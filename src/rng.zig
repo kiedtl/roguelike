@@ -8,7 +8,7 @@ const math = std.math;
 var rng: rand.Isaac64 = undefined;
 
 pub fn init() void {
-    rng = rand.Isaac64.init(0xeffaced_facade);
+    rng = rand.Isaac64.init(0xdefaced_cafe);
 }
 
 pub fn boolean() bool {
