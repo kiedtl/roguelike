@@ -11,7 +11,30 @@ pub fn build(b: *Builder) void {
     // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall.
     const mode = b.standardReleaseOptions();
 
+    const termbox_sources = [_][]const u8{
+        "tb/src/input.c",
+        "tb/src/memstream.c",
+        "tb/src/ringbuffer.c",
+        "tb/src/termbox.c",
+        "tb/src/term.c",
+        "tb/src/utf8.c",
+    };
+
+    const termbox_cflags = [_][]const u8{
+        "-std=c99",
+        "-Wpedantic",
+        "-Wall",
+        "-Werror",
+        "-g",
+        "-I./tb/src",
+        "-D_POSIX_C_SOURCE=200809L",
+        "-D_XOPEN_SOURCE",
+    };
+
     const exe = b.addExecutable("rl", "src/main.zig");
+    for (termbox_sources) |termbox_source|
+        exe.addCSourceFile(termbox_source, &termbox_cflags);
+    exe.linkLibC();
     exe.setTarget(target);
     exe.setBuildMode(mode);
     exe.install();

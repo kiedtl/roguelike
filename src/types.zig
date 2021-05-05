@@ -41,6 +41,10 @@ pub const Coord = struct {
         return .{ .x = x, .y = y };
     }
 
+    pub fn eq(a: Self, b: Self) bool {
+        return a.x == b.x and a.y == b.y;
+    }
+
     pub fn move(self: *Self, direction: Direction, limit: Self) bool {
         var dx: isize = 0;
         var dy: isize = 0;
@@ -79,6 +83,11 @@ pub const Coord = struct {
     }
 };
 
+pub const Slave = struct {
+    prison_start: Coord,
+    prison_end: Coord,
+};
+
 pub const Guard = struct {
     patrol_start: Coord,
     patrol_end: Coord,
@@ -89,17 +98,27 @@ pub const OccupationTag = enum {
     // Cook,
     // Miner,
     // Architect,
-    // Slave,
+    Slave,
     // None,
+};
+
+pub const Allegiance = enum {
+    Sauron,
+    Illuvatar,
+    Self,
+    NoneEvil,
+    NoneGood,
 };
 
 pub const Occupation = union(OccupationTag) {
     Guard: Guard,
+    Slave: Slave,
 };
 
 pub const Mob = struct {
     tile: u21,
     occupation: Occupation,
+    allegiance: Allegiance,
 };
 
 pub const TileType = enum {
@@ -122,4 +141,16 @@ pub const GuardTemplate = Mob{
             .patrol_end = Coord.new(0, 0),
         },
     },
+    .allegiance = .Sauron,
+};
+
+pub const ElfTemplate = Mob{
+    .tile = '@',
+    .occupation = Occupation{
+        .Slave = Slave{
+            .prison_start = Coord.new(0, 0),
+            .prison_end = Coord.new(0, 0),
+        },
+    },
+    .allegiance = .Illuvatar,
 };

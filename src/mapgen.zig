@@ -54,6 +54,14 @@ pub fn add_guard_stations() void {
     }
 }
 
+pub fn add_player() void {
+    var player = ElfTemplate;
+    //player.occupation.Slave.prison_start = Coord.new(stationy, stationx);
+    //player.occupation.Slave.prison_end = Coord.new(stationy, stationx);
+    state.dungeon[state.HEIGHT / 2][state.WIDTH / 2].mob = player;
+    state.player = Coord.new(state.WIDTH / 2, state.HEIGHT / 2);
+}
+
 pub fn drunken_walk() void {
     const center_weight = 20;
     const fill_goal = @intToFloat(f64, state.WIDTH * state.HEIGHT) * 0.35;
