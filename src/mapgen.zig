@@ -114,6 +114,7 @@ pub fn drunken_walk() void {
             .South => south += prev_direction_weight,
             .West => west += prev_direction_weight,
             .East => east += prev_direction_weight,
+            else => unreachable,
         }
 
         // normalize probabilities

@@ -1,5 +1,8 @@
+const std = @import("std");
+
 const termbox = @import("termbox.zig");
 const state = @import("state.zig");
+usingnamespace @import("types.zig");
 
 // tb_shutdown() calls abort() if tb_init() wasn't called, or if tb_shutdown()
 // was called twice. Keep track of termbox's state to prevent this.
@@ -29,6 +32,19 @@ pub fn deinit() !void {
 }
 
 pub fn draw() void {
+    // Some test code. Nothing to see here, move along.
+    // {
+    //     const astar = @import("astar.zig");
+    //     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    //     defer arena.deinit();
+    //     const path = astar.path(state.player, Coord.new(state.WIDTH - 25, 4), Coord.new(state.WIDTH, state.HEIGHT), &arena.allocator);
+    //     if (path) |coords| {
+    //         for (coords.items) |coord| {
+    //             state.dungeon[coord.y][coord.x].marked = true;
+    //         }
+    //     }
+    // }
+    //
     const playery = @intCast(isize, state.player.y);
     const playerx = @intCast(isize, state.player.x);
 
@@ -68,7 +84,11 @@ pub fn draw() void {
                 .Floor => if (state.dungeon[u_y][u_x].mob) |mob| {
                     termbox.tb_change_cell(cursorx, cursory, mob.tile, 0xffffff, 0x121212);
                 } else {
-                    termbox.tb_change_cell(cursorx, cursory, '·', 0xffffff, 0x121212);
+                    const color: u32 = if (state.dungeon[u_y][u_x].marked)
+                        0x454545
+                    else
+                        0x121212;
+                    termbox.tb_change_cell(cursorx, cursory, '·', 0xffffff, color);
                 },
             }
 
@@ -91,4 +111,5 @@ pub fn draw() void {
     }
 
     termbox.tb_present();
+    state.reset_marks();
 }

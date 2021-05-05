@@ -8,10 +8,21 @@ pub const WIDTH = 100;
 pub var dungeon = [_][WIDTH]Tile{[_]Tile{Tile{
     .type = .Wall,
     .mob = null,
+    .marked = false,
 }} ** WIDTH} ** HEIGHT;
 pub var player = Coord.new(0, 0);
 
 pub fn tick() void {}
+
+pub fn reset_marks() void {
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            dungeon[y][x].marked = false;
+        }
+    }
+}
 
 /// Try to move a mob.
 ///
