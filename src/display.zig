@@ -44,7 +44,15 @@ pub fn draw() void {
     //         }
     //     }
     // }
-    //
+    {
+        const begin = Coord.new(state.WIDTH / 2 + 3, 15);
+        const coords = begin.draw_line(state.player, Coord.new(state.WIDTH, state.HEIGHT));
+        for (coords) |sliceitem| {
+            if (sliceitem) |coord| {
+                state.dungeon[coord.y][coord.x].marked = true;
+            }
+        }
+    }
     const playery = @intCast(isize, state.player.y);
     const playerx = @intCast(isize, state.player.x);
 
