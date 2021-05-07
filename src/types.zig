@@ -267,9 +267,10 @@ pub const Mob = struct {
     memory: CoordCharMap,
     fov: CoordArrayList,
     vision: usize,
+    coord: Coord,
 
-    pub fn cansee(self: *const Mob, mob_coord: Coord, coord: Coord) bool {
-        if (mob_coord.distance(coord) > self.vision)
+    pub fn cansee(self: *const Mob, coord: Coord) bool {
+        if (self.coord.distance(coord) > self.vision)
             return false;
 
         for (self.fov.items) |fovcoord| {
@@ -306,6 +307,7 @@ pub const GuardTemplate = Mob{
     .fov = undefined,
     .memory = undefined,
     .vision = 4,
+    .coord = undefined,
 };
 
 pub const ElfTemplate = Mob{
@@ -320,4 +322,5 @@ pub const ElfTemplate = Mob{
     .fov = undefined,
     .memory = undefined,
     .vision = 25,
+    .coord = undefined,
 };

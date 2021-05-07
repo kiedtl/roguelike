@@ -1,4 +1,5 @@
 const std = @import("std");
+const math = std.math;
 
 const termbox = @import("termbox.zig");
 const state = @import("state.zig");
@@ -32,7 +33,19 @@ pub fn deinit() !void {
     is_tb_inited = false;
 }
 
+fn _mobs_can_see(moblist: *const std.ArrayList(*Mob), coord: Coord) bool {
+    for (moblist.items) |mob| {
+        if (mob.cansee(coord)) return true;
+    }
+    return false;
+}
+
 pub fn draw() void {
+    // TODO: do some tests and figure out what's the practical limit to memory
+    // usage, and reduce the buffer's size to that.
+    var membuf: [65535]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
     const playery = @intCast(isize, state.player.y);
     const playerx = @intCast(isize, state.player.x);
     var player = state.dungeon[state.player.y][state.player.x].mob orelse unreachable;
@@ -50,7 +63,37 @@ pub fn draw() void {
     var cursory: isize = 0;
     var cursorx: isize = 0;
 
-    var y: isize = starty;
+    // Create a list of all mobs on the map so that we can calculate what tiles
+    // are in the FOV of any mob. Use all mobs on the map, not just the ones
+    // that will be displayed.
+    var moblist = std.ArrayList(*Mob).init(&fba.allocator);
+    {
+        var iy = starty;
+        while (iy < endy) : (iy += 1) {
+            var ix: isize = startx;
+            while (ix < endx) : (ix += 1) {
+                if (iy < 0 or ix < 0 or iy >= state.HEIGHT or ix >= state.WIDTH) {
+                    continue;
+                }
+
+                const u_x: usize = @intCast(usize, ix);
+                const u_y: usize = @intCast(usize, iy);
+                const coord = Coord.new(u_x, u_y);
+
+                if (coord.eq(state.player))
+                    continue;
+
+                if (state.dungeon[u_y][u_x].mob) |*mob| {
+                    if (!player.cansee(coord))
+                        continue;
+
+                    moblist.append(mob) catch unreachable;
+                }
+            }
+        }
+    }
+
+    var y = starty;
     while (y < endy and cursory < @intCast(usize, maxy)) : ({
         y += 1;
         cursory += 1;
@@ -73,12 +116,12 @@ pub fn draw() void {
 
             // if player can't see area, draw a blank/grey tile, depending on
             // what they saw last there
-            if (!player.cansee(state.player, coord)) {
+            if (!player.cansee(coord)) {
                 if (player.memory.contains(coord)) {
                     const tile = @as(u32, player.memory.get(coord) orelse unreachable);
-                    termbox.tb_change_cell(cursorx, cursory, tile, 0x3f3f3f, 0x080808);
+                    termbox.tb_change_cell(cursorx, cursory, tile, 0x3f3f3f, 0x101010);
                 } else {
-                    termbox.tb_change_cell(cursorx, cursory, '·', 0, 0);
+                    termbox.tb_change_cell(cursorx, cursory, ' ', 0xffffff, 0);
                 }
                 continue;
             }
@@ -88,11 +131,12 @@ pub fn draw() void {
                 .Floor => if (state.dungeon[u_y][u_x].mob) |mob| {
                     termbox.tb_change_cell(cursorx, cursory, mob.tile, 0xffffff, 0x121212);
                 } else {
+                    const tile: u32 = if (_mobs_can_see(&moblist, coord)) '·' else ' ';
                     const color: u32 = if (state.dungeon[u_y][u_x].marked)
                         0x454545
                     else
                         0x1e1e1e;
-                    termbox.tb_change_cell(cursorx, cursory, ' ', 0, color);
+                    termbox.tb_change_cell(cursorx, cursory, tile, 0xffffff, color);
                 },
             }
 

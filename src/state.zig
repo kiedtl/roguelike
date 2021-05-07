@@ -106,6 +106,7 @@ pub fn mob_move(coord: Coord, direction: Direction) bool {
             player = dest;
     }
 
+    dungeon[dest.y][dest.x].mob.?.coord = dest;
     return true;
 }
 
