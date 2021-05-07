@@ -28,7 +28,7 @@ fn _foreach_mob(func: fn (Coord, *Mob) void) void {
 
 fn __mob_fov(coord: Coord, mob: *Mob) void {
     mob.fov.shrinkRetainingCapacity(0);
-    fov.naive(coord, mob.vision, mapgeometry, &mob.fov);
+    fov.shadowcast(coord, mob.vision, mapgeometry, &mob.fov);
 }
 
 pub fn tick() void {
