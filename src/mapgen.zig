@@ -1,17 +1,20 @@
 const std = @import("std");
+const heap = std.heap;
+const mem = std.mem;
 
 const rng = @import("rng.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
-fn _add_guard_station(stationy: usize, stationx: usize) void {
+fn _add_guard_station(stationy: usize, stationx: usize, alloc: *mem.Allocator) void {
     var guard = GuardTemplate;
     guard.occupation.Guard.patrol_start = Coord.new(stationy, stationx);
     guard.occupation.Guard.patrol_end = Coord.new(stationy, stationx);
+    guard.fov = CoordArrayList.init(alloc);
     state.dungeon[stationy][stationx].mob = guard;
 }
 
-pub fn add_guard_stations() void {
+pub fn add_guard_stations(alloc: *mem.Allocator) void {
     // --- Guard route patterns ---
     const patterns = [_][9]TileType{
         // ###
@@ -46,7 +49,7 @@ pub fn add_guard_stations() void {
 
             for (patterns) |pattern| {
                 if (std.mem.eql(TileType, &neighbors, &pattern)) {
-                    _add_guard_station(y, x);
+                    _add_guard_station(y, x, alloc);
                     break;
                 }
             }
@@ -54,10 +57,11 @@ pub fn add_guard_stations() void {
     }
 }
 
-pub fn add_player() void {
+pub fn add_player(alloc: *mem.Allocator) void {
     var player = ElfTemplate;
     //player.occupation.Slave.prison_start = Coord.new(stationy, stationx);
     //player.occupation.Slave.prison_end = Coord.new(stationy, stationx);
+    player.fov = CoordArrayList.init(alloc);
     state.dungeon[state.HEIGHT / 2][state.WIDTH / 2].mob = player;
     state.player = Coord.new(state.WIDTH / 2, state.HEIGHT / 2);
 }

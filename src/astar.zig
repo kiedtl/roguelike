@@ -1,7 +1,7 @@
 const std = @import("std");
 const assert = std.debug.assert;
-usingnamespace @import("types.zig");
 
+usingnamespace @import("types.zig");
 const state = @import("state.zig");
 
 const Node = struct {

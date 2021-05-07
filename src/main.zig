@@ -45,11 +45,29 @@ pub fn main() anyerror!void {
         error.UnsupportedTerminal => @panic("Unsupported terminal"),
         error.PipeTrapFailed => @panic("Internal termbox error"),
     }
+    defer display.deinit() catch unreachable;
+
+    var gpa = std.heap.GeneralPurposeAllocator(.{
+        // Probably should enable this later on to track memory usage, if
+        // allocations become too much
+        .enable_memory_limit = false,
+        .safety = true,
+
+        // Probably would enable this later, as we might want to run the ticks()
+        // on other dungeon levels in another thread
+        .thread_safe = true,
+
+        .never_unmap = false,
+    }){};
+    defer std.debug.assert(!gpa.deinit());
 
     rng.init();
     mapgen.drunken_walk();
-    mapgen.add_guard_stations();
-    mapgen.add_player();
+    mapgen.add_guard_stations(&gpa.allocator);
+    mapgen.add_player(&gpa.allocator);
+
+    state.tick();
+    defer state.freeall();
 
     display.draw();
 
@@ -70,6 +88,4 @@ pub fn main() anyerror!void {
             else => {},
         }
     }
-
-    display.deinit() catch unreachable;
 }

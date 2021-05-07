@@ -1,5 +1,6 @@
 const std = @import("std");
 const math = std.math;
+const mem = std.mem;
 const assert = std.debug.assert;
 
 pub const Direction = enum {
@@ -126,25 +127,17 @@ pub const Coord = struct {
         return false;
     }
 
-    fn insert_if_valid(x: isize, y: isize, buf: *[2048]?Coord, index: *usize, limit: Coord) void {
-        assert(index.* + 1 < buf.len);
-
+    fn insert_if_valid(x: isize, y: isize, buf: *CoordArrayList, limit: Coord) void {
         if (x < 0 or y < 0)
             return;
         if (x > @intCast(isize, limit.x) or y > @intCast(isize, limit.y))
             return;
 
-        buf[index.*] = Coord.new(@intCast(usize, x), @intCast(usize, y));
-        index.* += 1;
+        buf.append(Coord.new(@intCast(usize, x), @intCast(usize, y))) catch unreachable;
     }
 
-    pub fn draw_line(from: Coord, to: Coord, limit: Coord) []?Coord {
-        // FIXME: this is a very lazy method to estimate max buffer length,
-        // should be doing some tests to find out what's the max buffer length
-        // needed in practice
-        var buf: [2048]?Coord = undefined;
-        for (buf) |_, index| buf[index] = null;
-        var index: usize = 0;
+    pub fn draw_line(from: Coord, to: Coord, limit: Coord, alloc: *mem.Allocator) CoordArrayList {
+        var buf = CoordArrayList.init(alloc);
 
         // plotLine(x0, y0, x1, y1)
         // dx = x1 - x0
@@ -192,7 +185,7 @@ pub const Coord = struct {
 
         //        //while (true) {
         //        while (x != xend) : (x += stepx) {
-        //            insert_if_valid(x, y, &buf, &index, limit);
+        //            insert_if_valid(x, y, &buf, limit);
 
         //            // if (x == xend or y == yend)
         //            //     break;
@@ -235,7 +228,7 @@ pub const Coord = struct {
         // var y = ystart;
 
         // while (x != xend) : (x += stepx) {
-        //     insert_if_valid(x, y, &buf, &index, limit);
+        //     insert_if_valid(x, y, &buf, limit);
 
         //     // err += slope;
         //     // if (err >= 0.5) {
@@ -292,7 +285,7 @@ pub const Coord = struct {
         if (dx > dy) {
             err = dx / 2.0;
             while (x != xend) {
-                insert_if_valid(x, y, &buf, &index, limit);
+                insert_if_valid(x, y, &buf, limit);
                 err -= dy;
                 if (err < 0) {
                     y += stepy;
@@ -303,7 +296,7 @@ pub const Coord = struct {
         } else {
             err = dy / 2.0;
             while (y != yend) {
-                insert_if_valid(x, y, &buf, &index, limit);
+                insert_if_valid(x, y, &buf, limit);
                 err -= dx;
                 if (err < 0) {
                     x += stepx;
@@ -313,15 +306,13 @@ pub const Coord = struct {
             }
         }
 
-        return buf[0..];
+        return buf;
     }
 
-    pub fn draw_circle(center: Coord, radius: usize, limit: Coord) []?Coord {
+    pub fn draw_circle(center: Coord, radius: usize, limit: Coord, alloc: *mem.Allocator) CoordArrayList {
         const circum = @floatToInt(usize, math.ceil(math.tau * @intToFloat(f64, radius)));
 
-        var buf: [2048]?Coord = undefined;
-        for (buf) |_, index| buf[index] = null;
-        var index: usize = 0;
+        var buf = CoordArrayList.init(alloc);
 
         const x: isize = @intCast(isize, center.x);
         const y: isize = @intCast(isize, center.y);
@@ -332,10 +323,10 @@ pub const Coord = struct {
         var dx: isize = 0;
         var dy: isize = @intCast(isize, radius);
 
-        insert_if_valid(x, y + @intCast(isize, radius), &buf, &index, limit);
-        insert_if_valid(x, y - @intCast(isize, radius), &buf, &index, limit);
-        insert_if_valid(x + @intCast(isize, radius), y, &buf, &index, limit);
-        insert_if_valid(x - @intCast(isize, radius), y, &buf, &index, limit);
+        insert_if_valid(x, y + @intCast(isize, radius), &buf, limit);
+        insert_if_valid(x, y - @intCast(isize, radius), &buf, limit);
+        insert_if_valid(x + @intCast(isize, radius), y, &buf, limit);
+        insert_if_valid(x - @intCast(isize, radius), y, &buf, limit);
 
         while (dx < dy) {
             if (f >= 0) {
@@ -348,17 +339,17 @@ pub const Coord = struct {
             ddf_x += 2;
             f += ddf_x + 1;
 
-            insert_if_valid(x + dx, y + dy, &buf, &index, limit);
-            insert_if_valid(x - dx, y + dy, &buf, &index, limit);
-            insert_if_valid(x + dx, y - dy, &buf, &index, limit);
-            insert_if_valid(x - dx, y - dy, &buf, &index, limit);
-            insert_if_valid(x + dy, y + dx, &buf, &index, limit);
-            insert_if_valid(x - dy, y + dx, &buf, &index, limit);
-            insert_if_valid(x + dy, y - dx, &buf, &index, limit);
-            insert_if_valid(x - dy, y - dx, &buf, &index, limit);
+            insert_if_valid(x + dx, y + dy, &buf, limit);
+            insert_if_valid(x - dx, y + dy, &buf, limit);
+            insert_if_valid(x + dx, y - dy, &buf, limit);
+            insert_if_valid(x - dx, y - dy, &buf, limit);
+            insert_if_valid(x + dy, y + dx, &buf, limit);
+            insert_if_valid(x - dy, y + dx, &buf, limit);
+            insert_if_valid(x + dy, y - dx, &buf, limit);
+            insert_if_valid(x - dy, y - dx, &buf, limit);
         }
 
-        return buf[0..];
+        return buf;
     }
 };
 
@@ -400,6 +391,20 @@ pub const Mob = struct {
     tile: u21,
     occupation: Occupation,
     allegiance: Allegiance,
+    fov: CoordArrayList,
+    vision: usize,
+
+    pub fn cansee(self: *const Mob, mob_coord: Coord, coord: Coord) bool {
+        if (mob_coord.distance(coord) > self.vision)
+            return false;
+
+        for (self.fov.items) |fovcoord| {
+            if (coord.eq(fovcoord))
+                return true;
+        }
+
+        return false;
+    }
 };
 
 pub const TileType = enum {
@@ -424,6 +429,8 @@ pub const GuardTemplate = Mob{
         },
     },
     .allegiance = .Sauron,
+    .fov = undefined,
+    .vision = 4,
 };
 
 pub const ElfTemplate = Mob{
@@ -435,4 +442,6 @@ pub const ElfTemplate = Mob{
         },
     },
     .allegiance = .Illuvatar,
+    .fov = undefined,
+    .vision = 25,
 };

@@ -1,10 +1,12 @@
 const std = @import("std");
 const assert = std.debug.assert;
 
+const fov = @import("fov.zig");
 usingnamespace @import("types.zig");
 
 pub const HEIGHT = 40;
 pub const WIDTH = 100;
+pub const mapgeometry = Coord.new(WIDTH, HEIGHT);
 pub var dungeon = [_][WIDTH]Tile{[_]Tile{Tile{
     .type = .Wall,
     .mob = null,
@@ -12,7 +14,38 @@ pub var dungeon = [_][WIDTH]Tile{[_]Tile{Tile{
 }} ** WIDTH} ** HEIGHT;
 pub var player = Coord.new(0, 0);
 
-pub fn tick() void {}
+fn _foreach_mob(func: fn (Coord, *Mob) void) void {
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            if (dungeon[y][x].mob) |*mob| {
+                func(Coord.new(x, y), mob);
+            }
+        }
+    }
+}
+
+fn __mob_fov(coord: Coord, mob: *Mob) void {
+    mob.fov.shrinkRetainingCapacity(0);
+    fov.naive(coord, mob.vision, mapgeometry, &mob.fov);
+}
+
+pub fn tick() void {
+    _foreach_mob(__mob_fov);
+}
+
+pub fn freeall() void {
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            if (dungeon[y][x].mob) |*mob| {
+                mob.fov.deinit();
+            }
+        }
+    }
+}
 
 pub fn reset_marks() void {
     var y: usize = 0;
