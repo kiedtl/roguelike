@@ -63,7 +63,7 @@ pub fn draw() void {
         }) {
             // if out of bounds on the map, draw a black tile
             if (y < 0 or x < 0 or y >= state.HEIGHT or x >= state.WIDTH) {
-                termbox.tb_change_cell(cursorx, cursory, ' ', 0xffffff, 0x000000);
+                termbox.tb_change_cell(cursorx, cursory, ' ', 0, 0);
                 continue;
             }
 
@@ -74,21 +74,25 @@ pub fn draw() void {
             // if player can't see area, draw a blank/grey tile, depending on
             // what they saw last there
             if (!player.cansee(state.player, coord)) {
-                const tile = @as(u32, player.memory.get(coord) orelse ' ');
-                termbox.tb_change_cell(cursorx, cursory, tile, 0x808080, 0x000000);
+                if (player.memory.contains(coord)) {
+                    const tile = @as(u32, player.memory.get(coord) orelse unreachable);
+                    termbox.tb_change_cell(cursorx, cursory, tile, 0x3f3f3f, 0x080808);
+                } else {
+                    termbox.tb_change_cell(cursorx, cursory, '·', 0, 0);
+                }
                 continue;
             }
 
             switch (state.dungeon[u_y][u_x].type) {
-                .Wall => termbox.tb_change_cell(cursorx, cursory, '▒', 0x404040, 0x808080),
+                .Wall => termbox.tb_change_cell(cursorx, cursory, '#', 0x505050, 0x9e9e9e),
                 .Floor => if (state.dungeon[u_y][u_x].mob) |mob| {
                     termbox.tb_change_cell(cursorx, cursory, mob.tile, 0xffffff, 0x121212);
                 } else {
                     const color: u32 = if (state.dungeon[u_y][u_x].marked)
                         0x454545
                     else
-                        0x121212;
-                    termbox.tb_change_cell(cursorx, cursory, '·', 0xffffff, color);
+                        0x1e1e1e;
+                    termbox.tb_change_cell(cursorx, cursory, ' ', 0, color);
                 },
             }
 

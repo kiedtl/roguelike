@@ -32,7 +32,7 @@ fn __mob_fov(coord: Coord, mob: *Mob) void {
     fov.shadowcast(coord, mob.vision, mapgeometry, &mob.fov);
 
     for (mob.fov.items) |fc| {
-        var tile: u21 = if (dungeon[fc.y][fc.x].type == .Wall) '▒' else '·';
+        var tile: u21 = if (dungeon[fc.y][fc.x].type == .Wall) '▓' else ' ';
         if (dungeon[fc.y][fc.x].mob) |tilemob| tile = tilemob.tile;
         mob.memory.put(fc, tile) catch unreachable;
     }
