@@ -13,6 +13,7 @@ pub var dungeon = [_][WIDTH]Tile{[_]Tile{Tile{
     .marked = false,
 }} ** WIDTH} ** HEIGHT;
 pub var player = Coord.new(0, 0);
+pub var ticks: usize = 0;
 
 fn _foreach_mob(func: fn (Coord, *Mob) void) void {
     var y: usize = 0;
@@ -29,9 +30,21 @@ fn _foreach_mob(func: fn (Coord, *Mob) void) void {
 fn __mob_fov(coord: Coord, mob: *Mob) void {
     mob.fov.shrinkRetainingCapacity(0);
     fov.shadowcast(coord, mob.vision, mapgeometry, &mob.fov);
+
+    for (mob.fov.items) |fc| {
+        var tile: u21 = if (dungeon[fc.y][fc.x].type == .Wall) '▒' else '·';
+        if (dungeon[fc.y][fc.x].mob) |tilemob| tile = tilemob.tile;
+        if (ticks > 1) {
+            // const d = @import("display.zig");
+            // std.log.info("capacity = {}", .{mob.memory.capacity()});
+            // @panic("f");
+        }
+        mob.memory.put(fc, tile) catch unreachable;
+    }
 }
 
 pub fn tick() void {
+    ticks += 1;
     _foreach_mob(__mob_fov);
 }
 
@@ -42,6 +55,7 @@ pub fn freeall() void {
         while (x < WIDTH) : (x += 1) {
             if (dungeon[y][x].mob) |*mob| {
                 mob.fov.deinit();
+                mob.memory.clearAndFree();
             }
         }
     }

@@ -65,7 +65,7 @@ pub fn draw() void {
     // }
     const playery = @intCast(isize, state.player.y);
     const playerx = @intCast(isize, state.player.x);
-    const player = state.dungeon[state.player.y][state.player.x].mob orelse unreachable;
+    var player = state.dungeon[state.player.y][state.player.x].mob orelse unreachable;
 
     const maxy: isize = termbox.tb_height() - 8;
     const maxx: isize = termbox.tb_width() - 30;
@@ -99,10 +99,13 @@ pub fn draw() void {
 
             const u_x: usize = @intCast(usize, x);
             const u_y: usize = @intCast(usize, y);
+            const coord = Coord.new(u_x, u_y);
 
-            // if player can't see area, draw a black tile
-            if (!player.cansee(state.player, Coord.new(u_x, u_y))) {
-                termbox.tb_change_cell(cursorx, cursory, ' ', 0xffffff, 0x000000);
+            // if player can't see area, draw a blank/grey tile, depending on
+            // what they saw last there
+            if (!player.cansee(state.player, coord)) {
+                const tile = @as(u32, player.memory.get(coord) orelse ' ');
+                termbox.tb_change_cell(cursorx, cursory, tile, 0x808080, 0x000000);
                 continue;
             }
 

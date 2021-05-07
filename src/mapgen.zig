@@ -11,6 +11,7 @@ fn _add_guard_station(stationy: usize, stationx: usize, alloc: *mem.Allocator) v
     guard.occupation.Guard.patrol_start = Coord.new(stationy, stationx);
     guard.occupation.Guard.patrol_end = Coord.new(stationy, stationx);
     guard.fov = CoordArrayList.init(alloc);
+    guard.memory = CoordCharMap.init(alloc);
     state.dungeon[stationy][stationx].mob = guard;
 }
 
@@ -62,6 +63,7 @@ pub fn add_player(alloc: *mem.Allocator) void {
     //player.occupation.Slave.prison_start = Coord.new(stationy, stationx);
     //player.occupation.Slave.prison_end = Coord.new(stationy, stationx);
     player.fov = CoordArrayList.init(alloc);
+    player.memory = CoordCharMap.init(alloc);
     state.dungeon[state.HEIGHT / 2][state.WIDTH / 2].mob = player;
     state.player = Coord.new(state.WIDTH / 2, state.HEIGHT / 2);
 }

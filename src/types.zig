@@ -70,6 +70,8 @@ pub const Coord = struct {
         return math.sqrt((x * x) + (y * y));
     }
 
+    pub fn hash(a: Self) u64 {}
+
     pub fn eq(a: Self, b: Self) bool {
         return a.x == b.x and a.y == b.y;
     }
@@ -353,6 +355,7 @@ pub const Coord = struct {
     }
 };
 
+pub const CoordCharMap = std.AutoHashMap(Coord, u21);
 pub const CoordArrayList = std.ArrayList(Coord);
 
 pub const Slave = struct {
@@ -391,6 +394,7 @@ pub const Mob = struct {
     tile: u21,
     occupation: Occupation,
     allegiance: Allegiance,
+    memory: CoordCharMap,
     fov: CoordArrayList,
     vision: usize,
 
@@ -430,6 +434,7 @@ pub const GuardTemplate = Mob{
     },
     .allegiance = .Sauron,
     .fov = undefined,
+    .memory = undefined,
     .vision = 4,
 };
 
@@ -443,5 +448,6 @@ pub const ElfTemplate = Mob{
     },
     .allegiance = .Illuvatar,
     .fov = undefined,
+    .memory = undefined,
     .vision = 25,
 };
