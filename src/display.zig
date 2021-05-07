@@ -33,36 +33,6 @@ pub fn deinit() !void {
 }
 
 pub fn draw() void {
-    // Some test code. Nothing to see here, move along.
-    // {
-    //     const astar = @import("astar.zig");
-    //     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    //     defer arena.deinit();
-    //     const path = astar.path(state.player, Coord.new(state.WIDTH - 25, 4), Coord.new(state.WIDTH, state.HEIGHT), &arena.allocator);
-    //     if (path) |coords| {
-    //         for (coords.items) |coord| {
-    //             state.dungeon[coord.y][coord.x].marked = true;
-    //         }
-    //     }
-    // }
-    // {
-    //     const begin = Coord.new(state.WIDTH / 2 + 3, 15);
-    //     const coords = begin.draw_line(state.player, Coord.new(state.WIDTH, state.HEIGHT));
-    //     for (coords) |sliceitem| {
-    //         if (sliceitem) |coord| {
-    //             state.dungeon[coord.y][coord.x].marked = true;
-    //         }
-    //     }
-    // }
-    // {
-    //     const fov = @import("fov.zig");
-    //     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    //     defer arena.deinit();
-    //     const fovarea = fov.naive(state.player, 8, Coord.new(state.WIDTH, state.HEIGHT), &arena.allocator);
-    //     for (fovarea.items) |coord| {
-    //         state.dungeon[coord.y][coord.x].marked = true;
-    //     }
-    // }
     const playery = @intCast(isize, state.player.y);
     const playerx = @intCast(isize, state.player.x);
     var player = state.dungeon[state.player.y][state.player.x].mob orelse unreachable;

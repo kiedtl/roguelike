@@ -34,11 +34,6 @@ fn __mob_fov(coord: Coord, mob: *Mob) void {
     for (mob.fov.items) |fc| {
         var tile: u21 = if (dungeon[fc.y][fc.x].type == .Wall) '▒' else '·';
         if (dungeon[fc.y][fc.x].mob) |tilemob| tile = tilemob.tile;
-        if (ticks > 1) {
-            // const d = @import("display.zig");
-            // std.log.info("capacity = {}", .{mob.memory.capacity()});
-            // @panic("f");
-        }
         mob.memory.put(fc, tile) catch unreachable;
     }
 }
