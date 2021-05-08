@@ -33,6 +33,46 @@ pub fn deinit() !void {
     is_tb_inited = false;
 }
 
+fn _draw_string(_x: isize, _y: isize, bg: u32, fg: u32, str: []const u8) !isize {
+    var x = _x;
+    var y = _y;
+
+    var utf8 = (try std.unicode.Utf8View.init(str)).iterator();
+    while (utf8.nextCodepointSlice()) |encoded_codepoint| {
+        const codepoint = try std.unicode.utf8Decode(encoded_codepoint);
+
+        if (codepoint == '\n') {
+            x = _x;
+            y += 1;
+            continue;
+        }
+
+        termbox.tb_change_cell(x, y, codepoint, bg, fg);
+        x += 1;
+    }
+
+    return y + 1;
+}
+
+fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: isize, starty: isize, endx: isize, endy: isize) void {
+    var y = starty;
+
+    y = _draw_string(startx, y, 0xffffff, 0, "@: You") catch unreachable;
+
+    _ = _draw_string(startx, y, 0xffffff, 0, "HP") catch unreachable;
+    {
+        var x = startx + 3;
+        const HP_percent = (player.HP * 100) / player.max_HP;
+        const HP_bar = @divTrunc((endx - x - 1) * 100, @intCast(isize, HP_percent));
+        const HP_bar_end = x + HP_bar;
+
+        while (x < HP_bar_end) : (x += 1) {
+            termbox.tb_change_cell(x, y, ' ', 0, 0xffffff);
+        }
+    }
+    y += 1;
+}
+
 fn _mobs_can_see(moblist: *const std.ArrayList(*Mob), coord: Coord) bool {
     for (moblist.items) |mob| {
         if (mob.is_dead) continue;
@@ -133,8 +173,8 @@ pub fn draw() void {
                     var color: u32 = 0x1e1e1e;
 
                     if (mob.current_pain() > 0.0) {
-                        var red = @floatToInt(u32, mob.current_pain() * 100);
-                        color = math.clamp(red, 0x1e, 0xee) << 16;
+                        var red = @floatToInt(u32, mob.current_pain() * 0x7ff);
+                        color = math.clamp(red, 0x00, 0xee) << 16;
                     }
 
                     if (mob.is_dead) {
@@ -156,6 +196,8 @@ pub fn draw() void {
                 termbox.tb_change_cell(cursorx, cursory, '@', 0x0, 0xffffff);
         }
     }
+
+    _draw_infopanel(&player, &moblist, maxx, 1, termbox.tb_width(), maxy);
 
     termbox.tb_present();
     state.reset_marks();

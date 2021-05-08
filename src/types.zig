@@ -325,10 +325,10 @@ pub const Mob = struct {
         }
 
         // WHAM
-        recipient.pain += 0.28;
+        recipient.pain += 0.14;
 
         // saturate on subtraction
-        recipient.HP = if ((recipient.HP -% 10) > recipient.HP) 0 else recipient.HP - 10;
+        recipient.HP = if ((recipient.HP -% 10) > recipient.HP) 0 else recipient.HP - 5;
     }
 
     pub fn kill(self: *Mob) void {
@@ -400,9 +400,9 @@ pub const GuardTemplate = Mob{
 
     .willpower = 2,
     .dexterity = 21,
-    .max_HP = 14,
+    .max_HP = 16,
 
-    .HP = 14,
+    .HP = 16,
 };
 
 pub const ElfTemplate = Mob{
