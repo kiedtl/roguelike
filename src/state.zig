@@ -27,6 +27,13 @@ pub fn tick() void {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
             if (dungeon[y][x].mob) |*mob| {
+                if (mob.is_dead) {
+                    continue;
+                } else if (mob.should_be_dead()) {
+                    mob.kill();
+                    continue;
+                }
+
                 mob.tick_pain();
 
                 mob.fov.shrinkRetainingCapacity(0);
@@ -34,7 +41,12 @@ pub fn tick() void {
 
                 for (mob.fov.items) |fc| {
                     var tile: u21 = if (dungeon[fc.y][fc.x].type == .Wall) '▓' else ' ';
-                    if (dungeon[fc.y][fc.x].mob) |tilemob| tile = tilemob.tile;
+                    if (dungeon[fc.y][fc.x].mob) |tilemob| {
+                        if (!tilemob.is_dead) {
+                            tile = tilemob.tile;
+                        }
+                    }
+
                     mob.memory.put(fc, tile) catch unreachable;
                 }
             }
@@ -48,8 +60,9 @@ pub fn freeall() void {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
             if (dungeon[y][x].mob) |*mob| {
-                mob.fov.deinit();
-                mob.memory.clearAndFree();
+                if (mob.is_dead)
+                    continue;
+                mob.kill();
             }
         }
     }
@@ -91,10 +104,10 @@ pub fn mob_move(coord: Coord, direction: Direction) bool {
         // XXX: add is_mob_hostile method that deals with all the nuances (eg
         // .NoneGood should not be hostile to .Illuvatar, but .NoneEvil should
         // be hostile to .Sauron)
-        if (othermob.allegiance != mob.allegiance) {
+        if (othermob.allegiance != mob.allegiance and !othermob.is_dead) {
             mob.fight(othermob);
         } else {
-            // TODO: implement swapping
+            // TODO: implement swapping when !othermob.is_dead
             return false;
         }
     } else {

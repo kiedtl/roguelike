@@ -271,6 +271,8 @@ pub const Mob = struct {
     vision: usize,
     coord: Coord,
 
+    is_dead: bool,
+
     // If the practical pain goes over PAIN_UNCONSCIOUS_THRESHHOLD, the mob
     // should go unconscious. If it goes over PAIN_DEATH_THRESHHOLD, it will
     // succumb and die.
@@ -303,11 +305,15 @@ pub const Mob = struct {
 
     // Reduce pain. Should be called by state.tick().
     pub fn tick_pain(self: *Mob) void {
+        assert(!self.is_dead);
+
         // TODO: pain effects (unconsciousness, screaming, etc)
         self.pain -= PAIN_DECAY * @intToFloat(f64, self.willpower);
     }
 
     pub fn fight(attacker: *Mob, recipient: *Mob) void {
+        assert(!attacker.is_dead);
+        assert(!recipient.is_dead);
         assert(recipient.dexterity < 100);
 
         // TODO: attacker's skill should play a significant part
@@ -325,11 +331,30 @@ pub const Mob = struct {
         recipient.HP = if ((recipient.HP -% 10) > recipient.HP) 0 else recipient.HP - 10;
     }
 
+    pub fn kill(self: *Mob) void {
+        self.fov.deinit();
+        self.memory.clearAndFree();
+        self.pain = 0.0;
+        self.is_dead = true;
+    }
+
+    pub fn should_be_dead(self: *const Mob) bool {
+        if (self.current_pain() > PAIN_DEATH_THRESHHOLD)
+            return true;
+
+        if (self.HP == 0)
+            return true;
+
+        return false;
+    }
+
     pub fn current_pain(self: *const Mob) f64 {
         return self.pain / @intToFloat(f64, self.willpower);
     }
 
     pub fn cansee(self: *const Mob, coord: Coord) bool {
+        assert(!self.is_dead);
+
         if (self.coord.distance(coord) > self.vision)
             return false;
 
@@ -369,6 +394,8 @@ pub const GuardTemplate = Mob{
     .vision = 4,
     .coord = undefined,
 
+    .is_dead = false,
+
     .pain = 0.0,
 
     .willpower = 2,
@@ -391,6 +418,8 @@ pub const ElfTemplate = Mob{
     .memory = undefined,
     .vision = 25,
     .coord = undefined,
+
+    .is_dead = false,
 
     .pain = 0.0,
 
