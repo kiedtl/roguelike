@@ -129,10 +129,14 @@ pub fn draw() void {
             switch (state.dungeon[u_y][u_x].type) {
                 .Wall => termbox.tb_change_cell(cursorx, cursory, '#', 0x505050, 0x9e9e9e),
                 .Floor => if (state.dungeon[u_y][u_x].mob) |mob| {
-                    termbox.tb_change_cell(cursorx, cursory, mob.tile, 0xffffff, 0x121212);
+                    var color: u32 = if (mob.current_pain() > 0.0)
+                        math.clamp(@floatToInt(u32, mob.current_pain() * 100), 0x1e, 0xee) << 16
+                    else
+                        0x1e1e1e;
+                    termbox.tb_change_cell(cursorx, cursory, mob.tile, 0xffffff, color);
                 } else {
                     const tile: u32 = if (_mobs_can_see(&moblist, coord)) '·' else ' ';
-                    const color: u32 = if (state.dungeon[u_y][u_x].marked)
+                    var color: u32 = if (state.dungeon[u_y][u_x].marked)
                         0x454545
                     else
                         0x1e1e1e;

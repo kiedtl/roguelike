@@ -3,6 +3,8 @@ const math = std.math;
 const mem = std.mem;
 const assert = std.debug.assert;
 
+const rng = @import("rng.zig");
+
 pub const Direction = enum {
     North,
     South,
@@ -269,6 +271,64 @@ pub const Mob = struct {
     vision: usize,
     coord: Coord,
 
+    // If the practical pain goes over PAIN_UNCONSCIOUS_THRESHHOLD, the mob
+    // should go unconscious. If it goes over PAIN_DEATH_THRESHHOLD, it will
+    // succumb and die.
+    //
+    // practical_pain = pain / willpower
+    pain: f64,
+
+    // Immutable instrinsic attributes.
+    //
+    // willpower: Controls the ability to resist pain and spells
+    // dexterity: Controls the likelihood of a mob dodging an attack.
+    //            Examples:   Troll: 1
+    //                     Hill Orc: 21
+    //                          Elf: 35
+    //                    Large Imp: 49
+    //                    Small Imp: 63
+    //
+    willpower: usize, // Range: 0 < willpower < 10
+    dexterity: usize, // Range: 0 < dexterity < 100
+    max_HP: usize,
+
+    // Mutable instrinsic attributes.
+    //
+    // The use and effects of most of these are obvious.
+    HP: usize,
+
+    pub const PAIN_DECAY = 0.0;
+    pub const PAIN_UNCONSCIOUS_THRESHHOLD = 1.0;
+    pub const PAIN_DEATH_THRESHHOLD = 1.8;
+
+    // Reduce pain. Should be called by state.tick().
+    pub fn tick_pain(self: *Mob) void {
+        // TODO: pain effects (unconsciousness, screaming, etc)
+        self.pain -= PAIN_DECAY * @intToFloat(f64, self.willpower);
+    }
+
+    pub fn fight(attacker: *Mob, recipient: *Mob) void {
+        assert(recipient.dexterity < 100);
+
+        // TODO: attacker's skill should play a significant part
+        const rand = rng.int(u7) % 100;
+
+        if (rand < recipient.dexterity) {
+            // missed
+            return;
+        }
+
+        // WHAM
+        recipient.pain += 0.28;
+
+        // saturate on subtraction
+        recipient.HP = if ((recipient.HP -% 10) > recipient.HP) 0 else recipient.HP - 10;
+    }
+
+    pub fn current_pain(self: *const Mob) f64 {
+        return self.pain / @intToFloat(f64, self.willpower);
+    }
+
     pub fn cansee(self: *const Mob, coord: Coord) bool {
         if (self.coord.distance(coord) > self.vision)
             return false;
@@ -308,6 +368,14 @@ pub const GuardTemplate = Mob{
     .memory = undefined,
     .vision = 4,
     .coord = undefined,
+
+    .pain = 0.0,
+
+    .willpower = 2,
+    .dexterity = 21,
+    .max_HP = 14,
+
+    .HP = 14,
 };
 
 pub const ElfTemplate = Mob{
@@ -323,4 +391,12 @@ pub const ElfTemplate = Mob{
     .memory = undefined,
     .vision = 25,
     .coord = undefined,
+
+    .pain = 0.0,
+
+    .willpower = 4,
+    .dexterity = 35,
+    .max_HP = 49,
+
+    .HP = 49,
 };

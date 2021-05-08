@@ -11,6 +11,10 @@ pub fn init() void {
     rng = rand.Isaac64.init(0xdefaced_cafe);
 }
 
+pub fn int(comptime T: type) T {
+    return rng.random.int(T);
+}
+
 pub fn boolean() bool {
     return rng.random.int(u1) == 1;
 }
