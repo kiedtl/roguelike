@@ -34,14 +34,81 @@ pub fn naive(center: Coord, radius: usize, limit: Coord, buf: *CoordArrayList) v
     }
 }
 
+pub fn octants(d: Direction, wide: bool) [4]?usize {
+    return if (wide) switch (d) {
+        .North => [_]?usize{ 1, 0, 3, 2 },
+        .South => [_]?usize{ 6, 7, 4, 5 },
+        .East => [_]?usize{ 3, 2, 5, 4 },
+        .West => [_]?usize{ 0, 1, 6, 7 },
+        .NorthEast => [_]?usize{ 0, 3, 2, 5 },
+        .NorthWest => [_]?usize{ 3, 0, 1, 6 },
+        .SouthEast => [_]?usize{ 2, 5, 4, 7 },
+        .SouthWest => [_]?usize{ 1, 6, 7, 4 },
+    } else switch (d) {
+        .North => [_]?usize{ 0, 3, null, null },
+        .South => [_]?usize{ 7, 4, null, null },
+        .East => [_]?usize{ 2, 5, null, null },
+        .West => [_]?usize{ 1, 6, null, null },
+        .NorthEast => [_]?usize{ 3, 2, null, null },
+        .NorthWest => [_]?usize{ 1, 0, null, null },
+        .SouthEast => [_]?usize{ 5, 4, null, null },
+        .SouthWest => [_]?usize{ 6, 7, null, null },
+    };
+}
+
 // Ported from doryen-fov Rust crate
 // TODO: provide link here
-const MULT0 = [8]isize{ 1, 0, 0, -1, -1, 0, 0, 1 };
-const MULT1 = [8]isize{ 0, 1, -1, 0, 0, -1, 1, 0 };
-const MULT2 = [8]isize{ 0, 1, 1, 0, 0, -1, -1, 0 };
-const MULT3 = [8]isize{ 1, 0, 0, 1, -1, 0, 0, -1 };
+pub fn shadowcast(coord: Coord, octs: [4]?usize, radius: usize, limit: Coord, buf: *CoordArrayList) void {
+    // Area of coverage by each octant (the MULT constant does the job of
+    // converting between octants, I think?):
+    //
+    //                               North
+    //                                 |
+    //                            \0000|3333/
+    //                            1\000|333/2
+    //                            11\00|33/22
+    //                            111\0|3/222
+    //                            1111\|/2222
+    //                       West -----@------ East
+    //                            6666/|\5555
+    //                            666/7|4\555
+    //                            66/77|44\55
+    //                            6/777|444\5
+    //                            /7777|4444\
+    //                                 |
+    //                               South
+    //
+    // Don't ask me how the octants were all displaced from what should've been
+    // their positions, I inherited(?) this problem from the doryen-fov Rust
+    // crate, from which this shadowcasting code was ported.
+    //
+    const MULT = [4][8]isize{
+        [_]isize{ 1, 0, 0, -1, -1, 0, 0, 1 },
+        [_]isize{ 0, 1, -1, 0, 0, -1, 1, 0 },
+        [_]isize{ 0, 1, 1, 0, 0, -1, -1, 0 },
+        [_]isize{ 1, 0, 0, 1, -1, 0, 0, -1 },
+    };
 
-fn _cast_light(cx: isize, cy: isize, row: isize, start_p: f64, end: f64, radius: isize, r2: isize, xx: isize, xy: isize, yx: isize, yy: isize, id: isize, limit: Coord, buf: *CoordArrayList) void {
+    var max_radius = radius;
+    if (max_radius == 0) {
+        const max_radius_x = math.max(limit.x - coord.x, coord.x);
+        const max_radius_y = math.max(limit.y - coord.y, coord.y);
+        max_radius = @floatToInt(usize, math.sqrt(@intToFloat(f64, max_radius_x * max_radius_x + max_radius_y * max_radius_y))) + 1;
+    }
+
+    const r2 = max_radius * max_radius;
+    for (octs) |maybe_oct| {
+        if (maybe_oct) |oct| {
+            _cast_light(@intCast(isize, coord.x), @intCast(isize, coord.y), 1, 1.0, 0.0, @intCast(isize, max_radius), @intCast(isize, r2), MULT[0][oct], MULT[1][oct], MULT[2][oct], MULT[3][oct], limit, buf);
+        }
+    }
+
+    // Adding the current coord doesn't seem like a good idea
+    // TODO: enumerate the reasons here in a coherent way
+    //buf.append(coord) catch unreachable;
+}
+
+fn _cast_light(cx: isize, cy: isize, row: isize, start_p: f64, end: f64, radius: isize, r2: isize, xx: isize, xy: isize, yx: isize, yy: isize, limit: Coord, buf: *CoordArrayList) void {
     if (start_p < end) {
         return;
     }
@@ -88,7 +155,7 @@ fn _cast_light(cx: isize, cy: isize, row: isize, start_p: f64, end: f64, radius:
                     }
                 } else if (tile_opacity(coord) >= 1.0 and j < radius) {
                     blocked = true;
-                    _cast_light(cx, cy, j + 1, start, l_slope, radius, r2, xx, xy, yx, yy, id + 1, limit, buf);
+                    _cast_light(cx, cy, j + 1, start, l_slope, radius, r2, xx, xy, yx, yy, limit, buf);
                     new_start = r_slope;
                 }
             }
@@ -97,20 +164,4 @@ fn _cast_light(cx: isize, cy: isize, row: isize, start_p: f64, end: f64, radius:
             break;
         }
     }
-}
-
-pub fn shadowcast(coord: Coord, max_radius_p: usize, limit: Coord, buf: *CoordArrayList) void {
-    var max_radius = max_radius_p;
-    if (max_radius_p == 0) {
-        const max_radius_x = math.max(limit.x - coord.x, coord.x);
-        const max_radius_y = math.max(limit.y - coord.y, coord.y);
-        max_radius = @floatToInt(usize, math.sqrt(@intToFloat(f64, max_radius_x * max_radius_x + max_radius_y * max_radius_y))) + 1;
-    }
-
-    const r2 = max_radius * max_radius;
-    const octants = [_]usize{ 0, 1, 2, 3, 4, 5, 6, 7 };
-    for (octants) |oct| {
-        _cast_light(@intCast(isize, coord.x), @intCast(isize, coord.y), 1, 1.0, 0.0, @intCast(isize, max_radius), @intCast(isize, r2), MULT0[oct], MULT1[oct], MULT2[oct], MULT3[oct], 0, limit, buf);
-    }
-    buf.append(coord) catch unreachable;
 }

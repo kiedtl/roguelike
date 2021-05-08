@@ -15,12 +15,17 @@ pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) nore
     std.builtin.default_panic(msg, error_return_trace);
 }
 
+// zig fmt: off
 pub fn handle_key(ev: termbox.tb_event) bool {
     if (ev.key != 0) {
         if (ev.key == termbox.TB_KEY_CTRL_C)
             return true;
     } else if (ev.ch != 0) {
         const did_anything = switch (ev.ch) {
+            'H' => state.mob_gaze(state.player, .West),
+            'J' => state.mob_gaze(state.player, .South),
+            'K' => state.mob_gaze(state.player, .North),
+            'L' => state.mob_gaze(state.player, .East),
             'h' => state.mob_move(state.player, .West),
             'j' => state.mob_move(state.player, .South),
             'k' => state.mob_move(state.player, .North),
@@ -37,6 +42,7 @@ pub fn handle_key(ev: termbox.tb_event) bool {
 
     return false;
 }
+// zig fmt: on
 
 pub fn main() anyerror!void {
     if (display.init()) {} else |err| switch (err) {

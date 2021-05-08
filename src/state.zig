@@ -15,10 +15,6 @@ pub var dungeon = [_][WIDTH]Tile{[_]Tile{Tile{
 pub var player = Coord.new(0, 0);
 pub var ticks: usize = 0;
 
-fn _foreach_mob(func: fn (Coord, *Mob) void) void {}
-
-fn __mob_fov(coord: Coord, mob: *Mob) void {}
-
 pub fn tick() void {
     ticks += 1;
 
@@ -36,8 +32,10 @@ pub fn tick() void {
 
                 mob.tick_pain();
 
+                const apparent_vision = if (mob.facing_wide) mob.vision / 2 else mob.vision;
+                const octants = fov.octants(mob.facing, mob.facing_wide);
                 mob.fov.shrinkRetainingCapacity(0);
-                fov.shadowcast(mob.coord, mob.vision, mapgeometry, &mob.fov);
+                fov.shadowcast(mob.coord, octants, mob.vision, mapgeometry, &mob.fov);
 
                 for (mob.fov.items) |fc| {
                     var tile: u21 = if (dungeon[fc.y][fc.x].type == .Wall) '▓' else ' ';
@@ -91,6 +89,9 @@ pub fn reset_marks() void {
 pub fn mob_move(coord: Coord, direction: Direction) bool {
     const mob = &dungeon[coord.y][coord.x].mob.?;
 
+    // Face in that direction no matter whether we end up moving or no
+    mob.facing = direction;
+
     var dest = coord;
     if (!dest.move(direction, Coord.new(WIDTH, HEIGHT))) {
         return false;
@@ -119,5 +120,21 @@ pub fn mob_move(coord: Coord, direction: Direction) bool {
     }
 
     dungeon[dest.y][dest.x].mob.?.coord = dest;
+    return true;
+}
+
+pub fn mob_gaze(coord: Coord, direction: Direction) bool {
+    const mob = &dungeon[coord.y][coord.x].mob.?;
+
+    if (mob.facing == direction) {
+        mob.facing_wide = !mob.facing_wide;
+    } else {
+        mob.facing = direction;
+    }
+
+    // Looking around is not instantaneous and should take up a turn...
+    // Probably might change this later, though, as making it not take up a turn
+    // might possibly keep things easy (a mob shouldn't creep up on a player while
+    // the player's scanning the opposite direction).
     return true;
 }

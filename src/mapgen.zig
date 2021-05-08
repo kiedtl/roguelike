@@ -6,13 +6,14 @@ const rng = @import("rng.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
-fn _add_guard_station(stationy: usize, stationx: usize, alloc: *mem.Allocator) void {
+fn _add_guard_station(stationy: usize, stationx: usize, d: Direction, alloc: *mem.Allocator) void {
     var guard = GuardTemplate;
     guard.occupation.Guard.patrol_start = Coord.new(stationy, stationx);
     guard.occupation.Guard.patrol_end = Coord.new(stationy, stationx);
     guard.fov = CoordArrayList.init(alloc);
     guard.memory = CoordCharMap.init(alloc);
     guard.coord = Coord.new(stationx, stationy);
+    guard.facing = d;
     state.dungeon[stationy][stationx].mob = guard;
 }
 
@@ -32,6 +33,8 @@ pub fn add_guard_stations(alloc: *mem.Allocator) void {
         // ###
         [_]TileType{ .Wall, .Wall, .Wall, .Wall, .Floor, .Floor, .Wall, .Wall, .Wall },
     };
+    // Too lazy to combine this with the previous constant in a struct
+    const pattern_directions = [_]Direction{ .East, .West, .East };
 
     var y: usize = 1;
     while (y < (state.HEIGHT - 1)) : (y += 1) {
@@ -49,9 +52,10 @@ pub fn add_guard_stations(alloc: *mem.Allocator) void {
                 state.dungeon[y + 1][x + 1].type,
             };
 
-            for (patterns) |pattern| {
+            for (patterns) |pattern, index| {
                 if (std.mem.eql(TileType, &neighbors, &pattern)) {
-                    _add_guard_station(y, x, alloc);
+                    const d = pattern_directions[index];
+                    _add_guard_station(y, x, d, alloc);
                     break;
                 }
             }

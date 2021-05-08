@@ -268,6 +268,8 @@ pub const Mob = struct {
     allegiance: Allegiance,
     memory: CoordCharMap,
     fov: CoordArrayList,
+    facing: Direction,
+    facing_wide: bool,
     vision: usize,
     coord: Coord,
 
@@ -355,8 +357,13 @@ pub const Mob = struct {
     pub fn cansee(self: *const Mob, coord: Coord) bool {
         assert(!self.is_dead);
 
+        // Can't see stuff beyond your range of vision
         if (self.coord.distance(coord) > self.vision)
             return false;
+
+        // Can always see yourself
+        if (self.coord.eq(coord))
+            return true;
 
         for (self.fov.items) |fovcoord| {
             if (coord.eq(fovcoord))
@@ -391,6 +398,8 @@ pub const GuardTemplate = Mob{
     .allegiance = .Sauron,
     .fov = undefined,
     .memory = undefined,
+    .facing = .North,
+    .facing_wide = false,
     .vision = 4,
     .coord = undefined,
 
@@ -416,7 +425,9 @@ pub const ElfTemplate = Mob{
     .allegiance = .Illuvatar,
     .fov = undefined,
     .memory = undefined,
-    .vision = 25,
+    .facing = .North,
+    .facing_wide = false,
+    .vision = 20,
     .coord = undefined,
 
     .is_dead = false,
