@@ -16,7 +16,9 @@ fn _find_coord(coord: Coord, array: *CoordArrayList) usize {
 
 pub fn dummyWork(_: *Mob, __: *mem.Allocator) void {}
 
-pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn guardWork(_mob: *Mob, alloc: *mem.Allocator) void {
+    var mob = _mob;
+    assert(state.dungeon[mob.coord.y][mob.coord.x].mob != null);
     assert(mob.occupation.phase == .Work);
 
     var from = mob.occupation.work_area.items[0];
@@ -43,8 +45,33 @@ pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
 
     const prev_facing = mob.facing;
 
-    // TODO: assert that the mob_move() func returns true
-    _ = state.mob_move(mob.coord, direction);
+    if (state.mob_move(mob.coord, direction)) |newptr|
+        mob = newptr;
 
-    if (prev_facing == mob.facing or prev_facing.is_adjacent(mob.facing)) {}
+    var newdirection: Direction = switch (mob.facing) {
+        .North => .NorthEast,
+        .East => .SouthEast,
+        .South => .SouthWest,
+        .West => .NorthWest,
+        .NorthEast => .East,
+        .SouthEast => .South,
+        .SouthWest => .West,
+        .NorthWest => .North,
+    };
+
+    if (prev_facing == newdirection) {
+        // TODO: factor into Direction.oppositeAdjacent
+        newdirection = switch (newdirection) {
+            .North => .NorthWest,
+            .East => .NorthEast,
+            .South => .SouthEast,
+            .West => .SouthWest,
+            .NorthEast => .North,
+            .SouthEast => .East,
+            .SouthWest => .South,
+            .NorthWest => .West,
+        };
+    }
+
+    _ = state.mob_gaze(mob.coord, newdirection);
 }

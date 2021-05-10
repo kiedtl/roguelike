@@ -135,34 +135,9 @@ pub fn draw() void {
     var cursorx: isize = 0;
 
     // Create a list of all mobs on the map so that we can calculate what tiles
-    // are in the FOV of any mob. Use all mobs on the map, not just the ones
-    // that will be displayed.
-    var moblist = std.ArrayList(*Mob).init(&fba.allocator);
-    {
-        var iy = starty;
-        while (iy < endy) : (iy += 1) {
-            var ix: isize = startx;
-            while (ix < endx) : (ix += 1) {
-                if (iy < 0 or ix < 0 or iy >= state.HEIGHT or ix >= state.WIDTH) {
-                    continue;
-                }
-
-                const u_x: usize = @intCast(usize, ix);
-                const u_y: usize = @intCast(usize, iy);
-                const coord = Coord.new(u_x, u_y);
-
-                if (coord.eq(state.player))
-                    continue;
-
-                if (state.dungeon[u_y][u_x].mob) |*mob| {
-                    if (!player.cansee(coord))
-                        continue;
-
-                    moblist.append(mob) catch unreachable;
-                }
-            }
-        }
-    }
+    // are in the FOV of any mob. Use only mobs that the player can see, the player
+    // shouldn't know what's in the FOV of an invisible mob!
+    var moblist = state.createMobList(false, true, &fba.allocator);
 
     var y = starty;
     while (y < endy and cursory < @intCast(usize, maxy)) : ({

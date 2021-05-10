@@ -23,6 +23,30 @@ pub fn is_walkable(coord: Coord) bool {
     return true;
 }
 
+pub fn createMobList(include_player: bool, only_if_infov: bool, alloc: *mem.Allocator) MobArrayList {
+    const playermob = dungeon[player.y][player.x].mob.?;
+
+    var moblist = std.ArrayList(*Mob).init(alloc);
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            const coord = Coord.new(x, y);
+
+            if (!include_player and coord.eq(player))
+                continue;
+
+            if (dungeon[y][x].mob) |*mob| {
+                if (only_if_infov and !playermob.cansee(coord))
+                    continue;
+
+                moblist.append(mob) catch unreachable;
+            }
+        }
+    }
+    return moblist;
+}
+
 // XXX: duplicate of ai._find_coord (private func)
 fn _find_coord(coord: Coord, array: *CoordArrayList) usize {
     for (array.items) |item, index| {
@@ -68,7 +92,6 @@ fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
                 mob.occupation.phase = .SawHostile;
                 mob.occupation.target = hostile;
                 mob.occupation.target_path = path;
-                //return; // XXX: should we return? it gives the player another turn to run
             }
         }
     }
@@ -102,28 +125,39 @@ fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
 pub fn tick(alloc: *mem.Allocator) void {
     ticks += 1;
 
-    var y: usize = 0;
-    while (y < HEIGHT) : (y += 1) {
-        var x: usize = 0;
-        while (x < WIDTH) : (x += 1) {
-            if (dungeon[y][x].mob) |*mob| {
-                if (mob.is_dead) {
-                    continue;
-                } else if (mob.should_be_dead()) {
-                    mob.kill();
-                    continue;
-                }
+    const moblist = createMobList(true, false, alloc);
+    defer moblist.deinit();
 
-                mob.tick_pain();
-                _update_fov(mob);
-
-                if (!Coord.new(x, y).eq(player)) {
-                    _mob_occupation_tick(mob, alloc);
-                }
-
-                _update_fov(mob);
-            }
+    for (moblist.items) |mob| {
+        if (mob.is_dead) {
+            continue;
+        } else if (mob.should_be_dead()) {
+            mob.kill();
+            continue;
         }
+
+        mob.tick_pain();
+        _update_fov(mob);
+
+        if (!mob.coord.eq(player)) {
+            _mob_occupation_tick(mob, alloc);
+        }
+
+        // Be careful here, the mob pointer will be invalid if the mob
+        // moves during the call to _mob_occupation_tick.
+    }
+
+    const newmoblist = createMobList(true, false, alloc);
+    defer newmoblist.deinit();
+
+    for (newmoblist.items) |mob| {
+        if (mob.is_dead) {
+            continue;
+        } else if (mob.should_be_dead()) {
+            mob.kill();
+            continue;
+        }
+        _update_fov(mob);
     }
 }
 
@@ -161,7 +195,7 @@ pub fn reset_marks() void {
 ///         | false: return false.
 ///     | false: Move onto the tile and return true.
 ///
-pub fn mob_move(coord: Coord, direction: Direction) bool {
+pub fn mob_move(coord: Coord, direction: Direction) ?*Mob {
     const mob = &dungeon[coord.y][coord.x].mob.?;
 
     // Face in that direction no matter whether we end up moving or no
@@ -169,33 +203,34 @@ pub fn mob_move(coord: Coord, direction: Direction) bool {
 
     var dest = coord;
     if (!dest.move(direction, Coord.new(WIDTH, HEIGHT))) {
-        return false;
+        return null;
     }
 
     if (dungeon[dest.y][dest.x].type == .Wall) {
-        return false;
+        return null;
     }
 
     if (dungeon[dest.y][dest.x].mob) |*othermob| {
-        // XXX: add is_mob_hostile method that deals with all the nuances (eg
+        // TODO: add is_mob_hostile method that deals with all the nuances (eg
         // .NoneGood should not be hostile to .Illuvatar, but .NoneEvil should
         // be hostile to .Sauron)
         if (othermob.allegiance != mob.allegiance and !othermob.is_dead) {
             mob.fight(othermob);
+            return mob;
         } else {
             // TODO: implement swapping when !othermob.is_dead
-            return false;
+            return null;
         }
-    } else {
-        dungeon[dest.y][dest.x].mob = dungeon[coord.y][coord.x].mob;
-        dungeon[coord.y][coord.x].mob = null;
-
-        if (coord.eq(player))
-            player = dest;
     }
 
+    dungeon[dest.y][dest.x].mob = dungeon[coord.y][coord.x].mob.?;
     dungeon[dest.y][dest.x].mob.?.coord = dest;
-    return true;
+    dungeon[coord.y][coord.x].mob = null;
+
+    if (coord.eq(player))
+        player = dest;
+
+    return &dungeon[dest.y][dest.x].mob.?;
 }
 
 pub fn mob_gaze(coord: Coord, direction: Direction) bool {

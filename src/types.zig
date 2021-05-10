@@ -461,6 +461,8 @@ pub const Mob = struct {
     }
 };
 
+pub const MobArrayList = std.ArrayList(*Mob);
+
 pub const TileType = enum {
     Wall = 0,
     Floor = 1,
