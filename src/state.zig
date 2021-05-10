@@ -68,7 +68,7 @@ fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
                 mob.occupation.phase = .SawHostile;
                 mob.occupation.target = hostile;
                 mob.occupation.target_path = path;
-                return; // XXX: should we return? it gives the player another turn to run
+                //return; // XXX: should we return? it gives the player another turn to run
             }
         }
     }
@@ -79,7 +79,8 @@ fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
     }
 
     if (mob.occupation.phase == .SawHostile and mob.occupation.is_combative) {
-        if (mob.occupation.target_path.?.items.len == 0 or dungeon[mob.occupation.target.?.y][mob.occupation.target.?.x].mob == null) {
+        const target = &dungeon[mob.occupation.target.?.y][mob.occupation.target.?.x];
+        if (mob.occupation.target_path.?.items.len == 0 or target.mob == null) {
             mob.occupation.target = null;
             if (mob.occupation.target_path) |list|
                 list.deinit();
@@ -88,8 +89,12 @@ fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
             return;
         }
 
-        const direction = mob.occupation.target_path.?.pop();
         // TODO: assert that the mob_move() func returns true
+
+        const direction = if (mob.occupation.target_path.?.items.len == 1 and target.mob != null)
+            mob.occupation.target_path.?.items[0]
+        else
+            mob.occupation.target_path.?.pop();
         _ = mob_move(mob.coord, direction);
     }
 }
