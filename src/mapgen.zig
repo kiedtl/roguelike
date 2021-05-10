@@ -8,8 +8,9 @@ usingnamespace @import("types.zig");
 
 fn _add_guard_station(stationy: usize, stationx: usize, d: Direction, alloc: *mem.Allocator) void {
     var guard = GuardTemplate;
-    guard.occupation.Guard.patrol_start = Coord.new(stationy, stationx);
-    guard.occupation.Guard.patrol_end = Coord.new(stationy, stationx);
+    guard.occupation.work_area = CoordArrayList.init(alloc);
+    guard.occupation.work_area.append(Coord.new(stationx, stationy)) catch unreachable;
+    guard.occupation.work_area.append(Coord.new(stationx, stationy)) catch unreachable;
     guard.fov = CoordArrayList.init(alloc);
     guard.memory = CoordCharMap.init(alloc);
     guard.coord = Coord.new(stationx, stationy);
@@ -67,12 +68,22 @@ pub fn add_player(alloc: *mem.Allocator) void {
     state.player = Coord.new(state.WIDTH / 2, state.HEIGHT / 2);
 
     var player = ElfTemplate;
-    //player.occupation.Slave.prison_start = Coord.new(stationy, stationx);
-    //player.occupation.Slave.prison_end = Coord.new(stationy, stationx);
+    player.occupation.work_area = CoordArrayList.init(alloc);
     player.fov = CoordArrayList.init(alloc);
     player.memory = CoordCharMap.init(alloc);
     player.coord = state.player;
     state.dungeon[state.player.y][state.player.x].mob = player;
+
+    // FIXME: remove
+    var guard = GuardTemplate;
+    guard.occupation.work_area = CoordArrayList.init(alloc);
+    guard.occupation.work_area.append(Coord.new(state.player.x + 0, state.player.y - 6)) catch unreachable;
+    guard.occupation.work_area.append(Coord.new(state.player.x + 5, state.player.y - 6)) catch unreachable;
+    guard.fov = CoordArrayList.init(alloc);
+    guard.memory = CoordCharMap.init(alloc);
+    guard.coord = Coord.new(state.player.x, state.player.y - 6);
+    guard.facing = .East;
+    state.dungeon[state.player.y - 6][state.player.x].mob = guard;
 }
 
 pub fn drunken_walk() void {

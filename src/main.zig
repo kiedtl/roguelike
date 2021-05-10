@@ -16,12 +16,17 @@ pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) nore
 }
 
 // zig fmt: off
-pub fn handle_key(ev: termbox.tb_event) bool {
+pub fn handle_key(ev: termbox.tb_event, alloc: *std.mem.Allocator) bool {
     if (ev.key != 0) {
         if (ev.key == termbox.TB_KEY_CTRL_C)
             return true;
     } else if (ev.ch != 0) {
         const did_anything = switch (ev.ch) {
+            '.' => true,
+            'Y' => state.mob_gaze(state.player, .NorthWest),
+            'U' => state.mob_gaze(state.player, .NorthEast),
+            'B' => state.mob_gaze(state.player, .SouthWest),
+            'N' => state.mob_gaze(state.player, .SouthEast),
             'H' => state.mob_gaze(state.player, .West),
             'J' => state.mob_gaze(state.player, .South),
             'K' => state.mob_gaze(state.player, .North),
@@ -30,11 +35,15 @@ pub fn handle_key(ev: termbox.tb_event) bool {
             'j' => state.mob_move(state.player, .South),
             'k' => state.mob_move(state.player, .North),
             'l' => state.mob_move(state.player, .East),
+            'y' => state.mob_move(state.player, .NorthWest),
+            'u' => state.mob_move(state.player, .NorthEast),
+            'b' => state.mob_move(state.player, .SouthWest),
+            'n' => state.mob_move(state.player, .SouthEast),
             else => false,
         };
 
         if (did_anything) {
-            state.tick();
+            state.tick(alloc);
             display.draw();
         }
     } else
@@ -51,7 +60,6 @@ pub fn main() anyerror!void {
         error.UnsupportedTerminal => @panic("Unsupported terminal"),
         error.PipeTrapFailed => @panic("Internal termbox error"),
     }
-    defer display.deinit() catch unreachable;
 
     var gpa = std.heap.GeneralPurposeAllocator(.{
         // Probably should enable this later on to track memory usage, if
@@ -65,15 +73,13 @@ pub fn main() anyerror!void {
 
         .never_unmap = false,
     }){};
-    defer std.debug.assert(!gpa.deinit());
 
     rng.init();
     mapgen.drunken_walk();
     mapgen.add_guard_stations(&gpa.allocator);
     mapgen.add_player(&gpa.allocator);
 
-    state.tick();
-    defer state.freeall();
+    state.tick(&gpa.allocator);
 
     display.draw();
 
@@ -87,11 +93,19 @@ pub fn main() anyerror!void {
 
         switch (@intCast(usize, t)) {
             termbox.TB_EVENT_KEY => {
-                if (handle_key(ev))
+                if (handle_key(ev, &gpa.allocator))
                     break;
             },
             termbox.TB_EVENT_RESIZE => display.draw(),
             else => {},
         }
+
+        if (state.dungeon[state.player.y][state.player.x].mob.?.is_dead) {
+            @panic("You lost, buddy");
+        }
     }
+
+    display.deinit() catch unreachable;
+    state.freeall();
+    _ = gpa.deinit();
 }

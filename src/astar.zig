@@ -1,4 +1,5 @@
 const std = @import("std");
+const mem = std.mem;
 const assert = std.debug.assert;
 
 usingnamespace @import("types.zig");
@@ -17,12 +18,7 @@ const Node = struct {
 
 const NodeArrayList = std.ArrayList(Node);
 
-// TODO: make this function a parameter to astar::search()
-fn coord_is_walkable(coord: Coord) bool {
-    if (state.dungeon[coord.y][coord.x].type == .Wall)
-        return false;
-    if (state.dungeon[coord.y][coord.x].mob) |_|
-        return false;
+fn dummy_is_walkable(_: Coord) bool {
     return true;
 }
 
@@ -33,8 +29,8 @@ fn coord_in_list(coord: Coord, list: *NodeArrayList) ?usize {
     return null;
 }
 
-pub fn path(start: Coord, goal: Coord, limit: Coord, alloc: *std.mem.Allocator) ?CoordArrayList {
-    if (!coord_is_walkable(goal))
+pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) bool, alloc: *std.mem.Allocator) ?DirectionArrayList {
+    if (!is_walkable(goal))
         return null;
 
     var open_list = NodeArrayList.init(alloc);
@@ -64,13 +60,28 @@ pub fn path(start: Coord, goal: Coord, limit: Coord, alloc: *std.mem.Allocator) 
         closed_list.append(current_node) catch unreachable;
 
         if (current_node.coord.eq(goal)) {
-            var list = CoordArrayList.init(alloc);
-            var current = current_node;
-            while (true) {
-                list.append(current.coord) catch unreachable;
+            var list = DirectionArrayList.init(alloc);
+            // var current = current_node;
+            // while (true) {
+            //     list.append(current.coord) catch unreachable;
 
-                if (current.parent) |parent| {
-                    current = if (coord_in_list(parent, &open_list)) |i|
+            //     if (current.parent) |parent| {
+            //         current = if (coord_in_list(parent, &open_list)) |i|
+            //             open_list.items[i]
+            //         else if (coord_in_list(parent, &closed_list)) |i|
+            //             closed_list.items[i]
+            //         else
+            //             unreachable;
+            //     } else {
+            //         break;
+            //     }
+            // }
+            var from: Node = undefined;
+            var to = current_node;
+            while (true) {
+                if (to.parent) |parent| {
+                    from = to;
+                    to = if (coord_in_list(parent, &open_list)) |i|
                         open_list.items[i]
                     else if (coord_in_list(parent, &closed_list)) |i|
                         closed_list.items[i]
@@ -79,19 +90,20 @@ pub fn path(start: Coord, goal: Coord, limit: Coord, alloc: *std.mem.Allocator) 
                 } else {
                     break;
                 }
+
+                const d = Direction.from_coords(from.coord, to.coord) catch unreachable;
+                list.append(d.opposite()) catch unreachable;
             }
-            std.mem.reverse(Coord, list.items);
+            //std.mem.reverse(Coord, list.items);
             return list;
         }
 
         const neighbors = DIRECTIONS;
         for (neighbors) |neighbor| {
             var coord = current_node.coord;
-            if (!coord.move(neighbor, limit))
+            if (!coord.move(neighbor, limit) or !is_walkable(coord)) {
                 continue;
-
-            if (!coord_is_walkable(coord))
-                continue;
+            }
 
             if (coord_in_list(coord, &closed_list)) |_|
                 continue;
@@ -114,4 +126,24 @@ pub fn path(start: Coord, goal: Coord, limit: Coord, alloc: *std.mem.Allocator) 
     }
 
     return null;
+}
+
+const expectEqSlice = std.testing.expectEqualSlices;
+
+fn _ensure(goal: Coord, expect: []const Direction, al: *mem.Allocator) void {
+    const start = Coord.new(0, 0);
+    const limit = Coord.new(9, 9);
+
+    const res = path(start, goal, limit, dummy_is_walkable, al).?;
+    expectEqSlice(Direction, res.items, expect);
+    res.deinit();
+}
+
+test "basic pathfinding" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer std.debug.assert(!gpa.deinit());
+    const al = &gpa.allocator;
+
+    _ensure(Coord.new(1, 0), &[_]Direction{.East}, al);
+    _ensure(Coord.new(2, 3), &[_]Direction{ .SouthEast, .SouthEast, .South }, al);
 }

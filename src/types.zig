@@ -4,6 +4,7 @@ const mem = std.mem;
 const assert = std.debug.assert;
 
 const rng = @import("rng.zig");
+const ai = @import("ai.zig");
 
 pub const Direction = enum {
     North,
@@ -16,6 +17,50 @@ pub const Direction = enum {
     SouthWest,
 
     const Self = @This();
+
+    pub fn from_coords(base: Coord, neighbor: Coord) !Self {
+        const dx = @intCast(isize, neighbor.x) - @intCast(isize, base.x);
+        const dy = @intCast(isize, neighbor.y) - @intCast(isize, base.y);
+
+        if (dx == 0 and dy == -1) {
+            return .North;
+        } else if (dx == 0 and dy == 1) {
+            return .South;
+        } else if (dx == 1 and dy == 0) {
+            return .East;
+        } else if (dx == -1 and dy == 0) {
+            return .West;
+        } else if (dx == 1 and dy == -1) {
+            return .NorthEast;
+        } else if (dx == -1 and dy == -1) {
+            return .NorthWest;
+        } else if (dx == 1 and dy == 1) {
+            return .SouthEast;
+        } else if (dx == -1 and dy == 1) {
+            return .SouthWest;
+        } else {
+            return error.NotNeighbor;
+        }
+    }
+
+    pub fn is_adjacent(base: Self, other: Self) bool {
+        const adjacent: [2]Direction = switch (base) {
+            .North => .{ .NorthWest, .NorthEast },
+            .East => .{ .NorthEast, .SouthEast },
+            .South => .{ .SouthWest, .SouthEast },
+            .West => .{ .NorthWest, .SouthWest },
+            .NorthWest => .{ .West, .North },
+            .NorthEast => .{ .East, .North },
+            .SouthWest => .{ .South, .West },
+            .SouthEast => .{ .South, .East },
+        };
+
+        for (adjacent) |adj| {
+            if (other == adj)
+                return true;
+        }
+        return false;
+    }
 
     pub fn is_diagonal(self: Self) bool {
         return switch (self) {
@@ -51,6 +96,12 @@ pub const Direction = enum {
         return self.turnleft().opposite();
     }
 };
+
+pub const DirectionArrayList = std.ArrayList(Direction);
+
+test "from_coords" {
+    std.testing.expectEqual(Direction.from_coords(Coord.new(0, 0), Coord.new(1, 0)), .East);
+}
 
 pub const CARDINAL_DIRECTIONS = [_]Direction{ .North, .South, .East, .West };
 pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .NorthWest, .SouthEast, .SouthWest };
@@ -117,13 +168,13 @@ pub const Coord = struct {
             },
         }
 
-        const newx = @intCast(usize, @intCast(isize, self.x) + dx);
-        const newy = @intCast(usize, @intCast(isize, self.y) + dy);
+        const newx = @intCast(isize, self.x) + dx;
+        const newy = @intCast(isize, self.y) + dy;
 
-        if (0 < newx and newx < (limit.x - 1)) {
-            if (0 < newy and newy < (limit.y - 1)) {
-                self.x = newx;
-                self.y = newy;
+        if (newx >= 0 and @intCast(usize, newx) < (limit.x - 1)) {
+            if (newy >= 0 and @intCast(usize, newy) < (limit.y - 1)) {
+                self.x = @intCast(usize, newx);
+                self.y = @intCast(usize, newy);
                 return true;
             }
         }
@@ -227,27 +278,16 @@ pub const Coord = struct {
     }
 };
 
+test "coord.move" {
+    const limit = Coord.new(9, 9);
+
+    var c = Coord.new(0, 0);
+    std.testing.expect(c.move(.East, limit));
+    std.testing.expectEqual(c, Coord.new(1, 0));
+}
+
 pub const CoordCharMap = std.AutoHashMap(Coord, u21);
 pub const CoordArrayList = std.ArrayList(Coord);
-
-pub const Slave = struct {
-    prison_start: Coord,
-    prison_end: Coord,
-};
-
-pub const Guard = struct {
-    patrol_start: Coord,
-    patrol_end: Coord,
-};
-
-pub const OccupationTag = enum {
-    Guard,
-    // Cook,
-    // Miner,
-    // Architect,
-    Slave,
-    // None,
-};
 
 pub const Allegiance = enum {
     Sauron,
@@ -257,9 +297,40 @@ pub const Allegiance = enum {
     NoneGood,
 };
 
-pub const Occupation = union(OccupationTag) {
-    Guard: Guard,
-    Slave: Slave,
+pub const OccupationPhase = enum {
+    Work,
+    SawHostile,
+    // Eat,
+    // Drink,
+    // Flee,
+    // Idle,
+    // GetItem,
+    // SearchItem,
+};
+
+pub const Occupation = struct {
+    // Name of work, intended to be used as a description of what the mob is
+    // doing. Examples: Guard("patrolling"), Smith("forging"), Demon("sulking")
+    work_description: []const u8,
+
+    // The area where the mob should be doing work.
+    work_area: CoordArrayList,
+
+    // work_fn is called on each tick when the mob is doing work.
+    //
+    // We only need to pass the Mob pointer because dungeon is a global variable,
+    // amirite?
+    work_fn: fn (*Mob, *mem.Allocator) void,
+
+    // Is the "work" combative? if so, in "SawHostile" phase the mob should try
+    // to attack the hostile mob; otherwise, it should merely raise the alarm.
+    is_combative: bool,
+
+    // The "target" in any phase.
+    target: ?Coord,
+    target_path: ?DirectionArrayList,
+
+    phase: OccupationPhase,
 };
 
 pub const Mob = struct {
@@ -335,6 +406,7 @@ pub const Mob = struct {
 
     pub fn kill(self: *Mob) void {
         self.fov.deinit();
+        self.occupation.work_area.deinit();
         self.memory.clearAndFree();
         self.pain = 0.0;
         self.is_dead = true;
@@ -390,17 +462,20 @@ pub const Tile = struct {
 pub const GuardTemplate = Mob{
     .tile = 'א',
     .occupation = Occupation{
-        .Guard = Guard{
-            .patrol_start = Coord.new(0, 0),
-            .patrol_end = Coord.new(0, 0),
-        },
+        .work_description = "patrolling",
+        .work_area = undefined,
+        .work_fn = ai.guardWork,
+        .is_combative = true,
+        .target = null,
+        .target_path = null,
+        .phase = .Work,
     },
     .allegiance = .Sauron,
     .fov = undefined,
     .memory = undefined,
     .facing = .North,
     .facing_wide = false,
-    .vision = 4,
+    .vision = 5,
     .coord = undefined,
 
     .is_dead = false,
@@ -417,10 +492,13 @@ pub const GuardTemplate = Mob{
 pub const ElfTemplate = Mob{
     .tile = '@',
     .occupation = Occupation{
-        .Slave = Slave{
-            .prison_start = Coord.new(0, 0),
-            .prison_end = Coord.new(0, 0),
-        },
+        .work_description = "meditating",
+        .work_area = undefined,
+        .work_fn = ai.dummyWork,
+        .is_combative = false,
+        .target = null,
+        .target_path = null,
+        .phase = .Work,
     },
     .allegiance = .Illuvatar,
     .fov = undefined,
