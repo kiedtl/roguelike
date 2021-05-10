@@ -117,9 +117,9 @@ pub const tb_cell = extern struct {
     bg: u32,
 };
 
-pub const TB_EVENT_KEY: usize = 1;
-pub const TB_EVENT_RESIZE: usize = 2;
-pub const TB_EVENT_MOUSE: usize = 3;
+pub const TB_EVENT_KEY: isize = 1;
+pub const TB_EVENT_RESIZE: isize = 2;
+pub const TB_EVENT_MOUSE: isize = 3;
 
 // An event, single interaction from the user. The 'mod' and 'ch' fields are
 // valid if 'type' is TB_EVENT_KEY. The 'w' and 'h' fields are valid if 'type'

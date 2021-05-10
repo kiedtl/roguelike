@@ -15,44 +15,6 @@ pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) nore
     std.builtin.default_panic(msg, error_return_trace);
 }
 
-// zig fmt: off
-pub fn handle_key(ev: termbox.tb_event, alloc: *std.mem.Allocator) bool {
-    if (ev.key != 0) {
-        if (ev.key == termbox.TB_KEY_CTRL_C)
-            return true;
-    } else if (ev.ch != 0) {
-        const did_anything = switch (ev.ch) {
-            '.' => true,
-            'Y' => state.mob_gaze(state.player, .NorthWest),
-            'U' => state.mob_gaze(state.player, .NorthEast),
-            'B' => state.mob_gaze(state.player, .SouthWest),
-            'N' => state.mob_gaze(state.player, .SouthEast),
-            'H' => state.mob_gaze(state.player, .West),
-            'J' => state.mob_gaze(state.player, .South),
-            'K' => state.mob_gaze(state.player, .North),
-            'L' => state.mob_gaze(state.player, .East),
-            'h' => state.mob_move(state.player, .West),
-            'j' => state.mob_move(state.player, .South),
-            'k' => state.mob_move(state.player, .North),
-            'l' => state.mob_move(state.player, .East),
-            'y' => state.mob_move(state.player, .NorthWest),
-            'u' => state.mob_move(state.player, .NorthEast),
-            'b' => state.mob_move(state.player, .SouthWest),
-            'n' => state.mob_move(state.player, .SouthEast),
-            else => false,
-        };
-
-        if (did_anything) {
-            state.tick(alloc);
-            display.draw();
-        }
-    } else
-        unreachable;
-
-    return false;
-}
-// zig fmt: on
-
 pub fn main() anyerror!void {
     if (display.init()) {} else |err| switch (err) {
         error.AlreadyInitialized => unreachable,
@@ -91,17 +53,43 @@ pub fn main() anyerror!void {
             @panic("Fatal termbox error");
         }
 
-        switch (@intCast(usize, t)) {
-            termbox.TB_EVENT_KEY => {
-                if (handle_key(ev, &gpa.allocator))
+        if (t == termbox.TB_EVENT_RESIZE) {
+            display.draw();
+        } else if (t == termbox.TB_EVENT_KEY) {
+            if (ev.key != 0) {
+                if (ev.key == termbox.TB_KEY_CTRL_C)
                     break;
-            },
-            termbox.TB_EVENT_RESIZE => display.draw(),
-            else => {},
-        }
+            } else if (ev.ch != 0) {
+                const did_anything = switch (ev.ch) {
+                    '.' => true,
+                    'Y' => state.mob_gaze(state.player, .NorthWest),
+                    'U' => state.mob_gaze(state.player, .NorthEast),
+                    'B' => state.mob_gaze(state.player, .SouthWest),
+                    'N' => state.mob_gaze(state.player, .SouthEast),
+                    'H' => state.mob_gaze(state.player, .West),
+                    'J' => state.mob_gaze(state.player, .South),
+                    'K' => state.mob_gaze(state.player, .North),
+                    'L' => state.mob_gaze(state.player, .East),
+                    'h' => state.mob_move(state.player, .West),
+                    'j' => state.mob_move(state.player, .South),
+                    'k' => state.mob_move(state.player, .North),
+                    'l' => state.mob_move(state.player, .East),
+                    'y' => state.mob_move(state.player, .NorthWest),
+                    'u' => state.mob_move(state.player, .NorthEast),
+                    'b' => state.mob_move(state.player, .SouthWest),
+                    'n' => state.mob_move(state.player, .SouthEast),
+                    else => false,
+                };
 
-        if (state.dungeon[state.player.y][state.player.x].mob.?.is_dead) {
-            @panic("You lost, buddy");
+                if (did_anything) {
+                    state.tick(&gpa.allocator);
+                    if (state.dungeon[state.player.y][state.player.x].mob.?.is_dead) {
+                        @panic("You died...");
+                    } else {
+                        display.draw();
+                    }
+                }
+            } else unreachable;
         }
     }
 
