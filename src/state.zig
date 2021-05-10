@@ -47,20 +47,17 @@ pub fn createMobList(include_player: bool, only_if_infov: bool, alloc: *mem.Allo
     return moblist;
 }
 
-// XXX: duplicate of ai._find_coord (private func)
-fn _find_coord(coord: Coord, array: *CoordArrayList) usize {
-    for (array.items) |item, index| {
-        if (item.eq(coord))
-            return index;
-    }
-    unreachable;
-}
-
 fn _update_fov(mob: *Mob) void {
-    const apparent_vision = if (mob.facing_wide) mob.vision / 2 else mob.vision;
-    const octants = fov.octants(mob.facing, mob.facing_wide);
     mob.fov.shrinkRetainingCapacity(0);
-    fov.shadowcast(mob.coord, octants, mob.vision, mapgeometry, &mob.fov);
+    const apparent_vision = if (mob.facing_wide) mob.vision / 2 else mob.vision;
+
+    if (mob.coord.eq(player)) {
+        for (CARDINAL_DIRECTIONS) |d|
+            fov.shadowcast(player, fov.octants(d, true), mob.vision, mapgeometry, &mob.fov);
+    } else {
+        const octants = fov.octants(mob.facing, mob.facing_wide);
+        fov.shadowcast(mob.coord, octants, apparent_vision, mapgeometry, &mob.fov);
+    }
 
     for (mob.fov.items) |fc| {
         var tile: u21 = if (dungeon[fc.y][fc.x].type == .Wall) '▓' else ' ';

@@ -62,14 +62,6 @@ pub fn main() anyerror!void {
             } else if (ev.ch != 0) {
                 const did_anything = switch (ev.ch) {
                     '.' => true,
-                    'Y' => state.mob_gaze(state.player, .NorthWest),
-                    'U' => state.mob_gaze(state.player, .NorthEast),
-                    'B' => state.mob_gaze(state.player, .SouthWest),
-                    'N' => state.mob_gaze(state.player, .SouthEast),
-                    'H' => state.mob_gaze(state.player, .West),
-                    'J' => state.mob_gaze(state.player, .South),
-                    'K' => state.mob_gaze(state.player, .North),
-                    'L' => state.mob_gaze(state.player, .East),
                     'h' => state.mob_move(state.player, .West) != null,
                     'j' => state.mob_move(state.player, .South) != null,
                     'k' => state.mob_move(state.player, .North) != null,
