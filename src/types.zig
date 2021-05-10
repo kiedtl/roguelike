@@ -334,6 +334,7 @@ pub const Occupation = struct {
 };
 
 pub const Mob = struct {
+    species: []const u8,
     tile: u21,
     occupation: Occupation,
     allegiance: Allegiance,
@@ -444,6 +445,20 @@ pub const Mob = struct {
 
         return false;
     }
+
+    // What's the monster doing right now?
+    pub fn activity_description(self: *const Mob) []const u8 {
+        var res = switch (self.occupation.phase) {
+            .Work => self.occupation.work_description,
+            .SawHostile => if (self.occupation.is_combative) "hunting" else "alarmed",
+        };
+
+        if (self.is_dead) {
+            res = "dead";
+        }
+
+        return res;
+    }
 };
 
 pub const TileType = enum {
@@ -460,6 +475,7 @@ pub const Tile = struct {
 // ---------- Mob templates ----------
 
 pub const GuardTemplate = Mob{
+    .species = "Hill Orc",
     .tile = 'א',
     .occupation = Occupation{
         .work_description = "patrolling",
@@ -490,6 +506,7 @@ pub const GuardTemplate = Mob{
 };
 
 pub const ElfTemplate = Mob{
+    .species = "Elf",
     .tile = '@',
     .occupation = Occupation{
         .work_description = "meditating",

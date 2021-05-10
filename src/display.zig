@@ -33,7 +33,19 @@ pub fn deinit() !void {
     is_tb_inited = false;
 }
 
-fn _draw_string(_x: isize, _y: isize, bg: u32, fg: u32, str: []const u8) !isize {
+fn _clear_line(from: isize, to: isize, y: isize) void {
+    var x = from;
+    while (x < to) : (x += 1)
+        termbox.tb_change_cell(x, y, ' ', 0xffffff, 0);
+}
+
+fn _draw_string(_x: isize, _y: isize, bg: u32, fg: u32, comptime format: []const u8, args: anytype) !isize {
+    var buf: [128]u8 = undefined;
+    for (buf) |_, i| buf[i] = 0;
+    var fbs = std.io.fixedBufferStream(&buf);
+    try std.fmt.format(fbs.writer(), format, args);
+    const str = fbs.getWritten();
+
     var x = _x;
     var y = _y;
 
@@ -54,23 +66,41 @@ fn _draw_string(_x: isize, _y: isize, bg: u32, fg: u32, str: []const u8) !isize 
     return y + 1;
 }
 
+fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, description: []const u8, bg: u32, fg: u32) void {
+    _ = _draw_string(startx, y, bg, 0, "{s}", .{description}) catch unreachable;
+
+    var x = startx + @intCast(isize, description.len) + 1;
+    const percent = (current * 100) / max;
+
+    if (percent == 0)
+        return;
+
+    const bar = @divTrunc((endx - x - 1) * @intCast(isize, percent), 100);
+    const bar_end = x + bar;
+
+    while (x < bar_end) : (x += 1)
+        termbox.tb_change_cell(x, y, ' ', fg, bg);
+}
+
 fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: isize, starty: isize, endx: isize, endy: isize) void {
     var y = starty;
 
-    y = _draw_string(startx, y, 0xffffff, 0, "@: You") catch unreachable;
+    y = _draw_string(startx, y, 0xffffff, 0, "@: You", .{}) catch unreachable;
 
-    _ = _draw_string(startx, y, 0xffffff, 0, "HP") catch unreachable;
-    {
-        var x = startx + 3;
-        const HP_percent = (player.HP * 100) / player.max_HP;
-        const HP_bar = @divTrunc((endx - x - 1) * 100, @intCast(isize, HP_percent));
-        const HP_bar_end = x + HP_bar;
+    _clear_line(startx, endx, y);
+    _draw_bar(y, startx, endx, player.HP, player.max_HP, "HP", 0xffffff, 0);
+    y += 2;
 
-        while (x < HP_bar_end) : (x += 1) {
-            termbox.tb_change_cell(x, y, ' ', 0, 0xffffff);
-        }
+    for (moblist.items) |mob| {
+        _clear_line(startx, endx, y);
+        _clear_line(startx, endx, y + 1);
+
+        var tile: [4]u8 = undefined;
+        _ = std.unicode.utf8Encode(mob.tile, &tile) catch unreachable;
+        y = _draw_string(startx, y, 0xffffff, 0, "{}: {} ({})", .{ 8, mob.species, mob.activity_description() }) catch unreachable;
+        _draw_bar(y, startx, endx, mob.HP, mob.max_HP, "HP", 0xffffff, 0);
+        y += 2;
     }
-    y += 1;
 }
 
 fn _mobs_can_see(moblist: *const std.ArrayList(*Mob), coord: Coord) bool {
