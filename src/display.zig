@@ -69,7 +69,7 @@ fn _draw_string(_x: isize, _y: isize, bg: u32, fg: u32, comptime format: []const
 }
 
 fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, description: []const u8, bg: u32, fg: u32) void {
-    _ = _draw_string(startx, y, bg, 0, "{s}", .{description}) catch unreachable;
+    _ = _draw_string(startx, y, 0xffffff, 0, "{s}", .{description}) catch unreachable;
 
     var x = startx + @intCast(isize, description.len) + 1;
     const percent = (current * 100) / max;
@@ -91,6 +91,8 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
 
     _clear_line(startx, endx, y);
     _draw_bar(y, startx, endx, player.HP, player.max_HP, "HP", 0xffffff, 0);
+    y += 1;
+    _draw_bar(y, startx, endx, player.noise, 10, "NS", 0x329f32, 0);
     y += 2;
 
     for (moblist.items) |mob| {
