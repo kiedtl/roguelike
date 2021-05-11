@@ -103,11 +103,8 @@ fn _can_see_hostile(mob: *Mob) ?Coord {
 fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
     if (mob.occupation.phase != .SawHostile) {
         if (_can_see_hostile(mob)) |hostile| {
-            if (astar.path(mob.coord, hostile, mapgeometry, is_walkable, alloc)) |path| {
-                mob.occupation.phase = .SawHostile;
-                mob.occupation.target = hostile;
-                mob.occupation.target_path = path;
-            }
+            mob.occupation.phase = .SawHostile;
+            mob.occupation.target = hostile;
         }
     }
 
@@ -117,22 +114,15 @@ fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
     }
 
     if (mob.occupation.phase == .SawHostile and mob.occupation.is_combative) {
-        const target = &dungeon[mob.occupation.target.?.y][mob.occupation.target.?.x];
-        if (mob.occupation.target_path.?.items.len == 0 or target.mob == null) {
+        const target_coord = mob.occupation.target.?;
+        const target = &dungeon[target_coord.y][target_coord.x];
+        if (mob.coord.eq(target_coord) or target.mob == null) {
             mob.occupation.target = null;
-            if (mob.occupation.target_path) |list|
-                list.deinit();
-            mob.occupation.target_path = null;
             mob.occupation.phase = .Work;
             return;
         }
 
-        // TODO: assert that the mob_move() func returns true
-
-        const direction = if (mob.occupation.target_path.?.items.len == 1 and target.mob != null)
-            mob.occupation.target_path.?.items[0]
-        else
-            mob.occupation.target_path.?.pop();
+        const direction = astar.nextDirectionTo(mob.coord, target_coord, mapgeometry, is_walkable).?;
         _ = mob_move(mob.coord, direction);
     }
 }

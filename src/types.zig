@@ -329,7 +329,6 @@ pub const Occupation = struct {
 
     // The "target" in any phase.
     target: ?Coord,
-    target_path: ?DirectionArrayList,
 
     phase: OccupationPhase,
 };
@@ -532,7 +531,6 @@ pub const GuardTemplate = Mob{
         .work_fn = ai.guardWork,
         .is_combative = true,
         .target = null,
-        .target_path = null,
         .phase = .Work,
     },
     .allegiance = .Sauron,
@@ -566,7 +564,6 @@ pub const ElfTemplate = Mob{
         .work_fn = ai.dummyWork,
         .is_combative = false,
         .target = null,
-        .target_path = null,
         .phase = .Work,
     },
     .allegiance = .Illuvatar,

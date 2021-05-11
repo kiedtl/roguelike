@@ -1,6 +1,7 @@
 const std = @import("std");
 
 const rng = @import("rng.zig");
+const astar = @import("astar.zig");
 const mapgen = @import("mapgen.zig");
 const display = @import("display.zig");
 const termbox = @import("termbox.zig");
@@ -36,7 +37,9 @@ pub fn main() anyerror!void {
         .never_unmap = false,
     }){};
 
+    astar.initCache(&gpa.allocator);
     rng.init();
+
     mapgen.drunken_walk();
     mapgen.add_guard_stations(&gpa.allocator);
     mapgen.add_player(&gpa.allocator);
@@ -85,6 +88,7 @@ pub fn main() anyerror!void {
         }
     }
 
+    astar.deinitCache();
     display.deinit() catch unreachable;
     state.freeall();
     _ = gpa.deinit();

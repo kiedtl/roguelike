@@ -91,10 +91,9 @@ pub fn shadowcast(coord: Coord, octs: [8]?usize, radius: usize, limit: Coord, ti
         max_radius = @floatToInt(usize, math.sqrt(@intToFloat(f64, max_radius_x * max_radius_x + max_radius_y * max_radius_y))) + 1;
     }
 
-    const r2 = max_radius * max_radius;
     for (octs) |maybe_oct| {
         if (maybe_oct) |oct| {
-            _cast_light(@intCast(isize, coord.x), @intCast(isize, coord.y), 1, 1.0, 0.0, @intCast(isize, max_radius), @intCast(isize, r2), MULT[0][oct], MULT[1][oct], MULT[2][oct], MULT[3][oct], limit, buf, tile_opacity);
+            _cast_light(@intCast(isize, coord.x), @intCast(isize, coord.y), 1, 1.0, 0.0, @intCast(isize, max_radius), MULT[0][oct], MULT[1][oct], MULT[2][oct], MULT[3][oct], limit, buf, tile_opacity);
         }
     }
 
@@ -103,10 +102,11 @@ pub fn shadowcast(coord: Coord, octs: [8]?usize, radius: usize, limit: Coord, ti
     //buf.append(coord) catch unreachable;
 }
 
-fn _cast_light(cx: isize, cy: isize, row: isize, start_p: f64, end: f64, radius: isize, r2: isize, xx: isize, xy: isize, yx: isize, yy: isize, limit: Coord, buf: *CoordArrayList, tile_opacity: fn (Coord) f64) void {
+fn _cast_light(cx: isize, cy: isize, row: isize, start_p: f64, end: f64, radius: isize, xx: isize, xy: isize, yx: isize, yy: isize, limit: Coord, buf: *CoordArrayList, tile_opacity: fn (Coord) f64) void {
     if (start_p < end) {
         return;
     }
+
     var start = start_p;
     var new_start: f64 = 0.0;
 
@@ -124,35 +124,36 @@ fn _cast_light(cx: isize, cy: isize, row: isize, start_p: f64, end: f64, radius:
             const cur_x = cx + dx * xx + dy * xy;
             const cur_y = cy + dx * yx + dy * yy;
 
-            if (cur_x >= 0 and cur_x < @intCast(isize, limit.x) and cur_y >= 0 and cur_y < @intCast(isize, limit.y)) {
-                //const off = @intCast(usize, cur_x) + @intCast(usize, cur_y) * limit.x;
-                const coord = Coord.new(@intCast(usize, cur_x), @intCast(usize, cur_y));
-                const l_slope = (@intToFloat(f64, dx) - 0.5) / (@intToFloat(f64, dy) + 0.5);
-                const r_slope = (@intToFloat(f64, dx) + 0.5) / (@intToFloat(f64, dy) - 0.5);
+            if (cur_x < 0 or cur_x >= @intCast(isize, limit.x) or cur_y < 0 or cur_y >= @intCast(isize, limit.y)) {
+                continue;
+            }
 
-                if (start < r_slope) {
-                    continue;
-                } else if (end > l_slope) {
-                    break;
-                }
+            const coord = Coord.new(@intCast(usize, cur_x), @intCast(usize, cur_y));
+            const l_slope = (@intToFloat(f64, dx) - 0.5) / (@intToFloat(f64, dy) + 0.5);
+            const r_slope = (@intToFloat(f64, dx) + 0.5) / (@intToFloat(f64, dy) - 0.5);
 
-                if (dx * dx + dy * dy <= r2) {
-                    buf.append(coord) catch unreachable;
-                }
+            if (start < r_slope) {
+                continue;
+            } else if (end > l_slope) {
+                break;
+            }
 
-                if (blocked) {
-                    if (tile_opacity(coord) >= 1.0) {
-                        new_start = r_slope;
-                        continue;
-                    } else {
-                        blocked = false;
-                        start = new_start;
-                    }
-                } else if (tile_opacity(coord) >= 1.0 and j < radius) {
-                    blocked = true;
-                    _cast_light(cx, cy, j + 1, start, l_slope, radius, r2, xx, xy, yx, yy, limit, buf, tile_opacity);
+            if (dx * dx + dy * dy <= @intCast(isize, radius * radius)) {
+                buf.append(coord) catch unreachable;
+            }
+
+            if (blocked) {
+                if (tile_opacity(coord) >= 1.0) {
                     new_start = r_slope;
+                    continue;
+                } else {
+                    blocked = false;
+                    start = new_start;
                 }
+            } else if (tile_opacity(coord) >= 1.0 and j < radius) {
+                blocked = true;
+                _cast_light(cx, cy, j + 1, start, l_slope, radius, xx, xy, yx, yy, limit, buf, tile_opacity);
+                new_start = r_slope;
             }
         }
         if (blocked) {

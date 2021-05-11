@@ -38,10 +38,7 @@ pub fn guardWork(_mob: *Mob, alloc: *mem.Allocator) void {
         to = mob.occupation.work_area.items[1];
     }
 
-    // TODO: cache
-    var path = astar.path(mob.coord, to, state.mapgeometry, state.is_walkable, alloc).?;
-    defer path.deinit();
-    const direction = path.pop();
+    const direction = astar.nextDirectionTo(mob.coord, to, state.mapgeometry, state.is_walkable).?;
 
     const prev_facing = mob.facing;
 

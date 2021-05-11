@@ -5,6 +5,8 @@ const assert = std.debug.assert;
 usingnamespace @import("types.zig");
 const state = @import("state.zig");
 
+const Path = struct { from: Coord, to: Coord };
+
 const Node = struct {
     coord: Coord,
     parent: ?Coord,
@@ -18,15 +20,42 @@ const Node = struct {
 
 const NodeArrayList = std.ArrayList(Node);
 
-fn dummy_is_walkable(_: Coord) bool {
-    return true;
-}
+var cache: std.AutoHashMap(Path, Direction) = undefined;
 
 fn coord_in_list(coord: Coord, list: *NodeArrayList) ?usize {
     for (list.items) |item, index|
         if (coord.eq(item.coord))
             return index;
     return null;
+}
+
+pub fn initCache(a: *mem.Allocator) void {
+    cache = std.AutoHashMap(Path, Direction).init(a);
+}
+
+pub fn deinitCache() void {
+    cache.clearAndFree();
+}
+
+pub fn nextDirectionTo(from: Coord, to: Coord, limit: Coord, is_walkable: fn (Coord) bool) ?Direction {
+    const pathobj = Path{ .from = from, .to = to };
+
+    if (!cache.contains(pathobj)) {
+        // TODO: do some tests and figure out what's the practical limit to memory
+        // usage, and reduce the buffer's size to that.
+        var membuf: [65535]u8 = undefined;
+        var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
+        const directions = path(from, to, limit, is_walkable, &fba.allocator) orelse return null;
+
+        var cur = from;
+        for (directions.items) |direction| {
+            cache.put(Path{ .from = cur, .to = to }, direction) catch unreachable;
+            assert(cur.move(direction, limit));
+        }
+    }
+
+    return cache.get(pathobj).?;
 }
 
 pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) bool, alloc: *std.mem.Allocator) ?DirectionArrayList {
@@ -128,7 +157,14 @@ pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) boo
     return null;
 }
 
+// ------------------------------- tests ------------------------------------
+
 const expectEqSlice = std.testing.expectEqualSlices;
+const expectEq = std.testing.expectEqual;
+
+fn dummy_is_walkable(_: Coord) bool {
+    return true;
+}
 
 fn _ensure(goal: Coord, expect: []const Direction, al: *mem.Allocator) void {
     const start = Coord.new(0, 0);
@@ -136,13 +172,18 @@ fn _ensure(goal: Coord, expect: []const Direction, al: *mem.Allocator) void {
 
     const res = path(start, goal, limit, dummy_is_walkable, al).?;
     expectEqSlice(Direction, res.items, expect);
+    const res2 = nextDirectionTo(start, goal, limit, dummy_is_walkable).?;
+    expectEq(res2, res.items[0]);
     res.deinit();
 }
 
-test "basic pathfinding" {
+test "basic and cached pathfinding" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer std.debug.assert(!gpa.deinit());
     const al = &gpa.allocator;
+
+    initCache(al);
+    defer deinitCache();
 
     _ensure(Coord.new(1, 0), &[_]Direction{.East}, al);
     _ensure(Coord.new(2, 3), &[_]Direction{ .SouthEast, .SouthEast, .South }, al);
