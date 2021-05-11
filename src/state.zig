@@ -148,7 +148,7 @@ fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
                 mob.occupation.phase = .Work;
             } else {
                 mob.facing_wide = true;
-                mob.facing = rng.choose(Direction, &CARDINAL_DIRECTIONS, &[_]usize{ 0, 0, 0, 0 }) catch unreachable;
+                mob.facing = rng.choose(Direction, &CARDINAL_DIRECTIONS, &[_]usize{ 1, 1, 1, 1 }) catch unreachable;
             }
         } else {
             const direction = astar.nextDirectionTo(mob.coord, target_coord, mapgeometry, is_walkable).?;
