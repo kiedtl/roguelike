@@ -16,6 +16,55 @@ pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) nore
     std.builtin.default_panic(msg, error_return_trace);
 }
 
+// Some debugging code. Nothing to see here, move along.
+fn debug_main() anyerror!void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{
+        // Probably should enable this later on to track memory usage, if
+        // allocations become too much
+        .enable_memory_limit = false,
+        .safety = true,
+
+        // Probably would enable this later, as we might want to run the ticks()
+        // on other dungeon levels in another thread
+        .thread_safe = true,
+
+        .never_unmap = false,
+    }){};
+
+    astar.initCache(&gpa.allocator);
+    rng.init();
+
+    mapgen.drunken_walk();
+    mapgen.add_guard_stations(&gpa.allocator);
+    mapgen.add_player(&gpa.allocator);
+
+    const start = Coord.new(63, 32);
+    const end = Coord.new(51, 20);
+
+    // {
+    //     var y: usize = 0;
+    //     while (y < state.HEIGHT) : (y += 1) {
+    //         var x: usize = 0;
+    //         while (x < state.WIDTH) : (x += 1) {
+    //             if (Coord.new(x, y).eq(start)) {
+    //                 std.debug.print("S", .{});
+    //             } else if (Coord.new(x, y).eq(end)) {
+    //                 std.debug.print("E", .{});
+    //             } else {
+    //                 switch (state.dungeon[y][x].type) {
+    //                     .Wall => std.debug.print("#", .{}),
+    //                     .Floor => std.debug.print(".", .{}),
+    //                 }
+    //             }
+    //         }
+    //         std.debug.print("\n", .{});
+    //     }
+    // }
+
+    _ = astar.nextDirectionTo(start, end, state.mapgeometry, state.is_walkable);
+    std.process.exit(0);
+}
+
 pub fn main() anyerror!void {
     if (display.init()) {} else |err| switch (err) {
         error.AlreadyInitialized => unreachable,

@@ -89,6 +89,22 @@ fn _update_fov(mob: *Mob) void {
     fov.shadowcast(mob.coord, all_octants, 25, mapgeometry, tile_sound_opacity, &mob.sound_fov);
 }
 
+fn _can_hear_hostile(mob: *Mob) ?Coord {
+    for (mob.sound_fov.items) |fitem| {
+        if (mob.canHear(fitem)) {
+            const othermob = &dungeon[fitem.y][fitem.x].mob.?;
+            if (mob.isHostileTo(othermob)) {
+                return fitem;
+            } else if ((othermob.noise - mob.hearing) > 20) {
+                // Sounds like one of our friends is having quite a party, let's
+                // go join the fun~
+                return fitem;
+            }
+        }
+    }
+    return null;
+}
+
 fn _can_see_hostile(mob: *Mob) ?Coord {
     for (mob.fov.items) |fitem| {
         if (dungeon[fitem.y][fitem.x].mob) |othermob| {
@@ -105,12 +121,37 @@ fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
         if (_can_see_hostile(mob)) |hostile| {
             mob.occupation.phase = .SawHostile;
             mob.occupation.target = hostile;
+        } else if (_can_hear_hostile(mob)) |dest| {
+            // Let's investigate
+            mob.occupation.phase = .GoTo;
+            mob.occupation.target = dest;
         }
     }
 
     if (mob.occupation.phase == .Work) {
         mob.occupation.work_fn(mob, alloc);
         return;
+    }
+
+    if (mob.occupation.phase == .GoTo) {
+        const target_coord = mob.occupation.target.?;
+
+        if (mob.coord.eq(target_coord)) {
+            // We're here, let's just look around a bit before leaving
+            //
+            // 1 in 8 chance of leaving every turn
+            if (rng.int(u3) == 0) {
+                mob.facing_wide = false;
+                mob.occupation.target = null;
+                mob.occupation.phase = .Work;
+            } else {
+                mob.facing_wide = true;
+                mob.facing = rng.choose(Direction, &CARDINAL_DIRECTIONS, &[_]usize{ 0, 0, 0, 0 }) catch unreachable;
+            }
+        } else {
+            const direction = astar.nextDirectionTo(mob.coord, target_coord, mapgeometry, is_walkable).?;
+            _ = mob_move(mob.coord, direction);
+        }
     }
 
     if (mob.occupation.phase == .SawHostile and mob.occupation.is_combative) {
@@ -217,10 +258,7 @@ pub fn mob_move(coord: Coord, direction: Direction) ?*Mob {
     }
 
     if (dungeon[dest.y][dest.x].mob) |*othermob| {
-        // TODO: add is_mob_hostile method that deals with all the nuances (eg
-        // .NoneGood should not be hostile to .Illuvatar, but .NoneEvil should
-        // be hostile to .Sauron)
-        if (othermob.allegiance != mob.allegiance and !othermob.is_dead) {
+        if (mob.isHostileTo(othermob) and !othermob.is_dead) {
             mob.fight(othermob);
             return mob;
         } else {

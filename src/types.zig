@@ -301,6 +301,11 @@ pub const Allegiance = enum {
 pub const OccupationPhase = enum {
     Work,
     SawHostile,
+
+    // XXX: Should be renamed to "Investigating". But perhaps there's a another
+    // usecase for this phase?
+    GoTo,
+
     // Eat,
     // Drink,
     // Flee,
@@ -431,6 +436,9 @@ pub const Mob = struct {
 
         // saturate on subtraction
         recipient.HP = if ((recipient.HP -% 10) > recipient.HP) 0 else recipient.HP - 5;
+
+        attacker.noise += 15;
+        recipient.noise += 15;
     }
 
     pub fn kill(self: *Mob) void {
@@ -454,6 +462,12 @@ pub const Mob = struct {
 
     pub fn current_pain(self: *const Mob) f64 {
         return self.pain / @intToFloat(f64, self.willpower);
+    }
+
+    pub fn isHostileTo(self: *const Mob, othermob: *const Mob) bool {
+        // TODO: deal with all the nuances (eg .NoneGood should not be hostile
+        // to .Illuvatar, but .NoneEvil should be hostile to .Sauron)
+        return self.allegiance != othermob.allegiance;
     }
 
     pub fn canHear(self: *const Mob, coord: Coord) bool {
@@ -497,6 +511,7 @@ pub const Mob = struct {
         var res = switch (self.occupation.phase) {
             .Work => self.occupation.work_description,
             .SawHostile => if (self.occupation.is_combative) "hunting" else "alarmed",
+            .GoTo => "investigating",
         };
 
         if (self.is_dead) {
