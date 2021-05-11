@@ -86,13 +86,14 @@ fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, d
 
 fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: isize, starty: isize, endx: isize, endy: isize) void {
     var y = starty;
+    while (y < endy) : (y += 1) _clear_line(startx, endx, y);
+    y = starty;
 
     y = _draw_string(startx, y, 0xffffff, 0, "@: You", .{}) catch unreachable;
 
-    _clear_line(startx, endx, y);
     _draw_bar(y, startx, endx, player.HP, player.max_HP, "HP", 0xffffff, 0);
     y += 1;
-    _draw_bar(y, startx, endx, player.noise, 10, "NS", 0x329f32, 0);
+    _draw_bar(y, startx, endx, player.noise, 20, "NS", 0x329f32, 0);
     y += 2;
 
     for (moblist.items) |mob| {
