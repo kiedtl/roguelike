@@ -12,6 +12,7 @@ fn _add_guard_station(stationy: usize, stationx: usize, d: Direction, alloc: *me
     guard.occupation.work_area.append(Coord.new(stationx, stationy)) catch unreachable;
     guard.occupation.work_area.append(Coord.new(stationx, stationy)) catch unreachable;
     guard.fov = CoordArrayList.init(alloc);
+    guard.sound_fov = CoordArrayList.init(alloc);
     guard.memory = CoordCharMap.init(alloc);
     guard.coord = Coord.new(stationx, stationy);
     guard.facing = d;
@@ -70,6 +71,7 @@ pub fn add_player(alloc: *mem.Allocator) void {
     var player = ElfTemplate;
     player.occupation.work_area = CoordArrayList.init(alloc);
     player.fov = CoordArrayList.init(alloc);
+    player.sound_fov = CoordArrayList.init(alloc);
     player.memory = CoordCharMap.init(alloc);
     player.coord = state.player;
     state.dungeon[state.player.y][state.player.x].mob = player;
@@ -80,6 +82,7 @@ pub fn add_player(alloc: *mem.Allocator) void {
     guard.occupation.work_area.append(Coord.new(state.player.x + 0, state.player.y - 6)) catch unreachable;
     guard.occupation.work_area.append(Coord.new(state.player.x + 5, state.player.y - 6)) catch unreachable;
     guard.fov = CoordArrayList.init(alloc);
+    guard.sound_fov = CoordArrayList.init(alloc);
     guard.memory = CoordCharMap.init(alloc);
     guard.coord = Coord.new(state.player.x, state.player.y - 6);
     guard.facing = .East;

@@ -1,3 +1,5 @@
+// TODO: rename this module to 'ui'
+
 const std = @import("std");
 const math = std.math;
 
@@ -163,11 +165,19 @@ pub fn draw() void {
             // if player can't see area, draw a blank/grey tile, depending on
             // what they saw last there
             if (!player.cansee(coord)) {
-                if (player.memory.contains(coord)) {
-                    const tile = @as(u32, player.memory.get(coord) orelse unreachable);
-                    termbox.tb_change_cell(cursorx, cursory, tile, 0x3f3f3f, 0x101010);
+                if (player.canHear(coord)) {
+                    const noise = state.dungeon[coord.y][coord.x].mob.?.noise;
+                    const green = math.clamp((noise - player.hearing) * 30, 20, 255);
+                    const color = @intCast(u32, green << 8);
+                    const bg: u32 = if (player.memory.contains(coord)) 0x101010 else 0;
+                    termbox.tb_change_cell(cursorx, cursory, '!', color, bg);
                 } else {
-                    termbox.tb_change_cell(cursorx, cursory, ' ', 0xffffff, 0);
+                    if (player.memory.contains(coord)) {
+                        const tile = @as(u32, player.memory.get(coord) orelse unreachable);
+                        termbox.tb_change_cell(cursorx, cursory, tile, 0x3f3f3f, 0x101010);
+                    } else {
+                        termbox.tb_change_cell(cursorx, cursory, ' ', 0xffffff, 0);
+                    }
                 }
                 continue;
             }

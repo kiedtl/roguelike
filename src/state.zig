@@ -3,6 +3,7 @@ const mem = std.mem;
 const assert = std.debug.assert;
 
 const astar = @import("astar.zig");
+const rng = @import("rng.zig");
 const fov = @import("fov.zig");
 usingnamespace @import("types.zig");
 
@@ -17,6 +18,19 @@ pub var dungeon = [_][WIDTH]Tile{[_]Tile{Tile{
 pub var player = Coord.new(0, 0);
 pub var ticks: usize = 0;
 
+// STYLE: change to Tile.soundOpacity
+fn tile_sound_opacity(coord: Coord) f64 {
+    const tile = dungeon[coord.y][coord.x];
+    return if (tile.type == .Wall) 0.4 else 0.2;
+}
+
+// STYLE: change to Tile.opacity
+fn tile_opacity(coord: Coord) f64 {
+    const tile = dungeon[coord.y][coord.x];
+    return if (tile.type == .Wall) 1.0 else 0.0;
+}
+
+// STYLE: change to Tile.isWalkable
 pub fn is_walkable(coord: Coord) bool {
     if (dungeon[coord.y][coord.x].type == .Wall)
         return false;
@@ -48,15 +62,16 @@ pub fn createMobList(include_player: bool, only_if_infov: bool, alloc: *mem.Allo
 }
 
 fn _update_fov(mob: *Mob) void {
+    const all_octants = [_]?usize{ 0, 1, 2, 3, 4, 5, 6, 7 };
+
     mob.fov.shrinkRetainingCapacity(0);
     const apparent_vision = if (mob.facing_wide) mob.vision / 2 else mob.vision;
 
     if (mob.coord.eq(player)) {
-        for (CARDINAL_DIRECTIONS) |d|
-            fov.shadowcast(player, fov.octants(d, true), mob.vision, mapgeometry, &mob.fov);
+        fov.shadowcast(player, all_octants, mob.vision, mapgeometry, tile_opacity, &mob.fov);
     } else {
         const octants = fov.octants(mob.facing, mob.facing_wide);
-        fov.shadowcast(mob.coord, octants, apparent_vision, mapgeometry, &mob.fov);
+        fov.shadowcast(mob.coord, octants, apparent_vision, mapgeometry, tile_opacity, &mob.fov);
     }
 
     for (mob.fov.items) |fc| {
@@ -69,6 +84,9 @@ fn _update_fov(mob: *Mob) void {
 
         mob.memory.put(fc, tile) catch unreachable;
     }
+
+    mob.sound_fov.shrinkRetainingCapacity(0);
+    fov.shadowcast(mob.coord, all_octants, 25, mapgeometry, tile_sound_opacity, &mob.sound_fov);
 }
 
 fn _can_see_hostile(mob: *Mob) ?Coord {
@@ -134,6 +152,7 @@ pub fn tick(alloc: *mem.Allocator) void {
         }
 
         mob.tick_pain();
+        mob.tick_noise();
         _update_fov(mob);
 
         if (!mob.coord.eq(player)) {
@@ -222,6 +241,7 @@ pub fn mob_move(coord: Coord, direction: Direction) ?*Mob {
 
     dungeon[dest.y][dest.x].mob = dungeon[coord.y][coord.x].mob.?;
     dungeon[dest.y][dest.x].mob.?.coord = dest;
+    dungeon[dest.y][dest.x].mob.?.noise += rng.int(u4) % 10;
     dungeon[coord.y][coord.x].mob = null;
 
     if (coord.eq(player))

@@ -4,14 +4,9 @@ const math = std.math;
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
-fn tile_opacity(coord: Coord) f64 {
-    const tile = state.dungeon[coord.y][coord.x];
-    return if (tile.type == .Wall) 1.0 else 0.0;
-}
-
 // This was supposed to be a raytracer.
 // I have no idea what it is now.
-pub fn naive(center: Coord, radius: usize, limit: Coord, buf: *CoordArrayList) void {
+pub fn naive(center: Coord, radius: usize, limit: Coord, opacity: fn (Coord) f64, buf: *CoordArrayList) void {
     // TODO: do some tests and figure out what's the practical limit to memory
     // usage, and reduce the buffer's size to that.
     var membuf: [65535]u8 = undefined;
@@ -28,37 +23,37 @@ pub fn naive(center: Coord, radius: usize, limit: Coord, buf: *CoordArrayList) v
                 break;
             }
 
-            cumulative_opacity += tile_opacity(line_coord);
+            cumulative_opacity += opacity(line_coord);
             buf.append(line_coord) catch unreachable;
         }
     }
 }
 
-pub fn octants(d: Direction, wide: bool) [4]?usize {
+pub fn octants(d: Direction, wide: bool) [8]?usize {
     return if (wide) switch (d) {
-        .North => [_]?usize{ 1, 0, 3, 2 },
-        .South => [_]?usize{ 6, 7, 4, 5 },
-        .East => [_]?usize{ 3, 2, 5, 4 },
-        .West => [_]?usize{ 0, 1, 6, 7 },
-        .NorthEast => [_]?usize{ 0, 3, 2, 5 },
-        .NorthWest => [_]?usize{ 3, 0, 1, 6 },
-        .SouthEast => [_]?usize{ 2, 5, 4, 7 },
-        .SouthWest => [_]?usize{ 1, 6, 7, 4 },
+        .North => [_]?usize{ 1, 0, 3, 2, null, null, null, null },
+        .South => [_]?usize{ 6, 7, 4, 5, null, null, null, null },
+        .East => [_]?usize{ 3, 2, 5, 4, null, null, null, null },
+        .West => [_]?usize{ 0, 1, 6, 7, null, null, null, null },
+        .NorthEast => [_]?usize{ 0, 3, 2, 5, null, null, null, null },
+        .NorthWest => [_]?usize{ 3, 0, 1, 6, null, null, null, null },
+        .SouthEast => [_]?usize{ 2, 5, 4, 7, null, null, null, null },
+        .SouthWest => [_]?usize{ 1, 6, 7, 4, null, null, null, null },
     } else switch (d) {
-        .North => [_]?usize{ 0, 3, null, null },
-        .South => [_]?usize{ 7, 4, null, null },
-        .East => [_]?usize{ 2, 5, null, null },
-        .West => [_]?usize{ 1, 6, null, null },
-        .NorthEast => [_]?usize{ 3, 2, null, null },
-        .NorthWest => [_]?usize{ 1, 0, null, null },
-        .SouthEast => [_]?usize{ 5, 4, null, null },
-        .SouthWest => [_]?usize{ 6, 7, null, null },
+        .North => [_]?usize{ 0, 3, null, null, null, null, null, null },
+        .South => [_]?usize{ 7, 4, null, null, null, null, null, null },
+        .East => [_]?usize{ 2, 5, null, null, null, null, null, null },
+        .West => [_]?usize{ 1, 6, null, null, null, null, null, null },
+        .NorthEast => [_]?usize{ 3, 2, null, null, null, null, null, null },
+        .NorthWest => [_]?usize{ 1, 0, null, null, null, null, null, null },
+        .SouthEast => [_]?usize{ 5, 4, null, null, null, null, null, null },
+        .SouthWest => [_]?usize{ 6, 7, null, null, null, null, null, null },
     };
 }
 
 // Ported from doryen-fov Rust crate
 // TODO: provide link here
-pub fn shadowcast(coord: Coord, octs: [4]?usize, radius: usize, limit: Coord, buf: *CoordArrayList) void {
+pub fn shadowcast(coord: Coord, octs: [8]?usize, radius: usize, limit: Coord, tile_opacity: fn (Coord) f64, buf: *CoordArrayList) void {
     // Area of coverage by each octant (the MULT constant does the job of
     // converting between octants, I think?):
     //
@@ -99,7 +94,7 @@ pub fn shadowcast(coord: Coord, octs: [4]?usize, radius: usize, limit: Coord, bu
     const r2 = max_radius * max_radius;
     for (octs) |maybe_oct| {
         if (maybe_oct) |oct| {
-            _cast_light(@intCast(isize, coord.x), @intCast(isize, coord.y), 1, 1.0, 0.0, @intCast(isize, max_radius), @intCast(isize, r2), MULT[0][oct], MULT[1][oct], MULT[2][oct], MULT[3][oct], limit, buf);
+            _cast_light(@intCast(isize, coord.x), @intCast(isize, coord.y), 1, 1.0, 0.0, @intCast(isize, max_radius), @intCast(isize, r2), MULT[0][oct], MULT[1][oct], MULT[2][oct], MULT[3][oct], limit, buf, tile_opacity);
         }
     }
 
@@ -108,7 +103,7 @@ pub fn shadowcast(coord: Coord, octs: [4]?usize, radius: usize, limit: Coord, bu
     //buf.append(coord) catch unreachable;
 }
 
-fn _cast_light(cx: isize, cy: isize, row: isize, start_p: f64, end: f64, radius: isize, r2: isize, xx: isize, xy: isize, yx: isize, yy: isize, limit: Coord, buf: *CoordArrayList) void {
+fn _cast_light(cx: isize, cy: isize, row: isize, start_p: f64, end: f64, radius: isize, r2: isize, xx: isize, xy: isize, yx: isize, yy: isize, limit: Coord, buf: *CoordArrayList, tile_opacity: fn (Coord) f64) void {
     if (start_p < end) {
         return;
     }
@@ -155,7 +150,7 @@ fn _cast_light(cx: isize, cy: isize, row: isize, start_p: f64, end: f64, radius:
                     }
                 } else if (tile_opacity(coord) >= 1.0 and j < radius) {
                     blocked = true;
-                    _cast_light(cx, cy, j + 1, start, l_slope, radius, r2, xx, xy, yx, yy, limit, buf);
+                    _cast_light(cx, cy, j + 1, start, l_slope, radius, r2, xx, xy, yx, yy, limit, buf, tile_opacity);
                     new_start = r_slope;
                 }
             }

@@ -4,6 +4,7 @@ const mem = std.mem;
 const assert = std.debug.assert;
 
 const rng = @import("rng.zig");
+const state = @import("state.zig");
 const ai = @import("ai.zig");
 
 pub const Direction = enum {
@@ -340,12 +341,19 @@ pub const Mob = struct {
     allegiance: Allegiance,
     memory: CoordCharMap,
     fov: CoordArrayList,
+    sound_fov: CoordArrayList,
     facing: Direction,
     facing_wide: bool,
     vision: usize,
     coord: Coord,
 
     is_dead: bool,
+
+    // The amount of sound the mob is making. Decays by 0.5 every tick.
+    //
+    // XXX: Would it be best to make this per-tile instead of per-mob? That way,
+    // the source of old sounds would be known when the soundmaker moves.
+    noise: usize,
 
     // If the practical pain goes over PAIN_UNCONSCIOUS_THRESHHOLD, the mob
     // should go unconscious. If it goes over PAIN_DEATH_THRESHHOLD, it will
@@ -363,9 +371,12 @@ pub const Mob = struct {
     //                          Elf: 35
     //                    Large Imp: 49
     //                    Small Imp: 63
+    // hearing:   The minimum intensity of a noise source before it can be
+    //            heard by a mob. The lower the value, the better.
     //
     willpower: usize, // Range: 0 < willpower < 10
     dexterity: usize, // Range: 0 < dexterity < 100
+    hearing: usize,
     max_HP: usize,
 
     // Mutable instrinsic attributes.
@@ -373,15 +384,33 @@ pub const Mob = struct {
     // The use and effects of most of these are obvious.
     HP: usize,
 
-    pub const PAIN_DECAY = 0.0;
+    pub const PAIN_DECAY = 0.08;
     pub const PAIN_UNCONSCIOUS_THRESHHOLD = 1.0;
     pub const PAIN_DEATH_THRESHHOLD = 1.8;
 
+    // Halves sound. Should be called by state.tick().
+    pub fn tick_noise(self: *Mob) void {
+        assert(!self.is_dead);
+        self.noise /= 2;
+    }
+
     // Reduce pain. Should be called by state.tick().
+    //
+    // TODO: pain effects (unconsciousness, etc)
     pub fn tick_pain(self: *Mob) void {
         assert(!self.is_dead);
 
-        // TODO: pain effects (unconsciousness, screaming, etc)
+        // The <mob> writhes in pain!
+        if (self.current_pain() > 0.2) {
+            self.noise += 5; // The <mob> writhes in pain!
+        } else if (self.current_pain() > 0.4) {
+            self.noise += 8; // The <mob> gasps in pain!
+        } else if (self.current_pain() > 0.6) {
+            self.noise += 24; // The <mob> yells!
+        } else if (self.current_pain() > 0.8) {
+            self.noise += 32; // The <mob> screams in agony!!
+        }
+
         self.pain -= PAIN_DECAY * @intToFloat(f64, self.willpower);
     }
 
@@ -399,7 +428,7 @@ pub const Mob = struct {
         }
 
         // WHAM
-        recipient.pain += 0.14;
+        recipient.pain += 0.21;
 
         // saturate on subtraction
         recipient.HP = if ((recipient.HP -% 10) > recipient.HP) 0 else recipient.HP - 5;
@@ -407,6 +436,7 @@ pub const Mob = struct {
 
     pub fn kill(self: *Mob) void {
         self.fov.deinit();
+        self.sound_fov.deinit();
         self.occupation.work_area.deinit();
         self.memory.clearAndFree();
         self.pain = 0.0;
@@ -425,6 +455,23 @@ pub const Mob = struct {
 
     pub fn current_pain(self: *const Mob) f64 {
         return self.pain / @intToFloat(f64, self.willpower);
+    }
+
+    pub fn canHear(self: *const Mob, coord: Coord) bool {
+        if (state.dungeon[coord.y][coord.x].mob == null)
+            return false;
+
+        // TODO: check the *apparent* sound (that is, the sound's intensity
+        // on the hearer's coordinate)
+        if (self.hearing > state.dungeon[coord.y][coord.x].mob.?.noise)
+            return false;
+
+        for (self.sound_fov.items) |fovcoord| {
+            if (coord.eq(fovcoord))
+                return true;
+        }
+
+        return false;
     }
 
     pub fn cansee(self: *const Mob, coord: Coord) bool {
@@ -490,6 +537,7 @@ pub const GuardTemplate = Mob{
     },
     .allegiance = .Sauron,
     .fov = undefined,
+    .sound_fov = undefined,
     .memory = undefined,
     .facing = .North,
     .facing_wide = false,
@@ -498,10 +546,12 @@ pub const GuardTemplate = Mob{
 
     .is_dead = false,
 
+    .noise = 0,
     .pain = 0.0,
 
     .willpower = 2,
     .dexterity = 21,
+    .hearing = 10,
     .max_HP = 16,
 
     .HP = 16,
@@ -521,6 +571,7 @@ pub const ElfTemplate = Mob{
     },
     .allegiance = .Illuvatar,
     .fov = undefined,
+    .sound_fov = undefined,
     .memory = undefined,
     .facing = .North,
     .facing_wide = false,
@@ -529,10 +580,12 @@ pub const ElfTemplate = Mob{
 
     .is_dead = false,
 
+    .noise = 0,
     .pain = 0.0,
 
     .willpower = 4,
     .dexterity = 35,
+    .hearing = 5,
     .max_HP = 49,
 
     .HP = 49,
