@@ -159,14 +159,21 @@ fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
     if (mob.occupation.phase == .SawHostile and mob.occupation.is_combative) {
         const target_coord = mob.occupation.target.?;
         const target = &dungeon[target_coord.y][target_coord.x];
+
+        if (target.mob == null) {
+            mob.occupation.phase = .GoTo;
+            _mob_occupation_tick(mob, alloc);
+        }
+
         if (mob.coord.eq(target_coord) or target.mob == null) {
             mob.occupation.target = null;
             mob.occupation.phase = .Work;
             return;
         }
 
-        const direction = astar.nextDirectionTo(mob.coord, target_coord, mapgeometry, is_walkable).?;
-        _ = mob_move(mob.coord, direction);
+        if (astar.nextDirectionTo(mob.coord, target_coord, mapgeometry, is_walkable)) |d| {
+            _ = mob_move(mob.coord, d);
+        }
     }
 }
 
