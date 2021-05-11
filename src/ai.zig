@@ -31,14 +31,14 @@ fn _guard_glance(mob: *Mob, prev_direction: Direction) void {
     if (prev_direction == newdirection) {
         // TODO: factor into Direction.oppositeAdjacent
         newdirection = switch (newdirection) {
-            .North => .NorthWest,
-            .East => .NorthEast,
-            .South => .SouthEast,
-            .West => .SouthWest,
-            .NorthEast => .North,
-            .SouthEast => .East,
-            .SouthWest => .South,
-            .NorthWest => .West,
+            .North => .West,
+            .East => .North,
+            .South => .East,
+            .West => .South,
+            .NorthEast => .SouthEast,
+            .SouthEast => .NorthEast,
+            .SouthWest => .NorthWest,
+            .NorthWest => .SouthWest,
         };
     }
 
