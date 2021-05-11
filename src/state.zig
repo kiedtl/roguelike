@@ -34,6 +34,8 @@ fn tile_opacity(coord: Coord) f64 {
 pub fn is_walkable(coord: Coord) bool {
     if (dungeon[coord.y][coord.x].type == .Wall)
         return false;
+    if (dungeon[coord.y][coord.x].mob != null)
+        return false;
     return true;
 }
 
