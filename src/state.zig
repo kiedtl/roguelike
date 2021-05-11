@@ -19,7 +19,7 @@ pub var player = Coord.new(0, 0);
 pub var ticks: usize = 0;
 
 // STYLE: change to Tile.soundOpacity
-fn tile_sound_opacity(coord: Coord) f64 {
+pub fn tile_sound_opacity(coord: Coord) f64 {
     const tile = dungeon[coord.y][coord.x];
     return if (tile.type == .Wall) 0.4 else 0.2;
 }
@@ -95,9 +95,11 @@ fn _can_hear_hostile(mob: *Mob) ?Coord {
     for (mob.sound_fov.items) |fitem| {
         if (mob.canHear(fitem)) {
             const othermob = &dungeon[fitem.y][fitem.x].mob.?;
+            const sound = mob.apparentNoise(othermob);
+
             if (mob.isHostileTo(othermob)) {
                 return fitem;
-            } else if ((othermob.noise - mob.hearing) > 20) {
+            } else if (sound > 20) {
                 // Sounds like one of our friends is having quite a party, let's
                 // go join the fun~
                 return fitem;
@@ -151,8 +153,9 @@ fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
                 mob.facing = rng.choose(Direction, &CARDINAL_DIRECTIONS, &[_]usize{ 1, 1, 1, 1 }) catch unreachable;
             }
         } else {
-            const direction = astar.nextDirectionTo(mob.coord, target_coord, mapgeometry, is_walkable).?;
-            _ = mob_move(mob.coord, direction);
+            if (astar.nextDirectionTo(mob.coord, target_coord, mapgeometry, is_walkable)) |d| {
+                _ = mob_move(mob.coord, d);
+            }
         }
     }
 

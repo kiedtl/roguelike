@@ -460,6 +460,24 @@ pub const Mob = struct {
         return false;
     }
 
+    pub fn apparentNoise(self: *const Mob, other: *const Mob) usize {
+        if (!self.canHear(other.coord)) return 0;
+
+        var membuf: [65535]u8 = undefined;
+        var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
+        const line = self.coord.draw_line(other.coord, state.mapgeometry, &fba.allocator);
+        var sound_resistance: f64 = 0.0;
+
+        for (line.items) |line_coord| {
+            sound_resistance += state.tile_sound_opacity(line_coord);
+            if (sound_resistance > 1.0) break;
+        }
+
+        var percent_heard = @floatToInt(usize, math.clamp(sound_resistance, 0.0, 1.0) * 100);
+        return (other.noise - self.hearing) * 100 / percent_heard;
+    }
+
     pub fn current_pain(self: *const Mob) f64 {
         return self.pain / @intToFloat(f64, self.willpower);
     }

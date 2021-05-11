@@ -169,11 +169,10 @@ pub fn draw() void {
             // what they saw last there
             if (!player.cansee(coord)) {
                 if (player.canHear(coord)) {
-                    const noise = state.dungeon[coord.y][coord.x].mob.?.noise;
-                    const green = math.clamp((noise - player.hearing) * 30, 20, 255);
-                    const color = @intCast(u32, green << 8);
+                    const noise = player.apparentNoise(&state.dungeon[coord.y][coord.x].mob.?);
+                    const green = @intCast(u32, math.clamp(noise * 30, 20, 255) << 8);
                     const bg: u32 = if (player.memory.contains(coord)) 0x101010 else 0;
-                    termbox.tb_change_cell(cursorx, cursory, '!', color, bg);
+                    termbox.tb_change_cell(cursorx, cursory, '!', green, bg);
                 } else {
                     if (player.memory.contains(coord)) {
                         const tile = @as(u32, player.memory.get(coord) orelse unreachable);
