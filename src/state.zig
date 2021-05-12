@@ -273,16 +273,16 @@ pub fn mob_move(coord: Coord, direction: Direction) ?*Mob {
         if (mob.isHostileTo(othermob) and !othermob.is_dead) {
             mob.fight(othermob);
             return mob;
-        } else {
-            // TODO: implement swapping when !othermob.is_dead
+        } else if (!othermob.is_dead) {
             return null;
         }
     }
 
+    const othermob = dungeon[dest.y][dest.x].mob;
     dungeon[dest.y][dest.x].mob = dungeon[coord.y][coord.x].mob.?;
     dungeon[dest.y][dest.x].mob.?.coord = dest;
     dungeon[dest.y][dest.x].mob.?.noise += rng.int(u4) % 10;
-    dungeon[coord.y][coord.x].mob = null;
+    dungeon[coord.y][coord.x].mob = othermob;
 
     if (coord.eq(player))
         player = dest;
