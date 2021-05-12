@@ -611,8 +611,8 @@ pub const GuardTemplate = Mob{
     .pain = 0.0,
 
     .willpower = 2,
-    .dexterity = 21,
-    .hearing = 10,
+    .dexterity = 10,
+    .hearing = 12,
     .max_HP = 16,
 
     .HP = 16,
@@ -644,7 +644,7 @@ pub const ElfTemplate = Mob{
     .pain = 0.0,
 
     .willpower = 4,
-    .dexterity = 35,
+    .dexterity = 28,
     .hearing = 5,
     .max_HP = 49,
 
