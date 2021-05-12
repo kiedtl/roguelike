@@ -19,6 +19,12 @@ pub fn boolean() bool {
     return rng.random.int(u1) == 1;
 }
 
+pub fn range(comptime T: type, min: T, max: T) T {
+    std.debug.assert(max >= min);
+    const diff = max - min;
+    return (int(T) % diff) + min;
+}
+
 pub fn shuffle(comptime T: type, arr: []T) void {
     rng.random.shuffle(T, arr);
 }
@@ -38,4 +44,19 @@ pub fn choose(comptime T: type, arr: []const T, weights: []const usize) !T {
     }
 
     return selected;
+}
+
+test "range" {
+    const testing = std.testing;
+
+    init();
+
+    var i: usize = 0;
+    while (i < 1000) : (i += 1) {
+        const r_u8 = range(u8, 10, 200);
+        const r_usize = range(usize, 34234, 89821);
+
+        std.testing.expect(r_u8 >= 10 and r_u8 < 200);
+        std.testing.expect(r_usize >= 34234 and r_usize < 89821);
+    }
 }

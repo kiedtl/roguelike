@@ -31,37 +31,27 @@ fn debug_main() anyerror!void {
         .never_unmap = false,
     }){};
 
-    astar.initCache(&gpa.allocator);
     rng.init();
 
-    mapgen.drunken_walk();
-    mapgen.add_guard_stations(&gpa.allocator);
-    mapgen.add_player(&gpa.allocator);
+    // mapgen.drunken_walk();
+    // mapgen.add_guard_stations(&gpa.allocator);
+    // mapgen.add_player(&gpa.allocator);
+    mapgen.tunneler(&gpa.allocator);
 
-    const start = Coord.new(63, 32);
-    const end = Coord.new(51, 20);
+    {
+        var y: usize = 0;
+        while (y < state.HEIGHT) : (y += 1) {
+            var x: usize = 0;
+            while (x < state.WIDTH) : (x += 1) {
+                switch (state.dungeon[y][x].type) {
+                    .Wall => std.debug.print("\x1b[07m \x1b[m", .{}),
+                    .Floor => std.debug.print("·", .{}),
+                }
+            }
+            std.debug.print("\n", .{});
+        }
+    }
 
-    // {
-    //     var y: usize = 0;
-    //     while (y < state.HEIGHT) : (y += 1) {
-    //         var x: usize = 0;
-    //         while (x < state.WIDTH) : (x += 1) {
-    //             if (Coord.new(x, y).eq(start)) {
-    //                 std.debug.print("S", .{});
-    //             } else if (Coord.new(x, y).eq(end)) {
-    //                 std.debug.print("E", .{});
-    //             } else {
-    //                 switch (state.dungeon[y][x].type) {
-    //                     .Wall => std.debug.print("#", .{}),
-    //                     .Floor => std.debug.print(".", .{}),
-    //                 }
-    //             }
-    //         }
-    //         std.debug.print("\n", .{});
-    //     }
-    // }
-
-    _ = astar.nextDirectionTo(start, end, state.mapgeometry, state.is_walkable);
     std.process.exit(0);
 }
 
