@@ -421,24 +421,28 @@ pub const Mob = struct {
     pub fn fight(attacker: *Mob, recipient: *Mob) void {
         assert(!attacker.is_dead);
         assert(!recipient.is_dead);
-        assert(recipient.dexterity < 100);
+        assert(attacker.dexterity < 100);
+
+        const is_stab = !recipient.isAwareOfAttack(attacker.coord);
 
         // TODO: attacker's skill should play a significant part
         const rand = rng.int(u7) % 100;
 
-        if (rand < recipient.dexterity) {
-            // missed
-            return;
+        if (!is_stab and rand < recipient.dexterity) {
+            return; // dodged attack!
         }
 
         // WHAM
         recipient.pain += 0.21;
 
-        // saturate on subtraction
-        recipient.HP = if ((recipient.HP -% 10) > recipient.HP) 0 else recipient.HP - 5;
+        attacker.noise += if (is_stab) 3 else 15;
+        recipient.noise += if (is_stab) 5 else 15;
 
-        attacker.noise += 15;
-        recipient.noise += 15;
+        var damage = @as(usize, rng.int(u3));
+        if (is_stab) damage *= 6;
+
+        // saturate on subtraction
+        recipient.HP = if ((recipient.HP -% damage) > recipient.HP) 0 else recipient.HP - damage;
     }
 
     pub fn kill(self: *Mob) void {
@@ -456,6 +460,22 @@ pub const Mob = struct {
 
         if (self.HP == 0)
             return true;
+
+        return false;
+    }
+
+    pub fn isAwareOfAttack(self: *const Mob, attacker: Coord) bool {
+        // Was the mob in attack/investigate phase?
+        switch (self.occupation.phase) {
+            .SawHostile, .GoTo => {},
+            else => return false,
+        }
+
+        // Could the mob see the attacker?
+        for (self.fov.items) |fovitem| {
+            if (fovitem.eq(attacker))
+                return true;
+        }
 
         return false;
     }
