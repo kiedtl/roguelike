@@ -387,6 +387,7 @@ pub const Mob = struct {
     //
     // The use and effects of most of these are obvious.
     HP: usize,
+    strength: usize,
 
     pub const PAIN_DECAY = 0.08;
     pub const PAIN_UNCONSCIOUS_THRESHHOLD = 1.0;
@@ -447,7 +448,7 @@ pub const Mob = struct {
         attacker.noise += noise;
         recipient.noise += noise;
 
-        var damage = @as(usize, rng.int(u3));
+        var damage = (attacker.strength / 4) + rng.range(usize, 0, 3);
         if (is_stab) damage *= 6;
 
         // saturate on subtraction
@@ -612,10 +613,11 @@ pub const GuardTemplate = Mob{
 
     .willpower = 2,
     .dexterity = 10,
-    .hearing = 12,
+    .hearing = 10,
     .max_HP = 16,
 
-    .HP = 16,
+    .HP = 21,
+    .strength = 10,
 };
 
 pub const ElfTemplate = Mob{
@@ -648,5 +650,6 @@ pub const ElfTemplate = Mob{
     .hearing = 5,
     .max_HP = 49,
 
-    .HP = 49,
+    .HP = 40,
+    .strength = 14,
 };
