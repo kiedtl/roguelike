@@ -100,9 +100,13 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
         _clear_line(startx, endx, y);
         _clear_line(startx, endx, y + 1);
 
-        var tile: [4]u8 = undefined;
-        _ = std.unicode.utf8Encode(mob.tile, &tile) catch unreachable;
-        y = _draw_string(startx, y, 0xffffff, 0, "{}: {} ({})", .{ 8, mob.species, mob.activity_description() }) catch unreachable;
+        // Draw the tile manually, _draw_string complains of invalid UTF-8 otherwise
+        //var tile: [4]u8 = undefined;
+        //_ = std.unicode.utf8Encode(mob.tile, &tile) catch unreachable;
+        termbox.tb_change_cell(startx, y, mob.tile, 0xffffff, 0);
+
+        y = _draw_string(startx + 1, y, 0xffffff, 0, ": {} ({})", .{ mob.species, mob.activity_description() }) catch unreachable;
+
         _draw_bar(y, startx, endx, mob.HP, mob.max_HP, "HP", 0xffffff, 0);
         y += 2;
     }
