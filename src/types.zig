@@ -451,6 +451,7 @@ pub const Mob = struct {
         self.sound_fov.deinit();
         self.occupation.work_area.deinit();
         self.memory.clearAndFree();
+        self.noise = 0;
         self.pain = 0.0;
         self.is_dead = true;
     }
