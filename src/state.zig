@@ -194,6 +194,7 @@ pub fn tick(alloc: *mem.Allocator) void {
             continue;
         }
 
+        mob.tick_hp();
         mob.tick_pain();
         mob.tick_noise();
         _update_fov(mob);

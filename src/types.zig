@@ -392,6 +392,14 @@ pub const Mob = struct {
     pub const PAIN_UNCONSCIOUS_THRESHHOLD = 1.0;
     pub const PAIN_DEATH_THRESHHOLD = 1.8;
 
+    // Regenerate health as necessary.
+    //
+    // TODO: regenerate health more if mob rested in last turn.
+    pub fn tick_hp(self: *Mob) void {
+        assert(!self.is_dead);
+        self.HP = math.clamp(self.HP + 1, 0, self.max_HP);
+    }
+
     // Halves sound. Should be called by state.tick().
     pub fn tick_noise(self: *Mob) void {
         assert(!self.is_dead);
