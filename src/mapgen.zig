@@ -70,6 +70,7 @@ pub fn add_player(alloc: *mem.Allocator) void {
 
     var player = ElfTemplate;
     player.occupation.work_area = CoordArrayList.init(alloc);
+    player.occupation.phase = .SawHostile;
     player.fov = CoordArrayList.init(alloc);
     player.sound_fov = CoordArrayList.init(alloc);
     player.memory = CoordCharMap.init(alloc);

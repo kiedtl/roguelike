@@ -435,8 +435,9 @@ pub const Mob = struct {
         // WHAM
         recipient.pain += 0.21;
 
-        attacker.noise += if (is_stab) 3 else 15;
-        recipient.noise += if (is_stab) 5 else 15;
+        const noise: usize = if (is_stab) 3 else 15;
+        attacker.noise += noise;
+        recipient.noise += noise;
 
         var damage = @as(usize, rng.int(u3));
         if (is_stab) damage *= 6;
