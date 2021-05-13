@@ -421,6 +421,59 @@ pub const Mob = struct { // {{{
         self.pain -= PAIN_DECAY * @intToFloat(f64, self.willpower);
     }
 
+    // Try to move a mob.
+    //
+    // Is the destination tile a wall?
+    // | true:  return false
+    // | false: Does the destination tile have a mob on it already?
+    //     | true:  Is the other mob hostile?
+    //         | true:  Fight!
+    //         | false: return false.
+    //     | false: Move onto the tile and return true.
+    //
+    pub fn moveInDirection(self: *Mob, direction: Direction) ?*Mob {
+        const coord = self.coord;
+
+        // Face in that direction no matter whether we end up moving or no
+        self.facing = direction;
+
+        var dest = coord;
+        if (!dest.move(direction, Coord.new(state.WIDTH, state.HEIGHT))) {
+            return null;
+        }
+
+        if (state.dungeon[dest.y][dest.x].type == .Wall) {
+            return null;
+        }
+
+        if (state.dungeon[dest.y][dest.x].mob) |*othermob| {
+            if (self.isHostileTo(othermob) and !othermob.is_dead) {
+                self.fight(othermob);
+                return self;
+            } else if (!othermob.is_dead) {
+                return null;
+            }
+        }
+
+        const othermob = state.dungeon[dest.y][dest.x].mob;
+        state.dungeon[dest.y][dest.x].mob = state.dungeon[coord.y][coord.x].mob.?;
+        state.dungeon[dest.y][dest.x].mob.?.noise += rng.int(u4) % 10;
+        state.dungeon[coord.y][coord.x].mob = othermob;
+        state.dungeon[dest.y][dest.x].mob.?.coord = dest;
+
+        if (state.dungeon[dest.y][dest.x].surface) |surface| {
+            switch (surface) {
+                .Machine => |m| m.on_trigger(&state.dungeon[dest.y][dest.x].mob.?, m),
+                else => {},
+            }
+        }
+
+        if (coord.eq(state.player))
+            state.player = dest;
+
+        return &state.dungeon[dest.y][dest.x].mob.?;
+    }
+
     pub fn fight(attacker: *Mob, recipient: *Mob) void {
         assert(!attacker.is_dead);
         assert(!recipient.is_dead);

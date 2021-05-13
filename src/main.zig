@@ -101,16 +101,17 @@ pub fn main() anyerror!void {
                 if (ev.key == termbox.TB_KEY_CTRL_C)
                     break;
             } else if (ev.ch != 0) {
+                const player = &state.dungeon[state.player.y][state.player.x].mob.?;
                 const did_anything = switch (ev.ch) {
                     '.' => true,
-                    'h' => state.mob_move(state.player, .West) != null,
-                    'j' => state.mob_move(state.player, .South) != null,
-                    'k' => state.mob_move(state.player, .North) != null,
-                    'l' => state.mob_move(state.player, .East) != null,
-                    'y' => state.mob_move(state.player, .NorthWest) != null,
-                    'u' => state.mob_move(state.player, .NorthEast) != null,
-                    'b' => state.mob_move(state.player, .SouthWest) != null,
-                    'n' => state.mob_move(state.player, .SouthEast) != null,
+                    'h' => player.moveInDirection(.West) != null,
+                    'j' => player.moveInDirection(.South) != null,
+                    'k' => player.moveInDirection(.North) != null,
+                    'l' => player.moveInDirection(.East) != null,
+                    'y' => player.moveInDirection(.NorthWest) != null,
+                    'u' => player.moveInDirection(.NorthEast) != null,
+                    'b' => player.moveInDirection(.SouthWest) != null,
+                    'n' => player.moveInDirection(.SouthEast) != null,
                     else => false,
                 };
 

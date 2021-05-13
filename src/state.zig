@@ -163,7 +163,7 @@ fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
             }
         } else {
             if (astar.nextDirectionTo(mob.coord, target_coord, mapgeometry, is_walkable)) |d| {
-                _ = mob_move(mob.coord, d);
+                _ = mob.moveInDirection(d);
             }
         }
     }
@@ -184,7 +184,7 @@ fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
         }
 
         if (astar.nextDirectionTo(mob.coord, target_coord, mapgeometry, is_walkable)) |d| {
-            _ = mob_move(mob.coord, d);
+            _ = mob.moveInDirection(d);
         }
     }
 }
@@ -252,59 +252,6 @@ pub fn reset_marks() void {
             dungeon[y][x].marked = false;
         }
     }
-}
-
-/// Try to move a mob.
-///
-/// Is the destination tile a wall?
-/// | true:  return false
-/// | false: Does the destination tile have a mob on it already?
-///     | true:  Is the other mob hostile?
-///         | true:  Fight!
-///         | false: return false.
-///     | false: Move onto the tile and return true.
-///
-pub fn mob_move(coord: Coord, direction: Direction) ?*Mob {
-    const mob = &dungeon[coord.y][coord.x].mob.?;
-
-    // Face in that direction no matter whether we end up moving or no
-    mob.facing = direction;
-
-    var dest = coord;
-    if (!dest.move(direction, Coord.new(WIDTH, HEIGHT))) {
-        return null;
-    }
-
-    if (dungeon[dest.y][dest.x].type == .Wall) {
-        return null;
-    }
-
-    if (dungeon[dest.y][dest.x].mob) |*othermob| {
-        if (mob.isHostileTo(othermob) and !othermob.is_dead) {
-            mob.fight(othermob);
-            return mob;
-        } else if (!othermob.is_dead) {
-            return null;
-        }
-    }
-
-    const othermob = dungeon[dest.y][dest.x].mob;
-    dungeon[dest.y][dest.x].mob = dungeon[coord.y][coord.x].mob.?;
-    dungeon[dest.y][dest.x].mob.?.coord = dest;
-    dungeon[dest.y][dest.x].mob.?.noise += rng.int(u4) % 10;
-    dungeon[coord.y][coord.x].mob = othermob;
-
-    if (dungeon[dest.y][dest.x].surface) |surface| {
-        switch (surface) {
-            .Machine => |m| m.on_trigger(&dungeon[dest.y][dest.x].mob.?, m),
-            else => {},
-        }
-    }
-
-    if (coord.eq(player))
-        player = dest;
-
-    return &dungeon[dest.y][dest.x].mob.?;
 }
 
 pub fn mob_gaze(coord: Coord, direction: Direction) bool {
