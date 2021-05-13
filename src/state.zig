@@ -123,6 +123,7 @@ fn _can_see_hostile(mob: *Mob) ?Coord {
 fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
     if (mob.occupation.phase != .SawHostile) {
         if (_can_see_hostile(mob)) |hostile| {
+            mob.noise += Mob.NOISE_YELL;
             mob.occupation.phase = .SawHostile;
             mob.occupation.target = hostile;
         } else if (_can_hear_hostile(mob)) |dest| {

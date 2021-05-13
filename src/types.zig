@@ -389,6 +389,11 @@ pub const Mob = struct {
     HP: usize,
     strength: usize,
 
+    pub const NOISE_WRITHE = 5;
+    pub const NOISE_GASP = 8;
+    pub const NOISE_YELL = 24;
+    pub const NOISE_SCREAM = 32;
+
     pub const PAIN_DECAY = 0.08;
     pub const PAIN_UNCONSCIOUS_THRESHHOLD = 1.0;
     pub const PAIN_DEATH_THRESHHOLD = 1.8;
@@ -415,13 +420,13 @@ pub const Mob = struct {
 
         // The <mob> writhes in pain!
         if (self.current_pain() > 0.2) {
-            self.noise += 5; // The <mob> writhes in pain!
+            self.noise += NOISE_WRITHE; // The <mob> writhes in pain!
         } else if (self.current_pain() > 0.4) {
-            self.noise += 8; // The <mob> gasps in pain!
+            self.noise += NOISE_GASP; // The <mob> gasps in pain!
         } else if (self.current_pain() > 0.6) {
-            self.noise += 24; // The <mob> yells!
+            self.noise += NOISE_YELL; // The <mob> yells!
         } else if (self.current_pain() > 0.8) {
-            self.noise += 32; // The <mob> screams in agony!!
+            self.noise += NOISE_SCREAM; // The <mob> screams in agony!!
         }
 
         self.pain -= PAIN_DECAY * @intToFloat(f64, self.willpower);
