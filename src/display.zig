@@ -129,8 +129,9 @@ pub fn draw() void {
     const playery = @intCast(isize, state.player.y);
     const playerx = @intCast(isize, state.player.x);
     var player = state.dungeon[state.player.y][state.player.x].mob orelse unreachable;
+    var is_player_watched = false;
 
-    const maxy: isize = termbox.tb_height() - 8;
+    const maxy: isize = termbox.tb_height() - 6;
     const maxx: isize = termbox.tb_width() - 30;
     const minx: isize = 0;
     const miny: isize = 0;
@@ -191,6 +192,9 @@ pub fn draw() void {
             switch (state.dungeon[u_y][u_x].type) {
                 .Wall => termbox.tb_change_cell(cursorx, cursory, '#', 0x505050, 0x9e9e9e),
                 .Floor => if (state.dungeon[u_y][u_x].mob) |mob| {
+                    if (player.coord.eq(coord) and _mobs_can_see(&moblist, coord))
+                        is_player_watched = true;
+
                     var color: u32 = 0x1e1e1e;
 
                     if (mob.current_pain() > 0.0) {
@@ -204,19 +208,20 @@ pub fn draw() void {
 
                     termbox.tb_change_cell(cursorx, cursory, mob.tile, 0xffffff, color);
                 } else {
-                    const tile: u32 = if (_mobs_can_see(&moblist, coord)) '·' else ' ';
-                    var color: u32 = if (state.dungeon[u_y][u_x].marked)
-                        0x454545
-                    else
-                        0x1e1e1e;
-                    termbox.tb_change_cell(cursorx, cursory, tile, 0xffffff, color);
+                    var can_mob_see = _mobs_can_see(&moblist, coord);
+                    if (state.player.eq(coord) and can_mob_see)
+                        is_player_watched = can_mob_see;
+
+                    const tile: u32 = if (can_mob_see) '·' else ' ';
+                    var bg: u32 = if (state.dungeon[u_y][u_x].marked) 0x454545 else 0x1e1e1e;
+                    termbox.tb_change_cell(cursorx, cursory, tile, 0xffffff, bg);
                 },
             }
-
-            if (u_y == playery and u_x == playerx)
-                termbox.tb_change_cell(cursorx, cursory, '@', 0x0, 0xffffff);
         }
     }
+
+    const player_bg: u32 = if (is_player_watched) 0x4682b4 else 0xffffff;
+    termbox.tb_change_cell(playerx - startx, playery - starty, '@', 0, player_bg);
 
     _draw_infopanel(&player, &moblist, maxx, 1, termbox.tb_width(), maxy);
 
