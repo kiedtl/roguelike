@@ -173,8 +173,7 @@ pub fn draw() void {
             // if player can't see area, draw a blank/grey tile, depending on
             // what they saw last there
             if (!player.cansee(coord)) {
-                if (player.canHear(coord)) {
-                    const noise = player.apparentNoise(&state.dungeon[coord.y][coord.x].mob.?);
+                if (player.canHear(coord)) |noise| {
                     const green = @intCast(u32, math.clamp(noise * 30, 20, 255) << 8);
                     const bg: u32 = if (player.memory.contains(coord)) 0x101010 else 0;
                     termbox.tb_change_cell(cursorx, cursory, '!', green, bg);

@@ -3,6 +3,7 @@ const mem = std.mem;
 const assert = std.debug.assert;
 
 const astar = @import("astar.zig");
+const utils = @import("utils.zig");
 const rng = @import("rng.zig");
 const fov = @import("fov.zig");
 usingnamespace @import("types.zig");
@@ -86,23 +87,27 @@ fn _update_fov(mob: *Mob) void {
 
         mob.memory.put(fc, tile) catch unreachable;
     }
-
-    mob.sound_fov.shrinkRetainingCapacity(0);
-    fov.shadowcast(mob.coord, all_octants, 25, mapgeometry, tile_sound_opacity, &mob.sound_fov);
 }
 
 fn _can_hear_hostile(mob: *Mob) ?Coord {
-    for (mob.sound_fov.items) |fitem| {
-        if (mob.canHear(fitem)) {
-            const othermob = &dungeon[fitem.y][fitem.x].mob.?;
-            const sound = mob.apparentNoise(othermob);
+    var y: usize = utils.saturating_sub(mob.coord.y, Mob.MAX_FOH);
+    while (y < (mob.coord.y + Mob.MAX_FOH)) : (y += 1) {
+        var x: usize = utils.saturating_sub(mob.coord.x, Mob.MAX_FOH);
+        while (x < (mob.coord.x + Mob.MAX_FOH)) : (x += 1) {
+            const fitem = Coord.new(x, y);
+            if (fitem.x >= WIDTH or fitem.y >= HEIGHT)
+                continue;
 
-            if (mob.isHostileTo(othermob)) {
-                return fitem;
-            } else if (sound > 20) {
-                // Sounds like one of our friends is having quite a party, let's
-                // go join the fun~
-                return fitem;
+            if (mob.canHear(fitem)) |sound| {
+                const othermob = &dungeon[fitem.y][fitem.x].mob.?;
+
+                if (mob.isHostileTo(othermob)) {
+                    return fitem;
+                } else if (sound > 20) {
+                    // Sounds like one of our friends is having quite a party, let's
+                    // go join the fun~
+                    return fitem;
+                }
             }
         }
     }

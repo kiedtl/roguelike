@@ -13,7 +13,6 @@ fn _add_guard_station(stationy: usize, stationx: usize, d: Direction, alloc: *me
     guard.occupation.work_area.append(Coord.new(stationx, stationy)) catch unreachable;
     guard.occupation.work_area.append(Coord.new(stationx, stationy)) catch unreachable;
     guard.fov = CoordArrayList.init(alloc);
-    guard.sound_fov = CoordArrayList.init(alloc);
     guard.memory = CoordCharMap.init(alloc);
     guard.coord = Coord.new(stationx, stationy);
     guard.facing = d;
@@ -73,7 +72,6 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     player.occupation.work_area = CoordArrayList.init(alloc);
     player.occupation.phase = .SawHostile;
     player.fov = CoordArrayList.init(alloc);
-    player.sound_fov = CoordArrayList.init(alloc);
     player.memory = CoordCharMap.init(alloc);
     player.coord = state.player;
     state.dungeon[state.player.y][state.player.x].mob = player;
@@ -275,7 +273,6 @@ pub fn tunneler(allocator: *mem.Allocator) void {
         guard.occupation.work_area.append(guardstart) catch unreachable;
         guard.occupation.work_area.append(guardend) catch unreachable;
         guard.fov = CoordArrayList.init(allocator);
-        guard.sound_fov = CoordArrayList.init(allocator);
         guard.memory = CoordCharMap.init(allocator);
         guard.coord = guardstart;
         guard.facing = .North;

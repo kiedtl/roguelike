@@ -4,6 +4,7 @@ const mem = std.mem;
 const assert = std.debug.assert;
 
 const rng = @import("rng.zig");
+const utils = @import("utils.zig");
 const state = @import("state.zig");
 const ai = @import("ai.zig");
 
@@ -345,7 +346,6 @@ pub const Mob = struct {
     allegiance: Allegiance,
     memory: CoordCharMap,
     fov: CoordArrayList,
-    sound_fov: CoordArrayList,
     facing: Direction,
     facing_wide: bool,
     vision: usize,
@@ -388,6 +388,9 @@ pub const Mob = struct {
     // The use and effects of most of these are obvious.
     HP: usize,
     strength: usize,
+
+    // Maximum field of hearing.
+    pub const MAX_FOH = 35;
 
     pub const NOISE_WRITHE = 5;
     pub const NOISE_GASP = 8;
@@ -462,7 +465,6 @@ pub const Mob = struct {
 
     pub fn kill(self: *Mob) void {
         self.fov.deinit();
-        self.sound_fov.deinit();
         self.occupation.work_area.deinit();
         self.memory.clearAndFree();
         self.noise = 0;
@@ -496,8 +498,16 @@ pub const Mob = struct {
         return false;
     }
 
-    pub fn apparentNoise(self: *const Mob, other: *const Mob) usize {
-        if (!self.canHear(other.coord)) return 0;
+    pub fn canHear(self: *const Mob, coord: Coord) ?usize {
+        if (state.dungeon[coord.y][coord.x].mob == null)
+            return null; // No mob there, nothing to hear
+
+        const other = &state.dungeon[coord.y][coord.x].mob.?;
+
+        if (self.coord.distance(other.coord) > MAX_FOH)
+            return null; // Too far away
+        if (other.noise <= self.hearing)
+            return null; // Too quiet to hear
 
         var membuf: [65535]u8 = undefined;
         var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
@@ -510,8 +520,9 @@ pub const Mob = struct {
             if (sound_resistance > 1.0) break;
         }
 
-        var percent_heard = @floatToInt(usize, math.clamp(sound_resistance, 0.0, 1.0) * 100);
-        return (other.noise - self.hearing) * 100 / percent_heard;
+        const heard = other.noise - self.hearing;
+        const apparent_volume = utils.saturating_sub(heard, @floatToInt(usize, sound_resistance));
+        return if (apparent_volume == 0) null else apparent_volume;
     }
 
     pub fn current_pain(self: *const Mob) f64 {
@@ -522,23 +533,6 @@ pub const Mob = struct {
         // TODO: deal with all the nuances (eg .NoneGood should not be hostile
         // to .Illuvatar, but .NoneEvil should be hostile to .Sauron)
         return self.allegiance != othermob.allegiance;
-    }
-
-    pub fn canHear(self: *const Mob, coord: Coord) bool {
-        if (state.dungeon[coord.y][coord.x].mob == null)
-            return false;
-
-        // TODO: check the *apparent* sound (that is, the sound's intensity
-        // on the hearer's coordinate)
-        if (self.hearing > state.dungeon[coord.y][coord.x].mob.?.noise)
-            return false;
-
-        for (self.sound_fov.items) |fovcoord| {
-            if (coord.eq(fovcoord))
-                return true;
-        }
-
-        return false;
     }
 
     pub fn cansee(self: *const Mob, coord: Coord) bool {
@@ -604,7 +598,6 @@ pub const GuardTemplate = Mob{
     },
     .allegiance = .Sauron,
     .fov = undefined,
-    .sound_fov = undefined,
     .memory = undefined,
     .facing = .North,
     .facing_wide = false,
@@ -638,7 +631,6 @@ pub const ElfTemplate = Mob{
     },
     .allegiance = .Illuvatar,
     .fov = undefined,
-    .sound_fov = undefined,
     .memory = undefined,
     .facing = .North,
     .facing_wide = false,
