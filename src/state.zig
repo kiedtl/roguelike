@@ -15,7 +15,10 @@ pub var dungeon = [_][WIDTH]Tile{[_]Tile{Tile{
     .type = .Wall,
     .mob = null,
     .marked = false,
+    .surface = null,
 }} ** WIDTH} ** HEIGHT;
+pub var machines: MachineArrayList = undefined;
+pub var props: PropArrayList = undefined;
 pub var player = Coord.new(0, 0);
 pub var ticks: usize = 0;
 
@@ -290,6 +293,13 @@ pub fn mob_move(coord: Coord, direction: Direction) ?*Mob {
     dungeon[dest.y][dest.x].mob.?.coord = dest;
     dungeon[dest.y][dest.x].mob.?.noise += rng.int(u4) % 10;
     dungeon[coord.y][coord.x].mob = othermob;
+
+    if (dungeon[dest.y][dest.x].surface) |surface| {
+        switch (surface) {
+            .Machine => |m| m.on_trigger(&dungeon[dest.y][dest.x].mob.?, m),
+            else => {},
+        }
+    }
 
     if (coord.eq(player))
         player = dest;

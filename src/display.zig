@@ -206,6 +206,13 @@ pub fn draw() void {
                     }
 
                     termbox.tb_change_cell(cursorx, cursory, mob.tile, 0xffffff, color);
+                } else if (state.dungeon[u_y][u_x].surface) |surfaceitem| {
+                    const tile = switch (surfaceitem) {
+                        .Machine => |m| m.tile,
+                        .Prop => |p| p.tile,
+                    };
+
+                    termbox.tb_change_cell(cursorx, cursory, tile, 0xffffff, 0x1e1e1e);
                 } else {
                     var can_mob_see = _mobs_can_see(&moblist, coord);
                     if (state.player.eq(coord) and can_mob_see)

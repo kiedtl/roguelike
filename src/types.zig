@@ -8,7 +8,18 @@ const utils = @import("utils.zig");
 const state = @import("state.zig");
 const ai = @import("ai.zig");
 
-pub const Direction = enum {
+pub const CARDINAL_DIRECTIONS = [_]Direction{ .North, .South, .East, .West };
+pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .NorthWest, .SouthEast, .SouthWest };
+
+// STYLE: change "FooArrayList" to "FooList"
+pub const DirectionArrayList = std.ArrayList(Direction);
+pub const CoordCharMap = std.AutoHashMap(Coord, u21);
+pub const CoordArrayList = std.ArrayList(Coord);
+pub const MobArrayList = std.ArrayList(*Mob); // STYLE: rename to MobPtrList
+pub const MachineArrayList = std.ArrayList(Machine);
+pub const PropArrayList = std.ArrayList(Prop);
+
+pub const Direction = enum { // {{{
     North,
     South,
     East,
@@ -97,18 +108,13 @@ pub const Direction = enum {
     pub fn turnright(self: *const Self) Self {
         return self.turnleft().opposite();
     }
-};
-
-pub const DirectionArrayList = std.ArrayList(Direction);
+}; // }}}
 
 test "from_coords" {
     std.testing.expectEqual(Direction.from_coords(Coord.new(0, 0), Coord.new(1, 0)), .East);
 }
 
-pub const CARDINAL_DIRECTIONS = [_]Direction{ .North, .South, .East, .West };
-pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .NorthWest, .SouthEast, .SouthWest };
-
-pub const Coord = struct {
+pub const Coord = struct { // {{{
     x: usize,
     y: usize,
 
@@ -278,7 +284,7 @@ pub const Coord = struct {
 
         return buf;
     }
-};
+}; // }}}
 
 test "coord.move" {
     const limit = Coord.new(9, 9);
@@ -288,32 +294,12 @@ test "coord.move" {
     std.testing.expectEqual(c, Coord.new(1, 0));
 }
 
-pub const CoordCharMap = std.AutoHashMap(Coord, u21);
-pub const CoordArrayList = std.ArrayList(Coord);
+pub const Allegiance = enum { Sauron, Illuvatar, NoneEvil, NoneGood };
 
-pub const Allegiance = enum {
-    Sauron,
-    Illuvatar,
-    Self,
-    NoneEvil,
-    NoneGood,
-};
-
-pub const OccupationPhase = enum {
-    Work,
-    SawHostile,
-
-    // XXX: Should be renamed to "Investigating". But perhaps there's a another
-    // usecase for this phase?
-    GoTo,
-
-    // Eat,
-    // Drink,
-    // Flee,
-    // Idle,
-    // GetItem,
-    // SearchItem,
-};
+// TODO: add phases: Eat, Drink, Flee, Idle, GetItem
+// XXX: "GoTo" should be renamed to "Investigating". But perhaps there's a another
+// usecase for this phase?
+pub const OccupationPhase = enum { Work, SawHostile, GoTo };
 
 pub const Occupation = struct {
     // Name of work, intended to be used as a description of what the mob is
@@ -339,7 +325,7 @@ pub const Occupation = struct {
     phase: OccupationPhase,
 };
 
-pub const Mob = struct {
+pub const Mob = struct { // {{{
     species: []const u8,
     tile: u21,
     occupation: Occupation,
@@ -568,9 +554,24 @@ pub const Mob = struct {
 
         return res;
     }
+}; // }}}
+
+pub const Machine = struct {
+    name: []const u8,
+    tile: u21,
+    // Does the presence of this machine render a tile unwalkable?
+    walkable: bool,
+    coord: Coord,
+    on_trigger: fn (*Mob, *Machine) void,
+    // FIXME: there has got to be a better way to do this
+    props: [40]?Prop,
+    // TODO: is_disabled, strength_needed
 };
 
-pub const MobArrayList = std.ArrayList(*Mob);
+pub const Prop = struct { name: []const u8, tile: u21 };
+
+pub const SurfaceItemTag = enum { Machine, Prop };
+pub const SurfaceItem = union(SurfaceItemTag) { Machine: *Machine, Prop: *Prop };
 
 pub const TileType = enum {
     Wall = 0,
@@ -581,6 +582,7 @@ pub const Tile = struct {
     type: TileType,
     mob: ?Mob,
     marked: bool,
+    surface: ?SurfaceItem,
 };
 
 // ---------- Mob templates ----------

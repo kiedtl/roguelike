@@ -3,6 +3,7 @@ const heap = std.heap;
 const mem = std.mem;
 
 const rng = @import("rng.zig");
+const machines = @import("machines.zig");
 const utils = @import("utils.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
@@ -263,6 +264,14 @@ pub fn tunneler(allocator: *mem.Allocator) void {
     _add_player(Coord.new(room.start.x + 1, room.start.y + 1), allocator);
 
     for (rooms.items) |nroom, i| {
+        const trap_x = rng.range(usize, nroom.start.x + 1, nroom.end().x - 1);
+        const trap_y = rng.range(usize, nroom.start.y + 1, nroom.end().y - 1);
+        var machine = machines.AlarmTrap;
+        machine.coord = Coord.new(trap_x, trap_y);
+        state.machines.append(machine) catch unreachable;
+        const machineptr = &state.machines.items[state.machines.items.len - 1];
+        state.dungeon[trap_y][trap_x].surface = SurfaceItem{ .Machine = machineptr };
+
         if (i == room_index) continue;
 
         const guardstart = Coord.new(nroom.start.x + 1, nroom.start.y + 1);

@@ -76,13 +76,14 @@ pub fn main() anyerror!void {
         .never_unmap = false,
     }){};
 
+    state.machines = MachineArrayList.init(&gpa.allocator);
+    state.props = PropArrayList.init(&gpa.allocator);
     astar.initCache(&gpa.allocator);
     rng.init();
 
     mapgen.tunneler(&gpa.allocator);
 
     state.tick(&gpa.allocator);
-
     display.draw();
 
     while (true) {
@@ -127,6 +128,8 @@ pub fn main() anyerror!void {
 
     astar.deinitCache();
     display.deinit() catch unreachable;
+    state.machines.deinit();
+    state.props.deinit();
     state.freeall();
     _ = gpa.deinit();
 }
