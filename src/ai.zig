@@ -42,7 +42,7 @@ fn _guard_glance(mob: *Mob, prev_direction: Direction) void {
         };
     }
 
-    _ = state.mob_gaze(mob.coord, newdirection);
+    _ = mob.gaze(newdirection);
 }
 
 pub fn guardWork(_mob: *Mob, alloc: *mem.Allocator) void {

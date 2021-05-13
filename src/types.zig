@@ -474,6 +474,16 @@ pub const Mob = struct { // {{{
         return &state.dungeon[dest.y][dest.x].mob.?;
     }
 
+    pub fn gaze(self: *Mob, direction: Direction) bool {
+        if (self.facing == direction) {
+            self.facing_wide = !self.facing_wide;
+        } else {
+            self.facing = direction;
+        }
+
+        return true;
+    }
+
     pub fn fight(attacker: *Mob, recipient: *Mob) void {
         assert(!attacker.is_dead);
         assert(!recipient.is_dead);

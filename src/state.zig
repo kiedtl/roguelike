@@ -253,19 +253,3 @@ pub fn reset_marks() void {
         }
     }
 }
-
-pub fn mob_gaze(coord: Coord, direction: Direction) bool {
-    const mob = &dungeon[coord.y][coord.x].mob.?;
-
-    if (mob.facing == direction) {
-        mob.facing_wide = !mob.facing_wide;
-    } else {
-        mob.facing = direction;
-    }
-
-    // Looking around is not instantaneous and should take up a turn...
-    // Probably might change this later, though, as making it not take up a turn
-    // might possibly keep things easy (a mob shouldn't creep up on a player while
-    // the player's scanning the opposite direction).
-    return true;
-}
