@@ -162,7 +162,7 @@ pub fn draw() void {
         }) {
             // if out of bounds on the map, draw a black tile
             if (y < 0 or x < 0 or y >= state.HEIGHT or x >= state.WIDTH) {
-                termbox.tb_change_cell(cursorx, cursory, ' ', 0, 0);
+                termbox.tb_change_cell(cursorx, cursory, ' ', 0xffffff, 0);
                 continue;
             }
 
