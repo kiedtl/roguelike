@@ -79,9 +79,7 @@ pub fn main() anyerror!void {
     astar.initCache(&gpa.allocator);
     rng.init();
 
-    mapgen.drunken_walk();
-    mapgen.add_guard_stations(&gpa.allocator);
-    mapgen.add_player(&gpa.allocator);
+    mapgen.tunneler(&gpa.allocator);
 
     state.tick(&gpa.allocator);
 
