@@ -3,6 +3,7 @@ const math = std.math;
 const mem = std.mem;
 const assert = std.debug.assert;
 
+const LinkedList = @import("list.zig").LinkedList;
 const rng = @import("rng.zig");
 const utils = @import("utils.zig");
 const state = @import("state.zig");
@@ -15,6 +16,7 @@ pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .
 pub const DirectionArrayList = std.ArrayList(Direction);
 pub const CoordCharMap = std.AutoHashMap(Coord, u21);
 pub const CoordArrayList = std.ArrayList(Coord);
+pub const MobList = LinkedList(Mob);
 pub const MobArrayList = std.ArrayList(*Mob); // STYLE: rename to MobPtrList
 pub const MachineArrayList = std.ArrayList(Machine);
 pub const PropArrayList = std.ArrayList(Prop);
@@ -431,7 +433,7 @@ pub const Mob = struct { // {{{
     //         | false: return false.
     //     | false: Move onto the tile and return true.
     //
-    pub fn moveInDirection(self: *Mob, direction: Direction) ?*Mob {
+    pub fn moveInDirection(self: *Mob, direction: Direction) bool {
         const coord = self.coord;
 
         // Face in that direction no matter whether we end up moving or no
@@ -439,31 +441,31 @@ pub const Mob = struct { // {{{
 
         var dest = coord;
         if (!dest.move(direction, Coord.new(state.WIDTH, state.HEIGHT))) {
-            return null;
+            return false;
         }
 
         if (state.dungeon[dest.y][dest.x].type == .Wall) {
-            return null;
+            return false;
         }
 
-        if (state.dungeon[dest.y][dest.x].mob) |*othermob| {
+        if (state.dungeon[dest.y][dest.x].mob) |othermob| {
             if (self.isHostileTo(othermob) and !othermob.is_dead) {
                 self.fight(othermob);
-                return self;
+                return true;
             } else if (!othermob.is_dead) {
-                return null;
+                return false;
             }
         }
 
         const othermob = state.dungeon[dest.y][dest.x].mob;
-        state.dungeon[dest.y][dest.x].mob = state.dungeon[coord.y][coord.x].mob.?;
-        state.dungeon[dest.y][dest.x].mob.?.noise += rng.int(u4) % 10;
+        state.dungeon[dest.y][dest.x].mob = self;
         state.dungeon[coord.y][coord.x].mob = othermob;
-        state.dungeon[dest.y][dest.x].mob.?.coord = dest;
+        self.noise += rng.int(u4) % 10;
+        self.coord = dest;
 
         if (state.dungeon[dest.y][dest.x].surface) |surface| {
             switch (surface) {
-                .Machine => |m| m.on_trigger(&state.dungeon[dest.y][dest.x].mob.?, m),
+                .Machine => |m| m.on_trigger(self, m),
                 else => {},
             }
         }
@@ -471,7 +473,7 @@ pub const Mob = struct { // {{{
         if (coord.eq(state.player))
             state.player = dest;
 
-        return &state.dungeon[dest.y][dest.x].mob.?;
+        return true;
     }
 
     pub fn gaze(self: *Mob, direction: Direction) bool {
@@ -551,7 +553,7 @@ pub const Mob = struct { // {{{
         if (state.dungeon[coord.y][coord.x].mob == null)
             return null; // No mob there, nothing to hear
 
-        const other = &state.dungeon[coord.y][coord.x].mob.?;
+        const other = state.dungeon[coord.y][coord.x].mob.?;
 
         if (self.coord.distance(other.coord) > MAX_FOH)
             return null; // Too far away
@@ -643,7 +645,7 @@ pub const TileType = enum {
 
 pub const Tile = struct {
     type: TileType,
-    mob: ?Mob,
+    mob: ?*Mob,
     marked: bool,
     surface: ?SurfaceItem,
 };

@@ -45,8 +45,7 @@ fn _guard_glance(mob: *Mob, prev_direction: Direction) void {
     _ = mob.gaze(newdirection);
 }
 
-pub fn guardWork(_mob: *Mob, alloc: *mem.Allocator) void {
-    var mob = _mob;
+pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
     assert(state.dungeon[mob.coord.y][mob.coord.x].mob != null);
     assert(mob.occupation.phase == .Work);
 
@@ -75,8 +74,6 @@ pub fn guardWork(_mob: *Mob, alloc: *mem.Allocator) void {
     // NOTE: if the guard isn't at their patrol route or station, this has the effect
     // of bringing them one step closer back.
     const direction = astar.nextDirectionTo(mob.coord, to, state.mapgeometry, state.is_walkable).?;
-    if (mob.moveInDirection(direction)) |newptr|
-        mob = newptr;
-
+    _ = mob.moveInDirection(direction);
     _guard_glance(mob, prev_facing);
 }

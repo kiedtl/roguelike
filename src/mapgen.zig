@@ -75,7 +75,8 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     player.fov = CoordArrayList.init(alloc);
     player.memory = CoordCharMap.init(alloc);
     player.coord = state.player;
-    state.dungeon[state.player.y][state.player.x].mob = player;
+    state.mobs.append(player) catch unreachable;
+    state.dungeon[state.player.y][state.player.x].mob = state.mobs.lastPtr().?;
 }
 
 const MAX_TUNNEL_LENGTH: usize = 12;
@@ -285,7 +286,8 @@ pub fn tunneler(allocator: *mem.Allocator) void {
         guard.memory = CoordCharMap.init(allocator);
         guard.coord = guardstart;
         guard.facing = .North;
-        state.dungeon[guardstart.y][guardstart.x].mob = guard;
+        state.mobs.append(guard) catch unreachable;
+        state.dungeon[guardstart.y][guardstart.x].mob = state.mobs.lastPtr().?;
     }
 
     rooms.deinit();

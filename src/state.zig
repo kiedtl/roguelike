@@ -17,6 +17,7 @@ pub var dungeon = [_][WIDTH]Tile{[_]Tile{Tile{
     .marked = false,
     .surface = null,
 }} ** WIDTH} ** HEIGHT;
+pub var mobs: MobList = undefined;
 pub var machines: MachineArrayList = undefined;
 pub var props: PropArrayList = undefined;
 pub var player = Coord.new(0, 0);
@@ -56,7 +57,7 @@ pub fn createMobList(include_player: bool, only_if_infov: bool, alloc: *mem.Allo
             if (!include_player and coord.eq(player))
                 continue;
 
-            if (dungeon[y][x].mob) |*mob| {
+            if (dungeon[y][x].mob) |mob| {
                 if (only_if_infov and !playermob.cansee(coord))
                     continue;
 
@@ -92,28 +93,19 @@ fn _update_fov(mob: *Mob) void {
     }
 }
 
-fn _can_hear_hostile(mob: *Mob) ?Coord {
-    var y: usize = utils.saturating_sub(mob.coord.y, Mob.MAX_FOH);
-    while (y < (mob.coord.y + Mob.MAX_FOH)) : (y += 1) {
-        var x: usize = utils.saturating_sub(mob.coord.x, Mob.MAX_FOH);
-        while (x < (mob.coord.x + Mob.MAX_FOH)) : (x += 1) {
-            const fitem = Coord.new(x, y);
-            if (fitem.x >= WIDTH or fitem.y >= HEIGHT)
-                continue;
-
-            if (mob.canHear(fitem)) |sound| {
-                const othermob = &dungeon[fitem.y][fitem.x].mob.?;
-
-                if (mob.isHostileTo(othermob)) {
-                    return fitem;
-                } else if (sound > 20) {
-                    // Sounds like one of our friends is having quite a party, let's
-                    // go join the fun~
-                    return fitem;
-                }
+fn _can_hear_hostile(mob: *Mob, moblist: *const MobArrayList) ?Coord {
+    for (moblist.items) |othermob| {
+        if (mob.canHear(othermob.coord)) |sound| {
+            if (mob.isHostileTo(othermob)) {
+                return othermob.coord;
+            } else if (sound > 20) {
+                // Sounds like one of our friends is having quite a party, let's
+                // go join the fun~
+                return othermob.coord;
             }
         }
     }
+
     return null;
 }
 
@@ -128,13 +120,13 @@ fn _can_see_hostile(mob: *Mob) ?Coord {
     return null;
 }
 
-fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
+fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem.Allocator) void {
     if (mob.occupation.phase != .SawHostile) {
         if (_can_see_hostile(mob)) |hostile| {
             mob.noise += Mob.NOISE_YELL;
             mob.occupation.phase = .SawHostile;
             mob.occupation.target = hostile;
-        } else if (_can_hear_hostile(mob)) |dest| {
+        } else if (_can_hear_hostile(mob, moblist)) |dest| {
             // Let's investigate
             mob.occupation.phase = .GoTo;
             mob.occupation.target = dest;
@@ -170,14 +162,13 @@ fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
 
     if (mob.occupation.phase == .SawHostile and mob.occupation.is_combative) {
         const target_coord = mob.occupation.target.?;
-        const target = &dungeon[target_coord.y][target_coord.x];
 
-        if (target.mob == null) {
+        if (dungeon[target_coord.y][target_coord.x].mob == null) {
             mob.occupation.phase = .GoTo;
-            _mob_occupation_tick(mob, alloc);
+            _mob_occupation_tick(mob, moblist, alloc);
         }
 
-        if (mob.coord.eq(target_coord) or target.mob == null) {
+        if (mob.coord.eq(target_coord) or dungeon[target_coord.y][target_coord.x].mob == null) {
             mob.occupation.target = null;
             mob.occupation.phase = .Work;
             return;
@@ -209,23 +200,9 @@ pub fn tick(alloc: *mem.Allocator) void {
         _update_fov(mob);
 
         if (!mob.coord.eq(player)) {
-            _mob_occupation_tick(mob, alloc);
+            _mob_occupation_tick(mob, &moblist, alloc);
         }
 
-        // Be careful here, the mob pointer will be invalid if the mob
-        // moves during the call to _mob_occupation_tick.
-    }
-
-    const newmoblist = createMobList(true, false, alloc);
-    defer newmoblist.deinit();
-
-    for (newmoblist.items) |mob| {
-        if (mob.is_dead) {
-            continue;
-        } else if (mob.should_be_dead()) {
-            mob.kill();
-            continue;
-        }
         _update_fov(mob);
     }
 }
@@ -235,7 +212,7 @@ pub fn freeall() void {
     while (y < HEIGHT) : (y += 1) {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
-            if (dungeon[y][x].mob) |*mob| {
+            if (dungeon[y][x].mob) |mob| {
                 if (mob.is_dead)
                     continue;
                 mob.kill();

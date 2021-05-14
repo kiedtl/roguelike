@@ -67,15 +67,17 @@ pub fn main() anyerror!void {
         // Probably should enable this later on to track memory usage, if
         // allocations become too much
         .enable_memory_limit = false,
+
         .safety = true,
 
         // Probably would enable this later, as we might want to run the ticks()
         // on other dungeon levels in another thread
         .thread_safe = true,
 
-        .never_unmap = false,
+        .never_unmap = true,
     }){};
 
+    state.mobs = MobList.init(&gpa.allocator);
     state.machines = MachineArrayList.init(&gpa.allocator);
     state.props = PropArrayList.init(&gpa.allocator);
     astar.initCache(&gpa.allocator);
@@ -101,17 +103,17 @@ pub fn main() anyerror!void {
                 if (ev.key == termbox.TB_KEY_CTRL_C)
                     break;
             } else if (ev.ch != 0) {
-                const player = &state.dungeon[state.player.y][state.player.x].mob.?;
+                const player = state.dungeon[state.player.y][state.player.x].mob.?;
                 const did_anything = switch (ev.ch) {
                     '.' => true,
-                    'h' => player.moveInDirection(.West) != null,
-                    'j' => player.moveInDirection(.South) != null,
-                    'k' => player.moveInDirection(.North) != null,
-                    'l' => player.moveInDirection(.East) != null,
-                    'y' => player.moveInDirection(.NorthWest) != null,
-                    'u' => player.moveInDirection(.NorthEast) != null,
-                    'b' => player.moveInDirection(.SouthWest) != null,
-                    'n' => player.moveInDirection(.SouthEast) != null,
+                    'h' => player.moveInDirection(.West),
+                    'j' => player.moveInDirection(.South),
+                    'k' => player.moveInDirection(.North),
+                    'l' => player.moveInDirection(.East),
+                    'y' => player.moveInDirection(.NorthWest),
+                    'u' => player.moveInDirection(.NorthEast),
+                    'b' => player.moveInDirection(.SouthWest),
+                    'n' => player.moveInDirection(.SouthEast),
                     else => false,
                 };
 
@@ -129,6 +131,7 @@ pub fn main() anyerror!void {
 
     astar.deinitCache();
     display.deinit() catch unreachable;
+    state.mobs.deinit();
     state.machines.deinit();
     state.props.deinit();
     state.freeall();
