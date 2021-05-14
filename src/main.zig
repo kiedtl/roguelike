@@ -78,8 +78,8 @@ pub fn main() anyerror!void {
     }){};
 
     state.mobs = MobList.init(&gpa.allocator);
-    state.machines = MachineArrayList.init(&gpa.allocator);
-    state.props = PropArrayList.init(&gpa.allocator);
+    state.machines = MachineList.init(&gpa.allocator);
+    state.props = PropList.init(&gpa.allocator);
     astar.initCache(&gpa.allocator);
     rng.init();
 

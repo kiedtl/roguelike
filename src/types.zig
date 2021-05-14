@@ -17,9 +17,9 @@ pub const DirectionArrayList = std.ArrayList(Direction);
 pub const CoordCharMap = std.AutoHashMap(Coord, u21);
 pub const CoordArrayList = std.ArrayList(Coord);
 pub const MobList = LinkedList(Mob);
+pub const MachineList = LinkedList(Machine);
+pub const PropList = LinkedList(Prop);
 pub const MobArrayList = std.ArrayList(*Mob); // STYLE: rename to MobPtrList
-pub const MachineArrayList = std.ArrayList(Machine);
-pub const PropArrayList = std.ArrayList(Prop);
 
 pub const Direction = enum { // {{{
     North,

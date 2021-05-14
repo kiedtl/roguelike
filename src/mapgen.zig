@@ -270,7 +270,7 @@ pub fn tunneler(allocator: *mem.Allocator) void {
         var machine = machines.AlarmTrap;
         machine.coord = Coord.new(trap_x, trap_y);
         state.machines.append(machine) catch unreachable;
-        const machineptr = &state.machines.items[state.machines.items.len - 1];
+        const machineptr = state.machines.lastPtr().?;
         state.dungeon[trap_y][trap_x].surface = SurfaceItem{ .Machine = machineptr };
 
         if (i == room_index) continue;

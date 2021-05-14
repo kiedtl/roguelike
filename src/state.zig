@@ -18,8 +18,8 @@ pub var dungeon = [_][WIDTH]Tile{[_]Tile{Tile{
     .surface = null,
 }} ** WIDTH} ** HEIGHT;
 pub var mobs: MobList = undefined;
-pub var machines: MachineArrayList = undefined;
-pub var props: PropArrayList = undefined;
+pub var machines: MachineList = undefined;
+pub var props: PropList = undefined;
 pub var player = Coord.new(0, 0);
 pub var ticks: usize = 0;
 
@@ -208,16 +208,10 @@ pub fn tick(alloc: *mem.Allocator) void {
 }
 
 pub fn freeall() void {
-    var y: usize = 0;
-    while (y < HEIGHT) : (y += 1) {
-        var x: usize = 0;
-        while (x < WIDTH) : (x += 1) {
-            if (dungeon[y][x].mob) |mob| {
-                if (mob.is_dead)
-                    continue;
-                mob.kill();
-            }
-        }
+    var iter = mobs.iterator();
+    while (iter.next()) |*mob| {
+        if (mob.is_dead) continue;
+        mob.kill();
     }
 }
 
