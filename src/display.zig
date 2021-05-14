@@ -93,7 +93,7 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
 
     _draw_bar(y, startx, endx, player.HP, player.max_HP, "HP", 0xffffff, 0);
     y += 1;
-    _draw_bar(y, startx, endx, player.noise, 20, "NS", 0x329f32, 0);
+    _draw_bar(y, startx, endx, player.noise, 20, "NS", 0x232faa, 0);
     y += 2;
 
     for (moblist.items) |mob| {
@@ -174,9 +174,10 @@ pub fn draw() void {
             // what they saw last there
             if (!player.cansee(coord)) {
                 if (player.canHear(coord)) |noise| {
-                    const green = @intCast(u32, math.clamp(noise * 30, 20, 255) << 8);
+                    const blue = @intCast(u32, math.clamp(noise * 30, 30, 255));
                     const bg: u32 = if (player.memory.contains(coord)) 0x101010 else 0;
-                    termbox.tb_change_cell(cursorx, cursory, '!', green, bg);
+                    const color = 0x23 << 16 | 0x2f << 8 | blue;
+                    termbox.tb_change_cell(cursorx, cursory, '?', color, bg);
                 } else {
                     if (player.memory.contains(coord)) {
                         const tile = @as(u32, player.memory.get(coord) orelse unreachable);
