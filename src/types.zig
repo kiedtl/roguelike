@@ -633,10 +633,10 @@ pub const Machine = struct {
     // Does the presence of this machine render a tile unwalkable?
     walkable: bool,
     opacity: f64,
-    coord: Coord,
+    coord: Coord = Coord.new(0, 0),
     on_trigger: fn (*Mob, *Machine) void,
     // FIXME: there has got to be a better way to do this
-    props: [40]?Prop,
+    props: [40]?Prop = [_]?Prop{null} ** 40,
     // TODO: is_disabled, strength_needed
 };
 

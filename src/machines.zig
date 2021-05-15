@@ -6,9 +6,7 @@ pub const AlarmTrap = Machine{
     .tile = '^',
     .walkable = true,
     .opacity = 0.0,
-    .coord = Coord.new(0, 0),
     .on_trigger = triggerAlarmTrap,
-    .props = [_]?Prop{null} ** 40,
 };
 
 pub const NormalDoor = Machine{
@@ -16,9 +14,7 @@ pub const NormalDoor = Machine{
     .tile = '+', // TODO: red background?
     .walkable = true,
     .opacity = 1.0,
-    .coord = Coord.new(0, 0),
     .on_trigger = triggerNone,
-    .props = [_]?Prop{null} ** 40,
 };
 
 pub fn triggerNone(_: *Mob, __: *Machine) void {}
