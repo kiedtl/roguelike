@@ -444,6 +444,12 @@ pub const Mob = struct { // {{{
             return false;
         }
 
+        return self.teleportTo(dest);
+    }
+
+    pub fn teleportTo(self: *Mob, dest: Coord) bool {
+        const coord = self.coord;
+
         if (state.dungeon[dest.y][dest.x].type == .Wall) {
             return false;
         }
@@ -626,6 +632,7 @@ pub const Machine = struct {
     tile: u21,
     // Does the presence of this machine render a tile unwalkable?
     walkable: bool,
+    opacity: f64,
     coord: Coord,
     on_trigger: fn (*Mob, *Machine) void,
     // FIXME: there has got to be a better way to do this

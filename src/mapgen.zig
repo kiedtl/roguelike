@@ -214,10 +214,16 @@ fn _tunnel(coord: Coord, previous: Direction) void {
         state.dungeon[newcoord2.y][newcoord2.x].type = .Floor;
 
         if (rng.range(usize, 0, 3) == 0) {
-            var door = newcoord2;
-            if (door.move(direction, state.mapgeometry)) {
+            var doorcoord = newcoord2;
+            if (doorcoord.move(direction, state.mapgeometry)) {
                 _room(direction, &room);
-                state.dungeon[door.y][door.x].type = .Floor;
+
+                var door = machines.NormalDoor;
+                door.coord = doorcoord;
+                state.machines.append(door) catch unreachable;
+                const doorptr = state.machines.lastPtr().?;
+                state.dungeon[doorcoord.y][doorcoord.x].surface = SurfaceItem{ .Machine = doorptr };
+                state.dungeon[doorcoord.y][doorcoord.x].type = .Floor;
             }
         } else {
             _tunnel(newcoord2, direction);

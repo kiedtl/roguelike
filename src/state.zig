@@ -31,8 +31,18 @@ pub fn tile_sound_opacity(coord: Coord) f64 {
 
 // STYLE: change to Tile.opacity
 fn tile_opacity(coord: Coord) f64 {
-    const tile = dungeon[coord.y][coord.x];
-    return if (tile.type == .Wall) 1.0 else 0.0;
+    const tile = &dungeon[coord.y][coord.x];
+    if (tile.type == .Wall) return 1.0;
+
+    var o: f64 = 0.0;
+    if (tile.surface) |surface| {
+        switch (surface) {
+            .Machine => |m| o += m.opacity,
+            else => {},
+        }
+    }
+
+    return o;
 }
 
 // STYLE: change to Tile.isWalkable
