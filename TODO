@@ -24,3 +24,26 @@ Feats (challenges)
 ------------------
 sneak	Only attack and kill with stabs.
 frugal	Use only one weapon throughout the game.
+
+Movement patterns
+-----------------
+sneak	[move, move, rest, move]
+charge	[move(A), move(A), move(A), attack(A)]
+
+Machines
+--------
+
+furnace
+cooler
+forge
+book copy machine
+memory "condenser"
+food ration maker
+heat-powered furnace
+"camera"
+alarm system
+announcement system
+elevator
+teleportation station
+nuclear reactor
+weapon repair shop
