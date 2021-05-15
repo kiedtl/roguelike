@@ -20,5 +20,9 @@ pub const NormalDoor = Machine{
 pub fn triggerNone(_: *Mob, __: *Machine) void {}
 
 pub fn triggerAlarmTrap(culprit: *Mob, machine: *Machine) void {
+    if (culprit.allegiance == .Sauron) {
+        return;
+    }
+
     culprit.noise += 1000; // muahahaha
 }
