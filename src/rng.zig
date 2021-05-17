@@ -22,11 +22,15 @@ pub fn boolean() bool {
 pub fn range(comptime T: type, min: T, max: T) T {
     std.debug.assert(max >= min);
     const diff = max - min;
-    return (int(T) % diff) + min;
+    return if (diff > 0) (int(T) % diff) + min else min;
 }
 
 pub fn shuffle(comptime T: type, arr: []T) void {
     rng.random.shuffle(T, arr);
+}
+
+pub fn chooseUnweighted(comptime T: type, arr: []const T) T {
+    return arr[range(usize, 0, arr.len - 1)];
 }
 
 pub fn choose(comptime T: type, arr: []const T, weights: []const usize) !T {

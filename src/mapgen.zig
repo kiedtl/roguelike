@@ -1,12 +1,22 @@
 const std = @import("std");
 const heap = std.heap;
 const mem = std.mem;
+const math = std.math;
 
 const rng = @import("rng.zig");
 const machines = @import("machines.zig");
 const utils = @import("utils.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
+
+fn _place_normal_door(coord: Coord) void {
+    var door = machines.NormalDoor;
+    door.coord = coord;
+    state.machines.append(door) catch unreachable;
+    const doorptr = state.machines.lastPtr().?;
+    state.dungeon[coord.y][coord.x].surface = SurfaceItem{ .Machine = doorptr };
+    state.dungeon[coord.y][coord.x].type = .Floor;
+}
 
 fn _add_guard_station(stationy: usize, stationx: usize, d: Direction, alloc: *mem.Allocator) void {
     var guard = GuardTemplate;
@@ -79,17 +89,21 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     state.dungeon[state.player.y][state.player.x].mob = state.mobs.lastPtr().?;
 }
 
-const MAX_TUNNEL_LENGTH: usize = 12;
-
-const MIN_ROOM_WIDTH: usize = 3;
-const MIN_ROOM_HEIGHT: usize = 3;
-const MAX_ROOM_WIDTH: usize = 10;
+const MIN_ROOM_WIDTH: usize = 7;
+const MIN_ROOM_HEIGHT: usize = 4;
+const MAX_ROOM_WIDTH: usize = 20;
 const MAX_ROOM_HEIGHT: usize = 10;
 
 const Room = struct {
     start: Coord,
     width: usize,
     height: usize,
+
+    pub fn overflowsLimit(self: *const Room, limit: *const Room) bool {
+        const a = self.end().x >= limit.end().x or self.end().y >= limit.end().x;
+        const b = self.start.x < limit.start.x or self.start.y < limit.start.y;
+        return a or b;
+    }
 
     pub fn end(self: *const Room) Coord {
         return Coord.new(self.start.x + self.width, self.start.y + self.height);
@@ -107,25 +121,25 @@ const Room = struct {
         return ca and cb and cc and cd;
     }
 
-    pub fn attach(self: *const Room, d: Direction, width: usize, height: usize) Room {
+    pub fn attach(self: *const Room, d: Direction, width: usize, height: usize, distance: usize) Room {
         return switch (d) {
             .North => Room{
-                .start = Coord.new(self.start.x + (self.width / 2), utils.saturating_sub(self.start.y, height + 1)),
+                .start = Coord.new(self.start.x + (self.width / 2), utils.saturating_sub(self.start.y, height + distance)),
                 .height = utils.saturating_sub(self.start.y, height),
                 .width = width,
             },
             .East => Room{
-                .start = Coord.new(self.end().x + 1, self.start.y + (self.height / 2)),
+                .start = Coord.new(self.end().x + distance, self.start.y + (self.height / 2)),
                 .height = height,
                 .width = width,
             },
             .South => Room{
-                .start = Coord.new(self.start.x + (self.width / 2) + 1, self.end().y),
+                .start = Coord.new(self.start.x + (self.width / 2), self.end().y + distance),
                 .height = height,
                 .width = width,
             },
             .West => Room{
-                .start = Coord.new(utils.saturating_sub(self.start.x, width + 1), self.start.y + (self.height / 2)),
+                .start = Coord.new(utils.saturating_sub(self.start.x, width + distance), self.start.y + (self.height / 2)),
                 .width = utils.saturating_sub(self.start.x, width),
                 .height = height,
             },
@@ -136,7 +150,7 @@ const Room = struct {
 
 var rooms: std.ArrayList(Room) = undefined;
 
-fn _room_intersects(room: *const Room, ignore: Coord) bool {
+fn _room_intersects(room: *const Room) bool {
     if (room.start.x == 0 or room.start.y == 0)
         return true;
     if (room.start.x >= state.WIDTH or room.start.y >= state.HEIGHT)
@@ -149,9 +163,6 @@ fn _room_intersects(room: *const Room, ignore: Coord) bool {
         while (y < room.end().y + 1) : (y += 1) {
             var x = utils.saturating_sub(room.start.x, 1);
             while (x < room.end().x + 1) : (x += 1) {
-                if (Coord.new(x, y).eq(ignore))
-                    continue;
-
                 if (state.dungeon[y][x].type != .Wall)
                     return true;
             }
@@ -176,99 +187,69 @@ fn _excavate(room: *const Room) void {
     }
 }
 
-fn _room(direction: Direction, room: *const Room) void {
-    const width = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
-    const height = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
+fn _place_rooms(count: usize) void {
+    const limit = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
+    const distances = [2][5]usize{ .{ 1, 2, 3, 4, 5 }, .{ 9, 8, 3, 2, 1 } };
 
-    const newroom = room.attach(direction, width, height);
+    sides: for (&CARDINAL_DIRECTIONS) |side| {
+        if (rng.range(usize, 0, 5) == 0) continue;
 
-    if (_room_intersects(&newroom, room.start)) return;
+        const parent = rng.chooseUnweighted(Room, rooms.items);
+        const distance = rng.choose(usize, &distances[0], &distances[1]) catch unreachable;
 
-    rooms.append(newroom) catch unreachable;
-    _excavate(&newroom);
-}
+        var child_w = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
+        var child_h = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
+        var child = parent.attach(side, child_w, child_h, distance);
 
-fn _tunnel(coord: Coord, previous: Direction) void {
-    var directions = CARDINAL_DIRECTIONS;
-    rng.shuffle(Direction, &directions);
+        while (_room_intersects(&child) or child.overflowsLimit(&limit)) {
+            if (child_w < MIN_ROOM_WIDTH or child_h < MIN_ROOM_HEIGHT)
+                continue :sides;
 
-    for (directions) |direction| {
-        var newcoord = coord;
-        if (!newcoord.move(direction, state.mapgeometry))
-            continue;
-
-        var newcoord2 = newcoord;
-        if (!newcoord2.move(direction, state.mapgeometry))
-            continue;
-
-        // TODO: give slight chance to connect anyway
-        if (state.dungeon[newcoord2.y][newcoord2.x].type != .Wall)
-            if (rng.range(usize, 0, 4) != 0) continue;
-
-        const room = Room{ .start = newcoord2, .width = 1, .height = 1 };
-        if (_room_intersects(&room, coord)) {
-            continue;
+            child_w -= 1;
+            child_h -= 1;
+            child = parent.attach(side, child_w, child_h, distance);
         }
 
-        state.dungeon[newcoord.y][newcoord.x].type = .Floor;
-        state.dungeon[newcoord2.y][newcoord2.x].type = .Floor;
+        _excavate(&child);
+        rooms.append(child) catch unreachable;
 
-        if (rng.range(usize, 0, 3) == 0) {
-            var doorcoord = newcoord2;
-            if (doorcoord.move(direction, state.mapgeometry)) {
-                _room(direction, &room);
+        const rsx = math.max(parent.start.x, child.start.x);
+        const rex = math.min(parent.end().x, child.end().x);
+        const x = rng.range(usize, math.min(rsx, rex), math.max(rsx, rex));
+        const rsy = math.max(parent.start.y, child.start.y);
+        const rey = math.min(parent.end().y, child.end().y);
+        const y = rng.range(usize, math.min(rsy, rey), math.max(rsy, rey));
 
-                var door = machines.NormalDoor;
-                door.coord = doorcoord;
-                state.machines.append(door) catch unreachable;
-                const doorptr = state.machines.lastPtr().?;
-                state.dungeon[doorcoord.y][doorcoord.x].surface = SurfaceItem{ .Machine = doorptr };
-                state.dungeon[doorcoord.y][doorcoord.x].type = .Floor;
-            }
-        } else {
-            _tunnel(newcoord2, direction);
-        }
+        var corridor = switch (side) {
+            .North => Room{ .start = Coord.new(x, child.end().y), .height = parent.start.y - child.end().y, .width = 1 },
+            .South => Room{ .start = Coord.new(x, parent.end().y), .height = child.start.y - parent.end().y, .width = 1 },
+            .West => Room{ .start = Coord.new(child.end().x, y), .height = 1, .width = parent.start.x - child.end().x },
+            .East => Room{ .start = Coord.new(parent.end().x, y), .height = 1, .width = child.start.x - parent.end().x },
+            else => unreachable,
+        };
+
+        _excavate(&corridor);
+
+        if (distance == 1) _place_normal_door(corridor.start);
     }
+
+    if (count > 0) _place_rooms(count - 1);
 }
 
-fn _remove_deadends(n: usize) void {
-    var y: usize = 0;
-    while (y < state.HEIGHT) : (y += 1) {
-        var x: usize = 0;
-        while (x < state.WIDTH) : (x += 1) {
-            var walls: usize = 0;
-
-            for (CARDINAL_DIRECTIONS) |d| {
-                var coord = Coord.new(x, y);
-                if (!coord.move(d, state.mapgeometry))
-                    continue;
-                if (state.dungeon[coord.y][coord.x].type == .Wall)
-                    walls += 1;
-            }
-
-            if (walls >= 3) {
-                state.dungeon[y][x].type = .Wall;
-            }
-        }
-    }
-
-    if (n > 0) {
-        _remove_deadends(n - 1);
-    }
-}
-
-pub fn tunneler(allocator: *mem.Allocator) void {
+pub fn placeRandomRooms(allocator: *mem.Allocator) void {
     rooms = std.ArrayList(Room).init(allocator);
 
-    const midx = rng.range(usize, 0, state.WIDTH / 2);
-    const midy = rng.range(usize, 0, state.HEIGHT / 2);
+    const width = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
+    const height = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
+    const x = rng.range(usize, 1, state.WIDTH / 2);
+    const y = rng.range(usize, 1, state.HEIGHT / 2);
+    const first = Room{ .start = Coord.new(x, y), .width = width, .height = height };
+    _excavate(&first);
+    rooms.append(first) catch unreachable;
 
-    _tunnel(Coord.new(midx, midy), .East);
-    _remove_deadends(500);
+    _place_rooms(100);
 
-    const room_index = rng.range(usize, 0, rooms.items.len);
-    const room = &rooms.items[room_index];
-    _add_player(Coord.new(room.start.x + 1, room.start.y + 1), allocator);
+    _add_player(Coord.new(first.start.x + 1, first.start.y + 1), allocator);
 
     for (rooms.items) |nroom, i| {
         const trap_x = rng.range(usize, nroom.start.x + 1, nroom.end().x - 1);
@@ -279,7 +260,8 @@ pub fn tunneler(allocator: *mem.Allocator) void {
         const machineptr = state.machines.lastPtr().?;
         state.dungeon[trap_y][trap_x].surface = SurfaceItem{ .Machine = machineptr };
 
-        if (i == room_index) continue;
+        // Don't add mobs to the first room (the one that the player's in)
+        if (i == 0) continue;
 
         const guardstart = Coord.new(nroom.start.x + 1, nroom.start.y + 1);
         const guardend = Coord.new(nroom.end().x - 1, nroom.end().y - 1);

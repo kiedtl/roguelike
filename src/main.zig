@@ -32,11 +32,14 @@ fn debug_main() anyerror!void {
     }){};
 
     rng.init();
+    state.mobs = MobList.init(&gpa.allocator);
+    state.machines = MachineList.init(&gpa.allocator);
+    state.props = PropList.init(&gpa.allocator);
 
     // mapgen.drunken_walk();
     // mapgen.add_guard_stations(&gpa.allocator);
     // mapgen.add_player(&gpa.allocator);
-    mapgen.tunneler(&gpa.allocator);
+    mapgen.placeRandomRooms(&gpa.allocator);
 
     {
         var y: usize = 0;
@@ -45,7 +48,19 @@ fn debug_main() anyerror!void {
             while (x < state.WIDTH) : (x += 1) {
                 switch (state.dungeon[y][x].type) {
                     .Wall => std.debug.print("\x1b[07m \x1b[m", .{}),
-                    .Floor => std.debug.print("·", .{}),
+                    .Floor => {
+                        var tile: u21 = '·';
+                        if (state.dungeon[y][x].surface) |surface| {
+                            switch (surface) {
+                                .Machine => |m| tile = m.tile,
+                                .Prop => |p| tile = p.tile,
+                            }
+                        }
+
+                        var buf: [4]u8 = .{ 0, 0, 0, 0 };
+                        _ = std.unicode.utf8Encode(tile, &buf) catch unreachable;
+                        std.debug.print("{}", .{buf});
+                    },
                 }
             }
             std.debug.print("\n", .{});
@@ -83,7 +98,7 @@ pub fn main() anyerror!void {
     astar.initCache(&gpa.allocator);
     rng.init();
 
-    mapgen.tunneler(&gpa.allocator);
+    mapgen.placeRandomRooms(&gpa.allocator);
 
     state.tick(&gpa.allocator);
     display.draw();
