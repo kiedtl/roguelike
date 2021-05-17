@@ -420,7 +420,7 @@ pub const Mob = struct { // {{{
             self.noise += NOISE_SCREAM; // The <mob> screams in agony!!
         }
 
-        self.pain -= PAIN_DECAY * @intToFloat(f64, self.willpower);
+        self.pain = math.max(self.pain - PAIN_DECAY * @intToFloat(f64, self.willpower), 0);
     }
 
     // Try to move a mob.
