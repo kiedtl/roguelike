@@ -174,7 +174,7 @@ fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem.All
     if (mob.occupation.phase == .SawHostile and mob.occupation.is_combative) {
         const target_coord = mob.occupation.target.?;
 
-        if (dungeon[target_coord.y][target_coord.x].mob == null) {
+        if (dungeon[target_coord.y][target_coord.x].mob == null or dungeon[target_coord.y][target_coord.x].mob == null) {
             mob.occupation.phase = .GoTo;
             _mob_occupation_tick(mob, moblist, alloc);
         }
