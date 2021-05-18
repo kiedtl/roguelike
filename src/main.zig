@@ -92,6 +92,7 @@ pub fn main() anyerror!void {
         .never_unmap = true,
     }){};
 
+    state.messages = MessageArrayList.init(&gpa.allocator);
     state.mobs = MobList.init(&gpa.allocator);
     state.machines = MachineList.init(&gpa.allocator);
     state.props = PropList.init(&gpa.allocator);

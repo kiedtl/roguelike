@@ -12,14 +12,14 @@ const ai = @import("ai.zig");
 pub const CARDINAL_DIRECTIONS = [_]Direction{ .North, .South, .East, .West };
 pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .NorthWest, .SouthEast, .SouthWest };
 
-// STYLE: change "FooArrayList" to "FooList"
 pub const DirectionArrayList = std.ArrayList(Direction);
 pub const CoordCharMap = std.AutoHashMap(Coord, u21);
 pub const CoordArrayList = std.ArrayList(Coord);
+pub const MessageArrayList = std.ArrayList(Message);
 pub const MobList = LinkedList(Mob);
 pub const MachineList = LinkedList(Machine);
 pub const PropList = LinkedList(Prop);
-pub const MobArrayList = std.ArrayList(*Mob); // STYLE: rename to MobPtrList
+pub const MobArrayList = std.ArrayList(*Mob); // STYLE: rename to MobPtrArrayList
 
 pub const Direction = enum { // {{{
     North,
@@ -296,6 +296,10 @@ test "coord.move" {
     std.testing.expectEqual(c, Coord.new(1, 0));
 }
 
+pub const Message = struct {
+    msg: [128]u8,
+};
+
 pub const Allegiance = enum { Sauron, Illuvatar, NoneEvil, NoneGood };
 
 // TODO: add phases: Eat, Drink, Flee, Idle, GetItem
@@ -518,6 +522,13 @@ pub const Mob = struct { // {{{
 
         // saturate on subtraction
         recipient.HP = if ((recipient.HP -% damage) > recipient.HP) 0 else recipient.HP - damage;
+
+        const hitstr = if (is_stab) "stab" else "hit";
+        if (recipient.coord.eq(state.player)) {
+            state.message("The {} {} you for {} damage!", .{ attacker.species, hitstr, damage });
+        } else if (attacker.coord.eq(state.player)) {
+            state.message("You {} the {} for {} damage!", .{ hitstr, recipient.species, damage });
+        }
     }
 
     pub fn kill(self: *Mob) void {

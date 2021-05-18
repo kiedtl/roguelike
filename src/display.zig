@@ -42,8 +42,7 @@ fn _clear_line(from: isize, to: isize, y: isize) void {
 }
 
 fn _draw_string(_x: isize, _y: isize, bg: u32, fg: u32, comptime format: []const u8, args: anytype) !isize {
-    var buf: [128]u8 = undefined;
-    for (buf) |_, i| buf[i] = 0;
+    var buf: [256]u8 = [_]u8{0} ** 256;
     var fbs = std.io.fixedBufferStream(&buf);
     try std.fmt.format(fbs.writer(), format, args);
     const str = fbs.getWritten();
@@ -109,6 +108,18 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
 
         _draw_bar(y, startx, endx, mob.HP, mob.max_HP, "HP", 0xffffff, 0);
         y += 2;
+    }
+}
+
+fn _draw_messages(startx: isize, endx: isize, starty: isize, endy: isize) void {
+    if (state.messages.items.len == 0)
+        return;
+
+    var y: isize = starty;
+    var i: usize = state.messages.items.len - 1;
+    while (i > 0 and y < endy) : (i -= 1) {
+        const msg = state.messages.items[i].msg;
+        y = _draw_string(startx, y, 0xffffff, 0, "{}", .{msg}) catch unreachable;
     }
 }
 
@@ -230,7 +241,8 @@ pub fn draw() void {
     const player_bg: u32 = if (is_player_watched) 0x4682b4 else 0xffffff;
     termbox.tb_change_cell(playerx - startx, playery - starty, '@', 0, player_bg);
 
-    _draw_infopanel(player, &moblist, maxx, 1, termbox.tb_width(), maxy);
+    _draw_infopanel(player, &moblist, maxx, 1, termbox.tb_width(), termbox.tb_height() - 1);
+    _draw_messages(0, maxx, maxy, termbox.tb_height() - 1);
 
     termbox.tb_present();
     state.reset_marks();

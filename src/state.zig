@@ -22,6 +22,7 @@ pub var machines: MachineList = undefined;
 pub var props: PropList = undefined;
 pub var player = Coord.new(0, 0);
 pub var ticks: usize = 0;
+pub var messages: MessageArrayList = undefined;
 
 // STYLE: change to Tile.soundOpacity
 pub fn tile_sound_opacity(coord: Coord) f64 {
@@ -233,4 +234,13 @@ pub fn reset_marks() void {
             dungeon[y][x].marked = false;
         }
     }
+}
+
+pub fn message(comptime fmt: []const u8, args: anytype) void {
+    var buf: [128]u8 = undefined;
+    for (buf) |*i| i.* = 0;
+    var fbs = std.io.fixedBufferStream(&buf);
+    std.fmt.format(fbs.writer(), fmt, args) catch |_| @panic("format error");
+    const str = fbs.getWritten();
+    messages.append(.{ .msg = buf }) catch @panic("OOM");
 }
