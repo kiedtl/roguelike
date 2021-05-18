@@ -336,27 +336,27 @@ pub const Mob = struct { // {{{
     tile: u21,
     occupation: Occupation,
     allegiance: Allegiance,
-    memory: CoordCharMap,
-    fov: CoordArrayList,
+    memory: CoordCharMap = undefined,
+    fov: CoordArrayList = undefined,
     facing: Direction,
     facing_wide: bool,
     vision: usize,
-    coord: Coord,
+    coord: Coord = Coord.new(0, 0),
 
-    is_dead: bool,
+    is_dead: bool = false,
 
     // The amount of sound the mob is making. Decays by 0.5 every tick.
     //
     // XXX: Would it be best to make this per-tile instead of per-mob? That way,
     // the source of old sounds would be known when the soundmaker moves.
-    noise: usize,
+    noise: usize = 0,
 
     // If the practical pain goes over PAIN_UNCONSCIOUS_THRESHHOLD, the mob
     // should go unconscious. If it goes over PAIN_DEATH_THRESHHOLD, it will
     // succumb and die.
     //
     // practical_pain = pain / willpower
-    pain: f64,
+    pain: f64 = 0.0,
 
     // Immutable instrinsic attributes.
     //
@@ -682,17 +682,9 @@ pub const GuardTemplate = Mob{
         .phase = .Work,
     },
     .allegiance = .Sauron,
-    .fov = undefined,
-    .memory = undefined,
     .facing = .North,
     .facing_wide = false,
     .vision = 5,
-    .coord = undefined,
-
-    .is_dead = false,
-
-    .noise = 0,
-    .pain = 0.0,
 
     .willpower = 2,
     .dexterity = 10,
@@ -715,17 +707,9 @@ pub const ElfTemplate = Mob{
         .phase = .Work,
     },
     .allegiance = .Illuvatar,
-    .fov = undefined,
-    .memory = undefined,
     .facing = .North,
     .facing_wide = false,
     .vision = 20,
-    .coord = undefined,
-
-    .is_dead = false,
-
-    .noise = 0,
-    .pain = 0.0,
 
     .willpower = 4,
     .dexterity = 28,
