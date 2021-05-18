@@ -1,11 +1,13 @@
 New mobs ([d]emon, [h]uman, [a]nimal, [u]ndead, [o]ther, * = allies)
 --------
 d	burning brute
+		A winged demon composed primarily of boiling granite, capable of
+		fearsome fire attacks.
 d	winged terror
 d	greater & lesser necromancer
 d	blazing brute
 a	jackals
-d	hellhounds
+a	hellhounds
 a	hounds
 h	death/fire/ether knight
 d	death angel
@@ -19,6 +21,18 @@ a	fire worm
 o	crystal statue
 o	turquoise statue
 u	lich
+d	bogeyman (TODO: change name)
+d	creeping dread
+*	angel
+*	archangel
+o	complex number
+o	real number
+o	imaginary number
+a	troll
+a	internet troll
+a	fire worm
+a	spiders
+o	grue
 
 Feats (challenges)
 ------------------
@@ -29,6 +43,7 @@ Movement patterns
 -----------------
 sneak	[move, move, rest, move]
 charge	[move(A), move(A), move(A), attack(A)]
+lunge	[move(A), move(A), attack(A)] (dagger)
 
 Machines
 --------
@@ -47,6 +62,7 @@ elevator
 teleportation station
 nuclear reactor
 weapon repair shop
+air purifier
 
 Refactorings
 ------------
