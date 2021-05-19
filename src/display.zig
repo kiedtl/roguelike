@@ -90,7 +90,7 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
 
     y = _draw_string(startx, y, 0xffffff, 0, "@: You", .{}) catch unreachable;
 
-    _draw_bar(y, startx, endx, player.HP, player.max_HP, "HP", 0xffffff, 0);
+    _draw_bar(y, startx, endx, @floatToInt(usize, player.HP), @floatToInt(usize, player.max_HP), "HP", 0xffffff, 0);
     y += 1;
     _draw_bar(y, startx, endx, player.noise, 20, "NS", 0x232faa, 0);
     y += 2;
@@ -106,7 +106,7 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
 
         y = _draw_string(startx + 1, y, 0xffffff, 0, ": {} ({})", .{ mob.species, mob.activity_description() }) catch unreachable;
 
-        _draw_bar(y, startx, endx, mob.HP, mob.max_HP, "HP", 0xffffff, 0);
+        _draw_bar(y, startx, endx, @floatToInt(usize, mob.HP), @floatToInt(usize, mob.max_HP), "HP", 0xffffff, 0);
         y += 2;
     }
 }

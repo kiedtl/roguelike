@@ -373,12 +373,12 @@ pub const Mob = struct { // {{{
     willpower: usize, // Range: 0 < willpower < 10
     dexterity: usize, // Range: 0 < dexterity < 100
     hearing: usize,
-    max_HP: usize,
+    max_HP: f64, // Should always be a whole number
 
     // Mutable instrinsic attributes.
     //
     // The use and effects of most of these are obvious.
-    HP: usize,
+    HP: f64, // f64 so that we can regenerate <1 HP per turn
     strength: usize,
 
     // Maximum field of hearing.
@@ -398,7 +398,7 @@ pub const Mob = struct { // {{{
     // TODO: regenerate health more if mob rested in last turn.
     pub fn tick_hp(self: *Mob) void {
         assert(!self.is_dead);
-        self.HP = math.clamp(self.HP + 1, 0, self.max_HP);
+        self.HP = math.clamp(self.HP + 0.14, 0, self.max_HP);
     }
 
     // Halves sound. Should be called by state.tick().
@@ -521,7 +521,8 @@ pub const Mob = struct { // {{{
         if (is_stab) damage *= 6;
 
         // saturate on subtraction
-        recipient.HP = if ((recipient.HP -% damage) > recipient.HP) 0 else recipient.HP - damage;
+        const HP = @floatToInt(usize, math.floor(recipient.HP));
+        recipient.HP = @intToFloat(f64, if ((HP -% damage) > HP) 0 else HP - damage);
 
         const hitstr = if (is_stab) "stab" else "hit";
         if (recipient.coord.eq(state.player)) {
