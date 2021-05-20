@@ -16,59 +16,59 @@ pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) nore
     std.builtin.default_panic(msg, error_return_trace);
 }
 
-// Some debugging code. Nothing to see here, move along.
-fn debug_main() anyerror!void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{
-        // Probably should enable this later on to track memory usage, if
-        // allocations become too much
-        .enable_memory_limit = false,
-        .safety = true,
+// // Some debugging code. Nothing to see here, move along.
+// fn debug_main() anyerror!void {
+//     var gpa = std.heap.GeneralPurposeAllocator(.{
+//         // Probably should enable this later on to track memory usage, if
+//         // allocations become too much
+//         .enable_memory_limit = false,
+//         .safety = true,
 
-        // Probably would enable this later, as we might want to run the ticks()
-        // on other dungeon levels in another thread
-        .thread_safe = true,
+//         // Probably would enable this later, as we might want to run the ticks()
+//         // on other dungeon levels in another thread
+//         .thread_safe = true,
 
-        .never_unmap = false,
-    }){};
+//         .never_unmap = false,
+//     }){};
 
-    rng.init();
-    state.mobs = MobList.init(&gpa.allocator);
-    state.machines = MachineList.init(&gpa.allocator);
-    state.props = PropList.init(&gpa.allocator);
+//     rng.init();
+//     state.mobs = MobList.init(&gpa.allocator);
+//     state.machines = MachineList.init(&gpa.allocator);
+//     state.props = PropList.init(&gpa.allocator);
 
-    // mapgen.drunken_walk();
-    // mapgen.add_guard_stations(&gpa.allocator);
-    // mapgen.add_player(&gpa.allocator);
-    mapgen.placeRandomRooms(&gpa.allocator);
+//     // mapgen.drunken_walk();
+//     // mapgen.add_guard_stations(&gpa.allocator);
+//     // mapgen.add_player(&gpa.allocator);
+//     mapgen.placeRandomRooms(&gpa.allocator);
 
-    {
-        var y: usize = 0;
-        while (y < state.HEIGHT) : (y += 1) {
-            var x: usize = 0;
-            while (x < state.WIDTH) : (x += 1) {
-                switch (state.dungeon[y][x].type) {
-                    .Wall => std.debug.print("\x1b[07m \x1b[m", .{}),
-                    .Floor => {
-                        var tile: u21 = '·';
-                        if (state.dungeon[y][x].surface) |surface| {
-                            switch (surface) {
-                                .Machine => |m| tile = m.tile,
-                                .Prop => |p| tile = p.tile,
-                            }
-                        }
+//     {
+//         var y: usize = 0;
+//         while (y < state.HEIGHT) : (y += 1) {
+//             var x: usize = 0;
+//             while (x < state.WIDTH) : (x += 1) {
+//                 switch (state.dungeon[0][y][x].type) {
+//                     .Wall => std.debug.print("\x1b[07m \x1b[m", .{}),
+//                     .Floor => {
+//                         var tile: u21 = '·';
+//                         if (state.dungeon[0][y][x].surface) |surface| {
+//                             switch (surface) {
+//                                 .Machine => |m| tile = m.tile,
+//                                 .Prop => |p| tile = p.tile,
+//                             }
+//                         }
 
-                        var buf: [4]u8 = .{ 0, 0, 0, 0 };
-                        _ = std.unicode.utf8Encode(tile, &buf) catch unreachable;
-                        std.debug.print("{}", .{buf});
-                    },
-                }
-            }
-            std.debug.print("\n", .{});
-        }
-    }
+//                         var buf: [4]u8 = .{ 0, 0, 0, 0 };
+//                         _ = std.unicode.utf8Encode(tile, &buf) catch unreachable;
+//                         std.debug.print("{}", .{buf});
+//                     },
+//                 }
+//             }
+//             std.debug.print("\n", .{});
+//         }
+//     }
 
-    std.process.exit(0);
-}
+//     std.process.exit(0);
+// }
 
 pub fn main() anyerror!void {
     if (display.init()) {} else |err| switch (err) {
@@ -99,7 +99,7 @@ pub fn main() anyerror!void {
     astar.initCache(&gpa.allocator);
     rng.init();
 
-    mapgen.placeRandomRooms(&gpa.allocator);
+    mapgen.placeRandomRooms(0, &gpa.allocator);
 
     state.tick(&gpa.allocator);
     display.draw();
@@ -119,23 +119,22 @@ pub fn main() anyerror!void {
                 if (ev.key == termbox.TB_KEY_CTRL_C)
                     break;
             } else if (ev.ch != 0) {
-                const player = state.dungeon[state.player.y][state.player.x].mob.?;
                 const did_anything = switch (ev.ch) {
                     '.' => true,
-                    'h' => player.moveInDirection(.West),
-                    'j' => player.moveInDirection(.South),
-                    'k' => player.moveInDirection(.North),
-                    'l' => player.moveInDirection(.East),
-                    'y' => player.moveInDirection(.NorthWest),
-                    'u' => player.moveInDirection(.NorthEast),
-                    'b' => player.moveInDirection(.SouthWest),
-                    'n' => player.moveInDirection(.SouthEast),
+                    'h' => state.player.moveInDirection(.West),
+                    'j' => state.player.moveInDirection(.South),
+                    'k' => state.player.moveInDirection(.North),
+                    'l' => state.player.moveInDirection(.East),
+                    'y' => state.player.moveInDirection(.NorthWest),
+                    'u' => state.player.moveInDirection(.NorthEast),
+                    'b' => state.player.moveInDirection(.SouthWest),
+                    'n' => state.player.moveInDirection(.SouthEast),
                     else => false,
                 };
 
                 if (did_anything) {
                     state.tick(&gpa.allocator);
-                    if (state.dungeon[state.player.y][state.player.x].mob.?.is_dead) {
+                    if (state.player.is_dead) {
                         @panic("You died...");
                     } else {
                         display.draw();

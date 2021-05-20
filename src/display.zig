@@ -137,9 +137,9 @@ pub fn draw() void {
     var membuf: [65535]u8 = undefined;
     var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
-    const playery = @intCast(isize, state.player.y);
-    const playerx = @intCast(isize, state.player.x);
-    var player = state.dungeon[state.player.y][state.player.x].mob orelse unreachable;
+    const playery = @intCast(isize, state.player.coord.y);
+    const playerx = @intCast(isize, state.player.coord.x);
+    const level = state.player.coord.z;
     var is_player_watched = false;
 
     const maxy: isize = termbox.tb_height() - 6;
@@ -158,7 +158,7 @@ pub fn draw() void {
     // Create a list of all mobs on the map so that we can calculate what tiles
     // are in the FOV of any mob. Use only mobs that the player can see, the player
     // shouldn't know what's in the FOV of an invisible mob!
-    var moblist = state.createMobList(false, true, &fba.allocator);
+    var moblist = state.createMobList(false, true, level, &fba.allocator);
 
     var y = starty;
     while (y < endy and cursory < @intCast(usize, maxy)) : ({
@@ -179,19 +179,19 @@ pub fn draw() void {
 
             const u_x: usize = @intCast(usize, x);
             const u_y: usize = @intCast(usize, y);
-            const coord = Coord.new(u_x, u_y);
+            const coord = Coord.new2(level, u_x, u_y);
 
             // if player can't see area, draw a blank/grey tile, depending on
             // what they saw last there
-            if (!player.cansee(coord)) {
-                if (player.canHear(coord)) |noise| {
+            if (!state.player.cansee(coord)) {
+                if (state.player.canHear(coord)) |noise| {
                     const blue = @intCast(u32, math.clamp(noise * 30, 30, 255));
-                    const bg: u32 = if (player.memory.contains(coord)) 0x101010 else 0;
+                    const bg: u32 = if (state.player.memory.contains(coord)) 0x101010 else 0;
                     const color = 0x23 << 16 | 0x2f << 8 | blue;
                     termbox.tb_change_cell(cursorx, cursory, '?', color, bg);
                 } else {
-                    if (player.memory.contains(coord)) {
-                        const tile = @as(u32, player.memory.get(coord) orelse unreachable);
+                    if (state.player.memory.contains(coord)) {
+                        const tile = @as(u32, state.player.memory.get(coord) orelse unreachable);
                         termbox.tb_change_cell(cursorx, cursory, tile, 0x3f3f3f, 0x101010);
                     } else {
                         termbox.tb_change_cell(cursorx, cursory, ' ', 0xffffff, 0);
@@ -200,10 +200,10 @@ pub fn draw() void {
                 continue;
             }
 
-            switch (state.dungeon[u_y][u_x].type) {
+            switch (state.dungeon.at(coord).type) {
                 .Wall => termbox.tb_change_cell(cursorx, cursory, '#', 0x505050, 0x9e9e9e),
-                .Floor => if (state.dungeon[u_y][u_x].mob) |mob| {
-                    if (player.coord.eq(coord) and _mobs_can_see(&moblist, coord))
+                .Floor => if (state.dungeon.at(coord).mob) |mob| {
+                    if (state.player.coord.eq(coord) and _mobs_can_see(&moblist, coord))
                         is_player_watched = true;
 
                     var color: u32 = 0x1e1e1e;
@@ -218,7 +218,7 @@ pub fn draw() void {
                     }
 
                     termbox.tb_change_cell(cursorx, cursory, mob.tile, 0xffffff, color);
-                } else if (state.dungeon[u_y][u_x].surface) |surfaceitem| {
+                } else if (state.dungeon.at(coord).surface) |surfaceitem| {
                     const tile = switch (surfaceitem) {
                         .Machine => |m| m.tile,
                         .Prop => |p| p.tile,
@@ -227,11 +227,11 @@ pub fn draw() void {
                     termbox.tb_change_cell(cursorx, cursory, tile, 0xffffff, 0x1e1e1e);
                 } else {
                     var can_mob_see = _mobs_can_see(&moblist, coord);
-                    if (state.player.eq(coord) and can_mob_see)
+                    if (state.player.coord.eq(coord) and can_mob_see)
                         is_player_watched = can_mob_see;
 
                     const tile: u32 = if (can_mob_see) '·' else ' ';
-                    var bg: u32 = if (state.dungeon[u_y][u_x].marked) 0x454545 else 0x1e1e1e;
+                    var bg: u32 = if (state.dungeon.at(coord).marked) 0x454545 else 0x1e1e1e;
                     termbox.tb_change_cell(cursorx, cursory, tile, 0xffffff, bg);
                 },
             }
@@ -241,7 +241,7 @@ pub fn draw() void {
     const player_bg: u32 = if (is_player_watched) 0x4682b4 else 0xffffff;
     termbox.tb_change_cell(playerx - startx, playery - starty, '@', 0, player_bg);
 
-    _draw_infopanel(player, &moblist, maxx, 1, termbox.tb_width(), termbox.tb_height() - 1);
+    _draw_infopanel(state.player, &moblist, maxx, 1, termbox.tb_width(), termbox.tb_height() - 1);
     _draw_messages(0, maxx, maxy, termbox.tb_height() - 1);
 
     termbox.tb_present();

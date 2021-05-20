@@ -9,6 +9,10 @@ const utils = @import("utils.zig");
 const state = @import("state.zig");
 const ai = @import("ai.zig");
 
+pub const HEIGHT = 40;
+pub const WIDTH = 100;
+pub const LEVELS = 08;
+
 pub const CARDINAL_DIRECTIONS = [_]Direction{ .North, .South, .East, .West };
 pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .NorthWest, .SouthEast, .SouthWest };
 
@@ -119,11 +123,16 @@ test "from_coords" {
 pub const Coord = struct { // {{{
     x: usize,
     y: usize,
+    z: usize,
 
     const Self = @This();
 
+    pub fn new2(level: usize, x: usize, y: usize) Coord {
+        return .{ .z = level, .x = x, .y = y };
+    }
+
     pub fn new(x: usize, y: usize) Coord {
-        return .{ .x = x, .y = y };
+        return .{ .z = 0, .x = x, .y = y };
     }
 
     pub fn distance(a: Self, b: Self) usize {
@@ -454,11 +463,11 @@ pub const Mob = struct { // {{{
     pub fn teleportTo(self: *Mob, dest: Coord) bool {
         const coord = self.coord;
 
-        if (state.dungeon[dest.y][dest.x].type == .Wall) {
+        if (state.dungeon.at(dest).type == .Wall) {
             return false;
         }
 
-        if (state.dungeon[dest.y][dest.x].mob) |othermob| {
+        if (state.dungeon.at(dest).mob) |othermob| {
             if (self.isHostileTo(othermob) and !othermob.is_dead) {
                 self.fight(othermob);
                 return true;
@@ -467,21 +476,18 @@ pub const Mob = struct { // {{{
             }
         }
 
-        const othermob = state.dungeon[dest.y][dest.x].mob;
-        state.dungeon[dest.y][dest.x].mob = self;
-        state.dungeon[coord.y][coord.x].mob = othermob;
+        const othermob = state.dungeon.at(dest).mob;
+        state.dungeon.at(dest).mob = self;
+        state.dungeon.at(coord).mob = othermob;
         self.noise += rng.int(u4) % 10;
         self.coord = dest;
 
-        if (state.dungeon[dest.y][dest.x].surface) |surface| {
+        if (state.dungeon.at(dest).surface) |surface| {
             switch (surface) {
                 .Machine => |m| m.on_trigger(self, m),
                 else => {},
             }
         }
-
-        if (coord.eq(state.player))
-            state.player = dest;
 
         return true;
     }
@@ -525,9 +531,9 @@ pub const Mob = struct { // {{{
         recipient.HP = @intToFloat(f64, if ((HP -% damage) > HP) 0 else HP - damage);
 
         const hitstr = if (is_stab) "stab" else "hit";
-        if (recipient.coord.eq(state.player)) {
+        if (recipient.coord.eq(state.player.coord)) {
             state.message("The {} {} you for {} damage!", .{ attacker.species, hitstr, damage });
-        } else if (attacker.coord.eq(state.player)) {
+        } else if (attacker.coord.eq(state.player.coord)) {
             state.message("You {} the {} for {} damage!", .{ hitstr, recipient.species, damage });
         }
     }
@@ -568,10 +574,12 @@ pub const Mob = struct { // {{{
     }
 
     pub fn canHear(self: *const Mob, coord: Coord) ?usize {
-        if (state.dungeon[coord.y][coord.x].mob == null)
+        if (state.dungeon.at(coord).mob == null)
             return null; // No mob there, nothing to hear
+        if (self.coord.z != coord.z)
+            return null; // Can't hear across levels
 
-        const other = state.dungeon[coord.y][coord.x].mob.?;
+        const other = state.dungeon.at(coord).mob.?;
 
         if (self.coord.distance(other.coord) > MAX_FOH)
             return null; // Too far away
@@ -663,10 +671,18 @@ pub const TileType = enum {
 };
 
 pub const Tile = struct {
-    type: TileType,
-    mob: ?*Mob,
-    marked: bool,
-    surface: ?SurfaceItem,
+    type: TileType = .Wall,
+    mob: ?*Mob = null,
+    marked: bool = false,
+    surface: ?SurfaceItem = null,
+};
+
+pub const Dungeon = struct {
+    map: [LEVELS][HEIGHT][WIDTH]Tile = [1][HEIGHT][WIDTH]Tile{[1][WIDTH]Tile{[1]Tile{.{}} ** WIDTH} ** HEIGHT} ** LEVELS,
+
+    pub fn at(self: *Dungeon, c: Coord) *Tile {
+        return &self.map[c.z][c.y][c.x];
+    }
 };
 
 // ---------- Mob templates ----------

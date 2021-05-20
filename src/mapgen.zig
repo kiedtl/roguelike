@@ -14,79 +14,78 @@ fn _place_normal_door(coord: Coord) void {
     door.coord = coord;
     state.machines.append(door) catch unreachable;
     const doorptr = state.machines.lastPtr().?;
-    state.dungeon[coord.y][coord.x].surface = SurfaceItem{ .Machine = doorptr };
-    state.dungeon[coord.y][coord.x].type = .Floor;
+    state.dungeon.at(coord).surface = SurfaceItem{ .Machine = doorptr };
+    state.dungeon.at(coord).type = .Floor;
 }
 
-fn _add_guard_station(stationy: usize, stationx: usize, d: Direction, alloc: *mem.Allocator) void {
-    var guard = GuardTemplate;
-    guard.occupation.work_area = CoordArrayList.init(alloc);
-    guard.occupation.work_area.append(Coord.new(stationx, stationy)) catch unreachable;
-    guard.occupation.work_area.append(Coord.new(stationx, stationy)) catch unreachable;
-    guard.fov = CoordArrayList.init(alloc);
-    guard.memory = CoordCharMap.init(alloc);
-    guard.coord = Coord.new(stationx, stationy);
-    guard.facing = d;
-    state.dungeon[stationy][stationx].mob = guard;
-}
+// fn _add_guard_station(stationy: usize, stationx: usize, d: Direction, alloc: *mem.Allocator) void {
+//     var guard = GuardTemplate;
+//     guard.occupation.work_area = CoordArrayList.init(alloc);
+//     guard.occupation.work_area.append(Coord.new(stationx, stationy)) catch unreachable;
+//     guard.occupation.work_area.append(Coord.new(stationx, stationy)) catch unreachable;
+//     guard.fov = CoordArrayList.init(alloc);
+//     guard.memory = CoordCharMap.init(alloc);
+//     guard.coord = Coord.new(stationx, stationy);
+//     guard.facing = d;
+//     state.dungeon[stationy][stationx].mob = guard;
+// }
 
-pub fn add_guard_stations(alloc: *mem.Allocator) void {
-    // --- Guard route patterns ---
-    const patterns = [_][9]TileType{
-        // ###
-        // #G.
-        // #..
-        [_]TileType{ .Wall, .Wall, .Wall, .Wall, .Floor, .Floor, .Wall, .Floor, .Floor },
-        // ###
-        // .G#
-        // .##
-        [_]TileType{ .Wall, .Wall, .Wall, .Floor, .Floor, .Wall, .Floor, .Wall, .Wall },
-        // ###
-        // #G.
-        // ###
-        [_]TileType{ .Wall, .Wall, .Wall, .Wall, .Floor, .Floor, .Wall, .Wall, .Wall },
-    };
-    // Too lazy to combine this with the previous constant in a struct
-    const pattern_directions = [_]Direction{ .East, .West, .East };
+// pub fn add_guard_stations(alloc: *mem.Allocator) void {
+//     // --- Guard route patterns ---
+//     const patterns = [_][9]TileType{
+//         // ###
+//         // #G.
+//         // #..
+//         [_]TileType{ .Wall, .Wall, .Wall, .Wall, .Floor, .Floor, .Wall, .Floor, .Floor },
+//         // ###
+//         // .G#
+//         // .##
+//         [_]TileType{ .Wall, .Wall, .Wall, .Floor, .Floor, .Wall, .Floor, .Wall, .Wall },
+//         // ###
+//         // #G.
+//         // ###
+//         [_]TileType{ .Wall, .Wall, .Wall, .Wall, .Floor, .Floor, .Wall, .Wall, .Wall },
+//     };
+//     // Too lazy to combine this with the previous constant in a struct
+//     const pattern_directions = [_]Direction{ .East, .West, .East };
 
-    var y: usize = 1;
-    while (y < (state.HEIGHT - 1)) : (y += 1) {
-        var x: usize = 1;
-        while (x < (state.WIDTH - 1)) : (x += 1) {
-            const neighbors = [_]TileType{
-                state.dungeon[y - 1][x - 1].type,
-                state.dungeon[y - 1][x - 0].type,
-                state.dungeon[y - 1][x + 1].type,
-                state.dungeon[y + 0][x - 1].type,
-                state.dungeon[y + 0][x - 0].type,
-                state.dungeon[y + 0][x + 1].type,
-                state.dungeon[y + 1][x - 1].type,
-                state.dungeon[y + 1][x - 0].type,
-                state.dungeon[y + 1][x + 1].type,
-            };
+//     var y: usize = 1;
+//     while (y < (state.HEIGHT - 1)) : (y += 1) {
+//         var x: usize = 1;
+//         while (x < (state.WIDTH - 1)) : (x += 1) {
+//             const neighbors = [_]TileType{
+//                 state.dungeon[y - 1][x - 1].type,
+//                 state.dungeon[y - 1][x - 0].type,
+//                 state.dungeon[y - 1][x + 1].type,
+//                 state.dungeon[y + 0][x - 1].type,
+//                 state.dungeon[y + 0][x - 0].type,
+//                 state.dungeon[y + 0][x + 1].type,
+//                 state.dungeon[y + 1][x - 1].type,
+//                 state.dungeon[y + 1][x - 0].type,
+//                 state.dungeon[y + 1][x + 1].type,
+//             };
 
-            for (patterns) |pattern, index| {
-                if (std.mem.eql(TileType, &neighbors, &pattern)) {
-                    const d = pattern_directions[index];
-                    _add_guard_station(y, x, d, alloc);
-                    break;
-                }
-            }
-        }
-    }
-}
+//             for (patterns) |pattern, index| {
+//                 if (std.mem.eql(TileType, &neighbors, &pattern)) {
+//                     const d = pattern_directions[index];
+//                     _add_guard_station(y, x, d, alloc);
+//                     break;
+//                 }
+//             }
+//         }
+//     }
+// }
 
 fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
-    state.player = coord;
-
     var player = ElfTemplate;
     player.occupation.work_area = CoordArrayList.init(alloc);
     player.occupation.phase = .SawHostile;
     player.fov = CoordArrayList.init(alloc);
     player.memory = CoordCharMap.init(alloc);
-    player.coord = state.player;
+    player.coord = coord;
     state.mobs.append(player) catch unreachable;
-    state.dungeon[state.player.y][state.player.x].mob = state.mobs.lastPtr().?;
+    state.dungeon.at(coord).mob = state.mobs.lastPtr().?;
+    state.player = state.mobs.lastPtr().?;
 }
 
 const MIN_ROOM_WIDTH: usize = 7;
@@ -158,16 +157,16 @@ fn _room_intersects(room: *const Room) bool {
     if (room.end().x >= state.WIDTH or room.end().y >= state.HEIGHT)
         return true;
 
-    {
-        var y = utils.saturating_sub(room.start.y, 1);
-        while (y < room.end().y + 1) : (y += 1) {
-            var x = utils.saturating_sub(room.start.x, 1);
-            while (x < room.end().x + 1) : (x += 1) {
-                if (state.dungeon[y][x].type != .Wall)
-                    return true;
-            }
-        }
-    }
+    // {
+    //     var y = utils.saturating_sub(room.start.y, 1);
+    //     while (y < room.end().y + 1) : (y += 1) {
+    //         var x = utils.saturating_sub(room.start.x, 1);
+    //         while (x < room.end().x + 1) : (x += 1) {
+    //             if (state.dungeon[y][x].type != .Wall)
+    //                 return true;
+    //         }
+    //     }
+    // }
 
     for (rooms.items) |otherroom| {
         if (room.intersects(&otherroom, 1)) return true;
@@ -182,7 +181,7 @@ fn _excavate(room: *const Room) void {
     while (y < room.end().y) : (y += 1) {
         var x = room.start.x;
         while (x < room.end().x) : (x += 1) {
-            state.dungeon[y][x].type = .Floor;
+            state.dungeon.at(Coord.new2(room.start.z, x, y)).type = .Floor;
         }
     }
 }
@@ -236,7 +235,7 @@ fn _place_rooms(count: usize) void {
     if (count > 0) _place_rooms(count - 1);
 }
 
-pub fn placeRandomRooms(allocator: *mem.Allocator) void {
+pub fn placeRandomRooms(level: usize, allocator: *mem.Allocator) void {
     rooms = std.ArrayList(Room).init(allocator);
 
     const width = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
@@ -258,13 +257,13 @@ pub fn placeRandomRooms(allocator: *mem.Allocator) void {
         machine.coord = Coord.new(trap_x, trap_y);
         state.machines.append(machine) catch unreachable;
         const machineptr = state.machines.lastPtr().?;
-        state.dungeon[trap_y][trap_x].surface = SurfaceItem{ .Machine = machineptr };
+        state.dungeon.at(Coord.new2(level, trap_x, trap_y)).surface = SurfaceItem{ .Machine = machineptr };
 
         // Don't add mobs to the first room (the one that the player's in)
         if (i == 0) continue;
 
-        const guardstart = Coord.new(nroom.start.x + 1, nroom.start.y + 1);
-        const guardend = Coord.new(nroom.end().x - 1, nroom.end().y - 1);
+        const guardstart = Coord.new2(level, nroom.start.x + 1, nroom.start.y + 1);
+        const guardend = Coord.new2(level, nroom.end().x - 1, nroom.end().y - 1);
 
         var guard = GuardTemplate;
         guard.occupation.work_area = CoordArrayList.init(allocator);
@@ -275,99 +274,99 @@ pub fn placeRandomRooms(allocator: *mem.Allocator) void {
         guard.coord = guardstart;
         guard.facing = .North;
         state.mobs.append(guard) catch unreachable;
-        state.dungeon[guardstart.y][guardstart.x].mob = state.mobs.lastPtr().?;
+        state.dungeon.at(guardstart).mob = state.mobs.lastPtr().?;
     }
 
     rooms.deinit();
 }
 
-pub fn drunken_walk() void {
-    const center_weight = 20;
-    const fill_goal = @intToFloat(f64, state.WIDTH * state.HEIGHT) * 0.35;
-    const prev_direction_weight = 90;
-    const max_iterations = 5000;
+// pub fn drunken_walk() void {
+//     const center_weight = 20;
+//     const fill_goal = @intToFloat(f64, state.WIDTH * state.HEIGHT) * 0.35;
+//     const prev_direction_weight = 90;
+//     const max_iterations = 5000;
 
-    var prev_direction: Direction = .North;
-    var filled: usize = 0;
-    var iterations: usize = 0;
-    var walker = Coord.new(state.WIDTH / 2, state.HEIGHT / 2);
+//     var prev_direction: Direction = .North;
+//     var filled: usize = 0;
+//     var iterations: usize = 0;
+//     var walker = Coord.new(state.WIDTH / 2, state.HEIGHT / 2);
 
-    while (true) {
-        // probability of going in a direction
-        var north: usize = 100;
-        var south: usize = 100;
-        var east: usize = 100;
-        var west: usize = 100;
+//     while (true) {
+//         // probability of going in a direction
+//         var north: usize = 100;
+//         var south: usize = 100;
+//         var east: usize = 100;
+//         var west: usize = 100;
 
-        if (state.WIDTH > state.HEIGHT) {
-            east += ((state.WIDTH * 100) / state.HEIGHT);
-            west += ((state.WIDTH * 100) / state.HEIGHT);
-        } else if (state.HEIGHT > state.WIDTH) {
-            north += ((state.HEIGHT * 100) / state.WIDTH);
-            south += ((state.HEIGHT * 100) / state.WIDTH);
-        }
+//         if (state.WIDTH > state.HEIGHT) {
+//             east += ((state.WIDTH * 100) / state.HEIGHT);
+//             west += ((state.WIDTH * 100) / state.HEIGHT);
+//         } else if (state.HEIGHT > state.WIDTH) {
+//             north += ((state.HEIGHT * 100) / state.WIDTH);
+//             south += ((state.HEIGHT * 100) / state.WIDTH);
+//         }
 
-        // weight the random walk against map edges
-        if (@intToFloat(f64, walker.x) < (@intToFloat(f64, state.WIDTH) * 0.25)) {
-            // walker is at far left
-            east += center_weight;
-        } else if (@intToFloat(f64, walker.x) > (@intToFloat(f64, state.WIDTH) * 0.75)) {
-            // walker is at far right
-            west += center_weight;
-        }
+//         // weight the random walk against map edges
+//         if (@intToFloat(f64, walker.x) < (@intToFloat(f64, state.WIDTH) * 0.25)) {
+//             // walker is at far left
+//             east += center_weight;
+//         } else if (@intToFloat(f64, walker.x) > (@intToFloat(f64, state.WIDTH) * 0.75)) {
+//             // walker is at far right
+//             west += center_weight;
+//         }
 
-        if (@intToFloat(f64, walker.y) < (@intToFloat(f64, state.HEIGHT) * 0.25)) {
-            // walker is at the top
-            south += center_weight;
-        } else if (@intToFloat(f64, walker.y) > (@intToFloat(f64, state.HEIGHT) * 0.75)) {
-            // walker is at the bottom
-            north += center_weight;
-        }
+//         if (@intToFloat(f64, walker.y) < (@intToFloat(f64, state.HEIGHT) * 0.25)) {
+//             // walker is at the top
+//             south += center_weight;
+//         } else if (@intToFloat(f64, walker.y) > (@intToFloat(f64, state.HEIGHT) * 0.75)) {
+//             // walker is at the bottom
+//             north += center_weight;
+//         }
 
-        // Don't break into a previously-built enclosure
-        // TODO
+//         // Don't break into a previously-built enclosure
+//         // TODO
 
-        // weight the walker to previous direction
-        switch (prev_direction) {
-            .North => north += prev_direction_weight,
-            .South => south += prev_direction_weight,
-            .West => west += prev_direction_weight,
-            .East => east += prev_direction_weight,
-            else => unreachable,
-        }
+//         // weight the walker to previous direction
+//         switch (prev_direction) {
+//             .North => north += prev_direction_weight,
+//             .South => south += prev_direction_weight,
+//             .West => west += prev_direction_weight,
+//             .East => east += prev_direction_weight,
+//             else => unreachable,
+//         }
 
-        // normalize probabilities
-        const total = north + south + east + west;
-        north = north * 100 / total;
-        south = south * 100 / total;
-        east = east * 100 / total;
-        west = west * 100 / total;
+//         // normalize probabilities
+//         const total = north + south + east + west;
+//         north = north * 100 / total;
+//         south = south * 100 / total;
+//         east = east * 100 / total;
+//         west = west * 100 / total;
 
-        // choose direction
-        var directions = CARDINAL_DIRECTIONS;
-        rng.shuffle(Direction, &directions);
+//         // choose direction
+//         var directions = CARDINAL_DIRECTIONS;
+//         rng.shuffle(Direction, &directions);
 
-        const direction = rng.choose(Direction, &CARDINAL_DIRECTIONS, &[_]usize{ north, south, east, west }) catch unreachable;
+//         const direction = rng.choose(Direction, &CARDINAL_DIRECTIONS, &[_]usize{ north, south, east, west }) catch unreachable;
 
-        if (walker.move(direction, Coord.new(state.WIDTH, state.HEIGHT))) {
-            if (state.dungeon[walker.y][walker.x].type == .Wall) {
-                filled += 1;
-                state.dungeon[walker.y][walker.x].type = .Floor;
-                prev_direction = direction;
-            } else {
-                prev_direction = direction.opposite();
-                if (rng.boolean()) {
-                    prev_direction = direction.turnright();
-                } else {
-                    prev_direction = direction.turnleft();
-                }
-            }
-        } else {
-            prev_direction = direction.opposite();
-        }
+//         if (walker.move(direction, Coord.new(state.WIDTH, state.HEIGHT))) {
+//             if (state.dungeon[walker.y][walker.x].type == .Wall) {
+//                 filled += 1;
+//                 state.dungeon[walker.y][walker.x].type = .Floor;
+//                 prev_direction = direction;
+//             } else {
+//                 prev_direction = direction.opposite();
+//                 if (rng.boolean()) {
+//                     prev_direction = direction.turnright();
+//                 } else {
+//                     prev_direction = direction.turnleft();
+//                 }
+//             }
+//         } else {
+//             prev_direction = direction.opposite();
+//         }
 
-        iterations += 1;
-        if (filled > fill_goal or iterations > max_iterations)
-            break;
-    }
-}
+//         iterations += 1;
+//         if (filled > fill_goal or iterations > max_iterations)
+//             break;
+//     }
+// }

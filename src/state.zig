@@ -8,31 +8,23 @@ const rng = @import("rng.zig");
 const fov = @import("fov.zig");
 usingnamespace @import("types.zig");
 
-pub const HEIGHT = 40;
-pub const WIDTH = 100;
 pub const mapgeometry = Coord.new(WIDTH, HEIGHT);
-pub var dungeon = [_][WIDTH]Tile{[_]Tile{Tile{
-    .type = .Wall,
-    .mob = null,
-    .marked = false,
-    .surface = null,
-}} ** WIDTH} ** HEIGHT;
+pub var dungeon: Dungeon = .{};
 pub var mobs: MobList = undefined;
 pub var machines: MachineList = undefined;
 pub var props: PropList = undefined;
-pub var player = Coord.new(0, 0);
+pub var player: *Mob = undefined;
 pub var ticks: usize = 0;
 pub var messages: MessageArrayList = undefined;
 
 // STYLE: change to Tile.soundOpacity
 pub fn tile_sound_opacity(coord: Coord) f64 {
-    const tile = dungeon[coord.y][coord.x];
-    return if (tile.type == .Wall) 0.4 else 0.2;
+    return if (dungeon.at(coord).type == .Wall) 0.4 else 0.2;
 }
 
 // STYLE: change to Tile.opacity
 fn tile_opacity(coord: Coord) f64 {
-    const tile = &dungeon[coord.y][coord.x];
+    const tile = dungeon.at(coord);
     if (tile.type == .Wall) return 1.0;
 
     var o: f64 = 0.0;
@@ -48,16 +40,15 @@ fn tile_opacity(coord: Coord) f64 {
 
 // STYLE: change to Tile.isWalkable
 pub fn is_walkable(coord: Coord) bool {
-    if (dungeon[coord.y][coord.x].type == .Wall)
+    if (dungeon.at(coord).type == .Wall)
         return false;
-    if (dungeon[coord.y][coord.x].mob != null)
+    if (dungeon.at(coord).mob != null)
         return false;
     return true;
 }
 
-pub fn createMobList(include_player: bool, only_if_infov: bool, alloc: *mem.Allocator) MobArrayList {
-    const playermob = dungeon[player.y][player.x].mob.?;
-
+// TODO: get rid of this
+pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, alloc: *mem.Allocator) MobArrayList {
     var moblist = std.ArrayList(*Mob).init(alloc);
     var y: usize = 0;
     while (y < HEIGHT) : (y += 1) {
@@ -65,11 +56,11 @@ pub fn createMobList(include_player: bool, only_if_infov: bool, alloc: *mem.Allo
         while (x < WIDTH) : (x += 1) {
             const coord = Coord.new(x, y);
 
-            if (!include_player and coord.eq(player))
+            if (!include_player and coord.eq(player.coord))
                 continue;
 
-            if (dungeon[y][x].mob) |mob| {
-                if (only_if_infov and !playermob.cansee(coord))
+            if (dungeon.at(Coord.new2(level, x, y)).mob) |mob| {
+                if (only_if_infov and !player.cansee(coord))
                     continue;
 
                 moblist.append(mob) catch unreachable;
@@ -85,16 +76,16 @@ fn _update_fov(mob: *Mob) void {
     mob.fov.shrinkRetainingCapacity(0);
     const apparent_vision = if (mob.facing_wide) mob.vision / 2 else mob.vision;
 
-    if (mob.coord.eq(player)) {
-        fov.shadowcast(player, all_octants, mob.vision, mapgeometry, tile_opacity, &mob.fov);
+    if (mob.coord.eq(player.coord)) {
+        fov.shadowcast(player.coord, all_octants, mob.vision, mapgeometry, tile_opacity, &mob.fov);
     } else {
         const octants = fov.octants(mob.facing, mob.facing_wide);
         fov.shadowcast(mob.coord, octants, apparent_vision, mapgeometry, tile_opacity, &mob.fov);
     }
 
     for (mob.fov.items) |fc| {
-        var tile: u21 = if (dungeon[fc.y][fc.x].type == .Wall) '▓' else ' ';
-        if (dungeon[fc.y][fc.x].mob) |tilemob| {
+        var tile: u21 = if (dungeon.at(fc).type == .Wall) '▓' else ' ';
+        if (dungeon.at(fc).mob) |tilemob| {
             if (!tilemob.is_dead) {
                 tile = tilemob.tile;
             }
@@ -122,7 +113,7 @@ fn _can_hear_hostile(mob: *Mob, moblist: *const MobArrayList) ?Coord {
 
 fn _can_see_hostile(mob: *Mob) ?Coord {
     for (mob.fov.items) |fitem| {
-        if (dungeon[fitem.y][fitem.x].mob) |othermob| {
+        if (dungeon.at(fitem).mob) |othermob| {
             if (othermob.allegiance != mob.allegiance and !othermob.is_dead) {
                 return fitem;
             }
@@ -174,12 +165,12 @@ fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem.All
     if (mob.occupation.phase == .SawHostile and mob.occupation.is_combative) {
         const target_coord = mob.occupation.target.?;
 
-        if (dungeon[target_coord.y][target_coord.x].mob == null or dungeon[target_coord.y][target_coord.x].mob == null) {
+        if (dungeon.at(target_coord).mob == null) {
             mob.occupation.phase = .GoTo;
             _mob_occupation_tick(mob, moblist, alloc);
         }
 
-        if (mob.coord.eq(target_coord) or dungeon[target_coord.y][target_coord.x].mob == null) {
+        if (mob.coord.eq(target_coord)) {
             mob.occupation.target = null;
             mob.occupation.phase = .Work;
             return;
@@ -194,7 +185,9 @@ fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem.All
 pub fn tick(alloc: *mem.Allocator) void {
     ticks += 1;
 
-    const moblist = createMobList(true, false, alloc);
+    const cur_level = player.coord.z;
+
+    const moblist = createMobList(true, false, cur_level, alloc);
     defer moblist.deinit();
 
     for (moblist.items) |mob| {
@@ -210,7 +203,7 @@ pub fn tick(alloc: *mem.Allocator) void {
         mob.tick_noise();
         _update_fov(mob);
 
-        if (!mob.coord.eq(player)) {
+        if (!mob.coord.eq(player.coord)) {
             _mob_occupation_tick(mob, &moblist, alloc);
         }
 
@@ -227,11 +220,14 @@ pub fn freeall() void {
 }
 
 pub fn reset_marks() void {
-    var y: usize = 0;
-    while (y < HEIGHT) : (y += 1) {
-        var x: usize = 0;
-        while (x < WIDTH) : (x += 1) {
-            dungeon[y][x].marked = false;
+    var z: usize = 0;
+    while (z < LEVELS) : (z += 1) {
+        var y: usize = 0;
+        while (y < HEIGHT) : (y += 1) {
+            var x: usize = 0;
+            while (x < WIDTH) : (x += 1) {
+                dungeon.at(Coord.new2(z, x, y)).marked = false;
+            }
         }
     }
 }

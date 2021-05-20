@@ -67,6 +67,11 @@ pub fn nextDirectionTo(from: Coord, to: Coord, limit: Coord, is_walkable: fn (Co
 }
 
 pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) bool, alloc: *std.mem.Allocator) ?CoordArrayList {
+    if (start.z != goal.z) {
+        // TODO: add support for pathfinding between levels
+        return null;
+    }
+
     var open_list = NodeArrayList.init(alloc);
     var closed_list = NodeArrayList.init(alloc);
 

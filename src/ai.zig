@@ -46,7 +46,7 @@ fn _guard_glance(mob: *Mob, prev_direction: Direction) void {
 }
 
 pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
-    assert(state.dungeon[mob.coord.y][mob.coord.x].mob != null);
+    assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.occupation.phase == .Work);
 
     var from = mob.occupation.work_area.items[0];
