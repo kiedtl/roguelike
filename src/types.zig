@@ -437,15 +437,6 @@ pub const Mob = struct { // {{{
     }
 
     // Try to move a mob.
-    //
-    // Is the destination tile a wall?
-    // | true:  return false
-    // | false: Does the destination tile have a mob on it already?
-    //     | true:  Is the other mob hostile?
-    //         | true:  Fight!
-    //         | false: return false.
-    //     | false: Move onto the tile and return true.
-    //
     pub fn moveInDirection(self: *Mob, direction: Direction) bool {
         const coord = self.coord;
 
@@ -655,6 +646,9 @@ pub const Machine = struct {
     opacity: f64,
     coord: Coord = Coord.new(0, 0),
     on_trigger: fn (*Mob, *Machine) void,
+    // Should the machine, if walkable, be avoided when doing pathfinding?
+    // Traps and staircases should be avoided, for instance.
+    should_be_avoided: bool,
     // FIXME: there has got to be a better way to do this
     props: [40]?Prop = [_]?Prop{null} ** 40,
     // TODO: is_disabled, strength_needed

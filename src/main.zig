@@ -99,7 +99,10 @@ pub fn main() anyerror!void {
     astar.initCache(&gpa.allocator);
     rng.init();
 
-    mapgen.placeRandomRooms(0, &gpa.allocator);
+    for (state.dungeon.map) |_, level|
+        mapgen.placeRandomRooms(level, &gpa.allocator);
+    for (state.dungeon.map) |_, level|
+        mapgen.placeRandomStairs(level);
 
     state.tick(&gpa.allocator);
     display.draw();

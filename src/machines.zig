@@ -1,5 +1,28 @@
+const std = @import("std");
+const assert = std.debug.assert;
+
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
+
+// TODO: Maybe define a "Doormat" prop that stairs have? And doormats should have
+// a very welcoming message on it, of course
+pub const StairUp = Machine{
+    .name = "ascending staircase",
+    .tile = '>',
+    .walkable = true,
+    .opacity = 0.0,
+    .on_trigger = triggerStairUp,
+    .should_be_avoided = true,
+};
+
+pub const StairDown = Machine{
+    .name = "descending staircase",
+    .tile = '<',
+    .walkable = true,
+    .opacity = 0.0,
+    .on_trigger = triggerStairDown,
+    .should_be_avoided = true,
+};
 
 pub const AlarmTrap = Machine{
     .name = "alarm trap",
@@ -7,6 +30,7 @@ pub const AlarmTrap = Machine{
     .walkable = true,
     .opacity = 0.0,
     .on_trigger = triggerAlarmTrap,
+    .should_be_avoided = true,
 };
 
 pub const NormalDoor = Machine{
@@ -15,6 +39,7 @@ pub const NormalDoor = Machine{
     .walkable = true,
     .opacity = 1.0,
     .on_trigger = triggerNone,
+    .should_be_avoided = false,
 };
 
 pub fn triggerNone(_: *Mob, __: *Machine) void {}
@@ -25,4 +50,39 @@ pub fn triggerAlarmTrap(culprit: *Mob, machine: *Machine) void {
     }
 
     culprit.noise += 1000; // muahahaha
+}
+
+pub fn triggerStairUp(culprit: *Mob, machine: *Machine) void {
+    assert(machine.coord.z >= 1);
+
+    const uplevel = Coord.new2(machine.coord.z - 1, machine.coord.x, machine.coord.y);
+
+    var dest: ?Coord = null;
+    for (&CARDINAL_DIRECTIONS) |d| {
+        var desttmp = uplevel;
+        if (desttmp.move(d, state.mapgeometry) and state.is_walkable(desttmp))
+            dest = desttmp;
+    }
+
+    if (dest) |spot| {
+        const moved = culprit.teleportTo(spot);
+        assert(moved);
+    }
+}
+
+pub fn triggerStairDown(culprit: *Mob, machine: *Machine) void {
+    const downlevel = Coord.new2(machine.coord.z + 1, machine.coord.x, machine.coord.y);
+    assert(downlevel.z < state.LEVELS);
+
+    var dest: ?Coord = null;
+    for (&CARDINAL_DIRECTIONS) |d| {
+        var desttmp = downlevel;
+        if (desttmp.move(d, state.mapgeometry) and state.is_walkable(desttmp))
+            dest = desttmp;
+    }
+
+    if (dest) |spot| {
+        const moved = culprit.teleportTo(spot);
+        assert(moved);
+    }
 }

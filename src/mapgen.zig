@@ -9,6 +9,14 @@ const utils = @import("utils.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
+fn _place_machine(coord: Coord, machine_template: *const Machine) void {
+    var machine = machine_template.*;
+    machine.coord = coord;
+    state.machines.append(machine) catch unreachable;
+    const machineptr = state.machines.lastPtr().?;
+    state.dungeon.at(coord).surface = SurfaceItem{ .Machine = machineptr };
+}
+
 fn _place_normal_door(coord: Coord) void {
     var door = machines.NormalDoor;
     door.coord = coord;
@@ -105,7 +113,7 @@ const Room = struct {
     }
 
     pub fn end(self: *const Room) Coord {
-        return Coord.new(self.start.x + self.width, self.start.y + self.height);
+        return Coord.new2(self.start.z, self.start.x + self.width, self.start.y + self.height);
     }
 
     pub fn intersects(a: *const Room, b: *const Room, padding: usize) bool {
@@ -123,22 +131,22 @@ const Room = struct {
     pub fn attach(self: *const Room, d: Direction, width: usize, height: usize, distance: usize) Room {
         return switch (d) {
             .North => Room{
-                .start = Coord.new(self.start.x + (self.width / 2), utils.saturating_sub(self.start.y, height + distance)),
+                .start = Coord.new2(self.start.z, self.start.x + (self.width / 2), utils.saturating_sub(self.start.y, height + distance)),
                 .height = utils.saturating_sub(self.start.y, height),
                 .width = width,
             },
             .East => Room{
-                .start = Coord.new(self.end().x + distance, self.start.y + (self.height / 2)),
+                .start = Coord.new2(self.start.z, self.end().x + distance, self.start.y + (self.height / 2)),
                 .height = height,
                 .width = width,
             },
             .South => Room{
-                .start = Coord.new(self.start.x + (self.width / 2), self.end().y + distance),
+                .start = Coord.new2(self.start.z, self.start.x + (self.width / 2), self.end().y + distance),
                 .height = height,
                 .width = width,
             },
             .West => Room{
-                .start = Coord.new(utils.saturating_sub(self.start.x, width + distance), self.start.y + (self.height / 2)),
+                .start = Coord.new2(self.start.z, utils.saturating_sub(self.start.x, width + distance), self.start.y + (self.height / 2)),
                 .width = utils.saturating_sub(self.start.x, width),
                 .height = height,
             },
@@ -186,7 +194,7 @@ fn _excavate(room: *const Room) void {
     }
 }
 
-fn _place_rooms(count: usize) void {
+fn _place_rooms(level: usize, count: usize) void {
     const limit = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
     const distances = [2][5]usize{ .{ 1, 2, 3, 4, 5 }, .{ 9, 8, 3, 2, 1 } };
 
@@ -220,10 +228,10 @@ fn _place_rooms(count: usize) void {
         const y = rng.range(usize, math.min(rsy, rey), math.max(rsy, rey));
 
         var corridor = switch (side) {
-            .North => Room{ .start = Coord.new(x, child.end().y), .height = parent.start.y - child.end().y, .width = 1 },
-            .South => Room{ .start = Coord.new(x, parent.end().y), .height = child.start.y - parent.end().y, .width = 1 },
-            .West => Room{ .start = Coord.new(child.end().x, y), .height = 1, .width = parent.start.x - child.end().x },
-            .East => Room{ .start = Coord.new(parent.end().x, y), .height = 1, .width = child.start.x - parent.end().x },
+            .North => Room{ .start = Coord.new2(level, x, child.end().y), .height = parent.start.y - child.end().y, .width = 1 },
+            .South => Room{ .start = Coord.new2(level, x, parent.end().y), .height = child.start.y - parent.end().y, .width = 1 },
+            .West => Room{ .start = Coord.new2(level, child.end().x, y), .height = 1, .width = parent.start.x - child.end().x },
+            .East => Room{ .start = Coord.new2(level, parent.end().x, y), .height = 1, .width = child.start.x - parent.end().x },
             else => unreachable,
         };
 
@@ -232,7 +240,7 @@ fn _place_rooms(count: usize) void {
         if (distance == 1) _place_normal_door(corridor.start);
     }
 
-    if (count > 0) _place_rooms(count - 1);
+    if (count > 0) _place_rooms(level, count - 1);
 }
 
 pub fn placeRandomRooms(level: usize, allocator: *mem.Allocator) void {
@@ -242,22 +250,19 @@ pub fn placeRandomRooms(level: usize, allocator: *mem.Allocator) void {
     const height = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
     const x = rng.range(usize, 1, state.WIDTH / 2);
     const y = rng.range(usize, 1, state.HEIGHT / 2);
-    const first = Room{ .start = Coord.new(x, y), .width = width, .height = height };
+    const first = Room{ .start = Coord.new2(level, x, y), .width = width, .height = height };
     _excavate(&first);
     rooms.append(first) catch unreachable;
 
-    _place_rooms(100);
+    _place_rooms(level, 100);
 
     _add_player(Coord.new(first.start.x + 1, first.start.y + 1), allocator);
 
     for (rooms.items) |nroom, i| {
-        const trap_x = rng.range(usize, nroom.start.x + 1, nroom.end().x - 1);
-        const trap_y = rng.range(usize, nroom.start.y + 1, nroom.end().y - 1);
-        var machine = machines.AlarmTrap;
-        machine.coord = Coord.new(trap_x, trap_y);
-        state.machines.append(machine) catch unreachable;
-        const machineptr = state.machines.lastPtr().?;
-        state.dungeon.at(Coord.new2(level, trap_x, trap_y)).surface = SurfaceItem{ .Machine = machineptr };
+        const mach_x = rng.range(usize, nroom.start.x + 1, nroom.end().x - 1);
+        const mach_y = rng.range(usize, nroom.start.y + 1, nroom.end().y - 1);
+        const mach_coord = Coord.new2(level, mach_x, mach_y);
+        _place_machine(mach_coord, &machines.AlarmTrap);
 
         // Don't add mobs to the first room (the one that the player's in)
         if (i == 0) continue;
@@ -278,6 +283,27 @@ pub fn placeRandomRooms(level: usize, allocator: *mem.Allocator) void {
     }
 
     rooms.deinit();
+}
+
+pub fn placeRandomStairs(level: usize) void {
+    if (level == (state.LEVELS - 1)) {
+        return;
+    }
+
+    var placed: usize = 0;
+    while (placed < 22) {
+        const rand_x = rng.range(usize, 1, state.WIDTH - 1);
+        const rand_y = rng.range(usize, 1, state.HEIGHT - 1);
+        const above = Coord.new2(level, rand_x, rand_y);
+        const below = Coord.new2(level + 1, rand_x, rand_y);
+
+        if (state.dungeon.at(below).type != .Wall and state.dungeon.at(above).type != .Wall) { // FIXME
+            _place_machine(above, &machines.StairDown);
+            _place_machine(below, &machines.StairUp);
+        }
+
+        placed += 1;
+    }
 }
 
 // pub fn drunken_walk() void {

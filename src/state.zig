@@ -44,6 +44,12 @@ pub fn is_walkable(coord: Coord) bool {
         return false;
     if (dungeon.at(coord).mob != null)
         return false;
+    if (dungeon.at(coord).surface) |surface| {
+        switch (surface) {
+            .Machine => |m| if (m.should_be_avoided) return true,
+            else => {},
+        }
+    }
     return true;
 }
 
