@@ -19,8 +19,15 @@ h	warlock
 a	fire worm
 *	shining one
 o	crystal statue
+		A statue of some nameless humanoid creature than once inhabited
+		the pits of Udùn. These statues are almost as rare as the white
+		crystal they're composed of.
+
+		...did those eyes just move?
 o	turquoise statue
 u	lich
+		The dessicated form of an ancient sorcerer, now controlled by the
+		very necromantic powers he once served.
 d	bogeyman (TODO: change name)
 d	creeping dread
 *	angel
@@ -63,6 +70,17 @@ teleportation station
 nuclear reactor
 weapon repair shop
 air purifier
+
+Books
+-----
+
+"Melkor: The life and times of the ancient King"
+"This was Melkor"
+recipe books
+	- "You learn how to pickle elven roasts."
+	- "You learn how to properly butcher hill orcs."
+dungeon maps
+inventory lists
 
 Refactorings
 ------------
