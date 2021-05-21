@@ -695,7 +695,7 @@ pub const Dungeon = struct {
 // ---------- Mob templates ----------
 
 pub const GuardTemplate = Mob{
-    .species = "Hill Orc",
+    .species = "orc",
     .tile = 'א',
     .occupation = Occupation{
         .work_description = "patrolling",
@@ -708,19 +708,19 @@ pub const GuardTemplate = Mob{
     .allegiance = .Sauron,
     .facing = .North,
     .facing_wide = false,
-    .vision = 5,
+    .vision = 12,
 
     .willpower = 2,
     .dexterity = 10,
-    .hearing = 10,
-    .max_HP = 16,
+    .hearing = 13,
+    .max_HP = 17,
 
     .HP = 21,
     .strength = 10,
 };
 
 pub const ElfTemplate = Mob{
-    .species = "Elf",
+    .species = "elf",
     .tile = '@',
     .occupation = Occupation{
         .work_description = "meditating",
