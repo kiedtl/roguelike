@@ -108,4 +108,5 @@ pub fn triggerGoldCoins(culprit: *Mob, machine: *Machine) void {
 
     // FIXME: this is a horrible hack due to machine's lack of state
     state.score += rng.range(usize, 100, 255);
+    state.dungeon.at(machine.coord).surface = null;
 }
