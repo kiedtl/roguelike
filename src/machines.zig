@@ -81,6 +81,7 @@ pub fn triggerStairUp(culprit: *Mob, machine: *Machine) void {
     if (dest) |spot| {
         const moved = culprit.teleportTo(spot);
         assert(moved);
+        state.message(.Move, "You ascend.", .{});
     }
 }
 
@@ -98,6 +99,7 @@ pub fn triggerStairDown(culprit: *Mob, machine: *Machine) void {
     if (dest) |spot| {
         const moved = culprit.teleportTo(spot);
         assert(moved);
+        state.message(.Move, "You descend.", .{});
     }
 }
 
@@ -109,4 +111,6 @@ pub fn triggerGoldCoins(culprit: *Mob, machine: *Machine) void {
     // FIXME: this is a horrible hack due to machine's lack of state
     state.score += rng.range(usize, 100, 255);
     state.dungeon.at(machine.coord).surface = null;
+
+    state.message(.Aquire, "You now have {} gold.", .{state.score});
 }

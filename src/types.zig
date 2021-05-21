@@ -308,11 +308,13 @@ test "coord.move" {
 pub const MessageType = enum {
     Info,
     Aquire,
+    Move,
 
     pub fn color(self: MessageType) u32 {
         return switch (self) {
             .Info => 0xfafefa,
             .Aquire => 0xffd700,
+            .Move => 0xfafefe,
         };
     }
 };
