@@ -16,6 +16,7 @@ pub var props: PropList = undefined;
 pub var player: *Mob = undefined;
 pub var ticks: usize = 0;
 pub var messages: MessageArrayList = undefined;
+pub var score: usize = 0;
 
 // STYLE: change to Tile.soundOpacity
 pub fn tile_sound_opacity(coord: Coord) f64 {

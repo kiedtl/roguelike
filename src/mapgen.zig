@@ -236,12 +236,17 @@ fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
         state.mobs.append(guard) catch unreachable;
         state.dungeon.at(guardstart).mob = state.mobs.lastPtr().?;
 
-        // --- add traps ---
+        // --- add machines ---
 
-        const mach_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
-        const mach_y = rng.range(usize, child.start.y + 1, child.end().y - 1);
-        const mach_coord = Coord.new2(level, mach_x, mach_y);
-        _place_machine(mach_coord, &machines.AlarmTrap);
+        const trap_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
+        const trap_y = rng.range(usize, child.start.y + 1, child.end().y - 1);
+        const trap_coord = Coord.new2(level, trap_x, trap_y);
+        _place_machine(trap_coord, &machines.AlarmTrap);
+
+        const loot_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
+        const loot_y = rng.range(usize, child.start.y + 1, child.end().y - 1);
+        const loot_coord = Coord.new2(level, loot_x, loot_y);
+        _place_machine(loot_coord, &machines.GoldCoins);
 
         // --- add corridors ---
 
