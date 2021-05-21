@@ -15,7 +15,6 @@ d	locust
 d	cankerworm
 d	night wanderer
 d	will o' the wisp
-h	warlock
 a	fire worm
 *	shining one
 o	crystal statue
@@ -54,7 +53,6 @@ lunge	[move(A), move(A), attack(A)] (dagger)
 
 Machines
 --------
-
 furnace
 cooler
 forge
