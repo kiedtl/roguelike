@@ -194,7 +194,7 @@ fn _excavate(room: *const Room) void {
     }
 }
 
-fn _place_rooms(level: usize, count: usize) void {
+fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
     const limit = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
     const distances = [2][5]usize{ .{ 1, 2, 3, 4, 5 }, .{ 9, 8, 3, 2, 1 } };
 
@@ -220,6 +220,31 @@ fn _place_rooms(level: usize, count: usize) void {
         _excavate(&child);
         rooms.append(child) catch unreachable;
 
+        // --- add mobs ---
+
+        const guardstart = Coord.new2(level, child.start.x + 1, child.start.y + 1);
+        const guardend = Coord.new2(level, child.end().x - 1, child.end().y - 1);
+
+        var guard = GuardTemplate;
+        guard.occupation.work_area = CoordArrayList.init(allocator);
+        guard.occupation.work_area.append(guardstart) catch unreachable;
+        guard.occupation.work_area.append(guardend) catch unreachable;
+        guard.fov = CoordArrayList.init(allocator);
+        guard.memory = CoordCharMap.init(allocator);
+        guard.coord = guardstart;
+        guard.facing = .North;
+        state.mobs.append(guard) catch unreachable;
+        state.dungeon.at(guardstart).mob = state.mobs.lastPtr().?;
+
+        // --- add traps ---
+
+        const mach_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
+        const mach_y = rng.range(usize, child.start.y + 1, child.end().y - 1);
+        const mach_coord = Coord.new2(level, mach_x, mach_y);
+        _place_machine(mach_coord, &machines.AlarmTrap);
+
+        // --- add corridors ---
+
         const rsx = math.max(parent.start.x, child.start.x);
         const rex = math.min(parent.end().x, child.end().x);
         const x = rng.range(usize, math.min(rsx, rex), math.max(rsx, rex));
@@ -240,7 +265,7 @@ fn _place_rooms(level: usize, count: usize) void {
         if (distance == 1) _place_normal_door(corridor.start);
     }
 
-    if (count > 0) _place_rooms(level, count - 1);
+    if (count > 0) _place_rooms(level, count - 1, allocator);
 }
 
 pub fn placeRandomRooms(level: usize, allocator: *mem.Allocator) void {
@@ -254,33 +279,11 @@ pub fn placeRandomRooms(level: usize, allocator: *mem.Allocator) void {
     _excavate(&first);
     rooms.append(first) catch unreachable;
 
-    _place_rooms(level, 100);
-
-    _add_player(Coord.new(first.start.x + 1, first.start.y + 1), allocator);
-
-    for (rooms.items) |nroom, i| {
-        const mach_x = rng.range(usize, nroom.start.x + 1, nroom.end().x - 1);
-        const mach_y = rng.range(usize, nroom.start.y + 1, nroom.end().y - 1);
-        const mach_coord = Coord.new2(level, mach_x, mach_y);
-        _place_machine(mach_coord, &machines.AlarmTrap);
-
-        // Don't add mobs to the first room (the one that the player's in)
-        if (i == 0) continue;
-
-        const guardstart = Coord.new2(level, nroom.start.x + 1, nroom.start.y + 1);
-        const guardend = Coord.new2(level, nroom.end().x - 1, nroom.end().y - 1);
-
-        var guard = GuardTemplate;
-        guard.occupation.work_area = CoordArrayList.init(allocator);
-        guard.occupation.work_area.append(guardstart) catch unreachable;
-        guard.occupation.work_area.append(guardend) catch unreachable;
-        guard.fov = CoordArrayList.init(allocator);
-        guard.memory = CoordCharMap.init(allocator);
-        guard.coord = guardstart;
-        guard.facing = .North;
-        state.mobs.append(guard) catch unreachable;
-        state.dungeon.at(guardstart).mob = state.mobs.lastPtr().?;
+    if (level == 0) {
+        _add_player(Coord.new2(0, first.start.x + 1, first.start.y + 1), allocator);
     }
+
+    _place_rooms(level, 100, allocator);
 
     rooms.deinit();
 }
@@ -291,7 +294,7 @@ pub fn placeRandomStairs(level: usize) void {
     }
 
     var placed: usize = 0;
-    while (placed < 22) {
+    while (placed < 5) {
         const rand_x = rng.range(usize, 1, state.WIDTH - 1);
         const rand_y = rng.range(usize, 1, state.HEIGHT - 1);
         const above = Coord.new2(level, rand_x, rand_y);
