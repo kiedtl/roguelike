@@ -117,11 +117,13 @@ fn _draw_messages(startx: isize, endx: isize, starty: isize, endy: isize) void {
     if (state.messages.items.len == 0)
         return;
 
+    const first = state.messages.items.len - 1;
     var y: isize = starty;
-    var i: usize = state.messages.items.len - 1;
+    var i: usize = first;
     while (i > 0 and y < endy) : (i -= 1) {
         const msg = state.messages.items[i].msg;
-        y = _draw_string(startx, y, 0xffffff, 0, "{}", .{msg}) catch unreachable;
+        const col = if (i == first) state.messages.items[i].type.color() else 0xa0a0a0;
+        y = _draw_string(startx, y, col, 0, "{}", .{msg}) catch unreachable;
     }
 }
 

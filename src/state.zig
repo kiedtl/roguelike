@@ -239,11 +239,11 @@ pub fn reset_marks() void {
     }
 }
 
-pub fn message(comptime fmt: []const u8, args: anytype) void {
+pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void {
     var buf: [128]u8 = undefined;
     for (buf) |*i| i.* = 0;
     var fbs = std.io.fixedBufferStream(&buf);
     std.fmt.format(fbs.writer(), fmt, args) catch |_| @panic("format error");
     const str = fbs.getWritten();
-    messages.append(.{ .msg = buf }) catch @panic("OOM");
+    messages.append(.{ .msg = buf, .type = mtype }) catch @panic("OOM");
 }

@@ -305,8 +305,21 @@ test "coord.move" {
     std.testing.expectEqual(c, Coord.new(1, 0));
 }
 
+pub const MessageType = enum {
+    Info,
+    Aquire,
+
+    pub fn color(self: MessageType) u32 {
+        return switch (self) {
+            .Info => 0xfafefa,
+            .Aquire => 0xffd700,
+        };
+    }
+};
+
 pub const Message = struct {
     msg: [128]u8,
+    type: MessageType,
 };
 
 pub const Allegiance = enum { Sauron, Illuvatar, NoneEvil, NoneGood };
@@ -523,9 +536,9 @@ pub const Mob = struct { // {{{
 
         const hitstr = if (is_stab) "stab" else "hit";
         if (recipient.coord.eq(state.player.coord)) {
-            state.message("The {} {} you for {} damage!", .{ attacker.species, hitstr, damage });
+            state.message(.Info, "The {} {} you for {} damage!", .{ attacker.species, hitstr, damage });
         } else if (attacker.coord.eq(state.player.coord)) {
-            state.message("You {} the {} for {} damage!", .{ hitstr, recipient.species, damage });
+            state.message(.Info, "You {} the {} for {} damage!", .{ hitstr, recipient.species, damage });
         }
     }
 
