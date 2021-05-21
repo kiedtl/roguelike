@@ -19,6 +19,11 @@ pub fn boolean() bool {
     return rng.random.int(u1) == 1;
 }
 
+pub fn onein(number: usize) bool {
+    return range(@TypeOf(number), 1, number) == 1;
+}
+
+// STYLE: change to range(min: anytype, max: @TypeOf(min)) @TypeOf(min)
 pub fn range(comptime T: type, min: T, max: T) T {
     std.debug.assert(max >= min);
     const diff = max - min;

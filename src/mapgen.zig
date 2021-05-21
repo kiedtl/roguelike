@@ -222,31 +222,36 @@ fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
 
         // --- add mobs ---
 
-        const guardstart = Coord.new2(level, child.start.x + 1, child.start.y + 1);
-        const guardend = Coord.new2(level, child.end().x - 1, child.end().y - 1);
-
-        var guard = GuardTemplate;
-        guard.occupation.work_area = CoordArrayList.init(allocator);
-        guard.occupation.work_area.append(guardstart) catch unreachable;
-        guard.occupation.work_area.append(guardend) catch unreachable;
-        guard.fov = CoordArrayList.init(allocator);
-        guard.memory = CoordCharMap.init(allocator);
-        guard.coord = guardstart;
-        guard.facing = .North;
-        state.mobs.append(guard) catch unreachable;
-        state.dungeon.at(guardstart).mob = state.mobs.lastPtr().?;
+        if (rng.onein(2)) {
+            const guardstart = Coord.new2(level, child.start.x + 1, child.start.y + 1);
+            const guardend = Coord.new2(level, child.end().x - 1, child.end().y - 1);
+            var guard = GuardTemplate;
+            guard.occupation.work_area = CoordArrayList.init(allocator);
+            guard.occupation.work_area.append(guardstart) catch unreachable;
+            guard.occupation.work_area.append(guardend) catch unreachable;
+            guard.fov = CoordArrayList.init(allocator);
+            guard.memory = CoordCharMap.init(allocator);
+            guard.coord = guardstart;
+            guard.facing = .North;
+            state.mobs.append(guard) catch unreachable;
+            state.dungeon.at(guardstart).mob = state.mobs.lastPtr().?;
+        }
 
         // --- add machines ---
 
-        const trap_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
-        const trap_y = rng.range(usize, child.start.y + 1, child.end().y - 1);
-        const trap_coord = Coord.new2(level, trap_x, trap_y);
-        _place_machine(trap_coord, &machines.AlarmTrap);
+        if (rng.onein(6)) {
+            const trap_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
+            const trap_y = rng.range(usize, child.start.y + 1, child.end().y - 1);
+            const trap_coord = Coord.new2(level, trap_x, trap_y);
+            _place_machine(trap_coord, &machines.AlarmTrap);
+        }
 
-        const loot_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
-        const loot_y = rng.range(usize, child.start.y + 1, child.end().y - 1);
-        const loot_coord = Coord.new2(level, loot_x, loot_y);
-        _place_machine(loot_coord, &machines.GoldCoins);
+        if (rng.onein(6)) {
+            const loot_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
+            const loot_y = rng.range(usize, child.start.y + 1, child.end().y - 1);
+            const loot_coord = Coord.new2(level, loot_x, loot_y);
+            _place_machine(loot_coord, &machines.GoldCoins);
+        }
 
         // --- add corridors ---
 
