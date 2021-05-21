@@ -93,7 +93,7 @@ pub fn shadowcast(coord: Coord, octs: [8]?usize, radius: usize, limit: Coord, ti
 
     for (octs) |maybe_oct| {
         if (maybe_oct) |oct| {
-            _cast_light(@intCast(isize, coord.x), @intCast(isize, coord.y), 1, 1.0, 0.0, @intCast(isize, max_radius), MULT[0][oct], MULT[1][oct], MULT[2][oct], MULT[3][oct], limit, buf, tile_opacity);
+            _cast_light(coord.z, @intCast(isize, coord.x), @intCast(isize, coord.y), 1, 1.0, 0.0, @intCast(isize, max_radius), MULT[0][oct], MULT[1][oct], MULT[2][oct], MULT[3][oct], limit, buf, tile_opacity);
         }
     }
 
@@ -102,7 +102,7 @@ pub fn shadowcast(coord: Coord, octs: [8]?usize, radius: usize, limit: Coord, ti
     //buf.append(coord) catch unreachable;
 }
 
-fn _cast_light(cx: isize, cy: isize, row: isize, start_p: f64, end: f64, radius: isize, xx: isize, xy: isize, yx: isize, yy: isize, limit: Coord, buf: *CoordArrayList, tile_opacity: fn (Coord) f64) void {
+fn _cast_light(level: usize, cx: isize, cy: isize, row: isize, start_p: f64, end: f64, radius: isize, xx: isize, xy: isize, yx: isize, yy: isize, limit: Coord, buf: *CoordArrayList, tile_opacity: fn (Coord) f64) void {
     if (start_p < end) {
         return;
     }
@@ -128,7 +128,7 @@ fn _cast_light(cx: isize, cy: isize, row: isize, start_p: f64, end: f64, radius:
                 continue;
             }
 
-            const coord = Coord.new(@intCast(usize, cur_x), @intCast(usize, cur_y));
+            const coord = Coord.new2(level, @intCast(usize, cur_x), @intCast(usize, cur_y));
             const l_slope = (@intToFloat(f64, dx) - 0.5) / (@intToFloat(f64, dy) + 0.5);
             const r_slope = (@intToFloat(f64, dx) + 0.5) / (@intToFloat(f64, dy) - 0.5);
 
@@ -152,7 +152,7 @@ fn _cast_light(cx: isize, cy: isize, row: isize, start_p: f64, end: f64, radius:
                 }
             } else if (tile_opacity(coord) >= 1.0 and j < radius) {
                 blocked = true;
-                _cast_light(cx, cy, j + 1, start, l_slope, radius, xx, xy, yx, yy, limit, buf, tile_opacity);
+                _cast_light(level, cx, cy, j + 1, start, l_slope, radius, xx, xy, yx, yy, limit, buf, tile_opacity);
                 new_start = r_slope;
             }
         }
