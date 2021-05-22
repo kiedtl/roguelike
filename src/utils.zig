@@ -18,7 +18,7 @@ pub fn mixColors(a: u32, b: u32, frac: f64) u32 {
     const bg = (b >> 08) & 0xFF;
     const bb = (b >> 00) & 0xFF;
     const rr = interpolate(ar, br, frac);
-    const rg = interpolate(ar, br, frac);
-    const rb = interpolate(ar, br, frac);
+    const rg = interpolate(ag, bg, frac);
+    const rb = interpolate(ab, bb, frac);
     return (rr << 16) | (rg << 8) | rb;
 }

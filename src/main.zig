@@ -1,6 +1,7 @@
 const std = @import("std");
 
 const rng = @import("rng.zig");
+const gas = @import("gas.zig");
 const astar = @import("astar.zig");
 const mapgen = @import("mapgen.zig");
 const display = @import("display.zig");
@@ -134,7 +135,7 @@ pub fn main() anyerror!void {
                     'b' => state.player.moveInDirection(.SouthWest),
                     'n' => state.player.moveInDirection(.SouthEast),
                     's' => blk: {
-                        state.dungeon.atGas(state.player.coord)[0] += 1.0;
+                        state.dungeon.atGas(state.player.coord)[gas.SmokeGas.id] += 1.0;
                         break :blk true;
                     },
                     else => false,

@@ -9,6 +9,15 @@ const utils = @import("utils.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
+fn _place_prop(coord: Coord, prop_template: *const Prop) *Prop {
+    var prop = prop_template.*;
+    prop.coord = coord;
+    state.props.append(prop) catch unreachable;
+    const propptr = state.props.lastPtr().?;
+    state.dungeon.at(coord).surface = SurfaceItem{ .Prop = propptr };
+    return state.props.lastPtr().?;
+}
+
 fn _place_machine(coord: Coord, machine_template: *const Machine) void {
     var machine = machine_template.*;
     machine.coord = coord;
@@ -239,11 +248,24 @@ fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
 
         // --- add machines ---
 
-        if (rng.onein(6)) {
+        if (rng.onein(4)) {
             const trap_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
             const trap_y = rng.range(usize, child.start.y + 1, child.end().y - 1);
             const trap_coord = Coord.new2(level, trap_x, trap_y);
-            _place_machine(trap_coord, &machines.AlarmTrap);
+            var trap: Machine = undefined;
+            if (rng.onein(3)) {
+                trap = machines.AlarmTrap;
+            } else {
+                trap = machines.CausticGasTrap;
+                var num_of_vents = rng.range(usize, 1, 3);
+                while (num_of_vents > 0) : (num_of_vents -= 1) {
+                    const vent_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
+                    const vent_y = rng.range(usize, child.start.y + 1, child.end().y - 1);
+                    const vent_coord = Coord.new2(level, vent_x, vent_y);
+                    trap.props[num_of_vents] = _place_prop(vent_coord, &machines.GasVentProp);
+                }
+            }
+            _place_machine(trap_coord, &trap);
         }
 
         if (rng.onein(6)) {

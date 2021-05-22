@@ -668,11 +668,11 @@ pub const Machine = struct {
     // Traps and staircases should be avoided, for instance.
     should_be_avoided: bool,
     // FIXME: there has got to be a better way to do this
-    props: [40]?Prop = [_]?Prop{null} ** 40,
+    props: [40]?*Prop = [_]?*Prop{null} ** 40,
     // TODO: is_disabled, strength_needed
 };
 
-pub const Prop = struct { name: []const u8, tile: u21 };
+pub const Prop = struct { name: []const u8, tile: u21, coord: Coord = Coord.new(0, 0) };
 
 pub const SurfaceItemTag = enum { Machine, Prop };
 pub const SurfaceItem = union(SurfaceItemTag) { Machine: *Machine, Prop: *Prop };
@@ -707,6 +707,7 @@ pub const Gas = struct {
     color: u32,
     dissipation_rate: f64,
     opacity: f64,
+    id: usize,
 };
 
 // ---------- Mob templates ----------

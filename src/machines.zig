@@ -1,11 +1,15 @@
 // TODO: add state to machines
+// STYLE: remove pub marker from trigger funcs
 
 const std = @import("std");
 const assert = std.debug.assert;
 
 const state = @import("state.zig");
+const gas = @import("gas.zig");
 const rng = @import("rng.zig");
 usingnamespace @import("types.zig");
+
+pub const GasVentProp = Prop{ .name = "gas vent", .tile = '=' };
 
 // FIXME: remove this. This is temporary until we get books, prefab rooms,
 // knowledge systems, etc.
@@ -47,6 +51,15 @@ pub const AlarmTrap = Machine{
     .should_be_avoided = true,
 };
 
+pub const CausticGasTrap = Machine{
+    .name = "caustic gas trap",
+    .tile = '^',
+    .walkable = true,
+    .opacity = 0.0,
+    .on_trigger = triggerCausticGasTrap,
+    .should_be_avoided = true,
+};
+
 pub const NormalDoor = Machine{
     .name = "door",
     .tile = '+', // TODO: red background?
@@ -65,6 +78,20 @@ pub fn triggerAlarmTrap(culprit: *Mob, machine: *Machine) void {
 
     culprit.noise += 1000; // muahahaha
     state.message(.Trap, "You hear a loud clanging noise!", .{});
+}
+
+pub fn triggerCausticGasTrap(culprit: *Mob, machine: *Machine) void {
+    if (culprit.allegiance == .Sauron) {
+        return;
+    }
+
+    for (machine.props) |maybe_prop| {
+        if (maybe_prop) |vent| {
+            state.dungeon.atGas(vent.coord)[gas.CausticGas.id] = 1.0;
+        }
+    }
+
+    state.message(.Trap, "Poisonous gas seeps through the gas vents!", .{});
 }
 
 pub fn triggerStairUp(culprit: *Mob, machine: *Machine) void {
