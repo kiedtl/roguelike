@@ -64,6 +64,7 @@ pub fn triggerAlarmTrap(culprit: *Mob, machine: *Machine) void {
     }
 
     culprit.noise += 1000; // muahahaha
+    state.message(.Trap, "You hear a loud clanging noise!", .{});
 }
 
 pub fn triggerStairUp(culprit: *Mob, machine: *Machine) void {
