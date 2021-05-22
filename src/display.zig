@@ -250,7 +250,6 @@ pub fn draw() void {
             const gases = state.dungeon.atGas(coord);
             for (gases) |q, g| {
                 const gcolor = gas.Gases[g].color;
-                std.log.warn("color for gas id {} is {X}", .{ g, gcolor });
                 const aq = 1 - math.clamp(q, 0.21, 1);
                 if (q > 0) tile.bg = utils.mixColors(gcolor, tile.bg, aq);
             }

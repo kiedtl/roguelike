@@ -311,6 +311,7 @@ pub const MessageType = enum {
     Aquire,
     Move,
     Trap,
+    Damage,
 
     pub fn color(self: MessageType) u32 {
         return switch (self) {
@@ -318,6 +319,7 @@ pub const MessageType = enum {
             .Aquire => 0xffd700,
             .Move => 0xfafefe,
             .Trap => 0xed254d,
+            .Damage => 0xed254d,
         };
     }
 };
@@ -426,6 +428,17 @@ pub const Mob = struct { // {{{
     pub fn tick_hp(self: *Mob) void {
         assert(!self.is_dead);
         self.HP = math.clamp(self.HP + 0.14, 0, self.max_HP);
+    }
+
+    // Check surrounding temperature/gas/water and drown, burn, freeze, or
+    // corrode mob.
+    pub fn tick_env(self: *Mob) void {
+        const gases = state.dungeon.atGas(self.coord);
+        for (gases) |quantity, gasi| {
+            if (quantity > 0.0) {
+                gas.Gases[gasi].trigger(self, quantity);
+            }
+        }
     }
 
     // Halves sound. Should be called by state.tick().
@@ -707,6 +720,7 @@ pub const Gas = struct {
     color: u32,
     dissipation_rate: f64,
     opacity: f64,
+    trigger: fn (*Mob, f64) void,
     id: usize,
 };
 

@@ -215,6 +215,8 @@ pub fn tick(alloc: *mem.Allocator) void {
         mob.tick_hp();
         mob.tick_pain();
         mob.tick_noise();
+        mob.tick_env();
+
         _update_fov(mob);
 
         if (!mob.coord.eq(player.coord)) {
