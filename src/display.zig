@@ -4,6 +4,8 @@ const std = @import("std");
 const math = std.math;
 
 const termbox = @import("termbox.zig");
+const utils = @import("utils.zig");
+const gas = @import("gas.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
@@ -204,8 +206,10 @@ pub fn draw() void {
                 continue;
             }
 
+            var tile = termbox.tb_cell{};
+
             switch (state.dungeon.at(coord).type) {
-                .Wall => termbox.tb_change_cell(cursorx, cursory, '#', 0x505050, 0x9e9e9e),
+                .Wall => tile = .{ .ch = '#', .fg = 0x505050, .bg = 0x9e9e9e },
                 .Floor => if (state.dungeon.at(coord).mob) |mob| {
                     if (state.player.coord.eq(coord) and _mobs_can_see(&moblist, coord))
                         is_player_watched = true;
@@ -221,24 +225,35 @@ pub fn draw() void {
                         color = 0xdc143c;
                     }
 
-                    termbox.tb_change_cell(cursorx, cursory, mob.tile, 0xffffff, color);
+                    tile.ch = mob.tile;
+                    tile.bg = color;
                 } else if (state.dungeon.at(coord).surface) |surfaceitem| {
-                    const tile = switch (surfaceitem) {
+                    const ch = switch (surfaceitem) {
                         .Machine => |m| m.tile,
                         .Prop => |p| p.tile,
                     };
 
-                    termbox.tb_change_cell(cursorx, cursory, tile, 0xffffff, 0x1e1e1e);
+                    tile.ch = ch;
+                    tile.bg = 0x1e1e1e;
                 } else {
                     var can_mob_see = _mobs_can_see(&moblist, coord);
                     if (state.player.coord.eq(coord) and can_mob_see)
                         is_player_watched = can_mob_see;
 
-                    const tile: u32 = if (can_mob_see) '·' else ' ';
+                    const ch: u32 = if (can_mob_see) '·' else ' ';
                     var bg: u32 = if (state.dungeon.at(coord).marked) 0x454545 else 0x1e1e1e;
-                    termbox.tb_change_cell(cursorx, cursory, tile, 0xffffff, bg);
+                    tile.ch = ch;
+                    tile.bg = bg;
                 },
             }
+
+            const gases = state.dungeon.atGas(coord);
+            for (gases) |q, g| {
+                const gcolor = gas.Gases[g].color;
+                const aq = 1 - math.clamp(q, 0.21, 1);
+                if (q > 0) tile.bg = utils.mixColors(gcolor, tile.bg, aq);
+            }
+            termbox.tb_put_cell(cursorx, cursory, &tile);
         }
     }
 

@@ -5,6 +5,7 @@ const assert = std.debug.assert;
 
 const LinkedList = @import("list.zig").LinkedList;
 const rng = @import("rng.zig");
+const gas = @import("gas.zig");
 const utils = @import("utils.zig");
 const state = @import("state.zig");
 const ai = @import("ai.zig");
@@ -690,10 +691,22 @@ pub const Tile = struct {
 
 pub const Dungeon = struct {
     map: [LEVELS][HEIGHT][WIDTH]Tile = [1][HEIGHT][WIDTH]Tile{[1][WIDTH]Tile{[1]Tile{.{}} ** WIDTH} ** HEIGHT} ** LEVELS,
+    gas: [LEVELS][HEIGHT][WIDTH][gas.GAS_NUM]f64 = [1][HEIGHT][WIDTH][gas.GAS_NUM]f64{[1][WIDTH][gas.GAS_NUM]f64{[1][gas.GAS_NUM]f64{[1]f64{0} ** gas.GAS_NUM} ** WIDTH} ** HEIGHT} ** LEVELS,
 
     pub fn at(self: *Dungeon, c: Coord) *Tile {
         return &self.map[c.z][c.y][c.x];
     }
+
+    // STYLE: rename to gasAt
+    pub fn atGas(self: *Dungeon, c: Coord) []f64 {
+        return &self.gas[c.z][c.y][c.x];
+    }
+};
+
+pub const Gas = struct {
+    color: u32,
+    dissipation_rate: f64,
+    opacity: f64,
 };
 
 // ---------- Mob templates ----------

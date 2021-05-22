@@ -105,6 +105,7 @@ pub fn main() anyerror!void {
         mapgen.placeRandomStairs(level);
 
     state.tick(&gpa.allocator);
+    state.tickAtmosphere(0);
     display.draw();
 
     while (true) {
@@ -132,10 +133,15 @@ pub fn main() anyerror!void {
                     'u' => state.player.moveInDirection(.NorthEast),
                     'b' => state.player.moveInDirection(.SouthWest),
                     'n' => state.player.moveInDirection(.SouthEast),
+                    's' => blk: {
+                        state.dungeon.atGas(state.player.coord)[0] += 1.0;
+                        break :blk true;
+                    },
                     else => false,
                 };
 
                 if (did_anything) {
+                    state.tickAtmosphere(0);
                     state.tick(&gpa.allocator);
                     if (state.player.is_dead) {
                         @panic("You died...");

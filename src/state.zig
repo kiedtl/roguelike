@@ -1,9 +1,11 @@
 const std = @import("std");
 const mem = std.mem;
+const math = std.math;
 const assert = std.debug.assert;
 
 const astar = @import("astar.zig");
 const utils = @import("utils.zig");
+const gas = @import("gas.zig");
 const rng = @import("rng.zig");
 const fov = @import("fov.zig");
 usingnamespace @import("types.zig");
@@ -34,6 +36,11 @@ fn tile_opacity(coord: Coord) f64 {
             .Machine => |m| o += m.opacity,
             else => {},
         }
+    }
+
+    const gases = dungeon.atGas(coord);
+    for (gases) |q, g| {
+        if (q > 0) o += gas.Gases[g].opacity;
     }
 
     return o;
@@ -216,6 +223,57 @@ pub fn tick(alloc: *mem.Allocator) void {
 
         _update_fov(mob);
     }
+}
+
+pub fn tickAtmosphere(cur_gas: usize) void {
+    const dissipation = gas.Gases[cur_gas].dissipation_rate;
+    const cur_lev = player.coord.z;
+    var new: [HEIGHT][WIDTH]f64 = undefined;
+    {
+        var y: usize = 0;
+        while (y < HEIGHT) : (y += 1) {
+            var x: usize = 0;
+            while (x < WIDTH) : (x += 1) {
+                const coord = Coord.new2(cur_lev, x, y);
+
+                if (dungeon.at(coord).type == .Wall)
+                    continue;
+
+                var avg: f64 = dungeon.atGas(coord)[cur_gas];
+                var neighbors: f64 = 1;
+                for (&DIRECTIONS) |d, i| {
+                    var n = coord;
+                    if (!n.move(d, mapgeometry)) continue;
+
+                    if (dungeon.at(n).type == .Wall)
+                        continue;
+
+                    if (dungeon.atGas(n)[cur_gas] == 0)
+                        continue;
+
+                    avg += dungeon.atGas(n)[cur_gas] - dissipation;
+                    neighbors += 1;
+                }
+
+                avg /= neighbors;
+                avg = math.max(avg, 0);
+
+                new[y][x] = avg;
+            }
+        }
+    }
+
+    {
+        var y: usize = 0;
+        while (y < HEIGHT) : (y += 1) {
+            var x: usize = 0;
+            while (x < WIDTH) : (x += 1)
+                dungeon.atGas(Coord.new2(cur_lev, x, y))[cur_gas] = new[y][x];
+        }
+    }
+
+    if (cur_gas < (gas.GAS_NUM - 1))
+        tickAtmosphere(cur_gas + 1);
 }
 
 pub fn freeall() void {

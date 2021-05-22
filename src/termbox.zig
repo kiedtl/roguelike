@@ -112,9 +112,9 @@ pub const TB_REVERSE: usize = 0x04000000;
 // - 'fg' foreground color and attributes
 // - 'bg' background color and attributes
 pub const tb_cell = extern struct {
-    ch: u32,
-    fg: u32,
-    bg: u32,
+    ch: u32 = ' ',
+    fg: u32 = 0xffffff,
+    bg: u32 = 0x000000,
 };
 
 pub const TB_EVENT_KEY: isize = 1;
