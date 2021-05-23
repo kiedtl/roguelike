@@ -72,18 +72,14 @@ pub const NormalDoor = Machine{
 pub fn triggerNone(_: *Mob, __: *Machine) void {}
 
 pub fn triggerAlarmTrap(culprit: *Mob, machine: *Machine) void {
-    if (culprit.allegiance == .Sauron) {
-        return;
-    }
+    if (culprit.allegiance == .Sauron) return;
 
     culprit.noise += 1000; // muahahaha
     state.message(.Trap, "You hear a loud clanging noise!", .{});
 }
 
 pub fn triggerCausticGasTrap(culprit: *Mob, machine: *Machine) void {
-    if (culprit.allegiance == .Sauron) {
-        return;
-    }
+    if (culprit.allegiance == .Sauron) return;
 
     for (machine.props) |maybe_prop| {
         if (maybe_prop) |vent| {
@@ -96,6 +92,7 @@ pub fn triggerCausticGasTrap(culprit: *Mob, machine: *Machine) void {
 
 pub fn triggerStairUp(culprit: *Mob, machine: *Machine) void {
     assert(machine.coord.z >= 1);
+    if (!culprit.coord.eq(state.player.coord)) return;
 
     const uplevel = Coord.new2(machine.coord.z - 1, machine.coord.x, machine.coord.y);
 
@@ -114,6 +111,8 @@ pub fn triggerStairUp(culprit: *Mob, machine: *Machine) void {
 }
 
 pub fn triggerStairDown(culprit: *Mob, machine: *Machine) void {
+    if (!culprit.coord.eq(state.player.coord)) return;
+
     const downlevel = Coord.new2(machine.coord.z + 1, machine.coord.x, machine.coord.y);
     assert(downlevel.z < state.LEVELS);
 
