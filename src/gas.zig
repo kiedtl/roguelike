@@ -2,7 +2,7 @@ const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
 pub const CausticGas = Gas{
-    .color = 0xee82ee, // violet
+    .color = 0xa7e234,
     .dissipation_rate = 0.01,
     .opacity = 0.3,
     .trigger = triggerCaustic,
