@@ -5,6 +5,7 @@ const assert = std.debug.assert;
 
 const LinkedList = @import("list.zig").LinkedList;
 const rng = @import("rng.zig");
+const materials = @import("materials.zig");
 const gas = @import("gas.zig");
 const utils = @import("utils.zig");
 const state = @import("state.zig");
@@ -305,6 +306,34 @@ test "coord.move" {
     std.testing.expect(c.move(.East, limit));
     std.testing.expectEqual(c, Coord.new(1, 0));
 }
+
+pub const Material = struct {
+    // Name of the material. e.g. "rhyolite"
+    name: []const u8,
+
+    // Description. e.g. "A sooty, flexible material used to make fire-proof
+    // cloaks."
+    description: []const u8,
+
+    // Material density in g/cm³
+    density: f64,
+
+    // Tile used to represent walls. The foreground color is used to represent
+    // items made with that material.
+    color_fg: u32,
+    color_bg: u32,
+    glyph: u21,
+
+    // Melting point in Celsius, and combust temperature, also in Celsius.
+    melting_point: usize,
+    combust_point: ?usize,
+
+    // Specific heat in kJ/(kg K)
+    specific_heat: f64,
+
+    // How much light this thing emits
+    luminescence: usize,
+};
 
 pub const MessageType = enum {
     Info,
@@ -696,6 +725,7 @@ pub const TileType = enum {
 };
 
 pub const Tile = struct {
+    material: *const Material = &materials.Basalt,
     type: TileType = .Wall,
     mob: ?*Mob = null,
     marked: bool = false,

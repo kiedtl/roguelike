@@ -206,10 +206,15 @@ pub fn draw() void {
                 continue;
             }
 
+            const material = state.dungeon.at(coord).material;
             var tile = termbox.tb_cell{};
 
             switch (state.dungeon.at(coord).type) {
-                .Wall => tile = .{ .ch = '#', .fg = 0x505050, .bg = 0x9e9e9e },
+                .Wall => tile = .{
+                    .ch = material.glyph,
+                    .fg = material.color_fg,
+                    .bg = material.color_bg,
+                },
                 .Floor => if (state.dungeon.at(coord).mob) |mob| {
                     if (state.player.coord.eq(coord) and _mobs_can_see(&moblist, coord))
                         is_player_watched = true;
@@ -253,6 +258,7 @@ pub fn draw() void {
                 const aq = 1 - math.clamp(q, 0.21, 1);
                 if (q > 0) tile.bg = utils.mixColors(gcolor, tile.bg, aq);
             }
+
             termbox.tb_put_cell(cursorx, cursory, &tile);
         }
     }
