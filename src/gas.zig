@@ -1,11 +1,11 @@
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
-pub const CausticGas = Gas{
+pub const Poison = Gas{
     .color = 0xa7e234,
     .dissipation_rate = 0.01,
     .opacity = 0.3,
-    .trigger = triggerCaustic,
+    .trigger = triggerPoison,
     .id = 0,
 };
 
@@ -18,12 +18,12 @@ pub const SmokeGas = Gas{
 };
 
 // NOTE: the gas' ID *must* match the index number.
-pub const Gases = [_]Gas{ CausticGas, SmokeGas };
+pub const Gases = [_]Gas{ Poison, SmokeGas };
 pub const GAS_NUM: usize = Gases.len;
 
 fn triggerNone(_: *Mob, __: f64) void {}
 
-fn triggerCaustic(idiot: *Mob, quantity: f64) void {
+fn triggerPoison(idiot: *Mob, quantity: f64) void {
     idiot.pain += 0.14 * quantity;
     idiot.HP *= 0.91;
 

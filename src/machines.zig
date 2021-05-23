@@ -51,12 +51,12 @@ pub const AlarmTrap = Machine{
     .should_be_avoided = true,
 };
 
-pub const CausticGasTrap = Machine{
-    .name = "caustic gas trap",
+pub const PoisonGasTrap = Machine{
+    .name = "poison gas trap",
     .tile = '^',
     .walkable = true,
     .opacity = 0.0,
-    .on_trigger = triggerCausticGasTrap,
+    .on_trigger = triggerPoisonGasTrap,
     .should_be_avoided = true,
 };
 
@@ -78,16 +78,16 @@ pub fn triggerAlarmTrap(culprit: *Mob, machine: *Machine) void {
     state.message(.Trap, "You hear a loud clanging noise!", .{});
 }
 
-pub fn triggerCausticGasTrap(culprit: *Mob, machine: *Machine) void {
+pub fn triggerPoisonGasTrap(culprit: *Mob, machine: *Machine) void {
     if (culprit.allegiance == .Sauron) return;
 
     for (machine.props) |maybe_prop| {
         if (maybe_prop) |vent| {
-            state.dungeon.atGas(vent.coord)[gas.CausticGas.id] = 1.0;
+            state.dungeon.atGas(vent.coord)[gas.Poison.id] = 1.0;
         }
     }
 
-    state.message(.Trap, "Poisonous gas seeps through the gas vents!", .{});
+    state.message(.Trap, "Noxious fumes seep through the gas vents!", .{});
 }
 
 pub fn triggerStairUp(culprit: *Mob, machine: *Machine) void {

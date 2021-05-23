@@ -256,7 +256,7 @@ fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
             if (rng.onein(3)) {
                 trap = machines.AlarmTrap;
             } else {
-                trap = machines.CausticGasTrap;
+                trap = machines.PoisonGasTrap;
                 var num_of_vents = rng.range(usize, 1, 3);
                 while (num_of_vents > 0) : (num_of_vents -= 1) {
                     const vent_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
