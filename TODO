@@ -95,3 +95,4 @@ Stop using the freaking `catch unreachable` syntax:
 	19:58 <ikskuh> "catch unreachable" will happily continue to execute code after the error in non-safe build modes
 Research Manhattan distance vs Euclidian distance vs Moore neighborhood
 	https://old.reddit.com/r/roguelikedev/comments/nev1jg/a_pathfinding_unstablenondeterministic/
+Define Species struct and carry immutable data for each mob in it

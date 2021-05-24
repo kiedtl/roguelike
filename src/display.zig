@@ -70,19 +70,19 @@ fn _draw_string(_x: isize, _y: isize, bg: u32, fg: u32, comptime format: []const
 }
 
 fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, description: []const u8, bg: u32, fg: u32) void {
-    _ = _draw_string(startx, y, 0xffffff, 0, "{s}", .{description}) catch unreachable;
+    const labelx = startx + 1;
+    _ = _draw_string(labelx, y, 0xffffff, 0, "{s}", .{description}) catch unreachable;
 
-    var x = startx + @intCast(isize, description.len) + 1;
+    var barx = startx;
     const percent = (current * 100) / max;
+    if (percent == 0) return;
+    const bar = @divTrunc((endx - barx - 1) * @intCast(isize, percent), 100);
+    const bar_end = barx + bar;
+    while (barx < bar_end) : (barx += 1) termbox.tb_change_cell(barx, y, ' ', fg, bg);
 
-    if (percent == 0)
-        return;
-
-    const bar = @divTrunc((endx - x - 1) * @intCast(isize, percent), 100);
-    const bar_end = x + bar;
-
-    while (x < bar_end) : (x += 1)
-        termbox.tb_change_cell(x, y, ' ', fg, bg);
+    const bar_len = bar_end - startx;
+    const description2 = description[0..math.min(@intCast(usize, bar_len), description.len)];
+    _ = _draw_string(labelx, y, 0xffffff, bg, "{s}", .{description2}) catch unreachable;
 }
 
 fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: isize, starty: isize, endx: isize, endy: isize) void {
@@ -92,25 +92,29 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
 
     y = _draw_string(startx, y, 0xffffff, 0, "@: You", .{}) catch unreachable;
 
-    _draw_bar(y, startx, endx, @floatToInt(usize, player.HP), @floatToInt(usize, player.max_HP), "HP", 0xffffff, 0);
+    _draw_bar(y, startx, endx, @floatToInt(usize, player.HP), @floatToInt(usize, player.max_HP), "Health", 0x232faa, 0);
     y += 1;
-    _draw_bar(y, startx, endx, player.noise, 20, "NS", 0x232faa, 0);
+    _draw_bar(y, startx, endx, player.noise, 20, "Noise", 0x232faa, 0);
     y += 1;
     y = _draw_string(startx, y, 0xffffff, 0, "score: {}", .{state.score}) catch unreachable;
     y += 2;
 
     for (moblist.items) |mob| {
+        if (mob.is_dead) continue;
+
         _clear_line(startx, endx, y);
         _clear_line(startx, endx, y + 1);
 
         // Draw the tile manually, _draw_string complains of invalid UTF-8 otherwise
+        // (FIXME)
+        //
         //var tile: [4]u8 = undefined;
         //_ = std.unicode.utf8Encode(mob.tile, &tile) catch unreachable;
         termbox.tb_change_cell(startx, y, mob.tile, 0xffffff, 0);
 
         y = _draw_string(startx + 1, y, 0xffffff, 0, ": {} ({})", .{ mob.species, mob.activity_description() }) catch unreachable;
 
-        _draw_bar(y, startx, endx, @floatToInt(usize, mob.HP), @floatToInt(usize, mob.max_HP), "HP", 0xffffff, 0);
+        _draw_bar(y, startx, endx, @floatToInt(usize, mob.HP), @floatToInt(usize, mob.max_HP), "Health", 0x232faa, 0);
         y += 2;
     }
 }
