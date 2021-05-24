@@ -356,6 +356,7 @@ pub const MessageType = enum {
 pub const Message = struct {
     msg: [128]u8,
     type: MessageType,
+    turn: usize,
 };
 
 pub const Allegiance = enum { Sauron, Illuvatar, NoneEvil, NoneGood };

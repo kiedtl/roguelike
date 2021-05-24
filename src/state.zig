@@ -300,5 +300,5 @@ pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void
     var fbs = std.io.fixedBufferStream(&buf);
     std.fmt.format(fbs.writer(), fmt, args) catch |_| @panic("format error");
     const str = fbs.getWritten();
-    messages.append(.{ .msg = buf, .type = mtype }) catch @panic("OOM");
+    messages.append(.{ .msg = buf, .type = mtype, .turn = ticks }) catch @panic("OOM");
 }
