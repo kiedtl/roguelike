@@ -808,6 +808,6 @@ pub const ElfTemplate = Mob{
     .hearing = 5,
     .max_HP = 49,
 
-    .HP = 40,
+    .HP = 49,
     .strength = 14,
 };
