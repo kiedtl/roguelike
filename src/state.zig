@@ -20,11 +20,6 @@ pub var ticks: usize = 0;
 pub var messages: MessageArrayList = undefined;
 pub var score: usize = 0;
 
-// STYLE: change to Tile.soundOpacity
-pub fn tile_sound_opacity(coord: Coord) f64 {
-    return if (dungeon.at(coord).type == .Wall) 0.4 else 0.2;
-}
-
 // STYLE: change to Tile.opacity
 fn tile_opacity(coord: Coord) f64 {
     const tile = dungeon.at(coord);

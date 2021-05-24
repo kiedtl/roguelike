@@ -643,8 +643,14 @@ pub const Mob = struct { // {{{
         const line = self.coord.draw_line(other.coord, state.mapgeometry, &fba.allocator);
         var sound_resistance: f64 = 0.0;
 
+        // FIXME: this lazy sound propagation formula isn't accurate. But this is
+        // a game, so I can get away with it, right?
         for (line.items) |line_coord| {
-            sound_resistance += state.tile_sound_opacity(line_coord);
+            const resistance = if (state.dungeon.at(line_coord).type == .Wall)
+                0.4 * state.dungeon.at(line_coord).material.density
+            else
+                0.2;
+            sound_resistance += resistance;
             if (sound_resistance > 1.0) break;
         }
 
