@@ -6,6 +6,8 @@ const assert = std.debug.assert;
 usingnamespace @import("types.zig");
 const state = @import("state.zig");
 
+const NodePriorityQueue = std.PriorityQueue(Node);
+
 const Path = struct { from: Coord, to: Coord };
 
 const Node = struct {
@@ -16,6 +18,10 @@ const Node = struct {
 
     pub fn f(n: *const Node) usize {
         return n.g + n.h;
+    }
+
+    pub fn betterThan(a: Node, b: Node) bool {
+        return a.f() < b.f();
     }
 };
 
@@ -72,25 +78,18 @@ pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) boo
         return null;
     }
 
-    var open_list = NodeArrayList.init(alloc);
+    var open_list = NodePriorityQueue.init(alloc, Node.betterThan);
     var closed_list = NodeArrayList.init(alloc);
 
-    open_list.append(Node{
+    open_list.add(Node{
         .coord = start,
         .g = 0,
         .h = start.distance(goal),
         .parent = null,
     }) catch unreachable;
 
-    while (open_list.items.len > 0) {
-        var best: usize = 0;
-        for (open_list.items) |node, index| {
-            if (node.f() < open_list.items[best].f()) {
-                best = index;
-            }
-        }
-
-        var current_node = open_list.orderedRemove(best);
+    while (open_list.count() > 0) {
+        var current_node = open_list.removeOrNull().?; // Should not be null
 
         if (current_node.coord.eq(goal)) {
             open_list.deinit();
@@ -118,7 +117,7 @@ pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) boo
         closed_list.append(current_node) catch unreachable;
 
         const neighbors = DIRECTIONS;
-        for (neighbors) |neighbor| {
+        neighbor: for (neighbors) |neighbor| {
             var coord = current_node.coord;
 
             if (!coord.move(neighbor, limit)) continue;
@@ -134,15 +133,18 @@ pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) boo
                 .h = coord.distance(goal),
             };
 
-            if (coord_in_list(coord, &open_list)) |index| {
-                if (node.g > open_list.items[index].g) {
-                    continue;
-                } else {
-                    _ = open_list.orderedRemove(index);
+            var iter = open_list.iterator();
+            while (iter.next()) |item| {
+                if (item.coord.eq(coord)) {
+                    if (node.g > item.g) {
+                        continue :neighbor;
+                    } else {
+                        _ = open_list.removeIndex(iter.count - 1);
+                    }
                 }
             }
 
-            open_list.append(node) catch unreachable;
+            open_list.add(node) catch unreachable;
         }
     }
 
