@@ -10,12 +10,30 @@ const rng = @import("rng.zig");
 const fov = @import("fov.zig");
 usingnamespace @import("types.zig");
 
-pub const mapgeometry = Coord.new(WIDTH, HEIGHT);
+// Should only be used directly by functions in main.zig. For other applications,
+// should be passed as a parameter by caller.
+pub var GPA = std.heap.GeneralPurposeAllocator(.{
+    // Probably should enable this later on to track memory usage, if
+    // allocations become too much
+    .enable_memory_limit = false,
+
+    .safety = true,
+
+    // Probably would enable this later, as we might want to run the ticks()
+    // on other dungeon levels in another thread
+    .thread_safe = true,
+
+    .never_unmap = true,
+}){};
+
+pub const mapgeometry = Coord.new2(LEVELS, WIDTH, HEIGHT);
 pub var dungeon: Dungeon = .{};
+pub var player: *Mob = undefined;
+
 pub var mobs: MobList = undefined;
 pub var machines: MachineList = undefined;
 pub var props: PropList = undefined;
-pub var player: *Mob = undefined;
+
 pub var ticks: usize = 0;
 pub var messages: MessageArrayList = undefined;
 pub var score: usize = 0;
@@ -79,7 +97,8 @@ pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, al
     return moblist;
 }
 
-fn _update_fov(mob: *Mob) void {
+// STYLE: rename to Mob.updateFOV
+pub fn _update_fov(mob: *Mob) void {
     const all_octants = [_]?usize{ 0, 1, 2, 3, 4, 5, 6, 7 };
 
     mob.fov.shrinkRetainingCapacity(0);
@@ -131,7 +150,7 @@ fn _can_see_hostile(mob: *Mob) ?Coord {
     return null;
 }
 
-fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem.Allocator) void {
+pub fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem.Allocator) void {
     if (mob.occupation.phase != .SawHostile) {
         if (_can_see_hostile(mob)) |hostile| {
             mob.noise += Mob.NOISE_YELL;
@@ -188,37 +207,6 @@ fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem.All
         if (astar.nextDirectionTo(mob.coord, target_coord, mapgeometry, is_walkable)) |d| {
             _ = mob.moveInDirection(d);
         }
-    }
-}
-
-pub fn tick(alloc: *mem.Allocator) void {
-    ticks += 1;
-
-    const cur_level = player.coord.z;
-
-    const moblist = createMobList(true, false, cur_level, alloc);
-    defer moblist.deinit();
-
-    for (moblist.items) |mob| {
-        if (mob.is_dead) {
-            continue;
-        } else if (mob.should_be_dead()) {
-            mob.kill();
-            continue;
-        }
-
-        mob.tick_hp();
-        mob.tick_pain();
-        mob.tick_noise();
-        mob.tick_env();
-
-        _update_fov(mob);
-
-        if (!mob.coord.eq(player.coord)) {
-            _mob_occupation_tick(mob, &moblist, alloc);
-        }
-
-        _update_fov(mob);
     }
 }
 

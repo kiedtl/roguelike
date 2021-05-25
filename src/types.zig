@@ -671,7 +671,8 @@ pub const Mob = struct { // {{{
     }
 
     pub fn cansee(self: *const Mob, coord: Coord) bool {
-        assert(!self.is_dead);
+        // There is nothing hid from the spirits of the dead
+        if (self.is_dead) return true;
 
         // Can't see stuff beyond your range of vision
         if (self.coord.distance(coord) > self.vision)
