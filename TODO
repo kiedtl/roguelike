@@ -1,44 +1,50 @@
-New mobs ([d]emon, [h]uman, [a]nimal, [u]ndead, [o]ther, * = allies)
+New mobs
+([s]pirit, [h]uman, [a]nimal, [u]ndead, [o]ther)
+([CE]Sauron, [LE]NoneEvil, [CG]NoneGood, [LG]Illuvatar, [CC]Sauron/NonEvil, [??]Neutral)
 --------
-d	burning brute
-		A winged demon composed primarily of boiling granite, capable of
-		fearsome fire attacks.
-d	winged terror
-d	greater & lesser necromancer
-d	blazing brute
-a	jackals
-a	hellhounds
-a	hounds
-h	death/fire/ether knight
-d	death angel
-d	locust
-d	cankerworm
-d	night wanderer
-d	will o' the wisp
-a	fire worm
-*	shining one
-o	crystal statue
-		A statue of some nameless humanoid creature than once inhabited
-		the pits of Udùn. These statues are almost as rare as the white
-		crystal they're composed of.
+CC	s	burning brute
+			A winged demon composed primarily of boiling granite, capable of
+			fearsome fire attacks.
+CC	s	winged terror
+CC	s	greater & lesser necromancer
+CE	s	blazing brute
+CC	a	jackals
+CE	a	hellhounds
+CC	a	hounds
+CE	h	death/fire/ether knight
+CC	s	death angel
+CC	s	locust
+CC	s	cankerworm
+LE	s	night wanderer
+LE	s	will o' the wisp
+CE	a	fire worm
+LG	s	shining one
+CE	o	crystal statue
+			A statue of some nameless humanoid creature than once inhabited
+			the pits of Udùn. These statues are almost as rare as the white
+			crystal they're composed of.
 
-		...did those eyes just move?
-o	turquoise statue
-u	lich
-		The dessicated form of an ancient sorcerer, now controlled by the
-		very necromantic powers he once served.
-d	bogeyman (TODO: change name)
-d	creeping dread
-*	angel
-*	archangel
-o	complex number
-o	real number
-o	imaginary number
-a	troll
-a	internet troll
-a	fire worm
-a	spiders
-o	grue
+			...did those eyes just move?
+CE	o	turquoise statue
+CE	u	lich
+			The dessicated form of an ancient sorcerer, now controlled by the
+			very necromantic powers he once served.
+LE	s	bogeyman (TODO: change name)
+LE	s	creeping dread
+LG	s	angel
+LG	s	archangel
+??	o	complex number
+??	o	real number
+??	o	imaginary number
+CE	a	troll
+LE	a	internet troll
+CC	a	spiders
+LE	o	grue
+??	a	rat
+??	a	quasit
+CE	o	floating eye(?)
+LE	s	stalker (invisible)
+LE	o	mimic
 
 Feats (challenges)
 ------------------
