@@ -408,16 +408,9 @@ pub const Mob = struct { // {{{
 
     is_dead: bool = false,
 
-    // If the practical pain goes over PAIN_UNCONSCIOUS_THRESHHOLD, the mob
-    // should go unconscious. If it goes over PAIN_DEATH_THRESHHOLD, it will
-    // succumb and die.
-    //
-    // practical_pain = pain / willpower
-    pain: f64 = 0.0,
-
     // Immutable instrinsic attributes.
     //
-    // willpower: Controls the ability to resist pain and spells
+    // willpower: Controls the ability to resist spells
     // dexterity: Controls the likelihood of a mob dodging an attack.
     //            Examples:   Troll: 1
     //                     Hill Orc: 21
@@ -467,23 +460,6 @@ pub const Mob = struct { // {{{
                 gas.Gases[gasi].trigger(self, quantity);
             }
         }
-    }
-
-    // Reduce pain. Should be called by state.tick().
-    //
-    // TODO: pain effects (unconsciousness, etc)
-    pub fn tick_pain(self: *Mob) void {
-        assert(!self.is_dead);
-
-        if (self.current_pain() > 0.4) {
-            self.makeNoise(NOISE_SHRIEK); // The <mob> shriek in pain!
-        } else if (self.current_pain() > 0.6) {
-            self.makeNoise(NOISE_YELL); // The <mob> yells!
-        } else if (self.current_pain() > 0.8) {
-            self.makeNoise(NOISE_SCREAM); // The <mob> screams in agony!!
-        }
-
-        self.pain = math.max(self.pain - PAIN_DECAY * @intToFloat(f64, self.willpower), 0);
     }
 
     pub fn makeNoise(self: *Mob, amount: usize) void {
@@ -562,9 +538,6 @@ pub const Mob = struct { // {{{
             return; // dodged attack!
         }
 
-        // WHAM
-        recipient.pain += 0.21;
-
         const noise: usize = if (is_stab) 3 else 15;
         attacker.makeNoise(noise);
         recipient.makeNoise(noise);
@@ -591,14 +564,10 @@ pub const Mob = struct { // {{{
         self.fov.deinit();
         self.occupation.work_area.deinit();
         self.memory.clearAndFree();
-        self.pain = 0.0;
         self.is_dead = true;
     }
 
     pub fn should_be_dead(self: *const Mob) bool {
-        if (self.current_pain() > PAIN_DEATH_THRESHHOLD)
-            return true;
-
         if (self.HP == 0)
             return true;
 
@@ -653,10 +622,6 @@ pub const Mob = struct { // {{{
         const heard = sound - self.hearing;
         const apparent_volume = utils.saturating_sub(heard, @floatToInt(usize, sound_resistance));
         return if (apparent_volume == 0) null else apparent_volume;
-    }
-
-    pub fn current_pain(self: *const Mob) f64 {
-        return self.pain / @intToFloat(f64, self.willpower);
     }
 
     pub fn isHostileTo(self: *const Mob, othermob: *const Mob) bool {

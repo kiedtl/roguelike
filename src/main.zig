@@ -139,7 +139,6 @@ fn tick() void {
         }
 
         mob.tick_hp();
-        mob.tick_pain();
         mob.tick_env();
 
         state._update_fov(mob);

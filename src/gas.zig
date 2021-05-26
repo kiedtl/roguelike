@@ -24,7 +24,6 @@ pub const GAS_NUM: usize = Gases.len;
 fn triggerNone(_: *Mob, __: f64) void {}
 
 fn triggerPoison(idiot: *Mob, quantity: f64) void {
-    idiot.pain += 0.14 * quantity;
     idiot.HP *= 0.91;
 
     if (idiot.coord.eq(state.player.coord)) {
