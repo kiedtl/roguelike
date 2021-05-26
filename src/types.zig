@@ -5,6 +5,7 @@ const assert = std.debug.assert;
 
 const LinkedList = @import("list.zig").LinkedList;
 const rng = @import("rng.zig");
+const termbox = @import("termbox.zig");
 const materials = @import("materials.zig");
 const gas = @import("gas.zig");
 const utils = @import("utils.zig");
@@ -729,6 +730,57 @@ pub const Tile = struct {
     mob: ?*Mob = null,
     marked: bool = false,
     surface: ?SurfaceItem = null,
+
+    pub fn displayAs(coord: Coord) termbox.tb_cell {
+        var self = state.dungeon.at(coord);
+        var cell = termbox.tb_cell{};
+
+        switch (self.type) {
+            .Wall => cell = .{
+                .ch = self.material.glyph,
+                .fg = self.material.color_fg,
+                .bg = self.material.color_bg,
+            },
+            .Floor => {
+                var color: u32 = utils.darkenColor(self.material.color_bg, 5);
+
+                if (self.mob) |mob| {
+                    const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);
+                    if (hp_loss_percent > 0) {
+                        const red = @floatToInt(u32, (255 * hp_loss_percent) / 100);
+                        color = math.clamp(red, 0x00, 0xee) << 16;
+                    }
+
+                    if (mob.is_dead) {
+                        color = 0xdc143c;
+                    }
+
+                    cell.ch = mob.tile;
+                    cell.bg = color;
+                } else if (state.dungeon.at(coord).surface) |surfaceitem| {
+                    const ch = switch (surfaceitem) {
+                        .Machine => |m| m.tile,
+                        .Prop => |p| p.tile,
+                    };
+
+                    cell.ch = ch;
+                    cell.bg = color;
+                } else {
+                    cell.ch = ' ';
+                    cell.bg = color;
+                }
+            },
+        }
+
+        const gases = state.dungeon.atGas(coord);
+        for (gases) |q, g| {
+            const gcolor = gas.Gases[g].color;
+            const aq = 1 - math.clamp(q, 0.21, 1);
+            if (q > 0) cell.bg = utils.mixColors(gcolor, cell.bg, aq);
+        }
+
+        return cell;
+    }
 };
 
 pub const Dungeon = struct {
@@ -759,6 +811,7 @@ pub const Gas = struct {
 };
 
 // ---------- Mob templates ----------
+// STYLE: move to mobs.zig
 
 pub const GuardTemplate = Mob{
     .species = "orc",

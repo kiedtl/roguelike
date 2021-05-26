@@ -214,63 +214,28 @@ pub fn draw() void {
             }
 
             const material = state.dungeon.at(coord).material;
-            var tile = termbox.tb_cell{};
+            var tile = Tile.displayAs(coord);
 
             switch (state.dungeon.at(coord).type) {
-                .Wall => tile = .{
-                    .ch = material.glyph,
-                    .fg = material.color_fg,
-                    .bg = material.color_bg,
+                .Wall => {},
+                .Floor => {
+                    if (state.dungeon.at(coord).mob) |mob| {
+                        if (state.player.coord.eq(coord) and _mobs_can_see(&moblist, coord))
+                            is_player_watched = true;
+                    } else if (state.dungeon.at(coord).surface) |surfaceitem| {} else {
+                        if (state.player.canHear(coord)) |noise| {
+                            const blue = @intCast(u32, math.clamp(noise * 30, 30, 255));
+                            const color = 0x23 << 16 | 0x2f << 8 | blue;
+                            tile.ch = '!';
+                            tile.fg = color;
+                        } else if (_mobs_can_see(&moblist, coord)) {
+                            var can_mob_see = true;
+                            if (state.player.coord.eq(coord))
+                                is_player_watched = can_mob_see;
+                            tile.ch = '·';
+                        }
+                    }
                 },
-                .Floor => if (state.dungeon.at(coord).mob) |mob| {
-                    if (state.player.coord.eq(coord) and _mobs_can_see(&moblist, coord))
-                        is_player_watched = true;
-
-                    var color: u32 = 0x1e1e1e;
-
-                    if (mob.current_pain() > 0.0) {
-                        var red = @floatToInt(u32, mob.current_pain() * 0x7ff);
-                        color = math.clamp(red, 0x00, 0xee) << 16;
-                    }
-
-                    if (mob.is_dead) {
-                        color = 0xdc143c;
-                    }
-
-                    tile.ch = mob.tile;
-                    tile.bg = color;
-                } else if (state.dungeon.at(coord).surface) |surfaceitem| {
-                    const ch = switch (surfaceitem) {
-                        .Machine => |m| m.tile,
-                        .Prop => |p| p.tile,
-                    };
-
-                    tile.ch = ch;
-                    tile.bg = 0x1e1e1e;
-                } else {
-                    const bg: u32 = if (state.dungeon.at(coord).marked) 0x454545 else 0x1e1e1e;
-
-                    if (state.player.canHear(coord)) |noise| {
-                        const blue = @intCast(u32, math.clamp(noise * 30, 30, 255));
-                        const color = 0x23 << 16 | 0x2f << 8 | blue;
-                        tile.ch = '!';
-                        tile.fg = color;
-                    } else {
-                        var can_mob_see = _mobs_can_see(&moblist, coord);
-                        if (state.player.coord.eq(coord) and can_mob_see)
-                            is_player_watched = can_mob_see;
-                        tile.ch = if (can_mob_see) '·' else ' ';
-                    }
-
-                    tile.bg = bg;
-                },
-            }
-
-            const gases = state.dungeon.atGas(coord);
-            for (gases) |q, g| {
-                const gcolor = gas.Gases[g].color;
-                const aq = 1 - math.clamp(q, 0.21, 1);
-                if (q > 0) tile.bg = utils.mixColors(gcolor, tile.bg, aq);
             }
 
             termbox.tb_put_cell(cursorx, cursory, &tile);

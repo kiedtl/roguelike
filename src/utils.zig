@@ -22,3 +22,10 @@ pub fn mixColors(a: u32, b: u32, frac: f64) u32 {
     const rb = interpolate(ab, bb, frac);
     return (rr << 16) | (rg << 8) | rb;
 }
+
+pub fn darkenColor(color: u32, by: u32) u32 {
+    const r = ((color >> 16) & 0xFF) / by;
+    const g = ((color >> 08) & 0xFF) / by;
+    const b = ((color >> 00) & 0xFF) / by;
+    return (r << 16) | (g << 8) | b;
+}
