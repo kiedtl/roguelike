@@ -110,7 +110,8 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
         //
         //var tile: [4]u8 = undefined;
         //_ = std.unicode.utf8Encode(mob.tile, &tile) catch unreachable;
-        termbox.tb_change_cell(startx, y, mob.tile, 0xffffff, 0);
+        var mobcell = Tile.displayAs(mob.coord);
+        termbox.tb_put_cell(startx, y, &mobcell);
 
         y = _draw_string(startx + 1, y, 0xffffff, 0, ": {} ({})", .{ mob.species, mob.activity_description() }) catch unreachable;
 
