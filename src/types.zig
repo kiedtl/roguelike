@@ -404,12 +404,6 @@ pub const Mob = struct { // {{{
 
     is_dead: bool = false,
 
-    // The amount of sound the mob is making. Decays by 0.5 every tick.
-    //
-    // XXX: Would it be best to make this per-tile instead of per-mob? That way,
-    // the source of old sounds would be known when the soundmaker moves.
-    noise: usize = 0,
-
     // If the practical pain goes over PAIN_UNCONSCIOUS_THRESHHOLD, the mob
     // should go unconscious. If it goes over PAIN_DEATH_THRESHHOLD, it will
     // succumb and die.
@@ -443,8 +437,8 @@ pub const Mob = struct { // {{{
     // Maximum field of hearing.
     pub const MAX_FOH = 35;
 
-    pub const NOISE_WRITHE = 5;
-    pub const NOISE_GASP = 8;
+    pub const NOISE_MOVE = 5;
+    pub const NOISE_SHRIEK = 8;
     pub const NOISE_YELL = 24;
     pub const NOISE_SCREAM = 32;
 
@@ -471,30 +465,26 @@ pub const Mob = struct { // {{{
         }
     }
 
-    // Halves sound. Should be called by state.tick().
-    pub fn tick_noise(self: *Mob) void {
-        assert(!self.is_dead);
-        self.noise /= 2;
-    }
-
     // Reduce pain. Should be called by state.tick().
     //
     // TODO: pain effects (unconsciousness, etc)
     pub fn tick_pain(self: *Mob) void {
         assert(!self.is_dead);
 
-        // The <mob> writhes in pain!
-        if (self.current_pain() > 0.2) {
-            self.noise += NOISE_WRITHE; // The <mob> writhes in pain!
-        } else if (self.current_pain() > 0.4) {
-            self.noise += NOISE_GASP; // The <mob> gasps in pain!
+        if (self.current_pain() > 0.4) {
+            self.makeNoise(NOISE_SHRIEK); // The <mob> shriek in pain!
         } else if (self.current_pain() > 0.6) {
-            self.noise += NOISE_YELL; // The <mob> yells!
+            self.makeNoise(NOISE_YELL); // The <mob> yells!
         } else if (self.current_pain() > 0.8) {
-            self.noise += NOISE_SCREAM; // The <mob> screams in agony!!
+            self.makeNoise(NOISE_SCREAM); // The <mob> screams in agony!!
         }
 
         self.pain = math.max(self.pain - PAIN_DECAY * @intToFloat(f64, self.willpower), 0);
+    }
+
+    pub fn makeNoise(self: *Mob, amount: usize) void {
+        assert(!self.is_dead);
+        state.dungeon.soundAt(self.coord).* += amount;
     }
 
     // Try to move a mob.
@@ -531,7 +521,7 @@ pub const Mob = struct { // {{{
         const othermob = state.dungeon.at(dest).mob;
         state.dungeon.at(dest).mob = self;
         state.dungeon.at(coord).mob = othermob;
-        self.noise += rng.int(u4) % 10;
+        self.makeNoise(NOISE_MOVE);
         self.coord = dest;
 
         if (state.dungeon.at(dest).surface) |surface| {
@@ -572,8 +562,8 @@ pub const Mob = struct { // {{{
         recipient.pain += 0.21;
 
         const noise: usize = if (is_stab) 3 else 15;
-        attacker.noise += noise;
-        recipient.noise += noise;
+        attacker.makeNoise(noise);
+        recipient.makeNoise(noise);
 
         var damage = (attacker.strength / 4) + rng.range(usize, 0, 3);
         if (is_stab) damage *= 6;
@@ -597,7 +587,6 @@ pub const Mob = struct { // {{{
         self.fov.deinit();
         self.occupation.work_area.deinit();
         self.memory.clearAndFree();
-        self.noise = 0;
         self.pain = 0.0;
         self.is_dead = true;
     }
@@ -629,22 +618,21 @@ pub const Mob = struct { // {{{
     }
 
     pub fn canHear(self: *const Mob, coord: Coord) ?usize {
-        if (state.dungeon.at(coord).mob == null)
-            return null; // No mob there, nothing to hear
+        const sound = state.dungeon.soundAt(coord).*;
+
         if (self.coord.z != coord.z)
             return null; // Can't hear across levels
-
-        const other = state.dungeon.at(coord).mob.?;
-
-        if (self.coord.distance(other.coord) > MAX_FOH)
+        if (self.coord.distance(coord) > MAX_FOH)
             return null; // Too far away
-        if (other.noise <= self.hearing)
+        if (sound <= self.hearing)
             return null; // Too quiet to hear
 
+        // TODO: do some tests and find the maximum used memory in practice,
+        // decrease the buffer's size to that
         var membuf: [65535]u8 = undefined;
         var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
-        const line = self.coord.draw_line(other.coord, state.mapgeometry, &fba.allocator);
+        const line = self.coord.draw_line(coord, state.mapgeometry, &fba.allocator);
         var sound_resistance: f64 = 0.0;
 
         // FIXME: this lazy sound propagation formula isn't accurate. But this is
@@ -658,7 +646,7 @@ pub const Mob = struct { // {{{
             if (sound_resistance > 1.0) break;
         }
 
-        const heard = other.noise - self.hearing;
+        const heard = sound - self.hearing;
         const apparent_volume = utils.saturating_sub(heard, @floatToInt(usize, sound_resistance));
         return if (apparent_volume == 0) null else apparent_volume;
     }
@@ -746,6 +734,7 @@ pub const Tile = struct {
 pub const Dungeon = struct {
     map: [LEVELS][HEIGHT][WIDTH]Tile = [1][HEIGHT][WIDTH]Tile{[1][WIDTH]Tile{[1]Tile{.{}} ** WIDTH} ** HEIGHT} ** LEVELS,
     gas: [LEVELS][HEIGHT][WIDTH][gas.GAS_NUM]f64 = [1][HEIGHT][WIDTH][gas.GAS_NUM]f64{[1][WIDTH][gas.GAS_NUM]f64{[1][gas.GAS_NUM]f64{[1]f64{0} ** gas.GAS_NUM} ** WIDTH} ** HEIGHT} ** LEVELS,
+    sound: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
 
     pub fn at(self: *Dungeon, c: Coord) *Tile {
         return &self.map[c.z][c.y][c.x];
@@ -754,6 +743,10 @@ pub const Dungeon = struct {
     // STYLE: rename to gasAt
     pub fn atGas(self: *Dungeon, c: Coord) []f64 {
         return &self.gas[c.z][c.y][c.x];
+    }
+
+    pub fn soundAt(self: *Dungeon, c: Coord) *usize {
+        return &self.sound[c.z][c.y][c.x];
     }
 };
 

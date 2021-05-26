@@ -109,6 +109,8 @@ fn tick() void {
     state.ticks += 1;
 
     state.tickAtmosphere(0);
+    state.tickSound();
+
     const cur_level = state.player.coord.z;
 
     var moblist = state.createMobList(false, false, cur_level, &state.GPA.allocator);
@@ -138,7 +140,6 @@ fn tick() void {
 
         mob.tick_hp();
         mob.tick_pain();
-        mob.tick_noise();
         mob.tick_env();
 
         state._update_fov(mob);

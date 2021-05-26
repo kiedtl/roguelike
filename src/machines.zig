@@ -74,7 +74,7 @@ pub fn triggerNone(_: *Mob, __: *Machine) void {}
 pub fn triggerAlarmTrap(culprit: *Mob, machine: *Machine) void {
     if (culprit.allegiance == .Sauron) return;
 
-    culprit.noise += 1000; // muahahaha
+    culprit.makeNoise(2048); // muahahaha
     state.message(.Trap, "You hear a loud clanging noise!", .{});
 }
 

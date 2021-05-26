@@ -94,7 +94,7 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
 
     _draw_bar(y, startx, endx, @floatToInt(usize, player.HP), @floatToInt(usize, player.max_HP), "Health", 0x232faa, 0);
     y += 1;
-    _draw_bar(y, startx, endx, player.noise, 20, "Noise", 0x232faa, 0);
+    //_draw_bar(y, startx, endx, player.noise, 20, "Noise", 0x232faa, 0); // TODO
     y += 1;
     y = _draw_string(startx, y, 0xffffff, 0, "score: {}", .{state.score}) catch unreachable;
     y += 2;
@@ -201,7 +201,7 @@ pub fn draw() void {
                     const blue = @intCast(u32, math.clamp(noise * 30, 30, 255));
                     const bg: u32 = if (state.player.memory.contains(coord)) 0x101010 else 0;
                     const color = 0x23 << 16 | 0x2f << 8 | blue;
-                    termbox.tb_change_cell(cursorx, cursory, '?', color, bg);
+                    termbox.tb_change_cell(cursorx, cursory, '!', color, bg);
                 } else {
                     if (state.player.memory.contains(coord)) {
                         const tile = @as(u32, state.player.memory.get(coord) orelse unreachable);
@@ -248,13 +248,20 @@ pub fn draw() void {
                     tile.ch = ch;
                     tile.bg = 0x1e1e1e;
                 } else {
-                    var can_mob_see = _mobs_can_see(&moblist, coord);
-                    if (state.player.coord.eq(coord) and can_mob_see)
-                        is_player_watched = can_mob_see;
+                    const bg: u32 = if (state.dungeon.at(coord).marked) 0x454545 else 0x1e1e1e;
 
-                    const ch: u32 = if (can_mob_see) '·' else ' ';
-                    var bg: u32 = if (state.dungeon.at(coord).marked) 0x454545 else 0x1e1e1e;
-                    tile.ch = ch;
+                    if (state.player.canHear(coord)) |noise| {
+                        const blue = @intCast(u32, math.clamp(noise * 30, 30, 255));
+                        const color = 0x23 << 16 | 0x2f << 8 | blue;
+                        tile.ch = '!';
+                        tile.fg = color;
+                    } else {
+                        var can_mob_see = _mobs_can_see(&moblist, coord);
+                        if (state.player.coord.eq(coord) and can_mob_see)
+                            is_player_watched = can_mob_see;
+                        tile.ch = if (can_mob_see) '·' else ' ';
+                    }
+
                     tile.bg = bg;
                 },
             }

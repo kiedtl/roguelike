@@ -153,7 +153,7 @@ fn _can_see_hostile(mob: *Mob) ?Coord {
 pub fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem.Allocator) void {
     if (mob.occupation.phase != .SawHostile) {
         if (_can_see_hostile(mob)) |hostile| {
-            mob.noise += Mob.NOISE_YELL;
+            mob.makeNoise(Mob.NOISE_YELL);
             mob.occupation.phase = .SawHostile;
             mob.occupation.target = hostile;
         } else if (_can_hear_hostile(mob, moblist)) |dest| {
@@ -206,6 +206,20 @@ pub fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem
 
         if (astar.nextDirectionTo(mob.coord, target_coord, mapgeometry, is_walkable)) |d| {
             _ = mob.moveInDirection(d);
+        }
+    }
+}
+
+pub fn tickSound() void {
+    const cur_lev = player.coord.z;
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            const coord = Coord.new2(cur_lev, x, y);
+            const cur_sound = dungeon.soundAt(coord).*;
+            const new_sound = @intToFloat(f64, cur_sound) * 0.85;
+            dungeon.soundAt(coord).* = @floatToInt(usize, new_sound);
         }
     }
 }
