@@ -20,7 +20,7 @@ pub const CARDINAL_DIRECTIONS = [_]Direction{ .North, .South, .East, .West };
 pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .NorthWest, .SouthEast, .SouthWest };
 
 pub const DirectionArrayList = std.ArrayList(Direction);
-pub const CoordCharMap = std.AutoHashMap(Coord, u21);
+pub const CoordCellMap = std.AutoHashMap(Coord, termbox.tb_cell);
 pub const CoordArrayList = std.ArrayList(Coord);
 pub const MessageArrayList = std.ArrayList(Message);
 pub const MobList = LinkedList(Mob);
@@ -396,7 +396,10 @@ pub const Mob = struct { // {{{
     tile: u21,
     occupation: Occupation,
     allegiance: Allegiance,
-    memory: CoordCharMap = undefined,
+    // TODO: instead of storing the tile's representation in memory, store the
+    // actual tile -- if a wall is destroyed outside of the player's FOV, the display
+    // code has no way of knowing what the player remembers the destroyed tile as...
+    memory: CoordCellMap = undefined,
     fov: CoordArrayList = undefined,
     facing: Direction,
     facing_wide: bool,
@@ -742,7 +745,7 @@ pub const Tile = struct {
                 .bg = self.material.color_bg,
             },
             .Floor => {
-                var color: u32 = utils.darkenColor(self.material.color_bg, 5);
+                var color: u32 = utils.darkenColor(self.material.color_bg, 4);
 
                 if (self.mob) |mob| {
                     const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);

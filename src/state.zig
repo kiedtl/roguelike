@@ -112,14 +112,7 @@ pub fn _update_fov(mob: *Mob) void {
     }
 
     for (mob.fov.items) |fc| {
-        var tile: u21 = if (dungeon.at(fc).type == .Wall) '▓' else ' ';
-        if (dungeon.at(fc).mob) |tilemob| {
-            if (!tilemob.is_dead) {
-                tile = tilemob.tile;
-            }
-        }
-
-        mob.memory.put(fc, tile) catch unreachable;
+        mob.memory.put(fc, Tile.displayAs(fc)) catch unreachable;
     }
 }
 

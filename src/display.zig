@@ -197,19 +197,24 @@ pub fn draw() void {
             // if player can't see area, draw a blank/grey tile, depending on
             // what they saw last there
             if (!state.player.cansee(coord)) {
-                if (state.player.canHear(coord)) |noise| {
-                    const blue = @intCast(u32, math.clamp(noise * 30, 30, 255));
-                    const bg: u32 = if (state.player.memory.contains(coord)) 0x101010 else 0;
-                    const color = 0x23 << 16 | 0x2f << 8 | blue;
-                    termbox.tb_change_cell(cursorx, cursory, '!', color, bg);
-                } else {
-                    if (state.player.memory.contains(coord)) {
-                        const tile = @as(u32, state.player.memory.get(coord) orelse unreachable);
-                        termbox.tb_change_cell(cursorx, cursory, tile, 0x3f3f3f, 0x101010);
-                    } else {
-                        termbox.tb_change_cell(cursorx, cursory, ' ', 0xffffff, 0);
+                if (state.player.memory.contains(coord)) {
+                    var tile = state.player.memory.get(coord) orelse unreachable;
+
+                    if (state.player.canHear(coord)) |noise| {
+                        const blue = @intCast(u32, math.clamp(noise * 30, 30, 255));
+                        tile.fg = 0x23 << 16 | 0x2f << 8 | blue;
+                        tile.ch = '!';
                     }
+
+                    tile.fg = utils.darkenColor(tile.fg, 3);
+                    tile.bg = utils.darkenColor(tile.bg, 3);
+                    tile.ch = if (state.dungeon.at(coord).type == .Wall) ' ' else tile.ch;
+
+                    termbox.tb_put_cell(cursorx, cursory, &tile);
+                } else {
+                    termbox.tb_change_cell(cursorx, cursory, ' ', 0xffffff, 0);
                 }
+
                 continue;
             }
 
