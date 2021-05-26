@@ -201,14 +201,17 @@ pub fn draw() void {
                 if (state.player.memory.contains(coord)) {
                     var tile = state.player.memory.get(coord) orelse unreachable;
 
+                    tile.fg = utils.darkenColor(tile.fg, 3);
+                    tile.bg = utils.darkenColor(tile.bg, 3);
+
                     if (state.player.canHear(coord)) |noise| {
-                        const blue = @intCast(u32, math.clamp(noise * 30, 30, 255));
-                        tile.fg = 0x23 << 16 | 0x2f << 8 | blue;
+                        // Adjust noise to between 0 and 122, add 0x95, then display
+                        const adj_n = math.min(noise, 100) * 100 / 122;
+                        const green = @intCast(u32, (255 * adj_n) / 100);
+                        tile.fg = (green + 0x85) << 8;
                         tile.ch = '!';
                     }
 
-                    tile.fg = utils.darkenColor(tile.fg, 3);
-                    tile.bg = utils.darkenColor(tile.bg, 3);
                     tile.ch = if (state.dungeon.at(coord).type == .Wall) ' ' else tile.ch;
 
                     termbox.tb_put_cell(cursorx, cursory, &tile);
@@ -230,10 +233,11 @@ pub fn draw() void {
                             is_player_watched = true;
                     } else if (state.dungeon.at(coord).surface) |surfaceitem| {} else {
                         if (state.player.canHear(coord)) |noise| {
-                            const blue = @intCast(u32, math.clamp(noise * 30, 30, 255));
-                            const color = 0x23 << 16 | 0x2f << 8 | blue;
+                            // Adjust noise to between 0 and 122, add 0x95, then display
+                            const adj_n = math.min(noise, 100) * 100 / 122;
+                            const green = @intCast(u32, (255 * adj_n) / 100);
+                            tile.fg = (green + 0x85) << 8;
                             tile.ch = '!';
-                            tile.fg = color;
                         } else if (_mobs_can_see(&moblist, coord)) {
                             var can_mob_see = true;
                             if (state.player.coord.eq(coord))
