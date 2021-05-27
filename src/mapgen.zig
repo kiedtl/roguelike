@@ -311,8 +311,9 @@ pub fn placeRandomRooms(level: usize, allocator: *mem.Allocator) void {
     _excavate(&first);
     rooms.append(first) catch unreachable;
 
-    if (level == 0) {
-        _add_player(Coord.new2(0, first.start.x + 1, first.start.y + 1), allocator);
+    if (level == PLAYER_STARTING_LEVEL) {
+        const p = Coord.new2(PLAYER_STARTING_LEVEL, first.start.x + 1, first.start.y + 1);
+        _add_player(p, allocator);
     }
 
     _place_rooms(level, 100, allocator);
