@@ -69,7 +69,7 @@ pub fn is_walkable(coord: Coord) bool {
         return false;
     if (dungeon.at(coord).surface) |surface| {
         switch (surface) {
-            .Machine => |m| if (m.should_be_avoided) return true,
+            .Machine => |m| if (m.should_be_avoided or !m.walkable) return false,
             else => {},
         }
     }
@@ -124,8 +124,8 @@ fn _can_hear_hostile(mob: *Mob, moblist: *const MobArrayList) ?Coord {
             if (mob.isHostileTo(othermob)) {
                 return othermob.coord;
             } else if (sound > 20) {
-                // Sounds like one of our friends is having quite a party, let's
-                // go join the fun~
+                // Sounds like one of our friends [or a neutral mob] is having
+                // quite a party, let's go join the fun~
                 return othermob.coord;
             }
         }
