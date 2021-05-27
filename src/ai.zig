@@ -73,7 +73,7 @@ pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
     //
     // NOTE: if the guard isn't at their patrol route or station, this has the effect
     // of bringing them one step closer back.
-    if (astar.nextDirectionTo(mob.coord, to, state.mapgeometry, state.is_walkable)) |d|
+    if (mob.nextDirectionTo(to, state.is_walkable)) |d|
         _ = mob.moveInDirection(d);
     _guard_glance(mob, prev_facing);
 }

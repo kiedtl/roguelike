@@ -30,7 +30,6 @@ fn initGame() void {
     state.mobs = MobList.init(&state.GPA.allocator);
     state.machines = MachineList.init(&state.GPA.allocator);
     state.props = PropList.init(&state.GPA.allocator);
-    astar.initCache(&state.GPA.allocator);
     rng.init();
 
     for (state.dungeon.map) |_, level| {
@@ -52,7 +51,6 @@ fn initGame() void {
 }
 
 fn deinitGame() void {
-    astar.deinitCache();
     display.deinit() catch unreachable;
     state.mobs.deinit();
     state.machines.deinit();

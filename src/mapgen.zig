@@ -96,10 +96,8 @@ fn _place_normal_door(coord: Coord) void {
 
 fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     var player = ElfTemplate;
-    player.occupation.work_area = CoordArrayList.init(alloc);
+    player.init(alloc);
     player.occupation.phase = .SawHostile;
-    player.fov = CoordArrayList.init(alloc);
-    player.memory = CoordCellMap.init(alloc);
     player.coord = coord;
     state.mobs.append(player) catch unreachable;
     state.dungeon.at(coord).mob = state.mobs.lastPtr().?;
@@ -250,11 +248,9 @@ fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
             const guardstart = Coord.new2(level, child.start.x + 1, child.start.y + 1);
             const guardend = Coord.new2(level, child.end().x - 1, child.end().y - 1);
             var guard = GuardTemplate;
-            guard.occupation.work_area = CoordArrayList.init(allocator);
+            guard.init(allocator);
             guard.occupation.work_area.append(guardstart) catch unreachable;
             guard.occupation.work_area.append(guardend) catch unreachable;
-            guard.fov = CoordArrayList.init(allocator);
-            guard.memory = CoordCellMap.init(allocator);
             guard.coord = guardstart;
             guard.facing = .North;
             state.mobs.append(guard) catch unreachable;

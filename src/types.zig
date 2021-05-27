@@ -6,6 +6,7 @@ const assert = std.debug.assert;
 const LinkedList = @import("list.zig").LinkedList;
 const rng = @import("rng.zig");
 const termbox = @import("termbox.zig");
+const astar = @import("astar.zig");
 const materials = @import("materials.zig");
 const gas = @import("gas.zig");
 const utils = @import("utils.zig");
@@ -23,6 +24,7 @@ pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .
 pub const DirectionArrayList = std.ArrayList(Direction);
 pub const CoordCellMap = std.AutoHashMap(Coord, termbox.tb_cell);
 pub const CoordArrayList = std.ArrayList(Coord);
+pub const PathCacheMap = std.AutoHashMap(Path, Direction);
 pub const MessageArrayList = std.ArrayList(Message);
 pub const MobList = LinkedList(Mob);
 pub const MachineList = LinkedList(Machine);
@@ -309,6 +311,8 @@ test "coord.move" {
     std.testing.expectEqual(c, Coord.new(1, 0));
 }
 
+pub const Path = struct { from: Coord, to: Coord };
+
 pub const Material = struct {
     // Name of the material. e.g. "rhyolite"
     name: []const u8,
@@ -404,8 +408,9 @@ pub const Mob = struct { // {{{
     // code has no way of knowing what the player remembers the destroyed tile as...
     memory: CoordCellMap = undefined,
     fov: CoordArrayList = undefined,
+    path_cache: PathCacheMap = undefined,
     facing: Direction,
-    facing_wide: bool,
+    facing_wide: bool, // TODO: remove?
     vision: usize,
     coord: Coord = Coord.new(0, 0),
 
@@ -563,10 +568,18 @@ pub const Mob = struct { // {{{
         }
     }
 
+    pub fn init(self: *Mob, alloc: *mem.Allocator) void {
+        self.path_cache = PathCacheMap.init(alloc);
+        self.occupation.work_area = CoordArrayList.init(alloc);
+        self.fov = CoordArrayList.init(alloc);
+        self.memory = CoordCellMap.init(alloc);
+    }
+
     pub fn kill(self: *Mob) void {
         self.fov.deinit();
         self.occupation.work_area.deinit();
         self.memory.clearAndFree();
+        self.path_cache.clearAndFree();
         self.is_dead = true;
     }
 
@@ -575,6 +588,35 @@ pub const Mob = struct { // {{{
             return true;
 
         return false;
+    }
+
+    // TODO: get rid of is_walkable parameter.
+    pub fn nextDirectionTo(self: *Mob, to: Coord, is_walkable: fn (Coord) bool) ?Direction {
+        const pathobj = Path{ .from = self.coord, .to = to };
+
+        if (!self.path_cache.contains(pathobj)) {
+            // TODO: do some tests and figure out what's the practical limit to memory
+            // usage, and reduce the buffer's size to that.
+            var membuf: [65535 * 10]u8 = undefined;
+            var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
+            const pth = astar.path(self.coord, to, state.mapgeometry, is_walkable, &fba.allocator) orelse return null;
+
+            var first: Coord = undefined;
+            var second = self.coord;
+
+            for (pth.items[1..]) |coord| {
+                first = second;
+                second = coord;
+
+                const d = Direction.from_coords(first, second) catch unreachable;
+                self.path_cache.put(Path{ .from = first, .to = to }, d) catch unreachable;
+            }
+
+            pth.deinit();
+        }
+
+        return self.path_cache.get(pathobj).?;
     }
 
     pub fn isAwareOfAttack(self: *const Mob, attacker: Coord) bool {

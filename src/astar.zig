@@ -8,8 +8,6 @@ const state = @import("state.zig");
 
 const NodePriorityQueue = std.PriorityQueue(Node);
 
-const Path = struct { from: Coord, to: Coord };
-
 const Node = struct {
     coord: Coord,
     parent: ?Coord,
@@ -34,42 +32,6 @@ fn coord_in_list(coord: Coord, list: *NodeArrayList) ?usize {
         if (coord.eq(item.coord))
             return index;
     return null;
-}
-
-pub fn initCache(a: *mem.Allocator) void {
-    cache = std.AutoHashMap(Path, Direction).init(a);
-}
-
-pub fn deinitCache() void {
-    cache.clearAndFree();
-}
-
-pub fn nextDirectionTo(from: Coord, to: Coord, limit: Coord, is_walkable: fn (Coord) bool) ?Direction {
-    const pathobj = Path{ .from = from, .to = to };
-
-    if (!cache.contains(pathobj)) {
-        // TODO: do some tests and figure out what's the practical limit to memory
-        // usage, and reduce the buffer's size to that.
-        var membuf: [65535 * 10]u8 = undefined;
-        var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-
-        const pth = path(from, to, limit, is_walkable, &fba.allocator) orelse return null;
-
-        var first: Coord = undefined;
-        var second = from;
-
-        for (pth.items[1..]) |coord| {
-            first = second;
-            second = coord;
-
-            const d = Direction.from_coords(first, second) catch unreachable;
-            cache.put(Path{ .from = first, .to = to }, d) catch unreachable;
-        }
-
-        pth.deinit();
-    }
-
-    return cache.get(pathobj).?;
 }
 
 pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) bool, alloc: *std.mem.Allocator) ?CoordArrayList {

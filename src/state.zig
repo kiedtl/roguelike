@@ -179,7 +179,7 @@ pub fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem
                 mob.facing = rng.choose(Direction, &CARDINAL_DIRECTIONS, &[_]usize{ 1, 1, 1, 1 }) catch unreachable;
             }
         } else {
-            if (astar.nextDirectionTo(mob.coord, target_coord, mapgeometry, is_walkable)) |d| {
+            if (mob.nextDirectionTo(target_coord, is_walkable)) |d| {
                 _ = mob.moveInDirection(d);
             }
         }
@@ -199,7 +199,7 @@ pub fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem
             return;
         }
 
-        if (astar.nextDirectionTo(mob.coord, target_coord, mapgeometry, is_walkable)) |d| {
+        if (mob.nextDirectionTo(target_coord, is_walkable)) |d| {
             _ = mob.moveInDirection(d);
         }
     }
