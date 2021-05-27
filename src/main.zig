@@ -33,8 +33,18 @@ fn initGame() void {
     astar.initCache(&state.GPA.allocator);
     rng.init();
 
-    for (state.dungeon.map) |_, level|
-        mapgen.placeRandomRooms(level, &state.GPA.allocator);
+    for (state.dungeon.map) |_, level| {
+        mapgen.fillRandom(level, 55);
+        mapgen.fillBar(level, 2);
+        mapgen.cellularAutomata(level, 6, 2);
+        mapgen.cellularAutomata(level, 6, 2);
+        mapgen.cellularAutomata(level, 6, 2);
+        mapgen.cellularAutomata(level, 6, 2);
+        mapgen.cellularAutomata(level, 6, 1);
+        mapgen.cellularAutomata(level, 6, 1);
+        mapgen.cellularAutomata(level, 5, 1);
+        mapgen.placeRandomRooms(level, 500, &state.GPA.allocator);
+    }
     for (state.dungeon.map) |_, level|
         mapgen.placeRandomStairs(level);
 
@@ -159,6 +169,6 @@ fn tick() void {
 
 pub fn main() anyerror!void {
     initGame();
-    viewer.main(); //while (true) tick();
+    while (true) tick();
     deinitGame();
 }

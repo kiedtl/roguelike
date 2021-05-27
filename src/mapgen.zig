@@ -5,6 +5,7 @@ const math = std.math;
 
 const rng = @import("rng.zig");
 const machines = @import("machines.zig");
+const materials = @import("materials.zig");
 const utils = @import("utils.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
@@ -174,17 +175,6 @@ fn _room_intersects(room: *const Room) bool {
     if (room.end().x >= state.WIDTH or room.end().y >= state.HEIGHT)
         return true;
 
-    // {
-    //     var y = utils.saturating_sub(room.start.y, 1);
-    //     while (y < room.end().y + 1) : (y += 1) {
-    //         var x = utils.saturating_sub(room.start.x, 1);
-    //         while (x < room.end().x + 1) : (x += 1) {
-    //             if (state.dungeon[y][x].type != .Wall)
-    //                 return true;
-    //         }
-    //     }
-    // }
-
     for (rooms.items) |otherroom| {
         if (room.intersects(&otherroom, 1)) return true;
     }
@@ -192,14 +182,40 @@ fn _room_intersects(room: *const Room) bool {
     return false;
 }
 
-fn _excavate(room: *const Room) void {
-    // TODO: assert that all the excavated portions are indeed walls
+fn _replace_tiles(room: *const Room, tile: Tile) void {
     var y = room.start.y;
     while (y < room.end().y) : (y += 1) {
         var x = room.start.x;
         while (x < room.end().x) : (x += 1) {
-            state.dungeon.at(Coord.new2(room.start.z, x, y)).type = .Floor;
+            const c = Coord.new2(room.start.z, x, y);
+            if (y >= HEIGHT or x >= WIDTH) continue;
+            if (state.dungeon.at(c).type == tile.type) continue;
+            state.dungeon.at(c).* = tile;
         }
+    }
+}
+
+fn _excavate(room: *const Room, ns: bool, ew: bool) void {
+    _replace_tiles(room, Tile{ .type = .Floor });
+
+    if (ns and ew) {
+        const n = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.start.y - 1), .width = room.width + 2, .height = 1 };
+        const s = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.end().y), .width = room.width + 2, .height = 1 };
+        const w = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.start.y - 1), .width = 1, .height = room.height + 2 };
+        const e = Room{ .start = Coord.new2(room.start.z, room.end().x, room.start.y - 1), .width = 1, .height = room.height + 2 };
+        _replace_tiles(&n, Tile{ .material = &materials.IronBarricade });
+        _replace_tiles(&s, Tile{ .material = &materials.IronBarricade });
+        _replace_tiles(&w, Tile{ .material = &materials.IronBarricade });
+        _replace_tiles(&e, Tile{ .material = &materials.IronBarricade });
+    } else {
+        const n = Room{ .start = Coord.new2(room.start.z, room.start.x, room.start.y - 1), .width = room.width, .height = 1 };
+        const s = Room{ .start = Coord.new2(room.start.z, room.start.x, room.end().y), .width = room.width, .height = 1 };
+        const w = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.start.y), .width = 1, .height = room.height };
+        const e = Room{ .start = Coord.new2(room.start.z, room.end().x, room.start.y), .width = 1, .height = room.height };
+        if (ns) _replace_tiles(&n, Tile{ .material = &materials.IronBarricade });
+        if (ns) _replace_tiles(&s, Tile{ .material = &materials.IronBarricade });
+        if (ew) _replace_tiles(&w, Tile{ .material = &materials.IronBarricade });
+        if (ew) _replace_tiles(&e, Tile{ .material = &materials.IronBarricade });
     }
 }
 
@@ -225,7 +241,7 @@ fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
             child = parent.attach(side, child_w, child_h, distance);
         }
 
-        _excavate(&child);
+        _excavate(&child, true, true);
         rooms.append(child) catch unreachable;
 
         // --- add mobs ---
@@ -292,7 +308,7 @@ fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
                 else => unreachable,
             };
 
-            _excavate(&corridor);
+            _excavate(&corridor, side == .East or side == .West, side == .North or side == .South);
 
             if (distance == 1) _place_normal_door(corridor.start);
         }
@@ -301,7 +317,7 @@ fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
     if (count > 0) _place_rooms(level, count - 1, allocator);
 }
 
-pub fn placeRandomRooms(level: usize, allocator: *mem.Allocator) void {
+pub fn placeRandomRooms(level: usize, num: usize, allocator: *mem.Allocator) void {
     rooms = std.ArrayList(Room).init(allocator);
 
     const width = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
@@ -309,7 +325,7 @@ pub fn placeRandomRooms(level: usize, allocator: *mem.Allocator) void {
     const x = rng.range(usize, 1, state.WIDTH / 2);
     const y = rng.range(usize, 1, state.HEIGHT / 2);
     const first = Room{ .start = Coord.new2(level, x, y), .width = width, .height = height };
-    _excavate(&first);
+    _excavate(&first, true, true);
     rooms.append(first) catch unreachable;
 
     if (level == PLAYER_STARTING_LEVEL) {
@@ -317,7 +333,7 @@ pub fn placeRandomRooms(level: usize, allocator: *mem.Allocator) void {
         _add_player(p, allocator);
     }
 
-    _place_rooms(level, 1000, allocator);
+    _place_rooms(level, num, allocator);
 
     rooms.deinit();
 }
@@ -340,6 +356,68 @@ pub fn placeRandomStairs(level: usize) void {
         }
 
         placed += 1;
+    }
+}
+
+pub fn cellularAutomata(level: usize, wall_req: usize, isle_req: usize) void {
+    var old: [HEIGHT][WIDTH]TileType = undefined;
+    {
+        var y: usize = 0;
+        while (y < HEIGHT) : (y += 1) {
+            var x: usize = 0;
+            while (x < WIDTH) : (x += 1)
+                old[y][x] = state.dungeon.at(Coord.new2(level, x, y)).type;
+        }
+    }
+
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            const coord = Coord.new2(level, x, y);
+
+            var neighbor_walls: usize = if (old[coord.y][coord.x] == .Wall) 1 else 0;
+            for (&CARDINAL_DIRECTIONS) |direction| {
+                var new = coord;
+                if (!new.move(direction, state.mapgeometry))
+                    continue;
+                if (old[new.y][new.x] == .Wall)
+                    neighbor_walls += 1;
+            }
+
+            if (neighbor_walls >= wall_req) {
+                state.dungeon.at(coord).type = .Wall;
+            } else if (neighbor_walls <= isle_req) {
+                state.dungeon.at(coord).type = .Wall;
+            } else {
+                state.dungeon.at(coord).type = .Floor;
+            }
+        }
+    }
+}
+
+pub fn fillBar(level: usize, height: usize) void {
+    // add a horizontal bar of floors in the center of the map as it may
+    // prevent a continuous vertical wall from forming during cellular automata,
+    // thus preventing isolated sections
+    const halfway = HEIGHT / 2;
+    var y: usize = halfway;
+    while (y < (halfway + height)) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            state.dungeon.at(Coord.new2(level, x, y)).type = .Floor;
+        }
+    }
+}
+
+pub fn fillRandom(level: usize, floor_chance: usize) void {
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            const t: TileType = if (rng.range(usize, 0, 100) > floor_chance) .Wall else .Floor;
+            state.dungeon.at(Coord.new2(level, x, y)).type = t;
+        }
     }
 }
 

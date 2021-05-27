@@ -335,6 +335,8 @@ pub const Material = struct {
 
     // How much light this thing emits
     luminescence: usize,
+
+    opacity: f64,
 };
 
 pub const MessageType = enum {
