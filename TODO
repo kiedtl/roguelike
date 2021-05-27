@@ -1,7 +1,11 @@
 New mobs
-([s]pirit, [h]uman, [a]nimal, [u]ndead, [o]ther)
+([s]pirit, [h]uman/elf, [a]nimal, [u]ndead, [o]ther)
 ([CE]Sauron, [LE]NoneEvil, [CG]NoneGood, [LG]Illuvatar, [CC]Sauron/NonEvil, [??]Neutral)
 --------
+CE	h	orc
+			Middle-sized humonoids with skin only slightly darker than the
+			underside of a rainbow trout, these ferocious beings are nothing
+			like the orcs you've read in the storybooks.
 CC	s	burning brute
 			A winged demon composed primarily of boiling granite, capable of
 			fearsome fire attacks.
@@ -21,15 +25,15 @@ CE	a	fire worm
 LG	s	shining one
 CE	o	crystal statue
 			A statue of some nameless humanoid creature than once inhabited
-			the pits of Udùn. These statues are almost as rare as the white
-			crystal they're composed of.
-
-			...did those eyes just move?
+			the pits of Udùn. These statues are almost as rare as the
+			translucent white crystal they're composed of.
 CE	o	turquoise statue
 CE	u	lich
 			The dessicated form of an ancient sorcerer, now controlled by the
 			very necromantic powers he once served.
 LE	s	bogeyman (TODO: change name)
+			A hideous, emaciated creature with eyes that are both dull and
+			bright in the dungeon's gloom.
 LE	s	creeping dread
 LG	s	angel
 LG	s	archangel
@@ -60,33 +64,56 @@ lunge	[move(A), move(A), attack(A)] (dagger)
 Machines
 --------
 furnace
+	- Heats air on one side of the chamber. May or may not be used by mobs.
+	- If used by mobs: maybe to run an execution chamber...?
+	- If used by player: used to kill mobs in a vault?
 cooler
+	- Cools the surrounding air, helping to preserve e.g. food items.
 forge
+	- Stuff some metal on one end, and weapons will appear on the other end.
 book copy machine
+	- Makes a book two.
 memory "condenser"
+	- "Condenses" player's memory into a (map) book.
 food ration maker
+	- Stuff corpses, fungi, and lichen (I know, gross) next to it and rations
+	  will appear on the other side.
 heat-powered furnace
+	- Like furnace. If put in a hot place (ie next to lava), will self-power.
 "camera"
+	- Pressure plate thing that puts an alert out if a non-Sauron-aligned
+	  mob walks on it. (Alerts result in death squads sent out.)
 alarm system
+	- ???
 announcement system
-elevator
+	- ???
 teleportation station
+	- Player can use it to teleport to a certain location.
 nuclear reactor
-weapon repair shop
+	- Recharges power storage machines.
+repair shop
+	- Mobs and player may use it to repair weapons and armor.
 air purifier
+	- Clears away gases in a certain radius.
 power storage
+	- Powers all machines in a certain radius.
+	- Player can destroy it to release electricity, zapping everything
+	  (including player) in a certain radius.
 "elevator"
+	- Spawns mobs for death squads, or mobs when the number of laborers/guards
+	  falls below a certain point
 sonar mining laser
+	- Unused by mobs, player can use it to blast away everything in a certain
+	  radius
 
 Books
 -----
-
 "Melkor: The Life and Times of the King of Arda"
 "This was Melkor"
 "Meing Krampgh"
-	- "You learn about the Hill Orc Master Race."
-"On the Descent of Orcs"
 	- "You learn that hill orcs are destined to rule the world."
+"On the Descent of Orcs"
+	- "You learn about the Hill Orc Master Race."
 "Durgh Stammer"
 	- "You learn that hill orcs are vastly superior to cave orcs."
 recipe books
