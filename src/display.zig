@@ -95,6 +95,7 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
     _draw_bar(y, startx, endx, @floatToInt(usize, player.HP), @floatToInt(usize, player.max_HP), "Health", 0x232faa, 0);
     y += 1;
     y = _draw_string(startx, y, 0xffffff, 0, "score: {:<5} level: {}", .{ state.score, state.player.coord.z }) catch unreachable;
+    y = _draw_string(startx, y, 0xffffff, 0, "turns: {}", .{state.ticks}) catch unreachable;
     y += 2;
 
     for (moblist.items) |mob| {
