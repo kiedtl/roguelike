@@ -141,7 +141,7 @@ const Room = struct {
         return switch (d) {
             .North => Room{
                 .start = Coord.new2(self.start.z, self.start.x + (self.width / 2), utils.saturating_sub(self.start.y, height + distance)),
-                .height = utils.saturating_sub(self.start.y, height),
+                .height = height,
                 .width = width,
             },
             .East => Room{
@@ -156,7 +156,7 @@ const Room = struct {
             },
             .West => Room{
                 .start = Coord.new2(self.start.z, utils.saturating_sub(self.start.x, width + distance), self.start.y + (self.height / 2)),
-                .width = utils.saturating_sub(self.start.x, width),
+                .width = width,
                 .height = height,
             },
             else => @panic("unimplemented"),
@@ -205,21 +205,20 @@ fn _excavate(room: *const Room) void {
 
 fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
     const limit = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
-    const distances = [2][5]usize{ .{ 1, 2, 3, 4, 5 }, .{ 9, 8, 3, 2, 1 } };
+    const distances = [2][5]usize{ .{ 0, 1, 2, 3, 4 }, .{ 3, 8, 4, 2, 1 } };
+    const side = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
 
-    sides: for (&CARDINAL_DIRECTIONS) |side| {
-        if (rng.range(usize, 0, 5) == 0) continue;
+    const parent = rng.chooseUnweighted(Room, rooms.items);
+    const distance = rng.choose(usize, &distances[0], &distances[1]) catch unreachable;
 
-        const parent = rng.chooseUnweighted(Room, rooms.items);
-        const distance = rng.choose(usize, &distances[0], &distances[1]) catch unreachable;
-
+    sides: {
         var child_w = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
         var child_h = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
         var child = parent.attach(side, child_w, child_h, distance);
 
         while (_room_intersects(&child) or child.overflowsLimit(&limit)) {
             if (child_w < MIN_ROOM_WIDTH or child_h < MIN_ROOM_HEIGHT)
-                continue :sides;
+                break :sides;
 
             child_w -= 1;
             child_h -= 1;
@@ -231,7 +230,7 @@ fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
 
         // --- add mobs ---
 
-        if (rng.onein(2)) {
+        if (rng.onein(3)) {
             const guardstart = Coord.new2(level, child.start.x + 1, child.start.y + 1);
             const guardend = Coord.new2(level, child.end().x - 1, child.end().y - 1);
             var guard = GuardTemplate;
@@ -277,24 +276,26 @@ fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
 
         // --- add corridors ---
 
-        const rsx = math.max(parent.start.x, child.start.x);
-        const rex = math.min(parent.end().x, child.end().x);
-        const x = rng.range(usize, math.min(rsx, rex), math.max(rsx, rex));
-        const rsy = math.max(parent.start.y, child.start.y);
-        const rey = math.min(parent.end().y, child.end().y);
-        const y = rng.range(usize, math.min(rsy, rey), math.max(rsy, rey));
+        if (distance > 0) {
+            const rsx = math.max(parent.start.x, child.start.x);
+            const rex = math.min(parent.end().x, child.end().x);
+            const x = rng.range(usize, math.min(rsx, rex), math.max(rsx, rex));
+            const rsy = math.max(parent.start.y, child.start.y);
+            const rey = math.min(parent.end().y, child.end().y);
+            const y = rng.range(usize, math.min(rsy, rey), math.max(rsy, rey));
 
-        var corridor = switch (side) {
-            .North => Room{ .start = Coord.new2(level, x, child.end().y), .height = parent.start.y - child.end().y, .width = 1 },
-            .South => Room{ .start = Coord.new2(level, x, parent.end().y), .height = child.start.y - parent.end().y, .width = 1 },
-            .West => Room{ .start = Coord.new2(level, child.end().x, y), .height = 1, .width = parent.start.x - child.end().x },
-            .East => Room{ .start = Coord.new2(level, parent.end().x, y), .height = 1, .width = child.start.x - parent.end().x },
-            else => unreachable,
-        };
+            var corridor = switch (side) {
+                .North => Room{ .start = Coord.new2(level, x, child.end().y), .height = parent.start.y - child.end().y, .width = 1 },
+                .South => Room{ .start = Coord.new2(level, x, parent.end().y), .height = child.start.y - parent.end().y, .width = 1 },
+                .West => Room{ .start = Coord.new2(level, child.end().x, y), .height = 1, .width = parent.start.x - child.end().x },
+                .East => Room{ .start = Coord.new2(level, parent.end().x, y), .height = 1, .width = child.start.x - parent.end().x },
+                else => unreachable,
+            };
 
-        _excavate(&corridor);
+            _excavate(&corridor);
 
-        if (distance == 1) _place_normal_door(corridor.start);
+            if (distance == 1) _place_normal_door(corridor.start);
+        }
     }
 
     if (count > 0) _place_rooms(level, count - 1, allocator);
@@ -316,7 +317,7 @@ pub fn placeRandomRooms(level: usize, allocator: *mem.Allocator) void {
         _add_player(p, allocator);
     }
 
-    _place_rooms(level, 100, allocator);
+    _place_rooms(level, 1000, allocator);
 
     rooms.deinit();
 }
