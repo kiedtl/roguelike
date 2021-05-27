@@ -581,6 +581,9 @@ pub const Mob = struct { // {{{
         self.memory.clearAndFree();
         self.path_cache.clearAndFree();
         self.is_dead = true;
+
+        state.dungeon.at(self.coord).item = Item{ .Corpse = self };
+        state.dungeon.at(self.coord).mob = null;
     }
 
     pub fn should_be_dead(self: *const Mob) bool {
@@ -732,6 +735,9 @@ pub const Prop = struct { name: []const u8, tile: u21, coord: Coord = Coord.new(
 pub const SurfaceItemTag = enum { Machine, Prop };
 pub const SurfaceItem = union(SurfaceItemTag) { Machine: *Machine, Prop: *Prop };
 
+pub const ItemTag = enum { Corpse };
+pub const Item = union(ItemTag) { Corpse: *Mob };
+
 pub const TileType = enum {
     Wall = 0,
     Floor = 1,
@@ -743,6 +749,7 @@ pub const Tile = struct {
     mob: ?*Mob = null,
     marked: bool = false,
     surface: ?SurfaceItem = null,
+    item: ?Item = null,
 
     pub fn displayAs(coord: Coord) termbox.tb_cell {
         var self = state.dungeon.at(coord);
@@ -770,6 +777,13 @@ pub const Tile = struct {
 
                     cell.ch = mob.tile;
                     cell.bg = color;
+                } else if (state.dungeon.at(coord).item) |item| {
+                    switch (item) {
+                        .Corpse => |corpse| {
+                            cell.ch = corpse.tile;
+                            cell.bg = 0xee0000;
+                        },
+                    }
                 } else if (state.dungeon.at(coord).surface) |surfaceitem| {
                     const ch = switch (surfaceitem) {
                         .Machine => |m| m.tile,
