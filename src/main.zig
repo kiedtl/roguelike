@@ -1,6 +1,7 @@
 const std = @import("std");
 
 const rng = @import("rng.zig");
+const viewer = @import("viewer.zig");
 const gas = @import("gas.zig");
 const astar = @import("astar.zig");
 const mapgen = @import("mapgen.zig");
@@ -158,6 +159,6 @@ fn tick() void {
 
 pub fn main() anyerror!void {
     initGame();
-    while (true) tick();
+    viewer.main(); //while (true) tick();
     deinitGame();
 }
