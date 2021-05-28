@@ -70,8 +70,8 @@ fn _draw_string(_x: isize, _y: isize, bg: u32, fg: u32, comptime format: []const
 }
 
 fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, description: []const u8, bg: u32, fg: u32) void {
+    const bg2 = utils.darkenColor(bg, 3);
     const labelx = startx + 1;
-    _ = _draw_string(labelx, y, 0xffffff, 0, "{s}", .{description}) catch unreachable;
 
     var barx = startx;
     const percent = (current * 100) / max;
@@ -79,10 +79,12 @@ fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, d
     const bar = @divTrunc((endx - barx - 1) * @intCast(isize, percent), 100);
     const bar_end = barx + bar;
     while (barx < bar_end) : (barx += 1) termbox.tb_change_cell(barx, y, ' ', fg, bg);
+    while (barx < (endx - 1)) : (barx += 1) termbox.tb_change_cell(barx, y, ' ', fg, bg2);
 
     const bar_len = bar_end - startx;
-    const description2 = description[0..math.min(@intCast(usize, bar_len), description.len)];
-    _ = _draw_string(labelx, y, 0xffffff, bg, "{s}", .{description2}) catch unreachable;
+    const description2 = description[math.min(@intCast(usize, bar_len), description.len)..];
+    _ = _draw_string(labelx, y, 0xffffff, bg, "{s}", .{description}) catch unreachable;
+    _ = _draw_string(labelx + bar_len, y, 0xffffff, bg2, "{s}", .{description2}) catch unreachable;
 }
 
 fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: isize, starty: isize, endx: isize, endy: isize) void {
