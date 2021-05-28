@@ -1,6 +1,7 @@
 New mobs
 ([s]pirit, [h]uman/elf, [a]nimal, [u]ndead, [o]ther)
-([CE]Sauron, [LE]NoneEvil, [CG]NoneGood, [LG]Illuvatar, [CC]Sauron/NonEvil, [??]Neutral)
+([CE]Sauron, [LE]NoneEvil, [CG]NoneGood, [LG]Illuvatar, [CC]Sauron/NonEvil, [??]Neutral,
+ [NN]NightCreature)
 --------
 CE	h	orc
 			Middle-sized humonoids with skin only slightly darker than the
@@ -19,7 +20,6 @@ CE	h	death/fire/ether knight
 CC	s	death angel
 CC	s	locust
 CC	s	cankerworm
-LE	s	night wanderer
 LE	s	will o' the wisp
 CE	a	fire worm
 LG	s	shining one
@@ -31,24 +31,26 @@ CE	o	turquoise statue
 CE	u	lich
 			The dessicated form of an ancient sorcerer, now controlled by the
 			very necromantic powers he once served.
-LE	s	bogeyman (TODO: change name)
-			A hideous, emaciated creature with eyes that are both dull and
-			bright in the dungeon's gloom.
-LE	s	creeping dread
 LG	s	angel
+LE	o	mimic
 LG	s	archangel
 ??	o	complex number
 ??	o	real number
 ??	o	imaginary number
 CE	a	troll
-LE	a	internet troll
-CC	a	spiders
-LE	o	grue
 ??	a	rat
 ??	a	quasit
 CE	o	floating eye(?)
-LE	s	stalker (invisible)
-LE	o	mimic
+LE	a	internet troll
+CC	a	spiders
+NN	s	stalker (invisible)
+NN	s	bogeyman (TODO: change name)
+			A hideous, emaciated creature with eyes that are both dull and
+			bright in the dungeon's gloom.
+NN	s	night wanderer
+NN	s	creeping dread
+NN	o	grue
+NN	o	vampire
 
 Feats (challenges)
 ------------------
@@ -57,9 +59,10 @@ frugal	Use only one weapon throughout the game.
 
 Movement patterns
 -----------------
-sneak	[move, move, rest, move]
-charge	[move(A), move(A), move(A), attack(A)]
-lunge	[move(A), move(A), attack(A)] (dagger)
+sneak      [move, move, rest, move]
+merciless  [move(A), attack(A), move(A), attack(A), move(A), attack(A)]
+charge     [move(A), move(A), move(A), attack(A)]
+recuperate [rest, rest, rest, rest]
 
 Machines
 --------
@@ -105,6 +108,8 @@ power storage
 sonar mining laser
 	- Unused by mobs, player can use it to blast away everything in a certain
 	  radius
+vending machine
+	- Alternative to food stockpile...?
 
 Books
 -----
