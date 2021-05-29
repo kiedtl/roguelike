@@ -1,5 +1,9 @@
 pub fn saturating_sub(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
-    return if ((a -% b) > a) 0 else a - b;
+    return switch (@typeInfo(@TypeOf(a))) {
+        .ComptimeInt, .Int => if ((a -% b) > a) 0 else a - b,
+        .ComptimeFloat, .Float => if ((a - b) > a) 0 else a - b,
+        else => @compileError("Type '" ++ @typeName(a) ++ "' not supported"),
+    };
 }
 
 // interpolate linearly between two vals

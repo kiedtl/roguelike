@@ -361,6 +361,8 @@ pub const MessageType = enum {
     }
 };
 
+pub const Damage = struct { amount: f64 };
+
 pub const Message = struct {
     msg: [128]u8,
     type: MessageType,
@@ -417,6 +419,7 @@ pub const Mob = struct { // {{{
 
     HP: f64, // f64 so that we can regenerate <1 HP per turn
     is_dead: bool = false,
+    last_damage: ?Damage = null,
 
     // Immutable instrinsic attributes.
     //
@@ -452,6 +455,7 @@ pub const Mob = struct { // {{{
     pub fn tick_hp(self: *Mob) void {
         assert(!self.is_dead);
         self.HP = math.clamp(self.HP + 0.14, 0, self.max_HP);
+        self.last_damage = null;
     }
 
     // Check surrounding temperature/gas/water and drown, burn, freeze, or
@@ -527,6 +531,15 @@ pub const Mob = struct { // {{{
         return true;
     }
 
+    pub fn takeDamage(self: *Mob, d: Damage) void {
+        self.HP = math.clamp(self.HP - d.amount, 0, self.max_HP);
+
+        // Commented out because last_damage is set to null too soon for the
+        // display to display it
+        //
+        //self.last_damage = d;
+    }
+
     pub fn fight(attacker: *Mob, recipient: *Mob) void {
         assert(!attacker.is_dead);
         assert(!recipient.is_dead);
@@ -548,9 +561,7 @@ pub const Mob = struct { // {{{
         var damage = (attacker.strength / 4) + rng.range(usize, 0, 3);
         if (is_stab) damage *= 6;
 
-        // saturate on subtraction
-        const HP = @floatToInt(usize, math.floor(recipient.HP));
-        recipient.HP = @intToFloat(f64, if ((HP -% damage) > HP) 0 else HP - damage);
+        recipient.takeDamage(.{ .amount = @intToFloat(f64, damage) });
 
         const hitstr = if (is_stab) "stab" else "hit";
         if (recipient.coord.eq(state.player.coord)) {
@@ -615,6 +626,15 @@ pub const Mob = struct { // {{{
         }
 
         return self.path_cache.get(pathobj).?;
+    }
+
+    pub fn lastDamagePercentage(self: *const Mob) usize {
+        if (self.last_damage) |dam| {
+            const am = math.clamp(dam.amount, 0, self.max_HP);
+            return @floatToInt(usize, (am * 100) / self.max_HP);
+        } else {
+            return 0;
+        }
     }
 
     pub fn isAwareOfAttack(self: *const Mob, attacker: Coord) bool {

@@ -69,22 +69,26 @@ fn _draw_string(_x: isize, _y: isize, bg: u32, fg: u32, comptime format: []const
     return y + 1;
 }
 
-fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, description: []const u8, bg: u32, fg: u32) void {
-    const bg2 = utils.darkenColor(bg, 3);
-    const labelx = startx + 1;
+fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, description: []const u8, loss_percent: usize, bg: u32, fg: u32) void {
+    const bar_max = endx - 5; // Minus max width needed to display loss percentage
+    const bg2 = utils.darkenColor(bg, 3); // Color used to display depleted bar
+    const labelx = startx + 1; // Start of label
 
     var barx = startx;
     const percent = (current * 100) / max;
     if (percent == 0) return;
-    const bar = @divTrunc((endx - barx - 1) * @intCast(isize, percent), 100);
+    const bar = @divTrunc((bar_max - barx - 1) * @intCast(isize, percent), 100);
     const bar_end = barx + bar;
     while (barx < bar_end) : (barx += 1) termbox.tb_change_cell(barx, y, ' ', fg, bg);
-    while (barx < (endx - 1)) : (barx += 1) termbox.tb_change_cell(barx, y, ' ', fg, bg2);
+    while (barx < (bar_max - 1)) : (barx += 1) termbox.tb_change_cell(barx, y, ' ', fg, bg2);
 
     const bar_len = bar_end - startx;
     const description2 = description[math.min(@intCast(usize, bar_len), description.len)..];
     _ = _draw_string(labelx, y, 0xffffff, bg, "{s}", .{description}) catch unreachable;
     _ = _draw_string(labelx + bar_len, y, 0xffffff, bg2, "{s}", .{description2}) catch unreachable;
+    if (loss_percent != 0) {
+        _ = _draw_string(bar_max, y, 0xffffff, 0, "-{}%", .{loss_percent}) catch unreachable;
+    }
 }
 
 fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: isize, starty: isize, endx: isize, endy: isize) void {
@@ -94,7 +98,7 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
 
     y = _draw_string(startx, y, 0xffffff, 0, "@: You", .{}) catch unreachable;
 
-    _draw_bar(y, startx, endx, @floatToInt(usize, player.HP), @floatToInt(usize, player.max_HP), "Health", 0x232faa, 0);
+    _draw_bar(y, startx, endx, @floatToInt(usize, player.HP), @floatToInt(usize, player.max_HP), "Health", player.lastDamagePercentage(), 0x232faa, 0);
     y += 1;
     y = _draw_string(startx, y, 0xffffff, 0, "score: {:<5} level: {}", .{ state.score, state.player.coord.z }) catch unreachable;
     y = _draw_string(startx, y, 0xffffff, 0, "turns: {}", .{state.ticks}) catch unreachable;
@@ -116,7 +120,7 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
 
         y = _draw_string(startx + 1, y, 0xffffff, 0, ": {} ({})", .{ mob.species, mob.activity_description() }) catch unreachable;
 
-        _draw_bar(y, startx, endx, @floatToInt(usize, mob.HP), @floatToInt(usize, mob.max_HP), "Health", 0x232faa, 0);
+        _draw_bar(y, startx, endx, @floatToInt(usize, mob.HP), @floatToInt(usize, mob.max_HP), "Health", mob.lastDamagePercentage(), 0x232faa, 0);
         y += 2;
     }
 }

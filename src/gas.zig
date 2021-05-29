@@ -24,7 +24,7 @@ pub const GAS_NUM: usize = Gases.len;
 fn triggerNone(_: *Mob, __: f64) void {}
 
 fn triggerPoison(idiot: *Mob, quantity: f64) void {
-    idiot.HP *= 0.91;
+    idiot.takeDamage(.{ .amount = idiot.HP * 0.11 });
 
     if (idiot.coord.eq(state.player.coord)) {
         state.message(.Damage, "You choke on the poisonous gas.", .{});
