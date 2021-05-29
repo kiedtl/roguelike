@@ -411,7 +411,6 @@ pub const Mob = struct { // {{{
     path_cache: PathCacheMap = undefined,
     facing: Direction,
     facing_wide: bool, // TODO: remove?
-    vision: usize,
     coord: Coord = Coord.new(0, 0),
 
     is_dead: bool = false,
@@ -420,16 +419,13 @@ pub const Mob = struct { // {{{
     //
     // willpower: Controls the ability to resist spells
     // dexterity: Controls the likelihood of a mob dodging an attack.
-    //            Examples:   Troll: 1
-    //                     Hill Orc: 21
-    //                          Elf: 35
-    //                    Large Imp: 49
-    //                    Small Imp: 63
     // hearing:   The minimum intensity of a noise source before it can be
     //            heard by a mob. The lower the value, the better.
+    // vision:    Maximum radius of the mob's field of vision.
     //
     willpower: usize, // Range: 0 < willpower < 10
     dexterity: usize, // Range: 0 < dexterity < 100
+    vision: usize,
     hearing: usize,
     max_HP: f64, // Should always be a whole number
 
