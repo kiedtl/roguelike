@@ -403,16 +403,19 @@ pub const Mob = struct { // {{{
     tile: u21,
     occupation: Occupation,
     allegiance: Allegiance,
+
     // TODO: instead of storing the tile's representation in memory, store the
     // actual tile -- if a wall is destroyed outside of the player's FOV, the display
     // code has no way of knowing what the player remembers the destroyed tile as...
     memory: CoordCellMap = undefined,
     fov: CoordArrayList = undefined,
     path_cache: PathCacheMap = undefined,
+
     facing: Direction,
     facing_wide: bool, // TODO: remove?
     coord: Coord = Coord.new(0, 0),
 
+    HP: f64, // f64 so that we can regenerate <1 HP per turn
     is_dead: bool = false,
 
     // Immutable instrinsic attributes.
@@ -422,18 +425,14 @@ pub const Mob = struct { // {{{
     // hearing:   The minimum intensity of a noise source before it can be
     //            heard by a mob. The lower the value, the better.
     // vision:    Maximum radius of the mob's field of vision.
+    // strength:  TODO: define!
     //
     willpower: usize, // Range: 0 < willpower < 10
     dexterity: usize, // Range: 0 < dexterity < 100
     vision: usize,
     hearing: usize,
-    max_HP: f64, // Should always be a whole number
-
-    // Mutable instrinsic attributes.
-    //
-    // The use and effects of most of these are obvious.
-    HP: f64, // f64 so that we can regenerate <1 HP per turn
     strength: usize,
+    max_HP: f64, // Should always be a whole number
 
     // Maximum field of hearing.
     pub const MAX_FOH = 35;
