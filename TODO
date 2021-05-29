@@ -136,3 +136,4 @@ Stop using the freaking `catch unreachable` syntax:
 Research Manhattan distance vs Euclidian distance vs Moore neighborhood
 	https://old.reddit.com/r/roguelikedev/comments/nev1jg/a_pathfinding_unstablenondeterministic/
 Define Species struct and carry immutable data for each mob in it
+Convert enum+union pair to union(enum) (see std/fifo.zig)
