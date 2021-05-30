@@ -175,8 +175,9 @@ pub fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem
 
     if (mob.occupation.phase == .SawHostile) {
         assert(mob.occupation.is_combative);
+        assert(mob.enemies.items.len > 0);
 
-        const target = mob.enemies.current().?.mob;
+        const target = mob.enemies.items[0].mob;
 
         if (dungeon.at(target.coord).mob == null) {
             mob.occupation.phase = .GoTo;

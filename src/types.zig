@@ -424,7 +424,7 @@ pub const Mob = struct { // {{{
     memory: CoordCellMap = undefined,
     fov: CoordArrayList = undefined,
     path_cache: PathCacheMap = undefined,
-    enemies: RingBuffer(EnemyRecord, 32) = .{},
+    enemies: std.ArrayList(EnemyRecord) = undefined,
 
     facing: Direction,
     facing_wide: bool, // TODO: remove?
@@ -609,7 +609,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn init(self: *Mob, alloc: *mem.Allocator) void {
-        self.enemies.init();
+        self.enemies = std.ArrayList(EnemyRecord).init(alloc);
         self.activities.init();
         self.path_cache = PathCacheMap.init(alloc);
         self.occupation.work_area = CoordArrayList.init(alloc);
