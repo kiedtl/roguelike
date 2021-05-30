@@ -200,35 +200,35 @@ pub fn draw() void {
             const u_y: usize = @intCast(usize, y);
             const coord = Coord.new2(level, u_x, u_y);
 
+            const material = state.dungeon.at(coord).material;
+            var tile = Tile.displayAs(coord);
+
             // if player can't see area, draw a blank/grey tile, depending on
             // what they saw last there
             if (!state.player.cansee(coord)) {
+                tile = .{ .fg = 0xffffff, .bg = 0, .ch = ' ' };
+
                 if (state.player.memory.contains(coord)) {
-                    var tile = state.player.memory.get(coord) orelse unreachable;
+                    tile = state.player.memory.get(coord) orelse unreachable;
 
                     tile.fg = utils.darkenColor(tile.fg, 3);
                     tile.bg = utils.darkenColor(tile.bg, 3);
 
-                    if (state.player.canHear(coord)) |noise| {
-                        // Adjust noise to between 0 and 122, add 0x95, then display
-                        const adj_n = math.min(noise, 100) * 100 / 122;
-                        const green = @intCast(u32, (255 * adj_n) / 100);
-                        tile.fg = (green + 0x85) << 8;
-                        tile.ch = '!';
-                    }
-
                     tile.ch = if (state.dungeon.at(coord).type == .Wall) ' ' else tile.ch;
-
-                    termbox.tb_put_cell(cursorx, cursory, &tile);
-                } else {
-                    termbox.tb_change_cell(cursorx, cursory, ' ', 0xffffff, 0);
                 }
+
+                if (state.player.canHear(coord)) |noise| {
+                    // Adjust noise to between 0 and 122, add 0x95, then display
+                    const adj_n = math.min(noise, 100) * 100 / 122;
+                    const green = @intCast(u32, (255 * adj_n) / 100);
+                    tile.fg = (green + 0x85) << 8;
+                    tile.ch = '!';
+                }
+
+                termbox.tb_put_cell(cursorx, cursory, &tile);
 
                 continue;
             }
-
-            const material = state.dungeon.at(coord).material;
-            var tile = Tile.displayAs(coord);
 
             switch (state.dungeon.at(coord).type) {
                 .Wall => {},
