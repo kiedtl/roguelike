@@ -213,8 +213,6 @@ pub fn draw() void {
 
                     tile.fg = utils.darkenColor(tile.fg, 3);
                     tile.bg = utils.darkenColor(tile.bg, 3);
-
-                    tile.ch = if (state.dungeon.at(coord).type == .Wall) ' ' else tile.ch;
                 }
 
                 if (state.player.canHear(coord)) |noise| {
