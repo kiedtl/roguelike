@@ -205,6 +205,9 @@ pub fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem
     }
 }
 
+// Each tick, make sound decay by 0.80 for each tile. This constant is chosen
+// to ensure that sound that results from an untimely persists for at least 4
+// turns.
 pub fn tickSound() void {
     const cur_lev = player.coord.z;
     var y: usize = 0;
@@ -213,7 +216,7 @@ pub fn tickSound() void {
         while (x < WIDTH) : (x += 1) {
             const coord = Coord.new2(cur_lev, x, y);
             const cur_sound = dungeon.soundAt(coord).*;
-            const new_sound = @intToFloat(f64, cur_sound) * 0.85;
+            const new_sound = @intToFloat(f64, cur_sound) * 0.80;
             dungeon.soundAt(coord).* = @floatToInt(usize, new_sound);
         }
     }
