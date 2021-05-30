@@ -60,7 +60,7 @@ frugal	Use only one weapon throughout the game.
 Movement patterns
 -----------------
 sneak      [move, move, rest, move]
-merciless  [move(A), attack(A), move(A), attack(A), move(A), attack(A)]
+merciless  [move(A), attack(A), move(A), attack(A)]
 charge     [move(A), move(A), move(A), attack(A)]
 recuperate [rest, rest, rest, rest]
 
