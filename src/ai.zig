@@ -57,6 +57,11 @@ pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
         return;
     }
 
+    if (!mob.isCreeping()) {
+        _ = mob.rest();
+        return;
+    }
+
     // Swap from and to if we've reached the goal, to walk back to the starting point.
     if (!from.eq(to) and mob.coord.eq(to)) {
         const tmp = mob.occupation.work_area.items[0];
