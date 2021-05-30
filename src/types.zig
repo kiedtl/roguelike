@@ -4,6 +4,8 @@ const mem = std.mem;
 const assert = std.debug.assert;
 
 const LinkedList = @import("list.zig").LinkedList;
+const RingBuffer = @import("ringbuffer.zig").RingBuffer;
+
 const rng = @import("rng.zig");
 const termbox = @import("termbox.zig");
 const astar = @import("astar.zig");
@@ -43,7 +45,7 @@ pub const Direction = enum { // {{{
 
     const Self = @This();
 
-    pub fn from_coords(base: Coord, neighbor: Coord) !Self {
+    pub fn from(base: Coord, neighbor: Coord) ?Self {
         const dx = @intCast(isize, neighbor.x) - @intCast(isize, base.x);
         const dy = @intCast(isize, neighbor.y) - @intCast(isize, base.y);
 
@@ -64,8 +66,13 @@ pub const Direction = enum { // {{{
         } else if (dx == -1 and dy == 1) {
             return .SouthWest;
         } else {
-            return error.NotNeighbor;
+            return null;
         }
+    }
+
+    // FIXME: deprecated!
+    pub fn from_coords(a: Coord, b: Coord) !Self {
+        return if (Direction.from(a, b)) |d| d else error.NotNeighbor;
     }
 
     pub fn is_adjacent(base: Self, other: Self) bool {
@@ -362,6 +369,9 @@ pub const MessageType = enum {
 };
 
 pub const Damage = struct { amount: f64 };
+pub const Activity = union(enum) {
+    Rest, Move: Direction, Attack: Direction, Teleport: Coord
+};
 
 pub const Message = struct {
     msg: [128]u8,
@@ -418,8 +428,9 @@ pub const Mob = struct { // {{{
     coord: Coord = Coord.new(0, 0),
 
     HP: f64, // f64 so that we can regenerate <1 HP per turn
-    is_dead: bool = false,
+    activities: RingBuffer(Activity, 4) = .{},
     last_damage: ?Damage = null,
+    is_dead: bool = false,
 
     // Immutable instrinsic attributes.
     //
@@ -440,8 +451,8 @@ pub const Mob = struct { // {{{
     // Maximum field of hearing.
     pub const MAX_FOH = 35;
 
-    pub const NOISE_MOVE = 5;
-    pub const NOISE_SHRIEK = 8;
+    pub const NOISE_MOVE = 10;
+    pub const NOISE_SHRIEK = 16;
     pub const NOISE_YELL = 24;
     pub const NOISE_SCREAM = 32;
 
@@ -508,7 +519,7 @@ pub const Mob = struct { // {{{
         const othermob = state.dungeon.at(dest).mob;
         state.dungeon.at(dest).mob = self;
         state.dungeon.at(coord).mob = othermob;
-        self.makeNoise(NOISE_MOVE);
+        if (!self.isCreeping()) self.makeNoise(NOISE_MOVE);
         self.coord = dest;
 
         if (state.dungeon.at(dest).surface) |surface| {
@@ -516,6 +527,15 @@ pub const Mob = struct { // {{{
                 .Machine => |m| m.on_trigger(self, m),
                 else => {},
             }
+        }
+
+        if (coord.distance(dest) == 1) {
+            // [unreachable] Since the distance == 1 the coords have to be together
+            const d = Direction.from_coords(coord, dest) catch unreachable;
+
+            self.activities.append(Activity{ .Move = d });
+        } else {
+            self.activities.append(Activity{ .Teleport = dest });
         }
 
         return true;
@@ -531,19 +551,19 @@ pub const Mob = struct { // {{{
         return true;
     }
 
-    pub fn takeDamage(self: *Mob, d: Damage) void {
-        self.HP = math.clamp(self.HP - d.amount, 0, self.max_HP);
-
-        // Commented out because last_damage is set to null too soon for the
-        // display to display it
-        //
-        //self.last_damage = d;
+    pub fn rest(self: *Mob) bool {
+        self.activities.append(.Rest);
+        return true;
     }
 
     pub fn fight(attacker: *Mob, recipient: *Mob) void {
         assert(!attacker.is_dead);
         assert(!recipient.is_dead);
         assert(attacker.dexterity < 100);
+
+        if (Direction.from(attacker.coord, recipient.coord)) |d| {
+            attacker.activities.append(.{ .Attack = d });
+        }
 
         const is_stab = !recipient.isAwareOfAttack(attacker.coord);
 
@@ -574,7 +594,17 @@ pub const Mob = struct { // {{{
         }
     }
 
+    pub fn takeDamage(self: *Mob, d: Damage) void {
+        self.HP = math.clamp(self.HP - d.amount, 0, self.max_HP);
+
+        // Commented out because last_damage is set to null too soon for the
+        // display to display it
+        //
+        //self.last_damage = d;
+    }
+
     pub fn init(self: *Mob, alloc: *mem.Allocator) void {
+        self.activities.init();
         self.path_cache = PathCacheMap.init(alloc);
         self.occupation.work_area = CoordArrayList.init(alloc);
         self.fov = CoordArrayList.init(alloc);
@@ -726,6 +756,17 @@ pub const Mob = struct { // {{{
         }
 
         return res;
+    }
+
+    pub fn isCreeping(self: *const Mob) bool {
+        var non_rests: usize = 0;
+
+        var iter = self.activities.iterator();
+        while (iter.next()) |ac| {
+            if (ac != .Rest) non_rests += 1;
+        }
+
+        return non_rests < self.activities.len;
     }
 }; // }}}
 
