@@ -451,10 +451,9 @@ pub const Mob = struct { // {{{
     // Maximum field of hearing.
     pub const MAX_FOH = 35;
 
-    pub const NOISE_MOVE = 10;
-    pub const NOISE_SHRIEK = 16;
-    pub const NOISE_YELL = 24;
-    pub const NOISE_SCREAM = 32;
+    pub const NOISE_MOVE = 20;
+    pub const NOISE_YELL = 40;
+    pub const NOISE_SCREAM = 60;
 
     pub const PAIN_DECAY = 0.08;
     pub const PAIN_UNCONSCIOUS_THRESHHOLD = 1.0;
@@ -914,7 +913,7 @@ pub const GuardTemplate = Mob{
 
     .willpower = 2,
     .dexterity = 10,
-    .hearing = 13,
+    .hearing = 8,
     .max_HP = 17,
 
     .HP = 21,
