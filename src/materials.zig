@@ -1,17 +1,17 @@
 usingnamespace @import("types.zig");
 
-pub const IronBarricade = Material{
-    .name = "iron barricade",
+pub const ConstructedBasalt = Material{
+    .name = "constructed basalt",
     .description = "TODO",
-    .density = 3.0, // FIXME: not accurate!
-    .color_fg = 0x272727, // bg of basalt floor
-    .color_bg = 0x708070,
+    .density = 1.5, // half of basalt
+    .color_fg = 0x9e9e9e,
+    .color_bg = 0x272727, // bg of basalt floor
     .glyph = '#',
     .melting_point = 700, // FIXME: not accurate
     .combust_point = null,
-    .specific_heat = 0.55, // FIXME: not accurate!
+    .specific_heat = 0.25, // half of basalt
     .luminescence = 0,
-    .opacity = 0.3,
+    .opacity = 1.0,
 };
 
 pub const Basalt = Material{

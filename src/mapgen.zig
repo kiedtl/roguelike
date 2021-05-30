@@ -201,19 +201,19 @@ fn _excavate(room: *const Room, ns: bool, ew: bool) void {
         const s = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.end().y), .width = room.width + 2, .height = 1 };
         const w = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.start.y - 1), .width = 1, .height = room.height + 2 };
         const e = Room{ .start = Coord.new2(room.start.z, room.end().x, room.start.y - 1), .width = 1, .height = room.height + 2 };
-        _replace_tiles(&n, Tile{ .material = &materials.IronBarricade });
-        _replace_tiles(&s, Tile{ .material = &materials.IronBarricade });
-        _replace_tiles(&w, Tile{ .material = &materials.IronBarricade });
-        _replace_tiles(&e, Tile{ .material = &materials.IronBarricade });
+        _replace_tiles(&n, Tile{ .material = &materials.ConstructedBasalt });
+        _replace_tiles(&s, Tile{ .material = &materials.ConstructedBasalt });
+        _replace_tiles(&w, Tile{ .material = &materials.ConstructedBasalt });
+        _replace_tiles(&e, Tile{ .material = &materials.ConstructedBasalt });
     } else {
         const n = Room{ .start = Coord.new2(room.start.z, room.start.x, room.start.y - 1), .width = room.width, .height = 1 };
         const s = Room{ .start = Coord.new2(room.start.z, room.start.x, room.end().y), .width = room.width, .height = 1 };
         const w = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.start.y), .width = 1, .height = room.height };
         const e = Room{ .start = Coord.new2(room.start.z, room.end().x, room.start.y), .width = 1, .height = room.height };
-        if (ns) _replace_tiles(&n, Tile{ .material = &materials.IronBarricade });
-        if (ns) _replace_tiles(&s, Tile{ .material = &materials.IronBarricade });
-        if (ew) _replace_tiles(&w, Tile{ .material = &materials.IronBarricade });
-        if (ew) _replace_tiles(&e, Tile{ .material = &materials.IronBarricade });
+        if (ns) _replace_tiles(&n, Tile{ .material = &materials.ConstructedBasalt });
+        if (ns) _replace_tiles(&s, Tile{ .material = &materials.ConstructedBasalt });
+        if (ew) _replace_tiles(&w, Tile{ .material = &materials.ConstructedBasalt });
+        if (ew) _replace_tiles(&e, Tile{ .material = &materials.ConstructedBasalt });
     }
 }
 
