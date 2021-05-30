@@ -55,6 +55,18 @@ pub fn checkForHostiles(mob: *Mob) void {
                 .counter = mob.memory_duration,
             }) catch unreachable;
         }
+
+        // Check for a dead enemy and drop that record.
+        if (state.dungeon.at(fitem).item) |item| {
+            switch (item) {
+                .Corpse => |corpse| {
+                    for (mob.enemies.items) |*enemy, i| {
+                        if (@ptrToInt(enemy.mob) == @ptrToInt(corpse))
+                            _ = mob.enemies.orderedRemove(i);
+                    }
+                },
+            }
+        }
     }
 
     // Decrement counters.

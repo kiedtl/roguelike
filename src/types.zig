@@ -797,6 +797,8 @@ pub const Prop = struct { name: []const u8, tile: u21, coord: Coord = Coord.new(
 pub const SurfaceItemTag = enum { Machine, Prop };
 pub const SurfaceItem = union(SurfaceItemTag) { Machine: *Machine, Prop: *Prop };
 
+// TODO: make corpse a surfaceitem? (if a mob dies over a surface item just dumb it
+// on a nearby tile)
 pub const ItemTag = enum { Corpse };
 pub const Item = union(ItemTag) { Corpse: *Mob };
 
