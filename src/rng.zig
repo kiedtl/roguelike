@@ -26,7 +26,7 @@ pub fn onein(number: usize) bool {
 // STYLE: change to range(min: anytype, max: @TypeOf(min)) @TypeOf(min)
 pub fn range(comptime T: type, min: T, max: T) T {
     std.debug.assert(max >= min);
-    const diff = max - min;
+    const diff = (max + 1) - min;
     return if (diff > 0) (int(T) % diff) + min else min;
 }
 

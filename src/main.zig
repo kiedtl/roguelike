@@ -33,16 +33,15 @@ fn initGame() void {
     rng.init();
 
     for (state.dungeon.map) |_, level| {
-        mapgen.fillRandom(level, 55);
-        mapgen.fillBar(level, 2);
-        mapgen.cellularAutomata(level, 6, 2);
-        mapgen.cellularAutomata(level, 6, 2);
-        mapgen.cellularAutomata(level, 6, 2);
-        mapgen.cellularAutomata(level, 6, 2);
+        mapgen.fillRandom(level, 40);
+        mapgen.fillBar(level, 1);
+        mapgen.cellularAutomata(level, 5, 2);
+        mapgen.cellularAutomata(level, 5, 2);
+        mapgen.cellularAutomata(level, 5, 2);
         mapgen.cellularAutomata(level, 6, 1);
         mapgen.cellularAutomata(level, 6, 1);
-        mapgen.cellularAutomata(level, 5, 1);
-        mapgen.placeRandomRooms(level, 500, &state.GPA.allocator);
+        mapgen.cellularAutomata(level, 6, 1);
+        mapgen.placeRandomRooms(level, 1000, &state.GPA.allocator);
     }
     for (state.dungeon.map) |_, level|
         mapgen.placeRandomStairs(level);

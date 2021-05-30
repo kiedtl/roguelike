@@ -10,6 +10,11 @@ const utils = @import("utils.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
+const MIN_ROOM_WIDTH: usize = 3;
+const MIN_ROOM_HEIGHT: usize = 3;
+const MAX_ROOM_WIDTH: usize = 10;
+const MAX_ROOM_HEIGHT: usize = 10;
+
 fn _place_prop(coord: Coord, prop_template: *const Prop) *Prop {
     var prop = prop_template.*;
     prop.coord = coord;
@@ -104,11 +109,6 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     state.player = state.mobs.lastPtr().?;
 }
 
-const MIN_ROOM_WIDTH: usize = 7;
-const MIN_ROOM_HEIGHT: usize = 4;
-const MAX_ROOM_WIDTH: usize = 20;
-const MAX_ROOM_HEIGHT: usize = 10;
-
 const Room = struct {
     start: Coord,
     width: usize,
@@ -165,7 +165,7 @@ const Room = struct {
 
 var rooms: std.ArrayList(Room) = undefined;
 
-fn _room_intersects(room: *const Room) bool {
+fn _room_intersects(room: *const Room, ignore: *const Room) bool {
     if (room.start.x == 0 or room.start.y == 0)
         return true;
     if (room.start.x >= state.WIDTH or room.start.y >= state.HEIGHT)
@@ -174,6 +174,11 @@ fn _room_intersects(room: *const Room) bool {
         return true;
 
     for (rooms.items) |otherroom| {
+        // Yes, I understand that this is ugly. No, I don't care.
+        if (otherroom.start.eq(ignore.start))
+            if (otherroom.width == ignore.width)
+                if (otherroom.height == ignore.height)
+                    continue;
         if (room.intersects(&otherroom, 1)) return true;
     }
 
@@ -196,30 +201,30 @@ fn _replace_tiles(room: *const Room, tile: Tile) void {
 fn _excavate(room: *const Room, ns: bool, ew: bool) void {
     _replace_tiles(room, Tile{ .type = .Floor });
 
-    if (ns and ew) {
-        const n = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.start.y - 1), .width = room.width + 2, .height = 1 };
-        const s = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.end().y), .width = room.width + 2, .height = 1 };
-        const w = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.start.y - 1), .width = 1, .height = room.height + 2 };
-        const e = Room{ .start = Coord.new2(room.start.z, room.end().x, room.start.y - 1), .width = 1, .height = room.height + 2 };
-        _replace_tiles(&n, Tile{ .material = &materials.ConstructedBasalt });
-        _replace_tiles(&s, Tile{ .material = &materials.ConstructedBasalt });
-        _replace_tiles(&w, Tile{ .material = &materials.ConstructedBasalt });
-        _replace_tiles(&e, Tile{ .material = &materials.ConstructedBasalt });
-    } else {
-        const n = Room{ .start = Coord.new2(room.start.z, room.start.x, room.start.y - 1), .width = room.width, .height = 1 };
-        const s = Room{ .start = Coord.new2(room.start.z, room.start.x, room.end().y), .width = room.width, .height = 1 };
-        const w = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.start.y), .width = 1, .height = room.height };
-        const e = Room{ .start = Coord.new2(room.start.z, room.end().x, room.start.y), .width = 1, .height = room.height };
-        if (ns) _replace_tiles(&n, Tile{ .material = &materials.ConstructedBasalt });
-        if (ns) _replace_tiles(&s, Tile{ .material = &materials.ConstructedBasalt });
-        if (ew) _replace_tiles(&w, Tile{ .material = &materials.ConstructedBasalt });
-        if (ew) _replace_tiles(&e, Tile{ .material = &materials.ConstructedBasalt });
-    }
+    // if (ns and ew) {
+    //     const n = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.start.y - 1), .width = room.width + 2, .height = 1 };
+    //     const s = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.end().y), .width = room.width + 2, .height = 1 };
+    //     const w = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.start.y - 1), .width = 1, .height = room.height + 2 };
+    //     const e = Room{ .start = Coord.new2(room.start.z, room.end().x, room.start.y - 1), .width = 1, .height = room.height + 2 };
+    //     _replace_tiles(&n, Tile{ .material = &materials.ConstructedBasalt });
+    //     _replace_tiles(&s, Tile{ .material = &materials.ConstructedBasalt });
+    //     _replace_tiles(&w, Tile{ .material = &materials.ConstructedBasalt });
+    //     _replace_tiles(&e, Tile{ .material = &materials.ConstructedBasalt });
+    // } else {
+    //     const n = Room{ .start = Coord.new2(room.start.z, room.start.x, room.start.y - 1), .width = room.width, .height = 1 };
+    //     const s = Room{ .start = Coord.new2(room.start.z, room.start.x, room.end().y), .width = room.width, .height = 1 };
+    //     const w = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.start.y), .width = 1, .height = room.height };
+    //     const e = Room{ .start = Coord.new2(room.start.z, room.end().x, room.start.y), .width = 1, .height = room.height };
+    //     if (ns) _replace_tiles(&n, Tile{ .material = &materials.ConstructedBasalt });
+    //     if (ns) _replace_tiles(&s, Tile{ .material = &materials.ConstructedBasalt });
+    //     if (ew) _replace_tiles(&w, Tile{ .material = &materials.ConstructedBasalt });
+    //     if (ew) _replace_tiles(&e, Tile{ .material = &materials.ConstructedBasalt });
+    // }
 }
 
 fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
     const limit = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
-    const distances = [2][5]usize{ .{ 0, 1, 2, 3, 4 }, .{ 3, 8, 4, 2, 1 } };
+    const distances = [2][6]usize{ .{ 0, 1, 2, 3, 4, 8 }, .{ 3, 8, 4, 3, 2, 1 } };
     const side = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
 
     const parent = rng.chooseUnweighted(Room, rooms.items);
@@ -230,7 +235,7 @@ fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
         var child_h = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
         var child = parent.attach(side, child_w, child_h, distance);
 
-        while (_room_intersects(&child) or child.overflowsLimit(&limit)) {
+        while (_room_intersects(&child, &parent) or child.overflowsLimit(&limit)) {
             if (child_w < MIN_ROOM_WIDTH or child_h < MIN_ROOM_HEIGHT)
                 break :sides;
 
@@ -291,10 +296,10 @@ fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
         if (distance > 0) {
             const rsx = math.max(parent.start.x, child.start.x);
             const rex = math.min(parent.end().x, child.end().x);
-            const x = rng.range(usize, math.min(rsx, rex), math.max(rsx, rex));
+            const x = rng.range(usize, math.min(rsx, rex), math.max(rsx, rex) - 1);
             const rsy = math.max(parent.start.y, child.start.y);
             const rey = math.min(parent.end().y, child.end().y);
-            const y = rng.range(usize, math.min(rsy, rey), math.max(rsy, rey));
+            const y = rng.range(usize, math.min(rsy, rey), math.max(rsy, rey) - 1);
 
             var corridor = switch (side) {
                 .North => Room{ .start = Coord.new2(level, x, child.end().y), .height = parent.start.y - child.end().y, .width = 1 },
@@ -305,6 +310,7 @@ fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
             };
 
             _excavate(&corridor, side == .East or side == .West, side == .North or side == .South);
+            rooms.append(corridor) catch unreachable;
 
             if (distance == 1) _place_normal_door(corridor.start);
         }
@@ -373,7 +379,7 @@ pub fn cellularAutomata(level: usize, wall_req: usize, isle_req: usize) void {
             const coord = Coord.new2(level, x, y);
 
             var neighbor_walls: usize = if (old[coord.y][coord.x] == .Wall) 1 else 0;
-            for (&CARDINAL_DIRECTIONS) |direction| {
+            for (&DIRECTIONS) |direction| {
                 var new = coord;
                 if (!new.move(direction, state.mapgeometry))
                     continue;
