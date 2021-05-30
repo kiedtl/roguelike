@@ -12,6 +12,8 @@ CC	s	burning brute
 			fearsome fire attacks.
 CC	s	winged terror
 CC	s	greater & lesser necromancer
+			An unusually fragile minor demon that has long wielded the secrets
+			of life and death.
 CE	s	blazing brute
 CC	a	jackals
 CE	a	hellhounds
@@ -22,7 +24,6 @@ CC	s	locust
 CC	s	cankerworm
 LE	s	will o' the wisp
 CE	a	fire worm
-LG	s	shining one
 CE	o	crystal statue
 			A statue of some nameless humanoid creature than once inhabited
 			the pits of Udùn. These statues are almost as rare as the
@@ -31,9 +32,10 @@ CE	o	turquoise statue
 CE	u	lich
 			The dessicated form of an ancient sorcerer, now controlled by the
 			very necromantic powers he once served.
+LG	s	shining one
 LG	s	angel
-LE	o	mimic
 LG	s	archangel
+LE	o	mimic
 ??	o	complex number
 ??	o	real number
 ??	o	imaginary number
@@ -68,22 +70,20 @@ Machines
 --------
 furnace
 	- Heats air on one side of the chamber. May or may not be used by mobs.
-	- If used by mobs: maybe to run an execution chamber...?
+	- If used by mobs: maybe to run an execution/torture chamber...?
 	- If used by player: used to kill mobs in a vault?
 cooler
 	- Cools the surrounding air, helping to preserve e.g. food items.
 forge
-	- Stuff some metal on one end, and weapons will appear on the other end.
+	- Stuff some metal on one end, and weapons will appear on the other.
 book copy machine
 	- Makes a book two.
-memory "condenser"
+memory condenser
 	- "Condenses" player's memory into a (map) book.
 food ration maker
 	- Stuff corpses, fungi, and lichen (I know, gross) next to it and rations
 	  will appear on the other side.
-heat-powered furnace
-	- Like furnace. If put in a hot place (ie next to lava), will self-power.
-"camera"
+camera
 	- Pressure plate thing that puts an alert out if a non-Sauron-aligned
 	  mob walks on it. (Alerts result in death squads sent out.)
 alarm system
@@ -92,22 +92,40 @@ announcement system
 	- ???
 teleportation station
 	- Player can use it to teleport to a certain location.
+uranium refinery
+	- Should only appear in the Research branch.
+	- Purely decor, until it's destroyed, in which case it'll release a bit
+	  of corium.
+potion synthesis machine
+	- Should be a synthesis machine for each major potion.
+	- Should only appear in the Research branch.
+power station
+	- Orc-powered power station.
 nuclear reactor
-	- Recharges power storage machines.
+	- Recharges power storage machines. When destroyed, releases massive
+	  quantities of radioactive gases, noxious fumes, boiling uranium,
+	  and lots of other nasty stuff, as well as a tremendous explosion.
+heat-powered power station
+	- If put in a hot place (ie next to lava), will self-power.
+railgun
+	- Should appear in the Research branch of the dungeon.
+	- Unused by mobs, and mostly useless for player.
+	- Zaps everything in a line, and self-destructs after X shots.
 repair shop
 	- Mobs and player may use it to repair weapons and armor.
 air purifier
 	- Clears away gases in a certain radius.
 power storage
-	- Powers all machines in a certain radius.
+	- Powers all machines in a certain radius, until it itself runs out of
+	  power. Useful for extending power station's range.
 	- Player can destroy it to release electricity, zapping everything
 	  (including player) in a certain radius.
-"elevator"
+elevator
 	- Spawns mobs for death squads, or mobs when the number of laborers/guards
 	  falls below a certain point
 sonar mining laser
 	- Unused by mobs, player can use it to blast away everything in a certain
-	  radius
+	  radius, in a certain direction.
 vending machine
 	- Alternative to food stockpile...?
 
@@ -129,7 +147,6 @@ inventory lists
 
 Refactorings
 ------------
-
 "Time energy" system for ticks/turns
 Stop using the freaking `catch unreachable` syntax:
 	19:58 <ikskuh> "catch unreachable" will happily continue to execute code after the error in non-safe build modes
