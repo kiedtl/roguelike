@@ -373,6 +373,8 @@ pub const Activity = union(enum) {
     Rest, Move: Direction, Attack: Direction, Teleport: Coord
 };
 
+pub const EnemyRecord = struct { mob: *Mob, counter: usize };
+
 pub const Message = struct {
     msg: [128]u8,
     type: MessageType,
@@ -422,6 +424,7 @@ pub const Mob = struct { // {{{
     memory: CoordCellMap = undefined,
     fov: CoordArrayList = undefined,
     path_cache: PathCacheMap = undefined,
+    enemies: RingBuffer(EnemyRecord, 32) = .{},
 
     facing: Direction,
     facing_wide: bool, // TODO: remove?
@@ -440,12 +443,15 @@ pub const Mob = struct { // {{{
     //            heard by a mob. The lower the value, the better.
     // vision:    Maximum radius of the mob's field of vision.
     // strength:  TODO: define!
+    // memory:    The maximum length of time for which a mob can remember
+    //            an enemy.
     //
     willpower: usize, // Range: 0 < willpower < 10
     dexterity: usize, // Range: 0 < dexterity < 100
     vision: usize,
     hearing: usize,
     strength: usize,
+    memory_duration: usize,
     max_HP: f64, // Should always be a whole number
 
     // Maximum field of hearing.
@@ -603,6 +609,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn init(self: *Mob, alloc: *mem.Allocator) void {
+        self.enemies.init();
         self.activities.init();
         self.path_cache = PathCacheMap.init(alloc);
         self.occupation.work_area = CoordArrayList.init(alloc);
@@ -915,6 +922,7 @@ pub const GuardTemplate = Mob{
     .dexterity = 10,
     .hearing = 8,
     .max_HP = 17,
+    .memory_duration = 5,
 
     .HP = 21,
     .strength = 10,
@@ -940,6 +948,7 @@ pub const ElfTemplate = Mob{
     .dexterity = 28,
     .hearing = 5,
     .max_HP = 49,
+    .memory_duration = 10,
 
     .HP = 49,
     .strength = 14,

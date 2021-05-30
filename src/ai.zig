@@ -16,6 +16,25 @@ fn _find_coord(coord: Coord, array: *CoordArrayList) usize {
 
 pub fn dummyWork(_: *Mob, __: *mem.Allocator) void {}
 
+pub fn checkForHostiles(mob: *Mob) void {
+    if (!mob.occupation.is_combative)
+        return;
+
+    for (mob.fov.items) |fitem| {
+        if (state.dungeon.at(fitem).mob) |othermob| {
+            if (!othermob.isHostileTo(mob)) continue;
+
+            assert(!othermob.is_dead); // Dead mobs should be corpses (ie items)
+
+            // FIXME: update existing records if necessary.
+            mob.enemies.append(.{ .mob = othermob, .counter = mob.memory_duration });
+        }
+    }
+
+    if (mob.enemies.current() != null)
+        mob.occupation.phase = .SawHostile;
+}
+
 fn _guard_glance(mob: *Mob, prev_direction: Direction) void {
     var newdirection: Direction = switch (mob.facing) {
         .North => .NorthEast,

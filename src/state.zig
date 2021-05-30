@@ -3,6 +3,7 @@ const mem = std.mem;
 const math = std.math;
 const assert = std.debug.assert;
 
+const ai = @import("ai.zig");
 const astar = @import("astar.zig");
 const utils = @import("utils.zig");
 const gas = @import("gas.zig");
@@ -134,24 +135,11 @@ fn _can_hear_hostile(mob: *Mob, moblist: *const MobArrayList) ?Coord {
     return null;
 }
 
-fn _can_see_hostile(mob: *Mob) ?Coord {
-    for (mob.fov.items) |fitem| {
-        if (dungeon.at(fitem).mob) |othermob| {
-            if (othermob.allegiance != mob.allegiance and !othermob.is_dead) {
-                return fitem;
-            }
-        }
-    }
-    return null;
-}
-
 pub fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem.Allocator) void {
+    ai.checkForHostiles(mob);
+
     if (mob.occupation.phase != .SawHostile) {
-        if (_can_see_hostile(mob)) |hostile| {
-            mob.makeNoise(Mob.NOISE_YELL);
-            mob.occupation.phase = .SawHostile;
-            mob.occupation.target = hostile;
-        } else if (_can_hear_hostile(mob, moblist)) |dest| {
+        if (_can_hear_hostile(mob, moblist)) |dest| {
             // Let's investigate
             mob.occupation.phase = .GoTo;
             mob.occupation.target = dest;
@@ -185,21 +173,24 @@ pub fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem
         }
     }
 
-    if (mob.occupation.phase == .SawHostile and mob.occupation.is_combative) {
-        const target_coord = mob.occupation.target.?;
+    if (mob.occupation.phase == .SawHostile) {
+        assert(mob.occupation.is_combative);
 
-        if (dungeon.at(target_coord).mob == null) {
+        const target = mob.enemies.current().?.mob;
+
+        if (dungeon.at(target.coord).mob == null) {
             mob.occupation.phase = .GoTo;
-            _mob_occupation_tick(mob, moblist, alloc);
+            mob.occupation.target = target.coord;
+            return;
         }
 
-        if (mob.coord.eq(target_coord)) {
+        if (mob.coord.eq(target.coord)) {
             mob.occupation.target = null;
             mob.occupation.phase = .Work;
             return;
         }
 
-        if (mob.nextDirectionTo(target_coord, is_walkable)) |d| {
+        if (mob.nextDirectionTo(target.coord, is_walkable)) |d| {
             _ = mob.moveInDirection(d);
         }
     }
