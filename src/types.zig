@@ -26,7 +26,6 @@ pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .
 pub const DirectionArrayList = std.ArrayList(Direction);
 pub const CoordCellMap = std.AutoHashMap(Coord, termbox.tb_cell);
 pub const CoordArrayList = std.ArrayList(Coord);
-pub const PathCacheMap = std.AutoHashMap(Path, Direction);
 pub const MessageArrayList = std.ArrayList(Message);
 pub const MobList = LinkedList(Mob);
 pub const MachineList = LinkedList(Machine);
@@ -423,7 +422,7 @@ pub const Mob = struct { // {{{
     // code has no way of knowing what the player remembers the destroyed tile as...
     memory: CoordCellMap = undefined,
     fov: CoordArrayList = undefined,
-    path_cache: PathCacheMap = undefined,
+    path_cache: std.AutoHashMap(Path, Coord) = undefined,
     enemies: std.ArrayList(EnemyRecord) = undefined,
 
     facing: Direction,
@@ -611,7 +610,7 @@ pub const Mob = struct { // {{{
     pub fn init(self: *Mob, alloc: *mem.Allocator) void {
         self.enemies = std.ArrayList(EnemyRecord).init(alloc);
         self.activities.init();
-        self.path_cache = PathCacheMap.init(alloc);
+        self.path_cache = std.AutoHashMap(Path, Coord).init(alloc);
         self.occupation.work_area = CoordArrayList.init(alloc);
         self.fov = CoordArrayList.init(alloc);
         self.memory = CoordCellMap.init(alloc);
@@ -647,21 +646,26 @@ pub const Mob = struct { // {{{
 
             const pth = astar.path(self.coord, to, state.mapgeometry, is_walkable, &fba.allocator) orelse return null;
 
-            var first: Coord = undefined;
-            var second = self.coord;
-
+            var last: Coord = self.coord;
             for (pth.items[1..]) |coord| {
-                first = second;
-                second = coord;
-
-                const d = Direction.from_coords(first, second) catch unreachable;
-                self.path_cache.put(Path{ .from = first, .to = to }, d) catch unreachable;
+                self.path_cache.put(Path{ .from = last, .to = to }, coord) catch unreachable;
+                last = coord;
             }
 
             pth.deinit();
         }
 
-        return self.path_cache.get(pathobj).?;
+        // Return the next direction, ensuring that the next tile is walkable.
+        // If it is not, set the path to null, ensuring that the path will be
+        // recalculated next time.
+        const next = self.path_cache.get(pathobj).?;
+        const direction = Direction.from_coords(self.coord, next) catch unreachable;
+        if (!next.eq(to) and !is_walkable(next)) {
+            _ = self.path_cache.remove(pathobj);
+            return null;
+        } else {
+            return direction;
+        }
     }
 
     pub fn lastDamagePercentage(self: *const Mob) usize {
