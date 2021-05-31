@@ -926,7 +926,7 @@ pub const GuardTemplate = Mob{
 
     .willpower = 2,
     .dexterity = 10,
-    .hearing = 8,
+    .hearing = 7,
     .max_HP = 17,
     .memory_duration = 5,
 
