@@ -164,7 +164,7 @@ pub fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem
                 mob.occupation.phase = .Work;
             } else {
                 mob.facing_wide = true;
-                mob.facing = rng.choose(Direction, &CARDINAL_DIRECTIONS, &[_]usize{ 1, 1, 1, 1 }) catch unreachable;
+                mob.facing = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
             }
         } else {
             if (mob.nextDirectionTo(target_coord, is_walkable)) |d| {
