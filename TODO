@@ -3,52 +3,52 @@ New mobs
 ([CE]Sauron, [LE]NoneEvil, [CG]NoneGood, [LG]Illuvatar, [CC]Sauron/NonEvil, [??]Neutral,
  [NN]NightCreature)
 --------
-CE	h	orc
-			Middle-sized humonoids with skin only slightly darker than the
-			underside of a rainbow trout, these ferocious beings are nothing
-			like the orcs you've read in the storybooks.
+CC	a	spiders
 CC	s	burning brute
-			A winged demon composed primarily of boiling granite, capable of
-			fearsome fire attacks.
+			"A winged demon composed primarily of boiling granite, capable of
+			fearsome fire attacks."
+CC	s	blazing brute
 CC	s	winged terror
 CC	s	greater & lesser necromancer
-			An unusually fragile minor demon that has long wielded the secrets
-			of life and death.
-CE	s	blazing brute
+			"An unusually fragile minor demon that has long wielded the secrets
+			of life and death."
 CC	a	jackals
-CE	a	hellhounds
 CC	a	hounds
-CE	h	death/fire/ether knight
-CC	s	death angel
 CC	s	locust
 CC	s	cankerworm
+CE	h	orc
+			"Middle-sized humonoids with skin only slightly darker than the
+			underside of a rainbow trout, these ferocious beings are nothing
+			like the orcs you've read about in the storybooks."
+CE	a	hellhounds
+CE	h	death/fire/ether knight
+CE	s	death angel
 LE	s	will o' the wisp
 CE	a	fire worm
 CE	o	crystal statue
-			A statue of some nameless humanoid creature than once inhabited
+			"A statue of some nameless humanoid creature than once inhabited
 			the pits of Udùn. These statues are almost as rare as the
-			translucent white crystal they're composed of.
+			translucent white crystal they're composed of."
 CE	o	turquoise statue
 CE	u	lich
-			The dessicated form of an ancient sorcerer, now controlled by the
-			very necromantic powers he once served.
+			"The dessicated form of an ancient sorcerer, now controlled by the
+			very necromantic powers he once served."
+CE	a	troll
+CE	o	floating eye(?)
+LE	a	internet troll
+LE	o	mimic
 LG	s	shining one
 LG	s	angel
 LG	s	archangel
-LE	o	mimic
 ??	o	complex number
 ??	o	real number
 ??	o	imaginary number
-CE	a	troll
 ??	a	rat
 ??	a	quasit
-CE	o	floating eye(?)
-LE	a	internet troll
-CC	a	spiders
 NN	s	stalker (invisible)
 NN	s	bogeyman (TODO: change name)
-			A hideous, emaciated creature with eyes that are both dull and
-			bright in the dungeon's gloom.
+			"A hideous, emaciated creature with eyes that are both dull and
+			bright in the dungeon's gloom."
 NN	s	night wanderer
 NN	s	creeping dread
 NN	o	grue
