@@ -765,14 +765,18 @@ pub const Mob = struct { // {{{
     }
 
     pub fn isCreeping(self: *const Mob) bool {
-        var non_rests: usize = 0;
+        return self.turnsSinceRest() < self.activities.len;
+    }
+
+    pub fn turnsSinceRest(self: *const Mob) usize {
+        var since: usize = 0;
 
         var iter = self.activities.iterator();
         while (iter.next()) |ac| {
-            if (ac != .Rest) non_rests += 1;
+            if (ac == .Rest) return since else since += 1;
         }
 
-        return non_rests < self.activities.len;
+        return since;
     }
 }; // }}}
 

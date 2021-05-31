@@ -16,10 +16,10 @@ pub fn RingBuffer(comptime T: type, size: usize) type {
             top: usize,
 
             pub fn next(self: *Iterator) ?T {
-                if (self.counter == 0) return null;
+                if (self.counter == self.rbuf.len) return null;
                 const o = self.top;
-                self.top = self.rbuf.nextIndex(o);
-                self.counter -= 1;
+                self.top = self.rbuf.prevIndex(o);
+                self.counter += 1;
                 return self.rbuf.buffer[o];
             }
         };
@@ -39,13 +39,15 @@ pub fn RingBuffer(comptime T: type, size: usize) type {
         }
 
         pub fn iterator(self: *const Self) Iterator {
-            return Iterator{ .rbuf = self, .counter = self.len, .top = self.top };
+            return Iterator{ .rbuf = self, .counter = 0, .top = self.top };
         }
 
         pub fn nextIndex(self: *const Self, index: usize) usize {
-            var n = index +% 1;
-            if (n >= self.buffer.len) n = 0;
-            return n;
+            return if (index == (self.len - 1)) 0 else index + 1;
+        }
+
+        pub fn prevIndex(self: *const Self, index: usize) usize {
+            return if (index == 0) self.len - 1 else index - 1;
         }
     };
 }
@@ -66,11 +68,12 @@ test "basic RingBuffer usage" {
     t.append(5);
     testing.expectEqual(t.current().?, 5);
 
-    const items = [_]usize{ 5, 2, 3, 4 };
+    const items = [_]usize{ 5, 4, 3, 2 };
     var ctr: usize = 0;
     var iter = t.iterator();
     while (iter.next()) |item| {
         testing.expectEqual(item, items[ctr]);
         ctr += 1;
     }
+    testing.expectEqual(ctr, items.len);
 }
