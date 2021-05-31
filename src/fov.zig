@@ -6,25 +6,46 @@ usingnamespace @import("types.zig");
 
 // This was supposed to be a raytracer.
 // I have no idea what it is now.
-pub fn naive(center: Coord, radius: usize, limit: Coord, opacity: fn (Coord) f64, buf: *CoordArrayList) void {
+pub fn raycast(center: Coord, radius: usize, limit: Coord, opacity: fn (Coord) f64, buf: *CoordArrayList) void {
     // TODO: do some tests and figure out what's the practical limit to memory
     // usage, and reduce the buffer's size to that.
     var membuf: [65535]u8 = undefined;
     var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
-    const circle = center.draw_circle(radius, limit, &fba.allocator);
+    const limitx = @intToFloat(f64, limit.x);
+    const limity = @intToFloat(f64, limit.y);
 
-    for (circle.items) |coord| {
-        const line = center.draw_line(coord, limit, &fba.allocator);
-        var cumulative_opacity: f64 = 0.0;
+    buf.append(center) catch unreachable;
 
-        for (line.items) |line_coord| {
-            if (cumulative_opacity >= 1.0) {
+    var i: usize = 0;
+    while (i <= 360) : (i += 1) {
+        //const ax: f64 = math.sin(@intToFloat(f64, i));
+        //const ay: f64 = math.cos(@intToFloat(f64, i));
+        const ax: f64 = math.sin(@intToFloat(f64, i) / (180 / math.pi));
+        const ay: f64 = math.cos(@intToFloat(f64, i) / (180 / math.pi));
+
+        var x = @intToFloat(f64, center.x);
+        var y = @intToFloat(f64, center.y);
+
+        var cumulative_opacity: f64 = 0;
+        var z: usize = 0;
+        while (z < radius) : (z += 1) {
+            x += ax;
+            y += ay;
+
+            if (x < 0 or y < 0)
                 break;
-            }
 
-            cumulative_opacity += opacity(line_coord);
-            buf.append(line_coord) catch unreachable;
+            const ix = @floatToInt(usize, math.round(x));
+            const iy = @floatToInt(usize, math.round(y));
+            const coord = Coord.new2(center.z, ix, iy);
+
+            if (ix >= limit.x or iy >= limit.y)
+                break;
+
+            buf.append(coord) catch unreachable;
+            cumulative_opacity += opacity(coord);
+            if (cumulative_opacity >= 1.0) break;
         }
     }
 }
