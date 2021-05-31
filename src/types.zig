@@ -713,7 +713,7 @@ pub const Mob = struct { // {{{
             const resistance = if (state.dungeon.at(line_coord).type == .Wall)
                 0.4 * state.dungeon.at(line_coord).material.density
             else
-                0.2;
+                0.08;
             sound_resistance += resistance;
             if (sound_resistance > 1.0) break;
         }
