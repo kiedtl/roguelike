@@ -119,12 +119,12 @@ fn _place_rooms(rooms: *RoomArrayList, level: usize, count: usize, allocator: *m
             const post_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
             const post_y = rng.range(usize, child.start.y + 1, child.end().y - 1);
             const post_coord = Coord.new2(level, post_x, post_y);
-            var keeper = KeeperTemplate;
-            keeper.init(allocator);
-            keeper.occupation.work_area.append(post_coord) catch unreachable;
-            keeper.coord = post_coord;
-            keeper.facing = .North;
-            state.mobs.append(keeper) catch unreachable;
+            var watcher = WatcherTemplate;
+            watcher.init(allocator);
+            watcher.occupation.work_area.append(post_coord) catch unreachable;
+            watcher.coord = post_coord;
+            watcher.facing = .North;
+            state.mobs.append(watcher) catch unreachable;
             state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
         }
 

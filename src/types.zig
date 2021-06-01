@@ -978,14 +978,14 @@ pub const Gas = struct {
 // ---------- Mob templates ----------
 // STYLE: move to mobs.zig
 
-pub const KeeperTemplate = Mob{
-    .species = "orc keeper",
-    .tile = 'כ',
+pub const WatcherTemplate = Mob{
+    .species = "watcher",
+    .tile = 'ש',
     .prefers_distance = 5,
     .occupation = Occupation{
-        .work_description = "guarding",
+        .work_description = "watching",
         .work_area = undefined,
-        .work_fn = ai.keeperWork,
+        .work_fn = ai.watcherWork,
         .is_combative = true,
         .target = null,
         .phase = .Work,
@@ -994,13 +994,13 @@ pub const KeeperTemplate = Mob{
     .vision = 13,
 
     .willpower = 3,
-    .dexterity = 16,
-    .hearing = 6,
+    .dexterity = 17,
+    .hearing = 5,
     .max_HP = 8,
-    .memory_duration = 4,
+    .memory_duration = 10,
 
     .HP = 8,
-    .strength = 6, // weakling!
+    .strength = 5, // weakling!
 };
 
 pub const GuardTemplate = Mob{

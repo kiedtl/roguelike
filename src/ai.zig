@@ -147,7 +147,7 @@ pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
     _guard_glance(mob, prev_facing);
 }
 
-pub fn keeperWork(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn watcherWork(mob: *Mob, alloc: *mem.Allocator) void {
     assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.occupation.phase == .Work);
 
