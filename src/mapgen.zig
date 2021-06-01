@@ -41,64 +41,6 @@ fn _place_normal_door(coord: Coord) void {
     state.dungeon.at(coord).type = .Floor;
 }
 
-// fn _add_guard_station(stationy: usize, stationx: usize, d: Direction, alloc: *mem.Allocator) void {
-//     var guard = GuardTemplate;
-//     guard.occupation.work_area = CoordArrayList.init(alloc);
-//     guard.occupation.work_area.append(Coord.new(stationx, stationy)) catch unreachable;
-//     guard.occupation.work_area.append(Coord.new(stationx, stationy)) catch unreachable;
-//     guard.fov = CoordArrayList.init(alloc);
-//     guard.memory = CoordCellMap.init(alloc);
-//     guard.coord = Coord.new(stationx, stationy);
-//     guard.facing = d;
-//     state.dungeon[stationy][stationx].mob = guard;
-// }
-
-// pub fn add_guard_stations(alloc: *mem.Allocator) void {
-//     // --- Guard route patterns ---
-//     const patterns = [_][9]TileType{
-//         // ###
-//         // #G.
-//         // #..
-//         [_]TileType{ .Wall, .Wall, .Wall, .Wall, .Floor, .Floor, .Wall, .Floor, .Floor },
-//         // ###
-//         // .G#
-//         // .##
-//         [_]TileType{ .Wall, .Wall, .Wall, .Floor, .Floor, .Wall, .Floor, .Wall, .Wall },
-//         // ###
-//         // #G.
-//         // ###
-//         [_]TileType{ .Wall, .Wall, .Wall, .Wall, .Floor, .Floor, .Wall, .Wall, .Wall },
-//     };
-//     // Too lazy to combine this with the previous constant in a struct
-//     const pattern_directions = [_]Direction{ .East, .West, .East };
-
-//     var y: usize = 1;
-//     while (y < (state.HEIGHT - 1)) : (y += 1) {
-//         var x: usize = 1;
-//         while (x < (state.WIDTH - 1)) : (x += 1) {
-//             const neighbors = [_]TileType{
-//                 state.dungeon[y - 1][x - 1].type,
-//                 state.dungeon[y - 1][x - 0].type,
-//                 state.dungeon[y - 1][x + 1].type,
-//                 state.dungeon[y + 0][x - 1].type,
-//                 state.dungeon[y + 0][x - 0].type,
-//                 state.dungeon[y + 0][x + 1].type,
-//                 state.dungeon[y + 1][x - 1].type,
-//                 state.dungeon[y + 1][x - 0].type,
-//                 state.dungeon[y + 1][x + 1].type,
-//             };
-
-//             for (patterns) |pattern, index| {
-//                 if (std.mem.eql(TileType, &neighbors, &pattern)) {
-//                     const d = pattern_directions[index];
-//                     _add_guard_station(y, x, d, alloc);
-//                     break;
-//                 }
-//             }
-//         }
-//     }
-// }
-
 fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     var player = ElfTemplate;
     player.init(alloc);
@@ -109,63 +51,7 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     state.player = state.mobs.lastPtr().?;
 }
 
-const Room = struct {
-    start: Coord,
-    width: usize,
-    height: usize,
-
-    pub fn overflowsLimit(self: *const Room, limit: *const Room) bool {
-        const a = self.end().x >= limit.end().x or self.end().y >= limit.end().x;
-        const b = self.start.x < limit.start.x or self.start.y < limit.start.y;
-        return a or b;
-    }
-
-    pub fn end(self: *const Room) Coord {
-        return Coord.new2(self.start.z, self.start.x + self.width, self.start.y + self.height);
-    }
-
-    pub fn intersects(a: *const Room, b: *const Room, padding: usize) bool {
-        const a_end = a.end();
-        const b_end = b.end();
-
-        const ca = utils.saturating_sub(a.start.x, padding) < b_end.x;
-        const cb = (a_end.x + padding) > b.start.x;
-        const cc = utils.saturating_sub(a.start.y, padding) < b_end.y;
-        const cd = (a_end.y + padding) > b.start.y;
-
-        return ca and cb and cc and cd;
-    }
-
-    pub fn attach(self: *const Room, d: Direction, width: usize, height: usize, distance: usize) Room {
-        return switch (d) {
-            .North => Room{
-                .start = Coord.new2(self.start.z, self.start.x + (self.width / 2), utils.saturating_sub(self.start.y, height + distance)),
-                .height = height,
-                .width = width,
-            },
-            .East => Room{
-                .start = Coord.new2(self.start.z, self.end().x + distance, self.start.y + (self.height / 2)),
-                .height = height,
-                .width = width,
-            },
-            .South => Room{
-                .start = Coord.new2(self.start.z, self.start.x + (self.width / 2), self.end().y + distance),
-                .height = height,
-                .width = width,
-            },
-            .West => Room{
-                .start = Coord.new2(self.start.z, utils.saturating_sub(self.start.x, width + distance), self.start.y + (self.height / 2)),
-                .width = width,
-                .height = height,
-            },
-            else => @panic("unimplemented"),
-        };
-    }
-};
-
-var rooms: std.ArrayList(Room) = undefined;
-
-fn _room_intersects(room: *const Room, ignore: *const Room) bool {
+fn _room_intersects(rooms: *const RoomArrayList, room: *const Room, ignore: *const Room) bool {
     if (room.start.x == 0 or room.start.y == 0)
         return true;
     if (room.start.x >= state.WIDTH or room.start.y >= state.HEIGHT)
@@ -200,29 +86,9 @@ fn _replace_tiles(room: *const Room, tile: Tile) void {
 
 fn _excavate(room: *const Room, ns: bool, ew: bool) void {
     _replace_tiles(room, Tile{ .type = .Floor });
-
-    // if (ns and ew) {
-    //     const n = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.start.y - 1), .width = room.width + 2, .height = 1 };
-    //     const s = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.end().y), .width = room.width + 2, .height = 1 };
-    //     const w = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.start.y - 1), .width = 1, .height = room.height + 2 };
-    //     const e = Room{ .start = Coord.new2(room.start.z, room.end().x, room.start.y - 1), .width = 1, .height = room.height + 2 };
-    //     _replace_tiles(&n, Tile{ .material = &materials.ConstructedBasalt });
-    //     _replace_tiles(&s, Tile{ .material = &materials.ConstructedBasalt });
-    //     _replace_tiles(&w, Tile{ .material = &materials.ConstructedBasalt });
-    //     _replace_tiles(&e, Tile{ .material = &materials.ConstructedBasalt });
-    // } else {
-    //     const n = Room{ .start = Coord.new2(room.start.z, room.start.x, room.start.y - 1), .width = room.width, .height = 1 };
-    //     const s = Room{ .start = Coord.new2(room.start.z, room.start.x, room.end().y), .width = room.width, .height = 1 };
-    //     const w = Room{ .start = Coord.new2(room.start.z, room.start.x - 1, room.start.y), .width = 1, .height = room.height };
-    //     const e = Room{ .start = Coord.new2(room.start.z, room.end().x, room.start.y), .width = 1, .height = room.height };
-    //     if (ns) _replace_tiles(&n, Tile{ .material = &materials.ConstructedBasalt });
-    //     if (ns) _replace_tiles(&s, Tile{ .material = &materials.ConstructedBasalt });
-    //     if (ew) _replace_tiles(&w, Tile{ .material = &materials.ConstructedBasalt });
-    //     if (ew) _replace_tiles(&e, Tile{ .material = &materials.ConstructedBasalt });
-    // }
 }
 
-fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
+fn _place_rooms(rooms: *RoomArrayList, level: usize, count: usize, allocator: *mem.Allocator) void {
     const limit = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
     const distances = [2][6]usize{ .{ 0, 1, 2, 3, 4, 8 }, .{ 3, 8, 4, 3, 2, 1 } };
     const side = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
@@ -235,7 +101,7 @@ fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
         var child_h = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
         var child = parent.attach(side, child_w, child_h, distance);
 
-        while (_room_intersects(&child, &parent) or child.overflowsLimit(&limit)) {
+        while (_room_intersects(rooms, &child, &parent) or child.overflowsLimit(&limit)) {
             if (child_w < MIN_ROOM_WIDTH or child_h < MIN_ROOM_HEIGHT)
                 break :sides;
 
@@ -249,17 +115,17 @@ fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
 
         // --- add mobs ---
 
-        if (rng.onein(3)) {
-            const guardstart = Coord.new2(level, child.start.x + 1, child.start.y + 1);
-            const guardend = Coord.new2(level, child.end().x - 1, child.end().y - 1);
-            var guard = GuardTemplate;
-            guard.init(allocator);
-            guard.occupation.work_area.append(guardstart) catch unreachable;
-            guard.occupation.work_area.append(guardend) catch unreachable;
-            guard.coord = guardstart;
-            guard.facing = .North;
-            state.mobs.append(guard) catch unreachable;
-            state.dungeon.at(guardstart).mob = state.mobs.lastPtr().?;
+        if (rng.onein(14)) {
+            const post_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
+            const post_y = rng.range(usize, child.start.y + 1, child.end().y - 1);
+            const post_coord = Coord.new2(level, post_x, post_y);
+            var keeper = KeeperTemplate;
+            keeper.init(allocator);
+            keeper.occupation.work_area.append(post_coord) catch unreachable;
+            keeper.coord = post_coord;
+            keeper.facing = .North;
+            state.mobs.append(keeper) catch unreachable;
+            state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
         }
 
         // --- add machines ---
@@ -316,11 +182,11 @@ fn _place_rooms(level: usize, count: usize, allocator: *mem.Allocator) void {
         }
     }
 
-    if (count > 0) _place_rooms(level, count - 1, allocator);
+    if (count > 0) _place_rooms(rooms, level, count - 1, allocator);
 }
 
 pub fn placeRandomRooms(level: usize, num: usize, allocator: *mem.Allocator) void {
-    rooms = std.ArrayList(Room).init(allocator);
+    var rooms = RoomArrayList.init(allocator);
 
     const width = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
     const height = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
@@ -335,9 +201,41 @@ pub fn placeRandomRooms(level: usize, num: usize, allocator: *mem.Allocator) voi
         _add_player(p, allocator);
     }
 
-    _place_rooms(level, num, allocator);
+    _place_rooms(&rooms, level, num, allocator);
 
-    rooms.deinit();
+    state.dungeon.rooms[level] = rooms;
+}
+
+pub fn placePatrolSquads(level: usize, allocator: *mem.Allocator) void {
+    var squads: usize = rng.range(usize, 3, 5);
+    while (squads > 0) : (squads -= 1) {
+        const room = rng.chooseUnweighted(Room, state.dungeon.rooms[level].items);
+        const patrol_units = rng.range(usize, 2, 4) % math.max(room.width, room.height);
+        var patrol_warden: ?*Mob = null;
+
+        var placed_units: usize = 0;
+        while (placed_units < patrol_units) {
+            const rnd = room.randomCoord();
+
+            if (state.dungeon.at(rnd).mob == null) {
+                var guard = GuardTemplate;
+                guard.init(allocator);
+                guard.occupation.work_area.append(rnd) catch unreachable;
+                guard.coord = rnd;
+                state.mobs.append(guard) catch unreachable;
+                const mobptr = state.mobs.lastPtr().?;
+                state.dungeon.at(rnd).mob = mobptr;
+
+                if (patrol_warden) |warden| {
+                    warden.squad_members.append(mobptr) catch unreachable;
+                } else {
+                    patrol_warden = mobptr;
+                }
+
+                placed_units += 1;
+            }
+        }
+    }
 }
 
 pub fn placeRandomStairs(level: usize) void {

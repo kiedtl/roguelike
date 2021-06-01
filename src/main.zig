@@ -1,7 +1,6 @@
 const std = @import("std");
 
 const rng = @import("rng.zig");
-const viewer = @import("viewer.zig");
 const gas = @import("gas.zig");
 const astar = @import("astar.zig");
 const mapgen = @import("mapgen.zig");
@@ -33,15 +32,16 @@ fn initGame() void {
     rng.init();
 
     for (state.dungeon.map) |_, level| {
-        mapgen.fillRandom(level, 40);
-        mapgen.fillBar(level, 1);
-        mapgen.cellularAutomata(level, 5, 2);
-        mapgen.cellularAutomata(level, 5, 2);
-        mapgen.cellularAutomata(level, 5, 2);
-        mapgen.cellularAutomata(level, 6, 1);
-        mapgen.cellularAutomata(level, 6, 1);
-        mapgen.cellularAutomata(level, 6, 1);
+        // mapgen.fillRandom(level, 40);
+        // mapgen.fillBar(level, 1);
+        // mapgen.cellularAutomata(level, 5, 2);
+        // mapgen.cellularAutomata(level, 5, 2);
+        // mapgen.cellularAutomata(level, 5, 2);
+        // mapgen.cellularAutomata(level, 6, 1);
+        // mapgen.cellularAutomata(level, 6, 1);
+        // mapgen.cellularAutomata(level, 6, 1);
         mapgen.placeRandomRooms(level, 1000, &state.GPA.allocator);
+        mapgen.placePatrolSquads(level, &state.GPA.allocator);
     }
     for (state.dungeon.map) |_, level|
         mapgen.placeRandomStairs(level);
@@ -113,7 +113,7 @@ fn readInput() bool {
     } else return false;
 }
 
-fn tick() void {
+fn tick(present: bool) void {
     state.ticks += 1;
 
     state.tickAtmosphere(0);
@@ -135,7 +135,7 @@ fn tick() void {
         if (mob.coord.eq(state.player.coord) and state.player.is_dead) {
             pollNoActionInput();
             std.time.sleep(2 * 100000000); // 0.3 seconds
-            display.draw();
+            if (present) display.draw();
             continue;
         }
 
@@ -164,8 +164,53 @@ fn tick() void {
     }
 }
 
+fn viewerDisplay(level: usize) void {
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            var t = Tile.displayAs(Coord.new2(level, x, y));
+            termbox.tb_put_cell(@intCast(isize, x), @intCast(isize, y), &t);
+        }
+    }
+    termbox.tb_present();
+}
+
+fn viewerMain() void {
+    state.player.kill();
+
+    var level: usize = PLAYER_STARTING_LEVEL;
+
+    while (true) {
+        viewerDisplay(level);
+
+        var ev: termbox.tb_event = undefined;
+        const t = termbox.tb_poll_event(&ev);
+
+        if (t == -1) @panic("Fatal termbox error");
+
+        if (t == termbox.TB_EVENT_KEY) {
+            if (ev.key != 0) {
+                if (ev.key == termbox.TB_KEY_CTRL_C) {
+                    break;
+                }
+            } else if (ev.ch != 0) {
+                switch (ev.ch) {
+                    '.' => tick(false),
+                    '<' => if (level > 0) {
+                        level -= 1;
+                    },
+                    '>' => if (level < (LEVELS - 1)) {
+                        level += 1;
+                    },
+                    else => {},
+                }
+            } else unreachable;
+        }
+    }
+}
 pub fn main() anyerror!void {
     initGame();
-    while (true) tick();
+    while (true) tick(true);
     deinitGame();
 }

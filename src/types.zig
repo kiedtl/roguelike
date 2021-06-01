@@ -26,11 +26,12 @@ pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .
 pub const DirectionArrayList = std.ArrayList(Direction);
 pub const CoordCellMap = std.AutoHashMap(Coord, termbox.tb_cell);
 pub const CoordArrayList = std.ArrayList(Coord);
+pub const RoomArrayList = std.ArrayList(Room);
 pub const MessageArrayList = std.ArrayList(Message);
 pub const MobList = LinkedList(Mob);
+pub const MobArrayList = std.ArrayList(*Mob); // STYLE: rename to MobPtrArrayList
 pub const MachineList = LinkedList(Machine);
 pub const PropList = LinkedList(Prop);
-pub const MobArrayList = std.ArrayList(*Mob); // STYLE: rename to MobPtrArrayList
 
 pub const Direction = enum { // {{{
     North,
@@ -317,6 +318,66 @@ test "coord.move" {
     std.testing.expectEqual(c, Coord.new(1, 0));
 }
 
+pub const Room = struct {
+    start: Coord,
+    width: usize,
+    height: usize,
+
+    pub fn overflowsLimit(self: *const Room, limit: *const Room) bool {
+        const a = self.end().x >= limit.end().x or self.end().y >= limit.end().x;
+        const b = self.start.x < limit.start.x or self.start.y < limit.start.y;
+        return a or b;
+    }
+
+    pub fn end(self: *const Room) Coord {
+        return Coord.new2(self.start.z, self.start.x + self.width, self.start.y + self.height);
+    }
+
+    pub fn intersects(a: *const Room, b: *const Room, padding: usize) bool {
+        const a_end = a.end();
+        const b_end = b.end();
+
+        const ca = utils.saturating_sub(a.start.x, padding) < b_end.x;
+        const cb = (a_end.x + padding) > b.start.x;
+        const cc = utils.saturating_sub(a.start.y, padding) < b_end.y;
+        const cd = (a_end.y + padding) > b.start.y;
+
+        return ca and cb and cc and cd;
+    }
+
+    pub fn randomCoord(self: *const Room) Coord {
+        const x = rng.range(usize, self.start.x, self.end().x - 1);
+        const y = rng.range(usize, self.start.y, self.end().y - 1);
+        return Coord.new2(self.start.z, x, y);
+    }
+
+    pub fn attach(self: *const Room, d: Direction, width: usize, height: usize, distance: usize) Room {
+        return switch (d) {
+            .North => Room{
+                .start = Coord.new2(self.start.z, self.start.x + (self.width / 2), utils.saturating_sub(self.start.y, height + distance)),
+                .height = height,
+                .width = width,
+            },
+            .East => Room{
+                .start = Coord.new2(self.start.z, self.end().x + distance, self.start.y + (self.height / 2)),
+                .height = height,
+                .width = width,
+            },
+            .South => Room{
+                .start = Coord.new2(self.start.z, self.start.x + (self.width / 2), self.end().y + distance),
+                .height = height,
+                .width = width,
+            },
+            .West => Room{
+                .start = Coord.new2(self.start.z, utils.saturating_sub(self.start.x, width + distance), self.start.y + (self.height / 2)),
+                .width = width,
+                .height = height,
+            },
+            else => @panic("unimplemented"),
+        };
+    }
+};
+
 pub const Path = struct { from: Coord, to: Coord };
 
 pub const Material = struct {
@@ -417,6 +478,8 @@ pub const Mob = struct { // {{{
     occupation: Occupation,
     allegiance: Allegiance,
 
+    squad_members: MobArrayList = undefined,
+
     // TODO: instead of storing the tile's representation in memory, store the
     // actual tile -- if a wall is destroyed outside of the player's FOV, the display
     // code has no way of knowing what the player remembers the destroyed tile as...
@@ -425,8 +488,8 @@ pub const Mob = struct { // {{{
     path_cache: std.AutoHashMap(Path, Coord) = undefined,
     enemies: std.ArrayList(EnemyRecord) = undefined,
 
-    facing: Direction,
-    facing_wide: bool, // TODO: remove?
+    facing: Direction = .North,
+    facing_wide: bool = false, // TODO: remove?
     coord: Coord = Coord.new(0, 0),
 
     HP: f64, // f64 so that we can regenerate <1 HP per turn
@@ -608,6 +671,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn init(self: *Mob, alloc: *mem.Allocator) void {
+        self.squad_members = MobArrayList.init(alloc);
         self.enemies = std.ArrayList(EnemyRecord).init(alloc);
         self.activities.init();
         self.path_cache = std.AutoHashMap(Path, Coord).init(alloc);
@@ -886,6 +950,7 @@ pub const Dungeon = struct {
     map: [LEVELS][HEIGHT][WIDTH]Tile = [1][HEIGHT][WIDTH]Tile{[1][WIDTH]Tile{[1]Tile{.{}} ** WIDTH} ** HEIGHT} ** LEVELS,
     gas: [LEVELS][HEIGHT][WIDTH][gas.GAS_NUM]f64 = [1][HEIGHT][WIDTH][gas.GAS_NUM]f64{[1][WIDTH][gas.GAS_NUM]f64{[1][gas.GAS_NUM]f64{[1]f64{0} ** gas.GAS_NUM} ** WIDTH} ** HEIGHT} ** LEVELS,
     sound: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
+    rooms: [LEVELS]RoomArrayList = undefined,
 
     pub fn at(self: *Dungeon, c: Coord) *Tile {
         return &self.map[c.z][c.y][c.x];
@@ -912,9 +977,33 @@ pub const Gas = struct {
 // ---------- Mob templates ----------
 // STYLE: move to mobs.zig
 
+pub const KeeperTemplate = Mob{
+    .species = "orc keeper",
+    .tile = 'כ',
+    .occupation = Occupation{
+        .work_description = "guarding",
+        .work_area = undefined,
+        .work_fn = ai.keeperWork,
+        .is_combative = true,
+        .target = null,
+        .phase = .Work,
+    },
+    .allegiance = .Sauron,
+    .vision = 13,
+
+    .willpower = 3,
+    .dexterity = 16,
+    .hearing = 6,
+    .max_HP = 8,
+    .memory_duration = 4,
+
+    .HP = 8,
+    .strength = 6, // weakling!
+};
+
 pub const GuardTemplate = Mob{
-    .species = "orc",
-    .tile = 'א',
+    .species = "orc guard",
+    .tile = 'ג',
     .occupation = Occupation{
         .work_description = "patrolling",
         .work_area = undefined,
@@ -924,20 +1013,19 @@ pub const GuardTemplate = Mob{
         .phase = .Work,
     },
     .allegiance = .Sauron,
-    .facing = .North,
-    .facing_wide = false,
-    .vision = 12,
+    .vision = 9,
 
     .willpower = 2,
-    .dexterity = 10,
+    .dexterity = 9,
     .hearing = 7,
     .max_HP = 17,
-    .memory_duration = 5,
+    .memory_duration = 3,
 
-    .HP = 21,
-    .strength = 10,
+    .HP = 17,
+    .strength = 14,
 };
 
+// TODO: make this a hooman
 pub const ElfTemplate = Mob{
     .species = "elf",
     .tile = '@',
@@ -950,8 +1038,6 @@ pub const ElfTemplate = Mob{
         .phase = .Work,
     },
     .allegiance = .Illuvatar,
-    .facing = .North,
-    .facing_wide = false,
     .vision = 20,
 
     .willpower = 4,

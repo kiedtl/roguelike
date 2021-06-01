@@ -195,6 +195,12 @@ pub fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem
             _ = mob.moveInDirection(d);
         }
     }
+
+    for (mob.squad_members.items) |lmob| {
+        lmob.occupation.target = mob.occupation.target;
+        lmob.occupation.phase = mob.occupation.phase;
+        lmob.occupation.work_area.items[0] = mob.occupation.work_area.items[0];
+    }
 }
 
 // Each tick, make sound decay by 0.80 for each tile. This constant is chosen

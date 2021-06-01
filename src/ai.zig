@@ -4,6 +4,7 @@ const assert = std.debug.assert;
 
 const state = @import("state.zig");
 const astar = @import("astar.zig");
+const rng = @import("rng.zig");
 usingnamespace @import("types.zig");
 
 fn _find_coord(coord: Coord, array: *CoordArrayList) usize {
@@ -118,11 +119,19 @@ pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
     assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.occupation.phase == .Work);
 
-    var from = mob.occupation.work_area.items[0];
-    var to = mob.occupation.work_area.items[1];
+    var to = mob.occupation.work_area.items[0];
 
-    if (from.eq(to) and mob.coord.eq(from)) {
-        _guard_glance(mob, mob.facing);
+    if (mob.coord.distance(to) < 3) {
+        // OK, reached our destination. Time to choose another one!
+        while (true) {
+            const room = rng.chooseUnweighted(Room, state.dungeon.rooms[mob.coord.z].items);
+            const point = room.randomCoord();
+
+            if (mob.nextDirectionTo(point, state.is_walkable)) |_| {
+                mob.occupation.work_area.items[0] = point;
+                break;
+            }
+        }
         return;
     }
 
@@ -131,23 +140,33 @@ pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
         return;
     }
 
-    // Swap from and to if we've reached the goal, to walk back to the starting point.
-    if (!from.eq(to) and mob.coord.eq(to)) {
-        const tmp = mob.occupation.work_area.items[0];
-        mob.occupation.work_area.items[0] = mob.occupation.work_area.items[1];
-        mob.occupation.work_area.items[1] = tmp;
-
-        from = mob.occupation.work_area.items[0];
-        to = mob.occupation.work_area.items[1];
-    }
-
     const prev_facing = mob.facing;
 
-    // Walk one step closer to the other end of the guard's patrol route.
-    //
-    // NOTE: if the guard isn't at their patrol route or station, this has the effect
-    // of bringing them one step closer back.
     if (mob.nextDirectionTo(to, state.is_walkable)) |d|
         _ = mob.moveInDirection(d);
     _guard_glance(mob, prev_facing);
+}
+
+pub fn keeperWork(mob: *Mob, alloc: *mem.Allocator) void {
+    assert(state.dungeon.at(mob.coord).mob != null);
+    assert(mob.occupation.phase == .Work);
+
+    var post = mob.occupation.work_area.items[0];
+
+    if (mob.coord.eq(post)) {
+        _guard_glance(mob, mob.facing);
+        return;
+    } else {
+        // We're not at our post, return there
+        if (!mob.isCreeping()) {
+            _ = mob.rest();
+            return;
+        }
+
+        const prev_facing = mob.facing;
+
+        if (mob.nextDirectionTo(post, state.is_walkable)) |d|
+            _ = mob.moveInDirection(d);
+        _guard_glance(mob, prev_facing);
+    }
 }
