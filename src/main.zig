@@ -40,7 +40,7 @@ fn initGame() void {
         // mapgen.cellularAutomata(level, 6, 1);
         // mapgen.cellularAutomata(level, 6, 1);
         // mapgen.cellularAutomata(level, 6, 1);
-        mapgen.placeRandomRooms(level, 1000, &state.GPA.allocator);
+        mapgen.placeRandomRooms(level, 2000, &state.GPA.allocator);
         mapgen.placePatrolSquads(level, &state.GPA.allocator);
     }
     for (state.dungeon.map) |_, level|
