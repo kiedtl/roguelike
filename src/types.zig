@@ -478,6 +478,7 @@ pub const Mob = struct { // {{{
     occupation: Occupation,
     allegiance: Allegiance,
 
+    prefers_distance: usize = 0,
     squad_members: MobArrayList = undefined,
 
     // TODO: instead of storing the tile's representation in memory, store the
@@ -980,6 +981,7 @@ pub const Gas = struct {
 pub const KeeperTemplate = Mob{
     .species = "orc keeper",
     .tile = 'כ',
+    .prefers_distance = 5,
     .occupation = Occupation{
         .work_description = "guarding",
         .work_area = undefined,

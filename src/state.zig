@@ -5,6 +5,7 @@ const assert = std.debug.assert;
 
 const ai = @import("ai.zig");
 const astar = @import("astar.zig");
+const dijkstra = @import("dijkstra.zig");
 const utils = @import("utils.zig");
 const gas = @import("gas.zig");
 const rng = @import("rng.zig");
@@ -191,8 +192,27 @@ pub fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem
             return;
         }
 
-        if (mob.nextDirectionTo(target.coord, is_walkable)) |d| {
-            _ = mob.moveInDirection(d);
+        if (mob.coord.distance(target.coord) > mob.prefers_distance) {
+            if (mob.nextDirectionTo(target.coord, is_walkable)) |d| {
+                _ = mob.moveInDirection(d);
+            }
+        } else if (mob.coord.distance(target.coord) < mob.prefers_distance) {
+            // Find next space to flee to.
+            const current_distance = mob.coord.distance(target.coord);
+
+            var dijk = dijkstra.Dijkstra.init(mob.coord, mapgeometry, 3, is_walkable, alloc);
+            defer dijk.deinit();
+
+            while (dijk.next()) |coord| {
+                if (coord.distance(target.coord) > current_distance) {
+                    if (mob.nextDirectionTo(coord, is_walkable)) |d| {
+                        const oldd = mob.facing;
+                        _ = mob.moveInDirection(d);
+                        mob.facing = oldd;
+                        break;
+                    }
+                }
+            }
         }
     }
 
