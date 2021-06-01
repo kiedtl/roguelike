@@ -121,7 +121,7 @@ pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
 
     var to = mob.occupation.work_area.items[0];
 
-    if (mob.coord.distance(to) < 3) {
+    if (mob.cansee(to)) {
         // OK, reached our destination. Time to choose another one!
         while (true) {
             const room = rng.chooseUnweighted(Room, state.dungeon.rooms[mob.coord.z].items);
