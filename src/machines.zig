@@ -11,6 +11,17 @@ usingnamespace @import("types.zig");
 
 pub const GasVentProp = Prop{ .name = "gas vent", .tile = '=' };
 
+pub const Lamp = Machine{
+    .name = "a lamp",
+    .tile = 'º',
+    .walkable = false,
+    .opacity = 0.0,
+    .on_trigger = triggerNone,
+    .should_be_avoided = false,
+    .luminescence_intensity = 75,
+    .luminescence_color = 0xffffff,
+};
+
 // FIXME: remove this. This is temporary until we get books, prefab rooms,
 // knowledge systems, etc.
 pub const GoldCoins = Machine{

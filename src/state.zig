@@ -40,6 +40,29 @@ pub var ticks: usize = 0;
 pub var messages: MessageArrayList = undefined;
 pub var score: usize = 0;
 
+// STYLE: change to Tile.lightOpacity
+fn light_tile_opacity(coord: Coord) f64 {
+    const tile = dungeon.at(coord);
+    var o: f64 = 0.09;
+
+    if (tile.type == .Wall)
+        return tile.material.opacity;
+
+    if (tile.surface) |surface| {
+        switch (surface) {
+            .Machine => |m| o += m.opacity,
+            else => {},
+        }
+    }
+
+    const gases = dungeon.atGas(coord);
+    for (gases) |q, g| {
+        if (q > 0) o += gas.Gases[g].opacity;
+    }
+
+    return o;
+}
+
 // STYLE: change to Tile.opacity
 fn tile_opacity(coord: Coord) f64 {
     const tile = dungeon.at(coord);
@@ -223,9 +246,58 @@ pub fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem
     }
 }
 
+pub fn tickLight() void {
+    const cur_lev = player.coord.z;
+
+    // TODO: do some tests and figure out what's the practical limit to memory
+    // usage, and reduce the buffer's size to that.
+    var membuf: [65535 * 10]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
+    {
+        var y: usize = 0;
+        while (y < HEIGHT) : (y += 1) {
+            var x: usize = 0;
+            while (x < WIDTH) : (x += 1) {
+                const coord = Coord.new2(cur_lev, x, y);
+                dungeon.lightIntensityAt(coord).* = 0;
+                dungeon.lightColorAt(coord).* = 0;
+            }
+        }
+    }
+
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            const coord = Coord.new2(cur_lev, x, y);
+            const light = dungeon.at(coord).emittedLightIntensity();
+
+            var lit = AnnotatedCoordArrayList.init(&fba.allocator);
+            //var lit = CoordArrayList.init(&fba.allocator);
+            defer lit.deinit();
+            fov.raycast(coord, 15, mapgeometry, light_tile_opacity, &lit);
+            //const all_octants = [_]?usize{ 0, 1, 2, 3, 4, 5, 6, 7 };
+            //fov.shadowcast(coord, all_octants, 10, mapgeometry, tile_opacity, &lit);
+
+            for (lit.items) |tile| {
+                const cur = tile.coord;
+                const res = 100 - math.min(100, tile.value);
+                const int = light * res / 100;
+                dungeon.lightIntensityAt(cur).* += int;
+                dungeon.lightColorAt(cur).* = 0xffffff;
+
+                // const l = utils.saturating_sub(light, coord.distance(tile));
+                // dungeon.lightIntensityAt(tile).* += l;
+                // dungeon.lightColorAt(tile).* = 0xffffff;
+            }
+        }
+    }
+}
+
 // Each tick, make sound decay by 0.80 for each tile. This constant is chosen
-// to ensure that sound that results from an untimely persists for at least 4
-// turns.
+// to ensure that sound that results from an untimely move persists for at least
+// 4 turns.
 pub fn tickSound() void {
     const cur_lev = player.coord.z;
     var y: usize = 0;

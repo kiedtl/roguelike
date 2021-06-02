@@ -130,6 +130,8 @@ fn _place_rooms(rooms: *RoomArrayList, level: usize, count: usize, allocator: *m
 
         // --- add machines ---
 
+        _place_machine(child.randomCoord(), &machines.Lamp);
+
         if (rng.onein(4)) {
             const trap_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
             const trap_y = rng.range(usize, child.start.y + 1, child.end().y - 1);

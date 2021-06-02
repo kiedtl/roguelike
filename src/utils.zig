@@ -1,3 +1,6 @@
+const std = @import("std");
+const math = std.math;
+
 pub fn saturating_sub(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
     return switch (@typeInfo(@TypeOf(a))) {
         .ComptimeInt, .Int => if ((a -% b) > a) 0 else a - b,
@@ -25,6 +28,17 @@ pub fn mixColors(a: u32, b: u32, frac: f64) u32 {
     const rg = interpolate(ag, bg, frac);
     const rb = interpolate(ab, bb, frac);
     return (rr << 16) | (rg << 8) | rb;
+}
+
+pub fn percentageOfColor(color: u32, _p: usize) u32 {
+    const percentage = math.clamp(_p, 0, 100);
+    var r = ((color >> 16) & 0xFF) * @intCast(u32, percentage) / 100;
+    var g = ((color >> 08) & 0xFF) * @intCast(u32, percentage) / 100;
+    var b = ((color >> 00) & 0xFF) * @intCast(u32, percentage) / 100;
+    r = math.clamp(r, 0, 0xFF);
+    g = math.clamp(g, 0, 0xFF);
+    b = math.clamp(b, 0, 0xFF);
+    return (r << 16) | (g << 8) | b;
 }
 
 pub fn darkenColor(color: u32, by: u32) u32 {

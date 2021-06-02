@@ -116,6 +116,7 @@ fn readInput() bool {
 fn tick(present: bool) void {
     state.ticks += 1;
 
+    state.tickLight();
     state.tickAtmosphere(0);
     state.tickSound();
 

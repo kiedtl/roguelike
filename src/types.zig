@@ -26,6 +26,7 @@ pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .
 pub const DirectionArrayList = std.ArrayList(Direction);
 pub const CoordCellMap = std.AutoHashMap(Coord, termbox.tb_cell);
 pub const CoordArrayList = std.ArrayList(Coord);
+pub const AnnotatedCoordArrayList = std.ArrayList(AnnotatedCoord);
 pub const RoomArrayList = std.ArrayList(Room);
 pub const MessageArrayList = std.ArrayList(Message);
 pub const MobList = LinkedList(Mob);
@@ -317,6 +318,8 @@ test "coord.move" {
     std.testing.expect(c.move(.East, limit));
     std.testing.expectEqual(c, Coord.new(1, 0));
 }
+
+pub const AnnotatedCoord = struct { coord: Coord, value: usize };
 
 pub const Room = struct {
     start: Coord,
@@ -723,13 +726,16 @@ pub const Mob = struct { // {{{
         // Return the next direction, ensuring that the next tile is walkable.
         // If it is not, set the path to null, ensuring that the path will be
         // recalculated next time.
-        const next = self.path_cache.get(pathobj).?;
-        const direction = Direction.from_coords(self.coord, next) catch unreachable;
-        if (!next.eq(to) and !is_walkable(next)) {
-            _ = self.path_cache.remove(pathobj);
-            return null;
+        if (self.path_cache.get(pathobj)) |next| {
+            const direction = Direction.from_coords(self.coord, next) catch unreachable;
+            if (!next.eq(to) and !is_walkable(next)) {
+                _ = self.path_cache.remove(pathobj);
+                return null;
+            } else {
+                return direction;
+            }
         } else {
-            return direction;
+            return null;
         }
     }
 
@@ -863,6 +869,8 @@ pub const Machine = struct {
     // FIXME: there has got to be a better way to do this
     props: [40]?*Prop = [_]?*Prop{null} ** 40,
     // TODO: is_disabled, strength_needed
+    luminescence_intensity: usize = 0,
+    luminescence_color: u32 = 0,
 };
 
 pub const Prop = struct { name: []const u8, tile: u21, coord: Coord = Coord.new(0, 0) };
@@ -887,6 +895,17 @@ pub const Tile = struct {
     marked: bool = false,
     surface: ?SurfaceItem = null,
     item: ?Item = null,
+
+    pub fn emittedLightIntensity(self: *const Tile) usize {
+        var l: usize = 0;
+        if (self.surface) |surface| {
+            switch (surface) {
+                .Machine => |m| l += m.luminescence_intensity,
+                else => {},
+            }
+        }
+        return l;
+    }
 
     pub fn displayAs(coord: Coord) termbox.tb_cell {
         var self = state.dungeon.at(coord);
@@ -943,6 +962,9 @@ pub const Tile = struct {
             if (q > 0) cell.bg = utils.mixColors(gcolor, cell.bg, aq);
         }
 
+        const light = state.dungeon.lightIntensityAt(coord).*;
+        cell.bg = math.max(utils.percentageOfColor(cell.bg, light), utils.darkenColor(cell.bg, 3));
+        cell.fg = math.max(utils.percentageOfColor(cell.fg, light), utils.darkenColor(cell.fg, 3));
         return cell;
     }
 };
@@ -951,6 +973,8 @@ pub const Dungeon = struct {
     map: [LEVELS][HEIGHT][WIDTH]Tile = [1][HEIGHT][WIDTH]Tile{[1][WIDTH]Tile{[1]Tile{.{}} ** WIDTH} ** HEIGHT} ** LEVELS,
     gas: [LEVELS][HEIGHT][WIDTH][gas.GAS_NUM]f64 = [1][HEIGHT][WIDTH][gas.GAS_NUM]f64{[1][WIDTH][gas.GAS_NUM]f64{[1][gas.GAS_NUM]f64{[1]f64{0} ** gas.GAS_NUM} ** WIDTH} ** HEIGHT} ** LEVELS,
     sound: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
+    light_intensity: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
+    light_color: [LEVELS][HEIGHT][WIDTH]u32 = [1][HEIGHT][WIDTH]u32{[1][WIDTH]u32{[1]u32{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     rooms: [LEVELS]RoomArrayList = undefined,
 
     pub fn at(self: *Dungeon, c: Coord) *Tile {
@@ -964,6 +988,14 @@ pub const Dungeon = struct {
 
     pub fn soundAt(self: *Dungeon, c: Coord) *usize {
         return &self.sound[c.z][c.y][c.x];
+    }
+
+    pub fn lightIntensityAt(self: *Dungeon, c: Coord) *usize {
+        return &self.light_intensity[c.z][c.y][c.x];
+    }
+
+    pub fn lightColorAt(self: *Dungeon, c: Coord) *u32 {
+        return &self.light_color[c.z][c.y][c.x];
     }
 };
 
