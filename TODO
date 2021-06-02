@@ -47,8 +47,8 @@ LG	s	archangel
 ??	a	quasit
 NN	s	stalker (invisible)
 NN	s	bogeyman (TODO: change name)
-			"A hideous, emaciated creature with eyes that are both dull and
-			bright in the dungeon's gloom."
+			"A emaciated old creature of hideous appearance, possessed with
+			eyes that are both dull and bright in the dungeon's gloom."
 NN	s	night wanderer
 NN	s	creeping dread
 NN	o	grue
@@ -66,6 +66,62 @@ merciless  [move(A), attack(A), move(A), attack(A)]
 charge     [move(A), move(A), move(A), attack(A)]
 recuperate [rest, rest, rest, rest]
 
+Rings
+-----
+- All rings will increase in power depending on... player experience? piety?
+- All rings will have severe negative effects, most notably decreased piety.
+- Rings that work on hostile mobs will have their effects increased if the hostile
+  mob has low willpower.
+- Rings will not work as soon as they are wielded, but must be worn for 200-500
+  turns to reach their full potential.
+ring of intimidation
+	- Gives player knowledge of dungeon's layout, based on the intimidated mob's
+	  memory.
+	- Affected mobs should have a status effect... (`stunned` maybe?)
+	- High penalty, depending on affected mob's willpower.
+ring of echolocation
+	- Gives player basic knowledge of dungeon's layout nearby sounds the player
+	  can hear. The wearer will not know about dungeon features, just walls,
+	  floors, and presence of water or lava.
+	- Low penalty.
+ring of clairvoyance
+	- Allows player to sense presence of low-to-mid willpower mobs (the wearer
+	  should not know what kind of mobs they are, though. A blue '?' is enough.)
+	- Medium penalty.
+ring of silence
+	- Removes noise from a certain radius.
+	- Medium penalty, depending on the amount of total noise that was silenced.
+ring of awareness
+	- Gives player knowledge of hidden dungeon features that have been seen
+	  by other mobs within a certain radius.
+	- High penalty, depending on affected mob's willpower.
+ring of protection
+	- Shields player from lethal (but only lethal) hits and fatal poisonings.
+	- Medium penalty, depending on how lethal the hit was.
+ring of invisibility
+	- Doesn't make wearer invisible, but prevents other hostiles from noticing
+	  the wearer, even if they walk within inches of each other's nose.
+	- High penalty, depending on affected mob's willpower.
+ring of shattering
+	- ???
+ring of fog
+	- Spews fire and smoke outward from the wearer when the wearer takes damage.
+	- Low penalty.
+ring of the night
+	- Radiates an aura of darkness around player.
+	- Low penalty.
+ring of the light
+	- Radiates a dark blue light around player, useful during the night.
+	- Low penalty.
+ring of death
+	- Causes nearby corpses to (very briefly) come to life and attack adjacent
+	  hostiles.
+	- Low piety penalty.
+	- May result in a nearby necromancer taking undue interest in you.
+ring of rage
+	- ???
+
+
 Machines
 --------
 furnace
@@ -81,15 +137,18 @@ book copy machine
 memory condenser
 	- "Condenses" player's memory into a (map) book.
 food ration maker
-	- Stuff corpses, fungi, and lichen (I know, gross) next to it and rations
+	- Stuff fungi, lichen, and cadavers (I know, gross) next to it and rations
 	  will appear on the other side.
 camera
 	- Pressure plate thing that puts an alert out if a non-Sauron-aligned
 	  mob walks on it. (Alerts result in death squads sent out.)
 alarm system
-	- ???
+	- A Watcher can operate the alarm system when fleeing to send an alert
+	  out, resulting in death squads being sent to the appropriate level.
 announcement system
-	- ???
+	- Player can operate this to get a popup detailing stuff about the dungeon.
+	  E.g. "Squad LI-12 sent to put down rogue elf on level 2" or "Squad HE-7 sent
+	  to destroy Burning Brute seen on level 7", or even "Food low on level 5".
 teleportation station
 	- Player can use it to teleport to a certain location.
 uranium refinery
