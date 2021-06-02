@@ -132,6 +132,7 @@ fn _cast_light(level: usize, cx: isize, cy: isize, row: isize, start_p: f64, end
         const dy = -j;
         var dx = -j - 1;
         var blocked = false;
+        var pblocked = false;
 
         while (dx <= 0) {
             dx += 1;
@@ -158,8 +159,10 @@ fn _cast_light(level: usize, cx: isize, cy: isize, row: isize, start_p: f64, end
                 buf.append(coord) catch unreachable;
             }
 
+            const op = tile_opacity(coord);
+
             if (blocked) {
-                if (tile_opacity(coord) >= 1.0) {
+                if (op >= 1.0) {
                     // We're scanning a blocked row.
                     new_start = r_slope;
                     continue;
@@ -167,13 +170,11 @@ fn _cast_light(level: usize, cx: isize, cy: isize, row: isize, start_p: f64, end
                     blocked = false;
                     start = new_start;
                 }
-            } else {
-                if (tile_opacity(coord) >= 1.0 and j < radius) {
-                    // This is a blocking square, start a child scan.
-                    blocked = true;
-                    _cast_light(level, cx, cy, j + 1, start, l_slope, radius, xx, xy, yx, yy, limit, buf, tile_opacity);
-                    new_start = r_slope;
-                }
+            } else if (op >= 1.0 and j < radius) {
+                // This is a blocking square, start a child scan.
+                blocked = true;
+                _cast_light(level, cx, cy, j + 1, start, l_slope, radius, xx, xy, yx, yy, limit, buf, tile_opacity);
+                new_start = r_slope;
             }
         }
 
