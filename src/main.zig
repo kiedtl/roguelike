@@ -10,6 +10,8 @@ const types = @import("types.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
+var quit: bool = undefined;
+
 // Install a panic handler that tries to shutdown termbox before calling the
 // default panic handler.
 pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) noreturn {
@@ -43,6 +45,7 @@ fn initGame() void {
         mapgen.placeRandomRooms(level, 2000, &state.GPA.allocator);
         mapgen.placePatrolSquads(level, &state.GPA.allocator);
     }
+
     for (state.dungeon.map) |_, level|
         mapgen.placeRandomStairs(level);
 
@@ -51,10 +54,20 @@ fn initGame() void {
 
 fn deinitGame() void {
     display.deinit() catch unreachable;
+
+    var iter = state.mobs.iterator();
+    while (iter.nextPtr()) |mob| {
+        if (mob.is_dead) continue;
+        mob.kill();
+    }
+    for (state.dungeon.rooms) |r|
+        r.deinit();
+
     state.mobs.deinit();
     state.machines.deinit();
+    state.messages.deinit();
     state.props.deinit();
-    state.freeall();
+
     _ = state.GPA.deinit();
 }
 
@@ -69,8 +82,7 @@ fn pollNoActionInput() void {
     } else if (t == termbox.TB_EVENT_KEY) {
         if (ev.key != 0) {
             if (ev.key == termbox.TB_KEY_CTRL_C) {
-                deinitGame();
-                std.os.exit(0);
+                quit = true;
             }
         }
     }
@@ -88,10 +100,9 @@ fn readInput() bool {
     } else if (t == termbox.TB_EVENT_KEY) {
         if (ev.key != 0) {
             if (ev.key == termbox.TB_KEY_CTRL_C) {
-                deinitGame();
-                std.os.exit(0);
+                quit = true;
             }
-            return false;
+            return true;
         } else if (ev.ch != 0) {
             return switch (ev.ch) {
                 '.' => state.player.rest(),
@@ -113,55 +124,51 @@ fn readInput() bool {
     } else return false;
 }
 
-fn tick(present: bool) void {
-    state.ticks += 1;
+fn tickGame() void {
+    quit = false;
+    while (!quit) {
+        const cur_level = state.player.coord.z;
 
-    //state.tickLight();
-    state.tickAtmosphere(0);
-    state.tickSound();
+        state.ticks += 1;
+        state.tickAtmosphere(0);
+        state.tickSound();
 
-    const cur_level = state.player.coord.z;
+        var iter = state.mobs.iterator();
+        while (iter.nextPtr()) |mob| {
+            if (mob.coord.z != cur_level) continue;
 
-    var moblist = state.createMobList(false, false, cur_level, &state.GPA.allocator);
-    defer moblist.deinit();
+            if (mob.is_dead) {
+                continue;
+            } else if (mob.should_be_dead()) {
+                mob.kill();
+                continue;
+            }
 
-    // Add the player to the beginning, as the moblist doesn't contain it
-    moblist.insert(0, state.player) catch unreachable;
+            mob.energy += 100;
+            if (mob.energy < 0) continue;
 
-    for (moblist.items) |mob| {
-        if (mob.coord.z != cur_level) {
-            continue;
+            mob.tick_hp();
+            mob.tick_env();
+
+            state._update_fov(mob);
+
+            if (mob.coord.eq(state.player.coord)) {
+                if (state.player.is_dead) {
+                    pollNoActionInput();
+                    std.time.sleep(2 * 100000000); // 0.3 seconds
+                    display.draw();
+                } else {
+                    display.draw();
+
+                    // Read input until something's done
+                    while (!readInput()) {}
+                }
+            } else {
+                state._mob_occupation_tick(mob, &state.GPA.allocator);
+            }
+
+            state._update_fov(mob);
         }
-
-        if (mob.coord.eq(state.player.coord) and state.player.is_dead) {
-            pollNoActionInput();
-            std.time.sleep(2 * 100000000); // 0.3 seconds
-            if (present) display.draw();
-            continue;
-        }
-
-        if (mob.is_dead) {
-            continue;
-        } else if (mob.should_be_dead()) {
-            mob.kill();
-            continue;
-        }
-
-        mob.tick_hp();
-        mob.tick_env();
-
-        state._update_fov(mob);
-
-        if (mob.coord.eq(state.player.coord)) {
-            display.draw();
-
-            // Read input until something's done
-            while (!readInput()) {}
-        } else {
-            state._mob_occupation_tick(mob, &moblist, &state.GPA.allocator);
-        }
-
-        state._update_fov(mob);
     }
 }
 
@@ -210,8 +217,9 @@ fn viewerMain() void {
         }
     }
 }
+
 pub fn main() anyerror!void {
     initGame();
-    while (true) tick(true);
+    tickGame();
     deinitGame();
 }

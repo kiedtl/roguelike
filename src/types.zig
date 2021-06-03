@@ -496,6 +496,7 @@ pub const Mob = struct { // {{{
     facing_wide: bool = false, // TODO: remove?
     coord: Coord = Coord.new(0, 0),
 
+    energy: isize = 0,
     HP: f64, // f64 so that we can regenerate <1 HP per turn
     activities: RingBuffer(Activity, 4) = .{},
     last_damage: ?Damage = null,
@@ -518,6 +519,7 @@ pub const Mob = struct { // {{{
     hearing: usize,
     strength: usize,
     memory_duration: usize,
+    base_speed: usize,
     max_HP: f64, // Should always be a whole number
 
     // Maximum field of hearing.
@@ -591,6 +593,7 @@ pub const Mob = struct { // {{{
         state.dungeon.at(dest).mob = self;
         state.dungeon.at(coord).mob = othermob;
         if (!self.isCreeping()) self.makeNoise(NOISE_MOVE);
+        self.energy -= self.speed();
         self.coord = dest;
 
         if (state.dungeon.at(dest).surface) |surface| {
@@ -624,6 +627,7 @@ pub const Mob = struct { // {{{
 
     pub fn rest(self: *Mob) bool {
         self.activities.append(.Rest);
+        self.energy -= self.speed();
         return true;
     }
 
@@ -651,8 +655,9 @@ pub const Mob = struct { // {{{
 
         var damage = (attacker.strength / 4) + rng.range(usize, 0, 3);
         if (is_stab) damage *= 6;
-
         recipient.takeDamage(.{ .amount = @intToFloat(f64, damage) });
+
+        attacker.energy -= attacker.speed();
 
         const hitstr = if (is_stab) "stab" else "hit";
         if (recipient.coord.eq(state.player.coord)) {
@@ -685,10 +690,13 @@ pub const Mob = struct { // {{{
     }
 
     pub fn kill(self: *Mob) void {
-        self.fov.deinit();
-        self.occupation.work_area.deinit();
-        self.memory.clearAndFree();
+        self.squad_members.deinit();
+        self.enemies.deinit();
         self.path_cache.clearAndFree();
+        self.occupation.work_area.deinit();
+        self.fov.deinit();
+        self.memory.clearAndFree();
+
         self.is_dead = true;
 
         state.dungeon.at(self.coord).item = Item{ .Corpse = self };
@@ -837,6 +845,14 @@ pub const Mob = struct { // {{{
         }
 
         return res;
+    }
+
+    pub fn hasMoreEnergyThan(a: *const Mob, b: *const Mob) bool {
+        return a.energy < b.energy;
+    }
+
+    pub fn speed(self: *const Mob) isize {
+        return @intCast(isize, self.base_speed);
     }
 
     pub fn isCreeping(self: *const Mob) bool {
@@ -1030,6 +1046,7 @@ pub const WatcherTemplate = Mob{
     .hearing = 5,
     .max_HP = 8,
     .memory_duration = 10,
+    .base_speed = 65,
 
     .HP = 8,
     .strength = 5, // weakling!
@@ -1054,6 +1071,7 @@ pub const GuardTemplate = Mob{
     .hearing = 7,
     .max_HP = 17,
     .memory_duration = 3,
+    .base_speed = 110,
 
     .HP = 17,
     .strength = 14,
@@ -1079,6 +1097,7 @@ pub const ElfTemplate = Mob{
     .hearing = 5,
     .max_HP = 49,
     .memory_duration = 10,
+    .base_speed = 80,
 
     .HP = 49,
     .strength = 14,

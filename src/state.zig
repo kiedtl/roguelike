@@ -143,8 +143,9 @@ pub fn _update_fov(mob: *Mob) void {
     }
 }
 
-fn _can_hear_hostile(mob: *Mob, moblist: *const MobArrayList) ?Coord {
-    for (moblist.items) |othermob| {
+fn _can_hear_hostile(mob: *Mob) ?Coord {
+    var iter = mobs.iterator();
+    while (iter.nextPtr()) |othermob| {
         if (mob.canHear(othermob.coord)) |sound| {
             if (mob.isHostileTo(othermob)) {
                 return othermob.coord;
@@ -159,11 +160,11 @@ fn _can_hear_hostile(mob: *Mob, moblist: *const MobArrayList) ?Coord {
     return null;
 }
 
-pub fn _mob_occupation_tick(mob: *Mob, moblist: *const MobArrayList, alloc: *mem.Allocator) void {
+pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
     ai.checkForHostiles(mob);
 
     if (mob.occupation.phase != .SawHostile) {
-        if (_can_hear_hostile(mob, moblist)) |dest| {
+        if (_can_hear_hostile(mob)) |dest| {
             // Let's investigate
             mob.occupation.phase = .GoTo;
             mob.occupation.target = dest;
@@ -361,14 +362,6 @@ pub fn tickAtmosphere(cur_gas: usize) void {
 
     if (cur_gas < (gas.GAS_NUM - 1))
         tickAtmosphere(cur_gas + 1);
-}
-
-pub fn freeall() void {
-    var iter = mobs.iterator();
-    while (iter.next()) |*mob| {
-        if (mob.is_dead) continue;
-        mob.kill();
-    }
 }
 
 pub fn reset_marks() void {

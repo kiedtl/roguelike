@@ -37,6 +37,10 @@ pub fn LinkedList(comptime T: type) type {
             pub fn next(iter: *Iterator) ?T {
                 return if (iter.nextNode()) |node| node.data else null;
             }
+
+            pub fn nextPtr(iter: *Iterator) ?*T {
+                return if (iter.nextNode()) |node| &node.data else null;
+            }
         };
 
         head: ?*Node,
