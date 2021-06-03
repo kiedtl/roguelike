@@ -269,6 +269,7 @@ potion of starvation
 potion of transubstantiation
 	- ???
 
+
 Books
 -----
 "Melkor: The Life and Times of the King of Arda"
@@ -284,6 +285,24 @@ recipe books
 	- "You learn how to properly butcher humans."
 dungeon maps
 inventory lists
+
+
+Materials
+---------
+chlus
+sulon
+magonium
+vinonium
+tanus
+hyine
+caus
+silus
+flouine
+rolæn
+voson
+chlorovine
+beus
+
 
 Refactorings
 ------------
