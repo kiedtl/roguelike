@@ -885,8 +885,7 @@ pub const Machine = struct {
     // FIXME: there has got to be a better way to do this
     props: [40]?*Prop = [_]?*Prop{null} ** 40,
     // TODO: is_disabled, strength_needed
-    luminescence_intensity: usize = 0,
-    luminescence_color: u32 = 0,
+    luminescence: usize = 0,
 };
 
 pub const Prop = struct { name: []const u8, tile: u21, coord: Coord = Coord.new(0, 0) };
@@ -916,7 +915,7 @@ pub const Tile = struct {
         var l: usize = 0;
         if (self.surface) |surface| {
             switch (surface) {
-                .Machine => |m| l += m.luminescence_intensity,
+                .Machine => |m| l += m.luminescence,
                 else => {},
             }
         }
@@ -971,16 +970,20 @@ pub const Tile = struct {
             },
         }
 
+        if (self.type != .Wall) {
+            const light = math.clamp(state.dungeon.lightIntensityAt(coord).*, 0, 100);
+            const light_adj = @floatToInt(usize, math.round(@intToFloat(f64, light) / 10) * 10);
+            cell.bg = math.max(utils.percentageOfColor(cell.bg, light_adj), utils.darkenColor(cell.bg, 3));
+            cell.fg = math.max(utils.percentageOfColor(cell.fg, light_adj), utils.darkenColor(cell.fg, 3));
+        }
+
         const gases = state.dungeon.atGas(coord);
         for (gases) |q, g| {
             const gcolor = gas.Gases[g].color;
-            const aq = 1 - math.clamp(q, 0.21, 1);
+            const aq = 1 - math.clamp(q, 0.19, 1);
             if (q > 0) cell.bg = utils.mixColors(gcolor, cell.bg, aq);
         }
 
-        const light = state.dungeon.lightIntensityAt(coord).*;
-        cell.bg = math.max(utils.percentageOfColor(cell.bg, light), utils.darkenColor(cell.bg, 3));
-        cell.fg = math.max(utils.percentageOfColor(cell.fg, light), utils.darkenColor(cell.fg, 3));
         return cell;
     }
 };
@@ -1008,10 +1011,6 @@ pub const Dungeon = struct {
 
     pub fn lightIntensityAt(self: *Dungeon, c: Coord) *usize {
         return &self.light_intensity[c.z][c.y][c.x];
-    }
-
-    pub fn lightColorAt(self: *Dungeon, c: Coord) *u32 {
-        return &self.light_color[c.z][c.y][c.x];
     }
 };
 

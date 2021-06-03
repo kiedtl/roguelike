@@ -213,8 +213,8 @@ pub fn draw() void {
                 if (state.player.memory.contains(coord)) {
                     tile = state.player.memory.get(coord) orelse unreachable;
 
-                    tile.fg = utils.darkenColor(tile.fg, 3);
-                    tile.bg = utils.darkenColor(tile.bg, 3);
+                    tile.fg = utils.darkenColor(tile.fg, 4);
+                    tile.bg = utils.darkenColor(tile.bg, 4);
                 }
 
                 if (state.player.canHear(coord)) |noise| {

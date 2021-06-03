@@ -41,23 +41,23 @@ pub var messages: MessageArrayList = undefined;
 pub var score: usize = 0;
 
 // STYLE: change to Tile.lightOpacity
-fn light_tile_opacity(coord: Coord) f64 {
+pub fn light_tile_opacity(coord: Coord) usize {
     const tile = dungeon.at(coord);
-    var o: f64 = 0.09;
+    var o: usize = 5;
 
     if (tile.type == .Wall)
-        return tile.material.opacity;
+        return @floatToInt(usize, tile.material.opacity * 100);
 
     if (tile.surface) |surface| {
         switch (surface) {
-            .Machine => |m| o += m.opacity,
+            .Machine => |m| o += @floatToInt(usize, m.opacity * 100),
             else => {},
         }
     }
 
     const gases = dungeon.atGas(coord);
     for (gases) |q, g| {
-        if (q > 0) o += gas.Gases[g].opacity;
+        if (q > 0) o += @floatToInt(usize, gas.Gases[g].opacity * 100);
     }
 
     return o;
@@ -250,11 +250,6 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
 pub fn tickLight() void {
     const cur_lev = player.coord.z;
 
-    // TODO: do some tests and figure out what's the practical limit to memory
-    // usage, and reduce the buffer's size to that.
-    var membuf: [65535 * 10]u8 = undefined;
-    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-
     {
         var y: usize = 0;
         while (y < HEIGHT) : (y += 1) {
@@ -262,7 +257,6 @@ pub fn tickLight() void {
             while (x < WIDTH) : (x += 1) {
                 const coord = Coord.new2(cur_lev, x, y);
                 dungeon.lightIntensityAt(coord).* = 0;
-                dungeon.lightColorAt(coord).* = 0;
             }
         }
     }
@@ -274,24 +268,17 @@ pub fn tickLight() void {
             const coord = Coord.new2(cur_lev, x, y);
             const light = dungeon.at(coord).emittedLightIntensity();
 
-            var lit = AnnotatedCoordArrayList.init(&fba.allocator);
-            //var lit = CoordArrayList.init(&fba.allocator);
-            defer lit.deinit();
-            fov.raycast(coord, 15, mapgeometry, light_tile_opacity, &lit);
-            //const all_octants = [_]?usize{ 0, 1, 2, 3, 4, 5, 6, 7 };
-            //fov.shadowcast(coord, all_octants, 10, mapgeometry, tile_opacity, &lit);
-
-            for (lit.items) |tile| {
-                const cur = tile.coord;
-                const res = 100 - math.min(100, tile.value);
-                const int = light * res / 100;
-                dungeon.lightIntensityAt(cur).* += int;
-                dungeon.lightColorAt(cur).* = 0xffffff;
-
-                // const l = utils.saturating_sub(light, coord.distance(tile));
-                // dungeon.lightIntensityAt(tile).* += l;
-                // dungeon.lightColorAt(tile).* = 0xffffff;
-            }
+            // A memorial to my stupidity:
+            //
+            // When I first created the lighting system, I omitted the below
+            // check (light > 0) and did raycasting *on every tile on the map*.
+            // I chalked the resulting lag (2 seconds for every turn!) to
+            // the lack of optimizations in the raycasting routing, and spent
+            // hours trying to write and rewrite a better raycasting function.
+            //
+            // Thankfully, I only wasted about two days of tearing out my hair
+            // before noticing the issue.
+            if (light > 0) fov.lightingRaycast(coord, 20, light);
         }
     }
 }

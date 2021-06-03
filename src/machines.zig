@@ -18,8 +18,7 @@ pub const Lamp = Machine{
     .opacity = 0.0,
     .on_trigger = triggerNone,
     .should_be_avoided = false,
-    .luminescence_intensity = 75,
-    .luminescence_color = 0xffffff,
+    .luminescence = 75,
 };
 
 // FIXME: remove this. This is temporary until we get books, prefab rooms,

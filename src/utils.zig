@@ -1,4 +1,5 @@
 const std = @import("std");
+const assert = std.debug.assert;
 const math = std.math;
 
 pub fn saturating_sub(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
@@ -18,6 +19,8 @@ fn interpolate(a: u32, b: u32, f: f64) u32 {
 
 // STYLE: move to separate colors module
 pub fn mixColors(a: u32, b: u32, frac: f64) u32 {
+    assert(frac <= 100);
+
     const ar = (a >> 16) & 0xFF;
     const ag = (a >> 08) & 0xFF;
     const ab = (a >> 00) & 0xFF;
