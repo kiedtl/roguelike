@@ -56,8 +56,10 @@ NN	o	vampire
 
 Feats (challenges)
 ------------------
-sneak	Only attack and kill with stabs.
-frugal	Use only one weapon throughout the game.
+sneak		Only attack and kill with stabs.
+frugal		Use only one weapon throughout the game.
+ringless	Use no rings at all.
+naked		Use no cloaks at all.
 
 Movement patterns
 -----------------
@@ -74,6 +76,8 @@ Rings
   mob has low willpower.
 - Rings will not work as soon as they are wielded, but must be worn for 200-500
   turns to reach their full potential.
+- Rings don't have an "enchantment" level, but "tiers" instead (mithril, gold,
+  silver, and iron).
 ring of intimidation
 	- Gives player knowledge of dungeon's layout, based on the intimidated mob's
 	  memory.
@@ -193,41 +197,77 @@ Potions/Vials/Tonics
 --------------------
 TODO: decide difference between potions, tonics, and vials.
 potion of incineration
+	- Explodes when opened, heating surrounding air.
 potion of confuzzlementation
+	- Confusion.
 potion of degeneration
+	- ???
 potion of hallucination
+	- Hallucination.
 potion of aviation
+	- ???
 potion of desalination
+	- ???
 potion of divination
+	- ???
 potion of antifreeze (TODO: name)
+	- Increases cold immunity by a very small amount.
 potion of refrigeration
+	- Freezes the surrounding air.
 potion of petrification
+	- Paralysis.
 potion of fog (TODO: name)
-potion of smoke (TODO: name)
+	- Fog.
 potion of acceleration
+	- Haste.
 potion of asphyxiation
+	- Releases vapours that causes suffocation.
 potion of preservation
+	- Heals 20% of health and removes poison.
 potion of recuperation
+	- Causes faster regeneration rate.
 potion of coagulation
+	- ???
 potion of cognition
+	- ???
 potion of corruption
+	- ???
 potion of cremation
+	- ???
 potion of deceleration
+	- Slow paralysis.
 potion of decimation
+	- Explosion that can destroy walls.
 potion of defoliation
+	- Poison that destroys plants and/or fungi.
 potion of dehydration
+	- ???
 potion of dehumanization
+	- ???
 potion of toxification
+	- Caustic poison.
 potion of dilution
+	- ???
 potion of electrocution
+	- Makes target significantly more susceptible to electric attacks.
 potion of fluoridation
+	- ???
+potion of chlorination
+	- ???
 potion of fumigation
+	- Releases toxic fumes that clear away other toxic fumes.
 potion of invigoration
+	- Temporarily increases strength.
 potion of intoxication
+	- Drunkenness.
 potion of irradiation
+	- Releases corium.
 potion of negation
+	- ???
 potion of starvation
+	- Increases digestion rate.
 potion of transubstantiation
+	- ???
 
 Books
 -----
