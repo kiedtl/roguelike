@@ -116,6 +116,7 @@ fn readInput() bool {
                 'b' => state.player.moveInDirection(.SouthWest),
                 'n' => state.player.moveInDirection(.SouthEast),
                 's' => blk: {
+                    _ = state.player.rest();
                     state.dungeon.atGas(state.player.coord)[gas.SmokeGas.id] += 1.0;
                     break :blk true;
                 },
