@@ -15,7 +15,9 @@ fn _find_coord(coord: Coord, array: *CoordArrayList) usize {
     unreachable;
 }
 
-pub fn dummyWork(_: *Mob, __: *mem.Allocator) void {}
+pub fn dummyWork(m: *Mob, _: *mem.Allocator) void {
+    _ = m.rest();
+}
 
 // For every enemy in the mob's FOV, create an "enemy record" with a pointer to
 // that mob and a counter. Set the counter to the mob's memory_duration.
@@ -81,7 +83,8 @@ pub fn checkForHostiles(mob: *Mob) void {
 
     if (mob.enemies.items.len > 0) {
         mob.occupation.phase = .SawHostile;
-    } else {
+    } else if (mob.occupation.phase == .SawHostile) {
+        // No enemies sighted, we're done hunting.
         mob.occupation.phase = .Work;
     }
 }
@@ -132,6 +135,8 @@ pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
                 break;
             }
         }
+
+        _ = mob.rest();
         return;
     }
 
@@ -141,9 +146,7 @@ pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
     }
 
     const prev_facing = mob.facing;
-
-    if (mob.nextDirectionTo(to, state.is_walkable)) |d|
-        _ = mob.moveInDirection(d);
+    mob.tryMoveTo(to);
     _guard_glance(mob, prev_facing);
 }
 
@@ -155,6 +158,7 @@ pub fn watcherWork(mob: *Mob, alloc: *mem.Allocator) void {
 
     if (mob.coord.eq(post)) {
         _guard_glance(mob, mob.facing);
+        _ = mob.rest();
         return;
     } else {
         // We're not at our post, return there
@@ -164,9 +168,7 @@ pub fn watcherWork(mob: *Mob, alloc: *mem.Allocator) void {
         }
 
         const prev_facing = mob.facing;
-
-        if (mob.nextDirectionTo(post, state.is_walkable)) |d|
-            _ = mob.moveInDirection(d);
+        mob.tryMoveTo(post);
         _guard_glance(mob, prev_facing);
     }
 }

@@ -161,6 +161,12 @@ fn _can_hear_hostile(mob: *Mob) ?Coord {
 }
 
 pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
+    for (mob.squad_members.items) |lmob| {
+        lmob.occupation.target = mob.occupation.target;
+        lmob.occupation.phase = mob.occupation.phase;
+        lmob.occupation.work_area.items[0] = mob.occupation.work_area.items[0];
+    }
+
     ai.checkForHostiles(mob);
 
     if (mob.occupation.phase != .SawHostile) {
@@ -183,7 +189,7 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
             // We're here, let's just look around a bit before leaving
             //
             // 1 in 8 chance of leaving every turn
-            if (rng.int(u3) == 0) {
+            if (rng.onein(8)) {
                 mob.facing_wide = false;
                 mob.occupation.target = null;
                 mob.occupation.phase = .Work;
@@ -191,10 +197,10 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
                 mob.facing_wide = true;
                 mob.facing = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
             }
+
+            _ = mob.rest();
         } else {
-            if (mob.nextDirectionTo(target_coord, is_walkable)) |d| {
-                _ = mob.moveInDirection(d);
-            }
+            mob.tryMoveTo(target_coord);
         }
     }
 
@@ -207,43 +213,40 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
         if (dungeon.at(target.coord).mob == null) {
             mob.occupation.phase = .GoTo;
             mob.occupation.target = target.coord;
+
+            _ = mob.rest();
             return;
         }
 
         if (mob.coord.eq(target.coord)) {
             mob.occupation.target = null;
             mob.occupation.phase = .Work;
+
+            _ = mob.rest();
             return;
         }
 
-        if (mob.coord.distance(target.coord) > mob.prefers_distance) {
-            if (mob.nextDirectionTo(target.coord, is_walkable)) |d| {
-                _ = mob.moveInDirection(d);
-            }
-        } else if (mob.coord.distance(target.coord) < mob.prefers_distance) {
-            // Find next space to flee to.
-            const current_distance = mob.coord.distance(target.coord);
+        const current_distance = mob.coord.distance(target.coord);
 
+        if (current_distance < mob.prefers_distance) {
+            // Find next space to flee to.
+            var moved = false;
             var dijk = dijkstra.Dijkstra.init(mob.coord, mapgeometry, 3, is_walkable, alloc);
             defer dijk.deinit();
-
             while (dijk.next()) |coord| {
-                if (coord.distance(target.coord) > current_distance) {
-                    if (mob.nextDirectionTo(coord, is_walkable)) |d| {
-                        const oldd = mob.facing;
-                        _ = mob.moveInDirection(d);
-                        mob.facing = oldd;
-                        break;
-                    }
+                if (coord.distance(target.coord) <= current_distance) continue;
+                if (mob.nextDirectionTo(coord, is_walkable)) |d| {
+                    const oldd = mob.facing;
+                    moved = mob.moveInDirection(d);
+                    mob.facing = oldd;
+                    break;
                 }
             }
-        }
-    }
 
-    for (mob.squad_members.items) |lmob| {
-        lmob.occupation.target = mob.occupation.target;
-        lmob.occupation.phase = mob.occupation.phase;
-        lmob.occupation.work_area.items[0] = mob.occupation.work_area.items[0];
+            if (!moved) _ = mob.rest();
+        } else {
+            mob.tryMoveTo(target.coord);
+        }
     }
 }
 

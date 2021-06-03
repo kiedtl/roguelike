@@ -558,6 +558,22 @@ pub const Mob = struct { // {{{
         state.dungeon.soundAt(self.coord).* += amount;
     }
 
+    // Try to move to a destination, one step at a time.
+    //
+    // Unlike the other move functions (teleportTo, moveInDirection) this
+    // function is guaranteed to return with a lower time energy amount than
+    // when it started with.
+    //
+    pub fn tryMoveTo(self: *Mob, dest: Coord) void {
+        const prev_energy = self.energy;
+
+        if (self.nextDirectionTo(dest, state.is_walkable)) |d| {
+            if (!self.moveInDirection(d)) _ = self.rest();
+        } else _ = self.rest();
+
+        assert(prev_energy > self.energy);
+    }
+
     // Try to move a mob.
     pub fn moveInDirection(self: *Mob, direction: Direction) bool {
         const coord = self.coord;
@@ -636,6 +652,8 @@ pub const Mob = struct { // {{{
         assert(!recipient.is_dead);
         assert(attacker.dexterity < 100);
 
+        attacker.energy -= attacker.speed();
+
         if (Direction.from(attacker.coord, recipient.coord)) |d| {
             attacker.activities.append(.{ .Attack = d });
         }
@@ -656,8 +674,6 @@ pub const Mob = struct { // {{{
         var damage = (attacker.strength / 4) + rng.range(usize, 0, 3);
         if (is_stab) damage *= 6;
         recipient.takeDamage(.{ .amount = @intToFloat(f64, damage) });
-
-        attacker.energy -= attacker.speed();
 
         const hitstr = if (is_stab) "stab" else "hit";
         if (recipient.coord.eq(state.player.coord)) {

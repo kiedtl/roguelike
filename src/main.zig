@@ -1,4 +1,5 @@
 const std = @import("std");
+const assert = std.debug.assert;
 
 const rng = @import("rng.zig");
 const gas = @import("gas.zig");
@@ -146,29 +147,29 @@ fn tickGame() void {
             }
 
             mob.energy += 100;
-            if (mob.energy < 0) continue;
 
-            mob.tick_hp();
-            mob.tick_env();
+            while (mob.energy >= 0) {
+                if (mob.is_dead or mob.should_be_dead()) break;
 
-            state._update_fov(mob);
+                const prev_energy = mob.energy;
 
-            if (mob.coord.eq(state.player.coord)) {
-                if (state.player.is_dead) {
-                    pollNoActionInput();
-                    std.time.sleep(2 * 100000000); // 0.3 seconds
+                mob.tick_hp();
+                mob.tick_env();
+
+                state._update_fov(mob);
+
+                if (mob.coord.eq(state.player.coord)) {
                     display.draw();
-                } else {
-                    display.draw();
-
-                    // Read input until something's done
                     while (!readInput()) {}
+                    if (quit) break;
+                } else {
+                    state._mob_occupation_tick(mob, &state.GPA.allocator);
                 }
-            } else {
-                state._mob_occupation_tick(mob, &state.GPA.allocator);
-            }
 
-            state._update_fov(mob);
+                state._update_fov(mob);
+
+                assert(prev_energy > mob.energy);
+            }
         }
     }
 }
