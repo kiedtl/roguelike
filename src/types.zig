@@ -33,6 +33,7 @@ pub const MessageArrayList = std.ArrayList(Message);
 pub const StatusArray = enums.EnumArray(Status, StatusData);
 pub const MobList = LinkedList(Mob);
 pub const MobArrayList = std.ArrayList(*Mob); // STYLE: rename to MobPtrArrayList
+pub const RingList = LinkedList(Ring);
 pub const MachineList = LinkedList(Machine);
 pub const PropList = LinkedList(Prop);
 
@@ -450,10 +451,45 @@ pub const Allegiance = enum { Sauron, Illuvatar, NoneEvil, NoneGood };
 
 pub const Status = enum {
     // Prevents a mob from taking their turn.
+    //
     // Doesn't have a power field.
     Paralysis,
 
+    // Allows mob to "see" presence of walls around sounds.
+    //
+    // Power field determines radius of effect.
+    Echolocation,
+
     pub const MAX_DURATION: usize = 20;
+
+    pub fn tickEcholocation(mob: *Mob) void {
+        const st = mob.isUnderStatus(.Echolocation) orelse return;
+
+        const radius = st.power;
+        const z = mob.coord.z;
+        const ystart = utils.saturating_sub(mob.coord.y, radius);
+        const yend = math.min(mob.coord.y + radius, HEIGHT);
+        const xstart = utils.saturating_sub(mob.coord.x, radius);
+        const xend = math.min(mob.coord.x + radius, WIDTH);
+
+        var tile: termbox.tb_cell = .{ .fg = 0xffffff, .ch = '#' };
+        var y: usize = ystart;
+        while (y < yend) : (y += 1) {
+            var x: usize = xstart;
+            while (x < xend) : (x += 1) {
+                const coord = Coord.new2(z, x, y);
+                const noise = mob.canHear(coord) orelse continue;
+                for (&DIRECTIONS) |d| {
+                    var neighbor = coord;
+                    if (!neighbor.move(d, state.mapgeometry)) continue;
+                    if (state.dungeon.neighboringWalls(neighbor) == 9) continue;
+
+                    tile.ch = if (state.dungeon.at(neighbor).type == .Wall) '#' else '·';
+                    _ = mob.memory.getOrPutValue(neighbor, tile) catch unreachable;
+                }
+            }
+        }
+    }
 };
 
 pub const StatusData = struct {
@@ -500,7 +536,6 @@ pub const Occupation = struct {
 pub const Mob = struct { // {{{
     species: []const u8,
     tile: u21,
-    occupation: Occupation,
     allegiance: Allegiance,
 
     prefers_distance: usize = 0,
@@ -518,12 +553,13 @@ pub const Mob = struct { // {{{
     facing_wide: bool = false, // TODO: remove?
     coord: Coord = Coord.new(0, 0),
 
-    statuses: StatusArray = StatusArray.initFill(.{}),
-
-    energy: isize = 0,
     HP: f64, // f64 so that we can regenerate <1 HP per turn
+    energy: isize = 0,
+    statuses: StatusArray = StatusArray.initFill(.{}),
+    occupation: Occupation,
     activities: RingBuffer(Activity, 4) = .{},
     last_damage: ?Damage = null,
+    inventory: Inventory = .{},
     is_dead: bool = false,
 
     // Immutable instrinsic attributes.
@@ -545,6 +581,13 @@ pub const Mob = struct { // {{{
     memory_duration: usize,
     base_speed: usize,
     max_HP: f64, // Should always be a whole number
+
+    pub const Inventory = struct {
+        r_rings: [2]?*Ring = [2]?*Ring{ null, null },
+        l_rings: [2]?*Ring = [2]?*Ring{ null, null },
+
+        // Head, Torso, Leggings, Boots, Gloves
+    };
 
     // Maximum field of hearing.
     pub const MAX_FOH = 35;
@@ -573,6 +616,29 @@ pub const Mob = struct { // {{{
         for (gases) |quantity, gasi| {
             if (quantity > 0.0) {
                 gas.Gases[gasi].trigger(self, quantity);
+            }
+        }
+    }
+
+    // Update the status powers for the rings
+    pub fn tickRings(self: *Mob) void {
+        for (&[_]?*Ring{
+            self.inventory.l_rings[0],
+            self.inventory.l_rings[1],
+            self.inventory.r_rings[0],
+            self.inventory.r_rings[1],
+        }) |maybe_ring| {
+            if (maybe_ring) |ring|
+                self.addStatus(ring.status, ring.currentPower());
+        }
+    }
+
+    // Do stuff for various statuses that need babysitting each turn.
+    pub fn tickStatuses(self: *Mob) void {
+        inline for (@typeInfo(Status).Enum.fields) |status| {
+            switch (@field(Status, status.name)) {
+                .Echolocation => Status.tickEcholocation(self),
+                else => {},
             }
         }
     }
@@ -788,7 +854,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn addStatus(self: *Mob, status: Status, power: usize) void {
-        const p_se = self.statuses.getPtr(.Paralysis);
+        const p_se = self.statuses.getPtr(status);
         p_se.started = state.ticks;
         p_se.power = power;
         p_se.duration = Status.MAX_DURATION;
@@ -945,10 +1011,40 @@ pub const Prop = struct { name: []const u8, tile: u21, coord: Coord = Coord.new(
 pub const SurfaceItemTag = enum { Machine, Prop };
 pub const SurfaceItem = union(SurfaceItemTag) { Machine: *Machine, Prop: *Prop };
 
+pub const Ring = struct {
+    status: Status,
+
+    // So, statuses have a concept of "power". And rings work by conferring a status
+    // when worn, and removing it when taken off.
+    //
+    // However, ring's don't give the full power all at once -- rather, the power starts
+    // at a certain amount ($status_start_power), increases by 1 every $status_power_increase
+    // turns, until it reaches $status_max_power.
+    //
+    status_start_power: usize,
+    status_max_power: usize,
+    status_power_increase: usize,
+
+    worn_since: ?usize = null,
+
+    pub fn currentPower(self: *Ring) usize {
+        if (self.worn_since) |worn_since| {
+            assert(worn_since <= state.ticks);
+
+            const turns_passed = state.ticks - worn_since;
+            const base_pow = turns_passed / self.status_power_increase;
+            const max = self.status_max_power;
+            return math.min(self.status_start_power + base_pow, max);
+        } else {
+            return 0;
+        }
+    }
+};
+
 // TODO: make corpse a surfaceitem? (if a mob dies over a surface item just dumb it
 // on a nearby tile)
-pub const ItemTag = enum { Corpse };
-pub const Item = union(ItemTag) { Corpse: *Mob };
+pub const ItemTag = enum { Corpse, Ring };
+pub const Item = union(ItemTag) { Corpse: *Mob, Ring: *Ring };
 
 pub const TileType = enum {
     Wall = 0,
@@ -1006,6 +1102,7 @@ pub const Tile = struct {
                             cell.ch = corpse.tile;
                             cell.bg = 0xee0000;
                         },
+                        else => cell.ch = '?',
                     }
                 } else if (state.dungeon.at(coord).surface) |surfaceitem| {
                     const ch = switch (surfaceitem) {
@@ -1047,6 +1144,16 @@ pub const Dungeon = struct {
     light_intensity: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     light_color: [LEVELS][HEIGHT][WIDTH]u32 = [1][HEIGHT][WIDTH]u32{[1][WIDTH]u32{[1]u32{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     rooms: [LEVELS]RoomArrayList = undefined,
+
+    pub fn neighboringWalls(self: *Dungeon, c: Coord) usize {
+        var walls: usize = if (self.at(c).type == .Wall) 1 else 0;
+        for (&DIRECTIONS) |d| {
+            var neighbor = c;
+            if (neighbor.move(d, state.mapgeometry)) continue;
+            if (self.at(neighbor).type == .Wall) walls += 1;
+        }
+        return walls;
+    }
 
     pub fn at(self: *Dungeon, c: Coord) *Tile {
         return &self.map[c.z][c.y][c.x];

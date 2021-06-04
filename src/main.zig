@@ -30,6 +30,7 @@ fn initGame() void {
 
     state.messages = MessageArrayList.init(&state.GPA.allocator);
     state.mobs = MobList.init(&state.GPA.allocator);
+    state.rings = RingList.init(&state.GPA.allocator);
     state.machines = MachineList.init(&state.GPA.allocator);
     state.props = PropList.init(&state.GPA.allocator);
     rng.init();
@@ -65,6 +66,7 @@ fn deinitGame() void {
         r.deinit();
 
     state.mobs.deinit();
+    state.rings.deinit();
     state.machines.deinit();
     state.messages.deinit();
     state.props.deinit();
@@ -156,6 +158,8 @@ fn tickGame() void {
 
                 mob.tick_hp();
                 mob.tick_env();
+                mob.tickRings();
+                mob.tickStatuses();
 
                 state._update_fov(mob);
 

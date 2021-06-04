@@ -68,6 +68,7 @@ pub fn checkForHostiles(mob: *Mob) void {
                             _ = mob.enemies.orderedRemove(i);
                     }
                 },
+                else => {},
             }
         }
     }

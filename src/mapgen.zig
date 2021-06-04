@@ -4,6 +4,7 @@ const mem = std.mem;
 const math = std.math;
 
 const rng = @import("rng.zig");
+const items = @import("items.zig");
 const machines = @import("machines.zig");
 const materials = @import("materials.zig");
 const utils = @import("utils.zig");
@@ -41,11 +42,18 @@ fn _place_normal_door(coord: Coord) void {
     state.dungeon.at(coord).type = .Floor;
 }
 
+// STYLE: make top level public func, call directly, rename placePlayer
 fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
+    var echoring = items.EcholocationRing;
+    echoring.worn_since = state.ticks;
+    state.rings.append(echoring) catch @panic("OOM");
+    const echoringptr = state.rings.lastPtr().?;
+
     var player = ElfTemplate;
     player.init(alloc);
     player.occupation.phase = .SawHostile;
     player.coord = coord;
+    player.inventory.r_rings[0] = echoringptr;
     state.mobs.append(player) catch unreachable;
     state.dungeon.at(coord).mob = state.mobs.lastPtr().?;
     state.player = state.mobs.lastPtr().?;
