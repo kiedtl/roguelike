@@ -132,21 +132,17 @@ fn _place_rooms(rooms: *RoomArrayList, level: usize, count: usize, allocator: *m
 
         _place_machine(child.randomCoord(), &machines.Lamp);
 
-        if (rng.onein(4)) {
-            const trap_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
-            const trap_y = rng.range(usize, child.start.y + 1, child.end().y - 1);
-            const trap_coord = Coord.new2(level, trap_x, trap_y);
+        if (rng.onein(2)) {
+            const trap_coord = child.randomCoord();
             var trap: Machine = undefined;
             if (rng.onein(3)) {
                 trap = machines.AlarmTrap;
             } else {
-                trap = machines.PoisonGasTrap;
+                trap = if (rng.onein(3)) machines.PoisonGasTrap else machines.ParalysisGasTrap;
                 var num_of_vents = rng.range(usize, 1, 3);
                 while (num_of_vents > 0) : (num_of_vents -= 1) {
-                    const vent_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
-                    const vent_y = rng.range(usize, child.start.y + 1, child.end().y - 1);
-                    const vent_coord = Coord.new2(level, vent_x, vent_y);
-                    trap.props[num_of_vents] = _place_prop(vent_coord, &machines.GasVentProp);
+                    const prop = _place_prop(child.randomCoord(), &machines.GasVentProp);
+                    trap.props[num_of_vents] = prop;
                 }
             }
             _place_machine(trap_coord, &trap);

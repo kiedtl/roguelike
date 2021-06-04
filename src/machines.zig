@@ -70,6 +70,15 @@ pub const PoisonGasTrap = Machine{
     .should_be_avoided = true,
 };
 
+pub const ParalysisGasTrap = Machine{
+    .name = "paralysis gas trap",
+    .tile = '^',
+    .walkable = true,
+    .opacity = 0.0,
+    .on_trigger = triggerParalysisGasTrap,
+    .should_be_avoided = true,
+};
+
 pub const NormalDoor = Machine{
     .name = "door",
     .tile = '+', // TODO: red background?
@@ -98,6 +107,18 @@ pub fn triggerPoisonGasTrap(culprit: *Mob, machine: *Machine) void {
     }
 
     state.message(.Trap, "Noxious fumes seep through the gas vents!", .{});
+}
+
+pub fn triggerParalysisGasTrap(culprit: *Mob, machine: *Machine) void {
+    if (culprit.allegiance == .Sauron) return;
+
+    for (machine.props) |maybe_prop| {
+        if (maybe_prop) |vent| {
+            state.dungeon.atGas(vent.coord)[gas.Paralysis.id] = 1.0;
+        }
+    }
+
+    state.message(.Trap, "Paralytic gas seeps out of the gas vents!", .{});
 }
 
 pub fn triggerStairUp(culprit: *Mob, machine: *Machine) void {

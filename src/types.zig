@@ -2,6 +2,7 @@ const std = @import("std");
 const math = std.math;
 const mem = std.mem;
 const assert = std.debug.assert;
+const enums = @import("std/enums.zig");
 
 const LinkedList = @import("list.zig").LinkedList;
 const RingBuffer = @import("ringbuffer.zig").RingBuffer;
@@ -29,6 +30,7 @@ pub const CoordArrayList = std.ArrayList(Coord);
 pub const AnnotatedCoordArrayList = std.ArrayList(AnnotatedCoord);
 pub const RoomArrayList = std.ArrayList(Room);
 pub const MessageArrayList = std.ArrayList(Message);
+pub const StatusArray = enums.EnumArray(Status, StatusData);
 pub const MobList = LinkedList(Mob);
 pub const MobArrayList = std.ArrayList(*Mob); // STYLE: rename to MobPtrArrayList
 pub const MachineList = LinkedList(Machine);
@@ -446,7 +448,27 @@ pub const Message = struct {
 
 pub const Allegiance = enum { Sauron, Illuvatar, NoneEvil, NoneGood };
 
-// TODO: add phases: Eat, Drink, Flee, Idle, GetItem
+pub const Status = enum {
+    // Prevents a mob from taking their turn.
+    // Doesn't have a power field.
+    Paralysis,
+
+    pub const MAX_DURATION: usize = 20;
+};
+
+pub const StatusData = struct {
+    // Which turn the status was slapped onto the mob
+    started: usize = 0,
+
+    // What's the "power" of a status (percentage). For some statuses, doesn't
+    // mean anything at all.
+    power: usize = 0, // What's the "power" of the status
+
+    // How long the status should last, from the time it started.
+    // turns_left := (started + duration) - current_turn
+    duration: usize = 0, // How long
+};
+
 // XXX: "GoTo" should be renamed to "Investigating". But perhaps there's a another
 // usecase for this phase?
 pub const OccupationPhase = enum { Work, SawHostile, GoTo };
@@ -466,7 +488,7 @@ pub const Occupation = struct {
     work_fn: fn (*Mob, *mem.Allocator) void,
 
     // Is the "work" combative? if so, in "SawHostile" phase the mob should try
-    // to attack the hostile mob; otherwise, it should merely raise the alarm.
+    // to attack the hostile mob.
     is_combative: bool,
 
     // The "target" in any phase.
@@ -495,6 +517,8 @@ pub const Mob = struct { // {{{
     facing: Direction = .North,
     facing_wide: bool = false, // TODO: remove?
     coord: Coord = Coord.new(0, 0),
+
+    statuses: StatusArray = StatusArray.initFill(.{}),
 
     energy: isize = 0,
     HP: f64, // f64 so that we can regenerate <1 HP per turn
@@ -761,6 +785,18 @@ pub const Mob = struct { // {{{
         } else {
             return null;
         }
+    }
+
+    pub fn addStatus(self: *Mob, status: Status, power: usize) void {
+        const p_se = self.statuses.getPtr(.Paralysis);
+        p_se.started = state.ticks;
+        p_se.power = power;
+        p_se.duration = Status.MAX_DURATION;
+    }
+
+    pub fn isUnderStatus(self: *Mob, status: Status) ?*StatusData {
+        const se = self.statuses.getPtr(status);
+        return if ((se.started + se.duration) < state.ticks) null else se;
     }
 
     pub fn lastDamagePercentage(self: *const Mob) usize {

@@ -1,3 +1,6 @@
+const std = @import("std");
+const math = std.math;
+
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
@@ -9,16 +12,24 @@ pub const Poison = Gas{
     .id = 0,
 };
 
+pub const Paralysis = Gas{
+    .color = 0xffffff,
+    .dissipation_rate = 0.05,
+    .opacity = 0.2,
+    .trigger = triggerParalysis,
+    .id = 1,
+};
+
 pub const SmokeGas = Gas{
     .color = 0xffffff,
     .dissipation_rate = 0.01,
     .opacity = 1.0,
     .trigger = triggerNone,
-    .id = 1,
+    .id = 2,
 };
 
 // NOTE: the gas' ID *must* match the index number.
-pub const Gases = [_]Gas{ Poison, SmokeGas };
+pub const Gases = [_]Gas{ Poison, Paralysis, SmokeGas };
 pub const GAS_NUM: usize = Gases.len;
 
 fn triggerNone(_: *Mob, __: f64) void {}
@@ -29,4 +40,8 @@ fn triggerPoison(idiot: *Mob, quantity: f64) void {
     if (idiot.coord.eq(state.player.coord)) {
         state.message(.Damage, "You choke on the poisonous gas.", .{});
     }
+}
+
+fn triggerParalysis(idiot: *Mob, quantity: f64) void {
+    idiot.addStatus(.Paralysis, 0);
 }

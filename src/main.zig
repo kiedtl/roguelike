@@ -72,9 +72,9 @@ fn deinitGame() void {
     _ = state.GPA.deinit();
 }
 
-fn pollNoActionInput() void {
+fn readNoActionInput() void {
     var ev: termbox.tb_event = undefined;
-    const t = termbox.tb_peek_event(&ev, 5);
+    const t = termbox.tb_poll_event(&ev);
 
     if (t == -1) @panic("Fatal termbox error");
 
@@ -159,12 +159,23 @@ fn tickGame() void {
 
                 state._update_fov(mob);
 
-                if (mob.coord.eq(state.player.coord)) {
-                    display.draw();
-                    while (!readInput()) {}
-                    if (quit) break;
+                if (mob.isUnderStatus(.Paralysis)) |_| {
+                    if (mob.coord.eq(state.player.coord)) {
+                        readNoActionInput();
+                        display.draw();
+                        if (quit) break;
+                    }
+
+                    _ = mob.rest();
+                    continue;
                 } else {
-                    state._mob_occupation_tick(mob, &state.GPA.allocator);
+                    if (mob.coord.eq(state.player.coord)) {
+                        display.draw();
+                        while (!readInput()) {}
+                        if (quit) break;
+                    } else {
+                        state._mob_occupation_tick(mob, &state.GPA.allocator);
+                    }
                 }
 
                 state._update_fov(mob);
