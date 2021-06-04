@@ -287,21 +287,43 @@ dungeon maps
 inventory lists
 
 
-Materials
+Materials (v = vial, s = stone, g = gem, o = ore/metal)
 ---------
-chlus
-sulon
-magonium
-vinonium
-tanus
-hyine
-caus
-silus
-flouine
-rolæn
-voson
-chlorovine
-beus
+g	vaand
+g	chlorovese
+g	chlus
+g	caus
+g	magenus
+g	silus
+g	chlade		Like mese in Minetest. Composes crystal statues. Glows.
+o	magonium
+o	beus
+o	sylvium
+o	magalt
+o	mithril
+o	vibonium
+v	tanus
+v	slade
+v	sulon
+v	pholenine
+v	chloroforon
+v	hyine
+v	quagenine
+v	flouine
+v	catasine
+v	cataline
+v	phytin
+s	nebro		Like slade in Dwarf Fortress -- extremely heavy.
+s	bolvyese
+s	vangenite
+s	dobalene
+s	hyalt
+s	quaese
+s	phybro
+s	phosire
+s	orthire
+s	talonium
+s	maron
 
 
 Refactorings
