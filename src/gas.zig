@@ -28,9 +28,14 @@ pub const SmokeGas = Gas{
     .id = 2,
 };
 
-// NOTE: the gas' ID *must* match the index number.
 pub const Gases = [_]Gas{ Poison, Paralysis, SmokeGas };
 pub const GAS_NUM: usize = Gases.len;
+
+// Ensure that each gas's ID matches the index that it appears as in Gases.
+comptime {
+    for (&Gases) |gas, i|
+        if (i != gas.id) @compileError("Gas's ID doesn't match index");
+}
 
 fn triggerNone(_: *Mob, __: f64) void {}
 
