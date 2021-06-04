@@ -191,6 +191,10 @@ sonar mining laser
 	  radius, in a certain direction.
 vending machine
 	- Alternative to food stockpile...?
+fire alarm
+	- Registers a FireAlarm when heat increases around it, drawing mobs
+	  designated as FireFighter towards it to remove the fire (if any --
+	  they can't do anything if the "fire" is an angry burning brute).
 
 
 Potions/Vials/Tonics
