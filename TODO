@@ -16,6 +16,7 @@ CC	a	jackals
 CC	a	hounds
 CC	s	locust
 CC	s	cankerworm
+CC	h	wraith
 CE	h	orc
 			"Middle-sized humonoids with skin only slightly darker than the
 			underside of a rainbow trout, these ferocious beings are nothing
@@ -24,7 +25,7 @@ CE	a	hellhounds
 CE	h	death/fire/ether knight
 CE	s	death angel
 LE	s	will o' the wisp
-CE	a	fire worm
+CE	a	fire worm (salamander?)
 CE	o	crystal statue
 			"A statue of some nameless humanoid creature than once inhabited
 			the pits of Udùn. These statues are almost as rare as the
@@ -40,15 +41,13 @@ LE	o	mimic
 LG	s	shining one
 LG	s	angel
 LG	s	archangel
-??	o	complex number
-??	o	real number
-??	o	imaginary number
 ??	a	rat
 ??	a	quasit
 NN	s	stalker (invisible)
 NN	s	bogeyman (TODO: change name)
-			"A emaciated old creature of hideous appearance, possessed with
-			eyes that are both dull and bright in the dungeon's gloom."
+			"A semi-sentient, emaciated humaniod creature of hideous appearance,
+			possessed with eyes that are both dull and bright in the dungeon's
+			gloom."
 NN	s	night wanderer
 NN	s	creeping dread
 NN	o	grue
@@ -60,6 +59,7 @@ sneak		Only attack and kill with stabs.
 frugal		Use only one weapon throughout the game.
 ringless	Use no rings at all.
 naked		Use no cloaks at all.
+chivalrous	Use only (unpoisoned) melee weapons.
 
 Movement patterns
 -----------------
@@ -71,11 +71,11 @@ recuperate [rest, rest, rest, rest]
 Rings
 -----
 - All rings will increase in power depending on... player experience? piety?
-- All rings will have severe negative effects, most notably decreased piety.
+- All rings will have severe negative effects, most notably decreased willpower.
 - Rings that work on hostile mobs will have their effects increased if the hostile
   mob has low willpower.
-- Rings will not work as soon as they are wielded, but must be worn for 200-500
-  turns to reach their full potential.
+- Rings will not work as soon as they are wielded, but must be worn for a few
+  hundred turns to reach their full potential.
 - Rings don't have an "enchantment" level, but "tiers" instead (mithril, gold,
   silver, and iron).
 ring of intimidation
@@ -93,7 +93,7 @@ ring of clairvoyance
 	  should not know what kind of mobs they are, though. A blue '?' is enough.)
 	- Medium penalty.
 ring of silence
-	- Removes noise from a certain radius.
+	- Removes noise from a certain radius every turn.
 	- Medium penalty, depending on the amount of total noise that was silenced.
 ring of awareness
 	- Gives player knowledge of hidden dungeon features that have been seen
@@ -108,21 +108,24 @@ ring of invisibility
 	- High penalty, depending on affected mob's willpower.
 ring of shattering
 	- ???
-ring of fog
+ring of fire
 	- Spews fire and smoke outward from the wearer when the wearer takes damage.
 	- Low penalty.
-ring of the night
+ring of night
 	- Radiates an aura of darkness around player.
 	- Low penalty.
-ring of the light
+ring of light
 	- Radiates a dark blue light around player, useful during the night.
 	- Low penalty.
 ring of death
 	- Causes nearby corpses to (very briefly) come to life and attack adjacent
 	  hostiles.
+	- May result in a nearby necromancer taking unwelcome interest in you.
 	- Low piety penalty.
-	- May result in a nearby necromancer taking undue interest in you.
 ring of rage
+	- ???
+ring of power
+	- Found only on wraiths.
 	- ???
 
 
@@ -298,13 +301,13 @@ g	chlorovese
 g	chlus
 g	caus
 g	magenus
-g	silus
+g	silus		Silicate, composes fire-proof cloaks.
 g	chlade		Like mese in Minetest. Composes crystal statues. Glows.
 o	magonium
 o	beus
 o	sylvium
 o	magalt
-o	mithril
+o	mithril		The mithril we all know and love.
 o	vibonium
 v	tanus
 v	slade
@@ -332,7 +335,7 @@ s	maron
 
 Refactorings/Fixes/Optimizations
 --------------------------------
-Use @mulAdd where possible (places to look: FOV, A*, Dijkstra, light/atmosphere/sound systems)
+Use @mulAdd where possible (FOV, A*, Dijkstra, light/atmosphere/sound systems)
 Use @setCold(true) where possible (see above for places to look)
 Use SIMD where possible
 Stop using the freaking `catch unreachable` syntax:
