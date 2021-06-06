@@ -338,6 +338,7 @@ Refactorings/Fixes/Optimizations
 Use @mulAdd where possible (FOV, A*, Dijkstra, light/atmosphere/sound systems)
 Use @setCold(true) where possible (see above for places to look)
 Use SIMD where possible
+Defined unimplemented() and todo()
 Stop using the freaking `catch unreachable` syntax:
 	libera#zig 19:58 <ikskuh> "catch unreachable" will happily continue to execute code
 	                          after the error in non-safe build modes
