@@ -35,6 +35,7 @@ fn initGame() void {
     state.props = PropList.init(&state.GPA.allocator);
     rng.init();
 
+    const fabs = mapgen.readPrefabs(&state.GPA.allocator);
     for (state.dungeon.map) |_, level| {
         // mapgen.fillRandom(level, 40);
         // mapgen.fillBar(level, 1);
@@ -44,8 +45,8 @@ fn initGame() void {
         // mapgen.cellularAutomata(level, 6, 1);
         // mapgen.cellularAutomata(level, 6, 1);
         // mapgen.cellularAutomata(level, 6, 1);
-        mapgen.placeRandomRooms(level, 2000, &state.GPA.allocator);
-        mapgen.placePatrolSquads(level, &state.GPA.allocator);
+        mapgen.placeRandomRooms(&fabs, level, 2000, &state.GPA.allocator);
+        mapgen.placeGuards(level, &state.GPA.allocator);
     }
 
     for (state.dungeon.map) |_, level|
@@ -222,7 +223,6 @@ fn viewerMain() void {
                 }
             } else if (ev.ch != 0) {
                 switch (ev.ch) {
-                    '.' => tick(false),
                     '<' => if (level > 0) {
                         level -= 1;
                     },
@@ -238,6 +238,6 @@ fn viewerMain() void {
 
 pub fn main() anyerror!void {
     initGame();
-    tickGame();
+    viewerMain(); //tickGame();
     deinitGame();
 }

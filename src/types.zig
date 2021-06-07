@@ -8,6 +8,7 @@ const LinkedList = @import("list.zig").LinkedList;
 const RingBuffer = @import("ringbuffer.zig").RingBuffer;
 
 const rng = @import("rng.zig");
+const mapgen = @import("mapgen.zig");
 const termbox = @import("termbox.zig");
 const astar = @import("astar.zig");
 const materials = @import("materials.zig");
@@ -325,12 +326,13 @@ test "coord.move" {
 pub const AnnotatedCoord = struct { coord: Coord, value: usize };
 
 pub const Room = struct {
+    prefab: ?mapgen.Prefab = null,
     start: Coord,
     width: usize,
     height: usize,
 
     pub fn overflowsLimit(self: *const Room, limit: *const Room) bool {
-        const a = self.end().x >= limit.end().x or self.end().y >= limit.end().x;
+        const a = self.end().x >= limit.end().x or self.end().y >= limit.end().y;
         const b = self.start.x < limit.start.x or self.start.y < limit.start.y;
         return a or b;
     }
@@ -357,25 +359,53 @@ pub const Room = struct {
         return Coord.new2(self.start.z, x, y);
     }
 
-    pub fn attach(self: *const Room, d: Direction, width: usize, height: usize, distance: usize) Room {
+    pub fn attach(self: *const Room, d: Direction, width: usize, height: usize, distance: usize, fab: ?*const mapgen.Prefab) ?Room {
+        // "Preferred" X/Y coordinates to start the child at. preferred_x is only
+        // valid if d == .North or d == .South, and preferred_y is only valid if
+        // d == .West or d == .East.
+        var preferred_x = self.start.x + (self.width / 2);
+        var preferred_y = self.start.y + (self.height / 2);
+
+        // Note: the coordinate returned by Prefab.connectorFor() is relative.
+
+        if (self.prefab != null and fab != null) {
+            const parent_con = self.prefab.?.connectorFor(d) orelse return null;
+            const child_con = fab.?.connectorFor(d.opposite()) orelse return null;
+            const parent_con_abs = Coord.new2(
+                self.start.z,
+                self.start.x + parent_con.x,
+                self.start.y + parent_con.y,
+            );
+            preferred_x = utils.saturating_sub(parent_con_abs.x, child_con.x);
+            preferred_y = utils.saturating_sub(parent_con_abs.y, child_con.y);
+        } else if (self.prefab) |pafab| {
+            const con = pafab.connectorFor(d) orelse return null;
+            preferred_x = self.start.x + con.x;
+            preferred_y = self.start.y + con.y;
+        } else if (fab) |chfab| {
+            const con = chfab.connectorFor(d.opposite()) orelse return null;
+            preferred_x = utils.saturating_sub(self.start.x, con.x);
+            preferred_y = utils.saturating_sub(self.start.y, con.y);
+        }
+
         return switch (d) {
             .North => Room{
-                .start = Coord.new2(self.start.z, self.start.x + (self.width / 2), utils.saturating_sub(self.start.y, height + distance)),
+                .start = Coord.new2(self.start.z, preferred_x, utils.saturating_sub(self.start.y, height + distance)),
                 .height = height,
                 .width = width,
             },
             .East => Room{
-                .start = Coord.new2(self.start.z, self.end().x + distance, self.start.y + (self.height / 2)),
+                .start = Coord.new2(self.start.z, self.end().x + distance, preferred_y),
                 .height = height,
                 .width = width,
             },
             .South => Room{
-                .start = Coord.new2(self.start.z, self.start.x + (self.width / 2), self.end().y + distance),
+                .start = Coord.new2(self.start.z, preferred_x, self.end().y + distance),
                 .height = height,
                 .width = width,
             },
             .West => Room{
-                .start = Coord.new2(self.start.z, utils.saturating_sub(self.start.x, width + distance), self.start.y + (self.height / 2)),
+                .start = Coord.new2(self.start.z, utils.saturating_sub(self.start.x, width + distance), preferred_y),
                 .width = width,
                 .height = height,
             },

@@ -2,6 +2,7 @@ const std = @import("std");
 const heap = std.heap;
 const mem = std.mem;
 const math = std.math;
+const assert = std.debug.assert;
 
 const rng = @import("rng.zig");
 const items = @import("items.zig");
@@ -11,8 +12,10 @@ const utils = @import("utils.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
-const MIN_ROOM_WIDTH: usize = 3;
-const MIN_ROOM_HEIGHT: usize = 3;
+// Dimensions include the first wall, so a minimum width of 2 guarantee that
+// there will be one empty space in the room, minimum.
+const MIN_ROOM_WIDTH: usize = 4;
+const MIN_ROOM_HEIGHT: usize = 4;
 const MAX_ROOM_WIDTH: usize = 10;
 const MAX_ROOM_HEIGHT: usize = 10;
 
@@ -79,119 +82,147 @@ fn _room_intersects(rooms: *const RoomArrayList, room: *const Room, ignore: *con
     return false;
 }
 
-fn _replace_tiles(room: *const Room, tile: Tile) void {
+fn _excavate_prefab(room: *const Room, fab: *const Prefab) void {
+    var y: usize = 0;
+    while (y < fab.width) : (y += 1) {
+        var x: usize = 0;
+        while (x < fab.height) : (x += 1) {
+            const rc = Coord.new2(room.start.z, x + room.start.x, y + room.start.y);
+            assert(rc.x < WIDTH and rc.y < HEIGHT);
+
+            switch (fab.content[y][x]) {
+                .Any => {},
+                .Wall, .LitWall => state.dungeon.at(rc).type = .Wall,
+                .Floor, .Connection => state.dungeon.at(rc).type = .Floor,
+                .Window, .Water => @panic("todo"),
+            }
+
+            switch (fab.content[y][x]) {
+                .LitWall => @panic("todo"),
+                .Window => @panic("todo"),
+                else => {},
+            }
+        }
+    }
+}
+
+fn _excavate_room(room: *const Room) void {
     var y = room.start.y;
     while (y < room.end().y) : (y += 1) {
         var x = room.start.x;
         while (x < room.end().x) : (x += 1) {
             const c = Coord.new2(room.start.z, x, y);
-            if (y >= HEIGHT or x >= WIDTH) continue;
-            if (state.dungeon.at(c).type == tile.type) continue;
-            state.dungeon.at(c).* = tile;
+            assert(c.x < WIDTH and c.y < HEIGHT);
+            state.dungeon.at(c).type = .Floor;
         }
     }
 }
 
-fn _excavate(room: *const Room, ns: bool, ew: bool) void {
-    _replace_tiles(room, Tile{ .type = .Floor });
-}
-
-fn _place_rooms(rooms: *RoomArrayList, level: usize, count: usize, allocator: *mem.Allocator) void {
+fn _place_rooms(rooms: *RoomArrayList, fabs: *const PrefabArrayList, level: usize, allocator: *mem.Allocator) void {
     const limit = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
     const distances = [2][6]usize{ .{ 0, 1, 2, 3, 4, 8 }, .{ 3, 8, 4, 3, 2, 1 } };
-    const side = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
 
     const parent = rng.chooseUnweighted(Room, rooms.items);
-    const distance = rng.choose(usize, &distances[0], &distances[1]) catch unreachable;
+    var fab: ?Prefab = null;
 
-    sides: {
+    var distance = rng.choose(usize, &distances[0], &distances[1]) catch unreachable;
+    var child: Room = undefined;
+    var side = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
+
+    if (rng.onein(3)) {
+        if (parent.prefab != null and distance == 0) distance += 1;
+
         var child_w = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
         var child_h = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
-        var child = parent.attach(side, child_w, child_h, distance);
+        child = parent.attach(side, child_w, child_h, distance, null).?;
 
         while (_room_intersects(rooms, &child, &parent) or child.overflowsLimit(&limit)) {
             if (child_w < MIN_ROOM_WIDTH or child_h < MIN_ROOM_HEIGHT)
-                break :sides;
+                return;
 
             child_w -= 1;
             child_h -= 1;
-            child = parent.attach(side, child_w, child_h, distance);
+            child = parent.attach(side, child_w, child_h, distance, null).?;
         }
 
-        _excavate(&child, true, true);
-        rooms.append(child) catch unreachable;
+        _excavate_room(&child);
+    } else {
+        if (distance == 0) distance += 1;
 
-        // --- add mobs ---
+        var child_w = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
+        var child_h = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
+        fab = rng.chooseUnweighted(Prefab, fabs.items);
+        child = parent.attach(side, fab.?.width, fab.?.height, distance, &fab.?) orelse return;
+        child.prefab = fab;
 
-        if (rng.onein(14)) {
-            const post_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
-            const post_y = rng.range(usize, child.start.y + 1, child.end().y - 1);
-            const post_coord = Coord.new2(level, post_x, post_y);
-            var watcher = WatcherTemplate;
-            watcher.init(allocator);
-            watcher.occupation.work_area.append(post_coord) catch unreachable;
-            watcher.coord = post_coord;
-            watcher.facing = .North;
-            state.mobs.append(watcher) catch unreachable;
-            state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
-        }
+        if (_room_intersects(rooms, &child, &parent) or child.overflowsLimit(&limit))
+            return;
 
-        // --- add machines ---
-
-        _place_machine(child.randomCoord(), &machines.Lamp);
-
-        if (rng.onein(2)) {
-            const trap_coord = child.randomCoord();
-            var trap: Machine = undefined;
-            if (rng.onein(3)) {
-                trap = machines.AlarmTrap;
-            } else {
-                trap = if (rng.onein(3)) machines.PoisonGasTrap else machines.ParalysisGasTrap;
-                var num_of_vents = rng.range(usize, 1, 3);
-                while (num_of_vents > 0) : (num_of_vents -= 1) {
-                    const prop = _place_prop(child.randomCoord(), &machines.GasVentProp);
-                    trap.props[num_of_vents] = prop;
-                }
-            }
-            _place_machine(trap_coord, &trap);
-        }
-
-        if (rng.onein(6)) {
-            const loot_x = rng.range(usize, child.start.x + 1, child.end().x - 1);
-            const loot_y = rng.range(usize, child.start.y + 1, child.end().y - 1);
-            const loot_coord = Coord.new2(level, loot_x, loot_y);
-            _place_machine(loot_coord, &machines.GoldCoins);
-        }
-
-        // --- add corridors ---
-
-        if (distance > 0) {
-            const rsx = math.max(parent.start.x, child.start.x);
-            const rex = math.min(parent.end().x, child.end().x);
-            const x = rng.range(usize, math.min(rsx, rex), math.max(rsx, rex) - 1);
-            const rsy = math.max(parent.start.y, child.start.y);
-            const rey = math.min(parent.end().y, child.end().y);
-            const y = rng.range(usize, math.min(rsy, rey), math.max(rsy, rey) - 1);
-
-            var corridor = switch (side) {
-                .North => Room{ .start = Coord.new2(level, x, child.end().y), .height = parent.start.y - child.end().y, .width = 1 },
-                .South => Room{ .start = Coord.new2(level, x, parent.end().y), .height = child.start.y - parent.end().y, .width = 1 },
-                .West => Room{ .start = Coord.new2(level, child.end().x, y), .height = 1, .width = parent.start.x - child.end().x },
-                .East => Room{ .start = Coord.new2(level, parent.end().x, y), .height = 1, .width = child.start.x - parent.end().x },
-                else => unreachable,
-            };
-
-            _excavate(&corridor, side == .East or side == .West, side == .North or side == .South);
-            rooms.append(corridor) catch unreachable;
-
-            if (distance == 1) _place_normal_door(corridor.start);
-        }
+        _excavate_prefab(&child, &fab.?);
     }
 
-    if (count > 0) _place_rooms(rooms, level, count - 1, allocator);
+    rooms.append(child) catch unreachable;
+
+    // --- add machines ---
+
+    _place_machine(child.randomCoord(), &machines.Lamp);
+
+    if (rng.onein(2)) {
+        const trap_coord = child.randomCoord();
+        var trap: Machine = undefined;
+        if (rng.onein(3)) {
+            trap = machines.AlarmTrap;
+        } else {
+            trap = if (rng.onein(3)) machines.PoisonGasTrap else machines.ParalysisGasTrap;
+            var num_of_vents = rng.range(usize, 1, 3);
+            while (num_of_vents > 0) : (num_of_vents -= 1) {
+                const prop = _place_prop(child.randomCoord(), &machines.GasVentProp);
+                trap.props[num_of_vents] = prop;
+            }
+        }
+        _place_machine(trap_coord, &trap);
+    }
+
+    if (rng.onein(6)) {
+        _place_machine(child.randomCoord(), &machines.GoldCoins);
+    }
+
+    // --- add corridors ---
+
+    if (distance > 0) corridor: {
+        var cor = Coord.new2(level, 0, 0);
+        if (parent.prefab) |f| {
+            const con = f.connectorFor(side) orelse break :corridor;
+            cor.x = parent.start.x + con.x;
+            cor.y = parent.start.y + con.y;
+        } else if (fab) |f| {
+            const con = f.connectorFor(side.opposite()) orelse break :corridor;
+            cor.x = child.start.x + con.x;
+            cor.y = child.start.y + con.y;
+        } else {
+            const rsx = math.max(parent.start.x, child.start.x);
+            const rex = math.min(parent.end().x, child.end().x);
+            const rsy = math.max(parent.start.y, child.start.y);
+            const rey = math.min(parent.end().y, child.end().y);
+            cor.x = rng.range(usize, math.min(rsx, rex), math.max(rsx, rex) - 1);
+            cor.y = rng.range(usize, math.min(rsy, rey), math.max(rsy, rey) - 1);
+        }
+
+        var corridor = switch (side) {
+            .North => Room{ .start = Coord.new2(level, cor.x, child.end().y), .height = parent.start.y - child.end().y, .width = 1 },
+            .South => Room{ .start = Coord.new2(level, cor.x, parent.end().y), .height = child.start.y - parent.end().y, .width = 1 },
+            .West => Room{ .start = Coord.new2(level, child.end().x, cor.y), .height = 1, .width = parent.start.x - child.end().x },
+            .East => Room{ .start = Coord.new2(level, parent.end().x, cor.y), .height = 1, .width = child.start.x - parent.end().x },
+            else => unreachable,
+        };
+
+        _excavate_room(&corridor);
+
+        if (distance == 1) _place_normal_door(corridor.start);
+    }
 }
 
-pub fn placeRandomRooms(level: usize, num: usize, allocator: *mem.Allocator) void {
+pub fn placeRandomRooms(fabs: *const PrefabArrayList, level: usize, num: usize, allocator: *mem.Allocator) void {
     var rooms = RoomArrayList.init(allocator);
 
     const width = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
@@ -199,7 +230,7 @@ pub fn placeRandomRooms(level: usize, num: usize, allocator: *mem.Allocator) voi
     const x = rng.range(usize, 1, state.WIDTH / 2);
     const y = rng.range(usize, 1, state.HEIGHT / 2);
     const first = Room{ .start = Coord.new2(level, x, y), .width = width, .height = height };
-    _excavate(&first, true, true);
+    _excavate_room(&first);
     rooms.append(first) catch unreachable;
 
     if (level == PLAYER_STARTING_LEVEL) {
@@ -207,12 +238,13 @@ pub fn placeRandomRooms(level: usize, num: usize, allocator: *mem.Allocator) voi
         _add_player(p, allocator);
     }
 
-    _place_rooms(&rooms, level, num, allocator);
+    var c = num;
+    while (c > 0) : (c -= 1) _place_rooms(&rooms, fabs, level, allocator);
 
     state.dungeon.rooms[level] = rooms;
 }
 
-pub fn placePatrolSquads(level: usize, allocator: *mem.Allocator) void {
+pub fn placeGuards(level: usize, allocator: *mem.Allocator) void {
     var squads: usize = rng.range(usize, 3, 5);
     while (squads > 0) : (squads -= 1) {
         const room = rng.chooseUnweighted(Room, state.dungeon.rooms[level].items);
@@ -240,6 +272,19 @@ pub fn placePatrolSquads(level: usize, allocator: *mem.Allocator) void {
 
                 placed_units += 1;
             }
+        }
+    }
+
+    for (state.dungeon.rooms[level].items) |room| {
+        if (rng.onein(14)) {
+            const post_coord = room.randomCoord();
+            var watcher = WatcherTemplate;
+            watcher.init(allocator);
+            watcher.occupation.work_area.append(post_coord) catch unreachable;
+            watcher.coord = post_coord;
+            watcher.facing = .North;
+            state.mobs.append(watcher) catch unreachable;
+            state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
         }
     }
 }
@@ -325,4 +370,116 @@ pub fn fillRandom(level: usize, floor_chance: usize) void {
             state.dungeon.at(Coord.new2(level, x, y)).type = t;
         }
     }
+}
+
+pub const Prefab = struct {
+    allow_spawning: bool = true,
+    allow_traps: bool = true,
+
+    height: usize = 0,
+    width: usize = 0,
+    content: [20][20]FabTile = undefined,
+    connections: [40]?Connection = undefined,
+
+    pub const FabTile = enum {
+        Wall, LitWall, Floor, Connection, Water, Window, Any
+    };
+
+    pub const Connection = struct {
+        c: Coord,
+        d: Direction,
+    };
+
+    pub fn connectorFor(self: *const Prefab, d: Direction) ?Coord {
+        for (self.connections) |maybe_con| {
+            const con = maybe_con orelse break;
+            if (con.d == d) return con.c;
+        }
+        return null;
+    }
+
+    pub fn parse(from: []const u8) !Prefab {
+        var f: Prefab = .{};
+        for (f.content) |*row| mem.set(FabTile, row, .Wall);
+        mem.set(?Connection, &f.connections, null);
+
+        var ci: usize = 0; // index for f.connections
+        var w: usize = 0;
+        var y: usize = 0;
+
+        var lines = mem.tokenize(from, "\n");
+        while (lines.next()) |line| {
+            switch (line[0]) {
+                '%' => {}, // ignore comments
+                '@' => @panic("TODO"), // TODO
+                else => {
+                    if (y > f.content.len) return error.FabTooTall;
+
+                    for (line) |c, x| {
+                        if (x > f.content[0].len) return error.FabTooWide;
+
+                        f.content[y][x] = switch (c) {
+                            '#' => .Wall,
+                            '&' => .LitWall,
+                            '.' => .Floor,
+                            '*' => .Connection,
+                            '~' => .Water,
+                            ';' => .Window,
+                            '?' => .Any,
+                            else => return error.InvalidFabTile,
+                        };
+
+                        if (c == '*') {
+                            f.connections[ci] = .{
+                                .c = Coord.new(x, y),
+                                .d = .North,
+                            };
+                            ci += 1;
+                        }
+
+                        if (x > w) w = x;
+                    }
+                    y += 1;
+                },
+            }
+        }
+
+        f.width = w;
+        f.height = y - 1;
+
+        for (&f.connections) |*con, i| {
+            if (con.*) |c| {
+                if (c.c.x == 0) {
+                    f.connections[i].?.d = .West;
+                } else if (c.c.y == 0) {
+                    f.connections[i].?.d = .North;
+                } else if (c.c.y == f.height) {
+                    f.connections[i].?.d = .South;
+                } else if (c.c.x == f.width) {
+                    f.connections[i].?.d = .East;
+                } else {
+                    return error.InvalidConnection;
+                }
+            }
+        }
+
+        return f;
+    }
+};
+
+pub const PrefabArrayList = std.ArrayList(Prefab);
+
+pub fn readPrefabs(alloc: *mem.Allocator) PrefabArrayList {
+    var fab = std.os.open("fab/test1.fab", 0, 0) catch @panic("couldn't open prefab");
+    defer std.os.close(fab);
+
+    var buf: [2048]u8 = [1]u8{0} ** 2048;
+    const read = std.os.read(fab, buf[0..]) catch @panic("couldn't read prefab");
+
+    const f = Prefab.parse(buf[0..read]) catch @panic("couldn't parse prefab");
+
+    var fabs = PrefabArrayList.init(alloc);
+    fabs.append(f) catch @panic("OOM");
+
+    return fabs;
 }
