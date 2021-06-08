@@ -482,11 +482,16 @@ pub const Prefab = struct {
                     if (y > f.content.len) return error.FabTooTall;
 
                     var x: usize = 0;
-                    var utf8 = (try std.unicode.Utf8View.init(line)).iterator();
+                    var utf8view = std.unicode.Utf8View.init(line) catch |_| {
+                        return error.InvalidUtf8;
+                    };
+                    var utf8 = utf8view.iterator();
                     while (utf8.nextCodepointSlice()) |encoded_codepoint| : (x += 1) {
                         if (x > f.content[0].len) return error.FabTooWide;
 
-                        const c = try std.unicode.utf8Decode(encoded_codepoint);
+                        const c = std.unicode.utf8Decode(encoded_codepoint) catch |_| {
+                            return error.InvalidUtf8;
+                        };
 
                         f.content[y][x] = switch (c) {
                             '#' => .Wall,
@@ -560,7 +565,19 @@ pub fn readPrefabs(alloc: *mem.Allocator) PrefabArrayList {
         defer fab_f.close();
 
         const read = fab_f.readAll(buf[0..]) catch unreachable;
-        const f = Prefab.parse(buf[0..read]) catch unreachable;
+
+        const f = Prefab.parse(buf[0..read]) catch |e| {
+            const msg = switch (e) {
+                error.InvalidFabTile => "Invalid prefab tile",
+                error.InvalidConnection => "Out of place connection tile",
+                error.FabTooWide => "Prefab exceeds width limit",
+                error.FabTooTall => "Prefab exceeds height limit",
+                error.InvalidUtf8 => "Encountered invalid UTF-8",
+            };
+            std.log.warn("{}: Couldn't load prefab: {}", .{ fab_file.name, msg });
+            continue;
+        };
+
         fabs.append(f) catch @panic("OOM");
     }
 
