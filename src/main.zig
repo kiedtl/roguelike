@@ -239,7 +239,7 @@ fn viewerMain() void {
 
 pub fn main() anyerror!void {
     initGame();
-    //viewerMain();
-    tickGame();
+    viewerMain();
+    //tickGame();
     deinitGame();
 }

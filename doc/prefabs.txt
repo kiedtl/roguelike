@@ -2,15 +2,13 @@
 %
 % Comments are done with a single percent mark.
 %
-% To simplify parsing, all characters are ASCII-only. This will be changed
-% later on.
-%
 % Legend:
 %    #   wall
 %    &   lit wall
 %    .   floor
 %    *   connection
 %    ~   water
+%    ≈   lava
 %    ;   window
 %    ?   anything
 %

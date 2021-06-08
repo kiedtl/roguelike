@@ -96,13 +96,15 @@ fn _excavate_prefab(room: *const Room, fab: *const Prefab) void {
             assert(rc.x < WIDTH);
             assert(rc.y < HEIGHT);
 
-            switch (fab.content[y][x]) {
-                .Any => {},
-                .Wall, .LitWall => state.dungeon.at(rc).type = .Wall,
-                .Floor, .Connection => state.dungeon.at(rc).type = .Floor,
-                .Water => state.dungeon.at(rc).type = .Water,
+            const tt: ?TileType = switch (fab.content[y][x]) {
+                .Any => null,
+                .Wall, .LitWall => .Wall,
+                .Floor, .Connection => .Floor,
+                .Water => .Water,
+                .Lava => .Lava,
                 .Window => @panic("todo"),
-            }
+            };
+            if (tt) |_tt| state.dungeon.at(rc).type = _tt;
 
             switch (fab.content[y][x]) {
                 .LitWall => @panic("todo"),
@@ -386,7 +388,7 @@ pub const Prefab = struct {
     connections: [40]?Connection = undefined,
 
     pub const FabTile = enum {
-        Wall, LitWall, Floor, Connection, Water, Window, Any
+        Wall, LitWall, Floor, Connection, Water, Lava, Window, Any
     };
 
     pub const Connection = struct {
@@ -419,8 +421,12 @@ pub const Prefab = struct {
                 else => {
                     if (y > f.content.len) return error.FabTooTall;
 
-                    for (line) |c, x| {
+                    var x: usize = 0;
+                    var utf8 = (try std.unicode.Utf8View.init(line)).iterator();
+                    while (utf8.nextCodepointSlice()) |encoded_codepoint| : (x += 1) {
                         if (x > f.content[0].len) return error.FabTooWide;
+
+                        const c = try std.unicode.utf8Decode(encoded_codepoint);
 
                         f.content[y][x] = switch (c) {
                             '#' => .Wall,
@@ -428,6 +434,7 @@ pub const Prefab = struct {
                             '.' => .Floor,
                             '*' => .Connection,
                             '~' => .Water,
+                            '≈' => .Lava,
                             ';' => .Window,
                             '?' => .Any,
                             else => return error.InvalidFabTile,
