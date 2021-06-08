@@ -19,6 +19,11 @@ const MIN_ROOM_HEIGHT: usize = 4;
 const MAX_ROOM_WIDTH: usize = 10;
 const MAX_ROOM_HEIGHT: usize = 10;
 
+// FIXME: these '- 1's shouldn't have to be there, but, uh, weird things happen
+// if they're removed.
+const LIMIT = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
+const DISTANCES = [2][6]usize{ .{ 0, 1, 2, 3, 4, 8 }, .{ 3, 8, 4, 3, 2, 1 } };
+
 fn _place_prop(coord: Coord, prop_template: *const Prop) *Prop {
     var prop = prop_template.*;
     prop.coord = coord;
@@ -84,11 +89,12 @@ fn _room_intersects(rooms: *const RoomArrayList, room: *const Room, ignore: *con
 
 fn _excavate_prefab(room: *const Room, fab: *const Prefab) void {
     var y: usize = 0;
-    while (y < fab.width) : (y += 1) {
+    while (y < fab.height) : (y += 1) {
         var x: usize = 0;
-        while (x < fab.height) : (x += 1) {
+        while (x < fab.width) : (x += 1) {
             const rc = Coord.new2(room.start.z, x + room.start.x, y + room.start.y);
-            assert(rc.x < WIDTH and rc.y < HEIGHT);
+            assert(rc.x < WIDTH);
+            assert(rc.y < HEIGHT);
 
             switch (fab.content[y][x]) {
                 .Any => {},
@@ -119,13 +125,10 @@ fn _excavate_room(room: *const Room) void {
 }
 
 fn _place_rooms(rooms: *RoomArrayList, fabs: *const PrefabArrayList, level: usize, allocator: *mem.Allocator) void {
-    const limit = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
-    const distances = [2][6]usize{ .{ 0, 1, 2, 3, 4, 8 }, .{ 3, 8, 4, 3, 2, 1 } };
-
     const parent = rng.chooseUnweighted(Room, rooms.items);
     var fab: ?Prefab = null;
 
-    var distance = rng.choose(usize, &distances[0], &distances[1]) catch unreachable;
+    var distance = rng.choose(usize, &DISTANCES[0], &DISTANCES[1]) catch unreachable;
     var child: Room = undefined;
     var side = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
 
@@ -134,9 +137,9 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *const PrefabArrayList, level: usiz
 
         var child_w = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
         var child_h = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
-        child = parent.attach(side, child_w, child_h, distance, null).?;
+        child = parent.attach(side, child_w, child_h, distance, null) orelse return;
 
-        while (_room_intersects(rooms, &child, &parent) or child.overflowsLimit(&limit)) {
+        while (_room_intersects(rooms, &child, &parent) or child.overflowsLimit(&LIMIT)) {
             if (child_w < MIN_ROOM_WIDTH or child_h < MIN_ROOM_HEIGHT)
                 return;
 
@@ -155,7 +158,7 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *const PrefabArrayList, level: usiz
         child = parent.attach(side, fab.?.width, fab.?.height, distance, &fab.?) orelse return;
         child.prefab = fab;
 
-        if (_room_intersects(rooms, &child, &parent) or child.overflowsLimit(&limit))
+        if (_room_intersects(rooms, &child, &parent) or child.overflowsLimit(&LIMIT))
             return;
 
         _excavate_prefab(&child, &fab.?);
@@ -469,17 +472,29 @@ pub const Prefab = struct {
 
 pub const PrefabArrayList = std.ArrayList(Prefab);
 
+// FIXME: error handling
 pub fn readPrefabs(alloc: *mem.Allocator) PrefabArrayList {
-    var fab = std.os.open("fab/test1.fab", 0, 0) catch @panic("couldn't open prefab");
-    defer std.os.close(fab);
-
-    var buf: [2048]u8 = [1]u8{0} ** 2048;
-    const read = std.os.read(fab, buf[0..]) catch @panic("couldn't read prefab");
-
-    const f = Prefab.parse(buf[0..read]) catch @panic("couldn't parse prefab");
-
+    var buf: [2048]u8 = undefined;
     var fabs = PrefabArrayList.init(alloc);
-    fabs.append(f) catch @panic("OOM");
+
+    const fabs_dir = std.fs.cwd().openDir("prefabs", .{
+        .iterate = true,
+    }) catch unreachable;
+
+    var fabs_dir_iterator = fabs_dir.iterate();
+    while (fabs_dir_iterator.next() catch unreachable) |fab_file| {
+        if (fab_file.kind != .File) continue;
+
+        var fab_f = fabs_dir.openFile(fab_file.name, .{
+            .read = true,
+            .lock = .None,
+        }) catch unreachable;
+        defer fab_f.close();
+
+        const read = fab_f.readAll(buf[0..]) catch unreachable;
+        const f = Prefab.parse(buf[0..read]) catch unreachable;
+        fabs.append(f) catch @panic("OOM");
+    }
 
     return fabs;
 }

@@ -1,0 +1,26 @@
+% Prefabs are done with a simple markup language.
+%
+% Comments are done with a single percent mark.
+%
+% To simplify parsing, all characters are ASCII-only. This will be changed
+% later on.
+%
+% Legend:
+%    #   wall
+%    &   lit wall
+%    .   floor
+%    *   connection
+%    ~   water
+%    ;   window
+%    ?   anything
+%
+%
+% Example:
+
+?##*##?
+##...##
+#.....#
+*.....*
+#.....#
+##...##
+?##*##?
