@@ -195,39 +195,64 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *const PrefabArrayList, level: usiz
     // --- add corridors ---
 
     if (distance > 0) corridor: {
-        var cor = Coord.new2(level, 0, 0);
-        if (parent.prefab) |*f| {
-            const con = f.connectorFor(side) orelse break :corridor;
-            cor.x = parent.start.x + con.x;
-            cor.y = parent.start.y + con.y;
-            f.useConnector(con) catch unreachable;
-        } else if (child.prefab) |*f| {
-            const con = f.connectorFor(side.opposite()) orelse break :corridor;
-            cor.x = child.start.x + con.x;
-            cor.y = child.start.y + con.y;
-            f.useConnector(con) catch unreachable;
+        var corridor_coord = Coord.new2(level, 0, 0);
+        var parent_connector_coord: ?Coord = null;
+        var child_connector_coord: ?Coord = null;
+
+        if (parent.prefab != null or child.prefab != null) {
+            if (parent.prefab) |*f| {
+                const con = f.connectorFor(side) orelse break :corridor;
+                corridor_coord.x = parent.start.x + con.x;
+                corridor_coord.y = parent.start.y + con.y;
+                parent_connector_coord = corridor_coord;
+                f.useConnector(con) catch unreachable;
+            }
+            if (child.prefab) |*f| {
+                const con = f.connectorFor(side.opposite()) orelse break :corridor;
+                corridor_coord.x = child.start.x + con.x;
+                corridor_coord.y = child.start.y + con.y;
+                child_connector_coord = corridor_coord;
+                f.useConnector(con) catch unreachable;
+            }
         } else {
             const rsx = math.max(parent.start.x, child.start.x);
             const rex = math.min(parent.end().x, child.end().x);
             const rsy = math.max(parent.start.y, child.start.y);
             const rey = math.min(parent.end().y, child.end().y);
-            cor.x = rng.range(usize, math.min(rsx, rex), math.max(rsx, rex) - 1);
-            cor.y = rng.range(usize, math.min(rsy, rey), math.max(rsy, rey) - 1);
+            corridor_coord.x = rng.range(usize, math.min(rsx, rex), math.max(rsx, rex) - 1);
+            corridor_coord.y = rng.range(usize, math.min(rsy, rey), math.max(rsy, rey) - 1);
         }
 
         var corridor = switch (side) {
-            .North => Room{ .start = Coord.new2(level, cor.x, child.end().y), .height = parent.start.y - (child.end().y - 1), .width = 1 },
-            .South => Room{ .start = Coord.new2(level, cor.x, parent.end().y), .height = child.start.y - (parent.end().y - 1), .width = 1 },
-            .West => Room{ .start = Coord.new2(level, child.end().x, cor.y), .height = 1, .width = parent.start.x - (child.end().x - 1) },
-            .East => Room{ .start = Coord.new2(level, parent.end().x, cor.y), .height = 1, .width = child.start.x - (parent.end().x - 1) },
+            .North => Room{
+                .start = Coord.new2(level, corridor_coord.x, child.end().y),
+                .height = parent.start.y - child.end().y,
+                .width = 1,
+            },
+            .South => Room{
+                .start = Coord.new2(level, corridor_coord.x, parent.end().y),
+                .height = child.start.y - parent.end().y,
+                .width = 1,
+            },
+            .West => Room{
+                .start = Coord.new2(level, child.end().x, corridor_coord.y),
+                .height = 1,
+                .width = parent.start.x - child.end().x,
+            },
+            .East => Room{
+                .start = Coord.new2(level, parent.end().x, corridor_coord.y),
+                .height = 1,
+                .width = child.start.x - parent.end().x,
+            },
             else => unreachable,
         };
 
         _excavate_room(&corridor);
 
         // When using a prefab, the corridor doesn't include the connectors. Excavate
-        // the connector manually.
-        state.dungeon.at(cor).type = .Floor;
+        // the connectors (both the beginning and the end) manually.
+        if (parent_connector_coord) |acon| state.dungeon.at(acon).type = .Floor;
+        if (child_connector_coord) |acon| state.dungeon.at(acon).type = .Floor;
 
         if (distance == 1) _place_normal_door(corridor.start);
     }
