@@ -260,12 +260,26 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *const PrefabArrayList, level: usiz
 pub fn placeRandomRooms(fabs: *const PrefabArrayList, level: usize, num: usize, allocator: *mem.Allocator) void {
     var rooms = RoomArrayList.init(allocator);
 
-    const width = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
-    const height = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
     const x = rng.range(usize, 1, state.WIDTH / 2);
     const y = rng.range(usize, 1, state.HEIGHT / 2);
-    const first = Room{ .start = Coord.new2(level, x, y), .width = width, .height = height };
-    _excavate_room(&first);
+    var first: Room = undefined;
+
+    if (Configs[level].starting_prefab) |prefab_name| {
+        const prefab = Prefab.findPrefabByName(prefab_name, fabs).?;
+        first = Room{
+            .start = Coord.new2(level, x, y),
+            .width = prefab.width,
+            .height = prefab.height,
+            .prefab = prefab,
+        };
+        _excavate_prefab(&first, &prefab);
+    } else {
+        const width = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
+        const height = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
+        first = Room{ .start = Coord.new2(level, x, y), .width = width, .height = height };
+        _excavate_room(&first);
+    }
+
     rooms.append(first) catch unreachable;
 
     if (level == PLAYER_STARTING_LEVEL) {
@@ -453,6 +467,8 @@ pub const Prefab = struct {
     allow_spawning: bool = true,
     allow_traps: bool = true,
 
+    name: [32:0]u8 = mem.zeroes([32:0]u8),
+
     height: usize = 0,
     width: usize = 0,
     content: [20][20]FabTile = undefined,
@@ -565,6 +581,11 @@ pub const Prefab = struct {
 
         return f;
     }
+
+    pub fn findPrefabByName(name: []const u8, fabs: *const PrefabArrayList) ?Prefab {
+        for (fabs.items) |f| if (mem.eql(u8, name, f.name[0..mem.lenZ(f.name)])) return f;
+        return null;
+    }
 };
 
 pub const PrefabArrayList = std.ArrayList(Prefab);
@@ -590,7 +611,7 @@ pub fn readPrefabs(alloc: *mem.Allocator) PrefabArrayList {
 
         const read = fab_f.readAll(buf[0..]) catch unreachable;
 
-        const f = Prefab.parse(buf[0..read]) catch |e| {
+        var f = Prefab.parse(buf[0..read]) catch |e| {
             const msg = switch (e) {
                 error.InvalidFabTile => "Invalid prefab tile",
                 error.InvalidConnection => "Out of place connection tile",
@@ -601,9 +622,21 @@ pub fn readPrefabs(alloc: *mem.Allocator) PrefabArrayList {
             std.log.warn("{}: Couldn't load prefab: {}", .{ fab_file.name, msg });
             continue;
         };
+        mem.copy(u8, &f.name, mem.trimRight(u8, fab_file.name, ".fab"));
 
+        std.log.warn("got {s}", .{f.name[0..mem.lenZ(&f.name)]});
         fabs.append(f) catch @panic("OOM");
     }
 
     return fabs;
 }
+
+pub const LevelConfig = struct {
+    starting_prefab: ?[]const u8 = null,
+};
+
+pub const Configs = [LEVELS]LevelConfig{
+    .{},
+    .{ .starting_prefab = "PRI_start" },
+    .{},
+};

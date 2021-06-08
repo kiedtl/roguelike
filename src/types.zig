@@ -19,8 +19,8 @@ const ai = @import("ai.zig");
 
 pub const HEIGHT = 40;
 pub const WIDTH = 100;
-pub const LEVELS = 07;
-pub const PLAYER_STARTING_LEVEL = 5; // second to last, TODO: define in data file
+pub const LEVELS = 3;
+pub const PLAYER_STARTING_LEVEL = 1; // TODO: define in data file
 
 pub const CARDINAL_DIRECTIONS = [_]Direction{ .North, .South, .East, .West };
 pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .NorthWest, .SouthEast, .SouthWest };
