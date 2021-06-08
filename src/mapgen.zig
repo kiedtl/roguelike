@@ -171,8 +171,6 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *const PrefabArrayList, level: usiz
 
     // --- add machines ---
 
-    _place_machine(child.randomCoord(), &machines.Lamp);
-
     if (rng.onein(2)) {
         const trap_coord = child.randomCoord();
         var trap: Machine = undefined;
@@ -291,6 +289,48 @@ pub fn placeGuards(level: usize, allocator: *mem.Allocator) void {
             watcher.facing = .North;
             state.mobs.append(watcher) catch unreachable;
             state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
+        }
+    }
+}
+
+pub fn placeLights(level: usize) void {
+    for (state.dungeon.rooms[level].items) |room| {
+        // Don't light small rooms.
+        if ((room.width * room.height) < 16)
+            continue;
+
+        var spacing: usize = rng.range(usize, 0, 2);
+        var y: usize = 0;
+        while (y < room.height) : (y += 1) {
+            if (spacing == 0) {
+                spacing = rng.range(usize, 4, 8);
+
+                const coord1 = Coord.new2(level, room.start.x, room.start.y + y);
+                var lamp1 = machines.Lamp;
+                lamp1.luminescence -= rng.range(usize, 0, 30);
+
+                const coord2 = Coord.new2(level, room.end().x - 1, room.start.y + y);
+                var lamp2 = machines.Lamp;
+                lamp2.luminescence -= rng.range(usize, 0, 30);
+
+                if (!state.dungeon.hasMachine(coord1) and
+                    state.dungeon.neighboringWalls(coord1, false) == 1 and
+                    state.dungeon.neighboringMachines(coord1) == 0 and
+                    state.dungeon.at(coord1).type == .Floor)
+                {
+                    _place_machine(coord1, &lamp1);
+                }
+
+                if (!state.dungeon.hasMachine(coord2) and
+                    state.dungeon.neighboringWalls(coord2, false) == 1 and
+                    state.dungeon.neighboringMachines(coord2) == 0 and
+                    state.dungeon.at(coord2).type == .Floor)
+                {
+                    _place_machine(coord2, &lamp2);
+                }
+            }
+
+            spacing -= 1;
         }
     }
 }

@@ -13,11 +13,12 @@ pub const GasVentProp = Prop{ .name = "gas vent", .tile = '=' };
 
 pub const Lamp = Machine{
     .name = "a lamp",
-    .tile = 'º',
+    .tile = '•',
     .walkable = false,
     .opacity = 0.0,
     .on_trigger = triggerNone,
     .should_be_avoided = false,
+    // maximum, could be much lower (see mapgen:_light_room)
     .luminescence = 75,
 };
 

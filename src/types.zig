@@ -512,7 +512,7 @@ pub const Status = enum {
                 for (&DIRECTIONS) |d| {
                     var neighbor = coord;
                     if (!neighbor.move(d, state.mapgeometry)) continue;
-                    if (state.dungeon.neighboringWalls(neighbor) == 9) continue;
+                    if (state.dungeon.neighboringWalls(neighbor, true) == 9) continue;
 
                     tile.ch = if (state.dungeon.at(neighbor).type == .Wall) '#' else '·';
                     _ = mob.memory.getOrPutValue(neighbor, tile) catch unreachable;
@@ -1192,11 +1192,37 @@ pub const Dungeon = struct {
     light_color: [LEVELS][HEIGHT][WIDTH]u32 = [1][HEIGHT][WIDTH]u32{[1][WIDTH]u32{[1]u32{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     rooms: [LEVELS]RoomArrayList = undefined,
 
-    pub fn neighboringWalls(self: *Dungeon, c: Coord) usize {
-        var walls: usize = if (self.at(c).type == .Wall) 1 else 0;
+    pub fn hasMachine(self: *Dungeon, c: Coord) bool {
+        if (self.at(c).surface) |surface| {
+            switch (surface) {
+                .Machine => |_| return true,
+                else => {},
+            }
+        }
+
+        return false;
+    }
+
+    pub fn neighboringMachines(self: *Dungeon, c: Coord) usize {
+        var machs: usize = if (self.hasMachine(c)) 1 else 0;
         for (&DIRECTIONS) |d| {
             var neighbor = c;
-            if (neighbor.move(d, state.mapgeometry)) continue;
+            if (!neighbor.move(d, state.mapgeometry)) continue;
+            if (self.hasMachine(neighbor)) machs += 1;
+        }
+        return machs;
+    }
+
+    pub fn neighboringWalls(self: *Dungeon, c: Coord, diags: bool) usize {
+        const directions = if (diags) &DIRECTIONS else &CARDINAL_DIRECTIONS;
+
+        var walls: usize = if (self.at(c).type == .Wall) 1 else 0;
+        for (directions) |d| {
+            var neighbor = c;
+            if (!neighbor.move(d, state.mapgeometry)) {
+                walls += 1;
+                continue;
+            }
             if (self.at(neighbor).type == .Wall) walls += 1;
         }
         return walls;

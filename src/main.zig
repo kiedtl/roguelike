@@ -46,6 +46,7 @@ fn initGame() void {
         // mapgen.cellularAutomata(level, 6, 1);
         // mapgen.cellularAutomata(level, 6, 1);
         mapgen.placeRandomRooms(&fabs, level, 2000, &state.GPA.allocator);
+        mapgen.placeLights(level);
         mapgen.placeGuards(level, &state.GPA.allocator);
     }
 
@@ -239,7 +240,7 @@ fn viewerMain() void {
 
 pub fn main() anyerror!void {
     initGame();
-    viewerMain();
-    //tickGame();
+    //viewerMain();
+    tickGame();
     deinitGame();
 }
