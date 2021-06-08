@@ -99,16 +99,15 @@ fn _excavate_prefab(room: *const Room, fab: *const Prefab) void {
             const tt: ?TileType = switch (fab.content[y][x]) {
                 .Any => null,
                 .Wall, .Connection => .Wall,
-                .Lamp, .Floor => .Floor,
+                .Bars, .Lamp, .Floor => .Floor,
                 .Water => .Water,
                 .Lava => .Lava,
-                .Window => @panic("todo"),
             };
             if (tt) |_tt| state.dungeon.at(rc).type = _tt;
 
             switch (fab.content[y][x]) {
                 .Lamp => _place_machine(rc, &machines.Lamp),
-                .Window => @panic("todo"),
+                .Bars => _ = _place_prop(rc, &machines.IronBarProp),
                 else => {},
             }
         }
@@ -460,7 +459,7 @@ pub const Prefab = struct {
     connections: [40]?Connection = undefined,
 
     pub const FabTile = enum {
-        Wall, Lamp, Floor, Connection, Water, Lava, Window, Any
+        Wall, Lamp, Floor, Connection, Water, Lava, Bars, Any
     };
 
     pub const Connection = struct {
@@ -533,7 +532,7 @@ pub const Prefab = struct {
                             },
                             '~' => .Water,
                             '≈' => .Lava,
-                            ';' => .Window,
+                            '≡' => .Bars,
                             '?' => .Any,
                             else => return error.InvalidFabTile,
                         };

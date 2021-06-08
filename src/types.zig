@@ -1036,7 +1036,13 @@ pub const Machine = struct {
     luminescence: usize = 0,
 };
 
-pub const Prop = struct { name: []const u8, tile: u21, coord: Coord = Coord.new(0, 0) };
+pub const Prop = struct {
+    name: []const u8,
+    tile: u21,
+    walkable: bool = true,
+    opacity: f64 = 0.0,
+    coord: Coord = Coord.new(0, 0),
+};
 
 pub const SurfaceItemTag = enum { Machine, Prop };
 pub const SurfaceItem = union(SurfaceItemTag) { Machine: *Machine, Prop: *Prop };
