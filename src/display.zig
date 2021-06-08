@@ -231,7 +231,6 @@ pub fn draw() void {
             }
 
             switch (state.dungeon.at(coord).type) {
-                .Wall => {},
                 .Floor => {
                     if (state.dungeon.at(coord).mob) |mob| {
                         if (state.player.coord.eq(coord) and _mobs_can_see(&moblist, coord))
@@ -251,6 +250,7 @@ pub fn draw() void {
                         }
                     }
                 },
+                else => {},
             }
 
             termbox.tb_put_cell(cursorx, cursory, &tile);

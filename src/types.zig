@@ -1077,8 +1077,12 @@ pub const ItemTag = enum { Corpse, Ring };
 pub const Item = union(ItemTag) { Corpse: *Mob, Ring: *Ring };
 
 pub const TileType = enum {
-    Wall = 0,
-    Floor = 1,
+    Wall,
+    Floor,
+    Water,
+    Lava,
+
+    pub const LAVA_LIGHT_INTENSITY: usize = 175;
 };
 
 pub const Tile = struct {
@@ -1090,6 +1094,9 @@ pub const Tile = struct {
     item: ?Item = null,
 
     pub fn emittedLightIntensity(self: *const Tile) usize {
+        if (self.type == .Lava)
+            return TileType.LAVA_LIGHT_INTENSITY;
+
         var l: usize = 0;
         if (self.surface) |surface| {
             switch (surface) {
@@ -1105,6 +1112,16 @@ pub const Tile = struct {
         var cell = termbox.tb_cell{};
 
         switch (self.type) {
+            .Water => cell = .{
+                .ch = '≈',
+                .fg = 0x86c2f5, // cornflowerblue
+                .bg = 0x34558e, // steelblue
+            },
+            .Lava => cell = .{
+                .ch = '≈',
+                .fg = 0xff5347, // tomato
+                .bg = 0xcb0f1f, // red
+            },
             .Wall => cell = .{
                 .ch = self.material.glyph,
                 .fg = self.material.color_fg,

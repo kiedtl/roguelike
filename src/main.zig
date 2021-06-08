@@ -205,6 +205,7 @@ fn viewerDisplay(level: usize) void {
 
 fn viewerMain() void {
     state.player.kill();
+    state.tickLight();
 
     var level: usize = PLAYER_STARTING_LEVEL;
 
@@ -238,6 +239,7 @@ fn viewerMain() void {
 
 pub fn main() anyerror!void {
     initGame();
-    viewerMain(); //tickGame();
+    //viewerMain();
+    tickGame();
     deinitGame();
 }

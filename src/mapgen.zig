@@ -100,7 +100,8 @@ fn _excavate_prefab(room: *const Room, fab: *const Prefab) void {
                 .Any => {},
                 .Wall, .LitWall => state.dungeon.at(rc).type = .Wall,
                 .Floor, .Connection => state.dungeon.at(rc).type = .Floor,
-                .Window, .Water => @panic("todo"),
+                .Water => state.dungeon.at(rc).type = .Water,
+                .Window => @panic("todo"),
             }
 
             switch (fab.content[y][x]) {
