@@ -4,33 +4,48 @@ New mobs
  [NN]NightCreature)
 --------
 CC	a	spiders
+			- Web attacks that hold player in stasis.
+			- Long-lived, slow acting poisoned bite.
 CC	s	burning brute
+			- Tremendously powerful fire attacks.
+			- Can be leveraged against guards.
 			"A winged demon composed primarily of boiling granite, capable of
 			fearsome fire attacks."
 CC	s	blazing brute
+			- Upscaled version of burning brute?
 CC	s	winged terror
-CC	s	greater & lesser necromancer
-			"An unusually fragile minor demon that has long wielded the secrets
-			of life and death."
 CC	a	jackals
 CC	a	hounds
 CC	s	locust
 CC	s	cankerworm
 CC	h	wraith
+CC	s	death angel
+			- Essentially a necromancer, but much more powerful on its own.
+			- Capable of striking dead mobs with low willpower, non-sentient
+			  mobs, mindless mobs, or undead mobs.
+CE	s	greater & lesser necromancer
+			"An unusually fragile minor demon that has long wielded the secrets
+			of life and death."
 CE	h	orc
 			"Middle-sized humonoids with skin only slightly darker than the
 			underside of a rainbow trout, these ferocious beings are nothing
 			like the orcs you've read about in the storybooks."
 CE	a	hellhounds
 CE	h	death/fire/ether knight
-CE	s	death angel
 LE	s	will o' the wisp
 CE	a	fire worm (salamander?)
 CE	o	crystal statue
+			- Confuses intruders that wander too closely.
+			- Nearly indestructable, except by fire attacks.
 			"A statue of some nameless humanoid creature than once inhabited
 			the pits of Udùn. These statues are almost as rare as the
 			translucent white crystal they're composed of."
 CE	o	turquoise statue
+			- Raises an awful shriek when the player passes it.
+			- Nearly indestructable, except by fire attacks.
+CE	o	kyanite statue
+			- Emits paralysis gas when intruders wander too closely.
+			- Nearly indestructable, except by fire attacks.
 CE	u	lich
 			"The dessicated form of an ancient sorcerer, now controlled by the
 			very necromantic powers he once served."
@@ -43,14 +58,31 @@ LG	s	angel
 LG	s	archangel
 ??	a	rat
 ??	a	quasit
-NN	s	stalker (invisible)
-NN	s	bogeyman (TODO: change name)
+NN	o	stalker (invisible)
+			- Invisible.
+			- Stalks victim, occasionally delivering blows.
+NN	o	bogeyman (TODO: change name)
+			- Stalks victim invisibly in groups of 3-5, then becomes visible
+			  and gangs up to beat victim's skull in. Casts silence, but, as
+			  with the bogeymen in Dwarf Fortress, constantly hurls insults
+			  and cackles while attacking.
+			- Incredibly good at dodging.
+			- If player has a high-enough willpower, can break silence and raise
+			  a the alarm. Guards wake up, stream in, and clash with the fleeing
+			  bogeymen.
 			"A semi-sentient, emaciated humaniod creature of hideous appearance,
 			possessed with eyes that are both dull and bright in the dungeon's
 			gloom."
-NN	s	night wanderer
-NN	s	creeping dread
+NN	o	night wanderer
+			- A thin, sickly-looking creature that wanders the dungeon. Mostly
+			  harmless.
+NN	o	creeping death
+			- Invisible.
+			- Waits for victim to enter a dead end, then emits a suffocating
+			  black gas that envelopes victim. Said gas is completely opaque
+			  and is jet black.
 NN	o	grue
+			- Hangs around in dark tiles, before gobbling up unsuspecting victims.
 NN	o	vampire
 
 Feats (challenges)
@@ -59,7 +91,8 @@ sneak		Only attack and kill with stabs.
 frugal		Use only one weapon throughout the game.
 ringless	Use no rings at all.
 naked		Use no cloaks at all.
-chivalrous	Use only (unpoisoned) melee weapons.
+chivalrous	Use only (unpoisoned) melee weapons, never ranged.
+ringlord	Never remove a rings throught the game.
 
 Movement patterns
 -----------------
