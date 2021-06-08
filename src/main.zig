@@ -226,11 +226,9 @@ fn viewerMain() void {
             } else if (ev.ch != 0) {
                 switch (ev.ch) {
                     '<' => if (level > 0) {
-                        state.tickLight();
                         level -= 1;
                     },
                     '>' => if (level < (LEVELS - 1)) {
-                        state.tickLight();
                         level += 1;
                     },
                     else => {},

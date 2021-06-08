@@ -98,8 +98,8 @@ fn _excavate_prefab(room: *const Room, fab: *const Prefab) void {
 
             const tt: ?TileType = switch (fab.content[y][x]) {
                 .Any => null,
-                .Wall => .Wall,
-                .Lamp, .Floor, .Connection => .Floor,
+                .Wall, .Connection => .Wall,
+                .Lamp, .Floor => .Floor,
                 .Water => .Water,
                 .Lava => .Lava,
                 .Window => @panic("todo"),
@@ -128,9 +128,10 @@ fn _excavate_room(room: *const Room) void {
 }
 
 fn _place_rooms(rooms: *RoomArrayList, fabs: *const PrefabArrayList, level: usize, allocator: *mem.Allocator) void {
-    const parent = rng.chooseUnweighted(Room, rooms.items);
-    var fab: ?Prefab = null;
+    // parent is non-const because we might need to update connectors on it.
+    var parent = rng.chooseUnweighted(Room, rooms.items);
 
+    var fab: ?Prefab = null;
     var distance = rng.choose(usize, &DISTANCES[0], &DISTANCES[1]) catch unreachable;
     var child: Room = undefined;
     var side = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
@@ -195,14 +196,16 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *const PrefabArrayList, level: usiz
 
     if (distance > 0) corridor: {
         var cor = Coord.new2(level, 0, 0);
-        if (parent.prefab) |f| {
+        if (parent.prefab) |*f| {
             const con = f.connectorFor(side) orelse break :corridor;
             cor.x = parent.start.x + con.x;
             cor.y = parent.start.y + con.y;
-        } else if (fab) |f| {
+            f.useConnector(con) catch unreachable;
+        } else if (child.prefab) |*f| {
             const con = f.connectorFor(side.opposite()) orelse break :corridor;
             cor.x = child.start.x + con.x;
             cor.y = child.start.y + con.y;
+            f.useConnector(con) catch unreachable;
         } else {
             const rsx = math.max(parent.start.x, child.start.x);
             const rex = math.min(parent.end().x, child.end().x);
@@ -213,14 +216,18 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *const PrefabArrayList, level: usiz
         }
 
         var corridor = switch (side) {
-            .North => Room{ .start = Coord.new2(level, cor.x, child.end().y), .height = parent.start.y - child.end().y, .width = 1 },
-            .South => Room{ .start = Coord.new2(level, cor.x, parent.end().y), .height = child.start.y - parent.end().y, .width = 1 },
-            .West => Room{ .start = Coord.new2(level, child.end().x, cor.y), .height = 1, .width = parent.start.x - child.end().x },
-            .East => Room{ .start = Coord.new2(level, parent.end().x, cor.y), .height = 1, .width = child.start.x - parent.end().x },
+            .North => Room{ .start = Coord.new2(level, cor.x, child.end().y), .height = parent.start.y - (child.end().y - 1), .width = 1 },
+            .South => Room{ .start = Coord.new2(level, cor.x, parent.end().y), .height = child.start.y - (parent.end().y - 1), .width = 1 },
+            .West => Room{ .start = Coord.new2(level, child.end().x, cor.y), .height = 1, .width = parent.start.x - (child.end().x - 1) },
+            .East => Room{ .start = Coord.new2(level, parent.end().x, cor.y), .height = 1, .width = child.start.x - (parent.end().x - 1) },
             else => unreachable,
         };
 
         _excavate_room(&corridor);
+
+        // When using a prefab, the corridor doesn't include the connectors. Excavate
+        // the connector manually.
+        state.dungeon.at(cor).type = .Floor;
 
         if (distance == 1) _place_normal_door(corridor.start);
     }
@@ -434,12 +441,25 @@ pub const Prefab = struct {
     pub const Connection = struct {
         c: Coord,
         d: Direction,
+        used: bool = false,
     };
+
+    pub fn useConnector(self: *Prefab, c: Coord) !void {
+        for (self.connections) |maybe_con, i| {
+            const con = maybe_con orelse break;
+            if (con.c.eq(c)) {
+                if (con.used) return error.ConnectorAlreadyUsed;
+                self.connections[i].?.used = true;
+                return;
+            }
+        }
+        return error.NoSuchConnector;
+    }
 
     pub fn connectorFor(self: *const Prefab, d: Direction) ?Coord {
         for (self.connections) |maybe_con| {
             const con = maybe_con orelse break;
-            if (con.d == d) return con.c;
+            if (con.d == d and !con.used) return con.c;
         }
         return null;
     }
@@ -472,31 +492,31 @@ pub const Prefab = struct {
                             '#' => .Wall,
                             '•' => .Lamp,
                             '.' => .Floor,
-                            '*' => .Connection,
+                            '*' => con: {
+                                f.connections[ci] = .{
+                                    .c = Coord.new(x, y),
+                                    .d = .North,
+                                };
+                                ci += 1;
+
+                                break :con .Connection;
+                            },
                             '~' => .Water,
                             '≈' => .Lava,
                             ';' => .Window,
                             '?' => .Any,
                             else => return error.InvalidFabTile,
                         };
-
-                        if (c == '*') {
-                            f.connections[ci] = .{
-                                .c = Coord.new(x, y),
-                                .d = .North,
-                            };
-                            ci += 1;
-                        }
-
-                        if (x > w) w = x;
                     }
+
+                    if (x > w) w = x;
                     y += 1;
                 },
             }
         }
 
         f.width = w;
-        f.height = y - 1;
+        f.height = y;
 
         for (&f.connections) |*con, i| {
             if (con.*) |c| {
@@ -504,9 +524,9 @@ pub const Prefab = struct {
                     f.connections[i].?.d = .West;
                 } else if (c.c.y == 0) {
                     f.connections[i].?.d = .North;
-                } else if (c.c.y == f.height) {
+                } else if (c.c.y == (f.height - 1)) {
                     f.connections[i].?.d = .South;
-                } else if (c.c.x == f.width) {
+                } else if (c.c.x == (f.width - 1)) {
                     f.connections[i].?.d = .East;
                 } else {
                     return error.InvalidConnection;
