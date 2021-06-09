@@ -40,6 +40,16 @@ pub const GoldCoins = Machine{
     .should_be_avoided = false,
 };
 
+pub const StairExit = Machine{
+    .id = "stair_exit",
+    .name = "exit staircase",
+    .tile = '»',
+    .walkable = true,
+    .opacity = 0.0,
+    .on_trigger = triggerStairExit,
+    .should_be_avoided = false,
+};
+
 // TODO: Maybe define a "Doormat" prop that stairs have? And doormats should have
 // a very welcoming message on it, of course
 pub const StairUp = Machine{
@@ -127,6 +137,12 @@ pub fn triggerParalysisGasTrap(culprit: *Mob, machine: *Machine) void {
     }
 
     state.message(.Trap, "Paralytic gas seeps out of the gas vents!", .{});
+}
+
+pub fn triggerStairExit(culprit: *Mob, machine: *Machine) void {
+    assert(machine.coord.z == 0);
+    if (!culprit.coord.eq(state.player.coord)) return;
+    quit = true;
 }
 
 pub fn triggerStairUp(culprit: *Mob, machine: *Machine) void {

@@ -1028,6 +1028,7 @@ pub const Mob = struct { // {{{
 }; // }}}
 
 pub const Machine = struct {
+    id: []const u8 = "",
     name: []const u8,
     tile: u21,
     // Does the presence of this machine render a tile unwalkable?
