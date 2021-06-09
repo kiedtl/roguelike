@@ -1095,6 +1095,8 @@ pub const Machine = struct {
 pub const Prop = struct {
     name: []const u8,
     tile: u21,
+    fg: ?u32 = null,
+    bg: ?u32 = null,
     walkable: bool = true,
     opacity: f64 = 0.0,
     coord: Coord = Coord.new(0, 0),
@@ -1214,13 +1216,21 @@ pub const Tile = struct {
                         else => cell.ch = '?',
                     }
                 } else if (state.dungeon.at(coord).surface) |surfaceitem| {
+                    var fg: ?u32 = null;
+                    var bg: ?u32 = null;
+
                     const ch = switch (surfaceitem) {
                         .Machine => |m| m.tile(),
-                        .Prop => |p| p.tile,
+                        .Prop => |p| prop: {
+                            if (p.bg) |prop_bg| bg = prop_bg;
+                            if (p.fg) |prop_fg| fg = prop_fg;
+                            break :prop p.tile;
+                        },
                     };
 
                     cell.ch = ch;
-                    cell.bg = color;
+                    cell.fg = fg orelse 0xffffff;
+                    cell.bg = bg orelse color;
                 } else {
                     cell.ch = ' ';
                     cell.bg = color;

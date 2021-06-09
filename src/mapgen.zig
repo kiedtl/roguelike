@@ -19,8 +19,6 @@ const MIN_ROOM_HEIGHT: usize = 4;
 const MAX_ROOM_WIDTH: usize = 10;
 const MAX_ROOM_HEIGHT: usize = 10;
 
-// FIXME: these '- 1's shouldn't have to be there, but, uh, weird things happen
-// if they're removed.
 const LIMIT = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
 const DISTANCES = [2][6]usize{ .{ 0, 1, 2, 3, 4, 8 }, .{ 3, 8, 4, 3, 2, 1 } };
 

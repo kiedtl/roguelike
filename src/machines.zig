@@ -14,6 +14,8 @@ pub const GasVentProp = Prop{ .name = "gas vent", .tile = '=' };
 pub const IronBarProp = Prop{
     .name = "iron bars",
     .tile = '≡',
+    .fg = 0x000012,
+    .bg = 0xdadada,
     .opacity = 0.3,
     .walkable = false,
 };
