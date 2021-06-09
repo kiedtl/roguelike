@@ -51,7 +51,7 @@ pub fn light_tile_opacity(coord: Coord) usize {
 
     if (tile.surface) |surface| {
         switch (surface) {
-            .Machine => |m| o += @floatToInt(usize, m.opacity * 100),
+            .Machine => |m| o += @floatToInt(usize, m.opacity() * 100),
             else => {},
         }
     }
@@ -74,7 +74,7 @@ fn tile_opacity(coord: Coord) f64 {
 
     if (tile.surface) |surface| {
         switch (surface) {
-            .Machine => |m| o += m.opacity,
+            .Machine => |m| o += m.opacity(),
             else => {},
         }
     }
@@ -89,13 +89,13 @@ fn tile_opacity(coord: Coord) f64 {
 
 // STYLE: change to Tile.isWalkable
 pub fn is_walkable(coord: Coord) bool {
-    if (dungeon.at(coord).type == .Wall)
+    if (dungeon.at(coord).type != .Floor)
         return false;
     if (dungeon.at(coord).mob != null)
         return false;
     if (dungeon.at(coord).surface) |surface| {
         switch (surface) {
-            .Machine => |m| if (m.should_be_avoided or !m.walkable) return false,
+            .Machine => |m| if (!m.isWalkable()) return false,
             else => {},
         }
     }
@@ -353,6 +353,17 @@ pub fn tickAtmosphere(cur_gas: usize) void {
 
     if (cur_gas < (gas.GAS_NUM - 1))
         tickAtmosphere(cur_gas + 1);
+}
+
+pub fn tickMachines(level: usize) void {
+    var iter = machines.iterator();
+    while (iter.nextPtr()) |machine| {
+        if (machine.coord.z != level or !machine.isPowered())
+            continue;
+
+        machine.on_power(machine);
+        machine.power = utils.saturating_sub(machine.power, machine.power_drain);
+    }
 }
 
 pub fn reset_marks() void {

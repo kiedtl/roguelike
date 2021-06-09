@@ -188,10 +188,6 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *const PrefabArrayList, level: usiz
         _place_machine(trap_coord, &trap);
     }
 
-    if (rng.onein(6)) {
-        _place_machine(child.randomCoord(), &machines.GoldCoins);
-    }
-
     // --- add corridors ---
 
     if (distance > 0) corridor: {
@@ -357,11 +353,11 @@ pub fn placeLights(level: usize) void {
 
                 const coord1 = Coord.new2(level, room.start.x, room.start.y + y);
                 var lamp1 = machines.Lamp;
-                lamp1.luminescence -= rng.range(usize, 0, 30);
+                lamp1.powered_luminescence -= rng.range(usize, 0, 30);
 
                 const coord2 = Coord.new2(level, room.end().x - 1, room.start.y + y);
                 var lamp2 = machines.Lamp;
-                lamp2.luminescence -= rng.range(usize, 0, 30);
+                lamp2.powered_luminescence -= rng.range(usize, 0, 30);
 
                 if (!state.dungeon.hasMachine(coord1) and
                     state.dungeon.neighboringWalls(coord1, false) == 1 and

@@ -720,15 +720,25 @@ pub const Mob = struct { // {{{
     pub fn teleportTo(self: *Mob, dest: Coord) bool {
         const coord = self.coord;
 
-        if (state.dungeon.at(dest).type == .Wall) {
-            return false;
-        }
-
-        if (state.dungeon.at(dest).mob) |othermob| {
-            if (self.isHostileTo(othermob) and !othermob.is_dead) {
-                self.fight(othermob);
-                return true;
-            } else if (!othermob.is_dead) {
+        if (!state.is_walkable(dest)) {
+            if (state.dungeon.at(dest).mob) |othermob| {
+                if (self.isHostileTo(othermob) and !othermob.is_dead) {
+                    self.fight(othermob);
+                    return true;
+                } else if (!othermob.is_dead) {
+                    return false;
+                }
+            } else if (state.dungeon.at(dest).surface) |surface| {
+                switch (surface) {
+                    .Machine => |m| if (!m.isWalkable()) {
+                        m.addPower(self);
+                        self.energy -= self.speed();
+                        return true;
+                    },
+                    else => {},
+                }
+                return false;
+            } else {
                 return false;
             }
         }
@@ -742,7 +752,7 @@ pub const Mob = struct { // {{{
 
         if (state.dungeon.at(dest).surface) |surface| {
             switch (surface) {
-                .Machine => |m| m.on_trigger(self, m),
+                .Machine => |m| if (m.isWalkable()) m.addPower(self),
                 else => {},
             }
         }
@@ -1030,19 +1040,56 @@ pub const Mob = struct { // {{{
 pub const Machine = struct {
     id: []const u8 = "",
     name: []const u8,
-    tile: u21,
-    // Does the presence of this machine render a tile unwalkable?
-    walkable: bool,
-    opacity: f64,
+
+    powered_tile: u21,
+    unpowered_tile: u21,
+
+    power_drain: usize = 100, // Power drained per turn
+    power_add: usize = 100, // Power added on interact
+
+    powered_walkable: bool = true,
+    unpowered_walkable: bool = true,
+
+    powered_opacity: f64 = 0.0,
+    unpowered_opacity: f64 = 0.0,
+
+    powered_luminescence: usize = 0,
+    unpowered_luminescence: usize = 0,
+
     coord: Coord = Coord.new(0, 0),
-    on_trigger: fn (*Mob, *Machine) void,
-    // Should the machine, if walkable, be avoided when doing pathfinding?
-    // Traps and staircases should be avoided, for instance.
-    should_be_avoided: bool,
+    on_power: fn (*Machine) void, // Called on each turn when the machine is powered
+    power: usize = 0, // percentage (0..100)
+    last_interaction: ?*Mob = null,
+
     // FIXME: there has got to be a better way to do this
     props: [40]?*Prop = [_]?*Prop{null} ** 40,
-    // TODO: is_disabled, strength_needed
-    luminescence: usize = 0,
+
+    // TODO: is_disabled?
+
+    pub fn addPower(self: *Machine, by: ?*Mob) void {
+        self.power += self.power_add;
+        self.last_interaction = by;
+    }
+
+    pub fn isPowered(self: *const Machine) bool {
+        return self.power > 0;
+    }
+
+    pub fn tile(self: *const Machine) u21 {
+        return if (self.isPowered()) self.powered_tile else self.unpowered_tile;
+    }
+
+    pub fn isWalkable(self: *const Machine) bool {
+        return if (self.isPowered()) self.powered_walkable else self.unpowered_walkable;
+    }
+
+    pub fn opacity(self: *const Machine) f64 {
+        return if (self.isPowered()) self.powered_opacity else self.unpowered_opacity;
+    }
+
+    pub fn luminescence(self: *const Machine) usize {
+        return if (self.isPowered()) self.powered_luminescence else self.unpowered_luminescence;
+    }
 };
 
 pub const Prop = struct {
@@ -1115,7 +1162,7 @@ pub const Tile = struct {
         var l: usize = 0;
         if (self.surface) |surface| {
             switch (surface) {
-                .Machine => |m| l += m.luminescence,
+                .Machine => |m| l += m.luminescence(),
                 else => {},
             }
         }
@@ -1168,7 +1215,7 @@ pub const Tile = struct {
                     }
                 } else if (state.dungeon.at(coord).surface) |surfaceitem| {
                     const ch = switch (surfaceitem) {
-                        .Machine => |m| m.tile,
+                        .Machine => |m| m.tile(),
                         .Prop => |p| p.tile,
                     };
 

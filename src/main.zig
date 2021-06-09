@@ -136,6 +136,7 @@ fn tickGame() void {
         const cur_level = state.player.coord.z;
 
         state.ticks += 1;
+        state.tickMachines(cur_level);
         state.tickLight();
         state.tickAtmosphere(0);
         state.tickSound();
