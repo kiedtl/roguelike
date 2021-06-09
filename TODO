@@ -397,3 +397,4 @@ x Allow for definition of a 'start' prefab
 - Add dialog to view inventory
 - Add dialog to use item in inventory (quaff potions)
 - Add dialog to throw potion at mob
+- Define where rings should be in prefabs
