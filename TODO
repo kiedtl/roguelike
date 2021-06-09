@@ -14,6 +14,7 @@ CC	s	burning brute
 CC	s	blazing brute
 			- Upscaled version of burning brute?
 CC	s	winged terror
+			- Summoner.
 CC	a	jackals
 CC	a	hounds
 CC	s	locust
@@ -21,9 +22,9 @@ CC	s	cankerworm
 CC	h	wraith
 CC	s	death angel
 			- Essentially a necromancer, but much more powerful on its own.
-			- Capable of striking dead mobs with low willpower, non-sentient
-			  mobs, mindless mobs, or undead mobs.
-CE	s	greater & lesser necromancer
+			- Capable of striking certain mobs (low willpower, non-sentient
+			  mobs, mindless mobs, or undead mobs) dead in one turn.
+CE	s	greater, lesser, minor necromancer
 			"An unusually fragile minor demon that has long wielded the secrets
 			of life and death."
 CE	h	orc
@@ -47,6 +48,9 @@ CE	o	kyanite statue
 			- Emits paralysis gas when intruders wander too closely.
 			- Nearly indestructable, except by fire attacks.
 CE	u	lich
+			- Ranged attacker. Hangs behind, flees when hostile closes in.
+			- Bufs allies when they're wounded, allows non-undead mobs to
+			  "taint" hostile.
 			"The dessicated form of an ancient sorcerer, now controlled by the
 			very necromantic powers he once served."
 CE	a	troll
@@ -58,6 +62,11 @@ LG	s	angel
 LG	s	archangel
 ??	a	rat
 ??	a	quasit
+??	o	lava flan
+			- Emits small amounts of smoke.
+			- Spawns around lava, made of lava.
+			- Splits in two when struck with shearing damage.
+			- Explodes on death.
 NN	o	stalker (invisible)
 			- Invisible.
 			- Stalks victim, occasionally delivering blows.
@@ -82,7 +91,7 @@ NN	o	creeping death
 			  black gas that envelopes victim. Said gas is completely opaque
 			  and is jet black.
 NN	o	grue
-			- Hangs around in dark tiles, before gobbling up unsuspecting victims.
+			- Like stalker, but dies when coming into contact with light.
 NN	o	vampire
 
 Feats (challenges)
