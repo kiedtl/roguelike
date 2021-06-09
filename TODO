@@ -386,12 +386,14 @@ Roadmap
 x Basic prefabs
 x Allow for definition of a 'start' prefab
 - Allow for prefabs to be restricted to a map
-	- Allow for prefabs to appear only a certain number of times
-	- Allow for definition of probability of prefab appearing
-	- Allow for placement of player in a specific location
-	- Allow for placement of mobs in a specific location
 - Allow for placement of specific item in a location
 - Add exit staircase that exits game
-- Add screen for winning
-- Add screen for death
+- Add screen/confirmation for winning
+- Add screen/confirmation for death
 - Add very simple morgue files
+- Add potion struct, define some potions
+- Throw some potions around during mapgen
+- Allow picking up of potions
+- Add dialog to view inventory
+- Add dialog to use item in inventory (quaff potions)
+- Add dialog to throw potion at mob
