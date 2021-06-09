@@ -624,7 +624,6 @@ pub fn readPrefabs(alloc: *mem.Allocator) PrefabArrayList {
         };
         mem.copy(u8, &f.name, mem.trimRight(u8, fab_file.name, ".fab"));
 
-        std.log.warn("got {s}", .{f.name[0..mem.lenZ(&f.name)]});
         fabs.append(f) catch @panic("OOM");
     }
 
