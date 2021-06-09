@@ -379,3 +379,19 @@ Research Manhattan distance vs Euclidian distance vs Moore neighborhood
 	https://reddit.com/r/roguelikedev/comments/nev1jg/a_pathfinding_unstablenondeterministic/
 Define Species struct and carry immutable data for each mob in it
 Convert enum+union pair to union(enum) (see std/fifo.zig) where needed
+
+
+Roadmap
+-------
+x Basic prefabs
+x Allow for definition of a 'start' prefab
+- Allow for prefabs to be restricted to a map
+	- Allow for prefabs to appear only a certain number of times
+	- Allow for definition of probability of prefab appearing
+	- Allow for placement of player in a specific location
+	- Allow for placement of mobs in a specific location
+- Allow for placement of specific item in a location
+- Add exit staircase that exits game
+- Add screen for winning
+- Add screen for death
+- Add very simple morgue files
