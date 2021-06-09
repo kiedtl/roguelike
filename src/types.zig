@@ -154,10 +154,18 @@ pub const Coord = struct { // {{{
     }
 
     pub fn distance(a: Self, b: Self) usize {
-        // d = sqrt(dx^2 + dy^2)
-        const x = math.max(a.x, b.x) - math.min(a.x, b.x);
-        const y = math.max(a.y, b.y) - math.min(a.y, b.y);
-        return math.sqrt((x * x) + (y * y));
+        // Euclidean: d = sqrt(dx^2 + dy^2)
+        //
+        // const x = math.max(a.x, b.x) - math.min(a.x, b.x);
+        // const y = math.max(a.y, b.y) - math.min(a.y, b.y);
+        // return math.sqrt((x * x) + (y * y));
+
+        // Manhattan: |x1 - x2| + |y1 - y2|
+        return @intCast(
+            usize,
+            (math.absInt(@intCast(isize, a.x) - @intCast(isize, b.x)) catch unreachable) +
+                (math.absInt(@intCast(isize, a.y) - @intCast(isize, b.y)) catch unreachable),
+        );
     }
 
     pub fn hash(a: Self) u64 {}

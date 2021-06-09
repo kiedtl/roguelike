@@ -86,7 +86,7 @@ pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) boo
             if (!is_walkable(coord) and !goal.eq(coord)) continue;
             if (coord_in_list(coord, &closed_list)) |_| continue;
 
-            const penalty: usize = if (neighbor.is_diagonal()) 14 else 10;
+            const penalty: usize = 0; //if (neighbor.is_diagonal()) 14 else 10;
 
             const node = Node{
                 .coord = coord,
