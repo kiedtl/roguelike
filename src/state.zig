@@ -96,7 +96,7 @@ pub fn is_walkable(coord: Coord) bool {
     if (dungeon.at(coord).surface) |surface| {
         switch (surface) {
             .Machine => |m| if (!m.isWalkable()) return false,
-            else => {},
+            .Prop => |p| if (!p.walkable) return false,
         }
     }
     return true;
