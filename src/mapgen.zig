@@ -283,7 +283,11 @@ pub fn placeRandomRooms(fabs: *const PrefabArrayList, level: usize, num: usize, 
     rooms.append(first) catch unreachable;
 
     if (level == PLAYER_STARTING_LEVEL) {
-        const p = Coord.new2(PLAYER_STARTING_LEVEL, first.start.x + 1, first.start.y + 1);
+        var p = Coord.new2(level, first.start.x + 1, first.start.y + 1);
+        if (first.prefab) |prefab|
+            if (prefab.player_position) |pos| {
+                p = Coord.new2(level, first.start.x + pos.x, first.start.y + pos.y);
+            };
         _add_player(p, allocator);
     }
 
@@ -464,6 +468,7 @@ pub fn fillRandom(level: usize, floor_chance: usize) void {
 }
 
 pub const Prefab = struct {
+    player_position: ?Coord = null,
     allow_spawning: bool = true,
     allow_traps: bool = true,
 
@@ -536,6 +541,10 @@ pub const Prefab = struct {
                         f.content[y][x] = switch (c) {
                             '#' => .Wall,
                             '•' => .Lamp,
+                            '@' => player: {
+                                f.player_position = Coord.new(x, y);
+                                break :player .Floor;
+                            },
                             '.' => .Floor,
                             '*' => con: {
                                 f.connections[ci] = .{
