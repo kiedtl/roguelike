@@ -109,6 +109,7 @@ sneak      [move, move, rest, move]
 merciless  [move(A), attack(A), move(A), attack(A)]
 charge     [move(A), move(A), move(A), attack(A)]
 recuperate [rest, rest, rest, rest]
+(See rings for other movement patterns.)
 
 Rings
 -----
@@ -121,10 +122,12 @@ Rings
 - Rings don't have an "enchantment" level, but "tiers" instead (mithril, gold,
   silver, and iron).
 ring of intimidation
-	- Gives player knowledge of dungeon's layout, based on the intimidated mob's
-	  memory.
-	- Affected mobs should have a status effect... (`stunned` maybe?)
-	- High penalty, depending on affected mob's willpower.
+	- Confers either stun or fear on mob when moving toward mob.
+	- Movement pattern: [move(N), move(N), move(N), move(N)]
+	// - Gives player knowledge of dungeon's layout, based on the intimidated mob's
+	//   memory.
+	// - Affected mobs should have a status effect... (`stunned` maybe?)
+	// - High penalty, depending on affected mob's willpower.
 ring of echolocation
 	- Gives player basic knowledge of dungeon's layout nearby sounds the player
 	  can hear. The wearer will not know about dungeon features, just walls,
@@ -151,8 +154,10 @@ ring of invisibility
 ring of shattering
 	- ???
 ring of fire
-	- Spews fire and smoke outward from the wearer when the wearer takes damage.
+	- Spews fire and smoke outward from the wearer when the wearer takes damage,
+	  and when the wearer has been attacking the same tile for the past 4 turns.
 	- Low penalty.
+	- Example movement pattern: [attack(N), attack(N), attack(N), attack(N)]
 ring of night
 	- Radiates an aura of darkness around player.
 	- Low penalty.
@@ -169,6 +174,9 @@ ring of rage
 ring of power
 	- Found only on wraiths.
 	- ???
+ring of evasion
+	- Spews fog outward from player when zigzagging and fleeing, increasing evasion.
+	- Example movement pattern: [move(NW), movw(NE), move(NW), move(NE)]
 
 
 Machines
