@@ -9,7 +9,26 @@ const gas = @import("gas.zig");
 const rng = @import("rng.zig");
 usingnamespace @import("types.zig");
 
-pub const GasVentProp = Prop{ .name = "gas vent", .tile = '=' };
+pub const PROPS = [_]Prop{
+    GasVentProp,
+    BedProp,
+    IronBarProp,
+};
+
+pub const MACHINES = [_]Machine{
+    Lamp,
+    StairUp,
+    StairDown,
+    NormalDoor,
+    ParalysisGasTrap,
+    PoisonGasTrap,
+    AlarmTrap,
+};
+
+pub const GasVentProp = Prop{
+    .name = "gas vent",
+    .tile = '=',
+};
 
 pub const BedProp = Prop{
     .id = "bed",
@@ -28,8 +47,6 @@ pub const IronBarProp = Prop{
     .opacity = 0.3,
     .walkable = false,
 };
-
-pub const PROPS = [_]Prop{ GasVentProp, BedProp, IronBarProp };
 
 pub const Lamp = Machine{
     .name = "a lamp",

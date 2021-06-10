@@ -52,12 +52,16 @@ pub fn darkenColor(color: u32, by: u32) u32 {
     return (r << 16) | (g << 8) | b;
 }
 
+pub fn used(slice: anytype) []const std.meta.Elem(@TypeOf(slice)) {
+    return slice[0..mem.lenZ(slice)];
+}
+
 pub fn findById(haystack: anytype, _needle: anytype) ?usize {
-    const needle = _needle[0..mem.lenZ(_needle)];
+    const needle = used(_needle);
 
     for (haystack) |straw, i| {
-        const id = straw.id[0..mem.lenZ(straw.id)];
-        if (mem.eql(u8, needle, straw.id)) return i;
+        const id = used(straw.id);
+        if (mem.eql(u8, needle, id)) return i;
     }
 
     return null;

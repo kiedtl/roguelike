@@ -117,6 +117,16 @@ fn _excavate_prefab(room: *const Room, fab: *const Prefab) void {
                             const prop = utils.findById(&machines.PROPS, pid).?;
                             _ = _place_prop(rc, &machines.PROPS[prop]);
                         },
+                        .Machine => |mid| {
+                            if (utils.findById(&machines.MACHINES, mid)) |mach| {
+                                _place_machine(rc, &machines.MACHINES[mach]);
+                            } else {
+                                std.log.warn(
+                                    "{}: Couldn't load machine {}, skipping.",
+                                    .{ utils.used(fab.name), utils.used(mid) },
+                                );
+                            }
+                        },
                         else => @panic("TODO"),
                     }
                 },
@@ -553,6 +563,11 @@ pub const Prefab = struct {
                             const id = words.next() orelse return error.MalformedFeatureDefinition;
                             f.features[identifier] = Feature{ .Prop = [_:0]u8{0} ** 32 };
                             mem.copy(u8, &f.features[identifier].?.Prop, id);
+                        },
+                        'm' => {
+                            const id = words.next() orelse return error.MalformedFeatureDefinition;
+                            f.features[identifier] = Feature{ .Machine = [_:0]u8{0} ** 32 };
+                            mem.copy(u8, &f.features[identifier].?.Machine, id);
                         },
                         else => return error.InvalidFeatureType,
                     }
