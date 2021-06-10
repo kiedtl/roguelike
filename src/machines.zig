@@ -54,7 +54,7 @@ pub const Lamp = Machine{
     .name = "a lamp",
 
     .powered_tile = '•',
-    .unpowered_tile = '•',
+    .unpowered_tile = '○',
 
     .power_drain = 0,
     .power_add = 15,
