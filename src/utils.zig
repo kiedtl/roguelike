@@ -52,7 +52,16 @@ pub fn darkenColor(color: u32, by: u32) u32 {
     return (r << 16) | (g << 8) | b;
 }
 
-pub fn used(slice: anytype) []const std.meta.Elem(@TypeOf(slice)) {
+pub fn used(slice: anytype) rt: {
+    const SliceType = @TypeOf(slice);
+    const ChildType = std.meta.Elem(SliceType);
+
+    break :rt switch (@typeInfo(SliceType)) {
+        .Pointer => |p| if (p.is_const) []const ChildType else []ChildType,
+        .Array => []const ChildType,
+        else => @compileError("Expected slice, got " ++ @typeName(SliceType)),
+    };
+} {
     return slice[0..mem.lenZ(slice)];
 }
 
