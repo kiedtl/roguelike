@@ -11,6 +11,15 @@ usingnamespace @import("types.zig");
 
 pub const GasVentProp = Prop{ .name = "gas vent", .tile = '=' };
 
+pub const BedProp = Prop{
+    .id = "bed",
+    .name = "bed",
+    .tile = 'Θ',
+    .fg = 0xdaa520,
+    .opacity = 0.6,
+    .walkable = false,
+};
+
 pub const IronBarProp = Prop{
     .name = "iron bars",
     .tile = '≡',
@@ -19,6 +28,8 @@ pub const IronBarProp = Prop{
     .opacity = 0.3,
     .walkable = false,
 };
+
+pub const PROPS = [_]Prop{ GasVentProp, BedProp, IronBarProp };
 
 pub const Lamp = Machine{
     .name = "a lamp",

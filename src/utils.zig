@@ -1,6 +1,7 @@
 const std = @import("std");
 const assert = std.debug.assert;
 const math = std.math;
+const mem = std.mem;
 
 pub fn saturating_sub(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
     return switch (@typeInfo(@TypeOf(a))) {
@@ -49,4 +50,16 @@ pub fn darkenColor(color: u32, by: u32) u32 {
     const g = ((color >> 08) & 0xFF) / by;
     const b = ((color >> 00) & 0xFF) / by;
     return (r << 16) | (g << 8) | b;
+}
+
+pub fn findById(haystack: anytype, _needle: anytype) ?usize {
+    const needle = _needle[0..mem.lenZ(_needle)];
+
+    for (haystack) |straw, i| {
+        const id = straw.id[0..mem.lenZ(straw.id)];
+        std.log.warn("searching for '{}', got '{}'", .{ needle, straw.id });
+        if (mem.eql(u8, needle, straw.id)) return i;
+    }
+
+    return null;
 }

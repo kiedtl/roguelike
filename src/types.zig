@@ -1093,6 +1093,7 @@ pub const Machine = struct {
 };
 
 pub const Prop = struct {
+    id: []const u8 = "",
     name: []const u8,
     tile: u21,
     fg: ?u32 = null,

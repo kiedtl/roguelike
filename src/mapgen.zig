@@ -97,13 +97,29 @@ fn _excavate_prefab(room: *const Room, fab: *const Prefab) void {
             const tt: ?TileType = switch (fab.content[y][x]) {
                 .Any => null,
                 .Wall, .Connection => .Wall,
-                .LockedDoor, .Door, .Bars, .Lamp, .Floor => .Floor,
+                .Feature,
+                .LockedDoor,
+                .Door,
+                .Bars,
+                .Lamp,
+                .Floor,
+                => .Floor,
                 .Water => .Water,
                 .Lava => .Lava,
             };
             if (tt) |_tt| state.dungeon.at(rc).type = _tt;
 
             switch (fab.content[y][x]) {
+                .Feature => |feature_id| {
+                    const feature = fab.features[feature_id].?;
+                    switch (feature) {
+                        .Prop => |pid| {
+                            const prop = utils.findById(&machines.PROPS, pid).?;
+                            _ = _place_prop(rc, &machines.PROPS[prop]);
+                        },
+                        else => @panic("TODO"),
+                    }
+                },
                 .LockedDoor, .Door => _place_normal_door(rc),
                 .Lamp => _place_machine(rc, &machines.Lamp),
                 .Bars => _ = _place_prop(rc, &machines.IronBarProp),
@@ -473,9 +489,16 @@ pub const Prefab = struct {
     width: usize = 0,
     content: [20][20]FabTile = undefined,
     connections: [40]?Connection = undefined,
+    features: [255]?Feature = [_]?Feature{null} ** 255,
 
-    pub const FabTile = enum {
-        Wall, LockedDoor, Door, Lamp, Floor, Connection, Water, Lava, Bars, Any
+    pub const FabTile = union(enum) {
+        Wall, LockedDoor, Door, Lamp, Floor, Connection, Water, Lava, Bars, Feature: u8, Any
+    };
+
+    pub const Feature = union(enum) {
+        Mob: [32:0]u8,
+        Machine: [32:0]u8,
+        Prop: [32:0]u8,
     };
 
     pub const Connection = struct {
@@ -517,7 +540,23 @@ pub const Prefab = struct {
         while (lines.next()) |line| {
             switch (line[0]) {
                 '%' => {}, // ignore comments
-                '@' => @panic("TODO"), // TODO
+                '@' => {
+                    var words = mem.tokenize(line, " ");
+                    _ = words.next(); // Skip the '@<ident>' bit
+
+                    const identifier = line[1];
+                    const feature_type = words.next() orelse return error.MalformedFeatureDefinition;
+                    if (feature_type.len != 1) return error.InvalidFeatureType;
+
+                    switch (feature_type[0]) {
+                        'p' => {
+                            const id = words.next() orelse return error.MalformedFeatureDefinition;
+                            f.features[identifier] = Feature{ .Prop = [_:0]u8{0} ** 32 };
+                            mem.copy(u8, &f.features[identifier].?.Prop, id);
+                        },
+                        else => return error.InvalidFeatureType,
+                    }
+                },
                 else => {
                     if (y > f.content.len) return error.FabTooTall;
 
@@ -556,6 +595,7 @@ pub const Prefab = struct {
                             '≈' => .Lava,
                             '≡' => .Bars,
                             '?' => .Any,
+                            '0'...'9' => FabTile{ .Feature = @intCast(u8, c) },
                             else => return error.InvalidFabTile,
                         };
                     }
@@ -623,6 +663,8 @@ pub fn readPrefabs(alloc: *mem.Allocator) PrefabArrayList {
                 error.InvalidConnection => "Out of place connection tile",
                 error.FabTooWide => "Prefab exceeds width limit",
                 error.FabTooTall => "Prefab exceeds height limit",
+                error.InvalidFeatureType => "Unknown feature type encountered",
+                error.MalformedFeatureDefinition => "Invalid syntax for feature definition",
                 error.InvalidUtf8 => "Encountered invalid UTF-8",
             };
             std.log.warn("{}: Couldn't load prefab: {}", .{ fab_file.name, msg });
