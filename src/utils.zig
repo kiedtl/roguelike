@@ -57,7 +57,6 @@ pub fn findById(haystack: anytype, _needle: anytype) ?usize {
 
     for (haystack) |straw, i| {
         const id = straw.id[0..mem.lenZ(straw.id)];
-        std.log.warn("searching for '{}', got '{}'", .{ needle, straw.id });
         if (mem.eql(u8, needle, straw.id)) return i;
     }
 
