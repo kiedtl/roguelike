@@ -38,7 +38,7 @@ pub const BedProp = Prop{
     .tile = 'Θ',
     .fg = 0xdaa520,
     .opacity = 0.6,
-    .walkable = false,
+    .walkable = true,
 };
 
 pub const IronBarProp = Prop{
