@@ -4,6 +4,7 @@
 const std = @import("std");
 const assert = std.debug.assert;
 
+const main = @import("root");
 const state = @import("state.zig");
 const gas = @import("gas.zig");
 const rng = @import("rng.zig");
@@ -17,6 +18,7 @@ pub const PROPS = [_]Prop{
 
 pub const MACHINES = [_]Machine{
     Lamp,
+    StairExit,
     StairUp,
     StairDown,
     NormalDoor,
@@ -173,7 +175,7 @@ pub fn powerStairExit(machine: *Machine) void {
     assert(machine.coord.z == 0);
     if (machine.last_interaction) |culprit| {
         if (!culprit.coord.eq(state.player.coord)) return;
-        quit = true;
+        main.quit = true;
     }
 }
 

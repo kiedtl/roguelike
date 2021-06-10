@@ -11,7 +11,8 @@ const types = @import("types.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
-var quit: bool = undefined;
+// quit is public, as machines such as StairExit will modify them.
+pub var quit: bool = undefined;
 
 // Install a panic handler that tries to shutdown termbox before calling the
 // default panic handler.
