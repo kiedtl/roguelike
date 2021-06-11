@@ -463,17 +463,21 @@ pub fn placeRandomStairs(level: usize) void {
 
     var placed: usize = 0;
     while (placed < 5) {
-        const rand_x = rng.range(usize, 1, state.WIDTH - 1);
-        const rand_y = rng.range(usize, 1, state.HEIGHT - 1);
-        const above = Coord.new2(level, rand_x, rand_y);
-        const below = Coord.new2(level + 1, rand_x, rand_y);
+        const room = rng.chooseUnweighted(Room, state.dungeon.rooms[level].items);
+        const rand = room.randomCoord();
+        const above = Coord.new2(level, rand.x, rand.y);
+        const below = Coord.new2(level + 1, rand.x, rand.y);
 
-        if (state.dungeon.at(below).type != .Wall and state.dungeon.at(above).type != .Wall) { // FIXME
+        if (!state.dungeon.hasMachine(above) and
+            !state.dungeon.hasMachine(below) and
+            state.is_walkable(below) and
+            state.is_walkable(above))
+        {
             _place_machine(above, &machines.StairDown);
             _place_machine(below, &machines.StairUp);
-        }
 
-        placed += 1;
+            placed += 1;
+        }
     }
 }
 
