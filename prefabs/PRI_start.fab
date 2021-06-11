@@ -13,3 +13,8 @@
 #####*#####
 
 @0 p bed
+:invisible
+:restriction 0
+:noguards
+:nolights
+:notraps

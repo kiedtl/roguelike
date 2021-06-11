@@ -36,7 +36,7 @@ fn initGame() void {
     state.props = PropList.init(&state.GPA.allocator);
     rng.init();
 
-    const fabs = mapgen.readPrefabs(&state.GPA.allocator);
+    var fabs = mapgen.readPrefabs(&state.GPA.allocator);
     for (state.dungeon.map) |_, level| {
         // mapgen.fillRandom(level, 40);
         // mapgen.fillBar(level, 1);
@@ -47,6 +47,7 @@ fn initGame() void {
         // mapgen.cellularAutomata(level, 6, 1);
         // mapgen.cellularAutomata(level, 6, 1);
         mapgen.placeRandomRooms(&fabs, level, 2000, &state.GPA.allocator);
+        mapgen.placeTraps(level);
         mapgen.placeLights(level);
         mapgen.placeGuards(level, &state.GPA.allocator);
     }
@@ -242,7 +243,7 @@ fn viewerMain() void {
 
 pub fn main() anyerror!void {
     initGame();
-    //viewerMain();
-    tickGame();
+    viewerMain();
+    //tickGame();
     deinitGame();
 }

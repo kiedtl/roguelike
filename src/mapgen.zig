@@ -65,6 +65,22 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     state.player = state.mobs.lastPtr().?;
 }
 
+fn _choosePrefab(prefabs: *PrefabArrayList) ?Prefab {
+    var i: usize = 255;
+    while (i > 0) : (i -= 1) {
+        // Don't use rng.chooseUnweighted, as we need a pointer to manage the
+        // restriction amount should we choose it.
+        const p = &prefabs.items[rng.range(usize, 0, prefabs.items.len - 1)];
+        if (p.invisible) continue;
+        if (p.restriction) |res| if (res == 0) continue;
+
+        if (p.restriction) |*res| res.* -= 1;
+        return p.*;
+    }
+
+    return null;
+}
+
 fn _room_intersects(rooms: *const RoomArrayList, room: *const Room, ignore: *const Room) bool {
     if (room.start.x == 0 or room.start.y == 0)
         return true;
@@ -151,7 +167,7 @@ fn _excavate_room(room: *const Room) void {
     }
 }
 
-fn _place_rooms(rooms: *RoomArrayList, fabs: *const PrefabArrayList, level: usize, allocator: *mem.Allocator) void {
+fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, allocator: *mem.Allocator) void {
     // parent is non-const because we might need to update connectors on it.
     var parent = rng.chooseUnweighted(Room, rooms.items);
 
@@ -182,7 +198,7 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *const PrefabArrayList, level: usiz
 
         var child_w = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
         var child_h = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
-        fab = rng.chooseUnweighted(Prefab, fabs.items);
+        fab = _choosePrefab(fabs) orelse return;
         child = parent.attach(side, fab.?.width, fab.?.height, distance, &fab.?) orelse return;
         child.prefab = fab;
 
@@ -193,24 +209,6 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *const PrefabArrayList, level: usiz
     }
 
     rooms.append(child) catch unreachable;
-
-    // --- add machines ---
-
-    if (rng.onein(2)) {
-        const trap_coord = child.randomCoord();
-        var trap: Machine = undefined;
-        if (rng.onein(3)) {
-            trap = machines.AlarmTrap;
-        } else {
-            trap = if (rng.onein(3)) machines.PoisonGasTrap else machines.ParalysisGasTrap;
-            var num_of_vents = rng.range(usize, 1, 3);
-            while (num_of_vents > 0) : (num_of_vents -= 1) {
-                const prop = _place_prop(child.randomCoord(), &machines.GasVentProp);
-                trap.props[num_of_vents] = prop;
-            }
-        }
-        _place_machine(trap_coord, &trap);
-    }
 
     // --- add corridors ---
 
@@ -278,7 +276,7 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *const PrefabArrayList, level: usiz
     }
 }
 
-pub fn placeRandomRooms(fabs: *const PrefabArrayList, level: usize, num: usize, allocator: *mem.Allocator) void {
+pub fn placeRandomRooms(fabs: *PrefabArrayList, level: usize, num: usize, allocator: *mem.Allocator) void {
     var rooms = RoomArrayList.init(allocator);
 
     const x = rng.range(usize, 1, state.WIDTH / 2);
@@ -318,12 +316,36 @@ pub fn placeRandomRooms(fabs: *const PrefabArrayList, level: usize, num: usize, 
     state.dungeon.rooms[level] = rooms;
 }
 
+pub fn placeTraps(level: usize) void {
+    for (state.dungeon.rooms[level].items) |room| {
+        if (room.prefab) |rfb| if (rfb.notraps) continue;
+
+        if (rng.onein(2)) {
+            const trap_coord = room.randomCoord();
+            var trap: Machine = undefined;
+            if (rng.onein(3)) {
+                trap = machines.AlarmTrap;
+            } else {
+                trap = if (rng.onein(3)) machines.PoisonGasTrap else machines.ParalysisGasTrap;
+                var num_of_vents = rng.range(usize, 1, 3);
+                while (num_of_vents > 0) : (num_of_vents -= 1) {
+                    const prop = _place_prop(room.randomCoord(), &machines.GasVentProp);
+                    trap.props[num_of_vents] = prop;
+                }
+            }
+            _place_machine(trap_coord, &trap);
+        }
+    }
+}
+
 pub fn placeGuards(level: usize, allocator: *mem.Allocator) void {
     var squads: usize = rng.range(usize, 3, 5);
     while (squads > 0) : (squads -= 1) {
         const room = rng.chooseUnweighted(Room, state.dungeon.rooms[level].items);
         const patrol_units = rng.range(usize, 2, 4) % math.max(room.width, room.height);
         var patrol_warden: ?*Mob = null;
+
+        if (room.prefab) |rfb| if (rfb.noguards) continue;
 
         var placed_units: usize = 0;
         while (placed_units < patrol_units) {
@@ -350,6 +372,8 @@ pub fn placeGuards(level: usize, allocator: *mem.Allocator) void {
     }
 
     for (state.dungeon.rooms[level].items) |room| {
+        if (room.prefab) |rfb| if (rfb.noguards) continue;
+
         if (rng.onein(14)) {
             const post_coord = room.randomCoord();
             var watcher = WatcherTemplate;
@@ -365,6 +389,8 @@ pub fn placeGuards(level: usize, allocator: *mem.Allocator) void {
 
 pub fn placeLights(level: usize) void {
     for (state.dungeon.rooms[level].items) |room| {
+        if (room.prefab) |rfb| if (rfb.nolights) continue;
+
         // Don't light small rooms.
         if ((room.width * room.height) < 16)
             continue;
@@ -489,11 +515,14 @@ pub fn fillRandom(level: usize, floor_chance: usize) void {
 }
 
 pub const Prefab = struct {
-    player_position: ?Coord = null,
-    allow_spawning: bool = true,
-    allow_traps: bool = true,
+    invisible: bool = false,
+    restriction: ?usize = null,
+    noguards: bool = false,
+    nolights: bool = false,
+    notraps: bool = false,
 
     name: [32:0]u8 = mem.zeroes([32:0]u8),
+    player_position: ?Coord = null,
 
     height: usize = 0,
     width: usize = 0,
@@ -550,6 +579,28 @@ pub const Prefab = struct {
         while (lines.next()) |line| {
             switch (line[0]) {
                 '%' => {}, // ignore comments
+                ':' => {
+                    var words = mem.tokenize(line[1..], " ");
+                    const key = words.next() orelse return error.MalformedMetadata;
+                    const val = words.next() orelse "";
+
+                    if (mem.eql(u8, key, "invisible")) {
+                        if (val.len != 0) return error.UnexpectedMetadataValue;
+                        f.invisible = true;
+                    } else if (mem.eql(u8, key, "restriction")) {
+                        if (val.len == 0) return error.ExpectedMetadataValue;
+                        f.restriction = std.fmt.parseInt(usize, val, 0) catch |_| return error.InvalidMetadataValue;
+                    } else if (mem.eql(u8, key, "noguards")) {
+                        if (val.len != 0) return error.UnexpectedMetadataValue;
+                        f.noguards = true;
+                    } else if (mem.eql(u8, key, "nolights")) {
+                        if (val.len != 0) return error.UnexpectedMetadataValue;
+                        f.nolights = true;
+                    } else if (mem.eql(u8, key, "notraps")) {
+                        if (val.len != 0) return error.UnexpectedMetadataValue;
+                        f.notraps = true;
+                    }
+                },
                 '@' => {
                     var words = mem.tokenize(line, " ");
                     _ = words.next(); // Skip the '@<ident>' bit
@@ -680,6 +731,10 @@ pub fn readPrefabs(alloc: *mem.Allocator) PrefabArrayList {
                 error.FabTooTall => "Prefab exceeds height limit",
                 error.InvalidFeatureType => "Unknown feature type encountered",
                 error.MalformedFeatureDefinition => "Invalid syntax for feature definition",
+                error.MalformedMetadata => "Malformed metadata",
+                error.InvalidMetadataValue => "Invalid value for metadata",
+                error.UnexpectedMetadataValue => "Unexpected value for metadata",
+                error.ExpectedMetadataValue => "Expected value for metadata",
                 error.InvalidUtf8 => "Encountered invalid UTF-8",
             };
             std.log.warn("{}: Couldn't load prefab: {}", .{ fab_file.name, msg });
@@ -698,7 +753,7 @@ pub const LevelConfig = struct {
 };
 
 pub const Configs = [LEVELS]LevelConfig{
-    .{},
+    .{ .starting_prefab = "ENT_start" },
     .{ .starting_prefab = "PRI_start" },
     .{},
 };
