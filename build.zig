@@ -41,10 +41,14 @@ pub fn build(b: *Builder) void {
 
     const run_cmd = exe.run();
     run_cmd.step.dependOn(b.getInstallStep());
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
-    }
-
-    const run_step = b.step("run", "Run the app");
+    if (b.args) |args| run_cmd.addArgs(args);
+    const run_step = b.step("run", "Run the roguelike");
     run_step.dependOn(&run_cmd.step);
+
+    var tests = b.addTest("tests/tests.zig");
+    tests.setBuildMode(mode);
+    tests.addPackagePath("src", "src/test.zig");
+    const tests_step = b.step("tests", "Run the various tests");
+    tests_step.dependOn(&exe.step);
+    tests_step.dependOn(&tests.step);
 }
