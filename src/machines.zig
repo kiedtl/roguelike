@@ -10,13 +10,27 @@ const gas = @import("gas.zig");
 const rng = @import("rng.zig");
 usingnamespace @import("types.zig");
 
+const STEEL_SUPPORT_COLOR: u32 = 0xa6c2d4;
+const COPPER_COIL_COLOR: u32 = 0xd96c00;
+
 pub const PROPS = [_]Prop{
+    WorkstationProp,
+    SteelSupport_NSE2_Prop,
+    SteelSupport_NSW2_Prop,
+    SteelSupport_NSE2W2_Prop,
+    SteelSupport_E2W2_Prop,
+    LeftCopperCoilProp,
+    RightCopperCoilProp,
+    UpperCopperCoilProp,
+    LowerCopperCoilProp,
+    FullCopperCoilProp,
     GasVentProp,
     BedProp,
     IronBarProp,
 };
 
 pub const MACHINES = [_]Machine{
+    PowerSupply,
     Lamp,
     StairExit,
     StairUp,
@@ -25,6 +39,96 @@ pub const MACHINES = [_]Machine{
     ParalysisGasTrap,
     PoisonGasTrap,
     AlarmTrap,
+};
+
+pub const WorkstationProp = Prop{
+    .id = "workstation",
+    .name = "workstation",
+    .tile = '░',
+    .fg = 0xffffff,
+    .opacity = 0.0,
+    .walkable = true,
+};
+
+pub const SteelSupport_NSE2_Prop = Prop{
+    .id = "steel_support_nse2",
+    .name = "steel support",
+    .tile = '╞',
+    .fg = STEEL_SUPPORT_COLOR,
+    .opacity = 1.0,
+    .walkable = false,
+};
+
+pub const SteelSupport_NSW2_Prop = Prop{
+    .id = "steel_support_nsw2",
+    .name = "steel support",
+    .tile = '╡',
+    .fg = STEEL_SUPPORT_COLOR,
+    .opacity = 1.0,
+    .walkable = false,
+};
+
+pub const SteelSupport_NSE2W2_Prop = Prop{
+    .id = "steel_support_nse2w2",
+    .name = "steel support",
+    .tile = '╪',
+    .fg = STEEL_SUPPORT_COLOR,
+    .opacity = 1.0,
+    .walkable = false,
+};
+
+pub const SteelSupport_E2W2_Prop = Prop{
+    .id = "steel_support_e2w2",
+    .name = "steel support",
+    .tile = '═',
+    .fg = STEEL_SUPPORT_COLOR,
+    .opacity = 1.0,
+    .walkable = false,
+};
+
+pub const LeftCopperCoilProp = Prop{
+    .id = "left_copper_coil",
+    .name = "half copper coil",
+    .tile = '▌',
+    .fg = COPPER_COIL_COLOR,
+    .opacity = 1.0,
+    .walkable = false,
+};
+
+pub const RightCopperCoilProp = Prop{
+    .id = "right_copper_coil",
+    .name = "half copper coil",
+    .tile = '▐',
+    .fg = COPPER_COIL_COLOR,
+    .opacity = 1.0,
+    .walkable = false,
+};
+
+pub const LowerCopperCoilProp = Prop{
+    .id = "lower_copper_coil",
+    .name = "half copper coil",
+    .tile = '▄',
+    .fg = COPPER_COIL_COLOR,
+    .opacity = 1.0,
+    .walkable = false,
+};
+
+pub const UpperCopperCoilProp = Prop{
+    .id = "upper_copper_coil",
+    .name = "half copper coil",
+    .tile = '▀',
+    .fg = COPPER_COIL_COLOR,
+    .opacity = 1.0,
+    .walkable = false,
+};
+
+pub const FullCopperCoilProp = Prop{
+    .id = "full_copper_coil",
+    .name = "large copper coil",
+    .tile = '█',
+    .fg = COPPER_COIL_COLOR,
+    .opacity = 1.0,
+    .walkable = false,
 };
 
 pub const GasVentProp = Prop{
@@ -50,6 +154,28 @@ pub const IronBarProp = Prop{
     .walkable = false,
 };
 
+pub const PowerSupply = Machine{
+    .id = "power_supply",
+    .name = "machine",
+
+    .powered_tile = '⊻',
+    .unpowered_tile = '⊻',
+
+    .power_drain = 100,
+    .power_add = 100,
+
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+
+    .powered_opacity = 0,
+    .unpowered_opacity = 0,
+
+    .powered_luminescence = 10,
+    .unpowered_luminescence = 10,
+
+    .on_power = powerPowerSupply,
+};
+
 pub const Lamp = Machine{
     .name = "a lamp",
 
@@ -58,6 +184,7 @@ pub const Lamp = Machine{
 
     .power_drain = 0,
     .power_add = 15,
+    .auto_power = true,
 
     .powered_walkable = false,
     .unpowered_walkable = false,
@@ -130,6 +257,14 @@ pub const NormalDoor = Machine{
 };
 
 pub fn powerNone(_: *Machine) void {}
+
+pub fn powerPowerSupply(machine: *Machine) void {
+    var iter = state.machines.iterator();
+    while (iter.nextPtr()) |mach| {
+        if (mach.coord.z == state.player.coord.z and mach.auto_power)
+            mach.addPower(null);
+    }
+}
 
 pub fn powerAlarmTrap(machine: *Machine) void {
     if (machine.last_interaction) |culprit| {

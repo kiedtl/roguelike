@@ -1,6 +1,7 @@
 const std = @import("std");
 const assert = std.debug.assert;
 const math = std.math;
+const meta = std.meta;
 const mem = std.mem;
 
 pub fn saturating_sub(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
@@ -74,4 +75,45 @@ pub fn findById(haystack: anytype, _needle: anytype) ?usize {
     }
 
     return null;
+}
+
+pub fn sentinel(comptime T: type) switch (@typeInfo(T)) {
+    .Pointer => |p| switch (@typeInfo(p.child)) {
+        .Pointer, .Array => @TypeOf(sentinel(p.child)),
+        else => if (p.sentinel) |s| @TypeOf(s) else ?p.child,
+    },
+    .Array => |a| if (a.sentinel) |s| ?@TypeOf(s) else ?a.child,
+    else => @compileError("Expected array or slice, found " ++ @typeName(T)),
+} {
+    return switch (@typeInfo(T)) {
+        .Pointer => |p| switch (@typeInfo(p.child)) {
+            .Pointer, .Array => sentinel(p.child),
+            else => if (p.sentinel) |s| s else null,
+        },
+        .Array => |a| if (a.sentinel) |s| s else null,
+        else => @compileError("Expected array or slice, found " ++ @typeName(T)),
+    };
+}
+
+pub fn copyZ(dest: anytype, src: anytype) void {
+    const DestElem = meta.Elem(@TypeOf(dest));
+    const SourceChild = meta.Elem(@TypeOf(src));
+    if (DestElem != SourceChild) {
+        const d = @typeName(@TypeOf(dest));
+        const s = @typeName(@TypeOf(src));
+        @compileError("Expected source to be " ++ d ++ ", got " ++ s);
+    }
+
+    const srclen = mem.lenZ(src);
+
+    assert(dest.len >= srclen);
+
+    var i: usize = 0;
+    while (i < srclen) : (i += 1)
+        dest[i] = src[i];
+
+    if (sentinel(@TypeOf(dest))) |s| {
+        assert((dest.len - 1) > srclen);
+        dest[srclen] = s;
+    }
 }

@@ -173,3 +173,16 @@ pub fn watcherWork(mob: *Mob, alloc: *mem.Allocator) void {
         _guard_glance(mob, prev_facing);
     }
 }
+
+pub fn interactionLaborerWork(mob: *Mob, _: *mem.Allocator) void {
+    assert(mob.occupation.work_area.items.len == 1);
+
+    const machine = mob.occupation.work_area.items[0];
+    //assert(!mob.coord.eq(machine));
+    if (mob.coord.eq(machine)) {
+        std.log.warn("oh no {} {}", .{ mob.coord, machine });
+    }
+    assert(mob.nextDirectionTo(machine, state.is_walkable) != null);
+
+    mob.tryMoveTo(machine);
+}

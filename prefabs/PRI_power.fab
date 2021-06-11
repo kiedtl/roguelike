@@ -1,0 +1,31 @@
+% Power supply.
+%
+% █▀▐▀░▀▌▀█
+% ══╪╡⊻╞╪══
+% █▄▐▄░▄▌▄█
+
+@0 p full_copper_coil
+@1 p upper_copper_coil
+@2 p lower_copper_coil
+@3 p right_copper_coil
+@4 p workstation
+@5 p left_copper_coil
+@6 p steel_support_e2w2
+@7 p steel_support_nse2w2
+@8 p steel_support_nsw2
+@9 p steel_support_nsw2
+@a m power_supply
+
+:spawn interaction_laborer 6,2 6,3
+:spawn interaction_laborer 6,4 6,3
+
+:restriction 1
+:nospawn
+
+###*#####*###
+#...........#
+#.013141510.#
+*.6678a9766.*
+#.023242520.#
+#...........#
+###*#####*###

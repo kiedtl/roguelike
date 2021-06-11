@@ -174,6 +174,10 @@ pub const Coord = struct { // {{{
         return a.x == b.x and a.y == b.y;
     }
 
+    pub fn add(a: Self, b: Self) Self {
+        return Coord.new2(a.z, a.x + b.x, a.y + b.y);
+    }
+
     pub fn move(self: *Self, direction: Direction, limit: Self) bool {
         var dx: isize = 0;
         var dy: isize = 0;
@@ -572,6 +576,7 @@ pub const Occupation = struct {
 };
 
 pub const Mob = struct { // {{{
+    id: []const u8 = "",
     species: []const u8,
     tile: u21,
     allegiance: Allegiance,
@@ -1052,6 +1057,7 @@ pub const Machine = struct {
 
     power_drain: usize = 100, // Power drained per turn
     power_add: usize = 100, // Power added on interact
+    auto_power: bool = false,
 
     powered_walkable: bool = true,
     unpowered_walkable: bool = true,
@@ -1411,4 +1417,37 @@ pub const ElfTemplate = Mob{
 
     .HP = 49,
     .strength = 14,
+};
+
+pub const InteractionLaborerTemplate = Mob{
+    .id = "interaction_laborer",
+    .species = "orc",
+    .tile = 'o',
+    .occupation = Occupation{
+        .work_description = "laboring",
+        .work_area = undefined,
+        .work_fn = ai.interactionLaborerWork,
+        .is_combative = false,
+        .target = null,
+        .phase = .Work,
+    },
+    .allegiance = .Sauron,
+    .vision = 6,
+
+    .willpower = 2,
+    .dexterity = 5,
+    .hearing = 10,
+    .max_HP = 15,
+    .memory_duration = 5,
+    .base_speed = 100,
+
+    .HP = 15,
+    .strength = 10,
+};
+
+pub const MOBS = [_]Mob{
+    WatcherTemplate,
+    GuardTemplate,
+    ElfTemplate,
+    InteractionLaborerTemplate,
 };
