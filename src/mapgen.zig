@@ -101,7 +101,7 @@ fn _room_intersects(rooms: *const RoomArrayList, room: *const Room, ignore: *con
     return false;
 }
 
-fn _excavate_prefab(room: *const Room, fab: *const Prefab) void {
+fn _excavate_prefab(room: *const Room, fab: *const Prefab, allocator: *mem.Allocator) void {
     var y: usize = 0;
     while (y < fab.height) : (y += 1) {
         var x: usize = 0;
@@ -143,13 +143,33 @@ fn _excavate_prefab(room: *const Room, fab: *const Prefab) void {
                                 );
                             }
                         },
-                        else => @panic("TODO"),
                     }
                 },
                 .LockedDoor, .Door => _place_normal_door(rc),
                 .Lamp => _place_machine(rc, &machines.Lamp),
                 .Bars => _ = _place_prop(rc, &machines.IronBarProp),
                 else => {},
+            }
+        }
+    }
+
+    for (fab.mobs) |maybe_mob| {
+        if (maybe_mob) |mob_f| {
+            if (utils.findById(&MOBS, mob_f.id)) |mob_template| {
+                var coord = room.start.add(mob_f.spawn_at);
+                var mob = MOBS[mob_template];
+                mob.init(allocator);
+                if (mob_f.work_at) |work_at|
+                    mob.occupation.work_area.append(room.start.add(work_at)) catch @panic("OOM");
+                mob.coord = coord;
+                state.mobs.append(mob) catch @panic("OOM");
+                const mobptr = state.mobs.lastPtr().?;
+                state.dungeon.at(coord).mob = mobptr;
+            } else {
+                std.log.warn(
+                    "{}: Couldn't load mob {}, skipping.",
+                    .{ utils.used(fab.name), utils.used(mob_f.id) },
+                );
             }
         }
     }
@@ -205,7 +225,7 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
         if (_room_intersects(rooms, &child, &parent) or child.overflowsLimit(&LIMIT))
             return;
 
-        _excavate_prefab(&child, &fab.?);
+        _excavate_prefab(&child, &fab.?, allocator);
     }
 
     rooms.append(child) catch unreachable;
@@ -291,7 +311,7 @@ pub fn placeRandomRooms(fabs: *PrefabArrayList, level: usize, num: usize, alloca
             .height = prefab.height,
             .prefab = prefab,
         };
-        _excavate_prefab(&first, &prefab);
+        _excavate_prefab(&first, &prefab, allocator);
     } else {
         const width = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
         const height = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
@@ -534,13 +554,19 @@ pub const Prefab = struct {
     content: [20][20]FabTile = undefined,
     connections: [40]?Connection = undefined,
     features: [255]?Feature = [_]?Feature{null} ** 255,
+    mobs: [20]?FeatureMob = [_]?FeatureMob{null} ** 20,
 
     pub const FabTile = union(enum) {
         Wall, LockedDoor, Door, Lamp, Floor, Connection, Water, Lava, Bars, Feature: u8, Any
     };
 
+    pub const FeatureMob = struct {
+        id: [32:0]u8,
+        spawn_at: Coord,
+        work_at: ?Coord,
+    };
+
     pub const Feature = union(enum) {
-        Mob: [32:0]u8,
         Machine: [32:0]u8,
         Prop: [32:0]u8,
     };
@@ -577,6 +603,7 @@ pub const Prefab = struct {
         mem.set(?Connection, &f.connections, null);
 
         var ci: usize = 0; // index for f.connections
+        var cm: usize = 0; // index for f.mobs
         var w: usize = 0;
         var y: usize = 0;
 
@@ -604,6 +631,35 @@ pub const Prefab = struct {
                     } else if (mem.eql(u8, key, "notraps")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.notraps = true;
+                    } else if (mem.eql(u8, key, "spawn")) {
+                        const spawn_at_str = words.next() orelse return error.ExpectedMetadataValue;
+                        const maybe_work_at_str: ?[]const u8 = words.next() orelse null;
+
+                        var spawn_at = Coord.new(0, 0);
+                        var spawn_at_tokens = mem.tokenize(spawn_at_str, ",");
+                        const spawn_at_str_a = spawn_at_tokens.next() orelse return error.InvalidMetadataValue;
+                        const spawn_at_str_b = spawn_at_tokens.next() orelse return error.InvalidMetadataValue;
+                        spawn_at.x = std.fmt.parseInt(usize, spawn_at_str_a, 0) catch |_| return error.InvalidMetadataValue;
+                        spawn_at.y = std.fmt.parseInt(usize, spawn_at_str_b, 0) catch |_| return error.InvalidMetadataValue;
+
+                        f.mobs[cm] = FeatureMob{
+                            .id = undefined,
+                            .spawn_at = spawn_at,
+                            .work_at = null,
+                        };
+                        utils.copyZ(&f.mobs[cm].?.id, val);
+
+                        if (maybe_work_at_str) |work_at_str| {
+                            var work_at = Coord.new(0, 0);
+                            var work_at_tokens = mem.tokenize(work_at_str, ",");
+                            const work_at_str_a = work_at_tokens.next() orelse return error.InvalidMetadataValue;
+                            const work_at_str_b = work_at_tokens.next() orelse return error.InvalidMetadataValue;
+                            work_at.x = std.fmt.parseInt(usize, work_at_str_a, 0) catch |_| return error.InvalidMetadataValue;
+                            work_at.y = std.fmt.parseInt(usize, work_at_str_b, 0) catch |_| return error.InvalidMetadataValue;
+                            f.mobs[cm].?.work_at = work_at;
+                        }
+
+                        cm += 1;
                     }
                 },
                 '@' => {
