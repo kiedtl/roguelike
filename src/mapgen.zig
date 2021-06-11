@@ -322,6 +322,8 @@ pub fn placeTraps(level: usize) void {
 
         if (rng.onein(2)) {
             const trap_coord = room.randomCoord();
+            if (state.dungeon.hasMachine(trap_coord)) continue;
+
             var trap: Machine = undefined;
             if (rng.onein(3)) {
                 trap = machines.AlarmTrap;
@@ -329,7 +331,10 @@ pub fn placeTraps(level: usize) void {
                 trap = if (rng.onein(3)) machines.PoisonGasTrap else machines.ParalysisGasTrap;
                 var num_of_vents = rng.range(usize, 1, 3);
                 while (num_of_vents > 0) : (num_of_vents -= 1) {
-                    const prop = _place_prop(room.randomCoord(), &machines.GasVentProp);
+                    const vent = room.randomCoord();
+                    if (state.dungeon.hasMachine(vent)) continue;
+
+                    const prop = _place_prop(vent, &machines.GasVentProp);
                     trap.props[num_of_vents] = prop;
                 }
             }
