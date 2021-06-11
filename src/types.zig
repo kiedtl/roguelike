@@ -866,6 +866,10 @@ pub const Mob = struct { // {{{
 
     // TODO: get rid of is_walkable parameter.
     pub fn nextDirectionTo(self: *Mob, to: Coord, is_walkable: fn (Coord) bool) ?Direction {
+        // FIXME: make this an assertion; no mob should ever be trying to path to
+        // themself.
+        if (self.coord.eq(to)) return null;
+
         const pathobj = Path{ .from = self.coord, .to = to };
 
         if (!self.path_cache.contains(pathobj)) {
@@ -876,11 +880,13 @@ pub const Mob = struct { // {{{
 
             const pth = astar.path(self.coord, to, state.mapgeometry, is_walkable, &fba.allocator) orelse return null;
 
+            assert(pth.items[0].eq(self.coord));
             var last: Coord = self.coord;
             for (pth.items[1..]) |coord| {
                 self.path_cache.put(Path{ .from = last, .to = to }, coord) catch unreachable;
                 last = coord;
             }
+            assert(last.eq(to));
 
             pth.deinit();
         }

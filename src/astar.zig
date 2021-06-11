@@ -51,7 +51,7 @@ pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) boo
     }) catch unreachable;
 
     while (open_list.count() > 0) {
-        var current_node = open_list.removeOrNull().?; // Should not be null
+        var current_node = open_list.remove();
 
         if (current_node.coord.eq(goal)) {
             open_list.deinit();
@@ -60,15 +60,9 @@ pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) boo
             var current = current_node;
             while (true) {
                 list.append(current.coord) catch unreachable;
-
                 if (current.parent) |parent| {
-                    current = if (coord_in_list(parent, &closed_list)) |i|
-                        closed_list.items[i]
-                    else
-                        unreachable;
-                } else {
-                    break;
-                }
+                    current = closed_list.items[coord_in_list(parent, &closed_list).?];
+                } else break;
             }
 
             closed_list.deinit();
@@ -86,23 +80,18 @@ pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) boo
             if (!is_walkable(coord) and !goal.eq(coord)) continue;
             if (coord_in_list(coord, &closed_list)) |_| continue;
 
-            const penalty: usize = 0; //if (neighbor.is_diagonal()) 14 else 10;
-
             const node = Node{
                 .coord = coord,
                 .parent = current_node.coord,
-                .g = current_node.g + penalty,
+                .g = current_node.g + 1,
                 .h = coord.distance(goal),
             };
 
             var iter = open_list.iterator();
             while (iter.next()) |item| {
                 if (item.coord.eq(coord)) {
-                    if (node.g > item.g) {
-                        continue :neighbor;
-                    } else {
-                        _ = open_list.removeIndex(iter.count - 1);
-                    }
+                    if (node.g > item.g) continue :neighbor;
+                    _ = open_list.removeIndex(iter.count - 1);
                 }
             }
 
