@@ -666,7 +666,7 @@ pub const Prefab = struct {
                             '≈' => .Lava,
                             '≡' => .Bars,
                             '?' => .Any,
-                            '0'...'9' => FabTile{ .Feature = @intCast(u8, c) },
+                            '0'...'9', 'a'...'z' => FabTile{ .Feature = @intCast(u8, c) },
                             else => return error.InvalidFabTile,
                         };
                     }
