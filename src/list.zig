@@ -3,6 +3,8 @@ const mem = std.mem;
 const assert = std.debug.assert;
 const testing = std.testing;
 
+// STYLE: change <name>Ptr to <name>Ref
+
 pub fn LinkedList(comptime T: type) type {
     return struct {
         const Self = @This();
@@ -88,6 +90,17 @@ pub fn LinkedList(comptime T: type) type {
             }
         }
 
+        pub fn nth(self: *Self, n: usize) ?T {
+            var i: usize = 0;
+            var iter = self.iterator();
+            while (iter.next()) |item| : (i += 1) {
+                if (i == n) {
+                    return item;
+                }
+            }
+            return null;
+        }
+
         pub fn first(self: *Self) ?T {
             return if (self.head) |head| head.data else null;
         }
@@ -104,15 +117,20 @@ pub fn LinkedList(comptime T: type) type {
             return if (self.tail) |tail| &tail.data else null;
         }
 
+        // TODO: allow const iteration
         pub fn iterator(self: *Self) Iterator {
             return Iterator{ .current = self.head };
         }
     };
 }
 
+// Use a GPA for tests as then we get an error when there's a memory leak
+const GPA = std.heap.GeneralPurposeAllocator(.{});
+
 test "basic LinkedList test" {
     const List = LinkedList(usize);
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+
+    var gpa = GPA{};
     defer testing.expect(!gpa.deinit());
 
     var list = List.init(&gpa.allocator);
@@ -120,7 +138,7 @@ test "basic LinkedList test" {
 
     const datas = [_]usize{ 5, 21, 623, 1, 36 };
     for (datas) |data| {
-        list.append(data) catch unreachable;
+        try list.append(data);
         testing.expectEqual(data, list.last().?);
     }
 
@@ -129,9 +147,34 @@ test "basic LinkedList test" {
     testing.expectEqual(datas[4], list.last().?);
     testing.expectEqual(datas[4], list.lastPtr().?.*);
 
+    // TODO: separate iterator test into its own test
     var index: usize = 0;
     var iter = list.iterator();
     while (iter.next()) |data| : (index += 1) {
         testing.expectEqual(datas[index], data);
     }
+}
+
+test "basic nth() usage" {
+    const List = LinkedList(usize);
+
+    var gpa = GPA{};
+    defer testing.expect(!gpa.deinit());
+
+    var list = List.init(&gpa.allocator);
+    defer list.deinit();
+
+    try list.append(23);
+    try list.append(0);
+    try list.append(98);
+    try list.append(11);
+    try list.append(12);
+    try list.append(72);
+
+    testing.expectEqual(list.nth(0), 23);
+    testing.expectEqual(list.nth(1), 0);
+    testing.expectEqual(list.nth(2), 98);
+    testing.expectEqual(list.nth(3), 11);
+    testing.expectEqual(list.nth(4), 12);
+    testing.expectEqual(list.nth(5), 72);
 }
