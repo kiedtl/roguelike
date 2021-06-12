@@ -25,8 +25,8 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
             return self.data[0..self.len];
         }
 
-        pub fn append(self: *Slice, item: T) !void {
-            if (self.len >= max_len) {
+        pub fn append(self: *Self, item: T) !void {
+            if (self.len >= capacity) {
                 return error.NoSpaceLeft;
             }
 

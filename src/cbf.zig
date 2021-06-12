@@ -7,8 +7,8 @@ const math = std.math;
 const assert = std.debug.assert;
 const testing = std.testing;
 
-const LinkedList = @import("src/list.zig").LinkedList;
-const StackBuffer = @import("src/buffer.zig").StackBuffer;
+const LinkedList = @import("list.zig").LinkedList;
+const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const KVList = LinkedList(KV);
 const StringBuffer = StackBuffer(u8, 2048);
@@ -152,15 +152,18 @@ const Parser = struct {
         }
     }
 
-    fn parseString(self: *Self) StringParserError!StringBuffer {
+    fn parseString(self: *Self) StringParserError!Value {
+        assert(self.input[self.index] == '"');
+        self.index += 1;
+
         var buf = StringBuffer.init("");
 
         while (self.index < self.input.len) : (self.index += 1) {
             switch (self.input[self.index]) {
-                '"' => return buf,
+                '"' => return Value{ .String = buf },
                 '\\' => {
                     self.index += 1;
-                    const esc = switch (self.input[self.index]) {
+                    const esc: u8 = switch (self.input[self.index]) {
                         '"' => '"',
                         '\\' => '\\',
                         'n' => '\n',
@@ -210,6 +213,7 @@ const Parser = struct {
                     break :c null;
                 },
                 ']', 0x09, 0x0a...0x0d, 0x20 => continue,
+                '"' => try self.parseString(),
                 else => try self.parseValue(),
             };
 
@@ -260,6 +264,33 @@ test "parse values" {
     while (resiter.next()) |kv| : (i += 1) {
         const key = Key{ .Numeric = i };
         testing.expectEqual(KV{ .key = key, .value = output[i] }, kv);
+    }
+}
+
+test "parse strings" {
+    var gpa = GPA{};
+    defer testing.expect(!gpa.deinit());
+
+    const Case = struct { input: []const u8, output: []const u8 };
+    const cases = [_]Case{
+        Case{ .input = "\"test\"", .output = "test" },
+        Case{ .input = "\"henlo world\"", .output = "henlo world" },
+        Case{ .input = "\"hi\n\n\"", .output = "hi\n\n" },
+        Case{ .input = "\"abcd\r\nabcd\r\n\\\\\"", .output = "abcd\r\nabcd\r\n\\" },
+        Case{ .input = "\"\\\" \\\" \\\" \\\\ \"", .output = "\" \" \" \\ " },
+    };
+
+    for (&cases) |case| {
+        var p = Parser{ .input = case.input };
+        var res = try p.parse(&gpa.allocator);
+        defer Parser.deinit(&res);
+
+        testing.expectEqual(meta.activeTag(res.nth(0).?.value), .String);
+        testing.expectEqualSlices(
+            u8,
+            res.nth(0).?.value.String.slice(),
+            case.output,
+        );
     }
 }
 
