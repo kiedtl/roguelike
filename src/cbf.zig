@@ -3,6 +3,7 @@
 const std = @import("std");
 const meta = std.meta;
 const mem = std.mem;
+const fmt = std.fmt;
 const math = std.math;
 const assert = std.debug.assert;
 const testing = std.testing;
@@ -388,4 +389,105 @@ test "parse lists with tags" {
     testing.expectEqual(list.nth(2).?.value, .False);
     testing.expectEqual(list.nth(3).?.value, .None);
     testing.expectEqual(list.nth(4).?.value, .None);
+}
+
+pub fn deserializeValue(comptime T: type, val: Value) ?T {
+    return switch (@typeInfo(T)) {
+        .NoReturn, .Void, .Type => null,
+        .Vector, .ComptimeInt, .ComptimeFloat, .Undefined => null,
+        .Bool => switch (val) {
+            .True => true,
+            .False => false,
+            else => null,
+        },
+        .Int => switch (val) {
+            .String => |s| fmt.parseInt(T, s.constSlice(), 0) catch null,
+            else => null,
+        },
+        .Float => switch (val) {
+            .String => |s| fmt.parseFloat(T, s.constSlice()) catch null,
+            else => null,
+        },
+        .Struct => switch (val) {
+            .List => |l| deserializeStruct(T, l) catch null,
+            else => null,
+        },
+        else => @panic("TODO"),
+    };
+}
+
+pub fn deserializeStruct(comptime T: type, data: *KVList) !T {
+    const struct_info = @typeInfo(T).Struct;
+    const fields = struct_info.fields;
+
+    var output = T{};
+
+    var iter = data.iterator();
+    while (iter.next()) |node| {
+        // Using block labels and 'break :block;' instead of the clunky 'found'
+        // variables segfaults Zig (See: #2727)
+        //
+        // https://github.com/ziglang/zig/issues/2727
+        switch (node.key) {
+            .Numeric => |n| {
+                var found = false;
+                inline for (fields) |f, i| {
+                    if (n == i) {
+                        if (deserializeValue(f.field_type, node.value)) |v| {
+                            @field(output, f.name) = v;
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) return error.TooManyItems;
+            },
+            .String => |s| {
+                var found = false;
+                inline for (fields) |f, i| {
+                    if (mem.eql(u8, s, fields[i].name)) {
+                        if (deserializeValue(fields[i].field_type, node.value)) |v| {
+                            @field(output, fields[i].name) = v;
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) return error.NoSuchTag;
+            },
+        }
+    }
+
+    return output;
+}
+
+test "value deserial" {
+    testing.expectEqual(deserializeValue(bool, .True), true);
+    testing.expectEqual(deserializeValue(bool, .False), false);
+
+    testing.expectEqual(deserializeValue(usize, Value{ .String = StringBuffer.init("0") }), 0);
+    testing.expectEqual(deserializeValue(usize, Value{ .String = StringBuffer.init("231") }), 231);
+
+    testing.expectEqual(deserializeValue(isize, Value{ .String = StringBuffer.init("-1") }), -1);
+    testing.expectEqual(deserializeValue(isize, Value{ .String = StringBuffer.init("91") }), 91);
+
+    testing.expectEqual(deserializeValue(f64, Value{ .String = StringBuffer.init("15.21") }), 15.21);
+}
+
+test "struct deserial" {
+    const Type = struct { foo: usize = 0, bar: bool = true, baz: isize = 0 };
+
+    var gpa = GPA{};
+    defer testing.expect(!gpa.deinit());
+
+    const input = "([foo]12 [bar]yea [baz]-2)";
+
+    var p = Parser{ .input = input };
+    var res = try p.parse(&gpa.allocator);
+    defer Parser.deinit(&res);
+
+    const r = try deserializeStruct(Type, &res.nth(0).?.value.List);
+    testing.expectEqual(r.foo, 12);
+    testing.expectEqual(r.bar, true);
+    testing.expectEqual(r.baz, -2);
 }
