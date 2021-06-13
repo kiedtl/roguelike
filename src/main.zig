@@ -11,9 +11,6 @@ const types = @import("types.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
-// quit is public, as machines such as StairExit will modify them.
-pub var quit: bool = undefined;
-
 // Install a panic handler that tries to shutdown termbox before calling the
 // default panic handler.
 pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) noreturn {
@@ -89,7 +86,7 @@ fn readNoActionInput() void {
     } else if (t == termbox.TB_EVENT_KEY) {
         if (ev.key != 0) {
             if (ev.key == termbox.TB_KEY_CTRL_C) {
-                quit = true;
+                state.state = .Quit;
             }
         }
     }
@@ -107,7 +104,7 @@ fn readInput() bool {
     } else if (t == termbox.TB_EVENT_KEY) {
         if (ev.key != 0) {
             if (ev.key == termbox.TB_KEY_CTRL_C) {
-                quit = true;
+                state.state = .Quit;
             }
             return true;
         } else if (ev.ch != 0) {
@@ -132,65 +129,72 @@ fn readInput() bool {
     } else return false;
 }
 
+fn gameOverScreen() void {
+    display.drawGameOver();
+    readNoActionInput();
+}
+
 fn tickGame() void {
-    quit = false;
-    while (!quit) {
-        const cur_level = state.player.coord.z;
+    if (state.player.is_dead) {
+        state.state = .Lose;
+        return;
+    }
 
-        state.ticks += 1;
-        state.tickMachines(cur_level);
-        state.tickLight();
-        state.tickAtmosphere(0);
-        state.tickSound();
+    const cur_level = state.player.coord.z;
 
-        var iter = state.mobs.iterator();
-        while (iter.nextPtr()) |mob| {
-            if (mob.coord.z != cur_level) continue;
+    state.ticks += 1;
+    state.tickMachines(cur_level);
+    state.tickLight();
+    state.tickAtmosphere(0);
+    state.tickSound();
 
-            if (mob.is_dead) {
-                continue;
-            } else if (mob.should_be_dead()) {
-                mob.kill();
-                continue;
-            }
+    var iter = state.mobs.iterator();
+    while (iter.nextPtr()) |mob| {
+        if (mob.coord.z != cur_level) continue;
 
-            mob.energy += 100;
+        if (mob.is_dead) {
+            continue;
+        } else if (mob.should_be_dead()) {
+            mob.kill();
+            continue;
+        }
 
-            while (mob.energy >= 0) {
-                if (mob.is_dead or mob.should_be_dead()) break;
+        mob.energy += 100;
 
-                const prev_energy = mob.energy;
+        while (mob.energy >= 0) {
+            if (mob.is_dead or mob.should_be_dead()) break;
 
-                mob.tick_hp();
-                mob.tick_env();
-                mob.tickRings();
-                mob.tickStatuses();
+            const prev_energy = mob.energy;
 
-                state._update_fov(mob);
+            mob.tick_hp();
+            mob.tick_env();
+            mob.tickRings();
+            mob.tickStatuses();
 
-                if (mob.isUnderStatus(.Paralysis)) |_| {
-                    if (mob.coord.eq(state.player.coord)) {
-                        readNoActionInput();
-                        display.draw();
-                        if (quit) break;
-                    }
+            state._update_fov(mob);
 
-                    _ = mob.rest();
-                    continue;
-                } else {
-                    if (mob.coord.eq(state.player.coord)) {
-                        display.draw();
-                        while (!readInput()) {}
-                        if (quit) break;
-                    } else {
-                        state._mob_occupation_tick(mob, &state.GPA.allocator);
-                    }
+            if (mob.isUnderStatus(.Paralysis)) |_| {
+                if (mob.coord.eq(state.player.coord)) {
+                    readNoActionInput();
+                    display.draw();
+                    if (state.state == .Quit) break;
                 }
 
-                state._update_fov(mob);
-
-                assert(prev_energy > mob.energy);
+                _ = mob.rest();
+                continue;
+            } else {
+                if (mob.coord.eq(state.player.coord)) {
+                    display.draw();
+                    while (!readInput()) {}
+                    if (state.state == .Quit) break;
+                } else {
+                    state._mob_occupation_tick(mob, &state.GPA.allocator);
+                }
             }
+
+            state._update_fov(mob);
+
+            assert(prev_energy > mob.energy);
         }
     }
 }
@@ -243,7 +247,14 @@ fn viewerMain() void {
 
 pub fn main() anyerror!void {
     initGame();
-    viewerMain();
-    //tickGame();
+
+    //viewerMain();
+
+    while (state.state != .Quit) switch (state.state) {
+        .Game => tickGame(),
+        .Lose, .Win => gameOverScreen(),
+        .Quit => break,
+    };
+
     deinitGame();
 }

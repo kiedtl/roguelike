@@ -12,6 +12,9 @@ const rng = @import("rng.zig");
 const fov = @import("fov.zig");
 usingnamespace @import("types.zig");
 
+pub const GameState = union(enum) { Game, Win, Lose, Quit };
+pub var state: GameState = .Game;
+
 // Should only be used directly by functions in main.zig. For other applications,
 // should be passed as a parameter by caller.
 pub var GPA = std.heap.GeneralPurposeAllocator(.{

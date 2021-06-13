@@ -2,6 +2,7 @@
 
 const std = @import("std");
 const math = std.math;
+const assert = std.debug.assert;
 
 const termbox = @import("termbox.zig");
 const utils = @import("utils.zig");
@@ -267,4 +268,18 @@ pub fn draw() void {
 
     termbox.tb_present();
     state.reset_marks();
+}
+
+pub fn drawGameOver() void {
+    assert(state.state == .Win or state.state == .Lose);
+
+    termbox.tb_clear();
+
+    const msg = if (state.state == .Win) "You escaped!" else "You died!";
+    const y = @divFloor(termbox.tb_height(), 2);
+    const x = @divFloor(termbox.tb_width(), 2) - @intCast(isize, msg.len / 2);
+
+    _ = _draw_string(x, y, 0xffffff, 0, "{s}", .{msg}) catch unreachable;
+
+    termbox.tb_present();
 }
