@@ -121,14 +121,16 @@ Rings
   hundred turns to reach their full potential.
 - Rings don't have an "enchantment" level, but "tiers" instead (mithril, gold,
   silver, and iron).
-ring of intimidation
+- Rings: (g)as, (s)tatus, (c)ustom, and [p]assive or [a]ctive
+- Rings: [p]assive (acting each turn) or [a]ctive (requiring user to move in pattern)
+ring of intimidation [a]
 	- Confers either stun or fear on mob when moving toward mob.
 	- Movement pattern: [move(N), move(N), move(N), move(N)]
 	// - Gives player knowledge of dungeon's layout, based on the intimidated mob's
 	//   memory.
 	// - Affected mobs should have a status effect... (`stunned` maybe?)
 	// - High penalty, depending on affected mob's willpower.
-ring of echolocation
+ring of echolocation [p]
 	- Gives player basic knowledge of dungeon's layout nearby sounds the player
 	  can hear. The wearer will not know about dungeon features, just walls,
 	  floors, and presence of water or lava.
@@ -253,77 +255,76 @@ fire alarm
 Potions/Vials/Tonics
 --------------------
 TODO: decide difference between potions, tonics, and vials.
-potion of incineration
+- Potions: [s]tatus, [g]as, [c]ustom
+potion of cremation [c]
 	- Explodes when opened, heating surrounding air.
-potion of confuzzlementation
+potion of confuzzlementation [g]
 	- Confusion.
-potion of degeneration
-	- ???
-potion of hallucination
+potion of hallucination [g]
 	- Hallucination.
-potion of aviation
-	- ???
-potion of desalination
-	- ???
-potion of divination
-	- ???
-potion of antifreeze (TODO: name)
+potion of antifreeze (TODO: name) [s]
 	- Increases cold immunity by a very small amount.
-potion of refrigeration
+potion of refrigeration [g]
 	- Freezes the surrounding air.
-potion of petrification
+potion of petrification [g]
 	- Paralysis.
-potion of fog (TODO: name)
+potion of fog (TODO: name) [g]
 	- Fog.
-potion of acceleration
+potion of acceleration [s]
 	- Haste.
-potion of asphyxiation
+potion of asphyxiation [g]
 	- Releases vapours that causes suffocation.
-potion of preservation
+potion of preservation [c]
 	- Heals 20% of health and removes poison.
-potion of recuperation
+potion of recuperation [s]
 	- Causes faster regeneration rate.
+potion of deceleration [s]
+	- Slow paralysis.
+potion of decimation [c]
+	- Explosion that can destroy walls.
+potion of defoliation [g]
+	- Poison that destroys plants and/or fungi.
+potion of dehumanization
+	- Makes mob mindless?
+potion of toxification [s]
+	- Caustic poison.
+potion of electrocution [s]
+	- Makes target significantly more susceptible to electric attacks.
+potion of fumigation [g]
+	- Releases toxic fumes that clear away other toxic fumes.
+potion of invigoration [s]
+	- Temporarily increases strength.
+potion of intoxication [s]
+	- Drunkenness.
+potion of irradiation [c]
+	- Releases corium.
+potion of starvation [s]
+	- Increases digestion rate.
+potion of dehydration
+	- ???
+potion of dilution
+	- ???
+potion of fluoridation
+	- ???
+potion of chlorination
+	- ???
+potion of negation
+	- ???
+potion of transubstantiation
+	- ???
 potion of coagulation
 	- ???
 potion of cognition
 	- ???
 potion of corruption
 	- ???
-potion of cremation
+potion of aviation
 	- ???
-potion of deceleration
-	- Slow paralysis.
-potion of decimation
-	- Explosion that can destroy walls.
-potion of defoliation
-	- Poison that destroys plants and/or fungi.
-potion of dehydration
+potion of degeneration
 	- ???
-potion of dehumanization
+potion of desalination
 	- ???
-potion of toxification
-	- Caustic poison.
-potion of dilution
-	- ???
-potion of electrocution
-	- Makes target significantly more susceptible to electric attacks.
-potion of fluoridation
-	- ???
-potion of chlorination
-	- ???
-potion of fumigation
-	- Releases toxic fumes that clear away other toxic fumes.
-potion of invigoration
-	- Temporarily increases strength.
-potion of intoxication
-	- Drunkenness.
-potion of irradiation
-	- Releases corium.
-potion of negation
-	- ???
-potion of starvation
-	- Increases digestion rate.
-potion of transubstantiation
+potion of divination
 	- ???
 
 
@@ -411,7 +412,7 @@ x Add screen/confirmation for death
 - Add potion struct, define some potions
 - Throw some potions around during mapgen
 - Allow picking up of potions
-- Add dialog to view inventory
+x Add dialog to view inventory
 - Add dialog to use item in inventory (quaff potions)
 - Add dialog to throw potion at mob
 - Define where rings should be in prefabs
