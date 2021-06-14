@@ -404,15 +404,21 @@ Roadmap
 x Basic prefabs
 x Allow for definition of a 'start' prefab
 x Allow for placement of player in a location
-- Allow for prefabs to be restricted to a map
+	- Allow for prefabs to be restricted to a map
+	- Allow for prefabs to be rotated
+	- Allow for prefabs to "seed" a map
+	- Allow for prefabs to have alternate layouts
 x Allow for placement of specific item in a location
 x Add exit staircase that exits game
 x Add screen/confirmation for winning
 x Add screen/confirmation for death
-- Add potion struct, define some potions
-- Throw some potions around during mapgen
-- Allow picking up of potions
+x Add potion struct, define some potions
+x Throw some potions around during mapgen
+x Allow picking up of potions
 x Add dialog to view inventory
-- Add dialog to use item in inventory (quaff potions)
+x Add dialog to use item in inventory (quaff potions)
 - Add dialog to throw potion at mob
+- Use proper CP407 arrows for staircases
 - Define where rings should be in prefabs
+- Define armor struct, use on mobs and player
+- Define melee weapon struct and dagger/spear, use on mobs and player
