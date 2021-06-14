@@ -211,15 +211,15 @@ pub const StairExit = Machine{
 // a very welcoming message on it, of course
 pub const StairUp = Machine{
     .name = "ascending staircase",
-    .powered_tile = '>',
-    .unpowered_tile = '>',
+    .powered_tile = '▲',
+    .unpowered_tile = '▲',
     .on_power = powerStairUp,
 };
 
 pub const StairDown = Machine{
     .name = "descending staircase",
-    .powered_tile = '<',
-    .unpowered_tile = '<',
+    .powered_tile = '▼',
+    .unpowered_tile = '▼',
     .on_power = powerStairDown,
 };
 
