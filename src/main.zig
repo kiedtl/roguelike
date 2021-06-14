@@ -97,6 +97,32 @@ fn readNoActionInput() void {
 
 // TODO: move this to state.zig...? There should probably be a separate file for
 // player-specific actions.
+fn useItem() bool {
+    state.message(.MetaError, "There's already an item here.", .{});
+    const index = display.chooseInventoryItem("Use") orelse return false;
+
+    switch (state.player.inventory.pack.slice()[index]) {
+        .Corpse => |_| {
+            state.message(.MetaError, "That doesn't look appetizing.", .{});
+            return false;
+        },
+        .Ring => |_| {
+            state.message(.MetaError, "Are you three?", .{});
+            return false;
+        },
+        .Potion => |p| state.player.quaffPotion(p),
+    }
+
+    _ = state.player.inventory.pack.orderedRemove(index) catch unreachable;
+
+    state.player.activities.append(.Use);
+    state.player.energy -= state.player.speed();
+
+    return true;
+}
+
+// TODO: move this to state.zig...? There should probably be a separate file for
+// player-specific actions.
 fn dropItem() bool {
     if (state.dungeon.at(state.player.coord).item) |item| {
         // TODO: scoot item automatically to next available tile?
@@ -132,6 +158,7 @@ fn readInput() bool {
             return true;
         } else if (ev.ch != 0) {
             return switch (ev.ch) {
+                'a' => useItem(),
                 'd' => dropItem(),
                 ',' => state.player.grabItem(),
                 '.' => state.player.rest(),

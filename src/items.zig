@@ -11,7 +11,7 @@ pub const EcholocationRing = Ring{
 
 pub const FogPotion = Potion{
     .name = "fog",
-    .type = .{ .Gas = gas.Paralysis.id },
+    .type = .{ .Gas = gas.SmokeGas.id },
     .color = 0x00A3D9,
 };
 

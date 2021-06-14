@@ -483,7 +483,7 @@ pub const MessageType = union(enum) {
 
 pub const Damage = struct { amount: f64 };
 pub const Activity = union(enum) {
-    Rest, Move: Direction, Attack: Direction, Teleport: Coord, Grab, Drop
+    Rest, Move: Direction, Attack: Direction, Teleport: Coord, Grab, Drop, Use
 };
 
 pub const EnemyRecord = struct { mob: *Mob, counter: usize };
@@ -709,6 +709,14 @@ pub const Mob = struct { // {{{
             return true;
         } else {
             return false;
+        }
+    }
+
+    pub fn quaffPotion(self: *Mob, potion: *Potion) void {
+        switch (potion.type) {
+            .Status => |s| self.addStatus(s, 0),
+            .Gas => |s| state.dungeon.atGas(self.coord)[s] = 1.0,
+            .Custom => |c| c(self),
         }
     }
 
