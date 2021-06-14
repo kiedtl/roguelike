@@ -107,17 +107,27 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
     y = _draw_string(startx, y, 0xffffff, 0, "turns: {}", .{state.ticks}) catch unreachable;
     y += 2;
 
+    const inventory = state.player.inventory.pack.slice();
+    if (inventory.len == 0) {
+        y = _draw_string(startx, y, 0xffffff, 0, "Your pack is empty.", .{}) catch unreachable;
+    } else {
+        y = _draw_string(startx, y, 0xffffff, 0, "Inventory:", .{}) catch unreachable;
+        for (inventory) |item| {
+            y = switch (item) {
+                .Corpse => |c| _draw_string(startx, y, 0xffffff, 0, "- {} corpse", .{c.species}),
+                .Ring => |r| _draw_string(startx, y, 0xffffff, 0, "- ring of {}", .{r.name}),
+                .TestObject => _draw_string(startx, y, 0xffffff, 0, "- fabulous monster", .{}),
+            } catch unreachable;
+        }
+    }
+    y += 2;
+
     for (moblist.items) |mob| {
         if (mob.is_dead) continue;
 
         _clear_line(startx, endx, y);
         _clear_line(startx, endx, y + 1);
 
-        // Draw the tile manually, _draw_string complains of invalid UTF-8 otherwise
-        // (FIXME)
-        //
-        //var tile: [4]u8 = undefined;
-        //_ = std.unicode.utf8Encode(mob.tile, &tile) catch unreachable;
         var mobcell = Tile.displayAs(mob.coord);
         termbox.tb_put_cell(startx, y, &mobcell);
 

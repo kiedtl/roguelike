@@ -109,6 +109,7 @@ fn readInput() bool {
             return true;
         } else if (ev.ch != 0) {
             return switch (ev.ch) {
+                ',' => state.player.grabItem(),
                 '.' => state.player.rest(),
                 'h' => state.player.moveInDirection(.West),
                 'j' => state.player.moveInDirection(.South),

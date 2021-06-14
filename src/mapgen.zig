@@ -360,6 +360,11 @@ pub fn placeTraps(level: usize) void {
             }
             _place_machine(trap_coord, &trap);
         }
+
+        const item_coord = room.randomCoord();
+        if (!state.dungeon.hasMachine(item_coord)) {
+            state.dungeon.at(item_coord).item = Item.TestObject;
+        }
     }
 }
 

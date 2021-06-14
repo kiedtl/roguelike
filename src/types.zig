@@ -6,6 +6,7 @@ const enums = @import("std/enums.zig");
 
 const LinkedList = @import("list.zig").LinkedList;
 const RingBuffer = @import("ringbuffer.zig").RingBuffer;
+const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const rng = @import("rng.zig");
 const mapgen = @import("mapgen.zig");
@@ -478,7 +479,7 @@ pub const MessageType = enum {
 
 pub const Damage = struct { amount: f64 };
 pub const Activity = union(enum) {
-    Rest, Move: Direction, Attack: Direction, Teleport: Coord
+    Rest, Move: Direction, Attack: Direction, Teleport: Coord, Grab
 };
 
 pub const EnemyRecord = struct { mob: *Mob, counter: usize };
@@ -626,10 +627,14 @@ pub const Mob = struct { // {{{
     max_HP: f64, // Should always be a whole number
 
     pub const Inventory = struct {
+        pack: PackBuffer = PackBuffer.init(&[_]Item{}),
+
         r_rings: [2]?*Ring = [2]?*Ring{ null, null },
         l_rings: [2]?*Ring = [2]?*Ring{ null, null },
 
         // Head, Torso, Leggings, Boots, Gloves
+
+        pub const PackBuffer = StackBuffer(Item, 5);
     };
 
     // Maximum field of hearing.
@@ -683,6 +688,21 @@ pub const Mob = struct { // {{{
                 .Echolocation => Status.tickEcholocation(self),
                 else => {},
             }
+        }
+    }
+
+    pub fn grabItem(self: *Mob) bool {
+        if (state.dungeon.at(self.coord).item) |item| {
+            self.inventory.pack.append(item) catch |e| switch (e) {
+                error.NoSpaceLeft => return false,
+            };
+            state.dungeon.at(self.coord).item = null;
+
+            self.activities.append(.Grab);
+            self.energy -= self.speed();
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -1119,6 +1139,9 @@ pub const SurfaceItemTag = enum { Machine, Prop };
 pub const SurfaceItem = union(SurfaceItemTag) { Machine: *Machine, Prop: *Prop };
 
 pub const Ring = struct {
+    // Ring of <name>
+    name: []const u8,
+
     status: Status,
 
     // So, statuses have a concept of "power". And rings work by conferring a status
@@ -1148,10 +1171,13 @@ pub const Ring = struct {
     }
 };
 
-// TODO: make corpse a surfaceitem? (if a mob dies over a surface item just dumb it
+// TODO: make corpse a surfaceitem? (if a mob dies over a surface item just dump it
 // on a nearby tile)
-pub const ItemTag = enum { Corpse, Ring };
-pub const Item = union(ItemTag) { Corpse: *Mob, Ring: *Ring };
+pub const Item = union(enum) {
+    Corpse: *Mob,
+    Ring: *Ring,
+    TestObject,
+};
 
 pub const TileType = enum {
     Wall,
