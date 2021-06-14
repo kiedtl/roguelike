@@ -37,6 +37,7 @@ pub const StatusArray = enums.EnumArray(Status, StatusData);
 pub const MobList = LinkedList(Mob);
 pub const MobArrayList = std.ArrayList(*Mob); // STYLE: rename to MobPtrArrayList
 pub const RingList = LinkedList(Ring);
+pub const PotionList = LinkedList(Potion);
 pub const MachineList = LinkedList(Machine);
 pub const PropList = LinkedList(Prop);
 

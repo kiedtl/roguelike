@@ -14,3 +14,5 @@ pub const FogPotion = Potion{
     .type = .{ .Gas = gas.Paralysis.id },
     .color = 0x00A3D9,
 };
+
+pub const POTIONS = [_]Potion{FogPotion};

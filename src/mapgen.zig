@@ -336,6 +336,28 @@ pub fn placeRandomRooms(fabs: *PrefabArrayList, level: usize, num: usize, alloca
     state.dungeon.rooms[level] = rooms;
 }
 
+pub fn placeItems(level: usize) void {
+    for (state.dungeon.rooms[level].items) |room| {
+        if (room.prefab) |rfb| if (rfb.noitems) continue;
+        if (room.height * room.width < 16) continue;
+
+        if (rng.onein(3)) {
+            var place = rng.range(usize, 1, 4);
+            while (place > 0) {
+                const coord = room.randomCoord();
+                if (state.dungeon.hasMachine(coord) or state.dungeon.at(coord).item != null)
+                    continue;
+
+                const potion = rng.chooseUnweighted(Potion, &items.POTIONS);
+                state.potions.append(potion) catch unreachable;
+                state.dungeon.at(coord).item = Item{ .Potion = state.potions.lastPtr().? };
+
+                place -= 1;
+            }
+        }
+    }
+}
+
 pub fn placeTraps(level: usize) void {
     for (state.dungeon.rooms[level].items) |room| {
         if (room.prefab) |rfb| if (rfb.notraps) continue;
@@ -546,6 +568,7 @@ pub fn fillRandom(level: usize, floor_chance: usize) void {
 pub const Prefab = struct {
     invisible: bool = false,
     restriction: ?usize = null,
+    noitems: bool = false,
     noguards: bool = false,
     nolights: bool = false,
     notraps: bool = false,

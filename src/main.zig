@@ -29,6 +29,7 @@ fn initGame() void {
     state.messages = MessageArrayList.init(&state.GPA.allocator);
     state.mobs = MobList.init(&state.GPA.allocator);
     state.rings = RingList.init(&state.GPA.allocator);
+    state.potions = PotionList.init(&state.GPA.allocator);
     state.machines = MachineList.init(&state.GPA.allocator);
     state.props = PropList.init(&state.GPA.allocator);
     rng.init();
@@ -46,6 +47,7 @@ fn initGame() void {
         mapgen.placeRandomRooms(&fabs, level, 2000, &state.GPA.allocator);
         mapgen.placeTraps(level);
         mapgen.placeLights(level);
+        mapgen.placeItems(level);
         mapgen.placeGuards(level, &state.GPA.allocator);
     }
 
@@ -68,6 +70,7 @@ fn deinitGame() void {
 
     state.mobs.deinit();
     state.rings.deinit();
+    state.potions.deinit();
     state.machines.deinit();
     state.messages.deinit();
     state.props.deinit();
