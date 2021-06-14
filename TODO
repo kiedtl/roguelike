@@ -406,9 +406,8 @@ x Allow for placement of player in a location
 - Allow for prefabs to be restricted to a map
 x Allow for placement of specific item in a location
 x Add exit staircase that exits game
-- Add screen/confirmation for winning
-- Add screen/confirmation for death
-- Add very simple morgue files
+x Add screen/confirmation for winning
+x Add screen/confirmation for death
 - Add potion struct, define some potions
 - Throw some potions around during mapgen
 - Allow picking up of potions
