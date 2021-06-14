@@ -9,6 +9,7 @@ const RingBuffer = @import("ringbuffer.zig").RingBuffer;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const rng = @import("rng.zig");
+const display = @import("display.zig");
 const mapgen = @import("mapgen.zig");
 const termbox = @import("termbox.zig");
 const astar = @import("astar.zig");
@@ -459,7 +460,8 @@ pub const Material = struct {
     opacity: f64,
 };
 
-pub const MessageType = enum {
+pub const MessageType = union(enum) {
+    MetaError,
     Info,
     Aquire,
     Move,
@@ -468,6 +470,7 @@ pub const MessageType = enum {
 
     pub fn color(self: MessageType) u32 {
         return switch (self) {
+            .MetaError => 0xffffff,
             .Info => 0xfafefa,
             .Aquire => 0xffd700,
             .Move => 0xfafefe,
@@ -479,7 +482,7 @@ pub const MessageType = enum {
 
 pub const Damage = struct { amount: f64 };
 pub const Activity = union(enum) {
-    Rest, Move: Direction, Attack: Direction, Teleport: Coord, Grab
+    Rest, Move: Direction, Attack: Direction, Teleport: Coord, Grab, Drop
 };
 
 pub const EnemyRecord = struct { mob: *Mob, counter: usize };
@@ -697,6 +700,8 @@ pub const Mob = struct { // {{{
                 error.NoSpaceLeft => return false,
             };
             state.dungeon.at(self.coord).item = null;
+
+            // TODO: show message
 
             self.activities.append(.Grab);
             self.energy -= self.speed();

@@ -92,6 +92,26 @@ fn readNoActionInput() void {
     }
 }
 
+// TODO: move this to state.zig...? There should probably be a separate file for
+// player-specific actions.
+fn dropItem() bool {
+    if (state.dungeon.at(state.player.coord).item) |item| {
+        // TODO: scoot item automatically to next available tile?
+        state.message(.MetaError, "There's already an item here.", .{});
+        return false;
+    } else {
+        const index = display.chooseInventoryItem("Drop") orelse return false;
+        const item = state.player.inventory.pack.orderedRemove(index) catch unreachable;
+        state.dungeon.at(state.player.coord).item = item;
+
+        // TODO: show message
+
+        state.player.activities.append(.Drop);
+        state.player.energy -= state.player.speed();
+        return true;
+    }
+}
+
 fn readInput() bool {
     var ev: termbox.tb_event = undefined;
     const t = termbox.tb_poll_event(&ev);
@@ -109,6 +129,7 @@ fn readInput() bool {
             return true;
         } else if (ev.ch != 0) {
             return switch (ev.ch) {
+                'd' => dropItem(),
                 ',' => state.player.grabItem(),
                 '.' => state.player.rest(),
                 'h' => state.player.moveInDirection(.West),

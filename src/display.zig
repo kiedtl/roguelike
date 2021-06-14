@@ -112,11 +112,11 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
         y = _draw_string(startx, y, 0xffffff, 0, "Your pack is empty.", .{}) catch unreachable;
     } else {
         y = _draw_string(startx, y, 0xffffff, 0, "Inventory:", .{}) catch unreachable;
-        for (inventory) |item| {
+        for (inventory) |item, i| {
             y = switch (item) {
-                .Corpse => |c| _draw_string(startx, y, 0xffffff, 0, "- {} corpse", .{c.species}),
-                .Ring => |r| _draw_string(startx, y, 0xffffff, 0, "- ring of {}", .{r.name}),
-                .TestObject => _draw_string(startx, y, 0xffffff, 0, "- fabulous monster", .{}),
+                .Corpse => |c| _draw_string(startx, y, 0xffffff, 0, "{}) {} corpse", .{ i, c.species }),
+                .Ring => |r| _draw_string(startx, y, 0xffffff, 0, "{}) ring of {}", .{ i, r.name }),
+                .TestObject => _draw_string(startx, y, 0xffffff, 0, "{}) fabulous monster", .{i}),
             } catch unreachable;
         }
     }
@@ -147,11 +147,12 @@ fn _draw_messages(startx: isize, endx: isize, starty: isize, endy: isize) void {
     var y: isize = starty;
     while (i > 0 and y < endy) : (i -= 1) {
         const msg = state.messages.items[i];
-        const col = if (msg.turn == state.ticks or i == first)
-            state.messages.items[i].type.color()
-        else
-            0xa0a0a0;
-        y = _draw_string(startx, y, col, 0, "{}", .{msg.msg}) catch unreachable;
+        const col = if (msg.turn == state.ticks or i == first) msg.type.color() else 0xa0a0a0;
+        if (msg.type == .MetaError) {
+            y = _draw_string(startx, y, col, 0, "ERROR: {}", .{msg.msg}) catch unreachable;
+        } else {
+            y = _draw_string(startx, y, col, 0, "{}", .{msg.msg}) catch unreachable;
+        }
     }
 }
 
@@ -278,6 +279,61 @@ pub fn draw() void {
 
     termbox.tb_present();
     state.reset_marks();
+}
+
+pub fn chooseInventoryItem(msg: []const u8) ?usize {
+    termbox.tb_clear();
+
+    const suffix = " which item?";
+    const inventory = state.player.inventory.pack.constSlice();
+
+    const msglen = msg.len + suffix.len;
+    var y = @divFloor(termbox.tb_height(), 2) - @intCast(isize, inventory.len + 2);
+    const x = @divFloor(termbox.tb_width(), 2) - @intCast(isize, msglen / 2);
+
+    _ = _draw_string(x, y, 0xffffff, 0, "{s}{s}", .{ msg, suffix }) catch unreachable;
+    y += 1;
+
+    if (inventory.len == 0) {
+        y = _draw_string(x, y, 0xffffff, 0, "(Your pack is empty.)", .{}) catch unreachable;
+    } else {
+        for (inventory) |item, i| {
+            y = switch (item) {
+                .Corpse => |c| _draw_string(x, y, 0xffffff, 0, "  {})  {} corpse", .{ i, c.species }),
+                .Ring => |r| _draw_string(x, y, 0xffffff, 0, "  {})  ring of {}", .{ i, r.name }),
+                .TestObject => _draw_string(x, y, 0xffffff, 0, "  {})  fabulous monster", .{i}),
+            } catch unreachable;
+        }
+    }
+
+    termbox.tb_present();
+
+    while (true) {
+        var ev: termbox.tb_event = undefined;
+        const t = termbox.tb_poll_event(&ev);
+
+        if (t == -1) @panic("Fatal termbox error");
+
+        if (t == termbox.TB_EVENT_KEY) {
+            if (ev.key != 0) {
+                if (ev.key == termbox.TB_KEY_CTRL_C or ev.key == termbox.TB_KEY_CTRL_G) {
+                    return null;
+                }
+                continue;
+            } else if (ev.ch != 0) {
+                switch (ev.ch) {
+                    ' ' => return null,
+                    '0'...'9' => {
+                        const c: usize = ev.ch - '0';
+                        if (c < inventory.len) {
+                            return c;
+                        }
+                    },
+                    else => {},
+                }
+            } else unreachable;
+        } else return null;
+    }
 }
 
 pub fn drawGameOver() void {
