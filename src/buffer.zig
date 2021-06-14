@@ -13,7 +13,7 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
 
         pub fn init(data: []const T) Self {
             var b: Self = .{ .len = data.len };
-            mem.copy(u8, &b.data, data);
+            mem.copy(T, &b.data, data);
             return b;
         }
 
