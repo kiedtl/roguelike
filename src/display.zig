@@ -116,7 +116,7 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
             y = switch (item) {
                 .Corpse => |c| _draw_string(startx, y, 0xffffff, 0, "{}) {} corpse", .{ i, c.species }),
                 .Ring => |r| _draw_string(startx, y, 0xffffff, 0, "{}) ring of {}", .{ i, r.name }),
-                .TestObject => _draw_string(startx, y, 0xffffff, 0, "{}) fabulous monster", .{i}),
+                .Potion => |p| _draw_string(startx, y, 0xffffff, 0, "{}) potion of {}", .{ i, p.name }),
             } catch unreachable;
         }
     }
@@ -301,7 +301,7 @@ pub fn chooseInventoryItem(msg: []const u8) ?usize {
             y = switch (item) {
                 .Corpse => |c| _draw_string(x, y, 0xffffff, 0, "  {})  {} corpse", .{ i, c.species }),
                 .Ring => |r| _draw_string(x, y, 0xffffff, 0, "  {})  ring of {}", .{ i, r.name }),
-                .TestObject => _draw_string(x, y, 0xffffff, 0, "  {})  fabulous monster", .{i}),
+                .Potion => |p| _draw_string(x, y, 0xffffff, 0, "{}) potion of {}", .{ i, p.name }),
             } catch unreachable;
         }
     }

@@ -1143,6 +1143,19 @@ pub const Prop = struct {
 pub const SurfaceItemTag = enum { Machine, Prop };
 pub const SurfaceItem = union(SurfaceItemTag) { Machine: *Machine, Prop: *Prop };
 
+pub const Potion = struct {
+    // Potion of <name>
+    name: []const u8,
+
+    type: union(enum) {
+        Status: Status,
+        Gas: usize,
+        Custom: fn (dork: *Mob) void,
+    },
+
+    color: u32,
+};
+
 pub const Ring = struct {
     // Ring of <name>
     name: []const u8,
@@ -1181,7 +1194,7 @@ pub const Ring = struct {
 pub const Item = union(enum) {
     Corpse: *Mob,
     Ring: *Ring,
-    TestObject,
+    Potion: *Potion,
 };
 
 pub const TileType = enum {
@@ -1256,6 +1269,10 @@ pub const Tile = struct {
                         .Corpse => |corpse| {
                             cell.ch = corpse.tile;
                             cell.bg = 0xee0000;
+                        },
+                        .Potion => |potion| {
+                            cell.ch = '¡';
+                            cell.fg = potion.color;
                         },
                         else => cell.ch = '?',
                     }
