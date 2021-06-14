@@ -339,7 +339,7 @@ pub fn placeRandomRooms(fabs: *PrefabArrayList, level: usize, num: usize, alloca
 pub fn placeItems(level: usize) void {
     for (state.dungeon.rooms[level].items) |room| {
         if (room.prefab) |rfb| if (rfb.noitems) continue;
-        if (room.height * room.width < 16) continue;
+        if ((room.height * room.width) < 20) continue;
 
         if (rng.onein(3)) {
             var place = rng.range(usize, 1, 4);
@@ -439,7 +439,11 @@ pub fn placeLights(level: usize) void {
         if (room.prefab) |rfb| if (rfb.nolights) continue;
 
         // Don't light small rooms.
-        if ((room.width * room.height) < 16)
+        if ((room.width * room.height) < 10)
+            continue;
+
+        // Don't light corridors.
+        if (room.width == 1 or room.height == 1)
             continue;
 
         var spacing: usize = rng.range(usize, 0, 2);
@@ -457,7 +461,7 @@ pub fn placeLights(level: usize) void {
                 lamp2.powered_luminescence -= rng.range(usize, 0, 30);
 
                 if (!state.dungeon.hasMachine(coord1) and
-                    state.dungeon.neighboringWalls(coord1, false) == 1 and
+                    state.dungeon.neighboringWalls(coord1, false) == 2 and
                     state.dungeon.neighboringMachines(coord1) == 0 and
                     state.dungeon.at(coord1).type == .Floor)
                 {
@@ -465,7 +469,7 @@ pub fn placeLights(level: usize) void {
                 }
 
                 if (!state.dungeon.hasMachine(coord2) and
-                    state.dungeon.neighboringWalls(coord2, false) == 1 and
+                    state.dungeon.neighboringWalls(coord2, false) == 2 and
                     state.dungeon.neighboringMachines(coord2) == 0 and
                     state.dungeon.at(coord2).type == .Floor)
                 {
