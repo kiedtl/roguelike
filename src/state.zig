@@ -370,19 +370,6 @@ pub fn tickMachines(level: usize) void {
     }
 }
 
-pub fn reset_marks() void {
-    var z: usize = 0;
-    while (z < LEVELS) : (z += 1) {
-        var y: usize = 0;
-        while (y < HEIGHT) : (y += 1) {
-            var x: usize = 0;
-            while (x < WIDTH) : (x += 1) {
-                dungeon.at(Coord.new2(z, x, y)).marked = false;
-            }
-        }
-    }
-}
-
 pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void {
     var buf: [128]u8 = undefined;
     for (buf) |*i| i.* = 0;

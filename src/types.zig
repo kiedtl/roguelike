@@ -234,17 +234,19 @@ pub const Coord = struct { // {{{
         return false;
     }
 
-    fn insert_if_valid(x: isize, y: isize, buf: *CoordArrayList, limit: Coord) void {
+    fn insert_if_valid(z: usize, x: isize, y: isize, buf: *StackBuffer(Coord, 2048), limit: Coord) void {
         if (x < 0 or y < 0)
             return;
         if (x > @intCast(isize, limit.x) or y > @intCast(isize, limit.y))
             return;
 
-        buf.append(Coord.new(@intCast(usize, x), @intCast(usize, y))) catch unreachable;
+        buf.append(Coord.new2(z, @intCast(usize, x), @intCast(usize, y))) catch unreachable;
     }
 
-    pub fn draw_line(from: Coord, to: Coord, limit: Coord, alloc: *mem.Allocator) CoordArrayList {
-        var buf = CoordArrayList.init(alloc);
+    pub fn drawLine(from: Coord, to: Coord, limit: Coord) StackBuffer(Coord, 2048) {
+        assert(from.z == to.z);
+
+        var buf = StackBuffer(Coord, 2048).init(null);
 
         const xstart = @intCast(isize, from.x);
         const xend = @intCast(isize, to.x);
@@ -262,7 +264,7 @@ pub const Coord = struct { // {{{
         if (dx > dy) {
             err = dx / 2.0;
             while (x != xend) {
-                insert_if_valid(x, y, &buf, limit);
+                insert_if_valid(from.z, x, y, &buf, limit);
                 err -= dy;
                 if (err < 0) {
                     y += stepy;
@@ -273,7 +275,7 @@ pub const Coord = struct { // {{{
         } else {
             err = dy / 2.0;
             while (y != yend) {
-                insert_if_valid(x, y, &buf, limit);
+                insert_if_valid(from.z, x, y, &buf, limit);
                 err -= dx;
                 if (err < 0) {
                     x += stepx;
@@ -483,7 +485,14 @@ pub const MessageType = union(enum) {
 
 pub const Damage = struct { amount: f64 };
 pub const Activity = union(enum) {
-    Rest, Move: Direction, Attack: Direction, Teleport: Coord, Grab, Drop, Use
+    Rest,
+    Move: Direction,
+    Attack: Direction,
+    Teleport: Coord,
+    Grab,
+    Drop,
+    Use,
+    Throw,
 };
 
 pub const EnemyRecord = struct { mob: *Mob, counter: usize };
@@ -718,6 +727,47 @@ pub const Mob = struct { // {{{
             .Gas => |s| state.dungeon.atGas(self.coord)[s] = 1.0,
             .Custom => |c| c(self),
         }
+    }
+
+    // Only destructible items can be thrown. If we allowed non-destructable
+    // items to be thrown, it'd pose many issues due to the fact that there
+    // can be only one item on a tile -- what should be done if a corpse it
+    // thrown onto a tile that already has an item? Should one of the items be
+    // destroyed, or should the thrown item be moved the nearest free tile?
+    // What if that free tile is twenty items away? ...
+    pub fn throwItem(self: *Mob, item: *Item, at: Coord) bool {
+        switch (item.*) {
+            .Potion => {},
+            else => return false,
+        }
+
+        const trajectory = self.coord.drawLine(at, state.mapgeometry);
+        var landed: ?Coord = null;
+        var energy: usize = 10; // TODO: make based on strength
+
+        for (trajectory.constSlice()) |coord| {
+            if (energy == 0 or (!coord.eq(self.coord) and !state.is_walkable(coord))) {
+                landed = coord;
+                break;
+            }
+            energy -= 1;
+        }
+        if (landed == null) landed = at;
+
+        switch (item.*) {
+            .Potion => |potion| {
+                if (state.dungeon.at(landed.?).mob) |bastard| {
+                    bastard.quaffPotion(potion);
+                } else switch (potion.type) {
+                    .Status => {},
+                    .Gas => |s| state.dungeon.atGas(landed.?)[s] = 1.0,
+                    .Custom => |f| f(null),
+                }
+            },
+            else => unreachable,
+        }
+
+        return true;
     }
 
     pub fn makeNoise(self: *Mob, amount: usize) void {
@@ -993,17 +1043,12 @@ pub const Mob = struct { // {{{
         if (sound <= self.hearing)
             return null; // Too quiet to hear
 
-        // TODO: do some tests and find the maximum used memory in practice,
-        // decrease the buffer's size to that
-        var membuf: [65535]u8 = undefined;
-        var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-
-        const line = self.coord.draw_line(coord, state.mapgeometry, &fba.allocator);
+        const line = self.coord.drawLine(coord, state.mapgeometry);
         var sound_resistance: f64 = 0.0;
 
         // FIXME: this lazy sound propagation formula isn't accurate. But this is
         // a game, so I can get away with it, right?
-        for (line.items) |line_coord| {
+        for (line.constSlice()) |line_coord| {
             const resistance = if (state.dungeon.at(line_coord).type == .Wall)
                 0.4 * state.dungeon.at(line_coord).material.density
             else
@@ -1159,7 +1204,7 @@ pub const Potion = struct {
     type: union(enum) {
         Status: Status,
         Gas: usize,
-        Custom: fn (dork: *Mob) void,
+        Custom: fn (dork: ?*Mob) void,
     },
 
     color: u32,

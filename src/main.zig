@@ -97,8 +97,25 @@ fn readNoActionInput() void {
 
 // TODO: move this to state.zig...? There should probably be a separate file for
 // player-specific actions.
+fn throwItem() bool {
+    const index = display.chooseInventoryItem("Throw") orelse return false;
+    const dest = display.chooseCell() orelse return false;
+    const item = &state.player.inventory.pack.slice()[index];
+
+    if (state.player.throwItem(item, dest)) {
+        _ = state.player.inventory.pack.orderedRemove(index) catch unreachable;
+        state.player.activities.append(.Throw);
+        state.player.energy -= state.player.speed();
+        return true;
+    } else {
+        state.message(.MetaError, "You can't throw that.", .{});
+        return false;
+    }
+}
+
+// TODO: move this to state.zig...? There should probably be a separate file for
+// player-specific actions.
 fn useItem() bool {
-    state.message(.MetaError, "There's already an item here.", .{});
     const index = display.chooseInventoryItem("Use") orelse return false;
 
     switch (state.player.inventory.pack.slice()[index]) {
@@ -158,6 +175,7 @@ fn readInput() bool {
             return true;
         } else if (ev.ch != 0) {
             return switch (ev.ch) {
+                't' => throwItem(),
                 'a' => useItem(),
                 'd' => dropItem(),
                 ',' => state.player.grabItem(),

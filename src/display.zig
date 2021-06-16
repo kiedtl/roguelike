@@ -278,7 +278,65 @@ pub fn draw() void {
     _draw_messages(0, maxx, maxy, termbox.tb_height() - 1);
 
     termbox.tb_present();
-    state.reset_marks();
+}
+
+pub fn chooseCell() ?Coord {
+    var coord: Coord = state.player.coord;
+
+    const playery = @intCast(isize, state.player.coord.y);
+    const playerx = @intCast(isize, state.player.coord.x);
+
+    const maxy: isize = termbox.tb_height() - 6;
+    const maxx: isize = termbox.tb_width() - 30;
+
+    const starty = playery - @divFloor(maxy, 2);
+    const startx = playerx - @divFloor(maxx, 2);
+
+    draw();
+
+    while (true) {
+        var ev: termbox.tb_event = undefined;
+        const t = termbox.tb_poll_event(&ev);
+
+        if (t == -1) @panic("Fatal termbox error");
+
+        if (t == termbox.TB_EVENT_KEY) {
+            if (ev.key != 0) {
+                switch (ev.key) {
+                    termbox.TB_KEY_CTRL_C,
+                    termbox.TB_KEY_CTRL_G,
+                    => return null,
+                    termbox.TB_KEY_ENTER => return coord,
+                    else => continue,
+                }
+            } else if (ev.ch != 0) {
+                switch (ev.ch) {
+                    'h' => _ = coord.move(.West, state.mapgeometry),
+                    'j' => _ = coord.move(.South, state.mapgeometry),
+                    'k' => _ = coord.move(.North, state.mapgeometry),
+                    'l' => _ = coord.move(.East, state.mapgeometry),
+                    'y' => _ = coord.move(.NorthWest, state.mapgeometry),
+                    'u' => _ = coord.move(.NorthEast, state.mapgeometry),
+                    'b' => _ = coord.move(.SouthWest, state.mapgeometry),
+                    'n' => _ = coord.move(.SouthEast, state.mapgeometry),
+                    else => {},
+                }
+            } else unreachable;
+        }
+
+        draw();
+
+        const relcoordx = @intCast(usize, @intCast(isize, coord.x) - startx);
+        const relcoordy = @intCast(usize, @intCast(isize, coord.y) - starty);
+        const adjcoord = (relcoordy * @intCast(usize, termbox.tb_width())) + relcoordx;
+        const coordtile = &termbox.tb_cell_buffer()[adjcoord];
+
+        const tmp = coordtile.bg;
+        coordtile.bg = coordtile.fg;
+        coordtile.fg = tmp;
+
+        termbox.tb_present();
+    }
 }
 
 pub fn chooseInventoryItem(msg: []const u8) ?usize {
