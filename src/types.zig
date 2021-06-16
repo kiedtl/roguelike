@@ -38,6 +38,8 @@ pub const MobList = LinkedList(Mob);
 pub const MobArrayList = std.ArrayList(*Mob); // STYLE: rename to MobPtrArrayList
 pub const RingList = LinkedList(Ring);
 pub const PotionList = LinkedList(Potion);
+pub const ArmorList = LinkedList(Armor);
+pub const WeaponList = LinkedList(Weapon);
 pub const MachineList = LinkedList(Machine);
 pub const PropList = LinkedList(Prop);
 
@@ -645,7 +647,8 @@ pub const Mob = struct { // {{{
         r_rings: [2]?*Ring = [2]?*Ring{ null, null },
         l_rings: [2]?*Ring = [2]?*Ring{ null, null },
 
-        // Head, Torso, Leggings, Boots, Gloves
+        armor: ?*Armor = null,
+        wielded: ?*Weapon = null,
 
         pub const PackBuffer = StackBuffer(Item, 5);
     };
@@ -738,6 +741,7 @@ pub const Mob = struct { // {{{
     pub fn throwItem(self: *Mob, item: *Item, at: Coord) bool {
         switch (item.*) {
             .Potion => {},
+            .Weapon => @panic("W/A TODO"),
             else => return false,
         }
 
@@ -755,6 +759,7 @@ pub const Mob = struct { // {{{
         if (landed == null) landed = at;
 
         switch (item.*) {
+            .Weapon => |_| @panic("W/A TODO"),
             .Potion => |potion| {
                 if (state.dungeon.at(landed.?).mob) |bastard| {
                     bastard.quaffPotion(potion);
@@ -1197,6 +1202,37 @@ pub const Prop = struct {
 pub const SurfaceItemTag = enum { Machine, Prop };
 pub const SurfaceItem = union(SurfaceItemTag) { Machine: *Machine, Prop: *Prop };
 
+// Each weapon and armor has a specific amount of maximum damage it can create
+// or prevent. That damage comes in several different types:
+//      - Crushing: clubs, maces, morningstars, battleaxes.
+//      - Slashing: swords, battleaxes.
+//      - Pulping: morningstars.
+//      - Puncture: spears, daggers, swords.
+//      - Lacerate: warwhips, morningstars.
+//
+// Just as each weapon may cause one or more of each type of damage, each armor
+// may prevent one or more of each damage as well.
+
+pub const Armor = struct {
+    id: []const u8,
+    name: []const u8,
+    crushing: usize,
+    pulping: usize,
+    slashing: usize,
+    piercing: usize,
+    lacerating: usize,
+};
+
+pub const Weapon = struct {
+    id: []const u8,
+    name: []const u8,
+    crushing: usize,
+    pulping: usize,
+    slashing: usize,
+    piercing: usize,
+    lacerating: usize,
+};
+
 pub const Potion = struct {
     // Potion of <name>
     name: []const u8,
@@ -1249,6 +1285,8 @@ pub const Item = union(enum) {
     Corpse: *Mob,
     Ring: *Ring,
     Potion: *Potion,
+    Armor: *Armor,
+    Weapon: *Weapon,
 };
 
 pub const TileType = enum {
@@ -1327,6 +1365,12 @@ pub const Tile = struct {
                         .Potion => |potion| {
                             cell.ch = '¡';
                             cell.fg = potion.color;
+                        },
+                        .Weapon => |_| {
+                            cell.ch = '≥'; // TODO: use U+1F5E1?
+                        },
+                        .Armor => |_| {
+                            cell.ch = '&'; // TODO: use U+1F6E1?
                         },
                         else => cell.ch = '?',
                     }

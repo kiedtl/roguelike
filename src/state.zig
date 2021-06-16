@@ -38,6 +38,8 @@ pub var player: *Mob = undefined;
 pub var mobs: MobList = undefined;
 pub var rings: RingList = undefined;
 pub var potions: PotionList = undefined;
+pub var armors: ArmorList = undefined;
+pub var weapons: WeaponList = undefined;
 pub var machines: MachineList = undefined;
 pub var props: PropList = undefined;
 

@@ -16,3 +16,23 @@ pub const FogPotion = Potion{
 };
 
 pub const POTIONS = [_]Potion{FogPotion};
+
+pub const LeatherArmor = Armor{
+    .id = "leather_armor",
+    .name = "leather",
+    .crushing = 2,
+    .pulping = 3,
+    .slashing = 5,
+    .piercing = 0,
+    .lacerating = 8,
+};
+
+pub const DaggerWeapon = Weapon{
+    .id = "dagger",
+    .name = "dagger",
+    .crushing = 0,
+    .pulping = 0,
+    .slashing = 3,
+    .piercing = 13,
+    .lacerating = 1,
+};

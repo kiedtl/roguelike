@@ -30,6 +30,8 @@ fn initGame() void {
     state.mobs = MobList.init(&state.GPA.allocator);
     state.rings = RingList.init(&state.GPA.allocator);
     state.potions = PotionList.init(&state.GPA.allocator);
+    state.armors = ArmorList.init(&state.GPA.allocator);
+    state.weapons = WeaponList.init(&state.GPA.allocator);
     state.machines = MachineList.init(&state.GPA.allocator);
     state.props = PropList.init(&state.GPA.allocator);
     rng.init();
@@ -124,9 +126,14 @@ fn useItem() bool {
             return false;
         },
         .Ring => |_| {
+            // So this message was in response to player going "I want to eat it"
+            // But of course they might have just been intending to "invoke" the
+            // ring, not knowing that there's no such thing.
+            // FIXME: so this message can definitely be improved...
             state.message(.MetaError, "Are you three?", .{});
             return false;
         },
+        .Weapon, .Armor => @panic("W/A TODO"),
         .Potion => |p| state.player.quaffPotion(p),
     }
 

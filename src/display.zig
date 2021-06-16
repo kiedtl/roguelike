@@ -117,6 +117,8 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
                 .Corpse => |c| _draw_string(startx, y, 0xffffff, 0, "  {}) {} corpse", .{ i, c.species }),
                 .Ring => |r| _draw_string(startx, y, 0xffffff, 0, "  {}) ring of {}", .{ i, r.name }),
                 .Potion => |p| _draw_string(startx, y, 0xffffff, 0, "  {}) potion of {}", .{ i, p.name }),
+                .Weapon => |w| _draw_string(startx, y, 0xffffff, 0, "  {}) {}", .{ i, w.name }),
+                .Armor => |a| _draw_string(startx, y, 0xffffff, 0, "  {}) {} armor", .{ i, a.name }),
             } catch unreachable;
         }
     }
@@ -360,6 +362,8 @@ pub fn chooseInventoryItem(msg: []const u8) ?usize {
                 .Corpse => |c| _draw_string(x, y, 0xffffff, 0, "  {})  {} corpse", .{ i, c.species }),
                 .Ring => |r| _draw_string(x, y, 0xffffff, 0, "  {})  ring of {}", .{ i, r.name }),
                 .Potion => |p| _draw_string(x, y, 0xffffff, 0, "  {}) potion of {}", .{ i, p.name }),
+                .Weapon => |w| _draw_string(x, y, 0xffffff, 0, "  {}) {}", .{ i, w.name }),
+                .Armor => |a| _draw_string(x, y, 0xffffff, 0, "  {}) {} armor", .{ i, a.name }),
             } catch unreachable;
         }
     }

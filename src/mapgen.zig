@@ -22,6 +22,18 @@ const MAX_ROOM_HEIGHT: usize = 10;
 const LIMIT = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
 const DISTANCES = [2][6]usize{ .{ 0, 1, 2, 3, 4, 8 }, .{ 3, 8, 4, 3, 2, 1 } };
 
+fn _createItem(comptime T: type, item: T) *T {
+    comptime const list = switch (T) {
+        Potion => &state.potions,
+        Ring => &state.rings,
+        Armor => &state.armors,
+        Weapon => &state.weapons,
+        else => @compileError("uh wat"),
+    };
+    list.append(item) catch @panic("OOM");
+    return list.lastPtr().?;
+}
+
 fn _place_prop(coord: Coord, prop_template: *const Prop) *Prop {
     var prop = prop_template.*;
     prop.coord = coord;
@@ -50,16 +62,17 @@ fn _place_normal_door(coord: Coord) void {
 
 // STYLE: make top level public func, call directly, rename placePlayer
 fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
-    var echoring = items.EcholocationRing;
+    const echoring = _createItem(Ring, items.EcholocationRing);
     echoring.worn_since = state.ticks;
-    state.rings.append(echoring) catch @panic("OOM");
-    const echoringptr = state.rings.lastPtr().?;
+
+    const armor = _createItem(Armor, items.LeatherArmor);
+    const weapon = _createItem(Weapon, items.DaggerWeapon);
 
     var player = ElfTemplate;
     player.init(alloc);
     player.occupation.phase = .SawHostile;
     player.coord = coord;
-    player.inventory.r_rings[0] = echoringptr;
+    player.inventory.r_rings[0] = echoring;
     state.mobs.append(player) catch unreachable;
     state.dungeon.at(coord).mob = state.mobs.lastPtr().?;
     state.player = state.mobs.lastPtr().?;
