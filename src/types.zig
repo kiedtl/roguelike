@@ -670,7 +670,6 @@ pub const Mob = struct { // {{{
     pub fn tick_hp(self: *Mob) void {
         assert(!self.is_dead);
         self.HP = math.clamp(self.HP + 0.14, 0, self.max_HP);
-        self.last_damage = null;
     }
 
     // Check surrounding temperature/gas/water and drown, burn, freeze, or
@@ -920,11 +919,7 @@ pub const Mob = struct { // {{{
 
     pub fn takeDamage(self: *Mob, d: Damage) void {
         self.HP = math.clamp(self.HP - d.amount, 0, self.max_HP);
-
-        // Commented out because last_damage is set to null too soon for the
-        // display to display it
-        //
-        //self.last_damage = d;
+        self.last_damage = d;
     }
 
     pub fn init(self: *Mob, alloc: *mem.Allocator) void {
