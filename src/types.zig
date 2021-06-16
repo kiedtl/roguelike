@@ -1365,12 +1365,15 @@ pub const Tile = struct {
                         .Potion => |potion| {
                             cell.ch = '¡';
                             cell.fg = potion.color;
+                            cell.bg = color;
                         },
                         .Weapon => |_| {
                             cell.ch = '≥'; // TODO: use U+1F5E1?
+                            cell.bg = color;
                         },
                         .Armor => |_| {
                             cell.ch = '&'; // TODO: use U+1F6E1?
+                            cell.bg = color;
                         },
                         else => cell.ch = '?',
                     }
