@@ -192,7 +192,7 @@ pub extern fn tb_change_cell(x: isize, y: isize, ch: u32, fg: u32, bg: u32) void
 // using tb_width() and tb_height() functions. The pointer stays valid as long
 // as no tb_clear() and tb_present() calls are made. The buffer is
 // one-dimensional buffer containing lines of cells starting from the top.
-pub extern fn tb_cell_buffer(void) [*c]tb_cell;
+pub extern fn tb_cell_buffer() [*c]tb_cell;
 
 pub const TB_INPUT_CURRENT: usize = 0; // 000
 pub const TB_INPUT_ESC: usize = 1; // 001
