@@ -408,6 +408,7 @@ x Allow for placement of player in a location
 	- Allow for prefabs to be rotated
 	- Allow for prefabs to "seed" a map
 	- Allow for prefabs to have alternate layouts
+	- Create corridors between parallel prefabs/rooms
 x Allow for placement of specific item in a location
 x Add exit staircase that exits game
 x Add screen/confirmation for winning
@@ -417,8 +418,11 @@ x Throw some potions around during mapgen
 x Allow picking up of potions
 x Add dialog to view inventory
 x Add dialog to use item in inventory (quaff potions)
-- Add dialog to throw potion at mob
-- Use proper CP407 arrows for staircases
+x Add dialog to throw potion at mob
+x Use proper CP407 arrows for staircases
 - Define where rings should be in prefabs
 - Define armor struct, use on mobs and player
 - Define melee weapon struct and dagger/spear, use on mobs and player
+- Add the Openworld
+- Add lichen and fungi
+- Add temperature system
