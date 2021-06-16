@@ -12,10 +12,14 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
 
         const Self = @This();
 
-        pub fn init(data: []const T) Self {
-            var b: Self = .{ .len = data.len };
-            mem.copy(T, &b.data, data);
-            return b;
+        pub fn init(data: ?[]const T) Self {
+            if (data) |d| {
+                var b: Self = .{ .len = d.len };
+                mem.copy(T, &b.data, d);
+                return b;
+            } else {
+                return .{};
+            }
         }
 
         pub fn slice(self: *Self) []T {
