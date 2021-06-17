@@ -35,6 +35,10 @@ pub fn mixColors(a: u32, b: u32, frac: f64) u32 {
     return (rr << 16) | (rg << 8) | rb;
 }
 
+pub fn percentOf(comptime T: type, x: T, percent: T) T {
+    return x * percent / 100;
+}
+
 pub fn percentageOfColor(color: u32, _p: usize) u32 {
     const percentage = math.clamp(_p, 0, 100);
     var r = ((color >> 16) & 0xFF) * @intCast(u32, percentage) / 100;

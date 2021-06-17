@@ -14,6 +14,7 @@ const mapgen = @import("mapgen.zig");
 const termbox = @import("termbox.zig");
 const astar = @import("astar.zig");
 const materials = @import("materials.zig");
+const items = @import("items.zig");
 const gas = @import("gas.zig");
 const utils = @import("utils.zig");
 const state = @import("state.zig");
@@ -878,10 +879,24 @@ pub const Mob = struct { // {{{
         return true;
     }
 
+    // TODO: bonus if defender didn't move in last two turns
+    // TODO: bonus if attacker didn't move in last two turns
+    // TODO: nbonus if attacker moved in last two turns
+    // TODO: nbonus if defender moved in last two turns
+    // TODO: bonus if defender is in a certain radius (<6 cells?)
+    // TODO: make missed ranged attacks land on adjacent squares
     pub fn fight(attacker: *Mob, recipient: *Mob) void {
         assert(!attacker.is_dead);
         assert(!recipient.is_dead);
-        assert(attacker.dexterity < 100);
+
+        assert(attacker.dexterity <= 100);
+        assert(recipient.dexterity <= 100);
+
+        assert(attacker.strength > 0);
+        assert(recipient.strength > 0);
+
+        const CHANCE_OF_AUTO_MISS = 14; // 1 in <x>
+        const CHANCE_OF_AUTO_HIT = 14; // 1 in <x>
 
         attacker.energy -= attacker.speed();
 
@@ -890,21 +905,41 @@ pub const Mob = struct { // {{{
         }
 
         const is_stab = !recipient.isAwareOfAttack(attacker.coord);
+        const auto_miss = rng.onein(CHANCE_OF_AUTO_MISS);
+        const auto_hit = is_stab or rng.onein(CHANCE_OF_AUTO_HIT);
 
-        // TODO: attacker's skill should play a significant part
-        const rand = rng.int(u7) % 100;
+        const miss = if (auto_miss)
+            true
+        else if (auto_hit)
+            false
+        else
+            (rng.rangeClumping(usize, 1, 10, 2) * attacker.accuracy()) <
+                (rng.rangeClumping(usize, 1, 10, 2) * recipient.dexterity);
 
-        if (!is_stab and rand < recipient.dexterity) {
-            return; // dodged attack!
+        if (miss) return;
+
+        const attacker_weapon = attacker.inventory.wielded orelse &items.UnarmedWeapon;
+        const attacker_extra_str = attacker.strength * 100 / attacker_weapon.required_strength;
+        const attacker_extra_str_adj = math.clamp(attacker_extra_str, 0, 150);
+        const recipient_armor = recipient.inventory.armor orelse &items.NoneArmor;
+        const max_damage = attacker_weapon.damages.resultOf(&recipient_armor.resists).sum();
+
+        assert(attacker_weapon.required_strength > 0);
+
+        var damage: usize = 0;
+        damage += rng.rangeClumping(usize, max_damage / 2, max_damage, 2);
+        damage = utils.percentOf(usize, damage, attacker_extra_str_adj);
+
+        if (is_stab) {
+            const bonus = DamageType.stabBonus(attacker_weapon.main_damage);
+            damage = utils.percentOf(usize, damage, bonus);
         }
 
-        const noise: usize = if (is_stab) 3 else 15;
-        attacker.makeNoise(noise);
-        recipient.makeNoise(noise);
-
-        var damage = (attacker.strength / 4) + rng.range(usize, 0, 3);
-        if (is_stab) damage *= 6;
         recipient.takeDamage(.{ .amount = @intToFloat(f64, damage) });
+
+        const noise = DamageType.causeNoise(attacker_weapon.main_damage, is_stab);
+        attacker.makeNoise(noise + rng.range(usize, 1, 3));
+        recipient.makeNoise(noise + rng.range(usize, 1, 3));
 
         const hitstr = if (is_stab) "stab" else "hit";
         if (recipient.coord.eq(state.player.coord)) {
@@ -914,6 +949,9 @@ pub const Mob = struct { // {{{
             }
         } else if (attacker.coord.eq(state.player.coord)) {
             state.message(.Info, "You {} the {} for {} damage!", .{ hitstr, recipient.species, damage });
+            if (recipient.should_be_dead()) {
+                state.message(.Damage, "You slew the {}.", .{recipient.species});
+            }
         }
     }
 
@@ -1111,6 +1149,10 @@ pub const Mob = struct { // {{{
         return @intCast(isize, self.base_speed);
     }
 
+    pub fn accuracy(self: *const Mob) usize {
+        return self.dexterity;
+    }
+
     pub fn isCreeping(self: *const Mob) bool {
         return self.turnsSinceRest() < self.activities.len;
     }
@@ -1208,24 +1250,98 @@ pub const SurfaceItem = union(SurfaceItemTag) { Machine: *Machine, Prop: *Prop }
 // Just as each weapon may cause one or more of each type of damage, each armor
 // may prevent one or more of each damage as well.
 
+pub const DamageType = enum {
+    Crushing,
+    Pulping,
+    Slashing,
+    Piercing,
+    Lacerating,
+
+    pub fn causeNoise(d: DamageType, stab: bool) usize {
+        return switch (d) {
+            .Crushing => if (stab) @as(usize, 10) else @as(usize, 18),
+            .Pulping => if (stab) @as(usize, 11) else @as(usize, 18),
+            .Slashing => if (stab) @as(usize, 5) else @as(usize, 14),
+            .Piercing => if (stab) @as(usize, 3) else @as(usize, 10),
+            .Lacerating => if (stab) @as(usize, 15) else @as(usize, 19),
+        };
+    }
+
+    // Return a percentile bonus with which to multiply the base damage
+    // amount when an attack is a stabbing attack.
+    pub fn stabBonus(d: DamageType) usize {
+        return switch (d) {
+            .Crushing => 420,
+            .Pulping => 350,
+            .Slashing => 540,
+            .Piercing => 700,
+            .Lacerating => 210,
+        };
+    }
+};
+
+//pub const Damages = enums.EnumFieldStruct(DamageType, 0);
+pub const Damages = struct {
+    Crushing: usize = 0,
+    Pulping: usize = 0,
+    Slashing: usize = 0,
+    Piercing: usize = 0,
+    Lacerating: usize = 0,
+
+    pub const Self = @This();
+
+    pub fn sum(self: *Self) usize {
+        return self.Crushing +
+            self.Pulping +
+            self.Slashing +
+            self.Piercing +
+            self.Lacerating;
+    }
+
+    pub fn resultOf(attack: *const Self, defense: *const Self) Self {
+        return .{
+            .Crushing = @intCast(usize, math.absInt(
+                @intCast(isize, attack.Crushing) - @intCast(isize, defense.Crushing),
+            ) catch unreachable),
+            .Pulping = @intCast(usize, math.absInt(
+                @intCast(isize, attack.Pulping) - @intCast(isize, defense.Pulping),
+            ) catch unreachable),
+            .Slashing = @intCast(usize, math.absInt(
+                @intCast(isize, attack.Slashing) - @intCast(isize, defense.Slashing),
+            ) catch unreachable),
+            .Piercing = @intCast(usize, math.absInt(
+                @intCast(isize, attack.Piercing) - @intCast(isize, defense.Piercing),
+            ) catch unreachable),
+            .Lacerating = @intCast(usize, math.absInt(
+                @intCast(isize, attack.Lacerating) - @intCast(isize, defense.Lacerating),
+            ) catch unreachable),
+        };
+    }
+
+    pub fn damageOf(self: *Self, d: DamageType) *usize {
+        const fields = @typeInfo(Self).fields;
+        var found_at: 0 = 0;
+        inline for (fields) |field, i| {
+            if (mem.eql(u8, @tagName(d), field.name))
+                found_at = i;
+        }
+        return @field(self, fields[found_at].name);
+    }
+};
+
 pub const Armor = struct {
     id: []const u8,
     name: []const u8,
-    crushing: usize,
-    pulping: usize,
-    slashing: usize,
-    piercing: usize,
-    lacerating: usize,
+    resists: Damages,
 };
 
 pub const Weapon = struct {
     id: []const u8,
     name: []const u8,
-    crushing: usize,
-    pulping: usize,
-    slashing: usize,
-    piercing: usize,
-    lacerating: usize,
+    required_strength: usize,
+    damages: Damages,
+    main_damage: DamageType,
+    secondary_damage: ?DamageType,
 };
 
 pub const Potion = struct {
@@ -1504,12 +1620,12 @@ pub const WatcherTemplate = Mob{
     .willpower = 3,
     .dexterity = 17,
     .hearing = 5,
-    .max_HP = 8,
+    .max_HP = 20,
     .memory_duration = 10,
     .base_speed = 65,
 
-    .HP = 8,
-    .strength = 5, // weakling!
+    .HP = 20,
+    .strength = 15, // weakling!
 };
 
 pub const GuardTemplate = Mob{
@@ -1527,14 +1643,14 @@ pub const GuardTemplate = Mob{
     .vision = 9,
 
     .willpower = 2,
-    .dexterity = 9,
+    .dexterity = 20,
     .hearing = 7,
-    .max_HP = 17,
+    .max_HP = 30,
     .memory_duration = 3,
     .base_speed = 110,
 
-    .HP = 17,
-    .strength = 14,
+    .HP = 30,
+    .strength = 20,
 };
 
 // TODO: make this a hooman
@@ -1553,14 +1669,14 @@ pub const ElfTemplate = Mob{
     .vision = 20,
 
     .willpower = 4,
-    .dexterity = 28,
+    .dexterity = 21,
     .hearing = 5,
-    .max_HP = 49,
+    .max_HP = 30,
     .memory_duration = 10,
     .base_speed = 80,
 
-    .HP = 49,
-    .strength = 14,
+    .HP = 30,
+    .strength = 19,
 };
 
 pub const InteractionLaborerTemplate = Mob{
@@ -1579,13 +1695,13 @@ pub const InteractionLaborerTemplate = Mob{
     .vision = 6,
 
     .willpower = 2,
-    .dexterity = 5,
+    .dexterity = 19,
     .hearing = 10,
-    .max_HP = 15,
+    .max_HP = 30,
     .memory_duration = 5,
     .base_speed = 100,
 
-    .HP = 15,
+    .HP = 30,
     .strength = 10,
 };
 

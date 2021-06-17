@@ -23,6 +23,21 @@ pub fn onein(number: usize) bool {
     return range(@TypeOf(number), 1, number) == 1;
 }
 
+// Ported from BrogueCE's source. (src/brogue/Math.c:40, randClumpedRange())
+pub fn rangeClumping(comptime T: type, min: T, max: T, clump: T) T {
+    std.debug.assert(max >= min);
+    if (clump <= 1) return range(T, min, max);
+
+    const sides = (max - min) / clump;
+    var i: usize = 0;
+    var total: usize = 0;
+
+    while (i < (max - min) % clump) : (i += 1) total += range(T, 0, sides + 1);
+    while (i < clump) : (i += 1) total += range(T, 0, sides);
+
+    return total + min;
+}
+
 // STYLE: change to range(min: anytype, max: @TypeOf(min)) @TypeOf(min)
 pub fn range(comptime T: type, min: T, max: T) T {
     std.debug.assert(max >= min);
@@ -69,3 +84,20 @@ test "range" {
         std.testing.expect(r_usize >= 34234 and r_usize < 89821);
     }
 }
+
+// When piped into `jp -input csv -type bar`, visualizes the results of
+// rangeClumping(). Was a great help in helping the author to understand exactly
+// what a Gaussian distribution is, and what effects the clumping factor
+// had on the results.
+//
+//pub fn main() anyerror!void {
+//    init();
+//    const max = 25;
+//    var occurs = [_]usize{0} ** (max + 1);
+//    for ([_]usize{0} ** 2000) |_, i| {
+//        occurs[rangeClumping(usize, 0, max, 5)] += 1;
+//    }
+//    for (&occurs) |occurance, number| {
+//        std.debug.print("{},{}\n", .{ number, occurance });
+//    }
+//}

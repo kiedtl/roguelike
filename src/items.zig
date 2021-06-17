@@ -20,19 +20,53 @@ pub const POTIONS = [_]Potion{FogPotion};
 pub const LeatherArmor = Armor{
     .id = "leather_armor",
     .name = "leather",
-    .crushing = 2,
-    .pulping = 3,
-    .slashing = 5,
-    .piercing = 0,
-    .lacerating = 8,
+    .resists = .{
+        .Crushing = 2,
+        .Pulping = 3,
+        .Slashing = 5,
+        .Piercing = 0,
+        .Lacerating = 8,
+    },
+};
+
+pub const NoneArmor = Armor{
+    .id = "none",
+    .name = "none",
+    .resists = .{
+        .Crushing = 1,
+        .Pulping = 1,
+        .Slashing = 1,
+        .Piercing = 1,
+        .Lacerating = 1,
+    },
+};
+
+pub const UnarmedWeapon = Weapon{
+    .id = "none",
+    .name = "none",
+    .required_strength = 1,
+    .damages = .{
+        .Crushing = 8,
+        .Pulping = 1,
+        .Slashing = 1,
+        .Piercing = 0,
+        .Lacerating = 1,
+    },
+    .main_damage = .Crushing,
+    .secondary_damage = null,
 };
 
 pub const DaggerWeapon = Weapon{
     .id = "dagger",
     .name = "dagger",
-    .crushing = 0,
-    .pulping = 0,
-    .slashing = 3,
-    .piercing = 13,
-    .lacerating = 1,
+    .required_strength = 14,
+    .damages = .{
+        .Crushing = 0,
+        .Pulping = 0,
+        .Slashing = 3,
+        .Piercing = 13,
+        .Lacerating = 2,
+    },
+    .main_damage = .Piercing,
+    .secondary_damage = null,
 };
