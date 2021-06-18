@@ -73,6 +73,8 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     player.occupation.phase = .SawHostile;
     player.coord = coord;
     player.inventory.r_rings[0] = echoring;
+    player.inventory.armor = armor;
+    player.inventory.wielded = weapon;
     state.mobs.append(player) catch unreachable;
     state.dungeon.at(coord).mob = state.mobs.lastPtr().?;
     state.player = state.mobs.lastPtr().?;
