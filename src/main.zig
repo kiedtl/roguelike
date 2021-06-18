@@ -99,6 +99,26 @@ fn readNoActionInput() void {
 
 // TODO: move this to state.zig...? There should probably be a separate file for
 // player-specific actions.
+fn rifleCorpse() bool {
+    if (state.dungeon.at(state.player.coord).item) |item| {
+        switch (item) {
+            .Corpse => |c| {
+                c.vomitInventory(&state.GPA.allocator);
+                state.player.energy -= state.player.speed() * 2;
+                state.message(.Info, "You rifle the {} corpse.", .{c.species});
+                return true;
+            },
+            else => state.message(.MetaError, "You can't rifle that.", .{}),
+        }
+        return false;
+    } else {
+        state.message(.MetaError, "The floor is a bit too hard to dig through...", .{});
+        return false;
+    }
+}
+
+// TODO: move this to state.zig...? There should probably be a separate file for
+// player-specific actions.
 fn throwItem() bool {
     const index = display.chooseInventoryItem("Throw") orelse return false;
     const dest = display.chooseCell() orelse return false;
@@ -182,6 +202,7 @@ fn readInput() bool {
             return true;
         } else if (ev.ch != 0) {
             return switch (ev.ch) {
+                'r' => rifleCorpse(),
                 't' => throwItem(),
                 'a' => useItem(),
                 'd' => dropItem(),

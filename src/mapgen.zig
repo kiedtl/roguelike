@@ -412,10 +412,15 @@ pub fn placeGuards(level: usize, allocator: *mem.Allocator) void {
             const rnd = room.randomCoord();
 
             if (state.dungeon.at(rnd).mob == null) {
+                const armor = _createItem(Armor, items.HeavyChainmailArmor);
+                const weapon = _createItem(Weapon, items.SpearWeapon);
+
                 var guard = GuardTemplate;
                 guard.init(allocator);
                 guard.occupation.work_area.append(rnd) catch unreachable;
                 guard.coord = rnd;
+                guard.inventory.armor = armor;
+                guard.inventory.wielded = weapon;
                 state.mobs.append(guard) catch unreachable;
                 const mobptr = state.mobs.lastPtr().?;
                 state.dungeon.at(rnd).mob = mobptr;

@@ -47,6 +47,12 @@ pub var ticks: usize = 0;
 pub var messages: MessageArrayList = undefined;
 pub var score: usize = 0;
 
+pub fn canRecieveItem(c: Coord) bool {
+    if (!is_walkable(c)) return false;
+    if (dungeon.at(c).item) |_| return false;
+    return true;
+}
+
 // STYLE: change to Tile.lightOpacity
 pub fn light_tile_opacity(coord: Coord) usize {
     const tile = dungeon.at(coord);

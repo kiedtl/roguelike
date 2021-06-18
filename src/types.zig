@@ -9,6 +9,7 @@ const RingBuffer = @import("ringbuffer.zig").RingBuffer;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const rng = @import("rng.zig");
+const dijkstra = @import("dijkstra.zig");
 const display = @import("display.zig");
 const mapgen = @import("mapgen.zig");
 const termbox = @import("termbox.zig");
@@ -651,7 +652,8 @@ pub const Mob = struct { // {{{
         armor: ?*Armor = null,
         wielded: ?*Weapon = null,
 
-        pub const PackBuffer = StackBuffer(Item, 5);
+        pub const PACK_SIZE: usize = 5;
+        pub const PackBuffer = StackBuffer(Item, PACK_SIZE);
     };
 
     // Maximum field of hearing.
@@ -958,6 +960,64 @@ pub const Mob = struct { // {{{
     pub fn takeDamage(self: *Mob, d: Damage) void {
         self.HP = math.clamp(self.HP - d.amount, 0, self.max_HP);
         self.last_damage = d;
+    }
+
+    // Called when player hits the [r]ifle key -- I see no reason for it to
+    // be called anytime else.
+    //
+    pub fn vomitInventory(self: *Mob, alloc: *mem.Allocator) void {
+        const special_invent = [_]?Item{
+            if (self.inventory.l_rings[0]) |r| Item{ .Ring = r } else null,
+            if (self.inventory.l_rings[1]) |r| Item{ .Ring = r } else null,
+            if (self.inventory.r_rings[0]) |r| Item{ .Ring = r } else null,
+            if (self.inventory.r_rings[1]) |r| Item{ .Ring = r } else null,
+            if (self.inventory.armor) |a| Item{ .Armor = a } else null,
+            if (self.inventory.wielded) |w| Item{ .Weapon = w } else null,
+        };
+
+        comptime const inventory_size = special_invent.len + Inventory.PACK_SIZE;
+        var coords = StackBuffer(Coord, inventory_size).init(null);
+
+        var dijk = dijkstra.Dijkstra.init(
+            self.coord,
+            state.mapgeometry,
+            5,
+            state.canRecieveItem,
+            alloc,
+        );
+        defer dijk.deinit();
+
+        while (dijk.next()) |coord| {
+            // Papering over a bug here, next() should never return starting coord
+            if (coord.eq(self.coord)) continue;
+
+            assert(state.canRecieveItem(coord));
+            coords.append(coord) catch |e| switch (e) {
+                error.NoSpaceLeft => break,
+                else => unreachable,
+            };
+        }
+
+        var ctr: usize = 0;
+
+        for (&special_invent) |maybe_item| {
+            if (maybe_item) |item| {
+                if (ctr >= coords.len) break;
+                state.dungeon.at(coords.data[ctr]).item = item;
+                ctr += 1;
+            }
+        }
+        for (self.inventory.pack.constSlice()) |item| {
+            if (ctr >= coords.len) break;
+            state.dungeon.at(coords.data[ctr]).item = item;
+            ctr += 1;
+        }
+
+        self.inventory.pack.clear();
+        self.inventory.armor = null;
+        self.inventory.wielded = null;
+        self.inventory.l_rings = [_]?*Ring{ null, null };
+        self.inventory.r_rings = [_]?*Ring{ null, null };
     }
 
     pub fn init(self: *Mob, alloc: *mem.Allocator) void {
@@ -1669,7 +1729,7 @@ pub const ElfTemplate = Mob{
     .vision = 20,
 
     .willpower = 4,
-    .dexterity = 21,
+    .dexterity = 99, //21,
     .hearing = 5,
     .max_HP = 30,
     .memory_duration = 10,

@@ -53,6 +53,10 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
             return self.data[self.len];
         }
 
+        pub fn clear(self: *Self) void {
+            self.len = 0;
+        }
+
         pub fn append(self: *Self, item: T) !void {
             if (self.len >= capacity) {
                 return error.NoSpaceLeft;

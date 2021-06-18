@@ -1,3 +1,5 @@
+// FIXME: next() should never return starting coord
+
 const std = @import("std");
 const mem = std.mem;
 
@@ -52,12 +54,11 @@ pub const Dijkstra = struct {
 
         self.closed.append(self.current) catch unreachable;
 
-        const neighbors = DIRECTIONS;
-        for (neighbors) |neighbor| {
+        for (&DIRECTIONS) |neighbor| {
             var coord = self.current;
+            if (!coord.c.move(neighbor, self.limit)) continue;
             coord.n += 1;
 
-            if (!coord.c.move(neighbor, self.limit)) continue;
             if (coord.n > self.max) continue;
             if (!self.is_valid(coord.c)) continue;
             if (coordInList(coord.c, &self.closed)) |_| continue;
@@ -66,7 +67,11 @@ pub const Dijkstra = struct {
             self.open.append(coord) catch unreachable;
         }
 
-        self.current = self.open.pop();
-        return self.current.c;
+        if (self.open.items.len == 0) {
+            return null;
+        } else {
+            self.current = self.open.orderedRemove(0);
+            return self.current.c;
+        }
     }
 };

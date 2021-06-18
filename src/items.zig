@@ -17,11 +17,23 @@ pub const FogPotion = Potion{
 
 pub const POTIONS = [_]Potion{FogPotion};
 
+pub const HeavyChainmailArmor = Armor{
+    .id = "hvy_chainmail_armor",
+    .name = "chainmail",
+    .resists = .{
+        .Crushing = 2,
+        .Pulping = 8,
+        .Slashing = 100,
+        .Piercing = 4,
+        .Lacerating = 100,
+    },
+};
+
 pub const LeatherArmor = Armor{
     .id = "leather_armor",
     .name = "leather",
     .resists = .{
-        .Crushing = 2,
+        .Crushing = 3,
         .Pulping = 3,
         .Slashing = 5,
         .Piercing = 0,
@@ -66,6 +78,21 @@ pub const DaggerWeapon = Weapon{
         .Slashing = 3,
         .Piercing = 13,
         .Lacerating = 2,
+    },
+    .main_damage = .Piercing,
+    .secondary_damage = null,
+};
+
+pub const SpearWeapon = Weapon{
+    .id = "spear",
+    .name = "spear",
+    .required_strength = 18,
+    .damages = .{
+        .Crushing = 0,
+        .Pulping = 0,
+        .Slashing = 2,
+        .Piercing = 17,
+        .Lacerating = 1,
     },
     .main_damage = .Piercing,
     .secondary_damage = null,
