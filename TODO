@@ -328,6 +328,88 @@ potion of divination
 	- ???
 
 
+Occupations
+-----------
+- Sentinel
+	Purpose: Guard against the Openworld denizens, and raise alarm in case
+	  of a wall breach and subsequent invasion.
+	Guards entry points to Openworld.
+	Guard vaults.
+	Armed to the teeth, but stops attacking when intruder leaves radius
+	Attempts to hold intruder in stasis with nets and shooting webs
+	If intruder is too strong, flees and raises alarm, calling for
+	  reinforcements
+- Watchers
+	Purpose: Give player a reason to think twice before entering room.
+	Guards a single room, staying stationary.
+	Very weak, but fast. Keeps its distance, and howls and yells when it
+	  encounters an intruder.
+- Guard
+	Purpose: Keep player always on their toes.
+	Walk in a squad from one room to another, and investigate noises.
+	Moderately well armed, but slow.
+- Warden
+	Purpose: roam around, beating/whipping idlers.
+	Weak, slow, and cowardly.
+- Sentry
+	Purpose: hide in cubbyhole in corridor or room, guarding.
+	Poorly armed, normal speed.
+	Attempts to hold intruder in stasis with nets and shooting webs,
+	  while making a big racket.
+- Firefighter
+	Purpose: respond to fire alarms, and use extinguisher to put fire out.
+	Travels in squads of 3-4. Can sprint to move 2.3 times as fast.
+	Always wears heat-proof cloak, and carries extinguisher. Defenseless
+	  against intruders.
+	Should flee if it realizes that the "fire" is an angry Burning Brute.
+- Scout
+	Purpose: roam through dungeon, looking for things that need to be done.
+	Reports the following: fires, bloody/dirty floors, overgrown fungi/plants
+	  that need to be removed, broken machines, traps, and other props, wounded
+	  mobs that are unconscious, presence of corpses.
+- Electrician
+	Purpose: fix electricity-emitting machines.
+	Fixes malfunctioning power supplies and power storage facilities, which
+	  would otherwise electrocute a normal technician.
+	Carries electricity-proof cloak.
+- Technician
+	Purpose: Fixes all other machines.
+- Engineer
+	Purpose: Fix traps and props.
+- Doctor
+	Purpose: heal wounded mobs.
+	Carries herbs and medicine (aka potions) that heal wounded mobs (via
+	  released vapours).
+- Priest
+	Purpose: Make the temple extremely dangerous.
+	May release tainted gas at intruders.
+	Calls on the Necromancer to smite intruders, who will happily oblige.
+	A special type of necromancer, but can only use that ability in "tainted"
+	  areas that were designated so by the High Priest.
+	Drags prisoners to altar, then burns the victim to death. Once cooked,
+	  the victim's corpse is animated.
+	Manufactures Potions of Tainting.
+- Researcher
+	Purpose: manufacture potions, and stand around, giving player something
+	  interesting to look at.
+	Uses machines and collections of vials to manufacture potions, placing
+	  them in storeroom.
+	Develops railgun and a few other big toys for player to fiddle with.
+- Farmer
+	Purpose: make food for the entire dungeon.
+	Farms fungi/mushrooms, harvesting them just before spore-producing stage.
+	Places fungi/mushrooms next to machines, before operating the machine
+	  and producing rations.
+- Singer/Dancer
+	Purpose: distract guards.
+	Starts singing and dancing on a stage at a specified time, attracting
+	  guards which have a low <discipline> field.
+	Makes wardens not entirely useless, as they can now showup in the concert
+	  halls to whip the denizens thereof.
+	Song names should be procedurally generated.
+	Each concert hall should have a poster "NOW LIVE: <song>"
+
+
 Books
 -----
 "Melkor: The Life and Times of the King of Arda"
