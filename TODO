@@ -386,17 +386,40 @@ s	maron
 
 Refactorings/Fixes/Optimizations
 --------------------------------
-Use @mulAdd where possible (FOV, A*, Dijkstra, light/atmosphere/sound systems)
-Use @setCold(true) where possible (see above for places to look)
-Use SIMD where possible
-Defined unimplemented() and todo()
-Stop using the freaking `catch unreachable` syntax:
-	libera#zig 19:58 <ikskuh> "catch unreachable" will happily continue to execute code
-	                          after the error in non-safe build modes
-Research Manhattan distance vs Euclidian distance vs Moore neighborhood
-	https://reddit.com/r/roguelikedev/comments/nev1jg/a_pathfinding_unstablenondeterministic/
-Define Species struct and carry immutable data for each mob in it
-Convert enum+union pair to union(enum) (see std/fifo.zig) where needed
+- Use @mulAdd where possible (FOV, A*, Dijkstra, light/atmosphere/sound systems)
+- Use @setCold(true) where possible (see above for places to look)
+- Use SIMD where possible
+- Defined unimplemented() and todo()
+- Stop using the freaking `catch unreachable` syntax:
+    libera#zig 19:58 <ikskuh> "catch unreachable" will happily continue to execute code
+                              after the error in non-safe build modes
+x Research Manhattan distance vs Euclidian distance vs Moore neighborhood:
+  https://reddit.com/r/roguelikedev/comments/nev1jg/a_pathfinding_unstablenondeterministic/
+- Define Species struct and carry immutable data for each mob in it
+x Convert enum+union pair to union(enum) (see std/fifo.zig) where needed
+- Add walls to edges of map after mapgen
+- Add padding between infopane/msgpane and map
+- Make it easier to tell the heavily wounded from dead
+x Fix showing of display percentage of last damage
+x Place stairs only in rooms
+x Make watchers shout loudly
+- Fix sound propagation
+- @ command to see player's full AC and stats
+- Add power component to machines
+- Allow mobs to shuffle past each other in corridors
+- UI for status effects (paralysis, etc)
+- Ring messages (full power, half power, equipped)
+- (Zig contribution: type coercion from anonymous list literal to array)
+- Make lighting system actually matter (affect FOV, stealth)
+  - Needs prefab seeding, to ensure that the power station appears on map
+- Use matrix to store mob's FOV, not array
+x Only print trap messages when culprit is player
+- Group identical messages in msgpane
+- Attack messages should be nice and descriptive ("You skewer the goblin!")
+  - Even more descriptive! ("The troll bashes you like an overripe mango!!")
+- Show red/yellow/orange for low health bars
+- Add reproducing rats
+- Remove all floats from color functions, sound systems, gas systems, etc.
 
 
 Roadmap
@@ -420,9 +443,10 @@ x Add dialog to view inventory
 x Add dialog to use item in inventory (quaff potions)
 x Add dialog to throw potion at mob
 x Use proper CP407 arrows for staircases
-- Define where rings should be in prefabs
-- Define armor struct, use on mobs and player
-- Define melee weapon struct and dagger/spear, use on mobs and player
+- Define where rings should be in prefabs/mobs
+x Define armor struct, use on mobs and player
+x Define melee weapon struct and dagger/spear, use on mobs and player
 - Add the Openworld
 - Add lichen and fungi
 - Add temperature system
+- Blood spattering?
