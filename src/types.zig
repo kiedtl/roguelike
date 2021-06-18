@@ -22,7 +22,7 @@ const utils = @import("utils.zig");
 const state = @import("state.zig");
 const ai = @import("ai.zig");
 
-pub const HEIGHT = 40;
+pub const HEIGHT = 100;
 pub const WIDTH = 100;
 pub const LEVELS = 3;
 pub const PLAYER_STARTING_LEVEL = 1; // TODO: define in data file

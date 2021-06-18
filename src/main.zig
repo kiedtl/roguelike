@@ -1,7 +1,9 @@
 const std = @import("std");
+const math = std.math;
 const assert = std.debug.assert;
 
 const rng = @import("rng.zig");
+const utils = @import("utils.zig");
 const gas = @import("gas.zig");
 const astar = @import("astar.zig");
 const mapgen = @import("mapgen.zig");
@@ -358,13 +360,23 @@ fn tickGame() void {
     }
 }
 
-fn viewerDisplay(level: usize) void {
+fn viewerDisplay(tty_height: usize, level: usize, sy: usize) void {
+    var dy: usize = sy;
     var y: usize = 0;
-    while (y < HEIGHT) : (y += 1) {
+    while (y < tty_height and dy < HEIGHT) : ({
+        y += 1;
+        dy += 1;
+    }) {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
-            var t = Tile.displayAs(Coord.new2(level, x, y));
+            var t = Tile.displayAs(Coord.new2(level, x, dy));
             termbox.tb_put_cell(@intCast(isize, x), @intCast(isize, y), &t);
+        }
+    }
+    while (y < tty_height) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            termbox.tb_change_cell(@intCast(isize, x), @intCast(isize, y), ' ', 0, 0);
         }
     }
     termbox.tb_present();
@@ -375,9 +387,12 @@ fn viewerMain() void {
     state.tickLight();
 
     var level: usize = PLAYER_STARTING_LEVEL;
+    var y: usize = 0;
+
+    const tty_height = @intCast(usize, termbox.tb_height());
 
     while (true) {
-        viewerDisplay(level);
+        viewerDisplay(tty_height, level, y);
 
         var ev: termbox.tb_event = undefined;
         const t = termbox.tb_poll_event(&ev);
@@ -391,6 +406,10 @@ fn viewerMain() void {
                 }
             } else if (ev.ch != 0) {
                 switch (ev.ch) {
+                    'j' => if (y < HEIGHT) {
+                        y = math.min(y + (tty_height / 2), HEIGHT - 1);
+                    },
+                    'k' => y = utils.saturating_sub(y, (tty_height / 2)),
                     '<' => if (level > 0) {
                         level -= 1;
                     },
