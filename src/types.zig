@@ -943,7 +943,11 @@ pub const Mob = struct { // {{{
         attacker.makeNoise(noise + rng.range(usize, 1, 3));
         recipient.makeNoise(noise + rng.range(usize, 1, 3));
 
-        const hitstr = if (is_stab) "stab" else "hit";
+        const hitstr = DamageType.damageString(
+            attacker_weapon.main_damage,
+            recipient.lastDamagePercentage(),
+        );
+
         if (recipient.coord.eq(state.player.coord)) {
             state.message(.Info, "The {} {} you for {} damage!", .{ attacker.species, hitstr, damage });
             if (recipient.should_be_dead()) {
@@ -1316,6 +1320,24 @@ pub const DamageType = enum {
     Slashing,
     Piercing,
     Lacerating,
+
+    const CRUSHING_STRS = [_][]const u8{ "slap", "smack", "bump", "thwack", "whack", "club", "cudgel", "bash", "pummel", "drub", "batter", "thrash" };
+    const PULPING_STRS = CRUSHING_STRS;
+    const SLASHING_STRS = [_][]const u8{ "nip", "cut", "slice", "slash", "shred" };
+    const PIERCING_STRS = [_][]const u8{ "poke", "prick", "pierce", "puncture", "stab", "skewer" };
+    const LACERATING_STRS = [_][]const u8{ "whip", "lash", "tear", "lacerate", "shred" };
+
+    pub fn damageString(d: DamageType, damage_percentage: usize) []const u8 {
+        const strs = switch (d) {
+            .Crushing => &CRUSHING_STRS,
+            .Pulping => &PULPING_STRS,
+            .Slashing => &SLASHING_STRS,
+            .Piercing => &PIERCING_STRS,
+            .Lacerating => &LACERATING_STRS,
+        };
+
+        return strs[(damage_percentage * (strs.len - 1)) / 100];
+    }
 
     pub fn causeNoise(d: DamageType, stab: bool) usize {
         return switch (d) {
@@ -1729,7 +1751,7 @@ pub const ElfTemplate = Mob{
     .vision = 20,
 
     .willpower = 4,
-    .dexterity = 99, //21,
+    .dexterity = 21,
     .hearing = 5,
     .max_HP = 30,
     .memory_duration = 10,
