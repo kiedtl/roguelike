@@ -47,6 +47,20 @@ pub var ticks: usize = 0;
 pub var messages: MessageArrayList = undefined;
 pub var score: usize = 0;
 
+pub fn nextAvailableSpaceForItem(c: Coord, alloc: *mem.Allocator) ?Coord {
+    if (canRecieveItem(c)) return c;
+
+    var dijk = dijkstra.Dijkstra.init(c, mapgeometry, 8, canRecieveItem, alloc);
+    defer dijk.deinit();
+
+    while (dijk.next()) |coord| {
+        assert(canRecieveItem(coord));
+        return coord;
+    }
+
+    return null;
+}
+
 pub fn canRecieveItem(c: Coord) bool {
     if (!is_walkable(c)) return false;
     if (dungeon.at(c).item) |_| return false;

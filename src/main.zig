@@ -153,7 +153,66 @@ fn useItem() bool {
             state.message(.MetaError, "Are you three?", .{});
             return false;
         },
-        .Weapon, .Armor => @panic("W/A TODO"),
+        .Weapon => |weapon| {
+            if (state.player.inventory.wielded) |w| {
+                state.player.inventory.pack.append(Item{ .Weapon = w }) catch |e| switch (e) {
+                    error.NoSpaceLeft => {
+                        if (state.nextAvailableSpaceForItem(
+                            state.player.coord,
+                            &state.GPA.allocator,
+                        )) |c| {
+                            state.message(
+                                .Info,
+                                "You drop the {} to wield the {}.",
+                                .{ w.name, weapon.name },
+                            );
+                            state.dungeon.at(c).item = Item{ .Weapon = w };
+                        } else {
+                            state.message(
+                                .Info,
+                                "You don't have any space to drop the {} to wield the {}.",
+                                .{ w.name, weapon.name },
+                            );
+                            return false;
+                        }
+                    },
+                    else => unreachable,
+                };
+                state.message(.Info, "You wield the {}.", .{weapon.name});
+            }
+
+            state.player.inventory.wielded = weapon;
+        },
+        .Armor => |armor| {
+            if (state.player.inventory.armor) |a| {
+                state.player.inventory.pack.append(Item{ .Armor = a }) catch |e| switch (e) {
+                    error.NoSpaceLeft => {
+                        if (state.nextAvailableSpaceForItem(
+                            state.player.coord,
+                            &state.GPA.allocator,
+                        )) |c| {
+                            state.message(
+                                .Info,
+                                "You drop the {} to wear the {}.",
+                                .{ a.name, armor.name },
+                            );
+                            state.dungeon.at(c).item = Item{ .Armor = a };
+                        } else {
+                            state.message(
+                                .Info,
+                                "You don't have any space to drop the {} to wear the {}.",
+                                .{ a.name, armor.name },
+                            );
+                            return false;
+                        }
+                    },
+                    else => unreachable,
+                };
+                state.message(.Info, "You wear the {}.", .{armor.name});
+            }
+
+            state.player.inventory.armor = armor;
+        },
         .Potion => |p| state.player.quaffPotion(p),
     }
 
