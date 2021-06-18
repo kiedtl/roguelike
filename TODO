@@ -487,7 +487,7 @@ x Place stairs only in rooms
 x Make watchers shout loudly
 - Fix sound propagation
 - @ command to see player's full AC and stats
-- Add power component to machines
+x Add power component to machines
 - Allow mobs to shuffle past each other in corridors
 - UI for status effects (paralysis, etc)
 - Ring messages (full power, half power, equipped)
@@ -497,7 +497,7 @@ x Make watchers shout loudly
 - Use matrix to store mob's FOV, not array
 x Only print trap messages when culprit is player
 - Group identical messages in msgpane
-- Attack messages should be nice and descriptive ("You skewer the goblin!")
+x Attack messages should be nice and descriptive ("You skewer the goblin!")
   - Even more descriptive! ("The troll bashes you like an overripe mango!!")
 - Show red/yellow/orange for low health bars
 - Add reproducing rats
