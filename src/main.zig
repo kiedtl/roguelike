@@ -73,6 +73,8 @@ fn deinitGame() void {
     state.mobs.deinit();
     state.rings.deinit();
     state.potions.deinit();
+    state.armors.deinit();
+    state.weapons.deinit();
     state.machines.deinit();
     state.messages.deinit();
     state.props.deinit();
