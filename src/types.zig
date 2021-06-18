@@ -1382,21 +1382,26 @@ pub const Damages = struct {
 
     pub fn resultOf(attack: *const Self, defense: *const Self) Self {
         return .{
-            .Crushing = @intCast(usize, math.absInt(
-                @intCast(isize, attack.Crushing) - @intCast(isize, defense.Crushing),
-            ) catch unreachable),
-            .Pulping = @intCast(usize, math.absInt(
-                @intCast(isize, attack.Pulping) - @intCast(isize, defense.Pulping),
-            ) catch unreachable),
-            .Slashing = @intCast(usize, math.absInt(
-                @intCast(isize, attack.Slashing) - @intCast(isize, defense.Slashing),
-            ) catch unreachable),
-            .Piercing = @intCast(usize, math.absInt(
-                @intCast(isize, attack.Piercing) - @intCast(isize, defense.Piercing),
-            ) catch unreachable),
-            .Lacerating = @intCast(usize, math.absInt(
-                @intCast(isize, attack.Lacerating) - @intCast(isize, defense.Lacerating),
-            ) catch unreachable),
+            .Crushing = @intCast(usize, math.max(
+                0,
+                (@intCast(isize, defense.Crushing) - @intCast(isize, attack.Crushing)) * -1,
+            )),
+            .Pulping = @intCast(usize, math.max(
+                0,
+                (@intCast(isize, defense.Pulping) - @intCast(isize, attack.Pulping)) * -1,
+            )),
+            .Slashing = @intCast(usize, math.max(
+                0,
+                (@intCast(isize, defense.Slashing) - @intCast(isize, attack.Slashing)) * -1,
+            )),
+            .Piercing = @intCast(usize, math.max(
+                0,
+                (@intCast(isize, defense.Piercing) - @intCast(isize, attack.Piercing)) * -1,
+            )),
+            .Lacerating = @intCast(usize, math.max(
+                0,
+                (@intCast(isize, defense.Lacerating) - @intCast(isize, attack.Lacerating)) * -1,
+            )),
         };
     }
 
