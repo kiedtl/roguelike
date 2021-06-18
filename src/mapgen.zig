@@ -89,7 +89,6 @@ fn _choosePrefab(prefabs: *PrefabArrayList) ?Prefab {
         if (p.invisible) continue;
         if (p.restriction) |res| if (res == 0) continue;
 
-        if (p.restriction) |*res| res.* -= 1;
         return p.*;
     }
 
@@ -244,6 +243,11 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
     }
 
     rooms.append(child) catch unreachable;
+
+    // Now we're finally sure that we've used the prefab, we can decrement the
+    // restriction counter.
+    if (child.prefab) |f|
+        Prefab.decrementPrefabRestrictionCounter(utils.used(f.name), fabs);
 
     // --- add corridors ---
 
@@ -602,8 +606,8 @@ pub const Prefab = struct {
 
     height: usize = 0,
     width: usize = 0,
-    content: [20][20]FabTile = undefined,
-    connections: [40]?Connection = undefined,
+    content: [40][40]FabTile = undefined,
+    connections: [80]?Connection = undefined,
     features: [255]?Feature = [_]?Feature{null} ** 255,
     mobs: [20]?FeatureMob = [_]?FeatureMob{null} ** 20,
 
@@ -809,6 +813,14 @@ pub const Prefab = struct {
     pub fn findPrefabByName(name: []const u8, fabs: *const PrefabArrayList) ?Prefab {
         for (fabs.items) |f| if (mem.eql(u8, name, f.name[0..mem.lenZ(f.name)])) return f;
         return null;
+    }
+
+    pub fn decrementPrefabRestrictionCounter(id: []const u8, lst: *const PrefabArrayList) void {
+        for (lst.items) |*f| {
+            if (mem.eql(u8, id, f.name[0..mem.lenZ(f.name)])) {
+                if (f.restriction) |_| f.restriction.? -= 1;
+            }
+        }
     }
 };
 
