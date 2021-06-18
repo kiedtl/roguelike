@@ -107,19 +107,26 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
     y = _draw_string(startx, y, 0xffffff, 0, "turns: {}", .{state.ticks}) catch unreachable;
     y += 2;
 
+    if (state.player.inventory.wielded) |weapon| {
+        const item = Item{ .Weapon = weapon };
+        const dest = (item.shortName() catch unreachable).constSlice();
+        y = _draw_string(startx, y, 0xffffff, 0, "-) {}", .{dest}) catch unreachable;
+    }
+    if (state.player.inventory.armor) |armor| {
+        const item = Item{ .Armor = armor };
+        const dest = (item.shortName() catch unreachable).constSlice();
+        y = _draw_string(startx, y, 0xffffff, 0, "&) {}", .{dest}) catch unreachable;
+    }
+    y += 1;
+
     const inventory = state.player.inventory.pack.slice();
     if (inventory.len == 0) {
         y = _draw_string(startx, y, 0xffffff, 0, "Your pack is empty.", .{}) catch unreachable;
     } else {
         y = _draw_string(startx, y, 0xffffff, 0, "Inventory:", .{}) catch unreachable;
         for (inventory) |item, i| {
-            y = switch (item) {
-                .Corpse => |c| _draw_string(startx, y, 0xffffff, 0, "  {}) {} corpse", .{ i, c.species }),
-                .Ring => |r| _draw_string(startx, y, 0xffffff, 0, "  {}) ring of {}", .{ i, r.name }),
-                .Potion => |p| _draw_string(startx, y, 0xffffff, 0, "  {}) potion of {}", .{ i, p.name }),
-                .Weapon => |w| _draw_string(startx, y, 0xffffff, 0, "  {}) {}", .{ i, w.name }),
-                .Armor => |a| _draw_string(startx, y, 0xffffff, 0, "  {}) {} armor", .{ i, a.name }),
-            } catch unreachable;
+            const dest = (item.shortName() catch unreachable).constSlice();
+            y = _draw_string(startx, y, 0xffffff, 0, "  {}) {}", .{ i, dest }) catch unreachable;
         }
     }
     y += 2;
@@ -358,13 +365,8 @@ pub fn chooseInventoryItem(msg: []const u8) ?usize {
         y = _draw_string(x, y, 0xffffff, 0, "(Your pack is empty.)", .{}) catch unreachable;
     } else {
         for (inventory) |item, i| {
-            y = switch (item) {
-                .Corpse => |c| _draw_string(x, y, 0xffffff, 0, "  {})  {} corpse", .{ i, c.species }),
-                .Ring => |r| _draw_string(x, y, 0xffffff, 0, "  {})  ring of {}", .{ i, r.name }),
-                .Potion => |p| _draw_string(x, y, 0xffffff, 0, "  {}) potion of {}", .{ i, p.name }),
-                .Weapon => |w| _draw_string(x, y, 0xffffff, 0, "  {}) {}", .{ i, w.name }),
-                .Armor => |a| _draw_string(x, y, 0xffffff, 0, "  {}) {} armor", .{ i, a.name }),
-            } catch unreachable;
+            const dest = (item.shortName() catch unreachable).constSlice();
+            y = _draw_string(x, y, 0xffffff, 0, "  {}) {}", .{ i, dest }) catch unreachable;
         }
     }
 

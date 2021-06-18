@@ -1,6 +1,7 @@
 const std = @import("std");
 const math = std.math;
 const mem = std.mem;
+const fmt = std.fmt;
 const assert = std.debug.assert;
 const enums = @import("std/enums.zig");
 
@@ -1485,6 +1486,20 @@ pub const Item = union(enum) {
     Potion: *Potion,
     Armor: *Armor,
     Weapon: *Weapon,
+
+    pub fn shortName(self: *const Item) !StackBuffer(u8, 128) {
+        var buf = StackBuffer(u8, 128).init(&([_]u8{0} ** 128));
+        var fbs = std.io.fixedBufferStream(buf.slice());
+        switch (self.*) {
+            .Corpse => |c| try fmt.format(fbs.writer(), "{} corpse", .{c.species}),
+            .Ring => |r| try fmt.format(fbs.writer(), "ring of {}", .{r.name}),
+            .Potion => |p| try fmt.format(fbs.writer(), "potion of {}", .{p.name}),
+            .Armor => |a| try fmt.format(fbs.writer(), "{} armor", .{a.name}),
+            .Weapon => |w| try fmt.format(fbs.writer(), "{}", .{w.name}),
+        }
+        buf.resizeTo(@intCast(usize, fbs.getPos() catch unreachable));
+        return buf;
+    }
 };
 
 pub const TileType = enum {

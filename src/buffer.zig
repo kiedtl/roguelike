@@ -3,6 +3,7 @@
 
 const std = @import("std");
 const mem = std.mem;
+const assert = std.debug.assert;
 
 pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
     return struct {
@@ -53,8 +54,13 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
             return self.data[self.len];
         }
 
+        pub fn resizeTo(self: *Self, size: usize) void {
+            assert(size < self.capacity);
+            self.len = size;
+        }
+
         pub fn clear(self: *Self) void {
-            self.len = 0;
+            self.resizeTo(0);
         }
 
         pub fn append(self: *Self, item: T) !void {
