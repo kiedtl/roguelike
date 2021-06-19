@@ -15,4 +15,5 @@
 @0 m stair_exit
 :invisible
 :restriction 0
+:nolights
 :notraps
