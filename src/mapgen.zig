@@ -95,7 +95,7 @@ fn _choosePrefab(prefabs: *PrefabArrayList) ?Prefab {
     return null;
 }
 
-fn _room_intersects(rooms: *const RoomArrayList, room: *const Room, ignore: *const Room) bool {
+fn _room_intersects(rooms: *const RoomArrayList, room: *const Room, ignore: ?*const Room) bool {
     if (room.start.x == 0 or room.start.y == 0)
         return true;
     if (room.start.x >= state.WIDTH or room.start.y >= state.HEIGHT)
@@ -105,10 +105,12 @@ fn _room_intersects(rooms: *const RoomArrayList, room: *const Room, ignore: *con
 
     for (rooms.items) |otherroom| {
         // Yes, I understand that this is ugly. No, I don't care.
-        if (otherroom.start.eq(ignore.start))
-            if (otherroom.width == ignore.width)
-                if (otherroom.height == ignore.height)
-                    continue;
+        if (ignore) |ign| {
+            if (otherroom.start.eq(ign.start))
+                if (otherroom.width == ign.width)
+                    if (otherroom.height == ign.height)
+                        continue;
+        }
         if (room.intersects(&otherroom, 1)) return true;
     }
 
@@ -532,7 +534,7 @@ pub fn placeRandomStairs(level: usize) void {
     }
 }
 
-pub fn cellularAutomata(level: usize, wall_req: usize, isle_req: usize) void {
+pub fn cellularAutomata(avoid: *const [HEIGHT][WIDTH]bool, level: usize, wall_req: usize, isle_req: usize) void {
     var old: [HEIGHT][WIDTH]TileType = undefined;
     {
         var y: usize = 0;
@@ -547,6 +549,7 @@ pub fn cellularAutomata(level: usize, wall_req: usize, isle_req: usize) void {
     while (y < HEIGHT) : (y += 1) {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
+            if (avoid[y][x]) continue;
             const coord = Coord.new2(level, x, y);
 
             var neighbor_walls: usize = if (old[coord.y][coord.x] == .Wall) 1 else 0;
@@ -583,15 +586,36 @@ pub fn fillBar(level: usize, height: usize) void {
     }
 }
 
-pub fn fillRandom(level: usize, floor_chance: usize) void {
+pub fn fillRandom(avoid: *const [HEIGHT][WIDTH]bool, level: usize, floor_chance: usize) void {
     var y: usize = 0;
     while (y < HEIGHT) : (y += 1) {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
+            if (avoid[y][x]) continue;
+            const coord = Coord.new2(level, x, y);
+
             const t: TileType = if (rng.range(usize, 0, 100) > floor_chance) .Wall else .Floor;
-            state.dungeon.at(Coord.new2(level, x, y)).type = t;
+            state.dungeon.at(coord).type = t;
         }
     }
+}
+
+pub fn cellularAutomataAvoidanceMap(level: usize) [HEIGHT][WIDTH]bool {
+    var res: [HEIGHT][WIDTH]bool = undefined;
+
+    const rooms = &state.dungeon.rooms[level];
+
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            const coord = Coord.new2(level, x, y);
+            const room = Room{ .start = coord, .width = 1, .height = 1 };
+            res[y][x] = _room_intersects(rooms, &room, null);
+        }
+    }
+
+    return res;
 }
 
 pub const Prefab = struct {

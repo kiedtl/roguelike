@@ -40,19 +40,20 @@ fn initGame() void {
 
     var fabs = mapgen.readPrefabs(&state.GPA.allocator);
     for (state.dungeon.map) |_, level| {
-        // mapgen.fillRandom(level, 40);
         // mapgen.fillBar(level, 1);
-        // mapgen.cellularAutomata(level, 5, 2);
-        // mapgen.cellularAutomata(level, 5, 2);
-        // mapgen.cellularAutomata(level, 5, 2);
-        // mapgen.cellularAutomata(level, 6, 1);
-        // mapgen.cellularAutomata(level, 6, 1);
-        // mapgen.cellularAutomata(level, 6, 1);
-        mapgen.placeRandomRooms(&fabs, level, 2000, &state.GPA.allocator);
+        mapgen.placeRandomRooms(&fabs, level, 500, &state.GPA.allocator);
         mapgen.placeTraps(level);
         mapgen.placeLights(level);
         mapgen.placeItems(level);
         mapgen.placeGuards(level, &state.GPA.allocator);
+
+        const caam = mapgen.cellularAutomataAvoidanceMap(level);
+
+        mapgen.fillRandom(&caam, level, 65);
+        mapgen.cellularAutomata(&caam, level, 5, 0);
+        mapgen.cellularAutomata(&caam, level, 6, 0);
+        mapgen.cellularAutomata(&caam, level, 6, 0);
+        mapgen.cellularAutomata(&caam, level, 6, 0);
     }
 
     for (state.dungeon.map) |_, level|
@@ -426,13 +427,13 @@ fn viewerMain() void {
 pub fn main() anyerror!void {
     initGame();
 
-    //viewerMain();
+    viewerMain();
 
-    while (state.state != .Quit) switch (state.state) {
-        .Game => tickGame(),
-        .Lose, .Win => gameOverScreen(),
-        .Quit => break,
-    };
+    // while (state.state != .Quit) switch (state.state) {
+    //     .Game => tickGame(),
+    //     .Lose, .Win => gameOverScreen(),
+    //     .Quit => break,
+    // };
 
     deinitGame();
 }
