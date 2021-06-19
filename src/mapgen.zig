@@ -305,6 +305,7 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
         };
 
         _excavate_room(&corridor);
+        rooms.append(corridor) catch unreachable;
 
         // When using a prefab, the corridor doesn't include the connectors. Excavate
         // the connectors (both the beginning and the end) manually.
