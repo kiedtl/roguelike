@@ -38,6 +38,7 @@ pub const RoomArrayList = std.ArrayList(Room);
 pub const MessageArrayList = std.ArrayList(Message);
 pub const StatusArray = enums.EnumArray(Status, StatusData);
 pub const MobList = LinkedList(Mob);
+pub const SobList = LinkedList(Sob);
 pub const MobArrayList = std.ArrayList(*Mob); // STYLE: rename to MobPtrArrayList
 pub const RingList = LinkedList(Ring);
 pub const PotionList = LinkedList(Potion);
@@ -508,7 +509,7 @@ pub const Message = struct {
     turn: usize,
 };
 
-pub const Allegiance = enum { Sauron, Illuvatar, NoneEvil, NoneGood };
+pub const Allegiance = enum { Neutral, Sauron, Illuvatar, NoneEvil, NoneGood };
 
 pub const Status = enum {
     // Prevents a mob from taking their turn.
@@ -1234,6 +1235,19 @@ pub const Mob = struct { // {{{
     }
 }; // }}}
 
+pub const Sob = struct {
+    id: []const u8 = "",
+    species: []const u8,
+    tile: u21,
+    coord: Coord = undefined,
+    allegiance: Allegiance = .Neutral,
+    damage: usize = 0, // 1..100
+    age: usize = 0,
+    is_dead: usize = false,
+    walkable: bool,
+    ai_func: fn (*Sob) void,
+};
+
 pub const Machine = struct {
     id: []const u8 = "",
     name: []const u8,
@@ -1301,8 +1315,8 @@ pub const Prop = struct {
     coord: Coord = Coord.new(0, 0),
 };
 
-pub const SurfaceItemTag = enum { Machine, Prop };
-pub const SurfaceItem = union(SurfaceItemTag) { Machine: *Machine, Prop: *Prop };
+pub const SurfaceItemTag = enum { Machine, Prop, Sob };
+pub const SurfaceItem = union(SurfaceItemTag) { Machine: *Machine, Prop: *Prop, Sob: *Sob };
 
 // Each weapon and armor has a specific amount of maximum damage it can create
 // or prevent. That damage comes in several different types:
@@ -1601,6 +1615,7 @@ pub const Tile = struct {
                             if (p.fg) |prop_fg| fg = prop_fg;
                             break :prop p.tile;
                         },
+                        .Sob => |s| s.tile,
                     };
 
                     cell.ch = ch;

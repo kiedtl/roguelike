@@ -36,6 +36,7 @@ pub var dungeon: Dungeon = .{};
 pub var player: *Mob = undefined;
 
 pub var mobs: MobList = undefined;
+pub var sobs: SobList = undefined;
 pub var rings: RingList = undefined;
 pub var potions: PotionList = undefined;
 pub var armors: ArmorList = undefined;
@@ -123,6 +124,7 @@ pub fn is_walkable(coord: Coord) bool {
         switch (surface) {
             .Machine => |m| if (!m.isWalkable()) return false,
             .Prop => |p| if (!p.walkable) return false,
+            .Sob => |s| if (!s.walkable) return false,
         }
     }
     return true;
@@ -379,6 +381,17 @@ pub fn tickAtmosphere(cur_gas: usize) void {
 
     if (cur_gas < (gas.GAS_NUM - 1))
         tickAtmosphere(cur_gas + 1);
+}
+
+pub fn tickSobs(level: usize) void {
+    var iter = sobs.iterator();
+    while (iter.nextPtr()) |sob| {
+        if (sob.coord.z != level or sob.is_dead)
+            continue;
+
+        sob.age += 1;
+        sob.ai_func(sob);
+    }
 }
 
 pub fn tickMachines(level: usize) void {

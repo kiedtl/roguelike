@@ -30,6 +30,7 @@ fn initGame() void {
 
     state.messages = MessageArrayList.init(&state.GPA.allocator);
     state.mobs = MobList.init(&state.GPA.allocator);
+    state.sobs = SobList.init(&state.GPA.allocator);
     state.rings = RingList.init(&state.GPA.allocator);
     state.potions = PotionList.init(&state.GPA.allocator);
     state.armors = ArmorList.init(&state.GPA.allocator);
@@ -74,6 +75,7 @@ fn deinitGame() void {
         r.deinit();
 
     state.mobs.deinit();
+    state.sobs.deinit();
     state.rings.deinit();
     state.potions.deinit();
     state.armors.deinit();
