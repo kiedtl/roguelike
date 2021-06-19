@@ -384,9 +384,12 @@ pub fn placeTraps(level: usize) void {
     for (state.dungeon.rooms[level].items) |room| {
         if (room.prefab) |rfb| if (rfb.notraps) continue;
 
+        // Don't place traps in places where it's impossible to avoid
+        if (room.height == 1 or room.width == 1) continue;
+
         if (rng.onein(2)) {
             const trap_coord = room.randomCoord();
-            if (state.dungeon.hasMachine(trap_coord)) continue;
+            if (state.dungeon.at(trap_coord).surface != null) continue;
 
             var trap: Machine = undefined;
             if (rng.onein(3)) {
