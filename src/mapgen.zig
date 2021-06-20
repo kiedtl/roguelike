@@ -22,6 +22,12 @@ const MAX_ROOM_HEIGHT: usize = 10;
 const LIMIT = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
 const DISTANCES = [2][6]usize{ .{ 0, 1, 2, 3, 4, 8 }, .{ 3, 8, 4, 3, 2, 1 } };
 
+const Corridor = struct {
+    room: Room,
+    parent_connector: ?Coord,
+    child_connector: ?Coord,
+};
+
 fn _createItem(comptime T: type, item: T) *T {
     comptime const list = switch (T) {
         Potion => &state.potions,
@@ -203,9 +209,70 @@ fn _excavate_room(room: *const Room) void {
     }
 }
 
+fn _createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?Corridor {
+    var corridor_coord = Coord.new2(level, 0, 0);
+    var parent_connector_coord: ?Coord = null;
+    var child_connector_coord: ?Coord = null;
+
+    if (parent.prefab != null or child.prefab != null) {
+        if (parent.prefab) |*f| {
+            const con = f.connectorFor(side) orelse return null;
+            corridor_coord.x = parent.start.x + con.x;
+            corridor_coord.y = parent.start.y + con.y;
+            parent_connector_coord = corridor_coord;
+            f.useConnector(con) catch unreachable;
+        }
+        if (child.prefab) |*f| {
+            const con = f.connectorFor(side.opposite()) orelse return null;
+            corridor_coord.x = child.start.x + con.x;
+            corridor_coord.y = child.start.y + con.y;
+            child_connector_coord = corridor_coord;
+            f.useConnector(con) catch unreachable;
+        }
+    } else {
+        const rsx = math.max(parent.start.x, child.start.x);
+        const rex = math.min(parent.end().x, child.end().x);
+        const rsy = math.max(parent.start.y, child.start.y);
+        const rey = math.min(parent.end().y, child.end().y);
+        corridor_coord.x = rng.range(usize, math.min(rsx, rex), math.max(rsx, rex) - 1);
+        corridor_coord.y = rng.range(usize, math.min(rsy, rey), math.max(rsy, rey) - 1);
+    }
+
+    const room = switch (side) {
+        .North => Room{
+            .start = Coord.new2(level, corridor_coord.x, child.end().y),
+            .height = parent.start.y - child.end().y,
+            .width = 1,
+        },
+        .South => Room{
+            .start = Coord.new2(level, corridor_coord.x, parent.end().y),
+            .height = child.start.y - parent.end().y,
+            .width = 1,
+        },
+        .West => Room{
+            .start = Coord.new2(level, child.end().x, corridor_coord.y),
+            .height = 1,
+            .width = parent.start.x - child.end().x,
+        },
+        .East => Room{
+            .start = Coord.new2(level, parent.end().x, corridor_coord.y),
+            .height = 1,
+            .width = child.start.x - parent.end().x,
+        },
+        else => unreachable,
+    };
+
+    return Corridor{
+        .room = room,
+        .parent_connector = parent_connector_coord,
+        .child_connector = child_connector_coord,
+    };
+}
+
 fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, allocator: *mem.Allocator) void {
-    // parent is non-const because we might need to update connectors on it.
-    var parent = rng.chooseUnweighted(Room, rooms.items);
+    //const parent = &rooms.items[rng.range(usize, 0, rooms.items.len - 1)];
+    var _parent = rng.chooseUnweighted(Room, rooms.items);
+    const parent = &_parent;
 
     var fab: ?Prefab = null;
     var distance = rng.choose(usize, &DISTANCES[0], &DISTANCES[1]) catch unreachable;
@@ -219,7 +286,7 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
         var child_h = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
         child = parent.attach(side, child_w, child_h, distance, null) orelse return;
 
-        while (_room_intersects(rooms, &child, &parent) or child.overflowsLimit(&LIMIT)) {
+        while (_room_intersects(rooms, &child, parent) or child.overflowsLimit(&LIMIT)) {
             if (child_w < MIN_ROOM_WIDTH or child_h < MIN_ROOM_HEIGHT)
                 return;
 
@@ -238,7 +305,7 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
         child = parent.attach(side, fab.?.width, fab.?.height, distance, &fab.?) orelse return;
         child.prefab = fab;
 
-        if (_room_intersects(rooms, &child, &parent) or child.overflowsLimit(&LIMIT))
+        if (_room_intersects(rooms, &child, parent) or child.overflowsLimit(&LIMIT))
             return;
 
         _excavate_prefab(&child, &fab.?, allocator);
@@ -253,68 +320,18 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
 
     // --- add corridors ---
 
-    if (distance > 0) corridor: {
-        var corridor_coord = Coord.new2(level, 0, 0);
-        var parent_connector_coord: ?Coord = null;
-        var child_connector_coord: ?Coord = null;
+    if (distance > 0) {
+        if (_createCorridor(level, parent, &child, side)) |corridor| {
+            _excavate_room(&corridor.room);
+            rooms.append(corridor.room) catch unreachable;
 
-        if (parent.prefab != null or child.prefab != null) {
-            if (parent.prefab) |*f| {
-                const con = f.connectorFor(side) orelse break :corridor;
-                corridor_coord.x = parent.start.x + con.x;
-                corridor_coord.y = parent.start.y + con.y;
-                parent_connector_coord = corridor_coord;
-                f.useConnector(con) catch unreachable;
-            }
-            if (child.prefab) |*f| {
-                const con = f.connectorFor(side.opposite()) orelse break :corridor;
-                corridor_coord.x = child.start.x + con.x;
-                corridor_coord.y = child.start.y + con.y;
-                child_connector_coord = corridor_coord;
-                f.useConnector(con) catch unreachable;
-            }
-        } else {
-            const rsx = math.max(parent.start.x, child.start.x);
-            const rex = math.min(parent.end().x, child.end().x);
-            const rsy = math.max(parent.start.y, child.start.y);
-            const rey = math.min(parent.end().y, child.end().y);
-            corridor_coord.x = rng.range(usize, math.min(rsx, rex), math.max(rsx, rex) - 1);
-            corridor_coord.y = rng.range(usize, math.min(rsy, rey), math.max(rsy, rey) - 1);
+            // When using a prefab, the corridor doesn't include the connectors. Excavate
+            // the connectors (both the beginning and the end) manually.
+            if (corridor.parent_connector) |acon| state.dungeon.at(acon).type = .Floor;
+            if (corridor.child_connector) |acon| state.dungeon.at(acon).type = .Floor;
+
+            if (distance == 1) _place_normal_door(corridor.room.start);
         }
-
-        var corridor = switch (side) {
-            .North => Room{
-                .start = Coord.new2(level, corridor_coord.x, child.end().y),
-                .height = parent.start.y - child.end().y,
-                .width = 1,
-            },
-            .South => Room{
-                .start = Coord.new2(level, corridor_coord.x, parent.end().y),
-                .height = child.start.y - parent.end().y,
-                .width = 1,
-            },
-            .West => Room{
-                .start = Coord.new2(level, child.end().x, corridor_coord.y),
-                .height = 1,
-                .width = parent.start.x - child.end().x,
-            },
-            .East => Room{
-                .start = Coord.new2(level, parent.end().x, corridor_coord.y),
-                .height = 1,
-                .width = child.start.x - parent.end().x,
-            },
-            else => unreachable,
-        };
-
-        _excavate_room(&corridor);
-        rooms.append(corridor) catch unreachable;
-
-        // When using a prefab, the corridor doesn't include the connectors. Excavate
-        // the connectors (both the beginning and the end) manually.
-        if (parent_connector_coord) |acon| state.dungeon.at(acon).type = .Floor;
-        if (child_connector_coord) |acon| state.dungeon.at(acon).type = .Floor;
-
-        if (distance == 1) _place_normal_door(corridor.start);
     }
 }
 
