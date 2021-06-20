@@ -520,6 +520,10 @@ pub fn placeRandomStairs(level: usize) void {
     var placed: usize = 0;
     while (placed < 5) {
         const room = rng.chooseUnweighted(Room, state.dungeon.rooms[level].items);
+
+        // Don't place stairs in narrow rooms where it's impossible to avoid.
+        if (room.width == 1 or room.height == 1) continue;
+
         const rand = room.randomCoord();
         const above = Coord.new2(level, rand.x, rand.y);
         const below = Coord.new2(level + 1, rand.x, rand.y);
