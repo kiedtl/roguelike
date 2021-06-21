@@ -350,7 +350,7 @@ fn tickGame() void {
             } else {
                 if (mob.coord.eq(state.player.coord)) {
                     display.draw();
-                    while (!readInput()) {}
+                    while (!readInput()) display.draw();
                     if (state.state == .Quit) break;
                 } else {
                     state._mob_occupation_tick(mob, &state.GPA.allocator);
