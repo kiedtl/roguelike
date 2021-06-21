@@ -26,6 +26,7 @@ const Corridor = struct {
     room: Room,
     parent_connector: ?Coord,
     child_connector: ?Coord,
+    distance: usize,
 };
 
 fn _createItem(comptime T: type, item: T) *T {
@@ -214,6 +215,64 @@ fn _excavate_room(room: *const Room) void {
     }
 }
 
+pub fn placeMoarCorridors(level: usize) void {
+    const rooms = &state.dungeon.rooms[level];
+    for (rooms.items) |*parent| {
+        if (parent.type == .Corridor) continue;
+
+        for (rooms.items) |*child| {
+            if (child.type == .Corridor) continue;
+
+            if (parent.intersects(child, 1)) {
+                continue;
+            }
+
+            if (parent.start.eq(child.start)) {
+                // skip ourselves
+                continue;
+            }
+
+            const x_overlap = math.max(parent.start.x, child.start.x) <
+                math.min(parent.end().x, child.end().x);
+            const y_overlap = math.max(parent.start.y, child.start.y) <
+                math.min(parent.end().y, child.end().y);
+
+            // FIXME: assert that x_overlap or y_overlap, but not both
+
+            if (!x_overlap and !y_overlap) {
+                continue;
+            }
+
+            var side: Direction = undefined;
+            if (x_overlap) {
+                side = if (parent.start.y > child.start.y) .North else .South;
+            } else if (y_overlap) {
+                side = if (parent.start.x > child.start.x) .West else .East;
+            }
+
+            if (_createCorridor(level, parent, child, side)) |corridor| {
+                if (corridor.distance == 0) {
+                    continue;
+                }
+
+                if (_room_intersects(rooms, &corridor.room, parent, true)) {
+                    continue;
+                }
+
+                _excavate_room(&corridor.room);
+                rooms.append(corridor.room) catch unreachable;
+
+                // When using a prefab, the corridor doesn't include the connectors. Excavate
+                // the connectors (both the beginning and the end) manually.
+                if (corridor.parent_connector) |acon| state.dungeon.at(acon).type = .Floor;
+                if (corridor.child_connector) |acon| state.dungeon.at(acon).type = .Floor;
+
+                if (corridor.distance == 1) _place_normal_door(corridor.room.start);
+            }
+        }
+    }
+}
+
 fn _createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?Corridor {
     var corridor_coord = Coord.new2(level, 0, 0);
     var parent_connector_coord: ?Coord = null;
@@ -273,6 +332,11 @@ fn _createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?
         .room = room,
         .parent_connector = parent_connector_coord,
         .child_connector = child_connector_coord,
+        .distance = switch (side) {
+            .North, .South => room.height,
+            .West, .East => room.width,
+            else => unreachable,
+        },
     };
 }
 
