@@ -5,6 +5,7 @@ const math = std.math;
 const assert = std.debug.assert;
 
 const rng = @import("rng.zig");
+const StackBuffer = @import("buffer.zig").StackBuffer;
 const items = @import("items.zig");
 const machines = @import("machines.zig");
 const materials = @import("materials.zig");
@@ -219,7 +220,14 @@ fn _excavate_room(room: *const Room) void {
 
 pub fn placeMoarCorridors(level: usize) void {
     const rooms = &state.dungeon.rooms[level];
-    for (rooms.items) |*parent| {
+
+    // Copy over the whole array -- otherwise, when we add more rooms in the
+    // inner loops, it might trigger a reallocation in ArrayList and invalidate
+    // all the pointers.
+    var rooms_parents = StackBuffer(Room, 128).init(null);
+    for (rooms.items) |r| rooms_parents.append(r) catch unreachable;
+
+    for (rooms_parents.slice()) |*parent| {
         if (parent.type == .Corridor) continue;
 
         for (rooms.items) |*child| {
