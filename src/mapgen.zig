@@ -87,14 +87,16 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     state.player = state.mobs.lastPtr().?;
 }
 
-fn _choosePrefab(prefabs: *PrefabArrayList) ?Prefab {
+fn _choosePrefab(level: usize, prefabs: *PrefabArrayList) ?Prefab {
     var i: usize = 255;
     while (i > 0) : (i -= 1) {
         // Don't use rng.chooseUnweighted, as we need a pointer to manage the
         // restriction amount should we choose it.
         const p = &prefabs.items[rng.range(usize, 0, prefabs.items.len - 1)];
         if (p.invisible) continue;
-        if (p.restriction) |res| if (res == 0) continue;
+
+        if (p.restriction) |restriction|
+            if (p.used[level] >= restriction) continue;
 
         return p.*;
     }
@@ -370,7 +372,7 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
 
         var child_w = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
         var child_h = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
-        fab = _choosePrefab(fabs) orelse return;
+        fab = _choosePrefab(level, fabs) orelse return;
         child = parent.attach(side, fab.?.width, fab.?.height, distance, &fab.?) orelse return;
         child.prefab = fab;
 
@@ -410,7 +412,7 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
     rooms.append(child) catch unreachable;
 
     if (child.prefab) |f|
-        Prefab.decrementPrefabRestrictionCounter(utils.used(f.name), fabs);
+        Prefab.incrementUsedCounter(utils.used(f.name), level, fabs);
 }
 
 pub fn placeRandomRooms(fabs: *PrefabArrayList, level: usize, num: usize, allocator: *mem.Allocator) void {
@@ -738,6 +740,8 @@ pub const Prefab = struct {
     features: [255]?Feature = [_]?Feature{null} ** 255,
     mobs: [20]?FeatureMob = [_]?FeatureMob{null} ** 20,
 
+    used: [LEVELS]usize = [_]usize{0} ** LEVELS,
+
     pub const FabTile = union(enum) {
         Wall, LockedDoor, Door, Lamp, Floor, Connection, Water, Lava, Bars, Feature: u8, Any
     };
@@ -942,10 +946,10 @@ pub const Prefab = struct {
         return null;
     }
 
-    pub fn decrementPrefabRestrictionCounter(id: []const u8, lst: *const PrefabArrayList) void {
-        for (lst.items) |*f| {
+    pub fn incrementUsedCounter(id: []const u8, level: usize, lst: *PrefabArrayList) void {
+        for (lst.items) |*f, i| {
             if (mem.eql(u8, id, f.name[0..mem.lenZ(f.name)])) {
-                if (f.restriction) |_| f.restriction.? -= 1;
+                f.used[level] += 1;
             }
         }
     }
