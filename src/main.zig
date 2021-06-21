@@ -364,6 +364,52 @@ fn tickGame() void {
     }
 }
 
+fn viewerTickGame(cur_level: usize) void {
+    state.ticks += 1;
+    state.tickMachines(cur_level);
+    state.tickLight();
+    state.tickAtmosphere(0);
+    state.tickSound();
+
+    var iter = state.mobs.iterator();
+    while (iter.nextPtr()) |mob| {
+        if (mob.coord.z != cur_level) continue;
+
+        if (mob.is_dead) {
+            continue;
+        } else if (mob.should_be_dead()) {
+            mob.kill();
+            continue;
+        }
+
+        mob.energy += 100;
+
+        while (mob.energy >= 0) {
+            if (mob.is_dead or mob.should_be_dead()) break;
+
+            const prev_energy = mob.energy;
+
+            mob.tick_hp();
+            mob.tick_env();
+            mob.tickRings();
+            mob.tickStatuses();
+
+            state._update_fov(mob);
+
+            if (mob.isUnderStatus(.Paralysis)) |_| {
+                _ = mob.rest();
+                continue;
+            } else {
+                state._mob_occupation_tick(mob, &state.GPA.allocator);
+            }
+
+            state._update_fov(mob);
+
+            assert(prev_energy > mob.energy);
+        }
+    }
+}
+
 fn viewerDisplay(tty_height: usize, level: usize, sy: usize) void {
     var dy: usize = sy;
     var y: usize = 0;
@@ -392,6 +438,7 @@ fn viewerMain() void {
 
     var level: usize = PLAYER_STARTING_LEVEL;
     var y: usize = 0;
+    var running: bool = false;
 
     const tty_height = @intCast(usize, termbox.tb_height());
 
@@ -399,7 +446,17 @@ fn viewerMain() void {
         viewerDisplay(tty_height, level, y);
 
         var ev: termbox.tb_event = undefined;
-        const t = termbox.tb_poll_event(&ev);
+        var t: isize = 0;
+
+        if (running) {
+            t = termbox.tb_peek_event(&ev, 200);
+            if (t == 0) {
+                viewerTickGame(level);
+                continue;
+            }
+        } else {
+            t = termbox.tb_poll_event(&ev);
+        }
 
         if (t == -1) @panic("Fatal termbox error");
 
@@ -410,6 +467,7 @@ fn viewerMain() void {
                 }
             } else if (ev.ch != 0) {
                 switch (ev.ch) {
+                    'a' => running = !running,
                     'j' => if (y < HEIGHT) {
                         y = math.min(y + (tty_height / 2), HEIGHT - 1);
                     },
