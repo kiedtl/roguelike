@@ -139,8 +139,8 @@ fn _excavate_prefab(room: *const Room, fab: *const Prefab, allocator: *mem.Alloc
             assert(rc.y < HEIGHT);
 
             const tt: ?TileType = switch (fab.content[y][x]) {
-                .Any => null,
-                .Wall, .Connection => .Wall,
+                .Any, .Connection => null,
+                .Wall => .Wall,
                 .Feature,
                 .LockedDoor,
                 .Door,
@@ -389,6 +389,7 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
 
             // When using a prefab, the corridor doesn't include the connectors. Excavate
             // the connectors (both the beginning and the end) manually.
+
             if (corridor.parent_connector) |acon| state.dungeon.at(acon).type = .Floor;
             if (corridor.child_connector) |acon| state.dungeon.at(acon).type = .Floor;
 
