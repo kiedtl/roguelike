@@ -349,10 +349,14 @@ test "coord.move" {
 pub const AnnotatedCoord = struct { coord: Coord, value: usize };
 
 pub const Room = struct {
+    type: RoomType = .Room,
+
     prefab: ?mapgen.Prefab = null,
     start: Coord,
     width: usize,
     height: usize,
+
+    pub const RoomType = enum { Corridor, Room };
 
     pub fn overflowsLimit(self: *const Room, limit: *const Room) bool {
         const a = self.end().x >= limit.end().x or self.end().y >= limit.end().y;

@@ -101,7 +101,7 @@ fn _choosePrefab(prefabs: *PrefabArrayList) ?Prefab {
     return null;
 }
 
-fn _room_intersects(rooms: *const RoomArrayList, room: *const Room, ignore: ?*const Room) bool {
+fn _room_intersects(rooms: *const RoomArrayList, room: *const Room, ignore: ?*const Room, ignore_corridors: bool) bool {
     if (room.start.x == 0 or room.start.y == 0)
         return true;
     if (room.start.x >= state.WIDTH or room.start.y >= state.HEIGHT)
@@ -117,6 +117,11 @@ fn _room_intersects(rooms: *const RoomArrayList, room: *const Room, ignore: ?*co
                     if (otherroom.height == ign.height)
                         continue;
         }
+
+        if (otherroom.type == .Corridor and ignore_corridors) {
+            continue;
+        }
+
         if (room.intersects(&otherroom, 1)) return true;
     }
 
@@ -238,7 +243,7 @@ fn _createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?
         corridor_coord.y = rng.range(usize, math.min(rsy, rey), math.max(rsy, rey) - 1);
     }
 
-    const room = switch (side) {
+    var room = switch (side) {
         .North => Room{
             .start = Coord.new2(level, corridor_coord.x, child.end().y),
             .height = parent.start.y - child.end().y,
@@ -261,6 +266,8 @@ fn _createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?
         },
         else => unreachable,
     };
+
+    room.type = .Corridor;
 
     return Corridor{
         .room = room,
@@ -286,7 +293,7 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
         var child_h = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
         child = parent.attach(side, child_w, child_h, distance, null) orelse return;
 
-        while (_room_intersects(rooms, &child, parent) or child.overflowsLimit(&LIMIT)) {
+        while (_room_intersects(rooms, &child, parent, true) or child.overflowsLimit(&LIMIT)) {
             if (child_w < MIN_ROOM_WIDTH or child_h < MIN_ROOM_HEIGHT)
                 return;
 
@@ -294,8 +301,6 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
             child_h -= 1;
             child = parent.attach(side, child_w, child_h, distance, null).?;
         }
-
-        _excavate_room(&child);
     } else {
         if (distance == 0) distance += 1;
 
@@ -305,23 +310,16 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
         child = parent.attach(side, fab.?.width, fab.?.height, distance, &fab.?) orelse return;
         child.prefab = fab;
 
-        if (_room_intersects(rooms, &child, parent) or child.overflowsLimit(&LIMIT))
+        if (_room_intersects(rooms, &child, parent, false) or child.overflowsLimit(&LIMIT))
             return;
-
-        _excavate_prefab(&child, &fab.?, allocator);
     }
-
-    rooms.append(child) catch unreachable;
-
-    // Now we're finally sure that we've used the prefab, we can decrement the
-    // restriction counter.
-    if (child.prefab) |f|
-        Prefab.decrementPrefabRestrictionCounter(utils.used(f.name), fabs);
-
-    // --- add corridors ---
 
     if (distance > 0) {
         if (_createCorridor(level, parent, &child, side)) |corridor| {
+            if (_room_intersects(rooms, &corridor.room, parent, true)) {
+                return;
+            }
+
             _excavate_room(&corridor.room);
             rooms.append(corridor.room) catch unreachable;
 
@@ -331,8 +329,23 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
             if (corridor.child_connector) |acon| state.dungeon.at(acon).type = .Floor;
 
             if (distance == 1) _place_normal_door(corridor.room.start);
+        } else {
+            return;
         }
     }
+
+    // Only now are we actually sure that we'd use the room
+
+    if (child.prefab) |_| {
+        _excavate_prefab(&child, &fab.?, allocator);
+    } else {
+        _excavate_room(&child);
+    }
+
+    rooms.append(child) catch unreachable;
+
+    if (child.prefab) |f|
+        Prefab.decrementPrefabRestrictionCounter(utils.used(f.name), fabs);
 }
 
 pub fn placeRandomRooms(fabs: *PrefabArrayList, level: usize, num: usize, allocator: *mem.Allocator) void {
@@ -635,7 +648,7 @@ pub fn cellularAutomataAvoidanceMap(level: usize) [HEIGHT][WIDTH]bool {
         while (x < WIDTH) : (x += 1) {
             const coord = Coord.new2(level, x, y);
             const room = Room{ .start = coord, .width = 1, .height = 1 };
-            res[y][x] = _room_intersects(rooms, &room, null);
+            res[y][x] = _room_intersects(rooms, &room, null, false);
         }
     }
 
