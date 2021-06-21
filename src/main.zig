@@ -42,7 +42,8 @@ fn initGame() void {
     var fabs = mapgen.readPrefabs(&state.GPA.allocator);
     for (state.dungeon.map) |_, level| {
         // mapgen.fillBar(level, 1);
-        mapgen.placeRandomRooms(&fabs, level, 500, &state.GPA.allocator);
+        mapgen.placeRandomRooms(&fabs, level, 100, &state.GPA.allocator);
+        mapgen.placeMoarCorridors(level);
         mapgen.placeTraps(level);
         mapgen.placeLights(level);
         mapgen.placeItems(level);
@@ -52,7 +53,7 @@ fn initGame() void {
 
         mapgen.fillRandom(&caam, level, 65);
         mapgen.cellularAutomata(&caam, level, 5, 0);
-        mapgen.cellularAutomata(&caam, level, 6, 0);
+        mapgen.cellularAutomata(&caam, level, 5, 0);
         mapgen.cellularAutomata(&caam, level, 6, 0);
         mapgen.cellularAutomata(&caam, level, 6, 0);
     }
