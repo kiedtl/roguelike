@@ -41,7 +41,7 @@ pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) boo
     }
 
     var open_list = NodePriorityQueue.init(alloc, Node.betterThan);
-    var closed_list = NodeArrayList.init(alloc);
+    var closed_list: [HEIGHT][WIDTH]?Node = [_][WIDTH]?Node{[_]?Node{null} ** WIDTH} ** HEIGHT;
 
     open_list.add(Node{
         .coord = start,
@@ -61,16 +61,15 @@ pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) boo
             while (true) {
                 list.append(current.coord) catch unreachable;
                 if (current.parent) |parent| {
-                    current = closed_list.items[coord_in_list(parent, &closed_list).?];
+                    current = closed_list[parent.y][parent.x].?;
                 } else break;
             }
 
-            closed_list.deinit();
             std.mem.reverse(Coord, list.items);
             return list;
         }
 
-        closed_list.append(current_node) catch unreachable;
+        closed_list[current_node.coord.y][current_node.coord.x] = current_node;
 
         const neighbors = DIRECTIONS;
         neighbor: for (neighbors) |neighbor| {
@@ -78,7 +77,7 @@ pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) boo
 
             if (!coord.move(neighbor, limit)) continue;
             if (!is_walkable(coord) and !goal.eq(coord)) continue;
-            if (coord_in_list(coord, &closed_list)) |_| continue;
+            if (closed_list[coord.y][coord.x]) |_| continue;
 
             const node = Node{
                 .coord = coord,
@@ -100,7 +99,6 @@ pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) boo
     }
 
     open_list.deinit();
-    closed_list.deinit();
     return null;
 }
 
