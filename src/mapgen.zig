@@ -730,6 +730,36 @@ pub fn cellularAutomataAvoidanceMap(level: usize) [HEIGHT][WIDTH]bool {
     return res;
 }
 
+pub fn populateCaves(avoid: *const [HEIGHT][WIDTH]bool, level: usize, allocator: *mem.Allocator) void {
+    const map = Room{
+        .start = Coord.new2(level, 0, 0),
+        .width = WIDTH,
+        .height = HEIGHT,
+    };
+
+    var placed: usize = 0;
+    while (placed < 20) {
+        const coord = map.randomCoord();
+        if (avoid[coord.y][coord.x]) continue;
+        if (!state.is_walkable(coord)) continue;
+
+        const armor = _createItem(Armor, items.LeatherArmor);
+        const weapon = _createItem(Weapon, items.ClubWeapon);
+
+        var gobbo = GoblinTemplate;
+        gobbo.init(allocator);
+        gobbo.occupation.work_area.append(coord) catch unreachable;
+        gobbo.coord = coord;
+        gobbo.inventory.armor = armor;
+        gobbo.inventory.wielded = weapon;
+        state.mobs.append(gobbo) catch unreachable;
+        const mobptr = state.mobs.lastPtr().?;
+        state.dungeon.at(coord).mob = mobptr;
+
+        placed += 1;
+    }
+}
+
 pub const Prefab = struct {
     invisible: bool = false,
     restriction: ?usize = null,

@@ -68,6 +68,21 @@ pub const UnarmedWeapon = Weapon{
     .secondary_damage = null,
 };
 
+pub const ClubWeapon = Weapon{
+    .id = "club",
+    .name = "stone club",
+    .required_strength = 17,
+    .damages = .{
+        .Crushing = 10,
+        .Pulping = 5,
+        .Slashing = 0,
+        .Piercing = 0,
+        .Lacerating = 0,
+    },
+    .main_damage = .Crushing,
+    .secondary_damage = .Pulping,
+};
+
 pub const DaggerWeapon = Weapon{
     .id = "dagger",
     .name = "dagger",

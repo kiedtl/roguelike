@@ -1657,6 +1657,8 @@ pub const Dungeon = struct {
     light_intensity: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     light_color: [LEVELS][HEIGHT][WIDTH]u32 = [1][HEIGHT][WIDTH]u32{[1][WIDTH]u32{[1]u32{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     rooms: [LEVELS]RoomArrayList = undefined,
+    // true == cave, false == rooms
+    layout: [LEVELS][HEIGHT][WIDTH]bool = undefined,
 
     pub fn hasMachine(self: *Dungeon, c: Coord) bool {
         if (self.at(c).surface) |surface| {
@@ -1826,9 +1828,35 @@ pub const InteractionLaborerTemplate = Mob{
     .strength = 10,
 };
 
+pub const GoblinTemplate = Mob{
+    .species = "goblin",
+    .tile = 'g',
+    .occupation = Occupation{
+        .work_description = "wandering",
+        .work_area = undefined,
+        .work_fn = ai.wanderWork,
+        .is_combative = true,
+        .target = null,
+        .phase = .Work,
+    },
+    .allegiance = .NoneEvil,
+    .vision = 10,
+
+    .willpower = 3,
+    .dexterity = 18,
+    .hearing = 5,
+    .max_HP = 35,
+    .memory_duration = 8,
+    .base_speed = 100,
+
+    .HP = 35,
+    .strength = 18,
+};
+
 pub const MOBS = [_]Mob{
     WatcherTemplate,
     GuardTemplate,
     ElfTemplate,
     InteractionLaborerTemplate,
+    GoblinTemplate,
 };

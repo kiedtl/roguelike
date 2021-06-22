@@ -49,13 +49,15 @@ fn initGame() void {
         mapgen.placeItems(level);
         mapgen.placeGuards(level, &state.GPA.allocator);
 
-        const caam = mapgen.cellularAutomataAvoidanceMap(level);
+        state.dungeon.layout[level] = mapgen.cellularAutomataAvoidanceMap(level);
 
-        mapgen.fillRandom(&caam, level, 65);
-        mapgen.cellularAutomata(&caam, level, 5, 0);
-        mapgen.cellularAutomata(&caam, level, 5, 0);
-        mapgen.cellularAutomata(&caam, level, 6, 0);
-        mapgen.cellularAutomata(&caam, level, 6, 0);
+        mapgen.fillRandom(&state.dungeon.layout[level], level, 65);
+        mapgen.cellularAutomata(&state.dungeon.layout[level], level, 5, 0);
+        mapgen.cellularAutomata(&state.dungeon.layout[level], level, 5, 0);
+        mapgen.cellularAutomata(&state.dungeon.layout[level], level, 6, 0);
+        mapgen.cellularAutomata(&state.dungeon.layout[level], level, 6, 0);
+
+        mapgen.populateCaves(&state.dungeon.layout[level], level, &state.GPA.allocator);
     }
 
     for (state.dungeon.map) |_, level|

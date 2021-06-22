@@ -186,3 +186,42 @@ pub fn interactionLaborerWork(mob: *Mob, _: *mem.Allocator) void {
 
     mob.tryMoveTo(machine);
 }
+
+pub fn wanderWork(mob: *Mob, alloc: *mem.Allocator) void {
+    assert(state.dungeon.at(mob.coord).mob != null);
+    assert(mob.occupation.phase == .Work);
+
+    var to = mob.occupation.work_area.items[0];
+
+    if (mob.cansee(to)) {
+        // OK, reached our destination. Time to choose another one!
+        const map = Room{
+            .start = Coord.new2(mob.coord.z, 1, 1),
+            .width = WIDTH - 1,
+            .height = HEIGHT - 1,
+        };
+
+        while (true) {
+            const point = map.randomCoord();
+
+            if (state.dungeon.layout[mob.coord.z][point.y][point.x]) continue;
+            if (!state.is_walkable(point)) continue;
+
+            if (mob.nextDirectionTo(point, state.is_walkable)) |_| {
+                mob.occupation.work_area.items[0] = point;
+                break;
+            }
+        }
+
+        _ = mob.rest();
+        return;
+    }
+
+    if (!mob.isCreeping()) {
+        _ = mob.rest();
+        return;
+    }
+
+    const prev_facing = mob.facing;
+    mob.tryMoveTo(to);
+}
