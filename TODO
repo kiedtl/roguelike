@@ -492,6 +492,13 @@ x Add power component to machines
 - (Zig contribution: type coercion from anonymous list literal to array)
 - Make lighting system actually matter (affect FOV, stealth)
   - Needs prefab seeding, to ensure that the power station appears on map
+- Refactor/cleanup FOV helper methods:
+  - Generalize raycasting function
+  - Make raycasting use bounding box instead of slower trigonometry nonsense
+  - Ensure that raycasting method doesn't have any artifacts
+  - Add quadrants to raycasting
+  - Use matrix to store mob's FOV, instead of array.
+  - Use raycasting for everyone, remove shadowcasting
 - Use matrix to store mob's FOV, not array
 x Only print trap messages when culprit is player
 - Group identical messages in msgpane
@@ -530,7 +537,7 @@ x Add the Openworld
 x Add goblins, rats, and other mobs to populate the Openworld
 x Allow stacking in inventory
 x Add ranged weaponry
-- Alternative weapons, weapon swapping
+x Alternative weapons, weapon swapping
 - Add portals to Openworld from the main dungeon, with sentinels
 - Add temperature system
 - Add Burning Brutes and Lava Flans to the Openworld
