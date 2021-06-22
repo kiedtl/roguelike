@@ -10,8 +10,14 @@ var costable: [360]f64 = [360]f64{ 1.0, 0.5403023058681398, -0.4161468365471424,
 
 // Check how light spreads over the map. As of now it's pretty tailored for the
 // lighting system, some work should be done to make it more generic.
-pub fn lightingRaycast(center: Coord, radius: usize, intensity: usize) void {
-    state.dungeon.lightIntensityAt(center).* = intensity;
+pub fn lightingRaycast(
+    center: Coord,
+    radius: usize,
+    energy: usize,
+    opacity_func: fn (Coord) usize,
+    buffer: *[HEIGHT][WIDTH]usize,
+) void {
+    buffer[center.y][center.x] = energy;
 
     var i: usize = 0;
     while (i < 360) : (i += 1) {
@@ -21,7 +27,7 @@ pub fn lightingRaycast(center: Coord, radius: usize, intensity: usize) void {
         var x = @intToFloat(f64, center.x);
         var y = @intToFloat(f64, center.y);
 
-        var ray_intensity: usize = intensity;
+        var ray_energy: usize = energy;
         var z: usize = 0;
         while (z < radius) : (z += 1) {
             x += ax;
@@ -36,15 +42,14 @@ pub fn lightingRaycast(center: Coord, radius: usize, intensity: usize) void {
             if (ix >= state.mapgeometry.x or iy >= state.mapgeometry.y)
                 break;
 
-            const previntens = state.dungeon.lightIntensityAt(coord).*;
-            const intensity_percent = ray_intensity * 100 / intensity;
-            if (intensity_percent > previntens) {
-                state.dungeon.lightIntensityAt(coord).* = intensity_percent;
+            const previous_energy = state.dungeon.lightIntensityAt(coord).*;
+            const energy_percent = ray_energy * 100 / energy;
+            if (energy_percent > previous_energy) {
+                buffer[coord.y][coord.x] = energy_percent;
             }
 
-            const opacity = state.light_tile_opacity(coord);
-            ray_intensity = utils.saturating_sub(ray_intensity, opacity);
-            if (ray_intensity == 0) break;
+            ray_energy = utils.saturating_sub(ray_energy, opacity_func(coord));
+            if (ray_energy == 0) break;
         }
     }
 }
