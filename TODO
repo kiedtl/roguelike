@@ -28,25 +28,26 @@ CE	s	greater, lesser, minor necromancer
 			"An unusually fragile minor demon that has long wielded the secrets
 			of life and death."
 CE	h	orc
-			"Middle-sized humonoids with skin only slightly darker than the
+			"Middle-sized humanoids with skin only slightly darker than the
 			underside of a rainbow trout, these ferocious beings are nothing
-			like the orcs you've read about in the storybooks."
+			like the misshapen apes that you've been told about around the
+			evening campfire.
 CE	a	hellhounds
 CE	h	death/fire/ether knight
 LE	s	will o' the wisp
 CE	a	fire worm (salamander?)
 CE	o	crystal statue
 			- Confuses intruders that wander too closely.
-			- Nearly indestructable, except by fire attacks.
+			- Nearly indestructible, except by fire attacks.
 			"A statue of some nameless humanoid creature than once inhabited
 			the pits of Udùn. These statues are almost as rare as the
 			translucent white crystal they're composed of."
 CE	o	turquoise statue
 			- Raises an awful shriek when the player passes it.
-			- Nearly indestructable, except by fire attacks.
+			- Nearly indestructible, except by fire attacks.
 CE	o	kyanite statue
 			- Emits paralysis gas when intruders wander too closely.
-			- Nearly indestructable, except by fire attacks.
+			- Nearly indestructible, except by fire attacks.
 CE	u	lich
 			- Ranged attacker. Hangs behind, flees when hostile closes in.
 			- Bufs allies when they're wounded, allows non-undead mobs to
@@ -76,20 +77,18 @@ NN	o	bogeyman (TODO: change name)
 			  with the bogeymen in Dwarf Fortress, constantly hurls insults
 			  and cackles while attacking.
 			- Incredibly good at dodging.
-			- If player has a high-enough willpower, can break silence and raise
-			  a the alarm. Guards wake up, stream in, and clash with the fleeing
-			  bogeymen.
-			"A semi-sentient, emaciated humaniod creature of hideous appearance,
-			possessed with eyes that are both dull and bright in the dungeon's
-			gloom."
+			"A emaciated humanoid creature of hideous appearance, possessed
+			with eyes that are both dull and bright in the dungeon's gloom."
 NN	o	night wanderer
 			- A thin, sickly-looking creature that wanders the dungeon. Mostly
 			  harmless.
 NN	o	creeping death
 			- Invisible.
 			- Waits for victim to enter a dead end, then emits a suffocating
-			  black gas that envelopes victim. Said gas is completely opaque
-			  and is jet black.
+			  gas that envelopes victim. Said gas is completely opaque and is
+			  jet black.
+			"An invisible Presence of destroying fire that stalks the dungeon,
+			wreathed in unapproachable darkness."
 NN	o	grue
 			- Like stalker, but dies when coming into contact with light.
 NN	o	vampire
@@ -101,7 +100,7 @@ frugal		Use only one weapon throughout the game.
 ringless	Use no rings at all.
 naked		Use no cloaks at all.
 chivalrous	Use only (unpoisoned) melee weapons, never ranged.
-ringlord	Never remove a rings throught the game.
+ringlord	Never remove a rings throughout the game.
 
 Movement patterns
 -----------------
@@ -121,7 +120,6 @@ Rings
   hundred turns to reach their full potential.
 - Rings don't have an "enchantment" level, but "tiers" instead (mithril, gold,
   silver, and iron).
-- Rings: (g)as, (s)tatus, (c)ustom, and [p]assive or [a]ctive
 - Rings: [p]assive (acting each turn) or [a]ctive (requiring user to move in pattern)
 ring of intimidation [a]
 	- Confers either stun or fear on mob when moving toward mob.
@@ -178,7 +176,7 @@ ring of power
 	- ???
 ring of evasion
 	- Spews fog outward from player when zigzagging and fleeing, increasing evasion.
-	- Example movement pattern: [move(NW), movw(NE), move(NW), move(NE)]
+	- Example movement pattern: [move(NW), move(NE), move(NW), move(NE)]
 
 
 Machines
@@ -394,7 +392,7 @@ Occupations
 	  interesting to look at.
 	Uses machines and collections of vials to manufacture potions, placing
 	  them in storeroom.
-	Develops railgun and a few other big toys for player to fiddle with.
+	Develops railgun and a few other big toys for player to fidget with.
 - Farmer
 	Purpose: make food for the entire dungeon.
 	Farms fungi/mushrooms, harvesting them just before spore-producing stage.
@@ -483,7 +481,7 @@ x Convert enum+union pair to union(enum) (see std/fifo.zig) where needed
 - Add padding between infopane/msgpane and map
 - Make it easier to tell the heavily wounded from dead
 x Fix showing of display percentage of last damage
-x Place stairs only in rooms
+- Place stairs only in rooms
 x Make watchers shout loudly
 - Fix sound propagation
 - @ command to see player's full AC and stats
@@ -502,7 +500,7 @@ x Attack messages should be nice and descriptive ("You skewer the goblin!")
 - Show red/yellow/orange for low health bars
 - Add reproducing rats
 - Remove all floats from color functions, sound systems, gas systems, etc.
-
+x Use proper CP407 arrows for staircases
 
 Roadmap
 -------
@@ -524,12 +522,11 @@ x Allow picking up of potions
 x Add dialog to view inventory
 x Add dialog to use item in inventory (quaff potions)
 x Add dialog to throw potion at mob
-x Use proper CP407 arrows for staircases
 - Define where rings should be in prefabs/mobs
 x Define armor struct, use on mobs and player
 x Define melee weapon struct and dagger/spear, use on mobs and player
-- Add the Openworld
-- Add goblins, rats, and other mobs to populate the Openworld
+x Add the Openworld
+x Add goblins, rats, and other mobs to populate the Openworld
 - Allow stacking in inventory
 - Add ranged weaponry
 - Add portals to Openworld from the main dungeon, with sentinels
