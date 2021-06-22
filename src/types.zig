@@ -755,7 +755,7 @@ pub const Mob = struct { // {{{
 
         const trajectory = self.coord.drawLine(at, state.mapgeometry);
         var landed: ?Coord = null;
-        var energy: usize = 10; // TODO: make based on strength
+        var energy: usize = self.strength;
 
         for (trajectory.constSlice()) |coord| {
             if (energy == 0 or (!coord.eq(self.coord) and !state.is_walkable(coord))) {
