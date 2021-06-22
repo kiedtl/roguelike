@@ -112,3 +112,32 @@ pub const SpearWeapon = Weapon{
     .main_damage = .Piercing,
     .secondary_damage = null,
 };
+
+pub const CrossbowLauncher = Weapon{
+    .id = "crossbow",
+    .name = "crossbow",
+    .required_strength = 20,
+    .damages = .{
+        .Crushing = 5,
+        .Pulping = 1,
+        .Slashing = 0,
+        .Piercing = 0,
+        .Lacerating = 0,
+    },
+    .main_damage = .Crushing,
+    .secondary_damage = null,
+    .launcher = .{},
+};
+
+pub const CrossbowBoltProjectile = Projectile{
+    .id = "bolt",
+    .name = "bolt",
+    .main_damage = .Piercing,
+    .damages = .{
+        .Crushing = 0,
+        .Pulping = 0,
+        .Slashing = 1,
+        .Piercing = 13,
+        .Lacerating = 0,
+    },
+};

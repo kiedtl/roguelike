@@ -74,7 +74,8 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     echoring.worn_since = state.ticks;
 
     const armor = _createItem(Armor, items.LeatherArmor);
-    const weapon = _createItem(Weapon, items.DaggerWeapon);
+    //const weapon = _createItem(Weapon, items.DaggerWeapon);
+    const weapon = _createItem(Weapon, items.CrossbowLauncher);
 
     var player = ElfTemplate;
     player.init(alloc);

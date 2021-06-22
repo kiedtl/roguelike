@@ -44,6 +44,7 @@ pub const RingList = LinkedList(Ring);
 pub const PotionList = LinkedList(Potion);
 pub const ArmorList = LinkedList(Armor);
 pub const WeaponList = LinkedList(Weapon);
+pub const ProjectileList = LinkedList(Projectile);
 pub const MachineList = LinkedList(Machine);
 pub const PropList = LinkedList(Prop);
 
@@ -503,6 +504,7 @@ pub const Activity = union(enum) {
     Drop,
     Use,
     Throw,
+    Fire,
 };
 
 pub const EnemyRecord = struct { mob: *Mob, counter: usize };
@@ -746,16 +748,16 @@ pub const Mob = struct { // {{{
     // thrown onto a tile that already has an item? Should one of the items be
     // destroyed, or should the thrown item be moved the nearest free tile?
     // What if that free tile is twenty items away? ...
-    pub fn throwItem(self: *Mob, item: *Item, at: Coord) bool {
+    pub fn throwItem(self: *Mob, item: *Item, at: Coord, _energy: ?usize) bool {
         switch (item.*) {
-            .Potion => {},
+            .Projectile, .Potion => {},
             .Weapon => @panic("W/A TODO"),
             else => return false,
         }
 
         const trajectory = self.coord.drawLine(at, state.mapgeometry);
         var landed: ?Coord = null;
-        var energy: usize = self.strength;
+        var energy: usize = _energy orelse self.strength;
 
         for (trajectory.constSlice()) |coord| {
             if (energy == 0 or (!coord.eq(self.coord) and !state.is_walkable(coord))) {
@@ -768,6 +770,39 @@ pub const Mob = struct { // {{{
 
         switch (item.*) {
             .Weapon => |_| @panic("W/A TODO"),
+            .Projectile => |projectile| {
+                if (state.dungeon.at(landed.?).mob) |bastard| {
+                    const CHANCE_OF_AUTO_MISS = 20; // 1 in <x>
+                    const CHANCE_OF_AUTO_HIT = 5; // 1 in <x>
+
+                    // FIXME: reduce code duplication in fight() vs here
+                    const is_stab = !bastard.isAwareOfAttack(self.coord);
+                    const auto_miss = rng.onein(CHANCE_OF_AUTO_MISS);
+                    const auto_hit = is_stab or rng.onein(CHANCE_OF_AUTO_HIT);
+
+                    const miss = if (auto_miss)
+                        true
+                    else if (auto_hit)
+                        false
+                    else
+                        (rng.rangeClumping(usize, 1, 10, 2) * self.accuracy()) <
+                            (rng.rangeClumping(usize, 1, 10, 2) * bastard.dexterity);
+
+                    if (!miss) {
+                        const defender_armor = bastard.inventory.armor orelse &items.NoneArmor;
+                        const max_damage = projectile.damages.resultOf(&defender_armor.resists).sum();
+
+                        var damage = rng.rangeClumping(usize, max_damage / 2, max_damage, 2);
+
+                        if (is_stab) {
+                            const bonus = DamageType.stabBonus(projectile.main_damage);
+                            damage = utils.percentOf(usize, damage, bonus);
+                        }
+
+                        bastard.takeDamage(.{ .amount = @intToFloat(f64, damage) });
+                    }
+                }
+            },
             .Potion => |potion| {
                 if (state.dungeon.at(landed.?).mob) |bastard| {
                     bastard.quaffPotion(potion);
@@ -1441,6 +1476,13 @@ pub const Armor = struct {
     resists: Damages,
 };
 
+pub const Projectile = struct {
+    id: []const u8,
+    name: []const u8,
+    main_damage: DamageType,
+    damages: Damages,
+};
+
 pub const Weapon = struct {
     id: []const u8,
     name: []const u8,
@@ -1448,6 +1490,9 @@ pub const Weapon = struct {
     damages: Damages,
     main_damage: DamageType,
     secondary_damage: ?DamageType,
+    launcher: ?Launcher = null,
+
+    pub const Launcher = struct {};
 };
 
 pub const Potion = struct {
@@ -1504,6 +1549,7 @@ pub const Item = union(enum) {
     Potion: *Potion,
     Armor: *Armor,
     Weapon: *Weapon,
+    Projectile: *Projectile,
 
     pub fn shortName(self: *const Item) !StackBuffer(u8, 128) {
         var buf = StackBuffer(u8, 128).init(&([_]u8{0} ** 128));
@@ -1514,6 +1560,7 @@ pub const Item = union(enum) {
             .Potion => |p| try fmt.format(fbs.writer(), "potion of {}", .{p.name}),
             .Armor => |a| try fmt.format(fbs.writer(), "{} armor", .{a.name}),
             .Weapon => |w| try fmt.format(fbs.writer(), "{}", .{w.name}),
+            .Projectile => |p| try fmt.format(fbs.writer(), "{}", .{p.name}),
         }
         buf.resizeTo(@intCast(usize, fbs.getPos() catch unreachable));
         return buf;

@@ -3,6 +3,7 @@ const math = std.math;
 const assert = std.debug.assert;
 
 const rng = @import("rng.zig");
+const items = @import("items.zig");
 const utils = @import("utils.zig");
 const gas = @import("gas.zig");
 const astar = @import("astar.zig");
@@ -35,6 +36,7 @@ fn initGame() void {
     state.potions = PotionList.init(&state.GPA.allocator);
     state.armors = ArmorList.init(&state.GPA.allocator);
     state.weapons = WeaponList.init(&state.GPA.allocator);
+    state.projectiles = ProjectileList.init(&state.GPA.allocator);
     state.machines = MachineList.init(&state.GPA.allocator);
     state.props = PropList.init(&state.GPA.allocator);
     rng.init();
@@ -83,6 +85,7 @@ fn deinitGame() void {
     state.potions.deinit();
     state.armors.deinit();
     state.weapons.deinit();
+    state.projectiles.deinit();
     state.machines.deinit();
     state.messages.deinit();
     state.props.deinit();
@@ -104,6 +107,28 @@ fn readNoActionInput() void {
                 state.state = .Quit;
             }
         }
+    }
+}
+
+// TODO: move this to state.zig...? There should probably be a separate file for
+// player-specific actions.
+fn fireLauncher() bool {
+    if (state.player.inventory.wielded) |weapon| {
+        if (weapon.launcher) |launcher| {
+            const dest = display.chooseCell() orelse return false;
+            state.projectiles.append(items.CrossbowBoltProjectile) catch unreachable;
+            var projectile = Item{ .Projectile = state.projectiles.lastPtr().? };
+            assert(state.player.throwItem(&projectile, dest, state.player.strength * 2));
+            state.player.activities.append(.Fire);
+            state.player.energy -= state.player.speed();
+            return true;
+        } else {
+            state.message(.MetaError, "You can't fire anything with that weapon.", .{});
+            return false;
+        }
+    } else {
+        state.message(.MetaError, "You aren't wielding anything.", .{});
+        return false;
     }
 }
 
@@ -134,7 +159,7 @@ fn throwItem() bool {
     const dest = display.chooseCell() orelse return false;
     const item = &state.player.inventory.pack.slice()[index];
 
-    if (state.player.throwItem(item, dest)) {
+    if (state.player.throwItem(item, dest, null)) {
         _ = state.player.inventory.pack.orderedRemove(index) catch unreachable;
         state.player.activities.append(.Throw);
         state.player.energy -= state.player.speed();
@@ -151,6 +176,10 @@ fn useItem() bool {
     const index = display.chooseInventoryItem("Use") orelse return false;
 
     switch (state.player.inventory.pack.slice()[index]) {
+        .Projectile => |_| {
+            state.message(.MetaError, "You need a launcher to use that.", .{});
+            return false;
+        },
         .Corpse => |_| {
             state.message(.MetaError, "That doesn't look appetizing.", .{});
             return false;
@@ -271,6 +300,7 @@ fn readInput() bool {
             return true;
         } else if (ev.ch != 0) {
             return switch (ev.ch) {
+                'f' => fireLauncher(),
                 'r' => rifleCorpse(),
                 't' => throwItem(),
                 'a' => useItem(),
@@ -490,13 +520,13 @@ fn viewerMain() void {
 pub fn main() anyerror!void {
     initGame();
 
-    viewerMain();
+    //viewerMain();
 
-    // while (state.state != .Quit) switch (state.state) {
-    //     .Game => tickGame(),
-    //     .Lose, .Win => gameOverScreen(),
-    //     .Quit => break,
-    // };
+    while (state.state != .Quit) switch (state.state) {
+        .Game => tickGame(),
+        .Lose, .Win => gameOverScreen(),
+        .Quit => break,
+    };
 
     deinitGame();
 }
