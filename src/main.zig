@@ -116,12 +116,26 @@ fn fireLauncher() bool {
     if (state.player.inventory.wielded) |weapon| {
         if (weapon.launcher) |launcher| {
             const dest = display.chooseCell() orelse return false;
-            state.projectiles.append(items.CrossbowBoltProjectile) catch unreachable;
-            var projectile = Item{ .Projectile = state.projectiles.lastPtr().? };
-            assert(state.player.throwItem(&projectile, dest, state.player.strength * 2));
-            state.player.activities.append(.Fire);
-            state.player.energy -= state.player.speed();
-            return true;
+
+            var projectile_index: ?usize = null;
+            for (state.player.inventory.pack.constSlice()) |item, i| switch (item) {
+                .Projectile => |projectile| if (projectile.type == launcher.need) {
+                    projectile_index = i;
+                },
+                else => {},
+            };
+
+            if (projectile_index) |index| {
+                var projectile = state.player.inventory.pack.slice()[index];
+                assert(state.player.throwItem(&projectile, dest, state.player.strength * 2));
+                _ = state.player.deleteItem(index) catch unreachable;
+                state.player.activities.append(.Fire);
+                state.player.energy -= state.player.speed();
+                return true;
+            } else {
+                state.message(.MetaError, "You don't have any projectiles.", .{});
+                return false;
+            }
         } else {
             state.message(.MetaError, "You can't fire anything with that weapon.", .{});
             return false;
@@ -160,7 +174,7 @@ fn throwItem() bool {
     const item = &state.player.inventory.pack.slice()[index];
 
     if (state.player.throwItem(item, dest, null)) {
-        _ = state.player.inventory.pack.orderedRemove(index) catch unreachable;
+        _ = state.player.deleteItem(index) catch unreachable;
         state.player.activities.append(.Throw);
         state.player.energy -= state.player.speed();
         return true;
@@ -255,7 +269,7 @@ fn useItem() bool {
         .Potion => |p| state.player.quaffPotion(p),
     }
 
-    _ = state.player.inventory.pack.orderedRemove(index) catch unreachable;
+    _ = state.player.deleteItem(index) catch unreachable;
 
     state.player.activities.append(.Use);
     state.player.energy -= state.player.speed();
@@ -272,7 +286,7 @@ fn dropItem() bool {
         return false;
     } else {
         const index = display.chooseInventoryItem("Drop") orelse return false;
-        const item = state.player.inventory.pack.orderedRemove(index) catch unreachable;
+        const item = state.player.deleteItem(index) catch unreachable;
         state.dungeon.at(state.player.coord).item = item;
 
         // TODO: show message

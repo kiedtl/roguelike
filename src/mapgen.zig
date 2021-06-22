@@ -470,15 +470,26 @@ pub fn placeItems(level: usize) void {
         if ((room.height * room.width) < 20) continue;
 
         if (rng.onein(3)) {
-            var place = rng.range(usize, 1, 4);
+            var place = rng.range(usize, 1, 3);
             while (place > 0) {
                 const coord = room.randomCoord();
                 if (state.dungeon.hasMachine(coord) or state.dungeon.at(coord).item != null)
                     continue;
 
-                const potion = rng.chooseUnweighted(Potion, &items.POTIONS);
-                state.potions.append(potion) catch unreachable;
-                state.dungeon.at(coord).item = Item{ .Potion = state.potions.lastPtr().? };
+                switch (rng.range(usize, 0, 1)) {
+                    0 => {
+                        const potion = rng.chooseUnweighted(Potion, &items.POTIONS);
+                        state.potions.append(potion) catch unreachable;
+                        state.dungeon.at(coord).item = Item{ .Potion = state.potions.lastPtr().? };
+                    },
+                    1 => {
+                        var bolt = items.CrossbowBoltProjectile;
+                        bolt.count = rng.rangeClumping(usize, 3, 10, 2);
+                        state.projectiles.append(items.CrossbowBoltProjectile) catch unreachable;
+                        state.dungeon.at(coord).item = Item{ .Projectile = state.projectiles.lastPtr().? };
+                    },
+                    else => unreachable,
+                }
 
                 place -= 1;
             }

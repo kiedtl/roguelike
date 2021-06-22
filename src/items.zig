@@ -126,7 +126,7 @@ pub const CrossbowLauncher = Weapon{
     },
     .main_damage = .Crushing,
     .secondary_damage = null,
-    .launcher = .{},
+    .launcher = .{ .need = .Bolt },
 };
 
 pub const CrossbowBoltProjectile = Projectile{
@@ -140,4 +140,5 @@ pub const CrossbowBoltProjectile = Projectile{
         .Piercing = 13,
         .Lacerating = 0,
     },
+    .type = .Bolt,
 };

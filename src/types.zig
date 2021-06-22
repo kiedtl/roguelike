@@ -717,14 +717,54 @@ pub const Mob = struct { // {{{
         }
     }
 
+    pub fn deleteItem(self: *Mob, index: usize) !Item {
+        if (index >= self.inventory.pack.len) return error.IndexOutOfRange;
+        switch (self.inventory.pack.slice()[index]) {
+            .Projectile => |projectile| {
+                if (projectile.count > 1) {
+                    projectile.count -= 1;
+
+                    var p = projectile.*;
+                    p.count = 1;
+                    state.projectiles.append(p) catch unreachable;
+
+                    return Item{ .Projectile = state.projectiles.lastPtr().? };
+                } else {
+                    return self.inventory.pack.orderedRemove(index) catch unreachable;
+                }
+            },
+            else => return self.inventory.pack.orderedRemove(index) catch unreachable,
+        }
+    }
+
     pub fn grabItem(self: *Mob) bool {
         if (state.dungeon.at(self.coord).item) |item| {
-            self.inventory.pack.append(item) catch |e| switch (e) {
-                error.NoSpaceLeft => return false,
-            };
-            state.dungeon.at(self.coord).item = null;
+            switch (item) {
+                .Projectile => |projectile| {
+                    var found: ?usize = null;
+                    for (self.inventory.pack.constSlice()) |entry, i| switch (entry) {
+                        .Projectile => |stack| if (stack.type == projectile.type and mem.eql(u8, stack.id, projectile.id)) {
+                            found = i;
+                        },
+                        else => {},
+                    };
 
-            // TODO: show message
+                    if (found) |index| {
+                        self.inventory.pack.slice()[index].Projectile.count += 1;
+                    } else {
+                        self.inventory.pack.append(item) catch |e| switch (e) {
+                            error.NoSpaceLeft => return false,
+                        };
+                    }
+                },
+                else => {
+                    self.inventory.pack.append(item) catch |e| switch (e) {
+                        error.NoSpaceLeft => return false,
+                    };
+                },
+            }
+
+            state.dungeon.at(self.coord).item = null;
 
             self.activities.append(.Grab);
             self.energy -= self.speed();
@@ -1481,6 +1521,10 @@ pub const Projectile = struct {
     name: []const u8,
     main_damage: DamageType,
     damages: Damages,
+    count: usize = 1,
+    type: ProjectileType,
+
+    pub const ProjectileType = enum { Bolt };
 };
 
 pub const Weapon = struct {
@@ -1492,7 +1536,9 @@ pub const Weapon = struct {
     secondary_damage: ?DamageType,
     launcher: ?Launcher = null,
 
-    pub const Launcher = struct {};
+    pub const Launcher = struct {
+        need: Projectile.ProjectileType,
+    };
 };
 
 pub const Potion = struct {
@@ -1560,7 +1606,7 @@ pub const Item = union(enum) {
             .Potion => |p| try fmt.format(fbs.writer(), "potion of {}", .{p.name}),
             .Armor => |a| try fmt.format(fbs.writer(), "{} armor", .{a.name}),
             .Weapon => |w| try fmt.format(fbs.writer(), "{}", .{w.name}),
-            .Projectile => |p| try fmt.format(fbs.writer(), "{}", .{p.name}),
+            .Projectile => |p| try fmt.format(fbs.writer(), "[{}] {}", .{ p.count, p.name }),
         }
         buf.resizeTo(@intCast(usize, fbs.getPos() catch unreachable));
         return buf;
@@ -1651,6 +1697,10 @@ pub const Tile = struct {
                         },
                         .Armor => |_| {
                             cell.ch = '&'; // TODO: use U+1F6E1?
+                            cell.bg = color;
+                        },
+                        .Projectile => |_| {
+                            cell.ch = '≥';
                             cell.bg = color;
                         },
                         else => cell.ch = '?',
