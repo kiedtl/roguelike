@@ -74,8 +74,8 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     echoring.worn_since = state.ticks;
 
     const armor = _createItem(Armor, items.LeatherArmor);
-    //const weapon = _createItem(Weapon, items.DaggerWeapon);
     const weapon = _createItem(Weapon, items.CrossbowLauncher);
+    const backup = _createItem(Weapon, items.DaggerWeapon);
 
     var player = ElfTemplate;
     player.init(alloc);
@@ -84,6 +84,7 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     player.inventory.r_rings[0] = echoring;
     player.inventory.armor = armor;
     player.inventory.wielded = weapon;
+    player.inventory.backup = backup;
     state.mobs.append(player) catch unreachable;
     state.dungeon.at(coord).mob = state.mobs.lastPtr().?;
     state.player = state.mobs.lastPtr().?;

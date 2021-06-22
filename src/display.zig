@@ -112,6 +112,11 @@ fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: is
         const dest = (item.shortName() catch unreachable).constSlice();
         y = _draw_string(startx, y, 0xffffff, 0, "-) {}", .{dest}) catch unreachable;
     }
+    if (state.player.inventory.backup) |backup| {
+        const item = Item{ .Weapon = backup };
+        const dest = (item.shortName() catch unreachable).constSlice();
+        y = _draw_string(startx, y, 0xffffff, 0, "2) {}", .{dest}) catch unreachable;
+    }
     if (state.player.inventory.armor) |armor| {
         const item = Item{ .Armor = armor };
         const dest = (item.shortName() catch unreachable).constSlice();

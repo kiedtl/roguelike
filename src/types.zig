@@ -155,11 +155,11 @@ pub const Coord = struct { // {{{
 
     const Self = @This();
 
-    pub fn new2(level: usize, x: usize, y: usize) Coord {
+    pub inline fn new2(level: usize, x: usize, y: usize) Coord {
         return .{ .z = level, .x = x, .y = y };
     }
 
-    pub fn new(x: usize, y: usize) Coord {
+    pub inline fn new(x: usize, y: usize) Coord {
         return .{ .z = 0, .x = x, .y = y };
     }
 
@@ -178,13 +178,11 @@ pub const Coord = struct { // {{{
         );
     }
 
-    pub fn hash(a: Self) u64 {}
-
-    pub fn eq(a: Self, b: Self) bool {
+    pub inline fn eq(a: Self, b: Self) bool {
         return a.x == b.x and a.y == b.y;
     }
 
-    pub fn add(a: Self, b: Self) Self {
+    pub inline fn add(a: Self, b: Self) Self {
         return Coord.new2(a.z, a.x + b.x, a.y + b.y);
     }
 
@@ -505,6 +503,7 @@ pub const Activity = union(enum) {
     Use,
     Throw,
     Fire,
+    SwapWeapons,
 };
 
 pub const EnemyRecord = struct { mob: *Mob, counter: usize };
@@ -659,6 +658,7 @@ pub const Mob = struct { // {{{
 
         armor: ?*Armor = null,
         wielded: ?*Weapon = null,
+        backup: ?*Weapon = null,
 
         pub const PACK_SIZE: usize = 5;
         pub const PackBuffer = StackBuffer(Item, PACK_SIZE);
@@ -715,6 +715,15 @@ pub const Mob = struct { // {{{
                 else => {},
             }
         }
+    }
+
+    pub fn swapWeapons(self: *Mob) bool {
+        const tmp = self.inventory.wielded;
+        self.inventory.wielded = self.inventory.backup;
+        self.inventory.backup = tmp;
+        self.activities.append(.SwapWeapons);
+        self.energy -= self.speed();
+        return true;
     }
 
     pub fn deleteItem(self: *Mob, index: usize) !Item {
@@ -1793,20 +1802,20 @@ pub const Dungeon = struct {
         return walls;
     }
 
-    pub fn at(self: *Dungeon, c: Coord) *Tile {
+    pub inline fn at(self: *Dungeon, c: Coord) *Tile {
         return &self.map[c.z][c.y][c.x];
     }
 
     // STYLE: rename to gasAt
-    pub fn atGas(self: *Dungeon, c: Coord) []f64 {
+    pub inline fn atGas(self: *Dungeon, c: Coord) []f64 {
         return &self.gas[c.z][c.y][c.x];
     }
 
-    pub fn soundAt(self: *Dungeon, c: Coord) *usize {
+    pub inline fn soundAt(self: *Dungeon, c: Coord) *usize {
         return &self.sound[c.z][c.y][c.x];
     }
 
-    pub fn lightIntensityAt(self: *Dungeon, c: Coord) *usize {
+    pub inline fn lightIntensityAt(self: *Dungeon, c: Coord) *usize {
         return &self.light_intensity[c.z][c.y][c.x];
     }
 };

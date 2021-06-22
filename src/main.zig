@@ -314,6 +314,7 @@ fn readInput() bool {
             return true;
         } else if (ev.ch != 0) {
             return switch (ev.ch) {
+                'x' => state.player.swapWeapons(),
                 'f' => fireLauncher(),
                 'r' => rifleCorpse(),
                 't' => throwItem(),

@@ -501,6 +501,7 @@ x Attack messages should be nice and descriptive ("You skewer the goblin!")
 - Add reproducing rats
 - Remove all floats from color functions, sound systems, gas systems, etc.
 x Use proper CP407 arrows for staircases
+- Allow more than one item on a tile, with only the top item showing/interact-able.
 
 Roadmap
 -------
@@ -527,8 +528,9 @@ x Define armor struct, use on mobs and player
 x Define melee weapon struct and dagger/spear, use on mobs and player
 x Add the Openworld
 x Add goblins, rats, and other mobs to populate the Openworld
-- Allow stacking in inventory
-- Add ranged weaponry
+x Allow stacking in inventory
+x Add ranged weaponry
+- Alternative weapons, weapon swapping
 - Add portals to Openworld from the main dungeon, with sentinels
 - Add temperature system
 - Add Burning Brutes and Lava Flans to the Openworld
