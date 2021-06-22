@@ -743,16 +743,25 @@ pub fn populateCaves(avoid: *const [HEIGHT][WIDTH]bool, level: usize, allocator:
         if (avoid[coord.y][coord.x]) continue;
         if (!state.is_walkable(coord)) continue;
 
-        const armor = _createItem(Armor, items.LeatherArmor);
-        const weapon = _createItem(Weapon, items.ClubWeapon);
+        if (rng.onein(3)) {
+            const armor = _createItem(Armor, items.LeatherArmor);
+            const weapon = _createItem(Weapon, items.ClubWeapon);
 
-        var gobbo = GoblinTemplate;
-        gobbo.init(allocator);
-        gobbo.occupation.work_area.append(coord) catch unreachable;
-        gobbo.coord = coord;
-        gobbo.inventory.armor = armor;
-        gobbo.inventory.wielded = weapon;
-        state.mobs.append(gobbo) catch unreachable;
+            var gobbo = GoblinTemplate;
+            gobbo.init(allocator);
+            gobbo.occupation.work_area.append(coord) catch unreachable;
+            gobbo.coord = coord;
+            gobbo.inventory.armor = armor;
+            gobbo.inventory.wielded = weapon;
+            state.mobs.append(gobbo) catch unreachable;
+        } else {
+            var rat = CaveRatTemplate;
+            rat.init(allocator);
+            rat.occupation.work_area.append(coord) catch unreachable;
+            rat.coord = coord;
+            state.mobs.append(rat) catch unreachable;
+        }
+
         const mobptr = state.mobs.lastPtr().?;
         state.dungeon.at(coord).mob = mobptr;
 

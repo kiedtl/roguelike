@@ -1853,6 +1853,31 @@ pub const GoblinTemplate = Mob{
     .strength = 18,
 };
 
+pub const CaveRatTemplate = Mob{
+    .species = "cave rat",
+    .tile = '²',
+    .occupation = Occupation{
+        .work_description = "wandering",
+        .work_area = undefined,
+        .work_fn = ai.wanderWork,
+        .is_combative = false,
+        .target = null,
+        .phase = .Work,
+    },
+    .allegiance = .NoneEvil,
+    .vision = 6,
+
+    .willpower = 1,
+    .dexterity = 10,
+    .hearing = 3,
+    .max_HP = 10,
+    .memory_duration = 15,
+    .base_speed = 40,
+
+    .HP = 10,
+    .strength = 5,
+};
+
 pub const MOBS = [_]Mob{
     WatcherTemplate,
     GuardTemplate,
