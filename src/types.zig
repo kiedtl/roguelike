@@ -1151,12 +1151,16 @@ pub const Mob = struct { // {{{
         // themself.
         if (self.coord.eq(to)) return null;
 
+        if (Direction.from_coords(self.coord, to)) |direction| {
+            return direction;
+        } else |_err| {}
+
         const pathobj = Path{ .from = self.coord, .to = to };
 
         if (!self.path_cache.contains(pathobj)) {
             // TODO: do some tests and figure out what's the practical limit to memory
             // usage, and reduce the buffer's size to that.
-            var membuf: [65535 * 10]u8 = undefined;
+            var membuf: [65535]u8 = undefined;
             var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
             const pth = astar.path(self.coord, to, state.mapgeometry, is_walkable, &fba.allocator) orelse return null;
