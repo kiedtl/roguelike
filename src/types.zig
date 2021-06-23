@@ -618,7 +618,6 @@ pub const Mob = struct { // {{{
     enemies: std.ArrayList(EnemyRecord) = undefined,
 
     facing: Direction = .North,
-    facing_wide: bool = false, // TODO: remove?
     coord: Coord = Coord.new(0, 0),
 
     HP: f64, // f64 so that we can regenerate <1 HP per turn
@@ -956,12 +955,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn gaze(self: *Mob, direction: Direction) bool {
-        if (self.facing == direction) {
-            self.facing_wide = !self.facing_wide;
-        } else {
-            self.facing = direction;
-        }
-
+        self.facing = direction;
         return true;
     }
 

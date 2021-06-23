@@ -498,12 +498,13 @@ Lighting/FOV:
 - Allow for prefabs to "seed" a map
 	(Needed to ensure that power stations can appear on map)
 - Refactor/cleanup FOV helper methods:
-  - Generalize raycasting function
-  - Make raycasting use bounding box instead of slower trigonometry nonsense
-  - Ensure that raycasting method doesn't have any artifacts
-  - Add quadrants to raycasting
+  x Generalize raycasting function
+  x Ensure that raycasting method doesn't have any artifacts
+  x Add quadrants to raycasting
+  x Use raycasting for everyone, remove shadowcasting
   - Use matrix to store mob's FOV, instead of array.
-  - Use raycasting for everyone, remove shadowcasting
+  - Update memoized sin/cos values
+  - Make raycasting use bounding box instead of slower trigonometry nonsense?
 - Set a filter on area outside FOV (sepia? grayscale?)
 - Show vision "energies" on FOV
 - Make lighting system affect stealth/FOV
@@ -582,3 +583,6 @@ x Research Manhattan distance vs Euclidian distance vs Moore neighborhood:
   https://reddit.com/r/roguelikedev/comments/nev1jg/a_pathfinding_unstablenondeterministic/
 x Add power component to machines
 
+Tests
+=====
+- Ensure that distance() treats diagonal moves as more expensive than cardinal moves

@@ -159,13 +159,31 @@ pub fn _update_fov(mob: *Mob) void {
     const all_octants = [_]?usize{ 0, 1, 2, 3, 4, 5, 6, 7 };
 
     mob.fov.shrinkRetainingCapacity(0);
-    const apparent_vision = if (mob.facing_wide) mob.vision / 2 else mob.vision;
 
     if (mob.coord.eq(player.coord)) {
-        fov.shadowcast(player.coord, all_octants, mob.vision, mapgeometry, tile_opacity, &mob.fov);
+        var buffer: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT;
+        fov.rayCastOctants(mob.coord, 10, 99, light_tile_opacity, &buffer, 0, 360);
+
+        var by: usize = 0;
+        while (by < HEIGHT) : (by += 1) {
+            var bx: usize = 0;
+            while (bx < WIDTH) : (bx += 1) {
+                const bcoord = Coord.new2(mob.coord.z, bx, by);
+                if (buffer[by][bx] > 0) mob.fov.append(bcoord) catch unreachable;
+            }
+        }
     } else {
-        const octants = fov.octants(mob.facing, mob.facing_wide);
-        fov.shadowcast(mob.coord, octants, apparent_vision, mapgeometry, tile_opacity, &mob.fov);
+        var buffer: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT;
+        fov.rayCast(mob.coord, 10, 99, light_tile_opacity, &buffer, mob.facing);
+
+        var by: usize = 0;
+        while (by < HEIGHT) : (by += 1) {
+            var bx: usize = 0;
+            while (bx < WIDTH) : (bx += 1) {
+                const bcoord = Coord.new2(mob.coord.z, bx, by);
+                if (buffer[by][bx] > 0) mob.fov.append(bcoord) catch unreachable;
+            }
+        }
     }
 
     for (mob.fov.items) |fc| {
@@ -220,11 +238,9 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
             //
             // 1 in 8 chance of leaving every turn
             if (rng.onein(8)) {
-                mob.facing_wide = false;
                 mob.occupation.target = null;
                 mob.occupation.phase = .Work;
             } else {
-                mob.facing_wide = true;
                 mob.facing = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
             }
 
@@ -324,7 +340,7 @@ pub fn tickLight() void {
             // before noticing the issue.
             //
             if (light > 0) {
-                fov.lightingRaycast(coord, 20, light, light_tile_opacity, &buffer);
+                fov.rayCastOctants(coord, 20, light, light_tile_opacity, &buffer, 0, 316);
 
                 var by: usize = 0;
                 while (by < HEIGHT) : (by += 1) {
