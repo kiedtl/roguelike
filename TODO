@@ -464,62 +464,14 @@ s	talonium
 s	maron
 
 
-Refactorings/Fixes/Optimizations
---------------------------------
-- Use @mulAdd where possible (FOV, A*, Dijkstra, light/atmosphere/sound systems)
-- Use @setCold(true) where possible (see above for places to look)
-- Use SIMD where possible
-- Defined unimplemented() and todo()
-- Stop using the freaking `catch unreachable` syntax:
-    libera#zig 19:58 <ikskuh> "catch unreachable" will happily continue to execute code
-                              after the error in non-safe build modes
-x Research Manhattan distance vs Euclidian distance vs Moore neighborhood:
-  https://reddit.com/r/roguelikedev/comments/nev1jg/a_pathfinding_unstablenondeterministic/
-- Define Species struct and carry immutable data for each mob in it
-x Convert enum+union pair to union(enum) (see std/fifo.zig) where needed
-- Add walls to edges of map after mapgen
-- Add padding between infopane/msgpane and map
-- Make it easier to tell the heavily wounded from dead
-x Fix showing of display percentage of last damage
-- Place stairs only in rooms
-x Make watchers shout loudly
-- Fix sound propagation
-- @ command to see player's full AC and stats
-x Add power component to machines
-- Allow mobs to shuffle past each other in corridors
-- UI for status effects (paralysis, etc)
-- Ring messages (full power, half power, equipped)
-- (Zig contribution: type coercion from anonymous list literal to array)
-- Make lighting system actually matter (affect FOV, stealth)
-  - Needs prefab seeding, to ensure that the power station appears on map
-- Refactor/cleanup FOV helper methods:
-  - Generalize raycasting function
-  - Make raycasting use bounding box instead of slower trigonometry nonsense
-  - Ensure that raycasting method doesn't have any artifacts
-  - Add quadrants to raycasting
-  - Use matrix to store mob's FOV, instead of array.
-  - Use raycasting for everyone, remove shadowcasting
-- Use matrix to store mob's FOV, not array
-x Only print trap messages when culprit is player
-- Group identical messages in msgpane
-x Attack messages should be nice and descriptive ("You skewer the goblin!")
-  - Even more descriptive! ("The troll smashes you like an overripe mango!!")
-- Show red/yellow/orange for low health bars
-- Add reproducing rats
-- Remove all floats from color functions, sound systems, gas systems, etc.
-x Use proper CP407 arrows for staircases
-- Allow more than one item on a tile, with only the top item showing/interact-able.
-
 Roadmap
 -------
+
+Basic stuff:
+============
 x Basic prefabs
 x Allow for definition of a 'start' prefab
 x Allow for placement of player in a location
-	- Allow for prefabs to be restricted to a map
-	- Allow for prefabs to be rotated
-	- Allow for prefabs to "seed" a map
-	- Allow for prefabs to have alternate layouts
-	- Create corridors between parallel prefabs/rooms
 x Allow for placement of specific item in a location
 x Add exit staircase that exits game
 x Add screen/confirmation for winning
@@ -530,16 +482,103 @@ x Allow picking up of potions
 x Add dialog to view inventory
 x Add dialog to use item in inventory (quaff potions)
 x Add dialog to throw potion at mob
-- Define where rings should be in prefabs/mobs
 x Define armor struct, use on mobs and player
 x Define melee weapon struct and dagger/spear, use on mobs and player
 x Add the Openworld
-x Add goblins, rats, and other mobs to populate the Openworld
 x Allow stacking in inventory
 x Add ranged weaponry
 x Alternative weapons, weapon swapping
+
+Ring and movements:
+===================
+- Define where rings should be in prefabs/mobs
+
+Lighting/FOV:
+=============
+- Allow for prefabs to "seed" a map
+	(Needed to ensure that power stations can appear on map)
+- Refactor/cleanup FOV helper methods:
+  - Generalize raycasting function
+  - Make raycasting use bounding box instead of slower trigonometry nonsense
+  - Ensure that raycasting method doesn't have any artifacts
+  - Add quadrants to raycasting
+  - Use matrix to store mob's FOV, instead of array.
+  - Use raycasting for everyone, remove shadowcasting
+- Set a filter on area outside FOV (sepia? grayscale?)
+- Show vision "energies" on FOV
+- Make lighting system affect stealth/FOV
+
+Room features:
+==============
+- Add some lichen and fungi to rooms
+- Add statues and chests to corners of rooms
+- Add "palantirs"
+- Allow for prefabs to be rotated
+- Allow for prefabs to have alternate layouts
+- Allow for prefabs to be restricted to a map
+- Create corridors between parallel prefabs/rooms
+- Make the "lamps" electric "braziers", and place in center/corners of room.
+  - Make them explosive and electrocutive!
+
+Openworld:
+==========
 - Add portals to Openworld from the main dungeon, with sentinels
+x Add goblins, rats, and other mobs to populate the Openworld
 - Add temperature system
 - Add Burning Brutes and Lava Flans to the Openworld
-- Blood spattering?
 - Add lichen, fungi, and lava to the Openworld
+
+Stretch goals:
+==============
+- Blood spattering?
+
+Mob AI
+======
+x Make watchers shout loudly
+- Allow mobs to shuffle past each other in corridors
+- Add reproducing rats
+
+User Interface
+==============
+- Add padding between infopane/msgpane and map
+- Make it easier to tell the heavily wounded from dead
+- @ command to see player's full AC and stats
+x Fix showing of display percentage of last damage
+- UI for status effects (paralysis, etc)
+- Ring messages (full power, half power, equipped)
+x Only print trap messages when culprit is player
+- Group identical messages in msgpane
+x Attack messages should be nice and descriptive ("You skewer the goblin!")
+  - Even more descriptive! ("The troll smashes you like an overripe mango!!")
+- Show red/yellow/orange for low health bars
+x Use proper CP407 arrows for staircases
+
+Optimizations
+=============
+- Use @mulAdd where possible (FOV, A*, Dijkstra, light/atmosphere/sound systems)
+- Use @setCold(true) where possible (see above for places to look)
+- Use SIMD where possible
+
+Fixes
+=====
+- Add walls to edges of map after mapgen
+- Place stairs only in rooms
+- Fix sound propagation
+
+Code cleanups
+=============
+- Defined unimplemented() and todo()
+- Stop using the freaking `catch unreachable` syntax:
+    libera#zig 19:58 <ikskuh> "catch unreachable" will happily continue to execute code
+                              after the error in non-safe build modes
+- Remove all floats from color functions, sound systems, gas systems, etc.
+
+
+Refactorings
+============
+- Define Species struct and carry immutable data for each mob in it
+x Convert enum+union pair to union(enum) (see std/fifo.zig) where needed
+x Research Manhattan distance vs Euclidian distance vs Moore neighborhood:
+  https://reddit.com/r/roguelikedev/comments/nev1jg/a_pathfinding_unstablenondeterministic/
+x Add power component to machines
+
