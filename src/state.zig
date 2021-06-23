@@ -158,37 +158,22 @@ pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, al
 pub fn _update_fov(mob: *Mob) void {
     const all_octants = [_]?usize{ 0, 1, 2, 3, 4, 5, 6, 7 };
 
-    mob.fov.shrinkRetainingCapacity(0);
+    for (mob.fov) |*row| for (row) |*cell| {
+        cell.* = 0;
+    };
 
     if (mob.coord.eq(player.coord)) {
-        var buffer: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT;
-        fov.rayCastOctants(mob.coord, 10, 99, light_tile_opacity, &buffer, 0, 360);
-
-        var by: usize = 0;
-        while (by < HEIGHT) : (by += 1) {
-            var bx: usize = 0;
-            while (bx < WIDTH) : (bx += 1) {
-                const bcoord = Coord.new2(mob.coord.z, bx, by);
-                if (buffer[by][bx] > 0) mob.fov.append(bcoord) catch unreachable;
-            }
-        }
+        fov.rayCastOctants(mob.coord, 10, 99, light_tile_opacity, &mob.fov, 0, 360);
     } else {
-        var buffer: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT;
-        fov.rayCast(mob.coord, 10, 99, light_tile_opacity, &buffer, mob.facing);
+        fov.rayCast(mob.coord, 10, 99, light_tile_opacity, &mob.fov, mob.facing);
+    }
 
-        var by: usize = 0;
-        while (by < HEIGHT) : (by += 1) {
-            var bx: usize = 0;
-            while (bx < WIDTH) : (bx += 1) {
-                const bcoord = Coord.new2(mob.coord.z, bx, by);
-                if (buffer[by][bx] > 0) mob.fov.append(bcoord) catch unreachable;
-            }
+    for (mob.fov) |row, y| for (row) |_, x| {
+        if (mob.fov[y][x] > 0) {
+            const fc = Coord.new2(mob.coord.z, x, y);
+            mob.memory.put(fc, Tile.displayAs(fc)) catch unreachable;
         }
-    }
-
-    for (mob.fov.items) |fc| {
-        mob.memory.put(fc, Tile.displayAs(fc)) catch unreachable;
-    }
+    };
 }
 
 fn _can_hear_hostile(mob: *Mob) ?Coord {

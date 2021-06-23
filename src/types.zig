@@ -612,8 +612,12 @@ pub const Mob = struct { // {{{
     // TODO: instead of storing the tile's representation in memory, store the
     // actual tile -- if a wall is destroyed outside of the player's FOV, the display
     // code has no way of knowing what the player remembers the destroyed tile as...
+    //
+    // Addendum 21-06-23: Is the above comment even true anymore (was it *ever* true)?
+    // Need to do some experimenting once explosions are added.
+    //
     memory: CoordCellMap = undefined,
-    fov: CoordArrayList = undefined,
+    fov: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT,
     path_cache: std.AutoHashMap(Path, Coord) = undefined,
     enemies: std.ArrayList(EnemyRecord) = undefined,
 
@@ -1114,7 +1118,6 @@ pub const Mob = struct { // {{{
         self.activities.init();
         self.path_cache = std.AutoHashMap(Path, Coord).init(alloc);
         self.occupation.work_area = CoordArrayList.init(alloc);
-        self.fov = CoordArrayList.init(alloc);
         self.memory = CoordCellMap.init(alloc);
     }
 
@@ -1123,7 +1126,6 @@ pub const Mob = struct { // {{{
         self.enemies.deinit();
         self.path_cache.clearAndFree();
         self.occupation.work_area.deinit();
-        self.fov.deinit();
         self.memory.clearAndFree();
 
         self.is_dead = true;
@@ -1215,10 +1217,7 @@ pub const Mob = struct { // {{{
         }
 
         // Could the mob see the attacker?
-        for (self.fov.items) |fovitem| {
-            if (fovitem.eq(attacker))
-                return true;
-        }
+        if (self.cansee(attacker)) return true;
 
         return false;
     }
@@ -1259,9 +1258,6 @@ pub const Mob = struct { // {{{
     }
 
     pub fn cansee(self: *const Mob, coord: Coord) bool {
-        // There is nothing hid from the spirits of the dead
-        if (self.is_dead) return true;
-
         // Can't see stuff beyond your range of vision
         if (self.coord.distance(coord) > self.vision)
             return false;
@@ -1270,10 +1266,8 @@ pub const Mob = struct { // {{{
         if (self.coord.eq(coord))
             return true;
 
-        for (self.fov.items) |fovcoord| {
-            if (coord.eq(fovcoord))
-                return true;
-        }
+        if (self.fov[coord.y][coord.x] > 0)
+            return true;
 
         return false;
     }

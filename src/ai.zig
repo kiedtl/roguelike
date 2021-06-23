@@ -38,7 +38,9 @@ pub fn checkForHostiles(mob: *Mob) void {
     if (!mob.occupation.is_combative)
         return;
 
-    vigilance: for (mob.fov.items) |fitem| {
+    vigilance: for (mob.fov) |row, y| for (row) |_, x| {
+        const fitem = Coord.new2(mob.coord.z, x, y);
+
         if (state.dungeon.at(fitem).mob) |othermob| {
             if (!othermob.isHostileTo(mob)) continue;
 
@@ -71,7 +73,7 @@ pub fn checkForHostiles(mob: *Mob) void {
                 else => {},
             }
         }
-    }
+    };
 
     // Decrement counters.
     for (mob.enemies.items) |*enemy, i| {
