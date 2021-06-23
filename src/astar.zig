@@ -14,7 +14,7 @@ const Node = struct {
     g: usize,
     h: usize,
 
-    pub fn f(n: *const Node) usize {
+    pub inline fn f(n: *const Node) usize {
         return n.g + n.h;
     }
 
@@ -34,7 +34,13 @@ fn coord_in_list(coord: Coord, list: *NodeArrayList) ?usize {
     return null;
 }
 
-pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) bool, alloc: *std.mem.Allocator) ?CoordArrayList {
+pub fn path(
+    start: Coord,
+    goal: Coord,
+    limit: Coord,
+    is_walkable: fn (Coord) bool,
+    alloc: *std.mem.Allocator,
+) ?CoordArrayList {
     if (start.z != goal.z) {
         // TODO: add support for pathfinding between levels
         return null;
@@ -76,8 +82,8 @@ pub fn path(start: Coord, goal: Coord, limit: Coord, is_walkable: fn (Coord) boo
             var coord = current_node.coord;
 
             if (!coord.move(neighbor, limit)) continue;
-            if (!is_walkable(coord) and !goal.eq(coord)) continue;
             if (closed_list[coord.y][coord.x]) |_| continue;
+            if (!is_walkable(coord) and !goal.eq(coord)) continue;
 
             const node = Node{
                 .coord = coord,
