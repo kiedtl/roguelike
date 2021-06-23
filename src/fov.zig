@@ -1,5 +1,6 @@
 const std = @import("std");
 const math = std.math;
+const assert = std.debug.assert;
 
 const state = @import("state.zig");
 const utils = @import("utils.zig");
@@ -42,7 +43,7 @@ pub fn lightingRaycast(
             if (ix >= state.mapgeometry.x or iy >= state.mapgeometry.y)
                 break;
 
-            const previous_energy = state.dungeon.lightIntensityAt(coord).*;
+            const previous_energy = buffer[coord.y][coord.x];
             const energy_percent = ray_energy * 100 / energy;
             if (energy_percent > previous_energy) {
                 buffer[coord.y][coord.x] = energy_percent;
@@ -50,6 +51,73 @@ pub fn lightingRaycast(
 
             ray_energy = utils.saturating_sub(ray_energy, opacity_func(coord));
             if (ray_energy == 0) break;
+        }
+    }
+
+    const x_min = utils.saturating_sub(center.x, radius);
+    const y_min = utils.saturating_sub(center.y, radius);
+    const x_max = math.clamp(center.x + radius + 1, 0, WIDTH - 1);
+    const y_max = math.clamp(center.y + radius + 1, 0, HEIGHT - 1);
+
+    _removeArtifacts(center.z, x_min, y_min, center.x, center.y, -1, -1, buffer, opacity_func);
+    _removeArtifacts(center.z, center.x, y_min, x_max - 1, center.y, 1, -1, buffer, opacity_func);
+    _removeArtifacts(center.z, x_min, center.y, center.x, y_max - 1, -1, 1, buffer, opacity_func);
+    _removeArtifacts(center.z, center.x, center.y, x_max - 1, y_max - 1, 1, 1, buffer, opacity_func);
+}
+
+// Much thanks to libtcod! :>
+fn _removeArtifacts(
+    z: usize,
+    x0: usize,
+    y0: usize,
+    x1: usize,
+    y1: usize,
+    dx: isize,
+    dy: isize,
+    buffer: *[HEIGHT][WIDTH]usize,
+    opacity_func: fn (Coord) usize,
+) void {
+    assert((math.absInt(dx) catch unreachable) == 1);
+    assert((math.absInt(dy) catch unreachable) == 1);
+
+    var cx: usize = x0;
+    while (cx < x1) : (cx += 1) {
+        var cy: usize = y0;
+        while (cy < y1) : (cy += 1) {
+            const x2 = @intCast(isize, cx) + dx;
+            const y2 = @intCast(isize, cy) + dy;
+
+            if (cx >= WIDTH or cy >= HEIGHT) {
+                continue;
+            }
+
+            if (buffer[cy][cx] > 0 and opacity_func(Coord.new2(z, cx, cy)) < 100) {
+                if (x2 >= @intCast(isize, x0) and x2 <= @intCast(isize, x1)) {
+                    const cx2 = @intCast(usize, x2);
+                    if (cx2 < WIDTH and cy < HEIGHT and opacity_func(Coord.new2(z, cx2, cy)) >= 100) {
+                        buffer[cy][cx2] = math.max(buffer[cy][cx2], buffer[cy][cx]);
+                    }
+                }
+
+                if (@intCast(isize, y2) >= y0 and @intCast(isize, y2) <= y1) {
+                    const cy2 = @intCast(usize, y2);
+                    if (cx < WIDTH and cy2 < HEIGHT and opacity_func(Coord.new2(z, cx, cy2)) >= 100) {
+                        buffer[cy2][cx] = math.max(buffer[cy2][cx], buffer[cy][cx]);
+                    }
+                }
+
+                if (@intCast(usize, x2) >= x0 and
+                    @intCast(isize, x2) <= x1 and
+                    @intCast(usize, y2) >= y0 and
+                    @intCast(usize, y2) <= y1)
+                {
+                    const cx2 = @intCast(usize, x2);
+                    const cy2 = @intCast(usize, y2);
+                    if (cx2 < WIDTH and cy2 < HEIGHT and opacity_func(Coord.new2(z, cx2, cy2)) >= 100) {
+                        buffer[cy2][cx2] = math.max(buffer[cy2][cx2], buffer[cy][cx]);
+                    }
+                }
+            }
         }
     }
 }
