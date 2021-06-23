@@ -43,23 +43,22 @@ fn initGame() void {
 
     var fabs = mapgen.readPrefabs(&state.GPA.allocator);
     for (state.dungeon.map) |_, level| {
-        // mapgen.fillBar(level, 1);
-        mapgen.placeRandomRooms(&fabs, level, 100, &state.GPA.allocator);
+        mapgen.placeRandomRooms(&fabs, level, 500, &state.GPA.allocator);
         mapgen.placeMoarCorridors(level);
         mapgen.placeTraps(level);
         mapgen.placeLights(level);
         mapgen.placeItems(level);
         mapgen.placeGuards(level, &state.GPA.allocator);
 
-        state.dungeon.layout[level] = mapgen.cellularAutomataAvoidanceMap(level);
+        // state.dungeon.layout[level] = mapgen.cellularAutomataAvoidanceMap(level);
 
-        mapgen.fillRandom(&state.dungeon.layout[level], level, 65);
-        mapgen.cellularAutomata(&state.dungeon.layout[level], level, 5, 0);
-        mapgen.cellularAutomata(&state.dungeon.layout[level], level, 5, 0);
-        mapgen.cellularAutomata(&state.dungeon.layout[level], level, 6, 0);
-        mapgen.cellularAutomata(&state.dungeon.layout[level], level, 6, 0);
+        // mapgen.fillRandom(&state.dungeon.layout[level], level, 65);
+        // mapgen.cellularAutomata(&state.dungeon.layout[level], level, 5, 0);
+        // mapgen.cellularAutomata(&state.dungeon.layout[level], level, 5, 0);
+        // mapgen.cellularAutomata(&state.dungeon.layout[level], level, 6, 0);
+        // mapgen.cellularAutomata(&state.dungeon.layout[level], level, 6, 0);
 
-        mapgen.populateCaves(&state.dungeon.layout[level], level, &state.GPA.allocator);
+        // mapgen.populateCaves(&state.dungeon.layout[level], level, &state.GPA.allocator);
     }
 
     for (state.dungeon.map) |_, level|
