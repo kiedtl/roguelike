@@ -7,15 +7,15 @@ usingnamespace @import("types.zig");
 pub const Poison = Gas{
     .color = 0xa7e234,
     .dissipation_rate = 0.01,
-    .opacity = 0.3,
+    .opacity = 0.19,
     .trigger = triggerPoison,
     .id = 0,
 };
 
 pub const Paralysis = Gas{
-    .color = 0xffffff,
+    .color = 0xaaaaff,
     .dissipation_rate = 0.05,
-    .opacity = 0.2,
+    .opacity = 0.15,
     .trigger = triggerParalysis,
     .id = 1,
 };
@@ -24,7 +24,7 @@ pub const Paralysis = Gas{
 pub const SmokeGas = Gas{
     .color = 0xffffff,
     .dissipation_rate = 0.01,
-    .opacity = 1.0,
+    .opacity = 0.3,
     .trigger = triggerNone,
     .id = 2,
 };
