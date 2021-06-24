@@ -415,25 +415,3 @@ fn _removeArtifacts(
         }
     }
 }
-
-pub fn octants(d: Direction, wide: bool) [8]?usize {
-    return if (wide) switch (d) {
-        .North => [_]?usize{ 1, 0, 3, 2, null, null, null, null },
-        .South => [_]?usize{ 6, 7, 4, 5, null, null, null, null },
-        .East => [_]?usize{ 3, 2, 5, 4, null, null, null, null },
-        .West => [_]?usize{ 0, 1, 6, 7, null, null, null, null },
-        .NorthEast => [_]?usize{ 0, 3, 2, 5, null, null, null, null },
-        .NorthWest => [_]?usize{ 3, 0, 1, 6, null, null, null, null },
-        .SouthEast => [_]?usize{ 2, 5, 4, 7, null, null, null, null },
-        .SouthWest => [_]?usize{ 1, 6, 7, 4, null, null, null, null },
-    } else switch (d) {
-        .North => [_]?usize{ 0, 3, null, null, null, null, null, null },
-        .South => [_]?usize{ 7, 4, null, null, null, null, null, null },
-        .East => [_]?usize{ 2, 5, null, null, null, null, null, null },
-        .West => [_]?usize{ 1, 6, null, null, null, null, null, null },
-        .NorthEast => [_]?usize{ 3, 2, null, null, null, null, null, null },
-        .NorthWest => [_]?usize{ 1, 0, null, null, null, null, null, null },
-        .SouthEast => [_]?usize{ 5, 4, null, null, null, null, null, null },
-        .SouthWest => [_]?usize{ 6, 7, null, null, null, null, null, null },
-    };
-}
