@@ -38,7 +38,9 @@ pub fn checkForHostiles(mob: *Mob) void {
     if (!mob.occupation.is_combative)
         return;
 
-    vigilance: for (mob.fov) |row, y| for (row) |_, x| {
+    vigilance: for (mob.fov) |row, y| for (row) |cell, x| {
+        if (cell == 0) continue;
+
         const fitem = Coord.new2(mob.coord.z, x, y);
 
         if (state.dungeon.at(fitem).mob) |othermob| {
