@@ -486,7 +486,7 @@ pub fn placeItems(level: usize) void {
                     1 => {
                         var bolt = items.CrossbowBoltProjectile;
                         bolt.count = rng.rangeClumping(usize, 3, 10, 2);
-                        state.projectiles.append(items.CrossbowBoltProjectile) catch unreachable;
+                        state.projectiles.append(bolt) catch unreachable;
                         state.dungeon.at(coord).item = Item{ .Projectile = state.projectiles.lastPtr().? };
                     },
                     else => unreachable,
