@@ -57,6 +57,14 @@ pub fn darkenColor(color: u32, by: u32) u32 {
     return (r << 16) | (g << 8) | b;
 }
 
+pub fn filterColorGrayscale(color: u32) u32 {
+    const r = @intToFloat(f64, ((color >> 16) & 0xFF));
+    const g = @intToFloat(f64, ((color >> 08) & 0xFF));
+    const b = @intToFloat(f64, ((color >> 00) & 0xFF));
+    const brightness = @floatToInt(u32, 0.299 * r + 0.587 * g + 0.114 * b);
+    return (brightness << 16) | (brightness << 8) | brightness;
+}
+
 pub fn used(slice: anytype) rt: {
     const SliceType = @TypeOf(slice);
     const ChildType = std.meta.Elem(SliceType);

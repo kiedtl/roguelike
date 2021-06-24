@@ -163,9 +163,9 @@ pub fn _update_fov(mob: *Mob) void {
     };
 
     if (mob.coord.eq(player.coord)) {
-        fov.rayCastOctants(mob.coord, 10, 99, light_tile_opacity, &mob.fov, 0, 360);
+        fov.rayCastOctants(mob.coord, mob.vision, 100, light_tile_opacity, &mob.fov, 0, 360);
     } else {
-        fov.rayCast(mob.coord, 10, 99, light_tile_opacity, &mob.fov, mob.facing);
+        fov.rayCast(mob.coord, mob.vision, 100, light_tile_opacity, &mob.fov, mob.facing);
     }
 
     for (mob.fov) |row, y| for (row) |_, x| {

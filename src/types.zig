@@ -1258,8 +1258,11 @@ pub const Mob = struct { // {{{
     }
 
     pub fn cansee(self: *const Mob, coord: Coord) bool {
-        // Can't see stuff beyond your range of vision
-        if (self.coord.distance(coord) > self.vision)
+        // Can't see stuff beyond your range of vision. Use vision*1.5 because
+        // the edges of the FOV will be invisible (FOV is circular, but the distance
+        // calculation penalizes diagonal movements).
+        //
+        if (self.coord.distance(coord) > (self.vision * 150 / 100))
             return false;
 
         // Can always see yourself
@@ -1666,7 +1669,7 @@ pub const Tile = struct {
                 .bg = self.material.color_bg,
             },
             .Floor => {
-                var color: u32 = utils.darkenColor(self.material.color_bg, 4);
+                var color: u32 = utils.percentageOfColor(self.material.color_bg, 40);
 
                 if (self.mob) |mob| {
                     const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);
@@ -1733,8 +1736,8 @@ pub const Tile = struct {
         if (self.type != .Wall) {
             const light = math.clamp(state.dungeon.lightIntensityAt(coord).*, 0, 100);
             const light_adj = @floatToInt(usize, math.round(@intToFloat(f64, light) / 10) * 10);
-            cell.bg = math.max(utils.percentageOfColor(cell.bg, light_adj), utils.darkenColor(cell.bg, 3));
-            cell.fg = math.max(utils.percentageOfColor(cell.fg, light_adj), utils.darkenColor(cell.fg, 3));
+            cell.bg = math.max(utils.percentageOfColor(cell.bg, light_adj), utils.darkenColor(cell.bg, 4));
+            cell.fg = math.max(utils.percentageOfColor(cell.fg, light_adj), utils.darkenColor(cell.fg, 4));
         }
 
         const gases = state.dungeon.atGas(coord);

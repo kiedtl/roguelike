@@ -239,8 +239,8 @@ pub fn draw() void {
                 if (state.player.memory.contains(coord)) {
                     tile = state.player.memory.get(coord) orelse unreachable;
 
-                    tile.fg = utils.darkenColor(tile.fg, 4);
-                    tile.bg = utils.darkenColor(tile.bg, 4);
+                    tile.fg = utils.filterColorGrayscale(utils.darkenColor(tile.fg, 4));
+                    tile.bg = utils.filterColorGrayscale(utils.darkenColor(tile.bg, 4));
                 }
 
                 if (state.player.canHear(coord)) |noise| {
@@ -256,6 +256,7 @@ pub fn draw() void {
                 continue;
             }
 
+            // Draw noise and indicate if that tile is visible by another mob
             switch (state.dungeon.at(coord).type) {
                 .Floor => {
                     if (state.dungeon.at(coord).mob) |mob| {
@@ -278,6 +279,15 @@ pub fn draw() void {
                 },
                 else => {},
             }
+
+            // Adjust depending on FOV/light
+            const light = math.max(
+                state.dungeon.lightIntensityAt(coord).*,
+                state.player.fov[coord.y][coord.x],
+            );
+            const light_adj = @floatToInt(usize, math.round(@intToFloat(f64, light) / 10) * 10);
+            tile.bg = math.max(utils.percentageOfColor(tile.bg, light), utils.darkenColor(tile.bg, 4));
+            tile.fg = math.max(utils.percentageOfColor(tile.fg, light), utils.darkenColor(tile.fg, 4));
 
             termbox.tb_put_cell(cursorx, cursory, &tile);
         }
