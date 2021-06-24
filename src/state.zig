@@ -283,28 +283,14 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
 
 pub fn tickLight() void {
     const cur_lev = player.coord.z;
+    const light_buffer = &dungeon.light_intensity[cur_lev];
 
     // Clear out previous light levels.
-    {
-        var y: usize = 0;
-        while (y < HEIGHT) : (y += 1) {
-            var x: usize = 0;
-            while (x < WIDTH) : (x += 1) {
-                const coord = Coord.new2(cur_lev, x, y);
-                dungeon.lightIntensityAt(coord).* = 0;
-            }
-        }
-    }
+    for (light_buffer) |*row| for (row) |*cell| {
+        cell.* = 0;
+    };
 
     // Now for the actual party...
-
-    // Buffer to store the results of the raycasting routine in, which we use to
-    // calculate the light spread.
-    //
-    // A single buffer is used for the entire level to ensure the raycasting
-    // routine knows when the light levels were already at a certain point, and
-    // not to modify it.
-    var buffer: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT;
 
     var y: usize = 0;
     while (y < HEIGHT) : (y += 1) {
@@ -325,16 +311,7 @@ pub fn tickLight() void {
             // before noticing the issue.
             //
             if (light > 0) {
-                fov.rayCastOctants(coord, 20, light, light_tile_opacity, &buffer, 0, 316);
-
-                var by: usize = 0;
-                while (by < HEIGHT) : (by += 1) {
-                    var bx: usize = 0;
-                    while (bx < WIDTH) : (bx += 1) {
-                        const bcoord = Coord.new2(cur_lev, bx, by);
-                        dungeon.lightIntensityAt(bcoord).* = buffer[by][bx];
-                    }
-                }
+                fov.rayCastOctants(coord, 20, light, light_tile_opacity, light_buffer, 0, 316);
             }
         }
     }

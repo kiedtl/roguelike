@@ -31,7 +31,7 @@ pub const PROPS = [_]Prop{
 
 pub const MACHINES = [_]Machine{
     PowerSupply,
-    Lamp,
+    Brazier,
     StairExit,
     StairUp,
     StairDown,
@@ -176,10 +176,10 @@ pub const PowerSupply = Machine{
     .on_power = powerPowerSupply,
 };
 
-pub const Lamp = Machine{
-    .name = "a lamp",
+pub const Brazier = Machine{
+    .name = "a brazier",
 
-    .powered_tile = '•',
+    .powered_tile = '☼',
     .unpowered_tile = '○',
 
     .power_drain = 0,
@@ -189,11 +189,11 @@ pub const Lamp = Machine{
     .powered_walkable = false,
     .unpowered_walkable = false,
 
-    .powered_opacity = 0.3,
-    .unpowered_opacity = 0.0,
+    .powered_opacity = 0.5,
+    .unpowered_opacity = 0.5,
 
-    // maximum, could be much lower (see mapgen:_light_room)
-    .powered_luminescence = 75,
+    // maximum, could be much lower (see mapgen:placeLights)
+    .powered_luminescence = 90,
     .unpowered_luminescence = 0,
 
     .on_power = powerNone,

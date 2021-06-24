@@ -150,7 +150,7 @@ fn _excavate_prefab(room: *const Room, fab: *const Prefab, allocator: *mem.Alloc
                 .LockedDoor,
                 .Door,
                 .Bars,
-                .Lamp,
+                .Brazier,
                 .Floor,
                 => .Floor,
                 .Water => .Water,
@@ -179,7 +179,7 @@ fn _excavate_prefab(room: *const Room, fab: *const Prefab, allocator: *mem.Alloc
                     }
                 },
                 .LockedDoor, .Door => _place_normal_door(rc),
-                .Lamp => _place_machine(rc, &machines.Lamp),
+                .Brazier => _place_machine(rc, &machines.Brazier),
                 .Bars => _ = _place_prop(rc, &machines.IronBarProp),
                 else => {},
             }
@@ -587,45 +587,32 @@ pub fn placeLights(level: usize) void {
         if (room.prefab) |rfb| if (rfb.nolights) continue;
 
         // Don't light small rooms.
-        if ((room.width * room.height) < 10)
+        if ((room.width * room.height) < 16)
             continue;
 
         // Don't light corridors.
         if (room.width == 1 or room.height == 1)
             continue;
 
-        var spacing: usize = rng.range(usize, 0, 2);
-        var y: usize = 0;
-        while (y < room.height) : (y += 1) {
-            if (spacing == 0) {
-                spacing = rng.range(usize, 4, 8);
+        const room_end = room.end();
+        const coords = [_]Coord{
+            room.start,
+            Coord.new2(room.start.z, room_end.x - 1, room.start.y),
+            Coord.new2(room.start.z, room.start.x, room_end.y - 1),
+            Coord.new2(room.start.z, room_end.x - 1, room_end.y - 1),
+        };
 
-                const coord1 = Coord.new2(level, room.start.x, room.start.y + y);
-                var lamp1 = machines.Lamp;
-                lamp1.powered_luminescence -= rng.range(usize, 0, 30);
+        for (&coords) |coord| {
+            var brazier = machines.Brazier;
+            brazier.powered_luminescence -= rng.rangeClumping(usize, 0, 30, 2);
 
-                const coord2 = Coord.new2(level, room.end().x - 1, room.start.y + y);
-                var lamp2 = machines.Lamp;
-                lamp2.powered_luminescence -= rng.range(usize, 0, 30);
-
-                if (!state.dungeon.hasMachine(coord1) and
-                    state.dungeon.neighboringWalls(coord1, false) == 2 and
-                    state.dungeon.neighboringMachines(coord1) == 0 and
-                    state.dungeon.at(coord1).type == .Floor)
-                {
-                    _place_machine(coord1, &lamp1);
-                }
-
-                if (!state.dungeon.hasMachine(coord2) and
-                    state.dungeon.neighboringWalls(coord2, false) == 2 and
-                    state.dungeon.neighboringMachines(coord2) == 0 and
-                    state.dungeon.at(coord2).type == .Floor)
-                {
-                    _place_machine(coord2, &lamp2);
-                }
+            if (!state.dungeon.hasMachine(coord) and
+                state.dungeon.neighboringWalls(coord, false) == 2 and
+                state.dungeon.neighboringMachines(coord) == 0 and
+                state.dungeon.at(coord).type == .Floor)
+            {
+                _place_machine(coord, &brazier);
             }
-
-            spacing -= 1;
         }
     }
 }
@@ -803,7 +790,7 @@ pub const Prefab = struct {
     used: [LEVELS]usize = [_]usize{0} ** LEVELS,
 
     pub const FabTile = union(enum) {
-        Wall, LockedDoor, Door, Lamp, Floor, Connection, Water, Lava, Bars, Feature: u8, Any
+        Wall, LockedDoor, Door, Brazier, Floor, Connection, Water, Lava, Bars, Feature: u8, Any
     };
 
     pub const FeatureMob = struct {
@@ -949,7 +936,7 @@ pub const Prefab = struct {
                             '#' => .Wall,
                             '+' => .Door,
                             '±' => .LockedDoor,
-                            '•' => .Lamp,
+                            '•' => .Brazier,
                             '@' => player: {
                                 f.player_position = Coord.new(x, y);
                                 break :player .Floor;

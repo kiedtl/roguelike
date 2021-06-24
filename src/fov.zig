@@ -301,6 +301,8 @@ pub fn rayCast(
 
     rayCastOctants(center, radius, energy, opacity_func, buffer, quadrant[0], quadrant[1]);
     rayCastOctants(center, radius, energy, opacity_func, buffer, quadrant[2], quadrant[3]);
+
+    buffer[center.y][center.x] = energy;
 }
 
 pub fn rayCastOctants(
@@ -312,8 +314,6 @@ pub fn rayCastOctants(
     start: usize,
     end: usize,
 ) void {
-    buffer[center.y][center.x] = energy;
-
     var i = start;
     while (i < end) : (i += 1) {
         const ax = sintable[i];
