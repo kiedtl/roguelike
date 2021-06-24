@@ -36,6 +36,7 @@ fn _createItem(comptime T: type, item: T) *T {
         Ring => &state.rings,
         Armor => &state.armors,
         Weapon => &state.weapons,
+        Projectile => &state.projectiles,
         else => @compileError("uh wat"),
     };
     list.append(item) catch @panic("OOM");
@@ -76,6 +77,8 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     const armor = _createItem(Armor, items.LeatherArmor);
     const weapon = _createItem(Weapon, items.CrossbowLauncher);
     const backup = _createItem(Weapon, items.DaggerWeapon);
+    const bolts = _createItem(Projectile, items.CrossbowBoltProjectile);
+    bolts.count = 10;
 
     var player = ElfTemplate;
     player.init(alloc);
@@ -85,6 +88,7 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     player.inventory.armor = armor;
     player.inventory.wielded = weapon;
     player.inventory.backup = backup;
+    player.inventory.pack.append(Item{ .Projectile = bolts }) catch unreachable;
     state.mobs.append(player) catch unreachable;
     state.dungeon.at(coord).mob = state.mobs.lastPtr().?;
     state.player = state.mobs.lastPtr().?;
