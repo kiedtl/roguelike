@@ -182,11 +182,7 @@ pub fn interactionLaborerWork(mob: *Mob, _: *mem.Allocator) void {
     assert(mob.occupation.work_area.items.len == 1);
 
     const machine = mob.occupation.work_area.items[0];
-    //assert(!mob.coord.eq(machine));
-    if (mob.coord.eq(machine)) {
-        std.log.warn("oh no {} {}", .{ mob.coord, machine });
-    }
-    assert(mob.nextDirectionTo(machine) != null);
+    assert(!mob.coord.eq(machine)); // Machine should not be walkable, right?
 
     mob.tryMoveTo(machine);
 }
