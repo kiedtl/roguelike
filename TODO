@@ -363,8 +363,8 @@ Occupations
 - Scout
 	Purpose: roam through dungeon, looking for things that need to be done.
 	Reports the following: fires, bloody/dirty floors, overgrown fungi/plants
-	  that need to be removed, broken machines, traps, and other props, wounded
-	  mobs that are unconscious, presence of corpses.
+	  that need to be removed, broken machines/traps/props, wounded mobs that
+	  are unconscious, and presence of corpses.
 - Electrician
 	Purpose: fix electricity-emitting machines.
 	Fixes malfunctioning power supplies and power storage facilities, which
@@ -381,7 +381,6 @@ Occupations
 - Priest
 	Purpose: Make the temple extremely dangerous.
 	May release tainted gas at intruders.
-	Calls on the Necromancer to smite intruders, who will happily oblige.
 	A special type of necromancer, but can only use that ability in "tainted"
 	  areas that were designated so by the High Priest.
 	Drags prisoners to altar, then burns the victim to death. Once cooked,
@@ -403,23 +402,32 @@ Occupations
 	Starts singing and dancing on a stage at a specified time, attracting
 	  guards which have a low <discipline> field.
 	Makes wardens not entirely useless, as they can now showup in the concert
-	  halls to whip the denizens thereof.
+	  halls to whip the slackers in there.
 	Song names should be procedurally generated.
 	Each concert hall should have a poster "NOW LIVE: <song>"
 
+
+Posters
+-------
+- Production of human rations must increase by 33% by the middle of next week.
+- Please do not feed the prisoners.
+- Prison staffers must strive to be inclusive and welcoming to all new inmates.
+- WANTED: <player>, escaped prisoner.
+- Absence without leave is punishable by a mandatory interview with the
+  High Priest.
 
 Books
 -----
 "Melkor: The Life and Times of the King of Arda"
 "This was Melkor"
 "Meing Krampgh"
-	- "You learn that hill orcs are destined to rule the world."
-"On the Descent of Orcs"
-	- "You learn about the Hill Orc Master Race."
+	- "You learn that hill goblins are destined to rule the world."
+"On the Descent of Goblins"
+	- "You learn about the Hill Goblin Master Race."
 "Durgh Stammer"
-	- "You learn that hill orcs are vastly superior to cave orcs."
+	- "You learn that hill goblins are vastly superior to cave goblins."
 recipe books
-	- "You learn how to pickle elven roasts."
+	- "You learn how to pickle goblin roasts."
 	- "You learn how to properly butcher humans."
 dungeon maps
 inventory lists
@@ -496,48 +504,41 @@ Ring and movements:
 Lighting/FOV:
 =============
 - Allow for prefabs to "seed" a map
-	(Needed to ensure that power stations can appear on map)
-- Refactor/cleanup FOV helper methods:
+  (Needed to ensure that power stations can appear on map)
+x Refactor/cleanup FOV helper methods:
   x Generalize raycasting function
-  x Ensure that raycasting method doesn't have any artifacts
   x Add quadrants to raycasting
   x Use raycasting for everyone, remove shadowcasting
-  - Use matrix to store mob's FOV, instead of array.
-  - Update memoized sin/cos values
-  - Make raycasting use bounding box instead of slower trigonometry nonsense?
-- Set a filter on area outside FOV (sepia? grayscale?)
-- Show vision "energies" on FOV
-- Make lighting system affect stealth/FOV
+  x Use matrix to store mob's FOV, instead of array.
+  x Update memoized sin/cos values
+- Ensure that raycasting method doesn't have any artifacts
+x Set a filter on area outside FOV (sepia? grayscale?)
+x Show vision "energies" on FOV
+x Make lighting system affect stealth/FOV
+- Make raycasting use bounding box instead of slower trigonometry method?
 
 Room features:
 ==============
+- Moar materials for walls
 - Add some lichen and fungi to rooms
 - Add statues and chests to corners of rooms
+- Add posters
 - Add "palantirs"
 - Allow for prefabs to be rotated
 - Allow for prefabs to have alternate layouts
 - Allow for prefabs to be restricted to a map
 - Create corridors between parallel prefabs/rooms
-- Make the "lamps" electric "braziers", and place in center/corners of room.
+x Make the "lamps" electric "braziers"
+  - Place them in center of rooms.
+  x Place them in corners of rooms.
   - Make them explosive and electrocutive!
 
-Openworld:
-==========
-- Add portals to Openworld from the main dungeon, with sentinels
-x Add goblins, rats, and other mobs to populate the Openworld
-- Add temperature system
-- Add Burning Brutes and Lava Flans to the Openworld
-- Add lichen, fungi, and lava to the Openworld
-
-Stretch goals:
-==============
-- Blood spattering?
-
-Mob AI
-======
-x Make watchers shout loudly
+Mobs, AI
+========
+- Make watchers shout loudly
 - Allow mobs to shuffle past each other in corridors
 - Add reproducing rats
+- Ensure that watchers and laborers don't leave to investigate noises
 
 User Interface
 ==============
@@ -554,17 +555,39 @@ x Attack messages should be nice and descriptive ("You skewer the goblin!")
 - Show red/yellow/orange for low health bars
 x Use proper CP407 arrows for staircases
 
-Optimizations
-=============
-- Use @mulAdd where possible (FOV, A*, Dijkstra, light/atmosphere/sound systems)
-- Use @setCold(true) where possible (see above for places to look)
-- Use SIMD where possible
-
 Fixes
 =====
 - Add walls to edges of map after mapgen
 - Place stairs only in rooms
 - Fix sound propagation
+
+Openworld:
+==========
+- Add portals to Openworld from the main dungeon, with sentinels
+x Add goblins, rats, and other mobs to populate the Openworld
+- Add temperature system
+- Add Burning Brutes and Lava Flans to the Openworld
+- Add lichen, fungi, and lava to the Openworld
+
+Stretch goals:
+==============
+- Potion and Ring ID system.
+- Blood spattering?
+- Speech bubbles in following situations:
+  - On spotting an enemy ("Aha!", "It's a <species>!", "It's the @!!")
+  - On being cornered ("Don't touch me!", "Go away!", "No farther!")
+  - On seeing a dead ally, killed by a visible hostile ("Murderer!")
+  - On pursuing a fleeing hostile ("Coward!", "Wimp!")
+  - On investigating a noise ("...?", "What?", "Must have been rats!")
+- Smell mechanics that allow, say, hellhounds and snakes to detect
+  intruders even if they can't see them.
+- Ranged melee weapons, e.g., spear and whips
+
+Optimizations
+=============
+- Use @mulAdd where possible (FOV, A*, Dijkstra, light/atmosphere/sound systems)
+- Use @setCold(true) where possible (see above for places to look)
+- Use SIMD where possible
 
 Code cleanups
 =============
@@ -573,7 +596,6 @@ Code cleanups
     libera#zig 19:58 <ikskuh> "catch unreachable" will happily continue to execute code
                               after the error in non-safe build modes
 - Remove all floats from color functions, sound systems, gas systems, etc.
-
 
 Refactorings
 ============
