@@ -74,7 +74,7 @@ pub fn nextAvailableSpaceForItem(c: Coord, alloc: *mem.Allocator) ?Coord {
 }
 
 // STYLE: change to Tile.lightOpacity
-pub fn light_tile_opacity(coord: Coord) usize {
+pub fn tileOpacity(coord: Coord) usize {
     const tile = dungeon.at(coord);
     var o: usize = 5;
 
@@ -91,29 +91,6 @@ pub fn light_tile_opacity(coord: Coord) usize {
     const gases = dungeon.atGas(coord);
     for (gases) |q, g| {
         if (q > 0) o += @floatToInt(usize, gas.Gases[g].opacity * 100);
-    }
-
-    return o;
-}
-
-// STYLE: change to Tile.opacity
-fn tile_opacity(coord: Coord) f64 {
-    const tile = dungeon.at(coord);
-    var o: f64 = 0.0;
-
-    if (tile.type == .Wall)
-        return tile.material.opacity;
-
-    if (tile.surface) |surface| {
-        switch (surface) {
-            .Machine => |m| o += m.opacity(),
-            else => {},
-        }
-    }
-
-    const gases = dungeon.atGas(coord);
-    for (gases) |q, g| {
-        if (q > 0) o += gas.Gases[g].opacity;
     }
 
     return o;
@@ -187,9 +164,9 @@ pub fn _update_fov(mob: *Mob) void {
     };
 
     if (mob.coord.eq(player.coord)) {
-        fov.rayCastOctants(mob.coord, mob.vision, 100, light_tile_opacity, &mob.fov, 0, 360);
+        fov.rayCastOctants(mob.coord, mob.vision, 100, tileOpacity, &mob.fov, 0, 360);
     } else {
-        fov.rayCast(mob.coord, mob.vision, 100, light_tile_opacity, &mob.fov, mob.facing);
+        fov.rayCast(mob.coord, mob.vision, 100, tileOpacity, &mob.fov, mob.facing);
     }
 
     for (mob.fov) |row, y| for (row) |_, x| {
@@ -335,7 +312,7 @@ pub fn tickLight() void {
             // before noticing the issue.
             //
             if (light > 0) {
-                fov.rayCastOctants(coord, 20, light, light_tile_opacity, light_buffer, 0, 316);
+                fov.rayCastOctants(coord, 20, light, tileOpacity, light_buffer, 0, 316);
             }
         }
     }
