@@ -294,8 +294,12 @@ pub fn draw() void {
     }
 
     if (!state.player.is_dead) {
-        const player_bg: u32 = if (is_player_watched) 0x4682b4 else 0xffffff;
-        termbox.tb_change_cell(playerx - startx, playery - starty, '@', 0, player_bg);
+        const normal_bg = Tile.displayAs(state.player.coord).bg;
+        if (is_player_watched) {
+            termbox.tb_change_cell(playerx - startx, playery - starty, '@', 0, 0xffffff);
+        } else {
+            termbox.tb_change_cell(playerx - startx, playery - starty, '@', 0xffffff, normal_bg);
+        }
     }
 
     _draw_infopanel(state.player, &moblist, maxx, 1, termbox.tb_width(), termbox.tb_height() - 1);
