@@ -209,7 +209,8 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
 
     ai.checkForHostiles(mob);
 
-    if (mob.occupation.phase != .SawHostile) {
+    // Check for sounds
+    if (mob.occupation.phase != .SawHostile and mob.occupation.is_combative) {
         if (_can_hear_hostile(mob)) |dest| {
             // Let's investigate
             mob.occupation.phase = .GoTo;
@@ -225,7 +226,7 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
     if (mob.occupation.phase == .GoTo) {
         const target_coord = mob.occupation.target.?;
 
-        if (mob.coord.eq(target_coord)) {
+        if (mob.coord.eq(target_coord) or mob.cansee(target_coord)) {
             // We're here, let's just look around a bit before leaving
             //
             // 1 in 8 chance of leaving every turn
@@ -248,14 +249,6 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
 
         const target = mob.enemies.items[0].mob;
 
-        if (dungeon.at(target.coord).mob == null) {
-            mob.occupation.phase = .GoTo;
-            mob.occupation.target = target.coord;
-
-            _ = mob.rest();
-            return;
-        }
-
         if (mob.coord.eq(target.coord)) {
             mob.occupation.target = null;
             mob.occupation.phase = .Work;
@@ -269,7 +262,7 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
         if (current_distance < mob.prefers_distance) {
             // Find next space to flee to.
             var moved = false;
-            var dijk = dijkstra.Dijkstra.init(mob.coord, mapgeometry, 3, is_walkable, .{}, alloc);
+            var dijk = dijkstra.Dijkstra.init(mob.coord, mapgeometry, 2, is_walkable, .{}, alloc);
             defer dijk.deinit();
             while (dijk.next()) |coord| {
                 if (coord.distance(target.coord) <= current_distance) continue;
