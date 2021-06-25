@@ -21,7 +21,7 @@ const MAX_ROOM_WIDTH: usize = 10;
 const MAX_ROOM_HEIGHT: usize = 10;
 
 const LIMIT = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
-const DISTANCES = [2][6]usize{ .{ 0, 1, 2, 3, 4, 8 }, .{ 3, 8, 4, 3, 2, 1 } };
+const DISTANCES = [2][6]usize{ .{ 0, 1, 2, 3, 4, 6 }, .{ 3, 9, 4, 3, 2, 1 } };
 
 const Corridor = struct {
     room: Room,
@@ -111,7 +111,13 @@ fn _choosePrefab(level: usize, prefabs: *PrefabArrayList) ?Prefab {
     return null;
 }
 
-fn _room_intersects(rooms: *const RoomArrayList, room: *const Room, ignore: ?*const Room, ignore_corridors: bool) bool {
+fn roomIntersects(
+    rooms: *const RoomArrayList,
+    room: *const Room,
+    ignore: ?*const Room,
+    ignore2: ?*const Room,
+    ignore_corridors: bool,
+) bool {
     if (room.start.x == 0 or room.start.y == 0)
         return true;
     if (room.start.x >= state.WIDTH or room.start.y >= state.HEIGHT)
@@ -119,20 +125,24 @@ fn _room_intersects(rooms: *const RoomArrayList, room: *const Room, ignore: ?*co
     if (room.end().x >= state.WIDTH or room.end().y >= state.HEIGHT)
         return true;
 
-    for (rooms.items) |otherroom| {
-        // Yes, I understand that this is ugly. No, I don't care.
+    for (rooms.items) |other| {
         if (ignore) |ign| {
-            if (otherroom.start.eq(ign.start))
-                if (otherroom.width == ign.width)
-                    if (otherroom.height == ign.height)
-                        continue;
+            if (other.start.eq(ign.start))
+                if (other.width == ign.width and other.height == ign.height)
+                    continue;
         }
 
-        if (otherroom.type == .Corridor and ignore_corridors) {
+        if (ignore2) |ign| {
+            if (other.start.eq(ign.start))
+                if (other.width == ign.width and other.height == ign.height)
+                    continue;
+        }
+
+        if (other.type == .Corridor and ignore_corridors) {
             continue;
         }
 
-        if (room.intersects(&otherroom, 1)) return true;
+        if (room.intersects(&other, 1)) return true;
     }
 
     return false;
@@ -267,11 +277,11 @@ pub fn placeMoarCorridors(level: usize) void {
             }
 
             if (_createCorridor(level, parent, child, side)) |corridor| {
-                if (corridor.distance == 0) {
+                if (corridor.distance == 0 or corridor.distance > 4) {
                     continue;
                 }
 
-                if (_room_intersects(rooms, &corridor.room, parent, true)) {
+                if (roomIntersects(rooms, &corridor.room, parent, child, false)) {
                     continue;
                 }
 
@@ -373,7 +383,7 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
         var child_h = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
         child = parent.attach(side, child_w, child_h, distance, null) orelse return;
 
-        while (_room_intersects(rooms, &child, parent, true) or child.overflowsLimit(&LIMIT)) {
+        while (roomIntersects(rooms, &child, parent, null, true) or child.overflowsLimit(&LIMIT)) {
             if (child_w < MIN_ROOM_WIDTH or child_h < MIN_ROOM_HEIGHT)
                 return;
 
@@ -390,13 +400,13 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
         child = parent.attach(side, fab.?.width, fab.?.height, distance, &fab.?) orelse return;
         child.prefab = fab;
 
-        if (_room_intersects(rooms, &child, parent, false) or child.overflowsLimit(&LIMIT))
+        if (roomIntersects(rooms, &child, parent, null, false) or child.overflowsLimit(&LIMIT))
             return;
     }
 
     if (distance > 0) {
         if (_createCorridor(level, parent, &child, side)) |corridor| {
-            if (_room_intersects(rooms, &corridor.room, parent, true)) {
+            if (roomIntersects(rooms, &corridor.room, parent, null, true)) {
                 return;
             }
 
@@ -727,7 +737,7 @@ pub fn cellularAutomataAvoidanceMap(level: usize) [HEIGHT][WIDTH]bool {
         while (x < WIDTH) : (x += 1) {
             const coord = Coord.new2(level, x, y);
             const room = Room{ .start = coord, .width = 1, .height = 1 };
-            res[y][x] = _room_intersects(rooms, &room, null, false);
+            res[y][x] = roomIntersects(rooms, &room, null, null, false);
         }
     }
 
