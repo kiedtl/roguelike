@@ -38,7 +38,8 @@ pub fn path(
     start: Coord,
     goal: Coord,
     limit: Coord,
-    is_walkable: fn (Coord) bool,
+    is_walkable: fn (Coord, state.IsWalkableOptions) bool,
+    opts: state.IsWalkableOptions,
     alloc: *std.mem.Allocator,
 ) ?CoordArrayList {
     if (start.z != goal.z) {
@@ -83,7 +84,7 @@ pub fn path(
 
             if (!coord.move(neighbor, limit)) continue;
             if (closed_list[coord.y][coord.x]) |_| continue;
-            if (!is_walkable(coord) and !goal.eq(coord)) continue;
+            if (!is_walkable(coord, opts) and !goal.eq(coord)) continue;
 
             const node = Node{
                 .coord = coord,
@@ -106,17 +107,4 @@ pub fn path(
 
     open_list.deinit();
     return null;
-}
-
-// ------------------------------- tests ------------------------------------
-
-const expectEqSlice = std.testing.expectEqualSlices;
-const expectEq = std.testing.expectEqual;
-
-fn dummy_is_walkable(_: Coord) bool {
-    return true;
-}
-
-test "basic and cached pathfinding" {
-    @panic("Tests are broken, TODO: fix");
 }

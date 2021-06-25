@@ -302,6 +302,16 @@ pub fn rayCast(
     rayCastOctants(center, radius, energy, opacity_func, buffer, quadrant[0], quadrant[1]);
     rayCastOctants(center, radius, energy, opacity_func, buffer, quadrant[2], quadrant[3]);
 
+    const x_min = utils.saturating_sub(center.x, radius);
+    const y_min = utils.saturating_sub(center.y, radius);
+    const x_max = math.clamp(center.x + radius + 1, 0, WIDTH - 1);
+    const y_max = math.clamp(center.y + radius + 1, 0, HEIGHT - 1);
+
+    _removeArtifacts(center.z, x_min, y_min, center.x, center.y, -1, -1, buffer, opacity_func);
+    _removeArtifacts(center.z, center.x, y_min, x_max - 1, center.y, 1, -1, buffer, opacity_func);
+    _removeArtifacts(center.z, x_min, center.y, center.x, y_max - 1, -1, 1, buffer, opacity_func);
+    _removeArtifacts(center.z, center.x, center.y, x_max - 1, y_max - 1, 1, 1, buffer, opacity_func);
+
     buffer[center.y][center.x] = energy;
 }
 
@@ -347,16 +357,6 @@ pub fn rayCastOctants(
             if (ray_energy == 0) break;
         }
     }
-
-    const x_min = utils.saturating_sub(center.x, radius);
-    const y_min = utils.saturating_sub(center.y, radius);
-    const x_max = math.clamp(center.x + radius + 1, 0, WIDTH - 1);
-    const y_max = math.clamp(center.y + radius + 1, 0, HEIGHT - 1);
-
-    _removeArtifacts(center.z, x_min, y_min, center.x, center.y, -1, -1, buffer, opacity_func);
-    _removeArtifacts(center.z, center.x, y_min, x_max - 1, center.y, 1, -1, buffer, opacity_func);
-    _removeArtifacts(center.z, x_min, center.y, center.x, y_max - 1, -1, 1, buffer, opacity_func);
-    _removeArtifacts(center.z, center.x, center.y, x_max - 1, y_max - 1, 1, 1, buffer, opacity_func);
 }
 
 // Much thanks to libtcod! :>

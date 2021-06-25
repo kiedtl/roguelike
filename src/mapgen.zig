@@ -649,8 +649,8 @@ pub fn placeRandomStairs(level: usize) void {
 
         if (!state.dungeon.hasMachine(above) and
             !state.dungeon.hasMachine(below) and
-            state.is_walkable(below) and
-            state.is_walkable(above))
+            state.is_walkable(below, .{ .right_now = true }) and
+            state.is_walkable(above, .{ .right_now = true }))
         {
             _place_machine(above, &machines.StairDown);
             _place_machine(below, &machines.StairUp);
@@ -755,7 +755,7 @@ pub fn populateCaves(avoid: *const [HEIGHT][WIDTH]bool, level: usize, allocator:
     while (placed < 20) {
         const coord = map.randomCoord();
         if (avoid[coord.y][coord.x]) continue;
-        if (!state.is_walkable(coord)) continue;
+        if (!state.is_walkable(coord, .{ .right_now = true })) continue;
 
         if (rng.onein(3)) {
             const armor = _createItem(Armor, items.LeatherArmor);

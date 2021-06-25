@@ -324,7 +324,7 @@ pub fn powerStairUp(machine: *Machine) void {
         var dest: ?Coord = null;
         for (&CARDINAL_DIRECTIONS) |d| {
             var desttmp = uplevel;
-            if (desttmp.move(d, state.mapgeometry) and state.is_walkable(desttmp))
+            if (desttmp.move(d, state.mapgeometry) and state.is_walkable(desttmp, .{ .right_now = true }))
                 dest = desttmp;
         }
 
@@ -346,7 +346,7 @@ pub fn powerStairDown(machine: *Machine) void {
         var dest: ?Coord = null;
         for (&CARDINAL_DIRECTIONS) |d| {
             var desttmp = downlevel;
-            if (desttmp.move(d, state.mapgeometry) and state.is_walkable(desttmp))
+            if (desttmp.move(d, state.mapgeometry) and state.is_walkable(desttmp, .{ .right_now = true }))
                 dest = desttmp;
         }
 

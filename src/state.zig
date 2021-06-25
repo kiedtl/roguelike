@@ -50,23 +50,27 @@ pub var messages: MessageArrayList = undefined;
 pub var score: usize = 0;
 
 pub fn nextAvailableSpaceForItem(c: Coord, alloc: *mem.Allocator) ?Coord {
-    if (canRecieveItem(c)) return c;
+    if (is_walkable(c, .{}) and dungeon.at(c).item == null)
+        return c;
 
-    var dijk = dijkstra.Dijkstra.init(c, mapgeometry, 8, canRecieveItem, alloc);
+    var dijk = dijkstra.Dijkstra.init(
+        c,
+        mapgeometry,
+        8,
+        is_walkable,
+        .{ .right_now = true },
+        alloc,
+    );
     defer dijk.deinit();
 
     while (dijk.next()) |coord| {
-        assert(canRecieveItem(coord));
+        if (!is_walkable(c, .{}) or dungeon.at(c).item != null)
+            continue;
+
         return coord;
     }
 
     return null;
-}
-
-pub fn canRecieveItem(c: Coord) bool {
-    if (!is_walkable(c)) return false;
-    if (dungeon.at(c).item) |_| return false;
-    return true;
 }
 
 // STYLE: change to Tile.lightOpacity
@@ -115,15 +119,35 @@ fn tile_opacity(coord: Coord) f64 {
     return o;
 }
 
+pub const IsWalkableOptions = struct {
+    // Return true only if the tile is walkable *right now*. Otherwise, tiles
+    // that *could* be walkable in the future are merely assigned a penalty but
+    // are treated as if they are walkable (e.g., tiles with mobs, or tiles with
+    // machines that are walkable when powered but not walkable otherwise, like
+    // doors).
+    //
+    right_now: bool = false,
+};
+
 // STYLE: change to Tile.isWalkable
-pub fn is_walkable(coord: Coord) bool {
+pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
     if (dungeon.at(coord).type != .Floor)
         return false;
+
     if (dungeon.at(coord).mob != null)
         return false;
+
     if (dungeon.at(coord).surface) |surface| {
         switch (surface) {
-            .Machine => |m| if (!m.isWalkable()) return false,
+            .Machine => |m| {
+                if (opts.right_now) {
+                    if (!m.isWalkable())
+                        return false;
+                } else {
+                    if (!m.powered_walkable and !m.unpowered_walkable)
+                        return false;
+                }
+            },
             .Prop => |p| if (!p.walkable) return false,
             .Sob => |s| if (!s.walkable) return false,
         }
@@ -262,11 +286,11 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
         if (current_distance < mob.prefers_distance) {
             // Find next space to flee to.
             var moved = false;
-            var dijk = dijkstra.Dijkstra.init(mob.coord, mapgeometry, 3, is_walkable, alloc);
+            var dijk = dijkstra.Dijkstra.init(mob.coord, mapgeometry, 3, is_walkable, .{}, alloc);
             defer dijk.deinit();
             while (dijk.next()) |coord| {
                 if (coord.distance(target.coord) <= current_distance) continue;
-                if (mob.nextDirectionTo(coord, is_walkable)) |d| {
+                if (mob.nextDirectionTo(coord)) |d| {
                     const oldd = mob.facing;
                     moved = mob.moveInDirection(d);
                     mob.facing = oldd;

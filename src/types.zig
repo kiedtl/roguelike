@@ -812,7 +812,10 @@ pub const Mob = struct { // {{{
         var energy: usize = _energy orelse self.strength;
 
         for (trajectory.constSlice()) |coord| {
-            if (energy == 0 or (!coord.eq(self.coord) and !state.is_walkable(coord))) {
+            if (energy == 0 or
+                (!coord.eq(self.coord) and
+                !state.is_walkable(coord, .{ .right_now = true })))
+            {
                 landed = coord;
                 break;
             }
@@ -884,7 +887,7 @@ pub const Mob = struct { // {{{
     pub fn tryMoveTo(self: *Mob, dest: Coord) void {
         const prev_energy = self.energy;
 
-        if (self.nextDirectionTo(dest, state.is_walkable)) |d| {
+        if (self.nextDirectionTo(dest)) |d| {
             if (!self.moveInDirection(d)) _ = self.rest();
         } else _ = self.rest();
 
@@ -909,13 +912,12 @@ pub const Mob = struct { // {{{
     pub fn teleportTo(self: *Mob, dest: Coord) bool {
         const coord = self.coord;
 
-        if (!state.is_walkable(dest)) {
+        if (!state.is_walkable(dest, .{ .right_now = true })) {
             if (state.dungeon.at(dest).mob) |othermob| {
-                if (self.isHostileTo(othermob) and !othermob.is_dead) {
+                assert(!othermob.is_dead);
+                if (self.isHostileTo(othermob)) {
                     self.fight(othermob);
                     return true;
-                } else if (!othermob.is_dead) {
-                    return false;
                 }
             } else if (state.dungeon.at(dest).surface) |surface| {
                 switch (surface) {
@@ -1074,7 +1076,8 @@ pub const Mob = struct { // {{{
             self.coord,
             state.mapgeometry,
             5,
-            state.canRecieveItem,
+            state.is_walkable,
+            .{ .right_now = true },
             alloc,
         );
         defer dijk.deinit();
@@ -1083,7 +1086,9 @@ pub const Mob = struct { // {{{
             // Papering over a bug here, next() should never return starting coord
             if (coord.eq(self.coord)) continue;
 
-            assert(state.canRecieveItem(coord));
+            if (!state.is_walkable(coord, .{}) or state.dungeon.at(coord).item != null)
+                continue;
+
             coords.append(coord) catch |e| switch (e) {
                 error.NoSpaceLeft => break,
                 else => unreachable,
@@ -1141,8 +1146,7 @@ pub const Mob = struct { // {{{
         return false;
     }
 
-    // TODO: get rid of is_walkable parameter.
-    pub fn nextDirectionTo(self: *Mob, to: Coord, is_walkable: fn (Coord) bool) ?Direction {
+    pub fn nextDirectionTo(self: *Mob, to: Coord) ?Direction {
         // FIXME: make this an assertion; no mob should ever be trying to path to
         // themself.
         if (self.coord.eq(to)) return null;
@@ -1159,7 +1163,14 @@ pub const Mob = struct { // {{{
             var membuf: [65535]u8 = undefined;
             var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
-            const pth = astar.path(self.coord, to, state.mapgeometry, is_walkable, &fba.allocator) orelse return null;
+            const pth = astar.path(
+                self.coord,
+                to,
+                state.mapgeometry,
+                state.is_walkable,
+                .{},
+                &fba.allocator,
+            ) orelse return null;
 
             assert(pth.items[0].eq(self.coord));
             var last: Coord = self.coord;
@@ -1177,7 +1188,7 @@ pub const Mob = struct { // {{{
         // recalculated next time.
         if (self.path_cache.get(pathobj)) |next| {
             const direction = Direction.from_coords(self.coord, next) catch unreachable;
-            if (!next.eq(to) and !is_walkable(next)) {
+            if (!next.eq(to) and !state.is_walkable(next, .{})) {
                 _ = self.path_cache.remove(pathobj);
                 return null;
             } else {

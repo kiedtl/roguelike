@@ -4,6 +4,7 @@ const std = @import("std");
 const mem = std.mem;
 
 usingnamespace @import("types.zig");
+const state = @import("state.zig");
 
 const Node = struct {
     c: Coord,
@@ -21,22 +22,31 @@ pub const Dijkstra = struct {
     current: Node,
     max: usize,
     limit: Coord,
-    is_valid: fn (Coord) bool,
+    is_valid: fn (Coord, state.IsWalkableOptions) bool,
+    is_valid_opts: state.IsWalkableOptions,
     open: NodeArrayList,
     closed: NodeArrayList,
 
     const Self = @This();
 
-    pub fn init(c: Coord, l: Coord, m: usize, f: fn (Coord) bool, a: *mem.Allocator) Self {
-        const n = Node{ .c = c, .n = 0 };
+    pub fn init(
+        start: Coord,
+        limit: Coord,
+        max_distance: usize,
+        is_valid: fn (Coord, state.IsWalkableOptions) bool,
+        is_valid_opts: state.IsWalkableOptions,
+        allocator: *mem.Allocator,
+    ) Self {
+        const n = Node{ .c = start, .n = 0 };
         var s = Self{
-            .center = c,
+            .center = start,
             .current = n,
-            .max = m,
-            .limit = l,
-            .is_valid = f,
-            .open = NodeArrayList.init(a),
-            .closed = NodeArrayList.init(a),
+            .max = max_distance,
+            .limit = limit,
+            .is_valid = is_valid,
+            .is_valid_opts = is_valid_opts,
+            .open = NodeArrayList.init(allocator),
+            .closed = NodeArrayList.init(allocator),
         };
         s.open.append(n) catch unreachable;
         return s;
@@ -60,7 +70,7 @@ pub const Dijkstra = struct {
             coord.n += 1;
 
             if (coord.n > self.max) continue;
-            if (!self.is_valid(coord.c)) continue;
+            if (!self.is_valid(coord.c, self.is_valid_opts)) continue;
             if (coordInList(coord.c, &self.closed)) |_| continue;
             if (coordInList(coord.c, &self.open)) |_| continue;
 

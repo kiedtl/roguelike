@@ -135,7 +135,7 @@ pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
             const room = rng.chooseUnweighted(Room, state.dungeon.rooms[mob.coord.z].items);
             const point = room.randomCoord();
 
-            if (mob.nextDirectionTo(point, state.is_walkable)) |_| {
+            if (mob.nextDirectionTo(point)) |_| {
                 mob.occupation.work_area.items[0] = point;
                 break;
             }
@@ -186,7 +186,7 @@ pub fn interactionLaborerWork(mob: *Mob, _: *mem.Allocator) void {
     if (mob.coord.eq(machine)) {
         std.log.warn("oh no {} {}", .{ mob.coord, machine });
     }
-    assert(mob.nextDirectionTo(machine, state.is_walkable) != null);
+    assert(mob.nextDirectionTo(machine) != null);
 
     mob.tryMoveTo(machine);
 }
@@ -209,9 +209,9 @@ pub fn wanderWork(mob: *Mob, alloc: *mem.Allocator) void {
             const point = map.randomCoord();
 
             if (state.dungeon.layout[mob.coord.z][point.y][point.x]) continue;
-            if (!state.is_walkable(point)) continue;
+            if (!state.is_walkable(point, .{})) continue;
 
-            if (mob.nextDirectionTo(point, state.is_walkable)) |_| {
+            if (mob.nextDirectionTo(point)) |_| {
                 mob.occupation.work_area.items[0] = point;
                 break;
             }
