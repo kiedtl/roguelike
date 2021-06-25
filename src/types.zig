@@ -576,6 +576,7 @@ pub const StatusData = struct {
 // usecase for this phase?
 pub const OccupationPhase = enum { Work, SawHostile, GoTo };
 
+// TODO: rename to "AI"
 pub const Occupation = struct {
     // Name of work, intended to be used as a description of what the mob is
     // doing. Examples: Guard("patrolling"), Smith("forging"), Demon("sulking")
@@ -584,11 +585,12 @@ pub const Occupation = struct {
     // The area where the mob should be doing work.
     work_area: CoordArrayList,
 
-    // work_fn is called on each tick when the mob is doing work.
+    // Work callbacks:
+    //     - work_fn:  on each tick when the mob is doing work.
+    //     - fight_fn: on each tick when the mob is pursuing a hostile mob.
     //
-    // We only need to pass the Mob pointer because dungeon is a global variable,
-    // amirite?
     work_fn: fn (*Mob, *mem.Allocator) void,
+    fight_fn: ?fn (*Mob, *mem.Allocator) void,
 
     // Is the "work" combative? if so, in "SawHostile" phase the mob should try
     // to attack the hostile mob.
@@ -606,7 +608,6 @@ pub const Mob = struct { // {{{
     tile: u21,
     allegiance: Allegiance,
 
-    prefers_distance: usize = 0,
     squad_members: MobArrayList = undefined,
 
     // TODO: instead of storing the tile's representation in memory, store the
@@ -1845,11 +1846,11 @@ pub const Gas = struct {
 pub const WatcherTemplate = Mob{
     .species = "watcher",
     .tile = 'ש',
-    .prefers_distance = 5,
     .occupation = Occupation{
         .work_description = "watching",
         .work_area = undefined,
         .work_fn = ai.watcherWork,
+        .fight_fn = ai.watcherFight,
         .is_combative = true,
         .target = null,
         .phase = .Work,
@@ -1876,6 +1877,7 @@ pub const GuardTemplate = Mob{
         .work_description = "patrolling",
         .work_area = undefined,
         .work_fn = ai.guardWork,
+        .fight_fn = ai.meleeFight,
         .is_combative = true,
         .target = null,
         .phase = .Work,
@@ -1903,6 +1905,7 @@ pub const ElfTemplate = Mob{
         .work_description = "meditating",
         .work_area = undefined,
         .work_fn = ai.dummyWork,
+        .fight_fn = ai.meleeFight,
         .is_combative = false,
         .target = null,
         .phase = .Work,
@@ -1930,6 +1933,7 @@ pub const InteractionLaborerTemplate = Mob{
         .work_description = "laboring",
         .work_area = undefined,
         .work_fn = ai.interactionLaborerWork,
+        .fight_fn = null,
         .is_combative = false,
         .target = null,
         .phase = .Work,
@@ -1956,6 +1960,7 @@ pub const GoblinTemplate = Mob{
         .work_description = "wandering",
         .work_area = undefined,
         .work_fn = ai.wanderWork,
+        .fight_fn = ai.meleeFight,
         .is_combative = true,
         .target = null,
         .phase = .Work,
@@ -1982,6 +1987,7 @@ pub const CaveRatTemplate = Mob{
         .work_description = "wandering",
         .work_area = undefined,
         .work_fn = ai.wanderWork,
+        .fight_fn = ai.meleeFight,
         .is_combative = false,
         .target = null,
         .phase = .Work,

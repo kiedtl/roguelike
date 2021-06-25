@@ -3,6 +3,7 @@ const mem = std.mem;
 const assert = std.debug.assert;
 
 const state = @import("state.zig");
+const dijkstra = @import("dijkstra.zig");
 const astar = @import("astar.zig");
 const rng = @import("rng.zig");
 usingnamespace @import("types.zig");
@@ -224,4 +225,62 @@ pub fn wanderWork(mob: *Mob, alloc: *mem.Allocator) void {
 
     const prev_facing = mob.facing;
     mob.tryMoveTo(to);
+}
+
+// - Move towards hostile, bapping it if we can.
+pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
+    mob.tryMoveTo(mob.enemies.items[0].mob.coord);
+}
+
+// - Can we see the hostile?
+//      - No:
+//          - Move towards the hostile.
+//      - Yes?
+//          - Are we at least PREFERRED_DISTANCE away from mob?
+//              - No?
+//                  - Move away from the hostile.
+//          - Shout!
+//
+pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
+    const PREFERRED_DISTANCE: usize = 5;
+
+    const target = mob.enemies.items[0].mob;
+
+    if (!mob.cansee(target.coord)) {
+        mob.tryMoveTo(target.coord);
+        return;
+    }
+
+    const current_distance = mob.coord.distance(target.coord);
+
+    if (current_distance < PREFERRED_DISTANCE) {
+        // Find next space to flee to.
+        var moved = false;
+        var dijk = dijkstra.Dijkstra.init(
+            mob.coord,
+            state.mapgeometry,
+            2,
+            state.is_walkable,
+            .{},
+            alloc,
+        );
+        defer dijk.deinit();
+        while (dijk.next()) |coord| {
+            if (coord.distance(target.coord) <= current_distance)
+                continue;
+
+            if (mob.nextDirectionTo(coord)) |d| {
+                const oldd = mob.facing;
+                moved = mob.moveInDirection(d);
+                mob.facing = oldd;
+                break;
+            }
+        }
+
+        if (!moved) _ = mob.rest();
+        mob.makeNoise(Mob.NOISE_YELL);
+    } else {
+        _ = mob.rest();
+        mob.makeNoise(Mob.NOISE_YELL);
+    }
 }

@@ -219,7 +219,7 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
     }
 
     if (mob.occupation.phase == .Work) {
-        mob.occupation.work_fn(mob, alloc);
+        (mob.occupation.work_fn)(mob, alloc);
         return;
     }
 
@@ -249,6 +249,7 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
 
         const target = mob.enemies.items[0].mob;
 
+        // If we're standing on the mob we were chasing, it's probably dead...
         if (mob.coord.eq(target.coord)) {
             mob.occupation.target = null;
             mob.occupation.phase = .Work;
@@ -257,27 +258,7 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
             return;
         }
 
-        const current_distance = mob.coord.distance(target.coord);
-
-        if (current_distance < mob.prefers_distance) {
-            // Find next space to flee to.
-            var moved = false;
-            var dijk = dijkstra.Dijkstra.init(mob.coord, mapgeometry, 2, is_walkable, .{}, alloc);
-            defer dijk.deinit();
-            while (dijk.next()) |coord| {
-                if (coord.distance(target.coord) <= current_distance) continue;
-                if (mob.nextDirectionTo(coord)) |d| {
-                    const oldd = mob.facing;
-                    moved = mob.moveInDirection(d);
-                    mob.facing = oldd;
-                    break;
-                }
-            }
-
-            if (!moved) _ = mob.rest();
-        } else {
-            mob.tryMoveTo(target.coord);
-        }
+        (mob.occupation.fight_fn.?)(mob, alloc);
     }
 }
 
