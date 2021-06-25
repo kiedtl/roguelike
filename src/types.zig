@@ -936,14 +936,17 @@ pub const Mob = struct { // {{{
             } else {
                 return false;
             }
+
+            return false;
         }
 
-        const othermob = state.dungeon.at(dest).mob;
+        assert(state.dungeon.at(dest).mob == null);
+
         state.dungeon.at(dest).mob = self;
-        state.dungeon.at(coord).mob = othermob;
+        state.dungeon.at(coord).mob = null;
+        self.coord = dest;
         if (!self.isCreeping()) self.makeNoise(NOISE_MOVE);
         self.energy -= self.speed();
-        self.coord = dest;
 
         if (state.dungeon.at(dest).surface) |surface| {
             switch (surface) {
