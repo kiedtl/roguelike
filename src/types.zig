@@ -635,18 +635,22 @@ pub const Mob = struct { // {{{
 
     // Immutable instrinsic attributes.
     //
-    // willpower: Controls the ability to resist spells
-    // dexterity: Controls the likelihood of a mob dodging an attack.
-    // hearing:   The minimum intensity of a noise source before it can be
-    //            heard by a mob. The lower the value, the better.
-    // vision:    Maximum radius of the mob's field of vision.
-    // strength:  TODO: define!
-    // memory:    The maximum length of time for which a mob can remember
-    //            an enemy.
+    // willpower:    Controls the ability to resist spells
+    // dexterity:    Controls the likelihood of a mob dodging an attack.
+    // hearing:      The minimum intensity of a noise source before it can be
+    //                 heard by a mob. The lower the value, the better.
+    // vision:       Maximum radius of the mob's field of vision.
+    // night_vision: If the light in a tile is below this amount, the mob cannot
+    //                 see that tile, even if it's in the FOV. The lower, the
+    //                 better.
+    // strength:     TODO: define!
+    // memory:       The maximum length of time for which a mob can remember
+    //                 an enemy.
     //
     willpower: usize, // Range: 0 < willpower < 10
     dexterity: usize, // Range: 0 < dexterity < 100
     vision: usize,
+    night_vision: usize,
     hearing: usize,
     strength: usize,
     memory_duration: usize,
@@ -1849,6 +1853,7 @@ pub const WatcherTemplate = Mob{
     },
     .allegiance = .Sauron,
     .vision = 13,
+    .night_vision = 15,
 
     .willpower = 3,
     .dexterity = 17,
@@ -1874,6 +1879,7 @@ pub const GuardTemplate = Mob{
     },
     .allegiance = .Sauron,
     .vision = 9,
+    .night_vision = 35,
 
     .willpower = 2,
     .dexterity = 20,
@@ -1900,6 +1906,7 @@ pub const ElfTemplate = Mob{
     },
     .allegiance = .Illuvatar,
     .vision = 20,
+    .night_vision = 0,
 
     .willpower = 4,
     .dexterity = 21,
@@ -1926,6 +1933,7 @@ pub const InteractionLaborerTemplate = Mob{
     },
     .allegiance = .Sauron,
     .vision = 6,
+    .night_vision = 30,
 
     .willpower = 2,
     .dexterity = 19,
@@ -1951,6 +1959,7 @@ pub const GoblinTemplate = Mob{
     },
     .allegiance = .NoneEvil,
     .vision = 10,
+    .night_vision = 0,
 
     .willpower = 3,
     .dexterity = 18,
@@ -1976,6 +1985,7 @@ pub const CaveRatTemplate = Mob{
     },
     .allegiance = .NoneEvil,
     .vision = 6,
+    .night_vision = 0,
 
     .willpower = 1,
     .dexterity = 10,

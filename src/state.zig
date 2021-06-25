@@ -172,6 +172,12 @@ pub fn _update_fov(mob: *Mob) void {
     for (mob.fov) |row, y| for (row) |_, x| {
         if (mob.fov[y][x] > 0) {
             const fc = Coord.new2(mob.coord.z, x, y);
+
+            if (dungeon.lightIntensityAt(fc).* < mob.night_vision) {
+                mob.fov[y][x] = 0;
+                continue;
+            }
+
             mob.memory.put(fc, Tile.displayAs(fc)) catch unreachable;
         }
     };
