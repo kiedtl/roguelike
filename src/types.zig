@@ -1867,8 +1867,8 @@ pub const WatcherTemplate = Mob{
 };
 
 pub const GuardTemplate = Mob{
-    .species = "orc guard",
-    .tile = 'ג',
+    .species = "patrol",
+    .tile = 'ק',
     .occupation = Occupation{
         .work_description = "patrolling",
         .work_area = undefined,
