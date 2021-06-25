@@ -36,6 +36,7 @@ pub const MACHINES = [_]Machine{
     StairUp,
     StairDown,
     NormalDoor,
+    LockedDoor,
     ParalysisGasTrap,
     PoisonGasTrap,
     AlarmTrap,
@@ -256,6 +257,18 @@ pub const NormalDoor = Machine{
     .on_power = powerNone,
 };
 
+pub const LockedDoor = Machine{
+    .name = "locked door",
+    .powered_tile = '⌂',
+    .unpowered_tile = '⌂',
+    .power_drain = 100,
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+    .powered_opacity = 0.7,
+    .unpowered_opacity = 0.7,
+    .on_power = powerLockedDoor,
+};
+
 pub fn powerNone(_: *Machine) void {}
 
 pub fn powerPowerSupply(machine: *Machine) void {
@@ -355,5 +368,23 @@ pub fn powerStairDown(machine: *Machine) void {
             assert(moved);
             state.message(.Move, "You descend.", .{});
         }
+    }
+}
+
+pub fn powerLockedDoor(machine: *Machine) void {
+    // Shouldn't be auto-powered
+    const culprit = machine.last_interaction.?;
+
+    if (culprit.allegiance == .Sauron) {
+        const direction = Direction.from_coords(culprit.coord, machine.coord) catch return;
+
+        var newcoord = machine.coord;
+        if (!newcoord.move(direction, state.mapgeometry)) return;
+
+        if (!state.is_walkable(newcoord, .{ .right_now = true })) return;
+
+        _ = culprit.teleportTo(newcoord);
+    } else {
+        state.message(.Move, "You feel a malevolent force forbidding you to pass.", .{});
     }
 }

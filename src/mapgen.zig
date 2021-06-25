@@ -60,8 +60,8 @@ fn _place_machine(coord: Coord, machine_template: *const Machine) void {
     state.dungeon.at(coord).surface = SurfaceItem{ .Machine = machineptr };
 }
 
-fn _place_normal_door(coord: Coord) void {
-    var door = machines.NormalDoor;
+fn placeDoor(coord: Coord, locked: bool) void {
+    var door = if (locked) machines.LockedDoor else machines.NormalDoor;
     door.coord = coord;
     state.machines.append(door) catch unreachable;
     const doorptr = state.machines.lastPtr().?;
@@ -192,7 +192,8 @@ fn _excavate_prefab(room: *const Room, fab: *const Prefab, allocator: *mem.Alloc
                         },
                     }
                 },
-                .LockedDoor, .Door => _place_normal_door(rc),
+                .LockedDoor => placeDoor(rc, true),
+                .Door => placeDoor(rc, false),
                 .Brazier => _place_machine(rc, &machines.Brazier),
                 .Bars => _ = _place_prop(rc, &machines.IronBarProp),
                 else => {},
@@ -293,7 +294,7 @@ pub fn placeMoarCorridors(level: usize) void {
                 if (corridor.parent_connector) |acon| state.dungeon.at(acon).type = .Floor;
                 if (corridor.child_connector) |acon| state.dungeon.at(acon).type = .Floor;
 
-                if (corridor.distance == 1) _place_normal_door(corridor.room.start);
+                if (corridor.distance == 1) placeDoor(corridor.room.start, false);
             }
         }
     }
@@ -419,7 +420,7 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
             if (corridor.parent_connector) |acon| state.dungeon.at(acon).type = .Floor;
             if (corridor.child_connector) |acon| state.dungeon.at(acon).type = .Floor;
 
-            if (distance == 1) _place_normal_door(corridor.room.start);
+            if (distance == 1) placeDoor(corridor.room.start, false);
         } else {
             return;
         }
