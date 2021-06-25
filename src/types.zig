@@ -679,10 +679,6 @@ pub const Mob = struct { // {{{
     pub const NOISE_YELL = 40;
     pub const NOISE_SCREAM = 60;
 
-    pub const PAIN_DECAY = 0.08;
-    pub const PAIN_UNCONSCIOUS_THRESHHOLD = 1.0;
-    pub const PAIN_DEATH_THRESHHOLD = 1.8;
-
     // Regenerate health as necessary.
     //
     // TODO: regenerate health more if mob rested in last turn.
