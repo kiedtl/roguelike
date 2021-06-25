@@ -791,7 +791,7 @@ pub const Prefab = struct {
     nolights: bool = false,
     notraps: bool = false,
 
-    name: [32:0]u8 = mem.zeroes([32:0]u8),
+    name: [64:0]u8 = mem.zeroes([64:0]u8),
     player_position: ?Coord = null,
 
     height: usize = 0,
