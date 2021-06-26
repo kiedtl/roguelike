@@ -92,16 +92,44 @@ fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, d
     }
 }
 
-fn _draw_infopanel(player: *Mob, moblist: *const std.ArrayList(*Mob), startx: isize, starty: isize, endx: isize, endy: isize) void {
+fn _draw_infopanel(
+    player: *Mob,
+    moblist: *const std.ArrayList(*Mob),
+    startx: isize,
+    starty: isize,
+    endx: isize,
+    endy: isize,
+) void {
+    const is_running = player.turnsSinceRest() == player.activities.len;
     var y = starty;
     while (y < endy) : (y += 1) _clear_line(startx, endx, y);
     y = starty;
 
     y = _draw_string(startx, y, 0xffffff, 0, "@: You", .{}) catch unreachable;
 
-    _draw_bar(y, startx, endx, @floatToInt(usize, player.HP), @floatToInt(usize, player.max_HP), "Health", player.lastDamagePercentage(), 0x232faa, 0);
+    _draw_bar(
+        y,
+        startx,
+        endx,
+        @floatToInt(usize, player.HP),
+        @floatToInt(usize, player.max_HP),
+        "health",
+        player.lastDamagePercentage(),
+        0x232faa,
+        0,
+    );
     y += 1;
-    _draw_bar(y, startx, endx, player.turnsSinceRest(), player.activities.len, "Noise", 0, if (player.turnsSinceRest() == player.activities.len) 0x45992f else 0x23752f, 0);
+    _draw_bar(
+        y,
+        startx,
+        endx,
+        player.turnsSinceRest(),
+        player.activities.len,
+        if (is_running) "running" else "walking",
+        0,
+        if (is_running) 0x45772e else 0x25570e,
+        0,
+    );
     y += 1;
     y = _draw_string(startx, y, 0xffffff, 0, "score: {:<5} level: {}", .{ state.score, state.player.coord.z }) catch unreachable;
     y = _draw_string(startx, y, 0xffffff, 0, "turns: {}", .{state.ticks}) catch unreachable;
