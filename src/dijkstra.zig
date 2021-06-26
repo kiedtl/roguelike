@@ -17,6 +17,10 @@ fn coordInList(coord: Coord, list: *NodeArrayList) ?usize {
     return null;
 }
 
+pub fn dummyIsValid(_: Coord, __: state.IsWalkableOptions) bool {
+    return true;
+}
+
 pub const Dijkstra = struct {
     center: Coord,
     current: Node,
@@ -26,6 +30,7 @@ pub const Dijkstra = struct {
     is_valid_opts: state.IsWalkableOptions,
     open: NodeArrayList,
     closed: NodeArrayList,
+    skip_current: bool = false,
 
     const Self = @This();
 
@@ -64,6 +69,12 @@ pub const Dijkstra = struct {
 
         self.closed.append(self.current) catch unreachable;
 
+        if (self.skip_current) {
+            self.skip_current = false;
+            self.current = self.open.orderedRemove(0);
+            return self.current.c;
+        }
+
         for (&DIRECTIONS) |neighbor| {
             var coord = self.current;
             if (!coord.c.move(neighbor, self.limit)) continue;
@@ -83,5 +94,9 @@ pub const Dijkstra = struct {
             self.current = self.open.orderedRemove(0);
             return self.current.c;
         }
+    }
+
+    pub fn skip(self: *Self) void {
+        self.skip_current = true;
     }
 };

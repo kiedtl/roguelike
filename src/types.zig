@@ -530,6 +530,11 @@ pub const Status = enum {
     pub const MAX_DURATION: usize = 20;
 
     pub fn tickEcholocation(mob: *Mob) void {
+        // TODO: do some tests and figure out what's the practical limit to memory
+        // usage, and reduce the buffer's size to that.
+        var membuf: [65535]u8 = undefined;
+        var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
         const st = mob.isUnderStatus(.Echolocation) orelse return;
 
         const radius = st.power;
@@ -546,13 +551,23 @@ pub const Status = enum {
             while (x < xend) : (x += 1) {
                 const coord = Coord.new2(z, x, y);
                 const noise = mob.canHear(coord) orelse continue;
-                for (&DIRECTIONS) |d| {
-                    var neighbor = coord;
-                    if (!neighbor.move(d, state.mapgeometry)) continue;
-                    if (state.dungeon.neighboringWalls(neighbor, true) == 9) continue;
+                var dijk = dijkstra.Dijkstra.init(
+                    coord,
+                    state.mapgeometry,
+                    2,
+                    dijkstra.dummyIsValid,
+                    .{},
+                    &fba.allocator,
+                );
+                defer dijk.deinit();
+                while (dijk.next()) |item| {
+                    if (state.dungeon.neighboringWalls(item, true) == 9) {
+                        dijk.skip();
+                        continue;
+                    }
 
-                    tile.ch = if (state.dungeon.at(neighbor).type == .Wall) '#' else '·';
-                    _ = mob.memory.getOrPutValue(neighbor, tile) catch unreachable;
+                    tile.ch = if (state.dungeon.at(item).type == .Wall) '#' else '·';
+                    _ = mob.memory.getOrPutValue(item, tile) catch unreachable;
                 }
             }
         }
