@@ -86,10 +86,12 @@ pub fn path(
             if (closed_list[coord.y][coord.x]) |_| continue;
             if (!is_walkable(coord, opts) and !goal.eq(coord)) continue;
 
+            const penalty: usize = if (neighbor.is_diagonal()) 14 else 10;
+
             const node = Node{
                 .coord = coord,
                 .parent = current_node.coord,
-                .g = current_node.g + 1,
+                .g = current_node.g + penalty,
                 .h = coord.distance(goal),
             };
 

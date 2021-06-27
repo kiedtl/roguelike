@@ -171,11 +171,17 @@ pub const Coord = struct { // {{{
         // return math.sqrt((x * x) + (y * y));
 
         // Manhattan: |x1 - x2| + |y1 - y2|
-        return @intCast(
-            usize,
-            (math.absInt(@intCast(isize, a.x) - @intCast(isize, b.x)) catch unreachable) +
-                (math.absInt(@intCast(isize, a.y) - @intCast(isize, b.y)) catch unreachable),
-        );
+        // return @intCast(
+        //     usize,
+        //     (math.absInt(@intCast(isize, a.x) - @intCast(isize, b.x)) catch unreachable) +
+        //         (math.absInt(@intCast(isize, a.y) - @intCast(isize, b.y)) catch unreachable),
+        // );
+
+        // Chebyshev: max(abs(x1 - x2), abs(y1 - y2))
+        return @intCast(usize, math.max(
+            (math.absInt(@intCast(isize, a.x) - @intCast(isize, b.x)) catch unreachable),
+            (math.absInt(@intCast(isize, a.y) - @intCast(isize, b.y)) catch unreachable),
+        ));
     }
 
     pub inline fn eq(a: Self, b: Self) bool {
@@ -336,6 +342,11 @@ pub const Coord = struct { // {{{
         return buf;
     }
 }; // }}}
+
+test "coord.distance" {
+    std.testing.expectEqual(Coord.new(0, 0).distance(Coord.new(0, 1)), 1);
+    std.testing.expectEqual(Coord.new(0, 0).distance(Coord.new(1, 1)), 1);
+}
 
 test "coord.move" {
     const limit = Coord.new(9, 9);
