@@ -535,10 +535,13 @@ x Make the "lamps" electric "braziers"
 
 Mobs, AI
 ========
-- Make watchers shout loudly
+x Make watchers shout loudly
 - Allow mobs to shuffle past each other in corridors
 - Add reproducing rats
-- Ensure that watchers and laborers don't leave to investigate noises
+x Ensure that laborers don't leave to investigate noises
+- Ensure that the EnemyRecord counter is only decremented if the pursuer can
+  see the last spot where the hostile was seen
+- Move off of tile if that tile has dangerous gas
 
 User Interface
 ==============
@@ -582,6 +585,9 @@ Stretch goals:
 - Smell mechanics that allow, say, hellhounds and snakes to detect
   intruders even if they can't see them.
 - Ranged melee weapons, e.g., spear and whips
+- Add braziers that are built into the walls, and use that instead for
+  corridors
+- Light colors
 
 Optimizations
 =============
@@ -604,7 +610,9 @@ x Convert enum+union pair to union(enum) (see std/fifo.zig) where needed
 x Research Manhattan distance vs Euclidian distance vs Moore neighborhood:
   https://reddit.com/r/roguelikedev/comments/nev1jg/a_pathfinding_unstablenondeterministic/
 x Add power component to machines
+x Use Chebyshev or Moore Neighborhood instead of Manhattan distance
 
 Tests
 =====
-- Ensure that distance() treats diagonal moves as more expensive than cardinal moves
+x Ensure that distance() treats diagonal moves as more expensive than cardinal moves, or
+  the opposite if Chebyshev/Moore is used later.
