@@ -544,7 +544,7 @@ pub fn placeTraps(level: usize) void {
 }
 
 pub fn placeGuards(level: usize, allocator: *mem.Allocator) void {
-    var squads: usize = rng.range(usize, 3, 5);
+    var squads: usize = rng.range(usize, 5, 8);
     while (squads > 0) : (squads -= 1) {
         const room = rng.chooseUnweighted(Room, state.dungeon.rooms[level].items);
         const patrol_units = rng.range(usize, 2, 4) % math.max(room.width, room.height);
