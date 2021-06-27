@@ -603,14 +603,23 @@ fn _lightCorridor(room: *const Room) void {
 
     var last_placed: usize = 0;
 
-    var x = room.start.x;
-    while (x < room_end.x) : (x += 1) {
-        if (x - last_placed > 5) {
-            const coord = Coord.new2(room.start.z, x, room_end.y);
-            var brazier = machines.Brazier;
-            brazier.powered_luminescence -= rng.rangeClumping(usize, 0, 30, 2);
-            _place_machine(coord, &brazier);
-            last_placed = x;
+    if (room.height == 1) {
+        var x = room.start.x;
+        while (x < room_end.x) : (x += 1) {
+            if (x - last_placed > 5) {
+                const coord = Coord.new2(room.start.z, x, room_end.y);
+                _place_machine(coord, &machines.Brazier);
+                last_placed = x;
+            }
+        }
+    } else if (room.width == 1) {
+        var y = room.start.y;
+        while (y < room_end.y) : (y += 1) {
+            if (y - last_placed > 5) {
+                const coord = Coord.new2(room.start.z, room_end.x, y);
+                _place_machine(coord, &machines.Brazier);
+                last_placed = y;
+            }
         }
     }
 }
@@ -623,7 +632,8 @@ pub fn placeLights(level: usize) void {
         if ((room.width * room.height) < 16)
             continue;
 
-        if (room.height == 1) {
+        // Treat corridors specially.
+        if (room.height == 1 or room.width == 1) {
             _lightCorridor(&room);
             continue;
         }
