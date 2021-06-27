@@ -180,8 +180,8 @@ pub const PowerSupply = Machine{
 pub const Brazier = Machine{
     .name = "a brazier",
 
-    .powered_tile = '☼',
-    .unpowered_tile = '○',
+    .powered_tile = '☐',
+    .unpowered_tile = '☐',
 
     .power_drain = 0,
     .power_add = 15,
