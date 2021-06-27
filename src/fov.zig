@@ -312,7 +312,7 @@ pub fn rayCast(
     _removeArtifacts(center.z, x_min, center.y, center.x, y_max - 1, -1, 1, buffer, opacity_func);
     _removeArtifacts(center.z, center.x, center.y, x_max - 1, y_max - 1, 1, 1, buffer, opacity_func);
 
-    buffer[center.y][center.x] = energy;
+    buffer[center.y][center.x] = 100;
 }
 
 pub fn rayCastOctants(
@@ -357,6 +357,8 @@ pub fn rayCastOctants(
             if (ray_energy == 0) break;
         }
     }
+
+    buffer[center.y][center.x] = 100;
 }
 
 // Much thanks to libtcod! :>
