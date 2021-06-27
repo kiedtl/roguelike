@@ -173,7 +173,11 @@ pub fn _update_fov(mob: *Mob) void {
         if (mob.fov[y][x] > 0) {
             const fc = Coord.new2(mob.coord.z, x, y);
 
-            if (dungeon.lightIntensityAt(fc).* < mob.night_vision) {
+            // If a tile is too dim to be seen by a mob and it's not adjacent to that mob,
+            // mark it as unlit.
+            if (fc.distance(mob.coord) > 1 and
+                dungeon.lightIntensityAt(fc).* < mob.night_vision)
+            {
                 mob.fov[y][x] = 0;
                 continue;
             }
