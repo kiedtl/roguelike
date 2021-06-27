@@ -597,6 +597,24 @@ pub fn placeGuards(level: usize, allocator: *mem.Allocator) void {
     }
 }
 
+fn _lightCorridor(room: *const Room) void {
+    assert(room.type == .Corridor);
+    const room_end = room.end();
+
+    var last_placed: usize = 0;
+
+    var x = room.start.x;
+    while (x < room_end.x) : (x += 1) {
+        if (x - last_placed > 5) {
+            const coord = Coord.new2(room.start.z, x, room_end.y);
+            var brazier = machines.Brazier;
+            brazier.powered_luminescence -= rng.rangeClumping(usize, 0, 30, 2);
+            _place_machine(coord, &brazier);
+            last_placed = x;
+        }
+    }
+}
+
 pub fn placeLights(level: usize) void {
     for (state.dungeon.rooms[level].items) |room| {
         if (room.prefab) |rfb| if (rfb.nolights) continue;
@@ -605,9 +623,10 @@ pub fn placeLights(level: usize) void {
         if ((room.width * room.height) < 16)
             continue;
 
-        // Don't light corridors.
-        if (room.width == 1 or room.height == 1)
+        if (room.height == 1) {
+            _lightCorridor(&room);
             continue;
+        }
 
         const room_end = room.end();
         const coords = [_]Coord{
