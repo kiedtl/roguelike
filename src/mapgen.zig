@@ -380,8 +380,8 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
     if (rng.onein(3)) {
         if (parent.prefab != null and distance == 0) distance += 1;
 
-        var child_w = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
-        var child_h = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
+        var child_w = rng.rangeClumping(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH, 2);
+        var child_h = rng.rangeClumping(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT, 2);
         child = parent.attach(side, child_w, child_h, distance, null) orelse return;
 
         while (roomIntersects(rooms, &child, parent, null, true) or child.overflowsLimit(&LIMIT)) {
