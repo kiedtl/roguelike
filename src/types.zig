@@ -1725,8 +1725,9 @@ pub const Tile = struct {
                 } else if (state.dungeon.at(coord).item) |item| {
                     switch (item) {
                         .Corpse => |corpse| {
-                            cell.ch = corpse.tile;
-                            cell.bg = 0xee0000;
+                            cell.ch = '%';
+                            cell.fg = 0xff9999;
+                            cell.bg = color;
                         },
                         .Potion => |potion| {
                             cell.ch = '¡';
