@@ -618,9 +618,11 @@ pub const Occupation = struct {
     work_fn: fn (*Mob, *mem.Allocator) void,
     fight_fn: ?fn (*Mob, *mem.Allocator) void,
 
-    // Is the "work" combative? if so, in "SawHostile" phase the mob should try
-    // to attack the hostile mob.
+    // Should the mob attack hostiles?
     is_combative: bool,
+
+    // Should the mob investigate noises?
+    is_curious: bool,
 
     // The "target" in any phase.
     target: ?Coord,
@@ -1898,6 +1900,7 @@ pub const WatcherTemplate = Mob{
         .work_fn = ai.watcherWork,
         .fight_fn = ai.watcherFight,
         .is_combative = true,
+        .is_curious = false,
         .target = null,
         .phase = .Work,
     },
@@ -1925,6 +1928,7 @@ pub const GuardTemplate = Mob{
         .work_fn = ai.guardWork,
         .fight_fn = ai.meleeFight,
         .is_combative = true,
+        .is_curious = true,
         .target = null,
         .phase = .Work,
     },
@@ -1953,6 +1957,7 @@ pub const ElfTemplate = Mob{
         .work_fn = ai.dummyWork,
         .fight_fn = ai.meleeFight,
         .is_combative = false,
+        .is_curious = false,
         .target = null,
         .phase = .Work,
     },
@@ -1981,6 +1986,7 @@ pub const InteractionLaborerTemplate = Mob{
         .work_fn = ai.interactionLaborerWork,
         .fight_fn = null,
         .is_combative = false,
+        .is_curious = false,
         .target = null,
         .phase = .Work,
     },
@@ -2009,6 +2015,7 @@ pub const GoblinTemplate = Mob{
         .work_fn = ai.wanderWork,
         .fight_fn = ai.meleeFight,
         .is_combative = true,
+        .is_curious = true,
         .target = null,
         .phase = .Work,
     },
@@ -2036,6 +2043,7 @@ pub const CaveRatTemplate = Mob{
         .work_fn = ai.wanderWork,
         .fight_fn = ai.meleeFight,
         .is_combative = false,
+        .is_curious = false,
         .target = null,
         .phase = .Work,
     },
