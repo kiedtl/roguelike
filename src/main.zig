@@ -111,6 +111,25 @@ fn readNoActionInput() void {
 
 // TODO: move this to state.zig...? There should probably be a separate file for
 // player-specific actions.
+fn moveOrFight(direction: Direction) bool {
+    const current = state.player.coord;
+
+    var dest = current;
+    if (!dest.move(direction, state.mapgeometry)) return false;
+
+    if (state.dungeon.at(dest).mob) |mob| {
+        if (mob.isHostileTo(state.player)) {
+            state.player.fight(mob);
+            return true;
+        }
+        return false;
+    }
+
+    return state.player.moveInDirection(direction);
+}
+
+// TODO: move this to state.zig...? There should probably be a separate file for
+// player-specific actions.
 fn fireLauncher() bool {
     if (state.player.inventory.wielded) |weapon| {
         if (weapon.launcher) |launcher| {
@@ -321,14 +340,14 @@ fn readInput() bool {
                 'd' => dropItem(),
                 ',' => state.player.grabItem(),
                 '.' => state.player.rest(),
-                'h' => state.player.moveInDirection(.West),
-                'j' => state.player.moveInDirection(.South),
-                'k' => state.player.moveInDirection(.North),
-                'l' => state.player.moveInDirection(.East),
-                'y' => state.player.moveInDirection(.NorthWest),
-                'u' => state.player.moveInDirection(.NorthEast),
-                'b' => state.player.moveInDirection(.SouthWest),
-                'n' => state.player.moveInDirection(.SouthEast),
+                'h' => moveOrFight(.West),
+                'j' => moveOrFight(.South),
+                'k' => moveOrFight(.North),
+                'l' => moveOrFight(.East),
+                'y' => moveOrFight(.NorthWest),
+                'u' => moveOrFight(.NorthEast),
+                'b' => moveOrFight(.SouthWest),
+                'n' => moveOrFight(.SouthEast),
                 's' => blk: {
                     _ = state.player.rest();
                     state.dungeon.atGas(state.player.coord)[gas.SmokeGas.id] += 1.0;

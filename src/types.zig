@@ -940,13 +940,7 @@ pub const Mob = struct { // {{{
         const coord = self.coord;
 
         if (!state.is_walkable(dest, .{ .right_now = true })) {
-            if (state.dungeon.at(dest).mob) |othermob| {
-                assert(!othermob.is_dead);
-                if (self.isHostileTo(othermob)) {
-                    self.fight(othermob);
-                    return true;
-                }
-            } else if (state.dungeon.at(dest).surface) |surface| {
+            if (state.dungeon.at(dest).surface) |surface| {
                 switch (surface) {
                     .Machine => |m| if (!m.isWalkable()) {
                         m.addPower(self);
@@ -955,8 +949,6 @@ pub const Mob = struct { // {{{
                     },
                     else => {},
                 }
-                return false;
-            } else {
                 return false;
             }
 

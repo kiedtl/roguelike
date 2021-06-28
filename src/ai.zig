@@ -229,7 +229,12 @@ pub fn wanderWork(mob: *Mob, alloc: *mem.Allocator) void {
 
 // - Move towards hostile, bapping it if we can.
 pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
-    mob.tryMoveTo(mob.enemies.items[0].mob.coord);
+    const target = mob.enemies.items[0].mob;
+    if (mob.coord.distance(target.coord) == 1) {
+        _ = mob.fight(target);
+    } else {
+        mob.tryMoveTo(target.coord);
+    }
 }
 
 // - Can we see the hostile?
@@ -277,7 +282,14 @@ pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
             }
         }
 
-        if (!moved) _ = mob.rest();
+        if (!moved) {
+            if (mob.coord.distance(target.coord) == 1) {
+                mob.fight(target);
+            } else {
+                _ = mob.rest();
+            }
+        }
+
         mob.makeNoise(Mob.NOISE_YELL);
     } else {
         _ = mob.rest();
