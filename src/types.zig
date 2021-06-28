@@ -914,7 +914,7 @@ pub const Mob = struct { // {{{
     //     - The mob wasn't working (e.g., may have been attacking), but the other
     //       one wasn't.
     //
-    pub fn canSwapWith(self: *Mob, other: *Mob, direction: ?Direction) bool {
+    pub fn canSwapWith(self: *const Mob, other: *Mob, direction: ?Direction) bool {
         var can = false;
         if (self.strength > other.strength) {
             can = true;
@@ -968,23 +968,6 @@ pub const Mob = struct { // {{{
         const coord = self.coord;
 
         if (!state.is_walkable(dest, .{ .right_now = true })) {
-            if (state.dungeon.at(dest).mob) |other| {
-                if (self.canSwapWith(other, direction)) {
-                    state.dungeon.at(dest).mob = self;
-                    state.dungeon.at(coord).mob = other;
-
-                    self.coord = dest;
-                    other.coord = coord;
-                    if (!self.isCreeping()) self.makeNoise(NOISE_MOVE);
-                    self.energy -= self.speed();
-
-                    // TODO: trigger machines
-
-                    return true;
-                }
-                return false;
-            }
-
             if (state.dungeon.at(dest).surface) |surface| {
                 switch (surface) {
                     .Machine => |m| if (!m.isWalkable()) {
@@ -999,11 +982,18 @@ pub const Mob = struct { // {{{
             return false;
         }
 
-        assert(state.dungeon.at(dest).mob == null);
+        if (state.dungeon.at(dest).mob) |other| {
+            if (!self.canSwapWith(other, direction)) return false;
+            state.dungeon.at(dest).mob = self;
+            state.dungeon.at(coord).mob = other;
+            self.coord = dest;
+            other.coord = coord;
+        } else {
+            state.dungeon.at(dest).mob = self;
+            state.dungeon.at(coord).mob = null;
+            self.coord = dest;
+        }
 
-        state.dungeon.at(dest).mob = self;
-        state.dungeon.at(coord).mob = null;
-        self.coord = dest;
         if (!self.isCreeping()) self.makeNoise(NOISE_MOVE);
         self.energy -= self.speed();
 
@@ -1227,7 +1217,7 @@ pub const Mob = struct { // {{{
                 to,
                 state.mapgeometry,
                 state.is_walkable,
-                .{},
+                .{ .mob = self },
                 &fba.allocator,
             ) orelse return null;
 
@@ -1247,7 +1237,7 @@ pub const Mob = struct { // {{{
         // recalculated next time.
         if (self.path_cache.get(pathobj)) |next| {
             const direction = Direction.from_coords(self.coord, next) catch unreachable;
-            if (!next.eq(to) and !state.is_walkable(next, .{})) {
+            if (!next.eq(to) and !state.is_walkable(next, .{ .mob = self })) {
                 _ = self.path_cache.remove(pathobj);
                 return null;
             } else {
