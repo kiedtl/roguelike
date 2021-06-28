@@ -56,7 +56,7 @@ pub const SteelSupport_NSE2_Prop = Prop{
     .name = "steel support",
     .tile = '╞',
     .fg = STEEL_SUPPORT_COLOR,
-    .opacity = 1.0,
+    .opacity = 0.0,
     .walkable = false,
 };
 
@@ -65,7 +65,7 @@ pub const SteelSupport_NSW2_Prop = Prop{
     .name = "steel support",
     .tile = '╡',
     .fg = STEEL_SUPPORT_COLOR,
-    .opacity = 1.0,
+    .opacity = 0.0,
     .walkable = false,
 };
 
@@ -74,7 +74,7 @@ pub const SteelSupport_NSE2W2_Prop = Prop{
     .name = "steel support",
     .tile = '╪',
     .fg = STEEL_SUPPORT_COLOR,
-    .opacity = 1.0,
+    .opacity = 0.0,
     .walkable = false,
 };
 
@@ -83,7 +83,7 @@ pub const SteelSupport_E2W2_Prop = Prop{
     .name = "steel support",
     .tile = '═',
     .fg = STEEL_SUPPORT_COLOR,
-    .opacity = 1.0,
+    .opacity = 0.0,
     .walkable = false,
 };
 
@@ -92,7 +92,7 @@ pub const LeftCopperCoilProp = Prop{
     .name = "half copper coil",
     .tile = '▌',
     .fg = COPPER_COIL_COLOR,
-    .opacity = 1.0,
+    .opacity = 0.0,
     .walkable = false,
 };
 
@@ -101,7 +101,7 @@ pub const RightCopperCoilProp = Prop{
     .name = "half copper coil",
     .tile = '▐',
     .fg = COPPER_COIL_COLOR,
-    .opacity = 1.0,
+    .opacity = 0.0,
     .walkable = false,
 };
 
@@ -110,7 +110,7 @@ pub const LowerCopperCoilProp = Prop{
     .name = "half copper coil",
     .tile = '▄',
     .fg = COPPER_COIL_COLOR,
-    .opacity = 1.0,
+    .opacity = 0.0,
     .walkable = false,
 };
 
@@ -119,7 +119,7 @@ pub const UpperCopperCoilProp = Prop{
     .name = "half copper coil",
     .tile = '▀',
     .fg = COPPER_COIL_COLOR,
-    .opacity = 1.0,
+    .opacity = 0.0,
     .walkable = false,
 };
 
@@ -128,7 +128,7 @@ pub const FullCopperCoilProp = Prop{
     .name = "large copper coil",
     .tile = '█',
     .fg = COPPER_COIL_COLOR,
-    .opacity = 1.0,
+    .opacity = 0.0,
     .walkable = false,
 };
 
