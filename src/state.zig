@@ -171,7 +171,7 @@ pub fn _update_fov(mob: *Mob) void {
     };
 
     if (mob.coord.eq(player.coord)) {
-        fov.rayCastOctants(mob.coord, mob.vision, 100, tileOpacity, &mob.fov, 0, 360);
+        fov.rayCast(mob.coord, mob.vision, 100, tileOpacity, &mob.fov, null);
     } else {
         fov.rayCast(mob.coord, mob.vision, 100, tileOpacity, &mob.fov, mob.facing);
     }
@@ -302,7 +302,7 @@ pub fn tickLight(level: usize) void {
             // before noticing the issue.
             //
             if (light > 0) {
-                fov.rayCastOctants(coord, 20, light, tileOpacity, light_buffer, 0, 316);
+                fov.rayCast(coord, 20, light, tileOpacity, light_buffer, null);
             }
         }
     }

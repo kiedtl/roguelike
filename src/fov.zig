@@ -265,7 +265,7 @@ pub fn rayCast(
     energy: usize,
     opacity_func: fn (Coord) usize,
     buffer: *[HEIGHT][WIDTH]usize,
-    direction: Direction,
+    direction: ?Direction,
 ) void {
     // Area of quadrant coverage by each direction:
     //
@@ -288,19 +288,23 @@ pub fn rayCast(
     //                    360 0
     //
     //
-    const quadrant: [4]usize = switch (direction) {
-        .South => [_]usize{ 315, 360, 0, 45 },
-        .SouthEast => [_]usize{ 0, 45, 45, 90 },
-        .East => [_]usize{ 45, 90, 90, 135 },
-        .NorthEast => [_]usize{ 90, 135, 135, 180 },
-        .North => [_]usize{ 135, 180, 180, 225 },
-        .NorthWest => [_]usize{ 180, 225, 225, 270 },
-        .West => [_]usize{ 225, 270, 270, 315 },
-        .SouthWest => [_]usize{ 270, 315, 315, 360 },
-    };
+    if (direction) |d| {
+        const quadrant: [4]usize = switch (d) {
+            .South => [_]usize{ 315, 360, 0, 45 },
+            .SouthEast => [_]usize{ 0, 45, 45, 90 },
+            .East => [_]usize{ 45, 90, 90, 135 },
+            .NorthEast => [_]usize{ 90, 135, 135, 180 },
+            .North => [_]usize{ 135, 180, 180, 225 },
+            .NorthWest => [_]usize{ 180, 225, 225, 270 },
+            .West => [_]usize{ 225, 270, 270, 315 },
+            .SouthWest => [_]usize{ 270, 315, 315, 360 },
+        };
 
-    rayCastOctants(center, radius, energy, opacity_func, buffer, quadrant[0], quadrant[1]);
-    rayCastOctants(center, radius, energy, opacity_func, buffer, quadrant[2], quadrant[3]);
+        _rayCastOctants(center, radius, energy, opacity_func, buffer, quadrant[0], quadrant[1]);
+        _rayCastOctants(center, radius, energy, opacity_func, buffer, quadrant[2], quadrant[3]);
+    } else {
+        _rayCastOctants(center, radius, energy, opacity_func, buffer, 0, 360);
+    }
 
     const x_min = utils.saturating_sub(center.x, radius);
     const y_min = utils.saturating_sub(center.y, radius);
@@ -315,7 +319,7 @@ pub fn rayCast(
     buffer[center.y][center.x] = 100;
 }
 
-pub fn rayCastOctants(
+fn _rayCastOctants(
     center: Coord,
     radius: usize,
     energy: usize,
@@ -357,8 +361,6 @@ pub fn rayCastOctants(
             if (ray_energy == 0) break;
         }
     }
-
-    buffer[center.y][center.x] = 100;
 }
 
 // Much thanks to libtcod! :>
