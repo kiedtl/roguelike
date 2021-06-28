@@ -200,7 +200,7 @@ fn _can_hear_hostile(mob: *Mob) ?Coord {
         if (mob.canHear(othermob.coord)) |sound| {
             if (mob.isHostileTo(othermob)) {
                 return othermob.coord;
-            } else if (sound > 20) {
+            } else if (sound > 20 and mob.occupation.phase == .SawHostile) {
                 // Sounds like one of our friends [or a neutral mob] is having
                 // quite a party, let's go join the fun~
                 return othermob.coord;
