@@ -1407,6 +1407,7 @@ pub const Machine = struct {
     power_add: usize = 100, // Power added on interact
     auto_power: bool = false,
 
+    treat_as_walkable_by: ?Allegiance = null,
     powered_walkable: bool = true,
     unpowered_walkable: bool = true,
 

@@ -262,6 +262,7 @@ pub const LockedDoor = Machine{
     .powered_tile = '⌂',
     .unpowered_tile = '⌂',
     .power_drain = 100,
+    .treat_as_walkable_by = .Sauron,
     .powered_walkable = false,
     .unpowered_walkable = false,
     .powered_opacity = 0.7,

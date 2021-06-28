@@ -119,6 +119,11 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
     if (dungeon.at(coord).surface) |surface| {
         switch (surface) {
             .Machine => |m| {
+                if (m.treat_as_walkable_by) |a|
+                    if (opts.mob) |mob|
+                        if (a == mob.allegiance)
+                            return true; // XXX: overrides below
+
                 if (opts.right_now) {
                     if (!m.isWalkable())
                         return false;
