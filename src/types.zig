@@ -1892,6 +1892,7 @@ pub const Gas = struct {
 // STYLE: move to mobs.zig
 
 pub const WatcherTemplate = Mob{
+    .id = "watcher",
     .species = "watcher",
     .tile = 'ש',
     .occupation = Occupation{
@@ -2002,6 +2003,7 @@ pub const InteractionLaborerTemplate = Mob{
 };
 
 pub const GoblinTemplate = Mob{
+    .id = "goblin",
     .species = "goblin",
     .tile = 'g',
     .occupation = Occupation{
