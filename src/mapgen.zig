@@ -584,7 +584,7 @@ pub fn placeGuards(level: usize, allocator: *mem.Allocator) void {
     for (state.dungeon.rooms[level].items) |room| {
         if (room.prefab) |rfb| if (rfb.noguards) continue;
 
-        if (rng.onein(14)) {
+        if (rng.onein(20)) {
             const post_coord = room.randomCoord();
             var watcher = WatcherTemplate;
             watcher.init(allocator);
