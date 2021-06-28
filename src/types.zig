@@ -656,6 +656,7 @@ pub const Mob = struct { // {{{
     statuses: StatusArray = StatusArray.initFill(.{}),
     occupation: Occupation,
     activities: RingBuffer(Activity, 4) = .{},
+    last_attempted_move: ?Direction = null,
     last_damage: ?Damage = null,
     inventory: Inventory = .{},
     is_dead: bool = false,
@@ -905,6 +906,31 @@ pub const Mob = struct { // {{{
         state.dungeon.soundAt(self.coord).* += amount;
     }
 
+    // Check if a mob, when trying to move into a space that already has a mob,
+    // can swap with that other mob. Return true if:
+    //     - The mob's strength is greater than the other mob's strength.
+    //     - The other mob was trying to move in the opposite direction, i.e.,
+    //       both mobs were trying to shuffle past each other.
+    //     - The mob wasn't working (e.g., may have been attacking), but the other
+    //       one wasn't.
+    //
+    pub fn canSwapWith(self: *Mob, other: *Mob, direction: ?Direction) bool {
+        var can = false;
+        if (self.strength > other.strength) {
+            can = true;
+        }
+        if (self.occupation.phase != .Work and other.occupation.phase == .Work) {
+            can = true;
+        }
+        if (direction != null and other.last_attempted_move != null) {
+            if (direction.? == other.last_attempted_move.?.opposite()) {
+                can = true;
+            }
+        }
+
+        return can;
+    }
+
     // Try to move to a destination, one step at a time.
     //
     // Unlike the other move functions (teleportTo, moveInDirection) this
@@ -925,21 +951,40 @@ pub const Mob = struct { // {{{
     pub fn moveInDirection(self: *Mob, direction: Direction) bool {
         const coord = self.coord;
 
-        // Face in that direction no matter whether we end up moving or no
+        // Face in that direction and update last_attempted_move, no matter
+        // whether we end up moving or no
         self.facing = direction;
+        self.last_attempted_move = direction;
 
         var dest = coord;
         if (!dest.move(direction, Coord.new(state.WIDTH, state.HEIGHT))) {
             return false;
         }
 
-        return self.teleportTo(dest);
+        return self.teleportTo(dest, direction);
     }
 
-    pub fn teleportTo(self: *Mob, dest: Coord) bool {
+    pub fn teleportTo(self: *Mob, dest: Coord, direction: ?Direction) bool {
         const coord = self.coord;
 
         if (!state.is_walkable(dest, .{ .right_now = true })) {
+            if (state.dungeon.at(dest).mob) |other| {
+                if (self.canSwapWith(other, direction)) {
+                    state.dungeon.at(dest).mob = self;
+                    state.dungeon.at(coord).mob = other;
+
+                    self.coord = dest;
+                    other.coord = coord;
+                    if (!self.isCreeping()) self.makeNoise(NOISE_MOVE);
+                    self.energy -= self.speed();
+
+                    // TODO: trigger machines
+
+                    return true;
+                }
+                return false;
+            }
+
             if (state.dungeon.at(dest).surface) |surface| {
                 switch (surface) {
                     .Machine => |m| if (!m.isWalkable()) {
@@ -949,7 +994,6 @@ pub const Mob = struct { // {{{
                     },
                     else => {},
                 }
-                return false;
             }
 
             return false;
@@ -970,14 +1014,7 @@ pub const Mob = struct { // {{{
             }
         }
 
-        if (coord.distance(dest) == 1) {
-            // [unreachable] Since the distance == 1 the coords have to be together
-            const d = Direction.from_coords(coord, dest) catch unreachable;
-
-            self.activities.append(Activity{ .Move = d });
-        } else {
-            self.activities.append(Activity{ .Teleport = dest });
-        }
+        if (direction) |d| self.activities.append(Activity{ .Move = d });
 
         return true;
     }

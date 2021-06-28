@@ -342,7 +342,7 @@ pub fn powerStairUp(machine: *Machine) void {
         }
 
         if (dest) |spot| {
-            const moved = culprit.teleportTo(spot);
+            const moved = culprit.teleportTo(spot, null);
             assert(moved);
             state.message(.Move, "You ascend.", .{});
         }
@@ -364,7 +364,7 @@ pub fn powerStairDown(machine: *Machine) void {
         }
 
         if (dest) |spot| {
-            const moved = culprit.teleportTo(spot);
+            const moved = culprit.teleportTo(spot, null);
             assert(moved);
             state.message(.Move, "You descend.", .{});
         }
@@ -383,7 +383,7 @@ pub fn powerLockedDoor(machine: *Machine) void {
 
         if (!state.is_walkable(newcoord, .{ .right_now = true })) return;
 
-        _ = culprit.teleportTo(newcoord);
+        _ = culprit.teleportTo(newcoord, null);
     } else {
         state.message(.Move, "You feel a malevolent force forbidding you to pass.", .{});
     }

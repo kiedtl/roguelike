@@ -122,7 +122,6 @@ fn moveOrFight(direction: Direction) bool {
             state.player.fight(mob);
             return true;
         }
-        return false;
     }
 
     return state.player.moveInDirection(direction);
