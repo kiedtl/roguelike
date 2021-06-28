@@ -391,7 +391,12 @@ fn tickGame() void {
         mob.energy += 100;
 
         while (mob.energy >= 0) {
-            if (mob.is_dead or mob.should_be_dead()) break;
+            if (mob.is_dead) {
+                break;
+            } else if (mob.should_be_dead()) {
+                mob.kill();
+                break;
+            }
 
             const prev_energy = mob.energy;
 

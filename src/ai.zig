@@ -36,6 +36,8 @@ pub fn dummyWork(m: *Mob, _: *mem.Allocator) void {
 // https://old.reddit.com/r/roguelikedev/comments/57dnqk/faq_friday_49_awareness_systems/d8r1ztp/
 //
 pub fn checkForHostiles(mob: *Mob) void {
+    assert(!mob.is_dead);
+
     if (!mob.occupation.is_combative)
         return;
 
@@ -63,27 +65,21 @@ pub fn checkForHostiles(mob: *Mob) void {
                 .counter = mob.memory_duration,
             }) catch unreachable;
         }
-
-        // Check for a dead enemy and drop that record.
-        if (state.dungeon.at(fitem).item) |item| {
-            switch (item) {
-                .Corpse => |corpse| {
-                    for (mob.enemies.items) |*enemy, i| {
-                        if (@ptrToInt(enemy.mob) == @ptrToInt(corpse))
-                            _ = mob.enemies.orderedRemove(i);
-                    }
-                },
-                else => {},
-            }
-        }
     };
 
     // Decrement counters.
-    for (mob.enemies.items) |*enemy, i| {
-        if (enemy.counter == 0) {
+    // When we remove an item, restart the loop (since the container is modified).
+    // FIXME: iterating over a container with a loop that potentially modifies
+    // that container is just begging for trouble.
+    var i: usize = 0;
+    while (i < mob.enemies.items.len) {
+        const enemy = &mob.enemies.items[i];
+        if (enemy.counter == 0 or enemy.mob.is_dead) {
             _ = mob.enemies.orderedRemove(i);
+            i = 0;
         } else {
             enemy.counter -= 1;
+            i += 1;
         }
     }
 

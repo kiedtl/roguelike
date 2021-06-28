@@ -1089,9 +1089,6 @@ pub const Mob = struct { // {{{
 
         if (recipient.coord.eq(state.player.coord)) {
             state.message(.Info, "The {} {} you for {} damage!", .{ attacker.species, hitstr, damage });
-            if (recipient.should_be_dead()) {
-                state.message(.Damage, "The {} killed you.", .{attacker.species});
-            }
         } else if (attacker.coord.eq(state.player.coord)) {
             state.message(.Info, "You {} the {} for {} damage!", .{ hitstr, recipient.species, damage });
             if (recipient.should_be_dead()) {
