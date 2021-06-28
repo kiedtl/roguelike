@@ -1228,6 +1228,7 @@ pub const Mob = struct { // {{{
         p_se.duration = Status.MAX_DURATION;
     }
 
+    // TODO: take *const Mob
     pub fn isUnderStatus(self: *Mob, status: Status) ?*StatusData {
         const se = self.statuses.getPtr(status);
         return if ((se.started + se.duration) < state.ticks) null else se;
@@ -1242,14 +1243,18 @@ pub const Mob = struct { // {{{
         }
     }
 
-    pub fn isAwareOfAttack(self: *const Mob, attacker: Coord) bool {
-        // Was the mob in attack/investigate phase?
+    // Check if a mob is capable of dodging an attack. Return false if:
+    //  - Mob was in .Work AI phase, and not in Investigate/Attack phase
+    //  - Mob was incapitated by a status effect (e.g. Paralysis)
+    //
+    pub fn isAwareOfAttack(self: *Mob, attacker: Coord) bool {
         switch (self.occupation.phase) {
             .SawHostile, .GoTo => {},
             else => return false,
         }
 
-        // Could the mob see the attacker?
+        if (self.isUnderStatus(.Paralysis)) |_| return false;
+
         if (self.cansee(attacker)) return true;
 
         return false;
