@@ -374,7 +374,7 @@ fn tickGame() void {
 
     state.ticks += 1;
     state.tickMachines(cur_level);
-    state.tickLight();
+    state.tickLight(cur_level);
     state.tickAtmosphere(0);
     state.tickSound();
 
@@ -432,7 +432,7 @@ fn tickGame() void {
 fn viewerTickGame(cur_level: usize) void {
     state.ticks += 1;
     state.tickMachines(cur_level);
-    state.tickLight();
+    state.tickLight(cur_level);
     state.tickAtmosphere(0);
     state.tickSound();
 
@@ -499,7 +499,6 @@ fn viewerDisplay(tty_height: usize, level: usize, sy: usize) void {
 
 fn viewerMain() void {
     state.player.kill();
-    state.tickLight();
 
     var level: usize = PLAYER_STARTING_LEVEL;
     var y: usize = 0;

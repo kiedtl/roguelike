@@ -266,9 +266,8 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
     }
 }
 
-pub fn tickLight() void {
-    const cur_lev = player.coord.z;
-    const light_buffer = &dungeon.light_intensity[cur_lev];
+pub fn tickLight(level: usize) void {
+    const light_buffer = &dungeon.light_intensity[level];
 
     // Clear out previous light levels.
     for (light_buffer) |*row| for (row) |*cell| {
@@ -281,7 +280,7 @@ pub fn tickLight() void {
     while (y < HEIGHT) : (y += 1) {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
-            const coord = Coord.new2(cur_lev, x, y);
+            const coord = Coord.new2(level, x, y);
             const light = dungeon.at(coord).emittedLightIntensity();
 
             // A memorial to my stupidity:
