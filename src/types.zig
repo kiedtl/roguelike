@@ -37,6 +37,7 @@ pub const AnnotatedCoordArrayList = std.ArrayList(AnnotatedCoord);
 pub const RoomArrayList = std.ArrayList(Room);
 pub const MessageArrayList = std.ArrayList(Message);
 pub const StatusArray = enums.EnumArray(Status, StatusData);
+pub const SpatterArray = enums.EnumArray(Spatter, usize);
 pub const MobList = LinkedList(Mob);
 pub const SobList = LinkedList(Sob);
 pub const MobArrayList = std.ArrayList(*Mob); // STYLE: rename to MobPtrArrayList
@@ -685,7 +686,8 @@ pub const Mob = struct { // {{{
     strength: usize,
     memory_duration: usize,
     base_speed: usize,
-    max_HP: f64, // Should always be a whole number
+    max_HP: f64,
+    blood: Spatter,
 
     pub const Inventory = struct {
         pack: PackBuffer = PackBuffer.init(&[_]Item{}),
@@ -1102,6 +1104,7 @@ pub const Mob = struct { // {{{
     pub fn takeDamage(self: *Mob, d: Damage) void {
         self.HP = math.clamp(self.HP - d.amount, 0, self.max_HP);
         self.last_damage = d;
+        state.dungeon.spatter(self.coord, self.blood);
     }
 
     // Called when player hits the [r]ifle key -- I see no reason for it to
@@ -1698,6 +1701,7 @@ pub const Tile = struct {
     marked: bool = false,
     surface: ?SurfaceItem = null,
     item: ?Item = null,
+    spatter: SpatterArray = SpatterArray.initFill(0),
 
     pub fn emittedLightIntensity(self: *const Tile) usize {
         if (self.type == .Lava)
@@ -1804,6 +1808,16 @@ pub const Tile = struct {
             cell.fg = math.max(utils.percentageOfColor(cell.fg, light_adj), utils.darkenColor(cell.fg, 4));
         }
 
+        var spattering = self.spatter.iterator();
+        while (spattering.next()) |entry| {
+            const spatter = entry.key;
+            const num = entry.value.*;
+            const color = spatter.color();
+            const q = @intToFloat(f64, num / 10);
+            const aq = 1 - math.clamp(q, 0.19, 1);
+            if (num > 0) cell.bg = utils.mixColors(color, cell.bg, aq);
+        }
+
         const gases = state.dungeon.atGas(coord);
         for (gases) |q, g| {
             const gcolor = gas.Gases[g].color;
@@ -1861,6 +1875,24 @@ pub const Dungeon = struct {
         return walls;
     }
 
+    pub fn spatter(self: *Dungeon, c: Coord, what: Spatter) void {
+        for (&DIRECTIONS) |d| {
+            if (!rng.onein(4)) continue;
+
+            var neighbor = c;
+            if (!neighbor.move(d, state.mapgeometry)) continue;
+            const prev = self.at(neighbor).spatter.get(what);
+            const new = math.min(prev + rng.range(usize, 0, 5), 10);
+            self.at(neighbor).spatter.set(what, new);
+        }
+
+        if (rng.boolean()) {
+            const prev = self.at(c).spatter.get(what);
+            const new = math.min(prev + rng.range(usize, 0, 5), 10);
+            self.at(c).spatter.set(what, new);
+        }
+    }
+
     pub inline fn at(self: *Dungeon, c: Coord) *Tile {
         return &self.map[c.z][c.y][c.x];
     }
@@ -1876,6 +1908,16 @@ pub const Dungeon = struct {
 
     pub inline fn lightIntensityAt(self: *Dungeon, c: Coord) *usize {
         return &self.light_intensity[c.z][c.y][c.x];
+    }
+};
+
+pub const Spatter = enum {
+    Blood,
+
+    pub inline fn color(self: Spatter) u32 {
+        return switch (self) {
+            .Blood => 0x9a1313,
+        };
     }
 };
 
@@ -1914,6 +1956,7 @@ pub const WatcherTemplate = Mob{
     .max_HP = 20,
     .memory_duration = 10,
     .base_speed = 65,
+    .blood = .Blood,
 
     .HP = 20,
     .strength = 15, // weakling!
@@ -1942,6 +1985,7 @@ pub const GuardTemplate = Mob{
     .max_HP = 30,
     .memory_duration = 3,
     .base_speed = 110,
+    .blood = .Blood,
 
     .HP = 30,
     .strength = 20,
@@ -1971,6 +2015,7 @@ pub const ElfTemplate = Mob{
     .max_HP = 30,
     .memory_duration = 10,
     .base_speed = 80,
+    .blood = .Blood,
 
     .HP = 30,
     .strength = 19,
@@ -2000,6 +2045,7 @@ pub const InteractionLaborerTemplate = Mob{
     .max_HP = 30,
     .memory_duration = 5,
     .base_speed = 100,
+    .blood = .Blood,
 
     .HP = 30,
     .strength = 10,
@@ -2029,6 +2075,7 @@ pub const GoblinTemplate = Mob{
     .max_HP = 35,
     .memory_duration = 8,
     .base_speed = 100,
+    .blood = .Blood,
 
     .HP = 35,
     .strength = 18,
@@ -2057,6 +2104,7 @@ pub const CaveRatTemplate = Mob{
     .max_HP = 10,
     .memory_duration = 15,
     .base_speed = 40,
+    .blood = .Blood,
 
     .HP = 10,
     .strength = 5,
