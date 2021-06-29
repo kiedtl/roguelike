@@ -1754,7 +1754,7 @@ pub const Tile = struct {
                     switch (item) {
                         .Corpse => |corpse| {
                             cell.ch = '%';
-                            cell.fg = 0xff9999;
+                            cell.fg = 0xffe0ef;
                             cell.bg = color;
                         },
                         .Potion => |potion| {
