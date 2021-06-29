@@ -551,6 +551,7 @@ pub fn placeGuards(level: usize, allocator: *mem.Allocator) void {
         var patrol_warden: ?*Mob = null;
 
         if (room.prefab) |rfb| if (rfb.noguards) continue;
+        if (room.type == .Corridor) continue;
 
         var placed_units: usize = 0;
         while (placed_units < patrol_units) {
@@ -583,6 +584,7 @@ pub fn placeGuards(level: usize, allocator: *mem.Allocator) void {
 
     for (state.dungeon.rooms[level].items) |room| {
         if (room.prefab) |rfb| if (rfb.noguards) continue;
+        if (room.type == .Corridor) continue;
 
         if (rng.onein(20)) {
             const post_coord = room.randomCoord();
