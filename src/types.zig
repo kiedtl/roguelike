@@ -1963,7 +1963,7 @@ pub const ElfTemplate = Mob{
     },
     .allegiance = .Illuvatar,
     .vision = 20,
-    .night_vision = 0,
+    .night_vision = 3,
 
     .willpower = 4,
     .dexterity = 21,
