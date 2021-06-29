@@ -3,45 +3,49 @@ New mobs
 ([CE]Sauron, [LE]NoneEvil, [CG]NoneGood, [LG]Illuvatar, [CC]Sauron/NonEvil, [??]Neutral,
  [NN]NightCreature)
 --------
-CC	a	spiders
+LE	a	spiders
 			- Web attacks that hold player in stasis.
 			- Long-lived, slow acting poisoned bite.
-CC	s	burning brute
+LE	s	burning brute
 			- Tremendously powerful fire attacks.
 			- Can be leveraged against guards.
 			"A winged demon composed primarily of boiling granite, capable of
 			fearsome fire attacks."
-CC	s	blazing brute
+LE	s	blazing brute
 			- Upscaled version of burning brute?
-CC	s	winged terror
-			- Summoner.
-CC	a	jackals
-CC	a	hounds
-CC	s	locust
-CC	s	cankerworm
-CC	h	wraith
-CC	s	death angel
+				- Maybe a Unique?
+LE	a	internet troll
+LE	o	mimic
+LE	s	locust
+LE	s	cankerworm
+LE	s	death angel
 			- Essentially a necromancer, but much more powerful on its own.
 			- Capable of striking certain mobs (low willpower, non-sentient
 			  mobs, mindless mobs, or undead mobs) dead in one turn.
+LE	s	will o' the wisp
+LE	s	winged terror
+			- Summoner.
+			- Main weapon is Fear spell.
+CE	h	wraith
+CE	a	jackals
+CE	a	hounds
 CE	s	greater, lesser, minor necromancer
 			"An unusually fragile minor demon that has long wielded the secrets
 			of life and death."
-CE	h	orc
+CE	h	goblin
 			"Middle-sized humanoids with skin only slightly darker than the
-			underside of a rainbow trout, these ferocious beings are nothing
+			underside of a rainbow trout, these ferocious creatures are nothing
 			like the misshapen apes that you've been told about around the
 			evening campfire.
 CE	a	hellhounds
 CE	h	death/fire/ether knight
-LE	s	will o' the wisp
 CE	a	fire worm (salamander?)
 CE	o	crystal statue
 			- Confuses intruders that wander too closely.
 			- Nearly indestructible, except by fire attacks.
 			"A statue of some nameless humanoid creature than once inhabited
 			the pits of Udùn. These statues are almost as rare as the
-			translucent white crystal they're composed of."
+			translucent blue crystal they're composed of."
 CE	o	turquoise statue
 			- Raises an awful shriek when the player passes it.
 			- Nearly indestructible, except by fire attacks.
@@ -56,8 +60,6 @@ CE	u	lich
 			very necromantic powers he once served."
 CE	a	troll
 CE	o	floating eye(?)
-LE	a	internet troll
-LE	o	mimic
 LG	s	shining one
 LG	s	angel
 LG	s	archangel
@@ -73,9 +75,7 @@ NN	o	stalker (invisible)
 			- Stalks victim, occasionally delivering blows.
 NN	o	bogeyman (TODO: change name)
 			- Stalks victim invisibly in groups of 3-5, then becomes visible
-			  and gangs up to beat victim's skull in. Casts silence, but, as
-			  with the bogeymen in Dwarf Fortress, constantly hurls insults
-			  and cackles while attacking.
+			  and gangs up to beat victim's skull in. Casts silence.
 			- Incredibly good at dodging.
 			"A emaciated humanoid creature of hideous appearance, possessed
 			with eyes that are both dull and bright in the dungeon's gloom."
@@ -85,10 +85,10 @@ NN	o	night wanderer
 NN	o	creeping death
 			- Invisible.
 			- Waits for victim to enter a dead end, then emits a suffocating
-			  gas that envelopes victim. Said gas is completely opaque and is
+			  gas that envelopes victim. Gas is completely opaque and is
 			  jet black.
-			"An invisible Presence of destroying fire that stalks the dungeon,
-			wreathed in unapproachable darkness."
+			"An invisible Presence that stalks the dungeon, wreathed in
+			unapproachable darkness."
 NN	o	grue
 			- Like stalker, but dies when coming into contact with light.
 NN	o	vampire
@@ -298,6 +298,8 @@ potion of irradiation [c]
 	- Releases corium.
 potion of starvation [s]
 	- Increases digestion rate.
+potion of decaffeination
+	- Emits gas that puts mob to sleep.
 potion of dehydration
 	- ???
 potion of dilution
@@ -360,11 +362,9 @@ Occupations
 	Always wears heat-proof cloak, and carries extinguisher. Defenseless
 	  against intruders.
 	Should flee if it realizes that the "fire" is an angry Burning Brute.
-- Scout
-	Purpose: roam through dungeon, looking for things that need to be done.
-	Reports the following: fires, bloody/dirty floors, overgrown fungi/plants
-	  that need to be removed, broken machines/traps/props, wounded mobs that
-	  are unconscious, and presence of corpses.
+- Cleaner
+	Purpose: add some life to the dungeon
+	Cleans spattering of blood from floors/walls
 - Electrician
 	Purpose: fix electricity-emitting machines.
 	Fixes malfunctioning power supplies and power storage facilities, which
@@ -412,9 +412,22 @@ Posters
 - Production of human rations must increase by 33% by the middle of next week.
 - Please do not feed the prisoners.
 - Prison staffers must strive to be inclusive and welcoming to all new inmates.
-- WANTED: <player>, escaped prisoner.
+- WANTED: Usko-nuhelmir, human, escaped prisoner.
 - Absence without leave is punishable by a mandatory interview with the
   High Priest.
+
+
+Unique mobs
+---------
+- Captain of the Guard
+- Head of Research
+- Marshall of the Dead
+  Nahorego Zinnugh
+- Keeper of the Fire Stones (High Priest)
+  Uberego Sohlghâsh
+- the player
+  Usko-nuhelmir
+
 
 Books
 -----
@@ -517,6 +530,16 @@ x Show vision "energies" on FOV
 x Make lighting system affect stealth/FOV
 - Make raycasting use bounding box instead of slower trigonometry method?
 
+Temperature
+===========
+- Add temperature matrix, tickTemperature(); make magma emit heat
+- Integrate with lighting system (make hot tiles emit light)
+- Update tickTemperature() to work with material's specific heat
+- Add emits_heat to Mob{}, define Burning Brute
+- Add min_heat, max_heat to Mob{}; add tickTemperatureEffects()
+- Allow walls to melt
+- Allow props and machines to be damaged and melt
+
 Room features:
 ==============
 - Moar materials for walls
@@ -536,17 +559,20 @@ x Make the "lamps" electric "braziers"
 Mobs, AI
 ========
 x Make watchers shout loudly
-- Allow mobs to shuffle past each other in corridors
+x Allow mobs to shuffle past each other in corridors
 - Add reproducing rats
 x Ensure that laborers don't leave to investigate noises
 - Ensure that the EnemyRecord counter is only decremented if the pursuer can
   see the last spot where the hostile was seen
 - Move off of tile if that tile has dangerous gas
+- Go into rage when encountering corpse of allied mob
+- "Scan" room when encountering blood spattering
+x Make watchers smack intruders when they can't run
 
 User Interface
 ==============
 - Add padding between infopane/msgpane and map
-- Make it easier to tell the heavily wounded from dead
+x Make it easier to tell the heavily wounded from dead
 - @ command to see player's full AC and stats
 x Fix showing of display percentage of last damage
 - UI for status effects (paralysis, etc)
@@ -562,7 +588,7 @@ Fixes
 =====
 - Add walls to edges of map after mapgen
 - Place stairs only in rooms
-- Fix sound propagation
+x Fix sound propagation
 
 Openworld:
 ==========
@@ -574,8 +600,9 @@ x Add goblins, rats, and other mobs to populate the Openworld
 
 Stretch goals:
 ==============
+- Use Dijkstra for lighting/FOV?
 - Potion and Ring ID system.
-- Blood spattering?
+x Blood spattering?
 - Speech bubbles in following situations:
   - On spotting an enemy ("Aha!", "It's a <species>!", "It's the @!!")
   - On being cornered ("Don't touch me!", "Go away!", "No farther!")
@@ -585,8 +612,8 @@ Stretch goals:
 - Smell mechanics that allow, say, hellhounds and snakes to detect
   intruders even if they can't see them.
 - Ranged melee weapons, e.g., spear and whips
-- Add braziers that are built into the walls, and use that instead for
-  corridors
+- Add braziers that are built into the walls (aka torches), and use that instead
+  for corridors
 - Light colors
 
 Optimizations
@@ -597,7 +624,7 @@ Optimizations
 
 Code cleanups
 =============
-- Defined unimplemented() and todo()
+- Defined unimplemented(), todo(), and oom()
 - Stop using the freaking `catch unreachable` syntax:
     libera#zig 19:58 <ikskuh> "catch unreachable" will happily continue to execute code
                               after the error in non-safe build modes
