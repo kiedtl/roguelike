@@ -1296,26 +1296,23 @@ pub const Mob = struct { // {{{
             return null; // Can't hear across levels
         if (self.coord.distance(coord) > MAX_FOH)
             return null; // Too far away
-        if (sound <= self.hearing)
+        if (sound < self.hearing)
             return null; // Too quiet to hear
 
         const line = self.coord.drawLine(coord, state.mapgeometry);
-        var sound_resistance: f64 = 0.0;
+        var apparent_volume = sound - self.hearing;
 
         // FIXME: this lazy sound propagation formula isn't accurate. But this is
         // a game, so I can get away with it, right?
-        for (line.constSlice()) |line_coord| {
-            const resistance = if (state.dungeon.at(line_coord).type == .Wall)
-                0.4 * state.dungeon.at(line_coord).material.density
+        for (line.constSlice()) |c| {
+            const resistance: usize = if (state.dungeon.at(c).type == .Wall)
+                @floatToInt(usize, 2 * state.dungeon.at(c).material.density)
             else
-                0.08;
-            sound_resistance += resistance;
-            if (sound_resistance > 1.0) break;
+                0;
+            apparent_volume = utils.saturating_sub(apparent_volume, resistance);
         }
 
-        const heard = sound - self.hearing;
-        const apparent_volume = utils.saturating_sub(heard, @floatToInt(usize, sound_resistance));
-        return if (apparent_volume == 0) null else apparent_volume;
+        return if (apparent_volume < self.hearing) apparent_volume else null;
     }
 
     pub fn isHostileTo(self: *const Mob, othermob: *const Mob) bool {
