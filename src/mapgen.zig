@@ -590,7 +590,7 @@ pub fn placeGuards(level: usize, allocator: *mem.Allocator) void {
             watcher.init(allocator);
             watcher.occupation.work_area.append(post_coord) catch unreachable;
             watcher.coord = post_coord;
-            watcher.facing = .North;
+            watcher.facing = rng.chooseUnweighted(Direction, &DIRECTIONS);
             state.mobs.append(watcher) catch unreachable;
             state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
         }

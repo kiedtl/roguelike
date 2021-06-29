@@ -159,7 +159,6 @@ pub fn watcherWork(mob: *Mob, alloc: *mem.Allocator) void {
     var post = mob.occupation.work_area.items[0];
 
     if (mob.coord.eq(post)) {
-        _guard_glance(mob, mob.facing);
         _ = mob.rest();
         return;
     } else {
