@@ -288,7 +288,7 @@ pub fn tickLight(level: usize) void {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
             const coord = Coord.new2(level, x, y);
-            const light = dungeon.at(coord).emittedLightIntensity();
+            const light = dungeon.emittedLightIntensity(coord);
 
             // A memorial to my stupidity:
             //

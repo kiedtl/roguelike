@@ -9,6 +9,7 @@ const LinkedList = @import("list.zig").LinkedList;
 const RingBuffer = @import("ringbuffer.zig").RingBuffer;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
+const heat = @import("heat.zig");
 const rng = @import("rng.zig");
 const dijkstra = @import("dijkstra.zig");
 const display = @import("display.zig");
@@ -1700,20 +1701,6 @@ pub const Tile = struct {
     item: ?Item = null,
     spatter: SpatterArray = SpatterArray.initFill(0),
 
-    pub fn emittedLightIntensity(self: *const Tile) usize {
-        if (self.type == .Lava)
-            return TileType.LAVA_LIGHT_INTENSITY;
-
-        var l: usize = 0;
-        if (self.surface) |surface| {
-            switch (surface) {
-                .Machine => |m| l += m.luminescence(),
-                else => {},
-            }
-        }
-        return l;
-    }
-
     pub fn displayAs(coord: Coord) termbox.tb_cell {
         var self = state.dungeon.at(coord);
         var cell = termbox.tb_cell{};
@@ -1832,9 +1819,30 @@ pub const Dungeon = struct {
     sound: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     light_intensity: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     light_color: [LEVELS][HEIGHT][WIDTH]u32 = [1][HEIGHT][WIDTH]u32{[1][WIDTH]u32{[1]u32{0} ** WIDTH} ** HEIGHT} ** LEVELS,
+    heat: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{heat.DEFAULT_HEAT} ** WIDTH} ** HEIGHT} ** LEVELS,
     rooms: [LEVELS]RoomArrayList = undefined,
     // true == cave, false == rooms
     layout: [LEVELS][HEIGHT][WIDTH]bool = undefined,
+
+    pub fn emittedLightIntensity(self: *Dungeon, coord: Coord) usize {
+        const tile: *Tile = state.dungeon.at(coord);
+
+        var l: usize = 0;
+
+        if (tile.type == .Lava)
+            l += TileType.LAVA_LIGHT_INTENSITY;
+
+        l += heat.lightEmittedByHeat(self.heat[coord.z][coord.y][coord.x]);
+
+        if (tile.surface) |surface| {
+            switch (surface) {
+                .Machine => |m| l += m.luminescence(),
+                else => {},
+            }
+        }
+
+        return l;
+    }
 
     pub fn hasMachine(self: *Dungeon, c: Coord) bool {
         if (self.at(c).surface) |surface| {

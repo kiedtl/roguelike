@@ -3,6 +3,7 @@ const math = std.math;
 const assert = std.debug.assert;
 
 const rng = @import("rng.zig");
+const heat = @import("heat.zig");
 const items = @import("items.zig");
 const utils = @import("utils.zig");
 const gas = @import("gas.zig");
@@ -374,6 +375,7 @@ fn tickGame() void {
     state.ticks += 1;
     state.tickMachines(cur_level);
     state.tickLight(cur_level);
+    heat.tickHeat(cur_level);
     state.tickAtmosphere(0);
     state.tickSound();
 
@@ -437,6 +439,7 @@ fn viewerTickGame(cur_level: usize) void {
     state.ticks += 1;
     state.tickMachines(cur_level);
     state.tickLight(cur_level);
+    heat.tickHeat(cur_level);
     state.tickAtmosphere(0);
     state.tickSound();
 
