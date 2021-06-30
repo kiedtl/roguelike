@@ -73,10 +73,12 @@ pub fn nextAvailableSpaceForItem(c: Coord, alloc: *mem.Allocator) ?Coord {
     return null;
 }
 
+const FLOOR_OPACITY: usize = 5;
+
 // STYLE: change to Tile.lightOpacity
 pub fn tileOpacity(coord: Coord) usize {
     const tile = dungeon.at(coord);
-    var o: usize = 5;
+    var o: usize = FLOOR_OPACITY;
 
     if (tile.type == .Wall)
         return @floatToInt(usize, tile.material.opacity * 100);
@@ -170,11 +172,10 @@ pub fn _update_fov(mob: *Mob) void {
         cell.* = 0;
     };
 
-    if (mob.coord.eq(player.coord)) {
-        fov.rayCast(mob.coord, mob.vision, 100, tileOpacity, &mob.fov, null);
-    } else {
-        fov.rayCast(mob.coord, mob.vision, 100, tileOpacity, &mob.fov, mob.facing);
-    }
+    const energy = mob.vision * FLOOR_OPACITY;
+    const direction = if (mob.coord.eq(player.coord)) null else mob.facing;
+
+    fov.rayCast(mob.coord, mob.vision, energy, tileOpacity, &mob.fov, direction);
 
     for (mob.fov) |row, y| for (row) |_, x| {
         if (mob.fov[y][x] > 0) {
