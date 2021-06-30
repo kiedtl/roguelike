@@ -1937,6 +1937,36 @@ pub const Gas = struct {
 // ---------- Mob templates ----------
 // STYLE: move to mobs.zig
 
+pub const ExecutionerTemplate = Mob{
+    .id = "executioner",
+    .species = "executioner",
+    .tile = 'א',
+    .occupation = Occupation{
+        .work_description = "wandering",
+        .work_area = undefined,
+        .work_fn = ai.watcherWork,
+        .fight_fn = ai.meleeFight,
+        .is_combative = true,
+        .is_curious = true,
+        .target = null,
+        .phase = .Work,
+    },
+    .allegiance = .Sauron,
+    .vision = 9,
+    .night_vision = 30,
+
+    .willpower = 3,
+    .dexterity = 18,
+    .hearing = 7,
+    .max_HP = 30,
+    .memory_duration = 5,
+    .base_speed = 100,
+    .blood = .Blood,
+
+    .HP = 30,
+    .strength = 20,
+};
+
 pub const WatcherTemplate = Mob{
     .id = "watcher",
     .species = "watcher",

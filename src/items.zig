@@ -113,6 +113,22 @@ pub const SpearWeapon = Weapon{
     .secondary_damage = null,
 };
 
+// A heavy flail, essentially a knout
+pub const ZinnagWeapon = Weapon{
+    .id = "zinnag",
+    .name = "zinnag",
+    .required_strength = 20,
+    .damages = .{
+        .Crushing = 9,
+        .Pulping = 16,
+        .Slashing = 2,
+        .Piercing = 5,
+        .Lacerating = 3,
+    },
+    .main_damage = .Pulping,
+    .secondary_damage = .Crushing,
+};
+
 pub const CrossbowLauncher = Weapon{
     .id = "crossbow",
     .name = "crossbow",
