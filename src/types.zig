@@ -1428,7 +1428,7 @@ pub const Machine = struct {
     // TODO: is_disabled?
 
     pub fn addPower(self: *Machine, by: ?*Mob) void {
-        self.power += self.power_add;
+        self.power = math.min(self.power + self.power_add, 100);
         self.last_interaction = by;
     }
 
