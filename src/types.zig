@@ -559,6 +559,13 @@ pub const Status = enum {
 
     pub const MAX_DURATION: usize = 20;
 
+    pub fn string(self: Status) []const u8 {
+        return switch (self) {
+            .Paralysis => "paralysis",
+            .Echolocation => "echolocation",
+        };
+    }
+
     pub fn tickEcholocation(mob: *Mob) void {
         // TODO: do some tests and figure out what's the practical limit to memory
         // usage, and reduce the buffer's size to that.
@@ -684,28 +691,32 @@ pub const Mob = struct { // {{{
 
     // Immutable instrinsic attributes.
     //
-    // willpower:    Controls the ability to resist spells
-    // dexterity:    Controls the likelihood of a mob dodging an attack.
-    // hearing:      The minimum intensity of a noise source before it can be
-    //                 heard by a mob. The lower the value, the better.
-    // vision:       Maximum radius of the mob's field of vision.
-    // night_vision: If the light in a tile is below this amount, the mob cannot
-    //                 see that tile, even if it's in the FOV. The lower, the
-    //                 better.
-    // strength:     TODO: define!
-    // memory:       The maximum length of time for which a mob can remember
-    //                 an enemy.
+    // willpower:     Controls the ability to resist spells
+    // dexterity:     Controls the likelihood of a mob dodging an attack.
+    // hearing:       The minimum intensity of a noise source before it can be
+    //                heard by a mob. The lower the value, the better.
+    // vision:        Maximum radius of the mob's field of vision.
+    // night_vision:  If the light in a tile is below this amount, the mob cannot
+    //                see that tile, even if it's in the FOV. The lower, the
+    //                better.
+    // deg360_vision: Mob's FOV ignores the facing mechanic and can see in all
+    //                directions (e.g., player, statues)
+    // strength:      TODO: define!
+    // memory:        The maximum length of time for which a mob can remember
+    //                an enemy.
     //
     willpower: usize, // Range: 0 < willpower < 10
     dexterity: usize, // Range: 0 < dexterity < 100
     vision: usize,
     night_vision: usize,
+    deg360_vision: bool = false,
     hearing: usize,
     strength: usize,
     memory_duration: usize,
     base_speed: usize,
     max_HP: f64,
-    blood: Spatter,
+    blood: ?Spatter,
+    immobile: bool = false,
 
     pub const Inventory = struct {
         pack: PackBuffer = PackBuffer.init(&[_]Item{}),
@@ -756,7 +767,7 @@ pub const Mob = struct { // {{{
             self.inventory.r_rings[1],
         }) |maybe_ring| {
             if (maybe_ring) |ring|
-                self.addStatus(ring.status, ring.currentPower());
+                self.addStatus(ring.status, ring.currentPower(), Status.MAX_DURATION);
         }
     }
 
@@ -835,8 +846,9 @@ pub const Mob = struct { // {{{
     }
 
     pub fn quaffPotion(self: *Mob, potion: *Potion) void {
+        // TODO: make the duration of potion status effect random (clumping, ofc)
         switch (potion.type) {
-            .Status => |s| self.addStatus(s, 0),
+            .Status => |s| self.addStatus(s, 0, Status.MAX_DURATION),
             .Gas => |s| state.dungeon.atGas(self.coord)[s] = 1.0,
             .Custom => |c| c(self),
         }
@@ -1128,7 +1140,7 @@ pub const Mob = struct { // {{{
     pub fn takeDamage(self: *Mob, d: Damage) void {
         self.HP = math.clamp(self.HP - d.amount, 0, self.max_HP);
         self.last_damage = d;
-        state.dungeon.spatter(self.coord, self.blood);
+        if (self.blood) |s| state.dungeon.spatter(self.coord, s);
     }
 
     // Called when player hits the [r]ifle key -- I see no reason for it to
@@ -1274,11 +1286,11 @@ pub const Mob = struct { // {{{
         }
     }
 
-    pub fn addStatus(self: *Mob, status: Status, power: usize) void {
+    pub fn addStatus(self: *Mob, status: Status, power: usize, duration: ?usize) void {
         const p_se = self.statuses.getPtr(status);
         p_se.started = state.ticks;
         p_se.power = power;
-        p_se.duration = Status.MAX_DURATION;
+        p_se.duration = duration orelse Status.MAX_DURATION;
     }
 
     // TODO: take *const Mob
@@ -2066,8 +2078,9 @@ pub const ElfTemplate = Mob{
     .allegiance = .Illuvatar,
     .vision = 20,
     .night_vision = 3,
+    .deg360_vision = true,
 
-    .willpower = 4,
+    .willpower = 6,
     .dexterity = 21,
     .hearing = 5,
     .max_HP = 30,
@@ -2166,6 +2179,37 @@ pub const CaveRatTemplate = Mob{
 
     .HP = 10,
     .strength = 5,
+};
+
+pub const CrystalStatueTemplate = Mob{
+    .species = "crystal statue",
+    .tile = '☺',
+    .occupation = Occupation{
+        .work_description = "gazing",
+        .work_area = undefined,
+        .work_fn = ai.dummyWork,
+        .fight_fn = ai.statueFight,
+        .is_combative = true,
+        .is_curious = false,
+        .target = null,
+        .phase = .Work,
+    },
+    .allegiance = .Sauron,
+    .vision = 20,
+    .night_vision = 0,
+    .deg360_vision = true,
+
+    .willpower = 3,
+    .dexterity = 100,
+    .hearing = 0,
+    .max_HP = 100,
+    .memory_duration = 15,
+    .base_speed = 40,
+    .blood = null,
+    .immobile = true,
+
+    .HP = 100,
+    .strength = 1,
 };
 
 pub const MOBS = [_]Mob{

@@ -3,6 +3,7 @@ const mem = std.mem;
 const assert = std.debug.assert;
 
 const state = @import("state.zig");
+const spells = @import("spells.zig");
 const dijkstra = @import("dijkstra.zig");
 const astar = @import("astar.zig");
 const rng = @import("rng.zig");
@@ -290,4 +291,36 @@ pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
         _ = mob.rest();
         mob.makeNoise(Mob.NOISE_YELL);
     }
+}
+
+// - Are there allies within view?
+//    - Yes: are they attacking the hostile?
+//        - Yes: paralyze the hostile
+pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
+    const target = mob.enemies.items[0].mob;
+
+    _ = mob.rest();
+
+    var ally = false;
+    for (mob.fov) |row, y| for (row) |cell, x| {
+        if (cell == 0) continue;
+        const fitem = Coord.new2(mob.coord.z, x, y);
+
+        if (state.dungeon.at(fitem).mob) |othermob| {
+            if (!othermob.immobile and
+                @ptrToInt(othermob) != @ptrToInt(mob) and
+                othermob.allegiance == mob.allegiance and
+                othermob.occupation.phase == .SawHostile and
+                othermob.enemies.items[0].mob.coord.eq(target.coord))
+            {
+                ally = true;
+                break;
+            }
+        }
+    };
+
+    if (!ally) return;
+
+    // FIXME: spells shouldn't be a free action
+    spells.CAST_FREEZE.use(mob, target.coord, .{ .spell_status_duration = 2 });
 }

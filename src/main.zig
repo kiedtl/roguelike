@@ -47,7 +47,7 @@ fn initGame() void {
         mapgen.placeRandomRooms(&fabs, level, 500, &state.GPA.allocator);
         mapgen.placeMoarCorridors(level);
         mapgen.placeTraps(level);
-        mapgen.placeLights(level);
+        mapgen.placeRoomFeatures(level, &state.GPA.allocator);
         mapgen.placeItems(level);
         mapgen.placeGuards(level, &state.GPA.allocator);
 

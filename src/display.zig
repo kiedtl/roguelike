@@ -131,6 +131,20 @@ fn _draw_infopanel(
         0,
     );
     y += 1;
+
+    var statuses = state.player.statuses.iterator();
+    while (statuses.next()) |entry| {
+        const status = entry.key;
+        const se = entry.value.*;
+
+        const left = utils.saturating_sub(se.started + se.duration, state.ticks);
+
+        if (left == 0) continue;
+
+        _draw_bar(y, startx, endx, left, Status.MAX_DURATION, status.string(), 0, 0x77452e, 0);
+        y += 1;
+    }
+
     y = _draw_string(startx, y, 0xffffff, 0, "score: {:<5} level: {}", .{ state.score, state.player.coord.z }) catch unreachable;
     y = _draw_string(startx, y, 0xffffff, 0, "turns: {}", .{state.ticks}) catch unreachable;
     y += 2;

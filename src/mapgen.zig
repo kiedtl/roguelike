@@ -647,7 +647,7 @@ fn _lightCorridor(room: *const Room) void {
     }
 }
 
-pub fn placeLights(level: usize) void {
+pub fn placeRoomFeatures(level: usize, allocator: *mem.Allocator) void {
     for (state.dungeon.rooms[level].items) |room| {
         if (room.prefab) |rfb| if (rfb.nolights) continue;
 
@@ -670,15 +670,32 @@ pub fn placeLights(level: usize) void {
         };
 
         for (&coords) |coord| {
-            var brazier = machines.Brazier;
-            brazier.powered_luminescence -= rng.rangeClumping(usize, 0, 30, 2);
+            if (rng.onein(3)) {
+                if (!state.dungeon.hasMachine(coord) and
+                    state.dungeon.neighboringWalls(coord, false) == 2 and
+                    state.dungeon.at(coord).type == .Floor)
+                {
+                    var mob = CrystalStatueTemplate;
 
-            if (!state.dungeon.hasMachine(coord) and
-                state.dungeon.neighboringWalls(coord, false) == 2 and
-                state.dungeon.neighboringMachines(coord) == 0 and
-                state.dungeon.at(coord).type == .Floor)
-            {
-                _place_machine(coord, &brazier);
+                    mob.init(allocator);
+
+                    mob.occupation.work_area.append(coord) catch unreachable;
+                    mob.coord = coord;
+
+                    state.mobs.append(mob) catch unreachable;
+                    state.dungeon.at(coord).mob = state.mobs.lastPtr().?;
+                }
+            } else {
+                var brazier = machines.Brazier;
+                brazier.powered_luminescence -= rng.rangeClumping(usize, 0, 30, 2);
+
+                if (!state.dungeon.hasMachine(coord) and
+                    state.dungeon.neighboringWalls(coord, false) == 2 and
+                    state.dungeon.neighboringMachines(coord) == 0 and
+                    state.dungeon.at(coord).type == .Floor)
+                {
+                    _place_machine(coord, &brazier);
+                }
             }
         }
     }

@@ -173,7 +173,7 @@ pub fn _update_fov(mob: *Mob) void {
     };
 
     const energy = mob.vision * FLOOR_OPACITY;
-    const direction = if (mob.coord.eq(player.coord)) null else mob.facing;
+    const direction = if (mob.deg360_vision) null else mob.facing;
 
     fov.rayCast(mob.coord, mob.vision, energy, tileOpacity, &mob.fov, direction);
 

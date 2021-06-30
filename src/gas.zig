@@ -49,5 +49,6 @@ fn triggerPoison(idiot: *Mob, quantity: f64) void {
 }
 
 fn triggerParalysis(idiot: *Mob, quantity: f64) void {
-    idiot.addStatus(.Paralysis, 0);
+    // TODO: Make the duration a clumping random value, depending on quantity
+    idiot.addStatus(.Paralysis, 0, Status.MAX_DURATION);
 }
