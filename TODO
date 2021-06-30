@@ -43,12 +43,20 @@ CE	a	fire worm (salamander?)
 CE	o	crystal statue
 			- Confuses intruders that wander too closely.
 			- Nearly indestructible, except by fire attacks.
-			"A statue of some nameless humanoid creature than once inhabited
-			the pits of Udùn. These statues are almost as rare as the
+			"A statue of some nameless creature than once lurked in the
+			depths of Udùn. These statues are almost as rare as the
 			translucent blue crystal they're composed of."
 CE	o	turquoise statue
 			- Raises an awful shriek when the player passes it.
 			- Nearly indestructible, except by fire attacks.
+CE	o	??? statue
+			- Follows intruders around, but only when they're not looking.
+			- Has base speed of 5 (so 20 moves per turn).
+			- Can be destroyed by the weakest of fire attacks. Necessary,
+			  since it can easily block corridors.
+CE	o	??? statue
+			- Casts corona on intruders.
+			- Indestructible.
 CE	o	kyanite statue
 			- Emits paralysis gas when intruders wander too closely.
 			- Nearly indestructible, except by fire attacks.
@@ -532,10 +540,10 @@ x Make lighting system affect stealth/FOV
 
 Temperature
 ===========
-- Add temperature matrix, tickTemperature(); make magma emit heat
-- Integrate with lighting system (make hot tiles emit light)
-- Update tickTemperature() to work with material's specific heat
+x Add temperature matrix, tickTemperature(); make magma emit heat
+x Integrate with lighting system (make hot tiles emit light)
 - Add emits_heat to Mob{}, define Burning Brute
+- Update tickTemperature() to work with material's specific heat
 - Add min_heat, max_heat to Mob{}; add tickTemperatureEffects()
 - Allow walls to melt
 - Allow props and machines to be damaged and melt
@@ -568,6 +576,8 @@ x Ensure that laborers don't leave to investigate noises
 - Go into rage when encountering corpse of allied mob
 - "Scan" room when encountering blood spattering
 x Make watchers smack intruders when they can't run
+- Mobs that throw potions of light at hostiles that are in areas too dark for
+  them to see
 
 User Interface
 ==============
