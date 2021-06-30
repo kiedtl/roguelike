@@ -507,6 +507,7 @@ pub const MessageType = union(enum) {
 
 pub const Damage = struct { amount: f64 };
 pub const Activity = union(enum) {
+    Interact,
     Rest,
     Move: Direction,
     Attack: Direction,
@@ -517,6 +518,22 @@ pub const Activity = union(enum) {
     Throw,
     Fire,
     SwapWeapons,
+    Rifle,
+
+    pub inline fn cost(self: Activity) usize {
+        return switch (self) {
+            .Interact => 90,
+            .Rest,
+            .Move,
+            .Teleport,
+            .Grab,
+            .Drop,
+            => 100,
+            .Throw, .Fire, .Attack => 110,
+            .SwapWeapons, .Use => 120,
+            .Rifle => 150,
+        };
+    }
 };
 
 pub const EnemyRecord = struct { mob: *Mob, counter: usize };
@@ -757,8 +774,7 @@ pub const Mob = struct { // {{{
         const tmp = self.inventory.wielded;
         self.inventory.wielded = self.inventory.backup;
         self.inventory.backup = tmp;
-        self.activities.append(.SwapWeapons);
-        self.energy -= self.speed();
+        self.declareAction(.SwapWeapons);
         return true;
     }
 
@@ -811,8 +827,7 @@ pub const Mob = struct { // {{{
 
             state.dungeon.at(self.coord).item = null;
 
-            self.activities.append(.Grab);
-            self.energy -= self.speed();
+            self.declareAction(.Grab);
             return true;
         } else {
             return false;
@@ -906,6 +921,12 @@ pub const Mob = struct { // {{{
         return true;
     }
 
+    pub fn declareAction(self: *Mob, action: Activity) void {
+        assert(!self.is_dead);
+        self.activities.append(action);
+        self.energy -= @divTrunc(self.speed() * @intCast(isize, action.cost()), 100);
+    }
+
     pub fn makeNoise(self: *Mob, amount: usize) void {
         assert(!self.is_dead);
         state.dungeon.soundAt(self.coord).* += amount;
@@ -977,7 +998,7 @@ pub const Mob = struct { // {{{
                 switch (surface) {
                     .Machine => |m| if (!m.isWalkable()) {
                         m.addPower(self);
-                        self.energy -= self.speed();
+                        self.declareAction(.Interact);
                         return true;
                     },
                     else => {},
@@ -999,9 +1020,6 @@ pub const Mob = struct { // {{{
             self.coord = dest;
         }
 
-        if (!self.isCreeping()) self.makeNoise(NOISE_MOVE);
-        self.energy -= self.speed();
-
         if (state.dungeon.at(dest).surface) |surface| {
             switch (surface) {
                 .Machine => |m| if (m.isWalkable()) m.addPower(self),
@@ -1009,7 +1027,13 @@ pub const Mob = struct { // {{{
             }
         }
 
-        if (direction) |d| self.activities.append(Activity{ .Move = d });
+        if (!self.isCreeping()) self.makeNoise(NOISE_MOVE);
+
+        if (direction) |d| {
+            self.declareAction(Activity{ .Move = d });
+        } else {
+            self.declareAction(Activity{ .Teleport = dest });
+        }
 
         return true;
     }
@@ -1020,8 +1044,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn rest(self: *Mob) bool {
-        self.activities.append(.Rest);
-        self.energy -= self.speed();
+        self.declareAction(.Rest);
         return true;
     }
 
