@@ -183,8 +183,8 @@ pub const Brazier = Machine{
     .powered_tile = '☐',
     .unpowered_tile = '☐',
 
-    .power_drain = 0,
-    .power_add = 15,
+    .power_drain = 30,
+    .power_add = 50,
     .auto_power = true,
 
     .powered_walkable = false,
