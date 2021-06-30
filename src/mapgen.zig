@@ -587,26 +587,28 @@ pub fn placeGuards(level: usize, allocator: *mem.Allocator) void {
     for (state.dungeon.rooms[level].items) |room| {
         if (room.prefab) |rfb| if (rfb.noguards) continue;
         if (room.type == .Corridor) continue;
+        if (room.height * room.width < 16) continue;
 
-        if (rng.onein(5)) {
+        if (rng.onein(2)) {
             const post_coord = room.randomCoord();
-            var mob: Mob = undefined;
-            var weapon: ?*Weapon = null;
-            var armor: ?*Armor = null;
-
-            switch (rng.range(usize, 0, 2)) {
-                0, 1 => {
-                    mob = ExecutionerTemplate;
-                    weapon = _createItem(Weapon, items.ZinnagWeapon);
-                },
-                2 => {
-                    mob = WatcherTemplate;
-                },
-                else => unreachable,
-            }
+            var mob = WatcherTemplate;
 
             mob.init(allocator);
-            mob.inventory.armor = armor;
+
+            mob.occupation.work_area.append(post_coord) catch unreachable;
+            mob.coord = post_coord;
+            mob.facing = rng.chooseUnweighted(Direction, &DIRECTIONS);
+
+            state.mobs.append(mob) catch unreachable;
+            state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
+        }
+
+        if (rng.onein(3)) {
+            const post_coord = room.randomCoord();
+            var mob = ExecutionerTemplate;
+            var weapon = _createItem(Weapon, items.ZinnagWeapon);
+
+            mob.init(allocator);
             mob.inventory.wielded = weapon;
             mob.occupation.work_area.append(post_coord) catch unreachable;
             mob.coord = post_coord;
