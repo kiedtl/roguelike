@@ -21,7 +21,8 @@ const MAX_ROOM_WIDTH: usize = 10;
 const MAX_ROOM_HEIGHT: usize = 10;
 
 const LIMIT = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
-const DISTANCES = [2][8]usize{ .{ 0, 1, 2, 3, 4, 5, 6, 7 }, .{ 3, 9, 4, 3, 2, 1, 1, 1 } };
+//const DISTANCES = [2][8]usize{ .{ 0, 1, 2, 3, 4, 5, 6, 7 }, .{ 3, 9, 4, 3, 2, 1, 1, 1 } };
+const DISTANCES = [2][8]usize{ .{ 0, 1, 2, 3, 4, 5, 6, 7 }, .{ 3, 5, 2, 2, 2, 5, 6, 5 } };
 
 const Corridor = struct {
     room: Room,
@@ -238,13 +239,10 @@ fn _excavate_room(room: *const Room) void {
 pub fn placeMoarCorridors(level: usize) void {
     const rooms = &state.dungeon.rooms[level];
 
-    // Copy over the whole array -- otherwise, when we add more rooms in the
-    // inner loops, it might trigger a reallocation in ArrayList and invalidate
-    // all the pointers.
-    var rooms_parents = StackBuffer(Room, 128).init(null);
-    for (rooms.items) |r| rooms_parents.append(r) catch unreachable;
+    var i: usize = 0;
+    while (i < rooms.items.len) : (i += 1) {
+        const parent = &rooms.items[i];
 
-    for (rooms_parents.slice()) |*parent| {
         if (parent.type == .Corridor) continue;
 
         for (rooms.items) |*child| {
@@ -295,6 +293,10 @@ pub fn placeMoarCorridors(level: usize) void {
                 if (corridor.child_connector) |acon| state.dungeon.at(acon).type = .Floor;
 
                 if (corridor.distance == 1) placeDoor(corridor.room.start, false);
+
+                // Restart loop
+                i = 0;
+                break;
             }
         }
     }
