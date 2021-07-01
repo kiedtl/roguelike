@@ -2,11 +2,8 @@ usingnamespace @import("types.zig");
 const state = @import("state.zig");
 const rng = @import("rng.zig");
 
-pub const CAST_FREEZE = Spell{
-    .name = "freeze",
-    .cast_type = .Cast,
-    .effect_type = .{ .Status = .Paralysis },
-};
+pub const CAST_FREEZE = Spell{ .name = "freeze", .cast_type = .Cast, .effect_type = .{ .Status = .Paralysis } };
+pub const CAST_FAMOUS = Spell{ .name = "famous", .cast_type = .Cast, .effect_type = .{ .Status = .Corona } };
 
 fn willSucceedAgainstMob(caster: *const Mob, target: *const Mob) bool {
     if (rng.onein(10)) return false;
@@ -15,7 +12,14 @@ fn willSucceedAgainstMob(caster: *const Mob, target: *const Mob) bool {
 }
 
 pub const SpellOptions = struct {
-    spell_status_duration: usize = Status.MAX_DURATION,
+    status_duration: usize = Status.MAX_DURATION,
+    status_power: usize = 0,
+};
+
+pub const SpellInfo = struct {
+    spell: *const Spell,
+    duration: usize = Status.MAX_DURATION,
+    power: usize = 0,
 };
 
 pub const Spell = struct {
@@ -48,7 +52,7 @@ pub const Spell = struct {
                 }
 
                 switch (self.effect_type) {
-                    .Status => |s| mob.addStatus(s, 0, opts.spell_status_duration),
+                    .Status => |s| mob.addStatus(s, opts.status_power, opts.status_duration),
                     .Custom => |c| c(target),
                 }
             },

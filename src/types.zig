@@ -24,6 +24,7 @@ const utils = @import("utils.zig");
 const state = @import("state.zig");
 const ai = @import("ai.zig");
 
+const SpellInfo = spells.SpellInfo;
 const Spell = spells.Spell;
 
 pub const HEIGHT = 100;
@@ -562,12 +563,18 @@ pub const Status = enum {
     // Power field determines radius of effect.
     Echolocation,
 
+    // Make mob emit light.
+    //
+    // Power field determines amount of light emitted.
+    Corona,
+
     pub const MAX_DURATION: usize = 20;
 
     pub fn string(self: Status) []const u8 {
         return switch (self) {
             .Paralysis => "paralysis",
             .Echolocation => "echolocation",
+            .Corona => "corona",
         };
     }
 
@@ -722,7 +729,7 @@ pub const Mob = struct { // {{{
     max_HP: f64,
     blood: ?Spatter,
     immobile: bool = false,
-    spells: StackBuffer(Spell, 2) = StackBuffer(Spell, 2).init(null),
+    spells: StackBuffer(SpellInfo, 2) = StackBuffer(SpellInfo, 2).init(null),
 
     pub const Inventory = struct {
         pack: PackBuffer = PackBuffer.init(&[_]Item{}),
@@ -1875,6 +1882,10 @@ pub const Dungeon = struct {
 
         l += heat.lightEmittedByHeat(self.heat[coord.z][coord.y][coord.x]);
 
+        if (tile.mob) |mob| {
+            if (mob.isUnderStatus(.Corona)) |se| l += se.power;
+        }
+
         if (tile.surface) |surface| {
             switch (surface) {
                 .Machine => |m| l += m.luminescence(),
@@ -2184,7 +2195,9 @@ pub const KyaniteStatueTemplate = Mob{
     .vision = 20,
     .night_vision = 0,
     .deg360_vision = true,
-    .spells = StackBuffer(Spell, 2).init(&[_]Spell{spells.CAST_FREEZE}),
+    .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
+        .{ .spell = &spells.CAST_FREEZE, .duration = 2 },
+    }),
 
     .willpower = 3,
     .dexterity = 100,
@@ -2199,6 +2212,38 @@ pub const KyaniteStatueTemplate = Mob{
     .strength = 1,
 };
 
+pub const NebroStatueTemplate = Mob{
+    .id = "nebro_statue",
+    .species = "nebro statue",
+    .tile = '☻',
+    .occupation = Occupation{
+        .work_description = "gazing",
+        .work_fn = ai.dummyWork,
+        .fight_fn = ai.statueFight,
+        .is_combative = true,
+        .is_curious = false,
+    },
+    .allegiance = .Sauron,
+    .vision = 20,
+    .night_vision = 0,
+    .deg360_vision = true,
+    .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
+        .{ .spell = &spells.CAST_FAMOUS, .duration = 15, .power = 50 },
+    }),
+
+    .willpower = 3,
+    .dexterity = 200,
+    .hearing = 0,
+    .max_HP = 1000,
+    .memory_duration = 15,
+    .base_speed = 40,
+    .blood = null,
+    .immobile = true,
+
+    .HP = 1000,
+    .strength = 2,
+};
+
 pub const MOBS = [_]Mob{
     WatcherTemplate,
     ExecutionerTemplate,
@@ -2208,4 +2253,5 @@ pub const MOBS = [_]Mob{
     GoblinTemplate,
     CaveRatTemplate,
     KyaniteStatueTemplate,
+    NebroStatueTemplate,
 };
