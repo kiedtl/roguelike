@@ -324,6 +324,7 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
     };
 
     if (!ally) return;
+    if (!rng.onein(6)) return;
 
     // FIXME: spells shouldn't be a free action
     const spell = mob.spells.data[0];

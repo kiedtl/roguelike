@@ -2199,7 +2199,7 @@ pub const KyaniteStatueTemplate = Mob{
         .{ .spell = &spells.CAST_FREEZE, .duration = 2 },
     }),
 
-    .willpower = 3,
+    .willpower = 8,
     .dexterity = 100,
     .hearing = 0,
     .max_HP = 100,
@@ -2231,7 +2231,7 @@ pub const NebroStatueTemplate = Mob{
         .{ .spell = &spells.CAST_FAMOUS, .duration = 15, .power = 50 },
     }),
 
-    .willpower = 3,
+    .willpower = 8,
     .dexterity = 200,
     .hearing = 0,
     .max_HP = 1000,
