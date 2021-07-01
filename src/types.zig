@@ -495,6 +495,7 @@ pub const MessageType = union(enum) {
     Move,
     Trap,
     Damage,
+    SpellCast,
 
     pub fn color(self: MessageType) u32 {
         return switch (self) {
@@ -504,6 +505,7 @@ pub const MessageType = union(enum) {
             .Move => 0xfafefe,
             .Trap => 0xed254d,
             .Damage => 0xed254d,
+            .SpellCast => 0xff7750,
         };
     }
 };
@@ -2031,6 +2033,7 @@ pub const WatcherTemplate = Mob{
 };
 
 pub const GuardTemplate = Mob{
+    .id = "patrol",
     .species = "patrol",
     .tile = 'ק',
     .occupation = Occupation{
@@ -2058,6 +2061,7 @@ pub const GuardTemplate = Mob{
 
 // TODO: make this a hooman
 pub const ElfTemplate = Mob{
+    .id = "elf",
     .species = "elf",
     .tile = '@',
     .occupation = Occupation{
@@ -2139,6 +2143,7 @@ pub const GoblinTemplate = Mob{
 };
 
 pub const CaveRatTemplate = Mob{
+    .id = "cave_rat",
     .species = "cave rat",
     .tile = '²',
     .occupation = Occupation{
@@ -2165,6 +2170,7 @@ pub const CaveRatTemplate = Mob{
 };
 
 pub const KyaniteStatueTemplate = Mob{
+    .id = "kyanite_statue",
     .species = "kyanite statue",
     .tile = '☺',
     .occupation = Occupation{
@@ -2195,8 +2201,11 @@ pub const KyaniteStatueTemplate = Mob{
 
 pub const MOBS = [_]Mob{
     WatcherTemplate,
+    ExecutionerTemplate,
     GuardTemplate,
     ElfTemplate,
     InteractionLaborerTemplate,
     GoblinTemplate,
+    CaveRatTemplate,
+    KyaniteStatueTemplate,
 };
