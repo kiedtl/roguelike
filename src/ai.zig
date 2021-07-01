@@ -297,6 +297,8 @@ pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
 //    - Yes: are they attacking the hostile?
 //        - Yes: paralyze the hostile
 pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
+    assert(mob.spells.len > 0);
+
     const target = mob.enemies.items[0].mob;
 
     _ = mob.rest();
@@ -322,5 +324,5 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
     if (!ally) return;
 
     // FIXME: spells shouldn't be a free action
-    spells.CAST_FREEZE.use(mob, target.coord, .{ .spell_status_duration = 2 });
+    mob.spells.data[0].use(mob, target.coord, .{ .spell_status_duration = 2 });
 }

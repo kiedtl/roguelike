@@ -10,6 +10,7 @@ const RingBuffer = @import("ringbuffer.zig").RingBuffer;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const heat = @import("heat.zig");
+const spells = @import("spells.zig");
 const rng = @import("rng.zig");
 const dijkstra = @import("dijkstra.zig");
 const display = @import("display.zig");
@@ -22,6 +23,8 @@ const gas = @import("gas.zig");
 const utils = @import("utils.zig");
 const state = @import("state.zig");
 const ai = @import("ai.zig");
+
+const Spell = spells.Spell;
 
 pub const HEIGHT = 100;
 pub const WIDTH = 100;
@@ -717,6 +720,7 @@ pub const Mob = struct { // {{{
     max_HP: f64,
     blood: ?Spatter,
     immobile: bool = false,
+    spells: StackBuffer(Spell, 2) = StackBuffer(Spell, 2).init(null),
 
     pub const Inventory = struct {
         pack: PackBuffer = PackBuffer.init(&[_]Item{}),
@@ -2174,6 +2178,7 @@ pub const KyaniteStatueTemplate = Mob{
     .vision = 20,
     .night_vision = 0,
     .deg360_vision = true,
+    .spells = StackBuffer(Spell, 2).init(&[_]Spell{spells.CAST_FREEZE}),
 
     .willpower = 3,
     .dexterity = 100,
