@@ -603,7 +603,7 @@ pub fn placeGuards(level: usize, allocator: *mem.Allocator) void {
             state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
         }
 
-        if (rng.onein(3)) {
+        if (rng.onein(4)) {
             const post_coord = room.randomCoord();
             var mob = ExecutionerTemplate;
             var weapon = _createItem(Weapon, items.ZinnagWeapon);
