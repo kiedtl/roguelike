@@ -635,7 +635,7 @@ pub const Occupation = struct {
     work_description: []const u8,
 
     // The area where the mob should be doing work.
-    work_area: CoordArrayList,
+    work_area: CoordArrayList = undefined,
 
     // Work callbacks:
     //     - work_fn:  on each tick when the mob is doing work.
@@ -651,9 +651,9 @@ pub const Occupation = struct {
     is_curious: bool,
 
     // The "target" in any phase.
-    target: ?Coord,
+    target: ?Coord = null,
 
-    phase: OccupationPhase,
+    phase: OccupationPhase = .Work,
 };
 
 pub const Mob = struct { // {{{
@@ -1978,13 +1978,10 @@ pub const ExecutionerTemplate = Mob{
     .tile = 'א',
     .occupation = Occupation{
         .work_description = "wandering",
-        .work_area = undefined,
         .work_fn = ai.watcherWork,
         .fight_fn = ai.meleeFight,
         .is_combative = true,
         .is_curious = true,
-        .target = null,
-        .phase = .Work,
     },
     .allegiance = .Sauron,
     .vision = 9,
@@ -2008,13 +2005,10 @@ pub const WatcherTemplate = Mob{
     .tile = 'ש',
     .occupation = Occupation{
         .work_description = "watching",
-        .work_area = undefined,
         .work_fn = ai.watcherWork,
         .fight_fn = ai.watcherFight,
         .is_combative = true,
         .is_curious = false,
-        .target = null,
-        .phase = .Work,
     },
     .allegiance = .Sauron,
     .vision = 13,
@@ -2037,13 +2031,10 @@ pub const GuardTemplate = Mob{
     .tile = 'ק',
     .occupation = Occupation{
         .work_description = "patrolling",
-        .work_area = undefined,
         .work_fn = ai.guardWork,
         .fight_fn = ai.meleeFight,
         .is_combative = true,
         .is_curious = true,
-        .target = null,
-        .phase = .Work,
     },
     .allegiance = .Sauron,
     .vision = 9,
@@ -2067,13 +2058,10 @@ pub const ElfTemplate = Mob{
     .tile = '@',
     .occupation = Occupation{
         .work_description = "meditating",
-        .work_area = undefined,
         .work_fn = ai.dummyWork,
         .fight_fn = ai.meleeFight,
         .is_combative = false,
         .is_curious = false,
-        .target = null,
-        .phase = .Work,
     },
     .allegiance = .Illuvatar,
     .vision = 20,
@@ -2098,13 +2086,10 @@ pub const InteractionLaborerTemplate = Mob{
     .tile = 'o',
     .occupation = Occupation{
         .work_description = "laboring",
-        .work_area = undefined,
         .work_fn = ai.interactionLaborerWork,
         .fight_fn = null,
         .is_combative = false,
         .is_curious = false,
-        .target = null,
-        .phase = .Work,
     },
     .allegiance = .Sauron,
     .vision = 6,
@@ -2128,13 +2113,10 @@ pub const GoblinTemplate = Mob{
     .tile = 'g',
     .occupation = Occupation{
         .work_description = "wandering",
-        .work_area = undefined,
         .work_fn = ai.wanderWork,
         .fight_fn = ai.meleeFight,
         .is_combative = true,
         .is_curious = true,
-        .target = null,
-        .phase = .Work,
     },
     .allegiance = .NoneEvil,
     .vision = 10,
@@ -2157,13 +2139,10 @@ pub const CaveRatTemplate = Mob{
     .tile = '²',
     .occupation = Occupation{
         .work_description = "wandering",
-        .work_area = undefined,
         .work_fn = ai.wanderWork,
         .fight_fn = ai.meleeFight,
         .is_combative = false,
         .is_curious = false,
-        .target = null,
-        .phase = .Work,
     },
     .allegiance = .NoneEvil,
     .vision = 6,
@@ -2186,13 +2165,10 @@ pub const CrystalStatueTemplate = Mob{
     .tile = '☺',
     .occupation = Occupation{
         .work_description = "gazing",
-        .work_area = undefined,
         .work_fn = ai.dummyWork,
         .fight_fn = ai.statueFight,
         .is_combative = true,
         .is_curious = false,
-        .target = null,
-        .phase = .Work,
     },
     .allegiance = .Sauron,
     .vision = 20,
