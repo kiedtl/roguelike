@@ -1,7 +1,6 @@
 New mobs
-([s]pirit, [h]uman/elf, [a]nimal, [u]ndead, [o]ther)
-([CE]Sauron, [LE]NoneEvil, [CG]NoneGood, [LG]Illuvatar, [CC]Sauron/NonEvil, [??]Neutral,
- [NN]NightCreature)
+([s]pirit, [h]uman, [a]nimal, [u]ndead, [o]ther)
+([CE]Sauron, [LE]NoneEvil, [CG]NoneGood, [LG]Illuvatar, [??]Neutral, [NN]NightCreature)
 --------
 LE	a	spiders
 			- Web attacks that hold player in stasis.
@@ -49,12 +48,12 @@ CE	o	crystal statue
 CE	o	turquoise statue
 			- Raises an awful shriek when the player passes it.
 			- Nearly indestructible, except by fire attacks.
-CE	o	??? statue
+CE	o	realgar statue
 			- Follows intruders around, but only when they're not looking.
 			- Has base speed of 5 (so 20 moves per turn).
-			- Can be destroyed by the weakest of fire attacks. Necessary,
+			- Can be destroyed by the weakest of attacks. Necessary,
 			  since it can easily block corridors.
-CE	o	??? statue
+CE	o	nebro statue
 			- Casts corona on intruders.
 			- Indestructible.
 CE	o	kyanite statue
@@ -67,7 +66,6 @@ CE	u	lich
 			"The dessicated form of an ancient sorcerer, now controlled by the
 			very necromantic powers he once served."
 CE	a	troll
-CE	o	floating eye(?)
 LG	s	shining one
 LG	s	angel
 LG	s	archangel
@@ -101,15 +99,6 @@ NN	o	grue
 			- Like stalker, but dies when coming into contact with light.
 NN	o	vampire
 
-Feats (challenges)
-------------------
-sneak		Only attack and kill with stabs.
-frugal		Use only one weapon throughout the game.
-ringless	Use no rings at all.
-naked		Use no cloaks at all.
-chivalrous	Use only (unpoisoned) melee weapons, never ranged.
-ringlord	Never remove a rings throughout the game.
-
 Movement patterns
 -----------------
 sneak      [move, move, rest, move]
@@ -120,7 +109,6 @@ recuperate [rest, rest, rest, rest]
 
 Rings
 -----
-- All rings will increase in power depending on... player experience? piety?
 - All rings will have severe negative effects, most notably decreased willpower.
 - Rings that work on hostile mobs will have their effects increased if the hostile
   mob has low willpower.
@@ -132,10 +120,6 @@ Rings
 ring of intimidation [a]
 	- Confers either stun or fear on mob when moving toward mob.
 	- Movement pattern: [move(N), move(N), move(N), move(N)]
-	// - Gives player knowledge of dungeon's layout, based on the intimidated mob's
-	//   memory.
-	// - Affected mobs should have a status effect... (`stunned` maybe?)
-	// - High penalty, depending on affected mob's willpower.
 ring of echolocation [p]
 	- Gives player basic knowledge of dungeon's layout nearby sounds the player
 	  can hear. The wearer will not know about dungeon features, just walls,
@@ -145,16 +129,10 @@ ring of clairvoyance
 	- Allows player to sense presence of low-to-mid willpower mobs (the wearer
 	  should not know what kind of mobs they are, though. A blue '?' is enough.)
 	- Medium penalty.
-ring of silence
-	- Removes noise from a certain radius every turn.
-	- Medium penalty, depending on the amount of total noise that was silenced.
 ring of awareness
 	- Gives player knowledge of hidden dungeon features that have been seen
 	  by other mobs within a certain radius.
 	- High penalty, depending on affected mob's willpower.
-ring of protection
-	- Shields player from lethal (but only lethal) hits and fatal poisonings.
-	- Medium penalty, depending on how lethal the hit was.
 ring of invisibility
 	- Doesn't make wearer invisible, but prevents other hostiles from noticing
 	  the wearer, even if they walk within inches of each other's nose.
@@ -608,29 +586,85 @@ x Add goblins, rats, and other mobs to populate the Openworld
 - Add Burning Brutes and Lava Flans to the Openworld
 - Add lichen, fungi, and lava to the Openworld
 
-Stretch goals:
-==============
-- Use Dijkstra for lighting/FOV?
+Ideas
+=====
+[+] planned, [~] obsolete, [x] done
+~ Layers, as in Brogue? (gas, liquid, surface, floor, etc.)
++ Cloaks of invisibility, confusion, blinding, camouflage, electricity
+  resistance, fire resistance, etc.
+- Ring of seeing (magic mapping)
++ Rings have negative effects (decreased piety/willpower)
++ Add bonus (or neg bonus) to attacker if defender moved or didn't move in the
+  past two turns
++ Ring of intimidation that magic maps dungeon based on mob's memory
++ Crafting grid/alchemy by arranging items on map and dancing
+x Lighting system and torches
+- Light colors
+x Ring of echolocation to magic-map neighbors of sound-producing tiles
+- "Night", when guards sleep, torches go out, and night creatures awaken
+- "Seed database" that stores bones for players who died during game, then
+  shows ingame bones/corpses/undead on other games
+- Candles that destory people/objects/rooms when quenched
+- "Permeability" instead of walkability, that lets creatures pass if they are
+  small enough (e.g., rats and small spires could pass through iron bars)
+- Tile "integrity" that reduces when tile is hit with explosion
+- Radioactivity system: nuclear reactors, uranium, corium, nuclear bombs that
+  the player can blow up for fun
+- Orchestra/Concert, that sings/players instruments and distracts guards
+	- Bonus: use Nazi singer names
+- Goblin "organizations" (purely eye candy)
+	- the Goblin Brotherhood, the ProudGobbos, etc
+- Night creatures should pop out of artwork at night
++ Stone guardians that patrol map and cast confusion at enemies, but move at 1
+  tile per 10-20 turns
+- Enemies that surrender or start whimpering when fleeing and trapped in a
+  corner, or maybe perpare for one final all-out assault
+- Enemies that suicide when cornered and about to die.
+- Headstones with previous player's comments on them, or ghosts that mourn
+  previous player's carelessnes (think DCSS ghosts)
+	- Bonus: the ghosts/gravestones are found in the temple in prison cells
+- Pub for guards to get drunk
+- Ring to detect powered machines
+- Ring/feature to detect what kind of mob made a noise
+- Radioactive gas leaking from a warehouse on a few levels, so a kind of food
+  clock
+- Ability to rifle sleeping/drunk/stunned guards as well as corpses
+- Lava flans
+- Undead have other interesting kinds of negative effects when they score a
+  hit?
+	- Reduced max HP, less regen rate, reduced stealth
+- Areas that speed up or slow down mobs
+- Lichen/fungi that puts mobs to sleep (enchanted ground)
+- Ice/oily floor that randomizes movement
+- Ground in Temple should drain stats, max HP, cause fatigue, etc
+- Sticky ground that reduces evasion
+- Mobile traps that can be placed by player and used to lure guards on top
+	- {Bombs/landmines, bear trap, damage trap} "kits"
+- Statues can only move when out of sight, and then very fast.
+- Item/lever player can trigger to unlock locked doors in room, releasing
+  prisoners and creating maximum chaos.
++ Use Dijkstra for lighting/FOV?
 - Potion and Ring ID system.
 x Blood spattering?
 - Speech bubbles in following situations:
   - On spotting an enemy ("Aha!", "It's a <species>!", "It's the @!!")
   - On being cornered ("Don't touch me!", "Go away!", "No farther!")
   - On seeing a dead ally, killed by a visible hostile ("Murderer!")
-  - On pursuing a fleeing hostile ("Coward!", "Wimp!")
+  - On pursuing a fleeing hostile ("Coward!", "Wimp!", "Bye clown!")
   - On investigating a noise ("...?", "What?", "Must have been rats!")
-- Smell mechanics that allow, say, hellhounds and snakes to detect
-  intruders even if they can't see them.
+- Smell mechanics that allow, say, hellhounds and snakes to detect intruders
+  even if they can't see them.
 - Ranged melee weapons, e.g., spear and whips
-- Add braziers that are built into the walls (aka torches), and use that instead
-  for corridors
-- Light colors
+- Add braziers that are built into the walls (aka torches), and use that
+  instead for corridors
 
 Optimizations
 =============
 - Use @mulAdd where possible (FOV, A*, Dijkstra, light/atmosphere/sound systems)
 - Use @setCold(true) where possible (see above for places to look)
 - Use SIMD where possible
+- Use a matrix to mark nodes as closed (instead of a heap-allocated list) for
+  Dijkstra.
 
 Code cleanups
 =============
