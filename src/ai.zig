@@ -303,6 +303,8 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
 
     _ = mob.rest();
 
+    if (!target.cansee(mob.coord)) return;
+
     var ally = false;
     for (mob.fov) |row, y| for (row) |cell, x| {
         if (cell == 0) continue;
