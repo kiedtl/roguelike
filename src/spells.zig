@@ -30,7 +30,7 @@ pub const Spell = struct {
         Custom: fn (Coord) void,
     },
 
-    pub fn use(self: Spell, caster: *Mob, target: Coord, opts: SpellOptions) void {
+    pub fn use(self: Spell, caster: *Mob, target: Coord, opts: SpellOptions, comptime message: ?[]const u8) void {
         switch (self.cast_type) {
             .Ray, .Bolt => @panic("TODO"),
             .Cast => {
@@ -38,6 +38,14 @@ pub const Spell = struct {
 
                 if (!willSucceedAgainstMob(caster, mob))
                     return;
+
+                if (mob.coord.eq(state.player.coord)) {
+                    state.message(
+                        .SpellCast,
+                        message orelse "The {0} gestures ominously!",
+                        .{caster.species},
+                    );
+                }
 
                 switch (self.effect_type) {
                     .Status => |s| mob.addStatus(s, 0, opts.spell_status_duration),

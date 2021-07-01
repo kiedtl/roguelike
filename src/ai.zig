@@ -326,5 +326,7 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
     if (!ally) return;
 
     // FIXME: spells shouldn't be a free action
-    mob.spells.data[0].use(mob, target.coord, .{ .spell_status_duration = 2 });
+    mob.spells.data[0].use(mob, target.coord, .{
+        .spell_status_duration = 2,
+    }, "The {0} glitters at you!");
 }
