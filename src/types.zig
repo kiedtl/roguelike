@@ -2203,8 +2203,8 @@ pub const KyaniteStatueTemplate = Mob{
     .dexterity = 100,
     .hearing = 0,
     .max_HP = 100,
-    .memory_duration = 15,
-    .base_speed = 40,
+    .memory_duration = 1,
+    .base_speed = 100,
     .blood = null,
     .immobile = true,
 
@@ -2235,8 +2235,8 @@ pub const NebroStatueTemplate = Mob{
     .dexterity = 200,
     .hearing = 0,
     .max_HP = 1000,
-    .memory_duration = 15,
-    .base_speed = 40,
+    .memory_duration = 1,
+    .base_speed = 100,
     .blood = null,
     .immobile = true,
 
