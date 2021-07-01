@@ -675,7 +675,7 @@ pub fn placeRoomFeatures(level: usize, allocator: *mem.Allocator) void {
                     state.dungeon.neighboringWalls(coord, false) == 2 and
                     state.dungeon.at(coord).type == .Floor)
                 {
-                    var mob = CrystalStatueTemplate;
+                    var mob = KyaniteStatueTemplate;
 
                     mob.init(allocator);
 

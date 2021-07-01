@@ -2160,8 +2160,8 @@ pub const CaveRatTemplate = Mob{
     .strength = 5,
 };
 
-pub const CrystalStatueTemplate = Mob{
-    .species = "crystal statue",
+pub const KyaniteStatueTemplate = Mob{
+    .species = "kyanite statue",
     .tile = '☺',
     .occupation = Occupation{
         .work_description = "gazing",
