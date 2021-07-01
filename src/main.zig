@@ -411,6 +411,7 @@ fn tickGame() void {
 
             if (mob.isUnderStatus(.Paralysis)) |_| {
                 if (mob.coord.eq(state.player.coord)) {
+                    display.draw();
                     readNoActionInput();
                     display.draw();
                     if (state.state == .Quit) break;
