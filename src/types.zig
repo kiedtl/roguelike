@@ -1339,7 +1339,14 @@ pub const Mob = struct { // {{{
     //  - Mob was in .Work AI phase, and not in Investigate/Attack phase
     //  - Mob was incapitated by a status effect (e.g. Paralysis)
     //
+    // Player is always aware of attacks. Stabs are there in the first place
+    // to "reward" the player for catching a hostile off guard, but allowing
+    // enemies to stab a paralyzed player is too harsh of a punishment.
+    //
     pub fn isAwareOfAttack(self: *Mob, attacker: Coord) bool {
+        if (self.coord.eq(state.player.coord))
+            return true;
+
         switch (self.occupation.phase) {
             .SawHostile, .GoTo => {},
             else => return false,
