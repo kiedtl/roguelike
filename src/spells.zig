@@ -36,6 +36,8 @@ pub const Spell = struct {
     },
 
     pub fn use(self: Spell, caster: *Mob, target: Coord, opts: SpellOptions, comptime message: ?[]const u8) void {
+        caster.declareAction(.Cast);
+
         switch (self.cast_type) {
             .Ray, .Bolt => @panic("TODO"),
             .Cast => {

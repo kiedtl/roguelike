@@ -523,6 +523,7 @@ pub const Activity = union(enum) {
     Use,
     Throw,
     Fire,
+    Cast,
     SwapWeapons,
     Rifle,
 
@@ -535,7 +536,7 @@ pub const Activity = union(enum) {
             .Grab,
             .Drop,
             => 100,
-            .Throw, .Fire, .Attack => 110,
+            .Cast, .Throw, .Fire, .Attack => 110,
             .SwapWeapons, .Use => 120,
             .Rifle => 150,
         };

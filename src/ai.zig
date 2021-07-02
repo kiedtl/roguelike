@@ -301,9 +301,10 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
 
     const target = mob.enemies.items[0].mob;
 
-    _ = mob.rest();
-
-    if (!target.cansee(mob.coord)) return;
+    if (!target.cansee(mob.coord)) {
+        _ = mob.rest();
+        return;
+    }
 
     var ally = false;
     for (mob.fov) |row, y| for (row) |cell, x| {
@@ -323,13 +324,13 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
         }
     };
 
-    if (!ally) return;
-    if (!rng.onein(4)) return;
-
-    // FIXME: spells shouldn't be a free action
-    const spell = mob.spells.data[0];
-    spell.spell.use(mob, target.coord, .{
-        .status_duration = spell.duration,
-        .status_power = spell.power,
-    }, "The {0} glitters at you!");
+    if (ally and rng.onein(4)) {
+        const spell = mob.spells.data[0];
+        spell.spell.use(mob, target.coord, .{
+            .status_duration = spell.duration,
+            .status_power = spell.power,
+        }, "The {0} glitters at you!");
+    } else {
+        _ = mob.rest();
+    }
 }
