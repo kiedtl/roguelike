@@ -974,6 +974,7 @@ pub const Mob = struct { // {{{
     //
     pub fn canSwapWith(self: *const Mob, other: *Mob, direction: ?Direction) bool {
         var can = false;
+
         if (self.strength > other.strength) {
             can = true;
         }
@@ -984,6 +985,9 @@ pub const Mob = struct { // {{{
             if (direction.? == other.last_attempted_move.?.opposite()) {
                 can = true;
             }
+        }
+        if (other.immobile) {
+            can = false;
         }
 
         return can;
