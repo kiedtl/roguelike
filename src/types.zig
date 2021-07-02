@@ -2247,7 +2247,7 @@ pub const NebroStatueTemplate = Mob{
     }),
 
     .willpower = 8,
-    .dexterity = 200,
+    .dexterity = 100,
     .hearing = 0,
     .max_HP = 1000,
     .memory_duration = 1,
@@ -2279,7 +2279,7 @@ pub const CrystalStatueTemplate = Mob{
     }),
 
     .willpower = 8,
-    .dexterity = 200,
+    .dexterity = 100,
     .hearing = 0,
     .max_HP = 1000,
     .memory_duration = 1,
