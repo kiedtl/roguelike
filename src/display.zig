@@ -77,7 +77,7 @@ fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, d
 
     var barx = startx;
     const percent = (current * 100) / max;
-    if (percent == 0) return;
+
     const bar = @divTrunc((bar_max - barx - 1) * @intCast(isize, percent), 100);
     const bar_end = barx + bar;
     while (barx < bar_end) : (barx += 1) termbox.tb_change_cell(barx, y, ' ', fg, bg);
@@ -104,8 +104,6 @@ fn _draw_infopanel(
     var y = starty;
     while (y < endy) : (y += 1) _clear_line(startx, endx, y);
     y = starty;
-
-    y = _draw_string(startx, y, 0xffffff, 0, "@: You", .{}) catch unreachable;
 
     _draw_bar(
         y,
