@@ -46,7 +46,8 @@ CE	o	crystal statue
 			depths of Udùn. These statues are almost as rare as the
 			translucent blue crystal they're composed of."
 CE	o	turquoise statue
-			- Raises an awful shriek when the player passes it.
+			//- Raises an awful shriek when the player passes it.
+			- ???
 			- Nearly indestructible, except by fire attacks.
 CE	o	realgar statue
 			- Follows intruders around, but only when they're not looking.
@@ -59,6 +60,11 @@ CE	o	nebro statue
 CE	o	kyanite statue
 			- Emits paralysis gas when intruders wander too closely.
 			- Nearly indestructible, except by fire attacks.
+CE	o	??? statue
+			- Comes to life when player is being pursued.
+			- Should be found near room entrances so that it can block the passage
+			  there.
+			- Quite destructible.
 CE	u	lich
 			- Ranged attacker. Hangs behind, flees when hostile closes in.
 			- Bufs allies when they're wounded, allows non-undead mobs to
@@ -657,6 +663,8 @@ x Blood spattering?
 - Ranged melee weapons, e.g., spear and whips
 - Add braziers that are built into the walls (aka torches), and use that
   instead for corridors
+- Some kind of squad-forming fast-moving swarming mob, like killer bees (DCSS)
+  or swarmers (Cogmind 7DRL)
 
 Optimizations
 =============
