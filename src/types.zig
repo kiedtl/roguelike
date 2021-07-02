@@ -971,6 +971,9 @@ pub const Mob = struct { // {{{
     pub fn canSwapWith(self: *const Mob, other: *Mob, direction: ?Direction) bool {
         var can = false;
 
+        if (other.isUnderStatus(.Paralysis)) |se| {
+            can = true;
+        }
         if (self.strength > other.strength) {
             can = true;
         }
@@ -982,6 +985,7 @@ pub const Mob = struct { // {{{
                 can = true;
             }
         }
+
         if (other.immobile) {
             can = false;
         }
