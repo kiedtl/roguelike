@@ -753,7 +753,7 @@ pub const Mob = struct { // {{{
     };
 
     // Maximum field of hearing.
-    pub const MAX_FOH = 35;
+    pub const MAX_FOH = 15;
 
     pub const NOISE_MOVE = 20;
     pub const NOISE_YELL = 40;
