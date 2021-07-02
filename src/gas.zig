@@ -29,7 +29,15 @@ pub const SmokeGas = Gas{
     .id = 2,
 };
 
-pub const Gases = [_]Gas{ Poison, Paralysis, SmokeGas };
+pub const Confusion = Gas{
+    .color = 0x33cbca,
+    .dissipation_rate = 0.08,
+    .opacity = 0.0,
+    .trigger = triggerConfusion,
+    .id = 3,
+};
+
+pub const Gases = [_]Gas{ Poison, Paralysis, SmokeGas, Confusion };
 pub const GAS_NUM: usize = Gases.len;
 
 // Ensure that each gas's ID matches the index that it appears as in Gases.
@@ -51,4 +59,9 @@ fn triggerPoison(idiot: *Mob, quantity: f64) void {
 fn triggerParalysis(idiot: *Mob, quantity: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
     idiot.addStatus(.Paralysis, 0, Status.MAX_DURATION);
+}
+
+fn triggerConfusion(idiot: *Mob, quantity: f64) void {
+    // TODO: Make the duration a clumping random value, depending on quantity
+    idiot.addStatus(.Confusion, 0, Status.MAX_DURATION);
 }

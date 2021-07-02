@@ -568,6 +568,11 @@ pub const Status = enum {
     // Power field determines amount of light emitted.
     Corona,
 
+    // Makes mob move in random directions.
+    //
+    // Doesn't have a power field.
+    Confusion,
+
     pub const MAX_DURATION: usize = 20;
 
     pub fn string(self: Status) []const u8 {
@@ -575,6 +580,7 @@ pub const Status = enum {
             .Paralysis => "paralysis",
             .Echolocation => "echolocation",
             .Corona => "corona",
+            .Confusion => "confusion",
         };
     }
 
@@ -999,8 +1005,12 @@ pub const Mob = struct { // {{{
     }
 
     // Try to move a mob.
-    pub fn moveInDirection(self: *Mob, direction: Direction) bool {
+    pub fn moveInDirection(self: *Mob, p_direction: Direction) bool {
         const coord = self.coord;
+        var direction = p_direction;
+
+        if (self.isUnderStatus(.Confusion)) |_|
+            direction = rng.chooseUnweighted(Direction, &DIRECTIONS);
 
         // Face in that direction and update last_attempted_move, no matter
         // whether we end up moving or no
@@ -2244,6 +2254,38 @@ pub const NebroStatueTemplate = Mob{
     .strength = 2,
 };
 
+pub const CrystalStatueTemplate = Mob{
+    .id = "crystal_statue",
+    .species = "crystal statue",
+    .tile = '☻',
+    .occupation = Occupation{
+        .work_description = "gazing",
+        .work_fn = ai.dummyWork,
+        .fight_fn = ai.statueFight,
+        .is_combative = true,
+        .is_curious = false,
+    },
+    .allegiance = .Sauron,
+    .vision = 20,
+    .night_vision = 0,
+    .deg360_vision = true,
+    .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
+        .{ .spell = &spells.CAST_FERMENT, .duration = 15, .power = 50 },
+    }),
+
+    .willpower = 8,
+    .dexterity = 200,
+    .hearing = 0,
+    .max_HP = 1000,
+    .memory_duration = 1,
+    .base_speed = 100,
+    .blood = null,
+    .immobile = true,
+
+    .HP = 1000,
+    .strength = 2,
+};
+
 pub const MOBS = [_]Mob{
     WatcherTemplate,
     ExecutionerTemplate,
@@ -2254,4 +2296,5 @@ pub const MOBS = [_]Mob{
     CaveRatTemplate,
     KyaniteStatueTemplate,
     NebroStatueTemplate,
+    CrystalStatueTemplate,
 };

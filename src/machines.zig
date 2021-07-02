@@ -39,6 +39,7 @@ pub const MACHINES = [_]Machine{
     LockedDoor,
     ParalysisGasTrap,
     PoisonGasTrap,
+    ConfusionGasTrap,
     AlarmTrap,
 };
 
@@ -245,6 +246,13 @@ pub const ParalysisGasTrap = Machine{
     .on_power = powerParalysisGasTrap,
 };
 
+pub const ConfusionGasTrap = Machine{
+    .name = "confusion gas trap",
+    .powered_tile = '^',
+    .unpowered_tile = '^',
+    .on_power = powerConfusionGasTrap,
+};
+
 pub const NormalDoor = Machine{
     .name = "door",
     .powered_tile = '□',
@@ -317,6 +325,21 @@ pub fn powerParalysisGasTrap(machine: *Machine) void {
 
         if (culprit.coord.eq(state.player.coord))
             state.message(.Trap, "Paralytic gas seeps out of the gas vents!", .{});
+    }
+}
+
+pub fn powerConfusionGasTrap(machine: *Machine) void {
+    if (machine.last_interaction) |culprit| {
+        if (culprit.allegiance == .Sauron) return;
+
+        for (machine.props) |maybe_prop| {
+            if (maybe_prop) |vent| {
+                state.dungeon.atGas(vent.coord)[gas.Confusion.id] = 1.0;
+            }
+        }
+
+        if (culprit.coord.eq(state.player.coord))
+            state.message(.Trap, "Confusing gas seeps out of the gas vents!", .{});
     }
 }
 

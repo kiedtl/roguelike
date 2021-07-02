@@ -15,7 +15,13 @@ pub const FogPotion = Potion{
     .color = 0x00A3D9,
 };
 
-pub const POTIONS = [_]Potion{FogPotion};
+pub const ConfusionPotion = Potion{
+    .name = "confuzzlementation",
+    .type = .{ .Gas = gas.Confusion.id },
+    .color = 0x33cbca,
+};
+
+pub const POTIONS = [_]Potion{ FogPotion, ConfusionPotion };
 
 pub const HeavyChainmailArmor = Armor{
     .id = "hvy_chainmail_armor",

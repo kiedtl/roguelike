@@ -531,6 +531,13 @@ pub fn placeTraps(level: usize) void {
                 trap = machines.AlarmTrap;
             } else {
                 trap = if (rng.onein(3)) machines.PoisonGasTrap else machines.ParalysisGasTrap;
+                trap = switch (rng.range(usize, 0, 4)) {
+                    0, 1 => machines.ConfusionGasTrap,
+                    2, 3 => machines.ParalysisGasTrap,
+                    4 => machines.PoisonGasTrap,
+                    else => unreachable,
+                };
+
                 var num_of_vents = rng.range(usize, 1, 3);
                 while (num_of_vents > 0) : (num_of_vents -= 1) {
                     const vent = room.randomCoord();
