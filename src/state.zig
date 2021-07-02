@@ -341,17 +341,16 @@ pub fn tickAtmosphere(cur_gas: usize) void {
                 var avg: f64 = dungeon.atGas(coord)[cur_gas];
                 var neighbors: f64 = 1;
                 for (&DIRECTIONS) |d, i| {
-                    var n = coord;
-                    if (!n.move(d, mapgeometry)) continue;
+                    if (coord.move(d, mapgeometry)) |n| {
+                        if (dungeon.at(n).type == .Wall)
+                            continue;
 
-                    if (dungeon.at(n).type == .Wall)
-                        continue;
+                        if (dungeon.atGas(n)[cur_gas] == 0)
+                            continue;
 
-                    if (dungeon.atGas(n)[cur_gas] == 0)
-                        continue;
-
-                    avg += dungeon.atGas(n)[cur_gas] - dissipation;
-                    neighbors += 1;
+                        avg += dungeon.atGas(n)[cur_gas] - dissipation;
+                        neighbors += 1;
+                    }
                 }
 
                 avg /= neighbors;

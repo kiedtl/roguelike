@@ -767,11 +767,11 @@ pub fn cellularAutomata(avoid: *const [HEIGHT][WIDTH]bool, level: usize, wall_re
 
             var neighbor_walls: usize = if (old[coord.y][coord.x] == .Wall) 1 else 0;
             for (&DIRECTIONS) |direction| {
-                var new = coord;
-                if (!new.move(direction, state.mapgeometry))
+                if (coord.move(direction, state.mapgeometry)) |new| {
                     continue;
-                if (old[new.y][new.x] == .Wall)
-                    neighbor_walls += 1;
+                    if (old[new.y][new.x] == .Wall)
+                        neighbor_walls += 1;
+                }
             }
 
             if (neighbor_walls >= wall_req) {

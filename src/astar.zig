@@ -80,30 +80,29 @@ pub fn path(
 
         const neighbors = DIRECTIONS;
         neighbor: for (neighbors) |neighbor| {
-            var coord = current_node.coord;
+            if (current_node.coord.move(neighbor, state.mapgeometry)) |coord| {
+                if (closed_list[coord.y][coord.x]) |_| continue;
+                if (!is_walkable(coord, opts) and !goal.eq(coord)) continue;
 
-            if (!coord.move(neighbor, limit)) continue;
-            if (closed_list[coord.y][coord.x]) |_| continue;
-            if (!is_walkable(coord, opts) and !goal.eq(coord)) continue;
+                const penalty: usize = if (neighbor.is_diagonal()) 14 else 10;
 
-            const penalty: usize = if (neighbor.is_diagonal()) 14 else 10;
+                const node = Node{
+                    .coord = coord,
+                    .parent = current_node.coord,
+                    .g = current_node.g + penalty,
+                    .h = coord.distance(goal),
+                };
 
-            const node = Node{
-                .coord = coord,
-                .parent = current_node.coord,
-                .g = current_node.g + penalty,
-                .h = coord.distance(goal),
-            };
-
-            var iter = open_list.iterator();
-            while (iter.next()) |item| {
-                if (item.coord.eq(coord)) {
-                    if (node.g > item.g) continue :neighbor;
-                    _ = open_list.removeIndex(iter.count - 1);
+                var iter = open_list.iterator();
+                while (iter.next()) |item| {
+                    if (item.coord.eq(coord)) {
+                        if (node.g > item.g) continue :neighbor;
+                        _ = open_list.removeIndex(iter.count - 1);
+                    }
                 }
-            }
 
-            open_list.add(node) catch unreachable;
+                open_list.add(node) catch unreachable;
+            }
         }
     }
 

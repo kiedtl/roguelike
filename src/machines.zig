@@ -360,9 +360,10 @@ pub fn powerStairUp(machine: *Machine) void {
 
         var dest: ?Coord = null;
         for (&CARDINAL_DIRECTIONS) |d| {
-            var desttmp = uplevel;
-            if (desttmp.move(d, state.mapgeometry) and state.is_walkable(desttmp, .{ .right_now = true }))
-                dest = desttmp;
+            if (uplevel.move(d, state.mapgeometry)) |desttmp|
+                if (state.is_walkable(desttmp, .{ .right_now = true })) {
+                    dest = desttmp;
+                };
         }
 
         if (dest) |spot| {
@@ -382,9 +383,10 @@ pub fn powerStairDown(machine: *Machine) void {
 
         var dest: ?Coord = null;
         for (&CARDINAL_DIRECTIONS) |d| {
-            var desttmp = downlevel;
-            if (desttmp.move(d, state.mapgeometry) and state.is_walkable(desttmp, .{ .right_now = true }))
-                dest = desttmp;
+            if (downlevel.move(d, state.mapgeometry)) |desttmp|
+                if (state.is_walkable(desttmp, .{ .right_now = true })) {
+                    dest = desttmp;
+                };
         }
 
         if (dest) |spot| {
@@ -402,12 +404,13 @@ pub fn powerLockedDoor(machine: *Machine) void {
     if (culprit.allegiance == .Sauron) {
         const direction = Direction.from_coords(culprit.coord, machine.coord) catch return;
 
-        var newcoord = machine.coord;
-        if (!newcoord.move(direction, state.mapgeometry)) return;
+        if (machine.coord.move(direction, state.mapgeometry)) |newcoord| {
+            if (!state.is_walkable(newcoord, .{ .right_now = true })) return;
 
-        if (!state.is_walkable(newcoord, .{ .right_now = true })) return;
-
-        _ = culprit.teleportTo(newcoord, null);
+            _ = culprit.teleportTo(newcoord, null);
+        } else {
+            return;
+        }
     } else {
         state.message(.Move, "You feel a malevolent force forbidding you to pass.", .{});
     }

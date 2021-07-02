@@ -33,19 +33,18 @@ pub fn tickHeat(level: usize) void {
 
                 var neighbors: usize = 1;
                 for (&DIRECTIONS) |d, i| {
-                    var n = coord;
-                    if (!n.move(d, state.mapgeometry)) continue;
+                    if (coord.move(d, state.mapgeometry)) |n| {
+                        const current = state.dungeon.heat[level][n.y][n.x];
 
-                    const current = state.dungeon.heat[level][n.y][n.x];
-
-                    if (current > DEFAULT_HEAT) {
-                        avg += state.dungeon.heat[level][n.y][n.x] - DISSIPATION;
-                    } else if (current < DEFAULT_HEAT) {
-                        avg += state.dungeon.heat[level][n.y][n.x] + DISSIPATION;
-                    } else {
-                        avg += state.dungeon.heat[level][n.y][n.x];
+                        if (current > DEFAULT_HEAT) {
+                            avg += state.dungeon.heat[level][n.y][n.x] - DISSIPATION;
+                        } else if (current < DEFAULT_HEAT) {
+                            avg += state.dungeon.heat[level][n.y][n.x] + DISSIPATION;
+                        } else {
+                            avg += state.dungeon.heat[level][n.y][n.x];
+                        }
+                        neighbors += 1;
                     }
-                    neighbors += 1;
                 }
 
                 avg /= neighbors;

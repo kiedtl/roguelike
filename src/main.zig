@@ -115,17 +115,18 @@ fn readNoActionInput() void {
 fn moveOrFight(direction: Direction) bool {
     const current = state.player.coord;
 
-    var dest = current;
-    if (!dest.move(direction, state.mapgeometry)) return false;
-
-    if (state.dungeon.at(dest).mob) |mob| {
-        if (mob.isHostileTo(state.player)) {
-            state.player.fight(mob);
-            return true;
+    if (current.move(direction, state.mapgeometry)) |dest| {
+        if (state.dungeon.at(dest).mob) |mob| {
+            if (mob.isHostileTo(state.player)) {
+                state.player.fight(mob);
+                return true;
+            }
         }
-    }
 
-    return state.player.moveInDirection(direction);
+        return state.player.moveInDirection(direction);
+    } else {
+        return false;
+    }
 }
 
 // TODO: move this to state.zig...? There should probably be a separate file for

@@ -76,16 +76,16 @@ pub const Dijkstra = struct {
         }
 
         for (&DIRECTIONS) |neighbor| {
-            var coord = self.current;
-            if (!coord.c.move(neighbor, self.limit)) continue;
-            coord.n += 1;
+            if (self.current.c.move(neighbor, self.limit)) |coord| {
+                const new = Node{ .c = coord, .n = self.current.n + 1 };
 
-            if (coord.n > self.max) continue;
-            if (!self.is_valid(coord.c, self.is_valid_opts)) continue;
-            if (coordInList(coord.c, &self.closed)) |_| continue;
-            if (coordInList(coord.c, &self.open)) |_| continue;
+                if (new.n > self.max) continue;
+                if (!self.is_valid(coord, self.is_valid_opts)) continue;
+                if (coordInList(coord, &self.closed)) |_| continue;
+                if (coordInList(coord, &self.open)) |_| continue;
 
-            self.open.append(coord) catch unreachable;
+                self.open.append(new) catch unreachable;
+            }
         }
 
         if (self.open.items.len == 0) {

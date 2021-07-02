@@ -379,14 +379,30 @@ pub fn chooseCell() ?Coord {
                 }
             } else if (ev.ch != 0) {
                 switch (ev.ch) {
-                    'h' => _ = coord.move(.West, state.mapgeometry),
-                    'j' => _ = coord.move(.South, state.mapgeometry),
-                    'k' => _ = coord.move(.North, state.mapgeometry),
-                    'l' => _ = coord.move(.East, state.mapgeometry),
-                    'y' => _ = coord.move(.NorthWest, state.mapgeometry),
-                    'u' => _ = coord.move(.NorthEast, state.mapgeometry),
-                    'b' => _ = coord.move(.SouthWest, state.mapgeometry),
-                    'n' => _ = coord.move(.SouthEast, state.mapgeometry),
+                    'h' => if (coord.move(.West, state.mapgeometry)) |new| {
+                        coord = new;
+                    },
+                    'j' => if (coord.move(.South, state.mapgeometry)) |new| {
+                        coord = new;
+                    },
+                    'k' => if (coord.move(.North, state.mapgeometry)) |new| {
+                        coord = new;
+                    },
+                    'l' => if (coord.move(.East, state.mapgeometry)) |new| {
+                        coord = new;
+                    },
+                    'y' => if (coord.move(.NorthWest, state.mapgeometry)) |new| {
+                        coord = new;
+                    },
+                    'u' => if (coord.move(.NorthEast, state.mapgeometry)) |new| {
+                        coord = new;
+                    },
+                    'b' => if (coord.move(.SouthWest, state.mapgeometry)) |new| {
+                        coord = new;
+                    },
+                    'n' => if (coord.move(.SouthEast, state.mapgeometry)) |new| {
+                        coord = new;
+                    },
                     else => {},
                 }
             } else unreachable;

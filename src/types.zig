@@ -198,7 +198,7 @@ pub const Coord = struct { // {{{
         return Coord.new2(a.z, a.x + b.x, a.y + b.y);
     }
 
-    pub fn move(self: *Self, direction: Direction, limit: Self) bool {
+    pub fn move(self: *const Self, direction: Direction, limit: Self) ?Coord {
         var dx: isize = 0;
         var dy: isize = 0;
 
@@ -240,15 +240,13 @@ pub const Coord = struct { // {{{
         const newx = @intCast(isize, self.x) + dx;
         const newy = @intCast(isize, self.y) + dy;
 
-        if (newx >= 0 and @intCast(usize, newx) < (limit.x - 1)) {
-            if (newy >= 0 and @intCast(usize, newy) < (limit.y - 1)) {
-                self.x = @intCast(usize, newx);
-                self.y = @intCast(usize, newy);
-                return true;
-            }
+        if ((newx >= 0 and @intCast(usize, newx) < (limit.x - 1)) and
+            (newy >= 0 and @intCast(usize, newy) < (limit.y - 1)))
+        {
+            return Coord.new2(self.z, @intCast(usize, newx), @intCast(usize, newy));
+        } else {
+            return null;
         }
-
-        return false;
     }
 
     fn insert_if_valid(z: usize, x: isize, y: isize, buf: *StackBuffer(Coord, 2048), limit: Coord) void {
@@ -356,10 +354,8 @@ test "coord.distance" {
 
 test "coord.move" {
     const limit = Coord.new(9, 9);
-
-    var c = Coord.new(0, 0);
-    std.testing.expect(c.move(.East, limit));
-    std.testing.expectEqual(c, Coord.new(1, 0));
+    const c = Coord.new(0, 0);
+    std.testing.expectEqual(c.move(.East, limit), Coord.new(1, 0));
 }
 
 pub const AnnotatedCoord = struct { coord: Coord, value: usize };
@@ -1022,12 +1018,11 @@ pub const Mob = struct { // {{{
         self.facing = direction;
         self.last_attempted_move = direction;
 
-        var dest = coord;
-        if (!dest.move(direction, Coord.new(state.WIDTH, state.HEIGHT))) {
+        if (coord.move(direction, state.mapgeometry)) |dest| {
+            return self.teleportTo(dest, direction);
+        } else {
             return false;
         }
-
-        return self.teleportTo(dest, direction);
     }
 
     pub fn teleportTo(self: *Mob, dest: Coord, direction: ?Direction) bool {
@@ -1925,9 +1920,9 @@ pub const Dungeon = struct {
     pub fn neighboringMachines(self: *Dungeon, c: Coord) usize {
         var machs: usize = if (self.hasMachine(c)) 1 else 0;
         for (&DIRECTIONS) |d| {
-            var neighbor = c;
-            if (!neighbor.move(d, state.mapgeometry)) continue;
-            if (self.hasMachine(neighbor)) machs += 1;
+            if (c.move(d, state.mapgeometry)) |neighbor| {
+                if (self.hasMachine(neighbor)) machs += 1;
+            }
         }
         return machs;
     }
@@ -1937,12 +1932,13 @@ pub const Dungeon = struct {
 
         var walls: usize = if (self.at(c).type == .Wall) 1 else 0;
         for (directions) |d| {
-            var neighbor = c;
-            if (!neighbor.move(d, state.mapgeometry)) {
+            if (c.move(d, state.mapgeometry)) |neighbor| {
+                if (self.at(neighbor).type == .Wall)
+                    walls += 1;
+            } else {
                 walls += 1;
                 continue;
             }
-            if (self.at(neighbor).type == .Wall) walls += 1;
         }
         return walls;
     }
@@ -1951,11 +1947,11 @@ pub const Dungeon = struct {
         for (&DIRECTIONS) |d| {
             if (!rng.onein(4)) continue;
 
-            var neighbor = c;
-            if (!neighbor.move(d, state.mapgeometry)) continue;
-            const prev = self.at(neighbor).spatter.get(what);
-            const new = math.min(prev + rng.range(usize, 0, 5), 10);
-            self.at(neighbor).spatter.set(what, new);
+            if (c.move(d, state.mapgeometry)) |neighbor| {
+                const prev = self.at(neighbor).spatter.get(what);
+                const new = math.min(prev + rng.range(usize, 0, 5), 10);
+                self.at(neighbor).spatter.set(what, new);
+            }
         }
 
         if (rng.boolean()) {
