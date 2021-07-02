@@ -31,6 +31,12 @@ const Corridor = struct {
     distance: usize,
 };
 
+fn isTileAvailable(coord: Coord) bool {
+    return state.dungeon.at(coord).mob == null and
+        state.dungeon.at(coord).surface == null and
+        state.dungeon.at(coord).item == null;
+}
+
 fn _createItem(comptime T: type, item: T) *T {
     comptime const list = switch (T) {
         Potion => &state.potions,
@@ -598,31 +604,35 @@ pub fn placeGuards(level: usize, allocator: *mem.Allocator) void {
 
         if (rng.onein(2)) {
             const post_coord = room.randomCoord();
-            var mob = WatcherTemplate;
+            if (isTileAvailable(post_coord)) {
+                var mob = WatcherTemplate;
 
-            mob.init(allocator);
+                mob.init(allocator);
 
-            mob.occupation.work_area.append(post_coord) catch unreachable;
-            mob.coord = post_coord;
-            mob.facing = rng.chooseUnweighted(Direction, &DIRECTIONS);
+                mob.occupation.work_area.append(post_coord) catch unreachable;
+                mob.coord = post_coord;
+                mob.facing = rng.chooseUnweighted(Direction, &DIRECTIONS);
 
-            state.mobs.append(mob) catch unreachable;
-            state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
+                state.mobs.append(mob) catch unreachable;
+                state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
+            }
         }
 
         if (rng.onein(4)) {
             const post_coord = room.randomCoord();
-            var mob = ExecutionerTemplate;
-            var weapon = _createItem(Weapon, items.ZinnagWeapon);
+            if (isTileAvailable(post_coord)) {
+                var mob = ExecutionerTemplate;
+                var weapon = _createItem(Weapon, items.ZinnagWeapon);
 
-            mob.init(allocator);
-            mob.inventory.wielded = weapon;
-            mob.occupation.work_area.append(post_coord) catch unreachable;
-            mob.coord = post_coord;
-            mob.facing = rng.chooseUnweighted(Direction, &DIRECTIONS);
+                mob.init(allocator);
+                mob.inventory.wielded = weapon;
+                mob.occupation.work_area.append(post_coord) catch unreachable;
+                mob.coord = post_coord;
+                mob.facing = rng.chooseUnweighted(Direction, &DIRECTIONS);
 
-            state.mobs.append(mob) catch unreachable;
-            state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
+                state.mobs.append(mob) catch unreachable;
+                state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
+            }
         }
     }
 }
@@ -724,8 +734,8 @@ pub fn placeRandomStairs(level: usize) void {
         const above = Coord.new2(level, rand.x, rand.y);
         const below = Coord.new2(level + 1, rand.x, rand.y);
 
-        if (!state.dungeon.hasMachine(above) and
-            !state.dungeon.hasMachine(below) and
+        if (isTileAvailable(above) and
+            isTileAvailable(below) and
             state.is_walkable(below, .{ .right_now = true }) and
             state.is_walkable(above, .{ .right_now = true }))
         {
