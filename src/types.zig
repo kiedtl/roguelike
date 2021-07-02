@@ -2016,7 +2016,7 @@ pub const ExecutionerTemplate = Mob{
         .is_curious = true,
     },
     .allegiance = .Sauron,
-    .vision = 9,
+    .vision = 6,
     .night_vision = 30,
 
     .willpower = 3,
@@ -2043,7 +2043,7 @@ pub const WatcherTemplate = Mob{
         .is_curious = false,
     },
     .allegiance = .Sauron,
-    .vision = 13,
+    .vision = 7,
     .night_vision = 15,
 
     .willpower = 3,
@@ -2070,7 +2070,7 @@ pub const GuardTemplate = Mob{
         .is_curious = true,
     },
     .allegiance = .Sauron,
-    .vision = 9,
+    .vision = 6,
     .night_vision = 35,
 
     .willpower = 2,
@@ -2098,7 +2098,7 @@ pub const ElfTemplate = Mob{
         .is_curious = false,
     },
     .allegiance = .Illuvatar,
-    .vision = 20,
+    .vision = 15,
     .night_vision = 3,
     .deg360_vision = true,
 
@@ -2153,7 +2153,7 @@ pub const GoblinTemplate = Mob{
         .is_curious = true,
     },
     .allegiance = .NoneEvil,
-    .vision = 10,
+    .vision = 12,
     .night_vision = 0,
 
     .willpower = 3,
@@ -2180,7 +2180,7 @@ pub const CaveRatTemplate = Mob{
         .is_curious = false,
     },
     .allegiance = .NoneEvil,
-    .vision = 6,
+    .vision = 12,
     .night_vision = 0,
 
     .willpower = 1,
