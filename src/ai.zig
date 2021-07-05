@@ -9,6 +9,13 @@ const astar = @import("astar.zig");
 const rng = @import("rng.zig");
 usingnamespace @import("types.zig");
 
+fn currentEnemy(me: *Mob) *EnemyRecord {
+    assert(me.occupation.phase == .SawHostile);
+    assert(me.enemies.items.len > 0);
+
+    return &me.enemies.items[me.enemies.items.len - 1];
+}
+
 fn _find_coord(coord: Coord, array: *CoordArrayList) usize {
     for (array.items) |item, index| {
         if (item.eq(coord))
@@ -288,7 +295,7 @@ pub fn wanderWork(mob: *Mob, alloc: *mem.Allocator) void {
 
 // - Move towards hostile, bapping it if we can.
 pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
-    const target = mob.enemies.items[0].mob;
+    const target = currentEnemy(mob).mob;
     if (mob.coord.distance(target.coord) == 1) {
         _ = mob.fight(target);
     } else {
@@ -308,7 +315,7 @@ pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
 pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
     const PREFERRED_DISTANCE: usize = 5;
 
-    const target = mob.enemies.items[0].mob;
+    const target = currentEnemy(mob).mob;
 
     if (!mob.cansee(target.coord)) {
         mob.tryMoveTo(target.coord);
@@ -362,7 +369,7 @@ pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
 pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
     assert(mob.spells.len > 0);
 
-    const target = mob.enemies.items[0].mob;
+    const target = currentEnemy(mob).mob;
 
     if (!target.cansee(mob.coord)) {
         _ = mob.rest();
