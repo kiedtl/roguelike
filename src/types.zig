@@ -741,6 +741,7 @@ pub const Mob = struct { // {{{
     memory_duration: usize,
     base_speed: usize,
     max_HP: f64,
+    regen: f64 = 0.14,
     blood: ?Spatter,
     immobile: bool = false,
     spells: StackBuffer(SpellInfo, 2) = StackBuffer(SpellInfo, 2).init(null),
@@ -771,7 +772,7 @@ pub const Mob = struct { // {{{
     // TODO: regenerate health more if mob rested in last turn.
     pub fn tick_hp(self: *Mob) void {
         assert(!self.is_dead);
-        self.HP = math.clamp(self.HP + 0.14, 0, self.max_HP);
+        self.HP = math.clamp(self.HP + self.regen, 0, self.max_HP);
     }
 
     // Check surrounding temperature/gas/water and drown, burn, freeze, or
@@ -2236,6 +2237,7 @@ pub const KyaniteStatueTemplate = Mob{
     .dexterity = 100,
     .hearing = 0,
     .max_HP = 100,
+    .regen = 10,
     .memory_duration = 1,
     .base_speed = 100,
     .blood = null,
@@ -2268,6 +2270,7 @@ pub const NebroStatueTemplate = Mob{
     .dexterity = 100,
     .hearing = 0,
     .max_HP = 1000,
+    .regen = 10,
     .memory_duration = 1,
     .base_speed = 100,
     .blood = null,
@@ -2300,6 +2303,7 @@ pub const CrystalStatueTemplate = Mob{
     .dexterity = 100,
     .hearing = 0,
     .max_HP = 1000,
+    .regen = 10,
     .memory_duration = 1,
     .base_speed = 100,
     .blood = null,
