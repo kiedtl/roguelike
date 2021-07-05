@@ -379,6 +379,7 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
                 @ptrToInt(othermob) != @ptrToInt(mob) and
                 othermob.allegiance == mob.allegiance and
                 othermob.occupation.phase == .SawHostile and
+                othermob.enemies.items.len > 0 and // mob's phase may not have been reset yet
                 othermob.enemies.items[0].mob.coord.eq(target.coord))
             {
                 ally = true;
