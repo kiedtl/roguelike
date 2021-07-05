@@ -261,10 +261,10 @@ pub fn wanderWork(mob: *Mob, alloc: *mem.Allocator) void {
             .height = HEIGHT - 1,
         };
 
-        while (true) {
+        var tries: usize = 0;
+        while (tries < 100) : (tries += 1) {
             const point = map.randomCoord();
 
-            if (state.dungeon.layout[mob.coord.z][point.y][point.x]) continue;
             if (!state.is_walkable(point, .{})) continue;
 
             if (mob.nextDirectionTo(point)) |_| {
