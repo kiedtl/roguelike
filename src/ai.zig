@@ -248,7 +248,7 @@ pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
         .CleanerIdle => {
             _ = mob.rest();
 
-            if (rng.onein(3))
+            if (rng.onein(2))
                 mob.occupation.work_phase = .CleanerScan;
         },
     }
