@@ -86,7 +86,9 @@ pub fn checkForHostiles(mob: *Mob) void {
 
     if (mob.enemies.items.len > 0) {
         mob.occupation.phase = .SawHostile;
-    } else if (mob.occupation.phase == .SawHostile) {
+    }
+
+    if (mob.occupation.phase == .SawHostile and mob.enemies.items.len == 0) {
         // No enemies sighted, we're done hunting.
         mob.occupation.phase = .Work;
     }
