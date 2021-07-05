@@ -558,7 +558,7 @@ pub fn placeTraps(level: usize) void {
     }
 }
 
-pub fn placeGuards(level: usize, allocator: *mem.Allocator) void {
+pub fn placeMobs(level: usize, allocator: *mem.Allocator) void {
     var squads: usize = rng.range(usize, 5, 8);
     while (squads > 0) : (squads -= 1) {
         const room = rng.chooseUnweighted(Room, state.dungeon.rooms[level].items);
@@ -630,6 +630,17 @@ pub fn placeGuards(level: usize, allocator: *mem.Allocator) void {
                 mob.coord = post_coord;
                 mob.facing = rng.chooseUnweighted(Direction, &DIRECTIONS);
 
+                state.mobs.append(mob) catch unreachable;
+                state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
+            }
+        }
+
+        if (rng.onein(10)) {
+            const post_coord = room.randomCoord();
+            if (isTileAvailable(post_coord)) {
+                var mob = CleanerTemplate;
+                mob.init(allocator);
+                mob.coord = post_coord;
                 state.mobs.append(mob) catch unreachable;
                 state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
             }

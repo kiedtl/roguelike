@@ -665,10 +665,21 @@ pub const Occupation = struct {
     // Should the mob investigate noises?
     is_curious: bool,
 
-    // The "target" in any phase.
+    // The "target" in any phase (except .SawHostile, the target for that is in
+    // the enemy records).
     target: ?Coord = null,
 
     phase: OccupationPhase = .Work,
+
+    // The particular phase of a mob's work phase. For instance a working Cleaner
+    // might be scanning, idling, or cleaning.
+    work_phase: AIWorkPhase = undefined,
+};
+
+pub const AIWorkPhase = enum {
+    CleanerScan,
+    CleanerClean,
+    CleanerIdle,
 };
 
 pub const Mob = struct { // {{{
@@ -2298,6 +2309,33 @@ pub const CrystalStatueTemplate = Mob{
     .strength = 2,
 };
 
+pub const CleanerTemplate = Mob{
+    .id = "interaction_laborer",
+    .species = "cleaner",
+    .tile = 'o',
+    .occupation = Occupation{
+        .work_description = "cleaning",
+        .work_fn = ai.cleanerWork,
+        .fight_fn = null,
+        .is_combative = false,
+        .is_curious = false,
+    },
+    .allegiance = .Sauron,
+    .vision = 6,
+    .night_vision = 30,
+
+    .willpower = 2,
+    .dexterity = 19,
+    .hearing = 10,
+    .max_HP = 30,
+    .memory_duration = 5,
+    .base_speed = 100,
+    .blood = .Blood,
+
+    .HP = 30,
+    .strength = 10,
+};
+
 pub const MOBS = [_]Mob{
     WatcherTemplate,
     ExecutionerTemplate,
@@ -2309,4 +2347,5 @@ pub const MOBS = [_]Mob{
     KyaniteStatueTemplate,
     NebroStatueTemplate,
     CrystalStatueTemplate,
+    CleanerTemplate,
 };

@@ -184,6 +184,67 @@ pub fn interactionLaborerWork(mob: *Mob, _: *mem.Allocator) void {
     mob.tryMoveTo(machine);
 }
 
+pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
+    switch (mob.occupation.work_phase) {
+        .CleanerScan => {
+            _ = mob.rest();
+
+            var y: usize = 0;
+            while (y < HEIGHT) : (y += 1) {
+                var x: usize = 0;
+                while (x < WIDTH) : (x += 1) {
+                    const coord = Coord.new2(mob.coord.z, x, y);
+                    var clean = true;
+
+                    var spattering = state.dungeon.at(coord).spatter.iterator();
+                    while (spattering.next()) |entry| {
+                        const num = entry.value.*;
+                        if (entry.value.* > 0) {
+                            clean = false;
+                            break;
+                        }
+                    }
+
+                    if (!clean) {
+                        mob.occupation.target = coord;
+                        mob.occupation.work_phase = .CleanerClean;
+                        break;
+                    }
+                }
+            }
+        },
+        .CleanerClean => {
+            const target = mob.occupation.target.?;
+            if (target.distance(mob.coord) > 1) {
+                mob.tryMoveTo(target);
+            } else {
+                _ = mob.rest();
+
+                var was_clean = true;
+                var spattering = state.dungeon.at(target).spatter.iterator();
+
+                while (spattering.next()) |entry| {
+                    const spatter = entry.key;
+                    const num = entry.value.*;
+                    if (num > 0) {
+                        was_clean = false;
+                        state.dungeon.at(target).spatter.set(spatter, num - 1);
+                    }
+                }
+
+                if (was_clean)
+                    mob.occupation.work_phase = .CleanerScan;
+            }
+        },
+        .CleanerIdle => {
+            _ = mob.rest();
+
+            if (rng.onein(3))
+                mob.occupation.work_phase = .CleanerScan;
+        },
+    }
+}
+
 pub fn wanderWork(mob: *Mob, alloc: *mem.Allocator) void {
     assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.occupation.phase == .Work);

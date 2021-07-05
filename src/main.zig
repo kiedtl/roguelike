@@ -49,7 +49,7 @@ fn initGame() void {
         mapgen.placeTraps(level);
         mapgen.placeRoomFeatures(level, &state.GPA.allocator);
         mapgen.placeItems(level);
-        mapgen.placeGuards(level, &state.GPA.allocator);
+        mapgen.placeMobs(level, &state.GPA.allocator);
 
         // state.dungeon.layout[level] = mapgen.cellularAutomataAvoidanceMap(level);
 
