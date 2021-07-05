@@ -259,17 +259,6 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
         assert(mob.occupation.is_combative);
         assert(mob.enemies.items.len > 0);
 
-        const target = mob.enemies.items[0].mob;
-
-        // If we're standing on the mob we were chasing, it's probably dead...
-        if (mob.coord.eq(target.coord)) {
-            mob.occupation.target = null;
-            mob.occupation.phase = .Work;
-
-            _ = mob.rest();
-            return;
-        }
-
         (mob.occupation.fight_fn.?)(mob, alloc);
     }
 }
