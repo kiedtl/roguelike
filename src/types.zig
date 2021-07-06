@@ -705,7 +705,7 @@ pub const Mob = struct { // {{{
     facing: Direction = .North,
     coord: Coord = Coord.new(0, 0),
 
-    HP: f64, // f64 so that we can regenerate <1 HP per turn
+    HP: f64 = undefined,
     energy: isize = 0,
     statuses: StatusArray = StatusArray.initFill(.{}),
     occupation: Occupation,
@@ -1244,6 +1244,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn init(self: *Mob, alloc: *mem.Allocator) void {
+        self.HP = self.max_HP;
         self.squad_members = MobArrayList.init(alloc);
         self.enemies = std.ArrayList(EnemyRecord).init(alloc);
         self.activities.init();
@@ -2046,7 +2047,6 @@ pub const ExecutionerTemplate = Mob{
     .base_speed = 100,
     .blood = .Blood,
 
-    .HP = 30,
     .strength = 20,
 };
 
@@ -2073,7 +2073,6 @@ pub const WatcherTemplate = Mob{
     .base_speed = 65,
     .blood = .Blood,
 
-    .HP = 20,
     .strength = 15, // weakling!
 };
 
@@ -2100,7 +2099,6 @@ pub const GuardTemplate = Mob{
     .base_speed = 110,
     .blood = .Blood,
 
-    .HP = 30,
     .strength = 20,
 };
 
@@ -2129,7 +2127,6 @@ pub const ElfTemplate = Mob{
     .base_speed = 80,
     .blood = .Blood,
 
-    .HP = 30,
     .strength = 19,
 };
 
@@ -2156,7 +2153,6 @@ pub const InteractionLaborerTemplate = Mob{
     .base_speed = 100,
     .blood = .Blood,
 
-    .HP = 30,
     .strength = 10,
 };
 
@@ -2183,7 +2179,6 @@ pub const GoblinTemplate = Mob{
     .base_speed = 100,
     .blood = .Blood,
 
-    .HP = 35,
     .strength = 18,
 };
 
@@ -2210,7 +2205,6 @@ pub const CaveRatTemplate = Mob{
     .base_speed = 40,
     .blood = .Blood,
 
-    .HP = 10,
     .strength = 5,
 };
 
@@ -2243,7 +2237,6 @@ pub const KyaniteStatueTemplate = Mob{
     .blood = null,
     .immobile = true,
 
-    .HP = 100,
     .strength = 1,
 };
 
@@ -2276,7 +2269,6 @@ pub const NebroStatueTemplate = Mob{
     .blood = null,
     .immobile = true,
 
-    .HP = 1000,
     .strength = 2,
 };
 
@@ -2309,7 +2301,6 @@ pub const CrystalStatueTemplate = Mob{
     .blood = null,
     .immobile = true,
 
-    .HP = 1000,
     .strength = 2,
 };
 
@@ -2336,7 +2327,6 @@ pub const CleanerTemplate = Mob{
     .base_speed = 100,
     .blood = .Blood,
 
-    .HP = 30,
     .strength = 10,
 };
 
