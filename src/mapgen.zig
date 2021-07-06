@@ -15,9 +15,9 @@ usingnamespace @import("types.zig");
 
 // Dimensions include the first wall, so a minimum width of 2 guarantee that
 // there will be one empty space in the room, minimum.
-const MIN_ROOM_WIDTH: usize = 4;
+const MIN_ROOM_WIDTH: usize = 6;
 const MIN_ROOM_HEIGHT: usize = 4;
-const MAX_ROOM_WIDTH: usize = 10;
+const MAX_ROOM_WIDTH: usize = 15;
 const MAX_ROOM_HEIGHT: usize = 10;
 
 const LIMIT = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
@@ -101,8 +101,8 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     state.player = state.mobs.lastPtr().?;
 }
 
-fn _choosePrefab(level: usize, prefabs: *PrefabArrayList) ?Prefab {
-    var i: usize = 255;
+fn choosePrefab(level: usize, prefabs: *PrefabArrayList) ?Prefab {
+    var i: usize = 512;
     while (i > 0) : (i -= 1) {
         // Don't use rng.chooseUnweighted, as we need a pointer to manage the
         // restriction amount should we choose it.
@@ -155,12 +155,22 @@ fn roomIntersects(
     return false;
 }
 
-fn _excavate_prefab(room: *const Room, fab: *const Prefab, allocator: *mem.Allocator) void {
+fn _excavate_prefab(
+    room: *const Room,
+    fab: *const Prefab,
+    allocator: *mem.Allocator,
+    startx: usize,
+    starty: usize,
+) void {
     var y: usize = 0;
     while (y < fab.height) : (y += 1) {
         var x: usize = 0;
         while (x < fab.width) : (x += 1) {
-            const rc = Coord.new2(room.start.z, x + room.start.x, y + room.start.y);
+            const rc = Coord.new2(
+                room.start.z,
+                x + room.start.x + startx,
+                y + room.start.y + starty,
+            );
             assert(rc.x < WIDTH);
             assert(rc.y < HEIGHT);
 
@@ -375,7 +385,13 @@ fn _createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?
     };
 }
 
-fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, allocator: *mem.Allocator) void {
+fn _place_rooms(
+    rooms: *RoomArrayList,
+    n_fabs: *PrefabArrayList,
+    s_fabs: *PrefabArrayList,
+    level: usize,
+    allocator: *mem.Allocator,
+) void {
     //const parent = &rooms.items[rng.range(usize, 0, rooms.items.len - 1)];
     var _parent = rng.chooseUnweighted(Room, rooms.items);
     const parent = &_parent;
@@ -386,6 +402,17 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
     var side = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
 
     if (rng.onein(3)) {
+        if (distance == 0) distance += 1;
+
+        var child_w = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
+        var child_h = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
+        fab = choosePrefab(level, n_fabs) orelse return;
+        child = parent.attach(side, fab.?.width, fab.?.height, distance, &fab.?) orelse return;
+        child.prefab = fab;
+
+        if (roomIntersects(rooms, &child, parent, null, false) or child.overflowsLimit(&LIMIT))
+            return;
+    } else {
         if (parent.prefab != null and distance == 0) distance += 1;
 
         var child_w = rng.rangeClumping(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH, 2);
@@ -400,17 +427,6 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
             child_h -= 1;
             child = parent.attach(side, child_w, child_h, distance, null).?;
         }
-    } else {
-        if (distance == 0) distance += 1;
-
-        var child_w = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
-        var child_h = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
-        fab = _choosePrefab(level, fabs) orelse return;
-        child = parent.attach(side, fab.?.width, fab.?.height, distance, &fab.?) orelse return;
-        child.prefab = fab;
-
-        if (roomIntersects(rooms, &child, parent, null, false) or child.overflowsLimit(&LIMIT))
-            return;
     }
 
     if (distance > 0) {
@@ -437,7 +453,7 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
     // Only now are we actually sure that we'd use the room
 
     if (child.prefab) |_| {
-        _excavate_prefab(&child, &fab.?, allocator);
+        _excavate_prefab(&child, &fab.?, allocator, 0, 0);
     } else {
         _excavate_room(&child);
     }
@@ -445,10 +461,26 @@ fn _place_rooms(rooms: *RoomArrayList, fabs: *PrefabArrayList, level: usize, all
     rooms.append(child) catch unreachable;
 
     if (child.prefab) |f|
-        Prefab.incrementUsedCounter(utils.used(f.name), level, fabs);
+        Prefab.incrementUsedCounter(utils.used(f.name), level, n_fabs);
+
+    if (child.prefab == null)
+        if (choosePrefab(level, s_fabs)) |subroom|
+            if (subroom.height < child.height and subroom.width < child.width) {
+                const mx = child.width - subroom.width;
+                const my = child.height - subroom.height;
+                const rx = rng.range(usize, 0, mx);
+                const ry = rng.range(usize, 0, my);
+                _excavate_prefab(&child, &subroom, allocator, rx, ry);
+            };
 }
 
-pub fn placeRandomRooms(fabs: *PrefabArrayList, level: usize, num: usize, allocator: *mem.Allocator) void {
+pub fn placeRandomRooms(
+    n_fabs: *PrefabArrayList,
+    s_fabs: *PrefabArrayList,
+    level: usize,
+    num: usize,
+    allocator: *mem.Allocator,
+) void {
     var rooms = RoomArrayList.init(allocator);
 
     const x = rng.range(usize, 1, state.WIDTH / 2);
@@ -456,14 +488,14 @@ pub fn placeRandomRooms(fabs: *PrefabArrayList, level: usize, num: usize, alloca
     var first: Room = undefined;
 
     if (Configs[level].starting_prefab) |prefab_name| {
-        const prefab = Prefab.findPrefabByName(prefab_name, fabs).?;
+        const prefab = Prefab.findPrefabByName(prefab_name, n_fabs).?;
         first = Room{
             .start = Coord.new2(level, x, y),
             .width = prefab.width,
             .height = prefab.height,
             .prefab = prefab,
         };
-        _excavate_prefab(&first, &prefab, allocator);
+        _excavate_prefab(&first, &prefab, allocator, 0, 0);
     } else {
         const width = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
         const height = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
@@ -483,7 +515,7 @@ pub fn placeRandomRooms(fabs: *PrefabArrayList, level: usize, num: usize, alloca
     }
 
     var c = num;
-    while (c > 0) : (c -= 1) _place_rooms(&rooms, fabs, level, allocator);
+    while (c > 0) : (c -= 1) _place_rooms(&rooms, n_fabs, s_fabs, level, allocator);
 
     state.dungeon.rooms[level] = rooms;
 }
@@ -615,6 +647,21 @@ pub fn placeMobs(level: usize, allocator: *mem.Allocator) void {
 
                 state.mobs.append(mob) catch unreachable;
                 state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
+            }
+
+            const coord = room.randomCoord();
+            if (isTileAvailable(coord)) {
+                const armor = _createItem(Armor, items.LeatherArmor);
+                const weapon = _createItem(Weapon, items.ClubWeapon);
+
+                var gobbo = GoblinTemplate;
+                gobbo.init(allocator);
+                gobbo.occupation.work_area.append(coord) catch unreachable;
+                gobbo.coord = coord;
+                gobbo.inventory.armor = armor;
+                gobbo.inventory.wielded = weapon;
+                state.mobs.append(gobbo) catch unreachable;
+                state.dungeon.at(coord).mob = state.mobs.lastPtr().?;
             }
         }
 
@@ -882,6 +929,7 @@ pub fn populateCaves(avoid: *const [HEIGHT][WIDTH]bool, level: usize, allocator:
 }
 
 pub const Prefab = struct {
+    subroom: bool = false,
     invisible: bool = false,
     restriction: ?usize = null,
     noitems: bool = false,
@@ -964,6 +1012,9 @@ pub const Prefab = struct {
                     if (mem.eql(u8, key, "invisible")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.invisible = true;
+                    } else if (mem.eql(u8, key, "subroom")) {
+                        if (val.len != 0) return error.UnexpectedMetadataValue;
+                        f.subroom = true;
                     } else if (mem.eql(u8, key, "restriction")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
                         f.restriction = std.fmt.parseInt(usize, val, 0) catch |_| return error.InvalidMetadataValue;
@@ -1117,9 +1168,11 @@ pub const Prefab = struct {
 pub const PrefabArrayList = std.ArrayList(Prefab);
 
 // FIXME: error handling
-pub fn readPrefabs(alloc: *mem.Allocator) PrefabArrayList {
+pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *PrefabArrayList) void {
     var buf: [2048]u8 = undefined;
-    var fabs = PrefabArrayList.init(alloc);
+
+    n_fabs.* = PrefabArrayList.init(alloc);
+    s_fabs.* = PrefabArrayList.init(alloc);
 
     const fabs_dir = std.fs.cwd().openDir("prefabs", .{
         .iterate = true,
@@ -1156,10 +1209,11 @@ pub fn readPrefabs(alloc: *mem.Allocator) PrefabArrayList {
         };
         mem.copy(u8, &f.name, mem.trimRight(u8, fab_file.name, ".fab"));
 
-        fabs.append(f) catch @panic("OOM");
+        if (f.subroom)
+            s_fabs.append(f) catch @panic("OOM")
+        else
+            n_fabs.append(f) catch @panic("OOM");
     }
-
-    return fabs;
 }
 
 pub const LevelConfig = struct {

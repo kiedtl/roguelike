@@ -42,9 +42,12 @@ fn initGame() void {
     state.props = PropList.init(&state.GPA.allocator);
     rng.init();
 
-    var fabs = mapgen.readPrefabs(&state.GPA.allocator);
+    var s_fabs: mapgen.PrefabArrayList = undefined;
+    var n_fabs: mapgen.PrefabArrayList = undefined;
+    mapgen.readPrefabs(&state.GPA.allocator, &n_fabs, &s_fabs);
+
     for (state.dungeon.map) |_, level| {
-        mapgen.placeRandomRooms(&fabs, level, 500, &state.GPA.allocator);
+        mapgen.placeRandomRooms(&n_fabs, &s_fabs, level, 256, &state.GPA.allocator);
         mapgen.placeMoarCorridors(level);
         mapgen.placeTraps(level);
         mapgen.placeRoomFeatures(level, &state.GPA.allocator);
