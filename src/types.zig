@@ -27,8 +27,8 @@ const ai = @import("ai.zig");
 const SpellInfo = spells.SpellInfo;
 const Spell = spells.Spell;
 
-pub const HEIGHT = 100;
-pub const WIDTH = 100;
+pub const HEIGHT = 40;
+pub const WIDTH = 80;
 pub const LEVELS = 3;
 pub const PLAYER_STARTING_LEVEL = 1; // TODO: define in data file
 

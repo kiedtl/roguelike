@@ -15,10 +15,10 @@ usingnamespace @import("types.zig");
 
 // Dimensions include the first wall, so a minimum width of 2 guarantee that
 // there will be one empty space in the room, minimum.
-const MIN_ROOM_WIDTH: usize = 6;
-const MIN_ROOM_HEIGHT: usize = 4;
-const MAX_ROOM_WIDTH: usize = 15;
-const MAX_ROOM_HEIGHT: usize = 10;
+const MIN_ROOM_WIDTH: usize = 7;
+const MIN_ROOM_HEIGHT: usize = 5;
+const MAX_ROOM_WIDTH: usize = 20;
+const MAX_ROOM_HEIGHT: usize = 15;
 
 const LIMIT = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
 //const DISTANCES = [2][8]usize{ .{ 0, 1, 2, 3, 4, 5, 6, 7 }, .{ 3, 9, 4, 3, 2, 1, 1, 1 } };
