@@ -313,9 +313,9 @@ pub fn tickSound() void {
     }
 }
 
-pub fn tickAtmosphere(cur_gas: usize) void {
+pub fn tickAtmosphere(cur_lev: usize, cur_gas: usize) void {
     const dissipation = gas.Gases[cur_gas].dissipation_rate;
-    const cur_lev = player.coord.z;
+
     var new: [HEIGHT][WIDTH]f64 = undefined;
     {
         var y: usize = 0;
@@ -360,7 +360,7 @@ pub fn tickAtmosphere(cur_gas: usize) void {
     }
 
     if (cur_gas < (gas.GAS_NUM - 1))
-        tickAtmosphere(cur_gas + 1);
+        tickAtmosphere(cur_lev, cur_gas + 1);
 }
 
 pub fn tickSobs(level: usize) void {
