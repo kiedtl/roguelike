@@ -222,7 +222,7 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
     ai.checkForHostiles(mob);
 
     // Check for sounds
-    if (mob.occupation.phase != .SawHostile and mob.occupation.is_curious) {
+    if (mob.occupation.phase == .Work and mob.occupation.is_curious) {
         if (_can_hear_hostile(mob)) |dest| {
             // Let's investigate
             mob.occupation.phase = .GoTo;
