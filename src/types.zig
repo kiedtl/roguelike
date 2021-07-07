@@ -1871,9 +1871,8 @@ pub const Tile = struct {
 
         if (self.type != .Wall) {
             const light = math.clamp(state.dungeon.lightIntensityAt(coord).*, 0, 100);
-            const light_adj = @floatToInt(usize, math.round(@intToFloat(f64, light) / 10) * 10);
-            cell.bg = math.max(utils.percentageOfColor(cell.bg, light_adj), utils.darkenColor(cell.bg, 4));
-            cell.fg = math.max(utils.percentageOfColor(cell.fg, light_adj), utils.darkenColor(cell.fg, 4));
+            cell.bg = math.max(utils.percentageOfColor(cell.bg, light), utils.darkenColor(cell.bg, 4));
+            cell.fg = math.max(utils.percentageOfColor(cell.fg, light), utils.darkenColor(cell.fg, 4));
         }
 
         var spattering = self.spatter.iterator();
