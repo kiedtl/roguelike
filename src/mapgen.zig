@@ -1255,7 +1255,7 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ 0, 7, 6, 5, 2, 2, 1, 0, 0, 0 },
         },
         .prefab_chance = 1,
-        .max_rooms = 4096,
+        .max_rooms = 2048,
     },
     .{
         .identifier = "PRI",
