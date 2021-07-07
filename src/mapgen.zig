@@ -1248,6 +1248,16 @@ pub const Configs = [LEVELS]LevelConfig{
         .max_rooms = 256,
     },
     .{
+        .identifier = "LAB",
+        .starting_prefab = "LAB_start",
+        .distances = [2][10]usize{
+            .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+            .{ 0, 7, 6, 5, 2, 2, 1, 0, 0, 0 },
+        },
+        .prefab_chance = 1,
+        .max_rooms = 4096,
+    },
+    .{
         .identifier = "PRI",
         .starting_prefab = "PRI_start",
         .distances = [2][10]usize{
