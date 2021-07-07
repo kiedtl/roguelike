@@ -1881,7 +1881,7 @@ pub const Tile = struct {
             const num = entry.value.*;
             const color = spatter.color();
             const q = @intToFloat(f64, num / 10);
-            const aq = 1 - math.clamp(q, 0.19, 1);
+            const aq = 1 - math.clamp(q, 0.19, 0.40);
             if (num > 0) cell.bg = utils.mixColors(color, cell.bg, aq);
         }
 
