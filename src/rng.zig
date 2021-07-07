@@ -61,9 +61,12 @@ pub fn choose(comptime T: type, arr: []const T, weights: []const usize) !T {
 
     for (arr) |item, index| {
         const weight = weights[index];
+        if (weight == 0) continue;
+
         const rnd = rng.random.int(usize) % (weight_total + weight);
         if (rnd >= weight_total) // probability is weight/(total+weight)
             selected = item;
+
         weight_total += weight;
     }
 
