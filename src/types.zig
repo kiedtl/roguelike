@@ -169,25 +169,26 @@ pub const Coord = struct { // {{{
         return .{ .z = 0, .x = x, .y = y };
     }
 
-    pub fn distance(a: Self, b: Self) usize {
+    pub inline fn difference(a: Self, b: Self) Self {
+        return Coord.new2(
+            a.z,
+            math.max(a.x, b.x) - math.min(a.x, b.x),
+            math.max(a.y, b.y) - math.min(a.y, b.y),
+        );
+    }
+
+    pub inline fn distance(a: Self, b: Self) usize {
+        const diff = a.difference(b);
+
         // Euclidean: d = sqrt(dx^2 + dy^2)
         //
-        // const x = math.max(a.x, b.x) - math.min(a.x, b.x);
-        // const y = math.max(a.y, b.y) - math.min(a.y, b.y);
-        // return math.sqrt((x * x) + (y * y));
+        // return math.sqrt((diff.x * diff.x) + (diff.y * diff.y));
 
-        // Manhattan: |x1 - x2| + |y1 - y2|
-        // return @intCast(
-        //     usize,
-        //     (math.absInt(@intCast(isize, a.x) - @intCast(isize, b.x)) catch unreachable) +
-        //         (math.absInt(@intCast(isize, a.y) - @intCast(isize, b.y)) catch unreachable),
-        // );
+        // Manhattan: d = dx + dy
+        // return diff.x + diff.y;
 
-        // Chebyshev: max(abs(x1 - x2), abs(y1 - y2))
-        return @intCast(usize, math.max(
-            (math.absInt(@intCast(isize, a.x) - @intCast(isize, b.x)) catch unreachable),
-            (math.absInt(@intCast(isize, a.y) - @intCast(isize, b.y)) catch unreachable),
-        ));
+        // Chebyshev: d = max(dx, dy)
+        return math.max(diff.x, diff.y);
     }
 
     pub inline fn eq(a: Self, b: Self) bool {
@@ -350,6 +351,7 @@ pub const Coord = struct { // {{{
 test "coord.distance" {
     std.testing.expectEqual(Coord.new(0, 0).distance(Coord.new(0, 1)), 1);
     std.testing.expectEqual(Coord.new(0, 0).distance(Coord.new(1, 1)), 1);
+    std.testing.expectEqual(Coord.new(0, 0).distance(Coord.new(0, 2)), 2);
 }
 
 test "coord.move" {
