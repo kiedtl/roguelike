@@ -201,7 +201,7 @@ fn _excavate_prefab(
                             } else {
                                 std.log.warn(
                                     "{}: Couldn't load machine {}, skipping.",
-                                    .{ utils.used(fab.name), utils.used(mid) },
+                                    .{ fab.name.constSlice(), utils.used(mid) },
                                 );
                             }
                         },
@@ -231,7 +231,7 @@ fn _excavate_prefab(
             } else {
                 std.log.warn(
                     "{}: Couldn't load mob {}, skipping.",
-                    .{ utils.used(fab.name), utils.used(mob_f.id) },
+                    .{ fab.name.constSlice(), utils.used(mob_f.id) },
                 );
             }
         }
@@ -463,7 +463,7 @@ fn _place_rooms(
     rooms.append(child) catch unreachable;
 
     if (child.prefab) |f|
-        Prefab.incrementUsedCounter(utils.used(f.name), level, n_fabs);
+        Prefab.incrementUsedCounter(f.name.constSlice(), level, n_fabs);
 
     if (child.prefab == null)
         if (choosePrefab(level, s_fabs)) |subroom|
@@ -938,7 +938,7 @@ pub const Prefab = struct {
     nolights: bool = false,
     notraps: bool = false,
 
-    name: [64:0]u8 = mem.zeroes([64:0]u8),
+    name: StackBuffer(u8, MAX_NAME_SIZE) = StackBuffer(u8, MAX_NAME_SIZE).init(null),
     player_position: ?Coord = null,
 
     height: usize = 0,
@@ -949,6 +949,8 @@ pub const Prefab = struct {
     mobs: [20]?FeatureMob = [_]?FeatureMob{null} ** 20,
 
     used: [LEVELS]usize = [_]usize{0} ** LEVELS,
+
+    pub const MAX_NAME_SIZE = 64;
 
     pub const FabTile = union(enum) {
         Wall, LockedDoor, Door, Brazier, Floor, Connection, Water, Lava, Bars, Feature: u8, Any
@@ -1153,14 +1155,15 @@ pub const Prefab = struct {
     }
 
     pub fn findPrefabByName(name: []const u8, fabs: *const PrefabArrayList) ?Prefab {
-        for (fabs.items) |f| if (mem.eql(u8, name, f.name[0..mem.lenZ(f.name)])) return f;
+        for (fabs.items) |f| if (mem.eql(u8, name, f.name.constSlice())) return f;
         return null;
     }
 
     pub fn incrementUsedCounter(id: []const u8, level: usize, lst: *PrefabArrayList) void {
         for (lst.items) |*f, i| {
-            if (mem.eql(u8, id, f.name[0..mem.lenZ(f.name)])) {
+            if (mem.eql(u8, id, f.name.constSlice())) {
                 f.used[level] += 1;
+                break;
             }
         }
     }
@@ -1208,7 +1211,9 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
             std.log.warn("{}: Couldn't load prefab: {}", .{ fab_file.name, msg });
             continue;
         };
-        mem.copy(u8, &f.name, mem.trimRight(u8, fab_file.name, ".fab"));
+
+        const prefab_name = mem.trimRight(u8, fab_file.name, ".fab");
+        f.name = StackBuffer(u8, Prefab.MAX_NAME_SIZE).init(prefab_name);
 
         if (f.subroom)
             s_fabs.append(f) catch @panic("OOM")
