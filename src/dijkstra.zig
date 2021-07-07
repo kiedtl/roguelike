@@ -29,7 +29,7 @@ pub const Dijkstra = struct {
     is_valid: fn (Coord, state.IsWalkableOptions) bool,
     is_valid_opts: state.IsWalkableOptions,
     open: NodeArrayList,
-    closed: NodeArrayList,
+    closed: [HEIGHT][WIDTH]?Node = [_][WIDTH]?Node{[_]?Node{null} ** WIDTH} ** HEIGHT,
     skip_current: bool = false,
 
     const Self = @This();
@@ -51,7 +51,6 @@ pub const Dijkstra = struct {
             .is_valid = is_valid,
             .is_valid_opts = is_valid_opts,
             .open = NodeArrayList.init(allocator),
-            .closed = NodeArrayList.init(allocator),
         };
         s.open.append(n) catch unreachable;
         return s;
@@ -59,7 +58,6 @@ pub const Dijkstra = struct {
 
     pub fn deinit(self: *Self) void {
         self.open.deinit();
-        self.closed.deinit();
     }
 
     pub fn next(self: *Self) ?Coord {
@@ -67,7 +65,7 @@ pub const Dijkstra = struct {
             return null;
         }
 
-        self.closed.append(self.current) catch unreachable;
+        self.closed[self.current.c.y][self.current.c.x] = self.current;
 
         if (self.skip_current) {
             self.skip_current = false;
@@ -81,7 +79,7 @@ pub const Dijkstra = struct {
 
                 if (new.n > self.max) continue;
                 if (!self.is_valid(coord, self.is_valid_opts)) continue;
-                if (coordInList(coord, &self.closed)) |_| continue;
+                if (self.closed[coord.y][coord.x] != null) continue;
                 if (coordInList(coord, &self.open)) |_| continue;
 
                 self.open.append(new) catch unreachable;
