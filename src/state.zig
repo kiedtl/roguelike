@@ -74,6 +74,7 @@ pub fn nextAvailableSpaceForItem(c: Coord, alloc: *mem.Allocator) ?Coord {
 }
 
 const FLOOR_OPACITY: usize = 5;
+const MOB_OPACITY: usize = 80;
 
 // STYLE: change to Tile.lightOpacity
 pub fn tileOpacity(coord: Coord) usize {
@@ -82,6 +83,9 @@ pub fn tileOpacity(coord: Coord) usize {
 
     if (tile.type == .Wall)
         return @floatToInt(usize, tile.material.opacity * 100);
+
+    if (tile.mob) |_|
+        o += MOB_OPACITY;
 
     if (tile.surface) |surface| {
         switch (surface) {
