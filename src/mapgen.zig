@@ -105,10 +105,16 @@ fn choosePrefab(level: usize, prefabs: *PrefabArrayList) ?Prefab {
         // Don't use rng.chooseUnweighted, as we need a pointer to manage the
         // restriction amount should we choose it.
         const p = &prefabs.items[rng.range(usize, 0, prefabs.items.len - 1)];
-        if (p.invisible) continue;
+
+        if (p.invisible)
+            continue; // Can't be used unless specifically called for by name.
+
+        if (!mem.eql(u8, p.name.constSlice()[0..3], Configs[level].identifier))
+            continue; // Prefab isn't for this level.
 
         if (p.restriction) |restriction|
-            if (p.used[level] >= restriction) continue;
+            if (p.used[level] >= restriction)
+                continue; // Prefab was used too many times.
 
         return p.*;
     }
