@@ -308,8 +308,8 @@ pub fn placeMoarCorridors(level: usize) void {
 
                 if (corridor.distance == 1) placeDoor(corridor.room.start, false);
 
-                // Restart loop
-                i = 0;
+                // Restart loop, as the slice pointer might have been modified if a
+                // reallocation took place
                 break;
             }
         }
@@ -1244,7 +1244,7 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
         },
         .prefab_chance = 3,
-        .max_rooms = 256,
+        .max_rooms = 512,
     },
     .{
         .identifier = "PRI",
