@@ -4,7 +4,7 @@ const math = std.math;
 const meta = std.meta;
 const mem = std.mem;
 
-pub fn saturating_sub(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
+pub fn saturating_sub(a: anytype, b: anytype) @TypeOf(a, b) {
     return switch (@typeInfo(@TypeOf(a))) {
         .ComptimeInt, .Int => if ((a -% b) > a) 0 else a - b,
         .ComptimeFloat, .Float => if ((a - b) > a) 0 else a - b,
