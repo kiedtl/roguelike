@@ -21,8 +21,6 @@ const MAX_ROOM_WIDTH: usize = 20;
 const MAX_ROOM_HEIGHT: usize = 15;
 
 const LIMIT = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
-//const DISTANCES = [2][8]usize{ .{ 0, 1, 2, 3, 4, 5, 6, 7 }, .{ 3, 9, 4, 3, 2, 1, 1, 1 } };
-const DISTANCES = [2][8]usize{ .{ 0, 1, 2, 3, 4, 5, 6, 7 }, .{ 3, 5, 2, 2, 2, 5, 6, 5 } };
 
 const Corridor = struct {
     room: Room,
@@ -397,11 +395,15 @@ fn _place_rooms(
     const parent = &_parent;
 
     var fab: ?Prefab = null;
-    var distance = rng.choose(usize, &DISTANCES[0], &DISTANCES[1]) catch unreachable;
+    var distance = rng.choose(
+        usize,
+        &Configs[level].distances[0],
+        &Configs[level].distances[1],
+    ) catch unreachable;
     var child: Room = undefined;
     var side = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
 
-    if (rng.onein(3)) {
+    if (rng.onein(Configs[level].prefab_chance)) {
         if (distance == 0) distance += 1;
 
         var child_w = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
@@ -478,7 +480,6 @@ pub fn placeRandomRooms(
     n_fabs: *PrefabArrayList,
     s_fabs: *PrefabArrayList,
     level: usize,
-    num: usize,
     allocator: *mem.Allocator,
 ) void {
     var rooms = RoomArrayList.init(allocator);
@@ -514,7 +515,7 @@ pub fn placeRandomRooms(
         _add_player(p, allocator);
     }
 
-    var c = num;
+    var c = Configs[level].max_rooms;
     while (c > 0) : (c -= 1) _place_rooms(&rooms, n_fabs, s_fabs, level, allocator);
 
     state.dungeon.rooms[level] = rooms;
@@ -1217,11 +1218,42 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
 }
 
 pub const LevelConfig = struct {
+    identifier: []const u8,
     starting_prefab: ?[]const u8 = null,
+    distances: [2][10]usize,
+    prefab_chance: usize,
+    max_rooms: usize,
 };
 
 pub const Configs = [LEVELS]LevelConfig{
-    .{ .starting_prefab = "ENT_start" },
-    .{ .starting_prefab = "PRI_start" },
-    .{},
+    .{
+        .identifier = "ENT",
+        .starting_prefab = "ENT_start",
+        .distances = [2][10]usize{
+            .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+            .{ 5, 9, 1, 0, 0, 0, 0, 0, 0, 0 },
+        },
+        .prefab_chance = 2,
+        .max_rooms = 256,
+    },
+    .{
+        .identifier = "PRI",
+        .starting_prefab = "PRI_start",
+        .distances = [2][10]usize{
+            .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+            .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
+        },
+        .prefab_chance = 3,
+        .max_rooms = 256,
+    },
+    .{
+        .identifier = "PRI",
+        .starting_prefab = "PRI_start",
+        .distances = [2][10]usize{
+            .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+            .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
+        },
+        .prefab_chance = 3,
+        .max_rooms = 512,
+    },
 };

@@ -47,7 +47,7 @@ fn initGame() void {
     mapgen.readPrefabs(&state.GPA.allocator, &n_fabs, &s_fabs);
 
     for (state.dungeon.map) |_, level| {
-        mapgen.placeRandomRooms(&n_fabs, &s_fabs, level, 256, &state.GPA.allocator);
+        mapgen.placeRandomRooms(&n_fabs, &s_fabs, level, &state.GPA.allocator);
         mapgen.placeMoarCorridors(level);
         mapgen.placeTraps(level);
         mapgen.placeRoomFeatures(level, &state.GPA.allocator);
