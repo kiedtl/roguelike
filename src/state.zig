@@ -289,7 +289,7 @@ pub fn tickLight(level: usize) void {
             // When I first created the lighting system, I omitted the below
             // check (light > 0) and did raycasting *on every tile on the map*.
             // I chalked the resulting lag (2 seconds for every turn!) to
-            // the lack of optimizations in the raycasting routing, and spent
+            // the lack of optimizations in the raycasting routine, and spent
             // hours trying to write and rewrite a better raycasting function.
             //
             // Thankfully, I only wasted about two days of tearing out my hair
@@ -303,8 +303,7 @@ pub fn tickLight(level: usize) void {
 }
 
 // Each tick, make sound decay by 0.80 for each tile.
-pub fn tickSound() void {
-    const cur_lev = player.coord.z;
+pub fn tickSound(cur_lev: usize) void {
     var y: usize = 0;
     while (y < HEIGHT) : (y += 1) {
         var x: usize = 0;

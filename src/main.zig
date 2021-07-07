@@ -381,7 +381,7 @@ fn tickGame() void {
     state.tickLight(cur_level);
     heat.tickHeat(cur_level);
     state.tickAtmosphere(cur_level, 0);
-    state.tickSound();
+    state.tickSound(cur_level);
 
     var iter = state.mobs.iterator();
     while (iter.nextPtr()) |mob| {
@@ -446,7 +446,7 @@ fn viewerTickGame(cur_level: usize) void {
     state.tickLight(cur_level);
     heat.tickHeat(cur_level);
     state.tickAtmosphere(cur_level, 0);
-    state.tickSound();
+    state.tickSound(cur_level);
 
     var iter = state.mobs.iterator();
     while (iter.nextPtr()) |mob| {
