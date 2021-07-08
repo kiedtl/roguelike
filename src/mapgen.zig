@@ -32,7 +32,7 @@ const Corridor = struct {
 fn isTileAvailable(coord: Coord) bool {
     return state.dungeon.at(coord).mob == null and
         state.dungeon.at(coord).surface == null and
-        state.dungeon.at(coord).item == null;
+        state.dungeon.itemsAt(coord).len == 0;
 }
 
 fn _createItem(comptime T: type, item: T) *T {
@@ -536,20 +536,24 @@ pub fn placeItems(level: usize) void {
             var place = rng.range(usize, 1, 3);
             while (place > 0) {
                 const coord = room.randomCoord();
-                if (state.dungeon.hasMachine(coord) or state.dungeon.at(coord).item != null)
+                if (!isTileAvailable(coord))
                     continue;
 
                 switch (rng.range(usize, 0, 1)) {
                     0 => {
                         const potion = rng.chooseUnweighted(Potion, &items.POTIONS);
                         state.potions.append(potion) catch unreachable;
-                        state.dungeon.at(coord).item = Item{ .Potion = state.potions.lastPtr().? };
+                        state.dungeon.itemsAt(coord).append(
+                            Item{ .Potion = state.potions.lastPtr().? },
+                        ) catch unreachable;
                     },
                     1 => {
                         var bolt = items.CrossbowBoltProjectile;
                         bolt.count = rng.rangeClumping(usize, 3, 10, 2);
                         state.projectiles.append(bolt) catch unreachable;
-                        state.dungeon.at(coord).item = Item{ .Projectile = state.projectiles.lastPtr().? };
+                        state.dungeon.itemsAt(coord).append(
+                            Item{ .Projectile = state.projectiles.lastPtr().? },
+                        ) catch unreachable;
                     },
                     else => unreachable,
                 }

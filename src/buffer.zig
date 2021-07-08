@@ -71,5 +71,13 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
             self.data[self.len] = item;
             self.len += 1;
         }
+
+        pub inline fn isFull(self: *Self) bool {
+            return self.len == self.capacity;
+        }
+
+        pub inline fn last(self: *Self) ?T {
+            return if (self.len > 0) self.data[self.len - 1] else null;
+        }
     };
 }

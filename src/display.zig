@@ -321,7 +321,11 @@ pub fn draw() void {
                     if (state.dungeon.at(coord).mob) |mob| {
                         if (state.player.coord.eq(coord) and _mobs_can_see(&moblist, coord))
                             is_player_watched = true;
-                    } else if (state.dungeon.at(coord).surface) |surfaceitem| {} else if (state.dungeon.at(coord).item) |item| {} else {
+                    } else if (state.dungeon.at(coord).surface != null or
+                        state.dungeon.itemsAt(coord).len > 0)
+                    {
+                        // Do nothing
+                    } else {
                         if (state.player.canHear(coord)) |noise| {
                             // Adjust noise to between 0 and 122, add 0x95, then display
                             const adj_n = math.min(noise, 100) * 100 / 122;

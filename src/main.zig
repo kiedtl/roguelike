@@ -171,7 +171,7 @@ fn fireLauncher() bool {
 // TODO: move this to state.zig...? There should probably be a separate file for
 // player-specific actions.
 fn rifleCorpse() bool {
-    if (state.dungeon.at(state.player.coord).item) |item| {
+    if (state.dungeon.itemsAt(state.player.coord).last()) |item| {
         switch (item) {
             .Corpse => |c| {
                 c.vomitInventory(&state.GPA.allocator);
@@ -241,7 +241,10 @@ fn useItem() bool {
                                 "You drop the {} to wield the {}.",
                                 .{ w.name, weapon.name },
                             );
-                            state.dungeon.at(c).item = Item{ .Weapon = w };
+
+                            if (state.dungeon.itemsAt(c).isFull())
+                                _ = state.dungeon.itemsAt(c).orderedRemove(0) catch unreachable;
+                            state.dungeon.itemsAt(c).append(Item{ .Weapon = w }) catch unreachable;
                         } else {
                             state.message(
                                 .Info,
@@ -271,7 +274,10 @@ fn useItem() bool {
                                 "You drop the {} to wear the {}.",
                                 .{ a.name, armor.name },
                             );
-                            state.dungeon.at(c).item = Item{ .Armor = a };
+
+                            if (state.dungeon.itemsAt(c).isFull())
+                                _ = state.dungeon.itemsAt(c).orderedRemove(0) catch unreachable;
+                            state.dungeon.itemsAt(c).append(Item{ .Armor = a }) catch unreachable;
                         } else {
                             state.message(
                                 .Info,
@@ -302,14 +308,14 @@ fn useItem() bool {
 // TODO: move this to state.zig...? There should probably be a separate file for
 // player-specific actions.
 fn dropItem() bool {
-    if (state.dungeon.at(state.player.coord).item) |item| {
+    if (state.dungeon.itemsAt(state.player.coord).isFull()) {
         // TODO: scoot item automatically to next available tile?
-        state.message(.MetaError, "There's already an item here.", .{});
+        state.message(.MetaError, "There's are already some items here.", .{});
         return false;
     } else {
         const index = display.chooseInventoryItem("Drop") orelse return false;
         const item = state.player.deleteItem(index) catch unreachable;
-        state.dungeon.at(state.player.coord).item = item;
+        state.dungeon.itemsAt(state.player.coord).append(item) catch unreachable;
 
         // TODO: show message
 

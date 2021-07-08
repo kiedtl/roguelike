@@ -843,7 +843,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn grabItem(self: *Mob) bool {
-        if (state.dungeon.at(self.coord).item) |item| {
+        if (state.dungeon.itemsAt(self.coord).last()) |item| {
             switch (item) {
                 .Projectile => |projectile| {
                     var found: ?usize = null;
@@ -869,7 +869,7 @@ pub const Mob = struct { // {{{
                 },
             }
 
-            state.dungeon.at(self.coord).item = null;
+            _ = state.dungeon.itemsAt(self.coord).pop() catch unreachable;
 
             self.declareAction(.Grab);
             return true;
@@ -1217,7 +1217,7 @@ pub const Mob = struct { // {{{
             // Papering over a bug here, next() should never return starting coord
             if (coord.eq(self.coord)) continue;
 
-            if (!state.is_walkable(coord, .{}) or state.dungeon.at(coord).item != null)
+            if (!state.is_walkable(coord, .{}) or state.dungeon.itemsAt(coord).isFull())
                 continue;
 
             coords.append(coord) catch |e| switch (e) {
@@ -1231,13 +1231,13 @@ pub const Mob = struct { // {{{
         for (&special_invent) |maybe_item| {
             if (maybe_item) |item| {
                 if (ctr >= coords.len) break;
-                state.dungeon.at(coords.data[ctr]).item = item;
+                state.dungeon.itemsAt(coords.data[ctr]).append(item) catch unreachable;
                 ctr += 1;
             }
         }
         for (self.inventory.pack.constSlice()) |item| {
             if (ctr >= coords.len) break;
-            state.dungeon.at(coords.data[ctr]).item = item;
+            state.dungeon.itemsAt(coords.data[ctr]).append(item) catch unreachable;
             ctr += 1;
         }
 
@@ -1267,7 +1267,11 @@ pub const Mob = struct { // {{{
 
         self.is_dead = true;
 
-        state.dungeon.at(self.coord).item = Item{ .Corpse = self };
+        if (state.dungeon.itemsAt(self.coord).isFull())
+            _ = state.dungeon.itemsAt(self.coord).orderedRemove(0) catch unreachable;
+
+        state.dungeon.itemsAt(self.coord).append(Item{ .Corpse = self }) catch unreachable;
+
         state.dungeon.at(self.coord).mob = null;
     }
 
@@ -1785,7 +1789,6 @@ pub const Tile = struct {
     mob: ?*Mob = null,
     marked: bool = false,
     surface: ?SurfaceItem = null,
-    item: ?Item = null,
     spatter: SpatterArray = SpatterArray.initFill(0),
 
     pub fn displayAs(coord: Coord) termbox.tb_cell {
@@ -1824,9 +1827,9 @@ pub const Tile = struct {
 
                     cell.ch = mob.tile;
                     cell.bg = color;
-                } else if (state.dungeon.at(coord).item) |item| {
+                } else if (state.dungeon.itemsAt(coord).last()) |item| {
                     switch (item) {
-                        .Corpse => |corpse| {
+                        .Corpse => |_| {
                             cell.ch = '%';
                             cell.fg = 0xffe0ef;
                             cell.bg = color;
@@ -1901,6 +1904,7 @@ pub const Tile = struct {
 
 pub const Dungeon = struct {
     map: [LEVELS][HEIGHT][WIDTH]Tile = [1][HEIGHT][WIDTH]Tile{[1][WIDTH]Tile{[1]Tile{.{}} ** WIDTH} ** HEIGHT} ** LEVELS,
+    items: [LEVELS][HEIGHT][WIDTH]ItemBuffer = [1][HEIGHT][WIDTH]ItemBuffer{[1][WIDTH]ItemBuffer{[1]ItemBuffer{ItemBuffer.init(null)} ** WIDTH} ** HEIGHT} ** LEVELS,
     gas: [LEVELS][HEIGHT][WIDTH][gas.GAS_NUM]f64 = [1][HEIGHT][WIDTH][gas.GAS_NUM]f64{[1][WIDTH][gas.GAS_NUM]f64{[1][gas.GAS_NUM]f64{[1]f64{0} ** gas.GAS_NUM} ** WIDTH} ** HEIGHT} ** LEVELS,
     sound: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     light_intensity: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
@@ -1909,6 +1913,8 @@ pub const Dungeon = struct {
     rooms: [LEVELS]RoomArrayList = undefined,
     // true == cave, false == rooms
     layout: [LEVELS][HEIGHT][WIDTH]bool = undefined,
+
+    pub const ItemBuffer = StackBuffer(Item, 7);
 
     pub fn emittedLightIntensity(self: *Dungeon, coord: Coord) usize {
         const tile: *Tile = state.dungeon.at(coord);
@@ -2004,6 +2010,10 @@ pub const Dungeon = struct {
 
     pub inline fn lightIntensityAt(self: *Dungeon, c: Coord) *usize {
         return &self.light_intensity[c.z][c.y][c.x];
+    }
+
+    pub inline fn itemsAt(self: *Dungeon, c: Coord) *ItemBuffer {
+        return &self.items[c.z][c.y][c.x];
     }
 };
 
