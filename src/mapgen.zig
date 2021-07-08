@@ -268,6 +268,9 @@ pub fn placeMoarCorridors(level: usize) void {
         for (rooms.items) |*child| {
             if (child.type == .Corridor) continue;
 
+            // Skip child prefabs for now, placeCorridor seems to be broken
+            if (child.prefab != null) continue;
+
             if (parent.intersects(child, 1)) {
                 continue;
             }
