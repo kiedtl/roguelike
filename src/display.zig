@@ -232,6 +232,7 @@ fn _draw_messages(startx: isize, endx: isize, starty: isize, endy: isize) void {
 fn _mobs_can_see(moblist: *const std.ArrayList(*Mob), coord: Coord) bool {
     for (moblist.items) |mob| {
         if (mob.is_dead) continue;
+        if (mob.no_show_fov or !mob.occupation.is_combative) continue;
         if (mob.cansee(coord)) return true;
     }
     return false;

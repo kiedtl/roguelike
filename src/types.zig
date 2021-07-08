@@ -732,6 +732,7 @@ pub const Mob = struct { // {{{
     //                better.
     // deg360_vision: Mob's FOV ignores the facing mechanic and can see in all
     //                directions (e.g., player, statues)
+    // no_show_fov:   If false, display code will not show mob's FOV.
     // strength:      TODO: define!
     // memory:        The maximum length of time for which a mob can remember
     //                an enemy.
@@ -741,6 +742,7 @@ pub const Mob = struct { // {{{
     vision: usize,
     night_vision: usize,
     deg360_vision: bool = false,
+    no_show_fov: bool = false,
     hearing: usize,
     strength: usize,
     memory_duration: usize,
@@ -2156,6 +2158,7 @@ pub const PlayerTemplate = Mob{
     .vision = 15,
     .night_vision = 3,
     .deg360_vision = true,
+    .no_show_fov = true,
 
     .willpower = 6,
     .dexterity = 21,
@@ -2265,6 +2268,7 @@ pub const KyaniteStatueTemplate = Mob{
     .vision = 20,
     .night_vision = 0,
     .deg360_vision = true,
+    .no_show_fov = true,
     .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
         .{ .spell = &spells.CAST_FREEZE, .duration = 2 },
     }),
@@ -2298,6 +2302,7 @@ pub const NebroStatueTemplate = Mob{
     .vision = 20,
     .night_vision = 0,
     .deg360_vision = true,
+    .no_show_fov = true,
     .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
         .{ .spell = &spells.CAST_FAMOUS, .duration = 15, .power = 50 },
     }),
@@ -2331,6 +2336,7 @@ pub const CrystalStatueTemplate = Mob{
     .vision = 20,
     .night_vision = 0,
     .deg360_vision = true,
+    .no_show_fov = true,
     .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
         .{ .spell = &spells.CAST_FERMENT, .duration = 15, .power = 50 },
     }),
