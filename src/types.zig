@@ -921,6 +921,8 @@ pub const Mob = struct { // {{{
         }
         if (landed == null) landed = at;
 
+        var was_miss = true;
+
         switch (item.*) {
             .Weapon => |_| @panic("W/A TODO"),
             .Projectile => |projectile| {
@@ -953,6 +955,7 @@ pub const Mob = struct { // {{{
                         }
 
                         bastard.takeDamage(.{ .amount = @intToFloat(f64, damage) });
+                        was_miss = false;
                     }
                 }
             },
@@ -964,8 +967,21 @@ pub const Mob = struct { // {{{
                     .Gas => |s| state.dungeon.atGas(landed.?)[s] = 1.0,
                     .Custom => |f| f(null),
                 }
+
+                // TODO: have cases where thrower misses and potion lands (unused?)
+                // in adjacent square
+                was_miss = false;
             },
             else => unreachable,
+        }
+
+        if (was_miss) {
+            var membuf: [8192]u8 = undefined;
+            var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
+            if (state.nextAvailableSpaceForItem(landed.?, &fba.allocator)) |dst| {
+                state.dungeon.itemsAt(dst).append(item.*) catch unreachable;
+            }
         }
 
         return true;
