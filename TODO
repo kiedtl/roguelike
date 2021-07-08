@@ -1,7 +1,47 @@
+Levels
+------
+(Note: the exact order is yet to be defined)
+- Entry
+- Offices
+- Garrison
+- Recreation
+	- Smallish square rooms with only one-width corridors. (So no prefabs.)
+	- Rooms filled with artwork, posters, skeleton displays, armor displays.
+- Laboratory
+	- Circular rooms, long corridors.
+	- Piles of vials. Rooms with potion synthesis machines.
+	- Some rooms have mobs in cages for researchers to experiment on.
+- Temple
+	- Hexagonal and star-shaped rooms.
+	- Refrigerated rooms filled with corpses.
+	- Plenty of necromancers/priests.
+	- Plenty of undead, death knights, etc.
+	- Starting area is large room and has altar with piles of corpses nearby.
+- Mining
+	- Caves, brogue-style.
+	- Rooms filled with pickaxes, boulders, and carts.
+- Smithing
+	- Large open area.
+	- Structures plopped all over the place.
+		- Filled with forges and smithing machines.
+		- Has stockpiles of ingots, ores, and metal goods.
+	- Has large lakes of smoke-producing lava.
+	- Plenty of fire drakes and lava flans.
+- Prison
+	- Medium-short corridors with rooms with locked enclosures of prisoners.
+	- Some torture rooms maybe.
+	- Levers for each room to unlock doors and release prisoners.
+- Nuclear
+- Labyrinth
+- Caves
+	- Just caves, brogue-style.
+
+
 New mobs
+--------
 ([s]pirit, [h]uman, [a]nimal, [u]ndead, [o]ther)
 ([CE]Sauron, [LE]NoneEvil, [CG]NoneGood, [LG]Illuvatar, [??]Neutral, [NN]NightCreature)
---------
+
 LE	a	spiders
 			- Web attacks that hold player in stasis.
 			- Long-lived, slow acting poisoned bite.
@@ -107,10 +147,11 @@ NN	o	vampire
 
 Movement patterns
 -----------------
-sneak      [move, move, rest, move]
-merciless  [move(A), attack(A), move(A), attack(A)]
-charge     [move(A), move(A), move(A), attack(A)]
-recuperate [rest, rest, rest, rest]
+sneak         [move, move, rest, move]
+merciless     [move(A), attack(A), move(A), attack(A)]
+counterattack [move(S), move(S), move(N), attack(A)]
+charge        [move(A), move(A), move(A), attack(A)]
+recuperate    [rest, rest, rest, rest]
 (See rings for other movement patterns.)
 
 Rings
@@ -128,8 +169,8 @@ ring of intimidation [a]
 	- Movement pattern: [move(N), move(N), move(N), move(N)]
 ring of echolocation [p]
 	- Gives player basic knowledge of dungeon's layout nearby sounds the player
-	  can hear. The wearer will not know about dungeon features, just walls,
-	  floors, and presence of water or lava.
+	  can hear. The wearer will not know about dungeon features, just walls and
+	  floors.
 	- Low penalty.
 ring of clairvoyance
 	- Allows player to sense presence of low-to-mid willpower mobs (the wearer
@@ -407,6 +448,9 @@ Posters
 - WANTED: Usko-nuhelmir, human, escaped prisoner.
 - Absence without leave is punishable by a mandatory interview with the
   High Priest.
+- The Necromancer is watching you.
+- The Necromancer can see you.
+- The Necromancer knows your thoughts.
 
 
 Unique mobs
