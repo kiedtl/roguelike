@@ -74,7 +74,7 @@ pub fn nextAvailableSpaceForItem(c: Coord, alloc: *mem.Allocator) ?Coord {
 }
 
 const FLOOR_OPACITY: usize = 5;
-const MOB_OPACITY: usize = 80;
+const MOB_OPACITY: usize = 10;
 
 // STYLE: change to Tile.lightOpacity
 pub fn tileOpacity(coord: Coord) usize {
