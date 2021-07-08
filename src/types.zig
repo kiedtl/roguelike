@@ -591,7 +591,7 @@ pub const Status = enum {
 
         const st = mob.isUnderStatus(.Echolocation) orelse return;
 
-        const radius = st.power;
+        const radius = mob.vision;
         const z = mob.coord.z;
         const ystart = utils.saturating_sub(mob.coord.y, radius);
         const yend = math.min(mob.coord.y + radius, HEIGHT);
@@ -608,7 +608,7 @@ pub const Status = enum {
                 var dijk = dijkstra.Dijkstra.init(
                     coord,
                     state.mapgeometry,
-                    2,
+                    st.power,
                     dijkstra.dummyIsValid,
                     .{},
                     &fba.allocator,
