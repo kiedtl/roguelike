@@ -185,9 +185,28 @@ fn _draw_infopanel(
         var mobcell = Tile.displayAs(mob.coord);
         termbox.tb_put_cell(startx, y, &mobcell);
 
-        y = _draw_string(startx + 1, y, 0xffffff, 0, ": {} ({})", .{ mob.species, mob.activity_description() }) catch unreachable;
+        const mobname = mob.occupation.profession_name orelse mob.species;
 
-        _draw_bar(y, startx, endx, @floatToInt(usize, mob.HP), @floatToInt(usize, mob.max_HP), "Health", mob.lastDamagePercentage(), 0x232faa, 0);
+        y = _draw_string(
+            startx + 1,
+            y,
+            0xffffff,
+            0,
+            ": {} ({})",
+            .{ mobname, mob.activity_description() },
+        ) catch unreachable;
+
+        _draw_bar(
+            y,
+            startx,
+            endx,
+            @floatToInt(usize, mob.HP),
+            @floatToInt(usize, mob.max_HP),
+            "Health",
+            mob.lastDamagePercentage(),
+            0x232faa,
+            0,
+        );
         y += 2;
     }
 }

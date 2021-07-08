@@ -85,7 +85,7 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     const bolts = _createItem(Projectile, items.CrossbowBoltProjectile);
     bolts.count = 10;
 
-    var player = ElfTemplate;
+    var player = PlayerTemplate;
     player.init(alloc);
     player.occupation.phase = .SawHostile;
     player.coord = coord;

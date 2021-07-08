@@ -647,9 +647,12 @@ pub const OccupationPhase = enum { Work, SawHostile, GoTo };
 
 // TODO: rename to "AI"
 pub const Occupation = struct {
-    // Name of work, intended to be used as a description of what the mob is
-    // doing. Examples: Guard("patrolling"), Smith("forging"), Demon("sulking")
-    work_description: []const u8,
+    // Name of mob doing the profession.
+    profession_name: ?[]const u8,
+
+    // Description of what the mob is doing. Examples: Guard("patrolling"),
+    // Smith("forging"), Demon("sulking")
+    profession_description: []const u8,
 
     // The area where the mob should be doing work.
     work_area: CoordArrayList = undefined,
@@ -1427,7 +1430,7 @@ pub const Mob = struct { // {{{
     // What's the monster doing right now?
     pub fn activity_description(self: *const Mob) []const u8 {
         var res = switch (self.occupation.phase) {
-            .Work => self.occupation.work_description,
+            .Work => self.occupation.profession_description,
             .SawHostile => if (self.occupation.is_combative) "hunting" else "alarmed",
             .GoTo => "investigating",
         };
@@ -2027,10 +2030,11 @@ pub const Gas = struct {
 
 pub const ExecutionerTemplate = Mob{
     .id = "executioner",
-    .species = "executioner",
+    .species = "human",
     .tile = 'א',
     .occupation = Occupation{
-        .work_description = "wandering",
+        .profession_name = "executioner",
+        .profession_description = "wandering",
         .work_fn = ai.watcherWork,
         .fight_fn = ai.meleeFight,
         .is_combative = true,
@@ -2053,10 +2057,11 @@ pub const ExecutionerTemplate = Mob{
 
 pub const WatcherTemplate = Mob{
     .id = "watcher",
-    .species = "watcher",
+    .species = "orc",
     .tile = 'ש',
     .occupation = Occupation{
-        .work_description = "watching",
+        .profession_name = "watcher",
+        .profession_description = "guarding",
         .work_fn = ai.watcherWork,
         .fight_fn = ai.watcherFight,
         .is_combative = true,
@@ -2079,10 +2084,11 @@ pub const WatcherTemplate = Mob{
 
 pub const GuardTemplate = Mob{
     .id = "patrol",
-    .species = "patrol",
+    .species = "orc",
     .tile = 'ק',
     .occupation = Occupation{
-        .work_description = "patrolling",
+        .profession_name = "guard",
+        .profession_description = "patrolling",
         .work_fn = ai.guardWork,
         .fight_fn = ai.meleeFight,
         .is_combative = true,
@@ -2103,13 +2109,13 @@ pub const GuardTemplate = Mob{
     .strength = 20,
 };
 
-// TODO: make this a hooman
-pub const ElfTemplate = Mob{
-    .id = "elf",
-    .species = "elf",
+pub const PlayerTemplate = Mob{
+    .id = "player",
+    .species = "human",
     .tile = '@',
     .occupation = Occupation{
-        .work_description = "meditating",
+        .profession_name = "[this is a bug]",
+        .profession_description = "[this is a bug]",
         .work_fn = ai.dummyWork,
         .fight_fn = ai.meleeFight,
         .is_combative = false,
@@ -2136,7 +2142,8 @@ pub const InteractionLaborerTemplate = Mob{
     .species = "orc",
     .tile = 'o',
     .occupation = Occupation{
-        .work_description = "laboring",
+        .profession_name = "slave",
+        .profession_description = "laboring",
         .work_fn = ai.interactionLaborerWork,
         .fight_fn = null,
         .is_combative = false,
@@ -2162,7 +2169,8 @@ pub const GoblinTemplate = Mob{
     .species = "goblin",
     .tile = 'g',
     .occupation = Occupation{
-        .work_description = "wandering",
+        .profession_name = null,
+        .profession_description = "wandering",
         .work_fn = ai.wanderWork,
         .fight_fn = ai.meleeFight,
         .is_combative = true,
@@ -2188,7 +2196,8 @@ pub const CaveRatTemplate = Mob{
     .species = "cave rat",
     .tile = '²',
     .occupation = Occupation{
-        .work_description = "wandering",
+        .profession_name = null,
+        .profession_description = "wandering",
         .work_fn = ai.wanderWork,
         .fight_fn = ai.meleeFight,
         .is_combative = false,
@@ -2214,7 +2223,8 @@ pub const KyaniteStatueTemplate = Mob{
     .species = "kyanite statue",
     .tile = '☺',
     .occupation = Occupation{
-        .work_description = "gazing",
+        .profession_name = null,
+        .profession_description = "gazing",
         .work_fn = ai.dummyWork,
         .fight_fn = ai.statueFight,
         .is_combative = true,
@@ -2246,7 +2256,8 @@ pub const NebroStatueTemplate = Mob{
     .species = "nebro statue",
     .tile = '☻',
     .occupation = Occupation{
-        .work_description = "gazing",
+        .profession_name = null,
+        .profession_description = "gazing",
         .work_fn = ai.dummyWork,
         .fight_fn = ai.statueFight,
         .is_combative = true,
@@ -2278,7 +2289,8 @@ pub const CrystalStatueTemplate = Mob{
     .species = "crystal statue",
     .tile = '☻',
     .occupation = Occupation{
-        .work_description = "gazing",
+        .profession_name = null,
+        .profession_description = "gazing",
         .work_fn = ai.dummyWork,
         .fight_fn = ai.statueFight,
         .is_combative = true,
@@ -2307,10 +2319,11 @@ pub const CrystalStatueTemplate = Mob{
 
 pub const CleanerTemplate = Mob{
     .id = "interaction_laborer",
-    .species = "cleaner",
-    .tile = 'o',
+    .species = "human",
+    .tile = 'h',
     .occupation = Occupation{
-        .work_description = "cleaning",
+        .profession_name = "cleaner",
+        .profession_description = "cleaning",
         .work_fn = ai.cleanerWork,
         .fight_fn = null,
         .is_combative = false,
@@ -2335,7 +2348,7 @@ pub const MOBS = [_]Mob{
     WatcherTemplate,
     ExecutionerTemplate,
     GuardTemplate,
-    ElfTemplate,
+    PlayerTemplate,
     InteractionLaborerTemplate,
     GoblinTemplate,
     CaveRatTemplate,
