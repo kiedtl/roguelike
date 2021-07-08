@@ -150,7 +150,7 @@ fn fireLauncher() bool {
             if (projectile_index) |index| {
                 var projectile = state.player.inventory.pack.slice()[index];
                 assert(state.player.throwItem(&projectile, dest, state.player.strength * 2));
-                _ = state.player.deleteItem(index) catch unreachable;
+                _ = state.player.removeItem(index, false) catch unreachable;
                 state.player.activities.append(.Fire);
                 state.player.energy -= state.player.speed();
                 return true;
@@ -196,7 +196,7 @@ fn throwItem() bool {
     const item = &state.player.inventory.pack.slice()[index];
 
     if (state.player.throwItem(item, dest, null)) {
-        _ = state.player.deleteItem(index) catch unreachable;
+        _ = state.player.removeItem(index, false) catch unreachable;
         state.player.activities.append(.Throw);
         state.player.energy -= state.player.speed();
         return true;
@@ -297,7 +297,7 @@ fn useItem() bool {
         .Potion => |p| state.player.quaffPotion(p),
     }
 
-    _ = state.player.deleteItem(index) catch unreachable;
+    _ = state.player.removeItem(index, false) catch unreachable;
 
     state.player.activities.append(.Use);
     state.player.energy -= state.player.speed();
@@ -314,7 +314,7 @@ fn dropItem() bool {
         return false;
     } else {
         const index = display.chooseInventoryItem("Drop") orelse return false;
-        const item = state.player.deleteItem(index) catch unreachable;
+        const item = state.player.removeItem(index, true) catch unreachable;
         state.dungeon.itemsAt(state.player.coord).append(item) catch unreachable;
 
         // TODO: show message

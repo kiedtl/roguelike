@@ -822,8 +822,13 @@ pub const Mob = struct { // {{{
         return true;
     }
 
-    pub fn deleteItem(self: *Mob, index: usize) !Item {
-        if (index >= self.inventory.pack.len) return error.IndexOutOfRange;
+    pub fn removeItem(self: *Mob, index: usize, whole_stack: bool) !Item {
+        if (index >= self.inventory.pack.len)
+            return error.IndexOutOfRange;
+
+        if (whole_stack)
+            return self.inventory.pack.orderedRemove(index) catch unreachable;
+
         switch (self.inventory.pack.slice()[index]) {
             .Projectile => |projectile| {
                 if (projectile.count > 1) {
