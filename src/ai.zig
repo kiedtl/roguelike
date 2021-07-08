@@ -376,18 +376,26 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
         return;
     }
 
+    // Check if there's an ally that satisfies the following conditions
+    //      - Isn't the current mob
+    //      - Isn't another immobile mob
+    //      - Is either investigating a noise, or
+    //      - Is attacking the hostile mob
     var ally = false;
     for (mob.fov) |row, y| for (row) |cell, x| {
         if (cell == 0) continue;
         const fitem = Coord.new2(mob.coord.z, x, y);
 
         if (state.dungeon.at(fitem).mob) |othermob| {
-            if (!othermob.immobile and
-                @ptrToInt(othermob) != @ptrToInt(mob) and
+            const phase = othermob.occupation.phase;
+
+            if (@ptrToInt(othermob) != @ptrToInt(mob) and
+                !othermob.immobile and
                 othermob.allegiance == mob.allegiance and
-                othermob.occupation.phase == .SawHostile and
+                ((phase == .SawHostile and
                 othermob.enemies.items.len > 0 and // mob's phase may not have been reset yet
-                othermob.enemies.items[0].mob.coord.eq(target.coord))
+                othermob.enemies.items[0].mob.coord.eq(target.coord)) or
+                (phase == .GoTo)))
             {
                 ally = true;
                 break;
