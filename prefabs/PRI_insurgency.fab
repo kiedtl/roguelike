@@ -1,0 +1,50 @@
+:spawn executioner 1,2
+:spawn executioner 1,4
+:spawn      goblin 8,2
+:spawn      goblin 8,4
+:spawn     watcher 1,1
+:spawn     watcher 8,1
+:spawn     watcher 1,5
+:spawn     watcher 8,5
+:spawn executioner 2,1
+:spawn executioner 2,2
+:spawn executioner 2,3
+:spawn executioner 2,4
+:spawn executioner 2,5
+:spawn executioner 7,1
+:spawn executioner 7,2
+:spawn executioner 7,3
+:spawn executioner 7,4
+:spawn executioner 7,5
+:spawn executioner 3,1
+:spawn executioner 4,1
+:spawn executioner 5,1
+:spawn executioner 6,1
+:spawn      goblin 3,2
+:spawn      goblin 4,2
+:spawn      goblin 5,2
+:spawn      goblin 6,2
+:spawn      goblin 3,3
+:spawn      goblin 4,3
+:spawn      goblin 5,3
+:spawn      goblin 6,3
+:spawn      goblin 3,4
+:spawn      goblin 4,4
+:spawn      goblin 5,4
+:spawn      goblin 6,4
+:spawn      goblin 3,5
+:spawn      goblin 4,5
+:spawn      goblin 5,5
+:spawn      goblin 6,5
+
+:invisible
+:noguards
+:nolights
+
+#*######*#
+*........*
+#........#
+#•......•#
+#........#
+*........*
+#*######*#

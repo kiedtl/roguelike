@@ -218,12 +218,14 @@ fn _excavate_prefab(
     for (fab.mobs) |maybe_mob| {
         if (maybe_mob) |mob_f| {
             if (utils.findById(&MOBS, mob_f.id)) |mob_template| {
-                var coord = room.start.add(mob_f.spawn_at);
+                const coord = room.start.add(mob_f.spawn_at);
+                const work_area = room.start.add(mob_f.work_at orelse coord);
+
                 var mob = MOBS[mob_template];
                 mob.init(allocator);
-                if (mob_f.work_at) |work_at|
-                    mob.occupation.work_area.append(room.start.add(work_at)) catch @panic("OOM");
+                mob.occupation.work_area.append(work_area) catch @panic("OOM");
                 mob.coord = coord;
+
                 state.mobs.append(mob) catch @panic("OOM");
                 const mobptr = state.mobs.lastPtr().?;
                 state.dungeon.at(coord).mob = mobptr;
@@ -631,6 +633,7 @@ pub fn placeMobs(level: usize, allocator: *mem.Allocator) void {
         var placed_units: usize = 0;
         while (placed_units < patrol_units) {
             const rnd = room.randomCoord();
+            if (!isTileAvailable(rnd)) continue;
 
             if (state.dungeon.at(rnd).mob == null) {
                 const armor = _createItem(Armor, items.HeavyChainmailArmor);
@@ -675,21 +678,6 @@ pub fn placeMobs(level: usize, allocator: *mem.Allocator) void {
 
                 state.mobs.append(mob) catch unreachable;
                 state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
-            }
-
-            const coord = room.randomCoord();
-            if (isTileAvailable(coord)) {
-                const armor = _createItem(Armor, items.LeatherArmor);
-                const weapon = _createItem(Weapon, items.ClubWeapon);
-
-                var gobbo = GoblinTemplate;
-                gobbo.init(allocator);
-                gobbo.occupation.work_area.append(coord) catch unreachable;
-                gobbo.coord = coord;
-                gobbo.inventory.armor = armor;
-                gobbo.inventory.wielded = weapon;
-                state.mobs.append(gobbo) catch unreachable;
-                state.dungeon.at(coord).mob = state.mobs.lastPtr().?;
             }
         }
 
@@ -973,7 +961,7 @@ pub const Prefab = struct {
     content: [40][40]FabTile = undefined,
     connections: [80]?Connection = undefined,
     features: [255]?Feature = [_]?Feature{null} ** 255,
-    mobs: [20]?FeatureMob = [_]?FeatureMob{null} ** 20,
+    mobs: [40]?FeatureMob = [_]?FeatureMob{null} ** 40,
 
     used: [LEVELS]usize = [_]usize{0} ** LEVELS,
 
@@ -1335,6 +1323,7 @@ pub const Configs = [LEVELS]LevelConfig{
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
             "PRI_start",
             "PRI_power",
+            "PRI_insurgency",
         }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
