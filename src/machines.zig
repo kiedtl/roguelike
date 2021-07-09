@@ -150,8 +150,8 @@ pub const PowerSupply = Machine{
     .id = "power_supply",
     .name = "machine",
 
-    .powered_tile = '⊻',
-    .unpowered_tile = '⊻',
+    .powered_tile = '█',
+    .unpowered_tile = '▓',
 
     .power_drain = 100,
     .power_add = 100,
