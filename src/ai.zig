@@ -313,7 +313,7 @@ pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
 //          - Shout!
 //
 pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
-    const PREFERRED_DISTANCE: usize = 5;
+    const PREFERRED_DISTANCE: usize = 4;
 
     const target = currentEnemy(mob).mob;
 
@@ -330,7 +330,7 @@ pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
         var dijk = dijkstra.Dijkstra.init(
             mob.coord,
             state.mapgeometry,
-            2,
+            PREFERRED_DISTANCE,
             state.is_walkable,
             .{},
             alloc,
