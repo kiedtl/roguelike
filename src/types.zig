@@ -29,8 +29,8 @@ const Spell = spells.Spell;
 
 pub const HEIGHT = 40;
 pub const WIDTH = 80;
-pub const LEVELS = 4;
-pub const PLAYER_STARTING_LEVEL = 2; // TODO: define in data file
+pub const LEVELS = 5;
+pub const PLAYER_STARTING_LEVEL = 3; // TODO: define in data file
 
 pub const CARDINAL_DIRECTIONS = [_]Direction{ .North, .South, .East, .West };
 pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .NorthWest, .SouthEast, .SouthWest };

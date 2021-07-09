@@ -13,13 +13,6 @@ const utils = @import("utils.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
-// Dimensions include the first wall, so a minimum width of 2 guarantee that
-// there will be one empty space in the room, minimum.
-const MIN_ROOM_WIDTH: usize = 7;
-const MIN_ROOM_HEIGHT: usize = 5;
-const MAX_ROOM_WIDTH: usize = 20;
-const MAX_ROOM_HEIGHT: usize = 15;
-
 const LIMIT = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
 
 const Corridor = struct {
@@ -415,8 +408,6 @@ fn _place_rooms(
     if (rng.onein(Configs[level].prefab_chance)) {
         if (distance == 0) distance += 1;
 
-        var child_w = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
-        var child_h = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
         fab = choosePrefab(level, n_fabs) orelse return;
         child = parent.attach(side, fab.?.width, fab.?.height, distance, &fab.?) orelse return;
         child.prefab = fab;
@@ -426,12 +417,13 @@ fn _place_rooms(
     } else {
         if (parent.prefab != null and distance == 0) distance += 1;
 
-        var child_w = rng.rangeClumping(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH, 2);
-        var child_h = rng.rangeClumping(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT, 2);
+        var child_w = rng.rangeClumping(usize, Configs[level].min_room_width, Configs[level].max_room_width, 2);
+        var child_h = rng.rangeClumping(usize, Configs[level].min_room_height, Configs[level].max_room_height, 2);
         child = parent.attach(side, child_w, child_h, distance, null) orelse return;
 
         while (roomIntersects(rooms, &child, parent, null, true) or child.overflowsLimit(&LIMIT)) {
-            if (child_w < MIN_ROOM_WIDTH or child_h < MIN_ROOM_HEIGHT)
+            if (child_w < Configs[level].min_room_width or
+                child_h < Configs[level].min_room_height)
                 return;
 
             child_w -= 1;
@@ -507,8 +499,8 @@ pub fn placeRandomRooms(
         };
         _excavate_prefab(&first, &prefab, allocator, 0, 0);
     } else {
-        const width = rng.range(usize, MIN_ROOM_WIDTH, MAX_ROOM_WIDTH);
-        const height = rng.range(usize, MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT);
+        const width = rng.range(usize, Configs[level].min_room_width, Configs[level].max_room_width);
+        const height = rng.range(usize, Configs[level].min_room_height, Configs[level].max_room_height);
         first = Room{ .start = Coord.new2(level, x, y), .width = width, .height = height };
         _excavate_room(&first);
     }
@@ -1241,6 +1233,13 @@ pub const LevelConfig = struct {
     distances: [2][10]usize,
     prefab_chance: usize,
     max_rooms: usize,
+
+    // Dimensions include the first wall, so a minimum width of 2 guarantee that
+    // there will be one empty space in the room, minimum.
+    min_room_width: usize = 7,
+    min_room_height: usize = 5,
+    max_room_width: usize = 20,
+    max_room_height: usize = 15,
 };
 
 pub const Configs = [LEVELS]LevelConfig{
@@ -1253,6 +1252,20 @@ pub const Configs = [LEVELS]LevelConfig{
         },
         .prefab_chance = 2,
         .max_rooms = 256,
+    },
+    .{
+        .identifier = "REC",
+        .starting_prefab = null,
+        .distances = [2][10]usize{
+            .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+            .{ 0, 9, 0, 0, 0, 0, 0, 0, 0, 0 },
+        },
+        .prefab_chance = 2, // no prefabs for REC
+        .max_rooms = 2048,
+        .min_room_width = 8,
+        .min_room_height = 5,
+        .max_room_width = 10,
+        .max_room_height = 6,
     },
     .{
         .identifier = "LAB",
