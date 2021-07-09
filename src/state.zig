@@ -90,6 +90,7 @@ pub fn tileOpacity(coord: Coord) usize {
     if (tile.surface) |surface| {
         switch (surface) {
             .Machine => |m| o += @floatToInt(usize, m.opacity() * 100),
+            .Prop => |p| o += @floatToInt(usize, p.opacity * 100),
             else => {},
         }
     }
