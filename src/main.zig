@@ -531,7 +531,7 @@ fn viewerMain() void {
         var t: isize = 0;
 
         if (running) {
-            t = termbox.tb_peek_event(&ev, 200);
+            t = termbox.tb_peek_event(&ev, 150);
             if (t == 0) {
                 viewerTickGame(level);
                 continue;
