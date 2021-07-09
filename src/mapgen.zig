@@ -485,39 +485,61 @@ pub fn placeRandomRooms(
 ) void {
     var rooms = RoomArrayList.init(allocator);
 
-    const x = rng.range(usize, 1, state.WIDTH / 2);
-    const y = rng.range(usize, 1, state.HEIGHT / 2);
-    var first: Room = undefined;
+    var first: ?Room = null;
 
-    if (Configs[level].starting_prefab) |prefab_name| {
-        const prefab = Prefab.findPrefabByName(prefab_name, n_fabs).?;
-        first = Room{
-            .start = Coord.new2(level, x, y),
-            .width = prefab.width,
-            .height = prefab.height,
-            .prefab = prefab,
+    var required = Configs[level].prefabs.constSlice();
+    var reqctr: usize = 0;
+
+    while (reqctr < required.len) {
+        const fab_name = required[reqctr];
+        const fab = Prefab.findPrefabByName(fab_name, n_fabs) orelse {
+            std.log.warn("Cannot find required prefab {}", .{fab_name});
+            return;
         };
-        _excavate_prefab(&first, &prefab, allocator, 0, 0);
-    } else {
-        const width = rng.range(usize, Configs[level].min_room_width, Configs[level].max_room_width);
-        const height = rng.range(usize, Configs[level].min_room_height, Configs[level].max_room_height);
-        first = Room{ .start = Coord.new2(level, x, y), .width = width, .height = height };
-        _excavate_room(&first);
+
+        const x = rng.range(usize, 1, state.WIDTH - fab.width - 1);
+        const y = rng.range(usize, 1, state.HEIGHT - fab.height - 1);
+
+        const room = Room{
+            .start = Coord.new2(level, x, y),
+            .width = fab.width,
+            .height = fab.height,
+            .prefab = fab,
+        };
+
+        if (roomIntersects(&rooms, &room, null, null, false))
+            continue;
+
+        if (first == null) first = room;
+        Prefab.incrementUsedCounter(fab.name.constSlice(), level, n_fabs);
+        _excavate_prefab(&room, &fab, allocator, 0, 0);
+        rooms.append(room) catch unreachable;
+        reqctr += 1;
     }
 
-    rooms.append(first) catch unreachable;
+    if (first == null) {
+        const width = rng.range(usize, Configs[level].min_room_width, Configs[level].max_room_width);
+        const height = rng.range(usize, Configs[level].min_room_height, Configs[level].max_room_height);
+        const x = rng.range(usize, 1, state.WIDTH - width - 1);
+        const y = rng.range(usize, 1, state.HEIGHT - height - 1);
+        first = Room{ .start = Coord.new2(level, x, y), .width = width, .height = height };
+        _excavate_room(&first.?);
+        rooms.append(first.?) catch unreachable;
+    }
 
     if (level == PLAYER_STARTING_LEVEL) {
-        var p = Coord.new2(level, first.start.x + 1, first.start.y + 1);
-        if (first.prefab) |prefab|
+        var p = Coord.new2(level, first.?.start.x + 1, first.?.start.y + 1);
+        if (first.?.prefab) |prefab|
             if (prefab.player_position) |pos| {
-                p = Coord.new2(level, first.start.x + pos.x, first.start.y + pos.y);
+                p = Coord.new2(level, first.?.start.x + pos.x, first.?.start.y + pos.y);
             };
         _add_player(p, allocator);
     }
 
     var c = Configs[level].max_rooms;
-    while (c > 0) : (c -= 1) _place_rooms(&rooms, n_fabs, s_fabs, level, allocator);
+    while (c > 0) : (c -= 1) {
+        _place_rooms(&rooms, n_fabs, s_fabs, level, allocator);
+    }
 
     state.dungeon.rooms[level] = rooms;
 }
@@ -1229,7 +1251,7 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
 
 pub const LevelConfig = struct {
     identifier: []const u8,
-    starting_prefab: ?[]const u8 = null,
+    prefabs: RPBuf = RPBuf.init(null),
     distances: [2][10]usize,
     prefab_chance: usize,
     max_rooms: usize,
@@ -1240,12 +1262,16 @@ pub const LevelConfig = struct {
     min_room_height: usize = 5,
     max_room_width: usize = 20,
     max_room_height: usize = 15,
+
+    pub const RPBuf = StackBuffer([]const u8, 4);
 };
 
 pub const Configs = [LEVELS]LevelConfig{
     .{
         .identifier = "ENT",
-        .starting_prefab = "ENT_start",
+        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
+            "ENT_start",
+        }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
             .{ 5, 9, 1, 0, 0, 0, 0, 0, 0, 0 },
@@ -1255,7 +1281,9 @@ pub const Configs = [LEVELS]LevelConfig{
     },
     .{
         .identifier = "TEM",
-        .starting_prefab = "TEM_start",
+        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
+            "TEM_start",
+        }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
             .{ 0, 7, 6, 5, 2, 2, 1, 0, 0, 0 },
@@ -1265,7 +1293,7 @@ pub const Configs = [LEVELS]LevelConfig{
     },
     .{
         .identifier = "REC",
-        .starting_prefab = null,
+        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{}),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
             .{ 0, 9, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -1279,7 +1307,9 @@ pub const Configs = [LEVELS]LevelConfig{
     },
     .{
         .identifier = "LAB",
-        .starting_prefab = "LAB_start",
+        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
+            "LAB_start",
+        }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
             .{ 0, 7, 6, 5, 2, 2, 1, 0, 0, 0 },
@@ -1289,7 +1319,10 @@ pub const Configs = [LEVELS]LevelConfig{
     },
     .{
         .identifier = "PRI",
-        .starting_prefab = "PRI_start",
+        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
+            "PRI_start",
+            "PRI_power",
+        }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
             .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
@@ -1299,7 +1332,10 @@ pub const Configs = [LEVELS]LevelConfig{
     },
     .{
         .identifier = "PRI",
-        .starting_prefab = "PRI_start",
+        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
+            "PRI_start",
+            "PRI_power",
+        }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
             .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
