@@ -1,7 +1,7 @@
 % Power supply.
 %
 % █▀▐▀░▀▌▀█
-% ══╪╡⊻╞╪══
+% ══╪╡█╞╪══
 % █▄▐▄░▄▌▄█
 
 @0 p full_copper_coil
@@ -16,8 +16,10 @@
 @9 p steel_support_nsw2
 @a m power_supply
 
-:spawn interaction_laborer 6,2 6,3
-:spawn interaction_laborer 6,4 6,3
+:spawn interaction_laborer  6,3  6,4
+:spawn interaction_laborer  6,5  6,4
+:spawn             watcher  1,1  1,1
+:spawn             watcher 11,7 11,7
 
 :restriction 1
 :notrap
@@ -25,9 +27,11 @@
 :nolight
 
 ###*#####*###
+#..........•#
 #...........#
-*.013141510.*
-#.6678a9766.#
-*.023242520.*
+#.013141510.#
+*.6678a9766.*
+#.023242520.#
 #...........#
+#•..........#
 ###*#####*###
