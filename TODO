@@ -6,7 +6,9 @@ Levels
 - Garrison
 - Recreation
 	- Smallish square rooms with only one-width corridors. (So no prefabs.)
-	- Rooms filled with artwork, posters, skeleton displays, armor displays.
+	- Rooms filled with artwork, posters, skeleton displays, armor displays,
+	  statues, bookshelves, fountains.
+	- Has bear traps with nearby hydras.
 - Laboratory
 	- Circular rooms, long corridors.
 	- Piles of vials. Rooms with potion synthesis machines.
@@ -15,7 +17,7 @@ Levels
 	- Has traps of {blinding, pain-causing} gas.
 	- Has teleportation traps.
 - Temple
-	- Hexagonal and star-shaped rooms.
+	- Octogonal and triangle-shaped rooms.
 	- Refrigerated rooms filled with corpses.
 	- Plenty of necromancers/priests.
 	- Plenty of undead, death knights, etc.
@@ -168,19 +170,19 @@ Rings
 - Rings don't have an "enchantment" level, but "tiers" instead (mithril, gold,
   silver, and iron).
 - Rings: [p]assive (acting each turn) or [a]ctive (requiring user to move in pattern)
-ring of contempt (intimidation) [a]
+contemptuous ring of intimidation [a]
 	- Confers either stun or fear on mob when moving toward mob.
 	- Must land right next to mob.
 	- Movement pattern: [move(N), move(N), move(N), move(N)]
-creeping ring [a]
+creeping ring of telepathy [a]
 	- Confers telepathy to all mobs in FOV.
 	- Slows down or restricts player movement.
 	- Movement pattern: [move(NE), move(SE), move(SW), move(NW)]
-sidestabbing ring [a]
+dancing ring of sidestepping [a]
 	- Teleport player around mob to area outside of that mob's FOV, enabling a stab.
 	- Must land next to mob.
 	- Movement pattern: [move(NW), move(NE), move(NW), move(NE)]
-ring of echolocation [p]
+singing ring of echolocation [p]
 	- Gives player basic knowledge of dungeon's layout nearby sounds the player
 	  can hear. The wearer will not know about dungeon features, just walls and
 	  floors.
@@ -188,47 +190,31 @@ ring of echolocation [p]
 ring of evasion [a]
 	- Spews fog outward from player when zigzagging and fleeing, increasing evasion.
 	- Example movement pattern: [move(NW), move(NE), move(NW), move(NE)]
-vampiric ring [a]
+vampiric ring of draining [a/p]
 	- Drains an enemy for {speed,health,HP}.
 	- Allows player to see that mob and all tiles within two spaces.
 	- Player will get a status (paralyzed? slowed? negative regen? traumatize? stun?)
 	  for a bit when the enemy dies OR the enemy sees the player.
 	- If the enemy dies, the player is teleported there in its place?
 	- Movement pattern: ???
-ring of clairvoyance
-	- Allows player to sense presence of low-to-mid willpower mobs (the wearer
-	  should not know what kind of mobs they are, though. A blue '?' is enough.)
-	- Medium penalty.
-ring of awareness
-	- Gives player knowledge of hidden dungeon features that have been seen
-	  by other mobs within a certain radius.
-	- High penalty, depending on affected mob's willpower.
+	- Also: when worn, allows player to sense nearby mobs.
+		- Movement pattern: ???
+faded ring of fire [a]
+	- Ring of fire, death, and darkness.
+	- Causes dark gas to emanate from player. Gas is opaque and blocks all light.
+		- Movement pattern:
+	- Causes all nearby machines to lose power for a bit (aka turn out the lights).
+		- Movement pattern:
+	- Raises all nearby corpses to attack enemies for a brief period of time.
+		- Movement pattern:
+	- Causes tiles in 3-space radius around player to burst into flame.
+		- Movement pattern.
+	- Found in the Temple.
 ring of invisibility
 	- Doesn't make wearer invisible, but prevents other hostiles from noticing
 	  the wearer, even if they walk within inches of each other's nose.
 	- High penalty, depending on affected mob's willpower.
-ring of shattering
-	- ???
-ring of fire
-	- Spews fire and smoke outward from the wearer when the wearer takes damage,
-	  and when the wearer has been attacking the same tile for the past 4 turns.
-	- Low penalty.
-	- Example movement pattern: [attack(N), attack(N), attack(N), attack(N)]
-ring of night
-	- Radiates an aura of darkness around player.
-	- Low penalty.
-ring of light
-	- Radiates a dark blue light around player, useful during the night.
-	- Low penalty.
-ring of death
-	- Causes nearby corpses to (very briefly) come to life and attack adjacent
-	  hostiles.
-	- May result in a nearby necromancer taking unwelcome interest in you.
-	- Low piety penalty.
-ring of rage
-	- ???
-ring of power
-	- Found only on wraiths.
+ring of fury
 	- ???
 
 
