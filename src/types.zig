@@ -541,7 +541,11 @@ pub const Activity = union(enum) {
     }
 };
 
-pub const EnemyRecord = struct { mob: *Mob, counter: usize };
+pub const EnemyRecord = struct {
+    mob: *Mob,
+    last_seen: Coord,
+    counter: usize,
+};
 
 pub const Message = struct {
     msg: [128]u8,
@@ -643,7 +647,7 @@ pub const StatusData = struct {
 
 // XXX: "GoTo" should be renamed to "Investigating". But perhaps there's a another
 // usecase for this phase?
-pub const OccupationPhase = enum { Work, SawHostile, GoTo };
+pub const OccupationPhase = enum { Work, SawHostile, GoTo, Flee };
 
 // TODO: rename to "AI"
 pub const Occupation = struct {
@@ -1393,7 +1397,7 @@ pub const Mob = struct { // {{{
             return true;
 
         switch (self.occupation.phase) {
-            .SawHostile, .GoTo => {},
+            .Flee, .SawHostile, .GoTo => {},
             else => return false,
         }
 
@@ -1460,6 +1464,7 @@ pub const Mob = struct { // {{{
             .Work => self.occupation.profession_description,
             .SawHostile => if (self.occupation.is_combative) "hunting" else "alarmed",
             .GoTo => "investigating",
+            .Flee => "fleeing",
         };
 
         if (self.is_dead) {
@@ -2096,7 +2101,7 @@ pub const WatcherTemplate = Mob{
         .profession_name = "watcher",
         .profession_description = "guarding",
         .work_fn = ai.watcherWork,
-        .fight_fn = ai.watcherFight,
+        .fight_fn = ai.flee,
         .is_combative = true,
         .is_curious = false,
     },

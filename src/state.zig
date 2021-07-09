@@ -206,7 +206,10 @@ fn _can_hear_hostile(mob: *Mob) ?Coord {
         if (mob.canHear(othermob.coord)) |sound| {
             if (mob.isHostileTo(othermob)) {
                 return othermob.coord;
-            } else if (sound > 20 and othermob.occupation.phase == .SawHostile) {
+            } else if (sound > 20 and
+                (othermob.occupation.phase == .SawHostile or
+                othermob.occupation.phase == .Flee))
+            {
                 // Sounds like one of our friends [or a neutral mob] is having
                 // quite a party, let's go join the fun~
                 return othermob.coord;
@@ -233,6 +236,13 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
             mob.occupation.phase = .GoTo;
             mob.occupation.target = dest;
         }
+    }
+
+    const flee_threshhold = mob.max_HP * 25 / 100;
+    if (mob.occupation.phase == .SawHostile and mob.HP < flee_threshhold) {
+        mob.occupation.phase = .Flee;
+    } else if (mob.occupation.phase == .Flee and mob.HP >= flee_threshhold) {
+        mob.occupation.phase = .SawHostile;
     }
 
     if (mob.occupation.phase == .Work) {
@@ -265,6 +275,10 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
         assert(mob.enemies.items.len > 0);
 
         (mob.occupation.fight_fn.?)(mob, alloc);
+    }
+
+    if (mob.occupation.phase == .Flee) {
+        ai.flee(mob, alloc);
     }
 }
 

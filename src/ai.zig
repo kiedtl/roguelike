@@ -10,7 +10,7 @@ const rng = @import("rng.zig");
 usingnamespace @import("types.zig");
 
 fn currentEnemy(me: *Mob) *EnemyRecord {
-    assert(me.occupation.phase == .SawHostile);
+    assert(me.occupation.phase == .SawHostile or me.occupation.phase == .Flee);
     assert(me.enemies.items.len > 0);
 
     return &me.enemies.items[me.enemies.items.len - 1];
@@ -97,7 +97,9 @@ pub fn checkForHostiles(mob: *Mob) void {
         mob.occupation.phase = .SawHostile;
     }
 
-    if (mob.occupation.phase == .SawHostile and mob.enemies.items.len == 0) {
+    if ((mob.occupation.phase == .SawHostile or mob.occupation.phase == .Flee) and
+        mob.enemies.items.len == 0)
+    {
         // No enemies sighted, we're done hunting.
         mob.occupation.phase = .Work;
     }
@@ -305,6 +307,57 @@ pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
     }
 }
 
+// - Are there allies within view?
+//    - Yes: are they attacking the hostile?
+//        - Yes: paralyze the hostile
+pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
+    assert(mob.spells.len > 0);
+
+    const target = currentEnemy(mob).mob;
+
+    if (!target.cansee(mob.coord)) {
+        _ = mob.rest();
+        return;
+    }
+
+    // Check if there's an ally that satisfies the following conditions
+    //      - Isn't the current mob
+    //      - Isn't another immobile mob
+    //      - Is either investigating a noise, or
+    //      - Is attacking the hostile mob
+    var ally = false;
+    for (mob.fov) |row, y| for (row) |cell, x| {
+        if (cell == 0) continue;
+        const fitem = Coord.new2(mob.coord.z, x, y);
+
+        if (state.dungeon.at(fitem).mob) |othermob| {
+            const phase = othermob.occupation.phase;
+
+            if (@ptrToInt(othermob) != @ptrToInt(mob) and
+                !othermob.immobile and
+                othermob.allegiance == mob.allegiance and
+                ((phase == .SawHostile and
+                othermob.enemies.items.len > 0 and // mob's phase may not have been reset yet
+                othermob.enemies.items[0].mob.coord.eq(target.coord)) or
+                (phase == .GoTo)))
+            {
+                ally = true;
+                break;
+            }
+        }
+    };
+
+    if (ally and rng.onein(4)) {
+        const spell = mob.spells.data[0];
+        spell.spell.use(mob, target.coord, .{
+            .status_duration = spell.duration,
+            .status_power = spell.power,
+        }, "The {0} glitters at you!");
+    } else {
+        _ = mob.rest();
+    }
+}
+
 // - Can we see the hostile?
 //      - No:
 //          - Move towards the hostile.
@@ -314,7 +367,7 @@ pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
 //                  - Move away from the hostile.
 //          - Shout!
 //
-pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn flee(mob: *Mob, alloc: *mem.Allocator) void {
     const PREFERRED_DISTANCE: usize = 4;
 
     const target = currentEnemy(mob).mob;
@@ -379,56 +432,5 @@ pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
     } else {
         _ = mob.rest();
         mob.makeNoise(Mob.NOISE_YELL);
-    }
-}
-
-// - Are there allies within view?
-//    - Yes: are they attacking the hostile?
-//        - Yes: paralyze the hostile
-pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
-    assert(mob.spells.len > 0);
-
-    const target = currentEnemy(mob).mob;
-
-    if (!target.cansee(mob.coord)) {
-        _ = mob.rest();
-        return;
-    }
-
-    // Check if there's an ally that satisfies the following conditions
-    //      - Isn't the current mob
-    //      - Isn't another immobile mob
-    //      - Is either investigating a noise, or
-    //      - Is attacking the hostile mob
-    var ally = false;
-    for (mob.fov) |row, y| for (row) |cell, x| {
-        if (cell == 0) continue;
-        const fitem = Coord.new2(mob.coord.z, x, y);
-
-        if (state.dungeon.at(fitem).mob) |othermob| {
-            const phase = othermob.occupation.phase;
-
-            if (@ptrToInt(othermob) != @ptrToInt(mob) and
-                !othermob.immobile and
-                othermob.allegiance == mob.allegiance and
-                ((phase == .SawHostile and
-                othermob.enemies.items.len > 0 and // mob's phase may not have been reset yet
-                othermob.enemies.items[0].mob.coord.eq(target.coord)) or
-                (phase == .GoTo)))
-            {
-                ally = true;
-                break;
-            }
-        }
-    };
-
-    if (ally and rng.onein(4)) {
-        const spell = mob.spells.data[0];
-        spell.spell.use(mob, target.coord, .{
-            .status_duration = spell.duration,
-            .status_power = spell.power,
-        }, "The {0} glitters at you!");
-    } else {
-        _ = mob.rest();
     }
 }
