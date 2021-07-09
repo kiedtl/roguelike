@@ -162,8 +162,8 @@ pub const PowerSupply = Machine{
     .powered_opacity = 0,
     .unpowered_opacity = 0,
 
-    .powered_luminescence = 10,
-    .unpowered_luminescence = 10,
+    .powered_luminescence = 99,
+    .unpowered_luminescence = 5,
 
     .on_power = powerPowerSupply,
 };
