@@ -63,6 +63,7 @@ pub fn checkForHostiles(mob: *Mob) void {
             for (mob.enemies.items) |*enemy, i| {
                 if (@ptrToInt(enemy.mob) == @ptrToInt(othermob)) {
                     enemy.counter = mob.memory_duration;
+                    enemy.last_seen = othermob.coord;
                     continue :vigilance;
                 }
             }
@@ -71,12 +72,13 @@ pub fn checkForHostiles(mob: *Mob) void {
             mob.enemies.append(.{
                 .mob = othermob,
                 .counter = mob.memory_duration,
+                .last_seen = othermob.coord,
             }) catch unreachable;
         }
     };
 
     // Decrement counters.
-    // When we remove an item, restart the loop (since the container is modified).
+    //
     // FIXME: iterating over a container with a loop that potentially modifies
     // that container is just begging for trouble.
     var i: usize = 0;
@@ -84,9 +86,9 @@ pub fn checkForHostiles(mob: *Mob) void {
         const enemy = &mob.enemies.items[i];
         if (enemy.counter == 0 or enemy.mob.is_dead) {
             _ = mob.enemies.orderedRemove(i);
-            i = 0;
         } else {
-            enemy.counter -= 1;
+            if (!mob.cansee(enemy.last_seen))
+                enemy.counter -= 1;
             i += 1;
         }
     }
