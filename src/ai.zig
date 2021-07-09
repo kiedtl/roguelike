@@ -325,8 +325,10 @@ pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
     const current_distance = mob.coord.distance(target.coord);
 
     if (current_distance < PREFERRED_DISTANCE) {
+        var flee_to: ?Coord = null;
+        var emerg_flee_to: ?Coord = null;
+
         // Find next space to flee to.
-        var moved = false;
         var dijk = dijkstra.Dijkstra.init(
             mob.coord,
             state.mapgeometry,
@@ -340,12 +342,27 @@ pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
             if (coord.distance(target.coord) <= current_distance)
                 continue;
 
-            if (mob.nextDirectionTo(coord)) |d| {
-                const oldd = mob.facing;
-                moved = mob.moveInDirection(d);
-                mob.facing = oldd;
-                break;
+            if (mob.nextDirectionTo(coord) == null)
+                continue;
+
+            const walls = state.dungeon.neighboringWalls(coord, true);
+
+            if (walls > 2) {
+                if (walls < 4) {
+                    emerg_flee_to = coord;
+                }
+                continue;
             }
+
+            flee_to = coord;
+            break;
+        }
+
+        var moved = false;
+        if (flee_to orelse emerg_flee_to) |dst| {
+            const oldd = mob.facing;
+            moved = mob.moveInDirection(mob.nextDirectionTo(dst).?);
+            mob.facing = oldd;
         }
 
         if (!moved) {
