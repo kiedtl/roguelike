@@ -2090,7 +2090,7 @@ pub const ExecutionerTemplate = Mob{
 
 pub const WatcherTemplate = Mob{
     .id = "watcher",
-    .species = "orc",
+    .species = "imp",
     .tile = 'ש',
     .occupation = Occupation{
         .profession_name = "watcher",
@@ -2109,7 +2109,7 @@ pub const WatcherTemplate = Mob{
     .hearing = 5,
     .max_HP = 40,
     .memory_duration = 10,
-    .base_speed = 65,
+    .base_speed = 60,
     .blood = .Blood,
 
     .strength = 15, // weakling!
