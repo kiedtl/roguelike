@@ -273,7 +273,7 @@ pub fn powerNone(_: *Machine) void {}
 pub fn powerPowerSupply(machine: *Machine) void {
     var iter = state.machines.iterator();
     while (iter.nextPtr()) |mach| {
-        if (mach.coord.z == state.player.coord.z and mach.auto_power)
+        if (mach.coord.z == machine.coord.z and mach.auto_power)
             mach.addPower(null);
     }
 }
