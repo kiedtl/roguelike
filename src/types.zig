@@ -1479,7 +1479,10 @@ pub const Mob = struct { // {{{
     }
 
     pub fn speed(self: *const Mob) isize {
-        return @intCast(isize, self.base_speed);
+        var bonus: usize = 100;
+        if (self.occupation.phase == .Flee) bonus += 10;
+
+        return @intCast(isize, self.base_speed * bonus / 100);
     }
 
     pub fn accuracy(self: *const Mob) usize {
