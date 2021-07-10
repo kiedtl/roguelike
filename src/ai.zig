@@ -229,7 +229,11 @@ pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
         .CleanerClean => {
             const target = mob.occupation.target.?;
             if (target.distance(mob.coord) > 1) {
-                mob.tryMoveTo(target);
+                if (!mob.isCreeping()) {
+                    _ = mob.rest();
+                } else {
+                    mob.tryMoveTo(target);
+                }
             } else {
                 _ = mob.rest();
 
