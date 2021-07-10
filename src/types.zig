@@ -1848,8 +1848,8 @@ pub const Tile = struct {
                 if (self.mob) |mob| {
                     const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);
                     if (hp_loss_percent > 0) {
-                        const red = @floatToInt(u32, (255 * hp_loss_percent) / 100);
-                        color = math.clamp(red, 0x00, 0xee) << 16;
+                        const red = @floatToInt(u32, (255 * hp_loss_percent) / 100) + 0x66;
+                        color = math.clamp(red, 0x66, 0xff) << 16;
                     }
 
                     if (mob.is_dead) {
