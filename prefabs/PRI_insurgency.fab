@@ -18,8 +18,6 @@
 :spawn executioner 7,5
 :spawn executioner 3,1
 :spawn executioner 4,1
-:spawn executioner 5,1
-:spawn executioner 6,1
 :spawn      goblin 3,2
 :spawn      goblin 4,2
 :spawn      goblin 5,2
@@ -41,10 +39,10 @@
 :noguards
 :nolights
 
-#*######*#
+#********#
 *........*
-#........#
+*........*
 #•......•#
-#........#
 *........*
-#*######*#
+*........*
+#********#

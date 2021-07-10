@@ -5,6 +5,7 @@ const math = std.math;
 const assert = std.debug.assert;
 
 const rng = @import("rng.zig");
+const mobs = @import("mobs.zig");
 const StackBuffer = @import("buffer.zig").StackBuffer;
 const items = @import("items.zig");
 const machines = @import("machines.zig");
@@ -26,6 +27,36 @@ fn isTileAvailable(coord: Coord) bool {
     return state.dungeon.at(coord).mob == null and
         state.dungeon.at(coord).surface == null and
         state.dungeon.itemsAt(coord).len == 0;
+}
+
+const PlaceMobOptions = struct {
+    facing: ?Direction = null,
+    phase: OccupationPhase = .Work,
+    work_area: ?Coord = null,
+};
+
+fn placeMob(
+    alloc: *mem.Allocator,
+    template: *const mobs.MobTemplate,
+    coord: Coord,
+    opts: PlaceMobOptions,
+) *Mob {
+    var mob = template.mob;
+    mob.init(alloc);
+    mob.coord = coord;
+    mob.occupation.phase = opts.phase;
+
+    if (template.weapon) |w| mob.inventory.wielded = _createItem(Weapon, w.*);
+    if (template.backup_weapon) |w| mob.inventory.backup = _createItem(Weapon, w.*);
+    if (template.armor) |a| mob.inventory.armor = _createItem(Armor, a.*);
+
+    if (opts.facing) |dir| mob.facing = dir;
+    if (opts.work_area) |work| mob.occupation.work_area.append(work) catch unreachable;
+
+    state.mobs.append(mob) catch unreachable;
+    const ptr = state.mobs.lastPtr().?;
+    state.dungeon.at(coord).mob = ptr;
+    return ptr;
 }
 
 fn _createItem(comptime T: type, item: T) *T {
@@ -72,24 +103,12 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     const echoring = _createItem(Ring, items.EcholocationRing);
     echoring.worn_since = state.ticks;
 
-    const armor = _createItem(Armor, items.LeatherArmor);
-    const weapon = _createItem(Weapon, items.CrossbowLauncher);
-    const backup = _createItem(Weapon, items.DaggerWeapon);
     const bolts = _createItem(Projectile, items.CrossbowBoltProjectile);
     bolts.count = 10;
 
-    var player = PlayerTemplate;
-    player.init(alloc);
-    player.occupation.phase = .SawHostile;
-    player.coord = coord;
-    player.inventory.r_rings[0] = echoring;
-    player.inventory.armor = armor;
-    player.inventory.wielded = weapon;
-    player.inventory.backup = backup;
-    player.inventory.pack.append(Item{ .Projectile = bolts }) catch unreachable;
-    state.mobs.append(player) catch unreachable;
-    state.dungeon.at(coord).mob = state.mobs.lastPtr().?;
-    state.player = state.mobs.lastPtr().?;
+    state.player = placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .SawHostile });
+    state.player.inventory.r_rings[0] = echoring;
+    state.player.inventory.pack.append(Item{ .Projectile = bolts }) catch unreachable;
 }
 
 fn choosePrefab(level: usize, prefabs: *PrefabArrayList) ?Prefab {
@@ -217,18 +236,13 @@ fn _excavate_prefab(
 
     for (fab.mobs) |maybe_mob| {
         if (maybe_mob) |mob_f| {
-            if (utils.findById(&MOBS, mob_f.id)) |mob_template| {
+            if (utils.findById(&mobs.MOBS, mob_f.id)) |mob_template| {
                 const coord = room.start.add(mob_f.spawn_at);
                 const work_area = room.start.add(mob_f.work_at orelse coord);
 
-                var mob = MOBS[mob_template];
-                mob.init(allocator);
-                mob.occupation.work_area.append(work_area) catch @panic("OOM");
-                mob.coord = coord;
-
-                state.mobs.append(mob) catch @panic("OOM");
-                const mobptr = state.mobs.lastPtr().?;
-                state.dungeon.at(coord).mob = mobptr;
+                _ = placeMob(allocator, &mobs.MOBS[mob_template], coord, .{
+                    .work_area = work_area,
+                });
             } else {
                 std.log.warn(
                     "{}: Couldn't load mob {}, skipping.",
@@ -620,7 +634,7 @@ pub fn placeTraps(level: usize) void {
     }
 }
 
-pub fn placeMobs(level: usize, allocator: *mem.Allocator) void {
+pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
     var squads: usize = rng.range(usize, 5, 8);
     while (squads > 0) : (squads -= 1) {
         const room = rng.chooseUnweighted(Room, state.dungeon.rooms[level].items);
@@ -636,23 +650,12 @@ pub fn placeMobs(level: usize, allocator: *mem.Allocator) void {
             if (!isTileAvailable(rnd)) continue;
 
             if (state.dungeon.at(rnd).mob == null) {
-                const armor = _createItem(Armor, items.HeavyChainmailArmor);
-                const weapon = _createItem(Weapon, items.SpearWeapon);
-
-                var guard = GuardTemplate;
-                guard.init(allocator);
-                guard.occupation.work_area.append(rnd) catch unreachable;
-                guard.coord = rnd;
-                guard.inventory.armor = armor;
-                guard.inventory.wielded = weapon;
-                state.mobs.append(guard) catch unreachable;
-                const mobptr = state.mobs.lastPtr().?;
-                state.dungeon.at(rnd).mob = mobptr;
+                const guard = placeMob(alloc, &mobs.GuardTemplate, rnd, .{ .work_area = rnd });
 
                 if (patrol_warden) |warden| {
-                    warden.squad_members.append(mobptr) catch unreachable;
+                    warden.squad_members.append(guard) catch unreachable;
                 } else {
-                    patrol_warden = mobptr;
+                    patrol_warden = guard;
                 }
 
                 placed_units += 1;
@@ -668,44 +671,20 @@ pub fn placeMobs(level: usize, allocator: *mem.Allocator) void {
         if (rng.onein(2)) {
             const post_coord = room.randomCoord();
             if (isTileAvailable(post_coord)) {
-                var mob = WatcherTemplate;
-
-                mob.init(allocator);
-
-                mob.occupation.work_area.append(post_coord) catch unreachable;
-                mob.coord = post_coord;
-                mob.facing = rng.chooseUnweighted(Direction, &DIRECTIONS);
-
-                state.mobs.append(mob) catch unreachable;
-                state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
+                _ = placeMob(alloc, &mobs.WatcherTemplate, post_coord, .{
+                    .work_area = post_coord,
+                    .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
+                });
             }
         }
 
         if (rng.onein(4)) {
             const post_coord = room.randomCoord();
             if (isTileAvailable(post_coord)) {
-                var mob = ExecutionerTemplate;
-                var weapon = _createItem(Weapon, items.ZinnagWeapon);
-
-                mob.init(allocator);
-                mob.inventory.wielded = weapon;
-                mob.occupation.work_area.append(post_coord) catch unreachable;
-                mob.coord = post_coord;
-                mob.facing = rng.chooseUnweighted(Direction, &DIRECTIONS);
-
-                state.mobs.append(mob) catch unreachable;
-                state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
-            }
-        }
-
-        if (rng.onein(10)) {
-            const post_coord = room.randomCoord();
-            if (isTileAvailable(post_coord)) {
-                var mob = CleanerTemplate;
-                mob.init(allocator);
-                mob.coord = post_coord;
-                state.mobs.append(mob) catch unreachable;
-                state.dungeon.at(post_coord).mob = state.mobs.lastPtr().?;
+                _ = placeMob(alloc, &mobs.ExecutionerTemplate, post_coord, .{
+                    .work_area = post_coord,
+                    .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
+                });
             }
         }
     }
@@ -738,7 +717,7 @@ fn _lightCorridor(room: *const Room) void {
     }
 }
 
-pub fn placeRoomFeatures(level: usize, allocator: *mem.Allocator) void {
+pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
     for (state.dungeon.rooms[level].items) |room| {
         if (room.prefab) |rfb| if (rfb.nolights) continue;
 
@@ -766,15 +745,7 @@ pub fn placeRoomFeatures(level: usize, allocator: *mem.Allocator) void {
                     state.dungeon.neighboringWalls(coord, false) == 2 and
                     state.dungeon.at(coord).type == .Floor)
                 {
-                    var mob = KyaniteStatueTemplate;
-
-                    mob.init(allocator);
-
-                    mob.occupation.work_area.append(coord) catch unreachable;
-                    mob.coord = coord;
-
-                    state.mobs.append(mob) catch unreachable;
-                    state.dungeon.at(coord).mob = state.mobs.lastPtr().?;
+                    _ = placeMob(alloc, &mobs.KyaniteStatueTemplate, coord, .{ .work_area = coord });
                 }
             } else {
                 var brazier = machines.Brazier;
@@ -905,7 +876,7 @@ pub fn cellularAutomataAvoidanceMap(level: usize) [HEIGHT][WIDTH]bool {
     return res;
 }
 
-pub fn populateCaves(avoid: *const [HEIGHT][WIDTH]bool, level: usize, allocator: *mem.Allocator) void {
+pub fn populateCaves(avoid: *const [HEIGHT][WIDTH]bool, level: usize, alloc: *mem.Allocator) void {
     const map = Room{
         .start = Coord.new2(level, 0, 0),
         .width = WIDTH,
@@ -919,22 +890,9 @@ pub fn populateCaves(avoid: *const [HEIGHT][WIDTH]bool, level: usize, allocator:
         if (!state.is_walkable(coord, .{ .right_now = true })) continue;
 
         if (rng.onein(3)) {
-            const armor = _createItem(Armor, items.LeatherArmor);
-            const weapon = _createItem(Weapon, items.ClubWeapon);
-
-            var gobbo = GoblinTemplate;
-            gobbo.init(allocator);
-            gobbo.occupation.work_area.append(coord) catch unreachable;
-            gobbo.coord = coord;
-            gobbo.inventory.armor = armor;
-            gobbo.inventory.wielded = weapon;
-            state.mobs.append(gobbo) catch unreachable;
+            _ = placeMob(alloc, &mobs.GoblinTemplate, coord, .{ .work_area = coord });
         } else {
-            var rat = CaveRatTemplate;
-            rat.init(allocator);
-            rat.occupation.work_area.append(coord) catch unreachable;
-            rat.coord = coord;
-            state.mobs.append(rat) catch unreachable;
+            _ = placeMob(alloc, &mobs.CaveRatTemplate, coord, .{ .work_area = coord });
         }
 
         const mobptr = state.mobs.lastPtr().?;
@@ -1310,6 +1268,7 @@ pub const Configs = [LEVELS]LevelConfig{
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
             "PRI_start",
             "PRI_power",
+            "PRI_cleaning",
         }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
@@ -1324,6 +1283,7 @@ pub const Configs = [LEVELS]LevelConfig{
             "PRI_start",
             "PRI_power",
             "PRI_insurgency",
+            "PRI_cleaning",
         }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
