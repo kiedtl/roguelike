@@ -53,8 +53,7 @@ fn initGame() void {
         mapgen.placeRoomFeatures(level, &state.GPA.allocator);
         mapgen.placeItems(level);
         mapgen.placeMobs(level, &state.GPA.allocator);
-
-        // state.dungeon.layout[level] = mapgen.cellularAutomataAvoidanceMap(level);
+        mapgen.generateLayoutMap(level);
 
         // mapgen.fillRandom(&state.dungeon.layout[level], level, 65);
         // mapgen.cellularAutomata(&state.dungeon.layout[level], level, 5, 0);

@@ -14,7 +14,11 @@ const utils = @import("utils.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
-const LIMIT = Room{ .start = Coord.new(0, 0), .width = state.WIDTH, .height = state.HEIGHT };
+const LIMIT = Room{
+    .start = Coord.new(1, 1),
+    .width = state.WIDTH - 1,
+    .height = state.HEIGHT - 1,
+};
 
 const Corridor = struct {
     room: Room,
@@ -51,7 +55,7 @@ fn placeMob(
     if (template.armor) |a| mob.inventory.armor = _createItem(Armor, a.*);
 
     if (opts.facing) |dir| mob.facing = dir;
-    if (opts.work_area) |work| mob.occupation.work_area.append(work) catch unreachable;
+    mob.occupation.work_area.append(opts.work_area orelse coord) catch unreachable;
 
     state.mobs.append(mob) catch unreachable;
     const ptr = state.mobs.lastPtr().?;
@@ -134,21 +138,14 @@ fn choosePrefab(level: usize, prefabs: *PrefabArrayList) ?Prefab {
     return null;
 }
 
-fn roomIntersects(
+fn findIntersectingRoom(
     rooms: *const RoomArrayList,
     room: *const Room,
     ignore: ?*const Room,
     ignore2: ?*const Room,
     ignore_corridors: bool,
-) bool {
-    if (room.start.x == 0 or room.start.y == 0)
-        return true;
-    if (room.start.x >= state.WIDTH or room.start.y >= state.HEIGHT)
-        return true;
-    if (room.end().x >= state.WIDTH or room.end().y >= state.HEIGHT)
-        return true;
-
-    for (rooms.items) |other| {
+) ?usize {
+    for (rooms.items) |other, i| {
         if (ignore) |ign| {
             if (other.start.eq(ign.start))
                 if (other.width == ign.width and other.height == ign.height)
@@ -165,10 +162,20 @@ fn roomIntersects(
             continue;
         }
 
-        if (room.intersects(&other, 1)) return true;
+        if (room.intersects(&other, 1)) return i;
     }
 
-    return false;
+    return null;
+}
+
+fn roomIntersects(
+    rooms: *const RoomArrayList,
+    room: *const Room,
+    ignore: ?*const Room,
+    ignore2: ?*const Room,
+    ign_c: bool,
+) bool {
+    return if (findIntersectingRoom(rooms, room, ignore, ignore2, ign_c)) |r| true else false;
 }
 
 fn _excavate_prefab(
@@ -238,7 +245,7 @@ fn _excavate_prefab(
         if (maybe_mob) |mob_f| {
             if (utils.findById(&mobs.MOBS, mob_f.id)) |mob_template| {
                 const coord = room.start.add(mob_f.spawn_at);
-                const work_area = room.start.add(mob_f.work_at orelse coord);
+                const work_area = room.start.add(mob_f.work_at orelse mob_f.spawn_at);
 
                 _ = placeMob(allocator, &mobs.MOBS[mob_template], coord, .{
                     .work_area = work_area,
@@ -650,7 +657,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
             if (!isTileAvailable(rnd)) continue;
 
             if (state.dungeon.at(rnd).mob == null) {
-                const guard = placeMob(alloc, &mobs.GuardTemplate, rnd, .{ .work_area = rnd });
+                const guard = placeMob(alloc, &mobs.GuardTemplate, rnd, .{});
 
                 if (patrol_warden) |warden| {
                     warden.squad_members.append(guard) catch unreachable;
@@ -672,7 +679,6 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
             const post_coord = room.randomCoord();
             if (isTileAvailable(post_coord)) {
                 _ = placeMob(alloc, &mobs.WatcherTemplate, post_coord, .{
-                    .work_area = post_coord,
                     .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
                 });
             }
@@ -682,7 +688,6 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
             const post_coord = room.randomCoord();
             if (isTileAvailable(post_coord)) {
                 _ = placeMob(alloc, &mobs.ExecutionerTemplate, post_coord, .{
-                    .work_area = post_coord,
                     .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
                 });
             }
@@ -745,7 +750,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                     state.dungeon.neighboringWalls(coord, false) == 2 and
                     state.dungeon.at(coord).type == .Floor)
                 {
-                    _ = placeMob(alloc, &mobs.KyaniteStatueTemplate, coord, .{ .work_area = coord });
+                    _ = placeMob(alloc, &mobs.KyaniteStatueTemplate, coord, .{});
                 }
             } else {
                 var brazier = machines.Brazier;
@@ -858,9 +863,7 @@ pub fn fillRandom(avoid: *const [HEIGHT][WIDTH]bool, level: usize, floor_chance:
     }
 }
 
-pub fn cellularAutomataAvoidanceMap(level: usize) [HEIGHT][WIDTH]bool {
-    var res: [HEIGHT][WIDTH]bool = undefined;
-
+pub fn generateLayoutMap(level: usize) void {
     const rooms = &state.dungeon.rooms[level];
 
     var y: usize = 0;
@@ -869,11 +872,14 @@ pub fn cellularAutomataAvoidanceMap(level: usize) [HEIGHT][WIDTH]bool {
         while (x < WIDTH) : (x += 1) {
             const coord = Coord.new2(level, x, y);
             const room = Room{ .start = coord, .width = 1, .height = 1 };
-            res[y][x] = roomIntersects(rooms, &room, null, null, false);
+
+            if (findIntersectingRoom(rooms, &room, null, null, false)) |r| {
+                state.layout[level][y][x] = state.Layout{ .Room = r };
+            } else {
+                state.layout[level][y][x] = .Unknown;
+            }
         }
     }
-
-    return res;
 }
 
 pub fn populateCaves(avoid: *const [HEIGHT][WIDTH]bool, level: usize, alloc: *mem.Allocator) void {
@@ -890,9 +896,9 @@ pub fn populateCaves(avoid: *const [HEIGHT][WIDTH]bool, level: usize, alloc: *me
         if (!state.is_walkable(coord, .{ .right_now = true })) continue;
 
         if (rng.onein(3)) {
-            _ = placeMob(alloc, &mobs.GoblinTemplate, coord, .{ .work_area = coord });
+            _ = placeMob(alloc, &mobs.GoblinTemplate, coord, .{});
         } else {
-            _ = placeMob(alloc, &mobs.CaveRatTemplate, coord, .{ .work_area = coord });
+            _ = placeMob(alloc, &mobs.CaveRatTemplate, coord, .{});
         }
 
         const mobptr = state.mobs.lastPtr().?;

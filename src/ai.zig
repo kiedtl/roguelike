@@ -268,7 +268,7 @@ pub fn wanderWork(mob: *Mob, alloc: *mem.Allocator) void {
 
     var to = mob.occupation.work_area.items[0];
 
-    if (mob.cansee(to)) {
+    if (mob.cansee(to) or !state.is_walkable(to, .{ .right_now = true })) {
         // OK, reached our destination. Time to choose another one!
         const map = Room{
             .start = Coord.new2(mob.coord.z, 1, 1),
@@ -277,10 +277,10 @@ pub fn wanderWork(mob: *Mob, alloc: *mem.Allocator) void {
         };
 
         var tries: usize = 0;
-        while (tries < 100) : (tries += 1) {
+        while (tries < 50) : (tries += 1) {
             const point = map.randomCoord();
 
-            if (!state.is_walkable(point, .{})) continue;
+            if (!state.is_walkable(point, .{ .right_now = true })) continue;
 
             if (mob.nextDirectionTo(point)) |_| {
                 mob.occupation.work_area.items[0] = point;
@@ -297,7 +297,44 @@ pub fn wanderWork(mob: *Mob, alloc: *mem.Allocator) void {
         return;
     }
 
-    const prev_facing = mob.facing;
+    mob.tryMoveTo(to);
+}
+
+pub fn goofingAroundWork(mob: *Mob, alloc: *mem.Allocator) void {
+    assert(state.dungeon.at(mob.coord).mob != null);
+    assert(mob.occupation.phase == .Work);
+
+    var to = mob.occupation.work_area.items[0];
+
+    if (mob.coord.eq(to) or !state.is_walkable(to, .{ .right_now = true })) {
+        // OK, reached our destination. Time to choose another one!
+        const room_i = switch (state.layout[mob.coord.z][mob.coord.y][mob.coord.x]) {
+            .Unknown => return,
+            .Room => |r| r,
+        };
+        const room = &state.dungeon.rooms[mob.coord.z].items[room_i];
+
+        var tries: usize = 0;
+        while (tries < 10) : (tries += 1) {
+            const point = room.randomCoord();
+
+            if (!state.is_walkable(point, .{ .right_now = true })) continue;
+
+            if (mob.nextDirectionTo(point)) |_| {
+                mob.occupation.work_area.items[0] = point;
+                break;
+            }
+        }
+
+        _ = mob.rest();
+        return;
+    }
+
+    if (!mob.isCreeping()) {
+        _ = mob.rest();
+        return;
+    }
+
     mob.tryMoveTo(to);
 }
 

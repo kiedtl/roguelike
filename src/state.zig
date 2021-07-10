@@ -13,7 +13,7 @@ const fov = @import("fov.zig");
 usingnamespace @import("types.zig");
 
 pub const GameState = union(enum) { Game, Win, Lose, Quit };
-pub var state: GameState = .Game;
+pub const Layout = union(enum) { Unknown, Room: usize };
 
 // Should only be used directly by functions in main.zig. For other applications,
 // should be passed as a parameter by caller.
@@ -33,7 +33,9 @@ pub var GPA = std.heap.GeneralPurposeAllocator(.{
 
 pub const mapgeometry = Coord.new2(LEVELS, WIDTH, HEIGHT);
 pub var dungeon: Dungeon = .{};
+pub var layout: [LEVELS][HEIGHT][WIDTH]Layout = undefined;
 pub var player: *Mob = undefined;
+pub var state: GameState = .Game;
 
 pub var mobs: MobList = undefined;
 pub var sobs: SobList = undefined;

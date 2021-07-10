@@ -373,9 +373,10 @@ pub const Room = struct {
     pub const RoomType = enum { Corridor, Room };
 
     pub fn overflowsLimit(self: *const Room, limit: *const Room) bool {
-        const a = self.end().x >= limit.end().x or self.end().y >= limit.end().y;
-        const b = self.start.x < limit.start.x or self.start.y < limit.start.y;
-        return a or b;
+        return self.end().x >= limit.end().x or
+            self.end().y >= limit.end().y or
+            self.start.x < limit.start.x or
+            self.start.y < limit.start.y;
     }
 
     pub fn end(self: *const Room) Coord {
@@ -1941,8 +1942,6 @@ pub const Dungeon = struct {
     light_color: [LEVELS][HEIGHT][WIDTH]u32 = [1][HEIGHT][WIDTH]u32{[1][WIDTH]u32{[1]u32{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     heat: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{heat.DEFAULT_HEAT} ** WIDTH} ** HEIGHT} ** LEVELS,
     rooms: [LEVELS]RoomArrayList = undefined,
-    // true == cave, false == rooms
-    layout: [LEVELS][HEIGHT][WIDTH]bool = undefined,
 
     pub const ItemBuffer = StackBuffer(Item, 7);
 
