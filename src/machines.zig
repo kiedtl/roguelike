@@ -14,7 +14,17 @@ usingnamespace @import("types.zig");
 const STEEL_SUPPORT_COLOR: u32 = 0xa6c2d4;
 const COPPER_COIL_COLOR: u32 = 0xd96c00;
 
+pub const STATUES = [_]Prop{
+    GoldStatue,
+    RealgarStatue,
+    IronStatue,
+    SodaliteStatue,
+    HematiteStatue,
+};
+
 pub const PROPS = [_]Prop{
+    GoldStatue,
+    RealgarStatue,
     WorkstationProp,
     SteelSupport_NSE2_Prop,
     SteelSupport_NSW2_Prop,
@@ -71,6 +81,12 @@ pub const Chest = Container{
     .tile = 'æ',
     .capacity = 7,
 };
+
+pub const GoldStatue = Prop{ .id = "gold_statue", .name = "gold statue", .tile = '☺', .fg = 0xfff720 };
+pub const RealgarStatue = Prop{ .id = "realgar_statue", .name = "realgar statue", .tile = '☺', .fg = 0xff343f };
+pub const IronStatue = Prop{ .id = "iron_statue", .name = "iron statue", .tile = '☻', .fg = 0xcacad2 };
+pub const SodaliteStatue = Prop{ .id = "sodalite_statue", .name = "sodalite statue", .tile = '☺', .fg = 0xa4cfff };
+pub const HematiteStatue = Prop{ .id = "hematite_statue", .name = "hematite statue", .tile = '☺', .fg = 0xff7f70 };
 
 pub const WorkstationProp = Prop{
     .id = "workstation",

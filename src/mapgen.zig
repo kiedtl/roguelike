@@ -777,9 +777,14 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
 
             switch (rng.range(usize, 1, 2)) {
                 1 => {
-                    if (statues < 1) {
-                        const statue = rng.chooseUnweighted(mobs.MobTemplate, &mobs.STATUES);
-                        _ = placeMob(alloc, &statue, coord, .{});
+                    if (statues < 3) {
+                        if (rng.onein(3)) {
+                            const statue = rng.chooseUnweighted(mobs.MobTemplate, &mobs.STATUES);
+                            _ = placeMob(alloc, &statue, coord, .{});
+                        } else {
+                            const statue = rng.chooseUnweighted(Prop, &machines.STATUES);
+                            _ = _place_prop(coord, &statue);
+                        }
                         statues += 1;
                     }
                 },
