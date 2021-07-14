@@ -776,9 +776,9 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                 },
                 2 => {
                     if (chests < 2 and state.dungeon.neighboringWalls(coord, true) == 3) {
-                        var chest = machines.Chest;
-                        chest.capacity -= rng.rangeClumping(usize, 0, 3, 2);
-                        placeContainer(coord, &chest);
+                        var cont = rng.chooseUnweighted(Container, &machines.CONTAINERS);
+                        cont.capacity -= rng.rangeClumping(usize, 0, 3, 2);
+                        placeContainer(coord, &cont);
                     }
                 },
                 else => unreachable,

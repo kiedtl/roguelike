@@ -44,10 +44,32 @@ pub const MACHINES = [_]Machine{
     AlarmTrap,
 };
 
+pub const CONTAINERS = [_]Container{
+    Bin, Barrel, Cabinet, Chest,
+};
+
+pub const Bin = Container{
+    .name = "bin",
+    .tile = '╳',
+    .capacity = 14,
+};
+
+pub const Barrel = Container{
+    .name = "barrel",
+    .tile = 'ʊ',
+    .capacity = 7,
+};
+
+pub const Cabinet = Container{
+    .name = "cabinet",
+    .tile = 'π',
+    .capacity = 5,
+};
+
 pub const Chest = Container{
     .name = "chest",
-    .tile = 'x',
-    .capacity = 14,
+    .tile = 'æ',
+    .capacity = 7,
 };
 
 pub const WorkstationProp = Prop{

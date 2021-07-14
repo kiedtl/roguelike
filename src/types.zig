@@ -1836,7 +1836,13 @@ pub const Tile = struct {
                     cell.bg = color;
 
                     const ch = switch (surfaceitem) {
-                        .Container => |c| c.tile,
+                        .Container => |c| cont: {
+                            if (c.capacity > 7) {
+                                cell.fg = 0x000000;
+                                cell.bg = 0x808000;
+                            }
+                            break :cont c.tile;
+                        },
                         .Machine => |m| mach: {
                             if (m.isPowered()) {
                                 if (m.powered_bg) |mach_bg| cell.bg = mach_bg;
