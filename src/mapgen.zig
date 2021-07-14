@@ -63,6 +63,23 @@ fn placeMob(
     return ptr;
 }
 
+fn randomWallCoord(room: *const Room) Coord {
+    const Range = struct { from: Coord, to: Coord };
+    const room_end = room.end();
+
+    const ranges = [_]Range{
+        .{ .from = Coord.new(room.start.x + 1, room.start.y - 1), .to = Coord.new(room_end.x - 2, room.start.y - 1) }, // top
+        .{ .from = Coord.new(room.start.x + 1, room_end.y), .to = Coord.new(room_end.x - 2, room_end.y) }, // bottom
+        .{ .from = Coord.new(room.start.x, room.start.y + 1), .to = Coord.new(room.start.x, room_end.y - 2) }, // left
+        .{ .from = Coord.new(room_end.x, room.start.y + 1), .to = Coord.new(room_end.x, room_end.y - 2) }, // left
+    };
+
+    const range = rng.chooseUnweighted(Range, &ranges);
+    const x = rng.rangeClumping(usize, range.from.x, range.to.x, 2);
+    const y = rng.rangeClumping(usize, range.from.y, range.to.y, 2);
+    return Coord.new2(room.start.z, x, y);
+}
+
 fn _createItem(comptime T: type, item: T) *T {
     comptime const list = switch (T) {
         Potion => &state.potions,
@@ -600,39 +617,49 @@ pub fn placeItems(level: usize) void {
 }
 
 pub fn placeTraps(level: usize) void {
-    for (state.dungeon.rooms[level].items) |room| {
+    room_iter: for (state.dungeon.rooms[level].items) |room| {
         if (room.prefab) |rfb| if (rfb.notraps) continue;
 
         // Don't place traps in places where it's impossible to avoid
         if (room.height == 1 or room.width == 1) continue;
 
-        if (rng.onein(2)) {
-            const trap_coord = room.randomCoord();
-            if (state.dungeon.at(trap_coord).surface != null) continue;
+        if (rng.onein(2)) continue;
 
-            var trap: Machine = undefined;
-            if (rng.onein(3)) {
-                trap = machines.AlarmTrap;
-            } else {
-                trap = if (rng.onein(3)) machines.PoisonGasTrap else machines.ParalysisGasTrap;
-                trap = switch (rng.range(usize, 0, 4)) {
-                    0, 1 => machines.ConfusionGasTrap,
-                    2, 3 => machines.ParalysisGasTrap,
-                    4 => machines.PoisonGasTrap,
-                    else => unreachable,
-                };
-
-                var num_of_vents = rng.range(usize, 1, 3);
-                while (num_of_vents > 0) : (num_of_vents -= 1) {
-                    const vent = room.randomCoord();
-                    if (state.dungeon.hasMachine(vent)) continue;
-
-                    const prop = _place_prop(vent, &machines.GasVentProp);
-                    trap.props[num_of_vents] = prop;
-                }
-            }
-            _place_machine(trap_coord, &trap);
+        var tries: usize = 25;
+        var trap_coord: Coord = undefined;
+        while (tries > 0) {
+            trap_coord = room.randomCoord();
+            if (isTileAvailable(trap_coord)) break;
+            if (tries == 0) continue :room_iter;
+            tries -= 1;
         }
+
+        var trap: Machine = undefined;
+        if (rng.onein(4)) {
+            trap = machines.AlarmTrap;
+        } else {
+            trap = if (rng.onein(3)) machines.PoisonGasTrap else machines.ParalysisGasTrap;
+            trap = switch (rng.range(usize, 0, 4)) {
+                0, 1 => machines.ConfusionGasTrap,
+                2, 3 => machines.ParalysisGasTrap,
+                4 => machines.PoisonGasTrap,
+                else => unreachable,
+            };
+
+            var num_of_vents = rng.range(usize, 1, 3);
+            while (num_of_vents > 0) {
+                const vent = randomWallCoord(&room);
+                if (state.dungeon.hasMachine(vent) or
+                    state.dungeon.at(vent).type != .Wall or
+                    state.dungeon.neighboringWalls(vent, true) == 9) continue;
+
+                state.dungeon.at(vent).type = .Floor;
+                const prop = _place_prop(vent, &machines.GasVentProp);
+                trap.props[num_of_vents] = prop;
+                num_of_vents -= 1;
+            }
+        }
+        _place_machine(trap_coord, &trap);
     }
 }
 

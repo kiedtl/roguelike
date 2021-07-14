@@ -133,6 +133,10 @@ pub const FullCopperCoilProp = Prop{
 pub const GasVentProp = Prop{
     .name = "gas vent",
     .tile = '=',
+    .fg = 0x666666,
+    .bg = 0xdddddd,
+    .walkable = false,
+    .opacity = 1.0,
 };
 
 pub const BedProp = Prop{
