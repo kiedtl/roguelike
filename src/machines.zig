@@ -45,7 +45,6 @@ pub const MACHINES = [_]Machine{
     Brazier,
     StairExit,
     StairUp,
-    StairDown,
     NormalDoor,
     LockedDoor,
     ParalysisGasTrap,
@@ -87,6 +86,14 @@ pub const RealgarStatue = Prop{ .id = "realgar_statue", .name = "realgar statue"
 pub const IronStatue = Prop{ .id = "iron_statue", .name = "iron statue", .tile = '☻', .fg = 0xcacad2 };
 pub const SodaliteStatue = Prop{ .id = "sodalite_statue", .name = "sodalite statue", .tile = '☺', .fg = 0xa4cfff };
 pub const HematiteStatue = Prop{ .id = "hematite_statue", .name = "hematite statue", .tile = '☺', .fg = 0xff7f70 };
+
+pub const StairDstProp = Prop{
+    .id = "stair_dst",
+    .name = "downward stair",
+    .tile = '×',
+    .fg = 0xffffff,
+    .walkable = true,
+};
 
 pub const WorkstationProp = Prop{
     .id = "workstation",
@@ -263,13 +270,6 @@ pub const StairUp = Machine{
     .on_power = powerStairUp,
 };
 
-pub const StairDown = Machine{
-    .name = "descending staircase",
-    .powered_tile = '▼',
-    .unpowered_tile = '▼',
-    .on_power = powerStairDown,
-};
-
 pub const AlarmTrap = Machine{
     .name = "alarm trap",
     .powered_tile = '^',
@@ -415,29 +415,6 @@ pub fn powerStairUp(machine: *Machine) void {
             const moved = culprit.teleportTo(spot, null);
             assert(moved);
             state.message(.Move, "You ascend.", .{});
-        }
-    }
-}
-
-pub fn powerStairDown(machine: *Machine) void {
-    if (machine.last_interaction) |culprit| {
-        if (!culprit.coord.eq(state.player.coord)) return;
-
-        const downlevel = Coord.new2(machine.coord.z + 1, machine.coord.x, machine.coord.y);
-        assert(downlevel.z < state.LEVELS);
-
-        var dest: ?Coord = null;
-        for (&CARDINAL_DIRECTIONS) |d| {
-            if (downlevel.move(d, state.mapgeometry)) |desttmp|
-                if (state.is_walkable(desttmp, .{ .right_now = true })) {
-                    dest = desttmp;
-                };
-        }
-
-        if (dest) |spot| {
-            const moved = culprit.teleportTo(spot, null);
-            assert(moved);
-            state.message(.Move, "You descend.", .{});
         }
     }
 }

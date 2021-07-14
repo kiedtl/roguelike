@@ -802,28 +802,26 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
 }
 
 pub fn placeRandomStairs(level: usize) void {
-    if (level == (state.LEVELS - 1)) {
-        return;
-    }
+    if (level == 0) return;
 
     var placed: usize = 0;
-    while (placed < 5) {
+    while (placed < 3) {
         const room = rng.chooseUnweighted(Room, state.dungeon.rooms[level].items);
 
         // Don't place stairs in narrow rooms where it's impossible to avoid.
         if (room.width == 1 or room.height == 1) continue;
 
         const rand = room.randomCoord();
-        const above = Coord.new2(level, rand.x, rand.y);
-        const below = Coord.new2(level + 1, rand.x, rand.y);
+        const current = Coord.new2(level, rand.x, rand.y);
+        const above = Coord.new2(level - 1, rand.x, rand.y);
 
-        if (isTileAvailable(above) and
-            isTileAvailable(below) and
-            state.is_walkable(below, .{ .right_now = true }) and
+        if (isTileAvailable(current) and
+            isTileAvailable(above) and
+            state.is_walkable(current, .{ .right_now = true }) and
             state.is_walkable(above, .{ .right_now = true }))
         {
-            _place_machine(above, &machines.StairDown);
-            _place_machine(below, &machines.StairUp);
+            _place_machine(current, &machines.StairUp);
+            _ = _place_prop(above, &machines.StairDstProp);
 
             placed += 1;
         }
