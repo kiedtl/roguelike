@@ -681,12 +681,11 @@ pub fn placeTraps(level: usize) void {
 
         var tries: usize = 25;
         var trap_coord: Coord = undefined;
-        while (tries > 0) {
+        while (tries > 0) : (tries -= 1) {
             trap_coord = room.randomCoord();
             if (state.dungeon.at(trap_coord).type == .Wall or
                 isTileAvailable(trap_coord)) break;
             if (tries == 0) continue :room_iter;
-            tries -= 1;
         }
 
         var trap: Machine = undefined;
@@ -702,7 +701,8 @@ pub fn placeTraps(level: usize) void {
             };
 
             var num_of_vents = rng.range(usize, 1, 3);
-            while (num_of_vents > 0) {
+            var v_tries: usize = 100;
+            while (tries > 0 and num_of_vents > 0) : (tries -= 1) {
                 const vent = randomWallCoord(&room);
                 if (state.dungeon.hasMachine(vent) or
                     state.dungeon.at(vent).type != .Wall or
@@ -1004,8 +1004,8 @@ pub const Prefab = struct {
     notraps: bool = false,
 
     name: StackBuffer(u8, MAX_NAME_SIZE) = StackBuffer(u8, MAX_NAME_SIZE).init(null),
-    player_position: ?Coord = null,
 
+    player_position: ?Coord = null,
     height: usize = 0,
     width: usize = 0,
     content: [40][40]FabTile = undefined,
@@ -1058,7 +1058,46 @@ pub const Prefab = struct {
         return null;
     }
 
-    pub fn parse(from: []const u8) !Prefab {
+    fn _finishParsing(
+        name: []const u8,
+        y: usize,
+        w: usize,
+        f: *Prefab,
+        n_fabs: *PrefabArrayList,
+        s_fabs: *PrefabArrayList,
+    ) !void {
+        f.width = w;
+        f.height = y;
+
+        for (&f.connections) |*con, i| {
+            if (con.*) |c| {
+                if (c.c.x == 0) {
+                    f.connections[i].?.d = .West;
+                } else if (c.c.y == 0) {
+                    f.connections[i].?.d = .North;
+                } else if (c.c.y == (f.height - 1)) {
+                    f.connections[i].?.d = .South;
+                } else if (c.c.x == (f.width - 1)) {
+                    f.connections[i].?.d = .East;
+                } else {
+                    return error.InvalidConnection;
+                }
+            }
+        }
+
+        const prefab_name = mem.trimRight(u8, name, ".fab");
+        f.name = StackBuffer(u8, Prefab.MAX_NAME_SIZE).init(prefab_name);
+
+        const to = if (f.subroom) s_fabs else n_fabs;
+        to.append(f.*) catch @panic("OOM");
+    }
+
+    pub fn parseAndLoad(
+        name: []const u8,
+        from: []const u8,
+        n_fabs: *PrefabArrayList,
+        s_fabs: *PrefabArrayList,
+    ) !void {
         var f: Prefab = .{};
         for (f.content) |*row| mem.set(FabTile, row, .Wall);
         mem.set(?Connection, &f.connections, null);
@@ -1072,6 +1111,21 @@ pub const Prefab = struct {
         while (lines.next()) |line| {
             switch (line[0]) {
                 '%' => {}, // ignore comments
+                '\\' => {
+                    try _finishParsing(name, y, w, &f, n_fabs, s_fabs);
+
+                    ci = 0;
+                    cm = 0;
+                    w = 0;
+                    y = 0;
+                    f.player_position = null;
+                    f.height = 0;
+                    f.width = 0;
+                    for (f.content) |*row| mem.set(FabTile, row, .Wall);
+                    mem.set(?Connection, &f.connections, null);
+                    mem.set(?Feature, &f.features, null);
+                    mem.set(?FeatureMob, &f.mobs, null);
+                },
                 ':' => {
                     var words = mem.tokenize(line[1..], " ");
                     const key = words.next() orelse return error.MalformedMetadata;
@@ -1197,26 +1251,7 @@ pub const Prefab = struct {
             }
         }
 
-        f.width = w;
-        f.height = y;
-
-        for (&f.connections) |*con, i| {
-            if (con.*) |c| {
-                if (c.c.x == 0) {
-                    f.connections[i].?.d = .West;
-                } else if (c.c.y == 0) {
-                    f.connections[i].?.d = .North;
-                } else if (c.c.y == (f.height - 1)) {
-                    f.connections[i].?.d = .South;
-                } else if (c.c.x == (f.width - 1)) {
-                    f.connections[i].?.d = .East;
-                } else {
-                    return error.InvalidConnection;
-                }
-            }
-        }
-
-        return f;
+        try _finishParsing(name, y, w, &f, n_fabs, s_fabs);
     }
 
     pub fn findPrefabByName(name: []const u8, fabs: *const PrefabArrayList) ?*Prefab {
@@ -1259,7 +1294,7 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
 
         const read = fab_f.readAll(buf[0..]) catch unreachable;
 
-        var f = Prefab.parse(buf[0..read]) catch |e| {
+        Prefab.parseAndLoad(fab_file.name, buf[0..read], n_fabs, s_fabs) catch |e| {
             const msg = switch (e) {
                 error.InvalidFabTile => "Invalid prefab tile",
                 error.InvalidConnection => "Out of place connection tile",
@@ -1276,14 +1311,6 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
             std.log.warn("{}: Couldn't load prefab: {}", .{ fab_file.name, msg });
             continue;
         };
-
-        const prefab_name = mem.trimRight(u8, fab_file.name, ".fab");
-        f.name = StackBuffer(u8, Prefab.MAX_NAME_SIZE).init(prefab_name);
-
-        if (f.subroom)
-            s_fabs.append(f) catch @panic("OOM")
-        else
-            n_fabs.append(f) catch @panic("OOM");
     }
 }
 
