@@ -718,31 +718,38 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
     }
 }
 
+fn placeLights(room: *const Room) void {
+    if (room.prefab) |rfb| if (rfb.nolights) return;
+
+    var lights: usize = 0;
+    var light_tries: usize = rng.range(usize, 0, 50);
+    while (light_tries > 0 and lights < 4) : (light_tries -= 1) {
+        const coord = randomWallCoord(room);
+
+        if (state.dungeon.at(coord).type != .Wall or
+            !isTileAvailable(coord) or
+            state.dungeon.neighboringWalls(coord, true) != 6 or
+            state.dungeon.neighboringMachines(coord) > 0)
+            continue;
+
+        var brazier = machines.Brazier;
+        brazier.powered_luminescence -= rng.rangeClumping(usize, 0, 30, 2);
+
+        _place_machine(coord, &brazier);
+        state.dungeon.at(coord).type = .Floor;
+        lights += 1;
+    }
+}
+
 pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
     for (state.dungeon.rooms[level].items) |room| {
-        if (room.prefab) |rfb| if (rfb.nolights) continue;
-
-        // Don't light small rooms or corridors.
+        // Don't fill small rooms or corridors.
         if ((room.width * room.height) < 16 or room.type == .Corridor)
             continue;
 
-        var lights: usize = 0;
-        var light_tries: usize = rng.range(usize, 0, 50);
-        while (light_tries > 0 and lights < 4) : (light_tries -= 1) {
-            const coord = randomWallCoord(&room);
-            if (state.dungeon.at(coord).type != .Wall or
-                !isTileAvailable(coord) or
-                state.dungeon.neighboringWalls(coord, true) != 6 or
-                state.dungeon.neighboringMachines(coord) > 0)
-                continue;
+        placeLights(&room);
 
-            var brazier = machines.Brazier;
-            brazier.powered_luminescence -= rng.rangeClumping(usize, 0, 30, 2);
-
-            _place_machine(coord, &brazier);
-            state.dungeon.at(coord).type = .Floor;
-            lights += 1;
-        }
+        if (room.prefab != null) continue;
 
         const Range = struct { from: Coord, to: Coord };
         const room_end = room.end();
@@ -757,9 +764,9 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
         var statues: usize = 0;
         var capacity: usize = 0;
 
-        var tries = rng.range(usize, 0, 100);
+        var tries = rng.range(usize, 0, math.sqrt(room.width * room.height) * 3);
         while (tries > 0) : (tries -= 1) {
-            const range = rng.chooseUnweighted(Range, &ranges);
+            const range = ranges[tries % ranges.len];
             const x = rng.rangeClumping(usize, range.from.x, range.to.x, 3);
             const y = rng.rangeClumping(usize, range.from.y, range.to.y, 2);
             const coord = Coord.new2(room.start.z, x, y);
@@ -777,7 +784,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                     }
                 },
                 2 => {
-                    if (capacity < ((room.width * room.height) * 4)) {
+                    if (capacity < (math.sqrt(room.width * room.height) * 4)) {
                         var cont = rng.chooseUnweighted(Container, &machines.CONTAINERS);
                         placeContainer(coord, &cont);
                         capacity += cont.capacity;
