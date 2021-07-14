@@ -1,16 +1,16 @@
-:spawn executioner 1,2
-:spawn executioner 1,4
+%:spawn executioner 1,2
+%:spawn executioner 1,4
 :spawn      goblin 8,2
 :spawn      goblin 8,4
 :spawn     watcher 1,1
 :spawn     watcher 8,1
 :spawn     watcher 1,5
 :spawn     watcher 8,5
-:spawn executioner 2,1
-:spawn executioner 2,2
-:spawn executioner 2,3
-:spawn executioner 2,4
-:spawn executioner 2,5
+%:spawn executioner 2,1
+%:spawn executioner 2,2
+%:spawn executioner 2,3
+%:spawn executioner 2,4
+%:spawn executioner 2,5
 :spawn executioner 7,1
 :spawn executioner 7,2
 :spawn executioner 7,3
@@ -44,7 +44,7 @@
 #********#
 *........*
 *........*
-#•......•#
+•........•
 *........*
 *........*
 #********#

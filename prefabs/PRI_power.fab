@@ -16,22 +16,20 @@
 @9 p steel_support_nsw2
 @a m power_supply
 
-:spawn interaction_laborer  6,3  6,4
-:spawn interaction_laborer  6,5  6,4
+:spawn interaction_laborer  6,2  6,3
+:spawn interaction_laborer  6,4  6,3
 :spawn             watcher  1,1  1,1
-:spawn             watcher 11,7 11,7
+:spawn             watcher 11,5 11,5
 
 :restriction 1
 :notrap
 :nospawn
 :nolight
 
-###*******###
-#..........•#
+###***#***###
 #...........#
 *.013141510.*
-*.6678a9766.*
+•.6678a9766.•
 *.023242520.*
 #...........#
-#•..........#
-###*******###
+###***#***###
