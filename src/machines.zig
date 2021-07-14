@@ -182,18 +182,24 @@ pub const PowerSupply = Machine{
 pub const Brazier = Machine{
     .name = "a brazier",
 
-    .powered_tile = '☐',
-    .unpowered_tile = '☐',
+    .powered_tile = '╋',
+    .unpowered_tile = '┽',
 
-    .power_drain = 30,
+    .powered_fg = 0xeee088,
+    .unpowered_fg = 0xffffff,
+
+    .powered_bg = 0xb7b7b7,
+    .unpowered_bg = 0xaaaaaa,
+
+    .power_drain = 20,
     .power_add = 50,
     .auto_power = true,
 
     .powered_walkable = false,
     .unpowered_walkable = false,
 
-    .powered_opacity = 0.5,
-    .unpowered_opacity = 0.5,
+    .powered_opacity = 0.9,
+    .unpowered_opacity = 0.3,
 
     // maximum, could be much lower (see mapgen:placeLights)
     .powered_luminescence = 90,

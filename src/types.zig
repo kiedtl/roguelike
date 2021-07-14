@@ -1467,6 +1467,11 @@ pub const Machine = struct {
     powered_tile: u21,
     unpowered_tile: u21,
 
+    powered_fg: ?u32 = null,
+    unpowered_fg: ?u32 = null,
+    powered_bg: ?u32 = null,
+    unpowered_bg: ?u32 = null,
+
     power_drain: usize = 100, // Power drained per turn
     power_add: usize = 100, // Power added on interact
     auto_power: bool = false,
@@ -1832,7 +1837,16 @@ pub const Tile = struct {
 
                     const ch = switch (surfaceitem) {
                         .Container => |c| c.tile,
-                        .Machine => |m| m.tile(),
+                        .Machine => |m| mach: {
+                            if (m.isPowered()) {
+                                if (m.powered_bg) |mach_bg| cell.bg = mach_bg;
+                                if (m.powered_fg) |mach_fg| cell.fg = mach_fg;
+                            } else {
+                                if (m.unpowered_bg) |mach_bg| cell.bg = mach_bg;
+                                if (m.unpowered_fg) |mach_fg| cell.fg = mach_fg;
+                            }
+                            break :mach m.tile();
+                        },
                         .Prop => |p| prop: {
                             if (p.bg) |prop_bg| cell.bg = prop_bg;
                             if (p.fg) |prop_fg| cell.fg = prop_fg;
