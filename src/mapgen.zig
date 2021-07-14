@@ -755,7 +755,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
         };
 
         var statues: usize = 0;
-        var chests: usize = 0;
+        var capacity: usize = 0;
 
         var tries = rng.range(usize, 0, 100);
         while (tries > 0) : (tries -= 1) {
@@ -764,21 +764,23 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
             const y = rng.rangeClumping(usize, range.from.y, range.to.y, 2);
             const coord = Coord.new2(room.start.z, x, y);
 
-            if (!isTileAvailable(coord)) continue;
+            if (!isTileAvailable(coord) or
+                state.dungeon.neighboringWalls(coord, true) != 3)
+                continue;
 
             switch (rng.range(usize, 1, 2)) {
                 1 => {
-                    if (statues < 1 and state.dungeon.neighboringWalls(coord, true) == 3) {
+                    if (statues < 1) {
                         const statue = rng.chooseUnweighted(mobs.MobTemplate, &mobs.STATUES);
                         _ = placeMob(alloc, &statue, coord, .{});
                         statues += 1;
                     }
                 },
                 2 => {
-                    if (chests < 2 and state.dungeon.neighboringWalls(coord, true) == 3) {
+                    if (capacity < ((room.width * room.height) * 4)) {
                         var cont = rng.chooseUnweighted(Container, &machines.CONTAINERS);
-                        cont.capacity -= rng.rangeClumping(usize, 0, 3, 2);
                         placeContainer(coord, &cont);
+                        capacity += cont.capacity;
                     }
                 },
                 else => unreachable,
