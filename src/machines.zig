@@ -198,8 +198,8 @@ pub const Brazier = Machine{
     .powered_walkable = false,
     .unpowered_walkable = false,
 
-    .powered_opacity = 0.9,
-    .unpowered_opacity = 0.3,
+    .powered_opacity = 1.0,
+    .unpowered_opacity = 1.0,
 
     // maximum, could be much lower (see mapgen:placeLights)
     .powered_luminescence = 90,

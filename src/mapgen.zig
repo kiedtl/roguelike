@@ -717,45 +717,30 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
     }
 }
 
-fn _lightCorridor(room: *const Room) void {
-    assert(room.type == .Corridor);
-    const room_end = room.end();
-
-    var last_placed: usize = 0;
-
-    if (room.height == 1) {
-        var x = room.start.x;
-        while (x < room_end.x) : (x += 1) {
-            if (x - last_placed > 5) {
-                const coord = Coord.new2(room.start.z, x, room_end.y);
-                _place_machine(coord, &machines.Brazier);
-                last_placed = x;
-            }
-        }
-    } else if (room.width == 1) {
-        var y = room.start.y;
-        while (y < room_end.y) : (y += 1) {
-            if (y - last_placed > 5) {
-                const coord = Coord.new2(room.start.z, room_end.x, y);
-                _place_machine(coord, &machines.Brazier);
-                last_placed = y;
-            }
-        }
-    }
-}
-
 pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
     for (state.dungeon.rooms[level].items) |room| {
         if (room.prefab) |rfb| if (rfb.nolights) continue;
 
-        // Don't light small rooms.
-        if ((room.width * room.height) < 16)
+        // Don't light small rooms or corridors.
+        if ((room.width * room.height) < 16 or room.type == .Corridor)
             continue;
 
-        // Treat corridors specially.
-        if (room.height == 1 or room.width == 1) {
-            _lightCorridor(&room);
-            continue;
+        var lights: usize = 0;
+        var light_tries: usize = rng.range(usize, 0, 50);
+        while (light_tries > 0 and lights < 4) : (light_tries -= 1) {
+            const coord = randomWallCoord(&room);
+            if (state.dungeon.at(coord).type != .Wall or
+                !isTileAvailable(coord) or
+                state.dungeon.neighboringWalls(coord, true) != 6 or
+                state.dungeon.neighboringMachines(coord) > 0)
+                continue;
+
+            var brazier = machines.Brazier;
+            brazier.powered_luminescence -= rng.rangeClumping(usize, 0, 30, 2);
+
+            _place_machine(coord, &brazier);
+            state.dungeon.at(coord).type = .Floor;
+            lights += 1;
         }
 
         const Range = struct { from: Coord, to: Coord };
@@ -768,7 +753,6 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
             .{ .from = Coord.new(room_end.x - 1, room.start.y + 1), .to = Coord.new(room_end.x - 1, room_end.y - 2) }, // left
         };
 
-        var lights: usize = 0;
         var statues: usize = 0;
         var chests: usize = 0;
 
@@ -781,7 +765,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
 
             if (!isTileAvailable(coord)) continue;
 
-            switch (rng.range(usize, 1, 3)) {
+            switch (rng.range(usize, 1, 2)) {
                 1 => {
                     if (statues < 1 and state.dungeon.neighboringWalls(coord, true) == 3) {
                         const statue = rng.chooseUnweighted(mobs.MobTemplate, &mobs.STATUES);
@@ -790,14 +774,6 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                     }
                 },
                 2 => {
-                    if (lights < 3 and state.dungeon.neighboringWalls(coord, true) == 3) {
-                        var brazier = machines.Brazier;
-                        brazier.powered_luminescence -= rng.rangeClumping(usize, 0, 30, 2);
-                        _place_machine(coord, &brazier);
-                        lights += 1;
-                    }
-                },
-                3 => {
                     if (chests < 2 and state.dungeon.neighboringWalls(coord, true) == 3) {
                         var chest = machines.Chest;
                         chest.capacity -= rng.rangeClumping(usize, 0, 3, 2);
