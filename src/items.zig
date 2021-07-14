@@ -148,19 +148,16 @@ pub const CrossbowLauncher = Weapon{
     },
     .main_damage = .Crushing,
     .secondary_damage = null,
-    .launcher = .{ .need = .Bolt },
-};
-
-pub const CrossbowBoltProjectile = Projectile{
-    .id = "bolt",
-    .name = "bolt",
-    .main_damage = .Piercing,
-    .damages = .{
-        .Crushing = 0,
-        .Pulping = 0,
-        .Slashing = 1,
-        .Piercing = 15,
-        .Lacerating = 0,
+    .launcher = .{
+        .projectile = Projectile{
+            .main_damage = .Piercing,
+            .damages = .{
+                .Crushing = 0,
+                .Pulping = 0,
+                .Slashing = 1,
+                .Piercing = 15,
+                .Lacerating = 0,
+            },
+        },
     },
-    .type = .Bolt,
 };

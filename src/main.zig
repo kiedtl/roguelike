@@ -1,6 +1,7 @@
 const std = @import("std");
 const math = std.math;
 const assert = std.debug.assert;
+const mem = std.mem;
 
 const rng = @import("rng.zig");
 const heat = @import("heat.zig");
@@ -37,9 +38,9 @@ fn initGame() void {
     state.potions = PotionList.init(&state.GPA.allocator);
     state.armors = ArmorList.init(&state.GPA.allocator);
     state.weapons = WeaponList.init(&state.GPA.allocator);
-    state.projectiles = ProjectileList.init(&state.GPA.allocator);
     state.machines = MachineList.init(&state.GPA.allocator);
     state.props = PropList.init(&state.GPA.allocator);
+    state.containers = ContainerList.init(&state.GPA.allocator);
     rng.init();
 
     var s_fabs: mapgen.PrefabArrayList = undefined;
@@ -87,10 +88,10 @@ fn deinitGame() void {
     state.potions.deinit();
     state.armors.deinit();
     state.weapons.deinit();
-    state.projectiles.deinit();
     state.machines.deinit();
     state.messages.deinit();
     state.props.deinit();
+    state.containers.deinit();
 
     _ = state.GPA.deinit();
 }
@@ -137,26 +138,10 @@ fn fireLauncher() bool {
     if (state.player.inventory.wielded) |weapon| {
         if (weapon.launcher) |launcher| {
             const dest = display.chooseCell() orelse return false;
-
-            var projectile_index: ?usize = null;
-            for (state.player.inventory.pack.constSlice()) |item, i| switch (item) {
-                .Projectile => |projectile| if (projectile.type == launcher.need) {
-                    projectile_index = i;
-                },
-                else => {},
-            };
-
-            if (projectile_index) |index| {
-                var projectile = state.player.inventory.pack.slice()[index];
-                assert(state.player.throwItem(&projectile, dest, state.player.strength * 2));
-                _ = state.player.removeItem(index, false) catch unreachable;
-                state.player.activities.append(.Fire);
-                state.player.energy -= state.player.speed();
-                return true;
-            } else {
-                state.message(.MetaError, "You don't have any projectiles.", .{});
-                return false;
-            }
+            assert(state.player.launchProjectile(&launcher, dest));
+            state.player.activities.append(.Fire);
+            state.player.energy -= state.player.speed();
+            return true;
         } else {
             state.message(.MetaError, "You can't fire anything with that weapon.", .{});
             return false;
@@ -167,13 +152,13 @@ fn fireLauncher() bool {
     }
 }
 
-pub fn grabItem(self: *Mob) bool {
+pub fn grabItem() bool {
     if (state.player.inventory.pack.isFull()) {
         state.message(.MetaError, "Your pack is full.", .{});
     }
 
-    if (state.dungeon.itemsAt(state.player.coord).len > 0) {
-        switch (state.dungeon.itemsAt(state.player.coord).data[0]) {
+    if (state.dungeon.at(state.player.coord).surface) |surface| {
+        switch (surface) {
             .Container => |container| {
                 if (container.items.len == 0) {
                     state.message(.MetaError, "There's nothing in the {}.", .{container.name});
@@ -181,7 +166,7 @@ pub fn grabItem(self: *Mob) bool {
                 } else {
                     const index = display.chooseInventoryItem(
                         "Take",
-                        state.player.inventory.pack.constSlice(),
+                        container.items.constSlice(),
                     ) orelse return false;
                     const item = container.items.orderedRemove(index) catch unreachable;
                     state.player.inventory.pack.append(item) catch unreachable;
@@ -197,35 +182,10 @@ pub fn grabItem(self: *Mob) bool {
         }
     }
 
-    if (state.dungeon.itemsAt(self.coord).last()) |item| {
-        switch (item) {
-            .Projectile => |projectile| {
-                var found: ?usize = null;
-                for (self.inventory.pack.constSlice()) |entry, i| switch (entry) {
-                    .Projectile => |stack| if (stack.type == projectile.type and mem.eql(u8, stack.id, projectile.id)) {
-                        found = i;
-                    },
-                    else => {},
-                };
-
-                if (found) |index| {
-                    self.inventory.pack.slice()[index].Projectile.count += 1;
-                } else {
-                    self.inventory.pack.append(item) catch |e| switch (e) {
-                        error.NoSpaceLeft => return false,
-                    };
-                }
-            },
-            else => {
-                self.inventory.pack.append(item) catch |e| switch (e) {
-                    error.NoSpaceLeft => return false,
-                };
-            },
-        }
-
-        _ = state.dungeon.itemsAt(self.coord).pop() catch unreachable;
-
-        self.declareAction(.Grab);
+    if (state.dungeon.itemsAt(state.player.coord).last()) |item| {
+        state.player.inventory.pack.append(item) catch unreachable;
+        _ = state.dungeon.itemsAt(state.player.coord).pop() catch unreachable;
+        state.player.declareAction(.Grab);
         return true;
     } else {
         return false;
@@ -255,12 +215,15 @@ fn rifleCorpse() bool {
 // TODO: move this to state.zig...? There should probably be a separate file for
 // player-specific actions.
 fn throwItem() bool {
-    const index = display.chooseInventoryItem("Throw") orelse return false;
+    const index = display.chooseInventoryItem(
+        "Throw",
+        state.player.inventory.pack.constSlice(),
+    ) orelse return false;
     const dest = display.chooseCell() orelse return false;
     const item = &state.player.inventory.pack.slice()[index];
 
-    if (state.player.throwItem(item, dest, null)) {
-        _ = state.player.removeItem(index, false) catch unreachable;
+    if (state.player.throwItem(item, dest)) {
+        _ = state.player.removeItem(index) catch unreachable;
         state.player.activities.append(.Throw);
         state.player.energy -= state.player.speed();
         return true;
@@ -273,13 +236,12 @@ fn throwItem() bool {
 // TODO: move this to state.zig...? There should probably be a separate file for
 // player-specific actions.
 fn useItem() bool {
-    const index = display.chooseInventoryItem("Use") orelse return false;
+    const index = display.chooseInventoryItem(
+        "Use",
+        state.player.inventory.pack.constSlice(),
+    ) orelse return false;
 
     switch (state.player.inventory.pack.slice()[index]) {
-        .Projectile => |_| {
-            state.message(.MetaError, "You need a launcher to use that.", .{});
-            return false;
-        },
         .Corpse => |_| {
             state.message(.MetaError, "That doesn't look appetizing.", .{});
             return false;
@@ -361,7 +323,7 @@ fn useItem() bool {
         .Potion => |p| state.player.quaffPotion(p),
     }
 
-    _ = state.player.removeItem(index, false) catch unreachable;
+    _ = state.player.removeItem(index) catch unreachable;
 
     state.player.activities.append(.Use);
     state.player.energy -= state.player.speed();
@@ -372,8 +334,8 @@ fn useItem() bool {
 // TODO: move this to state.zig...? There should probably be a separate file for
 // player-specific actions.
 fn dropItem() bool {
-    if (state.dungeon.itemsAt(state.player.coord).len > 0) {
-        switch (state.dungeon.itemsAt(state.player.coord).data[0]) {
+    if (state.dungeon.at(state.player.coord).surface) |surface| {
+        switch (surface) {
             .Container => |container| {
                 if (container.items.len >= container.capacity) {
                     state.message(.MetaError, "There's no place on the {} for that.", .{container.name});
@@ -383,7 +345,7 @@ fn dropItem() bool {
                         "Store",
                         state.player.inventory.pack.constSlice(),
                     ) orelse return false;
-                    const item = state.player.removeItem(index, true) catch unreachable;
+                    const item = state.player.removeItem(index) catch unreachable;
                     container.items.append(item) catch unreachable;
 
                     // TODO: show message
@@ -406,7 +368,7 @@ fn dropItem() bool {
             "Drop",
             state.player.inventory.pack.constSlice(),
         ) orelse return false;
-        const item = state.player.removeItem(index, true) catch unreachable;
+        const item = state.player.removeItem(index) catch unreachable;
         state.dungeon.itemsAt(state.player.coord).append(item) catch unreachable;
 
         // TODO: show message
@@ -440,7 +402,7 @@ fn readInput() bool {
                 't' => throwItem(),
                 'a' => useItem(),
                 'd' => dropItem(),
-                ',' => state.player.grabItem(),
+                ',' => grabItem(),
                 '.' => state.player.rest(),
                 'h' => moveOrFight(.West),
                 'j' => moveOrFight(.South),

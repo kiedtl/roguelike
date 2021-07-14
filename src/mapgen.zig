@@ -114,12 +114,8 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     const echoring = _createItem(Ring, items.EcholocationRing);
     echoring.worn_since = state.ticks;
 
-    const bolts = _createItem(Projectile, items.CrossbowBoltProjectile);
-    bolts.count = 10;
-
     state.player = placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .SawHostile });
     state.player.inventory.r_rings[0] = echoring;
-    state.player.inventory.pack.append(Item{ .Projectile = bolts }) catch unreachable;
 }
 
 fn choosePrefab(level: usize, prefabs: *PrefabArrayList) ?Prefab {
@@ -586,20 +582,12 @@ pub fn placeItems(level: usize) void {
                 if (!isTileAvailable(coord))
                     continue;
 
-                switch (rng.range(usize, 0, 1)) {
+                switch (rng.range(usize, 0, 0)) {
                     0 => {
                         const potion = rng.chooseUnweighted(Potion, &items.POTIONS);
                         state.potions.append(potion) catch unreachable;
                         state.dungeon.itemsAt(coord).append(
                             Item{ .Potion = state.potions.lastPtr().? },
-                        ) catch unreachable;
-                    },
-                    1 => {
-                        var bolt = items.CrossbowBoltProjectile;
-                        bolt.count = rng.rangeClumping(usize, 3, 10, 2);
-                        state.projectiles.append(bolt) catch unreachable;
-                        state.dungeon.itemsAt(coord).append(
-                            Item{ .Projectile = state.projectiles.lastPtr().? },
                         ) catch unreachable;
                     },
                     else => unreachable,
@@ -755,6 +743,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
 
         var lights: usize = 0;
         var statues: usize = 0;
+        var chests: usize = 0;
 
         var tries = rng.range(usize, 0, 100);
         while (tries > 0) : (tries -= 1) {
@@ -765,7 +754,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
 
             if (!isTileAvailable(coord)) continue;
 
-            switch (rng.range(usize, 1, 2)) {
+            switch (rng.range(usize, 1, 3)) {
                 1 => {
                     if (statues < 1 and state.dungeon.neighboringWalls(coord, true) == 3) {
                         const statue = rng.chooseUnweighted(mobs.MobTemplate, &mobs.STATUES);
@@ -782,9 +771,11 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                     }
                 },
                 3 => {
-                    var chest = machines.Chest;
-                    chest.capacity -= rng.rangeClumping(usize, 0, 3, 2);
-                    placeContainer(coord, &chest);
+                    if (chests < 2 and state.dungeon.neighboringWalls(coord, true) == 3) {
+                        var chest = machines.Chest;
+                        chest.capacity -= rng.rangeClumping(usize, 0, 3, 2);
+                        placeContainer(coord, &chest);
+                    }
                 },
                 else => unreachable,
             }

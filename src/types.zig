@@ -829,29 +829,11 @@ pub const Mob = struct { // {{{
         return true;
     }
 
-    pub fn removeItem(self: *Mob, index: usize, whole_stack: bool) !Item {
+    pub fn removeItem(self: *Mob, index: usize) !Item {
         if (index >= self.inventory.pack.len)
             return error.IndexOutOfRange;
 
-        if (whole_stack)
-            return self.inventory.pack.orderedRemove(index) catch unreachable;
-
-        switch (self.inventory.pack.slice()[index]) {
-            .Projectile => |projectile| {
-                if (projectile.count > 1) {
-                    projectile.count -= 1;
-
-                    var p = projectile.*;
-                    p.count = 1;
-                    state.projectiles.append(p) catch unreachable;
-
-                    return Item{ .Projectile = state.projectiles.lastPtr().? };
-                } else {
-                    return self.inventory.pack.orderedRemove(index) catch unreachable;
-                }
-            },
-            else => return self.inventory.pack.orderedRemove(index) catch unreachable,
-        }
+        return self.inventory.pack.orderedRemove(index) catch unreachable;
     }
 
     pub fn quaffPotion(self: *Mob, potion: *Potion) void {
@@ -863,22 +845,10 @@ pub const Mob = struct { // {{{
         }
     }
 
-    // Only destructible items can be thrown. If we allowed non-destructable
-    // items to be thrown, it'd pose many issues due to the fact that there
-    // can be only one item on a tile -- what should be done if a corpse it
-    // thrown onto a tile that already has an item? Should one of the items be
-    // destroyed, or should the thrown item be moved the nearest free tile?
-    // What if that free tile is twenty items away? ...
-    pub fn throwItem(self: *Mob, item: *Item, at: Coord, _energy: ?usize) bool {
-        switch (item.*) {
-            .Projectile, .Potion => {},
-            .Weapon => @panic("W/A TODO"),
-            else => return false,
-        }
-
+    pub fn launchProjectile(self: *Mob, launcher: *const Weapon.Launcher, at: Coord) bool {
         const trajectory = self.coord.drawLine(at, state.mapgeometry);
         var landed: ?Coord = null;
-        var energy: usize = _energy orelse self.strength;
+        var energy: usize = self.strength * 2;
 
         for (trajectory.constSlice()) |coord| {
             if (energy == 0 or
@@ -892,44 +862,61 @@ pub const Mob = struct { // {{{
         }
         if (landed == null) landed = at;
 
-        var was_miss = true;
+        if (state.dungeon.at(landed.?).mob) |bastard| {
+            const CHANCE_OF_AUTO_MISS = 20; // 1 in <x>
+            const CHANCE_OF_AUTO_HIT = 5; // 1 in <x>
+
+            // FIXME: reduce code duplication in fight() vs here
+            const is_stab = !bastard.isAwareOfAttack(self.coord);
+            const auto_miss = rng.onein(CHANCE_OF_AUTO_MISS);
+            const auto_hit = is_stab or rng.onein(CHANCE_OF_AUTO_HIT);
+
+            const miss = if (auto_miss)
+                true
+            else if (auto_hit)
+                false
+            else
+                (rng.rangeClumping(usize, 1, 10, 2) * self.accuracy()) <
+                    (rng.rangeClumping(usize, 1, 10, 2) * bastard.dexterity);
+
+            if (!miss) {
+                const projectile = launcher.projectile;
+                const defender_armor = bastard.inventory.armor orelse &items.NoneArmor;
+                const max_damage = projectile.damages.resultOf(&defender_armor.resists).sum();
+
+                var damage = rng.rangeClumping(usize, max_damage / 2, max_damage, 2);
+                bastard.takeDamage(.{ .amount = @intToFloat(f64, damage) });
+            }
+        }
+
+        return true;
+    }
+
+    pub fn throwItem(self: *Mob, item: *Item, at: Coord) bool {
+        switch (item.*) {
+            .Potion => {},
+            .Weapon => @panic("W/A TODO"),
+            else => return false,
+        }
+
+        const trajectory = self.coord.drawLine(at, state.mapgeometry);
+        var landed: ?Coord = null;
+        var energy: usize = self.strength;
+
+        for (trajectory.constSlice()) |coord| {
+            if (energy == 0 or
+                (!coord.eq(self.coord) and
+                !state.is_walkable(coord, .{ .right_now = true })))
+            {
+                landed = coord;
+                break;
+            }
+            energy -= 1;
+        }
+        if (landed == null) landed = at;
 
         switch (item.*) {
             .Weapon => |_| @panic("W/A TODO"),
-            .Projectile => |projectile| {
-                if (state.dungeon.at(landed.?).mob) |bastard| {
-                    const CHANCE_OF_AUTO_MISS = 20; // 1 in <x>
-                    const CHANCE_OF_AUTO_HIT = 5; // 1 in <x>
-
-                    // FIXME: reduce code duplication in fight() vs here
-                    const is_stab = !bastard.isAwareOfAttack(self.coord);
-                    const auto_miss = rng.onein(CHANCE_OF_AUTO_MISS);
-                    const auto_hit = is_stab or rng.onein(CHANCE_OF_AUTO_HIT);
-
-                    const miss = if (auto_miss)
-                        true
-                    else if (auto_hit)
-                        false
-                    else
-                        (rng.rangeClumping(usize, 1, 10, 2) * self.accuracy()) <
-                            (rng.rangeClumping(usize, 1, 10, 2) * bastard.dexterity);
-
-                    if (!miss) {
-                        const defender_armor = bastard.inventory.armor orelse &items.NoneArmor;
-                        const max_damage = projectile.damages.resultOf(&defender_armor.resists).sum();
-
-                        var damage = rng.rangeClumping(usize, max_damage / 2, max_damage, 2);
-
-                        if (is_stab) {
-                            const bonus = DamageType.stabBonus(projectile.main_damage);
-                            damage = utils.percentOf(usize, damage, bonus);
-                        }
-
-                        bastard.takeDamage(.{ .amount = @intToFloat(f64, damage) });
-                        was_miss = false;
-                    }
-                }
-            },
             .Potion => |potion| {
                 if (state.dungeon.at(landed.?).mob) |bastard| {
                     bastard.quaffPotion(potion);
@@ -941,18 +928,8 @@ pub const Mob = struct { // {{{
 
                 // TODO: have cases where thrower misses and potion lands (unused?)
                 // in adjacent square
-                was_miss = false;
             },
             else => unreachable,
-        }
-
-        if (was_miss) {
-            var membuf: [8192]u8 = undefined;
-            var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-
-            if (state.nextAvailableSpaceForItem(landed.?, &fba.allocator)) |dst| {
-                state.dungeon.itemsAt(dst).append(item.*) catch unreachable;
-            }
         }
 
         return true;
@@ -1688,14 +1665,8 @@ pub const Armor = struct {
 };
 
 pub const Projectile = struct {
-    id: []const u8,
-    name: []const u8,
     main_damage: DamageType,
     damages: Damages,
-    count: usize = 1,
-    type: ProjectileType,
-
-    pub const ProjectileType = enum { Bolt };
 };
 
 pub const Weapon = struct {
@@ -1708,7 +1679,7 @@ pub const Weapon = struct {
     launcher: ?Launcher = null,
 
     pub const Launcher = struct {
-        need: Projectile.ProjectileType,
+        projectile: Projectile,
     };
 };
 
@@ -1764,7 +1735,6 @@ pub const Item = union(enum) {
     Potion: *Potion,
     Armor: *Armor,
     Weapon: *Weapon,
-    Projectile: *Projectile,
 
     pub fn shortName(self: *const Item) !StackBuffer(u8, 128) {
         var buf = StackBuffer(u8, 128).init(&([_]u8{0} ** 128));
@@ -1775,7 +1745,6 @@ pub const Item = union(enum) {
             .Potion => |p| try fmt.format(fbs.writer(), "potion of {}", .{p.name}),
             .Armor => |a| try fmt.format(fbs.writer(), "{} armor", .{a.name}),
             .Weapon => |w| try fmt.format(fbs.writer(), "{}", .{w.name}),
-            .Projectile => |p| try fmt.format(fbs.writer(), "[{}] {}", .{ p.count, p.name }),
         }
         buf.resizeTo(@intCast(usize, fbs.getPos() catch unreachable));
         return buf;
@@ -1853,10 +1822,6 @@ pub const Tile = struct {
                         },
                         .Armor => |_| {
                             cell.ch = '&'; // TODO: use U+1F6E1?
-                            cell.bg = color;
-                        },
-                        .Projectile => |_| {
-                            cell.ch = '≥';
                             cell.bg = color;
                         },
                         else => cell.ch = '?',

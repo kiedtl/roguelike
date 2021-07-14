@@ -43,7 +43,6 @@ pub var rings: RingList = undefined;
 pub var potions: PotionList = undefined;
 pub var armors: ArmorList = undefined;
 pub var weapons: WeaponList = undefined;
-pub var projectiles: ProjectileList = undefined;
 pub var machines: MachineList = undefined;
 pub var props: PropList = undefined;
 pub var containers: ContainerList = undefined;
@@ -128,7 +127,7 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
 
     if (dungeon.at(coord).surface) |surface| {
         switch (surface) {
-            .Container => |_| return false,
+            .Container => |_| return true,
             .Machine => |m| {
                 if (m.treat_as_walkable_by) |a|
                     if (opts.mob) |mob|
