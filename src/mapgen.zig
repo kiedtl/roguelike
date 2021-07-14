@@ -135,7 +135,7 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     state.player.inventory.r_rings[0] = echoring;
 }
 
-fn choosePrefab(level: usize, prefabs: *PrefabArrayList) ?Prefab {
+fn choosePrefab(level: usize, prefabs: *PrefabArrayList) ?*Prefab {
     var i: usize = 512;
     while (i > 0) : (i -= 1) {
         // Don't use rng.chooseUnweighted, as we need a pointer to manage the
@@ -152,10 +152,64 @@ fn choosePrefab(level: usize, prefabs: *PrefabArrayList) ?Prefab {
             if (p.used[level] >= restriction)
                 continue; // Prefab was used too many times.
 
-        return p.*;
+        return p;
     }
 
     return null;
+}
+
+fn attachRoom(parent: *const Room, d: Direction, width: usize, height: usize, distance: usize, fab: ?*const Prefab) ?Room {
+    // "Preferred" X/Y coordinates to start the child at. preferred_x is only
+    // valid if d == .North or d == .South, and preferred_y is only valid if
+    // d == .West or d == .East.
+    var preferred_x = parent.start.x + (parent.width / 2);
+    var preferred_y = parent.start.y + (parent.height / 2);
+
+    // Note: the coordinate returned by Prefab.connectorFor() is relative.
+
+    if (parent.prefab != null and fab != null) {
+        const parent_con = parent.prefab.?.connectorFor(d) orelse return null;
+        const child_con = fab.?.connectorFor(d.opposite()) orelse return null;
+        const parent_con_abs = Coord.new2(
+            parent.start.z,
+            parent.start.x + parent_con.x,
+            parent.start.y + parent_con.y,
+        );
+        preferred_x = utils.saturating_sub(parent_con_abs.x, child_con.x);
+        preferred_y = utils.saturating_sub(parent_con_abs.y, child_con.y);
+    } else if (parent.prefab) |pafab| {
+        const con = pafab.connectorFor(d) orelse return null;
+        preferred_x = parent.start.x + con.x;
+        preferred_y = parent.start.y + con.y;
+    } else if (fab) |chfab| {
+        const con = chfab.connectorFor(d.opposite()) orelse return null;
+        preferred_x = utils.saturating_sub(parent.start.x, con.x);
+        preferred_y = utils.saturating_sub(parent.start.y, con.y);
+    }
+
+    return switch (d) {
+        .North => Room{
+            .start = Coord.new2(parent.start.z, preferred_x, utils.saturating_sub(parent.start.y, height + distance)),
+            .height = height,
+            .width = width,
+        },
+        .East => Room{
+            .start = Coord.new2(parent.start.z, parent.end().x + distance, preferred_y),
+            .height = height,
+            .width = width,
+        },
+        .South => Room{
+            .start = Coord.new2(parent.start.z, preferred_x, parent.end().y + distance),
+            .height = height,
+            .width = width,
+        },
+        .West => Room{
+            .start = Coord.new2(parent.start.z, utils.saturating_sub(parent.start.x, width + distance), preferred_y),
+            .width = width,
+            .height = height,
+        },
+        else => @panic("unimplemented"),
+    };
 }
 
 fn findIntersectingRoom(
@@ -367,14 +421,14 @@ fn _createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?
     var child_connector_coord: ?Coord = null;
 
     if (parent.prefab != null or child.prefab != null) {
-        if (parent.prefab) |*f| {
+        if (parent.prefab) |f| {
             const con = f.connectorFor(side) orelse return null;
             corridor_coord.x = parent.start.x + con.x;
             corridor_coord.y = parent.start.y + con.y;
             parent_connector_coord = corridor_coord;
             f.useConnector(con) catch unreachable;
         }
-        if (child.prefab) |*f| {
+        if (child.prefab) |f| {
             const con = f.connectorFor(side.opposite()) orelse return null;
             corridor_coord.x = child.start.x + con.x;
             corridor_coord.y = child.start.y + con.y;
@@ -439,7 +493,7 @@ fn _place_rooms(
     var _parent = rng.chooseUnweighted(Room, rooms.items);
     const parent = &_parent;
 
-    var fab: ?Prefab = null;
+    var fab: ?*Prefab = null;
     var distance = rng.choose(
         usize,
         &Configs[level].distances[0],
@@ -452,7 +506,7 @@ fn _place_rooms(
         if (distance == 0) distance += 1;
 
         fab = choosePrefab(level, n_fabs) orelse return;
-        child = parent.attach(side, fab.?.width, fab.?.height, distance, &fab.?) orelse return;
+        child = attachRoom(parent, side, fab.?.width, fab.?.height, distance, fab) orelse return;
         child.prefab = fab;
 
         if (roomIntersects(rooms, &child, parent, null, false) or child.overflowsLimit(&LIMIT))
@@ -462,7 +516,7 @@ fn _place_rooms(
 
         var child_w = rng.rangeClumping(usize, Configs[level].min_room_width, Configs[level].max_room_width, 2);
         var child_h = rng.rangeClumping(usize, Configs[level].min_room_height, Configs[level].max_room_height, 2);
-        child = parent.attach(side, child_w, child_h, distance, null) orelse return;
+        child = attachRoom(parent, side, child_w, child_h, distance, null) orelse return;
 
         while (roomIntersects(rooms, &child, parent, null, true) or child.overflowsLimit(&LIMIT)) {
             if (child_w < Configs[level].min_room_width or
@@ -471,7 +525,7 @@ fn _place_rooms(
 
             child_w -= 1;
             child_h -= 1;
-            child = parent.attach(side, child_w, child_h, distance, null).?;
+            child = attachRoom(parent, side, child_w, child_h, distance, null).?;
         }
     }
 
@@ -499,7 +553,7 @@ fn _place_rooms(
     // Only now are we actually sure that we'd use the room
 
     if (child.prefab) |_| {
-        _excavate_prefab(&child, &fab.?, allocator, 0, 0);
+        _excavate_prefab(&child, fab.?, allocator, 0, 0);
     } else {
         _excavate_room(&child);
     }
@@ -516,7 +570,7 @@ fn _place_rooms(
                 const my = child.height - subroom.height;
                 const rx = rng.range(usize, 0, mx);
                 const ry = rng.range(usize, 0, my);
-                _excavate_prefab(&child, &subroom, allocator, rx, ry);
+                _excavate_prefab(&child, subroom, allocator, rx, ry);
             };
 }
 
@@ -555,7 +609,7 @@ pub fn placeRandomRooms(
 
         if (first == null) first = room;
         Prefab.incrementUsedCounter(fab.name.constSlice(), level, n_fabs);
-        _excavate_prefab(&room, &fab, allocator, 0, 0);
+        _excavate_prefab(&room, fab, allocator, 0, 0);
         rooms.append(room) catch unreachable;
         reqctr += 1;
     }
@@ -685,6 +739,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
                 if (patrol_warden) |warden| {
                     warden.squad_members.append(guard) catch unreachable;
                 } else {
+                    guard.strength += 2;
                     patrol_warden = guard;
                 }
 
@@ -954,9 +1009,9 @@ pub const Prefab = struct {
     height: usize = 0,
     width: usize = 0,
     content: [40][40]FabTile = undefined,
-    connections: [80]?Connection = undefined,
-    features: [255]?Feature = [_]?Feature{null} ** 255,
-    mobs: [40]?FeatureMob = [_]?FeatureMob{null} ** 40,
+    connections: [40]?Connection = undefined,
+    features: [128]?Feature = [_]?Feature{null} ** 128,
+    mobs: [32]?FeatureMob = [_]?FeatureMob{null} ** 32,
 
     used: [LEVELS]usize = [_]usize{0} ** LEVELS,
 
@@ -1164,8 +1219,8 @@ pub const Prefab = struct {
         return f;
     }
 
-    pub fn findPrefabByName(name: []const u8, fabs: *const PrefabArrayList) ?Prefab {
-        for (fabs.items) |f| if (mem.eql(u8, name, f.name.constSlice())) return f;
+    pub fn findPrefabByName(name: []const u8, fabs: *const PrefabArrayList) ?*Prefab {
+        for (fabs.items) |*f| if (mem.eql(u8, name, f.name.constSlice())) return f;
         return null;
     }
 
@@ -1279,7 +1334,7 @@ pub const Configs = [LEVELS]LevelConfig{
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{}),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-            .{ 0, 9, 0, 0, 0, 0, 0, 0, 0, 0 },
+            .{ 0, 9, 0, 0, 0, 0, 0, 0, 0, 5 },
         },
         .prefab_chance = 2, // no prefabs for REC
         .max_rooms = 2048,

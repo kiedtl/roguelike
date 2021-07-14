@@ -366,7 +366,7 @@ pub const AnnotatedCoord = struct { coord: Coord, value: usize };
 pub const Room = struct {
     type: RoomType = .Room,
 
-    prefab: ?mapgen.Prefab = null,
+    prefab: ?*mapgen.Prefab = null,
     start: Coord,
     width: usize,
     height: usize,
@@ -400,60 +400,6 @@ pub const Room = struct {
         const x = rng.range(usize, self.start.x, self.end().x - 1);
         const y = rng.range(usize, self.start.y, self.end().y - 1);
         return Coord.new2(self.start.z, x, y);
-    }
-
-    pub fn attach(self: *const Room, d: Direction, width: usize, height: usize, distance: usize, fab: ?*const mapgen.Prefab) ?Room {
-        // "Preferred" X/Y coordinates to start the child at. preferred_x is only
-        // valid if d == .North or d == .South, and preferred_y is only valid if
-        // d == .West or d == .East.
-        var preferred_x = self.start.x + (self.width / 2);
-        var preferred_y = self.start.y + (self.height / 2);
-
-        // Note: the coordinate returned by Prefab.connectorFor() is relative.
-
-        if (self.prefab != null and fab != null) {
-            const parent_con = self.prefab.?.connectorFor(d) orelse return null;
-            const child_con = fab.?.connectorFor(d.opposite()) orelse return null;
-            const parent_con_abs = Coord.new2(
-                self.start.z,
-                self.start.x + parent_con.x,
-                self.start.y + parent_con.y,
-            );
-            preferred_x = utils.saturating_sub(parent_con_abs.x, child_con.x);
-            preferred_y = utils.saturating_sub(parent_con_abs.y, child_con.y);
-        } else if (self.prefab) |pafab| {
-            const con = pafab.connectorFor(d) orelse return null;
-            preferred_x = self.start.x + con.x;
-            preferred_y = self.start.y + con.y;
-        } else if (fab) |chfab| {
-            const con = chfab.connectorFor(d.opposite()) orelse return null;
-            preferred_x = utils.saturating_sub(self.start.x, con.x);
-            preferred_y = utils.saturating_sub(self.start.y, con.y);
-        }
-
-        return switch (d) {
-            .North => Room{
-                .start = Coord.new2(self.start.z, preferred_x, utils.saturating_sub(self.start.y, height + distance)),
-                .height = height,
-                .width = width,
-            },
-            .East => Room{
-                .start = Coord.new2(self.start.z, self.end().x + distance, preferred_y),
-                .height = height,
-                .width = width,
-            },
-            .South => Room{
-                .start = Coord.new2(self.start.z, preferred_x, self.end().y + distance),
-                .height = height,
-                .width = width,
-            },
-            .West => Room{
-                .start = Coord.new2(self.start.z, utils.saturating_sub(self.start.x, width + distance), preferred_y),
-                .width = width,
-                .height = height,
-            },
-            else => @panic("unimplemented"),
-        };
     }
 };
 
