@@ -53,6 +53,7 @@ pub const WeaponList = LinkedList(Weapon);
 pub const ProjectileList = LinkedList(Projectile);
 pub const MachineList = LinkedList(Machine);
 pub const PropList = LinkedList(Prop);
+pub const ContainerList = LinkedList(Container);
 
 pub const Direction = enum { // {{{
     North,
@@ -853,42 +854,6 @@ pub const Mob = struct { // {{{
         }
     }
 
-    pub fn grabItem(self: *Mob) bool {
-        if (state.dungeon.itemsAt(self.coord).last()) |item| {
-            switch (item) {
-                .Projectile => |projectile| {
-                    var found: ?usize = null;
-                    for (self.inventory.pack.constSlice()) |entry, i| switch (entry) {
-                        .Projectile => |stack| if (stack.type == projectile.type and mem.eql(u8, stack.id, projectile.id)) {
-                            found = i;
-                        },
-                        else => {},
-                    };
-
-                    if (found) |index| {
-                        self.inventory.pack.slice()[index].Projectile.count += 1;
-                    } else {
-                        self.inventory.pack.append(item) catch |e| switch (e) {
-                            error.NoSpaceLeft => return false,
-                        };
-                    }
-                },
-                else => {
-                    self.inventory.pack.append(item) catch |e| switch (e) {
-                        error.NoSpaceLeft => return false,
-                    };
-                },
-            }
-
-            _ = state.dungeon.itemsAt(self.coord).pop() catch unreachable;
-
-            self.declareAction(.Grab);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     pub fn quaffPotion(self: *Mob, potion: *Potion) void {
         // TODO: make the duration of potion status effect random (clumping, ofc)
         switch (potion.type) {
@@ -1586,8 +1551,22 @@ pub const Prop = struct {
     coord: Coord = Coord.new(0, 0),
 };
 
-pub const SurfaceItemTag = enum { Machine, Prop, Sob };
-pub const SurfaceItem = union(SurfaceItemTag) { Machine: *Machine, Prop: *Prop, Sob: *Sob };
+pub const Container = struct {
+    name: []const u8,
+    tile: u21,
+    capacity: usize,
+    items: ItemBuffer = ItemBuffer.init(null),
+
+    pub const ItemBuffer = StackBuffer(Item, 10);
+};
+
+pub const SurfaceItemTag = enum { Machine, Prop, Sob, Container };
+pub const SurfaceItem = union(SurfaceItemTag) {
+    Machine: *Machine,
+    Prop: *Prop,
+    Sob: *Sob,
+    Container: *Container,
+};
 
 // Each weapon and armor has a specific amount of maximum damage it can create
 // or prevent. That damage comes in several different types:
@@ -1779,8 +1758,6 @@ pub const Ring = struct {
     }
 };
 
-// TODO: make corpse a surfaceitem? (if a mob dies over a surface item just dump it
-// on a nearby tile)
 pub const Item = union(enum) {
     Corpse: *Mob,
     Ring: *Ring,
@@ -1889,6 +1866,7 @@ pub const Tile = struct {
                     cell.bg = color;
 
                     const ch = switch (surfaceitem) {
+                        .Container => |c| c.tile,
                         .Machine => |m| m.tile(),
                         .Prop => |p| prop: {
                             if (p.bg) |prop_bg| cell.bg = prop_bg;

@@ -1,3 +1,4 @@
+// TODO: rename this file to surfaces.zig
 // TODO: add state to machines
 // STYLE: remove pub marker from power funcs
 
@@ -41,6 +42,12 @@ pub const MACHINES = [_]Machine{
     PoisonGasTrap,
     ConfusionGasTrap,
     AlarmTrap,
+};
+
+pub const Chest = Container{
+    .name = "chest",
+    .tile = 'x',
+    .capacity = 14,
 };
 
 pub const WorkstationProp = Prop{

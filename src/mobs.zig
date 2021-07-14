@@ -378,3 +378,9 @@ pub const MOBS = [_]MobTemplate{
     CrystalStatueTemplate,
     CleanerTemplate,
 };
+
+pub const STATUES = [_]MobTemplate{
+    KyaniteStatueTemplate,
+    NebroStatueTemplate,
+    CrystalStatueTemplate,
+};

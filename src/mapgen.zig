@@ -85,6 +85,13 @@ fn _place_prop(coord: Coord, prop_template: *const Prop) *Prop {
     return state.props.lastPtr().?;
 }
 
+fn placeContainer(coord: Coord, template: *const Container) void {
+    var container = template.*;
+    state.containers.append(container) catch unreachable;
+    const ptr = state.containers.lastPtr().?;
+    state.dungeon.at(coord).surface = SurfaceItem{ .Container = ptr };
+}
+
 fn _place_machine(coord: Coord, machine_template: *const Machine) void {
     var machine = machine_template.*;
     machine.coord = coord;
@@ -736,33 +743,50 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
             continue;
         }
 
+        const Range = struct { from: Coord, to: Coord };
         const room_end = room.end();
-        const coords = [_]Coord{
-            room.start,
-            Coord.new2(room.start.z, room_end.x - 1, room.start.y),
-            Coord.new2(room.start.z, room.start.x, room_end.y - 1),
-            Coord.new2(room.start.z, room_end.x - 1, room_end.y - 1),
+
+        const ranges = [_]Range{
+            .{ .from = Coord.new(room.start.x + 1, room.start.y), .to = Coord.new(room_end.x - 2, room.start.y) }, // top
+            .{ .from = Coord.new(room.start.x + 1, room_end.y - 1), .to = Coord.new(room_end.x - 2, room_end.y - 1) }, // bottom
+            .{ .from = Coord.new(room.start.x, room.start.y + 1), .to = Coord.new(room.start.x, room_end.y - 2) }, // left
+            .{ .from = Coord.new(room_end.x - 1, room.start.y + 1), .to = Coord.new(room_end.x - 1, room_end.y - 2) }, // left
         };
 
-        for (&coords) |coord| {
-            if (rng.onein(3)) {
-                if (!state.dungeon.hasMachine(coord) and
-                    state.dungeon.neighboringWalls(coord, false) == 2 and
-                    state.dungeon.at(coord).type == .Floor)
-                {
-                    _ = placeMob(alloc, &mobs.KyaniteStatueTemplate, coord, .{});
-                }
-            } else {
-                var brazier = machines.Brazier;
-                brazier.powered_luminescence -= rng.rangeClumping(usize, 0, 30, 2);
+        var lights: usize = 0;
+        var statues: usize = 0;
 
-                if (!state.dungeon.hasMachine(coord) and
-                    state.dungeon.neighboringWalls(coord, false) == 2 and
-                    state.dungeon.neighboringMachines(coord) == 0 and
-                    state.dungeon.at(coord).type == .Floor)
-                {
-                    _place_machine(coord, &brazier);
-                }
+        var tries = rng.range(usize, 0, 100);
+        while (tries > 0) : (tries -= 1) {
+            const range = rng.chooseUnweighted(Range, &ranges);
+            const x = rng.rangeClumping(usize, range.from.x, range.to.x, 3);
+            const y = rng.rangeClumping(usize, range.from.y, range.to.y, 2);
+            const coord = Coord.new2(room.start.z, x, y);
+
+            if (!isTileAvailable(coord)) continue;
+
+            switch (rng.range(usize, 1, 2)) {
+                1 => {
+                    if (statues < 1 and state.dungeon.neighboringWalls(coord, true) == 3) {
+                        const statue = rng.chooseUnweighted(mobs.MobTemplate, &mobs.STATUES);
+                        _ = placeMob(alloc, &statue, coord, .{});
+                        statues += 1;
+                    }
+                },
+                2 => {
+                    if (lights < 3 and state.dungeon.neighboringWalls(coord, true) == 3) {
+                        var brazier = machines.Brazier;
+                        brazier.powered_luminescence -= rng.rangeClumping(usize, 0, 30, 2);
+                        _place_machine(coord, &brazier);
+                        lights += 1;
+                    }
+                },
+                3 => {
+                    var chest = machines.Chest;
+                    chest.capacity -= rng.rangeClumping(usize, 0, 3, 2);
+                    placeContainer(coord, &chest);
+                },
+                else => unreachable,
             }
         }
     }

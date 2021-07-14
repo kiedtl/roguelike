@@ -167,6 +167,71 @@ fn fireLauncher() bool {
     }
 }
 
+pub fn grabItem(self: *Mob) bool {
+    if (state.player.inventory.pack.isFull()) {
+        state.message(.MetaError, "Your pack is full.", .{});
+    }
+
+    if (state.dungeon.itemsAt(state.player.coord).len > 0) {
+        switch (state.dungeon.itemsAt(state.player.coord).data[0]) {
+            .Container => |container| {
+                if (container.items.len == 0) {
+                    state.message(.MetaError, "There's nothing in the {}.", .{container.name});
+                    return false;
+                } else {
+                    const index = display.chooseInventoryItem(
+                        "Take",
+                        state.player.inventory.pack.constSlice(),
+                    ) orelse return false;
+                    const item = container.items.orderedRemove(index) catch unreachable;
+                    state.player.inventory.pack.append(item) catch unreachable;
+
+                    // TODO: show message
+
+                    state.player.activities.append(.Grab);
+                    state.player.energy -= state.player.speed();
+                    return true;
+                }
+            },
+            else => {},
+        }
+    }
+
+    if (state.dungeon.itemsAt(self.coord).last()) |item| {
+        switch (item) {
+            .Projectile => |projectile| {
+                var found: ?usize = null;
+                for (self.inventory.pack.constSlice()) |entry, i| switch (entry) {
+                    .Projectile => |stack| if (stack.type == projectile.type and mem.eql(u8, stack.id, projectile.id)) {
+                        found = i;
+                    },
+                    else => {},
+                };
+
+                if (found) |index| {
+                    self.inventory.pack.slice()[index].Projectile.count += 1;
+                } else {
+                    self.inventory.pack.append(item) catch |e| switch (e) {
+                        error.NoSpaceLeft => return false,
+                    };
+                }
+            },
+            else => {
+                self.inventory.pack.append(item) catch |e| switch (e) {
+                    error.NoSpaceLeft => return false,
+                };
+            },
+        }
+
+        _ = state.dungeon.itemsAt(self.coord).pop() catch unreachable;
+
+        self.declareAction(.Grab);
+        return true;
+    } else {
+        return false;
+    }
+}
+
 // TODO: move this to state.zig...? There should probably be a separate file for
 // player-specific actions.
 fn rifleCorpse() bool {
@@ -307,12 +372,40 @@ fn useItem() bool {
 // TODO: move this to state.zig...? There should probably be a separate file for
 // player-specific actions.
 fn dropItem() bool {
+    if (state.dungeon.itemsAt(state.player.coord).len > 0) {
+        switch (state.dungeon.itemsAt(state.player.coord).data[0]) {
+            .Container => |container| {
+                if (container.items.len >= container.capacity) {
+                    state.message(.MetaError, "There's no place on the {} for that.", .{container.name});
+                    return false;
+                } else {
+                    const index = display.chooseInventoryItem(
+                        "Store",
+                        state.player.inventory.pack.constSlice(),
+                    ) orelse return false;
+                    const item = state.player.removeItem(index, true) catch unreachable;
+                    container.items.append(item) catch unreachable;
+
+                    // TODO: show message
+
+                    state.player.activities.append(.Drop);
+                    state.player.energy -= state.player.speed();
+                    return true;
+                }
+            },
+            else => {},
+        }
+    }
+
     if (state.dungeon.itemsAt(state.player.coord).isFull()) {
         // TODO: scoot item automatically to next available tile?
         state.message(.MetaError, "There's are already some items here.", .{});
         return false;
     } else {
-        const index = display.chooseInventoryItem("Drop") orelse return false;
+        const index = display.chooseInventoryItem(
+            "Drop",
+            state.player.inventory.pack.constSlice(),
+        ) orelse return false;
         const item = state.player.removeItem(index, true) catch unreachable;
         state.dungeon.itemsAt(state.player.coord).append(item) catch unreachable;
 

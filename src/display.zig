@@ -447,23 +447,22 @@ pub fn chooseCell() ?Coord {
     }
 }
 
-pub fn chooseInventoryItem(msg: []const u8) ?usize {
+pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
     termbox.tb_clear();
 
     const suffix = " which item?";
-    const inventory = state.player.inventory.pack.constSlice();
 
     const msglen = msg.len + suffix.len;
-    var y = @divFloor(termbox.tb_height(), 2) - @intCast(isize, inventory.len + 2);
+    var y = @divFloor(termbox.tb_height(), 2) - @intCast(isize, items.len + 2);
     const x = @divFloor(termbox.tb_width(), 2) - @intCast(isize, msglen / 2);
 
     _ = _draw_string(x, y, 0xffffff, 0, "{s}{s}", .{ msg, suffix }) catch unreachable;
     y += 1;
 
-    if (inventory.len == 0) {
-        y = _draw_string(x, y, 0xffffff, 0, "(Your pack is empty.)", .{}) catch unreachable;
+    if (items.len == 0) {
+        y = _draw_string(x, y, 0xffffff, 0, "(Nothing to choose.)", .{}) catch unreachable;
     } else {
-        for (inventory) |item, i| {
+        for (items) |item, i| {
             const dest = (item.shortName() catch unreachable).constSlice();
             y = _draw_string(x, y, 0xffffff, 0, "  {}) {}", .{ i, dest }) catch unreachable;
         }
@@ -488,7 +487,7 @@ pub fn chooseInventoryItem(msg: []const u8) ?usize {
                     ' ' => return null,
                     '0'...'9' => {
                         const c: usize = ev.ch - '0';
-                        if (c < inventory.len) {
+                        if (c < items.len) {
                             return c;
                         }
                     },
