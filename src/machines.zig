@@ -25,6 +25,9 @@ pub const STATUES = [_]Prop{
 pub const PROPS = [_]Prop{
     GoldStatue,
     RealgarStatue,
+    IronStatue,
+    SodaliteStatue,
+    HematiteStatue,
     WorkstationProp,
     SteelSupport_NSE2_Prop,
     SteelSupport_NSW2_Prop,
@@ -81,11 +84,11 @@ pub const Chest = Container{
     .capacity = 7,
 };
 
-pub const GoldStatue = Prop{ .id = "gold_statue", .name = "gold statue", .tile = '☺', .fg = 0xfff720 };
-pub const RealgarStatue = Prop{ .id = "realgar_statue", .name = "realgar statue", .tile = '☺', .fg = 0xff343f };
-pub const IronStatue = Prop{ .id = "iron_statue", .name = "iron statue", .tile = '☻', .fg = 0xcacad2 };
-pub const SodaliteStatue = Prop{ .id = "sodalite_statue", .name = "sodalite statue", .tile = '☺', .fg = 0xa4cfff };
-pub const HematiteStatue = Prop{ .id = "hematite_statue", .name = "hematite statue", .tile = '☺', .fg = 0xff7f70 };
+pub const GoldStatue = Prop{ .id = "gold_statue", .name = "gold statue", .tile = '☺', .fg = 0xfff720, .walkable = false };
+pub const RealgarStatue = Prop{ .id = "realgar_statue", .name = "realgar statue", .tile = '☺', .fg = 0xff343f, .walkable = false };
+pub const IronStatue = Prop{ .id = "iron_statue", .name = "iron statue", .tile = '☻', .fg = 0xcacad2, .walkable = false };
+pub const SodaliteStatue = Prop{ .id = "sodalite_statue", .name = "sodalite statue", .tile = '☺', .fg = 0xa4cfff, .walkable = false };
+pub const HematiteStatue = Prop{ .id = "hematite_statue", .name = "hematite statue", .tile = '☺', .fg = 0xff7f70, .walkable = false };
 
 pub const StairDstProp = Prop{
     .id = "stair_dst",
