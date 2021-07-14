@@ -134,8 +134,7 @@ pub const PlayerTemplate = MobTemplate{
 
         .strength = 19,
     },
-    .weapon = &items.CrossbowLauncher,
-    .backup_weapon = &items.DaggerWeapon,
+    .weapon = &items.DaggerWeapon,
     .armor = &items.LeatherArmor,
 };
 
