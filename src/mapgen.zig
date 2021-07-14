@@ -629,7 +629,8 @@ pub fn placeTraps(level: usize) void {
         var trap_coord: Coord = undefined;
         while (tries > 0) {
             trap_coord = room.randomCoord();
-            if (isTileAvailable(trap_coord)) break;
+            if (state.dungeon.at(trap_coord).type == .Wall or
+                isTileAvailable(trap_coord)) break;
             if (tries == 0) continue :room_iter;
             tries -= 1;
         }
