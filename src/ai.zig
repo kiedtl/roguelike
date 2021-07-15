@@ -9,11 +9,24 @@ const astar = @import("astar.zig");
 const rng = @import("rng.zig");
 usingnamespace @import("types.zig");
 
+// Find the nearest enemy.
 fn currentEnemy(me: *Mob) *EnemyRecord {
     assert(me.occupation.phase == .SawHostile or me.occupation.phase == .Flee);
     assert(me.enemies.items.len > 0);
 
-    return &me.enemies.items[me.enemies.items.len - 1];
+    var nearest: usize = 0;
+    var nearest_distance: usize = 10000;
+    var i: usize = 0;
+
+    while (i < me.enemies.items.len) : (i += 1) {
+        const distance = me.coord.distance(me.enemies.items[i].last_seen);
+        if (distance < nearest_distance) {
+            nearest = i;
+            nearest_distance = distance;
+        }
+    }
+
+    return &me.enemies.items[nearest];
 }
 
 fn _find_coord(coord: Coord, array: *CoordArrayList) usize {
