@@ -60,29 +60,10 @@ pub const CONTAINERS = [_]Container{
     Bin, Barrel, Cabinet, Chest,
 };
 
-pub const Bin = Container{
-    .name = "bin",
-    .tile = '╳',
-    .capacity = 14,
-};
-
-pub const Barrel = Container{
-    .name = "barrel",
-    .tile = 'ʊ',
-    .capacity = 7,
-};
-
-pub const Cabinet = Container{
-    .name = "cabinet",
-    .tile = 'π',
-    .capacity = 5,
-};
-
-pub const Chest = Container{
-    .name = "chest",
-    .tile = 'æ',
-    .capacity = 7,
-};
+pub const Bin = Container{ .name = "bin", .tile = '╳', .capacity = 14, .type = .Casual };
+pub const Barrel = Container{ .name = "barrel", .tile = 'ʊ', .capacity = 7, .type = .Eatables };
+pub const Cabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 5, .type = .Wearables };
+pub const Chest = Container{ .name = "chest", .tile = 'æ', .capacity = 7, .type = .Valuables };
 
 pub const GoldStatue = Prop{ .id = "gold_statue", .name = "gold statue", .tile = '☺', .fg = 0xfff720, .walkable = false };
 pub const RealgarStatue = Prop{ .id = "realgar_statue", .name = "realgar statue", .tile = '☺', .fg = 0xff343f, .walkable = false };

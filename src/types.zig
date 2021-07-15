@@ -1484,8 +1484,16 @@ pub const Container = struct {
     tile: u21,
     capacity: usize,
     items: ItemBuffer = ItemBuffer.init(null),
+    type: ContainerType,
 
     pub const ItemBuffer = StackBuffer(Item, 10);
+    pub const ContainerType = enum {
+        Eatables, // All food
+        Wearables, // Weapons, armor, clothing, thread, cloth
+        Valuables, // potions
+        Casual, // dice, deck of cards
+        Utility, // Depends on the level (for PRI: rope, chains, etc)
+    };
 };
 
 pub const SurfaceItemTag = enum { Machine, Prop, Sob, Container };
