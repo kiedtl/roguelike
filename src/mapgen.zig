@@ -855,26 +855,34 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
 pub fn placeRandomStairs(level: usize) void {
     if (level == 0) return;
 
+    const rooms = state.dungeon.rooms[level].items;
+
+    var room_i: usize = 0;
     var placed: usize = 0;
-    while (placed < 3) {
-        const room = rng.chooseUnweighted(Room, state.dungeon.rooms[level].items);
+
+    while (placed < 3 and room_i < rooms.len) : (room_i += 1) {
+        const room = &rooms[room_i];
 
         // Don't place stairs in narrow rooms where it's impossible to avoid.
         if (room.width == 1 or room.height == 1) continue;
 
-        const rand = room.randomCoord();
-        const current = Coord.new2(level, rand.x, rand.y);
-        const above = Coord.new2(level - 1, rand.x, rand.y);
+        var tries: usize = 5;
+        tries: while (tries > 0) : (tries -= 1) {
+            const rand = room.randomCoord();
+            const current = Coord.new2(level, rand.x, rand.y);
+            const above = Coord.new2(level - 1, rand.x, rand.y);
 
-        if (isTileAvailable(current) and
-            isTileAvailable(above) and
-            state.is_walkable(current, .{ .right_now = true }) and
-            state.is_walkable(above, .{ .right_now = true }))
-        {
-            _place_machine(current, &machines.StairUp);
-            _ = _place_prop(above, &machines.StairDstProp);
+            if (isTileAvailable(current) and
+                isTileAvailable(above) and
+                state.is_walkable(current, .{ .right_now = true }) and
+                state.is_walkable(above, .{ .right_now = true }))
+            {
+                _place_machine(current, &machines.StairUp);
+                _ = _place_prop(above, &machines.StairDstProp);
 
-            placed += 1;
+                placed += 1;
+                break :tries;
+            }
         }
     }
 }
