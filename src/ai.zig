@@ -304,11 +304,12 @@ pub fn goofingAroundWork(mob: *Mob, alloc: *mem.Allocator) void {
     assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.occupation.phase == .Work);
 
-    var to = mob.occupation.work_area.items[0];
+    const station = mob.occupation.work_area.items[0];
+    const dest = mob.occupation.target orelse mob.coord;
 
-    if (mob.coord.eq(to) or !state.is_walkable(to, .{ .right_now = true })) {
+    if (mob.coord.eq(dest) or !state.is_walkable(dest, .{ .right_now = true })) {
         // OK, reached our destination. Time to choose another one!
-        const room_i = switch (state.layout[mob.coord.z][mob.coord.y][mob.coord.x]) {
+        const room_i = switch (state.layout[mob.coord.z][station.y][station.x]) {
             .Unknown => return,
             .Room => |r| r,
         };
@@ -321,7 +322,7 @@ pub fn goofingAroundWork(mob: *Mob, alloc: *mem.Allocator) void {
             if (!state.is_walkable(point, .{ .right_now = true })) continue;
 
             if (mob.nextDirectionTo(point)) |_| {
-                mob.occupation.work_area.items[0] = point;
+                mob.occupation.target = point;
                 break;
             }
         }
@@ -335,7 +336,7 @@ pub fn goofingAroundWork(mob: *Mob, alloc: *mem.Allocator) void {
         return;
     }
 
-    mob.tryMoveTo(to);
+    mob.tryMoveTo(dest);
 }
 
 // - Move towards hostile, bapping it if we can.
