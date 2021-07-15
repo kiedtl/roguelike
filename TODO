@@ -25,6 +25,7 @@ Levels
 - Mining
 	- Caves, brogue-style.
 	- Rooms filled with pickaxes, boulders, and carts.
+	- Vampires.
 - Smithing
 	- Large open area.
 	- Structures plopped all over the place.
@@ -150,6 +151,8 @@ NN	o	creeping death
 NN	o	grue
 			- Like stalker, but dies when coming into contact with light.
 NN	o	vampire
+			- Becomes easier to hit when in contact with light.
+			- Regens slower when in contact with light.
 
 Movement patterns
 -----------------
@@ -230,8 +233,6 @@ forge
 	- Stuff some metal on one end, and weapons will appear on the other.
 book copy machine
 	- Makes a book two.
-memory condenser
-	- "Condenses" player's memory into a (map) book.
 food ration maker
 	- Stuff fungi, lichen, and cadavers (I know, gross) next to it and rations
 	  will appear on the other side.
@@ -394,7 +395,7 @@ Occupations
 	Purpose: hide in cubbyhole in corridor or room, guarding.
 	Poorly armed, normal speed.
 	Attempts to hold intruder in stasis with nets and shooting webs,
-	  while making a big racket.
+	  then closes in to slice attacker.
 - Executioner
 	Purpose: -
 	No armor.
@@ -462,6 +463,8 @@ Posters
 - The Necromancer is watching you.
 - The Necromancer can see you.
 - The Necromancer knows your thoughts.
+- WANTED: <player>, human, escaped prisoner.
+- WANTED: <previous player>, human, escaped prisoner.
 
 
 Unique mobs
@@ -478,8 +481,8 @@ Unique mobs
 
 Books
 -----
-"Melkor: The Life and Times of the King of Arda"
-"This was Melkor"
+// "Melkor: The Life and Times of the King of Arda"
+// "This was Melkor"
 "Meing Krampgh"
 	- "You learn that hill goblins are destined to rule the world."
 "On the Descent of Goblins"
@@ -563,7 +566,7 @@ Ring and movements:
 
 Lighting/FOV:
 =============
-- Allow for prefabs to "seed" a map
+x Allow for prefabs to "seed" a map
   (Needed to ensure that power stations can appear on map)
 x Refactor/cleanup FOV helper methods:
   x Generalize raycasting function
@@ -571,11 +574,11 @@ x Refactor/cleanup FOV helper methods:
   x Use raycasting for everyone, remove shadowcasting
   x Use matrix to store mob's FOV, instead of array.
   x Update memoized sin/cos values
-- Ensure that raycasting method doesn't have any artifacts
+x Ensure that raycasting method doesn't have any artifacts
 x Set a filter on area outside FOV (sepia? grayscale?)
 x Show vision "energies" on FOV
 x Make lighting system affect stealth/FOV
-- Make raycasting use bounding box instead of slower trigonometry method?
+~ Make raycasting use bounding box instead of slower trigonometry method?
 
 Temperature
 ===========
@@ -591,13 +594,13 @@ Room features:
 ==============
 - Moar materials for walls
 - Add some lichen and fungi to rooms
-- Add statues and chests to corners of rooms
+x Add statues and chests to corners of rooms
 - Add posters
 - Add "palantirs"
-- Allow for prefabs to be rotated
-- Allow for prefabs to have alternate layouts
-- Allow for prefabs to be restricted to a map
-- Create corridors between parallel prefabs/rooms
+~ Allow for prefabs to be rotated
+x Allow for prefabs to have alternate layouts
+x Allow for prefabs to be restricted to a map
+x Create corridors between parallel prefabs/rooms
 x Make the "lamps" electric "braziers"
   - Place them in center of rooms.
   x Place them in corners of rooms.
@@ -609,7 +612,7 @@ x Make watchers shout loudly
 x Allow mobs to shuffle past each other in corridors
 - Add reproducing rats
 x Ensure that laborers don't leave to investigate noises
-- Ensure that the EnemyRecord counter is only decremented if the pursuer can
+x Ensure that the EnemyRecord counter is only decremented if the pursuer can
   see the last spot where the hostile was seen
 - Move off of tile if that tile has dangerous gas
 - Go into rage when encountering corpse of allied mob
@@ -636,14 +639,13 @@ x Use proper CP407 arrows for staircases
 Fixes
 =====
 - Add walls to edges of map after mapgen
-- Place stairs only in rooms
+x Place stairs only in rooms
 x Fix sound propagation
 
 Openworld:
 ==========
 - Add portals to Openworld from the main dungeon, with sentinels
 x Add goblins, rats, and other mobs to populate the Openworld
-- Add temperature system
 - Add Burning Brutes and Lava Flans to the Openworld
 - Add lichen, fungi, and lava to the Openworld
 
@@ -717,7 +719,7 @@ x Blood spattering?
 - Smell mechanics that allow, say, hellhounds and snakes to detect intruders
   even if they can't see them.
 - Ranged melee weapons, e.g., spear and whips
-- Add braziers that are built into the walls (aka torches), and use that
+x Add braziers that are built into the walls (aka torches), and use that
   instead for corridors
 - Some kind of squad-forming fast-moving swarming mob, like killer bees (DCSS)
   or swarmers (Cogmind 7DRL)
@@ -727,7 +729,7 @@ Optimizations
 - Use @mulAdd where possible (FOV, A*, Dijkstra, light/atmosphere/sound systems)
 - Use @setCold(true) where possible (see above for places to look)
 - Use SIMD where possible
-- Use a matrix to mark nodes as closed (instead of a heap-allocated list) for
+x Use a matrix to mark nodes as closed (instead of a heap-allocated list) for
   Dijkstra.
 
 Code cleanups
