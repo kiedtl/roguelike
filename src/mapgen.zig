@@ -104,6 +104,7 @@ fn _place_prop(coord: Coord, prop_template: *const Prop) *Prop {
 
 fn placeContainer(coord: Coord, template: *const Container) void {
     var container = template.*;
+    container.coord = coord;
     state.containers.append(container) catch unreachable;
     const ptr = state.containers.lastPtr().?;
     state.dungeon.at(coord).surface = SurfaceItem{ .Container = ptr };
@@ -642,30 +643,25 @@ pub fn placeRandomRooms(
 }
 
 pub fn placeItems(level: usize) void {
-    for (state.dungeon.rooms[level].items) |room| {
-        if (room.prefab) |rfb| if (rfb.noitems) continue;
-        if ((room.height * room.width) < 20) continue;
+    var containers = state.containers.iterator();
+    while (containers.nextPtr()) |container| {
+        if (container.coord.z != level) continue;
 
-        if (rng.onein(3)) {
-            var place = rng.range(usize, 1, 3);
-            while (place > 0) {
-                const coord = room.randomCoord();
-                if (!isTileAvailable(coord))
-                    continue;
+        // How much should we fill the container?
+        const fill = rng.rangeClumping(usize, 0, container.capacity, 2);
 
-                switch (rng.range(usize, 0, 0)) {
-                    0 => {
-                        const potion = rng.chooseUnweighted(Potion, &items.POTIONS);
-                        state.potions.append(potion) catch unreachable;
-                        state.dungeon.itemsAt(coord).append(
-                            Item{ .Potion = state.potions.lastPtr().? },
-                        ) catch unreachable;
-                    },
-                    else => unreachable,
+        switch (container.type) {
+            .Valuables => {
+                var i: usize = 0;
+                while (i < fill) : (i += 1) {
+                    const potion = rng.chooseUnweighted(Potion, &items.POTIONS);
+                    state.potions.append(potion) catch unreachable;
+                    container.items.append(
+                        Item{ .Potion = state.potions.lastPtr().? },
+                    ) catch unreachable;
                 }
-
-                place -= 1;
-            }
+            },
+            else => {},
         }
     }
 }

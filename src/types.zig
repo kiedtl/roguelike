@@ -1485,8 +1485,9 @@ pub const Container = struct {
     capacity: usize,
     items: ItemBuffer = ItemBuffer.init(null),
     type: ContainerType,
+    coord: Coord = undefined,
 
-    pub const ItemBuffer = StackBuffer(Item, 10);
+    pub const ItemBuffer = StackBuffer(Item, 21);
     pub const ContainerType = enum {
         Eatables, // All food
         Wearables, // Weapons, armor, clothing, thread, cloth
