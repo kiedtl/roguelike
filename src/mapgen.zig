@@ -149,9 +149,8 @@ fn choosePrefab(level: usize, prefabs: *PrefabArrayList) ?*Prefab {
         if (!mem.eql(u8, p.name.constSlice()[0..3], Configs[level].identifier))
             continue; // Prefab isn't for this level.
 
-        if (p.restriction) |restriction|
-            if (p.used[level] >= restriction)
-                continue; // Prefab was used too many times.
+        if (p.used[level] >= p.restriction)
+            continue; // Prefab was used too many times.
 
         return p;
     }
@@ -1001,7 +1000,7 @@ pub fn populateCaves(avoid: *const [HEIGHT][WIDTH]bool, level: usize, alloc: *me
 pub const Prefab = struct {
     subroom: bool = false,
     invisible: bool = false,
-    restriction: ?usize = null,
+    restriction: usize = 1,
     noitems: bool = false,
     noguards: bool = false,
     nolights: bool = false,
