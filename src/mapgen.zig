@@ -1361,12 +1361,12 @@ pub const Configs = [LEVELS]LevelConfig{
     },
     .{
         .identifier = "REC",
-        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{}),
+        .prefabs = LevelConfig.RPBuf.init(null),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
             .{ 0, 9, 0, 0, 0, 0, 0, 0, 0, 5 },
         },
-        .prefab_chance = 2, // no prefabs for REC
+        .prefab_chance = 100, // No prefabs for REC
         .max_rooms = 2048,
         .min_room_width = 8,
         .min_room_height = 5,
@@ -1375,15 +1375,17 @@ pub const Configs = [LEVELS]LevelConfig{
     },
     .{
         .identifier = "LAB",
-        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
-            "LAB_start",
-        }),
+        .prefabs = LevelConfig.RPBuf.init(null),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-            .{ 0, 7, 6, 5, 2, 2, 1, 0, 0, 0 },
+            .{ 9, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         },
-        .prefab_chance = 1,
+        .prefab_chance = 100, // No prefabs for LAB
         .max_rooms = 2048,
+        .min_room_width = 8,
+        .min_room_height = 6,
+        .max_room_width = 30,
+        .max_room_height = 20,
     },
     .{
         .identifier = "PRI",
