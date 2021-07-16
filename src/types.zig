@@ -524,6 +524,27 @@ pub const Status = enum {
     // Doesn't have a power field.
     Confusion,
 
+    // Makes mob fast or slow.
+    //
+    // Doesn't have a power field.
+    Fast,
+    Slow,
+
+    // Increases a mob's regeneration rate (see Mob.tick_hp).
+    //
+    // Doesn't have a power field.
+    Recuperate,
+
+    // Prevents regen and gives occasional damage.
+    //
+    // Doesn't have a power field (but probably should).
+    Poison,
+
+    // Raises strength and dexterity and increases regeneration.
+    //
+    // Doesn't have a power field.
+    Invigorate,
+
     pub const MAX_DURATION: usize = 20;
 
     pub fn string(self: Status) []const u8 {
@@ -532,6 +553,11 @@ pub const Status = enum {
             .Echolocation => "echolocation",
             .Corona => "corona",
             .Confusion => "confusion",
+            .Fast => "fast",
+            .Slow => "slow",
+            .Recuperate => "recuperate",
+            .Poison => "poison",
+            .Invigorate => "invigorate",
         };
     }
 
@@ -673,29 +699,29 @@ pub const Mob = struct { // {{{
 
     // Immutable instrinsic attributes.
     //
-    // willpower:     Controls the ability to resist spells
-    // dexterity:     Controls the likelihood of a mob dodging an attack.
-    // hearing:       The minimum intensity of a noise source before it can be
-    //                heard by a mob. The lower the value, the better.
-    // vision:        Maximum radius of the mob's field of vision.
-    // night_vision:  If the light in a tile is below this amount, the mob cannot
-    //                see that tile, even if it's in the FOV. The lower, the
-    //                better.
-    // deg360_vision: Mob's FOV ignores the facing mechanic and can see in all
-    //                directions (e.g., player, statues)
-    // no_show_fov:   If false, display code will not show mob's FOV.
-    // strength:      TODO: define!
-    // memory:        The maximum length of time for which a mob can remember
-    //                an enemy.
+    // willpower:      Controls the ability to resist and cast spells.
+    // base_dexterity: Controls the likelihood of a mob dodging an attack.
+    // base_strength:  TODO: define!
+    // hearing:        The minimum intensity of a noise source before it can be
+    //                 heard by a mob. The lower the value, the better.
+    // vision:         Maximum radius of the mob's field of vision.
+    // night_vision:   If the light in a tile is below this amount, the mob cannot
+    //                 see that tile, even if it's in the FOV. The lower, the
+    //                 better.
+    // deg360_vision:  Mob's FOV ignores the facing mechanic and can see in all
+    //                 directions (e.g., player, statues)
+    // no_show_fov:    If false, display code will not show mob's FOV.
+    // memory:         The maximum length of time for which a mob can remember
+    //                 an enemy.
     //
     willpower: usize, // Range: 0 < willpower < 10
-    dexterity: usize, // Range: 0 < dexterity < 100
+    base_strength: usize,
+    base_dexterity: usize, // Range: 0 < dexterity < 100
     vision: usize,
-    night_vision: usize,
+    night_vision: usize, // Range: 0 < night_vision < 100
     deg360_vision: bool = false,
     no_show_fov: bool = false,
     hearing: usize,
-    strength: usize,
     memory_duration: usize,
     base_speed: usize,
     max_HP: f64,
@@ -730,7 +756,21 @@ pub const Mob = struct { // {{{
     // TODO: regenerate health more if mob rested in last turn.
     pub fn tick_hp(self: *Mob) void {
         assert(!self.is_dead);
-        self.HP = math.clamp(self.HP + self.regen, 0, self.max_HP);
+
+        if (self.isUnderStatus(.Poison)) |_| {
+            if (rng.onein(3)) {
+                self.takeDamage(.{
+                    .amount = @intToFloat(f64, rng.rangeClumping(usize, 1, 3, 2)),
+                });
+            }
+            return;
+        }
+
+        var regen = self.regen;
+        if (self.isUnderStatus(.Invigorate)) |_| regen = regen * 150 / 100;
+        if (self.isUnderStatus(.Recuperate)) |_| regen = regen * 450 / 100;
+
+        self.HP = math.clamp(self.HP + regen, 0, self.max_HP);
     }
 
     // Check surrounding temperature/gas/water and drown, burn, freeze, or
@@ -794,7 +834,7 @@ pub const Mob = struct { // {{{
     pub fn launchProjectile(self: *Mob, launcher: *const Weapon.Launcher, at: Coord) bool {
         const trajectory = self.coord.drawLine(at, state.mapgeometry);
         var landed: ?Coord = null;
-        var energy: usize = self.strength * 2;
+        var energy: usize = self.strength() * 2;
 
         for (trajectory.constSlice()) |coord| {
             if (energy == 0 or
@@ -823,7 +863,7 @@ pub const Mob = struct { // {{{
                 false
             else
                 (rng.rangeClumping(usize, 1, 10, 2) * self.accuracy()) <
-                    (rng.rangeClumping(usize, 1, 10, 2) * bastard.dexterity);
+                    (rng.rangeClumping(usize, 1, 10, 2) * bastard.dexterity());
 
             if (!miss) {
                 const projectile = launcher.projectile;
@@ -847,7 +887,7 @@ pub const Mob = struct { // {{{
 
         const trajectory = self.coord.drawLine(at, state.mapgeometry);
         var landed: ?Coord = null;
-        var energy: usize = self.strength;
+        var energy: usize = self.strength();
 
         for (trajectory.constSlice()) |coord| {
             if (energy == 0 or
@@ -906,7 +946,7 @@ pub const Mob = struct { // {{{
         if (other.isUnderStatus(.Paralysis)) |se| {
             can = true;
         }
-        if (self.strength > other.strength) {
+        if (self.strength() > other.strength()) {
             can = true;
         }
         if (self.occupation.phase != .Work and other.occupation.phase == .Work) {
@@ -1029,11 +1069,11 @@ pub const Mob = struct { // {{{
         assert(!attacker.is_dead);
         assert(!recipient.is_dead);
 
-        assert(attacker.dexterity <= 100);
-        assert(recipient.dexterity <= 100);
+        assert(attacker.dexterity() <= 100);
+        assert(recipient.dexterity() <= 100);
 
-        assert(attacker.strength > 0);
-        assert(recipient.strength > 0);
+        assert(attacker.strength() > 0);
+        assert(recipient.strength() > 0);
 
         const CHANCE_OF_AUTO_MISS = 14; // 1 in <x>
         const CHANCE_OF_AUTO_HIT = 14; // 1 in <x>
@@ -1054,12 +1094,12 @@ pub const Mob = struct { // {{{
             false
         else
             (rng.rangeClumping(usize, 1, 10, 2) * attacker.accuracy()) <
-                (rng.rangeClumping(usize, 1, 10, 2) * recipient.dexterity);
+                (rng.rangeClumping(usize, 1, 10, 2) * recipient.dexterity());
 
         if (miss) return;
 
         const attacker_weapon = attacker.inventory.wielded orelse &items.UnarmedWeapon;
-        const attacker_extra_str = attacker.strength * 100 / attacker_weapon.required_strength;
+        const attacker_extra_str = attacker.strength() * 100 / attacker_weapon.required_strength;
         const attacker_extra_str_adj = math.clamp(attacker_extra_str, 0, 150);
         const recipient_armor = recipient.inventory.armor orelse &items.NoneArmor;
         const max_damage = attacker_weapon.damages.resultOf(&recipient_armor.resists).sum();
@@ -1257,9 +1297,8 @@ pub const Mob = struct { // {{{
         p_se.duration = duration orelse Status.MAX_DURATION;
     }
 
-    // TODO: take *const Mob
-    pub fn isUnderStatus(self: *Mob, status: Status) ?*StatusData {
-        const se = self.statuses.getPtr(status);
+    pub fn isUnderStatus(self: *const Mob, status: Status) ?*const StatusData {
+        const se = self.statuses.getPtrConst(status);
         return if ((se.started + se.duration) < state.ticks) null else se;
     }
 
@@ -1280,7 +1319,7 @@ pub const Mob = struct { // {{{
     // to "reward" the player for catching a hostile off guard, but allowing
     // enemies to stab a paralyzed player is too harsh of a punishment.
     //
-    pub fn isAwareOfAttack(self: *Mob, attacker: Coord) bool {
+    pub fn isAwareOfAttack(self: *const Mob, attacker: Coord) bool {
         if (self.coord.eq(state.player.coord))
             return true;
 
@@ -1368,13 +1407,27 @@ pub const Mob = struct { // {{{
 
     pub fn speed(self: *const Mob) isize {
         var bonus: usize = 100;
-        if (self.occupation.phase == .Flee) bonus += 10;
+        if (self.occupation.phase == .Flee) bonus -= 10;
+        if (self.isUnderStatus(.Fast)) |_| bonus = bonus * 90 / 100;
+        if (self.isUnderStatus(.Slow)) |_| bonus = bonus * 120 / 100;
 
         return @intCast(isize, self.base_speed * bonus / 100);
     }
 
     pub fn accuracy(self: *const Mob) usize {
-        return self.dexterity;
+        return self.dexterity();
+    }
+
+    pub inline fn strength(self: *const Mob) usize {
+        var str = self.base_strength;
+        if (self.isUnderStatus(.Invigorate)) |_| str = str * 180 / 100;
+        return str;
+    }
+
+    pub inline fn dexterity(self: *const Mob) usize {
+        var dex = self.base_dexterity;
+        if (self.isUnderStatus(.Invigorate)) |_| dex = dex * 150 / 100;
+        return dex;
     }
 
     pub fn isCreeping(self: *const Mob) bool {
@@ -1644,13 +1697,15 @@ pub const Weapon = struct {
 };
 
 pub const Potion = struct {
+    id: []const u8,
+
     // Potion of <name>
     name: []const u8,
 
     type: union(enum) {
         Status: Status,
         Gas: usize,
-        Custom: fn (dork: ?*Mob) void,
+        Custom: fn (?*Mob) void,
     },
 
     color: u32,

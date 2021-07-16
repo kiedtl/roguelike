@@ -290,6 +290,17 @@ fn _excavate_prefab(
                 .Feature => |feature_id| {
                     const feature = fab.features[feature_id].?;
                     switch (feature) {
+                        .Potion => |pid| {
+                            if (utils.findById(&items.POTIONS, pid)) |potion_i| {
+                                const potion_o = _createItem(Potion, items.POTIONS[potion_i]);
+                                state.dungeon.itemsAt(rc).append(Item{ .Potion = potion_o }) catch unreachable;
+                            } else {
+                                std.log.warn(
+                                    "{}: Couldn't load potion {}, skipping.",
+                                    .{ fab.name.constSlice(), utils.used(pid) },
+                                );
+                            }
+                        },
                         .Prop => |pid| {
                             const prop = utils.findById(&machines.PROPS, pid).?;
                             _ = _place_prop(rc, &machines.PROPS[prop]);
@@ -734,7 +745,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
                 if (patrol_warden) |warden| {
                     warden.squad_members.append(guard) catch unreachable;
                 } else {
-                    guard.strength += 2;
+                    guard.base_strength += 2;
                     patrol_warden = guard;
                 }
 
@@ -1033,6 +1044,7 @@ pub const Prefab = struct {
     pub const Feature = union(enum) {
         Machine: [32:0]u8,
         Prop: [32:0]u8,
+        Potion: [32:0]u8,
     };
 
     pub const Connection = struct {
@@ -1192,6 +1204,11 @@ pub const Prefab = struct {
                     if (feature_type.len != 1) return error.InvalidFeatureType;
 
                     switch (feature_type[0]) {
+                        'P' => {
+                            const id = words.next() orelse return error.MalformedFeatureDefinition;
+                            f.features[identifier] = Feature{ .Potion = [_:0]u8{0} ** 32 };
+                            mem.copy(u8, &f.features[identifier].?.Potion, id);
+                        },
                         'p' => {
                             const id = words.next() orelse return error.MalformedFeatureDefinition;
                             f.features[identifier] = Feature{ .Prop = [_:0]u8{0} ** 32 };

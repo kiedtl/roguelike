@@ -7,7 +7,7 @@ usingnamespace @import("types.zig");
 pub const Poison = Gas{
     .color = 0xa7e234,
     .dissipation_rate = 0.01,
-    .opacity = 0.19,
+    .opacity = 0.05,
     .trigger = triggerPoison,
     .id = 0,
 };
@@ -15,7 +15,7 @@ pub const Poison = Gas{
 pub const Paralysis = Gas{
     .color = 0xaaaaff,
     .dissipation_rate = 0.05,
-    .opacity = 0.15,
+    .opacity = 0.03,
     .trigger = triggerParalysis,
     .id = 1,
 };
@@ -37,7 +37,15 @@ pub const Confusion = Gas{
     .id = 3,
 };
 
-pub const Gases = [_]Gas{ Poison, Paralysis, SmokeGas, Confusion };
+pub const Slow = Gas{
+    .color = 0x8e77dd,
+    .dissipation_rate = 0.02,
+    .opacity = 0.0,
+    .trigger = triggerSlow,
+    .id = 4,
+};
+
+pub const Gases = [_]Gas{ Poison, Paralysis, SmokeGas, Confusion, Slow };
 pub const GAS_NUM: usize = Gases.len;
 
 // Ensure that each gas's ID matches the index that it appears as in Gases.
@@ -49,11 +57,8 @@ comptime {
 fn triggerNone(_: *Mob, __: f64) void {}
 
 fn triggerPoison(idiot: *Mob, quantity: f64) void {
-    idiot.takeDamage(.{ .amount = idiot.HP * 0.11 });
-
-    if (idiot.coord.eq(state.player.coord)) {
-        state.message(.Damage, "You choke on the poisonous gas.", .{});
-    }
+    // TODO: Make the duration a clumping random value, depending on quantity
+    idiot.addStatus(.Poison, 0, Status.MAX_DURATION);
 }
 
 fn triggerParalysis(idiot: *Mob, quantity: f64) void {
@@ -64,4 +69,9 @@ fn triggerParalysis(idiot: *Mob, quantity: f64) void {
 fn triggerConfusion(idiot: *Mob, quantity: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
     idiot.addStatus(.Confusion, 0, Status.MAX_DURATION);
+}
+
+fn triggerSlow(idiot: *Mob, quantity: f64) void {
+    // TODO: Make the duration a clumping random value, depending on quantity
+    idiot.addStatus(.Slow, 0, Status.MAX_DURATION);
 }

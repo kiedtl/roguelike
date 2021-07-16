@@ -33,14 +33,14 @@ pub const ExecutionerTemplate = MobTemplate{
         .night_vision = 30,
 
         .willpower = 3,
-        .dexterity = 18,
+        .base_dexterity = 18,
         .hearing = 7,
         .max_HP = 60,
         .memory_duration = 5,
         .base_speed = 100,
         .blood = .Blood,
 
-        .strength = 20,
+        .base_strength = 20,
     },
     .weapon = &items.ZinnagWeapon,
 };
@@ -63,14 +63,14 @@ pub const WatcherTemplate = MobTemplate{
         .night_vision = 15,
 
         .willpower = 3,
-        .dexterity = 17,
+        .base_dexterity = 17,
         .hearing = 5,
         .max_HP = 40,
         .memory_duration = 10,
         .base_speed = 60,
         .blood = .Blood,
 
-        .strength = 15, // weakling!
+        .base_strength = 15, // weakling!
     },
 };
 
@@ -92,14 +92,14 @@ pub const GuardTemplate = MobTemplate{
         .night_vision = 35,
 
         .willpower = 2,
-        .dexterity = 20,
+        .base_dexterity = 20,
         .hearing = 7,
         .max_HP = 60,
         .memory_duration = 3,
         .base_speed = 110,
         .blood = .Blood,
 
-        .strength = 20,
+        .base_strength = 20,
     },
     .weapon = &items.SpearWeapon,
     .armor = &items.HeavyChainmailArmor,
@@ -125,14 +125,14 @@ pub const PlayerTemplate = MobTemplate{
         .no_show_fov = true,
 
         .willpower = 6,
-        .dexterity = 21,
+        .base_dexterity = 21,
         .hearing = 5,
         .max_HP = 60,
         .memory_duration = 10,
         .base_speed = 80,
         .blood = .Blood,
 
-        .strength = 19,
+        .base_strength = 19,
     },
     .weapon = &items.DaggerWeapon,
     .armor = &items.LeatherArmor,
@@ -156,14 +156,14 @@ pub const InteractionLaborerTemplate = MobTemplate{
         .night_vision = 30,
 
         .willpower = 2,
-        .dexterity = 19,
+        .base_dexterity = 19,
         .hearing = 10,
         .max_HP = 60,
         .memory_duration = 5,
         .base_speed = 100,
         .blood = .Blood,
 
-        .strength = 10,
+        .base_strength = 10,
     },
 };
 
@@ -185,14 +185,14 @@ pub const GoblinTemplate = MobTemplate{
         .night_vision = 0,
 
         .willpower = 3,
-        .dexterity = 18,
+        .base_dexterity = 18,
         .hearing = 5,
         .max_HP = 70,
         .memory_duration = 8,
         .base_speed = 100,
         .blood = .Blood,
 
-        .strength = 18,
+        .base_strength = 18,
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
@@ -216,14 +216,14 @@ pub const CaveRatTemplate = MobTemplate{
         .night_vision = 0,
 
         .willpower = 1,
-        .dexterity = 10,
+        .base_dexterity = 10,
         .hearing = 3,
         .max_HP = 15,
         .memory_duration = 15,
         .base_speed = 40,
         .blood = .Blood,
 
-        .strength = 5,
+        .base_strength = 5,
     },
 };
 
@@ -250,7 +250,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
         }),
 
         .willpower = 8,
-        .dexterity = 100,
+        .base_dexterity = 100,
         .hearing = 0,
         .max_HP = 100,
         .regen = 100,
@@ -259,7 +259,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
         .blood = null,
         .immobile = true,
 
-        .strength = 1,
+        .base_strength = 1,
     },
 };
 
@@ -286,7 +286,7 @@ pub const NebroStatueTemplate = MobTemplate{
         }),
 
         .willpower = 8,
-        .dexterity = 100,
+        .base_dexterity = 100,
         .hearing = 0,
         .max_HP = 1000,
         .regen = 100,
@@ -295,7 +295,7 @@ pub const NebroStatueTemplate = MobTemplate{
         .blood = null,
         .immobile = true,
 
-        .strength = 2,
+        .base_strength = 2,
     },
 };
 
@@ -322,7 +322,7 @@ pub const CrystalStatueTemplate = MobTemplate{
         }),
 
         .willpower = 8,
-        .dexterity = 100,
+        .base_dexterity = 100,
         .hearing = 0,
         .max_HP = 1000,
         .regen = 100,
@@ -331,7 +331,7 @@ pub const CrystalStatueTemplate = MobTemplate{
         .blood = null,
         .immobile = true,
 
-        .strength = 2,
+        .base_strength = 2,
     },
 };
 
@@ -353,14 +353,14 @@ pub const CleanerTemplate = MobTemplate{
         .night_vision = 30,
 
         .willpower = 2,
-        .dexterity = 19,
+        .base_dexterity = 19,
         .hearing = 10,
         .max_HP = 60,
         .memory_duration = 5,
         .base_speed = 100,
         .blood = .Blood,
 
-        .strength = 10,
+        .base_strength = 10,
     },
 };
 
