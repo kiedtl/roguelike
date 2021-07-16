@@ -4,6 +4,13 @@
 % - some blood spattered on the floor
 % - drunk and sleeping guard
 
+:invisible
+:restriction 0
+:noguards
+:nolights
+:notraps
+@0 p bed
+
 #########****##
 #0.....#......•
 #......±.@....*
@@ -11,13 +18,6 @@
 ##≡≡≡≡##......*
 •.............#
 ##***********##
-
-@0 p bed
-:invisible
-:restriction 0
-:noguards
-:nolights
-:notraps
 
 % Test prefab for testing various things
 %
