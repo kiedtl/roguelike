@@ -101,9 +101,46 @@ fn _draw_infopanel(
     endy: isize,
 ) void {
     const is_running = player.turnsSinceRest() == player.activities.len;
+    const strength = player.strength();
+    const dexterity = player.dexterity();
+    const speed = player.speed();
+
     var y = starty;
     while (y < endy) : (y += 1) _clear_line(startx, endx, y);
     y = starty;
+
+    y = _draw_string(startx, y, 0xffffff, 0, "score: {:<5} depth: {}", .{ state.score, state.player.coord.z }) catch unreachable;
+    y = _draw_string(startx, y, 0xffffff, 0, "turns: {}", .{state.ticks}) catch unreachable;
+    y += 1;
+
+    if (strength != state.player.base_strength) {
+        const diff = @intCast(isize, strength) - @intCast(isize, state.player.base_strength);
+        const adiff = math.absInt(diff) catch unreachable;
+        const sign = if (diff > 0) "+" else "-";
+        y = _draw_string(startx, y, 0xffffff, 0, "strength:  {} ({}{})", .{ strength, sign, adiff }) catch unreachable;
+    } else {
+        y = _draw_string(startx, y, 0xffffff, 0, "strength:  {}", .{strength}) catch unreachable;
+    }
+
+    if (dexterity != state.player.base_dexterity) {
+        const diff = @intCast(isize, dexterity) - @intCast(isize, state.player.base_dexterity);
+        const adiff = math.absInt(diff) catch unreachable;
+        const sign = if (diff > 0) "+" else "-";
+        y = _draw_string(startx, y, 0xffffff, 0, "dexterity: {} ({}{})", .{ dexterity, sign, adiff }) catch unreachable;
+    } else {
+        y = _draw_string(startx, y, 0xffffff, 0, "dexterity: {}", .{dexterity}) catch unreachable;
+    }
+
+    if (speed != state.player.base_speed) {
+        const diff = @intCast(isize, speed) - @intCast(isize, state.player.base_speed);
+        const adiff = math.absInt(diff) catch unreachable;
+        const sign = if (diff > 0) "+" else "-";
+        y = _draw_string(startx, y, 0xffffff, 0, "speed: {} ({}{})", .{ speed, sign, adiff }) catch unreachable;
+    } else {
+        y = _draw_string(startx, y, 0xffffff, 0, "speed: {}", .{speed}) catch unreachable;
+    }
+
+    y += 1;
 
     _draw_bar(
         y,
@@ -142,10 +179,7 @@ fn _draw_infopanel(
         _draw_bar(y, startx, endx, left, Status.MAX_DURATION, status.string(), 0, 0x77452e, 0);
         y += 1;
     }
-
-    y = _draw_string(startx, y, 0xffffff, 0, "score: {:<5} level: {}", .{ state.score, state.player.coord.z }) catch unreachable;
-    y = _draw_string(startx, y, 0xffffff, 0, "turns: {}", .{state.ticks}) catch unreachable;
-    y += 2;
+    y += 1;
 
     if (state.player.inventory.wielded) |weapon| {
         const item = Item{ .Weapon = weapon };
