@@ -904,12 +904,14 @@ pub const Mob = struct { // {{{
         switch (item.*) {
             .Weapon => |_| @panic("W/A TODO"),
             .Potion => |potion| {
-                if (state.dungeon.at(landed.?).mob) |bastard| {
-                    bastard.quaffPotion(potion);
-                } else switch (potion.type) {
-                    .Status => {},
-                    .Gas => |s| state.dungeon.atGas(landed.?)[s] = 1.0,
-                    .Custom => |f| f(null),
+                if (!potion.ingested) {
+                    if (state.dungeon.at(landed.?).mob) |bastard| {
+                        bastard.quaffPotion(potion);
+                    } else switch (potion.type) {
+                        .Status => {},
+                        .Gas => |s| state.dungeon.atGas(landed.?)[s] = 1.0,
+                        .Custom => |f| f(null),
+                    }
                 }
 
                 // TODO: have cases where thrower misses and potion lands (unused?)
@@ -1707,6 +1709,11 @@ pub const Potion = struct {
         Gas: usize,
         Custom: fn (?*Mob) void,
     },
+
+    // Whether the potion needs to be quaffed to work. If false,
+    // thrown potions will not have any effect, even if they land
+    // on a mob.
+    ingested: bool = false,
 
     color: u32,
 };
