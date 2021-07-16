@@ -96,9 +96,9 @@ fn deinitGame() void {
     _ = state.GPA.deinit();
 }
 
-fn readNoActionInput() void {
+fn readNoActionInput(timeout: ?isize) void {
     var ev: termbox.tb_event = undefined;
-    const t = termbox.tb_poll_event(&ev);
+    const t = if (timeout) |t| termbox.tb_peek_event(&ev, t) else termbox.tb_poll_event(&ev);
 
     if (t == -1) @panic("Fatal termbox error");
 
@@ -425,7 +425,7 @@ fn readInput() bool {
 
 fn gameOverScreen() void {
     display.drawGameOver();
-    readNoActionInput();
+    readNoActionInput(null);
 }
 
 fn tickGame() void {
@@ -456,6 +456,19 @@ fn tickGame() void {
 
         mob.energy += 100;
 
+        if (mob.energy < 0) {
+            if (mob.coord.eq(state.player.coord)) {
+                display.draw();
+                readNoActionInput(130);
+                display.draw();
+                if (state.state == .Quit) break;
+            }
+
+            continue;
+        }
+
+        var is_first = true;
+
         while (mob.energy >= 0) {
             if (mob.is_dead) {
                 break;
@@ -476,7 +489,7 @@ fn tickGame() void {
             if (mob.isUnderStatus(.Paralysis)) |_| {
                 if (mob.coord.eq(state.player.coord)) {
                     display.draw();
-                    readNoActionInput();
+                    readNoActionInput(130);
                     display.draw();
                     if (state.state == .Quit) break;
                 }
@@ -496,6 +509,8 @@ fn tickGame() void {
             state._update_fov(mob);
 
             assert(prev_energy > mob.energy);
+
+            is_first = false;
         }
     }
 }
