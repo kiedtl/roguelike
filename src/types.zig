@@ -1408,8 +1408,8 @@ pub const Mob = struct { // {{{
     pub fn speed(self: *const Mob) isize {
         var bonus: usize = 100;
         if (self.occupation.phase == .Flee) bonus -= 10;
-        if (self.isUnderStatus(.Fast)) |_| bonus = bonus * 90 / 100;
-        if (self.isUnderStatus(.Slow)) |_| bonus = bonus * 120 / 100;
+        if (self.isUnderStatus(.Fast)) |_| bonus = bonus * 50 / 100;
+        if (self.isUnderStatus(.Slow)) |_| bonus = bonus * 160 / 100;
 
         return @intCast(isize, self.base_speed * bonus / 100);
     }
