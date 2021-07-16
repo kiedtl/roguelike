@@ -155,6 +155,7 @@ fn fireLauncher() bool {
 pub fn grabItem() bool {
     if (state.player.inventory.pack.isFull()) {
         state.message(.MetaError, "Your pack is full.", .{});
+        return false;
     }
 
     if (state.dungeon.at(state.player.coord).surface) |surface| {
