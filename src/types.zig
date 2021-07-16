@@ -1319,7 +1319,7 @@ pub const Mob = struct { // {{{
             apparent_volume = utils.saturating_sub(apparent_volume, resistance);
         }
 
-        return if (apparent_volume < self.hearing) apparent_volume else null;
+        return if (apparent_volume >= self.hearing) apparent_volume else null;
     }
 
     pub fn isHostileTo(self: *const Mob, othermob: *const Mob) bool {
