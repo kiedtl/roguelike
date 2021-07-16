@@ -618,6 +618,8 @@ x Ensure that the EnemyRecord counter is only decremented if the pursuer can
 x Make watchers smack intruders when they can't run
 - Mobs that throw potions of light at hostiles that are in areas too dark for
   them to see
+- Fleeing mobs and mobs that have just spotted an enemy "tell" nearby allies
+  about the hostile
 
 User Interface
 ==============
