@@ -549,15 +549,15 @@ pub const Status = enum {
 
     pub fn string(self: Status) []const u8 {
         return switch (self) {
-            .Paralysis => "paralysis",
+            .Paralysis => "paralyzed",
             .Echolocation => "echolocation",
-            .Corona => "corona",
-            .Confusion => "confusion",
-            .Fast => "fast",
-            .Slow => "slow",
-            .Recuperate => "recuperate",
-            .Poison => "poison",
-            .Invigorate => "invigorate",
+            .Corona => "glowing",
+            .Confusion => "confused",
+            .Fast => "hasted",
+            .Slow => "slowed",
+            .Recuperate => "recuperating",
+            .Poison => "poisoned",
+            .Invigorate => "invigorated",
         };
     }
 
