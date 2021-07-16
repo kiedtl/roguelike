@@ -298,44 +298,40 @@ Potions/Vials/Tonics
 --------------------
 TODO: decide difference between potions, tonics, and vials.
 - Potions: [s]tatus, [g]as, [c]ustom
-potion of cremation [c]
-	- Explodes when opened, heating surrounding air.
 potion of confuzzlementation [g]
 	- Confusion.
-potion of hallucination [g]
-	- Hallucination.
-potion of antifreeze (TODO: name) [s]
-	- Increases cold immunity by a very small amount.
-potion of refrigeration [g]
-	- Freezes the surrounding air.
 potion of petrification [g]
 	- Paralysis.
 potion of fog (TODO: name) [g]
 	- Fog.
 potion of acceleration [s]
 	- Haste.
-potion of asphyxiation [g]
-	- Releases vapours that causes suffocation.
 potion of preservation [c]
 	- Heals 20% of health and removes poison.
 potion of recuperation [s]
 	- Causes faster regeneration rate.
 potion of deceleration [s]
-	- Slow paralysis.
+	- Slowdown.
+potion of coagulation
+	- Poison (loss of regen, occasional damage, weakness)
+potion of invigoration [s]
+	- Temporarily increases strength and dexterity.
+potion of cremation [c]
+	- Explodes when opened, heating surrounding air.
+potion of refrigeration [g]
+	- Freezes the surrounding air, slowing down cold-blooded mobs.
+potion of asphyxiation [g]
+	- Releases vapours that causes suffocation.
 potion of decimation [c]
 	- Explosion that can destroy walls.
 potion of defoliation [g]
 	- Poison that destroys plants and/or fungi.
 potion of dehumanization
 	- Makes mob mindless?
-potion of toxification [s]
-	- Caustic poison.
 potion of electrocution [s]
-	- Makes target significantly more susceptible to electric attacks.
+	- Makes target significantly more susceptible to electric attacks?
 potion of fumigation [g]
 	- Releases toxic fumes that clear away other toxic fumes.
-potion of invigoration [s]
-	- Temporarily increases strength.
 potion of intoxication [s]
 	- Drunkenness.
 potion of irradiation [c]
@@ -355,8 +351,6 @@ potion of chlorination
 potion of negation
 	- ???
 potion of transubstantiation
-	- ???
-potion of coagulation
 	- ???
 potion of cognition
 	- ???
