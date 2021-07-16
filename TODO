@@ -9,15 +9,19 @@ Levels
 	- Rooms filled with artwork, posters, skeleton displays, armor displays,
 	  statues, bookshelves, fountains.
 	- Has bear traps with nearby hydras.
+	- Preprocessing: change walls that are shared with multiple rooms to
+	  windows.
 - Laboratory
-	- Circular rooms, long corridors.
+	- Large open space.
 	- Piles of vials. Rooms with potion synthesis machines.
-	- Some rooms have mobs in cages for researchers to experiment on.
+	- Mobs in cages for researchers to experiment on.
 	- Small pools of poisonous sludge.
 	- Has traps of {blinding, pain-causing} gas.
 	- Has teleportation traps.
+	- Preprocessing: add a bunch of rooms on top of everything (regardless
+	  of intersections) to make the place even more open.
 - Temple
-	- Octogonal and triangle-shaped rooms.
+	- Circular rooms, long corridors.
 	- Refrigerated rooms filled with corpses.
 	- Plenty of necromancers/priests.
 	- Plenty of undead, death knights, etc.
