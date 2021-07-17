@@ -139,8 +139,7 @@ fn fireLauncher() bool {
         if (weapon.launcher) |launcher| {
             const dest = display.chooseCell() orelse return false;
             assert(state.player.launchProjectile(&launcher, dest));
-            state.player.activities.append(.Fire);
-            state.player.energy -= state.player.speed();
+            state.player.declareAction(.Fire);
             return true;
         } else {
             state.message(.MetaError, "You can't fire anything with that weapon.", .{});
@@ -174,8 +173,7 @@ pub fn grabItem() bool {
 
                     // TODO: show message
 
-                    state.player.activities.append(.Grab);
-                    state.player.energy -= state.player.speed();
+                    state.player.declareAction(.Grab);
                     return true;
                 }
             },
@@ -200,7 +198,7 @@ fn rifleCorpse() bool {
         switch (item) {
             .Corpse => |c| {
                 c.vomitInventory(&state.GPA.allocator);
-                state.player.energy -= state.player.speed() * 2;
+                state.player.declareAction(.Rifle);
                 state.message(.Info, "You rifle the {} corpse.", .{c.species});
                 return true;
             },
@@ -225,8 +223,7 @@ fn throwItem() bool {
 
     if (state.player.throwItem(item, dest)) {
         _ = state.player.removeItem(index) catch unreachable;
-        state.player.activities.append(.Throw);
-        state.player.energy -= state.player.speed();
+        state.player.declareAction(.Throw);
         return true;
     } else {
         state.message(.MetaError, "You can't throw that.", .{});
@@ -326,8 +323,7 @@ fn useItem() bool {
 
     _ = state.player.removeItem(index) catch unreachable;
 
-    state.player.activities.append(.Use);
-    state.player.energy -= state.player.speed();
+    state.player.declareAction(.Use);
 
     return true;
 }
@@ -351,8 +347,7 @@ fn dropItem() bool {
 
                     // TODO: show message
 
-                    state.player.activities.append(.Drop);
-                    state.player.energy -= state.player.speed();
+                    state.player.declareAction(.Drop);
                     return true;
                 }
             },
@@ -374,8 +369,7 @@ fn dropItem() bool {
 
         // TODO: show message
 
-        state.player.activities.append(.Drop);
-        state.player.energy -= state.player.speed();
+        state.player.declareAction(.Drop);
         return true;
     }
 }
