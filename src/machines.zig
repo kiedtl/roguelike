@@ -382,25 +382,12 @@ pub fn powerStairExit(machine: *Machine) void {
 
 pub fn powerStairUp(machine: *Machine) void {
     assert(machine.coord.z >= 1);
-    if (machine.last_interaction) |culprit| {
-        if (!culprit.coord.eq(state.player.coord)) return;
+    const culprit = machine.last_interaction.?;
+    if (!culprit.coord.eq(state.player.coord)) return;
 
-        const uplevel = Coord.new2(machine.coord.z - 1, machine.coord.x, machine.coord.y);
-
-        var dest: ?Coord = null;
-        for (&CARDINAL_DIRECTIONS) |d| {
-            if (uplevel.move(d, state.mapgeometry)) |desttmp|
-                if (state.is_walkable(desttmp, .{ .right_now = true })) {
-                    dest = desttmp;
-                };
-        }
-
-        if (dest) |spot| {
-            const moved = culprit.teleportTo(spot, null);
-            assert(moved);
-            state.message(.Move, "You ascend.", .{});
-        }
-    }
+    const dst = Coord.new2(machine.coord.z - 1, machine.coord.x, machine.coord.y);
+    if (culprit.teleportTo(dst, null))
+        state.message(.Move, "You ascend.", .{});
 }
 
 pub fn powerLockedDoor(machine: *Machine) void {
