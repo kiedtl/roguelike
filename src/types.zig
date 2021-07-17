@@ -535,7 +535,7 @@ pub const Status = enum {
     // Doesn't have a power field.
     Recuperate,
 
-    // Prevents regen and gives occasional damage.
+    // Prevents regen and gives damage.
     //
     // Doesn't have a power field (but probably should).
     Poison,
@@ -561,13 +561,19 @@ pub const Status = enum {
         };
     }
 
+    pub fn tickPoison(mob: *Mob) void {
+        mob.takeDamage(.{
+            .amount = @intToFloat(f64, rng.rangeClumping(usize, 0, 2, 2)),
+        });
+    }
+
     pub fn tickEcholocation(mob: *Mob) void {
         // TODO: do some tests and figure out what's the practical limit to memory
         // usage, and reduce the buffer's size to that.
         var membuf: [65535]u8 = undefined;
         var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
-        const st = mob.isUnderStatus(.Echolocation) orelse return;
+        const st = mob.isUnderStatus(.Echolocation).?;
 
         const radius = mob.vision;
         const z = mob.coord.z;
@@ -757,14 +763,7 @@ pub const Mob = struct { // {{{
     pub fn tick_hp(self: *Mob) void {
         assert(!self.is_dead);
 
-        if (self.isUnderStatus(.Poison)) |_| {
-            if (rng.onein(3)) {
-                self.takeDamage(.{
-                    .amount = @intToFloat(f64, rng.rangeClumping(usize, 1, 3, 2)),
-                });
-            }
-            return;
-        }
+        if (self.isUnderStatus(.Poison)) |_| return;
 
         var regen = self.regen;
         if (self.isUnderStatus(.Invigorate)) |_| regen = regen * 150 / 100;
@@ -800,9 +799,13 @@ pub const Mob = struct { // {{{
     // Do stuff for various statuses that need babysitting each turn.
     pub fn tickStatuses(self: *Mob) void {
         inline for (@typeInfo(Status).Enum.fields) |status| {
-            switch (@field(Status, status.name)) {
-                .Echolocation => Status.tickEcholocation(self),
-                else => {},
+            const status_e = @field(Status, status.name);
+            if (self.isUnderStatus(status_e)) |_| {
+                switch (status_e) {
+                    .Echolocation => Status.tickEcholocation(self),
+                    .Poison => Status.tickPoison(self),
+                    else => {},
+                }
             }
         }
     }
