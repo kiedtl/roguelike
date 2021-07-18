@@ -200,6 +200,10 @@ pub const Coord = struct { // {{{
         return Coord.new2(a.z, a.x + b.x, a.y + b.y);
     }
 
+    pub inline fn asRoom(self: *const Self) Room {
+        return Room{ .start = self.*, .width = 1, .height = 1 };
+    }
+
     pub fn move(self: *const Self, direction: Direction, limit: Self) ?Coord {
         var dx: isize = 0;
         var dy: isize = 0;
@@ -671,12 +675,18 @@ pub const AIWorkPhase = enum {
     CleanerIdle,
 };
 
+pub const Prisoner = struct {
+    of: Allegiance,
+    prison: Room,
+};
+
 pub const Mob = struct { // {{{
     species: []const u8,
     tile: u21,
     allegiance: Allegiance,
 
     squad_members: MobArrayList = undefined,
+    prisoner_status: ?Prisoner = null,
 
     // TODO: instead of storing the tile's representation in memory, store the
     // actual tile -- if a wall is destroyed outside of the player's FOV, the display
@@ -1367,9 +1377,21 @@ pub const Mob = struct { // {{{
     }
 
     pub fn isHostileTo(self: *const Mob, othermob: *const Mob) bool {
+        var hostile = false;
+
         // TODO: deal with all the nuances (eg .NoneGood should not be hostile
         // to .Illuvatar, but .NoneEvil should be hostile to .Sauron)
-        return self.allegiance != othermob.allegiance;
+        if (self.allegiance != othermob.allegiance) hostile = true;
+
+        if (othermob.prisoner_status) |prisoner_status| {
+            if (prisoner_status.of == self.allegiance and
+                othermob.coord.asRoom().intersects(&prisoner_status.prison, 0))
+            {
+                hostile = false;
+            }
+        }
+
+        return hostile;
     }
 
     pub fn cansee(self: *const Mob, coord: Coord) bool {

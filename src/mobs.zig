@@ -378,6 +378,10 @@ pub const MOBS = [_]MobTemplate{
     CleanerTemplate,
 };
 
+pub const PRISONERS = [_]MobTemplate{
+    GoblinTemplate,
+};
+
 pub const STATUES = [_]MobTemplate{
     KyaniteStatueTemplate,
     NebroStatueTemplate,

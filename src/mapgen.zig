@@ -274,6 +274,7 @@ fn _excavate_prefab(
             const tt: ?TileType = switch (fab.content[y][x]) {
                 .Any, .Connection => null,
                 .Wall => .Wall,
+                .LevelFeature,
                 .Feature,
                 .LockedDoor,
                 .Door,
@@ -287,6 +288,7 @@ fn _excavate_prefab(
             if (tt) |_tt| state.dungeon.at(rc).type = _tt;
 
             switch (fab.content[y][x]) {
+                .LevelFeature => |l| (Configs[room.start.z].level_features[l].?)(l, rc, room, fab, allocator),
                 .Feature => |feature_id| {
                     const feature = fab.features[feature_id].?;
                     switch (feature) {
@@ -576,11 +578,11 @@ fn _place_rooms(
 
     if (child.prefab == null)
         if (choosePrefab(level, s_fabs)) |subroom|
-            if (subroom.height < child.height and subroom.width < child.width) {
+            if ((subroom.height + 2) < child.height and (subroom.width + 2) < child.width) {
                 const mx = child.width - subroom.width;
                 const my = child.height - subroom.height;
-                const rx = rng.range(usize, 0, mx);
-                const ry = rng.range(usize, 0, my);
+                const rx = mx - (subroom.width / 2);
+                const ry = my - (subroom.height / 2);
                 _excavate_prefab(&child, subroom, allocator, rx, ry);
             };
 }
@@ -1008,6 +1010,18 @@ pub fn populateCaves(avoid: *const [HEIGHT][WIDTH]bool, level: usize, alloc: *me
     }
 }
 
+fn levelFeaturePrisoners(_: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+    // Can only place prisoners in subrooms for now...
+    assert(prefab.subroom);
+
+    const prisoner_t = rng.chooseUnweighted(mobs.MobTemplate, &mobs.PRISONERS);
+    const prisoner = placeMob(alloc, &prisoner_t, coord, .{});
+    prisoner.prisoner_status = Prisoner{
+        .of = .Sauron,
+        .prison = .{ .start = room.start, .width = room.width, .height = room.height },
+    };
+}
+
 pub const Prefab = struct {
     subroom: bool = false,
     invisible: bool = false,
@@ -1032,7 +1046,18 @@ pub const Prefab = struct {
     pub const MAX_NAME_SIZE = 64;
 
     pub const FabTile = union(enum) {
-        Wall, LockedDoor, Door, Brazier, Floor, Connection, Water, Lava, Bars, Feature: u8, Any
+        Wall,
+        LockedDoor,
+        Door,
+        Brazier,
+        Floor,
+        Connection,
+        Water,
+        Lava,
+        Bars,
+        Feature: u8,
+        LevelFeature: usize,
+        Any,
     };
 
     pub const FeatureMob = struct {
@@ -1260,6 +1285,7 @@ pub const Prefab = struct {
                             '≈' => .Lava,
                             '≡' => .Bars,
                             '?' => .Any,
+                            'α' => FabTile{ .LevelFeature = @as(usize, 'α' - c) },
                             '0'...'9', 'a'...'z' => FabTile{ .Feature = @intCast(u8, c) },
                             else => return error.InvalidFabTile,
                         };
@@ -1348,7 +1374,10 @@ pub const LevelConfig = struct {
     max_room_width: usize = 20,
     max_room_height: usize = 15,
 
+    level_features: [1]?LevelFeatureFunc = [_]?LevelFeatureFunc{null},
+
     pub const RPBuf = StackBuffer([]const u8, 4);
+    pub const LevelFeatureFunc = fn (usize, Coord, *const Room, *const Prefab, *mem.Allocator) void;
 };
 
 pub const Configs = [LEVELS]LevelConfig{
@@ -1417,6 +1446,7 @@ pub const Configs = [LEVELS]LevelConfig{
         },
         .prefab_chance = 3,
         .max_rooms = 512,
+        .level_features = .{levelFeaturePrisoners},
     },
     .{
         .identifier = "PRI",
@@ -1432,5 +1462,6 @@ pub const Configs = [LEVELS]LevelConfig{
         },
         .prefab_chance = 3,
         .max_rooms = 512,
+        .level_features = [_]?LevelConfig.LevelFeatureFunc{levelFeaturePrisoners},
     },
 };
