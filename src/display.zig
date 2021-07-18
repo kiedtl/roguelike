@@ -38,13 +38,57 @@ pub fn deinit() !void {
     is_tb_inited = false;
 }
 
+pub const DisplayWindow = enum { PlayerInfo, Main, EnemyInfo, Log };
+pub const Dimension = struct { from: Coord, to: Coord, width: usize, height: usize };
+
+pub fn dimensions(w: DisplayWindow) Dimension {
+    const height = @intCast(usize, termbox.tb_height());
+    const width = @intCast(usize, termbox.tb_width());
+
+    const log_height = 6;
+    const playerinfo_width = 25;
+    const enemyinfo_width = 25;
+    const playerinfo_start = 1;
+    const main_start = playerinfo_start + playerinfo_width + 1;
+    const main_width = width - 1 - playerinfo_width - enemyinfo_width;
+    const log_start = main_start;
+    const enemyinfo_start = main_start + main_width + 1;
+
+    return switch (w) {
+        .PlayerInfo => .{
+            .from = Coord.new(playerinfo_start, 0),
+            .to = Coord.new(playerinfo_start + playerinfo_width, height - 1),
+            .width = playerinfo_width,
+            .height = height - 1,
+        },
+        .Main => .{
+            .from = Coord.new(main_start, 0),
+            .to = Coord.new(main_start + main_width, height - 1 - log_height),
+            .width = main_width,
+            .height = height - 1 - log_height,
+        },
+        .EnemyInfo => .{
+            .from = Coord.new(enemyinfo_start, 0),
+            .to = Coord.new(width - 1, height - 1),
+            .width = enemyinfo_width,
+            .height = height - 1,
+        },
+        .Log => .{
+            .from = Coord.new(log_start, height - 1 - log_height),
+            .to = Coord.new(log_start + main_width, height - 1),
+            .width = main_width,
+            .height = log_height,
+        },
+    };
+}
+
 fn _clear_line(from: isize, to: isize, y: isize) void {
     var x = from;
     while (x < to) : (x += 1)
         termbox.tb_change_cell(x, y, ' ', 0xffffff, 0);
 }
 
-fn _draw_string(_x: isize, _y: isize, bg: u32, fg: u32, comptime format: []const u8, args: anytype) !isize {
+fn _draw_string(_x: isize, _y: isize, endx: isize, bg: u32, fg: u32, comptime format: []const u8, args: anytype) !isize {
     var buf: [256]u8 = [_]u8{0} ** 256;
     var fbs = std.io.fixedBufferStream(&buf);
     try std.fmt.format(fbs.writer(), format, args);
@@ -65,13 +109,15 @@ fn _draw_string(_x: isize, _y: isize, bg: u32, fg: u32, comptime format: []const
 
         termbox.tb_change_cell(x, y, codepoint, bg, fg);
         x += 1;
+
+        if (x == endx) break;
     }
 
     return y + 1;
 }
 
-fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, description: []const u8, loss_percent: usize, bg: u32, fg: u32) void {
-    const bar_max = endx - 5; // Minus max width needed to display loss percentage
+fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, description: []const u8, bg: u32, fg: u32) void {
+    const bar_max = endx;
     const bg2 = utils.darkenColor(bg, 3); // Color used to display depleted bar
     const labelx = startx + 1; // Start of label
 
@@ -85,59 +131,113 @@ fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, d
 
     const bar_len = bar_end - startx;
     const description2 = description[math.min(@intCast(usize, bar_len), description.len)..];
-    _ = _draw_string(labelx, y, 0xffffff, bg, "{s}", .{description}) catch unreachable;
-    _ = _draw_string(labelx + bar_len, y, 0xffffff, bg2, "{s}", .{description2}) catch unreachable;
-    if (loss_percent != 0) {
-        _ = _draw_string(bar_max, y, 0xffffff, 0, "-{}%", .{loss_percent}) catch unreachable;
-    }
+    _ = _draw_string(labelx, y, endx, 0xffffff, bg, "{s}", .{description}) catch unreachable;
+    _ = _draw_string(labelx + bar_len, y, endx, 0xffffff, bg2, "{s}", .{description2}) catch unreachable;
 }
 
-fn _draw_infopanel(
-    player: *Mob,
-    moblist: *const std.ArrayList(*Mob),
+fn drawEnemyInfo(
+    moblist: []const *Mob,
     startx: isize,
     starty: isize,
     endx: isize,
     endy: isize,
 ) void {
-    const is_running = player.turnsSinceRest() == player.activities.len;
-    const strength = player.strength();
-    const dexterity = player.dexterity();
-    const speed = player.speed();
+    var y = starty;
+    while (y < endy) : (y += 1) _clear_line(startx, endx, y);
+    y = starty;
+
+    for (moblist) |mob| {
+        if (mob.is_dead) continue;
+
+        _clear_line(startx, endx, y);
+        _clear_line(startx, endx, y + 1);
+
+        var mobcell = Tile.displayAs(mob.coord);
+        termbox.tb_put_cell(startx, y, &mobcell);
+
+        const mobname = mob.occupation.profession_name orelse mob.species;
+
+        y = _draw_string(startx + 1, y, endx, 0xffffff, 0, ": {}", .{mobname}) catch unreachable;
+
+        _draw_bar(
+            y,
+            startx,
+            endx,
+            @floatToInt(usize, mob.HP),
+            @floatToInt(usize, mob.max_HP),
+            "health",
+            0x232faa,
+            0,
+        );
+        y += 1;
+
+        var statuses = mob.statuses.iterator();
+        while (statuses.next()) |entry| {
+            const status = entry.key;
+            const se = entry.value.*;
+
+            const left = utils.saturating_sub(se.started + se.duration, state.ticks);
+
+            if (left == 0) continue;
+
+            _draw_bar(y, startx, endx, left, Status.MAX_DURATION, status.string(), 0x77452e, 0);
+            y += 1;
+        }
+
+        const activity = mob.activity_description();
+        y = _draw_string(
+            endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2),
+            y,
+            endx,
+            0x9a9a9a,
+            0,
+            "{}",
+            .{activity},
+        ) catch unreachable;
+
+        y += 2;
+    }
+}
+
+fn drawPlayerInfo(startx: isize, starty: isize, endx: isize, endy: isize) void {
+    const is_running = state.player.turnsSinceRest() == state.player.activities.len;
+    const strength = state.player.strength();
+    const dexterity = state.player.dexterity();
+    const speed = state.player.speed();
 
     var y = starty;
     while (y < endy) : (y += 1) _clear_line(startx, endx, y);
     y = starty;
 
-    y = _draw_string(startx, y, 0xffffff, 0, "score: {:<5} depth: {}", .{ state.score, state.player.coord.z }) catch unreachable;
-    y = _draw_string(startx, y, 0xffffff, 0, "turns: {}", .{state.ticks}) catch unreachable;
+    y = _draw_string(startx, y, endx, 0xffffff, 0, "score: {:<5} depth: {}", .{ state.score, state.player.coord.z }) catch unreachable;
+    y = _draw_string(startx, y, endx, 0xffffff, 0, "turns: {}", .{state.ticks}) catch unreachable;
     y += 1;
 
     if (strength != state.player.base_strength) {
         const diff = @intCast(isize, strength) - @intCast(isize, state.player.base_strength);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _draw_string(startx, y, 0xffffff, 0, "strength:  {} ({}{})", .{ strength, sign, adiff }) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, "strength:  {} ({}{})", .{ strength, sign, adiff }) catch unreachable;
     } else {
-        y = _draw_string(startx, y, 0xffffff, 0, "strength:  {}", .{strength}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, "strength:  {}", .{strength}) catch unreachable;
     }
 
     if (dexterity != state.player.base_dexterity) {
         const diff = @intCast(isize, dexterity) - @intCast(isize, state.player.base_dexterity);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _draw_string(startx, y, 0xffffff, 0, "dexterity: {} ({}{})", .{ dexterity, sign, adiff }) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, "dexterity: {} ({}{})", .{ dexterity, sign, adiff }) catch unreachable;
     } else {
-        y = _draw_string(startx, y, 0xffffff, 0, "dexterity: {}", .{dexterity}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, "dexterity: {}", .{dexterity}) catch unreachable;
     }
 
     if (speed != state.player.base_speed) {
         const diff = @intCast(isize, speed) - @intCast(isize, state.player.base_speed);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _draw_string(startx, y, 0xffffff, 0, "speed: {} ({}{})", .{ speed, sign, adiff }) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, "speed: {} ({}{})", .{ speed, sign, adiff }) catch unreachable;
     } else {
-        y = _draw_string(startx, y, 0xffffff, 0, "speed: {}", .{speed}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, "speed: {}", .{speed}) catch unreachable;
     }
 
     y += 1;
@@ -146,10 +246,9 @@ fn _draw_infopanel(
         y,
         startx,
         endx,
-        @floatToInt(usize, player.HP),
-        @floatToInt(usize, player.max_HP),
+        @floatToInt(usize, state.player.HP),
+        @floatToInt(usize, state.player.max_HP),
         "health",
-        player.lastDamagePercentage(),
         0x232faa,
         0,
     );
@@ -158,10 +257,9 @@ fn _draw_infopanel(
         y,
         startx,
         endx,
-        player.turnsSinceRest(),
-        player.activities.len,
+        state.player.turnsSinceRest(),
+        state.player.activities.len,
         if (is_running) "running" else "walking",
-        0,
         if (is_running) 0x45772e else 0x25570e,
         0,
     );
@@ -176,7 +274,7 @@ fn _draw_infopanel(
 
         if (left == 0) continue;
 
-        _draw_bar(y, startx, endx, left, Status.MAX_DURATION, status.string(), 0, 0x77452e, 0);
+        _draw_bar(y, startx, endx, left, Status.MAX_DURATION, status.string(), 0x77452e, 0);
         y += 1;
     }
     y += 1;
@@ -184,68 +282,33 @@ fn _draw_infopanel(
     if (state.player.inventory.wielded) |weapon| {
         const item = Item{ .Weapon = weapon };
         const dest = (item.shortName() catch unreachable).constSlice();
-        y = _draw_string(startx, y, 0xffffff, 0, "-) {}", .{dest}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, "-) {}", .{dest}) catch unreachable;
     }
     if (state.player.inventory.backup) |backup| {
         const item = Item{ .Weapon = backup };
         const dest = (item.shortName() catch unreachable).constSlice();
-        y = _draw_string(startx, y, 0xffffff, 0, "2) {}", .{dest}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, "2) {}", .{dest}) catch unreachable;
     }
     if (state.player.inventory.armor) |armor| {
         const item = Item{ .Armor = armor };
         const dest = (item.shortName() catch unreachable).constSlice();
-        y = _draw_string(startx, y, 0xffffff, 0, "&) {}", .{dest}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, "&) {}", .{dest}) catch unreachable;
     }
     y += 1;
 
     const inventory = state.player.inventory.pack.slice();
     if (inventory.len == 0) {
-        y = _draw_string(startx, y, 0xffffff, 0, "Your pack is empty.", .{}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, "Your pack is empty.", .{}) catch unreachable;
     } else {
-        y = _draw_string(startx, y, 0xffffff, 0, "Inventory:", .{}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, "Inventory:", .{}) catch unreachable;
         for (inventory) |item, i| {
             const dest = (item.shortName() catch unreachable).constSlice();
-            y = _draw_string(startx, y, 0xffffff, 0, "  {}) {}", .{ i, dest }) catch unreachable;
+            y = _draw_string(startx, y, endx, 0xffffff, 0, "  {}) {}", .{ i, dest }) catch unreachable;
         }
-    }
-    y += 2;
-
-    for (moblist.items) |mob| {
-        if (mob.is_dead) continue;
-
-        _clear_line(startx, endx, y);
-        _clear_line(startx, endx, y + 1);
-
-        var mobcell = Tile.displayAs(mob.coord);
-        termbox.tb_put_cell(startx, y, &mobcell);
-
-        const mobname = mob.occupation.profession_name orelse mob.species;
-
-        y = _draw_string(
-            startx + 1,
-            y,
-            0xffffff,
-            0,
-            ": {} ({})",
-            .{ mobname, mob.activity_description() },
-        ) catch unreachable;
-
-        _draw_bar(
-            y,
-            startx,
-            endx,
-            @floatToInt(usize, mob.HP),
-            @floatToInt(usize, mob.max_HP),
-            "Health",
-            mob.lastDamagePercentage(),
-            0x232faa,
-            0,
-        );
-        y += 2;
     }
 }
 
-fn _draw_messages(startx: isize, endx: isize, starty: isize, endy: isize) void {
+fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
     if (state.messages.items.len == 0)
         return;
 
@@ -256,15 +319,15 @@ fn _draw_messages(startx: isize, endx: isize, starty: isize, endy: isize) void {
         const msg = state.messages.items[i];
         const col = if (msg.turn == state.ticks or i == first) msg.type.color() else 0xa0a0a0;
         if (msg.type == .MetaError) {
-            y = _draw_string(startx, y, col, 0, "ERROR: {}", .{msg.msg}) catch unreachable;
+            y = _draw_string(startx, y, endx, col, 0, "ERROR: {}", .{msg.msg}) catch unreachable;
         } else {
-            y = _draw_string(startx, y, col, 0, "{}", .{msg.msg}) catch unreachable;
+            y = _draw_string(startx, y, endx, col, 0, "{}", .{msg.msg}) catch unreachable;
         }
     }
 }
 
-fn _mobs_can_see(moblist: *const std.ArrayList(*Mob), coord: Coord) bool {
-    for (moblist.items) |mob| {
+fn _mobs_can_see(moblist: []const *Mob, coord: Coord) bool {
+    for (moblist) |mob| {
         if (mob.is_dead) continue;
         if (mob.no_show_fov or !mob.occupation.is_combative) continue;
         if (mob.cansee(coord)) return true;
@@ -272,43 +335,31 @@ fn _mobs_can_see(moblist: *const std.ArrayList(*Mob), coord: Coord) bool {
     return false;
 }
 
-pub fn draw() void {
-    // TODO: do some tests and figure out what's the practical limit to memory
-    // usage, and reduce the buffer's size to that.
-    var membuf: [65535]u8 = undefined;
-    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-
+pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize, endy: isize) void {
     const playery = @intCast(isize, state.player.coord.y);
     const playerx = @intCast(isize, state.player.coord.x);
     const level = state.player.coord.z;
     var is_player_watched = false;
 
-    const maxy: isize = termbox.tb_height() - 6;
-    const maxx: isize = termbox.tb_width() - 30;
-    const minx: isize = 0;
-    const miny: isize = 0;
-
-    const starty = playery - @divFloor(maxy, 2);
-    const endy = playery + @divFloor(maxy, 2);
-    const startx = playerx - @divFloor(maxx, 2);
-    const endx = playerx + @divFloor(maxx, 2);
-
-    var cursory: isize = 0;
+    const main_window = dimensions(.Main);
+    var cursory: isize = starty;
     var cursorx: isize = 0;
 
-    // Create a list of all mobs on the map so that we can calculate what tiles
-    // are in the FOV of any mob. Use only mobs that the player can see, the player
-    // shouldn't know what's in the FOV of an invisible mob!
-    var moblist = state.createMobList(false, true, level, &fba.allocator);
+    const height = @intCast(usize, endy - starty);
+    const width = @intCast(usize, endx - startx);
+    const map_starty = playery - @intCast(isize, height / 2);
+    const map_endy = playery + @intCast(isize, height / 2);
+    const map_startx = playerx - @intCast(isize, width / 2);
+    const map_endx = playerx + @intCast(isize, width / 2);
 
-    var y = starty;
-    while (y < endy and cursory < @intCast(usize, maxy)) : ({
+    var y = map_starty;
+    while (y < map_endy and cursory < endy) : ({
         y += 1;
         cursory += 1;
-        cursorx = 0;
+        cursorx = startx;
     }) {
-        var x: isize = startx;
-        while (x < endx and cursorx < maxx) : ({
+        var x: isize = map_startx;
+        while (x < map_endx and cursorx < endx) : ({
             x += 1;
             cursorx += 1;
         }) {
@@ -354,8 +405,12 @@ pub fn draw() void {
             switch (state.dungeon.at(coord).type) {
                 .Floor => {
                     if (state.dungeon.at(coord).mob) |mob| {
-                        if (state.player.coord.eq(coord) and _mobs_can_see(&moblist, coord))
-                            is_player_watched = true;
+                        // Treat this cell specially if it's the player and the player is
+                        // being watched.
+                        if (state.player.coord.eq(coord) and _mobs_can_see(moblist, coord)) {
+                            termbox.tb_change_cell(cursorx, cursory, '@', 0, 0xffffff);
+                            continue;
+                        }
                     } else if (state.dungeon.at(coord).surface != null or
                         state.dungeon.itemsAt(coord).len > 0)
                     {
@@ -367,7 +422,7 @@ pub fn draw() void {
                             const green = @intCast(u32, (255 * adj_n) / 100);
                             tile.fg = (green + 0x85) << 8;
                             tile.ch = '!';
-                        } else if (_mobs_can_see(&moblist, coord)) {
+                        } else if (_mobs_can_see(moblist, coord)) {
                             var can_mob_see = true;
                             if (state.player.coord.eq(coord))
                                 is_player_watched = can_mob_see;
@@ -390,35 +445,78 @@ pub fn draw() void {
             termbox.tb_put_cell(cursorx, cursory, &tile);
         }
     }
+}
 
-    if (!state.player.is_dead) {
-        const normal_bg = Tile.displayAs(state.player.coord).bg;
-        if (is_player_watched) {
-            termbox.tb_change_cell(playerx - startx, playery - starty, '@', 0, 0xffffff);
-        } else {
-            termbox.tb_change_cell(playerx - startx, playery - starty, '@', 0xffffff, normal_bg);
-        }
-    }
+pub fn draw() void {
+    // TODO: do some tests and figure out what's the practical limit to memory
+    // usage, and reduce the buffer's size to that.
+    var membuf: [65535]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
-    _draw_infopanel(state.player, &moblist, maxx, 1, termbox.tb_width(), termbox.tb_height() - 1);
-    _draw_messages(0, maxx, maxy, termbox.tb_height() - 1);
+    // Create a list of all mobs on the map so that we can calculate what tiles
+    // are in the FOV of any mob. Use only mobs that the player can see, the player
+    // shouldn't know what's in the FOV of an invisible mob!
+    const moblist = state.createMobList(false, true, state.player.coord.z, &fba.allocator);
+
+    const playerinfo_window = dimensions(.PlayerInfo);
+    const main_window = dimensions(.Main);
+    const enemyinfo_window = dimensions(.EnemyInfo);
+    const log_window = dimensions(.Log);
+
+    drawPlayerInfo(
+        @intCast(isize, playerinfo_window.from.x),
+        @intCast(isize, playerinfo_window.from.y),
+        @intCast(isize, playerinfo_window.to.x),
+        @intCast(isize, playerinfo_window.to.y),
+    );
+    drawMap(
+        moblist.items,
+        @intCast(isize, main_window.from.x),
+        @intCast(isize, main_window.to.x),
+        @intCast(isize, main_window.from.y),
+        @intCast(isize, main_window.to.y),
+    );
+    drawEnemyInfo(
+        moblist.items,
+        @intCast(isize, enemyinfo_window.from.x),
+        @intCast(isize, enemyinfo_window.from.y),
+        @intCast(isize, enemyinfo_window.to.x),
+        @intCast(isize, enemyinfo_window.to.y),
+    );
+    drawLog(
+        @intCast(isize, log_window.from.x),
+        @intCast(isize, log_window.to.x),
+        @intCast(isize, log_window.from.y),
+        @intCast(isize, log_window.to.y),
+    );
 
     termbox.tb_present();
 }
 
 pub fn chooseCell() ?Coord {
+    // TODO: do some tests and figure out what's the practical limit to memory
+    // usage, and reduce the buffer's size to that.
+    var membuf: [65535]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
+    // Create a list of all mobs on the map so that we can calculate what tiles
+    // are in the FOV of any mob. Use only mobs that the player can see, the player
+    // shouldn't know what's in the FOV of an invisible mob!
+    const moblist = state.createMobList(false, true, state.player.coord.z, &fba.allocator);
+
     var coord: Coord = state.player.coord;
 
     const playery = @intCast(isize, state.player.coord.y);
     const playerx = @intCast(isize, state.player.coord.x);
 
-    const maxy: isize = termbox.tb_height() - 6;
-    const maxx: isize = termbox.tb_width() - 30;
+    const height = termbox.tb_height() - 1;
+    const width = termbox.tb_width() - 1;
 
-    const starty = playery - @divFloor(maxy, 2);
-    const startx = playerx - @divFloor(maxx, 2);
+    const starty = playery - @divFloor(height, 2);
+    const startx = playerx - @divFloor(width, 2);
 
-    draw();
+    drawMap(moblist.items, 0, width, 0, height);
+    termbox.tb_present();
 
     while (true) {
         var ev: termbox.tb_event = undefined;
@@ -437,36 +535,20 @@ pub fn chooseCell() ?Coord {
                 }
             } else if (ev.ch != 0) {
                 switch (ev.ch) {
-                    'h' => if (coord.move(.West, state.mapgeometry)) |new| {
-                        coord = new;
-                    },
-                    'j' => if (coord.move(.South, state.mapgeometry)) |new| {
-                        coord = new;
-                    },
-                    'k' => if (coord.move(.North, state.mapgeometry)) |new| {
-                        coord = new;
-                    },
-                    'l' => if (coord.move(.East, state.mapgeometry)) |new| {
-                        coord = new;
-                    },
-                    'y' => if (coord.move(.NorthWest, state.mapgeometry)) |new| {
-                        coord = new;
-                    },
-                    'u' => if (coord.move(.NorthEast, state.mapgeometry)) |new| {
-                        coord = new;
-                    },
-                    'b' => if (coord.move(.SouthWest, state.mapgeometry)) |new| {
-                        coord = new;
-                    },
-                    'n' => if (coord.move(.SouthEast, state.mapgeometry)) |new| {
-                        coord = new;
-                    },
+                    'h' => coord = coord.move(.West, state.mapgeometry) orelse coord,
+                    'j' => coord = coord.move(.South, state.mapgeometry) orelse coord,
+                    'k' => coord = coord.move(.North, state.mapgeometry) orelse coord,
+                    'l' => coord = coord.move(.East, state.mapgeometry) orelse coord,
+                    'y' => coord = coord.move(.NorthWest, state.mapgeometry) orelse coord,
+                    'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
+                    'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
+                    'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
                     else => {},
                 }
             } else unreachable;
         }
 
-        draw();
+        drawMap(moblist.items, 0, width, 0, height);
 
         const relcoordx = @intCast(usize, @intCast(isize, coord.x) - startx);
         const relcoordy = @intCast(usize, @intCast(isize, coord.y) - starty);
@@ -489,16 +571,17 @@ pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
     const msglen = msg.len + suffix.len;
     var y = @divFloor(termbox.tb_height(), 2) - @intCast(isize, items.len + 2);
     const x = @divFloor(termbox.tb_width(), 2) - @intCast(isize, msglen / 2);
+    const endx = termbox.tb_width() - 1;
 
-    _ = _draw_string(x, y, 0xffffff, 0, "{s}{s}", .{ msg, suffix }) catch unreachable;
+    _ = _draw_string(x, y, endx, 0xffffff, 0, "{s}{s}", .{ msg, suffix }) catch unreachable;
     y += 1;
 
     if (items.len == 0) {
-        y = _draw_string(x, y, 0xffffff, 0, "(Nothing to choose.)", .{}) catch unreachable;
+        y = _draw_string(x, y, endx, 0xffffff, 0, "(Nothing to choose.)", .{}) catch unreachable;
     } else {
         for (items) |item, i| {
             const dest = (item.shortName() catch unreachable).constSlice();
-            y = _draw_string(x, y, 0xffffff, 0, "  {}) {}", .{ i, dest }) catch unreachable;
+            y = _draw_string(x, y, endx, 0xffffff, 0, "  {}) {}", .{ i, dest }) catch unreachable;
         }
     }
 
@@ -541,7 +624,7 @@ pub fn drawGameOver() void {
     const y = @divFloor(termbox.tb_height(), 2);
     const x = @divFloor(termbox.tb_width(), 2) - @intCast(isize, msg.len / 2);
 
-    _ = _draw_string(x, y, 0xffffff, 0, "{s}", .{msg}) catch unreachable;
+    _ = _draw_string(x, y, termbox.tb_width(), 0xffffff, 0, "{s}", .{msg}) catch unreachable;
 
     termbox.tb_present();
 }
