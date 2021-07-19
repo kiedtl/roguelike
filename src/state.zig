@@ -345,25 +345,23 @@ pub fn tickAtmosphere(cur_lev: usize, cur_gas: usize) void {
             while (x < WIDTH) : (x += 1) {
                 const coord = Coord.new2(cur_lev, x, y);
 
-                if (dungeon.at(coord).type == .Wall)
+                if (!is_walkable(coord, .{}))
                     continue;
 
                 var avg: f64 = dungeon.atGas(coord)[cur_gas];
                 var neighbors: f64 = 1;
                 for (&DIRECTIONS) |d, i| {
                     if (coord.move(d, mapgeometry)) |n| {
-                        if (dungeon.at(n).type == .Wall)
+                        if (dungeon.atGas(n)[cur_gas] < 0.1)
                             continue;
 
-                        if (dungeon.atGas(n)[cur_gas] == 0)
-                            continue;
-
-                        avg += dungeon.atGas(n)[cur_gas] - dissipation;
+                        avg += dungeon.atGas(n)[cur_gas];
                         neighbors += 1;
                     }
                 }
 
                 avg /= neighbors;
+                avg -= dissipation;
                 avg = math.max(avg, 0);
 
                 new[y][x] = avg;

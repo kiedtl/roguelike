@@ -31,7 +31,7 @@ pub const SmokeGas = Gas{
 
 pub const Confusion = Gas{
     .color = 0x33cbca,
-    .dissipation_rate = 0.08,
+    .dissipation_rate = 0.05,
     .opacity = 0.0,
     .trigger = triggerConfusion,
     .id = 3,
