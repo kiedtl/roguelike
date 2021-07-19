@@ -63,7 +63,7 @@ fn placeMob(
     return ptr;
 }
 
-fn randomWallCoord(room: *const Room) Coord {
+fn randomWallCoord(room: *const Room, i: ?usize) Coord {
     const Range = struct { from: Coord, to: Coord };
     const room_end = room.end();
 
@@ -74,7 +74,7 @@ fn randomWallCoord(room: *const Room) Coord {
         .{ .from = Coord.new(room_end.x, room.start.y + 1), .to = Coord.new(room_end.x, room_end.y - 2) }, // left
     };
 
-    const range = rng.chooseUnweighted(Range, &ranges);
+    const range = if (i) |_i| ranges[(_i + 1) % ranges.len] else rng.chooseUnweighted(Range, &ranges);
     const x = rng.rangeClumping(usize, range.from.x, range.to.x, 2);
     const y = rng.rangeClumping(usize, range.from.y, range.to.y, 2);
     return Coord.new2(room.start.z, x, y);
@@ -714,8 +714,8 @@ pub fn placeTraps(level: usize) void {
 
             var num_of_vents = rng.range(usize, 1, 3);
             var v_tries: usize = 100;
-            while (tries > 0 and num_of_vents > 0) : (tries -= 1) {
-                const vent = randomWallCoord(&room);
+            while (v_tries > 0 and num_of_vents > 0) : (v_tries -= 1) {
+                const vent = randomWallCoord(&room, v_tries);
                 if (state.dungeon.hasMachine(vent) or
                     state.dungeon.at(vent).type != .Wall or
                     state.dungeon.neighboringWalls(vent, true) == 9) continue;
@@ -791,7 +791,7 @@ fn placeLights(room: *const Room) void {
     var lights: usize = 0;
     var light_tries: usize = rng.range(usize, 0, 50);
     while (light_tries > 0 and lights < 4) : (light_tries -= 1) {
-        const coord = randomWallCoord(room);
+        const coord = randomWallCoord(room, light_tries);
 
         if (state.dungeon.at(coord).type != .Wall or
             !isTileAvailable(coord) or
