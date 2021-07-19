@@ -579,10 +579,8 @@ fn _place_rooms(
     if (child.prefab == null)
         if (choosePrefab(level, s_fabs)) |subroom|
             if ((subroom.height + 2) < child.height and (subroom.width + 2) < child.width) {
-                const mx = child.width - subroom.width;
-                const my = child.height - subroom.height;
-                const rx = mx - (subroom.width / 2);
-                const ry = my - (subroom.height / 2);
+                const rx = (child.width / 2) - (subroom.width / 2);
+                const ry = (child.height / 2) - (subroom.height / 2);
                 _excavate_prefab(&child, subroom, allocator, rx, ry);
             };
 }
