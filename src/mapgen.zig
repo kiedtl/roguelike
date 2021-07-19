@@ -576,13 +576,19 @@ fn _place_rooms(
     if (child.prefab) |f|
         Prefab.incrementUsedCounter(f.name.constSlice(), level, n_fabs);
 
-    if (child.prefab == null)
-        if (choosePrefab(level, s_fabs)) |subroom|
-            if ((subroom.height + 2) < child.height and (subroom.width + 2) < child.width) {
-                const rx = (child.width / 2) - (subroom.width / 2);
-                const ry = (child.height / 2) - (subroom.height / 2);
-                _excavate_prefab(&child, subroom, allocator, rx, ry);
-            };
+    if (child.prefab == null) {
+        var tries: usize = 50;
+        while (tries > 0) : (tries -= 1) {
+            if (choosePrefab(level, s_fabs)) |subroom| {
+                if ((subroom.height + 2) < child.height and (subroom.width + 2) < child.width) {
+                    const rx = (child.width / 2) - (subroom.width / 2);
+                    const ry = (child.height / 2) - (subroom.height / 2);
+                    _excavate_prefab(&child, subroom, allocator, rx, ry);
+                    break;
+                }
+            }
+        }
+    }
 }
 
 pub fn placeRandomRooms(
