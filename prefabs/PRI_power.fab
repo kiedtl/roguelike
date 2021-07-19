@@ -13,7 +13,7 @@
 @6 p steel_support_e2w2
 @7 p steel_support_nse2w2
 @8 p steel_support_nsw2
-@9 p steel_support_nsw2
+@9 p steel_support_nse2
 @a m power_supply
 
 :spawn interaction_laborer  6,2  6,3
