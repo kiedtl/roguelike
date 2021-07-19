@@ -136,23 +136,26 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     state.player.inventory.r_rings[0] = echoring;
 }
 
+fn prefabIsValid(level: usize, prefab: *Prefab) bool {
+    if (prefab.invisible)
+        return false; // Can't be used unless specifically called for by name.
+
+    if (!mem.eql(u8, prefab.name.constSlice()[0..3], Configs[level].identifier))
+        return false; // Prefab isn't for this level.
+
+    if (prefab.used[level] >= prefab.restriction)
+        return false; // Prefab was used too many times.
+
+    return true;
+}
+
 fn choosePrefab(level: usize, prefabs: *PrefabArrayList) ?*Prefab {
     var i: usize = 512;
     while (i > 0) : (i -= 1) {
-        // Don't use rng.chooseUnweighted, as we need a pointer to manage the
-        // restriction amount should we choose it.
+        // Don't use rng.chooseUnweighted, as we need a pointer
         const p = &prefabs.items[rng.range(usize, 0, prefabs.items.len - 1)];
 
-        if (p.invisible)
-            continue; // Can't be used unless specifically called for by name.
-
-        if (!mem.eql(u8, p.name.constSlice()[0..3], Configs[level].identifier))
-            continue; // Prefab isn't for this level.
-
-        if (p.used[level] >= p.restriction)
-            continue; // Prefab was used too many times.
-
-        return p;
+        if (prefabIsValid(level, p)) return p;
     }
 
     return null;
@@ -577,15 +580,15 @@ fn _place_rooms(
         Prefab.incrementUsedCounter(f.name.constSlice(), level, n_fabs);
 
     if (child.prefab == null) {
-        var tries: usize = 50;
-        while (tries > 0) : (tries -= 1) {
-            if (choosePrefab(level, s_fabs)) |subroom| {
-                if ((subroom.height + 2) < child.height and (subroom.width + 2) < child.width) {
-                    const rx = (child.width / 2) - (subroom.width / 2);
-                    const ry = (child.height / 2) - (subroom.height / 2);
-                    _excavate_prefab(&child, subroom, allocator, rx, ry);
-                    break;
-                }
+        for (s_fabs.items) |*subroom| {
+            if (!prefabIsValid(level, subroom))
+                continue;
+
+            if ((subroom.height + 2) < child.height and (subroom.width + 2) < child.width) {
+                const rx = (child.width / 2) - (subroom.width / 2);
+                const ry = (child.height / 2) - (subroom.height / 2);
+                _excavate_prefab(&child, subroom, allocator, rx, ry);
+                break;
             }
         }
     }
@@ -1317,6 +1320,10 @@ pub const Prefab = struct {
             }
         }
     }
+
+    pub fn greaterThan(_: void, a: Prefab, b: Prefab) bool {
+        return (a.height * a.width) > (b.height * b.width);
+    }
 };
 
 pub const PrefabArrayList = std.ArrayList(Prefab);
@@ -1362,6 +1369,8 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
             continue;
         };
     }
+
+    std.sort.insertionSort(Prefab, s_fabs.items, {}, Prefab.greaterThan);
 }
 
 pub const LevelConfig = struct {
