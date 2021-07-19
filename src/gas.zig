@@ -45,7 +45,15 @@ pub const Slow = Gas{
     .id = 4,
 };
 
-pub const Gases = [_]Gas{ Poison, Paralysis, SmokeGas, Confusion, Slow };
+pub const Healing = Gas{
+    .color = 0xbb97aa,
+    .dissipation_rate = 0.02,
+    .opacity = 0.0,
+    .trigger = triggerHealing,
+    .id = 5,
+};
+
+pub const Gases = [_]Gas{ Poison, Paralysis, SmokeGas, Confusion, Slow, Healing };
 pub const GAS_NUM: usize = Gases.len;
 
 // Ensure that each gas's ID matches the index that it appears as in Gases.
@@ -74,4 +82,9 @@ fn triggerConfusion(idiot: *Mob, quantity: f64) void {
 fn triggerSlow(idiot: *Mob, quantity: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
     idiot.addStatus(.Slow, 0, Status.MAX_DURATION);
+}
+
+fn triggerHealing(mob: *Mob, quantity: f64) void {
+    mob.HP *= 1.1 * (quantity + 1.0);
+    mob.HP = math.clamp(mob.HP, 0, mob.max_HP);
 }

@@ -1,0 +1,16 @@
+:subroom
+
+:spawn interaction_laborer 8,2 7,2
+
+@0 p medium_sieve
+@1 m healing_gas_pump
+@2 p steel_support_se2
+@3 p steel_support_ne2
+@4 p steel_gas_reservoir
+
+#≡≡≡≡≡#..
+•α....#24
+±..α..01.
+•....α#34
+#≡≡≡≡≡#..
+.........

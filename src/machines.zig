@@ -29,6 +29,10 @@ pub const PROPS = [_]Prop{
     SodaliteStatue,
     HematiteStatue,
     WorkstationProp,
+    MediumSieve,
+    SteelGasReservoir,
+    SteelSupport_NE2_Prop,
+    SteelSupport_SE2_Prop,
     SteelSupport_NSE2_Prop,
     SteelSupport_NSW2_Prop,
     SteelSupport_NSE2W2_Prop,
@@ -45,6 +49,7 @@ pub const PROPS = [_]Prop{
 
 pub const MACHINES = [_]Machine{
     PowerSupply,
+    HealingGasPump,
     Brazier,
     StairExit,
     StairUp,
@@ -85,6 +90,39 @@ pub const WorkstationProp = Prop{
     .tile = '░',
     .fg = 0xffffff,
     .walkable = true,
+};
+
+pub const MediumSieve = Prop{
+    .id = "medium_sieve",
+    .name = "medium_sieve",
+    .tile = '▒',
+    .fg = 0xffe7e7,
+    .walkable = false,
+    .function = .ActionPoint,
+};
+
+pub const SteelGasReservoir = Prop{
+    .id = "steel_gas_reservoir",
+    .name = "steel gas reservoir",
+    .tile = '■',
+    .fg = 0xd7d7ff,
+    .walkable = false,
+};
+
+pub const SteelSupport_NE2_Prop = Prop{
+    .id = "steel_support_ne2",
+    .name = "steel support",
+    .tile = '╘',
+    .fg = STEEL_SUPPORT_COLOR,
+    .walkable = false,
+};
+
+pub const SteelSupport_SE2_Prop = Prop{
+    .id = "steel_support_se2",
+    .name = "steel support",
+    .tile = '╒',
+    .fg = STEEL_SUPPORT_COLOR,
+    .walkable = false,
 };
 
 pub const SteelSupport_NSE2_Prop = Prop{
@@ -208,6 +246,25 @@ pub const PowerSupply = Machine{
     .on_power = powerPowerSupply,
 };
 
+pub const HealingGasPump = Machine{
+    .id = "healing_gas_pump",
+    .name = "machine",
+
+    .powered_tile = '█',
+    .unpowered_tile = '▓',
+
+    .power_drain = 100,
+    .power_add = 100,
+
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+
+    .powered_opacity = 0,
+    .unpowered_opacity = 0,
+
+    .on_power = powerHealingGasPump,
+};
+
 pub const Brazier = Machine{
     .name = "a brazier",
 
@@ -314,6 +371,17 @@ pub fn powerPowerSupply(machine: *Machine) void {
     while (iter.nextPtr()) |mach| {
         if (mach.coord.z == machine.coord.z and mach.auto_power)
             mach.addPower(null);
+    }
+}
+
+pub fn powerHealingGasPump(machine: *Machine) void {
+    for (&CARDINAL_DIRECTIONS) |direction| {
+        if (machine.coord.move(direction, state.mapgeometry)) |neighbor| {
+            if (state.dungeon.at(neighbor).surface) |surface| {
+                if (std.meta.activeTag(surface) == .Prop and surface.Prop.function == .ActionPoint)
+                    state.dungeon.atGas(neighbor)[gas.Healing.id] = 1.0;
+            }
+        }
     }
 }
 

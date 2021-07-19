@@ -1548,6 +1548,8 @@ pub const Machine = struct {
     }
 };
 
+pub const PropFunction = enum { ActionPoint, None };
+
 pub const Prop = struct {
     id: []const u8 = "",
     name: []const u8,
@@ -1556,6 +1558,7 @@ pub const Prop = struct {
     bg: ?u32 = null,
     walkable: bool = true,
     opacity: f64 = 0.0,
+    function: PropFunction = .None,
     coord: Coord = Coord.new(0, 0),
 };
 

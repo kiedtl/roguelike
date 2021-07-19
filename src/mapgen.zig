@@ -334,8 +334,16 @@ fn _excavate_prefab(
     for (fab.mobs) |maybe_mob| {
         if (maybe_mob) |mob_f| {
             if (utils.findById(&mobs.MOBS, mob_f.id)) |mob_template| {
-                const coord = room.start.add(mob_f.spawn_at);
-                const work_area = room.start.add(mob_f.work_at orelse mob_f.spawn_at);
+                const coord = Coord.new2(
+                    room.start.z,
+                    mob_f.spawn_at.x + room.start.x + startx,
+                    mob_f.spawn_at.y + room.start.y + starty,
+                );
+                const work_area = Coord.new2(
+                    room.start.z,
+                    (mob_f.work_at orelse mob_f.spawn_at).x + room.start.x + startx,
+                    (mob_f.work_at orelse mob_f.spawn_at).y + room.start.y + starty,
+                );
 
                 _ = placeMob(allocator, &mobs.MOBS[mob_template], coord, .{
                     .work_area = work_area,
