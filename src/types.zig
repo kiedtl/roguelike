@@ -973,7 +973,7 @@ pub const Mob = struct { // {{{
             }
         }
 
-        if (self.isHostileTo(other) or other.immobile) {
+        if (self.allegiance != other.allegiance or other.immobile) {
             can = false;
         }
 
