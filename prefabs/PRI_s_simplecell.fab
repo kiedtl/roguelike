@@ -1,17 +1,29 @@
 :subroom
 
+@0 m restricted_machines_open_lever
 ###
 #α#
 #±#
+0..
+
 \
-#±#
-#α#
-###
+
+@0 m restricted_machines_open_lever
+0#±#
+.#α#
+.###
+
 \
+
+@0 m restricted_machines_open_lever
+0..
 ###
 #α±
 ###
+
 \
-###
-±α#
-###
+
+@0 m restricted_machines_open_lever
+###0
+±α#.
+###.

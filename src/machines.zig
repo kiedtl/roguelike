@@ -59,6 +59,7 @@ pub const MACHINES = [_]Machine{
     PoisonGasTrap,
     ConfusionGasTrap,
     AlarmTrap,
+    RestrictedMachinesOpenLever,
 };
 
 pub const CONTAINERS = [_]Container{
@@ -360,9 +361,19 @@ pub const LockedDoor = Machine{
     .restricted_to = .Sauron,
     .powered_walkable = true,
     .unpowered_walkable = false,
-    .powered_opacity = 0.0,
-    .unpowered_opacity = 0.0,
     .on_power = powerNone,
+};
+
+pub const RestrictedMachinesOpenLever = Machine{
+    .id = "restricted_machines_open_lever",
+    .name = "lever",
+    .powered_tile = '\\',
+    .unpowered_tile = '/',
+    .unpowered_fg = 0xdaa520,
+    .power_drain = 90,
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+    .on_power = powerRestrictedMachinesOpenLever,
 };
 
 pub fn powerNone(_: *Machine) void {}
@@ -457,4 +468,28 @@ pub fn powerStairUp(machine: *Machine) void {
     const dst = Coord.new2(machine.coord.z - 1, machine.coord.x, machine.coord.y);
     if (culprit.teleportTo(dst, null))
         state.message(.Move, "You ascend.", .{});
+}
+
+pub fn powerRestrictedMachinesOpenLever(machine: *Machine) void {
+    const room_i = switch (state.layout[machine.coord.z][machine.coord.y][machine.coord.x]) {
+        .Unknown => return,
+        .Room => |r| r,
+    };
+    const room = &state.dungeon.rooms[machine.coord.z].items[room_i];
+
+    var y: usize = room.start.y;
+    while (y < room.end().y) : (y += 1) {
+        var x: usize = room.start.x;
+        while (x < room.end().x) : (x += 1) {
+            const coord = Coord.new2(machine.coord.z, x, y);
+
+            if (state.dungeon.at(coord).surface) |surface| {
+                switch (surface) {
+                    .Machine => |m| if (m.restricted_to != null)
+                        m.addPower(null),
+                    else => {},
+                }
+            }
+        }
+    }
 }

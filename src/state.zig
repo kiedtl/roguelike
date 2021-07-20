@@ -139,7 +139,7 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
                     // oh boy
                     if (opts.mob) |mob|
                         if (m.restricted_to) |restriction|
-                            if (m.powered_walkable and !m.unpowered_walkable)
+                            if (!m.isWalkable() and m.powered_walkable and !m.unpowered_walkable)
                                 if (restriction != mob.allegiance)
                                     return false;
                 }
