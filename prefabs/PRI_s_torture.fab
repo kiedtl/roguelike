@@ -2,7 +2,6 @@
 
 :spawn  interaction_laborer 8,1 7,1
 :spawn torturer_necromancer 3,5 3,5
-:spawn          executioner 3,3 3,3
 
 @0 p medium_sieve
 @1 m healing_gas_pump
