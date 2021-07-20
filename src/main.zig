@@ -46,6 +46,8 @@ fn initGame() void {
     var s_fabs: mapgen.PrefabArrayList = undefined;
     var n_fabs: mapgen.PrefabArrayList = undefined;
     mapgen.readPrefabs(&state.GPA.allocator, &n_fabs, &s_fabs);
+    defer s_fabs.deinit();
+    defer n_fabs.deinit();
 
     for (state.dungeon.map) |_, level| {
         mapgen.placeRandomRooms(&n_fabs, &s_fabs, level, &state.GPA.allocator);
