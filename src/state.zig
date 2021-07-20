@@ -176,8 +176,6 @@ pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, al
 
 // STYLE: rename to Mob.updateFOV
 pub fn _update_fov(mob: *Mob) void {
-    const all_octants = [_]?usize{ 0, 1, 2, 3, 4, 5, 6, 7 };
-
     for (mob.fov) |*row| for (row) |*cell| {
         cell.* = 0;
     };
