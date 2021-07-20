@@ -3,6 +3,7 @@ const mem = std.mem;
 const assert = std.debug.assert;
 
 const state = @import("state.zig");
+const items = @import("items.zig");
 const spells = @import("spells.zig");
 const dijkstra = @import("dijkstra.zig");
 const buffer = @import("buffer.zig");
@@ -32,12 +33,32 @@ pub fn currentEnemy(me: *Mob) *EnemyRecord {
     return &me.enemies.items[nearest];
 }
 
-fn _find_coord(coord: Coord, array: *CoordArrayList) usize {
-    for (array.items) |item, index| {
-        if (item.eq(coord))
-            return index;
-    }
-    unreachable;
+// Flee if:
+//      - enemy's HP is twice as high as mob's HP
+//      - mob's HP is 1/3 of normal and enemy's HP is greater than mob's
+//      - enemy's weapon is capable of trashing the mob in up to three hits
+//
+// TODO: flee if surrounded and there are no allies in sight
+pub fn shouldFlee(me: *Mob) bool {
+    var result = false;
+
+    const enemy = currentEnemy(me).mob;
+    const max_hp_third = me.max_HP * 33 / 100;
+
+    if (enemy.HP > (me.HP * 2))
+        result = true;
+
+    if (me.HP <= max_hp_third and me.HP < enemy.HP)
+        result = true;
+
+    const enemy_weapon = enemy.inventory.wielded orelse &items.UnarmedWeapon;
+    const my_armor = me.inventory.armor orelse &items.NoneArmor;
+    const max_damage = @intToFloat(f64, enemy_weapon.damages.resultOf(&my_armor.resists).sum());
+
+    if (max_damage >= max_hp_third or max_damage >= me.HP)
+        result = true;
+
+    return result;
 }
 
 pub fn dummyWork(m: *Mob, _: *mem.Allocator) void {

@@ -243,10 +243,9 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
         }
     }
 
-    const flee_threshhold = mob.max_HP * 25 / 100;
-    if (mob.occupation.phase == .SawHostile and mob.HP < flee_threshhold) {
+    if (mob.occupation.phase == .SawHostile and ai.shouldFlee(mob)) {
         mob.occupation.phase = .Flee;
-    } else if (mob.occupation.phase == .Flee and mob.HP >= flee_threshhold) {
+    } else if (mob.occupation.phase == .Flee and !ai.shouldFlee(mob)) {
         mob.occupation.phase = .SawHostile;
     }
 
