@@ -496,10 +496,9 @@ fn tickGame() void {
 
             mob.tick_hp();
             mob.tick_env();
+            mob.tickFOV();
             mob.tickRings();
             mob.tickStatuses();
-
-            state._update_fov(mob);
 
             if (mob.isUnderStatus(.Paralysis)) |_| {
                 if (mob.coord.eq(state.player.coord)) {
@@ -521,7 +520,7 @@ fn tickGame() void {
                 }
             }
 
-            state._update_fov(mob);
+            mob.tickFOV();
 
             assert(prev_energy > mob.energy);
 
@@ -558,10 +557,9 @@ fn viewerTickGame(cur_level: usize) void {
 
             mob.tick_hp();
             mob.tick_env();
+            mob.tickFOV();
             mob.tickRings();
             mob.tickStatuses();
-
-            state._update_fov(mob);
 
             if (mob.isUnderStatus(.Paralysis)) |_| {
                 _ = mob.rest();
@@ -570,7 +568,7 @@ fn viewerTickGame(cur_level: usize) void {
                 state._mob_occupation_tick(mob, &state.GPA.allocator);
             }
 
-            state._update_fov(mob);
+            mob.tickFOV();
 
             assert(prev_energy > mob.energy);
         }

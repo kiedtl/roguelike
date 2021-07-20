@@ -75,8 +75,8 @@ pub fn nextAvailableSpaceForItem(c: Coord, alloc: *mem.Allocator) ?Coord {
     return null;
 }
 
-const FLOOR_OPACITY: usize = 5;
-const MOB_OPACITY: usize = 10;
+pub const FLOOR_OPACITY: usize = 5;
+pub const MOB_OPACITY: usize = 20;
 
 // STYLE: change to Tile.lightOpacity
 pub fn tileOpacity(coord: Coord) usize {
@@ -172,35 +172,6 @@ pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, al
         }
     }
     return moblist;
-}
-
-// STYLE: rename to Mob.updateFOV
-pub fn _update_fov(mob: *Mob) void {
-    for (mob.fov) |*row| for (row) |*cell| {
-        cell.* = 0;
-    };
-
-    const energy = math.clamp(mob.vision * FLOOR_OPACITY, 0, 100);
-    const direction = if (mob.deg360_vision) null else mob.facing;
-
-    fov.rayCast(mob.coord, mob.vision, energy, tileOpacity, &mob.fov, direction);
-
-    for (mob.fov) |row, y| for (row) |_, x| {
-        if (mob.fov[y][x] > 0) {
-            const fc = Coord.new2(mob.coord.z, x, y);
-
-            // If a tile is too dim to be seen by a mob and it's not adjacent to that mob,
-            // mark it as unlit.
-            if (fc.distance(mob.coord) > 1 and
-                dungeon.lightIntensityAt(fc).* < mob.night_vision)
-            {
-                mob.fov[y][x] = 0;
-                continue;
-            }
-
-            mob.memory.put(fc, Tile.displayAs(fc)) catch unreachable;
-        }
-    };
 }
 
 fn _can_hear_hostile(mob: *Mob) ?Coord {

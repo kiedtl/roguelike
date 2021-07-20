@@ -9,6 +9,7 @@ const LinkedList = @import("list.zig").LinkedList;
 const RingBuffer = @import("ringbuffer.zig").RingBuffer;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
+const fov = @import("fov.zig");
 const heat = @import("heat.zig");
 const spells = @import("spells.zig");
 const rng = @import("rng.zig");
@@ -779,6 +780,34 @@ pub const Mob = struct { // {{{
     pub const NOISE_MOVE = 20;
     pub const NOISE_YELL = 60;
     pub const NOISE_SCREAM = 100;
+
+    pub fn tickFOV(self: *Mob) void {
+        for (self.fov) |*row| for (row) |*cell| {
+            cell.* = 0;
+        };
+
+        const energy = math.clamp(self.vision * state.FLOOR_OPACITY, 0, 100);
+        const direction = if (self.deg360_vision) null else self.facing;
+
+        fov.rayCast(self.coord, self.vision, energy, state.tileOpacity, &self.fov, direction);
+
+        for (self.fov) |row, y| for (row) |_, x| {
+            if (self.fov[y][x] > 0) {
+                const fc = Coord.new2(self.coord.z, x, y);
+
+                // If a tile is too dim to be seen by a mob and it's not adjacent to that mob,
+                // mark it as unlit.
+                if (fc.distance(self.coord) > 1 and
+                    state.dungeon.lightIntensityAt(fc).* < self.night_vision)
+                {
+                    self.fov[y][x] = 0;
+                    continue;
+                }
+
+                self.memory.put(fc, Tile.displayAs(fc)) catch unreachable;
+            }
+        };
+    }
 
     // Regenerate health as necessary.
     //
