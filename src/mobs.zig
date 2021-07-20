@@ -119,7 +119,7 @@ pub const PlayerTemplate = MobTemplate{
             .is_curious = false,
         },
         .allegiance = .Illuvatar,
-        .vision = 15,
+        .vision = 25,
         .night_vision = 3,
         .deg360_vision = true,
         .no_show_fov = true,
@@ -364,6 +364,37 @@ pub const CleanerTemplate = MobTemplate{
     },
 };
 
+pub const TorturerNecromancerTemplate = MobTemplate{
+    .id = "torturer_necromancer",
+    .mob = .{
+        .species = "necromancer",
+        .tile = 'Ñ',
+        .occupation = Occupation{
+            .profession_name = "torturer",
+            .profession_description = "torturing",
+            .work_fn = ai.tortureWork,
+            .fight_fn = ai.meleeFight,
+            .is_combative = true,
+            .is_curious = false,
+        },
+        .allegiance = .Sauron,
+        .vision = 6,
+        .night_vision = 20,
+        .deg360_vision = true,
+        .no_show_fov = false,
+
+        .willpower = 8,
+        .base_dexterity = 25,
+        .hearing = 6,
+        .max_HP = 80,
+        .memory_duration = 10,
+        .base_speed = 100,
+        .blood = .Blood,
+
+        .base_strength = 25,
+    },
+};
+
 pub const MOBS = [_]MobTemplate{
     WatcherTemplate,
     ExecutionerTemplate,
@@ -376,6 +407,7 @@ pub const MOBS = [_]MobTemplate{
     NebroStatueTemplate,
     CrystalStatueTemplate,
     CleanerTemplate,
+    TorturerNecromancerTemplate,
 };
 
 pub const PRISONERS = [_]MobTemplate{

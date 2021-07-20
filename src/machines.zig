@@ -220,7 +220,7 @@ pub const IronBarProp = Prop{
     .tile = '≡',
     .fg = 0x000012,
     .bg = 0xdadada,
-    .opacity = 0.3,
+    .opacity = 0.0,
     .walkable = false,
 };
 
@@ -359,8 +359,8 @@ pub const LockedDoor = Machine{
     .treat_as_walkable_by = .Sauron,
     .powered_walkable = false,
     .unpowered_walkable = false,
-    .powered_opacity = 0.7,
-    .unpowered_opacity = 0.7,
+    .powered_opacity = 0.1,
+    .unpowered_opacity = 0.1,
     .on_power = powerLockedDoor,
 };
 

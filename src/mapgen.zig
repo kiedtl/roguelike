@@ -283,6 +283,7 @@ fn _excavate_prefab(
                 .Door,
                 .Bars,
                 .Brazier,
+                .Prison,
                 .Floor,
                 => .Floor,
                 .Water => .Water,
@@ -326,6 +327,7 @@ fn _excavate_prefab(
                 .Door => placeDoor(rc, false),
                 .Brazier => _place_machine(rc, &machines.Brazier),
                 .Bars => _ = _place_prop(rc, &machines.IronBarProp),
+                .Prison => state.dungeon.at(rc).prison = true,
                 else => {},
             }
         }
@@ -1026,15 +1028,10 @@ pub fn populateCaves(avoid: *const [HEIGHT][WIDTH]bool, level: usize, alloc: *me
 }
 
 fn levelFeaturePrisoners(_: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
-    // Can only place prisoners in subrooms for now...
-    assert(prefab.subroom);
-
     const prisoner_t = rng.chooseUnweighted(mobs.MobTemplate, &mobs.PRISONERS);
     const prisoner = placeMob(alloc, &prisoner_t, coord, .{});
-    prisoner.prisoner_status = Prisoner{
-        .of = .Sauron,
-        .prison = .{ .start = room.start, .width = room.width, .height = room.height },
-    };
+    prisoner.prisoner_status = Prisoner{ .of = .Sauron };
+    state.dungeon.at(coord).prison = true;
 }
 
 pub const Prefab = struct {
@@ -1066,6 +1063,7 @@ pub const Prefab = struct {
         Door,
         Brazier,
         Floor,
+        Prison,
         Connection,
         Water,
         Lava,
@@ -1286,6 +1284,7 @@ pub const Prefab = struct {
                                 f.player_position = Coord.new(x, y);
                                 break :player .Floor;
                             },
+                            ',' => .Prison,
                             '.' => .Floor,
                             '*' => con: {
                                 f.connections[ci] = .{

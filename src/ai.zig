@@ -5,12 +5,15 @@ const assert = std.debug.assert;
 const state = @import("state.zig");
 const spells = @import("spells.zig");
 const dijkstra = @import("dijkstra.zig");
+const buffer = @import("buffer.zig");
 const astar = @import("astar.zig");
 const rng = @import("rng.zig");
 usingnamespace @import("types.zig");
 
+const StackBuffer = buffer.StackBuffer;
+
 // Find the nearest enemy.
-fn currentEnemy(me: *Mob) *EnemyRecord {
+pub fn currentEnemy(me: *Mob) *EnemyRecord {
     assert(me.occupation.phase == .SawHostile or me.occupation.phase == .Flee);
     assert(me.enemies.items.len > 0);
 
@@ -97,7 +100,10 @@ pub fn checkForHostiles(mob: *Mob) void {
     var i: usize = 0;
     while (i < mob.enemies.items.len) {
         const enemy = &mob.enemies.items[i];
-        if (enemy.counter == 0 or enemy.mob.is_dead) {
+        if (enemy.counter == 0 or
+            !mob.isHostileTo(enemy.mob) or
+            enemy.mob.is_dead)
+        {
             _ = mob.enemies.orderedRemove(i);
         } else {
             if (!mob.cansee(enemy.last_seen))
@@ -352,9 +358,47 @@ pub fn goofingAroundWork(mob: *Mob, alloc: *mem.Allocator) void {
     mob.tryMoveTo(dest);
 }
 
+// - Get list of prisoners within view.
+// - Sort according to distance.
+// - Go through list.
+//      - Skip ones that are already affected by Pain.
+//      - When cast spell, return.
+pub fn tortureWork(mob: *Mob, alloc: *mem.Allocator) void {
+    const _sortFunc = struct {
+        fn _sortWithDistance(me: *Mob, a: *Mob, b: *Mob) bool {
+            return a.coord.distance(me.coord) > b.coord.distance(me.coord);
+        }
+    };
+
+    var prisoners = StackBuffer(*Mob, 32).init(null);
+
+    for (mob.fov) |row, y| for (row) |cell, x| {
+        if (cell == 0) continue;
+        const fitem = Coord.new2(mob.coord.z, x, y);
+
+        if (state.dungeon.at(fitem).mob) |othermob| {
+            if (othermob.prisoner_status != null) prisoners.append(othermob) catch break;
+        }
+    };
+
+    std.sort.insertionSort(*Mob, prisoners.slice(), mob, _sortFunc._sortWithDistance);
+
+    for (prisoners.constSlice()) |prisoner| {
+        if (prisoner.isUnderStatus(.Pain)) |_|
+            continue;
+
+        spells.CAST_PAIN.use(mob, prisoner.coord, .{ .status_duration = 10 }, null);
+        return;
+    }
+
+    _ = mob.rest();
+}
+
 // - Move towards hostile, bapping it if we can.
 pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
     const target = currentEnemy(mob).mob;
+    assert(mob.isHostileTo(target));
+
     if (mob.coord.distance(target.coord) == 1) {
         _ = mob.fight(target);
     } else {

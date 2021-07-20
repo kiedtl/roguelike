@@ -5,6 +5,7 @@ const rng = @import("rng.zig");
 pub const CAST_FREEZE = Spell{ .name = "freeze", .cast_type = .Cast, .effect_type = .{ .Status = .Paralysis } };
 pub const CAST_FAMOUS = Spell{ .name = "famous", .cast_type = .Cast, .effect_type = .{ .Status = .Corona } };
 pub const CAST_FERMENT = Spell{ .name = "ferment", .cast_type = .Cast, .effect_type = .{ .Status = .Confusion } };
+pub const CAST_PAIN = Spell{ .name = "pain", .cast_type = .Cast, .effect_type = .{ .Status = .Pain } };
 
 fn willSucceedAgainstMob(caster: *const Mob, target: *const Mob) bool {
     if (rng.onein(10)) return false;

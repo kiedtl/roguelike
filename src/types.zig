@@ -549,6 +549,12 @@ pub const Status = enum {
     // Doesn't have a power field.
     Invigorate,
 
+    // Forces mob to move in random directions instead of resting, scream,
+    // and lose HP every turn.
+    //
+    // Doesn't have a power field (but probably should).
+    Pain,
+
     pub const MAX_DURATION: usize = 20;
 
     pub fn string(self: Status) []const u8 {
@@ -562,12 +568,20 @@ pub const Status = enum {
             .Recuperate => "recuperating",
             .Poison => "poisoned",
             .Invigorate => "invigorated",
+            .Pain => "pain",
         };
     }
 
     pub fn tickPoison(mob: *Mob) void {
         mob.takeDamage(.{
             .amount = @intToFloat(f64, rng.rangeClumping(usize, 0, 2, 2)),
+        });
+    }
+
+    pub fn tickPain(mob: *Mob) void {
+        mob.makeNoise(Mob.NOISE_SCREAM);
+        mob.takeDamage(.{
+            .amount = @intToFloat(f64, rng.rangeClumping(usize, 1, 3, 2)),
         });
     }
 
@@ -677,7 +691,6 @@ pub const AIWorkPhase = enum {
 
 pub const Prisoner = struct {
     of: Allegiance,
-    prison: Room,
 };
 
 pub const Mob = struct { // {{{
@@ -814,6 +827,7 @@ pub const Mob = struct { // {{{
                 switch (status_e) {
                     .Echolocation => Status.tickEcholocation(self),
                     .Poison => Status.tickPoison(self),
+                    .Pain => Status.tickPain(self),
                     else => {},
                 }
             }
@@ -1070,7 +1084,12 @@ pub const Mob = struct { // {{{
     }
 
     pub fn rest(self: *Mob) bool {
-        self.declareAction(.Rest);
+        if (self.isUnderStatus(.Pain) != null and !self.immobile) {
+            if (!self.moveInDirection(rng.chooseUnweighted(Direction, &DIRECTIONS)))
+                self.declareAction(.Rest);
+        } else {
+            self.declareAction(.Rest);
+        }
         return true;
     }
 
@@ -1385,7 +1404,7 @@ pub const Mob = struct { // {{{
 
         if (othermob.prisoner_status) |prisoner_status| {
             if (prisoner_status.of == self.allegiance and
-                othermob.coord.asRoom().intersects(&prisoner_status.prison, 0))
+                state.dungeon.at(othermob.coord).prison)
             {
                 hostile = false;
             }
@@ -1811,6 +1830,7 @@ pub const TileType = enum {
 };
 
 pub const Tile = struct {
+    prison: bool = false,
     material: *const Material = &materials.Basalt,
     type: TileType = .Wall,
     mob: ?*Mob = null,

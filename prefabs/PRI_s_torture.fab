@@ -1,6 +1,8 @@
 :subroom
 
-:spawn interaction_laborer 8,2 7,2
+:spawn  interaction_laborer 8,1 7,1
+:spawn torturer_necromancer 3,5 3,5
+:spawn          executioner 3,3 3,3
 
 @0 p medium_sieve
 @1 m healing_gas_pump
@@ -8,9 +10,9 @@
 @3 p steel_support_ne2
 @4 p steel_gas_reservoir
 
-#≡≡≡≡≡#..
-•α....#24
-±..α..01.
-•....α#34
+#≡≡≡≡≡#24
+±,ααα,01.
+#,,,,,#34
+#,,,,,#..
 #≡≡≡≡≡#..
 .........
