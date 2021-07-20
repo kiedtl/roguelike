@@ -231,10 +231,15 @@ pub fn watcherWork(mob: *Mob, alloc: *mem.Allocator) void {
 pub fn interactionLaborerWork(mob: *Mob, _: *mem.Allocator) void {
     assert(mob.occupation.work_area.items.len == 1);
 
-    const machine = mob.occupation.work_area.items[0];
-    assert(!mob.coord.eq(machine)); // Machine should not be walkable, right?
+    const machine_coord = mob.occupation.work_area.items[0];
+    const machine = state.dungeon.at(machine_coord).surface.?.Machine;
+    assert(!mob.coord.eq(machine_coord)); // Machine should not be walkable
 
-    mob.tryMoveTo(machine);
+    if (!machine.isPowered() and rng.onein(2)) {
+        mob.tryMoveTo(machine_coord);
+    } else {
+        _ = mob.rest();
+    }
 }
 
 pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
