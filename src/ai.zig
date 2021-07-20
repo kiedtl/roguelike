@@ -226,6 +226,10 @@ pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
                 var x: usize = 0;
                 while (x < WIDTH) : (x += 1) {
                     const coord = Coord.new2(mob.coord.z, x, y);
+
+                    // Let the prisoners wallow in filth
+                    if (state.dungeon.at(coord).prison) continue;
+
                     var clean = true;
 
                     var spattering = state.dungeon.at(coord).spatter.iterator();
