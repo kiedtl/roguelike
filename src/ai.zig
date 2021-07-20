@@ -368,7 +368,9 @@ pub fn goofingAroundWork(mob: *Mob, alloc: *mem.Allocator) void {
         while (tries < 10) : (tries += 1) {
             const point = room.randomCoord();
 
-            if (!state.is_walkable(point, .{ .right_now = true })) continue;
+            if (!state.is_walkable(point, .{ .right_now = true }) or
+                state.dungeon.at(point).prison)
+                continue;
 
             if (mob.nextDirectionTo(point)) |_| {
                 mob.occupation.target = point;
@@ -394,6 +396,18 @@ pub fn goofingAroundWork(mob: *Mob, alloc: *mem.Allocator) void {
 //      - Skip ones that are already affected by Pain.
 //      - When cast spell, return.
 pub fn tortureWork(mob: *Mob, alloc: *mem.Allocator) void {
+    const post = mob.occupation.work_area.items[0];
+
+    if (!mob.coord.eq(post)) {
+        // We're not at our post, return there
+        if (!mob.isCreeping()) {
+            _ = mob.rest();
+        } else {
+            mob.tryMoveTo(post);
+        }
+        return;
+    }
+
     const _sortFunc = struct {
         fn _sortWithDistance(me: *Mob, a: *Mob, b: *Mob) bool {
             return a.coord.distance(me.coord) > b.coord.distance(me.coord);
