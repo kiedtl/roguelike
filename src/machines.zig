@@ -353,15 +353,16 @@ pub const NormalDoor = Machine{
 
 pub const LockedDoor = Machine{
     .name = "locked door",
-    .powered_tile = '⌂',
-    .unpowered_tile = '⌂',
+    .powered_tile = '□',
+    .unpowered_tile = '■',
+    .unpowered_fg = 0xcfcfff,
     .power_drain = 100,
-    .treat_as_walkable_by = .Sauron,
-    .powered_walkable = false,
+    .restricted_to = .Sauron,
+    .powered_walkable = true,
     .unpowered_walkable = false,
-    .powered_opacity = 0.1,
-    .unpowered_opacity = 0.1,
-    .on_power = powerLockedDoor,
+    .powered_opacity = 0.0,
+    .unpowered_opacity = 0.0,
+    .on_power = powerNone,
 };
 
 pub fn powerNone(_: *Machine) void {}
@@ -456,23 +457,4 @@ pub fn powerStairUp(machine: *Machine) void {
     const dst = Coord.new2(machine.coord.z - 1, machine.coord.x, machine.coord.y);
     if (culprit.teleportTo(dst, null))
         state.message(.Move, "You ascend.", .{});
-}
-
-pub fn powerLockedDoor(machine: *Machine) void {
-    // Shouldn't be auto-powered
-    const culprit = machine.last_interaction.?;
-
-    if (culprit.allegiance == .Sauron) {
-        const direction = Direction.from_coords(culprit.coord, machine.coord) catch return;
-
-        if (machine.coord.move(direction, state.mapgeometry)) |newcoord| {
-            if (!state.is_walkable(newcoord, .{ .right_now = true })) return;
-
-            _ = culprit.teleportTo(newcoord, null);
-        } else {
-            return;
-        }
-    } else {
-        state.message(.Move, "You feel a malevolent force forbidding you to pass.", .{});
-    }
 }

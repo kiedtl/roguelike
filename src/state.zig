@@ -129,17 +129,19 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
         switch (surface) {
             .Container => |_| return true,
             .Machine => |m| {
-                if (m.treat_as_walkable_by) |a|
-                    if (opts.mob) |mob|
-                        if (a == mob.allegiance)
-                            return true; // XXX: overrides below
-
                 if (opts.right_now) {
                     if (!m.isWalkable())
                         return false;
                 } else {
                     if (!m.powered_walkable and !m.unpowered_walkable)
                         return false;
+
+                    // oh boy
+                    if (opts.mob) |mob|
+                        if (m.restricted_to) |restriction|
+                            if (m.powered_walkable and !m.unpowered_walkable)
+                                if (restriction != mob.allegiance)
+                                    return false;
                 }
             },
             .Prop => |p| if (!p.walkable) return false,

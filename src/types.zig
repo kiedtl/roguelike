@@ -1521,7 +1521,7 @@ pub const Machine = struct {
     power_add: usize = 100, // Power added on interact
     auto_power: bool = false,
 
-    treat_as_walkable_by: ?Allegiance = null,
+    restricted_to: ?Allegiance = null,
     powered_walkable: bool = true,
     unpowered_walkable: bool = true,
 
@@ -1542,6 +1542,10 @@ pub const Machine = struct {
     // TODO: is_disabled?
 
     pub fn addPower(self: *Machine, by: ?*Mob) void {
+        if (by) |_by|
+            if (self.restricted_to) |restriction|
+                if (restriction != _by.allegiance) return;
+
         self.power = math.min(self.power + self.power_add, 100);
         self.last_interaction = by;
     }
