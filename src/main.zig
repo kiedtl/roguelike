@@ -409,6 +409,24 @@ fn readInput() bool {
                 'u' => moveOrFight(.NorthEast),
                 'b' => moveOrFight(.SouthWest),
                 'n' => moveOrFight(.SouthEast),
+
+                // wizard keys
+                '<' => blk: {
+                    if (state.player.coord.z != 0) {
+                        const new = Coord.new2(state.player.coord.z - 1, state.player.coord.x, state.player.coord.y);
+                        break :blk state.player.teleportTo(new, null);
+                    } else {
+                        break :blk false;
+                    }
+                },
+                '>' => blk: {
+                    if (state.player.coord.z < (LEVELS - 1)) {
+                        const new = Coord.new2(state.player.coord.z + 1, state.player.coord.x, state.player.coord.y);
+                        break :blk state.player.teleportTo(new, null);
+                    } else {
+                        break :blk false;
+                    }
+                },
                 's' => blk: {
                     _ = state.player.rest();
                     state.dungeon.atGas(state.player.coord)[gas.SmokeGas.id] += 1.0;
