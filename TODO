@@ -588,13 +588,13 @@ x Integrate with lighting system (make hot tiles emit light)
 - Allow walls to melt
 - Allow props and machines to be damaged and melt
 
-Room features:
-==============
-- Moar materials for walls
+Room features/Mapgen:
+=====================
+- Allow close prefabs
+- Make connectors flanked by floors a floor or door
 - Add some lichen and fungi to rooms
 x Add statues and chests to corners of rooms
 - Add posters
-- Add "palantirs"
 ~ Allow for prefabs to be rotated
 x Allow for prefabs to have alternate layouts
 x Allow for prefabs to be restricted to a map
@@ -723,6 +723,10 @@ x Add braziers that are built into the walls (aka torches), and use that
   instead for corridors
 - Some kind of squad-forming fast-moving swarming mob, like killer bees (DCSS)
   or swarmers (Cogmind 7DRL)
++ Level with hospital (get healed with healing gas), nursery (kill baby goblins!),
+  dining room, bedrooms, kitchen
++ "cameras kits" that create surface items that keep the surrounding area in the
+  FOV of all mobs that have a certain ring on
 
 Optimizations
 =============
