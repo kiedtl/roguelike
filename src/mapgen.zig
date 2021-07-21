@@ -584,8 +584,6 @@ fn _place_rooms(
         _excavate_room(&child);
     }
 
-    rooms.append(child) catch unreachable;
-
     if (child.prefab) |f|
         Prefab.incrementUsedCounter(f.name.constSlice(), level, n_fabs);
 
@@ -598,10 +596,13 @@ fn _place_rooms(
                 const rx = (child.width / 2) - (subroom.width / 2);
                 const ry = (child.height / 2) - (subroom.height / 2);
                 _excavate_prefab(&child, subroom, allocator, rx, ry);
+                child.has_subroom = true;
                 break;
             }
         }
     }
+
+    rooms.append(child) catch unreachable;
 }
 
 pub fn placeRandomRooms(
@@ -843,19 +844,20 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
 
         var statues: usize = 0;
         var capacity: usize = 0;
+        var levers: usize = 0;
 
-        var tries = rng.range(usize, 0, math.sqrt(room.width * room.height) * 3);
+        var tries = math.sqrt(room.width * room.height) * 5;
         while (tries > 0) : (tries -= 1) {
             const range = ranges[tries % ranges.len];
-            const x = rng.rangeClumping(usize, range.from.x, range.to.x, 3);
-            const y = rng.rangeClumping(usize, range.from.y, range.to.y, 2);
+            const x = rng.range(usize, range.from.x, range.to.x);
+            const y = rng.range(usize, range.from.y, range.to.y);
             const coord = Coord.new2(room.start.z, x, y);
 
             if (!isTileAvailable(coord) or
                 state.dungeon.neighboringWalls(coord, true) != 3)
                 continue;
 
-            switch (rng.range(usize, 1, 2)) {
+            switch (rng.range(usize, 1, 3)) {
                 1 => {
                     if (statues < 3) {
                         if (rng.onein(3)) {
@@ -873,6 +875,12 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                         var cont = rng.chooseUnweighted(Container, &machines.CONTAINERS);
                         placeContainer(coord, &cont);
                         capacity += cont.capacity;
+                    }
+                },
+                3 => {
+                    if (levers < 1 and room.has_subroom) {
+                        _place_machine(coord, &machines.RestrictedMachinesOpenLever);
+                        levers += 1;
                     }
                 },
                 else => unreachable,

@@ -372,6 +372,8 @@ pub const Room = struct {
     type: RoomType = .Room,
 
     prefab: ?*mapgen.Prefab = null,
+    has_subroom: bool = false,
+
     start: Coord,
     width: usize,
     height: usize,
