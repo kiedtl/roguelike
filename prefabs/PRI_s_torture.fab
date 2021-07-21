@@ -1,5 +1,7 @@
 :subroom
 
+:prison 0,0 7 5
+
 :spawn  interaction_laborer 8,1 7,1
 :spawn torturer_necromancer 3,5 3,5
 
@@ -10,8 +12,8 @@
 @4 p steel_gas_reservoir
 
 #≡≡≡≡≡#24
-#,ααα,01.
-•,,,,,#34
-#,,,,,#..
+±.ααα.01.
+•.ααα.#34
+#.....#..
 #≡≡≡≡≡#..
 .........

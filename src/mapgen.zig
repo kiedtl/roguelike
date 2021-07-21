@@ -283,7 +283,6 @@ fn _excavate_prefab(
                 .Door,
                 .Bars,
                 .Brazier,
-                .Prison,
                 .Floor,
                 => .Floor,
                 .Water => .Water,
@@ -327,7 +326,6 @@ fn _excavate_prefab(
                 .Door => placeDoor(rc, false),
                 .Brazier => _place_machine(rc, &machines.Brazier),
                 .Bars => _ = _place_prop(rc, &machines.IronBarProp),
-                .Prison => state.dungeon.at(rc).prison = true,
                 else => {},
             }
         }
@@ -355,6 +353,27 @@ fn _excavate_prefab(
                     "{}: Couldn't load mob {}, skipping.",
                     .{ fab.name.constSlice(), utils.used(mob_f.id) },
                 );
+            }
+        }
+    }
+
+    for (fab.prisons.constSlice()) |prison_area| {
+        const prison_start = Coord.new2(
+            room.start.z,
+            prison_area.start.x + room.start.x + startx,
+            prison_area.start.y + room.start.y + starty,
+        );
+        const prison_end = Coord.new2(
+            room.start.z,
+            prison_area.end().x + room.start.x + startx,
+            prison_area.end().y + room.start.y + starty,
+        );
+
+        var p_y: usize = prison_start.y;
+        while (p_y < prison_end.y) : (p_y += 1) {
+            var p_x: usize = prison_start.x;
+            while (p_x < prison_end.x) : (p_x += 1) {
+                state.dungeon.at(Coord.new2(room.start.z, p_x, p_y)).prison = true;
             }
         }
     }
@@ -596,6 +615,7 @@ fn _place_rooms(
                 const rx = (child.width / 2) - (subroom.width / 2);
                 const ry = (child.height / 2) - (subroom.height / 2);
                 _excavate_prefab(&child, subroom, allocator, rx, ry);
+                Prefab.incrementUsedCounter(subroom.name.constSlice(), level, s_fabs);
                 child.has_subroom = true;
                 break;
             }
@@ -1039,7 +1059,6 @@ fn levelFeaturePrisoners(_: usize, coord: Coord, room: *const Room, prefab: *con
     const prisoner_t = rng.chooseUnweighted(mobs.MobTemplate, &mobs.PRISONERS);
     const prisoner = placeMob(alloc, &prisoner_t, coord, .{});
     prisoner.prisoner_status = Prisoner{ .of = .Sauron };
-    state.dungeon.at(coord).prison = true;
 }
 
 pub const Prefab = struct {
@@ -1060,6 +1079,7 @@ pub const Prefab = struct {
     connections: [40]?Connection = undefined,
     features: [128]?Feature = [_]?Feature{null} ** 128,
     mobs: [45]?FeatureMob = [_]?FeatureMob{null} ** 45,
+    prisons: StackBuffer(Room, 8) = StackBuffer(Room, 8).init(null),
 
     used: [LEVELS]usize = [_]usize{0} ** LEVELS,
 
@@ -1071,7 +1091,6 @@ pub const Prefab = struct {
         Door,
         Brazier,
         Floor,
-        Prison,
         Connection,
         Water,
         Lava,
@@ -1182,6 +1201,7 @@ pub const Prefab = struct {
                     f.player_position = null;
                     f.height = 0;
                     f.width = 0;
+                    f.prisons.clear();
                     for (f.content) |*row| mem.set(FabTile, row, .Wall);
                     mem.set(?Connection, &f.connections, null);
                     mem.set(?Feature, &f.features, null);
@@ -1239,6 +1259,23 @@ pub const Prefab = struct {
                         }
 
                         cm += 1;
+                    } else if (mem.eql(u8, key, "prison")) {
+                        var room_start = Coord.new(0, 0);
+                        var width: usize = 0;
+                        var height: usize = 0;
+
+                        var room_start_tokens = mem.tokenize(val, ",");
+                        const room_start_str_a = room_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        const room_start_str_b = room_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        room_start.x = std.fmt.parseInt(usize, room_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
+                        room_start.y = std.fmt.parseInt(usize, room_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
+
+                        const width_str = words.next() orelse return error.ExpectedMetadataValue;
+                        const height_str = words.next() orelse return error.ExpectedMetadataValue;
+                        width = std.fmt.parseInt(usize, width_str, 0) catch |_| return error.InvalidMetadataValue;
+                        height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
+
+                        f.prisons.append(.{ .start = room_start, .width = width, .height = height }) catch |_| return error.TooManyPrisons;
                     }
                 },
                 '@' => {
@@ -1292,7 +1329,6 @@ pub const Prefab = struct {
                                 f.player_position = Coord.new(x, y);
                                 break :player .Floor;
                             },
-                            ',' => .Prison,
                             '.' => .Floor,
                             '*' => con: {
                                 f.connections[ci] = .{
@@ -1368,6 +1404,7 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
 
         Prefab.parseAndLoad(fab_file.name, buf[0..read], n_fabs, s_fabs) catch |e| {
             const msg = switch (e) {
+                error.TooManyPrisons => "Too many prisons",
                 error.InvalidFabTile => "Invalid prefab tile",
                 error.InvalidConnection => "Out of place connection tile",
                 error.FabTooWide => "Prefab exceeds width limit",
