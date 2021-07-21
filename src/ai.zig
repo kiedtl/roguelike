@@ -12,6 +12,15 @@ const rng = @import("rng.zig");
 usingnamespace @import("types.zig");
 
 const StackBuffer = buffer.StackBuffer;
+const SpellInfo = spells.SpellInfo;
+
+fn flingRandomSpell(me: *Mob, target: *Mob) void {
+    const spell = rng.chooseUnweighted(SpellInfo, me.spells.slice());
+    spell.spell.use(me, target.coord, .{
+        .status_duration = spell.duration,
+        .status_power = spell.power,
+    }, null);
+}
 
 // Find the nearest enemy.
 pub fn currentEnemy(me: *Mob) *EnemyRecord {
@@ -37,6 +46,7 @@ pub fn currentEnemy(me: *Mob) *EnemyRecord {
 //      - enemy's HP is twice as high as mob's HP
 //      - mob's HP is 1/3 of normal and enemy's HP is greater than mob's
 //      - enemy's weapon is capable of trashing the mob in up to three hits
+//      - mob has .Flee status effect
 //
 // TODO: flee if surrounded and there are no allies in sight
 pub fn shouldFlee(me: *Mob) bool {
@@ -58,7 +68,73 @@ pub fn shouldFlee(me: *Mob) bool {
     if (max_damage >= max_hp_third or max_damage >= me.HP)
         result = true;
 
+    if (me.isUnderStatus(.Fear)) |_|
+        result = true;
+
     return result;
+}
+
+// - Can we see the hostile?
+//      - No:
+//          - Move towards the hostile.
+//      - Yes?
+//          - Are we at least <distance> away from mob?
+//              - No?
+//                  - Move away from the hostile.
+//
+pub fn keepDistance(mob: *Mob, from: Coord, distance: usize, alloc: *mem.Allocator) bool {
+    if (!mob.cansee(from)) {
+        mob.tryMoveTo(from);
+        return true;
+    }
+
+    const current_distance = mob.coord.distance(from);
+
+    if (current_distance < distance) {
+        var flee_to: ?Coord = null;
+        var emerg_flee_to: ?Coord = null;
+
+        // Find next space to flee to.
+        var dijk = dijkstra.Dijkstra.init(
+            mob.coord,
+            state.mapgeometry,
+            distance,
+            state.is_walkable,
+            .{},
+            alloc,
+        );
+        defer dijk.deinit();
+        while (dijk.next()) |coord| {
+            if (coord.distance(from) <= current_distance)
+                continue;
+
+            if (mob.nextDirectionTo(coord) == null)
+                continue;
+
+            const walls = state.dungeon.neighboringWalls(coord, true);
+
+            if (walls > 2) {
+                if (walls < 4) {
+                    emerg_flee_to = coord;
+                }
+                continue;
+            }
+
+            flee_to = coord;
+            break;
+        }
+
+        var moved = false;
+        if (flee_to orelse emerg_flee_to) |dst| {
+            const oldd = mob.facing;
+            moved = mob.moveInDirection(mob.nextDirectionTo(dst).?);
+            mob.facing = oldd;
+        }
+
+        return moved;
+    }
+
+    return false;
 }
 
 pub fn dummyWork(m: *Mob, _: *mem.Allocator) void {
@@ -143,6 +219,14 @@ pub fn checkForHostiles(mob: *Mob) void {
         // No enemies sighted, we're done hunting.
         mob.occupation.phase = .Work;
     }
+
+    // Sort according to distance.
+    const _sortFunc = struct {
+        fn _sortWithDistance(me: *Mob, a: EnemyRecord, b: EnemyRecord) bool {
+            return a.mob.coord.distance(me.coord) > b.mob.coord.distance(me.coord);
+        }
+    };
+    std.sort.insertionSort(EnemyRecord, mob.enemies.items, mob, _sortFunc._sortWithDistance);
 }
 
 fn _guard_glance(mob: *Mob, prev_direction: Direction) void {
@@ -431,7 +515,10 @@ pub fn tortureWork(mob: *Mob, alloc: *mem.Allocator) void {
         if (prisoner.isUnderStatus(.Pain)) |_|
             continue;
 
-        spells.CAST_PAIN.use(mob, prisoner.coord, .{ .status_duration = 10 }, null);
+        spells.CAST_PAIN.use(mob, prisoner.coord, .{
+            .status_duration = 10,
+            .status_power = 4,
+        }, null);
         return;
     }
 
@@ -448,6 +535,38 @@ pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
     } else {
         mob.tryMoveTo(target.coord);
     }
+}
+
+pub fn mageFight(mob: *Mob, alloc: *mem.Allocator) void {
+    const spell = rng.chooseUnweighted(SpellInfo, mob.spells.slice());
+
+    const spell_status: ?Status = if (std.meta.activeTag(spell.spell.effect_type) == .Status)
+        spell.spell.effect_type.Status
+    else
+        null;
+
+    for (mob.enemies.items) |enemy_record| {
+        const enemy = enemy_record.mob;
+
+        // Skip mobs that have already been afflicted, or just
+        // skip them according to our tender mercies if we can't
+        // tell if they've been cast at last time
+        if (spell_status) |status| {
+            if (enemy.isUnderStatus(status)) |_|
+                continue;
+        } else if (rng.onein(3)) {
+            continue;
+        }
+
+        spell.spell.use(mob, enemy.coord, .{
+            .status_duration = 10,
+            .status_power = 4,
+        }, null);
+        return;
+    }
+
+    // We didn't find an enemy to cast at, just fling at the first enemy
+    flingRandomSpell(mob, currentEnemy(mob).mob);
 }
 
 // - Are there allies within view?
@@ -501,79 +620,16 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
     }
 }
 
-// - Can we see the hostile?
-//      - No:
-//          - Move towards the hostile.
-//      - Yes?
-//          - Are we at least PREFERRED_DISTANCE away from mob?
-//              - No?
-//                  - Move away from the hostile.
-//          - Shout!
-//
 pub fn flee(mob: *Mob, alloc: *mem.Allocator) void {
-    const PREFERRED_DISTANCE: usize = 4;
-
     const target = currentEnemy(mob).mob;
 
-    if (!mob.cansee(target.coord)) {
-        mob.tryMoveTo(target.coord);
-        return;
+    if (!keepDistance(mob, target.coord, 5, alloc)) {
+        if (mob.coord.distance(target.coord) == 1) {
+            (mob.occupation.fight_fn.?)(mob, alloc);
+        } else {
+            _ = mob.rest();
+        }
     }
 
-    const current_distance = mob.coord.distance(target.coord);
-
-    if (current_distance < PREFERRED_DISTANCE) {
-        var flee_to: ?Coord = null;
-        var emerg_flee_to: ?Coord = null;
-
-        // Find next space to flee to.
-        var dijk = dijkstra.Dijkstra.init(
-            mob.coord,
-            state.mapgeometry,
-            PREFERRED_DISTANCE,
-            state.is_walkable,
-            .{},
-            alloc,
-        );
-        defer dijk.deinit();
-        while (dijk.next()) |coord| {
-            if (coord.distance(target.coord) <= current_distance)
-                continue;
-
-            if (mob.nextDirectionTo(coord) == null)
-                continue;
-
-            const walls = state.dungeon.neighboringWalls(coord, true);
-
-            if (walls > 2) {
-                if (walls < 4) {
-                    emerg_flee_to = coord;
-                }
-                continue;
-            }
-
-            flee_to = coord;
-            break;
-        }
-
-        var moved = false;
-        if (flee_to orelse emerg_flee_to) |dst| {
-            const oldd = mob.facing;
-            moved = mob.moveInDirection(mob.nextDirectionTo(dst).?);
-            mob.facing = oldd;
-        }
-
-        if (!moved) {
-            if (mob.coord.distance(target.coord) == 1) {
-                mob.fight(target);
-            } else {
-                _ = mob.rest();
-            }
-        }
-
-        mob.makeNoise(Mob.NOISE_YELL);
-    } else {
-        _ = mob.rest();
-        mob.makeNoise(Mob.NOISE_YELL);
-    }
+    mob.makeNoise(Mob.NOISE_YELL);
 }

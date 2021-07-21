@@ -553,8 +553,13 @@ pub const Status = enum {
     // Forces mob to move in random directions instead of resting, scream,
     // and lose HP every turn.
     //
-    // Doesn't have a power field (but probably should).
+    // Power field determines maximum amount of HP that can be lost per turn.
     Pain,
+
+    // Forces the mob to always flee.
+    //
+    // Doesn't have a power field.
+    Fear,
 
     pub const MAX_DURATION: usize = 20;
 
@@ -570,6 +575,7 @@ pub const Status = enum {
             .Poison => "poisoned",
             .Invigorate => "invigorated",
             .Pain => "pain",
+            .Fear => "fearful",
         };
     }
 
@@ -580,9 +586,11 @@ pub const Status = enum {
     }
 
     pub fn tickPain(mob: *Mob) void {
+        const st = mob.isUnderStatus(.Pain).?;
+
         mob.makeNoise(Mob.NOISE_SCREAM);
         mob.takeDamage(.{
-            .amount = @intToFloat(f64, rng.rangeClumping(usize, 1, 3, 2)),
+            .amount = @intToFloat(f64, rng.rangeClumping(usize, 1, st.power, 2)),
         });
     }
 

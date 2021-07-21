@@ -115,6 +115,21 @@ pub const DaggerWeapon = Weapon{
     .secondary_damage = null,
 };
 
+pub const SwordWeapon = Weapon{
+    .id = "sword",
+    .name = "sword",
+    .required_strength = 15,
+    .damages = .{
+        .Crushing = 0,
+        .Pulping = 0,
+        .Slashing = 15,
+        .Piercing = 7,
+        .Lacerating = 0,
+    },
+    .main_damage = .Slashing,
+    .secondary_damage = .Piercing,
+};
+
 pub const SpearWeapon = Weapon{
     .id = "spear",
     .name = "spear",

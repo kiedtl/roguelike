@@ -1051,7 +1051,7 @@ pub const Prefab = struct {
     content: [40][40]FabTile = undefined,
     connections: [40]?Connection = undefined,
     features: [128]?Feature = [_]?Feature{null} ** 128,
-    mobs: [32]?FeatureMob = [_]?FeatureMob{null} ** 32,
+    mobs: [45]?FeatureMob = [_]?FeatureMob{null} ** 45,
 
     used: [LEVELS]usize = [_]usize{0} ** LEVELS,
 

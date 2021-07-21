@@ -373,18 +373,22 @@ pub const TorturerNecromancerTemplate = MobTemplate{
             .profession_name = "torturer",
             .profession_description = "torturing",
             .work_fn = ai.tortureWork,
-            .fight_fn = ai.meleeFight,
+            .fight_fn = ai.mageFight,
             .is_combative = true,
-            .is_curious = false,
+            .is_curious = true,
         },
         .allegiance = .Sauron,
         .vision = 6,
         .night_vision = 20,
         .deg360_vision = true,
         .no_show_fov = false,
+        .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
+            .{ .spell = &spells.CAST_PAIN, .duration = 7, .power = 20 },
+            .{ .spell = &spells.CAST_FEAR, .duration = 7 },
+        }),
 
-        .willpower = 8,
-        .base_dexterity = 25,
+        .willpower = 10,
+        .base_dexterity = 30,
         .hearing = 6,
         .max_HP = 80,
         .memory_duration = 10,
@@ -393,6 +397,8 @@ pub const TorturerNecromancerTemplate = MobTemplate{
 
         .base_strength = 25,
     },
+    .weapon = &items.SwordWeapon,
+    .armor = &items.HeavyChainmailArmor,
 };
 
 pub const MOBS = [_]MobTemplate{
