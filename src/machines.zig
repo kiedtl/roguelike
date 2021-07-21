@@ -278,8 +278,8 @@ pub const Brazier = Machine{
     .powered_bg = 0xb7b7b7,
     .unpowered_bg = 0xaaaaaa,
 
-    .power_drain = 20,
-    .power_add = 50,
+    .power_drain = 10,
+    .power_add = 100,
     .auto_power = true,
 
     .powered_walkable = false,
