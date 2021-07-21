@@ -1,43 +1,47 @@
-:spawn executioner 1,2
-:spawn executioner 1,4
+:spawn torturer_necromancer 5,1
+
 :spawn executioner 2,1
-:spawn executioner 2,2
-:spawn executioner 2,3
-:spawn executioner 2,4
-:spawn executioner 7,1
-:spawn executioner 7,2
-:spawn executioner 7,3
-:spawn executioner 7,4
-:spawn executioner 7,5
 :spawn executioner 3,1
 :spawn executioner 4,1
-:spawn executioner 5,1
 :spawn executioner 6,1
-:spawn      goblin 3,2
-:spawn      goblin 4,2
-:spawn      goblin 5,2
-:spawn      goblin 6,2
-:spawn      goblin 3,3
-:spawn      goblin 4,3
-:spawn      goblin 5,3
-:spawn      goblin 6,3
-:spawn      goblin 3,4
-:spawn      goblin 4,4
-:spawn      goblin 5,4
-:spawn      goblin 6,4
-:spawn      goblin 3,5
-:spawn      goblin 4,5
-:spawn      goblin 5,5
-:spawn      goblin 6,5
+:spawn executioner 7,1
+:spawn executioner 8,1
+
+:spawn executioner 3,2
+:spawn executioner 4,2
+:spawn executioner 5,2
+:spawn executioner 6,2
+:spawn executioner 7,2
+
+:spawn goblin 1,6
+:spawn goblin 2,6
+:spawn goblin 3,6
+:spawn goblin 4,6
+:spawn goblin 6,6
+:spawn goblin 7,6
+:spawn goblin 8,6
+:spawn goblin 9,6
+
+:spawn goblin 1,7
+:spawn goblin 2,7
+:spawn goblin 3,7
+:spawn goblin 4,7
+:spawn goblin 5,7
+:spawn goblin 6,7
+:spawn goblin 7,7
+:spawn goblin 8,7
+:spawn goblin 9,7
 
 :invisible
 :noguards
 :nolights
 
-#********#
-*........*
-*........*
-•........•
-*........*
-*........*
-#********#
+#****•****#
+*.........*
+*.........*
+*.........*
+*.........*
+•.........•
+*.........*
+*.........*
+#****•****#
