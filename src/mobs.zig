@@ -33,7 +33,7 @@ pub const ExecutionerTemplate = MobTemplate{
         .night_vision = 30,
 
         .willpower = 3,
-        .base_dexterity = 18,
+        .base_dexterity = 35,
         .hearing = 7,
         .max_HP = 60,
         .memory_duration = 5,
@@ -92,7 +92,7 @@ pub const GuardTemplate = MobTemplate{
         .night_vision = 30,
 
         .willpower = 2,
-        .base_dexterity = 20,
+        .base_dexterity = 25,
         .hearing = 7,
         .max_HP = 50,
         .memory_duration = 5,
@@ -123,7 +123,7 @@ pub const PatrolTemplate = MobTemplate{
         .night_vision = 35,
 
         .willpower = 2,
-        .base_dexterity = 20,
+        .base_dexterity = 25,
         .hearing = 7,
         .max_HP = 60,
         .memory_duration = 3,
@@ -154,9 +154,9 @@ pub const PlayerTemplate = MobTemplate{
         .night_vision = 3,
         .deg360_vision = true,
         .no_show_fov = true,
-
+        .regen = 100,
         .willpower = 6,
-        .base_dexterity = 21,
+        .base_dexterity = 28,
         .hearing = 5,
         .max_HP = 60,
         .memory_duration = 10,
@@ -187,7 +187,7 @@ pub const InteractionLaborerTemplate = MobTemplate{
         .night_vision = 30,
 
         .willpower = 2,
-        .base_dexterity = 19,
+        .base_dexterity = 15,
         .hearing = 10,
         .max_HP = 60,
         .memory_duration = 5,
@@ -216,7 +216,7 @@ pub const GoblinTemplate = MobTemplate{
         .night_vision = 0,
 
         .willpower = 3,
-        .base_dexterity = 18,
+        .base_dexterity = 43,
         .hearing = 5,
         .max_HP = 70,
         .memory_duration = 8,
@@ -247,7 +247,7 @@ pub const CaveRatTemplate = MobTemplate{
         .night_vision = 0,
 
         .willpower = 1,
-        .base_dexterity = 10,
+        .base_dexterity = 60,
         .hearing = 3,
         .max_HP = 15,
         .memory_duration = 15,
@@ -384,7 +384,7 @@ pub const CleanerTemplate = MobTemplate{
         .night_vision = 30,
 
         .willpower = 2,
-        .base_dexterity = 19,
+        .base_dexterity = 15,
         .hearing = 10,
         .max_HP = 60,
         .memory_duration = 5,

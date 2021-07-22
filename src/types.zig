@@ -11,6 +11,7 @@ const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const fov = @import("fov.zig");
 const heat = @import("heat.zig");
+const combat = @import("combat.zig");
 const spells = @import("spells.zig");
 const rng = @import("rng.zig");
 const dijkstra = @import("dijkstra.zig");
@@ -731,7 +732,7 @@ pub const Mob = struct { // {{{
     energy: isize = 0,
     statuses: StatusArray = StatusArray.initFill(.{}),
     occupation: Occupation,
-    activities: RingBuffer(Activity, 4) = .{},
+    activities: RingBuffer(Activity, MAX_ACTIVITY_BUFFER_SZ) = .{},
     last_attempted_move: ?Direction = null,
     last_damage: ?Damage = null,
     inventory: Inventory = .{},
@@ -783,6 +784,9 @@ pub const Mob = struct { // {{{
         pub const PACK_SIZE: usize = 7;
         pub const PackBuffer = StackBuffer(Item, PACK_SIZE);
     };
+
+    // Size of `activities` Ringbuffer
+    pub const MAX_ACTIVITY_BUFFER_SZ = 4;
 
     // Maximum field of hearing.
     pub const MAX_FOH = 20;
@@ -915,21 +919,9 @@ pub const Mob = struct { // {{{
         if (landed == null) landed = at;
 
         if (state.dungeon.at(landed.?).mob) |bastard| {
-            const CHANCE_OF_AUTO_MISS = 20; // 1 in <x>
-            const CHANCE_OF_AUTO_HIT = 5; // 1 in <x>
-
-            // FIXME: reduce code duplication in fight() vs here
-            const is_stab = !bastard.isAwareOfAttack(self.coord);
-            const auto_miss = rng.onein(CHANCE_OF_AUTO_MISS);
-            const auto_hit = is_stab or rng.onein(CHANCE_OF_AUTO_HIT);
-
-            const miss = if (auto_miss)
-                true
-            else if (auto_hit)
-                false
-            else
-                (rng.rangeClumping(usize, 1, 10, 2) * self.accuracy()) <
-                    (rng.rangeClumping(usize, 1, 10, 2) * bastard.dexterity());
+            const miss =
+                (rng.range(usize, 0, 100) < combat.chanceOfAttackLanding(self, bastard)) and
+                (rng.range(usize, 0, 100) > combat.chanceOfAttackDodged(self, bastard));
 
             if (!miss) {
                 const projectile = launcher.projectile;
@@ -1132,24 +1124,12 @@ pub const Mob = struct { // {{{
         return true;
     }
 
-    // TODO: bonus if defender didn't move in last two turns
-    // TODO: bonus if attacker didn't move in last two turns
-    // TODO: nbonus if attacker moved in last two turns
-    // TODO: nbonus if defender moved in last two turns
-    // TODO: bonus if defender is in a certain radius (<6 cells?)
-    // TODO: make missed ranged attacks land on adjacent squares
     pub fn fight(attacker: *Mob, recipient: *Mob) void {
         assert(!attacker.is_dead);
         assert(!recipient.is_dead);
 
-        assert(attacker.dexterity() <= 100);
-        assert(recipient.dexterity() <= 100);
-
         assert(attacker.strength() > 0);
         assert(recipient.strength() > 0);
-
-        const CHANCE_OF_AUTO_MISS = 14; // 1 in <x>
-        const CHANCE_OF_AUTO_HIT = 14; // 1 in <x>
 
         attacker.energy -= attacker.speed();
 
@@ -1157,20 +1137,21 @@ pub const Mob = struct { // {{{
             attacker.activities.append(.{ .Attack = d });
         }
 
-        const is_stab = !recipient.isAwareOfAttack(attacker.coord);
-        const auto_miss = rng.onein(CHANCE_OF_AUTO_MISS);
-        const auto_hit = is_stab or rng.onein(CHANCE_OF_AUTO_HIT);
+        // const chance_of_land = combat.chanceOfAttackLanding(attacker, recipient);
+        // const chance_of_dodge = combat.chanceOfAttackDodged(attacker, recipient);
+        // if (attacker.coord.eq(state.player.coord)) {
+        //     state.message(.Info, "you attack: chance of land: {}, chance of dodge: {}", .{ chance_of_land, chance_of_dodge });
+        // } else if (recipient.coord.eq(state.player.coord)) {
+        //     state.message(.Info, "you defend: chance of land: {}, chance of dodge: {}", .{ chance_of_land, chance_of_dodge });
+        // }
 
-        const miss = if (auto_miss)
-            true
-        else if (auto_hit)
-            false
-        else
-            (rng.rangeClumping(usize, 1, 10, 2) * attacker.accuracy()) <
-                (rng.rangeClumping(usize, 1, 10, 2) * recipient.dexterity());
+        const miss =
+            (rng.range(usize, 0, 100) < combat.chanceOfAttackLanding(attacker, recipient)) and
+            (rng.range(usize, 0, 100) > combat.chanceOfAttackDodged(attacker, recipient));
 
         if (miss) return;
 
+        const is_stab = !recipient.isAwareOfAttack(attacker.coord);
         const attacker_weapon = attacker.inventory.wielded orelse &items.UnarmedWeapon;
         const attacker_extra_str = attacker.strength() * 100 / attacker_weapon.required_strength;
         const attacker_extra_str_adj = math.clamp(attacker_extra_str, 0, 150);
@@ -1499,10 +1480,6 @@ pub const Mob = struct { // {{{
         return @intCast(isize, self.base_speed * bonus / 100);
     }
 
-    pub fn accuracy(self: *const Mob) usize {
-        return self.dexterity();
-    }
-
     pub inline fn strength(self: *const Mob) usize {
         var str = self.base_strength;
         if (self.isUnderStatus(.Invigorate)) |_| str = str * 180 / 100;
@@ -1778,6 +1755,7 @@ pub const Weapon = struct {
     id: []const u8,
     name: []const u8,
     required_strength: usize,
+    required_dexterity: usize,
     damages: Damages,
     main_damage: DamageType,
     secondary_damage: ?DamageType,
@@ -1980,7 +1958,6 @@ pub const Tile = struct {
         if (self.type != .Wall) {
             const light = math.clamp(state.dungeon.lightIntensityAt(coord).*, 0, 100);
             cell.bg = math.max(utils.percentageOfColor(cell.bg, light), utils.darkenColor(cell.bg, 4));
-            cell.fg = math.max(utils.percentageOfColor(cell.fg, light), utils.darkenColor(cell.fg, 4));
         }
 
         var spattering = self.spatter.iterator();
