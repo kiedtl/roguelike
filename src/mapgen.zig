@@ -780,7 +780,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
             if (!isTileAvailable(rnd)) continue;
 
             if (state.dungeon.at(rnd).mob == null) {
-                const guard = placeMob(alloc, &mobs.GuardTemplate, rnd, .{});
+                const guard = placeMob(alloc, &mobs.PatrolTemplate, rnd, .{});
 
                 if (patrol_warden) |warden| {
                     warden.squad_members.append(guard) catch unreachable;
@@ -794,26 +794,52 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
         }
     }
 
+    // Chances for mobs to spawn:
+    //      - 10/12 chance for Guards
+    //      - 1/5   chance for Executioners
+    //      - 1/7   chance for Watchers
+
     for (state.dungeon.rooms[level].items) |room| {
         if (room.prefab) |rfb| if (rfb.noguards) continue;
         if (room.type == .Corridor) continue;
         if (room.height * room.width < 16) continue;
 
-        if (rng.onein(2)) {
-            const post_coord = room.randomCoord();
-            if (isTileAvailable(post_coord)) {
-                _ = placeMob(alloc, &mobs.WatcherTemplate, post_coord, .{
-                    .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
-                });
+        if (rng.tenin(12)) {
+            var tries: usize = 50;
+            while (tries > 0) : (tries -= 1) {
+                const post_coord = room.randomCoord();
+                if (isTileAvailable(post_coord)) {
+                    _ = placeMob(alloc, &mobs.GuardTemplate, post_coord, .{
+                        .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
+                    });
+                    break;
+                }
             }
         }
 
-        if (rng.onein(4)) {
-            const post_coord = room.randomCoord();
-            if (isTileAvailable(post_coord)) {
-                _ = placeMob(alloc, &mobs.ExecutionerTemplate, post_coord, .{
-                    .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
-                });
+        if (rng.onein(5)) {
+            var tries: usize = 50;
+            while (tries > 0) : (tries -= 1) {
+                const post_coord = room.randomCoord();
+                if (isTileAvailable(post_coord)) {
+                    _ = placeMob(alloc, &mobs.ExecutionerTemplate, post_coord, .{
+                        .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
+                    });
+                    break;
+                }
+            }
+        }
+
+        if (rng.onein(7)) {
+            var tries: usize = 50;
+            while (tries > 0) : (tries -= 1) {
+                const post_coord = room.randomCoord();
+                if (isTileAvailable(post_coord)) {
+                    _ = placeMob(alloc, &mobs.WatcherTemplate, post_coord, .{
+                        .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
+                    });
+                    break;
+                }
             }
         }
     }

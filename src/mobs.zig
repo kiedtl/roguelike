@@ -75,12 +75,43 @@ pub const WatcherTemplate = MobTemplate{
 };
 
 pub const GuardTemplate = MobTemplate{
-    .id = "patrol",
+    .id = "guard",
     .mob = .{
-        .species = "orc",
-        .tile = 'ק',
+        .species = "goblin",
+        .tile = 'ט',
         .occupation = Occupation{
             .profession_name = "guard",
+            .profession_description = "guarding",
+            .work_fn = ai.watcherWork,
+            .fight_fn = ai.meleeFight,
+            .is_combative = true,
+            .is_curious = true,
+        },
+        .allegiance = .Sauron,
+        .vision = 6,
+        .night_vision = 30,
+
+        .willpower = 2,
+        .base_dexterity = 20,
+        .hearing = 7,
+        .max_HP = 50,
+        .memory_duration = 5,
+        .base_speed = 100,
+        .blood = .Blood,
+
+        .base_strength = 20,
+    },
+    .weapon = &items.SwordWeapon,
+    .armor = &items.HeavyChainmailArmor,
+};
+
+pub const PatrolTemplate = MobTemplate{
+    .id = "patrol",
+    .mob = .{
+        .species = "goblin",
+        .tile = 'ק',
+        .occupation = Occupation{
+            .profession_name = "patrol",
             .profession_description = "patrolling",
             .work_fn = ai.guardWork,
             .fight_fn = ai.meleeFight,
@@ -405,6 +436,7 @@ pub const MOBS = [_]MobTemplate{
     WatcherTemplate,
     ExecutionerTemplate,
     GuardTemplate,
+    PatrolTemplate,
     PlayerTemplate,
     InteractionLaborerTemplate,
     GoblinTemplate,

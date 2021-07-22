@@ -1,7 +1,5 @@
-// Yes, yes, I know Zig has a `rand` module. But, hey, reinventing the wheel is
-// fun!!
-
 const std = @import("std");
+const assert = std.debug.assert;
 const rand = std.rand;
 const math = std.math;
 
@@ -19,6 +17,13 @@ pub fn boolean() bool {
     return rng.random.int(u1) == 1;
 }
 
+// TODO: make generic
+pub fn tenin(number: usize) bool {
+    assert(number >= 10);
+    return range(@TypeOf(number), 1, number) <= 10;
+}
+
+// TODO: make generic
 pub fn onein(number: usize) bool {
     return range(@TypeOf(number), 1, number) == 1;
 }
