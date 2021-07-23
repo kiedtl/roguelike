@@ -603,6 +603,8 @@ x Make the "lamps" electric "braziers"
   - Place them in center of rooms.
   x Place them in corners of rooms.
   - Make them explosive and electrocutive!
+- Useless items in bins, cabinets, etc
+- Weapons and armor in cabinets
 
 Mobs, AI
 ========
@@ -620,6 +622,8 @@ x Make watchers smack intruders when they can't run
   them to see
 - Fleeing mobs and mobs that have just spotted an enemy "tell" nearby allies
   about the hostile
+- Define what undead are somewhere (combat bonuses, stat increases, miasma
+  emissions, etc)
 
 User Interface
 ==============
@@ -727,6 +731,7 @@ x Add braziers that are built into the walls (aka torches), and use that
   dining room, bedrooms, kitchen
 + "cameras kits" that create surface items that keep the surrounding area in the
   FOV of all mobs that have a certain ring on
+- Experiment with "bouncing" rays in raycasting routines
 
 Optimizations
 =============
@@ -743,6 +748,8 @@ Code cleanups
     libera#zig 19:58 <ikskuh> "catch unreachable" will happily continue to execute code
                               after the error in non-safe build modes
 - Remove all floats from color functions, sound systems, gas systems, etc.
+- Review usage of usize and change to u64/u32 where needed to prevent portability issues
+- Define custom assert() that can give additional context
 
 Refactorings
 ============
@@ -752,6 +759,7 @@ x Research Manhattan distance vs Euclidian distance vs Moore neighborhood:
   https://reddit.com/r/roguelikedev/comments/nev1jg/a_pathfinding_unstablenondeterministic/
 x Add power component to machines
 x Use Chebyshev or Moore Neighborhood instead of Manhattan distance
+- Use arrays and indexes for state.* instead of linked lists and pointers
 
 Tests
 =====
