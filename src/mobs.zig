@@ -154,7 +154,7 @@ pub const PlayerTemplate = MobTemplate{
         .night_vision = 3,
         .deg360_vision = true,
         .no_show_fov = true,
-        .regen = 100,
+
         .willpower = 6,
         .base_dexterity = 28,
         .hearing = 5,
