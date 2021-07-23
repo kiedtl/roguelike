@@ -623,7 +623,7 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
 pub fn flee(mob: *Mob, alloc: *mem.Allocator) void {
     const target = currentEnemy(mob).mob;
 
-    if (!keepDistance(mob, target.coord, 5, alloc)) {
+    if (!keepDistance(mob, target.coord, 15, alloc)) {
         if (mob.coord.distance(target.coord) == 1) {
             (mob.occupation.fight_fn.?)(mob, alloc);
         } else {
