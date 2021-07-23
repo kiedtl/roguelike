@@ -1000,6 +1000,11 @@ pub const Mob = struct { // {{{
     //     - The mob wasn't working (e.g., may have been attacking), but the other
     //       one wasn't.
     //
+    // Return false if:
+    //     - The other mob is the player. No mob should be able to swap with the player.
+    //     - The mob is the player and the other mob is a noncombative enemy (e.g.,
+    //       slaves). The player has no business attacking non-combative enemies.
+    //
     pub fn canSwapWith(self: *const Mob, other: *Mob, direction: ?Direction) bool {
         var can = false;
 
@@ -1018,8 +1023,17 @@ pub const Mob = struct { // {{{
             }
         }
 
-        if (self.allegiance != other.allegiance or other.immobile) {
+        if (self.allegiance != other.allegiance) {
             can = false;
+        }
+        if (other.coord.eq(state.player.coord)) {
+            can = false;
+        }
+        if (self.coord.eq(state.player.coord) and
+            other.isHostileTo(state.player) and
+            !other.occupation.is_combative)
+        {
+            can = true;
         }
 
         return can;

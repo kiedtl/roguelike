@@ -130,7 +130,7 @@ fn moveOrFight(direction: Direction) bool {
 
     if (current.move(direction, state.mapgeometry)) |dest| {
         if (state.dungeon.at(dest).mob) |mob| {
-            if (mob.isHostileTo(state.player)) {
+            if (state.player.isHostileTo(mob) and !state.player.canSwapWith(mob, direction)) {
                 state.player.fight(mob);
                 return true;
             }
