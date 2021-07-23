@@ -732,6 +732,9 @@ x Add braziers that are built into the walls (aka torches), and use that
 + "cameras kits" that create surface items that keep the surrounding area in the
   FOV of all mobs that have a certain ring on
 - Experiment with "bouncing" rays in raycasting routines
+- Ring/item that has leaving a vunerable "copy" of yourself where that item/ring
+  was activated (that is, *two* tiles have the .mob field pointing to the player,
+  while the player.coord field points to only one of them).
 
 Optimizations
 =============
