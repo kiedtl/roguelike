@@ -919,11 +919,11 @@ pub const Mob = struct { // {{{
         if (landed == null) landed = at;
 
         if (state.dungeon.at(landed.?).mob) |bastard| {
-            const miss =
-                (rng.range(usize, 0, 100) < combat.chanceOfAttackLanding(self, bastard)) and
-                (rng.range(usize, 0, 100) > combat.chanceOfAttackDodged(self, bastard));
+            const hit =
+                (rng.range(usize, 1, 100) <= combat.chanceOfAttackLanding(self, bastard)) and
+                (rng.range(usize, 1, 100) >= combat.chanceOfAttackDodged(bastard, self));
 
-            if (!miss) {
+            if (hit) {
                 const projectile = launcher.projectile;
                 const defender_armor = bastard.inventory.armor orelse &items.NoneArmor;
                 const max_damage = projectile.damages.resultOf(&defender_armor.resists).sum();
@@ -1152,18 +1152,18 @@ pub const Mob = struct { // {{{
         }
 
         // const chance_of_land = combat.chanceOfAttackLanding(attacker, recipient);
-        // const chance_of_dodge = combat.chanceOfAttackDodged(attacker, recipient);
+        // const chance_of_dodge = combat.chanceOfAttackDodged(recipient, attacker);
         // if (attacker.coord.eq(state.player.coord)) {
         //     state.message(.Info, "you attack: chance of land: {}, chance of dodge: {}", .{ chance_of_land, chance_of_dodge });
         // } else if (recipient.coord.eq(state.player.coord)) {
         //     state.message(.Info, "you defend: chance of land: {}, chance of dodge: {}", .{ chance_of_land, chance_of_dodge });
         // }
 
-        const miss =
-            (rng.range(usize, 0, 100) < combat.chanceOfAttackLanding(attacker, recipient)) and
-            (rng.range(usize, 0, 100) > combat.chanceOfAttackDodged(attacker, recipient));
+        const hit =
+            (rng.range(usize, 1, 100) <= combat.chanceOfAttackLanding(attacker, recipient)) and
+            (rng.range(usize, 1, 100) >= combat.chanceOfAttackDodged(recipient, attacker));
 
-        if (miss) return;
+        if (!hit) return;
 
         const is_stab = !recipient.isAwareOfAttack(attacker.coord);
         const attacker_weapon = attacker.inventory.wielded orelse &items.UnarmedWeapon;
