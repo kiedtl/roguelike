@@ -49,9 +49,15 @@ fn initGame() void {
     defer s_fabs.deinit();
     defer n_fabs.deinit();
 
-    for (state.dungeon.map) |_, level| {
+    var level: usize = 0;
+    while (level < LEVELS) {
+        mapgen.resetLevel(level);
         mapgen.placeRandomRooms(&n_fabs, &s_fabs, level, &state.GPA.allocator);
         mapgen.placeMoarCorridors(level);
+
+        if (!mapgen.validateLevel(level, &state.GPA.allocator))
+            continue; // try again
+
         mapgen.placeTraps(level);
         mapgen.placeRoomFeatures(level, &state.GPA.allocator);
         mapgen.placeItems(level);
@@ -65,10 +71,12 @@ fn initGame() void {
         // mapgen.cellularAutomata(&state.dungeon.layout[level], level, 6, 0);
 
         // mapgen.populateCaves(&state.dungeon.layout[level], level, &state.GPA.allocator);
+
+        level += 1;
     }
 
-    for (state.dungeon.map) |_, level|
-        mapgen.placeRandomStairs(level);
+    for (state.dungeon.map) |_, mlevel|
+        mapgen.placeRandomStairs(mlevel);
 
     display.draw();
 }

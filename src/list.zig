@@ -25,8 +25,9 @@ pub fn LinkedList(comptime T: type) type {
         pub const Iterator = struct {
             current: ?*Node,
 
-            fn nextNode(iter: *Iterator) ?*Node {
+            pub fn nextNode(iter: *Iterator) ?*Node {
                 const current = iter.current;
+                var result: ?*Node = undefined;
 
                 if (current) |c| {
                     iter.current = c.next;
@@ -90,6 +91,16 @@ pub fn LinkedList(comptime T: type) type {
             }
         }
 
+        pub fn remove(self: *Self, node: *Node) void {
+            if (node.prev) |prevn| prevn.next = node.next;
+            if (node.next) |nextn| nextn.prev = node.prev;
+
+            if (self.head == node) self.head = node.next;
+            if (self.tail == node) self.tail = node.prev;
+
+            node.free(self.allocator);
+        }
+
         pub fn nth(self: *Self, n: usize) ?T {
             var i: usize = 0;
             var iter = self.iterator();
@@ -136,7 +147,7 @@ test "basic LinkedList test" {
     var list = List.init(&gpa.allocator);
     defer list.deinit();
 
-    const datas = [_]usize{ 5, 21, 623, 1, 36 };
+    const datas = [_]usize{ 5, 22, 623, 1, 36 };
     for (datas) |data| {
         try list.append(data);
         testing.expectEqual(data, list.last().?);
@@ -153,6 +164,16 @@ test "basic LinkedList test" {
     while (iter.next()) |data| : (index += 1) {
         testing.expectEqual(datas[index], data);
     }
+
+    iter = list.iterator();
+    while (iter.nextNode()) |node| {
+        if (node.data % 2 == 0)
+            list.remove(node);
+    }
+
+    testing.expectEqual(list.nth(0), 5);
+    testing.expectEqual(list.nth(1), 623);
+    testing.expectEqual(list.nth(2), 1);
 }
 
 test "basic nth() usage" {

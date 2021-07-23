@@ -1851,11 +1851,11 @@ pub const TileType = enum {
 };
 
 pub const Tile = struct {
-    prison: bool = false,
-    material: *const Material = &materials.Basalt,
-    type: TileType = .Wall,
-    mob: ?*Mob = null,
     marked: bool = false,
+    prison: bool = false,
+    type: TileType = .Wall,
+    material: *const Material = &materials.Basalt,
+    mob: ?*Mob = null,
     surface: ?SurfaceItem = null,
     spatter: SpatterArray = SpatterArray.initFill(0),
 
@@ -1958,6 +1958,7 @@ pub const Tile = struct {
         if (self.type != .Wall) {
             const light = math.clamp(state.dungeon.lightIntensityAt(coord).*, 0, 100);
             cell.bg = math.max(utils.percentageOfColor(cell.bg, light), utils.darkenColor(cell.bg, 4));
+            cell.fg = math.max(utils.percentageOfColor(cell.fg, light), utils.darkenColor(cell.fg, 4));
         }
 
         var spattering = self.spatter.iterator();

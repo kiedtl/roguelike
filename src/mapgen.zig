@@ -4,6 +4,7 @@ const mem = std.mem;
 const math = std.math;
 const assert = std.debug.assert;
 
+const astar = @import("astar.zig");
 const rng = @import("rng.zig");
 const mobs = @import("mobs.zig");
 const StackBuffer = @import("buffer.zig").StackBuffer;
@@ -389,6 +390,80 @@ fn _excavate_room(room: *const Room) void {
             state.dungeon.at(c).type = .Floor;
         }
     }
+}
+
+// Destroy items, machines, and mobs associated with level and reset level's
+// terrain.
+pub fn resetLevel(level: usize) void {
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            const coord = Coord.new2(level, x, y);
+
+            const tile = state.dungeon.at(coord);
+            tile.prison = false;
+            tile.marked = false;
+            tile.type = .Wall;
+            tile.material = &materials.Basalt;
+            tile.mob = null;
+            tile.surface = null;
+            tile.spatter = SpatterArray.initFill(0);
+        }
+    }
+
+    var mobiter = state.mobs.iterator();
+    while (mobiter.nextNode()) |node| {
+        if (node.data.coord.z == level) {
+            node.data.kill();
+            state.mobs.remove(node);
+        }
+    }
+
+    var machiter = state.machines.iterator();
+    while (machiter.nextNode()) |node| {
+        if (node.data.coord.z == level) {
+            state.machines.remove(node);
+        }
+    }
+}
+
+pub fn validateLevel(level: usize, alloc: *mem.Allocator) bool {
+    // utility functions
+    const _f = struct {
+        pub fn _getWalkablePoint(room: *const Room) Coord {
+            var point: Coord = undefined;
+            var tries: usize = 100;
+            while (tries > 0) : (tries -= 1) {
+                point = room.randomCoord();
+                if (state.dungeon.at(point).type == .Floor)
+                    return point;
+            }
+            unreachable;
+        }
+
+        pub fn _isWalkable(coord: Coord, opts: state.IsWalkableOptions) bool {
+            return state.dungeon.at(coord).type == .Floor;
+        }
+    };
+
+    const rooms = state.dungeon.rooms[level].items;
+    const base_room = rng.chooseUnweighted(Room, rooms);
+    const point = _f._getWalkablePoint(&base_room);
+
+    for (rooms) |otherroom| {
+        if (otherroom.start.eq(base_room.start)) continue;
+
+        const otherpoint = _f._getWalkablePoint(&otherroom);
+
+        if (astar.path(point, otherpoint, state.mapgeometry, _f._isWalkable, .{}, alloc)) |p| {
+            p.deinit();
+        } else {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 pub fn placeMoarCorridors(level: usize) void {
