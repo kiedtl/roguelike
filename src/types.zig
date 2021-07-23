@@ -470,7 +470,7 @@ pub const Activity = union(enum) {
     Interact,
     Rest,
     Move: Direction,
-    Attack: Direction,
+    Attack: Coord,
     Teleport: Coord,
     Grab,
     Drop,
@@ -1145,11 +1145,7 @@ pub const Mob = struct { // {{{
         assert(attacker.strength() > 0);
         assert(recipient.strength() > 0);
 
-        attacker.energy -= attacker.speed();
-
-        if (Direction.from(attacker.coord, recipient.coord)) |d| {
-            attacker.activities.append(.{ .Attack = d });
-        }
+        attacker.declareAction(.{ .Attack = recipient.coord });
 
         // const chance_of_land = combat.chanceOfAttackLanding(attacker, recipient);
         // const chance_of_dodge = combat.chanceOfAttackDodged(recipient, attacker);
