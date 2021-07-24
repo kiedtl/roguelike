@@ -884,7 +884,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
             var tries: usize = 50;
             while (tries > 0) : (tries -= 1) {
                 const post_coord = room.randomCoord();
-                if (isTileAvailable(post_coord)) {
+                if (isTileAvailable(post_coord) and !state.dungeon.at(post_coord).prison) {
                     _ = placeMob(alloc, &mobs.GuardTemplate, post_coord, .{
                         .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
                     });
@@ -897,7 +897,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
             var tries: usize = 50;
             while (tries > 0) : (tries -= 1) {
                 const post_coord = room.randomCoord();
-                if (isTileAvailable(post_coord)) {
+                if (isTileAvailable(post_coord) and !state.dungeon.at(post_coord).prison) {
                     _ = placeMob(alloc, &mobs.ExecutionerTemplate, post_coord, .{
                         .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
                     });
@@ -910,7 +910,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
             var tries: usize = 50;
             while (tries > 0) : (tries -= 1) {
                 const post_coord = room.randomCoord();
-                if (isTileAvailable(post_coord)) {
+                if (isTileAvailable(post_coord) and !state.dungeon.at(post_coord).prison) {
                     _ = placeMob(alloc, &mobs.WatcherTemplate, post_coord, .{
                         .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
                     });
