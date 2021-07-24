@@ -1614,7 +1614,7 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
             .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
         },
-        .prefab_chance = 3,
+        .prefab_chance = 2,
         .max_rooms = 512,
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeaturePrisoners,
@@ -1631,7 +1631,7 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
             .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
         },
-        .prefab_chance = 3,
+        .prefab_chance = 2,
         .max_rooms = 512,
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeaturePrisoners,
