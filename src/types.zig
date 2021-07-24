@@ -517,6 +517,11 @@ pub const Status = enum {
     // Doesn't have a power field.
     Paralysis,
 
+    // Prevents a mob from moving and dodging.
+    //
+    // Doesn't have a power field.
+    Held,
+
     // Allows mob to "see" presence of walls around sounds.
     //
     // Power field determines radius of effect.
@@ -569,6 +574,7 @@ pub const Status = enum {
     pub fn string(self: Status) []const u8 {
         return switch (self) {
             .Paralysis => "paralyzed",
+            .Held => "held",
             .Echolocation => "echolocation",
             .Corona => "glowing",
             .Confusion => "confused",
@@ -881,8 +887,7 @@ pub const Mob = struct { // {{{
         const tmp = self.inventory.wielded;
         self.inventory.wielded = self.inventory.backup;
         self.inventory.backup = tmp;
-        self.declareAction(.SwapWeapons);
-        return true;
+        return false; // zero-cost action
     }
 
     pub fn removeItem(self: *Mob, index: usize) !Item {
@@ -932,6 +937,10 @@ pub const Mob = struct { // {{{
                 bastard.takeDamage(.{ .amount = @intToFloat(f64, damage) });
             }
         }
+
+        if (launcher.projectile.effect) |effect_func| (effect_func)(landed.?);
+
+        self.declareAction(.Fire);
 
         return true;
     }
@@ -1093,6 +1102,20 @@ pub const Mob = struct { // {{{
             return false;
         }
 
+        if (!self.isCreeping()) self.makeNoise(NOISE_MOVE);
+
+        if (direction) |d| {
+            self.declareAction(Activity{ .Move = d });
+        } else {
+            self.declareAction(Activity{ .Teleport = dest });
+        }
+
+        if (self.isUnderStatus(.Held)) |se| {
+            const new_duration = utils.saturating_sub(se.duration, rng.range(usize, 0, 3));
+            self.addStatus(.Held, 0, new_duration);
+            return true;
+        }
+
         if (state.dungeon.at(dest).mob) |other| {
             if (!self.canSwapWith(other, direction)) return false;
             state.dungeon.at(dest).mob = self;
@@ -1110,14 +1133,6 @@ pub const Mob = struct { // {{{
                 .Machine => |m| if (m.isWalkable()) m.addPower(self),
                 else => {},
             }
-        }
-
-        if (!self.isCreeping()) self.makeNoise(NOISE_MOVE);
-
-        if (direction) |d| {
-            self.declareAction(Activity{ .Move = d });
-        } else {
-            self.declareAction(Activity{ .Teleport = dest });
         }
 
         return true;
@@ -1561,11 +1576,10 @@ pub const Machine = struct {
     on_power: fn (*Machine) void, // Called on each turn when the machine is powered
     power: usize = 0, // percentage (0..100)
     last_interaction: ?*Mob = null,
+    disabled: bool = false,
 
     // FIXME: there has got to be a better way to do this
     props: [40]?*Prop = [_]?*Prop{null} ** 40,
-
-    // TODO: is_disabled?
 
     pub fn addPower(self: *Machine, by: ?*Mob) void {
         if (by) |_by|
@@ -1759,6 +1773,7 @@ pub const Armor = struct {
 pub const Projectile = struct {
     main_damage: DamageType,
     damages: Damages,
+    effect: ?fn (Coord) void = null,
 };
 
 pub const Weapon = struct {

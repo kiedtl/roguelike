@@ -1,6 +1,7 @@
 const std = @import("std");
 const mem = std.mem;
 const assert = std.debug.assert;
+const math = std.math;
 
 const state = @import("state.zig");
 const items = @import("items.zig");
@@ -547,6 +548,55 @@ pub fn tortureWork(mob: *Mob, alloc: *mem.Allocator) void {
 pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
     const target = currentEnemy(mob).mob;
     assert(mob.isHostileTo(target));
+
+    if (mob.coord.distance(target.coord) == 1) {
+        _ = mob.fight(target);
+    } else {
+        mob.tryMoveTo(target.coord);
+    }
+}
+
+// - Wield launcher.
+// - Iterate through enemies. Foreach:
+//      - Is it .Held?
+//          - No:
+//              - Fire launcher at it.
+//              - Return.
+//          - Yes:
+//              - Continue.
+// - Wield weapon.
+// - Can we attack the nearest enemy?
+//      - No:
+//          - Move towards enemy.
+//      - Yes:
+//          - Attack.
+//
+// TODO: check if there's a clear line of fire (free from allies and other mobs)
+// to target before firing.
+//
+pub fn sentinelFight(mob: *Mob, alloc: *mem.Allocator) void {
+    if (mob.inventory.backup) |backup|
+        if (backup.launcher != null) {
+            _ = mob.swapWeapons();
+        };
+
+    if (mob.inventory.wielded) |wielded|
+        if (wielded.launcher != null) {
+            const enemiesct = math.min(4, mob.enemies.items.len - 1);
+            for (mob.enemies.items[0..enemiesct]) |enemy| {
+                if (enemy.mob.isUnderStatus(.Held)) |_| continue;
+
+                _ = mob.launchProjectile(&mob.inventory.wielded.?.launcher.?, enemy.mob.coord);
+                return;
+            }
+        };
+
+    if (mob.inventory.backup) |backup|
+        if (backup.launcher == null) {
+            _ = mob.swapWeapons();
+        };
+
+    const target = currentEnemy(mob).mob;
 
     if (mob.coord.distance(target.coord) == 1) {
         _ = mob.fight(target);

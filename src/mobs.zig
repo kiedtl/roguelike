@@ -105,6 +105,38 @@ pub const GuardTemplate = MobTemplate{
     .armor = &items.HeavyChainmailArmor,
 };
 
+pub const SentinelTemplate = MobTemplate{
+    .id = "sentinel",
+    .mob = .{
+        .species = "human",
+        .tile = 'ל',
+        .occupation = Occupation{
+            .profession_name = "sentinel",
+            .profession_description = "guarding",
+            .work_fn = ai.guardWork,
+            .fight_fn = ai.sentinelFight,
+            .is_combative = true,
+            .is_curious = true,
+        },
+        .allegiance = .Sauron,
+        .vision = 7,
+        .night_vision = 20,
+
+        .willpower = 5,
+        .base_dexterity = 30,
+        .hearing = 6,
+        .max_HP = 65,
+        .memory_duration = 7,
+        .base_speed = 90,
+        .blood = .Blood,
+
+        .base_strength = 28,
+    },
+    .weapon = &items.SwordWeapon,
+    .backup_weapon = &items.NetLauncher,
+    .armor = &items.HeavyChainmailArmor,
+};
+
 pub const PatrolTemplate = MobTemplate{
     .id = "patrol",
     .mob = .{
@@ -166,6 +198,7 @@ pub const PlayerTemplate = MobTemplate{
         .base_strength = 19,
     },
     .weapon = &items.DaggerWeapon,
+    .backup_weapon = &items.NetLauncher,
     .armor = &items.LeatherArmor,
 };
 
@@ -436,6 +469,7 @@ pub const MOBS = [_]MobTemplate{
     WatcherTemplate,
     ExecutionerTemplate,
     GuardTemplate,
+    SentinelTemplate,
     PatrolTemplate,
     PlayerTemplate,
     InteractionLaborerTemplate,

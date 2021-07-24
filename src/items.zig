@@ -2,6 +2,9 @@ const std = @import("std");
 const math = std.math;
 
 const gas = @import("gas.zig");
+const rng = @import("rng.zig");
+const state = @import("state.zig");
+const machines = @import("machines.zig");
 usingnamespace @import("types.zig");
 
 pub const EcholocationRing = Ring{
@@ -167,6 +170,37 @@ pub const ZinnagWeapon = Weapon{
     .secondary_damage = .Crushing,
 };
 
+pub const NetLauncher = Weapon{
+    .id = "net_launcher",
+    .name = "net launcher",
+    .required_strength = 10,
+    .required_dexterity = 10,
+    .damages = .{
+        .Crushing = 5,
+        .Pulping = 0,
+        .Slashing = 0,
+        .Piercing = 0,
+        .Lacerating = 0,
+    },
+    .main_damage = .Crushing,
+    .secondary_damage = null,
+    .launcher = .{
+        .projectile = NetLauncherProjectile,
+    },
+};
+
+pub const NetLauncherProjectile = Projectile{
+    .main_damage = .Crushing,
+    .damages = .{
+        .Crushing = 5,
+        .Pulping = 0,
+        .Slashing = 0,
+        .Piercing = 0,
+        .Lacerating = 0,
+    },
+    .effect = triggerNetLauncherProjectile,
+};
+
 fn triggerPreservePotion(_dork: ?*Mob) void {
     if (_dork) |dork| {
 
@@ -175,5 +209,33 @@ fn triggerPreservePotion(_dork: ?*Mob) void {
         if (dork.isUnderStatus(.Confusion)) |_| dork.addStatus(.Confusion, 0, 0);
 
         dork.HP = math.min(dork.max_HP, dork.HP + (dork.max_HP * 150 / 100));
+    }
+}
+
+fn triggerNetLauncherProjectile(coord: Coord) void {
+    const _f = struct {
+        fn _addNet(c: Coord) void {
+            if (state.dungeon.at(c).mob) |mob| {
+                mob.addStatus(.Held, 0, null);
+            } else {
+                if (state.is_walkable(c, .{ .right_now = true }) and
+                    state.dungeon.at(c).surface == null)
+                {
+                    var net = machines.NetTrap;
+                    net.coord = c;
+                    state.machines.append(net) catch unreachable;
+                    state.dungeon.at(c).surface = SurfaceItem{ .Machine = state.machines.lastPtr().? };
+                }
+            }
+        }
+    };
+
+    _f._addNet(coord);
+
+    for (&DIRECTIONS) |direction| {
+        if (rng.onein(6)) continue;
+        if (coord.move(direction, state.mapgeometry)) |neighbor| {
+            _f._addNet(neighbor);
+        }
     }
 }

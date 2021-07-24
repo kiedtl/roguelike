@@ -18,8 +18,8 @@
 
 :spawn interaction_laborer  6,2  6,3
 :spawn interaction_laborer  6,4  6,3
-:spawn             watcher  1,1  1,1
-:spawn             watcher 11,5 11,5
+:spawn            sentinel  1,1  1,1
+:spawn            sentinel 11,5 11,5
 :spawn             cleaner  1,6
 :spawn             cleaner  2,6
 :spawn             cleaner  3,6

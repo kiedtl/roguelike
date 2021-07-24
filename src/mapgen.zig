@@ -1481,8 +1481,9 @@ pub const Prefab = struct {
 pub const PrefabArrayList = std.ArrayList(Prefab);
 
 // FIXME: error handling
+// FIXME: warn if prefab is zerowidth/zeroheight (prefabs file might not have fit in buffer)
 pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *PrefabArrayList) void {
-    var buf: [2048]u8 = undefined;
+    var buf: [8192]u8 = undefined;
 
     n_fabs.* = PrefabArrayList.init(alloc);
     s_fabs.* = PrefabArrayList.init(alloc);

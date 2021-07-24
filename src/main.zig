@@ -149,7 +149,6 @@ fn fireLauncher() bool {
         if (weapon.launcher) |launcher| {
             const dest = display.chooseCell() orelse return false;
             assert(state.player.launchProjectile(&launcher, dest));
-            state.player.declareAction(.Fire);
             return true;
         } else {
             state.message(.MetaError, "You can't fire anything with that weapon.", .{});
@@ -639,6 +638,7 @@ fn viewerMain() void {
                 }
             } else if (ev.ch != 0) {
                 switch (ev.ch) {
+                    '.' => viewerTickGame(level),
                     'a' => running = !running,
                     'j' => if (y < HEIGHT) {
                         y = math.min(y + (tty_height / 2), HEIGHT - 1);

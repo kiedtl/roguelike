@@ -9,6 +9,7 @@ const state = @import("state.zig");
 const CHANCE_OF_AUTO_HIT = 20;
 const CHANCE_OF_AUTO_MISS = 20;
 
+const DEFENDER_HELD_BONUS: isize = 60;
 const GREATER_DEXTERITY_BONUS: isize = 10;
 const DOUBLE_GREATER_DEXTERITY_BONUS: isize = 20;
 const FULL_LIGHT_BONUS: isize = 10;
@@ -33,6 +34,8 @@ pub fn chanceOfAttackLanding(attacker: *const Mob, defender: *const Mob) usize {
 
     var chance: isize = 60;
 
+    chance += if (defender.isUnderStatus(.Held)) |_| DEFENDER_HELD_BONUS else 0;
+
     chance += if (attacker.dexterity() > defender.dexterity()) GREATER_DEXTERITY_BONUS else 0;
     chance += if (attacker.dexterity() > (defender.dexterity() * 2)) DOUBLE_GREATER_DEXTERITY_BONUS else 0;
     chance += @intCast(isize, Mob.MAX_ACTIVITY_BUFFER_SZ - defender.turnsSinceRest()) * 3;
@@ -47,6 +50,7 @@ pub fn chanceOfAttackLanding(attacker: *const Mob, defender: *const Mob) usize {
 
 pub fn chanceOfAttackDodged(defender: *const Mob, attacker: *const Mob) usize {
     if (!defender.isAwareOfAttack(attacker.coord)) return 0;
+    if (defender.isUnderStatus(.Held)) |_| return 0;
 
     const neighboring_walls = @intCast(isize, state.dungeon.neighboringWalls(defender.coord, true));
 

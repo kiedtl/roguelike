@@ -366,7 +366,7 @@ pub fn tickSobs(level: usize) void {
 pub fn tickMachines(level: usize) void {
     var iter = machines.iterator();
     while (iter.nextPtr()) |machine| {
-        if (machine.coord.z != level or !machine.isPowered())
+        if (machine.coord.z != level or !machine.isPowered() or machine.disabled)
             continue;
 
         machine.on_power(machine);

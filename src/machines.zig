@@ -59,6 +59,7 @@ pub const MACHINES = [_]Machine{
     PoisonGasTrap,
     ConfusionGasTrap,
     AlarmTrap,
+    NetTrap,
     RestrictedMachinesOpenLever,
 };
 
@@ -319,6 +320,15 @@ pub const AlarmTrap = Machine{
     .on_power = powerAlarmTrap,
 };
 
+pub const NetTrap = Machine{
+    .name = "net",
+    .powered_fg = 0xffff00,
+    .unpowered_fg = 0xffff00,
+    .powered_tile = ':',
+    .unpowered_tile = ':',
+    .on_power = powerNetTrap,
+};
+
 pub const PoisonGasTrap = Machine{
     .name = "poison gas trap",
     .powered_tile = '^',
@@ -406,6 +416,14 @@ pub fn powerAlarmTrap(machine: *Machine) void {
         if (culprit.coord.eq(state.player.coord))
             state.message(.Trap, "You hear a loud clanging noise!", .{});
     }
+}
+
+pub fn powerNetTrap(machine: *Machine) void {
+    if (machine.last_interaction) |culprit| {
+        culprit.addStatus(.Held, 0, null);
+    }
+    state.dungeon.at(machine.coord).surface = null;
+    machine.disabled = true;
 }
 
 pub fn powerPoisonGasTrap(machine: *Machine) void {
