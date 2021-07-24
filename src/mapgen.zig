@@ -1157,7 +1157,9 @@ pub fn populateCaves(avoid: *const [HEIGHT][WIDTH]bool, level: usize, alloc: *me
     }
 }
 
-fn levelFeaturePrisoners(_: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+fn levelFeaturePrisoners(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+    if (c == 1 and rng.onein(2)) return;
+
     const prisoner_t = rng.chooseUnweighted(mobs.MobTemplate, &mobs.PRISONERS);
     const prisoner = placeMob(alloc, &prisoner_t, coord, .{});
     prisoner.prisoner_status = Prisoner{ .of = .Sauron };
@@ -1445,7 +1447,7 @@ pub const Prefab = struct {
                             '≈' => .Lava,
                             '≡' => .Bars,
                             '?' => .Any,
-                            'α' => FabTile{ .LevelFeature = @as(usize, 'α' - c) },
+                            'α'...'β' => FabTile{ .LevelFeature = @as(usize, c - 'α') },
                             '0'...'9', 'a'...'z' => FabTile{ .Feature = @intCast(u8, c) },
                             else => return error.InvalidFabTile,
                         };
@@ -1542,7 +1544,7 @@ pub const LevelConfig = struct {
     max_room_width: usize = 20,
     max_room_height: usize = 15,
 
-    level_features: [1]?LevelFeatureFunc = [_]?LevelFeatureFunc{null},
+    level_features: [2]?LevelFeatureFunc = [_]?LevelFeatureFunc{ null, null },
 
     pub const RPBuf = StackBuffer([]const u8, 4);
     pub const LevelFeatureFunc = fn (usize, Coord, *const Room, *const Prefab, *mem.Allocator) void;
@@ -1614,7 +1616,10 @@ pub const Configs = [LEVELS]LevelConfig{
         },
         .prefab_chance = 3,
         .max_rooms = 512,
-        .level_features = .{levelFeaturePrisoners},
+        .level_features = [_]?LevelConfig.LevelFeatureFunc{
+            levelFeaturePrisoners,
+            levelFeaturePrisoners,
+        },
     },
     .{
         .identifier = "PRI",
@@ -1628,6 +1633,9 @@ pub const Configs = [LEVELS]LevelConfig{
         },
         .prefab_chance = 3,
         .max_rooms = 512,
-        .level_features = [_]?LevelConfig.LevelFeatureFunc{levelFeaturePrisoners},
+        .level_features = [_]?LevelConfig.LevelFeatureFunc{
+            levelFeaturePrisoners,
+            levelFeaturePrisoners,
+        },
     },
 };
