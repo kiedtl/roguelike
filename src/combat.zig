@@ -20,6 +20,8 @@ const LOW_STRENGTH_NBONUS: isize = 10;
 const GREATER_DEXTERITY_DODGE_BONUS: isize = 10;
 const DOUBLE_GREATER_DEXTERITY_DODGE_BONUS: isize = 10;
 
+// TODO: weapon/armor penalties
+
 pub fn chanceOfAttackLanding(attacker: *const Mob, defender: *const Mob) usize {
     if (!defender.isAwareOfAttack(attacker.coord)) return 100;
 
