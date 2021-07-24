@@ -14,6 +14,7 @@ const GREATER_DEXTERITY_BONUS: isize = 10;
 const DOUBLE_GREATER_DEXTERITY_BONUS: isize = 20;
 const FULL_LIGHT_BONUS: isize = 10;
 
+const ATTACKER_HELD_NBONUS: isize = 14;
 const DIM_LIGHT_NBONUS: isize = 10;
 const LOW_DEXTERITY_NBONUS: isize = 10;
 const LOW_STRENGTH_NBONUS: isize = 10;
@@ -35,12 +36,12 @@ pub fn chanceOfAttackLanding(attacker: *const Mob, defender: *const Mob) usize {
     var chance: isize = 60;
 
     chance += if (defender.isUnderStatus(.Held)) |_| DEFENDER_HELD_BONUS else 0;
-
     chance += if (attacker.dexterity() > defender.dexterity()) GREATER_DEXTERITY_BONUS else 0;
     chance += if (attacker.dexterity() > (defender.dexterity() * 2)) DOUBLE_GREATER_DEXTERITY_BONUS else 0;
     chance += @intCast(isize, Mob.MAX_ACTIVITY_BUFFER_SZ - defender.turnsSinceRest()) * 3;
     chance += if (tile_light == 100) FULL_LIGHT_BONUS else 0;
 
+    chance -= if (attacker.isUnderStatus(.Held)) |_| ATTACKER_HELD_NBONUS else 0;
     chance -= if (tile_light < attacker.night_vision) DIM_LIGHT_NBONUS else 0;
     chance -= if (attacker.dexterity() < attacker_weapon.required_dexterity) LOW_DEXTERITY_NBONUS else 0;
     chance -= if (attacker.strength() < attacker_weapon.required_strength) LOW_STRENGTH_NBONUS else 0;
