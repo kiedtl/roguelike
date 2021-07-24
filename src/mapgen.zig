@@ -841,7 +841,8 @@ pub fn placeTraps(level: usize) void {
 }
 
 pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
-    var squads: usize = rng.range(usize, 5, 8);
+    var squads: usize = Configs[level].patrol_squads;
+
     while (squads > 0) : (squads -= 1) {
         const room = rng.chooseUnweighted(Room, state.dungeon.rooms[level].items);
         const patrol_units = rng.range(usize, 2, 4) % math.max(room.width, room.height);
@@ -870,51 +871,22 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
         }
     }
 
-    // Chances for mobs to spawn:
-    //      - 10/12 chance for Guards
-    //      - 1/5   chance for Executioners
-    //      - 1/7   chance for Watchers
-
     for (state.dungeon.rooms[level].items) |room| {
         if (room.prefab) |rfb| if (rfb.noguards) continue;
         if (room.type == .Corridor) continue;
         if (room.height * room.width < 16) continue;
 
-        if (rng.tenin(12)) {
-            var tries: usize = 50;
-            while (tries > 0) : (tries -= 1) {
-                const post_coord = room.randomCoord();
-                if (isTileAvailable(post_coord) and !state.dungeon.at(post_coord).prison) {
-                    _ = placeMob(alloc, &mobs.GuardTemplate, post_coord, .{
-                        .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
-                    });
-                    break;
-                }
-            }
-        }
-
-        if (rng.onein(5)) {
-            var tries: usize = 50;
-            while (tries > 0) : (tries -= 1) {
-                const post_coord = room.randomCoord();
-                if (isTileAvailable(post_coord) and !state.dungeon.at(post_coord).prison) {
-                    _ = placeMob(alloc, &mobs.ExecutionerTemplate, post_coord, .{
-                        .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
-                    });
-                    break;
-                }
-            }
-        }
-
-        if (rng.onein(7)) {
-            var tries: usize = 50;
-            while (tries > 0) : (tries -= 1) {
-                const post_coord = room.randomCoord();
-                if (isTileAvailable(post_coord) and !state.dungeon.at(post_coord).prison) {
-                    _ = placeMob(alloc, &mobs.WatcherTemplate, post_coord, .{
-                        .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
-                    });
-                    break;
+        for (Configs[level].mob_options.data) |mob| {
+            if (rng.tenin(mob.chance)) {
+                var tries: usize = 100;
+                while (tries > 0) : (tries -= 1) {
+                    const post_coord = room.randomCoord();
+                    if (isTileAvailable(post_coord) and !state.dungeon.at(post_coord).prison) {
+                        _ = placeMob(alloc, mob.template, post_coord, .{
+                            .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
+                        });
+                        break;
+                    }
                 }
             }
         }
@@ -1546,8 +1518,21 @@ pub const LevelConfig = struct {
 
     level_features: [2]?LevelFeatureFunc = [_]?LevelFeatureFunc{ null, null },
 
+    patrol_squads: usize,
+    mob_options: MCBuf = MCBuf.init(&[_]MobConfig{
+        .{ .chance = 12, .template = &mobs.GuardTemplate },
+        .{ .chance = 50, .template = &mobs.ExecutionerTemplate },
+        .{ .chance = 70, .template = &mobs.WatcherTemplate },
+    }),
+
     pub const RPBuf = StackBuffer([]const u8, 4);
+    pub const MCBuf = StackBuffer(MobConfig, 3);
     pub const LevelFeatureFunc = fn (usize, Coord, *const Room, *const Prefab, *mem.Allocator) void;
+
+    pub const MobConfig = struct {
+        chance: usize, // Ten in <chance>
+        template: *const mobs.MobTemplate,
+    };
 };
 
 pub const Configs = [LEVELS]LevelConfig{
@@ -1562,6 +1547,8 @@ pub const Configs = [LEVELS]LevelConfig{
         },
         .prefab_chance = 2,
         .max_rooms = 256,
+
+        .patrol_squads = 3,
     },
     .{
         .identifier = "TEM",
@@ -1574,6 +1561,8 @@ pub const Configs = [LEVELS]LevelConfig{
         },
         .prefab_chance = 1,
         .max_rooms = 2048,
+
+        .patrol_squads = 2,
     },
     .{
         .identifier = "REC",
@@ -1588,6 +1577,8 @@ pub const Configs = [LEVELS]LevelConfig{
         .min_room_height = 5,
         .max_room_width = 10,
         .max_room_height = 6,
+
+        .patrol_squads = 1,
     },
     .{
         .identifier = "LAB",
@@ -1602,6 +1593,13 @@ pub const Configs = [LEVELS]LevelConfig{
         .min_room_height = 6,
         .max_room_width = 30,
         .max_room_height = 20,
+
+        .patrol_squads = 3,
+        .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
+            .{ .chance = 12, .template = &mobs.SentinelTemplate },
+            .{ .chance = 25, .template = &mobs.WatcherTemplate },
+            .{ .chance = 50, .template = &mobs.GuardTemplate },
+        }),
     },
     .{
         .identifier = "PRI",
@@ -1620,6 +1618,8 @@ pub const Configs = [LEVELS]LevelConfig{
             levelFeaturePrisoners,
             levelFeaturePrisoners,
         },
+
+        .patrol_squads = 6,
     },
     .{
         .identifier = "PRI",
@@ -1637,5 +1637,7 @@ pub const Configs = [LEVELS]LevelConfig{
             levelFeaturePrisoners,
             levelFeaturePrisoners,
         },
+
+        .patrol_squads = 5,
     },
 };

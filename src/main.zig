@@ -660,13 +660,13 @@ fn viewerMain() void {
 pub fn main() anyerror!void {
     initGame();
 
-    //viewerMain();
+    viewerMain();
 
-    while (state.state != .Quit) switch (state.state) {
-        .Game => tickGame(),
-        .Lose, .Win => gameOverScreen(),
-        .Quit => break,
-    };
+    // while (state.state != .Quit) switch (state.state) {
+    //     .Game => tickGame(),
+    //     .Lose, .Win => gameOverScreen(),
+    //     .Quit => break,
+    // };
 
     deinitGame();
 }
