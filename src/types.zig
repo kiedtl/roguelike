@@ -1045,6 +1045,10 @@ pub const Mob = struct { // {{{
             can = true;
         }
 
+        if (other.immobile) {
+            can = false;
+        }
+
         return can;
     }
 
