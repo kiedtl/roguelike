@@ -34,6 +34,19 @@ fn coord_in_list(coord: Coord, list: *NodeArrayList) ?usize {
     return null;
 }
 
+fn pathfindingPenalty(coord: Coord) usize {
+    var c: usize = 0;
+
+    if (state.dungeon.at(coord).surface) |surface| switch (surface) {
+        .Machine => |m| c += m.pathfinding_penalty,
+        .Container => |_| c += 30,
+        .Prop => c += 15,
+        else => {},
+    };
+
+    return c;
+}
+
 pub fn path(
     start: Coord,
     goal: Coord,
@@ -84,7 +97,9 @@ pub fn path(
                 if (closed_list[coord.y][coord.x]) |_| continue;
                 if (!is_walkable(coord, opts) and !goal.eq(coord)) continue;
 
-                const penalty: usize = if (neighbor.is_diagonal()) 14 else 10;
+                const penalty: usize =
+                    if (neighbor.is_diagonal()) 7 else 5 +
+                    pathfindingPenalty(coord);
 
                 const node = Node{
                     .coord = coord,

@@ -327,6 +327,7 @@ pub const NetTrap = Machine{
     .powered_tile = ':',
     .unpowered_tile = ':',
     .on_power = powerNetTrap,
+    .pathfinding_penalty = 80,
 };
 
 pub const PoisonGasTrap = Machine{

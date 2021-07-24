@@ -1572,6 +1572,9 @@ pub const Machine = struct {
     powered_luminescence: usize = 0,
     unpowered_luminescence: usize = 0,
 
+    // A* penalty if the machine is walkable
+    pathfinding_penalty: usize = 0,
+
     coord: Coord = Coord.new(0, 0),
     on_power: fn (*Machine) void, // Called on each turn when the machine is powered
     power: usize = 0, // percentage (0..100)
