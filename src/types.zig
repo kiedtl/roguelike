@@ -1987,11 +1987,9 @@ pub const Tile = struct {
             },
         }
 
-        if (self.type != .Wall) {
-            const light = math.clamp(state.dungeon.lightIntensityAt(coord).*, 0, 100);
-            cell.bg = math.max(utils.percentageOfColor(cell.bg, light), utils.darkenColor(cell.bg, 4));
-            cell.fg = math.max(utils.percentageOfColor(cell.fg, light), utils.darkenColor(cell.fg, 4));
-        }
+        const light = math.clamp(state.dungeon.lightIntensityAt(coord).*, 0, 100);
+        cell.bg = math.max(utils.percentageOfColor(cell.bg, light), utils.darkenColor(cell.bg, 3));
+        cell.fg = math.max(utils.percentageOfColor(cell.fg, light), utils.darkenColor(cell.fg, 3));
 
         var spattering = self.spatter.iterator();
         while (spattering.next()) |entry| {
