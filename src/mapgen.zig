@@ -448,10 +448,11 @@ pub fn validateLevel(level: usize, alloc: *mem.Allocator) bool {
     };
 
     const rooms = state.dungeon.rooms[level].items;
-    const base_room = rng.chooseUnweighted(Room, rooms);
+    const base_room = rng.chooseUnweighted(Room, rooms); // FIXME: ensure is not corridor
     const point = _f._getWalkablePoint(&base_room);
 
     for (rooms) |otherroom| {
+        if (otherroom.type == .Corridor) continue;
         if (otherroom.start.eq(base_room.start)) continue;
 
         const otherpoint = _f._getWalkablePoint(&otherroom);
