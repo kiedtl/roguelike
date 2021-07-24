@@ -11,6 +11,8 @@
 %    ≈   lava
 %    ;   window
 %    ?   anything
+%    α   depends on level
+%    β   depends on level
 %
 %
 % Example:
