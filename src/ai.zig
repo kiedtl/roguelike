@@ -258,7 +258,7 @@ fn _guard_glance(mob: *Mob, prev_direction: Direction) void {
     _ = mob.gaze(newdirection);
 }
 
-pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn patrolWork(mob: *Mob, alloc: *mem.Allocator) void {
     assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.occupation.phase == .Work);
 
@@ -290,15 +290,33 @@ pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
     _guard_glance(mob, prev_facing);
 }
 
-pub fn watcherWork(mob: *Mob, alloc: *mem.Allocator) void {
-    assert(state.dungeon.at(mob.coord).mob != null);
-    assert(mob.occupation.phase == .Work);
-
+pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
     var post = mob.occupation.work_area.items[0];
 
     if (mob.coord.eq(post)) {
         _ = mob.rest();
-        return;
+    } else {
+        // We're not at our post, return there
+        if (!mob.isCreeping()) {
+            _ = mob.rest();
+            return;
+        }
+
+        const prev_facing = mob.facing;
+        mob.tryMoveTo(post);
+        _guard_glance(mob, prev_facing);
+    }
+}
+
+pub fn watcherWork(mob: *Mob, alloc: *mem.Allocator) void {
+    var post = mob.occupation.work_area.items[0];
+
+    if (mob.coord.eq(post)) {
+        _ = mob.rest();
+
+        if (rng.onein(6)) {
+            mob.facing = rng.chooseUnweighted(Direction, &DIRECTIONS);
+        }
     } else {
         // We're not at our post, return there
         if (!mob.isCreeping()) {
