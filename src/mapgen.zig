@@ -405,7 +405,7 @@ pub fn resetLevel(level: usize) void {
             tile.prison = false;
             tile.marked = false;
             tile.type = .Wall;
-            tile.material = &materials.Basalt;
+            tile.material = Configs[level].default_material;
             tile.mob = null;
             tile.surface = null;
             tile.spatter = SpatterArray.initFill(0);
@@ -1525,6 +1525,8 @@ pub const LevelConfig = struct {
         .{ .chance = 70, .template = &mobs.WatcherTemplate },
     }),
 
+    default_material: *const Material = &materials.Basalt,
+
     pub const RPBuf = StackBuffer([]const u8, 4);
     pub const MCBuf = StackBuffer(MobConfig, 3);
     pub const LevelFeatureFunc = fn (usize, Coord, *const Room, *const Prefab, *mem.Allocator) void;
@@ -1600,6 +1602,8 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ .chance = 25, .template = &mobs.WatcherTemplate },
             .{ .chance = 50, .template = &mobs.GuardTemplate },
         }),
+
+        .default_material = &materials.Dobalene,
     },
     .{
         .identifier = "PRI",

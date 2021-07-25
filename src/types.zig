@@ -427,7 +427,7 @@ pub const Material = struct {
     // Tile used to represent walls. The foreground color is used to represent
     // items made with that material.
     color_fg: u32,
-    color_bg: u32,
+    color_bg: ?u32,
     glyph: u21,
 
     // Melting point in Celsius, and combust temperature, also in Celsius.
@@ -1895,6 +1895,11 @@ pub const Tile = struct {
         var self = state.dungeon.at(coord);
         var cell = termbox.tb_cell{};
 
+        const color: u32 = utils.percentageOfColor(
+            self.material.color_bg orelse self.material.color_fg,
+            40,
+        );
+
         switch (self.type) {
             .Water => cell = .{
                 .ch = '≈',
@@ -1909,24 +1914,19 @@ pub const Tile = struct {
             .Wall => cell = .{
                 .ch = self.material.glyph,
                 .fg = self.material.color_fg,
-                .bg = self.material.color_bg,
+                .bg = self.material.color_bg orelse color,
             },
             .Floor => {
-                var color: u32 = utils.percentageOfColor(self.material.color_bg, 40);
-
                 if (self.mob) |mob| {
+                    cell.bg = color;
+
                     const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);
                     if (hp_loss_percent > 0) {
                         const red = @floatToInt(u32, (255 * hp_loss_percent) / 100) + 0x66;
-                        color = math.clamp(red, 0x66, 0xff) << 16;
-                    }
-
-                    if (mob.is_dead) {
-                        color = 0xdc143c;
+                        cell.bg = math.clamp(red, 0x66, 0xff) << 16;
                     }
 
                     cell.ch = mob.tile;
-                    cell.bg = color;
                 } else if (state.dungeon.itemsAt(coord).last()) |item| {
                     switch (item) {
                         .Corpse => |_| {
@@ -1995,10 +1995,10 @@ pub const Tile = struct {
         while (spattering.next()) |entry| {
             const spatter = entry.key;
             const num = entry.value.*;
-            const color = spatter.color();
+            const sp_color = spatter.color();
             const q = @intToFloat(f64, num / 10);
             const aq = 1 - math.clamp(q, 0.19, 0.40);
-            if (num > 0) cell.bg = utils.mixColors(color, cell.bg, aq);
+            if (num > 0) cell.bg = utils.mixColors(sp_color, cell.bg, aq);
         }
 
         const gases = state.dungeon.atGas(coord);
