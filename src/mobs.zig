@@ -183,7 +183,7 @@ pub const PlayerTemplate = MobTemplate{
         },
         .allegiance = .Illuvatar,
         .vision = 25,
-        .night_vision = 3,
+        .night_vision = 0,
         .deg360_vision = true,
         .no_show_fov = true,
 
