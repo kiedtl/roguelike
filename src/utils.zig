@@ -4,6 +4,9 @@ const math = std.math;
 const meta = std.meta;
 const mem = std.mem;
 
+const state = @import("state.zig");
+usingnamespace @import("types.zig");
+
 pub fn saturating_sub(a: anytype, b: anytype) @TypeOf(a, b) {
     return switch (@typeInfo(@TypeOf(a))) {
         .ComptimeInt, .Int => if ((a -% b) > a) 0 else a - b,
