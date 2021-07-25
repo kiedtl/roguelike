@@ -114,7 +114,7 @@ pub const DaggerWeapon = Weapon{
         .Crushing = 0,
         .Pulping = 0,
         .Slashing = 3,
-        .Piercing = 10,
+        .Piercing = 15,
         .Lacerating = 2,
     },
     .main_damage = .Piercing,
