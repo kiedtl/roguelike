@@ -1137,6 +1137,20 @@ fn levelFeaturePrisoners(c: usize, coord: Coord, room: *const Room, prefab: *con
     prisoner.prisoner_status = Prisoner{ .of = .Sauron };
 }
 
+fn levelFeaturePotions(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+    const potion = rng.chooseUnweighted(Potion, &items.POTIONS);
+    state.potions.append(potion) catch unreachable;
+    state.dungeon.itemsAt(coord).append(
+        Item{ .Potion = state.potions.lastPtr().? },
+    ) catch unreachable;
+}
+
+fn levelFeatureVials(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+    state.dungeon.itemsAt(coord).append(
+        Item{ .Vial = rng.choose(Vial, &Vial.VIALS, &Vial.VIAL_COMMONICITY) catch unreachable },
+    ) catch unreachable;
+}
+
 pub const Prefab = struct {
     subroom: bool = false,
     invisible: bool = false,
@@ -1598,6 +1612,11 @@ pub const Configs = [LEVELS]LevelConfig{
         .min_room_height = 6,
         .max_room_width = 30,
         .max_room_height = 20,
+
+        .level_features = [_]?LevelConfig.LevelFeatureFunc{
+            levelFeatureVials,
+            levelFeaturePotions,
+        },
 
         .patrol_squads = 3,
         .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{

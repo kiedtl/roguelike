@@ -1818,6 +1818,67 @@ pub const Potion = struct {
     color: u32,
 };
 
+pub const Vial = enum {
+    Tanus,
+    Slade,
+    Pholenine,
+    Chloroforon,
+    Hyine,
+    Quagenine,
+    Flouine,
+    Cataline,
+    Phytin,
+
+    pub const VIALS = [_]Vial{
+        .Tanus, .Slade, .Pholenine, .Chloroforon, .Hyine, .Quagenine, .Flouine, .Cataline, .Phytin,
+    };
+
+    // Commonicity (adj) -- the opposite of rarity, because why not. Higher numbers are more common.
+    pub const VIAL_COMMONICITY = [_]usize{ 5, 1, 2, 3, 7, 7, 2, 1, 5 };
+
+    pub inline fn tile(self: Vial) u21 {
+        return switch (self) {
+            .Tanus => '⊕',
+            .Slade => '⊖',
+            .Pholenine => '⊗',
+            .Chloroforon => '⊘',
+            .Hyine => '⊙',
+            .Quagenine => '⊚',
+            .Flouine => '⊛',
+            .Cataline => '⊜',
+            .Phytin => '⊝',
+        };
+    }
+
+    pub inline fn color(self: Vial) u32 {
+        return switch (self) {
+            .Tanus => 0xff9390,
+            .Slade => 0x79d28f,
+            .Pholenine => 0xffb6ac,
+            .Chloroforon => 0xffe001,
+            .Hyine => 0x50ff2e,
+            .Quagenine => 0xff81f1,
+            .Flouine => 0x33ccff,
+            .Cataline => 0xf2a2b8,
+            .Phytin => 0xf2c088,
+        };
+    }
+
+    pub inline fn name(self: Vial) []const u8 {
+        return switch (self) {
+            .Tanus => "tanus",
+            .Slade => "slade",
+            .Pholenine => "pholenine",
+            .Chloroforon => "chloroforon",
+            .Hyine => "hyine",
+            .Quagenine => "quagenine",
+            .Flouine => "flouine",
+            .Cataline => "cataline",
+            .Phytin => "phytin",
+        };
+    }
+};
+
 pub const Ring = struct {
     // Ring of <name>
     name: []const u8,
@@ -1855,6 +1916,7 @@ pub const Item = union(enum) {
     Corpse: *Mob,
     Ring: *Ring,
     Potion: *Potion,
+    Vial: Vial,
     Armor: *Armor,
     Weapon: *Weapon,
 
@@ -1865,6 +1927,7 @@ pub const Item = union(enum) {
             .Corpse => |c| try fmt.format(fbs.writer(), "{} corpse", .{c.species}),
             .Ring => |r| try fmt.format(fbs.writer(), "ring of {}", .{r.name}),
             .Potion => |p| try fmt.format(fbs.writer(), "potion of {}", .{p.name}),
+            .Vial => |v| try fmt.format(fbs.writer(), "vial of {}", .{v.name()}),
             .Armor => |a| try fmt.format(fbs.writer(), "{} armor", .{a.name}),
             .Weapon => |w| try fmt.format(fbs.writer(), "{}", .{w.name}),
         }
@@ -1939,6 +2002,11 @@ pub const Tile = struct {
                         .Potion => |potion| {
                             cell.ch = '¡';
                             cell.fg = potion.color;
+                            cell.bg = color;
+                        },
+                        .Vial => |v| {
+                            cell.ch = v.tile();
+                            cell.fg = v.color();
                             cell.bg = color;
                         },
                         .Weapon => |_| {
