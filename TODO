@@ -509,17 +509,18 @@ o	sylvium
 o	magalt
 o	mithril		The mithril we all know and love.
 o	vibonium
-v	tanus
-v	slade
-v	sulon
-v	pholenine
+v	tanus		Extracted from talonium.
+v	slade		Extracted from sulon.
+v	pholenine	Extracted from phosire.
 v	chloroforon
-v	hyine
+v	hyine		Extracted from hyalt.
 v	quagenine
 v	flouine
-v	catasine
-v	cataline
+v	cataline	Extracted from catasine.
 v	phytin
+s	sulon
+s	catasine
+s	talonium
 s	nebro		Like slade in Dwarf Fortress -- extremely heavy.
 s	bolyvese
 s	vangenite
@@ -529,7 +530,6 @@ s	quaese
 s	phybro
 s	phosire
 s	orthire
-s	talonium
 s	maron
 
 
