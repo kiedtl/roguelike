@@ -51,12 +51,16 @@ fn initGame() void {
 
     var level: usize = 0;
     while (level < LEVELS) {
+        std.log.warn("Generating map {}.", .{mapgen.Configs[level].identifier});
+
         mapgen.resetLevel(level);
         mapgen.placeRandomRooms(&n_fabs, &s_fabs, level, &state.GPA.allocator);
         mapgen.placeMoarCorridors(level);
 
-        if (!mapgen.validateLevel(level, &state.GPA.allocator))
+        if (!mapgen.validateLevel(level, &state.GPA.allocator)) {
+            std.log.warn("Map {} invalid, regenerating.", .{mapgen.Configs[level].identifier});
             continue; // try again
+        }
 
         mapgen.placeTraps(level);
         mapgen.placeRoomFeatures(level, &state.GPA.allocator);
