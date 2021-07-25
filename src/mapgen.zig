@@ -395,6 +395,21 @@ fn _excavate_room(room: *const Room) void {
 // Destroy items, machines, and mobs associated with level and reset level's
 // terrain.
 pub fn resetLevel(level: usize) void {
+    var mobiter = state.mobs.iterator();
+    while (mobiter.nextNode()) |node| {
+        if (node.data.coord.z == level) {
+            node.data.kill();
+            state.mobs.remove(node);
+        }
+    }
+
+    var machiter = state.machines.iterator();
+    while (machiter.nextNode()) |node| {
+        if (node.data.coord.z == level) {
+            state.machines.remove(node);
+        }
+    }
+
     var y: usize = 0;
     while (y < HEIGHT) : (y += 1) {
         var x: usize = 0;
@@ -409,21 +424,8 @@ pub fn resetLevel(level: usize) void {
             tile.mob = null;
             tile.surface = null;
             tile.spatter = SpatterArray.initFill(0);
-        }
-    }
 
-    var mobiter = state.mobs.iterator();
-    while (mobiter.nextNode()) |node| {
-        if (node.data.coord.z == level) {
-            node.data.kill();
-            state.mobs.remove(node);
-        }
-    }
-
-    var machiter = state.machines.iterator();
-    while (machiter.nextNode()) |node| {
-        if (node.data.coord.z == level) {
-            state.machines.remove(node);
+            state.dungeon.itemsAt(coord).clear();
         }
     }
 }
