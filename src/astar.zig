@@ -34,7 +34,7 @@ fn coord_in_list(coord: Coord, list: *NodeArrayList) ?usize {
     return null;
 }
 
-fn pathfindingPenalty(coord: Coord) usize {
+fn pathfindingPenalty(coord: Coord, opts: state.IsWalkableOptions) usize {
     var c: usize = 0;
 
     if (state.dungeon.at(coord).surface) |surface| switch (surface) {
@@ -43,6 +43,11 @@ fn pathfindingPenalty(coord: Coord) usize {
         .Prop => c += 15,
         else => {},
     };
+
+    if (opts.mob) |mob|
+        if (state.dungeon.lightIntensityAt(coord).* < mob.night_vision) {
+            c += 10;
+        };
 
     return c;
 }
@@ -99,7 +104,7 @@ pub fn path(
 
                 const penalty: usize =
                     if (neighbor.is_diagonal()) 7 else 5 +
-                    pathfindingPenalty(coord);
+                    pathfindingPenalty(coord, opts);
 
                 const node = Node{
                     .coord = coord,
