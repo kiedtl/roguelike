@@ -325,7 +325,7 @@ fn _excavate_prefab(
                 },
                 .LockedDoor => placeDoor(rc, true),
                 .Door => placeDoor(rc, false),
-                .Brazier => _place_machine(rc, &machines.Brazier),
+                .Brazier => _place_machine(rc, Configs[room.start.z].light),
                 .Bars => _ = _place_prop(rc, &machines.IronBarProp),
                 else => {},
             }
@@ -405,7 +405,7 @@ pub fn resetLevel(level: usize) void {
             tile.prison = false;
             tile.marked = false;
             tile.type = .Wall;
-            tile.material = Configs[level].default_material;
+            tile.material = Configs[level].material;
             tile.mob = null;
             tile.surface = null;
             tile.spatter = SpatterArray.initFill(0);
@@ -907,8 +907,8 @@ fn placeLights(room: *const Room) void {
             state.dungeon.neighboringMachines(coord) > 0)
             continue;
 
-        var brazier = machines.Brazier;
-        brazier.powered_luminescence -= rng.rangeClumping(usize, 0, 30, 2);
+        var brazier = Configs[room.start.z].light.*;
+        brazier.powered_luminescence -= rng.rangeClumping(usize, 0, 20, 2);
 
         _place_machine(coord, &brazier);
         state.dungeon.at(coord).type = .Floor;
@@ -1525,7 +1525,8 @@ pub const LevelConfig = struct {
         .{ .chance = 70, .template = &mobs.WatcherTemplate },
     }),
 
-    default_material: *const Material = &materials.Basalt,
+    material: *const Material = &materials.Basalt,
+    light: *const Machine = &machines.Brazier,
 
     pub const RPBuf = StackBuffer([]const u8, 4);
     pub const MCBuf = StackBuffer(MobConfig, 3);
@@ -1605,7 +1606,8 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ .chance = 50, .template = &mobs.GuardTemplate },
         }),
 
-        .default_material = &materials.Dobalene,
+        .material = &materials.Dobalene,
+        .light = &machines.Lamp,
     },
     .{
         .identifier = "PRI",

@@ -51,6 +51,7 @@ pub const MACHINES = [_]Machine{
     PowerSupply,
     HealingGasPump,
     Brazier,
+    Lamp,
     StairExit,
     StairUp,
     NormalDoor,
@@ -291,6 +292,32 @@ pub const Brazier = Machine{
 
     // maximum, could be much lower (see mapgen:placeLights)
     .powered_luminescence = 90,
+    .unpowered_luminescence = 0,
+
+    .on_power = powerNone,
+};
+
+pub const Lamp = Machine{
+    .name = "a lamp",
+
+    .powered_tile = '•',
+    .unpowered_tile = '○',
+
+    .powered_fg = 0xffdf12,
+    .unpowered_fg = 0x88e0ee,
+
+    .power_drain = 10,
+    .power_add = 100,
+    .auto_power = true,
+
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+
+    .powered_opacity = 1.0,
+    .unpowered_opacity = 1.0,
+
+    // maximum, could be lower (see mapgen:placeLights)
+    .powered_luminescence = 100,
     .unpowered_luminescence = 0,
 
     .on_power = powerNone,
