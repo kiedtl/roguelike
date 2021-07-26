@@ -10,10 +10,13 @@
 %    ~   water
 %    ≈   lava
 %    ;   window
+%    +   door
+%    ±   locked door
+%    ≡   bars
 %    ?   anything
 %    α   depends on level
 %    β   depends on level
-%
+%    γ   depends on level
 %
 % Example:
 
