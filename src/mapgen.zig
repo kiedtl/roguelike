@@ -682,7 +682,7 @@ fn _place_rooms(
     }
 
     if (child.prefab) |f|
-        Prefab.incrementUsedCounter(f.name.constSlice(), level, n_fabs);
+        f.used[level] += 1;
 
     if (child.prefab == null) {
         for (s_fabs.items) |*subroom| {
@@ -693,7 +693,7 @@ fn _place_rooms(
                 const rx = (child.width / 2) - (subroom.width / 2);
                 const ry = (child.height / 2) - (subroom.height / 2);
                 _excavate_prefab(&child, subroom, allocator, rx, ry);
-                Prefab.incrementUsedCounter(subroom.name.constSlice(), level, s_fabs);
+                subroom.used[level] += 1;
                 child.has_subroom = true;
                 break;
             }
@@ -737,7 +737,7 @@ pub fn placeRandomRooms(
             continue;
 
         if (first == null) first = room;
-        Prefab.incrementUsedCounter(fab.name.constSlice(), level, n_fabs);
+        fab.used[level] += 1;
         _excavate_prefab(&room, fab, allocator, 0, 0);
         rooms.append(room) catch unreachable;
         reqctr += 1;
@@ -1453,15 +1453,6 @@ pub const Prefab = struct {
     pub fn findPrefabByName(name: []const u8, fabs: *const PrefabArrayList) ?*Prefab {
         for (fabs.items) |*f| if (mem.eql(u8, name, f.name.constSlice())) return f;
         return null;
-    }
-
-    pub fn incrementUsedCounter(id: []const u8, level: usize, lst: *PrefabArrayList) void {
-        for (lst.items) |*f, i| {
-            if (mem.eql(u8, id, f.name.constSlice())) {
-                f.used[level] += 1;
-                break;
-            }
-        }
     }
 
     pub fn greaterThan(_: void, a: Prefab, b: Prefab) bool {
