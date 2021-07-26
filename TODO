@@ -295,9 +295,8 @@ fire alarm
 	  they can't do anything if the "fire" is an angry burning brute).
 
 
-Potions/Vials/Tonics
+Potions/Vials
 --------------------
-TODO: decide difference between potions, tonics, and vials.
 - Potions: [s]tatus, [g]as, [c]ustom
 potion of confuzzlementation [g]
 	- Confusion.
@@ -365,36 +364,48 @@ potion of desalination
 	- ???
 potion of divination
 	- ???
+vial of tanus
+	- Mutation: byvision
+	  Makes mob see directly behind them as well as in front of them.
+vial of slade
+	- Mutation: bishop
+	  Makes mob unable to move in cardinal directions.
+vial of pholenine
+	- Mutation: rook
+	  Makes mob unable to move in diagonal directions.
+vial of chloroforon
+vial of hyine
+vial of quagenin
+vial of flouin
+vial of cataline
+	- Mutation: partial vampirism
+	Makes mob take damage when standing on a fully lit tile.
+	Gives mob perfect night vision.
+vial of phytin
 
 
 Occupations
 -----------
-- Sentinel
-	Purpose: Guard against the Openworld denizens, and raise alarm in case
-	  of a wall breach and subsequent invasion.
-	Guards entry points to Openworld.
-	Guard vaults.
-	Armed to the teeth, but stops attacking when intruder leaves radius
+- Sentry
+	Purpose: -
+	Armed to the teeth.
 	Attempts to hold intruder in stasis with nets and shooting webs
-	If intruder is too strong, flees and raises alarm, calling for
-	  reinforcements
 - Watchers
 	Purpose: Give player a reason to think twice before entering room.
 	Guards a single room, staying stationary.
+	Changes glance direction every now and then.
 	Very weak, but fast. Keeps its distance, and howls and yells when it
 	  encounters an intruder.
-- Guard
+- Patrol
 	Purpose: Keep player always on their toes.
 	Walk in a squad from one room to another, and investigate noises.
 	Moderately well armed, but slow.
+- Guard
+	Purpose: Keep player always on their toes.
+	Just stands around.
 - Warden
 	Purpose: roam around, beating/whipping idlers.
 	Weak, slow, and cowardly.
-- Sentry
-	Purpose: hide in cubbyhole in corridor or room, guarding.
-	Poorly armed, normal speed.
-	Attempts to hold intruder in stasis with nets and shooting webs,
-	  then closes in to slice attacker.
 - Executioner
 	Purpose: -
 	No armor.
@@ -402,7 +413,8 @@ Occupations
 	just two to three strikes.
 - Firefighter
 	Purpose: respond to fire alarms, and use extinguisher to put fire out.
-	Travels in squads of 3-4. Can sprint to move 2.3 times as fast.
+	Travels in squads of 3-4.
+	Faster than other mobs.
 	Always wears heat-proof cloak, and carries extinguisher. Defenseless
 	  against intruders.
 	Should flee if it realizes that the "fire" is an angry Burning Brute.
@@ -431,11 +443,7 @@ Occupations
 	  the victim's corpse is animated.
 	Manufactures Potions of Tainting.
 - Researcher
-	Purpose: manufacture potions, and stand around, giving player something
-	  interesting to look at.
-	Uses machines and collections of vials to manufacture potions, placing
-	  them in storeroom.
-	Develops railgun and a few other big toys for player to fidget with.
+	Purpose: Add some life to the dungeon.
 - Farmer
 	Purpose: make food for the entire dungeon.
 	Farms fungi/mushrooms, harvesting them just before spore-producing stage.
