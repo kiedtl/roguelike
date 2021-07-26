@@ -30,7 +30,7 @@ const SpellInfo = spells.SpellInfo;
 const Spell = spells.Spell;
 
 pub const HEIGHT = 40;
-pub const WIDTH = 80;
+pub const WIDTH = 100;
 pub const LEVELS = 6;
 pub const PLAYER_STARTING_LEVEL = 5; // TODO: define in data file
 
