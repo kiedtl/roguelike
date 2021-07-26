@@ -45,6 +45,7 @@ pub const PROPS = [_]Prop{
     GasVentProp,
     BedProp,
     IronBarProp,
+    TitaniumBarProp,
 };
 
 pub const MACHINES = [_]Machine{
@@ -209,6 +210,14 @@ pub const GasVentProp = Prop{
     .opacity = 1.0,
 };
 
+pub const GasSpigotProp = Prop{
+    .name = "gas spigot",
+    .tile = '*',
+    .fg = 0xffffff,
+    .walkable = false,
+    .opacity = 0.0,
+};
+
 pub const BedProp = Prop{
     .id = "bed",
     .name = "bed",
@@ -223,6 +232,14 @@ pub const IronBarProp = Prop{
     .tile = '≡',
     .fg = 0x000012,
     .bg = 0xdadada,
+    .opacity = 0.0,
+    .walkable = false,
+};
+
+pub const TitaniumBarProp = Prop{
+    .name = "titanium bars",
+    .tile = '≡',
+    .fg = 0xeaecef,
     .opacity = 0.0,
     .walkable = false,
 };

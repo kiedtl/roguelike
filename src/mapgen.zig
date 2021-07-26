@@ -326,7 +326,7 @@ fn _excavate_prefab(
                 .LockedDoor => placeDoor(rc, true),
                 .Door => placeDoor(rc, false),
                 .Brazier => _place_machine(rc, Configs[room.start.z].light),
-                .Bars => _ = _place_prop(rc, &machines.IronBarProp),
+                .Bars => _ = _place_prop(rc, Configs[room.start.z].bars),
                 else => {},
             }
         }
@@ -833,7 +833,7 @@ pub fn placeTraps(level: usize) void {
                     state.dungeon.neighboringWalls(vent, true) == 9) continue;
 
                 state.dungeon.at(vent).type = .Floor;
-                const prop = _place_prop(vent, &machines.GasVentProp);
+                const prop = _place_prop(vent, Configs[level].vent);
                 trap.props[num_of_vents] = prop;
                 num_of_vents -= 1;
             }
@@ -1534,6 +1534,8 @@ pub const LevelConfig = struct {
 
     material: *const Material = &materials.Basalt,
     light: *const Machine = &machines.Brazier,
+    vent: *const Prop = &machines.GasVentProp,
+    bars: *const Prop = &machines.IronBarProp,
 
     pub const RPBuf = StackBuffer([]const u8, 4);
     pub const MCBuf = StackBuffer(MobConfig, 3);
@@ -1620,6 +1622,8 @@ pub const Configs = [LEVELS]LevelConfig{
 
         .material = &materials.Dobalene,
         .light = &machines.Lamp,
+        .vent = &machines.GasSpigotProp,
+        .bars = &machines.TitaniumBarProp,
     },
     .{
         .identifier = "PRI",
