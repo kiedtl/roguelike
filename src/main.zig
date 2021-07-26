@@ -337,6 +337,7 @@ fn useItem() bool {
             state.player.inventory.armor = armor;
         },
         .Potion => |p| state.player.quaffPotion(p),
+        .Vial => |v| @panic("TODO"),
     }
 
     _ = state.player.removeItem(index) catch unreachable;
