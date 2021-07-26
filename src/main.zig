@@ -31,6 +31,8 @@ fn initGame() void {
         error.PipeTrapFailed => @panic("Internal termbox error"),
     }
 
+    state.memory = CoordCellMap.init(&state.GPA.allocator);
+
     state.messages = MessageArrayList.init(&state.GPA.allocator);
     state.mobs = MobList.init(&state.GPA.allocator);
     state.sobs = SobList.init(&state.GPA.allocator);
@@ -41,6 +43,7 @@ fn initGame() void {
     state.machines = MachineList.init(&state.GPA.allocator);
     state.props = PropList.init(&state.GPA.allocator);
     state.containers = ContainerList.init(&state.GPA.allocator);
+
     rng.init();
 
     var s_fabs: mapgen.PrefabArrayList = undefined;
@@ -87,6 +90,8 @@ fn initGame() void {
 
 fn deinitGame() void {
     display.deinit() catch unreachable;
+
+    state.memory.clearAndFree();
 
     var iter = state.mobs.iterator();
     while (iter.nextPtr()) |mob| {
@@ -664,13 +669,13 @@ fn viewerMain() void {
 pub fn main() anyerror!void {
     initGame();
 
-    viewerMain();
+    //viewerMain();
 
-    // while (state.state != .Quit) switch (state.state) {
-    //     .Game => tickGame(),
-    //     .Lose, .Win => gameOverScreen(),
-    //     .Quit => break,
-    // };
+    while (state.state != .Quit) switch (state.state) {
+        .Game => tickGame(),
+        .Lose, .Win => gameOverScreen(),
+        .Quit => break,
+    };
 
     deinitGame();
 }

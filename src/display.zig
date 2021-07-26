@@ -381,8 +381,8 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
             if (!state.player.cansee(coord)) {
                 tile = .{ .fg = 0xffffff, .bg = 0, .ch = ' ' };
 
-                if (state.player.memory.contains(coord)) {
-                    tile = state.player.memory.get(coord) orelse unreachable;
+                if (state.memory.contains(coord)) {
+                    tile = state.memory.get(coord) orelse unreachable;
 
                     tile.fg = utils.filterColorGrayscale(utils.darkenColor(tile.fg, 3));
                     tile.bg = utils.filterColorGrayscale(utils.darkenColor(tile.bg, 3));

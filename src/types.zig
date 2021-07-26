@@ -604,19 +604,21 @@ pub const Status = enum {
     }
 
     pub fn tickEcholocation(mob: *Mob) void {
+        if (!mob.coord.eq(state.player.coord)) return;
+
         // TODO: do some tests and figure out what's the practical limit to memory
         // usage, and reduce the buffer's size to that.
         var membuf: [65535]u8 = undefined;
         var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
-        const st = mob.isUnderStatus(.Echolocation).?;
+        const st = state.player.isUnderStatus(.Echolocation).?;
 
-        const radius = mob.vision;
-        const z = mob.coord.z;
-        const ystart = utils.saturating_sub(mob.coord.y, radius);
-        const yend = math.min(mob.coord.y + radius, HEIGHT);
-        const xstart = utils.saturating_sub(mob.coord.x, radius);
-        const xend = math.min(mob.coord.x + radius, WIDTH);
+        const radius = state.player.vision;
+        const z = state.player.coord.z;
+        const ystart = utils.saturating_sub(state.player.coord.y, radius);
+        const yend = math.min(state.player.coord.y + radius, HEIGHT);
+        const xstart = utils.saturating_sub(state.player.coord.x, radius);
+        const xend = math.min(state.player.coord.x + radius, WIDTH);
 
         var tile: termbox.tb_cell = .{ .fg = 0xffffff, .ch = '#' };
         var y: usize = ystart;
@@ -624,7 +626,7 @@ pub const Status = enum {
             var x: usize = xstart;
             while (x < xend) : (x += 1) {
                 const coord = Coord.new2(z, x, y);
-                const noise = mob.canHear(coord) orelse continue;
+                const noise = state.player.canHear(coord) orelse continue;
                 var dijk = dijkstra.Dijkstra.init(
                     coord,
                     state.mapgeometry,
@@ -641,7 +643,7 @@ pub const Status = enum {
                     }
 
                     tile.ch = if (state.dungeon.at(item).type == .Wall) '#' else '·';
-                    _ = mob.memory.getOrPutValue(item, tile) catch unreachable;
+                    _ = state.memory.getOrPutValue(item, tile) catch unreachable;
                 }
             }
         }
@@ -719,14 +721,6 @@ pub const Mob = struct { // {{{
     squad_members: MobArrayList = undefined,
     prisoner_status: ?Prisoner = null,
 
-    // TODO: instead of storing the tile's representation in memory, store the
-    // actual tile -- if a wall is destroyed outside of the player's FOV, the display
-    // code has no way of knowing what the player remembers the destroyed tile as...
-    //
-    // Addendum 21-06-23: Is the above comment even true anymore (was it *ever* true)?
-    // Need to do some experimenting once explosions are added.
-    //
-    memory: CoordCellMap = undefined,
     fov: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT,
     path_cache: std.AutoHashMap(Path, Coord) = undefined,
     enemies: std.ArrayList(EnemyRecord) = undefined,
@@ -824,7 +818,8 @@ pub const Mob = struct { // {{{
                     continue;
                 }
 
-                self.memory.put(fc, Tile.displayAs(fc)) catch unreachable;
+                if (self.coord.eq(state.player.coord))
+                    state.memory.put(fc, Tile.displayAs(fc)) catch unreachable;
             }
         };
     }
@@ -1293,7 +1288,6 @@ pub const Mob = struct { // {{{
         self.activities.init();
         self.path_cache = std.AutoHashMap(Path, Coord).init(alloc);
         self.occupation.work_area = CoordArrayList.init(alloc);
-        self.memory = CoordCellMap.init(alloc);
     }
 
     pub fn kill(self: *Mob) void {
@@ -1301,7 +1295,6 @@ pub const Mob = struct { // {{{
         self.enemies.deinit();
         self.path_cache.clearAndFree();
         self.occupation.work_area.deinit();
-        self.memory.clearAndFree();
 
         self.is_dead = true;
 

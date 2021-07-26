@@ -37,6 +37,15 @@ pub var layout: [LEVELS][HEIGHT][WIDTH]Layout = undefined;
 pub var player: *Mob = undefined;
 pub var state: GameState = .Game;
 
+// TODO: instead of storing the tile's representation in memory, store the
+// actual tile -- if a wall is destroyed outside of the player's FOV, the display
+// code has no way of knowing what the player remembers the destroyed tile as...
+//
+// Addendum 21-06-23: Is the above comment even true anymore (was it *ever* true)?
+// Need to do some experimenting once explosions are added.
+//
+pub var memory: CoordCellMap = undefined;
+
 pub var mobs: MobList = undefined;
 pub var sobs: SobList = undefined;
 pub var rings: RingList = undefined;
