@@ -670,13 +670,24 @@ fn viewerMain() void {
 pub fn main() anyerror!void {
     initGame();
 
-    //viewerMain();
+    var use_viewer: bool = undefined;
 
-    while (state.state != .Quit) switch (state.state) {
-        .Game => tickGame(),
-        .Lose, .Win => gameOverScreen(),
-        .Quit => break,
-    };
+    if (std.process.getEnvVarOwned(&state.GPA.allocator, "RL_MODE")) |v| {
+        use_viewer = mem.eql(u8, v, "viewer");
+        state.GPA.allocator.free(v);
+    } else |_| {
+        use_viewer = false;
+    }
+
+    if (use_viewer) {
+        viewerMain();
+    } else {
+        while (state.state != .Quit) switch (state.state) {
+            .Game => tickGame(),
+            .Lose, .Win => gameOverScreen(),
+            .Quit => break,
+        };
+    }
 
     deinitGame();
 }
