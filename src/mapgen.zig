@@ -1131,9 +1131,11 @@ pub fn populateCaves(avoid: *const [HEIGHT][WIDTH]bool, level: usize, alloc: *me
     }
 }
 
-fn levelFeaturePrisoners(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
-    if (c == 1 and rng.onein(2)) return;
+fn levelFeaturePrisonersMaybe(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+    if (rng.onein(2)) levelFeaturePrisoners(c, coord, room, prefab, alloc);
+}
 
+fn levelFeaturePrisoners(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
     const prisoner_t = rng.chooseUnweighted(mobs.MobTemplate, &mobs.PRISONERS);
     const prisoner = placeMob(alloc, &prisoner_t, coord, .{});
     prisoner.prisoner_status = Prisoner{ .of = .Sauron };
@@ -1435,7 +1437,7 @@ pub const Prefab = struct {
                             '≈' => .Lava,
                             '≡' => .Bars,
                             '?' => .Any,
-                            'α'...'β' => FabTile{ .LevelFeature = @as(usize, c - 'α') },
+                            'α'...'γ' => FabTile{ .LevelFeature = @as(usize, c - 'α') },
                             '0'...'9', 'a'...'z' => FabTile{ .Feature = @intCast(u8, c) },
                             else => return error.InvalidFabTile,
                         };
@@ -1523,7 +1525,7 @@ pub const LevelConfig = struct {
     max_room_width: usize = 20,
     max_room_height: usize = 15,
 
-    level_features: [2]?LevelFeatureFunc = [_]?LevelFeatureFunc{ null, null },
+    level_features: [3]?LevelFeatureFunc = [_]?LevelFeatureFunc{ null, null, null },
 
     patrol_squads: usize,
     mob_options: MCBuf = MCBuf.init(&[_]MobConfig{
@@ -1611,6 +1613,7 @@ pub const Configs = [LEVELS]LevelConfig{
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeatureVials,
             levelFeaturePotions,
+            levelFeaturePrisoners,
         },
 
         .patrol_squads = 3,
@@ -1622,7 +1625,7 @@ pub const Configs = [LEVELS]LevelConfig{
 
         .material = &materials.Dobalene,
         .light = &machines.Lamp,
-        .vent = &machines.GasSpigotProp,
+        .vent = &machines.LabGasVentProp,
         .bars = &machines.TitaniumBarProp,
     },
     .{
@@ -1640,7 +1643,8 @@ pub const Configs = [LEVELS]LevelConfig{
         .max_rooms = 512,
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeaturePrisoners,
-            levelFeaturePrisoners,
+            levelFeaturePrisonersMaybe,
+            null,
         },
 
         .patrol_squads = 6,
@@ -1659,7 +1663,8 @@ pub const Configs = [LEVELS]LevelConfig{
         .max_rooms = 512,
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeaturePrisoners,
-            levelFeaturePrisoners,
+            levelFeaturePrisonersMaybe,
+            null,
         },
 
         .patrol_squads = 5,

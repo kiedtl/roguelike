@@ -43,6 +43,7 @@ pub const PROPS = [_]Prop{
     LowerCopperCoilProp,
     FullCopperCoilProp,
     GasVentProp,
+    LabGasVentProp,
     BedProp,
     IronBarProp,
     TitaniumBarProp,
@@ -210,9 +211,9 @@ pub const GasVentProp = Prop{
     .opacity = 1.0,
 };
 
-pub const GasSpigotProp = Prop{
-    .name = "gas spigot",
-    .tile = '*',
+pub const LabGasVentProp = Prop{
+    .name = "gas vent",
+    .tile = '=',
     .fg = 0xffffff,
     .walkable = false,
     .opacity = 0.0,
@@ -238,7 +239,7 @@ pub const IronBarProp = Prop{
 
 pub const TitaniumBarProp = Prop{
     .name = "titanium bars",
-    .tile = '≡',
+    .tile = '*',
     .fg = 0xeaecef,
     .opacity = 0.0,
     .walkable = false,
