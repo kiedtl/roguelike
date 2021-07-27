@@ -389,6 +389,11 @@ fn _removeArtifacts(
                 continue;
             }
 
+            // papering over what's possibly a deeper issue here
+            if (y2 < 0) {
+                continue;
+            }
+
             if (buffer[cy][cx] > 0 and opacity_func(Coord.new2(z, cx, cy)) < 100) {
                 if (x2 >= @intCast(isize, x0) and x2 <= @intCast(isize, x1)) {
                     const cx2 = @intCast(usize, x2);
