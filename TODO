@@ -102,10 +102,7 @@ CE	o	turquoise statue
 			- ???
 			- Nearly indestructible, except by fire attacks.
 CE	o	realgar statue
-			- Follows intruders around, but only when they're not looking.
-			- Has base speed of 5 (so 20 moves per turn).
-			- Can be destroyed by the weakest of attacks. Necessary,
-			  since it can easily block corridors.
+			- ???
 CE	o	nebro statue
 			- Casts corona on intruders.
 			- Indestructible.
@@ -383,6 +380,12 @@ vial of cataline
 	Gives mob perfect night vision.
 vial of phytin
 
+
+Abominations
+------------
+Strange mobs found on LAB levels.
+- Creeping Abomination
+  Like Blue Monk (in Hazard Level) or weeping angels.
 
 Occupations
 -----------
