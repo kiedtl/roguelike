@@ -362,7 +362,7 @@ potion of desalination
 potion of divination
 	- ???
 vial of tanus
-	- Mutation: byvision
+	- Mutation: backvision
 	  Makes mob see directly behind them as well as in front of them.
 vial of slade
 	- Mutation: bishop
@@ -371,6 +371,8 @@ vial of pholenine
 	- Mutation: rook
 	  Makes mob unable to move in diagonal directions.
 vial of chloroforon
+	- Mutation: byvision
+	  Makes mob see on both sides, but not on front or behind.
 vial of hyine
 vial of quagenin
 vial of flouin
@@ -385,7 +387,16 @@ Abominations
 ------------
 Strange mobs found on LAB levels.
 - Creeping Abomination
-  Like Blue Monk (in Hazard Level) or weeping angels.
+  - Like Blue Monk (in Hazard Level) or weeping angels.
+- Skulking Abomination
+  - Refuses to move into a tile that doesn't have at least one wall as a neighbor.
+  - When spotted, IF the spotter is an enemy and has half of it's normal HP, it
+    moves in and attacks, still keeping close to walls.
+    Otherwise, it turns into a piece of artwork.
+  - Game description should describe it as having an extremely hideous appearance.
+- Fiery/Burning Abomination
+- Deadly Abomination
+- Cloven Abomination
 
 Occupations
 -----------
