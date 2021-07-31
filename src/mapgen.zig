@@ -1571,12 +1571,14 @@ pub const Configs = [LEVELS]LevelConfig{
         }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-            .{ 0, 7, 6, 5, 2, 2, 1, 0, 0, 0 },
+            .{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
         },
         .prefab_chance = 1,
         .max_rooms = 2048,
 
         .patrol_squads = 2,
+
+        .material = &materials.Marble,
     },
     .{
         .identifier = "REC",
