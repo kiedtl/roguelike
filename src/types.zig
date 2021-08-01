@@ -819,7 +819,7 @@ pub const Mob = struct { // {{{
                 }
 
                 if (self.coord.eq(state.player.coord))
-                    state.memory.put(fc, Tile.displayAs(fc)) catch unreachable;
+                    state.memory.put(fc, Tile.displayAs(fc, true)) catch unreachable;
             }
         };
     }
@@ -1947,7 +1947,7 @@ pub const Tile = struct {
     surface: ?SurfaceItem = null,
     spatter: SpatterArray = SpatterArray.initFill(0),
 
-    pub fn displayAs(coord: Coord) termbox.tb_cell {
+    pub fn displayAs(coord: Coord, ignore_lights: bool) termbox.tb_cell {
         var self = state.dungeon.at(coord);
         var cell = termbox.tb_cell{};
 
@@ -2050,9 +2050,11 @@ pub const Tile = struct {
             },
         }
 
-        const light = math.clamp(state.dungeon.lightIntensityAt(coord).*, 0, 100);
-        cell.bg = math.max(utils.percentageOfColor(cell.bg, light), utils.darkenColor(cell.bg, 3));
-        cell.fg = math.max(utils.percentageOfColor(cell.fg, light), utils.darkenColor(cell.fg, 3));
+        if (!ignore_lights) {
+            const light = math.clamp(state.dungeon.lightIntensityAt(coord).*, 0, 100);
+            cell.bg = math.max(utils.percentageOfColor(cell.bg, light), utils.darkenColor(cell.bg, 3));
+            cell.fg = math.max(utils.percentageOfColor(cell.fg, light), utils.darkenColor(cell.fg, 3));
+        }
 
         var spattering = self.spatter.iterator();
         while (spattering.next()) |entry| {
