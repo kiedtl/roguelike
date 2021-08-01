@@ -900,7 +900,7 @@ fn placeLights(room: *const Room) void {
 
     var lights: usize = 0;
     var light_tries: usize = rng.range(usize, 0, 50);
-    while (light_tries > 0 and lights < 4) : (light_tries -= 1) {
+    while (light_tries > 0 and lights < 2) : (light_tries -= 1) {
         const coord = randomWallCoord(room, light_tries);
 
         if (state.dungeon.at(coord).type != .Wall or
