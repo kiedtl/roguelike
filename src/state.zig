@@ -265,6 +265,11 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
 }
 
 pub fn tickLight(level: usize) void {
+    // TODO: do some tests and figure out what's the practical limit to memory
+    // usage, and reduce the buffer's size to that.
+    var membuf: [65535]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
     const light_buffer = &dungeon.light_intensity[level];
 
     // Clear out previous light levels.
@@ -293,7 +298,27 @@ pub fn tickLight(level: usize) void {
             // before noticing the issue.
             //
             if (light > 0) {
-                fov.rayCast(coord, 20, light, tileOpacity, light_buffer, null);
+                var dijk = dijkstra.Dijkstra.init(
+                    coord,
+                    mapgeometry,
+                    25,
+                    dijkstra.dummyIsValid,
+                    .{},
+                    &fba.allocator,
+                );
+                defer dijk.deinit();
+
+                while (dijk.next()) |tile| {
+                    const dist = tile.distance(coord);
+                    var p = dist * FLOOR_OPACITY;
+                    if (dijk.current.n > dist) p *= 2;
+
+                    const new = utils.saturating_sub(light, p);
+                    const cur = light_buffer[tile.y][tile.x];
+                    if (new > cur) light_buffer[tile.y][tile.x] = new;
+
+                    if (tileOpacity(tile) >= 100) dijk.skip();
+                }
             }
         }
     }
