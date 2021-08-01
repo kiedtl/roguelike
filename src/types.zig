@@ -248,8 +248,8 @@ pub const Coord = struct { // {{{
         const newx = @intCast(isize, self.x) + dx;
         const newy = @intCast(isize, self.y) + dy;
 
-        if ((newx >= 0 and @intCast(usize, newx) < (limit.x - 1)) and
-            (newy >= 0 and @intCast(usize, newy) < (limit.y - 1)))
+        if ((newx >= 0 and @intCast(usize, newx) < limit.x) and
+            (newy >= 0 and @intCast(usize, newy) < limit.y))
         {
             return Coord.new2(self.z, @intCast(usize, newx), @intCast(usize, newy));
         } else {
