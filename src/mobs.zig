@@ -444,7 +444,6 @@ pub const TorturerNecromancerTemplate = MobTemplate{
         .allegiance = .Sauron,
         .vision = 6,
         .night_vision = 20,
-        .deg360_vision = true,
         .no_show_fov = false,
         .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
             .{ .spell = &spells.CAST_PAIN, .duration = 7, .power = 20 },
