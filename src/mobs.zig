@@ -7,12 +7,15 @@ usingnamespace @import("types.zig");
 const StackBuffer = buffer.StackBuffer;
 const SpellInfo = spells.SpellInfo;
 
+const StatusBuffer = StackBuffer(StatusDataInfo, 2);
+
 pub const MobTemplate = struct {
     id: []const u8,
     mob: Mob,
     weapon: ?*const Weapon = null,
     backup_weapon: ?*const Weapon = null,
     armor: ?*const Armor = null,
+    statuses: StatusBuffer = StatusBuffer.init(null),
 };
 
 pub const ExecutionerTemplate = MobTemplate{
@@ -464,6 +467,40 @@ pub const TorturerNecromancerTemplate = MobTemplate{
     .armor = &items.HeavyChainmailArmor,
 };
 
+pub const TanusExperiment = MobTemplate{
+    .id = "tanus_experiment",
+    .mob = .{
+        .species = "tanusian experiment",
+        .tile = 'e',
+        .occupation = Occupation{
+            .profession_name = null,
+            .profession_description = "wandering",
+            .work_fn = ai.wanderWork,
+            .fight_fn = ai.meleeFight,
+            .is_combative = true,
+            .is_curious = true,
+        },
+        .allegiance = .Sauron,
+        .vision = 12,
+        .night_vision = 0,
+
+        .willpower = 3,
+        .base_dexterity = 43,
+        .hearing = 5,
+        .max_HP = 70,
+        .memory_duration = 8,
+        .base_speed = 100,
+        .blood = .Blood,
+
+        .base_strength = 18,
+    },
+    .weapon = &items.ClubWeapon,
+    .armor = &items.LeatherArmor,
+    .statuses = StatusBuffer.init(&[_]StatusDataInfo{
+        .{ .status = .Backvision, .duration = Status.PERM_DURATION },
+    }),
+};
+
 pub const MOBS = [_]MobTemplate{
     WatcherTemplate,
     ExecutionerTemplate,
@@ -479,6 +516,7 @@ pub const MOBS = [_]MobTemplate{
     CrystalStatueTemplate,
     CleanerTemplate,
     TorturerNecromancerTemplate,
+    TanusExperiment,
 };
 
 pub const PRISONERS = [_]MobTemplate{
@@ -489,4 +527,8 @@ pub const STATUES = [_]MobTemplate{
     KyaniteStatueTemplate,
     NebroStatueTemplate,
     CrystalStatueTemplate,
+};
+
+pub const EXPERIMENTS = [_]MobTemplate{
+    TanusExperiment,
 };

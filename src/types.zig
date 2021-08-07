@@ -569,7 +569,13 @@ pub const Status = enum {
     // Doesn't have a power field.
     Fear,
 
+    // Allows mob to see directly behind them as well as in front of them.
+    //
+    // Doesn't have a power field.
+    Backvision,
+
     pub const MAX_DURATION: usize = 20;
+    pub const PERM_DURATION: usize = 65535;
 
     pub fn string(self: Status) []const u8 {
         return switch (self) {
@@ -585,6 +591,7 @@ pub const Status = enum {
             .Invigorate => "invigorated",
             .Pain => "pain",
             .Fear => "fearful",
+            .Backvision => "back vision",
         };
     }
 
@@ -663,8 +670,14 @@ pub const StatusData = struct {
     duration: usize = 0, // How long
 };
 
-// XXX: "GoTo" should be renamed to "Investigating". But perhaps there's a another
-// usecase for this phase?
+pub const StatusDataInfo = struct {
+    status: Status,
+    power: usize = 0,
+    duration: usize = Status.MAX_DURATION,
+};
+
+// STYLE: Rename GoTo to Investigate
+// STYLE: Rename SawHostile to Hunt
 pub const OccupationPhase = enum { Work, SawHostile, GoTo, Flee };
 
 // TODO: rename to "AI"
@@ -804,6 +817,8 @@ pub const Mob = struct { // {{{
         const direction = if (self.deg360_vision) null else self.facing;
 
         fov.rayCast(self.coord, self.vision, energy, state.tileOpacity, &self.fov, direction);
+        if (self.isUnderStatus(.Backvision) != null and direction != null)
+            fov.rayCast(self.coord, self.vision, energy, state.tileOpacity, &self.fov, direction.?.opposite());
 
         for (self.fov) |row, y| for (row) |_, x| {
             if (self.fov[y][x] > 0) {

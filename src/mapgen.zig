@@ -58,6 +58,10 @@ fn placeMob(
     if (opts.facing) |dir| mob.facing = dir;
     mob.occupation.work_area.append(opts.work_area orelse coord) catch unreachable;
 
+    for (template.statuses.constSlice()) |status_info| {
+        mob.addStatus(status_info.status, status_info.power, status_info.duration);
+    }
+
     state.mobs.append(mob) catch unreachable;
     const ptr = state.mobs.lastPtr().?;
     state.dungeon.at(coord).mob = ptr;
@@ -1155,6 +1159,11 @@ fn levelFeatureVials(c: usize, coord: Coord, room: *const Room, prefab: *const P
     ) catch unreachable;
 }
 
+fn levelFeatureExperiments(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+    const exp_t = rng.chooseUnweighted(mobs.MobTemplate, &mobs.EXPERIMENTS);
+    const exp = placeMob(alloc, &exp_t, coord, .{});
+}
+
 pub const Prefab = struct {
     subroom: bool = false,
     invisible: bool = false,
@@ -1615,7 +1624,7 @@ pub const Configs = [LEVELS]LevelConfig{
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeatureVials,
             levelFeaturePotions,
-            levelFeaturePrisoners,
+            levelFeatureExperiments,
         },
 
         .patrol_squads = 3,
