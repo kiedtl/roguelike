@@ -80,7 +80,13 @@ LE	s	winged terror
 CE	h	wraith
 CE	a	jackals
 CE	a	hounds
-CE	s	greater, lesser, minor necromancer
+CE	s	necromancer
+			- Casts Fear, Pain, and Raise spell.
+			- Good night vision.
+			- Good dexterity and strength, high HP.
+			- High memory duration.
+			- Normal speed.
+			- Has sword and heavy chainmail.
 			"An unusually fragile minor demon that has long wielded the secrets
 			of life and death."
 CE	h	goblin
