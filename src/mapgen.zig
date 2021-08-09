@@ -1627,11 +1627,11 @@ pub const Configs = [LEVELS]LevelConfig{
             levelFeatureExperiments,
         },
 
-        .patrol_squads = 3,
+        .patrol_squads = 1,
         .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
-            .{ .chance = 12, .template = &mobs.SentinelTemplate },
-            .{ .chance = 25, .template = &mobs.WatcherTemplate },
-            .{ .chance = 50, .template = &mobs.GuardTemplate },
+            .{ .chance = 21, .template = &mobs.SentinelTemplate },
+            .{ .chance = 35, .template = &mobs.WatcherTemplate },
+            .{ .chance = 56, .template = &mobs.GuardTemplate },
         }),
 
         .material = &materials.Dobalene,
