@@ -1623,7 +1623,7 @@ pub const Configs = [LEVELS]LevelConfig{
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeatureVials,
-            levelFeaturePotions,
+            levelFeaturePrisoners,
             levelFeatureExperiments,
         },
 
