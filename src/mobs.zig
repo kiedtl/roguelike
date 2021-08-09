@@ -481,8 +481,8 @@ pub const TanusExperiment = MobTemplate{
             .is_curious = true,
         },
         .allegiance = .Sauron,
-        .vision = 12,
-        .night_vision = 0,
+        .vision = 6,
+        .night_vision = 20,
 
         .willpower = 3,
         .base_dexterity = 43,
