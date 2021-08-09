@@ -379,9 +379,12 @@ vial of quagenin
 vial of flouin
 vial of cataline
 	- Mutation: partial vampirism
-	Makes mob take damage when standing on a fully lit tile.
-	Gives mob perfect night vision.
+	  Makes mob take damage when standing on a fully lit tile.
+	  Gives mob perfect night vision.
 vial of phytin
+	- Mutation:
+	  Makes mob unable to see in dimly-lit tiles.
+	  Gives mob very long memory (~20 turns?)
 
 
 Abominations
