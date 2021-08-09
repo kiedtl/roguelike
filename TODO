@@ -173,9 +173,6 @@ recuperate    [rest, rest, rest, rest]
 
 Rings
 -----
-- All rings will have severe negative effects, most notably decreased willpower.
-- Rings that work on hostile mobs will have their effects increased if the hostile
-  mob has low willpower.
 - Rings will not work as soon as they are wielded, but must be worn for a few
   hundred turns to reach their full potential.
 - Rings don't have an "enchantment" level, but "tiers" instead (mithril, gold,
@@ -377,8 +374,6 @@ vial of pholenine
 	- Mutation: rook
 	  Makes mob unable to move in diagonal directions.
 vial of chloroforon
-	- Mutation: byvision
-	  Makes mob see on both sides, but not on front or behind.
 vial of hyine
 vial of quagenin
 vial of flouin
@@ -546,7 +541,7 @@ v	hyine		Extracted from hyalt.
 v	quagenine
 v	flouine
 v	cataline	Extracted from catasine.
-v	phytin
+v	phytin		Extracted from phybro.
 s	sulon
 s	catasine
 s	talonium
@@ -656,7 +651,7 @@ x Make watchers smack intruders when they can't run
 
 User Interface
 ==============
-- Add padding between infopane/msgpane and map
+x Add padding between infopane/msgpane and map
 x Make it easier to tell the heavily wounded from dead
 - @ command to see player's full AC and stats
 x Fix showing of display percentage of last damage
@@ -671,7 +666,7 @@ x Use proper CP407 arrows for staircases
 
 Fixes
 =====
-- Add walls to edges of map after mapgen
+x Add walls to edges of map after mapgen
 x Place stairs only in rooms
 x Fix sound propagation
 
@@ -772,6 +767,7 @@ Optimizations
 - Use SIMD where possible
 x Use a matrix to mark nodes as closed (instead of a heap-allocated list) for
   Dijkstra.
+- Use Manhattan distance for A* algorithm (overestimating heuristic might be better?)
 
 Code cleanups
 =============
