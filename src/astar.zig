@@ -6,32 +6,33 @@ const assert = std.debug.assert;
 usingnamespace @import("types.zig");
 const state = @import("state.zig");
 
-const NodePriorityQueue = std.PriorityQueue(Node);
+var cache: std.AutoHashMap(Path, Direction) = undefined;
+
+const NodeState = enum { Open, Closed };
 
 const Node = struct {
     coord: Coord,
-    parent: ?Coord,
+    parent: ?*Node,
     g: usize,
     h: usize,
+    state: NodeState,
 
     pub inline fn f(n: *const Node) usize {
         return n.g + n.h;
     }
 
-    pub fn betterThan(a: Node, b: Node) bool {
+    pub fn betterThan(a: *Node, b: *Node) bool {
         return a.f() < b.f();
     }
 };
 
 const NodeArrayList = std.ArrayList(Node);
+const NodePriorityQueue = std.PriorityQueue(*Node);
 
-var cache: std.AutoHashMap(Path, Direction) = undefined;
-
-fn coord_in_list(coord: Coord, list: *NodeArrayList) ?usize {
-    for (list.items) |item, index|
-        if (coord.eq(item.coord))
-            return index;
-    return null;
+// Manhattan: d = dx + dy
+inline fn manhattanHeuristic(a: Coord, b: Coord) usize {
+    const diff = a.difference(b);
+    return diff.x + diff.y;
 }
 
 fn pathfindingPenalty(coord: Coord, opts: state.IsWalkableOptions) usize {
@@ -66,27 +67,29 @@ pub fn path(
     }
 
     var open_list = NodePriorityQueue.init(alloc, Node.betterThan);
-    var closed_list: [HEIGHT][WIDTH]?Node = [_][WIDTH]?Node{[_]?Node{null} ** WIDTH} ** HEIGHT;
+    var nodes: [HEIGHT][WIDTH]?Node = [_][WIDTH]?Node{[_]?Node{null} ** WIDTH} ** HEIGHT;
 
-    open_list.add(Node{
+    nodes[start.y][start.x] = Node{
         .coord = start,
         .g = 0,
-        .h = start.distance(goal),
+        .h = manhattanHeuristic(start, goal),
         .parent = null,
-    }) catch unreachable;
+        .state = .Open,
+    };
+    open_list.add(&nodes[start.y][start.x].?) catch unreachable;
 
     while (open_list.count() > 0) {
-        var current_node = open_list.remove();
+        var current_node: *Node = open_list.remove();
 
         if (current_node.coord.eq(goal)) {
             open_list.deinit();
 
             var list = CoordArrayList.init(alloc);
-            var current = current_node;
+            var current = current_node.*;
             while (true) {
                 list.append(current.coord) catch unreachable;
                 if (current.parent) |parent| {
-                    current = closed_list[parent.y][parent.x].?;
+                    current = parent.*;
                 } else break;
             }
 
@@ -94,34 +97,36 @@ pub fn path(
             return list;
         }
 
-        closed_list[current_node.coord.y][current_node.coord.x] = current_node;
+        current_node.state = .Closed;
 
         const neighbors = DIRECTIONS;
         neighbor: for (neighbors) |neighbor| {
             if (current_node.coord.move(neighbor, state.mapgeometry)) |coord| {
-                if (closed_list[coord.y][coord.x]) |_| continue;
+                if (nodes[coord.y][coord.x]) |*other_node|
+                    if (other_node.state == .Closed)
+                        continue;
+
                 if (!is_walkable(coord, opts) and !goal.eq(coord)) continue;
 
-                const penalty: usize =
-                    if (neighbor.is_diagonal()) 7 else 5 +
+                const cost = (if (neighbor.is_diagonal()) @as(usize, 7) else 5) +
                     pathfindingPenalty(coord, opts);
+                const new_g = current_node.g + cost;
+
+                if (nodes[coord.y][coord.x]) |*other_node|
+                    if (other_node.g < new_g)
+                        continue;
 
                 const node = Node{
                     .coord = coord,
-                    .parent = current_node.coord,
-                    .g = current_node.g + penalty,
-                    .h = coord.distance(goal),
+                    .parent = current_node,
+                    .g = new_g,
+                    .h = manhattanHeuristic(coord, goal),
+                    .state = .Open,
                 };
 
-                var iter = open_list.iterator();
-                while (iter.next()) |item| {
-                    if (item.coord.eq(coord)) {
-                        if (node.g > item.g) continue :neighbor;
-                        _ = open_list.removeIndex(iter.count - 1);
-                    }
-                }
-
-                open_list.add(node) catch unreachable;
+                const in_ol = if (nodes[coord.y][coord.x]) |*on| on.state == .Open else false;
+                nodes[coord.y][coord.x] = node;
+                if (!in_ol) open_list.add(&nodes[coord.y][coord.x].?) catch unreachable;
             }
         }
     }
