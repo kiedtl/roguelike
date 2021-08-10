@@ -8,7 +8,6 @@ const heat = @import("heat.zig");
 const items = @import("items.zig");
 const utils = @import("utils.zig");
 const gas = @import("gas.zig");
-const astar = @import("astar.zig");
 const mapgen = @import("mapgen.zig");
 const display = @import("display.zig");
 const termbox = @import("termbox.zig");
