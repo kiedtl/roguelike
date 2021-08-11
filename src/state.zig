@@ -24,11 +24,10 @@ pub var GPA = std.heap.GeneralPurposeAllocator(.{
 
     .safety = true,
 
-    // Probably would enable this later, as we might want to run the ticks()
-    // on other dungeon levels in another thread
-    .thread_safe = true,
+    // Probably would enable this later?
+    .thread_safe = false,
 
-    .never_unmap = true,
+    .never_unmap = false,
 }){};
 
 pub const mapgeometry = Coord.new2(LEVELS, WIDTH, HEIGHT);
@@ -301,7 +300,7 @@ pub fn tickLight(level: usize) void {
                 var dijk = dijkstra.Dijkstra.init(
                     coord,
                     mapgeometry,
-                    25,
+                    light / FLOOR_OPACITY,
                     dijkstra.dummyIsValid,
                     .{},
                     &fba.allocator,
