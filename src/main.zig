@@ -64,6 +64,8 @@ fn initGame() void {
             continue; // try again
         }
 
+        mapgen.setLevelMaterial(level);
+
         mapgen.placeTraps(level);
         mapgen.placeRoomFeatures(level, &state.GPA.allocator);
         mapgen.placeItems(level);

@@ -1,12 +1,13 @@
 usingnamespace @import("types.zig");
 const state = @import("state.zig");
 
+// TODO: realgar, change this material to the stone realgar is found in
 pub const Basalt = Material{
     .name = "basalt",
     .description = "TODO",
     .density = 2.9,
-    .color_fg = 0x404040,
-    .color_bg = 0x968f74,
+    .color_fg = 0x505050,
+    .color_bg = 0x9e9e9e,
     .tileset = 0,
     .melting_point = 983,
     .combust_point = null,
@@ -25,6 +26,20 @@ pub const Dobalene = Material{
     .melting_point = 8219,
     .combust_point = null,
     .specific_heat = 0.91,
+    .luminescence = 0,
+    .opacity = 1.0,
+};
+
+pub const Concrete = Material{
+    .name = "concrete",
+    .description = "TODO",
+    .density = 2.78, // not accurate
+    .color_fg = 0x404040,
+    .color_bg = 0x968f74,
+    .tileset = 0,
+    .melting_point = 825, // not accurate
+    .combust_point = null,
+    .specific_heat = 0.91, // not accurate
     .luminescence = 0,
     .opacity = 1.0,
 };

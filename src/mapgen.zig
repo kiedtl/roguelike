@@ -424,12 +424,24 @@ pub fn resetLevel(level: usize) void {
             tile.prison = false;
             tile.marked = false;
             tile.type = .Wall;
-            tile.material = Configs[level].material;
+            tile.material = &materials.Basalt;
             tile.mob = null;
             tile.surface = null;
             tile.spatter = SpatterArray.initFill(0);
 
             state.dungeon.itemsAt(coord).clear();
+        }
+    }
+}
+
+pub fn setLevelMaterial(level: usize) void {
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            const coord = Coord.new2(level, x, y);
+            if (state.dungeon.neighboringWalls(coord, true) < 9)
+                state.dungeon.at(coord).material = Configs[level].material;
         }
     }
 }
@@ -1543,7 +1555,7 @@ pub const LevelConfig = struct {
         .{ .chance = 70, .template = &mobs.WatcherTemplate },
     }),
 
-    material: *const Material = &materials.Basalt,
+    material: *const Material = &materials.Concrete,
     light: *const Machine = &machines.Brazier,
     vent: *const Prop = &machines.GasVentProp,
     bars: *const Prop = &machines.IronBarProp,
