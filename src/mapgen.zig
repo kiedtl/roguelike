@@ -942,7 +942,7 @@ fn placeLights(room: *const Room) void {
     if (room.prefab) |rfb| if (rfb.nolights) return;
 
     var lights: usize = 0;
-    var lights_needed = rng.rangeClumping(usize, 0, 3, 2);
+    var lights_needed = rng.rangeClumping(usize, 0, 4, 2);
     var light_tries: usize = rng.range(usize, 0, 50);
     while (light_tries > 0 and lights < lights_needed) : (light_tries -= 1) {
         const coord = randomWallCoord(room, light_tries);
@@ -954,7 +954,21 @@ fn placeLights(room: *const Room) void {
             continue; // invalid coord
 
         var brazier = Configs[room.start.z].light.*;
-        brazier.powered_luminescence -= rng.rangeClumping(usize, 0, 20, 2);
+
+        // Dim light by random amount, depending on how many lights there are in
+        // room.
+        //
+        // Rooms with lots of lights can have their lights dimmed quite a bit.
+        // Rooms with only one light shouldn't have their lights dimmed by a lot.
+        const max_dim: usize = switch (lights_needed) {
+            0 => unreachable,
+            1 => 5,
+            2 => 10,
+            3 => 20,
+            4 => 30,
+            else => unreachable,
+        };
+        brazier.powered_luminescence -= rng.rangeClumping(usize, 0, max_dim, 2);
 
         _place_machine(coord, &brazier);
         state.dungeon.at(coord).type = .Floor;
