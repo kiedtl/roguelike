@@ -65,34 +65,22 @@ pub const Dijkstra = struct {
 
         self.nodes[self.current.c.y][self.current.c.x].?.state = .Closed;
 
-        if (self.skip_current) {
-            self.skip_current = false;
-            self.current = self.open.orderedRemove(0);
-            return self.current.c;
-        }
-
-        for (&DIRECTIONS) |neighbor| {
-            if (self.current.c.move(neighbor, self.limit)) |coord| {
+        if (!self.skip_current) {
+            for (&DIRECTIONS) |neighbor| if (self.current.c.move(neighbor, self.limit)) |coord| {
                 const new = Node{ .c = coord, .n = self.current.n + 1 };
 
+                if (self.nodes[coord.y][coord.x]) |oldnode|
+                    if (oldnode.state == .Closed) continue;
                 if (new.n > self.max) continue;
                 if (!self.is_valid(coord, self.is_valid_opts)) continue;
 
-                var in_ol = false;
-
-                if (self.nodes[coord.y][coord.x]) |oldnode| switch (oldnode.state) {
-                    .Open => if (oldnode.n < new.n) {
-                        continue;
-                    } else {
-                        in_ol = true;
-                    },
-                    .Closed => continue,
-                };
-
+                var in_ol = if (self.nodes[coord.y][coord.x]) |_| true else false;
                 self.nodes[coord.y][coord.x] = new;
                 if (!in_ol)
                     self.open.append(self.nodes[coord.y][coord.x].?) catch unreachable;
-            }
+            };
+        } else {
+            self.skip_current = false;
         }
 
         if (self.open.items.len == 0) {
