@@ -823,8 +823,12 @@ pub fn placeTraps(level: usize) void {
         var trap_coord: Coord = undefined;
         while (tries > 0) : (tries -= 1) {
             trap_coord = room.randomCoord();
-            if (state.dungeon.at(trap_coord).type == .Wall or
-                isTileAvailable(trap_coord)) break;
+            if (state.dungeon.at(trap_coord).type != .Wall and
+                isTileAvailable(trap_coord) and
+                !state.dungeon.at(trap_coord).prison)
+                break; // we found a valid coord
+
+            // didn't find a coord, continue to the next room
             if (tries == 0) continue :room_iter;
         }
 
@@ -1024,6 +1028,8 @@ pub fn placeRandomStairs(level: usize) void {
 
             if (isTileAvailable(current) and
                 isTileAvailable(above) and
+                !state.dungeon.at(current).prison and
+                !state.dungeon.at(above).prison and
                 state.is_walkable(current, .{ .right_now = true }) and
                 state.is_walkable(above, .{ .right_now = true }))
             {
