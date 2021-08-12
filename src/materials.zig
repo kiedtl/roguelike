@@ -203,6 +203,7 @@ const PATTERNS = [_]Pattern{
     .{ .p = "..?.##..?", .t = .{ '#', '━', '█' } },
 };
 
+// TODO: merge with utils.findPatternMatch()
 pub fn tileFor(coord: Coord, tileset: usize) u21 {
     const coords = [_]?Coord{
         coord.move(.NorthWest, state.mapgeometry),

@@ -28,6 +28,28 @@ const Corridor = struct {
     distance: usize,
 };
 
+const VALID_FEATURE_TILE_PATTERNS = [_][]const u8{
+    // ###
+    // ?.?
+    // ...
+    "###?.?...",
+
+    // ...
+    // ?.?
+    // ###
+    "...?.?###",
+
+    // .?#
+    // ..#
+    // .?#
+    ".?#..#.?#",
+
+    // #?.
+    // #..
+    // #?.
+    "#?.#..#?.",
+};
+
 fn isTileAvailable(coord: Coord) bool {
     return state.dungeon.at(coord).type == .Floor and
         state.dungeon.at(coord).mob == null and
@@ -824,9 +846,9 @@ pub fn placeTraps(level: usize) void {
         var trap_coord: Coord = undefined;
         while (tries > 0) : (tries -= 1) {
             trap_coord = room.randomCoord();
-            if (state.dungeon.at(trap_coord).type != .Wall and
-                isTileAvailable(trap_coord) and
-                !state.dungeon.at(trap_coord).prison)
+            if (isTileAvailable(trap_coord) and
+                !state.dungeon.at(trap_coord).prison and
+                state.dungeon.neighboringWalls(trap_coord, true) == 2)
                 break; // we found a valid coord
 
             // didn't find a coord, continue to the next room
@@ -972,7 +994,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
             const coord = Coord.new2(room.start.z, x, y);
 
             if (!isTileAvailable(coord) or
-                state.dungeon.neighboringWalls(coord, true) != 3)
+                utils.findPatternMatch(coord, &VALID_FEATURE_TILE_PATTERNS) == null)
                 continue;
 
             switch (rng.range(usize, 1, 3)) {
@@ -1031,6 +1053,7 @@ pub fn placeRandomStairs(level: usize) void {
                 isTileAvailable(above) and
                 !state.dungeon.at(current).prison and
                 !state.dungeon.at(above).prison and
+                state.dungeon.neighboringWalls(current, true) == 0 and
                 state.is_walkable(current, .{ .right_now = true }) and
                 state.is_walkable(above, .{ .right_now = true }))
             {

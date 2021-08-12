@@ -132,3 +132,35 @@ pub fn copyZ(dest: anytype, src: anytype) void {
         dest[srclen] = s;
     }
 }
+
+pub fn findPatternMatch(coord: Coord, patterns: []const []const u8) ?usize {
+    const coords = [_]?Coord{
+        coord.move(.NorthWest, state.mapgeometry),
+        coord.move(.North, state.mapgeometry),
+        coord.move(.NorthEast, state.mapgeometry),
+        coord.move(.West, state.mapgeometry),
+        coord,
+        coord.move(.East, state.mapgeometry),
+        coord.move(.SouthWest, state.mapgeometry),
+        coord.move(.South, state.mapgeometry),
+        coord.move(.SouthEast, state.mapgeometry),
+    };
+
+    patterns: for (patterns) |pattern, pattern_i| {
+        var i: usize = 0;
+        while (i < 9) : (i += 1) {
+            if (pattern[i] == '?') continue;
+
+            const tiletype = if (coords[i]) |c| state.dungeon.at(c).type else .Wall;
+            const typech: u21 = if (tiletype == .Floor) '.' else '#';
+            if (typech != pattern[i]) continue :patterns;
+        }
+
+        // we have a match if we haven't continued to the next iteration
+        // by this point
+        return pattern_i;
+    }
+
+    // no match found
+    return null;
+}
