@@ -9,6 +9,7 @@
 :noguards
 :nolights
 :notraps
+:prison 2,2 7 4
 @0 p bed
 
 #*########******#
