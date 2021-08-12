@@ -42,7 +42,7 @@ pub fn chanceOfAttackLanding(attacker: *const Mob, defender: *const Mob) usize {
     chance += if (tile_light == 100) FULL_LIGHT_BONUS else 0;
 
     chance -= if (attacker.isUnderStatus(.Held)) |_| ATTACKER_HELD_NBONUS else 0;
-    chance -= if (tile_light < attacker.night_vision) DIM_LIGHT_NBONUS else 0;
+    chance -= if (!attacker.vision_range().contains(tile_light)) DIM_LIGHT_NBONUS else 0;
     chance -= if (attacker.dexterity() < attacker_weapon.required_dexterity) LOW_DEXTERITY_NBONUS else 0;
     chance -= if (attacker.strength() < attacker_weapon.required_strength) LOW_STRENGTH_NBONUS else 0;
 

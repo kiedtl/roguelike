@@ -7,15 +7,13 @@ usingnamespace @import("types.zig");
 const StackBuffer = buffer.StackBuffer;
 const SpellInfo = spells.SpellInfo;
 
-const StatusBuffer = StackBuffer(StatusDataInfo, 2);
-
 pub const MobTemplate = struct {
     id: []const u8,
     mob: Mob,
     weapon: ?*const Weapon = null,
     backup_weapon: ?*const Weapon = null,
     armor: ?*const Armor = null,
-    statuses: StatusBuffer = StatusBuffer.init(null),
+    statuses: []const StatusDataInfo = &[_]StatusDataInfo{},
 };
 
 pub const ExecutionerTemplate = MobTemplate{
@@ -33,7 +31,7 @@ pub const ExecutionerTemplate = MobTemplate{
         },
         .allegiance = .Sauron,
         .vision = 6,
-        .night_vision = 30,
+        .base_night_vision = 30,
 
         .willpower = 3,
         .base_dexterity = 35,
@@ -63,7 +61,7 @@ pub const WatcherTemplate = MobTemplate{
         },
         .allegiance = .Sauron,
         .vision = 7,
-        .night_vision = 15,
+        .base_night_vision = 15,
 
         .willpower = 3,
         .base_dexterity = 17,
@@ -92,7 +90,7 @@ pub const GuardTemplate = MobTemplate{
         },
         .allegiance = .Sauron,
         .vision = 6,
-        .night_vision = 30,
+        .base_night_vision = 30,
 
         .willpower = 2,
         .base_dexterity = 25,
@@ -123,7 +121,7 @@ pub const SentinelTemplate = MobTemplate{
         },
         .allegiance = .Sauron,
         .vision = 7,
-        .night_vision = 20,
+        .base_night_vision = 20,
 
         .willpower = 5,
         .base_dexterity = 30,
@@ -155,7 +153,7 @@ pub const PatrolTemplate = MobTemplate{
         },
         .allegiance = .Sauron,
         .vision = 6,
-        .night_vision = 35,
+        .base_night_vision = 35,
 
         .willpower = 2,
         .base_dexterity = 25,
@@ -186,7 +184,7 @@ pub const PlayerTemplate = MobTemplate{
         },
         .allegiance = .Illuvatar,
         .vision = 25,
-        .night_vision = 0,
+        .base_night_vision = 0,
         .deg360_vision = true,
         .no_show_fov = true,
 
@@ -220,7 +218,7 @@ pub const InteractionLaborerTemplate = MobTemplate{
         },
         .allegiance = .Sauron,
         .vision = 6,
-        .night_vision = 30,
+        .base_night_vision = 30,
 
         .willpower = 2,
         .base_dexterity = 15,
@@ -249,7 +247,7 @@ pub const GoblinTemplate = MobTemplate{
         },
         .allegiance = .NoneEvil,
         .vision = 12,
-        .night_vision = 0,
+        .base_night_vision = 0,
 
         .willpower = 3,
         .base_dexterity = 43,
@@ -280,7 +278,7 @@ pub const CaveRatTemplate = MobTemplate{
         },
         .allegiance = .NoneEvil,
         .vision = 12,
-        .night_vision = 0,
+        .base_night_vision = 0,
 
         .willpower = 1,
         .base_dexterity = 60,
@@ -309,7 +307,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
         },
         .allegiance = .Sauron,
         .vision = 20,
-        .night_vision = 0,
+        .base_night_vision = 0,
         .deg360_vision = true,
         .no_show_fov = true,
         .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
@@ -345,7 +343,7 @@ pub const NebroStatueTemplate = MobTemplate{
         },
         .allegiance = .Sauron,
         .vision = 20,
-        .night_vision = 0,
+        .base_night_vision = 0,
         .deg360_vision = true,
         .no_show_fov = true,
         .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
@@ -381,7 +379,7 @@ pub const CrystalStatueTemplate = MobTemplate{
         },
         .allegiance = .Sauron,
         .vision = 20,
-        .night_vision = 0,
+        .base_night_vision = 0,
         .deg360_vision = true,
         .no_show_fov = true,
         .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
@@ -417,7 +415,7 @@ pub const CleanerTemplate = MobTemplate{
         },
         .allegiance = .Sauron,
         .vision = 6,
-        .night_vision = 30,
+        .base_night_vision = 30,
 
         .willpower = 2,
         .base_dexterity = 15,
@@ -446,7 +444,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
         },
         .allegiance = .Sauron,
         .vision = 6,
-        .night_vision = 20,
+        .base_night_vision = 20,
         .no_show_fov = false,
         .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
             .{ .spell = &spells.CAST_PAIN, .duration = 7, .power = 20 },
@@ -482,7 +480,7 @@ pub const TanusExperiment = MobTemplate{
         },
         .allegiance = .Sauron,
         .vision = 6,
-        .night_vision = 20,
+        .base_night_vision = 20,
 
         .willpower = 3,
         .base_dexterity = 43,
@@ -496,9 +494,103 @@ pub const TanusExperiment = MobTemplate{
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
-    .statuses = StatusBuffer.init(&[_]StatusDataInfo{
-        .{ .status = .Backvision, .duration = Status.PERM_DURATION },
-    }),
+    .statuses = &[_]StatusDataInfo{.{ .status = .Backvision, .duration = Status.PERM_DURATION }},
+};
+
+pub const CatalineExperiment = MobTemplate{
+    .id = "cataline_experiment",
+    .mob = .{
+        .species = "catalinic experiment",
+        .tile = 'e',
+        .occupation = Occupation{
+            .profession_name = null,
+            .profession_description = "wandering",
+            .work_fn = ai.guardWork,
+            .fight_fn = ai.meleeFight,
+            .is_combative = true,
+            .is_curious = true,
+        },
+        .allegiance = .Sauron,
+        .vision = 6,
+        .base_night_vision = 20,
+
+        .willpower = 3,
+        .base_dexterity = 43,
+        .hearing = 5,
+        .max_HP = 70,
+        .memory_duration = 8,
+        .base_speed = 100,
+        .blood = .Blood,
+
+        .base_strength = 18,
+    },
+    .weapon = &items.ClubWeapon,
+    .armor = &items.LeatherArmor,
+    .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = Status.PERM_DURATION }},
+};
+
+pub const FlouinExperiment = MobTemplate{
+    .id = "flouin_experiment",
+    .mob = .{
+        .species = "flouinian experiment",
+        .tile = 'e',
+        .occupation = Occupation{
+            .profession_name = null,
+            .profession_description = "wandering",
+            .work_fn = ai.guardWork,
+            .fight_fn = ai.meleeFight,
+            .is_combative = true,
+            .is_curious = true,
+        },
+        .allegiance = .Sauron,
+        .vision = 6,
+        .base_night_vision = 20,
+
+        .willpower = 3,
+        .base_dexterity = 43,
+        .hearing = 5,
+        .max_HP = 70,
+        .memory_duration = 8,
+        .base_speed = 100,
+        .blood = .Blood,
+
+        .base_strength = 18,
+    },
+    .weapon = &items.ClubWeapon,
+    .armor = &items.LeatherArmor,
+    .statuses = &[_]StatusDataInfo{.{ .status = .DayBlindness, .duration = Status.PERM_DURATION }},
+};
+
+pub const PhytinExperiment = MobTemplate{
+    .id = "phytin_experiment",
+    .mob = .{
+        .species = "phytinic experiment",
+        .tile = 'e',
+        .occupation = Occupation{
+            .profession_name = null,
+            .profession_description = "wandering",
+            .work_fn = ai.guardWork,
+            .fight_fn = ai.meleeFight,
+            .is_combative = true,
+            .is_curious = true,
+        },
+        .allegiance = .Sauron,
+        .vision = 6,
+        .base_night_vision = 20,
+
+        .willpower = 3,
+        .base_dexterity = 43,
+        .hearing = 5,
+        .max_HP = 70,
+        .memory_duration = 8,
+        .base_speed = 100,
+        .blood = .Blood,
+
+        .base_strength = 18,
+    },
+    .weapon = &items.ClubWeapon,
+    .armor = &items.LeatherArmor,
+    .statuses = &[_]StatusDataInfo{.{ .status = .NightBlindness, .duration = Status.PERM_DURATION }},
 };
 
 pub const MOBS = [_]MobTemplate{
@@ -517,6 +609,9 @@ pub const MOBS = [_]MobTemplate{
     CleanerTemplate,
     TorturerNecromancerTemplate,
     TanusExperiment,
+    CatalineExperiment,
+    FlouinExperiment,
+    PhytinExperiment,
 };
 
 pub const PRISONERS = [_]MobTemplate{
@@ -531,4 +626,7 @@ pub const STATUES = [_]MobTemplate{
 
 pub const EXPERIMENTS = [_]MobTemplate{
     TanusExperiment,
+    CatalineExperiment,
+    FlouinExperiment,
+    PhytinExperiment,
 };

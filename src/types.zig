@@ -57,6 +57,17 @@ pub const MachineList = LinkedList(Machine);
 pub const PropList = LinkedList(Prop);
 pub const ContainerList = LinkedList(Container);
 
+pub fn MinMax(comptime T: type) type {
+    return struct {
+        min: T,
+        max: T,
+
+        pub fn contains(s: @This(), v: T) bool {
+            return v <= s.max and v >= s.min;
+        }
+    };
+}
+
 pub const Direction = enum { // {{{
     North,
     South,
@@ -574,6 +585,21 @@ pub const Status = enum {
     // Doesn't have a power field.
     Backvision,
 
+    // Allows mob to see completely in dark areas.
+    //
+    // Doesn't have a power field.
+    NightVision,
+
+    // Prevents mob from seeing in brightly-lit areas.
+    //
+    // Doesn't have a power field.
+    DayBlindness,
+
+    // Prevents mob from seeing in dimly-lit areas.
+    //
+    // Doesn't have a power field.
+    NightBlindness,
+
     pub const MAX_DURATION: usize = 20;
     pub const PERM_DURATION: usize = 65535;
 
@@ -592,6 +618,9 @@ pub const Status = enum {
             .Pain => "pain",
             .Fear => "fearful",
             .Backvision => "back vision",
+            .NightVision => "night vision",
+            .DayBlindness => "day blindness",
+            .NightBlindness => "night blindness",
         };
     }
 
@@ -753,26 +782,26 @@ pub const Mob = struct { // {{{
 
     // Immutable instrinsic attributes.
     //
-    // willpower:      Controls the ability to resist and cast spells.
-    // base_dexterity: Controls the likelihood of a mob dodging an attack.
-    // base_strength:  TODO: define!
-    // hearing:        The minimum intensity of a noise source before it can be
-    //                 heard by a mob. The lower the value, the better.
-    // vision:         Maximum radius of the mob's field of vision.
-    // night_vision:   If the light in a tile is below this amount, the mob cannot
-    //                 see that tile, even if it's in the FOV. The lower, the
-    //                 better.
-    // deg360_vision:  Mob's FOV ignores the facing mechanic and can see in all
-    //                 directions (e.g., player, statues)
-    // no_show_fov:    If false, display code will not show mob's FOV.
-    // memory:         The maximum length of time for which a mob can remember
-    //                 an enemy.
+    // willpower:          Controls the ability to resist and cast spells.
+    // base_dexterity:     Controls the likelihood of a mob dodging an attack.
+    // base_strength:      TODO: define!
+    // hearing:            The minimum intensity of a noise source before it can be
+    //                     heard by a mob. The lower the value, the better.
+    // vision:             Maximum radius of the mob's field of vision.
+    // base_night_vision:  If the light in a tile is below this amount, the mob cannot
+    //                     see that tile, even if it's in the FOV. The lower, the
+    //                     better.
+    // deg360_vision:      Mob's FOV ignores the facing mechanic and can see in all
+    //                     directions (e.g., player, statues)
+    // no_show_fov:        If false, display code will not show mob's FOV.
+    // memory:             The maximum length of time for which a mob can remember
+    //                     an enemy.
     //
     willpower: usize, // Range: 0 < willpower < 10
     base_strength: usize,
     base_dexterity: usize, // Range: 0 < dexterity < 100
     vision: usize,
-    night_vision: usize, // Range: 0 < night_vision < 100
+    base_night_vision: usize, // Range: 0 < night_vision < 100
     deg360_vision: bool = false,
     no_show_fov: bool = false,
     hearing: usize,
@@ -813,6 +842,7 @@ pub const Mob = struct { // {{{
             cell.* = 0;
         };
 
+        const c_vision_range = self.vision_range();
         const energy = math.clamp(self.vision * state.FLOOR_OPACITY, 0, 100);
         const direction = if (self.deg360_vision) null else self.facing;
 
@@ -823,12 +853,11 @@ pub const Mob = struct { // {{{
         for (self.fov) |row, y| for (row) |_, x| {
             if (self.fov[y][x] > 0) {
                 const fc = Coord.new2(self.coord.z, x, y);
+                const light = state.dungeon.lightIntensityAt(fc).*;
 
                 // If a tile is too dim to be seen by a mob and it's not adjacent to that mob,
                 // mark it as unlit.
-                if (fc.distance(self.coord) > 1 and
-                    state.dungeon.lightIntensityAt(fc).* < self.night_vision)
-                {
+                if (fc.distance(self.coord) > 1 and !c_vision_range.contains(light)) {
                     self.fov[y][x] = 0;
                     continue;
                 }
@@ -1515,6 +1544,20 @@ pub const Mob = struct { // {{{
         if (self.isUnderStatus(.Slow)) |_| bonus = bonus * 160 / 100;
 
         return @intCast(isize, self.base_speed * bonus / 100);
+    }
+
+    pub fn vision_range(self: *const Mob) MinMax(usize) {
+        var min: usize = self.base_night_vision;
+        if (self.isUnderStatus(.NightBlindness) != null)
+            min = math.clamp(min + 30, 0, 50);
+        if (self.isUnderStatus(.NightVision) != null and min > 0)
+            min = 0;
+
+        var max: usize = 100;
+        if (self.isUnderStatus(.DayBlindness) != null)
+            max = 60;
+
+        return .{ .min = min, .max = max };
     }
 
     pub inline fn strength(self: *const Mob) usize {

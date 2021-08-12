@@ -58,7 +58,7 @@ fn placeMob(
     if (opts.facing) |dir| mob.facing = dir;
     mob.occupation.work_area.append(opts.work_area orelse coord) catch unreachable;
 
-    for (template.statuses.constSlice()) |status_info| {
+    for (template.statuses) |status_info| {
         mob.addStatus(status_info.status, status_info.power, status_info.duration);
     }
 
