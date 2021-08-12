@@ -29,7 +29,8 @@ const Corridor = struct {
 };
 
 fn isTileAvailable(coord: Coord) bool {
-    return state.dungeon.at(coord).mob == null and
+    return state.dungeon.at(coord).type == .Floor and
+        state.dungeon.at(coord).mob == null and
         state.dungeon.at(coord).surface == null and
         state.dungeon.itemsAt(coord).len == 0;
 }
@@ -925,10 +926,10 @@ fn placeLights(room: *const Room) void {
         const coord = randomWallCoord(room, light_tries);
 
         if (state.dungeon.at(coord).type != .Wall or
-            !isTileAvailable(coord) or
+            state.dungeon.at(coord).surface != null or
             state.dungeon.neighboringWalls(coord, true) != 6 or
             state.dungeon.neighboringMachines(coord) > 0)
-            continue;
+            continue; // invalid coord
 
         var brazier = Configs[room.start.z].light.*;
         brazier.powered_luminescence -= rng.rangeClumping(usize, 0, 20, 2);
