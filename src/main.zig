@@ -431,16 +431,20 @@ fn readInput() bool {
                 // wizard keys
                 '<' => blk: {
                     if (state.player.coord.z != 0) {
-                        const new = Coord.new2(state.player.coord.z - 1, state.player.coord.x, state.player.coord.y);
-                        break :blk state.player.teleportTo(new, null);
+                        const l = state.player.coord.z - 1;
+                        const r = rng.chooseUnweighted(Room, state.dungeon.rooms[l].items);
+                        const c = r.randomCoord();
+                        break :blk state.player.teleportTo(c, null);
                     } else {
                         break :blk false;
                     }
                 },
                 '>' => blk: {
                     if (state.player.coord.z < (LEVELS - 1)) {
-                        const new = Coord.new2(state.player.coord.z + 1, state.player.coord.x, state.player.coord.y);
-                        break :blk state.player.teleportTo(new, null);
+                        const l = state.player.coord.z + 1;
+                        const r = rng.chooseUnweighted(Room, state.dungeon.rooms[l].items);
+                        const c = r.randomCoord();
+                        break :blk state.player.teleportTo(c, null);
                     } else {
                         break :blk false;
                     }
