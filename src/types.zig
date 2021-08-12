@@ -439,6 +439,7 @@ pub const Material = struct {
     // items made with that material.
     color_fg: u32,
     color_bg: ?u32,
+    color_floor: u32,
     tileset: usize,
 
     // Melting point in Celsius, and combust temperature, also in Celsius.
@@ -2014,10 +2015,7 @@ pub const Tile = struct {
         var self = state.dungeon.at(coord);
         var cell = termbox.tb_cell{};
 
-        const color: u32 = utils.percentageOfColor(
-            self.material.color_bg orelse self.material.color_fg,
-            40,
-        );
+        const color: u32 = utils.percentageOfColor(self.material.color_floor, 40);
 
         switch (self.type) {
             .Water => cell = .{
