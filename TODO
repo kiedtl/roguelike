@@ -178,6 +178,12 @@ Rings
 - Rings don't have an "enchantment" level, but "tiers" instead (mithril, gold,
   silver, and iron).
 - Rings: [p]assive (acting each turn) or [a]ctive (requiring user to move in pattern)
+aged ring of knowledge [p]
+	- Gives player knowledge of dungeon events.
+	  E.g., "You feel like someone is looking for you." (pursuers enter level)
+	        "You feel like someone spotted you."        (mob outside player's FOV spotted)
+		"You feel uneasy."                          (death squad entered level)
+		"You feel very uneasy."                     (undead nearby)
 contemptuous ring of intimidation [a]
 	- Confers either stun or fear on mob when moving toward mob.
 	- Must land right next to mob.
@@ -365,26 +371,26 @@ potion of desalination
 potion of divination
 	- ???
 vial of tanus
-	- Mutation: backvision
+	- Status: backvision
 	  Makes mob see directly behind them as well as in front of them.
 vial of slade
-	- Mutation: bishop
+	- Status: bishop
 	  Makes mob unable to move in cardinal directions.
 vial of pholenine
-	- Mutation: rook
+	- Status: rook
 	  Makes mob unable to move in diagonal directions.
 vial of chloroforon
 vial of hyine
 vial of quagenin
-vial of flouin
 vial of cataline
-	- Mutation: partial vampirism
-	  Makes mob take damage when standing on a fully lit tile.
+	- Status: nightvision
 	  Gives mob perfect night vision.
+vial of flouin
+	- Status: dayblindness
+	  Makes mob unable to see in brightly-lit tiles.
 vial of phytin
-	- Mutation:
+	- Status: nightblindness
 	  Makes mob unable to see in dimly-lit tiles.
-	  Gives mob very long memory (~20 turns?)
 
 
 Abominations
@@ -467,14 +473,6 @@ Occupations
 	Farms fungi/mushrooms, harvesting them just before spore-producing stage.
 	Places fungi/mushrooms next to machines, before operating the machine
 	  and producing rations.
-- Singer/Dancer
-	Purpose: distract guards.
-	Starts singing and dancing on a stage at a specified time, attracting
-	  guards which have a low <discipline> field.
-	Makes wardens not entirely useless, as they can now showup in the concert
-	  halls to whip the slackers in there.
-	Song names should be procedurally generated.
-	Each concert hall should have a poster "NOW LIVE: <song>"
 
 
 Posters
