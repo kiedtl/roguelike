@@ -550,7 +550,7 @@ pub const FlouinExperiment = MobTemplate{
         .base_dexterity = 43,
         .hearing = 5,
         .max_HP = 70,
-        .memory_duration = 8,
+        .memory_duration = 15,
         .base_speed = 100,
         .blood = .Blood,
 
@@ -582,7 +582,7 @@ pub const PhytinExperiment = MobTemplate{
         .base_dexterity = 43,
         .hearing = 5,
         .max_HP = 70,
-        .memory_duration = 8,
+        .memory_duration = 15,
         .base_speed = 100,
         .blood = .Blood,
 
