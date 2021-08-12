@@ -176,7 +176,8 @@ fn drawEnemyInfo(
             const status = entry.key;
             const se = entry.value.*;
 
-            const left = utils.saturating_sub(se.started + se.duration, state.ticks);
+            var left = utils.saturating_sub(se.started + se.duration, state.ticks);
+            if (se.permanent) left = Status.MAX_DURATION;
 
             if (left == 0) continue;
 
@@ -270,7 +271,8 @@ fn drawPlayerInfo(startx: isize, starty: isize, endx: isize, endy: isize) void {
         const status = entry.key;
         const se = entry.value.*;
 
-        const left = utils.saturating_sub(se.started + se.duration, state.ticks);
+        var left = utils.saturating_sub(se.started + se.duration, state.ticks);
+        if (se.permanent) left = Status.MAX_DURATION;
 
         if (left == 0) continue;
 

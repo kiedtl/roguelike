@@ -59,7 +59,7 @@ fn placeMob(
     mob.occupation.work_area.append(opts.work_area orelse coord) catch unreachable;
 
     for (template.statuses) |status_info| {
-        mob.addStatus(status_info.status, status_info.power, status_info.duration);
+        mob.addStatus(status_info.status, status_info.power, status_info.duration, status_info.permanent);
     }
 
     state.mobs.append(mob) catch unreachable;

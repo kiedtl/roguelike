@@ -205,8 +205,8 @@ fn triggerPreservePotion(_dork: ?*Mob) void {
     if (_dork) |dork| {
 
         // If the mob has a bad status, set the status' duration to 0 (thus removing it)
-        if (dork.isUnderStatus(.Poison)) |_| dork.addStatus(.Poison, 0, 0);
-        if (dork.isUnderStatus(.Confusion)) |_| dork.addStatus(.Confusion, 0, 0);
+        if (dork.isUnderStatus(.Poison)) |_| dork.addStatus(.Poison, 0, 0, false);
+        if (dork.isUnderStatus(.Confusion)) |_| dork.addStatus(.Confusion, 0, 0, false);
 
         dork.HP = math.min(dork.max_HP, dork.HP + (dork.max_HP * 150 / 100));
     }
@@ -216,7 +216,7 @@ fn triggerNetLauncherProjectile(coord: Coord) void {
     const _f = struct {
         fn _addNet(c: Coord) void {
             if (state.dungeon.at(c).mob) |mob| {
-                mob.addStatus(.Held, 0, null);
+                mob.addStatus(.Held, 0, null, false);
             } else {
                 if (state.is_walkable(c, .{ .right_now = true }) and
                     state.dungeon.at(c).surface == null)

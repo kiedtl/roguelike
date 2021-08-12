@@ -466,7 +466,7 @@ pub fn powerAlarmTrap(machine: *Machine) void {
 
 pub fn powerNetTrap(machine: *Machine) void {
     if (machine.last_interaction) |culprit| {
-        culprit.addStatus(.Held, 0, null);
+        culprit.addStatus(.Held, 0, null, false);
     }
     state.dungeon.at(machine.coord).surface = null;
     machine.disabled = true;

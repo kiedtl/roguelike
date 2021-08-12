@@ -601,7 +601,6 @@ pub const Status = enum {
     NightBlindness,
 
     pub const MAX_DURATION: usize = 20;
-    pub const PERM_DURATION: usize = 65535;
 
     pub fn string(self: Status) []const u8 {
         return switch (self) {
@@ -697,12 +696,17 @@ pub const StatusData = struct {
     // How long the status should last, from the time it started.
     // turns_left := (started + duration) - current_turn
     duration: usize = 0, // How long
+
+    // If the status is permanent.
+    // If set, the duration doesn't matter.
+    permanent: bool = false,
 };
 
 pub const StatusDataInfo = struct {
     status: Status,
     power: usize = 0,
     duration: usize = Status.MAX_DURATION,
+    permanent: bool = false,
 };
 
 // STYLE: Rename GoTo to Investigate
@@ -903,7 +907,7 @@ pub const Mob = struct { // {{{
             self.inventory.r_rings[1],
         }) |maybe_ring| {
             if (maybe_ring) |ring|
-                self.addStatus(ring.status, ring.currentPower(), Status.MAX_DURATION);
+                self.addStatus(ring.status, ring.currentPower(), Status.MAX_DURATION, false);
         }
     }
 
@@ -939,7 +943,7 @@ pub const Mob = struct { // {{{
     pub fn quaffPotion(self: *Mob, potion: *Potion) void {
         // TODO: make the duration of potion status effect random (clumping, ofc)
         switch (potion.type) {
-            .Status => |s| self.addStatus(s, 0, Status.MAX_DURATION),
+            .Status => |s| self.addStatus(s, 0, Status.MAX_DURATION, false),
             .Gas => |s| state.dungeon.atGas(self.coord)[s] = 1.0,
             .Custom => |c| c(self),
         }
@@ -1155,7 +1159,7 @@ pub const Mob = struct { // {{{
 
         if (self.isUnderStatus(.Held)) |se| {
             const new_duration = utils.saturating_sub(se.duration, rng.range(usize, 0, 3));
-            self.addStatus(.Held, 0, new_duration);
+            self.addStatus(.Held, 0, new_duration, false);
             return true;
         }
 
@@ -1410,16 +1414,17 @@ pub const Mob = struct { // {{{
         }
     }
 
-    pub fn addStatus(self: *Mob, status: Status, power: usize, duration: ?usize) void {
+    pub fn addStatus(self: *Mob, status: Status, power: usize, duration: ?usize, permanent: bool) void {
         const p_se = self.statuses.getPtr(status);
         p_se.started = state.ticks;
         p_se.power = power;
         p_se.duration = duration orelse Status.MAX_DURATION;
+        p_se.permanent = permanent;
     }
 
     pub fn isUnderStatus(self: *const Mob, status: Status) ?*const StatusData {
         const se = self.statuses.getPtrConst(status);
-        return if ((se.started + se.duration) < state.ticks) null else se;
+        return if (se.permanent or (se.started + se.duration) < state.ticks) null else se;
     }
 
     pub fn lastDamagePercentage(self: *const Mob) usize {

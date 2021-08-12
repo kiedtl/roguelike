@@ -494,7 +494,7 @@ pub const TanusExperiment = MobTemplate{
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
-    .statuses = &[_]StatusDataInfo{.{ .status = .Backvision, .duration = Status.PERM_DURATION }},
+    .statuses = &[_]StatusDataInfo{.{ .status = .Backvision, .permanent = true }},
 };
 
 pub const CatalineExperiment = MobTemplate{
@@ -526,7 +526,7 @@ pub const CatalineExperiment = MobTemplate{
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
-    .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = Status.PERM_DURATION }},
+    .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .permanent = true }},
 };
 
 pub const FlouinExperiment = MobTemplate{
@@ -558,7 +558,7 @@ pub const FlouinExperiment = MobTemplate{
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
-    .statuses = &[_]StatusDataInfo{.{ .status = .DayBlindness, .duration = Status.PERM_DURATION }},
+    .statuses = &[_]StatusDataInfo{.{ .status = .DayBlindness, .permanent = true }},
 };
 
 pub const PhytinExperiment = MobTemplate{
@@ -590,7 +590,7 @@ pub const PhytinExperiment = MobTemplate{
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
-    .statuses = &[_]StatusDataInfo{.{ .status = .NightBlindness, .duration = Status.PERM_DURATION }},
+    .statuses = &[_]StatusDataInfo{.{ .status = .NightBlindness, .permanent = true }},
 };
 
 pub const MOBS = [_]MobTemplate{

@@ -57,7 +57,7 @@ pub const Spell = struct {
                 }
 
                 switch (self.effect_type) {
-                    .Status => |s| mob.addStatus(s, opts.status_power, opts.status_duration),
+                    .Status => |s| mob.addStatus(s, opts.status_power, opts.status_duration, false),
                     .Custom => |c| c(target),
                 }
             },

@@ -66,22 +66,22 @@ fn triggerNone(_: *Mob, __: f64) void {}
 
 fn triggerPoison(idiot: *Mob, quantity: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
-    idiot.addStatus(.Poison, 0, Status.MAX_DURATION);
+    idiot.addStatus(.Poison, 0, Status.MAX_DURATION, false);
 }
 
 fn triggerParalysis(idiot: *Mob, quantity: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
-    idiot.addStatus(.Paralysis, 0, Status.MAX_DURATION);
+    idiot.addStatus(.Paralysis, 0, Status.MAX_DURATION, false);
 }
 
 fn triggerConfusion(idiot: *Mob, quantity: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
-    idiot.addStatus(.Confusion, 0, Status.MAX_DURATION);
+    idiot.addStatus(.Confusion, 0, Status.MAX_DURATION, false);
 }
 
 fn triggerSlow(idiot: *Mob, quantity: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
-    idiot.addStatus(.Slow, 0, Status.MAX_DURATION);
+    idiot.addStatus(.Slow, 0, Status.MAX_DURATION, false);
 }
 
 fn triggerHealing(mob: *Mob, quantity: f64) void {
