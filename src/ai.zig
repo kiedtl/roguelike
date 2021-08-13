@@ -84,11 +84,6 @@ pub fn shouldFlee(me: *Mob) bool {
 //                  - Move away from the hostile.
 //
 pub fn keepDistance(mob: *Mob, from: Coord, distance: usize, alloc: *mem.Allocator) bool {
-    if (!mob.cansee(from)) {
-        mob.tryMoveTo(from);
-        return true;
-    }
-
     const current_distance = mob.coord.distance(from);
 
     if (current_distance < distance) {
@@ -204,7 +199,7 @@ pub fn checkForHostiles(mob: *Mob) void {
         {
             _ = mob.enemies.orderedRemove(i);
         } else {
-            if (!mob.cansee(enemy.last_seen))
+            if (!mob.cansee(enemy.last_seen) and mob.occupation.phase != .Flee)
                 enemy.counter -= 1;
             i += 1;
         }
@@ -554,6 +549,24 @@ pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
     } else {
         mob.tryMoveTo(target.coord);
     }
+}
+
+pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
+    const target = currentEnemy(mob).mob;
+
+    if (!mob.cansee(target.coord)) {
+        mob.tryMoveTo(target.coord);
+    } else {
+        if (!keepDistance(mob, target.coord, 8, alloc)) {
+            if (mob.coord.distance(target.coord) == 1) {
+                (mob.occupation.fight_fn.?)(mob, alloc);
+            } else {
+                _ = mob.rest();
+            }
+        }
+    }
+
+    mob.makeNoise(Mob.NOISE_YELL);
 }
 
 // - Wield launcher.

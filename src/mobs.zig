@@ -55,7 +55,7 @@ pub const WatcherTemplate = MobTemplate{
             .profession_name = "watcher",
             .profession_description = "guarding",
             .work_fn = ai.watcherWork,
-            .fight_fn = ai.flee,
+            .fight_fn = ai.watcherFight,
             .is_combative = true,
             .is_curious = false,
         },
