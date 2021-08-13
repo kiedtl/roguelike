@@ -268,6 +268,23 @@ pub const Coord = struct { // {{{
         }
     }
 
+    pub fn closestDirectionTo(self: Coord, to: Coord, limit: Coord) Direction {
+        var closest_distance: usize = 10000000000;
+        var closest_direction: Direction = .North;
+
+        for (&DIRECTIONS) |direction| if (self.move(direction, limit)) |neighbor| {
+            const diff = neighbor.difference(to);
+            const dist = diff.x + diff.y;
+
+            if (dist < closest_distance) {
+                closest_distance = dist;
+                closest_direction = direction;
+            }
+        };
+
+        return closest_direction;
+    }
+
     fn insert_if_valid(z: usize, x: isize, y: isize, buf: *StackBuffer(Coord, 2048), limit: Coord) void {
         if (x < 0 or y < 0)
             return;

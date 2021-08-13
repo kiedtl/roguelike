@@ -248,6 +248,7 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
             _ = mob.rest();
         } else {
             mob.tryMoveTo(target_coord);
+            mob.facing = mob.coord.closestDirectionTo(target_coord, mapgeometry);
         }
     }
 
@@ -256,6 +257,9 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
         assert(mob.enemies.items.len > 0);
 
         (mob.ai.fight_fn.?)(mob, alloc);
+
+        const target = mob.enemies.items[0].mob;
+        mob.facing = mob.coord.closestDirectionTo(target.coord, mapgeometry);
     }
 
     if (mob.ai.phase == .Flee) {
