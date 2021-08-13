@@ -839,9 +839,10 @@ pub const Mob = struct { // {{{
     // Maximum field of hearing.
     pub const MAX_FOH = 20;
 
-    pub const NOISE_MOVE = 20;
-    pub const NOISE_YELL = 60;
-    pub const NOISE_SCREAM = 100;
+    pub const NOISE_MOVE = 50;
+    pub const NOISE_SPEAK = 100;
+    pub const NOISE_YELL = 150;
+    pub const NOISE_SCREAM = 200;
 
     pub fn tickFOV(self: *Mob) void {
         for (self.fov) |*row| for (row) |*cell| {
