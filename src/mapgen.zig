@@ -842,13 +842,15 @@ pub fn placeTraps(level: usize) void {
 
         if (rng.onein(2)) continue;
 
-        var tries: usize = 25;
+        var tries: usize = 40;
         var trap_coord: Coord = undefined;
+
         while (tries > 0) : (tries -= 1) {
             trap_coord = room.randomCoord();
+
             if (isTileAvailable(trap_coord) and
                 !state.dungeon.at(trap_coord).prison and
-                state.dungeon.neighboringWalls(trap_coord, true) == 2)
+                state.dungeon.neighboringWalls(trap_coord, true) <= 1)
                 break; // we found a valid coord
 
             // didn't find a coord, continue to the next room
