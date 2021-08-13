@@ -1509,11 +1509,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn cansee(self: *const Mob, coord: Coord) bool {
-        // Can't see stuff beyond your range of vision. Use vision*1.5 because
-        // the edges of the FOV will be invisible (FOV is circular, but the distance
-        // calculation penalizes diagonal movements).
-        //
-        if (self.coord.distance(coord) > (self.vision * 150 / 100))
+        if (self.coord.distance(coord) > self.vision)
             return false;
 
         // Can always see yourself
