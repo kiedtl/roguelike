@@ -580,16 +580,15 @@ pub fn sentinelFight(mob: *Mob, alloc: *mem.Allocator) void {
             _ = mob.swapWeapons();
         };
 
-    if (mob.inventory.wielded) |wielded|
-        if (wielded.launcher != null) {
-            const enemiesct = math.min(4, mob.enemies.items.len - 1);
-            for (mob.enemies.items[0..enemiesct]) |enemy| {
-                if (enemy.mob.isUnderStatus(.Held)) |_| continue;
+    if (mob.inventory.wielded != null and mob.inventory.wielded.?.launcher != null) {
+        const enemiesct = math.min(4, mob.enemies.items.len);
+        for (mob.enemies.items[0..enemiesct]) |enemy| {
+            if (enemy.mob.isUnderStatus(.Held)) |_| continue;
 
-                _ = mob.launchProjectile(&mob.inventory.wielded.?.launcher.?, enemy.mob.coord);
-                return;
-            }
-        };
+            _ = mob.launchProjectile(&mob.inventory.wielded.?.launcher.?, enemy.mob.coord);
+            return;
+        }
+    }
 
     if (mob.inventory.backup) |backup|
         if (backup.launcher == null) {
