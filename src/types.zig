@@ -529,7 +529,8 @@ pub const Status = enum {
     // Doesn't have a power field.
     Paralysis,
 
-    // Prevents a mob from moving and dodging.
+    // Prevents a mob from moving and dodging. When mob tries to move, the duration
+    // decreases by a bit depending on how strong mob is.
     //
     // Doesn't have a power field.
     Held,
@@ -1159,7 +1160,9 @@ pub const Mob = struct { // {{{
         }
 
         if (self.isUnderStatus(.Held)) |se| {
-            const new_duration = utils.saturating_sub(se.duration, rng.range(usize, 0, 3));
+            const held_remove_max = self.strength() / 2;
+            const held_remove = rng.rangeClumping(usize, 2, held_remove_max, 2);
+            const new_duration = utils.saturating_sub(se.duration, held_remove);
             self.addStatus(.Held, 0, new_duration, false);
             return true;
         }
