@@ -711,12 +711,9 @@ pub const StatusDataInfo = struct {
     permanent: bool = false,
 };
 
-// STYLE: Rename GoTo to Investigate
-// STYLE: Rename SawHostile to Hunt
-pub const OccupationPhase = enum { Work, SawHostile, GoTo, Flee };
+pub const AIPhase = enum { Work, Hunt, Investigate, Flee };
 
-// TODO: rename to "AI"
-pub const Occupation = struct {
+pub const AI = struct {
     // Name of mob doing the profession.
     profession_name: ?[]const u8,
 
@@ -740,11 +737,11 @@ pub const Occupation = struct {
     // Should the mob investigate noises?
     is_curious: bool,
 
-    // The "target" in any phase (except .SawHostile, the target for that is in
+    // The "target" in any phase (except .Hunt, the target for that is in
     // the enemy records).
     target: ?Coord = null,
 
-    phase: OccupationPhase = .Work,
+    phase: AIPhase = .Work,
 
     // The particular phase of a mob's work phase. For instance a working Cleaner
     // might be scanning, idling, or cleaning.
@@ -779,7 +776,7 @@ pub const Mob = struct { // {{{
     HP: f64 = undefined,
     energy: isize = 0,
     statuses: StatusArray = StatusArray.initFill(.{}),
-    occupation: Occupation,
+    ai: AI,
     activities: RingBuffer(Activity, MAX_ACTIVITY_BUFFER_SZ) = .{},
     last_attempted_move: ?Direction = null,
     last_damage: ?Damage = null,
@@ -1070,7 +1067,7 @@ pub const Mob = struct { // {{{
         if (self.strength() > other.strength()) {
             can = true;
         }
-        if (self.occupation.phase != .Work and other.occupation.phase == .Work) {
+        if (self.ai.phase != .Work and other.ai.phase == .Work) {
             can = true;
         }
         if (direction != null and other.last_attempted_move != null) {
@@ -1087,7 +1084,7 @@ pub const Mob = struct { // {{{
         }
         if (self.coord.eq(state.player.coord) and
             other.isHostileTo(state.player) and
-            !other.occupation.is_combative)
+            !other.ai.is_combative)
         {
             can = true;
         }
@@ -1341,14 +1338,14 @@ pub const Mob = struct { // {{{
         self.enemies = std.ArrayList(EnemyRecord).init(alloc);
         self.activities.init();
         self.path_cache = std.AutoHashMap(Path, Coord).init(alloc);
-        self.occupation.work_area = CoordArrayList.init(alloc);
+        self.ai.work_area = CoordArrayList.init(alloc);
     }
 
     pub fn kill(self: *Mob) void {
         self.squad_members.deinit();
         self.enemies.deinit();
         self.path_cache.clearAndFree();
-        self.occupation.work_area.deinit();
+        self.ai.work_area.deinit();
 
         self.is_dead = true;
 
@@ -1454,8 +1451,8 @@ pub const Mob = struct { // {{{
         if (self.coord.eq(state.player.coord))
             return true;
 
-        switch (self.occupation.phase) {
-            .Flee, .SawHostile, .GoTo => {},
+        switch (self.ai.phase) {
+            .Flee, .Hunt, .Investigate => {},
             else => return false,
         }
 
@@ -1526,10 +1523,10 @@ pub const Mob = struct { // {{{
 
     // What's the monster doing right now?
     pub fn activity_description(self: *const Mob) []const u8 {
-        var res = switch (self.occupation.phase) {
-            .Work => self.occupation.profession_description,
-            .SawHostile => if (self.occupation.is_combative) "hunting" else "alarmed",
-            .GoTo => "investigating",
+        var res = switch (self.ai.phase) {
+            .Work => self.ai.profession_description,
+            .Hunt => if (self.ai.is_combative) "hunting" else "alarmed",
+            .Investigate => "investigating",
             .Flee => "fleeing",
         };
 
@@ -1546,7 +1543,7 @@ pub const Mob = struct { // {{{
 
     pub fn speed(self: *const Mob) isize {
         var bonus: usize = 100;
-        if (self.occupation.phase == .Flee) bonus -= 10;
+        if (self.ai.phase == .Flee) bonus -= 10;
         if (self.isUnderStatus(.Fast)) |_| bonus = bonus * 50 / 100;
         if (self.isUnderStatus(.Slow)) |_| bonus = bonus * 160 / 100;
 

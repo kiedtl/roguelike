@@ -155,7 +155,7 @@ fn drawEnemyInfo(
         var mobcell = Tile.displayAs(mob.coord, false);
         termbox.tb_put_cell(startx, y, &mobcell);
 
-        const mobname = mob.occupation.profession_name orelse mob.species;
+        const mobname = mob.ai.profession_name orelse mob.species;
 
         y = _draw_string(startx + 1, y, endx, 0xffffff, 0, ": {}", .{mobname}) catch unreachable;
 
@@ -331,7 +331,7 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
 fn _mobs_can_see(moblist: []const *Mob, coord: Coord) bool {
     for (moblist) |mob| {
         if (mob.is_dead) continue;
-        if (mob.no_show_fov or !mob.occupation.is_combative) continue;
+        if (mob.no_show_fov or !mob.ai.is_combative) continue;
         if (mob.cansee(coord)) return true;
     }
     return false;

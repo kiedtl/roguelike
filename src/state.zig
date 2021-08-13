@@ -189,8 +189,8 @@ fn _can_hear_hostile(mob: *Mob) ?Coord {
             if (mob.isHostileTo(othermob)) {
                 return othermob.coord;
             } else if (sound > 20 and
-                (othermob.occupation.phase == .SawHostile or
-                othermob.occupation.phase == .Flee))
+                (othermob.ai.phase == .Hunt or
+                othermob.ai.phase == .Flee))
             {
                 // Sounds like one of our friends [or a neutral mob] is having
                 // quite a party, let's go join the fun~
@@ -204,43 +204,43 @@ fn _can_hear_hostile(mob: *Mob) ?Coord {
 
 pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
     for (mob.squad_members.items) |lmob| {
-        lmob.occupation.target = mob.occupation.target;
-        lmob.occupation.phase = mob.occupation.phase;
-        lmob.occupation.work_area.items[0] = mob.occupation.work_area.items[0];
+        lmob.ai.target = mob.ai.target;
+        lmob.ai.phase = mob.ai.phase;
+        lmob.ai.work_area.items[0] = mob.ai.work_area.items[0];
     }
 
     ai.checkForHostiles(mob);
 
     // Check for sounds
-    if (mob.occupation.phase == .Work and mob.occupation.is_curious) {
+    if (mob.ai.phase == .Work and mob.ai.is_curious) {
         if (_can_hear_hostile(mob)) |dest| {
             // Let's investigate
-            mob.occupation.phase = .GoTo;
-            mob.occupation.target = dest;
+            mob.ai.phase = .Investigate;
+            mob.ai.target = dest;
         }
     }
 
-    if (mob.occupation.phase == .SawHostile and ai.shouldFlee(mob)) {
-        mob.occupation.phase = .Flee;
-    } else if (mob.occupation.phase == .Flee and !ai.shouldFlee(mob)) {
-        mob.occupation.phase = .SawHostile;
+    if (mob.ai.phase == .Hunt and ai.shouldFlee(mob)) {
+        mob.ai.phase = .Flee;
+    } else if (mob.ai.phase == .Flee and !ai.shouldFlee(mob)) {
+        mob.ai.phase = .Hunt;
     }
 
-    if (mob.occupation.phase == .Work) {
-        (mob.occupation.work_fn)(mob, alloc);
+    if (mob.ai.phase == .Work) {
+        (mob.ai.work_fn)(mob, alloc);
         return;
     }
 
-    if (mob.occupation.phase == .GoTo) {
-        const target_coord = mob.occupation.target.?;
+    if (mob.ai.phase == .Investigate) {
+        const target_coord = mob.ai.target.?;
 
         if (mob.coord.eq(target_coord) or mob.cansee(target_coord)) {
             // We're here, let's just look around a bit before leaving
             //
             // 1 in 8 chance of leaving every turn
             if (rng.onein(8)) {
-                mob.occupation.target = null;
-                mob.occupation.phase = .Work;
+                mob.ai.target = null;
+                mob.ai.phase = .Work;
             } else {
                 mob.facing = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
             }
@@ -251,14 +251,14 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
         }
     }
 
-    if (mob.occupation.phase == .SawHostile) {
-        assert(mob.occupation.is_combative);
+    if (mob.ai.phase == .Hunt) {
+        assert(mob.ai.is_combative);
         assert(mob.enemies.items.len > 0);
 
-        (mob.occupation.fight_fn.?)(mob, alloc);
+        (mob.ai.fight_fn.?)(mob, alloc);
     }
 
-    if (mob.occupation.phase == .Flee) {
+    if (mob.ai.phase == .Flee) {
         ai.flee(mob, alloc);
     }
 }

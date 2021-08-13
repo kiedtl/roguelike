@@ -25,7 +25,7 @@ fn flingRandomSpell(me: *Mob, target: *Mob) void {
 
 // Find the nearest enemy.
 pub fn currentEnemy(me: *Mob) *EnemyRecord {
-    assert(me.occupation.phase == .SawHostile or me.occupation.phase == .Flee);
+    assert(me.ai.phase == .Hunt or me.ai.phase == .Flee);
     assert(me.enemies.items.len > 0);
 
     var nearest: usize = 0;
@@ -155,7 +155,7 @@ pub fn dummyWork(m: *Mob, _: *mem.Allocator) void {
 pub fn checkForHostiles(mob: *Mob) void {
     assert(!mob.is_dead);
 
-    if (!mob.occupation.is_combative)
+    if (!mob.ai.is_combative)
         return;
 
     vigilance: for (mob.fov) |row, y| for (row) |cell, x| {
@@ -199,21 +199,21 @@ pub fn checkForHostiles(mob: *Mob) void {
         {
             _ = mob.enemies.orderedRemove(i);
         } else {
-            if (!mob.cansee(enemy.last_seen) and mob.occupation.phase != .Flee)
+            if (!mob.cansee(enemy.last_seen) and mob.ai.phase != .Flee)
                 enemy.counter -= 1;
             i += 1;
         }
     }
 
     if (mob.enemies.items.len > 0) {
-        mob.occupation.phase = .SawHostile;
+        mob.ai.phase = .Hunt;
     }
 
-    if ((mob.occupation.phase == .SawHostile or mob.occupation.phase == .Flee) and
+    if ((mob.ai.phase == .Hunt or mob.ai.phase == .Flee) and
         mob.enemies.items.len == 0)
     {
         // No enemies sighted, we're done hunting.
-        mob.occupation.phase = .Work;
+        mob.ai.phase = .Work;
     }
 
     // Sort according to distance.
@@ -256,9 +256,9 @@ fn _guard_glance(mob: *Mob, prev_direction: Direction) void {
 
 pub fn patrolWork(mob: *Mob, alloc: *mem.Allocator) void {
     assert(state.dungeon.at(mob.coord).mob != null);
-    assert(mob.occupation.phase == .Work);
+    assert(mob.ai.phase == .Work);
 
-    var to = mob.occupation.work_area.items[0];
+    var to = mob.ai.work_area.items[0];
 
     if (mob.cansee(to)) {
         // OK, reached our destination. Time to choose another one!
@@ -267,7 +267,7 @@ pub fn patrolWork(mob: *Mob, alloc: *mem.Allocator) void {
             const point = room.randomCoord();
 
             if (mob.nextDirectionTo(point)) |_| {
-                mob.occupation.work_area.items[0] = point;
+                mob.ai.work_area.items[0] = point;
                 break;
             }
         }
@@ -287,7 +287,7 @@ pub fn patrolWork(mob: *Mob, alloc: *mem.Allocator) void {
 }
 
 pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
-    var post = mob.occupation.work_area.items[0];
+    var post = mob.ai.work_area.items[0];
 
     if (mob.coord.eq(post)) {
         _ = mob.rest();
@@ -305,7 +305,7 @@ pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
 }
 
 pub fn watcherWork(mob: *Mob, alloc: *mem.Allocator) void {
-    var post = mob.occupation.work_area.items[0];
+    var post = mob.ai.work_area.items[0];
 
     if (mob.coord.eq(post)) {
         _ = mob.rest();
@@ -327,9 +327,9 @@ pub fn watcherWork(mob: *Mob, alloc: *mem.Allocator) void {
 }
 
 pub fn interactionLaborerWork(mob: *Mob, _: *mem.Allocator) void {
-    assert(mob.occupation.work_area.items.len == 1);
+    assert(mob.ai.work_area.items.len == 1);
 
-    const machine_coord = mob.occupation.work_area.items[0];
+    const machine_coord = mob.ai.work_area.items[0];
     const machine = state.dungeon.at(machine_coord).surface.?.Machine;
     assert(!mob.coord.eq(machine_coord)); // Machine should not be walkable
 
@@ -341,7 +341,7 @@ pub fn interactionLaborerWork(mob: *Mob, _: *mem.Allocator) void {
 }
 
 pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
-    switch (mob.occupation.work_phase) {
+    switch (mob.ai.work_phase) {
         .CleanerScan => {
             _ = mob.rest();
 
@@ -366,15 +366,15 @@ pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
                     }
 
                     if (!clean) {
-                        mob.occupation.target = coord;
-                        mob.occupation.work_phase = .CleanerClean;
+                        mob.ai.target = coord;
+                        mob.ai.work_phase = .CleanerClean;
                         break;
                     }
                 }
             }
         },
         .CleanerClean => {
-            const target = mob.occupation.target.?;
+            const target = mob.ai.target.?;
             if (target.distance(mob.coord) > 1) {
                 if (!mob.isCreeping()) {
                     _ = mob.rest();
@@ -397,23 +397,23 @@ pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
                 }
 
                 if (was_clean)
-                    mob.occupation.work_phase = .CleanerScan;
+                    mob.ai.work_phase = .CleanerScan;
             }
         },
         .CleanerIdle => {
             _ = mob.rest();
 
             if (rng.onein(2))
-                mob.occupation.work_phase = .CleanerScan;
+                mob.ai.work_phase = .CleanerScan;
         },
     }
 }
 
 pub fn wanderWork(mob: *Mob, alloc: *mem.Allocator) void {
     assert(state.dungeon.at(mob.coord).mob != null);
-    assert(mob.occupation.phase == .Work);
+    assert(mob.ai.phase == .Work);
 
-    var to = mob.occupation.work_area.items[0];
+    var to = mob.ai.work_area.items[0];
 
     if (mob.cansee(to) or !state.is_walkable(to, .{ .right_now = true })) {
         // OK, reached our destination. Time to choose another one!
@@ -430,7 +430,7 @@ pub fn wanderWork(mob: *Mob, alloc: *mem.Allocator) void {
             if (!state.is_walkable(point, .{ .right_now = true })) continue;
 
             if (mob.nextDirectionTo(point)) |_| {
-                mob.occupation.work_area.items[0] = point;
+                mob.ai.work_area.items[0] = point;
                 break;
             }
         }
@@ -449,10 +449,10 @@ pub fn wanderWork(mob: *Mob, alloc: *mem.Allocator) void {
 
 pub fn goofingAroundWork(mob: *Mob, alloc: *mem.Allocator) void {
     assert(state.dungeon.at(mob.coord).mob != null);
-    assert(mob.occupation.phase == .Work);
+    assert(mob.ai.phase == .Work);
 
-    const station = mob.occupation.work_area.items[0];
-    const dest = mob.occupation.target orelse mob.coord;
+    const station = mob.ai.work_area.items[0];
+    const dest = mob.ai.target orelse mob.coord;
 
     if (mob.coord.eq(dest) or !state.is_walkable(dest, .{ .right_now = true })) {
         // OK, reached our destination. Time to choose another one!
@@ -471,7 +471,7 @@ pub fn goofingAroundWork(mob: *Mob, alloc: *mem.Allocator) void {
                 continue;
 
             if (mob.nextDirectionTo(point)) |_| {
-                mob.occupation.target = point;
+                mob.ai.target = point;
                 break;
             }
         }
@@ -494,7 +494,7 @@ pub fn goofingAroundWork(mob: *Mob, alloc: *mem.Allocator) void {
 //      - Skip ones that are already affected by Pain.
 //      - When cast spell, return.
 pub fn tortureWork(mob: *Mob, alloc: *mem.Allocator) void {
-    const post = mob.occupation.work_area.items[0];
+    const post = mob.ai.work_area.items[0];
 
     if (!mob.coord.eq(post)) {
         // We're not at our post, return there
@@ -559,7 +559,7 @@ pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
     } else {
         if (!keepDistance(mob, target.coord, 8, alloc)) {
             if (mob.coord.distance(target.coord) == 1) {
-                (mob.occupation.fight_fn.?)(mob, alloc);
+                (mob.ai.fight_fn.?)(mob, alloc);
             } else {
                 _ = mob.rest();
             }
@@ -672,15 +672,15 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
         const fitem = Coord.new2(mob.coord.z, x, y);
 
         if (state.dungeon.at(fitem).mob) |othermob| {
-            const phase = othermob.occupation.phase;
+            const phase = othermob.ai.phase;
 
             if (@ptrToInt(othermob) != @ptrToInt(mob) and
                 !othermob.immobile and
                 othermob.allegiance == mob.allegiance and
-                ((phase == .SawHostile and
+                ((phase == .Hunt and
                 othermob.enemies.items.len > 0 and // mob's phase may not have been reset yet
                 othermob.enemies.items[0].mob.coord.eq(target.coord)) or
-                (phase == .GoTo)))
+                (phase == .Investigate)))
             {
                 ally = true;
                 break;
@@ -704,7 +704,7 @@ pub fn flee(mob: *Mob, alloc: *mem.Allocator) void {
 
     if (!keepDistance(mob, target.coord, 15, alloc)) {
         if (mob.coord.distance(target.coord) == 1) {
-            (mob.occupation.fight_fn.?)(mob, alloc);
+            (mob.ai.fight_fn.?)(mob, alloc);
         } else {
             _ = mob.rest();
         }

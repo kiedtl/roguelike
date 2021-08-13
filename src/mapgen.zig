@@ -59,7 +59,7 @@ fn isTileAvailable(coord: Coord) bool {
 
 const PlaceMobOptions = struct {
     facing: ?Direction = null,
-    phase: OccupationPhase = .Work,
+    phase: AIPhase = .Work,
     work_area: ?Coord = null,
 };
 
@@ -72,14 +72,14 @@ fn placeMob(
     var mob = template.mob;
     mob.init(alloc);
     mob.coord = coord;
-    mob.occupation.phase = opts.phase;
+    mob.ai.phase = opts.phase;
 
     if (template.weapon) |w| mob.inventory.wielded = _createItem(Weapon, w.*);
     if (template.backup_weapon) |w| mob.inventory.backup = _createItem(Weapon, w.*);
     if (template.armor) |a| mob.inventory.armor = _createItem(Armor, a.*);
 
     if (opts.facing) |dir| mob.facing = dir;
-    mob.occupation.work_area.append(opts.work_area orelse coord) catch unreachable;
+    mob.ai.work_area.append(opts.work_area orelse coord) catch unreachable;
 
     for (template.statuses) |status_info| {
         mob.addStatus(status_info.status, status_info.power, status_info.duration, status_info.permanent);
@@ -160,7 +160,7 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     const echoring = _createItem(Ring, items.EcholocationRing);
     echoring.worn_since = state.ticks;
 
-    state.player = placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .SawHostile });
+    state.player = placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
     state.player.inventory.r_rings[0] = echoring;
 }
 
