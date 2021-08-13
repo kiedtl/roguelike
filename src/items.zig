@@ -216,7 +216,7 @@ fn triggerNetLauncherProjectile(coord: Coord) void {
     const _f = struct {
         fn _addNet(c: Coord) void {
             if (state.dungeon.at(c).mob) |mob| {
-                mob.addStatus(.Held, 0, null, false);
+                mob.addStatus(.Held, 0, 10, false);
             } else {
                 if (state.is_walkable(c, .{ .right_now = true }) and
                     state.dungeon.at(c).surface == null)
