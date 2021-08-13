@@ -986,6 +986,7 @@ pub const Mob = struct { // {{{
         if (launcher.projectile.effect) |effect_func| (effect_func)(landed.?);
 
         self.declareAction(.Fire);
+        self.makeNoise(launcher.noise);
 
         return true;
     }
@@ -1850,6 +1851,7 @@ pub const Weapon = struct {
     launcher: ?Launcher = null,
 
     pub const Launcher = struct {
+        noise: usize,
         projectile: Projectile,
     };
 };

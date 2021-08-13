@@ -120,7 +120,7 @@ pub const SentinelTemplate = MobTemplate{
             .is_curious = true,
         },
         .allegiance = .Sauron,
-        .vision = 7,
+        .vision = 8,
         .base_night_vision = 20,
 
         .willpower = 5,
@@ -133,7 +133,7 @@ pub const SentinelTemplate = MobTemplate{
 
         .base_strength = 28,
     },
-    .weapon = &items.SwordWeapon,
+    .weapon = &items.DartLauncher,
     .backup_weapon = &items.NetLauncher,
     .armor = &items.HeavyChainmailArmor,
 };

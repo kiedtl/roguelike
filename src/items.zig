@@ -185,20 +185,48 @@ pub const NetLauncher = Weapon{
     .main_damage = .Crushing,
     .secondary_damage = null,
     .launcher = .{
-        .projectile = NetLauncherProjectile,
+        .projectile = Projectile{
+            .main_damage = .Crushing,
+            .damages = .{
+                .Crushing = 5,
+                .Pulping = 0,
+                .Slashing = 0,
+                .Piercing = 0,
+                .Lacerating = 0,
+            },
+            .effect = triggerNetLauncherProjectile,
+        },
+        .noise = Mob.NOISE_MOVE,
     },
 };
 
-pub const NetLauncherProjectile = Projectile{
-    .main_damage = .Crushing,
+pub const DartLauncher = Weapon{
+    .id = "dart_launcher",
+    .name = "dart launcher",
+    .required_strength = 12,
+    .required_dexterity = 12,
     .damages = .{
-        .Crushing = 5,
-        .Pulping = 0,
-        .Slashing = 0,
+        .Crushing = 4,
+        .Pulping = 2,
+        .Slashing = 1,
         .Piercing = 0,
         .Lacerating = 0,
     },
-    .effect = triggerNetLauncherProjectile,
+    .main_damage = .Crushing,
+    .secondary_damage = null,
+    .launcher = .{
+        .projectile = Projectile{
+            .main_damage = .Pulping,
+            .damages = .{
+                .Crushing = 0,
+                .Pulping = 8,
+                .Slashing = 3,
+                .Piercing = 2,
+                .Lacerating = 2,
+            },
+        },
+        .noise = Mob.NOISE_YELL,
+    },
 };
 
 fn triggerPreservePotion(_dork: ?*Mob) void {
@@ -230,11 +258,12 @@ fn triggerNetLauncherProjectile(coord: Coord) void {
         }
     };
 
-    _f._addNet(coord);
-
     for (&DIRECTIONS) |direction| {
-        if (rng.onein(6)) continue;
         if (coord.move(direction, state.mapgeometry)) |neighbor| {
+            // if there's no mob on a tile, give a chance for a net
+            // to not fall there
+            if (state.dungeon.at(neighbor).mob == null and rng.onein(4)) continue;
+
             _f._addNet(neighbor);
         }
     }

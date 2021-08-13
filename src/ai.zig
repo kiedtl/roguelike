@@ -575,32 +575,31 @@ pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
 // to target before firing.
 //
 pub fn sentinelFight(mob: *Mob, alloc: *mem.Allocator) void {
-    if (mob.inventory.backup) |backup|
-        if (backup.launcher != null) {
-            _ = mob.swapWeapons();
-        };
-
-    if (mob.inventory.wielded != null and mob.inventory.wielded.?.launcher != null) {
-        const enemiesct = math.min(4, mob.enemies.items.len);
-        for (mob.enemies.items[0..enemiesct]) |enemy| {
-            if (enemy.mob.isUnderStatus(.Held)) |_| continue;
-
-            _ = mob.launchProjectile(&mob.inventory.wielded.?.launcher.?, enemy.mob.coord);
-            return;
-        }
-    }
-
-    if (mob.inventory.backup) |backup|
-        if (backup.launcher == null) {
-            _ = mob.swapWeapons();
-        };
-
     const target = currentEnemy(mob).mob;
 
-    if (mob.coord.distance(target.coord) == 1) {
-        _ = mob.fight(target);
-    } else {
+    // if we can't see the enemy because it's outside of our range of vision,
+    // move towards it
+    if (!mob.cansee(target.coord) and mob.coord.distance(target.coord) > mob.vision)
         mob.tryMoveTo(target.coord);
+
+    // hack to give breathing space to enemy who just escaped net
+    const spare_enemy_net = rng.tenin(25);
+
+    if (target.coord.distance(mob.coord) == 1 or
+        target.isUnderStatus(.Held) != null or
+        spare_enemy_net)
+    {
+        // fire dart
+        if (mem.eql(u8, mob.inventory.backup.?.id, "dart_launcher"))
+            _ = mob.swapWeapons();
+
+        _ = mob.launchProjectile(&mob.inventory.wielded.?.launcher.?, target.coord);
+    } else {
+        // fire net
+        if (mem.eql(u8, mob.inventory.backup.?.id, "net_launcher"))
+            _ = mob.swapWeapons();
+
+        _ = mob.launchProjectile(&mob.inventory.wielded.?.launcher.?, target.coord);
     }
 }
 
