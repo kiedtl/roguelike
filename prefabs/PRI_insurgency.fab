@@ -1,9 +1,8 @@
+:spawn             sentinel 1,1
+:spawn                guard 4,1
 :spawn torturer_necromancer 5,1
-
-:spawn    sentinel 3,1
-:spawn executioner 4,1
-:spawn executioner 6,1
-:spawn    sentinel 7,1
+:spawn                guard 6,1
+:spawn             sentinel 9,1
 
 :spawn executioner 3,2
 :spawn executioner 4,2
