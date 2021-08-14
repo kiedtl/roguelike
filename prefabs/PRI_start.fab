@@ -90,7 +90,7 @@
 % :nolights
 % :notraps
 % 
-% :spawn watcher  3,2
+% :spawn patrol  3,2
 % 
 % #*#•#########•#########*#
 % *≡≡...................≡≡*
