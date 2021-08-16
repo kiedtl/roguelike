@@ -13,14 +13,20 @@ Levels
 	  windows.
 - Laboratory
 	- Large open space.
-	- Piles of vials.
-	- Rooms with potion synthesis machines.
-	- Mobs in cages for researchers to experiment on, extractors, grinders.
-	- Small pools of poisonous sludge.
+	- Stockpiles of ores, and vials.
+	- Whole floor is geared to the production of vials and usage of them.
+	- Production of vials:
+	  - Ore "elevator", supposedly brings up ores from lower floors.
+	    Dumps ores on nearby tiles.
+	  - Haulers bring ores to ore stockpiles.
+	  - Extractor machines, which are located in the ore stockpiles, create
+	    vials.
+	  - Haulers bring vials to vial stockpiles.
+	  - Haulers take vials to research stations.
+	- Usage of vials: research stations, alchemists use them to "experiment"
+	  on prisoners.
 	- Has traps of {blinding, pain-causing} gas.
 	- Has teleportation traps.
-	- Preprocessing: add a bunch of rooms on top of everything (regardless
-	  of intersections) to make the place even more open.
 - Temple
 	- Circular rooms.
 	- Refrigerated rooms filled with corpses.
@@ -30,7 +36,7 @@ Levels
 - Mining
 	- Caves, brogue-style.
 	- Rooms filled with pickaxes, boulders, and carts.
-	- Vampires.
+	- Cowardly kobolds that swarm around player.
 - Smithing
 	- Large open area.
 	- Structures plopped all over the place.
@@ -398,7 +404,7 @@ Abominations
 Strange mobs found on LAB levels.
 - Creeping Abomination
   - Like Blue Monk (in Hazard Level) or weeping angels.
-- Skulking Abomination
+- Slinking Abomination
   - Refuses to move into a tile that doesn't have at least one wall as a neighbor.
   - When spotted, IF the spotter is an enemy and has half of it's normal HP, it
     moves in and attacks, still keeping close to walls.
@@ -406,7 +412,13 @@ Strange mobs found on LAB levels.
   - Game description should describe it as having an extremely hideous appearance.
 - Fiery/Burning Abomination
 - Deadly Abomination
-- Cloven Abomination
+- Undulating Abomination
+  - Slow (speed == ~180?)
+  - If enemy is less than X spaces away, it moves toward enemy.
+  - Doesn't attack.
+  - Emits gas that doesn't not spread far. Gas slows down affected mobs. (100s => 150s)
+  - If attacked, paralyzes player.
+- Cleaving Abomination
 
 Occupations
 -----------
@@ -477,17 +489,43 @@ Occupations
 
 Posters
 -------
-- Production of human rations must increase by 33% by the middle of next week.
+PRI:
+- Production of human meat rations must increase by 33% by the middle of next
+  week.
 - Please do not feed the prisoners.
 - Prison staffers must strive to be inclusive and welcoming to all new inmates.
-- WANTED: Usko-nuhelmir, human, escaped prisoner.
 - Absence without leave is punishable by a mandatory interview with the
   High Priest.
+- WANTED: Usko-nuhelmir, human, escaped prisoner.
+- WANTED: <player>, human, escaped prisoner.
+- WANTED: <previous player>, human, escaped prisoner.
 - The Necromancer is watching you.
 - The Necromancer can see you.
 - The Necromancer knows your thoughts.
+REC:
+- WANTED: Usko-nuhelmir, human, escaped prisoner.
 - WANTED: <player>, human, escaped prisoner.
 - WANTED: <previous player>, human, escaped prisoner.
+- The Necromancer is watching you.
+- The Necromancer can see you.
+- The Necromancer knows your thoughts.
+LAB:
+- Please wear gloves and safety goggles at all times.
+- Handling slade without permission is strictly forbidden.
+- Handling slade without written permission is strictly forbidden.
+- Handling slade without prior permission from the Head of Research is strictly
+  forbidden.
+- A inspection by the Head of Research on current safety practices will be
+  conducted next week.
+- The Head of Research is committed to ensuring that all staff remain safe
+  during work shifts.
+- Please read the appropriate manual(s) before operating machinery.
+- Please read the manual before operating the extractors.
+- Please read the manual before operating the grinders.
+- Please read the manual before operating the research stations.
+- Do not use another staffer's research station.
+- Staffers that molest the prisoners in any way will be scheduled for a
+  mandatory interview with the High Priest.
 
 
 Unique mobs
@@ -506,15 +544,17 @@ Possible names
 --------------
 - "Burning Brutes"
 - "Deranged Clowns"
+- "Treason"
 - "Scoundrel", "Rascal", "Snarl", etc
 - "Turncoat", "Oathbreaker"
 - "Halls of the Necromancer"
 - "Dominions of the Necromancer"
+- "Wrath of the Necromancer"
 - "Fear of Death"
 
 Maybe a combination.
-- "Oathbreaker: Dominions of the Necromancer" for current game, something like
-  "Oathbreaker: the Fear of Death" for a 7DRL sequel?
+- "Wrath of the Necromancer: Oathbreaker" for current game, something like
+  "Wrath of the Necromancer: Fear of Death" for a 7DRL sequel?
 
 Books
 -----
@@ -526,11 +566,11 @@ Books
 	- "You learn about the Hill Goblin Master Race."
 "Durgh Stammer"
 	- "You learn that hill goblins are vastly superior to cave goblins."
+"On the Origins of Phytin"
+"On the Molecular Structure of Tanus"
 recipe books
 	- "You learn how to pickle goblin roasts."
 	- "You learn how to properly butcher humans."
-dungeon maps
-inventory lists
 
 
 Materials (v = vial, s = stone, g = gem, o = ore/metal)
@@ -644,6 +684,7 @@ x Make the "lamps" electric "braziers"
   - Make them explosive and electrocutive!
 - Useless items in bins, cabinets, etc
 - Weapons and armor in cabinets
+- Allow multiple subrooms in rooms (BSP?)
 
 Mobs, AI
 ========
@@ -783,6 +824,11 @@ Optimizations
 x Use a matrix to mark nodes as closed (instead of a heap-allocated list) for
   Dijkstra.
 - Use Manhattan distance for A* algorithm (overestimating heuristic might be better?)
+- Allow functions that repeatedly call A* for the same mob to store an "AstarContext"
+  structure that allows astar.path() to reuse cell cost, walkablility, etc data
+  without calling those functions again.
+- Use atan to calculate octant in which coord appears relative to mob's coord, instead
+  of the slower method seen in Coord.closestDirectionTo()
 
 Code cleanups
 =============
