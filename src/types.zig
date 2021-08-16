@@ -1909,20 +1909,6 @@ pub const Vial = enum {
     // Commonicity (adj) -- the opposite of rarity, because why not. Higher numbers are more common.
     pub const VIAL_COMMONICITY = [_]usize{ 5, 1, 2, 3, 7, 7, 2, 1, 5 };
 
-    pub inline fn tile(self: Vial) u21 {
-        return switch (self) {
-            .Tanus => '⊕',
-            .Slade => '⊖',
-            .Pholenine => '⊗',
-            .Chloroforon => '⊘',
-            .Hyine => '⊙',
-            .Quagenine => '⊚',
-            .Flouine => '⊛',
-            .Cataline => '⊜',
-            .Phytin => '⊝',
-        };
-    }
-
     pub inline fn color(self: Vial) u32 {
         return switch (self) {
             .Tanus => 0xff9390,
@@ -2075,7 +2061,7 @@ pub const Tile = struct {
                             cell.bg = color;
                         },
                         .Vial => |v| {
-                            cell.ch = v.tile();
+                            cell.ch = '♪';
                             cell.fg = v.color();
                             cell.bg = color;
                         },
