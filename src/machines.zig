@@ -113,6 +113,8 @@ pub const Wire_N1S1E2_Prop = Prop{ .id = "wire_n1s1e2", .name = "copper wire", .
 pub const Wire_N1S1E2W2_Prop = Prop{ .id = "wire_n1s1e2w2", .name = "copper wire", .tile = '╪', .fg = COPPER_WIRE_COLOR };
 pub const Wire_N1S1_Prop = Prop{ .id = "wire_n1s1", .name = "copper wire", .tile = '│', .fg = COPPER_WIRE_COLOR };
 
+pub const Wall__Prop = Prop{ .id = "wire_n1s1", .name = "wall", .tile = '│', .fg = COPPER_WIRE_COLOR };
+
 pub const StairDstProp = Prop{
     .id = "stair_dst",
     .name = "downward stair",
@@ -132,7 +134,7 @@ pub const PowerSwitchProp = Prop{
 pub const ControlPanelProp = Prop{
     .id = "control_panel",
     .name = "control panel",
-    .tile = '□',
+    .tile = '⌨',
     .fg = 0xffffff,
     .walkable = false,
 };
