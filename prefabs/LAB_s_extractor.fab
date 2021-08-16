@@ -1,0 +1,38 @@
+% Extractor for LAB.
+% 
+% ╓─╓┐┐──╓─┐
+% ║┏━█━━□♥━┤
+% ■┃╜─   ╘╕┃
+% │┃      │┃
+% ╞╪⊞⊞⊞─⊞⊞⊡╡
+% □┃       ┃
+%  ┗━•   •━┛
+
+:subroom
+
+@0 m extractor
+@1 p switching_station
+@2 p large_transformer
+@3 p control_panel
+@4 p power_switch
+@5 p small_transformer
+@a p wire_s2e1
+@b p wire_e1w1
+@c p wire_s1w1
+@d p wire_n2s2
+@e p wire_n1s1w1
+@f p wire_n2w1
+@g p wire_n1e2
+@h p wire_s1w2
+@i p wire_n1s1w2
+@j p wire_n1s1e2
+@k p wire_n1s1e2w2
+@l p wire_n1s1
+
+abaccbbabc
+d##2##34#e
+5#fb..ggh#
+l#......l#
+jk000b001i
+3#.......#
+.##•...•##

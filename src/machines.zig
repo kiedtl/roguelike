@@ -12,7 +12,8 @@ const rng = @import("rng.zig");
 usingnamespace @import("types.zig");
 
 const STEEL_SUPPORT_COLOR: u32 = 0xa6c2d4;
-const COPPER_COIL_COLOR: u32 = 0xd96c00;
+const COPPER_COIL_COLOR: u32 = 0xe99c39;
+const COPPER_WIRE_COLOR: u32 = 0xffe5d3;
 
 pub const STATUES = [_]Prop{
     GoldStatue,
@@ -28,6 +29,23 @@ pub const PROPS = [_]Prop{
     IronStatue,
     SodaliteStatue,
     HematiteStatue,
+    Wire_S2E1_Prop,
+    Wire_E1W1_Prop,
+    Wire_S1W1_Prop,
+    Wire_N2S2_Prop,
+    Wire_N1S1W1_Prop,
+    Wire_N2W1_Prop,
+    Wire_N1E2_Prop,
+    Wire_S1W2_Prop,
+    Wire_N1S1W2_Prop,
+    Wire_N1S1E2_Prop,
+    Wire_N1S1E2W2_Prop,
+    Wire_N1S1_Prop,
+    PowerSwitchProp,
+    ControlPanelProp,
+    SmallTransformerProp,
+    LargeTransformerProp,
+    SwitchingStationProp,
     WorkstationProp,
     MediumSieve,
     SteelGasReservoir,
@@ -50,6 +68,7 @@ pub const PROPS = [_]Prop{
 };
 
 pub const MACHINES = [_]Machine{
+    Extractor,
     PowerSupply,
     HealingGasPump,
     Brazier,
@@ -81,12 +100,65 @@ pub const IronStatue = Prop{ .id = "iron_statue", .name = "iron statue", .tile =
 pub const SodaliteStatue = Prop{ .id = "sodalite_statue", .name = "sodalite statue", .tile = '☺', .fg = 0xa4cfff, .walkable = false };
 pub const HematiteStatue = Prop{ .id = "hematite_statue", .name = "hematite statue", .tile = '☺', .fg = 0xff7f70, .walkable = false };
 
+pub const Wire_S2E1_Prop = Prop{ .id = "wire_s2e1", .name = "copper wire", .tile = '╓', .fg = COPPER_WIRE_COLOR };
+pub const Wire_E1W1_Prop = Prop{ .id = "wire_e1w1", .name = "copper wire", .tile = '─', .fg = COPPER_WIRE_COLOR };
+pub const Wire_S1W1_Prop = Prop{ .id = "wire_s1w1", .name = "copper wire", .tile = '┐', .fg = COPPER_WIRE_COLOR };
+pub const Wire_N2S2_Prop = Prop{ .id = "wire_n2s2", .name = "copper wire", .tile = '║', .fg = COPPER_WIRE_COLOR };
+pub const Wire_N1S1W1_Prop = Prop{ .id = "wire_n1s1w1", .name = "copper wire", .tile = '┤', .fg = COPPER_WIRE_COLOR };
+pub const Wire_N2W1_Prop = Prop{ .id = "wire_n2w1", .name = "copper wire", .tile = '╜', .fg = COPPER_WIRE_COLOR };
+pub const Wire_N1E2_Prop = Prop{ .id = "wire_n1e2", .name = "copper wire", .tile = '╘', .fg = COPPER_WIRE_COLOR };
+pub const Wire_S1W2_Prop = Prop{ .id = "wire_s1w2", .name = "copper wire", .tile = '╕', .fg = COPPER_WIRE_COLOR };
+pub const Wire_N1S1W2_Prop = Prop{ .id = "wire_n1s1w2", .name = "copper wire", .tile = '╡', .fg = COPPER_WIRE_COLOR };
+pub const Wire_N1S1E2_Prop = Prop{ .id = "wire_n1s1e2", .name = "copper wire", .tile = '╞', .fg = COPPER_WIRE_COLOR };
+pub const Wire_N1S1E2W2_Prop = Prop{ .id = "wire_n1s1e2w2", .name = "copper wire", .tile = '╪', .fg = COPPER_WIRE_COLOR };
+pub const Wire_N1S1_Prop = Prop{ .id = "wire_n1s1", .name = "copper wire", .tile = '│', .fg = COPPER_WIRE_COLOR };
+
 pub const StairDstProp = Prop{
     .id = "stair_dst",
     .name = "downward stair",
     .tile = '×',
     .fg = 0xffffff,
     .walkable = true,
+};
+
+pub const PowerSwitchProp = Prop{
+    .id = "power_switch",
+    .name = "power switch",
+    .tile = '♥',
+    .fg = 0xffffff,
+    .walkable = false,
+};
+
+pub const ControlPanelProp = Prop{
+    .id = "control_panel",
+    .name = "control panel",
+    .tile = '□',
+    .fg = 0xffffff,
+    .walkable = false,
+};
+
+pub const SmallTransformerProp = Prop{
+    .id = "small_transformer",
+    .name = "machine",
+    .tile = '■',
+    .fg = COPPER_WIRE_COLOR,
+    .walkable = false,
+};
+
+pub const LargeTransformerProp = Prop{
+    .id = "large_transformer",
+    .name = "machine",
+    .tile = '█',
+    .fg = COPPER_WIRE_COLOR,
+    .walkable = false,
+};
+
+pub const SwitchingStationProp = Prop{
+    .id = "switching_station",
+    .name = "machine",
+    .tile = '⊡',
+    .fg = 0xffaf9a,
+    .walkable = false,
 };
 
 pub const WorkstationProp = Prop{
@@ -243,6 +315,19 @@ pub const TitaniumBarProp = Prop{
     .fg = 0xeaecef,
     .opacity = 0.0,
     .walkable = false,
+};
+
+pub const Extractor = Machine{
+    .id = "extractor",
+    .name = "machine",
+
+    .powered_tile = '⊟',
+    .unpowered_tile = '⊞',
+
+    .power_drain = 100,
+    .power_add = 100,
+
+    .on_power = powerExtractor,
 };
 
 pub const PowerSupply = Machine{
@@ -434,6 +519,10 @@ pub const RestrictedMachinesOpenLever = Machine{
 };
 
 pub fn powerNone(_: *Machine) void {}
+
+pub fn powerExtractor(machine: *Machine) void {
+    // TODO
+}
 
 pub fn powerPowerSupply(machine: *Machine) void {
     var iter = state.machines.iterator();
