@@ -416,7 +416,7 @@ Strange mobs found on LAB levels.
   - Slow (speed == ~180?)
   - If enemy is less than X spaces away, it moves toward enemy.
   - Doesn't attack.
-  - Emits gas that doesn't not spread far. Gas slows down affected mobs. (100s => 150s)
+  - Emits gas that doesn't spread far. Gas slows down affected mobs. (100s => 150s)
   - If attacked, paralyzes player.
 - Cleaving Abomination
 
@@ -472,12 +472,7 @@ Occupations
 	  released vapours).
 - Priest
 	Purpose: Make the temple extremely dangerous.
-	May release tainted gas at intruders.
-	A special type of necromancer, but can only use that ability in "tainted"
-	  areas that were designated so by the High Priest.
-	Drags prisoners to altar, then burns the victim to death. Once cooked,
-	  the victim's corpse is animated.
-	Manufactures Potions of Tainting.
+	???
 - Researcher
 	Purpose: Add some life to the dungeon.
 - Farmer
@@ -520,12 +515,12 @@ LAB:
 - The Head of Research is committed to ensuring that all staff remain safe
   during work shifts.
 - Please read the appropriate manual(s) before operating machinery.
-- Please read the manual before operating the extractors.
-- Please read the manual before operating the grinders.
-- Please read the manual before operating the research stations.
+- Read the owner's manual before operating extractors.
+- Read the owner's manual before operating grinders.
+- Read the owner's manual before operating research stations.
 - Do not use another staffer's research station.
-- Staffers that molest the prisoners in any way will be scheduled for a
-  mandatory interview with the High Priest.
+- Staffers that molest prisoners outside of research sessions will be scheduled
+  for a mandatory appointment at the Temple.
 
 
 Unique mobs
