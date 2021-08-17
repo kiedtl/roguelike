@@ -335,8 +335,14 @@ fn _excavate_prefab(
                             }
                         },
                         .Prop => |pid| {
-                            const prop = utils.findById(&machines.PROPS, pid).?;
-                            _ = _place_prop(rc, &machines.PROPS[prop]);
+                            if (utils.findById(&machines.PROPS, pid)) |prop| {
+                                _ = _place_prop(rc, &machines.PROPS[prop]);
+                            } else {
+                                std.log.warn(
+                                    "{}: Couldn't load prop {}, skipping.",
+                                    .{ fab.name.constSlice(), utils.used(pid) },
+                                );
+                            }
                         },
                         .Machine => |mid| {
                             if (utils.findById(&machines.MACHINES, mid)) |mach| {
@@ -1671,7 +1677,7 @@ pub const Configs = [LEVELS]LevelConfig{
         }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-            .{ 9, 1, 1, 1, 1, 0, 0, 0, 0, 0 },
+            .{ 9, 2, 1, 1, 1, 1, 0, 0, 0, 0 },
         },
         .prefab_chance = 100, // No prefabs for LAB
         .max_rooms = 2048,

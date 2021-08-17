@@ -9,9 +9,12 @@ const main = @import("root");
 const state = @import("state.zig");
 const gas = @import("gas.zig");
 const rng = @import("rng.zig");
+const materials = @import("materials.zig");
 usingnamespace @import("types.zig");
 
 const STEEL_SUPPORT_COLOR: u32 = 0xa6c2d4;
+const VANGEN_WALL_COLOR: u32 = materials.Vangenite.color_fg;
+const MARBLE_WALL_COLOR: u32 = materials.Marble.color_floor;
 const COPPER_COIL_COLOR: u32 = 0xe99c39;
 const COPPER_WIRE_COLOR: u32 = 0xffe5d3;
 
@@ -29,6 +32,18 @@ pub const PROPS = [_]Prop{
     IronStatue,
     SodaliteStatue,
     HematiteStatue,
+    MarbleWall_Upper,
+    MarbleWall_Lower,
+    Wall_E1W1_Prop,
+    Wall_S1W1_Prop,
+    Wall_N1S1W1_Prop,
+    Wall_N1S1_Prop,
+    Wall_N1S1E1_Prop,
+    Wall_N1W1_Prop,
+    Wall_N1E1_Prop,
+    Wall_S1E1_Prop,
+    Wall_E1W1_thinE_Prop,
+    Wall_E1W1_thinW_Prop,
     Wire_S2E1_Prop,
     Wire_E1W1_Prop,
     Wire_S1W1_Prop,
@@ -41,11 +56,13 @@ pub const PROPS = [_]Prop{
     Wire_N1S1E2_Prop,
     Wire_N1S1E2W2_Prop,
     Wire_N1S1_Prop,
+    Gearbox,
     PowerSwitchProp,
     ControlPanelProp,
     SmallTransformerProp,
     LargeTransformerProp,
     SwitchingStationProp,
+    ItemLocationProp,
     WorkstationProp,
     MediumSieve,
     SteelGasReservoir,
@@ -68,6 +85,7 @@ pub const PROPS = [_]Prop{
 };
 
 pub const MACHINES = [_]Machine{
+    ElevatorMotor,
     Extractor,
     PowerSupply,
     HealingGasPump,
@@ -100,6 +118,17 @@ pub const IronStatue = Prop{ .id = "iron_statue", .name = "iron statue", .tile =
 pub const SodaliteStatue = Prop{ .id = "sodalite_statue", .name = "sodalite statue", .tile = '☺', .fg = 0xa4cfff, .walkable = false };
 pub const HematiteStatue = Prop{ .id = "hematite_statue", .name = "hematite statue", .tile = '☺', .fg = 0xff7f70, .walkable = false };
 
+pub const Wall_E1W1_Prop = Prop{ .id = "wall_e1w1", .name = "vangenite wall", .tile = '━', .fg = VANGEN_WALL_COLOR };
+pub const Wall_S1W1_Prop = Prop{ .id = "wall_s1w1", .name = "vangenite wall", .tile = '┓', .fg = VANGEN_WALL_COLOR };
+pub const Wall_N1S1W1_Prop = Prop{ .id = "wall_n1s1w1", .name = "vangenite wall", .tile = '┫', .fg = VANGEN_WALL_COLOR };
+pub const Wall_N1S1_Prop = Prop{ .id = "wall_n1s1", .name = "vangenite wall", .tile = '┃', .fg = VANGEN_WALL_COLOR };
+pub const Wall_N1S1E1_Prop = Prop{ .id = "wall_n1s1e1", .name = "vangenite wall", .tile = '┣', .fg = VANGEN_WALL_COLOR };
+pub const Wall_N1W1_Prop = Prop{ .id = "wall_n1w1", .name = "vangenite wall", .tile = '┛', .fg = VANGEN_WALL_COLOR };
+pub const Wall_N1E1_Prop = Prop{ .id = "wall_n1e1", .name = "vangenite wall", .tile = '┗', .fg = VANGEN_WALL_COLOR };
+pub const Wall_S1E1_Prop = Prop{ .id = "wall_s1e1", .name = "vangenite wall", .tile = '┏', .fg = VANGEN_WALL_COLOR };
+pub const Wall_E1W1_thinE_Prop = Prop{ .id = "wall_e1w1_thine", .name = "vangenite wall", .tile = '╾', .fg = VANGEN_WALL_COLOR };
+pub const Wall_E1W1_thinW_Prop = Prop{ .id = "wall_e1w1_thinw", .name = "vangenite wall", .tile = '╼', .fg = VANGEN_WALL_COLOR };
+
 pub const Wire_S2E1_Prop = Prop{ .id = "wire_s2e1", .name = "copper wire", .tile = '╓', .fg = COPPER_WIRE_COLOR };
 pub const Wire_E1W1_Prop = Prop{ .id = "wire_e1w1", .name = "copper wire", .tile = '─', .fg = COPPER_WIRE_COLOR };
 pub const Wire_S1W1_Prop = Prop{ .id = "wire_s1w1", .name = "copper wire", .tile = '┐', .fg = COPPER_WIRE_COLOR };
@@ -113,7 +142,16 @@ pub const Wire_N1S1E2_Prop = Prop{ .id = "wire_n1s1e2", .name = "copper wire", .
 pub const Wire_N1S1E2W2_Prop = Prop{ .id = "wire_n1s1e2w2", .name = "copper wire", .tile = '╪', .fg = COPPER_WIRE_COLOR };
 pub const Wire_N1S1_Prop = Prop{ .id = "wire_n1s1", .name = "copper wire", .tile = '│', .fg = COPPER_WIRE_COLOR };
 
-pub const Wall__Prop = Prop{ .id = "wire_n1s1", .name = "wall", .tile = '│', .fg = COPPER_WIRE_COLOR };
+pub const MarbleWall_Upper = Prop{ .id = "marble_wall_upper", .name = "marble wall", .tile = '▀', .fg = MARBLE_WALL_COLOR };
+pub const MarbleWall_Lower = Prop{ .id = "marble_wall_lower", .name = "marble wall", .tile = '▄', .fg = MARBLE_WALL_COLOR };
+
+pub const Gearbox = Prop{
+    .id = "gearbox",
+    .name = "gearbox",
+    .tile = '■',
+    .fg = 0xffffff,
+    .walkable = false,
+};
 
 pub const StairDstProp = Prop{
     .id = "stair_dst",
@@ -161,6 +199,14 @@ pub const SwitchingStationProp = Prop{
     .tile = '⊡',
     .fg = 0xffaf9a,
     .walkable = false,
+};
+
+pub const ItemLocationProp = Prop{
+    .id = "item_location",
+    .name = "mat",
+    .tile = '░',
+    .fg = 0x989898,
+    .walkable = true,
 };
 
 pub const WorkstationProp = Prop{
@@ -317,6 +363,19 @@ pub const TitaniumBarProp = Prop{
     .fg = 0xeaecef,
     .opacity = 0.0,
     .walkable = false,
+};
+
+pub const ElevatorMotor = Machine{
+    .id = "elevator_motor",
+    .name = "motor",
+
+    .powered_tile = '⊛',
+    .unpowered_tile = '⊚',
+
+    .power_drain = 100,
+    .power_add = 100,
+
+    .on_power = powerElevatorMotor,
 };
 
 pub const Extractor = Machine{
@@ -521,6 +580,10 @@ pub const RestrictedMachinesOpenLever = Machine{
 };
 
 pub fn powerNone(_: *Machine) void {}
+
+pub fn powerElevatorMotor(machine: *Machine) void {
+    // TODO
+}
 
 pub fn powerExtractor(machine: *Machine) void {
     // TODO

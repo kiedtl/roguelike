@@ -17,6 +17,21 @@ pub const Basalt = Material{
     .opacity = 1.0,
 };
 
+pub const Vangenite = Material{
+    .name = "vangenite",
+    .description = "TODO",
+    .density = 1.8,
+    .color_fg = 0xcfffdd,
+    .color_bg = null,
+    .color_floor = 0xcfffdd,
+    .tileset = 1,
+    .melting_point = 1128,
+    .combust_point = null,
+    .specific_heat = 0.91, // TODO
+    .luminescence = 40,
+    .opacity = 1.0,
+};
+
 pub const Dobalene = Material{
     .name = "dobalene",
     .description = "TODO",
@@ -25,9 +40,9 @@ pub const Dobalene = Material{
     .color_bg = null,
     .color_floor = 0xabcdff,
     .tileset = 1,
-    .melting_point = 8219,
+    .melting_point = 876,
     .combust_point = null,
-    .specific_heat = 0.91,
+    .specific_heat = 0.91, // TODO
     .luminescence = 0,
     .opacity = 1.0,
 };
