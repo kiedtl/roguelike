@@ -504,6 +504,8 @@ REC:
 - The Necromancer is watching you.
 - The Necromancer can see you.
 - The Necromancer knows your thoughts.
+- "Urum-Zhiolum" is a codeword for goblin extermination.
+  (And techinically that's correct.)
 LAB:
 - Please wear gloves and safety goggles at all times.
 - Handling slade without permission is strictly forbidden.
@@ -553,15 +555,22 @@ Maybe a combination.
 
 Books
 -----
-// "Melkor: The Life and Times of the King of Arda"
-// "This was Melkor"
+"Kornahl: The Life and Times of the Ancient Hill-King"
+	- "You learn that Kornahl was by right king of the whole universe."
+"This was Kornahl"
+	- "You learn that Kornahl was undoubtedly the fastest, strongest,
+	   besterestest hill goblin that ever was."
 "Meing Krampgh"
 	- "You learn that hill goblins are destined to rule the world."
+"Histories of Men"
+	- "You learn that humans are automatically inferior to other
+	   fang-possessing bipeds."
 "On the Descent of Goblins"
 	- "You learn about the Hill Goblin Master Race."
 "Durgh Stammer"
 	- "You learn that hill goblins are vastly superior to cave goblins."
-"On the Origins of Phytin"
+"On the Origins of Slade"
+"An Inquiry into the Chemical Properties of Phytin"
 "On the Molecular Structure of Tanus"
 recipe books
 	- "You learn how to pickle goblin roasts."
@@ -577,32 +586,33 @@ g	caus
 g	magenus
 g	silus		Silicate, composes fire-proof cloaks.
 g	chlade		Like mese in Minetest. Composes crystal statues. Glows.
+			Associated with demonic powers.
 o	magonium
 o	beus
 o	sylvium
 o	magalt
-o	mithril		The mithril we all know and love.
 o	vibonium
 v	tanus		Extracted from talonium.
 v	slade		Extracted from sulon.
 v	pholenine	Extracted from phosire.
 v	chloroforon
 v	hyine		Extracted from hyalt.
-v	quagenine
+v	quagenine	Extracted from quaese.
 v	flouine
 v	cataline	Extracted from catasine.
 v	phytin		Extracted from phybro.
-s	sulon
-s	catasine
-s	talonium
-s	nebro		Like slade in Dwarf Fortress -- extremely heavy.
-s	bolyvese
-s	vangenite
+s	sulon		Ore of slade.
+s	catasine	Ore of cataline.
+s	talonium	Ore of tanus.
+s	hyalt		Ore of hyine.
+s	quaese		Ore of quagenine.
+s	phybro		Ore of phytin.
+s	phosire		Ore of pholenine.
 s	dobalene	Makes up the walls of LAB.
-s	hyalt
-s	quaese
-s	phybro
-s	phosire
+s	nebro		Like slade in Dwarf Fortress -- extremely heavy.
+			Associated with demonic powers.
+s	vangenite	Makes up the walls of machinery in LAB. Glows dimly.
+s	bolyvese
 s	orthire
 s	maron
 
