@@ -47,6 +47,8 @@ pub const PROPS = [_]Prop{
     Wire_S2E1_Prop,
     Wire_E1W1_Prop,
     Wire_S1W1_Prop,
+    Wire_S1E1_Prop,
+    Wire_N1W1_Prop,
     Wire_N2S2_Prop,
     Wire_N1S1W1_Prop,
     Wire_N2W1_Prop,
@@ -56,6 +58,10 @@ pub const PROPS = [_]Prop{
     Wire_N1S1E2_Prop,
     Wire_N1S1E2W2_Prop,
     Wire_N1S1_Prop,
+    Wire_S1E1W1_Prop,
+    Wire_N2E1W1_Prop,
+    TableProp,
+    LargePumpProp,
     Gearbox,
     PowerSwitchProp,
     ControlPanelProp,
@@ -132,6 +138,8 @@ pub const Wall_E1W1_thinW_Prop = Prop{ .id = "wall_e1w1_thinw", .name = "vangeni
 pub const Wire_S2E1_Prop = Prop{ .id = "wire_s2e1", .name = "copper wire", .tile = '╓', .fg = COPPER_WIRE_COLOR };
 pub const Wire_E1W1_Prop = Prop{ .id = "wire_e1w1", .name = "copper wire", .tile = '─', .fg = COPPER_WIRE_COLOR };
 pub const Wire_S1W1_Prop = Prop{ .id = "wire_s1w1", .name = "copper wire", .tile = '┐', .fg = COPPER_WIRE_COLOR };
+pub const Wire_S1E1_Prop = Prop{ .id = "wire_s1e1", .name = "copper wire", .tile = '┌', .fg = COPPER_WIRE_COLOR };
+pub const Wire_N1W1_Prop = Prop{ .id = "wire_n1w1", .name = "copper wire", .tile = '┘', .fg = COPPER_WIRE_COLOR };
 pub const Wire_N2S2_Prop = Prop{ .id = "wire_n2s2", .name = "copper wire", .tile = '║', .fg = COPPER_WIRE_COLOR };
 pub const Wire_N1S1W1_Prop = Prop{ .id = "wire_n1s1w1", .name = "copper wire", .tile = '┤', .fg = COPPER_WIRE_COLOR };
 pub const Wire_N2W1_Prop = Prop{ .id = "wire_n2w1", .name = "copper wire", .tile = '╜', .fg = COPPER_WIRE_COLOR };
@@ -141,9 +149,27 @@ pub const Wire_N1S1W2_Prop = Prop{ .id = "wire_n1s1w2", .name = "copper wire", .
 pub const Wire_N1S1E2_Prop = Prop{ .id = "wire_n1s1e2", .name = "copper wire", .tile = '╞', .fg = COPPER_WIRE_COLOR };
 pub const Wire_N1S1E2W2_Prop = Prop{ .id = "wire_n1s1e2w2", .name = "copper wire", .tile = '╪', .fg = COPPER_WIRE_COLOR };
 pub const Wire_N1S1_Prop = Prop{ .id = "wire_n1s1", .name = "copper wire", .tile = '│', .fg = COPPER_WIRE_COLOR };
+pub const Wire_S1E1W1_Prop = Prop{ .id = "wire_s1e1w1", .name = "copper wire", .tile = '┬', .fg = COPPER_WIRE_COLOR };
+pub const Wire_N2E1W1_Prop = Prop{ .id = "wire_n2e1w1", .name = "copper wire", .tile = '╨', .fg = COPPER_WIRE_COLOR };
 
 pub const MarbleWall_Upper = Prop{ .id = "marble_wall_upper", .name = "marble wall", .tile = '▀', .fg = MARBLE_WALL_COLOR };
 pub const MarbleWall_Lower = Prop{ .id = "marble_wall_lower", .name = "marble wall", .tile = '▄', .fg = MARBLE_WALL_COLOR };
+
+pub const TableProp = Prop{
+    .id = "table",
+    .name = "table",
+    .tile = '⊺',
+    .fg = 0xffffff,
+    .walkable = false,
+};
+
+pub const LargePumpProp = Prop{
+    .id = "large_pump",
+    .name = "large pump",
+    .tile = '█',
+    .fg = 0xffffff,
+    .walkable = false,
+};
 
 pub const Gearbox = Prop{
     .id = "gearbox",

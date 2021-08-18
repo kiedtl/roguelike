@@ -1,9 +1,37 @@
+% Research stations with cells.
+%
+%   ♪♪╓─┐
+% ┏━┓█━┓│
+% ┃g┃┬╨┃╕
+% ┃*┃■┌┃┤
+% ⊺ ⌨╜╘⊡┘
+
 :subroom
 :restriction 2
 
-###
-#β#
-#≡#
+@0 p large_pump
+@1 p small_transformer
+@2 p table
+@3 p control_panel
+@4 p switching_station
+@a p wire_s2e1
+@b p wire_e1w1
+@c p wire_s1w1
+@d p wire_n1s1
+@e p wire_s1e1w1
+@f p wire_n2e1w1
+@g p wire_s1w2
+@h p wire_s1e1
+@i p wire_n1s1w1
+@j p wire_n2w1
+@k p wire_n1e2
+@l p wire_n1w1
+
+..ααabc
+###0##d
+#β#ef#g
+#≡#1h#i
+2.3jk4l
 
 \
 
