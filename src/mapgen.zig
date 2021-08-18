@@ -321,39 +321,45 @@ fn _excavate_prefab(
             switch (fab.content[y][x]) {
                 .LevelFeature => |l| (Configs[room.start.z].level_features[l].?)(l, rc, room, fab, allocator),
                 .Feature => |feature_id| {
-                    const feature = fab.features[feature_id].?;
-                    switch (feature) {
-                        .Potion => |pid| {
-                            if (utils.findById(&items.POTIONS, pid)) |potion_i| {
-                                const potion_o = _createItem(Potion, items.POTIONS[potion_i]);
-                                state.dungeon.itemsAt(rc).append(Item{ .Potion = potion_o }) catch unreachable;
-                            } else {
-                                std.log.warn(
-                                    "{}: Couldn't load potion {}, skipping.",
-                                    .{ fab.name.constSlice(), utils.used(pid) },
-                                );
-                            }
-                        },
-                        .Prop => |pid| {
-                            if (utils.findById(&machines.PROPS, pid)) |prop| {
-                                _ = _place_prop(rc, &machines.PROPS[prop]);
-                            } else {
-                                std.log.warn(
-                                    "{}: Couldn't load prop {}, skipping.",
-                                    .{ fab.name.constSlice(), utils.used(pid) },
-                                );
-                            }
-                        },
-                        .Machine => |mid| {
-                            if (utils.findById(&machines.MACHINES, mid)) |mach| {
-                                _place_machine(rc, &machines.MACHINES[mach]);
-                            } else {
-                                std.log.warn(
-                                    "{}: Couldn't load machine {}, skipping.",
-                                    .{ fab.name.constSlice(), utils.used(mid) },
-                                );
-                            }
-                        },
+                    if (fab.features[feature_id]) |feature| {
+                        switch (feature) {
+                            .Potion => |pid| {
+                                if (utils.findById(&items.POTIONS, pid)) |potion_i| {
+                                    const potion_o = _createItem(Potion, items.POTIONS[potion_i]);
+                                    state.dungeon.itemsAt(rc).append(Item{ .Potion = potion_o }) catch unreachable;
+                                } else {
+                                    std.log.warn(
+                                        "{}: Couldn't load potion {}, skipping.",
+                                        .{ fab.name.constSlice(), utils.used(pid) },
+                                    );
+                                }
+                            },
+                            .Prop => |pid| {
+                                if (utils.findById(&machines.PROPS, pid)) |prop| {
+                                    _ = _place_prop(rc, &machines.PROPS[prop]);
+                                } else {
+                                    std.log.warn(
+                                        "{}: Couldn't load prop {}, skipping.",
+                                        .{ fab.name.constSlice(), utils.used(pid) },
+                                    );
+                                }
+                            },
+                            .Machine => |mid| {
+                                if (utils.findById(&machines.MACHINES, mid)) |mach| {
+                                    _place_machine(rc, &machines.MACHINES[mach]);
+                                } else {
+                                    std.log.warn(
+                                        "{}: Couldn't load machine {}, skipping.",
+                                        .{ fab.name.constSlice(), utils.used(mid) },
+                                    );
+                                }
+                            },
+                        }
+                    } else {
+                        std.log.warn(
+                            "{}: Feature '{c}' not present, skipping.",
+                            .{ fab.name.constSlice(), feature_id },
+                        );
                     }
                 },
                 .LockedDoor => placeDoor(rc, true),
