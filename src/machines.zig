@@ -4,6 +4,7 @@
 
 const std = @import("std");
 const assert = std.debug.assert;
+const mem = std.mem;
 
 const main = @import("root");
 const state = @import("state.zig");
@@ -219,9 +220,12 @@ pub const ElevatorMotor = Machine{
     .powered_tile = '⊛',
     .unpowered_tile = '⊚',
 
-    .power_drain = 100,
+    .power_drain = 50,
     .power_add = 100,
     .auto_power = true,
+
+    .powered_walkable = false,
+    .unpowered_walkable = false,
 
     .on_power = powerElevatorMotor,
 };
@@ -233,8 +237,12 @@ pub const Extractor = Machine{
     .powered_tile = '⊟',
     .unpowered_tile = '⊞',
 
-    .power_drain = 100,
+    .power_drain = 50,
     .power_add = 100,
+    .auto_power = true,
+
+    .powered_walkable = false,
+    .unpowered_walkable = false,
 
     .on_power = powerExtractor,
 };
@@ -246,7 +254,7 @@ pub const PowerSupply = Machine{
     .powered_tile = '█',
     .unpowered_tile = '▓',
 
-    .power_drain = 100,
+    .power_drain = 30,
     .power_add = 100,
 
     .powered_walkable = false,
@@ -432,9 +440,7 @@ pub fn powerNone(_: *Machine) void {}
 pub fn powerElevatorMotor(machine: *Machine) void {
     // Only function on every eighth turn, to give the impression that it takes
     // a while to bring up more ores
-    if ((state.ticks & 7) != 0) {
-        return;
-    }
+    if ((state.ticks & 7) != 0) return;
 
     for (&CARDINAL_DIRECTIONS) |direction| if (machine.coord.move(direction, state.mapgeometry)) |neighbor| {
         if (state.dungeon.at(neighbor).surface) |surface| {
@@ -451,7 +457,41 @@ pub fn powerElevatorMotor(machine: *Machine) void {
 }
 
 pub fn powerExtractor(machine: *Machine) void {
-    // TODO
+    // Only function on every eighth turn, to give the impression that it takes
+    // a while to extract more vials
+    if ((state.ticks & 7) != 0) return;
+
+    var input: Coord = undefined;
+    var output: Coord = undefined;
+    var found_coords = false;
+
+    for (&CARDINAL_DIRECTIONS) |direction| if (machine.coord.move(direction, state.mapgeometry)) |neighbor| {
+        if (state.dungeon.at(neighbor).surface) |surface| {
+            if (std.meta.activeTag(surface) == .Prop and surface.Prop.function == .ActionPoint) {
+                if (machine.coord.move(direction.opposite(), state.mapgeometry)) |opposite_neighbor| {
+                    input = opposite_neighbor;
+                    output = neighbor;
+                    found_coords = true;
+                    break;
+                }
+            }
+        }
+    };
+
+    if (!found_coords) unreachable;
+
+    if (state.dungeon.itemsAt(output).isFull())
+        return;
+
+    const input_items = state.dungeon.itemsAt(input);
+    if (input_items.len > 0) switch (input_items.data[0]) {
+        .Boulder => |b| for (&Vial.VIAL_ORES) |vd| if (vd.m) |m|
+            if (mem.eql(u8, m.name, b.name)) {
+                state.dungeon.itemsAt(output).append(Item{ .Vial = vd.v }) catch unreachable;
+                _ = input_items.orderedRemove(0) catch unreachable;
+            },
+        else => {},
+    };
 }
 
 pub fn powerPowerSupply(machine: *Machine) void {
