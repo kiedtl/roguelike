@@ -5,7 +5,7 @@
 % ■┃╜─   ╘╕┃
 % │┃      │┃
 % ╞╪⊞⊞⊞─⊞⊞⊡╡
-% ⌨┃       ┃
+% ⌨┃░░░░░░░┃
 %  ┗━•   •━┛
 
 :subroom
@@ -16,6 +16,7 @@
 @3 p control_panel
 @4 p power_switch
 @5 p small_transformer
+@6 p item_location
 @a p wire_s2e1
 @b p wire_e1w1
 @c p wire_s1w1
@@ -34,5 +35,5 @@ d##2##34#e
 5#fb..ggh#
 l#......l#
 jk000b001i
-3#.......#
+3#6666666#
 .##•...•##
