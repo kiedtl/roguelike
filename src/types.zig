@@ -2067,34 +2067,31 @@ pub const Tile = struct {
 
                     cell.ch = mob.tile;
                 } else if (state.dungeon.itemsAt(coord).last()) |item| {
+                    cell.fg = 0xffffff;
+                    cell.bg = color;
+
                     switch (item) {
                         .Corpse => |_| {
                             cell.ch = '%';
                             cell.fg = 0xffe0ef;
-                            cell.bg = color;
                         },
                         .Potion => |potion| {
                             cell.ch = '¡';
                             cell.fg = potion.color;
-                            cell.bg = color;
                         },
                         .Vial => |v| {
                             cell.ch = '♪';
                             cell.fg = v.color();
-                            cell.bg = color;
                         },
                         .Weapon => |_| {
                             cell.ch = '≥'; // TODO: use U+1F5E1?
-                            cell.bg = color;
                         },
                         .Armor => |_| {
                             cell.ch = '&'; // TODO: use U+1F6E1?
-                            cell.bg = color;
                         },
                         .Boulder => |b| {
                             cell.ch = '©';
                             cell.fg = b.color_floor;
-                            cell.bg = color;
                         },
                         else => cell.ch = '?',
                     }
