@@ -118,279 +118,99 @@ pub const Barrel = Container{ .name = "barrel", .tile = 'ʊ', .capacity = 7, .ty
 pub const Cabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 5, .type = .Wearables };
 pub const Chest = Container{ .name = "chest", .tile = 'æ', .capacity = 7, .type = .Valuables };
 
-pub const GoldStatue = Prop{ .id = "gold_statue", .name = "gold statue", .tile = '☺', .fg = 0xfff720, .walkable = false };
-pub const RealgarStatue = Prop{ .id = "realgar_statue", .name = "realgar statue", .tile = '☺', .fg = 0xff343f, .walkable = false };
-pub const IronStatue = Prop{ .id = "iron_statue", .name = "iron statue", .tile = '☻', .fg = 0xcacad2, .walkable = false };
-pub const SodaliteStatue = Prop{ .id = "sodalite_statue", .name = "sodalite statue", .tile = '☺', .fg = 0xa4cfff, .walkable = false };
-pub const HematiteStatue = Prop{ .id = "hematite_statue", .name = "hematite statue", .tile = '☺', .fg = 0xff7f70, .walkable = false };
-
-pub const Wall_E1W1_Prop = Prop{ .id = "wall_e1w1", .name = "vangenite wall", .tile = '━', .fg = VANGEN_WALL_COLOR };
-pub const Wall_S1W1_Prop = Prop{ .id = "wall_s1w1", .name = "vangenite wall", .tile = '┓', .fg = VANGEN_WALL_COLOR };
-pub const Wall_N1S1W1_Prop = Prop{ .id = "wall_n1s1w1", .name = "vangenite wall", .tile = '┫', .fg = VANGEN_WALL_COLOR };
-pub const Wall_N1S1_Prop = Prop{ .id = "wall_n1s1", .name = "vangenite wall", .tile = '┃', .fg = VANGEN_WALL_COLOR };
-pub const Wall_N1S1E1_Prop = Prop{ .id = "wall_n1s1e1", .name = "vangenite wall", .tile = '┣', .fg = VANGEN_WALL_COLOR };
-pub const Wall_N1W1_Prop = Prop{ .id = "wall_n1w1", .name = "vangenite wall", .tile = '┛', .fg = VANGEN_WALL_COLOR };
-pub const Wall_N1E1_Prop = Prop{ .id = "wall_n1e1", .name = "vangenite wall", .tile = '┗', .fg = VANGEN_WALL_COLOR };
-pub const Wall_S1E1_Prop = Prop{ .id = "wall_s1e1", .name = "vangenite wall", .tile = '┏', .fg = VANGEN_WALL_COLOR };
-pub const Wall_E1W1_thinE_Prop = Prop{ .id = "wall_e1w1_thine", .name = "vangenite wall", .tile = '╾', .fg = VANGEN_WALL_COLOR };
-pub const Wall_E1W1_thinW_Prop = Prop{ .id = "wall_e1w1_thinw", .name = "vangenite wall", .tile = '╼', .fg = VANGEN_WALL_COLOR };
-
-pub const Wire_S2E1_Prop = Prop{ .id = "wire_s2e1", .name = "copper wire", .tile = '╓', .fg = COPPER_WIRE_COLOR };
-pub const Wire_E1W1_Prop = Prop{ .id = "wire_e1w1", .name = "copper wire", .tile = '─', .fg = COPPER_WIRE_COLOR };
-pub const Wire_S1W1_Prop = Prop{ .id = "wire_s1w1", .name = "copper wire", .tile = '┐', .fg = COPPER_WIRE_COLOR };
-pub const Wire_S1E1_Prop = Prop{ .id = "wire_s1e1", .name = "copper wire", .tile = '┌', .fg = COPPER_WIRE_COLOR };
-pub const Wire_N1W1_Prop = Prop{ .id = "wire_n1w1", .name = "copper wire", .tile = '┘', .fg = COPPER_WIRE_COLOR };
-pub const Wire_N2S2_Prop = Prop{ .id = "wire_n2s2", .name = "copper wire", .tile = '║', .fg = COPPER_WIRE_COLOR };
-pub const Wire_N1S1W1_Prop = Prop{ .id = "wire_n1s1w1", .name = "copper wire", .tile = '┤', .fg = COPPER_WIRE_COLOR };
-pub const Wire_N2W1_Prop = Prop{ .id = "wire_n2w1", .name = "copper wire", .tile = '╜', .fg = COPPER_WIRE_COLOR };
-pub const Wire_N1E2_Prop = Prop{ .id = "wire_n1e2", .name = "copper wire", .tile = '╘', .fg = COPPER_WIRE_COLOR };
-pub const Wire_S1W2_Prop = Prop{ .id = "wire_s1w2", .name = "copper wire", .tile = '╕', .fg = COPPER_WIRE_COLOR };
-pub const Wire_N1S1W2_Prop = Prop{ .id = "wire_n1s1w2", .name = "copper wire", .tile = '╡', .fg = COPPER_WIRE_COLOR };
-pub const Wire_N1S1E2_Prop = Prop{ .id = "wire_n1s1e2", .name = "copper wire", .tile = '╞', .fg = COPPER_WIRE_COLOR };
-pub const Wire_N1S1E2W2_Prop = Prop{ .id = "wire_n1s1e2w2", .name = "copper wire", .tile = '╪', .fg = COPPER_WIRE_COLOR };
-pub const Wire_N1S1_Prop = Prop{ .id = "wire_n1s1", .name = "copper wire", .tile = '│', .fg = COPPER_WIRE_COLOR };
-pub const Wire_S1E1W1_Prop = Prop{ .id = "wire_s1e1w1", .name = "copper wire", .tile = '┬', .fg = COPPER_WIRE_COLOR };
-pub const Wire_N2E1W1_Prop = Prop{ .id = "wire_n2e1w1", .name = "copper wire", .tile = '╨', .fg = COPPER_WIRE_COLOR };
-
-pub const MarbleWall_Upper = Prop{ .id = "marble_wall_upper", .name = "marble wall", .tile = '▀', .fg = MARBLE_WALL_COLOR };
-pub const MarbleWall_Lower = Prop{ .id = "marble_wall_lower", .name = "marble wall", .tile = '▄', .fg = MARBLE_WALL_COLOR };
-
-pub const TableProp = Prop{
-    .id = "table",
-    .name = "table",
-    .tile = '⊺',
-    .fg = 0xffffff,
-    .walkable = false,
+const mkprop_opts = struct {
+    bg: ?u32 = null,
+    walkable: bool = false,
+    opacity: f64 = 0.0,
+    function: PropFunction = .None,
 };
 
-pub const LargePumpProp = Prop{
-    .id = "large_pump",
-    .name = "large pump",
-    .tile = '█',
-    .fg = 0xffffff,
-    .walkable = false,
-};
+fn mkprop(id: []const u8, name: []const u8, tile: u21, fg: ?u32, opts: mkprop_opts) Prop {
+    return .{
+        .id = id,
+        .name = name,
+        .tile = tile,
+        .fg = fg,
+        .bg = opts.bg,
+        .walkable = opts.walkable,
+        .opacity = opts.opacity,
+        .function = opts.function,
+    };
+}
 
-pub const Gearbox = Prop{
-    .id = "gearbox",
-    .name = "gearbox",
-    .tile = '■',
-    .fg = 0xffffff,
-    .walkable = false,
-};
+// zig fmt: off
 
-pub const StairDstProp = Prop{
-    .id = "stair_dst",
-    .name = "downward stair",
-    .tile = '×',
-    .fg = 0xffffff,
-    .walkable = true,
-};
+pub const GoldStatue     = mkprop("gold_statue",     "gold statue",     '☺', 0xfff720, .{});
+pub const RealgarStatue  = mkprop("realgar_statue",  "realgar statue",  '☺', 0xff343f, .{});
+pub const IronStatue     = mkprop("iron_statue",     "iron statue",     '☻', 0xcacad2, .{});
+pub const SodaliteStatue = mkprop("sodalite_statue", "sodalite statue", '☺', 0xa4cfff, .{});
+pub const HematiteStatue = mkprop("hematite_statue", "hematite statue", '☺', 0xff7f70, .{});
 
-pub const PowerSwitchProp = Prop{
-    .id = "power_switch",
-    .name = "power switch",
-    .tile = '♥',
-    .fg = 0xffffff,
-    .walkable = false,
-};
+pub const Wall_E1W1_Prop       = mkprop("wall_e1w1",       "vangenite wall", '━', VANGEN_WALL_COLOR, .{});
+pub const Wall_S1W1_Prop       = mkprop("wall_s1w1",       "vangenite wall", '┓', VANGEN_WALL_COLOR, .{});
+pub const Wall_N1S1W1_Prop     = mkprop("wall_n1s1w1",     "vangenite wall", '┫', VANGEN_WALL_COLOR, .{});
+pub const Wall_N1S1_Prop       = mkprop("wall_n1s1",       "vangenite wall", '┃', VANGEN_WALL_COLOR, .{});
+pub const Wall_N1S1E1_Prop     = mkprop("wall_n1s1e1",     "vangenite wall", '┣', VANGEN_WALL_COLOR, .{});
+pub const Wall_N1W1_Prop       = mkprop("wall_n1w1",       "vangenite wall", '┛', VANGEN_WALL_COLOR, .{});
+pub const Wall_N1E1_Prop       = mkprop("wall_n1e1",       "vangenite wall", '┗', VANGEN_WALL_COLOR, .{});
+pub const Wall_S1E1_Prop       = mkprop("wall_s1e1",       "vangenite wall", '┏', VANGEN_WALL_COLOR, .{});
+pub const Wall_E1W1_thinE_Prop = mkprop("wall_e1w1_thine", "vangenite wall", '╾', VANGEN_WALL_COLOR, .{});
+pub const Wall_E1W1_thinW_Prop = mkprop("wall_e1w1_thinw", "vangenite wall", '╼', VANGEN_WALL_COLOR, .{});
 
-pub const ControlPanelProp = Prop{
-    .id = "control_panel",
-    .name = "control panel",
-    .tile = '⌨',
-    .fg = 0xffffff,
-    .walkable = false,
-};
+pub const Wire_S2E1_Prop     = mkprop("wire_s2e1",     "copper wire", '╓', COPPER_WIRE_COLOR, .{.walkable=true});
+pub const Wire_E1W1_Prop     = mkprop("wire_e1w1",     "copper wire", '─', COPPER_WIRE_COLOR, .{.walkable=true});
+pub const Wire_S1W1_Prop     = mkprop("wire_s1w1",     "copper wire", '┐', COPPER_WIRE_COLOR, .{.walkable=true});
+pub const Wire_S1E1_Prop     = mkprop("wire_s1e1",     "copper wire", '┌', COPPER_WIRE_COLOR, .{.walkable=true});
+pub const Wire_N1W1_Prop     = mkprop("wire_n1w1",     "copper wire", '┘', COPPER_WIRE_COLOR, .{.walkable=true});
+pub const Wire_N2S2_Prop     = mkprop("wire_n2s2",     "copper wire", '║', COPPER_WIRE_COLOR, .{.walkable=true});
+pub const Wire_N1S1W1_Prop   = mkprop("wire_n1s1w1",   "copper wire", '┤', COPPER_WIRE_COLOR, .{.walkable=true});
+pub const Wire_N2W1_Prop     = mkprop("wire_n2w1",     "copper wire", '╜', COPPER_WIRE_COLOR, .{.walkable=true});
+pub const Wire_N1E2_Prop     = mkprop("wire_n1e2",     "copper wire", '╘', COPPER_WIRE_COLOR, .{.walkable=true});
+pub const Wire_S1W2_Prop     = mkprop("wire_s1w2",     "copper wire", '╕', COPPER_WIRE_COLOR, .{.walkable=true});
+pub const Wire_N1S1W2_Prop   = mkprop("wire_n1s1w2",   "copper wire", '╡', COPPER_WIRE_COLOR, .{.walkable=true});
+pub const Wire_N1S1E2_Prop   = mkprop("wire_n1s1e2",   "copper wire", '╞', COPPER_WIRE_COLOR, .{.walkable=true});
+pub const Wire_N1S1E2W2_Prop = mkprop("wire_n1s1e2w2", "copper wire", '╪', COPPER_WIRE_COLOR, .{.walkable=true});
+pub const Wire_N1S1_Prop     = mkprop("wire_n1s1",     "copper wire", '│', COPPER_WIRE_COLOR, .{.walkable=true});
+pub const Wire_S1E1W1_Prop   = mkprop("wire_s1e1w1",   "copper wire", '┬', COPPER_WIRE_COLOR, .{.walkable=true});
+pub const Wire_N2E1W1_Prop   = mkprop("wire_n2e1w1",   "copper wire", '╨', COPPER_WIRE_COLOR, .{.walkable=true});
 
-pub const SmallTransformerProp = Prop{
-    .id = "small_transformer",
-    .name = "machine",
-    .tile = '■',
-    .fg = COPPER_WIRE_COLOR,
-    .walkable = false,
-};
+pub const SteelSupport_NE2_Prop    = mkprop("steel_support_ne2",    "steel support", '╘', STEEL_SUPPORT_COLOR, .{});
+pub const SteelSupport_SE2_Prop    = mkprop("steel_support_se2",    "steel support", '╒', STEEL_SUPPORT_COLOR, .{});
+pub const SteelSupport_NSE2_Prop   = mkprop("steel_support_nse2",   "steel support", '╞', STEEL_SUPPORT_COLOR, .{});
+pub const SteelSupport_NSW2_Prop   = mkprop("steel_support_nsw2",   "steel support", '╡', STEEL_SUPPORT_COLOR, .{});
+pub const SteelSupport_NSE2W2_Prop = mkprop("steel_support_nse2w2", "steel support", '╪', STEEL_SUPPORT_COLOR, .{});
+pub const SteelSupport_E2W2_Prop   = mkprop("steel_support_e2w2",   "steel support", '═', STEEL_SUPPORT_COLOR, .{});
 
-pub const LargeTransformerProp = Prop{
-    .id = "large_transformer",
-    .name = "machine",
-    .tile = '█',
-    .fg = COPPER_WIRE_COLOR,
-    .walkable = false,
-};
+pub const MarbleWall_Upper     = mkprop("marble_wall_upper", "marble wall", '▀', MARBLE_WALL_COLOR , .{});
+pub const MarbleWall_Lower     = mkprop("marble_wall_lower", "marble wall", '▄', MARBLE_WALL_COLOR , .{});
 
-pub const SwitchingStationProp = Prop{
-    .id = "switching_station",
-    .name = "machine",
-    .tile = '⊡',
-    .fg = 0xffaf9a,
-    .walkable = false,
-};
+pub const LeftCopperCoilProp   = mkprop("left_copper_coil",  "half copper coil",  '▌', COPPER_COIL_COLOR, .{.walkable = false});
+pub const RightCopperCoilProp  = mkprop("right_copper_coil", "half copper coil",  '▐', COPPER_COIL_COLOR, .{.walkable = false});
+pub const LowerCopperCoilProp  = mkprop("lower_copper_coil", "half copper coil",  '▄', COPPER_COIL_COLOR, .{.walkable = false});
+pub const UpperCopperCoilProp  = mkprop("upper_copper_coil", "half copper coil",  '▀', COPPER_COIL_COLOR, .{.walkable = false});
+pub const FullCopperCoilProp   = mkprop("full_copper_coil",  "large copper coil", '█', COPPER_COIL_COLOR, .{.walkable = false});
 
-pub const ItemLocationProp = Prop{
-    .id = "item_location",
-    .name = "mat",
-    .tile = '░',
-    .fg = 0x989898,
-    .walkable = true,
-    .function = .ActionPoint,
-};
+pub const TableProp            = mkprop("table",               "table",               '⊺', 0xffffff,          .{});
+pub const LargePumpProp        = mkprop("large_pump",          "large pump",          '█', 0xffffff,          .{});
+pub const Gearbox              = mkprop("gearbox",             "gearbox",             '■', 0xffffff,          .{});
+pub const PowerSwitchProp      = mkprop("power_switch",        "power switch",        '♥', 0xffffff,          .{});
+pub const ControlPanelProp     = mkprop("control_panel",       "control panel",       '⌨', 0xffffff,          .{});
+pub const SmallTransformerProp = mkprop("small_transformer",   "machine",             '■', COPPER_WIRE_COLOR, .{});
+pub const LargeTransformerProp = mkprop("large_transformer",   "machine",             '█', COPPER_WIRE_COLOR, .{});
+pub const SwitchingStationProp = mkprop("switching_station",   "machine",             '⊡', 0xffaf9a,          .{});
+pub const SteelGasReservoir    = mkprop("steel_gas_reservoir", "steel gas reservoir", '■', 0xd7d7ff,          .{});
 
-pub const WorkstationProp = Prop{
-    .id = "workstation",
-    .name = "workstation",
-    .tile = '░',
-    .fg = 0xffffff,
-    .walkable = true,
-};
+pub const StairDstProp         = mkprop("stair_dst",           "downward stair",      '×', 0xffffff,          .{.walkable = true});
+pub const ItemLocationProp     = mkprop("item_location",       "mat",                 '░', 0x989898,          .{ .walkable = true, .function = .ActionPoint });
+pub const WorkstationProp      = mkprop("workstation",         "workstation",         '░', 0xffffff,          .{.walkable = true});
+pub const MediumSieve          = mkprop("medium_sieve",        "medium_sieve",        '▒', 0xffe7e7,          .{ .walkable = false, .function = .ActionPoint });
+pub const GasVentProp          = mkprop("gas_vent",            "gas vent",            '=', 0xffffff,          .{ .bg = 0x888888, .walkable = false, .opacity = 1.0 });
+pub const LabGasVentProp       = mkprop("gas_vent",            "gas vent",            '=', 0xffffff,          .{ .walkable = false, .opacity = 0.0 });
+pub const BedProp              = mkprop("bed",                 "bed",                 'Θ', 0xdaa520,          .{ .opacity = 0.6, .walkable = true });
+pub const IronBarProp          = mkprop("iron_bars",           "iron bars",           '≡', 0x000012,          .{ .bg = 0xdadada, .opacity = 0.0, .walkable = false });
+pub const TitaniumBarProp      = mkprop("titanium_bars",       "titanium bars",       '*', 0xeaecef,          .{ .opacity = 0.0, .walkable = false });
 
-pub const MediumSieve = Prop{
-    .id = "medium_sieve",
-    .name = "medium_sieve",
-    .tile = '▒',
-    .fg = 0xffe7e7,
-    .walkable = false,
-    .function = .ActionPoint,
-};
-
-pub const SteelGasReservoir = Prop{
-    .id = "steel_gas_reservoir",
-    .name = "steel gas reservoir",
-    .tile = '■',
-    .fg = 0xd7d7ff,
-    .walkable = false,
-};
-
-pub const SteelSupport_NE2_Prop = Prop{
-    .id = "steel_support_ne2",
-    .name = "steel support",
-    .tile = '╘',
-    .fg = STEEL_SUPPORT_COLOR,
-    .walkable = false,
-};
-
-pub const SteelSupport_SE2_Prop = Prop{
-    .id = "steel_support_se2",
-    .name = "steel support",
-    .tile = '╒',
-    .fg = STEEL_SUPPORT_COLOR,
-    .walkable = false,
-};
-
-pub const SteelSupport_NSE2_Prop = Prop{
-    .id = "steel_support_nse2",
-    .name = "steel support",
-    .tile = '╞',
-    .fg = STEEL_SUPPORT_COLOR,
-    .walkable = false,
-};
-
-pub const SteelSupport_NSW2_Prop = Prop{
-    .id = "steel_support_nsw2",
-    .name = "steel support",
-    .tile = '╡',
-    .fg = STEEL_SUPPORT_COLOR,
-    .walkable = false,
-};
-
-pub const SteelSupport_NSE2W2_Prop = Prop{
-    .id = "steel_support_nse2w2",
-    .name = "steel support",
-    .tile = '╪',
-    .fg = STEEL_SUPPORT_COLOR,
-    .walkable = false,
-};
-
-pub const SteelSupport_E2W2_Prop = Prop{
-    .id = "steel_support_e2w2",
-    .name = "steel support",
-    .tile = '═',
-    .fg = STEEL_SUPPORT_COLOR,
-    .walkable = false,
-};
-
-pub const LeftCopperCoilProp = Prop{
-    .id = "left_copper_coil",
-    .name = "half copper coil",
-    .tile = '▌',
-    .fg = COPPER_COIL_COLOR,
-    .walkable = false,
-};
-
-pub const RightCopperCoilProp = Prop{
-    .id = "right_copper_coil",
-    .name = "half copper coil",
-    .tile = '▐',
-    .fg = COPPER_COIL_COLOR,
-    .walkable = false,
-};
-
-pub const LowerCopperCoilProp = Prop{
-    .id = "lower_copper_coil",
-    .name = "half copper coil",
-    .tile = '▄',
-    .fg = COPPER_COIL_COLOR,
-    .walkable = false,
-};
-
-pub const UpperCopperCoilProp = Prop{
-    .id = "upper_copper_coil",
-    .name = "half copper coil",
-    .tile = '▀',
-    .fg = COPPER_COIL_COLOR,
-    .walkable = false,
-};
-
-pub const FullCopperCoilProp = Prop{
-    .id = "full_copper_coil",
-    .name = "large copper coil",
-    .tile = '█',
-    .fg = COPPER_COIL_COLOR,
-    .walkable = false,
-};
-
-pub const GasVentProp = Prop{
-    .name = "gas vent",
-    .tile = '=',
-    .fg = 0xffffff,
-    .bg = 0x888888,
-    .walkable = false,
-    .opacity = 1.0,
-};
-
-pub const LabGasVentProp = Prop{
-    .name = "gas vent",
-    .tile = '=',
-    .fg = 0xffffff,
-    .walkable = false,
-    .opacity = 0.0,
-};
-
-pub const BedProp = Prop{
-    .id = "bed",
-    .name = "bed",
-    .tile = 'Θ',
-    .fg = 0xdaa520,
-    .opacity = 0.6,
-    .walkable = true,
-};
-
-pub const IronBarProp = Prop{
-    .name = "iron bars",
-    .tile = '≡',
-    .fg = 0x000012,
-    .bg = 0xdadada,
-    .opacity = 0.0,
-    .walkable = false,
-};
-
-pub const TitaniumBarProp = Prop{
-    .name = "titanium bars",
-    .tile = '*',
-    .fg = 0xeaecef,
-    .opacity = 0.0,
-    .walkable = false,
-};
+// zig fmt: on
 
 pub const ElevatorMotor = Machine{
     .id = "elevator_motor",
