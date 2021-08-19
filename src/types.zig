@@ -1907,19 +1907,35 @@ pub const Vial = enum {
     };
 
     // Commonicity (adj) -- the opposite of rarity, because why not. Higher numbers are more common.
+    //
+    // Is in same order as with VIAL_ORES and VIALS.
     pub const VIAL_COMMONICITY = [_]usize{ 5, 1, 2, 3, 7, 7, 2, 1, 5 };
+
+    pub const OreAndVial = struct { m: ?*const Material, v: Vial };
+
+    pub const VIAL_ORES = [_]OreAndVial{
+        .{ .m = &materials.Talonium, .v = .Tanus },
+        .{ .m = &materials.Sulon, .v = .Slade },
+        .{ .m = &materials.Phosire, .v = .Pholenine },
+        .{ .m = null, .v = .Chloroforon },
+        .{ .m = &materials.Hyalt, .v = .Hyine },
+        .{ .m = &materials.Quaese, .v = .Quagenine },
+        .{ .m = null, .v = .Flouine },
+        .{ .m = &materials.Catasine, .v = .Cataline },
+        .{ .m = &materials.Phybro, .v = .Phytin },
+    };
 
     pub inline fn color(self: Vial) u32 {
         return switch (self) {
-            .Tanus => 0xff9390,
-            .Slade => 0x79d28f,
-            .Pholenine => 0xffb6ac,
+            .Tanus => materials.Talonium.color_floor,
+            .Slade => materials.Sulon.color_floor,
+            .Pholenine => materials.Phosire.color_floor,
             .Chloroforon => 0xffe001,
-            .Hyine => 0x50ff2e,
-            .Quagenine => 0xff81f1,
+            .Hyine => materials.Hyalt.color_floor,
+            .Quagenine => materials.Quaese.color_floor,
             .Flouine => 0x33ccff,
-            .Cataline => 0xf2a2b8,
-            .Phytin => 0xf2c088,
+            .Cataline => materials.Catasine.color_floor,
+            .Phytin => materials.Phybro.color_floor,
         };
     }
 
@@ -1978,6 +1994,7 @@ pub const Item = union(enum) {
     Vial: Vial,
     Armor: *Armor,
     Weapon: *Weapon,
+    Boulder: *const Material,
 
     pub fn shortName(self: *const Item) !StackBuffer(u8, 128) {
         var buf = StackBuffer(u8, 128).init(&([_]u8{0} ** 128));
@@ -1989,6 +2006,7 @@ pub const Item = union(enum) {
             .Vial => |v| try fmt.format(fbs.writer(), "vial of {}", .{v.name()}),
             .Armor => |a| try fmt.format(fbs.writer(), "{} armor", .{a.name}),
             .Weapon => |w| try fmt.format(fbs.writer(), "{}", .{w.name}),
+            .Boulder => |b| try fmt.format(fbs.writer(), "boulder of {}", .{b.name}),
         }
         buf.resizeTo(@intCast(usize, fbs.getPos() catch unreachable));
         return buf;
@@ -2071,6 +2089,11 @@ pub const Tile = struct {
                         },
                         .Armor => |_| {
                             cell.ch = '&'; // TODO: use U+1F6E1?
+                            cell.bg = color;
+                        },
+                        .Boulder => |b| {
+                            cell.ch = '©';
+                            cell.fg = b.color_floor;
                             cell.bg = color;
                         },
                         else => cell.ch = '?',

@@ -17,6 +17,111 @@ pub const Basalt = Material{
     .opacity = 1.0,
 };
 
+pub const Talonium = Material{
+    .name = "talonium",
+    .description = "TODO",
+    .density = 0.82, // TODO
+    .color_fg = 0xff9390,
+    .color_bg = null,
+    .color_floor = 0xff9390,
+    .tileset = 1,
+    .melting_point = 1128, // TODO
+    .combust_point = null,
+    .specific_heat = 0.91, // TODO
+    .luminescence = 0,
+    .opacity = 1.0,
+};
+
+pub const Sulon = Material{
+    .name = "sulon",
+    .description = "TODO",
+    .density = 0.82, // TODO
+    .color_fg = 0x79d28f,
+    .color_bg = null,
+    .color_floor = 0x79d28f,
+    .tileset = 1,
+    .melting_point = 1128, // TODO
+    .combust_point = null,
+    .specific_heat = 0.91, // TODO
+    .luminescence = 0,
+    .opacity = 1.0,
+};
+
+pub const Phosire = Material{
+    .name = "phosire",
+    .description = "TODO",
+    .density = 0.82, // TODO
+    .color_fg = 0xffb6ac,
+    .color_bg = null,
+    .color_floor = 0xffb6ac,
+    .tileset = 1,
+    .melting_point = 1128, // TODO
+    .combust_point = null,
+    .specific_heat = 0.91, // TODO
+    .luminescence = 0,
+    .opacity = 1.0,
+};
+
+pub const Hyalt = Material{
+    .name = "hyalt",
+    .description = "TODO",
+    .density = 0.82, // TODO
+    .color_fg = 0x50ff2e,
+    .color_bg = null,
+    .color_floor = 0x50ff2e,
+    .tileset = 1,
+    .melting_point = 1128, // TODO
+    .combust_point = null,
+    .specific_heat = 0.91, // TODO
+    .luminescence = 0,
+    .opacity = 1.0,
+};
+
+pub const Quaese = Material{
+    .name = "quaese",
+    .description = "TODO",
+    .density = 0.82, // TODO
+    .color_fg = 0xff81f1,
+    .color_bg = null,
+    .color_floor = 0xff81f1,
+    .tileset = 1,
+    .melting_point = 1128, // TODO
+    .combust_point = null,
+    .specific_heat = 0.91, // TODO
+    .luminescence = 0,
+    .opacity = 1.0,
+};
+
+pub const Catasine = Material{
+    .name = "catasine",
+    .description = "TODO",
+    .density = 0.82, // TODO
+    .color_fg = 0xf2a2b8,
+    .color_bg = null,
+    .color_floor = 0xf2a2b8,
+    .tileset = 1,
+    .melting_point = 1128, // TODO
+    .combust_point = null,
+    .specific_heat = 0.91, // TODO
+    .luminescence = 0,
+    .opacity = 1.0,
+};
+
+pub const Phybro = Material{
+    .name = "phybro",
+    .description = "TODO",
+    .density = 0.82, // TODO
+    .color_fg = 0xf2c088,
+    .color_bg = null,
+    .color_floor = 0xf2c088,
+    .tileset = 1,
+    .melting_point = 1128, // TODO
+    .combust_point = null,
+    .specific_heat = 0.91, // TODO
+    .luminescence = 0,
+    .opacity = 1.0,
+};
+
 pub const Vangenite = Material{
     .name = "vangenite",
     .description = "TODO",

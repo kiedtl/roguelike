@@ -233,6 +233,7 @@ pub const ItemLocationProp = Prop{
     .tile = '░',
     .fg = 0x989898,
     .walkable = true,
+    .function = .ActionPoint,
 };
 
 pub const WorkstationProp = Prop{
@@ -400,6 +401,7 @@ pub const ElevatorMotor = Machine{
 
     .power_drain = 100,
     .power_add = 100,
+    .auto_power = true,
 
     .on_power = powerElevatorMotor,
 };
@@ -608,7 +610,24 @@ pub const RestrictedMachinesOpenLever = Machine{
 pub fn powerNone(_: *Machine) void {}
 
 pub fn powerElevatorMotor(machine: *Machine) void {
-    // TODO
+    // Only function on every eighth turn, to give the impression that it takes
+    // a while to bring up more ores
+    if ((state.ticks & 7) != 0) {
+        return;
+    }
+
+    for (&CARDINAL_DIRECTIONS) |direction| if (machine.coord.move(direction, state.mapgeometry)) |neighbor| {
+        if (state.dungeon.at(neighbor).surface) |surface| {
+            if (std.meta.activeTag(surface) == .Prop and surface.Prop.function == .ActionPoint) {
+                if (!state.dungeon.itemsAt(neighbor).isFull()) {
+                    const v = rng.choose(Vial.OreAndVial, &Vial.VIAL_ORES, &Vial.VIAL_COMMONICITY) catch unreachable;
+                    if (v.m) |material| {
+                        state.dungeon.itemsAt(neighbor).append(Item{ .Boulder = material }) catch unreachable;
+                    }
+                }
+            }
+        }
+    };
 }
 
 pub fn powerExtractor(machine: *Machine) void {

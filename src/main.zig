@@ -339,6 +339,10 @@ fn useItem() bool {
         },
         .Potion => |p| state.player.quaffPotion(p),
         .Vial => |v| @panic("TODO"),
+        .Boulder => |_| {
+            state.message(.MetaError, "You want to *eat* that?", .{});
+            return false;
+        },
     }
 
     _ = state.player.removeItem(index) catch unreachable;
