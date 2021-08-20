@@ -485,26 +485,31 @@ Occupations
 Posters
 -------
 PRI:
+- A new shipment of prisoners from Traumbulnahl will arrive next week.
 - Production of human meat rations must increase by 33% by the middle of next
   week.
 - Please do not feed the prisoners.
 - Prison staffers must strive to be inclusive and welcoming to all new inmates.
 - Absence without leave is punishable by a mandatory interview with the
   High Priest.
-- WANTED: Usko-nuhelmir, human, escaped prisoner.
+- WANTED: Orbomus-Nulohelmir, human, escaped prisoner.
 - WANTED: <player>, human, escaped prisoner.
 - WANTED: <previous player>, human, escaped prisoner.
 - The Necromancer is watching you.
 - The Necromancer can see you.
 - The Necromancer knows your thoughts.
+- Don't eat the prisoners.
+- Sentinels must report to the Captain of the Guard tomorrow morning with regards
+  to the upcoming transfer to Traummalnahl.
 REC:
-- WANTED: Usko-nuhelmir, human, escaped prisoner.
+- WANTED: Obomus-Nulohelmir, human, escaped prisoner.
 - WANTED: <player>, human, escaped prisoner.
 - WANTED: <previous player>, human, escaped prisoner.
 - The Necromancer is watching you.
 - The Necromancer can see you.
 - The Necromancer knows your thoughts.
-- "Urum-Zhiolum" is a codeword for goblin extermination.
+- The Necromancer knows your loyalties.
+- "Urum-Zhiolum" is a codeword for goblin genocide.
   (And techinically that's correct.)
 LAB:
 - Please wear gloves and safety goggles at all times.
@@ -534,7 +539,7 @@ Unique mobs
 - Keeper of the Fire Stones (High Priest)
   Uberego Sohlghâsh
 - the player
-  Usko-nuhelmir
+  Obomus-Nulohelmir
 
 
 Possible names
@@ -555,9 +560,9 @@ Maybe a combination.
 
 Books
 -----
-"Kornahl: The Life and Times of the Ancient Hill-King"
+"Kornalg: The Life and Times of the Ancient Hill-King"
 	- "You learn that Kornahl was by right king of the whole universe."
-"This was Kornahl"
+"This was Kornalg"
 	- "You learn that Kornahl was undoubtedly the fastest, strongest,
 	   besterestest hill goblin that ever was."
 "Meing Krampgh"
@@ -601,13 +606,13 @@ v	quagenine	Extracted from quaese.
 v	flouine
 v	cataline	Extracted from catasine.
 v	phytin		Extracted from phybro.
-s	sulon		Ore of slade.
-s	catasine	Ore of cataline.
 s	talonium	Ore of tanus.
+s	sulon		Ore of slade.
+s	phosire		Ore of pholenine.
 s	hyalt		Ore of hyine.
 s	quaese		Ore of quagenine.
+s	catasine	Ore of cataline.
 s	phybro		Ore of phytin.
-s	phosire		Ore of pholenine.
 s	dobalene	Makes up the walls of LAB.
 s	nebro		Like slade in Dwarf Fortress -- extremely heavy.
 			Associated with demonic powers.
