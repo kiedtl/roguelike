@@ -62,7 +62,6 @@ pub const PROPS = [_]Prop{
     Wire_S1E1W1_Prop,
     Wire_N2E1W1_Prop,
     TableProp,
-    LargePumpProp,
     Gearbox,
     PowerSwitchProp,
     ControlPanelProp,
@@ -92,6 +91,7 @@ pub const PROPS = [_]Prop{
 };
 
 pub const MACHINES = [_]Machine{
+    ResearchCore,
     ElevatorMotor,
     Extractor,
     PowerSupply,
@@ -192,7 +192,6 @@ pub const UpperCopperCoilProp  = mkprop("upper_copper_coil", "half copper coil",
 pub const FullCopperCoilProp   = mkprop("full_copper_coil",  "large copper coil", '█', COPPER_COIL_COLOR, .{.walkable = false});
 
 pub const TableProp            = mkprop("table",               "table",               '⊺', 0xffffff,          .{});
-pub const LargePumpProp        = mkprop("large_pump",          "large pump",          '█', 0xffffff,          .{});
 pub const Gearbox              = mkprop("gearbox",             "gearbox",             '■', 0xffffff,          .{});
 pub const PowerSwitchProp      = mkprop("power_switch",        "power switch",        '♥', 0xffffff,          .{});
 pub const ControlPanelProp     = mkprop("control_panel",       "control panel",       '⌨', 0xffffff,          .{});
@@ -212,6 +211,23 @@ pub const IronBarProp          = mkprop("iron_bars",           "iron bars",     
 pub const TitaniumBarProp      = mkprop("titanium_bars",       "titanium bars",       '*', 0xeaecef,          .{ .opacity = 0.0, .walkable = false });
 
 // zig fmt: on
+
+pub const ResearchCore = Machine{
+    .id = "research_core",
+    .name = "research core",
+
+    .powered_tile = '█',
+    .unpowered_tile = '▓',
+
+    .power_drain = 50,
+    .power_add = 100,
+    .auto_power = true,
+
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+
+    .on_power = powerResearchCore,
+};
 
 pub const ElevatorMotor = Machine{
     .id = "elevator_motor",
@@ -436,6 +452,22 @@ pub const RestrictedMachinesOpenLever = Machine{
 };
 
 pub fn powerNone(_: *Machine) void {}
+
+pub fn powerResearchCore(machine: *Machine) void {
+    // Only function on every fourth turn, to give the impression that it takes
+    // a while to process vials
+    if ((state.ticks & 3) != 0) return;
+
+    item_scan: for (&DIRECTIONS) |direction| if (machine.coord.move(direction, state.mapgeometry)) |neighbor| {
+        for (state.dungeon.itemsAt(neighbor).constSlice()) |item, i| switch (item) {
+            .Vial => {
+                _ = state.dungeon.itemsAt(neighbor).orderedRemove(i) catch unreachable;
+                continue :item_scan;
+            },
+            else => {},
+        };
+    };
+}
 
 pub fn powerElevatorMotor(machine: *Machine) void {
     // Only function on every eighth turn, to give the impression that it takes

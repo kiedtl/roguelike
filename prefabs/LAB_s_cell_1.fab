@@ -9,7 +9,7 @@
 :subroom
 :restriction 2
 
-@0 p large_pump
+@0 m research_core
 @1 p small_transformer
 @2 p table
 @3 p control_panel
