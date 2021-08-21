@@ -485,18 +485,18 @@ pub fn validateLevel(level: usize, alloc: *mem.Allocator) bool {
     // utility functions
     const _f = struct {
         pub fn _getWalkablePoint(room: *const Room) Coord {
-            var point: Coord = undefined;
+            var point: Coord = room.start;
             var tries: usize = 100;
             while (tries > 0) : (tries -= 1) {
-                point = room.randomCoord();
                 if (state.dungeon.at(point).type == .Floor)
                     return point;
+                point = room.randomCoord();
             }
             unreachable;
         }
 
         pub fn _isWalkable(coord: Coord, opts: state.IsWalkableOptions) bool {
-            return state.dungeon.at(coord).type == .Floor;
+            return state.dungeon.at(coord).type != .Wall;
         }
     };
 
