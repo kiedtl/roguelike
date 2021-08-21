@@ -345,36 +345,23 @@ pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
         .CleanerScan => {
             _ = mob.rest();
 
-            var y: usize = 0;
-            while (y < HEIGHT) : (y += 1) {
-                var x: usize = 0;
-                while (x < WIDTH) : (x += 1) {
-                    const coord = Coord.new2(mob.coord.z, x, y);
-
-                    // Let the prisoners wallow in filth
-                    if (state.dungeon.at(coord).prison) continue;
-
-                    var clean = true;
-
-                    var spattering = state.dungeon.at(coord).spatter.iterator();
-                    while (spattering.next()) |entry| {
-                        const num = entry.value.*;
-                        if (entry.value.* > 0) {
-                            clean = false;
+            for (state.tasks.items) |*task, id|
+                if (!task.completed and task.assigned_to == null) {
+                    switch (task.type) {
+                        .Clean => |c| {
+                            mob.ai.task_id = id;
+                            task.assigned_to = mob;
+                            mob.ai.work_phase = .CleanerClean;
                             break;
-                        }
+                        },
+                        else => {},
                     }
-
-                    if (!clean) {
-                        mob.ai.target = coord;
-                        mob.ai.work_phase = .CleanerClean;
-                        break;
-                    }
-                }
-            }
+                };
         },
         .CleanerClean => {
-            const target = mob.ai.target.?;
+            const task = state.tasks.items[mob.ai.task_id.?];
+            const target = task.type.Clean;
+
             if (target.distance(mob.coord) > 1) {
                 if (!mob.isCreeping()) {
                     _ = mob.rest();
@@ -396,15 +383,12 @@ pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
                     }
                 }
 
-                if (was_clean)
+                if (was_clean) {
                     mob.ai.work_phase = .CleanerScan;
+                    state.tasks.items[mob.ai.task_id.?].completed = true;
+                    mob.ai.task_id = null;
+                }
             }
-        },
-        .CleanerIdle => {
-            _ = mob.rest();
-
-            if (rng.onein(2))
-                mob.ai.work_phase = .CleanerScan;
         },
     }
 }

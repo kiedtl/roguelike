@@ -10,7 +10,10 @@ const utils = @import("utils.zig");
 const gas = @import("gas.zig");
 const rng = @import("rng.zig");
 const fov = @import("fov.zig");
+const tasks_m = @import("tasks.zig");
 usingnamespace @import("types.zig");
+
+pub const TaskArrayList = tasks_m.TaskArrayList;
 
 pub const GameState = union(enum) { Game, Win, Lose, Quit };
 pub const Layout = union(enum) { Unknown, Room: usize };
@@ -45,6 +48,11 @@ pub var state: GameState = .Game;
 //
 pub var memory: CoordCellMap = undefined;
 
+pub var stockpiles: [LEVELS]RoomArrayList = undefined;
+pub var inputs: [LEVELS]RoomArrayList = undefined;
+pub var outputs: [LEVELS]RoomArrayList = undefined;
+
+pub var tasks: TaskArrayList = undefined;
 pub var mobs: MobList = undefined;
 pub var sobs: SobList = undefined;
 pub var rings: RingList = undefined;

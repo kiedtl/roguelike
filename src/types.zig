@@ -758,6 +758,10 @@ pub const AI = struct {
     // the enemy records).
     target: ?Coord = null,
 
+    // For a laborer (cleaner/hauler), the associated task ID.
+    // The task ID is simply the index for state.tasks.
+    task_id: ?usize = null,
+
     phase: AIPhase = .Work,
 
     // The particular phase of a mob's work phase. For instance a working Cleaner
@@ -768,7 +772,6 @@ pub const AI = struct {
 pub const AIWorkPhase = enum {
     CleanerScan,
     CleanerClean,
-    CleanerIdle,
 };
 
 pub const Prisoner = struct {

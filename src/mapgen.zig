@@ -760,9 +760,8 @@ pub fn placeRandomRooms(
     level: usize,
     allocator: *mem.Allocator,
 ) void {
-    var rooms = RoomArrayList.init(allocator);
-
     var first: ?Room = null;
+    const rooms = &state.dungeon.rooms[level];
 
     var required = Configs[level].prefabs.constSlice();
     var reqctr: usize = 0;
@@ -784,7 +783,7 @@ pub fn placeRandomRooms(
             .prefab = fab,
         };
 
-        if (roomIntersects(&rooms, &room, null, null, false))
+        if (roomIntersects(rooms, &room, null, null, false))
             continue;
 
         if (first == null) first = room;
@@ -815,10 +814,8 @@ pub fn placeRandomRooms(
 
     var c = Configs[level].max_rooms;
     while (c > 0) : (c -= 1) {
-        _place_rooms(&rooms, n_fabs, s_fabs, level, allocator);
+        _place_rooms(rooms, n_fabs, s_fabs, level, allocator);
     }
-
-    state.dungeon.rooms[level] = rooms;
 }
 
 pub fn placeItems(level: usize) void {

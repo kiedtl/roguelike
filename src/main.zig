@@ -5,6 +5,7 @@ const mem = std.mem;
 
 const rng = @import("rng.zig");
 const heat = @import("heat.zig");
+const tasks = @import("tasks.zig");
 const items = @import("items.zig");
 const utils = @import("utils.zig");
 const gas = @import("gas.zig");
@@ -14,6 +15,8 @@ const termbox = @import("termbox.zig");
 const types = @import("types.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
+
+pub const TaskArrayList = tasks.TaskArrayList;
 
 // Install a panic handler that tries to shutdown termbox before calling the
 // default panic handler.
@@ -32,7 +35,7 @@ fn initGame() void {
 
     state.memory = CoordCellMap.init(&state.GPA.allocator);
 
-    state.messages = MessageArrayList.init(&state.GPA.allocator);
+    state.tasks = TaskArrayList.init(&state.GPA.allocator);
     state.mobs = MobList.init(&state.GPA.allocator);
     state.sobs = SobList.init(&state.GPA.allocator);
     state.rings = RingList.init(&state.GPA.allocator);
@@ -42,6 +45,14 @@ fn initGame() void {
     state.machines = MachineList.init(&state.GPA.allocator);
     state.props = PropList.init(&state.GPA.allocator);
     state.containers = ContainerList.init(&state.GPA.allocator);
+    state.messages = MessageArrayList.init(&state.GPA.allocator);
+
+    for (state.dungeon.map) |_, level| {
+        state.stockpiles[level] = RoomArrayList.init(&state.GPA.allocator);
+        state.inputs[level] = RoomArrayList.init(&state.GPA.allocator);
+        state.outputs[level] = RoomArrayList.init(&state.GPA.allocator);
+        state.dungeon.rooms[level] = RoomArrayList.init(&state.GPA.allocator);
+    }
 
     rng.init();
 
@@ -99,9 +110,14 @@ fn deinitGame() void {
         if (mob.is_dead) continue;
         mob.kill();
     }
-    for (state.dungeon.rooms) |r|
-        r.deinit();
+    for (state.dungeon.map) |_, level| {
+        state.dungeon.rooms[level].deinit();
+        state.stockpiles[level].deinit();
+        state.inputs[level].deinit();
+        state.outputs[level].deinit();
+    }
 
+    state.tasks.deinit();
     state.mobs.deinit();
     state.sobs.deinit();
     state.rings.deinit();
@@ -481,6 +497,7 @@ fn tickGame() void {
     state.tickMachines(cur_level);
     state.tickLight(cur_level);
     heat.tickHeat(cur_level);
+    tasks.tickTasks(cur_level);
     state.tickAtmosphere(cur_level, 0);
     state.tickSound(cur_level);
 
@@ -560,6 +577,7 @@ fn viewerTickGame(cur_level: usize) void {
     state.tickMachines(cur_level);
     state.tickLight(cur_level);
     heat.tickHeat(cur_level);
+    tasks.tickTasks(cur_level);
     state.tickAtmosphere(cur_level, 0);
     state.tickSound(cur_level);
 
