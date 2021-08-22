@@ -417,6 +417,41 @@ fn _excavate_prefab(
             }
         }
     }
+
+    if (fab.stockpile) |stockpile| {
+        const room_start = Coord.new2(
+            room.start.z,
+            stockpile.start.x + room.start.x + startx,
+            stockpile.start.y + room.start.y + starty,
+        );
+        var stckpl = Stockpile{
+            .room = Room{
+                .start = room_start,
+                .width = stockpile.width,
+                .height = stockpile.height,
+            },
+            .type = undefined,
+        };
+        const inferred = stckpl.inferType();
+        if (!inferred) {
+            std.log.err("{}: Couldn't infer type for stockpile! (skipping)", .{fab.name.constSlice()});
+        } else {
+            state.stockpiles[room.start.z].append(stckpl) catch unreachable;
+        }
+    }
+
+    if (fab.output) |output| {
+        const room_start = Coord.new2(
+            room.start.z,
+            output.start.x + room.start.x + startx,
+            output.start.y + room.start.y + starty,
+        );
+        state.outputs[room.start.z].append(Room{
+            .start = room_start,
+            .width = output.width,
+            .height = output.height,
+        }) catch unreachable;
+    }
 }
 
 fn _excavate_room(room: *const Room) void {
@@ -1251,6 +1286,8 @@ pub const Prefab = struct {
     features: [128]?Feature = [_]?Feature{null} ** 128,
     mobs: [45]?FeatureMob = [_]?FeatureMob{null} ** 45,
     prisons: StackBuffer(Room, 8) = StackBuffer(Room, 8).init(null),
+    stockpile: ?Room = null,
+    output: ?Room = null,
 
     used: [LEVELS]usize = [_]usize{0} ** LEVELS,
 
@@ -1447,6 +1484,44 @@ pub const Prefab = struct {
                         height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
 
                         f.prisons.append(.{ .start = room_start, .width = width, .height = height }) catch |_| return error.TooManyPrisons;
+                    } else if (mem.eql(u8, key, "stockpile")) {
+                        if (f.stockpile) |_| return error.StockpileAlreadyDefined;
+
+                        var room_start = Coord.new(0, 0);
+                        var width: usize = 0;
+                        var height: usize = 0;
+
+                        var room_start_tokens = mem.tokenize(val, ",");
+                        const room_start_str_a = room_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        const room_start_str_b = room_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        room_start.x = std.fmt.parseInt(usize, room_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
+                        room_start.y = std.fmt.parseInt(usize, room_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
+
+                        const width_str = words.next() orelse return error.ExpectedMetadataValue;
+                        const height_str = words.next() orelse return error.ExpectedMetadataValue;
+                        width = std.fmt.parseInt(usize, width_str, 0) catch |_| return error.InvalidMetadataValue;
+                        height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
+
+                        f.stockpile = .{ .start = room_start, .width = width, .height = height };
+                    } else if (mem.eql(u8, key, "output")) {
+                        if (f.output) |_| return error.OutputAreaAlreadyDefined;
+
+                        var room_start = Coord.new(0, 0);
+                        var width: usize = 0;
+                        var height: usize = 0;
+
+                        var room_start_tokens = mem.tokenize(val, ",");
+                        const room_start_str_a = room_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        const room_start_str_b = room_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        room_start.x = std.fmt.parseInt(usize, room_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
+                        room_start.y = std.fmt.parseInt(usize, room_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
+
+                        const width_str = words.next() orelse return error.ExpectedMetadataValue;
+                        const height_str = words.next() orelse return error.ExpectedMetadataValue;
+                        width = std.fmt.parseInt(usize, width_str, 0) catch |_| return error.InvalidMetadataValue;
+                        height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
+
+                        f.output = .{ .start = room_start, .width = width, .height = height };
                     }
                 },
                 '@' => {
@@ -1567,6 +1642,8 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
 
         Prefab.parseAndLoad(fab_file.name, buf[0..read], n_fabs, s_fabs) catch |e| {
             const msg = switch (e) {
+                error.StockpileAlreadyDefined => "Stockpile already defined for prefab",
+                error.OutputAreaAlreadyDefined => "Output area already defined for prefab",
                 error.TooManyPrisons => "Too many prisons",
                 error.InvalidFabTile => "Invalid prefab tile",
                 error.InvalidConnection => "Out of place connection tile",

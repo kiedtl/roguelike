@@ -42,6 +42,7 @@ pub const CoordCellMap = std.AutoHashMap(Coord, termbox.tb_cell);
 pub const CoordArrayList = std.ArrayList(Coord);
 pub const AnnotatedCoordArrayList = std.ArrayList(AnnotatedCoord);
 pub const RoomArrayList = std.ArrayList(Room);
+pub const StockpileArrayList = std.ArrayList(Stockpile);
 pub const MessageArrayList = std.ArrayList(Message);
 pub const StatusArray = enums.EnumArray(Status, StatusData);
 pub const SpatterArray = enums.EnumArray(Spatter, usize);
@@ -436,6 +437,29 @@ pub const Room = struct {
         const x = rng.range(usize, self.start.x, self.end().x - 1);
         const y = rng.range(usize, self.start.y, self.end().y - 1);
         return Coord.new2(self.start.z, x, y);
+    }
+};
+
+pub const Stockpile = struct {
+    room: Room,
+    type: ItemType,
+
+    pub fn inferType(self: *Stockpile) bool {
+        var y: usize = self.room.start.y;
+        while (y < self.room.end().y) : (y += 1) {
+            var x: usize = self.room.start.x;
+            while (x < self.room.end().x) : (x += 1) {
+                const coord = Coord.new2(self.room.start.z, x, y);
+                const titems = state.dungeon.itemsAt(coord);
+
+                if (titems.len > 0) {
+                    self.type = std.meta.activeTag(titems.data[0]);
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 };
 
@@ -1990,7 +2014,11 @@ pub const Ring = struct {
     }
 };
 
-pub const Item = union(enum) {
+pub const ItemType = enum {
+    Corpse, Ring, Potion, Vial, Armor, Weapon, Boulder
+};
+
+pub const Item = union(ItemType) {
     Corpse: *Mob,
     Ring: *Ring,
     Potion: *Potion,

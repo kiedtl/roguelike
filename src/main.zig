@@ -48,7 +48,7 @@ fn initGame() void {
     state.messages = MessageArrayList.init(&state.GPA.allocator);
 
     for (state.dungeon.map) |_, level| {
-        state.stockpiles[level] = RoomArrayList.init(&state.GPA.allocator);
+        state.stockpiles[level] = StockpileArrayList.init(&state.GPA.allocator);
         state.inputs[level] = RoomArrayList.init(&state.GPA.allocator);
         state.outputs[level] = RoomArrayList.init(&state.GPA.allocator);
         state.dungeon.rooms[level] = RoomArrayList.init(&state.GPA.allocator);
