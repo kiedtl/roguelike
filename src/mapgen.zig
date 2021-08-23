@@ -1290,14 +1290,8 @@ fn levelFeatureExperiments(c: usize, coord: Coord, room: *const Room, prefab: *c
 }
 
 fn levelFeatureOres(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
-    var v: Vial.OreAndVial = undefined;
-    while (true) {
-        v = rng.choose(Vial.OreAndVial, &Vial.VIAL_ORES, &Vial.VIAL_COMMONICITY) catch unreachable;
-        if (v.m) |material| {
-            state.dungeon.itemsAt(coord).append(Item{ .Boulder = material }) catch unreachable;
-            break;
-        }
-    }
+    const v = rng.choose(Vial.OreAndVial, &Vial.VIAL_ORES, &Vial.VIAL_COMMONICITY) catch unreachable;
+    if (v.m) |material| state.dungeon.itemsAt(coord).append(Item{ .Boulder = material }) catch unreachable;
 }
 
 pub const Prefab = struct {
