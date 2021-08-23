@@ -489,9 +489,9 @@ pub fn powerElevatorMotor(machine: *Machine) void {
 }
 
 pub fn powerExtractor(machine: *Machine) void {
-    // Only function on every eighth turn, to give the impression that it takes
+    // Only function on every 32th turn, to give the impression that it takes
     // a while to extract more vials
-    if ((state.ticks & 7) != 0) return;
+    if ((state.ticks % 32) != 0) return;
 
     var input: Coord = undefined;
     var output: Coord = undefined;
