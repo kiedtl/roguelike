@@ -454,15 +454,15 @@ pub const RestrictedMachinesOpenLever = Machine{
 pub fn powerNone(_: *Machine) void {}
 
 pub fn powerResearchCore(machine: *Machine) void {
-    // Only function on every fourth turn, to give the impression that it takes
+    // Only function on every 32nd turn, to give the impression that it takes
     // a while to process vials
-    if ((state.ticks & 3) != 0) return;
+    if ((state.ticks % 32) != 0 or rng.onein(3)) return;
 
-    item_scan: for (&DIRECTIONS) |direction| if (machine.coord.move(direction, state.mapgeometry)) |neighbor| {
+    for (&DIRECTIONS) |direction| if (machine.coord.move(direction, state.mapgeometry)) |neighbor| {
         for (state.dungeon.itemsAt(neighbor).constSlice()) |item, i| switch (item) {
             .Vial => {
                 _ = state.dungeon.itemsAt(neighbor).orderedRemove(i) catch unreachable;
-                continue :item_scan;
+                return;
             },
             else => {},
         };
