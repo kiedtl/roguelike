@@ -400,6 +400,35 @@ pub const CrystalStatueTemplate = MobTemplate{
     },
 };
 
+pub const AlchemistTemplate = MobTemplate{
+    .id = "alchemist",
+    .mob = .{
+        .species = "human",
+        .tile = 'h',
+        .ai = AI{
+            .profession_name = "alchemist",
+            .profession_description = "experimenting",
+            .work_fn = ai.guardWork,
+            .fight_fn = null,
+            .is_combative = false,
+            .is_curious = false,
+        },
+        .allegiance = .Sauron,
+        .vision = 7,
+        .base_night_vision = 20,
+
+        .willpower = 5,
+        .base_dexterity = 30,
+        .hearing = 6,
+        .max_HP = 65,
+        .memory_duration = 7,
+        .base_speed = 90,
+        .blood = .Blood,
+
+        .base_strength = 28,
+    },
+};
+
 pub const CleanerTemplate = MobTemplate{
     .id = "cleaner",
     .mob = .{
@@ -637,6 +666,7 @@ pub const MOBS = [_]MobTemplate{
     KyaniteStatueTemplate,
     NebroStatueTemplate,
     CrystalStatueTemplate,
+    AlchemistTemplate,
     CleanerTemplate,
     HaulerTemplate,
     TorturerNecromancerTemplate,
