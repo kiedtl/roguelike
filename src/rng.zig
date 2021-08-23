@@ -10,7 +10,11 @@ pub fn init() void {
 }
 
 pub fn int(comptime T: type) T {
-    return rng.random.int(T);
+    return switch (@typeInfo(T)) {
+        .Int => rng.random.int(T),
+        .Float => rng.random.float(T),
+        else => @compileError("Expected int or float, got " ++ @typeName(T)),
+    };
 }
 
 pub fn boolean() bool {
@@ -47,7 +51,7 @@ pub fn rangeClumping(comptime T: type, min: T, max: T, clump: T) T {
 pub fn range(comptime T: type, min: T, max: T) T {
     std.debug.assert(max >= min);
     const diff = (max + 1) - min;
-    return if (diff > 0) (int(T) % diff) + min else min;
+    return if (diff > 0) @mod(int(T), diff) + min else min;
 }
 
 pub fn shuffle(comptime T: type, arr: []T) void {
