@@ -470,9 +470,9 @@ pub fn powerResearchCore(machine: *Machine) void {
 }
 
 pub fn powerElevatorMotor(machine: *Machine) void {
-    // Only function on every eighth turn, to give the impression that it takes
+    // Only function on every 32th turn or so, to give the impression that it takes
     // a while to bring up more ores
-    if ((state.ticks & 7) != 0) return;
+    if ((state.ticks % 32) != 0 or rng.onein(3)) return;
 
     for (&CARDINAL_DIRECTIONS) |direction| if (machine.coord.move(direction, state.mapgeometry)) |neighbor| {
         if (state.dungeon.at(neighbor).surface) |surface| {
