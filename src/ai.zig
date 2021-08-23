@@ -390,6 +390,78 @@ pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
                 }
             }
         },
+        else => unreachable,
+    }
+}
+
+pub fn haulerWork(mob: *Mob, alloc: *mem.Allocator) void {
+    switch (mob.ai.work_phase) {
+        .HaulerScan => {
+            _ = mob.rest();
+
+            for (state.tasks.items) |*task, id|
+                if (!task.completed and task.assigned_to == null) {
+                    switch (task.type) {
+                        .Haul => |c| {
+                            std.log.warn("found job", .{});
+                            mob.ai.task_id = id;
+                            task.assigned_to = mob;
+                            mob.ai.work_phase = .HaulerTake;
+                            break;
+                        },
+                        else => {},
+                    }
+                };
+        },
+        .HaulerTake => {
+            const task = state.tasks.items[mob.ai.task_id.?];
+            const itemcoord = task.type.Haul.from;
+
+            if (itemcoord.distance(mob.coord) > 1) {
+                if (!mob.isCreeping()) {
+                    _ = mob.rest();
+                } else {
+                    mob.tryMoveTo(itemcoord);
+                }
+            } else {
+                const item = state.dungeon.itemsAt(itemcoord).pop() catch |_| {
+                    // Somehow the item disappeared, resume job-hunting
+                    _ = mob.rest();
+                    state.tasks.items[mob.ai.task_id.?].completed = true;
+                    mob.ai.task_id = null;
+                    mob.ai.work_phase = .HaulerScan;
+                    return;
+                };
+                mob.inventory.pack.append(item) catch unreachable;
+                mob.declareAction(.Grab);
+                mob.ai.work_phase = .HaulerDrop;
+            }
+        },
+        .HaulerDrop => {
+            const task = state.tasks.items[mob.ai.task_id.?];
+            const dest = task.type.Haul.to;
+
+            if (dest.distance(mob.coord) > 1) {
+                if (!mob.isCreeping()) {
+                    _ = mob.rest();
+                } else {
+                    mob.tryMoveTo(dest);
+                }
+            } else {
+                const item = mob.inventory.pack.pop() catch unreachable;
+                if (!mob.dropItem(item, dest)) {
+                    // Somehow the item place disappeared, dump the item somewhere.
+                    // If there's no place to dump, just let the item disappear :P
+                    const spot = state.nextAvailableSpaceForItem(mob.coord, alloc);
+                    if (spot) |dst| _ = mob.dropItem(item, dst);
+                }
+
+                state.tasks.items[mob.ai.task_id.?].completed = true;
+                mob.ai.task_id = null;
+                mob.ai.work_phase = .HaulerScan;
+            }
+        },
+        else => unreachable,
     }
 }
 

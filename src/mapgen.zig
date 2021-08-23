@@ -1267,6 +1267,17 @@ fn levelFeatureExperiments(c: usize, coord: Coord, room: *const Room, prefab: *c
     const exp = placeMob(alloc, &exp_t, coord, .{});
 }
 
+fn levelFeatureOres(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+    var v: Vial.OreAndVial = undefined;
+    while (true) {
+        v = rng.choose(Vial.OreAndVial, &Vial.VIAL_ORES, &Vial.VIAL_COMMONICITY) catch unreachable;
+        if (v.m) |material| {
+            state.dungeon.itemsAt(coord).append(Item{ .Boulder = material }) catch unreachable;
+            break;
+        }
+    }
+}
+
 pub const Prefab = struct {
     subroom: bool = false,
     invisible: bool = false,
@@ -1589,7 +1600,7 @@ pub const Prefab = struct {
                             '≈' => .Lava,
                             '≡' => .Bars,
                             '?' => .Any,
-                            'α'...'γ' => FabTile{ .LevelFeature = @as(usize, c - 'α') },
+                            'α'...'δ' => FabTile{ .LevelFeature = @as(usize, c - 'α') },
                             '0'...'9', 'a'...'z' => FabTile{ .Feature = @intCast(u8, c) },
                             else => return error.InvalidFabTile,
                         };
@@ -1679,7 +1690,7 @@ pub const LevelConfig = struct {
     max_room_width: usize = 20,
     max_room_height: usize = 15,
 
-    level_features: [3]?LevelFeatureFunc = [_]?LevelFeatureFunc{ null, null, null },
+    level_features: [4]?LevelFeatureFunc = [_]?LevelFeatureFunc{ null, null, null, null },
 
     patrol_squads: usize,
     mob_options: MCBuf = MCBuf.init(&[_]MobConfig{
@@ -1770,6 +1781,7 @@ pub const Configs = [LEVELS]LevelConfig{
             levelFeatureVials,
             levelFeaturePrisoners,
             levelFeatureExperiments,
+            levelFeatureOres,
         },
 
         .patrol_squads = 1,
@@ -1801,6 +1813,7 @@ pub const Configs = [LEVELS]LevelConfig{
             levelFeaturePrisoners,
             levelFeaturePrisonersMaybe,
             null,
+            null,
         },
 
         .patrol_squads = 6,
@@ -1820,6 +1833,7 @@ pub const Configs = [LEVELS]LevelConfig{
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeaturePrisoners,
             levelFeaturePrisonersMaybe,
+            null,
             null,
         },
 

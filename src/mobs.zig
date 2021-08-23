@@ -412,6 +412,7 @@ pub const CleanerTemplate = MobTemplate{
             .fight_fn = null,
             .is_combative = false,
             .is_curious = false,
+            .work_phase = .CleanerScan,
         },
         .allegiance = .Sauron,
         .vision = 6,
@@ -423,6 +424,36 @@ pub const CleanerTemplate = MobTemplate{
         .max_HP = 60,
         .memory_duration = 5,
         .base_speed = 100,
+        .blood = .Blood,
+
+        .base_strength = 10,
+    },
+};
+
+pub const HaulerTemplate = MobTemplate{
+    .id = "hauler",
+    .mob = .{
+        .species = "goblin",
+        .tile = 'u',
+        .ai = AI{
+            .profession_name = "hauler",
+            .profession_description = "hauling",
+            .work_fn = ai.haulerWork,
+            .fight_fn = null,
+            .is_combative = false,
+            .is_curious = false,
+            .work_phase = .HaulerScan,
+        },
+        .allegiance = .Sauron,
+        .vision = 6,
+        .base_night_vision = 30,
+
+        .willpower = 2,
+        .base_dexterity = 25,
+        .hearing = 8,
+        .max_HP = 50,
+        .memory_duration = 8,
+        .base_speed = 55,
         .blood = .Blood,
 
         .base_strength = 10,
@@ -607,6 +638,7 @@ pub const MOBS = [_]MobTemplate{
     NebroStatueTemplate,
     CrystalStatueTemplate,
     CleanerTemplate,
+    HaulerTemplate,
     TorturerNecromancerTemplate,
     TanusExperiment,
     CatalineExperiment,

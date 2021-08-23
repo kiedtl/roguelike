@@ -370,6 +370,8 @@ fn useItem() bool {
 
 // TODO: move this to state.zig...? There should probably be a separate file for
 // player-specific actions.
+//
+// TODO: merge with Mob.dropItem()
 fn dropItem() bool {
     if (state.dungeon.at(state.player.coord).surface) |surface| {
         switch (surface) {

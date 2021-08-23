@@ -796,6 +796,9 @@ pub const AI = struct {
 pub const AIWorkPhase = enum {
     CleanerScan,
     CleanerClean,
+    HaulerScan,
+    HaulerTake,
+    HaulerDrop,
 };
 
 pub const Prisoner = struct {
@@ -1031,6 +1034,31 @@ pub const Mob = struct { // {{{
         self.makeNoise(launcher.noise);
 
         return true;
+    }
+
+    pub fn dropItem(self: *Mob, item: Item, at: Coord) bool {
+        if (state.dungeon.at(at).surface) |surface| {
+            switch (surface) {
+                .Container => |container| {
+                    if (container.items.len >= container.capacity) {
+                        return false;
+                    } else {
+                        container.items.append(item) catch unreachable;
+                        self.declareAction(.Drop);
+                        return true;
+                    }
+                },
+                else => {},
+            }
+        }
+
+        if (state.dungeon.itemsAt(at).isFull()) {
+            return false;
+        } else {
+            state.dungeon.itemsAt(at).append(item) catch unreachable;
+            self.declareAction(.Drop);
+            return true;
+        }
     }
 
     pub fn throwItem(self: *Mob, item: *Item, at: Coord) bool {
