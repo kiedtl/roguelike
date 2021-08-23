@@ -2364,10 +2364,12 @@ pub const Dungeon = struct {
 
 pub const Spatter = enum {
     Blood,
+    Dust,
 
     pub inline fn color(self: Spatter) u32 {
         return switch (self) {
             .Blood => 0x9a1313,
+            .Dust => 0x92744c,
         };
     }
 };
@@ -2378,4 +2380,5 @@ pub const Gas = struct {
     opacity: f64,
     trigger: fn (*Mob, f64) void,
     id: usize,
+    residue: ?Spatter = null,
 };

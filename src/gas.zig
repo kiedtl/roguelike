@@ -58,6 +58,7 @@ pub const Dust = Gas{
     .dissipation_rate = 0.07,
     .opacity = 0.1,
     .trigger = triggerDust,
+    .residue = .Dust,
     .id = 6,
 };
 

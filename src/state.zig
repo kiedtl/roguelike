@@ -351,6 +351,7 @@ pub fn tickSound(cur_lev: usize) void {
 
 pub fn tickAtmosphere(cur_lev: usize, cur_gas: usize) void {
     const dissipation = gas.Gases[cur_gas].dissipation_rate;
+    const residue = gas.Gases[cur_gas].residue;
 
     var new: [HEIGHT][WIDTH]f64 = undefined;
     {
@@ -388,8 +389,12 @@ pub fn tickAtmosphere(cur_lev: usize, cur_gas: usize) void {
         var y: usize = 0;
         while (y < HEIGHT) : (y += 1) {
             var x: usize = 0;
-            while (x < WIDTH) : (x += 1)
-                dungeon.atGas(Coord.new2(cur_lev, x, y))[cur_gas] = new[y][x];
+            while (x < WIDTH) : (x += 1) {
+                const coord = Coord.new2(cur_lev, x, y);
+                dungeon.atGas(coord)[cur_gas] = new[y][x];
+                if (residue != null and new[y][x] > 0.3)
+                    dungeon.spatter(coord, residue.?);
+            }
         }
     }
 
