@@ -444,6 +444,36 @@ pub const Stockpile = struct {
     room: Room,
     type: ItemType,
 
+    pub fn findEmptySlot(self: *const Stockpile) ?Coord {
+        var y: usize = self.room.start.y;
+        while (y < self.room.end().y) : (y += 1) {
+            var x: usize = self.room.start.x;
+            while (x < self.room.end().x) : (x += 1) {
+                const coord = Coord.new2(self.room.start.z, x, y);
+                // TODO: search containers as well
+                if (!state.dungeon.itemsAt(coord).isFull()) {
+                    return coord;
+                }
+            }
+        }
+        return null;
+    }
+
+    pub fn findItem(self: *const Stockpile) ?Coord {
+        var y: usize = self.room.start.y;
+        while (y < self.room.end().y) : (y += 1) {
+            var x: usize = self.room.start.x;
+            while (x < self.room.end().x) : (x += 1) {
+                const coord = Coord.new2(self.room.start.z, x, y);
+                // TODO: search containers as well
+                if (state.dungeon.itemsAt(coord).len > 0) {
+                    return coord;
+                }
+            }
+        }
+        return null;
+    }
+
     pub fn inferType(self: *Stockpile) bool {
         var y: usize = self.room.start.y;
         while (y < self.room.end().y) : (y += 1) {

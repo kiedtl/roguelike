@@ -22,16 +22,19 @@
 :spawn            sentinel 13,1
 :spawn            sentinel  1,5
 :spawn            sentinel 13,5
+:spawn             cleaner  1,6
 :spawn             cleaner  2,6
 :spawn             cleaner  3,6
 :spawn             cleaner  4,6
 :spawn             cleaner  5,6
-:spawn             cleaner  6,6
+:spawn              hauler  6,6
 :spawn              hauler  7,6
 :spawn              hauler  8,6
 :spawn              hauler  9,6
 :spawn              hauler 10,6
 :spawn              hauler 11,6
+:spawn              hauler 12,6
+:spawn              hauler 13,6
 
 
 :invisible

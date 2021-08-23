@@ -452,6 +452,28 @@ fn _excavate_prefab(
             .height = output.height,
         }) catch unreachable;
     }
+
+    if (fab.input) |input| {
+        const room_start = Coord.new2(
+            room.start.z,
+            input.start.x + room.start.x + startx,
+            input.start.y + room.start.y + starty,
+        );
+        var input_stckpl = Stockpile{
+            .room = Room{
+                .start = room_start,
+                .width = input.width,
+                .height = input.height,
+            },
+            .type = undefined,
+        };
+        const inferred = input_stckpl.inferType();
+        if (!inferred) {
+            std.log.err("{}: Couldn't infer type for input area! (skipping)", .{fab.name.constSlice()});
+        } else {
+            state.inputs[room.start.z].append(input_stckpl) catch unreachable;
+        }
+    }
 }
 
 fn _excavate_room(room: *const Room) void {
@@ -1298,6 +1320,7 @@ pub const Prefab = struct {
     mobs: [45]?FeatureMob = [_]?FeatureMob{null} ** 45,
     prisons: StackBuffer(Room, 8) = StackBuffer(Room, 8).init(null),
     stockpile: ?Room = null,
+    input: ?Room = null,
     output: ?Room = null,
 
     used: [LEVELS]usize = [_]usize{0} ** LEVELS,
@@ -1425,6 +1448,9 @@ pub const Prefab = struct {
                     mem.set(?Connection, &f.connections, null);
                     mem.set(?Feature, &f.features, null);
                     mem.set(?FeatureMob, &f.mobs, null);
+                    f.stockpile = null;
+                    f.input = null;
+                    f.output = null;
                 },
                 ':' => {
                     var words = mem.tokenize(line[1..], " ");
@@ -1533,6 +1559,25 @@ pub const Prefab = struct {
                         height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
 
                         f.output = .{ .start = room_start, .width = width, .height = height };
+                    } else if (mem.eql(u8, key, "input")) {
+                        if (f.input) |_| return error.InputAreaAlreadyDefined;
+
+                        var room_start = Coord.new(0, 0);
+                        var width: usize = 0;
+                        var height: usize = 0;
+
+                        var room_start_tokens = mem.tokenize(val, ",");
+                        const room_start_str_a = room_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        const room_start_str_b = room_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        room_start.x = std.fmt.parseInt(usize, room_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
+                        room_start.y = std.fmt.parseInt(usize, room_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
+
+                        const width_str = words.next() orelse return error.ExpectedMetadataValue;
+                        const height_str = words.next() orelse return error.ExpectedMetadataValue;
+                        width = std.fmt.parseInt(usize, width_str, 0) catch |_| return error.InvalidMetadataValue;
+                        height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
+
+                        f.input = .{ .start = room_start, .width = width, .height = height };
                     }
                 },
                 '@' => {
@@ -1655,6 +1700,7 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
             const msg = switch (e) {
                 error.StockpileAlreadyDefined => "Stockpile already defined for prefab",
                 error.OutputAreaAlreadyDefined => "Output area already defined for prefab",
+                error.InputAreaAlreadyDefined => "Input area already defined for prefab",
                 error.TooManyPrisons => "Too many prisons",
                 error.InvalidFabTile => "Invalid prefab tile",
                 error.InvalidConnection => "Out of place connection tile",

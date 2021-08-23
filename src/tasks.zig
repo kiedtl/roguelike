@@ -102,23 +102,63 @@ pub fn tickTasks(level: usize) void {
             var stockpile: ?Coord = null;
 
             // Now search for a stockpile
-            stckpl_search: for (state.stockpiles[level].items) |item| if (item.type == _type) {
-                var y: usize = item.room.start.y;
-                while (y < item.room.end().y) : (y += 1) {
-                    var x: usize = item.room.start.x;
-                    while (x < item.room.end().x) : (x += 1) {
-                        const coord = Coord.new2(level, x, y);
-                        if (!state.dungeon.itemsAt(coord).isFull()) {
-                            stockpile = coord;
-                            break :stckpl_search;
-                        }
-                    }
+            for (state.stockpiles[level].items) |item| if (item.type == _type) {
+                if (item.findEmptySlot()) |coord| {
+                    stockpile = coord;
+                    break;
                 }
             };
 
             if (stockpile) |dest| {
                 state.tasks.append(
                     Task{ .type = TaskType{ .Haul = .{ .from = itemcoord.?, .to = dest } } },
+                ) catch unreachable;
+            }
+        }
+    }
+
+    // Check for empty input areas that need to be filled
+    for (state.inputs[level].items) |input_area| {
+        var empty_slot_: ?Coord = null;
+        var y: usize = input_area.room.start.y;
+        outer: while (y < input_area.room.end().y) : (y += 1) {
+            var x: usize = input_area.room.start.x;
+            while (x < input_area.room.end().x) : (x += 1) {
+                const coord = Coord.new2(level, x, y);
+                // TODO: search containers as well
+                if (!state.dungeon.itemsAt(coord).isFull()) {
+                    var already_reported = false;
+
+                    for (state.tasks.items) |task, id| switch (task.type) {
+                        .Haul => |h| if (h.to.eq(coord) and !task.completed) {
+                            already_reported = true;
+                            break;
+                        },
+                        else => {},
+                    };
+
+                    if (!already_reported) {
+                        empty_slot_ = coord;
+                        break :outer;
+                    }
+                }
+            }
+        }
+
+        if (empty_slot_) |empty_slot| {
+            var take_from_: ?Coord = null;
+
+            // Search stockpiles
+            for (state.stockpiles[level].items) |stockpile| if (stockpile.type == input_area.type) {
+                if (stockpile.findItem()) |coord| {
+                    take_from_ = coord;
+                    break;
+                }
+            };
+
+            if (take_from_) |take_from| {
+                state.tasks.append(
+                    Task{ .type = TaskType{ .Haul = .{ .from = take_from, .to = empty_slot } } },
                 ) catch unreachable;
             }
         }

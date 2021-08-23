@@ -49,7 +49,7 @@ pub var state: GameState = .Game;
 pub var memory: CoordCellMap = undefined;
 
 pub var stockpiles: [LEVELS]StockpileArrayList = undefined;
-pub var inputs: [LEVELS]RoomArrayList = undefined;
+pub var inputs: [LEVELS]StockpileArrayList = undefined;
 pub var outputs: [LEVELS]RoomArrayList = undefined;
 
 pub var tasks: TaskArrayList = undefined;
