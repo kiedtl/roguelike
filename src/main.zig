@@ -4,6 +4,7 @@ const assert = std.debug.assert;
 const mem = std.mem;
 
 const rng = @import("rng.zig");
+const literature = @import("literature.zig");
 const heat = @import("heat.zig");
 const tasks = @import("tasks.zig");
 const items = @import("items.zig");
@@ -17,6 +18,7 @@ const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
 pub const TaskArrayList = tasks.TaskArrayList;
+pub const PosterArrayList = literature.PosterArrayList;
 
 // Install a panic handler that tries to shutdown termbox before calling the
 // default panic handler.
@@ -46,6 +48,9 @@ fn initGame() void {
     state.props = PropList.init(&state.GPA.allocator);
     state.containers = ContainerList.init(&state.GPA.allocator);
     state.messages = MessageArrayList.init(&state.GPA.allocator);
+
+    state.posters = PosterArrayList.init(&state.GPA.allocator);
+    literature.readPosters(&state.GPA.allocator, &state.posters);
 
     for (state.dungeon.map) |_, level| {
         state.stockpiles[level] = StockpileArrayList.init(&state.GPA.allocator);
@@ -128,6 +133,10 @@ fn deinitGame() void {
     state.messages.deinit();
     state.props.deinit();
     state.containers.deinit();
+
+    for (state.posters.items) |poster|
+        poster.deinit(&state.GPA.allocator);
+    state.posters.deinit();
 
     _ = state.GPA.deinit();
 }

@@ -484,50 +484,7 @@ Occupations
 
 Posters
 -------
-PRI:
-- A new shipment of prisoners from Traumbulnahl will arrive next week.
-- Production of human meat rations must increase by 33% by the middle of next
-  week.
-- Please do not feed the prisoners.
-- Prison staffers must strive to be inclusive and welcoming to all new inmates.
-- Absence without leave is punishable by a mandatory interview with the
-  High Priest.
-- WANTED: Orbomus-Nulohelmir, human, escaped prisoner.
-- WANTED: <player>, human, escaped prisoner.
-- WANTED: <previous player>, human, escaped prisoner.
-- The Necromancer is watching you.
-- The Necromancer can see you.
-- The Necromancer knows your thoughts.
-- Don't eat the prisoners.
-- Sentinels must report to the Captain of the Guard tomorrow morning with regards
-  to the upcoming transfer to Traummalnahl.
-REC:
-- WANTED: Obomus-Nulohelmir, human, escaped prisoner.
-- WANTED: <player>, human, escaped prisoner.
-- WANTED: <previous player>, human, escaped prisoner.
-- The Necromancer is watching you.
-- The Necromancer can see you.
-- The Necromancer knows your thoughts.
-- The Necromancer knows your loyalties.
-- "Urum-Zhiolum" is a codeword for goblin genocide.
-  (And techinically that's correct.)
-LAB:
-- Please wear gloves and safety goggles at all times.
-- Handling slade without permission is strictly forbidden.
-- Handling slade without written permission is strictly forbidden.
-- Handling slade without prior permission from the Head of Research is strictly
-  forbidden.
-- A inspection by the Head of Research on current safety practices will be
-  conducted next week.
-- The Head of Research is committed to ensuring that all staff remain safe
-  during work shifts.
-- Please read the appropriate manual(s) before operating machinery.
-- Read the owner's manual before operating extractors.
-- Read the owner's manual before operating grinders.
-- Read the owner's manual before operating research stations.
-- Do not use another staffer's research station.
-- Staffers that molest prisoners outside of research sessions will be scheduled
-  for a mandatory appointment at the Temple.
+(moved to data/posters.tsv)
 
 
 Unique mobs

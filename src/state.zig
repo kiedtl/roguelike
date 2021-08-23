@@ -9,11 +9,13 @@ const dijkstra = @import("dijkstra.zig");
 const utils = @import("utils.zig");
 const gas = @import("gas.zig");
 const rng = @import("rng.zig");
+const literature = @import("literature.zig");
 const fov = @import("fov.zig");
 const tasks_m = @import("tasks.zig");
 usingnamespace @import("types.zig");
 
 pub const TaskArrayList = tasks_m.TaskArrayList;
+pub const PosterArrayList = literature.PosterArrayList;
 
 pub const GameState = union(enum) { Game, Win, Lose, Quit };
 pub const Layout = union(enum) { Unknown, Room: usize };
@@ -62,6 +64,8 @@ pub var weapons: WeaponList = undefined;
 pub var machines: MachineList = undefined;
 pub var props: PropList = undefined;
 pub var containers: ContainerList = undefined;
+
+pub var posters: PosterArrayList = undefined;
 
 pub var ticks: usize = 0;
 pub var messages: MessageArrayList = undefined;
