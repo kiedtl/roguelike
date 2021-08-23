@@ -26,6 +26,7 @@
 @j p wire_n2w1
 @k p wire_n1e2
 @l p wire_n1w1
+:prison 1,1 1 1
 
 ..ααabc
 ###0##d
@@ -35,18 +36,20 @@
 
 \
 
+:prison 1,1 1 1
 #≡#
 #β#
 ###
 
 \
 
+:prison 1,1 1 1
 ###
 #β≡
 ###
 
 \
-
+:prison 1,1 1 1
 ###
 ≡β#
 ###
