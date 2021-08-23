@@ -521,6 +521,7 @@ pub fn powerExtractor(machine: *Machine) void {
             if (mem.eql(u8, m.name, b.name)) {
                 state.dungeon.itemsAt(output).append(Item{ .Vial = vd.v }) catch unreachable;
                 _ = input_items.orderedRemove(0) catch unreachable;
+                state.dungeon.atGas(machine.coord)[gas.Dust.id] = rng.range(f64, 0.1, 0.2);
             },
         else => {},
     };

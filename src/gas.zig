@@ -53,7 +53,15 @@ pub const Healing = Gas{
     .id = 5,
 };
 
-pub const Gases = [_]Gas{ Poison, Paralysis, SmokeGas, Confusion, Slow, Healing };
+pub const Dust = Gas{
+    .color = 0xd2b48c,
+    .dissipation_rate = 0.07,
+    .opacity = 0.1,
+    .trigger = triggerDust,
+    .id = 6,
+};
+
+pub const Gases = [_]Gas{ Poison, Paralysis, SmokeGas, Confusion, Slow, Healing, Dust };
 pub const GAS_NUM: usize = Gases.len;
 
 // Ensure that each gas's ID matches the index that it appears as in Gases.
@@ -88,3 +96,5 @@ fn triggerHealing(mob: *Mob, quantity: f64) void {
     mob.HP *= 1.1 * (quantity + 1.0);
     mob.HP = math.clamp(mob.HP, 0, mob.max_HP);
 }
+
+fn triggerDust(mob: *Mob, quantity: f64) void {}
