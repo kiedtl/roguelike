@@ -343,7 +343,11 @@ pub fn interactionLaborerWork(mob: *Mob, _: *mem.Allocator) void {
 pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
     switch (mob.ai.work_phase) {
         .CleanerScan => {
-            _ = mob.rest();
+            if (mob.ai.work_area.items.len > 0 and mob.coord.distance(mob.ai.work_area.items[0]) > 1) {
+                mob.tryMoveTo(mob.ai.work_area.items[0]);
+            } else {
+                _ = mob.rest();
+            }
 
             for (state.tasks.items) |*task, id|
                 if (!task.completed and task.assigned_to == null) {
@@ -397,7 +401,11 @@ pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
 pub fn haulerWork(mob: *Mob, alloc: *mem.Allocator) void {
     switch (mob.ai.work_phase) {
         .HaulerScan => {
-            _ = mob.rest();
+            if (mob.ai.work_area.items.len > 0 and mob.coord.distance(mob.ai.work_area.items[0]) > 1) {
+                mob.tryMoveTo(mob.ai.work_area.items[0]);
+            } else {
+                _ = mob.rest();
+            }
 
             for (state.tasks.items) |*task, id|
                 if (!task.completed and task.assigned_to == null) {
