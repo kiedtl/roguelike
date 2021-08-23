@@ -10,10 +10,13 @@ const mobs = @import("mobs.zig");
 const StackBuffer = @import("buffer.zig").StackBuffer;
 const items = @import("items.zig");
 const machines = @import("machines.zig");
+const literature = @import("literature.zig");
 const materials = @import("materials.zig");
 const utils = @import("utils.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
+
+const Poster = literature.Poster;
 
 const LIMIT = Room{
     .start = Coord.new(1, 1),
@@ -55,6 +58,19 @@ fn isTileAvailable(coord: Coord) bool {
         state.dungeon.at(coord).mob == null and
         state.dungeon.at(coord).surface == null and
         state.dungeon.itemsAt(coord).len == 0;
+}
+
+fn choosePoster(level: usize) ?*const Poster {
+    var tries: usize = 256;
+    while (tries > 0) : (tries -= 1) {
+        const p = &state.posters.items[rng.range(usize, 0, state.posters.items.len - 1)];
+        if (p.placement_counter > 0 or !mem.eql(u8, Configs[level].identifier, p.level))
+            continue;
+        p.placement_counter += 1;
+        return p;
+    }
+
+    return null;
 }
 
 const PlaceMobOptions = struct {
@@ -524,6 +540,11 @@ pub fn resetLevel(level: usize) void {
             state.dungeon.itemsAt(coord).clear();
         }
     }
+
+    state.dungeon.rooms[level].shrinkRetainingCapacity(0);
+    state.stockpiles[level].shrinkRetainingCapacity(0);
+    state.inputs[level].shrinkRetainingCapacity(0);
+    state.outputs[level].shrinkRetainingCapacity(0);
 }
 
 pub fn setLevelMaterial(level: usize) void {
@@ -847,6 +868,7 @@ pub fn placeRandomRooms(
         fab.used[level] += 1;
         _excavate_prefab(&room, fab, allocator, 0, 0);
         rooms.append(room) catch unreachable;
+
         reqctr += 1;
     }
 
@@ -1067,6 +1089,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
         var statues: usize = 0;
         var capacity: usize = 0;
         var levers: usize = 0;
+        var posters: usize = 0;
 
         var tries = math.sqrt(room.width * room.height) * 5;
         while (tries > 0) : (tries -= 1) {
@@ -1079,7 +1102,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                 utils.findPatternMatch(coord, &VALID_FEATURE_TILE_PATTERNS) == null)
                 continue;
 
-            switch (rng.range(usize, 1, 3)) {
+            switch (rng.range(usize, 1, 4)) {
                 1 => {
                     if (statues < 3) {
                         if (rng.onein(3)) {
@@ -1103,6 +1126,14 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                     if (levers < 1 and room.has_subroom) {
                         _place_machine(coord, &machines.RestrictedMachinesOpenLever);
                         levers += 1;
+                    }
+                },
+                4 => {
+                    if ((room.width * room.height) > 16 and posters < 2) {
+                        if (choosePoster(level)) |poster| {
+                            state.dungeon.at(coord).surface = SurfaceItem{ .Poster = poster };
+                            posters += 1;
+                        }
                     }
                 },
                 else => unreachable,

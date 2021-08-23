@@ -166,8 +166,10 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
             },
             .Prop => |p| if (!p.walkable) return false,
             .Sob => |s| if (!s.walkable) return false,
+            .Poster => return false,
         }
     }
+
     return true;
 }
 

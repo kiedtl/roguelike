@@ -6,6 +6,7 @@ const mem = std.mem;
 pub const Poster = struct {
     level: []const u8,
     text: []const u8,
+    placement_counter: usize = 0,
 
     pub const ParseError = error{
         ExpectedTextField,

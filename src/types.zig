@@ -24,10 +24,12 @@ const items = @import("items.zig");
 const gas = @import("gas.zig");
 const utils = @import("utils.zig");
 const state = @import("state.zig");
+const literature = @import("literature.zig");
 const ai = @import("ai.zig");
 
 const SpellInfo = spells.SpellInfo;
 const Spell = spells.Spell;
+const Poster = literature.Poster;
 
 pub const HEIGHT = 40;
 pub const WIDTH = 100;
@@ -1807,12 +1809,13 @@ pub const Container = struct {
     };
 };
 
-pub const SurfaceItemTag = enum { Machine, Prop, Sob, Container };
+pub const SurfaceItemTag = enum { Machine, Prop, Sob, Container, Poster };
 pub const SurfaceItem = union(SurfaceItemTag) {
     Machine: *Machine,
     Prop: *Prop,
     Sob: *Sob,
     Container: *Container,
+    Poster: *const Poster,
 };
 
 // Each weapon and armor has a specific amount of maximum damage it can create
@@ -2212,6 +2215,7 @@ pub const Tile = struct {
                             break :prop p.tile;
                         },
                         .Sob => |s| s.tile,
+                        .Poster => '∺',
                     };
 
                     cell.ch = ch;
