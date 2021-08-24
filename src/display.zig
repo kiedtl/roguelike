@@ -88,7 +88,16 @@ fn _clear_line(from: isize, to: isize, y: isize) void {
         termbox.tb_change_cell(x, y, ' ', 0xffffff, 0);
 }
 
-fn _draw_string(_x: isize, _y: isize, endx: isize, bg: u32, fg: u32, comptime format: []const u8, args: anytype) !isize {
+fn _draw_string(
+    _x: isize,
+    _y: isize,
+    endx: isize,
+    bg: u32,
+    fg: u32,
+    fold: bool,
+    comptime format: []const u8,
+    args: anytype,
+) !isize {
     var buf: [256]u8 = [_]u8{0} ** 256;
     var fbs = std.io.fixedBufferStream(&buf);
     try std.fmt.format(fbs.writer(), format, args);
@@ -110,7 +119,14 @@ fn _draw_string(_x: isize, _y: isize, endx: isize, bg: u32, fg: u32, comptime fo
         termbox.tb_change_cell(x, y, codepoint, bg, fg);
         x += 1;
 
-        if (x == endx) break;
+        if (x == endx) {
+            if (fold) {
+                x = _x + 2;
+                y += 1;
+            } else {
+                break;
+            }
+        }
     }
 
     return y + 1;
@@ -131,8 +147,8 @@ fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, d
 
     const bar_len = bar_end - startx;
     const description2 = description[math.min(@intCast(usize, bar_len), description.len)..];
-    _ = _draw_string(labelx, y, endx, 0xffffff, bg, "{s}", .{description}) catch unreachable;
-    _ = _draw_string(labelx + bar_len, y, endx, 0xffffff, bg2, "{s}", .{description2}) catch unreachable;
+    _ = _draw_string(labelx, y, endx, 0xffffff, bg, false, "{s}", .{description}) catch unreachable;
+    _ = _draw_string(labelx + bar_len, y, endx, 0xffffff, bg2, false, "{s}", .{description2}) catch unreachable;
 }
 
 fn drawEnemyInfo(
@@ -157,7 +173,7 @@ fn drawEnemyInfo(
 
         const mobname = mob.ai.profession_name orelse mob.species;
 
-        y = _draw_string(startx + 1, y, endx, 0xffffff, 0, ": {}", .{mobname}) catch unreachable;
+        y = _draw_string(startx + 1, y, endx, 0xffffff, 0, false, ": {}", .{mobname}) catch unreachable;
 
         _draw_bar(
             y,
@@ -192,6 +208,7 @@ fn drawEnemyInfo(
             endx,
             0x9a9a9a,
             0,
+            false,
             "{}",
             .{activity},
         ) catch unreachable;
@@ -210,35 +227,35 @@ fn drawPlayerInfo(startx: isize, starty: isize, endx: isize, endy: isize) void {
     while (y < endy) : (y += 1) _clear_line(startx, endx, y);
     y = starty;
 
-    y = _draw_string(startx, y, endx, 0xffffff, 0, "score: {:<5} depth: {}", .{ state.score, state.player.coord.z }) catch unreachable;
-    y = _draw_string(startx, y, endx, 0xffffff, 0, "turns: {}", .{state.ticks}) catch unreachable;
+    y = _draw_string(startx, y, endx, 0xffffff, 0, false, "score: {:<5} depth: {}", .{ state.score, state.player.coord.z }) catch unreachable;
+    y = _draw_string(startx, y, endx, 0xffffff, 0, false, "turns: {}", .{state.ticks}) catch unreachable;
     y += 1;
 
     if (strength != state.player.base_strength) {
         const diff = @intCast(isize, strength) - @intCast(isize, state.player.base_strength);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _draw_string(startx, y, endx, 0xffffff, 0, "strength:  {} ({}{})", .{ strength, sign, adiff }) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "strength:  {} ({}{})", .{ strength, sign, adiff }) catch unreachable;
     } else {
-        y = _draw_string(startx, y, endx, 0xffffff, 0, "strength:  {}", .{strength}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "strength:  {}", .{strength}) catch unreachable;
     }
 
     if (dexterity != state.player.base_dexterity) {
         const diff = @intCast(isize, dexterity) - @intCast(isize, state.player.base_dexterity);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _draw_string(startx, y, endx, 0xffffff, 0, "dexterity: {} ({}{})", .{ dexterity, sign, adiff }) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "dexterity: {} ({}{})", .{ dexterity, sign, adiff }) catch unreachable;
     } else {
-        y = _draw_string(startx, y, endx, 0xffffff, 0, "dexterity: {}", .{dexterity}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "dexterity: {}", .{dexterity}) catch unreachable;
     }
 
     if (speed != state.player.base_speed) {
         const diff = @intCast(isize, speed) - @intCast(isize, state.player.base_speed);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _draw_string(startx, y, endx, 0xffffff, 0, "speed: {} ({}{})", .{ speed, sign, adiff }) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "speed: {} ({}{})", .{ speed, sign, adiff }) catch unreachable;
     } else {
-        y = _draw_string(startx, y, endx, 0xffffff, 0, "speed: {}", .{speed}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "speed: {}", .{speed}) catch unreachable;
     }
 
     y += 1;
@@ -284,28 +301,28 @@ fn drawPlayerInfo(startx: isize, starty: isize, endx: isize, endy: isize) void {
     if (state.player.inventory.wielded) |weapon| {
         const item = Item{ .Weapon = weapon };
         const dest = (item.shortName() catch unreachable).constSlice();
-        y = _draw_string(startx, y, endx, 0xffffff, 0, "-) {}", .{dest}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "-) {}", .{dest}) catch unreachable;
     }
     if (state.player.inventory.backup) |backup| {
         const item = Item{ .Weapon = backup };
         const dest = (item.shortName() catch unreachable).constSlice();
-        y = _draw_string(startx, y, endx, 0xffffff, 0, "2) {}", .{dest}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "2) {}", .{dest}) catch unreachable;
     }
     if (state.player.inventory.armor) |armor| {
         const item = Item{ .Armor = armor };
         const dest = (item.shortName() catch unreachable).constSlice();
-        y = _draw_string(startx, y, endx, 0xffffff, 0, "&) {}", .{dest}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "&) {}", .{dest}) catch unreachable;
     }
     y += 1;
 
     const inventory = state.player.inventory.pack.slice();
     if (inventory.len == 0) {
-        y = _draw_string(startx, y, endx, 0xffffff, 0, "Your pack is empty.", .{}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "Your pack is empty.", .{}) catch unreachable;
     } else {
-        y = _draw_string(startx, y, endx, 0xffffff, 0, "Inventory:", .{}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "Inventory:", .{}) catch unreachable;
         for (inventory) |item, i| {
             const dest = (item.shortName() catch unreachable).constSlice();
-            y = _draw_string(startx, y, endx, 0xffffff, 0, "  {}) {}", .{ i, dest }) catch unreachable;
+            y = _draw_string(startx, y, endx, 0xffffff, 0, false, "  {}) {}", .{ i, dest }) catch unreachable;
         }
     }
 }
@@ -321,9 +338,9 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
         const msg = state.messages.items[i];
         const col = if (msg.turn == state.ticks or i == first) msg.type.color() else 0xa0a0a0;
         if (msg.type == .MetaError) {
-            y = _draw_string(startx, y, endx, col, 0, "ERROR: {}", .{msg.msg}) catch unreachable;
+            y = _draw_string(startx, y, endx, col, 0, true, "ERROR: {}", .{msg.msg}) catch unreachable;
         } else {
-            y = _draw_string(startx, y, endx, col, 0, "{}", .{msg.msg}) catch unreachable;
+            y = _draw_string(startx, y, endx, col, 0, true, "{}", .{msg.msg}) catch unreachable;
         }
     }
 }
@@ -566,15 +583,15 @@ pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
     const x = @divFloor(termbox.tb_width(), 2) - @intCast(isize, msglen / 2);
     const endx = termbox.tb_width() - 1;
 
-    _ = _draw_string(x, y, endx, 0xffffff, 0, "{s}{s}", .{ msg, suffix }) catch unreachable;
+    _ = _draw_string(x, y, endx, 0xffffff, 0, false, "{s}{s}", .{ msg, suffix }) catch unreachable;
     y += 1;
 
     if (items.len == 0) {
-        y = _draw_string(x, y, endx, 0xffffff, 0, "(Nothing to choose.)", .{}) catch unreachable;
+        y = _draw_string(x, y, endx, 0xffffff, 0, false, "(Nothing to choose.)", .{}) catch unreachable;
     } else {
         for (items) |item, i| {
             const dest = (item.shortName() catch unreachable).constSlice();
-            y = _draw_string(x, y, endx, 0xffffff, 0, "  {}) {}", .{ i, dest }) catch unreachable;
+            y = _draw_string(x, y, endx, 0xffffff, 0, false, "  {}) {}", .{ i, dest }) catch unreachable;
         }
     }
 
@@ -617,7 +634,7 @@ pub fn drawGameOver() void {
     const y = @divFloor(termbox.tb_height(), 2);
     const x = @divFloor(termbox.tb_width(), 2) - @intCast(isize, msg.len / 2);
 
-    _ = _draw_string(x, y, termbox.tb_width(), 0xffffff, 0, "{s}", .{msg}) catch unreachable;
+    _ = _draw_string(x, y, termbox.tb_width(), 0xffffff, 0, false, "{s}", .{msg}) catch unreachable;
 
     termbox.tb_present();
 }

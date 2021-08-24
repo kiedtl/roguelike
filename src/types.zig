@@ -34,7 +34,7 @@ const Poster = literature.Poster;
 pub const HEIGHT = 40;
 pub const WIDTH = 100;
 pub const LEVELS = 6;
-pub const PLAYER_STARTING_LEVEL = 5; // TODO: define in data file
+pub const PLAYER_STARTING_LEVEL = 3; //5; // TODO: define in data file
 
 pub const CARDINAL_DIRECTIONS = [_]Direction{ .North, .South, .East, .West };
 pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .NorthWest, .SouthEast, .SouthWest };
@@ -1246,6 +1246,9 @@ pub const Mob = struct { // {{{
                         m.addPower(self);
                         self.declareAction(.Interact);
                         return true;
+                    },
+                    .Poster => |p| {
+                        state.message(.Info, "You read the poster: '{}'", .{p.text});
                     },
                     else => {},
                 }
