@@ -49,3 +49,33 @@ test "copy" {
     u.copyZ(&three, "str is 15 chars");
     testing.expectEqualSlices(u8, &three, "str is 15 chars");
 }
+
+test "folding text" {
+    {
+        const str = "  abcd efgh  ijkl mnop ";
+        var folder = u.FoldedTextIterator.init(str, 4);
+        testing.expectEqualSlices(u8, folder.next().?, "abcd");
+        testing.expectEqualSlices(u8, folder.next().?, "efgh");
+        testing.expectEqualSlices(u8, folder.next().?, "ijkl");
+        testing.expectEqualSlices(u8, folder.next().?, "mnop");
+        testing.expectEqual(folder.next(), null);
+    }
+
+    {
+        const str = "I had a vision when the night was late: a youth came riding toward the palace-gate.";
+        var folder = u.FoldedTextIterator.init(str, 10);
+        testing.expectEqualSlices(u8, folder.next().?, "I had a");
+        testing.expectEqualSlices(u8, folder.next().?, "vision");
+        testing.expectEqualSlices(u8, folder.next().?, "when the");
+        testing.expectEqualSlices(u8, folder.next().?, "night was");
+        testing.expectEqualSlices(u8, folder.next().?, "late: a");
+        testing.expectEqualSlices(u8, folder.next().?, "youth");
+        testing.expectEqualSlices(u8, folder.next().?, "came");
+        testing.expectEqualSlices(u8, folder.next().?, "riding");
+        testing.expectEqualSlices(u8, folder.next().?, "toward");
+        testing.expectEqualSlices(u8, folder.next().?, "the");
+        testing.expectEqualSlices(u8, folder.next().?, "palace-gat");
+        testing.expectEqualSlices(u8, folder.next().?, "e.");
+        testing.expectEqual(folder.next(), null);
+    }
+}

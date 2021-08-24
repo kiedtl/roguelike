@@ -164,3 +164,59 @@ pub fn findPatternMatch(coord: Coord, patterns: []const []const u8) ?usize {
     // no match found
     return null;
 }
+
+// FIXME: split long words along '-'
+// FIXME: add tests to ensure that long words aren't put on separate lines with
+//        nothing on the previous line, like the fold implementation in lurch
+// FIXME: don't break unicode codepoints
+// FIXME: stress-test on abnormal inputs (empty input, input full of whitespace, etc)
+pub const FoldedTextIterator = struct {
+    str: []const u8,
+    width: usize,
+    last_space: ?usize = null,
+    index: usize = 0,
+    line_begin: usize = 0,
+
+    const Self = @This();
+
+    pub fn init(str: []const u8, width: usize) Self {
+        return .{ .str = str, .width = width };
+    }
+
+    pub fn next(self: *Self) ?[]const u8 {
+        if (self.index >= self.str.len) {
+            return null;
+        }
+
+        while (self.index < self.str.len and (self.index - self.line_begin) < self.width) {
+            switch (self.str[self.index]) {
+                ' ', '\t', '\n', '\x0b', '\x0c', '\x0d' => {
+                    // We've found some whitespace.
+                    // If we're at the beginning of a line, ignore it; otherwise,
+                    // save the current index.
+                    if ((self.index - self.line_begin) == 0) {
+                        self.index += 1;
+                        self.line_begin += 1;
+                        continue;
+                    }
+
+                    self.last_space = self.index;
+                },
+                else => {},
+            }
+            self.index += 1;
+        }
+
+        // Backup to the last space (if necessary) and return a new
+        // line.
+        if (self.last_space) |spc| {
+            self.index = spc;
+            self.last_space = null;
+        }
+
+        const old_line_begin = self.line_begin;
+        self.line_begin = self.index;
+        const res = self.str[old_line_begin..self.index];
+        return if (res.len == 0) null else res;
+    }
+};
