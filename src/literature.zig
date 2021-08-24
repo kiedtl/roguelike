@@ -41,7 +41,7 @@ pub fn readPosters(alloc: *mem.Allocator, buf: *PosterArrayList) void {
                 Poster.ParseError.ExpectedLevelField => "expected level field",
                 Poster.ParseError.ExpectedTextField => "expected text field",
                 Poster.ParseError.InvalidLevelIdent => "invalid level identifier",
-                else => unreachable,
+                Poster.ParseError.OutOfMemory => "hit alt-f4 a few times please",
             };
             std.log.warn("Line {}: Unable to parse poster: {}", .{ lineno, err_str });
         }
