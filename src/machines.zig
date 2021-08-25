@@ -16,6 +16,7 @@ usingnamespace @import("types.zig");
 const STEEL_SUPPORT_COLOR: u32 = 0xa6c2d4;
 const VANGEN_WALL_COLOR: u32 = materials.Vangenite.color_fg;
 const MARBLE_WALL_COLOR: u32 = materials.Marble.color_floor;
+const CNCRTE_WALL_COLOR: u32 = materials.Concrete.color_floor;
 const COPPER_COIL_COLOR: u32 = 0xe99c39;
 const COPPER_WIRE_COLOR: u32 = 0xffe5d3;
 
@@ -35,6 +36,9 @@ pub const PROPS = [_]Prop{
     HematiteStatue,
     MarbleWall_Upper,
     MarbleWall_Lower,
+    ConcreteWall_Upper,
+    ConcreteWall_Lower,
+    ConcreteWall_Full,
     Wall_E1W1_Prop,
     Wall_S1W1_Prop,
     Wall_N1S1W1_Prop,
@@ -45,6 +49,15 @@ pub const PROPS = [_]Prop{
     Wall_S1E1_Prop,
     Wall_E1W1_thinE_Prop,
     Wall_E1W1_thinW_Prop,
+    Pipe_E1W1_Prop,
+    Pipe_S1W1_Prop,
+    Pipe_S1E1_Prop,
+    Pipe_N1W1_Prop,
+    Pipe_N1S1W1_Prop,
+    Pipe_N1S1E1_Prop,
+    Pipe_N1S1_Prop,
+    Pipe_S1E1W1_Prop,
+    Pipe_N1E1W1_Prop,
     Wire_S2E1_Prop,
     Wire_E1W1_Prop,
     Wire_S1W1_Prop,
@@ -72,6 +85,7 @@ pub const PROPS = [_]Prop{
     WorkstationProp,
     MediumSieve,
     SteelGasReservoir,
+    SteelGasPin,
     SteelSupport_NE2_Prop,
     SteelSupport_SE2_Prop,
     SteelSupport_NSE2_Prop,
@@ -95,6 +109,7 @@ pub const MACHINES = [_]Machine{
     ElevatorMotor,
     Extractor,
     PowerSupply,
+    NuclearPowerSupply,
     HealingGasPump,
     Brazier,
     Lamp,
@@ -158,22 +173,32 @@ pub const Wall_S1E1_Prop       = mkprop("wall_s1e1",       "vangenite wall", '�
 pub const Wall_E1W1_thinE_Prop = mkprop("wall_e1w1_thine", "vangenite wall", '╾', VANGEN_WALL_COLOR, .{});
 pub const Wall_E1W1_thinW_Prop = mkprop("wall_e1w1_thinw", "vangenite wall", '╼', VANGEN_WALL_COLOR, .{});
 
-pub const Wire_S2E1_Prop     = mkprop("wire_s2e1",     "copper wire", '╓', COPPER_WIRE_COLOR, .{.walkable=true});
-pub const Wire_E1W1_Prop     = mkprop("wire_e1w1",     "copper wire", '─', COPPER_WIRE_COLOR, .{.walkable=true});
-pub const Wire_S1W1_Prop     = mkprop("wire_s1w1",     "copper wire", '┐', COPPER_WIRE_COLOR, .{.walkable=true});
-pub const Wire_S1E1_Prop     = mkprop("wire_s1e1",     "copper wire", '┌', COPPER_WIRE_COLOR, .{.walkable=true});
-pub const Wire_N1W1_Prop     = mkprop("wire_n1w1",     "copper wire", '┘', COPPER_WIRE_COLOR, .{.walkable=true});
-pub const Wire_N2S2_Prop     = mkprop("wire_n2s2",     "copper wire", '║', COPPER_WIRE_COLOR, .{.walkable=true});
-pub const Wire_N1S1W1_Prop   = mkprop("wire_n1s1w1",   "copper wire", '┤', COPPER_WIRE_COLOR, .{.walkable=true});
-pub const Wire_N2W1_Prop     = mkprop("wire_n2w1",     "copper wire", '╜', COPPER_WIRE_COLOR, .{.walkable=true});
-pub const Wire_N1E2_Prop     = mkprop("wire_n1e2",     "copper wire", '╘', COPPER_WIRE_COLOR, .{.walkable=true});
-pub const Wire_S1W2_Prop     = mkprop("wire_s1w2",     "copper wire", '╕', COPPER_WIRE_COLOR, .{.walkable=true});
-pub const Wire_N1S1W2_Prop   = mkprop("wire_n1s1w2",   "copper wire", '╡', COPPER_WIRE_COLOR, .{.walkable=true});
-pub const Wire_N1S1E2_Prop   = mkprop("wire_n1s1e2",   "copper wire", '╞', COPPER_WIRE_COLOR, .{.walkable=true});
-pub const Wire_N1S1E2W2_Prop = mkprop("wire_n1s1e2w2", "copper wire", '╪', COPPER_WIRE_COLOR, .{.walkable=true});
-pub const Wire_N1S1_Prop     = mkprop("wire_n1s1",     "copper wire", '│', COPPER_WIRE_COLOR, .{.walkable=true});
-pub const Wire_S1E1W1_Prop   = mkprop("wire_s1e1w1",   "copper wire", '┬', COPPER_WIRE_COLOR, .{.walkable=true});
-pub const Wire_N2E1W1_Prop   = mkprop("wire_n2e1w1",   "copper wire", '╨', COPPER_WIRE_COLOR, .{.walkable=true});
+pub const Pipe_E1W1_Prop     = mkprop("pipe_e1w1",     "steel pipe",  '─', STEEL_SUPPORT_COLOR, .{.walkable=true});
+pub const Pipe_S1W1_Prop     = mkprop("pipe_s1w1",     "steel pipe",  '┐', STEEL_SUPPORT_COLOR, .{.walkable=true});
+pub const Pipe_S1E1_Prop     = mkprop("pipe_s1e1",     "steel pipe",  '┌', STEEL_SUPPORT_COLOR, .{.walkable=true});
+pub const Pipe_N1W1_Prop     = mkprop("pipe_n1w1",     "steel pipe",  '┘', STEEL_SUPPORT_COLOR, .{.walkable=true});
+pub const Pipe_N1S1W1_Prop   = mkprop("pipe_n1s1w1",   "steel pipe",  '┤', STEEL_SUPPORT_COLOR, .{.walkable=true});
+pub const Pipe_N1S1E1_Prop   = mkprop("pipe_n1s1e1",   "steel pipe",  '├', STEEL_SUPPORT_COLOR, .{.walkable=true});
+pub const Pipe_N1S1_Prop     = mkprop("pipe_n1s1",     "steel pipe",  '│', STEEL_SUPPORT_COLOR, .{.walkable=true});
+pub const Pipe_S1E1W1_Prop   = mkprop("pipe_s1e1w1",   "steel pipe",  '┬', STEEL_SUPPORT_COLOR, .{.walkable=true});
+pub const Pipe_N1E1W1_Prop   = mkprop("pipe_n1e1w1",   "steel pipe",  '┴', STEEL_SUPPORT_COLOR, .{.walkable=true});
+
+pub const Wire_S2E1_Prop     = mkprop("wire_s2e1",     "copper wire", '╓', COPPER_WIRE_COLOR,   .{.walkable=true});
+pub const Wire_E1W1_Prop     = mkprop("wire_e1w1",     "copper wire", '─', COPPER_WIRE_COLOR,   .{.walkable=true});
+pub const Wire_S1W1_Prop     = mkprop("wire_s1w1",     "copper wire", '┐', COPPER_WIRE_COLOR,   .{.walkable=true});
+pub const Wire_S1E1_Prop     = mkprop("wire_s1e1",     "copper wire", '┌', COPPER_WIRE_COLOR,   .{.walkable=true});
+pub const Wire_N1W1_Prop     = mkprop("wire_n1w1",     "copper wire", '┘', COPPER_WIRE_COLOR,   .{.walkable=true});
+pub const Wire_N2S2_Prop     = mkprop("wire_n2s2",     "copper wire", '║', COPPER_WIRE_COLOR,   .{.walkable=true});
+pub const Wire_N1S1W1_Prop   = mkprop("wire_n1s1w1",   "copper wire", '┤', COPPER_WIRE_COLOR,   .{.walkable=true});
+pub const Wire_N2W1_Prop     = mkprop("wire_n2w1",     "copper wire", '╜', COPPER_WIRE_COLOR,   .{.walkable=true});
+pub const Wire_N1E2_Prop     = mkprop("wire_n1e2",     "copper wire", '╘', COPPER_WIRE_COLOR,   .{.walkable=true});
+pub const Wire_S1W2_Prop     = mkprop("wire_s1w2",     "copper wire", '╕', COPPER_WIRE_COLOR,   .{.walkable=true});
+pub const Wire_N1S1W2_Prop   = mkprop("wire_n1s1w2",   "copper wire", '╡', COPPER_WIRE_COLOR,   .{.walkable=true});
+pub const Wire_N1S1E2_Prop   = mkprop("wire_n1s1e2",   "copper wire", '╞', COPPER_WIRE_COLOR,   .{.walkable=true});
+pub const Wire_N1S1E2W2_Prop = mkprop("wire_n1s1e2w2", "copper wire", '╪', COPPER_WIRE_COLOR,   .{.walkable=true});
+pub const Wire_N1S1_Prop     = mkprop("wire_n1s1",     "copper wire", '│', COPPER_WIRE_COLOR,   .{.walkable=true});
+pub const Wire_S1E1W1_Prop   = mkprop("wire_s1e1w1",   "copper wire", '┬', COPPER_WIRE_COLOR,   .{.walkable=true});
+pub const Wire_N2E1W1_Prop   = mkprop("wire_n2e1w1",   "copper wire", '╨', COPPER_WIRE_COLOR,   .{.walkable=true});
 
 pub const SteelSupport_NE2_Prop    = mkprop("steel_support_ne2",    "steel support", '╘', STEEL_SUPPORT_COLOR, .{});
 pub const SteelSupport_SE2_Prop    = mkprop("steel_support_se2",    "steel support", '╒', STEEL_SUPPORT_COLOR, .{});
@@ -182,23 +207,28 @@ pub const SteelSupport_NSW2_Prop   = mkprop("steel_support_nsw2",   "steel suppo
 pub const SteelSupport_NSE2W2_Prop = mkprop("steel_support_nse2w2", "steel support", '╪', STEEL_SUPPORT_COLOR, .{});
 pub const SteelSupport_E2W2_Prop   = mkprop("steel_support_e2w2",   "steel support", '═', STEEL_SUPPORT_COLOR, .{});
 
-pub const MarbleWall_Upper     = mkprop("marble_wall_upper", "marble wall", '▀', MARBLE_WALL_COLOR , .{});
-pub const MarbleWall_Lower     = mkprop("marble_wall_lower", "marble wall", '▄', MARBLE_WALL_COLOR , .{});
+pub const MarbleWall_Upper     = mkprop("marble_wall_upper",   "marble wall", '▀', MARBLE_WALL_COLOR , .{});
+pub const MarbleWall_Lower     = mkprop("marble_wall_lower",   "marble wall", '▄', MARBLE_WALL_COLOR , .{});
 
-pub const LeftCopperCoilProp   = mkprop("left_copper_coil",  "half copper coil",  '▌', COPPER_COIL_COLOR, .{.walkable = false});
-pub const RightCopperCoilProp  = mkprop("right_copper_coil", "half copper coil",  '▐', COPPER_COIL_COLOR, .{.walkable = false});
-pub const LowerCopperCoilProp  = mkprop("lower_copper_coil", "half copper coil",  '▄', COPPER_COIL_COLOR, .{.walkable = false});
-pub const UpperCopperCoilProp  = mkprop("upper_copper_coil", "half copper coil",  '▀', COPPER_COIL_COLOR, .{.walkable = false});
-pub const FullCopperCoilProp   = mkprop("full_copper_coil",  "large copper coil", '█', COPPER_COIL_COLOR, .{.walkable = false});
+pub const ConcreteWall_Upper   = mkprop("concrete_wall_upper", "concrete wall", '▀', CNCRTE_WALL_COLOR , .{});
+pub const ConcreteWall_Lower   = mkprop("concrete_wall_lower", "concrete wall", '▄', CNCRTE_WALL_COLOR , .{});
+pub const ConcreteWall_Full    = mkprop("concrete_wall_full",  "concrete wall", '█', CNCRTE_WALL_COLOR , .{});
 
-pub const TableProp            = mkprop("table",               "table",               '⊺', 0xffffff,          .{});
-pub const Gearbox              = mkprop("gearbox",             "gearbox",             '■', 0xffffff,          .{});
-pub const PowerSwitchProp      = mkprop("power_switch",        "power switch",        '♥', 0xffffff,          .{});
-pub const ControlPanelProp     = mkprop("control_panel",       "control panel",       '⌨', 0xffffff,          .{});
-pub const SmallTransformerProp = mkprop("small_transformer",   "machine",             '■', COPPER_WIRE_COLOR, .{});
-pub const LargeTransformerProp = mkprop("large_transformer",   "machine",             '█', COPPER_WIRE_COLOR, .{});
-pub const SwitchingStationProp = mkprop("switching_station",   "machine",             '⊡', 0xffaf9a,          .{});
-pub const SteelGasReservoir    = mkprop("steel_gas_reservoir", "steel gas reservoir", '■', 0xd7d7ff,          .{});
+pub const LeftCopperCoilProp   = mkprop("left_copper_coil",    "half copper coil",  '▌', COPPER_COIL_COLOR, .{.walkable = false});
+pub const RightCopperCoilProp  = mkprop("right_copper_coil",   "half copper coil",  '▐', COPPER_COIL_COLOR, .{.walkable = false});
+pub const LowerCopperCoilProp  = mkprop("lower_copper_coil",   "half copper coil",  '▄', COPPER_COIL_COLOR, .{.walkable = false});
+pub const UpperCopperCoilProp  = mkprop("upper_copper_coil",   "half copper coil",  '▀', COPPER_COIL_COLOR, .{.walkable = false});
+pub const FullCopperCoilProp   = mkprop("full_copper_coil",    "large copper coil", '█', COPPER_COIL_COLOR, .{.walkable = false});
+
+pub const TableProp            = mkprop("table",               "table",               '⊺', 0xffffff,            .{});
+pub const Gearbox              = mkprop("gearbox",             "gearbox",             '■', 0xffffff,            .{});
+pub const PowerSwitchProp      = mkprop("power_switch",        "power switch",        '♥', 0xffffff,            .{});
+pub const ControlPanelProp     = mkprop("control_panel",       "control panel",       '⌨', 0xffffff,            .{});
+pub const SmallTransformerProp = mkprop("small_transformer",   "machine",             '■', COPPER_WIRE_COLOR,   .{});
+pub const LargeTransformerProp = mkprop("large_transformer",   "machine",             '█', COPPER_WIRE_COLOR,   .{});
+pub const SwitchingStationProp = mkprop("switching_station",   "machine",             '⊡', 0xffaf9a,            .{});
+pub const SteelGasReservoir    = mkprop("steel_gas_reservoir", "steel gas reservoir", '■', 0xd7d7ff,            .{});
+pub const SteelGasPin          = mkprop("steel_pin",           "steel pin",           '·', STEEL_SUPPORT_COLOR, .{});
 
 pub const StairDstProp         = mkprop("stair_dst",           "downward stair",      '×', 0xffffff,          .{.walkable = true});
 pub const ItemLocationProp     = mkprop("item_location",       "mat",                 '░', 0x989898,          .{ .walkable = true, .function = .ActionPoint });
@@ -279,8 +309,31 @@ pub const PowerSupply = Machine{
     .powered_opacity = 0,
     .unpowered_opacity = 0,
 
-    .powered_luminescence = 99,
+    .powered_luminescence = 75,
     .unpowered_luminescence = 5,
+
+    .on_power = powerPowerSupply,
+};
+
+pub const NuclearPowerSupply = Machine{
+    .id = "nuclear_power_supply",
+    .name = "orthire furnace",
+
+    .powered_tile = '≡',
+    .unpowered_tile = '≡',
+
+    .power_drain = 0,
+    .power_add = 100,
+    .power = 100, // Start out fully powered
+
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+
+    .powered_opacity = 0,
+    .unpowered_opacity = 0,
+
+    .powered_luminescence = 100,
+    .unpowered_luminescence = 20,
 
     .on_power = powerPowerSupply,
 };

@@ -1,0 +1,27 @@
+:invisible
+:nospawn
+
+:spawn cleaner 1,1
+:spawn cleaner 2,1
+:spawn cleaner 3,1
+:spawn cleaner 4,1
+:spawn cleaner 5,1
+:spawn cleaner 6,1
+:spawn cleaner 1,2
+:spawn cleaner 2,2
+:spawn cleaner 3,2
+:spawn  hauler 4,2
+:spawn  hauler 5,2
+:spawn  hauler 6,2
+:spawn  hauler 1,3
+:spawn  hauler 2,3
+:spawn  hauler 3,3
+:spawn  hauler 4,3
+:spawn  hauler 5,3
+:spawn  hauler 6,3
+
+#******#
+*......*
+*......*
+*......*
+#******#

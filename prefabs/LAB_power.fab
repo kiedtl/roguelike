@@ -1,52 +1,44 @@
-% Power supply.
+% Nuclear power supply.
 %
-% █▀▐▀░▀▌▀█
-% ══╪╡█╞╪══
-% █▄▐▄░▄▌▄█
-
-@0 p full_copper_coil
-@1 p upper_copper_coil
-@2 p lower_copper_coil
-@3 p right_copper_coil
-@4 p workstation
-@5 p left_copper_coil
-@6 p steel_support_e2w2
-@7 p steel_support_nse2w2
-@8 p steel_support_nsw2
-@9 p steel_support_nse2
-@a m power_supply
-
-:spawn interaction_laborer  7,2  7,3
-:spawn interaction_laborer  7,4  7,3
-:spawn            sentinel  1,1
-:spawn            sentinel 13,1
-:spawn            sentinel  1,5
-:spawn            sentinel 13,5
-:spawn             cleaner  1,6
-:spawn             cleaner  2,6
-:spawn             cleaner  3,6
-:spawn             cleaner  4,6
-:spawn             cleaner  5,6
-:spawn              hauler  6,6
-:spawn              hauler  7,6
-:spawn              hauler  8,6
-:spawn              hauler  9,6
-:spawn              hauler 10,6
-:spawn              hauler 11,6
-:spawn              hauler 12,6
-:spawn              hauler 13,6
-
+% ·▄▄┬▄▄·
+% █  ┴┘ █┐
+% ┣╾┤≡├╼┫⊡
+% █ ┌┬  █╡
+% ·▀▀┴▀▀·⌨
 
 :invisible
 :notrap
 :nospawn
 :nolight
 
-####***#***####
-#......@......#
-*..013141510..*
-•..6678a9766..•
-*..023242520..*
-#.............#
-•.............•
-####***#***####
+@0 p concrete_wall_lower
+@1 p concrete_wall_upper
+@2 p concrete_wall_full
+@3 m nuclear_power_supply
+@4 p switching_station
+@5 p control_panel
+@a p steel_pin
+@b p wall_n1s1e1
+@c p wall_e1w1_thine
+@d p wall_e1w1_thinw
+@e p wall_n1s1w1
+@f p pipe_s1e1w1
+@g p pipe_n1e1w1
+@h p pipe_n1w1
+@i p pipe_n1s1w1
+@j p pipe_n1s1e1
+@k p pipe_n1e1w1
+@l p pipe_s1e1w1
+@m p pipe_s1e1
+@n p wire_s1w1
+@o p wire_n1s1w2
+
+####*****#####
+#............#
+*..a00f00a...*
+#..2..gh.2n..#
+#..bci3jde4..#
+#..2.ml..2o..#
+*..a11k11a5..*
+#............#
+####*****#####

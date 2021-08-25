@@ -1836,6 +1836,7 @@ pub const Configs = [LEVELS]LevelConfig{
         .identifier = "LAB",
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
             "LAB_power",
+            "LAB_workers",
         }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },

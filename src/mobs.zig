@@ -182,7 +182,7 @@ pub const PlayerTemplate = MobTemplate{
             .is_combative = false,
             .is_curious = false,
         },
-        .allegiance = .Sauron,
+        .allegiance = .Illuvatar,
         .vision = 25,
         .base_night_vision = 0,
         .deg360_vision = true,
