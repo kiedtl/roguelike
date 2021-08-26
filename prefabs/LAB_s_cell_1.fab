@@ -27,7 +27,7 @@
 @k p wire_n1e2
 @l p wire_n1w1
 
-:prison 1,1 1 1
+:prison 1,2 1 1
 :input 2,0 2 1
 :spawn alchemist 1,4
 
