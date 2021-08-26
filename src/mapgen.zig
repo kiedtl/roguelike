@@ -1104,15 +1104,13 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
 
             switch (rng.range(usize, 1, 4)) {
                 1 => {
-                    if (statues < 3) {
-                        if (rng.onein(3)) {
-                            const statue = rng.chooseUnweighted(mobs.MobTemplate, &mobs.STATUES);
-                            _ = placeMob(alloc, &statue, coord, .{});
-                        } else {
-                            const statue = rng.chooseUnweighted(Prop, &machines.STATUES);
-                            _ = _place_prop(coord, &statue);
-                        }
+                    if (Configs[level].allow_statues and statues < 3 and rng.onein(3)) {
+                        const statue = rng.chooseUnweighted(mobs.MobTemplate, &mobs.STATUES);
+                        _ = placeMob(alloc, &statue, coord, .{});
                         statues += 1;
+                    } else {
+                        const statue = rng.chooseUnweighted(Prop, Configs[level].props);
+                        _ = _place_prop(coord, &statue);
                     }
                 },
                 2 => {
@@ -1774,6 +1772,8 @@ pub const LevelConfig = struct {
     light: *const Machine = &machines.Brazier,
     vent: *const Prop = &machines.GasVentProp,
     bars: *const Prop = &machines.IronBarProp,
+    props: []const Prop = &machines.STATUES,
+    allow_statues: bool = true,
 
     pub const RPBuf = StackBuffer([]const u8, 4);
     pub const MCBuf = StackBuffer(MobConfig, 3);
@@ -1831,6 +1831,8 @@ pub const Configs = [LEVELS]LevelConfig{
         .max_room_height = 6,
 
         .patrol_squads = 1,
+
+        .allow_statues = false,
     },
     .{
         .identifier = "LAB",
@@ -1867,6 +1869,8 @@ pub const Configs = [LEVELS]LevelConfig{
         .light = &machines.Lamp,
         .vent = &machines.LabGasVentProp,
         .bars = &machines.TitaniumBarProp,
+        .props = &machines.LABSTUFF,
+        .allow_statues = false,
     },
     .{
         .identifier = "PRI",

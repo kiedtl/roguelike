@@ -28,6 +28,19 @@ pub const STATUES = [_]Prop{
     HematiteStatue,
 };
 
+pub const LABSTUFF = [_]Prop{
+    Centrifuge,
+    XRayAppar,
+    WaterPurifierAppar,
+    FracDistillAppar,
+    LaserEtcher,
+    DistillAppar,
+    Burner,
+    Microscope,
+    Calorimeter,
+    VacuumChamber,
+};
+
 pub const PROPS = [_]Prop{
     GoldStatue,
     RealgarStatue,
@@ -81,6 +94,16 @@ pub const PROPS = [_]Prop{
     SmallTransformerProp,
     LargeTransformerProp,
     SwitchingStationProp,
+    Centrifuge,
+    XRayAppar,
+    WaterPurifierAppar,
+    FracDistillAppar,
+    LaserEtcher,
+    DistillAppar,
+    Burner,
+    Microscope,
+    Calorimeter,
+    VacuumChamber,
     ItemLocationProp,
     WorkstationProp,
     MediumSieve,
@@ -229,6 +252,17 @@ pub const LargeTransformerProp = mkprop("large_transformer",   "machine",       
 pub const SwitchingStationProp = mkprop("switching_station",   "machine",             '⊡', 0xffaf9a,            .{});
 pub const SteelGasReservoir    = mkprop("steel_gas_reservoir", "steel gas reservoir", '■', 0xd7d7ff,            .{});
 pub const SteelGasPin          = mkprop("steel_pin",           "steel pin",           '·', STEEL_SUPPORT_COLOR, .{});
+
+pub const Centrifuge           = mkprop("centrifuge",          "centrifuge",          '⊜', 0xffe4e1,            .{});
+pub const XRayAppar            = mkprop("xray_appar",          "x-ray machine",       '‡', 0xa8ffa8,            .{});
+pub const WaterPurifierAppar   = mkprop("water_purifi_appar",  "water purifier",      '⊝', 0xe0ffff,            .{});
+pub const FracDistillAppar     = mkprop("frac_distill_appar",  "fractional distiller",'∓', 0xe6e6fa,            .{});
+pub const LaserEtcher          = mkprop("laser_etcher",        "laser etcher",        '⊎', 0xfff0f5,            .{});
+pub const DistillAppar         = mkprop("simp_distill_appar",  "distiller",           '∔', 0xd0e4fe,            .{});
+pub const Burner               = mkprop("burner",              "burner",              '⊼', 0xffffe0,            .{});
+pub const Microscope           = mkprop("microscope",          "microscope",          '†', 0xffeaca,            .{});
+pub const Calorimeter          = mkprop("microscope",          "microscope",          '⊝', 0xf5f5dc,            .{});
+pub const VacuumChamber        = mkprop("microscope",          "microscope",          '⊜', 0xffefdf,            .{});
 
 pub const StairDstProp         = mkprop("stair_dst",           "downward stair",      '×', 0xffffff,          .{.walkable = true});
 pub const ItemLocationProp     = mkprop("item_location",       "mat",                 '░', 0x989898,          .{ .walkable = true, .function = .ActionPoint });
