@@ -1152,15 +1152,20 @@ pub const Mob = struct { // {{{
     // Check if a mob, when trying to move into a space that already has a mob,
     // can swap with that other mob. Return true if:
     //     - The mob's strength is greater than the other mob's strength.
+    //     - The mob's speed is greater than the other mob's speed.
+    //     - The other mob didn't try to move in the past turn.
     //     - The other mob was trying to move in the opposite direction, i.e.,
     //       both mobs were trying to shuffle past each other.
     //     - The mob wasn't working (e.g., may have been attacking), but the other
     //       one wasn't.
     //
     // Return false if:
+    //     - The other mob was trying to move in the same direction. No need to barge
+    //       past, he'll move soon enough.
     //     - The other mob is the player. No mob should be able to swap with the player.
     //     - The mob is the player and the other mob is a noncombative enemy (e.g.,
     //       slaves). The player has no business attacking non-combative enemies.
+    //     - The other mob is immobile (e.g., a statue).
     //
     pub fn canSwapWith(self: *const Mob, other: *Mob, direction: ?Direction) bool {
         var can = false;
@@ -1171,7 +1176,13 @@ pub const Mob = struct { // {{{
         if (self.strength() > other.strength()) {
             can = true;
         }
+        if (self.speed() > other.speed()) {
+            can = true;
+        }
         if (self.ai.phase != .Work and other.ai.phase == .Work) {
+            can = true;
+        }
+        if (direction != null and other.last_attempted_move == null) {
             can = true;
         }
         if (direction != null and other.last_attempted_move != null) {
@@ -1180,6 +1191,11 @@ pub const Mob = struct { // {{{
             }
         }
 
+        if (direction != null and other.last_attempted_move != null) {
+            if (direction.? == other.last_attempted_move.?) {
+                can = false;
+            }
+        }
         if (self.allegiance != other.allegiance) {
             can = false;
         }
