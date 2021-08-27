@@ -13,6 +13,26 @@ const rng = @import("rng.zig");
 const materials = @import("materials.zig");
 usingnamespace @import("types.zig");
 
+const mkprop_opts = struct {
+    bg: ?u32 = null,
+    walkable: bool = false,
+    opacity: f64 = 0.0,
+    function: PropFunction = .None,
+};
+
+fn mkprop(id: []const u8, name: []const u8, tile: u21, fg: ?u32, opts: mkprop_opts) Prop {
+    return .{
+        .id = id,
+        .name = name,
+        .tile = tile,
+        .fg = fg,
+        .bg = opts.bg,
+        .walkable = opts.walkable,
+        .opacity = opts.opacity,
+        .function = opts.function,
+    };
+}
+
 const STEEL_SUPPORT_COLOR: u32 = 0xa6c2d4;
 const VANGEN_WALL_COLOR: u32 = materials.Vangenite.color_fg;
 const MARBLE_WALL_COLOR: u32 = materials.Marble.color_floor;
@@ -28,6 +48,44 @@ pub const STATUES = [_]Prop{
     HematiteStatue,
 };
 
+pub const LAB_UTILITY_ITEMS = [_]Prop{
+    mkprop("", "beaker", '~', 0xffffff, .{}),
+    mkprop("", "large beaker", '~', 0xffffff, .{}),
+    mkprop("", "mesh", '~', 0xffffff, .{}),
+    mkprop("", "strainer", '~', 0xffffff, .{}),
+    mkprop("", "scale", '~', 0xffffff, .{}),
+    mkprop("", "lens", '~', 0xffffff, .{}),
+    mkprop("", "battery", '~', 0xffffff, .{}),
+    mkprop("", "test-tube", '~', 0xffffff, .{}),
+    mkprop("", "large battery", '~', 0xffffff, .{}),
+    mkprop("", "empty vial", '~', 0xffffff, .{}),
+    mkprop("", "test-tube holder", '~', 0xffffff, .{}),
+    mkprop("", "stirring rod", '~', 0xffffff, .{}),
+    mkprop("", "laboratory balance", '~', 0xffffff, .{}),
+    mkprop("", "crucible", '~', 0xffffff, .{}),
+    mkprop("", "crucible tongs", '~', 0xffffff, .{}),
+    mkprop("", "filter paper", '~', 0xffffff, .{}),
+    mkprop("", "flask", '~', 0xffffff, .{}),
+    mkprop("", "filter flask", '~', 0xffffff, .{}),
+    mkprop("", "pipet", '~', 0xffffff, .{}),
+    mkprop("", "buret", '~', 0xffffff, .{}),
+    mkprop("", "ring stand", '~', 0xffffff, .{}),
+    mkprop("", "double buret clamp", '~', 0xffffff, .{}),
+    mkprop("", "mortar/pestle", '~', 0xffffff, .{}),
+    mkprop("", "evaporating dish", '~', 0xffffff, .{}),
+    mkprop("", "flame spreader", '~', 0xffffff, .{}),
+    mkprop("", "burner lighter", '~', 0xffffff, .{}),
+    mkprop("", "utility clamps", '~', 0xffffff, .{}),
+    mkprop("", "separatory funnel", '~', 0xffffff, .{}),
+    mkprop("", "reagent bottle", '~', 0xffffff, .{}),
+    mkprop("", "graduated cylinder", '~', 0xffffff, .{}),
+    mkprop("", "petri dish", '~', 0xffffff, .{}),
+    mkprop("", "rubber stopper", '~', 0xffffff, .{}),
+    mkprop("", "thermometer", '~', 0xffffff, .{}),
+    mkprop("", "Buchner funnel", '~', 0xffffff, .{}),
+    mkprop("", "Erlenmeyer flask", '~', 0xffffff, .{}),
+};
+
 pub const LABSTUFF = [_]Prop{
     Centrifuge,
     XRayAppar,
@@ -35,7 +93,8 @@ pub const LABSTUFF = [_]Prop{
     FracDistillAppar,
     LaserEtcher,
     DistillAppar,
-    Burner,
+    BunsenBurner,
+    TirrillBurner,
     Microscope,
     Calorimeter,
     VacuumChamber,
@@ -100,7 +159,8 @@ pub const PROPS = [_]Prop{
     FracDistillAppar,
     LaserEtcher,
     DistillAppar,
-    Burner,
+    BunsenBurner,
+    TirrillBurner,
     Microscope,
     Calorimeter,
     VacuumChamber,
@@ -148,34 +208,11 @@ pub const MACHINES = [_]Machine{
     RestrictedMachinesOpenLever,
 };
 
-pub const CONTAINERS = [_]Container{
-    Bin, Barrel, Cabinet, Chest,
-};
-
-pub const Bin = Container{ .name = "bin", .tile = '╳', .capacity = 14, .type = .Casual };
-pub const Barrel = Container{ .name = "barrel", .tile = 'ʊ', .capacity = 7, .type = .Eatables };
+pub const Bin = Container{ .name = "bin", .tile = '╳', .capacity = 14, .type = .Utility, .item_repeat = 20 };
+pub const Barrel = Container{ .name = "barrel", .tile = 'ʊ', .capacity = 7, .type = .Eatables, .item_repeat = 0 };
 pub const Cabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 5, .type = .Wearables };
 pub const Chest = Container{ .name = "chest", .tile = 'æ', .capacity = 7, .type = .Valuables };
-
-const mkprop_opts = struct {
-    bg: ?u32 = null,
-    walkable: bool = false,
-    opacity: f64 = 0.0,
-    function: PropFunction = .None,
-};
-
-fn mkprop(id: []const u8, name: []const u8, tile: u21, fg: ?u32, opts: mkprop_opts) Prop {
-    return .{
-        .id = id,
-        .name = name,
-        .tile = tile,
-        .fg = fg,
-        .bg = opts.bg,
-        .walkable = opts.walkable,
-        .opacity = opts.opacity,
-        .function = opts.function,
-    };
-}
+pub const LabCabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 8, .type = .Utility, .item_repeat = 60 };
 
 // zig fmt: off
 
@@ -259,10 +296,11 @@ pub const WaterPurifierAppar   = mkprop("water_purifi_appar",  "water purifier",
 pub const FracDistillAppar     = mkprop("frac_distill_appar",  "fractional distiller",'∓', 0xe6e6fa,            .{});
 pub const LaserEtcher          = mkprop("laser_etcher",        "laser etcher",        '⊎', 0xfff0f5,            .{});
 pub const DistillAppar         = mkprop("simp_distill_appar",  "distiller",           '∔', 0xd0e4fe,            .{});
-pub const Burner               = mkprop("burner",              "burner",              '⊼', 0xffffe0,            .{});
+pub const BunsenBurner         = mkprop("b_burner",            "bunsen burner",       '⊼', 0xffffe0,            .{});
+pub const TirrillBurner        = mkprop("t_burner",            "tirrill burner",      '⊼', 0xffffe0,            .{});
 pub const Microscope           = mkprop("microscope",          "microscope",          '†', 0xffeaca,            .{});
-pub const Calorimeter          = mkprop("microscope",          "microscope",          '⊝', 0xf5f5dc,            .{});
-pub const VacuumChamber        = mkprop("microscope",          "microscope",          '⊜', 0xffefdf,            .{});
+pub const Calorimeter          = mkprop("calorimeter",         "calorimeter",         '⊝', 0xf5f5dc,            .{});
+pub const VacuumChamber        = mkprop("vacuum_chmbr",        "vacuum chamber",      '⊜', 0xffefdf,            .{});
 
 pub const StairDstProp         = mkprop("stair_dst",           "downward stair",      '×', 0xffffff,          .{.walkable = true});
 pub const ItemLocationProp     = mkprop("item_location",       "mat",                 '░', 0x989898,          .{ .walkable = true, .function = .ActionPoint });

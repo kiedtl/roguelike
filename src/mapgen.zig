@@ -908,12 +908,28 @@ pub fn placeItems(level: usize) void {
         switch (container.type) {
             .Valuables => {
                 var i: usize = 0;
+                var potion = rng.chooseUnweighted(Potion, &items.POTIONS);
                 while (i < fill) : (i += 1) {
-                    const potion = rng.chooseUnweighted(Potion, &items.POTIONS);
+                    if (rng.range(usize, 0, 100) < container.item_repeat) {
+                        potion = rng.chooseUnweighted(Potion, &items.POTIONS);
+                    }
+
                     state.potions.append(potion) catch unreachable;
                     container.items.append(
                         Item{ .Potion = state.potions.lastPtr().? },
                     ) catch unreachable;
+                }
+            },
+            .Utility => if (Configs[level].utility_items.len > 0) {
+                const item_list = Configs[level].utility_items;
+                var item = &item_list[rng.range(usize, 0, item_list.len - 1)];
+                var i: usize = 0;
+                while (i < fill) : (i += 1) {
+                    if (rng.range(usize, 0, 100) < container.item_repeat) {
+                        item = &item_list[rng.range(usize, 0, item_list.len - 1)];
+                    }
+
+                    container.items.append(Item{ .Prop = item }) catch unreachable;
                 }
             },
             else => {},
@@ -1115,7 +1131,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                 },
                 2 => {
                     if (capacity < (math.sqrt(room.width * room.height) * 4)) {
-                        var cont = rng.chooseUnweighted(Container, &machines.CONTAINERS);
+                        var cont = rng.chooseUnweighted(Container, Configs[level].containers);
                         placeContainer(coord, &cont);
                         capacity += cont.capacity;
                     }
@@ -1773,6 +1789,13 @@ pub const LevelConfig = struct {
     vent: *const Prop = &machines.GasVentProp,
     bars: *const Prop = &machines.IronBarProp,
     props: []const Prop = &machines.STATUES,
+    containers: []const Container = &[_]Container{
+        machines.Bin,
+        machines.Barrel,
+        machines.Cabinet,
+        machines.Chest,
+    },
+    utility_items: []const Prop = &[_]Prop{},
     allow_statues: bool = true,
 
     pub const RPBuf = StackBuffer([]const u8, 4);
@@ -1870,6 +1893,9 @@ pub const Configs = [LEVELS]LevelConfig{
         .vent = &machines.LabGasVentProp,
         .bars = &machines.TitaniumBarProp,
         .props = &machines.LABSTUFF,
+        .containers = &[_]Container{ machines.Chest, machines.LabCabinet },
+        .utility_items = &machines.LAB_UTILITY_ITEMS,
+
         .allow_statues = false,
     },
     .{

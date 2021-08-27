@@ -1801,6 +1801,7 @@ pub const Container = struct {
     items: ItemBuffer = ItemBuffer.init(null),
     type: ContainerType,
     coord: Coord = undefined,
+    item_repeat: usize = 10, // Chance of the first item appearing again
 
     pub const ItemBuffer = StackBuffer(Item, 21);
     pub const ContainerType = enum {
@@ -2079,7 +2080,7 @@ pub const Ring = struct {
 };
 
 pub const ItemType = enum {
-    Corpse, Ring, Potion, Vial, Armor, Weapon, Boulder
+    Corpse, Ring, Potion, Vial, Armor, Weapon, Boulder, Prop
 };
 
 pub const Item = union(ItemType) {
@@ -2090,6 +2091,7 @@ pub const Item = union(ItemType) {
     Armor: *Armor,
     Weapon: *Weapon,
     Boulder: *const Material,
+    Prop: *const Prop,
 
     pub fn shortName(self: *const Item) !StackBuffer(u8, 128) {
         var buf = StackBuffer(u8, 128).init(&([_]u8{0} ** 128));
@@ -2102,6 +2104,7 @@ pub const Item = union(ItemType) {
             .Armor => |a| try fmt.format(fbs.writer(), "{} armor", .{a.name}),
             .Weapon => |w| try fmt.format(fbs.writer(), "{}", .{w.name}),
             .Boulder => |b| try fmt.format(fbs.writer(), "boulder of {}", .{b.name}),
+            .Prop => |b| try fmt.format(fbs.writer(), "{}", .{b.name}),
         }
         buf.resizeTo(@intCast(usize, fbs.getPos() catch unreachable));
         return buf;
@@ -2188,6 +2191,10 @@ pub const Tile = struct {
                             cell.ch = '©';
                             cell.fg = b.color_floor;
                         },
+                        .Prop => |p| {
+                            cell.ch = p.tile;
+                            cell.fg = p.fg orelse 0xffffff;
+                        },
                         else => cell.ch = '?',
                     }
                 } else if (state.dungeon.at(coord).surface) |surfaceitem| {
@@ -2196,7 +2203,7 @@ pub const Tile = struct {
 
                     const ch = switch (surfaceitem) {
                         .Container => |c| cont: {
-                            if (c.capacity > 7) {
+                            if (c.capacity >= 14) {
                                 cell.fg = 0x000000;
                                 cell.bg = 0x808000;
                             }

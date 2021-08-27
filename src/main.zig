@@ -368,6 +368,10 @@ fn useItem() bool {
             state.message(.MetaError, "You want to *eat* that?", .{});
             return false;
         },
+        .Prop => |p| {
+            state.message(.Info, "You admire the {}.", .{p.name});
+            return false;
+        },
     }
 
     _ = state.player.removeItem(index) catch unreachable;
