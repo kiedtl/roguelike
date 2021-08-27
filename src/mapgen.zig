@@ -1335,8 +1335,14 @@ fn levelFeatureExperiments(c: usize, coord: Coord, room: *const Room, prefab: *c
 }
 
 fn levelFeatureOres(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
-    const v = rng.choose(Vial.OreAndVial, &Vial.VIAL_ORES, &Vial.VIAL_COMMONICITY) catch unreachable;
-    if (v.m) |material| state.dungeon.itemsAt(coord).append(Item{ .Boulder = material }) catch unreachable;
+    var tries: usize = 50;
+    while (tries > 0) : (tries -= 1) {
+        const v = rng.choose(Vial.OreAndVial, &Vial.VIAL_ORES, &Vial.VIAL_COMMONICITY) catch unreachable;
+        if (v.m) |material| {
+            state.dungeon.itemsAt(coord).append(Item{ .Boulder = material }) catch unreachable;
+            break;
+        }
+    }
 }
 
 pub const Prefab = struct {
@@ -1861,7 +1867,6 @@ pub const Configs = [LEVELS]LevelConfig{
         .identifier = "LAB",
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
             "LAB_power",
-            "LAB_workers",
         }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
