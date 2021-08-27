@@ -7,8 +7,6 @@
 % ⌨┃░░░░░ •┃
 
 :subroom
-:output 2,5 6 1
-:input 2,3 5 1
 
 @0 m extractor
 @1 p switching_station
@@ -33,6 +31,8 @@
 @k p wire_n1s1e2w2
 @l p wire_n1s1
 
+:output 2,5 5 1
+:input 2,3 5 1
 :spawn  hauler 0,0
 :spawn  hauler 1,0
 :spawn  hauler 2,0
