@@ -76,8 +76,14 @@ pub fn tickTasks(level: usize) void {
                 var x: usize = output_area.start.x;
                 while (x < output_area.end().x) : (x += 1) {
                     const coord = Coord.new2(level, x, y);
+
                     const t_items = state.dungeon.itemsAt(coord);
-                    if (t_items.len > 0) {
+                    const c_items: ?*Container.ItemBuffer =
+                        if (state.dungeon.hasContainer(coord)) |c| &c.items else null;
+
+                    if ((c_items != null and c_items.?.len > 0) or
+                        (c_items == null and t_items.len > 0))
+                    {
                         var already_reported = false;
 
                         for (state.tasks.items) |task, id| switch (task.type) {
@@ -89,7 +95,10 @@ pub fn tickTasks(level: usize) void {
                         };
 
                         if (!already_reported) {
-                            itemttype = std.meta.activeTag(t_items.data[0]);
+                            itemttype = if (c_items) |ci|
+                                std.meta.activeTag(ci.data[0])
+                            else
+                                std.meta.activeTag(t_items.data[0]);
                             itemcoord = coord;
                             break :outer;
                         }
@@ -125,8 +134,14 @@ pub fn tickTasks(level: usize) void {
             var x: usize = input_area.room.start.x;
             while (x < input_area.room.end().x) : (x += 1) {
                 const coord = Coord.new2(level, x, y);
-                // TODO: search containers as well
-                if (!state.dungeon.itemsAt(coord).isFull()) {
+
+                const t_items = state.dungeon.itemsAt(coord);
+                const c_items: ?*Container.ItemBuffer =
+                    if (state.dungeon.hasContainer(coord)) |c| &c.items else null;
+
+                if ((c_items != null and !c_items.?.isFull()) or
+                    (c_items == null and !t_items.isFull()))
+                {
                     var already_reported = false;
 
                     for (state.tasks.items) |task, id| switch (task.type) {

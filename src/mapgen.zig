@@ -1334,13 +1334,31 @@ fn levelFeatureExperiments(c: usize, coord: Coord, room: *const Room, prefab: *c
     const exp = placeMob(alloc, &exp_t, coord, .{});
 }
 
+// Randomly place a vial ore. If the Y coordinate is even, create a container and
+// fill it up halfway; otherwise, place only one item on the ground.
 fn levelFeatureOres(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+    var using_container: ?*Container = null;
+
+    if ((coord.y % 2) == 0) {
+        placeContainer(coord, &machines.VOreCrate);
+        using_container = state.dungeon.at(coord).surface.?.Container;
+    }
+
+    var placed: usize = rng.rangeClumping(usize, 3, 8, 2);
     var tries: usize = 50;
     while (tries > 0) : (tries -= 1) {
         const v = rng.choose(Vial.OreAndVial, &Vial.VIAL_ORES, &Vial.VIAL_COMMONICITY) catch unreachable;
+
         if (v.m) |material| {
-            state.dungeon.itemsAt(coord).append(Item{ .Boulder = material }) catch unreachable;
-            break;
+            const item = Item{ .Boulder = material };
+            if (using_container) |container| {
+                container.items.append(item) catch unreachable;
+                if (placed == 0) break;
+                placed -= 1;
+            } else {
+                state.dungeon.itemsAt(coord).append(item) catch unreachable;
+                break;
+            }
         }
     }
 }

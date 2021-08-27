@@ -452,7 +452,10 @@ pub const Stockpile = struct {
             var x: usize = self.room.start.x;
             while (x < self.room.end().x) : (x += 1) {
                 const coord = Coord.new2(self.room.start.z, x, y);
-                // TODO: search containers as well
+                if (state.dungeon.hasContainer(coord)) |container|
+                    if (!container.items.isFull()) {
+                        return coord;
+                    };
                 if (!state.dungeon.itemsAt(coord).isFull()) {
                     return coord;
                 }
@@ -467,7 +470,10 @@ pub const Stockpile = struct {
             var x: usize = self.room.start.x;
             while (x < self.room.end().x) : (x += 1) {
                 const coord = Coord.new2(self.room.start.z, x, y);
-                // TODO: search containers as well
+                if (state.dungeon.hasContainer(coord)) |container|
+                    if (container.items.len > 0) {
+                        return coord;
+                    };
                 if (state.dungeon.itemsAt(coord).len > 0) {
                     return coord;
                 }
@@ -482,11 +488,19 @@ pub const Stockpile = struct {
             var x: usize = self.room.start.x;
             while (x < self.room.end().x) : (x += 1) {
                 const coord = Coord.new2(self.room.start.z, x, y);
-                const titems = state.dungeon.itemsAt(coord);
 
-                if (titems.len > 0) {
-                    self.type = std.meta.activeTag(titems.data[0]);
-                    return true;
+                if (state.dungeon.hasContainer(coord)) |container| {
+                    if (container.items.len > 0) {
+                        self.type = std.meta.activeTag(container.items.data[0]);
+                        return true;
+                    }
+                } else {
+                    const titems = state.dungeon.itemsAt(coord);
+
+                    if (titems.len > 0) {
+                        self.type = std.meta.activeTag(titems.data[0]);
+                        return true;
+                    }
                 }
             }
         }
@@ -1824,6 +1838,7 @@ pub const Container = struct {
         Eatables, // All food
         Wearables, // Weapons, armor, clothing, thread, cloth
         Valuables, // potions
+        VOres, // self-explanatory
         Casual, // dice, deck of cards
         Utility, // Depends on the level (for PRI: rope, chains, etc)
     };
@@ -2324,6 +2339,14 @@ pub const Dungeon = struct {
         }
 
         return false;
+    }
+
+    pub fn hasContainer(self: *Dungeon, c: Coord) ?*Container {
+        const tile = self.at(c);
+        if (tile.surface) |surface|
+            if (std.meta.activeTag(surface) == .Container)
+                return surface.Container;
+        return null;
     }
 
     pub fn neighboringMachines(self: *Dungeon, c: Coord) usize {

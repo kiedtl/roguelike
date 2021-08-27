@@ -212,7 +212,8 @@ pub const Bin = Container{ .name = "bin", .tile = '╳', .capacity = 14, .type =
 pub const Barrel = Container{ .name = "barrel", .tile = 'ʊ', .capacity = 7, .type = .Eatables, .item_repeat = 0 };
 pub const Cabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 5, .type = .Wearables };
 pub const Chest = Container{ .name = "chest", .tile = 'æ', .capacity = 7, .type = .Valuables };
-pub const LabCabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 8, .type = .Utility, .item_repeat = 60 };
+pub const LabCabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 8, .type = .Utility, .item_repeat = 70 };
+pub const VOreCrate = Container{ .name = "crate", .tile = '∐', .capacity = 21, .type = .VOres, .item_repeat = 60 };
 
 // zig fmt: off
 
@@ -640,12 +641,20 @@ pub fn powerExtractor(machine: *Machine) void {
     if (state.dungeon.itemsAt(output).isFull())
         return;
 
-    const input_items = state.dungeon.itemsAt(input);
-    if (input_items.len > 0) switch (input_items.data[0]) {
+    // TODO: don't eat items that can't be processed
+
+    var input_item: ?Item = null;
+    if (state.dungeon.hasContainer(input)) |container| {
+        if (container.items.len > 0) input_item = container.items.pop() catch unreachable;
+    } else {
+        const t_items = state.dungeon.itemsAt(input);
+        if (t_items.len > 0) input_item = t_items.pop() catch unreachable;
+    }
+
+    if (input_item != null) switch (input_item.?) {
         .Boulder => |b| for (&Vial.VIAL_ORES) |vd| if (vd.m) |m|
             if (mem.eql(u8, m.name, b.name)) {
                 state.dungeon.itemsAt(output).append(Item{ .Vial = vd.v }) catch unreachable;
-                _ = input_items.orderedRemove(0) catch unreachable;
                 state.dungeon.atGas(machine.coord)[gas.Dust.id] = rng.range(f64, 0.1, 0.2);
             },
         else => {},
