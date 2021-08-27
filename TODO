@@ -518,22 +518,34 @@ Maybe a combination.
 Books
 -----
 "Kornalg: The Life and Times of the Ancient Hill-King"
-	- "You learn that Kornahl was by right king of the whole universe."
+	- "You learn that Kornalg was by right king of the whole universe."
 "This was Kornalg"
-	- "You learn that Kornahl was undoubtedly the fastest, strongest,
+	- "You learn that Kornalg was undoubtedly the bravest, strongest,
 	   besterestest hill goblin that ever was."
 "Meing Krampgh"
 	- "You learn that hill goblins are destined to rule the world."
-"Histories of Men"
-	- "You learn that humans are automatically inferior to other
+"Histories of Man"
+	- "You learn that dark-skinned humans are automatically inferior to other
 	   fang-possessing bipeds."
 "On the Descent of Goblins"
 	- "You learn about the Hill Goblin Master Race."
 "Durgh Stammer"
 	- "You learn that hill goblins are vastly superior to cave goblins."
+"The Path to Goblin Supremacy"
+"The Weekly Hurricane"
 "On the Origins of Slade"
 "An Inquiry into the Chemical Properties of Phytin"
 "On the Molecular Structure of Tanus"
+"Operating Traumbulnahl Machinery"
+	- "You learn that human-leather gloves are required while operating
+	  extractors."
+"Optimizing Distance Functions"
+	- "You learn that Chebyshev distance is to be preferred to Euclidean
+	distance for tile-based games."
+"Optimizing the A* Algorithm"
+	- "You learn about Manhattan distance."
+"A Short Guide on Brewing Kombucha"
+	- "You learn the ratios of sugar and tea needed to brew kombucha."
 recipe books
 	- "You learn how to pickle goblin roasts."
 	- "You learn how to properly butcher humans."
@@ -575,7 +587,8 @@ s	nebro		Like slade in Dwarf Fortress -- extremely heavy.
 			Associated with demonic powers.
 s	vangenite	Makes up the walls of machinery in LAB. Glows dimly.
 s	bolyvese
-s	orthire
+s	orthire		Uranium. Nuclear reactors are referred to as
+			"Orthire Furnaces".
 s	maron
 
 
