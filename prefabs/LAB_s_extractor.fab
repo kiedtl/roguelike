@@ -1,12 +1,10 @@
 % Extractor for LAB.
-% 
+%
 % ╓─╓┐┐──╓─┐
-% ║┏━█━━⌨♥━┤
-% ■┃╜─   ╘╕┃
-% │┃      │┃
+% ║┏━█━━━⌨♥┤
+% ■┃     ╘╡┃
 % ╞╪⊞⊞⊞⊞⊞─⊡╡
-% ⌨┃░░░░░  ┃
-%  ┗━•   •━┛
+% ⌨┃░░░░░ •┃
 
 :subroom
 :output 2,5 6 1
@@ -19,6 +17,9 @@
 @4 p power_switch
 @5 p small_transformer
 @6 p item_location
+@7 p wall_n1s1
+@8 p wall_e1w1
+@9 p wall_s1e1
 @a p wire_s2e1
 @b p wire_e1w1
 @c p wire_s1w1
@@ -32,10 +33,20 @@
 @k p wire_n1s1e2w2
 @l p wire_n1s1
 
+:spawn  hauler 0,0
+:spawn  hauler 1,0
+:spawn  hauler 2,0
+:spawn  hauler 3,0
+:spawn  hauler 4,0
+:spawn cleaner 5,0
+:spawn cleaner 6,0
+:spawn cleaner 7,0
+:spawn cleaner 8,0
+:spawn cleaner 9,0
+
+..........
 abaccbbabc
-d##2##34#e
-5#fb..ggh#
-l#δδδδδ.l#
+d98288348e
+57fδδδδgi7
 jk00000b1i
-3#66666..#
-.##•...•##
+3766666.•7

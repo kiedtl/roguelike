@@ -29,6 +29,9 @@
 
 :prison 1,2 1 1
 :input 2,0 2 1
+
+:spawn    hauler 0,0
+:spawn    hauler 1,0
 :spawn alchemist 1,4
 
 ..ααabc
