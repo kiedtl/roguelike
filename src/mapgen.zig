@@ -851,8 +851,8 @@ pub fn placeRandomRooms(
             return;
         };
 
-        const x = rng.range(usize, 1, state.WIDTH - fab.width - 1);
-        const y = rng.range(usize, 1, state.HEIGHT - fab.height - 1);
+        const x = rng.rangeClumping(usize, 1, state.WIDTH - fab.width - 1, 2);
+        const y = rng.rangeClumping(usize, 1, state.HEIGHT - fab.height - 1, 2);
 
         const room = Room{
             .start = Coord.new2(level, x, y),
