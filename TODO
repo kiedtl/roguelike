@@ -9,34 +9,37 @@ Levels
 	- Rooms filled with artwork, posters, skeleton displays, armor displays,
 	  statues, bookshelves, fountains.
 	- Has bear traps with nearby hydras.
-	- Preprocessing: change walls that are shared with multiple rooms to
+	- Postprocessing: change walls that are shared with multiple rooms to
 	  windows.
 - Laboratory
-	- Large open space.
-	- Stockpiles of ores, and vials.
-	- Whole floor is geared to the production of vials and usage of them.
-	- Production of vials:
-	  - Ore "elevator", supposedly brings up ores from lower floors.
+	x Large open space.
+	x Stockpiles of ores, and vials.
+	x Whole floor is geared to the production of vials and usage of them.
+	x Production of vials:
+	  x Ore "elevator", supposedly brings up ores from lower floors.
 	    Dumps ores on nearby tiles.
-	  - Haulers bring ores to ore stockpiles.
-	  - Extractor machines, which are located in the ore stockpiles, create
+	  x Haulers bring ores to ore stockpiles.
+	  x Extractor machines, which are located in the ore stockpiles, create
 	    vials.
-	  - Haulers bring vials to vial stockpiles.
-	  - Haulers take vials to research stations.
-	- Usage of vials: research stations, alchemists use them to "experiment"
+	  x Haulers bring vials to vial stockpiles.
+	  x Haulers take vials to research stations.
+	x Usage of vials: research stations, alchemists use them to "experiment"
 	  on prisoners.
 	- Has traps of {blinding, pain-causing} gas.
 	- Has teleportation traps.
 - Temple
-	- Circular rooms.
+	x Circular rooms.
 	- Refrigerated rooms filled with corpses.
 	- Plenty of necromancers/priests.
 	- Plenty of undead, death knights, etc.
 	- Starting area is large room and has altar with piles of corpses nearby.
+	- Has abominations.
 - Mining
 	- Caves, brogue-style.
 	- Rooms filled with pickaxes, boulders, and carts.
-	- Cowardly kobolds that swarm around player.
+	- Splotches of the map use materials like sulon/chlade/realgar/hematite.
+	- "Miners" go about, cutting up map portions with ores.
+	- "Haulers" take boulders and move them to ore elevators/stockpiles.
 - Smithing
 	- Large open area.
 	- Structures plopped all over the place.
@@ -46,127 +49,10 @@ Levels
 	- Has pools of mire and dross.
 	- Plenty of fire drakes and lava flans.
 - Prison
-	- Medium-short corridors with rooms with locked enclosures of prisoners.
-	- Some torture rooms maybe.
-	- Levers for each room to unlock doors and release prisoners.
-- Nuclear
-- Labyrinth
-- Caves
-	- Just caves, brogue-style.
+	x Medium-short corridors with rooms with locked enclosures of prisoners.
+	x Some torture rooms maybe.
+	x Levers for each room to unlock doors and release prisoners.
 
-
-New mobs
---------
-([s]pirit, [h]uman, [a]nimal, [u]ndead, [o]ther)
-([CE]Sauron, [LE]NoneEvil, [CG]NoneGood, [LG]Illuvatar, [??]Neutral, [NN]NightCreature)
-
-LE	a	spiders
-			- Web attacks that hold player in stasis.
-			- Long-lived, slow acting poisoned bite.
-LE	s	burning brute
-			- Tremendously powerful fire attacks.
-			- Can be leveraged against guards.
-			"A winged demon composed primarily of boiling granite, capable of
-			fearsome fire attacks."
-LE	s	blazing brute
-			- Upscaled version of burning brute?
-				- Maybe a Unique?
-LE	a	internet troll
-LE	o	mimic
-LE	s	locust
-LE	s	cankerworm
-LE	s	death angel
-			- Essentially a necromancer, but much more powerful on its own.
-			- Capable of striking certain mobs (low willpower, non-sentient
-			  mobs, mindless mobs, or undead mobs) dead in one turn.
-LE	s	will o' the wisp
-LE	s	winged terror
-			- Summoner.
-			- Main weapon is Fear spell.
-CE	h	wraith
-CE	a	jackals
-CE	a	hounds
-CE	s	necromancer
-			- Casts Fear, Pain, and Raise spell.
-			- Good night vision.
-			- Good dexterity and strength, high HP.
-			- High memory duration.
-			- Normal speed.
-			- Has sword and heavy chainmail.
-			"An unusually fragile minor demon that has long wielded the secrets
-			of life and death."
-CE	h	goblin
-			"Middle-sized humanoids with skin only slightly darker than the
-			underside of a rainbow trout, these ferocious creatures are nothing
-			like the misshapen apes that you've been told about around the
-			evening campfire.
-CE	a	hellhounds
-CE	h	death/fire/ether knight
-CE	a	fire worm (salamander?)
-CE	o	crystal statue
-			- Confuses intruders that wander too closely.
-			- Nearly indestructible, except by fire attacks.
-			"A statue of some nameless creature than once lurked in the
-			depths of Udùn. These statues are almost as rare as the
-			translucent blue crystal they're composed of."
-CE	o	turquoise statue
-			//- Raises an awful shriek when the player passes it.
-			- ???
-			- Nearly indestructible, except by fire attacks.
-CE	o	realgar statue
-			- ???
-CE	o	nebro statue
-			- Casts corona on intruders.
-			- Indestructible.
-CE	o	kyanite statue
-			- Emits paralysis gas when intruders wander too closely.
-			- Nearly indestructible, except by fire attacks.
-CE	o	??? statue
-			- Comes to life when player is being pursued.
-			- Should be found near room entrances so that it can block the passage
-			  there.
-			- Quite destructible.
-CE	u	lich
-			- Ranged attacker. Hangs behind, flees when hostile closes in.
-			- Bufs allies when they're wounded, allows non-undead mobs to
-			  "taint" hostile.
-			"The dessicated form of an ancient sorcerer, now controlled by the
-			very necromantic powers he once served."
-CE	a	troll
-LG	s	shining one
-LG	s	angel
-LG	s	archangel
-??	a	rat
-??	a	quasit
-??	o	lava flan
-			- Emits small amounts of smoke.
-			- Spawns around lava, made of lava.
-			- Splits in two when struck with shearing damage.
-			- Explodes on death.
-NN	o	stalker (invisible)
-			- Invisible.
-			- Stalks victim, occasionally delivering blows.
-NN	o	bogeyman (TODO: change name)
-			- Stalks victim invisibly in groups of 3-5, then becomes visible
-			  and gangs up to beat victim's skull in. Casts silence.
-			- Incredibly good at dodging.
-			"A emaciated humanoid creature of hideous appearance, possessed
-			with eyes that are both dull and bright in the dungeon's gloom."
-NN	o	night wanderer
-			- A thin, sickly-looking creature that wanders the dungeon. Mostly
-			  harmless.
-NN	o	creeping death
-			- Invisible.
-			- Waits for victim to enter a dead end, then emits a suffocating
-			  gas that envelopes victim. Gas is completely opaque and is
-			  jet black.
-			"An invisible Presence that stalks the dungeon, wreathed in
-			unapproachable darkness."
-NN	o	grue
-			- Like stalker, but dies when coming into contact with light.
-NN	o	vampire
-			- Becomes easier to hit when in contact with light.
-			- Regens slower when in contact with light.
 
 Movement patterns
 -----------------
@@ -401,7 +287,7 @@ vial of phytin
 
 Abominations
 ------------
-Strange mobs found on LAB levels.
+Strange mobs found on LAB/TEM levels.
 - Creeping Abomination
   - Like Blue Monk (in Hazard Level) or weeping angels.
 - Slinking Abomination
@@ -410,76 +296,12 @@ Strange mobs found on LAB levels.
     moves in and attacks, still keeping close to walls.
     Otherwise, it turns into a piece of artwork.
   - Game description should describe it as having an extremely hideous appearance.
-- Fiery/Burning Abomination
-- Deadly Abomination
 - Undulating Abomination
   - Slow (speed == ~180?)
   - If enemy is less than X spaces away, it moves toward enemy.
   - Doesn't attack.
   - Emits gas that doesn't spread far. Gas slows down affected mobs. (100s => 150s)
   - If attacked, paralyzes player.
-- Cleaving Abomination
-
-Occupations
------------
-- Sentry
-	Purpose: -
-	Armed to the teeth.
-	Attempts to hold intruder in stasis with nets and shooting webs
-- Watchers
-	Purpose: Give player a reason to think twice before entering room.
-	Guards a single room, staying stationary.
-	Changes glance direction every now and then.
-	Very weak, but fast. Keeps its distance, and howls and yells when it
-	  encounters an intruder.
-- Patrol
-	Purpose: Keep player always on their toes.
-	Walk in a squad from one room to another, and investigate noises.
-	Moderately well armed, but slow.
-- Guard
-	Purpose: Keep player always on their toes.
-	Just stands around.
-- Warden
-	Purpose: roam around, beating/whipping idlers.
-	Weak, slow, and cowardly.
-- Executioner
-	Purpose: -
-	No armor.
-	Keeps a Zinnag ("death-flail"), which is capable of killing a mob in
-	just two to three strikes.
-- Firefighter
-	Purpose: respond to fire alarms, and use extinguisher to put fire out.
-	Travels in squads of 3-4.
-	Faster than other mobs.
-	Always wears heat-proof cloak, and carries extinguisher. Defenseless
-	  against intruders.
-	Should flee if it realizes that the "fire" is an angry Burning Brute.
-- Cleaner
-	Purpose: add some life to the dungeon
-	Cleans spattering of blood from floors/walls
-- Electrician
-	Purpose: fix electricity-emitting machines.
-	Fixes malfunctioning power supplies and power storage facilities, which
-	  would otherwise electrocute a normal technician.
-	Carries electricity-proof cloak.
-- Technician
-	Purpose: Fixes all other machines.
-- Engineer
-	Purpose: Fix traps and props.
-- Doctor
-	Purpose: heal wounded mobs.
-	Carries herbs and medicine (aka potions) that heal wounded mobs (via
-	  released vapours).
-- Priest
-	Purpose: Make the temple extremely dangerous.
-	???
-- Researcher
-	Purpose: Add some life to the dungeon.
-- Farmer
-	Purpose: make food for the entire dungeon.
-	Farms fungi/mushrooms, harvesting them just before spore-producing stage.
-	Places fungi/mushrooms next to machines, before operating the machine
-	  and producing rations.
 
 
 Posters
@@ -514,6 +336,7 @@ Possible names
 Maybe a combination.
 - "Wrath of the Necromancer: Oathbreaker" for current game, something like
   "Wrath of the Necromancer: Fear of Death" for a 7DRL sequel?
+
 
 Books
 -----
