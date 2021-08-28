@@ -1633,11 +1633,21 @@ pub const Mob = struct { // {{{
         // to .Illuvatar, but .NoneEvil should be hostile to .Sauron)
         if (self.allegiance != othermob.allegiance) hostile = true;
 
+        // If the other mob is a prisoner of my faction or we're both prisoners
+        // of the same faction, don't be hostile
         if (othermob.prisoner_status) |prisoner_status| {
             if (prisoner_status.of == self.allegiance and
                 state.dungeon.at(othermob.coord).prison)
             {
                 hostile = false;
+            }
+
+            if (self.prisoner_status) |my_prisoner_status| {
+                if (my_prisoner_status.of == prisoner_status.of and
+                    state.dungeon.at(self.coord).prison)
+                {
+                    hostile = false;
+                }
             }
         }
 

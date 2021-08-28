@@ -347,8 +347,9 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
 
 fn _mobs_can_see(moblist: []const *Mob, coord: Coord) bool {
     for (moblist) |mob| {
-        if (mob.is_dead) continue;
-        if (mob.no_show_fov or !mob.ai.is_combative) continue;
+        if (mob.is_dead or mob.no_show_fov or
+            !mob.ai.is_combative or !mob.isHostileTo(state.player))
+            continue;
         if (mob.cansee(coord)) return true;
     }
     return false;

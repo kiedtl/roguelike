@@ -171,13 +171,13 @@ fn placeDoor(coord: Coord, locked: bool) void {
     state.dungeon.at(coord).type = .Floor;
 }
 
-// STYLE: make top level public func, call directly, rename placePlayer
 fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     const echoring = _createItem(Ring, items.EcholocationRing);
     echoring.worn_since = state.ticks;
 
     state.player = placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
     state.player.inventory.r_rings[0] = echoring;
+    state.player.prisoner_status = Prisoner{ .of = .Sauron };
 }
 
 fn prefabIsValid(level: usize, prefab: *Prefab) bool {
