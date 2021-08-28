@@ -1848,22 +1848,6 @@ pub const Configs = [LEVELS]LevelConfig{
         .patrol_squads = 3,
     },
     .{
-        .identifier = "TEM",
-        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
-            "TEM_start",
-        }),
-        .distances = [2][10]usize{
-            .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-            .{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-        },
-        .prefab_chance = 1,
-        .max_rooms = 2048,
-
-        .patrol_squads = 2,
-
-        .material = &materials.Marble,
-    },
-    .{
         .identifier = "REC",
         .prefabs = LevelConfig.RPBuf.init(null),
         .distances = [2][10]usize{
@@ -1880,6 +1864,22 @@ pub const Configs = [LEVELS]LevelConfig{
         .patrol_squads = 1,
 
         .allow_statues = false,
+    },
+    .{
+        .identifier = "TEM",
+        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
+            "TEM_start",
+        }),
+        .distances = [2][10]usize{
+            .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+            .{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+        },
+        .prefab_chance = 1,
+        .max_rooms = 2048,
+
+        .patrol_squads = 2,
+
+        .material = &materials.Marble,
     },
     .{
         .identifier = "LAB",
