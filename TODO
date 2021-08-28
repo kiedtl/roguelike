@@ -1,9 +1,6 @@
 Levels
 ------
-(Note: the exact order is yet to be defined)
 - Entry
-- Offices
-- Garrison
 - Recreation
 	- Smallish square rooms with only one-width corridors. (So no prefabs.)
 	- Rooms filled with artwork, posters, skeleton displays, armor displays,
@@ -63,6 +60,7 @@ charge        [move(A), move(A), move(A), attack(A)]
 recuperate    [rest, rest, rest, rest]
 (See rings for other movement patterns.)
 
+
 Rings
 -----
 - Rings will not work as soon as they are wielded, but must be worn for a few
@@ -86,13 +84,13 @@ creeping ring of telepathy [a]
 	- Movement pattern: [move(NE), move(SE), move(SW), move(NW)]
 dancing ring of sidestepping [a]
 	- Teleport player around mob to area outside of that mob's FOV, enabling a stab.
+	- Paralyzes mob for exactly one turn.
 	- Must land next to mob.
 	- Movement pattern: [move(NW), move(NE), move(NW), move(NE)]
 singing ring of echolocation [p]
 	- Gives player basic knowledge of dungeon's layout nearby sounds the player
 	  can hear. The wearer will not know about dungeon features, just walls and
 	  floors.
-	- Low penalty.
 ring of evasion [a]
 	- Spews fog outward from player when zigzagging and fleeing, increasing evasion.
 	- Example movement pattern: [move(NW), move(NE), move(NW), move(NE)]
@@ -106,7 +104,6 @@ vampiric ring of draining [a/p]
 	- Also: when worn, allows player to sense nearby mobs.
 		- Movement pattern: ???
 faded ring of fire [a]
-	- Ring of fire, death, and darkness.
 	- Causes dark gas to emanate from player. Gas is opaque and blocks all light.
 		- Movement pattern:
 	- Causes all nearby machines to lose power for a bit (aka turn out the lights).
@@ -114,175 +111,67 @@ faded ring of fire [a]
 	- Raises all nearby corpses to attack enemies for a brief period of time.
 		- Movement pattern:
 	- Causes tiles in 3-space radius around player to burst into flame.
-		- Movement pattern.
+		- Movement pattern:
 	- Found in the Temple.
 ring of invisibility
 	- Doesn't make wearer invisible, but prevents other hostiles from noticing
 	  the wearer, even if they walk within inches of each other's nose.
-	- High penalty, depending on affected mob's willpower.
-ring of fury
-	- ???
-
-
-Machines
---------
-furnace
-	- Heats air on one side of the chamber. May or may not be used by mobs.
-	- If used by mobs: maybe to run an execution/torture chamber...?
-	- If used by player: used to kill mobs in a vault?
-cooler
-	- Cools the surrounding air, helping to preserve e.g. food items.
-forge
-	- Stuff some metal on one end, and weapons will appear on the other.
-book copy machine
-	- Makes a book two.
-food ration maker
-	- Stuff fungi, lichen, and cadavers (I know, gross) next to it and rations
-	  will appear on the other side.
-camera
-	- Pressure plate thing that puts an alert out if a non-Sauron-aligned
-	  mob walks on it. (Alerts result in death squads sent out.)
-alarm system
-	- A Watcher can operate the alarm system when fleeing to send an alert
-	  out, resulting in death squads being sent to the appropriate level.
-announcement system
-	- Player can operate this to get a popup detailing stuff about the dungeon.
-	  E.g. "Squad LI-12 sent to put down rogue elf on level 2" or "Squad HE-7 sent
-	  to destroy Burning Brute seen on level 7", or even "Food low on level 5".
-teleportation station
-	- Player can use it to teleport to a certain location.
-uranium refinery
-	- Should only appear in the Research branch.
-	- Purely decor, until it's destroyed, in which case it'll release a bit
-	  of corium.
-potion synthesis machine
-	- Should be a synthesis machine for each major potion.
-	- Should only appear in the Research branch.
-power station
-	- Orc-powered power station.
-nuclear reactor
-	- Recharges power storage machines. When destroyed, releases massive
-	  quantities of radioactive gases, noxious fumes, boiling uranium,
-	  and lots of other nasty stuff, as well as a tremendous explosion.
-heat-powered power station
-	- If put in a hot place (ie next to lava), will self-power.
-railgun
-	- Should appear in the Research branch of the dungeon.
-	- Unused by mobs, and mostly useless for player.
-	- Zaps everything in a line, and self-destructs after X shots.
-repair shop
-	- Mobs and player may use it to repair weapons and armor.
-air purifier
-	- Clears away gases in a certain radius.
-power storage
-	- Powers all machines in a certain radius, until it itself runs out of
-	  power. Useful for extending power station's range.
-	- Player can destroy it to release electricity, zapping everything
-	  (including player) in a certain radius.
-elevator
-	- Spawns mobs for death squads, or mobs when the number of laborers/guards
-	  falls below a certain point
-sonar mining laser
-	- Unused by mobs, player can use it to blast away everything in a certain
-	  radius, in a certain direction.
-vending machine
-	- Alternative to food stockpile...?
-fire alarm
-	- Registers a FireAlarm when heat increases around it, drawing mobs
-	  designated as FireFighter towards it to remove the fire (if any --
-	  they can't do anything if the "fire" is an angry burning brute).
 
 
 Potions/Vials
 --------------------
-- Potions: [s]tatus, [g]as, [c]ustom
-potion of confuzzlementation [g]
-	- Confusion.
-potion of petrification [g]
-	- Paralysis.
-potion of fog (TODO: name) [g]
-	- Fog.
-potion of acceleration [s]
-	- Haste.
-potion of preservation [c]
-	- Heals 20% of health and removes poison.
-potion of recuperation [s]
-	- Causes faster regeneration rate.
-potion of deceleration [s]
-	- Slowdown.
-potion of coagulation
-	- Poison (loss of regen, occasional damage, weakness)
-potion of invigoration [s]
-	- Temporarily increases strength and dexterity.
-potion of cremation [c]
-	- Explodes when opened, heating surrounding air.
-potion of refrigeration [g]
-	- Freezes the surrounding air, slowing down cold-blooded mobs.
-potion of asphyxiation [g]
-	- Releases vapours that causes suffocation.
-potion of decimation [c]
-	- Explosion that can destroy walls.
-potion of defoliation [g]
-	- Poison that destroys plants and/or fungi.
-potion of dehumanization
-	- Makes mob mindless?
-potion of electrocution [s]
-	- Makes target significantly more susceptible to electric attacks?
-potion of fumigation [g]
-	- Releases toxic fumes that clear away other toxic fumes.
-potion of intoxication [s]
-	- Drunkenness.
-potion of irradiation [c]
-	- Releases corium.
-potion of starvation [s]
-	- Increases digestion rate.
-potion of decaffeination
-	- Emits gas that puts mob to sleep.
-potion of dehydration
-	- ???
-potion of dilution
-	- ???
-potion of fluoridation
-	- ???
-potion of chlorination
-	- ???
-potion of negation
-	- ???
-potion of transubstantiation
-	- ???
-potion of cognition
-	- ???
-potion of corruption
-	- ???
-potion of aviation
-	- ???
-potion of degeneration
-	- ???
-potion of desalination
-	- ???
-potion of divination
-	- ???
-vial of tanus
-	- Status: backvision
-	  Makes mob see directly behind them as well as in front of them.
-vial of slade
-	- Status: bishop
-	  Makes mob unable to move in cardinal directions.
-vial of pholenine
-	- Status: rook
-	  Makes mob unable to move in diagonal directions.
-vial of chloroforon
-vial of hyine
-vial of quagenin
-vial of cataline
-	- Status: nightvision
-	  Gives mob perfect night vision.
-vial of flouin
-	- Status: dayblindness
-	  Makes mob unable to see in brightly-lit tiles.
-vial of phytin
-	- Status: nightblindness
-	  Makes mob unable to see in dimly-lit tiles.
+Potions: [s]tatus, [g]as, [c]ustom
+x potion of confuzzlementation [g]
+  Confusion.
+x potion of petrification [g]
+  Paralysis.
+x potion of fog (TODO: name) [g]
+  Fog.
+x potion of acceleration [s]
+  Haste.
+x potion of preservation [c]
+  Heals 20% of health and removes poison.
+x potion of recuperation [s]
+  Causes faster regeneration rate.
+x potion of deceleration [s]
+  Slowdown.
+x potion of coagulation
+  Poison (loss of regen, occasional damage, weakness)
+x potion of invigoration [s]
+  Temporarily increases strength and dexterity.
+- potion of cremation [c]
+  Explodes when opened, heating surrounding air.
+- potion of refrigeration [g]
+  Freezes the surrounding air, slowing down cold-blooded mobs.
+- potion of decimation [c]
+  Explosion that can destroy walls.
+- potion of defoliation [g]
+  Poison that destroys plants and/or fungi.
+- potion of dehumanization
+  Makes mob mindless?
+- potion of intoxication [s]
+  Drunkenness.
+- vial of tanus
+  Status: backvision
+    Makes mob see directly behind them as well as in front of them.
+- vial of slade
+  Status: bishop
+    Makes mob unable to move in cardinal directions.
+- vial of pholenine
+  Status: rook
+    Makes mob unable to move in diagonal directions.
+- vial of chloroforon
+- vial of hyine
+- vial of quagenin
+- vial of cataline
+  Status: nightvision
+    Gives mob perfect night vision.
+- vial of flouin
+  Status: dayblindness
+    Makes mob unable to see in brightly-lit tiles.
+- vial of phytin
+  Status: nightblindness
+    Makes mob unable to see in dimly-lit tiles.
 
 
 Abominations
@@ -493,7 +382,6 @@ Mobs, AI
 ========
 x Make watchers shout loudly
 x Allow mobs to shuffle past each other in corridors
-- Add reproducing rats
 x Ensure that laborers don't leave to investigate noises
 x Ensure that the EnemyRecord counter is only decremented if the pursuer can
   see the last spot where the hostile was seen
@@ -626,7 +514,7 @@ Optimizations
 - Use SIMD where possible
 x Use a matrix to mark nodes as closed (instead of a heap-allocated list) for
   Dijkstra.
-- Use Manhattan distance for A* algorithm (overestimating heuristic might be better?)
+x Use Manhattan distance for A* algorithm (overestimating heuristic might be better?)
 - Allow functions that repeatedly call A* for the same mob to store an "AstarContext"
   structure that allows astar.path() to reuse cell cost, walkablility, etc data
   without calling those functions again.
@@ -636,7 +524,7 @@ x Use a matrix to mark nodes as closed (instead of a heap-allocated list) for
 Code cleanups
 =============
 - Defined unimplemented(), todo(), and oom()
-- Stop using the freaking `catch unreachable` syntax:
+- Stop using the `catch unreachable` syntax:
     libera#zig 19:58 <ikskuh> "catch unreachable" will happily continue to execute code
                               after the error in non-safe build modes
 - Remove all floats from color functions, sound systems, gas systems, etc.
@@ -650,10 +538,10 @@ x Convert enum+union pair to union(enum) (see std/fifo.zig) where needed
 x Research Manhattan distance vs Euclidian distance vs Moore neighborhood:
   https://reddit.com/r/roguelikedev/comments/nev1jg/a_pathfinding_unstablenondeterministic/
 x Add power component to machines
-x Use Chebyshev or Moore Neighborhood instead of Manhattan distance
+x Use Chebyshev instead of Manhattan distance
 - Use arrays and indexes for state.* instead of linked lists and pointers
 
 Tests
 =====
 x Ensure that distance() treats diagonal moves as more expensive than cardinal moves, or
-  the opposite if Chebyshev/Moore is used later.
+  the opposite if Chebyshev is used later.
