@@ -23,14 +23,14 @@ Levels
 	x Usage of vials: research stations, alchemists use them to "experiment"
 	  on prisoners.
 	- Has traps of {blinding, pain-causing} gas.
-	- Has teleportation traps.
 - Temple
 	x Circular rooms.
-	- Refrigerated rooms filled with corpses.
-	- Plenty of necromancers/priests.
-	- Plenty of undead, death knights, etc.
-	- Starting area is large room and has altar with piles of corpses nearby.
+	- Stockpiles of corpses.
+	- Wandering priest mobs, that raise corpses on sight of player.
+	- Some undead are stationary.
+	- Undead drop back dead when player wanders out of sight.
 	- Has abominations.
+	- Has teleportation traps.
 - Mining
 	- Caves, brogue-style.
 	- Rooms filled with pickaxes, boulders, and carts.
@@ -49,6 +49,24 @@ Levels
 	x Medium-short corridors with rooms with locked enclosures of prisoners.
 	x Some torture rooms maybe.
 	x Levers for each room to unlock doors and release prisoners.
+
+
+Undead
+------
+Undead:
+- May be mindless, depending on how they were raised from the dead.
+- Has 150% strength bonus.
+- Has 150% speed bonus.
+- Has -50% dexterity nerf.
+- Can only see 3-4 tiles ahead of them.
+- Emit miasma.
+  - Miasma has no effect, but may decrease morale in AI'd mobs.
+  - Serves to give early warning of undead's presence.
+- Are immune to Pain and Fear.
+- Never flee, unless commanded so by their squad leader.
+- Don't breath gases, and are thus not affected by most of them.
+- Are immune to stabbing(?)
+- Have a willpower of basically zero, and can thus be affected by any spell.
 
 
 Movement patterns
