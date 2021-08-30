@@ -412,6 +412,16 @@ pub const Room = struct {
 
     pub const RoomType = enum { Corridor, Room };
 
+    pub fn add(a: *const Room, b: *const Room) Room {
+        assert(b.start.z == 0);
+
+        return .{
+            .start = Coord.new2(a.start.z, a.start.x + b.start.x, a.start.y + b.start.y),
+            .width = a.width,
+            .height = b.width,
+        };
+    }
+
     pub fn overflowsLimit(self: *const Room, limit: *const Room) bool {
         return self.end().x >= limit.end().x or
             self.end().y >= limit.end().y or
@@ -1777,6 +1787,7 @@ pub const Machine = struct {
 
     powered_luminescence: usize = 0,
     unpowered_luminescence: usize = 0,
+    dims: bool = false,
 
     // A* penalty if the machine is walkable
     pathfinding_penalty: usize = 0,
@@ -1816,7 +1827,13 @@ pub const Machine = struct {
     }
 
     pub fn luminescence(self: *const Machine) usize {
-        return if (self.isPowered()) self.powered_luminescence else self.unpowered_luminescence;
+        return if (self.isPowered())
+            if (self.dims)
+                self.powered_luminescence * self.power / 100
+            else
+                self.powered_luminescence
+        else
+            self.unpowered_luminescence;
     }
 };
 

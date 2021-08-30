@@ -734,6 +734,22 @@ fn _createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?
     };
 }
 
+fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Room, alloc: *mem.Allocator) void {
+    for (s_fabs.items) |*subroom| {
+        if (!prefabIsValid(parent.start.z, subroom))
+            continue;
+
+        if ((subroom.height + 2) < area.height and (subroom.width + 2) < area.width) {
+            const rx = (area.width / 2) - (subroom.width / 2);
+            const ry = (area.height / 2) - (subroom.height / 2);
+            _excavate_prefab(&parent.add(area), subroom, alloc, rx, ry);
+            subroom.used[parent.start.z] += 1;
+            parent.has_subroom = true;
+            break;
+        }
+    }
+}
+
 fn _place_rooms(
     rooms: *RoomArrayList,
     n_fabs: *PrefabArrayList,
@@ -814,18 +830,11 @@ fn _place_rooms(
         f.used[level] += 1;
 
     if (child.prefab == null) {
-        for (s_fabs.items) |*subroom| {
-            if (!prefabIsValid(level, subroom))
-                continue;
-
-            if ((subroom.height + 2) < child.height and (subroom.width + 2) < child.width) {
-                const rx = (child.width / 2) - (subroom.width / 2);
-                const ry = (child.height / 2) - (subroom.height / 2);
-                _excavate_prefab(&child, subroom, allocator, rx, ry);
-                subroom.used[level] += 1;
-                child.has_subroom = true;
-                break;
-            }
+        const area = Room{ .start = Coord.new(0, 0), .width = child.width, .height = child.height };
+        placeSubroom(s_fabs, &child, &area, allocator);
+    } else if (child.prefab.?.subroom_areas.len > 0) {
+        for (child.prefab.?.subroom_areas.constSlice()) |subroom_area| {
+            placeSubroom(s_fabs, &child, &subroom_area, allocator);
         }
     }
 
@@ -1045,6 +1054,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
 }
 
 fn placeLights(room: *const Room) void {
+    if (Configs[room.start.z].no_lights) return;
     if (room.prefab) |rfb| if (rfb.nolights) return;
 
     var lights: usize = 0;
@@ -1382,6 +1392,7 @@ pub const Prefab = struct {
     features: [128]?Feature = [_]?Feature{null} ** 128,
     mobs: [45]?FeatureMob = [_]?FeatureMob{null} ** 45,
     prisons: StackBuffer(Room, 8) = StackBuffer(Room, 8).init(null),
+    subroom_areas: StackBuffer(Room, 8) = StackBuffer(Room, 8).init(null),
     stockpile: ?Room = null,
     input: ?Room = null,
     output: ?Room = null,
@@ -1507,6 +1518,7 @@ pub const Prefab = struct {
                     f.height = 0;
                     f.width = 0;
                     f.prisons.clear();
+                    f.subroom_areas.clear();
                     for (f.content) |*row| mem.set(FabTile, row, .Wall);
                     mem.set(?Connection, &f.connections, null);
                     mem.set(?Feature, &f.features, null);
@@ -1584,6 +1596,23 @@ pub const Prefab = struct {
                         height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
 
                         f.prisons.append(.{ .start = room_start, .width = width, .height = height }) catch |_| return error.TooManyPrisons;
+                    } else if (mem.eql(u8, key, "subroom_area")) {
+                        var room_start = Coord.new(0, 0);
+                        var width: usize = 0;
+                        var height: usize = 0;
+
+                        var room_start_tokens = mem.tokenize(val, ",");
+                        const room_start_str_a = room_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        const room_start_str_b = room_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        room_start.x = std.fmt.parseInt(usize, room_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
+                        room_start.y = std.fmt.parseInt(usize, room_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
+
+                        const width_str = words.next() orelse return error.ExpectedMetadataValue;
+                        const height_str = words.next() orelse return error.ExpectedMetadataValue;
+                        width = std.fmt.parseInt(usize, width_str, 0) catch |_| return error.InvalidMetadataValue;
+                        height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
+
+                        f.subroom_areas.append(.{ .start = room_start, .width = width, .height = height }) catch |_| return error.TooManySubrooms;
                     } else if (mem.eql(u8, key, "stockpile")) {
                         if (f.stockpile) |_| return error.StockpileAlreadyDefined;
 
@@ -1765,6 +1794,7 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
                 error.OutputAreaAlreadyDefined => "Output area already defined for prefab",
                 error.InputAreaAlreadyDefined => "Input area already defined for prefab",
                 error.TooManyPrisons => "Too many prisons",
+                error.TooManySubrooms => "Too many subroom areas",
                 error.InvalidFabTile => "Invalid prefab tile",
                 error.InvalidConnection => "Out of place connection tile",
                 error.FabTooWide => "Prefab exceeds width limit",
@@ -1808,6 +1838,7 @@ pub const LevelConfig = struct {
         .{ .chance = 70, .template = &mobs.WatcherTemplate },
     }),
 
+    no_lights: bool = false,
     material: *const Material = &materials.Concrete,
     light: *const Machine = &machines.Brazier,
     vent: *const Prop = &machines.GasVentProp,
@@ -1875,10 +1906,11 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
         },
         .prefab_chance = 1,
-        .max_rooms = 2048,
+        .max_rooms = 4096,
 
         .patrol_squads = 2,
 
+        .no_lights = true,
         .material = &materials.Marble,
     },
     .{
