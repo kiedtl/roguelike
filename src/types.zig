@@ -33,7 +33,7 @@ const Poster = literature.Poster;
 
 pub const HEIGHT = 40;
 pub const WIDTH = 100;
-pub const LEVELS = 6;
+pub const LEVELS = 7;
 pub const PLAYER_STARTING_LEVEL = 5; // TODO: define in data file
 
 pub const CARDINAL_DIRECTIONS = [_]Direction{ .North, .South, .East, .West };

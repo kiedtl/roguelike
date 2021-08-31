@@ -72,6 +72,19 @@ fn initGame() void {
         std.log.warn("Generating map {}.", .{mapgen.Configs[level].identifier});
 
         mapgen.resetLevel(level);
+
+        if (level == 6) {
+            mapgen.fillRandom(&state.layout[level], level, 40);
+            mapgen.cellularAutomata(&state.layout[level], level, 3, 0);
+            mapgen.cellularAutomata(&state.layout[level], level, 4, 0);
+            mapgen.cellularAutomata(&state.layout[level], level, 4, 0);
+            mapgen.cellularAutomata(&state.layout[level], level, 4, 0);
+            mapgen.cellularAutomata(&state.layout[level], level, 4, 0);
+            mapgen.cellularAutomata(&state.layout[level], level, 4, 0);
+            mapgen.cellularAutomata(&state.layout[level], level, 3, 0);
+            mapgen.cellularAutomata(&state.layout[level], level, 3, 0);
+        }
+
         mapgen.placeRandomRooms(&n_fabs, &s_fabs, level, &state.GPA.allocator);
         mapgen.placeMoarCorridors(level);
 
@@ -87,14 +100,6 @@ fn initGame() void {
         mapgen.placeItems(level);
         mapgen.placeMobs(level, &state.GPA.allocator);
         mapgen.generateLayoutMap(level);
-
-        // mapgen.fillRandom(&state.dungeon.layout[level], level, 65);
-        // mapgen.cellularAutomata(&state.dungeon.layout[level], level, 5, 0);
-        // mapgen.cellularAutomata(&state.dungeon.layout[level], level, 5, 0);
-        // mapgen.cellularAutomata(&state.dungeon.layout[level], level, 6, 0);
-        // mapgen.cellularAutomata(&state.dungeon.layout[level], level, 6, 0);
-
-        // mapgen.populateCaves(&state.dungeon.layout[level], level, &state.GPA.allocator);
 
         level += 1;
     }

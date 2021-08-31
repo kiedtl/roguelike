@@ -1204,28 +1204,28 @@ pub fn placeRandomStairs(level: usize) void {
     }
 }
 
-pub fn cellularAutomata(avoid: *const [HEIGHT][WIDTH]bool, level: usize, wall_req: usize, isle_req: usize) void {
+pub fn cellularAutomata(layout: *const [HEIGHT][WIDTH]state.Layout, level: usize, wall_req: usize, isle_req: usize) void {
     var old: [HEIGHT][WIDTH]TileType = undefined;
     {
-        var y: usize = 0;
-        while (y < HEIGHT) : (y += 1) {
-            var x: usize = 0;
-            while (x < WIDTH) : (x += 1)
+        var y: usize = 1;
+        while (y < HEIGHT - 1) : (y += 1) {
+            var x: usize = 1;
+            while (x < WIDTH - 1) : (x += 1)
                 old[y][x] = state.dungeon.at(Coord.new2(level, x, y)).type;
         }
     }
 
-    var y: usize = 0;
-    while (y < HEIGHT) : (y += 1) {
-        var x: usize = 0;
-        while (x < WIDTH) : (x += 1) {
-            if (avoid[y][x]) continue;
+    var y: usize = 1;
+    while (y < HEIGHT - 1) : (y += 1) {
+        var x: usize = 1;
+        while (x < WIDTH - 1) : (x += 1) {
+            if (layout[y][x] != .Unknown) continue;
+
             const coord = Coord.new2(level, x, y);
 
             var neighbor_walls: usize = if (old[coord.y][coord.x] == .Wall) 1 else 0;
-            for (&DIRECTIONS) |direction| {
+            for (&CARDINAL_DIRECTIONS) |direction| {
                 if (coord.move(direction, state.mapgeometry)) |new| {
-                    continue;
                     if (old[new.y][new.x] == .Wall)
                         neighbor_walls += 1;
                 }
@@ -1233,7 +1233,7 @@ pub fn cellularAutomata(avoid: *const [HEIGHT][WIDTH]bool, level: usize, wall_re
 
             if (neighbor_walls >= wall_req) {
                 state.dungeon.at(coord).type = .Wall;
-            } else if (neighbor_walls <= isle_req) {
+            } else if (neighbor_walls < isle_req) {
                 state.dungeon.at(coord).type = .Wall;
             } else {
                 state.dungeon.at(coord).type = .Floor;
@@ -1256,12 +1256,13 @@ pub fn fillBar(level: usize, height: usize) void {
     }
 }
 
-pub fn fillRandom(avoid: *const [HEIGHT][WIDTH]bool, level: usize, floor_chance: usize) void {
-    var y: usize = 0;
-    while (y < HEIGHT) : (y += 1) {
-        var x: usize = 0;
-        while (x < WIDTH) : (x += 1) {
-            if (avoid[y][x]) continue;
+pub fn fillRandom(layout: *const [HEIGHT][WIDTH]state.Layout, level: usize, floor_chance: usize) void {
+    var y: usize = 1;
+    while (y < HEIGHT - 1) : (y += 1) {
+        var x: usize = 1;
+        while (x < WIDTH - 1) : (x += 1) {
+            if (layout[y][x] != .Unknown) continue;
+
             const coord = Coord.new2(level, x, y);
 
             const t: TileType = if (rng.range(usize, 0, 100) > floor_chance) .Wall else .Floor;
@@ -1286,32 +1287,6 @@ pub fn generateLayoutMap(level: usize) void {
                 state.layout[level][y][x] = .Unknown;
             }
         }
-    }
-}
-
-pub fn populateCaves(avoid: *const [HEIGHT][WIDTH]bool, level: usize, alloc: *mem.Allocator) void {
-    const map = Room{
-        .start = Coord.new2(level, 0, 0),
-        .width = WIDTH,
-        .height = HEIGHT,
-    };
-
-    var placed: usize = 0;
-    while (placed < 20) {
-        const coord = map.randomCoord();
-        if (avoid[coord.y][coord.x]) continue;
-        if (!state.is_walkable(coord, .{ .right_now = true })) continue;
-
-        if (rng.onein(3)) {
-            _ = placeMob(alloc, &mobs.GoblinTemplate, coord, .{});
-        } else {
-            _ = placeMob(alloc, &mobs.CaveRatTemplate, coord, .{});
-        }
-
-        const mobptr = state.mobs.lastPtr().?;
-        state.dungeon.at(coord).mob = mobptr;
-
-        placed += 1;
     }
 }
 
@@ -1995,5 +1970,31 @@ pub const Configs = [LEVELS]LevelConfig{
         },
 
         .patrol_squads = 5,
+    },
+    .{
+        .identifier = "SMI",
+        .prefabs = LevelConfig.RPBuf.init(null),
+        .distances = [2][10]usize{
+            .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+            .{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+        },
+        .prefab_chance = 1,
+        .max_rooms = 512,
+
+        .level_features = [_]?LevelConfig.LevelFeatureFunc{
+            null,
+            null,
+            null,
+            null,
+        },
+
+        .patrol_squads = 3,
+        .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
+            .{ .chance = 21, .template = &mobs.SentinelTemplate },
+            .{ .chance = 35, .template = &mobs.WatcherTemplate },
+            .{ .chance = 56, .template = &mobs.GuardTemplate },
+        }),
+
+        .allow_statues = false,
     },
 };
