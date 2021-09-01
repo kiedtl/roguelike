@@ -83,14 +83,6 @@ fn initGame() void {
             mapgen.cellularAutomata(&state.layout[level], level, 4, 0, .Wall);
             mapgen.cellularAutomata(&state.layout[level], level, 3, 0, .Wall);
             mapgen.cellularAutomata(&state.layout[level], level, 3, 0, .Wall);
-
-            mapgen.fillRandom(&state.layout[level], level, 2, .Lava);
-            mapgen.cellularAutomata(&state.layout[level], level, 2, 0, .Lava);
-            mapgen.cellularAutomata(&state.layout[level], level, 2, 0, .Lava);
-            mapgen.cellularAutomata(&state.layout[level], level, 1, 0, .Lava);
-            mapgen.cellularAutomata(&state.layout[level], level, 1, 0, .Lava);
-            mapgen.cellularAutomata(&state.layout[level], level, 2, 0, .Lava);
-            mapgen.cellularAutomata(&state.layout[level], level, 3, 0, .Lava);
         }
 
         mapgen.placeRandomRooms(&n_fabs, &s_fabs, level, &state.GPA.allocator);
@@ -108,6 +100,16 @@ fn initGame() void {
         mapgen.placeItems(level);
         mapgen.placeMobs(level, &state.GPA.allocator);
         mapgen.generateLayoutMap(level);
+
+        if (level == 6) {
+            mapgen.fillRandom(&state.layout[level], level, 2, .Lava);
+            mapgen.cellularAutomata(&state.layout[level], level, 2, 0, .Lava);
+            mapgen.cellularAutomata(&state.layout[level], level, 2, 0, .Lava);
+            mapgen.cellularAutomata(&state.layout[level], level, 1, 0, .Lava);
+            mapgen.cellularAutomata(&state.layout[level], level, 1, 0, .Lava);
+            mapgen.cellularAutomata(&state.layout[level], level, 2, 0, .Lava);
+            mapgen.cellularAutomata(&state.layout[level], level, 3, 0, .Lava);
+        }
 
         level += 1;
     }
