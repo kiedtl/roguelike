@@ -84,7 +84,7 @@ fn initGame() void {
             mapgen.cellularAutomata(&state.layout[level], level, 3, 0, .Wall);
             mapgen.cellularAutomata(&state.layout[level], level, 3, 0, .Wall);
 
-            mapgen.fillRandom(&state.layout[level], level, 4, .Lava);
+            mapgen.fillRandom(&state.layout[level], level, 2, .Lava);
             mapgen.cellularAutomata(&state.layout[level], level, 2, 0, .Lava);
             mapgen.cellularAutomata(&state.layout[level], level, 2, 0, .Lava);
             mapgen.cellularAutomata(&state.layout[level], level, 1, 0, .Lava);
