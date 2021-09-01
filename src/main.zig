@@ -74,15 +74,23 @@ fn initGame() void {
         mapgen.resetLevel(level);
 
         if (level == 6) {
-            mapgen.fillRandom(&state.layout[level], level, 40);
-            mapgen.cellularAutomata(&state.layout[level], level, 3, 0);
-            mapgen.cellularAutomata(&state.layout[level], level, 4, 0);
-            mapgen.cellularAutomata(&state.layout[level], level, 4, 0);
-            mapgen.cellularAutomata(&state.layout[level], level, 4, 0);
-            mapgen.cellularAutomata(&state.layout[level], level, 4, 0);
-            mapgen.cellularAutomata(&state.layout[level], level, 4, 0);
-            mapgen.cellularAutomata(&state.layout[level], level, 3, 0);
-            mapgen.cellularAutomata(&state.layout[level], level, 3, 0);
+            mapgen.fillRandom(&state.layout[level], level, 40, .Floor);
+            mapgen.cellularAutomata(&state.layout[level], level, 3, 0, .Wall);
+            mapgen.cellularAutomata(&state.layout[level], level, 4, 0, .Wall);
+            mapgen.cellularAutomata(&state.layout[level], level, 4, 0, .Wall);
+            mapgen.cellularAutomata(&state.layout[level], level, 4, 0, .Wall);
+            mapgen.cellularAutomata(&state.layout[level], level, 4, 0, .Wall);
+            mapgen.cellularAutomata(&state.layout[level], level, 4, 0, .Wall);
+            mapgen.cellularAutomata(&state.layout[level], level, 3, 0, .Wall);
+            mapgen.cellularAutomata(&state.layout[level], level, 3, 0, .Wall);
+
+            mapgen.fillRandom(&state.layout[level], level, 4, .Lava);
+            mapgen.cellularAutomata(&state.layout[level], level, 2, 0, .Lava);
+            mapgen.cellularAutomata(&state.layout[level], level, 2, 0, .Lava);
+            mapgen.cellularAutomata(&state.layout[level], level, 1, 0, .Lava);
+            mapgen.cellularAutomata(&state.layout[level], level, 1, 0, .Lava);
+            mapgen.cellularAutomata(&state.layout[level], level, 2, 0, .Lava);
+            mapgen.cellularAutomata(&state.layout[level], level, 3, 0, .Lava);
         }
 
         mapgen.placeRandomRooms(&n_fabs, &s_fabs, level, &state.GPA.allocator);

@@ -1204,7 +1204,7 @@ pub fn placeRandomStairs(level: usize) void {
     }
 }
 
-pub fn cellularAutomata(layout: *const [HEIGHT][WIDTH]state.Layout, level: usize, wall_req: usize, isle_req: usize) void {
+pub fn cellularAutomata(layout: *const [HEIGHT][WIDTH]state.Layout, level: usize, req: usize, isle_req: usize, ttype: TileType) void {
     var old: [HEIGHT][WIDTH]TileType = undefined;
     {
         var y: usize = 1;
@@ -1223,19 +1223,19 @@ pub fn cellularAutomata(layout: *const [HEIGHT][WIDTH]state.Layout, level: usize
 
             const coord = Coord.new2(level, x, y);
 
-            var neighbor_walls: usize = if (old[coord.y][coord.x] == .Wall) 1 else 0;
+            var neighbor_on_cells: usize = if (old[coord.y][coord.x] == ttype) 1 else 0;
             for (&CARDINAL_DIRECTIONS) |direction| {
                 if (coord.move(direction, state.mapgeometry)) |new| {
-                    if (old[new.y][new.x] == .Wall)
-                        neighbor_walls += 1;
+                    if (old[new.y][new.x] == ttype)
+                        neighbor_on_cells += 1;
                 }
             }
 
-            if (neighbor_walls >= wall_req) {
-                state.dungeon.at(coord).type = .Wall;
-            } else if (neighbor_walls < isle_req) {
-                state.dungeon.at(coord).type = .Wall;
-            } else {
+            if (neighbor_on_cells >= req) {
+                state.dungeon.at(coord).type = ttype;
+            } else if (neighbor_on_cells < isle_req) {
+                state.dungeon.at(coord).type = ttype;
+            } else if (old[coord.y][coord.x] == ttype) {
                 state.dungeon.at(coord).type = .Floor;
             }
         }
@@ -1256,7 +1256,7 @@ pub fn fillBar(level: usize, height: usize) void {
     }
 }
 
-pub fn fillRandom(layout: *const [HEIGHT][WIDTH]state.Layout, level: usize, floor_chance: usize) void {
+pub fn fillRandom(layout: *const [HEIGHT][WIDTH]state.Layout, level: usize, chance: usize, ttype: TileType) void {
     var y: usize = 1;
     while (y < HEIGHT - 1) : (y += 1) {
         var x: usize = 1;
@@ -1265,8 +1265,9 @@ pub fn fillRandom(layout: *const [HEIGHT][WIDTH]state.Layout, level: usize, floo
 
             const coord = Coord.new2(level, x, y);
 
-            const t: TileType = if (rng.range(usize, 0, 100) > floor_chance) .Wall else .Floor;
-            state.dungeon.at(coord).type = t;
+            if (rng.range(usize, 0, 100) < chance) {
+                state.dungeon.at(coord).type = ttype;
+            }
         }
     }
 }
