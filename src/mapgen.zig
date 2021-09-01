@@ -1887,7 +1887,7 @@ pub const Configs = [LEVELS]LevelConfig{
         .patrol_squads = 2,
 
         .no_lights = true,
-        .material = &materials.Marble,
+        .material = &materials.Limestone,
     },
     .{
         .identifier = "LAB",
@@ -1995,6 +1995,8 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ .chance = 35, .template = &mobs.WatcherTemplate },
             .{ .chance = 56, .template = &mobs.GuardTemplate },
         }),
+
+        .material = &materials.Limestone,
 
         .allow_statues = false,
     },

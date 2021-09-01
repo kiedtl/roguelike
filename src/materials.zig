@@ -167,15 +167,15 @@ pub const Concrete = Material{
     .opacity = 1.0,
 };
 
-pub const Marble = Material{
-    .name = "marble",
+pub const Limestone = Material{
+    .name = "limestone",
     .description = "TODO",
-    .density = 2.78,
-    .color_fg = 0xffffff,
-    .color_bg = null,
-    .color_floor = 0xfafafa,
-    .tileset = 2,
-    .melting_point = 825,
+    .density = 2.78, // not accurate
+    .color_fg = 0x45455f,
+    .color_bg = 0xffffef,
+    .color_floor = 0xffffef,
+    .tileset = 0,
+    .melting_point = 825, // not accurate
     .combust_point = null,
     .specific_heat = 910, // not accurate
     .luminescence = 0,

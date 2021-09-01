@@ -35,7 +35,7 @@ fn mkprop(id: []const u8, name: []const u8, tile: u21, fg: ?u32, opts: mkprop_op
 
 const STEEL_SUPPORT_COLOR: u32 = 0xa6c2d4;
 const VANGEN_WALL_COLOR: u32 = materials.Vangenite.color_fg;
-const MARBLE_WALL_COLOR: u32 = materials.Marble.color_floor;
+const LIMEST_WALL_COLOR: u32 = materials.Limestone.color_floor;
 const CNCRTE_WALL_COLOR: u32 = materials.Concrete.color_floor;
 const COPPER_COIL_COLOR: u32 = 0xe99c39;
 const COPPER_WIRE_COLOR: u32 = 0xffe5d3;
@@ -106,8 +106,8 @@ pub const PROPS = [_]Prop{
     IronStatue,
     SodaliteStatue,
     HematiteStatue,
-    MarbleWall_Upper,
-    MarbleWall_Lower,
+    LimestoneWall_Upper,
+    LimestoneWall_Lower,
     ConcreteWall_Upper,
     ConcreteWall_Lower,
     ConcreteWall_Full,
@@ -269,8 +269,8 @@ pub const SteelSupport_NSW2_Prop   = mkprop("steel_support_nsw2",   "steel suppo
 pub const SteelSupport_NSE2W2_Prop = mkprop("steel_support_nse2w2", "steel support", '╪', STEEL_SUPPORT_COLOR, .{});
 pub const SteelSupport_E2W2_Prop   = mkprop("steel_support_e2w2",   "steel support", '═', STEEL_SUPPORT_COLOR, .{});
 
-pub const MarbleWall_Upper     = mkprop("marble_wall_upper",   "marble wall", '▀', MARBLE_WALL_COLOR , .{});
-pub const MarbleWall_Lower     = mkprop("marble_wall_lower",   "marble wall", '▄', MARBLE_WALL_COLOR , .{});
+pub const LimestoneWall_Upper  = mkprop("limestone_wall_upper","limestone wall",'▀', LIMEST_WALL_COLOR , .{});
+pub const LimestoneWall_Lower  = mkprop("limestone_wall_lower","limestone wall",'▄', LIMEST_WALL_COLOR , .{});
 
 pub const ConcreteWall_Upper   = mkprop("concrete_wall_upper", "concrete wall", '▀', CNCRTE_WALL_COLOR , .{});
 pub const ConcreteWall_Lower   = mkprop("concrete_wall_lower", "concrete wall", '▄', CNCRTE_WALL_COLOR , .{});
