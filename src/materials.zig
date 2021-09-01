@@ -12,7 +12,7 @@ pub const Basalt = Material{
     .tileset = 0,
     .melting_point = 983,
     .combust_point = null,
-    .specific_heat = 0.84, // FIXME: not accurate!
+    .specific_heat = 840, // FIXME: not accurate!
     .luminescence = 0,
     .opacity = 1.0,
 };
@@ -27,7 +27,7 @@ pub const Talonium = Material{
     .tileset = 1,
     .melting_point = 1128, // TODO
     .combust_point = null,
-    .specific_heat = 0.91, // TODO
+    .specific_heat = 910, // TODO
     .luminescence = 0,
     .opacity = 1.0,
 };
@@ -42,7 +42,7 @@ pub const Sulon = Material{
     .tileset = 1,
     .melting_point = 1128, // TODO
     .combust_point = null,
-    .specific_heat = 0.91, // TODO
+    .specific_heat = 910, // TODO
     .luminescence = 0,
     .opacity = 1.0,
 };
@@ -57,7 +57,7 @@ pub const Phosire = Material{
     .tileset = 1,
     .melting_point = 1128, // TODO
     .combust_point = null,
-    .specific_heat = 0.91, // TODO
+    .specific_heat = 910, // TODO
     .luminescence = 0,
     .opacity = 1.0,
 };
@@ -72,7 +72,7 @@ pub const Hyalt = Material{
     .tileset = 1,
     .melting_point = 1128, // TODO
     .combust_point = null,
-    .specific_heat = 0.91, // TODO
+    .specific_heat = 910, // TODO
     .luminescence = 0,
     .opacity = 1.0,
 };
@@ -87,7 +87,7 @@ pub const Quaese = Material{
     .tileset = 1,
     .melting_point = 1128, // TODO
     .combust_point = null,
-    .specific_heat = 0.91, // TODO
+    .specific_heat = 910, // TODO
     .luminescence = 0,
     .opacity = 1.0,
 };
@@ -102,7 +102,7 @@ pub const Catasine = Material{
     .tileset = 1,
     .melting_point = 1128, // TODO
     .combust_point = null,
-    .specific_heat = 0.91, // TODO
+    .specific_heat = 910, // TODO
     .luminescence = 0,
     .opacity = 1.0,
 };
@@ -117,7 +117,7 @@ pub const Phybro = Material{
     .tileset = 1,
     .melting_point = 1128, // TODO
     .combust_point = null,
-    .specific_heat = 0.91, // TODO
+    .specific_heat = 910, // TODO
     .luminescence = 0,
     .opacity = 1.0,
 };
@@ -132,7 +132,7 @@ pub const Vangenite = Material{
     .tileset = 1,
     .melting_point = 1128,
     .combust_point = null,
-    .specific_heat = 0.91, // TODO
+    .specific_heat = 910, // TODO
     .luminescence = 40,
     .opacity = 1.0,
 };
@@ -147,7 +147,7 @@ pub const Dobalene = Material{
     .tileset = 1,
     .melting_point = 876,
     .combust_point = null,
-    .specific_heat = 0.91, // TODO
+    .specific_heat = 910, // TODO
     .luminescence = 0,
     .opacity = 1.0,
 };
@@ -162,7 +162,7 @@ pub const Concrete = Material{
     .tileset = 0,
     .melting_point = 825, // not accurate
     .combust_point = null,
-    .specific_heat = 0.91, // not accurate
+    .specific_heat = 910, // not accurate
     .luminescence = 0,
     .opacity = 1.0,
 };
@@ -177,7 +177,7 @@ pub const Marble = Material{
     .tileset = 2,
     .melting_point = 825,
     .combust_point = null,
-    .specific_heat = 0.91, // not accurate
+    .specific_heat = 910, // not accurate
     .luminescence = 0,
     .opacity = 1.0,
 };

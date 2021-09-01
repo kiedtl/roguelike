@@ -550,6 +550,9 @@ pub const Material = struct {
     luminescence: usize,
 
     opacity: f64,
+
+    pub const AIR_SPECIFIC_HEAT = 100.5;
+    pub const AIR_DENSITY = 0.001225;
 };
 
 pub const MessageType = union(enum) {
@@ -2174,8 +2177,6 @@ pub const TileType = enum {
     Floor,
     Water,
     Lava,
-
-    pub const LAVA_LIGHT_INTENSITY: usize = 175;
 };
 
 pub const Tile = struct {
@@ -2300,6 +2301,10 @@ pub const Tile = struct {
             cell.fg = math.max(utils.percentageOfColor(cell.fg, light), utils.darkenColor(cell.fg, 3));
         }
 
+        const temperature = state.dungeon.heat[coord.z][coord.y][coord.x];
+        const light_emitted = heat.lightEmittedByHeat(temperature);
+        cell.bg = utils.mixColors(cell.bg, 0xffe122, @intToFloat(f64, light_emitted) / 1000);
+
         var spattering = self.spatter.iterator();
         while (spattering.next()) |entry| {
             const spatter = entry.key;
@@ -2337,9 +2342,6 @@ pub const Dungeon = struct {
         const tile: *Tile = state.dungeon.at(coord);
 
         var l: usize = 0;
-
-        if (tile.type == .Lava)
-            l += TileType.LAVA_LIGHT_INTENSITY;
 
         l += heat.lightEmittedByHeat(self.heat[coord.z][coord.y][coord.x]);
 
