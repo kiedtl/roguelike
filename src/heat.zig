@@ -19,8 +19,8 @@ fn newTemperatures(
     const b_specific_heat = if (b_tile.type == .Wall) b_tile.material.specific_heat else Material.AIR_SPECIFIC_HEAT;
     const a_density = if (a_tile.type == .Wall) a_tile.material.density else Material.AIR_DENSITY;
     const b_density = if (b_tile.type == .Wall) b_tile.material.density else Material.AIR_DENSITY;
+    const a_k: f64 = if (a_tile.type == .Wall) 3.00 else 15.00; // Thermal conductivity. Just using a random value, TODO: fix
 
-    const a_k = 4.00; // Thermal conductivity. Just using a random value, TODO: fix
     const time = 1.0; // 1 second
     const A = 1.0; // Surface area of <b> in contact with <a> (1 m²)
     const deltaT = @intToFloat(f64, @intCast(isize, a_temp) - @intCast(isize, b_temp));

@@ -551,8 +551,8 @@ pub const Material = struct {
 
     opacity: f64,
 
-    pub const AIR_SPECIFIC_HEAT = 100.5;
-    pub const AIR_DENSITY = 0.001225;
+    pub const AIR_SPECIFIC_HEAT = 200.5;
+    pub const AIR_DENSITY = 0.012;
 };
 
 pub const MessageType = union(enum) {
