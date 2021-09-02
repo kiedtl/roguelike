@@ -372,7 +372,7 @@ Temperature
 x Add temperature matrix, tickTemperature(); make magma emit heat
 x Integrate with lighting system (make hot tiles emit light)
 - Add emits_heat to Mob{}, define Burning Brute
-- Update tickTemperature() to work with material's specific heat
+x Update tickTemperature() to work with material's specific heat
 - Add min_heat, max_heat to Mob{}; add tickTemperatureEffects()
 - Allow walls to melt
 - Allow props and machines to be damaged and melt
@@ -392,7 +392,7 @@ x Make the "lamps" electric "braziers"
   - Place them in center of rooms.
   x Place them in corners of rooms.
   - Make them explosive and electrocutive!
-- Useless items in bins, cabinets, etc
+x Useless items in bins, cabinets, etc
 - Weapons and armor in cabinets
 - Allow multiple subrooms in rooms (BSP?)
 
@@ -411,7 +411,7 @@ x Make watchers smack intruders when they can't run
   them to see
 - Fleeing mobs and mobs that have just spotted an enemy "tell" nearby allies
   about the hostile
-- Define what undead are somewhere (combat bonuses, stat increases, miasma
+x Define what undead are somewhere (combat bonuses, stat increases, miasma
   emissions, etc)
 
 User Interface
@@ -435,7 +435,7 @@ x Add walls to edges of map after mapgen
 x Place stairs only in rooms
 x Fix sound propagation
 
-Openworld:
+Caverns:
 ==========
 - Add portals to Openworld from the main dungeon, with sentinels
 x Add goblins, rats, and other mobs to populate the Openworld
@@ -446,14 +446,14 @@ Ideas
 =====
 [+] planned, [~] obsolete, [x] done
 ~ Layers, as in Brogue? (gas, liquid, surface, floor, etc.)
-+ Cloaks of invisibility, confusion, blinding, camouflage, electricity
+- Cloaks of invisibility, confusion, blinding, camouflage, electricity
   resistance, fire resistance, etc.
 - Ring of seeing (magic mapping)
-+ Rings have negative effects (decreased piety/willpower)
-+ Add bonus (or neg bonus) to attacker if defender moved or didn't move in the
+- Rings have negative effects (decreased piety/willpower)
+- Add bonus (or neg bonus) to attacker if defender moved or didn't move in the
   past two turns
-+ Ring of intimidation that magic maps dungeon based on mob's memory
-+ Crafting grid/alchemy by arranging items on map and dancing
+- Ring of intimidation that magic maps dungeon based on mob's memory
+- Crafting grid/alchemy by arranging items on map and dancing
 x Lighting system and torches
 - Light colors
 x Ring of echolocation to magic-map neighbors of sound-producing tiles
@@ -472,7 +472,7 @@ x Ring of echolocation to magic-map neighbors of sound-producing tiles
 	- the Goblin Brotherhood, the ProudGobbos, the Seven Percenters, the
 	  Goblin Nations, etc
 - Night creatures should pop out of artwork at night
-+ Stone guardians that patrol map and cast confusion at enemies, but move at 1
+~ Stone guardians that patrol map and cast confusion at enemies, but move at 1
   tile per 10-20 turns
 - Enemies that surrender or start whimpering when fleeing and trapped in a
   corner, or maybe perpare for one final all-out assault
@@ -507,8 +507,11 @@ x Blood spattering?
   - On spotting an enemy ("Aha!", "It's a <species>!", "It's the @!!")
   - On being cornered ("Don't touch me!", "Go away!", "No farther!")
   - On seeing a dead ally, killed by a visible hostile ("Murderer!")
+  - On seeing a dead ally, killed by a nonvisible hostile ("Oh no!", "Noo!")
   - On pursuing a fleeing hostile ("Coward!", "Wimp!", "Bye clown!")
-  - On investigating a noise ("...?", "What?", "Must have been rats!")
+  - On investigating a noise ("...?", "What?")
+  - On completing investigation of a noise ("Must have been rats!")
+  - On finding an pursued enemy ("Its here!", "I've got you now!", "Now you're mine!")
 - Smell mechanics that allow, say, hellhounds and snakes to detect intruders
   even if they can't see them.
 - Ranged melee weapons, e.g., spear and whips
@@ -516,9 +519,9 @@ x Add braziers that are built into the walls (aka torches), and use that
   instead for corridors
 - Some kind of squad-forming fast-moving swarming mob, like killer bees (DCSS)
   or swarmers (Cogmind 7DRL)
-+ Level with hospital (get healed with healing gas), nursery (kill baby goblins!),
+- Level with hospital (get healed with healing gas), nursery (kill baby goblins!),
   dining room, bedrooms, kitchen
-+ "cameras kits" that create surface items that keep the surrounding area in the
+- "cameras kits" that create surface items that keep the surrounding area in the
   FOV of all mobs that have a certain ring on
 - Experiment with "bouncing" rays in raycasting routines
 - Ring/item that has leaving a vunerable "copy" of yourself where that item/ring
