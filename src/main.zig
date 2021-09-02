@@ -49,7 +49,6 @@ fn initGame() void {
     state.containers = ContainerList.init(&state.GPA.allocator);
     state.messages = MessageArrayList.init(&state.GPA.allocator);
 
-    state.posters = PosterArrayList.init(&state.GPA.allocator);
     literature.readPosters(&state.GPA.allocator, &state.posters);
 
     for (state.dungeon.map) |_, level| {
