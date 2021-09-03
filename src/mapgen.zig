@@ -9,7 +9,7 @@ const rng = @import("rng.zig");
 const mobs = @import("mobs.zig");
 const StackBuffer = @import("buffer.zig").StackBuffer;
 const items = @import("items.zig");
-const machines = @import("machines.zig");
+const surfaces = @import("surfaces.zig");
 const literature = @import("literature.zig");
 const materials = @import("materials.zig");
 const utils = @import("utils.zig");
@@ -166,7 +166,7 @@ fn _place_machine(coord: Coord, machine_template: *const Machine) void {
 }
 
 fn placeDoor(coord: Coord, locked: bool) void {
-    var door = if (locked) machines.LockedDoor else machines.NormalDoor;
+    var door = if (locked) surfaces.LockedDoor else surfaces.NormalDoor;
     door.coord = coord;
     state.machines.append(door) catch unreachable;
     const doorptr = state.machines.lastPtr().?;
@@ -354,8 +354,8 @@ fn _excavate_prefab(
                                 }
                             },
                             .Prop => |pid| {
-                                if (utils.findById(machines.props.items, pid)) |prop| {
-                                    _ = placeProp(rc, &machines.props.items[prop]);
+                                if (utils.findById(surfaces.props.items, pid)) |prop| {
+                                    _ = placeProp(rc, &surfaces.props.items[prop]);
                                 } else {
                                     std.log.warn(
                                         "{}: Couldn't load prop {}, skipping.",
@@ -364,8 +364,8 @@ fn _excavate_prefab(
                                 }
                             },
                             .Machine => |mid| {
-                                if (utils.findById(&machines.MACHINES, mid)) |mach| {
-                                    _place_machine(rc, &machines.MACHINES[mach]);
+                                if (utils.findById(&surfaces.MACHINES, mid)) |mach| {
+                                    _place_machine(rc, &surfaces.MACHINES[mach]);
                                 } else {
                                     std.log.warn(
                                         "{}: Couldn't load machine {}, skipping.",
@@ -385,8 +385,8 @@ fn _excavate_prefab(
                 .Door => placeDoor(rc, false),
                 .Brazier => _place_machine(rc, Configs[room.start.z].light),
                 .Bars => {
-                    const p_ind = utils.findById(machines.props.items, Configs[room.start.z].bars);
-                    _ = placeProp(rc, &machines.props.items[p_ind.?]);
+                    const p_ind = utils.findById(surfaces.props.items, Configs[room.start.z].bars);
+                    _ = placeProp(rc, &surfaces.props.items[p_ind.?]);
                 },
                 else => {},
             }
@@ -978,13 +978,13 @@ pub fn placeTraps(level: usize) void {
 
         var trap: Machine = undefined;
         if (rng.onein(4)) {
-            trap = machines.AlarmTrap;
+            trap = surfaces.AlarmTrap;
         } else {
-            trap = if (rng.onein(3)) machines.PoisonGasTrap else machines.ParalysisGasTrap;
+            trap = if (rng.onein(3)) surfaces.PoisonGasTrap else surfaces.ParalysisGasTrap;
             trap = switch (rng.range(usize, 0, 4)) {
-                0, 1 => machines.ConfusionGasTrap,
-                2, 3 => machines.ParalysisGasTrap,
-                4 => machines.PoisonGasTrap,
+                0, 1 => surfaces.ConfusionGasTrap,
+                2, 3 => surfaces.ParalysisGasTrap,
+                4 => surfaces.PoisonGasTrap,
                 else => unreachable,
             };
 
@@ -997,8 +997,8 @@ pub fn placeTraps(level: usize) void {
                     state.dungeon.neighboringWalls(vent, true) == 9) continue;
 
                 state.dungeon.at(vent).type = .Floor;
-                const p_ind = utils.findById(machines.props.items, Configs[room.start.z].vent);
-                const prop = placeProp(vent, &machines.props.items[p_ind.?]);
+                const p_ind = utils.findById(surfaces.props.items, Configs[room.start.z].vent);
+                const prop = placeProp(vent, &surfaces.props.items[p_ind.?]);
                 trap.props[num_of_vents] = prop;
                 num_of_vents -= 1;
             }
@@ -1155,7 +1155,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                 },
                 3 => {
                     if (levers < 1 and room.has_subroom) {
-                        _place_machine(coord, &machines.RestrictedMachinesOpenLever);
+                        _place_machine(coord, &surfaces.RestrictedMachinesOpenLever);
                         levers += 1;
                     }
                 },
@@ -1174,7 +1174,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
 }
 
 pub fn placeRandomStairs(level: usize) void {
-    const stair_dst = &machines.props.items[utils.findById(machines.props.items, "stair_dst").?];
+    const stair_dst = &surfaces.props.items[utils.findById(surfaces.props.items, "stair_dst").?];
 
     if (level == 0) return;
 
@@ -1203,7 +1203,7 @@ pub fn placeRandomStairs(level: usize) void {
                 state.is_walkable(current, .{ .right_now = true }) and
                 state.is_walkable(above, .{ .right_now = true }))
             {
-                _place_machine(current, &machines.StairUp);
+                _place_machine(current, &surfaces.StairUp);
                 _ = placeProp(above, stair_dst);
 
                 placed += 1;
@@ -1335,7 +1335,7 @@ fn levelFeatureOres(c: usize, coord: Coord, room: *const Room, prefab: *const Pr
     var using_container: ?*Container = null;
 
     if ((coord.y % 2) == 0) {
-        placeContainer(coord, &machines.VOreCrate);
+        placeContainer(coord, &surfaces.VOreCrate);
         using_container = state.dungeon.at(coord).surface.?.Container;
     }
 
@@ -1825,17 +1825,17 @@ pub const LevelConfig = struct {
 
     no_lights: bool = false,
     material: *const Material = &materials.Concrete,
-    light: *const Machine = &machines.Brazier,
+    light: *const Machine = &surfaces.Brazier,
     vent: []const u8 = "gas_vent",
     bars: []const u8 = "iron_bars",
-    props: *[]const Prop = &machines.statue_props.items,
+    props: *[]const Prop = &surfaces.statue_props.items,
     containers: []const Container = &[_]Container{
-        machines.Bin,
-        machines.Barrel,
-        machines.Cabinet,
-        machines.Chest,
+        surfaces.Bin,
+        surfaces.Barrel,
+        surfaces.Cabinet,
+        surfaces.Chest,
     },
-    utility_items: *[]const Prop = &machines.prison_item_props.items,
+    utility_items: *[]const Prop = &surfaces.prison_item_props.items,
     allow_statues: bool = true,
 
     pub const RPBuf = StackBuffer([]const u8, 4);
@@ -1929,12 +1929,12 @@ pub const Configs = [LEVELS]LevelConfig{
         }),
 
         .material = &materials.Dobalene,
-        .light = &machines.Lamp,
+        .light = &surfaces.Lamp,
         .vent = "lab_gas_vent",
         .bars = "titanium_bars",
-        .props = &machines.laboratory_props.items,
-        .containers = &[_]Container{ machines.Chest, machines.LabCabinet },
-        .utility_items = &machines.laboratory_item_props.items,
+        .props = &surfaces.laboratory_props.items,
+        .containers = &[_]Container{ surfaces.Chest, surfaces.LabCabinet },
+        .utility_items = &surfaces.laboratory_item_props.items,
 
         .allow_statues = false,
     },

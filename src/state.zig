@@ -418,17 +418,6 @@ pub fn tickSobs(level: usize) void {
     }
 }
 
-pub fn tickMachines(level: usize) void {
-    var iter = machines.iterator();
-    while (iter.nextPtr()) |machine| {
-        if (machine.coord.z != level or !machine.isPowered() or machine.disabled)
-            continue;
-
-        machine.on_power(machine);
-        machine.power = utils.saturating_sub(machine.power, machine.power_drain);
-    }
-}
-
 pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void {
     var buf: [128]u8 = undefined;
     for (buf) |*i| i.* = 0;

@@ -1,4 +1,3 @@
-// TODO: rename this file to surfaces.zig
 // TODO: add state to machines
 
 const std = @import("std");
@@ -6,6 +5,7 @@ const assert = std.debug.assert;
 const mem = std.mem;
 
 const main = @import("root");
+const utils = @import("utils.zig");
 const state = @import("state.zig");
 const gas = @import("gas.zig");
 const tsv = @import("tsv.zig");
@@ -591,5 +591,16 @@ pub fn readProps(alloc: *mem.Allocator) void {
             else => {},
         };
         std.log.warn("Loaded {} props.", .{props.items.len});
+    }
+}
+
+pub fn tickMachines(level: usize) void {
+    var iter = state.machines.iterator();
+    while (iter.nextPtr()) |machine| {
+        if (machine.coord.z != level or !machine.isPowered() or machine.disabled)
+            continue;
+
+        machine.on_power(machine);
+        machine.power = utils.saturating_sub(machine.power, machine.power_drain);
     }
 }

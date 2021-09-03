@@ -11,7 +11,7 @@ const items = @import("items.zig");
 const utils = @import("utils.zig");
 const gas = @import("gas.zig");
 const mapgen = @import("mapgen.zig");
-const machines = @import("machines.zig");
+const surfaces = @import("surfaces.zig");
 const display = @import("display.zig");
 const termbox = @import("termbox.zig");
 const types = @import("types.zig");
@@ -50,7 +50,7 @@ fn initGame() void {
     state.containers = ContainerList.init(&state.GPA.allocator);
     state.messages = MessageArrayList.init(&state.GPA.allocator);
 
-    machines.readProps(&state.GPA.allocator);
+    surfaces.readProps(&state.GPA.allocator);
     literature.readPosters(&state.GPA.allocator);
 
     for (state.dungeon.map) |_, level| {
@@ -154,9 +154,9 @@ fn deinitGame() void {
         poster.deinit(&state.GPA.allocator);
     literature.posters.deinit();
 
-    for (machines.props.items) |prop|
+    for (surfaces.props.items) |prop|
         prop.deinit(&state.GPA.allocator);
-    machines.props.deinit();
+    surfaces.props.deinit();
 
     _ = state.GPA.deinit();
 }
@@ -529,7 +529,7 @@ fn tickGame() void {
     const cur_level = state.player.coord.z;
 
     state.ticks += 1;
-    state.tickMachines(cur_level);
+    surfaces.tickMachines(cur_level);
     state.tickLight(cur_level);
     heat.tickHeat(cur_level);
     tasks.tickTasks(cur_level);
@@ -609,7 +609,7 @@ fn tickGame() void {
 
 fn viewerTickGame(cur_level: usize) void {
     state.ticks += 1;
-    state.tickMachines(cur_level);
+    surfaces.tickMachines(cur_level);
     state.tickLight(cur_level);
     heat.tickHeat(cur_level);
     tasks.tickTasks(cur_level);

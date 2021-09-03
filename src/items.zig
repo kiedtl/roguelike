@@ -4,7 +4,7 @@ const math = std.math;
 const gas = @import("gas.zig");
 const rng = @import("rng.zig");
 const state = @import("state.zig");
-const machines = @import("machines.zig");
+const surfaces = @import("surfaces.zig");
 usingnamespace @import("types.zig");
 
 pub const EcholocationRing = Ring{
@@ -249,7 +249,7 @@ fn triggerNetLauncherProjectile(coord: Coord) void {
                 if (state.is_walkable(c, .{ .right_now = true }) and
                     state.dungeon.at(c).surface == null)
                 {
-                    var net = machines.NetTrap;
+                    var net = surfaces.NetTrap;
                     net.coord = c;
                     state.machines.append(net) catch unreachable;
                     state.dungeon.at(c).surface = SurfaceItem{ .Machine = state.machines.lastPtr().? };
