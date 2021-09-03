@@ -411,7 +411,6 @@ pub fn haulerWork(mob: *Mob, alloc: *mem.Allocator) void {
                 if (!task.completed and task.assigned_to == null) {
                     switch (task.type) {
                         .Haul => |c| {
-                            std.log.warn("found job", .{});
                             mob.ai.task_id = id;
                             task.assigned_to = mob;
                             mob.ai.work_phase = .HaulerTake;
