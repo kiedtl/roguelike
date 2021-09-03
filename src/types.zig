@@ -56,8 +56,9 @@ pub const PotionList = LinkedList(Potion);
 pub const ArmorList = LinkedList(Armor);
 pub const WeaponList = LinkedList(Weapon);
 pub const ProjectileList = LinkedList(Projectile);
-pub const MachineList = LinkedList(Machine);
 pub const PropList = LinkedList(Prop);
+pub const PropArrayList = std.ArrayList(Prop);
+pub const MachineList = LinkedList(Machine);
 pub const ContainerList = LinkedList(Container);
 
 pub fn MinMax(comptime T: type) type {
@@ -1840,11 +1841,13 @@ pub const Machine = struct {
     }
 };
 
-pub const PropFunction = enum { ActionPoint, None };
+pub const PropFunction = enum {
+    ActionPoint, Laboratory, LaboratoryItem, Statue, None
+};
 
 pub const Prop = struct {
-    id: []const u8 = "",
-    name: []const u8,
+    id: []u8 = "",
+    name: []u8,
     tile: u21,
     fg: ?u32 = null,
     bg: ?u32 = null,
@@ -1852,6 +1855,11 @@ pub const Prop = struct {
     opacity: f64 = 0.0,
     function: PropFunction = .None,
     coord: Coord = Coord.new(0, 0),
+
+    pub fn deinit(self: *const Prop, alloc: *mem.Allocator) void {
+        alloc.free(self.id);
+        alloc.free(self.name);
+    }
 };
 
 pub const Container = struct {

@@ -54,6 +54,7 @@ pub var stockpiles: [LEVELS]StockpileArrayList = undefined;
 pub var inputs: [LEVELS]StockpileArrayList = undefined;
 pub var outputs: [LEVELS]RoomArrayList = undefined;
 
+// Data objects
 pub var tasks: TaskArrayList = undefined;
 pub var mobs: MobList = undefined;
 pub var sobs: SobList = undefined;
@@ -64,8 +65,6 @@ pub var weapons: WeaponList = undefined;
 pub var machines: MachineList = undefined;
 pub var props: PropList = undefined;
 pub var containers: ContainerList = undefined;
-
-pub var posters: PosterArrayList = undefined;
 
 pub var ticks: usize = 0;
 pub var messages: MessageArrayList = undefined;

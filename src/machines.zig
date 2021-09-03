@@ -1,6 +1,5 @@
 // TODO: rename this file to surfaces.zig
 // TODO: add state to machines
-// STYLE: remove pub marker from power funcs
 
 const std = @import("std");
 const assert = std.debug.assert;
@@ -9,183 +8,16 @@ const mem = std.mem;
 const main = @import("root");
 const state = @import("state.zig");
 const gas = @import("gas.zig");
+const tsv = @import("tsv.zig");
 const rng = @import("rng.zig");
 const materials = @import("materials.zig");
 usingnamespace @import("types.zig");
 
-const mkprop_opts = struct {
-    bg: ?u32 = null,
-    walkable: bool = false,
-    opacity: f64 = 0.0,
-    function: PropFunction = .None,
-};
-
-fn mkprop(id: []const u8, name: []const u8, tile: u21, fg: ?u32, opts: mkprop_opts) Prop {
-    return .{
-        .id = id,
-        .name = name,
-        .tile = tile,
-        .fg = fg,
-        .bg = opts.bg,
-        .walkable = opts.walkable,
-        .opacity = opts.opacity,
-        .function = opts.function,
-    };
-}
-
-const STEEL_SUPPORT_COLOR: u32 = 0xa6c2d4;
-const VANGEN_WALL_COLOR: u32 = materials.Vangenite.color_fg;
-const LIMEST_WALL_COLOR: u32 = materials.Limestone.color_floor;
-const CNCRTE_WALL_COLOR: u32 = materials.Concrete.color_floor;
-const COPPER_COIL_COLOR: u32 = 0xe99c39;
-const COPPER_WIRE_COLOR: u32 = 0xffe5d3;
-
-pub const STATUES = [_]Prop{
-    GoldStatue,
-    RealgarStatue,
-    IronStatue,
-    SodaliteStatue,
-    HematiteStatue,
-};
-
-pub const LAB_UTILITY_ITEMS = [_]Prop{
-    mkprop("", "beaker", '~', 0xffffff, .{}),
-    mkprop("", "large beaker", '~', 0xffffff, .{}),
-    mkprop("", "mesh", '~', 0xffffff, .{}),
-    mkprop("", "strainer", '~', 0xffffff, .{}),
-    mkprop("", "scale", '~', 0xffffff, .{}),
-    mkprop("", "lens", '~', 0xffffff, .{}),
-    mkprop("", "battery", '~', 0xffffff, .{}),
-    mkprop("", "test-tube", '~', 0xffffff, .{}),
-    mkprop("", "large battery", '~', 0xffffff, .{}),
-    mkprop("", "empty vial", '~', 0xffffff, .{}),
-    mkprop("", "test-tube holder", '~', 0xffffff, .{}),
-    mkprop("", "stirring rod", '~', 0xffffff, .{}),
-    mkprop("", "laboratory balance", '~', 0xffffff, .{}),
-    mkprop("", "crucible", '~', 0xffffff, .{}),
-    mkprop("", "crucible tongs", '~', 0xffffff, .{}),
-    mkprop("", "filter paper", '~', 0xffffff, .{}),
-    mkprop("", "flask", '~', 0xffffff, .{}),
-    mkprop("", "filter flask", '~', 0xffffff, .{}),
-    mkprop("", "pipet", '~', 0xffffff, .{}),
-    mkprop("", "buret", '~', 0xffffff, .{}),
-    mkprop("", "ring stand", '~', 0xffffff, .{}),
-    mkprop("", "double buret clamp", '~', 0xffffff, .{}),
-    mkprop("", "mortar/pestle", '~', 0xffffff, .{}),
-    mkprop("", "evaporating dish", '~', 0xffffff, .{}),
-    mkprop("", "flame spreader", '~', 0xffffff, .{}),
-    mkprop("", "burner lighter", '~', 0xffffff, .{}),
-    mkprop("", "utility clamps", '~', 0xffffff, .{}),
-    mkprop("", "separatory funnel", '~', 0xffffff, .{}),
-    mkprop("", "reagent bottle", '~', 0xffffff, .{}),
-    mkprop("", "graduated cylinder", '~', 0xffffff, .{}),
-    mkprop("", "petri dish", '~', 0xffffff, .{}),
-    mkprop("", "rubber stopper", '~', 0xffffff, .{}),
-    mkprop("", "thermometer", '~', 0xffffff, .{}),
-    mkprop("", "Buchner funnel", '~', 0xffffff, .{}),
-    mkprop("", "Erlenmeyer flask", '~', 0xffffff, .{}),
-};
-
-pub const LABSTUFF = [_]Prop{
-    Centrifuge,
-    XRayAppar,
-    WaterPurifierAppar,
-    FracDistillAppar,
-    LaserEtcher,
-    DistillAppar,
-    BunsenBurner,
-    TirrillBurner,
-    Microscope,
-    Calorimeter,
-    VacuumChamber,
-};
-
-pub const PROPS = [_]Prop{
-    GoldStatue,
-    RealgarStatue,
-    IronStatue,
-    SodaliteStatue,
-    HematiteStatue,
-    LimestoneWall_Upper,
-    LimestoneWall_Lower,
-    ConcreteWall_Upper,
-    ConcreteWall_Lower,
-    ConcreteWall_Full,
-    Wall_E1W1_Prop,
-    Wall_S1W1_Prop,
-    Wall_N1S1W1_Prop,
-    Wall_N1S1_Prop,
-    Wall_N1S1E1_Prop,
-    Wall_N1W1_Prop,
-    Wall_N1E1_Prop,
-    Wall_S1E1_Prop,
-    Wall_E1W1_thinE_Prop,
-    Wall_E1W1_thinW_Prop,
-    Pipe_E1W1_Prop,
-    Pipe_S1W1_Prop,
-    Pipe_S1E1_Prop,
-    Pipe_N1W1_Prop,
-    Pipe_N1S1W1_Prop,
-    Pipe_N1S1E1_Prop,
-    Pipe_N1S1_Prop,
-    Pipe_S1E1W1_Prop,
-    Pipe_N1E1W1_Prop,
-    Wire_S2E1_Prop,
-    Wire_E1W1_Prop,
-    Wire_S1W1_Prop,
-    Wire_S1E1_Prop,
-    Wire_N1W1_Prop,
-    Wire_N2S2_Prop,
-    Wire_N1S1W1_Prop,
-    Wire_N2W1_Prop,
-    Wire_N1E2_Prop,
-    Wire_S1W2_Prop,
-    Wire_N1S1W2_Prop,
-    Wire_N1S1E2_Prop,
-    Wire_N1S1E2W2_Prop,
-    Wire_N1S1_Prop,
-    Wire_S1E1W1_Prop,
-    Wire_N2E1W1_Prop,
-    TableProp,
-    Gearbox,
-    PowerSwitchProp,
-    ControlPanelProp,
-    SmallTransformerProp,
-    LargeTransformerProp,
-    SwitchingStationProp,
-    Centrifuge,
-    XRayAppar,
-    WaterPurifierAppar,
-    FracDistillAppar,
-    LaserEtcher,
-    DistillAppar,
-    BunsenBurner,
-    TirrillBurner,
-    Microscope,
-    Calorimeter,
-    VacuumChamber,
-    ItemLocationProp,
-    WorkstationProp,
-    MediumSieve,
-    SteelGasReservoir,
-    SteelGasPin,
-    SteelSupport_NE2_Prop,
-    SteelSupport_SE2_Prop,
-    SteelSupport_NSE2_Prop,
-    SteelSupport_NSW2_Prop,
-    SteelSupport_NSE2W2_Prop,
-    SteelSupport_E2W2_Prop,
-    LeftCopperCoilProp,
-    RightCopperCoilProp,
-    UpperCopperCoilProp,
-    LowerCopperCoilProp,
-    FullCopperCoilProp,
-    GasVentProp,
-    LabGasVentProp,
-    BedProp,
-    IronBarProp,
-    TitaniumBarProp,
-};
+pub var props: PropArrayList = undefined;
+pub var prison_item_props: PropArrayList = undefined;
+pub var laboratory_item_props: PropArrayList = undefined;
+pub var laboratory_props: PropArrayList = undefined;
+pub var statue_props: PropArrayList = undefined;
 
 pub const MACHINES = [_]Machine{
     ResearchCore,
@@ -215,106 +47,6 @@ pub const Cabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 5, .
 pub const Chest = Container{ .name = "chest", .tile = 'æ', .capacity = 7, .type = .Valuables };
 pub const LabCabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 8, .type = .Utility, .item_repeat = 70 };
 pub const VOreCrate = Container{ .name = "crate", .tile = '∐', .capacity = 21, .type = .VOres, .item_repeat = 60 };
-
-// zig fmt: off
-
-pub const GoldStatue     = mkprop("gold_statue",     "gold statue",     '☺', 0xfff720, .{});
-pub const RealgarStatue  = mkprop("realgar_statue",  "realgar statue",  '☺', 0xff343f, .{});
-pub const IronStatue     = mkprop("iron_statue",     "iron statue",     '☻', 0xcacad2, .{});
-pub const SodaliteStatue = mkprop("sodalite_statue", "sodalite statue", '☺', 0xa4cfff, .{});
-pub const HematiteStatue = mkprop("hematite_statue", "hematite statue", '☺', 0xff7f70, .{});
-
-pub const Wall_E1W1_Prop       = mkprop("wall_e1w1",       "vangenite wall", '━', VANGEN_WALL_COLOR, .{});
-pub const Wall_S1W1_Prop       = mkprop("wall_s1w1",       "vangenite wall", '┓', VANGEN_WALL_COLOR, .{});
-pub const Wall_N1S1W1_Prop     = mkprop("wall_n1s1w1",     "vangenite wall", '┫', VANGEN_WALL_COLOR, .{});
-pub const Wall_N1S1_Prop       = mkprop("wall_n1s1",       "vangenite wall", '┃', VANGEN_WALL_COLOR, .{});
-pub const Wall_N1S1E1_Prop     = mkprop("wall_n1s1e1",     "vangenite wall", '┣', VANGEN_WALL_COLOR, .{});
-pub const Wall_N1W1_Prop       = mkprop("wall_n1w1",       "vangenite wall", '┛', VANGEN_WALL_COLOR, .{});
-pub const Wall_N1E1_Prop       = mkprop("wall_n1e1",       "vangenite wall", '┗', VANGEN_WALL_COLOR, .{});
-pub const Wall_S1E1_Prop       = mkprop("wall_s1e1",       "vangenite wall", '┏', VANGEN_WALL_COLOR, .{});
-pub const Wall_E1W1_thinE_Prop = mkprop("wall_e1w1_thine", "vangenite wall", '╾', VANGEN_WALL_COLOR, .{});
-pub const Wall_E1W1_thinW_Prop = mkprop("wall_e1w1_thinw", "vangenite wall", '╼', VANGEN_WALL_COLOR, .{});
-
-pub const Pipe_E1W1_Prop     = mkprop("pipe_e1w1",     "steel pipe",  '─', STEEL_SUPPORT_COLOR, .{.walkable=true});
-pub const Pipe_S1W1_Prop     = mkprop("pipe_s1w1",     "steel pipe",  '┐', STEEL_SUPPORT_COLOR, .{.walkable=true});
-pub const Pipe_S1E1_Prop     = mkprop("pipe_s1e1",     "steel pipe",  '┌', STEEL_SUPPORT_COLOR, .{.walkable=true});
-pub const Pipe_N1W1_Prop     = mkprop("pipe_n1w1",     "steel pipe",  '┘', STEEL_SUPPORT_COLOR, .{.walkable=true});
-pub const Pipe_N1S1W1_Prop   = mkprop("pipe_n1s1w1",   "steel pipe",  '┤', STEEL_SUPPORT_COLOR, .{.walkable=true});
-pub const Pipe_N1S1E1_Prop   = mkprop("pipe_n1s1e1",   "steel pipe",  '├', STEEL_SUPPORT_COLOR, .{.walkable=true});
-pub const Pipe_N1S1_Prop     = mkprop("pipe_n1s1",     "steel pipe",  '│', STEEL_SUPPORT_COLOR, .{.walkable=true});
-pub const Pipe_S1E1W1_Prop   = mkprop("pipe_s1e1w1",   "steel pipe",  '┬', STEEL_SUPPORT_COLOR, .{.walkable=true});
-pub const Pipe_N1E1W1_Prop   = mkprop("pipe_n1e1w1",   "steel pipe",  '┴', STEEL_SUPPORT_COLOR, .{.walkable=true});
-
-pub const Wire_S2E1_Prop     = mkprop("wire_s2e1",     "copper wire", '╓', COPPER_WIRE_COLOR,   .{.walkable=true});
-pub const Wire_E1W1_Prop     = mkprop("wire_e1w1",     "copper wire", '─', COPPER_WIRE_COLOR,   .{.walkable=true});
-pub const Wire_S1W1_Prop     = mkprop("wire_s1w1",     "copper wire", '┐', COPPER_WIRE_COLOR,   .{.walkable=true});
-pub const Wire_S1E1_Prop     = mkprop("wire_s1e1",     "copper wire", '┌', COPPER_WIRE_COLOR,   .{.walkable=true});
-pub const Wire_N1W1_Prop     = mkprop("wire_n1w1",     "copper wire", '┘', COPPER_WIRE_COLOR,   .{.walkable=true});
-pub const Wire_N2S2_Prop     = mkprop("wire_n2s2",     "copper wire", '║', COPPER_WIRE_COLOR,   .{.walkable=true});
-pub const Wire_N1S1W1_Prop   = mkprop("wire_n1s1w1",   "copper wire", '┤', COPPER_WIRE_COLOR,   .{.walkable=true});
-pub const Wire_N2W1_Prop     = mkprop("wire_n2w1",     "copper wire", '╜', COPPER_WIRE_COLOR,   .{.walkable=true});
-pub const Wire_N1E2_Prop     = mkprop("wire_n1e2",     "copper wire", '╘', COPPER_WIRE_COLOR,   .{.walkable=true});
-pub const Wire_S1W2_Prop     = mkprop("wire_s1w2",     "copper wire", '╕', COPPER_WIRE_COLOR,   .{.walkable=true});
-pub const Wire_N1S1W2_Prop   = mkprop("wire_n1s1w2",   "copper wire", '╡', COPPER_WIRE_COLOR,   .{.walkable=true});
-pub const Wire_N1S1E2_Prop   = mkprop("wire_n1s1e2",   "copper wire", '╞', COPPER_WIRE_COLOR,   .{.walkable=true});
-pub const Wire_N1S1E2W2_Prop = mkprop("wire_n1s1e2w2", "copper wire", '╪', COPPER_WIRE_COLOR,   .{.walkable=true});
-pub const Wire_N1S1_Prop     = mkprop("wire_n1s1",     "copper wire", '│', COPPER_WIRE_COLOR,   .{.walkable=true});
-pub const Wire_S1E1W1_Prop   = mkprop("wire_s1e1w1",   "copper wire", '┬', COPPER_WIRE_COLOR,   .{.walkable=true});
-pub const Wire_N2E1W1_Prop   = mkprop("wire_n2e1w1",   "copper wire", '╨', COPPER_WIRE_COLOR,   .{.walkable=true});
-
-pub const SteelSupport_NE2_Prop    = mkprop("steel_support_ne2",    "steel support", '╘', STEEL_SUPPORT_COLOR, .{});
-pub const SteelSupport_SE2_Prop    = mkprop("steel_support_se2",    "steel support", '╒', STEEL_SUPPORT_COLOR, .{});
-pub const SteelSupport_NSE2_Prop   = mkprop("steel_support_nse2",   "steel support", '╞', STEEL_SUPPORT_COLOR, .{});
-pub const SteelSupport_NSW2_Prop   = mkprop("steel_support_nsw2",   "steel support", '╡', STEEL_SUPPORT_COLOR, .{});
-pub const SteelSupport_NSE2W2_Prop = mkprop("steel_support_nse2w2", "steel support", '╪', STEEL_SUPPORT_COLOR, .{});
-pub const SteelSupport_E2W2_Prop   = mkprop("steel_support_e2w2",   "steel support", '═', STEEL_SUPPORT_COLOR, .{});
-
-pub const LimestoneWall_Upper  = mkprop("limestone_wall_upper","limestone wall",'▀', LIMEST_WALL_COLOR , .{});
-pub const LimestoneWall_Lower  = mkprop("limestone_wall_lower","limestone wall",'▄', LIMEST_WALL_COLOR , .{});
-
-pub const ConcreteWall_Upper   = mkprop("concrete_wall_upper", "concrete wall", '▀', CNCRTE_WALL_COLOR , .{});
-pub const ConcreteWall_Lower   = mkprop("concrete_wall_lower", "concrete wall", '▄', CNCRTE_WALL_COLOR , .{});
-pub const ConcreteWall_Full    = mkprop("concrete_wall_full",  "concrete wall", '█', CNCRTE_WALL_COLOR , .{});
-
-pub const LeftCopperCoilProp   = mkprop("left_copper_coil",    "half copper coil",  '▌', COPPER_COIL_COLOR, .{.walkable = false});
-pub const RightCopperCoilProp  = mkprop("right_copper_coil",   "half copper coil",  '▐', COPPER_COIL_COLOR, .{.walkable = false});
-pub const LowerCopperCoilProp  = mkprop("lower_copper_coil",   "half copper coil",  '▄', COPPER_COIL_COLOR, .{.walkable = false});
-pub const UpperCopperCoilProp  = mkprop("upper_copper_coil",   "half copper coil",  '▀', COPPER_COIL_COLOR, .{.walkable = false});
-pub const FullCopperCoilProp   = mkprop("full_copper_coil",    "large copper coil", '█', COPPER_COIL_COLOR, .{.walkable = false});
-
-pub const TableProp            = mkprop("table",               "table",               '⊺', 0xffffff,            .{});
-pub const Gearbox              = mkprop("gearbox",             "gearbox",             '■', 0xffffff,            .{});
-pub const PowerSwitchProp      = mkprop("power_switch",        "power switch",        '♥', 0xffffff,            .{});
-pub const ControlPanelProp     = mkprop("control_panel",       "control panel",       '⌨', 0xffffff,            .{});
-pub const SmallTransformerProp = mkprop("small_transformer",   "machine",             '■', COPPER_WIRE_COLOR,   .{});
-pub const LargeTransformerProp = mkprop("large_transformer",   "machine",             '█', COPPER_WIRE_COLOR,   .{});
-pub const SwitchingStationProp = mkprop("switching_station",   "machine",             '⊡', 0xffaf9a,            .{});
-pub const SteelGasReservoir    = mkprop("steel_gas_reservoir", "steel gas reservoir", '■', 0xd7d7ff,            .{});
-pub const SteelGasPin          = mkprop("steel_pin",           "steel pin",           '·', STEEL_SUPPORT_COLOR, .{});
-
-pub const Centrifuge           = mkprop("centrifuge",          "centrifuge",          '⊜', 0xffe4e1,            .{});
-pub const XRayAppar            = mkprop("xray_appar",          "x-ray machine",       '‡', 0xa8ffa8,            .{});
-pub const WaterPurifierAppar   = mkprop("water_purifi_appar",  "water purifier",      '⊝', 0xe0ffff,            .{});
-pub const FracDistillAppar     = mkprop("frac_distill_appar",  "fractional distiller",'∓', 0xe6e6fa,            .{});
-pub const LaserEtcher          = mkprop("laser_etcher",        "laser etcher",        '⊎', 0xfff0f5,            .{});
-pub const DistillAppar         = mkprop("simp_distill_appar",  "distiller",           '∔', 0xd0e4fe,            .{});
-pub const BunsenBurner         = mkprop("b_burner",            "bunsen burner",       '⊼', 0xffffe0,            .{});
-pub const TirrillBurner        = mkprop("t_burner",            "tirrill burner",      '⊼', 0xffffe0,            .{});
-pub const Microscope           = mkprop("microscope",          "microscope",          '†', 0xffeaca,            .{});
-pub const Calorimeter          = mkprop("calorimeter",         "calorimeter",         '⊝', 0xf5f5dc,            .{});
-pub const VacuumChamber        = mkprop("vacuum_chmbr",        "vacuum chamber",      '⊜', 0xffefdf,            .{});
-
-pub const StairDstProp         = mkprop("stair_dst",           "downward stair",      '×', 0xffffff,          .{.walkable = true});
-pub const ItemLocationProp     = mkprop("item_location",       "mat",                 '░', 0x989898,          .{ .walkable = true, .function = .ActionPoint });
-pub const WorkstationProp      = mkprop("workstation",         "workstation",         '░', 0xffffff,          .{.walkable = true});
-pub const MediumSieve          = mkprop("medium_sieve",        "medium_sieve",        '▒', 0xffe7e7,          .{ .walkable = false, .function = .ActionPoint });
-pub const GasVentProp          = mkprop("gas_vent",            "gas vent",            '=', 0xffffff,          .{ .bg = 0x888888, .walkable = false, .opacity = 1.0 });
-pub const LabGasVentProp       = mkprop("gas_vent",            "gas vent",            '=', 0xffffff,          .{ .walkable = false, .opacity = 0.0 });
-pub const BedProp              = mkprop("bed",                 "bed",                 'Θ', 0xdaa520,          .{ .opacity = 0.6, .walkable = true });
-pub const IronBarProp          = mkprop("iron_bars",           "iron bars",           '≡', 0x000012,          .{ .bg = 0xdadada, .opacity = 0.0, .walkable = false });
-pub const TitaniumBarProp      = mkprop("titanium_bars",       "titanium bars",       '*', 0xeaecef,          .{ .opacity = 0.0, .walkable = false });
-
-// zig fmt: on
 
 pub const ResearchCore = Machine{
     .id = "research_core",
@@ -605,9 +337,9 @@ pub const RestrictedMachinesOpenLever = Machine{
     .on_power = powerRestrictedMachinesOpenLever,
 };
 
-pub fn powerNone(_: *Machine) void {}
+fn powerNone(_: *Machine) void {}
 
-pub fn powerResearchCore(machine: *Machine) void {
+fn powerResearchCore(machine: *Machine) void {
     // Only function on every 32nd turn, to give the impression that it takes
     // a while to process vials
     if ((state.ticks % 32) != 0 or rng.onein(3)) return;
@@ -623,7 +355,7 @@ pub fn powerResearchCore(machine: *Machine) void {
     };
 }
 
-pub fn powerElevatorMotor(machine: *Machine) void {
+fn powerElevatorMotor(machine: *Machine) void {
     // Only function on every 32th turn or so, to give the impression that it takes
     // a while to bring up more ores
     if ((state.ticks % 32) != 0 or rng.onein(3)) return;
@@ -642,7 +374,7 @@ pub fn powerElevatorMotor(machine: *Machine) void {
     };
 }
 
-pub fn powerExtractor(machine: *Machine) void {
+fn powerExtractor(machine: *Machine) void {
     // Only function on every 32th turn, to give the impression that it takes
     // a while to extract more vials
     if ((state.ticks % 32) != 0) return;
@@ -689,7 +421,7 @@ pub fn powerExtractor(machine: *Machine) void {
     };
 }
 
-pub fn powerPowerSupply(machine: *Machine) void {
+fn powerPowerSupply(machine: *Machine) void {
     var iter = state.machines.iterator();
     while (iter.nextPtr()) |mach| {
         if (mach.coord.z == machine.coord.z and mach.auto_power)
@@ -697,7 +429,7 @@ pub fn powerPowerSupply(machine: *Machine) void {
     }
 }
 
-pub fn powerHealingGasPump(machine: *Machine) void {
+fn powerHealingGasPump(machine: *Machine) void {
     for (&CARDINAL_DIRECTIONS) |direction| {
         if (machine.coord.move(direction, state.mapgeometry)) |neighbor| {
             if (state.dungeon.at(neighbor).surface) |surface| {
@@ -708,7 +440,7 @@ pub fn powerHealingGasPump(machine: *Machine) void {
     }
 }
 
-pub fn powerAlarmTrap(machine: *Machine) void {
+fn powerAlarmTrap(machine: *Machine) void {
     if (machine.last_interaction) |culprit| {
         if (culprit.allegiance == .Sauron) return;
 
@@ -718,7 +450,7 @@ pub fn powerAlarmTrap(machine: *Machine) void {
     }
 }
 
-pub fn powerNetTrap(machine: *Machine) void {
+fn powerNetTrap(machine: *Machine) void {
     if (machine.last_interaction) |culprit| {
         culprit.addStatus(.Held, 0, null, false);
     }
@@ -726,7 +458,7 @@ pub fn powerNetTrap(machine: *Machine) void {
     machine.disabled = true;
 }
 
-pub fn powerPoisonGasTrap(machine: *Machine) void {
+fn powerPoisonGasTrap(machine: *Machine) void {
     if (machine.last_interaction) |culprit| {
         if (culprit.allegiance == .Sauron) return;
 
@@ -741,7 +473,7 @@ pub fn powerPoisonGasTrap(machine: *Machine) void {
     }
 }
 
-pub fn powerParalysisGasTrap(machine: *Machine) void {
+fn powerParalysisGasTrap(machine: *Machine) void {
     if (machine.last_interaction) |culprit| {
         if (culprit.allegiance == .Sauron) return;
 
@@ -756,7 +488,7 @@ pub fn powerParalysisGasTrap(machine: *Machine) void {
     }
 }
 
-pub fn powerConfusionGasTrap(machine: *Machine) void {
+fn powerConfusionGasTrap(machine: *Machine) void {
     if (machine.last_interaction) |culprit| {
         if (culprit.allegiance == .Sauron) return;
 
@@ -771,7 +503,7 @@ pub fn powerConfusionGasTrap(machine: *Machine) void {
     }
 }
 
-pub fn powerStairExit(machine: *Machine) void {
+fn powerStairExit(machine: *Machine) void {
     assert(machine.coord.z == 0);
     if (machine.last_interaction) |culprit| {
         if (!culprit.coord.eq(state.player.coord)) return;
@@ -779,7 +511,7 @@ pub fn powerStairExit(machine: *Machine) void {
     }
 }
 
-pub fn powerStairUp(machine: *Machine) void {
+fn powerStairUp(machine: *Machine) void {
     assert(machine.coord.z >= 1);
     const culprit = machine.last_interaction.?;
     if (!culprit.coord.eq(state.player.coord)) return;
@@ -789,7 +521,7 @@ pub fn powerStairUp(machine: *Machine) void {
         state.message(.Move, "You ascend.", .{});
 }
 
-pub fn powerRestrictedMachinesOpenLever(machine: *Machine) void {
+fn powerRestrictedMachinesOpenLever(machine: *Machine) void {
     const room_i = switch (state.layout[machine.coord.z][machine.coord.y][machine.coord.x]) {
         .Unknown => return,
         .Room => |r| r,
@@ -810,5 +542,54 @@ pub fn powerRestrictedMachinesOpenLever(machine: *Machine) void {
                 }
             }
         }
+    }
+}
+
+pub fn readProps(alloc: *mem.Allocator) void {
+    prison_item_props = PropArrayList.init(alloc);
+    laboratory_item_props = PropArrayList.init(alloc);
+    laboratory_props = PropArrayList.init(alloc);
+    statue_props = PropArrayList.init(alloc);
+
+    const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
+    const data_file = data_dir.openFile("props.tsv", .{
+        .read = true,
+        .lock = .None,
+    }) catch unreachable;
+
+    var rbuf: [65535]u8 = undefined;
+    const read = data_file.readAll(rbuf[0..]) catch unreachable;
+
+    const result = tsv.parse(
+        Prop,
+        &[_]tsv.TSVSchemaItem{
+            .{ .field_name = "id", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
+            .{ .field_name = "name", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
+            .{ .field_name = "tile", .parse_to = u21, .parse_fn = tsv.parseCharacter },
+            .{ .field_name = "fg", .parse_to = ?u32, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = null },
+            .{ .field_name = "bg", .parse_to = ?u32, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = null },
+            .{ .field_name = "walkable", .parse_to = bool, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = true },
+            .{ .field_name = "opacity", .parse_to = f64, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0.0 },
+            .{ .field_name = "function", .parse_to = PropFunction, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = .None },
+        },
+        .{ .id = undefined, .name = undefined, .tile = undefined },
+        rbuf[0..read],
+        alloc,
+    );
+
+    if (!result.is_ok()) {
+        std.log.err(
+            "Cannot read props: {} (line {}, field {})",
+            .{ result.Err.type, result.Err.context.lineno, result.Err.context.field },
+        );
+    } else {
+        props = result.unwrap();
+        for (props.items) |prop| switch (prop.function) {
+            .Laboratory => laboratory_props.append(prop) catch unreachable,
+            .LaboratoryItem => laboratory_item_props.append(prop) catch unreachable,
+            .Statue => statue_props.append(prop) catch unreachable,
+            else => {},
+        };
+        std.log.warn("Loaded {} props.", .{props.items.len});
     }
 }

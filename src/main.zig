@@ -11,6 +11,7 @@ const items = @import("items.zig");
 const utils = @import("utils.zig");
 const gas = @import("gas.zig");
 const mapgen = @import("mapgen.zig");
+const machines = @import("machines.zig");
 const display = @import("display.zig");
 const termbox = @import("termbox.zig");
 const types = @import("types.zig");
@@ -49,7 +50,8 @@ fn initGame() void {
     state.containers = ContainerList.init(&state.GPA.allocator);
     state.messages = MessageArrayList.init(&state.GPA.allocator);
 
-    literature.readPosters(&state.GPA.allocator, &state.posters);
+    machines.readProps(&state.GPA.allocator);
+    literature.readPosters(&state.GPA.allocator);
 
     for (state.dungeon.map) |_, level| {
         state.stockpiles[level] = StockpileArrayList.init(&state.GPA.allocator);
@@ -148,9 +150,13 @@ fn deinitGame() void {
     state.props.deinit();
     state.containers.deinit();
 
-    for (state.posters.items) |poster|
+    for (literature.posters.items) |poster|
         poster.deinit(&state.GPA.allocator);
-    state.posters.deinit();
+    literature.posters.deinit();
+
+    for (machines.props.items) |prop|
+        prop.deinit(&state.GPA.allocator);
+    machines.props.deinit();
 
     _ = state.GPA.deinit();
 }

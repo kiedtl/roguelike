@@ -41,16 +41,94 @@ pub fn Result(comptime T: type, comptime E: type) type {
     };
 }
 
-pub const TSVParseErrorContext = struct {
-    lineno: usize,
-    field: usize,
+pub const TSVParseError = struct {
+    type: ErrorType,
+    context: Context,
+
+    pub const Context = struct {
+        lineno: usize,
+        field: usize,
+    };
+
+    pub const ErrorType = enum {
+        MissingField,
+        ErrorParsingField,
+        OutOfMemory,
+    };
 };
 
-pub const TSVParseError = union(enum) {
-    MissingField: TSVParseErrorContext,
-    ErrorParsingField: TSVParseErrorContext,
-    OutOfMemory: TSVParseErrorContext,
-};
+pub fn parseCharacter(comptime T: type, result: *T, input: []const u8, alloc: *mem.Allocator) bool {
+    switch (@typeInfo(T)) {
+        .Int => {},
+        else => @compileError("Expected int for parsing result type, found '" ++ @typeName(T) ++ "'"),
+    }
+
+    if (input[0] != '\'') {
+        return false; // ERROR: Invalid character literal
+    }
+
+    var found_char = false;
+    var utf8 = (std.unicode.Utf8View.init(input) catch |_| {
+        return false; // ERROR: Invalid unicode dumbass
+    }).iterator();
+    _ = utf8.nextCodepointSlice(); // skip beginning quote
+
+    while (utf8.nextCodepointSlice()) |encoded_codepoint| {
+        const codepoint = std.unicode.utf8Decode(encoded_codepoint) catch |_| {
+            return false; // ERROR: Invalid unicode dumbass
+        };
+        switch (codepoint) {
+            '\'' => {
+                if (!found_char) {
+                    return false; // ERROR: empty literal
+                }
+
+                if (utf8.nextCodepointSlice()) |_| {
+                    return false; // ERROR: trailing characters
+                }
+
+                return true;
+            },
+            '\\' => {
+                if (found_char) {
+                    return false; // ERROR: too many characters
+                }
+
+                const encoded_next = utf8.nextCodepointSlice() orelse {
+                    return false; // ERROR: incomplete escape sequence
+                };
+                const next = std.unicode.utf8Decode(encoded_next) catch |_| {
+                    return false; // ERROR: Invalid unicode dumbass
+                };
+
+                // TODO: \xXX, \uXXXX, \UXXXXXXXX
+                const esc: u8 = switch (next) {
+                    '\'' => '\'',
+                    '\\' => '\\',
+                    'n' => '\n',
+                    'r' => '\r',
+                    'a' => '\x07',
+                    '0' => '\x00',
+                    't' => '\t',
+                    else => return false, // ERROR: invalid escape sequence
+                };
+
+                result.* = esc;
+                found_char = true;
+            },
+            else => {
+                if (found_char) {
+                    return false; // ERROR: too many characters
+                }
+
+                result.* = codepoint;
+                found_char = true;
+            },
+        }
+    }
+
+    return false; // ERROR: unterminated literal
+}
 
 pub fn parseUtf8String(comptime T: type, result: *T, input: []const u8, alloc: *mem.Allocator) bool {
     if (T != []u8) {
@@ -62,7 +140,7 @@ pub fn parseUtf8String(comptime T: type, result: *T, input: []const u8, alloc: *
     }
 
     var tmpbuf = alloc.alloc(u8, input.len) catch return false; // ERROR: OOM
-    var buf_i: usize = 0; // skip beginning quote
+    var buf_i: usize = 0;
     var i: usize = 1; // skip beginning quote
 
     while (i < input.len) : (i += 1) {
@@ -111,13 +189,34 @@ pub fn parseUtf8String(comptime T: type, result: *T, input: []const u8, alloc: *
 
 pub fn parsePrimitive(comptime T: type, result: *T, input: []const u8, alloc: *mem.Allocator) bool {
     switch (@typeInfo(T)) {
-        .Int => result.* = std.fmt.parseInt(T, input, 10) catch return false,
+        .Int => {
+            var inp_start: usize = 0;
+            var base: u8 = 0;
+
+            if (input.len >= 3) {
+                if (mem.eql(u8, input[0..2], "0x")) {
+                    base = 16;
+                    inp_start = 2;
+                } else if (mem.eql(u8, input[0..2], "0o")) {
+                    base = 8;
+                    inp_start = 2;
+                } else if (mem.eql(u8, input[0..2], "0b")) {
+                    base = 2;
+                    inp_start = 2;
+                } else if (mem.eql(u8, input[0..2], "0s")) { // ???
+                    base = 12;
+                    inp_start = 2;
+                }
+            }
+
+            result.* = std.fmt.parseInt(T, input[inp_start..], base) catch return false;
+        },
         .Float => result.* = std.fmt.parseFloat(T, input) catch return false,
         .Bool => {
             if (mem.eql(u8, input, "yea")) {
-                result = true;
+                result.* = true;
             } else if (mem.eql(u8, input, "nay")) {
-                result = false;
+                result.* = false;
             } else return false;
         },
         .Optional => |optional| {
@@ -184,16 +283,12 @@ pub fn parse(
 ) Result(std.ArrayList(T), TSVParseError) {
     const S = struct {
         pub fn _err(
-            comptime errort: @TagType(TSVParseError),
+            errort: TSVParseError.ErrorType,
             lineno: usize,
             field: usize,
         ) Result(std.ArrayList(T), TSVParseError) {
             return .{
-                .Err = @unionInit(
-                    TSVParseError,
-                    @tagName(errort),
-                    .{ .lineno = lineno, .field = field },
-                ),
+                .Err = .{ .type = errort, .context = .{ .lineno = lineno, .field = field } },
             };
         }
     };
@@ -209,21 +304,22 @@ pub fn parse(
     var lineno: usize = 0;
 
     while (lines.next()) |line| {
+        lineno += 1;
+
         var result: T = start_val;
 
         // ignore blank/comment lines
         if (line.len == 0 or line[0] == '#') {
-            lineno += 1;
             continue;
         }
 
         var input_fields = mem.split(line, "\t");
 
         inline for (schema) |schema_item, i| {
-            const input_field = input_fields.next() orelse "";
+            var input_field = mem.trim(u8, input_fields.next() orelse "", " ");
 
             // Handle empty fields
-            if (input_field.len == 0) {
+            if (input_field.len == 0 or input_field[0] == '-') {
                 if (schema_item.optional) {
                     @field(result, schema_item.field_name) = schema_item.default_val;
                 } else {
@@ -243,7 +339,6 @@ pub fn parse(
         }
 
         results.append(result) catch return S._err(.OutOfMemory, lineno, 0);
-        lineno += 1;
     }
 
     return .{ .Ok = results };

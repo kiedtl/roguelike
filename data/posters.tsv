@@ -6,46 +6,46 @@
 
 # Prison
 #
-PRI	A new shipment of prisoners from Traumbulnahl will arrive next week.
-PRI	Production of human meat rations must increase by 33% by the middle of next week.
-PRI	Please do not feed the prisoners.
-PRI	Prison staffers must strive to be inclusive and welcoming to all new inmates.
-PRI	Prison torturers must strive to be inclusive and welcoming to all new inmates.
-PRI	Absence without leave is punishable with a mandatory interview with the High Priest.
-PRI	WANTED: Orbomus-Nulohelmir, human, escaped prisoner.
-PRI	WANTED: <player>, human, escaped prisoner.
-PRI	WANTED: <previous player>, human, escaped prisoner.
-PRI	The Necromancer is watching you.
-PRI	The Necromancer can see you.
-PRI	The Necromancer knows your thoughts.
-PRI	Unauthorized consumption of prisoners is punishable with up to 20 lashes.
-PRI	Sentinels must report to the Captain of the Guard tomorrow regarding the upcoming transfer to Traummalnahl.
+"PRI"	"A new shipment of prisoners from Traumbulnahl will arrive next week."
+"PRI"	"Production of human meat rations must increase by 33% by the middle of next week."
+"PRI"	"Please do not feed the prisoners."
+"PRI"	"Prison staffers must strive to be inclusive and welcoming to all new inmates."
+"PRI"	"Prison torturers must strive to be inclusive and welcoming to all new inmates."
+"PRI"	"Absence without leave is punishable with a mandatory interview with the High Priest."
+"PRI"	"WANTED: Orbomus-Nulohelmir, human, escaped prisoner."
+"PRI"	"WANTED: <player>, human, escaped prisoner."
+"PRI"	"WANTED: <previous player>, human, escaped prisoner."
+"PRI"	"The Necromancer is watching you."
+"PRI"	"The Necromancer can see you."
+"PRI"	"The Necromancer knows your thoughts."
+"PRI"	"Unauthorized consumption of prisoners is punishable with up to 20 lashes."
+"PRI"	"Sentinels must report to the Captain of the Guard tomorrow regarding the upcoming transfer to Traummalnahl."
 
 # Recreation
 #
-REC	WANTED: Obomus-Nulohelmir, human, escaped prisoner.
-REC	WANTED: kiedtl, human, escaped prisoner.
-REC	The Necromancer is watching you.
-REC	The Necromancer can see you.
-REC	The Necromancer knows your thoughts.
-REC	The Necromancer knows your loyalties.
-REC	"Urum-Zhiolum" is a codeword for goblin genocide.
-REC	A goblin's honor is his loyalty.
-REC	We must secure the existence of the Goblin Nation and a future for our seed.
-REC	The Cave Goblins will not replace us.
-REC	The Urumderm will not replace us.
+"REC"	"WANTED: Obomus-Nulohelmir, human, escaped prisoner."
+"REC"	"WANTED: kiedtl, human, escaped prisoner."
+"REC"	"The Necromancer is watching you."
+"REC"	"The Necromancer can see you."
+"REC"	"The Necromancer knows your thoughts."
+"REC"	"The Necromancer knows your loyalties."
+"REC"	"\"Urum-Zhiolum\" is a codeword for goblin genocide."
+"REC"	"A goblin's honor is his loyalty."
+"REC"	"We must secure the existence of the Goblin Nation and a future for our seed."
+"REC"	"The Cave Goblins will not replace us."
+"REC"	"The Urumderm will not replace us."
 
 # Laboratory
 #
-LAB	Staffers should wear gloves and safety goggles at all times.
-LAB	Handling slade without permission is strictly forbidden.
-LAB	Handling slade without written permission is strictly forbidden.
-LAB	Handling slade without prior permission from the Head of Research is strictly forbidden.
-LAB	A inspection by the Head of Research on current safety precautions will be conducted next week.
-LAB	The Head of Research is committed to ensuring that all staff remain safe during work shifts.
-LAB	Please read the appropriate manual(s) before operating machinery.
-LAB	Read the owner's manual before operating extractors.
-LAB	Read the owner's manual before operating grinders.
-LAB	Read the owner's manual before operating research stations.
-LAB	Do not use another staffer's research station.
-LAB	Staffers that molest prisoners outside of research sessions will be scheduled for a mandatory appointment at the Temple.
+"LAB"	"Staffers should wear gloves and safety goggles at all times."
+"LAB"	"Handling slade without permission is strictly forbidden."
+"LAB"	"Handling slade without written permission is strictly forbidden."
+"LAB"	"Handling slade without prior permission from the Head of Research is strictly forbidden."
+"LAB"	"A inspection by the Head of Research on current safety precautions will be conducted next week."
+"LAB"	"The Head of Research is committed to ensuring that all staff remain safe during work shifts."
+"LAB"	"Please read the appropriate manual(s) before operating machinery."
+"LAB"	"Read the owner's manual before operating extractors."
+"LAB"	"Read the owner's manual before operating grinders."
+"LAB"	"Read the owner's manual before operating research stations."
+"LAB"	"Do not use another staffer's research station."
+"LAB"	"Staffers that molest prisoners outside of research sessions will be scheduled for a mandatory appointment at the Temple."

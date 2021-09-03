@@ -19,7 +19,9 @@ pub const Poster = struct {
 
 pub const PosterArrayList = std.ArrayList(Poster);
 
-pub fn readPosters(alloc: *mem.Allocator, buf: *PosterArrayList) void {
+pub var posters: PosterArrayList = undefined;
+
+pub fn readPosters(alloc: *mem.Allocator) void {
     const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
     const data_file = data_dir.openFile("posters.tsv", .{
         .read = true,
@@ -41,9 +43,12 @@ pub fn readPosters(alloc: *mem.Allocator, buf: *PosterArrayList) void {
     );
 
     if (!result.is_ok()) {
-        std.log.err("Cannot read posters: {}", .{meta.activeTag(result.Err)});
+        std.log.err(
+            "Cannot read props: {} (line {}, field {})",
+            .{ result.Err.type, result.Err.context.lineno, result.Err.context.field },
+        );
     } else {
-        buf.* = result.unwrap();
-        std.log.warn("Loaded {} posters.", .{buf.items.len});
+        posters = result.unwrap();
+        std.log.warn("Loaded {} posters.", .{posters.items.len});
     }
 }
