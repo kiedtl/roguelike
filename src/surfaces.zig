@@ -356,47 +356,31 @@ fn powerResearchCore(machine: *Machine) void {
 }
 
 fn powerElevatorMotor(machine: *Machine) void {
+    assert(machine.areas.len > 0);
+
     // Only function on every 32th turn or so, to give the impression that it takes
     // a while to bring up more ores
     if ((state.ticks % 32) != 0 or rng.onein(3)) return;
 
-    for (&CARDINAL_DIRECTIONS) |direction| if (machine.coord.move(direction, state.mapgeometry)) |neighbor| {
-        if (state.dungeon.at(neighbor).surface) |surface| {
-            if (std.meta.activeTag(surface) == .Prop and surface.Prop.function == .ActionPoint) {
-                if (!state.dungeon.itemsAt(neighbor).isFull()) {
-                    const v = rng.choose(Vial.OreAndVial, &Vial.VIAL_ORES, &Vial.VIAL_COMMONICITY) catch unreachable;
-                    if (v.m) |material| {
-                        state.dungeon.itemsAt(neighbor).append(Item{ .Boulder = material }) catch unreachable;
-                    }
-                }
+    for (machine.areas.constSlice()) |coord| {
+        if (!state.dungeon.itemsAt(coord).isFull()) {
+            const v = rng.choose(Vial.OreAndVial, &Vial.VIAL_ORES, &Vial.VIAL_COMMONICITY) catch unreachable;
+            if (v.m) |material| {
+                state.dungeon.itemsAt(coord).append(Item{ .Boulder = material }) catch unreachable;
             }
         }
-    };
+    }
 }
 
 fn powerExtractor(machine: *Machine) void {
+    assert(machine.areas.len == 2);
+
     // Only function on every 32th turn, to give the impression that it takes
     // a while to extract more vials
     if ((state.ticks % 32) != 0) return;
 
-    var input: Coord = undefined;
-    var output: Coord = undefined;
-    var found_coords = false;
-
-    for (&CARDINAL_DIRECTIONS) |direction| if (machine.coord.move(direction, state.mapgeometry)) |neighbor| {
-        if (state.dungeon.at(neighbor).surface) |surface| {
-            if (std.meta.activeTag(surface) == .Prop and surface.Prop.function == .ActionPoint) {
-                if (machine.coord.move(direction.opposite(), state.mapgeometry)) |opposite_neighbor| {
-                    input = opposite_neighbor;
-                    output = neighbor;
-                    found_coords = true;
-                    break;
-                }
-            }
-        }
-    };
-
-    if (!found_coords) unreachable;
+    var input = machine.areas.data[0];
+    var output = machine.areas.data[1];
 
     if (state.dungeon.itemsAt(output).isFull())
         return;
@@ -430,13 +414,10 @@ fn powerPowerSupply(machine: *Machine) void {
 }
 
 fn powerHealingGasPump(machine: *Machine) void {
-    for (&CARDINAL_DIRECTIONS) |direction| {
-        if (machine.coord.move(direction, state.mapgeometry)) |neighbor| {
-            if (state.dungeon.at(neighbor).surface) |surface| {
-                if (std.meta.activeTag(surface) == .Prop and surface.Prop.function == .ActionPoint)
-                    state.dungeon.atGas(neighbor)[gas.Healing.id] = 1.0;
-            }
-        }
+    assert(machine.areas.len > 0);
+
+    for (machine.areas.constSlice()) |coord| {
+        state.dungeon.atGas(coord)[gas.Healing.id] = 1.0;
     }
 }
 
@@ -546,6 +527,22 @@ fn powerRestrictedMachinesOpenLever(machine: *Machine) void {
 }
 
 pub fn readProps(alloc: *mem.Allocator) void {
+    const PropData = struct {
+        id: []u8 = undefined,
+        name: []u8 = undefined,
+        tile: u21 = undefined,
+        fg: ?u32 = undefined,
+        bg: ?u32 = undefined,
+        walkable: bool = undefined,
+        opacity: f64 = undefined,
+        function: Function = undefined,
+
+        pub const Function = enum {
+            ActionPoint, Laboratory, LaboratoryItem, Statue, None
+        };
+    };
+
+    props = PropArrayList.init(alloc);
     prison_item_props = PropArrayList.init(alloc);
     laboratory_item_props = PropArrayList.init(alloc);
     laboratory_props = PropArrayList.init(alloc);
@@ -561,7 +558,7 @@ pub fn readProps(alloc: *mem.Allocator) void {
     const read = data_file.readAll(rbuf[0..]) catch unreachable;
 
     const result = tsv.parse(
-        Prop,
+        PropData,
         &[_]tsv.TSVSchemaItem{
             .{ .field_name = "id", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
             .{ .field_name = "name", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
@@ -570,9 +567,9 @@ pub fn readProps(alloc: *mem.Allocator) void {
             .{ .field_name = "bg", .parse_to = ?u32, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = null },
             .{ .field_name = "walkable", .parse_to = bool, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = true },
             .{ .field_name = "opacity", .parse_to = f64, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0.0 },
-            .{ .field_name = "function", .parse_to = PropFunction, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = .None },
+            .{ .field_name = "function", .parse_to = PropData.Function, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = .None },
         },
-        .{ .id = undefined, .name = undefined, .tile = undefined },
+        .{},
         rbuf[0..read],
         alloc,
     );
@@ -583,15 +580,42 @@ pub fn readProps(alloc: *mem.Allocator) void {
             .{ result.Err.type, result.Err.context.lineno, result.Err.context.field },
         );
     } else {
-        props = result.unwrap();
-        for (props.items) |prop| switch (prop.function) {
-            .Laboratory => laboratory_props.append(prop) catch unreachable,
-            .LaboratoryItem => laboratory_item_props.append(prop) catch unreachable,
-            .Statue => statue_props.append(prop) catch unreachable,
-            else => {},
-        };
+        const propdatas = result.unwrap();
+        defer propdatas.deinit();
+
+        for (propdatas.items) |propdata| {
+            const prop = Prop{
+                .id = propdata.id,
+                .name = propdata.name,
+                .tile = propdata.tile,
+                .fg = propdata.fg,
+                .bg = propdata.bg,
+                .walkable = propdata.walkable,
+                .opacity = propdata.opacity,
+            };
+
+            switch (propdata.function) {
+                .Laboratory => laboratory_props.append(prop) catch unreachable,
+                .LaboratoryItem => laboratory_item_props.append(prop) catch unreachable,
+                .Statue => statue_props.append(prop) catch unreachable,
+                else => {},
+            }
+
+            props.append(prop) catch unreachable;
+        }
+
         std.log.warn("Loaded {} props.", .{props.items.len});
     }
+}
+
+pub fn freeProps(alloc: *mem.Allocator) void {
+    for (props.items) |prop| prop.deinit(alloc);
+
+    props.deinit();
+    prison_item_props.deinit();
+    laboratory_item_props.deinit();
+    laboratory_props.deinit();
+    statue_props.deinit();
 }
 
 pub fn tickMachines(level: usize) void {

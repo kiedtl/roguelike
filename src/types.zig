@@ -1802,8 +1802,14 @@ pub const Machine = struct {
     last_interaction: ?*Mob = null,
     disabled: bool = false,
 
-    // FIXME: there has got to be a better way to do this
+    // TODO: Remove
     props: [40]?*Prop = [_]?*Prop{null} ** 40,
+
+    // Areas the machine might manipulate/change while powered
+    //
+    // E.g., a blast furnace will heat up the first area, and search
+    // for fuel in the second area.
+    areas: StackBuffer(Coord, 8) = StackBuffer(Coord, 8).init(null),
 
     pub fn addPower(self: *Machine, by: ?*Mob) void {
         if (by) |_by|
@@ -1841,19 +1847,14 @@ pub const Machine = struct {
     }
 };
 
-pub const PropFunction = enum {
-    ActionPoint, Laboratory, LaboratoryItem, Statue, None
-};
-
 pub const Prop = struct {
-    id: []u8 = "",
-    name: []u8,
+    id: []const u8,
+    name: []const u8,
     tile: u21,
     fg: ?u32 = null,
     bg: ?u32 = null,
     walkable: bool = true,
     opacity: f64 = 0.0,
-    function: PropFunction = .None,
     coord: Coord = Coord.new(0, 0),
 
     pub fn deinit(self: *const Prop, alloc: *mem.Allocator) void {

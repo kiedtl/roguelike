@@ -364,12 +364,21 @@ fn _excavate_prefab(
                                 }
                             },
                             .Machine => |mid| {
-                                if (utils.findById(&surfaces.MACHINES, mid)) |mach| {
+                                if (utils.findById(&surfaces.MACHINES, mid.id)) |mach| {
                                     _place_machine(rc, &surfaces.MACHINES[mach]);
+                                    const machine = state.dungeon.at(rc).surface.?.Machine;
+                                    for (mid.points.constSlice()) |point| {
+                                        const adj_point = Coord.new2(
+                                            room.start.z,
+                                            point.x + room.start.x + startx,
+                                            point.y + room.start.y + starty,
+                                        );
+                                        machine.areas.append(adj_point) catch unreachable;
+                                    }
                                 } else {
                                     std.log.warn(
                                         "{}: Couldn't load machine {}, skipping.",
-                                        .{ fab.name.constSlice(), utils.used(mid) },
+                                        .{ fab.name.constSlice(), utils.used(mid.id) },
                                     );
                                 }
                             },
@@ -1408,7 +1417,10 @@ pub const Prefab = struct {
     };
 
     pub const Feature = union(enum) {
-        Machine: [32:0]u8,
+        Machine: struct {
+            id: [32:0]u8,
+            points: StackBuffer(Coord, 8),
+        },
         Prop: [32:0]u8,
         Potion: [32:0]u8,
     };
@@ -1664,22 +1676,35 @@ pub const Prefab = struct {
                     const identifier = line[1];
                     const feature_type = words.next() orelse return error.MalformedFeatureDefinition;
                     if (feature_type.len != 1) return error.InvalidFeatureType;
+                    const id = words.next() orelse return error.MalformedFeatureDefinition;
 
                     switch (feature_type[0]) {
                         'P' => {
-                            const id = words.next() orelse return error.MalformedFeatureDefinition;
                             f.features[identifier] = Feature{ .Potion = [_:0]u8{0} ** 32 };
                             mem.copy(u8, &f.features[identifier].?.Potion, id);
                         },
                         'p' => {
-                            const id = words.next() orelse return error.MalformedFeatureDefinition;
                             f.features[identifier] = Feature{ .Prop = [_:0]u8{0} ** 32 };
                             mem.copy(u8, &f.features[identifier].?.Prop, id);
                         },
                         'm' => {
-                            const id = words.next() orelse return error.MalformedFeatureDefinition;
-                            f.features[identifier] = Feature{ .Machine = [_:0]u8{0} ** 32 };
-                            mem.copy(u8, &f.features[identifier].?.Machine, id);
+                            var points = StackBuffer(Coord, 8).init(null);
+                            while (words.next()) |word| {
+                                var coord = Coord.new2(0, 0, 0);
+                                var coord_tokens = mem.tokenize(word, ",");
+                                const coord_str_a = coord_tokens.next() orelse return error.InvalidMetadataValue;
+                                const coord_str_b = coord_tokens.next() orelse return error.InvalidMetadataValue;
+                                coord.x = std.fmt.parseInt(usize, coord_str_a, 0) catch |_| return error.InvalidMetadataValue;
+                                coord.y = std.fmt.parseInt(usize, coord_str_b, 0) catch |_| return error.InvalidMetadataValue;
+                                points.append(coord) catch unreachable;
+                            }
+                            f.features[identifier] = Feature{
+                                .Machine = .{
+                                    .id = [_:0]u8{0} ** 32,
+                                    .points = points,
+                                },
+                            };
+                            mem.copy(u8, &f.features[identifier].?.Machine.id, id);
                         },
                         else => return error.InvalidFeatureType,
                     }

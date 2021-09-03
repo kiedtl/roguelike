@@ -8,16 +8,11 @@
 
 :subroom
 
-@0 m extractor
-@1 p switching_station
-@2 p large_transformer
-@3 p control_panel
-@4 p power_switch
-@5 p small_transformer
-@6 p item_location
-@7 p wall_n1s1
-@8 p wall_e1w1
-@9 p wall_s1e1
+@0 m extractor 2,3 2,5
+@1 m extractor 3,3 3,5
+@2 m extractor 4,3 4,5
+@3 m extractor 5,3 5,5
+@4 m extractor 6,3 6,5
 @a p wire_s2e1
 @b p wire_e1w1
 @c p wire_s1w1
@@ -30,6 +25,15 @@
 @j p wire_n1s1e2
 @k p wire_n1s1e2w2
 @l p wire_n1s1
+@m p switching_station
+@n p large_transformer
+@o p control_panel
+@p p power_switch
+@q p small_transformer
+@r p item_location
+@s p wall_n1s1
+@t p wall_e1w1
+@u p wall_s1e1
 
 :output 2,5 5 1
 :input 2,3 5 1
@@ -46,7 +50,7 @@
 
 ..........
 abaccbbabc
-d98288348e
-57fδδδδgi7
-jk00000b1i
-3766666.•7
+dutnttopte
+qsfδδδδgis
+jk01234bmi
+osrrrrr.•s

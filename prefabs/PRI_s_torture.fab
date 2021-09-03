@@ -6,7 +6,7 @@
 :spawn torturer_necromancer 3,5 3,5
 
 @0 p medium_sieve
-@1 m healing_gas_pump
+@1 m healing_gas_pump 6,1
 @2 p steel_support_se2
 @3 p steel_support_ne2
 @4 p steel_gas_reservoir

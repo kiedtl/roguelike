@@ -1,6 +1,6 @@
 % Ore elevator.
 %
-% ┏▀▀▀┓■
+% ┏▀░▀┓■
 % ┣╾⊛╼━┫
 % ┗▄░▄┛■
 
@@ -9,7 +9,7 @@
 :output 0,0 6 3
 
 @0 p gearbox
-@1 m elevator_motor
+@1 m elevator_motor 2,0 2,2
 @a p wall_s1e1
 @b p limestone_wall_upper
 @c p limestone_wall_upper

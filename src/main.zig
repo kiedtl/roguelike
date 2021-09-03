@@ -154,9 +154,7 @@ fn deinitGame() void {
         poster.deinit(&state.GPA.allocator);
     literature.posters.deinit();
 
-    for (surfaces.props.items) |prop|
-        prop.deinit(&state.GPA.allocator);
-    surfaces.props.deinit();
+    surfaces.freeProps(&state.GPA.allocator);
 
     _ = state.GPA.deinit();
 }
