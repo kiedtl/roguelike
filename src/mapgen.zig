@@ -2008,7 +2008,9 @@ pub const Configs = [LEVELS]LevelConfig{
     },
     .{
         .identifier = "SMI",
-        .prefabs = LevelConfig.RPBuf.init(null),
+        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
+            "SMI_forge",
+        }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
             .{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },

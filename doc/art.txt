@@ -58,34 +58,34 @@
 
 # LAB
 
-  ♪♪╓─┐     research station
+  ♪♪╓─┐      research station
 ┏━┓█━┓│
 ┃g┃┬╨┃╕
 ┃*┃■┌┃┤
 ⊺ ⌨╜╘⊡┘
 
-■┏▀▀▀┓      ore elevator
+■┏▀▀▀┓       ore elevator
 ┣━╾⊛╼┫
 ■┗▄░▄┛
 
-┏▀▀▀┓■      ore elevator
+┏▀▀▀┓■       ore elevator
 ┣╾⊛╼━┫
 ┗▄░▄┛■
 
-╓□┬┬□╖      grinder
+╓□┬┬□╖       grinder
 ╙╟██╢╜
 
-┌╒==╕┐      air purifier
+┌╒==╕┐       air purifier
 │░▓▓░│
 └╘==╛┘
 
-╓─╓┐┐──╓─┐  extractor
+╓─╓┐┐──╓─┐   extractor
 ║┏━█━━━⌨♥┤
-■┃     ╘╡┃
+■┃╜    ╘╡┃
 ╞╪⊞⊞⊞⊞⊞─⊡╡
 ⌨┃░░░░░ •┃
 
-·▄▄┬▄▄·     nuclear reactor
+·▄▄┬▄▄·      nuclear reactor
 █  ┴┘ █┐
 ┣╾┤≡├╼┫⊡
 █ ┌┬  █╡
@@ -93,20 +93,23 @@
 
 # SMI
 
- ▄▀▀▀▄      forge
-▐ ┐░  █
-──♦░░ ■
-▐ ┘░  █
- ▀▄▄▄▀
-
- ▄▀░▀▄      refinery furnace
+ ▄▀░▀▄       refinery furnace
 ▐  ░  ▌
 █┬┤░├─█
 ▐└─≡┐ ▌
 ·▀█░█▀·
 
-  ┏▄▄▄▄▄┓   blast furnace
-▄┐█┌╿──┐█
-░┣━╾≡░░ ■
-▀┘█└╽──┘█
-  ┗▀▀▀▀▀┛
+┌▄▄▄▄▄┐      forge
+█┌╿──┐█
+┣╾≡   ■
+█└╽──┘█
+└▀▀▀▀▀┘
+
+╓──┌┐╕━━━━━┓ blast furnace
+╚══╧╧╪╡░░░░■
+┌╥ ▄▀│▀▄━━━┫
+╞■▐ └┴  ▌░░■
+╞■▐    ┌▌░░┃
+├─█  ≡ ├█─┐┃
+╞■ ▀▄▄▄▀╒╤╡┃
+╘■──╨─╜ └└┴┘

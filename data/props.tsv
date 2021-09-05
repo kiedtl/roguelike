@@ -1,7 +1,7 @@
 #
 # Props for the dungeon.
 #
-# vim: set nowrap
+# vim: nowrap colorcolumn=0
 #
 
 # Laboratory stuff
@@ -79,11 +79,14 @@
 "wall_s1e1"            	 "vangenite wall"       	 '┏' 	 0xb6efe0 	 -        	 nay
 "wall_e1w1_thine"      	 "vangenite wall"       	 '╾' 	 0xb6efe0 	 -        	 nay
 "wall_e1w1_thinw"      	 "vangenite wall"       	 '╼' 	 0xb6efe0 	 -        	 nay
+"wall_n1s1_thinn"      	 "vangenite wall"       	 '╽' 	 0xb6efe0 	 -        	 nay
+"wall_n1s1_thins"      	 "vangenite wall"       	 '╿' 	 0xb6efe0 	 -        	 nay
 
 "pipe_e1w1"            	 "steel pipe"           	 '─' 	 0xa6c2d4 	 -        	   -
-"pipe_s1w1"            	 "steel pipe"           	 '┐' 	 0xa6c2d4 	 -        	   -
 "pipe_s1e1"            	 "steel pipe"           	 '┌' 	 0xa6c2d4 	 -        	   -
+"pipe_s1w1"            	 "steel pipe"           	 '┐' 	 0xa6c2d4 	 -        	   -
 "pipe_n1w1"            	 "steel pipe"           	 '┘' 	 0xa6c2d4 	 -        	   -
+"pipe_n1e1"            	 "steel pipe"           	 '└' 	 0xa6c2d4 	 -        	   -
 "pipe_n1s1w1"          	 "steel pipe"           	 '┤' 	 0xa6c2d4 	 -        	   -
 "pipe_n1s1e1"          	 "steel pipe"           	 '├' 	 0xa6c2d4 	 -        	   -
 "pipe_n1s1"            	 "steel pipe"           	 '│' 	 0xa6c2d4 	 -        	   -

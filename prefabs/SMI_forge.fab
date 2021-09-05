@@ -1,0 +1,32 @@
+% ┌▄▄▄▄▄┐      forge
+% █┌╿──┐█
+% ┣╾≡   ■
+% █└╽──┘█
+% └▀▀▀▀▀┘
+
+@0 p pipe_s1e1
+@1 p concrete_wall_lower
+@2 p pipe_s1w1
+@3 p concrete_wall_full
+@4 p wall_n1s1_thins
+@5 p pipe_e1w1
+@6 p item_location
+@7 p wall_n1s1e1
+@8 p wall_e1w1
+@9 p wall_e1w1_thine
+% @a m blast_furnace
+@b p concrete_wall_upper 2,3 7,3 8,3
+@c p pipe_n1w1
+@d p pipe_n1e1
+@e p wall_n1s1_thinn
+
+:input 7,3 1 1
+:output 8,3 1 1
+
+***********
+*.0111112.*
+*.3045523.*
+*.79.66.+.*
+*.3de55c3.*
+*.dbbbbbc.*
+***********
