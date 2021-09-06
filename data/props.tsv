@@ -82,15 +82,31 @@
 "wall_n1s1_thinn"      	 "vangenite wall"       	 '╽' 	 0xb6efe0 	 -        	 nay
 "wall_n1s1_thins"      	 "vangenite wall"       	 '╿' 	 0xb6efe0 	 -        	 nay
 
+"pipe_s1e2w2"          	 "steel pipe"           	 '╤' 	 0xa6c2d4 	 -        	   -
+"pipe_n1s1e2w2"        	 "steel pipe"           	 '╪' 	 0xa6c2d4 	 -        	   -
+"pipe_n1e2w2"          	 "steel pipe"           	 '╧' 	 0xa6c2d4 	 -        	   -
+"pipe_e2w2"            	 "steel pipe"           	 '═' 	 0xa6c2d4 	 -        	   -
+"pipe_n2e2"            	 "steel pipe"           	 '╚' 	 0xa6c2d4 	 -        	   -
+"pipe_s2e1"            	 "steel pipe"           	 '╓' 	 0xa6c2d4 	 -        	   -
 "pipe_e1w1"            	 "steel pipe"           	 '─' 	 0xa6c2d4 	 -        	   -
-"pipe_s1e1"            	 "steel pipe"           	 '┌' 	 0xa6c2d4 	 -        	   -
 "pipe_s1w1"            	 "steel pipe"           	 '┐' 	 0xa6c2d4 	 -        	   -
+"pipe_s1e1"            	 "steel pipe"           	 '┌' 	 0xa6c2d4 	 -        	   -
 "pipe_n1w1"            	 "steel pipe"           	 '┘' 	 0xa6c2d4 	 -        	   -
-"pipe_n1e1"            	 "steel pipe"           	 '└' 	 0xa6c2d4 	 -        	   -
+"pipe_n2s2"            	 "steel pipe"           	 '║' 	 0xa6c2d4 	 -        	   -
 "pipe_n1s1w1"          	 "steel pipe"           	 '┤' 	 0xa6c2d4 	 -        	   -
-"pipe_n1s1e1"          	 "steel pipe"           	 '├' 	 0xa6c2d4 	 -        	   -
+"pipe_n2w1"            	 "steel pipe"           	 '╜' 	 0xa6c2d4 	 -        	   -
+"pipe_n1e2"            	 "steel pipe"           	 '╘' 	 0xa6c2d4 	 -        	   -
+"pipe_s1w2"            	 "steel pipe"           	 '╕' 	 0xa6c2d4 	 -        	   -
+"pipe_s1e2"            	 "steel pipe"           	 '╒' 	 0xa6c2d4 	 -        	   -
+"pipe_n1s1w2"          	 "steel pipe"           	 '╡' 	 0xa6c2d4 	 -        	   -
+"pipe_n1s1e2"          	 "steel pipe"           	 '╞' 	 0xa6c2d4 	 -        	   -
+"pipe_n1s1e2w2"        	 "steel pipe"           	 '╪' 	 0xa6c2d4 	 -        	   -
 "pipe_n1s1"            	 "steel pipe"           	 '│' 	 0xa6c2d4 	 -        	   -
 "pipe_s1e1w1"          	 "steel pipe"           	 '┬' 	 0xa6c2d4 	 -        	   -
+"pipe_s2e1w1"          	 "steel pipe"           	 '╥' 	 0xa6c2d4 	 -        	   -
+"pipe_n2e1w1"          	 "steel pipe"           	 '╨' 	 0xa6c2d4 	 -        	   -
+"pipe_n1e1"            	 "steel pipe"           	 '└' 	 0xa6c2d4 	 -        	   -
+"pipe_n1s1e1"          	 "steel pipe"           	 '├' 	 0xa6c2d4 	 -        	   -
 "pipe_n1e1w1"          	 "steel pipe"           	 '┴' 	 0xa6c2d4 	 -        	   -
 
 "wire_s2e1"            	 "copper wire"          	 '╓' 	 0xffe5d3 	 -        	   -
@@ -122,6 +138,8 @@
 
 "concrete_wall_upper"  	 "concrete wall"        	 '▀' 	 0xa79f85 	 -        	 nay
 "concrete_wall_lower"  	 "concrete wall"        	 '▄' 	 0xa79f85 	 -        	 nay
+"concrete_wall_left"   	 "concrete wall"        	 '▐' 	 0xa79f85 	 -        	 nay
+"concrete_wall_right"  	 "concrete wall"        	 '▌' 	 0xa79f85 	 -        	 nay
 "concrete_wall_full"   	 "concrete wall"        	 '█' 	 0xa79f85 	 -        	 nay
 
 "left_copper_coil"     	 "half copper coil"     	 '▌' 	 0xe99c39 	 -        	 nay

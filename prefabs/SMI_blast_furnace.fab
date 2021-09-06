@@ -1,0 +1,53 @@
+% ╓──┌┐╕━━━━━┓ blast furnace
+% ╚══╧╧╪╡░░░░■
+% ┌╥ ▄▀│▀▄━━━┫
+% ╞■▐ └┴  ▌░░■
+% ╞■▐    ┌▌░░┃
+% ├─█  ≡ ├█─┐┃
+% ╞■ ▀▄▄▄▀╒╤╡┃
+% ╘■──╨─╜ └└┴┘
+
+@0 p pipe_s2e1
+@1 p pipe_e1w1
+@2 p pipe_s1e1
+@3 p pipe_s1w1
+@4 p pipe_s1w2
+@5 p wall_e1w1
+@6 p wall_s1w1
+@7 p pipe_n2e2
+@8 p pipe_e2w2
+@9 p pipe_n1e2w2
+@a p pipe_n1s1e2w2
+@b p pipe_n1s1w2
+@c p item_location
+@d p pipe_s2e1w1
+@e p concrete_wall_lower
+@f p concrete_wall_upper
+@g p pipe_n1s1
+@h p wall_n1s1w1
+@i p pipe_n1s1e2
+@j p steel_gas_reservoir
+@k p concrete_wall_right
+@l p pipe_n1e1
+@m p pipe_n1e1w1
+@n p concrete_wall_left
+@o p wall_n1s1
+@p p pipe_n1s1e1
+@q p concrete_wall_full
+@r p pipe_s1e2
+@s p pipe_s1e2w2
+@t p pipe_n1e1
+@u p pipe_n2e1w1
+@v p pipe_n2w1
+@w p pipe_n1w1
+
+***...***...***
+*011234555556.*
+*78899accccc+.*
+.2d.efgfe555h.*
+.ijk.lm..ncc+.*
+.ijk....2ncco.*
+.p1q....pq13o.*
+.ij.feeefrsao.*
+*tj11u1v.llmw.*
+***...***...***
