@@ -1367,6 +1367,31 @@ fn levelFeatureOres(c: usize, coord: Coord, room: *const Room, prefab: *const Pr
     }
 }
 
+// Randomly place an iron ore. Randomly, create a container and
+// fill it up halfway; otherwise, place only one item on the ground.
+fn levelFeatureIronOres(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+    const ores = [_]Material{materials.Hematite};
+    var using_container: ?*Container = null;
+
+    if ((room.start.x % 2) == 0) {
+        placeContainer(coord, &surfaces.VOreCrate);
+        using_container = state.dungeon.at(coord).surface.?.Container;
+    }
+
+    var placed: usize = if (using_container == null) 2 else rng.rangeClumping(usize, 3, 8, 2);
+    while (placed > 0) : (placed -= 1) {
+        const mat = &ores[rng.range(usize, 0, ores.len - 1)];
+
+        const item = Item{ .Boulder = mat };
+        if (using_container) |container| {
+            container.items.append(item) catch unreachable;
+            if (placed == 0) break;
+        } else {
+            state.dungeon.itemsAt(coord).append(item) catch unreachable;
+        }
+    }
+}
+
 pub const Prefab = struct {
     subroom: bool = false,
     invisible: bool = false,
@@ -2015,11 +2040,11 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
             .{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
         },
-        .prefab_chance = 1,
+        .prefab_chance = 3,
         .max_rooms = 512,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
-            null,
+            levelFeatureIronOres,
             null,
             null,
             null,

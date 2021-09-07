@@ -1,6 +1,21 @@
 usingnamespace @import("types.zig");
 const state = @import("state.zig");
 
+pub const Hematite = Material{
+    .name = "hematite",
+    .description = "TODO",
+    .density = 5.3,
+    .color_fg = 0x802020,
+    .color_bg = 0xd2d2d2,
+    .color_floor = 0x802020,
+    .tileset = 0,
+    .melting_point = 1383,
+    .combust_point = null,
+    .specific_heat = 500, // FIXME: not accurate!
+    .luminescence = 0,
+    .opacity = 1.0,
+};
+
 // TODO: realgar, change this material to the stone realgar is found in
 pub const Basalt = Material{
     .name = "basalt",
