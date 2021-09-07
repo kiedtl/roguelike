@@ -31,6 +31,18 @@ const Corridor = struct {
     distance: usize,
 };
 
+const VALID_DOOR_PLACEMENT_PATTERNS = [_][]const u8{
+    // ?.?
+    // #.#
+    // ?.?
+    "?.?#.#?.?",
+
+    // ?#?
+    // ...
+    // ?#?
+    "?#?...?#?",
+};
+
 const VALID_FEATURE_TILE_PATTERNS = [_][]const u8{
     // ###
     // ?.?
@@ -672,7 +684,10 @@ pub fn placeMoarCorridors(level: usize) void {
                 if (corridor.parent_connector) |acon| state.dungeon.at(acon).type = .Floor;
                 if (corridor.child_connector) |acon| state.dungeon.at(acon).type = .Floor;
 
-                if (corridor.distance == 1) placeDoor(corridor.room.start, false);
+                if (Configs[level].allow_doors and rng.onein(3)) {
+                    if (utils.findPatternMatch(corridor.room.start, &VALID_DOOR_PLACEMENT_PATTERNS) != null)
+                        placeDoor(corridor.room.start, false);
+                }
 
                 // Restart loop, as the slice pointer might have been modified if a
                 // reallocation took place
@@ -812,22 +827,14 @@ fn _place_rooms(
         }
     }
 
+    var corridor: ?Corridor = null;
+
     if (distance > 0) {
-        if (_createCorridor(level, parent, &child, side)) |corridor| {
-            if (roomIntersects(rooms, &corridor.room, parent, null, true)) {
+        if (_createCorridor(level, parent, &child, side)) |maybe_corridor| {
+            if (roomIntersects(rooms, &maybe_corridor.room, parent, null, true)) {
                 return;
             }
-
-            _excavate_room(&corridor.room);
-            rooms.append(corridor.room) catch unreachable;
-
-            // When using a prefab, the corridor doesn't include the connectors. Excavate
-            // the connectors (both the beginning and the end) manually.
-
-            if (corridor.parent_connector) |acon| state.dungeon.at(acon).type = .Floor;
-            if (corridor.child_connector) |acon| state.dungeon.at(acon).type = .Floor;
-
-            if (distance == 1) placeDoor(corridor.room.start, false);
+            corridor = maybe_corridor;
         } else {
             return;
         }
@@ -839,6 +846,22 @@ fn _place_rooms(
         _excavate_prefab(&child, fab.?, allocator, 0, 0);
     } else {
         _excavate_room(&child);
+    }
+
+    if (corridor) |cor| {
+        _excavate_room(&cor.room);
+        rooms.append(cor.room) catch unreachable;
+
+        // When using a prefab, the corridor doesn't include the connectors. Excavate
+        // the connectors (both the beginning and the end) manually.
+
+        if (cor.parent_connector) |acon| state.dungeon.at(acon).type = .Floor;
+        if (cor.child_connector) |acon| state.dungeon.at(acon).type = .Floor;
+
+        if (Configs[level].allow_doors and rng.onein(3)) {
+            if (utils.findPatternMatch(cor.room.start, &VALID_DOOR_PLACEMENT_PATTERNS) != null)
+                placeDoor(cor.room.start, false);
+        }
     }
 
     if (child.prefab) |f|
@@ -1887,6 +1910,7 @@ pub const LevelConfig = struct {
     },
     utility_items: *[]const Prop = &surfaces.prison_item_props.items,
     allow_statues: bool = true,
+    allow_doors: bool = true,
 
     pub const RPBuf = StackBuffer([]const u8, 4);
     pub const MCBuf = StackBuffer(MobConfig, 3);
@@ -1987,6 +2011,7 @@ pub const Configs = [LEVELS]LevelConfig{
         .utility_items = &surfaces.laboratory_item_props.items,
 
         .allow_statues = false,
+        .allow_doors = false,
     },
     .{
         .identifier = "PRI",
@@ -2060,5 +2085,6 @@ pub const Configs = [LEVELS]LevelConfig{
         .material = &materials.Limestone,
 
         .allow_statues = false,
+        .allow_doors = false,
     },
 };
