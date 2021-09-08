@@ -51,8 +51,8 @@
 "gearbox"              	 "gearbox"              	 '■' 	 0xffffff 	 -        	 nay
 "power_switch"         	 "power switch"         	 '♥' 	 0xffffff 	 -        	 nay
 "control_panel"        	 "control panel"        	 '⌨' 	 0xffffff 	 -        	 nay
-"small_transformer"    	 "machine"              	 '■' 	 0xffe5d3 	 -        	 nay
-"large_transformer"    	 "machine"              	 '█' 	 0xffe5d3 	 -        	 nay
+"small_transformer"    	 "transformer"          	 '■' 	 0xffe5d3 	 -        	 nay
+"large_transformer"    	 "transformer"          	 'ö' 	 0xffe5d3 	 -        	 nay
 "switching_station"    	 "machine"              	 '⊡' 	 0xffaf9a 	 -        	 nay
 "steel_gas_reservoir"  	 "steel gas reservoir"  	 '■' 	 0xd7d7ff 	 -        	 nay
 "steel_pin"            	 "steel pin"            	 '·' 	 0xa6c2d4 	 -        	   -
