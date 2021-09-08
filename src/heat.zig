@@ -41,7 +41,7 @@ fn newTemperatures(
 }
 
 pub fn lightEmittedByHeat(temperature: usize) usize {
-    if (temperature > 600) {
+    if (temperature > 600 and false) { // disabled for now
         return math.clamp((temperature - 600) * 100 / 1000, 0, 75);
     } else return 0;
 }
