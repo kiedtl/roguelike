@@ -2263,8 +2263,8 @@ pub const Configs = [LEVELS]LevelConfig{
             "SMI_refinery_furnace",
         }),
         .distances = [2][10]usize{
-            .{ 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 },
-            .{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+            .{ 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 },
+            .{ 1, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
         },
         .prefab_chance = 1,
         .max_rooms = 450,
