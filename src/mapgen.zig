@@ -2283,7 +2283,7 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ .chance = 56, .template = &mobs.GuardTemplate },
         }),
 
-        .material = &materials.Limestone,
+        .material = &materials.Basalt,
         .tiletype = .Floor,
 
         .allow_statues = false,
