@@ -553,12 +553,13 @@ pub fn resetLevel(level: usize) void {
     while (y < HEIGHT) : (y += 1) {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
+            const is_edge = y == 0 or x == 0 or y == (HEIGHT - 1) or x == (WIDTH - 1);
             const coord = Coord.new2(level, x, y);
 
             const tile = state.dungeon.at(coord);
             tile.prison = false;
             tile.marked = false;
-            tile.type = .Wall;
+            tile.type = if (is_edge) .Wall else Configs[level].tiletype;
             tile.material = &materials.Basalt;
             tile.mob = null;
             tile.surface = null;
@@ -1245,72 +1246,255 @@ pub fn placeRandomStairs(level: usize) void {
     }
 }
 
-pub fn cellularAutomata(layout: *const [HEIGHT][WIDTH]state.Layout, level: usize, req: usize, isle_req: usize, ttype: TileType) void {
-    var old: [HEIGHT][WIDTH]TileType = undefined;
-    {
-        var y: usize = 1;
-        while (y < HEIGHT - 1) : (y += 1) {
-            var x: usize = 1;
-            while (x < WIDTH - 1) : (x += 1)
-                old[y][x] = state.dungeon.at(Coord.new2(level, x, y)).type;
+pub fn placeBlobs(level: usize) void {
+    var grid: [WIDTH][HEIGHT]usize = undefined;
+    const blob_configs = Configs[level].blobs;
+    for (blob_configs) |cfg| {
+        var i: usize = rng.range(usize, cfg.number.min, cfg.number.max);
+        while (i > 0) : (i -= 1) {
+            const blob = createBlob(
+                &grid,
+                cfg.ca_rounds,
+                rng.range(usize, cfg.min_blob_width.min, cfg.min_blob_width.max),
+                rng.range(usize, cfg.min_blob_height.min, cfg.min_blob_height.max),
+                rng.range(usize, cfg.max_blob_width.min, cfg.max_blob_width.max),
+                rng.range(usize, cfg.max_blob_height.min, cfg.max_blob_height.max),
+                cfg.ca_percent_seeded,
+                cfg.ca_birth_params,
+                cfg.ca_survival_params,
+            );
+
+            const start_y = rng.range(usize, 1, HEIGHT - blob.height - 1);
+            const start_x = rng.range(usize, 1, WIDTH - blob.width - 1);
+            const start = Coord.new2(level, start_x, start_y);
+
+            var map_y: usize = 0;
+            var blob_y = blob.start.y;
+            while (blob_y < blob.end().y) : ({
+                blob_y += 1;
+                map_y += 1;
+            }) {
+                var map_x: usize = 0;
+                var blob_x = blob.start.x;
+                while (blob_x < blob.end().x) : ({
+                    blob_x += 1;
+                    map_x += 1;
+                }) {
+                    const coord = Coord.new2(6, map_x, map_y).add(start);
+                    if (grid[blob_x][blob_y] != 0)
+                        state.dungeon.at(coord).type = cfg.type;
+                }
+            }
         }
     }
+}
 
-    var y: usize = 1;
-    while (y < HEIGHT - 1) : (y += 1) {
-        var x: usize = 1;
-        while (x < WIDTH - 1) : (x += 1) {
-            if (layout[y][x] != .Unknown) continue;
+// Ported from BrogueCE (src/brogue/Grid.c)
+// (c) Contributors to BrogueCE. I do not claim authorship of the following function.
+fn createBlob(
+    grid: *[WIDTH][HEIGHT]usize,
+    rounds: usize,
+    min_blob_width: usize,
+    min_blob_height: usize,
+    max_blob_width: usize,
+    max_blob_height: usize,
+    percent_seeded: usize,
+    birth_params: *const [9]u8,
+    survival_params: *const [9]u8,
+) Room {
+    const S = struct {
+        fn cellularAutomataRound(buf: *[WIDTH][HEIGHT]usize, births: *const [9]u8, survivals: *const [9]u8) void {
+            var buf2: [WIDTH][HEIGHT]usize = undefined;
+            for (buf) |*col, x| for (col) |*cell, y| {
+                buf2[x][y] = cell.*;
+            };
 
-            const coord = Coord.new2(level, x, y);
+            var x: usize = 0;
+            while (x < WIDTH) : (x += 1) {
+                var y: usize = 0;
+                while (y < HEIGHT) : (y += 1) {
+                    const coord = Coord.new(x, y);
 
-            var neighbor_on_cells: usize = if (old[coord.y][coord.x] == ttype) 1 else 0;
+                    var nb_count: usize = 0;
+
+                    for (&DIRECTIONS) |direction|
+                        if (coord.move(direction, state.mapgeometry)) |neighbor| {
+                            if (buf2[neighbor.x][neighbor.y] != 0) {
+                                nb_count += 1;
+                            }
+                        };
+
+                    if (buf2[x][y] == 0 and births[nb_count] == 't') {
+                        buf[x][y] = 1; // birth
+                    } else if (buf2[x][y] != 0 and survivals[nb_count] == 't') {
+                        // survival
+                    } else {
+                        buf[x][y] = 0; // death
+                    }
+                }
+            }
+        }
+
+        fn fillContiguousRegion(buf: *[WIDTH][HEIGHT]usize, x: usize, y: usize, value: usize) usize {
+            var num: usize = 1;
+
+            const coord = Coord.new(x, y);
+            buf[x][y] = value;
+
+            // Iterate through the four cardinal neighbors.
             for (&CARDINAL_DIRECTIONS) |direction| {
-                if (coord.move(direction, state.mapgeometry)) |new| {
-                    if (old[new.y][new.x] == ttype)
-                        neighbor_on_cells += 1;
+                if (coord.move(direction, state.mapgeometry)) |neighbor| {
+                    if (buf[neighbor.x][neighbor.y] == 1) { // If the neighbor is an unmarked region cell,
+                        num += fillContiguousRegion(buf, neighbor.x, neighbor.y, value); // then recurse.
+                    }
+                } else {
+                    break;
                 }
             }
 
-            if (neighbor_on_cells >= req) {
-                state.dungeon.at(coord).type = ttype;
-            } else if (neighbor_on_cells < isle_req) {
-                state.dungeon.at(coord).type = ttype;
-            } else if (old[coord.y][coord.x] == ttype) {
-                state.dungeon.at(coord).type = .Floor;
+            return num;
+        }
+    };
+
+    var i: usize = 0;
+    var j: usize = 0;
+    var k: usize = 0;
+
+    var blob_num: usize = 0;
+    var blob_size: usize = 0;
+    var top_blob_num: usize = 0;
+    var top_blob_size: usize = 0;
+
+    var top_blob_min_x: usize = 0;
+    var top_blob_min_y: usize = 0;
+    var top_blob_max_x: usize = 0;
+    var top_blob_max_y: usize = 0;
+
+    var blob_width: usize = 0;
+    var blob_height: usize = 0;
+
+    var found_cell_this_line = false;
+
+    // Generate blobs until they satisfy the provided restraints
+    var first = true; // Zig, get a do-while already
+    while (first or blob_width < min_blob_width or blob_height < min_blob_height or top_blob_num == 0) {
+        first = false;
+
+        for (grid) |*col| for (col) |*cell| {
+            cell.* = 0;
+        };
+
+        // Fill relevant portion with noise based on the percentSeeded argument.
+        i = 0;
+        while (i < max_blob_width) : (i += 1) {
+            j = 0;
+            while (j < max_blob_height) : (j += 1) {
+                grid[i][j] = if (rng.range(usize, 0, 100) < percent_seeded) 1 else 0;
+            }
+        }
+
+        // Some iterations of cellular automata
+        k = 0;
+        while (k < rounds) : (k += 1) {
+            S.cellularAutomataRound(grid, birth_params, survival_params);
+        }
+
+        // Now to measure the result. These are best-of variables; start them out at worst-case values.
+        top_blob_size = 0;
+        top_blob_num = 0;
+        top_blob_min_x = max_blob_width;
+        top_blob_max_x = 0;
+        top_blob_min_y = max_blob_height;
+        top_blob_max_y = 0;
+
+        // Fill each blob with its own number, starting with 2 (since 1 means floor), and keeping track of the biggest:
+        blob_num = 2;
+
+        i = 0;
+        while (i < WIDTH) : (i += 1) {
+            j = 0;
+            while (j < HEIGHT) : (j += 1) {
+                if (grid[i][j] == 1) { // an unmarked blob
+                    // Mark all the cells and returns the total size:
+                    blob_size = S.fillContiguousRegion(grid, i, j, blob_num);
+                    if (blob_size > top_blob_size) { // if this blob is a new record
+                        top_blob_size = blob_size;
+                        top_blob_num = blob_num;
+                    }
+                    blob_num += 1;
+                }
+            }
+        }
+
+        // Figure out the top blob's height and width:
+        // First find the max & min x:
+        i = 0;
+        while (i < WIDTH) : (i += 1) {
+            found_cell_this_line = false;
+            j = 0;
+            while (j < HEIGHT) : (j += 1) {
+                if (grid[i][j] == top_blob_num) {
+                    found_cell_this_line = true;
+                    break;
+                }
+            }
+
+            if (found_cell_this_line) {
+                if (i < top_blob_min_x) {
+                    top_blob_min_x = i;
+                }
+
+                if (i > top_blob_max_x) {
+                    top_blob_max_x = i;
+                }
+            }
+        }
+
+        // Then the max & min y:
+        j = 0;
+        while (j < HEIGHT) : (j += 1) {
+            found_cell_this_line = false;
+            i = 0;
+            while (i < WIDTH) : (i += 1) {
+                if (grid[i][j] == top_blob_num) {
+                    found_cell_this_line = true;
+                    break;
+                }
+            }
+
+            if (found_cell_this_line) {
+                if (j < top_blob_min_y) {
+                    top_blob_min_y = j;
+                }
+
+                if (j > top_blob_max_y) {
+                    top_blob_max_y = j;
+                }
+            }
+        }
+
+        blob_width = (top_blob_max_x - top_blob_min_x) + 1;
+        blob_height = (top_blob_max_y - top_blob_min_y) + 1;
+    }
+
+    // Replace the winning blob with 1's, and everything else with 0's:
+    i = 0;
+    while (i < WIDTH) : (i += 1) {
+        j = 0;
+        while (j < HEIGHT) : (j += 1) {
+            if (grid[i][j] == top_blob_num) {
+                grid[i][j] = 1;
+            } else {
+                grid[i][j] = 0;
             }
         }
     }
-}
 
-pub fn fillBar(level: usize, height: usize) void {
-    // add a horizontal bar of floors in the center of the map as it may
-    // prevent a continuous vertical wall from forming during cellular automata,
-    // thus preventing isolated sections
-    const halfway = HEIGHT / 2;
-    var y: usize = halfway;
-    while (y < (halfway + height)) : (y += 1) {
-        var x: usize = 0;
-        while (x < WIDTH) : (x += 1) {
-            state.dungeon.at(Coord.new2(level, x, y)).type = .Floor;
-        }
-    }
-}
-
-pub fn fillRandom(layout: *const [HEIGHT][WIDTH]state.Layout, level: usize, chance: usize, ttype: TileType) void {
-    var y: usize = 1;
-    while (y < HEIGHT - 1) : (y += 1) {
-        var x: usize = 1;
-        while (x < WIDTH - 1) : (x += 1) {
-            if (layout[y][x] != .Unknown) continue;
-
-            const coord = Coord.new2(level, x, y);
-
-            if (rng.range(usize, 0, 100) < chance) {
-                state.dungeon.at(coord).type = ttype;
-            }
-        }
-    }
+    return .{
+        .start = Coord.new(top_blob_min_x, top_blob_min_y),
+        .width = blob_width,
+        .height = blob_height,
+    };
 }
 
 pub fn generateLayoutMap(level: usize) void {
@@ -1897,6 +2081,7 @@ pub const LevelConfig = struct {
     }),
 
     no_lights: bool = false,
+    tiletype: TileType = .Wall,
     material: *const Material = &materials.Concrete,
     light: *const Machine = &surfaces.Brazier,
     vent: []const u8 = "gas_vent",
@@ -1911,6 +2096,7 @@ pub const LevelConfig = struct {
     utility_items: *[]const Prop = &surfaces.prison_item_props.items,
     allow_statues: bool = true,
     allow_doors: bool = true,
+    blobs: []const BlobConfig = &[_]BlobConfig{},
 
     pub const RPBuf = StackBuffer([]const u8, 4);
     pub const MCBuf = StackBuffer(MobConfig, 3);
@@ -1919,6 +2105,19 @@ pub const LevelConfig = struct {
     pub const MobConfig = struct {
         chance: usize, // Ten in <chance>
         template: *const mobs.MobTemplate,
+    };
+
+    pub const BlobConfig = struct {
+        number: MinMax(usize),
+        type: TileType,
+        min_blob_width: MinMax(usize),
+        min_blob_height: MinMax(usize),
+        max_blob_width: MinMax(usize),
+        max_blob_height: MinMax(usize),
+        ca_rounds: usize,
+        ca_percent_seeded: usize,
+        ca_birth_params: *const [9]u8,
+        ca_survival_params: *const [9]u8,
     };
 };
 
@@ -2060,13 +2259,15 @@ pub const Configs = [LEVELS]LevelConfig{
         .identifier = "SMI",
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
             "SMI_forge",
+            "SMI_blast_furnace",
+            "SMI_refinery_furnace",
         }),
         .distances = [2][10]usize{
-            .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+            .{ 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 },
             .{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
         },
-        .prefab_chance = 3,
-        .max_rooms = 512,
+        .prefab_chance = 1,
+        .max_rooms = 450,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeatureIronOres,
@@ -2083,8 +2284,35 @@ pub const Configs = [LEVELS]LevelConfig{
         }),
 
         .material = &materials.Limestone,
+        .tiletype = .Floor,
 
         .allow_statues = false,
         .allow_doors = false,
+        .blobs = &[_]LevelConfig.BlobConfig{
+            .{
+                .number = MinMax(usize){ .min = 6, .max = 8 },
+                .type = .Wall,
+                .min_blob_width = MinMax(usize){ .min = 7, .max = 8 },
+                .min_blob_height = MinMax(usize){ .min = 7, .max = 8 },
+                .max_blob_width = MinMax(usize){ .min = 10, .max = 15 },
+                .max_blob_height = MinMax(usize){ .min = 9, .max = 15 },
+                .ca_rounds = 5,
+                .ca_percent_seeded = 55,
+                .ca_birth_params = "ffffffttt",
+                .ca_survival_params = "ffffttttt",
+            },
+            .{
+                .number = MinMax(usize){ .min = 5, .max = 7 },
+                .type = .Lava,
+                .min_blob_width = MinMax(usize){ .min = 6, .max = 8 },
+                .min_blob_height = MinMax(usize){ .min = 6, .max = 8 },
+                .max_blob_width = MinMax(usize){ .min = 10, .max = 14 },
+                .max_blob_height = MinMax(usize){ .min = 9, .max = 14 },
+                .ca_rounds = 5,
+                .ca_percent_seeded = 55,
+                .ca_birth_params = "ffffftttt",
+                .ca_survival_params = "ffffttttt",
+            },
+        },
     },
 };

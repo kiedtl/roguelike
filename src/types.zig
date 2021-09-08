@@ -2352,6 +2352,9 @@ pub const Dungeon = struct {
 
         var l: usize = 0;
 
+        if (tile.type == .Lava)
+            l += 100;
+
         l += heat.lightEmittedByHeat(self.heat[coord.z][coord.y][coord.x]);
 
         if (tile.mob) |mob| {

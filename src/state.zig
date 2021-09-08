@@ -283,7 +283,7 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
 pub fn tickLight(level: usize) void {
     // TODO: do some tests and figure out what's the practical limit to memory
     // usage, and reduce the buffer's size to that.
-    var membuf: [8192]u8 = undefined;
+    var membuf: [65535]u8 = undefined;
     var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
     const light_buffer = &dungeon.light_intensity[level];
