@@ -2279,8 +2279,8 @@ pub const Configs = [LEVELS]LevelConfig{
         .patrol_squads = 5,
         .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
             .{ .chance = 16, .template = &mobs.WatcherTemplate },
+            .{ .chance = 30, .template = &mobs.HaulerTemplate },
             .{ .chance = 56, .template = &mobs.GuardTemplate },
-            .{ .chance = 80, .template = &mobs.SentinelTemplate },
         }),
 
         .material = &materials.Limestone,
