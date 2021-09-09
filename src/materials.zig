@@ -20,6 +20,7 @@ pub const Hematite = Material{
 pub const Iron = Material{
     .name = "iron",
     .description = "TODO",
+    .type = .Metal,
     .density = 5.3, // FIXME: not accurate!
     .color_fg = 0xcacbca,
     .color_bg = 0xefefef,

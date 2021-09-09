@@ -456,6 +456,7 @@ pub const Room = struct {
 pub const Stockpile = struct {
     room: Room,
     type: ItemType,
+    boulder_material_type: ?Material.MaterialType = null,
 
     pub fn findEmptySlot(self: *const Stockpile) ?Coord {
         var y: usize = self.room.start.y;
@@ -493,32 +494,45 @@ pub const Stockpile = struct {
         return null;
     }
 
-    pub fn inferType(self: *Stockpile) bool {
-        var y: usize = self.room.start.y;
-        while (y < self.room.end().y) : (y += 1) {
-            var x: usize = self.room.start.x;
-            while (x < self.room.end().x) : (x += 1) {
-                const coord = Coord.new2(self.room.start.z, x, y);
-
-                if (state.dungeon.hasContainer(coord)) |container| {
-                    if (container.items.len > 0) {
-                        self.type = std.meta.activeTag(container.items.data[0]);
-                        return true;
-                    }
-                } else {
-                    const titems = state.dungeon.itemsAt(coord);
-
-                    if (titems.len > 0) {
-                        self.type = std.meta.activeTag(titems.data[0]);
-                        return true;
-                    }
-                }
-            }
+    pub fn isOfSameType(self: *const Stockpile, item: *const Item) bool {
+        if (self.type != std.meta.activeTag(item.*)) {
+            return false;
         }
 
-        return false;
+        switch (item.*) {
+            .Boulder => |b| if (b.type != self.boulder_material_type.?) return false,
+            else => {},
+        }
+
+        return true;
+    }
+
+    pub fn inferType(self: *Stockpile) bool {
+        if (self.findItem()) |item_location| {
+            const item = if (state.dungeon.hasContainer(item_location)) |container|
+                container.items.data[0]
+            else
+                state.dungeon.itemsAt(item_location).data[0];
+
+            self.type = std.meta.activeTag(item);
+            switch (self.type) {
+                .Boulder => self.boulder_material_type = item.Boulder.type,
+                else => {},
+            }
+
+            return true;
+        } else {
+            return false;
+        }
     }
 };
+
+test "stockpile type equality" {
+    std.testing.expect((Stockpile{ .room = undefined, .type = .Weapon }).isOfSameType(&Item{ .Weapon = undefined }));
+    std.testing.expect((Stockpile{ .room = undefined, .type = .Boulder, .boulder_material_type = .Metal }).isOfSameType(&Item{ .Boulder = &materials.Iron }));
+    std.testing.expect((Stockpile{ .room = undefined, .type = .Boulder, .boulder_material_type = .I_Stone }).isOfSameType(&Item{ .Boulder = &materials.Basalt }));
+    std.testing.expect(!(Stockpile{ .room = undefined, .type = .Boulder, .boulder_material_type = .I_Stone }).isOfSameType(&Item{ .Boulder = &materials.Iron }));
+}
 
 pub const Path = struct { from: Coord, to: Coord };
 
@@ -529,6 +543,8 @@ pub const Material = struct {
     // Description. e.g. "A sooty, flexible material used to make fire-proof
     // cloaks."
     description: []const u8,
+
+    type: MaterialType = .I_Stone,
 
     // Material density in g/cm³
     density: f64,
@@ -556,6 +572,30 @@ pub const Material = struct {
 
     pub const AIR_SPECIFIC_HEAT = 200.5;
     pub const AIR_DENSITY = 0.012;
+
+    pub const MaterialType = enum {
+        Metal,
+        I_Stone,
+        S_Stone,
+        M_Stone,
+        Gem,
+    };
+
+    pub fn chunkTile(self: *const Material) u21 {
+        return switch (self.type) {
+            .Metal => '-',
+            .I_Stone, .S_Stone, .M_Stone => '©',
+            .Gem => '¤',
+        };
+    }
+
+    pub fn chunkName(self: *const Material) []const u8 {
+        return switch (self.type) {
+            .Metal => "ingot",
+            .I_Stone, .S_Stone, .M_Stone => "boulder",
+            .Gem => "gem",
+        };
+    }
 };
 
 pub const MessageType = union(enum) {
@@ -2175,7 +2215,7 @@ pub const Item = union(ItemType) {
             .Vial => |v| try fmt.format(fbs.writer(), "vial of {}", .{v.name()}),
             .Armor => |a| try fmt.format(fbs.writer(), "{} armor", .{a.name}),
             .Weapon => |w| try fmt.format(fbs.writer(), "{}", .{w.name}),
-            .Boulder => |b| try fmt.format(fbs.writer(), "boulder of {}", .{b.name}),
+            .Boulder => |b| try fmt.format(fbs.writer(), "{} of {}", .{ b.chunkName(), b.name }),
             .Prop => |b| try fmt.format(fbs.writer(), "{}", .{b.name}),
         }
         buf.resizeTo(@intCast(usize, fbs.getPos() catch unreachable));
@@ -2256,7 +2296,7 @@ pub const Tile = struct {
                             cell.ch = '&'; // TODO: use U+1F6E1?
                         },
                         .Boulder => |b| {
-                            cell.ch = '©';
+                            cell.ch = b.chunkTile();
                             cell.fg = b.color_floor;
                         },
                         .Prop => |p| {

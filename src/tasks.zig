@@ -66,7 +66,7 @@ pub fn tickTasks(level: usize) void {
 
     // Check for items in outputs that need to be hauled to stockpiles
     for (state.outputs[level].items) |output_area| {
-        var itemttype: ?ItemType = null;
+        var item: ?*const Item = null;
         var itemcoord: ?Coord = null;
 
         // Search for a stray item
@@ -95,10 +95,7 @@ pub fn tickTasks(level: usize) void {
                         };
 
                         if (!already_reported) {
-                            itemttype = if (c_items) |ci|
-                                std.meta.activeTag(ci.data[0])
-                            else
-                                std.meta.activeTag(t_items.data[0]);
+                            item = if (c_items) |ci| &ci.data[0] else &t_items.data[0];
                             itemcoord = coord;
                             break :outer;
                         }
@@ -107,16 +104,17 @@ pub fn tickTasks(level: usize) void {
             }
         }
 
-        if (itemttype) |_type| {
+        if (item) |_item| {
             var stockpile: ?Coord = null;
 
             // Now search for a stockpile
-            for (state.stockpiles[level].items) |item| if (item.type == _type) {
-                if (item.findEmptySlot()) |coord| {
-                    stockpile = coord;
-                    break;
-                }
-            };
+            for (state.stockpiles[level].items) |c_stockpile|
+                if (c_stockpile.isOfSameType(_item)) {
+                    if (c_stockpile.findEmptySlot()) |coord| {
+                        stockpile = coord;
+                        break;
+                    }
+                };
 
             if (stockpile) |dest| {
                 state.tasks.append(
