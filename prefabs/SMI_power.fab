@@ -25,7 +25,7 @@
 @g p wire_n2w1
 @h p concrete_wall_left
 @i p concrete_wall_right
-% @z 
+@z m turbine_power_supply 7,4 7,5
 
 .*.*.*.*.*≈*..
 *.......≈≈≈≈.*
@@ -33,6 +33,6 @@
 *~~~~~~3≈≈≈≈4*
 *~~~~~i5h≈≈≈6*
 *.~~~~i578889*
-*~~~~~~abcc.d*
+*~~~~~~abcczd*
 *.~~~00eeffg.*
 .*.*.*.*.*.*..

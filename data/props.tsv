@@ -48,7 +48,7 @@
 "hematite_statue"      	 "hematite statue"      	 '☺' 	 0xff7f70 	 -        	 nay 	 - 	 .Statue
 
 "table"                	 "table"                	 '⊺' 	 0xffffff 	 -        	 nay
-"turbine"              	 "turbine"              	 '◴' 	 0xffffff 	 -        	 nay
+"turbine"              	 "turbine"              	 '◴' 	 0xffd700 	 -        	 nay
 "gearbox"              	 "gearbox"              	 '■' 	 0xffffff 	 -        	 nay
 "power_switch"         	 "power switch"         	 '♥' 	 0xffffff 	 -        	 nay
 "control_panel"        	 "control panel"        	 '⌨' 	 0xffffff 	 -        	 nay

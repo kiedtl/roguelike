@@ -25,6 +25,7 @@ pub const MACHINES = [_]Machine{
     Extractor,
     PowerSupply,
     NuclearPowerSupply,
+    TurbinePowerSupply,
     HealingGasPump,
     Brazier,
     Altar,
@@ -142,6 +143,29 @@ pub const NuclearPowerSupply = Machine{
     .unpowered_luminescence = 20,
 
     .on_power = powerPowerSupply,
+};
+
+pub const TurbinePowerSupply = Machine{
+    .id = "turbine_power_supply",
+    .name = "turbine controller",
+
+    .powered_tile = '≡',
+    .unpowered_tile = '≡',
+
+    .power_drain = 2,
+    .power_add = 100,
+    .power = 100, // Start out fully powered
+
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+
+    .powered_opacity = 0,
+    .unpowered_opacity = 0,
+
+    .powered_luminescence = 0,
+    .unpowered_luminescence = 0,
+
+    .on_power = powerTurbinePowerSupply,
 };
 
 pub const HealingGasPump = Machine{
@@ -411,6 +435,36 @@ fn powerPowerSupply(machine: *Machine) void {
         if (mach.coord.z == machine.coord.z and mach.auto_power)
             mach.addPower(null);
     }
+}
+
+fn powerTurbinePowerSupply(machine: *Machine) void {
+    assert(machine.areas.len > 0);
+
+    var steam: f64 = 0.0;
+
+    for (machine.areas.constSlice()) |area| {
+        const prop = state.dungeon.at(area).surface.?.Prop;
+
+        // Anathema, we're modifying a game object this way! the horrors!
+        prop.tile = switch (prop.tile) {
+            '◴' => rng.chooseUnweighted(u21, &[_]u21{ '◜', '◠', '◝', '◡' }),
+            '◜' => '◠',
+            '◠' => '◝',
+            '◝' => '◟',
+            '◟' => '◡',
+            '◡' => '◞',
+            '◞' => '◜',
+            else => unreachable,
+        };
+
+        steam += state.dungeon.atGas(area)[gas.Steam.id];
+    }
+
+    powerPowerSupply(machine);
+
+    // Bypass machine.addPower
+    machine.power += @floatToInt(usize, (steam / 2) * 10);
+    machine.last_interaction = null;
 }
 
 fn powerHealingGasPump(machine: *Machine) void {
