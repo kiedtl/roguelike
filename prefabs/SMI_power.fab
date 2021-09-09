@@ -1,0 +1,38 @@
+%      ~~~~    turbine
+% ~~~━┳━~~~┑
+% ~~~~╿~~~~⊡
+% ~~~ ◴ ~~~│
+% ~~~ ◴┐▂▂▂⌨
+% ~~~~╽╪öö≡╛
+% ~~━━┻┻┴┴╜
+
+@0 p wall_e1w1
+@1 p wall_s1e1w1
+@2 p wall_s1w1_thins
+@3 p wall_n1s1_thins
+@4 p switching_station
+@5 p turbine
+@6 p wire_n1s1
+@7 p wire_s1w1
+@8 p concrete_wall_lower4
+@9 p control_panel
+@a p wall_n1s1_thinn
+@b p wire_n1s1e2w2
+@c p large_transformer
+@d p wire_n1w2
+@e p wall_n1e1w1
+@f p wire_n1e1w1
+@g p wire_n2w1
+@h p concrete_wall_left
+@i p concrete_wall_right
+% @z 
+
+.*.*.*.*.*≈*..
+*.......≈≈≈≈.*
+*.~~~~0100002*
+*~~~~~~3≈≈≈≈4*
+*~~~~~i5h≈≈≈6*
+*.~~~~i578889*
+*~~~~~~abcc.d*
+*.~~~00eeffg.*
+.*.*.*.*.*.*..

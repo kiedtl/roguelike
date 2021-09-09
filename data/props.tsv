@@ -48,6 +48,7 @@
 "hematite_statue"      	 "hematite statue"      	 '☺' 	 0xff7f70 	 -        	 nay 	 - 	 .Statue
 
 "table"                	 "table"                	 '⊺' 	 0xffffff 	 -        	 nay
+"turbine"              	 "turbine"              	 '◴' 	 0xffffff 	 -        	 nay
 "gearbox"              	 "gearbox"              	 '■' 	 0xffffff 	 -        	 nay
 "power_switch"         	 "power switch"         	 '♥' 	 0xffffff 	 -        	 nay
 "control_panel"        	 "control panel"        	 '⌨' 	 0xffffff 	 -        	 nay
@@ -69,6 +70,9 @@
 "calorimeter"          	 "calorimeter"          	 '⊝' 	 0xf5f5dc 	 -        	 nay 	 - 	 .Laboratory
 "vacuum_chmbr"         	 "vacuum chamber"       	 '⊜' 	 0xffefdf 	 -        	 nay 	 - 	 .Laboratory
 
+"wall_s1w1_thins"      	 "vangenite wall"       	 '┑' 	 0xb6efe0 	 -        	 nay
+"wall_s1e1w1"          	 "vangenite wall"       	 '┳' 	 0xb6efe0 	 -        	 nay
+"wall_n1e1w1"          	 "vangenite wall"       	 '┻' 	 0xb6efe0 	 -        	 nay
 "wall_e1w1"            	 "vangenite wall"       	 '━' 	 0xb6efe0 	 -        	 nay
 "wall_s1w1"            	 "vangenite wall"       	 '┓' 	 0xb6efe0 	 -        	 nay
 "wall_n1s1w1"          	 "vangenite wall"       	 '┫' 	 0xb6efe0 	 -        	 nay
@@ -109,6 +113,7 @@
 "pipe_n1s1e1"          	 "steel pipe"           	 '├' 	 0xa6c2d4 	 -        	   -
 "pipe_n1e1w1"          	 "steel pipe"           	 '┴' 	 0xa6c2d4 	 -        	   -
 
+"wire_n1e1w1"          	 "copper wire"          	 '┴' 	 0xffe5d3 	 -        	   -
 "wire_s2e1"            	 "copper wire"          	 '╓' 	 0xffe5d3 	 -        	   -
 "wire_e1w1"            	 "copper wire"          	 '─' 	 0xffe5d3 	 -        	   -
 "wire_s1w1"            	 "copper wire"          	 '┐' 	 0xffe5d3 	 -        	   -
@@ -117,6 +122,7 @@
 "wire_n2s2"            	 "copper wire"          	 '║' 	 0xffe5d3 	 -        	   -
 "wire_n1s1w1"          	 "copper wire"          	 '┤' 	 0xffe5d3 	 -        	   -
 "wire_n2w1"            	 "copper wire"          	 '╜' 	 0xffe5d3 	 -        	   -
+"wire_n1w2"            	 "copper wire"          	 '╛' 	 0xffe5d3 	 -        	   -
 "wire_n1e2"            	 "copper wire"          	 '╘' 	 0xffe5d3 	 -        	   -
 "wire_s1w2"            	 "copper wire"          	 '╕' 	 0xffe5d3 	 -        	   -
 "wire_n1s1w2"          	 "copper wire"          	 '╡' 	 0xffe5d3 	 -        	   -
@@ -138,6 +144,7 @@
 
 "concrete_wall_upper"  	 "concrete wall"        	 '▀' 	 0xa79f85 	 -        	 nay
 "concrete_wall_lower"  	 "concrete wall"        	 '▄' 	 0xa79f85 	 -        	 nay
+"concrete_wall_lower4" 	 "concrete wall"        	 '▂' 	 0xa79f85 	 -        	 nay
 "concrete_wall_left"   	 "concrete wall"        	 '▐' 	 0xa79f85 	 -        	 nay
 "concrete_wall_right"  	 "concrete wall"        	 '▌' 	 0xa79f85 	 -        	 nay
 "concrete_wall_full"   	 "concrete wall"        	 '█' 	 0xa79f85 	 -        	 nay
