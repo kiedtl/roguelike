@@ -442,11 +442,12 @@ pub fn tickAtmosphere(cur_lev: usize, cur_gas: usize) void {
             while (x < WIDTH) : (x += 1) {
                 const coord = Coord.new2(cur_lev, x, y);
                 const temp = dungeon.heat[cur_lev][y][x];
+                const c_gas = dungeon.atGas(coord);
                 switch (dungeon.at(coord).type) {
                     .Water => if (temp >= 100) {
-                        const added_max = math.clamp((temp - 50) * 25 / 50, 0, 50);
+                        const added_max = math.clamp((temp - 50) * 5 / 30, 0, 30);
                         const added = rng.range(f64, 0.0, @intToFloat(f64, added_max) / 100);
-                        dungeon.atGas(coord)[gas.Steam.id] += added;
+                        c_gas[gas.Steam.id] = math.max(c_gas[gas.Steam.id], added);
                     },
                     // TODO: smoke for lava?
                     else => {},

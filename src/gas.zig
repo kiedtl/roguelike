@@ -64,7 +64,7 @@ pub const Dust = Gas{
 
 pub const Steam = Gas{
     .color = 0x5f5f5f,
-    .dissipation_rate = 0.09,
+    .dissipation_rate = 0.12,
     .opacity = 0.00,
     .trigger = triggerNone,
     .id = 7,

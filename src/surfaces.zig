@@ -463,7 +463,7 @@ fn powerTurbinePowerSupply(machine: *Machine) void {
     powerPowerSupply(machine);
 
     // Bypass machine.addPower
-    machine.power += @floatToInt(usize, (steam / 2) * 10);
+    machine.power += @floatToInt(usize, steam * 10);
     machine.last_interaction = null;
 }
 
