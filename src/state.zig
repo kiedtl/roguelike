@@ -432,7 +432,30 @@ pub fn tickSound(cur_lev: usize) void {
     }
 }
 
+// Create and dissipate gas.
 pub fn tickAtmosphere(cur_lev: usize, cur_gas: usize) void {
+    // First make hot water emit gas.
+    {
+        var y: usize = 0;
+        while (y < HEIGHT) : (y += 1) {
+            var x: usize = 0;
+            while (x < WIDTH) : (x += 1) {
+                const coord = Coord.new2(cur_lev, x, y);
+                const temp = dungeon.heat[cur_lev][y][x];
+                switch (dungeon.at(coord).type) {
+                    .Water => if (temp >= 100) {
+                        const added_max = math.clamp((temp - 50) * 25 / 50, 0, 50);
+                        const added = rng.range(f64, 0.0, @intToFloat(f64, added_max) / 100);
+                        dungeon.atGas(coord)[gas.Steam.id] += added;
+                    },
+                    // TODO: smoke for lava?
+                    else => {},
+                }
+            }
+        }
+    }
+
+    // ...then spread it.
     const dissipation = gas.Gases[cur_gas].dissipation_rate;
     const residue = gas.Gases[cur_gas].residue;
 

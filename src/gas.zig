@@ -62,7 +62,17 @@ pub const Dust = Gas{
     .id = 6,
 };
 
-pub const Gases = [_]Gas{ Poison, Paralysis, SmokeGas, Confusion, Slow, Healing, Dust };
+pub const Steam = Gas{
+    .color = 0x999999,
+    .dissipation_rate = 0.08,
+    .opacity = 0.00,
+    .trigger = triggerNone,
+    .id = 7,
+};
+
+pub const Gases = [_]Gas{
+    Poison, Paralysis, SmokeGas, Confusion, Slow, Healing, Dust, Steam,
+};
 pub const GAS_NUM: usize = Gases.len;
 
 // Ensure that each gas's ID matches the index that it appears as in Gases.
