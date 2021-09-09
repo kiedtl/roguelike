@@ -2308,6 +2308,10 @@ pub const Tile = struct {
             cell.fg = math.max(utils.percentageOfColor(cell.fg, light), utils.darkenColor(cell.fg, 3));
         }
 
+        //const temperature = state.dungeon.heat[coord.z][coord.y][coord.x];
+        //const light_emitted = if (temperature > 600) math.clamp((temperature - 600) * 100 / 1000, 0, 75) else 0;
+        //cell.bg = utils.mixColors(cell.bg, 0xffe122, @intToFloat(f64, light_emitted) / 600);
+
         var spattering = self.spatter.iterator();
         while (spattering.next()) |entry| {
             const spatter = entry.key;
