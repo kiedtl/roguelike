@@ -2214,12 +2214,10 @@ pub const Tile = struct {
                 .fg = 0xff5347, // tomato
                 .bg = 0xcb0f1f, // red
             },
-            .Wall => {
-                cell = .{
-                    .ch = materials.tileFor(coord, self.material.tileset),
-                    .fg = self.material.color_fg,
-                    .bg = self.material.color_bg orelse color,
-                };
+            .Wall => cell = .{
+                .ch = materials.tileFor(coord, self.material.tileset),
+                .fg = self.material.color_fg,
+                .bg = self.material.color_bg orelse color,
             },
             .Floor => {
                 if (self.mob) |mob| {
