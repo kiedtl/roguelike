@@ -467,7 +467,7 @@ pub fn tickAtmosphere(cur_lev: usize, cur_gas: usize) void {
             while (x < WIDTH) : (x += 1) {
                 const coord = Coord.new2(cur_lev, x, y);
 
-                if (!is_walkable(coord, .{}))
+                if (dungeon.at(coord).type == .Wall)
                     continue;
 
                 var avg: f64 = dungeon.atGas(coord)[cur_gas];
