@@ -544,6 +544,8 @@ pub const Material = struct {
     melting_point: usize,
     combust_point: ?usize,
 
+    smelt_result: ?*const Material = null,
+
     // Specific heat in kJ/(kg K)
     specific_heat: f64,
 
@@ -1809,7 +1811,7 @@ pub const Machine = struct {
     //
     // E.g., a blast furnace will heat up the first area, and search
     // for fuel in the second area.
-    areas: StackBuffer(Coord, 8) = StackBuffer(Coord, 8).init(null),
+    areas: StackBuffer(Coord, 16) = StackBuffer(Coord, 16).init(null),
 
     pub fn addPower(self: *Machine, by: ?*Mob) void {
         if (by) |_by|

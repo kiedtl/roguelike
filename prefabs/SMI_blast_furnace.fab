@@ -41,6 +41,7 @@
 @v p pipe_n2w1
 @w p pipe_n1w1
 @x p pipe_n1s1w2
+@z m blast_furnace 8,2 9,2 10,2 11,2 6,5 10,4 11,4 10,5 11,5
 
 :input 8,2 4 1
 :output 10,4 2 2
@@ -51,7 +52,7 @@
 .2d.efgfe555h.*
 .ijk.lm..ncc+.*
 .ijk....2ncco.*
-.p1q....pq13o.*
+.p1q..z.pq13o.*
 .ij.feeefrsao.*
 *tj11u1v.llmw.*
 ***...***...***

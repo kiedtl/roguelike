@@ -11,6 +11,22 @@ pub const Hematite = Material{
     .tileset = 0,
     .melting_point = 1383,
     .combust_point = null,
+    .smelt_result = &Iron,
+    .specific_heat = 500, // FIXME: not accurate!
+    .luminescence = 0,
+    .opacity = 1.0,
+};
+
+pub const Iron = Material{
+    .name = "iron",
+    .description = "TODO",
+    .density = 5.3, // FIXME: not accurate!
+    .color_fg = 0xcacbca,
+    .color_bg = 0xefefef,
+    .color_floor = 0xcacbca,
+    .tileset = 0,
+    .melting_point = 1383, // FIXME: not accurate!
+    .combust_point = null,
     .specific_heat = 500, // FIXME: not accurate!
     .luminescence = 0,
     .opacity = 1.0,

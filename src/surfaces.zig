@@ -3,6 +3,7 @@
 const std = @import("std");
 const assert = std.debug.assert;
 const mem = std.mem;
+const meta = std.meta;
 
 const main = @import("root");
 const utils = @import("utils.zig");
@@ -23,6 +24,7 @@ pub const MACHINES = [_]Machine{
     ResearchCore,
     ElevatorMotor,
     Extractor,
+    BlastFurnace,
     PowerSupply,
     NuclearPowerSupply,
     TurbinePowerSupply,
@@ -98,6 +100,27 @@ pub const Extractor = Machine{
     .unpowered_walkable = false,
 
     .on_power = powerExtractor,
+};
+
+pub const BlastFurnace = Machine{
+    .id = "blast_furnace",
+    .name = "blast furnace",
+
+    .powered_tile = '≡',
+    .unpowered_tile = '≡',
+
+    .power_drain = 50,
+    .power_add = 100,
+    .auto_power = true,
+
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+
+    .powered_luminescence = 100,
+    .unpowered_luminescence = 0,
+    .dims = true,
+
+    .on_power = powerBlastFurnace,
 };
 
 pub const PowerSupply = Machine{
@@ -427,6 +450,68 @@ fn powerExtractor(machine: *Machine) void {
             },
         else => {},
     };
+}
+
+fn powerBlastFurnace(machine: *Machine) void {
+    assert(machine.areas.len == 9);
+
+    // Only function on every 8th turn, to give the impression that it takes
+    // a while to smelt more ores
+    if ((state.ticks % 8) != 0) return;
+
+    const areas = machine.areas.constSlice();
+    const input_areas = areas[0..4];
+    const furnace_area = areas[4];
+    const output_areas = areas[5..7];
+    const refuse_areas = areas[7..9];
+
+    // Move input items to furnace
+    for (input_areas) |input_area| {
+        if (state.dungeon.itemsAt(furnace_area).isFull())
+            break;
+
+        var input_item: ?Item = null;
+        if (state.dungeon.hasContainer(input_area)) |container| {
+            if (container.items.len > 0) input_item = container.items.pop() catch unreachable;
+        } else {
+            const t_items = state.dungeon.itemsAt(input_area);
+            if (t_items.len > 0) input_item = t_items.pop() catch unreachable;
+        }
+
+        if (input_item) |item| {
+            // XXX: it may be desirable later to handle this in a cleaner manner
+            assert(meta.activeTag(item) == .Boulder);
+
+            state.dungeon.itemsAt(furnace_area).append(item) catch unreachable;
+            return;
+        }
+    }
+
+    // Process items in furnace area and move to output area.
+    var output_spot: ?Coord = null;
+    for (output_areas) |output_area| {
+        if (state.dungeon.hasContainer(output_area)) |container| {
+            if (!container.items.isFull()) {
+                output_spot = output_area;
+                break;
+            }
+        } else {
+            if (!state.dungeon.itemsAt(output_area).isFull()) {
+                output_spot = output_area;
+                break;
+            }
+        }
+    }
+
+    if (output_spot != null and state.dungeon.itemsAt(furnace_area).len > 0) {
+        const item = state.dungeon.itemsAt(furnace_area).pop() catch unreachable;
+
+        // XXX: it may be desirable later to handle this in a cleaner manner
+        assert(meta.activeTag(item) == .Boulder);
+
+        const result_mat = item.Boulder.smelt_result.?;
+        state.dungeon.itemsAt(output_spot.?).append(Item{ .Boulder = result_mat }) catch unreachable;
+    }
 }
 
 fn powerPowerSupply(machine: *Machine) void {

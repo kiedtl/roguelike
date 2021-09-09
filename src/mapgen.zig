@@ -379,7 +379,7 @@ fn _excavate_prefab(
                                 if (utils.findById(&surfaces.MACHINES, mid.id)) |mach| {
                                     _place_machine(rc, &surfaces.MACHINES[mach]);
                                     const machine = state.dungeon.at(rc).surface.?.Machine;
-                                    for (mid.points.constSlice()) |point| {
+                                    for (mid.points.constSlice()) |point, i| {
                                         const adj_point = Coord.new2(
                                             room.start.z,
                                             point.x + room.start.x + startx,
@@ -1651,7 +1651,7 @@ pub const Prefab = struct {
     pub const Feature = union(enum) {
         Machine: struct {
             id: [32:0]u8,
-            points: StackBuffer(Coord, 8),
+            points: StackBuffer(Coord, 16),
         },
         Prop: [32:0]u8,
         Potion: [32:0]u8,
@@ -1920,7 +1920,7 @@ pub const Prefab = struct {
                             mem.copy(u8, &f.features[identifier].?.Prop, id);
                         },
                         'm' => {
-                            var points = StackBuffer(Coord, 8).init(null);
+                            var points = StackBuffer(Coord, 16).init(null);
                             while (words.next()) |word| {
                                 var coord = Coord.new2(0, 0, 0);
                                 var coord_tokens = mem.tokenize(word, ",");
