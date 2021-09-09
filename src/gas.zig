@@ -63,8 +63,8 @@ pub const Dust = Gas{
 };
 
 pub const Steam = Gas{
-    .color = 0x999999,
-    .dissipation_rate = 0.08,
+    .color = 0x5f5f5f,
+    .dissipation_rate = 0.09,
     .opacity = 0.00,
     .trigger = triggerNone,
     .id = 7,
