@@ -431,7 +431,7 @@ pub fn haulerWork(mob: *Mob, alloc: *mem.Allocator) void {
                     mob.tryMoveTo(itemcoord);
                 }
             } else {
-                const item = state.dungeon.itemsAt(itemcoord).pop() catch |_| {
+                const item = state.dungeon.getItem(itemcoord) catch |_| {
                     // Somehow the item disappeared, resume job-hunting
                     _ = mob.rest();
                     state.tasks.items[mob.ai.task_id.?].completed = true;

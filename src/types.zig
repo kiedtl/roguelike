@@ -2456,6 +2456,16 @@ pub const Dungeon = struct {
         return walls;
     }
 
+    // Get an item from the ground or a container (if it exists), otherwise
+    // return null;
+    pub fn getItem(self: *Dungeon, c: Coord) !Item {
+        if (self.hasContainer(c)) |container| {
+            return try container.items.orderedRemove(0);
+        } else {
+            return try self.itemsAt(c).pop();
+        }
+    }
+
     pub fn spatter(self: *Dungeon, c: Coord, what: Spatter) void {
         for (&DIRECTIONS) |d| {
             if (!rng.onein(4)) continue;
