@@ -1599,6 +1599,13 @@ fn levelFeatureIronOres(c: usize, coord: Coord, room: *const Room, prefab: *cons
     }
 }
 
+// Randomly place an metal ingot.
+fn levelFeatureMetals(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+    const metals = [_]Material{materials.Iron};
+    const mat = &metals[rng.range(usize, 0, metals.len - 1)];
+    state.dungeon.itemsAt(coord).append(Item{ .Boulder = mat }) catch unreachable;
+}
+
 pub const Prefab = struct {
     subroom: bool = false,
     invisible: bool = false,
@@ -2271,7 +2278,7 @@ pub const Configs = [LEVELS]LevelConfig{
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeatureIronOres,
-            null,
+            levelFeatureMetals,
             null,
             null,
         },
