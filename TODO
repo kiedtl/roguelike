@@ -254,7 +254,9 @@ Books
 	   besterestest hill goblin that ever was."
 "Meing Krampgh"
 	- "You learn that hill goblins are destined to rule the world."
-"Histories of Man"
+	- "You learn that those filthy cave-goblins have been infiltrating
+	   hill-goblin society for centuries."
+"Histories of Men"
 	- "You learn that dark-skinned humans are automatically inferior to other
 	   fang-possessing bipeds."
 "On the Descent of Goblins"
@@ -271,14 +273,19 @@ Books
 	  extractors."
 "Optimizing Distance Functions"
 	- "You learn that Chebyshev distance is to be preferred to Euclidean
-	distance for tile-based games."
+	  distance for tile-based games."
 "Optimizing the A* Algorithm"
-	- "You learn about Manhattan distance."
+	- "You learn about the Manhattan distance function."
+"Daily Consumption of Butter Tea"
+	- "You learn that some wacko humans actually like drinking rancid
+	  butter mash."
+	- "You learn the ratios of butter and tea needed to produce butter tea."
 "A Short Guide on Brewing Kombucha"
+	- "You learn that some weird humans actually like drinking spoiled tea."
 	- "You learn the ratios of sugar and tea needed to brew kombucha."
 recipe books
 	- "You learn how to pickle goblin roasts."
-	- "You learn how to properly butcher humans."
+	- "You learn how to properly butcher humans carcases."
 
 
 Materials (v = vial, s = stone, g = gem, o = ore/metal)
@@ -551,6 +558,9 @@ Code cleanups
 - Remove all floats from color functions, sound systems, gas systems, etc.
 - Review usage of usize and change to u64/u32 where needed to prevent portability issues
 - Define custom assert() that can give additional context
+- Define Lua API and move the following to Lua data files:
+  - levelFeature definitions (see mapgen.zig)
+  - levelConfig (see mapgen.zig)
 
 Refactorings
 ============
