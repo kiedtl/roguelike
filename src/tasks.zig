@@ -109,7 +109,7 @@ pub fn tickTasks(level: usize) void {
 
             // Now search for a stockpile
             for (state.stockpiles[level].items) |c_stockpile|
-                if (c_stockpile.isOfSameType(_item)) {
+                if (c_stockpile.isItemOfSameType(_item)) {
                     if (c_stockpile.findEmptySlot()) |coord| {
                         stockpile = coord;
                         break;
@@ -162,12 +162,13 @@ pub fn tickTasks(level: usize) void {
             var take_from_: ?Coord = null;
 
             // Search stockpiles
-            for (state.stockpiles[level].items) |stockpile| if (stockpile.type == input_area.type) {
-                if (stockpile.findItem()) |coord| {
-                    take_from_ = coord;
-                    break;
-                }
-            };
+            for (state.stockpiles[level].items) |stockpile|
+                if (stockpile.isStockpileOfSameType(&input_area)) {
+                    if (stockpile.findItem()) |coord| {
+                        take_from_ = coord;
+                        break;
+                    }
+                };
 
             if (take_from_) |take_from| {
                 state.tasks.append(

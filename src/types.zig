@@ -494,7 +494,26 @@ pub const Stockpile = struct {
         return null;
     }
 
-    pub fn isOfSameType(self: *const Stockpile, item: *const Item) bool {
+    // TODO: rewrite this monstrosity
+    pub fn isStockpileOfSameType(a: *const Stockpile, b: *const Stockpile) bool {
+        if (a.type != b.type) {
+            return false;
+        }
+
+        if (a.boulder_material_type) |mat| {
+            if (b.boulder_material_type == null) return false;
+            if (b.boulder_material_type != mat) return false;
+        }
+
+        if (b.boulder_material_type) |mat| {
+            if (a.boulder_material_type == null) return false;
+            if (a.boulder_material_type != mat) return false;
+        }
+
+        return true;
+    }
+
+    pub fn isItemOfSameType(self: *const Stockpile, item: *const Item) bool {
         if (self.type != std.meta.activeTag(item.*)) {
             return false;
         }
@@ -532,6 +551,7 @@ test "stockpile type equality" {
     std.testing.expect((Stockpile{ .room = undefined, .type = .Boulder, .boulder_material_type = .Metal }).isOfSameType(&Item{ .Boulder = &materials.Iron }));
     std.testing.expect((Stockpile{ .room = undefined, .type = .Boulder, .boulder_material_type = .I_Stone }).isOfSameType(&Item{ .Boulder = &materials.Basalt }));
     std.testing.expect(!(Stockpile{ .room = undefined, .type = .Boulder, .boulder_material_type = .I_Stone }).isOfSameType(&Item{ .Boulder = &materials.Iron }));
+    std.testing.expect(!(Stockpile{ .room = undefined, .type = .Boulder, .boulder_material_type = .Metal }).isOfSameType(&Item{ .Boulder = &materials.Hematite }));
 }
 
 pub const Path = struct { from: Coord, to: Coord };
