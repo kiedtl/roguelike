@@ -18,7 +18,6 @@ pub const Task = struct {
 
 // Scan for tasks
 pub fn tickTasks(level: usize) void {
-    const s = @ptrCast(*volatile TaskArrayList, &state.tasks);
     {
         var y: usize = 0;
         while (y < HEIGHT) : (y += 1) {
