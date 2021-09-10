@@ -7,8 +7,8 @@
 @0 p concrete_wall_lower
 @1 p concrete_wall_upper
 @2 p item_location
-@3 p concrete_wall_left
-@4 p concrete_wall_right
+@3 p concrete_wall_right
+@4 p concrete_wall_left
 @5 p concrete_wall_full
 @6 p pipe_s1e1w1
 @7 p pipe_n1s1w1

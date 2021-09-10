@@ -145,8 +145,8 @@
 "concrete_wall_upper"  	 "concrete wall"        	 '▀' 	 0xa79f85 	 -        	 nay
 "concrete_wall_lower"  	 "concrete wall"        	 '▄' 	 0xa79f85 	 -        	 nay
 "concrete_wall_lower4" 	 "concrete wall"        	 '▂' 	 0xa79f85 	 -        	 nay
-"concrete_wall_left"   	 "concrete wall"        	 '▐' 	 0xa79f85 	 -        	 nay
-"concrete_wall_right"  	 "concrete wall"        	 '▌' 	 0xa79f85 	 -        	 nay
+"concrete_wall_right"  	 "concrete wall"        	 '▐' 	 0xa79f85 	 -        	 nay
+"concrete_wall_left"   	 "concrete wall"        	 '▌' 	 0xa79f85 	 -        	 nay
 "concrete_wall_full"   	 "concrete wall"        	 '█' 	 0xa79f85 	 -        	 nay
 
 "left_copper_coil"     	 "half copper coil"     	 '▌' 	 0xe99c39 	 -        	 nay
