@@ -1606,6 +1606,16 @@ fn levelFeatureMetals(c: usize, coord: Coord, room: *const Room, prefab: *const 
     state.dungeon.itemsAt(coord).append(Item{ .Boulder = mat }) catch unreachable;
 }
 
+// Randomly place a random metal prop.
+fn levelFeatureMetalProducts(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+    const prop_ids = [_][]const u8{"chain"};
+    const prop_id = prop_ids[rng.range(usize, 0, prop_ids.len - 1)];
+    const prop_idx = utils.findById(surfaces.props.items, prop_id).?;
+    state.dungeon.itemsAt(coord).append(
+        Item{ .Prop = &surfaces.props.items[prop_idx] },
+    ) catch unreachable;
+}
+
 pub const Prefab = struct {
     subroom: bool = false,
     invisible: bool = false,
@@ -2265,9 +2275,10 @@ pub const Configs = [LEVELS]LevelConfig{
     .{
         .identifier = "SMI",
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
-            "SMI_forge",
+            "SMI_chain_press",
             "SMI_blast_furnace",
-            "SMI_refinery_furnace",
+            "SMI_stockpiles",
+            "SMI_power",
         }),
         .distances = [2][10]usize{
             .{ 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 },
@@ -2279,7 +2290,7 @@ pub const Configs = [LEVELS]LevelConfig{
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeatureIronOres,
             levelFeatureMetals,
-            null,
+            levelFeatureMetalProducts,
             null,
         },
 

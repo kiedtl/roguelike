@@ -21,6 +21,7 @@ pub var laboratory_props: PropArrayList = undefined;
 pub var statue_props: PropArrayList = undefined;
 
 pub const MACHINES = [_]Machine{
+    ChainPress,
     ResearchCore,
     ElevatorMotor,
     Extractor,
@@ -50,6 +51,23 @@ pub const Cabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 5, .
 pub const Chest = Container{ .name = "chest", .tile = 'æ', .capacity = 7, .type = .Valuables };
 pub const LabCabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 8, .type = .Utility, .item_repeat = 70 };
 pub const VOreCrate = Container{ .name = "crate", .tile = '∐', .capacity = 21, .type = .VOres, .item_repeat = 60 };
+
+pub const ChainPress = Machine{
+    .id = "chain_press",
+    .name = "chain press",
+
+    .powered_tile = '≡',
+    .unpowered_tile = '≡',
+
+    .power_drain = 50,
+    .power_add = 100,
+    .auto_power = true,
+
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+
+    .on_power = powerChainPress,
+};
 
 pub const ResearchCore = Machine{
     .id = "research_core",
@@ -385,6 +403,58 @@ pub const RestrictedMachinesOpenLever = Machine{
 };
 
 fn powerNone(_: *Machine) void {}
+
+fn powerChainPress(machine: *Machine) void {
+    assert(machine.areas.len == 16);
+
+    const press1 = machine.areas.data[0];
+    const press2 = machine.areas.data[1];
+    const asm1 = machine.areas.data[2..8];
+    const asm2 = machine.areas.data[8..14];
+    const output = machine.areas.data[14];
+    const input = machine.areas.data[15];
+
+    assert(asm1.len == asm2.len);
+
+    const press1_glyphs = [_]u21{ '▆', '▅', '▄', '▃', '▂', ' ' };
+    const press1_glyph = press1_glyphs[state.ticks % press1_glyphs[0..].len];
+    const press2_glyphs = [_]u21{ '▂', '▃', '▄', '▅', '▆', '█' };
+    const press2_glyph = press2_glyphs[state.ticks % press2_glyphs[0..].len];
+
+    state.dungeon.at(press1).surface.?.Prop.tile = press1_glyph;
+    state.dungeon.at(press2).surface.?.Prop.tile = press2_glyph;
+
+    var i: usize = 0;
+    while (i < asm1.len) : (i += 1) {
+        const prop1 = state.dungeon.at(asm1[i]).surface.?.Prop;
+        const prop2 = state.dungeon.at(asm2[i]).surface.?.Prop;
+
+        if (i % ((state.ticks % (asm1.len + 1)) + 1) == 0) {
+            prop1.tile = '━';
+            prop1.fg = 0xffe744;
+        } else {
+            prop1.tile = '┉';
+            prop1.fg = 0xe0e0ff;
+        }
+
+        if ((state.ticks % asm2.len) == (asm2.len - 1 - i)) {
+            prop2.tile = '━';
+            prop2.fg = 0xffe744;
+        } else {
+            prop2.tile = '┅';
+            prop2.fg = 0xe0e0ff;
+        }
+    }
+
+    if ((state.ticks % (asm1.len * 2)) == 0) {
+        if (state.dungeon.getItem(input)) |_| {
+            const prop_idx = utils.findById(props.items, "chain").?;
+            state.dungeon.itemsAt(output).append(
+                Item{ .Prop = &props.items[prop_idx] },
+            ) catch unreachable;
+        } else |_| {}
+    }
+}
 
 fn powerResearchCore(machine: *Machine) void {
     // Only function on every 32nd turn, to give the impression that it takes

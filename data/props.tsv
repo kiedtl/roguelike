@@ -47,6 +47,14 @@
 "sodalite_statue"      	 "sodalite statue"      	 '☺' 	 0xa4cfff 	 -        	 nay 	 - 	 .Statue
 "hematite_statue"      	 "hematite statue"      	 '☺' 	 0xff7f70 	 -        	 nay 	 - 	 .Statue
 
+# NOTE: the glyphs/colors for these are hardcoded in surfaces.zig:powerChainPress()
+"chain_asm1"           	 "chain assembly line"  	 '┉' 	 0xe0e0ff 	 -        	 nay
+"chain_asm1"           	 "chain assembly line"  	 '┉' 	 0xe0e0ff 	 -        	 nay
+"chain_asm2"           	 "chain assembly line"  	 '┅' 	 0xe0e0ff 	 -        	 nay
+"chain_press_upper"    	 "upper chain press"    	 '█' 	 0x606060 	0xcacbdd  	 nay
+"chain_press_lower"    	 "lower chain press"    	 '█' 	 0xcacbdd 	0x606060  	 nay
+"chain"                	 "chain"                	 '§' 	 0xe0e0ff 	 -        	 nay
+
 "table"                	 "table"                	 '⊺' 	 0xffffff 	 -        	 nay
 "turbine"              	 "turbine"              	 '◴' 	 0xffd700 	 -        	 nay
 "gearbox"              	 "gearbox"              	 '■' 	 0xffffff 	 -        	 nay
@@ -70,6 +78,7 @@
 "calorimeter"          	 "calorimeter"          	 '⊝' 	 0xf5f5dc 	 -        	 nay 	 - 	 .Laboratory
 "vacuum_chmbr"         	 "vacuum chamber"       	 '⊜' 	 0xffefdf 	 -        	 nay 	 - 	 .Laboratory
 
+"wall_n1s1e1w1"        	 "vangenite wall"       	 '╋' 	 0xb6efe0 	 -        	 nay
 "wall_s1w1_thins"      	 "vangenite wall"       	 '┑' 	 0xb6efe0 	 -        	 nay
 "wall_s1e1w1"          	 "vangenite wall"       	 '┳' 	 0xb6efe0 	 -        	 nay
 "wall_n1e1w1"          	 "vangenite wall"       	 '┻' 	 0xb6efe0 	 -        	 nay
@@ -116,6 +125,7 @@
 "wire_n1e1w1"          	 "copper wire"          	 '┴' 	 0xffe5d3 	 -        	   -
 "wire_s2e1"            	 "copper wire"          	 '╓' 	 0xffe5d3 	 -        	   -
 "wire_e1w1"            	 "copper wire"          	 '─' 	 0xffe5d3 	 -        	   -
+"wire_n1e1"            	 "copper wire"          	 '└' 	 0xffe5d3 	 -        	   -
 "wire_s1w1"            	 "copper wire"          	 '┐' 	 0xffe5d3 	 -        	   -
 "wire_s1e1"            	 "copper wire"          	 '┌' 	 0xffe5d3 	 -        	   -
 "wire_n1w1"            	 "copper wire"          	 '┘' 	 0xffe5d3 	 -        	   -
