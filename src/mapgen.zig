@@ -1052,7 +1052,8 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
         if (room.type == .Corridor) continue;
 
         var placed_units: usize = 0;
-        while (placed_units < patrol_units) {
+        var tries: usize = 2048;
+        while (tries > 0 and placed_units < patrol_units) : (tries -= 1) {
             const rnd = room.randomCoord();
             if (!isTileAvailable(rnd)) continue;
 
