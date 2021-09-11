@@ -420,6 +420,15 @@ x Make watchers smack intruders when they can't run
   about the hostile
 x Define what undead are somewhere (combat bonuses, stat increases, miasma
   emissions, etc)
+- Add rat+food system
+  - Farmers and vending machines fill food stockpiles
+  - Mobs go to stockpile, grab food, and eat
+  - Mobs spatter crumbs on the floor
+  - Rats, hiding in dark corners, emerge and eat/clean crumbs
+  - Rats come to lick up blood and feast on corpses as well
+  - Guards chase down rats and viciously kill them
+  - Rats "spawn" in some way
+  - etc
 
 User Interface
 ==============
