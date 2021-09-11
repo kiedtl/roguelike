@@ -2309,6 +2309,9 @@ pub const Tile = struct {
                             cell.ch = '♪';
                             cell.fg = v.color();
                         },
+                        .Ring => |_| {
+                            cell.ch = '°';
+                        },
                         .Weapon => |_| {
                             cell.ch = '≥'; // TODO: use U+1F5E1?
                         },
@@ -2323,7 +2326,6 @@ pub const Tile = struct {
                             cell.ch = p.tile;
                             cell.fg = p.fg orelse 0xffffff;
                         },
-                        else => cell.ch = '?',
                     }
                 } else if (state.dungeon.at(coord).surface) |surfaceitem| {
                     cell.fg = 0xffffff;
