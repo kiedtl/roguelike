@@ -2287,7 +2287,7 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ 1, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
         },
         .prefab_chance = 1,
-        .max_rooms = 512,
+        .max_rooms = 1049,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeatureIronOres,
@@ -2298,7 +2298,7 @@ pub const Configs = [LEVELS]LevelConfig{
 
         .patrol_squads = 5,
         .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
-            .{ .chance = 16, .template = &mobs.WatcherTemplate },
+            .{ .chance = 10, .template = &mobs.WatcherTemplate },
             .{ .chance = 30, .template = &mobs.HaulerTemplate },
             .{ .chance = 56, .template = &mobs.GuardTemplate },
         }),
