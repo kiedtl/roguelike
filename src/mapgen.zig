@@ -2115,7 +2115,7 @@ pub const LevelConfig = struct {
     allow_doors: bool = true,
     blobs: []const BlobConfig = &[_]BlobConfig{},
 
-    pub const RPBuf = StackBuffer([]const u8, 4);
+    pub const RPBuf = StackBuffer([]const u8, 8);
     pub const MCBuf = StackBuffer(MobConfig, 3);
     pub const LevelFeatureFunc = fn (usize, Coord, *const Room, *const Prefab, *mem.Allocator) void;
 
@@ -2279,6 +2279,7 @@ pub const Configs = [LEVELS]LevelConfig{
             "SMI_blast_furnace",
             "SMI_stockpiles",
             "SMI_power",
+            "SMI_elevator",
         }),
         .distances = [2][10]usize{
             .{ 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 },

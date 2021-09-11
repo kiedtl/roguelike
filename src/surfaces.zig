@@ -479,11 +479,22 @@ fn powerElevatorMotor(machine: *Machine) void {
     // a while to bring up more ores
     if ((state.ticks % 32) != 0 or rng.onein(3)) return;
 
+    // FIXME: level checking is an uglyyy hack
+    const level = @import("mapgen.zig").Configs[machine.coord.z].identifier;
+
     for (machine.areas.constSlice()) |coord| {
         if (!state.dungeon.itemsAt(coord).isFull()) {
-            const v = rng.choose(Vial.OreAndVial, &Vial.VIAL_ORES, &Vial.VIAL_COMMONICITY) catch unreachable;
-            if (v.m) |material| {
-                state.dungeon.itemsAt(coord).append(Item{ .Boulder = material }) catch unreachable;
+            var material: ?*const Material = null;
+
+            if (mem.eql(u8, level, "LAB")) {
+                material = (rng.choose(Vial.OreAndVial, &Vial.VIAL_ORES, &Vial.VIAL_COMMONICITY) catch unreachable).m;
+            } else if (mem.eql(u8, level, "SMI")) {
+                const metals = [_]*const Material{&materials.Iron};
+                material = metals[rng.range(usize, 0, metals.len - 1)];
+            } else unreachable;
+
+            if (material) |mat| {
+                state.dungeon.itemsAt(coord).append(Item{ .Boulder = mat }) catch unreachable;
             }
         }
     }

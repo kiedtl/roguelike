@@ -1,0 +1,32 @@
+% Ore elevator.
+%
+% ┏▀░▀┓■
+% ┣╾⊛╼━┫
+% ┗▄░▄┛■
+
+:restriction 2
+:output 0,0 6 3
+
+@0 p gearbox
+@1 m elevator_motor 2,0 2,2
+@a p wall_s1e1
+@b p concrete_wall_upper
+@c p concrete_wall_upper
+@d p wall_s1w1
+@e p wall_n1s1e1
+@f p wall_e1w1_thine
+@g p wall_e1w1_thinw
+@h p wall_e1w1
+@i p wall_n1s1w1
+@j p wall_n1e1
+@k p concrete_wall_lower
+@l p item_location
+@m p wall_n1w1
+
+:spawn hauler 6,0
+:spawn hauler 6,1
+:spawn hauler 6,2
+
+ablbd0.
+ef1ghi.
+jklkm0.
