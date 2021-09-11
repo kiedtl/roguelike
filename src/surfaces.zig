@@ -446,7 +446,9 @@ fn powerChainPress(machine: *Machine) void {
         }
     }
 
-    if ((state.ticks % (asm1.len * 2)) == 0) {
+    if ((state.ticks % (asm1.len * 4)) == 0 and
+        !state.dungeon.itemsAt(output).isFull())
+    {
         if (state.dungeon.getItem(input)) |_| {
             const prop_idx = utils.findById(props.items, "chain").?;
             state.dungeon.itemsAt(output).append(
