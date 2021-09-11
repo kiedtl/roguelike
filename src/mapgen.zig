@@ -830,7 +830,7 @@ fn _place_rooms(
 
     var corridor: ?Corridor = null;
 
-    if (distance > 0) {
+    if (distance > 0 and Configs[level].allow_corridors) {
         if (_createCorridor(level, parent, &child, side)) |maybe_corridor| {
             if (roomIntersects(rooms, &maybe_corridor.room, parent, null, true)) {
                 return;
@@ -2114,6 +2114,8 @@ pub const LevelConfig = struct {
     utility_items: *[]const Prop = &surfaces.prison_item_props.items,
     allow_statues: bool = true,
     allow_doors: bool = true,
+    allow_corridors: bool = true,
+
     blobs: []const BlobConfig = &[_]BlobConfig{},
 
     pub const RPBuf = StackBuffer([]const u8, 8);
@@ -2287,7 +2289,7 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ 1, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
         },
         .prefab_chance = 1,
-        .max_rooms = 1049,
+        .max_rooms = 512,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeatureIronOres,
@@ -2308,6 +2310,8 @@ pub const Configs = [LEVELS]LevelConfig{
 
         .allow_statues = false,
         .allow_doors = false,
+        .allow_corridors = false,
+
         .blobs = &[_]LevelConfig.BlobConfig{
             .{
                 .number = MinMax(usize){ .min = 6, .max = 8 },
