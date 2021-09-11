@@ -5,7 +5,7 @@
 % ┌┘⊡██└╽──────█▀
 % └⌨┘┗┗▀▀▀▀▀▀▀▀┛
 
-:restriction 2
+:restriction 1
 
 @0 p wall_s1e1
 @1 p wall_s1w1

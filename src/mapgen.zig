@@ -2286,7 +2286,7 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ 1, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
         },
         .prefab_chance = 1,
-        .max_rooms = 450,
+        .max_rooms = 512,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeatureIronOres,
