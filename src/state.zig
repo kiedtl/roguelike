@@ -457,7 +457,7 @@ pub fn tickAtmosphere(cur_lev: usize, cur_gas: usize) void {
     }
 
     // ...then spread it.
-    const dissipation = gas.Gases[cur_gas].dissipation_rate;
+    const std_dissipation = gas.Gases[cur_gas].dissipation_rate;
     const residue = gas.Gases[cur_gas].residue;
 
     var new: [HEIGHT][WIDTH]f64 = undefined;
@@ -483,8 +483,12 @@ pub fn tickAtmosphere(cur_lev: usize, cur_gas: usize) void {
                     }
                 }
 
+                const max_dissipation = @floatToInt(usize, std_dissipation * 100);
+                const dissipation = rng.rangeClumping(usize, 0, max_dissipation * 2, 2);
+                const dissipation_f = @intToFloat(f64, dissipation) / 100;
+
                 avg /= neighbors;
-                avg -= dissipation;
+                avg -= dissipation_f;
                 avg = math.max(avg, 0);
 
                 new[y][x] = avg;
