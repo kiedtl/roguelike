@@ -1,3 +1,6 @@
+// FIXME: using f64 as T for range/rangeClumping returns, shall we say, incorrect
+// values
+
 const std = @import("std");
 const assert = std.debug.assert;
 const rand = std.rand;
