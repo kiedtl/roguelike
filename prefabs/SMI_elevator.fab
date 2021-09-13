@@ -23,9 +23,9 @@
 @l p item_location
 @m p wall_n1w1
 
-:spawn hauler 6,0
 :spawn hauler 6,1
 :spawn hauler 6,2
+:spawn hauler 6,3
 
 ..****...
 *ablbd0.*
