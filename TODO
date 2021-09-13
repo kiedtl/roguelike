@@ -15,9 +15,8 @@ Levels
 	x Production of vials:
 	  x Ore "elevator", supposedly brings up ores from lower floors.
 	    Dumps ores on nearby tiles.
-	  x Haulers bring ores to ore stockpiles.
-	  x Extractor machines, which are located in the ore stockpiles, create
-	    vials.
+	  x Haulers bring ores to ore stockpiles, and then to extractors..
+	  x Extractor machines create vials.
 	  x Haulers bring vials to vial stockpiles.
 	  x Haulers take vials to research stations.
 	x Usage of vials: research stations, alchemists use them to "experiment"
@@ -38,13 +37,26 @@ Levels
 	- "Miners" go about, cutting up map portions with ores.
 	- "Haulers" take boulders and move them to ore elevators/stockpiles.
 - Smithing
-	- Large open area.
-	- Structures plopped all over the place.
-		- Filled with forges and smithing machines.
-		- Has stockpiles of ingots, ores, and metal goods.
-	- Has large lakes of smoke-producing lava.
-	- Has pools of mire and dross.
-	- Plenty of fire drakes and lava flans.
+	x Large open area.
+	x Structures plopped all over the place.
+		x Filled with forges and smithing machines.
+		x Has stockpiles of ingots, ores, and metal goods.
+		- Elevator and some stockpiles should have walls+doors
+		  around them...
+	x Whole floor is geared to the production of chains.
+	x Production of vials:
+	  x Ore "elevator", supposedly brings up ores from lower floors.
+	    Dumps iron ores on nearby tiles.
+	    x Hematite
+	    - Magnetite
+	  x Haulers bring ores to ore stockpiles, and later on carry them to the
+	    blast furnaces.
+	  x Blast furnaces smelt ores into iron ingots.
+	  x Haulers bring ingots to ingots stockpiles.
+	  x Haulers take ingots to chain presses.
+	  x Chain presses stamp out chain and link them together.
+	  x Haulers take chains to stockpiles.
+	- Has large lakes of lava.
 - Prison
 	x Medium-short corridors with rooms with locked enclosures of prisoners.
 	x Some torture rooms maybe.
@@ -75,6 +87,7 @@ sneak         [move, move, rest, move]
 merciless     [move(A), attack(A), move(A), attack(A)]
 counterattack [move(S), move(S), move(N), attack(A)]
 charge        [move(A), move(A), move(A), attack(A)]
+lunge         [move(A) (lands next to mob)]
 recuperate    [rest, rest, rest, rest]
 (See rings for other movement patterns.)
 
@@ -248,10 +261,10 @@ Maybe a combination.
 Books
 -----
 "Kornalg: The Life and Times of the Ancient Hill-King"
-	- "You learn that Kornalg was by right king of the whole universe."
-"This was Kornalg"
 	- "You learn that Kornalg was undoubtedly the bravest, strongest,
 	   besterestest hill goblin that ever was."
+"This was Kornalg"
+	- "You learn that Kornalg was by right king of the whole universe."
 "Meing Krampgh"
 	- "You learn that hill goblins are destined to rule the world."
 	- "You learn that those filthy cave-goblins have been infiltrating
@@ -402,6 +415,7 @@ x Make the "lamps" electric "braziers"
 x Useless items in bins, cabinets, etc
 - Weapons and armor in cabinets
 - Allow multiple subrooms in rooms (BSP?)
+- Cave-like boundaries around edges of map in SMI
 
 Mobs, AI
 ========
