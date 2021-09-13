@@ -1297,7 +1297,7 @@ pub fn placeBlobs(level: usize) void {
                     blob_x += 1;
                     map_x += 1;
                 }) {
-                    const coord = Coord.new2(6, map_x, map_y).add(start);
+                    const coord = Coord.new2(level, map_x, map_y).add(start);
                     if (grid[blob_x][blob_y] != 0)
                         state.dungeon.at(coord).type = cfg.type;
                 }
@@ -2207,6 +2207,21 @@ pub const Configs = [LEVELS]LevelConfig{
 
         .no_lights = true,
         .material = &materials.Limestone,
+
+        .blobs = &[_]LevelConfig.BlobConfig{
+            .{
+                .number = MinMax(usize){ .min = 6, .max = 9 },
+                .type = .Floor,
+                .min_blob_width = MinMax(usize){ .min = 6, .max = 8 },
+                .min_blob_height = MinMax(usize){ .min = 6, .max = 8 },
+                .max_blob_width = MinMax(usize){ .min = 10, .max = 14 },
+                .max_blob_height = MinMax(usize){ .min = 9, .max = 14 },
+                .ca_rounds = 5,
+                .ca_percent_seeded = 55,
+                .ca_birth_params = "ffffffttt",
+                .ca_survival_params = "ffffttttt",
+            },
+        },
     },
     .{
         .identifier = "LAB",
