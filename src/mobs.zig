@@ -323,6 +323,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
         .base_speed = 100,
         .blood = null,
         .immobile = true,
+        .unbreathing = true,
 
         .base_strength = 1,
     },
@@ -359,6 +360,7 @@ pub const NebroStatueTemplate = MobTemplate{
         .base_speed = 100,
         .blood = null,
         .immobile = true,
+        .unbreathing = true,
 
         .base_strength = 2,
     },
@@ -395,6 +397,7 @@ pub const CrystalStatueTemplate = MobTemplate{
         .base_speed = 100,
         .blood = null,
         .immobile = true,
+        .unbreathing = true,
 
         .base_strength = 2,
     },

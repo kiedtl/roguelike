@@ -968,6 +968,7 @@ pub const Mob = struct { // {{{
     // no_show_fov:        If false, display code will not show mob's FOV.
     // memory:             The maximum length of time for which a mob can remember
     //                     an enemy.
+    // unbreathing:        Controls whether a mob is susceptible to a gas' effect.
     //
     willpower: usize, // Range: 0 < willpower < 10
     base_strength: usize,
@@ -983,6 +984,7 @@ pub const Mob = struct { // {{{
     regen: f64 = 0.14,
     blood: ?Spatter,
     immobile: bool = false,
+    unbreathing: bool = false,
     spells: StackBuffer(SpellInfo, 2) = StackBuffer(SpellInfo, 2).init(null),
 
     pub const Inventory = struct {
@@ -1061,7 +1063,7 @@ pub const Mob = struct { // {{{
     pub fn tick_env(self: *Mob) void {
         const gases = state.dungeon.atGas(self.coord);
         for (gases) |quantity, gasi| {
-            if (quantity > 0.0) {
+            if ((!self.unbreathing or gas.Gases[gasi].not_breathed) and quantity > 0.0) {
                 gas.Gases[gasi].trigger(self, quantity);
             }
         }
@@ -2545,6 +2547,7 @@ pub const Gas = struct {
     dissipation_rate: f64,
     opacity: f64,
     trigger: fn (*Mob, f64) void,
+    not_breathed: bool = false, // if true, will affect nonbreathing mobs
     id: usize,
     residue: ?Spatter = null,
 };
