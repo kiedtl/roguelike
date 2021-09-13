@@ -22,14 +22,6 @@ Levels
 	x Usage of vials: research stations, alchemists use them to "experiment"
 	  on prisoners.
 	- Has traps of {blinding, pain-causing} gas.
-- Temple
-	x Circular rooms.
-	- Stockpiles of corpses.
-	- Wandering priest mobs, that raise corpses on sight of player.
-	- Some undead are stationary.
-	- Undead drop back dead when player wanders out of sight.
-	- Has abominations.
-	- Has teleportation traps.
 - Mining
 	- Caves, brogue-style.
 	- Rooms filled with pickaxes, boulders, and carts.
@@ -143,7 +135,6 @@ faded ring of fire [a]
 		- Movement pattern:
 	- Causes tiles in 3-space radius around player to burst into flame.
 		- Movement pattern:
-	- Found in the Temple.
 ring of invisibility
 	- Doesn't make wearer invisible, but prevents other hostiles from noticing
 	  the wearer, even if they walk within inches of each other's nose.
@@ -207,7 +198,7 @@ x potion of invigoration [s]
 
 Abominations
 ------------
-Strange mobs found on LAB/TEM levels.
+Strange mobs found on LAB levels.
 - Creeping Abomination
   - Like Blue Monk (in Hazard Level) or weeping angels.
 - Slinking Abomination
@@ -506,7 +497,7 @@ x Ring of echolocation to magic-map neighbors of sound-producing tiles
 - Areas that speed up or slow down mobs
 - Lichen/fungi that puts mobs to sleep (enchanted ground)
 - Ice/oily floor that randomizes movement
-- Ground in Temple should drain stats, max HP, cause fatigue, etc
+- Undead should drain stats, max HP, cause fatigue, etc
 - Sticky ground that reduces evasion
 - Mobile traps that can be placed by player and used to lure guards on top
 	- {Bombs/landmines, bear trap, damage trap} "kits"

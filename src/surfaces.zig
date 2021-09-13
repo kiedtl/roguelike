@@ -31,7 +31,6 @@ pub const MACHINES = [_]Machine{
     TurbinePowerSupply,
     HealingGasPump,
     Brazier,
-    Altar,
     Lamp,
     StairExit,
     StairUp,
@@ -253,33 +252,6 @@ pub const Brazier = Machine{
     // maximum, could be much lower (see mapgen:placeLights)
     .powered_luminescence = 90,
     .unpowered_luminescence = 0,
-
-    .on_power = powerNone,
-};
-
-pub const Altar = Machine{
-    .id = "altar",
-    .name = "an altar",
-
-    .powered_tile = '☼',
-    .unpowered_tile = '☼',
-
-    .powered_fg = 0xf0e68c,
-    .unpowered_fg = 0xeeeeee,
-
-    .power_drain = 1,
-    .power_add = 20,
-    .power = 100, // start out with full power
-
-    .powered_walkable = false,
-    .unpowered_walkable = false,
-
-    .powered_opacity = 0.0,
-    .unpowered_opacity = 0.0,
-
-    .powered_luminescence = 100,
-    .unpowered_luminescence = 0,
-    .dims = true,
 
     .on_power = powerNone,
 };

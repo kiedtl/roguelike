@@ -2192,21 +2192,24 @@ pub const Configs = [LEVELS]LevelConfig{
         .allow_statues = false,
     },
     .{
-        .identifier = "TEM",
+        .identifier = "PRI",
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
-            "TEM_start",
+            "PRI_power",
         }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-            .{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+            .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
         },
-        .prefab_chance = 1,
-        .max_rooms = 4096,
+        .prefab_chance = 2,
+        .max_rooms = 2048,
+        .level_features = [_]?LevelConfig.LevelFeatureFunc{
+            levelFeaturePrisoners,
+            levelFeaturePrisonersMaybe,
+            null,
+            null,
+        },
 
-        .patrol_squads = 2,
-
-        .no_lights = true,
-        .material = &materials.Limestone,
+        .patrol_squads = 6,
 
         .blobs = &[_]LevelConfig.BlobConfig{
             .{
@@ -2214,8 +2217,8 @@ pub const Configs = [LEVELS]LevelConfig{
                 .type = .Floor,
                 .min_blob_width = MinMax(usize){ .min = 6, .max = 8 },
                 .min_blob_height = MinMax(usize){ .min = 6, .max = 8 },
-                .max_blob_width = MinMax(usize){ .min = 10, .max = 14 },
-                .max_blob_height = MinMax(usize){ .min = 9, .max = 14 },
+                .max_blob_width = MinMax(usize){ .min = 16, .max = 19 },
+                .max_blob_height = MinMax(usize){ .min = 16, .max = 19 },
                 .ca_rounds = 5,
                 .ca_percent_seeded = 55,
                 .ca_birth_params = "ffffffttt",
