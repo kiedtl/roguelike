@@ -6,6 +6,12 @@
 
 # Prison
 #
+# Lore note: unit names are constructed as follows:
+#     <unit-type><species><number>
+# ...where:
+#     <unit-type> is one of: (G)uard, (I)nfantry
+# and <species>   is one of: (H)uman, (U)ruk
+#
 "PRI"	"A new shipment of prisoners from Traumbulnahl will arrive next week."
 "PRI"	"Production of human meat rations must increase by 33% by the middle of next week."
 "PRI"	"Please do not feed the prisoners."
@@ -18,8 +24,11 @@
 "PRI"	"The Necromancer is watching you."
 "PRI"	"The Necromancer can see you."
 "PRI"	"The Necromancer knows your thoughts."
-"PRI"	"Unauthorized consumption of prisoners is punishable with up to 20 lashes."
 "PRI"	"GH3-Sentinels must report to the Captain of the Guard tomorrow regarding the upcoming transfer to Traummalnahl."
+"PRI"	"Nine patrol troops will be added to unit GU7 in a few months."
+"PRI"	"Twenty-seven infantry troops will be added to unit IU2 in four weeks."
+"PRI"	"Korskuth behl-Dhalsmal, uruk, will be publicly impaled tomorrow morning for attempted cannibalisation of a comrade."
+"PRI"	"Unauthorized consumption of prisoners is punishable with up to 20 lashes."
 
 # Recreation
 #
