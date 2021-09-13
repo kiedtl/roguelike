@@ -401,7 +401,10 @@ pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
 pub fn haulerWork(mob: *Mob, alloc: *mem.Allocator) void {
     switch (mob.ai.work_phase) {
         .HaulerScan => {
-            if (mob.ai.work_area.items.len > 0 and mob.coord.distance(mob.ai.work_area.items[0]) > 1) {
+            if (mob.ai.work_area.items.len > 0 and
+                mob.coord.distance(mob.ai.work_area.items[0]) > 1 and
+                mob.isCreeping())
+            {
                 mob.tryMoveTo(mob.ai.work_area.items[0]);
             } else {
                 _ = mob.rest();
