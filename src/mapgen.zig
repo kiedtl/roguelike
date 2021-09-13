@@ -793,11 +793,7 @@ fn _place_rooms(
     const parent = &_parent;
 
     var fab: ?*Prefab = null;
-    var distance = rng.choose(
-        usize,
-        &Configs[level].distances[0],
-        &Configs[level].distances[1],
-    ) catch unreachable;
+    var distance = rng.choose(usize, &Configs[level].distances[0], &Configs[level].distances[1]) catch unreachable;
     var child: Room = undefined;
     var side = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
 
@@ -808,8 +804,21 @@ fn _place_rooms(
         child = attachRoom(parent, side, fab.?.width, fab.?.height, distance, fab) orelse return;
         child.prefab = fab;
 
-        if (roomIntersects(rooms, &child, parent, null, false) or child.overflowsLimit(&LIMIT))
-            return;
+        if (roomIntersects(rooms, &child, parent, null, false) or child.overflowsLimit(&LIMIT)) {
+            if (Configs[level].shrink_corridors_to_fit) {
+                while (roomIntersects(rooms, &child, parent, null, true) or child.overflowsLimit(&LIMIT)) {
+                    if (distance == 1) {
+                        return;
+                    }
+
+                    distance -= 1;
+                    child = attachRoom(parent, side, fab.?.width, fab.?.height, distance, fab) orelse return;
+                    child.prefab = fab;
+                }
+            } else {
+                return;
+            }
+        }
     } else {
         if (parent.prefab != null and distance == 0) distance += 1;
 
@@ -817,14 +826,21 @@ fn _place_rooms(
         var child_h = rng.rangeClumping(usize, Configs[level].min_room_height, Configs[level].max_room_height, 2);
         child = attachRoom(parent, side, child_w, child_h, distance, null) orelse return;
 
-        while (roomIntersects(rooms, &child, parent, null, true) or child.overflowsLimit(&LIMIT)) {
+        var i: usize = 0;
+        while (roomIntersects(rooms, &child, parent, null, true) or child.overflowsLimit(&LIMIT)) : (i += 1) {
             if (child_w < Configs[level].min_room_width or
                 child_h < Configs[level].min_room_height)
                 return;
 
-            child_w -= 1;
-            child_h -= 1;
-            child = attachRoom(parent, side, child_w, child_h, distance, null).?;
+            // Alternate between shrinking the corridor and shrinking the room
+            if (i % 2 == 0 and Configs[level].shrink_corridors_to_fit and distance > 1) {
+                distance -= 1;
+            } else {
+                child_w -= 1;
+                child_h -= 1;
+            }
+
+            child = attachRoom(parent, side, child_w, child_h, distance, null) orelse return;
         }
     }
 
@@ -2079,6 +2095,7 @@ pub const LevelConfig = struct {
     identifier: []const u8,
     prefabs: RPBuf = RPBuf.init(null),
     distances: [2][10]usize,
+    shrink_corridors_to_fit: bool = true,
     prefab_chance: usize,
     max_rooms: usize,
 
@@ -2288,6 +2305,7 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 },
             .{ 1, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
         },
+        .shrink_corridors_to_fit = false,
         .prefab_chance = 1,
         .max_rooms = 512,
 
