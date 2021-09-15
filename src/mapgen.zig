@@ -1649,6 +1649,7 @@ pub const Prefab = struct {
     subroom: bool = false,
     invisible: bool = false,
     restriction: usize = 1,
+    priority: usize = 0,
     noitems: bool = false,
     noguards: bool = false,
     nolights: bool = false,
@@ -1816,6 +1817,9 @@ pub const Prefab = struct {
                     } else if (mem.eql(u8, key, "restriction")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
                         f.restriction = std.fmt.parseInt(usize, val, 0) catch |_| return error.InvalidMetadataValue;
+                    } else if (mem.eql(u8, key, "priority")) {
+                        if (val.len == 0) return error.ExpectedMetadataValue;
+                        f.priority = std.fmt.parseInt(usize, val, 0) catch |_| return error.InvalidMetadataValue;
                     } else if (mem.eql(u8, key, "noguards")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.noguards = true;
@@ -2046,7 +2050,7 @@ pub const Prefab = struct {
     }
 
     pub fn greaterThan(_: void, a: Prefab, b: Prefab) bool {
-        return (a.height * a.width) > (b.height * b.width);
+        return (a.priority > b.priority) or (a.height * a.width) > (b.height * b.width);
     }
 };
 
