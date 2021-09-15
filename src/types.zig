@@ -2316,7 +2316,7 @@ pub const Tile = struct {
 
                     if (mob.prisoner_status) |ps| {
                         if (state.dungeon.at(coord).prison or ps.held_by != null) {
-                            cell.fg = 0xca00ca;
+                            cell.fg = 0xffcfff;
                         }
                     }
 
