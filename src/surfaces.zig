@@ -731,6 +731,7 @@ pub fn readProps(alloc: *mem.Allocator) void {
         walkable: bool = undefined,
         opacity: f64 = undefined,
         function: Function = undefined,
+        holder: bool = undefined,
 
         pub const Function = enum {
             ActionPoint, Laboratory, LaboratoryItem, Statue, None
@@ -763,6 +764,7 @@ pub fn readProps(alloc: *mem.Allocator) void {
             .{ .field_name = "walkable", .parse_to = bool, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = true },
             .{ .field_name = "opacity", .parse_to = f64, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0.0 },
             .{ .field_name = "function", .parse_to = PropData.Function, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = .None },
+            .{ .field_name = "holder", .parse_to = bool, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = false },
         },
         .{},
         rbuf[0..read],
@@ -787,6 +789,7 @@ pub fn readProps(alloc: *mem.Allocator) void {
                 .bg = propdata.bg,
                 .walkable = propdata.walkable,
                 .opacity = propdata.opacity,
+                .holder = propdata.holder,
             };
 
             switch (propdata.function) {

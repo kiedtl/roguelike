@@ -2,6 +2,7 @@ const std = @import("std");
 const heap = std.heap;
 const mem = std.mem;
 const math = std.math;
+const meta = std.meta;
 const assert = std.debug.assert;
 
 const astar = @import("astar.zig");
@@ -1541,6 +1542,17 @@ fn levelFeaturePrisoners(c: usize, coord: Coord, room: *const Room, prefab: *con
     const prisoner_t = rng.chooseUnweighted(mobs.MobTemplate, &mobs.PRISONERS);
     const prisoner = placeMob(alloc, &prisoner_t, coord, .{});
     prisoner.prisoner_status = Prisoner{ .of = .Sauron };
+
+    for (&CARDINAL_DIRECTIONS) |direction|
+        if (coord.move(direction, state.mapgeometry)) |neighbor| {
+            //if (direction == .North) unreachable;
+            if (state.dungeon.at(neighbor).surface) |surface| {
+                if (meta.activeTag(surface) == .Prop and surface.Prop.holder) {
+                    prisoner.prisoner_status.?.held_by = .{ .Prop = surface.Prop };
+                    break;
+                }
+            }
+        };
 }
 
 fn levelFeaturePotions(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {

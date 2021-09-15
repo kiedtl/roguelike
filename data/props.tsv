@@ -5,41 +5,41 @@
 #
 
 # Laboratory stuff
-""                     	 "beaker"               	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "large beaker"         	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "mesh"                 	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "strainer"             	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "scale"                	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "lens"                 	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "battery"              	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "test-tube"            	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "large battery"        	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "empty vial"           	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "test-tube holder"     	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "stirring rod"         	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "laboratory balance"   	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "crucible"             	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "crucible tongs"       	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "filter paper"         	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "flask"                	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "filter flask"         	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "pipet"                	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "buret"                	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "ring stand"           	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "double buret clamp"   	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "mortar/pestle"        	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "evaporating dish"     	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "flame spreader"       	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "burner lighter"       	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "utility clamps"       	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "separatory funnel"    	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "reagent bottle"       	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "graduated cylinder"   	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "petri dish"           	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "rubber stopper"       	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "thermometer"          	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "Buchner funnel"       	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
-""                     	 "Erlenmeyer flask"     	 '~' 	 0xffffff 	 -        	   - 	 - 	 .LaboratoryItem
+""                     	 "beaker"               	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "large beaker"         	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "mesh"                 	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "strainer"             	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "scale"                	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "lens"                 	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "battery"              	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "test-tube"            	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "large battery"        	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "empty vial"           	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "test-tube holder"     	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "stirring rod"         	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "laboratory balance"   	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "crucible"             	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "crucible tongs"       	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "filter paper"         	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "flask"                	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "filter flask"         	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "pipet"                	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "buret"                	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "ring stand"           	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "double buret clamp"   	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "mortar/pestle"        	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "evaporating dish"     	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "flame spreader"       	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "burner lighter"       	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "utility clamps"       	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "separatory funnel"    	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "reagent bottle"       	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "graduated cylinder"   	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "petri dish"           	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "rubber stopper"       	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "thermometer"          	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "Buchner funnel"       	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
+""                     	 "Erlenmeyer flask"     	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
 
 "gold_statue"          	 "gold statue"          	 '☺' 	 0xfff720 	 -        	 nay 	 - 	 .Statue
 "realgar_statue"       	 "realgar statue"       	 '☺' 	 0xff343f 	 -        	 nay 	 - 	 .Statue
@@ -51,9 +51,9 @@
 "chain_asm1"           	 "chain assembly line"  	 '┉' 	 0xe0e0ff 	 -        	 nay
 "chain_asm1"           	 "chain assembly line"  	 '┉' 	 0xe0e0ff 	 -        	 nay
 "chain_asm2"           	 "chain assembly line"  	 '┅' 	 0xe0e0ff 	 -        	 nay
-"chain_press_upper"    	 "upper chain press"    	 '█' 	 0x606060 	0xcacbdd  	 nay
-"chain_press_lower"    	 "lower chain press"    	 '█' 	 0xcacbdd 	0x606060  	 nay
-"chain"                	 "chain"                	 '§' 	 0xe0e0ff 	 -        	 nay
+"chain_press_upper"    	 "upper chain press"    	 '█' 	 0x606060 	 0xcacbdd 	 nay
+"chain_press_lower"    	 "lower chain press"    	 '█' 	 0xcacbdd 	 0x606060 	 nay
+"chain"                	 "chain"                	 '§' 	 0xe0e0ff 	 -        	 nay 	 - 	               - 	 yea
 
 "table"                	 "table"                	 '⊺' 	 0xffffff 	 -        	 nay
 "turbine"              	 "turbine"              	 '◴' 	 0xffd700 	 -        	 nay
@@ -64,7 +64,7 @@
 "large_transformer"    	 "transformer"          	 'ö' 	 0xffe5d3 	 -        	 nay
 "switching_station"    	 "machine"              	 '⊡' 	 0xffaf9a 	 -        	 nay
 "steel_gas_reservoir"  	 "steel gas reservoir"  	 '■' 	 0xd7d7ff 	 -        	 nay
-"steel_pin"            	 "steel pin"            	 '·' 	 0xa6c2d4 	 -        	   -
+"steel_pin"            	 "steel pin"            	 '·' 	 0xa6c2d4 	 -        	 -
 
 "centrifuge"           	 "centrifuge"           	 '⊜' 	 0xffe4e1 	 -        	 nay 	 - 	 .Laboratory
 "xray_appar"           	 "x-ray machine"        	 '‡' 	 0xa8ffa8 	 -        	 nay 	 - 	 .Laboratory
@@ -95,52 +95,52 @@
 "wall_n1s1_thinn"      	 "vangenite wall"       	 '╽' 	 0xb6efe0 	 -        	 nay
 "wall_n1s1_thins"      	 "vangenite wall"       	 '╿' 	 0xb6efe0 	 -        	 nay
 
-"pipe_s1e2w2"          	 "steel pipe"           	 '╤' 	 0xa6c2d4 	 -        	   -
-"pipe_n1s1e2w2"        	 "steel pipe"           	 '╪' 	 0xa6c2d4 	 -        	   -
-"pipe_n1e2w2"          	 "steel pipe"           	 '╧' 	 0xa6c2d4 	 -        	   -
-"pipe_e2w2"            	 "steel pipe"           	 '═' 	 0xa6c2d4 	 -        	   -
-"pipe_n2e2"            	 "steel pipe"           	 '╚' 	 0xa6c2d4 	 -        	   -
-"pipe_s2e1"            	 "steel pipe"           	 '╓' 	 0xa6c2d4 	 -        	   -
-"pipe_e1w1"            	 "steel pipe"           	 '─' 	 0xa6c2d4 	 -        	   -
-"pipe_s1w1"            	 "steel pipe"           	 '┐' 	 0xa6c2d4 	 -        	   -
-"pipe_s1e1"            	 "steel pipe"           	 '┌' 	 0xa6c2d4 	 -        	   -
-"pipe_n1w1"            	 "steel pipe"           	 '┘' 	 0xa6c2d4 	 -        	   -
-"pipe_n2s2"            	 "steel pipe"           	 '║' 	 0xa6c2d4 	 -        	   -
-"pipe_n1s1w1"          	 "steel pipe"           	 '┤' 	 0xa6c2d4 	 -        	   -
-"pipe_n2w1"            	 "steel pipe"           	 '╜' 	 0xa6c2d4 	 -        	   -
-"pipe_n1e2"            	 "steel pipe"           	 '╘' 	 0xa6c2d4 	 -        	   -
-"pipe_s1w2"            	 "steel pipe"           	 '╕' 	 0xa6c2d4 	 -        	   -
-"pipe_s1e2"            	 "steel pipe"           	 '╒' 	 0xa6c2d4 	 -        	   -
-"pipe_n1s1w2"          	 "steel pipe"           	 '╡' 	 0xa6c2d4 	 -        	   -
-"pipe_n1s1e2"          	 "steel pipe"           	 '╞' 	 0xa6c2d4 	 -        	   -
-"pipe_n1s1e2w2"        	 "steel pipe"           	 '╪' 	 0xa6c2d4 	 -        	   -
-"pipe_n1s1"            	 "steel pipe"           	 '│' 	 0xa6c2d4 	 -        	   -
-"pipe_s1e1w1"          	 "steel pipe"           	 '┬' 	 0xa6c2d4 	 -        	   -
-"pipe_s2e1w1"          	 "steel pipe"           	 '╥' 	 0xa6c2d4 	 -        	   -
-"pipe_n2e1w1"          	 "steel pipe"           	 '╨' 	 0xa6c2d4 	 -        	   -
-"pipe_n1e1"            	 "steel pipe"           	 '└' 	 0xa6c2d4 	 -        	   -
-"pipe_n1s1e1"          	 "steel pipe"           	 '├' 	 0xa6c2d4 	 -        	   -
-"pipe_n1e1w1"          	 "steel pipe"           	 '┴' 	 0xa6c2d4 	 -        	   -
+"pipe_s1e2w2"          	 "steel pipe"           	 '╤' 	 0xa6c2d4 	 -        	 -
+"pipe_n1s1e2w2"        	 "steel pipe"           	 '╪' 	 0xa6c2d4 	 -        	 -
+"pipe_n1e2w2"          	 "steel pipe"           	 '╧' 	 0xa6c2d4 	 -        	 -
+"pipe_e2w2"            	 "steel pipe"           	 '═' 	 0xa6c2d4 	 -        	 -
+"pipe_n2e2"            	 "steel pipe"           	 '╚' 	 0xa6c2d4 	 -        	 -
+"pipe_s2e1"            	 "steel pipe"           	 '╓' 	 0xa6c2d4 	 -        	 -
+"pipe_e1w1"            	 "steel pipe"           	 '─' 	 0xa6c2d4 	 -        	 -
+"pipe_s1w1"            	 "steel pipe"           	 '┐' 	 0xa6c2d4 	 -        	 -
+"pipe_s1e1"            	 "steel pipe"           	 '┌' 	 0xa6c2d4 	 -        	 -
+"pipe_n1w1"            	 "steel pipe"           	 '┘' 	 0xa6c2d4 	 -        	 -
+"pipe_n2s2"            	 "steel pipe"           	 '║' 	 0xa6c2d4 	 -        	 -
+"pipe_n1s1w1"          	 "steel pipe"           	 '┤' 	 0xa6c2d4 	 -        	 -
+"pipe_n2w1"            	 "steel pipe"           	 '╜' 	 0xa6c2d4 	 -        	 -
+"pipe_n1e2"            	 "steel pipe"           	 '╘' 	 0xa6c2d4 	 -        	 -
+"pipe_s1w2"            	 "steel pipe"           	 '╕' 	 0xa6c2d4 	 -        	 -
+"pipe_s1e2"            	 "steel pipe"           	 '╒' 	 0xa6c2d4 	 -        	 -
+"pipe_n1s1w2"          	 "steel pipe"           	 '╡' 	 0xa6c2d4 	 -        	 -
+"pipe_n1s1e2"          	 "steel pipe"           	 '╞' 	 0xa6c2d4 	 -        	 -
+"pipe_n1s1e2w2"        	 "steel pipe"           	 '╪' 	 0xa6c2d4 	 -        	 -
+"pipe_n1s1"            	 "steel pipe"           	 '│' 	 0xa6c2d4 	 -        	 -
+"pipe_s1e1w1"          	 "steel pipe"           	 '┬' 	 0xa6c2d4 	 -        	 -
+"pipe_s2e1w1"          	 "steel pipe"           	 '╥' 	 0xa6c2d4 	 -        	 -
+"pipe_n2e1w1"          	 "steel pipe"           	 '╨' 	 0xa6c2d4 	 -        	 -
+"pipe_n1e1"            	 "steel pipe"           	 '└' 	 0xa6c2d4 	 -        	 -
+"pipe_n1s1e1"          	 "steel pipe"           	 '├' 	 0xa6c2d4 	 -        	 -
+"pipe_n1e1w1"          	 "steel pipe"           	 '┴' 	 0xa6c2d4 	 -        	 -
 
-"wire_n1e1w1"          	 "copper wire"          	 '┴' 	 0xffe5d3 	 -        	   -
-"wire_s2e1"            	 "copper wire"          	 '╓' 	 0xffe5d3 	 -        	   -
-"wire_e1w1"            	 "copper wire"          	 '─' 	 0xffe5d3 	 -        	   -
-"wire_n1e1"            	 "copper wire"          	 '└' 	 0xffe5d3 	 -        	   -
-"wire_s1w1"            	 "copper wire"          	 '┐' 	 0xffe5d3 	 -        	   -
-"wire_s1e1"            	 "copper wire"          	 '┌' 	 0xffe5d3 	 -        	   -
-"wire_n1w1"            	 "copper wire"          	 '┘' 	 0xffe5d3 	 -        	   -
-"wire_n2s2"            	 "copper wire"          	 '║' 	 0xffe5d3 	 -        	   -
-"wire_n1s1w1"          	 "copper wire"          	 '┤' 	 0xffe5d3 	 -        	   -
-"wire_n2w1"            	 "copper wire"          	 '╜' 	 0xffe5d3 	 -        	   -
-"wire_n1w2"            	 "copper wire"          	 '╛' 	 0xffe5d3 	 -        	   -
-"wire_n1e2"            	 "copper wire"          	 '╘' 	 0xffe5d3 	 -        	   -
-"wire_s1w2"            	 "copper wire"          	 '╕' 	 0xffe5d3 	 -        	   -
-"wire_n1s1w2"          	 "copper wire"          	 '╡' 	 0xffe5d3 	 -        	   -
-"wire_n1s1e2"          	 "copper wire"          	 '╞' 	 0xffe5d3 	 -        	   -
-"wire_n1s1e2w2"        	 "copper wire"          	 '╪' 	 0xffe5d3 	 -        	   -
-"wire_n1s1"            	 "copper wire"          	 '│' 	 0xffe5d3 	 -        	   -
-"wire_s1e1w1"          	 "copper wire"          	 '┬' 	 0xffe5d3 	 -        	   -
-"wire_n2e1w1"          	 "copper wire"          	 '╨' 	 0xffe5d3 	 -        	   -
+"wire_n1e1w1"          	 "copper wire"          	 '┴' 	 0xffe5d3 	 -        	 -
+"wire_s2e1"            	 "copper wire"          	 '╓' 	 0xffe5d3 	 -        	 -
+"wire_e1w1"            	 "copper wire"          	 '─' 	 0xffe5d3 	 -        	 -
+"wire_n1e1"            	 "copper wire"          	 '└' 	 0xffe5d3 	 -        	 -
+"wire_s1w1"            	 "copper wire"          	 '┐' 	 0xffe5d3 	 -        	 -
+"wire_s1e1"            	 "copper wire"          	 '┌' 	 0xffe5d3 	 -        	 -
+"wire_n1w1"            	 "copper wire"          	 '┘' 	 0xffe5d3 	 -        	 -
+"wire_n2s2"            	 "copper wire"          	 '║' 	 0xffe5d3 	 -        	 -
+"wire_n1s1w1"          	 "copper wire"          	 '┤' 	 0xffe5d3 	 -        	 -
+"wire_n2w1"            	 "copper wire"          	 '╜' 	 0xffe5d3 	 -        	 -
+"wire_n1w2"            	 "copper wire"          	 '╛' 	 0xffe5d3 	 -        	 -
+"wire_n1e2"            	 "copper wire"          	 '╘' 	 0xffe5d3 	 -        	 -
+"wire_s1w2"            	 "copper wire"          	 '╕' 	 0xffe5d3 	 -        	 -
+"wire_n1s1w2"          	 "copper wire"          	 '╡' 	 0xffe5d3 	 -        	 -
+"wire_n1s1e2"          	 "copper wire"          	 '╞' 	 0xffe5d3 	 -        	 -
+"wire_n1s1e2w2"        	 "copper wire"          	 '╪' 	 0xffe5d3 	 -        	 -
+"wire_n1s1"            	 "copper wire"          	 '│' 	 0xffe5d3 	 -        	 -
+"wire_s1e1w1"          	 "copper wire"          	 '┬' 	 0xffe5d3 	 -        	 -
+"wire_n2e1w1"          	 "copper wire"          	 '╨' 	 0xffe5d3 	 -        	 -
 
 "steel_support_ne2"    	 "steel support"        	 '╘' 	 0xa6c2d4 	 -        	 nay
 "steel_support_se2"    	 "steel support"        	 '╒' 	 0xa6c2d4 	 -        	 nay
@@ -165,12 +165,12 @@
 "upper_copper_coil"    	 "half copper coil"     	 '▀' 	 0xe99c39 	 -        	 nay
 "full_copper_coil"     	 "large copper coil"    	 '█' 	 0xe99c39 	 -        	 nay
 
-"stair_dst"            	 "downward stair"       	 '×' 	 0xffffff 	 -        	   -
-"item_location"        	 "mat"                  	 '░' 	 0x989898 	 -        	   - 	 - 	 .ActionPoint
-"workstation"          	 "workstation"          	 '░' 	 0xffffff 	 -        	   -
+"stair_dst"            	 "downward stair"       	 '×' 	 0xffffff 	 -        	 -
+"item_location"        	 "mat"                  	 '░' 	 0x989898 	 -        	 -   	 - 	 .ActionPoint
+"workstation"          	 "workstation"          	 '░' 	 0xffffff 	 -        	 -
 "medium_sieve"         	 "medium_sieve"         	 '▒' 	 0xffe7e7 	 -        	 nay 	 - 	 .ActionPoint
 "gas_vent"             	 "gas vent"             	 '=' 	 0xffffff 	 0x888888 	 nay 	 1.0
 "lab_gas_vent"         	 "gas vent"             	 '=' 	 0xffffff 	 -        	 nay
-"bed"                  	 "bed"                  	 'Θ' 	 0xdaa520 	 -        	   - 	 0.6
+"bed"                  	 "bed"                  	 'Θ' 	 0xdaa520 	 -        	 -   	 0.6
 "iron_bars"            	 "iron bars"            	 '≡' 	 0x000012 	 0xdadada 	 nay
 "titanium_bars"        	 "titanium bars"        	 '*' 	 0xeaecef 	 -        	 nay

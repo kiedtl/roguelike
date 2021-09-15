@@ -925,6 +925,16 @@ pub const AIWorkPhase = enum {
 
 pub const Prisoner = struct {
     of: Allegiance,
+    held_by: ?union(enum) { Mob: *const Mob, Prop: *const Prop } = null,
+
+    pub fn heldAt(self: *const Prisoner) Coord {
+        assert(self.held_by != null);
+
+        return switch (self.held_by.?) {
+            .Mob => |m| m.coord,
+            .Prop => |p| p.coord,
+        };
+    }
 };
 
 pub const Mob = struct { // {{{
@@ -1347,6 +1357,10 @@ pub const Mob = struct { // {{{
     pub fn teleportTo(self: *Mob, dest: Coord, direction: ?Direction) bool {
         const coord = self.coord;
 
+        if (self.prisoner_status) |prisoner|
+            if (prisoner.held_by != null)
+                return false;
+
         if (!state.is_walkable(dest, .{ .right_now = true })) {
             if (state.dungeon.at(dest).surface) |surface| {
                 switch (surface) {
@@ -1584,6 +1598,11 @@ pub const Mob = struct { // {{{
         // themself.
         if (self.coord.eq(to)) return null;
 
+        // Cannot move if you're a prisoner (unless you're moving one space away)
+        if (self.prisoner_status) |p|
+            if (p.held_by != null and p.heldAt().distance(to) > 1)
+                return null;
+
         if (Direction.from_coords(self.coord, to)) |direction| {
             return direction;
         } else |_err| {}
@@ -1713,16 +1732,16 @@ pub const Mob = struct { // {{{
 
         // If the other mob is a prisoner of my faction or we're both prisoners
         // of the same faction, don't be hostile
-        if (othermob.prisoner_status) |prisoner_status| {
-            if (prisoner_status.of == self.allegiance and
-                state.dungeon.at(othermob.coord).prison)
+        if (othermob.prisoner_status) |ps| {
+            if (ps.of == self.allegiance and
+                (state.dungeon.at(othermob.coord).prison or ps.held_by != null))
             {
                 hostile = false;
             }
 
-            if (self.prisoner_status) |my_prisoner_status| {
-                if (my_prisoner_status.of == prisoner_status.of and
-                    state.dungeon.at(self.coord).prison)
+            if (self.prisoner_status) |my_ps| {
+                if (my_ps.of == ps.of and
+                    (state.dungeon.at(self.coord).prison or my_ps.held_by != null))
                 {
                     hostile = false;
                 }
@@ -1919,6 +1938,7 @@ pub const Prop = struct {
     bg: ?u32 = null,
     walkable: bool = true,
     opacity: f64 = 0.0,
+    holder: bool = false, // Can a prisoner be held to it?
     coord: Coord = Coord.new(0, 0),
 
     pub fn deinit(self: *const Prop, alloc: *mem.Allocator) void {
@@ -2285,12 +2305,19 @@ pub const Tile = struct {
             },
             .Floor => {
                 if (self.mob) |mob| {
+                    cell.fg = 0xffffff;
                     cell.bg = color;
 
                     const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);
                     if (hp_loss_percent > 0) {
                         const red = @floatToInt(u32, (255 * hp_loss_percent) / 100) + 0x66;
                         cell.bg = math.clamp(red, 0x66, 0xff) << 16;
+                    }
+
+                    if (mob.prisoner_status) |ps| {
+                        if (state.dungeon.at(coord).prison or ps.held_by != null) {
+                            cell.fg = 0xca00ca;
+                        }
                     }
 
                     cell.ch = mob.tile;

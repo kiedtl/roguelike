@@ -23,6 +23,10 @@ const GREATER_DEXTERITY_DODGE_BONUS: isize = 10;
 const DOUBLE_GREATER_DEXTERITY_DODGE_BONUS: isize = 10;
 
 // TODO: weapon/armor penalties
+//
+// XXX: should there be penalties for prisoners held with chains/ropes? Such
+// prisoners are not considered hostile to the guards and thus should never be
+// attacked/attack...
 
 pub fn chanceOfAttackLanding(attacker: *const Mob, defender: *const Mob) usize {
     if (!defender.isAwareOfAttack(attacker.coord)) return 100;
