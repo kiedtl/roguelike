@@ -5,10 +5,10 @@
 % ┗▄░▄┛■
 
 :restriction 2
-:output 0,0 6 3
+:output 2,2 6 3
 
 @0 p gearbox
-@1 m elevator_motor 2,0 2,2
+@1 m elevator_motor 4,2 4,4
 @a p wall_s1e1
 @b p concrete_wall_upper
 @c p concrete_wall_upper
@@ -23,12 +23,14 @@
 @l p item_location
 @m p wall_n1w1
 
-:spawn hauler 6,1
-:spawn hauler 6,2
-:spawn hauler 6,3
+:spawn hauler 8,2
+:spawn hauler 8,3
+:spawn hauler 8,4
 
-..****...
-*ablbd0.*
-*ef1ghi.*
-*jklkm0.*
-..****...
+..*******..
+*.........*
+*.ablbd0..*
+*.ef1ghi..*
+*.jklkm0..*
+*.........*
+..*******..

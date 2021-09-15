@@ -463,7 +463,7 @@ fn powerElevatorMotor(machine: *Machine) void {
             if (mem.eql(u8, level, "LAB")) {
                 material = (rng.choose(Vial.OreAndVial, &Vial.VIAL_ORES, &Vial.VIAL_COMMONICITY) catch unreachable).m;
             } else if (mem.eql(u8, level, "SMI")) {
-                const metals = [_]*const Material{&materials.Iron};
+                const metals = [_]*const Material{&materials.Hematite};
                 material = metals[rng.range(usize, 0, metals.len - 1)];
             } else unreachable;
 
