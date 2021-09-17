@@ -336,7 +336,7 @@ fn _excavate_prefab(
 
             const tt: ?TileType = switch (fab.content[y][x]) {
                 .Any, .Connection => null,
-                .Wall => .Wall,
+                .Window, .Wall => .Wall,
                 .LevelFeature,
                 .Feature,
                 .LockedDoor,
@@ -351,6 +351,7 @@ fn _excavate_prefab(
             if (tt) |_tt| state.dungeon.at(rc).type = _tt;
 
             switch (fab.content[y][x]) {
+                .Window => state.dungeon.at(rc).material = &materials.Glass,
                 .LevelFeature => |l| (Configs[room.start.z].level_features[l].?)(l, rc, room, fab, allocator),
                 .Feature => |feature_id| {
                     if (fab.features[feature_id]) |feature| {
@@ -582,6 +583,12 @@ pub fn setLevelMaterial(level: usize) void {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
             const coord = Coord.new2(level, x, y);
+
+            // If it's not the default material, don't reset it
+            // Doing so would destroy glass blocks, etc
+            if (!mem.eql(u8, "basalt", state.dungeon.at(coord).material.name))
+                continue;
+
             if (state.dungeon.neighboringWalls(coord, true) < 9)
                 state.dungeon.at(coord).material = Configs[level].material;
         }
@@ -1675,6 +1682,7 @@ pub const Prefab = struct {
     pub const MAX_NAME_SIZE = 64;
 
     pub const FabTile = union(enum) {
+        Window,
         Wall,
         LockedDoor,
         Door,
@@ -2007,6 +2015,7 @@ pub const Prefab = struct {
                         };
 
                         f.content[y][x] = switch (c) {
+                            '&' => .Window,
                             '#' => .Wall,
                             '+' => .Door,
                             '±' => .LockedDoor,

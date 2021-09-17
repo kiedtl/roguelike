@@ -1,6 +1,21 @@
 usingnamespace @import("types.zig");
 const state = @import("state.zig");
 
+pub const Glass = Material{
+    .name = "glass",
+    .description = "TODO",
+    .density = 5.3, // FIXME: not accurate!
+    .color_fg = 0x677ba3,
+    .color_bg = 0x90a3b7,
+    .color_floor = 0x677ba3,
+    .tileset = 0,
+    .melting_point = 1383, // FIXME: not accurate!
+    .combust_point = null, // FIXME: not accurate!
+    .specific_heat = 500, // FIXME: not accurate!
+    .luminescence = 0,
+    .opacity = 0.0,
+};
+
 pub const Hematite = Material{
     .name = "hematite",
     .description = "TODO",

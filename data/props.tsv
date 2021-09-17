@@ -49,7 +49,6 @@
 
 # NOTE: the glyphs/colors for these are hardcoded in surfaces.zig:powerChainPress()
 "chain_asm1"           	 "chain assembly line"  	 '┉' 	 0xe0e0ff 	 -        	 nay
-"chain_asm1"           	 "chain assembly line"  	 '┉' 	 0xe0e0ff 	 -        	 nay
 "chain_asm2"           	 "chain assembly line"  	 '┅' 	 0xe0e0ff 	 -        	 nay
 "chain_press_upper"    	 "upper chain press"    	 '█' 	 0x606060 	 0xcacbdd 	 nay
 "chain_press_lower"    	 "lower chain press"    	 '█' 	 0xcacbdd 	 0x606060 	 nay
@@ -95,32 +94,33 @@
 "wall_n1s1_thinn"      	 "vangenite wall"       	 '╽' 	 0xb6efe0 	 -        	 nay
 "wall_n1s1_thins"      	 "vangenite wall"       	 '╿' 	 0xb6efe0 	 -        	 nay
 
-"pipe_s1e2w2"          	 "steel pipe"           	 '╤' 	 0xa6c2d4 	 -        	 -
-"pipe_n1s1e2w2"        	 "steel pipe"           	 '╪' 	 0xa6c2d4 	 -        	 -
-"pipe_n1e2w2"          	 "steel pipe"           	 '╧' 	 0xa6c2d4 	 -        	 -
-"pipe_e2w2"            	 "steel pipe"           	 '═' 	 0xa6c2d4 	 -        	 -
-"pipe_n2e2"            	 "steel pipe"           	 '╚' 	 0xa6c2d4 	 -        	 -
-"pipe_s2e1"            	 "steel pipe"           	 '╓' 	 0xa6c2d4 	 -        	 -
-"pipe_e1w1"            	 "steel pipe"           	 '─' 	 0xa6c2d4 	 -        	 -
-"pipe_s1w1"            	 "steel pipe"           	 '┐' 	 0xa6c2d4 	 -        	 -
-"pipe_s1e1"            	 "steel pipe"           	 '┌' 	 0xa6c2d4 	 -        	 -
-"pipe_n1w1"            	 "steel pipe"           	 '┘' 	 0xa6c2d4 	 -        	 -
-"pipe_n2s2"            	 "steel pipe"           	 '║' 	 0xa6c2d4 	 -        	 -
-"pipe_n1s1w1"          	 "steel pipe"           	 '┤' 	 0xa6c2d4 	 -        	 -
-"pipe_n2w1"            	 "steel pipe"           	 '╜' 	 0xa6c2d4 	 -        	 -
-"pipe_n1e2"            	 "steel pipe"           	 '╘' 	 0xa6c2d4 	 -        	 -
-"pipe_s1w2"            	 "steel pipe"           	 '╕' 	 0xa6c2d4 	 -        	 -
-"pipe_s1e2"            	 "steel pipe"           	 '╒' 	 0xa6c2d4 	 -        	 -
-"pipe_n1s1w2"          	 "steel pipe"           	 '╡' 	 0xa6c2d4 	 -        	 -
-"pipe_n1s1e2"          	 "steel pipe"           	 '╞' 	 0xa6c2d4 	 -        	 -
-"pipe_n1s1e2w2"        	 "steel pipe"           	 '╪' 	 0xa6c2d4 	 -        	 -
-"pipe_n1s1"            	 "steel pipe"           	 '│' 	 0xa6c2d4 	 -        	 -
-"pipe_s1e1w1"          	 "steel pipe"           	 '┬' 	 0xa6c2d4 	 -        	 -
-"pipe_s2e1w1"          	 "steel pipe"           	 '╥' 	 0xa6c2d4 	 -        	 -
-"pipe_n2e1w1"          	 "steel pipe"           	 '╨' 	 0xa6c2d4 	 -        	 -
-"pipe_n1e1"            	 "steel pipe"           	 '└' 	 0xa6c2d4 	 -        	 -
-"pipe_n1s1e1"          	 "steel pipe"           	 '├' 	 0xa6c2d4 	 -        	 -
-"pipe_n1e1w1"          	 "steel pipe"           	 '┴' 	 0xa6c2d4 	 -        	 -
+"pipe_s1e2w2"          	 "steel pipe"           	 '╤' 	 0xa6c2d4 	 -        	 nay
+"pipe_n1s1e2w2"        	 "steel pipe"           	 '╪' 	 0xa6c2d4 	 -        	 nay
+"pipe_n1e2w2"          	 "steel pipe"           	 '╧' 	 0xa6c2d4 	 -        	 nay
+"pipe_e2w2"            	 "steel pipe"           	 '═' 	 0xa6c2d4 	 -        	 nay
+"pipe_n2e2"            	 "steel pipe"           	 '╚' 	 0xa6c2d4 	 -        	 nay
+"pipe_s2e1"            	 "steel pipe"           	 '╓' 	 0xa6c2d4 	 -        	 nay
+"pipe_e1w1"            	 "steel pipe"           	 '─' 	 0xa6c2d4 	 -        	 nay
+"pipe_s1w1"            	 "steel pipe"           	 '┐' 	 0xa6c2d4 	 -        	 nay
+"pipe_s1e1"            	 "steel pipe"           	 '┌' 	 0xa6c2d4 	 -        	 nay
+"pipe_n1w1"            	 "steel pipe"           	 '┘' 	 0xa6c2d4 	 -        	 nay
+"pipe_n2s2"            	 "steel pipe"           	 '║' 	 0xa6c2d4 	 -        	 nay
+"pipe_n1s1w1"          	 "steel pipe"           	 '┤' 	 0xa6c2d4 	 -        	 nay
+"pipe_n2w1"            	 "steel pipe"           	 '╜' 	 0xa6c2d4 	 -        	 nay
+"pipe_n1w2"            	 "steel pipe"           	 '╛' 	 0xa6c2d4 	 -        	 nay
+"pipe_n1e2"            	 "steel pipe"           	 '╘' 	 0xa6c2d4 	 -        	 nay
+"pipe_s1w2"            	 "steel pipe"           	 '╕' 	 0xa6c2d4 	 -        	 nay
+"pipe_s1e2"            	 "steel pipe"           	 '╒' 	 0xa6c2d4 	 -        	 nay
+"pipe_n1s1w2"          	 "steel pipe"           	 '╡' 	 0xa6c2d4 	 -        	 nay
+"pipe_n1s1e2"          	 "steel pipe"           	 '╞' 	 0xa6c2d4 	 -        	 nay
+"pipe_n1s1e2w2"        	 "steel pipe"           	 '╪' 	 0xa6c2d4 	 -        	 nay
+"pipe_n1s1"            	 "steel pipe"           	 '│' 	 0xa6c2d4 	 -        	 nay
+"pipe_s1e1w1"          	 "steel pipe"           	 '┬' 	 0xa6c2d4 	 -        	 nay
+"pipe_s2e1w1"          	 "steel pipe"           	 '╥' 	 0xa6c2d4 	 -        	 nay
+"pipe_n2e1w1"          	 "steel pipe"           	 '╨' 	 0xa6c2d4 	 -        	 nay
+"pipe_n1e1"            	 "steel pipe"           	 '└' 	 0xa6c2d4 	 -        	 nay
+"pipe_n1s1e1"          	 "steel pipe"           	 '├' 	 0xa6c2d4 	 -        	 nay
+"pipe_n1e1w1"          	 "steel pipe"           	 '┴' 	 0xa6c2d4 	 -        	 nay
 
 "wire_n1e1w1"          	 "copper wire"          	 '┴' 	 0xffe5d3 	 -        	 -
 "wire_s2e1"            	 "copper wire"          	 '╓' 	 0xffe5d3 	 -        	 -

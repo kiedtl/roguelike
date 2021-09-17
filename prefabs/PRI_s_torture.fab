@@ -1,20 +1,37 @@
+%
+% ######### ▂▂   torture room
+% #g.....▒#u□□
+% #.g...┌╞#█╧╛
+% #gg...╘╧#╛─┘
+% #########...
+% ....Ñ.......
+
 :subroom
 :priority 1
 
 :prison 0,0 7 5
 
-:spawn  interaction_laborer 8,1 7,1
-:spawn torturer_necromancer 3,5 3,5
+:spawn  interaction_laborer 9,1 9,2
+:spawn torturer_necromancer 4,5 4,5
 
 @0 p medium_sieve
-@1 m healing_gas_pump 6,1
-@2 p steel_support_se2
-@3 p steel_support_ne2
-@4 p steel_gas_reservoir
+@1 m healing_gas_pump 7,1
 
-#≡≡≡≡≡#24
-±.ααα.01.
-•.ααα.#34
-#.....#..
-#≡≡≡≡≡#..
-.........
+@a p concrete_wall_lower4
+@b p steel_gas_reservoir
+
+@c p pipe_s1e1
+@d p pipe_n1s1e2
+@e p pipe_n1e2w2
+@f p pipe_n1w2
+
+@g p pipe_n1e2
+@h p pipe_e1w1
+@i p pipe_n1w1
+
+#&&&&&&&#.aa
+±..αα..0#.bb
+•..αα.cd#1ef
+#..αα.ge#fhi
+#&&&&&&&#...
+............
