@@ -9,7 +9,7 @@
 :subroom
 :priority 1
 
-:prison 0,0 7 5
+:prison 0,0 9 5
 
 :spawn  interaction_laborer 9,1 9,2
 :spawn torturer_necromancer 4,5 4,5
