@@ -5,7 +5,7 @@
 % ┗▄░▄┛■
 
 @0 p gearbox
-@1 m elevator_motor 4,2 4,4
+@1 m elevator_motor 6,3 6,5
 @a p wall_s1e1
 @b p concrete_wall_upper
 @c p concrete_wall_upper
