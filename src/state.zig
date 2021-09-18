@@ -445,7 +445,7 @@ pub fn tickAtmosphere(cur_lev: usize, cur_gas: usize) void {
                 const c_gas = dungeon.atGas(coord);
                 switch (dungeon.at(coord).type) {
                     .Water => if (temp >= 100) {
-                        const added_max = math.clamp((temp - 50) * 5 / 30, 0, 30);
+                        const added_max = math.clamp((temp - 50) * 6 / 45, 0, 45);
                         const added = rng.range(f64, 0.0, @intToFloat(f64, added_max) / 100);
                         c_gas[gas.Steam.id] = math.max(c_gas[gas.Steam.id], added);
                     },
