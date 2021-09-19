@@ -91,12 +91,11 @@ Rings
 - Rings don't have an "enchantment" level, but "tiers" instead (mithril, gold,
   silver, and iron).
 - Rings: [p]assive (acting each turn) or [a]ctive (requiring user to move in pattern)
-aged ring of knowledge [p]
-	- Gives player knowledge of dungeon events.
-	  E.g., "You feel like someone is looking for you." (pursuers enter level)
-	        "You feel like someone spotted you."        (mob outside player's FOV spotted)
-		"You feel uneasy."                          (death squad entered level)
-		"You feel very uneasy."                     (undead nearby)
+ancient ring of knowledge [a/p]
+	- Passively allows player to know if they're still being pursued.
+	- Allows player to see spots near pursuers (but not the pursuers
+	  themselves?) for ~3-5 turns.
+	  - Movement pattern:
 contemptuous ring of intimidation [a]
 	- Confers either stun or fear on mob when moving toward mob.
 	- Must land right next to mob.
@@ -122,6 +121,7 @@ vampiric ring of draining [a/p]
 	- Allows player to see that mob and all tiles within two spaces.
 	- Player will get a status (paralyzed? slowed? negative regen? traumatize? stun?)
 	  for a bit when the enemy dies OR the enemy sees the player.
+	- The drained mob immedietely becomes an enemy to everyone.
 	- If the enemy dies, the player is teleported there in its place?
 	- Movement pattern: ???
 	- Also: when worn, allows player to sense nearby mobs.
@@ -272,6 +272,10 @@ Books
 recipe books
 	- "You learn how to pickle goblin roasts."
 	- "You learn how to properly butcher humans carcases."
+dungeon maps
+	- maps of just mob stations
+	- maps of just presence of walls/floors
+	- maps of special item locations (rings/potions)
 
 
 Materials (v = vial, s = stone, g = gem, o = ore/metal)
@@ -376,7 +380,7 @@ Room features/Mapgen:
 - Make connectors flanked by floors a floor or door
 - Add some lichen and fungi to rooms
 x Add statues and chests to corners of rooms
-- Add posters
+x Add posters
 ~ Allow for prefabs to be rotated
 x Allow for prefabs to have alternate layouts
 x Allow for prefabs to be restricted to a map
