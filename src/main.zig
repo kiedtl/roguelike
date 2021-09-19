@@ -74,8 +74,8 @@ fn initGame() void {
 
         mapgen.resetLevel(level);
         mapgen.placeBlobs(level);
-        mapgen.placeRandomRooms(&n_fabs, &s_fabs, level, &state.GPA.allocator);
-        mapgen.placeMoarCorridors(level);
+        (mapgen.Configs[level].mapgen_func)(&n_fabs, &s_fabs, level, &state.GPA.allocator);
+        mapgen.placeMoarCorridors(level, &state.GPA.allocator);
 
         if (!mapgen.validateLevel(level, &state.GPA.allocator)) {
             std.log.warn("Map {} invalid, regenerating.", .{mapgen.Configs[level].identifier});

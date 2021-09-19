@@ -411,7 +411,9 @@ pub const Room = struct {
     width: usize,
     height: usize,
 
-    pub const RoomType = enum { Corridor, Room };
+    connections: usize = 0,
+
+    pub const RoomType = enum { Corridor, Room, Sideroom };
 
     pub fn add(a: *const Room, b: *const Room) Room {
         assert(b.start.z == 0);

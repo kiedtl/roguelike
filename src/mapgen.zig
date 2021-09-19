@@ -19,6 +19,8 @@ usingnamespace @import("types.zig");
 
 const Poster = literature.Poster;
 
+const CONNECTIONS_MAX = 5;
+
 const LIMIT = Room{
     .start = Coord.new(1, 1),
     .width = state.WIDTH - 1,
@@ -27,6 +29,13 @@ const LIMIT = Room{
 
 const Corridor = struct {
     room: Room,
+
+    // Return the parent/child again because in certain cases callers
+    // don't know what child was passed, e.g., the BSP algorithm
+    //
+    parent: *Room,
+    child: *Room,
+
     parent_connector: ?Coord,
     child_connector: ?Coord,
     distance: usize,
@@ -121,6 +130,29 @@ fn placeMob(
     const ptr = state.mobs.lastPtr().?;
     state.dungeon.at(coord).mob = ptr;
     return ptr;
+}
+
+// Given a parent and child room, return the direction a corridor between the two
+// would go
+fn getConnectionSide(parent: *const Room, child: *const Room) ?Direction {
+    assert(!parent.start.eq(child.start)); // parent != child
+
+    const x_overlap = math.max(parent.start.x, child.start.x) <
+        math.min(parent.end().x, child.end().x);
+    const y_overlap = math.max(parent.start.y, child.start.y) <
+        math.min(parent.end().y, child.end().y);
+
+    // FIXME: assert that x_overlap or y_overlap, but not both
+
+    if (!x_overlap and !y_overlap) {
+        return null;
+    }
+
+    if (x_overlap) {
+        return if (parent.start.y > child.start.y) .North else .South;
+    } else if (y_overlap) {
+        return if (parent.start.x > child.start.x) .West else .East;
+    } else unreachable;
 }
 
 fn randomWallCoord(room: *const Room, i: ?usize) Coord {
@@ -634,16 +666,20 @@ pub fn validateLevel(level: usize, alloc: *mem.Allocator) bool {
     return true;
 }
 
-pub fn placeMoarCorridors(level: usize) void {
+pub fn placeMoarCorridors(level: usize, alloc: *mem.Allocator) void {
+    var newrooms = RoomArrayList.init(alloc);
+    defer newrooms.deinit();
+
     const rooms = &state.dungeon.rooms[level];
 
     var i: usize = 0;
     while (i < rooms.items.len) : (i += 1) {
         const parent = &rooms.items[i];
 
-        if (parent.type == .Corridor) continue;
+        child_search: for (rooms.items) |*child, child_i| {
+            if (parent.connections > CONNECTIONS_MAX) break;
+            if (child.connections > CONNECTIONS_MAX) continue;
 
-        for (rooms.items) |*child| {
             if (child.type == .Corridor) continue;
 
             // Skip child prefabs for now, placeCorridor seems to be broken
@@ -658,35 +694,25 @@ pub fn placeMoarCorridors(level: usize) void {
                 continue;
             }
 
-            const x_overlap = math.max(parent.start.x, child.start.x) <
-                math.min(parent.end().x, child.end().x);
-            const y_overlap = math.max(parent.start.y, child.start.y) <
-                math.min(parent.end().y, child.end().y);
+            var side: ?Direction = getConnectionSide(parent, child);
+            if (side == null) continue;
 
-            // FIXME: assert that x_overlap or y_overlap, but not both
-
-            if (!x_overlap and !y_overlap) {
-                continue;
-            }
-
-            var side: Direction = undefined;
-            if (x_overlap) {
-                side = if (parent.start.y > child.start.y) .North else .South;
-            } else if (y_overlap) {
-                side = if (parent.start.x > child.start.x) .West else .East;
-            }
-
-            if (_createCorridor(level, parent, child, side)) |corridor| {
-                if (corridor.distance == 0 or corridor.distance > 4) {
+            if (_createCorridor(level, parent, child, side.?)) |corridor| {
+                if (corridor.distance == 0 or corridor.distance > 9) {
                     continue;
                 }
 
-                if (roomIntersects(rooms, &corridor.room, parent, child, false)) {
+                if (roomIntersects(rooms, &corridor.room, parent, child, false) or
+                    roomIntersects(&newrooms, &corridor.room, parent, child, false))
+                {
                     continue;
                 }
+
+                parent.connections += 1;
+                child.connections += 1;
 
                 _excavate_room(&corridor.room);
-                rooms.append(corridor.room) catch unreachable;
+                newrooms.append(corridor.room) catch unreachable;
 
                 // When using a prefab, the corridor doesn't include the connectors. Excavate
                 // the connectors (both the beginning and the end) manually.
@@ -697,13 +723,11 @@ pub fn placeMoarCorridors(level: usize) void {
                     if (utils.findPatternMatch(corridor.room.start, &VALID_DOOR_PLACEMENT_PATTERNS) != null)
                         placeDoor(corridor.room.start, false);
                 }
-
-                // Restart loop, as the slice pointer might have been modified if a
-                // reallocation took place
-                break;
             }
         }
     }
+
+    for (newrooms.items) |new| rooms.append(new) catch unreachable;
 }
 
 fn _createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?Corridor {
@@ -763,6 +787,8 @@ fn _createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?
 
     return Corridor{
         .room = room,
+        .parent = parent,
+        .child = child,
         .parent_connector = parent_connector_coord,
         .child_connector = child_connector_coord,
         .distance = switch (side) {
@@ -796,9 +822,13 @@ fn _place_rooms(
     level: usize,
     allocator: *mem.Allocator,
 ) void {
-    //const parent = &rooms.items[rng.range(usize, 0, rooms.items.len - 1)];
-    var _parent = rng.chooseUnweighted(Room, rooms.items);
-    const parent = &_parent;
+    const parent_i = rng.range(usize, 0, rooms.items.len - 1);
+    var parent = &rooms.items[parent_i];
+
+    if (parent.connections > CONNECTIONS_MAX) return;
+
+    //var _parent = rng.chooseUnweighted(Room, rooms.items);
+    //const parent = &_parent;
 
     var fab: ?*Prefab = null;
     var distance = rng.choose(usize, &Configs[level].distances[0], &Configs[level].distances[1]) catch unreachable;
@@ -901,6 +931,11 @@ fn _place_rooms(
         }
     }
 
+    // Use parent's index, as we appended the corridor earlier and that may
+    // have invalidated parent's pointer
+    child.connections += 1;
+    rooms.items[parent_i].connections += 1;
+
     rooms.append(child) catch unreachable;
 }
 
@@ -963,10 +998,267 @@ pub fn placeRandomRooms(
         _add_player(p, allocator);
     }
 
-    var c = Configs[level].max_rooms;
+    var c = Configs[level].mapgen_iters;
     while (c > 0) : (c -= 1) {
         _place_rooms(rooms, n_fabs, s_fabs, level, allocator);
     }
+}
+
+pub fn placeBSPRooms(
+    n_fabs: *PrefabArrayList,
+    s_fabs: *PrefabArrayList,
+    level: usize,
+    allocator: *mem.Allocator,
+) void {
+    const Node = struct {
+        const Self = @This();
+
+        room: Room,
+        childs: [2]?*Self = [_]?*Self{ null, null },
+        parent: ?*Self = null,
+        group: Group,
+
+        // Index in dungeon's room list
+        index: usize = 0,
+
+        pub const ArrayList = std.ArrayList(*Self);
+
+        pub const Group = enum { Root, Branch, Leaf, Failed };
+
+        pub fn freeRecursively(self: *Self, alloc: *mem.Allocator) void {
+            const childs = self.childs;
+
+            // Don't free grandparent node, which is stack-allocated
+            if (self.parent != null) alloc.destroy(self);
+
+            if (childs[0]) |child| child.freeRecursively(alloc);
+            if (childs[1]) |child| child.freeRecursively(alloc);
+        }
+
+        fn splitH(self: *const Self, percent: usize, out1: *Room, out2: *Room) void {
+            out1.* = self.room;
+            out2.* = self.room;
+
+            out1.height = out1.height * (percent) / 100;
+            out2.height = (out2.height * (100 - percent) / 100) - 1;
+            out2.start.y += out1.height + 1;
+        }
+
+        fn splitV(self: *const Self, percent: usize, out1: *Room, out2: *Room) void {
+            out1.* = self.room;
+            out2.* = self.room;
+
+            out1.width = out1.width * (percent) / 100;
+            out2.width = (out2.width * (100 - percent) / 100) - 1;
+            out2.start.x += out1.width + 1;
+        }
+
+        pub fn splitTree(
+            self: *Self,
+            failed: *ArrayList,
+            leaves: *ArrayList,
+            maplevel: usize,
+            alloc: *mem.Allocator,
+        ) mem.Allocator.Error!void {
+            var branches = ArrayList.init(alloc);
+            defer branches.deinit();
+            try branches.append(self);
+
+            var iters: usize = Configs[maplevel].mapgen_iters;
+            while (iters > 0 and branches.items.len > 0) : (iters -= 1) {
+                const cur = branches.swapRemove(rng.range(usize, 0, branches.items.len - 1));
+
+                var new1: Room = undefined;
+                var new2: Room = undefined;
+
+                // Ratio to split by.
+                //
+                // e.g., if percent == 30%, then new1 will be 30% of original,
+                // and new2 will be 70% of original.
+                const percent = rng.range(usize, 25, 75);
+
+                // Split horizontally or vertically
+                if ((cur.room.height * 2) > cur.room.width) {
+                    cur.splitH(percent, &new1, &new2);
+                } else if (cur.room.width > (cur.room.height * 2)) {
+                    cur.splitV(percent, &new1, &new2);
+                } else {
+                    if (rng.tenin(18)) {
+                        cur.splitH(percent, &new1, &new2);
+                    } else {
+                        cur.splitV(percent, &new1, &new2);
+                    }
+                }
+
+                var has_child = false;
+                const prospective_children = [_]Room{ new1, new2 };
+                for (prospective_children) |prospective_child, i| {
+                    const node = try alloc.create(Self);
+                    node.* = .{ .room = prospective_child, .group = undefined, .parent = cur };
+                    cur.childs[i] = node;
+
+                    if (prospective_child.width > Configs[maplevel].min_room_width and
+                        prospective_child.height > Configs[maplevel].min_room_height)
+                    {
+                        has_child = true;
+
+                        if (prospective_child.width < Configs[maplevel].max_room_width or
+                            prospective_child.height < Configs[maplevel].max_room_height)
+                        {
+                            try leaves.append(node);
+                            node.group = .Leaf;
+                        } else {
+                            try branches.append(node);
+                            node.group = .Branch;
+                        }
+                    } else {
+                        try failed.append(node);
+                        node.group = .Failed;
+                    }
+                }
+
+                if (!has_child) {
+                    try leaves.append(cur);
+                    cur.group = .Leaf;
+                }
+            }
+        }
+    };
+
+    const rooms = &state.dungeon.rooms[level];
+
+    var failed = Node.ArrayList.init(allocator);
+    defer failed.deinit();
+    var leaves = Node.ArrayList.init(allocator);
+    defer leaves.deinit();
+
+    const map = Room{ .start = Coord.new2(level, 1, 1), .height = HEIGHT - 2, .width = WIDTH - 2 };
+    var grandma_node = Node{ .room = map, .group = .Root };
+    grandma_node.splitTree(&failed, &leaves, level, allocator) catch unreachable;
+    defer grandma_node.freeRecursively(allocator);
+
+    for (failed.items) |container_node| {
+        assert(container_node.group == .Failed);
+        var room = container_node.room;
+        room.type = .Sideroom;
+        container_node.index = rooms.items.len;
+        _excavate_room(&room);
+        rooms.append(room) catch unreachable;
+    }
+
+    for (leaves.items) |container_node| {
+        assert(container_node.group == .Leaf);
+        var room = container_node.room;
+
+        // Random room sizes are disabled for now.
+        //const container = container_node.room;
+        //const w = rng.range(usize, Configs[level].min_room_width, container.width);
+        //const h = rng.range(usize, Configs[level].min_room_height, container.height);
+        //const x = rng.range(usize, container.start.x, container.end().x - w);
+        //const y = rng.range(usize, container.start.y, container.end().y - h);
+        //var room = Room{ .start = Coord.new2(level, x, y), .width = w, .height = h };
+
+        _excavate_room(&room);
+
+        const area = Room{
+            .start = Coord.new(0, 0),
+            .width = room.width,
+            .height = room.height,
+        };
+        placeSubroom(s_fabs, &room, &area, allocator);
+
+        container_node.index = rooms.items.len;
+        rooms.append(room) catch unreachable;
+    }
+
+    const S = struct {
+        const Self = @This();
+
+        // Recursively descend tree, looking for a room
+        fn getRoomFromNode(node: *const Node) ?usize {
+            if (node.group == .Leaf or node.group == .Failed)
+                return node.index;
+
+            if (node.childs[0]) |child| return getRoomFromNode(child);
+            if (node.childs[1]) |child| return getRoomFromNode(child);
+
+            return null;
+        }
+
+        fn tryNodeConnection(
+            maplevel: usize,
+            parent: *Room,
+            child: *Room,
+            roomlist: *RoomArrayList,
+        ) ?Corridor {
+            const d = getConnectionSide(parent, child) orelse return null;
+            if (_createCorridor(maplevel, parent, child, d)) |corridor| {
+                // FIXME: 2021-09-18: uncomment this and disable intersecting
+                // corridors, for some weird reason this code doesn't try
+                // connecting another room if its first try fails...? (Far too
+                // tired to fix this now after working on it for 48+ hours...)
+                //
+                // if (roomIntersects(roomlist, &corridor.room, parent, child, false))
+                //     return null;
+                return corridor;
+            } else {
+                return null;
+            }
+        }
+
+        // Recursively attempt connection.
+        fn tryRecursiveNodeConnection(
+            maplevel: usize,
+            parent: *Room,
+            child_tree: *const Node,
+            roomlist: *RoomArrayList,
+        ) ?Corridor {
+            if (child_tree.group == .Leaf or child_tree.group == .Failed) {
+                const child = &roomlist.items[child_tree.index];
+                return tryNodeConnection(maplevel, parent, child, roomlist);
+            }
+
+            if (child_tree.childs[0]) |child|
+                if (tryRecursiveNodeConnection(maplevel, parent, child, roomlist)) |c|
+                    return c;
+
+            if (child_tree.childs[1]) |child|
+                if (tryRecursiveNodeConnection(maplevel, parent, child, roomlist)) |c|
+                    return c;
+
+            return null;
+        }
+
+        pub fn addCorridors(maplevel: usize, node: *Node, roomlist: *RoomArrayList) void {
+            const childs = node.childs;
+
+            if (childs[0] != null and childs[1] != null) {
+                var child1 = &roomlist.items[getRoomFromNode(childs[0].?).?];
+
+                if (tryRecursiveNodeConnection(maplevel, child1, childs[1].?, roomlist)) |corridor| {
+                    corridor.parent.connections += 1;
+                    corridor.child.connections += 1;
+
+                    _excavate_room(&corridor.room);
+                    roomlist.append(corridor.room) catch unreachable;
+
+                    if (Configs[maplevel].allow_doors and rng.onein(3)) {
+                        if (utils.findPatternMatch(
+                            corridor.room.start,
+                            &VALID_DOOR_PLACEMENT_PATTERNS,
+                        ) != null) {
+                            placeDoor(corridor.room.start, false);
+                        }
+                    }
+                }
+            }
+
+            if (childs[0]) |child| addCorridors(maplevel, child, roomlist);
+            if (childs[1]) |child| addCorridors(maplevel, child, roomlist);
+        }
+    };
+
+    S.addCorridors(level, &grandma_node, rooms);
 }
 
 pub fn placeItems(level: usize) void {
@@ -1014,7 +1306,8 @@ pub fn placeTraps(level: usize) void {
         if (room.prefab) |rfb| if (rfb.notraps) continue;
 
         // Don't place traps in places where it's impossible to avoid
-        if (room.height == 1 or room.width == 1) continue;
+        if (room.height == 1 or room.width == 1 or room.type != .Room)
+            continue;
 
         if (rng.onein(2)) continue;
 
@@ -1160,8 +1453,12 @@ fn placeLights(room: *const Room) void {
 pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
     for (state.dungeon.rooms[level].items) |room| {
         // Don't fill small rooms or corridors.
-        if ((room.width * room.height) < 16 or room.type == .Corridor)
+        if ((room.width * room.height) < 16 or
+            room.type == .Corridor or
+            room.type == .Sideroom)
+        {
             continue;
+        }
 
         placeLights(&room);
 
@@ -2119,10 +2416,20 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
 pub const LevelConfig = struct {
     identifier: []const u8,
     prefabs: RPBuf = RPBuf.init(null),
-    distances: [2][10]usize,
+    distances: [2][10]usize = [2][10]usize{
+        .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+        .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
+    },
     shrink_corridors_to_fit: bool = true,
     prefab_chance: usize,
-    max_rooms: usize,
+
+    mapgen_func: fn (*PrefabArrayList, *PrefabArrayList, usize, *mem.Allocator) void = placeRandomRooms,
+
+    // Determines the number of iterations used by the mapgen algorithm.
+    //
+    // On placeRandomRooms: try mapgen_iters times to place a rooms randomly.
+    // On placeBSPRooms:    try mapgen_iters times to split a BSP node.
+    mapgen_iters: usize,
 
     // Dimensions include the first wall, so a minimum width of 2 guarantee that
     // there will be one empty space in the room, minimum.
@@ -2194,19 +2501,16 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ 5, 9, 1, 0, 0, 0, 0, 0, 0, 0 },
         },
         .prefab_chance = 2,
-        .max_rooms = 256,
+        .mapgen_iters = 256,
 
         .patrol_squads = 3,
     },
     .{
         .identifier = "REC",
         .prefabs = LevelConfig.RPBuf.init(null),
-        .distances = [2][10]usize{
-            .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-            .{ 0, 9, 0, 0, 0, 0, 0, 0, 0, 5 },
-        },
         .prefab_chance = 100, // No prefabs for REC
-        .max_rooms = 2048,
+        .mapgen_func = placeBSPRooms,
+        .mapgen_iters = 2048,
         .min_room_width = 8,
         .min_room_height = 5,
         .max_room_width = 10,
@@ -2226,7 +2530,7 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
         },
         .prefab_chance = 2,
-        .max_rooms = 2048,
+        .mapgen_iters = 2048,
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeaturePrisoners,
             levelFeaturePrisonersMaybe,
@@ -2261,7 +2565,7 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ 9, 2, 1, 1, 1, 1, 0, 0, 0, 0 },
         },
         .prefab_chance = 100, // No prefabs for LAB
-        .max_rooms = 2048,
+        .mapgen_iters = 2048,
         .min_room_width = 8,
         .min_room_height = 6,
         .max_room_width = 30,
@@ -2304,7 +2608,7 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
         },
         .prefab_chance = 2,
-        .max_rooms = 512,
+        .mapgen_iters = 512,
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeaturePrisoners,
             levelFeaturePrisonersMaybe,
@@ -2325,7 +2629,7 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
         },
         .prefab_chance = 2,
-        .max_rooms = 512,
+        .mapgen_iters = 512,
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeaturePrisoners,
             levelFeaturePrisonersMaybe,
@@ -2350,7 +2654,7 @@ pub const Configs = [LEVELS]LevelConfig{
         },
         .shrink_corridors_to_fit = false,
         .prefab_chance = 1,
-        .max_rooms = 512,
+        .mapgen_iters = 1049,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeatureIronOres,
