@@ -1475,6 +1475,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
         };
 
         var statues: usize = 0;
+        var props: usize = 0;
         var capacity: usize = 0;
         var levers: usize = 0;
         var posters: usize = 0;
@@ -1496,9 +1497,10 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                         const statue = rng.chooseUnweighted(mobs.MobTemplate, &mobs.STATUES);
                         _ = placeMob(alloc, &statue, coord, .{});
                         statues += 1;
-                    } else {
-                        const statue = rng.chooseUnweighted(Prop, Configs[level].props.*);
-                        _ = placeProp(coord, &statue);
+                    } else if (props < 3) {
+                        const prop = rng.chooseUnweighted(Prop, Configs[level].props.*);
+                        _ = placeProp(coord, &prop);
+                        props += 1;
                     }
                 },
                 2 => {
@@ -1515,7 +1517,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                     }
                 },
                 4 => {
-                    if ((room.width * room.height) > 16 and posters < 2) {
+                    if ((room.width * room.height) > 25 and posters < 2) {
                         if (choosePoster(level)) |poster| {
                             state.dungeon.at(coord).surface = SurfaceItem{ .Poster = poster };
                             posters += 1;
