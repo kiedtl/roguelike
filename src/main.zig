@@ -40,7 +40,6 @@ fn initGame() void {
 
     state.tasks = TaskArrayList.init(&state.GPA.allocator);
     state.mobs = MobList.init(&state.GPA.allocator);
-    state.sobs = SobList.init(&state.GPA.allocator);
     state.rings = RingList.init(&state.GPA.allocator);
     state.potions = PotionList.init(&state.GPA.allocator);
     state.armors = ArmorList.init(&state.GPA.allocator);
@@ -105,7 +104,7 @@ fn deinitGame() void {
     state.memory.clearAndFree();
 
     var iter = state.mobs.iterator();
-    while (iter.nextPtr()) |mob| {
+    while (iter.next()) |mob| {
         if (mob.is_dead) continue;
         mob.kill();
     }
@@ -118,7 +117,6 @@ fn deinitGame() void {
 
     state.tasks.deinit();
     state.mobs.deinit();
-    state.sobs.deinit();
     state.rings.deinit();
     state.potions.deinit();
     state.armors.deinit();
@@ -513,7 +511,7 @@ fn tickGame() void {
     state.tickSound(cur_level);
 
     var iter = state.mobs.iterator();
-    while (iter.nextPtr()) |mob| {
+    while (iter.next()) |mob| {
         if (mob.coord.z != cur_level) continue;
 
         if (mob.is_dead) {
@@ -593,7 +591,7 @@ fn viewerTickGame(cur_level: usize) void {
     state.tickSound(cur_level);
 
     var iter = state.mobs.iterator();
-    while (iter.nextPtr()) |mob| {
+    while (iter.next()) |mob| {
         if (mob.coord.z != cur_level) continue;
 
         if (mob.is_dead) {

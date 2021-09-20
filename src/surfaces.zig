@@ -572,7 +572,7 @@ fn powerBlastFurnace(machine: *Machine) void {
 
 fn powerPowerSupply(machine: *Machine) void {
     var iter = state.machines.iterator();
-    while (iter.nextPtr()) |mach| {
+    while (iter.next()) |mach| {
         if (mach.coord.z == machine.coord.z and mach.auto_power)
             mach.addPower(null);
     }
@@ -818,7 +818,7 @@ pub fn freeProps(alloc: *mem.Allocator) void {
 
 pub fn tickMachines(level: usize) void {
     var iter = state.machines.iterator();
-    while (iter.nextPtr()) |machine| {
+    while (iter.next()) |machine| {
         if (machine.coord.z != level or !machine.isPowered() or machine.disabled)
             continue;
 

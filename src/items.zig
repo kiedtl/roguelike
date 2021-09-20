@@ -252,7 +252,7 @@ fn triggerNetLauncherProjectile(coord: Coord) void {
                     var net = surfaces.NetTrap;
                     net.coord = c;
                     state.machines.append(net) catch unreachable;
-                    state.dungeon.at(c).surface = SurfaceItem{ .Machine = state.machines.lastPtr().? };
+                    state.dungeon.at(c).surface = SurfaceItem{ .Machine = state.machines.last().? };
                 }
             }
         }

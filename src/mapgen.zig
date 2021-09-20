@@ -127,7 +127,7 @@ fn placeMob(
     }
 
     state.mobs.append(mob) catch unreachable;
-    const ptr = state.mobs.lastPtr().?;
+    const ptr = state.mobs.last().?;
     state.dungeon.at(coord).mob = ptr;
     return ptr;
 }
@@ -182,23 +182,23 @@ fn _createItem(comptime T: type, item: T) *T {
         else => @compileError("uh wat"),
     };
     list.append(item) catch @panic("OOM");
-    return list.lastPtr().?;
+    return list.last().?;
 }
 
 fn placeProp(coord: Coord, prop_template: *const Prop) *Prop {
     var prop = prop_template.*;
     prop.coord = coord;
     state.props.append(prop) catch unreachable;
-    const propptr = state.props.lastPtr().?;
+    const propptr = state.props.last().?;
     state.dungeon.at(coord).surface = SurfaceItem{ .Prop = propptr };
-    return state.props.lastPtr().?;
+    return state.props.last().?;
 }
 
 fn placeContainer(coord: Coord, template: *const Container) void {
     var container = template.*;
     container.coord = coord;
     state.containers.append(container) catch unreachable;
-    const ptr = state.containers.lastPtr().?;
+    const ptr = state.containers.last().?;
     state.dungeon.at(coord).surface = SurfaceItem{ .Container = ptr };
 }
 
@@ -206,7 +206,7 @@ fn _place_machine(coord: Coord, machine_template: *const Machine) void {
     var machine = machine_template.*;
     machine.coord = coord;
     state.machines.append(machine) catch unreachable;
-    const machineptr = state.machines.lastPtr().?;
+    const machineptr = state.machines.last().?;
     state.dungeon.at(coord).surface = SurfaceItem{ .Machine = machineptr };
 }
 
@@ -214,7 +214,7 @@ fn placeDoor(coord: Coord, locked: bool) void {
     var door = if (locked) surfaces.LockedDoor else surfaces.NormalDoor;
     door.coord = coord;
     state.machines.append(door) catch unreachable;
-    const doorptr = state.machines.lastPtr().?;
+    const doorptr = state.machines.last().?;
     state.dungeon.at(coord).surface = SurfaceItem{ .Machine = doorptr };
     state.dungeon.at(coord).type = .Floor;
 }
@@ -569,17 +569,17 @@ fn _excavate_room(room: *const Room) void {
 // terrain.
 pub fn resetLevel(level: usize) void {
     var mobiter = state.mobs.iterator();
-    while (mobiter.nextNode()) |node| {
-        if (node.data.coord.z == level) {
-            node.data.kill();
-            state.mobs.remove(node);
+    while (mobiter.next()) |mob| {
+        if (mob.coord.z == level) {
+            mob.kill();
+            state.mobs.remove(mob);
         }
     }
 
     var machiter = state.machines.iterator();
-    while (machiter.nextNode()) |node| {
-        if (node.data.coord.z == level) {
-            state.machines.remove(node);
+    while (machiter.next()) |machine| {
+        if (machine.coord.z == level) {
+            state.machines.remove(machine);
         }
     }
 
@@ -1263,7 +1263,7 @@ pub fn placeBSPRooms(
 
 pub fn placeItems(level: usize) void {
     var containers = state.containers.iterator();
-    while (containers.nextPtr()) |container| {
+    while (containers.next()) |container| {
         if (container.coord.z != level) continue;
 
         // How much should we fill the container?
@@ -1280,7 +1280,7 @@ pub fn placeItems(level: usize) void {
 
                     state.potions.append(potion) catch unreachable;
                     container.items.append(
-                        Item{ .Potion = state.potions.lastPtr().? },
+                        Item{ .Potion = state.potions.last().? },
                     ) catch unreachable;
                 }
             },
@@ -1865,7 +1865,7 @@ fn levelFeaturePotions(c: usize, coord: Coord, room: *const Room, prefab: *const
     const potion = rng.chooseUnweighted(Potion, &items.POTIONS);
     state.potions.append(potion) catch unreachable;
     state.dungeon.itemsAt(coord).append(
-        Item{ .Potion = state.potions.lastPtr().? },
+        Item{ .Potion = state.potions.last().? },
     ) catch unreachable;
 }
 

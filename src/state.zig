@@ -57,7 +57,6 @@ pub var outputs: [LEVELS]RoomArrayList = undefined;
 // Data objects
 pub var tasks: TaskArrayList = undefined;
 pub var mobs: MobList = undefined;
-pub var sobs: SobList = undefined;
 pub var rings: RingList = undefined;
 pub var potions: PotionList = undefined;
 pub var armors: ArmorList = undefined;
@@ -164,7 +163,6 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
                 }
             },
             .Prop => |p| if (!p.walkable) return false,
-            .Sob => |s| if (!s.walkable) return false,
             .Poster => return false,
         }
     }
@@ -197,7 +195,7 @@ pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, al
 
 fn _can_hear_hostile(mob: *Mob) ?Coord {
     var iter = mobs.iterator();
-    while (iter.nextPtr()) |othermob| {
+    while (iter.next()) |othermob| {
         if (mob.canHear(othermob.coord)) |sound| {
             if (mob.isHostileTo(othermob)) {
                 return othermob.coord;
@@ -511,17 +509,6 @@ pub fn tickAtmosphere(cur_lev: usize, cur_gas: usize) void {
 
     if (cur_gas < (gas.GAS_NUM - 1))
         tickAtmosphere(cur_lev, cur_gas + 1);
-}
-
-pub fn tickSobs(level: usize) void {
-    var iter = sobs.iterator();
-    while (iter.nextPtr()) |sob| {
-        if (sob.coord.z != level or sob.is_dead)
-            continue;
-
-        sob.age += 1;
-        sob.ai_func(sob);
-    }
 }
 
 pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void {

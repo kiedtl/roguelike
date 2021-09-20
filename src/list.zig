@@ -3,51 +3,49 @@ const mem = std.mem;
 const assert = std.debug.assert;
 const testing = std.testing;
 
-// STYLE: change <name>Ptr to <name>Ref
-
-pub fn LinkedList(comptime T: type) type {
+// Basic node that can be used for scalar data.
+pub fn ScalarNode(comptime T: type) type {
     return struct {
         const Self = @This();
 
-        pub const Node = struct {
-            prev: ?*Node,
-            next: ?*Node,
-            data: T,
+        __prev: ?*Self = null,
+        __next: ?*Self = null,
+        data: T,
+    };
+}
 
-            pub fn free(self: *Node, allocator: *mem.Allocator) void {
-                var slice: []u8 = undefined;
-                slice.ptr = @intToPtr([*]u8, @ptrToInt(self));
-                slice.len = @sizeOf(Node);
-                allocator.free(slice);
-            }
-        };
+pub fn LinkedList(comptime T: type) type {
+    switch (@typeInfo(T)) {
+        .Struct => {},
+        else => @compileError("Expected struct, got '" ++ @typeName(T) ++ "'"),
+    }
+
+    if (!@hasField(T, "__next"))
+        @compileError("Struct '" ++ @typeName(T) ++ "' does not have a '__next' field");
+    if (!@hasField(T, "__prev"))
+        @compileError("Struct '" ++ @typeName(T) ++ "' does not have a '__prev' field");
+
+    return struct {
+        const Self = @This();
 
         pub const Iterator = struct {
-            current: ?*Node,
+            current: ?*T,
 
-            pub fn nextNode(iter: *Iterator) ?*Node {
+            pub fn next(iter: *Iterator) ?*T {
                 const current = iter.current;
-                var result: ?*Node = undefined;
+                var result: ?*T = undefined;
 
                 if (current) |c| {
-                    iter.current = c.next;
+                    iter.current = c.__next;
                     return c;
                 } else {
                     return null;
                 }
             }
-
-            pub fn next(iter: *Iterator) ?T {
-                return if (iter.nextNode()) |node| node.data else null;
-            }
-
-            pub fn nextPtr(iter: *Iterator) ?*T {
-                return if (iter.nextNode()) |node| &node.data else null;
-            }
         };
 
-        head: ?*Node,
-        tail: ?*Node,
+        head: ?*T,
+        tail: ?*T,
         allocator: *mem.Allocator,
 
         pub fn init(allocator: *mem.Allocator) Self {
@@ -64,44 +62,46 @@ pub fn LinkedList(comptime T: type) type {
             }
 
             var current = self.head.?;
-            while (current.next) |next| {
-                current.free(self.allocator);
+            while (current.__next) |next| {
+                self.allocator.destroy(current);
                 current = next;
             }
 
-            current.free(self.allocator);
+            self.allocator.destroy(current);
         }
 
+        // Make a copy of data and allocate it on the heap, then append to the
+        // list.
         pub fn append(self: *Self, data: T) !void {
-            var node = try self.allocator.create(Node);
-            node.data = data;
+            var node = try self.allocator.create(T);
+            node.* = data;
 
             if (self.tail) |tail| {
-                assert(tail.next == null);
+                assert(tail.__next == null);
 
-                node.prev = tail;
-                node.next = null;
-                tail.next = node;
+                node.__prev = tail;
+                node.__next = null;
+                tail.__next = node;
                 self.tail = node;
             } else {
-                node.prev = null;
-                node.next = null;
+                node.__prev = null;
+                node.__next = null;
                 self.head = node;
                 self.tail = node;
             }
         }
 
-        pub fn remove(self: *Self, node: *Node) void {
-            if (node.prev) |prevn| prevn.next = node.next;
-            if (node.next) |nextn| nextn.prev = node.prev;
+        pub fn remove(self: *Self, node: *T) void {
+            if (node.__prev) |prevn| prevn.__next = node.__next;
+            if (node.__next) |nextn| nextn.__prev = node.__prev;
 
-            if (self.head == node) self.head = node.next;
-            if (self.tail == node) self.tail = node.prev;
+            if (self.head == node) self.head = node.__next;
+            if (self.tail == node) self.tail = node.__prev;
 
-            node.free(self.allocator);
+            self.allocator.destroy(node);
         }
 
-        pub fn nth(self: *Self, n: usize) ?T {
+        pub fn nth(self: *Self, n: usize) ?*T {
             var i: usize = 0;
             var iter = self.iterator();
             while (iter.next()) |item| : (i += 1) {
@@ -112,24 +112,16 @@ pub fn LinkedList(comptime T: type) type {
             return null;
         }
 
-        pub fn first(self: *Self) ?T {
-            return if (self.head) |head| head.data else null;
+        pub fn first(self: *Self) ?*T {
+            return if (self.head) |head| head else null;
         }
 
-        pub fn last(self: *Self) ?T {
-            return if (self.tail) |tail| tail.data else null;
-        }
-
-        pub fn firstPtr(self: *Self) ?*T {
-            return if (self.head) |head| &head.data else null;
-        }
-
-        pub fn lastPtr(self: *Self) ?*T {
-            return if (self.tail) |tail| &tail.data else null;
+        pub fn last(self: *Self) ?*T {
+            return if (self.tail) |tail| tail else null;
         }
 
         // TODO: allow const iteration
-        pub fn iterator(self: *Self) Iterator {
+        pub fn iterator(self: *const Self) Iterator {
             return Iterator{ .current = self.head };
         }
     };
@@ -139,7 +131,8 @@ pub fn LinkedList(comptime T: type) type {
 const GPA = std.heap.GeneralPurposeAllocator(.{});
 
 test "basic LinkedList test" {
-    const List = LinkedList(usize);
+    const Node = ScalarNode(usize);
+    const List = LinkedList(Node);
 
     var gpa = GPA{};
     defer testing.expect(!gpa.deinit());
@@ -149,35 +142,34 @@ test "basic LinkedList test" {
 
     const datas = [_]usize{ 5, 22, 623, 1, 36 };
     for (datas) |data| {
-        try list.append(data);
-        testing.expectEqual(data, list.last().?);
+        try list.append(Node{ .data = data });
+        testing.expectEqual(data, list.last().?.data);
     }
 
-    testing.expectEqual(datas[0], list.first().?);
-    testing.expectEqual(datas[0], list.firstPtr().?.*);
-    testing.expectEqual(datas[4], list.last().?);
-    testing.expectEqual(datas[4], list.lastPtr().?.*);
+    testing.expectEqual(datas[0], list.first().?.data);
+    testing.expectEqual(datas[4], list.last().?.data);
 
     // TODO: separate iterator test into its own test
     var index: usize = 0;
     var iter = list.iterator();
-    while (iter.next()) |data| : (index += 1) {
-        testing.expectEqual(datas[index], data);
+    while (iter.next()) |node| : (index += 1) {
+        testing.expectEqual(datas[index], node.data);
     }
 
     iter = list.iterator();
-    while (iter.nextNode()) |node| {
+    while (iter.next()) |node| {
         if (node.data % 2 == 0)
             list.remove(node);
     }
 
-    testing.expectEqual(list.nth(0), 5);
-    testing.expectEqual(list.nth(1), 623);
-    testing.expectEqual(list.nth(2), 1);
+    testing.expectEqual(list.nth(0).?.data, 5);
+    testing.expectEqual(list.nth(1).?.data, 623);
+    testing.expectEqual(list.nth(2).?.data, 1);
 }
 
 test "basic nth() usage" {
-    const List = LinkedList(usize);
+    const Node = ScalarNode(usize);
+    const List = LinkedList(Node);
 
     var gpa = GPA{};
     defer testing.expect(!gpa.deinit());
@@ -185,17 +177,17 @@ test "basic nth() usage" {
     var list = List.init(&gpa.allocator);
     defer list.deinit();
 
-    try list.append(23);
-    try list.append(0);
-    try list.append(98);
-    try list.append(11);
-    try list.append(12);
-    try list.append(72);
+    try list.append(Node{ .data = 23 });
+    try list.append(Node{ .data = 0 });
+    try list.append(Node{ .data = 98 });
+    try list.append(Node{ .data = 11 });
+    try list.append(Node{ .data = 12 });
+    try list.append(Node{ .data = 72 });
 
-    testing.expectEqual(list.nth(0), 23);
-    testing.expectEqual(list.nth(1), 0);
-    testing.expectEqual(list.nth(2), 98);
-    testing.expectEqual(list.nth(3), 11);
-    testing.expectEqual(list.nth(4), 12);
-    testing.expectEqual(list.nth(5), 72);
+    testing.expectEqual(list.nth(0).?.data, 23);
+    testing.expectEqual(list.nth(1).?.data, 0);
+    testing.expectEqual(list.nth(2).?.data, 98);
+    testing.expectEqual(list.nth(3).?.data, 11);
+    testing.expectEqual(list.nth(4).?.data, 12);
+    testing.expectEqual(list.nth(5).?.data, 72);
 }

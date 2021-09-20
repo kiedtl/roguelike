@@ -39,23 +39,19 @@ pub const PLAYER_STARTING_LEVEL = 5; // TODO: define in data file
 pub const CARDINAL_DIRECTIONS = [_]Direction{ .North, .South, .East, .West };
 pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .NorthWest, .SouthEast, .SouthWest };
 
-pub const DirectionArrayList = std.ArrayList(Direction);
 pub const CoordCellMap = std.AutoHashMap(Coord, termbox.tb_cell);
 pub const CoordArrayList = std.ArrayList(Coord);
-pub const AnnotatedCoordArrayList = std.ArrayList(AnnotatedCoord);
 pub const RoomArrayList = std.ArrayList(Room);
 pub const StockpileArrayList = std.ArrayList(Stockpile);
 pub const MessageArrayList = std.ArrayList(Message);
 pub const StatusArray = enums.EnumArray(Status, StatusData);
 pub const SpatterArray = enums.EnumArray(Spatter, usize);
 pub const MobList = LinkedList(Mob);
-pub const SobList = LinkedList(Sob);
-pub const MobArrayList = std.ArrayList(*Mob); // STYLE: rename to MobPtrArrayList
+pub const MobArrayList = std.ArrayList(*Mob);
 pub const RingList = LinkedList(Ring);
 pub const PotionList = LinkedList(Potion);
 pub const ArmorList = LinkedList(Armor);
 pub const WeaponList = LinkedList(Weapon);
-pub const ProjectileList = LinkedList(Projectile);
 pub const PropList = LinkedList(Prop);
 pub const PropArrayList = std.ArrayList(Prop);
 pub const MachineList = LinkedList(Machine);
@@ -398,8 +394,6 @@ test "coord.move" {
     const c = Coord.new(0, 0);
     std.testing.expectEqual(c.move(.East, limit), Coord.new(1, 0));
 }
-
-pub const AnnotatedCoord = struct { coord: Coord, value: usize };
 
 pub const Room = struct {
     type: RoomType = .Room,
@@ -940,6 +934,10 @@ pub const Prisoner = struct {
 };
 
 pub const Mob = struct { // {{{
+    // linked list stuff
+    __next: ?*Mob = null,
+    __prev: ?*Mob = null,
+
     species: []const u8,
     tile: u21,
     allegiance: Allegiance,
@@ -1838,20 +1836,11 @@ pub const Mob = struct { // {{{
     }
 }; // }}}
 
-pub const Sob = struct {
-    id: []const u8 = "",
-    species: []const u8,
-    tile: u21,
-    coord: Coord = undefined,
-    allegiance: Allegiance = .Neutral,
-    damage: usize = 0, // 1..100
-    age: usize = 0,
-    is_dead: usize = false,
-    walkable: bool,
-    ai_func: fn (*Sob) void,
-};
-
 pub const Machine = struct {
+    // linked list stuff
+    __next: ?*Machine = null,
+    __prev: ?*Machine = null,
+
     id: []const u8 = "",
     name: []const u8,
 
@@ -1933,6 +1922,10 @@ pub const Machine = struct {
 };
 
 pub const Prop = struct {
+    // linked list stuff
+    __next: ?*Prop = null,
+    __prev: ?*Prop = null,
+
     id: []const u8,
     name: []const u8,
     tile: u21,
@@ -1950,6 +1943,10 @@ pub const Prop = struct {
 };
 
 pub const Container = struct {
+    // linked list stuff
+    __next: ?*Container = null,
+    __prev: ?*Container = null,
+
     name: []const u8,
     tile: u21,
     capacity: usize,
@@ -1969,11 +1966,10 @@ pub const Container = struct {
     };
 };
 
-pub const SurfaceItemTag = enum { Machine, Prop, Sob, Container, Poster };
+pub const SurfaceItemTag = enum { Machine, Prop, Container, Poster };
 pub const SurfaceItem = union(SurfaceItemTag) {
     Machine: *Machine,
     Prop: *Prop,
-    Sob: *Sob,
     Container: *Container,
     Poster: *const Poster,
 };
@@ -2092,6 +2088,10 @@ pub const Damages = struct {
 };
 
 pub const Armor = struct {
+    // linked list stuff
+    __next: ?*Armor = null,
+    __prev: ?*Armor = null,
+
     id: []const u8,
     name: []const u8,
     resists: Damages,
@@ -2104,6 +2104,10 @@ pub const Projectile = struct {
 };
 
 pub const Weapon = struct {
+    // linked list stuff
+    __next: ?*Weapon = null,
+    __prev: ?*Weapon = null,
+
     id: []const u8,
     name: []const u8,
     required_strength: usize,
@@ -2120,6 +2124,10 @@ pub const Weapon = struct {
 };
 
 pub const Potion = struct {
+    // linked list stuff
+    __next: ?*Potion = null,
+    __prev: ?*Potion = null,
+
     id: []const u8,
 
     // Potion of <name>
@@ -2203,6 +2211,10 @@ pub const Vial = enum {
 };
 
 pub const Ring = struct {
+    // linked list stuff
+    __next: ?*Ring = null,
+    __prev: ?*Ring = null,
+
     // Ring of <name>
     name: []const u8,
 
@@ -2385,7 +2397,6 @@ pub const Tile = struct {
                             if (p.fg) |prop_fg| cell.fg = prop_fg;
                             break :prop p.tile;
                         },
-                        .Sob => |s| s.tile,
                         .Poster => '∺',
                     };
 
