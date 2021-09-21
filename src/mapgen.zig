@@ -21,7 +21,7 @@ const Poster = literature.Poster;
 
 const CONNECTIONS_MAX = 5;
 
-const LIMIT = Room{
+const LIMIT = Rect{
     .start = Coord.new(1, 1),
     .width = state.WIDTH - 1,
     .height = state.HEIGHT - 1,
@@ -135,41 +135,42 @@ fn placeMob(
 // Given a parent and child room, return the direction a corridor between the two
 // would go
 fn getConnectionSide(parent: *const Room, child: *const Room) ?Direction {
-    assert(!parent.start.eq(child.start)); // parent != child
+    assert(!parent.rect.start.eq(child.rect.start)); // parent != child
 
-    const x_overlap = math.max(parent.start.x, child.start.x) <
-        math.min(parent.end().x, child.end().x);
-    const y_overlap = math.max(parent.start.y, child.start.y) <
-        math.min(parent.end().y, child.end().y);
+    const x_overlap = math.max(parent.rect.start.x, child.rect.start.x) <
+        math.min(parent.rect.end().x, child.rect.end().x);
+    const y_overlap = math.max(parent.rect.start.y, child.rect.start.y) <
+        math.min(parent.rect.end().y, child.rect.end().y);
 
-    // FIXME: assert that x_overlap or y_overlap, but not both
+    // assert that x_overlap or y_overlap, but not both
+    assert(!(x_overlap and y_overlap));
 
     if (!x_overlap and !y_overlap) {
         return null;
     }
 
     if (x_overlap) {
-        return if (parent.start.y > child.start.y) .North else .South;
+        return if (parent.rect.start.y > child.rect.start.y) .North else .South;
     } else if (y_overlap) {
-        return if (parent.start.x > child.start.x) .West else .East;
+        return if (parent.rect.start.x > child.rect.start.x) .West else .East;
     } else unreachable;
 }
 
-fn randomWallCoord(room: *const Room, i: ?usize) Coord {
+fn randomWallCoord(rect: *const Rect, i: ?usize) Coord {
     const Range = struct { from: Coord, to: Coord };
-    const room_end = room.end();
+    const rect_end = rect.end();
 
     const ranges = [_]Range{
-        .{ .from = Coord.new(room.start.x + 1, room.start.y - 1), .to = Coord.new(room_end.x - 2, room.start.y - 1) }, // top
-        .{ .from = Coord.new(room.start.x + 1, room_end.y), .to = Coord.new(room_end.x - 2, room_end.y) }, // bottom
-        .{ .from = Coord.new(room.start.x, room.start.y + 1), .to = Coord.new(room.start.x, room_end.y - 2) }, // left
-        .{ .from = Coord.new(room_end.x, room.start.y + 1), .to = Coord.new(room_end.x, room_end.y - 2) }, // left
+        .{ .from = Coord.new(rect.start.x + 1, rect.start.y - 1), .to = Coord.new(rect_end.x - 2, rect.start.y - 1) }, // top
+        .{ .from = Coord.new(rect.start.x + 1, rect_end.y), .to = Coord.new(rect_end.x - 2, rect_end.y) }, // bottom
+        .{ .from = Coord.new(rect.start.x, rect.start.y + 1), .to = Coord.new(rect.start.x, rect_end.y - 2) }, // left
+        .{ .from = Coord.new(rect_end.x, rect.start.y + 1), .to = Coord.new(rect_end.x, rect_end.y - 2) }, // left
     };
 
     const range = if (i) |_i| ranges[(_i + 1) % ranges.len] else rng.chooseUnweighted(Range, &ranges);
     const x = rng.rangeClumping(usize, range.from.x, range.to.x, 2);
     const y = rng.rangeClumping(usize, range.from.y, range.to.y, 2);
-    return Coord.new2(room.start.z, x, y);
+    return Coord.new2(rect.start.z, x, y);
 }
 
 fn _createItem(comptime T: type, item: T) *T {
@@ -253,12 +254,12 @@ fn choosePrefab(level: usize, prefabs: *PrefabArrayList) ?*Prefab {
     return null;
 }
 
-fn attachRoom(parent: *const Room, d: Direction, width: usize, height: usize, distance: usize, fab: ?*const Prefab) ?Room {
+fn attachRect(parent: *const Room, d: Direction, width: usize, height: usize, distance: usize, fab: ?*const Prefab) ?Rect {
     // "Preferred" X/Y coordinates to start the child at. preferred_x is only
     // valid if d == .North or d == .South, and preferred_y is only valid if
     // d == .West or d == .East.
-    var preferred_x = parent.start.x + (parent.width / 2);
-    var preferred_y = parent.start.y + (parent.height / 2);
+    var preferred_x = parent.rect.start.x + (parent.rect.width / 2);
+    var preferred_y = parent.rect.start.y + (parent.rect.height / 2);
 
     // Note: the coordinate returned by Prefab.connectorFor() is relative.
 
@@ -266,40 +267,40 @@ fn attachRoom(parent: *const Room, d: Direction, width: usize, height: usize, di
         const parent_con = parent.prefab.?.connectorFor(d) orelse return null;
         const child_con = fab.?.connectorFor(d.opposite()) orelse return null;
         const parent_con_abs = Coord.new2(
-            parent.start.z,
-            parent.start.x + parent_con.x,
-            parent.start.y + parent_con.y,
+            parent.rect.start.z,
+            parent.rect.start.x + parent_con.x,
+            parent.rect.start.y + parent_con.y,
         );
         preferred_x = utils.saturating_sub(parent_con_abs.x, child_con.x);
         preferred_y = utils.saturating_sub(parent_con_abs.y, child_con.y);
     } else if (parent.prefab) |pafab| {
         const con = pafab.connectorFor(d) orelse return null;
-        preferred_x = parent.start.x + con.x;
-        preferred_y = parent.start.y + con.y;
+        preferred_x = parent.rect.start.x + con.x;
+        preferred_y = parent.rect.start.y + con.y;
     } else if (fab) |chfab| {
         const con = chfab.connectorFor(d.opposite()) orelse return null;
-        preferred_x = utils.saturating_sub(parent.start.x, con.x);
-        preferred_y = utils.saturating_sub(parent.start.y, con.y);
+        preferred_x = utils.saturating_sub(parent.rect.start.x, con.x);
+        preferred_y = utils.saturating_sub(parent.rect.start.y, con.y);
     }
 
     return switch (d) {
-        .North => Room{
-            .start = Coord.new2(parent.start.z, preferred_x, utils.saturating_sub(parent.start.y, height + distance)),
+        .North => Rect{
+            .start = Coord.new2(parent.rect.start.z, preferred_x, utils.saturating_sub(parent.rect.start.y, height + distance)),
             .height = height,
             .width = width,
         },
-        .East => Room{
-            .start = Coord.new2(parent.start.z, parent.end().x + distance, preferred_y),
+        .East => Rect{
+            .start = Coord.new2(parent.rect.start.z, parent.rect.end().x + distance, preferred_y),
             .height = height,
             .width = width,
         },
-        .South => Room{
-            .start = Coord.new2(parent.start.z, preferred_x, parent.end().y + distance),
+        .South => Rect{
+            .start = Coord.new2(parent.rect.start.z, preferred_x, parent.rect.end().y + distance),
             .height = height,
             .width = width,
         },
-        .West => Room{
-            .start = Coord.new2(parent.start.z, utils.saturating_sub(parent.start.x, width + distance), preferred_y),
+        .West => Rect{
+            .start = Coord.new2(parent.rect.start.z, utils.saturating_sub(parent.rect.start.x, width + distance), preferred_y),
             .width = width,
             .height = height,
         },
@@ -308,7 +309,7 @@ fn attachRoom(parent: *const Room, d: Direction, width: usize, height: usize, di
 }
 
 fn findIntersectingRoom(
-    rooms: *const RoomArrayList,
+    rooms: *const Room.ArrayList,
     room: *const Room,
     ignore: ?*const Room,
     ignore2: ?*const Room,
@@ -316,14 +317,14 @@ fn findIntersectingRoom(
 ) ?usize {
     for (rooms.items) |other, i| {
         if (ignore) |ign| {
-            if (other.start.eq(ign.start))
-                if (other.width == ign.width and other.height == ign.height)
+            if (other.rect.start.eq(ign.rect.start))
+                if (other.rect.width == ign.rect.width and other.rect.height == ign.rect.height)
                     continue;
         }
 
         if (ignore2) |ign| {
-            if (other.start.eq(ign.start))
-                if (other.width == ign.width and other.height == ign.height)
+            if (other.rect.start.eq(ign.rect.start))
+                if (other.rect.width == ign.rect.width and other.rect.height == ign.rect.height)
                     continue;
         }
 
@@ -331,14 +332,14 @@ fn findIntersectingRoom(
             continue;
         }
 
-        if (room.intersects(&other, 1)) return i;
+        if (room.rect.intersects(&other.rect, 1)) return i;
     }
 
     return null;
 }
 
 fn roomIntersects(
-    rooms: *const RoomArrayList,
+    rooms: *const Room.ArrayList,
     room: *const Room,
     ignore: ?*const Room,
     ignore2: ?*const Room,
@@ -347,7 +348,7 @@ fn roomIntersects(
     return if (findIntersectingRoom(rooms, room, ignore, ignore2, ign_c)) |r| true else false;
 }
 
-fn _excavate_prefab(
+fn excavatePrefab(
     room: *const Room,
     fab: *const Prefab,
     allocator: *mem.Allocator,
@@ -359,9 +360,9 @@ fn _excavate_prefab(
         var x: usize = 0;
         while (x < fab.width) : (x += 1) {
             const rc = Coord.new2(
-                room.start.z,
-                x + room.start.x + startx,
-                y + room.start.y + starty,
+                room.rect.start.z,
+                x + room.rect.start.x + startx,
+                y + room.rect.start.y + starty,
             );
             assert(rc.x < WIDTH);
             assert(rc.y < HEIGHT);
@@ -384,7 +385,7 @@ fn _excavate_prefab(
 
             switch (fab.content[y][x]) {
                 .Window => state.dungeon.at(rc).material = &materials.Glass,
-                .LevelFeature => |l| (Configs[room.start.z].level_features[l].?)(l, rc, room, fab, allocator),
+                .LevelFeature => |l| (Configs[room.rect.start.z].level_features[l].?)(l, rc, room, fab, allocator),
                 .Feature => |feature_id| {
                     if (fab.features[feature_id]) |feature| {
                         switch (feature) {
@@ -415,9 +416,9 @@ fn _excavate_prefab(
                                     const machine = state.dungeon.at(rc).surface.?.Machine;
                                     for (mid.points.constSlice()) |point, i| {
                                         const adj_point = Coord.new2(
-                                            room.start.z,
-                                            point.x + room.start.x + startx,
-                                            point.y + room.start.y + starty,
+                                            room.rect.start.z,
+                                            point.x + room.rect.start.x + startx,
+                                            point.y + room.rect.start.y + starty,
                                         );
                                         machine.areas.append(adj_point) catch unreachable;
                                     }
@@ -438,9 +439,9 @@ fn _excavate_prefab(
                 },
                 .LockedDoor => placeDoor(rc, true),
                 .Door => placeDoor(rc, false),
-                .Brazier => _place_machine(rc, Configs[room.start.z].light),
+                .Brazier => _place_machine(rc, Configs[room.rect.start.z].light),
                 .Bars => {
-                    const p_ind = utils.findById(surfaces.props.items, Configs[room.start.z].bars);
+                    const p_ind = utils.findById(surfaces.props.items, Configs[room.rect.start.z].bars);
                     _ = placeProp(rc, &surfaces.props.items[p_ind.?]);
                 },
                 else => {},
@@ -452,14 +453,14 @@ fn _excavate_prefab(
         if (maybe_mob) |mob_f| {
             if (utils.findById(&mobs.MOBS, mob_f.id)) |mob_template| {
                 const coord = Coord.new2(
-                    room.start.z,
-                    mob_f.spawn_at.x + room.start.x + startx,
-                    mob_f.spawn_at.y + room.start.y + starty,
+                    room.rect.start.z,
+                    mob_f.spawn_at.x + room.rect.start.x + startx,
+                    mob_f.spawn_at.y + room.rect.start.y + starty,
                 );
                 const work_area = Coord.new2(
-                    room.start.z,
-                    (mob_f.work_at orelse mob_f.spawn_at).x + room.start.x + startx,
-                    (mob_f.work_at orelse mob_f.spawn_at).y + room.start.y + starty,
+                    room.rect.start.z,
+                    (mob_f.work_at orelse mob_f.spawn_at).x + room.rect.start.x + startx,
+                    (mob_f.work_at orelse mob_f.spawn_at).y + room.rect.start.y + starty,
                 );
 
                 _ = placeMob(allocator, &mobs.MOBS[mob_template], coord, .{
@@ -476,33 +477,33 @@ fn _excavate_prefab(
 
     for (fab.prisons.constSlice()) |prison_area| {
         const prison_start = Coord.new2(
-            room.start.z,
-            prison_area.start.x + room.start.x + startx,
-            prison_area.start.y + room.start.y + starty,
+            room.rect.start.z,
+            prison_area.start.x + room.rect.start.x + startx,
+            prison_area.start.y + room.rect.start.y + starty,
         );
         const prison_end = Coord.new2(
-            room.start.z,
-            prison_area.end().x + room.start.x + startx,
-            prison_area.end().y + room.start.y + starty,
+            room.rect.start.z,
+            prison_area.end().x + room.rect.start.x + startx,
+            prison_area.end().y + room.rect.start.y + starty,
         );
 
         var p_y: usize = prison_start.y;
         while (p_y < prison_end.y) : (p_y += 1) {
             var p_x: usize = prison_start.x;
             while (p_x < prison_end.x) : (p_x += 1) {
-                state.dungeon.at(Coord.new2(room.start.z, p_x, p_y)).prison = true;
+                state.dungeon.at(Coord.new2(room.rect.start.z, p_x, p_y)).prison = true;
             }
         }
     }
 
     if (fab.stockpile) |stockpile| {
         const room_start = Coord.new2(
-            room.start.z,
-            stockpile.start.x + room.start.x + startx,
-            stockpile.start.y + room.start.y + starty,
+            room.rect.start.z,
+            stockpile.start.x + room.rect.start.x + startx,
+            stockpile.start.y + room.rect.start.y + starty,
         );
         var stckpl = Stockpile{
-            .room = Room{
+            .room = Rect{
                 .start = room_start,
                 .width = stockpile.width,
                 .height = stockpile.height,
@@ -513,17 +514,17 @@ fn _excavate_prefab(
         if (!inferred) {
             std.log.err("{}: Couldn't infer type for stockpile! (skipping)", .{fab.name.constSlice()});
         } else {
-            state.stockpiles[room.start.z].append(stckpl) catch unreachable;
+            state.stockpiles[room.rect.start.z].append(stckpl) catch unreachable;
         }
     }
 
     if (fab.output) |output| {
         const room_start = Coord.new2(
-            room.start.z,
-            output.start.x + room.start.x + startx,
-            output.start.y + room.start.y + starty,
+            room.rect.start.z,
+            output.start.x + room.rect.start.x + startx,
+            output.start.y + room.rect.start.y + starty,
         );
-        state.outputs[room.start.z].append(Room{
+        state.outputs[room.rect.start.z].append(Rect{
             .start = room_start,
             .width = output.width,
             .height = output.height,
@@ -532,12 +533,12 @@ fn _excavate_prefab(
 
     if (fab.input) |input| {
         const room_start = Coord.new2(
-            room.start.z,
-            input.start.x + room.start.x + startx,
-            input.start.y + room.start.y + starty,
+            room.rect.start.z,
+            input.start.x + room.rect.start.x + startx,
+            input.start.y + room.rect.start.y + starty,
         );
         var input_stckpl = Stockpile{
-            .room = Room{
+            .room = Rect{
                 .start = room_start,
                 .width = input.width,
                 .height = input.height,
@@ -548,17 +549,17 @@ fn _excavate_prefab(
         if (!inferred) {
             std.log.err("{}: Couldn't infer type for input area! (skipping)", .{fab.name.constSlice()});
         } else {
-            state.inputs[room.start.z].append(input_stckpl) catch unreachable;
+            state.inputs[room.rect.start.z].append(input_stckpl) catch unreachable;
         }
     }
 }
 
-fn _excavate_room(room: *const Room) void {
-    var y = room.start.y;
-    while (y < room.end().y) : (y += 1) {
-        var x = room.start.x;
-        while (x < room.end().x) : (x += 1) {
-            const c = Coord.new2(room.start.z, x, y);
+fn excavateRect(rect: *const Rect) void {
+    var y = rect.start.y;
+    while (y < rect.end().y) : (y += 1) {
+        var x = rect.start.x;
+        while (x < rect.end().x) : (x += 1) {
+            const c = Coord.new2(rect.start.z, x, y);
             assert(c.x < WIDTH and c.y < HEIGHT);
             state.dungeon.at(c).type = .Floor;
         }
@@ -603,7 +604,7 @@ pub fn resetLevel(level: usize) void {
         }
     }
 
-    state.dungeon.rooms[level].shrinkRetainingCapacity(0);
+    state.rooms[level].shrinkRetainingCapacity(0);
     state.stockpiles[level].shrinkRetainingCapacity(0);
     state.inputs[level].shrinkRetainingCapacity(0);
     state.outputs[level].shrinkRetainingCapacity(0);
@@ -630,7 +631,7 @@ pub fn setLevelMaterial(level: usize) void {
 pub fn validateLevel(level: usize, alloc: *mem.Allocator) bool {
     // utility functions
     const _f = struct {
-        pub fn _getWalkablePoint(room: *const Room) Coord {
+        pub fn _getWalkablePoint(room: *const Rect) Coord {
             var point: Coord = room.start;
             var tries: usize = 100;
             while (tries > 0) : (tries -= 1) {
@@ -646,15 +647,15 @@ pub fn validateLevel(level: usize, alloc: *mem.Allocator) bool {
         }
     };
 
-    const rooms = state.dungeon.rooms[level].items;
-    const base_room = rng.chooseUnweighted(Room, rooms); // FIXME: ensure is not corridor
-    const point = _f._getWalkablePoint(&base_room);
+    const rooms = state.rooms[level].items;
+    const base_room = rng.chooseUnweighted(Room, rooms);
+    const point = _f._getWalkablePoint(&base_room.rect);
 
     for (rooms) |otherroom| {
         if (otherroom.type == .Corridor) continue;
-        if (otherroom.start.eq(base_room.start)) continue;
+        if (otherroom.rect.start.eq(base_room.rect.start)) continue;
 
-        const otherpoint = _f._getWalkablePoint(&otherroom);
+        const otherpoint = _f._getWalkablePoint(&otherroom.rect);
 
         if (astar.path(point, otherpoint, state.mapgeometry, _f._isWalkable, .{}, alloc)) |p| {
             p.deinit();
@@ -667,10 +668,10 @@ pub fn validateLevel(level: usize, alloc: *mem.Allocator) bool {
 }
 
 pub fn placeMoarCorridors(level: usize, alloc: *mem.Allocator) void {
-    var newrooms = RoomArrayList.init(alloc);
+    var newrooms = Room.ArrayList.init(alloc);
     defer newrooms.deinit();
 
-    const rooms = &state.dungeon.rooms[level];
+    const rooms = &state.rooms[level];
 
     var i: usize = 0;
     while (i < rooms.items.len) : (i += 1) {
@@ -685,11 +686,11 @@ pub fn placeMoarCorridors(level: usize, alloc: *mem.Allocator) void {
             // Skip child prefabs for now, placeCorridor seems to be broken
             if (child.prefab != null) continue;
 
-            if (parent.intersects(child, 1)) {
+            if (parent.rect.intersects(&child.rect, 1)) {
                 continue;
             }
 
-            if (parent.start.eq(child.start)) {
+            if (parent.rect.start.eq(child.rect.start)) {
                 // skip ourselves
                 continue;
             }
@@ -697,7 +698,7 @@ pub fn placeMoarCorridors(level: usize, alloc: *mem.Allocator) void {
             var side: ?Direction = getConnectionSide(parent, child);
             if (side == null) continue;
 
-            if (_createCorridor(level, parent, child, side.?)) |corridor| {
+            if (createCorridor(level, parent, child, side.?)) |corridor| {
                 if (corridor.distance == 0 or corridor.distance > 9) {
                     continue;
                 }
@@ -711,7 +712,7 @@ pub fn placeMoarCorridors(level: usize, alloc: *mem.Allocator) void {
                 parent.connections += 1;
                 child.connections += 1;
 
-                _excavate_room(&corridor.room);
+                excavateRect(&corridor.room.rect);
                 newrooms.append(corridor.room) catch unreachable;
 
                 // When using a prefab, the corridor doesn't include the connectors. Excavate
@@ -720,8 +721,8 @@ pub fn placeMoarCorridors(level: usize, alloc: *mem.Allocator) void {
                 if (corridor.child_connector) |acon| state.dungeon.at(acon).type = .Floor;
 
                 if (Configs[level].allow_doors and rng.onein(3)) {
-                    if (utils.findPatternMatch(corridor.room.start, &VALID_DOOR_PLACEMENT_PATTERNS) != null)
-                        placeDoor(corridor.room.start, false);
+                    if (utils.findPatternMatch(corridor.room.rect.start, &VALID_DOOR_PLACEMENT_PATTERNS) != null)
+                        placeDoor(corridor.room.rect.start, false);
                 }
             }
         }
@@ -730,7 +731,7 @@ pub fn placeMoarCorridors(level: usize, alloc: *mem.Allocator) void {
     for (newrooms.items) |new| rooms.append(new) catch unreachable;
 }
 
-fn _createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?Corridor {
+fn createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?Corridor {
     var corridor_coord = Coord.new2(level, 0, 0);
     var parent_connector_coord: ?Coord = null;
     var child_connector_coord: ?Coord = null;
@@ -738,47 +739,55 @@ fn _createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?
     if (parent.prefab != null or child.prefab != null) {
         if (parent.prefab) |f| {
             const con = f.connectorFor(side) orelse return null;
-            corridor_coord.x = parent.start.x + con.x;
-            corridor_coord.y = parent.start.y + con.y;
+            corridor_coord.x = parent.rect.start.x + con.x;
+            corridor_coord.y = parent.rect.start.y + con.y;
             parent_connector_coord = corridor_coord;
             f.useConnector(con) catch unreachable;
         }
         if (child.prefab) |f| {
             const con = f.connectorFor(side.opposite()) orelse return null;
-            corridor_coord.x = child.start.x + con.x;
-            corridor_coord.y = child.start.y + con.y;
+            corridor_coord.x = child.rect.start.x + con.x;
+            corridor_coord.y = child.rect.start.y + con.y;
             child_connector_coord = corridor_coord;
             f.useConnector(con) catch unreachable;
         }
     } else {
-        const rsx = math.max(parent.start.x, child.start.x);
-        const rex = math.min(parent.end().x, child.end().x);
-        const rsy = math.max(parent.start.y, child.start.y);
-        const rey = math.min(parent.end().y, child.end().y);
+        const rsx = math.max(parent.rect.start.x, child.rect.start.x);
+        const rex = math.min(parent.rect.end().x, child.rect.end().x);
+        const rsy = math.max(parent.rect.start.y, child.rect.start.y);
+        const rey = math.min(parent.rect.end().y, child.rect.end().y);
         corridor_coord.x = rng.range(usize, math.min(rsx, rex), math.max(rsx, rex) - 1);
         corridor_coord.y = rng.range(usize, math.min(rsy, rey), math.max(rsy, rey) - 1);
     }
 
     var room = switch (side) {
         .North => Room{
-            .start = Coord.new2(level, corridor_coord.x, child.end().y),
-            .height = parent.start.y - child.end().y,
-            .width = 1,
+            .rect = Rect{
+                .start = Coord.new2(level, corridor_coord.x, child.rect.end().y),
+                .height = parent.rect.start.y - child.rect.end().y,
+                .width = 1,
+            },
         },
         .South => Room{
-            .start = Coord.new2(level, corridor_coord.x, parent.end().y),
-            .height = child.start.y - parent.end().y,
-            .width = 1,
+            .rect = Rect{
+                .start = Coord.new2(level, corridor_coord.x, parent.rect.end().y),
+                .height = child.rect.start.y - parent.rect.end().y,
+                .width = 1,
+            },
         },
         .West => Room{
-            .start = Coord.new2(level, child.end().x, corridor_coord.y),
-            .height = 1,
-            .width = parent.start.x - child.end().x,
+            .rect = Rect{
+                .start = Coord.new2(level, child.rect.end().x, corridor_coord.y),
+                .height = 1,
+                .width = parent.rect.start.x - child.rect.end().x,
+            },
         },
         .East => Room{
-            .start = Coord.new2(level, parent.end().x, corridor_coord.y),
-            .height = 1,
-            .width = child.start.x - parent.end().x,
+            .rect = Rect{
+                .start = Coord.new2(level, parent.rect.end().x, corridor_coord.y),
+                .height = 1,
+                .width = child.rect.start.x - parent.rect.end().x,
+            },
         },
         else => unreachable,
     };
@@ -792,23 +801,27 @@ fn _createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?
         .parent_connector = parent_connector_coord,
         .child_connector = child_connector_coord,
         .distance = switch (side) {
-            .North, .South => room.height,
-            .West, .East => room.width,
+            .North, .South => room.rect.height,
+            .West, .East => room.rect.width,
             else => unreachable,
         },
     };
 }
 
-fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Room, alloc: *mem.Allocator) void {
+fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, alloc: *mem.Allocator) void {
     for (s_fabs.items) |*subroom| {
-        if (!prefabIsValid(parent.start.z, subroom))
+        if (!prefabIsValid(parent.rect.start.z, subroom))
             continue;
 
         if ((subroom.height + 2) < area.height and (subroom.width + 2) < area.width) {
             const rx = (area.width / 2) - (subroom.width / 2);
             const ry = (area.height / 2) - (subroom.height / 2);
-            _excavate_prefab(&parent.add(area), subroom, alloc, rx, ry);
-            subroom.used[parent.start.z] += 1;
+
+            var parent_adj = parent.*;
+            parent_adj.rect = parent_adj.rect.add(area);
+
+            excavatePrefab(&parent_adj, subroom, alloc, rx, ry);
+            subroom.used[parent.rect.start.z] += 1;
             parent.has_subroom = true;
             break;
         }
@@ -816,7 +829,7 @@ fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Room, allo
 }
 
 fn _place_rooms(
-    rooms: *RoomArrayList,
+    rooms: *Room.ArrayList,
     n_fabs: *PrefabArrayList,
     s_fabs: *PrefabArrayList,
     level: usize,
@@ -827,9 +840,6 @@ fn _place_rooms(
 
     if (parent.connections > CONNECTIONS_MAX) return;
 
-    //var _parent = rng.chooseUnweighted(Room, rooms.items);
-    //const parent = &_parent;
-
     var fab: ?*Prefab = null;
     var distance = rng.choose(usize, &Configs[level].distances[0], &Configs[level].distances[1]) catch unreachable;
     var child: Room = undefined;
@@ -839,33 +849,39 @@ fn _place_rooms(
         if (distance == 0) distance += 1;
 
         fab = choosePrefab(level, n_fabs) orelse return;
-        child = attachRoom(parent, side, fab.?.width, fab.?.height, distance, fab) orelse return;
-        child.prefab = fab;
+        var childrect = attachRect(parent, side, fab.?.width, fab.?.height, distance, fab) orelse return;
 
-        if (roomIntersects(rooms, &child, parent, null, false) or child.overflowsLimit(&LIMIT)) {
+        if (roomIntersects(rooms, &Room{ .rect = childrect }, parent, null, false) or
+            childrect.overflowsLimit(&LIMIT))
+        {
             if (Configs[level].shrink_corridors_to_fit) {
-                while (roomIntersects(rooms, &child, parent, null, true) or child.overflowsLimit(&LIMIT)) {
+                while (roomIntersects(rooms, &Room{ .rect = childrect }, parent, null, true) or
+                    childrect.overflowsLimit(&LIMIT))
+                {
                     if (distance == 1) {
                         return;
                     }
 
                     distance -= 1;
-                    child = attachRoom(parent, side, fab.?.width, fab.?.height, distance, fab) orelse return;
-                    child.prefab = fab;
+                    childrect = attachRect(parent, side, fab.?.width, fab.?.height, distance, fab) orelse return;
                 }
             } else {
                 return;
             }
         }
+
+        child = Room{ .rect = childrect, .prefab = fab };
     } else {
         if (parent.prefab != null and distance == 0) distance += 1;
 
         var child_w = rng.rangeClumping(usize, Configs[level].min_room_width, Configs[level].max_room_width, 2);
         var child_h = rng.rangeClumping(usize, Configs[level].min_room_height, Configs[level].max_room_height, 2);
-        child = attachRoom(parent, side, child_w, child_h, distance, null) orelse return;
+        var childrect = attachRect(parent, side, child_w, child_h, distance, null) orelse return;
 
         var i: usize = 0;
-        while (roomIntersects(rooms, &child, parent, null, true) or child.overflowsLimit(&LIMIT)) : (i += 1) {
+        while (roomIntersects(rooms, &Room{ .rect = childrect }, parent, null, true) or
+            childrect.overflowsLimit(&LIMIT)) : (i += 1)
+        {
             if (child_w < Configs[level].min_room_width or
                 child_h < Configs[level].min_room_height)
                 return;
@@ -878,14 +894,16 @@ fn _place_rooms(
                 child_h -= 1;
             }
 
-            child = attachRoom(parent, side, child_w, child_h, distance, null) orelse return;
+            childrect = attachRect(parent, side, child_w, child_h, distance, null) orelse return;
         }
+
+        child = Room{ .rect = childrect };
     }
 
     var corridor: ?Corridor = null;
 
     if (distance > 0 and Configs[level].allow_corridors) {
-        if (_createCorridor(level, parent, &child, side)) |maybe_corridor| {
+        if (createCorridor(level, parent, &child, side)) |maybe_corridor| {
             if (roomIntersects(rooms, &maybe_corridor.room, parent, null, true)) {
                 return;
             }
@@ -898,13 +916,13 @@ fn _place_rooms(
     // Only now are we actually sure that we'd use the room
 
     if (child.prefab) |_| {
-        _excavate_prefab(&child, fab.?, allocator, 0, 0);
+        excavatePrefab(&child, fab.?, allocator, 0, 0);
     } else {
-        _excavate_room(&child);
+        excavateRect(&child.rect);
     }
 
     if (corridor) |cor| {
-        _excavate_room(&cor.room);
+        excavateRect(&cor.room.rect);
         rooms.append(cor.room) catch unreachable;
 
         // When using a prefab, the corridor doesn't include the connectors. Excavate
@@ -914,8 +932,11 @@ fn _place_rooms(
         if (cor.child_connector) |acon| state.dungeon.at(acon).type = .Floor;
 
         if (Configs[level].allow_doors and rng.onein(3)) {
-            if (utils.findPatternMatch(cor.room.start, &VALID_DOOR_PLACEMENT_PATTERNS) != null)
-                placeDoor(cor.room.start, false);
+            if (utils.findPatternMatch(
+                cor.room.rect.start,
+                &VALID_DOOR_PLACEMENT_PATTERNS,
+            ) != null)
+                placeDoor(cor.room.rect.start, false);
         }
     }
 
@@ -923,7 +944,11 @@ fn _place_rooms(
         f.used[level] += 1;
 
     if (child.prefab == null) {
-        const area = Room{ .start = Coord.new(0, 0), .width = child.width, .height = child.height };
+        const area = Rect{
+            .start = Coord.new(0, 0),
+            .width = child.rect.width,
+            .height = child.rect.height,
+        };
         placeSubroom(s_fabs, &child, &area, allocator);
     } else if (child.prefab.?.subroom_areas.len > 0) {
         for (child.prefab.?.subroom_areas.constSlice()) |subroom_area| {
@@ -946,7 +971,7 @@ pub fn placeRandomRooms(
     allocator: *mem.Allocator,
 ) void {
     var first: ?Room = null;
-    const rooms = &state.dungeon.rooms[level];
+    const rooms = &state.rooms[level];
 
     var required = Configs[level].prefabs.constSlice();
     var reqctr: usize = 0;
@@ -962,9 +987,11 @@ pub fn placeRandomRooms(
         const y = rng.rangeClumping(usize, 1, state.HEIGHT - fab.height - 1, 2);
 
         const room = Room{
-            .start = Coord.new2(level, x, y),
-            .width = fab.width,
-            .height = fab.height,
+            .rect = Rect{
+                .start = Coord.new2(level, x, y),
+                .width = fab.width,
+                .height = fab.height,
+            },
             .prefab = fab,
         };
 
@@ -973,7 +1000,7 @@ pub fn placeRandomRooms(
 
         if (first == null) first = room;
         fab.used[level] += 1;
-        _excavate_prefab(&room, fab, allocator, 0, 0);
+        excavatePrefab(&room, fab, allocator, 0, 0);
         rooms.append(room) catch unreachable;
 
         reqctr += 1;
@@ -984,16 +1011,18 @@ pub fn placeRandomRooms(
         const height = rng.range(usize, Configs[level].min_room_height, Configs[level].max_room_height);
         const x = rng.range(usize, 1, state.WIDTH - width - 1);
         const y = rng.range(usize, 1, state.HEIGHT - height - 1);
-        first = Room{ .start = Coord.new2(level, x, y), .width = width, .height = height };
-        _excavate_room(&first.?);
+        first = Room{
+            .rect = Rect{ .start = Coord.new2(level, x, y), .width = width, .height = height },
+        };
+        excavateRect(&first.?.rect);
         rooms.append(first.?) catch unreachable;
     }
 
     if (level == PLAYER_STARTING_LEVEL) {
-        var p = Coord.new2(level, first.?.start.x + 1, first.?.start.y + 1);
+        var p = Coord.new2(level, first.?.rect.start.x + 1, first.?.rect.start.y + 1);
         if (first.?.prefab) |prefab|
             if (prefab.player_position) |pos| {
-                p = Coord.new2(level, first.?.start.x + pos.x, first.?.start.y + pos.y);
+                p = Coord.new2(level, first.?.rect.start.x + pos.x, first.?.rect.start.y + pos.y);
             };
         _add_player(p, allocator);
     }
@@ -1013,7 +1042,7 @@ pub fn placeBSPRooms(
     const Node = struct {
         const Self = @This();
 
-        room: Room,
+        rect: Rect,
         childs: [2]?*Self = [_]?*Self{ null, null },
         parent: ?*Self = null,
         group: Group,
@@ -1035,18 +1064,18 @@ pub fn placeBSPRooms(
             if (childs[1]) |child| child.freeRecursively(alloc);
         }
 
-        fn splitH(self: *const Self, percent: usize, out1: *Room, out2: *Room) void {
-            out1.* = self.room;
-            out2.* = self.room;
+        fn splitH(self: *const Self, percent: usize, out1: *Rect, out2: *Rect) void {
+            out1.* = self.rect;
+            out2.* = self.rect;
 
             out1.height = out1.height * (percent) / 100;
             out2.height = (out2.height * (100 - percent) / 100) - 1;
             out2.start.y += out1.height + 1;
         }
 
-        fn splitV(self: *const Self, percent: usize, out1: *Room, out2: *Room) void {
-            out1.* = self.room;
-            out2.* = self.room;
+        fn splitV(self: *const Self, percent: usize, out1: *Rect, out2: *Rect) void {
+            out1.* = self.rect;
+            out2.* = self.rect;
 
             out1.width = out1.width * (percent) / 100;
             out2.width = (out2.width * (100 - percent) / 100) - 1;
@@ -1068,8 +1097,8 @@ pub fn placeBSPRooms(
             while (iters > 0 and branches.items.len > 0) : (iters -= 1) {
                 const cur = branches.swapRemove(rng.range(usize, 0, branches.items.len - 1));
 
-                var new1: Room = undefined;
-                var new2: Room = undefined;
+                var new1: Rect = undefined;
+                var new2: Rect = undefined;
 
                 // Ratio to split by.
                 //
@@ -1078,9 +1107,9 @@ pub fn placeBSPRooms(
                 const percent = rng.range(usize, 25, 75);
 
                 // Split horizontally or vertically
-                if ((cur.room.height * 2) > cur.room.width) {
+                if ((cur.rect.height * 2) > cur.rect.width) {
                     cur.splitH(percent, &new1, &new2);
-                } else if (cur.room.width > (cur.room.height * 2)) {
+                } else if (cur.rect.width > (cur.rect.height * 2)) {
                     cur.splitV(percent, &new1, &new2);
                 } else {
                     if (rng.tenin(18)) {
@@ -1091,10 +1120,10 @@ pub fn placeBSPRooms(
                 }
 
                 var has_child = false;
-                const prospective_children = [_]Room{ new1, new2 };
+                const prospective_children = [_]Rect{ new1, new2 };
                 for (prospective_children) |prospective_child, i| {
                     const node = try alloc.create(Self);
-                    node.* = .{ .room = prospective_child, .group = undefined, .parent = cur };
+                    node.* = .{ .rect = prospective_child, .group = undefined, .parent = cur };
                     cur.childs[i] = node;
 
                     if (prospective_child.width > Configs[maplevel].min_room_width and
@@ -1125,30 +1154,32 @@ pub fn placeBSPRooms(
         }
     };
 
-    const rooms = &state.dungeon.rooms[level];
+    const rooms = &state.rooms[level];
 
     var failed = Node.ArrayList.init(allocator);
     defer failed.deinit();
     var leaves = Node.ArrayList.init(allocator);
     defer leaves.deinit();
 
-    const map = Room{ .start = Coord.new2(level, 1, 1), .height = HEIGHT - 2, .width = WIDTH - 2 };
-    var grandma_node = Node{ .room = map, .group = .Root };
+    var grandma_node = Node{
+        .rect = Rect{ .start = Coord.new2(level, 1, 1), .height = HEIGHT - 2, .width = WIDTH - 2 },
+        .group = .Root,
+    };
     grandma_node.splitTree(&failed, &leaves, level, allocator) catch unreachable;
     defer grandma_node.freeRecursively(allocator);
 
     for (failed.items) |container_node| {
         assert(container_node.group == .Failed);
-        var room = container_node.room;
+        var room = Room{ .rect = container_node.rect };
         room.type = .Sideroom;
         container_node.index = rooms.items.len;
-        _excavate_room(&room);
+        excavateRect(&room.rect);
         rooms.append(room) catch unreachable;
     }
 
     for (leaves.items) |container_node| {
         assert(container_node.group == .Leaf);
-        var room = container_node.room;
+        var room = Room{ .rect = container_node.rect };
 
         // Random room sizes are disabled for now.
         //const container = container_node.room;
@@ -1158,12 +1189,12 @@ pub fn placeBSPRooms(
         //const y = rng.range(usize, container.start.y, container.end().y - h);
         //var room = Room{ .start = Coord.new2(level, x, y), .width = w, .height = h };
 
-        _excavate_room(&room);
+        excavateRect(&room.rect);
 
-        const area = Room{
+        const area = Rect{
             .start = Coord.new(0, 0),
-            .width = room.width,
-            .height = room.height,
+            .width = room.rect.width,
+            .height = room.rect.height,
         };
         placeSubroom(s_fabs, &room, &area, allocator);
 
@@ -1174,29 +1205,31 @@ pub fn placeBSPRooms(
     const S = struct {
         const Self = @This();
 
-        // Recursively descend tree, looking for a room
-        fn getRoomFromNode(node: *const Node) ?usize {
+        // Recursively descend tree, looking for a leaf's rectangle
+        fn getRectFromNode(node: *const Node) ?usize {
             if (node.group == .Leaf or node.group == .Failed)
                 return node.index;
 
-            if (node.childs[0]) |child| return getRoomFromNode(child);
-            if (node.childs[1]) |child| return getRoomFromNode(child);
+            if (node.childs[0]) |child| return getRectFromNode(child);
+            if (node.childs[1]) |child| return getRectFromNode(child);
 
             return null;
         }
 
-        fn tryNodeConnection(
-            maplevel: usize,
-            parent: *Room,
-            child: *Room,
-            roomlist: *RoomArrayList,
-        ) ?Corridor {
-            const d = getConnectionSide(parent, child) orelse return null;
-            if (_createCorridor(maplevel, parent, child, d)) |corridor| {
+        fn tryNodeConnection(maplevel: usize, parent: Rect, child: Rect, roomlist: *Room.ArrayList) ?Corridor {
+            var parentr = Room{ .rect = parent };
+            var childr = Room{ .rect = child };
+
+            const d = getConnectionSide(&parentr, &childr) orelse return null;
+            if (createCorridor(maplevel, &parentr, &childr, d)) |corridor| {
                 // FIXME: 2021-09-18: uncomment this and disable intersecting
                 // corridors, for some weird reason this code doesn't try
                 // connecting another room if its first try fails...? (Far too
                 // tired to fix this now after working on it for 48+ hours...)
+                //
+                // Addendum 2021-09-21: Might be because a room behind another
+                // is trying to connect to a room in front of it? Need a way
+                // to find another parent node if it's not valid.
                 //
                 // if (roomIntersects(roomlist, &corridor.room, parent, child, false))
                 //     return null;
@@ -1209,13 +1242,13 @@ pub fn placeBSPRooms(
         // Recursively attempt connection.
         fn tryRecursiveNodeConnection(
             maplevel: usize,
-            parent: *Room,
+            parent: *Rect,
             child_tree: *const Node,
-            roomlist: *RoomArrayList,
+            roomlist: *Room.ArrayList,
         ) ?Corridor {
             if (child_tree.group == .Leaf or child_tree.group == .Failed) {
-                const child = &roomlist.items[child_tree.index];
-                return tryNodeConnection(maplevel, parent, child, roomlist);
+                const child = roomlist.items[child_tree.index].rect;
+                return tryNodeConnection(maplevel, parent.*, child, roomlist);
             }
 
             if (child_tree.childs[0]) |child|
@@ -1229,25 +1262,25 @@ pub fn placeBSPRooms(
             return null;
         }
 
-        pub fn addCorridors(maplevel: usize, node: *Node, roomlist: *RoomArrayList) void {
+        pub fn addCorridors(maplevel: usize, node: *Node, roomlist: *Room.ArrayList) void {
             const childs = node.childs;
 
             if (childs[0] != null and childs[1] != null) {
-                var child1 = &roomlist.items[getRoomFromNode(childs[0].?).?];
+                var child1 = &roomlist.items[getRectFromNode(childs[0].?).?].rect;
 
                 if (tryRecursiveNodeConnection(maplevel, child1, childs[1].?, roomlist)) |corridor| {
                     corridor.parent.connections += 1;
                     corridor.child.connections += 1;
 
-                    _excavate_room(&corridor.room);
+                    excavateRect(&corridor.room.rect);
                     roomlist.append(corridor.room) catch unreachable;
 
                     if (Configs[maplevel].allow_doors and rng.onein(3)) {
                         if (utils.findPatternMatch(
-                            corridor.room.start,
+                            corridor.room.rect.start,
                             &VALID_DOOR_PLACEMENT_PATTERNS,
                         ) != null) {
-                            placeDoor(corridor.room.start, false);
+                            placeDoor(corridor.room.rect.start, false);
                         }
                     }
                 }
@@ -1302,11 +1335,12 @@ pub fn placeItems(level: usize) void {
 }
 
 pub fn placeTraps(level: usize) void {
-    room_iter: for (state.dungeon.rooms[level].items) |room| {
-        if (room.prefab) |rfb| if (rfb.notraps) continue;
+    room_iter: for (state.rooms[level].items) |maproom| {
+        if (maproom.prefab) |rfb| if (rfb.notraps) continue;
+        const room = maproom.rect;
 
         // Don't place traps in places where it's impossible to avoid
-        if (room.height == 1 or room.width == 1 or room.type != .Room)
+        if (room.height == 1 or room.width == 1 or maproom.type != .Room)
             continue;
 
         if (rng.onein(2)) continue;
@@ -1361,8 +1395,8 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
     var squads: usize = Configs[level].patrol_squads;
 
     while (squads > 0) : (squads -= 1) {
-        const room = rng.chooseUnweighted(Room, state.dungeon.rooms[level].items);
-        const patrol_units = rng.range(usize, 2, 4) % math.max(room.width, room.height);
+        const room = rng.chooseUnweighted(Room, state.rooms[level].items);
+        const patrol_units = rng.range(usize, 3, 5) % math.max(room.rect.width, room.rect.height);
         var patrol_warden: ?*Mob = null;
 
         if (room.prefab) |rfb| if (rfb.noguards) continue;
@@ -1371,7 +1405,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
         var placed_units: usize = 0;
         var tries: usize = 2048;
         while (tries > 0 and placed_units < patrol_units) : (tries -= 1) {
-            const rnd = room.randomCoord();
+            const rnd = room.rect.randomCoord();
             if (!isTileAvailable(rnd)) continue;
 
             if (state.dungeon.at(rnd).mob == null) {
@@ -1389,16 +1423,16 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
         }
     }
 
-    for (state.dungeon.rooms[level].items) |room| {
+    for (state.rooms[level].items) |room| {
         if (room.prefab) |rfb| if (rfb.noguards) continue;
         if (room.type == .Corridor) continue;
-        if (room.height * room.width < 16) continue;
+        if (room.rect.height * room.rect.width < 25) continue;
 
         for (Configs[level].mob_options.data) |mob| {
             if (rng.tenin(mob.chance)) {
                 var tries: usize = 100;
                 while (tries > 0) : (tries -= 1) {
-                    const post_coord = room.randomCoord();
+                    const post_coord = room.rect.randomCoord();
                     if (isTileAvailable(post_coord) and !state.dungeon.at(post_coord).prison) {
                         _ = placeMob(alloc, mob.template, post_coord, .{
                             .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
@@ -1412,14 +1446,14 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
 }
 
 fn placeLights(room: *const Room) void {
-    if (Configs[room.start.z].no_lights) return;
+    if (Configs[room.rect.start.z].no_lights) return;
     if (room.prefab) |rfb| if (rfb.nolights) return;
 
     var lights: usize = 0;
     var lights_needed = rng.rangeClumping(usize, 0, 4, 2);
     var light_tries: usize = rng.range(usize, 0, 50);
     while (light_tries > 0 and lights < lights_needed) : (light_tries -= 1) {
-        const coord = randomWallCoord(room, light_tries);
+        const coord = randomWallCoord(&room.rect, light_tries);
 
         if (state.dungeon.at(coord).type != .Wall or
             state.dungeon.at(coord).surface != null or
@@ -1427,7 +1461,7 @@ fn placeLights(room: *const Room) void {
             state.dungeon.neighboringMachines(coord) > 0)
             continue; // invalid coord
 
-        var brazier = Configs[room.start.z].light.*;
+        var brazier = Configs[room.rect.start.z].light.*;
 
         // Dim light by random amount, depending on how many lights there are in
         // room.
@@ -1451,9 +1485,11 @@ fn placeLights(room: *const Room) void {
 }
 
 pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
-    for (state.dungeon.rooms[level].items) |room| {
+    for (state.rooms[level].items) |room| {
+        const rect = room.rect;
+
         // Don't fill small rooms or corridors.
-        if ((room.width * room.height) < 16 or
+        if ((rect.width * rect.height) < 16 or
             room.type == .Corridor or
             room.type == .Sideroom)
         {
@@ -1465,13 +1501,13 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
         if (room.prefab != null) continue;
 
         const Range = struct { from: Coord, to: Coord };
-        const room_end = room.end();
+        const rect_end = rect.end();
 
         const ranges = [_]Range{
-            .{ .from = Coord.new(room.start.x + 1, room.start.y), .to = Coord.new(room_end.x - 2, room.start.y) }, // top
-            .{ .from = Coord.new(room.start.x + 1, room_end.y - 1), .to = Coord.new(room_end.x - 2, room_end.y - 1) }, // bottom
-            .{ .from = Coord.new(room.start.x, room.start.y + 1), .to = Coord.new(room.start.x, room_end.y - 2) }, // left
-            .{ .from = Coord.new(room_end.x - 1, room.start.y + 1), .to = Coord.new(room_end.x - 1, room_end.y - 2) }, // left
+            .{ .from = Coord.new(rect.start.x + 1, rect.start.y), .to = Coord.new(rect_end.x - 2, rect.start.y) }, // top
+            .{ .from = Coord.new(rect.start.x + 1, rect_end.y - 1), .to = Coord.new(rect_end.x - 2, rect_end.y - 1) }, // bottom
+            .{ .from = Coord.new(rect.start.x, rect.start.y + 1), .to = Coord.new(rect.start.x, rect_end.y - 2) }, // left
+            .{ .from = Coord.new(rect_end.x - 1, rect.start.y + 1), .to = Coord.new(rect_end.x - 1, rect_end.y - 2) }, // left
         };
 
         var statues: usize = 0;
@@ -1480,12 +1516,12 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
         var levers: usize = 0;
         var posters: usize = 0;
 
-        var tries = math.sqrt(room.width * room.height) * 5;
+        var tries = math.sqrt(rect.width * rect.height) * 5;
         while (tries > 0) : (tries -= 1) {
             const range = ranges[tries % ranges.len];
             const x = rng.range(usize, range.from.x, range.to.x);
             const y = rng.range(usize, range.from.y, range.to.y);
-            const coord = Coord.new2(room.start.z, x, y);
+            const coord = Coord.new2(rect.start.z, x, y);
 
             if (!isTileAvailable(coord) or
                 utils.findPatternMatch(coord, &VALID_FEATURE_TILE_PATTERNS) == null)
@@ -1504,7 +1540,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                     }
                 },
                 2 => {
-                    if (capacity < (math.sqrt(room.width * room.height) * 4)) {
+                    if (capacity < (math.sqrt(rect.width * rect.height) * 4)) {
                         var cont = rng.chooseUnweighted(Container, Configs[level].containers);
                         placeContainer(coord, &cont);
                         capacity += cont.capacity;
@@ -1517,7 +1553,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                     }
                 },
                 4 => {
-                    if ((room.width * room.height) > 25 and posters < 2) {
+                    if ((rect.width * rect.height) > 25 and posters < 2) {
                         if (choosePoster(level)) |poster| {
                             state.dungeon.at(coord).surface = SurfaceItem{ .Poster = poster };
                             posters += 1;
@@ -1535,7 +1571,7 @@ pub fn placeRandomStairs(level: usize) void {
 
     if (level == 0) return;
 
-    const rooms = state.dungeon.rooms[level].items;
+    const rooms = state.rooms[level].items;
 
     var room_i: usize = 0;
     var placed: usize = 0;
@@ -1544,11 +1580,11 @@ pub fn placeRandomStairs(level: usize) void {
         const room = &rooms[room_i];
 
         // Don't place stairs in narrow rooms where it's impossible to avoid.
-        if (room.width == 1 or room.height == 1) continue;
+        if (room.rect.width == 1 or room.rect.height == 1) continue;
 
         var tries: usize = 5;
         tries: while (tries > 0) : (tries -= 1) {
-            const rand = room.randomCoord();
+            const rand = room.rect.randomCoord();
             const current = Coord.new2(level, rand.x, rand.y);
             const above = Coord.new2(level - 1, rand.x, rand.y);
 
@@ -1625,7 +1661,7 @@ fn createBlob(
     percent_seeded: usize,
     birth_params: *const [9]u8,
     survival_params: *const [9]u8,
-) Room {
+) Rect {
     const S = struct {
         fn cellularAutomataRound(buf: *[WIDTH][HEIGHT]usize, births: *const [9]u8, survivals: *const [9]u8) void {
             var buf2: [WIDTH][HEIGHT]usize = undefined;
@@ -1822,14 +1858,14 @@ fn createBlob(
 }
 
 pub fn generateLayoutMap(level: usize) void {
-    const rooms = &state.dungeon.rooms[level];
+    const rooms = &state.rooms[level];
 
     var y: usize = 0;
     while (y < HEIGHT) : (y += 1) {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
             const coord = Coord.new2(level, x, y);
-            const room = Room{ .start = coord, .width = 1, .height = 1 };
+            const room = Room{ .rect = coord.asRect() };
 
             if (findIntersectingRoom(rooms, &room, null, null, false)) |r| {
                 state.layout[level][y][x] = state.Layout{ .Room = r };
@@ -1915,7 +1951,7 @@ fn levelFeatureIronOres(c: usize, coord: Coord, room: *const Room, prefab: *cons
     const ores = [_]Material{materials.Hematite};
     var using_container: ?*Container = null;
 
-    if ((room.start.x % 2) == 0) {
+    if ((room.rect.start.x % 2) == 0) {
         placeContainer(coord, &surfaces.VOreCrate);
         using_container = state.dungeon.at(coord).surface.?.Container;
     }
@@ -1951,6 +1987,28 @@ fn levelFeatureMetalProducts(c: usize, coord: Coord, room: *const Room, prefab: 
     ) catch unreachable;
 }
 
+// Room: "Annotated Room{}"
+// Contains additional information necessary for mapgen.
+//
+pub const Room = struct {
+    // linked list stuff
+    __next: ?*Room = null,
+    __prev: ?*Room = null,
+
+    rect: Rect,
+
+    type: RoomType = .Room,
+
+    prefab: ?*Prefab = null,
+    has_subroom: bool = false,
+
+    connections: usize = 0,
+
+    pub const RoomType = enum { Corridor, Room, Sideroom };
+
+    pub const ArrayList = std.ArrayList(Room);
+};
+
 pub const Prefab = struct {
     subroom: bool = false,
     invisible: bool = false,
@@ -1970,11 +2028,11 @@ pub const Prefab = struct {
     connections: [40]?Connection = undefined,
     features: [128]?Feature = [_]?Feature{null} ** 128,
     mobs: [45]?FeatureMob = [_]?FeatureMob{null} ** 45,
-    prisons: StackBuffer(Room, 8) = StackBuffer(Room, 8).init(null),
-    subroom_areas: StackBuffer(Room, 8) = StackBuffer(Room, 8).init(null),
-    stockpile: ?Room = null,
-    input: ?Room = null,
-    output: ?Room = null,
+    prisons: StackBuffer(Rect, 8) = StackBuffer(Rect, 8).init(null),
+    subroom_areas: StackBuffer(Rect, 8) = StackBuffer(Rect, 8).init(null),
+    stockpile: ?Rect = null,
+    input: ?Rect = null,
+    output: ?Rect = null,
 
     used: [LEVELS]usize = [_]usize{0} ** LEVELS,
 
@@ -2166,96 +2224,96 @@ pub const Prefab = struct {
 
                         cm += 1;
                     } else if (mem.eql(u8, key, "prison")) {
-                        var room_start = Coord.new(0, 0);
+                        var rect_start = Coord.new(0, 0);
                         var width: usize = 0;
                         var height: usize = 0;
 
-                        var room_start_tokens = mem.tokenize(val, ",");
-                        const room_start_str_a = room_start_tokens.next() orelse return error.InvalidMetadataValue;
-                        const room_start_str_b = room_start_tokens.next() orelse return error.InvalidMetadataValue;
-                        room_start.x = std.fmt.parseInt(usize, room_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
-                        room_start.y = std.fmt.parseInt(usize, room_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
+                        var rect_start_tokens = mem.tokenize(val, ",");
+                        const rect_start_str_a = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        const rect_start_str_b = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
+                        rect_start.y = std.fmt.parseInt(usize, rect_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
 
                         const width_str = words.next() orelse return error.ExpectedMetadataValue;
                         const height_str = words.next() orelse return error.ExpectedMetadataValue;
                         width = std.fmt.parseInt(usize, width_str, 0) catch |_| return error.InvalidMetadataValue;
                         height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
 
-                        f.prisons.append(.{ .start = room_start, .width = width, .height = height }) catch |_| return error.TooManyPrisons;
+                        f.prisons.append(.{ .start = rect_start, .width = width, .height = height }) catch |_| return error.TooManyPrisons;
                     } else if (mem.eql(u8, key, "subroom_area")) {
-                        var room_start = Coord.new(0, 0);
+                        var rect_start = Coord.new(0, 0);
                         var width: usize = 0;
                         var height: usize = 0;
 
-                        var room_start_tokens = mem.tokenize(val, ",");
-                        const room_start_str_a = room_start_tokens.next() orelse return error.InvalidMetadataValue;
-                        const room_start_str_b = room_start_tokens.next() orelse return error.InvalidMetadataValue;
-                        room_start.x = std.fmt.parseInt(usize, room_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
-                        room_start.y = std.fmt.parseInt(usize, room_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
+                        var rect_start_tokens = mem.tokenize(val, ",");
+                        const rect_start_str_a = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        const rect_start_str_b = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
+                        rect_start.y = std.fmt.parseInt(usize, rect_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
 
                         const width_str = words.next() orelse return error.ExpectedMetadataValue;
                         const height_str = words.next() orelse return error.ExpectedMetadataValue;
                         width = std.fmt.parseInt(usize, width_str, 0) catch |_| return error.InvalidMetadataValue;
                         height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
 
-                        f.subroom_areas.append(.{ .start = room_start, .width = width, .height = height }) catch |_| return error.TooManySubrooms;
+                        f.subroom_areas.append(.{ .start = rect_start, .width = width, .height = height }) catch |_| return error.TooManySubrooms;
                     } else if (mem.eql(u8, key, "stockpile")) {
                         if (f.stockpile) |_| return error.StockpileAlreadyDefined;
 
-                        var room_start = Coord.new(0, 0);
+                        var rect_start = Coord.new(0, 0);
                         var width: usize = 0;
                         var height: usize = 0;
 
-                        var room_start_tokens = mem.tokenize(val, ",");
-                        const room_start_str_a = room_start_tokens.next() orelse return error.InvalidMetadataValue;
-                        const room_start_str_b = room_start_tokens.next() orelse return error.InvalidMetadataValue;
-                        room_start.x = std.fmt.parseInt(usize, room_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
-                        room_start.y = std.fmt.parseInt(usize, room_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
+                        var rect_start_tokens = mem.tokenize(val, ",");
+                        const rect_start_str_a = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        const rect_start_str_b = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
+                        rect_start.y = std.fmt.parseInt(usize, rect_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
 
                         const width_str = words.next() orelse return error.ExpectedMetadataValue;
                         const height_str = words.next() orelse return error.ExpectedMetadataValue;
                         width = std.fmt.parseInt(usize, width_str, 0) catch |_| return error.InvalidMetadataValue;
                         height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
 
-                        f.stockpile = .{ .start = room_start, .width = width, .height = height };
+                        f.stockpile = .{ .start = rect_start, .width = width, .height = height };
                     } else if (mem.eql(u8, key, "output")) {
                         if (f.output) |_| return error.OutputAreaAlreadyDefined;
 
-                        var room_start = Coord.new(0, 0);
+                        var rect_start = Coord.new(0, 0);
                         var width: usize = 0;
                         var height: usize = 0;
 
-                        var room_start_tokens = mem.tokenize(val, ",");
-                        const room_start_str_a = room_start_tokens.next() orelse return error.InvalidMetadataValue;
-                        const room_start_str_b = room_start_tokens.next() orelse return error.InvalidMetadataValue;
-                        room_start.x = std.fmt.parseInt(usize, room_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
-                        room_start.y = std.fmt.parseInt(usize, room_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
+                        var rect_start_tokens = mem.tokenize(val, ",");
+                        const rect_start_str_a = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        const rect_start_str_b = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
+                        rect_start.y = std.fmt.parseInt(usize, rect_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
 
                         const width_str = words.next() orelse return error.ExpectedMetadataValue;
                         const height_str = words.next() orelse return error.ExpectedMetadataValue;
                         width = std.fmt.parseInt(usize, width_str, 0) catch |_| return error.InvalidMetadataValue;
                         height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
 
-                        f.output = .{ .start = room_start, .width = width, .height = height };
+                        f.output = .{ .start = rect_start, .width = width, .height = height };
                     } else if (mem.eql(u8, key, "input")) {
                         if (f.input) |_| return error.InputAreaAlreadyDefined;
 
-                        var room_start = Coord.new(0, 0);
+                        var rect_start = Coord.new(0, 0);
                         var width: usize = 0;
                         var height: usize = 0;
 
-                        var room_start_tokens = mem.tokenize(val, ",");
-                        const room_start_str_a = room_start_tokens.next() orelse return error.InvalidMetadataValue;
-                        const room_start_str_b = room_start_tokens.next() orelse return error.InvalidMetadataValue;
-                        room_start.x = std.fmt.parseInt(usize, room_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
-                        room_start.y = std.fmt.parseInt(usize, room_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
+                        var rect_start_tokens = mem.tokenize(val, ",");
+                        const rect_start_str_a = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        const rect_start_str_b = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
+                        rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
+                        rect_start.y = std.fmt.parseInt(usize, rect_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
 
                         const width_str = words.next() orelse return error.ExpectedMetadataValue;
                         const height_str = words.next() orelse return error.ExpectedMetadataValue;
                         width = std.fmt.parseInt(usize, width_str, 0) catch |_| return error.InvalidMetadataValue;
                         height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
 
-                        f.input = .{ .start = room_start, .width = width, .height = height };
+                        f.input = .{ .start = rect_start, .width = width, .height = height };
                     }
                 },
                 '@' => {

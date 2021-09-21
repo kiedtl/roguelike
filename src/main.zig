@@ -55,8 +55,8 @@ fn initGame() void {
     for (state.dungeon.map) |_, level| {
         state.stockpiles[level] = StockpileArrayList.init(&state.GPA.allocator);
         state.inputs[level] = StockpileArrayList.init(&state.GPA.allocator);
-        state.outputs[level] = RoomArrayList.init(&state.GPA.allocator);
-        state.dungeon.rooms[level] = RoomArrayList.init(&state.GPA.allocator);
+        state.outputs[level] = Rect.ArrayList.init(&state.GPA.allocator);
+        state.rooms[level] = mapgen.Room.ArrayList.init(&state.GPA.allocator);
     }
 
     rng.init();
@@ -109,10 +109,10 @@ fn deinitGame() void {
         mob.kill();
     }
     for (state.dungeon.map) |_, level| {
-        state.dungeon.rooms[level].deinit();
         state.stockpiles[level].deinit();
         state.inputs[level].deinit();
         state.outputs[level].deinit();
+        state.rooms[level].deinit();
     }
 
     state.tasks.deinit();
@@ -461,8 +461,8 @@ fn readInput() bool {
                 '<' => blk: {
                     if (state.player.coord.z != 0) {
                         const l = state.player.coord.z - 1;
-                        const r = rng.chooseUnweighted(Room, state.dungeon.rooms[l].items);
-                        const c = r.randomCoord();
+                        const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
+                        const c = r.rect.randomCoord();
                         break :blk state.player.teleportTo(c, null);
                     } else {
                         break :blk false;
@@ -471,8 +471,8 @@ fn readInput() bool {
                 '>' => blk: {
                     if (state.player.coord.z < (LEVELS - 1)) {
                         const l = state.player.coord.z + 1;
-                        const r = rng.chooseUnweighted(Room, state.dungeon.rooms[l].items);
-                        const c = r.randomCoord();
+                        const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
+                        const c = r.rect.randomCoord();
                         break :blk state.player.teleportTo(c, null);
                     } else {
                         break :blk false;

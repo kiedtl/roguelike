@@ -702,7 +702,7 @@ fn powerRestrictedMachinesOpenLever(machine: *Machine) void {
         .Unknown => return,
         .Room => |r| r,
     };
-    const room = &state.dungeon.rooms[machine.coord.z].items[room_i];
+    const room = &state.rooms[machine.coord.z].items[room_i].rect;
 
     var y: usize = room.start.y;
     while (y < room.end().y) : (y += 1) {

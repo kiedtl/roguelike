@@ -6,6 +6,7 @@ const assert = std.debug.assert;
 const ai = @import("ai.zig");
 const astar = @import("astar.zig");
 const dijkstra = @import("dijkstra.zig");
+const mapgen = @import("mapgen.zig");
 const utils = @import("utils.zig");
 const gas = @import("gas.zig");
 const rng = @import("rng.zig");
@@ -50,9 +51,10 @@ pub var state: GameState = .Game;
 //
 pub var memory: CoordCellMap = undefined;
 
+pub var rooms: [LEVELS]mapgen.Room.ArrayList = undefined;
 pub var stockpiles: [LEVELS]StockpileArrayList = undefined;
 pub var inputs: [LEVELS]StockpileArrayList = undefined;
-pub var outputs: [LEVELS]RoomArrayList = undefined;
+pub var outputs: [LEVELS]Rect.ArrayList = undefined;
 
 // Data objects
 pub var tasks: TaskArrayList = undefined;

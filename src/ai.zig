@@ -6,6 +6,7 @@ const math = std.math;
 const state = @import("state.zig");
 const items = @import("items.zig");
 const spells = @import("spells.zig");
+const mapgen = @import("mapgen.zig");
 const dijkstra = @import("dijkstra.zig");
 const buffer = @import("buffer.zig");
 const astar = @import("astar.zig");
@@ -263,8 +264,8 @@ pub fn patrolWork(mob: *Mob, alloc: *mem.Allocator) void {
     if (mob.cansee(to)) {
         // OK, reached our destination. Time to choose another one!
         while (true) {
-            const room = rng.chooseUnweighted(Room, state.dungeon.rooms[mob.coord.z].items);
-            const point = room.randomCoord();
+            const room = rng.chooseUnweighted(mapgen.Room, state.rooms[mob.coord.z].items);
+            const point = room.rect.randomCoord();
 
             if (mob.nextDirectionTo(point)) |_| {
                 mob.ai.work_area.items[0] = point;
@@ -483,7 +484,7 @@ pub fn wanderWork(mob: *Mob, alloc: *mem.Allocator) void {
 
     if (mob.cansee(to) or !state.is_walkable(to, .{ .right_now = true })) {
         // OK, reached our destination. Time to choose another one!
-        const map = Room{
+        const map = Rect{
             .start = Coord.new2(mob.coord.z, 1, 1),
             .width = WIDTH - 1,
             .height = HEIGHT - 1,
@@ -526,11 +527,11 @@ pub fn goofingAroundWork(mob: *Mob, alloc: *mem.Allocator) void {
             .Unknown => return,
             .Room => |r| r,
         };
-        const room = &state.dungeon.rooms[mob.coord.z].items[room_i];
+        const room = &state.rooms[mob.coord.z].items[room_i];
 
         var tries: usize = 0;
         while (tries < 10) : (tries += 1) {
-            const point = room.randomCoord();
+            const point = room.rect.randomCoord();
 
             if (!state.is_walkable(point, .{ .right_now = true }) or
                 state.dungeon.at(point).prison)

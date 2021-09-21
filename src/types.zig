@@ -41,7 +41,6 @@ pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .
 
 pub const CoordCellMap = std.AutoHashMap(Coord, termbox.tb_cell);
 pub const CoordArrayList = std.ArrayList(Coord);
-pub const RoomArrayList = std.ArrayList(Room);
 pub const StockpileArrayList = std.ArrayList(Stockpile);
 pub const MessageArrayList = std.ArrayList(Message);
 pub const StatusArray = enums.EnumArray(Status, StatusData);
@@ -213,8 +212,8 @@ pub const Coord = struct { // {{{
         return Coord.new2(a.z, a.x + b.x, a.y + b.y);
     }
 
-    pub inline fn asRoom(self: *const Self) Room {
-        return Room{ .start = self.*, .width = 1, .height = 1 };
+    pub inline fn asRect(self: *const Self) Rect {
+        return Rect{ .start = self.*, .width = 1, .height = 1 };
     }
 
     pub fn move(self: *const Self, direction: Direction, limit: Self) ?Coord {
@@ -395,21 +394,14 @@ test "coord.move" {
     std.testing.expectEqual(c.move(.East, limit), Coord.new(1, 0));
 }
 
-pub const Room = struct {
-    type: RoomType = .Room,
-
-    prefab: ?*mapgen.Prefab = null,
-    has_subroom: bool = false,
-
+pub const Rect = struct {
     start: Coord,
     width: usize,
     height: usize,
 
-    connections: usize = 0,
+    pub const ArrayList = std.ArrayList(Rect);
 
-    pub const RoomType = enum { Corridor, Room, Sideroom };
-
-    pub fn add(a: *const Room, b: *const Room) Room {
+    pub fn add(a: *const Rect, b: *const Rect) Rect {
         assert(b.start.z == 0);
 
         return .{
@@ -419,18 +411,18 @@ pub const Room = struct {
         };
     }
 
-    pub fn overflowsLimit(self: *const Room, limit: *const Room) bool {
+    pub fn overflowsLimit(self: *const Rect, limit: *const Rect) bool {
         return self.end().x >= limit.end().x or
             self.end().y >= limit.end().y or
             self.start.x < limit.start.x or
             self.start.y < limit.start.y;
     }
 
-    pub fn end(self: *const Room) Coord {
+    pub fn end(self: *const Rect) Coord {
         return Coord.new2(self.start.z, self.start.x + self.width, self.start.y + self.height);
     }
 
-    pub fn intersects(a: *const Room, b: *const Room, padding: usize) bool {
+    pub fn intersects(a: *const Rect, b: *const Rect, padding: usize) bool {
         const a_end = a.end();
         const b_end = b.end();
 
@@ -442,7 +434,7 @@ pub const Room = struct {
         return ca and cb and cc and cd;
     }
 
-    pub fn randomCoord(self: *const Room) Coord {
+    pub fn randomCoord(self: *const Rect) Coord {
         const x = rng.range(usize, self.start.x, self.end().x - 1);
         const y = rng.range(usize, self.start.y, self.end().y - 1);
         return Coord.new2(self.start.z, x, y);
@@ -450,7 +442,7 @@ pub const Room = struct {
 };
 
 pub const Stockpile = struct {
-    room: Room,
+    room: Rect,
     type: ItemType,
     boulder_material_type: ?Material.MaterialType = null,
 
@@ -2447,7 +2439,6 @@ pub const Dungeon = struct {
     light_intensity: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     light_color: [LEVELS][HEIGHT][WIDTH]u32 = [1][HEIGHT][WIDTH]u32{[1][WIDTH]u32{[1]u32{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     heat: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{heat.DEFAULT_HEAT} ** WIDTH} ** HEIGHT} ** LEVELS,
-    rooms: [LEVELS]RoomArrayList = undefined,
 
     pub const ItemBuffer = StackBuffer(Item, 7);
 
