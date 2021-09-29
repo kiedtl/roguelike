@@ -1262,6 +1262,8 @@ pub const Mob = struct { // {{{
     //     - The other mob is immobile (e.g., a statue).
     //     - The other mob is a prisoner that's tied up somewhere.
     //
+    // TODO: cleanup this, express login in a cleaner way.
+    //
     pub fn canSwapWith(self: *const Mob, other: *Mob, direction: ?Direction) bool {
         var can = false;
 
