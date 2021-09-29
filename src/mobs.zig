@@ -174,6 +174,7 @@ pub const PlayerTemplate = MobTemplate{
     .mob = .{
         .species = "human",
         .tile = '@',
+        .prisoner_status = .{ .of = .Necromancer },
         .ai = AI{
             .profession_name = "[this is a bug]",
             .profession_description = "[this is a bug]",

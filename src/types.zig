@@ -1731,8 +1731,8 @@ pub const Mob = struct { // {{{
 
         if (self.allegiance != othermob.allegiance) hostile = true;
 
-        // If the other mob is a prisoner of my faction or we're both prisoners
-        // of the same faction, don't be hostile
+        // If the other mob is a prisoner of my faction (and is actually in
+        // prison) or we're both prisoners of the same faction, don't be hostile.
         if (othermob.prisoner_status) |ps| {
             if (ps.of == self.allegiance and
                 (state.dungeon.at(othermob.coord).prison or ps.held_by != null))
@@ -1741,9 +1741,7 @@ pub const Mob = struct { // {{{
             }
 
             if (self.prisoner_status) |my_ps| {
-                if (my_ps.of == ps.of and
-                    (state.dungeon.at(self.coord).prison or my_ps.held_by != null))
-                {
+                if (my_ps.of == ps.of) {
                     hostile = false;
                 }
             }
