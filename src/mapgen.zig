@@ -2566,9 +2566,9 @@ pub const Configs = [LEVELS]LevelConfig{
         .patrol_squads = 3,
     },
     .{
-        .identifier = "REC",
+        .identifier = "REG",
         .prefabs = LevelConfig.RPBuf.init(null),
-        .prefab_chance = 100, // No prefabs for REC
+        .prefab_chance = 100, // No prefabs for REG
         .mapgen_func = placeBSPRooms,
         .mapgen_iters = 2048,
         .min_room_width = 8,
