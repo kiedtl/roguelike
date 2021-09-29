@@ -1251,15 +1251,16 @@ pub const Mob = struct { // {{{
     //     - The other mob was trying to move in the opposite direction, i.e.,
     //       both mobs were trying to shuffle past each other.
     //     - The mob wasn't working (e.g., may have been attacking), but the other
-    //       one wasn't.
+    //       one was.
+    //     - The mob is the player and the other mob is a noncombative enemy (e.g.,
+    //       slaves). The player has no business attacking non-combative enemies.
     //
     // Return false if:
     //     - The other mob was trying to move in the same direction. No need to barge
-    //       past, he'll move soon enough.
+    //       past, it'll move soon enough.
     //     - The other mob is the player. No mob should be able to swap with the player.
-    //     - The mob is the player and the other mob is a noncombative enemy (e.g.,
-    //       slaves). The player has no business attacking non-combative enemies.
     //     - The other mob is immobile (e.g., a statue).
+    //     - The other mob is a prisoner that's tied up somewhere.
     //
     pub fn canSwapWith(self: *const Mob, other: *Mob, direction: ?Direction) bool {
         var can = false;
@@ -1302,6 +1303,10 @@ pub const Mob = struct { // {{{
         {
             can = true;
         }
+        if (other.prisoner_status) |ps|
+            if (ps.held_by != null) {
+                can = false;
+            };
 
         if (other.immobile) {
             can = false;
