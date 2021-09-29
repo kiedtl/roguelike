@@ -434,10 +434,44 @@ fn readInput() bool {
         return false;
     } else if (t == termbox.TB_EVENT_KEY) {
         if (ev.key != 0) {
-            if (ev.key == termbox.TB_KEY_CTRL_C) {
-                state.state = .Quit;
-            }
-            return true;
+            return switch (ev.key) {
+                termbox.TB_KEY_CTRL_C => b: {
+                    state.state = .Quit;
+                    break :b true;
+                },
+
+                // Wizard keys
+                termbox.TB_KEY_F1 => blk: {
+                    if (state.player.coord.z != 0) {
+                        const l = state.player.coord.z - 1;
+                        const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
+                        const c = r.rect.randomCoord();
+                        break :blk state.player.teleportTo(c, null);
+                    } else {
+                        break :blk false;
+                    }
+                },
+                termbox.TB_KEY_F2 => blk: {
+                    if (state.player.coord.z < (LEVELS - 1)) {
+                        const l = state.player.coord.z + 1;
+                        const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
+                        const c = r.rect.randomCoord();
+                        break :blk state.player.teleportTo(c, null);
+                    } else {
+                        break :blk false;
+                    }
+                },
+                termbox.TB_KEY_F3 => blk: {
+                    state.player.allegiance = switch (state.player.allegiance) {
+                        .Illuvatar => .Sauron,
+                        .Sauron => .NoneEvil,
+                        .NoneEvil => .Illuvatar,
+                        else => unreachable,
+                    };
+                    break :blk false;
+                },
+                else => false,
+            };
         } else if (ev.ch != 0) {
             return switch (ev.ch) {
                 'x' => state.player.swapWeapons(),
@@ -456,33 +490,6 @@ fn readInput() bool {
                 'u' => moveOrFight(.NorthEast),
                 'b' => moveOrFight(.SouthWest),
                 'n' => moveOrFight(.SouthEast),
-
-                // wizard keys
-                '<' => blk: {
-                    if (state.player.coord.z != 0) {
-                        const l = state.player.coord.z - 1;
-                        const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
-                        const c = r.rect.randomCoord();
-                        break :blk state.player.teleportTo(c, null);
-                    } else {
-                        break :blk false;
-                    }
-                },
-                '>' => blk: {
-                    if (state.player.coord.z < (LEVELS - 1)) {
-                        const l = state.player.coord.z + 1;
-                        const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
-                        const c = r.rect.randomCoord();
-                        break :blk state.player.teleportTo(c, null);
-                    } else {
-                        break :blk false;
-                    }
-                },
-                's' => blk: {
-                    _ = state.player.rest();
-                    state.dungeon.atGas(state.player.coord)[gas.SmokeGas.id] += 1.0;
-                    break :blk true;
-                },
                 else => false,
             };
         } else unreachable;
