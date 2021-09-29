@@ -226,7 +226,7 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
 
     state.player = placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
     state.player.inventory.r_rings[0] = echoring;
-    state.player.prisoner_status = Prisoner{ .of = .Sauron };
+    state.player.prisoner_status = Prisoner{ .of = .Necromancer };
 }
 
 fn prefabIsValid(level: usize, prefab: *Prefab) bool {
@@ -1883,7 +1883,7 @@ fn levelFeaturePrisonersMaybe(c: usize, coord: Coord, room: *const Room, prefab:
 fn levelFeaturePrisoners(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
     const prisoner_t = rng.chooseUnweighted(mobs.MobTemplate, &mobs.PRISONERS);
     const prisoner = placeMob(alloc, &prisoner_t, coord, .{});
-    prisoner.prisoner_status = Prisoner{ .of = .Sauron };
+    prisoner.prisoner_status = Prisoner{ .of = .Necromancer };
 
     for (&CARDINAL_DIRECTIONS) |direction|
         if (coord.move(direction, state.mapgeometry)) |neighbor| {

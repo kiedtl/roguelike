@@ -672,7 +672,11 @@ pub const Message = struct {
     turn: usize,
 };
 
-pub const Allegiance = enum { Neutral, Sauron, Illuvatar, NoneEvil, NoneGood };
+pub const Allegiance = enum {
+    Necromancer,
+    OtherGood, // Humans in the plains
+    OtherEvil, // Cave goblins, southern humans
+};
 
 pub const Status = enum {
     // Prevents a mob from taking their turn.
@@ -1725,8 +1729,6 @@ pub const Mob = struct { // {{{
     pub fn isHostileTo(self: *const Mob, othermob: *const Mob) bool {
         var hostile = false;
 
-        // TODO: deal with all the nuances (eg .NoneGood should not be hostile
-        // to .Illuvatar, but .NoneEvil should be hostile to .Sauron)
         if (self.allegiance != othermob.allegiance) hostile = true;
 
         // If the other mob is a prisoner of my faction or we're both prisoners

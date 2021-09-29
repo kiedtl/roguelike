@@ -463,10 +463,9 @@ fn readInput() bool {
                 },
                 termbox.TB_KEY_F3 => blk: {
                     state.player.allegiance = switch (state.player.allegiance) {
-                        .Illuvatar => .Sauron,
-                        .Sauron => .NoneEvil,
-                        .NoneEvil => .Illuvatar,
-                        else => unreachable,
+                        .OtherGood => .Necromancer,
+                        .Necromancer => .OtherEvil,
+                        .OtherEvil => .OtherGood,
                     };
                     break :blk false;
                 },

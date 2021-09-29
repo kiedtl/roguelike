@@ -355,7 +355,7 @@ pub const LockedDoor = Machine{
     .unpowered_tile = '■',
     .unpowered_fg = 0xcfcfff,
     .power_drain = 90,
-    .restricted_to = .Sauron,
+    .restricted_to = .Necromancer,
     .powered_walkable = true,
     .unpowered_walkable = false,
     .on_power = powerNone,
@@ -618,7 +618,7 @@ fn powerHealingGasPump(machine: *Machine) void {
 
 fn powerAlarmTrap(machine: *Machine) void {
     if (machine.last_interaction) |culprit| {
-        if (culprit.allegiance == .Sauron) return;
+        if (culprit.allegiance == .Necromancer) return;
 
         culprit.makeNoise(2048); // muahahaha
         if (culprit.coord.eq(state.player.coord))
@@ -636,7 +636,7 @@ fn powerNetTrap(machine: *Machine) void {
 
 fn powerPoisonGasTrap(machine: *Machine) void {
     if (machine.last_interaction) |culprit| {
-        if (culprit.allegiance == .Sauron) return;
+        if (culprit.allegiance == .Necromancer) return;
 
         for (machine.props) |maybe_prop| {
             if (maybe_prop) |vent| {
@@ -651,7 +651,7 @@ fn powerPoisonGasTrap(machine: *Machine) void {
 
 fn powerParalysisGasTrap(machine: *Machine) void {
     if (machine.last_interaction) |culprit| {
-        if (culprit.allegiance == .Sauron) return;
+        if (culprit.allegiance == .Necromancer) return;
 
         for (machine.props) |maybe_prop| {
             if (maybe_prop) |vent| {
@@ -666,7 +666,7 @@ fn powerParalysisGasTrap(machine: *Machine) void {
 
 fn powerConfusionGasTrap(machine: *Machine) void {
     if (machine.last_interaction) |culprit| {
-        if (culprit.allegiance == .Sauron) return;
+        if (culprit.allegiance == .Necromancer) return;
 
         for (machine.props) |maybe_prop| {
             if (maybe_prop) |vent| {
