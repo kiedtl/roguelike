@@ -1,13 +1,12 @@
 Levels
 ------
 - Entry
-- Recreation
-	- Smallish square rooms with only one-width corridors. (So no prefabs.)
-	- Rooms filled with artwork, posters, skeleton displays, armor displays,
-	  statues, bookshelves, fountains.
-	- Has bear traps with nearby hydras.
+- Regulation
+	- Smallish square rooms with only one-width corridors.
+	- Lots of minor gauges, valves, etc.
+	- Most machines are explosive.
 	- Postprocessing: change walls that are shared with multiple rooms to
-	  windows.
+	  windows?
 - Laboratory
 	x Large open space.
 	x Stockpiles of ores, and vials.
@@ -28,12 +27,12 @@ Levels
 	- Splotches of the map use materials like sulon/chlade/realgar/hematite.
 	- "Miners" go about, cutting up map portions with ores.
 	- "Haulers" take boulders and move them to ore elevators/stockpiles.
-- Smithing
+x Smithing
 	x Large open area.
 	x Structures plopped all over the place.
 		x Filled with forges and smithing machines.
 		x Has stockpiles of ingots, ores, and metal goods.
-		- Elevator and some stockpiles should have walls+doors
+		x Elevator and some stockpiles should have walls+doors
 		  around them...
 	x Whole floor is geared to the production of chains.
 	x Production of vials:
@@ -48,19 +47,59 @@ Levels
 	  x Haulers take ingots to chain presses.
 	  x Chain presses stamp out chain and link them together.
 	  x Haulers take chains to stockpiles.
-	- Has large lakes of lava.
-- Prison
+	x Has large lakes of lava.
+x Prison
 	x Medium-short corridors with rooms with locked enclosures of prisoners.
 	x Some torture rooms maybe.
 	x Levers for each room to unlock doors and release prisoners.
 
+New Levels
+----------
+"Solitary" ("SOL") or "Confinement" ("CON"):
+- Grid layout ("Manhattan-like"?):
+  ...............................
+  .####...####..####..####..####.
+  .#..#...#..#..#..#..#..#..#..#.
+  .#+##...#+##..#..#..#+##..#+##.
+  ..............#..#.............
+  .####...####..#..+..####..####.
+  .#..#...#..#..#..#..#..#..#..#.
+  .#+##...#+##..####..#+##..#+##.
+  ...............................
+  .####...##########..####..####.
+  .#..#...#........#..#..#..#..#.
+  .#+##...#######+##..#+##..#+##.
+  ...............................
+  .####...####..####..####..####.
+  .#..#...#..#..#..#..#..#..#..#.
+  .#+##...#+##..#+##..#+##..#+##.
+  ...............................
+- (Larger rooms are optional?)
+- Each room has one goblin prisoner.
+- Plenty of patrols, and guards at hallway junctions
+- Layout leads to interesting gameplay, I think?
+
+Something like "Quarters"/"Leisure":
+- Barracks/clusters of beds
+  - Full of mobs that can wake up at any time
+- Tables and chairs
+- Chests of food and drink
+- Nursery? (kill baby goblins! fun!)
+
+Intelligence
+------------
+- Stupid mobs will have trouble determining what's a stronger enemy
+  (morale system).
+- Intelligent mobs won't assign A* penalty to areas out of max FOV range.
+  - Thus, stupid mobs will prefer to walk through areas they can see, whereas
+    intelligent mobs will always take the shorter path.
 
 Undead
 ------
 Undead:
 - May be mindless, depending on how they were raised from the dead.
 - Has 150% strength bonus.
-- Has 150% speed bonus.
+- Has -50% speed nerf.
 - Has -50% dexterity nerf.
 - Can only see 3-4 tiles ahead of them.
 - Emit miasma.
@@ -393,6 +432,15 @@ x Useless items in bins, cabinets, etc
 - Weapons and armor in cabinets
 - Allow multiple subrooms in rooms (BSP?)
 - Cave-like boundaries around edges of map in SMI
+- Different types of power generators for different maps:
+    - TOP, REG: regular power plant
+    - PRI:      coal furnace
+    - SMI:      turbines (geothermal)
+    - LAB:      nuclear power plant
+- Allow multi-width corridors (aka hallways)
+- Prisoners chained up to the wall in PRI
+- Preserved corpses lined up along walls in PRI?
+  - Can be animated by angry necromancers.
 
 Mobs, AI
 ========
@@ -422,6 +470,15 @@ x Define what undead are somewhere (combat bonuses, stat increases, miasma
   - etc
 - Make .Hallucination status possible
 - Make cleaners remove nets shot out by sentinels
+- Revamp squad AI.
+- Add morale system for each mob, affected by:
+  - Loss of leader (squad)
+  - Battlecry of leader (squad)
+  - Presence of stronger allies
+  - Presence of stronger enemies
+  - Presence of many enemies
+  - Pain,Fear effects
+  - Miasma gas, other gases
 
 User Interface
 ==============
@@ -437,6 +494,7 @@ x Attack messages should be nice and descriptive ("You skewer the goblin!")
   - Even more descriptive! ("The troll smashes you like an overripe mango!!")
 - Show red/yellow/orange for low health bars
 x Use proper CP407 arrows for staircases
+- Show prisoner's activity as "prisoner" instead of {"investigate","attack"}, etc
 
 Fixes
 =====
@@ -563,6 +621,7 @@ Code cleanups
 - Define Lua API and move the following to Lua data files:
   - levelFeature definitions (see mapgen.zig)
   - levelConfig (see mapgen.zig)
+- Cleanup/factorize container/item manipulation code for Machine AI.
 
 Refactorings
 ============
@@ -573,6 +632,10 @@ x Research Manhattan distance vs Euclidian distance vs Moore neighborhood:
 x Add power component to machines
 x Use Chebyshev instead of Manhattan distance
 - Use arrays and indexes for state.* instead of linked lists and pointers
+- Use linked list for roomslist, and use raw pointers instead of indexes
+  whenever needed in mapgen code.
+- Keep track of each connected room in mapgen, so that no room connects to the
+  same room twice.
 
 Tests
 =====
