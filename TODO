@@ -428,7 +428,8 @@ x Make the "lamps" electric "braziers"
   - Place them in center of rooms.
   x Place them in corners of rooms.
   - Make them explosive and electrocutive!
-x Useless items in bins, cabinets, etc
+* Useless items in bins, cabinets, etc
+  - dice, deck of cards
 - Weapons and armor in cabinets
 - Allow multiple subrooms in rooms (BSP?)
 - Cave-like boundaries around edges of map in SMI
@@ -441,6 +442,21 @@ x Useless items in bins, cabinets, etc
 - Prisoners chained up to the wall in PRI
 - Preserved corpses lined up along walls in PRI?
   - Can be animated by angry necromancers.
+- Useless items in various locations:
+  - Potted mushrooms
+  - chairs/tables
+  - artwork
+- Useless food items in barrels:
+  - slime molds
+  - mangosteins
+  - (dried) mushrooms
+  - dried meat
+  - kombucha
+  - bread
+  - dried fish
+  - dried salamander
+  - dried seaweed
+  - alcohol (should use some made-up names, in gobbo language)
 
 Mobs, AI
 ========
@@ -503,7 +519,7 @@ x Place stairs only in rooms
 x Fix sound propagation
 
 Caverns:
-==========
+========
 - Add portals to Openworld from the main dungeon, with sentinels
 x Add goblins, rats, and other mobs to populate the Openworld
 - Add Burning Brutes and Lava Flans to the Openworld
