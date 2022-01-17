@@ -1,3 +1,10 @@
+// This garbage is incredibly over-complicated and unnecessary. I can't believe
+// I added it in the first place.
+// I'd remove it right now, but SMI's steam-powered generator relies on it, uhg.
+// At the very least, this should be drastically simplified later on.
+//
+// Under no condition should new features rely on the heat system.
+
 const std = @import("std");
 const math = std.math;
 
