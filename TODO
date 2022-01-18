@@ -105,10 +105,17 @@ New mobs
 	- Spits out sulfuric/miasmic gas, which raises corpses and slows living creatures.
 - frozen fiend
 	- Creates icy obstacles to block player (but obstacles melt after 2-4 turns).
+- lightning spire
+	- like dcss' lightning spire
+	- hurls bolts of electricity
+	- extremely high AC
+- torpor spire
+	- like dcss' torpor snail
+	- slows player when in FOV
+	- extremely high AC
 - iron spire
 	- "A towering demonic spire, with a thousand eyes leering through its
-	  iron plates. It shreds its enemies with fiery bolts while slowly
-	  pursuing on its 18 spider-like legs."
+	  iron plates. It shreds its enemies with fiery bolts."
 	- like dcss' hell sentinel
 	- hurls bolts of fire
 	- extremely high AC
@@ -128,7 +135,7 @@ New mobs
 	  very briefly invunerable and sends them insane.
 	- Blinks around so as to not be adjacent to allies. (If nowhere to
 	  blink, teleports away.)
-	- Teleports away when no allies visible.
+	- Teleports away (or suicides?) when no allies visible.
 	- Immune to weapon damage.
 - burning brute
 	- "A demon composed primarily of boiling granite, capable of fearsome
@@ -475,18 +482,21 @@ x Revamp sound system
 x Fix message-displaying bugs
 x Add basic power supply to vaults
 - Create misc evocable items
+- Create eldritch lantern evocable
 - Create warning horn for Warden
 - Create Warden, add to vaults, adjust mob ratio there
-- Create gold item type
-- Add "sack of gold" container
-- Add automatic gold-pickup
-- Add gold to vaults and other maps
+- Add treatures to Vaults
+  - Create gold item/prop
+  - Add "sack of gold" container
+  - Add jewels
+  - Add armour and weapons (only ones that are useless to player)
 - Add ability to present confirm/dialog boxes
 - Add morgue-file generation
 - Show morgue to player on death/win
 - Implement basic explosions (with wizard functionality)
 - Add potion of decimation
 - Add bomb-making evocables (and maybe increase size of inventory)
+- Revamp confuse; add "daze" status
 
 Ring and movements:
 ===================
@@ -612,6 +622,35 @@ x Use proper CP407 arrows for staircases
 - Show prisoner's activity as "prisoner" instead of {"investigate","attack"}, etc
 - Make bg of cell with noise green
 
+Items/Machines
+==============
+- Add cloaks:
+  - fire resistance
+  - electricty resistance
+  - shadows
+    - 30% chance for hostile to not notice mob, even when mob is in hostile's FOV
+    - Dramatically increases dexterity
+- Add evocables:
+  - "eldritch lantern": dazes or blinds *all* mobs in FOV; blinds player
+    for 2 turns. 4 charges.
+  - "cannon kit" (SMI): creates permanent cannon on use (see below). 1 charge.
+  - "lightning rod" (LAB): severely damages all mobs without rElec in FOV.
+- Add machines:
+  - "cannons" (LAB): fires projectile in direction, eviscerating any mobs.
+    Loud sound. 6 charges, pwr-station powered.
+  - "floodgates" (PRI): creates permanent pool of shallow water.
+    1 charge, pwr-station powered.
+  - "canister of sludge" (SMI): can be "broken open" to release torrent of toxic
+    sludge in direction, creating pool and damaging mobs. Takes 2 turns to empty.
+    1 charge.
+  - "canister of fuel" (VLT): can be "broken open" to release torrent of burning
+    fuel in direction, cremating mobs and creating pool/cloud of fire. Takes 4
+    turns to completely empty. 1 charge.
+  - "lightning vane" (LAB): kills all mobs without rElec in FOV. Deafening noise.
+    4 charges, pwr-station powered.
+  - recharging stations: 4 charges. 1-2 per level.
+
+
 Message pane
 ============
 - Messages:
@@ -628,7 +667,7 @@ Message pane
 x Only print trap messages when culprit is player
 - Group identical messages in msgpane
 x Attack messages should be nice and descriptive ("You skewer the goblin!")
-  - Even more descriptive! ("The troll smashes you like an overripe mango!!")
+  x Even more descriptive! ("The troll smashes you like an overripe mango!!")
 
 Fixes
 =====
