@@ -337,10 +337,14 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
     while (i > 0 and y < endy) : (i -= 1) {
         const msg = state.messages.items[i];
         const col = if (msg.turn == state.ticks or i == first) msg.type.color() else 0xa0a0a0;
+        const msgtext = utils.used(msg.msg);
+
+        _clear_line(startx, endx, y);
+
         if (msg.type == .MetaError) {
-            y = _draw_string(startx, y, endx, col, 0, true, "ERROR: {}", .{msg.msg}) catch unreachable;
+            y = _draw_string(startx, y, endx, col, 0, true, "ERROR: {}", .{msgtext}) catch unreachable;
         } else {
-            y = _draw_string(startx, y, endx, col, 0, true, "{}", .{msg.msg}) catch unreachable;
+            y = _draw_string(startx, y, endx, col, 0, true, "{}", .{msgtext}) catch unreachable;
         }
     }
 }

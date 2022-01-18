@@ -671,7 +671,7 @@ pub const EnemyRecord = struct {
 };
 
 pub const Message = struct {
-    msg: [128]u8,
+    msg: [128:0]u8,
     type: MessageType,
     turn: usize,
 };

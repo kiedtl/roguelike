@@ -520,6 +520,13 @@ pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void
     for (buf) |*i| i.* = 0;
     var fbs = std.io.fixedBufferStream(&buf);
     std.fmt.format(fbs.writer(), fmt, args) catch |_| @panic("format error");
-    const str = fbs.getWritten();
-    messages.append(.{ .msg = buf, .type = mtype, .turn = ticks }) catch @panic("OOM");
+
+    var msg: Message = .{
+        .msg = undefined,
+        .type = mtype,
+        .turn = ticks,
+    };
+    utils.copyZ(&msg.msg, fbs.getWritten());
+
+    messages.append(msg) catch @panic("OOM");
 }
