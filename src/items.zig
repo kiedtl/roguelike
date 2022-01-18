@@ -73,6 +73,50 @@ pub const NoneArmor = Armor{
     },
 };
 
+fn dmgstr(p: usize, vself: []const u8, vother: []const u8, vdeg: []const u8) DamageStr {
+    return .{ .dmg_percent = p, .verb_self = vself, .verb_other = vother, .verb_degree = vdeg };
+}
+
+const CRUSHING_STRS = [_]DamageStr{
+    dmgstr(000, "whack", "whacks", ""),
+    dmgstr(010, "cudgel", "cudgels", ""),
+    dmgstr(030, "bash", "bashes", ""),
+    dmgstr(040, "hammer", "hammers", ""),
+    dmgstr(060, "batter", "batters", ""),
+    dmgstr(070, "thrash", "thrashes", ""),
+    dmgstr(099, "flatten", "flattens", " like a chapati"),
+    dmgstr(120, "smash", "smashes", " like an overripe mango"),
+    dmgstr(180, "grind", "grinds", " into powder"),
+};
+const SLASHING_STRS = [_]DamageStr{
+    dmgstr(000, "nip", "nips", ""),
+    dmgstr(010, "hit", "hits", ""),
+    dmgstr(030, "slash", "slashes", ""),
+    dmgstr(040, "slice", "slices", ""),
+    dmgstr(050, "shred", "shreds", ""),
+    dmgstr(070, "chop", "chops", " into pieces"),
+    dmgstr(090, "chop", "chops", " into tiny pieces"),
+    dmgstr(110, "slice", "slices", " into ribbons"),
+    dmgstr(150, "mince", "minces", " like boiled poultry"),
+};
+const PIERCING_STRS = [_]DamageStr{
+    dmgstr(010, "prick", "pricks", ""),
+    dmgstr(020, "puncture", "punctures", ""),
+    dmgstr(030, "perforate", "perforates", ""),
+    dmgstr(040, "skewer", "skewers", ""),
+    dmgstr(060, "impale", "impales", ""),
+    dmgstr(080, "skewers", "skewers", " like a kebab"),
+    dmgstr(090, "spit", "spits", " like a pig"),
+    dmgstr(100, "perforate", "perforates", " like a sieve"),
+};
+const LACERATING_STRS = [_][]DamageStr{
+    dmgstr(020, "whip", "whips", ""),
+    dmgstr(040, "lash", "lashes", ""),
+    dmgstr(050, "lacerate", "lacerates", ""),
+    dmgstr(070, "shred", "shreds", ""),
+    dmgstr(090, "shred", "shreds", " like wet paper"),
+};
+
 pub const UnarmedWeapon = Weapon{
     .id = "none",
     .name = "none",
@@ -87,6 +131,12 @@ pub const UnarmedWeapon = Weapon{
     },
     .main_damage = .Crushing,
     .secondary_damage = null,
+    .strs = &[_]DamageStr{
+        dmgstr(020, "punch", "punches", ""),
+        dmgstr(030, "hit", "hits", ""),
+        dmgstr(040, "bludgeon", "bludgeons", ""),
+        dmgstr(060, "pummel", "pummels", ""),
+    },
 };
 
 pub const ClubWeapon = Weapon{
@@ -103,6 +153,7 @@ pub const ClubWeapon = Weapon{
     },
     .main_damage = .Crushing,
     .secondary_damage = .Pulping,
+    .strs = &CRUSHING_STRS,
 };
 
 pub const DaggerWeapon = Weapon{
@@ -119,6 +170,7 @@ pub const DaggerWeapon = Weapon{
     },
     .main_damage = .Piercing,
     .secondary_damage = null,
+    .strs = &PIERCING_STRS,
 };
 
 pub const SwordWeapon = Weapon{
@@ -135,6 +187,7 @@ pub const SwordWeapon = Weapon{
     },
     .main_damage = .Slashing,
     .secondary_damage = .Piercing,
+    .strs = &SLASHING_STRS,
 };
 
 pub const SpearWeapon = Weapon{
@@ -151,6 +204,7 @@ pub const SpearWeapon = Weapon{
     },
     .main_damage = .Piercing,
     .secondary_damage = null,
+    .strs = &PIERCING_STRS,
 };
 
 // A heavy flail, essentially a knout
@@ -168,6 +222,7 @@ pub const ZinnagWeapon = Weapon{
     },
     .main_damage = .Pulping,
     .secondary_damage = .Crushing,
+    .strs = &CRUSHING_STRS,
 };
 
 pub const NetLauncher = Weapon{
@@ -197,6 +252,7 @@ pub const NetLauncher = Weapon{
             .effect = triggerNetLauncherProjectile,
         },
     },
+    .strs = &CRUSHING_STRS,
 };
 
 pub const DartLauncher = Weapon{
@@ -225,6 +281,7 @@ pub const DartLauncher = Weapon{
             },
         },
     },
+    .strs = &CRUSHING_STRS,
 };
 
 fn triggerPreservePotion(_dork: ?*Mob) void {

@@ -1488,17 +1488,49 @@ pub const Mob = struct { // {{{
             recipient.makeNoise(.Combat, .Medium);
         }
 
-        const hitstr = DamageType.damageString(
-            attacker_weapon.main_damage,
-            recipient.lastDamagePercentage(),
-        );
+        var dmg_percent = recipient.lastDamagePercentage();
+        var hitstrs = attacker_weapon.strs[attacker_weapon.strs.len - 1];
+        {
+            for (attacker_weapon.strs) |strset, i| {
+                if (strset.dmg_percent > dmg_percent) {
+                    hitstrs = strset;
+                    break;
+                }
+            }
+        }
+
+        var punctuation: []const u8 = ".";
+        if (dmg_percent >= 10) punctuation = "!";
+        if (dmg_percent >= 25) punctuation = "!!";
+        if (dmg_percent >= 50) punctuation = "!!!";
+        if (dmg_percent >= 75) punctuation = "!!!!";
 
         if (recipient.coord.eq(state.player.coord)) {
-            state.message(.Info, "The {} {} you for {} damage!", .{ attacker.species, hitstr, damage });
+            // ↓ isn't necessary, but it's a workaround for a Zig compiler bug.
+            // XXX: when updated to Zig v9, poke this code around and see if
+            // the bug is still there.
+            const attacker_name = attacker.ai.profession_name orelse
+                attacker.species;
+
+            state.message(.Info, "The {} {} you{}{} ({}% dmg)", .{
+                attacker_name,
+                hitstrs.verb_other,
+                hitstrs.verb_degree,
+                punctuation,
+                dmg_percent,
+            });
         } else if (attacker.coord.eq(state.player.coord)) {
-            state.message(.Info, "You {} the {} for {} damage!", .{ hitstr, recipient.species, damage });
+            const recipient_name = recipient.ai.profession_name orelse recipient.species;
+
+            state.message(.Info, "You {} the {}{}{} ({}% dmg)", .{
+                hitstrs.verb_self,
+                recipient_name,
+                hitstrs.verb_degree,
+                punctuation,
+                dmg_percent,
+            });
             if (recipient.should_be_dead()) {
-                state.message(.Damage, "You slew the {}.", .{recipient.species});
+                state.message(.Damage, "You slew the {}.", .{recipient_name});
             }
         }
     }
@@ -1675,8 +1707,7 @@ pub const Mob = struct { // {{{
 
     pub fn lastDamagePercentage(self: *const Mob) usize {
         if (self.last_damage) |dam| {
-            const am = math.clamp(dam.amount, 0, self.max_HP);
-            return @floatToInt(usize, (am * 100) / self.max_HP);
+            return @floatToInt(usize, (dam.amount * 100) / self.max_HP);
         } else {
             return 0;
         }
@@ -1986,24 +2017,6 @@ pub const DamageType = enum {
     Piercing,
     Lacerating,
 
-    const CRUSHING_STRS = [_][]const u8{ "slap", "smack", "bump", "thwack", "whack", "club", "cudgel", "bash", "pummel", "drub", "batter", "thrash" };
-    const PULPING_STRS = CRUSHING_STRS;
-    const SLASHING_STRS = [_][]const u8{ "nip", "cut", "slice", "slash", "shred" };
-    const PIERCING_STRS = [_][]const u8{ "poke", "prick", "pierce", "puncture", "stab", "skewer" };
-    const LACERATING_STRS = [_][]const u8{ "whip", "lash", "tear", "lacerate", "shred" };
-
-    pub fn damageString(d: DamageType, damage_percentage: usize) []const u8 {
-        const strs = switch (d) {
-            .Crushing => &CRUSHING_STRS,
-            .Pulping => &PULPING_STRS,
-            .Slashing => &SLASHING_STRS,
-            .Piercing => &PIERCING_STRS,
-            .Lacerating => &LACERATING_STRS,
-        };
-
-        return strs[(damage_percentage * (strs.len - 1)) / 100];
-    }
-
     // Return a percentile bonus with which to multiply the base damage
     // amount when an attack is a stabbing attack.
     pub fn stabBonus(d: DamageType) usize {
@@ -2015,6 +2028,13 @@ pub const DamageType = enum {
             .Lacerating => 210,
         };
     }
+};
+
+pub const DamageStr = struct {
+    dmg_percent: usize,
+    verb_self: []const u8,
+    verb_other: []const u8,
+    verb_degree: []const u8,
 };
 
 //pub const Damages = enums.EnumFieldStruct(DamageType, 0);
@@ -2100,6 +2120,7 @@ pub const Weapon = struct {
     main_damage: DamageType,
     secondary_damage: ?DamageType,
     launcher: ?Launcher = null,
+    strs: []const DamageStr,
 
     pub const Launcher = struct {
         projectile: Projectile,
