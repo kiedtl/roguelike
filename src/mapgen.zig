@@ -2566,7 +2566,7 @@ pub const Configs = [LEVELS]LevelConfig{
         .patrol_squads = 3,
     },
     .{
-        .identifier = "REG",
+        .identifier = "VLT",
         .prefabs = LevelConfig.RPBuf.init(null),
         .prefab_chance = 100, // No prefabs for REG
         .mapgen_func = placeBSPRooms,

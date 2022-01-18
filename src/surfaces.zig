@@ -28,6 +28,7 @@ pub const MACHINES = [_]Machine{
     BlastFurnace,
     PowerSupply,
     NuclearPowerSupply,
+    FuelPowerSupply,
     TurbinePowerSupply,
     HealingGasPump,
     Brazier,
@@ -168,6 +169,29 @@ pub const NuclearPowerSupply = Machine{
 
     .powered_tile = '≡',
     .unpowered_tile = '≡',
+
+    .power_drain = 0,
+    .power_add = 100,
+    .power = 100, // Start out fully powered
+
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+
+    .powered_opacity = 0,
+    .unpowered_opacity = 0,
+
+    .powered_luminescence = 100,
+    .unpowered_luminescence = 20,
+
+    .on_power = powerPowerSupply,
+};
+
+pub const FuelPowerSupply = Machine{
+    .id = "fuel_power_supply",
+    .name = "fuel furnace",
+
+    .powered_tile = '█',
+    .unpowered_tile = '█',
 
     .power_drain = 0,
     .power_add = 100,

@@ -471,10 +471,9 @@ x Add the Openworld
 x Allow stacking in inventory
 x Add ranged weaponry
 x Alternative weapons, weapon swapping
-- Revamp sound system
-- Fix message-displaying bugs
-- Add basic power supply to vaults
-- Add basic power supply to vaults
+x Revamp sound system
+x Fix message-displaying bugs
+x Add basic power supply to vaults
 - Create misc evocable items
 - Create warning horn for Warden
 - Create Warden, add to vaults, adjust mob ratio there
@@ -586,6 +585,7 @@ x Define what undead are somewhere (combat bonuses, stat increases, miasma
   - Guards chase down rats and viciously kill them
   - Guards jumping around chasing rats creates another threat to player (guard
     may not be where the player last saw them!)
+  - Or, if the above is too much, we'll add some harmless cats to kill rats.
   - Rats "spawn" in some way
   - etc
 - Make .Hallucination status possible
