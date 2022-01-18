@@ -9,6 +9,7 @@ const LinkedList = @import("list.zig").LinkedList;
 const RingBuffer = @import("ringbuffer.zig").RingBuffer;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
+const ai = @import("ai.zig");
 const fov = @import("fov.zig");
 const heat = @import("heat.zig");
 const combat = @import("combat.zig");
@@ -25,7 +26,10 @@ const gas = @import("gas.zig");
 const utils = @import("utils.zig");
 const state = @import("state.zig");
 const literature = @import("literature.zig");
-const ai = @import("ai.zig");
+
+const Sound = @import("sound.zig").Sound;
+const SoundIntensity = @import("sound.zig").SoundIntensity;
+const SoundType = @import("sound.zig").SoundType;
 
 const SpellInfo = spells.SpellInfo;
 const Spell = spells.Spell;
@@ -789,7 +793,7 @@ pub const Status = enum {
     pub fn tickPain(mob: *Mob) void {
         const st = mob.isUnderStatus(.Pain).?;
 
-        mob.makeNoise(Mob.NOISE_SCREAM);
+        mob.makeNoise(.Scream, .Louder);
         mob.takeDamage(.{
             .amount = @intToFloat(f64, rng.rangeClumping(usize, 1, st.power, 2)),
         });
@@ -818,7 +822,9 @@ pub const Status = enum {
             var x: usize = xstart;
             while (x < xend) : (x += 1) {
                 const coord = Coord.new2(z, x, y);
-                const noise = state.player.canHear(coord) orelse continue;
+                if (state.player.canHear(coord) == null)
+                    continue;
+
                 var dijk = dijkstra.Dijkstra.init(
                     coord,
                     state.mapgeometry,
@@ -1010,14 +1016,6 @@ pub const Mob = struct { // {{{
     // Size of `activities` Ringbuffer
     pub const MAX_ACTIVITY_BUFFER_SZ = 4;
 
-    // Maximum field of hearing.
-    pub const MAX_FOH = 20;
-
-    pub const NOISE_MOVE = 50;
-    pub const NOISE_SPEAK = 100;
-    pub const NOISE_YELL = 150;
-    pub const NOISE_SCREAM = 200;
-
     pub fn tickFOV(self: *Mob) void {
         for (self.fov) |*row| for (row) |*cell| {
             cell.* = 0;
@@ -1161,7 +1159,7 @@ pub const Mob = struct { // {{{
         if (launcher.projectile.effect) |effect_func| (effect_func)(landed.?);
 
         self.declareAction(.Fire);
-        self.makeNoise(launcher.noise);
+        self.makeNoise(.Combat, .Medium);
 
         return true;
     }
@@ -1242,9 +1240,15 @@ pub const Mob = struct { // {{{
         self.energy -= @divTrunc(self.speed() * @intCast(isize, action.cost()), 100);
     }
 
-    pub fn makeNoise(self: *Mob, amount: usize) void {
+    pub fn makeNoise(self: *Mob, s_type: SoundType, intensity: SoundIntensity) void {
         assert(!self.is_dead);
-        state.dungeon.soundAt(self.coord).* += amount;
+        state.dungeon.soundAt(self.coord).* = .{
+            .mob_source = self,
+            .intensity = intensity,
+            .type = s_type,
+            .state = .New,
+            .when = state.ticks,
+        };
     }
 
     // Check if a mob, when trying to move into a space that already has a mob,
@@ -1382,7 +1386,7 @@ pub const Mob = struct { // {{{
             return false;
         }
 
-        if (!self.isCreeping()) self.makeNoise(NOISE_MOVE);
+        if (!self.isCreeping()) self.makeNoise(.Movement, .Medium);
 
         if (direction) |d| {
             self.declareAction(Activity{ .Move = d });
@@ -1478,9 +1482,11 @@ pub const Mob = struct { // {{{
 
         recipient.takeDamage(.{ .amount = @intToFloat(f64, damage) });
 
-        const noise = DamageType.causeNoise(attacker_weapon.main_damage, is_stab);
-        attacker.makeNoise(noise + rng.range(usize, 1, 3));
-        recipient.makeNoise(noise + rng.range(usize, 1, 3));
+        // XXX: should this be .Loud instead of .Medium?
+        if (!is_stab) {
+            attacker.makeNoise(.Combat, .Medium);
+            recipient.makeNoise(.Combat, .Medium);
+        }
 
         const hitstr = DamageType.damageString(
             attacker_weapon.main_damage,
@@ -1700,30 +1706,19 @@ pub const Mob = struct { // {{{
         return false;
     }
 
-    pub fn canHear(self: *const Mob, coord: Coord) ?usize {
-        const sound = state.dungeon.soundAt(coord).*;
+    pub fn canHear(self: *const Mob, coord: Coord) ?*Sound {
+        const sound = state.dungeon.soundAt(coord);
 
         if (self.coord.z != coord.z)
             return null; // Can't hear across levels
-        if (self.coord.distance(coord) > MAX_FOH)
+
+        if (sound.state == .Dead)
+            return null; // Sound was made a while back
+
+        if (self.coord.distance(coord) > sound.intensity.radiusHeard())
             return null; // Too far away
-        if (sound < self.hearing)
-            return null; // Too quiet to hear
 
-        const line = self.coord.drawLine(coord, state.mapgeometry);
-        var apparent_volume = sound - self.hearing;
-
-        // FIXME: this lazy sound propagation formula isn't accurate. But this is
-        // a game, so I can get away with it, right?
-        for (line.constSlice()) |c| {
-            const resistance: usize = if (state.dungeon.at(c).type == .Wall)
-                @floatToInt(usize, 2 * state.dungeon.at(c).material.density)
-            else
-                0;
-            apparent_volume = utils.saturating_sub(apparent_volume, resistance);
-        }
-
-        return if (apparent_volume >= self.hearing) apparent_volume else null;
+        return sound;
     }
 
     pub fn isHostileTo(self: *const Mob, othermob: *const Mob) bool {
@@ -2009,16 +2004,6 @@ pub const DamageType = enum {
         return strs[(damage_percentage * (strs.len - 1)) / 100];
     }
 
-    pub fn causeNoise(d: DamageType, stab: bool) usize {
-        return switch (d) {
-            .Crushing => if (stab) @as(usize, 10) else @as(usize, 18),
-            .Pulping => if (stab) @as(usize, 11) else @as(usize, 18),
-            .Slashing => if (stab) @as(usize, 5) else @as(usize, 14),
-            .Piercing => if (stab) @as(usize, 3) else @as(usize, 10),
-            .Lacerating => if (stab) @as(usize, 15) else @as(usize, 19),
-        };
-    }
-
     // Return a percentile bonus with which to multiply the base damage
     // amount when an attack is a stabbing attack.
     pub fn stabBonus(d: DamageType) usize {
@@ -2117,7 +2102,6 @@ pub const Weapon = struct {
     launcher: ?Launcher = null,
 
     pub const Launcher = struct {
-        noise: usize,
         projectile: Projectile,
     };
 };
@@ -2442,7 +2426,7 @@ pub const Dungeon = struct {
     map: [LEVELS][HEIGHT][WIDTH]Tile = [1][HEIGHT][WIDTH]Tile{[1][WIDTH]Tile{[1]Tile{.{}} ** WIDTH} ** HEIGHT} ** LEVELS,
     items: [LEVELS][HEIGHT][WIDTH]ItemBuffer = [1][HEIGHT][WIDTH]ItemBuffer{[1][WIDTH]ItemBuffer{[1]ItemBuffer{ItemBuffer.init(null)} ** WIDTH} ** HEIGHT} ** LEVELS,
     gas: [LEVELS][HEIGHT][WIDTH][gas.GAS_NUM]f64 = [1][HEIGHT][WIDTH][gas.GAS_NUM]f64{[1][WIDTH][gas.GAS_NUM]f64{[1][gas.GAS_NUM]f64{[1]f64{0} ** gas.GAS_NUM} ** WIDTH} ** HEIGHT} ** LEVELS,
-    sound: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
+    sound: [LEVELS][HEIGHT][WIDTH]Sound = [1][HEIGHT][WIDTH]Sound{[1][WIDTH]Sound{[1]Sound{.{}} ** WIDTH} ** HEIGHT} ** LEVELS,
     light_intensity: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     light_color: [LEVELS][HEIGHT][WIDTH]u32 = [1][HEIGHT][WIDTH]u32{[1][WIDTH]u32{[1]u32{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     heat: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{heat.DEFAULT_HEAT} ** WIDTH} ** HEIGHT} ** LEVELS,
@@ -2555,7 +2539,7 @@ pub const Dungeon = struct {
         return &self.gas[c.z][c.y][c.x];
     }
 
-    pub inline fn soundAt(self: *Dungeon, c: Coord) *usize {
+    pub inline fn soundAt(self: *Dungeon, c: Coord) *Sound {
         return &self.sound[c.z][c.y][c.x];
     }
 

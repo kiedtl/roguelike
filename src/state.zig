@@ -15,6 +15,8 @@ const fov = @import("fov.zig");
 const tasks_m = @import("tasks.zig");
 usingnamespace @import("types.zig");
 
+const SoundState = @import("sound.zig").SoundState;
+
 pub const TaskArrayList = tasks_m.TaskArrayList;
 pub const PosterArrayList = literature.PosterArrayList;
 
@@ -198,11 +200,12 @@ pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, al
 fn _can_hear_hostile(mob: *Mob) ?Coord {
     var iter = mobs.iterator();
     while (iter.next()) |othermob| {
+        // FIXME: uhg, why don't we just scan the surroundings for noises
+        // instead of looking at every damn mob
         if (mob.canHear(othermob.coord)) |sound| {
             if (mob.isHostileTo(othermob)) {
                 return othermob.coord;
-            } else if (sound > 20 and
-                (othermob.ai.phase == .Hunt or
+            } else if (sound.type != .Movement and (othermob.ai.phase == .Hunt or
                 othermob.ai.phase == .Flee))
             {
                 // Sounds like one of our friends [or a neutral mob] is having
@@ -418,16 +421,15 @@ pub fn tickLight(level: usize) void {
     }
 }
 
-// Each tick, make sound decay by 0.80 for each tile.
+// Make sound "decay" each tick.
 pub fn tickSound(cur_lev: usize) void {
     var y: usize = 0;
     while (y < HEIGHT) : (y += 1) {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
             const coord = Coord.new2(cur_lev, x, y);
-            const cur_sound = dungeon.soundAt(coord).*;
-            const new_sound = @intToFloat(f64, cur_sound) * 0.75;
-            dungeon.soundAt(coord).* = @floatToInt(usize, new_sound);
+            const cur_sound = dungeon.soundAt(coord);
+            cur_sound.state = SoundState.ageToState(ticks - cur_sound.when);
         }
     }
 }

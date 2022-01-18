@@ -633,7 +633,7 @@ pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
         }
     }
 
-    mob.makeNoise(Mob.NOISE_YELL);
+    mob.makeNoise(.Shout, .Loud);
 }
 
 // - Wield launcher.
@@ -777,5 +777,5 @@ pub fn flee(mob: *Mob, alloc: *mem.Allocator) void {
         }
     }
 
-    mob.makeNoise(Mob.NOISE_YELL);
+    mob.makeNoise(.Shout, .Loud);
 }

@@ -409,10 +409,12 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
                 }
 
                 if (state.player.canHear(coord)) |noise| {
-                    // Adjust noise to between 0 and 122, add 0x95, then display
-                    const adj_n = math.min(noise, 100) * 100 / 122;
-                    const green = @intCast(u32, (255 * adj_n) / 100);
-                    tile.fg = (green + 0x85) << 8;
+                    const green: u32 = switch (noise.state) {
+                        .New => 0x00D610,
+                        .Old => 0x00B310,
+                        .Dead => unreachable,
+                    };
+                    tile.fg = green;
                     tile.ch = '!';
                 }
 
@@ -437,10 +439,12 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
                         // Do nothing
                     } else {
                         if (state.player.canHear(coord)) |noise| {
-                            // Adjust noise to between 0 and 122, add 0x95, then display
-                            const adj_n = math.min(noise, 100) * 100 / 122;
-                            const green = @intCast(u32, (255 * adj_n) / 100);
-                            tile.fg = (green + 0x85) << 8;
+                            const green: u32 = switch (noise.state) {
+                                .New => 0x00D610,
+                                .Old => 0x00B310,
+                                .Dead => unreachable,
+                            };
+                            tile.fg = green;
                             tile.ch = '!';
                         } else if (_mobs_can_see(moblist, coord)) {
                             var can_mob_see = true;

@@ -620,7 +620,7 @@ fn powerAlarmTrap(machine: *Machine) void {
     if (machine.last_interaction) |culprit| {
         if (culprit.allegiance == .Necromancer) return;
 
-        culprit.makeNoise(2048); // muahahaha
+        culprit.makeNoise(.Alarm, .Loudest); // muahahaha
         if (culprit.coord.eq(state.player.coord))
             state.message(.Trap, "You hear a loud clanging noise!", .{});
     }

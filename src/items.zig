@@ -196,7 +196,6 @@ pub const NetLauncher = Weapon{
             },
             .effect = triggerNetLauncherProjectile,
         },
-        .noise = Mob.NOISE_MOVE,
     },
 };
 
@@ -225,7 +224,6 @@ pub const DartLauncher = Weapon{
                 .Lacerating = 2,
             },
         },
-        .noise = Mob.NOISE_YELL,
     },
 };
 
