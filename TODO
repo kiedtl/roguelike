@@ -1,10 +1,12 @@
 Levels
 ------
 - Entry
-- Regulation
+- Vaults
 	- Smallish square rooms with only one-width corridors.
-	- Lots of minor gauges, valves, etc.
-	- Most machines are explosive.
+	- Lots of weapons, armour, etc on racks.
+	- Lots of chests full of explosives.
+	- Lots of chests full of gold and jewels (useless).
+	- Wardens everywhere.
 	- Postprocessing: change walls that are shared with multiple rooms to
 	  windows?
 - Laboratory
@@ -86,8 +88,76 @@ Something like "Quarters"/"Leisure":
 - Chests of food and drink
 - Nursery? (kill baby goblins! fun!)
 
+New mobs
+--------
+- creeping death
+	- A sabre-toothed cat, nothing more or less.
+	- Has LOS radius of just one more than player's.
+	- Stalks player around.
+	- After a bit, the cat charges and attacks player.
+	- While charging:
+		- 50% increased speed
+		- Bite provides chance of paralysis
+	- When player is in LOS of cat, messages:
+		- "You feel like something is watching you."
+		- "You feel uneasy." (just before cat charges)
+- sulfur/decaying fiend
+	- Spits out sulfuric/miasmic gas, which raises corpses and slows living creatures.
+- frozen fiend
+	- Creates icy obstacles to block player (but obstacles melt after 2-4 turns).
+- iron spire
+	- "A towering demonic spire, with a thousand eyes leering through its
+	  iron plates. It shreds its enemies with fiery bolts while slowly
+	  pursuing on its 18 spider-like legs."
+	- like dcss' hell sentinel
+	- hurls bolts of fire
+	- extremely high AC
+- warden
+	- locks nearby doors
+	- calls for reinforcements by shouting/sounding horn
+- wretched stars
+	- "A fiery apparition wreathed in unapproachable darkness. It has the
+	  appearance of a double wheel, covered within and without in glazed
+	  eyes."
+	- Extremely fast.
+	- Mights allies.
+	- Mobs cannot be adjacent without getting some kind of ill effect.
+		- drain? poison? sickness?
+	- Emanates opaque gas.
+	- When allies are about to die, gives them a status them makes them
+	  very briefly invunerable and sends them insane.
+	- Blinks around so as to not be adjacent to allies. (If nowhere to
+	  blink, teleports away.)
+	- Teleports away when no allies visible.
+	- Immune to weapon damage.
+- burning brute
+	- "A demon composed primarily of boiling granite, capable of fearsome
+	  fire attacks."
+	- Hurls bolts of fire and lightning.
+- fiery fiend
+- [ancient] liche
+	- Summons orbs of {destruction,lightning}.
+	- Summons wretched stars.
+	- Hurls bolts of calcifying dust (same as DCSS' catoblepas).
+	- Holds the rings.
+- jellies
+	- Split on hit.
+
+Evocables
+---------
+- Warden's signal horn
+- Small bomb kit
+  Creates bomb that explodes within X turns, damaging ~7 radius.
+- Large bomb kit
+  Creates bomb that explodes within X turns, damaging ~15 radius.
+- Small mine kit
+  Creates bomb that explodes when stepped on, damaging ~9 radius.
+- Large mine kit
+  Creates bomb that explodes when stepped on, damaging ~19 radius.
+
 Intelligence
 ------------
+- Stupid mobs will employ ranged attacks even when it might hit another ally.
 - Stupid mobs will have trouble determining what's a stronger enemy
   (morale system).
 - Intelligent mobs won't assign A* penalty to areas out of max FOV range.
@@ -143,11 +213,12 @@ creeping ring of telepathy [a]
 	- Confers telepathy to all mobs in FOV.
 	- Slows down or restricts player movement.
 	- Movement pattern: [move(NE), move(SE), move(SW), move(NW)]
-dancing ring of sidestepping [a]
+dancing ring of sidestepping [a/p]
 	- Teleport player around mob to area outside of that mob's FOV, enabling a stab.
-	- Paralyzes mob for exactly one turn.
-	- Must land next to mob.
-	- Movement pattern: [move(NW), move(NE), move(NW), move(NE)]
+	  - Paralyzes mob for exactly one turn.
+	  - Must land next to mob.
+	  - Movement pattern: [move(NW), move(NE), move(NW), move(NE)]
+	- Forces player to swap with attacked mob on damage (passive).
 singing ring of echolocation [p]
 	- Gives player basic knowledge of dungeon's layout nearby sounds the player
 	  can hear. The wearer will not know about dungeon features, just walls and
@@ -201,17 +272,13 @@ x potion of coagulation
 x potion of invigoration [s]
   Temporarily increases strength and dexterity.
 - potion of cremation [c]
-  Explodes when opened, heating surrounding air.
+  Explodes when opened, setting surroundings on fire.
+- potion of decimation [c]
+  Explosion that destroys walls.
 - potion of refrigeration [g]
   Freezes the surrounding air, slowing down cold-blooded mobs.
-- potion of decimation [c]
-  Explosion that can destroy walls.
 - potion of defoliation [g]
-  Poison that destroys plants and/or fungi.
-- potion of dehumanization
-  Makes mob mindless?
-- potion of intoxication [s]
-  Drunkenness.
+  Poison that destroys plants and/or fungi (releasing spores? hmmmm....).
 - vial of tanus
   Status: backvision
     Makes mob see directly behind them as well as in front of them.
@@ -272,11 +339,29 @@ Unique mobs
 
 Books
 -----
+Trying to read an [unreadable] book results in:
+	- "This book is written in Old Dramamos and you cannot read it."
+Trying to read an [barbarians] book results in:
+	- "This book is written in the language of the Western barbarians. You
+	   read the book with great difficulty."
+Trying to read a [forbidden] book results in:
+	- "This book has a seal set on it, threatening would-be readers with
+	   death. Really open?"
+[unreadable] "Book of Damnation"
+[unreadable] "Book of the Dead"
+[unreadable] "Book of Torment"
+[unreadable] "Of Men and Muskrats"
+[unreadable] "Is Man a Myth?"
+[forbidden]  "Book of Hymns"/"Soraldal"
+[barbarians] "On the Goblins"/"Urukdal"
+	- "You learn that two dark-skinned humans named Valimer and Kaiüs
+	   visited a few hill-goblin settlements a thousand years ago."
+"The Vale of Fear"/"Skarlef"
 "Kornalg: The Life and Times of the Ancient Hill-King"
 	- "You learn that Kornalg was undoubtedly the bravest, strongest,
-	   besterestest hill goblin that ever was."
+	   besterestest hill-goblin that ever lived."
 "This was Kornalg"
-	- "You learn that Kornalg was by right king of the whole universe."
+	- "You learn that Kornalg was rightly the king of the whole universe."
 "Meing Krampgh"
 	- "You learn that hill goblins are destined to rule the world."
 	- "You learn that those filthy cave-goblins have been infiltrating
@@ -290,6 +375,8 @@ Books
 	- "You learn that hill goblins are vastly superior to cave goblins."
 "The Path to Goblin Supremacy"
 "The Weekly Hurricane"
+	- "You learn that cave goblins are responsible for just about every
+	   bad thing that happened to hill goblins in the past 10,000 years."
 "On the Origins of Slade"
 "An Inquiry into the Chemical Properties of Phytin"
 "On the Molecular Structure of Tanus"
@@ -301,6 +388,8 @@ Books
 	  distance for tile-based games."
 "Optimizing the A* Algorithm"
 	- "You learn about the Manhattan distance function."
+"Origins of the Kaborego-Zin"/"Origins of the Creeping Death"
+	- "You learn that the origins of the creeping death are a complete mystery."
 "Daily Consumption of Butter Tea"
 	- "You learn that some wacko humans actually like drinking rancid
 	  butter mash."
@@ -308,6 +397,9 @@ Books
 "A Short Guide on Brewing Kombucha"
 	- "You learn that some weird humans actually like drinking spoiled tea."
 	- "You learn the ratios of sugar and tea needed to brew kombucha."
+"Oneirical's guide to the DCSS' FeSu"
+	- "You learn that a few humans actually like scaled-down creeping deaths."
+	- "You learn that some people like cats. A lot."
 recipe books
 	- "You learn how to pickle goblin roasts."
 	- "You learn how to properly butcher humans carcases."
@@ -359,10 +451,7 @@ s	maron
 
 
 Roadmap
--------
-
-Basic stuff:
-============
+=======
 x Basic prefabs
 x Allow for definition of a 'start' prefab
 x Allow for placement of player in a location
@@ -382,6 +471,23 @@ x Add the Openworld
 x Allow stacking in inventory
 x Add ranged weaponry
 x Alternative weapons, weapon swapping
+- Revamp sound system
+- Fix message-displaying bugs
+- Add basic power supply to vaults
+- Add basic power supply to vaults
+- Create misc evocable items
+- Create warning horn for Warden
+- Create Warden, add to vaults, adjust mob ratio there
+- Create gold item type
+- Add "sack of gold" container
+- Add automatic gold-pickup
+- Add gold to vaults and other maps
+- Add ability to present confirm/dialog boxes
+- Add morgue-file generation
+- Show morgue to player on death/win
+- Implement basic explosions (with wizard functionality)
+- Add potion of decimation
+- Add bomb-making evocables (and maybe increase size of inventory)
 
 Ring and movements:
 ===================
@@ -407,11 +513,7 @@ Temperature
 ===========
 x Add temperature matrix, tickTemperature(); make magma emit heat
 x Integrate with lighting system (make hot tiles emit light)
-- Add emits_heat to Mob{}, define Burning Brute
 x Update tickTemperature() to work with material's specific heat
-- Add min_heat, max_heat to Mob{}; add tickTemperatureEffects()
-- Allow walls to melt
-- Allow props and machines to be damaged and melt
 
 Room features/Mapgen:
 =====================
@@ -482,6 +584,8 @@ x Define what undead are somewhere (combat bonuses, stat increases, miasma
   - Rats, hiding in dark corners, emerge and eat/clean crumbs
   - Rats come to lick up blood and feast on corpses as well
   - Guards chase down rats and viciously kill them
+  - Guards jumping around chasing rats creates another threat to player (guard
+    may not be where the player last saw them!)
   - Rats "spawn" in some way
   - etc
 - Make .Hallucination status possible
@@ -503,14 +607,28 @@ x Make it easier to tell the heavily wounded from dead
 - @ command to see player's full AC and stats
 x Fix showing of display percentage of last damage
 - UI for status effects (paralysis, etc)
-- Ring messages (full power, half power, equipped)
+- Show red/yellow/orange for low health bars
+x Use proper CP407 arrows for staircases
+- Show prisoner's activity as "prisoner" instead of {"investigate","attack"}, etc
+- Make bg of cell with noise green
+
+Message pane
+============
+- Messages:
+  - On using ring (full power, half power, equipped)
+  - On swapping with mob
+  - On seeing a mob cast a spell
+  - On dodging by enemy or player
+  - On death
+  - On resisting a spell
+  - On swapping weapon
+  - On using launcher
+  - On making a noise, or mob making a noise
+- Messages that require confirm/keypress
 x Only print trap messages when culprit is player
 - Group identical messages in msgpane
 x Attack messages should be nice and descriptive ("You skewer the goblin!")
   - Even more descriptive! ("The troll smashes you like an overripe mango!!")
-- Show red/yellow/orange for low health bars
-x Use proper CP407 arrows for staircases
-- Show prisoner's activity as "prisoner" instead of {"investigate","attack"}, etc
 
 Fixes
 =====
@@ -610,6 +728,11 @@ x Add braziers that are built into the walls (aka torches), and use that
 - Ring/item that has leaving a vunerable "copy" of yourself where that item/ring
   was activated (that is, *two* tiles have the .mob field pointing to the player,
   while the player.coord field points to only one of them).
+- weapon runes:
+	- interleaving
+		- Swap on hit
+	- banishing
+		- Teleports away
 
 Optimizations
 =============
