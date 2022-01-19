@@ -407,11 +407,14 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
 
                 if (state.memory.contains(coord)) {
                     tile = state.memory.get(coord) orelse unreachable;
-
-                    tile.fg = utils.darkenColor(utils.filterColorGrayscale(tile.fg), 4);
-                    tile.bg = utils.darkenColor(utils.filterColorGrayscale(tile.bg), 4);
+                } else if (state.dungeon.neighboringWalls(coord, true) < 9) {
+                    tile.ch = if (state.dungeon.at(coord).type == .Wall) '#' else '·';
                 }
 
+                tile.fg = utils.darkenColor(utils.filterColorGrayscale(tile.fg), 4);
+                tile.bg = utils.darkenColor(utils.filterColorGrayscale(tile.bg), 4);
+
+                // Can we hear anything
                 if (state.player.canHear(coord)) |noise| {
                     const green: u32 = switch (noise.state) {
                         .New => 0x00D610,
