@@ -480,48 +480,15 @@ pub fn wanderWork(mob: *Mob, alloc: *mem.Allocator) void {
     assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.ai.phase == .Work);
 
-    var to = mob.ai.work_area.items[0];
-
-    if (mob.cansee(to) or !state.is_walkable(to, .{ .right_now = true })) {
-        // OK, reached our destination. Time to choose another one!
-        const map = Rect{
-            .start = Coord.new2(mob.coord.z, 1, 1),
-            .width = WIDTH - 1,
-            .height = HEIGHT - 1,
-        };
-
-        var tries: usize = 0;
-        while (tries < 50) : (tries += 1) {
-            const point = map.randomCoord();
-
-            if (!state.is_walkable(point, .{ .right_now = true })) continue;
-
-            if (mob.nextDirectionTo(point)) |_| {
-                mob.ai.work_area.items[0] = point;
-                break;
-            }
-        }
-
-        _ = mob.rest();
-        return;
-    }
-
-    if (!mob.isCreeping()) {
-        _ = mob.rest();
-        return;
-    }
-
-    mob.tryMoveTo(to);
-}
-
-pub fn goofingAroundWork(mob: *Mob, alloc: *mem.Allocator) void {
-    assert(state.dungeon.at(mob.coord).mob != null);
-    assert(mob.ai.phase == .Work);
-
     const station = mob.ai.work_area.items[0];
     const dest = mob.ai.target orelse mob.coord;
 
     if (mob.coord.eq(dest) or !state.is_walkable(dest, .{ .right_now = true })) {
+        if (rng.tenin(15)) {
+            _ = mob.rest();
+            return;
+        }
+
         // OK, reached our destination. Time to choose another one!
         const room_i = switch (state.layout[mob.coord.z][station.y][station.x]) {
             .Unknown => return,
@@ -530,7 +497,7 @@ pub fn goofingAroundWork(mob: *Mob, alloc: *mem.Allocator) void {
         const room = &state.rooms[mob.coord.z].items[room_i];
 
         var tries: usize = 0;
-        while (tries < 10) : (tries += 1) {
+        while (tries < 5) : (tries += 1) {
             const point = room.rect.randomCoord();
 
             if (!state.is_walkable(point, .{ .right_now = true }) or

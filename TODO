@@ -481,8 +481,8 @@ x Add basic power supply to vaults
 x Create misc evocable items
 x Create eldritch lantern evocable
 x Create warning horn for Warden
-- Create Warden, add to vaults, adjust mob ratio there
-- Make executioner slower to move around
+x Create Warden, add to vaults, adjust mob ratio there
+x Make executioner slower to move around
 - Add treatures to Vaults
   - Create gold item/prop
   - Add "sack of gold" container
