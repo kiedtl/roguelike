@@ -39,7 +39,7 @@ pub const Evocable = struct {
 pub const EldritchLanternEvoc = Evocable{
     .id = "eldritch_lantern",
     .name = "eldritch lantern",
-    .tile_fg = 0x12abef,
+    .tile_fg = 0x23abef,
     .max_charges = 5,
     .trigger_fn = _triggerEldritchLantern,
 };
@@ -84,6 +84,29 @@ fn _triggerEldritchLantern(mob: *Mob, evoc: *Evocable) bool {
         if (player_was_affected) {
             state.message(.Info, "You feel dazed by the blinding light.", .{});
         }
+    }
+
+    return true;
+}
+
+pub const WarningHornEvoc = Evocable{
+    .id = "warning_horn",
+    .name = "warning horn",
+    .tile_fg = 0xefab23,
+    .max_charges = 3,
+    .trigger_fn = _triggerWarningHorn,
+};
+fn _triggerWarningHorn(mob: *Mob, evoc: *Evocable) bool {
+    mob.makeNoise(.Alarm, .Loudest);
+
+    if (mob == state.player) {
+        state.message(.Info, "You blow the horn!", .{});
+    } else if (state.player.cansee(mob.coord)) {
+        // ↓ this isn't needed, but it's a workaround for a Zig compiler bug
+        // FIXME: when upgraded to Zig v9, poke this code and see if the bug's
+        // still there
+        const mobname = mob.ai.profession_name orelse mob.species;
+        state.message(.Info, "The {} blows its warning horn!", .{mobname});
     }
 
     return true;
