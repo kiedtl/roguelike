@@ -4,6 +4,7 @@ const buffer = @import("buffer.zig");
 const spells = @import("spells.zig");
 usingnamespace @import("types.zig");
 
+const Evocable = items.Evocable;
 const StackBuffer = buffer.StackBuffer;
 const SpellInfo = spells.SpellInfo;
 
@@ -14,6 +15,7 @@ pub const MobTemplate = struct {
     backup_weapon: ?*const Weapon = null,
     armor: ?*const Armor = null,
     statuses: []const StatusDataInfo = &[_]StatusDataInfo{},
+    evocables: []const Evocable = &[_]Evocable{},
 };
 
 pub const ExecutionerTemplate = MobTemplate{
@@ -73,6 +75,37 @@ pub const WatcherTemplate = MobTemplate{
 
         .base_strength = 15, // weakling!
     },
+};
+
+pub const WardenTemplate = MobTemplate{
+    .id = "guard",
+    .mob = .{
+        .species = "goblin",
+        .tile = 'ם',
+        .ai = AI{
+            .profession_name = "warden",
+            .profession_description = "guarding",
+            .work_fn = ai.guardWork,
+            .fight_fn = ai.meleeFight,
+            .is_combative = true,
+            .is_curious = true,
+        },
+        .allegiance = .Necromancer,
+        .vision = 5,
+        .base_night_vision = 35,
+
+        .willpower = 3,
+        .base_dexterity = 20,
+        .hearing = 7,
+        .max_HP = 40,
+        .memory_duration = 6,
+        .base_speed = 120,
+        .blood = .Blood,
+
+        .base_strength = 24,
+    },
+    .weapon = &items.SwordWeapon,
+    .armor = &items.HeavyChainmailArmor,
 };
 
 pub const GuardTemplate = MobTemplate{
@@ -658,8 +691,9 @@ pub const PhytinExperiment = MobTemplate{
 };
 
 pub const MOBS = [_]MobTemplate{
-    WatcherTemplate,
     ExecutionerTemplate,
+    WatcherTemplate,
+    WardenTemplate,
     GuardTemplate,
     SentinelTemplate,
     PatrolTemplate,

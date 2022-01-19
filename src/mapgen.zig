@@ -124,6 +124,12 @@ fn placeMob(
     if (opts.facing) |dir| mob.facing = dir;
     mob.ai.work_area.append(opts.work_area orelse coord) catch unreachable;
 
+    for (template.evocables) |evocable_template| {
+        var evocable = _createItem(Evocable, evocable_template);
+        evocable.charges = evocable.max_charges;
+        mob.inventory.pack.append(Item{ .Evocable = evocable }) catch unreachable;
+    }
+
     for (template.statuses) |status_info| {
         mob.addStatus(status_info.status, status_info.power, status_info.duration, status_info.permanent);
     }
@@ -1397,23 +1403,24 @@ pub fn placeTraps(level: usize) void {
 pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
     var squads: usize = Configs[level].patrol_squads;
 
-    while (squads > 0) : (squads -= 1) {
+    while (squads > 0) {
         const room = rng.chooseUnweighted(Room, state.rooms[level].items);
-        const patrol_units = rng.range(usize, 3, 5) % math.max(room.rect.width, room.rect.height);
-        var patrol_warden: ?*Mob = null;
 
         if (room.prefab) |rfb| if (rfb.noguards) continue;
         if (room.type == .Corridor) continue;
 
+        var patrol_warden: ?*Mob = null;
+        const patrol_units = rng.range(usize, 3, 4);
+
         var placed_units: usize = 0;
-        var tries: usize = 2048;
-        while (tries > 0 and placed_units < patrol_units) : (tries -= 1) {
-            const rnd = room.rect.randomCoord();
-            if (!isTileAvailable(rnd)) continue;
+        var y: usize = room.rect.start.y;
+        while (y < room.rect.end().y and placed_units < patrol_units) : (y += 1) {
+            var x: usize = room.rect.start.x;
+            while (x < room.rect.end().x and placed_units < patrol_units) : (x += 1) {
+                const coord = Coord.new2(level, x, y);
+                if (!isTileAvailable(coord)) continue;
 
-            if (state.dungeon.at(rnd).mob == null) {
-                const guard = placeMob(alloc, &mobs.PatrolTemplate, rnd, .{});
-
+                const guard = placeMob(alloc, &mobs.PatrolTemplate, coord, .{});
                 if (patrol_warden) |warden| {
                     warden.squad_members.append(guard) catch unreachable;
                 } else {
@@ -1424,6 +1431,8 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
                 placed_units += 1;
             }
         }
+
+        if (placed_units > 0) squads -= 1;
     }
 
     for (state.rooms[level].items) |room| {
@@ -2579,7 +2588,12 @@ pub const Configs = [LEVELS]LevelConfig{
         .max_room_width = 10,
         .max_room_height = 6,
 
-        .patrol_squads = 1,
+        .patrol_squads = 2,
+        .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
+            .{ .chance = 15, .template = &mobs.GuardTemplate },
+            .{ .chance = 30, .template = &mobs.WatcherTemplate },
+            .{ .chance = 55, .template = &mobs.WardenTemplate },
+        }),
 
         .allow_statues = false,
     },
