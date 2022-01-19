@@ -17,6 +17,8 @@ const utils = @import("utils.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
+const Evocable = items.Evocable;
+const EvocableList = items.EvocableList;
 const Poster = literature.Poster;
 
 const CONNECTIONS_MAX = 5;
@@ -180,6 +182,7 @@ fn _createItem(comptime T: type, item: T) *T {
         Armor => &state.armors,
         Weapon => &state.weapons,
         Projectile => &state.projectiles,
+        Evocable => &state.evocables,
         else => @compileError("uh wat"),
     };
     list.append(item) catch @panic("OOM");

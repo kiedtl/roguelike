@@ -7,6 +7,88 @@ const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
 usingnamespace @import("types.zig");
 
+const LinkedList = @import("list.zig").LinkedList;
+
+pub const EvocableList = LinkedList(Evocable);
+pub const Evocable = struct {
+    // linked list stuff
+    __next: ?*Evocable = null,
+    __prev: ?*Evocable = null,
+
+    id: []const u8,
+    name: []const u8,
+    tile_fg: u32,
+
+    charges: usize = 0,
+    max_charges: usize,
+
+    trigger_fn: fn (*Mob, *Evocable) bool,
+
+    // TODO: targeting functionality
+
+    pub fn evoke(self: *Evocable, by: *Mob) bool {
+        if (self.charges > 0) {
+            self.charges -= 1;
+            return self.trigger_fn(by, self);
+        } else {
+            return false;
+        }
+    }
+};
+
+pub const EldritchLanternEvoc = Evocable{
+    .id = "eldritch_lantern",
+    .name = "eldritch lantern",
+    .tile_fg = 0x12abef,
+    .max_charges = 5,
+    .trigger_fn = _triggerEldritchLantern,
+};
+fn _triggerEldritchLantern(mob: *Mob, evoc: *Evocable) bool {
+    var affected: usize = 0;
+    var player_was_affected: bool = false;
+
+    for (mob.fov) |row, y| for (row) |cell, x| {
+        if (cell == 0) continue;
+
+        const coord = Coord.new2(mob.coord.z, x, y);
+
+        if (state.dungeon.at(coord).mob) |othermob| {
+            if (othermob == mob) continue;
+
+            const dur = rng.rangeClumping(usize, 5, 20, 2);
+            othermob.addStatus(.Confusion, 0, dur, false);
+
+            affected += 1;
+            if (othermob == state.player)
+                player_was_affected = true;
+        }
+    };
+
+    mob.addStatus(.Confusion, 0, rng.range(usize, 1, 4), false);
+    mob.makeNoise(.Explosion, .Quiet);
+
+    if (mob == state.player) {
+        state.message(.Info, "The eldritch lantern flashes brilliantly!", .{});
+
+        if (affected > 1) {
+            state.message(.Info, "You and those nearby are dazed by the light.", .{});
+        } else {
+            state.message(.Info, "You are dazed by the light.", .{});
+        }
+    } else if (state.player.cansee(mob.coord)) {
+        // ↓ this isn't needed, but it's a workaround for a Zig compiler bug
+        // FIXME: when upgraded to Zig v9, poke this code and see if the bug's
+        // still there
+        const mobname = mob.ai.profession_name orelse mob.species;
+        state.message(.Info, "The {} flashes an eldritch lantern!", .{mobname});
+        if (player_was_affected) {
+            state.message(.Info, "You feel dazed by the blinding light.", .{});
+        }
+    }
+
+    return true;
+}
+
 pub const EcholocationRing = Ring{
     .name = "echolocation",
     .status = .Echolocation,

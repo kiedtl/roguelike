@@ -20,6 +20,7 @@ usingnamespace @import("types.zig");
 
 pub const TaskArrayList = tasks.TaskArrayList;
 pub const PosterArrayList = literature.PosterArrayList;
+pub const EvocableList = items.EvocableList;
 
 // Install a panic handler that tries to shutdown termbox before calling the
 // default panic handler.
@@ -47,6 +48,7 @@ fn initGame() void {
     state.machines = MachineList.init(&state.GPA.allocator);
     state.props = PropList.init(&state.GPA.allocator);
     state.containers = ContainerList.init(&state.GPA.allocator);
+    state.evocables = EvocableList.init(&state.GPA.allocator);
     state.messages = MessageArrayList.init(&state.GPA.allocator);
 
     surfaces.readProps(&state.GPA.allocator);
@@ -125,6 +127,7 @@ fn deinitGame() void {
     state.messages.deinit();
     state.props.deinit();
     state.containers.deinit();
+    state.evocables.deinit();
 
     for (literature.posters.items) |poster|
         poster.deinit(&state.GPA.allocator);
@@ -286,6 +289,7 @@ fn useItem() bool {
             // So this message was in response to player going "I want to eat it"
             // But of course they might have just been intending to "invoke" the
             // ring, not knowing that there's no such thing.
+            //
             // FIXME: so this message can definitely be improved...
             state.message(.MetaError, "Are you three?", .{});
             return false;
@@ -366,9 +370,16 @@ fn useItem() bool {
             state.message(.Info, "You admire the {}.", .{p.name});
             return false;
         },
+        .Evocable => |v| {
+            if (!v.evoke(state.player))
+                return false;
+        },
     }
 
-    _ = state.player.removeItem(index) catch unreachable;
+    switch (state.player.inventory.pack.slice()[index]) {
+        .Evocable => {},
+        else => _ = state.player.removeItem(index) catch unreachable,
+    }
 
     state.player.declareAction(.Use);
 

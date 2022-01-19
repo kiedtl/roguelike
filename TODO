@@ -252,9 +252,6 @@ faded ring of fire [a]
 		- Movement pattern:
 	- Causes tiles in 3-space radius around player to burst into flame.
 		- Movement pattern:
-ring of invisibility
-	- Doesn't make wearer invisible, but prevents other hostiles from noticing
-	  the wearer, even if they walk within inches of each other's nose.
 
 
 Potions/Vials
@@ -481,22 +478,29 @@ x Alternative weapons, weapon swapping
 x Revamp sound system
 x Fix message-displaying bugs
 x Add basic power supply to vaults
-- Create misc evocable items
-- Create eldritch lantern evocable
+x Create misc evocable items
+x Create eldritch lantern evocable
 - Create warning horn for Warden
 - Create Warden, add to vaults, adjust mob ratio there
+- Make executioner slower to move around
 - Add treatures to Vaults
   - Create gold item/prop
   - Add "sack of gold" container
   - Add jewels
   - Add armour and weapons (only ones that are useless to player)
 - Add ability to present confirm/dialog boxes
+- Add confirm boxes when:
+  - Going to move into hostile's FOV
+  - Going to make noise
 - Add morgue-file generation
 - Show morgue to player on death/win
 - Implement basic explosions (with wizard functionality)
 - Add potion of decimation
-- Add bomb-making evocables (and maybe increase size of inventory)
+- Add bomb-making evocables
+- Increase size of inventory
 - Revamp confuse; add "daze" status
+- Add recharging stations
+- Place evocables around dungeon
 
 Ring and movements:
 ===================

@@ -27,6 +27,8 @@ const utils = @import("utils.zig");
 const state = @import("state.zig");
 const literature = @import("literature.zig");
 
+const Evocable = @import("items.zig").Evocable;
+
 const Sound = @import("sound.zig").Sound;
 const SoundIntensity = @import("sound.zig").SoundIntensity;
 const SoundType = @import("sound.zig").SoundType;
@@ -1731,6 +1733,7 @@ pub const Mob = struct { // {{{
         }
 
         if (self.isUnderStatus(.Paralysis)) |_| return false;
+        if (self.isUnderStatus(.Confusion)) |_| return false;
 
         if (self.cansee(attacker)) return true;
 
@@ -2252,7 +2255,7 @@ pub const Ring = struct {
 };
 
 pub const ItemType = enum {
-    Corpse, Ring, Potion, Vial, Armor, Weapon, Boulder, Prop
+    Corpse, Ring, Potion, Vial, Armor, Weapon, Boulder, Prop, Evocable
 };
 
 pub const Item = union(ItemType) {
@@ -2264,6 +2267,7 @@ pub const Item = union(ItemType) {
     Weapon: *Weapon,
     Boulder: *const Material,
     Prop: *const Prop,
+    Evocable: *Evocable,
 
     pub fn shortName(self: *const Item) !StackBuffer(u8, 128) {
         var buf = StackBuffer(u8, 128).init(&([_]u8{0} ** 128));
@@ -2277,6 +2281,7 @@ pub const Item = union(ItemType) {
             .Weapon => |w| try fmt.format(fbs.writer(), "{}", .{w.name}),
             .Boulder => |b| try fmt.format(fbs.writer(), "{} of {}", .{ b.chunkName(), b.name }),
             .Prop => |b| try fmt.format(fbs.writer(), "{}", .{b.name}),
+            .Evocable => |v| try fmt.format(fbs.writer(), "{}", .{v.name}),
         }
         buf.resizeTo(@intCast(usize, fbs.getPos() catch unreachable));
         return buf;
@@ -2372,6 +2377,10 @@ pub const Tile = struct {
                         .Prop => |p| {
                             cell.ch = p.tile;
                             cell.fg = p.fg orelse 0xffffff;
+                        },
+                        .Evocable => |v| {
+                            cell.ch = '}';
+                            cell.fg = v.tile_fg;
                         },
                     }
                 } else if (state.dungeon.at(coord).surface) |surfaceitem| {
