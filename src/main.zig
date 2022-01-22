@@ -97,6 +97,13 @@ fn initGame() void {
     for (state.dungeon.map) |_, mlevel|
         mapgen.placeRandomStairs(mlevel);
 
+    for (state.dungeon.map) |lev, z| for (lev) |row, y| for (row) |_, x| {
+        const c = Coord.new2(z, x, y);
+        if (state.dungeon.neighboringWalls(c, true) < 9) {
+            state.memory.put(c, Tile.displayAs(c, true, true)) catch unreachable;
+        }
+    };
+
     display.draw();
 }
 
@@ -654,7 +661,7 @@ fn viewerDisplay(tty_height: usize, level: usize, sy: usize) void {
     }) {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
-            var t = Tile.displayAs(Coord.new2(level, x, dy), false);
+            var t = Tile.displayAs(Coord.new2(level, x, dy), false, false);
             termbox.tb_put_cell(@intCast(isize, x), @intCast(isize, y), &t);
         }
     }
