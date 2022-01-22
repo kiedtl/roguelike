@@ -106,6 +106,7 @@ pub const WardenTemplate = MobTemplate{
     },
     .weapon = &items.SwordWeapon,
     .armor = &items.HeavyChainmailArmor,
+    .evocables = &[_]Evocable{items.WarningHornEvoc},
 };
 
 pub const GuardTemplate = MobTemplate{

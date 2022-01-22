@@ -1126,6 +1126,14 @@ pub const Mob = struct { // {{{
         }
     }
 
+    pub fn evokeOrRest(self: *Mob, evocable: *Evocable) void {
+        if (!evocable.evoke(self)) {
+            _ = self.rest();
+        } else {
+            self.declareAction(.Use);
+        }
+    }
+
     pub fn launchProjectile(self: *Mob, launcher: *const Weapon.Launcher, at: Coord) bool {
         const trajectory = self.coord.drawLine(at, state.mapgeometry);
         var landed: ?Coord = null;

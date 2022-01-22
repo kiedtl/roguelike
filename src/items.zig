@@ -21,14 +21,31 @@ pub const Evocable = struct {
 
     charges: usize = 0,
     max_charges: usize,
+    last_used: usize = 0,
+
+    purpose: Purpose,
 
     trigger_fn: fn (*Mob, *Evocable) bool,
+
+    // The AI uses this to determine whether to active an evocable in a mob's
+    // inventory.
+    pub const Purpose = enum {
+        // The evocable can be activated during a fight, to debuff enemies.
+        EnemyDebuff,
+
+        // The evocable can be activated during a fight, to buff allies.
+        AllyBuff,
+
+        // The evocable can be activated during a fight, to buff self.
+        SelfBuff,
+    };
 
     // TODO: targeting functionality
 
     pub fn evoke(self: *Evocable, by: *Mob) bool {
         if (self.charges > 0) {
             self.charges -= 1;
+            self.last_used = state.ticks;
             return self.trigger_fn(by, self);
         } else {
             return false;
@@ -41,6 +58,7 @@ pub const EldritchLanternEvoc = Evocable{
     .name = "eldritch lantern",
     .tile_fg = 0x23abef,
     .max_charges = 5,
+    .purpose = .EnemyDebuff,
     .trigger_fn = _triggerEldritchLantern,
 };
 fn _triggerEldritchLantern(mob: *Mob, evoc: *Evocable) bool {
@@ -94,6 +112,7 @@ pub const WarningHornEvoc = Evocable{
     .name = "warning horn",
     .tile_fg = 0xefab23,
     .max_charges = 3,
+    .purpose = .SelfBuff,
     .trigger_fn = _triggerWarningHorn,
 };
 fn _triggerWarningHorn(mob: *Mob, evoc: *Evocable) bool {
