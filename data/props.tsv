@@ -41,12 +41,20 @@
 ""                     	 "Buchner funnel"       	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
 ""                     	 "Erlenmeyer flask"     	 '~' 	 0xffffff 	 -        	 -   	 - 	 .LaboratoryItem
 
+# Vaults stuff
+"gold_ingots"          	 "gold ingots"          	 '╳' 	 0x000000 	 0xffd700 	 nay 	 -	 .Vault
+"gold_chest"           	 "gold chest"           	 'æ' 	 0xffd700 	 -        	 nay 	 -	 .Vault
+"iron_ingots"          	 "iron ingots"          	 '╳' 	 0x000000 	 0xcacbca 	 nay 	 -	 .Vault
+"steel_ingots"         	 "steel ingots"         	 '╳' 	 0x000000 	 0xeeeeee 	 nay 	 -	 .Vault
+
+# Statues
 "gold_statue"          	 "gold statue"          	 '☺' 	 0xfff720 	 -        	 nay 	 - 	 .Statue
 "realgar_statue"       	 "realgar statue"       	 '☺' 	 0xff343f 	 -        	 nay 	 - 	 .Statue
 "iron_statue"          	 "iron statue"          	 '☻' 	 0xcacad2 	 -        	 nay 	 - 	 .Statue
 "sodalite_statue"      	 "sodalite statue"      	 '☺' 	 0xa4cfff 	 -        	 nay 	 - 	 .Statue
 "hematite_statue"      	 "hematite statue"      	 '☺' 	 0xff7f70 	 -        	 nay 	 - 	 .Statue
 
+# Smithing stuff
 # NOTE: the glyphs/colors for these are hardcoded in surfaces.zig:powerChainPress()
 "chain_asm1"           	 "chain assembly line"  	 '┉' 	 0xe0e0ff 	 -        	 nay
 "chain_asm2"           	 "chain assembly line"  	 '┅' 	 0xe0e0ff 	 -        	 nay

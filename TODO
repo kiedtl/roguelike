@@ -483,15 +483,14 @@ x Create eldritch lantern evocable
 x Create warning horn for Warden
 x Create Warden, add to vaults, adjust mob ratio there
 x Make executioner slower to move around
-- Add treatures to Vaults
-  - Create gold item/prop
-  - Add "sack of gold" container
-  - Add jewels
+* Add treatures to Vaults
+  x Create gold item/prop
   - Add armour and weapons (only ones that are useless to player)
 - Add ability to present confirm/dialog boxes
 - Add confirm boxes when:
   - Going to move into hostile's FOV
   - Going to make noise
+  - Going to move into a trap
 - Add morgue-file generation
 - Show morgue to player on death/win
 - Implement basic explosions (with wizard functionality)
@@ -540,7 +539,7 @@ x Allow for prefabs to have alternate layouts
 x Allow for prefabs to be restricted to a map
 x Create corridors between parallel prefabs/rooms
 x Make the "lamps" electric "braziers"
-  - Place them in center of rooms.
+  ~ Place them in center of rooms.
   x Place them in corners of rooms.
   - Make them explosive and electrocutive!
 * Useless items in bins, cabinets, etc
@@ -613,6 +612,7 @@ x Define what undead are somewhere (combat bonuses, stat increases, miasma
   - Presence of many enemies
   - Pain,Fear effects
   - Miasma gas, other gases
+  - Buffs on self or allies (haste, might, etc)
 
 User Interface
 ==============

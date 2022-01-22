@@ -2596,6 +2596,9 @@ pub const Configs = [LEVELS]LevelConfig{
         }),
 
         .allow_statues = false,
+
+        .props = &surfaces.vault_props.items,
+        .containers = &[_]Container{surfaces.Chest},
     },
     .{
         .identifier = "PRI",

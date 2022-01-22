@@ -18,6 +18,7 @@ pub var props: PropArrayList = undefined;
 pub var prison_item_props: PropArrayList = undefined;
 pub var laboratory_item_props: PropArrayList = undefined;
 pub var laboratory_props: PropArrayList = undefined;
+pub var vault_props: PropArrayList = undefined;
 pub var statue_props: PropArrayList = undefined;
 
 pub const MACHINES = [_]Machine{
@@ -758,7 +759,7 @@ pub fn readProps(alloc: *mem.Allocator) void {
         holder: bool = undefined,
 
         pub const Function = enum {
-            ActionPoint, Laboratory, LaboratoryItem, Statue, None
+            ActionPoint, Laboratory, Vault, LaboratoryItem, Statue, None
         };
     };
 
@@ -766,6 +767,7 @@ pub fn readProps(alloc: *mem.Allocator) void {
     prison_item_props = PropArrayList.init(alloc);
     laboratory_item_props = PropArrayList.init(alloc);
     laboratory_props = PropArrayList.init(alloc);
+    vault_props = PropArrayList.init(alloc);
     statue_props = PropArrayList.init(alloc);
 
     const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
@@ -819,6 +821,7 @@ pub fn readProps(alloc: *mem.Allocator) void {
             switch (propdata.function) {
                 .Laboratory => laboratory_props.append(prop) catch unreachable,
                 .LaboratoryItem => laboratory_item_props.append(prop) catch unreachable,
+                .Vault => vault_props.append(prop) catch unreachable,
                 .Statue => statue_props.append(prop) catch unreachable,
                 else => {},
             }
@@ -837,6 +840,7 @@ pub fn freeProps(alloc: *mem.Allocator) void {
     prison_item_props.deinit();
     laboratory_item_props.deinit();
     laboratory_props.deinit();
+    vault_props.deinit();
     statue_props.deinit();
 }
 
