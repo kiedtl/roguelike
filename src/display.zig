@@ -407,8 +407,6 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
 
                 if (state.memory.contains(coord)) {
                     tile = state.memory.get(coord) orelse unreachable;
-                } else if (state.dungeon.neighboringWalls(coord, true) < 9) {
-                    tile.ch = if (state.dungeon.at(coord).type == .Wall) '#' else '·';
                 }
 
                 tile.fg = utils.darkenColor(utils.filterColorGrayscale(tile.fg), 4);
