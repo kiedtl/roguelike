@@ -168,7 +168,7 @@ fn drawEnemyInfo(
         _clear_line(startx, endx, y);
         _clear_line(startx, endx, y + 1);
 
-        var mobcell = Tile.displayAs(mob.coord, false, false);
+        var mobcell = Tile.displayAs(mob.coord, false);
         termbox.tb_put_cell(startx, y, &mobcell);
 
         const mobname = mob.ai.profession_name orelse mob.species;
@@ -398,7 +398,7 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
             const coord = Coord.new2(level, u_x, u_y);
 
             const material = state.dungeon.at(coord).material;
-            var tile = Tile.displayAs(coord, false, false);
+            var tile = Tile.displayAs(coord, false);
 
             // if player can't see area, draw a blank/grey tile, depending on
             // what they saw last there
@@ -407,6 +407,8 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
 
                 if (state.memory.contains(coord)) {
                     tile = state.memory.get(coord) orelse unreachable;
+                } else if (state.dungeon.neighboringWalls(coord, true) < 9) {
+                    tile.ch = if (state.dungeon.at(coord).type == .Wall) '#' else '·';
                 }
 
                 tile.fg = utils.darkenColor(utils.filterColorGrayscale(tile.fg), 4);

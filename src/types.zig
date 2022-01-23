@@ -1043,9 +1043,8 @@ pub const Mob = struct { // {{{
                     continue;
                 }
 
-                // If this mob is the player, then add the tile to memory
                 if (self.coord.eq(state.player.coord))
-                    state.memory.put(fc, Tile.displayAs(fc, true, false)) catch unreachable;
+                    state.memory.put(fc, Tile.displayAs(fc, true)) catch unreachable;
             }
         };
     }
@@ -2313,7 +2312,7 @@ pub const Tile = struct {
     surface: ?SurfaceItem = null,
     spatter: SpatterArray = SpatterArray.initFill(0),
 
-    pub fn displayAs(coord: Coord, ignore_lights: bool, ignore_mobs: bool) termbox.tb_cell {
+    pub fn displayAs(coord: Coord, ignore_lights: bool) termbox.tb_cell {
         var self = state.dungeon.at(coord);
         var cell = termbox.tb_cell{};
 
@@ -2336,9 +2335,7 @@ pub const Tile = struct {
                 .bg = self.material.color_bg orelse color,
             },
             .Floor => {
-                if (!ignore_mobs and self.mob != null) {
-                    const mob = self.mob.?;
-
+                if (self.mob) |mob| {
                     cell.fg = 0xffffff;
                     cell.bg = color;
 
