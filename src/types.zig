@@ -1523,6 +1523,9 @@ pub const Mob = struct { // {{{
 
         var dmg_percent = recipient.lastDamagePercentage();
         var hitstrs = attacker_weapon.strs[attacker_weapon.strs.len - 1];
+        // FIXME: insert some randomization here. Currently every single stab
+        // the player makes results in "You puncture the XXX like a sieve!!!!"
+        // which gets boring after a bit.
         {
             for (attacker_weapon.strs) |strset, i| {
                 if (strset.dmg_percent > dmg_percent) {
@@ -1533,10 +1536,10 @@ pub const Mob = struct { // {{{
         }
 
         var punctuation: []const u8 = ".";
-        if (dmg_percent >= 10) punctuation = "!";
-        if (dmg_percent >= 25) punctuation = "!!";
-        if (dmg_percent >= 50) punctuation = "!!!";
-        if (dmg_percent >= 75) punctuation = "!!!!";
+        if (dmg_percent >= 20) punctuation = "!";
+        if (dmg_percent >= 40) punctuation = "!!";
+        if (dmg_percent >= 60) punctuation = "!!!";
+        if (dmg_percent >= 80) punctuation = "!!!!";
 
         if (recipient.coord.eq(state.player.coord)) {
             state.message(.Info, "The {} {} you{}{} ({}% dmg)", .{
