@@ -1018,6 +1018,10 @@ pub const Mob = struct { // {{{
     // Size of `activities` Ringbuffer
     pub const MAX_ACTIVITY_BUFFER_SZ = 4;
 
+    pub fn displayName(self: *Mob) []const u8 {
+        return self.ai.profession_name orelse self.species;
+    }
+
     pub fn tickFOV(self: *Mob) void {
         for (self.fov) |*row| for (row) |*cell| {
             cell.* = 0;
@@ -1470,7 +1474,26 @@ pub const Mob = struct { // {{{
             (rng.range(usize, 1, 100) <= combat.chanceOfAttackLanding(attacker, recipient)) and
             (rng.range(usize, 1, 100) >= combat.chanceOfAttackDodged(recipient, attacker));
 
-        if (!hit) return;
+        if (!hit) {
+            if (attacker == state.player) {
+                state.message(.Info, "You miss the {}.", .{recipient.displayName()});
+            } else if (recipient == state.player) {
+                state.message(.Info, "The {} misses you.", .{attacker.displayName()});
+            } else {
+                const cansee_a = state.player.cansee(attacker.coord);
+                const cansee_r = state.player.cansee(recipient.coord);
+
+                if (cansee_a or cansee_r) {
+                    state.message(.Info, "{}{} misses {}{}.", .{
+                        if (cansee_a) @as([]const u8, "The ") else "",
+                        if (cansee_a) attacker.displayName() else "Something",
+                        if (cansee_r) @as([]const u8, "the ") else "",
+                        if (cansee_r) recipient.displayName() else "something",
+                    });
+                }
+            }
+            return;
+        }
 
         const is_stab = !recipient.isAwareOfAttack(attacker.coord);
         const attacker_weapon = attacker.inventory.wielded orelse &items.UnarmedWeapon;
@@ -1516,31 +1539,43 @@ pub const Mob = struct { // {{{
         if (dmg_percent >= 75) punctuation = "!!!!";
 
         if (recipient.coord.eq(state.player.coord)) {
-            // ↓ isn't necessary, but it's a workaround for a Zig compiler bug.
-            // XXX: when updated to Zig v9, poke this code around and see if
-            // the bug is still there.
-            const attacker_name = attacker.ai.profession_name orelse
-                attacker.species;
-
             state.message(.Info, "The {} {} you{}{} ({}% dmg)", .{
-                attacker_name,
+                attacker.displayName(),
                 hitstrs.verb_other,
                 hitstrs.verb_degree,
                 punctuation,
                 dmg_percent,
             });
         } else if (attacker.coord.eq(state.player.coord)) {
-            const recipient_name = recipient.ai.profession_name orelse recipient.species;
-
             state.message(.Info, "You {} the {}{}{} ({}% dmg)", .{
                 hitstrs.verb_self,
-                recipient_name,
+                recipient.displayName(),
                 hitstrs.verb_degree,
                 punctuation,
                 dmg_percent,
             });
             if (recipient.should_be_dead()) {
-                state.message(.Damage, "You slew the {}.", .{recipient_name});
+                state.message(.Damage, "You slew the {}.", .{recipient.displayName()});
+            }
+        } else {
+            const cansee_a = state.player.cansee(attacker.coord);
+            const cansee_r = state.player.cansee(recipient.coord);
+
+            // XXX: this and the above "something misses something" message
+            // thing will print stuff like "The Something misses the goblin!" I
+            // suspect this is a miscompilation, because test code runs fine
+            // otherwise. Must check after upgrading to Zig v9.
+            if (cansee_a or cansee_r) {
+                state.message(.Info, "{}{} {} {}{}{}{} ({}% dmg)", .{
+                    if (cansee_a) @as([]const u8, "The ") else "",
+                    if (cansee_a) attacker.displayName() else "Something",
+                    hitstrs.verb_other,
+                    if (cansee_r) @as([]const u8, "the ") else "",
+                    if (cansee_r) recipient.displayName() else "something",
+                    hitstrs.verb_degree,
+                    punctuation,
+                    dmg_percent,
+                });
             }
         }
     }
