@@ -1511,6 +1511,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
         placeLights(&room);
 
         if (room.prefab != null) continue;
+        if (rng.tenin(25)) continue;
 
         const Range = struct { from: Coord, to: Coord };
         const rect_end = rect.end();
