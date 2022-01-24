@@ -5,6 +5,7 @@ const assert = std.debug.assert;
 
 const ai = @import("ai.zig");
 const astar = @import("astar.zig");
+const display = @import("display.zig");
 const dijkstra = @import("dijkstra.zig");
 const mapgen = @import("mapgen.zig");
 const utils = @import("utils.zig");
@@ -528,7 +529,8 @@ pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void
     };
     utils.copyZ(&msg.msg, fbs.getWritten());
 
-    if (messages.items.len > 0 and mem.eql(
+    // If the message isn't a prompt, check if the message is a duplicate
+    if (mtype != .Prompt and messages.items.len > 0 and mem.eql(
         u8,
         utils.used(messages.items[messages.items.len - 1].msg),
         utils.used(msg.msg),
@@ -536,5 +538,50 @@ pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void
         messages.items[messages.items.len - 1].dups += 1;
     } else {
         messages.append(msg) catch @panic("OOM");
+    }
+}
+
+// Print a prompt, redrawing the screen immediately.
+//
+// If valid_inputs is empty, any input will be accepted and returned.
+// If the key pressed is not in valid_inputs, continue prompting.
+// If a 'cancel' key is pressed (see display.waitForInput), the text "Nevermind" is printed.
+// If <enter> is pressed, default_input is returned.
+// Otherwise, normalized_inputs[<index of key in valid_inputs>] is returned.
+//
+// Example:
+//     messageKeyPrompts("Foo [Y/n]?", .{}, 'Y', "YyNn", "yynn");
+//  "Y" => 'y'
+//  "N" => 'n'
+//  "n' => 'n'
+//
+pub fn messageKeyPrompt(
+    comptime fmt: []const u8,
+    args: anytype,
+    default_input: ?u8,
+    valid_inputs: []const u8,
+    normalized_inputs: []const u8,
+) ?u8 {
+    message(.Prompt, fmt, args);
+    display.draw();
+
+    while (true) {
+        const res = display.waitForInput(default_input);
+        if (res == null) {
+            message(.Prompt, "Nevermind.", .{});
+            return null;
+        }
+        if (res.? > 255) continue;
+
+        const key = @intCast(u8, res.?);
+
+        // Should we accept any input?
+        if (valid_inputs.len == 0) {
+            return key;
+        }
+
+        if (mem.indexOfScalar(u8, valid_inputs, key)) |ind| {
+            return normalized_inputs[ind];
+        }
     }
 }

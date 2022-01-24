@@ -643,16 +643,29 @@ pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
     }
 }
 
-pub fn drawGameOver() void {
-    assert(state.state == .Win or state.state == .Lose);
+// Wait for input. Return null if Ctrl+c or escape was pressed, default_input
+// if <enter> is pressed ,otherwise the key pressed. Will continue waiting if a
+// mouse event or resize event was recieved.
+pub fn waitForInput(default_input: ?u8) ?u32 {
+    while (true) {
+        var ev: termbox.tb_event = undefined;
+        const t = termbox.tb_poll_event(&ev);
 
-    termbox.tb_clear();
+        if (t == -1) @panic("Fatal termbox error");
 
-    const msg = if (state.state == .Win) "You escaped!" else "You died!";
-    const y = @divFloor(termbox.tb_height(), 2);
-    const x = @divFloor(termbox.tb_width(), 2) - @intCast(isize, msg.len / 2);
+        if (t == termbox.TB_EVENT_RESIZE) {
+            draw();
+        } else if (t == termbox.TB_EVENT_KEY) {
+            if (ev.key != 0) switch (ev.key) {
+                termbox.TB_KEY_ESC, termbox.TB_KEY_CTRL_C => return null,
+                termbox.TB_KEY_ENTER => if (default_input) |def| return def else continue,
+                termbox.TB_KEY_SPACE => return ' ',
+                else => continue,
+            };
 
-    _ = _draw_string(x, y, termbox.tb_width(), 0xffffff, 0, false, "{s}", .{msg}) catch unreachable;
-
-    termbox.tb_present();
+            if (ev.ch != 0) {
+                return ev.ch;
+            }
+        }
+    }
 }

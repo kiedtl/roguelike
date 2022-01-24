@@ -613,7 +613,8 @@ pub const Material = struct {
 };
 
 pub const MessageType = union(enum) {
-    MetaError,
+    Prompt, // Prompt for a choice/input, or respond to result from previous prompt
+    MetaError, // Player tried to do something invalid.
     Info,
     Aquire,
     Move,
@@ -623,6 +624,7 @@ pub const MessageType = union(enum) {
 
     pub fn color(self: MessageType) u32 {
         return switch (self) {
+            .Prompt => 0x34cdff,
             .MetaError => 0xffffff,
             .Info => 0xfafefa,
             .Aquire => 0xffd700,

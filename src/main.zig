@@ -506,11 +506,6 @@ fn readInput() bool {
     } else return false;
 }
 
-fn gameOverScreen() void {
-    display.drawGameOver();
-    readNoActionInput(null);
-}
-
 fn tickGame() void {
     if (state.player.is_dead) {
         state.state = .Lose;
@@ -737,7 +732,14 @@ pub fn main() anyerror!void {
     } else {
         while (state.state != .Quit) switch (state.state) {
             .Game => tickGame(),
-            .Lose, .Win => gameOverScreen(),
+            .Win => {
+                _ = state.messageKeyPrompt("You escaped! (more)", .{}, ' ', "", "");
+                break;
+            },
+            .Lose => {
+                _ = state.messageKeyPrompt("You die... (more)", .{}, ' ', "", "");
+                break;
+            },
             .Quit => break,
         };
     }
