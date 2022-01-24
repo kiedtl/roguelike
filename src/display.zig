@@ -331,13 +331,19 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
     if (state.messages.items.len == 0)
         return;
 
-    const first = state.messages.items.len - 1;
+    const msgcount = state.messages.items.len - 1;
+    const first = msgcount - math.min(msgcount, @intCast(usize, endy - 1 - starty));
     var i: usize = first;
     var y: isize = starty;
-    while (i > 0 and y < endy) : (i -= 1) {
+    while (i <= msgcount and y < endy) : (i += 1) {
         const msg = state.messages.items[i];
-        const col = if (msg.turn == state.ticks or i == first) msg.type.color() else 0xa0a0a0;
         const msgtext = utils.used(msg.msg);
+
+        const col = if (msg.turn == state.ticks or i == msgcount)
+            msg.type.color()
+        else
+            utils.darkenColor(msg.type.color(), 2);
+
         const prefix: []const u8 = switch (msg.type) {
             .MetaError => "ERROR: ",
             else => "",
