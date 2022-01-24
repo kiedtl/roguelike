@@ -1953,6 +1953,10 @@ pub const Machine = struct {
     last_interaction: ?*Mob = null,
     disabled: bool = false,
 
+    // If the player tries to trigger the machine, should we prompt for a
+    // confirmation?
+    evoke_confirm: ?[]const u8 = null,
+
     // TODO: Remove
     props: [40]?*Prop = [_]?*Prop{null} ** 40,
 

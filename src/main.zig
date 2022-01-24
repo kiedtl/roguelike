@@ -168,6 +168,18 @@ fn moveOrFight(direction: Direction) bool {
             }
         }
 
+        if (state.dungeon.at(dest).surface) |surf| switch (surf) {
+            .Machine => |m| if (m.evoke_confirm) |msg| {
+                const r = state.messageKeyPrompt("{} [y/N]", .{msg}, 'n', "YyNn ", "yynnn");
+                if (r == null or r.? == 'n') {
+                    if (r != null)
+                        state.message(.Prompt, "Okay then.", .{});
+                    return false;
+                }
+            },
+            else => {},
+        };
+
         return state.player.moveInDirection(direction);
     } else {
         return false;

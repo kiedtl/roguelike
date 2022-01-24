@@ -321,6 +321,7 @@ pub const StairUp = Machine{
     .name = "ascending staircase",
     .powered_tile = '▲',
     .unpowered_tile = '▲',
+    .evoke_confirm = "Go upstairs?",
     .on_power = powerStairUp,
 };
 
@@ -328,6 +329,7 @@ pub const AlarmTrap = Machine{
     .name = "alarm trap",
     .powered_tile = '^',
     .unpowered_tile = '^',
+    .evoke_confirm = "Really trigger the alarm trap?",
     .on_power = powerAlarmTrap,
 };
 
@@ -345,6 +347,7 @@ pub const PoisonGasTrap = Machine{
     .name = "poison gas trap",
     .powered_tile = '^',
     .unpowered_tile = '^',
+    .evoke_confirm = "Really trigger the poison gas trap?",
     .on_power = powerPoisonGasTrap,
 };
 
@@ -352,6 +355,7 @@ pub const ParalysisGasTrap = Machine{
     .name = "paralysis gas trap",
     .powered_tile = '^',
     .unpowered_tile = '^',
+    .evoke_confirm = "Really trigger the paralysis gas trap?",
     .on_power = powerParalysisGasTrap,
 };
 
@@ -359,6 +363,7 @@ pub const ConfusionGasTrap = Machine{
     .name = "confusion gas trap",
     .powered_tile = '^',
     .unpowered_tile = '^',
+    .evoke_confirm = "Really trigger the confusion gas trap?",
     .on_power = powerConfusionGasTrap,
 };
 
@@ -645,7 +650,7 @@ fn powerAlarmTrap(machine: *Machine) void {
     if (machine.last_interaction) |culprit| {
         if (culprit.allegiance == .Necromancer) return;
 
-        culprit.makeNoise(.Alarm, .Loudest); // muahahaha
+        culprit.makeNoise(.Alarm, .Deafening); // muahahaha
         if (culprit.coord.eq(state.player.coord))
             state.message(.Trap, "You hear a loud clanging noise!", .{});
     }
