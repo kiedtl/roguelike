@@ -338,13 +338,21 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
         const msg = state.messages.items[i];
         const col = if (msg.turn == state.ticks or i == first) msg.type.color() else 0xa0a0a0;
         const msgtext = utils.used(msg.msg);
+        const prefix: []const u8 = switch (msg.type) {
+            .MetaError => "ERROR: ",
+            else => "",
+        };
 
         _clear_line(startx, endx, y);
 
-        if (msg.type == .MetaError) {
-            y = _draw_string(startx, y, endx, col, 0, true, "ERROR: {}", .{msgtext}) catch unreachable;
+        if (msg.dups == 0) {
+            y = _draw_string(startx, y, endx, col, 0, true, "{}{}", .{
+                prefix, msgtext,
+            }) catch unreachable;
         } else {
-            y = _draw_string(startx, y, endx, col, 0, true, "{}", .{msgtext}) catch unreachable;
+            y = _draw_string(startx, y, endx, col, 0, true, "{}{} (×{})", .{
+                prefix, msgtext, msg.dups + 1,
+            }) catch unreachable;
         }
     }
 }

@@ -528,5 +528,13 @@ pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void
     };
     utils.copyZ(&msg.msg, fbs.getWritten());
 
-    messages.append(msg) catch @panic("OOM");
+    if (messages.items.len > 0 and mem.eql(
+        u8,
+        utils.used(messages.items[messages.items.len - 1].msg),
+        utils.used(msg.msg),
+    )) {
+        messages.items[messages.items.len - 1].dups += 1;
+    } else {
+        messages.append(msg) catch @panic("OOM");
+    }
 }

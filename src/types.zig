@@ -676,6 +676,7 @@ pub const Message = struct {
     msg: [128:0]u8,
     type: MessageType,
     turn: usize,
+    dups: usize = 0,
 };
 
 pub const Allegiance = enum {
