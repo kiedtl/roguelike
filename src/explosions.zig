@@ -26,7 +26,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
             return switch (state.dungeon.at(coord).type) {
                 .Wall => rng.range(usize, 60, 140),
                 .Lava, .Water, .Floor => b: {
-                    var hind: usize = 10;
+                    var hind: usize = 5;
                     if (state.dungeon.at(coord).mob != null) {
                         hind += 10;
                     }

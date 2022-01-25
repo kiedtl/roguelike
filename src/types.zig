@@ -1137,7 +1137,7 @@ pub const Mob = struct { // {{{
         switch (potion.type) {
             .Status => |s| self.addStatus(s, 0, Status.MAX_DURATION, false),
             .Gas => |s| state.dungeon.atGas(self.coord)[s] = 1.0,
-            .Custom => |c| c(self),
+            .Custom => |c| c(self, self.coord),
         }
     }
 
@@ -1249,7 +1249,7 @@ pub const Mob = struct { // {{{
                     } else switch (potion.type) {
                         .Status => {},
                         .Gas => |s| state.dungeon.atGas(landed.?)[s] = 1.0,
-                        .Custom => |f| f(null),
+                        .Custom => |f| f(null, landed.?),
                     }
                 }
 
@@ -2236,7 +2236,7 @@ pub const Potion = struct {
     type: union(enum) {
         Status: Status,
         Gas: usize,
-        Custom: fn (?*Mob) void,
+        Custom: fn (?*Mob, Coord) void,
     },
 
     // Whether the potion needs to be quaffed to work. If false,
