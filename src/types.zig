@@ -636,7 +636,15 @@ pub const MessageType = union(enum) {
     }
 };
 
-pub const Damage = struct { amount: f64 };
+pub const Damage = struct {
+    amount: f64,
+    by_mob: ?*Mob = null,
+    source: DamageSource = .Other,
+
+    pub const DamageSource = enum {
+        Other, MeleeAttack, RangedAttack, Stab
+    };
+};
 pub const Activity = union(enum) {
     Interact,
     Rest,
@@ -772,7 +780,7 @@ pub const Status = enum {
         return switch (self) {
             .Paralysis => "paralyzed",
             .Held => "held",
-            .Echolocation => "echolocation",
+            .Echolocation => "echolocating",
             .Corona => "glowing",
             .Confusion => "confused",
             .Fast => "hasted",
@@ -780,12 +788,12 @@ pub const Status = enum {
             .Recuperate => "recuperating",
             .Poison => "poisoned",
             .Invigorate => "invigorated",
-            .Pain => "pain",
+            .Pain => "tormented",
             .Fear => "fearful",
-            .Backvision => "back vision",
-            .NightVision => "night vision",
-            .DayBlindness => "day blindness",
-            .NightBlindness => "night blindness",
+            .Backvision => "reverse-sighted",
+            .NightVision => "night-sighted",
+            .DayBlindness => "day-blinded",
+            .NightBlindness => "night-blinded",
         };
     }
 
@@ -967,7 +975,9 @@ pub const Mob = struct { // {{{
     last_attempted_move: ?Direction = null,
     last_damage: ?Damage = null,
     inventory: Inventory = .{},
+
     is_dead: bool = false,
+    killed_by: ?*Mob = null,
 
     // Immutable instrinsic attributes.
     //
@@ -1100,6 +1110,10 @@ pub const Mob = struct { // {{{
         inline for (@typeInfo(Status).Enum.fields) |status| {
             const status_e = @field(Status, status.name);
             if (self.isUnderStatus(status_e)) |_| {
+                if (self == state.player) {
+                    state.chardata.time_with_statuses.getPtr(status_e).* += 1;
+                }
+
                 switch (status_e) {
                     .Echolocation => Status.tickEcholocation(self),
                     .Poison => Status.tickPoison(self),
@@ -1169,7 +1183,10 @@ pub const Mob = struct { // {{{
                 const max_damage = projectile.damages.resultOf(&defender_armor.resists).sum();
 
                 var damage = rng.rangeClumping(usize, max_damage / 2, max_damage, 2);
-                bastard.takeDamage(.{ .amount = @intToFloat(f64, damage) });
+                bastard.takeDamage(.{
+                    .amount = @intToFloat(f64, damage),
+                    .source = .RangedAttack,
+                });
             }
         }
 
@@ -1516,7 +1533,11 @@ pub const Mob = struct { // {{{
             damage = utils.percentOf(usize, damage, bonus);
         }
 
-        recipient.takeDamage(.{ .amount = @intToFloat(f64, damage) });
+        recipient.takeDamage(.{
+            .amount = @intToFloat(f64, damage),
+            .source = if (is_stab) .Stab else .MeleeAttack,
+            .by_mob = attacker,
+        });
 
         // XXX: should this be .Loud instead of .Medium?
         if (!is_stab) {
@@ -1560,6 +1581,7 @@ pub const Mob = struct { // {{{
                 punctuation,
                 dmg_percent,
             });
+
             if (recipient.should_be_dead()) {
                 state.message(.Damage, "You slew the {}.", .{recipient.displayName()});
             }
@@ -1571,6 +1593,8 @@ pub const Mob = struct { // {{{
             // thing will print stuff like "The Something misses the goblin!" I
             // suspect this is a miscompilation, because test code runs fine
             // otherwise. Must check after upgrading to Zig v9.
+            //
+            // FIXME TODO
             if (cansee_a or cansee_r) {
                 state.message(.Info, "{}{} {} {}{}{}{} ({}% dmg)", .{
                     if (cansee_a) @as([]const u8, "The ") else "",
@@ -1587,9 +1611,22 @@ pub const Mob = struct { // {{{
     }
 
     pub fn takeDamage(self: *Mob, d: Damage) void {
-        self.HP = math.clamp(self.HP - d.amount, 0, self.max_HP);
+        const was_already_dead = self.should_be_dead();
+
         self.last_damage = d;
         if (self.blood) |s| state.dungeon.spatter(self.coord, s);
+        self.HP = math.clamp(self.HP - d.amount, 0, self.max_HP);
+
+        if (!was_already_dead and self.HP == 0 and d.by_mob != null) {
+            self.killed_by = d.by_mob.?;
+            if (d.by_mob == state.player) {
+                state.chardata.foes_killed_total += 1;
+                if (d.source == .Stab) state.chardata.foes_stabbed += 1;
+
+                const prevtotal = (state.chardata.foes_killed.getOrPutValue(self.displayName(), 0) catch unreachable).value;
+                state.chardata.foes_killed.put(self.displayName(), prevtotal + 1) catch unreachable;
+            }
+        }
     }
 
     // Called when player hits the [r]ifle key -- I see no reason for it to

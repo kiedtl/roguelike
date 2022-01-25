@@ -1,3 +1,8 @@
+const cstd = @cImport({
+    @cDefine("_XOPEN_SOURCE", "500");
+    @cInclude("stdlib.h");
+});
+
 const std = @import("std");
 const math = std.math;
 const assert = std.debug.assert;
@@ -37,6 +42,7 @@ fn initGame() void {
         error.PipeTrapFailed => @panic("Internal termbox error"),
     }
 
+    state.chardata.init(&state.GPA.allocator);
     state.memory = CoordCellMap.init(&state.GPA.allocator);
 
     state.tasks = TaskArrayList.init(&state.GPA.allocator);
@@ -71,7 +77,7 @@ fn initGame() void {
 
     var level: usize = 0;
     while (level < LEVELS) {
-        std.log.warn("Generating map {}.", .{mapgen.Configs[level].identifier});
+        std.log.info("Generating map {}.", .{mapgen.Configs[level].identifier});
 
         mapgen.resetLevel(level);
         mapgen.placeBlobs(level);
@@ -79,7 +85,7 @@ fn initGame() void {
         mapgen.placeMoarCorridors(level, &state.GPA.allocator);
 
         if (!mapgen.validateLevel(level, &state.GPA.allocator)) {
-            std.log.warn("Map {} invalid, regenerating.", .{mapgen.Configs[level].identifier});
+            std.log.info("Map {} invalid, regenerating.", .{mapgen.Configs[level].identifier});
             continue; // try again
         }
 
@@ -103,6 +109,7 @@ fn initGame() void {
 fn deinitGame() void {
     display.deinit() catch unreachable;
 
+    state.chardata.deinit();
     state.memory.clearAndFree();
 
     var iter = state.mobs.iterator();
@@ -372,7 +379,11 @@ fn useItem() bool {
 
             state.player.inventory.armor = armor;
         },
-        .Potion => |p| state.player.quaffPotion(p),
+        .Potion => |p| {
+            state.player.quaffPotion(p);
+            const prevtotal = (state.chardata.potions_quaffed.getOrPutValue(p.id, 0) catch unreachable).value;
+            state.chardata.potions_quaffed.put(p.id, prevtotal + 1) catch unreachable;
+        },
         .Vial => |v| @panic("TODO"),
         .Boulder => |_| {
             state.message(.MetaError, "You want to *eat* that?", .{});
@@ -382,9 +393,10 @@ fn useItem() bool {
             state.message(.Info, "You admire the {}.", .{p.name});
             return false;
         },
-        .Evocable => |v| {
-            if (!v.evoke(state.player))
-                return false;
+        .Evocable => |v| if (!v.evoke(state.player)) {
+            const prevtotal = (state.chardata.evocs_used.getOrPutValue(v.id, 0) catch unreachable).value;
+            state.chardata.evocs_used.put(v.id, prevtotal + 1) catch unreachable;
+            return false;
         },
     }
 
@@ -576,6 +588,10 @@ fn tickGame() void {
             mob.tickRings();
             mob.tickStatuses();
 
+            if (mob == state.player) {
+                state.chardata.time_on_levels[mob.coord.z] += 1;
+            }
+
             if (mob.isUnderStatus(.Paralysis)) |_| {
                 if (mob.coord.eq(state.player.coord)) {
                     display.draw();
@@ -755,6 +771,12 @@ pub fn main() anyerror!void {
             .Quit => break,
         };
     }
+
+    const morgue = state.formatMorgue(&state.GPA.allocator) catch unreachable;
+    const filename = "dump.txt";
+    try std.fs.cwd().writeFile(filename, morgue.items[0..]);
+    std.log.info("Morgue file written to {}.", .{filename});
+    morgue.deinit(); // We can't defer{} this because we're deinit'ing the allocator
 
     deinitGame();
 }

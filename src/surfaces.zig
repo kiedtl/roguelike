@@ -834,7 +834,7 @@ pub fn readProps(alloc: *mem.Allocator) void {
             props.append(prop) catch unreachable;
         }
 
-        std.log.warn("Loaded {} props.", .{props.items.len});
+        std.log.info("Loaded {} props.", .{props.items.len});
     }
 }
 

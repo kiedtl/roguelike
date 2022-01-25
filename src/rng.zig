@@ -7,9 +7,11 @@ const rand = std.rand;
 const math = std.math;
 
 var rng: rand.Isaac64 = undefined;
+pub var seed: u64 = undefined;
 
 pub fn init() void {
-    rng = rand.Isaac64.init(0xdefaced_cafe);
+    seed = 0xdefaced_cafe;
+    rng = rand.Isaac64.init(seed);
 }
 
 pub fn int(comptime T: type) T {

@@ -403,7 +403,7 @@ fn excavatePrefab(
                                     const potion_o = _createItem(Potion, items.POTIONS[potion_i]);
                                     state.dungeon.itemsAt(rc).append(Item{ .Potion = potion_o }) catch unreachable;
                                 } else {
-                                    std.log.warn(
+                                    std.log.err(
                                         "{}: Couldn't load potion {}, skipping.",
                                         .{ fab.name.constSlice(), utils.used(pid) },
                                     );
@@ -413,7 +413,7 @@ fn excavatePrefab(
                                 if (utils.findById(surfaces.props.items, pid)) |prop| {
                                     _ = placeProp(rc, &surfaces.props.items[prop]);
                                 } else {
-                                    std.log.warn(
+                                    std.log.err(
                                         "{}: Couldn't load prop {}, skipping.",
                                         .{ fab.name.constSlice(), utils.used(pid) },
                                     );
@@ -432,7 +432,7 @@ fn excavatePrefab(
                                         machine.areas.append(adj_point) catch unreachable;
                                     }
                                 } else {
-                                    std.log.warn(
+                                    std.log.err(
                                         "{}: Couldn't load machine {}, skipping.",
                                         .{ fab.name.constSlice(), utils.used(mid.id) },
                                     );
@@ -440,7 +440,7 @@ fn excavatePrefab(
                             },
                         }
                     } else {
-                        std.log.warn(
+                        std.log.err(
                             "{}: Feature '{c}' not present, skipping.",
                             .{ fab.name.constSlice(), feature_id },
                         );
@@ -476,7 +476,7 @@ fn excavatePrefab(
                     .work_area = work_area,
                 });
             } else {
-                std.log.warn(
+                std.log.err(
                     "{}: Couldn't load mob {}, skipping.",
                     .{ fab.name.constSlice(), utils.used(mob_f.id) },
                 );
@@ -988,7 +988,7 @@ pub fn placeRandomRooms(
     while (reqctr < required.len) {
         const fab_name = required[reqctr];
         const fab = Prefab.findPrefabByName(fab_name, n_fabs) orelse {
-            std.log.warn("Cannot find required prefab {}", .{fab_name});
+            std.log.err("Cannot find required prefab {}", .{fab_name});
             return;
         };
 
@@ -2478,7 +2478,7 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
                 error.ExpectedMetadataValue => "Expected value for metadata",
                 error.InvalidUtf8 => "Encountered invalid UTF-8",
             };
-            std.log.warn("{}: Couldn't load prefab: {}", .{ fab_file.name, msg });
+            std.log.info("{}: Couldn't load prefab: {}", .{ fab_file.name, msg });
             continue;
         };
     }

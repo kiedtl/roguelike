@@ -2,6 +2,7 @@ const std = @import("std");
 const mem = std.mem;
 const math = std.math;
 const assert = std.debug.assert;
+const enums = @import("std/enums.zig");
 
 const ai = @import("ai.zig");
 const astar = @import("astar.zig");
@@ -43,6 +44,29 @@ pub var dungeon: Dungeon = .{};
 pub var layout: [LEVELS][HEIGHT][WIDTH]Layout = undefined;
 pub var player: *Mob = undefined;
 pub var state: GameState = .Game;
+
+// Information collected over a run to present in a morgue file.
+pub var chardata: struct {
+    foes_killed_total: usize = 0,
+    foes_stabbed: usize = 0,
+    foes_killed: std.AutoHashMap([]const u8, usize) = undefined,
+    time_with_statuses: enums.EnumArray(Status, usize) = enums.EnumArray(Status, usize).initFill(0),
+    time_on_levels: [LEVELS]usize = [1]usize{0} ** LEVELS,
+    potions_quaffed: std.AutoHashMap([]const u8, usize) = undefined,
+    evocs_used: std.AutoHashMap([]const u8, usize) = undefined,
+
+    pub fn init(self: *@This(), alloc: *mem.Allocator) void {
+        self.foes_killed = std.AutoHashMap([]const u8, usize).init(alloc);
+        self.potions_quaffed = std.AutoHashMap([]const u8, usize).init(alloc);
+        self.evocs_used = std.AutoHashMap([]const u8, usize).init(alloc);
+    }
+
+    pub fn deinit(self: *@This()) void {
+        self.foes_killed.clearAndFree();
+        self.potions_quaffed.clearAndFree();
+        self.evocs_used.clearAndFree();
+    }
+} = .{};
 
 // TODO: instead of storing the tile's representation in memory, store the
 // actual tile -- if a wall is destroyed outside of the player's FOV, the display
@@ -175,7 +199,7 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
     return true;
 }
 
-// TODO: get rid of this
+// TODO: move this to utils.zig?
 pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, alloc: *mem.Allocator) MobArrayList {
     var moblist = std.ArrayList(*Mob).init(alloc);
     var y: usize = 0;
@@ -584,4 +608,221 @@ pub fn messageKeyPrompt(
             return normalized_inputs[ind];
         }
     }
+}
+
+pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
+    const S = struct {
+        fn _damageString() []const u8 {
+            const ldp = player.lastDamagePercentage();
+            var str: []const u8 = "killed";
+            if (ldp > 30) str = "demolished";
+            if (ldp > 50) str = "miserably destroyed";
+            if (ldp > 80) str = "utterly destroyed";
+            return str;
+        }
+    };
+
+    var buf = std.ArrayList(u8).init(alloc);
+    var w = buf.writer();
+
+    try w.print("Oathbreaker morgue entry\n", .{});
+    try w.print("\n", .{});
+    try w.print("Seed: {}\n", .{rng.seed});
+    try w.print("\n", .{});
+    try w.print("{} {} after {} turns\n", .{
+        std.os.getenv("USER").?, // FIXME: should have backup option if null
+        if (state == .Win) @as([]const u8, "escaped") else "died",
+        ticks,
+    });
+    if (state == .Lose) {
+        if (player.killed_by) |by| {
+            try w.print("        ...{} by a {} ({}% dmg)\n", .{
+                S._damageString(),
+                by.displayName(),
+                player.lastDamagePercentage(),
+            });
+        }
+        try w.print("        ...on level -{} ({}) of the Dungeon\n", .{
+            player.coord.z,
+            mapgen.Configs[player.coord.z].identifier,
+        });
+    }
+    try w.print("\n", .{});
+    try w.print("-) {: <40} &) {}\n", .{
+        if (player.inventory.wielded) |i|
+            ((Item{ .Weapon = i }).shortName() catch unreachable).constSlice()
+        else
+            "<none>",
+        if (player.inventory.armor) |a|
+            ((Item{ .Armor = a }).shortName() catch unreachable).constSlice()
+        else
+            "<none>",
+    });
+    try w.print("2) {}\n", .{
+        if (player.inventory.backup) |b|
+            ((Item{ .Weapon = b }).shortName() catch unreachable).constSlice()
+        else
+            "<none>",
+    });
+    try w.print("\n", .{});
+    try w.print("Rings:\n", .{});
+    try w.print("1) {: <40} 2) {}\n", .{
+        if (player.inventory.l_rings[0]) |b|
+            ((Item{ .Ring = b }).shortName() catch unreachable).constSlice()
+        else
+            "<none>",
+        if (player.inventory.l_rings[1]) |b|
+            ((Item{ .Ring = b }).shortName() catch unreachable).constSlice()
+        else
+            "<none>",
+    });
+    try w.print("3) {: <40} 4) {}\n", .{
+        if (player.inventory.r_rings[0]) |b|
+            ((Item{ .Ring = b }).shortName() catch unreachable).constSlice()
+        else
+            "<none>",
+        if (player.inventory.r_rings[1]) |b|
+            ((Item{ .Ring = b }).shortName() catch unreachable).constSlice()
+        else
+            "<none>",
+    });
+    try w.print("\n", .{});
+    try w.print("Inventory:\n", .{});
+    for (player.inventory.pack.constSlice()) |item| {
+        const itemname = (item.shortName() catch unreachable).constSlice();
+        try w.print("- {}\n", .{itemname});
+    }
+    try w.print("\n", .{});
+    try w.print("You were: ", .{});
+    {
+        var comma = false;
+        inline for (@typeInfo(Status).Enum.fields) |status| {
+            const status_e = @field(Status, status.name);
+            if (player.isUnderStatus(status_e)) |_| {
+                if (comma)
+                    try w.print(", {}", .{status_e.string()})
+                else
+                    try w.print("{}", .{status_e.string()});
+                comma = true;
+            }
+        }
+    }
+    try w.print(".\n", .{});
+    try w.print("You killed {} foe{}, stabbing {} of them.\n", .{
+        chardata.foes_killed_total,
+        if (chardata.foes_killed_total > 0) @as([]const u8, "s") else "",
+        chardata.foes_stabbed,
+    });
+    try w.print("\n", .{});
+    try w.print("Last messages:\n", .{});
+    if (messages.items.len > 0) {
+        const msgcount = messages.items.len - 1;
+        var i: usize = msgcount - math.min(msgcount, 45);
+        while (i <= msgcount) : (i += 1) {
+            const msg = messages.items[i];
+            const msgtext = utils.used(msg.msg);
+
+            const prefix: []const u8 = switch (msg.type) {
+                .MetaError => "ERROR: ",
+                else => "",
+            };
+
+            if (msg.dups == 0) {
+                try w.print("- {}{}\n", .{ prefix, msgtext });
+            } else {
+                try w.print("- {}{} (×{})\n", .{ prefix, msgtext, msg.dups + 1 });
+            }
+        }
+    }
+    try w.print("\n", .{});
+    try w.print("Surroundings:\n", .{});
+    {
+        const radius: usize = 14;
+        var y: usize = utils.saturating_sub(player.coord.y, radius);
+        while (y < math.min(player.coord.y + radius, HEIGHT)) : (y += 1) {
+            try w.print("        ", .{});
+            var x: usize = utils.saturating_sub(player.coord.x, radius);
+            while (x < math.min(player.coord.x + radius, WIDTH)) : (x += 1) {
+                const coord = Coord.new2(player.coord.z, x, y);
+
+                if (dungeon.neighboringWalls(coord, true) == 9) {
+                    try w.print(" ", .{});
+                    continue;
+                }
+
+                if (player.coord.eq(coord)) {
+                    try w.print("@", .{});
+                    continue;
+                }
+
+                var ch = @intCast(u21, Tile.displayAs(coord, false).ch);
+                if (ch == ' ') ch = '.';
+
+                // TODO: after zig v9 upgrade, change this to use {u} format specifier
+                var utf8buf: [4]u8 = undefined;
+                const sz = std.unicode.utf8Encode(ch, &utf8buf) catch unreachable;
+                try w.print("{}", .{utf8buf[0..sz]});
+            }
+            try w.print("\n", .{});
+        }
+    }
+    try w.print("\n", .{});
+    try w.print("You could see:\n", .{});
+    {
+        const can_see = createMobList(false, true, player.coord.z, alloc);
+        defer can_see.deinit();
+        var can_see_counted = std.AutoHashMap([]const u8, usize).init(alloc);
+        defer can_see_counted.deinit();
+        for (can_see.items) |mob| {
+            const prevtotal = (can_see_counted.getOrPutValue(mob.displayName(), 0) catch unreachable).value;
+            can_see_counted.put(mob.displayName(), prevtotal + 1) catch unreachable;
+        }
+
+        var iter = can_see_counted.iterator();
+        while (iter.next()) |mobcount| {
+            try w.print("- {: >2} {}\n", .{ mobcount.value, mobcount.key });
+        }
+    }
+    try w.print("\n", .{});
+    try w.print("Vanquished foes:\n", .{});
+    {
+        var iter = chardata.foes_killed.iterator();
+        while (iter.next()) |mobcount| {
+            try w.print("- {: >2} {}\n", .{ mobcount.value, mobcount.key });
+        }
+    }
+    try w.print("\n", .{});
+    try w.print("Time spent with statuses:\n", .{});
+    inline for (@typeInfo(Status).Enum.fields) |status| {
+        const status_e = @field(Status, status.name);
+        const turns = chardata.time_with_statuses.get(status_e);
+        if (turns > 0) {
+            try w.print("- {: <20} {: >5} turns\n", .{ status_e.string(), turns });
+        }
+    }
+    try w.print("\n", .{});
+    try w.print("Items used:\n", .{});
+    {
+        var iter = chardata.potions_quaffed.iterator();
+        while (iter.next()) |item| {
+            try w.print("- {: <20} {: >5}\n", .{ item.value, item.key });
+        }
+    }
+    {
+        var iter = chardata.evocs_used.iterator();
+        while (iter.next()) |item| {
+            try w.print("- {: <20} {: >5}\n", .{ item.value, item.key });
+        }
+    }
+    try w.print("\n", .{});
+    try w.print("Time spent on levels:\n", .{});
+    for (chardata.time_on_levels[0..]) |turns, level| {
+        try w.print("        -{} ({})           {}\n", .{
+            level,
+            mapgen.Configs[level].identifier,
+            turns,
+        });
+    }
+
+    return buf;
 }
