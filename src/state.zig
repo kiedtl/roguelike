@@ -230,8 +230,18 @@ fn _canHearNoise(mob: *Mob) ?Coord {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
             const coord = Coord.new2(mob.coord.z, x, y);
-            if (mob.canHear(coord)) |sound|
+            if (mob.canHear(coord)) |sound| {
+                if (sound.mob_source) |othermob| {
+                    // Just because one guard made some noise running over to
+                    // the player doesn't mean we want to whole level to
+                    // run over and investigate the guard's noise.
+                    //
+                    if (sound.type == .Movement and !mob.isHostileTo(othermob))
+                        continue;
+                }
+
                 return coord;
+            }
         }
     }
 
