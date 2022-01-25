@@ -208,9 +208,10 @@ const CRUSHING_STRS = [_]DamageStr{
     dmgstr(040, "hammer", "hammers", ""),
     dmgstr(060, "batter", "batters", ""),
     dmgstr(070, "thrash", "thrashes", ""),
-    dmgstr(099, "flatten", "flattens", " like a chapati"),
-    dmgstr(120, "smash", "smashes", " like an overripe mango"),
-    dmgstr(180, "grind", "grinds", " into powder"),
+    dmgstr(120, "flatten", "flattens", " like a chapati"),
+    dmgstr(150, "smash", "smashes", " like an overripe mango"),
+    dmgstr(200, "grind", "grinds", " into powder"),
+    dmgstr(400, "pulverise", "pulverises", " into a thin bloody mist"),
 };
 const SLASHING_STRS = [_]DamageStr{
     dmgstr(000, "nip", "nips", ""),
@@ -221,17 +222,19 @@ const SLASHING_STRS = [_]DamageStr{
     dmgstr(070, "chop", "chops", " into pieces"),
     dmgstr(090, "chop", "chops", " into tiny pieces"),
     dmgstr(110, "slice", "slices", " into ribbons"),
-    dmgstr(150, "mince", "minces", " like boiled poultry"),
+    dmgstr(140, "cut", "cuts", " asunder"),
+    dmgstr(200, "mince", "minces", " like boiled poultry"),
 };
 const PIERCING_STRS = [_]DamageStr{
     dmgstr(010, "prick", "pricks", ""),
     dmgstr(020, "puncture", "punctures", ""),
-    dmgstr(030, "perforate", "perforates", ""),
-    dmgstr(040, "skewer", "skewers", ""),
-    dmgstr(060, "impale", "impales", ""),
-    dmgstr(080, "skewers", "skewers", " like a kebab"),
-    dmgstr(090, "spit", "spits", " like a pig"),
-    dmgstr(100, "perforate", "perforates", " like a sieve"),
+    dmgstr(030, "hit", "hits", ""),
+    dmgstr(040, "perforate", "perforates", ""),
+    dmgstr(050, "skewer", "skewers", ""),
+    dmgstr(070, "impale", "impales", ""),
+    dmgstr(100, "skewers", "skewers", " like a kebab"),
+    dmgstr(110, "spit", "spits", " like a pig"),
+    dmgstr(120, "perforate", "perforates", " like a sieve"),
 };
 const LACERATING_STRS = [_][]DamageStr{
     dmgstr(020, "whip", "whips", ""),
@@ -239,6 +242,7 @@ const LACERATING_STRS = [_][]DamageStr{
     dmgstr(050, "lacerate", "lacerates", ""),
     dmgstr(070, "shred", "shreds", ""),
     dmgstr(090, "shred", "shreds", " like wet paper"),
+    dmgstr(150, "mangle", "mangles", " beyond recognition"),
 };
 
 pub const UnarmedWeapon = Weapon{
@@ -247,7 +251,7 @@ pub const UnarmedWeapon = Weapon{
     .required_strength = 1,
     .required_dexterity = 1,
     .damages = .{
-        .Crushing = 5,
+        .Crushing = 6,
         .Pulping = 0,
         .Slashing = 0,
         .Piercing = 0,
@@ -269,8 +273,8 @@ pub const ClubWeapon = Weapon{
     .required_strength = 17,
     .required_dexterity = 5,
     .damages = .{
-        .Crushing = 10,
-        .Pulping = 5,
+        .Crushing = 12,
+        .Pulping = 2,
         .Slashing = 0,
         .Piercing = 0,
         .Lacerating = 0,
