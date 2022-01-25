@@ -1017,8 +1017,7 @@ pub const Mob = struct { // {{{
     pub const Inventory = struct {
         pack: PackBuffer = PackBuffer.init(&[_]Item{}),
 
-        r_rings: [2]?*Ring = [2]?*Ring{ null, null },
-        l_rings: [2]?*Ring = [2]?*Ring{ null, null },
+        rings: [4]?*Ring = [4]?*Ring{ null, null, null, null },
 
         armor: ?*Armor = null,
         wielded: ?*Weapon = null,
@@ -1094,12 +1093,7 @@ pub const Mob = struct { // {{{
 
     // Update the status powers for the rings
     pub fn tickRings(self: *Mob) void {
-        for (&[_]?*Ring{
-            self.inventory.l_rings[0],
-            self.inventory.l_rings[1],
-            self.inventory.r_rings[0],
-            self.inventory.r_rings[1],
-        }) |maybe_ring| {
+        for (self.inventory.rings) |maybe_ring| {
             if (maybe_ring) |ring|
                 self.addStatus(ring.status, ring.currentPower(), Status.MAX_DURATION, false);
         }
@@ -1634,10 +1628,10 @@ pub const Mob = struct { // {{{
     //
     pub fn vomitInventory(self: *Mob, alloc: *mem.Allocator) void {
         const special_invent = [_]?Item{
-            if (self.inventory.l_rings[0]) |r| Item{ .Ring = r } else null,
-            if (self.inventory.l_rings[1]) |r| Item{ .Ring = r } else null,
-            if (self.inventory.r_rings[0]) |r| Item{ .Ring = r } else null,
-            if (self.inventory.r_rings[1]) |r| Item{ .Ring = r } else null,
+            if (self.inventory.rings[0]) |r| Item{ .Ring = r } else null,
+            if (self.inventory.rings[1]) |r| Item{ .Ring = r } else null,
+            if (self.inventory.rings[2]) |r| Item{ .Ring = r } else null,
+            if (self.inventory.rings[3]) |r| Item{ .Ring = r } else null,
             if (self.inventory.armor) |a| Item{ .Armor = a } else null,
             if (self.inventory.wielded) |w| Item{ .Weapon = w } else null,
         };
@@ -1686,8 +1680,7 @@ pub const Mob = struct { // {{{
         self.inventory.pack.clear();
         self.inventory.armor = null;
         self.inventory.wielded = null;
-        self.inventory.l_rings = [_]?*Ring{ null, null };
-        self.inventory.r_rings = [_]?*Ring{ null, null };
+        self.inventory.rings = [_]?*Ring{ null, null, null, null };
     }
 
     pub fn init(self: *Mob, alloc: *mem.Allocator) void {

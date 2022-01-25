@@ -234,7 +234,7 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     echoring.worn_since = state.ticks;
 
     state.player = placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
-    state.player.inventory.r_rings[0] = echoring;
+    state.player.inventory.rings[0] = echoring;
     state.player.prisoner_status = Prisoner{ .of = .Necromancer };
 }
 

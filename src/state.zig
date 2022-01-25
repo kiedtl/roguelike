@@ -662,21 +662,21 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
     try w.print("\n", .{});
     try w.print("Rings:\n", .{});
     try w.print("1) {: <40} 2) {}\n", .{
-        if (player.inventory.l_rings[0]) |b|
+        if (player.inventory.rings[0]) |b|
             ((Item{ .Ring = b }).shortName() catch unreachable).constSlice()
         else
             "<none>",
-        if (player.inventory.l_rings[1]) |b|
+        if (player.inventory.rings[1]) |b|
             ((Item{ .Ring = b }).shortName() catch unreachable).constSlice()
         else
             "<none>",
     });
     try w.print("3) {: <40} 4) {}\n", .{
-        if (player.inventory.r_rings[0]) |b|
+        if (player.inventory.rings[2]) |b|
             ((Item{ .Ring = b }).shortName() catch unreachable).constSlice()
         else
             "<none>",
-        if (player.inventory.r_rings[1]) |b|
+        if (player.inventory.rings[3]) |b|
             ((Item{ .Ring = b }).shortName() catch unreachable).constSlice()
         else
             "<none>",
