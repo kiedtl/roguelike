@@ -331,6 +331,11 @@ pub fn interactionLaborerWork(mob: *Mob, _: *mem.Allocator) void {
     assert(mob.ai.work_area.items.len == 1);
 
     const machine_coord = mob.ai.work_area.items[0];
+    if (state.dungeon.at(machine_coord).surface == null) {
+        // Oops, our machine disappeared, probably because of an explosion
+        _ = mob.rest();
+        return;
+    }
     const machine = state.dungeon.at(machine_coord).surface.?.Machine;
     assert(!mob.coord.eq(machine_coord)); // Machine should not be walkable
 

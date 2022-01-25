@@ -165,8 +165,10 @@ pub const IsWalkableOptions = struct {
 
 // STYLE: change to Tile.isWalkable
 pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
-    if (dungeon.at(coord).type != .Floor)
-        return false;
+    switch (dungeon.at(coord).type) {
+        .Wall, .Water, .Lava => return false,
+        else => {},
+    }
 
     if (dungeon.at(coord).mob) |other|
         if (opts.mob) |mob|

@@ -300,10 +300,10 @@ pub fn rayCast(
             .SouthWest => [_]usize{ 270, 315, 315, 360 },
         };
 
-        _rayCastOctants(center, radius, energy, opacity_func, buffer, quadrant[0], quadrant[1]);
-        _rayCastOctants(center, radius, energy, opacity_func, buffer, quadrant[2], quadrant[3]);
+        rayCastOctants(center, radius, energy, opacity_func, buffer, quadrant[0], quadrant[1]);
+        rayCastOctants(center, radius, energy, opacity_func, buffer, quadrant[2], quadrant[3]);
     } else {
-        _rayCastOctants(center, radius, energy, opacity_func, buffer, 0, 360);
+        rayCastOctants(center, radius, energy, opacity_func, buffer, 0, 360);
     }
 
     const x_min = utils.saturating_sub(center.x, radius);
@@ -319,7 +319,7 @@ pub fn rayCast(
     buffer[center.y][center.x] = 100;
 }
 
-fn _rayCastOctants(
+pub fn rayCastOctants(
     center: Coord,
     radius: usize,
     energy: usize,

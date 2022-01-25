@@ -11,6 +11,7 @@ const mem = std.mem;
 const rng = @import("rng.zig");
 const literature = @import("literature.zig");
 const heat = @import("heat.zig");
+const explosions = @import("explosions.zig");
 const tasks = @import("tasks.zig");
 const items = @import("items.zig");
 const utils = @import("utils.zig");
@@ -503,6 +504,14 @@ fn readInput() bool {
                         .OtherEvil => .OtherGood,
                     };
                     break :blk false;
+                },
+                termbox.TB_KEY_F4 => blk: {
+                    explosions.kaboom(state.player.coord, .{
+                        .strength = 10 * 100,
+                        .spare_player = true,
+                    });
+                    _ = state.player.rest();
+                    break :blk true;
                 },
                 else => false,
             };

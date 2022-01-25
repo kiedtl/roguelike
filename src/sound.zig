@@ -35,7 +35,7 @@ pub const SoundState = enum {
     Dead,
 
     pub fn ageToState(age: usize) SoundState {
-        return if (age <= 2) @as(SoundState, .New) else if (age <= 4) @as(SoundState, .Old) else @as(SoundState, .Dead);
+        return if (age <= 3) @as(SoundState, .New) else if (age <= 6) @as(SoundState, .Old) else @as(SoundState, .Dead);
     }
 };
 

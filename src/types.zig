@@ -642,7 +642,7 @@ pub const Damage = struct {
     source: DamageSource = .Other,
 
     pub const DamageSource = enum {
-        Other, MeleeAttack, RangedAttack, Stab
+        Other, MeleeAttack, RangedAttack, Stab, Explosion
     };
 };
 pub const Activity = union(enum) {
@@ -2383,6 +2383,8 @@ pub const TileType = enum {
     Floor,
     Water,
     Lava,
+    BrokenWall,
+    BrokenFloor,
 };
 
 pub const Tile = struct {
@@ -2416,99 +2418,105 @@ pub const Tile = struct {
                 .fg = self.material.color_fg,
                 .bg = self.material.color_bg orelse color,
             },
-            .Floor => {
-                if (self.mob) |mob| {
-                    cell.fg = 0xffffff;
-                    cell.bg = color;
-
-                    const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);
-                    if (hp_loss_percent > 0) {
-                        const red = @floatToInt(u32, (255 * hp_loss_percent) / 100) + 0x66;
-                        cell.bg = math.clamp(red, 0x66, 0xff) << 16;
-                    }
-
-                    if (mob.prisoner_status) |ps| {
-                        if (state.dungeon.at(coord).prison or ps.held_by != null) {
-                            cell.fg = 0xffcfff;
-                        }
-                    }
-
-                    cell.ch = mob.tile;
-                } else if (state.dungeon.itemsAt(coord).last()) |item| {
-                    cell.fg = 0xffffff;
-                    cell.bg = color;
-
-                    switch (item) {
-                        .Corpse => |_| {
-                            cell.ch = '%';
-                            cell.fg = 0xffe0ef;
-                        },
-                        .Potion => |potion| {
-                            cell.ch = '¡';
-                            cell.fg = potion.color;
-                        },
-                        .Vial => |v| {
-                            cell.ch = '♪';
-                            cell.fg = v.color();
-                        },
-                        .Ring => |_| {
-                            cell.ch = '°';
-                        },
-                        .Weapon => |_| {
-                            cell.ch = '≥'; // TODO: use U+1F5E1?
-                        },
-                        .Armor => |_| {
-                            cell.ch = '&'; // TODO: use U+1F6E1?
-                        },
-                        .Boulder => |b| {
-                            cell.ch = b.chunkTile();
-                            cell.fg = b.color_floor;
-                        },
-                        .Prop => |p| {
-                            cell.ch = p.tile;
-                            cell.fg = p.fg orelse 0xffffff;
-                        },
-                        .Evocable => |v| {
-                            cell.ch = '}';
-                            cell.fg = v.tile_fg;
-                        },
-                    }
-                } else if (state.dungeon.at(coord).surface) |surfaceitem| {
-                    cell.fg = 0xffffff;
-                    cell.bg = color;
-
-                    const ch = switch (surfaceitem) {
-                        .Container => |c| cont: {
-                            if (c.capacity >= 14) {
-                                cell.fg = 0x000000;
-                                cell.bg = 0x808000;
-                            }
-                            break :cont c.tile;
-                        },
-                        .Machine => |m| mach: {
-                            if (m.isPowered()) {
-                                if (m.powered_bg) |mach_bg| cell.bg = mach_bg;
-                                if (m.powered_fg) |mach_fg| cell.fg = mach_fg;
-                            } else {
-                                if (m.unpowered_bg) |mach_bg| cell.bg = mach_bg;
-                                if (m.unpowered_fg) |mach_fg| cell.fg = mach_fg;
-                            }
-                            break :mach m.tile();
-                        },
-                        .Prop => |p| prop: {
-                            if (p.bg) |prop_bg| cell.bg = prop_bg;
-                            if (p.fg) |prop_fg| cell.fg = prop_fg;
-                            break :prop p.tile;
-                        },
-                        .Poster => '∺',
-                    };
-
-                    cell.ch = ch;
-                } else {
-                    cell.ch = ' ';
-                    cell.bg = color;
-                }
+            .BrokenFloor, .BrokenWall, .Floor => {
+                cell.ch = ' ';
+                cell.bg = color;
             },
+        }
+
+        if (self.mob) |mob| {
+            assert(self.type != .Wall);
+
+            cell.fg = 0xffffff;
+            cell.bg = color;
+
+            const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);
+            if (hp_loss_percent > 0) {
+                const red = @floatToInt(u32, (255 * hp_loss_percent) / 100) + 0x66;
+                cell.bg = math.clamp(red, 0x66, 0xff) << 16;
+            }
+
+            if (mob.prisoner_status) |ps| {
+                if (state.dungeon.at(coord).prison or ps.held_by != null) {
+                    cell.fg = 0xffcfff;
+                }
+            }
+
+            cell.ch = mob.tile;
+        } else if (state.dungeon.itemsAt(coord).last()) |item| {
+            assert(self.type != .Wall);
+
+            cell.fg = 0xffffff;
+            cell.bg = color;
+
+            switch (item) {
+                .Corpse => |_| {
+                    cell.ch = '%';
+                    cell.fg = 0xffe0ef;
+                },
+                .Potion => |potion| {
+                    cell.ch = '¡';
+                    cell.fg = potion.color;
+                },
+                .Vial => |v| {
+                    cell.ch = '♪';
+                    cell.fg = v.color();
+                },
+                .Ring => |_| {
+                    cell.ch = '°';
+                },
+                .Weapon => |_| {
+                    cell.ch = '≥'; // TODO: use U+1F5E1?
+                },
+                .Armor => |_| {
+                    cell.ch = '&'; // TODO: use U+1F6E1?
+                },
+                .Boulder => |b| {
+                    cell.ch = b.chunkTile();
+                    cell.fg = b.color_floor;
+                },
+                .Prop => |p| {
+                    cell.ch = p.tile;
+                    cell.fg = p.fg orelse 0xffffff;
+                },
+                .Evocable => |v| {
+                    cell.ch = '}';
+                    cell.fg = v.tile_fg;
+                },
+            }
+        } else if (state.dungeon.at(coord).surface) |surfaceitem| {
+            assert(self.type != .Wall);
+
+            cell.fg = 0xffffff;
+            cell.bg = color;
+
+            const ch = switch (surfaceitem) {
+                .Container => |c| cont: {
+                    if (c.capacity >= 14) {
+                        cell.fg = 0x000000;
+                        cell.bg = 0x808000;
+                    }
+                    break :cont c.tile;
+                },
+                .Machine => |m| mach: {
+                    if (m.isPowered()) {
+                        if (m.powered_bg) |mach_bg| cell.bg = mach_bg;
+                        if (m.powered_fg) |mach_fg| cell.fg = mach_fg;
+                    } else {
+                        if (m.unpowered_bg) |mach_bg| cell.bg = mach_bg;
+                        if (m.unpowered_fg) |mach_fg| cell.fg = mach_fg;
+                    }
+                    break :mach m.tile();
+                },
+                .Prop => |p| prop: {
+                    if (p.bg) |prop_bg| cell.bg = prop_bg;
+                    if (p.fg) |prop_fg| cell.fg = prop_fg;
+                    break :prop p.tile;
+                },
+                .Poster => '∺',
+            };
+
+            cell.ch = ch;
         }
 
         if (!ignore_lights) {

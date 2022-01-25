@@ -444,7 +444,7 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
 
             // Draw noise and indicate if that tile is visible by another mob
             switch (state.dungeon.at(coord).type) {
-                .Floor => {
+                .BrokenFloor, .BrokenWall, .Floor => {
                     if (state.dungeon.at(coord).mob) |mob| {
                         // Treat this cell specially if it's the player and the player is
                         // being watched.
