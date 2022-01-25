@@ -1835,11 +1835,12 @@ pub const Mob = struct { // {{{
         if (self.coord.z != coord.z)
             return null; // Can't hear across levels
 
-        if (sound.state == .Dead)
-            return null; // Sound was made a while back
+        if (sound.state == .Dead or sound.intensity == .Silent)
+            return null; // Sound was made a while back, or is silent
 
-        if (self.coord.distance(coord) > sound.intensity.radiusHeard())
-            return null; // Too far away
+        if (self != state.player) // Player can always hear sounds
+            if (self.coord.distance(coord) > sound.intensity.radiusHeard())
+                return null; // Too far away
 
         return sound;
     }
