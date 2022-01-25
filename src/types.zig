@@ -1575,10 +1575,6 @@ pub const Mob = struct { // {{{
                 punctuation,
                 dmg_percent,
             });
-
-            if (recipient.should_be_dead()) {
-                state.message(.Damage, "You slew the {}.", .{recipient.displayName()});
-            }
         } else {
             const cansee_a = state.player.cansee(attacker.coord);
             const cansee_r = state.player.cansee(recipient.coord);
@@ -1706,6 +1702,20 @@ pub const Mob = struct { // {{{
         state.dungeon.itemsAt(self.coord).append(Item{ .Corpse = self }) catch unreachable;
 
         state.dungeon.at(self.coord).mob = null;
+
+        if (self != state.player) {
+            if (self.killed_by) |by_mob| {
+                if (by_mob == state.player) {
+                    state.message(.Damage, "You slew the {}.", .{self.displayName()});
+                } else if (state.player.cansee(by_mob.coord)) {
+                    state.message(.Damage, "The {} killed the {}.", .{ by_mob.displayName(), self.displayName() });
+                }
+            } else {
+                if (state.player.cansee(self.coord)) {
+                    state.message(.Damage, "The {} dies.", .{self.displayName()});
+                }
+            }
+        }
     }
 
     pub fn should_be_dead(self: *const Mob) bool {
