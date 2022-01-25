@@ -207,32 +207,41 @@ Rings
 - Rings don't have an "enchantment" level, but "tiers" instead (mithril, gold,
   silver, and iron).
 - Rings: [p]assive (acting each turn) or [a]ctive (requiring user to move in pattern)
-ancient ring of knowledge [a/p]
+ring of knowledge [a/p]
 	- Passively allows player to know if they're still being pursued.
 	- Allows player to see spots near pursuers (but not the pursuers
 	  themselves?) for ~3-5 turns.
 	  - Movement pattern:
-contemptuous ring of intimidation [a]
+ring of devastation [a]
 	- Confers either stun or fear on mob when moving toward mob.
-	- Must land right next to mob.
-	- Movement pattern: [move(N), move(N), move(N), move(N)]
-creeping ring of telepathy [a]
-	- Confers telepathy to all mobs in FOV.
-	- Slows down or restricts player movement.
-	- Movement pattern: [move(NE), move(SE), move(SW), move(NW)]
+	  - Must land right next to mob.
+	  - Movement pattern: [move(N), move(N), move(N), move(N)]
+	- Can hurl crystal lance, to halve foe's health and knock them back,
+	  halving health again if they are thrown into a wall.
+	  .Loudest noise.
+	- Can destroy a wall tile, sending shards of lethally sharp stone
+	  hurtling towards adjacent mobs. Harder stones == more damage.
+	  .Deafening noise.
+ring of distortion [a]
+	- Bend space: blink all mobs in FOV (& player) at random.
+	  Twists space violently around player, reducing HP by 75%.
+	- Aura of dispersal: creates aura around player where any mob in the
+	  aura will be blinked away (& possibly paralysed) for 2-3 turns.
+	  Twists space violently around player, reducing HP by 75%.
+	- Scatter: teleport all mobs in FOV (& player) around floor. Player
+	  should land in area without nearby mobs.
+	  Twists space violently around player, reducing HP by 75%.
 dancing ring of sidestepping [a/p]
 	- Teleport player around mob to area outside of that mob's FOV, enabling a stab.
 	  - Paralyzes mob for exactly one turn.
 	  - Must land next to mob.
 	  - Movement pattern: [move(NW), move(NE), move(NW), move(NE)]
 	- Forces player to swap with attacked mob on damage (passive).
-singing ring of echolocation [p]
+ring of singing [a/p]
+	- Aura of silence: mutes all sound in vicinity for ~10 turns.
 	- Gives player basic knowledge of dungeon's layout nearby sounds the player
 	  can hear. The wearer will not know about dungeon features, just walls and
 	  floors.
-ring of evasion [a]
-	- Spews fog outward from player when zigzagging and fleeing, increasing evasion.
-	- Example movement pattern: [move(NW), move(NE), move(NW), move(NE)]
 vampiric ring of draining [a/p]
 	- Drains an enemy for {speed,health,HP}.
 	- Allows player to see that mob and all tiles within two spaces.
@@ -243,7 +252,7 @@ vampiric ring of draining [a/p]
 	- Movement pattern: ???
 	- Also: when worn, allows player to sense nearby mobs.
 		- Movement pattern: ???
-faded ring of fire [a]
+ring of fire [a]
 	- Causes dark gas to emanate from player. Gas is opaque and blocks all light.
 		- Movement pattern:
 	- Causes all nearby machines to lose power for a bit (aka turn out the lights).
@@ -252,10 +261,12 @@ faded ring of fire [a]
 		- Movement pattern:
 	- Causes tiles in 3-space radius around player to burst into flame.
 		- Movement pattern:
+	- Summons orbs of fire when moving straight away from foe. Orbs create
+	  smoke/fog as they move and attack foes. Like Foxfire.
 
 
 Potions/Vials
---------------------
+-------------
 Potions: [s]tatus, [g]as, [c]ustom
 x potion of confuzzlementation [g]
   Confusion.
@@ -323,6 +334,8 @@ Strange mobs found on LAB levels.
   - Doesn't attack.
   - Emits gas that doesn't spread far. Gas slows down affected mobs. (100s => 150s)
   - If attacked, paralyzes player.
+- Lacertilian Abomination
+  - Hydra, multiple attacks per turn
 
 
 Posters
@@ -486,20 +499,25 @@ x Make executioner slower to move around
 * Add treatures to Vaults
   x Create gold item/prop
   - Add armour and weapons (only ones that are useless to player)
-- Add ability to present confirm/dialog boxes
-- Add confirm boxes when:
+x Add ability to present confirm/dialog boxes
+* Add confirm boxes when:
   - Going to move into hostile's FOV
-  - Going to make noise
-  - Going to move into a trap
-- Add morgue-file generation
-- Show morgue to player on death/win
+  x Going to move into a trap or stairs
+x Show messages the normal way (i.e., top-to-bottom)
+x Add morgue-file generation
+x Show morgue to player on death/win
 - Implement basic explosions (with wizard functionality)
 - Add potion of decimation
 - Add bomb-making evocables
 - Increase size of inventory
-- Revamp confuse; add "daze" status
-- Add recharging stations
 - Place evocables around dungeon
+- Add recharging stations
+- Revamp confuse; add "daze" status
+- Upgrade to Zig v9
+  - Remove usage of usingnamespace
+  - Petition khuxkm/ben for update
+  - Remove utils.saturating_sub
+  - Fix "*mem.Allocator" params
 
 Ring and movements:
 ===================
@@ -547,11 +565,11 @@ x Make the "lamps" electric "braziers"
 - Weapons and armor in cabinets
 - Allow multiple subrooms in rooms (BSP?)
 - Cave-like boundaries around edges of map in SMI
-- Different types of power generators for different maps:
-    - TOP, REG: regular power plant
-    - PRI:      coal furnace
-    - SMI:      turbines (geothermal)
-    - LAB:      nuclear power plant
+x Different types of power generators for different maps:
+    x VLT:  coal furnace
+    x PRI:  normal power plant
+    x SMI:  turbines (geothermal)
+    x LAB:  nuclear power plant
 - Allow multi-width corridors (aka hallways)
 - Prisoners chained up to the wall in PRI
 - Preserved corpses lined up along walls in PRI?
