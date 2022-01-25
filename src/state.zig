@@ -224,21 +224,14 @@ pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, al
     return moblist;
 }
 
-fn _can_hear_hostile(mob: *Mob) ?Coord {
-    var iter = mobs.iterator();
-    while (iter.next()) |othermob| {
-        // FIXME: uhg, why don't we just scan the surroundings for noises
-        // instead of looking at every damn mob
-        if (mob.canHear(othermob.coord)) |sound| {
-            if (mob.isHostileTo(othermob)) {
-                return othermob.coord;
-            } else if (sound.type != .Movement and (othermob.ai.phase == .Hunt or
-                othermob.ai.phase == .Flee))
-            {
-                // Sounds like one of our friends [or a neutral mob] is having
-                // quite a party, let's go join the fun~
-                return othermob.coord;
-            }
+fn _canHearNoise(mob: *Mob) ?Coord {
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            const coord = Coord.new2(mob.coord.z, x, y);
+            if (mob.canHear(coord)) |sound|
+                return coord;
         }
     }
 
@@ -256,7 +249,7 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
 
     // Check for sounds
     if (mob.ai.phase == .Work and mob.ai.is_curious) {
-        if (_can_hear_hostile(mob)) |dest| {
+        if (_canHearNoise(mob)) |dest| {
             // Let's investigate
             mob.ai.phase = .Investigate;
             mob.ai.target = dest;
