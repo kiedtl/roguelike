@@ -19,6 +19,7 @@ pub const ExplosionOpts = struct {
 //
 // TODO: set kaboom'd area on fire
 // TODO: throw mobs backward
+// TODO: take armour into account when giving damage
 //
 pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
     const S = struct {
@@ -81,8 +82,15 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
             };
             state.dungeon.at(coord).surface = null;
             if (state.dungeon.at(coord).mob) |unfortunate| {
-                if (!(unfortunate == state.player and opts.spare_player)) {
-                    // TODO: take armour into account
+                if (unfortunate == state.player) {
+                    if (!opts.spare_player) {
+                        state.player.takeDamage(.{
+                            .amount = state.player.HP * 0.75,
+                            .source = .Explosion,
+                        });
+                        state.message(.Info, "The blast hits you!!", .{});
+                    }
+                } else {
                     unfortunate.takeDamage(.{
                         .amount = 100 * @intToFloat(f64, cell) / 100.0,
                         .source = .Explosion,
