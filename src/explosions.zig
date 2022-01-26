@@ -13,6 +13,22 @@ pub const ExplosionOpts = struct {
     // Whether to pulverise the player if the blast hits them. The only time
     // this should be true is when the explosion was created with a wizkey.
     spare_player: bool = false,
+
+    // Who created the explosion, and is thus responsible for the damage to mobs?
+    // Should always be either the player or null.
+    //
+    // (Or... could there be explosions from spells cast by sorcerors? Hmmmmmmm:
+    //   - The burning brute gestures horribly at the sentinel!
+    //   - The sentinel explodes in a blast of fire!
+    //   - KABOOM!
+    //   - The blast pulverises the patrol!! (130% dmg) (×2)
+    //   - The blast hits you!!
+    //   - The blast hits the guard! (59% dmg)
+    //   - The sentinel dies.
+    //   - The patrol dies. (×2)
+    // )
+    //
+    culprit: ?*Mob = null,
 };
 
 // Sets off an explosion.
@@ -52,6 +68,14 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
         }
     };
 
+    state.dungeon.soundAt(ground0).* = .{
+        .intensity = .Deafening,
+        .type = .Explosion,
+        .state = .New,
+        .when = state.ticks,
+    };
+    state.message(.Info, "KABOOM!", .{});
+
     var result: [HEIGHT][WIDTH]usize = undefined;
     for (result) |*row| for (row) |*cell| {
         cell.* = 0;
@@ -63,6 +87,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
         fov.rayCastOctants(ground0, (s / 100) * 2, s, S._opacityFunc, &result, deg, deg + 31);
     }
 
+    result[ground0.y][ground0.x] = 100; // Ground zero is always harmed
     for (result) |row, y| for (row) |cell, x| {
         // Leave edge of map alone.
         if (y == 0 or x == 0 or y == (HEIGHT - 1) or x == (WIDTH - 1)) {
@@ -93,7 +118,9 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                 } else {
                     unfortunate.takeDamage(.{
                         .amount = 100 * @intToFloat(f64, cell) / 100.0,
+                        .by_mob = opts.culprit,
                         .source = .Explosion,
+                        .indirect = true,
                     });
                     if (state.player.cansee(unfortunate.coord)) {
                         const ldp = unfortunate.lastDamagePercentage();
@@ -108,12 +135,5 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                 }
             }
         }
-    };
-
-    state.dungeon.soundAt(ground0).* = .{
-        .intensity = .Deafening,
-        .type = .Explosion,
-        .state = .New,
-        .when = state.ticks,
     };
 }

@@ -457,7 +457,10 @@ fn triggerPreservePotion(_dork: ?*Mob, coord: Coord) void {
 
 fn triggerDecimatePotion(_dork: ?*Mob, coord: Coord) void {
     const MIN_EXPLOSION_RADIUS: usize = 2;
-    explosions.kaboom(coord, .{ .strength = MIN_EXPLOSION_RADIUS * 100 });
+    explosions.kaboom(coord, .{
+        .strength = MIN_EXPLOSION_RADIUS * 100,
+        .culprit = state.player,
+    });
 }
 
 fn triggerNetLauncherProjectile(coord: Coord) void {

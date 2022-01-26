@@ -779,7 +779,10 @@ fn powerMine(machine: *Machine) void {
     if (rng.tenin(25)) {
         state.dungeon.at(machine.coord).surface = null;
         machine.disabled = true;
-        explosions.kaboom(machine.coord, .{ .strength = 3 * 100 });
+        explosions.kaboom(machine.coord, .{
+            .strength = 3 * 100,
+            .culprit = state.player,
+        });
     }
 }
 

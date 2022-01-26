@@ -641,6 +641,11 @@ pub const Damage = struct {
     by_mob: ?*Mob = null,
     source: DamageSource = .Other,
 
+    // by_mob isn't null, but the damage done wasn't done in melee, ranged,
+    // or spell attack. E.g., it could have been a fire or explosion caused by
+    // by_mob.
+    indirect: bool = false,
+
     pub const DamageSource = enum {
         Other, MeleeAttack, RangedAttack, Stab, Explosion
     };
