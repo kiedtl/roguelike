@@ -8,6 +8,7 @@ const meta = std.meta;
 const main = @import("root");
 const utils = @import("utils.zig");
 const state = @import("state.zig");
+const explosions = @import("explosions.zig");
 const gas = @import("gas.zig");
 const tsv = @import("tsv.zig");
 const rng = @import("rng.zig");
@@ -44,6 +45,7 @@ pub const MACHINES = [_]Machine{
     AlarmTrap,
     NetTrap,
     RestrictedMachinesOpenLever,
+    Mine,
 };
 
 pub const Bin = Container{ .name = "bin", .tile = '╳', .capacity = 14, .type = .Utility, .item_repeat = 20 };
@@ -404,6 +406,17 @@ pub const RestrictedMachinesOpenLever = Machine{
     .on_power = powerRestrictedMachinesOpenLever,
 };
 
+pub const Mine = Machine{
+    .name = "mine",
+    .powered_fg = 0xff34d7,
+    .unpowered_fg = 0xff3434,
+    .powered_tile = ':',
+    .unpowered_tile = ':',
+    .power_drain = 0, // Stay powered on once activated
+    .on_power = powerMine,
+    .pathfinding_penalty = 10,
+};
+
 fn powerNone(_: *Machine) void {}
 
 fn powerChainPress(machine: *Machine) void {
@@ -748,6 +761,25 @@ fn powerRestrictedMachinesOpenLever(machine: *Machine) void {
                 }
             }
         }
+    }
+}
+
+fn powerMine(machine: *Machine) void {
+    if (machine.last_interaction) |mob|
+        if (mob == state.player) {
+            // Deactivate.
+            // TODO: either one of two things should be done:
+            //       - Make it so that goblins won't trigger it, and make use of the
+            //         restricted_to field on this machine.
+            //       - Add a restricted_from field to ensure player won't trigger it.
+            machine.power = 0;
+            return;
+        };
+
+    if (rng.tenin(25)) {
+        state.dungeon.at(machine.coord).surface = null;
+        machine.disabled = true;
+        explosions.kaboom(machine.coord, .{ .strength = 3 * 100 });
     }
 }
 

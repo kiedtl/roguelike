@@ -1,5 +1,6 @@
 const std = @import("std");
 const math = std.math;
+const assert = std.debug.assert;
 
 const explosions = @import("explosions.zig");
 const gas = @import("gas.zig");
@@ -39,6 +40,8 @@ pub const Evocable = struct {
 
         // The evocable can be activated during a fight, to buff self.
         SelfBuff,
+
+        Other,
     };
 
     // TODO: targeting functionality
@@ -53,6 +56,32 @@ pub const Evocable = struct {
         }
     }
 };
+
+pub const MineKitEvoc = Evocable{
+    .id = "mine_kit",
+    .name = "mine kit",
+    .tile_fg = 0xffffff,
+    .max_charges = 2,
+    .purpose = .Other,
+    .trigger_fn = _triggerMineKit,
+};
+fn _triggerMineKit(mob: *Mob, evoc: *Evocable) bool {
+    assert(mob == state.player);
+
+    if (state.dungeon.at(mob.coord).surface) |_| {
+        state.message(.MetaError, "You can't build a mine where you're standing.", .{});
+        return false;
+    }
+
+    var mine = surfaces.Mine;
+    mine.coord = mob.coord;
+    state.machines.append(mine) catch unreachable;
+    state.dungeon.at(mob.coord).surface = SurfaceItem{ .Machine = state.machines.last().? };
+
+    state.message(.Info, "You build a mine. You'd better be far away when it detonates!", .{});
+
+    return true;
+}
 
 pub const EldritchLanternEvoc = Evocable{
     .id = "eldritch_lantern",
@@ -427,7 +456,7 @@ fn triggerPreservePotion(_dork: ?*Mob, coord: Coord) void {
 }
 
 fn triggerDecimatePotion(_dork: ?*Mob, coord: Coord) void {
-    const MIN_EXPLOSION_RADIUS: usize = 4;
+    const MIN_EXPLOSION_RADIUS: usize = 2;
     explosions.kaboom(coord, .{ .strength = MIN_EXPLOSION_RADIUS * 100 });
 }
 
