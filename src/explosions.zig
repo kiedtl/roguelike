@@ -35,6 +35,7 @@ pub const ExplosionOpts = struct {
 //
 // TODO: set kaboom'd area on fire
 // TODO: throw mobs backward
+// TODO: throw shrapnel at nearby mobs
 // TODO: take armour into account when giving damage
 //
 pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
@@ -101,11 +102,18 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                 else => .BrokenFloor,
             };
             state.dungeon.at(coord).type = newtype;
+
+            if (newtype == .BrokenWall and rng.onein(20)) {
+                const boulder = Item{ .Boulder = state.dungeon.at(coord).material };
+                state.dungeon.itemsAt(coord).append(boulder) catch |_| {};
+            }
+
             if (state.dungeon.at(coord).surface) |surf| switch (surf) {
                 .Machine => |m| m.delete(),
                 else => {},
             };
             state.dungeon.at(coord).surface = null;
+
             if (state.dungeon.at(coord).mob) |unfortunate| {
                 if (unfortunate == state.player) {
                     if (!opts.spare_player) {
