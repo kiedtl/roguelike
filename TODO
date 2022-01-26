@@ -521,14 +521,13 @@ x Redo weapons/armor for player
   x knife, dagger, stiletto, rapier, estoc(?)
 x Introduce speed/dexterity penalties for armor
 x Remove swords, replace with maces
-- Add bonus for high STR to damage output (maybe: (damage * (str-req_str)*req_str/100))
 - Place evocables around dungeon
 - Place potions *outside* of containers
 - Place weapons, armor around dungeon
 - Add recharging stations (and ensure they can't recharge mine kits!)
-- Add messages when player finds evocable or recharging station
+- Add messages when player finds evocable, recharging station, potion, or stairs
 - Revamp confuse; add "daze" status
-- Fix: add mob to enemy list when they stab, and daze enemy (unless undead)
+- Fix: add mob to enemy list when they stab, and 90% chance to daze enemy (unless undead)
 - Modify player starting environment
   - Starting messages ("You have just escaped...", "Probably pick up those item...")
   - Add some potions for player to use in starting area + weapon + armor
@@ -677,9 +676,12 @@ Items/Machines
     for 2 turns. 4 charges.
   - "cannon kit" (SMI): creates permanent cannon on use (see below). 1 charge.
   - "lightning rod" (LAB): severely damages all mobs without rElec in FOV.
-  - "symbol of tormet" (House): Gives .Fear to all mobs in FOV, and halves HP of
-    all mobs (including evoker). ∞ charges.a
-    - "You hold up the Symbol of Torment. Pain wracks your body!"
+  - "symbol of torment" (House): Gives .Fear to all mobs in FOV, and halves HP of
+    all mobs (including evoker). Has no effect on rTorm or undead. ∞ charges.
+    - "You raise the Symbol of Torment. Pain wracks your body!"
+    - "The guard beholds the symbol and is wracked with agony!"
+    - 10% chance for the Symbol to not affect player.
+    - Inspired by DCSS' Symbol of Torment spell.
 - Add machines:
   - "cannons" (LAB): fires projectile in direction, eviscerating any mobs.
     Loud sound. 6 charges, pwr-station powered.
