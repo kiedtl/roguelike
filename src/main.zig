@@ -419,7 +419,9 @@ fn useItem() bool {
     }
 
     switch (state.player.inventory.pack.slice()[index]) {
-        .Evocable => {},
+        .Evocable => |e| if (e.delete_when_inert and e.charges == 0) {
+            _ = state.player.removeItem(index) catch unreachable;
+        },
         else => _ = state.player.removeItem(index) catch unreachable,
     }
 

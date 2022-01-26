@@ -25,6 +25,9 @@ pub const Evocable = struct {
     max_charges: usize,
     last_used: usize = 0,
 
+    // Whether to destroy the evocable when it's finished.
+    delete_when_inert: bool = false,
+
     purpose: Purpose,
 
     trigger_fn: fn (*Mob, *Evocable) bool,
@@ -62,6 +65,7 @@ pub const MineKitEvoc = Evocable{
     .name = "mine kit",
     .tile_fg = 0xffffff,
     .max_charges = 2,
+    .delete_when_inert = true,
     .purpose = .Other,
     .trigger_fn = _triggerMineKit,
 };
