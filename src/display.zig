@@ -10,6 +10,9 @@ const gas = @import("gas.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
+pub const MIN_WIN_WIDTH: isize = 100;
+pub const MIN_WIN_HEIGHT: isize = 38;
+
 // tb_shutdown() calls abort() if tb_init() wasn't called, or if tb_shutdown()
 // was called twice. Keep track of termbox's state to prevent this.
 var is_tb_inited = false;
@@ -29,6 +32,48 @@ pub fn init() !void {
     _ = termbox.tb_select_output_mode(termbox.TB_OUTPUT_TRUECOLOR);
     _ = termbox.tb_set_clear_attributes(termbox.TB_WHITE, termbox.TB_BLACK);
     _ = termbox.tb_clear();
+}
+
+// Check that the window is the minimum size.
+//
+// Return true if the user resized the window, false if the user press Ctrl+C.
+pub fn checkWindowSize(min_width: isize, min_height: isize) bool {
+    while (true) {
+        const cur_w = termbox.tb_width();
+        const cur_h = termbox.tb_height();
+
+        if (cur_w >= min_width and cur_h >= min_height) {
+            // All's well
+            termbox.tb_clear();
+            return true;
+        }
+
+        _ = _draw_string(1, 1, cur_w, 0xffffff, 0, false, "Your terminal is too small.", .{}) catch unreachable;
+        _ = _draw_string(1, 3, cur_w, 0xffffff, 0, false, "Minimum: {}x{}.", .{ min_width, min_height }) catch unreachable;
+        _ = _draw_string(1, 4, cur_w, 0xffffff, 0, false, "Current size: {}x{}.", .{ cur_w, cur_h }) catch unreachable;
+
+        termbox.tb_present();
+
+        var ev: termbox.tb_event = undefined;
+        const t = termbox.tb_poll_event(&ev);
+
+        if (t == -1) @panic("Fatal termbox error");
+
+        if (t == termbox.TB_EVENT_KEY) {
+            if (ev.key != 0) {
+                switch (ev.key) {
+                    termbox.TB_KEY_CTRL_C, termbox.TB_KEY_ESC => return false,
+                    else => {},
+                }
+                continue;
+            } else if (ev.ch != 0) {
+                switch (ev.ch) {
+                    'q' => return false,
+                    else => {},
+                }
+            } else unreachable;
+        }
+    }
 }
 
 pub fn deinit() !void {

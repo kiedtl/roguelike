@@ -35,12 +35,16 @@ pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) nore
     std.builtin.default_panic(msg, error_return_trace);
 }
 
-fn initGame() void {
+fn initGame() bool {
     if (display.init()) {} else |err| switch (err) {
         error.AlreadyInitialized => unreachable,
         error.TTYOpenFailed => @panic("Could not open TTY"),
         error.UnsupportedTerminal => @panic("Unsupported terminal"),
         error.PipeTrapFailed => @panic("Internal termbox error"),
+    }
+
+    if (!display.checkWindowSize(display.MIN_WIN_WIDTH, display.MIN_WIN_HEIGHT)) {
+        return false;
     }
 
     state.chardata.init(&state.GPA.allocator);
@@ -105,6 +109,8 @@ fn initGame() void {
         mapgen.placeRandomStairs(mlevel);
 
     display.draw();
+
+    return true;
 }
 
 fn deinitGame() void {
@@ -765,7 +771,10 @@ fn viewerMain() void {
 }
 
 pub fn main() anyerror!void {
-    initGame();
+    if (!initGame()) {
+        deinitGame();
+        return;
+    }
 
     var use_viewer: bool = undefined;
 
