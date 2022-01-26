@@ -1919,12 +1919,17 @@ pub const Mob = struct { // {{{
     }
 
     pub fn speed(self: *const Mob) isize {
-        var bonus: usize = 100;
-        if (self.ai.phase == .Flee) bonus -= 10;
-        if (self.isUnderStatus(.Fast)) |_| bonus = bonus * 50 / 100;
-        if (self.isUnderStatus(.Slow)) |_| bonus = bonus * 160 / 100;
+        var speed_perc: isize = 100;
+        if (self.ai.phase == .Flee) speed_perc -= 10;
+        if (self.isUnderStatus(.Fast)) |_| speed_perc = @divTrunc(speed_perc * 50, 100);
+        if (self.isUnderStatus(.Slow)) |_| speed_perc = @divTrunc(speed_perc * 160, 100);
 
-        return @intCast(isize, self.base_speed * bonus / 100);
+        if (self.inventory.armor) |a|
+            if (a.speed_penalty) |pen| {
+                speed_perc += @intCast(isize, pen);
+            };
+
+        return @divTrunc(@intCast(isize, self.base_speed) * math.max(0, speed_perc), 100);
     }
 
     pub fn vision_range(self: *const Mob) MinMax(usize) {
@@ -2211,6 +2216,7 @@ pub const Armor = struct {
     id: []const u8,
     name: []const u8,
     resists: Damages,
+    speed_penalty: ?usize = null,
 };
 
 pub const Projectile = struct {

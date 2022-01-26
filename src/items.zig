@@ -207,6 +207,7 @@ pub const ChainmailArmor = Armor{
         .Piercing = 3,
         .Lacerating = 15,
     },
+    .speed_penalty = 20,
 };
 
 pub const RobeArmor = Armor{

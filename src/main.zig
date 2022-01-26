@@ -392,6 +392,8 @@ fn useItem() bool {
                     else => unreachable,
                 };
                 state.message(.Info, "You wear the {}.", .{armor.name});
+                if (armor.speed_penalty) |_|
+                    state.message(.Info, "Moving around in this armor is going to be slow.", .{});
             }
 
             state.player.inventory.armor = armor;
