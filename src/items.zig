@@ -293,7 +293,7 @@ const PIERCING_STRS = [_]DamageStr{
     dmgstr(040, "perforate", "perforates", ""),
     dmgstr(050, "skewer", "skewers", ""),
     dmgstr(070, "impale", "impales", ""),
-    dmgstr(100, "skewers", "skewers", " like a kebab"),
+    dmgstr(100, "skewer", "skewers", " like a kebab"),
     dmgstr(110, "spit", "spits", " like a pig"),
     dmgstr(120, "perforate", "perforates", " like a sieve"),
 };

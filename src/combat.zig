@@ -1,10 +1,12 @@
 const std = @import("std");
 const math = std.math;
+const assert = std.debug.assert;
 
 const items = @import("items.zig");
 usingnamespace @import("types.zig");
 const rng = @import("rng.zig");
 const state = @import("state.zig");
+const utils = @import("utils.zig");
 
 const CHANCE_OF_AUTO_HIT = 20;
 const CHANCE_OF_AUTO_MISS = 20;
@@ -22,11 +24,26 @@ const LOW_STRENGTH_NBONUS: isize = 10;
 const GREATER_DEXTERITY_DODGE_BONUS: isize = 10;
 const DOUBLE_GREATER_DEXTERITY_DODGE_BONUS: isize = 10;
 
-// TODO: weapon/armor penalties
-//
-// XXX: should there be penalties for prisoners held with chains/ropes? Such
-// prisoners are not considered hostile to the guards and thus should never be
-// attacked/attack...
+pub fn damageOutput(attacker: *const Mob, recipient: *const Mob, is_stab: bool) usize {
+    const weapon = attacker.inventory.wielded orelse &items.UnarmedWeapon;
+    assert(weapon.required_strength > 0);
+
+    const attacker_extra_str = attacker.strength() * 100 / weapon.required_strength;
+    const attacker_extra_str_adj = math.clamp(attacker_extra_str, 0, 250);
+    const recipient_armor = recipient.inventory.armor orelse &items.NoneArmor;
+    const max_damage = weapon.damages.resultOf(&recipient_armor.resists).sum();
+
+    var damage: usize = 0;
+    damage += rng.rangeClumping(usize, max_damage / 2, max_damage, 2);
+    damage = utils.percentOf(usize, damage, attacker_extra_str_adj);
+
+    if (is_stab) {
+        const bonus = DamageType.stabBonus(weapon.main_damage);
+        damage = utils.percentOf(usize, damage, bonus);
+    }
+
+    return damage;
+}
 
 pub fn chanceOfAttackLanding(attacker: *const Mob, defender: *const Mob) usize {
     if (!defender.isAwareOfAttack(attacker.coord)) return 100;

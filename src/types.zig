@@ -1509,26 +1509,12 @@ pub const Mob = struct { // {{{
                     });
                 }
             }
+
             return;
         }
 
         const is_stab = !recipient.isAwareOfAttack(attacker.coord);
-        const attacker_weapon = attacker.inventory.wielded orelse &items.UnarmedWeapon;
-        const attacker_extra_str = attacker.strength() * 100 / attacker_weapon.required_strength;
-        const attacker_extra_str_adj = math.clamp(attacker_extra_str, 0, 150);
-        const recipient_armor = recipient.inventory.armor orelse &items.NoneArmor;
-        const max_damage = attacker_weapon.damages.resultOf(&recipient_armor.resists).sum();
-
-        assert(attacker_weapon.required_strength > 0);
-
-        var damage: usize = 0;
-        damage += rng.rangeClumping(usize, max_damage / 2, max_damage, 2);
-        damage = utils.percentOf(usize, damage, attacker_extra_str_adj);
-
-        if (is_stab) {
-            const bonus = DamageType.stabBonus(attacker_weapon.main_damage);
-            damage = utils.percentOf(usize, damage, bonus);
-        }
+        const damage = combat.damageOutput(attacker, recipient, is_stab);
 
         recipient.takeDamage(.{
             .amount = @intToFloat(f64, damage),
@@ -1542,6 +1528,7 @@ pub const Mob = struct { // {{{
             recipient.makeNoise(.Combat, .Medium);
         }
 
+        const attacker_weapon = attacker.inventory.wielded orelse &items.UnarmedWeapon;
         var dmg_percent = recipient.lastDamagePercentage();
         var hitstrs = attacker_weapon.strs[attacker_weapon.strs.len - 1];
         // FIXME: insert some randomization here. Currently every single stab
