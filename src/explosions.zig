@@ -102,7 +102,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
             };
             state.dungeon.at(coord).type = newtype;
             if (state.dungeon.at(coord).surface) |surf| switch (surf) {
-                .Machine => |m| m.disabled = true,
+                .Machine => |m| m.delete(),
                 else => {},
             };
             state.dungeon.at(coord).surface = null;

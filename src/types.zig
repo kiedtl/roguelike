@@ -2007,7 +2007,6 @@ pub const Machine = struct {
     on_power: fn (*Machine) void, // Called on each turn when the machine is powered
     power: usize = 0, // percentage (0..100)
     last_interaction: ?*Mob = null,
-    disabled: bool = false,
 
     // If the player tries to trigger the machine, should we prompt for a
     // confirmation?
@@ -2021,6 +2020,12 @@ pub const Machine = struct {
     // E.g., a blast furnace will heat up the first area, and search
     // for fuel in the second area.
     areas: StackBuffer(Coord, 16) = StackBuffer(Coord, 16).init(null),
+
+    // Delete machine, remove from map, deallocate memory
+    pub fn delete(self: *Machine) void {
+        state.dungeon.at(self.coord).surface = null;
+        state.machines.delete(self);
+    }
 
     pub fn addPower(self: *Machine, by: ?*Mob) void {
         if (by) |_by|
