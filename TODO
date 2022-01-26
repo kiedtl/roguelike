@@ -88,6 +88,12 @@ Something like "Quarters"/"Leisure":
 - Chests of food and drink
 - Nursery? (kill baby goblins! fun!)
 
+Something like "Crypt"/"Tomb"/"Temple"/"House of the Dead"
+- Undead and abominations everywhere, almost no living guards.
+- Necromancers.
+- The occasional experiment (or maybe just undead experiments?).
+- Houses the Rune of Torment, and player might find the Symbol of Torment as well.
+
 New mobs
 --------
 - creeping death
@@ -506,13 +512,28 @@ x Add ability to present confirm/dialog boxes
 x Show messages the normal way (i.e., top-to-bottom)
 x Add morgue-file generation
 x Show morgue to player on death/win
-- Implement basic explosions (with wizard functionality)
-- Add potion of decimation
-- Add bomb-making evocables
-- Increase size of inventory
+x Implement basic explosions (with wizard functionality)
+x Add potion of decimation
+x Add bomb-making evocables
+x Increase size of inventory
+x Redo weapons/armor for player
+  x robe, gambeson armor, leather armor
+  x knife, dagger, stiletto, rapier, estoc(?)
+x Introduce speed/dexterity penalties for armor
+x Remove swords, replace with maces
+- Add bonus for high STR to damage output (maybe: (damage * (str-req_str)*req_str/100))
 - Place evocables around dungeon
-- Add recharging stations
+- Place potions *outside* of containers
+- Place weapons, armor around dungeon
+- Add recharging stations (and ensure they can't recharge mine kits!)
+- Add messages when player finds evocable or recharging station
 - Revamp confuse; add "daze" status
+- Fix: add mob to enemy list when they stab, and daze enemy (unless undead)
+- Modify player starting environment
+  - Starting messages ("You have just escaped...", "Probably pick up those item...")
+  - Add some potions for player to use in starting area + weapon + armor
+- Add fire system, .Burn status, potions of cremation, explosion fires, etc
+- Revisit and revamp SMI mapgen, add "toxic sludge" pools and bridges over them
 - Upgrade to Zig v9
   - Remove usage of usingnamespace
   - Petition khuxkm/ben for update
@@ -619,7 +640,6 @@ x Define what undead are somewhere (combat bonuses, stat increases, miasma
   - Or, if the above is too much, we'll add some harmless cats to kill rats.
   - Rats "spawn" in some way
   - etc
-- Make .Hallucination status possible
 - Make cleaners remove nets shot out by sentinels
 - Revamp squad AI.
 - Add morale system for each mob, affected by:
@@ -657,6 +677,9 @@ Items/Machines
     for 2 turns. 4 charges.
   - "cannon kit" (SMI): creates permanent cannon on use (see below). 1 charge.
   - "lightning rod" (LAB): severely damages all mobs without rElec in FOV.
+  - "symbol of tormet" (House): Gives .Fear to all mobs in FOV, and halves HP of
+    all mobs (including evoker). ∞ charges.a
+    - "You hold up the Symbol of Torment. Pain wracks your body!"
 - Add machines:
   - "cannons" (LAB): fires projectile in direction, eviscerating any mobs.
     Loud sound. 6 charges, pwr-station powered.
@@ -678,9 +701,12 @@ Message pane
 - Messages:
   - On using ring (full power, half power, equipped)
   - On swapping with mob
+  - On mob refusing to swap with player
+  - On enemy turning to flee
+  - On recieving a status (Confuse, Daze, etc)
   - On seeing a mob cast a spell
-  - On dodging by enemy or player
-  - On death
+  x On dodging by enemy or player
+  x On death
   - On resisting a spell
   - On swapping weapon
   - On using launcher
