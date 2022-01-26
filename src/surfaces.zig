@@ -775,10 +775,13 @@ fn powerMine(machine: *Machine) void {
             return;
         };
 
-    if (rng.tenin(25)) {
-        state.dungeon.at(machine.coord).surface = null;
+    if (rng.tenin(35)) {
+        const coord = machine.coord;
+
+        // XXX: after this point, no part of machine.* should be accessed.
         machine.delete();
-        explosions.kaboom(machine.coord, .{
+
+        explosions.kaboom(coord, .{
             .strength = 3 * 100,
             .culprit = state.player,
         });

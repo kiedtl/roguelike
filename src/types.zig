@@ -2024,7 +2024,7 @@ pub const Machine = struct {
     // Delete machine, remove from map, deallocate memory
     pub fn delete(self: *Machine) void {
         state.dungeon.at(self.coord).surface = null;
-        state.machines.delete(self);
+        state.machines.remove(self);
     }
 
     pub fn addPower(self: *Machine, by: ?*Mob) void {
