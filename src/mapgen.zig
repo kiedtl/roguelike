@@ -2707,7 +2707,7 @@ pub const Configs = [LEVELS]LevelConfig{
         }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-            .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
+            .{ 5, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
         },
         .prefab_chance = 2,
         .mapgen_iters = 512,
