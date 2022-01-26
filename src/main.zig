@@ -275,6 +275,10 @@ fn rifleCorpse() bool {
 // TODO: move this to state.zig...? There should probably be a separate file for
 // player-specific actions.
 fn throwItem() bool {
+    if (state.player.inventory.pack.len == 0) {
+        state.message(.MetaError, "Your pack is empty.", .{});
+    }
+
     const index = display.chooseInventoryItem(
         "Throw",
         state.player.inventory.pack.constSlice(),
@@ -295,6 +299,10 @@ fn throwItem() bool {
 // TODO: move this to state.zig...? There should probably be a separate file for
 // player-specific actions.
 fn useItem() bool {
+    if (state.player.inventory.pack.len == 0) {
+        state.message(.MetaError, "Your pack is empty.", .{});
+    }
+
     const index = display.chooseInventoryItem(
         "Use",
         state.player.inventory.pack.constSlice(),
@@ -416,6 +424,10 @@ fn useItem() bool {
 //
 // TODO: merge with Mob.dropItem()
 fn dropItem() bool {
+    if (state.player.inventory.pack.len == 0) {
+        state.message(.MetaError, "Your pack is empty.", .{});
+    }
+
     if (state.dungeon.at(state.player.coord).surface) |surface| {
         switch (surface) {
             .Container => |container| {

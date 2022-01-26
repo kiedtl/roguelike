@@ -82,10 +82,14 @@ pub fn dimensions(w: DisplayWindow) Dimension {
     };
 }
 
-fn _clear_line(from: isize, to: isize, y: isize) void {
+fn _clearLineWith(from: isize, to: isize, y: isize, ch: u32, fg: u32, bg: u32) void {
     var x = from;
     while (x < to) : (x += 1)
-        termbox.tb_change_cell(x, y, ' ', 0xffffff, 0);
+        termbox.tb_change_cell(x, y, ch, fg, bg);
+}
+
+fn _clear_line(from: isize, to: isize, y: isize) void {
+    _clearLineWith(from, to, y, ' ', 0xffffff, 0x000000);
 }
 
 fn _draw_string(
@@ -598,30 +602,75 @@ pub fn chooseCell() ?Coord {
 }
 
 pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
+    assert(items.len > 0); // This should have been handled previously.
+
     termbox.tb_clear();
 
-    const suffix = " which item?";
+    const GREY: u32 = 0xafafaf;
+    const WHITE: u32 = 0xffffff;
+    const BG_GREY: u32 = 0x1e1e1e;
+    const BLACK: u32 = 0x000000;
 
-    const msglen = msg.len + suffix.len;
-    var y = @divFloor(termbox.tb_height(), 2) - @intCast(isize, items.len + 2);
-    const x = @divFloor(termbox.tb_width(), 2) - @intCast(isize, msglen / 2);
+    const suffix = " which item?";
+    const usage_str = "ESC/q/Ctrl+C to cancel, Enter/Space to select.";
+
+    var longest_width: isize = 0;
+    for (items) |item| {
+        const name = item.shortName() catch unreachable;
+        if (name.len > longest_width)
+            longest_width = @intCast(isize, name.len);
+    }
+    // + (gold_indicator + number + dash) + padding
+    const line_width = math.max(@intCast(isize, usage_str.len), longest_width + 6 + 10);
+
+    var y = @divFloor(termbox.tb_height(), 2) - @intCast(isize, ((items.len * 3) + 3) / 2);
+    const x = @divFloor(termbox.tb_width(), 2) - @divFloor(line_width, 2);
     const endx = termbox.tb_width() - 1;
 
-    _ = _draw_string(x, y, endx, 0xffffff, 0, false, "{s}{s}", .{ msg, suffix }) catch unreachable;
+    y = _draw_string(x, y, endx, WHITE, 0, false, "{s}{s}", .{ msg, suffix }) catch unreachable;
+    y = _draw_string(x, y, endx, GREY, 0, false, usage_str, .{}) catch unreachable;
     y += 1;
+    const starty = y;
 
-    if (items.len == 0) {
-        y = _draw_string(x, y, endx, 0xffffff, 0, false, "(Nothing to choose.)", .{}) catch unreachable;
-    } else {
-        for (items) |item, i| {
-            const dest = (item.shortName() catch unreachable).constSlice();
-            y = _draw_string(x, y, endx, 0xffffff, 0, false, "  {}) {}", .{ i, dest }) catch unreachable;
-        }
-    }
-
-    termbox.tb_present();
+    var chosen: usize = 0;
+    var cancelled = false;
 
     while (true) {
+        y = starty;
+        for (items) |item, i| {
+            const name = (item.shortName() catch unreachable).constSlice();
+
+            const dist_from_chosen = @intCast(u32, math.absInt(
+                @intCast(isize, i) - @intCast(isize, chosen),
+            ) catch unreachable);
+            const darkening = math.max(30, 100 - math.min(100, dist_from_chosen * 10));
+            const dark_bg_grey = utils.percentageOfColor(BG_GREY, darkening);
+
+            _clearLineWith(x, x + line_width, y + 0, '▂', dark_bg_grey, BLACK);
+            _clearLineWith(x, x + line_width, y + 1, ' ', BLACK, dark_bg_grey);
+            _clearLineWith(x, x + line_width, y + 2, '▆', BLACK, dark_bg_grey);
+
+            y += 1;
+
+            if (i == chosen) {
+                _ = _draw_string(x, y, endx, 0xffd700, BG_GREY, false, "▎", .{}) catch unreachable;
+            }
+
+            y = _draw_string(
+                x + 1,
+                y,
+                endx,
+                if (i == chosen) WHITE else utils.percentageOfColor(GREY, darkening),
+                dark_bg_grey,
+                false,
+                " {} - {}",
+                .{ i, name },
+            ) catch unreachable;
+
+            y += 1;
+        }
+
+        termbox.tb_present();
         var ev: termbox.tb_event = undefined;
         const t = termbox.tb_poll_event(&ev);
 
@@ -629,24 +678,54 @@ pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
 
         if (t == termbox.TB_EVENT_KEY) {
             if (ev.key != 0) {
-                if (ev.key == termbox.TB_KEY_CTRL_C or ev.key == termbox.TB_KEY_CTRL_G) {
-                    return null;
+                switch (ev.key) {
+                    termbox.TB_KEY_ARROW_DOWN,
+                    termbox.TB_KEY_ARROW_LEFT,
+                    => if (chosen < items.len - 1) {
+                        chosen += 1;
+                    },
+                    termbox.TB_KEY_ARROW_UP,
+                    termbox.TB_KEY_ARROW_RIGHT,
+                    => if (chosen > 0) {
+                        chosen -= 1;
+                    },
+                    termbox.TB_KEY_CTRL_C,
+                    termbox.TB_KEY_CTRL_G,
+                    termbox.TB_KEY_ESC,
+                    => {
+                        cancelled = true;
+                        break;
+                    },
+                    termbox.TB_KEY_SPACE, termbox.TB_KEY_ENTER => break,
+                    else => {},
                 }
                 continue;
             } else if (ev.ch != 0) {
                 switch (ev.ch) {
-                    ' ' => return null,
+                    'q' => {
+                        cancelled = true;
+                        break;
+                    },
+                    'j', 'h' => if (chosen < items.len - 1) {
+                        chosen += 1;
+                    },
+                    'k', 'l' => if (chosen > 0) {
+                        chosen -= 1;
+                    },
                     '0'...'9' => {
                         const c: usize = ev.ch - '0';
                         if (c < items.len) {
-                            return c;
+                            chosen = c;
                         }
                     },
                     else => {},
                 }
             } else unreachable;
-        } else return null;
+        }
     }
+
+    termbox.tb_clear();
+    return if (cancelled) null else chosen;
 }
 
 // Wait for input. Return null if Ctrl+c or escape was pressed, default_input
