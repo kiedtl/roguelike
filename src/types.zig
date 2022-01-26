@@ -663,7 +663,6 @@ pub const Activity = union(enum) {
     Fire,
     Cast,
     SwapWeapons,
-    Rifle,
 
     pub inline fn cost(self: Activity) usize {
         return switch (self) {
@@ -676,7 +675,6 @@ pub const Activity = union(enum) {
             => 100,
             .Cast, .Throw, .Fire, .Attack => 110,
             .SwapWeapons, .Use => 120,
-            .Rifle => 150,
         };
     }
 };
@@ -1622,66 +1620,6 @@ pub const Mob = struct { // {{{
                 state.chardata.foes_killed.put(self.displayName(), prevtotal + 1) catch unreachable;
             }
         }
-    }
-
-    // Called when player hits the [r]ifle key -- I see no reason for it to
-    // be called anytime else.
-    //
-    pub fn vomitInventory(self: *Mob, alloc: *mem.Allocator) void {
-        const special_invent = [_]?Item{
-            if (self.inventory.rings[0]) |r| Item{ .Ring = r } else null,
-            if (self.inventory.rings[1]) |r| Item{ .Ring = r } else null,
-            if (self.inventory.rings[2]) |r| Item{ .Ring = r } else null,
-            if (self.inventory.rings[3]) |r| Item{ .Ring = r } else null,
-            if (self.inventory.armor) |a| Item{ .Armor = a } else null,
-            if (self.inventory.wielded) |w| Item{ .Weapon = w } else null,
-        };
-
-        comptime const inventory_size = special_invent.len + Inventory.PACK_SIZE;
-        var coords = StackBuffer(Coord, inventory_size).init(null);
-
-        var dijk = dijkstra.Dijkstra.init(
-            self.coord,
-            state.mapgeometry,
-            5,
-            state.is_walkable,
-            .{ .right_now = true },
-            alloc,
-        );
-        defer dijk.deinit();
-
-        while (dijk.next()) |coord| {
-            // Papering over a bug here, next() should never return starting coord
-            if (coord.eq(self.coord)) continue;
-
-            if (!state.is_walkable(coord, .{}) or state.dungeon.itemsAt(coord).isFull())
-                continue;
-
-            coords.append(coord) catch |e| switch (e) {
-                error.NoSpaceLeft => break,
-                else => unreachable,
-            };
-        }
-
-        var ctr: usize = 0;
-
-        for (&special_invent) |maybe_item| {
-            if (maybe_item) |item| {
-                if (ctr >= coords.len) break;
-                state.dungeon.itemsAt(coords.data[ctr]).append(item) catch unreachable;
-                ctr += 1;
-            }
-        }
-        for (self.inventory.pack.constSlice()) |item| {
-            if (ctr >= coords.len) break;
-            state.dungeon.itemsAt(coords.data[ctr]).append(item) catch unreachable;
-            ctr += 1;
-        }
-
-        self.inventory.pack.clear();
-        self.inventory.armor = null;
-        self.inventory.wielded = null;
-        self.inventory.rings = [_]?*Ring{ null, null, null, null };
     }
 
     pub fn init(self: *Mob, alloc: *mem.Allocator) void {

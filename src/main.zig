@@ -260,26 +260,6 @@ pub fn grabItem() bool {
 
 // TODO: move this to state.zig...? There should probably be a separate file for
 // player-specific actions.
-fn rifleCorpse() bool {
-    if (state.dungeon.itemsAt(state.player.coord).last()) |item| {
-        switch (item) {
-            .Corpse => |c| {
-                c.vomitInventory(&state.GPA.allocator);
-                state.player.declareAction(.Rifle);
-                state.message(.Info, "You rifle the {} corpse.", .{c.species});
-                return true;
-            },
-            else => state.message(.MetaError, "You can't rifle that.", .{}),
-        }
-        return false;
-    } else {
-        state.message(.MetaError, "The floor is a bit too hard to dig through...", .{});
-        return false;
-    }
-}
-
-// TODO: move this to state.zig...? There should probably be a separate file for
-// player-specific actions.
 fn throwItem() bool {
     if (state.player.inventory.pack.len == 0) {
         state.message(.MetaError, "Your pack is empty.", .{});
@@ -545,7 +525,6 @@ fn readInput() bool {
             return switch (ev.ch) {
                 'x' => state.player.swapWeapons(),
                 'f' => fireLauncher(),
-                'r' => rifleCorpse(),
                 't' => throwItem(),
                 'a' => useItem(),
                 'd' => dropItem(),
