@@ -640,6 +640,7 @@ pub const Damage = struct {
     amount: f64,
     by_mob: ?*Mob = null,
     source: DamageSource = .Other,
+    blood: bool = true,
 
     // by_mob isn't null, but the damage done wasn't done in melee, ranged,
     // or spell attack. E.g., it could have been a fire or explosion caused by
@@ -803,6 +804,7 @@ pub const Status = enum {
     pub fn tickPoison(mob: *Mob) void {
         mob.takeDamage(.{
             .amount = @intToFloat(f64, rng.rangeClumping(usize, 0, 2, 2)),
+            .blood = false,
         });
     }
 
@@ -812,6 +814,7 @@ pub const Status = enum {
         mob.makeNoise(.Scream, .Louder);
         mob.takeDamage(.{
             .amount = @intToFloat(f64, rng.rangeClumping(usize, 1, st.power, 2)),
+            .blood = false,
         });
     }
 
@@ -1593,9 +1596,9 @@ pub const Mob = struct { // {{{
     pub fn takeDamage(self: *Mob, d: Damage) void {
         const was_already_dead = self.should_be_dead();
 
-        self.last_damage = d;
-        if (self.blood) |s| state.dungeon.spatter(self.coord, s);
         self.HP = math.clamp(self.HP - d.amount, 0, self.max_HP);
+        if (d.blood) if (self.blood) |s| state.dungeon.spatter(self.coord, s);
+        self.last_damage = d;
 
         if (!was_already_dead and self.HP == 0 and d.by_mob != null) {
             self.killed_by = d.by_mob.?;
