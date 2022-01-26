@@ -411,9 +411,10 @@ fn useItem() bool {
             return false;
         },
         .Evocable => |v| if (!v.evoke(state.player)) {
+            return false;
+        } else {
             const prevtotal = (state.chardata.evocs_used.getOrPutValue(v.id, 0) catch unreachable).value;
             state.chardata.evocs_used.put(v.id, prevtotal + 1) catch unreachable;
-            return false;
         },
     }
 
