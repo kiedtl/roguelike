@@ -673,7 +673,8 @@ fn powerNetTrap(machine: *Machine) void {
     if (machine.last_interaction) |culprit| {
         culprit.addStatus(.Held, 0, null, false);
     }
-    machine.delete();
+    state.dungeon.at(machine.coord).surface = null;
+    machine.disabled = true;
 }
 
 fn powerPoisonGasTrap(machine: *Machine) void {
@@ -775,13 +776,11 @@ fn powerMine(machine: *Machine) void {
             return;
         };
 
-    if (rng.tenin(35)) {
-        const coord = machine.coord;
+    if (rng.tenin(25)) {
+        state.dungeon.at(machine.coord).surface = null;
+        machine.disabled = true;
 
-        // XXX: after this point, no part of machine.* should be accessed.
-        machine.delete();
-
-        explosions.kaboom(coord, .{
+        explosions.kaboom(machine.coord, .{
             .strength = 3 * 100,
             .culprit = state.player,
         });
@@ -889,7 +888,7 @@ pub fn freeProps(alloc: *mem.Allocator) void {
 pub fn tickMachines(level: usize) void {
     var iter = state.machines.iterator();
     while (iter.next()) |machine| {
-        if (machine.coord.z != level or !machine.isPowered())
+        if (machine.coord.z != level or !machine.isPowered() or machine.disabled)
             continue;
 
         machine.on_power(machine);
