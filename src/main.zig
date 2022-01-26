@@ -283,6 +283,7 @@ fn rifleCorpse() bool {
 fn throwItem() bool {
     if (state.player.inventory.pack.len == 0) {
         state.message(.MetaError, "Your pack is empty.", .{});
+        return false;
     }
 
     const index = display.chooseInventoryItem(
@@ -307,6 +308,7 @@ fn throwItem() bool {
 fn useItem() bool {
     if (state.player.inventory.pack.len == 0) {
         state.message(.MetaError, "Your pack is empty.", .{});
+        return false;
     }
 
     const index = display.chooseInventoryItem(
@@ -432,6 +434,7 @@ fn useItem() bool {
 fn dropItem() bool {
     if (state.player.inventory.pack.len == 0) {
         state.message(.MetaError, "Your pack is empty.", .{});
+        return false;
     }
 
     if (state.dungeon.at(state.player.coord).surface) |surface| {
