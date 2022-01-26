@@ -197,15 +197,39 @@ pub const POTIONS = [_]Potion{
     DecimatePotion,
 };
 
-pub const HeavyChainmailArmor = Armor{
-    .id = "hvy_chainmail_armor",
+pub const ChainmailArmor = Armor{
+    .id = "chainmail_armor",
     .name = "chainmail",
     .resists = .{
         .Crushing = 2,
         .Pulping = 8,
         .Slashing = 15,
-        .Piercing = 4,
+        .Piercing = 3,
         .Lacerating = 15,
+    },
+};
+
+pub const RobeArmor = Armor{
+    .id = "robe_armor",
+    .name = "robe",
+    .resists = .{
+        .Crushing = 0,
+        .Pulping = 1,
+        .Slashing = 2,
+        .Piercing = 0,
+        .Lacerating = 3,
+    },
+};
+
+pub const GambesonArmor = Armor{
+    .id = "gambeson_armor",
+    .name = "gambeson",
+    .resists = .{
+        .Crushing = 1,
+        .Pulping = 3,
+        .Slashing = 4,
+        .Piercing = 2,
+        .Lacerating = 6,
     },
 };
 
@@ -213,10 +237,10 @@ pub const LeatherArmor = Armor{
     .id = "leather_armor",
     .name = "leather",
     .resists = .{
-        .Crushing = 3,
-        .Pulping = 3,
+        .Crushing = 2,
+        .Pulping = 5,
         .Slashing = 5,
-        .Piercing = 1,
+        .Piercing = 3,
         .Lacerating = 8,
     },
 };
@@ -303,21 +327,21 @@ pub const UnarmedWeapon = Weapon{
     },
 };
 
-pub const ClubWeapon = Weapon{
-    .id = "club",
-    .name = "stone club",
-    .required_strength = 17,
-    .required_dexterity = 5,
+pub const KnifeWeapon = Weapon{
+    .id = "knife",
+    .name = "knife",
+    .required_strength = 8,
+    .required_dexterity = 7,
     .damages = .{
-        .Crushing = 12,
-        .Pulping = 2,
-        .Slashing = 0,
-        .Piercing = 0,
-        .Lacerating = 0,
+        .Crushing = 0,
+        .Pulping = 1,
+        .Slashing = 1,
+        .Piercing = 10,
+        .Lacerating = 1,
     },
-    .main_damage = .Crushing,
-    .secondary_damage = .Pulping,
-    .strs = &CRUSHING_STRS,
+    .main_damage = .Piercing,
+    .secondary_damage = null,
+    .strs = &PIERCING_STRS,
 };
 
 pub const DaggerWeapon = Weapon{
@@ -337,21 +361,38 @@ pub const DaggerWeapon = Weapon{
     .strs = &PIERCING_STRS,
 };
 
-pub const SwordWeapon = Weapon{
-    .id = "sword",
-    .name = "sword",
-    .required_strength = 15,
-    .required_dexterity = 15,
+pub const StilettoWeapon = Weapon{
+    .id = "stiletto",
+    .name = "stiletto",
+    .required_strength = 14,
+    .required_dexterity = 13,
     .damages = .{
         .Crushing = 0,
         .Pulping = 0,
-        .Slashing = 15,
-        .Piercing = 7,
-        .Lacerating = 0,
+        .Slashing = 2,
+        .Piercing = 19,
+        .Lacerating = 2,
     },
-    .main_damage = .Slashing,
-    .secondary_damage = .Piercing,
-    .strs = &SLASHING_STRS,
+    .main_damage = .Piercing,
+    .secondary_damage = null,
+    .strs = &PIERCING_STRS,
+};
+
+pub const RapierWeapon = Weapon{
+    .id = "rapier",
+    .name = "rapier",
+    .required_strength = 13,
+    .required_dexterity = 16,
+    .damages = .{
+        .Crushing = 0,
+        .Pulping = 0,
+        .Slashing = 1,
+        .Piercing = 24,
+        .Lacerating = 1,
+    },
+    .main_damage = .Piercing,
+    .secondary_damage = null,
+    .strs = &PIERCING_STRS,
 };
 
 pub const SpearWeapon = Weapon{
@@ -364,28 +405,61 @@ pub const SpearWeapon = Weapon{
         .Pulping = 0,
         .Slashing = 2,
         .Piercing = 15,
-        .Lacerating = 0,
+        .Lacerating = 1,
     },
     .main_damage = .Piercing,
     .secondary_damage = null,
     .strs = &PIERCING_STRS,
 };
 
-// A heavy flail, essentially a knout
-pub const ZinnagWeapon = Weapon{
-    .id = "zinnag",
-    .name = "zinnag",
+pub const KnoutWeapon = Weapon{
+    .id = "knout",
+    .name = "knout",
     .required_strength = 20,
     .required_dexterity = 30,
     .damages = .{
-        .Crushing = 9,
-        .Pulping = 16,
+        .Crushing = 12,
+        .Pulping = 19,
         .Slashing = 2,
         .Piercing = 5,
-        .Lacerating = 3,
+        .Lacerating = 5,
     },
     .main_damage = .Pulping,
     .secondary_damage = .Crushing,
+    .strs = &CRUSHING_STRS,
+};
+
+pub const ClubWeapon = Weapon{
+    .id = "club",
+    .name = "stone club",
+    .required_strength = 15,
+    .required_dexterity = 5,
+    .damages = .{
+        .Crushing = 12,
+        .Pulping = 2,
+        .Slashing = 0,
+        .Piercing = 0,
+        .Lacerating = 2,
+    },
+    .main_damage = .Crushing,
+    .secondary_damage = .Pulping,
+    .strs = &CRUSHING_STRS,
+};
+
+pub const MaceWeapon = Weapon{
+    .id = "mace",
+    .name = "mace",
+    .required_strength = 17,
+    .required_dexterity = 6,
+    .damages = .{
+        .Crushing = 15,
+        .Pulping = 1,
+        .Slashing = 0,
+        .Piercing = 0,
+        .Lacerating = 1,
+    },
+    .main_damage = .Crushing,
+    .secondary_damage = null,
     .strs = &CRUSHING_STRS,
 };
 

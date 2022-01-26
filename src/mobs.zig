@@ -45,7 +45,7 @@ pub const ExecutionerTemplate = MobTemplate{
 
         .base_strength = 20,
     },
-    .weapon = &items.ZinnagWeapon,
+    .weapon = &items.KnoutWeapon,
 };
 
 pub const WatcherTemplate = MobTemplate{
@@ -104,8 +104,8 @@ pub const WardenTemplate = MobTemplate{
 
         .base_strength = 24,
     },
-    .weapon = &items.SwordWeapon,
-    .armor = &items.HeavyChainmailArmor,
+    .weapon = &items.MaceWeapon,
+    .armor = &items.ChainmailArmor,
     .evocables = &[_]Evocable{items.WarningHornEvoc},
 };
 
@@ -136,8 +136,8 @@ pub const GuardTemplate = MobTemplate{
 
         .base_strength = 20,
     },
-    .weapon = &items.SwordWeapon,
-    .armor = &items.HeavyChainmailArmor,
+    .weapon = &items.MaceWeapon,
+    .armor = &items.GambesonArmor,
 };
 
 pub const SentinelTemplate = MobTemplate{
@@ -169,7 +169,7 @@ pub const SentinelTemplate = MobTemplate{
     },
     .weapon = &items.DartLauncher,
     .backup_weapon = &items.NetLauncher,
-    .armor = &items.HeavyChainmailArmor,
+    .armor = &items.LeatherArmor,
 };
 
 pub const PatrolTemplate = MobTemplate{
@@ -200,7 +200,7 @@ pub const PatrolTemplate = MobTemplate{
         .base_strength = 20,
     },
     .weapon = &items.SpearWeapon,
-    .armor = &items.HeavyChainmailArmor,
+    .armor = &items.GambesonArmor,
 };
 
 pub const PlayerTemplate = MobTemplate{
@@ -233,9 +233,9 @@ pub const PlayerTemplate = MobTemplate{
 
         .base_strength = 19,
     },
-    .weapon = &items.DaggerWeapon,
+    .weapon = &items.KnifeWeapon,
     .backup_weapon = &items.NetLauncher,
-    .armor = &items.LeatherArmor,
+    .armor = &items.RobeArmor,
 };
 
 pub const InteractionLaborerTemplate = MobTemplate{
@@ -294,7 +294,7 @@ pub const GoblinTemplate = MobTemplate{
 
         .base_strength = 18,
     },
-    .weapon = &items.ClubWeapon,
+    .weapon = &items.MaceWeapon,
     .armor = &items.LeatherArmor,
 };
 
@@ -559,8 +559,8 @@ pub const TorturerNecromancerTemplate = MobTemplate{
 
         .base_strength = 25,
     },
-    .weapon = &items.SwordWeapon,
-    .armor = &items.HeavyChainmailArmor,
+    .weapon = &items.MaceWeapon,
+    .armor = &items.ChainmailArmor,
 };
 
 pub const TanusExperiment = MobTemplate{
