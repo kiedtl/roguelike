@@ -1028,7 +1028,7 @@ pub const Mob = struct { // {{{
         wielded: ?*Weapon = null,
         backup: ?*Weapon = null,
 
-        pub const PACK_SIZE: usize = 7;
+        pub const PACK_SIZE: usize = 10;
         pub const PackBuffer = StackBuffer(Item, PACK_SIZE);
     };
 
