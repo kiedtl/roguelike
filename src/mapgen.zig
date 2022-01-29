@@ -466,6 +466,15 @@ fn excavatePrefab(
                     mob_f.spawn_at.x + room.rect.start.x + startx,
                     mob_f.spawn_at.y + room.rect.start.y + starty,
                 );
+
+                if (state.dungeon.at(coord).type == .Wall) {
+                    std.log.err(
+                        "{}: Tried to place mob in wall. (this is a bug.)",
+                        .{fab.name.constSlice()},
+                    );
+                    continue;
+                }
+
                 const work_area = Coord.new2(
                     room.rect.start.z,
                     (mob_f.work_at orelse mob_f.spawn_at).x + room.rect.start.x + startx,
@@ -1354,10 +1363,10 @@ pub fn placeTraps(level: usize) void {
 
         if (rng.onein(2)) continue;
 
-        var tries: usize = 40;
+        var tries: usize = 30;
         var trap_coord: Coord = undefined;
 
-        while (tries > 0) : (tries -= 1) {
+        while (true) {
             trap_coord = room.randomCoord();
 
             if (isTileAvailable(trap_coord) and
@@ -1367,6 +1376,7 @@ pub fn placeTraps(level: usize) void {
 
             // didn't find a coord, continue to the next room
             if (tries == 0) continue :room_iter;
+            tries -= 1;
         }
 
         var trap: Machine = undefined;
