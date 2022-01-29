@@ -1889,6 +1889,10 @@ pub const Mob = struct { // {{{
     pub inline fn dexterity(self: *const Mob) usize {
         var dex = self.base_dexterity;
         if (self.isUnderStatus(.Invigorate)) |_| dex = dex * 150 / 100;
+        if (self.inventory.armor) |a|
+            if (a.dex_penalty) |pen| {
+                dex -= pen;
+            };
         return dex;
     }
 
@@ -2151,6 +2155,7 @@ pub const Armor = struct {
     name: []const u8,
     resists: Damages,
     speed_penalty: ?usize = null,
+    dex_penalty: ?usize = null,
 };
 
 pub const Projectile = struct {

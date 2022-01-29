@@ -204,10 +204,24 @@ pub const ChainmailArmor = Armor{
         .Crushing = 2,
         .Pulping = 8,
         .Slashing = 15,
-        .Piercing = 3,
+        .Piercing = 5,
         .Lacerating = 15,
     },
+    .speed_penalty = 40,
+};
+
+pub const ScalemailArmor = Armor{
+    .id = "scalemail_armor",
+    .name = "scale mail",
+    .resists = .{
+        .Crushing = 10,
+        .Pulping = 10,
+        .Slashing = 10,
+        .Piercing = 5,
+        .Lacerating = 10,
+    },
     .speed_penalty = 20,
+    .dex_penalty = 40,
 };
 
 pub const RobeArmor = Armor{

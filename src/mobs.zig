@@ -234,7 +234,6 @@ pub const PlayerTemplate = MobTemplate{
         .base_strength = 19,
     },
     .weapon = &items.KnifeWeapon,
-    .backup_weapon = &items.NetLauncher,
     .armor = &items.RobeArmor,
 };
 
