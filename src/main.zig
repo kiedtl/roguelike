@@ -72,7 +72,7 @@ fn initGame() bool {
         state.rooms[level] = mapgen.Room.ArrayList.init(&state.GPA.allocator);
     }
 
-    rng.init();
+    rng.init(&state.GPA.allocator) catch |_| return false;
 
     var s_fabs: mapgen.PrefabArrayList = undefined;
     var n_fabs: mapgen.PrefabArrayList = undefined;

@@ -8,9 +8,19 @@ const math = std.math;
 
 var rng: rand.Isaac64 = undefined;
 pub var seed: u64 = undefined;
+//seed = 0xdefaced_cafe;
 
-pub fn init() void {
-    seed = 0xdefaced_cafe;
+pub fn init(alloc: *std.mem.Allocator) !void {
+    if (std.process.getEnvVarOwned(alloc, "RL_SEED")) |seed_str| {
+        defer alloc.free(seed_str);
+        seed = std.fmt.parseInt(u64, seed_str, 0) catch |err| {
+            std.log.err("{} is an invalid seed.", .{seed_str});
+            return err;
+        };
+    } else |_| {
+        seed = @intCast(u64, std.time.milliTimestamp());
+    }
+
     rng = rand.Isaac64.init(seed);
 }
 
