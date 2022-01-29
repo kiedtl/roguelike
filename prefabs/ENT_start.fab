@@ -1,19 +1,60 @@
-% This is the "ending" room with the exit staircase, but is techincally the
+% This is the "ending" room with the exit staircase, but is technically the
 % "start" prefab -- the one which is used to seed the map.
 
-#########*#########
-#.......≡.≡.......#
-#.......≡.≡.......#
-#.....#.#.#.#.....#
-#.....#.#.#.#.....#
-#≡≡####.....####≡≡#
-*........0........*
-#≡≡####.....####≡≡#
-#.....#.#.#.#.....#
-#.....#.#.#.#.....#
-#.......≡.≡.......#
-#.......≡.≡.......#
-#########*#########
+:invisible
+:restriction 0
+:nolights
+:notraps
+:noguards
+
+@0 m stair_exit
+
+:spawn watcher       5,1
+:spawn watcher       5,5
+:spawn watcher      21,1
+:spawn watcher      21,5
+:spawn sentinel      6,1
+:spawn sentinel      6,5
+:spawn sentinel     20,1
+:spawn sentinel     20,5
+:spawn executioner  12,1
+:spawn executioner  12,5
+:spawn executioner  14,1
+:spawn executioner  14,5
+:spawn guard        11,1
+:spawn guard        11,5
+:spawn guard        15,1
+:spawn guard        15,5
+:spawn guard         8,1
+:spawn guard         9,1
+:spawn guard         8,5
+:spawn guard         9,5
+:spawn guard        17,1
+:spawn guard        18,1
+:spawn guard        17,5
+:spawn guard        18,5
+
+###########################
+*...≡..#..#..#..#..#..≡...*
+*...#+#•#+##+#+##+#•#+#...*
+•............0............•
+*...#+#•#+##+#+##+#•#+#...*
+*...≡..#..#..#..#..#..≡...*
+###########################
+
+% #########*#########
+% #.......≡.≡.......#
+% #.......≡.≡.......#
+% #.....#.#.#.#.....#
+% #.....#.#.#.#.....#
+% #≡≡####.....####≡≡#
+% *........0........*
+% #≡≡####.....####≡≡#
+% #.....#.#.#.#.....#
+% #.....#.#.#.#.....#
+% #.......≡.≡.......#
+% #.......≡.≡.......#
+% #########*#########
 
 % #*###??#######??###*#
 % #...###.......###...#
@@ -26,9 +67,3 @@
 % #≡#...###...###...#≡#
 % #...###.......###...#
 % #*###??#######??###*#
-
-@0 m stair_exit
-:invisible
-:restriction 0
-:nolights
-:notraps

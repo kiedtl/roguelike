@@ -2565,18 +2565,26 @@ pub const LevelConfig = struct {
 
 pub const Configs = [LEVELS]LevelConfig{
     .{
-        .identifier = "ENT",
+        .identifier = "PRI",
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
             "ENT_start",
+            "PRI_power",
         }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
             .{ 5, 9, 1, 0, 0, 0, 0, 0, 0, 0 },
         },
         .prefab_chance = 2,
-        .mapgen_iters = 256,
+        .mapgen_iters = 1049,
 
-        .patrol_squads = 3,
+        .patrol_squads = 2,
+
+        .level_features = [_]?LevelConfig.LevelFeatureFunc{
+            levelFeaturePrisoners,
+            levelFeaturePrisonersMaybe,
+            null,
+            null,
+        },
     },
     .{
         .identifier = "VLT",

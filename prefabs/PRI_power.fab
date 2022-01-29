@@ -28,7 +28,7 @@
 
 :restriction 1
 :notrap
-:nospawn
+:noguards
 :nolight
 
 ###***#***###
