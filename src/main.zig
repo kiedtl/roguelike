@@ -28,10 +28,11 @@ pub const TaskArrayList = tasks.TaskArrayList;
 pub const PosterArrayList = literature.PosterArrayList;
 pub const EvocableList = items.EvocableList;
 
-// Install a panic handler that tries to shutdown termbox before calling the
-// default panic handler.
+// Install a panic handler that tries to shutdown termbox and print the RNG
+// seed before calling the default panic handler.
 pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) noreturn {
     display.deinit() catch |e| {};
+    std.log.info("Fatal error encountered. (Seed: {})", .{rng.seed});
     std.builtin.default_panic(msg, error_return_trace);
 }
 
