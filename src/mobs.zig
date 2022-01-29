@@ -78,7 +78,7 @@ pub const WatcherTemplate = MobTemplate{
 };
 
 pub const WardenTemplate = MobTemplate{
-    .id = "guard",
+    .id = "warden",
     .mob = .{
         .species = "goblin",
         .tile = 'ם',
