@@ -581,7 +581,7 @@ pub fn resetLevel(level: usize) void {
     var mobiter = state.mobs.iterator();
     while (mobiter.next()) |mob| {
         if (mob.coord.z == level) {
-            mob.kill();
+            mob.deinit();
             state.mobs.remove(mob);
         }
     }

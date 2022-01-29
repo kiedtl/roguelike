@@ -1622,20 +1622,6 @@ pub const Mob = struct { // {{{
     }
 
     pub fn kill(self: *Mob) void {
-        self.squad_members.deinit();
-        self.enemies.deinit();
-        self.path_cache.clearAndFree();
-        self.ai.work_area.deinit();
-
-        self.is_dead = true;
-
-        if (state.dungeon.itemsAt(self.coord).isFull())
-            _ = state.dungeon.itemsAt(self.coord).orderedRemove(0) catch unreachable;
-
-        state.dungeon.itemsAt(self.coord).append(Item{ .Corpse = self }) catch unreachable;
-
-        state.dungeon.at(self.coord).mob = null;
-
         if (self != state.player) {
             if (self.killed_by) |by_mob| {
                 if (by_mob == state.player) {
@@ -1649,6 +1635,26 @@ pub const Mob = struct { // {{{
                 }
             }
         }
+
+        self.deinit();
+    }
+
+    // Separate from kill() because some code (e.g., mapgen) cannot rely on the player
+    // having been initialized.
+    pub fn deinit(self: *Mob) void {
+        self.squad_members.deinit();
+        self.enemies.deinit();
+        self.path_cache.clearAndFree();
+        self.ai.work_area.deinit();
+
+        self.is_dead = true;
+
+        if (state.dungeon.itemsAt(self.coord).isFull())
+            _ = state.dungeon.itemsAt(self.coord).orderedRemove(0) catch unreachable;
+
+        state.dungeon.itemsAt(self.coord).append(Item{ .Corpse = self }) catch unreachable;
+
+        state.dungeon.at(self.coord).mob = null;
     }
 
     pub fn should_be_dead(self: *const Mob) bool {
