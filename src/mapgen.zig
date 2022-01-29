@@ -651,10 +651,13 @@ pub fn validateLevel(level: usize, alloc: *mem.Allocator) bool {
     const _f = struct {
         pub fn _getWalkablePoint(room: *const Rect) Coord {
             var point: Coord = room.start;
-            var tries: usize = 100;
+            var tries: usize = 1000;
             while (tries > 0) : (tries -= 1) {
-                if (state.dungeon.at(point).type == .Floor)
+                if (state.dungeon.at(point).type == .Floor and
+                    state.dungeon.at(point).surface == null)
+                {
                     return point;
+                }
                 point = room.randomCoord();
             }
             unreachable;
