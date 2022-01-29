@@ -1,0 +1,57 @@
+% i knife
+An ordinary utility knife.
+
+Typically used for cutting rope and making holes in cloth, this knife will make
+holes in wardens and guards just fine. Hopefully you'll find a better weapon
+before long.
+
+% i dagger
+A dagger.
+
+An medium-sized double-edged knife, useful for stabbing foes.
+
+% i stiletto
+A stiletto.
+
+A long dagger, ending in a razor-sharp point but with rather dull edges. It
+works very well for stabbing unaware enemies.
+
+% i rapier
+A rapier.
+
+A very long needle-like dagger, ending in an incredibly sharp edge, but with
+blunt edges. Its general design, especially the handle, is uncommonly elegant.
+It works extremely well for stabbing enemies, but isn't good for much else.
+
+% m cave_goblin
+A cave-goblin.
+
+One of the last few remaining prisoners of war, captured at last at the end
+of the battle in which the hill-goblins overran this stronghold. It sits
+here, nursing its wounds, and waiting miserably until its execution.
+
+For some reason, its captors haven't bothered to take its mace and armor away...
+
+% M mine
+A mine.
+
+It will activate when a non-player monster steps on it, but it may not explode
+immediately. However, monsters will avoid the mine if they can do so. Place the
+mine in a corridor to ensure it is stepped on.
+
+It will create an explosion with a radius of 3-6 tiles.
+
+% E eldritch_lantern
+An eldritch lantern.
+
+A very strange device, found in abundance in this place when the hill-goblins
+overran it. What use the cave-goblins might have had for it is a mystery.
+
+When evoked, it will create a powerful flash of light, dazing all mobs in your
+field of vision for a few turns. It will daze you as well, hopefully not for
+very long.
+
+% E mine_kit
+A mine kit.
+
+You can evoke it to build a small @(mine,mine) where you are standing.
