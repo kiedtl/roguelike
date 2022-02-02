@@ -649,16 +649,22 @@ pub fn validateLevel(level: usize, alloc: *mem.Allocator) bool {
     // utility functions
     const _f = struct {
         pub fn _getWalkablePoint(room: *const Rect) Coord {
-            var point: Coord = room.start;
-            var tries: usize = 1000;
-            while (tries > 0) : (tries -= 1) {
-                if (state.dungeon.at(point).type == .Floor and
-                    state.dungeon.at(point).surface == null)
-                {
-                    return point;
+            var y: usize = room.start.y;
+            while (y < room.end().y) : (y += 1) {
+                var x: usize = room.start.x;
+                while (x < room.end().x) : (x += 1) {
+                    const point = Coord.new2(room.start.z, x, y);
+                    if (state.dungeon.at(point).type == .Floor and
+                        state.dungeon.at(point).surface == null)
+                    {
+                        return point;
+                    }
                 }
-                point = room.randomCoord();
             }
+            std.log.err(
+                "BUG: found no walkable point in room (dim: {}x{})",
+                .{ room.width, room.height },
+            );
             unreachable;
         }
 
@@ -668,7 +674,10 @@ pub fn validateLevel(level: usize, alloc: *mem.Allocator) bool {
     };
 
     const rooms = state.rooms[level].items;
-    const base_room = rng.chooseUnweighted(Room, rooms);
+    const base_room = b: while (true) {
+        const r = rng.chooseUnweighted(Room, rooms);
+        if (r.type != .Corridor) break :b r;
+    } else unreachable;
     const point = _f._getWalkablePoint(&base_room.rect);
 
     for (rooms) |otherroom| {
@@ -1129,7 +1138,7 @@ pub fn placeBSPRooms(
             while (iters > 0 and branches.items.len > 0) : (iters -= 1) {
                 const cur = branches.swapRemove(rng.range(usize, 0, branches.items.len - 1));
 
-                if (cur.rect.height == 1 or cur.rect.width == 1) {
+                if (cur.rect.height <= 3 or cur.rect.width <= 3) {
                     continue;
                 }
 
