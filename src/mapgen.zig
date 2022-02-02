@@ -191,8 +191,7 @@ fn _createItem(comptime T: type, item: T) *T {
         Evocable => &state.evocables,
         else => @compileError("uh wat"),
     };
-    list.append(item) catch @panic("OOM");
-    return list.last().?;
+    return list.appendAndReturn(item) catch @panic("OOM");
 }
 
 fn placeProp(coord: Coord, prop_template: *const Prop) *Prop {
@@ -1086,21 +1085,33 @@ pub fn placeBSPRooms(
         }
 
         fn splitH(self: *const Self, percent: usize, out1: *Rect, out2: *Rect) void {
+            assert(self.rect.width > 1);
+
             out1.* = self.rect;
             out2.* = self.rect;
 
             out1.height = out1.height * (percent) / 100;
             out2.height = (out2.height * (100 - percent) / 100) - 1;
             out2.start.y += out1.height + 1;
+
+            if (out1.height == 0 or out2.height == 0) {
+                splitH(self, 50, out1, out2);
+            }
         }
 
         fn splitV(self: *const Self, percent: usize, out1: *Rect, out2: *Rect) void {
+            assert(self.rect.height > 1);
+
             out1.* = self.rect;
             out2.* = self.rect;
 
             out1.width = out1.width * (percent) / 100;
             out2.width = (out2.width * (100 - percent) / 100) - 1;
             out2.start.x += out1.width + 1;
+
+            if (out1.width == 0 or out2.width == 0) {
+                splitV(self, 50, out1, out2);
+            }
         }
 
         pub fn splitTree(
@@ -1117,6 +1128,10 @@ pub fn placeBSPRooms(
             var iters: usize = Configs[maplevel].mapgen_iters;
             while (iters > 0 and branches.items.len > 0) : (iters -= 1) {
                 const cur = branches.swapRemove(rng.range(usize, 0, branches.items.len - 1));
+
+                if (cur.rect.height == 1 or cur.rect.width == 1) {
+                    continue;
+                }
 
                 var new1: Rect = undefined;
                 var new2: Rect = undefined;
@@ -1209,6 +1224,8 @@ pub fn placeBSPRooms(
         //const x = rng.range(usize, container.start.x, container.end().x - w);
         //const y = rng.range(usize, container.start.y, container.end().y - h);
         //var room = Room{ .start = Coord.new2(level, x, y), .width = w, .height = h };
+
+        assert(room.rect.width > 0 and room.rect.height > 0);
 
         excavateRect(&room.rect);
 
@@ -1316,6 +1333,11 @@ pub fn placeBSPRooms(
 }
 
 pub fn placeItems(level: usize) void {
+    // FIXME: generate this at comptime.
+    var item_weights: [items.ITEM_DROPS.len]usize = undefined;
+    for (items.ITEM_DROPS) |item, i| item_weights[i] = item.w;
+
+    // Fill up containers first.
     var containers = state.containers.iterator();
     while (containers.next()) |container| {
         if (container.coord.z != level) continue;
@@ -1324,20 +1346,6 @@ pub fn placeItems(level: usize) void {
         const fill = rng.rangeClumping(usize, 0, container.capacity, 2);
 
         switch (container.type) {
-            .Valuables => {
-                var i: usize = 0;
-                var potion = rng.chooseUnweighted(Potion, &items.POTIONS);
-                while (i < fill) : (i += 1) {
-                    if (rng.range(usize, 0, 100) < container.item_repeat) {
-                        potion = rng.chooseUnweighted(Potion, &items.POTIONS);
-                    }
-
-                    state.potions.append(potion) catch unreachable;
-                    container.items.append(
-                        Item{ .Potion = state.potions.last().? },
-                    ) catch unreachable;
-                }
-            },
             .Utility => if (Configs[level].utility_items.*.len > 0) {
                 const item_list = Configs[level].utility_items.*;
                 var item = &item_list[rng.range(usize, 0, item_list.len - 1)];
@@ -1351,6 +1359,46 @@ pub fn placeItems(level: usize) void {
                 }
             },
             else => {},
+        }
+    }
+
+    // Now drop items that the player could use.
+    room_iter: for (state.rooms[level].items) |room| {
+        if (room.type == .Corridor or room.has_subroom or room.prefab != null or rng.tenin(25)) {
+            continue; // Skip some rooms
+        }
+
+        const max_items = rng.range(usize, 1, 3);
+        var items_placed: usize = 0;
+
+        while (items_placed < max_items) : (items_placed += 1) {
+            var tries: usize = 500;
+            var item_coord: Coord = undefined;
+
+            while (true) {
+                item_coord = room.rect.randomCoord();
+
+                // FIXME: uhg, this will reject tiles with mobs on it, even
+                // though that's not what we want. On the other hand, killing
+                // a guard that has a potion underneath it will cause the
+                // corpse to hide the potion...
+                if (isTileAvailable(item_coord) and
+                    !state.dungeon.at(item_coord).prison)
+                    break; // we found a valid coord
+
+                // didn't find a coord, continue to the next room...
+                if (tries == 0) continue :room_iter;
+                tries -= 1;
+            }
+
+            const item_info = rng.choose(@TypeOf(items.ITEM_DROPS[0]), &items.ITEM_DROPS, &item_weights) catch unreachable;
+            const item = switch (item_info.i) {
+                .W => |i| Item{ .Weapon = _createItem(Weapon, i) },
+                .A => |i| Item{ .Armor = _createItem(Armor, i) },
+                .P => |i| Item{ .Potion = _createItem(Potion, i) },
+                .E => |i| Item{ .Evocable = _createItem(Evocable, i) },
+            };
+            state.dungeon.itemsAt(item_coord).append(item) catch unreachable;
         }
     }
 }
@@ -1524,7 +1572,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
         placeLights(&room);
 
         if (room.prefab != null) continue;
-        if (rng.tenin(25)) continue;
+        if (!rng.onein(4)) continue;
 
         const Range = struct { from: Coord, to: Coord };
         const rect_end = rect.end();
@@ -2544,7 +2592,7 @@ pub const LevelConfig = struct {
         surfaces.Bin,
         surfaces.Barrel,
         surfaces.Cabinet,
-        surfaces.Chest,
+        //surfaces.Chest,
     },
     utility_items: *[]const Prop = &surfaces.prison_item_props.items,
     allow_statues: bool = true,
@@ -2620,7 +2668,7 @@ pub const Configs = [LEVELS]LevelConfig{
         .allow_statues = false,
 
         .props = &surfaces.vault_props.items,
-        .containers = &[_]Container{surfaces.Chest},
+        //.containers = &[_]Container{surfaces.Chest},
     },
     .{
         .identifier = "PRI",
@@ -2692,7 +2740,8 @@ pub const Configs = [LEVELS]LevelConfig{
         .vent = "lab_gas_vent",
         .bars = "titanium_bars",
         .props = &surfaces.laboratory_props.items,
-        .containers = &[_]Container{ surfaces.Chest, surfaces.LabCabinet },
+        //.containers = &[_]Container{ surfaces.Chest, surfaces.LabCabinet },
+        .containers = &[_]Container{surfaces.LabCabinet},
         .utility_items = &surfaces.laboratory_item_props.items,
 
         .allow_statues = false,

@@ -91,6 +91,11 @@ pub fn LinkedList(comptime T: type) type {
             }
         }
 
+        pub fn appendAndReturn(self: *Self, data: T) !*T {
+            try self.append(data);
+            return self.last() orelse @panic("/dev/sda is on fire");
+        }
+
         pub fn remove(self: *Self, node: *T) void {
             if (node.__prev) |prevn| prevn.__next = node.__next;
             if (node.__next) |nextn| nextn.__prev = node.__prev;

@@ -2039,7 +2039,6 @@ pub const Container = struct {
     pub const ContainerType = enum {
         Eatables, // All food
         Wearables, // Weapons, armor, clothing, thread, cloth
-        Valuables, // potions
         VOres, // self-explanatory
         Casual, // dice, deck of cards
         Utility, // Depends on the level (for PRI: rope, chains, etc)

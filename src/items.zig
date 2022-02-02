@@ -11,6 +11,57 @@ usingnamespace @import("types.zig");
 
 const LinkedList = @import("list.zig").LinkedList;
 
+// TODO: remove
+pub const POTIONS = [_]Potion{
+    FogPotion,
+    ConfusionPotion,
+    ParalysisPotion,
+    FastPotion,
+    SlowPotion,
+    RecuperatePotion,
+    PoisonPotion,
+    InvigoratePotion,
+    PreservePotion,
+    DecimatePotion,
+};
+
+// Items to be dropped into rooms for the player's use.
+//
+pub const ITEM_DROPS = [_]struct {
+    w: usize,
+    i: union(enum) {
+        W: Weapon, A: Armor, P: Potion, E: Evocable
+    },
+}{
+    // Weapons
+    .{ .w = 50, .i = .{ .W = MaceWeapon } },
+    .{ .w = 50, .i = .{ .W = ClubWeapon } },
+    .{ .w = 50, .i = .{ .W = KnifeWeapon } },
+    .{ .w = 30, .i = .{ .W = DaggerWeapon } },
+    .{ .w = 10, .i = .{ .W = StilettoWeapon } },
+    .{ .w = 05, .i = .{ .W = RapierWeapon } },
+    // Armor
+    .{ .w = 50, .i = .{ .A = RobeArmor } },
+    .{ .w = 40, .i = .{ .A = GambesonArmor } },
+    .{ .w = 15, .i = .{ .A = LeatherArmor } },
+    .{ .w = 05, .i = .{ .A = ChainmailArmor } },
+    .{ .w = 02, .i = .{ .A = ScalemailArmor } },
+    // Potions
+    .{ .w = 40, .i = .{ .P = FogPotion } },
+    .{ .w = 70, .i = .{ .P = ConfusionPotion } },
+    .{ .w = 40, .i = .{ .P = ParalysisPotion } },
+    .{ .w = 40, .i = .{ .P = FastPotion } },
+    .{ .w = 70, .i = .{ .P = SlowPotion } },
+    .{ .w = 80, .i = .{ .P = RecuperatePotion } },
+    .{ .w = 70, .i = .{ .P = PoisonPotion } },
+    .{ .w = 70, .i = .{ .P = InvigoratePotion } },
+    .{ .w = 30, .i = .{ .P = PreservePotion } },
+    .{ .w = 10, .i = .{ .P = DecimatePotion } },
+    // Evocables
+    .{ .w = 05, .i = .{ .E = MineKitEvoc } },
+    .{ .w = 05, .i = .{ .E = EldritchLanternEvoc } },
+};
+
 pub const EvocableList = LinkedList(Evocable);
 pub const Evocable = struct {
     // linked list stuff
@@ -183,19 +234,6 @@ pub const PoisonPotion = Potion{ .id = "potion_poison", .name = "coagulation", .
 pub const InvigoratePotion = Potion{ .id = "potion_invigorate", .name = "invigoration", .type = .{ .Status = .Invigorate }, .ingested = true, .color = 0xdada53 };
 pub const PreservePotion = Potion{ .id = "potion_preserve", .name = "preservation", .type = .{ .Custom = triggerPreservePotion }, .ingested = true, .color = 0xda5353 };
 pub const DecimatePotion = Potion{ .id = "potion_decimate", .name = "decimation", .type = .{ .Custom = triggerDecimatePotion }, .color = 0xffffff }; // TODO: unique color
-
-pub const POTIONS = [_]Potion{
-    FogPotion,
-    ConfusionPotion,
-    ParalysisPotion,
-    FastPotion,
-    SlowPotion,
-    RecuperatePotion,
-    PoisonPotion,
-    InvigoratePotion,
-    PreservePotion,
-    DecimatePotion,
-};
 
 pub const ChainmailArmor = Armor{
     .id = "chainmail_armor",
