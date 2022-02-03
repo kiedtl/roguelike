@@ -2786,7 +2786,6 @@ pub const Configs = [LEVELS]LevelConfig{
     .{
         .identifier = "PRI",
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
-            "PRI_start",
             "PRI_power",
             "PRI_insurgency",
         }),
