@@ -2724,7 +2724,7 @@ pub const Configs = [LEVELS]LevelConfig{
             null,
         },
 
-        .patrol_squads = 6,
+        .patrol_squads = 1,
 
         .blobs = &[_]LevelConfig.BlobConfig{
             .{
@@ -2803,7 +2803,7 @@ pub const Configs = [LEVELS]LevelConfig{
             null,
         },
 
-        .patrol_squads = 6,
+        .patrol_squads = 2,
     },
     .{
         .identifier = "PRI",
@@ -2824,7 +2824,7 @@ pub const Configs = [LEVELS]LevelConfig{
             null,
         },
 
-        .patrol_squads = 5,
+        .patrol_squads = 2,
     },
     .{
         .identifier = "SMI",
@@ -2850,7 +2850,7 @@ pub const Configs = [LEVELS]LevelConfig{
             null,
         },
 
-        .patrol_squads = 5,
+        .patrol_squads = 3,
         .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
             .{ .chance = 10, .template = &mobs.WatcherTemplate },
             .{ .chance = 30, .template = &mobs.HaulerTemplate },
