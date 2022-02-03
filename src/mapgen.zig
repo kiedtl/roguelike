@@ -41,6 +41,21 @@ const Corridor = struct {
     parent_connector: ?Coord,
     child_connector: ?Coord,
     distance: usize,
+
+    // The connector coords for the prefabs used, if any (the first is the parent's
+    // connector, the second is the child's connector).
+    //
+    // When the corridor is excavated these must be marked as unused.
+    //
+    // (Note, this is distinct from parent_connector/child_connector. Those two
+    // are absolute coordinates, fab_connectors is relative to the start of the
+    // prefab's room.
+    fab_connectors: [2]?Coord = .{ null, null },
+
+    pub fn markConnectorsAsUsed(self: *const Corridor, parent: *Room, child: *Room) !void {
+        if (parent.prefab) |fab| if (self.fab_connectors[0]) |c| try fab.useConnector(c);
+        if (child.prefab) |fab| if (self.fab_connectors[1]) |c| try fab.useConnector(c);
+    }
 };
 
 const VALID_DOOR_PLACEMENT_PATTERNS = [_][]const u8{
@@ -742,6 +757,7 @@ pub fn placeMoarCorridors(level: usize, alloc: *mem.Allocator) void {
                 child.connections += 1;
 
                 excavateRect(&corridor.room.rect);
+                corridor.markConnectorsAsUsed(parent, child) catch unreachable;
                 newrooms.append(corridor.room) catch unreachable;
 
                 // When using a prefab, the corridor doesn't include the connectors. Excavate
@@ -764,6 +780,7 @@ fn createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?C
     var corridor_coord = Coord.new2(level, 0, 0);
     var parent_connector_coord: ?Coord = null;
     var child_connector_coord: ?Coord = null;
+    var fab_connectors = [_]?Coord{ null, null };
 
     if (parent.prefab != null or child.prefab != null) {
         if (parent.prefab) |f| {
@@ -771,14 +788,14 @@ fn createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?C
             corridor_coord.x = parent.rect.start.x + con.x;
             corridor_coord.y = parent.rect.start.y + con.y;
             parent_connector_coord = corridor_coord;
-            f.useConnector(con) catch unreachable;
+            fab_connectors[0] = con;
         }
         if (child.prefab) |f| {
             const con = f.connectorFor(side.opposite()) orelse return null;
             corridor_coord.x = child.rect.start.x + con.x;
             corridor_coord.y = child.rect.start.y + con.y;
             child_connector_coord = corridor_coord;
-            f.useConnector(con) catch unreachable;
+            fab_connectors[1] = con;
         }
     } else {
         const rsx = math.max(parent.rect.start.x, child.rect.start.x);
@@ -834,6 +851,7 @@ fn createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?C
             .West, .East => room.rect.width,
             else => unreachable,
         },
+        .fab_connectors = fab_connectors,
     };
 }
 
@@ -867,7 +885,9 @@ fn _place_rooms(
     const parent_i = rng.range(usize, 0, rooms.items.len - 1);
     var parent = &rooms.items[parent_i];
 
-    if (parent.connections > CONNECTIONS_MAX) return;
+    if (parent.connections > CONNECTIONS_MAX) {
+        return;
+    }
 
     var fab: ?*Prefab = null;
     var distance = rng.choose(usize, &Configs[level].distances[0], &Configs[level].distances[1]) catch unreachable;
@@ -952,6 +972,13 @@ fn _place_rooms(
 
     if (corridor) |cor| {
         excavateRect(&cor.room.rect);
+        cor.markConnectorsAsUsed(parent, &child) catch unreachable;
+
+        // XXX: atchung, don't access <parent> var after this, as appending this
+        // may have invalidated that pointer.
+        //
+        // FIXME: can't we append this along with the child at the end of this
+        // function?
         rooms.append(cor.room) catch unreachable;
 
         // When using a prefab, the corridor doesn't include the connectors. Excavate
