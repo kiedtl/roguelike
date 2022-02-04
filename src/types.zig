@@ -2400,7 +2400,16 @@ pub const Tile = struct {
         if (self.mob) |mob| {
             assert(self.type != .Wall);
 
-            cell.fg = 0xffffff;
+            cell.fg = switch (mob.ai.phase) {
+                .Work, .Flee => 0xffffff,
+                .Investigate => 0xffd700,
+                .Hunt => 0xffbbbb,
+            };
+            if (mob == state.player or
+                mob.isUnderStatus(.Paralysis) != null or
+                mob.isUnderStatus(.Confusion) != null)
+                cell.fg = 0xffffff;
+
             cell.bg = color;
 
             const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);
