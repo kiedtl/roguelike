@@ -11,7 +11,7 @@ const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
 pub const MIN_WIN_WIDTH: isize = 100;
-pub const MIN_WIN_HEIGHT: isize = 38;
+pub const MIN_WIN_HEIGHT: isize = 30;
 
 // tb_shutdown() calls abort() if tb_init() wasn't called, or if tb_shutdown()
 // was called twice. Keep track of termbox's state to prevent this.
