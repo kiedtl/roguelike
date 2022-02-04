@@ -496,8 +496,8 @@ fn powerElevatorMotor(machine: *Machine) void {
     // a while to bring up more ores
     if ((state.ticks % 32) != 0 or rng.onein(3)) return;
 
-    // FIXME: level checking is an uglyyy hack
-    const level = @import("mapgen.zig").Configs[machine.coord.z].identifier;
+    // XXX: should there be a better way than checking level num?
+    const level = state.levelinfo[machine.coord.z].id;
 
     for (machine.areas.constSlice()) |coord| {
         if (!state.dungeon.itemsAt(coord).isFull()) {

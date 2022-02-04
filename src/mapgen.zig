@@ -105,7 +105,7 @@ fn choosePoster(level: usize) ?*const Poster {
         const i = rng.range(usize, 0, literature.posters.items.len - 1);
         const p = &literature.posters.items[i];
 
-        if (p.placement_counter > 0 or !mem.eql(u8, Configs[level].identifier, p.level))
+        if (p.placement_counter > 0 or !mem.eql(u8, state.levelinfo[level].id, p.level))
             continue;
 
         p.placement_counter += 1;
@@ -256,7 +256,7 @@ fn prefabIsValid(level: usize, prefab: *Prefab) bool {
     if (prefab.invisible)
         return false; // Can't be used unless specifically called for by name.
 
-    if (!mem.eql(u8, prefab.name.constSlice()[0..3], Configs[level].identifier))
+    if (!mem.eql(u8, prefab.name.constSlice()[0..3], state.levelinfo[level].id))
         return false; // Prefab isn't for this level.
 
     if (prefab.used[level] >= prefab.restriction)
@@ -2584,7 +2584,6 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
 }
 
 pub const LevelConfig = struct {
-    identifier: []const u8,
     prefabs: RPBuf = RPBuf.init(null),
     distances: [2][10]usize = [2][10]usize{
         .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
@@ -2662,7 +2661,6 @@ pub const LevelConfig = struct {
 
 pub const Configs = [LEVELS]LevelConfig{
     .{
-        .identifier = "PRI",
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
             "ENT_start",
             "PRI_power",
@@ -2684,7 +2682,6 @@ pub const Configs = [LEVELS]LevelConfig{
         },
     },
     .{
-        .identifier = "VLT",
         .prefabs = LevelConfig.RPBuf.init(null),
         .prefab_chance = 100, // No prefabs for REG
         .mapgen_func = placeBSPRooms,
@@ -2707,7 +2704,6 @@ pub const Configs = [LEVELS]LevelConfig{
         //.containers = &[_]Container{surfaces.Chest},
     },
     .{
-        .identifier = "PRI",
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
             "PRI_power",
         }),
@@ -2742,7 +2738,6 @@ pub const Configs = [LEVELS]LevelConfig{
         },
     },
     .{
-        .identifier = "LAB",
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
             "LAB_power",
         }),
@@ -2784,7 +2779,6 @@ pub const Configs = [LEVELS]LevelConfig{
         .allow_doors = false,
     },
     .{
-        .identifier = "PRI",
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
             "PRI_power",
             "PRI_insurgency",
@@ -2805,7 +2799,6 @@ pub const Configs = [LEVELS]LevelConfig{
         .patrol_squads = 2,
     },
     .{
-        .identifier = "PRI",
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
             "PRI_start",
             "PRI_power",
@@ -2826,7 +2819,6 @@ pub const Configs = [LEVELS]LevelConfig{
         .patrol_squads = 2,
     },
     .{
-        .identifier = "SMI",
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
             "SMI_chain_press",
             "SMI_blast_furnace",

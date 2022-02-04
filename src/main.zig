@@ -83,7 +83,7 @@ fn initGame() bool {
 
     var level: usize = 0;
     while (level < LEVELS) {
-        std.log.info("Generating map {}.", .{mapgen.Configs[level].identifier});
+        std.log.info("Generating map {}.", .{state.levelinfo[level].id});
 
         mapgen.resetLevel(level);
         mapgen.placeBlobs(level);
@@ -91,7 +91,7 @@ fn initGame() bool {
         mapgen.placeMoarCorridors(level, &state.GPA.allocator);
 
         if (!mapgen.validateLevel(level, &state.GPA.allocator)) {
-            std.log.info("Map {} invalid, regenerating.", .{mapgen.Configs[level].identifier});
+            std.log.info("Map {} invalid, regenerating.", .{state.levelinfo[level].id});
             continue; // try again
         }
 

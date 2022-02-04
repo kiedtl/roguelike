@@ -45,6 +45,18 @@ pub var layout: [LEVELS][HEIGHT][WIDTH]Layout = undefined;
 pub var player: *Mob = undefined;
 pub var state: GameState = .Game;
 
+pub const levelinfo = [LEVELS]struct {
+    id: []const u8, name: []const u8
+}{
+    .{ .id = "PRI", .name = "-1/Prison" },
+    .{ .id = "VLT", .name = "-2/Vaults" },
+    .{ .id = "PRI", .name = "-3/Prison" },
+    .{ .id = "LAB", .name = "-4/Laboratory" },
+    .{ .id = "PRI", .name = "-5/Prison" },
+    .{ .id = "PRI", .name = "-6/Prison" },
+    .{ .id = "SMI", .name = "-7/Smithing" },
+};
+
 // Information collected over a run to present in a morgue file.
 pub var chardata: struct {
     foes_killed_total: usize = 0,
@@ -647,10 +659,7 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
                 player.lastDamagePercentage(),
             });
         }
-        try w.print("        ...on level -{} ({}) of the Dungeon\n", .{
-            player.coord.z,
-            mapgen.Configs[player.coord.z].identifier,
-        });
+        try w.print("        ...on level {} of the Dungeon\n", .{levelinfo[player.coord.z].name});
     }
     try w.print("\n", .{});
     try w.print("-) {: <40} &) {}\n", .{
@@ -822,11 +831,7 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
     try w.print("\n", .{});
     try w.print("Time spent on levels:\n", .{});
     for (chardata.time_on_levels[0..]) |turns, level| {
-        try w.print("        -{} ({})           {}\n", .{
-            level,
-            mapgen.Configs[level].identifier,
-            turns,
-        });
+        try w.print("- {: <20} {: >5}\n", .{ levelinfo[level].name, turns });
     }
 
     return buf;
