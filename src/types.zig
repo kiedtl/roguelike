@@ -458,6 +458,11 @@ pub const Stockpile = struct {
             var x: usize = self.room.start.x;
             while (x < self.room.end().x) : (x += 1) {
                 const coord = Coord.new2(self.room.start.z, x, y);
+
+                if (state.dungeon.at(coord).type != .Floor) {
+                    continue;
+                }
+
                 if (state.dungeon.hasContainer(coord)) |container|
                     if (!container.items.isFull()) {
                         return coord;
@@ -1199,6 +1204,11 @@ pub const Mob = struct { // {{{
     }
 
     pub fn dropItem(self: *Mob, item: Item, at: Coord) bool {
+        // Some faulty AI might be doing this. Or maybe a stockpile is
+        // configured incorrectly and a hauler is trying to drop items in the
+        // wrong place.
+        if (state.dungeon.at(at).type == .Wall) return false;
+
         if (state.dungeon.at(at).surface) |surface| {
             switch (surface) {
                 .Container => |container| {
