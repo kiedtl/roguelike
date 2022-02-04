@@ -183,8 +183,9 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
     }
 
     if (dungeon.at(coord).mob) |other|
-        if (opts.mob) |mob|
+        if (opts.mob) |mob| {
             if (!mob.canSwapWith(other, null)) return false;
+        } else return false;
 
     if (dungeon.at(coord).surface) |surface| {
         switch (surface) {

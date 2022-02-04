@@ -426,7 +426,6 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
     const playery = @intCast(isize, state.player.coord.y);
     const playerx = @intCast(isize, state.player.coord.x);
     const level = state.player.coord.z;
-    var is_player_watched = false;
 
     const main_window = dimensions(.Main);
     var cursory: isize = starty;
@@ -494,31 +493,42 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
             // Draw noise and indicate if that tile is visible by another mob
             switch (state.dungeon.at(coord).type) {
                 .BrokenFloor, .BrokenWall, .Floor => {
-                    if (state.dungeon.at(coord).mob) |mob| {
+                    const has_stuff = state.dungeon.at(coord).surface != null or
+                        state.dungeon.at(coord).mob != null or
+                        state.dungeon.itemsAt(coord).len > 0;
+
+                    if (state.player.canHear(coord)) |noise| {
+                        const green: u32 = switch (noise.state) {
+                            .New => 0x00D610,
+                            .Old => 0x00B310,
+                            .Dead => unreachable,
+                        };
+                        if (has_stuff) {
+                            tile.bg = utils.darkenColor(green, 3);
+                        } else {
+                            tile.fg = green;
+                            tile.ch = '!';
+                        }
+                    }
+
+                    if (_mobs_can_see(moblist, coord)) {
                         // Treat this cell specially if it's the player and the player is
                         // being watched.
                         if (state.player.coord.eq(coord) and _mobs_can_see(moblist, coord)) {
                             termbox.tb_change_cell(cursorx, cursory, '@', 0, 0xffffff);
                             continue;
                         }
-                    } else if (state.dungeon.at(coord).surface != null or
-                        state.dungeon.itemsAt(coord).len > 0)
-                    {
-                        // Do nothing
-                    } else {
-                        if (state.player.canHear(coord)) |noise| {
-                            const green: u32 = switch (noise.state) {
-                                .New => 0x00D610,
-                                .Old => 0x00B310,
-                                .Dead => unreachable,
-                            };
-                            tile.fg = green;
-                            tile.ch = '!';
-                        } else if (_mobs_can_see(moblist, coord)) {
-                            var can_mob_see = true;
-                            if (state.player.coord.eq(coord))
-                                is_player_watched = can_mob_see;
+
+                        if (has_stuff) {
+                            if (state.is_walkable(coord, .{ .right_now = true })) {
+                                // Swap.
+                                tile.fg ^= tile.bg;
+                                tile.bg ^= tile.fg;
+                                tile.fg ^= tile.bg;
+                            }
+                        } else {
                             tile.ch = '·';
+                            tile.fg = 0xffffff;
                         }
                     }
                 },
