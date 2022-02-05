@@ -607,7 +607,6 @@ fn powerBlastFurnace(machine: *Machine) void {
         // XXX: it may be desirable later to handle this in a cleaner manner
         assert(meta.activeTag(item) == .Boulder);
 
-        state.dungeon.heat[machine.coord.z][machine.coord.y][machine.coord.x] += item.Boulder.melting_point;
         const result_mat = item.Boulder.smelt_result.?;
         state.dungeon.itemsAt(output_spot.?).append(Item{ .Boulder = result_mat }) catch unreachable;
     }

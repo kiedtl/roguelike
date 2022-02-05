@@ -10,7 +10,6 @@ const mem = std.mem;
 
 const rng = @import("rng.zig");
 const literature = @import("literature.zig");
-const heat = @import("heat.zig");
 const explosions = @import("explosions.zig");
 const tasks = @import("tasks.zig");
 const items = @import("items.zig");
@@ -556,7 +555,6 @@ fn tickGame() void {
     state.ticks += 1;
     surfaces.tickMachines(cur_level);
     state.tickLight(cur_level);
-    heat.tickHeat(cur_level);
     tasks.tickTasks(cur_level);
     state.tickAtmosphere(cur_level, 0);
     state.tickSound(cur_level);
@@ -640,7 +638,6 @@ fn viewerTickGame(cur_level: usize) void {
     state.ticks += 1;
     surfaces.tickMachines(cur_level);
     state.tickLight(cur_level);
-    heat.tickHeat(cur_level);
     tasks.tickTasks(cur_level);
     state.tickAtmosphere(cur_level, 0);
     state.tickSound(cur_level);

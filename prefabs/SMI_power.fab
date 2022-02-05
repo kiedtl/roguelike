@@ -1,6 +1,6 @@
 %      ~~~~    turbine
 % ~~~━┳━~~~┑
-% ~~~~╿~~~~⊡
+% ~~~~~~~~~⊡
 % ~~~▌◴▐~~~│
 % ~~~▌◴┐▂▂▂⌨
 % ~~~~╽╪öö≡╛
@@ -25,13 +25,14 @@
 @g p wire_n2w1
 @h p concrete_wall_left
 @i p concrete_wall_right
-@z m turbine_power_supply 7,4 7,5
+@z m turbine_power_supply 7,4 7,6
 
 ??*?*?*?*?≈?*?
 *.......≈≈≈≈.*
 *.~~~~0100002*
 *~~~~~~3≈≈≈≈4*
 *~~~~~h5i≈≈≈6*
+*~~~~~~≈≈≈≈≈4*
 *.~~~~h578889*
 *~~~~~~abcczd*
 *.~~~00eeffg.*

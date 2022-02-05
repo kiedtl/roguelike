@@ -11,7 +11,6 @@ const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const ai = @import("ai.zig");
 const fov = @import("fov.zig");
-const heat = @import("heat.zig");
 const combat = @import("combat.zig");
 const spells = @import("spells.zig");
 const rng = @import("rng.zig");
@@ -2507,10 +2506,6 @@ pub const Tile = struct {
             cell.fg = math.max(utils.percentageOfColor(cell.fg, light), utils.darkenColor(cell.fg, 3));
         }
 
-        //const temperature = state.dungeon.heat[coord.z][coord.y][coord.x];
-        //const light_emitted = if (temperature > 600) math.clamp((temperature - 600) * 100 / 1000, 0, 75) else 0;
-        //cell.bg = utils.mixColors(cell.bg, 0xffe122, @intToFloat(f64, light_emitted) / 600);
-
         var spattering = self.spatter.iterator();
         while (spattering.next()) |entry| {
             const spatter = entry.key;
@@ -2539,7 +2534,6 @@ pub const Dungeon = struct {
     sound: [LEVELS][HEIGHT][WIDTH]Sound = [1][HEIGHT][WIDTH]Sound{[1][WIDTH]Sound{[1]Sound{.{}} ** WIDTH} ** HEIGHT} ** LEVELS,
     light_intensity: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     light_color: [LEVELS][HEIGHT][WIDTH]u32 = [1][HEIGHT][WIDTH]u32{[1][WIDTH]u32{[1]u32{0} ** WIDTH} ** HEIGHT} ** LEVELS,
-    heat: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{heat.DEFAULT_HEAT} ** WIDTH} ** HEIGHT} ** LEVELS,
 
     pub const ItemBuffer = StackBuffer(Item, 7);
 
@@ -2550,8 +2544,6 @@ pub const Dungeon = struct {
 
         if (tile.type == .Lava)
             l += 80;
-
-        l += heat.lightEmittedByHeat(self.heat[coord.z][coord.y][coord.x]);
 
         if (tile.mob) |mob| {
             if (mob.isUnderStatus(.Corona)) |se| l += se.power;
