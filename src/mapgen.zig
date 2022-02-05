@@ -235,7 +235,7 @@ fn _place_machine(coord: Coord, machine_template: *const Machine) void {
 }
 
 fn placeDoor(coord: Coord, locked: bool) void {
-    var door = if (locked) surfaces.LockedDoor else surfaces.NormalDoor;
+    var door = if (locked) surfaces.LockedDoor else Configs[coord.z].door.*;
     door.coord = coord;
     state.machines.append(door) catch unreachable;
     const doorptr = state.machines.last().?;
@@ -2620,6 +2620,7 @@ pub const LevelConfig = struct {
     tiletype: TileType = .Wall,
     material: *const Material = &materials.Concrete,
     light: *const Machine = &surfaces.Brazier,
+    door: *const Machine = &surfaces.NormalDoor,
     vent: []const u8 = "gas_vent",
     bars: []const u8 = "iron_bars",
     props: *[]const Prop = &surfaces.statue_props.items,
@@ -2770,13 +2771,13 @@ pub const Configs = [LEVELS]LevelConfig{
         .light = &surfaces.Lamp,
         .vent = "lab_gas_vent",
         .bars = "titanium_bars",
+        .door = &surfaces.LabDoor,
         .props = &surfaces.laboratory_props.items,
         //.containers = &[_]Container{ surfaces.Chest, surfaces.LabCabinet },
         .containers = &[_]Container{surfaces.LabCabinet},
         .utility_items = &surfaces.laboratory_item_props.items,
 
         .allow_statues = false,
-        .allow_doors = false,
     },
     .{
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{

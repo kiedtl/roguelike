@@ -38,6 +38,7 @@ pub const MACHINES = [_]Machine{
     StairExit,
     StairUp,
     NormalDoor,
+    LabDoor,
     LockedDoor,
     ParalysisGasTrap,
     PoisonGasTrap,
@@ -377,6 +378,19 @@ pub const NormalDoor = Machine{
     .powered_walkable = true,
     .unpowered_walkable = false,
     .powered_opacity = 0.0,
+    .unpowered_opacity = 1.0,
+    .on_power = powerNone,
+};
+
+pub const LabDoor = Machine{
+    .name = "door",
+    .powered_tile = '+',
+    .unpowered_tile = '+',
+    .unpowered_fg = 0xffbfff,
+    .power_drain = 50,
+    .powered_walkable = true,
+    .unpowered_walkable = true,
+    .powered_opacity = 0.2,
     .unpowered_opacity = 1.0,
     .on_power = powerNone,
 };
