@@ -251,6 +251,9 @@ fn _canHearNoise(mob: *Mob) ?Coord {
                     //
                     if (sound.type == .Movement and !mob.isHostileTo(othermob))
                         continue;
+
+                    if (dungeon.at(coord).prison)
+                        continue;
                 }
 
                 return coord;
