@@ -620,7 +620,6 @@ pub const MessageType = union(enum) {
     Prompt, // Prompt for a choice/input, or respond to result from previous prompt
     MetaError, // Player tried to do something invalid.
     Info,
-    Aquire,
     Move,
     Trap,
     Damage,
@@ -631,7 +630,6 @@ pub const MessageType = union(enum) {
             .Prompt => 0x34cdff,
             .MetaError => 0xffffff,
             .Info => 0xfafefa,
-            .Aquire => 0xffd700,
             .Move => 0xfafefe,
             .Trap => 0xed254d,
             .Damage => 0xed254d,
@@ -1900,7 +1898,7 @@ pub const Mob = struct { // {{{
         if (self.isUnderStatus(.Invigorate)) |_| dex = dex * 150 / 100;
         if (self.inventory.armor) |a|
             if (a.dex_penalty) |pen| {
-                dex -= pen;
+                dex = dex * pen / 100;
             };
         return dex;
     }

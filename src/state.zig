@@ -111,7 +111,7 @@ pub var messages: MessageArrayList = undefined;
 pub var score: usize = 0;
 
 pub fn nextAvailableSpaceForItem(c: Coord, alloc: *mem.Allocator) ?Coord {
-    if (is_walkable(c, .{}) and !dungeon.itemsAt(c).isFull())
+    if (is_walkable(c, .{ .right_now = true }) and !dungeon.itemsAt(c).isFull())
         return c;
 
     var dijk = dijkstra.Dijkstra.init(
@@ -125,7 +125,7 @@ pub fn nextAvailableSpaceForItem(c: Coord, alloc: *mem.Allocator) ?Coord {
     defer dijk.deinit();
 
     while (dijk.next()) |coord| {
-        if (!is_walkable(c, .{}) or dungeon.itemsAt(c).isFull())
+        if (!is_walkable(c, .{ .right_now = true }) or dungeon.itemsAt(c).isFull())
             continue;
 
         return coord;

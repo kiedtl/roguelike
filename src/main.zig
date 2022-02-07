@@ -1,8 +1,3 @@
-const cstd = @cImport({
-    @cDefine("_XOPEN_SOURCE", "500");
-    @cInclude("stdlib.h");
-});
-
 const std = @import("std");
 const math = std.math;
 const assert = std.debug.assert;
@@ -224,6 +219,8 @@ pub fn grabItem() bool {
         return false;
     }
 
+    var item: Item = undefined;
+
     if (state.dungeon.at(state.player.coord).surface) |surface| {
         switch (surface) {
             .Container => |container| {
@@ -235,27 +232,53 @@ pub fn grabItem() bool {
                         "Take",
                         container.items.constSlice(),
                     ) orelse return false;
-                    const item = container.items.orderedRemove(index) catch unreachable;
-                    state.player.inventory.pack.append(item) catch unreachable;
-
-                    // TODO: show message
-
-                    state.player.declareAction(.Grab);
-                    return true;
+                    item = container.items.orderedRemove(index) catch unreachable;
                 }
             },
             else => {},
         }
     }
 
-    if (state.dungeon.itemsAt(state.player.coord).last()) |item| {
-        state.player.inventory.pack.append(item) catch unreachable;
-        _ = state.dungeon.itemsAt(state.player.coord).pop() catch unreachable;
-        state.player.declareAction(.Grab);
-        return true;
+    if (state.dungeon.itemsAt(state.player.coord).last()) |_| {
+        item = state.dungeon.itemsAt(state.player.coord).pop() catch unreachable;
     } else {
         return false;
     }
+
+    switch (item) {
+        .Weapon => |weapon| {
+            if (state.player.inventory.wielded) |old_w| {
+                state.dungeon.itemsAt(state.player.coord).append(Item{ .Weapon = old_w }) catch unreachable;
+                state.player.declareAction(.Drop);
+                state.message(.Info, "You drop the {} to wield the {}.", .{ old_w.name, weapon.name });
+            }
+
+            state.player.inventory.wielded = weapon;
+            state.player.declareAction(.Use);
+            state.message(.Info, "Now wielding a {}.", .{weapon.name});
+        },
+        .Armor => |armor| {
+            if (state.player.inventory.armor) |a| {
+                state.dungeon.itemsAt(state.player.coord).append(Item{ .Armor = a }) catch unreachable;
+                state.player.declareAction(.Drop);
+                state.message(.Info, "You drop the {} to wear the {}.", .{ a.name, armor.name });
+            }
+
+            state.player.inventory.armor = armor;
+            state.player.declareAction(.Use);
+            state.message(.Info, "Now wearing a {}.", .{armor.name});
+            if (armor.speed_penalty != null or armor.dex_penalty != null)
+                state.message(.Info, "This armor is going to be annoying to wear.", .{});
+        },
+        else => {
+            state.player.inventory.pack.append(item) catch unreachable;
+            state.player.declareAction(.Grab);
+            state.message(.Info, "Acquired: {}", .{
+                (state.player.inventory.pack.last().?.shortName() catch unreachable).constSlice(),
+            });
+        },
+    }
+    return true;
 }
 
 // TODO: move this to state.zig...? There should probably be a separate file for
@@ -310,74 +333,7 @@ fn useItem() bool {
             state.message(.MetaError, "Are you three?", .{});
             return false;
         },
-        .Weapon => |weapon| {
-            if (state.player.inventory.wielded) |w| {
-                state.player.inventory.pack.append(Item{ .Weapon = w }) catch |e| switch (e) {
-                    error.NoSpaceLeft => {
-                        if (state.nextAvailableSpaceForItem(
-                            state.player.coord,
-                            &state.GPA.allocator,
-                        )) |c| {
-                            state.message(
-                                .Info,
-                                "You drop the {} to wield the {}.",
-                                .{ w.name, weapon.name },
-                            );
-
-                            if (state.dungeon.itemsAt(c).isFull())
-                                _ = state.dungeon.itemsAt(c).orderedRemove(0) catch unreachable;
-                            state.dungeon.itemsAt(c).append(Item{ .Weapon = w }) catch unreachable;
-                        } else {
-                            state.message(
-                                .Info,
-                                "You don't have any space to drop the {} to wield the {}.",
-                                .{ w.name, weapon.name },
-                            );
-                            return false;
-                        }
-                    },
-                    else => unreachable,
-                };
-                state.message(.Info, "You wield the {}.", .{weapon.name});
-            }
-
-            state.player.inventory.wielded = weapon;
-        },
-        .Armor => |armor| {
-            if (state.player.inventory.armor) |a| {
-                state.player.inventory.pack.append(Item{ .Armor = a }) catch |e| switch (e) {
-                    error.NoSpaceLeft => {
-                        if (state.nextAvailableSpaceForItem(
-                            state.player.coord,
-                            &state.GPA.allocator,
-                        )) |c| {
-                            state.message(
-                                .Info,
-                                "You drop the {} to wear the {}.",
-                                .{ a.name, armor.name },
-                            );
-
-                            if (state.dungeon.itemsAt(c).isFull())
-                                _ = state.dungeon.itemsAt(c).orderedRemove(0) catch unreachable;
-                            state.dungeon.itemsAt(c).append(Item{ .Armor = a }) catch unreachable;
-                        } else {
-                            state.message(
-                                .Info,
-                                "You don't have any space to drop the {} to wear the {}.",
-                                .{ a.name, armor.name },
-                            );
-                            return false;
-                        }
-                    },
-                    else => unreachable,
-                };
-                state.message(.Info, "You wear the {}.", .{armor.name});
-                if (armor.speed_penalty) |_|
-                    state.message(.Info, "Moving around in this armor is going to be slow.", .{});
-            }
-
-            state.player.inventory.armor = armor;
-        },
+        .Armor, .Weapon => unreachable,
         .Potion => |p| {
             state.player.quaffPotion(p);
             const prevtotal = (state.chardata.potions_quaffed.getOrPutValue(p.id, 0) catch unreachable).value;
