@@ -59,7 +59,6 @@ pub fn chanceOfAttackLanding(attacker: *const Mob, defender: *const Mob) usize {
     chance += if (defender.isUnderStatus(.Held)) |_| DEFENDER_HELD_BONUS else 0;
     chance += if (attacker.dexterity() > defender.dexterity()) GREATER_DEXTERITY_BONUS else 0;
     chance += if (attacker.dexterity() > (defender.dexterity() * 2)) DOUBLE_GREATER_DEXTERITY_BONUS else 0;
-    chance += @intCast(isize, Mob.MAX_ACTIVITY_BUFFER_SZ - defender.turnsSinceRest()) * 3;
     chance += if (tile_light == 100) FULL_LIGHT_BONUS else 0;
 
     chance -= if (attacker.isUnderStatus(.Held)) |_| ATTACKER_HELD_NBONUS else 0;

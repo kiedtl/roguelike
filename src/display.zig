@@ -267,7 +267,7 @@ fn drawEnemyInfo(
 }
 
 fn drawPlayerInfo(startx: isize, starty: isize, endx: isize, endy: isize) void {
-    const is_running = state.player.turnsSinceRest() == state.player.activities.len;
+    const is_running = state.player.turnsSpentMoving() == state.player.activities.len;
     const strength = state.player.strength();
     const dexterity = state.player.dexterity();
     const speed = state.player.speed();
@@ -324,7 +324,7 @@ fn drawPlayerInfo(startx: isize, starty: isize, endx: isize, endy: isize) void {
         y,
         startx,
         endx,
-        state.player.turnsSinceRest(),
+        state.player.turnsSpentMoving(),
         state.player.activities.len,
         if (is_running) "running" else "walking",
         if (is_running) 0x45772e else 0x25570e,

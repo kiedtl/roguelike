@@ -1906,18 +1906,17 @@ pub const Mob = struct { // {{{
     }
 
     pub fn isCreeping(self: *const Mob) bool {
-        return self.turnsSinceRest() < self.activities.len;
+        return self.turnsSpentMoving() < self.activities.len;
     }
 
-    pub fn turnsSinceRest(self: *const Mob) usize {
-        var since: usize = 0;
-
+    // Find out how many turns spent in moving
+    pub fn turnsSpentMoving(self: *const Mob) usize {
+        var turns: usize = 0;
         var iter = self.activities.iterator();
         while (iter.next()) |ac| {
-            if (ac == .Rest) return since else since += 1;
+            if (ac != .Move) return turns else turns += 1;
         }
-
-        return since;
+        return turns;
     }
 }; // }}}
 
