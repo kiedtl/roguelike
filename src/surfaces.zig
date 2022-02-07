@@ -39,6 +39,7 @@ pub const MACHINES = [_]Machine{
     StairUp,
     NormalDoor,
     LabDoor,
+    VaultDoor,
     LockedDoor,
     ParalysisGasTrap,
     PoisonGasTrap,
@@ -376,8 +377,8 @@ pub const NormalDoor = Machine{
     .unpowered_tile = '■',
     .power_drain = 49,
     .powered_walkable = true,
-    .unpowered_walkable = false,
-    .powered_opacity = 0.0,
+    .unpowered_walkable = true,
+    .powered_opacity = 0.2,
     .unpowered_opacity = 1.0,
     .on_power = powerNone,
 };
@@ -385,12 +386,27 @@ pub const NormalDoor = Machine{
 pub const LabDoor = Machine{
     .name = "door",
     .powered_tile = '+',
-    .unpowered_tile = '+',
+    .unpowered_tile = 'x',
+    .powered_fg = 0xffdf10,
     .unpowered_fg = 0xffbfff,
     .power_drain = 50,
-    .powered_walkable = true,
+    .power = 100,
+    .powered_walkable = false,
     .unpowered_walkable = true,
-    .powered_opacity = 0.2,
+    .powered_opacity = 1.0,
+    .unpowered_opacity = 0.0,
+    .on_power = powerLabDoor,
+};
+
+pub const VaultDoor = Machine{
+    .name = "door",
+    .powered_tile = '░',
+    .unpowered_tile = '█',
+    .unpowered_fg = 0xffbfff,
+    .power_drain = 49,
+    .powered_walkable = true,
+    .unpowered_walkable = false,
+    .powered_opacity = 0.0,
     .unpowered_opacity = 1.0,
     .on_power = powerNone,
 };
@@ -751,6 +767,26 @@ fn powerStairUp(machine: *Machine) void {
     const dst = Coord.new2(machine.coord.z - 1, machine.coord.x, machine.coord.y);
     if (culprit.teleportTo(dst, null))
         state.message(.Move, "You ascend.", .{});
+}
+
+fn powerLabDoor(machine: *Machine) void {
+    var has_mob = if (state.dungeon.at(machine.coord).mob != null) true else false;
+    for (&DIRECTIONS) |d| {
+        if (has_mob) break;
+        if (machine.coord.move(d, state.mapgeometry)) |neighbor| {
+            if (state.dungeon.at(neighbor).mob != null) has_mob = true;
+        }
+    }
+
+    if (has_mob) {
+        machine.powered_tile = '\'';
+        machine.powered_walkable = true;
+        machine.powered_opacity = 0.0;
+    } else {
+        machine.powered_tile = '+';
+        machine.powered_walkable = false;
+        machine.powered_opacity = 1.0;
+    }
 }
 
 fn powerRestrictedMachinesOpenLever(machine: *Machine) void {
