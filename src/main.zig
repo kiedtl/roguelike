@@ -274,7 +274,7 @@ pub fn grabItem() bool {
             state.player.inventory.pack.append(item) catch unreachable;
             state.player.declareAction(.Grab);
             state.message(.Info, "Acquired: {}", .{
-                (state.player.inventory.pack.last().?.shortName() catch unreachable).constSlice(),
+                (state.player.inventory.pack.last().?.longName() catch unreachable).constSlice(),
             });
         },
     }

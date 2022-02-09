@@ -670,17 +670,17 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
     try w.print("\n", .{});
     try w.print("-) {: <40} &) {}\n", .{
         if (player.inventory.wielded) |i|
-            ((Item{ .Weapon = i }).shortName() catch unreachable).constSlice()
+            ((Item{ .Weapon = i }).longName() catch unreachable).constSlice()
         else
             "<none>",
         if (player.inventory.armor) |a|
-            ((Item{ .Armor = a }).shortName() catch unreachable).constSlice()
+            ((Item{ .Armor = a }).longName() catch unreachable).constSlice()
         else
             "<none>",
     });
     try w.print("2) {}\n", .{
         if (player.inventory.backup) |b|
-            ((Item{ .Weapon = b }).shortName() catch unreachable).constSlice()
+            ((Item{ .Weapon = b }).longName() catch unreachable).constSlice()
         else
             "<none>",
     });
@@ -688,28 +688,28 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
     try w.print("Rings:\n", .{});
     try w.print("1) {: <40} 2) {}\n", .{
         if (player.inventory.rings[0]) |b|
-            ((Item{ .Ring = b }).shortName() catch unreachable).constSlice()
+            ((Item{ .Ring = b }).longName() catch unreachable).constSlice()
         else
             "<none>",
         if (player.inventory.rings[1]) |b|
-            ((Item{ .Ring = b }).shortName() catch unreachable).constSlice()
+            ((Item{ .Ring = b }).longName() catch unreachable).constSlice()
         else
             "<none>",
     });
     try w.print("3) {: <40} 4) {}\n", .{
         if (player.inventory.rings[2]) |b|
-            ((Item{ .Ring = b }).shortName() catch unreachable).constSlice()
+            ((Item{ .Ring = b }).longName() catch unreachable).constSlice()
         else
             "<none>",
         if (player.inventory.rings[3]) |b|
-            ((Item{ .Ring = b }).shortName() catch unreachable).constSlice()
+            ((Item{ .Ring = b }).longName() catch unreachable).constSlice()
         else
             "<none>",
     });
     try w.print("\n", .{});
     try w.print("Inventory:\n", .{});
     for (player.inventory.pack.constSlice()) |item| {
-        const itemname = (item.shortName() catch unreachable).constSlice();
+        const itemname = (item.longName() catch unreachable).constSlice();
         try w.print("- {}\n", .{itemname});
     }
     try w.print("\n", .{});

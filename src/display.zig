@@ -671,7 +671,7 @@ pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
 
     var longest_width: isize = 0;
     for (items) |item| {
-        const name = item.shortName() catch unreachable;
+        const name = item.longName() catch unreachable;
         if (name.len > longest_width)
             longest_width = @intCast(isize, name.len);
     }
@@ -693,7 +693,7 @@ pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
     while (true) {
         y = starty;
         for (items) |item, i| {
-            const name = (item.shortName() catch unreachable).constSlice();
+            const name = (item.longName() catch unreachable).constSlice();
 
             const dist_from_chosen = @intCast(u32, math.absInt(
                 @intCast(isize, i) - @intCast(isize, chosen),

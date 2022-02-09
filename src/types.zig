@@ -2328,7 +2328,27 @@ pub const Item = union(ItemType) {
     Prop: *const Prop,
     Evocable: *Evocable,
 
-    pub fn shortName(self: *const Item) !StackBuffer(u8, 128) {
+    // FIXME: can't we just return the constSlice() of the stack buffer?
+    pub fn shortName(self: *const Item) !StackBuffer(u8, 64) {
+        var buf = StackBuffer(u8, 64).init(&([_]u8{0} ** 64));
+        var fbs = std.io.fixedBufferStream(buf.slice());
+        switch (self.*) {
+            .Corpse => |c| try fmt.format(fbs.writer(), "%{}", .{c.species}),
+            .Ring => |r| try fmt.format(fbs.writer(), "*{}", .{r.name}),
+            .Potion => |p| try fmt.format(fbs.writer(), "¡{}", .{p.name}),
+            .Vial => |v| try fmt.format(fbs.writer(), "♪{}", .{v.name()}),
+            .Armor => |a| try fmt.format(fbs.writer(), "]{}", .{a.name}),
+            .Weapon => |w| try fmt.format(fbs.writer(), "){}", .{w.name}),
+            .Boulder => |b| try fmt.format(fbs.writer(), "•{} of {}", .{ b.chunkName(), b.name }),
+            .Prop => |b| try fmt.format(fbs.writer(), "{}", .{b.name}),
+            .Evocable => |v| try fmt.format(fbs.writer(), "}}{}", .{v.name}),
+        }
+        buf.resizeTo(@intCast(usize, fbs.getPos() catch unreachable));
+        return buf;
+    }
+
+    // FIXME: can't we just return the constSlice() of the stack buffer?
+    pub fn longName(self: *const Item) !StackBuffer(u8, 128) {
         var buf = StackBuffer(u8, 128).init(&([_]u8{0} ** 128));
         var fbs = std.io.fixedBufferStream(buf.slice());
         switch (self.*) {
