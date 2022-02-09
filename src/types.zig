@@ -601,8 +601,8 @@ pub const Material = struct {
 
     pub fn chunkTile(self: *const Material) u21 {
         return switch (self.type) {
-            .Metal => '-',
-            .I_Stone, .S_Stone, .M_Stone => '©',
+            .Metal => '⁍',
+            .I_Stone, .S_Stone, .M_Stone => '•',
             .Gem => '¤',
         };
     }
@@ -2461,13 +2461,13 @@ pub const Tile = struct {
                     cell.fg = v.color();
                 },
                 .Ring => |_| {
-                    cell.ch = '°';
+                    cell.ch = '*';
                 },
                 .Weapon => |_| {
-                    cell.ch = '≥'; // TODO: use U+1F5E1?
+                    cell.ch = ')';
                 },
                 .Armor => |_| {
-                    cell.ch = '&'; // TODO: use U+1F6E1?
+                    cell.ch = '[';
                 },
                 .Boulder => |b| {
                     cell.ch = b.chunkTile();
