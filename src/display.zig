@@ -549,7 +549,20 @@ pub fn draw() void {
     // Create a list of all mobs on the map so that we can calculate what tiles
     // are in the FOV of any mob. Use only mobs that the player can see, the player
     // shouldn't know what's in the FOV of an invisible mob!
+    //
+    // Then, sort list to put nonhostiles last, and closer mobs first.
     const moblist = state.createMobList(false, true, state.player.coord.z, &fba.allocator);
+    {
+        const S = struct {
+            pub fn _sortFunc(_: void, a: *Mob, b: *Mob) bool {
+                const p = state.player;
+                if (p.isHostileTo(a) and !p.isHostileTo(b)) return true;
+                if (!p.isHostileTo(a) and p.isHostileTo(b)) return false;
+                return p.coord.distance(a.coord) < p.coord.distance(b.coord);
+            }
+        };
+        std.sort.insertionSort(*Mob, moblist.items, {}, S._sortFunc);
+    }
 
     const playerinfo_window = dimensions(.PlayerInfo);
     const main_window = dimensions(.Main);
