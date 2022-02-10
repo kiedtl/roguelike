@@ -1000,12 +1000,14 @@ fn _place_rooms(
         f.used[level] += 1;
 
     if (child.prefab == null) {
-        const area = Rect{
-            .start = Coord.new(0, 0),
-            .width = child.rect.width,
-            .height = child.rect.height,
-        };
-        placeSubroom(s_fabs, &child, &area, allocator);
+        if (rng.onein(3)) {
+            const area = Rect{
+                .start = Coord.new(0, 0),
+                .width = child.rect.width,
+                .height = child.rect.height,
+            };
+            placeSubroom(s_fabs, &child, &area, allocator);
+        }
     } else if (child.prefab.?.subroom_areas.len > 0) {
         for (child.prefab.?.subroom_areas.constSlice()) |subroom_area| {
             placeSubroom(s_fabs, &child, &subroom_area, allocator);
@@ -1400,8 +1402,18 @@ pub fn placeItems(level: usize) void {
 
     // Now drop items that the player could use.
     room_iter: for (state.rooms[level].items) |room| {
-        if (room.type == .Corridor or room.has_subroom or room.prefab != null or rng.tenin(25)) {
-            continue; // Skip some rooms
+        // Don't place items if:
+        // - Room is a corridor. Loot in corridors is dumb (looking at you, DCSS).
+        // - Room has a subroom (might be too crowded!).
+        // - Room is a prefab and the prefab forbids items.
+        // - Random chance.
+        //
+        if (room.type == .Corridor or
+            room.has_subroom or
+            (room.prefab != null and room.prefab.?.noitems) or
+            rng.tenin(15))
+        {
+            continue;
         }
 
         const max_items = rng.range(usize, 1, 3);
@@ -1607,8 +1619,8 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
 
         placeLights(&room);
 
-        if (room.prefab != null) continue;
-        if (!rng.onein(4)) continue;
+        if (room.prefab != null or room.has_subroom) continue;
+        if (rng.tenin(25)) continue;
 
         const Range = struct { from: Coord, to: Coord };
         const rect_end = rect.end();
@@ -2700,7 +2712,7 @@ pub const Configs = [LEVELS]LevelConfig{
         }),
 
         .allow_statues = false,
-        .door = &surfaces.LabDoor,
+        .door = &surfaces.VaultDoor,
 
         .props = &surfaces.vault_props.items,
         //.containers = &[_]Container{surfaces.Chest},
