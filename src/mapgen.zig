@@ -70,6 +70,18 @@ const VALID_DOOR_PLACEMENT_PATTERNS = [_][]const u8{
     "?#?...?#?",
 };
 
+const VALID_LIGHT_PLACEMENT_PATTERNS = [_][]const u8{
+    // ???
+    // ###
+    // ???
+    "???###???",
+
+    // ?#?
+    // ?#?
+    // ?#?
+    "?#??#??#?",
+};
+
 const VALID_FEATURE_TILE_PATTERNS = [_][]const u8{
     // ###
     // ?.?
@@ -1578,7 +1590,7 @@ fn placeLights(room: *const Room) void {
 
         if (state.dungeon.at(coord).type != .Wall or
             state.dungeon.at(coord).surface != null or
-            state.dungeon.neighboringWalls(coord, true) != 6 or
+            utils.findPatternMatch(coord, &VALID_LIGHT_PLACEMENT_PATTERNS) == null or
             state.dungeon.neighboringMachines(coord) > 0)
             continue; // invalid coord
 
