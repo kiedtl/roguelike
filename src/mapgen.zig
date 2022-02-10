@@ -765,7 +765,7 @@ pub fn placeMoarCorridors(level: usize, alloc: *mem.Allocator) void {
                 if (corridor.parent_connector) |acon| state.dungeon.at(acon).type = .Floor;
                 if (corridor.child_connector) |acon| state.dungeon.at(acon).type = .Floor;
 
-                if (Configs[level].allow_doors and rng.onein(3)) {
+                if (rng.tenin(Configs[level].door_chance)) {
                     if (utils.findPatternMatch(corridor.room.rect.start, &VALID_DOOR_PLACEMENT_PATTERNS) != null)
                         placeDoor(corridor.room.rect.start, false);
                 }
@@ -987,7 +987,7 @@ fn _place_rooms(
         if (cor.parent_connector) |acon| state.dungeon.at(acon).type = .Floor;
         if (cor.child_connector) |acon| state.dungeon.at(acon).type = .Floor;
 
-        if (Configs[level].allow_doors and rng.onein(3)) {
+        if (rng.tenin(Configs[level].door_chance)) {
             if (utils.findPatternMatch(
                 cor.room.rect.start,
                 &VALID_DOOR_PLACEMENT_PATTERNS,
@@ -1351,7 +1351,7 @@ pub fn placeBSPRooms(
                     excavateRect(&corridor.room.rect);
                     roomlist.append(corridor.room) catch unreachable;
 
-                    if (Configs[maplevel].allow_doors and rng.onein(3)) {
+                    if (rng.tenin(Configs[maplevel].door_chance)) {
                         if (utils.findPatternMatch(
                             corridor.room.rect.start,
                             &VALID_DOOR_PLACEMENT_PATTERNS,
@@ -2644,7 +2644,7 @@ pub const LevelConfig = struct {
     },
     utility_items: *[]const Prop = &surfaces.prison_item_props.items,
     allow_statues: bool = true,
-    allow_doors: bool = true,
+    door_chance: usize = 30,
     allow_corridors: bool = true,
 
     blobs: []const BlobConfig = &[_]BlobConfig{},
@@ -2712,6 +2712,7 @@ pub const Configs = [LEVELS]LevelConfig{
         }),
 
         .allow_statues = false,
+        .door_chance = 10,
         .door = &surfaces.VaultDoor,
 
         .props = &surfaces.vault_props.items,
@@ -2780,6 +2781,7 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ .chance = 56, .template = &mobs.GuardTemplate },
         }),
 
+        .door_chance = 10,
         .material = &materials.Dobalene,
         .light = &surfaces.Lamp,
         .vent = "lab_gas_vent",
@@ -2866,7 +2868,7 @@ pub const Configs = [LEVELS]LevelConfig{
         .tiletype = .Floor,
 
         .allow_statues = false,
-        .allow_doors = false,
+        .door_chance = 0,
         .allow_corridors = false,
 
         .blobs = &[_]LevelConfig.BlobConfig{
