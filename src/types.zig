@@ -1751,8 +1751,9 @@ pub const Mob = struct { // {{{
     }
 
     // Check if a mob is capable of dodging an attack. Return false if:
-    //  - Mob was in .Work AI phase, and not in Investigate/Attack phase
-    //  - Mob was incapitated by a status effect (e.g. Paralysis)
+    //  - Mob was in .Work AI phase
+    //  - Is in Investigate/Hunt phase and:
+    //    - is incapitated by a status effect (e.g. Paralysis)
     //
     // Player is always aware of attacks. Stabs are there in the first place
     // to "reward" the player for catching a hostile off guard, but allowing
@@ -1762,17 +1763,19 @@ pub const Mob = struct { // {{{
         if (self.coord.eq(state.player.coord))
             return true;
 
-        switch (self.ai.phase) {
-            .Flee, .Hunt, .Investigate => {},
-            else => return false,
-        }
+        return switch (self.ai.phase) {
+            .Flee, .Hunt, .Investigate => b: {
+                if (self.isUnderStatus(.Paralysis)) |_| break :b false;
+                if (self.isUnderStatus(.Confusion)) |_| break :b false;
 
-        if (self.isUnderStatus(.Paralysis)) |_| return false;
-        if (self.isUnderStatus(.Confusion)) |_| return false;
-
-        if (self.cansee(attacker)) return true;
-
-        return false;
+                if (self.ai.phase == .Flee and !self.cansee(attacker)) {
+                    break :b false;
+                } else {
+                    break :b true;
+                }
+            },
+            .Work => false,
+        };
     }
 
     pub fn canHear(self: *const Mob, coord: Coord) ?*Sound {
