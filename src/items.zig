@@ -27,12 +27,13 @@ pub const POTIONS = [_]Potion{
 
 // Items to be dropped into rooms for the player's use.
 //
-pub const ITEM_DROPS = [_]struct {
+pub const ItemTemplate = struct {
     w: usize,
     i: union(enum) {
         W: Weapon, A: Armor, P: Potion, E: Evocable
     },
-}{
+};
+pub const ITEM_DROPS = [_]ItemTemplate{
     // Weapons
     .{ .w = 50, .i = .{ .W = MaceWeapon } },
     .{ .w = 50, .i = .{ .W = ClubWeapon } },

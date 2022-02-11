@@ -17,6 +17,7 @@ const utils = @import("utils.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
+const ItemTemplate = items.ItemTemplate;
 const Evocable = items.Evocable;
 const EvocableList = items.EvocableList;
 const Poster = literature.Poster;
@@ -221,6 +222,31 @@ fn _createItem(comptime T: type, item: T) *T {
     return list.appendAndReturn(item) catch @panic("OOM");
 }
 
+fn _createItemFromTemplate(template: ItemTemplate) Item {
+    return switch (template.i) {
+        .W => |i| Item{ .Weapon = _createItem(Weapon, i) },
+        .A => |i| Item{ .Armor = _createItem(Armor, i) },
+        .P => |i| Item{ .Potion = _createItem(Potion, i) },
+        .E => |i| Item{ .Evocable = _createItem(Evocable, i) },
+        //else => @panic("TODO"),
+    };
+}
+
+fn _chooseLootItem(item_weights: []usize, value_range: MinMax(usize)) ItemTemplate {
+    while (true) {
+        const item_info = rng.choose(
+            @TypeOf(items.ITEM_DROPS[0]),
+            &items.ITEM_DROPS,
+            item_weights,
+        ) catch unreachable;
+
+        if (!value_range.contains(item_info.w))
+            continue;
+
+        return item_info;
+    }
+}
+
 fn placeProp(coord: Coord, prop_template: *const Prop) *Prop {
     var prop = prop_template.*;
     prop.coord = coord;
@@ -265,14 +291,19 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
 }
 
 fn prefabIsValid(level: usize, prefab: *Prefab) bool {
-    if (prefab.invisible)
+    if (prefab.invisible) {
         return false; // Can't be used unless specifically called for by name.
+    }
 
-    if (!mem.eql(u8, prefab.name.constSlice()[0..3], state.levelinfo[level].id))
+    if (!mem.eql(u8, prefab.name.constSlice()[0..3], state.levelinfo[level].id) and
+        !mem.eql(u8, prefab.name.constSlice()[0..3], "ANY"))
+    {
         return false; // Prefab isn't for this level.
+    }
 
-    if (prefab.used[level] >= prefab.restriction)
+    if (prefab.used[level] >= prefab.restriction) {
         return false; // Prefab was used too many times.
+    }
 
     return true;
 }
@@ -390,6 +421,21 @@ fn excavatePrefab(
     startx: usize,
     starty: usize,
 ) void {
+    // Generate loot items.
+    //
+    var loot_item1: ItemTemplate = undefined;
+    var loot_item2: ItemTemplate = undefined;
+    var rare_loot_item: ItemTemplate = undefined;
+    {
+        // FIXME: generate this once at comptime.
+        var item_weights: [items.ITEM_DROPS.len]usize = undefined;
+        for (items.ITEM_DROPS) |item, i| item_weights[i] = item.w;
+
+        loot_item1 = _chooseLootItem(&item_weights, minmax(usize, 30, 100));
+        loot_item2 = _chooseLootItem(&item_weights, minmax(usize, 30, 100));
+        rare_loot_item = _chooseLootItem(&item_weights, minmax(usize, 0, 40));
+    }
+
     var y: usize = 0;
     while (y < fab.height) : (y += 1) {
         var x: usize = 0;
@@ -412,6 +458,9 @@ fn excavatePrefab(
                 .Bars,
                 .Brazier,
                 .Floor,
+                .Loot1,
+                .Loot2,
+                .RareLoot,
                 => .Floor,
                 .Water => .Water,
                 .Lava => .Lava,
@@ -479,6 +528,9 @@ fn excavatePrefab(
                     const p_ind = utils.findById(surfaces.props.items, Configs[room.rect.start.z].bars);
                     _ = placeProp(rc, &surfaces.props.items[p_ind.?]);
                 },
+                .Loot1 => state.dungeon.itemsAt(rc).append(_createItemFromTemplate(loot_item1)) catch unreachable,
+                .Loot2 => state.dungeon.itemsAt(rc).append(_createItemFromTemplate(loot_item2)) catch unreachable,
+                .RareLoot => state.dungeon.itemsAt(rc).append(_createItemFromTemplate(rare_loot_item)) catch unreachable,
                 else => {},
             }
         }
@@ -1451,13 +1503,8 @@ pub fn placeItems(level: usize) void {
                 tries -= 1;
             }
 
-            const item_info = rng.choose(@TypeOf(items.ITEM_DROPS[0]), &items.ITEM_DROPS, &item_weights) catch unreachable;
-            const item = switch (item_info.i) {
-                .W => |i| Item{ .Weapon = _createItem(Weapon, i) },
-                .A => |i| Item{ .Armor = _createItem(Armor, i) },
-                .P => |i| Item{ .Potion = _createItem(Potion, i) },
-                .E => |i| Item{ .Evocable = _createItem(Evocable, i) },
-            };
+            const t = _chooseLootItem(&item_weights, minmax(usize, 0, 100));
+            const item = _createItemFromTemplate(t);
             state.dungeon.itemsAt(item_coord).append(item) catch unreachable;
         }
     }
@@ -2185,6 +2232,9 @@ pub const Prefab = struct {
         Bars,
         Feature: u8,
         LevelFeature: usize,
+        Loot1,
+        Loot2,
+        RareLoot,
         Any,
     };
 
@@ -2531,6 +2581,9 @@ pub const Prefab = struct {
                             '?' => .Any,
                             'α'...'δ' => FabTile{ .LevelFeature = @as(usize, c - 'α') },
                             '0'...'9', 'a'...'z' => FabTile{ .Feature = @intCast(u8, c) },
+                            'L' => .Loot1,
+                            'X' => .Loot2,
+                            'R' => .RareLoot,
                             else => return error.InvalidFabTile,
                         };
                     }
@@ -2549,7 +2602,7 @@ pub const Prefab = struct {
         return null;
     }
 
-    pub fn greaterThan(_: void, a: Prefab, b: Prefab) bool {
+    pub fn lesserThan(_: void, a: Prefab, b: Prefab) bool {
         return (a.priority > b.priority) or (a.height * a.width) > (b.height * b.width);
     }
 };
@@ -2604,7 +2657,7 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
         };
     }
 
-    std.sort.insertionSort(Prefab, s_fabs.items, {}, Prefab.greaterThan);
+    std.sort.insertionSort(Prefab, s_fabs.items, {}, Prefab.lesserThan);
 }
 
 pub const LevelConfig = struct {

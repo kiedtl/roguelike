@@ -71,6 +71,9 @@ pub fn MinMax(comptime T: type) type {
         }
     };
 }
+pub fn minmax(comptime T: type, min: T, max: T) MinMax(T) {
+    return MinMax(T){ .min = min, .max = max };
+}
 
 pub const Direction = enum { // {{{
     North,
