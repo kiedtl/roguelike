@@ -919,10 +919,21 @@ fn createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?C
     };
 }
 
-fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, alloc: *mem.Allocator) void {
+const SubroomPlacementOptions = struct {
+    loot: bool = true
+};
+
+fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, alloc: *mem.Allocator, opts: SubroomPlacementOptions) void {
     for (s_fabs.items) |*subroom| {
-        if (!prefabIsValid(parent.rect.start.z, subroom))
+        if (!prefabIsValid(parent.rect.start.z, subroom)) {
             continue;
+        }
+
+        // Don't allow loot subrooms unless opts.loot==true, and in that case
+        // only take loot subrooms.
+        if (opts.loot != subroom.is_loot) {
+            continue;
+        }
 
         if ((subroom.height + 2) < area.height and (subroom.width + 2) < area.width) {
             const rx = (area.width / 2) - (subroom.width / 2);
@@ -1064,17 +1075,20 @@ fn _place_rooms(
         f.used[level] += 1;
 
     if (child.prefab == null) {
-        if (rng.onein(3)) {
-            const area = Rect{
+        if (rng.onein(2)) {
+            placeSubroom(s_fabs, &child, &Rect{
                 .start = Coord.new(0, 0),
                 .width = child.rect.width,
                 .height = child.rect.height,
-            };
-            placeSubroom(s_fabs, &child, &area, allocator);
+            }, allocator, .{
+                .loot = rng.onein(3),
+            });
         }
     } else if (child.prefab.?.subroom_areas.len > 0) {
         for (child.prefab.?.subroom_areas.constSlice()) |subroom_area| {
-            placeSubroom(s_fabs, &child, &subroom_area, allocator);
+            placeSubroom(s_fabs, &child, &subroom_area, allocator, .{
+                .loot = rng.onein(5),
+            });
         }
     }
 
@@ -1331,12 +1345,11 @@ pub fn placeBSPRooms(
 
         excavateRect(&room.rect);
 
-        const area = Rect{
+        placeSubroom(s_fabs, &room, &Rect{
             .start = Coord.new(0, 0),
             .width = room.rect.width,
             .height = room.rect.height,
-        };
-        placeSubroom(s_fabs, &room, &area, allocator);
+        }, allocator, .{});
 
         container_node.index = rooms.items.len;
         rooms.append(room) catch unreachable;
@@ -2195,6 +2208,7 @@ pub const Prefab = struct {
     invisible: bool = false,
     restriction: usize = 1,
     priority: usize = 0,
+    is_loot: bool = false, // Is this a loot prefab?
     noitems: bool = false,
     noguards: bool = false,
     nolights: bool = false,
@@ -2378,6 +2392,9 @@ pub const Prefab = struct {
                     } else if (mem.eql(u8, key, "notraps")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.notraps = true;
+                    } else if (mem.eql(u8, key, "is_loot")) {
+                        if (val.len != 0) return error.UnexpectedMetadataValue;
+                        f.is_loot = true;
                     } else if (mem.eql(u8, key, "spawn")) {
                         const spawn_at_str = words.next() orelse return error.ExpectedMetadataValue;
                         const maybe_work_at_str: ?[]const u8 = words.next() orelse null;
