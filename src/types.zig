@@ -2390,6 +2390,7 @@ pub const Tile = struct {
     mob: ?*Mob = null,
     surface: ?SurfaceItem = null,
     spatter: SpatterArray = SpatterArray.initFill(0),
+    rand: usize = 0,
 
     pub fn displayAs(coord: Coord, ignore_lights: bool) termbox.tb_cell {
         var self = state.dungeon.at(coord);
@@ -2413,8 +2414,24 @@ pub const Tile = struct {
                 .fg = self.material.color_fg,
                 .bg = self.material.color_bg orelse color,
             },
-            .BrokenFloor, .BrokenWall, .Floor => {
+            .Floor => {
                 cell.ch = ' ';
+                cell.bg = color;
+            },
+            .BrokenFloor => {
+                const chars = [_]u32{ '`', '=', '*', '+', ';', ':', '"' };
+
+                cell.bg = color;
+                if (self.rand % 100 < 30) {
+                    cell.ch = chars[self.rand % chars.len];
+                    cell.fg = utils.percentageOfColor(color, 60);
+                } else {
+                    cell.ch = ' ';
+                }
+            },
+            .BrokenWall => {
+                cell.ch = ';';
+                cell.fg = utils.percentageOfColor(color, 60);
                 cell.bg = color;
             },
         }

@@ -42,6 +42,8 @@ fn initGame() bool {
         return false;
     }
 
+    rng.init(&state.GPA.allocator) catch |_| return false;
+
     state.chardata.init(&state.GPA.allocator);
     state.memory = CoordCellMap.init(&state.GPA.allocator);
 
@@ -60,14 +62,16 @@ fn initGame() bool {
     surfaces.readProps(&state.GPA.allocator);
     literature.readPosters(&state.GPA.allocator);
 
-    for (state.dungeon.map) |_, level| {
+    for (state.dungeon.map) |*map, level| {
         state.stockpiles[level] = StockpileArrayList.init(&state.GPA.allocator);
         state.inputs[level] = StockpileArrayList.init(&state.GPA.allocator);
         state.outputs[level] = Rect.ArrayList.init(&state.GPA.allocator);
         state.rooms[level] = mapgen.Room.ArrayList.init(&state.GPA.allocator);
-    }
 
-    rng.init(&state.GPA.allocator) catch |_| return false;
+        for (map) |*row| for (row) |*tile| {
+            tile.rand = rng.int(usize);
+        };
+    }
 
     var s_fabs: mapgen.PrefabArrayList = undefined;
     var n_fabs: mapgen.PrefabArrayList = undefined;

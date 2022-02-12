@@ -103,10 +103,10 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
             };
             state.dungeon.at(coord).type = newtype;
 
-            if (newtype == .BrokenWall and rng.onein(20)) {
-                const boulder = Item{ .Boulder = state.dungeon.at(coord).material };
-                state.dungeon.itemsAt(coord).append(boulder) catch |_| {};
-            }
+            // if (newtype == .BrokenWall and rng.onein(20)) {
+            //     const boulder = Item{ .Boulder = state.dungeon.at(coord).material };
+            //     state.dungeon.itemsAt(coord).append(boulder) catch |_| {};
+            // }
 
             if (state.dungeon.at(coord).surface) |surf| switch (surf) {
                 .Machine => |m| m.disabled = true,
