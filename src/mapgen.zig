@@ -1671,21 +1671,6 @@ fn placeLights(room: *const Room) void {
 
         var brazier = Configs[room.rect.start.z].light.*;
 
-        // Dim light by random amount, depending on how many lights there are in
-        // room.
-        //
-        // Rooms with lots of lights can have their lights dimmed quite a bit.
-        // Rooms with only one light shouldn't have their lights dimmed by a lot.
-        const max_dim: usize = switch (lights_needed) {
-            0 => unreachable,
-            1 => 5,
-            2 => 10,
-            3 => 20,
-            4 => 30,
-            else => unreachable,
-        };
-        brazier.powered_luminescence -= rng.rangeClumping(usize, 0, max_dim, 2);
-
         _place_machine(coord, &brazier);
         state.dungeon.at(coord).type = .Floor;
         lights += 1;
