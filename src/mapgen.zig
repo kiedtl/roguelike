@@ -724,7 +724,12 @@ pub fn setLevelMaterial(level: usize) void {
     }
 }
 
-pub fn validateLevel(level: usize, alloc: *mem.Allocator) bool {
+pub fn validateLevel(
+    level: usize,
+    alloc: *mem.Allocator,
+    n_fabs: *PrefabArrayList,
+    s_fabs: *PrefabArrayList,
+) bool {
     // utility functions
     const _f = struct {
         pub fn _getWalkablePoint(room: *const Rect) Coord {
@@ -758,6 +763,16 @@ pub fn validateLevel(level: usize, alloc: *mem.Allocator) bool {
         if (r.type != .Corridor) break :b r;
     } else unreachable;
     const point = _f._getWalkablePoint(&base_room.rect);
+
+    // Ensure that all required prefabs were used.
+    for (Configs[level].prefabs.constSlice()) |required_fab| {
+        const fab = Prefab.findPrefabByName(required_fab, n_fabs) orelse
+            Prefab.findPrefabByName(required_fab, s_fabs).?;
+
+        if (fab.used[level] == 0) {
+            return false;
+        }
+    }
 
     for (rooms) |otherroom| {
         if (otherroom.type == .Corridor) continue;
@@ -920,7 +935,7 @@ fn createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?C
 }
 
 const SubroomPlacementOptions = struct {
-    loot: bool = true
+    loot: bool = false
 };
 
 fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, alloc: *mem.Allocator, opts: SubroomPlacementOptions) void {
@@ -1349,7 +1364,7 @@ pub fn placeBSPRooms(
             .start = Coord.new(0, 0),
             .width = room.rect.width,
             .height = room.rect.height,
-        }, allocator, .{});
+        }, allocator, .{ .loot = rng.onein(3) });
 
         container_node.index = rooms.items.len;
         rooms.append(room) catch unreachable;
@@ -2777,8 +2792,10 @@ pub const Configs = [LEVELS]LevelConfig{
         },
     },
     .{
-        .prefabs = LevelConfig.RPBuf.init(null),
-        .prefab_chance = 100, // No prefabs for REG
+        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
+            "VLT_power",
+        }),
+        .prefab_chance = 1000, // No prefabs for VLT
         .mapgen_func = placeBSPRooms,
         .mapgen_iters = 2048,
         .min_room_width = 8,

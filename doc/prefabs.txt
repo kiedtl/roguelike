@@ -17,6 +17,9 @@
 %    α   depends on level
 %    β   depends on level
 %    γ   depends on level
+%    L   first loot item
+%    X   second loot item
+%    R   rare loot item
 %
 % Example:
 

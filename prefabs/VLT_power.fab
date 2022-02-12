@@ -1,15 +1,17 @@
 % Power supply.
 %
-%  ╓─█─╓─┐
-% ┌Ä─┳─Ä┐⊡
-% ┋##¦##┋│
-% ┋##¦##┋⌨
-% └·─┻─·┘
+%  ╓╥─╓─┐
+% ┌ÄÄ┳Ä┐≡
+% ┋##¦#┋⊡
+% └·─┻·┘
+
+:subroom
+:priority 99
 
 @a m fuel_power_supply
 @b p fuel_burner
-@c p outlet
-@d p control_panel
+@c p compact_turbine
+% @d p control_panel
 @e p switching_station
 
 @0 p pipe_s2e1
@@ -25,15 +27,11 @@
 
 @f p wall_n1e1w1
 @g p steel_pin
+@h p pipe_s2e1w1
 
-:subroom
-:restriction 1
-:priority 99
-
-..........
-..01a1012.
-.3c141c2e.
-.5bb6bb57.
-.5bb6bb5d.
-.8g1f1g9..
-..........
+.........
+..0ha012.
+.3cc4c20.
+.5bb6b5e.
+.8g1fg9..
+.........

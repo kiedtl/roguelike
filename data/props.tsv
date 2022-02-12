@@ -74,7 +74,7 @@
 "steel_gas_reservoir"  	 "steel gas reservoir"  	 '■' 	 0xd7d7ff 	 -        	 nay
 "steel_pin"            	 "steel pin"            	 '·' 	 0xa6c2d4 	 -        	 -
 
-"outlet"               	 "outlet"               	 'Ä' 	 0xffe4e1 	 -        	 nay 	 - 	 .Laboratory
+"compact_turbine"      	 "compact turbine"      	 'Ä' 	 0xffe4e1 	 -        	 nay 	 - 	 .Laboratory
 "centrifuge"           	 "centrifuge"           	 '⊜' 	 0xffe4e1 	 -        	 nay 	 - 	 .Laboratory
 "xray_appar"           	 "x-ray machine"        	 '‡' 	 0xa8ffa8 	 -        	 nay 	 - 	 .Laboratory
 "water_purifi_appar"   	 "water purifier"       	 '⊝' 	 0xe0ffff 	 -        	 nay 	 - 	 .Laboratory
@@ -87,24 +87,24 @@
 "calorimeter"          	 "calorimeter"          	 '⊝' 	 0xf5f5dc 	 -        	 nay 	 - 	 .Laboratory
 "vacuum_chmbr"         	 "vacuum chamber"       	 '⊜' 	 0xffefdf 	 -        	 nay 	 - 	 .Laboratory
 
-"wall_n1s1_slt"        	 "vangenite wall"       	 '┋' 	 0xb6efe0 	 -        	 nay
-"wall_n1s1_slt2"       	 "vangenite wall"       	 '¦' 	 0xb6efe0 	 -        	 nay
-"wall_n1s1e1w1"        	 "vangenite wall"       	 '╋' 	 0xb6efe0 	 -        	 nay
-"wall_s1w1_thins"      	 "vangenite wall"       	 '┑' 	 0xb6efe0 	 -        	 nay
-"wall_s1e1w1"          	 "vangenite wall"       	 '┳' 	 0xb6efe0 	 -        	 nay
-"wall_n1e1w1"          	 "vangenite wall"       	 '┻' 	 0xb6efe0 	 -        	 nay
-"wall_e1w1"            	 "vangenite wall"       	 '━' 	 0xb6efe0 	 -        	 nay
-"wall_s1w1"            	 "vangenite wall"       	 '┓' 	 0xb6efe0 	 -        	 nay
-"wall_n1s1w1"          	 "vangenite wall"       	 '┫' 	 0xb6efe0 	 -        	 nay
-"wall_n1s1"            	 "vangenite wall"       	 '┃' 	 0xb6efe0 	 -        	 nay
-"wall_n1s1e1"          	 "vangenite wall"       	 '┣' 	 0xb6efe0 	 -        	 nay
-"wall_n1w1"            	 "vangenite wall"       	 '┛' 	 0xb6efe0 	 -        	 nay
-"wall_n1e1"            	 "vangenite wall"       	 '┗' 	 0xb6efe0 	 -        	 nay
-"wall_s1e1"            	 "vangenite wall"       	 '┏' 	 0xb6efe0 	 -        	 nay
-"wall_e1w1_thine"      	 "vangenite wall"       	 '╾' 	 0xb6efe0 	 -        	 nay
-"wall_e1w1_thinw"      	 "vangenite wall"       	 '╼' 	 0xb6efe0 	 -        	 nay
-"wall_n1s1_thinn"      	 "vangenite wall"       	 '╽' 	 0xb6efe0 	 -        	 nay
-"wall_n1s1_thins"      	 "vangenite wall"       	 '╿' 	 0xb6efe0 	 -        	 nay
+"wall_n1s1_slt"        	 "vangenite wall"       	 '┋' 	 0xe0f8f2 	 -        	 nay
+"wall_n1s1_slt2"       	 "vangenite wall"       	 '¦' 	 0xe0f8f2 	 -        	 nay
+"wall_n1s1e1w1"        	 "vangenite wall"       	 '╋' 	 0xe0f8f2 	 -        	 nay
+"wall_s1w1_thins"      	 "vangenite wall"       	 '┑' 	 0xe0f8f2 	 -        	 nay
+"wall_s1e1w1"          	 "vangenite wall"       	 '┳' 	 0xe0f8f2 	 -        	 nay
+"wall_n1e1w1"          	 "vangenite wall"       	 '┻' 	 0xe0f8f2 	 -        	 nay
+"wall_e1w1"            	 "vangenite wall"       	 '━' 	 0xe0f8f2 	 -        	 nay
+"wall_s1w1"            	 "vangenite wall"       	 '┓' 	 0xe0f8f2 	 -        	 nay
+"wall_n1s1w1"          	 "vangenite wall"       	 '┫' 	 0xe0f8f2 	 -        	 nay
+"wall_n1s1"            	 "vangenite wall"       	 '┃' 	 0xe0f8f2 	 -        	 nay
+"wall_n1s1e1"          	 "vangenite wall"       	 '┣' 	 0xe0f8f2 	 -        	 nay
+"wall_n1w1"            	 "vangenite wall"       	 '┛' 	 0xe0f8f2 	 -        	 nay
+"wall_n1e1"            	 "vangenite wall"       	 '┗' 	 0xe0f8f2 	 -        	 nay
+"wall_s1e1"            	 "vangenite wall"       	 '┏' 	 0xe0f8f2 	 -        	 nay
+"wall_e1w1_thine"      	 "vangenite wall"       	 '╾' 	 0xe0f8f2 	 -        	 nay
+"wall_e1w1_thinw"      	 "vangenite wall"       	 '╼' 	 0xe0f8f2 	 -        	 nay
+"wall_n1s1_thinn"      	 "vangenite wall"       	 '╽' 	 0xe0f8f2 	 -        	 nay
+"wall_n1s1_thins"      	 "vangenite wall"       	 '╿' 	 0xe0f8f2 	 -        	 nay
 
 "pipe_s1e2w2"          	 "steel pipe"           	 '╤' 	 0xa6c2d4 	 -        	 nay
 "pipe_n1s1e2w2"        	 "steel pipe"           	 '╪' 	 0xa6c2d4 	 -        	 nay
