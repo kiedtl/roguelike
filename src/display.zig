@@ -268,6 +268,10 @@ fn drawEnemyInfo(
 
 fn drawPlayerInfo(startx: isize, starty: isize, endx: isize, endy: isize) void {
     const is_running = state.player.turnsSpentMoving() == state.player.activities.len;
+    const last_action_cost = if (state.player.activities.current()) |lastaction| b: {
+        const spd = @intToFloat(f64, state.player.speed());
+        break :b (spd * @intToFloat(f64, lastaction.cost())) / 100.0 / 10.0;
+    } else 0.0;
     const strength = state.player.strength();
     const dexterity = state.player.dexterity();
     const speed = state.player.speed();
@@ -276,35 +280,39 @@ fn drawPlayerInfo(startx: isize, starty: isize, endx: isize, endy: isize) void {
     while (y < endy) : (y += 1) _clear_line(startx, endx, y);
     y = starty;
 
-    y = _draw_string(startx, y, endx, 0xffffff, 0, false, "score: {:<5} depth: {}", .{ state.score, state.player.coord.z }) catch unreachable;
-    y = _draw_string(startx, y, endx, 0xffffff, 0, false, "turns: {}", .{state.ticks}) catch unreachable;
+    y = _draw_string(startx, y, endx, 0xffffff, 0, false, "score: {:<5} depth: {}", .{
+        state.score, state.player.coord.z,
+    }) catch unreachable;
+    y = _draw_string(startx, y, endx, 0xffffff, 0, false, "turns: {} ({e:.1})", .{
+        state.ticks, last_action_cost,
+    }) catch unreachable;
     y += 1;
 
     if (strength != state.player.base_strength) {
         const diff = @intCast(isize, strength) - @intCast(isize, state.player.base_strength);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "strength:  {} ({}{})", .{ strength, sign, adiff }) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "STR  {} ({}{})", .{ strength, sign, adiff }) catch unreachable;
     } else {
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "strength:  {}", .{strength}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "STR  {}", .{strength}) catch unreachable;
     }
 
     if (dexterity != state.player.base_dexterity) {
         const diff = @intCast(isize, dexterity) - @intCast(isize, state.player.base_dexterity);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "dexterity: {} ({}{})", .{ dexterity, sign, adiff }) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "DEX  {} ({}{})", .{ dexterity, sign, adiff }) catch unreachable;
     } else {
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "dexterity: {}", .{dexterity}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "DEX  {}", .{dexterity}) catch unreachable;
     }
 
     if (speed != state.player.base_speed) {
         const diff = @intCast(isize, speed) - @intCast(isize, state.player.base_speed);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "speed: {} ({}{})", .{ speed, sign, adiff }) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "SPD  {}% ({}{}%)", .{ speed, sign, adiff }) catch unreachable;
     } else {
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "speed: {}", .{speed}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "SPD  {}%", .{speed}) catch unreachable;
     }
 
     y += 1;
