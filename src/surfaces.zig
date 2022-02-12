@@ -195,8 +195,8 @@ pub const FuelPowerSupply = Machine{
     .id = "fuel_power_supply",
     .name = "fuel furnace",
 
-    .powered_tile = '█',
-    .unpowered_tile = '█',
+    .powered_tile = '≡',
+    .unpowered_tile = '≡',
 
     .power_drain = 0,
     .power_add = 100,
