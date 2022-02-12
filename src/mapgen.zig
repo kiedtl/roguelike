@@ -24,6 +24,9 @@ const Poster = literature.Poster;
 
 const CONNECTIONS_MAX = 5;
 
+// TODO: replace with MinMax
+const Range = struct { from: Coord, to: Coord };
+
 const LIMIT = Rect{
     .start = Coord.new(1, 1),
     .width = state.WIDTH - 1,
@@ -193,7 +196,6 @@ fn getConnectionSide(parent: *const Room, child: *const Room) ?Direction {
 }
 
 fn randomWallCoord(rect: *const Rect, i: ?usize) Coord {
-    const Range = struct { from: Coord, to: Coord };
     const rect_end = rect.end();
 
     const ranges = [_]Range{
@@ -1677,6 +1679,29 @@ fn placeLights(room: *const Room) void {
     }
 }
 
+// Place a single prop along a Coord range.
+fn _placePropAlongRange(level: usize, where: Range, prop: *const Prop, max: usize) usize {
+    // FIXME: we *really* should just be iterating through each coordinate
+    // in this Range, instead of randomly choosing a bunch over and over
+    //
+    var tries: usize = max;
+    var placed: usize = 0;
+    while (tries > 0) : (tries -= 1) {
+        const x = rng.range(usize, where.from.x, where.to.x);
+        const y = rng.range(usize, where.from.y, where.to.y);
+        const coord = Coord.new2(level, x, y);
+
+        if (!isTileAvailable(coord) or
+            utils.findPatternMatch(coord, &VALID_FEATURE_TILE_PATTERNS) == null)
+            continue;
+
+        _ = placeProp(coord, prop);
+        placed += 1;
+    }
+
+    return placed;
+}
+
 pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
     for (state.rooms[level].items) |room| {
         const rect = room.rect;
@@ -1694,7 +1719,6 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
         if (room.prefab != null or room.has_subroom) continue;
         if (rng.tenin(25)) continue;
 
-        const Range = struct { from: Coord, to: Coord };
         const rect_end = rect.end();
 
         const ranges = [_]Range{
@@ -1710,8 +1734,26 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
         var levers: usize = 0;
         var posters: usize = 0;
 
+        var forbidden_range: ?usize = null;
+
+        if (rng.onein(3) and Configs[level].single_props.len > 0) {
+            const prop_id = rng.chooseUnweighted([]const u8, Configs[level].single_props);
+            const prop_ind = utils.findById(surfaces.props.items, prop_id).?;
+            const prop = surfaces.props.items[prop_ind];
+
+            const range_ind = rng.range(usize, 0, ranges.len - 1);
+            forbidden_range = range_ind;
+            const range = ranges[range_ind];
+
+            const tries = math.max(rect.width, rect.height) * 3;
+            props += _placePropAlongRange(rect.start.z, range, &prop, tries);
+        }
+
         var tries = math.sqrt(rect.width * rect.height) * 5;
         while (tries > 0) : (tries -= 1) {
+            const range_ind = tries % ranges.len;
+            if (forbidden_range) |fr| if (range_ind == fr) continue;
+
             const range = ranges[tries % ranges.len];
             const x = rng.range(usize, range.from.x, range.to.x);
             const y = rng.range(usize, range.from.y, range.to.y);
@@ -2718,6 +2760,8 @@ pub const LevelConfig = struct {
     vent: []const u8 = "gas_vent",
     bars: []const u8 = "iron_bars",
     props: *[]const Prop = &surfaces.statue_props.items,
+    // Props that can be placed in bulk along a single wall.
+    single_props: []const []const u8 = &[_][]const u8{},
     containers: []const Container = &[_]Container{
         surfaces.Bin,
         surfaces.Barrel,
@@ -2775,6 +2819,8 @@ pub const Configs = [LEVELS]LevelConfig{
             null,
             null,
         },
+
+        .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
     },
     .{
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
@@ -2835,6 +2881,8 @@ pub const Configs = [LEVELS]LevelConfig{
                 .ca_survival_params = "ffffttttt",
             },
         },
+
+        .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
     },
     .{
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
@@ -2897,6 +2945,8 @@ pub const Configs = [LEVELS]LevelConfig{
         },
 
         .patrol_squads = 2,
+
+        .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
     },
     .{
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
@@ -2917,6 +2967,8 @@ pub const Configs = [LEVELS]LevelConfig{
         },
 
         .patrol_squads = 2,
+
+        .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
     },
     .{
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{

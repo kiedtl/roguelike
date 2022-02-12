@@ -63,6 +63,9 @@
 "chain"                	 "chain"                	 '§' 	 0xe0e0ff 	 -        	 nay 	 - 	               - 	 yea
 
 "table"                	 "table"                	 '⊺' 	 0xffffff 	 -        	 nay
+"wood_table"           	 "table"                	 '⊺' 	 0xdaa520 	 -        	 nay
+"wood_chair"           	 "chair"                	 '╛' 	 0xdaa520 	 -        	 nay
+
 "turbine"              	 "turbine"              	 '◴' 	 0xffd700 	 -        	 nay
 "gearbox"              	 "gearbox"              	 '■' 	 0xffffff 	 -        	 nay
 "power_switch"         	 "power switch"         	 '♥' 	 0xffffff 	 -        	 nay
