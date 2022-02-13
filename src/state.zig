@@ -80,14 +80,17 @@ pub var chardata: struct {
     }
 } = .{};
 
-// TODO: instead of storing the tile's representation in memory, store the
-// actual tile -- if a wall is destroyed outside of the player's FOV, the display
-// code has no way of knowing what the player remembers the destroyed tile as...
-//
-// Addendum 21-06-23: Is the above comment even true anymore (was it *ever* true)?
-// Need to do some experimenting once explosions are added.
-//
-pub var memory: CoordCellMap = undefined;
+pub const MemoryTile = struct {
+    fg: u32 = 0x000000,
+    bg: u32 = 0x000000,
+    ch: u32 = ' ',
+    type: MTileType = .Immediate,
+
+    pub const MTileType = enum { Immediate, Echolocated };
+};
+pub const MemoryTileMap = std.AutoHashMap(Coord, MemoryTile);
+
+pub var memory: MemoryTileMap = undefined;
 
 pub var rooms: [LEVELS]mapgen.Room.ArrayList = undefined;
 pub var stockpiles: [LEVELS]StockpileArrayList = undefined;
@@ -110,28 +113,48 @@ pub var ticks: usize = 0;
 pub var messages: MessageArrayList = undefined;
 pub var score: usize = 0;
 
-pub fn nextAvailableSpaceForItem(c: Coord, alloc: *mem.Allocator) ?Coord {
-    if (is_walkable(c, .{ .right_now = true }) and !dungeon.itemsAt(c).isFull())
-        return c;
+// Find the nearest space in which an item can be dropped.
+//
+// First attempt to find a tile without any items on it; if there are no such
+// spaces within two spaces, grab the nearest place where an item can be
+// dropped.
+//
+// Note, non-full containers are considered a "valid" space for dropping an
+// item here.
+//
+pub fn nextAvailableSpaceForItem(c: Coord, a: *mem.Allocator) ?Coord {
+    const S = struct {
+        pub fn _helper(strict: bool, crd: Coord, alloc: *mem.Allocator) ?Coord {
+            const S = struct {
+                pub fn _isFull(strict_: bool, coord: Coord) bool {
+                    if (dungeon.at(coord).surface) |surface| {
+                        switch (surface) {
+                            .Container => |container| return container.items.isFull(),
+                            else => {},
+                        }
+                    }
 
-    var dijk = dijkstra.Dijkstra.init(
-        c,
-        mapgeometry,
-        8,
-        is_walkable,
-        .{ .right_now = true },
-        alloc,
-    );
-    defer dijk.deinit();
+                    return if (strict_)
+                        dungeon.itemsAt(coord).len > 0
+                    else
+                        dungeon.itemsAt(coord).isFull();
+                }
+            };
 
-    while (dijk.next()) |coord| {
-        if (!is_walkable(c, .{ .right_now = true }) or dungeon.itemsAt(c).isFull())
-            continue;
+            if (is_walkable(crd, .{ .right_now = true }) and !S._isFull(strict, crd))
+                return crd;
 
-        return coord;
-    }
+            var dijk = dijkstra.Dijkstra.init(crd, mapgeometry, 2, is_walkable, .{ .right_now = true }, alloc);
+            defer dijk.deinit();
 
-    return null;
+            return while (dijk.next()) |child| {
+                if (!S._isFull(strict, child))
+                    break child;
+            } else null;
+        }
+    };
+
+    return S._helper(true, c, a) orelse S._helper(false, c, a);
 }
 
 pub const FLOOR_OPACITY: usize = 4;

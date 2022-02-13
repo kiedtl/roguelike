@@ -44,7 +44,6 @@ pub const PLAYER_STARTING_LEVEL = 5; // TODO: define in data file
 pub const CARDINAL_DIRECTIONS = [_]Direction{ .North, .South, .East, .West };
 pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .NorthWest, .SouthEast, .SouthWest };
 
-pub const CoordCellMap = std.AutoHashMap(Coord, termbox.tb_cell);
 pub const CoordArrayList = std.ArrayList(Coord);
 pub const StockpileArrayList = std.ArrayList(Stockpile);
 pub const MessageArrayList = std.ArrayList(Message);
@@ -840,7 +839,8 @@ pub const Status = enum {
         const xstart = utils.saturating_sub(state.player.coord.x, radius);
         const xend = math.min(state.player.coord.x + radius, WIDTH);
 
-        var tile: termbox.tb_cell = .{ .fg = 0xffffff, .ch = '#' };
+        var tile: state.MemoryTile = .{ .fg = 0xffffff, .ch = '#', .type = .Echolocated };
+
         var y: usize = ystart;
         while (y < yend) : (y += 1) {
             var x: usize = xstart;
@@ -1069,9 +1069,6 @@ pub const Mob = struct { // {{{
                     self.fov[y][x] = 0;
                     continue;
                 }
-
-                if (self.coord.eq(state.player.coord))
-                    state.memory.put(fc, Tile.displayAs(fc, true)) catch unreachable;
             }
         };
     }
@@ -1932,6 +1929,9 @@ pub const Machine = struct {
     id: []const u8 = "",
     name: []const u8,
 
+    // Should we announce its existence to the player when found?
+    announce: bool = false,
+
     powered_tile: u21,
     unpowered_tile: u21,
 
@@ -2067,10 +2067,10 @@ pub const SurfaceItem = union(SurfaceItemTag) {
 
 // Each weapon and armor has a specific amount of maximum damage it can create
 // or prevent. That damage comes in several different types:
-//      - Crushing: clubs, maces, morningstars, battleaxes.
+//      - Crushing: clubs, maces, morningstars, battleaxes, warhammers.
 //      - Slashing: swords, battleaxes.
 //      - Pulping: morningstars.
-//      - Puncture: spears, daggers, swords.
+//      - Puncture: spears, daggers, swords, warhammers.
 //      - Lacerate: warwhips, morningstars.
 //
 // Just as each weapon may cause one or more of each type of damage, each armor
@@ -2333,6 +2333,14 @@ pub const Item = union(ItemType) {
     Boulder: *const Material,
     Prop: *const Prop,
     Evocable: *Evocable,
+
+    // Should we announce the item to the player when we find it?
+    pub fn announce(self: Item) bool {
+        return switch (self) {
+            .Corpse, .Vial, .Boulder, .Prop => false,
+            .Ring, .Potion, .Armor, .Weapon, .Evocable => true,
+        };
+    }
 
     // FIXME: can't we just return the constSlice() of the stack buffer?
     pub fn shortName(self: *const Item) !StackBuffer(u8, 64) {

@@ -3,6 +3,8 @@ const math = std.math;
 const assert = std.debug.assert;
 const mem = std.mem;
 
+const StackBuffer = @import("buffer.zig").StackBuffer;
+
 const rng = @import("rng.zig");
 const literature = @import("literature.zig");
 const explosions = @import("explosions.zig");
@@ -45,7 +47,7 @@ fn initGame() bool {
     rng.init(&state.GPA.allocator) catch |_| return false;
 
     state.chardata.init(&state.GPA.allocator);
-    state.memory = CoordCellMap.init(&state.GPA.allocator);
+    state.memory = state.MemoryTileMap.init(&state.GPA.allocator);
 
     state.tasks = TaskArrayList.init(&state.GPA.allocator);
     state.mobs = MobList.init(&state.GPA.allocator);
@@ -163,6 +165,77 @@ fn readNoActionInput(timeout: ?isize) void {
         if (ev.key != 0) {
             if (ev.key == termbox.TB_KEY_CTRL_C) {
                 state.state = .Quit;
+            }
+        }
+    }
+}
+
+// TODO: move this to player.zig...? There should probably be a separate file for
+// player-specific stuff.
+//
+// Iterate through each tile in FOV:
+// - Add them to memory.
+// - If they haven't existed in memory before as an .Immediate tile, check for
+//   things of interest (items, machines, etc) and announce their presence.
+fn bookkeepingFOV() void {
+    const SBuf = StackBuffer(u8, 64);
+    const Announcement = struct { count: usize, name: SBuf };
+    const AList = std.ArrayList(Announcement);
+
+    var announcements = AList.init(&state.GPA.allocator);
+
+    const S = struct {
+        // Add to announcements if it doesn't exist, otherwise increment counter
+        pub fn _addToAnnouncements(name: SBuf, buf: *AList) void {
+            for (buf.items) |*announcement| {
+                if (mem.eql(u8, announcement.name.constSlice(), name.constSlice())) {
+                    announcement.count += 1;
+                    return;
+                }
+            }
+            // Add, since we didn't encounter it before
+            buf.append(.{ .count = 1, .name = name }) catch unreachable;
+        }
+    };
+
+    for (state.player.fov) |row, y| for (row) |_, x| {
+        if (state.player.fov[y][x] > 0) {
+            const fc = Coord.new2(state.player.coord.z, x, y);
+
+            var was_already_seen: bool = false;
+            if (state.memory.get(fc)) |memtile|
+                if (memtile.type == .Immediate) {
+                    was_already_seen = true;
+                };
+
+            if (!was_already_seen) {
+                if (state.dungeon.at(fc).surface) |surf| switch (surf) {
+                    .Machine => |m| if (m.announce)
+                        S._addToAnnouncements(SBuf.init(m.name), &announcements),
+                    else => {},
+                };
+                if (state.dungeon.itemsAt(fc).last()) |item|
+                    if (item.announce()) {
+                        const n = item.shortName() catch unreachable;
+                        S._addToAnnouncements(n, &announcements);
+                    };
+            }
+
+            const t = Tile.displayAs(fc, true);
+            const memt = state.MemoryTile{ .bg = t.bg, .fg = t.fg, .ch = t.ch };
+            state.memory.put(fc, memt) catch unreachable;
+        }
+    };
+
+    if (announcements.items.len > 7) {
+        state.message(.Info, "Found {} objects.", .{announcements.items.len});
+    } else {
+        for (announcements.items) |ann| {
+            const n = ann.name.constSlice();
+            if (ann.count == 1) {
+                state.message(.Info, "Found a {}.", .{n});
+            } else {
+                state.message(.Info, "Found {} {}.", .{ ann.count, n });
             }
         }
     }
@@ -382,46 +455,23 @@ fn dropItem() bool {
         return false;
     }
 
-    if (state.dungeon.at(state.player.coord).surface) |surface| {
-        switch (surface) {
-            .Container => |container| {
-                if (container.items.len >= container.capacity) {
-                    state.message(.MetaError, "There's no place on the {} for that.", .{container.name});
-                    return false;
-                } else {
-                    const index = display.chooseInventoryItem(
-                        "Store",
-                        state.player.inventory.pack.constSlice(),
-                    ) orelse return false;
-                    const item = state.player.removeItem(index) catch unreachable;
-                    container.items.append(item) catch unreachable;
-
-                    // TODO: show message
-
-                    state.player.declareAction(.Drop);
-                    return true;
-                }
-            },
-            else => {},
-        }
-    }
-
-    if (state.dungeon.itemsAt(state.player.coord).isFull()) {
-        // TODO: scoot item automatically to next available tile?
-        state.message(.MetaError, "There's are already some items here.", .{});
-        return false;
-    } else {
+    if (state.nextAvailableSpaceForItem(state.player.coord, &state.GPA.allocator)) |coord| {
         const index = display.chooseInventoryItem(
             "Drop",
             state.player.inventory.pack.constSlice(),
         ) orelse return false;
         const item = state.player.removeItem(index) catch unreachable;
-        state.dungeon.itemsAt(state.player.coord).append(item) catch unreachable;
 
-        // TODO: show message
+        const dropped = state.player.dropItem(item, coord);
+        assert(dropped);
 
-        state.player.declareAction(.Drop);
+        state.message(.Info, "Dropped: {}.", .{
+            (item.shortName() catch unreachable).constSlice(),
+        });
         return true;
+    } else {
+        state.message(.MetaError, "There's no nearby space to drop items.", .{});
+        return false;
     }
 }
 
@@ -563,6 +613,7 @@ fn tickGame() void {
 
             if (mob == state.player) {
                 state.chardata.time_on_levels[mob.coord.z] += 1;
+                bookkeepingFOV();
             }
 
             if (mob.isUnderStatus(.Paralysis)) |_| {
@@ -586,6 +637,10 @@ fn tickGame() void {
             }
 
             mob.tickFOV();
+
+            if (mob == state.player) {
+                bookkeepingFOV();
+            }
 
             assert(prev_energy > mob.energy);
 

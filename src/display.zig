@@ -497,7 +497,8 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
                 tile = .{ .fg = 0xffffff, .bg = 0, .ch = ' ' };
 
                 if (state.memory.contains(coord)) {
-                    tile = state.memory.get(coord) orelse unreachable;
+                    const memt = state.memory.get(coord) orelse unreachable;
+                    tile = .{ .fg = memt.fg, .bg = memt.bg, .ch = memt.ch };
                 }
 
                 tile.fg = utils.darkenColor(utils.filterColorGrayscale(tile.fg), 4);
