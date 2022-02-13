@@ -319,6 +319,7 @@ pub fn grabItem() bool {
     if (state.dungeon.itemsAt(state.player.coord).last()) |_| {
         item = state.dungeon.itemsAt(state.player.coord).pop() catch unreachable;
     } else {
+        state.message(.MetaError, "There's nothing here.", .{});
         return false;
     }
 
