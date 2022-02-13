@@ -196,8 +196,8 @@ fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, d
 
     const bar_len = bar_end - startx;
     const description2 = description[math.min(@intCast(usize, bar_len), description.len)..];
-    _ = _draw_string(labelx, y, endx, 0xffffff, bg, false, "{s}", .{description}) catch unreachable;
-    _ = _draw_string(labelx + bar_len, y, endx, 0xffffff, bg2, false, "{s}", .{description2}) catch unreachable;
+    _ = _draw_string(labelx, y, endx, fg, bg, false, "{s}", .{description}) catch unreachable;
+    _ = _draw_string(labelx + bar_len, y, endx, fg, bg2, false, "{s}", .{description2}) catch unreachable;
 }
 
 fn drawEnemyInfo(
@@ -232,7 +232,7 @@ fn drawEnemyInfo(
             @floatToInt(usize, mob.max_HP),
             "health",
             0x232faa,
-            0,
+            0xffffff,
         );
         y += 1;
 
@@ -246,7 +246,7 @@ fn drawEnemyInfo(
 
             if (left == 0) continue;
 
-            _draw_bar(y, startx, endx, left, Status.MAX_DURATION, status.string(), 0x77452e, 0);
+            _draw_bar(y, startx, endx, left, Status.MAX_DURATION, status.string(), 0x77452e, 0xffffff);
             y += 1;
         }
 
@@ -266,7 +266,7 @@ fn drawEnemyInfo(
     }
 }
 
-fn drawPlayerInfo(startx: isize, starty: isize, endx: isize, endy: isize) void {
+fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, endy: isize) void {
     const is_running = state.player.turnsSpentMoving() == state.player.activities.len;
     const last_action_cost = if (state.player.activities.current()) |lastaction| b: {
         const spd = @intToFloat(f64, state.player.speed());
@@ -275,6 +275,15 @@ fn drawPlayerInfo(startx: isize, starty: isize, endx: isize, endy: isize) void {
     const strength = state.player.strength();
     const dexterity = state.player.dexterity();
     const speed = state.player.speed();
+    const pursued = b: for (moblist) |mob| {
+        if (mob.isHostileTo(state.player)) {
+            for (mob.enemies.items) |enemyrecord| {
+                if (enemyrecord.mob == state.player) {
+                    break :b true;
+                }
+            }
+        }
+    } else false;
 
     var y = starty;
     while (y < endy) : (y += 1) _clear_line(startx, endx, y);
@@ -325,7 +334,7 @@ fn drawPlayerInfo(startx: isize, starty: isize, endx: isize, endy: isize) void {
         @floatToInt(usize, state.player.max_HP),
         "health",
         0x232faa,
-        0,
+        0xffffff,
     );
     y += 1;
     _draw_bar(
@@ -336,7 +345,7 @@ fn drawPlayerInfo(startx: isize, starty: isize, endx: isize, endy: isize) void {
         state.player.activities.len,
         if (is_running) "running" else "walking",
         if (is_running) 0x45772e else 0x25570e,
-        0,
+        0xffffff,
     );
     y += 1;
 
@@ -350,10 +359,22 @@ fn drawPlayerInfo(startx: isize, starty: isize, endx: isize, endy: isize) void {
 
         if (left == 0) continue;
 
-        _draw_bar(y, startx, endx, left, Status.MAX_DURATION, status.string(), 0x77452e, 0);
+        _draw_bar(y, startx, endx, left, Status.MAX_DURATION, status.string(), 0x77452e, 0xffffff);
         y += 1;
     }
     y += 1;
+
+    _draw_bar(
+        y,
+        startx,
+        endx,
+        1,
+        1,
+        if (pursued) "pursued" else "unseen",
+        if (pursued) 0xcccccc else 0x222222,
+        if (pursued) 0x222222 else 0xcccccc,
+    );
+    y += 2;
 
     if (state.player.inventory.wielded) |weapon| {
         const item = Item{ .Weapon = weapon };
@@ -578,6 +599,7 @@ pub fn draw() void {
     const log_window = dimensions(.Log);
 
     drawPlayerInfo(
+        moblist.items,
         @intCast(isize, playerinfo_window.from.x),
         @intCast(isize, playerinfo_window.from.y),
         @intCast(isize, playerinfo_window.to.x),
