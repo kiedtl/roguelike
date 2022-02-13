@@ -2390,6 +2390,10 @@ pub const Tile = struct {
     mob: ?*Mob = null,
     surface: ?SurfaceItem = null,
     spatter: SpatterArray = SpatterArray.initFill(0),
+
+    // A random value that's set at the beginning of the game.
+    // To be used when a random value that's specific to a coordinate, but that
+    // won't change over time, is needed.
     rand: usize = 0,
 
     pub fn displayAs(coord: Coord, ignore_lights: bool) termbox.tb_cell {
