@@ -276,7 +276,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     const dexterity = state.player.dexterity();
     const speed = state.player.speed();
     const pursued = b: for (moblist) |mob| {
-        if (mob.isHostileTo(state.player)) {
+        if (!mob.no_show_fov and mob.isHostileTo(state.player)) {
             for (mob.enemies.items) |enemyrecord| {
                 if (enemyrecord.mob == state.player) {
                     break :b true;
