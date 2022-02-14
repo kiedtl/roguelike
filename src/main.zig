@@ -196,6 +196,7 @@ fn bookkeepingFOV() void {
     const AList = std.ArrayList(Announcement);
 
     var announcements = AList.init(&state.GPA.allocator);
+    defer announcements.deinit();
 
     const S = struct {
         // Add to announcements if it doesn't exist, otherwise increment counter
