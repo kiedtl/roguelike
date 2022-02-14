@@ -666,7 +666,12 @@ fn excavateRect(rect: *const Rect) void {
 
 // Destroy items, machines, and mobs associated with level and reset level's
 // terrain.
-pub fn resetLevel(level: usize) void {
+//
+// Also, reset the `used` counters for prefabs.
+pub fn resetLevel(level: usize, n_fabs: *PrefabArrayList, s_fabs: *PrefabArrayList) void {
+    for (n_fabs.items) |*fab| fab.used[level] = 0;
+    for (s_fabs.items) |*fab| fab.used[level] = 0;
+
     var mobiter = state.mobs.iterator();
     while (mobiter.next()) |mob| {
         if (mob.coord.z == level) {
