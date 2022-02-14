@@ -544,35 +544,6 @@ pub const NetLauncher = Weapon{
     .strs = &CRUSHING_STRS,
 };
 
-pub const DartLauncher = Weapon{
-    .id = "dart_launcher",
-    .name = "dart launcher",
-    .required_strength = 12,
-    .required_dexterity = 12,
-    .damages = .{
-        .Crushing = 4,
-        .Pulping = 2,
-        .Slashing = 1,
-        .Piercing = 0,
-        .Lacerating = 0,
-    },
-    .main_damage = .Crushing,
-    .secondary_damage = null,
-    .launcher = .{
-        .projectile = Projectile{
-            .main_damage = .Pulping,
-            .damages = .{
-                .Crushing = 0,
-                .Pulping = 8,
-                .Slashing = 3,
-                .Piercing = 2,
-                .Lacerating = 2,
-            },
-        },
-    },
-    .strs = &CRUSHING_STRS,
-};
-
 fn triggerPreservePotion(_dork: ?*Mob, coord: Coord) void {
     if (_dork) |dork| {
 

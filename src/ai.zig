@@ -660,11 +660,15 @@ pub fn sentinelFight(mob: *Mob, alloc: *mem.Allocator) void {
         target.isUnderStatus(.Held) != null or
         spare_enemy_net)
     {
-        // fire dart
-        if (mem.eql(u8, mob.inventory.backup.?.id, "dart_launcher"))
+        if (mem.eql(u8, mob.inventory.backup.?.id, "knife"))
             _ = mob.swapWeapons();
 
-        _ = mob.launchProjectile(&mob.inventory.wielded.?.launcher.?, target.coord);
+        // attack
+        if (mob.coord.distance(target.coord) == 1) {
+            _ = mob.fight(target);
+        } else {
+            mob.tryMoveTo(target.coord);
+        }
     } else {
         // fire net
         if (mem.eql(u8, mob.inventory.backup.?.id, "net_launcher"))

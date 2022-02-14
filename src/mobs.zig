@@ -85,7 +85,7 @@ pub const WardenTemplate = MobTemplate{
         .ai = AI{
             .profession_name = "warden",
             .profession_description = "guarding",
-            .work_fn = ai.guardWork,
+            .work_fn = ai.patrolWork,
             .fight_fn = ai.meleeFight,
             .is_combative = true,
             .is_curious = true,
@@ -148,10 +148,10 @@ pub const SentinelTemplate = MobTemplate{
         .ai = AI{
             .profession_name = "sentinel",
             .profession_description = "guarding",
-            .work_fn = ai.guardWork,
+            .work_fn = ai.watcherWork,
             .fight_fn = ai.sentinelFight,
             .is_combative = true,
-            .is_curious = true,
+            .is_curious = false,
         },
         .allegiance = .Necromancer,
         .vision = 8,
@@ -167,7 +167,7 @@ pub const SentinelTemplate = MobTemplate{
 
         .base_strength = 28,
     },
-    .weapon = &items.DartLauncher,
+    .weapon = &items.KnifeWeapon,
     .backup_weapon = &items.NetLauncher,
     .armor = &items.LeatherArmor,
 };
