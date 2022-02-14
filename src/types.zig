@@ -1143,11 +1143,12 @@ pub const Mob = struct { // {{{
     }
 
     pub fn evokeOrRest(self: *Mob, evocable: *Evocable) void {
-        if (!evocable.evoke(self)) {
+        evocable.evoke(self) catch |_| {
             _ = self.rest();
-        } else {
-            self.declareAction(.Use);
-        }
+            return;
+        };
+
+        self.declareAction(.Use);
     }
 
     pub fn launchProjectile(self: *Mob, launcher: *const Weapon.Launcher, at: Coord) bool {

@@ -85,7 +85,7 @@ pub const Evocable = struct {
 
     purpose: Purpose,
 
-    trigger_fn: fn (*Mob, *Evocable) bool,
+    trigger_fn: fn (*Mob, *Evocable) EvokeError!void,
 
     // The AI uses this to determine whether to active an evocable in a mob's
     // inventory.
@@ -104,13 +104,15 @@ pub const Evocable = struct {
 
     // TODO: targeting functionality
 
-    pub fn evoke(self: *Evocable, by: *Mob) bool {
+    pub const EvokeError = error{ NoCharges, BadPosition };
+
+    pub fn evoke(self: *Evocable, by: *Mob) EvokeError!void {
         if (self.charges > 0) {
             self.charges -= 1;
             self.last_used = state.ticks;
-            return self.trigger_fn(by, self);
+            try self.trigger_fn(by, self);
         } else {
-            return false;
+            return error.NoCharges;
         }
     }
 };
@@ -125,12 +127,12 @@ pub const MineKitEvoc = Evocable{
     .purpose = .Other,
     .trigger_fn = _triggerMineKit,
 };
-fn _triggerMineKit(mob: *Mob, evoc: *Evocable) bool {
+fn _triggerMineKit(mob: *Mob, evoc: *Evocable) Evocable.EvokeError!void {
     assert(mob == state.player);
 
     if (state.dungeon.at(mob.coord).surface) |_| {
         state.message(.MetaError, "You can't build a mine where you're standing.", .{});
-        return false;
+        return error.BadPosition;
     }
 
     var mine = surfaces.Mine;
@@ -139,8 +141,6 @@ fn _triggerMineKit(mob: *Mob, evoc: *Evocable) bool {
     state.dungeon.at(mob.coord).surface = SurfaceItem{ .Machine = state.machines.last().? };
 
     state.message(.Info, "You build a mine. You'd better be far away when it detonates!", .{});
-
-    return true;
 }
 
 pub const EldritchLanternEvoc = Evocable{
@@ -151,7 +151,7 @@ pub const EldritchLanternEvoc = Evocable{
     .purpose = .EnemyDebuff,
     .trigger_fn = _triggerEldritchLantern,
 };
-fn _triggerEldritchLantern(mob: *Mob, evoc: *Evocable) bool {
+fn _triggerEldritchLantern(mob: *Mob, evoc: *Evocable) Evocable.EvokeError!void {
     var affected: usize = 0;
     var player_was_affected: bool = false;
 
@@ -161,7 +161,8 @@ fn _triggerEldritchLantern(mob: *Mob, evoc: *Evocable) bool {
         const coord = Coord.new2(mob.coord.z, x, y);
 
         if (state.dungeon.at(coord).mob) |othermob| {
-            if (othermob == mob) continue;
+            if (!othermob.cansee(mob.coord))
+                continue;
 
             const dur = rng.rangeClumping(usize, 5, 20, 2);
             othermob.addStatus(.Confusion, 0, dur, false);
@@ -184,17 +185,11 @@ fn _triggerEldritchLantern(mob: *Mob, evoc: *Evocable) bool {
             state.message(.Info, "You are dazed by the light.", .{});
         }
     } else if (state.player.cansee(mob.coord)) {
-        // ↓ this isn't needed, but it's a workaround for a Zig compiler bug
-        // FIXME: when upgraded to Zig v9, poke this code and see if the bug's
-        // still there
-        const mobname = mob.ai.profession_name orelse mob.species;
-        state.message(.Info, "The {} flashes an eldritch lantern!", .{mobname});
-        if (player_was_affected) {
+        state.message(.Info, "The {} flashes an eldritch lantern!", .{mob.displayName()});
+        if (player_was_affected) { // Player *should* always be affected...
             state.message(.Info, "You feel dazed by the blinding light.", .{});
         }
     }
-
-    return true;
 }
 
 pub const WarningHornEvoc = Evocable{
@@ -205,7 +200,7 @@ pub const WarningHornEvoc = Evocable{
     .purpose = .SelfBuff,
     .trigger_fn = _triggerWarningHorn,
 };
-fn _triggerWarningHorn(mob: *Mob, evoc: *Evocable) bool {
+fn _triggerWarningHorn(mob: *Mob, evoc: *Evocable) Evocable.EvokeError!void {
     mob.makeNoise(.Alarm, .Loudest);
 
     if (mob == state.player) {
@@ -217,8 +212,6 @@ fn _triggerWarningHorn(mob: *Mob, evoc: *Evocable) bool {
         const mobname = mob.ai.profession_name orelse mob.species;
         state.message(.Info, "The {} blows its warning horn!", .{mobname});
     }
-
-    return true;
 }
 
 pub const EcholocationRing = Ring{

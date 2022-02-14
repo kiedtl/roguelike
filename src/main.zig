@@ -479,9 +479,14 @@ fn useItem() bool {
             state.message(.Info, "You admire the {}.", .{p.name});
             return false;
         },
-        .Evocable => |v| if (!v.evoke(state.player)) {
-            return false;
-        } else {
+        .Evocable => |v| {
+            v.evoke(state.player) catch |e| {
+                if (e == error.NoCharges) {
+                    state.message(.MetaError, "You can't use the {} anymore!", .{v.name});
+                }
+                return false;
+            };
+
             const prevtotal = (state.chardata.evocs_used.getOrPutValue(v.id, 0) catch unreachable).value;
             state.chardata.evocs_used.put(v.id, prevtotal + 1) catch unreachable;
         },
