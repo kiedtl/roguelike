@@ -306,7 +306,7 @@ pub const Lamp = Machine{
     .unpowered_opacity = 1.0,
 
     // maximum, could be lower (see mapgen:placeLights)
-    .powered_luminescence = 100,
+    .powered_luminescence = 90,
     .unpowered_luminescence = 0,
 
     .on_power = powerNone,

@@ -32,8 +32,6 @@ pub const ExecutionerTemplate = MobTemplate{
             .is_curious = true,
         },
         .allegiance = .Necromancer,
-        .vision = 6,
-        .base_night_vision = 30,
 
         .willpower = 3,
         .base_dexterity = 35,
@@ -62,8 +60,6 @@ pub const WatcherTemplate = MobTemplate{
             .is_curious = false,
         },
         .allegiance = .Necromancer,
-        .vision = 7,
-        .base_night_vision = 15,
 
         .willpower = 3,
         .base_dexterity = 17,
@@ -92,7 +88,6 @@ pub const WardenTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
         .vision = 5,
-        .base_night_vision = 35,
 
         .willpower = 3,
         .base_dexterity = 20,
@@ -123,8 +118,6 @@ pub const GuardTemplate = MobTemplate{
             .is_curious = true,
         },
         .allegiance = .Necromancer,
-        .vision = 6,
-        .base_night_vision = 30,
 
         .willpower = 2,
         .base_dexterity = 25,
@@ -154,8 +147,6 @@ pub const SentinelTemplate = MobTemplate{
             .is_curious = false,
         },
         .allegiance = .Necromancer,
-        .vision = 8,
-        .base_night_vision = 20,
 
         .willpower = 5,
         .base_dexterity = 30,
@@ -186,8 +177,6 @@ pub const PatrolTemplate = MobTemplate{
             .is_curious = true,
         },
         .allegiance = .Necromancer,
-        .vision = 6,
-        .base_night_vision = 35,
 
         .willpower = 2,
         .base_dexterity = 25,
@@ -218,7 +207,7 @@ pub const PlayerTemplate = MobTemplate{
             .is_curious = false,
         },
         .allegiance = .OtherGood,
-        .vision = 25,
+        .vision = 15,
         .base_night_vision = 0,
         .deg360_vision = true,
         .no_show_fov = true,
@@ -251,8 +240,6 @@ pub const InteractionLaborerTemplate = MobTemplate{
             .is_curious = false,
         },
         .allegiance = .Necromancer,
-        .vision = 6,
-        .base_night_vision = 30,
 
         .willpower = 2,
         .base_dexterity = 15,
@@ -280,8 +267,7 @@ pub const GoblinTemplate = MobTemplate{
             .is_curious = true,
         },
         .allegiance = .OtherEvil,
-        .vision = 12,
-        .base_night_vision = 0,
+        .vision = 10,
 
         .willpower = 3,
         .base_dexterity = 43,
@@ -311,8 +297,7 @@ pub const CaveRatTemplate = MobTemplate{
             .is_curious = false,
         },
         .allegiance = .OtherEvil,
-        .vision = 12,
-        .base_night_vision = 0,
+        .vision = 10,
 
         .willpower = 1,
         .base_dexterity = 60,
@@ -451,8 +436,6 @@ pub const AlchemistTemplate = MobTemplate{
             .is_curious = false,
         },
         .allegiance = .Necromancer,
-        .vision = 7,
-        .base_night_vision = 20,
 
         .willpower = 5,
         .base_dexterity = 30,
@@ -481,8 +464,6 @@ pub const CleanerTemplate = MobTemplate{
             .work_phase = .CleanerScan,
         },
         .allegiance = .Necromancer,
-        .vision = 6,
-        .base_night_vision = 30,
 
         .willpower = 2,
         .base_dexterity = 15,
@@ -511,8 +492,6 @@ pub const HaulerTemplate = MobTemplate{
             .work_phase = .HaulerScan,
         },
         .allegiance = .Necromancer,
-        .vision = 6,
-        .base_night_vision = 30,
 
         .willpower = 2,
         .base_dexterity = 25,
@@ -541,7 +520,6 @@ pub const TorturerNecromancerTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
         .vision = 6,
-        .base_night_vision = 20,
         .no_show_fov = false,
         .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
             .{ .spell = &spells.CAST_PAIN, .duration = 7, .power = 20 },
@@ -576,8 +554,6 @@ pub const TanusExperiment = MobTemplate{
             .is_curious = true,
         },
         .allegiance = .Necromancer,
-        .vision = 6,
-        .base_night_vision = 20,
 
         .willpower = 3,
         .base_dexterity = 43,
@@ -608,8 +584,6 @@ pub const CatalineExperiment = MobTemplate{
             .is_curious = true,
         },
         .allegiance = .Necromancer,
-        .vision = 6,
-        .base_night_vision = 20,
 
         .willpower = 3,
         .base_dexterity = 43,
@@ -640,8 +614,6 @@ pub const FlouinExperiment = MobTemplate{
             .is_curious = true,
         },
         .allegiance = .Necromancer,
-        .vision = 6,
-        .base_night_vision = 20,
 
         .willpower = 3,
         .base_dexterity = 43,
@@ -672,8 +644,6 @@ pub const PhytinExperiment = MobTemplate{
             .is_curious = true,
         },
         .allegiance = .Necromancer,
-        .vision = 6,
-        .base_night_vision = 20,
 
         .willpower = 3,
         .base_dexterity = 43,

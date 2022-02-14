@@ -284,6 +284,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
             }
         }
     } else false;
+    const light = state.dungeon.lightIntensityAt(state.player.coord).*;
 
     var y = starty;
     while (y < endy) : (y += 1) _clear_line(startx, endx, y);
@@ -337,17 +338,6 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         0xffffff,
     );
     y += 1;
-    _draw_bar(
-        y,
-        startx,
-        endx,
-        state.player.turnsSpentMoving(),
-        state.player.activities.len,
-        if (is_running) "running" else "walking",
-        if (is_running) 0x45772e else 0x25570e,
-        0xffffff,
-    );
-    y += 1;
 
     var statuses = state.player.statuses.iterator();
     while (statuses.next()) |entry| {
@@ -368,10 +358,32 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         y,
         startx,
         endx,
+        state.player.turnsSpentMoving(),
+        state.player.activities.len,
+        if (is_running) "running" else "walking",
+        if (is_running) 0x45772e else 0x25570e,
+        0xffffff,
+    );
+    y += 1;
+    _draw_bar(
+        y,
+        startx,
+        endx,
+        light / 10,
+        10,
+        if (light > 20) "lit" else "shadowed",
+        0x776644,
+        0xffffff,
+    );
+    y += 1;
+    _draw_bar(
+        y,
+        startx,
+        endx,
         1,
         1,
         if (pursued) "pursued" else "unseen",
-        if (pursued) 0xcccccc else 0x222222,
+        if (pursued) 0x99bbcc else 0x222222,
         if (pursued) 0x222222 else 0xcccccc,
     );
     y += 2;
@@ -557,8 +569,8 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
                                 tile.fg ^= tile.bg;
                             }
                         } else {
-                            tile.ch = '·';
-                            tile.fg = 0xffffff;
+                            tile.ch = '⬞';
+                            //tile.fg = 0xffffff;
                         }
                     }
                 },

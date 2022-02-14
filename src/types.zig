@@ -1004,8 +1004,8 @@ pub const Mob = struct { // {{{
     willpower: usize, // Range: 0 < willpower < 10
     base_strength: usize,
     base_dexterity: usize, // Range: 0 < dexterity < 100
-    vision: usize,
-    base_night_vision: usize, // Range: 0 < night_vision < 100
+    vision: usize = 7,
+    base_night_vision: usize = 20, // Range: 0 < night_vision < 100
     deg360_vision: bool = false,
     no_show_fov: bool = false,
     hearing: usize,
@@ -2423,8 +2423,6 @@ pub const Tile = struct {
         var self = state.dungeon.at(coord);
         var cell = termbox.tb_cell{};
 
-        const color: u32 = utils.percentageOfColor(self.material.color_floor, 40);
-
         switch (self.type) {
             .Water => cell = .{
                 .ch = '≈',
@@ -2439,27 +2437,21 @@ pub const Tile = struct {
             .Wall => cell = .{
                 .ch = materials.tileFor(coord, self.material.tileset),
                 .fg = self.material.color_fg,
-                .bg = self.material.color_bg orelse color,
+                .bg = self.material.color_bg orelse 0x000000,
             },
             .Floor => {
-                cell.ch = ' ';
-                cell.bg = color;
+                cell.ch = '·';
+                cell.fg = 0xcacbca;
             },
-            .BrokenFloor => {
-                const chars = [_]u32{ '`', '=', '*', '+', ';', ':', '"' };
+            .BrokenFloor, .BrokenWall => {
+                cell.fg = 0xcacbca;
 
-                cell.bg = color;
-                if (self.rand % 100 < 30) {
+                const chars = [_]u32{ '`', ',', '^', '\'', '*', '"' };
+                if (self.rand % 100 < 15) {
                     cell.ch = chars[self.rand % chars.len];
-                    cell.fg = utils.percentageOfColor(color, 60);
                 } else {
-                    cell.ch = ' ';
+                    cell.ch = '·';
                 }
-            },
-            .BrokenWall => {
-                cell.ch = ';';
-                cell.fg = utils.percentageOfColor(color, 60);
-                cell.bg = color;
             },
         }
 
@@ -2475,8 +2467,6 @@ pub const Tile = struct {
                 mob.isUnderStatus(.Paralysis) != null or
                 mob.isUnderStatus(.Confusion) != null)
                 cell.fg = 0xffffff;
-
-            cell.bg = color;
 
             const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);
             if (hp_loss_percent > 0) {
@@ -2495,7 +2485,6 @@ pub const Tile = struct {
             assert(self.type != .Wall);
 
             cell.fg = 0xffffff;
-            cell.bg = color;
 
             switch (item) {
                 .Corpse => |_| {
@@ -2536,7 +2525,6 @@ pub const Tile = struct {
             assert(self.type != .Wall);
 
             cell.fg = 0xffffff;
-            cell.bg = color;
 
             const ch = switch (surfaceitem) {
                 .Container => |c| cont: {
@@ -2567,10 +2555,11 @@ pub const Tile = struct {
             cell.ch = ch;
         }
 
-        if (!ignore_lights) {
-            const light = math.clamp(state.dungeon.lightIntensityAt(coord).*, 0, 100);
-            cell.bg = math.max(utils.percentageOfColor(cell.bg, light), utils.darkenColor(cell.bg, 3));
-            cell.fg = math.max(utils.percentageOfColor(cell.fg, light), utils.darkenColor(cell.fg, 3));
+        if (!ignore_lights and self.type != .Wall) {
+            const light = state.dungeon.lightIntensityAt(coord).*;
+            if (light < 20) {
+                cell.fg = utils.percentageOfColor(cell.fg, 40);
+            }
         }
 
         var spattering = self.spatter.iterator();

@@ -157,8 +157,8 @@ pub fn nextAvailableSpaceForItem(c: Coord, a: *mem.Allocator) ?Coord {
     return S._helper(true, c, a) orelse S._helper(false, c, a);
 }
 
-pub const FLOOR_OPACITY: usize = 4;
-pub const MOB_OPACITY: usize = 20;
+pub const FLOOR_OPACITY: usize = 5;
+pub const MOB_OPACITY: usize = 10;
 
 // STYLE: change to Tile.lightOpacity
 pub fn tileOpacity(coord: Coord) usize {
@@ -353,138 +353,35 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
 }
 
 pub fn tickLight(level: usize) void {
-    // TODO: do some tests and figure out what's the practical limit to memory
-    // usage, and reduce the buffer's size to that.
-    var membuf: [65535]u8 = undefined;
-    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-
     const light_buffer = &dungeon.light_intensity[level];
 
     // Clear out previous light levels.
     for (light_buffer) |*row| for (row) |*cell| {
-        cell.* = 500;
+        cell.* = 0;
     };
 
-    var light_distances: [HEIGHT][WIDTH]usize = undefined;
-    var light_intensities: [HEIGHT][WIDTH]usize = undefined;
-    var lights_list = CoordArrayList.init(&fba.allocator);
-    defer lights_list.deinit();
+    // Now for the actual party...
 
-    {
-        var y: usize = 0;
-        while (y < HEIGHT) : (y += 1) {
-            var x: usize = 0;
-            while (x < WIDTH) : (x += 1) {
-                const coord = Coord.new2(level, x, y);
-                const light = dungeon.emittedLightIntensity(coord);
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            const coord = Coord.new2(level, x, y);
+            const light = dungeon.emittedLightIntensity(coord);
 
-                light_buffer[y][x] = light;
-                light_distances[y][x] = 500;
-                light_intensities[y][x] = light;
-
-                // A memorial to my stupidity:
-                //
-                // When I first created the lighting system, I omitted the below
-                // check (light > 0) and did raycasting *on every tile on the map*.
-                // I chalked the resulting lag (2 seconds for every turn!) to
-                // the lack of optimizations in the raycasting routine, and spent
-                // hours trying to write and rewrite a better raycasting function.
-                //
-                // Thankfully, I only wasted about two days of tearing out my hair
-                // before noticing the issue.
-                //
-                if (light > 0) {
-                    lights_list.append(coord) catch unreachable;
-                    light_distances[y][x] = 0;
-                }
-            }
-        }
-    }
-
-    var opacity: [HEIGHT][WIDTH]usize = undefined;
-    {
-        var y: usize = 0;
-        while (y < HEIGHT) : (y += 1) {
-            var x: usize = 0;
-            while (x < WIDTH) : (x += 1) {
-                opacity[y][x] = tileOpacity(Coord.new2(level, x, y));
-            }
-        }
-    }
-
-    var no_changes = false;
-    while (!no_changes) {
-        no_changes = true;
-
-        var y: usize = 0;
-        while (y < HEIGHT) : (y += 1) {
-            var x: usize = 0;
-            while (x < WIDTH) : (x += 1) {
-                const coord = Coord.new2(level, x, y);
-
-                const i_current_score = light_buffer[coord.y][coord.x];
-                var i_best_score: usize = 0;
-                const d_current_score = light_distances[coord.y][coord.x];
-                var d_best_score: usize = 0;
-
-                for (&DIRECTIONS) |direction| if (coord.move(direction, mapgeometry)) |neighbor| {
-                    // Skip lit walls
-                    if (opacity[neighbor.y][neighbor.x] >= 100 and
-                        light_intensities[neighbor.y][neighbor.x] == 0)
-                    {
-                        continue;
-                    }
-
-                    const d_neighbor_score = light_distances[neighbor.y][neighbor.x];
-                    if (d_neighbor_score < d_best_score) {
-                        d_best_score = d_neighbor_score;
-                    }
-
-                    const i_neighbor_score = light_buffer[neighbor.y][neighbor.x];
-                    if (i_neighbor_score > i_best_score) {
-                        i_best_score = i_neighbor_score;
-                    }
-                };
-
-                if ((d_best_score + 1) < d_current_score) {
-                    light_distances[y][x] = d_best_score + 1;
-                    no_changes = false;
-                }
-
-                const i_best_score_adj = utils.saturating_sub(i_best_score, FLOOR_OPACITY);
-                if (i_current_score < i_best_score_adj) {
-                    light_buffer[y][x] = i_best_score_adj;
-                    no_changes = false;
-                }
-            }
-        }
-    }
-
-    {
-        var y: usize = 0;
-        while (y < HEIGHT) : (y += 1) {
-            var x: usize = 0;
-            while (x < WIDTH) : (x += 1) {
-                const coord = Coord.new2(level, x, y);
-
-                // Find distance of closest light
-                var closest_light: usize = 999;
-                for (lights_list.items) |light| {
-                    //if (light_intensities[light.y][light.x] >= light_buffer[y][x]) {
-                    const dist = coord.distance(light);
-                    if (dist < closest_light) {
-                        closest_light = dist;
-                    }
-                    //}
-                }
-
-                // If the distance to the closest light is less than the current
-                // value of this cell in the "dijkstra map", the light went around
-                // a corner; therefore, this cell should be in shadow.
-                if (light_distances[y][x] > closest_light) {
-                    light_buffer[y][x] /= 2;
-                    light_buffer[y][x] = math.max(light_buffer[y][x], light_intensities[y][x]);
-                }
+            // A memorial to my stupidity:
+            //
+            // When I first created the lighting system, I omitted the below
+            // check (light > 0) and did raycasting *on every tile on the map*.
+            // I chalked the resulting lag (2 seconds for every turn!) to
+            // the lack of optimizations in the raycasting routine, and spent
+            // hours trying to write and rewrite a better raycasting function.
+            //
+            // Thankfully, I only wasted about two days of tearing out my hair
+            // before noticing the issue.
+            //
+            if (light > 0) {
+                fov.rayCast(coord, 20, light, tileOpacity, light_buffer, null);
             }
         }
     }

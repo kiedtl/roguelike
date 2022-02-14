@@ -75,15 +75,35 @@ const VALID_DOOR_PLACEMENT_PATTERNS = [_][]const u8{
 };
 
 const VALID_LIGHT_PLACEMENT_PATTERNS = [_][]const u8{
-    // ???
+    // ...
     // ###
-    // ???
-    "???###???",
+    // ...
+    "...###...",
 
-    // ?#?
-    // ?#?
-    // ?#?
-    "?#??#??#?",
+    // ###
+    // ###
+    // ?.?
+    "######?.?",
+
+    // ?.?
+    // ###
+    // ###
+    "######?.?",
+
+    // .#.
+    // .#.
+    // .#.
+    ".#..#..#.",
+
+    // ##?
+    // ##.
+    // ##?
+    "##?##?##?",
+
+    // ?##
+    // .##
+    // ?##
+    "?##.##?##",
 };
 
 const VALID_FEATURE_TILE_PATTERNS = [_][]const u8{
@@ -1698,9 +1718,16 @@ fn placeLights(room: *const Room) void {
     if (Configs[room.rect.start.z].no_lights) return;
     if (room.prefab) |rfb| if (rfb.nolights) return;
 
+    const area = room.rect.height * room.rect.width;
+    var lights_needed: usize = undefined;
+    if (area <= 050) lights_needed = rng.range(usize, 0, 1);
+    if (area >= 100) lights_needed = rng.range(usize, 0, 2);
+    if (area >= 150) lights_needed = rng.range(usize, 0, 2);
+    if (area >= 250) lights_needed = rng.range(usize, 2, 3);
+    if (area >= 500) lights_needed = rng.range(usize, 2, 4);
+
     var lights: usize = 0;
-    var lights_needed = rng.rangeClumping(usize, 0, 4, 2);
-    var light_tries: usize = rng.range(usize, 0, 50);
+    var light_tries: usize = 200;
     while (light_tries > 0 and lights < lights_needed) : (light_tries -= 1) {
         const coord = randomWallCoord(&room.rect, light_tries);
 
@@ -1711,6 +1738,9 @@ fn placeLights(room: *const Room) void {
             continue; // invalid coord
 
         var brazier = Configs[room.rect.start.z].light.*;
+
+        // Dim lights by a random amount.
+        brazier.powered_luminescence -= rng.range(usize, 0, 35);
 
         _place_machine(coord, &brazier);
         state.dungeon.at(coord).type = .Floor;
