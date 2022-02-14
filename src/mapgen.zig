@@ -1446,7 +1446,21 @@ pub fn placeBSPRooms(
             return null;
         }
 
-        pub fn addCorridors(maplevel: usize, node: *Node, roomlist: *Room.ArrayList) void {
+        // Recursively excavate corridors.
+        //
+        // doorlist: a list of possible spots to place a door. Populated as
+        //   such spots are found.
+        //
+        //   NOTE: We cannot place doors right away, because we might end up
+        //   with empty spots next to it as we continue to recursively excavate
+        //   corridors.
+        //
+        fn excavateCorridors(
+            maplevel: usize,
+            node: *Node,
+            roomlist: *Room.ArrayList,
+            doorlist: *CoordArrayList,
+        ) void {
             const childs = node.childs;
 
             if (childs[0] != null and childs[1] != null) {
@@ -1458,24 +1472,35 @@ pub fn placeBSPRooms(
 
                     excavateRect(&corridor.room.rect);
                     roomlist.append(corridor.room) catch unreachable;
-
-                    if (rng.tenin(Configs[maplevel].door_chance)) {
-                        if (utils.findPatternMatch(
-                            corridor.room.rect.start,
-                            &VALID_DOOR_PLACEMENT_PATTERNS,
-                        ) != null) {
-                            placeDoor(corridor.room.rect.start, false);
-                        }
-                    }
+                    doorlist.append(corridor.room.rect.start) catch unreachable;
                 }
             }
 
-            if (childs[0]) |child| addCorridors(maplevel, child, roomlist);
-            if (childs[1]) |child| addCorridors(maplevel, child, roomlist);
+            if (childs[0]) |child| excavateCorridors(maplevel, child, roomlist, doorlist);
+            if (childs[1]) |child| excavateCorridors(maplevel, child, roomlist, doorlist);
+        }
+
+        pub fn addCorridorsAndDoors(
+            maplevel: usize,
+            node: *Node,
+            roomlist: *Room.ArrayList,
+            alloc: *mem.Allocator,
+        ) void {
+            var doorlist = CoordArrayList.init(alloc);
+            defer doorlist.deinit();
+
+            excavateCorridors(maplevel, node, roomlist, &doorlist);
+
+            for (doorlist.items) |doorspot|
+                if (utils.findPatternMatch(doorspot, &VALID_DOOR_PLACEMENT_PATTERNS) != null and
+                    rng.tenin(Configs[maplevel].door_chance))
+                {
+                    placeDoor(doorspot, false);
+                };
         }
     };
 
-    S.addCorridors(level, &grandma_node, rooms);
+    S.addCorridorsAndDoors(level, &grandma_node, rooms, allocator);
 }
 
 pub fn placeItems(level: usize) void {
