@@ -667,19 +667,12 @@ pub const Activity = union(enum) {
     Throw,
     Fire,
     Cast,
-    SwapWeapons,
 
     pub inline fn cost(self: Activity) usize {
         return switch (self) {
             .Interact => 90,
-            .Rest,
-            .Move,
-            .Teleport,
-            .Grab,
-            .Drop,
-            => 100,
-            .Cast, .Throw, .Fire, .Attack => 110,
-            .SwapWeapons, .Use => 120,
+            .Rest, .Move, .Teleport, .Grab, .Drop, .Use => 100,
+            .Cast, .Throw, .Fire, .Attack => 120,
         };
     }
 };

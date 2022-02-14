@@ -3000,7 +3000,7 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ 1, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
         },
         .shrink_corridors_to_fit = false,
-        .prefab_chance = 1,
+        .prefab_chance = 1, // Only prefabs for SMI
         .mapgen_iters = 1049,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
