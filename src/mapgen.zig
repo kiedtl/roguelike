@@ -669,10 +669,10 @@ fn excavateRect(rect: *const Rect) void {
 // Destroy items, machines, and mobs associated with level and reset level's
 // terrain.
 //
-// Also, reset the `used` counters for prefabs.
+// Also, reset the `used` counters and connections for prefabs.
 pub fn resetLevel(level: usize, n_fabs: *PrefabArrayList, s_fabs: *PrefabArrayList) void {
-    for (n_fabs.items) |*fab| fab.used[level] = 0;
-    for (s_fabs.items) |*fab| fab.used[level] = 0;
+    for (n_fabs.items) |*fab| fab.reset(level);
+    for (s_fabs.items) |*fab| fab.reset(level);
 
     var mobiter = state.mobs.iterator();
     while (mobiter.next()) |mob| {
@@ -2353,6 +2353,15 @@ pub const Prefab = struct {
         d: Direction,
         used: bool = false,
     };
+
+    pub fn reset(self: *Prefab, level: usize) void {
+        self.used[level] = 0;
+
+        for (self.connections) |maybe_con, i| {
+            const con = maybe_con orelse break;
+            self.connections[i].?.used = false;
+        }
+    }
 
     pub fn useConnector(self: *Prefab, c: Coord) !void {
         for (self.connections) |maybe_con, i| {

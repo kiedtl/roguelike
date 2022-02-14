@@ -86,8 +86,6 @@ fn initGame() bool {
     while (level < LEVELS) {
         tries += 1;
 
-        std.log.info("Generating map {}.", .{state.levelinfo[level].id});
-
         mapgen.resetLevel(level, &n_fabs, &s_fabs);
         mapgen.placeBlobs(level);
         (mapgen.Configs[level].mapgen_func)(&n_fabs, &s_fabs, level, &state.GPA.allocator);
@@ -95,13 +93,13 @@ fn initGame() bool {
 
         if (!mapgen.validateLevel(level, &state.GPA.allocator, &n_fabs, &s_fabs)) {
             if (tries < 27) {
-                std.log.info("Map {} invalid, regenerating.", .{state.levelinfo[level].id});
+                std.log.info("Map {} invalid, regenerating...", .{state.levelinfo[level].name});
                 continue; // try again
             } else {
                 // Give up!
                 std.log.err(
                     "[BUG] Couldn't generate a valid map for {}!",
-                    .{state.levelinfo[level].id},
+                    .{state.levelinfo[level].name},
                 );
                 @panic("Fatal error.");
             }
@@ -114,6 +112,8 @@ fn initGame() bool {
         mapgen.placeItems(level);
         mapgen.placeMobs(level, &state.GPA.allocator);
         mapgen.generateLayoutMap(level);
+
+        std.log.info("Generated map {}.", .{state.levelinfo[level].name});
 
         level += 1;
         tries = 0;
