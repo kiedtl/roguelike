@@ -82,17 +82,29 @@ fn initGame() bool {
     defer n_fabs.deinit();
 
     var level: usize = 0;
+    var tries: usize = 0;
     while (level < LEVELS) {
+        tries += 1;
+
         std.log.info("Generating map {}.", .{state.levelinfo[level].id});
 
-        mapgen.resetLevel(level);
+        mapgen.resetLevel(level, &n_fabs, &s_fabs);
         mapgen.placeBlobs(level);
         (mapgen.Configs[level].mapgen_func)(&n_fabs, &s_fabs, level, &state.GPA.allocator);
         mapgen.placeMoarCorridors(level, &state.GPA.allocator);
 
         if (!mapgen.validateLevel(level, &state.GPA.allocator, &n_fabs, &s_fabs)) {
-            std.log.info("Map {} invalid, regenerating.", .{state.levelinfo[level].id});
-            continue; // try again
+            if (tries < 27) {
+                std.log.info("Map {} invalid, regenerating.", .{state.levelinfo[level].id});
+                continue; // try again
+            } else {
+                // Give up!
+                std.log.err(
+                    "[BUG] Couldn't generate a valid map for {}!",
+                    .{state.levelinfo[level].id},
+                );
+                @panic("Fatal error.");
+            }
         }
 
         mapgen.setLevelMaterial(level);
@@ -104,6 +116,7 @@ fn initGame() bool {
         mapgen.generateLayoutMap(level);
 
         level += 1;
+        tries = 0;
     }
 
     for (state.dungeon.map) |_, mlevel|
