@@ -1132,8 +1132,15 @@ pub fn placeRandomRooms(
     while (reqctr < required.len) {
         const fab_name = required[reqctr];
         const fab = Prefab.findPrefabByName(fab_name, n_fabs) orelse {
-            std.log.err("Cannot find required prefab {}", .{fab_name});
-            return;
+            // Do nothing, it might be a required subroom.
+            //
+            // FIXME: we still should handle this error
+            //
+            //
+            //std.log.err("Cannot find required prefab {}", .{fab_name});
+            //return;
+            reqctr += 1;
+            continue;
         };
 
         const x = rng.rangeClumping(usize, 1, state.WIDTH - fab.width - 1, 2);
@@ -2803,6 +2810,7 @@ pub const Configs = [LEVELS]LevelConfig{
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
             "ENT_start",
             "PRI_power",
+            "ANY_s_recharging",
         }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
@@ -2851,6 +2859,7 @@ pub const Configs = [LEVELS]LevelConfig{
     .{
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
             "PRI_power",
+            "ANY_s_recharging",
         }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
@@ -2887,6 +2896,7 @@ pub const Configs = [LEVELS]LevelConfig{
     .{
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
             "LAB_power",
+            "ANY_s_recharging",
         }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
@@ -2930,6 +2940,7 @@ pub const Configs = [LEVELS]LevelConfig{
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
             "PRI_power",
             "PRI_insurgency",
+            "ANY_s_recharging",
         }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
@@ -2952,6 +2963,7 @@ pub const Configs = [LEVELS]LevelConfig{
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
             "PRI_start",
             "PRI_power",
+            "ANY_s_recharging",
         }),
         .distances = [2][10]usize{
             .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },

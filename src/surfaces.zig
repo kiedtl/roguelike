@@ -48,6 +48,7 @@ pub const MACHINES = [_]Machine{
     NetTrap,
     RestrictedMachinesOpenLever,
     Mine,
+    RechargingStation,
 };
 
 pub const Bin = Container{ .name = "bin", .tile = '╳', .capacity = 14, .type = .Utility, .item_repeat = 20 };
@@ -449,6 +450,24 @@ pub const Mine = Machine{
     .pathfinding_penalty = 10,
 };
 
+pub const RechargingStation = Machine{
+    .id = "recharging_station",
+    .name = "recharging station",
+    .announce = true,
+    .powered_tile = '≡',
+    .unpowered_tile = 'x',
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+    .power_drain = 99,
+    .auto_power = true,
+    .on_power = powerNone,
+    .interact1 = .{
+        .name = "recharge",
+        .max_use = 3,
+        .func = interact1RechargingStation,
+    },
+};
+
 fn powerNone(_: *Machine) void {}
 
 fn powerChainPress(machine: *Machine) void {
@@ -837,6 +856,24 @@ fn powerMine(machine: *Machine) void {
         });
     }
 }
+
+fn interact1RechargingStation(machine: *Machine, by: *Mob) bool {
+    // XXX: All messages are printed in invokeRecharger().
+    assert(by == state.player);
+
+    var num_recharged: usize = 0;
+    for (state.player.inventory.pack.slice()) |item| switch (item) {
+        .Evocable => |e| if (e.rechargable and e.charges < e.max_charges) {
+            e.charges = e.max_charges;
+            num_recharged += 1;
+        },
+        else => {},
+    };
+
+    return num_recharged > 0;
+}
+
+// ----------------------------------------------------------------------------
 
 pub fn readProps(alloc: *mem.Allocator) void {
     const PropData = struct {

@@ -1964,6 +1964,8 @@ pub const Machine = struct {
     last_interaction: ?*Mob = null,
     disabled: bool = false,
 
+    interact1: ?MachInteract = null,
+
     // If the player tries to trigger the machine, should we prompt for a
     // confirmation?
     evoke_confirm: ?[]const u8 = null,
@@ -1976,6 +1978,25 @@ pub const Machine = struct {
     // E.g., a blast furnace will heat up the first area, and search
     // for fuel in the second area.
     areas: StackBuffer(Coord, 16) = StackBuffer(Coord, 16).init(null),
+
+    pub const MachInteract = struct {
+        name: []const u8,
+        used: usize = 0,
+        max_use: usize, // 0 for infinite uses
+        func: fn (*Machine, *Mob) bool,
+    };
+
+    pub fn evoke(self: *Machine, mob: *Mob, interaction: *MachInteract) !void {
+        if (!self.isPowered())
+            return error.NotPowered;
+
+        if (interaction.max_use > 0 and interaction.used >= interaction.max_use)
+            return error.UsedMax;
+
+        if ((interaction.func)(self, mob)) {
+            interaction.used += 1;
+        } else return error.NoEffect;
+    }
 
     pub fn addPower(self: *Machine, by: ?*Mob) void {
         if (by) |_by|

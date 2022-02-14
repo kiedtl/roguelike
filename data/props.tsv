@@ -73,10 +73,13 @@
 "small_transformer"    	 "transformer"          	 '■' 	 0xffe5d3 	 -        	 nay
 "large_transformer"    	 "transformer"          	 'ö' 	 0xffe5d3 	 -        	 nay
 "switching_station"    	 "switching station"    	 '⊡' 	 0xffaf9a 	 -        	 nay
+"battery"              	 "battery pack"         	 '▂' 	 0x90a3b7 	 -        	 nay
 "fuel_burner"          	 "fuel burner"          	 '#' 	 0xffa0a0 	 -        	 nay 	 -
 "steel_gas_reservoir"  	 "steel gas reservoir"  	 '■' 	 0xd7d7ff 	 -        	 nay
 "steel_pin"            	 "steel pin"            	 '·' 	 0xa6c2d4 	 -        	 -
 
+"antenna_tip"          	 "antenna tip"          	 '´' 	 0x90a3b7 	 -        	 nay 	 - 	 .Laboratory
+"antenna"              	 "antenna"              	 'Ÿ' 	 0x90a3b7 	 -        	 nay 	 - 	 .Laboratory
 "compact_turbine"      	 "compact turbine"      	 'Ä' 	 0xffe4e1 	 -        	 nay 	 - 	 .Laboratory
 "centrifuge"           	 "centrifuge"           	 '⊜' 	 0xffe4e1 	 -        	 nay 	 - 	 .Laboratory
 "xray_appar"           	 "x-ray machine"        	 '‡' 	 0xa8ffa8 	 -        	 nay 	 - 	 .Laboratory
@@ -93,6 +96,8 @@
 "wall_n1s1_slt"        	 "vangenite wall"       	 '┋' 	 0xe0f8f2 	 -        	 nay
 "wall_n1s1_slt2"       	 "vangenite wall"       	 '¦' 	 0xe0f8f2 	 -        	 nay
 "wall_n1s1e1w1"        	 "vangenite wall"       	 '╋' 	 0xe0f8f2 	 -        	 nay
+"wall_s1w1_thinw"      	 "vangenite wall"       	 '┒' 	 0xe0f8f2 	 -        	 nay
+"wall_n1w1_thinw"      	 "vangenite wall"       	 '┚' 	 0xe0f8f2 	 -        	 nay
 "wall_s1w1_thins"      	 "vangenite wall"       	 '┑' 	 0xe0f8f2 	 -        	 nay
 "wall_s1e1w1"          	 "vangenite wall"       	 '┳' 	 0xe0f8f2 	 -        	 nay
 "wall_n1e1w1"          	 "vangenite wall"       	 '┻' 	 0xe0f8f2 	 -        	 nay
@@ -139,6 +144,7 @@
 
 "wire_n1e1w1"          	 "copper wire"          	 '┴' 	 0xffe5d3 	 -        	 -
 "wire_s2e1"            	 "copper wire"          	 '╓' 	 0xffe5d3 	 -        	 -
+"wire_s2w1"            	 "copper wire"          	 '╖' 	 0xffe5d3 	 -        	 -
 "wire_e1w1"            	 "copper wire"          	 '─' 	 0xffe5d3 	 -        	 -
 "wire_n1e1"            	 "copper wire"          	 '└' 	 0xffe5d3 	 -        	 -
 "wire_s1w1"            	 "copper wire"          	 '┐' 	 0xffe5d3 	 -        	 -
@@ -153,9 +159,11 @@
 "wire_n1s1w2"          	 "copper wire"          	 '╡' 	 0xffe5d3 	 -        	 -
 "wire_n1s1e2"          	 "copper wire"          	 '╞' 	 0xffe5d3 	 -        	 -
 "wire_n1s1e2w2"        	 "copper wire"          	 '╪' 	 0xffe5d3 	 -        	 -
+"wire_n1e2w2"          	 "copper wire"          	 '╧' 	 0xffe5d3 	 -        	 -
 "wire_n1s1"            	 "copper wire"          	 '│' 	 0xffe5d3 	 -        	 -
 "wire_s1e1w1"          	 "copper wire"          	 '┬' 	 0xffe5d3 	 -        	 -
 "wire_n2e1w1"          	 "copper wire"          	 '╨' 	 0xffe5d3 	 -        	 -
+"wire_s2e1w1"          	 "copper wire"          	 '╥' 	 0xffe5d3 	 -        	 -
 
 "steel_support_ne2"    	 "steel support"        	 '╘' 	 0xa6c2d4 	 -        	 nay
 "steel_support_se2"    	 "steel support"        	 '╒' 	 0xa6c2d4 	 -        	 nay

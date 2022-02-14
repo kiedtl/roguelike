@@ -274,6 +274,45 @@ fn moveOrFight(direction: Direction) bool {
 
 // TODO: move this to state.zig...? There should probably be a separate file for
 // player-specific actions.
+fn invokeRecharger() bool {
+    var recharger: ?*Machine = null;
+
+    for (state.player.fov) |row, y| for (row) |_, x| {
+        if (state.player.fov[y][x] > 0) {
+            const fc = Coord.new2(state.player.coord.z, x, y);
+            if (state.dungeon.at(fc).surface) |surf| switch (surf) {
+                .Machine => |m| if (mem.eql(u8, m.id, "recharging_station")) {
+                    recharger = m;
+                },
+                else => {},
+            };
+        }
+    };
+
+    if (recharger) |mach| {
+        mach.evoke(state.player, &mach.interact1.?) catch |e| {
+            switch (e) {
+                error.NotPowered => state.message(.MetaError, "The station has no power!", .{}),
+                error.UsedMax => state.message(.MetaError, "The station is out of charges!", .{}),
+                error.NoEffect => state.message(.MetaError, "No evocables to recharge!", .{}),
+            }
+            return false;
+        };
+
+        state.player.declareAction(.Interact);
+        state.message(.Info, "All evocables recharged.", .{});
+        state.message(.Info, "You can use this station {} more times.", .{
+            mach.interact1.?.max_use - mach.interact1.?.used,
+        });
+        return true;
+    } else {
+        state.message(.MetaError, "No recharging station in sight!", .{});
+        return false;
+    }
+}
+
+// TODO: move this to state.zig...? There should probably be a separate file for
+// player-specific actions.
 fn fireLauncher() bool {
     if (state.player.inventory.wielded) |weapon| {
         if (weapon.launcher) |launcher| {
@@ -536,6 +575,7 @@ fn readInput() bool {
             return switch (ev.ch) {
                 'x' => state.player.swapWeapons(),
                 'f' => fireLauncher(),
+                'r' => invokeRecharger(),
                 't' => throwItem(),
                 'a' => useItem(),
                 'd' => dropItem(),

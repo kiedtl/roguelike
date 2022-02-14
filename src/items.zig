@@ -80,6 +80,9 @@ pub const Evocable = struct {
     // Whether to destroy the evocable when it's finished.
     delete_when_inert: bool = false,
 
+    // Whether a recharging station should recharge it.
+    rechargable: bool = true,
+
     purpose: Purpose,
 
     trigger_fn: fn (*Mob, *Evocable) bool,
@@ -118,6 +121,7 @@ pub const MineKitEvoc = Evocable{
     .tile_fg = 0xffffff,
     .max_charges = 2,
     .delete_when_inert = true,
+    .rechargable = false,
     .purpose = .Other,
     .trigger_fn = _triggerMineKit,
 };
