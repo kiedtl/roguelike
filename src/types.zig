@@ -660,7 +660,7 @@ pub const Activity = union(enum) {
     Interact,
     Rest,
     Move: Direction,
-    Attack: Coord,
+    Attack: struct { coord: Coord, weapon_delay: usize },
     Teleport: Coord,
     Grab,
     Drop,
@@ -673,7 +673,8 @@ pub const Activity = union(enum) {
         return switch (self) {
             .Interact => 90,
             .Rest, .Move, .Teleport, .Grab, .Drop, .Use => 100,
-            .Cast, .Throw, .Fire, .Attack => 120,
+            .Cast, .Throw, .Fire => 120,
+            .Attack => |a| 120 * a.weapon_delay / 100,
         };
     }
 };
@@ -1506,7 +1507,11 @@ pub const Mob = struct { // {{{
         assert(attacker.strength() > 0);
         assert(recipient.strength() > 0);
 
-        attacker.declareAction(.{ .Attack = recipient.coord });
+        const attacker_weapon = attacker.inventory.wielded orelse &items.UnarmedWeapon;
+
+        attacker.declareAction(.{
+            .Attack = .{ .coord = recipient.coord, .weapon_delay = attacker_weapon.delay },
+        });
 
         // const chance_of_land = combat.chanceOfAttackLanding(attacker, recipient);
         // const chance_of_dodge = combat.chanceOfAttackDodged(recipient, attacker);
@@ -1557,7 +1562,6 @@ pub const Mob = struct { // {{{
             recipient.makeNoise(.Combat, .Medium);
         }
 
-        const attacker_weapon = attacker.inventory.wielded orelse &items.UnarmedWeapon;
         var dmg_percent = recipient.lastDamagePercentage();
         var hitstrs = attacker_weapon.strs[attacker_weapon.strs.len - 1];
         // FIXME: insert some randomization here. Currently every single stab
@@ -2229,6 +2233,7 @@ pub const Weapon = struct {
     name: []const u8,
     required_strength: usize,
     required_dexterity: usize,
+    delay: usize = 100, // Percentage (100 = normal speed, 200 = twice as slow)
     damages: Damages,
     main_damage: DamageType,
     secondary_damage: ?DamageType,
