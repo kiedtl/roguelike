@@ -2927,6 +2927,9 @@ pub const Configs = [LEVELS]LevelConfig{
 
         .props = &surfaces.vault_props.items,
         //.containers = &[_]Container{surfaces.Chest},
+        .single_props = &[_][]const u8{
+            "fuel_barrel", "iron_ingots", "steel_ingots", "gold_ingots",
+        },
     },
     .{
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
@@ -3005,6 +3008,7 @@ pub const Configs = [LEVELS]LevelConfig{
         //.containers = &[_]Container{ surfaces.Chest, surfaces.LabCabinet },
         .containers = &[_]Container{surfaces.LabCabinet},
         .utility_items = &surfaces.laboratory_item_props.items,
+        .single_props = &[_][]const u8{"table"},
 
         .allow_statues = false,
     },

@@ -46,6 +46,7 @@
 "gold_chest"           	 "gold chest"           	 'æ' 	 0xffd700 	 -        	 nay 	 -	 .Vault
 "iron_ingots"          	 "iron ingots"          	 '╳' 	 0x000000 	 0xcacbca 	 nay 	 -	 .Vault
 "steel_ingots"         	 "steel ingots"         	 '╳' 	 0x000000 	 0xeeeeee 	 nay 	 -	 .Vault
+"fuel_barrel"          	 "barrel of fuel"       	 'ʊ' 	 0xdaa520 	 -        	 nay
 
 # Statues
 "gold_statue"          	 "gold statue"          	 '☺' 	 0xfff720 	 -        	 nay 	 - 	 .Statue
@@ -64,7 +65,7 @@
 
 "table"                	 "table"                	 '⊺' 	 0xffffff 	 -        	 nay
 "wood_table"           	 "table"                	 '⊺' 	 0xdaa520 	 -        	 nay
-"wood_chair"           	 "chair"                	 '╛' 	 0xdaa520 	 -        	 nay
+"wood_chair"           	 "chair"                	 '╛' 	 0xdaa520 	 -        	 yea
 
 "turbine"              	 "turbine"              	 '◴' 	 0xffd700 	 -        	 nay
 "gearbox"              	 "gearbox"              	 '■' 	 0xffffff 	 -        	 nay
