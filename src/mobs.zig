@@ -367,7 +367,7 @@ pub const NebroStatueTemplate = MobTemplate{
         .deg360_vision = true,
         .no_show_fov = true,
         .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
-            .{ .spell = &spells.CAST_FAMOUS, .duration = 15, .power = 50 },
+            .{ .spell = &spells.CAST_FAMOUS, .duration = 5, .power = 30 },
         }),
 
         .willpower = 8,
@@ -404,7 +404,7 @@ pub const CrystalStatueTemplate = MobTemplate{
         .deg360_vision = true,
         .no_show_fov = true,
         .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
-            .{ .spell = &spells.CAST_FERMENT, .duration = 15, .power = 50 },
+            .{ .spell = &spells.CAST_FERMENT, .duration = 10, .power = 0 },
         }),
 
         .willpower = 8,

@@ -727,6 +727,7 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
     // Check if there's an ally that satisfies the following conditions
     //      - Isn't the current mob
     //      - Isn't another immobile mob
+    //      - Is seen by the target
     //      - Is either investigating a noise, or
     //      - Is attacking the hostile mob
     var ally = false;
@@ -737,8 +738,9 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
         if (state.dungeon.at(fitem).mob) |othermob| {
             const phase = othermob.ai.phase;
 
-            if (@ptrToInt(othermob) != @ptrToInt(mob) and
+            if (othermob != mob and
                 !othermob.immobile and
+                target.cansee(othermob.coord) and
                 othermob.allegiance == mob.allegiance and
                 ((phase == .Hunt and
                 othermob.enemies.items.len > 0 and // mob's phase may not have been reset yet
@@ -751,7 +753,7 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
         }
     };
 
-    if (ally and rng.onein(4)) {
+    if (ally and rng.onein(10)) {
         const spell = mob.spells.data[0];
         spell.spell.use(mob, target.coord, .{
             .status_duration = spell.duration,
