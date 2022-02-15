@@ -195,6 +195,10 @@ pub const IsWalkableOptions = struct {
     // doors).
     //
     right_now: bool = false,
+
+    // Consider a tile with a mob on it walkable.
+    ignore_mobs: bool = false,
+
     mob: ?*const Mob = null,
 };
 
@@ -205,10 +209,12 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
         else => {},
     }
 
-    if (dungeon.at(coord).mob) |other|
-        if (opts.mob) |mob| {
-            if (!mob.canSwapWith(other, null)) return false;
-        } else return false;
+    if (!opts.ignore_mobs) {
+        if (dungeon.at(coord).mob) |other|
+            if (opts.mob) |mob| {
+                if (!mob.canSwapWith(other, null)) return false;
+            } else return false;
+    }
 
     if (dungeon.at(coord).surface) |surface| {
         switch (surface) {

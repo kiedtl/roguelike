@@ -1427,7 +1427,7 @@ pub const Mob = struct { // {{{
             if (prisoner.held_by != null)
                 return false;
 
-        if (!state.is_walkable(dest, .{ .right_now = true })) {
+        if (!state.is_walkable(dest, .{ .right_now = true, .ignore_mobs = true })) {
             if (state.dungeon.at(dest).surface) |surface| {
                 switch (surface) {
                     .Machine => |m| if (!m.isWalkable()) {
