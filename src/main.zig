@@ -18,6 +18,7 @@ const display = @import("display.zig");
 const termbox = @import("termbox.zig");
 const types = @import("types.zig");
 const state = @import("state.zig");
+const err = @import("err.zig");
 usingnamespace @import("types.zig");
 
 pub const TaskArrayList = tasks.TaskArrayList;
@@ -28,13 +29,13 @@ pub const EvocableList = items.EvocableList;
 // seed before calling the default panic handler.
 pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) noreturn {
     display.deinit() catch |e| {};
-    std.log.info("Fatal error encountered. (Seed: {})", .{rng.seed});
+    std.log.err("Fatal error encountered. (Seed: {})", .{rng.seed});
     std.builtin.default_panic(msg, error_return_trace);
 }
 
 fn initGame() bool {
-    if (display.init()) {} else |err| switch (err) {
-        error.AlreadyInitialized => unreachable,
+    if (display.init()) {} else |e| switch (e) {
+        error.AlreadyInitialized => err.wat(),
         error.TTYOpenFailed => @panic("Could not open TTY"),
         error.UnsupportedTerminal => @panic("Unsupported terminal"),
         error.PipeTrapFailed => @panic("Internal termbox error"),
@@ -97,11 +98,10 @@ fn initGame() bool {
                 continue; // try again
             } else {
                 // Give up!
-                std.log.err(
-                    "[BUG] Couldn't generate a valid map for {}!",
+                err.bug(
+                    "Couldn't generate a valid map for {}!",
                     .{state.levelinfo[level].name},
                 );
-                @panic("Fatal error.");
             }
         }
 
@@ -128,7 +128,7 @@ fn initGame() bool {
 }
 
 fn deinitGame() void {
-    display.deinit() catch unreachable;
+    display.deinit() catch err.wat();
 
     state.chardata.deinit();
     state.memory.clearAndFree();
@@ -208,7 +208,7 @@ fn bookkeepingFOV() void {
                 }
             }
             // Add, since we didn't encounter it before
-            buf.append(.{ .count = 1, .name = name }) catch unreachable;
+            buf.append(.{ .count = 1, .name = name }) catch err.wat();
         }
     };
 
@@ -230,14 +230,14 @@ fn bookkeepingFOV() void {
                 };
                 if (state.dungeon.itemsAt(fc).last()) |item|
                     if (item.announce()) {
-                        const n = item.shortName() catch unreachable;
+                        const n = item.shortName() catch err.wat();
                         S._addToAnnouncements(n, &announcements);
                     };
             }
 
             const t = Tile.displayAs(fc, true);
             const memt = state.MemoryTile{ .bg = t.bg, .fg = t.fg, .ch = t.ch };
-            state.memory.put(fc, memt) catch unreachable;
+            state.memory.put(fc, memt) catch err.wat();
         }
     };
 
@@ -367,7 +367,7 @@ pub fn grabItem() bool {
                         "Take",
                         container.items.constSlice(),
                     ) orelse return false;
-                    item = container.items.orderedRemove(index) catch unreachable;
+                    item = container.items.orderedRemove(index) catch err.wat();
                 }
             },
             else => {},
@@ -375,7 +375,7 @@ pub fn grabItem() bool {
     }
 
     if (state.dungeon.itemsAt(state.player.coord).last()) |_| {
-        item = state.dungeon.itemsAt(state.player.coord).pop() catch unreachable;
+        item = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
     } else {
         state.message(.MetaError, "There's nothing here.", .{});
         return false;
@@ -384,7 +384,7 @@ pub fn grabItem() bool {
     switch (item) {
         .Weapon => |weapon| {
             if (state.player.inventory.wielded) |old_w| {
-                state.dungeon.itemsAt(state.player.coord).append(Item{ .Weapon = old_w }) catch unreachable;
+                state.dungeon.itemsAt(state.player.coord).append(Item{ .Weapon = old_w }) catch err.wat();
                 state.player.declareAction(.Drop);
                 state.message(.Info, "You drop the {} to wield the {}.", .{ old_w.name, weapon.name });
             }
@@ -395,7 +395,7 @@ pub fn grabItem() bool {
         },
         .Armor => |armor| {
             if (state.player.inventory.armor) |a| {
-                state.dungeon.itemsAt(state.player.coord).append(Item{ .Armor = a }) catch unreachable;
+                state.dungeon.itemsAt(state.player.coord).append(Item{ .Armor = a }) catch err.wat();
                 state.player.declareAction(.Drop);
                 state.message(.Info, "You drop the {} to wear the {}.", .{ a.name, armor.name });
             }
@@ -407,10 +407,10 @@ pub fn grabItem() bool {
                 state.message(.Info, "This armor is going to be annoying to wear.", .{});
         },
         else => {
-            state.player.inventory.pack.append(item) catch unreachable;
+            state.player.inventory.pack.append(item) catch err.wat();
             state.player.declareAction(.Grab);
             state.message(.Info, "Acquired: {}", .{
-                (state.player.inventory.pack.last().?.longName() catch unreachable).constSlice(),
+                (state.player.inventory.pack.last().?.longName() catch err.wat()).constSlice(),
             });
         },
     }
@@ -433,7 +433,7 @@ fn throwItem() bool {
     const item = &state.player.inventory.pack.slice()[index];
 
     if (state.player.throwItem(item, dest)) {
-        _ = state.player.removeItem(index) catch unreachable;
+        _ = state.player.removeItem(index) catch err.wat();
         state.player.declareAction(.Throw);
         return true;
     } else {
@@ -469,13 +469,13 @@ fn useItem() bool {
             state.message(.MetaError, "Are you three?", .{});
             return false;
         },
-        .Armor, .Weapon => unreachable,
+        .Armor, .Weapon => err.wat(),
         .Potion => |p| {
             state.player.quaffPotion(p);
-            const prevtotal = (state.chardata.potions_quaffed.getOrPutValue(p.id, 0) catch unreachable).value;
-            state.chardata.potions_quaffed.put(p.id, prevtotal + 1) catch unreachable;
+            const prevtotal = (state.chardata.potions_quaffed.getOrPutValue(p.id, 0) catch err.wat()).value;
+            state.chardata.potions_quaffed.put(p.id, prevtotal + 1) catch err.wat();
         },
-        .Vial => |v| @panic("TODO"),
+        .Vial => |v| err.todo(),
         .Boulder => |_| {
             state.message(.MetaError, "You want to *eat* that?", .{});
             return false;
@@ -492,16 +492,16 @@ fn useItem() bool {
                 return false;
             };
 
-            const prevtotal = (state.chardata.evocs_used.getOrPutValue(v.id, 0) catch unreachable).value;
-            state.chardata.evocs_used.put(v.id, prevtotal + 1) catch unreachable;
+            const prevtotal = (state.chardata.evocs_used.getOrPutValue(v.id, 0) catch err.wat()).value;
+            state.chardata.evocs_used.put(v.id, prevtotal + 1) catch err.wat();
         },
     }
 
     switch (state.player.inventory.pack.slice()[index]) {
         .Evocable => |e| if (e.delete_when_inert and e.charges == 0) {
-            _ = state.player.removeItem(index) catch unreachable;
+            _ = state.player.removeItem(index) catch err.wat();
         },
-        else => _ = state.player.removeItem(index) catch unreachable,
+        else => _ = state.player.removeItem(index) catch err.wat(),
     }
 
     state.player.declareAction(.Use);
@@ -524,13 +524,13 @@ fn dropItem() bool {
             "Drop",
             state.player.inventory.pack.constSlice(),
         ) orelse return false;
-        const item = state.player.removeItem(index) catch unreachable;
+        const item = state.player.removeItem(index) catch err.wat();
 
         const dropped = state.player.dropItem(item, coord);
         assert(dropped);
 
         state.message(.Info, "Dropped: {}.", .{
-            (item.shortName() catch unreachable).constSlice(),
+            (item.shortName() catch err.wat()).constSlice(),
         });
         return true;
     } else {
@@ -615,7 +615,7 @@ fn readInput() bool {
                 'n' => moveOrFight(.SouthEast),
                 else => false,
             };
-        } else unreachable;
+        } else err.wat();
     } else return false;
 }
 
@@ -830,7 +830,7 @@ fn viewerMain() void {
                     },
                     else => {},
                 }
-            } else unreachable;
+            } else err.wat();
         }
     }
 }
@@ -867,7 +867,7 @@ pub fn main() anyerror!void {
         };
     }
 
-    const morgue = state.formatMorgue(&state.GPA.allocator) catch unreachable;
+    const morgue = state.formatMorgue(&state.GPA.allocator) catch err.wat();
     const filename = "dump.txt";
     try std.fs.cwd().writeFile(filename, morgue.items[0..]);
     std.log.info("Morgue file written to {}.", .{filename});

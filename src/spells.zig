@@ -1,4 +1,5 @@
 usingnamespace @import("types.zig");
+const err = @import("err.zig");
 const state = @import("state.zig");
 const rng = @import("rng.zig");
 
@@ -41,7 +42,7 @@ pub const Spell = struct {
         caster.declareAction(.Cast);
 
         switch (self.cast_type) {
-            .Ray, .Bolt => @panic("TODO"),
+            .Ray, .Bolt => err.todo(),
             .Cast => {
                 const mob = state.dungeon.at(target).mob.?;
 

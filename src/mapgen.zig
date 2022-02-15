@@ -6,6 +6,7 @@ const meta = std.meta;
 const assert = std.debug.assert;
 
 const astar = @import("astar.zig");
+const err = @import("err.zig");
 const rng = @import("rng.zig");
 const mobs = @import("mobs.zig");
 const StackBuffer = @import("buffer.zig").StackBuffer;
@@ -173,19 +174,19 @@ fn placeMob(
     if (template.armor) |a| mob.inventory.armor = _createItem(Armor, a.*);
 
     if (opts.facing) |dir| mob.facing = dir;
-    mob.ai.work_area.append(opts.work_area orelse coord) catch unreachable;
+    mob.ai.work_area.append(opts.work_area orelse coord) catch err.wat();
 
     for (template.evocables) |evocable_template| {
         var evocable = _createItem(Evocable, evocable_template);
         evocable.charges = evocable.max_charges;
-        mob.inventory.pack.append(Item{ .Evocable = evocable }) catch unreachable;
+        mob.inventory.pack.append(Item{ .Evocable = evocable }) catch err.wat();
     }
 
     for (template.statuses) |status_info| {
         mob.addStatus(status_info.status, status_info.power, status_info.duration, status_info.permanent);
     }
 
-    state.mobs.append(mob) catch unreachable;
+    state.mobs.append(mob) catch err.wat();
     const ptr = state.mobs.last().?;
     state.dungeon.at(coord).mob = ptr;
     return ptr;
@@ -212,7 +213,7 @@ fn getConnectionSide(parent: *const Room, child: *const Room) ?Direction {
         return if (parent.rect.start.y > child.rect.start.y) .North else .South;
     } else if (y_overlap) {
         return if (parent.rect.start.x > child.rect.start.x) .West else .East;
-    } else unreachable;
+    } else err.wat();
 }
 
 fn randomWallCoord(rect: *const Rect, i: ?usize) Coord {
@@ -241,7 +242,7 @@ fn _createItem(comptime T: type, item: T) *T {
         Evocable => &state.evocables,
         else => @compileError("uh wat"),
     };
-    return list.appendAndReturn(item) catch @panic("OOM");
+    return list.appendAndReturn(item) catch err.oom();
 }
 
 fn _createItemFromTemplate(template: ItemTemplate) Item {
@@ -250,7 +251,7 @@ fn _createItemFromTemplate(template: ItemTemplate) Item {
         .A => |i| Item{ .Armor = _createItem(Armor, i) },
         .P => |i| Item{ .Potion = _createItem(Potion, i) },
         .E => |i| Item{ .Evocable = _createItem(Evocable, i) },
-        //else => @panic("TODO"),
+        //else => err.todo(),
     };
 }
 
@@ -260,7 +261,7 @@ fn _chooseLootItem(item_weights: []usize, value_range: MinMax(usize)) ItemTempla
             @TypeOf(items.ITEM_DROPS[0]),
             &items.ITEM_DROPS,
             item_weights,
-        ) catch unreachable;
+        ) catch err.wat();
 
         if (!value_range.contains(item_info.w))
             continue;
@@ -272,7 +273,7 @@ fn _chooseLootItem(item_weights: []usize, value_range: MinMax(usize)) ItemTempla
 fn placeProp(coord: Coord, prop_template: *const Prop) *Prop {
     var prop = prop_template.*;
     prop.coord = coord;
-    state.props.append(prop) catch unreachable;
+    state.props.append(prop) catch err.wat();
     const propptr = state.props.last().?;
     state.dungeon.at(coord).surface = SurfaceItem{ .Prop = propptr };
     return state.props.last().?;
@@ -281,7 +282,7 @@ fn placeProp(coord: Coord, prop_template: *const Prop) *Prop {
 fn placeContainer(coord: Coord, template: *const Container) void {
     var container = template.*;
     container.coord = coord;
-    state.containers.append(container) catch unreachable;
+    state.containers.append(container) catch err.wat();
     const ptr = state.containers.last().?;
     state.dungeon.at(coord).surface = SurfaceItem{ .Container = ptr };
 }
@@ -289,7 +290,7 @@ fn placeContainer(coord: Coord, template: *const Container) void {
 fn _place_machine(coord: Coord, machine_template: *const Machine) void {
     var machine = machine_template.*;
     machine.coord = coord;
-    state.machines.append(machine) catch unreachable;
+    state.machines.append(machine) catch err.wat();
     const machineptr = state.machines.last().?;
     state.dungeon.at(coord).surface = SurfaceItem{ .Machine = machineptr };
 }
@@ -297,7 +298,7 @@ fn _place_machine(coord: Coord, machine_template: *const Machine) void {
 fn placeDoor(coord: Coord, locked: bool) void {
     var door = if (locked) surfaces.LockedDoor else Configs[coord.z].door.*;
     door.coord = coord;
-    state.machines.append(door) catch unreachable;
+    state.machines.append(door) catch err.wat();
     const doorptr = state.machines.last().?;
     state.dungeon.at(coord).surface = SurfaceItem{ .Machine = doorptr };
     state.dungeon.at(coord).type = .Floor;
@@ -311,7 +312,7 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     state.player.inventory.rings[0] = echoring;
     state.player.prisoner_status = Prisoner{ .of = .Necromancer };
 
-    //state.player.inventory.pack.append(Item{ .Evocable = _createItem(Evocable, items.EldritchLanternEvoc) }) catch unreachable;
+    //state.player.inventory.pack.append(Item{ .Evocable = _createItem(Evocable, items.EldritchLanternEvoc) }) catch err.wat();
 }
 
 fn prefabIsValid(level: usize, prefab: *Prefab) bool {
@@ -394,7 +395,7 @@ fn attachRect(parent: *const Room, d: Direction, width: usize, height: usize, di
             .width = width,
             .height = height,
         },
-        else => @panic("unimplemented"),
+        else => err.todo(),
     };
 }
 
@@ -500,7 +501,7 @@ fn excavatePrefab(
                             .Potion => |pid| {
                                 if (utils.findById(&items.POTIONS, pid)) |potion_i| {
                                     const potion_o = _createItem(Potion, items.POTIONS[potion_i]);
-                                    state.dungeon.itemsAt(rc).append(Item{ .Potion = potion_o }) catch unreachable;
+                                    state.dungeon.itemsAt(rc).append(Item{ .Potion = potion_o }) catch err.wat();
                                 } else {
                                     std.log.err(
                                         "{}: Couldn't load potion {}, skipping.",
@@ -528,7 +529,7 @@ fn excavatePrefab(
                                             point.x + room.rect.start.x + startx,
                                             point.y + room.rect.start.y + starty,
                                         );
-                                        machine.areas.append(adj_point) catch unreachable;
+                                        machine.areas.append(adj_point) catch err.wat();
                                     }
                                 } else {
                                     std.log.err(
@@ -552,9 +553,9 @@ fn excavatePrefab(
                     const p_ind = utils.findById(surfaces.props.items, Configs[room.rect.start.z].bars);
                     _ = placeProp(rc, &surfaces.props.items[p_ind.?]);
                 },
-                .Loot1 => state.dungeon.itemsAt(rc).append(_createItemFromTemplate(loot_item1)) catch unreachable,
-                .Loot2 => state.dungeon.itemsAt(rc).append(_createItemFromTemplate(loot_item2)) catch unreachable,
-                .RareLoot => state.dungeon.itemsAt(rc).append(_createItemFromTemplate(rare_loot_item)) catch unreachable,
+                .Loot1 => state.dungeon.itemsAt(rc).append(_createItemFromTemplate(loot_item1)) catch err.wat(),
+                .Loot2 => state.dungeon.itemsAt(rc).append(_createItemFromTemplate(loot_item2)) catch err.wat(),
+                .RareLoot => state.dungeon.itemsAt(rc).append(_createItemFromTemplate(rare_loot_item)) catch err.wat(),
                 else => {},
             }
         }
@@ -634,7 +635,7 @@ fn excavatePrefab(
         if (!inferred) {
             std.log.err("{}: Couldn't infer type for stockpile! (skipping)", .{fab.name.constSlice()});
         } else {
-            state.stockpiles[room.rect.start.z].append(stckpl) catch unreachable;
+            state.stockpiles[room.rect.start.z].append(stckpl) catch err.wat();
         }
     }
 
@@ -648,7 +649,7 @@ fn excavatePrefab(
             .start = room_start,
             .width = output.width,
             .height = output.height,
-        }) catch unreachable;
+        }) catch err.wat();
     }
 
     if (fab.input) |input| {
@@ -669,7 +670,7 @@ fn excavatePrefab(
         if (!inferred) {
             std.log.err("{}: Couldn't infer type for input area! (skipping)", .{fab.name.constSlice()});
         } else {
-            state.inputs[room.rect.start.z].append(input_stckpl) catch unreachable;
+            state.inputs[room.rect.start.z].append(input_stckpl) catch err.wat();
         }
     }
 }
@@ -778,7 +779,7 @@ pub fn validateLevel(
                 "BUG: found no walkable point in room (dim: {}x{})",
                 .{ room.width, room.height },
             );
-            unreachable;
+            err.wat();
         }
 
         pub fn _isWalkable(coord: Coord, opts: state.IsWalkableOptions) bool {
@@ -790,7 +791,7 @@ pub fn validateLevel(
     const base_room = b: while (true) {
         const r = rng.chooseUnweighted(Room, rooms);
         if (r.type != .Corridor) break :b r;
-    } else unreachable;
+    } else err.wat();
     const point = _f._getWalkablePoint(&base_room.rect);
 
     // Ensure that all required prefabs were used.
@@ -865,8 +866,8 @@ pub fn placeMoarCorridors(level: usize, alloc: *mem.Allocator) void {
                 child.connections += 1;
 
                 excavateRect(&corridor.room.rect);
-                corridor.markConnectorsAsUsed(parent, child) catch unreachable;
-                newrooms.append(corridor.room) catch unreachable;
+                corridor.markConnectorsAsUsed(parent, child) catch err.wat();
+                newrooms.append(corridor.room) catch err.wat();
 
                 // When using a prefab, the corridor doesn't include the connectors. Excavate
                 // the connectors (both the beginning and the end) manually.
@@ -881,7 +882,7 @@ pub fn placeMoarCorridors(level: usize, alloc: *mem.Allocator) void {
         }
     }
 
-    for (newrooms.items) |new| rooms.append(new) catch unreachable;
+    for (newrooms.items) |new| rooms.append(new) catch err.wat();
 }
 
 fn createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?Corridor {
@@ -943,7 +944,7 @@ fn createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?C
                 .width = child.rect.start.x - parent.rect.end().x,
             },
         },
-        else => unreachable,
+        else => err.wat(),
     };
 
     room.type = .Corridor;
@@ -957,7 +958,7 @@ fn createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?C
         .distance = switch (side) {
             .North, .South => room.rect.height,
             .West, .East => room.rect.width,
-            else => unreachable,
+            else => err.wat(),
         },
         .fab_connectors = fab_connectors,
     };
@@ -1009,7 +1010,7 @@ fn _place_rooms(
     }
 
     var fab: ?*Prefab = null;
-    var distance = rng.choose(usize, &Configs[level].distances[0], &Configs[level].distances[1]) catch unreachable;
+    var distance = rng.choose(usize, &Configs[level].distances[0], &Configs[level].distances[1]) catch err.wat();
     var child: Room = undefined;
     var side = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
 
@@ -1091,14 +1092,14 @@ fn _place_rooms(
 
     if (corridor) |cor| {
         excavateRect(&cor.room.rect);
-        cor.markConnectorsAsUsed(parent, &child) catch unreachable;
+        cor.markConnectorsAsUsed(parent, &child) catch err.wat();
 
         // XXX: atchung, don't access <parent> var after this, as appending this
         // may have invalidated that pointer.
         //
         // FIXME: can't we append this along with the child at the end of this
         // function?
-        rooms.append(cor.room) catch unreachable;
+        rooms.append(cor.room) catch err.wat();
 
         // When using a prefab, the corridor doesn't include the connectors. Excavate
         // the connectors (both the beginning and the end) manually.
@@ -1141,7 +1142,7 @@ fn _place_rooms(
     child.connections += 1;
     rooms.items[parent_i].connections += 1;
 
-    rooms.append(child) catch unreachable;
+    rooms.append(child) catch err.wat();
 }
 
 pub fn placeRandomRooms(
@@ -1188,7 +1189,7 @@ pub fn placeRandomRooms(
         if (first == null) first = room;
         fab.used[level] += 1;
         excavatePrefab(&room, fab, allocator, 0, 0);
-        rooms.append(room) catch unreachable;
+        rooms.append(room) catch err.wat();
 
         reqctr += 1;
     }
@@ -1202,7 +1203,7 @@ pub fn placeRandomRooms(
             .rect = Rect{ .start = Coord.new2(level, x, y), .width = width, .height = height },
         };
         excavateRect(&first.?.rect);
-        rooms.append(first.?) catch unreachable;
+        rooms.append(first.?) catch err.wat();
     }
 
     if (level == PLAYER_STARTING_LEVEL) {
@@ -1368,7 +1369,7 @@ pub fn placeBSPRooms(
         .rect = Rect{ .start = Coord.new2(level, 1, 1), .height = HEIGHT - 2, .width = WIDTH - 2 },
         .group = .Root,
     };
-    grandma_node.splitTree(&failed, &leaves, level, allocator) catch unreachable;
+    grandma_node.splitTree(&failed, &leaves, level, allocator) catch err.wat();
     defer grandma_node.freeRecursively(allocator);
 
     for (failed.items) |container_node| {
@@ -1377,7 +1378,7 @@ pub fn placeBSPRooms(
         room.type = .Sideroom;
         container_node.index = rooms.items.len;
         excavateRect(&room.rect);
-        rooms.append(room) catch unreachable;
+        rooms.append(room) catch err.wat();
     }
 
     for (leaves.items) |container_node| {
@@ -1403,7 +1404,7 @@ pub fn placeBSPRooms(
         }, allocator, .{ .loot = rng.onein(3) });
 
         container_node.index = rooms.items.len;
-        rooms.append(room) catch unreachable;
+        rooms.append(room) catch err.wat();
     }
 
     const S = struct {
@@ -1491,8 +1492,8 @@ pub fn placeBSPRooms(
                     corridor.child.connections += 1;
 
                     excavateRect(&corridor.room.rect);
-                    roomlist.append(corridor.room) catch unreachable;
-                    doorlist.append(corridor.room.rect.start) catch unreachable;
+                    roomlist.append(corridor.room) catch err.wat();
+                    doorlist.append(corridor.room.rect.start) catch err.wat();
                 }
             }
 
@@ -1546,7 +1547,7 @@ pub fn placeItems(level: usize) void {
                         item = &item_list[rng.range(usize, 0, item_list.len - 1)];
                     }
 
-                    container.items.append(Item{ .Prop = item }) catch unreachable;
+                    container.items.append(Item{ .Prop = item }) catch err.wat();
                 }
             },
             else => {},
@@ -1594,7 +1595,7 @@ pub fn placeItems(level: usize) void {
 
             const t = _chooseLootItem(&item_weights, minmax(usize, 0, 100));
             const item = _createItemFromTemplate(t);
-            state.dungeon.itemsAt(item_coord).append(item) catch unreachable;
+            state.dungeon.itemsAt(item_coord).append(item) catch err.wat();
         }
     }
 }
@@ -1635,7 +1636,7 @@ pub fn placeTraps(level: usize) void {
                 0, 1 => surfaces.ConfusionGasTrap,
                 2, 3 => surfaces.ParalysisGasTrap,
                 4 => surfaces.PoisonGasTrap,
-                else => unreachable,
+                else => err.wat(),
             };
 
             var num_of_vents = rng.range(usize, 1, 3);
@@ -1679,7 +1680,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
 
                 const guard = placeMob(alloc, &mobs.PatrolTemplate, coord, .{});
                 if (patrol_warden) |warden| {
-                    warden.squad_members.append(guard) catch unreachable;
+                    warden.squad_members.append(guard) catch err.wat();
                 } else {
                     guard.base_strength += 2;
                     patrol_warden = guard;
@@ -1865,7 +1866,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                         }
                     }
                 },
-                else => unreachable,
+                else => err.wat(),
             }
         }
     }
@@ -2192,7 +2193,7 @@ fn levelFeaturePrisoners(c: usize, coord: Coord, room: *const Room, prefab: *con
 
     for (&CARDINAL_DIRECTIONS) |direction|
         if (coord.move(direction, state.mapgeometry)) |neighbor| {
-            //if (direction == .North) unreachable;
+            //if (direction == .North) err.wat();
             if (state.dungeon.at(neighbor).surface) |surface| {
                 if (meta.activeTag(surface) == .Prop and surface.Prop.holder) {
                     prisoner.prisoner_status.?.held_by = .{ .Prop = surface.Prop };
@@ -2204,16 +2205,16 @@ fn levelFeaturePrisoners(c: usize, coord: Coord, room: *const Room, prefab: *con
 
 fn levelFeaturePotions(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
     const potion = rng.chooseUnweighted(Potion, &items.POTIONS);
-    state.potions.append(potion) catch unreachable;
+    state.potions.append(potion) catch err.wat();
     state.dungeon.itemsAt(coord).append(
         Item{ .Potion = state.potions.last().? },
-    ) catch unreachable;
+    ) catch err.wat();
 }
 
 fn levelFeatureVials(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
     state.dungeon.itemsAt(coord).append(
-        Item{ .Vial = rng.choose(Vial, &Vial.VIALS, &Vial.VIAL_COMMONICITY) catch unreachable },
-    ) catch unreachable;
+        Item{ .Vial = rng.choose(Vial, &Vial.VIALS, &Vial.VIAL_COMMONICITY) catch err.wat() },
+    ) catch err.wat();
 }
 
 fn levelFeatureExperiments(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
@@ -2234,16 +2235,16 @@ fn levelFeatureOres(c: usize, coord: Coord, room: *const Room, prefab: *const Pr
     var placed: usize = rng.rangeClumping(usize, 3, 8, 2);
     var tries: usize = 50;
     while (tries > 0) : (tries -= 1) {
-        const v = rng.choose(Vial.OreAndVial, &Vial.VIAL_ORES, &Vial.VIAL_COMMONICITY) catch unreachable;
+        const v = rng.choose(Vial.OreAndVial, &Vial.VIAL_ORES, &Vial.VIAL_COMMONICITY) catch err.wat();
 
         if (v.m) |material| {
             const item = Item{ .Boulder = material };
             if (using_container) |container| {
-                container.items.append(item) catch unreachable;
+                container.items.append(item) catch err.wat();
                 if (placed == 0) break;
                 placed -= 1;
             } else {
-                state.dungeon.itemsAt(coord).append(item) catch unreachable;
+                state.dungeon.itemsAt(coord).append(item) catch err.wat();
                 break;
             }
         }
@@ -2267,10 +2268,10 @@ fn levelFeatureIronOres(c: usize, coord: Coord, room: *const Room, prefab: *cons
 
         const item = Item{ .Boulder = mat };
         if (using_container) |container| {
-            container.items.append(item) catch unreachable;
+            container.items.append(item) catch err.wat();
             if (placed == 0) break;
         } else {
-            state.dungeon.itemsAt(coord).append(item) catch unreachable;
+            state.dungeon.itemsAt(coord).append(item) catch err.wat();
         }
     }
 }
@@ -2279,7 +2280,7 @@ fn levelFeatureIronOres(c: usize, coord: Coord, room: *const Room, prefab: *cons
 fn levelFeatureMetals(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
     const metals = [_]*const Material{&materials.Iron};
     const mat = rng.chooseUnweighted(*const Material, metals[0..]);
-    state.dungeon.itemsAt(coord).append(Item{ .Boulder = mat }) catch unreachable;
+    state.dungeon.itemsAt(coord).append(Item{ .Boulder = mat }) catch err.wat();
 }
 
 // Randomly place a random metal prop.
@@ -2289,7 +2290,7 @@ fn levelFeatureMetalProducts(c: usize, coord: Coord, room: *const Room, prefab: 
     const prop_idx = utils.findById(surfaces.props.items, prop_id).?;
     state.dungeon.itemsAt(coord).append(
         Item{ .Prop = &surfaces.props.items[prop_idx] },
-    ) catch unreachable;
+    ) catch err.wat();
 }
 
 // Room: "Annotated Room{}"
@@ -2444,7 +2445,7 @@ pub const Prefab = struct {
         f.name = StackBuffer(u8, Prefab.MAX_NAME_SIZE).init(prefab_name);
 
         const to = if (f.subroom) s_fabs else n_fabs;
-        to.append(f.*) catch @panic("OOM");
+        to.append(f.*) catch err.oom();
     }
 
     pub fn parseAndLoad(
@@ -2664,7 +2665,7 @@ pub const Prefab = struct {
                                 const coord_str_b = coord_tokens.next() orelse return error.InvalidMetadataValue;
                                 coord.x = std.fmt.parseInt(usize, coord_str_a, 0) catch |_| return error.InvalidMetadataValue;
                                 coord.y = std.fmt.parseInt(usize, coord_str_b, 0) catch |_| return error.InvalidMetadataValue;
-                                points.append(coord) catch unreachable;
+                                points.append(coord) catch err.wat();
                             }
                             f.features[identifier] = Feature{
                                 .Machine = .{
@@ -2756,19 +2757,19 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
 
     const fabs_dir = std.fs.cwd().openDir("prefabs", .{
         .iterate = true,
-    }) catch unreachable;
+    }) catch err.wat();
 
     var fabs_dir_iterator = fabs_dir.iterate();
-    while (fabs_dir_iterator.next() catch unreachable) |fab_file| {
+    while (fabs_dir_iterator.next() catch err.wat()) |fab_file| {
         if (fab_file.kind != .File) continue;
 
         var fab_f = fabs_dir.openFile(fab_file.name, .{
             .read = true,
             .lock = .None,
-        }) catch unreachable;
+        }) catch err.wat();
         defer fab_f.close();
 
-        const read = fab_f.readAll(buf[0..]) catch unreachable;
+        const read = fab_f.readAll(buf[0..]) catch err.wat();
 
         Prefab.parseAndLoad(fab_file.name, buf[0..read], n_fabs, s_fabs) catch |e| {
             const msg = switch (e) {

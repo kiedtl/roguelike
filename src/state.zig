@@ -6,6 +6,7 @@ const enums = @import("std/enums.zig");
 
 const ai = @import("ai.zig");
 const astar = @import("astar.zig");
+const err = @import("err.zig");
 const display = @import("display.zig");
 const dijkstra = @import("dijkstra.zig");
 const mapgen = @import("mapgen.zig");
@@ -493,7 +494,7 @@ pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void
     var buf: [128]u8 = undefined;
     for (buf) |*i| i.* = 0;
     var fbs = std.io.fixedBufferStream(&buf);
-    std.fmt.format(fbs.writer(), fmt, args) catch |_| @panic("format error");
+    std.fmt.format(fbs.writer(), fmt, args) catch |_| err.bug("format error", .{});
 
     var msg: Message = .{
         .msg = undefined,
@@ -510,7 +511,7 @@ pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void
     )) {
         messages.items[messages.items.len - 1].dups += 1;
     } else {
-        messages.append(msg) catch @panic("OOM");
+        messages.append(msg) catch err.oom();
     }
 }
 

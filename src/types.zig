@@ -12,6 +12,7 @@ const StackBuffer = @import("buffer.zig").StackBuffer;
 const ai = @import("ai.zig");
 const fov = @import("fov.zig");
 const combat = @import("combat.zig");
+const err = @import("err.zig");
 const spells = @import("spells.zig");
 const rng = @import("rng.zig");
 const dijkstra = @import("dijkstra.zig");
@@ -161,7 +162,7 @@ pub const Direction = enum { // {{{
             .South => .East,
             .East => .North,
             .West => .South,
-            else => unreachable,
+            else => err.wat(),
         };
     }
 
@@ -297,7 +298,7 @@ pub const Coord = struct { // {{{
         if (x > @intCast(isize, limit.x) or y > @intCast(isize, limit.y))
             return;
 
-        buf.append(Coord.new2(z, @intCast(usize, x), @intCast(usize, y))) catch unreachable;
+        buf.append(Coord.new2(z, @intCast(usize, x), @intCast(usize, y))) catch err.wat();
     }
 
     pub fn drawLine(from: Coord, to: Coord, limit: Coord) StackBuffer(Coord, 2048) {
@@ -311,32 +312,32 @@ pub const Coord = struct { // {{{
         const yend = @intCast(isize, to.y);
         const stepx: isize = if (xstart < xend) 1 else -1;
         const stepy: isize = if (ystart < yend) 1 else -1;
-        const dx = @intToFloat(f64, math.absInt(xend - xstart) catch unreachable);
-        const dy = @intToFloat(f64, math.absInt(yend - ystart) catch unreachable);
+        const dx = @intToFloat(f64, math.absInt(xend - xstart) catch err.wat());
+        const dy = @intToFloat(f64, math.absInt(yend - ystart) catch err.wat());
 
-        var err: f64 = 0.0;
+        var errmarg: f64 = 0.0;
         var x = @intCast(isize, from.x);
         var y = @intCast(isize, from.y);
 
         if (dx > dy) {
-            err = dx / 2.0;
+            errmarg = dx / 2.0;
             while (x != xend) {
                 insert_if_valid(from.z, x, y, &buf, limit);
-                err -= dy;
-                if (err < 0) {
+                errmarg -= dy;
+                if (errmarg < 0) {
                     y += stepy;
-                    err += dx;
+                    errmarg += dx;
                 }
                 x += stepx;
             }
         } else {
-            err = dy / 2.0;
+            errmarg = dy / 2.0;
             while (y != yend) {
                 insert_if_valid(from.z, x, y, &buf, limit);
-                err -= dx;
-                if (err < 0) {
+                errmarg -= dx;
+                if (errmarg < 0) {
                     x += stepx;
-                    err += dy;
+                    errmarg += dy;
                 }
                 y += stepy;
             }
@@ -864,7 +865,7 @@ pub const Status = enum {
                     }
 
                     tile.ch = if (state.dungeon.at(item).type == .Wall) '#' else '·';
-                    _ = state.memory.getOrPutValue(item, tile) catch unreachable;
+                    _ = state.memory.getOrPutValue(item, tile) catch err.wat();
                 }
             }
         }
@@ -1136,7 +1137,7 @@ pub const Mob = struct { // {{{
         if (index >= self.inventory.pack.len)
             return error.IndexOutOfRange;
 
-        return self.inventory.pack.orderedRemove(index) catch unreachable;
+        return self.inventory.pack.orderedRemove(index) catch err.wat();
     }
 
     pub fn quaffPotion(self: *Mob, potion: *Potion) void {
@@ -1212,7 +1213,7 @@ pub const Mob = struct { // {{{
                     if (container.items.len >= container.capacity) {
                         return false;
                     } else {
-                        container.items.append(item) catch unreachable;
+                        container.items.append(item) catch err.wat();
                         self.declareAction(.Drop);
                         return true;
                     }
@@ -1224,7 +1225,7 @@ pub const Mob = struct { // {{{
         if (state.dungeon.itemsAt(at).isFull()) {
             return false;
         } else {
-            state.dungeon.itemsAt(at).append(item) catch unreachable;
+            state.dungeon.itemsAt(at).append(item) catch err.wat();
             self.declareAction(.Drop);
             return true;
         }
@@ -1233,7 +1234,7 @@ pub const Mob = struct { // {{{
     pub fn throwItem(self: *Mob, item: *Item, at: Coord) bool {
         switch (item.*) {
             .Potion => {},
-            .Weapon => @panic("W/A TODO"),
+            .Weapon => err.todo(),
             else => return false,
         }
 
@@ -1254,7 +1255,7 @@ pub const Mob = struct { // {{{
         if (landed == null) landed = at;
 
         switch (item.*) {
-            .Weapon => |_| @panic("W/A TODO"),
+            .Weapon => |_| err.todo(),
             .Potion => |potion| {
                 if (!potion.ingested) {
                     if (state.dungeon.at(landed.?).mob) |bastard| {
@@ -1269,7 +1270,7 @@ pub const Mob = struct { // {{{
                 // TODO: have cases where thrower misses and potion lands (unused?)
                 // in adjacent square
             },
-            else => unreachable,
+            else => err.wat(),
         }
 
         return true;
@@ -1391,7 +1392,7 @@ pub const Mob = struct { // {{{
         // for monsters, or in main:moveOrFight() for the player).
         //
         if (direction.is_diagonal() and self.isUnderStatus(.Confusion) != null)
-            @panic("BUG: Confused mob is trying to move diagonally!");
+            err.bug("Confused mob is trying to move diagonally!", .{});
 
         if (self.isUnderStatus(.Daze)) |_|
             direction = rng.chooseUnweighted(Direction, &DIRECTIONS);
@@ -1631,8 +1632,8 @@ pub const Mob = struct { // {{{
                 state.chardata.foes_killed_total += 1;
                 if (d.source == .Stab) state.chardata.foes_stabbed += 1;
 
-                const prevtotal = (state.chardata.foes_killed.getOrPutValue(self.displayName(), 0) catch unreachable).value;
-                state.chardata.foes_killed.put(self.displayName(), prevtotal + 1) catch unreachable;
+                const prevtotal = (state.chardata.foes_killed.getOrPutValue(self.displayName(), 0) catch err.wat()).value;
+                state.chardata.foes_killed.put(self.displayName(), prevtotal + 1) catch err.wat();
             }
         }
     }
@@ -1675,9 +1676,9 @@ pub const Mob = struct { // {{{
         self.is_dead = true;
 
         if (state.dungeon.itemsAt(self.coord).isFull())
-            _ = state.dungeon.itemsAt(self.coord).orderedRemove(0) catch unreachable;
+            _ = state.dungeon.itemsAt(self.coord).orderedRemove(0) catch err.wat();
 
-        state.dungeon.itemsAt(self.coord).append(Item{ .Corpse = self }) catch unreachable;
+        state.dungeon.itemsAt(self.coord).append(Item{ .Corpse = self }) catch err.wat();
 
         state.dungeon.at(self.coord).mob = null;
     }
@@ -1728,7 +1729,7 @@ pub const Mob = struct { // {{{
             assert(pth.items[0].eq(self.coord));
             var last: Coord = self.coord;
             for (pth.items[1..]) |coord| {
-                self.path_cache.put(Path{ .from = last, .to = to }, coord) catch unreachable;
+                self.path_cache.put(Path{ .from = last, .to = to }, coord) catch err.wat();
                 last = coord;
             }
             assert(last.eq(to));
@@ -1740,7 +1741,7 @@ pub const Mob = struct { // {{{
         // If it is not, set the path to null, ensuring that the path will be
         // recalculated next time.
         if (self.path_cache.get(pathobj)) |next| {
-            const direction = Direction.from_coords(self.coord, next) catch unreachable;
+            const direction = Direction.from_coords(self.coord, next) catch err.wat();
             if (!next.eq(to) and !state.is_walkable(next, .{ .mob = self })) {
                 _ = self.path_cache.remove(pathobj);
                 return null;
@@ -2401,7 +2402,7 @@ pub const Item = union(ItemType) {
             .Prop => |b| try fmt.format(fbs.writer(), "{}", .{b.name}),
             .Evocable => |v| try fmt.format(fbs.writer(), "}}{}", .{v.name}),
         }
-        buf.resizeTo(@intCast(usize, fbs.getPos() catch unreachable));
+        buf.resizeTo(@intCast(usize, fbs.getPos() catch err.wat()));
         return buf;
     }
 
@@ -2420,7 +2421,7 @@ pub const Item = union(ItemType) {
             .Prop => |b| try fmt.format(fbs.writer(), "{}", .{b.name}),
             .Evocable => |v| try fmt.format(fbs.writer(), "{}", .{v.name}),
         }
-        buf.resizeTo(@intCast(usize, fbs.getPos() catch unreachable));
+        buf.resizeTo(@intCast(usize, fbs.getPos() catch err.wat()));
         return buf;
     }
 };
