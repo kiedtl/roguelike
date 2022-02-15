@@ -1577,6 +1577,14 @@ pub const Mob = struct { // {{{
             .Attack = .{ .coord = recipient.coord, .weapon_delay = attacker_weapon.delay },
         });
 
+        // If the defender didn't know about the attacker's existence now's a
+        // good time to find out
+        ai.updateEnemyRecord(recipient, .{
+            .mob = attacker,
+            .counter = recipient.memory_duration,
+            .last_seen = attacker.coord,
+        });
+
         // const chance_of_land = combat.chanceOfAttackLanding(attacker, recipient);
         // const chance_of_dodge = combat.chanceOfAttackDodged(recipient, attacker);
         // if (attacker.coord.eq(state.player.coord)) {
@@ -1619,6 +1627,11 @@ pub const Mob = struct { // {{{
             .source = if (is_stab) .Stab else .MeleeAttack,
             .by_mob = attacker,
         });
+
+        // Daze stabbed mobs.
+        if (is_stab) {
+            recipient.addStatus(.Daze, 0, rng.range(usize, 3, 5), false);
+        }
 
         // XXX: should this be .Loud instead of .Medium?
         if (!is_stab) {

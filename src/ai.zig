@@ -137,6 +137,20 @@ pub fn dummyWork(m: *Mob, _: *mem.Allocator) void {
     _ = m.rest();
 }
 
+pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
+    // Search for an existing record.
+    for (mob.enemies.items) |*enemyrec, i| {
+        if (enemyrec.mob == new.mob) {
+            enemyrec.counter = mob.memory_duration;
+            enemyrec.last_seen = new.mob.coord;
+            return;
+        }
+    }
+
+    // No existing record, append.
+    mob.enemies.append(new) catch unreachable;
+}
+
 // For every enemy in the mob's FOV, create an "enemy record" with a pointer to
 // that mob and a counter. Set the counter to the mob's memory_duration.
 //
@@ -158,31 +172,19 @@ pub fn checkForHostiles(mob: *Mob) void {
     if (!mob.ai.is_combative)
         return;
 
-    vigilance: for (mob.fov) |row, y| for (row) |cell, x| {
+    for (mob.fov) |row, y| for (row) |cell, x| {
         if (cell == 0) continue;
-
         const fitem = Coord.new2(mob.coord.z, x, y);
 
         if (state.dungeon.at(fitem).mob) |othermob| {
-            if (!othermob.isHostileTo(mob)) continue;
-
             assert(!othermob.is_dead); // Dead mobs should be corpses (ie items)
-
-            // Search for an existing record.
-            for (mob.enemies.items) |*enemy, i| {
-                if (@ptrToInt(enemy.mob) == @ptrToInt(othermob)) {
-                    enemy.counter = mob.memory_duration;
-                    enemy.last_seen = othermob.coord;
-                    continue :vigilance;
-                }
+            if (othermob.isHostileTo(mob)) {
+                updateEnemyRecord(mob, .{
+                    .mob = othermob,
+                    .counter = mob.memory_duration,
+                    .last_seen = othermob.coord,
+                });
             }
-
-            // No existing record, append.
-            mob.enemies.append(.{
-                .mob = othermob,
-                .counter = mob.memory_duration,
-                .last_seen = othermob.coord,
-            }) catch unreachable;
         }
     };
 
