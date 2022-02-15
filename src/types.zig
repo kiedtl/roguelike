@@ -622,6 +622,7 @@ pub const Material = struct {
 pub const MessageType = union(enum) {
     Prompt, // Prompt for a choice/input, or respond to result from previous prompt
     MetaError, // Player tried to do something invalid.
+    Status, // A status effect was added or removed.
     Info,
     Move,
     Trap,
@@ -630,13 +631,14 @@ pub const MessageType = union(enum) {
 
     pub fn color(self: MessageType) u32 {
         return switch (self) {
-            .Prompt => 0x34cdff,
-            .MetaError => 0xffffff,
-            .Info => 0xfafefa,
-            .Move => 0xfafefe,
-            .Trap => 0xed254d,
-            .Damage => 0xed254d,
-            .SpellCast => 0xff7750,
+            .Prompt => 0x34cdff, // cyan blue
+            .MetaError => 0xffffff, // white
+            .Info => 0xfafefa, // creamy white
+            .Move => 0xfafefe, // creamy white
+            .Trap => 0xed254d, // pinkish red
+            .Damage => 0xed254d, // pinkish red
+            .SpellCast => 0xff7750, // golden yellow
+            .Status => 0x7fffd4, // aquamarine
         };
     }
 };
@@ -806,6 +808,52 @@ pub const Status = enum {
         };
     }
 
+    pub fn messageWhenAdded(self: Status) ?[3][]const u8 {
+        return switch (self) {
+            .Paralysis => .{ "are", "is", " paralyzed" },
+            .Held => .{ "are", "is", " entangled" },
+            .Corona => .{ "begin", "starts", " glowing" },
+            .Daze => .{ "are lost in", "stumbles around in", " a daze" },
+            .Confusion => .{ "are", "looks", " confused" },
+            .Fast => .{ "feel yourself", "starts", " moving faster" },
+            .Slow => .{ "feel yourself", "starts", " moving slowly" },
+            .Poison => .{ "feel very", "looks very", " sick" },
+            .Invigorate => .{ "feel", "looks", " invigorated" },
+            .Pain => .{ "are", "is", " wracked with pain" },
+            .Fear => .{ "feel", "looks", " troubled" },
+            .Echolocation => null,
+            .Recuperate => null,
+            .NightVision,
+            .Backvision,
+            .NightBlindness,
+            .DayBlindness,
+            => err.wat(),
+        };
+    }
+
+    pub fn messageWhenRemoved(self: Status) ?[3][]const u8 {
+        return switch (self) {
+            .Paralysis => .{ "can move again", "starts moving again", "" },
+            .Held => .{ "break", "breaks", " free" },
+            .Corona => .{ "stop", "stops", " glowing" },
+            .Daze => .{ "break out of your daze", "breaks out of their daze", "" },
+            .Confusion => .{ "are no longer", "no longer looks", " confused" },
+            .Fast => .{ "are no longer", "is no longer", " moving faster" },
+            .Slow => .{ "are no longer", "is no longer", " moving slowly" },
+            .Poison => .{ "feel", "looks", " healtheir" },
+            .Invigorate => .{ "no longer feel", "no longer looks", " invigorated" },
+            .Pain => .{ "are no longer", "is no longer", " wracked with pain" },
+            .Fear => .{ "no longer feel", "no longer looks", " troubled" },
+            .Echolocation => null,
+            .Recuperate => null,
+            .NightVision,
+            .Backvision,
+            .NightBlindness,
+            .DayBlindness,
+            => err.wat(),
+        };
+    }
+
     pub fn tickPoison(mob: *Mob) void {
         mob.takeDamage(.{
             .amount = @intToFloat(f64, rng.rangeClumping(usize, 0, 2, 2)),
@@ -874,15 +922,11 @@ pub const Status = enum {
 };
 
 pub const StatusData = struct {
-    // Which turn the status was slapped onto the mob
-    started: usize = 0,
-
     // What's the "power" of a status (percentage). For some statuses, doesn't
     // mean anything at all.
     power: usize = 0, // What's the "power" of the status
 
-    // How long the status should last, from the time it started.
-    // turns_left := (started + duration) - current_turn
+    // How long the status should last. Decremented each turn.
     duration: usize = 0, // How long
 
     // If the status is permanent.
@@ -1108,14 +1152,19 @@ pub const Mob = struct { // {{{
         }
     }
 
-    // Do stuff for various statuses that need babysitting each turn.
+    // Decrement status durations, and do stuff for various statuses that need
+    // babysitting each turn.
     pub fn tickStatuses(self: *Mob) void {
         inline for (@typeInfo(Status).Enum.fields) |status| {
             const status_e = @field(Status, status.name);
-            if (self.isUnderStatus(status_e)) |_| {
+
+            if (self.isUnderStatus(status_e)) |status_data| {
                 if (self == state.player) {
                     state.chardata.time_with_statuses.getPtr(status_e).* += 1;
                 }
+
+                // Decrement
+                self.addStatus(status_e, status_data.power, utils.saturating_sub(status_data.duration, 1), status_data.permanent);
 
                 switch (status_e) {
                     .Echolocation => Status.tickEcholocation(self),
@@ -1141,7 +1190,22 @@ pub const Mob = struct { // {{{
         return self.inventory.pack.orderedRemove(index) catch err.wat();
     }
 
-    pub fn quaffPotion(self: *Mob, potion: *Potion) void {
+    // Quaff a potion, applying its effects to a Mob.
+    //
+    // direct: was the potion quaffed directly (i.e., was it thrown at the
+    //   mob or did the mob quaff it?). Used to determine whether to print a
+    //   message.
+    pub fn quaffPotion(self: *Mob, potion: *Potion, direct: bool) void {
+        if (direct) {
+            if (self == state.player) {
+                state.message(.Info, "You slurp the potion of {}.", .{potion.name});
+            } else if (state.player.cansee(self.coord)) {
+                state.message(.Info, "The {} quaffs a potion of {}!", .{
+                    self.displayName(), potion.name,
+                });
+            }
+        }
+
         // TODO: make the duration of potion status effect random (clumping, ofc)
         switch (potion.type) {
             .Status => |s| self.addStatus(s, 0, Status.MAX_DURATION, false),
@@ -1260,7 +1324,7 @@ pub const Mob = struct { // {{{
             .Potion => |potion| {
                 if (!potion.ingested) {
                     if (state.dungeon.at(landed.?).mob) |bastard| {
-                        bastard.quaffPotion(potion);
+                        bastard.quaffPotion(potion, false);
                     } else switch (potion.type) {
                         .Status => {},
                         .Gas => |s| state.dungeon.atGas(landed.?)[s] = 1.0,
@@ -1758,16 +1822,37 @@ pub const Mob = struct { // {{{
     }
 
     pub fn addStatus(self: *Mob, status: Status, power: usize, duration: ?usize, permanent: bool) void {
+        const had_status_before = self.isUnderStatus(status) != null;
+
         const p_se = self.statuses.getPtr(status);
-        p_se.started = state.ticks;
         p_se.power = power;
         p_se.duration = duration orelse Status.MAX_DURATION;
         p_se.permanent = permanent;
+
+        const has_status_now = self.isUnderStatus(status) != null;
+
+        var msg_parts: ?[3][]const u8 = null;
+
+        if (had_status_before and !has_status_now) {
+            msg_parts = status.messageWhenRemoved();
+        } else if (!had_status_before and has_status_now) {
+            msg_parts = status.messageWhenAdded();
+        }
+
+        if (msg_parts) |_| {
+            if (self == state.player) {
+                state.message(.Status, "You {}{}.", .{ msg_parts.?[0], msg_parts.?[2] });
+            } else if (state.player.cansee(self.coord)) {
+                state.message(.Status, "The {} {}{}.", .{
+                    self.displayName(), msg_parts.?[1], msg_parts.?[2],
+                });
+            }
+        }
     }
 
     pub fn isUnderStatus(self: *const Mob, status: Status) ?*const StatusData {
         const se = self.statuses.getPtrConst(status);
-        return if (se.permanent or (se.started + se.duration) < state.ticks) null else se;
+        return if (se.permanent or se.duration == 0) null else se;
     }
 
     pub fn lastDamagePercentage(self: *const Mob) usize {

@@ -241,12 +241,12 @@ fn drawEnemyInfo(
             const status = entry.key;
             const se = entry.value.*;
 
-            var left = utils.saturating_sub(se.started + se.duration, state.ticks);
-            if (se.permanent) left = Status.MAX_DURATION;
+            var duration = se.duration;
+            if (se.permanent) duration = Status.MAX_DURATION;
 
-            if (left == 0) continue;
+            if (duration == 0) continue;
 
-            _draw_bar(y, startx, endx, left, Status.MAX_DURATION, status.string(), 0x77452e, 0xffffff);
+            _draw_bar(y, startx, endx, duration, Status.MAX_DURATION, status.string(), 0x77452e, 0xffffff);
             y += 1;
         }
 
@@ -344,12 +344,12 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         const status = entry.key;
         const se = entry.value.*;
 
-        var left = utils.saturating_sub(se.started + se.duration, state.ticks);
-        if (se.permanent) left = Status.MAX_DURATION;
+        var duration = se.duration;
+        if (se.permanent) duration = Status.MAX_DURATION;
 
-        if (left == 0) continue;
+        if (duration == 0) continue;
 
-        _draw_bar(y, startx, endx, left, Status.MAX_DURATION, status.string(), 0x77452e, 0xffffff);
+        _draw_bar(y, startx, endx, duration, Status.MAX_DURATION, status.string(), 0x77452e, 0xffffff);
         y += 1;
     }
     y += 1;

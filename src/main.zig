@@ -471,7 +471,7 @@ fn useItem() bool {
         },
         .Armor, .Weapon => err.wat(),
         .Potion => |p| {
-            state.player.quaffPotion(p);
+            state.player.quaffPotion(p, true);
             const prevtotal = (state.chardata.potions_quaffed.getOrPutValue(p.id, 0) catch err.wat()).value;
             state.chardata.potions_quaffed.put(p.id, prevtotal + 1) catch err.wat();
         },
