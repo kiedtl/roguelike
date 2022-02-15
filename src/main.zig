@@ -260,6 +260,11 @@ fn bookkeepingFOV() void {
 fn moveOrFight(direction: Direction) bool {
     const current = state.player.coord;
 
+    if (direction.is_diagonal() and state.player.isUnderStatus(.Confusion) != null) {
+        state.message(.MetaError, "You cannot move diagonally whilst confused!", .{});
+        return false;
+    }
+
     if (current.move(direction, state.mapgeometry)) |dest| {
         if (state.dungeon.at(dest).mob) |mob| {
             if (state.player.isHostileTo(mob) and !state.player.canSwapWith(mob, direction)) {

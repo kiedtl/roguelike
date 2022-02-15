@@ -718,7 +718,12 @@ pub const Status = enum {
     // Power field determines amount of light emitted.
     Corona,
 
-    // Makes mob move in random directions.
+    // Makes mob move and in random directions.
+    //
+    // Doesn't have a power field.
+    Daze,
+
+    // Prevents mobs from using diagonal moves.
     //
     // Doesn't have a power field.
     Confusion,
@@ -783,6 +788,7 @@ pub const Status = enum {
             .Held => "held",
             .Echolocation => "echolocating",
             .Corona => "glowing",
+            .Daze => "dazed",
             .Confusion => "confused",
             .Fast => "hasted",
             .Slow => "slowed",
@@ -1381,7 +1387,13 @@ pub const Mob = struct { // {{{
         const coord = self.coord;
         var direction = p_direction;
 
-        if (self.isUnderStatus(.Confusion)) |_|
+        // This should have been handled elsewhere (in the pathfinding code
+        // for monsters, or in main:moveOrFight() for the player).
+        //
+        if (direction.is_diagonal() and self.isUnderStatus(.Confusion) != null)
+            @panic("BUG: Confused mob is trying to move diagonally!");
+
+        if (self.isUnderStatus(.Daze)) |_|
             direction = rng.chooseUnweighted(Direction, &DIRECTIONS);
 
         // Face in that direction and update last_attempted_move, no matter
@@ -1389,11 +1401,23 @@ pub const Mob = struct { // {{{
         self.facing = direction;
         self.last_attempted_move = direction;
 
+        var succeeded = false;
         if (coord.move(direction, state.mapgeometry)) |dest| {
-            return self.teleportTo(dest, direction);
+            succeeded = self.teleportTo(dest, direction);
         } else {
-            return false;
+            succeeded = false;
         }
+
+        if (!succeeded and self.isUnderStatus(.Daze) != null) {
+            if (self == state.player) {
+                state.message(.Info, "You stumble around in a daze.", .{});
+            } else if (state.player.cansee(self.coord)) {
+                state.message(.Info, "The {} stumbles around in a daze.", .{self.displayName()});
+            }
+
+            _ = self.rest();
+            return true;
+        } else return succeeded;
     }
 
     pub fn teleportTo(self: *Mob, dest: Coord, direction: ?Direction) bool {
@@ -1670,14 +1694,18 @@ pub const Mob = struct { // {{{
         // themself.
         if (self.coord.eq(to)) return null;
 
+        const is_confused = self.isUnderStatus(.Confusion) != null;
+
         // Cannot move if you're a prisoner (unless you're moving one space away)
         if (self.prisoner_status) |p|
             if (p.held_by != null and p.heldAt().distance(to) > 1)
                 return null;
 
-        if (Direction.from_coords(self.coord, to)) |direction| {
-            return direction;
-        } else |_err| {}
+        if (!is_confused) {
+            if (Direction.from_coords(self.coord, to)) |direction| {
+                return direction;
+            } else |_err| {}
+        }
 
         const pathobj = Path{ .from = self.coord, .to = to };
 
@@ -1693,6 +1721,7 @@ pub const Mob = struct { // {{{
                 state.mapgeometry,
                 state.is_walkable,
                 .{ .mob = self },
+                if (is_confused) &CARDINAL_DIRECTIONS else &DIRECTIONS,
                 &fba.allocator,
             ) orelse return null;
 
@@ -1760,7 +1789,7 @@ pub const Mob = struct { // {{{
         return switch (self.ai.phase) {
             .Flee, .Hunt, .Investigate => b: {
                 if (self.isUnderStatus(.Paralysis)) |_| break :b false;
-                if (self.isUnderStatus(.Confusion)) |_| break :b false;
+                if (self.isUnderStatus(.Daze)) |_| break :b false;
 
                 if (self.ai.phase == .Flee and !self.cansee(attacker)) {
                     break :b false;
@@ -2465,7 +2494,7 @@ pub const Tile = struct {
             };
             if (mob == state.player or
                 mob.isUnderStatus(.Paralysis) != null or
-                mob.isUnderStatus(.Confusion) != null)
+                mob.isUnderStatus(.Daze) != null)
                 cell.fg = 0xffffff;
 
             const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);

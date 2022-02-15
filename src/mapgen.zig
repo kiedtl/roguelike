@@ -809,7 +809,7 @@ pub fn validateLevel(
 
         const otherpoint = _f._getWalkablePoint(&otherroom.rect);
 
-        if (astar.path(point, otherpoint, state.mapgeometry, _f._isWalkable, .{}, alloc)) |p| {
+        if (astar.path(point, otherpoint, state.mapgeometry, _f._isWalkable, .{}, &DIRECTIONS, alloc)) |p| {
             p.deinit();
         } else {
             return false;

@@ -9,7 +9,6 @@ const spells = @import("spells.zig");
 const mapgen = @import("mapgen.zig");
 const dijkstra = @import("dijkstra.zig");
 const buffer = @import("buffer.zig");
-const astar = @import("astar.zig");
 const rng = @import("rng.zig");
 usingnamespace @import("types.zig");
 

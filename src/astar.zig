@@ -70,6 +70,7 @@ pub fn path(
     limit: Coord,
     is_walkable: fn (Coord, state.IsWalkableOptions) bool,
     opts: state.IsWalkableOptions,
+    directions: []const Direction,
     alloc: *std.mem.Allocator,
 ) ?CoordArrayList {
     if (start.z != goal.z) {
@@ -111,7 +112,7 @@ pub fn path(
 
         current_node.state = .Closed;
 
-        const neighbors = DIRECTIONS;
+        const neighbors = directions;
         neighbor: for (neighbors) |neighbor| {
             if (cur_coord.move(neighbor, state.mapgeometry)) |coord| {
                 if (nodes[coord.y][coord.x].state == .Closed)
