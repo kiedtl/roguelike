@@ -76,7 +76,7 @@
 "battery"              	 "battery pack"         	 '▂' 	 0x90a3b7 	 -        	 nay
 "fuel_burner"          	 "fuel burner"          	 '#' 	 0xffa0a0 	 -        	 nay 	 -
 "steel_gas_reservoir"  	 "steel gas reservoir"  	 '■' 	 0xd7d7ff 	 -        	 nay
-"steel_pin"            	 "steel pin"            	 '·' 	 0xa6c2d4 	 -        	 -
+"steel_pin"            	 "steel pin"            	 '+' 	 0xa6c2d4 	 -        	 -
 
 "antenna_tip"          	 "antenna tip"          	 '´' 	 0x90a3b7 	 -        	 nay 	 - 	 .Laboratory
 "antenna"              	 "antenna"              	 'Ÿ' 	 0x90a3b7 	 -        	 nay 	 - 	 .Laboratory
