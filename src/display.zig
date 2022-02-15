@@ -429,7 +429,7 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
         const msg = state.messages.items[i];
         const msgtext = utils.used(msg.msg);
 
-        const col = if (msg.turn == state.ticks or i == msgcount)
+        const col = if (msg.turn >= utils.saturating_sub(state.ticks, 3) or i == msgcount)
             msg.type.color()
         else
             utils.darkenColor(msg.type.color(), 2);
