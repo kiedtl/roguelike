@@ -2682,7 +2682,10 @@ pub const Tile = struct {
                     if (p.fg) |prop_fg| cell.fg = prop_fg;
                     break :prop p.tile;
                 },
-                .Poster => '∺',
+                .Poster => |p| poster: {
+                    cell.fg = self.material.color_bg orelse self.material.color_fg;
+                    break :poster '?';
+                },
             };
 
             cell.ch = ch;
