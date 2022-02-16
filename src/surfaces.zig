@@ -4,7 +4,9 @@ const std = @import("std");
 const assert = std.debug.assert;
 const mem = std.mem;
 const meta = std.meta;
+const math = std.math;
 
+const spells = @import("spells.zig");
 const main = @import("root");
 const utils = @import("utils.zig");
 const state = @import("state.zig");
@@ -258,7 +260,7 @@ pub const HealingGasPump = Machine{
 };
 
 pub const Brazier = Machine{
-    .name = "a brazier",
+    .name = "brazier",
 
     .powered_tile = '╋',
     .unpowered_tile = '┽',
@@ -283,11 +285,15 @@ pub const Brazier = Machine{
     .powered_luminescence = 90,
     .unpowered_luminescence = 0,
 
+    .malfunction_effect = Machine.MalfunctionEffect{
+        .Electrocute = .{ .chance = 40, .damage = 10, .radius = 5 },
+    },
+
     .on_power = powerNone,
 };
 
 pub const Lamp = Machine{
-    .name = "a lamp",
+    .name = "lamp",
 
     .powered_tile = '•',
     .unpowered_tile = '○',
@@ -308,6 +314,10 @@ pub const Lamp = Machine{
     // maximum, could be lower (see mapgen:placeLights)
     .powered_luminescence = 90,
     .unpowered_luminescence = 0,
+
+    .malfunction_effect = Machine.MalfunctionEffect{
+        .Electrocute = .{ .chance = 40, .damage = 10, .radius = 5 },
+    },
 
     .on_power = powerNone,
 };
@@ -975,12 +985,52 @@ pub fn freeProps(alloc: *mem.Allocator) void {
 }
 
 pub fn tickMachines(level: usize) void {
-    var iter = state.machines.iterator();
-    while (iter.next()) |machine| {
-        if (machine.coord.z != level or !machine.isPowered() or machine.disabled)
-            continue;
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            const coord = Coord.new2(level, x, y);
+            if (state.dungeon.at(coord).surface == null or
+                meta.activeTag(state.dungeon.at(coord).surface.?) != .Machine)
+                continue;
 
-        machine.on_power(machine);
-        machine.power = utils.saturating_sub(machine.power, machine.power_drain);
+            const machine = state.dungeon.at(coord).surface.?.Machine;
+            if (machine.disabled)
+                continue;
+
+            if (machine.isPowered()) {
+                machine.on_power(machine);
+                machine.power = utils.saturating_sub(machine.power, machine.power_drain);
+            } else if (machine.broken) {
+                if (machine.malfunction_effect) |effect| switch (effect) {
+                    .Electrocute => |e| {
+                        var did_anything = false;
+                        var zy: usize = utils.saturating_sub(coord.y, e.radius);
+                        while (zy < math.min(zy + e.radius, HEIGHT)) : (zy += 1) {
+                            var zx: usize = utils.saturating_sub(coord.x, e.radius);
+                            while (zx < math.min(zx + e.radius, WIDTH)) : (zx += 1) {
+                                const zcoord = Coord.new2(level, zx, zy);
+                                const target = state.dungeon.at(zcoord).mob orelse continue;
+                                if (rng.tenin(e.chance)) {
+                                    if (!utils.hasClearLOF(coord, zcoord)) continue;
+                                    spells.BOLT_LIGHTNING.use(null, coord, zcoord, .{
+                                        .caster_name = machine.name,
+                                        .bolt_power = e.damage,
+                                    }, "The broken {0} shoots a spark!");
+                                    did_anything = true;
+                                }
+                            }
+                        }
+                    },
+                    .Explode => |e| {
+                        if (rng.tenin(e.chance)) {
+                            explosions.kaboom(coord, .{ .strength = e.power });
+                        } else if (state.player.cansee(coord)) {
+                            state.message(.Info, "The broken {} hums ominously!", .{machine.name});
+                        }
+                    },
+                };
+            }
+        }
     }
 }

@@ -23,7 +23,7 @@ pub const SoundIntensity = enum {
 };
 
 pub const SoundType = enum {
-    None, Movement, Combat, Shout, Alarm, Scream, Explosion
+    None, Movement, Combat, Shout, Alarm, Scream, Explosion, Crash
 };
 
 // .New: sound has just been made

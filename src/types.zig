@@ -649,10 +649,16 @@ pub const Damage = struct {
     source: DamageSource = .Other,
     blood: bool = true,
 
+    kind: DamageKind = .Physical,
+
     // by_mob isn't null, but the damage done wasn't done in melee, ranged,
     // or spell attack. E.g., it could have been a fire or explosion caused by
     // by_mob.
     indirect: bool = false,
+
+    pub const DamageKind = enum {
+        Physical, Electric
+    };
 
     pub const DamageSource = enum {
         Other, MeleeAttack, RangedAttack, Stab, Explosion
@@ -1158,13 +1164,15 @@ pub const Mob = struct { // {{{
         inline for (@typeInfo(Status).Enum.fields) |status| {
             const status_e = @field(Status, status.name);
 
+            // Decrement
+            if (self.isUnderStatus(status_e)) |status_data| {
+                self.addStatus(status_e, status_data.power, utils.saturating_sub(status_data.duration, 1), status_data.permanent);
+            }
+
             if (self.isUnderStatus(status_e)) |status_data| {
                 if (self == state.player) {
                     state.chardata.time_with_statuses.getPtr(status_e).* += 1;
                 }
-
-                // Decrement
-                self.addStatus(status_e, status_data.power, utils.saturating_sub(status_data.duration, 1), status_data.permanent);
 
                 switch (status_e) {
                     .Echolocation => Status.tickEcholocation(self),
@@ -2093,7 +2101,10 @@ pub const Machine = struct {
     on_power: fn (*Machine) void, // Called on each turn when the machine is powered
     power: usize = 0, // percentage (0..100)
     last_interaction: ?*Mob = null,
+
     disabled: bool = false,
+    broken: bool = false,
+    malfunction_effect: ?MalfunctionEffect = null,
 
     interact1: ?MachInteract = null,
 
@@ -2109,6 +2120,12 @@ pub const Machine = struct {
     // E.g., a blast furnace will heat up the first area, and search
     // for fuel in the second area.
     areas: StackBuffer(Coord, 16) = StackBuffer(Coord, 16).init(null),
+
+    // chance: each turn, effect has ten in $chance to trigger.
+    pub const MalfunctionEffect = union(enum) {
+        Electrocute: struct { chance: usize, radius: usize, damage: usize },
+        Explode: struct { chance: usize, power: usize },
+    };
 
     pub const MachInteract = struct {
         name: []const u8,
@@ -2144,7 +2161,7 @@ pub const Machine = struct {
     }
 
     pub fn isPowered(self: *const Machine) bool {
-        return self.power > 0;
+        return !self.broken and self.power > 0;
     }
 
     pub fn tile(self: *const Machine) u21 {
@@ -2685,7 +2702,12 @@ pub const Tile = struct {
                         if (m.unpowered_bg) |mach_bg| cell.bg = mach_bg;
                         if (m.unpowered_fg) |mach_fg| cell.fg = mach_fg;
                     }
-                    break :mach m.tile();
+
+                    if (m.broken) {
+                        break :mach 'X';
+                    } else {
+                        break :mach m.tile();
+                    }
                 },
                 .Prop => |p| prop: {
                     if (p.bg) |prop_bg| cell.bg = prop_bg;

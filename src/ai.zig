@@ -17,7 +17,7 @@ const SpellInfo = spells.SpellInfo;
 
 fn flingRandomSpell(me: *Mob, target: *Mob) void {
     const spell = rng.chooseUnweighted(SpellInfo, me.spells.slice());
-    spell.spell.use(me, target.coord, .{
+    spell.spell.use(me, me.coord, target.coord, .{
         .status_duration = spell.duration,
         .status_power = spell.power,
     }, null);
@@ -569,7 +569,7 @@ pub fn tortureWork(mob: *Mob, alloc: *mem.Allocator) void {
         if (prisoner.isUnderStatus(.Pain)) |_|
             continue;
 
-        spells.CAST_PAIN.use(mob, prisoner.coord, .{
+        spells.CAST_PAIN.use(mob, mob.coord, prisoner.coord, .{
             .status_duration = 10,
             .status_power = 4,
         }, null);
@@ -700,7 +700,7 @@ pub fn mageFight(mob: *Mob, alloc: *mem.Allocator) void {
             continue;
         }
 
-        spell.spell.use(mob, enemy.coord, .{
+        spell.spell.use(mob, mob.coord, enemy.coord, .{
             .status_duration = 10,
             .status_power = 4,
         }, null);
@@ -755,10 +755,10 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
 
     if (ally and rng.onein(10)) {
         const spell = mob.spells.data[0];
-        spell.spell.use(mob, target.coord, .{
+        spell.spell.use(mob, mob.coord, target.coord, .{
             .status_duration = spell.duration,
             .status_power = spell.power,
-        }, "The {0} glitters at you!");
+        }, "The {0} glitters ominously!");
     } else {
         _ = mob.rest();
     }

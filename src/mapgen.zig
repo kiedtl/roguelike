@@ -312,7 +312,7 @@ fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
     state.player.inventory.rings[0] = echoring;
     state.player.prisoner_status = Prisoner{ .of = .Necromancer };
 
-    //state.player.inventory.pack.append(Item{ .Evocable = _createItem(Evocable, items.EldritchLanternEvoc) }) catch err.wat();
+    //state.player.inventory.pack.append(Item{ .Evocable = _createItem(Evocable, items.HammerEvoc) }) catch err.wat();
 }
 
 fn prefabIsValid(level: usize, prefab: *Prefab) bool {

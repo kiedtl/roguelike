@@ -7,6 +7,17 @@ const mem = std.mem;
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
+pub fn hasClearLOF(from: Coord, to: Coord) bool {
+    const line = from.drawLine(to, state.mapgeometry);
+    return for (line.constSlice()) |c| {
+        if (!c.eq(from) and !c.eq(to) and
+            !state.is_walkable(c, .{ .right_now = true }))
+        {
+            break false;
+        }
+    } else true;
+}
+
 pub fn saturating_sub(a: anytype, b: anytype) @TypeOf(a, b) {
     return switch (@typeInfo(@TypeOf(a))) {
         .ComptimeInt, .Int => if ((a -% b) > a) 0 else a - b,

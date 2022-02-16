@@ -1,9 +1,12 @@
 const std = @import("std");
 const math = std.math;
+const meta = std.meta;
 const assert = std.debug.assert;
 
+const err = @import("err.zig");
 const explosions = @import("explosions.zig");
 const gas = @import("gas.zig");
+const display = @import("display.zig");
 const rng = @import("rng.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
@@ -59,6 +62,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 30, .i = .{ .P = PreservePotion } },
     .{ .w = 10, .i = .{ .P = DecimatePotion } },
     // Evocables
+    .{ .w = 10, .i = .{ .E = HammerEvoc } },
     .{ .w = 05, .i = .{ .E = MineKitEvoc } },
     .{ .w = 05, .i = .{ .E = EldritchLanternEvoc } },
 };
@@ -74,13 +78,15 @@ pub const Evocable = struct {
     tile_fg: u32,
 
     charges: usize = 0,
-    max_charges: usize,
+    max_charges: usize, // Zero for infinite charges
     last_used: usize = 0,
 
     // Whether to destroy the evocable when it's finished.
     delete_when_inert: bool = false,
 
     // Whether a recharging station should recharge it.
+    //
+    // Must be false if max_charges == 0.
     rechargable: bool = true,
 
     purpose: Purpose,
@@ -107,8 +113,9 @@ pub const Evocable = struct {
     pub const EvokeError = error{ NoCharges, BadPosition };
 
     pub fn evoke(self: *Evocable, by: *Mob) EvokeError!void {
-        if (self.charges > 0) {
-            self.charges -= 1;
+        if (self.max_charges == 0 or self.charges > 0) {
+            if (self.max_charges > 0)
+                self.charges -= 1;
             self.last_used = state.ticks;
             try self.trigger_fn(by, self);
         } else {
@@ -116,6 +123,47 @@ pub const Evocable = struct {
         }
     }
 };
+
+pub const HammerEvoc = Evocable{
+    .id = "hammer",
+    .name = "hammer",
+    .tile_fg = 0xffffff,
+    .max_charges = 0,
+    .rechargable = false,
+    .purpose = .Other,
+    .trigger_fn = _triggerHammerEvoc,
+};
+fn _triggerHammerEvoc(mob: *Mob, evoc: *Evocable) Evocable.EvokeError!void {
+    assert(mob == state.player);
+
+    const dest = display.chooseCell() orelse return error.BadPosition;
+    if (dest.distance(mob.coord) > 1) {
+        state.message(.MetaError, "Your arms aren't that long!", .{});
+        return error.BadPosition;
+    } else if (state.dungeon.at(dest).surface == null) {
+        state.message(.MetaError, "There's nothing there to break!", .{});
+        return error.BadPosition;
+    } else if (meta.activeTag(state.dungeon.at(dest).surface.?) != .Machine) {
+        state.message(.MetaError, "Smashing that would be a waste of time.", .{});
+        return error.BadPosition;
+    } else if (state.dungeon.at(dest).surface.?.Machine.broken) {
+        state.message(.MetaError, "Some rogue already smashed that.", .{});
+        return error.BadPosition;
+    }
+
+    const machine = state.dungeon.at(dest).surface.?.Machine;
+    machine.broken = true;
+
+    mob.makeNoise(.Crash, .Medium);
+
+    switch (rng.range(usize, 0, 3)) {
+        0 => state.message(.Info, "You viciously smash the {}.", .{machine.name}),
+        1 => state.message(.Info, "You noisily smash the {}.", .{machine.name}),
+        2 => state.message(.Info, "You pound the {} into fine dust!", .{machine.name}),
+        3 => state.message(.Info, "You smash the {} savagely.", .{machine.name}),
+        else => err.wat(),
+    }
+}
 
 pub const MineKitEvoc = Evocable{
     .id = "mine_kit",
