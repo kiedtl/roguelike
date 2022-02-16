@@ -1927,7 +1927,7 @@ pub const Mob = struct { // {{{
             }
         }
 
-        const radius = utils.saturating_sub(sound.intensity.radiusHeard(), walls_in_way);
+        const radius = utils.saturating_sub(sound.intensity.radiusHeard(), walls_in_way * 2);
         if (self != state.player) // Player can always hear sounds
             if (self.coord.distance(coord) > radius)
                 return null; // Too far away
