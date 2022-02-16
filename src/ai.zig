@@ -4,6 +4,7 @@ const assert = std.debug.assert;
 const math = std.math;
 
 const state = @import("state.zig");
+const utils = @import("utils.zig");
 const items = @import("items.zig");
 const spells = @import("spells.zig");
 const mapgen = @import("mapgen.zig");
@@ -632,8 +633,14 @@ pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
 // - Iterate through enemies. Foreach:
 //      - Is it .Held?
 //          - No:
-//              - Fire launcher at it.
-//              - Return.
+//              - Can we fire a net at it?
+//                  - Yes:
+//                    - Fire launcher at it.
+//                    - Return.
+//                  - No:
+//                    - Move towards enemy.
+//                    - TODO: try to smartly move into a position where net
+//                      can be fired, not brainlessly move towards foe.
 //          - Yes:
 //              - Continue.
 // - Wield weapon.
@@ -642,9 +649,6 @@ pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
 //          - Move towards enemy.
 //      - Yes:
 //          - Attack.
-//
-// TODO: check if there's a clear line of fire (free from allies and other mobs)
-// to target before firing.
 //
 pub fn sentinelFight(mob: *Mob, alloc: *mem.Allocator) void {
     const target = currentEnemy(mob).mob;
@@ -659,7 +663,8 @@ pub fn sentinelFight(mob: *Mob, alloc: *mem.Allocator) void {
 
     if (target.coord.distance(mob.coord) == 1 or
         target.isUnderStatus(.Held) != null or
-        spare_enemy_net)
+        spare_enemy_net or
+        !utils.hasClearLOF(mob.coord, target.coord))
     {
         if (mem.eql(u8, mob.inventory.backup.?.id, "knife"))
             _ = mob.swapWeapons();
