@@ -667,7 +667,7 @@ fn powerPowerSupply(machine: *Machine) void {
     var iter = state.machines.iterator();
     while (iter.next()) |mach| {
         if (mach.coord.z == machine.coord.z and mach.auto_power)
-            mach.addPower(null);
+            _ = mach.addPower(null);
     }
 }
 
@@ -696,7 +696,7 @@ fn powerTurbinePowerSupply(machine: *Machine) void {
 
     powerPowerSupply(machine);
 
-    // Bypass machine.addPower
+    // Bypass machine.addPower (addendum 2022-02: Why?)
     machine.power += @floatToInt(usize, steam * 10);
     machine.last_interaction = null;
 }
@@ -825,8 +825,9 @@ fn powerRestrictedMachinesOpenLever(machine: *Machine) void {
 
             if (state.dungeon.at(coord).surface) |surface| {
                 switch (surface) {
-                    .Machine => |m| if (m.restricted_to != null)
-                        m.addPower(null),
+                    .Machine => |m| if (m.restricted_to != null) {
+                        _ = m.addPower(null);
+                    },
                     else => {},
                 }
             }

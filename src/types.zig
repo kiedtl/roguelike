@@ -1497,9 +1497,12 @@ pub const Mob = struct { // {{{
             if (state.dungeon.at(dest).surface) |surface| {
                 switch (surface) {
                     .Machine => |m| if (!m.isWalkable()) {
-                        m.addPower(self);
-                        self.declareAction(.Interact);
-                        return true;
+                        if (m.addPower(self)) {
+                            self.declareAction(.Interact);
+                            return true;
+                        } else {
+                            return false;
+                        }
                     },
                     .Poster => |p| {
                         state.message(.Info, "You read the poster: '{}'", .{p.text});
@@ -1541,7 +1544,9 @@ pub const Mob = struct { // {{{
 
         if (state.dungeon.at(dest).surface) |surface| {
             switch (surface) {
-                .Machine => |m| if (m.isWalkable()) m.addPower(self),
+                .Machine => |m| if (m.isWalkable()) {
+                    _ = m.addPower(self);
+                },
                 else => {},
             }
         }
@@ -2124,13 +2129,18 @@ pub const Machine = struct {
         } else return error.NoEffect;
     }
 
-    pub fn addPower(self: *Machine, by: ?*Mob) void {
-        if (by) |_by|
+    pub fn addPower(self: *Machine, by: ?*Mob) bool {
+        if (by) |_by| {
             if (self.restricted_to) |restriction|
-                if (restriction != _by.allegiance) return;
+                if (restriction != _by.allegiance) return false;
+            if (self.auto_power)
+                return false; // Usually this is a bug (TODO: make this an assert()).
+        }
 
         self.power = math.min(self.power + self.power_add, 100);
         self.last_interaction = by;
+
+        return true;
     }
 
     pub fn isPowered(self: *const Machine) bool {
