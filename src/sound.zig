@@ -7,17 +7,15 @@ pub const SoundIntensity = enum {
     Loud,
     Louder,
     Loudest,
-    Deafening,
 
     pub fn radiusHeard(self: SoundIntensity) usize {
         return switch (self) {
             .Silent => 0,
             .Quiet => 5,
             .Medium => 10,
-            .Loud => 15,
-            .Louder => 20,
-            .Loudest => 25,
-            .Deafening => 35,
+            .Loud => 14,
+            .Louder => 18,
+            .Loudest => 20,
         };
     }
 };

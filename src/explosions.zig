@@ -70,7 +70,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
     };
 
     state.dungeon.soundAt(ground0).* = .{
-        .intensity = .Deafening,
+        .intensity = .Loudest,
         .type = .Explosion,
         .state = .New,
         .when = state.ticks,
