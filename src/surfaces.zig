@@ -46,7 +46,6 @@ pub const MACHINES = [_]Machine{
     ParalysisGasTrap,
     PoisonGasTrap,
     ConfusionGasTrap,
-    AlarmTrap,
     NetTrap,
     RestrictedMachinesOpenLever,
     Mine,
@@ -338,14 +337,6 @@ pub const StairUp = Machine{
     .unpowered_tile = '▲',
     .evoke_confirm = "Go upstairs?",
     .on_power = powerStairUp,
-};
-
-pub const AlarmTrap = Machine{
-    .name = "alarm trap",
-    .powered_tile = '^',
-    .unpowered_tile = '^',
-    .evoke_confirm = "Really trigger the alarm trap?",
-    .on_power = powerAlarmTrap,
 };
 
 pub const NetTrap = Machine{
@@ -719,16 +710,6 @@ fn powerHealingGasPump(machine: *Machine) void {
     }
 }
 
-fn powerAlarmTrap(machine: *Machine) void {
-    if (machine.last_interaction) |culprit| {
-        if (culprit.allegiance == .Necromancer) return;
-
-        culprit.makeNoise(.Alarm, .Loudest); // muahahaha
-        if (culprit.coord.eq(state.player.coord))
-            state.message(.Trap, "You hear a loud clanging noise!", .{});
-    }
-}
-
 fn powerNetTrap(machine: *Machine) void {
     if (machine.last_interaction) |culprit| {
         culprit.addStatus(.Held, 0, null, false);
@@ -747,7 +728,7 @@ fn powerPoisonGasTrap(machine: *Machine) void {
             }
         }
 
-        if (culprit.coord.eq(state.player.coord))
+        if (culprit == state.player)
             state.message(.Trap, "Noxious fumes seep through the gas vents!", .{});
     }
 }
@@ -762,7 +743,7 @@ fn powerParalysisGasTrap(machine: *Machine) void {
             }
         }
 
-        if (culprit.coord.eq(state.player.coord))
+        if (culprit == state.player)
             state.message(.Trap, "Paralytic gas seeps out of the gas vents!", .{});
     }
 }
@@ -777,7 +758,7 @@ fn powerConfusionGasTrap(machine: *Machine) void {
             }
         }
 
-        if (culprit.coord.eq(state.player.coord))
+        if (culprit == state.player)
             state.message(.Trap, "Confusing gas seeps out of the gas vents!", .{});
     }
 }

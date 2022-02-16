@@ -1627,32 +1627,26 @@ pub fn placeTraps(level: usize) void {
             tries -= 1;
         }
 
-        var trap: Machine = undefined;
-        if (rng.onein(4)) {
-            trap = surfaces.AlarmTrap;
-        } else {
-            trap = if (rng.onein(3)) surfaces.PoisonGasTrap else surfaces.ParalysisGasTrap;
-            trap = switch (rng.range(usize, 0, 4)) {
-                0, 1 => surfaces.ConfusionGasTrap,
-                2, 3 => surfaces.ParalysisGasTrap,
-                4 => surfaces.PoisonGasTrap,
-                else => err.wat(),
-            };
+        var trap = switch (rng.range(usize, 0, 4)) {
+            0, 1 => surfaces.ConfusionGasTrap,
+            2, 3 => surfaces.ParalysisGasTrap,
+            4 => surfaces.PoisonGasTrap,
+            else => err.wat(),
+        };
 
-            var num_of_vents = rng.range(usize, 1, 3);
-            var v_tries: usize = 100;
-            while (v_tries > 0 and num_of_vents > 0) : (v_tries -= 1) {
-                const vent = randomWallCoord(&room, v_tries);
-                if (state.dungeon.hasMachine(vent) or
-                    state.dungeon.at(vent).type != .Wall or
-                    state.dungeon.neighboringWalls(vent, true) == 9) continue;
+        var num_of_vents = rng.range(usize, 1, 3);
+        var v_tries: usize = 100;
+        while (v_tries > 0 and num_of_vents > 0) : (v_tries -= 1) {
+            const vent = randomWallCoord(&room, v_tries);
+            if (state.dungeon.hasMachine(vent) or
+                state.dungeon.at(vent).type != .Wall or
+                state.dungeon.neighboringWalls(vent, true) == 9) continue;
 
-                state.dungeon.at(vent).type = .Floor;
-                const p_ind = utils.findById(surfaces.props.items, Configs[room.start.z].vent);
-                const prop = placeProp(vent, &surfaces.props.items[p_ind.?]);
-                trap.props[num_of_vents] = prop;
-                num_of_vents -= 1;
-            }
+            state.dungeon.at(vent).type = .Floor;
+            const p_ind = utils.findById(surfaces.props.items, Configs[room.start.z].vent);
+            const prop = placeProp(vent, &surfaces.props.items[p_ind.?]);
+            trap.props[num_of_vents] = prop;
+            num_of_vents -= 1;
         }
         _place_machine(trap_coord, &trap);
     }
