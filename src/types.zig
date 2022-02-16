@@ -1633,11 +1633,6 @@ pub const Mob = struct { // {{{
             .by_mob = attacker,
         });
 
-        // Daze stabbed mobs.
-        if (is_stab) {
-            recipient.addStatus(.Daze, 0, rng.range(usize, 3, 5), false);
-        }
-
         // XXX: should this be .Loud instead of .Medium?
         if (!is_stab) {
             attacker.makeNoise(.Combat, .Medium);
@@ -1702,6 +1697,11 @@ pub const Mob = struct { // {{{
                     dmg_percent,
                 });
             }
+        }
+
+        // Daze stabbed mobs.
+        if (is_stab and !recipient.should_be_dead()) {
+            recipient.addStatus(.Daze, 0, rng.range(usize, 3, 5), false);
         }
     }
 
