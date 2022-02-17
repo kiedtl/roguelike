@@ -1926,7 +1926,6 @@ pub const Mob = struct { // {{{
         if (sound.state == .Dead or sound.intensity == .Silent)
             return null; // Sound was made a while back, or is silent
 
-        // If there are a lot of walls in the way, quiet the noise
         const line = self.coord.drawLine(coord, state.mapgeometry);
         var walls_in_way: usize = 0;
         for (line.constSlice()) |c| {
@@ -1935,7 +1934,12 @@ pub const Mob = struct { // {{{
             }
         }
 
-        const radius = utils.saturating_sub(sound.intensity.radiusHeard(), walls_in_way * 2);
+        // If there are a lot of walls in the way, quiet the noise
+        const radius = utils.saturating_sub(
+            sound.intensity.radiusHeard(),
+            walls_in_way * 2,
+        );
+
         if (self != state.player) // Player can always hear sounds
             if (self.coord.distance(coord) > radius)
                 return null; // Too far away
