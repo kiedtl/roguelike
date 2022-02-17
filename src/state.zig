@@ -334,7 +334,15 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
                 mob.ai.target = null;
                 mob.ai.phase = .Work;
             } else {
-                mob.facing = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
+                if (rng.onein(4)) {
+                    // Cardinal only, just in case mob is confused
+                    const d = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
+
+                    const s = mob.moveInDirection(d);
+                    if (!s) _ = mob.rest();
+                } else {
+                    mob.facing = rng.chooseUnweighted(Direction, &DIRECTIONS);
+                }
             }
 
             _ = mob.rest();
