@@ -504,6 +504,31 @@ pub fn tickAtmosphere(cur_lev: usize, cur_gas: usize) void {
         tickAtmosphere(cur_lev, cur_gas + 1);
 }
 
+pub fn messageAboutMob(
+    mob: *const Mob,
+    ref_coord: ?Coord,
+    mtype: MessageType,
+    comptime mob_is_me_fmt: []const u8,
+    mob_is_me_args: anytype,
+    comptime mob_is_else_fmt: []const u8,
+    mob_is_else_args: anytype,
+) void {
+    var buf: [128]u8 = undefined;
+    for (buf) |*i| i.* = 0;
+    var fbs = std.io.fixedBufferStream(&buf);
+
+    if (mob == player) {
+        std.fmt.format(fbs.writer(), mob_is_me_fmt, mob_is_me_args) catch err.wat();
+        message(mtype, "You {}", .{fbs.getWritten()});
+    } else if (player.cansee(mob.coord)) {
+        std.fmt.format(fbs.writer(), mob_is_else_fmt, mob_is_else_args) catch err.wat();
+        message(mtype, "The {} {}", .{ mob.displayName(), fbs.getWritten() });
+    } else if (ref_coord != null and player.cansee(ref_coord.?)) {
+        std.fmt.format(fbs.writer(), mob_is_else_fmt, mob_is_else_args) catch err.wat();
+        message(mtype, "Something {}", .{fbs.getWritten()});
+    }
+}
+
 pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void {
     var buf: [128]u8 = undefined;
     for (buf) |*i| i.* = 0;

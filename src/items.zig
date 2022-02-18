@@ -62,7 +62,8 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 30, .i = .{ .P = PreservePotion } },
     .{ .w = 10, .i = .{ .P = DecimatePotion } },
     // Evocables
-    .{ .w = 10, .i = .{ .E = HammerEvoc } },
+    .{ .w = 10, .i = .{ .E = IronSpikeEvoc } },
+    .{ .w = 02, .i = .{ .E = HammerEvoc } },
     .{ .w = 05, .i = .{ .E = MineKitEvoc } },
     .{ .w = 05, .i = .{ .E = EldritchLanternEvoc } },
 };
@@ -166,10 +167,48 @@ fn _triggerHammerEvoc(mob: *Mob, evoc: *Evocable) Evocable.EvokeError!void {
     }
 }
 
+pub const IronSpikeEvoc = Evocable{
+    .id = "iron_spike",
+    .name = "iron spike",
+    .tile_fg = 0xcacbca,
+    .max_charges = 1,
+    .delete_when_inert = true,
+    .rechargable = false,
+    .purpose = .Other,
+    .trigger_fn = _triggerIronSpikeEvoc,
+};
+
+fn _triggerIronSpikeEvoc(mob: *Mob, evoc: *Evocable) Evocable.EvokeError!void {
+    assert(mob == state.player);
+
+    const dest = display.chooseCell() orelse return error.BadPosition;
+    if (dest.distance(mob.coord) > 1) {
+        state.message(.MetaError, "Your arms aren't that long!", .{});
+        return error.BadPosition;
+    } else if (state.dungeon.at(dest).surface == null) {
+        state.message(.MetaError, "There's nothing there to break!", .{});
+        return error.BadPosition;
+    } else if (meta.activeTag(state.dungeon.at(dest).surface.?) != .Machine or
+        !state.dungeon.at(dest).surface.?.Machine.can_be_jammed)
+    {
+        state.message(.MetaError, "You can't jam that!", .{});
+        return error.BadPosition;
+    } else if (state.dungeon.at(dest).surface.?.Machine.jammed) {
+        state.message(.MetaError, "That's already jammed!", .{});
+        return error.BadPosition;
+    }
+
+    const machine = state.dungeon.at(dest).surface.?.Machine;
+    machine.jammed = true;
+    machine.power = 0;
+
+    state.message(.Info, "You jam the {}...", .{machine.name});
+}
+
 pub const MineKitEvoc = Evocable{
     .id = "mine_kit",
     .name = "mine kit",
-    .tile_fg = 0xffffff,
+    .tile_fg = 0xffd7d7,
     .max_charges = 2,
     .delete_when_inert = true,
     .rechargable = false,

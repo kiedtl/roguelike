@@ -377,11 +377,14 @@ pub const NormalDoor = Machine{
     .name = "door",
     .powered_tile = '□',
     .unpowered_tile = '■',
+    .powered_fg = 0xeab530, // light wood brown
+    .unpowered_fg = 0xeab530,
     .power_drain = 49,
     .powered_walkable = true,
     .unpowered_walkable = true,
     .powered_opacity = 0.2,
     .unpowered_opacity = 1.0,
+    .can_be_jammed = true,
     .on_power = powerNone,
 };
 
@@ -396,6 +399,7 @@ pub const LabDoor = Machine{
     .unpowered_walkable = true,
     .powered_opacity = 1.0,
     .unpowered_opacity = 0.0,
+    .can_be_jammed = true,
     .on_power = powerLabDoor,
 };
 
@@ -411,6 +415,7 @@ pub const VaultDoor = Machine{
     .unpowered_walkable = false,
     .powered_opacity = 0.0,
     .unpowered_opacity = 1.0,
+    .can_be_jammed = true,
     .on_power = powerNone,
 };
 
@@ -423,6 +428,7 @@ pub const LockedDoor = Machine{
     .restricted_to = .Necromancer,
     .powered_walkable = true,
     .unpowered_walkable = false,
+    .can_be_jammed = true,
     .on_power = powerNone,
 };
 

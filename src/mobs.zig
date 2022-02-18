@@ -224,6 +224,7 @@ pub const PlayerTemplate = MobTemplate{
     },
     .weapon = &items.KnifeWeapon,
     .armor = &items.RobeArmor,
+    //.evocables = &[_]Evocable{items.IronSpikeEvoc},
 };
 
 pub const InteractionLaborerTemplate = MobTemplate{

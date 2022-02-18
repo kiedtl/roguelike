@@ -1094,7 +1094,7 @@ pub const Mob = struct { // {{{
     // Size of `activities` Ringbuffer
     pub const MAX_ACTIVITY_BUFFER_SZ = 4;
 
-    pub fn displayName(self: *Mob) []const u8 {
+    pub fn displayName(self: *const Mob) []const u8 {
         return self.ai.profession_name orelse self.species;
     }
 
@@ -2112,6 +2112,9 @@ pub const Machine = struct {
     malfunctioning: bool = false, // Should only be true if tile.broken is true
     malfunction_effect: ?MalfunctionEffect = null,
 
+    can_be_jammed: bool = false,
+    jammed: bool = false,
+
     interact1: ?MachInteract = null,
 
     // If the player tries to trigger the machine, should we prompt for a
@@ -2158,6 +2161,45 @@ pub const Machine = struct {
                 if (restriction != _by.allegiance) return false;
             if (self.auto_power)
                 return false; // Usually this is a bug (TODO: make this an assert()).
+        } else assert(self.auto_power);
+
+        if (self.jammed) {
+            assert(self.can_be_jammed);
+            const strength = if (by) |mob| mob.strength() else 50;
+            if (rng.range(usize, 0, 100) < strength) {
+                self.jammed = false;
+
+                // unjammed!
+                if (rng.range(usize, 0, 100) < strength) {
+                    // broken!
+                    state.dungeon.at(self.coord).broken = true;
+                    if (by) |mob| mob.makeNoise(.Crash, .Medium);
+
+                    if (by) |mob| {
+                        state.messageAboutMob(mob, self.coord, .Info, "break down the jammed {}!", .{self.name}, "breaks down the jammed {}!", .{self.name});
+                    } else {
+                        state.message(.Info, "The {} breaks down!", .{self.name});
+                    }
+
+                    return true;
+                } else {
+                    if (by) |mob| mob.makeNoise(.Crash, .Quiet);
+
+                    if (by) |mob| {
+                        state.messageAboutMob(mob, self.coord, .Info, "push on {} and unjam it!", .{self.name}, "pushes on the {}, and unjams it!", .{self.name});
+                    } else {
+                        state.message(.Info, "The {} unjams itself!", .{self.name});
+                    }
+                }
+            } else {
+                if (by) |mob| {
+                    state.messageAboutMob(mob, self.coord, .Info, "push on the jammed {}, but nothing happens.", .{self.name}, "pushes on the jammed {}, but nothing happens.", .{self.name});
+                } else {
+                    state.message(.Info, "The jammed {} groans and fumes!", .{self.name});
+                }
+
+                return true;
+            }
         }
 
         self.power = math.min(self.power + self.power_add, 100);
@@ -2175,6 +2217,7 @@ pub const Machine = struct {
     }
 
     pub fn isWalkable(self: *const Machine) bool {
+        if (self.jammed) return false;
         return if (self.isPowered()) self.powered_walkable else self.unpowered_walkable;
     }
 
