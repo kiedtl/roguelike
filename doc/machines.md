@@ -27,6 +27,7 @@ chain presses, ore elevators, etc. These machines are purely for aesthetics and
 serve no purpose to the player, although they will be repaired by engineers if
 destroyed.
 
-**Powered environmental machines.** Includes lights, braziers, and air
-purifiers. They are powered by the level's power station, but unlike the
-previous category they do affect gameplay in significant ways.
+**Powered environmental machines.** Includes lights, braziers, lab doors, and
+air purifiers. They are powered by the level's power station, and the player
+doesn't interact directly with them, but unlike the previous category they do
+affect gameplay in significant ways.
