@@ -505,6 +505,34 @@ pub const HaulerTemplate = MobTemplate{
     },
 };
 
+pub const EngineerTemplate = MobTemplate{
+    .id = "engineer",
+    .mob = .{
+        .species = "goblin",
+        .tile = 'w',
+        .ai = AI{
+            .profession_name = "engineer",
+            .profession_description = "repairing",
+            .work_fn = ai.engineerWork,
+            .fight_fn = null,
+            .is_combative = false,
+            .is_curious = false,
+            .work_phase = .EngineerScan,
+        },
+        .allegiance = .Necromancer,
+
+        .willpower = 2,
+        .base_dexterity = 25,
+        .hearing = 8,
+        .max_HP = 50,
+        .memory_duration = 8,
+        .base_speed = 55,
+        .blood = .Blood,
+
+        .base_strength = 10,
+    },
+};
+
 pub const TorturerNecromancerTemplate = MobTemplate{
     .id = "torturer_necromancer",
     .mob = .{
@@ -676,6 +704,7 @@ pub const MOBS = [_]MobTemplate{
     CrystalStatueTemplate,
     AlchemistTemplate,
     CleanerTemplate,
+    EngineerTemplate,
     HaulerTemplate,
     TorturerNecromancerTemplate,
     TanusExperiment,

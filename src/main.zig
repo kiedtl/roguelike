@@ -822,6 +822,14 @@ fn viewerMain() void {
                         y = math.min(y + (tty_height / 2), HEIGHT - 1);
                     },
                     'k' => y = utils.saturating_sub(y, (tty_height / 2)),
+                    'e' => explosions.kaboom(
+                        Coord.new2(
+                            level,
+                            rng.range(usize, 20, WIDTH - 20),
+                            rng.range(usize, 20, HEIGHT - 20),
+                        ),
+                        .{ .strength = rng.range(usize, 400, 1500) },
+                    ),
                     '<' => if (level > 0) {
                         level -= 1;
                     },

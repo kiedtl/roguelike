@@ -20,10 +20,6 @@
 :spawn interaction_laborer  6,4  6,3
 :spawn            sentinel  1,1  1,1
 :spawn            sentinel 11,5 11,5
-:spawn             cleaner  1,6
-:spawn             cleaner  2,6
-:spawn             cleaner  3,6
-:spawn             cleaner  4,6
 
 
 :restriction 1
@@ -37,5 +33,4 @@
 •.6678a9766.•
 *.023242520.*
 #...........#
-•...........•
 ###***#***###

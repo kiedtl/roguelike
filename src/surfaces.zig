@@ -285,7 +285,7 @@ pub const Brazier = Machine{
     .unpowered_luminescence = 0,
 
     .malfunction_effect = Machine.MalfunctionEffect{
-        .Electrocute = .{ .chance = 40, .damage = 10, .radius = 5 },
+        .Electrocute = .{ .chance = 40, .damage = 1, .radius = 5 },
     },
 
     .on_power = powerNone,
@@ -981,23 +981,22 @@ pub fn tickMachines(level: usize) void {
             if (machine.isPowered()) {
                 machine.on_power(machine);
                 machine.power = utils.saturating_sub(machine.power, machine.power_drain);
-            } else if (machine.broken) {
+            } else if (state.dungeon.at(machine.coord).broken and machine.malfunctioning) {
                 if (machine.malfunction_effect) |effect| switch (effect) {
                     .Electrocute => |e| {
-                        var did_anything = false;
-                        var zy: usize = utils.saturating_sub(coord.y, e.radius);
-                        while (zy < math.min(zy + e.radius, HEIGHT)) : (zy += 1) {
-                            var zx: usize = utils.saturating_sub(coord.x, e.radius);
-                            while (zx < math.min(zx + e.radius, WIDTH)) : (zx += 1) {
-                                const zcoord = Coord.new2(level, zx, zy);
-                                const target = state.dungeon.at(zcoord).mob orelse continue;
-                                if (rng.tenin(e.chance)) {
+                        if (rng.tenin(e.chance)) {
+                            var zy: usize = utils.saturating_sub(coord.y, e.radius);
+                            find_mob: while (zy < math.min(zy + e.radius, HEIGHT)) : (zy += 1) {
+                                var zx: usize = utils.saturating_sub(coord.x, e.radius);
+                                while (zx < math.min(zx + e.radius, WIDTH)) : (zx += 1) {
+                                    const zcoord = Coord.new2(level, zx, zy);
+                                    const target = state.dungeon.at(zcoord).mob orelse continue;
                                     if (!utils.hasClearLOF(coord, zcoord)) continue;
                                     spells.BOLT_LIGHTNING.use(null, coord, zcoord, .{
                                         .caster_name = machine.name,
                                         .bolt_power = e.damage,
                                     }, "The broken {0} shoots a spark!");
-                                    did_anything = true;
+                                    break :find_mob;
                                 }
                             }
                         }

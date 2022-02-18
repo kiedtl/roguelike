@@ -1707,6 +1707,24 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
             }
         }
     }
+
+    for (Configs[level].required_mobs) |required_mob| {
+        var placed_ctr: usize = required_mob.count;
+        while (placed_ctr > 0) {
+            const room = rng.chooseUnweighted(Room, state.rooms[level].items);
+            if (room.type == .Corridor) continue;
+
+            var tries: usize = 10;
+            while (tries > 0) : (tries -= 1) {
+                const post_coord = room.rect.randomCoord();
+                if (isTileAvailable(post_coord) and !state.dungeon.at(post_coord).prison) {
+                    placed_ctr -= 1;
+                    _ = placeMob(alloc, required_mob.template, post_coord, .{});
+                    break;
+                }
+            }
+        }
+    }
 }
 
 fn placeLights(room: *const Room) void {
@@ -2824,6 +2842,10 @@ pub const LevelConfig = struct {
         .{ .chance = 50, .template = &mobs.ExecutionerTemplate },
         .{ .chance = 70, .template = &mobs.WatcherTemplate },
     }),
+    required_mobs: []const RequiredMob = &[_]RequiredMob{
+        .{ .count = 3, .template = &mobs.CleanerTemplate },
+        .{ .count = 3, .template = &mobs.EngineerTemplate },
+    },
 
     no_lights: bool = false,
     tiletype: TileType = .Wall,
@@ -2851,6 +2873,10 @@ pub const LevelConfig = struct {
     pub const RPBuf = StackBuffer([]const u8, 8);
     pub const MCBuf = StackBuffer(MobConfig, 3);
     pub const LevelFeatureFunc = fn (usize, Coord, *const Room, *const Prefab, *mem.Allocator) void;
+
+    pub const RequiredMob = struct {
+        count: usize, template: *const mobs.MobTemplate
+    };
 
     pub const MobConfig = struct {
         chance: usize, // Ten in <chance>

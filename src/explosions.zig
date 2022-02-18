@@ -1,3 +1,6 @@
+const std = @import("std");
+const meta = std.meta;
+
 usingnamespace @import("types.zig");
 const fov = @import("fov.zig");
 const state = @import("state.zig");
@@ -64,7 +67,6 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                     };
                     break :b hind;
                 },
-                else => return 0,
             };
         }
     };
@@ -97,22 +99,16 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
 
         if (cell > 0) {
             const coord = Coord.new2(ground0.z, x, y);
-            const newtype: TileType = switch (state.dungeon.at(coord).type) {
-                .Wall => .BrokenWall,
-                else => .BrokenFloor,
-            };
-            state.dungeon.at(coord).type = newtype;
 
-            // if (newtype == .BrokenWall and rng.onein(20)) {
-            //     const boulder = Item{ .Boulder = state.dungeon.at(coord).material };
-            //     state.dungeon.itemsAt(coord).append(boulder) catch |_| {};
-            // }
+            state.dungeon.at(coord).broken = true;
 
-            if (state.dungeon.at(coord).surface) |surf| switch (surf) {
-                .Machine => |m| m.disabled = true,
+            if (state.dungeon.at(coord).surface) |surface| switch (surface) {
+                .Machine => |m| if (m.malfunction_effect) |eff| {
+                    if (meta.activeTag(eff) == .Explode)
+                        m.malfunctioning = true;
+                },
                 else => {},
             };
-            state.dungeon.at(coord).surface = null;
 
             if (state.dungeon.at(coord).mob) |unfortunate| {
                 if (unfortunate == state.player) {

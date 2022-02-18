@@ -534,7 +534,7 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
 
             // Draw noise and indicate if that tile is visible by another mob
             switch (state.dungeon.at(coord).type) {
-                .BrokenFloor, .BrokenWall, .Floor => {
+                .Floor => {
                     const has_stuff = state.dungeon.at(coord).surface != null or
                         state.dungeon.at(coord).mob != null or
                         state.dungeon.itemsAt(coord).len > 0;

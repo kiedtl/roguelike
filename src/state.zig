@@ -166,7 +166,7 @@ pub fn tileOpacity(coord: Coord) usize {
     const tile = dungeon.at(coord);
     var o: usize = FLOOR_OPACITY;
 
-    if (tile.type == .Wall)
+    if (tile.type == .Wall and !tile.broken)
         return @floatToInt(usize, tile.material.opacity * 100);
 
     if (tile.mob) |_|
@@ -205,9 +205,13 @@ pub const IsWalkableOptions = struct {
 
 // STYLE: change to Tile.isWalkable
 pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
-    switch (dungeon.at(coord).type) {
-        .Wall, .Water, .Lava => return false,
-        else => {},
+    const tile_broken = dungeon.at(coord).broken;
+
+    if (!tile_broken) {
+        switch (dungeon.at(coord).type) {
+            .Wall, .Water, .Lava => return false,
+            else => {},
+        }
     }
 
     if (!opts.ignore_mobs) {
@@ -217,27 +221,29 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
             } else return false;
     }
 
-    if (dungeon.at(coord).surface) |surface| {
-        switch (surface) {
-            .Container => |_| return true,
-            .Machine => |m| {
-                if (opts.right_now) {
-                    if (!m.isWalkable())
-                        return false;
-                } else {
-                    if (!m.powered_walkable and !m.unpowered_walkable)
-                        return false;
+    if (!tile_broken) {
+        if (dungeon.at(coord).surface) |surface| {
+            switch (surface) {
+                .Container => |_| return true,
+                .Machine => |m| {
+                    if (opts.right_now) {
+                        if (!m.isWalkable())
+                            return false;
+                    } else {
+                        if (!m.powered_walkable and !m.unpowered_walkable)
+                            return false;
 
-                    // oh boy
-                    if (opts.mob) |mob|
-                        if (m.restricted_to) |restriction|
-                            if (!m.isWalkable() and m.powered_walkable and !m.unpowered_walkable)
-                                if (restriction != mob.allegiance)
-                                    return false;
-                }
-            },
-            .Prop => |p| if (!p.walkable) return false,
-            .Poster => return false,
+                        // oh boy
+                        if (opts.mob) |mob|
+                            if (m.restricted_to) |restriction|
+                                if (!m.isWalkable() and m.powered_walkable and !m.unpowered_walkable)
+                                    if (restriction != mob.allegiance)
+                                        return false;
+                    }
+                },
+                .Prop => |p| if (!p.walkable) return false,
+                .Poster => return false,
+            }
         }
     }
 

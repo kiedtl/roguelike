@@ -146,19 +146,20 @@ fn _triggerHammerEvoc(mob: *Mob, evoc: *Evocable) Evocable.EvokeError!void {
     } else if (meta.activeTag(state.dungeon.at(dest).surface.?) != .Machine) {
         state.message(.MetaError, "Smashing that would be a waste of time.", .{});
         return error.BadPosition;
-    } else if (state.dungeon.at(dest).surface.?.Machine.broken) {
+    } else if (state.dungeon.at(dest).broken) {
         state.message(.MetaError, "Some rogue already smashed that.", .{});
         return error.BadPosition;
     }
 
     const machine = state.dungeon.at(dest).surface.?.Machine;
-    machine.broken = true;
+    machine.malfunctioning = true;
+    state.dungeon.at(dest).broken = true;
 
     mob.makeNoise(.Crash, .Medium);
 
     switch (rng.range(usize, 0, 3)) {
         0 => state.message(.Info, "You viciously smash the {}.", .{machine.name}),
-        1 => state.message(.Info, "You noisily smash the {}.", .{machine.name}),
+        1 => state.message(.Info, "You noisily break the {}.", .{machine.name}),
         2 => state.message(.Info, "You pound the {} into fine dust!", .{machine.name}),
         3 => state.message(.Info, "You smash the {} savagely.", .{machine.name}),
         else => err.wat(),

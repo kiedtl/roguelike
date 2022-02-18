@@ -333,7 +333,7 @@ pub fn interactionLaborerWork(mob: *Mob, _: *mem.Allocator) void {
     assert(mob.ai.work_area.items.len == 1);
 
     const machine_coord = mob.ai.work_area.items[0];
-    if (state.dungeon.at(machine_coord).surface == null) {
+    if (state.dungeon.at(machine_coord).broken) {
         // Oops, our machine disappeared, probably because of an explosion
         _ = mob.rest();
         return;
@@ -351,7 +351,10 @@ pub fn interactionLaborerWork(mob: *Mob, _: *mem.Allocator) void {
 pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
     switch (mob.ai.work_phase) {
         .CleanerScan => {
-            if (mob.ai.work_area.items.len > 0 and mob.coord.distance(mob.ai.work_area.items[0]) > 1) {
+            if (mob.ai.work_area.items.len > 0 and
+                mob.coord.distance(mob.ai.work_area.items[0]) > 1 and
+                mob.isCreeping())
+            {
                 mob.tryMoveTo(mob.ai.work_area.items[0]);
             } else {
                 _ = mob.rest();
@@ -400,6 +403,76 @@ pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
                     state.tasks.items[mob.ai.task_id.?].completed = true;
                     mob.ai.task_id = null;
                 }
+            }
+        },
+        else => unreachable,
+    }
+}
+
+pub fn engineerWork(mob: *Mob, _: *mem.Allocator) void {
+    switch (mob.ai.work_phase) {
+        .EngineerScan => {
+            if (mob.ai.work_area.items.len > 0 and
+                mob.coord.distance(mob.ai.work_area.items[0]) > 1 and
+                mob.isCreeping())
+            {
+                mob.tryMoveTo(mob.ai.work_area.items[0]);
+            } else {
+                _ = mob.rest();
+            }
+
+            // Sometimes engineers get stuck in never-ending loops of trying
+            // to repair a square, noticing that another engineer is on that
+            // square, moving away, then coming back to repair that square
+            // only to find the other engineer has returned as well.
+            //
+            // Introduce some randomness to hopefully fix this issue most of the
+            // time.
+            if (rng.onein(4)) return;
+
+            var closest_task: ?usize = 0;
+            var closest_task_dist: usize = 999;
+
+            for (state.tasks.items) |*task, id|
+                if (!task.completed and task.assigned_to == null) {
+                    switch (task.type) {
+                        .Repair => |c| if (mob.coord.distance(c) < closest_task_dist) {
+                            closest_task = id;
+                            closest_task_dist = mob.coord.distance(c);
+                        },
+                        else => {},
+                    }
+                };
+
+            if (closest_task) |id| {
+                mob.ai.task_id = id;
+                state.tasks.items[id].assigned_to = mob;
+                mob.ai.work_phase = .EngineerRepair;
+            }
+        },
+        .EngineerRepair => {
+            const task = state.tasks.items[mob.ai.task_id.?];
+            const target = task.type.Repair;
+
+            if (target.distance(mob.coord) > 1) {
+                if (!mob.isCreeping()) {
+                    _ = mob.rest();
+                } else {
+                    mob.tryMoveTo(target);
+                }
+            } else {
+                _ = mob.rest();
+
+                // If there's a mob in the way, just pretend we're finished and
+                // move on
+                //
+                if (state.dungeon.at(target).mob == null) {
+                    state.dungeon.at(target).broken = false;
+                }
+
+                mob.ai.work_phase = .EngineerScan;
+                state.tasks.items[mob.ai.task_id.?].completed = true;
+                mob.ai.task_id = null;
             }
         },
         else => unreachable,

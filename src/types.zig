@@ -994,6 +994,8 @@ pub const AIWorkPhase = enum {
     HaulerScan,
     HaulerTake,
     HaulerDrop,
+    EngineerScan,
+    EngineerRepair,
 };
 
 pub const Prisoner = struct {
@@ -2107,7 +2109,7 @@ pub const Machine = struct {
     last_interaction: ?*Mob = null,
 
     disabled: bool = false,
-    broken: bool = false,
+    malfunctioning: bool = false, // Should only be true if tile.broken is true
     malfunction_effect: ?MalfunctionEffect = null,
 
     interact1: ?MachInteract = null,
@@ -2165,7 +2167,7 @@ pub const Machine = struct {
     }
 
     pub fn isPowered(self: *const Machine) bool {
-        return !self.broken and self.power > 0;
+        return !state.dungeon.at(self.coord).broken and self.power > 0;
     }
 
     pub fn tile(self: *const Machine) u21 {
@@ -2565,8 +2567,6 @@ pub const TileType = enum {
     Floor,
     Water,
     Lava,
-    BrokenWall,
-    BrokenFloor,
 };
 
 pub const Tile = struct {
@@ -2582,6 +2582,9 @@ pub const Tile = struct {
     // To be used when a random value that's specific to a coordinate, but that
     // won't change over time, is needed.
     rand: usize = 0,
+
+    // Is the surface item (or wall) on the tile broken?
+    broken: bool = false,
 
     pub fn displayAs(coord: Coord, ignore_lights: bool) termbox.tb_cell {
         var self = state.dungeon.at(coord);
@@ -2607,20 +2610,22 @@ pub const Tile = struct {
                 cell.ch = '·';
                 cell.fg = 0xcacbca;
             },
-            .BrokenFloor, .BrokenWall => {
-                cell.fg = 0xcacbca;
+        }
 
-                const chars = [_]u32{ '`', ',', '^', '\'', '*', '"' };
-                if (self.rand % 100 < 15) {
-                    cell.ch = chars[self.rand % chars.len];
-                } else {
-                    cell.ch = '·';
-                }
-            },
+        if (self.broken) {
+            cell.fg = 0xcacbca;
+            cell.bg = 0x000000;
+
+            const chars = [_]u32{ '`', ',', '^', '\'', '*', '"' };
+            if (self.rand % 100 < 15) {
+                cell.ch = chars[self.rand % chars.len];
+            } else {
+                cell.ch = '·';
+            }
         }
 
         if (self.mob) |mob| {
-            assert(self.type != .Wall);
+            if (!self.broken) assert(self.type != .Wall);
 
             cell.fg = switch (mob.ai.phase) {
                 .Work, .Flee => 0xffffff,
@@ -2646,7 +2651,7 @@ pub const Tile = struct {
 
             cell.ch = mob.tile;
         } else if (state.dungeon.itemsAt(coord).last()) |item| {
-            assert(self.type != .Wall);
+            if (!self.broken) assert(self.type != .Wall);
 
             cell.fg = 0xffffff;
 
@@ -2686,17 +2691,19 @@ pub const Tile = struct {
                 },
             }
         } else if (state.dungeon.at(coord).surface) |surfaceitem| {
-            assert(self.type != .Wall);
+            if (!self.broken) assert(self.type != .Wall);
 
             cell.fg = 0xffffff;
 
-            const ch = switch (surfaceitem) {
+            const ch: u21 = switch (surfaceitem) {
                 .Container => |c| cont: {
-                    if (c.capacity >= 14) {
-                        cell.fg = 0x000000;
-                        cell.bg = 0x808000;
+                    if (!self.broken) {
+                        if (c.capacity >= 14) {
+                            cell.fg = 0x000000;
+                            cell.bg = 0x808000;
+                        }
                     }
-                    break :cont c.tile;
+                    break :cont if (self.broken) 'x' else c.tile;
                 },
                 .Machine => |m| mach: {
                     if (m.isPowered()) {
@@ -2707,20 +2714,20 @@ pub const Tile = struct {
                         if (m.unpowered_fg) |mach_fg| cell.fg = mach_fg;
                     }
 
-                    if (m.broken) {
-                        break :mach 'X';
-                    } else {
-                        break :mach m.tile();
-                    }
+                    break :mach if (self.broken) 'x' else m.tile();
                 },
                 .Prop => |p| prop: {
-                    if (p.bg) |prop_bg| cell.bg = prop_bg;
-                    if (p.fg) |prop_fg| cell.fg = prop_fg;
-                    break :prop p.tile;
+                    if (!self.broken) {
+                        if (p.bg) |prop_bg| cell.bg = prop_bg;
+                        if (p.fg) |prop_fg| cell.fg = prop_fg;
+                    }
+                    break :prop if (self.broken) '·' else p.tile;
                 },
                 .Poster => |p| poster: {
-                    cell.fg = self.material.color_bg orelse self.material.color_fg;
-                    break :poster '?';
+                    if (!self.broken) {
+                        cell.fg = self.material.color_bg orelse self.material.color_fg;
+                    }
+                    break :poster if (self.broken) @as(u21, '·') else '?';
                 },
             };
 
