@@ -430,7 +430,7 @@ pub fn engineerWork(mob: *Mob, _: *mem.Allocator) void {
             // time.
             if (rng.onein(4)) return;
 
-            var closest_task: ?usize = 0;
+            var closest_task: ?usize = null;
             var closest_task_dist: usize = 999;
 
             for (state.tasks.items) |*task, id|
