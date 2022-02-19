@@ -2164,40 +2164,7 @@ pub const Machine = struct {
         } else assert(self.auto_power);
 
         if (self.jammed) {
-            assert(self.can_be_jammed);
-            const strength = if (by) |mob| mob.strength() else 50;
-            if (rng.range(usize, 0, 100) < strength) {
-                self.jammed = false;
-
-                // unjammed!
-                if (rng.range(usize, 0, 100) < strength) {
-                    // broken!
-                    state.dungeon.at(self.coord).broken = true;
-                    if (by) |mob| mob.makeNoise(.Crash, .Medium);
-
-                    if (by) |mob| {
-                        state.messageAboutMob(mob, self.coord, .Info, "break down the jammed {}!", .{self.name}, "breaks down the jammed {}!", .{self.name});
-                    } else {
-                        state.message(.Info, "The {} breaks down!", .{self.name});
-                    }
-
-                    return true;
-                } else {
-                    if (by) |mob| mob.makeNoise(.Crash, .Quiet);
-
-                    if (by) |mob| {
-                        state.messageAboutMob(mob, self.coord, .Info, "push on {} and unjam it!", .{self.name}, "pushes on the {}, and unjams it!", .{self.name});
-                    } else {
-                        state.message(.Info, "The {} unjams itself!", .{self.name});
-                    }
-                }
-            } else {
-                if (by) |mob| {
-                    state.messageAboutMob(mob, self.coord, .Info, "push on the jammed {}, but nothing happens.", .{self.name}, "pushes on the jammed {}, but nothing happens.", .{self.name});
-                } else {
-                    state.message(.Info, "The jammed {} groans and fumes!", .{self.name});
-                }
-
+            if (!self._tryUnjam(by)) {
                 return true;
             }
         }
@@ -2206,6 +2173,47 @@ pub const Machine = struct {
         self.last_interaction = by;
 
         return true;
+    }
+
+    fn _tryUnjam(self: *Machine, by: ?*Mob) bool {
+        assert(self.jammed and self.can_be_jammed);
+
+        const strength = if (by) |mob| mob.strength() else 50;
+
+        if (rng.range(usize, 0, 100) < strength) {
+            // unjammed!
+            self.jammed = false;
+
+            if (rng.range(usize, 0, 100) < strength) {
+                // broken!
+                state.dungeon.at(self.coord).broken = true;
+                if (by) |mob| mob.makeNoise(.Crash, .Medium);
+
+                if (by) |mob| {
+                    state.messageAboutMob(mob, self.coord, .Info, "break down the jammed {}!", .{self.name}, "breaks down the jammed {}!", .{self.name});
+                } else {
+                    state.message(.Info, "The {} breaks down!", .{self.name});
+                }
+            } else {
+                if (by) |mob| mob.makeNoise(.Crash, .Quiet);
+
+                if (by) |mob| {
+                    state.messageAboutMob(mob, self.coord, .Info, "push on {} and unjam it!", .{self.name}, "pushes on the {}, and unjams it!", .{self.name});
+                } else {
+                    state.message(.Info, "The {} unjams itself!", .{self.name});
+                }
+            }
+
+            return true;
+        } else {
+            if (by) |mob| {
+                state.messageAboutMob(mob, self.coord, .Info, "push on the jammed {}, but nothing happens.", .{self.name}, "pushes on the jammed {}, but nothing happens.", .{self.name});
+            } else {
+                state.message(.Info, "The jammed {} groans and fumes!", .{self.name});
+            }
+
+            return false;
+        }
     }
 
     pub fn isPowered(self: *const Machine) bool {
