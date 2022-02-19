@@ -395,6 +395,7 @@ pub const LabDoor = Machine{
     .powered_fg = 0xffdf10,
     .unpowered_fg = 0xffbfff,
     .power_drain = 30,
+    .auto_power = true,
     .powered_walkable = false,
     .unpowered_walkable = true,
     .powered_opacity = 1.0,
