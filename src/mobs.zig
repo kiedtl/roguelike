@@ -36,7 +36,7 @@ pub const ExecutionerTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 3,
-        .base_dexterity = 35,
+        .base_dexterity = 18,
         .hearing = 7,
         .max_HP = 40,
         .memory_duration = 5,
@@ -64,7 +64,7 @@ pub const WatcherTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 3,
-        .base_dexterity = 17,
+        .base_dexterity = 30,
         .hearing = 5,
         .max_HP = 20,
         .memory_duration = 10,
@@ -92,7 +92,7 @@ pub const WardenTemplate = MobTemplate{
         .vision = 5,
 
         .willpower = 3,
-        .base_dexterity = 20,
+        .base_dexterity = 15,
         .hearing = 7,
         .max_HP = 30,
         .memory_duration = 6,
@@ -122,7 +122,7 @@ pub const GuardTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 2,
-        .base_dexterity = 25,
+        .base_dexterity = 20,
         .hearing = 7,
         .max_HP = 35,
         .memory_duration = 5,
@@ -151,14 +151,14 @@ pub const SentinelTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 5,
-        .base_dexterity = 30,
+        .base_dexterity = 25,
         .hearing = 6,
         .max_HP = 40,
         .memory_duration = 7,
         .base_speed = 90,
         .blood = .Blood,
 
-        .base_strength = 28,
+        .base_strength = 25,
     },
     .weapon = &items.KnifeWeapon,
     .armor = &items.LeatherArmor,
@@ -181,7 +181,7 @@ pub const PatrolTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 2,
-        .base_dexterity = 25,
+        .base_dexterity = 20,
         .hearing = 7,
         .max_HP = 30,
         .memory_duration = 3,
@@ -215,14 +215,14 @@ pub const PlayerTemplate = MobTemplate{
         .no_show_fov = true,
 
         .willpower = 6,
-        .base_dexterity = 28,
+        .base_dexterity = 25,
         .hearing = 5,
         .max_HP = 60,
         .memory_duration = 10,
         .base_speed = 80,
         .blood = .Blood,
 
-        .base_strength = 19,
+        .base_strength = 18,
     },
     .weapon = &items.KnifeWeapon,
     .armor = &items.RobeArmor,
@@ -273,7 +273,7 @@ pub const GoblinTemplate = MobTemplate{
         .vision = 8,
 
         .willpower = 3,
-        .base_dexterity = 43,
+        .base_dexterity = 30,
         .hearing = 5,
         .max_HP = 60,
         .memory_duration = 8,
@@ -309,7 +309,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
         }),
 
         .willpower = 8,
-        .base_dexterity = 100,
+        .base_dexterity = 0,
         .hearing = 0,
         .max_HP = 100,
         .regen = 100,
@@ -346,7 +346,7 @@ pub const NebroStatueTemplate = MobTemplate{
         }),
 
         .willpower = 8,
-        .base_dexterity = 100,
+        .base_dexterity = 0,
         .hearing = 0,
         .max_HP = 1000,
         .regen = 100,
@@ -383,7 +383,7 @@ pub const CrystalStatueTemplate = MobTemplate{
         }),
 
         .willpower = 8,
-        .base_dexterity = 100,
+        .base_dexterity = 0,
         .hearing = 0,
         .max_HP = 1000,
         .regen = 100,
@@ -530,7 +530,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
         }),
 
         .willpower = 10,
-        .base_dexterity = 30,
+        .base_dexterity = 15,
         .hearing = 6,
         .max_HP = 40,
         .memory_duration = 10,
@@ -559,7 +559,7 @@ pub const TanusExperiment = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 3,
-        .base_dexterity = 43,
+        .base_dexterity = 30,
         .hearing = 5,
         .max_HP = 50,
         .memory_duration = 8,
@@ -589,7 +589,7 @@ pub const CatalineExperiment = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 3,
-        .base_dexterity = 43,
+        .base_dexterity = 30,
         .hearing = 5,
         .max_HP = 50,
         .memory_duration = 8,
@@ -619,7 +619,7 @@ pub const FlouinExperiment = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 3,
-        .base_dexterity = 43,
+        .base_dexterity = 30,
         .hearing = 5,
         .max_HP = 50,
         .memory_duration = 15,
@@ -649,7 +649,7 @@ pub const PhytinExperiment = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 3,
-        .base_dexterity = 43,
+        .base_dexterity = 30,
         .hearing = 5,
         .max_HP = 50,
         .memory_duration = 15,

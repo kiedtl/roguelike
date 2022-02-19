@@ -2387,8 +2387,6 @@ pub const Weapon = struct {
 
     id: []const u8,
     name: []const u8,
-    required_strength: usize,
-    required_dexterity: usize,
     delay: usize = 100, // Percentage (100 = normal speed, 200 = twice as slow)
     damages: Damages,
     main_damage: DamageType,
