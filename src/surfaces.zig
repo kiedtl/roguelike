@@ -736,6 +736,9 @@ fn powerPoisonGasTrap(machine: *Machine) void {
 
         if (culprit == state.player)
             state.message(.Trap, "Noxious fumes seep through the gas vents!", .{});
+
+        machine.disabled = true;
+        state.dungeon.at(machine.coord).surface = null;
     }
 }
 
@@ -751,6 +754,9 @@ fn powerParalysisGasTrap(machine: *Machine) void {
 
         if (culprit == state.player)
             state.message(.Trap, "Paralytic gas seeps out of the gas vents!", .{});
+
+        machine.disabled = true;
+        state.dungeon.at(machine.coord).surface = null;
     }
 }
 
@@ -766,6 +772,9 @@ fn powerConfusionGasTrap(machine: *Machine) void {
 
         if (culprit == state.player)
             state.message(.Trap, "Confusing gas seeps out of the gas vents!", .{});
+
+        machine.disabled = true;
+        state.dungeon.at(machine.coord).surface = null;
     }
 }
 
