@@ -45,29 +45,28 @@ pub fn currentEnemy(me: *Mob) *EnemyRecord {
 }
 
 // Flee if:
-//      - enemy's HP is twice as high as mob's HP
-//      - mob's HP is 1/3 of normal and enemy's HP is greater than mob's
-//      - enemy's weapon is capable of trashing the mob in up to three hits
-//      - mob has .Flee status effect
+//      - enemy's HP is ×4 as high as mob's HP
+//      - mob's HP is 1/5 of normal and enemy's HP is greater than mob's
+//      - enemy's weapon is capable of trashing the mob in two hits
+//      - mob has .Fear status effect
 //
-// TODO: flee if surrounded and there are no allies in sight
+// TODO: flee if flanked and there are no allies in sight
 pub fn shouldFlee(me: *Mob) bool {
     var result = false;
 
     const enemy = currentEnemy(me).mob;
-    const max_hp_third = me.max_HP * 33 / 100;
 
-    if (enemy.HP > (me.HP * 2))
+    if (enemy.HP > (me.HP * 4))
         result = true;
 
-    if (me.HP <= max_hp_third and me.HP < enemy.HP)
+    if (me.HP <= (me.max_HP / 5) and me.HP < enemy.HP)
         result = true;
 
     const enemy_weapon = enemy.inventory.wielded orelse &items.UnarmedWeapon;
     const my_armor = me.inventory.armor orelse &items.NoneArmor;
     const max_damage = @intToFloat(f64, enemy_weapon.damages.resultOf(&my_armor.resists).sum());
 
-    if (max_damage >= max_hp_third or max_damage >= me.HP)
+    if (max_damage >= (me.HP / 2))
         result = true;
 
     if (me.isUnderStatus(.Fear)) |_|
