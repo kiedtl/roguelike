@@ -1064,7 +1064,7 @@ pub const Mob = struct { // {{{
     willpower: usize, // Range: 0 < willpower < 10
     base_strength: usize,
     base_dexterity: usize, // Range: 0 < dexterity < 100
-    vision: usize = 7,
+    vision: usize = 6,
     base_night_vision: usize = 20, // Range: 0 < night_vision < 100
     deg360_vision: bool = false,
     no_show_fov: bool = false,
