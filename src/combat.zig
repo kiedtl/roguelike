@@ -69,16 +69,20 @@ pub fn chanceOfAttackLanding(attacker: *const Mob, defender: *const Mob) usize {
     return @intCast(usize, math.clamp(chance, 0, 100));
 }
 
-pub fn chanceOfAttackDodged(defender: *const Mob, attacker: *const Mob) usize {
-    if (!defender.isAwareOfAttack(attacker.coord)) return 0;
+pub fn chanceOfAttackDodged(defender: *const Mob, attacker: ?*const Mob) usize {
+    if (attacker) |a|
+        if (!defender.isAwareOfAttack(a.coord)) return 0;
     if (defender.isUnderStatus(.Held)) |_| return 0;
 
     const neighboring_walls = @intCast(isize, state.dungeon.neighboringWalls(defender.coord, true));
 
     var chance: isize = 10;
 
-    chance += if (defender.dexterity() > attacker.dexterity()) GREATER_DEXTERITY_DODGE_BONUS else 0;
-    chance += if (defender.dexterity() > (attacker.dexterity() * 2)) DOUBLE_GREATER_DEXTERITY_DODGE_BONUS else 0;
+    if (attacker) |a| {
+        chance += if (defender.dexterity() > a.dexterity()) GREATER_DEXTERITY_DODGE_BONUS else 0;
+        chance += if (defender.dexterity() > (a.dexterity() * 2)) DOUBLE_GREATER_DEXTERITY_DODGE_BONUS else 0;
+    }
+
     chance += (9 - neighboring_walls) * 3;
 
     return @intCast(usize, math.clamp(chance, 0, 100));

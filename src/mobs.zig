@@ -5,6 +5,7 @@ const spells = @import("spells.zig");
 usingnamespace @import("types.zig");
 
 const Evocable = items.Evocable;
+const Projectile = items.Projectile;
 const StackBuffer = buffer.StackBuffer;
 const SpellInfo = spells.SpellInfo;
 
@@ -15,6 +16,7 @@ pub const MobTemplate = struct {
     backup_weapon: ?*const Weapon = null,
     armor: ?*const Armor = null,
     statuses: []const StatusDataInfo = &[_]StatusDataInfo{},
+    projectile: ?*const Projectile = null,
     evocables: []const Evocable = &[_]Evocable{},
 };
 
@@ -159,8 +161,8 @@ pub const SentinelTemplate = MobTemplate{
         .base_strength = 28,
     },
     .weapon = &items.KnifeWeapon,
-    .backup_weapon = &items.NetLauncher,
     .armor = &items.LeatherArmor,
+    .projectile = &items.NetProj,
 };
 
 pub const PatrolTemplate = MobTemplate{

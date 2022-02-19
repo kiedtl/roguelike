@@ -2,8 +2,10 @@ const std = @import("std");
 const mem = std.mem;
 const assert = std.debug.assert;
 const math = std.math;
+const meta = std.meta;
 
 const state = @import("state.zig");
+const err = @import("err.zig");
 const utils = @import("utils.zig");
 const items = @import("items.zig");
 const spells = @import("spells.zig");
@@ -701,26 +703,21 @@ pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
     mob.makeNoise(.Shout, .Loud);
 }
 
-// - Wield launcher.
 // - Iterate through enemies. Foreach:
 //      - Is it .Held?
 //          - No:
-//              - Can we fire a net at it?
+//              - Can we throw a net at it?
 //                  - Yes:
-//                    - Fire launcher at it.
-//                    - Return.
+//                    - Action: Throw net.
 //                  - No:
-//                    - Move towards enemy.
+//                    - Action: Move towards enemy.
 //                    - TODO: try to smartly move into a position where net
 //                      can be fired, not brainlessly move towards foe.
-//          - Yes:
-//              - Continue.
-// - Wield weapon.
 // - Can we attack the nearest enemy?
 //      - No:
-//          - Move towards enemy.
+//          - Action: Move towards enemy.
 //      - Yes:
-//          - Attack.
+//          - Action: Attack.
 //
 pub fn sentinelFight(mob: *Mob, alloc: *mem.Allocator) void {
     const target = currentEnemy(mob).mob;
@@ -733,14 +730,19 @@ pub fn sentinelFight(mob: *Mob, alloc: *mem.Allocator) void {
     // hack to give breathing space to enemy who just escaped net
     const spare_enemy_net = rng.tenin(25);
 
+    const net_item: ?usize = for (mob.inventory.pack.constSlice()) |item, id| {
+        if (meta.activeTag(item) == .Projectile and
+            mem.eql(u8, item.Projectile.id, "net"))
+        {
+            break id;
+        }
+    } else null;
+
     if (target.coord.distance(mob.coord) == 1 or
         target.isUnderStatus(.Held) != null or
-        spare_enemy_net or
+        spare_enemy_net or net_item == null or
         !utils.hasClearLOF(mob.coord, target.coord))
     {
-        if (mem.eql(u8, mob.inventory.backup.?.id, "knife"))
-            _ = mob.swapWeapons();
-
         // attack
         if (mob.coord.distance(target.coord) == 1) {
             _ = mob.fight(target);
@@ -749,10 +751,9 @@ pub fn sentinelFight(mob: *Mob, alloc: *mem.Allocator) void {
         }
     } else {
         // fire net
-        if (mem.eql(u8, mob.inventory.backup.?.id, "net_launcher"))
-            _ = mob.swapWeapons();
-
-        _ = mob.launchProjectile(&mob.inventory.wielded.?.launcher.?, target.coord);
+        const item = mob.inventory.pack.orderedRemove(net_item.?) catch err.wat();
+        const s = mob.throwItem(&item, target.coord, alloc);
+        assert(s);
     }
 }
 

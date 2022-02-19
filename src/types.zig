@@ -28,6 +28,7 @@ const state = @import("state.zig");
 const literature = @import("literature.zig");
 
 const Evocable = @import("items.zig").Evocable;
+const Projectile = @import("items.zig").Projectile;
 
 const Sound = @import("sound.zig").Sound;
 const SoundIntensity = @import("sound.zig").SoundIntensity;
@@ -1233,49 +1234,6 @@ pub const Mob = struct { // {{{
         self.declareAction(.Use);
     }
 
-    pub fn launchProjectile(self: *Mob, launcher: *const Weapon.Launcher, at: Coord) bool {
-        const trajectory = self.coord.drawLine(at, state.mapgeometry);
-        var landed: ?Coord = null;
-        var energy: usize = self.strength() * 2;
-
-        for (trajectory.constSlice()) |coord| {
-            if (energy == 0 or
-                (!coord.eq(self.coord) and
-                !state.is_walkable(coord, .{ .right_now = true })))
-            {
-                landed = coord;
-                break;
-            }
-            energy -= 1;
-        }
-        if (landed == null) landed = at;
-
-        if (state.dungeon.at(landed.?).mob) |bastard| {
-            const hit =
-                (rng.range(usize, 1, 100) <= combat.chanceOfAttackLanding(self, bastard)) and
-                (rng.range(usize, 1, 100) >= combat.chanceOfAttackDodged(bastard, self));
-
-            if (hit) {
-                const projectile = launcher.projectile;
-                const defender_armor = bastard.inventory.armor orelse &items.NoneArmor;
-                const max_damage = projectile.damages.resultOf(&defender_armor.resists).sum();
-
-                var damage = rng.rangeClumping(usize, max_damage / 2, max_damage, 2);
-                bastard.takeDamage(.{
-                    .amount = @intToFloat(f64, damage),
-                    .source = .RangedAttack,
-                });
-            }
-        }
-
-        if (launcher.projectile.effect) |effect_func| (effect_func)(landed.?);
-
-        self.declareAction(.Fire);
-        self.makeNoise(.Combat, .Medium);
-
-        return true;
-    }
-
     pub fn dropItem(self: *Mob, item: Item, at: Coord) bool {
         // Some faulty AI might be doing this. Or maybe a stockpile is
         // configured incorrectly and a hauler is trying to drop items in the
@@ -1306,39 +1264,61 @@ pub const Mob = struct { // {{{
         }
     }
 
-    pub fn throwItem(self: *Mob, item: *Item, at: Coord) bool {
+    pub fn throwItem(self: *Mob, item: *const Item, at: Coord, alloc: *mem.Allocator) bool {
         switch (item.*) {
-            .Potion => {},
-            .Weapon => err.todo(),
+            .Projectile, .Potion => {},
             else => return false,
         }
 
-        const trajectory = self.coord.drawLine(at, state.mapgeometry);
-        var landed: ?Coord = null;
-        var energy: usize = self.strength();
+        const item_name = (item.*.shortName() catch err.wat()).constSlice();
 
-        for (trajectory.constSlice()) |coord| {
-            if (energy == 0 or
-                (!coord.eq(self.coord) and
+        self.declareAction(.Throw);
+        state.messageAboutMob(self, self.coord, .Info, "throws a {}!", .{item_name}, "throws a {}!", .{item_name});
+
+        const dodgeable = switch (item.*) {
+            .Projectile => true,
+            .Potion => false,
+            else => err.wat(),
+        };
+
+        const trajectory = self.coord.drawLine(at, state.mapgeometry);
+
+        const landed = for (trajectory.constSlice()) |coord| {
+            if ((!coord.eq(self.coord) and
                 !state.is_walkable(coord, .{ .right_now = true })))
             {
-                landed = coord;
-                break;
+                if (state.dungeon.at(coord).mob) |mob| {
+                    const chance = combat.chanceOfAttackDodged(mob, null);
+                    if (dodgeable and rng.range(usize, 0, 100) < chance) {
+                        state.messageAboutMob(mob, mob.coord, .Info, "dodge the {}.", .{item_name}, "dodges the {}.", .{item_name});
+                        continue; // Dodged, onward!
+                    }
+                }
+
+                break coord;
             }
-            energy -= 1;
-        }
-        if (landed == null) landed = at;
+        } else at;
 
         switch (item.*) {
-            .Weapon => |_| err.todo(),
+            .Projectile => |proj| {
+                if (state.dungeon.at(landed).mob) |mob| {
+                    switch (proj.effect) {
+                        .Status => |s| mob.addStatus(s.status, s.power, s.duration, s.permanent),
+                    }
+                } else {
+                    const spot = state.nextAvailableSpaceForItem(landed, alloc);
+                    if (spot) |_spot|
+                        state.dungeon.itemsAt(_spot).append(item.*) catch err.wat();
+                }
+            },
             .Potion => |potion| {
                 if (!potion.ingested) {
-                    if (state.dungeon.at(landed.?).mob) |bastard| {
+                    if (state.dungeon.at(landed).mob) |bastard| {
                         bastard.quaffPotion(potion, false);
                     } else switch (potion.type) {
                         .Status => {},
-                        .Gas => |s| state.dungeon.atGas(landed.?)[s] = 1.0,
-                        .Custom => |f| f(null, landed.?),
+                        .Gas => |s| state.dungeon.atGas(landed)[s] = 1.0,
+                        .Custom => |f| f(null, landed),
                     }
                 }
 
@@ -2400,12 +2380,6 @@ pub const Armor = struct {
     dex_penalty: ?usize = null,
 };
 
-pub const Projectile = struct {
-    main_damage: DamageType,
-    damages: Damages,
-    effect: ?fn (Coord) void = null,
-};
-
 pub const Weapon = struct {
     // linked list stuff
     __next: ?*Weapon = null,
@@ -2419,12 +2393,7 @@ pub const Weapon = struct {
     damages: Damages,
     main_damage: DamageType,
     secondary_damage: ?DamageType,
-    launcher: ?Launcher = null,
     strs: []const DamageStr,
-
-    pub const Launcher = struct {
-        projectile: Projectile,
-    };
 };
 
 pub const Potion = struct {
@@ -2552,7 +2521,7 @@ pub const Ring = struct {
 };
 
 pub const ItemType = enum {
-    Corpse, Ring, Potion, Vial, Armor, Weapon, Boulder, Prop, Evocable
+    Corpse, Ring, Potion, Vial, Projectile, Armor, Weapon, Boulder, Prop, Evocable
 };
 
 pub const Item = union(ItemType) {
@@ -2560,6 +2529,7 @@ pub const Item = union(ItemType) {
     Ring: *Ring,
     Potion: *Potion,
     Vial: Vial,
+    Projectile: *const Projectile,
     Armor: *Armor,
     Weapon: *Weapon,
     Boulder: *const Material,
@@ -2570,7 +2540,7 @@ pub const Item = union(ItemType) {
     pub fn announce(self: Item) bool {
         return switch (self) {
             .Corpse, .Vial, .Boulder, .Prop => false,
-            .Ring, .Potion, .Armor, .Weapon, .Evocable => true,
+            .Projectile, .Ring, .Potion, .Armor, .Weapon, .Evocable => true,
         };
     }
 
@@ -2583,6 +2553,7 @@ pub const Item = union(ItemType) {
             .Ring => |r| try fmt.format(fbs.writer(), "*{}", .{r.name}),
             .Potion => |p| try fmt.format(fbs.writer(), "¡{}", .{p.name}),
             .Vial => |v| try fmt.format(fbs.writer(), "♪{}", .{v.name()}),
+            .Projectile => |p| try fmt.format(fbs.writer(), "{}", .{p.name}),
             .Armor => |a| try fmt.format(fbs.writer(), "]{}", .{a.name}),
             .Weapon => |w| try fmt.format(fbs.writer(), "){}", .{w.name}),
             .Boulder => |b| try fmt.format(fbs.writer(), "•{} of {}", .{ b.chunkName(), b.name }),
@@ -2602,6 +2573,7 @@ pub const Item = union(ItemType) {
             .Ring => |r| try fmt.format(fbs.writer(), "ring of {}", .{r.name}),
             .Potion => |p| try fmt.format(fbs.writer(), "potion of {}", .{p.name}),
             .Vial => |v| try fmt.format(fbs.writer(), "vial of {}", .{v.name()}),
+            .Projectile => |p| try fmt.format(fbs.writer(), "{}", .{p.name}),
             .Armor => |a| try fmt.format(fbs.writer(), "{} armor", .{a.name}),
             .Weapon => |w| try fmt.format(fbs.writer(), "{}", .{w.name}),
             .Boulder => |b| try fmt.format(fbs.writer(), "{} of {}", .{ b.chunkName(), b.name }),
@@ -2718,6 +2690,10 @@ pub const Tile = struct {
                 .Vial => |v| {
                     cell.ch = '♪';
                     cell.fg = v.color();
+                },
+                .Projectile => |p| {
+                    cell.ch = '(';
+                    cell.fg = p.color;
                 },
                 .Ring => |_| {
                     cell.ch = '*';

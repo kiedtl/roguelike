@@ -330,24 +330,6 @@ fn invokeRecharger() bool {
     }
 }
 
-// TODO: move this to state.zig...? There should probably be a separate file for
-// player-specific actions.
-fn fireLauncher() bool {
-    if (state.player.inventory.wielded) |weapon| {
-        if (weapon.launcher) |launcher| {
-            const dest = display.chooseCell() orelse return false;
-            assert(state.player.launchProjectile(&launcher, dest));
-            return true;
-        } else {
-            state.message(.MetaError, "You can't fire anything with that weapon.", .{});
-            return false;
-        }
-    } else {
-        state.message(.MetaError, "You aren't wielding anything.", .{});
-        return false;
-    }
-}
-
 pub fn grabItem() bool {
     if (state.player.inventory.pack.isFull()) {
         state.message(.MetaError, "Your pack is full.", .{});
@@ -432,9 +414,8 @@ fn throwItem() bool {
     const dest = display.chooseCell() orelse return false;
     const item = &state.player.inventory.pack.slice()[index];
 
-    if (state.player.throwItem(item, dest)) {
+    if (state.player.throwItem(item, dest, &state.GPA.allocator)) {
         _ = state.player.removeItem(index) catch err.wat();
-        state.player.declareAction(.Throw);
         return true;
     } else {
         state.message(.MetaError, "You can't throw that.", .{});
@@ -476,7 +457,7 @@ fn useItem() bool {
             state.chardata.potions_quaffed.put(p.id, prevtotal + 1) catch err.wat();
         },
         .Vial => |v| err.todo(),
-        .Boulder => |_| {
+        .Projectile, .Boulder => {
             state.message(.MetaError, "You want to *eat* that?", .{});
             return false;
         },
@@ -598,7 +579,6 @@ fn readInput() bool {
         } else if (ev.ch != 0) {
             return switch (ev.ch) {
                 'x' => state.player.swapWeapons(),
-                'f' => fireLauncher(),
                 'r' => invokeRecharger(),
                 't' => throwItem(),
                 'a' => useItem(),
@@ -707,7 +687,9 @@ fn tickGame() void {
                 bookkeepingFOV();
             }
 
-            assert(prev_energy > mob.energy);
+            if (prev_energy <= mob.energy) {
+                err.bug("Mob {} did nothing during its turn!", .{mob.displayName()});
+            }
 
             is_first = false;
         }

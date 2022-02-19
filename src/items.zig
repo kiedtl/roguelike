@@ -68,6 +68,27 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 05, .i = .{ .E = EldritchLanternEvoc } },
 };
 
+pub const Projectile = struct {
+    id: []const u8,
+    name: []const u8,
+    color: u32,
+    effect: union(enum) {
+        Status: StatusDataInfo,
+    },
+};
+
+pub const NetProj = Projectile{
+    .id = "net",
+    .name = "net",
+    .color = 0xffd700,
+    .effect = .{
+        .Status = .{
+            .status = .Held,
+            .duration = 10,
+        },
+    },
+};
+
 pub const EvocableList = LinkedList(Evocable);
 pub const Evocable = struct {
     // linked list stuff
@@ -606,36 +627,6 @@ pub const MaceWeapon = Weapon{
     .strs = &CRUSHING_STRS,
 };
 
-pub const NetLauncher = Weapon{
-    .id = "net_launcher",
-    .name = "net launcher",
-    .required_strength = 10,
-    .required_dexterity = 10,
-    .damages = .{
-        .Crushing = 5,
-        .Pulping = 0,
-        .Slashing = 0,
-        .Piercing = 0,
-        .Lacerating = 0,
-    },
-    .main_damage = .Crushing,
-    .secondary_damage = null,
-    .launcher = .{
-        .projectile = Projectile{
-            .main_damage = .Crushing,
-            .damages = .{
-                .Crushing = 5,
-                .Pulping = 0,
-                .Slashing = 0,
-                .Piercing = 0,
-                .Lacerating = 0,
-            },
-            .effect = triggerNetLauncherProjectile,
-        },
-    },
-    .strs = &CRUSHING_STRS,
-};
-
 fn triggerPreservePotion(_dork: ?*Mob, coord: Coord) void {
     if (_dork) |dork| {
 
@@ -653,33 +644,4 @@ fn triggerDecimatePotion(_dork: ?*Mob, coord: Coord) void {
         .strength = MIN_EXPLOSION_RADIUS * 100,
         .culprit = state.player,
     });
-}
-
-fn triggerNetLauncherProjectile(coord: Coord) void {
-    const _f = struct {
-        fn _addNet(c: Coord) void {
-            if (state.dungeon.at(c).mob) |mob| {
-                mob.addStatus(.Held, 0, 10, false);
-            } else {
-                if (state.is_walkable(c, .{ .right_now = true }) and
-                    state.dungeon.at(c).surface == null)
-                {
-                    var net = surfaces.NetTrap;
-                    net.coord = c;
-                    state.machines.append(net) catch unreachable;
-                    state.dungeon.at(c).surface = SurfaceItem{ .Machine = state.machines.last().? };
-                }
-            }
-        }
-    };
-
-    for (&DIRECTIONS) |direction| {
-        if (coord.move(direction, state.mapgeometry)) |neighbor| {
-            // if there's no mob on a tile, give a chance for a net
-            // to not fall there
-            if (state.dungeon.at(neighbor).mob == null and rng.onein(4)) continue;
-
-            _f._addNet(neighbor);
-        }
-    }
 }

@@ -182,6 +182,12 @@ fn placeMob(
         mob.inventory.pack.append(Item{ .Evocable = evocable }) catch err.wat();
     }
 
+    if (template.projectile) |proj| {
+        while (!mob.inventory.pack.isFull()) {
+            mob.inventory.pack.append(Item{ .Projectile = proj }) catch err.wat();
+        }
+    }
+
     for (template.statuses) |status_info| {
         mob.addStatus(status_info.status, status_info.power, status_info.duration, status_info.permanent);
     }
@@ -238,7 +244,6 @@ fn _createItem(comptime T: type, item: T) *T {
         Ring => &state.rings,
         Armor => &state.armors,
         Weapon => &state.weapons,
-        Projectile => &state.projectiles,
         Evocable => &state.evocables,
         else => @compileError("uh wat"),
     };
