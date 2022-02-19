@@ -1845,7 +1845,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
 
             switch (rng.range(usize, 1, 4)) {
                 1 => {
-                    if (Configs[level].allow_statues and statues < 3 and rng.onein(3)) {
+                    if (Configs[level].allow_statues and statues == 0 and rng.onein(2)) {
                         const statue = rng.chooseUnweighted(mobs.MobTemplate, &mobs.STATUES);
                         _ = placeMob(alloc, &statue, coord, .{});
                         statues += 1;
