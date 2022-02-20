@@ -1074,8 +1074,6 @@ pub const Mob = struct { // {{{
     // no_show_fov:        If false, display code will not show mob's FOV.
     // memory:             The maximum length of time for which a mob can remember
     //                     an enemy.
-    // unbreathing:        Controls whether a mob is susceptible to a gas' effect.
-    //
     willpower: usize, // Range: 0 < willpower < 10
     base_strength: usize,
     base_dexterity: usize, // Range: 0 < dexterity < 100
@@ -1090,7 +1088,7 @@ pub const Mob = struct { // {{{
     regen: f64 = 0.14,
     blood: ?Spatter,
     immobile: bool = false,
-    unbreathing: bool = false,
+    innate_resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
     spells: StackBuffer(SpellInfo, 2) = StackBuffer(SpellInfo, 2).init(null),
 
     pub const Inventory = struct {
@@ -1162,7 +1160,7 @@ pub const Mob = struct { // {{{
     pub fn tick_env(self: *Mob) void {
         const gases = state.dungeon.atGas(self.coord);
         for (gases) |quantity, gasi| {
-            if ((!self.unbreathing or gas.Gases[gasi].not_breathed) and quantity > 0.0) {
+            if ((rng.range(usize, 0, 100) < self.resistance(.rFume) or gas.Gases[gasi].not_breathed) and quantity > 0.0) {
                 gas.Gases[gasi].trigger(self, quantity);
             }
         }
@@ -2062,8 +2060,20 @@ pub const Mob = struct { // {{{
         return pips;
     }
 
+    // Returns different things depending on what resist is.
+    //
+    // For all resists except rPara and rFume, returns damage mitigated.
+    // For rFume, returns chance for gas to trigger.
+    // For rPara, returns... hmm, this isn't implemented yet.
     pub inline fn resistance(self: *const Mob, resist: Resistance) usize {
         var pips: isize = 0;
+
+        // Add the mob's innate resistance. This is a bit clumsy.
+        inline for (@typeInfo(Resistance).Enum.fields) |variant| {
+            const e = @intToEnum(Resistance, variant.value);
+            if (e == resist) pips += @field(self.innate_resists, @tagName(e));
+        }
+
         if (self.inventory.cloak) |clk| switch (clk.ego) {
             .Resist => |r| if (r == resist) {
                 pips += 1;
@@ -2071,16 +2081,29 @@ pub const Mob = struct { // {{{
             else => {},
         };
 
-        pips = math.clamp(pips, -2, 3);
+        pips = switch (resist) {
+            .rFume => math.clamp(pips, 0, 2),
+            .rPara => math.clamp(pips, 0, 3),
+            else => math.clamp(pips, -2, 3),
+        };
 
-        return switch (pips) {
-            -2 => 150,
-            -1 => 125,
-            00 => 100,
-            01 => 50,
-            02 => 25,
-            03 => 0,
-            else => err.wat(),
+        // FIXME: handle rPara
+        return switch (resist) {
+            .rFume => @as(usize, switch (pips) {
+                0 => 100,
+                1 => 20,
+                2 => 0,
+                else => err.wat(),
+            }),
+            else => @as(usize, switch (pips) {
+                -2 => 150,
+                -1 => 125,
+                00 => 100,
+                01 => 50,
+                02 => 25,
+                03 => 0,
+                else => err.wat(),
+            }),
         };
     }
 
