@@ -271,7 +271,8 @@ pub fn patrolWork(mob: *Mob, alloc: *mem.Allocator) void {
 
     if (mob.cansee(to)) {
         // OK, reached our destination. Time to choose another one!
-        while (true) {
+        var tries: usize = 30;
+        while (tries > 0) : (tries -= 1) {
             const room = rng.chooseUnweighted(mapgen.Room, state.rooms[mob.coord.z].items);
             const point = room.rect.randomCoord();
 
