@@ -348,7 +348,7 @@ pub const EcholocationRing = Ring{
     .status_power_increase = 100,
 };
 
-pub const FogPotion = Potion{ .id = "potion_fog", .name = "fog", .type = .{ .Gas = gas.SmokeGas.id }, .color = 0x00A3D9 };
+pub const FogPotion = Potion{ .id = "potion_fog", .name = "fog", .type = .{ .Gas = gas.FogGas.id }, .color = 0x00A3D9 };
 pub const ConfusionPotion = Potion{ .id = "potion_confusion", .name = "confuzzlementation", .type = .{ .Gas = gas.Confusion.id }, .color = 0x33cbca };
 pub const ParalysisPotion = Potion{ .id = "potion_paralysis", .name = "petrification", .type = .{ .Gas = gas.Paralysis.id }, .color = 0xaaaaff };
 pub const FastPotion = Potion{ .id = "potion_fast", .name = "acceleration", .type = .{ .Status = .Fast }, .ingested = true, .color = 0xbb6c55 };
