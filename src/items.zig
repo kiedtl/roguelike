@@ -33,7 +33,7 @@ pub const POTIONS = [_]Potion{
 pub const ItemTemplate = struct {
     w: usize,
     i: union(enum) {
-        W: Weapon, A: Armor, P: Potion, E: Evocable
+        W: Weapon, A: Armor, C: *const Cloak, P: Potion, E: Evocable
     },
 };
 pub const ITEM_DROPS = [_]ItemTemplate{
@@ -63,10 +63,27 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .P = DecimatePotion } },
     // Evocables
     .{ .w = 10, .i = .{ .E = IronSpikeEvoc } },
-    .{ .w = 02, .i = .{ .E = HammerEvoc } },
     .{ .w = 05, .i = .{ .E = MineKitEvoc } },
     .{ .w = 05, .i = .{ .E = EldritchLanternEvoc } },
+    .{ .w = 02, .i = .{ .E = HammerEvoc } },
+    // Cloaks
+    .{ .w = 02, .i = .{ .C = &SiliconCloak } },
+    .{ .w = 02, .i = .{ .C = &FurCloak } },
+    .{ .w = 02, .i = .{ .C = &VelvetCloak } },
+    .{ .w = 02, .i = .{ .C = &ThornsCloak } },
 };
+
+pub const Cloak = struct {
+    name: []const u8,
+    ego: union(enum) {
+        Resist: Resistance, Stealth, Retaliate
+    },
+};
+
+pub const SiliconCloak = Cloak{ .name = "silicon", .ego = .{ .Resist = .rFire } };
+pub const FurCloak = Cloak{ .name = "fur", .ego = .{ .Resist = .rElec } };
+pub const VelvetCloak = Cloak{ .name = "velvet", .ego = .Stealth };
+pub const ThornsCloak = Cloak{ .name = "thorns", .ego = .Retaliate };
 
 pub const Projectile = struct {
     id: []const u8,

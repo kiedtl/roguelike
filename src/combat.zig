@@ -17,6 +17,7 @@ const ATTACKER_HELD_NBONUS: isize = 21;
 const DIM_LIGHT_NBONUS: isize = 14;
 
 const DEFENDER_HELD_NBONUS: isize = 14;
+const DEFENDER_STEALTH_BONUS: isize = 7;
 
 pub fn damageOutput(attacker: *const Mob, recipient: *const Mob, is_stab: bool) usize {
     const weapon = attacker.inventory.wielded orelse &items.UnarmedWeapon;
@@ -64,6 +65,8 @@ pub fn chanceOfAttackDodged(defender: *const Mob, attacker: ?*const Mob) usize {
     var chance: isize = @intCast(isize, defender.dexterity());
 
     chance += (9 - neighboring_walls) * 3; // +3-27%
+    chance += @intCast(isize, defender.stealth()) * DEFENDER_STEALTH_BONUS;
+
     chance -= if (defender.isUnderStatus(.Held)) |_| DEFENDER_HELD_NBONUS else 0;
 
     return @intCast(usize, math.clamp(chance, 0, 100));

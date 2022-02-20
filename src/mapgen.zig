@@ -21,6 +21,7 @@ usingnamespace @import("types.zig");
 const ItemTemplate = items.ItemTemplate;
 const Evocable = items.Evocable;
 const EvocableList = items.EvocableList;
+const Cloak = items.Cloak;
 const Poster = literature.Poster;
 
 const CONNECTIONS_MAX = 5;
@@ -172,6 +173,7 @@ fn placeMob(
     if (template.weapon) |w| mob.inventory.wielded = _createItem(Weapon, w.*);
     if (template.backup_weapon) |w| mob.inventory.backup = _createItem(Weapon, w.*);
     if (template.armor) |a| mob.inventory.armor = _createItem(Armor, a.*);
+    if (template.cloak) |c| mob.inventory.cloak = c;
 
     if (opts.facing) |dir| mob.facing = dir;
     mob.ai.work_area.append(opts.work_area orelse coord) catch err.wat();
@@ -256,6 +258,7 @@ fn _createItemFromTemplate(template: ItemTemplate) Item {
         .A => |i| Item{ .Armor = _createItem(Armor, i) },
         .P => |i| Item{ .Potion = _createItem(Potion, i) },
         .E => |i| Item{ .Evocable = _createItem(Evocable, i) },
+        .C => |i| Item{ .Cloak = i },
         //else => err.todo(),
     };
 }

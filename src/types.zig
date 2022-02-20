@@ -1,6 +1,7 @@
 const std = @import("std");
 const math = std.math;
 const mem = std.mem;
+const meta = std.meta;
 const fmt = std.fmt;
 const assert = std.debug.assert;
 const enums = @import("std/enums.zig");
@@ -29,6 +30,7 @@ const literature = @import("literature.zig");
 
 const Evocable = @import("items.zig").Evocable;
 const Projectile = @import("items.zig").Projectile;
+const Cloak = @import("items.zig").Cloak;
 
 const Sound = @import("sound.zig").Sound;
 const SoundIntensity = @import("sound.zig").SoundIntensity;
@@ -644,6 +646,10 @@ pub const MessageType = union(enum) {
     }
 };
 
+pub const Resistance = enum {
+    rFire, rElec, rMlee, rFume, rPois, rPara
+};
+
 pub const Damage = struct {
     amount: f64,
     by_mob: ?*Mob = null,
@@ -658,7 +664,15 @@ pub const Damage = struct {
     indirect: bool = false,
 
     pub const DamageKind = enum {
-        Physical, Electric
+        Physical,
+        Electric,
+
+        pub fn resist(self: DamageKind) Resistance {
+            return switch (self) {
+                .Physical => .rMlee,
+                .Electric => .rElec,
+            };
+        }
     };
 
     pub const DamageSource = enum {
@@ -1085,6 +1099,7 @@ pub const Mob = struct { // {{{
         rings: [4]?*Ring = [4]?*Ring{ null, null, null, null },
 
         armor: ?*Armor = null,
+        cloak: ?*const Cloak = null,
         wielded: ?*Weapon = null,
         backup: ?*Weapon = null,
 
@@ -1611,6 +1626,26 @@ pub const Mob = struct { // {{{
                 }
             }
 
+            // Retaliation damage?
+            if (recipient.inventory.cloak) |clk|
+                if (meta.activeTag(clk.ego) == .Retaliate and
+                    rng.range(usize, 0, 100) < 14)
+                {
+                    const max_dmg = @floatToInt(usize, attacker.HP * 21 / 100);
+                    const min_dmg = @floatToInt(usize, attacker.HP * 14 / 100);
+                    const dmg = @intToFloat(f64, rng.range(usize, max_dmg / 2, max_dmg));
+                    attacker.takeDamage(.{ .amount = dmg });
+                    const dmg_percent = attacker.lastDamagePercentage();
+
+                    const n = if (recipient == state.player) "your" else recipient.displayName();
+                    state.messageAboutMob2(attacker, attacker.coord, .Info, "is hurt by {}{}{} thorny cloak! ({}% dmg)", .{
+                        if (recipient == state.player) @as([]const u8, "") else "the ",
+                        n,
+                        if (recipient == state.player) @as([]const u8, "") else "'s",
+                        dmg_percent,
+                    });
+                };
+
             return;
         }
 
@@ -1698,7 +1733,10 @@ pub const Mob = struct { // {{{
     pub fn takeDamage(self: *Mob, d: Damage) void {
         const was_already_dead = self.should_be_dead();
 
-        self.HP = math.clamp(self.HP - d.amount, 0, self.max_HP);
+        const resist = @intToFloat(f64, self.resistance(d.kind.resist()));
+        const amount = d.amount * resist / 100.0;
+
+        self.HP = math.clamp(self.HP - amount, 0, self.max_HP);
         if (d.blood) if (self.blood) |s| state.dungeon.spatter(self.coord, s);
         self.last_damage = d;
 
@@ -2013,6 +2051,37 @@ pub const Mob = struct { // {{{
             max = 60;
 
         return .{ .min = min, .max = max };
+    }
+
+    pub inline fn stealth(self: *const Mob) usize {
+        var pips: usize = 0;
+        if (self.inventory.cloak) |clk|
+            if (meta.activeTag(clk.ego) == .Stealth) {
+                pips += 1;
+            };
+        return pips;
+    }
+
+    pub inline fn resistance(self: *const Mob, resist: Resistance) usize {
+        var pips: isize = 0;
+        if (self.inventory.cloak) |clk| switch (clk.ego) {
+            .Resist => |r| if (r == resist) {
+                pips += 1;
+            },
+            else => {},
+        };
+
+        pips = math.clamp(pips, -2, 3);
+
+        return switch (pips) {
+            -2 => 150,
+            -1 => 125,
+            00 => 100,
+            01 => 50,
+            02 => 25,
+            03 => 0,
+            else => err.wat(),
+        };
     }
 
     pub inline fn strength(self: *const Mob) usize {
@@ -2519,7 +2588,7 @@ pub const Ring = struct {
 };
 
 pub const ItemType = enum {
-    Corpse, Ring, Potion, Vial, Projectile, Armor, Weapon, Boulder, Prop, Evocable
+    Corpse, Ring, Potion, Vial, Projectile, Armor, Cloak, Weapon, Boulder, Prop, Evocable
 };
 
 pub const Item = union(ItemType) {
@@ -2529,6 +2598,7 @@ pub const Item = union(ItemType) {
     Vial: Vial,
     Projectile: *const Projectile,
     Armor: *Armor,
+    Cloak: *const Cloak,
     Weapon: *Weapon,
     Boulder: *const Material,
     Prop: *const Prop,
@@ -2538,7 +2608,7 @@ pub const Item = union(ItemType) {
     pub fn announce(self: Item) bool {
         return switch (self) {
             .Corpse, .Vial, .Boulder, .Prop => false,
-            .Projectile, .Ring, .Potion, .Armor, .Weapon, .Evocable => true,
+            .Cloak, .Projectile, .Ring, .Potion, .Armor, .Weapon, .Evocable => true,
         };
     }
 
@@ -2553,6 +2623,7 @@ pub const Item = union(ItemType) {
             .Vial => |v| try fmt.format(fbs.writer(), "♪{}", .{v.name()}),
             .Projectile => |p| try fmt.format(fbs.writer(), "{}", .{p.name}),
             .Armor => |a| try fmt.format(fbs.writer(), "]{}", .{a.name}),
+            .Cloak => |c| try fmt.format(fbs.writer(), "clk of {}", .{c.name}),
             .Weapon => |w| try fmt.format(fbs.writer(), "){}", .{w.name}),
             .Boulder => |b| try fmt.format(fbs.writer(), "•{} of {}", .{ b.chunkName(), b.name }),
             .Prop => |b| try fmt.format(fbs.writer(), "{}", .{b.name}),
@@ -2573,6 +2644,7 @@ pub const Item = union(ItemType) {
             .Vial => |v| try fmt.format(fbs.writer(), "vial of {}", .{v.name()}),
             .Projectile => |p| try fmt.format(fbs.writer(), "{}", .{p.name}),
             .Armor => |a| try fmt.format(fbs.writer(), "{} armor", .{a.name}),
+            .Cloak => |c| try fmt.format(fbs.writer(), "cloak of {}", .{c.name}),
             .Weapon => |w| try fmt.format(fbs.writer(), "{}", .{w.name}),
             .Boulder => |b| try fmt.format(fbs.writer(), "{} of {}", .{ b.chunkName(), b.name }),
             .Prop => |b| try fmt.format(fbs.writer(), "{}", .{b.name}),
@@ -2699,7 +2771,7 @@ pub const Tile = struct {
                 .Weapon => |_| {
                     cell.ch = ')';
                 },
-                .Armor => |_| {
+                .Cloak, .Armor => {
                     cell.ch = '[';
                 },
                 .Boulder => |b| {

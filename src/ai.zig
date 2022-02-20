@@ -180,6 +180,11 @@ pub fn checkForHostiles(mob: *Mob) void {
 
         if (state.dungeon.at(fitem).mob) |othermob| {
             assert(!othermob.is_dead); // Dead mobs should be corpses (ie items)
+
+            // Stealth check
+            if (rng.range(usize, 0, 100) < othermob.stealth() * 10)
+                continue;
+
             if (othermob.isHostileTo(mob)) {
                 updateEnemyRecord(mob, .{
                     .mob = othermob,

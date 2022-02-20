@@ -504,6 +504,10 @@ pub fn tickAtmosphere(cur_lev: usize, cur_gas: usize) void {
         tickAtmosphere(cur_lev, cur_gas + 1);
 }
 
+pub fn messageAboutMob2(mob: *const Mob, ref_coord: ?Coord, mtype: MessageType, comptime fmt: []const u8, args: anytype) void {
+    messageAboutMob(mob, ref_coord, mtype, fmt, args, fmt, args);
+}
+
 pub fn messageAboutMob(
     mob: *const Mob,
     ref_coord: ?Coord,

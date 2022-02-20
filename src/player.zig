@@ -218,6 +218,17 @@ pub fn grabItem() bool {
             if (armor.speed_penalty != null or armor.dex_penalty != null)
                 state.message(.Info, "This armor is going to be annoying to wear.", .{});
         },
+        .Cloak => |cloak| {
+            if (state.player.inventory.cloak) |c| {
+                state.dungeon.itemsAt(state.player.coord).append(Item{ .Cloak = c }) catch err.wat();
+                state.player.declareAction(.Drop);
+                state.message(.Info, "You drop the {} to wear the {}.", .{ c.name, cloak.name });
+            }
+
+            state.player.inventory.cloak = cloak;
+            state.player.declareAction(.Use);
+            state.message(.Info, "Now wearing a cloak of {}.", .{cloak.name});
+        },
         else => {
             state.player.inventory.pack.append(item) catch err.wat();
             state.player.declareAction(.Grab);
@@ -276,7 +287,7 @@ pub fn useItem() bool {
             state.message(.MetaError, "Are you three?", .{});
             return false;
         },
-        .Armor, .Weapon => err.wat(),
+        .Armor, .Cloak, .Weapon => err.wat(),
         .Potion => |p| {
             state.player.quaffPotion(p, true);
             const prevtotal = (state.chardata.potions_quaffed.getOrPutValue(p.id, 0) catch err.wat()).value;

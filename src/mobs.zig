@@ -5,6 +5,7 @@ const spells = @import("spells.zig");
 usingnamespace @import("types.zig");
 
 const Evocable = items.Evocable;
+const Cloak = items.Cloak;
 const Projectile = items.Projectile;
 const StackBuffer = buffer.StackBuffer;
 const SpellInfo = spells.SpellInfo;
@@ -15,6 +16,7 @@ pub const MobTemplate = struct {
     weapon: ?*const Weapon = null,
     backup_weapon: ?*const Weapon = null,
     armor: ?*const Armor = null,
+    cloak: ?*const Cloak = null,
     statuses: []const StatusDataInfo = &[_]StatusDataInfo{},
     projectile: ?*const Projectile = null,
     evocables: []const Evocable = &[_]Evocable{},
@@ -227,6 +229,7 @@ pub const PlayerTemplate = MobTemplate{
     .weapon = &items.KnifeWeapon,
     .armor = &items.RobeArmor,
     //.evocables = &[_]Evocable{items.IronSpikeEvoc},
+    .cloak = &items.ThornsCloak,
 };
 
 pub const InteractionLaborerTemplate = MobTemplate{
@@ -506,6 +509,7 @@ pub const EngineerTemplate = MobTemplate{
 
         .base_strength = 10,
     },
+    .cloak = &items.FurCloak,
 };
 
 pub const TorturerNecromancerTemplate = MobTemplate{
