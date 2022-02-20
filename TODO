@@ -110,8 +110,9 @@ New mobs
 		- "You feel uneasy." (just before cat charges)
 - sulfur/decaying fiend
 	- Spits out sulfuric/miasmic gas, which raises corpses and slows living creatures.
-- frozen fiend
+- freezing fiend
 	- Creates icy obstacles to block player (but obstacles melt after 2-4 turns).
+	- Has Frozen Ramparts-like spell to damage foes surrounded by walls.
 - lightning spire
 	- like dcss' lightning spire
 	- hurls bolts of electricity
@@ -165,18 +166,21 @@ New mobs
 	- Split on hit?
 - bats
 	- Harmless and multicolored, like DCSS' butterflies.
+	- Glows, shedding light on surroundings.
 - beastmaster
+	- Slow (120) and heavily armored, but just a simple mace.
 	- Releases chained dogs, hounds, wolves in same room when seeing hostile.
 	- Goads beasts on, possibly giving them .Enraged status
 
 Intelligence
 ------------
-- Stupid mobs will employ ranged attacks even when it might hit another ally.
 - Stupid mobs will have trouble determining what's a stronger enemy
   (morale system).
+- Extra stupid mobs will employ ranged attacks even when it might hit another ally.
 - Intelligent mobs won't assign A* penalty to areas out of max FOV range.
   - Thus, stupid mobs will prefer to walk through areas they can see, whereas
     intelligent mobs will always take the shorter path.
+- Unintelligent mobs cannot use doors and machines marked as requiring INT.
 
 Undead
 ------
@@ -206,7 +210,7 @@ x sneak         [move, move, rest, move]
 - merciless     [move(A), attack(A), move(A), attack(A)]
 - counterattack [move(S), move(S), move(N), attack(A)]
 - lunge         [move(A), move(A), move(A), attack(A)]
-  - Daze/stun/paralyse defender?
+  - Daze/stun/paralyse/shove defender?
 - sideswipe     [attack(N), move(NE), attack(W)]
 - backstab      [attack(N), move(NE), move(NW), attack(S)]
 - whirlwind     [attack(N), attack(S), attack(E), attack(W)]
@@ -248,11 +252,8 @@ ring of distortion [a]
 	  should land in area without nearby mobs.
 	  Twists space violently around player, reducing HP by 75%.
 dancing ring of sidestepping [a/p]
-	- Teleport player around mob to area outside of that mob's FOV, enabling a stab.
-	  - Paralyzes mob for exactly one turn.
-	  - Must land next to mob.
-	  - Movement pattern: [move(NW), move(NE), move(NW), move(NE)]
-	- Forces player to swap with attacked mob on damage (passive).
+	- Allows player to swap with attacked mob on damage.
+		- Movement pattern: ???
 ring of singing [a/p]
 	- Aura of silence: mutes all sound in vicinity for ~10 turns.
 	- Gives player basic knowledge of dungeon's layout nearby sounds the player
@@ -281,6 +282,9 @@ ring of fire [a]
 	  smoke/fog as they move and attack foes. Like Foxfire.
 	- Ignition/Hellfire: fill all tiles with foes with fire. Sets caster on fire.
 	  Puts clouds of fire around at random (potentially impeding escape).
+ring of hexing [a]
+	- Dismissal: forces all investigating mobs in LOS to return to working.
+	  If resisted by willpower, will reveal player's location to them.
 
 
 Potions/Vials
@@ -296,8 +300,6 @@ x potion of acceleration [s]
   Haste.
 x potion of preservation [c]
   Heals 20% of health and removes poison.
-x potion of recuperation [s]
-  Causes faster regeneration rate.
 x potion of deceleration [s]
   Slowdown.
 x potion of coagulation
@@ -306,7 +308,7 @@ x potion of invigoration [s]
   Temporarily increases strength and dexterity.
 - potion of cremation [c]
   Explodes when opened, setting surroundings on fire.
-- potion of decimation [c]
+x potion of decimation [c]
   Explosion that destroys walls.
 - potion of refrigeration [g]
   Freezes the surrounding air, slowing down cold-blooded mobs.
@@ -355,10 +357,12 @@ Strange mobs found on LAB levels.
 - Lacertilian Abomination
   - Hydra, multiple attacks per turn
 - Tentacled Abomination
-  - Abomination with twenty tentacled, like DCSS tile for ugly things
+  - Abomination with twenty tentacles, like DCSS tile for ugly things
   - Almost as fast as player (85%).
   - Ranged attack: throws boulders at player (i.e., DCSS' cyclops).
   - Melee  attack: throws player across room to get more ranged hits.
+  - Usually tries to attack ranged, but may occasionally rush across room
+    and throw player around just for the heck of it.
 
 Posters
 -------
@@ -450,6 +454,7 @@ dungeon maps
 	- maps of just mob stations
 	- maps of just presence of walls/floors
 	- maps of special item locations (rings/potions)
+	- maps of possible stair locations
 
 
 Materials (v = vial, s = stone, g = gem, o = ore/metal)
@@ -522,20 +527,21 @@ x Create eldritch lantern evocable
 x Create warning horn for Warden
 x Create Warden, add to vaults, adjust mob ratio there
 x Make executioner slower to move around
-* Add treatures to Vaults
+x Add treatures to Vaults
   x Create gold item/prop
-  - Add armour and weapons (only ones that are useless to player)
+  x Add armour and weapons (only ones that are useless to player)
 x Add ability to present confirm/dialog boxes
 * Add confirm boxes when:
   - Going to move into hostile's FOV
   x Going to move into a trap or stairs
+  - Going to start running
 x Show messages the normal way (i.e., top-to-bottom)
 x Add morgue-file generation
 x Show morgue to player on death/win
 x Implement basic explosions (with wizard functionality)
 x Add potion of decimation
 x Add bomb-making evocables
-- Rework and implement some items stuff
+x Rework and implement some items stuff
   x Increase size of inventory
   x Redo weapons/armor for player
     x robe, gambeson armor, leather armor, chain mail, scale mail
@@ -544,62 +550,87 @@ x Add bomb-making evocables
   x Remove swords, replace with maces
   x Place evocables, potions, weapons, armor around dungeon
   x Place item "stockpiles" in PRI and VLT; remove some PRI subrooms to make place for it
-  - Add messages when player finds evocable, recharging station, potion, or stairs
-- Add recharging stations (and ensure they can't recharge mine kits!)
-- Revamp confuse; add "daze" status
-  - Fix: add mob to enemy list when they stab, and 90% chance to daze enemy (unless undead)
-- Modify player starting environment
-  - Starting messages ("You have just escaped...", "Probably pick up those item...")
+  x Add messages when player finds evocable, recharging station, potion, or stairs
+  - Prevent some rare items from spawning at all on lower floors
+x Add recharging stations (and ensure they can't recharge mine kits!)
+x Revamp confuse; add "daze" status
+  x Fix: add mob to enemy list when they stab, and 90% chance to daze enemy (unless undead)
+x Modify player starting environment
+  x Starting messages ("You have just escaped...", "Probably pick up those item...")
   x Add some potions for player to use in starting area + weapon + armor
-- Add malfunctioning machines
-  - explosivity
-  - electrocutivity
-  - hammer evocable
+x Add malfunctioning machines
+  x explosivity, electrocutivity
+  x hammer evocable, player breaking machines
+  x iron spike evocable, jamming doors
+  x Engineers that repair machines/walls
+x Implement cloaks
+  x Add resistances
+  x cloak of fur, silicon, velvet, thorns
+  x Give engineers a cloak of fur
+- Add `Flanked` effect + UI element
 - Add fire system
-  - .Burn
   - potions of cremation
-  - explosion fires
-  - tile flammability
 - Stair overhaul
   - Consider making stairs unique surface item from machines
   - Move stairs into walls, give different Brogue-like look
   - Organize branches and their levels; add stairs to them
-  - Place stairs as far away from other stairs as possible; add downstairs
-- Posters/books
-  - Overhaul poster look
-  - Poster types (graffiti, announcement, engraving, etc)
-  - Add bookshelves
-  - Add book types
-    - Maps
-    - Useless books
-- Bribing
-  - Gold + jewelry collection
-  - Bri(b)ing key to bribe monsters
-- Squad overhaul
-  - Patrol squads
-  - Prisoner squads + goblin commanders
+  - Place stairs as far away from other stairs as possible
+  - Remove regeneration for monsters and players
+    - Remove ¡recuperation
+  - Nerf poison and pain damage
+  - Fountains to drink from
+  - Medics that heal monsters
+  - Apply "upgrade" and healing to player on ascension
+- Air purifiers, mob AI to move out of gases
 - Potions
-  - Potion of dilution
+  - Dilution/concentration:
+    - Potion of dilution   (dilution)
+    - Grills + kitchen set (concentration)
+  - Potion of defumigation
   - Potion of lubrication
   - Potion of fixation
   - Nerf potions of acceleration
 - Add fungi, plants
   - flourescent
   - flammable fungi ("dead fungi")
-  - fungi that release spores when damaged
-    - poison, healing, confusing spores
   - tall mushrooms (reduced LOS)
   - taller mushrooms (LOS == 2)
+- Add tougher monsters
+  - Burning brutes
+  - Sorcerers
+- Implement intelligence
+  - Prevent dumb monsters from opening doors
+  - Prevent sentinels from shooting allies and such
 - Revisit and revamp SMI mapgen
   - toxic sludge pools and bridges over them
 - Show information characters next to mob in enemy pane
+x LOS/lighting revamp
+  x Nerf player's LOS, buf enemies' LOS
+  x Change lighting algorithm
+  x Remove partial lighting?
+  x Show walls as always lit?
 - Informational screens
   - "?" screen
   - "@" screen
   - Item info screen, 'i' key
   - E(x)amine screen
   - Poster description screen
+- Fix/reimplement item-choosing screen
 - Fix/reimplement tile-choosing screen
+- Weapon tiers
+  - Ensure rarer tiers don't spawn on easy floors.
+  - Add grindstones.
+- Posters/books
+  - Poster types (graffiti, announcement, engraving, etc)
+  - Add bookshelves and book types
+    - Maps
+    - Useless books
+- Bribing
+  - Gold + jewelry collection
+  - Bri(b)ing key to bribe lone monsters
+- Squad overhaul
+  - Patrol squads
+  - Prisoner squads + goblin commanders
 - Upgrade to Zig v9
   - Remove usage of usingnamespace
   - Petition khuxkm/ben for update
@@ -646,7 +677,7 @@ x Create corridors between parallel prefabs/rooms
 x Make the "lamps" electric "braziers"
   ~ Place them in center of rooms.
   x Place them in corners of rooms.
-  - Make them explosive and electrocutive!
+  x Make them explosive and electrocutive!
 * Useless items in bins, cabinets, etc
   - dice, deck of cards
 - Weapons and armor in cabinets
@@ -676,6 +707,14 @@ x Different types of power generators for different maps:
   - dried salamander
   - dried seaweed
   - alcohol (should use some made-up names, in gobbo language)
+
+Morgue files
+============
+- Show annotated game notes (a la DCSS/Boohu).
+- Count the number of times the player "got lucky" (i.e., was at critical HP
+  but didn't take a hit hard enough to be killed).
+- Show total (IRL) time duration of game.
+- Show player's title.
 
 Mobs, AI
 ========
@@ -747,13 +786,14 @@ x Make bg of cell with noise green
 Items/Machines
 ==============
 - Add cloaks:
-  - fire resistance
-  - electricty resistance
-  - shadows
+  - cloak of silicon (fire resistance)
+  - cloak of fur     (electricty resistance)
+  - cloak of velvet
     - 30% chance for hostile to not notice mob, even when mob is in hostile's FOV
-    - Dramatically increases dexterity
-  - velvet
-    - Quiets all noises made by player (.Medium => .Quiet, .Loud => .Medium, etc)
+    - Slightly increases dexterity
+  - cloak of thorns
+    - 40% chance for a missed melee attack to backfire on attacker, dealing
+      moderate damage.
 - Add evocables:
   x "eldritch lantern": dazes or blinds *all* mobs in FOV; blinds player
     for 2 turns. 4 charges.
@@ -774,7 +814,8 @@ Items/Machines
       - Would be disabled by engineers.
   - "fume hood" (SMI): Makes player unbreathing for X turns, unaffected by gas.
     4 charges.
-  - "hammer": Destroys a machine. ∞ charges; cannot be recharged.
+  x "hammer": Destroys a machine. ∞ charges; cannot be recharged.
+  x "iron spike": Jams a door. 1 charge; cannot be recharged.
   - "blinding torch": Basically a laser. Can be evoked on a monster that can
     currently see the player (or *could* see the player, if its LOS was long
     enough), and will blind and daze that monster. 4 charges.
@@ -787,6 +828,8 @@ Items/Machines
   x "mine kit": Creates mine on tile. 2 charges; cannot be recharged.
   - camera reader (TODO: name)
     - Can "hack" pre-placed cameras to spy on nearby areas for X turns?
+  - "sparkflinger": Sprays sparks onto a tile, igniting it (.fire == 6-8).
+    Like Conjure Flame in DCSS. 6 charges.
 - Add machines:
   - "cannons" (LAB): fires projectile in direction, eviscerating any mobs.
     Loud sound. 6 charges, pwr-station powered.
@@ -800,10 +843,17 @@ Items/Machines
     turns to completely empty. 1 charge.
   - "lightning vane" (LAB): kills all mobs without rElec in FOV. Deafening noise.
     4 charges, pwr-station powered.
-  - recharging stations: 4 charges. 1-2 per level.
+  x recharging stations: 4 charges. 1-2 per level.
     - 'r' key is shortcut to evoke recharging station, when such a station is
       in LOS. Doing so invokes it for everything in inventory. (But player should
       have some mechanism of choosing what evocables to charge.)
+  - grindstones: Can be evoked to "sharpen" an edged/piercing weapon, "upgrading"
+    it (worn → mediocre, mediocre → fine). Can only be evoked on a weapon once,
+    and there's always a 10% chance for the weapon to break. 2 charges.
+  - fountain (SMI): Can be evoked to heal player by doubling current health.
+    2 charges.
+  - grill: Can be evoked to concentrate two potions into one, making its
+    effect stronger. 3 charges. Found in a kitchen-like subroom.
 
 
 Message pane
@@ -813,7 +863,8 @@ Message pane
   - On swapping with mob
   - On mob refusing to swap with player
   - On enemy turning to flee
-  - On recieving a status (Confuse, Daze, etc)
+  x On recieving a status (Confuse, Daze, etc)
+  - On having the duration of status extended/lessened
   - On seeing a mob cast a spell
   x On dodging by enemy or player
   x On death
@@ -833,13 +884,9 @@ x Add walls to edges of map after mapgen
 x Place stairs only in rooms
 x Fix sound propagation
 - Reject maps without enough open space
-
-Caverns:
-========
-- Add portals to Openworld from the main dungeon, with sentinels
-x Add goblins, rats, and other mobs to populate the Openworld
-- Add Burning Brutes and Lava Flans to the Openworld
-- Add lichen, fungi, and lava to the Openworld
+- Give player credit for deaths caused by malfunctioning machines
+- Show appropriate number of exclamation points on messages about
+  spell damage
 
 Ideas
 =====
@@ -944,12 +991,20 @@ x Add braziers that are built into the walls (aka torches), and use that
   was activated (that is, *two* tiles have the .mob field pointing to the player,
   while the player.coord field points to only one of them).
 - weapon runes:
-	- interleaving
-		- Swap on hit
-	- banishing
-		- Teleports away
+	- interleaving: Swap on hit
+	- banishing:    Teleports away
 - MP-like system that limits how often spellcasters can cast spells (providing
   a way to tweak dangerous-ness) and how often player can use ring effects.
+- Extremely dangerous (but lucrative) vaults that have golden walls, warning
+  player of danger.
+- Nice floor tile patterns, like Ultima Ratio Regum.
+  E.g.:      #############    #############
+             #·,·,·,·,·,·#    #·,·,·,·,·,·#
+             #`.`.`.`.`.`#    #—.—.—.—.—.—#
+             #,`,`,`,`,`,#    #—,—,—,—,—,—#
+             #·,·,·,·,·,·#    #—.—.—.—.—.—#
+             #`.`.`.`.`.`#    #·,·,·,·,·,·#
+             #############    #############
 
 Optimizations
 =============
