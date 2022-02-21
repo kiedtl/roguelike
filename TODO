@@ -115,22 +115,21 @@ New mobs
 	- Has Frozen Ramparts-like spell to damage foes surrounded by walls.
 - lightning spire
 	- like dcss' lightning spire
-	- hurls bolts of electricity
+	- hurls powerful bolts of electricity
 	- extremely high AC
-	- immobile
+	- immobile, only attacks when other hostile present
 - torpor spire
 	- like dcss' torpor snail
-	- slows player when in FOV
+	- attempts to slows player when in FOV
 	- extremely high AC
 	- immobile
 - iron spire
 	- "A towering demonic spire, with a thousand eyes leering through its
 	  iron plates. It shreds its enemies with shards of iron."
-	- hurls iron shards
+	- hurls iron shards and orbs of devastation
 	- extremely high AC
-	- immobile
-- warden
-	- locks nearby doors
+	- immobile, only attacks when other hostile present
+x warden
 	- calls for reinforcements by shouting/sounding horn
 - wretched stars
 	- "A fiery apparition, wreathed in unapproachable darkness. It has the
@@ -141,7 +140,7 @@ New mobs
 	- Emanates opaque gas.
 	  - Mobs that step in gas will be irresistibly blinked away.
 	- When allies are about to die, gives them a status them makes them
-	  very briefly invunerable and sends them insane.
+	  very briefly invunerable and sends them insane. (Death's Door?)
 	- Blinks around so as to not be adjacent to allies. (Won't blink if
 	  there's no place to blink *to*.)
 	- Teleports away (or suicides?) when no allies visible.
@@ -156,7 +155,6 @@ New mobs
 	  - Such a mob will recieve a strength boost, and will try to stay close
 	    to hostile at all costs.
 	- Has kicking (x1) and clawing (x2) attack (need species struct for this).
-- fiery fiend
 - [ancient] sorcerer
 	- Summons orbs of {destruction,lightning}.
 	- Summons wretched stars.
@@ -174,25 +172,25 @@ New mobs
 
 Intelligence
 ------------
-- Stupid mobs will have trouble determining what's a stronger enemy
+- Levels: mindless, moron, animal, human, genius
+- Stupid (<Human) mobs will have trouble determining what's a stronger enemy
   (morale system).
-- Extra stupid mobs will employ ranged attacks even when it might hit another ally.
-- Intelligent mobs won't assign A* penalty to areas out of max FOV range.
-  - Thus, stupid mobs will prefer to walk through areas they can see, whereas
-    intelligent mobs will always take the shorter path.
+- Extra stupid (<Moron) mobs will employ ranged attacks even when it might hit
+  another ally.
+- Mindless mobs will never flee.
 - Unintelligent mobs cannot use doors and machines marked as requiring INT.
 
 Undead
 ------
 Undead:
-- May be mindless, depending on how they were raised from the dead.
+- Intelligent: mindless.
 - Has 150% strength bonus.
 - Has -20% speed nerf.
 - Has -50% dexterity nerf.
 - Can only see 3-4 tiles ahead of them.
 - Cannot hear noises.
 - Have a .memory of ~7.
-- Are vunerable to fire (rFire-)
+- Are vunerable to fire and electricity (rFire- rElec-).
 - Emit miasma.
   - Miasma has no effect, but may decrease morale in AI'd mobs.
   - Serves to give early warning of undead's presence.
@@ -216,7 +214,6 @@ x sneak         [move, move, rest, move]
 - whirlwind     [attack(N), attack(S), attack(E), attack(W)]
   - (attack in four unique directions four times in a row)
   - active AoE ring abilities?
-- recuperate    [rest, rest, rest, rest]
 (See rings for other movement patterns.)
 
 
@@ -306,7 +303,7 @@ x potion of coagulation
   Poison (loss of regen, occasional damage, weakness)
 x potion of invigoration [s]
   Temporarily increases strength and dexterity.
-- potion of cremation [c]
+- potion of incineration [c]
   Explodes when opened, setting surroundings on fire.
 x potion of decimation [c]
   Explosion that destroys walls.
@@ -567,9 +564,8 @@ x Implement cloaks
   x Add resistances
   x cloak of fur, silicon, velvet, thorns
   x Give engineers a cloak of fur
-- Add `Flanked` effect + UI element
-- Add fire system
-  - potions of cremation
+x Add fire system
+  x potions of incineration
 - Stair overhaul
   - Consider making stairs unique surface item from machines
   - Move stairs into walls, give different Brogue-like look
@@ -625,9 +621,6 @@ x LOS/lighting revamp
   - Add bookshelves and book types
     - Maps
     - Useless books
-- Bribing
-  - Gold + jewelry collection
-  - Bri(b)ing key to bribe lone monsters
 - Squad overhaul
   - Patrol squads
   - Prisoner squads + goblin commanders
@@ -786,16 +779,16 @@ x Make bg of cell with noise green
 Items/Machines
 ==============
 - Add cloaks:
-  - cloak of silicon (fire resistance)
-  - cloak of fur     (electricty resistance)
-  - cloak of velvet
+  x cloak of silicon (fire resistance)
+  x cloak of fur     (electricty resistance)
+  x cloak of velvet
     - 30% chance for hostile to not notice mob, even when mob is in hostile's FOV
     - Slightly increases dexterity
-  - cloak of thorns
+  x cloak of thorns
     - 40% chance for a missed melee attack to backfire on attacker, dealing
       moderate damage.
 - Add evocables:
-  x "eldritch lantern": dazes or blinds *all* mobs in FOV; blinds player
+  x "eldritch lantern": dazes or blinds mobs in FOV; blinds player
     for 2 turns. 4 charges.
   - "cannon kit" (SMI): creates permanent cannon on use (see below). 1 charge.
   - "lightning rod" (LAB): severely damages all mobs without rElec in FOV.
@@ -839,7 +832,7 @@ Items/Machines
     sludge in direction, creating pool and damaging mobs. Takes 2 turns to empty.
     1 charge.
   - "canister of fuel" (VLT): can be "broken open" to release torrent of burning
-    fuel in direction, cremating mobs and creating pool/cloud of fire. Takes 4
+    fuel in direction, incinerating mobs and creating pool/cloud of fire. Takes 4
     turns to completely empty. 1 charge.
   - "lightning vane" (LAB): kills all mobs without rElec in FOV. Deafening noise.
     4 charges, pwr-station powered.
@@ -855,6 +848,10 @@ Items/Machines
   - grill: Can be evoked to concentrate two potions into one, making its
     effect stronger. 3 charges. Found in a kitchen-like subroom.
 
+Fires/explosions
+================
+- Make monsters flee sooner if burning?
+- Make steam a fire retardant?
 
 Message pane
 ============
@@ -864,17 +861,16 @@ Message pane
   - On mob refusing to swap with player
   - On enemy turning to flee
   x On recieving a status (Confuse, Daze, etc)
-  - On having the duration of status extended/lessened
+  x On having the duration of status extended/lessened
   - On seeing a mob cast a spell
   x On dodging by enemy or player
   x On death
   - On resisting a spell
   - On swapping weapon
-  - On using launcher
   - On making a noise, or mob making a noise
-- Messages that require confirm/keypress
+x Messages that require confirm/keypress
 x Only print trap messages when culprit is player
-- Group identical messages in msgpane
+x Group identical messages in msgpane
 x Attack messages should be nice and descriptive ("You skewer the goblin!")
   x Even more descriptive! ("The troll smashes you like an overripe mango!!")
 
@@ -1005,6 +1001,11 @@ x Add braziers that are built into the walls (aka torches), and use that
              #·,·,·,·,·,·#    #—.—.—.—.—.—#
              #`.`.`.`.`.`#    #·,·,·,·,·,·#
              #############    #############
+- Add `Flanked` effect + UI element
+- Bribing: bribe lone monsters to stay quiet, but they'll turn hostile again if
+  an unbribed comrade shows up
+  - Gold + jewelry collection
+  - Bri(b)ing key to bribe lone monsters
 
 Optimizations
 =============
