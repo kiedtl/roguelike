@@ -46,7 +46,6 @@ pub const MACHINES = [_]Machine{
     ParalysisGasTrap,
     PoisonGasTrap,
     ConfusionGasTrap,
-    NetTrap,
     RestrictedMachinesOpenLever,
     Mine,
     RechargingStation,
@@ -167,6 +166,8 @@ pub const PowerSupply = Machine{
     .powered_luminescence = 75,
     .unpowered_luminescence = 5,
 
+    .flammability = 8,
+
     .on_power = powerPowerSupply,
 };
 
@@ -190,6 +191,8 @@ pub const NuclearPowerSupply = Machine{
     .powered_luminescence = 100,
     .unpowered_luminescence = 20,
 
+    .flammability = 15,
+
     .on_power = powerPowerSupply,
 };
 
@@ -212,6 +215,9 @@ pub const FuelPowerSupply = Machine{
 
     .powered_luminescence = 100,
     .unpowered_luminescence = 20,
+
+    .flammability = 15,
+    .malfunction_effect = .{ .Explode = .{ .chance = 50, .power = 80 } },
 
     .on_power = powerPowerSupply,
 };
@@ -284,6 +290,7 @@ pub const Brazier = Machine{
     .powered_luminescence = 90,
     .unpowered_luminescence = 0,
 
+    .flammability = 8,
     .malfunction_effect = Machine.MalfunctionEffect{
         .Electrocute = .{ .chance = 40, .damage = 1, .radius = 5 },
     },
@@ -314,6 +321,7 @@ pub const Lamp = Machine{
     .powered_luminescence = 90,
     .unpowered_luminescence = 0,
 
+    .flammability = 8,
     .malfunction_effect = Machine.MalfunctionEffect{
         .Electrocute = .{ .chance = 40, .damage = 10, .radius = 5 },
     },
@@ -337,16 +345,6 @@ pub const StairUp = Machine{
     .unpowered_tile = '▲',
     .evoke_confirm = "Go upstairs?",
     .on_power = powerStairUp,
-};
-
-pub const NetTrap = Machine{
-    .name = "net",
-    .powered_fg = 0xffff00,
-    .unpowered_fg = 0xffff00,
-    .powered_tile = ':',
-    .unpowered_tile = ':',
-    .on_power = powerNetTrap,
-    .pathfinding_penalty = 80,
 };
 
 pub const PoisonGasTrap = Machine{
@@ -384,6 +382,7 @@ pub const NormalDoor = Machine{
     .unpowered_walkable = true,
     .powered_opacity = 0.2,
     .unpowered_opacity = 1.0,
+    .flammability = 15,
     .can_be_jammed = true,
     .on_power = powerNone,
 };
@@ -400,6 +399,7 @@ pub const LabDoor = Machine{
     .unpowered_walkable = true,
     .powered_opacity = 1.0,
     .unpowered_opacity = 0.0,
+    .flammability = 15,
     .can_be_jammed = true,
     .on_power = powerLabDoor,
 };
@@ -416,6 +416,7 @@ pub const VaultDoor = Machine{
     .unpowered_walkable = false,
     .powered_opacity = 0.0,
     .unpowered_opacity = 1.0,
+    .flammability = 15,
     .can_be_jammed = true,
     .on_power = powerNone,
 };
@@ -429,6 +430,7 @@ pub const LockedDoor = Machine{
     .restricted_to = .Necromancer,
     .powered_walkable = true,
     .unpowered_walkable = false,
+    .flammability = 15,
     .can_be_jammed = true,
     .on_power = powerNone,
 };
@@ -443,6 +445,7 @@ pub const RestrictedMachinesOpenLever = Machine{
     .power_drain = 90,
     .powered_walkable = false,
     .unpowered_walkable = false,
+    .flammability = 15,
     .on_power = powerRestrictedMachinesOpenLever,
 };
 
@@ -454,6 +457,8 @@ pub const Mine = Machine{
     .unpowered_tile = ':',
     .power_drain = 0, // Stay powered on once activated
     .on_power = powerMine,
+    .flammability = 15,
+    .malfunction_effect = .{ .Explode = .{ .chance = 50, .power = 80 } },
     .pathfinding_penalty = 10,
 };
 
@@ -468,6 +473,7 @@ pub const RechargingStation = Machine{
     .power_drain = 99,
     .auto_power = true,
     .on_power = powerNone,
+    .flammability = 15,
     .interact1 = .{
         .name = "recharge",
         .max_use = 3,
@@ -891,11 +897,12 @@ pub fn readProps(alloc: *mem.Allocator) void {
         bg: ?u32 = undefined,
         walkable: bool = undefined,
         opacity: f64 = undefined,
+        flammability: usize = undefined,
         function: Function = undefined,
         holder: bool = undefined,
 
         pub const Function = enum {
-            ActionPoint, Laboratory, Vault, LaboratoryItem, Statue, None
+            Laboratory, Vault, LaboratoryItem, Statue, None
         };
     };
 
@@ -925,6 +932,7 @@ pub fn readProps(alloc: *mem.Allocator) void {
             .{ .field_name = "bg", .parse_to = ?u32, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = null },
             .{ .field_name = "walkable", .parse_to = bool, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = true },
             .{ .field_name = "opacity", .parse_to = f64, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0.0 },
+            .{ .field_name = "flammability", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
             .{ .field_name = "function", .parse_to = PropData.Function, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = .None },
             .{ .field_name = "holder", .parse_to = bool, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = false },
         },
@@ -950,6 +958,7 @@ pub fn readProps(alloc: *mem.Allocator) void {
                 .fg = propdata.fg,
                 .bg = propdata.bg,
                 .walkable = propdata.walkable,
+                .flammability = propdata.flammability,
                 .opacity = propdata.opacity,
                 .holder = propdata.holder,
             };

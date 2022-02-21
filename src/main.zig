@@ -10,6 +10,7 @@ const player = @import("player.zig");
 const literature = @import("literature.zig");
 const explosions = @import("explosions.zig");
 const tasks = @import("tasks.zig");
+const fire = @import("fire.zig");
 const items = @import("items.zig");
 const utils = @import("utils.zig");
 const gas = @import("gas.zig");
@@ -273,10 +274,11 @@ fn tickGame() void {
 
     state.ticks += 1;
     surfaces.tickMachines(cur_level);
-    state.tickLight(cur_level);
     tasks.tickTasks(cur_level);
+    fire.tickFire(cur_level);
     state.tickAtmosphere(cur_level, 0);
     state.tickSound(cur_level);
+    state.tickLight(cur_level);
 
     var iter = state.mobs.iterator();
     while (iter.next()) |mob| {
@@ -363,10 +365,11 @@ fn tickGame() void {
 fn viewerTickGame(cur_level: usize) void {
     state.ticks += 1;
     surfaces.tickMachines(cur_level);
-    state.tickLight(cur_level);
     tasks.tickTasks(cur_level);
+    fire.tickFire(cur_level);
     state.tickAtmosphere(cur_level, 0);
     state.tickSound(cur_level);
+    state.tickLight(cur_level);
 
     var iter = state.mobs.iterator();
     while (iter.next()) |mob| {

@@ -11,22 +11,23 @@ const RingBuffer = @import("ringbuffer.zig").RingBuffer;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const ai = @import("ai.zig");
-const fov = @import("fov.zig");
+const astar = @import("astar.zig");
 const combat = @import("combat.zig");
 const err = @import("err.zig");
-const spells = @import("spells.zig");
-const rng = @import("rng.zig");
 const dijkstra = @import("dijkstra.zig");
 const display = @import("display.zig");
-const mapgen = @import("mapgen.zig");
-const termbox = @import("termbox.zig");
-const astar = @import("astar.zig");
-const materials = @import("materials.zig");
-const items = @import("items.zig");
+const fire = @import("fire.zig");
+const fov = @import("fov.zig");
 const gas = @import("gas.zig");
-const utils = @import("utils.zig");
-const state = @import("state.zig");
+const items = @import("items.zig");
 const literature = @import("literature.zig");
+const mapgen = @import("mapgen.zig");
+const materials = @import("materials.zig");
+const termbox = @import("termbox.zig");
+const utils = @import("utils.zig");
+const rng = @import("rng.zig");
+const state = @import("state.zig");
+const spells = @import("spells.zig");
 
 const Evocable = @import("items.zig").Evocable;
 const Projectile = @import("items.zig").Projectile;
@@ -665,11 +666,13 @@ pub const Damage = struct {
 
     pub const DamageKind = enum {
         Physical,
+        Fire,
         Electric,
 
         pub fn resist(self: DamageKind) Resistance {
             return switch (self) {
                 .Physical => .rMlee,
+                .Fire => .rFire,
                 .Electric => .rElec,
             };
         }
@@ -769,6 +772,11 @@ pub const Status = enum {
     // Doesn't have a power field (but probably should).
     Poison,
 
+    // Removes 1-2 HP per turn and sets mob's coord on fire.
+    //
+    // Doesn't have a power field.
+    Fire,
+
     // Raises strength and dexterity and increases regeneration.
     //
     // Doesn't have a power field.
@@ -819,6 +827,7 @@ pub const Status = enum {
             .Slow => "slowed",
             .Recuperate => "recuperating",
             .Poison => "poisoned",
+            .Fire => "burning",
             .Invigorate => "invigorated",
             .Pain => "tormented",
             .Fear => "fearful",
@@ -839,6 +848,7 @@ pub const Status = enum {
             .Fast => .{ "feel yourself", "starts", " moving faster" },
             .Slow => .{ "feel yourself", "starts", " moving slowly" },
             .Poison => .{ "feel very", "looks very", " sick" },
+            .Fire => .{ "catch", "catches", " fire" },
             .Invigorate => .{ "feel", "looks", " invigorated" },
             .Pain => .{ "are", "is", " wracked with pain" },
             .Fear => .{ "feel", "looks", " troubled" },
@@ -862,6 +872,7 @@ pub const Status = enum {
             .Fast => .{ "are no longer", "is no longer", " moving faster" },
             .Slow => .{ "are no longer", "is no longer", " moving slowly" },
             .Poison => .{ "feel", "looks", " healthier" },
+            .Fire => .{ "are no longer", "is no longer", " on fire" },
             .Invigorate => .{ "no longer feel", "no longer looks", " invigorated" },
             .Pain => .{ "are no longer", "is no longer", " wracked with pain" },
             .Fear => .{ "no longer feel", "no longer looks", " troubled" },
@@ -880,6 +891,16 @@ pub const Status = enum {
             .amount = @intToFloat(f64, rng.rangeClumping(usize, 0, 2, 2)),
             .blood = false,
         });
+    }
+
+    pub fn tickFire(mob: *Mob) void {
+        mob.takeDamage(.{
+            .amount = @intToFloat(f64, rng.range(usize, 1, 2)),
+            .kind = .Fire,
+            .blood = false,
+        });
+        if (state.dungeon.fireAt(mob.coord).* == 0)
+            fire.setTileOnFire(mob.coord);
     }
 
     pub fn tickPain(mob: *Mob) void {
@@ -1193,6 +1214,7 @@ pub const Mob = struct { // {{{
                 switch (status_e) {
                     .Echolocation => Status.tickEcholocation(self),
                     .Poison => Status.tickPoison(self),
+                    .Fire => Status.tickFire(self),
                     .Pain => Status.tickPain(self),
                     else => {},
                 }
@@ -1286,7 +1308,7 @@ pub const Mob = struct { // {{{
         const item_name = (item.*.shortName() catch err.wat()).constSlice();
 
         self.declareAction(.Throw);
-        state.messageAboutMob(self, self.coord, .Info, "throws a {}!", .{item_name}, "throws a {}!", .{item_name});
+        state.messageAboutMob(self, self.coord, .Info, "throw a {}!", .{item_name}, "throws a {}!", .{item_name});
 
         const dodgeable = switch (item.*) {
             .Projectile => true,
@@ -2172,6 +2194,8 @@ pub const Machine = struct {
     unpowered_luminescence: usize = 0,
     dims: bool = false,
 
+    flammability: usize = 0,
+
     // A* penalty if the machine is walkable
     pathfinding_penalty: usize = 0,
 
@@ -2324,11 +2348,12 @@ pub const Prop = struct {
     id: []const u8,
     name: []const u8,
     tile: u21,
-    fg: ?u32 = null,
-    bg: ?u32 = null,
-    walkable: bool = true,
-    opacity: f64 = 0.0,
-    holder: bool = false, // Can a prisoner be held to it?
+    fg: ?u32,
+    bg: ?u32,
+    walkable: bool,
+    opacity: f64,
+    holder: bool, // Can a prisoner be held to it?
+    flammability: usize,
     coord: Coord = Coord.new(0, 0),
 
     pub fn deinit(self: *const Prop, alloc: *mem.Allocator) void {
@@ -2766,6 +2791,10 @@ pub const Tile = struct {
             }
 
             cell.ch = mob.tile;
+        } else if (state.dungeon.fireAt(coord).* > 0) {
+            const famount = state.dungeon.fireAt(coord).*;
+            cell.ch = fire.fireGlyph(famount);
+            cell.fg = fire.fireColor(famount);
         } else if (state.dungeon.itemsAt(coord).last()) |item| {
             if (!self.broken) assert(self.type != .Wall);
 
@@ -2888,6 +2917,7 @@ pub const Dungeon = struct {
     gas: [LEVELS][HEIGHT][WIDTH][gas.GAS_NUM]f64 = [1][HEIGHT][WIDTH][gas.GAS_NUM]f64{[1][WIDTH][gas.GAS_NUM]f64{[1][gas.GAS_NUM]f64{[1]f64{0} ** gas.GAS_NUM} ** WIDTH} ** HEIGHT} ** LEVELS,
     sound: [LEVELS][HEIGHT][WIDTH]Sound = [1][HEIGHT][WIDTH]Sound{[1][WIDTH]Sound{[1]Sound{.{}} ** WIDTH} ** HEIGHT} ** LEVELS,
     light_intensity: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
+    fire: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
 
     pub const ItemBuffer = StackBuffer(Item, 7);
 
@@ -2909,6 +2939,8 @@ pub const Dungeon = struct {
                 else => {},
             }
         }
+
+        l += fire.fireLight(self.fireAt(coord).*);
 
         return l;
     }
@@ -2974,7 +3006,7 @@ pub const Dungeon = struct {
 
             if (c.move(d, state.mapgeometry)) |neighbor| {
                 const prev = self.at(neighbor).spatter.get(what);
-                const new = math.min(prev + rng.range(usize, 0, 5), 10);
+                const new = math.min(prev + rng.range(usize, 0, 4), 10);
                 self.at(neighbor).spatter.set(what, new);
             }
         }
@@ -2999,6 +3031,10 @@ pub const Dungeon = struct {
         return &self.sound[c.z][c.y][c.x];
     }
 
+    pub inline fn fireAt(self: *Dungeon, c: Coord) *usize {
+        return &self.fire[c.z][c.y][c.x];
+    }
+
     pub inline fn lightIntensityAt(self: *Dungeon, c: Coord) *usize {
         return &self.light_intensity[c.z][c.y][c.x];
     }
@@ -3009,11 +3045,13 @@ pub const Dungeon = struct {
 };
 
 pub const Spatter = enum {
+    Ash,
     Blood,
     Dust,
 
     pub inline fn color(self: Spatter) u32 {
         return switch (self) {
+            .Ash => 0x121212,
             .Blood => 0x9a1313,
             .Dust => 0x92744c,
         };

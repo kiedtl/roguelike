@@ -4,6 +4,7 @@ const testing = std.testing;
 const math = std.math;
 const assert = std.debug.assert;
 
+const fire = @import("fire.zig");
 usingnamespace @import("types.zig");
 const state = @import("state.zig");
 
@@ -52,19 +53,24 @@ fn pathfindingPenalty(coord: Coord, opts: state.IsWalkableOptions) usize {
     if (state.dungeon.at(coord).surface) |surface| switch (surface) {
         .Machine => |m| {
             c += m.pathfinding_penalty;
-            if (m.jammed) if (opts.mob) |mob| {
-                c += 100 / mob.strength();
-            };
+            if (m.jammed)
+                if (opts.mob) |mob| {
+                    c += 100 / mob.strength();
+                };
         },
         .Container => |_| c += 30,
         .Prop => c += 15,
         else => {},
     };
 
-    if (opts.mob) |mob|
+    if (opts.mob) |mob| {
         if (!mob.vision_range().contains(state.dungeon.lightIntensityAt(coord).*)) {
             c += 10;
-        };
+        }
+
+        if (!fire.fireIsSafeFor(mob, state.dungeon.fireAt(coord).*))
+            c += 49;
+    }
 
     return c;
 }

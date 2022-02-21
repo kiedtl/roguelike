@@ -50,7 +50,7 @@ pub fn currentEnemy(me: *Mob) *EnemyRecord {
 //      - enemy's HP is ×4 as high as mob's HP
 //      - mob's HP is 1/5 of normal and enemy's HP is greater than mob's
 //      - enemy's weapon is capable of trashing the mob in two hits
-//      - mob has .Fear status effect
+//      - mob has .Fear or .Fire status effect
 //
 // TODO: flee if flanked and there are no allies in sight
 pub fn shouldFlee(me: *Mob) bool {
@@ -71,7 +71,7 @@ pub fn shouldFlee(me: *Mob) bool {
     if (max_damage >= (me.HP / 2))
         result = true;
 
-    if (me.isUnderStatus(.Fear)) |_|
+    if (me.isUnderStatus(.Fear) != null or me.isUnderStatus(.Fire) != null)
         result = true;
 
     return result;

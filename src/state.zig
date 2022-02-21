@@ -10,6 +10,7 @@ const err = @import("err.zig");
 const display = @import("display.zig");
 const dijkstra = @import("dijkstra.zig");
 const mapgen = @import("mapgen.zig");
+const fire = @import("fire.zig");
 const utils = @import("utils.zig");
 const gas = @import("gas.zig");
 const rng = @import("rng.zig");
@@ -184,6 +185,8 @@ pub fn tileOpacity(coord: Coord) usize {
     for (gases) |q, g| {
         if (q > 0) o += @floatToInt(usize, gas.Gases[g].opacity * 100);
     }
+
+    o += fire.fireOpacity(dungeon.fireAt(coord).*);
 
     return o;
 }

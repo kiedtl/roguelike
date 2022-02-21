@@ -4,6 +4,8 @@ const meta = std.meta;
 usingnamespace @import("types.zig");
 const fov = @import("fov.zig");
 const state = @import("state.zig");
+const fire = @import("fire.zig");
+const sound = @import("sound.zig");
 const rng = @import("rng.zig");
 
 pub const ExplosionOpts = struct {
@@ -71,12 +73,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
         }
     };
 
-    state.dungeon.soundAt(ground0).* = .{
-        .intensity = .Loudest,
-        .type = .Explosion,
-        .state = .New,
-        .when = state.ticks,
-    };
+    sound.makeNoise(ground0, .Explosion, .Loudest);
     state.message(.Info, "KABOOM!", .{});
 
     var result: [HEIGHT][WIDTH]usize = undefined;
@@ -101,6 +98,12 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
             const coord = Coord.new2(ground0.z, x, y);
 
             state.dungeon.at(coord).broken = true;
+
+            const max_range = (opts.strength / 100) * 2;
+            const chance_for_fire = 100 - (coord.distance(ground0) * 100 / max_range);
+            if (rng.percent(chance_for_fire)) {
+                fire.setTileOnFire(coord);
+            }
 
             if (state.dungeon.at(coord).surface) |surface| switch (surface) {
                 .Machine => |m| if (m.malfunction_effect) |eff| {

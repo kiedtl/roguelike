@@ -1,3 +1,4 @@
+const state = @import("state.zig");
 usingnamespace @import("types.zig");
 
 pub const SoundIntensity = enum {
@@ -45,3 +46,12 @@ pub const Sound = struct {
     state: SoundState = .Dead,
     when: usize = 0,
 };
+
+pub fn makeNoise(coord: Coord, s_type: SoundType, intensity: SoundIntensity) void {
+    state.dungeon.soundAt(coord).* = .{
+        .intensity = intensity,
+        .type = s_type,
+        .state = .New,
+        .when = state.ticks,
+    };
+}

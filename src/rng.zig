@@ -36,6 +36,10 @@ pub fn boolean() bool {
     return rng.random.int(u1) == 1;
 }
 
+pub fn percent(number: anytype) bool {
+    return range(@TypeOf(number), 1, 100) < math.min(100, number);
+}
+
 // TODO: make generic
 pub fn tenin(number: usize) bool {
     assert(number >= 10);

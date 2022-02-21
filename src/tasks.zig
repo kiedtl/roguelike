@@ -27,7 +27,7 @@ pub fn tickTasks(level: usize) void {
                 const coord = Coord.new2(level, x, y);
 
                 // Check for broken tiles
-                if (state.dungeon.at(coord).broken) {
+                if (state.dungeon.at(coord).broken and state.dungeon.fireAt(coord).* == 0) {
                     var already_reported: ?usize = null;
 
                     for (state.tasks.items) |task, id| switch (task.type) {

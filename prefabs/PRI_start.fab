@@ -12,18 +12,19 @@
 :prison 2,2 7 4
 @0 p bed
 
-@a P potion_fast
+@a P potion_preserve
 @b P potion_paralysis
-@c P potion_fog
+@c P potion_smoke
 @d P potion_recuperate
-@e P potion_preserve
+@e P potion_fast
+@f P potion_incinerate
 
 #*########******#
 *...............•
-*.########.aac..*
-*.#0.....#...d..*
-•.#......±@.bb..*
-*.##≡≡≡≡##.cd...*
+*.########..aa..*
+*.#0.....#.bbe..*
+•.#......±@ccf..*
+*.##≡≡≡≡##..dd..*
 *...............•
 #***************#
 

@@ -5,6 +5,8 @@ const assert = std.debug.assert;
 
 const err = @import("err.zig");
 const explosions = @import("explosions.zig");
+const fire = @import("fire.zig");
+const fov = @import("fov.zig");
 const gas = @import("gas.zig");
 const display = @import("display.zig");
 const rng = @import("rng.zig");
@@ -16,7 +18,7 @@ const LinkedList = @import("list.zig").LinkedList;
 
 // TODO: remove
 pub const POTIONS = [_]Potion{
-    FogPotion,
+    SmokePotion,
     ConfusionPotion,
     ParalysisPotion,
     FastPotion,
@@ -26,6 +28,7 @@ pub const POTIONS = [_]Potion{
     InvigoratePotion,
     PreservePotion,
     DecimatePotion,
+    IncineratePotion,
 };
 
 // Items to be dropped into rooms for the player's use.
@@ -51,7 +54,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 05, .i = .{ .A = ChainmailArmor } },
     .{ .w = 02, .i = .{ .A = ScalemailArmor } },
     // Potions
-    .{ .w = 40, .i = .{ .P = FogPotion } },
+    .{ .w = 40, .i = .{ .P = SmokePotion } },
     .{ .w = 70, .i = .{ .P = ConfusionPotion } },
     .{ .w = 40, .i = .{ .P = ParalysisPotion } },
     .{ .w = 40, .i = .{ .P = FastPotion } },
@@ -60,6 +63,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 70, .i = .{ .P = PoisonPotion } },
     .{ .w = 70, .i = .{ .P = InvigoratePotion } },
     .{ .w = 30, .i = .{ .P = PreservePotion } },
+    .{ .w = 30, .i = .{ .P = IncineratePotion } },
     .{ .w = 10, .i = .{ .P = DecimatePotion } },
     // Evocables
     .{ .w = 10, .i = .{ .E = IronSpikeEvoc } },
@@ -348,7 +352,7 @@ pub const EcholocationRing = Ring{
     .status_power_increase = 100,
 };
 
-pub const FogPotion = Potion{ .id = "potion_fog", .name = "fog", .type = .{ .Gas = gas.FogGas.id }, .color = 0x00A3D9 };
+pub const SmokePotion = Potion{ .id = "potion_smoke", .name = "smoke", .type = .{ .Gas = gas.SmokeGas.id }, .color = 0x00A3D9 };
 pub const ConfusionPotion = Potion{ .id = "potion_confusion", .name = "confuzzlementation", .type = .{ .Gas = gas.Confusion.id }, .color = 0x33cbca };
 pub const ParalysisPotion = Potion{ .id = "potion_paralysis", .name = "petrification", .type = .{ .Gas = gas.Paralysis.id }, .color = 0xaaaaff };
 pub const FastPotion = Potion{ .id = "potion_fast", .name = "acceleration", .type = .{ .Status = .Fast }, .ingested = true, .color = 0xbb6c55 };
@@ -357,6 +361,7 @@ pub const RecuperatePotion = Potion{ .id = "potion_recuperate", .name = "recuper
 pub const PoisonPotion = Potion{ .id = "potion_poison", .name = "coagulation", .type = .{ .Gas = gas.Poison.id }, .color = 0xa7e234 };
 pub const InvigoratePotion = Potion{ .id = "potion_invigorate", .name = "invigoration", .type = .{ .Status = .Invigorate }, .ingested = true, .color = 0xdada53 };
 pub const PreservePotion = Potion{ .id = "potion_preserve", .name = "preservation", .type = .{ .Custom = triggerPreservePotion }, .ingested = true, .color = 0xda5353 };
+pub const IncineratePotion = Potion{ .id = "potion_incinerate", .name = "incineration", .type = .{ .Custom = triggerIncineratePotion }, .ingested = false, .color = 0xff3434 }; // TODO: unique color
 pub const DecimatePotion = Potion{ .id = "potion_decimate", .name = "decimation", .type = .{ .Custom = triggerDecimatePotion }, .color = 0xffffff }; // TODO: unique color
 
 pub const ChainmailArmor = Armor{
@@ -635,6 +640,42 @@ fn triggerPreservePotion(_dork: ?*Mob, coord: Coord) void {
 
         dork.HP = math.min(dork.max_HP, dork.HP + (dork.max_HP * 150 / 100));
     }
+}
+
+fn triggerIncineratePotion(_dork: ?*Mob, coord: Coord) void {
+    const mean_radius: usize = 4;
+    const S = struct {
+        pub fn _opacityFunc(c: Coord) usize {
+            return switch (state.dungeon.at(c).type) {
+                .Lava, .Water, .Wall => 100,
+                .Floor => if (state.dungeon.at(c).surface) |surf| switch (surf) {
+                    .Machine => |m| if (m.isWalkable()) @as(usize, 0) else 50,
+                    .Prop => |p| if (p.walkable) @as(usize, 0) else 50,
+                    .Container => 100,
+                    else => 0,
+                } else 0,
+            };
+        }
+    };
+
+    var result: [HEIGHT][WIDTH]usize = undefined;
+    for (result) |*row| for (row) |*cell| {
+        cell.* = 0;
+    };
+
+    var deg: usize = 0;
+    while (deg < 360) : (deg += 60) {
+        const s = rng.range(usize, mean_radius / 2, mean_radius * 2) * 10;
+        fov.rayCastOctants(coord, mean_radius, s, S._opacityFunc, &result, deg, deg + 61);
+    }
+    result[coord.y][coord.x] = 100; // Ground zero is always incinerated
+
+    for (result) |row, y| for (row) |cell, x| {
+        if (cell > 0) {
+            const cellc = Coord.new2(coord.z, x, y);
+            fire.setTileOnFire(cellc);
+        }
+    };
 }
 
 fn triggerDecimatePotion(_dork: ?*Mob, coord: Coord) void {
