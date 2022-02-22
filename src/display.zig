@@ -90,7 +90,7 @@ pub fn dimensions(w: DisplayWindow) Dimension {
     const height = @intCast(usize, termbox.tb_height());
     const width = @intCast(usize, termbox.tb_width());
 
-    const log_height = 6;
+    const log_height = 10;
     const playerinfo_width = 25;
     const enemyinfo_width = 25;
     const playerinfo_start = 1;
