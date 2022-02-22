@@ -12,6 +12,7 @@ const CHANCE_OF_AUTO_HIT = 14;
 const CHANCE_OF_AUTO_MISS = 14;
 
 const FULL_LIGHT_BONUS: isize = 14;
+const DEFENDER_UNAWARE_BONUS: isize = 21;
 
 const ATTACKER_HELD_NBONUS: isize = 21;
 const DIM_LIGHT_NBONUS: isize = 14;
@@ -37,15 +38,15 @@ pub fn damageOutput(attacker: *const Mob, recipient: *const Mob, is_stab: bool) 
 }
 
 pub fn chanceOfAttackLanding(attacker: *const Mob, defender: *const Mob) usize {
-    if (!defender.isAwareOfAttack(attacker.coord)) return 100;
-
     if (rng.onein(CHANCE_OF_AUTO_HIT)) return 100;
     if (rng.onein(CHANCE_OF_AUTO_MISS)) return 0;
 
     const tile_light = state.dungeon.lightAt(defender.coord).*;
     const attacker_weapon = attacker.inventory.wielded orelse &items.UnarmedWeapon;
 
-    var chance: isize = 60;
+    var chance: isize = 70;
+
+    chance += if (!defender.isAwareOfAttack(attacker.coord)) DEFENDER_UNAWARE_BONUS else 0;
 
     chance -= if (attacker.isUnderStatus(.Held)) |_| ATTACKER_HELD_NBONUS else 0;
     chance -= if (!attacker.canSeeInLight(tile_light)) DIM_LIGHT_NBONUS else 0;
