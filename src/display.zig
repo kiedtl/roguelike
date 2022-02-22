@@ -288,10 +288,10 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
 
     var y = starty;
     while (y < endy) : (y += 1) _clear_line(startx, endx, y);
-    y = starty;
+    y = starty + 1;
 
-    y = _draw_string(startx, y, endx, 0xffffff, 0, false, "score: {:<5} depth: {}", .{
-        state.score, state.player.coord.z,
+    y = _draw_string(startx, y, endx, 0xffffff, 0, false, "depth: {}", .{
+        state.levelinfo[state.player.coord.z].name,
     }) catch unreachable;
     y = _draw_string(startx, y, endx, 0xffffff, 0, false, "turns: {} ({e:.1})", .{
         state.ticks, last_action_cost,
