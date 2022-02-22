@@ -132,7 +132,7 @@ pub fn nextAvailableSpaceForItem(c: Coord, a: *mem.Allocator) ?Coord {
                     if (dungeon.at(coord).surface) |surface| {
                         switch (surface) {
                             .Container => |container| return container.items.isFull(),
-                            else => {},
+                            else => if (strict_) return false,
                         }
                     }
 

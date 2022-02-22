@@ -1802,7 +1802,7 @@ pub const Mob = struct { // {{{
     }
 
     // Separate from kill() because some code (e.g., mapgen) cannot rely on the player
-    // having been initialized.
+    // having been initialized (to print the messages).
     pub fn deinit(self: *Mob) void {
         self.squad_members.deinit();
         self.enemies.deinit();
@@ -1811,10 +1811,12 @@ pub const Mob = struct { // {{{
 
         self.is_dead = true;
 
-        if (state.dungeon.itemsAt(self.coord).isFull())
-            _ = state.dungeon.itemsAt(self.coord).orderedRemove(0) catch err.wat();
-
-        state.dungeon.itemsAt(self.coord).append(Item{ .Corpse = self }) catch err.wat();
+        // Generate a corpse if possible.
+        var membuf: [4096]u8 = undefined;
+        var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+        const corpsetile = state.nextAvailableSpaceForItem(self.coord, &fba.allocator);
+        if (corpsetile) |c|
+            state.dungeon.itemsAt(c).append(Item{ .Corpse = self }) catch err.wat();
 
         state.dungeon.at(self.coord).mob = null;
     }
