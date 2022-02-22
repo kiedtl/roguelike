@@ -1144,9 +1144,9 @@ pub const Mob = struct { // {{{
         const energy = math.clamp(self.vision * Dungeon.FLOOR_OPACITY, 0, 100);
         const direction = if (self.deg360_vision) null else self.facing;
 
-        fov.rayCast(self.coord, self.vision, energy, Dungeon.tileOpacity, &self.fov, direction);
+        fov.rayCast(self.coord, self.vision, energy, Dungeon.tileOpacity, &self.fov, direction, self == state.player);
         if (self.isUnderStatus(.Backvision) != null and direction != null)
-            fov.rayCast(self.coord, self.vision, energy, Dungeon.tileOpacity, &self.fov, direction.?.opposite());
+            fov.rayCast(self.coord, self.vision, energy, Dungeon.tileOpacity, &self.fov, direction.?.opposite(), self == state.player);
 
         for (self.fov) |row, y| for (row) |_, x| {
             if (self.fov[y][x] > 0) {

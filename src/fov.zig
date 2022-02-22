@@ -266,6 +266,7 @@ pub fn rayCast(
     opacity_func: fn (Coord) usize,
     buffer: *[HEIGHT][WIDTH]usize,
     direction: ?Direction,
+    remove_artefacts: bool,
 ) void {
     // Area of quadrant coverage by each direction:
     //
@@ -311,10 +312,12 @@ pub fn rayCast(
     const x_max = math.clamp(center.x + radius + 1, 0, WIDTH - 1);
     const y_max = math.clamp(center.y + radius + 1, 0, HEIGHT - 1);
 
-    _removeArtifacts(center.z, x_min, y_min, center.x, center.y, -1, -1, buffer, opacity_func);
-    _removeArtifacts(center.z, center.x, y_min, x_max - 1, center.y, 1, -1, buffer, opacity_func);
-    _removeArtifacts(center.z, x_min, center.y, center.x, y_max - 1, -1, 1, buffer, opacity_func);
-    _removeArtifacts(center.z, center.x, center.y, x_max - 1, y_max - 1, 1, 1, buffer, opacity_func);
+    if (remove_artefacts) {
+        _removeArtifacts(center.z, x_min, y_min, center.x, center.y, -1, -1, buffer, opacity_func);
+        _removeArtifacts(center.z, center.x, y_min, x_max - 1, center.y, 1, -1, buffer, opacity_func);
+        _removeArtifacts(center.z, x_min, center.y, center.x, y_max - 1, -1, 1, buffer, opacity_func);
+        _removeArtifacts(center.z, center.x, center.y, x_max - 1, y_max - 1, 1, 1, buffer, opacity_func);
+    }
 
     buffer[center.y][center.x] = 100;
 }
