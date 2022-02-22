@@ -1320,7 +1320,7 @@ pub const Mob = struct { // {{{
 
         const trajectory = self.coord.drawLine(at, state.mapgeometry);
 
-        const landed = for (trajectory.constSlice()) |coord| {
+        const landed: ?Coord = for (trajectory.constSlice()) |coord| {
             if ((!coord.eq(self.coord) and
                 !state.is_walkable(coord, .{ .right_now = true })))
             {
@@ -1334,28 +1334,30 @@ pub const Mob = struct { // {{{
 
                 break coord;
             }
-        } else at;
+        } else null;
 
         switch (item.*) {
             .Projectile => |proj| {
-                if (state.dungeon.at(landed).mob) |mob| {
+                if (landed != null and state.dungeon.at(landed.?).mob != null) {
+                    const mob = state.dungeon.at(landed.?).mob.?;
                     switch (proj.effect) {
                         .Status => |s| mob.addStatus(s.status, s.power, s.duration, s.permanent),
                     }
                 } else {
-                    const spot = state.nextAvailableSpaceForItem(landed, alloc);
+                    const spot = state.nextAvailableSpaceForItem(at, alloc);
                     if (spot) |_spot|
                         state.dungeon.itemsAt(_spot).append(item.*) catch err.wat();
                 }
             },
             .Potion => |potion| {
+                const crd = landed orelse at;
                 if (!potion.ingested) {
-                    if (state.dungeon.at(landed).mob) |bastard| {
-                        bastard.quaffPotion(potion, false);
+                    if (state.dungeon.at(crd).mob) |mob| {
+                        mob.quaffPotion(potion, false);
                     } else switch (potion.type) {
                         .Status => {},
-                        .Gas => |s| state.dungeon.atGas(landed)[s] = 1.0,
-                        .Custom => |f| f(null, landed),
+                        .Gas => |s| state.dungeon.atGas(crd)[s] = 1.0,
+                        .Custom => |f| f(null, crd),
                     }
                 }
 
