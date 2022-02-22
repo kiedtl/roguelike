@@ -1087,9 +1087,7 @@ pub const Mob = struct { // {{{
     // hearing:            The minimum intensity of a noise source before it can be
     //                     heard by a mob. The lower the value, the better.
     // vision:             Maximum radius of the mob's field of vision.
-    // base_night_vision:  If the light in a tile is below this amount, the mob cannot
-    //                     see that tile, even if it's in the FOV. The lower, the
-    //                     better.
+    // base_night_vision:  Whether the mob can see in darkness.
     // deg360_vision:      Mob's FOV ignores the facing mechanic and can see in all
     //                     directions (e.g., player, statues)
     // no_show_fov:        If false, display code will not show mob's FOV.
@@ -1099,7 +1097,7 @@ pub const Mob = struct { // {{{
     base_strength: usize,
     base_dexterity: usize, // Range: 0 < dexterity < 100
     vision: usize = 6,
-    base_night_vision: usize = 20, // Range: 0 < night_vision < 100
+    base_night_vision: bool = false,
     deg360_vision: bool = false,
     no_show_fov: bool = false,
     hearing: usize,
@@ -1138,22 +1136,23 @@ pub const Mob = struct { // {{{
             cell.* = 0;
         };
 
-        const c_vision_range = self.vision_range();
-        const energy = math.clamp(self.vision * state.FLOOR_OPACITY, 0, 100);
+        const light_requirements = [_]bool{ self.canSeeInLight(false), self.canSeeInLight(true) };
+
+        const energy = math.clamp(self.vision * Dungeon.FLOOR_OPACITY, 0, 100);
         const direction = if (self.deg360_vision) null else self.facing;
 
-        fov.rayCast(self.coord, self.vision, energy, state.tileOpacity, &self.fov, direction);
+        fov.rayCast(self.coord, self.vision, energy, Dungeon.tileOpacity, &self.fov, direction);
         if (self.isUnderStatus(.Backvision) != null and direction != null)
-            fov.rayCast(self.coord, self.vision, energy, state.tileOpacity, &self.fov, direction.?.opposite());
+            fov.rayCast(self.coord, self.vision, energy, Dungeon.tileOpacity, &self.fov, direction.?.opposite());
 
         for (self.fov) |row, y| for (row) |_, x| {
             if (self.fov[y][x] > 0) {
                 const fc = Coord.new2(self.coord.z, x, y);
-                const light = state.dungeon.lightIntensityAt(fc).*;
+                const light = state.dungeon.lightAt(fc).*;
 
-                // If a tile is too dim to be seen by a mob and it's not adjacent to that mob,
-                // mark it as unlit.
-                if (fc.distance(self.coord) > 1 and !c_vision_range.contains(light)) {
+                // If a tile is too dim to be seen by a mob and the tile isn't
+                // adjacent to that mob, mark it as unlit.
+                if (fc.distance(self.coord) > 1 and !light_requirements[@boolToInt(light)]) {
                     self.fov[y][x] = 0;
                     continue;
                 }
@@ -2059,18 +2058,16 @@ pub const Mob = struct { // {{{
         return @divTrunc(@intCast(isize, self.base_speed) * math.max(0, speed_perc), 100);
     }
 
-    pub fn vision_range(self: *const Mob) MinMax(usize) {
-        var min: usize = self.base_night_vision;
-        if (self.isUnderStatus(.NightBlindness) != null)
-            min = math.clamp(min + 30, 0, 50);
-        if (self.isUnderStatus(.NightVision) != null and min > 0)
-            min = 0;
-
-        var max: usize = 100;
-        if (self.isUnderStatus(.DayBlindness) != null)
-            max = 60;
-
-        return .{ .min = min, .max = max };
+    pub fn canSeeInLight(self: *const Mob, light: bool) bool {
+        if (!light) {
+            if (self.isUnderStatus(.NightBlindness) != null) return false;
+            if (self.isUnderStatus(.NightVision) != null) return true;
+            if (self.base_night_vision) return true;
+            return false;
+        } else {
+            if (self.isUnderStatus(.DayBlindness) != null) return false;
+            return true;
+        }
     }
 
     pub inline fn stealth(self: *const Mob) usize {
@@ -2884,8 +2881,7 @@ pub const Tile = struct {
         }
 
         if (!ignore_lights and self.type != .Wall) {
-            const light = state.dungeon.lightIntensityAt(coord).*;
-            if (light < 20) {
+            if (!state.dungeon.lightAt(coord).*) {
                 cell.fg = utils.percentageOfColor(cell.fg, 40);
             }
         }
@@ -2916,12 +2912,65 @@ pub const Dungeon = struct {
     items: [LEVELS][HEIGHT][WIDTH]ItemBuffer = [1][HEIGHT][WIDTH]ItemBuffer{[1][WIDTH]ItemBuffer{[1]ItemBuffer{ItemBuffer.init(null)} ** WIDTH} ** HEIGHT} ** LEVELS,
     gas: [LEVELS][HEIGHT][WIDTH][gas.GAS_NUM]f64 = [1][HEIGHT][WIDTH][gas.GAS_NUM]f64{[1][WIDTH][gas.GAS_NUM]f64{[1][gas.GAS_NUM]f64{[1]f64{0} ** gas.GAS_NUM} ** WIDTH} ** HEIGHT} ** LEVELS,
     sound: [LEVELS][HEIGHT][WIDTH]Sound = [1][HEIGHT][WIDTH]Sound{[1][WIDTH]Sound{[1]Sound{.{}} ** WIDTH} ** HEIGHT} ** LEVELS,
-    light_intensity: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
+    light: [LEVELS][HEIGHT][WIDTH]bool = [1][HEIGHT][WIDTH]bool{[1][WIDTH]bool{[1]bool{false} ** WIDTH} ** HEIGHT} ** LEVELS,
     fire: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
 
     pub const ItemBuffer = StackBuffer(Item, 7);
 
-    pub fn emittedLightIntensity(self: *Dungeon, coord: Coord) usize {
+    pub const FLOOR_OPACITY: usize = 5;
+    pub const MOB_OPACITY: usize = 10;
+
+    pub fn isTileOpaque(coord: Coord) bool {
+        const tile = state.dungeon.at(coord);
+
+        if (tile.type == .Wall and !tile.broken)
+            return true;
+
+        if (tile.surface) |surface| {
+            switch (surface) {
+                .Machine => |m| if (m.opacity() >= 1.0) return true,
+                .Prop => |p| if (p.opacity >= 1.0) return true,
+                else => {},
+            }
+        }
+
+        const gases = state.dungeon.atGas(coord);
+        for (gases) |q, g| {
+            if (q > 0 and gas.Gases[g].opacity >= 1.0) return true;
+        }
+
+        return false;
+    }
+
+    pub fn tileOpacity(coord: Coord) usize {
+        const tile = state.dungeon.at(coord);
+        var o: usize = FLOOR_OPACITY;
+
+        if (tile.type == .Wall and !tile.broken)
+            return @floatToInt(usize, tile.material.opacity * 100);
+
+        if (tile.mob) |_|
+            o += MOB_OPACITY;
+
+        if (tile.surface) |surface| {
+            switch (surface) {
+                .Machine => |m| o += @floatToInt(usize, m.opacity() * 100),
+                .Prop => |p| o += @floatToInt(usize, p.opacity * 100),
+                else => {},
+            }
+        }
+
+        const gases = state.dungeon.atGas(coord);
+        for (gases) |q, g| {
+            if (q > 0) o += @floatToInt(usize, gas.Gases[g].opacity * 100);
+        }
+
+        o += fire.fireOpacity(state.dungeon.fireAt(coord).*);
+
+        return o;
+    }
+
+    pub fn emittedLight(self: *Dungeon, coord: Coord) usize {
         const tile: *Tile = state.dungeon.at(coord);
 
         var l: usize = 0;
@@ -3035,8 +3084,8 @@ pub const Dungeon = struct {
         return &self.fire[c.z][c.y][c.x];
     }
 
-    pub inline fn lightIntensityAt(self: *Dungeon, c: Coord) *usize {
-        return &self.light_intensity[c.z][c.y][c.x];
+    pub inline fn lightAt(self: *Dungeon, c: Coord) *bool {
+        return &self.light[c.z][c.y][c.x];
     }
 
     pub inline fn itemsAt(self: *Dungeon, c: Coord) *ItemBuffer {

@@ -64,7 +64,7 @@ fn pathfindingPenalty(coord: Coord, opts: state.IsWalkableOptions) usize {
     };
 
     if (opts.mob) |mob| {
-        if (!mob.vision_range().contains(state.dungeon.lightIntensityAt(coord).*)) {
+        if (!mob.canSeeInLight(state.dungeon.lightAt(coord).*)) {
             c += 10;
         }
 

@@ -212,7 +212,7 @@ pub const PlayerTemplate = MobTemplate{
         },
         .allegiance = .OtherGood,
         .vision = 10,
-        .base_night_vision = 0,
+        .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
 
@@ -304,7 +304,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
         .vision = 20,
-        .base_night_vision = 0,
+        .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
         .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
@@ -340,7 +340,7 @@ pub const NebroStatueTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
         .vision = 20,
-        .base_night_vision = 0,
+        .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
         .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
@@ -376,7 +376,7 @@ pub const CrystalStatueTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
         .vision = 20,
-        .base_night_vision = 0,
+        .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
         .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{

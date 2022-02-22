@@ -427,3 +427,141 @@ fn _removeArtifacts(
         }
     }
 }
+
+// Ported from doryen-fov Rust crate
+// TODO: provide link here
+pub fn shadowCast(
+    coord: Coord,
+    radius: usize,
+    limit: Coord,
+    buffer: *[HEIGHT][WIDTH]bool,
+    opacity_func: fn (Coord) bool,
+) void {
+    // Area of coverage by each octant (the MULT constant does the job of
+    // converting between octants, I think?):
+    //
+    //                               North
+    //                                 |
+    //                            \0000|3333/
+    //                            1\000|333/2
+    //                            11\00|33/22
+    //                            111\0|3/222
+    //                            1111\|/2222
+    //                       West -----@------ East
+    //                            6666/|\5555
+    //                            666/7|4\555
+    //                            66/77|44\55
+    //                            6/777|444\5
+    //                            /7777|4444\
+    //                                 |
+    //                               South
+    //
+    // Don't ask me how the octants were all displaced from what should've been
+    // their positions, I inherited(?) this problem from the doryen-fov Rust
+    // crate, from which this shadowcasting code was ported.
+    //
+    const MULT = [4][8]isize{
+        [_]isize{ 1, 0, 0, -1, -1, 0, 0, 1 },
+        [_]isize{ 0, 1, -1, 0, 0, -1, 1, 0 },
+        [_]isize{ 0, 1, 1, 0, 0, -1, -1, 0 },
+        [_]isize{ 1, 0, 0, 1, -1, 0, 0, -1 },
+    };
+
+    var max_radius = radius;
+    if (max_radius == 0) {
+        const max_radius_x = math.max(limit.x - coord.x, coord.x);
+        const max_radius_y = math.max(limit.y - coord.y, coord.y);
+        max_radius = @floatToInt(usize, math.sqrt(@intToFloat(f64, max_radius_x * max_radius_x + max_radius_y * max_radius_y))) + 1;
+    }
+
+    const octants = [_]usize{ 0, 1, 2, 3, 4, 5, 6, 7 };
+    for (octants) |oct| {
+        _cast_light(coord.z, @intCast(isize, coord.x), @intCast(isize, coord.y), 1, 1.0, 0.0, @intCast(isize, max_radius), MULT[0][oct], MULT[1][oct], MULT[2][oct], MULT[3][oct], limit, buffer, opacity_func);
+    }
+
+    buffer[coord.y][coord.x] = true;
+}
+
+fn _cast_light(
+    level: usize,
+    cx: isize,
+    cy: isize,
+    row: isize,
+    start_p: f64,
+    end: f64,
+    radius: isize,
+    xx: isize,
+    xy: isize,
+    yx: isize,
+    yy: isize,
+    limit: Coord,
+    buffer: *[HEIGHT][WIDTH]bool,
+    tile_opacity: fn (Coord) bool,
+) void {
+    if (start_p < end) {
+        return;
+    }
+
+    var start = start_p;
+    var new_start: f64 = 0.0;
+
+    var j: isize = row;
+    var stepj: isize = if (row < radius) 1 else -1;
+
+    while (j < radius) : (j += stepj) {
+        const dy = -j;
+        var dx = -j - 1;
+        var blocked = false;
+        var pblocked = false;
+
+        while (dx <= 0) {
+            dx += 1;
+
+            const cur_x = cx + dx * xx + dy * xy;
+            const cur_y = cy + dx * yx + dy * yy;
+
+            if (cur_x < 0 or cur_x >= @intCast(isize, limit.x) or cur_y < 0 or cur_y >= @intCast(isize, limit.y)) {
+                continue;
+            }
+
+            const coord = Coord.new2(level, @intCast(usize, cur_x), @intCast(usize, cur_y));
+            const l_slope = (@intToFloat(f64, dx) - 0.5) / (@intToFloat(f64, dy) + 0.5);
+            const r_slope = (@intToFloat(f64, dx) + 0.5) / (@intToFloat(f64, dy) - 0.5);
+
+            if (start < r_slope) {
+                continue;
+            } else if (end > l_slope) {
+                break;
+            }
+
+            if (dx * dx + dy * dy <= @intCast(isize, radius * radius)) {
+                // Our light beam is hitting this tile, light it.
+                buffer[coord.y][coord.x] = true;
+            }
+
+            const transparent = tile_opacity(coord);
+
+            if (blocked) {
+                if (transparent) {
+                    // We're scanning a blocked row.
+                    new_start = r_slope;
+                    continue;
+                } else {
+                    blocked = false;
+                    start = new_start;
+                }
+            } else if (transparent and j < radius) {
+                // This is a blocking square, start a child scan.
+                blocked = true;
+                _cast_light(level, cx, cy, j + 1, start, l_slope, radius, xx, xy, yx, yy, limit, buffer, tile_opacity);
+                new_start = r_slope;
+            }
+        }
+
+        // We've scanned the row.
+        // Do next row unless last square was blocking.
+        if (blocked) {
+            break;
+        }
+    }
+}

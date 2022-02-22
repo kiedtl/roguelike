@@ -159,38 +159,6 @@ pub fn nextAvailableSpaceForItem(c: Coord, a: *mem.Allocator) ?Coord {
     return S._helper(true, c, a) orelse S._helper(false, c, a);
 }
 
-pub const FLOOR_OPACITY: usize = 5;
-pub const MOB_OPACITY: usize = 10;
-
-// STYLE: change to Tile.lightOpacity
-pub fn tileOpacity(coord: Coord) usize {
-    const tile = dungeon.at(coord);
-    var o: usize = FLOOR_OPACITY;
-
-    if (tile.type == .Wall and !tile.broken)
-        return @floatToInt(usize, tile.material.opacity * 100);
-
-    if (tile.mob) |_|
-        o += MOB_OPACITY;
-
-    if (tile.surface) |surface| {
-        switch (surface) {
-            .Machine => |m| o += @floatToInt(usize, m.opacity() * 100),
-            .Prop => |p| o += @floatToInt(usize, p.opacity * 100),
-            else => {},
-        }
-    }
-
-    const gases = dungeon.atGas(coord);
-    for (gases) |q, g| {
-        if (q > 0) o += @floatToInt(usize, gas.Gases[g].opacity * 100);
-    }
-
-    o += fire.fireOpacity(dungeon.fireAt(coord).*);
-
-    return o;
-}
-
 pub const IsWalkableOptions = struct {
     // Return true only if the tile is walkable *right now*. Otherwise, tiles
     // that *could* be walkable in the future are merely assigned a penalty but
@@ -377,11 +345,11 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
 }
 
 pub fn tickLight(level: usize) void {
-    const light_buffer = &dungeon.light_intensity[level];
+    const light_buffer = &dungeon.light[level];
 
     // Clear out previous light levels.
     for (light_buffer) |*row| for (row) |*cell| {
-        cell.* = 0;
+        cell.* = false;
     };
 
     // Now for the actual party...
@@ -391,7 +359,7 @@ pub fn tickLight(level: usize) void {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
             const coord = Coord.new2(level, x, y);
-            const light = dungeon.emittedLightIntensity(coord);
+            const light = dungeon.emittedLight(coord);
 
             // A memorial to my stupidity:
             //
@@ -405,7 +373,9 @@ pub fn tickLight(level: usize) void {
             // before noticing the issue.
             //
             if (light > 0) {
-                fov.rayCast(coord, 20, light, tileOpacity, light_buffer, null);
+                //fov.rayCast(coord, 20, light, Dungeon.tileOpacity, light_buffer, null);
+                const r = light / Dungeon.FLOOR_OPACITY;
+                fov.shadowCast(coord, r, mapgeometry, light_buffer, Dungeon.isTileOpaque);
             }
         }
     }

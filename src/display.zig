@@ -284,7 +284,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
             }
         }
     } else false;
-    const light = state.dungeon.lightIntensityAt(state.player.coord).*;
+    const light = state.dungeon.lightAt(state.player.coord).*;
 
     var y = starty;
     while (y < endy) : (y += 1) _clear_line(startx, endx, y);
@@ -369,9 +369,9 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         y,
         startx,
         endx,
-        light / 10,
-        10,
-        if (light > 20) "lit" else "shadowed",
+        if (light) 1 else 0,
+        1,
+        if (light) "lit" else "shadowed",
         0x776644,
         0xffffff,
     );

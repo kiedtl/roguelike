@@ -42,15 +42,13 @@ pub fn chanceOfAttackLanding(attacker: *const Mob, defender: *const Mob) usize {
     if (rng.onein(CHANCE_OF_AUTO_HIT)) return 100;
     if (rng.onein(CHANCE_OF_AUTO_MISS)) return 0;
 
-    const tile_light = state.dungeon.lightIntensityAt(defender.coord).*;
+    const tile_light = state.dungeon.lightAt(defender.coord).*;
     const attacker_weapon = attacker.inventory.wielded orelse &items.UnarmedWeapon;
 
     var chance: isize = 60;
 
-    chance += if (tile_light == 100) FULL_LIGHT_BONUS else 0;
-
     chance -= if (attacker.isUnderStatus(.Held)) |_| ATTACKER_HELD_NBONUS else 0;
-    chance -= if (!attacker.vision_range().contains(tile_light)) DIM_LIGHT_NBONUS else 0;
+    chance -= if (!attacker.canSeeInLight(tile_light)) DIM_LIGHT_NBONUS else 0;
 
     return @intCast(usize, math.clamp(chance, 0, 100));
 }
