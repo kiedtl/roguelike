@@ -1,5 +1,7 @@
 % This is the "ending" room with the exit staircase, but is technically the
 % "start" prefab -- the one which is used to seed the map.
+%
+% TODO: allow variations
 
 :invisible
 :restriction 0
@@ -67,3 +69,14 @@
 % #≡#...###...###...#≡#
 % #...###.......###...#
 % #*###??#######??###*#
+
+% ?#########?
+% ?#•.....•#?
+% ?#...0...#?
+% ?#•.....•#?
+% ###+#.#+###
+% *...≡.≡...*
+% #.###.###.#
+% *...≡.≡...*
+% #####.#####
+% ????#*#????
