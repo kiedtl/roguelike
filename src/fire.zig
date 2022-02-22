@@ -13,8 +13,9 @@ pub fn tileFlammability(c: Coord) usize {
     var f: usize = 0;
 
     if (state.dungeon.at(c).mob) |mob| {
-        if (mob.resistance(.rFire) >= 100)
-            f += 10;
+        if (mob.resistance(.rFire) >= 100) {
+            f += if (mob.isUnderStatus(.Fire) == null) @as(usize, 10) else 5;
+        }
     }
 
     if (state.dungeon.at(c).surface) |s| switch (s) {
@@ -83,7 +84,8 @@ pub fn tickFire(level: usize) void {
             // Set mob on fire
             if (oldfire > 3 and rng.percent(oldfire * 10)) {
                 if (state.dungeon.at(coord).mob) |mob| {
-                    mob.addStatus(.Fire, 0, math.min(oldfire, 10), false);
+                    if (mob.isUnderStatus(.Fire) == null)
+                        mob.addStatus(.Fire, 0, math.min(oldfire, 10), false);
                 }
             }
 
