@@ -559,7 +559,7 @@ test "stockpile type equality" {
     std.testing.expect(!(Stockpile{ .room = undefined, .type = .Boulder, .boulder_material_type = .Metal }).isOfSameType(&Item{ .Boulder = &materials.Hematite }));
 }
 
-pub const Path = struct { from: Coord, to: Coord };
+pub const Path = struct { from: Coord, to: Coord, confused_state: bool };
 
 pub const Material = struct {
     // Name of the material. e.g. "rhyolite"
@@ -1841,7 +1841,7 @@ pub const Mob = struct { // {{{
             } else |_err| {}
         }
 
-        const pathobj = Path{ .from = self.coord, .to = to };
+        const pathobj = Path{ .from = self.coord, .to = to, .confused_state = is_confused };
 
         if (!self.path_cache.contains(pathobj)) {
             // TODO: do some tests and figure out what's the practical limit to memory
@@ -1862,7 +1862,10 @@ pub const Mob = struct { // {{{
             assert(pth.items[0].eq(self.coord));
             var last: Coord = self.coord;
             for (pth.items[1..]) |coord| {
-                self.path_cache.put(Path{ .from = last, .to = to }, coord) catch err.wat();
+                self.path_cache.put(
+                    Path{ .from = last, .to = to, .confused_state = is_confused },
+                    coord,
+                ) catch err.wat();
                 last = coord;
             }
             assert(last.eq(to));
