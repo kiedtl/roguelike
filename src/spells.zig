@@ -54,7 +54,8 @@ pub const Spell = struct {
     cast_type: union(enum) {
         Ray,
 
-        // Single-target, requires line-of-fire. Cannot be dodged.
+        // Single-target, requires line-of-fire. Cannot be dodged and hits all
+        // mobs in path.
         Bolt,
 
         // Doesn't require line-of-fire. Checks willpower.
@@ -103,30 +104,31 @@ pub const Spell = struct {
             .Bolt => {
                 // Fling a bolt and let it hit whatever
                 const line = caster_coord.drawLine(target, state.mapgeometry);
-                const bolt_dest = for (line.constSlice()) |c| {
-                    if (!c.eq(caster_coord) and !state.is_walkable(c, .{ .right_now = true }))
-                        break c;
-                } else target;
+                for (line.constSlice()) |c| {
+                    if (!c.eq(caster_coord) and !state.is_walkable(c, .{ .right_now = true })) {
+                        const hit_mob = state.dungeon.at(c).mob;
 
-                const hit_mob = state.dungeon.at(bolt_dest).mob;
+                        if (hit_mob) |victim| {
+                            if (victim == state.player) {
+                                state.message(.Info, "The {} hits you!", .{self.name});
+                            } else if (state.player.cansee(victim.coord)) {
+                                state.message(.Info, "The {} hits the {}!", .{
+                                    self.name, victim.displayName(),
+                                });
+                            } else if (state.player.cansee(caster_coord)) {
+                                state.message(.Info, "The {} hits something!", .{self.name});
+                            }
+                        }
 
-                if (hit_mob) |victim| {
-                    if (victim == state.player) {
-                        state.message(.Info, "The {} hits you!", .{self.name});
-                    } else if (state.player.cansee(victim.coord)) {
-                        state.message(.Info, "The {} hits the {}!", .{
-                            self.name, victim.displayName(),
-                        });
-                    } else if (state.player.cansee(caster_coord)) {
-                        state.message(.Info, "The {} hits something!", .{self.name});
+                        switch (self.effect_type) {
+                            .Status => |s| if (hit_mob) |victim| {
+                                victim.addStatus(s, opts.status_power, opts.status_duration, false);
+                            },
+                            .Custom => |cu| cu(self, opts, c),
+                        }
+
+                        if (hit_mob == null) break;
                     }
-                }
-
-                switch (self.effect_type) {
-                    .Status => |s| if (hit_mob) |victim| {
-                        victim.addStatus(s, opts.status_power, opts.status_duration, false);
-                    },
-                    .Custom => |c| c(self, opts, bolt_dest),
                 }
             },
             .Cast => {
