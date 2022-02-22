@@ -17,6 +17,7 @@ const err = @import("err.zig");
 const dijkstra = @import("dijkstra.zig");
 const display = @import("display.zig");
 const fire = @import("fire.zig");
+const player = @import("player.zig");
 const fov = @import("fov.zig");
 const gas = @import("gas.zig");
 const items = @import("items.zig");
@@ -1536,6 +1537,14 @@ pub const Mob = struct { // {{{
                     .Poster => |p| {
                         state.message(.Info, "You read the poster: '{}'", .{p.text});
                     },
+                    .Stair => |s| if (self == state.player) {
+                        if (s) |floor| {
+                            player.triggerStair(dest, floor);
+                            return true;
+                        } else {
+                            state.message(.MetaError, "It's suicide to go back!", .{});
+                        }
+                    },
                     else => {},
                 }
             }
@@ -2392,12 +2401,13 @@ pub const Container = struct {
     };
 };
 
-pub const SurfaceItemTag = enum { Machine, Prop, Container, Poster };
+pub const SurfaceItemTag = enum { Machine, Prop, Container, Poster, Stair };
 pub const SurfaceItem = union(SurfaceItemTag) {
     Machine: *Machine,
     Prop: *Prop,
     Container: *Container,
     Poster: *const Poster,
+    Stair: ?usize, // null = downstairs
 };
 
 // Each weapon and armor has a specific amount of maximum damage it can create
@@ -2885,6 +2895,16 @@ pub const Tile = struct {
                     }
                     break :poster if (self.broken) @as(u21, '·') else '?';
                 },
+                .Stair => |s| stair: {
+                    if (s == null) {
+                        cell.fg = 0xeeeeee;
+                        cell.bg = 0x0000ff;
+                    } else {
+                        cell.bg = 0x997700;
+                        cell.fg = 0xffd700;
+                    }
+                    break :stair if (s == null) @as(u21, '>') else '<';
+                },
             };
 
             cell.ch = ch;
@@ -2924,11 +2944,14 @@ pub const Dungeon = struct {
     sound: [LEVELS][HEIGHT][WIDTH]Sound = [1][HEIGHT][WIDTH]Sound{[1][WIDTH]Sound{[1]Sound{.{}} ** WIDTH} ** HEIGHT} ** LEVELS,
     light: [LEVELS][HEIGHT][WIDTH]bool = [1][HEIGHT][WIDTH]bool{[1][WIDTH]bool{[1]bool{false} ** WIDTH} ** HEIGHT} ** LEVELS,
     fire: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
+    stairs: [LEVELS][STAIRS_ON_LEVEL]?Coord = undefined,
 
     pub const ItemBuffer = StackBuffer(Item, 7);
 
-    pub const FLOOR_OPACITY: usize = 10;
+    pub const STAIRS_ON_LEVEL: usize = 2;
+
     pub const MOB_OPACITY: usize = 10;
+    pub const FLOOR_OPACITY: usize = 10;
 
     pub fn isTileOpaque(coord: Coord) bool {
         const tile = state.dungeon.at(coord);
@@ -2995,6 +3018,7 @@ pub const Dungeon = struct {
         if (tile.surface) |surface| {
             switch (surface) {
                 .Machine => |m| l += m.luminescence(),
+                .Stair => l += 30,
                 else => {},
             }
         }

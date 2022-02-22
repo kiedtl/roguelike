@@ -65,7 +65,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                             hind += rng.range(usize, 50, 80);
                         },
                         .Container => hind += rng.range(usize, 60, 80),
-                        .Poster => {},
+                        else => {},
                     };
                     break :b hind;
                 },

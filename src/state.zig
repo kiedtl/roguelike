@@ -214,6 +214,7 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
                 },
                 .Prop => |p| if (!p.walkable) return false,
                 .Poster => return false,
+                .Stair => return false,
             }
         }
     }

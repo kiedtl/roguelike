@@ -90,7 +90,7 @@ const VALID_LIGHT_PLACEMENT_PATTERNS = [_][]const u8{
     // ?.?
     // ###
     // ###
-    "######?.?",
+    "?.?######",
 
     // .#.
     // .#.
@@ -100,7 +100,7 @@ const VALID_LIGHT_PLACEMENT_PATTERNS = [_][]const u8{
     // ##?
     // ##.
     // ##?
-    "##?##?##?",
+    "##?##.##?",
 
     // ?##
     // .##
@@ -1889,43 +1889,99 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
     }
 }
 
-pub fn placeRandomStairs(level: usize) void {
-    const stair_dst = &surfaces.props.items[utils.findById(surfaces.props.items, "stair_dst").?];
-
+pub fn placeStairs(level: usize, alloc: *mem.Allocator) void {
     if (level == 0) return;
 
-    const rooms = state.rooms[level].items;
+    const dest_floor = level - 1;
 
-    var room_i: usize = 0;
-    var placed: usize = 0;
+    // Find coord candidates for stairs placement
+    var locations = CoordArrayList.init(alloc);
+    defer locations.deinit();
+    for (state.rooms[level].items) |room| {
+        var tries: usize = 1000;
+        while (tries > 0) : (tries -= 1) {
+            // randomWallCoord gets angry if we're in a corridor
+            if (room.type != .Room or room.rect.width == 1 or room.rect.height == 1)
+                continue;
 
-    while (placed < 3 and room_i < rooms.len) : (room_i += 1) {
-        const room = &rooms[room_i];
+            const coord = randomWallCoord(&room.rect, null);
+            const above = Coord.new2(dest_floor, coord.x, coord.y);
 
-        // Don't place stairs in narrow rooms where it's impossible to avoid.
-        if (room.rect.width == 1 or room.rect.height == 1) continue;
-
-        var tries: usize = 5;
-        tries: while (tries > 0) : (tries -= 1) {
-            const rand = room.rect.randomCoord();
-            const current = Coord.new2(level, rand.x, rand.y);
-            const above = Coord.new2(level - 1, rand.x, rand.y);
-
-            if (isTileAvailable(current) and
-                isTileAvailable(above) and
-                !state.dungeon.at(current).prison and
+            if (state.dungeon.at(coord).type == .Wall and
+                state.dungeon.at(above).type == .Wall and
+                !state.dungeon.at(coord).prison and
                 !state.dungeon.at(above).prison and
-                state.dungeon.neighboringWalls(current, true) == 0 and
-                state.is_walkable(current, .{ .right_now = true }) and
-                state.is_walkable(above, .{ .right_now = true }))
+                utils.hasPatternMatch(coord, &VALID_LIGHT_PLACEMENT_PATTERNS) and
+                utils.hasPatternMatch(above, &VALID_LIGHT_PLACEMENT_PATTERNS))
             {
-                _place_machine(current, &surfaces.StairUp);
-                _ = placeProp(above, stair_dst);
-
-                placed += 1;
-                break :tries;
+                locations.append(coord) catch err.wat();
+                break;
             }
         }
+    }
+
+    if (locations.items.len == 0) {
+        err.bug("Couldn't place stairs anywhere on {}!", .{state.levelinfo[level].name});
+    }
+
+    // We'll use dijkstra to create a "ranking matrix", which we'll use to
+    // sort out the candidates later.
+    var stair_dijkmap: [HEIGHT][WIDTH]usize = undefined;
+    for (stair_dijkmap) |*row| for (row) |*cell| {
+        cell.* = 999;
+    };
+
+    // First, find the entry locations. These locations are either the stairs
+    // from the previous level, or the player's starting area.
+    for (state.dungeon.stairs[level - 1]) |prev_stair| {
+        if (prev_stair) |c| stair_dijkmap[c.y][c.x] = 0;
+    }
+    if (level == PLAYER_STARTING_LEVEL)
+        stair_dijkmap[state.player.coord.y][state.player.coord.x] = 0;
+
+    // Now fill out the dijkstra map to assign a score to each coordinate.
+    var changes_made = true;
+    while (changes_made) {
+        changes_made = false;
+        for (stair_dijkmap) |*row, y| for (row) |*cell, x| {
+            const coord = Coord.new2(level, x, y);
+            if (!state.is_walkable(coord, .{}))
+                continue;
+
+            var lowest_neighbor: usize = 999;
+            for (&CARDINAL_DIRECTIONS) |d|
+                if (coord.move(d, state.mapgeometry)) |neighbor| {
+                    const ncell = stair_dijkmap[neighbor.y][neighbor.x];
+                    if (ncell < lowest_neighbor) lowest_neighbor = ncell;
+                };
+            if (cell.* > (lowest_neighbor + 1)) {
+                cell.* = lowest_neighbor + 1;
+                changes_made = true;
+            }
+        };
+    }
+
+    // Sort the candidates by the score
+    const _sortFunc = struct {
+        pub fn f(map: *const [HEIGHT][WIDTH]usize, a: Coord, b: Coord) bool {
+            return map[a.y][a.x] < map[b.y][b.x];
+        }
+    };
+    std.sort.insertionSort(Coord, locations.items, &stair_dijkmap, _sortFunc.f);
+
+    // Pop the top three candidates out and create some stairs.
+    var i: usize = 0;
+    while (i < locations.items.len and i < Dungeon.STAIRS_ON_LEVEL) : (i += 1) {
+        const coord = locations.items[i];
+        const above = Coord.new2(level - 1, coord.x, coord.y);
+        state.dungeon.stairs[level][i] = coord;
+        state.dungeon.at(coord).type = .Floor;
+        state.dungeon.at(coord).surface = .{ .Stair = dest_floor };
+        state.dungeon.at(above).type = .Floor;
+        state.dungeon.at(above).surface = .{ .Stair = null };
+    }
+    while (i < Dungeon.STAIRS_ON_LEVEL) : (i += 1) {
+        state.dungeon.stairs[level][i] = null;
     }
 }
 

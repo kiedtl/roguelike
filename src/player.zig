@@ -20,6 +20,22 @@ const state = @import("state.zig");
 const err = @import("err.zig");
 usingnamespace @import("types.zig");
 
+pub fn triggerStair(stair: Coord, whence: usize) void {
+    const upstair = Coord.new2(whence, stair.x, stair.y);
+    const dest = for (&DIRECTIONS) |d| {
+        if (upstair.move(d, state.mapgeometry)) |neighbor| {
+            if (state.is_walkable(neighbor, .{ .right_now = true }))
+                break neighbor;
+        }
+    } else err.bug("Unable to find passable tile near upstairs!", .{});
+
+    if (state.player.teleportTo(dest, null)) {
+        state.message(.Move, "You ascend. Welcome to {}!", .{state.levelinfo[whence].name});
+    } else {
+        err.bug("Unable to ascend stairs! (something's in the way, maybe?)", .{});
+    }
+}
+
 // Iterate through each tile in FOV:
 // - Add them to memory.
 // - If they haven't existed in memory before as an .Immediate tile, check for
@@ -60,6 +76,8 @@ pub fn bookkeepingFOV() void {
                 if (state.dungeon.at(fc).surface) |surf| switch (surf) {
                     .Machine => |m| if (m.announce)
                         S._addToAnnouncements(SBuf.init(m.name), &announcements),
+                    .Stair => |s| if (s != null)
+                        S._addToAnnouncements(SBuf.init("upward stairs"), &announcements),
                     else => {},
                 };
                 if (state.dungeon.itemsAt(fc).last()) |item|

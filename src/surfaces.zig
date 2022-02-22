@@ -38,7 +38,6 @@ pub const MACHINES = [_]Machine{
     Brazier,
     Lamp,
     StairExit,
-    StairUp,
     NormalDoor,
     LabDoor,
     VaultDoor,
@@ -329,19 +328,9 @@ pub const Lamp = Machine{
 pub const StairExit = Machine{
     .id = "stair_exit",
     .name = "exit staircase",
-    .powered_tile = '»',
-    .unpowered_tile = '»',
+    .powered_tile = '«',
+    .unpowered_tile = '«',
     .on_power = powerStairExit,
-};
-
-// TODO: Maybe define a "Doormat" prop that stairs have? And doormats should have
-// a very welcoming message on it, of course
-pub const StairUp = Machine{
-    .name = "ascending staircase",
-    .powered_tile = '▲',
-    .unpowered_tile = '▲',
-    .evoke_confirm = "Go upstairs?",
-    .on_power = powerStairUp,
 };
 
 pub const PoisonGasTrap = Machine{
@@ -787,16 +776,6 @@ fn powerStairExit(machine: *Machine) void {
         if (!culprit.coord.eq(state.player.coord)) return;
         state.state = .Win;
     }
-}
-
-fn powerStairUp(machine: *Machine) void {
-    assert(machine.coord.z >= 1);
-    const culprit = machine.last_interaction.?;
-    if (!culprit.coord.eq(state.player.coord)) return;
-
-    const dst = Coord.new2(machine.coord.z - 1, machine.coord.x, machine.coord.y);
-    if (culprit.teleportTo(dst, null))
-        state.message(.Move, "You ascend.", .{});
 }
 
 fn powerLabDoor(machine: *Machine) void {

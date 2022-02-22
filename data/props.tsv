@@ -190,7 +190,6 @@
 "upper_copper_coil"    	 "half copper coil"     	 '▀' 	 0xe99c39 	 -        	 nay
 "full_copper_coil"     	 "large copper coil"    	 '█' 	 0xe99c39 	 -        	 nay
 
-"stair_dst"            	 "downward stair"       	 '×' 	 0xffffff 	 -        	 -
 "item_location"        	 "mat"                  	 '░' 	 0x989898 	 -        	 -   	 -
 "workstation"          	 "workstation"          	 '░' 	 0xffffff 	 -        	 -
 "medium_sieve"         	 "medium_sieve"         	 '▒' 	 0xffe7e7 	 -        	 nay 	 -

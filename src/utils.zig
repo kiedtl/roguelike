@@ -144,6 +144,10 @@ pub fn copyZ(dest: anytype, src: anytype) void {
     }
 }
 
+pub fn hasPatternMatch(coord: Coord, patterns: []const []const u8) bool {
+    return findPatternMatch(coord, patterns) != null;
+}
+
 pub fn findPatternMatch(coord: Coord, patterns: []const []const u8) ?usize {
     const coords = [_]?Coord{
         coord.move(.NorthWest, state.mapgeometry),
@@ -162,7 +166,21 @@ pub fn findPatternMatch(coord: Coord, patterns: []const []const u8) ?usize {
         while (i < 9) : (i += 1) {
             if (pattern[i] == '?') continue;
 
-            const tiletype = if (coords[i]) |c| state.dungeon.at(c).type else .Wall;
+            var tiletype: TileType = .Wall;
+
+            if (coords[i]) |c| {
+                tiletype = state.dungeon.at(c).type;
+                if (state.dungeon.at(c).surface) |s| switch (s) {
+                    .Machine => |m| if (!m.powered_walkable and !m.unpowered_walkable) {
+                        tiletype = .Wall;
+                    },
+                    .Prop => |p| if (!p.walkable) {
+                        tiletype = .Wall;
+                    },
+                    .Container, .Poster, .Stair => tiletype = .Wall,
+                };
+            }
+
             const typech: u21 = if (tiletype == .Floor) '.' else '#';
             if (typech != pattern[i]) continue :patterns;
         }

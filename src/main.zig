@@ -115,14 +115,13 @@ fn initGame() bool {
         mapgen.placeMobs(level, &state.GPA.allocator);
         mapgen.generateLayoutMap(level);
 
+        mapgen.placeStairs(level, &state.GPA.allocator);
+
         std.log.info("Generated map {}.", .{state.levelinfo[level].name});
 
         level += 1;
         tries = 0;
     }
-
-    for (state.dungeon.map) |_, mlevel|
-        mapgen.placeRandomStairs(mlevel);
 
     display.draw();
 
