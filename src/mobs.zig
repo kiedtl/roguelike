@@ -319,7 +319,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
         .base_speed = 100,
         .blood = null,
         .immobile = true,
-        .innate_resists = .{ .rMlee = 3, .rFume = 3 },
+        .innate_resists = .{ .rPois = 3, .rFire = 3, .rElec = 3, .rMlee = 3, .rFume = 3 },
 
         .base_strength = 1,
     },
@@ -355,7 +355,7 @@ pub const NebroStatueTemplate = MobTemplate{
         .base_speed = 100,
         .blood = null,
         .immobile = true,
-        .innate_resists = .{ .rMlee = 3, .rFume = 3 },
+        .innate_resists = .{ .rPois = 3, .rFire = 3, .rElec = 3, .rMlee = 3, .rFume = 3 },
 
         .base_strength = 2,
     },
@@ -391,7 +391,7 @@ pub const CrystalStatueTemplate = MobTemplate{
         .base_speed = 100,
         .blood = null,
         .immobile = true,
-        .innate_resists = .{ .rMlee = 3, .rFume = 3 },
+        .innate_resists = .{ .rPois = 3, .rFire = 3, .rElec = 3, .rMlee = 3, .rFume = 3 },
 
         .base_strength = 2,
     },

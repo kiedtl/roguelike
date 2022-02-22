@@ -668,12 +668,14 @@ pub const Damage = struct {
         Physical,
         Fire,
         Electric,
+        Poison,
 
         pub fn resist(self: DamageKind) Resistance {
             return switch (self) {
                 .Physical => .rMlee,
                 .Fire => .rFire,
                 .Electric => .rElec,
+                .Poison => .rPois,
             };
         }
     };
@@ -890,6 +892,7 @@ pub const Status = enum {
         mob.takeDamage(.{
             .amount = @intToFloat(f64, rng.rangeClumping(usize, 0, 2, 2)),
             .blood = false,
+            .kind = .Poison,
         });
     }
 
