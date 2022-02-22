@@ -23,8 +23,10 @@ pub const Paralysis = Gas{
 
 pub const SmokeGas = Gas{
     .color = 0xffffff,
-    .dissipation_rate = 0.01,
-    .opacity = 1.0,
+    .dissipation_rate = 0.02,
+    // Lava emits smoke. If opacity >= 1.0, this causes massive lighting
+    // fluctuations, which is not desirable.
+    .opacity = 0.8,
     .trigger = triggerNone,
     .id = 2,
 };
@@ -112,7 +114,7 @@ fn triggerDust(mob: *Mob, quantity: f64) void {}
 
 // Create and dissipate gas.
 pub fn tickGases(cur_lev: usize, cur_gas: usize) void {
-    // First make hot water emit gas.
+    // First make hot water emit steam, and lava emit smoke.
     {
         var y: usize = 0;
         while (y < HEIGHT) : (y += 1) {
@@ -130,7 +132,11 @@ pub fn tickGases(cur_lev: usize, cur_gas: usize) void {
                             };
                         c_gas[Steam.id] = near_lavas;
                     },
-                    // TODO: smoke for lava?
+                    .Lava => {
+                        if (rng.onein(3000)) {
+                            c_gas[SmokeGas.id] += 0.15;
+                        }
+                    },
                     else => {},
                 }
             }
