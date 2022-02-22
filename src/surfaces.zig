@@ -239,9 +239,6 @@ pub const TurbinePowerSupply = Machine{
     .powered_opacity = 0,
     .unpowered_opacity = 0,
 
-    .powered_luminescence = 0,
-    .unpowered_luminescence = 0,
-
     .on_power = powerTurbinePowerSupply,
 };
 
@@ -287,7 +284,7 @@ pub const Brazier = Machine{
     .unpowered_opacity = 1.0,
 
     // maximum, could be much lower (see mapgen:placeLights)
-    .powered_luminescence = 90,
+    .powered_luminescence = 100,
     .unpowered_luminescence = 0,
 
     .flammability = 8,
@@ -318,7 +315,7 @@ pub const Lamp = Machine{
     .unpowered_opacity = 1.0,
 
     // maximum, could be lower (see mapgen:placeLights)
-    .powered_luminescence = 90,
+    .powered_luminescence = 100,
     .unpowered_luminescence = 0,
 
     .flammability = 8,

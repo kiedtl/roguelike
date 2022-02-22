@@ -2927,7 +2927,7 @@ pub const Dungeon = struct {
 
     pub const ItemBuffer = StackBuffer(Item, 7);
 
-    pub const FLOOR_OPACITY: usize = 5;
+    pub const FLOOR_OPACITY: usize = 10;
     pub const MOB_OPACITY: usize = 10;
 
     pub fn isTileOpaque(coord: Coord) bool {
@@ -2986,7 +2986,7 @@ pub const Dungeon = struct {
         var l: usize = 0;
 
         if (tile.type == .Lava)
-            l += 80;
+            l += 50;
 
         if (tile.mob) |mob| {
             if (mob.isUnderStatus(.Corona)) |se| l += se.power;

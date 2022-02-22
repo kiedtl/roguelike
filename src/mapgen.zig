@@ -1740,8 +1740,7 @@ fn placeLights(room: *const Room) void {
     const area = room.rect.height * room.rect.width;
     var lights_needed: usize = undefined;
     if (area <= 050) lights_needed = rng.range(usize, 0, 1);
-    if (area >= 100) lights_needed = rng.range(usize, 0, 2);
-    if (area >= 150) lights_needed = rng.range(usize, 0, 2);
+    if (area >= 100) lights_needed = rng.range(usize, 1, 2);
     if (area >= 250) lights_needed = rng.range(usize, 2, 3);
     if (area >= 500) lights_needed = rng.range(usize, 2, 4);
 
@@ -1759,7 +1758,7 @@ fn placeLights(room: *const Room) void {
         var brazier = Configs[room.rect.start.z].light.*;
 
         // Dim lights by a random amount.
-        brazier.powered_luminescence -= rng.range(usize, 0, 35);
+        brazier.powered_luminescence -= rng.range(usize, 0, 10);
 
         _place_machine(coord, &brazier);
         state.dungeon.at(coord).type = .Floor;
