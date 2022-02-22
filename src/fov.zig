@@ -379,9 +379,9 @@ fn _removeArtifacts(
     assert((math.absInt(dy) catch unreachable) == 1);
 
     var cx: usize = x0;
-    while (cx < x1) : (cx += 1) {
+    while (cx <= x1) : (cx += 1) {
         var cy: usize = y0;
-        while (cy < y1) : (cy += 1) {
+        while (cy <= y1) : (cy += 1) {
             const x2 = @intCast(isize, cx) + dx;
             const y2 = @intCast(isize, cy) + dy;
 
@@ -390,9 +390,12 @@ fn _removeArtifacts(
             }
 
             // papering over what's possibly a deeper issue here
-            if (y2 < 0) {
-                continue;
-            }
+            //
+            // addendum 2022-02-21: seems to not be an issue anymore
+            //
+            //if (y2 < 0) {
+            //    continue;
+            //}
 
             if (buffer[cy][cx] > 0 and opacity_func(Coord.new2(z, cx, cy)) < 100) {
                 if (x2 >= @intCast(isize, x0) and x2 <= @intCast(isize, x1)) {
