@@ -2,6 +2,7 @@ const std = @import("std");
 const math = std.math;
 
 const state = @import("state.zig");
+const rng = @import("rng.zig");
 usingnamespace @import("types.zig");
 
 pub const Poison = Gas{
@@ -108,3 +109,87 @@ fn triggerHealing(mob: *Mob, quantity: f64) void {
 }
 
 fn triggerDust(mob: *Mob, quantity: f64) void {}
+
+// Create and dissipate gas.
+pub fn tickGases(cur_lev: usize, cur_gas: usize) void {
+    // First make hot water emit gas.
+    {
+        var y: usize = 0;
+        while (y < HEIGHT) : (y += 1) {
+            var x: usize = 0;
+            while (x < WIDTH) : (x += 1) {
+                const coord = Coord.new2(cur_lev, x, y);
+                const c_gas = state.dungeon.atGas(coord);
+                switch (state.dungeon.at(coord).type) {
+                    .Water => {
+                        var near_lavas: f64 = 0;
+                        for (&DIRECTIONS) |d|
+                            if (coord.move(d, state.mapgeometry)) |neighbor| {
+                                if (state.dungeon.at(neighbor).type == .Lava)
+                                    near_lavas += 1;
+                            };
+                        c_gas[Steam.id] = near_lavas;
+                    },
+                    // TODO: smoke for lava?
+                    else => {},
+                }
+            }
+        }
+    }
+
+    // ...then spread it.
+    const std_dissipation = Gases[cur_gas].dissipation_rate;
+    const residue = Gases[cur_gas].residue;
+
+    var new: [HEIGHT][WIDTH]f64 = undefined;
+    {
+        var y: usize = 0;
+        while (y < HEIGHT) : (y += 1) {
+            var x: usize = 0;
+            while (x < WIDTH) : (x += 1) {
+                const coord = Coord.new2(cur_lev, x, y);
+
+                if (state.dungeon.at(coord).type == .Wall)
+                    continue;
+
+                var avg: f64 = state.dungeon.atGas(coord)[cur_gas];
+                var neighbors: f64 = 1;
+                for (&DIRECTIONS) |d, i| {
+                    if (coord.move(d, state.mapgeometry)) |n| {
+                        if (state.dungeon.atGas(n)[cur_gas] < 0.1)
+                            continue;
+
+                        avg += state.dungeon.atGas(n)[cur_gas];
+                        neighbors += 1;
+                    }
+                }
+
+                const max_dissipation = @floatToInt(usize, std_dissipation * 100);
+                const dissipation = rng.rangeClumping(usize, 0, max_dissipation * 2, 2);
+                const dissipation_f = @intToFloat(f64, dissipation) / 100;
+
+                avg /= neighbors;
+                avg -= dissipation_f;
+                avg = math.max(avg, 0);
+
+                new[y][x] = avg;
+            }
+        }
+    }
+
+    {
+        var y: usize = 0;
+        while (y < HEIGHT) : (y += 1) {
+            var x: usize = 0;
+            while (x < WIDTH) : (x += 1) {
+                const coord = Coord.new2(cur_lev, x, y);
+                state.dungeon.atGas(coord)[cur_gas] = new[y][x];
+                if (residue != null and new[y][x] > 0.3)
+                    state.dungeon.spatter(coord, residue.?);
+            }
+        }
+    }
+
+    if (cur_gas < (GAS_NUM - 1))
+        tickGases(cur_lev, cur_gas + 1);
+}
