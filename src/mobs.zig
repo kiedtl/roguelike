@@ -221,7 +221,7 @@ pub const PlayerTemplate = MobTemplate{
         .hearing = 5,
         .max_HP = 60,
         .memory_duration = 10,
-        .base_speed = 80,
+        .base_speed = 100,
         .blood = .Blood,
 
         .base_strength = 18,
