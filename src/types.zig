@@ -43,9 +43,9 @@ const Spell = spells.Spell;
 const Poster = literature.Poster;
 
 pub const HEIGHT = 40;
-pub const WIDTH = 100;
-pub const LEVELS = 7;
-pub const PLAYER_STARTING_LEVEL = 5; // TODO: define in data file
+pub const WIDTH = 90;
+pub const LEVELS = 14;
+pub const PLAYER_STARTING_LEVEL = 13; // TODO: define in data file
 
 pub const CARDINAL_DIRECTIONS = [_]Direction{ .North, .South, .East, .West };
 pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .NorthWest, .SouthEast, .SouthWest };

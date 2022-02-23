@@ -84,6 +84,8 @@ fn initGame() bool {
     defer s_fabs.deinit();
     defer n_fabs.deinit();
 
+    mapgen.fixConfigs();
+
     var level: usize = 0;
     var tries: usize = 0;
     while (level < LEVELS) {

@@ -825,7 +825,7 @@ pub fn validateLevel(
     const point = _f._getWalkablePoint(&base_room.rect);
 
     // Ensure that all required prefabs were used.
-    for (Configs[level].prefabs.constSlice()) |required_fab| {
+    for (Configs[level].prefabs) |required_fab| {
         const fab = Prefab.findPrefabByName(required_fab, n_fabs) orelse
             Prefab.findPrefabByName(required_fab, s_fabs).?;
 
@@ -1184,7 +1184,7 @@ pub fn placeRandomRooms(
     var first: ?Room = null;
     const rooms = &state.rooms[level];
 
-    var required = Configs[level].prefabs.constSlice();
+    var required = Configs[level].prefabs;
     var reqctr: usize = 0;
 
     while (reqctr < required.len) {
@@ -2927,7 +2927,7 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
 }
 
 pub const LevelConfig = struct {
-    prefabs: RPBuf = RPBuf.init(null),
+    prefabs: []const []const u8 = .{},
     distances: [2][10]usize = [2][10]usize{
         .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
         .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
@@ -2990,7 +2990,6 @@ pub const LevelConfig = struct {
 
     blobs: []const BlobConfig = &[_]BlobConfig{},
 
-    pub const RPBuf = StackBuffer([]const u8, 8);
     pub const MCBuf = StackBuffer(MobConfig, 3);
     pub const LevelFeatureFunc = fn (usize, Coord, *const Room, *const Prefab, *mem.Allocator) void;
 
@@ -3017,255 +3016,186 @@ pub const LevelConfig = struct {
     };
 };
 
-pub const Configs = [LEVELS]LevelConfig{
-    .{
-        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
-            "ENT_start",
-            "PRI_power",
-            "ANY_s_recharging",
-        }),
-        .distances = [2][10]usize{
-            .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-            .{ 5, 9, 1, 0, 0, 0, 0, 0, 0, 0 },
-        },
-        .prefab_chance = 2,
-        .mapgen_iters = 1049,
+// -----------------------------------------------------------------------------
 
-        .patrol_squads = 2,
-
-        .level_features = [_]?LevelConfig.LevelFeatureFunc{
-            levelFeaturePrisoners,
-            levelFeaturePrisonersMaybe,
-            null,
-            null,
-        },
-
-        .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
+pub const PRI_BASE_LEVELCONFIG = LevelConfig{
+    .prefabs = &[_][]const u8{ "PRI_power", "ANY_s_recharging" },
+    .distances = [2][10]usize{
+        .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+        .{ 5, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
     },
-    .{
-        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
-            "VLT_power",
-        }),
-        .prefab_chance = 1000, // No prefabs for VLT
-        .mapgen_func = placeBSPRooms,
-        .mapgen_iters = 2048,
-        .min_room_width = 8,
-        .min_room_height = 5,
-        .max_room_width = 10,
-        .max_room_height = 6,
-
-        .patrol_squads = 2,
-        .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
-            .{ .chance = 15, .template = &mobs.GuardTemplate },
-            .{ .chance = 30, .template = &mobs.WatcherTemplate },
-            .{ .chance = 55, .template = &mobs.WardenTemplate },
-        }),
-
-        .no_windows = true,
-        .allow_statues = false,
-        .door_chance = 10,
-        .door = &surfaces.VaultDoor,
-
-        .props = &surfaces.vault_props.items,
-        //.containers = &[_]Container{surfaces.Chest},
-        .single_props = &[_][]const u8{
-            "gold_chest", "fuel_barrel", "iron_ingots", "steel_ingots", "gold_ingots",
-        },
-        .chance_for_single_prop_placement = 100,
+    .prefab_chance = 2,
+    .mapgen_iters = 1024,
+    .level_features = [_]?LevelConfig.LevelFeatureFunc{
+        levelFeaturePrisoners,
+        levelFeaturePrisonersMaybe,
+        null,
+        null,
     },
-    .{
-        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
-            "PRI_power",
-            "ANY_s_recharging",
-        }),
-        .distances = [2][10]usize{
-            .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-            .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
-        },
-        .prefab_chance = 2,
-        .mapgen_iters = 2048,
-        .level_features = [_]?LevelConfig.LevelFeatureFunc{
-            levelFeaturePrisoners,
-            levelFeaturePrisonersMaybe,
-            null,
-            null,
-        },
 
-        .patrol_squads = 1,
+    .patrol_squads = 2,
 
-        .blobs = &[_]LevelConfig.BlobConfig{
-            .{
-                .number = MinMax(usize){ .min = 6, .max = 9 },
-                .type = .Floor,
-                .min_blob_width = MinMax(usize){ .min = 6, .max = 8 },
-                .min_blob_height = MinMax(usize){ .min = 6, .max = 8 },
-                .max_blob_width = MinMax(usize){ .min = 16, .max = 19 },
-                .max_blob_height = MinMax(usize){ .min = 16, .max = 19 },
-                .ca_rounds = 5,
-                .ca_percent_seeded = 55,
-                .ca_birth_params = "ffffffttt",
-                .ca_survival_params = "ffffttttt",
-            },
-        },
+    .machine = &surfaces.Drain,
+    .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
+};
 
-        .machine = &surfaces.Drain,
-        .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
+pub const VLT_BASE_LEVELCONFIG = LevelConfig{
+    .prefabs = &[_][]const u8{"VLT_power"},
+    .prefab_chance = 1000, // No prefabs for VLT
+    .mapgen_func = placeBSPRooms,
+    .mapgen_iters = 1024,
+    .min_room_width = 8,
+    .min_room_height = 5,
+    .max_room_width = 10,
+    .max_room_height = 6,
+
+    .patrol_squads = 2,
+    .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
+        .{ .chance = 15, .template = &mobs.GuardTemplate },
+        .{ .chance = 30, .template = &mobs.WatcherTemplate },
+        .{ .chance = 70, .template = &mobs.WardenTemplate },
+    }),
+
+    .no_windows = true,
+    .allow_statues = false,
+    .door_chance = 10,
+    .door = &surfaces.VaultDoor,
+
+    .props = &surfaces.vault_props.items,
+    //.containers = &[_]Container{surfaces.Chest},
+    .single_props = &[_][]const u8{
+        "gold_chest", "fuel_barrel", "iron_ingots", "steel_ingots", "gold_ingots",
     },
-    .{
-        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
-            "LAB_power",
-            "ANY_s_recharging",
-        }),
-        .distances = [2][10]usize{
-            .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-            .{ 9, 2, 1, 1, 1, 1, 0, 0, 0, 0 },
-        },
-        .prefab_chance = 100, // No prefabs for LAB
-        .mapgen_iters = 2048,
-        .min_room_width = 8,
-        .min_room_height = 6,
-        .max_room_width = 30,
-        .max_room_height = 20,
+    .chance_for_single_prop_placement = 100,
+};
 
-        .level_features = [_]?LevelConfig.LevelFeatureFunc{
-            levelFeatureVials,
-            levelFeaturePrisoners,
-            levelFeatureExperiments,
-            levelFeatureOres,
-        },
-
-        .patrol_squads = 1,
-        .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
-            .{ .chance = 21, .template = &mobs.SentinelTemplate },
-            .{ .chance = 35, .template = &mobs.WatcherTemplate },
-            .{ .chance = 56, .template = &mobs.GuardTemplate },
-        }),
-
-        .door_chance = 10,
-        .material = &materials.Dobalene,
-        .window_material = &materials.PolishedGlass,
-        .light = &surfaces.Lamp,
-        .vent = "lab_gas_vent",
-        .bars = "titanium_bars",
-        .door = &surfaces.LabDoor,
-        .props = &surfaces.laboratory_props.items,
-        //.containers = &[_]Container{ surfaces.Chest, surfaces.LabCabinet },
-        .containers = &[_]Container{surfaces.LabCabinet},
-        .utility_items = &surfaces.laboratory_item_props.items,
-        .single_props = &[_][]const u8{"table"},
-
-        .allow_statues = false,
+pub const LAB_BASE_LEVELCONFIG = LevelConfig{
+    .prefabs = &[_][]const u8{ "LAB_power", "ANY_s_recharging" },
+    .distances = [2][10]usize{
+        .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+        .{ 9, 2, 1, 1, 1, 1, 0, 0, 0, 0 },
     },
-    .{
-        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
-            "PRI_power",
-            "PRI_insurgency",
-            "ANY_s_recharging",
-        }),
-        .distances = [2][10]usize{
-            .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-            .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
-        },
-        .prefab_chance = 2,
-        .mapgen_iters = 512,
-        .level_features = [_]?LevelConfig.LevelFeatureFunc{
-            levelFeaturePrisoners,
-            levelFeaturePrisonersMaybe,
-            null,
-            null,
-        },
+    .prefab_chance = 100, // No prefabs for LAB
+    .mapgen_iters = 2048,
+    .min_room_width = 8,
+    .min_room_height = 6,
+    .max_room_width = 30,
+    .max_room_height = 20,
 
-        .patrol_squads = 2,
-
-        .machine = &surfaces.Drain,
-        .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
+    .level_features = [_]?LevelConfig.LevelFeatureFunc{
+        levelFeatureVials,
+        levelFeaturePrisoners,
+        levelFeatureExperiments,
+        levelFeatureOres,
     },
-    .{
-        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
-            "PRI_start",
-            "PRI_power",
-            "ANY_s_recharging",
-        }),
-        .distances = [2][10]usize{
-            .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-            .{ 5, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
-        },
-        .prefab_chance = 2,
-        .mapgen_iters = 512,
-        .level_features = [_]?LevelConfig.LevelFeatureFunc{
-            levelFeaturePrisoners,
-            levelFeaturePrisonersMaybe,
-            null,
-            null,
-        },
 
-        .patrol_squads = 2,
+    .patrol_squads = 1,
+    .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
+        .{ .chance = 21, .template = &mobs.SentinelTemplate },
+        .{ .chance = 35, .template = &mobs.WatcherTemplate },
+        .{ .chance = 56, .template = &mobs.GuardTemplate },
+    }),
 
-        .machine = &surfaces.Drain,
-        .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
+    .door_chance = 10,
+    .material = &materials.Dobalene,
+    .window_material = &materials.PolishedGlass,
+    .light = &surfaces.Lamp,
+    .vent = "lab_gas_vent",
+    .bars = "titanium_bars",
+    .door = &surfaces.LabDoor,
+    .props = &surfaces.laboratory_props.items,
+    //.containers = &[_]Container{ surfaces.Chest, surfaces.LabCabinet },
+    .containers = &[_]Container{surfaces.LabCabinet},
+    .utility_items = &surfaces.laboratory_item_props.items,
+    .single_props = &[_][]const u8{"table"},
+
+    .allow_statues = false,
+};
+
+pub const SMI_BASE_LEVELCONFIG = LevelConfig{
+    .prefabs = &[_][]const u8{
+        "SMI_chain_press",
+        "SMI_blast_furnace",
+        "SMI_stockpiles",
+        "SMI_power",
+        "SMI_elevator",
     },
-    .{
-        .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{
-            "SMI_chain_press",
-            "SMI_blast_furnace",
-            "SMI_stockpiles",
-            "SMI_power",
-            "SMI_elevator",
-        }),
-        .distances = [2][10]usize{
-            .{ 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 },
-            .{ 1, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+    .distances = [2][10]usize{
+        .{ 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 },
+        .{ 1, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+    },
+    .shrink_corridors_to_fit = false,
+    .prefab_chance = 1, // Only prefabs for SMI
+    .mapgen_iters = 512,
+
+    .level_features = [_]?LevelConfig.LevelFeatureFunc{
+        levelFeatureIronOres,
+        levelFeatureMetals,
+        levelFeatureMetalProducts,
+        null,
+    },
+
+    .patrol_squads = 3,
+    .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
+        .{ .chance = 10, .template = &mobs.WatcherTemplate },
+        .{ .chance = 30, .template = &mobs.HaulerTemplate },
+        .{ .chance = 56, .template = &mobs.GuardTemplate },
+    }),
+
+    .material = &materials.Basalt,
+    .tiletype = .Floor,
+
+    .allow_statues = false,
+    .door_chance = 0,
+    .allow_corridors = false,
+
+    .blobs = &[_]LevelConfig.BlobConfig{
+        .{
+            .number = MinMax(usize){ .min = 6, .max = 8 },
+            .type = .Wall,
+            .min_blob_width = MinMax(usize){ .min = 7, .max = 8 },
+            .min_blob_height = MinMax(usize){ .min = 7, .max = 8 },
+            .max_blob_width = MinMax(usize){ .min = 10, .max = 15 },
+            .max_blob_height = MinMax(usize){ .min = 9, .max = 15 },
+            .ca_rounds = 5,
+            .ca_percent_seeded = 55,
+            .ca_birth_params = "ffffffttt",
+            .ca_survival_params = "ffffttttt",
         },
-        .shrink_corridors_to_fit = false,
-        .prefab_chance = 1, // Only prefabs for SMI
-        .mapgen_iters = 1049,
-
-        .level_features = [_]?LevelConfig.LevelFeatureFunc{
-            levelFeatureIronOres,
-            levelFeatureMetals,
-            levelFeatureMetalProducts,
-            null,
-        },
-
-        .patrol_squads = 3,
-        .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
-            .{ .chance = 10, .template = &mobs.WatcherTemplate },
-            .{ .chance = 30, .template = &mobs.HaulerTemplate },
-            .{ .chance = 56, .template = &mobs.GuardTemplate },
-        }),
-
-        .material = &materials.Basalt,
-        .tiletype = .Floor,
-
-        .allow_statues = false,
-        .door_chance = 0,
-        .allow_corridors = false,
-
-        .blobs = &[_]LevelConfig.BlobConfig{
-            .{
-                .number = MinMax(usize){ .min = 6, .max = 8 },
-                .type = .Wall,
-                .min_blob_width = MinMax(usize){ .min = 7, .max = 8 },
-                .min_blob_height = MinMax(usize){ .min = 7, .max = 8 },
-                .max_blob_width = MinMax(usize){ .min = 10, .max = 15 },
-                .max_blob_height = MinMax(usize){ .min = 9, .max = 15 },
-                .ca_rounds = 5,
-                .ca_percent_seeded = 55,
-                .ca_birth_params = "ffffffttt",
-                .ca_survival_params = "ffffttttt",
-            },
-            .{
-                .number = MinMax(usize){ .min = 5, .max = 7 },
-                .type = .Lava,
-                .min_blob_width = MinMax(usize){ .min = 6, .max = 8 },
-                .min_blob_height = MinMax(usize){ .min = 6, .max = 8 },
-                .max_blob_width = MinMax(usize){ .min = 10, .max = 14 },
-                .max_blob_height = MinMax(usize){ .min = 9, .max = 14 },
-                .ca_rounds = 5,
-                .ca_percent_seeded = 55,
-                .ca_birth_params = "ffffftttt",
-                .ca_survival_params = "ffffttttt",
-            },
+        .{
+            .number = MinMax(usize){ .min = 5, .max = 7 },
+            .type = .Lava,
+            .min_blob_width = MinMax(usize){ .min = 6, .max = 8 },
+            .min_blob_height = MinMax(usize){ .min = 6, .max = 8 },
+            .max_blob_width = MinMax(usize){ .min = 10, .max = 14 },
+            .max_blob_height = MinMax(usize){ .min = 9, .max = 14 },
+            .ca_rounds = 5,
+            .ca_percent_seeded = 55,
+            .ca_birth_params = "ffffftttt",
+            .ca_survival_params = "ffffttttt",
         },
     },
 };
+
+pub var Configs = [LEVELS]LevelConfig{
+    PRI_BASE_LEVELCONFIG, // TODO: ENT_start
+    PRI_BASE_LEVELCONFIG, // TODO: ENT_start
+    VLT_BASE_LEVELCONFIG,
+    VLT_BASE_LEVELCONFIG,
+    VLT_BASE_LEVELCONFIG,
+    PRI_BASE_LEVELCONFIG,
+    SMI_BASE_LEVELCONFIG,
+    SMI_BASE_LEVELCONFIG,
+    SMI_BASE_LEVELCONFIG,
+    LAB_BASE_LEVELCONFIG,
+    LAB_BASE_LEVELCONFIG,
+    LAB_BASE_LEVELCONFIG,
+    PRI_BASE_LEVELCONFIG,
+    PRI_BASE_LEVELCONFIG, // TODO: PRI_start
+};
+
+// TODO: convert this to a comptime expression
+pub fn fixConfigs() void {
+    Configs[0].prefabs = &[_][]const u8{ "ENT_start", "PRI_power", "ANY_s_recharging" };
+    Configs[PLAYER_STARTING_LEVEL].prefabs = &[_][]const u8{ "PRI_start", "PRI_power", "ANY_s_recharging" };
+}
