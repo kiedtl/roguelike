@@ -195,5 +195,5 @@
 "medium_sieve"         	 "medium_sieve"         	 '▒' 	 0xffe7e7 	 -        	 nay 	 -
 "gas_vent"             	 "gas vent"             	 '=' 	 0xffffff 	 0x888888 	 nay 	 1.0
 "lab_gas_vent"         	 "gas vent"             	 '=' 	 0xffffff 	 -        	 nay
-"iron_bars"            	 "iron bars"            	 '≡' 	 0x000012 	 0xdadada 	 nay
+"iron_bars"            	 "iron bars"            	 '#' 	 0x000000 	 0x444444 	 nay
 "titanium_bars"        	 "titanium bars"        	 '*' 	 0xeaecef 	 -        	 nay
