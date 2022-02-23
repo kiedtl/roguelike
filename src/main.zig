@@ -117,12 +117,16 @@ fn initGame() bool {
         mapgen.placeMobs(level, &state.GPA.allocator);
         mapgen.generateLayoutMap(level);
 
-        mapgen.placeStairs(level, &state.GPA.allocator);
-
         std.log.info("Generated map {}.", .{state.levelinfo[level].name});
 
         level += 1;
         tries = 0;
+    }
+
+    var f_level: usize = LEVELS - 1;
+    while (f_level > 0) : (f_level -= 1) {
+        for (mapgen.Configs[f_level].stairs_to) |dst_floor|
+            mapgen.placeStair(f_level, dst_floor, &state.GPA.allocator);
     }
 
     display.draw();

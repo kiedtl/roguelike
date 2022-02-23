@@ -2965,11 +2965,12 @@ pub const Dungeon = struct {
     sound: [LEVELS][HEIGHT][WIDTH]Sound = [1][HEIGHT][WIDTH]Sound{[1][WIDTH]Sound{[1]Sound{.{}} ** WIDTH} ** HEIGHT} ** LEVELS,
     light: [LEVELS][HEIGHT][WIDTH]bool = [1][HEIGHT][WIDTH]bool{[1][WIDTH]bool{[1]bool{false} ** WIDTH} ** HEIGHT} ** LEVELS,
     fire: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
-    stairs: [LEVELS][STAIRS_ON_LEVEL]?Coord = undefined,
+    stairs: [LEVELS]StairBuffer = [_]StairBuffer{StairBuffer.init(null)} ** LEVELS,
 
     pub const ItemBuffer = StackBuffer(Item, 7);
+    pub const StairBuffer = StackBuffer(Coord, MAX_STAIRS);
 
-    pub const STAIRS_ON_LEVEL: usize = 1;
+    pub const MAX_STAIRS: usize = 2;
 
     pub const MOB_OPACITY: usize = 10;
     pub const FLOOR_OPACITY: usize = 10;

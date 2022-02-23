@@ -1943,22 +1943,39 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
     }
 }
 
-pub fn placeStairs(level: usize, alloc: *mem.Allocator) void {
-    if (level == 0) return;
+pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
+    assert(level != 0);
 
-    const dest_floor = level - 1;
-
-    // Find coord candidates for stairs placement
+    // Find coord candidates for stairs placement. Usually this will be in a room,
+    // but we're not forcing it because that wouldn't work well for Smithing.
+    //
     var locations = CoordArrayList.init(alloc);
     defer locations.deinit();
-    for (state.rooms[level].items) |room| {
-        var tries: usize = 1000;
-        while (tries > 0) : (tries -= 1) {
-            // randomWallCoord gets angry if we're in a corridor
-            if (room.type != .Room or room.rect.width == 1 or room.rect.height == 1)
-                continue;
+    // for (state.rooms[level].items) |room| {
+    //     var tries: usize = 1000;
+    //     while (tries > 0) : (tries -= 1) {
+    for (state.dungeon.map[level]) |*row, y| {
+        for (row) |tile, x| {
+            const room: ?*Room = switch (state.layout[level][y][x]) {
+                .Unknown => null,
+                .Room => |r| &state.rooms[level].items[r],
+            };
 
-            const coord = randomWallCoord(&room.rect, tries);
+            const above_room: ?*Room = switch (state.layout[dest_floor][y][x]) {
+                .Unknown => null,
+                .Room => |r| &state.rooms[dest_floor].items[r],
+            };
+
+            // randomWallCoord gets angry if we're in a corridor
+            if ((room != null and room.?.has_stairs) or
+                (above_room != null and above_room.?.has_stairs))
+            //or room.rect.width == 1 or room.rect.height == 1)
+            {
+                continue;
+            }
+
+            //const coord = randomWallCoord(&room.rect, tries);
+            const coord = Coord.new2(level, x, y);
             const above = Coord.new2(dest_floor, coord.x, coord.y);
 
             if (state.dungeon.at(coord).type == .Wall and
@@ -1986,9 +2003,14 @@ pub fn placeStairs(level: usize, alloc: *mem.Allocator) void {
     };
 
     // First, find the entry locations. These locations are either the stairs
-    // from the previous level, or the player's starting area.
-    for (state.dungeon.stairs[level - 1]) |prev_stair| {
-        if (prev_stair) |c| stair_dijkmap[c.y][c.x] = 0;
+    // from the previous levels, or the player's starting area.
+    for (state.dungeon.stairs) |level_stairs| {
+        for (level_stairs.constSlice()) |stair| {
+            if (state.dungeon.at(stair).surface.?.Stair) |stair_dest|
+                if (stair_dest == level) {
+                    stair_dijkmap[stair.y][stair.x] = 0;
+                };
+        }
     }
     if (level == PLAYER_STARTING_LEVEL)
         stair_dijkmap[state.player.coord.y][state.player.coord.x] = 0;
@@ -2023,20 +2045,25 @@ pub fn placeStairs(level: usize, alloc: *mem.Allocator) void {
     };
     std.sort.insertionSort(Coord, locations.items, &stair_dijkmap, _sortFunc.f);
 
-    // Pop the top three candidates out and create some stairs.
-    var i: usize = 0;
-    while (i < locations.items.len and i < Dungeon.STAIRS_ON_LEVEL) : (i += 1) {
-        const coord = locations.items[i];
-        const above = Coord.new2(level - 1, coord.x, coord.y);
-        state.dungeon.stairs[level][i] = coord;
-        state.dungeon.at(coord).type = .Floor;
-        state.dungeon.at(coord).surface = .{ .Stair = dest_floor };
-        state.dungeon.at(above).type = .Floor;
-        state.dungeon.at(above).surface = .{ .Stair = null };
+    // Pop the top candidate out and create a staircase.
+    const coord = locations.items[0];
+    const above = Coord.new2(dest_floor, coord.x, coord.y);
+
+    state.dungeon.at(coord).type = .Floor;
+    state.dungeon.at(coord).surface = .{ .Stair = dest_floor };
+    state.dungeon.at(above).type = .Floor;
+    state.dungeon.at(above).surface = .{ .Stair = null };
+
+    switch (state.layout[level][coord.y][coord.x]) {
+        .Room => |r| state.rooms[level].items[r].has_stairs = true,
+        else => {},
     }
-    while (i < Dungeon.STAIRS_ON_LEVEL) : (i += 1) {
-        state.dungeon.stairs[level][i] = null;
+    switch (state.layout[dest_floor][above.y][above.x]) {
+        .Room => |r| state.rooms[dest_floor].items[r].has_stairs = true,
+        else => {},
     }
+
+    state.dungeon.stairs[level].append(coord) catch err.wat();
 }
 
 pub fn placeBlobs(level: usize) void {
@@ -2435,6 +2462,7 @@ pub const Room = struct {
     prefab: ?*Prefab = null,
     has_subroom: bool = false,
     has_window: bool = false,
+    has_stairs: bool = false,
 
     connections: usize = 0,
 
@@ -2927,6 +2955,8 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
 }
 
 pub const LevelConfig = struct {
+    stairs_to: []const usize = &[_]usize{},
+
     prefabs: []const []const u8 = .{},
     distances: [2][10]usize = [2][10]usize{
         .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
@@ -3195,7 +3225,25 @@ pub var Configs = [LEVELS]LevelConfig{
 };
 
 // TODO: convert this to a comptime expression
+// zig fmt: off
 pub fn fixConfigs() void {
     Configs[0].prefabs = &[_][]const u8{ "ENT_start", "PRI_power", "ANY_s_recharging" };
     Configs[PLAYER_STARTING_LEVEL].prefabs = &[_][]const u8{ "PRI_start", "PRI_power", "ANY_s_recharging" };
+
+    // Be careful when editing this
+    Configs[00].stairs_to = &[_]usize{};      // -1/Prison       -> nothing
+    Configs[01].stairs_to = &[_]usize{    0}; // -2/Prison       -> -1/Prison
+    Configs[02].stairs_to = &[_]usize{    1}; // -3/Vaults/3     -> -2/Prison
+    Configs[03].stairs_to = &[_]usize{1,  2}; // -3/Vaults/2     -> -3/Vaults/3,     -2/Prison
+    Configs[04].stairs_to = &[_]usize{1,  3}; // -3/Vaults       -> -3/Vaults/2,     -2/Prison
+    Configs[05].stairs_to = &[_]usize{    4}; // -4/Prison       -> -3/Vaults
+    Configs[06].stairs_to = &[_]usize{    5}; // -5/Smithing/3   -> -4/Prison
+    Configs[07].stairs_to = &[_]usize{5,  6}; // -5/Smithing/2   -> -5/Smithing/3,   -4/Prison
+    Configs[08].stairs_to = &[_]usize{5,  7}; // -5/Smithing     -> -5/Smithing/2,   -4/Prison
+    Configs[09].stairs_to = &[_]usize{    8}; // -6/Laboratory/3 -> -5/Smithing
+    Configs[10].stairs_to = &[_]usize{8,  9}; // -6/Laboratory/2 -> -6/Laboratory/3, -5/Smithing
+    Configs[11].stairs_to = &[_]usize{8, 10}; // -6/Laboratory   -> -6/Laboratory/2, -5/Smithing
+    Configs[12].stairs_to = &[_]usize{   11}; // -7/Prison       -> -6/Laboratory
+    Configs[13].stairs_to = &[_]usize{   12}; // -8/Prison       -> -7/Prison
 }
+// zig fmt: on
