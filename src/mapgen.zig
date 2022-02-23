@@ -1783,14 +1783,20 @@ fn placeLights(room: *const Room) void {
     if (room.prefab) |rfb| if (rfb.nolights) return;
 
     const area = room.rect.height * room.rect.width;
+
     var lights_needed: usize = undefined;
-    if (area <= 050) lights_needed = rng.range(usize, 0, 1);
-    if (area >= 100) lights_needed = rng.range(usize, 1, 2);
-    if (area >= 250) lights_needed = rng.range(usize, 2, 3);
-    if (area >= 500) lights_needed = rng.range(usize, 2, 4);
+    if (area <= 80) {
+        lights_needed = rng.range(usize, 0, 1);
+    } else if (area <= 100) {
+        lights_needed = rng.range(usize, 1, 2);
+    } else if (area <= 150) {
+        lights_needed = rng.range(usize, 1, 3);
+    } else {
+        lights_needed = rng.range(usize, 2, 4);
+    }
 
     var lights: usize = 0;
-    var light_tries: usize = 200;
+    var light_tries: usize = 500;
     while (light_tries > 0 and lights < lights_needed) : (light_tries -= 1) {
         const coord = randomWallCoord(&room.rect, light_tries);
 
