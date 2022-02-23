@@ -1,60 +1,3 @@
-Levels
-------
-- Entry
-- Vaults
-	- Smallish square rooms with only one-width corridors.
-	- Lots of weapons, armour, etc on racks.
-	- Lots of chests full of explosives.
-	- Lots of chests full of gold and jewels (useless).
-	- Wardens everywhere.
-	- Postprocessing: change walls that are shared with multiple rooms to
-	  windows?
-- Laboratory
-	x Large open space.
-	x Stockpiles of ores, and vials.
-	x Whole floor is geared to the production of vials and usage of them.
-	x Production of vials:
-	  x Ore "elevator", supposedly brings up ores from lower floors.
-	    Dumps ores on nearby tiles.
-	  x Haulers bring ores to ore stockpiles, and then to extractors..
-	  x Extractor machines create vials.
-	  x Haulers bring vials to vial stockpiles.
-	  x Haulers take vials to research stations.
-	x Usage of vials: research stations, alchemists use them to "experiment"
-	  on prisoners.
-	- Has traps of {blinding, pain-causing} gas.
-- Mining
-	- Caves, brogue-style.
-	- Rooms filled with pickaxes, boulders, and carts.
-	- Splotches of the map use materials like sulon/chlade/realgar/hematite.
-	- "Miners" go about, cutting up map portions with ores.
-	- "Haulers" take boulders and move them to ore elevators/stockpiles.
-x Smithing
-	x Large open area.
-	x Structures plopped all over the place.
-		x Filled with forges and smithing machines.
-		x Has stockpiles of ingots, ores, and metal goods.
-		x Elevator and some stockpiles should have walls+doors
-		  around them...
-	x Whole floor is geared to the production of chains.
-	x Production of vials:
-	  x Ore "elevator", supposedly brings up ores from lower floors.
-	    Dumps iron ores on nearby tiles.
-	    x Hematite
-	    - Magnetite
-	  x Haulers bring ores to ore stockpiles, and later on carry them to the
-	    blast furnaces.
-	  x Blast furnaces smelt ores into iron ingots.
-	  x Haulers bring ingots to ingots stockpiles.
-	  x Haulers take ingots to chain presses.
-	  x Chain presses stamp out chain and link them together.
-	  x Haulers take chains to stockpiles.
-	x Has large lakes of lava.
-x Prison
-	x Medium-short corridors with rooms with locked enclosures of prisoners.
-	x Some torture rooms maybe.
-	x Levers for each room to unlock doors and release prisoners.
-
 New Levels
 ----------
 "Solitary" ("SOL") or "Confinement" ("CON"):
@@ -81,20 +24,6 @@ New Levels
 - Plenty of patrols, and guards at hallway junctions
 - Layout leads to interesting gameplay, I think?
 
-Something like "Quarters"/"Leisure":
-- Barracks/clusters of beds
-  - Full of mobs that can wake up at any time
-- Tables and chairs
-- Chests of food and drink
-- Nursery? (kill baby goblins! fun!)
-
-Something like "Crypt"/"Tomb"/"Temple"/"House of the Dead"
-- Undead and abominations everywhere, almost no living guards.
-- Necromancers and demons.
-- The occasional experiment (or maybe just undead experiments?).
-- Houses the Rune of Torment, and player might find the Symbol of Torment as well.
-- Uses Cogmind-like tunneling algorithm.
-
 New mobs
 --------
 - creeping death
@@ -110,7 +39,23 @@ New mobs
 		- "You feel uneasy." (just before cat charges)
 - sulfur/decaying fiend
 	- Spits out sulfuric/miasmic gas, which raises corpses and slows living creatures.
+- fuming fiend
+	- "A strange winged figure, cloaked in dirty rags. It is holding a
+	   sceptre of crystal."
+	- Bolt of Dispersal: resistably blinks all affected mobs away. Used to
+	  open LOS in order to see enemy.
+	- Dispel Fumes: removes all clouds in caster's LOS, Used to remove gas
+	  obscuring enemy.
+	- Vunerable to fire, immune to electricity.
+	- Airstrike: moderate damage, smite-targeted.
+	  - "The fuming fiend waves its arms around in wide circles!"
+	  - "The air whirls around and strikes you!"
+	  - "The air twists around and strikes you!"
+	  - "The air twists itself inside-out and smites you!!"
 - freezing fiend
+	- "A winged humanoid, clothed in watery-blue robes. It whispers grimly
+	   to itself as it patrols its home, inspecting its underlings with
+	   an expression of frozen contempt.
 	- Creates icy obstacles to block player (but obstacles melt after 2-4 turns).
 	- Has Frozen Ramparts-like spell to damage foes surrounded by walls.
 - lightning spire
@@ -146,9 +91,10 @@ x warden
 	- Teleports away (or suicides?) when no allies visible.
 	- Immune to weapon damage.
 - burning brute
-	- "A demon composed primarily of boiling granite, capable of fearsome
-	  fire attacks."
-	- Hurls bolts of fire and lightning.
+	- "A raging winged demon composed primarily of boiling basalt,
+	  feared even by its peers for its vicious fire attacks."
+	- Has rFire∞, but rElec-.
+	- Hurls bolts of fire.
 	- Burnt offering: Gives a visible ally the .InnerFire status. Effects:
 	  - Every 2-3 turns, flames seep out of mob and ignite nearby tiles.
 	  - When timer is over, mob explodes, damaging all nearby mobs.
@@ -295,12 +241,8 @@ x potion of fog (TODO: name) [g]
   Fog.
 x potion of acceleration [s]
   Haste.
-x potion of preservation [c]
-  Heals 20% of health and removes poison.
-x potion of deceleration [s]
-  Slowdown.
 x potion of coagulation
-  Poison (loss of regen, occasional damage, weakness)
+  Poison (occasional damage, slowness)
 x potion of invigoration [s]
   Temporarily increases strength and dexterity.
 - potion of incineration [c]
@@ -567,16 +509,24 @@ x Implement cloaks
 x Add fire system
   x potions of incineration
 - Stair overhaul
-  - Consider making stairs unique surface item from machines
-  - Move stairs into walls, give different Brogue-like look
+  x Move stairs into walls, give different Brogue-like look
   - Organize branches and their levels; add stairs to them
-  - Place stairs as far away from other stairs as possible
+  x Place stairs as far away from other stairs as possible
+  - Add stair guardians to prevent stair-fleeing
   - Remove regeneration for monsters and players
-    - Remove ¡recuperation
+    - Remove healing from ¡preservation; give ¡recuperation rMlee-
   - Nerf poison and pain damage
+    - Merge poison and deceleration
   - Fountains to drink from
   - Medics that heal monsters
   - Apply "upgrade" and healing to player on ascension
+- Add tougher monsters; balancing
+  - Make fleeing monsters tell allies of foe
+  - Make cornered fleeing monsters .Enraged
+  - Burning brutes, sorcerers, beastmasters
+  - Reaching weapons for beastmasters and patrols
+  - Add `Flanked` effect + UI element
+  - Repositioning AI (flanking and allowing allies w/reaching weapons to hit foe)
 - Air purifiers, mob AI to move out of gases
 - Potions
   - Dilution/concentration:
@@ -591,14 +541,15 @@ x Add fire system
   - flammable fungi ("dead fungi")
   - tall mushrooms (reduced LOS)
   - taller mushrooms (LOS == 2)
-- Add tougher monsters
-  - Burning brutes
-  - Sorcerers
 - Implement intelligence
   - Prevent dumb monsters from opening doors
   - Prevent sentinels from shooting allies and such
 - Revisit and revamp SMI mapgen
   - toxic sludge pools and bridges over them
+- Revisit Laboratory
+  - Add spires and spire kits
+  - Add bosses
+  - Add traps of blinding gas
 - Show information characters next to mob in enemy pane
 x LOS/lighting revamp
   x Nerf player's LOS, buf enemies' LOS
@@ -881,8 +832,10 @@ x Place stairs only in rooms
 x Fix sound propagation
 - Reject maps without enough open space
 - Give player credit for deaths caused by malfunctioning machines
+- Give player credit for deaths caused by fires
 - Show appropriate number of exclamation points on messages about
   spell damage
+- Don't allow confused monsters to attack diagonally.
 
 Ideas
 =====
@@ -1001,11 +954,12 @@ x Add braziers that are built into the walls (aka torches), and use that
              #·,·,·,·,·,·#    #—.—.—.—.—.—#
              #`.`.`.`.`.`#    #·,·,·,·,·,·#
              #############    #############
-- Add `Flanked` effect + UI element
 - Bribing: bribe lone monsters to stay quiet, but they'll turn hostile again if
   an unbribed comrade shows up
   - Gold + jewelry collection
   - Bri(b)ing key to bribe lone monsters
+- "Doormat" poster that has welcoming messages on it, right next to stairs
+  - Maybe describes level's challenges for new players?
 
 Optimizations
 =============
