@@ -368,11 +368,11 @@ pub const ChainmailArmor = Armor{
     .id = "chainmail_armor",
     .name = "chainmail",
     .resists = .{
-        .Crushing = 2,
-        .Pulping = 8,
-        .Slashing = 15,
-        .Piercing = 5,
-        .Lacerating = 15,
+        .Crushing = 5,
+        .Pulping = 10,
+        .Slashing = 50,
+        .Piercing = 30,
+        .Lacerating = 90,
     },
     .speed_penalty = 40,
 };
@@ -381,11 +381,11 @@ pub const ScalemailArmor = Armor{
     .id = "scalemail_armor",
     .name = "scale mail",
     .resists = .{
-        .Crushing = 10,
-        .Pulping = 10,
-        .Slashing = 10,
-        .Piercing = 5,
-        .Lacerating = 10,
+        .Crushing = 15,
+        .Pulping = 20,
+        .Slashing = 50,
+        .Piercing = 20,
+        .Lacerating = 90,
     },
     .speed_penalty = 20,
     .dex_penalty = 40,
@@ -396,10 +396,10 @@ pub const RobeArmor = Armor{
     .name = "robe",
     .resists = .{
         .Crushing = 0,
-        .Pulping = 1,
+        .Pulping = 5,
         .Slashing = 2,
-        .Piercing = 0,
-        .Lacerating = 3,
+        .Piercing = 2,
+        .Lacerating = 10,
     },
 };
 
@@ -407,11 +407,11 @@ pub const GambesonArmor = Armor{
     .id = "gambeson_armor",
     .name = "gambeson",
     .resists = .{
-        .Crushing = 1,
-        .Pulping = 3,
-        .Slashing = 4,
-        .Piercing = 2,
-        .Lacerating = 6,
+        .Crushing = 8,
+        .Pulping = 8,
+        .Slashing = 15,
+        .Piercing = 10,
+        .Lacerating = 15,
     },
 };
 
@@ -419,11 +419,11 @@ pub const LeatherArmor = Armor{
     .id = "leather_armor",
     .name = "leather",
     .resists = .{
-        .Crushing = 2,
-        .Pulping = 5,
-        .Slashing = 5,
-        .Piercing = 3,
-        .Lacerating = 8,
+        .Crushing = 8,
+        .Pulping = 10,
+        .Slashing = 18,
+        .Piercing = 15,
+        .Lacerating = 25,
     },
 };
 
@@ -492,7 +492,7 @@ pub const UnarmedWeapon = Weapon{
     .name = "none",
     .delay = 80,
     .damages = .{
-        .Crushing = 6,
+        .Crushing = 10,
         .Pulping = 0,
         .Slashing = 0,
         .Piercing = 0,

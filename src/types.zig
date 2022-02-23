@@ -2458,7 +2458,7 @@ pub const Damages = struct {
 
     pub const Self = @This();
 
-    pub fn sum(self: *Self) usize {
+    pub fn sum(self: *const Self) usize {
         return self.Crushing +
             self.Pulping +
             self.Slashing +
@@ -2468,26 +2468,11 @@ pub const Damages = struct {
 
     pub fn resultOf(attack: *const Self, defense: *const Self) Self {
         return .{
-            .Crushing = @intCast(usize, math.max(
-                0,
-                (@intCast(isize, defense.Crushing) - @intCast(isize, attack.Crushing)) * -1,
-            )),
-            .Pulping = @intCast(usize, math.max(
-                0,
-                (@intCast(isize, defense.Pulping) - @intCast(isize, attack.Pulping)) * -1,
-            )),
-            .Slashing = @intCast(usize, math.max(
-                0,
-                (@intCast(isize, defense.Slashing) - @intCast(isize, attack.Slashing)) * -1,
-            )),
-            .Piercing = @intCast(usize, math.max(
-                0,
-                (@intCast(isize, defense.Piercing) - @intCast(isize, attack.Piercing)) * -1,
-            )),
-            .Lacerating = @intCast(usize, math.max(
-                0,
-                (@intCast(isize, defense.Lacerating) - @intCast(isize, attack.Lacerating)) * -1,
-            )),
+            .Crushing = attack.Crushing - (attack.Crushing * defense.Crushing / 100),
+            .Pulping = attack.Pulping - (attack.Pulping * defense.Pulping / 100),
+            .Slashing = attack.Slashing - (attack.Slashing * defense.Slashing / 100),
+            .Piercing = attack.Piercing - (attack.Piercing * defense.Piercing / 100),
+            .Lacerating = attack.Lacerating - (attack.Lacerating * defense.Lacerating / 100),
         };
     }
 
