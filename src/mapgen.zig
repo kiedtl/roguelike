@@ -1830,7 +1830,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
         var statues: usize = 0;
         var props: usize = 0;
         var capacity: usize = 0;
-        var levers: usize = 0;
+        var machs: usize = 0;
         var posters: usize = 0;
 
         var forbidden_range: ?usize = null;
@@ -1884,9 +1884,9 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                     }
                 },
                 3 => {
-                    if (levers < 1 and room.has_subroom) {
-                        _place_machine(coord, &surfaces.RestrictedMachinesOpenLever);
-                        levers += 1;
+                    if (machs < 1 and Configs[level].machine != null) {
+                        _place_machine(coord, Configs[level].machine.?);
+                        machs += 1;
                     }
                 },
                 4 => {
@@ -2929,6 +2929,7 @@ pub const LevelConfig = struct {
     door: *const Machine = &surfaces.NormalDoor,
     vent: []const u8 = "gas_vent",
     bars: []const u8 = "iron_bars",
+    machine: ?*const Machine = null,
     props: *[]const Prop = &surfaces.statue_props.items,
     // Props that can be placed in bulk along a single wall.
     single_props: []const []const u8 = &[_][]const u8{},
@@ -3063,6 +3064,7 @@ pub const Configs = [LEVELS]LevelConfig{
             },
         },
 
+        .machine = &surfaces.Drain,
         .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
     },
     .{
@@ -3130,6 +3132,7 @@ pub const Configs = [LEVELS]LevelConfig{
 
         .patrol_squads = 2,
 
+        .machine = &surfaces.Drain,
         .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
     },
     .{
@@ -3153,6 +3156,7 @@ pub const Configs = [LEVELS]LevelConfig{
 
         .patrol_squads = 2,
 
+        .machine = &surfaces.Drain,
         .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
     },
     .{

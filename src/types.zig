@@ -775,6 +775,11 @@ pub const Status = enum {
     // Doesn't have a power field (but probably should).
     Poison,
 
+    // Slows down mob and gives sprays vomit everywhere.
+    //
+    // Doesn't have a power field.
+    Nausea,
+
     // Removes 1-2 HP per turn and sets mob's coord on fire.
     //
     // Doesn't have a power field.
@@ -830,6 +835,7 @@ pub const Status = enum {
             .Slow => "slowed",
             .Recuperate => "recuperating",
             .Poison => "poisoned",
+            .Nausea => "nauseated",
             .Fire => "burning",
             .Invigorate => "invigorated",
             .Pain => "tormented",
@@ -851,6 +857,7 @@ pub const Status = enum {
             .Fast => .{ "feel yourself", "starts", " moving faster" },
             .Slow => .{ "feel yourself", "starts", " moving slowly" },
             .Poison => .{ "feel very", "looks very", " sick" },
+            .Nausea => .{ "feel", "looks", " nauseated" },
             .Fire => .{ "catch", "catches", " fire" },
             .Invigorate => .{ "feel", "looks", " invigorated" },
             .Pain => .{ "are", "is", " wracked with pain" },
@@ -875,6 +882,7 @@ pub const Status = enum {
             .Fast => .{ "are no longer", "is no longer", " moving faster" },
             .Slow => .{ "are no longer", "is no longer", " moving slowly" },
             .Poison => .{ "feel", "looks", " healthier" },
+            .Nausea => .{ "are no longer", "is no longer", " nauseated" },
             .Fire => .{ "are no longer", "is no longer", " on fire" },
             .Invigorate => .{ "no longer feel", "no longer looks", " invigorated" },
             .Pain => .{ "are no longer", "is no longer", " wracked with pain" },
@@ -895,6 +903,13 @@ pub const Status = enum {
             .blood = false,
             .kind = .Poison,
         });
+    }
+
+    pub fn tickNausea(mob: *Mob) void {
+        if (state.ticks % 3 == 0) {
+            state.message(.Status, "You retch profusely.", .{});
+            state.dungeon.spatter(mob.coord, .Vomit);
+        }
     }
 
     pub fn tickFire(mob: *Mob) void {
@@ -1217,6 +1232,7 @@ pub const Mob = struct { // {{{
                 switch (status_e) {
                     .Echolocation => Status.tickEcholocation(self),
                     .Poison => Status.tickPoison(self),
+                    .Nausea => Status.tickNausea(self),
                     .Fire => Status.tickFire(self),
                     .Pain => Status.tickPain(self),
                     else => {},
@@ -1237,6 +1253,22 @@ pub const Mob = struct { // {{{
             return error.IndexOutOfRange;
 
         return self.inventory.pack.orderedRemove(index) catch err.wat();
+    }
+
+    // If held, flail around trying to get free.
+    pub fn flailAround(self: *Mob) void {
+        if (self.isUnderStatus(.Held)) |se| {
+            const held_remove_max = self.strength() / 2;
+            const held_remove = rng.rangeClumping(usize, 2, held_remove_max, 2);
+            const new_duration = utils.saturating_sub(se.duration, held_remove);
+            self.addStatus(.Held, 0, new_duration, false);
+
+            if (self.isUnderStatus(.Held)) |_| {
+                state.messageAboutMob(self, self.coord, .Info, "flail around helplessly.", .{}, "flails around helplessly.", .{});
+            }
+
+            _ = self.rest();
+        } else err.bug("Tried to make a non-.Held mob flail around!", .{});
     }
 
     // Quaff a potion, applying its effects to a Mob.
@@ -1497,6 +1529,11 @@ pub const Mob = struct { // {{{
         self.facing = direction;
         self.last_attempted_move = direction;
 
+        if (self.isUnderStatus(.Held)) |_| {
+            self.flailAround();
+            return true;
+        }
+
         var succeeded = false;
         if (coord.move(direction, state.mapgeometry)) |dest| {
             succeeded = self.teleportTo(dest, direction);
@@ -1558,14 +1595,6 @@ pub const Mob = struct { // {{{
             self.declareAction(Activity{ .Move = d });
         } else {
             self.declareAction(Activity{ .Teleport = dest });
-        }
-
-        if (self.isUnderStatus(.Held)) |se| {
-            const held_remove_max = self.strength() / 2;
-            const held_remove = rng.rangeClumping(usize, 2, held_remove_max, 2);
-            const new_duration = utils.saturating_sub(se.duration, held_remove);
-            self.addStatus(.Held, 0, new_duration, false);
-            return true;
         }
 
         if (state.dungeon.at(dest).mob) |other| {
@@ -2067,7 +2096,8 @@ pub const Mob = struct { // {{{
         var speed_perc: isize = 100;
         if (self.ai.phase == .Flee) speed_perc -= 10;
         if (self.isUnderStatus(.Fast)) |_| speed_perc = @divTrunc(speed_perc * 50, 100);
-        if (self.isUnderStatus(.Slow)) |_| speed_perc = @divTrunc(speed_perc * 160, 100);
+        if (self.isUnderStatus(.Slow)) |_| speed_perc = @divTrunc(speed_perc * 150, 100);
+        if (self.isUnderStatus(.Nausea)) |_| speed_perc = @divTrunc(speed_perc * 150, 100);
 
         if (self.inventory.armor) |a|
             if (a.speed_penalty) |pen| {
@@ -3116,12 +3146,14 @@ pub const Spatter = enum {
     Ash,
     Blood,
     Dust,
+    Vomit,
 
     pub inline fn color(self: Spatter) u32 {
         return switch (self) {
             .Ash => 0x121212,
             .Blood => 0x9a1313,
             .Dust => 0x92744c,
+            .Vomit => 0x329b32,
         };
     }
 };
