@@ -168,6 +168,11 @@ pub const IsWalkableOptions = struct {
     //
     right_now: bool = false,
 
+    // Only treat a tile as unwalkable if it breaks line-of-fire.
+    //
+    // Water and lava tiles will not be considered unwalkable if this is true.
+    only_if_breaks_lof: bool = false,
+
     // Consider a tile with a mob on it walkable.
     ignore_mobs: bool = false,
 
@@ -180,16 +185,18 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
 
     if (!tile_broken) {
         switch (dungeon.at(coord).type) {
-            .Wall, .Water, .Lava => return false,
+            .Wall => return false,
+            .Water, .Lava => if (!opts.only_if_breaks_lof) return false,
             else => {},
         }
     }
 
     if (!opts.ignore_mobs) {
-        if (dungeon.at(coord).mob) |other|
+        if (dungeon.at(coord).mob) |other| {
             if (opts.mob) |mob| {
                 if (!mob.canSwapWith(other, null)) return false;
             } else return false;
+        }
     }
 
     if (!tile_broken) {

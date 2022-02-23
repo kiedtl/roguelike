@@ -11,7 +11,7 @@ pub fn hasClearLOF(from: Coord, to: Coord) bool {
     const line = from.drawLine(to, state.mapgeometry);
     return for (line.constSlice()) |c| {
         if (!c.eq(from) and !c.eq(to) and
-            !state.is_walkable(c, .{ .right_now = true }))
+            !state.is_walkable(c, .{ .right_now = true, .only_if_breaks_lof = true }))
         {
             break false;
         }

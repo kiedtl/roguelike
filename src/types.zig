@@ -335,6 +335,7 @@ pub const Coord = struct { // {{{
                 }
                 x += stepx;
             }
+            insert_if_valid(from.z, x, y, &buf, limit);
         } else {
             errmarg = dy / 2.0;
             while (y != yend) {
@@ -346,6 +347,7 @@ pub const Coord = struct { // {{{
                 }
                 y += stepy;
             }
+            insert_if_valid(from.z, x, y, &buf, limit);
         }
 
         return buf;
@@ -1352,16 +1354,20 @@ pub const Mob = struct { // {{{
         };
 
         const trajectory = self.coord.drawLine(at, state.mapgeometry);
-
         const landed: ?Coord = for (trajectory.constSlice()) |coord| {
-            if ((!coord.eq(self.coord) and
-                !state.is_walkable(coord, .{ .right_now = true })))
-            {
+            if (self.coord.eq(coord)) continue;
+
+            if (!state.is_walkable(coord, .{
+                .right_now = true,
+                .only_if_breaks_lof = true,
+            })) {
                 if (state.dungeon.at(coord).mob) |mob| {
                     const chance = combat.chanceOfAttackDodged(mob, null);
-                    if (dodgeable and rng.range(usize, 0, 100) < chance) {
-                        state.messageAboutMob(mob, mob.coord, .Info, "dodge the {}.", .{item_name}, "dodges the {}.", .{item_name});
+                    if (dodgeable and rng.percent(chance)) {
+                        state.messageAboutMob(mob, self.coord, .Info, "dodge the {}.", .{item_name}, "dodges the {}.", .{item_name});
                         continue; // Dodged, onward!
+                    } else {
+                        state.messageAboutMob(mob, self.coord, .Info, "are hit by the {}.", .{item_name}, "is hit by the {}.", .{item_name});
                     }
                 }
 
