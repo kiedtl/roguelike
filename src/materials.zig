@@ -13,7 +13,7 @@ pub const PolishedGlass = Material{
     .combust_point = null, // FIXME: not accurate!
     .specific_heat = 500, // FIXME: not accurate!
     .luminescence = 0,
-    .opacity = 0.0,
+    .opacity = 0.3,
 };
 
 pub const Glass = Material{
@@ -28,7 +28,7 @@ pub const Glass = Material{
     .combust_point = null, // FIXME: not accurate!
     .specific_heat = 500, // FIXME: not accurate!
     .luminescence = 0,
-    .opacity = 0.0,
+    .opacity = 0.1,
 };
 
 pub const Hematite = Material{
