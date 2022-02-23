@@ -1823,7 +1823,9 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
 
         var forbidden_range: ?usize = null;
 
-        if (rng.onein(3) and Configs[level].single_props.len > 0) {
+        if (rng.percent(Configs[level].chance_for_single_prop_placement) and
+            Configs[level].single_props.len > 0)
+        {
             const prop_id = rng.chooseUnweighted([]const u8, Configs[level].single_props);
             const prop_ind = utils.findById(surfaces.props.items, prop_id).?;
             const prop = surfaces.props.items[prop_ind];
@@ -2918,6 +2920,7 @@ pub const LevelConfig = struct {
     props: *[]const Prop = &surfaces.statue_props.items,
     // Props that can be placed in bulk along a single wall.
     single_props: []const []const u8 = &[_][]const u8{},
+    chance_for_single_prop_placement: usize = 33, // percentage
     containers: []const Container = &[_]Container{
         surfaces.Bin,
         surfaces.Barrel,
@@ -3009,8 +3012,9 @@ pub const Configs = [LEVELS]LevelConfig{
         .props = &surfaces.vault_props.items,
         //.containers = &[_]Container{surfaces.Chest},
         .single_props = &[_][]const u8{
-            "fuel_barrel", "iron_ingots", "steel_ingots", "gold_ingots",
+            "gold_chest", "fuel_barrel", "iron_ingots", "steel_ingots", "gold_ingots",
         },
+        .chance_for_single_prop_placement = 100,
     },
     .{
         .prefabs = LevelConfig.RPBuf.init(&[_][]const u8{

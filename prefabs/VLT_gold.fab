@@ -3,27 +3,35 @@
 :subroom
 :restriction 1
 
-@a p gold_chest
 @b p gold_ingots
 .......
-.abbba.
 .bbbbb.
-.abbba.
+.......
+.bbbbb.
 .......
 
 \
 
-@a p gold_chest
 @b p gold_ingots
-......
-.aaaa.
-.bbbb.
-.aaaa.
-......
+........
+.bb..bb.
+.bb..bb.
+........
+.bb..bb.
+.bb..bb.
+........
 
 \
 
-@a p gold_chest
+@b p gold_ingots
+.......
+.bb.bb.
+.......
+.bb.bb.
+.......
+
+\
+
 @b p gold_ingots
 .......
 .bbbbb.

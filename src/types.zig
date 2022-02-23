@@ -2948,7 +2948,7 @@ pub const Dungeon = struct {
 
     pub const ItemBuffer = StackBuffer(Item, 7);
 
-    pub const STAIRS_ON_LEVEL: usize = 2;
+    pub const STAIRS_ON_LEVEL: usize = 1;
 
     pub const MOB_OPACITY: usize = 10;
     pub const FLOOR_OPACITY: usize = 10;
