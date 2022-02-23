@@ -76,6 +76,18 @@ const VALID_DOOR_PLACEMENT_PATTERNS = [_][]const u8{
     "?#?...?#?",
 };
 
+const VALID_STAIR_PLACEMENT_PATTERNS = [_][]const u8{
+    // ???
+    // ###
+    // ?.?
+    "???###?.?",
+
+    // ?.?
+    // ###
+    // ???
+    "?.?###???",
+};
+
 const VALID_LIGHT_PLACEMENT_PATTERNS = [_][]const u8{
     // ...
     // ###
@@ -1906,15 +1918,15 @@ pub fn placeStairs(level: usize, alloc: *mem.Allocator) void {
             if (room.type != .Room or room.rect.width == 1 or room.rect.height == 1)
                 continue;
 
-            const coord = randomWallCoord(&room.rect, null);
+            const coord = randomWallCoord(&room.rect, tries);
             const above = Coord.new2(dest_floor, coord.x, coord.y);
 
             if (state.dungeon.at(coord).type == .Wall and
                 state.dungeon.at(above).type == .Wall and
                 !state.dungeon.at(coord).prison and
                 !state.dungeon.at(above).prison and
-                utils.hasPatternMatch(coord, &VALID_LIGHT_PLACEMENT_PATTERNS) and
-                utils.hasPatternMatch(above, &VALID_LIGHT_PLACEMENT_PATTERNS))
+                utils.hasPatternMatch(coord, &VALID_STAIR_PLACEMENT_PATTERNS) and
+                utils.hasPatternMatch(above, &VALID_STAIR_PLACEMENT_PATTERNS))
             {
                 locations.append(coord) catch err.wat();
                 break;
