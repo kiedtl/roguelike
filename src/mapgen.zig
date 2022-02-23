@@ -64,6 +64,18 @@ const Corridor = struct {
     }
 };
 
+const VALID_WINDOW_PLACEMENT_PATTERNS = [_][]const u8{
+    // ?.?
+    // ###
+    // ?.?
+    "?.?###?.?",
+
+    // ?#?
+    // .#.
+    // ?#?
+    "?#?.#.?#?",
+};
+
 const VALID_DOOR_PLACEMENT_PATTERNS = [_][]const u8{
     // ?.?
     // #.#
@@ -1745,6 +1757,27 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
     }
 }
 
+fn placeWindow(room: *Room) void {
+    if (Configs[room.rect.start.z].no_windows) return;
+    if (room.has_window) return;
+
+    const material = Configs[room.rect.start.z].window_material;
+
+    var tries: usize = 200;
+    while (tries > 0) : (tries -= 1) {
+        const coord = randomWallCoord(&room.rect, tries);
+
+        if (state.dungeon.at(coord).type != .Wall or
+            !utils.hasPatternMatch(coord, &VALID_WINDOW_PLACEMENT_PATTERNS) or
+            state.dungeon.neighboringMachines(coord) > 0)
+            continue; // invalid coord
+
+        room.has_window = true;
+        state.dungeon.at(coord).material = material;
+        break;
+    }
+}
+
 fn placeLights(room: *const Room) void {
     if (Configs[room.rect.start.z].no_lights) return;
     if (room.prefab) |rfb| if (rfb.nolights) return;
@@ -1802,7 +1835,7 @@ fn _placePropAlongRange(level: usize, where: Range, prop: *const Prop, max: usiz
 }
 
 pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
-    for (state.rooms[level].items) |room| {
+    for (state.rooms[level].items) |*room| {
         const rect = room.rect;
 
         // Don't fill small rooms or corridors.
@@ -1813,7 +1846,8 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
             continue;
         }
 
-        placeLights(&room);
+        placeLights(room);
+        placeWindow(room);
 
         if (room.prefab != null or room.has_subroom) continue;
         if (rng.tenin(25)) continue;
@@ -2394,6 +2428,7 @@ pub const Room = struct {
 
     prefab: ?*Prefab = null,
     has_subroom: bool = false,
+    has_window: bool = false,
 
     connections: usize = 0,
 
@@ -2923,8 +2958,10 @@ pub const LevelConfig = struct {
     },
 
     no_lights: bool = false,
+    no_windows: bool = false,
     tiletype: TileType = .Wall,
     material: *const Material = &materials.Concrete,
+    window_material: *const Material = &materials.Glass,
     light: *const Machine = &surfaces.Brazier,
     door: *const Machine = &surfaces.NormalDoor,
     vent: []const u8 = "gas_vent",
@@ -3018,6 +3055,7 @@ pub const Configs = [LEVELS]LevelConfig{
             .{ .chance = 55, .template = &mobs.WardenTemplate },
         }),
 
+        .no_windows = true,
         .allow_statues = false,
         .door_chance = 10,
         .door = &surfaces.VaultDoor,
@@ -3099,6 +3137,7 @@ pub const Configs = [LEVELS]LevelConfig{
 
         .door_chance = 10,
         .material = &materials.Dobalene,
+        .window_material = &materials.PolishedGlass,
         .light = &surfaces.Lamp,
         .vent = "lab_gas_vent",
         .bars = "titanium_bars",
