@@ -2028,13 +2028,12 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
     };
 
     // First, find the entry/exit locations. These locations are either the
-    // stairs from the previous levels (or other stairs on this level), or the
-    // player's starting area.
+    // stairs leading from the previous levels, or the player's starting area.
     for (state.dungeon.stairs) |level_stairs| {
         for (level_stairs.constSlice()) |stair| {
             if (state.dungeon.at(stair).surface.?.Stair) |stair_dest|
-                if (stair.z == level or stair_dest.z == level) {
-                    stair_dijkmap[stair.y][stair.x] = 0;
+                if (stair_dest.z == level) {
+                    stair_dijkmap[stair_dest.y][stair_dest.x] = 0;
                 };
         }
     }
@@ -2048,16 +2047,22 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
         changes_made = false;
         for (stair_dijkmap) |*row, y| for (row) |*cell, x| {
             const coord = Coord.new2(level, x, y);
-            if (!location_map[y][x] and !state.is_walkable(coord, .{}))
+            if ((!location_map[y][x] and
+                !state.is_walkable(coord, .{ .ignore_mobs = true })) or
+                (cell.* != null and cell.*.? == 0))
+            {
                 continue;
+            }
 
             const cur_val = cell.* orelse 999;
 
             var lowest_neighbor: usize = 999;
             for (&CARDINAL_DIRECTIONS) |d|
                 if (coord.move(d, state.mapgeometry)) |neighbor| {
-                    const ncell = stair_dijkmap[neighbor.y][neighbor.x] orelse 999;
-                    if (ncell < lowest_neighbor) lowest_neighbor = ncell;
+                    if (stair_dijkmap[neighbor.y][neighbor.x]) |ncell|
+                        if (ncell < lowest_neighbor) {
+                            lowest_neighbor = ncell;
+                        };
                 };
             if (cur_val > (lowest_neighbor + 1)) {
                 cell.* = lowest_neighbor + 1;
@@ -2065,6 +2070,24 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
             }
         };
     }
+
+    // Debugging code.
+    //
+    // std.log.info("{}", .{state.levelinfo[level].name});
+    // for (stair_dijkmap) |*row, y| {
+    //     for (row) |cell, x| {
+    //         if (cell == null) {
+    //             std.io.getStdErr().writer().print(" ", .{}) catch unreachable;
+    //         } else if (cell.? == 0) {
+    //             std.io.getStdErr().writer().print("@", .{}) catch unreachable;
+    //         } else if (location_map[y][x]) {
+    //             std.io.getStdErr().writer().print("^", .{}) catch unreachable;
+    //         } else {
+    //             std.io.getStdErr().writer().print("{}", .{math.clamp(cell.? / 10, 0, 9)}) catch unreachable;
+    //         }
+    //     }
+    //     std.io.getStdErr().writer().print("\n", .{}) catch unreachable;
+    // }
 
     // Find the candidate farthest away from entry/exit locations.
     const _sortFunc = struct {
