@@ -767,12 +767,12 @@ pub const Status = enum {
     Fast,
     Slow,
 
-    // Increases a mob's regeneration rate (see Mob.tick_hp).
+    // Makes the mob regenerate 1 HP per turn.
     //
     // Doesn't have a power field.
     Recuperate,
 
-    // Prevents regen and gives damage.
+    // Gives damage.
     //
     // Doesn't have a power field (but probably should).
     Poison,
@@ -787,7 +787,7 @@ pub const Status = enum {
     // Doesn't have a power field.
     Fire,
 
-    // Raises strength and dexterity and increases regeneration.
+    // Raises strength and dexterity.
     //
     // Doesn't have a power field.
     Invigorate,
@@ -897,6 +897,10 @@ pub const Status = enum {
             .DayBlindness,
             => err.wat(),
         };
+    }
+
+    pub fn tickRecuperate(mob: *Mob) void {
+        mob.HP = math.clamp(mob.HP + 1, 0, mob.max_HP);
     }
 
     pub fn tickPoison(mob: *Mob) void {
@@ -1125,7 +1129,6 @@ pub const Mob = struct { // {{{
     memory_duration: usize,
     base_speed: usize,
     max_HP: f64,
-    regen: f64 = 0.14,
     blood: ?Spatter,
     immobile: bool = false,
     innate_resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
@@ -1181,21 +1184,6 @@ pub const Mob = struct { // {{{
         };
     }
 
-    // Regenerate health as necessary.
-    //
-    // TODO: regenerate health more if mob rested in last turn.
-    pub fn tick_hp(self: *Mob) void {
-        assert(!self.is_dead);
-
-        if (self.isUnderStatus(.Poison)) |_| return;
-
-        var regen = self.regen;
-        if (self.isUnderStatus(.Invigorate)) |_| regen = regen * 150 / 100;
-        if (self.isUnderStatus(.Recuperate)) |_| regen = regen * 450 / 100;
-
-        self.HP = math.clamp(self.HP + regen, 0, self.max_HP);
-    }
-
     // Check surrounding temperature/gas/water and drown, burn, freeze, or
     // corrode mob.
     pub fn tick_env(self: *Mob) void {
@@ -1233,6 +1221,7 @@ pub const Mob = struct { // {{{
 
                 switch (status_e) {
                     .Echolocation => Status.tickEcholocation(self),
+                    .Recuperate => Status.tickRecuperate(self),
                     .Poison => Status.tickPoison(self),
                     .Nausea => Status.tickNausea(self),
                     .Fire => Status.tickFire(self),
@@ -2148,12 +2137,21 @@ pub const Mob = struct { // {{{
             if (e == resist) pips += @field(self.innate_resists, @tagName(e));
         }
 
+        // Check armor
         if (self.inventory.cloak) |clk| switch (clk.ego) {
             .Resist => |r| if (r == resist) {
                 pips += 1;
             },
             else => {},
         };
+
+        // Check statuses
+        switch (resist) {
+            .rMlee => if (self.isUnderStatus(.Recuperate) != null) {
+                pips -= 1;
+            },
+            else => {},
+        }
 
         pips = switch (resist) {
             .rFume => math.clamp(pips, 0, 2),

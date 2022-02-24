@@ -321,7 +321,6 @@ fn tickGame() void {
 
             const prev_energy = mob.energy;
 
-            mob.tick_hp();
             mob.tick_env();
             mob.tickFOV();
             mob.tickRings();
@@ -394,7 +393,6 @@ fn viewerTickGame(cur_level: usize) void {
 
             const prev_energy = mob.energy;
 
-            mob.tick_hp();
             mob.tick_env();
             mob.tickFOV();
             mob.tickRings();

@@ -26,7 +26,6 @@ pub const POTIONS = [_]Potion{
     RecuperatePotion,
     PoisonPotion,
     InvigoratePotion,
-    PreservePotion,
     DecimatePotion,
     IncineratePotion,
 };
@@ -62,7 +61,6 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 80, .i = .{ .P = RecuperatePotion } },
     .{ .w = 70, .i = .{ .P = PoisonPotion } },
     .{ .w = 70, .i = .{ .P = InvigoratePotion } },
-    .{ .w = 30, .i = .{ .P = PreservePotion } },
     .{ .w = 30, .i = .{ .P = IncineratePotion } },
     .{ .w = 10, .i = .{ .P = DecimatePotion } },
     // Evocables
@@ -360,9 +358,8 @@ pub const SlowPotion = Potion{ .id = "potion_slow", .name = "deceleration", .typ
 pub const RecuperatePotion = Potion{ .id = "potion_recuperate", .name = "recuperation", .type = .{ .Status = .Recuperate }, .color = 0xffffff };
 pub const PoisonPotion = Potion{ .id = "potion_poison", .name = "coagulation", .type = .{ .Gas = gas.Poison.id }, .color = 0xa7e234 };
 pub const InvigoratePotion = Potion{ .id = "potion_invigorate", .name = "invigoration", .type = .{ .Status = .Invigorate }, .ingested = true, .color = 0xdada53 };
-pub const PreservePotion = Potion{ .id = "potion_preserve", .name = "preservation", .type = .{ .Custom = triggerPreservePotion }, .ingested = true, .color = 0xda5353 };
 pub const IncineratePotion = Potion{ .id = "potion_incinerate", .name = "incineration", .type = .{ .Custom = triggerIncineratePotion }, .ingested = false, .color = 0xff3434 }; // TODO: unique color
-pub const DecimatePotion = Potion{ .id = "potion_decimate", .name = "decimation", .type = .{ .Custom = triggerDecimatePotion }, .color = 0xffffff }; // TODO: unique color
+pub const DecimatePotion = Potion{ .id = "potion_decimate", .name = "decimation", .type = .{ .Custom = triggerDecimatePotion }, .color = 0xda5353 }; // TODO: unique color
 
 pub const ChainmailArmor = Armor{
     .id = "chainmail_armor",
@@ -630,17 +627,6 @@ pub const MaceWeapon = Weapon{
     .secondary_damage = null,
     .strs = &CRUSHING_STRS,
 };
-
-fn triggerPreservePotion(_dork: ?*Mob, coord: Coord) void {
-    if (_dork) |dork| {
-
-        // If the mob has a bad status, set the status' duration to 0 (thus removing it)
-        if (dork.isUnderStatus(.Poison)) |_| dork.addStatus(.Poison, 0, 0, false);
-        if (dork.isUnderStatus(.Confusion)) |_| dork.addStatus(.Confusion, 0, 0, false);
-
-        dork.HP = math.min(dork.max_HP, dork.HP + (dork.max_HP * 150 / 100));
-    }
-}
 
 fn triggerIncineratePotion(_dork: ?*Mob, coord: Coord) void {
     const mean_radius: usize = 4;
