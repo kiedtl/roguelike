@@ -18,19 +18,14 @@
 
 :spawn interaction_laborer  6,2  6,3
 :spawn interaction_laborer  6,4  6,3
-:spawn            sentinel  1,1  1,1
-:spawn            sentinel 11,5 11,5
-
 
 :restriction 1
 :notrap
-:noguards
-:nolight
 
 ###***#***###
 #...........#
 *.013141510.*
-•.6678a9766.•
+#.6678a9766.#
 *.023242520.*
 #...........#
 ###***#***###
