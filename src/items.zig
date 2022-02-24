@@ -22,7 +22,6 @@ pub const POTIONS = [_]Potion{
     ConfusionPotion,
     ParalysisPotion,
     FastPotion,
-    SlowPotion,
     RecuperatePotion,
     PoisonPotion,
     InvigoratePotion,
@@ -57,7 +56,6 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 70, .i = .{ .P = ConfusionPotion } },
     .{ .w = 40, .i = .{ .P = ParalysisPotion } },
     .{ .w = 40, .i = .{ .P = FastPotion } },
-    .{ .w = 70, .i = .{ .P = SlowPotion } },
     .{ .w = 80, .i = .{ .P = RecuperatePotion } },
     .{ .w = 70, .i = .{ .P = PoisonPotion } },
     .{ .w = 70, .i = .{ .P = InvigoratePotion } },
@@ -354,7 +352,6 @@ pub const SmokePotion = Potion{ .id = "potion_smoke", .name = "smoke", .type = .
 pub const ConfusionPotion = Potion{ .id = "potion_confusion", .name = "confuzzlementation", .type = .{ .Gas = gas.Confusion.id }, .color = 0x33cbca };
 pub const ParalysisPotion = Potion{ .id = "potion_paralysis", .name = "petrification", .type = .{ .Gas = gas.Paralysis.id }, .color = 0xaaaaff };
 pub const FastPotion = Potion{ .id = "potion_fast", .name = "acceleration", .type = .{ .Status = .Fast }, .ingested = true, .color = 0xbb6c55 };
-pub const SlowPotion = Potion{ .id = "potion_slow", .name = "deceleration", .type = .{ .Gas = gas.Slow.id }, .color = 0x8e77dd };
 pub const RecuperatePotion = Potion{ .id = "potion_recuperate", .name = "recuperation", .type = .{ .Status = .Recuperate }, .color = 0xffffff };
 pub const PoisonPotion = Potion{ .id = "potion_poison", .name = "coagulation", .type = .{ .Gas = gas.Poison.id }, .color = 0xa7e234 };
 pub const InvigoratePotion = Potion{ .id = "potion_invigorate", .name = "invigoration", .type = .{ .Status = .Invigorate }, .ingested = true, .color = 0xdada53 };

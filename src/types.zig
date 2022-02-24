@@ -772,7 +772,7 @@ pub const Status = enum {
     // Doesn't have a power field.
     Recuperate,
 
-    // Gives damage.
+    // Gives damage and slows mob.
     //
     // Doesn't have a power field (but probably should).
     Poison,
@@ -905,7 +905,7 @@ pub const Status = enum {
 
     pub fn tickPoison(mob: *Mob) void {
         mob.takeDamage(.{
-            .amount = @intToFloat(f64, rng.rangeClumping(usize, 0, 2, 2)),
+            .amount = @intToFloat(f64, rng.range(usize, 0, 1)),
             .blood = false,
             .kind = .Poison,
         });
@@ -1268,14 +1268,12 @@ pub const Mob = struct { // {{{
     //   mob or did the mob quaff it?). Used to determine whether to print a
     //   message.
     pub fn quaffPotion(self: *Mob, potion: *Potion, direct: bool) void {
+        if (direct and self.isUnderStatus(.Nausea) != null) {
+            err.bug("Nauseated mob is quaffing potions!", .{});
+        }
+
         if (direct) {
-            if (self == state.player) {
-                state.message(.Info, "You slurp the potion of {}.", .{potion.name});
-            } else if (state.player.cansee(self.coord)) {
-                state.message(.Info, "The {} quaffs a potion of {}!", .{
-                    self.displayName(), potion.name,
-                });
-            }
+            state.messageAboutMob(self, self.coord, .Info, "slurp a potion of {}", .{potion.name}, "quaffs a potion of {}!", .{potion.name});
         }
 
         // TODO: make the duration of potion status effect random (clumping, ofc)
@@ -2092,6 +2090,7 @@ pub const Mob = struct { // {{{
         if (self.ai.phase == .Flee) speed_perc -= 10;
         if (self.isUnderStatus(.Fast)) |_| speed_perc = @divTrunc(speed_perc * 50, 100);
         if (self.isUnderStatus(.Slow)) |_| speed_perc = @divTrunc(speed_perc * 150, 100);
+        if (self.isUnderStatus(.Poison)) |_| speed_perc = @divTrunc(speed_perc * 150, 100);
         if (self.isUnderStatus(.Nausea)) |_| speed_perc = @divTrunc(speed_perc * 150, 100);
 
         if (self.inventory.armor) |a|
