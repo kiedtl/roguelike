@@ -2917,14 +2917,17 @@ pub const Tile = struct {
                     break :poster if (self.broken) @as(u21, '·') else '?';
                 },
                 .Stair => |s| stair: {
+                    var ch: u21 = '.';
                     if (s == null) {
+                        ch = '>';
                         cell.fg = 0xeeeeee;
                         cell.bg = 0x0000ff;
                     } else {
+                        ch = if (state.levelinfo[s.?.z].optional) '≤' else '<';
                         cell.bg = 0x997700;
                         cell.fg = 0xffd700;
                     }
-                    break :stair if (s == null) @as(u21, '>') else '<';
+                    break :stair ch;
                 },
             };
 
