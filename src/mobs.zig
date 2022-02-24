@@ -515,7 +515,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
         .species = "necromancer",
         .tile = 'Ñ',
         .ai = AI{
-            .profession_name = "torturer",
+            .profession_name = "necromancer",
             .profession_description = "torturing",
             .work_fn = ai.tortureWork,
             .fight_fn = ai.mageFight,
@@ -526,8 +526,8 @@ pub const TorturerNecromancerTemplate = MobTemplate{
         .vision = 5,
         .no_show_fov = false,
         .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
-            .{ .spell = &spells.CAST_PAIN, .duration = 7, .power = 20 },
-            .{ .spell = &spells.CAST_FEAR, .duration = 7 },
+            .{ .spell = &spells.CAST_PAIN, .duration = 5, .power = 5 },
+            .{ .spell = &spells.CAST_FEAR, .duration = 9 },
         }),
 
         .willpower = 10,

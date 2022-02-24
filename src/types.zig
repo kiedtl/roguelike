@@ -933,7 +933,7 @@ pub const Status = enum {
 
         mob.makeNoise(.Scream, .Louder);
         mob.takeDamage(.{
-            .amount = @intToFloat(f64, rng.rangeClumping(usize, 1, st.power, 2)),
+            .amount = @intToFloat(f64, rng.rangeClumping(usize, 0, st.power, 2)),
             .blood = false,
         });
     }
