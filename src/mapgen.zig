@@ -98,6 +98,16 @@ const VALID_STAIR_PLACEMENT_PATTERNS = [_][]const u8{
     // ###
     // ???
     "?.?###???",
+
+    // ?#?
+    // .#?
+    // ?#?
+    "?#?.#??#?",
+
+    // ?#?
+    // ?#.
+    // ?#?
+    "?#??#.?#?",
 };
 
 const VALID_LIGHT_PLACEMENT_PATTERNS = [_][]const u8{
@@ -1946,14 +1956,34 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
 pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
     assert(level != 0);
 
+    // Find a location for the "reciever" staircase.
+    const down_staircase = b: for (state.dungeon.map[dest_floor]) |*row, y| {
+        for (row) |tile, x| {
+            const room: ?*Room = switch (state.layout[dest_floor][y][x]) {
+                .Unknown => null,
+                .Room => |r| &state.rooms[dest_floor].items[r],
+            };
+
+            if (room != null and room.?.has_stair) {
+                continue;
+            }
+
+            const coord = Coord.new2(dest_floor, x, y);
+
+            if (state.dungeon.at(coord).type == .Wall and
+                !state.dungeon.at(coord).prison and
+                utils.hasPatternMatch(coord, &VALID_STAIR_PLACEMENT_PATTERNS))
+            {
+                break :b coord;
+            }
+        }
+    } else err.bug("Couldn't place a downstair on {}!", .{state.levelinfo[dest_floor].name});
+
     // Find coord candidates for stairs placement. Usually this will be in a room,
     // but we're not forcing it because that wouldn't work well for Smithing.
     //
     var locations = CoordArrayList.init(alloc);
     defer locations.deinit();
-    // for (state.rooms[level].items) |room| {
-    //     var tries: usize = 1000;
-    //     while (tries > 0) : (tries -= 1) {
     for (state.dungeon.map[level]) |*row, y| {
         for (row) |tile, x| {
             const room: ?*Room = switch (state.layout[level][y][x]) {
@@ -1961,32 +1991,17 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
                 .Room => |r| &state.rooms[level].items[r],
             };
 
-            const above_room: ?*Room = switch (state.layout[dest_floor][y][x]) {
-                .Unknown => null,
-                .Room => |r| &state.rooms[dest_floor].items[r],
-            };
-
-            // randomWallCoord gets angry if we're in a corridor
-            if ((room != null and room.?.has_stairs) or
-                (above_room != null and above_room.?.has_stairs))
-            //or room.rect.width == 1 or room.rect.height == 1)
-            {
+            if (room != null and room.?.has_stair) {
                 continue;
             }
 
-            //const coord = randomWallCoord(&room.rect, tries);
             const coord = Coord.new2(level, x, y);
-            const above = Coord.new2(dest_floor, coord.x, coord.y);
 
             if (state.dungeon.at(coord).type == .Wall and
-                state.dungeon.at(above).type == .Wall and
                 !state.dungeon.at(coord).prison and
-                !state.dungeon.at(above).prison and
-                utils.hasPatternMatch(coord, &VALID_STAIR_PLACEMENT_PATTERNS) and
-                utils.hasPatternMatch(above, &VALID_STAIR_PLACEMENT_PATTERNS))
+                utils.hasPatternMatch(coord, &VALID_STAIR_PLACEMENT_PATTERNS))
             {
                 locations.append(coord) catch err.wat();
-                break;
             }
         }
     }
@@ -1995,19 +2010,30 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
         err.bug("Couldn't place stairs anywhere on {}!", .{state.levelinfo[level].name});
     }
 
+    // Map out the locations in a grid, so that we can easily tell what's in the
+    // location list without scanning the whole list each time.
+    var location_map: [HEIGHT][WIDTH]bool = undefined;
+    for (location_map) |*row, y| for (row) |*cell, x| {
+        cell.* = false;
+    };
+    for (locations.items) |c| {
+        location_map[c.y][c.x] = true;
+    }
+
     // We'll use dijkstra to create a "ranking matrix", which we'll use to
     // sort out the candidates later.
-    var stair_dijkmap: [HEIGHT][WIDTH]usize = undefined;
+    var stair_dijkmap: [HEIGHT][WIDTH]?usize = undefined;
     for (stair_dijkmap) |*row| for (row) |*cell| {
-        cell.* = 999;
+        cell.* = null;
     };
 
-    // First, find the entry locations. These locations are either the stairs
-    // from the previous levels, or the player's starting area.
+    // First, find the entry/exit locations. These locations are either the
+    // stairs from the previous levels (or other stairs on this level), or the
+    // player's starting area.
     for (state.dungeon.stairs) |level_stairs| {
         for (level_stairs.constSlice()) |stair| {
             if (state.dungeon.at(stair).surface.?.Stair) |stair_dest|
-                if (stair_dest == level) {
+                if (stair.z == level or stair_dest.z == level) {
                     stair_dijkmap[stair.y][stair.x] = 0;
                 };
         }
@@ -2016,54 +2042,55 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
         stair_dijkmap[state.player.coord.y][state.player.coord.x] = 0;
 
     // Now fill out the dijkstra map to assign a score to each coordinate.
+    // Farthest == best.
     var changes_made = true;
     while (changes_made) {
         changes_made = false;
         for (stair_dijkmap) |*row, y| for (row) |*cell, x| {
             const coord = Coord.new2(level, x, y);
-            if (!state.is_walkable(coord, .{}))
+            if (!location_map[y][x] and !state.is_walkable(coord, .{}))
                 continue;
+
+            const cur_val = cell.* orelse 999;
 
             var lowest_neighbor: usize = 999;
             for (&CARDINAL_DIRECTIONS) |d|
                 if (coord.move(d, state.mapgeometry)) |neighbor| {
-                    const ncell = stair_dijkmap[neighbor.y][neighbor.x];
+                    const ncell = stair_dijkmap[neighbor.y][neighbor.x] orelse 999;
                     if (ncell < lowest_neighbor) lowest_neighbor = ncell;
                 };
-            if (cell.* > (lowest_neighbor + 1)) {
+            if (cur_val > (lowest_neighbor + 1)) {
                 cell.* = lowest_neighbor + 1;
                 changes_made = true;
             }
         };
     }
 
-    // Sort the candidates by the score
+    // Find the candidate farthest away from entry/exit locations.
     const _sortFunc = struct {
-        pub fn f(map: *const [HEIGHT][WIDTH]usize, a: Coord, b: Coord) bool {
-            return map[a.y][a.x] < map[b.y][b.x];
+        pub fn f(map: *const [HEIGHT][WIDTH]?usize, a: Coord, b: Coord) bool {
+            if (map[a.y][a.x] == null) return true else if (map[b.y][b.x] == null) return false;
+            return map[a.y][a.x].? < map[b.y][b.x].?;
         }
     };
-    std.sort.insertionSort(Coord, locations.items, &stair_dijkmap, _sortFunc.f);
+    std.sort.sort(Coord, locations.items, &stair_dijkmap, _sortFunc.f);
 
-    // Pop the top candidate out and create a staircase.
-    const coord = locations.items[0];
-    const above = Coord.new2(dest_floor, coord.x, coord.y);
-
-    state.dungeon.at(coord).type = .Floor;
-    state.dungeon.at(coord).surface = .{ .Stair = dest_floor };
-    state.dungeon.at(above).type = .Floor;
-    state.dungeon.at(above).surface = .{ .Stair = null };
-
-    switch (state.layout[level][coord.y][coord.x]) {
-        .Room => |r| state.rooms[level].items[r].has_stairs = true,
+    // Create some stairs!
+    const up_staircase = locations.items[locations.items.len - 1];
+    state.dungeon.at(up_staircase).type = .Floor;
+    state.dungeon.at(up_staircase).surface = .{ .Stair = down_staircase };
+    switch (state.layout[level][up_staircase.y][up_staircase.x]) {
+        .Room => |r| state.rooms[level].items[r].has_stair = true,
         else => {},
     }
-    switch (state.layout[dest_floor][above.y][above.x]) {
-        .Room => |r| state.rooms[dest_floor].items[r].has_stairs = true,
+    state.dungeon.stairs[level].append(up_staircase) catch err.wat();
+
+    state.dungeon.at(down_staircase).type = .Floor;
+    state.dungeon.at(down_staircase).surface = .{ .Stair = null };
+    switch (state.layout[dest_floor][down_staircase.y][down_staircase.x]) {
+        .Room => |r| state.rooms[dest_floor].items[r].has_stair = true,
         else => {},
     }
-
-    state.dungeon.stairs[level].append(coord) catch err.wat();
 }
 
 pub fn placeBlobs(level: usize) void {
@@ -2462,7 +2489,7 @@ pub const Room = struct {
     prefab: ?*Prefab = null,
     has_subroom: bool = false,
     has_window: bool = false,
-    has_stairs: bool = false,
+    has_stair: bool = false,
 
     connections: usize = 0,
 

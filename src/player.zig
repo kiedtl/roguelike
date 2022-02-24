@@ -20,17 +20,16 @@ const state = @import("state.zig");
 const err = @import("err.zig");
 usingnamespace @import("types.zig");
 
-pub fn triggerStair(stair: Coord, whence: usize) void {
-    const upstair = Coord.new2(whence, stair.x, stair.y);
+pub fn triggerStair(stair: Coord, dest_stair: Coord) void {
     const dest = for (&DIRECTIONS) |d| {
-        if (upstair.move(d, state.mapgeometry)) |neighbor| {
+        if (dest_stair.move(d, state.mapgeometry)) |neighbor| {
             if (state.is_walkable(neighbor, .{ .right_now = true }))
                 break neighbor;
         }
     } else err.bug("Unable to find passable tile near upstairs!", .{});
 
     if (state.player.teleportTo(dest, null)) {
-        state.message(.Move, "You ascend. Welcome to {}!", .{state.levelinfo[whence].name});
+        state.message(.Move, "You ascend. Welcome to {}!", .{state.levelinfo[dest_stair.z].name});
     } else {
         err.bug("Unable to ascend stairs! (something's in the way, maybe?)", .{});
     }

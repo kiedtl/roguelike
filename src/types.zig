@@ -42,8 +42,8 @@ const SpellInfo = spells.SpellInfo;
 const Spell = spells.Spell;
 const Poster = literature.Poster;
 
-pub const HEIGHT = 40;
-pub const WIDTH = 90;
+pub const HEIGHT = 35;
+pub const WIDTH = 80;
 pub const LEVELS = 14;
 pub const PLAYER_STARTING_LEVEL = 13; // TODO: define in data file
 
@@ -2443,7 +2443,7 @@ pub const SurfaceItem = union(SurfaceItemTag) {
     Prop: *Prop,
     Container: *Container,
     Poster: *const Poster,
-    Stair: ?usize, // null = downstairs
+    Stair: ?Coord, // null = downstairs
 };
 
 // Each weapon and armor has a specific amount of maximum damage it can create
