@@ -41,7 +41,7 @@ New mobs
 	- Spits out sulfuric/miasmic gas, which raises corpses and slows living creatures.
 - fuming fiend
 	- "A strange winged figure, cloaked in dirty rags. It is holding a
-	   sceptre of crystal."
+	   crystal sceptre."
 	- Bolt of Dispersal: resistably blinks all affected mobs away. Used to
 	  open LOS in order to see enemy.
 	- Dispel Fumes: removes all clouds in caster's LOS, Used to remove gas
@@ -61,18 +61,18 @@ New mobs
 - lightning spire
 	- like dcss' lightning spire
 	- hurls powerful bolts of electricity
-	- extremely high AC
+	- rFire+ rMlee+ rFume∞ rPara∞ rPois∞
 	- immobile, only attacks when other hostile present
 - torpor spire
 	- like dcss' torpor snail
 	- attempts to slows player when in FOV
-	- extremely high AC
+	- rFire+ rMlee+ rFume∞ rPara∞ rPois∞
 	- immobile
 - iron spire
 	- "A towering demonic spire, with a thousand eyes leering through its
 	  iron plates. It shreds its enemies with shards of iron."
 	- hurls iron shards and orbs of devastation
-	- extremely high AC
+	- rFire+ rMlee+ rFume∞ rPara∞ rPois∞
 	- immobile, only attacks when other hostile present
 x warden
 	- calls for reinforcements by shouting/sounding horn
@@ -132,7 +132,7 @@ Undead:
 - Intelligent: mindless.
 - Has 150% strength bonus.
 - Has -20% speed nerf.
-- Has -50% dexterity nerf.
+- Has -40% dexterity nerf.
 - Can only see 3-4 tiles ahead of them.
 - Cannot hear noises.
 - Have a .memory of ~7.
@@ -187,13 +187,13 @@ ring of devastation [a]
 	  .Deafening noise.
 ring of distortion [a]
 	- Bend space: blink all mobs in FOV (& player) at random.
-	  Twists space violently around player, reducing HP by 75%.
+	  Twists space violently around player, reducing HP by 10%.
 	- Aura of dispersal: creates aura around player where any mob in the
 	  aura will be blinked away (& possibly paralysed) for 2-3 turns.
-	  Twists space violently around player, reducing HP by 75%.
+	  Twists space violently around player, reducing HP by 10%.
 	- Scatter: teleport all mobs in FOV (& player) around floor. Player
 	  should land in area without nearby mobs.
-	  Twists space violently around player, reducing HP by 75%.
+	  Twists space violently around player, reducing HP by 10%.
 dancing ring of sidestepping [a/p]
 	- Allows player to swap with attacked mob on damage.
 		- Movement pattern: ???
@@ -308,17 +308,6 @@ Posters
 (moved to data/posters.tsv)
 
 
-Unique mobs
----------
-- Captain of the Guard
-- Head of Research
-- Marshall of the Dead
-  Nahorego Zinnugh
-- Keeper of the Fire Stones (High Priest)
-  Uberego Sohlghâsh
-- the player
-  Obomus-Nulohelmir
-
 Books
 -----
 Trying to read an [unreadable] book results in:
@@ -393,6 +382,7 @@ dungeon maps
 	- maps of just mob stations
 	- maps of just presence of walls/floors
 	- maps of special item locations (rings/potions)
+	- maps of machine locations (recharging stations/drains)
 	- maps of possible stair locations
 
 
@@ -510,37 +500,32 @@ x Add fire system
   x potions of incineration
 - Stair overhaul
   x Move stairs into walls, give different Brogue-like look
-  - Organize branches and their levels; add stairs to them
+  x Organize branches and their levels; add stairs to them
   x Place stairs as far away from other stairs as possible
-  - Add stair guardians to prevent stair-fleeing
-  - Remove regeneration for monsters and players
-    - Remove healing from ¡preservation; give ¡recuperation rMlee-
-  - Nerf poison and pain damage
-    - Merge poison and deceleration
+  x Add stair guardians to prevent stair-fleeing
+  x Remove regeneration for monsters and players
+    x Remove healing from ¡preservation; give ¡recuperation rMlee-
+  x Nerf poison and pain damage
+    x Merge poison and deceleration
   - Fountains to drink from
-  - Medics that heal monsters
   - Apply "upgrade" and healing to player on ascension
+- Runes and scoring
 - Add tougher monsters; balancing
-  - Make fleeing monsters tell allies of foe
-  - Make cornered fleeing monsters .Enraged
-  - Burning brutes, sorcerers, beastmasters
+  - Make fleeing monsters tell allies of foe, and make them .Enraged when cornered
+  - Burning brutes, frozen fiends, sulfur fiends, sorcerers
+  - javelineers, beastmasters, dogs, hounds, creeping deaths
+  - Fuming fiends, other Smithing-only monsters
   - Reaching weapons for beastmasters and patrols
   - Add `Flanked` effect + UI element
   - Repositioning AI (flanking and allowing allies w/reaching weapons to hit foe)
-- Air purifiers, mob AI to move out of gases
+- Air purifiers, mob AI to move out of gases/dangerous cells
 - Potions
   - Dilution/concentration:
     - Potion of dilution   (dilution)
     - Grills + kitchen set (concentration)
   - Potion of defumigation
-  - Potion of lubrication
-  - Potion of fixation
   - Nerf potions of acceleration
-- Add fungi, plants
-  - flourescent
-  - flammable fungi ("dead fungi")
-  - tall mushrooms (reduced LOS)
-  - taller mushrooms (LOS == 2)
+- Add fungi, plants, terrain
 - Implement intelligence
   - Prevent dumb monsters from opening doors
   - Prevent sentinels from shooting allies and such
@@ -612,6 +597,17 @@ Room features/Mapgen:
 - Allow close prefabs
 - Make connectors flanked by floors a floor or door
 - Add some lichen and fungi to rooms
+  - brambles (retaliation; dmg on movement; 150% slowness)
+  - fluorescent fungi
+  - dead, flammable fungi
+  - tall fungi (very reduced LOS)
+- Terrain/floor types
+  - camoflaging fungi (Stlth+)
+  - metal (rElec-)
+  - wood (rFire- rElec+)
+  - carpet (Muffle+)
+  - gravel (Muffle-)
+  - ashes/gypsum (cloud of dust on movement)
 x Add statues and chests to corners of rooms
 x Add posters
 ~ Allow for prefabs to be rotated
