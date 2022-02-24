@@ -31,7 +31,7 @@ Sources:
 
 Resistance to any physical damage (from a weapon, a spell, explosions, etc).
 
-Sources: none currently.
+Sources: ¡recuperate (rMlee-)
 
 Monsters:
 - Statues (`rMlee∞`)
