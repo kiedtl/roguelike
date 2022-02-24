@@ -2091,6 +2091,17 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
         .Room => |r| state.rooms[dest_floor].items[r].has_stair = true,
         else => {},
     }
+
+    // Place a guardian near the stairs in a diagonal position, if possible.
+    for (&DIRECTIONS) |d| {
+        if (!d.is_diagonal()) continue;
+        if (up_staircase.move(d, state.mapgeometry)) |neighbor| {
+            if (state.is_walkable(neighbor, .{ .right_now = true })) {
+                _ = placeMob(alloc, &mobs.SentinelTemplate, neighbor, .{});
+                break;
+            }
+        }
+    }
 }
 
 pub fn placeBlobs(level: usize) void {
