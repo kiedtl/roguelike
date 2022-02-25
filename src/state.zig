@@ -7,6 +7,7 @@ const enums = @import("std/enums.zig");
 const ai = @import("ai.zig");
 const astar = @import("astar.zig");
 const err = @import("err.zig");
+const player_m = @import("player.zig");
 const display = @import("display.zig");
 const dijkstra = @import("dijkstra.zig");
 const mapgen = @import("mapgen.zig");
@@ -48,23 +49,24 @@ pub var player: *Mob = undefined;
 pub var state: GameState = .Game;
 
 // zig fmt: off
+// field upgr: whether to grant an upgrade on this floor.
 pub const levelinfo = [LEVELS]struct {
-    id: []const u8, optional: bool, name: []const u8
+    id: []const u8, upgr: bool, optional: bool, name: []const u8
 }{
-    .{ .id = "PRI", .optional = false, .name = "-1/Prison"       },
-    .{ .id = "PRI", .optional = false, .name = "-2/Prison"       },
-    .{ .id = "VLT", .optional = true,  .name = "-3/Vaults/3"     },
-    .{ .id = "VLT", .optional = true,  .name = "-3/Vaults/2"     },
-    .{ .id = "VLT", .optional = false, .name = "-3/Vaults"       },
-    .{ .id = "PRI", .optional = false, .name = "-4/Prison"       },
-    .{ .id = "SMI", .optional = true,  .name = "-5/Smithing/3"   },
-    .{ .id = "SMI", .optional = true,  .name = "-5/Smithing/2"   },
-    .{ .id = "SMI", .optional = false, .name = "-5/Smithing"     },
-    .{ .id = "LAB", .optional = true,  .name = "-6/Laboratory/2" },
-    .{ .id = "LAB", .optional = true,  .name = "-6/Laboratory/3" },
-    .{ .id = "LAB", .optional = false, .name = "-6/Laboratory"   },
-    .{ .id = "PRI", .optional = false, .name = "-7/Prison"       },
-    .{ .id = "PRI", .optional = false, .name = "-8/Prison"       },
+    .{ .id = "PRI", .upgr = false, .optional = false, .name = "-1/Prison"       },
+    .{ .id = "PRI", .upgr = false, .optional = false, .name = "-2/Prison"       },
+    .{ .id = "VLT", .upgr = false, .optional = true,  .name = "-3/Vaults/3"     },
+    .{ .id = "VLT", .upgr = false, .optional = true,  .name = "-3/Vaults/2"     },
+    .{ .id = "VLT", .upgr = true,  .optional = false, .name = "-3/Vaults"       },
+    .{ .id = "PRI", .upgr = false, .optional = false, .name = "-4/Prison"       },
+    .{ .id = "SMI", .upgr = false, .optional = true,  .name = "-5/Smithing/3"   },
+    .{ .id = "SMI", .upgr = false, .optional = true,  .name = "-5/Smithing/2"   },
+    .{ .id = "SMI", .upgr = true,  .optional = false, .name = "-5/Smithing"     },
+    .{ .id = "LAB", .upgr = false, .optional = true,  .name = "-6/Laboratory/2" },
+    .{ .id = "LAB", .upgr = false, .optional = true,  .name = "-6/Laboratory/3" },
+    .{ .id = "LAB", .upgr = true,  .optional = false, .name = "-6/Laboratory"   },
+    .{ .id = "PRI", .upgr = false, .optional = false, .name = "-7/Prison"       },
+    .{ .id = "PRI", .upgr = false, .optional = false, .name = "-8/Prison"       },
 };
 // zig fmt: on
 
@@ -90,6 +92,8 @@ pub var chardata: struct {
         self.evocs_used.clearAndFree();
     }
 } = .{};
+
+pub const player_upgrades: [3]player_m.PlayerUpgradeInfo = undefined;
 
 pub const MemoryTile = struct {
     fg: u32 = 0x000000,

@@ -1110,6 +1110,7 @@ pub const Mob = struct { // {{{
     // willpower:          Controls the ability to resist and cast spells.
     // base_dexterity:     Controls the likelihood of a mob dodging an attack.
     // base_strength:      TODO: define!
+    // base_stealth:       Innate stealth.
     // hearing:            The minimum intensity of a noise source before it can be
     //                     heard by a mob. The lower the value, the better.
     // vision:             Maximum radius of the mob's field of vision.
@@ -1122,6 +1123,7 @@ pub const Mob = struct { // {{{
     willpower: usize, // Range: 0 < willpower < 10
     base_strength: usize,
     base_dexterity: usize, // Range: 0 < dexterity < 100
+    base_stealth: usize = 0,
     vision: usize = 6,
     base_night_vision: bool = false,
     deg360_vision: bool = false,
@@ -2115,7 +2117,7 @@ pub const Mob = struct { // {{{
     }
 
     pub inline fn stealth(self: *const Mob) usize {
-        var pips: usize = 0;
+        var pips = self.base_stealth;
         if (self.inventory.cloak) |clk|
             if (meta.activeTag(clk.ego) == .Stealth) {
                 pips += 1;

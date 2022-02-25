@@ -2,6 +2,7 @@ const std = @import("std");
 const math = std.math;
 const assert = std.debug.assert;
 const mem = std.mem;
+const meta = std.meta;
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
@@ -20,6 +21,77 @@ const state = @import("state.zig");
 const err = @import("err.zig");
 usingnamespace @import("types.zig");
 
+pub const PlayerUpgradeInfo = struct {
+    recieved: bool = false,
+    upgrade: PlayerUpgrade,
+};
+
+pub const PlayerUpgrade = enum {
+    Fast,
+    Strong,
+    Agile,
+    OI_Enraged,
+    OI_Fast,
+    OI_Shove,
+    Healthy,
+    Mana,
+    Stealthy,
+    Will,
+    Sniffing,
+    Echolocating,
+
+    pub fn announce(self: PlayerUpgrade) []const u8 {
+        return switch (self) {
+            .Fast => "You feel yourself moving faster.",
+            .Strong => "You feel mighty!",
+            .Agile => "You are good at evading blows.",
+            .OI_Enraged => "You feel hatred building up inside.",
+            .OI_Fast => "You put on a burst of speed when injured.",
+            .OI_Shove => "You begin shoving past foes when injured.",
+            .Healthy => "You are unusually robust.",
+            .Mana => "You sense your inner strength grow.",
+            .Stealthy => "You move stealthily.",
+            .Will => "Your will hardens.",
+            .Sniffing => "Your sense of smell becomes acute.",
+            .Echolocating => "Your sense of hearing becomes acute.",
+        };
+    }
+
+    pub fn implement(self: PlayerUpgrade) void {
+        switch (self) {
+            .Fast => state.player.base_speed = state.player.base_speed * 110 / 100,
+            .Strong => state.player.base_strength = state.player.base_strength * 130 / 100,
+            .Agile => state.player.base_dexterity = state.player.base_dexterity * 130 / 100,
+            .OI_Enraged => err.todo(),
+            .OI_Fast => err.todo(),
+            .OI_Shove => err.todo(),
+            .Healthy => state.player.max_HP = state.player.max_HP * 150 / 100,
+            .Mana => err.todo(),
+            .Stealthy => state.player.base_stealth += 1,
+            .Will => state.player.willpower = math.clamp(state.player.willpower + 3, 0, 10),
+            .Sniffing => err.todo(),
+            .Echolocating => err.todo(),
+        }
+    }
+};
+
+pub fn choosePlayerUpgrades() void {
+    var i: usize = 0;
+    for (state.levelinfo) |level| if (level.upgr) {
+        var upgrade: PlayerUpgrade = while (true) {
+            const upgrades = meta.fields(PlayerUpgrade);
+            const upgrade_i = rng.chooseUnweighted(std.builtin.TypeInfo.EnumField, upgrades);
+            const upgrade_v = @intToEnum(PlayerUpgrade, upgrade_i.value);
+            const already_picked = for (state.player.upgrades) |existing_upgr| {
+                if (existing_upgr.upgrade == upgrade_v) break true;
+            } else false;
+            if (!already_picked) break upgrade;
+        } else err.wat();
+        state.player_upgrades[i] = .{ .recieved = false, .upgrade = upgrade };
+        i += 1;
+    };
+}
+
 pub fn triggerStair(stair: Coord, dest_stair: Coord) void {
     const dest = for (&DIRECTIONS) |d| {
         if (dest_stair.move(d, state.mapgeometry)) |neighbor| {
@@ -32,6 +104,15 @@ pub fn triggerStair(stair: Coord, dest_stair: Coord) void {
         state.message(.Move, "You ascend. Welcome to {}!", .{state.levelinfo[dest_stair.z].name});
     } else {
         err.bug("Unable to ascend stairs! (something's in the way, maybe?)", .{});
+    }
+
+    if (state.levelinfo[state.player.coord.z].upgr) {
+        const upgrade = for (state.player_upgrades) |u| {
+            if (!u.recieved) break u.upgrade;
+        } else err.bug("Cannot find upgrade to grant!", .{});
+        upgrade.implement();
+
+        state.message(.Info, "You feel different... {}", .{upgrade.announce()});
     }
 }
 
