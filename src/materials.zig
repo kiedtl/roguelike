@@ -1,7 +1,12 @@
 usingnamespace @import("types.zig");
 const state = @import("state.zig");
 
+pub const MATERIALS = [_]*const Material{
+    &Iron,
+};
+
 pub const PolishedGlass = Material{
+    .id = "polished_glass",
     .name = "polished glass",
     .description = "TODO",
     .density = 5.3, // FIXME: not accurate!
@@ -56,6 +61,7 @@ pub const Iron = Material{
     .color_bg = 0xefefef,
     .color_floor = 0xcacbca,
     .tileset = 0,
+    .floor_tile = '+',
     .melting_point = 1383, // FIXME: not accurate!
     .combust_point = null,
     .specific_heat = 500, // FIXME: not accurate!

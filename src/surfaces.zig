@@ -51,6 +51,7 @@ pub const MACHINES = [_]Machine{
     Mine,
     RechargingStation,
     Drain,
+    Fountain,
 };
 
 pub const Bin = Container{ .name = "bin", .tile = '╳', .capacity = 14, .type = .Utility, .item_repeat = 20 };
@@ -479,6 +480,27 @@ pub const Drain = Machine{
     },
 };
 
+pub const Fountain = Machine{
+    .id = "fountain",
+    .name = "fountain",
+    .announce = true,
+    .powered_tile = '⌠',
+    .unpowered_tile = '⌠',
+    .powered_fg = 0x00d7ff,
+    .unpowered_fg = 0x00d7ff,
+    .powered_walkable = true,
+    .unpowered_walkable = true,
+    .on_power = powerNone,
+    .interact1 = .{
+        .name = "quaff",
+        .success_msg = "The fountain refreshes you.",
+        .no_effect_msg = "The fountain is dry!",
+        .needs_power = false,
+        .max_use = 2,
+        .func = interact1Fountain,
+    },
+};
+
 fn powerNone(_: *Machine) void {}
 
 fn powerChainPress(machine: *Machine) void {
@@ -868,6 +890,21 @@ fn interact1Drain(machine: *Machine, mob: *Mob) bool {
     if (rng.onein(3)) {
         mob.addStatus(.Nausea, 0, 10, false);
     }
+
+    return true;
+}
+
+fn interact1Fountain(machine: *Machine, mob: *Mob) bool {
+    assert(mob == state.player);
+
+    const HP = state.player.HP;
+    state.player.HP = math.clamp(HP + ((state.player.max_HP - HP) / 2), 0, state.player.max_HP);
+
+    // Remove some harmful statuses.
+    state.player.addStatus(.Fire, 0, 0, false);
+    state.player.addStatus(.Poison, 0, 0, false);
+    state.player.addStatus(.Nausea, 0, 0, false);
+    state.player.addStatus(.Pain, 0, 0, false);
 
     return true;
 }

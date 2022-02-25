@@ -532,6 +532,11 @@ fn excavatePrefab(
             };
             if (tt) |_tt| state.dungeon.at(rc).type = _tt;
 
+            if (fab.material) |mat|
+                if (fab.content[y][x] != .Any) {
+                    state.dungeon.at(rc).material = mat;
+                };
+
             switch (fab.content[y][x]) {
                 .Window => state.dungeon.at(rc).material = &materials.Glass,
                 .LevelFeature => |l| (Configs[room.rect.start.z].level_features[l].?)(l, rc, room, fab, allocator),
@@ -1020,6 +1025,14 @@ fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, allo
             continue;
         }
 
+        if (subroom.center_align) {
+            if (subroom.height % 2 != area.height % 2 or
+                subroom.width % 2 != area.width % 2)
+            {
+                continue;
+            }
+        }
+
         if ((subroom.height + 2) < area.height and (subroom.width + 2) < area.width) {
             const rx = (area.width / 2) - (subroom.width / 2);
             const ry = (area.height / 2) - (subroom.height / 2);
@@ -1160,7 +1173,7 @@ fn _place_rooms(
         f.used[level] += 1;
 
     if (child.prefab == null) {
-        if (rng.onein(2)) {
+        if (rng.tenin(15)) {
             placeSubroom(s_fabs, &child, &Rect{
                 .start = Coord.new(0, 0),
                 .width = child.rect.width,
@@ -1437,11 +1450,13 @@ pub fn placeBSPRooms(
 
         excavateRect(&room.rect);
 
-        placeSubroom(s_fabs, &room, &Rect{
-            .start = Coord.new(0, 0),
-            .width = room.rect.width,
-            .height = room.rect.height,
-        }, allocator, .{ .loot = rng.onein(3) });
+        if (rng.tenin(15)) {
+            placeSubroom(s_fabs, &room, &Rect{
+                .start = Coord.new(0, 0),
+                .width = room.rect.width,
+                .height = room.rect.height,
+            }, allocator, .{ .loot = rng.onein(3) });
+        }
 
         container_node.index = rooms.items.len;
         rooms.append(room) catch err.wat();
@@ -2534,6 +2549,7 @@ pub const Room = struct {
 
 pub const Prefab = struct {
     subroom: bool = false,
+    center_align: bool = false,
     invisible: bool = false,
     restriction: usize = 1,
     priority: usize = 0,
@@ -2544,6 +2560,8 @@ pub const Prefab = struct {
     notraps: bool = false,
 
     name: StackBuffer(u8, MAX_NAME_SIZE) = StackBuffer(u8, MAX_NAME_SIZE).init(null),
+
+    material: ?*const Material = null,
 
     player_position: ?Coord = null,
     height: usize = 0,
@@ -2715,6 +2733,15 @@ pub const Prefab = struct {
                     } else if (mem.eql(u8, key, "subroom")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.subroom = true;
+                    } else if (mem.eql(u8, key, "center_align")) {
+                        if (val.len != 0) return error.UnexpectedMetadataValue;
+                        f.center_align = true;
+                    } else if (mem.eql(u8, key, "material")) {
+                        if (val.len == 0) return error.ExpectedMetadataValue;
+                        f.material = for (materials.MATERIALS) |mat| {
+                            if (mem.eql(u8, val, mat.id orelse mat.name))
+                                break mat;
+                        } else return error.InvalidMetadataValue;
                     } else if (mem.eql(u8, key, "restriction")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
                         f.restriction = std.fmt.parseInt(usize, val, 0) catch |_| return error.InvalidMetadataValue;

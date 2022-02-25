@@ -1,7 +1,7 @@
 % Subrooms with gold chests and gold ingots.
 
 :subroom
-:restriction 1
+:center_align
 
 @b p gold_ingots
 .......

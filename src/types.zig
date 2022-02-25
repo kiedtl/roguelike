@@ -42,8 +42,8 @@ const SpellInfo = spells.SpellInfo;
 const Spell = spells.Spell;
 const Poster = literature.Poster;
 
-pub const HEIGHT = 35;
-pub const WIDTH = 80;
+pub const HEIGHT = 40;
+pub const WIDTH = 85;
 pub const LEVELS = 14;
 pub const PLAYER_STARTING_LEVEL = 13; // TODO: define in data file
 
@@ -566,6 +566,7 @@ pub const Path = struct { from: Coord, to: Coord, confused_state: bool };
 
 pub const Material = struct {
     // Name of the material. e.g. "rhyolite"
+    id: ?[]const u8 = null,
     name: []const u8,
 
     // Description. e.g. "A sooty, flexible material used to make fire-proof
@@ -577,12 +578,12 @@ pub const Material = struct {
     // Material density in g/cm³
     density: f64,
 
-    // Tile used to represent walls. The foreground color is used to represent
-    // items made with that material.
+    // Tile used to represent walls.
     color_fg: u32,
     color_bg: ?u32,
     color_floor: u32,
     tileset: usize,
+    floor_tile: u21 = '·',
 
     // Melting point in Celsius, and combust temperature, also in Celsius.
     melting_point: usize,
@@ -2786,7 +2787,7 @@ pub const Tile = struct {
                 .bg = self.material.color_bg orelse 0x000000,
             },
             .Floor => {
-                cell.ch = '·';
+                cell.ch = self.material.floor_tile;
                 cell.fg = 0xcacbca;
             },
         }
