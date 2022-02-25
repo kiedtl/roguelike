@@ -58,21 +58,36 @@ New mobs
 	   an expression of frozen contempt.
 	- Creates icy obstacles to block player (but obstacles melt after 2-4 turns).
 	- Has Frozen Ramparts-like spell to damage foes surrounded by walls.
+- crystal servitor
+	- "A humanoid statue carved out of a white crystal, imbued with an evil
+	  spirit. It radiates an intense aura of palpable malice."
+	- Appears in pairs in hallways of the Morgue.
+	- Chance to resistibly blink intruders to itself.
+- sapphire servitor
+	- "A humanoid statue carved out of a white crystal, imbued with an evil
+	  spirit. It radiates an intense aura of palpable malice."
+	- Appears in pairs in hallways of the Morgue.
+	- Chance to resistibly blink intruders away from itself.
+- jasper servitor
+	- "A humanoid statue carved out of a white crystal, imbued with an evil
+	  spirit. It radiates an intense aura of palpable malice."
+	- Appears in pairs guarding doorways of rooms in the Morgue.
+	- Chance to prevent passage of intruders.
 - lightning spire
 	- like dcss' lightning spire
 	- hurls powerful bolts of electricity
-	- rFire+ rMlee+ rFume∞ rPara∞ rPois∞
+	- rFire+ rElec+ rMlee+ rFume∞ rPara∞ rPois∞
 	- immobile, only attacks when other hostile present
 - torpor spire
 	- like dcss' torpor snail
 	- attempts to slows player when in FOV
-	- rFire+ rMlee+ rFume∞ rPara∞ rPois∞
+	- rFire+ rElec+ rMlee+ rFume∞ rPara∞ rPois∞
 	- immobile
 - iron spire
 	- "A towering demonic spire, with a thousand eyes leering through its
-	  iron plates. It shreds its enemies with shards of iron."
+	  iron plates. It shreds its enemies with shards of metal."
 	- hurls iron shards and orbs of devastation
-	- rFire+ rMlee+ rFume∞ rPara∞ rPois∞
+	- rFire+ rElec+ rMlee+ rFume∞ rPara∞ rPois∞
 	- immobile, only attacks when other hostile present
 x warden
 	- calls for reinforcements by shouting/sounding horn
@@ -86,8 +101,7 @@ x warden
 	  - Mobs that step in gas will be irresistibly blinked away.
 	- When allies are about to die, gives them a status them makes them
 	  very briefly invunerable and sends them insane. (Death's Door?)
-	- Blinks around so as to not be adjacent to allies. (Won't blink if
-	  there's no place to blink *to*.)
+	- Tries to blink around so as to not be adjacent to allies.
 	- Teleports away (or suicides?) when no allies visible.
 	- Immune to weapon damage.
 - burning brute
@@ -102,17 +116,17 @@ x warden
 	    to hostile at all costs.
 	- Has kicking (x1) and clawing (x2) attack (need species struct for this).
 - [ancient] sorcerer
-	- Summons orbs of {destruction,lightning}.
+	- Summons orbs of living lightning.
 	- Summons wretched stars.
+	- Hurls crystal shards.
 	- Hurls bolts of calcifying dust (same as DCSS' catoblepas).
-	- Holds the rings(?)
 - jellies
 	- Split on hit?
 - bats
 	- Harmless and multicolored, like DCSS' butterflies.
 	- Glows, shedding light on surroundings.
 - beastmaster
-	- Slow (120) and heavily armored, but just a simple mace.
+	- Slow (120) and heavily armored, but just a simple club.
 	- Releases chained dogs, hounds, wolves in same room when seeing hostile.
 	- Goads beasts on, possibly giving them .Enraged status
 
@@ -518,6 +532,7 @@ x Add fire system
   - Reaching weapons for beastmasters and patrols
   - Add `Flanked` effect + UI element
   - Repositioning AI (flanking and allowing allies w/reaching weapons to hit foe)
+  - Reinforcements on guard deaths + security force when alert level rises.
 - Air purifiers, mob AI to move out of gases/dangerous cells
 - Potions
   - Dilution/concentration:
@@ -533,6 +548,7 @@ x Add fire system
   - toxic sludge pools and bridges over them
 - Revisit Laboratory
   - Add spires and spire kits
+  - Add command stones and transporter stones
   - Add bosses
   - Add traps of blinding gas
 - Show information characters next to mob in enemy pane
@@ -645,7 +661,6 @@ x Different types of power generators for different maps:
   - bread
   - dried fish
   - dried salamander
-  - dried seaweed
   - alcohol (should use some made-up names, in gobbo language)
 
 Morgue files
@@ -685,7 +700,7 @@ x Define what undead are somewhere (combat bonuses, stat increases, miasma
   - Or, if the above is too much, we'll add some harmless cats to kill rats.
   - Rats "spawn" in some way
   - etc
-- Make cleaners/engineers remove nets shot out by sentinels
+~ Make cleaners/engineers remove nets shot out by sentinels
 - Revamp squad AI.
 - Add morale system for each mob, affected by:
   - Loss of leader (squad)
@@ -790,14 +805,18 @@ Items/Machines
   - grindstones: Can be evoked to "sharpen" an edged/piercing weapon, "upgrading"
     it (worn → mediocre, mediocre → fine). Can only be evoked on a weapon once,
     and there's always a 10% chance for the weapon to break. 2 charges.
-  - fountain (SMI): Can be evoked to heal player by doubling current health.
+  - fountain: Can be evoked to heal player by half of lost health.
     2 charges.
   - grill: Can be evoked to concentrate two potions into one, making its
     effect stronger. 3 charges. Found in a kitchen-like subroom.
+  - command stone: Summons a random (1-3) number of guards on the level to come
+    to the command stone's location. 1 charge.
+  - transporter stone: Teleports a random spire on the level to its location.
+    1 charge.
 
 Fires/explosions
 ================
-- Make monsters flee sooner if burning?
+x Make monsters flee sooner if burning?
 - Make steam a fire retardant?
 
 Message pane
