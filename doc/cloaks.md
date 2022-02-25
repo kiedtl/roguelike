@@ -9,7 +9,9 @@ Cloaks are auxiliary armor that come with four egos:
 
 Like armor, you are expected to wear a cloak as soon as you find one. Unlike
 armor, the only drawback to wearing a particular cloak is that you forfeit the
-benefits given by wearing a cloak of another ego.
+benefits given by wearing a cloak of another ego. Each cloak should be equally
+useful; the only reason you'd choose one over the other is because of a
+different strategy or different item set.
 
 You should find at least two cloaks per game.
 
