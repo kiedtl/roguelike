@@ -18,6 +18,8 @@ const rng = @import("rng.zig");
 const materials = @import("materials.zig");
 usingnamespace @import("types.zig");
 
+const StackBuffer = @import("buffer.zig").StackBuffer;
+
 pub var props: PropArrayList = undefined;
 pub var prison_item_props: PropArrayList = undefined;
 pub var laboratory_item_props: PropArrayList = undefined;
@@ -449,6 +451,8 @@ pub const RechargingStation = Machine{
     .flammability = 15,
     .interact1 = .{
         .name = "recharge",
+        .success_msg = "All evocables recharged.",
+        .no_effect_msg = "No evocables to recharge!",
         .max_use = 3,
         .func = interact1RechargingStation,
     },
@@ -458,13 +462,21 @@ pub const Drain = Machine{
     .id = "drain",
     .name = "drain",
     .announce = true,
-    .powered_tile = 'o',
+    .powered_tile = '∩',
     .unpowered_tile = '∩',
     .powered_fg = 0x888888,
     .unpowered_fg = 0x888888,
-    .powered_walkable = false,
-    .unpowered_walkable = false,
-    .on_power = powerDrain,
+    .powered_walkable = true,
+    .unpowered_walkable = true,
+    .on_power = powerNone,
+    .interact1 = .{
+        .name = "crawl",
+        .success_msg = "You crawl into the drain and emerge from another!",
+        .no_effect_msg = "You crawl into the drain, but it's a dead end!",
+        .needs_power = false,
+        .max_use = 2,
+        .func = interact1Drain,
+    },
 };
 
 fn powerNone(_: *Machine) void {}
@@ -829,45 +841,35 @@ fn interact1RechargingStation(machine: *Machine, by: *Mob) bool {
     return num_recharged > 0;
 }
 
-fn powerDrain(machine: *Machine) void {
-    if (machine.last_interaction) |mob| {
-        assert(mob == state.player);
+fn interact1Drain(machine: *Machine, mob: *Mob) bool {
+    assert(mob == state.player);
 
-        state.dungeon.at(machine.coord).surface = null;
-        machine.disabled = true;
-
-        state.message(.Info, "You crawl into the drain...", .{});
-
-        const drain = d: for (state.dungeon.map[state.player.coord.z]) |*row, y| {
-            for (row) |*tile, x| {
-                if (tile.surface) |s|
-                    if (meta.activeTag(s) == .Machine and
-                        mem.eql(u8, s.Machine.id, "drain"))
-                    {
-                        break :d s.Machine;
-                    };
-            }
-        } else {
-            state.message(.Info, "...but it turns out to be a dead end!", .{});
-            return;
-        };
-
-        const dest = for (&DIRECTIONS) |d| {
-            if (drain.coord.move(d, state.mapgeometry)) |neighbor| {
-                if (state.is_walkable(neighbor, .{ .right_now = true }))
-                    break neighbor;
-            }
-        } else err.bug("Unable to find passable tile near drain!", .{});
-
-        state.message(.Info, "...and crawl out of another!", .{});
-
-        const succeeded = mob.teleportTo(dest, null);
-        assert(succeeded);
-
-        if (rng.onein(3)) {
-            mob.addStatus(.Nausea, 0, 10, false);
+    var drains = StackBuffer(*Machine, 32).init(null);
+    for (state.dungeon.map[state.player.coord.z]) |*row, y| {
+        for (row) |*tile, x| {
+            if (tile.surface) |s|
+                if (meta.activeTag(s) == .Machine and
+                    s.Machine != machine and
+                    mem.eql(u8, s.Machine.id, "drain"))
+                {
+                    drains.append(s.Machine) catch err.wat();
+                };
         }
     }
+
+    if (drains.len == 0) {
+        return false;
+    }
+    const drain = rng.chooseUnweighted(*Machine, drains.constSlice());
+
+    const succeeded = mob.teleportTo(drain.coord, null);
+    assert(succeeded);
+
+    if (rng.onein(3)) {
+        mob.addStatus(.Nausea, 0, 10, false);
+    }
+
+    return true;
 }
 
 // ----------------------------------------------------------------------------

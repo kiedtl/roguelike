@@ -7,8 +7,11 @@ const assert = std.debug.assert;
 const termbox = @import("termbox.zig");
 const utils = @import("utils.zig");
 const gas = @import("gas.zig");
+const err = @import("err.zig");
 const state = @import("state.zig");
 usingnamespace @import("types.zig");
+
+const StackBuffer = @import("buffer.zig").StackBuffer;
 
 pub const MIN_WIN_WIDTH: isize = 80;
 pub const MIN_WIN_HEIGHT: isize = 30;
@@ -715,6 +718,19 @@ pub fn chooseCell() ?Coord {
 pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
     assert(items.len > 0); // This should have been handled previously.
 
+    // Messy.
+    var namebuf = StackBuffer(StackBuffer(u8, 128), 100).init(null);
+    var namebuf_strings = StackBuffer([]const u8, 100).init(null);
+    for (items) |item| {
+        namebuf.append(item.longName() catch err.wat()) catch err.wat();
+        namebuf_strings.append(namebuf.last().?.constSlice()) catch err.wat();
+    }
+    return chooseOption(msg, namebuf_strings.constSlice());
+}
+
+pub fn chooseOption(msg: []const u8, options: []const []const u8) ?usize {
+    assert(options.len > 0); // This should have been handled previously.
+
     termbox.tb_clear();
 
     const GREY: u32 = 0xafafaf;
@@ -722,23 +738,21 @@ pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
     const BG_GREY: u32 = 0x1e1e1e;
     const BLACK: u32 = 0x000000;
 
-    const suffix = " which item?";
     const usage_str = "ESC/q/Ctrl+C to cancel, Enter/Space to select.";
 
     var longest_width: isize = 0;
-    for (items) |item| {
-        const name = item.longName() catch unreachable;
-        if (name.len > longest_width)
-            longest_width = @intCast(isize, name.len);
+    for (options) |opt| {
+        if (opt.len > longest_width)
+            longest_width = @intCast(isize, opt.len);
     }
     // + (gold_indicator + number + dash) + padding
     const line_width = math.max(@intCast(isize, usage_str.len), longest_width + 6 + 10);
 
-    var y = @divFloor(termbox.tb_height(), 2) - @intCast(isize, ((items.len * 3) + 3) / 2);
+    var y = @divFloor(termbox.tb_height(), 2) - @intCast(isize, ((options.len * 3) + 3) / 2);
     const x = @divFloor(termbox.tb_width(), 2) - @divFloor(line_width, 2);
     const endx = termbox.tb_width() - 1;
 
-    y = _draw_string(x, y, endx, WHITE, 0, false, "{s}{s}", .{ msg, suffix }) catch unreachable;
+    y = _draw_string(x, y, endx, WHITE, 0, false, "{s}", .{msg}) catch unreachable;
     y = _draw_string(x, y, endx, GREY, 0, false, usage_str, .{}) catch unreachable;
     y += 1;
     const starty = y;
@@ -748,9 +762,7 @@ pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
 
     while (true) {
         y = starty;
-        for (items) |item, i| {
-            const name = (item.longName() catch unreachable).constSlice();
-
+        for (options) |name, i| {
             const dist_from_chosen = @intCast(u32, math.absInt(
                 @intCast(isize, i) - @intCast(isize, chosen),
             ) catch unreachable);
@@ -792,7 +804,7 @@ pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
                 switch (ev.key) {
                     termbox.TB_KEY_ARROW_DOWN,
                     termbox.TB_KEY_ARROW_LEFT,
-                    => if (chosen < items.len - 1) {
+                    => if (chosen < options.len - 1) {
                         chosen += 1;
                     },
                     termbox.TB_KEY_ARROW_UP,
@@ -817,7 +829,7 @@ pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
                         cancelled = true;
                         break;
                     },
-                    'j', 'h' => if (chosen < items.len - 1) {
+                    'j', 'h' => if (chosen < options.len - 1) {
                         chosen += 1;
                     },
                     'k', 'l' => if (chosen > 0) {
@@ -825,7 +837,7 @@ pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
                     },
                     '0'...'9' => {
                         const c: usize = ev.ch - '0';
-                        if (c < items.len) {
+                        if (c < options.len) {
                             chosen = c;
                         }
                     },

@@ -2283,13 +2283,16 @@ pub const Machine = struct {
 
     pub const MachInteract = struct {
         name: []const u8,
+        success_msg: []const u8,
+        no_effect_msg: []const u8,
+        needs_power: bool = true,
         used: usize = 0,
         max_use: usize, // 0 for infinite uses
         func: fn (*Machine, *Mob) bool,
     };
 
     pub fn evoke(self: *Machine, mob: *Mob, interaction: *MachInteract) !void {
-        if (!self.isPowered())
+        if (interaction.needs_power and !self.isPowered())
             return error.NotPowered;
 
         if (interaction.max_use > 0 and interaction.used >= interaction.max_use)

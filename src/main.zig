@@ -251,7 +251,7 @@ fn readInput() bool {
                 'x' => state.player.swapWeapons(),
                 'r' => player.invokeRecharger(),
                 't' => player.throwItem(),
-                'a' => player.useItem(),
+                'a' => player.useSomething(),
                 'd' => player.dropItem(),
                 ',' => player.grabItem(),
                 '.' => state.player.rest(),

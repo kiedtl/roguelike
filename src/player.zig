@@ -140,6 +140,30 @@ pub fn moveOrFight(direction: Direction) bool {
     }
 }
 
+fn _invokeMachine(mach: *Machine) bool {
+    const interaction = &mach.interact1.?;
+    mach.evoke(state.player, interaction) catch |e| {
+        switch (e) {
+            error.NotPowered => state.message(.MetaError, "The {} has no power!", .{mach.name}),
+            error.UsedMax => state.message(.MetaError, "You can't use {} anymore.", .{mach.name}),
+            error.NoEffect => state.message(.MetaError, "{}", .{interaction.no_effect_msg}),
+        }
+        return false;
+    };
+
+    state.player.declareAction(.Interact);
+    state.message(.Info, "{}", .{interaction.success_msg});
+
+    const left = mach.interact1.?.max_use - mach.interact1.?.used;
+    if (left == 0) {
+        state.message(.Info, "The {} becomes inert.", .{mach.name});
+    } else {
+        state.message(.Info, "You can use this {} {} more times.", .{ mach.name, left });
+    }
+
+    return true;
+}
+
 pub fn invokeRecharger() bool {
     var recharger: ?*Machine = null;
 
@@ -156,21 +180,7 @@ pub fn invokeRecharger() bool {
     };
 
     if (recharger) |mach| {
-        mach.evoke(state.player, &mach.interact1.?) catch |e| {
-            switch (e) {
-                error.NotPowered => state.message(.MetaError, "The station has no power!", .{}),
-                error.UsedMax => state.message(.MetaError, "The station is out of charges!", .{}),
-                error.NoEffect => state.message(.MetaError, "No evocables to recharge!", .{}),
-            }
-            return false;
-        };
-
-        state.player.declareAction(.Interact);
-        state.message(.Info, "All evocables recharged.", .{});
-        state.message(.Info, "You can use this station {} more times.", .{
-            mach.interact1.?.max_use - mach.interact1.?.used,
-        });
-        return true;
+        return _invokeMachine(mach);
     } else {
         state.message(.MetaError, "No recharging station in sight!", .{});
         return false;
@@ -193,7 +203,7 @@ pub fn grabItem() bool {
                     return false;
                 } else {
                     const index = display.chooseInventoryItem(
-                        "Take",
+                        "Take what?",
                         container.items.constSlice(),
                     ) orelse return false;
                     item = container.items.orderedRemove(index) catch err.wat();
@@ -264,7 +274,7 @@ pub fn throwItem() bool {
     }
 
     const index = display.chooseInventoryItem(
-        "Throw",
+        "Throw what?",
         state.player.inventory.pack.constSlice(),
     ) orelse return false;
     const dest = display.chooseCell() orelse return false;
@@ -279,14 +289,38 @@ pub fn throwItem() bool {
     }
 }
 
-pub fn useItem() bool {
+pub fn useSomething() bool {
+    var mach: ?*Machine = null;
+    if (state.dungeon.at(state.player.coord).surface) |s| switch (s) {
+        .Machine => |m| if (m.interact1) |_| {
+            mach = m;
+        },
+        else => {},
+    };
+
+    if (mach) |machine| {
+        const choice = display.chooseOption(
+            "Use what?",
+            &[_][]const u8{ machine.name, "<Inventory>" },
+        ) orelse return false;
+        return switch (choice) {
+            0 => _invokeMachine(machine),
+            1 => _useItem(),
+            else => err.wat(),
+        };
+    } else {
+        return _useItem();
+    }
+}
+
+fn _useItem() bool {
     if (state.player.inventory.pack.len == 0) {
         state.message(.MetaError, "Your pack is empty.", .{});
         return false;
     }
 
     const index = display.chooseInventoryItem(
-        "Use",
+        "Use what item?",
         state.player.inventory.pack.constSlice(),
     ) orelse return false;
 
@@ -357,7 +391,7 @@ pub fn dropItem() bool {
 
     if (state.nextAvailableSpaceForItem(state.player.coord, &state.GPA.allocator)) |coord| {
         const index = display.chooseInventoryItem(
-            "Drop",
+            "Drop what?",
             state.player.inventory.pack.constSlice(),
         ) orelse return false;
         const item = state.player.removeItem(index) catch err.wat();
