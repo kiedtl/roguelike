@@ -21,6 +21,14 @@
 %    X   second loot item
 %    R   rare loot item
 %
+% Metadata:
+%    :material <name>
+%        Use <name> as the material for floor and wall tiles.
+%        Reset on /.
+%    :center_align
+%        Disallow placing a subroom if it wouldn't be aligned in the center of
+%        the parent room.
+%
 % Example:
 
 ?##*##?
