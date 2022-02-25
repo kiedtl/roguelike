@@ -23,6 +23,7 @@ Oathbreaker draws ideas and inspiration from a wide selection of roguelikes:
   Krone Hotel, it will differ widely from the branch in that game.
 - Iron spike evocables were taken directly from TGGW.
 - Explosions and destructible terrain in general is inspired by Cogmind.
+- The lighting system was inspired by Golden Krone Hotel 7DRL.
 - And of course, monster cone-shaped LOS and pattern-based abilities was stolen
   directly from Ironwood.
 
