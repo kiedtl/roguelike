@@ -395,10 +395,11 @@ fn _removeArtifacts(
             // papering over what's possibly a deeper issue here
             //
             // addendum 2022-02-21: seems to not be an issue anymore
+            // addendum 2022-02-25: it still is, nevermind
             //
-            //if (y2 < 0) {
-            //    continue;
-            //}
+            if (y2 < 0) {
+                continue;
+            }
 
             if (buffer[cy][cx] > 0 and opacity_func(Coord.new2(z, cx, cy)) < 100) {
                 if (x2 >= @intCast(isize, x0) and x2 <= @intCast(isize, x1)) {
