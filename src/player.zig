@@ -59,7 +59,7 @@ pub const PlayerUpgrade = enum {
 
     pub fn implement(self: PlayerUpgrade) void {
         switch (self) {
-            .Fast => state.player.base_speed = state.player.base_speed * 110 / 100,
+            .Fast => state.player.base_speed = state.player.base_speed * 90 / 100,
             .Strong => state.player.base_strength = state.player.base_strength * 130 / 100,
             .Agile => state.player.base_dexterity = state.player.base_dexterity * 130 / 100,
             .OI_Enraged => err.todo(),
@@ -70,7 +70,7 @@ pub const PlayerUpgrade = enum {
             .Stealthy => state.player.base_stealth += 1,
             .Will => state.player.willpower = math.clamp(state.player.willpower + 3, 0, 10),
             .Sniffing => err.todo(),
-            .Echolocating => err.todo(),
+            .Echolocating => state.player.addStatus(.Echolocation, 1, 7, true),
         }
     }
 };
@@ -105,6 +105,13 @@ pub fn triggerStair(stair: Coord, dest_stair: Coord) void {
     } else {
         err.bug("Unable to ascend stairs! (something's in the way, maybe?)", .{});
     }
+
+    // Remove all statuses and heal player.
+    inline for (@typeInfo(Status).Enum.fields) |status| {
+        const status_e = @field(Status, status.name);
+        state.player.addStatus(status_e, 0, 0, false);
+    }
+    state.player.HP = state.player.max_HP;
 
     if (state.levelinfo[state.player.coord.z].upgr) {
         const upgrade = for (state.player_upgrades) |u| {
