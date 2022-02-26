@@ -47,9 +47,8 @@ pub fn currentEnemy(me: *Mob) *EnemyRecord {
 }
 
 // Flee if:
-//      - enemy's HP is ×4 as high as mob's HP
+//      - mob is at half of health and enemy's HP is ×4 as high as mob's HP
 //      - mob's HP is 1/5 of normal and enemy's HP is greater than mob's
-//      - enemy's weapon is capable of trashing the mob in two hits
 //      - mob has .Fear or .Fire status effect
 //
 // TODO: flee if flanked and there are no allies in sight
@@ -58,17 +57,10 @@ pub fn shouldFlee(me: *Mob) bool {
 
     const enemy = currentEnemy(me).mob;
 
-    if (enemy.HP > (me.HP * 4))
+    if (me.HP <= (me.max_HP / 2) and enemy.HP > (me.HP * 4))
         result = true;
 
     if (me.HP <= (me.max_HP / 5) and me.HP < enemy.HP)
-        result = true;
-
-    const enemy_weapon = enemy.inventory.wielded orelse &items.UnarmedWeapon;
-    const my_armor = me.inventory.armor orelse &items.NoneArmor;
-    const max_damage = @intToFloat(f64, enemy_weapon.damages.resultOf(&my_armor.resists).sum());
-
-    if (max_damage >= (me.HP / 2))
         result = true;
 
     if (me.isUnderStatus(.Fear) != null or me.isUnderStatus(.Fire) != null)
@@ -77,62 +69,68 @@ pub fn shouldFlee(me: *Mob) bool {
     return result;
 }
 
-// - Can we see the hostile?
-//      - No:
-//          - Move towards the hostile.
-//      - Yes?
-//          - Are we at least <distance> away from mob?
-//              - No?
-//                  - Move away from the hostile.
+// Notify nearest ally of a hostile.
+pub fn alertAllyOfHostile(mob: *Mob) void {
+    const hostile = mob.enemies.items[0];
+    if (mob.allies.items.len > 0) {
+        updateEnemyRecord(mob.allies.items[0], hostile);
+    }
+}
+
+// Are we at least <distance> away from mob?
+//   - No?
+//     - Move away from the hostile.
 //
-pub fn keepDistance(mob: *Mob, from: Coord, distance: usize, alloc: *mem.Allocator) bool {
+pub fn keepDistance(mob: *Mob, from: Coord, distance: usize) void {
+    var moved = false;
+
     const current_distance = mob.coord.distance(from);
 
     if (current_distance < distance) {
-        var flee_to: ?Coord = null;
-        var emerg_flee_to: ?Coord = null;
+        var walkability_map: [HEIGHT][WIDTH]bool = undefined;
+        for (walkability_map) |*row, y| for (row) |*cell, x| {
+            const coord = Coord.new2(mob.coord.z, x, y);
+            cell.* = state.is_walkable(coord, .{ .mob = mob });
+        };
 
-        // Find next space to flee to.
-        var dijk = dijkstra.Dijkstra.init(
-            mob.coord,
-            state.mapgeometry,
-            distance,
-            state.is_walkable,
-            .{},
-            alloc,
-        );
-        defer dijk.deinit();
-        while (dijk.next()) |coord| {
-            if (coord.distance(from) <= current_distance)
-                continue;
+        var flee_dijkmap: [HEIGHT][WIDTH]?f64 = undefined;
+        for (flee_dijkmap) |*row| for (row) |*cell| {
+            cell.* = null;
+        };
 
-            if (mob.nextDirectionTo(coord) == null)
-                continue;
+        for (mob.enemies.items) |enemy| {
+            const coord = enemy.last_seen;
+            flee_dijkmap[coord.y][coord.x] = 0;
+        }
 
-            const walls = state.dungeon.neighboringWalls(coord, true);
+        dijkstra.dijkRollUphill(&flee_dijkmap, &DIRECTIONS, &walkability_map);
+        dijkstra.dijkMultiplyMap(&flee_dijkmap, -1.25);
+        dijkstra.dijkRollUphill(&flee_dijkmap, &DIRECTIONS, &walkability_map);
 
-            if (walls > 2) {
-                if (walls < 4) {
-                    emerg_flee_to = coord;
+        var direction: ?Direction = null;
+        var lowest_val: f64 = 999;
+        for (&DIRECTIONS) |d| if (mob.coord.move(d, state.mapgeometry)) |neighbor| {
+            if (flee_dijkmap[neighbor.y][neighbor.x]) |v| {
+                if (v < lowest_val) {
+                    lowest_val = v;
+                    direction = d;
                 }
-                continue;
             }
+        };
 
-            flee_to = coord;
-            break;
+        if (direction) |d| {
+            moved = mob.moveInDirection(d);
+        } else {
+            moved = false;
         }
-
-        var moved = false;
-        if (flee_to orelse emerg_flee_to) |dst| {
-            const oldd = mob.facing;
-            moved = mob.moveInDirection(mob.nextDirectionTo(dst).?);
-            mob.facing = oldd;
-        }
-
-        return moved;
+    } else {
+        moved = false;
     }
 
-    return false;
+    if (!moved) {
+        _ = mob.rest();
+        mob.facing = mob.coord.closestDirectionTo(from, state.mapgeometry);
+    }
 }
 
 pub fn dummyWork(m: *Mob, _: *mem.Allocator) void {
@@ -168,11 +166,13 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
 // This approach was stolen from Cogmind:
 // https://old.reddit.com/r/roguelikedev/comments/57dnqk/faq_friday_49_awareness_systems/d8r1ztp/
 //
+// If then mob is an ally, add it to the ally list.
+//
 pub fn checkForHostiles(mob: *Mob) void {
     assert(!mob.is_dead);
 
-    if (!mob.ai.is_combative)
-        return;
+    // Reset the ally list.
+    mob.allies.shrinkRetainingCapacity(0);
 
     for (mob.fov) |row, y| for (row) |cell, x| {
         if (cell == 0) continue;
@@ -180,6 +180,8 @@ pub fn checkForHostiles(mob: *Mob) void {
 
         if (state.dungeon.at(fitem).mob) |othermob| {
             assert(!othermob.is_dead); // Dead mobs should be corpses (ie items)
+
+            if (othermob == mob) continue;
 
             // Stealth check
             if (rng.range(usize, 0, 100) < othermob.stealth() * 10)
@@ -191,11 +193,13 @@ pub fn checkForHostiles(mob: *Mob) void {
                     .counter = mob.memory_duration,
                     .last_seen = othermob.coord,
                 });
+            } else if (othermob.allegiance == mob.allegiance) {
+                mob.allies.append(othermob) catch err.wat();
             }
         }
     };
 
-    // Decrement counters.
+    // Decrement enemy counters.
     //
     // FIXME: iterating over a container with a loop that potentially modifies
     // that container is just begging for trouble.
@@ -214,7 +218,7 @@ pub fn checkForHostiles(mob: *Mob) void {
         }
     }
 
-    if (mob.enemies.items.len > 0) {
+    if (mob.ai.is_combative and mob.enemies.items.len > 0) {
         mob.ai.phase = .Hunt;
     }
 
@@ -225,13 +229,17 @@ pub fn checkForHostiles(mob: *Mob) void {
         mob.ai.phase = .Work;
     }
 
-    // Sort according to distance.
+    // Sort allies/enemies according to distance.
     const _sortFunc = struct {
-        fn _sortWithDistance(me: *Mob, a: EnemyRecord, b: EnemyRecord) bool {
+        fn _sortEnemies(me: *Mob, a: EnemyRecord, b: EnemyRecord) bool {
             return a.mob.coord.distance(me.coord) > b.mob.coord.distance(me.coord);
         }
+        fn _sortAllies(me: *Mob, a: *Mob, b: *Mob) bool {
+            return a.coord.distance(me.coord) > b.coord.distance(me.coord);
+        }
     };
-    std.sort.insertionSort(EnemyRecord, mob.enemies.items, mob, _sortFunc._sortWithDistance);
+    std.sort.insertionSort(EnemyRecord, mob.enemies.items, mob, _sortFunc._sortEnemies);
+    std.sort.insertionSort(*Mob, mob.allies.items, mob, _sortFunc._sortAllies);
 }
 
 fn _guard_glance(mob: *Mob, prev_direction: Direction) void {
@@ -697,13 +705,8 @@ pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
     if (!mob.cansee(target.coord)) {
         mob.tryMoveTo(target.coord);
     } else {
-        if (!keepDistance(mob, target.coord, 8, alloc)) {
-            if (mob.coord.distance(target.coord) == 1) {
-                (mob.ai.fight_fn.?)(mob, alloc);
-            } else {
-                _ = mob.rest();
-            }
-        }
+        alertAllyOfHostile(mob);
+        keepDistance(mob, target.coord, 8);
     }
 
     mob.makeNoise(.Shout, .Loud);
@@ -814,30 +817,16 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
     //      - Is seen by the target
     //      - Is either investigating a noise, or
     //      - Is attacking the hostile mob
-    var ally = false;
-    for (mob.fov) |row, y| for (row) |cell, x| {
-        if (cell == 0) continue;
-        const fitem = Coord.new2(mob.coord.z, x, y);
-
-        if (state.dungeon.at(fitem).mob) |othermob| {
-            const phase = othermob.ai.phase;
-
-            if (othermob != mob and
-                !othermob.immobile and
-                target.cansee(othermob.coord) and
-                othermob.allegiance == mob.allegiance and
-                ((phase == .Hunt and
-                othermob.enemies.items.len > 0 and // mob's phase may not have been reset yet
-                othermob.enemies.items[0].mob.coord.eq(target.coord)) or
-                (phase == .Investigate)))
-            {
-                ally = true;
-                break;
-            }
+    const found_ally = for (mob.allies.items) |ally| {
+        if (ally.immobile and target.cansee(ally.coord) and
+            ((ally.ai.phase == .Hunt and ally.enemies.items.len > 0) or
+            (ally.ai.phase == .Investigate)))
+        {
+            break true;
         }
-    };
+    } else false;
 
-    if (ally and rng.onein(10)) {
+    if (found_ally and rng.onein(10)) {
         const spell = mob.spells.data[0];
         spell.spell.use(mob, mob.coord, target.coord, .{
             .status_duration = spell.duration,
@@ -851,13 +840,8 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
 pub fn flee(mob: *Mob, alloc: *mem.Allocator) void {
     const target = currentEnemy(mob).mob;
 
-    if (!keepDistance(mob, target.coord, 15, alloc)) {
-        if (mob.coord.distance(target.coord) == 1) {
-            (mob.ai.fight_fn.?)(mob, alloc);
-        } else {
-            _ = mob.rest();
-        }
-    }
+    alertAllyOfHostile(mob);
+    keepDistance(mob, target.coord, 20);
 
     mob.makeNoise(.Shout, .Loud);
 }

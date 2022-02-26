@@ -6,6 +6,50 @@ const mem = std.mem;
 usingnamespace @import("types.zig");
 const state = @import("state.zig");
 
+// Dijkstra maps, aka influence maps
+
+// param force_roll: Whether to roll on a tile, even if it's not walkable.
+pub fn dijkRollUphill(
+    map: *[HEIGHT][WIDTH]?f64,
+    directions: []const Direction,
+    walkability_map: *const [HEIGHT][WIDTH]bool,
+) void {
+    var changes_made = true;
+    while (changes_made) {
+        changes_made = false;
+        for (map) |*row, y| for (row) |*cell, x| {
+            if (!walkability_map[y][x] or (cell.* != null and cell.*.? == 0)) {
+                continue;
+            }
+
+            const coord = Coord.new(x, y);
+            const cur_val = cell.* orelse 999;
+
+            var lowest_neighbor: f64 = 999;
+            for (directions) |d|
+                if (coord.move(d, state.mapgeometry)) |neighbor| {
+                    if (map[neighbor.y][neighbor.x]) |ncell|
+                        if (ncell < lowest_neighbor) {
+                            lowest_neighbor = ncell;
+                        };
+                };
+            if (cur_val > (lowest_neighbor + 1)) {
+                cell.* = lowest_neighbor + 1;
+                changes_made = true;
+            }
+        };
+    }
+}
+
+// Multiply each value in the matrix by a value.
+pub fn dijkMultiplyMap(map: *[HEIGHT][WIDTH]?f64, value: f64) void {
+    for (map) |*row| for (row) |*cell| {
+        if (cell.*) |v| cell.* = v * value;
+    };
+}
+
+// Dijkstra iterator
+
 const NodeState = enum { Open, Closed };
 const Node = struct {
     c: Coord,

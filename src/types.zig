@@ -1089,6 +1089,7 @@ pub const Mob = struct { // {{{
     fov: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT,
     path_cache: std.AutoHashMap(Path, Coord) = undefined,
     enemies: std.ArrayList(EnemyRecord) = undefined,
+    allies: MobArrayList = undefined,
 
     facing: Direction = .North,
     coord: Coord = Coord.new(0, 0),
@@ -1814,6 +1815,7 @@ pub const Mob = struct { // {{{
         self.HP = self.max_HP;
         self.squad_members = MobArrayList.init(alloc);
         self.enemies = std.ArrayList(EnemyRecord).init(alloc);
+        self.allies = MobArrayList.init(alloc);
         self.activities.init();
         self.path_cache = std.AutoHashMap(Path, Coord).init(alloc);
         self.ai.work_area = CoordArrayList.init(alloc);
@@ -1842,6 +1844,7 @@ pub const Mob = struct { // {{{
     pub fn deinit(self: *Mob) void {
         self.squad_members.deinit();
         self.enemies.deinit();
+        self.allies.deinit();
         self.path_cache.clearAndFree();
         self.ai.work_area.deinit();
 
@@ -1992,9 +1995,9 @@ pub const Mob = struct { // {{{
 
                 if (self.ai.phase == .Flee and !self.cansee(attacker)) {
                     break :b false;
-                } else {
-                    break :b true;
                 }
+
+                break :b true;
             },
             .Work => false,
         };
