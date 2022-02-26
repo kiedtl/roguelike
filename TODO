@@ -208,14 +208,8 @@ ring of distortion [a]
 	- Scatter: teleport all mobs in FOV (& player) around floor. Player
 	  should land in area without nearby mobs.
 	  Twists space violently around player, reducing HP by 10%.
-dancing ring of sidestepping [a/p]
-	- Allows player to swap with attacked mob on damage.
-		- Movement pattern: ???
 ring of singing [a/p]
 	- Aura of silence: mutes all sound in vicinity for ~10 turns.
-	- Gives player basic knowledge of dungeon's layout nearby sounds the player
-	  can hear. The wearer will not know about dungeon features, just walls and
-	  floors.
 vampiric ring of draining [a/p]
 	- Drains an enemy for {speed,health,HP}.
 	- Allows player to see that mob and all tiles within two spaces.
@@ -512,7 +506,7 @@ x Implement cloaks
   x Give engineers a cloak of fur
 x Add fire system
   x potions of incineration
-- Stair overhaul
+x Stair overhaul
   x Move stairs into walls, give different Brogue-like look
   x Organize branches and their levels; add stairs to them
   x Place stairs as far away from other stairs as possible
@@ -521,20 +515,23 @@ x Add fire system
     x Remove healing from ¡preservation; give ¡recuperation rMlee-
   x Nerf poison and pain damage
     x Merge poison and deceleration
-  - Fountains to drink from
-  - Apply "upgrade" and healing to player on ascension
+  x Fountains to drink from
+  x Apply "upgrade" and healing to player on ascension
 - Runes and scoring
 - Add tougher monsters; balancing
-  - Make fleeing monsters tell allies of foe, and make them .Enraged when cornered
+  - Make fleeing monsters tell allies of foe
+  - Flee effects (speed, enraged, shoving)
   - Burning brutes, frozen fiends, sulfur fiends, sorcerers
-  - javelineers, beastmasters, dogs, hounds, creeping deaths
+  - smelling mechanic, dogs, hounds, creeping deaths
+  - javelineers, beastmasters
   - Fuming fiends, other Smithing-only monsters
-  - Reaching weapons for beastmasters and patrols
+  - Reaching weapon effects for beastmasters and patrols
   - Add `Flanked` effect + UI element
+  - Add mana system
   - Repositioning AI (flanking and allowing allies w/reaching weapons to hit foe)
   - Reinforcements on guard deaths + security force when alert level rises.
 - Air purifiers, mob AI to move out of gases/dangerous cells
-- Potions
+- More potions stuff
   - Dilution/concentration:
     - Potion of dilution   (dilution)
     - Grills + kitchen set (concentration)
@@ -754,6 +751,7 @@ Items/Machines
     for 2 turns. 4 charges.
   - "cannon kit" (SMI): creates permanent cannon on use (see below). 1 charge.
   - "lightning rod" (LAB): severely damages all mobs without rElec in FOV.
+    - Note: implement electricity damage propagation for this.
   - "symbol of torment" (House): Gives .Fear to all mobs in FOV, and halves HP of
     all mobs (including evoker). Has no effect on rTorm or undead. ∞ charges.
     - "You raise the Symbol of Torment. Pain wracks your body!"
@@ -767,8 +765,7 @@ Items/Machines
       - Will be avoided if possible by pathfinding AI.
       - Very quiet, maybe even silent.
       - Would be disabled by engineers.
-  - "fume hood" (SMI): Makes player unbreathing for X turns, unaffected by gas.
-    4 charges.
+  - "fume hood" (SMI): Grants rFume∞ for ~10 turns. 4 charges.
   x "hammer": Destroys a machine. ∞ charges; cannot be recharged.
   x "iron spike": Jams a door. 1 charge; cannot be recharged.
   - "blinding torch": Basically a laser. Can be evoked on a monster that can
@@ -783,8 +780,8 @@ Items/Machines
   x "mine kit": Creates mine on tile. 2 charges; cannot be recharged.
   - camera reader (TODO: name)
     - Can "hack" pre-placed cameras to spy on nearby areas for X turns?
-  - "sparkflinger": Sprays sparks onto a tile, igniting it (.fire == 6-8).
-    Like Conjure Flame in DCSS. 6 charges.
+  - "tinderbox": Ignites a single tile. Like Conjure Flame in DCSS. 6 charges.
+  - "sparkthrower": Shoots a narrow beam of flames at a target. 6 charges.
 - Add machines:
   - "cannons" (LAB): fires projectile in direction, eviscerating any mobs.
     Loud sound. 6 charges, pwr-station powered.
@@ -800,16 +797,14 @@ Items/Machines
     4 charges, pwr-station powered.
   x recharging stations: 4 charges. 1-2 per level.
     - 'r' key is shortcut to evoke recharging station, when such a station is
-      in LOS. Doing so invokes it for everything in inventory. (But player should
-      have some mechanism of choosing what evocables to charge.)
+      in LOS. Doing so invokes it for everything in inventory.
   - grindstones: Can be evoked to "sharpen" an edged/piercing weapon, "upgrading"
     it (worn → mediocre, mediocre → fine). Can only be evoked on a weapon once,
     and there's always a 10% chance for the weapon to break. 2 charges.
-  - fountain: Can be evoked to heal player by half of lost health.
-    2 charges.
+  - fountain: Can be evoked to heal player by half of lost health. 2 charges.
   - grill: Can be evoked to concentrate two potions into one, making its
     effect stronger. 3 charges. Found in a kitchen-like subroom.
-  - command stone: Summons a random (1-3) number of guards on the level to come
+  - summon stone: Summons a random (1-3) number of guards on the level to come
     to the command stone's location. 1 charge.
   - transporter stone: Teleports a random spire on the level to its location.
     1 charge.
