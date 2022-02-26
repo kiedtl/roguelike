@@ -8,6 +8,7 @@ const assert = std.debug.assert;
 const astar = @import("astar.zig");
 const err = @import("err.zig");
 const rng = @import("rng.zig");
+const dijkstra = @import("dijkstra.zig");
 const mobs = @import("mobs.zig");
 const StackBuffer = @import("buffer.zig").StackBuffer;
 const items = @import("items.zig");
@@ -2035,9 +2036,16 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
         location_map[c.y][c.x] = true;
     }
 
+    var walkability_map: [HEIGHT][WIDTH]bool = undefined;
+    for (walkability_map) |*row, y| for (row) |*cell, x| {
+        const coord = Coord.new2(level, x, y);
+        cell.* = location_map[y][x] or
+            state.is_walkable(coord, .{ .ignore_mobs = true });
+    };
+
     // We'll use dijkstra to create a "ranking matrix", which we'll use to
     // sort out the candidates later.
-    var stair_dijkmap: [HEIGHT][WIDTH]?usize = undefined;
+    var stair_dijkmap: [HEIGHT][WIDTH]?f64 = undefined;
     for (stair_dijkmap) |*row| for (row) |*cell| {
         cell.* = null;
     };
@@ -2057,34 +2065,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
 
     // Now fill out the dijkstra map to assign a score to each coordinate.
     // Farthest == best.
-    var changes_made = true;
-    while (changes_made) {
-        changes_made = false;
-        for (stair_dijkmap) |*row, y| for (row) |*cell, x| {
-            const coord = Coord.new2(level, x, y);
-            if ((!location_map[y][x] and
-                !state.is_walkable(coord, .{ .ignore_mobs = true })) or
-                (cell.* != null and cell.*.? == 0))
-            {
-                continue;
-            }
-
-            const cur_val = cell.* orelse 999;
-
-            var lowest_neighbor: usize = 999;
-            for (&CARDINAL_DIRECTIONS) |d|
-                if (coord.move(d, state.mapgeometry)) |neighbor| {
-                    if (stair_dijkmap[neighbor.y][neighbor.x]) |ncell|
-                        if (ncell < lowest_neighbor) {
-                            lowest_neighbor = ncell;
-                        };
-                };
-            if (cur_val > (lowest_neighbor + 1)) {
-                cell.* = lowest_neighbor + 1;
-                changes_made = true;
-            }
-        };
-    }
+    dijkstra.dijkRollUphill(&stair_dijkmap, &CARDINAL_DIRECTIONS, &walkability_map);
 
     // Debugging code.
     //
@@ -2106,7 +2087,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
 
     // Find the candidate farthest away from entry/exit locations.
     const _sortFunc = struct {
-        pub fn f(map: *const [HEIGHT][WIDTH]?usize, a: Coord, b: Coord) bool {
+        pub fn f(map: *const [HEIGHT][WIDTH]?f64, a: Coord, b: Coord) bool {
             if (map[a.y][a.x] == null) return true else if (map[b.y][b.x] == null) return false;
             return map[a.y][a.x].? < map[b.y][b.x].?;
         }
