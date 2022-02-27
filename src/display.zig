@@ -223,9 +223,7 @@ fn drawEnemyInfo(
         var mobcell = Tile.displayAs(mob.coord, false);
         termbox.tb_put_cell(startx, y, &mobcell);
 
-        const mobname = mob.ai.profession_name orelse mob.species;
-
-        y = _draw_string(startx + 1, y, endx, 0xffffff, 0, false, ": {}", .{mobname}) catch unreachable;
+        y = _draw_string(startx + 1, y, endx, 0xffffff, 0, false, ": {}", .{mob.displayName()}) catch unreachable;
 
         _draw_bar(
             y,
@@ -253,7 +251,7 @@ fn drawEnemyInfo(
             y += 1;
         }
 
-        const activity = mob.activity_description();
+        const activity = if (mob.prisoner_status != null) if (mob.prisoner_status.?.held_by != null) "(chained)" else "(prisoner)" else mob.activity_description();
         y = _draw_string(
             endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2),
             y,
