@@ -245,7 +245,43 @@ pub fn checkForHostiles(mob: *Mob) void {
     std.sort.insertionSort(*Mob, mob.allies.items, mob, _sortFunc._sortAllies);
 }
 
-fn _guard_glance(mob: *Mob, prev_direction: Direction) void {
+fn _guardGlanceRandom(mob: *Mob) void {
+    if (rng.onein(6)) {
+        mob.facing = rng.chooseUnweighted(Direction, &DIRECTIONS);
+    }
+}
+
+fn _guardGlanceAround(mob: *Mob) void {
+    if (rng.tenin(15)) return;
+
+    if (rng.boolean()) {
+        // Glance right
+        mob.facing = switch (mob.facing) {
+            .North => .NorthEast,
+            .NorthEast => .East,
+            .East => .SouthEast,
+            .SouthEast => .South,
+            .South => .SouthWest,
+            .SouthWest => .West,
+            .West => .NorthWest,
+            .NorthWest => .North,
+        };
+    } else {
+        // Glance left
+        mob.facing = switch (mob.facing) {
+            .North => .NorthWest,
+            .NorthWest => .West,
+            .West => .SouthWest,
+            .SouthWest => .South,
+            .South => .SouthEast,
+            .SouthEast => .East,
+            .East => .NorthEast,
+            .NorthEast => .North,
+        };
+    }
+}
+
+fn _guardGlanceLeftRight(mob: *Mob, prev_direction: Direction) void {
     var newdirection: Direction = switch (mob.facing) {
         .North => .NorthEast,
         .East => .SouthEast,
@@ -304,7 +340,7 @@ pub fn patrolWork(mob: *Mob, alloc: *mem.Allocator) void {
 
     const prev_facing = mob.facing;
     mob.tryMoveTo(to);
-    _guard_glance(mob, prev_facing);
+    _guardGlanceLeftRight(mob, prev_facing);
 }
 
 pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
@@ -312,6 +348,8 @@ pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
 
     if (mob.coord.eq(post)) {
         _ = mob.rest();
+
+        _guardGlanceAround(mob);
     } else {
         // We're not at our post, return there
         if (!mob.isCreeping()) {
@@ -321,7 +359,7 @@ pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
 
         const prev_facing = mob.facing;
         mob.tryMoveTo(post);
-        _guard_glance(mob, prev_facing);
+        _guardGlanceLeftRight(mob, prev_facing);
     }
 }
 
@@ -331,9 +369,7 @@ pub fn watcherWork(mob: *Mob, alloc: *mem.Allocator) void {
     if (mob.coord.eq(post)) {
         _ = mob.rest();
 
-        if (rng.onein(6)) {
-            mob.facing = rng.chooseUnweighted(Direction, &DIRECTIONS);
-        }
+        _guardGlanceRandom(mob);
     } else {
         // We're not at our post, return there
         if (!mob.isCreeping()) {
@@ -343,7 +379,7 @@ pub fn watcherWork(mob: *Mob, alloc: *mem.Allocator) void {
 
         const prev_facing = mob.facing;
         mob.tryMoveTo(post);
-        _guard_glance(mob, prev_facing);
+        _guardGlanceLeftRight(mob, prev_facing);
     }
 }
 
