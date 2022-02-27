@@ -21,6 +21,7 @@ pub fn tileFlammability(c: Coord) usize {
     if (state.dungeon.at(c).surface) |s| switch (s) {
         .Prop => |p| f += p.flammability,
         .Machine => |m| f += m.flammability,
+        .Corpse => |_| f += 6,
         else => f += 4,
     };
 
@@ -111,9 +112,12 @@ pub fn tickFire(level: usize) void {
             // If there's an explosive machine on this tile, have a chance for it
             // to explode immediately.
             //
+            // If there's a corpse on that tile, destroy it.
+            //
             // Otherwise, mark the tile as broken (but don't set any machines as
             // malfunctioning).
             if (state.dungeon.at(coord).surface) |s| switch (s) {
+                .Corpse => |_| state.dungeon.at(coord).surface = null,
                 .Machine => |m| if (m.malfunction_effect) |eff| switch (eff) {
                     .Explode => |e| if (rng.percent(oldfire * 10))
                         explosions.kaboom(coord, .{ .strength = e.power }),

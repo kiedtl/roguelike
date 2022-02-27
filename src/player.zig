@@ -425,10 +425,6 @@ fn _useItem() bool {
     ) orelse return false;
 
     switch (state.player.inventory.pack.slice()[index]) {
-        .Corpse => |_| {
-            state.message(.MetaError, "That doesn't look appetizing.", .{});
-            return false;
-        },
         .Ring => |_| {
             // So this message was in response to player going "I want to eat it"
             // But of course they might have just been intending to "invoke" the

@@ -38,7 +38,7 @@ const Sound = @import("sound.zig").Sound;
 const SoundIntensity = @import("sound.zig").SoundIntensity;
 const SoundType = @import("sound.zig").SoundType;
 
-const SpellInfo = spells.SpellInfo;
+const SpellOptions = spells.SpellOptions;
 const Spell = spells.Spell;
 const Poster = literature.Poster;
 
@@ -1133,6 +1133,7 @@ pub const Mob = struct { // {{{
     last_damage: ?Damage = null,
     inventory: Inventory = .{},
 
+    is_undead: bool = false,
     is_dead: bool = false,
     killed_by: ?*Mob = null,
 
@@ -1151,6 +1152,8 @@ pub const Mob = struct { // {{{
     // no_show_fov:        If false, display code will not show mob's FOV.
     // memory:             The maximum length of time for which a mob can remember
     //                     an enemy.
+    // deaf:               Whether it can hear sounds.
+    //
     willpower: usize, // Range: 0 < willpower < 10
     base_strength: usize,
     base_dexterity: usize, // Range: 0 < dexterity < 100
@@ -1161,12 +1164,15 @@ pub const Mob = struct { // {{{
     no_show_fov: bool = false,
     hearing: usize,
     memory_duration: usize,
+    deaf: bool = false,
     base_speed: usize,
     max_HP: f64,
     blood: ?Spatter,
     immobile: bool = false,
     innate_resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
-    spells: StackBuffer(SpellInfo, 2) = StackBuffer(SpellInfo, 2).init(null),
+
+    // Listed in order of preference.
+    spells: []const SpellOptions = &[_]SpellOptions{},
 
     pub const Inventory = struct {
         pack: PackBuffer = PackBuffer.init(&[_]Item{}),
@@ -1186,7 +1192,19 @@ pub const Mob = struct { // {{{
     pub const MAX_ACTIVITY_BUFFER_SZ = 4;
 
     pub fn displayName(self: *const Mob) []const u8 {
-        return self.ai.profession_name orelse self.species;
+        const Static = struct {
+            var buf: [32]u8 = undefined;
+        };
+
+        const base_name = self.ai.profession_name orelse self.species;
+
+        if (self.is_undead) {
+            var fbs = std.io.fixedBufferStream(&Static.buf);
+            std.fmt.format(fbs.writer(), "former {}", .{base_name}) catch |_| err.wat();
+            return fbs.getWritten();
+        } else {
+            return base_name;
+        }
     }
 
     pub fn tickFOV(self: *Mob) void {
@@ -1876,6 +1894,45 @@ pub const Mob = struct { // {{{
         self.ai.work_area = CoordArrayList.init(alloc);
     }
 
+    pub fn raiseAsUndead(self: *Mob, corpse_coord: Coord) void {
+        self.is_dead = false;
+        self.init(&state.GPA.allocator); // FIXME: antipattern?
+        self.coord = corpse_coord;
+
+        self.is_undead = true;
+
+        self.ai = .{
+            .profession_name = null,
+            .profession_description = "watching",
+            .work_area = self.ai.work_area,
+            .work_fn = ai.dummyWork,
+            .fight_fn = ai.meleeFight,
+            .is_combative = true,
+            .is_curious = false,
+            .flee_effect = null,
+        };
+
+        // FIXME: don't assume this (the player might be raising a corpse too!)
+        self.allegiance = .Necromancer;
+
+        self.base_strength = self.base_strength * 120 / 100;
+        self.base_dexterity = self.base_dexterity * 60 / 100;
+        self.base_speed = self.base_speed * 120 / 100;
+
+        self.vision = 4;
+        self.memory_duration = 7;
+        self.deaf = true;
+
+        self.innate_resists.rFire = math.clamp(self.innate_resists.rFire - 1, -2, 3);
+        self.innate_resists.rElec = math.clamp(self.innate_resists.rElec - 1, -2, 3);
+        self.innate_resists.rFume = 2;
+
+        self.willpower = 0;
+
+        state.dungeon.at(corpse_coord).surface = null;
+        state.dungeon.at(corpse_coord).mob = self;
+    }
+
     pub fn kill(self: *Mob) void {
         if (self != state.player) {
             if (self.killed_by) |by_mob| {
@@ -1897,6 +1954,13 @@ pub const Mob = struct { // {{{
     // Separate from kill() because some code (e.g., mapgen) cannot rely on the player
     // having been initialized (to print the messages).
     pub fn deinit(self: *Mob) void {
+        const S = struct {
+            pub fn _isNotWall(c: Coord, _: state.IsWalkableOptions) bool {
+                return state.dungeon.at(c).type != .Wall and
+                    state.dungeon.at(c).surface == null;
+            }
+        };
+
         self.squad_members.deinit();
         self.enemies.deinit();
         self.allies.deinit();
@@ -1905,12 +1969,21 @@ pub const Mob = struct { // {{{
 
         self.is_dead = true;
 
-        // Generate a corpse if possible.
-        var membuf: [4096]u8 = undefined;
-        var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-        const corpsetile = state.nextAvailableSpaceForItem(self.coord, &fba.allocator);
-        if (corpsetile) |c|
-            state.dungeon.itemsAt(c).append(Item{ .Corpse = self }) catch err.wat();
+        if (!self.is_undead) {
+            // Generate a corpse if possible.
+            var membuf: [4096]u8 = undefined;
+            var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
+            var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 2, S._isNotWall, .{}, &fba.allocator);
+            defer dijk.deinit();
+
+            const corpsetile: ?Coord = while (dijk.next()) |child| {
+                if (state.dungeon.at(child).surface == null) break child;
+            } else null;
+
+            if (corpsetile) |c|
+                state.dungeon.at(c).surface = .{ .Corpse = self };
+        }
 
         state.dungeon.at(self.coord).mob = null;
     }
@@ -2074,6 +2147,8 @@ pub const Mob = struct { // {{{
     }
 
     pub fn canHear(self: *const Mob, coord: Coord) ?*Sound {
+        if (self.deaf) return null;
+
         const sound = state.dungeon.soundAt(coord);
 
         if (self.coord.z != coord.z)
@@ -2514,8 +2589,9 @@ pub const Container = struct {
     };
 };
 
-pub const SurfaceItemTag = enum { Machine, Prop, Container, Poster, Stair };
+pub const SurfaceItemTag = enum { Corpse, Machine, Prop, Container, Poster, Stair };
 pub const SurfaceItem = union(SurfaceItemTag) {
+    Corpse: *Mob,
     Machine: *Machine,
     Prop: *Prop,
     Container: *Container,
@@ -2751,11 +2827,10 @@ pub const Ring = struct {
 };
 
 pub const ItemType = enum {
-    Corpse, Ring, Potion, Vial, Projectile, Armor, Cloak, Weapon, Boulder, Prop, Evocable
+    Ring, Potion, Vial, Projectile, Armor, Cloak, Weapon, Boulder, Prop, Evocable
 };
 
 pub const Item = union(ItemType) {
-    Corpse: *Mob,
     Ring: *Ring,
     Potion: *Potion,
     Vial: Vial,
@@ -2770,7 +2845,7 @@ pub const Item = union(ItemType) {
     // Should we announce the item to the player when we find it?
     pub fn announce(self: Item) bool {
         return switch (self) {
-            .Corpse, .Vial, .Boulder, .Prop => false,
+            .Vial, .Boulder, .Prop => false,
             .Cloak, .Projectile, .Ring, .Potion, .Armor, .Weapon, .Evocable => true,
         };
     }
@@ -2780,7 +2855,6 @@ pub const Item = union(ItemType) {
         var buf = StackBuffer(u8, 64).init(&([_]u8{0} ** 64));
         var fbs = std.io.fixedBufferStream(buf.slice());
         switch (self.*) {
-            .Corpse => |c| try fmt.format(fbs.writer(), "%{}", .{c.species}),
             .Ring => |r| try fmt.format(fbs.writer(), "*{}", .{r.name}),
             .Potion => |p| try fmt.format(fbs.writer(), "¡{}", .{p.name}),
             .Vial => |v| try fmt.format(fbs.writer(), "♪{}", .{v.name()}),
@@ -2801,7 +2875,6 @@ pub const Item = union(ItemType) {
         var buf = StackBuffer(u8, 128).init(&([_]u8{0} ** 128));
         var fbs = std.io.fixedBufferStream(buf.slice());
         switch (self.*) {
-            .Corpse => |c| try fmt.format(fbs.writer(), "{} corpse", .{c.species}),
             .Ring => |r| try fmt.format(fbs.writer(), "ring of {}", .{r.name}),
             .Potion => |p| try fmt.format(fbs.writer(), "potion of {}", .{p.name}),
             .Vial => |v| try fmt.format(fbs.writer(), "vial of {}", .{v.name()}),
@@ -2905,7 +2978,7 @@ pub const Tile = struct {
                 }
             }
 
-            cell.ch = mob.tile;
+            cell.ch = if (mob.is_undead) 'z' else mob.tile;
         } else if (state.dungeon.fireAt(coord).* > 0) {
             const famount = state.dungeon.fireAt(coord).*;
             cell.ch = fire.fireGlyph(famount);
@@ -2916,10 +2989,6 @@ pub const Tile = struct {
             cell.fg = 0xffffff;
 
             switch (item) {
-                .Corpse => |_| {
-                    cell.ch = '%';
-                    cell.fg = 0xffe0ef;
-                },
                 .Potion => |potion| {
                     cell.ch = '¡';
                     cell.fg = potion.color;
@@ -2960,6 +3029,10 @@ pub const Tile = struct {
             cell.fg = 0xffffff;
 
             const ch: u21 = switch (surfaceitem) {
+                .Corpse => |_| c: {
+                    cell.fg = 0xffe0ef;
+                    break :c '%';
+                },
                 .Container => |c| cont: {
                     if (!self.broken) {
                         if (c.capacity >= 14) {

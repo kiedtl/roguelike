@@ -8,7 +8,7 @@ const Evocable = items.Evocable;
 const Cloak = items.Cloak;
 const Projectile = items.Projectile;
 const StackBuffer = buffer.StackBuffer;
-const SpellInfo = spells.SpellInfo;
+const SpellOptions = spells.SpellOptions;
 
 pub const MobTemplate = struct {
     id: []const u8,
@@ -283,7 +283,7 @@ pub const GoblinTemplate = MobTemplate{
         .willpower = 3,
         .base_dexterity = 30,
         .hearing = 5,
-        .max_HP = 60,
+        .max_HP = 50,
         .memory_duration = 8,
         .base_speed = 100,
         .blood = .Blood,
@@ -312,9 +312,9 @@ pub const KyaniteStatueTemplate = MobTemplate{
         .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
-        .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
+        .spells = &[_]SpellOptions{
             .{ .spell = &spells.CAST_FREEZE, .duration = 2 },
-        }),
+        },
 
         .willpower = 8,
         .base_dexterity = 0,
@@ -348,9 +348,9 @@ pub const NebroStatueTemplate = MobTemplate{
         .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
-        .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
+        .spells = &[_]SpellOptions{
             .{ .spell = &spells.CAST_FAMOUS, .duration = 5, .power = 30 },
-        }),
+        },
 
         .willpower = 8,
         .base_dexterity = 0,
@@ -384,9 +384,9 @@ pub const CrystalStatueTemplate = MobTemplate{
         .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
-        .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
+        .spells = &[_]SpellOptions{
             .{ .spell = &spells.CAST_FERMENT, .duration = 10, .power = 0 },
-        }),
+        },
 
         .willpower = 8,
         .base_dexterity = 0,
@@ -521,7 +521,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
         .tile = 'Ñ',
         .ai = AI{
             .profession_name = "necromancer",
-            .profession_description = "torturing",
+            .profession_description = "tormenting",
             .work_fn = ai.tortureWork,
             .fight_fn = ai.mageFight,
             .is_combative = true,
@@ -530,15 +530,16 @@ pub const TorturerNecromancerTemplate = MobTemplate{
         .allegiance = .Necromancer,
         .vision = 5,
         .no_show_fov = false,
-        .spells = StackBuffer(SpellInfo, 2).init(&[_]SpellInfo{
-            .{ .spell = &spells.CAST_PAIN, .duration = 5, .power = 5 },
+        .spells = &[_]SpellOptions{
+            .{ .spell = &spells.CAST_RESURRECT_NORMAL },
             .{ .spell = &spells.CAST_FEAR, .duration = 9 },
-        }),
+            .{ .spell = &spells.CAST_PAIN, .duration = 5, .power = 5 },
+        },
 
         .willpower = 10,
         .base_dexterity = 15,
         .hearing = 6,
-        .max_HP = 40,
+        .max_HP = 50,
         .memory_duration = 10,
         .base_speed = 100,
         .blood = .Blood,

@@ -145,7 +145,7 @@ pub fn nextAvailableSpaceForItem(c: Coord, a: *mem.Allocator) ?Coord {
                     if (dungeon.at(coord).surface) |surface| {
                         switch (surface) {
                             .Container => |container| return container.items.isFull(),
-                            else => if (strict_) return false,
+                            else => if (strict_) return true,
                         }
                     }
 
@@ -215,6 +215,7 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
     if (!tile_broken) {
         if (dungeon.at(coord).surface) |surface| {
             switch (surface) {
+                .Corpse => |_| return true,
                 .Container => |_| return true,
                 .Machine => |m| {
                     if (opts.right_now) {

@@ -1041,8 +1041,9 @@ pub fn tickMachines(level: usize) void {
                                     const target = state.dungeon.at(zcoord).mob orelse continue;
                                     if (!utils.hasClearLOF(coord, zcoord)) continue;
                                     spells.BOLT_LIGHTNING.use(null, coord, zcoord, .{
+                                        .spell = &spells.BOLT_LIGHTNING,
                                         .caster_name = machine.name,
-                                        .bolt_power = e.damage,
+                                        .power = e.damage,
                                     }, "The broken {0} shoots a spark!");
                                     break :find_mob;
                                 }

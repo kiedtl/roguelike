@@ -16,14 +16,39 @@ const rng = @import("rng.zig");
 usingnamespace @import("types.zig");
 
 const StackBuffer = buffer.StackBuffer;
-const SpellInfo = spells.SpellInfo;
+const SpellOptions = spells.SpellOptions;
 
 fn flingRandomSpell(me: *Mob, target: *Mob) void {
-    const spell = rng.chooseUnweighted(SpellInfo, me.spells.slice());
-    spell.spell.use(me, me.coord, target.coord, .{
-        .status_duration = spell.duration,
-        .status_power = spell.power,
-    }, null);
+    const spell = rng.chooseUnweighted(SpellOptions, me.spells);
+    spell.spell.use(me, me.coord, target.coord, spell, null);
+}
+
+pub fn getNearestCorpse(me: *Mob) ?Coord {
+    var buf = StackBuffer(Coord, 32).init(null);
+
+    search: for (me.fov) |row, y| for (row) |cell, x| {
+        if (buf.isFull()) break :search;
+
+        if (cell == 0) continue;
+        const coord = Coord.new2(me.coord.z, x, y);
+
+        if (state.dungeon.at(coord).surface) |s| switch (s) {
+            .Corpse => |_| buf.append(coord) catch err.wat(),
+            else => {},
+        };
+    };
+
+    if (buf.len == 0) return null;
+
+    // Sort according to distance.
+    const _sortFunc = struct {
+        fn _fn(mob: *Mob, a: Coord, b: Coord) bool {
+            return a.distance(mob.coord) > b.distance(mob.coord);
+        }
+    };
+    std.sort.insertionSort(Coord, buf.slice(), me, _sortFunc._fn);
+
+    return buf.last().?;
 }
 
 // Find the nearest enemy.
@@ -53,6 +78,8 @@ pub fn currentEnemy(me: *Mob) *EnemyRecord {
 //
 // TODO: flee if flanked and there are no allies in sight
 pub fn shouldFlee(me: *Mob) bool {
+    if (me.is_undead) return false;
+
     var result = false;
 
     const enemy = currentEnemy(me).mob;
@@ -112,7 +139,11 @@ pub fn keepDistance(mob: *Mob, from: Coord, distance: usize) void {
 
         var direction: ?Direction = null;
         var lowest_val: f64 = 999;
-        for (&DIRECTIONS) |d| if (mob.coord.move(d, state.mapgeometry)) |neighbor| {
+        const directions: []const Direction = if (mob.isUnderStatus(.Confusion)) |_|
+            &CARDINAL_DIRECTIONS
+        else
+            &DIRECTIONS;
+        for (directions) |d| if (mob.coord.move(d, state.mapgeometry)) |neighbor| {
             if (flee_dijkmap[neighbor.y][neighbor.x]) |v| {
                 if (v < lowest_val) {
                     lowest_val = v;
@@ -364,7 +395,7 @@ pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
 }
 
 pub fn watcherWork(mob: *Mob, alloc: *mem.Allocator) void {
-    var post = mob.ai.work_area.items[0];
+    const post = mob.ai.work_area.items[0];
 
     if (mob.coord.eq(post)) {
         _ = mob.rest();
@@ -698,8 +729,9 @@ pub fn tortureWork(mob: *Mob, alloc: *mem.Allocator) void {
             continue;
 
         spells.CAST_PAIN.use(mob, mob.coord, prisoner.coord, .{
-            .status_duration = 10,
-            .status_power = 4,
+            .spell = &spells.CAST_PAIN,
+            .duration = 10,
+            .power = 4,
         }, null);
         return;
     }
@@ -805,36 +837,44 @@ pub fn sentinelFight(mob: *Mob, alloc: *mem.Allocator) void {
     }
 }
 
-pub fn mageFight(mob: *Mob, alloc: *mem.Allocator) void {
-    const spell = rng.chooseUnweighted(SpellInfo, mob.spells.slice());
+fn _isValidTargetForSpell(caster: *Mob, spell: SpellOptions, target: *Mob) bool {
+    if (!caster.cansee(target.coord))
+        return false;
 
-    const spell_status: ?Status = if (std.meta.activeTag(spell.spell.effect_type) == .Status)
-        spell.spell.effect_type.Status
-    else
-        null;
+    if (spell.spell.cast_type == .Bolt)
+        if (!utils.hasClearLOF(caster.coord, target.coord))
+            return false;
 
-    for (mob.enemies.items) |enemy_record| {
-        const enemy = enemy_record.mob;
-
-        // Skip mobs that have already been afflicted, or just
-        // skip them according to our tender mercies if we can't
-        // tell if they've been cast at last time
-        if (spell_status) |status| {
-            if (enemy.isUnderStatus(status)) |_|
-                continue;
-        } else if (rng.onein(3)) {
-            continue;
-        }
-
-        spell.spell.use(mob, mob.coord, enemy.coord, .{
-            .status_duration = 10,
-            .status_power = 4,
-        }, null);
-        return;
+    if (meta.activeTag(spell.spell.effect_type) == .Status) {
+        if (target.isUnderStatus(spell.spell.effect_type.Status)) |_|
+            return false;
     }
 
-    // We didn't find an enemy to cast at, just fling at the first enemy
-    flingRandomSpell(mob, currentEnemy(mob).mob);
+    return true;
+}
+
+fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
+    if (spell.spell.cast_type == .Smite and
+        spell.spell.smite_target_type == .Corpse)
+    {
+        return getNearestCorpse(caster);
+    } else {
+        return for (caster.enemies.items) |enemy_record| {
+            if (_isValidTargetForSpell(caster, spell, enemy_record.mob))
+                return enemy_record.last_seen;
+        } else null;
+    }
+}
+
+pub fn mageFight(mob: *Mob, alloc: *mem.Allocator) void {
+    for (mob.spells) |spell| {
+        if (_findValidTargetForSpell(mob, spell)) |coord| {
+            spell.spell.use(mob, mob.coord, coord, spell, null);
+            return;
+        }
+    }
+
+    _ = mob.rest();
 }
 
 // - Are there allies within view?
@@ -866,11 +906,8 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
     } else false;
 
     if (found_ally and rng.onein(10)) {
-        const spell = mob.spells.data[0];
-        spell.spell.use(mob, mob.coord, target.coord, .{
-            .status_duration = spell.duration,
-            .status_power = spell.power,
-        }, "The {0} glitters ominously!");
+        const spell = mob.spells[0];
+        spell.spell.use(mob, mob.coord, target.coord, spell, "The {0} glitters ominously!");
     } else {
         _ = mob.rest();
     }

@@ -177,7 +177,7 @@ pub fn findPatternMatch(coord: Coord, patterns: []const []const u8) ?usize {
                     .Prop => |p| if (!p.walkable) {
                         tiletype = .Wall;
                     },
-                    .Container, .Poster, .Stair => tiletype = .Wall,
+                    .Corpse, .Container, .Poster, .Stair => tiletype = .Wall,
                 };
             }
 
