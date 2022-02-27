@@ -1827,6 +1827,7 @@ pub const Mob = struct { // {{{
 
     pub fn takeDamage(self: *Mob, d: Damage) void {
         const was_already_dead = self.should_be_dead();
+        const old_HP = self.HP;
 
         const resist = @intToFloat(f64, self.resistance(d.kind.resist()));
         const amount = d.amount * resist / 100.0;
@@ -1835,6 +1836,7 @@ pub const Mob = struct { // {{{
         if (d.blood) if (self.blood) |s| state.dungeon.spatter(self.coord, s);
         self.last_damage = d;
 
+        // Player kill-count bookkeeping.
         if (!was_already_dead and self.HP == 0 and d.by_mob != null) {
             self.killed_by = d.by_mob.?;
             if (d.by_mob == state.player) {
@@ -1843,6 +1845,23 @@ pub const Mob = struct { // {{{
 
                 const prevtotal = (state.chardata.foes_killed.getOrPutValue(self.displayName(), 0) catch err.wat()).value;
                 state.chardata.foes_killed.put(self.displayName(), prevtotal + 1) catch err.wat();
+            }
+        }
+
+        // Should we give the player its flee-effect?
+        //
+        // FIXME: this probably shouldn't be handled here.
+        if (self == state.player) {
+            if (self.lastDamagePercentage() >= 50 or
+                (self.HP <= (self.max_HP / 10) and old_HP > (self.max_HP / 10)))
+            {
+                if (self.isUnderStatus(.Exhausted) == null) {
+                    if (self.ai.flee_effect) |s| {
+                        if (self.isUnderStatus(s.status) == null) {
+                            self.applyStatus(s);
+                        }
+                    }
+                }
             }
         }
     }
