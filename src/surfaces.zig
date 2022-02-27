@@ -814,7 +814,7 @@ fn powerLabDoor(machine: *Machine) void {
     }
 
     if (has_mob) {
-        machine.powered_tile = '\'';
+        machine.powered_tile = '\\';
         machine.powered_walkable = true;
         machine.powered_opacity = 0.0;
     } else {

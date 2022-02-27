@@ -3197,7 +3197,7 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
 
     .door_chance = 10,
     .material = &materials.Dobalene,
-    .window_material = &materials.PolishedGlass,
+    .window_material = &materials.LabGlass,
     .light = &surfaces.Lamp,
     .vent = "lab_gas_vent",
     .bars = "titanium_bars",
