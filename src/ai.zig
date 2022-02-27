@@ -66,6 +66,9 @@ pub fn shouldFlee(me: *Mob) bool {
     if (me.isUnderStatus(.Fear) != null or me.isUnderStatus(.Fire) != null)
         result = true;
 
+    if (me.isUnderStatus(.Enraged) != null)
+        result = false;
+
     return result;
 }
 

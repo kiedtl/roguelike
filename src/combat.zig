@@ -13,10 +13,12 @@ const CHANCE_OF_AUTO_MISS = 14;
 
 const FULL_LIGHT_BONUS: isize = 14;
 const DEFENDER_UNAWARE_BONUS: isize = 21;
+const ATTACKER_ENRAGED_BONUS: isize = 20;
 
 const ATTACKER_HELD_NBONUS: isize = 21;
 const DIM_LIGHT_NBONUS: isize = 14;
 
+const DEFENDER_ENRAGED_NBONUS: isize = 20;
 const DEFENDER_HELD_NBONUS: isize = 14;
 const DEFENDER_STEALTH_BONUS: isize = 7;
 
@@ -28,6 +30,7 @@ pub fn damageOutput(attacker: *const Mob, recipient: *const Mob, is_stab: bool) 
 
     var damage: usize = 0;
     damage += rng.rangeClumping(usize, max_damage / 2, max_damage, 2);
+    damage += if (attacker.isUnderStatus(.Enraged) != null) damage / 5 else 0;
 
     if (is_stab) {
         const bonus = DamageType.stabBonus(weapon.main_damage);
@@ -47,6 +50,7 @@ pub fn chanceOfAttackLanding(attacker: *const Mob, defender: *const Mob) usize {
     var chance: isize = 70;
 
     chance += if (!defender.isAwareOfAttack(attacker.coord)) DEFENDER_UNAWARE_BONUS else 0;
+    chance += if (attacker.isUnderStatus(.Enraged) != null) ATTACKER_ENRAGED_BONUS else 0;
 
     chance -= if (attacker.isUnderStatus(.Held)) |_| ATTACKER_HELD_NBONUS else 0;
     chance -= if (!attacker.canSeeInLight(tile_light)) DIM_LIGHT_NBONUS else 0;
@@ -67,6 +71,7 @@ pub fn chanceOfAttackDodged(defender: *const Mob, attacker: ?*const Mob) usize {
     chance += @intCast(isize, defender.stealth()) * DEFENDER_STEALTH_BONUS;
 
     chance -= if (defender.isUnderStatus(.Held)) |_| DEFENDER_HELD_NBONUS else 0;
+    chance -= if (defender.isUnderStatus(.Enraged) != null) DEFENDER_ENRAGED_NBONUS else 0;
 
     return @intCast(usize, math.clamp(chance, 0, 100));
 }

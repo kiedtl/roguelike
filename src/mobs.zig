@@ -149,6 +149,11 @@ pub const SentinelTemplate = MobTemplate{
             .fight_fn = ai.sentinelFight,
             .is_combative = true,
             .is_curious = false,
+            .flee_effect = .{
+                .status = .Enraged,
+                .duration = 10,
+                .exhausting = true,
+            },
         },
         .allegiance = .Necromancer,
 

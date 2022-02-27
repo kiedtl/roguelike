@@ -53,7 +53,7 @@ pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .
 pub const CoordArrayList = std.ArrayList(Coord);
 pub const StockpileArrayList = std.ArrayList(Stockpile);
 pub const MessageArrayList = std.ArrayList(Message);
-pub const StatusArray = enums.EnumArray(Status, StatusData);
+pub const StatusArray = enums.EnumArray(Status, StatusDataInfo);
 pub const SpatterArray = enums.EnumArray(Spatter, usize);
 pub const MobList = LinkedList(Mob);
 pub const MobArrayList = std.ArrayList(*Mob);
@@ -824,6 +824,22 @@ pub const Status = enum {
     // Doesn't have a power field.
     NightBlindness,
 
+    // Allows a mob to shove past all other mobs.
+    //
+    // Doesn't have a power field.
+    Shove,
+
+    // Gives mob several combat/speed bonuses (and nerfs).
+    //
+    // Doesn't have a power field.
+    Enraged,
+
+    // Several effects:
+    // - prevents a mob from getting bonuses when cornered
+    //
+    // Doesn't have a power field.
+    Exhausted,
+
     pub const MAX_DURATION: usize = 20;
 
     pub fn string(self: Status) []const u8 {
@@ -847,6 +863,9 @@ pub const Status = enum {
             .NightVision => "night-sighted",
             .DayBlindness => "day-blinded",
             .NightBlindness => "night-blinded",
+            .Shove => "shoving",
+            .Enraged => "enraged",
+            .Exhausted => "exhausted",
         };
     }
 
@@ -865,6 +884,9 @@ pub const Status = enum {
             .Invigorate => .{ "feel", "looks", " invigorated" },
             .Pain => .{ "are", "is", " wracked with pain" },
             .Fear => .{ "feel", "looks", " troubled" },
+            .Shove => .{ "begin", "starts", " violently shoving past foes" },
+            .Enraged => .{ "fly", "flies", " into a rage" },
+            .Exhausted => .{ "feel", "looks", " exhausted" },
             .Echolocation => null,
             .Recuperate => null,
             .NightVision,
@@ -890,6 +912,9 @@ pub const Status = enum {
             .Invigorate => .{ "no longer feel", "no longer looks", " invigorated" },
             .Pain => .{ "are no longer", "is no longer", " wracked with pain" },
             .Fear => .{ "no longer feel", "no longer looks", " troubled" },
+            .Shove => .{ "stop", "stops", " shoving past foes" },
+            .Enraged => .{ "stop", "stops", " raging" },
+            .Exhausted => .{ "are no longer", "is no longer", " exhausted" },
             .Echolocation => null,
             .Recuperate => null,
             .NightVision,
@@ -989,7 +1014,10 @@ pub const Status = enum {
     }
 };
 
-pub const StatusData = struct {
+pub const StatusDataInfo = struct {
+    // This field doesn't matter when it's in mob.statuses
+    status: Status = undefined,
+
     // What's the "power" of a status (percentage). For some statuses, doesn't
     // mean anything at all.
     power: usize = 0, // What's the "power" of the status
@@ -1000,13 +1028,9 @@ pub const StatusData = struct {
     // If the status is permanent.
     // If set, the duration doesn't matter.
     permanent: bool = false,
-};
 
-pub const StatusDataInfo = struct {
-    status: Status,
-    power: usize = 0,
-    duration: usize = Status.MAX_DURATION,
-    permanent: bool = false,
+    // Whether to give the .Exhaust status after the effect is over.
+    exhausting: bool = false,
 };
 
 pub const AIPhase = enum { Work, Hunt, Investigate, Flee };
@@ -1034,6 +1058,12 @@ pub const AI = struct {
 
     // Should the mob investigate noises?
     is_curious: bool,
+
+    flee_effect: ?StatusDataInfo = .{
+        .status = .Fast,
+        .duration = 10,
+        .exhausting = true,
+    },
 
     // The "target" in any phase (except .Hunt, the target for that is in
     // the enemy records).
@@ -1215,7 +1245,9 @@ pub const Mob = struct { // {{{
 
             // Decrement
             if (self.isUnderStatus(status_e)) |status_data| {
-                self.addStatus(status_e, status_data.power, utils.saturating_sub(status_data.duration, 1), status_data.permanent);
+                var n_status_data = status_data.*;
+                n_status_data.duration = utils.saturating_sub(n_status_data.duration, 1);
+                self.applyStatus(n_status_data);
             }
 
             if (self.isUnderStatus(status_e)) |status_data| {
@@ -1428,6 +1460,7 @@ pub const Mob = struct { // {{{
     //       one was.
     //     - The mob is the player and the other mob is a noncombative enemy (e.g.,
     //       slaves). The player has no business attacking non-combative enemies.
+    //     - The mob has the .Shove status.
     //
     // Return false if:
     //     - The other mob was trying to move in the same direction. No need to barge
@@ -1477,6 +1510,9 @@ pub const Mob = struct { // {{{
             other.isHostileTo(state.player) and
             !other.ai.is_combative)
         {
+            can = true;
+        }
+        if (self.isUnderStatus(.Shove) != null) {
             can = true;
         }
         if (other.prisoner_status) |ps|
@@ -1934,21 +1970,36 @@ pub const Mob = struct { // {{{
     }
 
     pub fn addStatus(self: *Mob, status: Status, power: usize, duration: ?usize, permanent: bool) void {
-        const had_status_before = self.isUnderStatus(status) != null;
+        self.applyStatus(.{
+            .status = status,
+            .duration = duration orelse Status.MAX_DURATION,
+            .power = power,
+            .permanent = permanent,
+        });
+    }
 
-        const p_se = self.statuses.getPtr(status);
-        p_se.power = power;
-        p_se.duration = duration orelse Status.MAX_DURATION;
-        p_se.permanent = permanent;
+    pub fn applyStatus(self: *Mob, s: StatusDataInfo) void {
+        const had_status_before = self.isUnderStatus(s.status) != null;
 
-        const has_status_now = self.isUnderStatus(status) != null;
+        const p_se = self.statuses.getPtr(s.status);
+        const was_exhausting = p_se.exhausting;
+        p_se.status = s.status;
+        p_se.power = s.power;
+        p_se.duration = s.duration;
+        p_se.permanent = s.permanent;
+        p_se.exhausting = s.exhausting;
+
+        const has_status_now = self.isUnderStatus(s.status) != null;
 
         var msg_parts: ?[3][]const u8 = null;
 
         if (had_status_before and !has_status_now) {
-            msg_parts = status.messageWhenRemoved();
+            msg_parts = s.status.messageWhenRemoved();
+
+            if (was_exhausting or s.exhausting)
+                self.addStatus(.Exhausted, 0, 10, false);
         } else if (!had_status_before and has_status_now) {
-            msg_parts = status.messageWhenAdded();
+            msg_parts = s.status.messageWhenAdded();
         }
 
         if (msg_parts) |_| {
@@ -1962,7 +2013,7 @@ pub const Mob = struct { // {{{
         }
     }
 
-    pub fn isUnderStatus(self: *const Mob, status: Status) ?*const StatusData {
+    pub fn isUnderStatus(self: *const Mob, status: Status) ?*const StatusDataInfo {
         const se = self.statuses.getPtrConst(status);
         return if (se.permanent or se.duration == 0) null else se;
     }
@@ -2095,6 +2146,7 @@ pub const Mob = struct { // {{{
         var speed_perc: isize = 100;
         if (self.ai.phase == .Flee) speed_perc -= 10;
         if (self.isUnderStatus(.Fast)) |_| speed_perc = @divTrunc(speed_perc * 50, 100);
+        if (self.isUnderStatus(.Enraged)) |_| speed_perc = @divTrunc(speed_perc * 80, 100);
         if (self.isUnderStatus(.Slow)) |_| speed_perc = @divTrunc(speed_perc * 150, 100);
         if (self.isUnderStatus(.Poison)) |_| speed_perc = @divTrunc(speed_perc * 150, 100);
         if (self.isUnderStatus(.Nausea)) |_| speed_perc = @divTrunc(speed_perc * 150, 100);

@@ -312,6 +312,14 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
 
     if (mob.ai.phase == .Hunt and ai.shouldFlee(mob)) {
         mob.ai.phase = .Flee;
+
+        if (mob.isUnderStatus(.Exhausted) == null) {
+            if (mob.ai.flee_effect) |s| {
+                if (mob.isUnderStatus(s.status) == null) {
+                    mob.applyStatus(s);
+                }
+            }
+        }
     } else if (mob.ai.phase == .Flee and !ai.shouldFlee(mob)) {
         mob.ai.phase = .Hunt;
     }
