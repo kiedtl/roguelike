@@ -14,6 +14,7 @@ const ai = @import("ai.zig");
 const astar = @import("astar.zig");
 const combat = @import("combat.zig");
 const err = @import("err.zig");
+const explosions = @import("explosions.zig");
 const dijkstra = @import("dijkstra.zig");
 const display = @import("display.zig");
 const fire = @import("fire.zig");
@@ -840,6 +841,11 @@ pub const Status = enum {
     // Doesn't have a power field.
     Exhausted,
 
+    // Makes the mob explode upon dying or the status running out.
+    //
+    // Power field is explosion strength.
+    Explosive,
+
     pub const MAX_DURATION: usize = 20;
 
     pub fn string(self: Status) []const u8 {
@@ -866,6 +872,7 @@ pub const Status = enum {
             .Shove => "shoving",
             .Enraged => "enraged",
             .Exhausted => "exhausted",
+            .Explosive => "explosive",
         };
     }
 
@@ -887,6 +894,7 @@ pub const Status = enum {
             .Shove => .{ "begin", "starts", " violently shoving past foes" },
             .Enraged => .{ "fly", "flies", " into a rage" },
             .Exhausted => .{ "feel", "looks", " exhausted" },
+            .Explosive => null,
             .Echolocation => null,
             .Recuperate => null,
             .NightVision,
@@ -915,6 +923,7 @@ pub const Status = enum {
             .Shove => .{ "stop", "stops", " shoving past foes" },
             .Enraged => .{ "stop", "stops", " raging" },
             .Exhausted => .{ "are no longer", "is no longer", " exhausted" },
+            .Explosive => null,
             .Echolocation => null,
             .Recuperate => null,
             .NightVision,
@@ -2007,6 +2016,10 @@ pub const Mob = struct { // {{{
             }
         };
 
+        if (self.isUnderStatus(.Explosive)) |s| {
+            explosions.kaboom(self.coord, .{ .strength = s.power });
+        }
+
         self.squad_members.deinit();
         self.enemies.deinit();
         self.allies.deinit();
@@ -2136,6 +2149,10 @@ pub const Mob = struct { // {{{
 
             if (was_exhausting or s.exhausting)
                 self.addStatus(.Exhausted, 0, 10, false);
+
+            if (p_se.status == .Explosive) {
+                explosions.kaboom(self.coord, .{ .strength = p_se.power });
+            }
         } else if (!had_status_before and has_status_now) {
             msg_parts = s.status.messageWhenAdded();
         }

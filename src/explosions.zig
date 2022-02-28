@@ -1,5 +1,6 @@
 const std = @import("std");
 const meta = std.meta;
+const math = std.math;
 
 usingnamespace @import("types.zig");
 const fov = @import("fov.zig");
@@ -38,7 +39,6 @@ pub const ExplosionOpts = struct {
 
 // Sets off an explosion.
 //
-// TODO: set kaboom'd area on fire
 // TODO: throw mobs backward
 // TODO: throw shrapnel at nearby mobs
 // TODO: take armour into account when giving damage
@@ -49,7 +49,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
             return switch (state.dungeon.at(coord).type) {
                 .Wall => rng.range(usize, 60, 140),
                 .Lava, .Water, .Floor => b: {
-                    var hind: usize = 5;
+                    var hind: usize = 0;
                     if (state.dungeon.at(coord).mob != null) {
                         hind += 10;
                     }
@@ -67,7 +67,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                         .Container => hind += rng.range(usize, 60, 80),
                         else => {},
                     };
-                    break :b hind;
+                    break :b math.max(20, hind);
                 },
             };
         }
@@ -118,19 +118,23 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                 state.dungeon.at(coord).broken = true;
 
             if (state.dungeon.at(coord).mob) |unfortunate| {
+                const total_dmg = @intToFloat(f64, opts.strength * cell / 100);
+
                 if (unfortunate == state.player) {
                     if (!opts.spare_player) {
                         state.player.takeDamage(.{
-                            .amount = state.player.HP * 0.75,
+                            .amount = math.min(total_dmg, state.player.HP * 0.50),
                             .source = .Explosion,
+                            .kind = .Fire,
                         });
                         state.message(.Info, "The blast hits you!!", .{});
                     }
                 } else {
                     unfortunate.takeDamage(.{
-                        .amount = 100 * @intToFloat(f64, cell) / 100.0,
+                        .amount = total_dmg,
                         .by_mob = opts.culprit,
                         .source = .Explosion,
+                        .kind = .Fire,
                         .indirect = true,
                     });
                     if (state.player.cansee(unfortunate.coord)) {

@@ -42,6 +42,21 @@ fn _effectBoltFire(spell: Spell, opts: SpellOptions, coord: Coord) void {
     }
 }
 
+pub const CAST_RESURRECT_FIRE = Spell{ .name = "burnt offering", .cast_type = .Smite, .smite_target_type = .Corpse, .effect_type = .{ .Custom = _resurrectFire }, .checks_will = false };
+fn _resurrectFire(spell: Spell, opts: SpellOptions, coord: Coord) void {
+    const corpse = state.dungeon.at(coord).surface.?.Corpse;
+    if (corpse.raiseAsUndead(coord)) {
+        if (state.player.cansee(coord)) {
+            state.message(.SpellCast, "The {} rises, burning with an unearthly flame!", .{
+                corpse.displayName(),
+            });
+        }
+        corpse.addStatus(.Fire, 0, 0, true);
+        corpse.addStatus(.Fast, 0, 0, true);
+        corpse.addStatus(.Explosive, 100, 20, false);
+    }
+}
+
 pub const CAST_RESURRECT_NORMAL = Spell{ .name = "resurrection", .cast_type = .Smite, .smite_target_type = .Corpse, .effect_type = .{ .Custom = _resurrectNormal }, .checks_will = false };
 fn _resurrectNormal(spell: Spell, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;

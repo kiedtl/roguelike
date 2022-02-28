@@ -55,3 +55,8 @@ very long.
 A mine kit.
 
 You can evoke it to build a small @(mine,mine) where you are standing.
+
+% m torturer_necromancer
+
+A particularly sadistic lesser death mage. His mouth is perpetually twisted into
+a leer of cruel contempt.

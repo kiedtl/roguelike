@@ -581,6 +581,7 @@ pub const BurningBruteTemplate = MobTemplate{
         .allegiance = .Necromancer,
         .vision = 5,
         .spells = &[_]SpellOptions{
+            .{ .spell = &spells.CAST_RESURRECT_FIRE, .power = 5, .duration = 10 },
             .{ .spell = &spells.BOLT_FIRE, .power = 5, .duration = 10 },
         },
 
