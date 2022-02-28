@@ -538,6 +538,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
             .fight_fn = ai.mageFight,
             .is_combative = true,
             .is_curious = true,
+            .is_fearless = true,
         },
         .allegiance = .Necromancer,
         .vision = 5,
@@ -574,7 +575,8 @@ pub const BurningBruteTemplate = MobTemplate{
             .fight_fn = ai.mageFight,
             .is_combative = true,
             .is_curious = true,
-            .is_fearless = true,
+            //.is_fearless = true, // Flee effect won't trigger otherwise.
+            .flee_effect = .{ .status = .Enraged, .duration = 10, .exhausting = true },
         },
         .allegiance = .Necromancer,
         .vision = 5,
