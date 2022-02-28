@@ -2263,7 +2263,6 @@ pub const Mob = struct { // {{{
 
     pub fn speed(self: *const Mob) isize {
         var speed_perc: isize = 100;
-        if (self.ai.phase == .Flee) speed_perc -= 10;
         if (self.isUnderStatus(.Fast)) |_| speed_perc = @divTrunc(speed_perc * 50, 100);
         if (self.isUnderStatus(.Enraged)) |_| speed_perc = @divTrunc(speed_perc * 80, 100);
         if (self.isUnderStatus(.Slow)) |_| speed_perc = @divTrunc(speed_perc * 150, 100);
