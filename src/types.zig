@@ -1915,7 +1915,30 @@ pub const Mob = struct { // {{{
         self.ai.work_area = CoordArrayList.init(alloc);
     }
 
-    pub fn raiseAsUndead(self: *Mob, corpse_coord: Coord) void {
+    pub fn raiseAsUndead(self: *Mob, corpse_coord: Coord) bool {
+        var newcoord: ?Coord = corpse_coord;
+        if (state.dungeon.at(corpse_coord).mob != null) {
+            var membuf: [4096]u8 = undefined;
+            var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
+            // FIXME: this will shove zombies through walls, since we're not
+            // checking if a tile is walkable!!
+            var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 10, state.is_walkable, .{ .right_now = true }, &fba.allocator);
+            defer dijk.deinit();
+
+            newcoord = while (dijk.next()) |child| {
+                if (state.dungeon.at(child).mob == null) break child;
+            } else null;
+        }
+
+        if (newcoord) |coord| {
+            state.dungeon.at(corpse_coord).surface = null;
+            state.dungeon.at(coord).mob = self;
+            self.coord = coord;
+        } else {
+            return false;
+        }
+
         self.is_dead = false;
         self.init(&state.GPA.allocator); // FIXME: antipattern?
 
@@ -1953,9 +1976,7 @@ pub const Mob = struct { // {{{
 
         self.willpower = 1;
 
-        state.dungeon.at(corpse_coord).surface = null;
-        state.dungeon.at(corpse_coord).mob = self;
-        self.coord = corpse_coord;
+        return true;
     }
 
     pub fn kill(self: *Mob) void {

@@ -200,7 +200,7 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
 // This approach was stolen from Cogmind:
 // https://old.reddit.com/r/roguelikedev/comments/57dnqk/faq_friday_49_awareness_systems/d8r1ztp/
 //
-// If then mob is an ally, add it to the ally list.
+// If the mob is an ally, add it to the ally list.
 //
 pub fn checkForHostiles(mob: *Mob) void {
     assert(!mob.is_dead);
@@ -213,7 +213,9 @@ pub fn checkForHostiles(mob: *Mob) void {
         const fitem = Coord.new2(mob.coord.z, x, y);
 
         if (state.dungeon.at(fitem).mob) |othermob| {
-            assert(!othermob.is_dead); // Dead mobs should be corpses (ie items)
+            if (othermob.is_dead) {
+                err.bug("Mob {} is dead but walking around!", .{othermob.displayName()});
+            }
 
             if (othermob == mob) continue;
 

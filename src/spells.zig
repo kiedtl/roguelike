@@ -45,12 +45,13 @@ fn _effectBoltFire(spell: Spell, opts: SpellOptions, coord: Coord) void {
 pub const CAST_RESURRECT_NORMAL = Spell{ .name = "resurrection", .cast_type = .Smite, .smite_target_type = .Corpse, .effect_type = .{ .Custom = _resurrectNormal }, .checks_will = false };
 fn _resurrectNormal(spell: Spell, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
-    if (state.player.cansee(coord)) {
-        state.message(.SpellCast, "The {} is imbued with a spirit of malice and rises!", .{
-            corpse.displayName(),
-        });
+    if (corpse.raiseAsUndead(coord)) {
+        if (state.player.cansee(coord)) {
+            state.message(.SpellCast, "The {} is imbued with a spirit of malice and rises!", .{
+                corpse.displayName(),
+            });
+        }
     }
-    corpse.raiseAsUndead(coord);
 }
 
 pub const CAST_FREEZE = Spell{ .name = "freeze", .cast_type = .Smite, .effect_type = .{ .Status = .Paralysis }, .checks_will = true };
