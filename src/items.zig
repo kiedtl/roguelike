@@ -40,13 +40,11 @@ pub const ItemTemplate = struct {
 pub const ITEM_DROPS = [_]ItemTemplate{
     // Weapons
     .{ .w = 50, .i = .{ .W = MaceWeapon } },
-    .{ .w = 50, .i = .{ .W = ClubWeapon } },
-    .{ .w = 50, .i = .{ .W = KnifeWeapon } },
+    .{ .w = 30, .i = .{ .W = MorningstarWeapon } },
     .{ .w = 30, .i = .{ .W = DaggerWeapon } },
     .{ .w = 10, .i = .{ .W = StilettoWeapon } },
     .{ .w = 05, .i = .{ .W = RapierWeapon } },
     // Armor
-    .{ .w = 50, .i = .{ .A = RobeArmor } },
     .{ .w = 40, .i = .{ .A = GambesonArmor } },
     .{ .w = 15, .i = .{ .A = LeatherArmor } },
     .{ .w = 05, .i = .{ .A = ChainmailArmor } },
