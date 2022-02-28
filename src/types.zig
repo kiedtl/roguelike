@@ -846,6 +846,11 @@ pub const Status = enum {
     // Power field is explosion strength.
     Explosive,
 
+    // Makes the mob automatically suicide when the status runs out.
+    //
+    // Doesn't have a power field.
+    Lifespan,
+
     pub const MAX_DURATION: usize = 20;
 
     pub fn string(self: Status) []const u8 {
@@ -873,6 +878,7 @@ pub const Status = enum {
             .Enraged => "enraged",
             .Exhausted => "exhausted",
             .Explosive => "explosive",
+            .Lifespan => "lifespan",
         };
     }
 
@@ -894,6 +900,7 @@ pub const Status = enum {
             .Shove => .{ "begin", "starts", " violently shoving past foes" },
             .Enraged => .{ "fly", "flies", " into a rage" },
             .Exhausted => .{ "feel", "looks", " exhausted" },
+            .Lifespan => null,
             .Explosive => null,
             .Echolocation => null,
             .Recuperate => null,
@@ -924,6 +931,7 @@ pub const Status = enum {
             .Enraged => .{ "stop", "stops", " raging" },
             .Exhausted => .{ "are no longer", "is no longer", " exhausted" },
             .Explosive => null,
+            .Lifespan => null,
             .Echolocation => null,
             .Recuperate => null,
             .NightVision,
@@ -1186,6 +1194,7 @@ pub const Mob = struct { // {{{
     base_speed: usize,
     max_HP: f64,
     blood: ?Spatter,
+    corpse: enum { Normal, Wall, None } = .Normal,
     immobile: bool = false,
     innate_resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
 
@@ -1623,6 +1632,8 @@ pub const Mob = struct { // {{{
     }
 
     pub fn teleportTo(self: *Mob, dest: Coord, direction: ?Direction) bool {
+        assert(!self.immobile);
+
         const coord = self.coord;
 
         if (self.prisoner_status) |prisoner|
@@ -1951,6 +1962,7 @@ pub const Mob = struct { // {{{
         self.is_dead = false;
         self.init(&state.GPA.allocator); // FIXME: antipattern?
 
+        self.tile = 'z';
         self.is_undead = true;
 
         self.energy = 0;
@@ -1967,6 +1979,7 @@ pub const Mob = struct { // {{{
         };
 
         self.blood = null;
+        self.corpse = .None;
 
         // FIXME: don't assume this (the player might be raising a corpse too!)
         self.allegiance = .Necromancer;
@@ -2029,7 +2042,7 @@ pub const Mob = struct { // {{{
         self.is_dead = true;
         state.dungeon.at(self.coord).mob = null;
 
-        if (!self.is_undead) {
+        if (self.corpse != .None) {
             // Generate a corpse if possible.
             var membuf: [4096]u8 = undefined;
             var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
@@ -2042,7 +2055,11 @@ pub const Mob = struct { // {{{
             } else null;
 
             if (corpsetile) |c| {
-                state.dungeon.at(c).surface = .{ .Corpse = self };
+                switch (self.corpse) {
+                    .None => err.wat(),
+                    .Normal => state.dungeon.at(c).surface = .{ .Corpse = self },
+                    .Wall => state.dungeon.at(c).type = .Wall,
+                }
             }
         }
     }
@@ -2152,6 +2169,10 @@ pub const Mob = struct { // {{{
 
             if (p_se.status == .Explosive) {
                 explosions.kaboom(self.coord, .{ .strength = p_se.power });
+            }
+
+            if (p_se.status == .Lifespan) {
+                self.takeDamage(.{ .amount = self.HP * 1000 });
             }
         } else if (!had_status_before and has_status_now) {
             msg_parts = s.status.messageWhenAdded();
@@ -3040,7 +3061,7 @@ pub const Tile = struct {
                 }
             }
 
-            cell.ch = if (mob.is_undead) 'z' else mob.tile;
+            cell.ch = mob.tile;
         } else if (state.dungeon.fireAt(coord).* > 0) {
             const famount = state.dungeon.fireAt(coord).*;
             cell.ch = fire.fireGlyph(famount);
@@ -3369,6 +3390,7 @@ pub const Spatter = enum {
     Blood,
     Dust,
     Vomit,
+    Water,
 
     pub inline fn color(self: Spatter) u32 {
         return switch (self) {
@@ -3376,6 +3398,7 @@ pub const Spatter = enum {
             .Blood => 0x9a1313,
             .Dust => 0x92744c,
             .Vomit => 0x329b32,
+            .Water => 0x12356e,
         };
     }
 };

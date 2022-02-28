@@ -9,6 +9,7 @@ const meta = std.meta;
 
 usingnamespace @import("types.zig");
 const err = @import("err.zig");
+const mobs = @import("mobs.zig");
 const sound = @import("sound.zig");
 const state = @import("state.zig");
 const rng = @import("rng.zig");
@@ -53,7 +54,52 @@ fn _resurrectFire(spell: Spell, opts: SpellOptions, coord: Coord) void {
         }
         corpse.addStatus(.Fire, 0, 0, true);
         corpse.addStatus(.Fast, 0, 0, true);
-        corpse.addStatus(.Explosive, 100, 20, false);
+        corpse.addStatus(.Explosive, opts.power, 20, false);
+    }
+}
+
+pub const CAST_RESURRECT_FROZEN = Spell{ .name = "frozen resurrection", .cast_type = .Smite, .smite_target_type = .Corpse, .effect_type = .{ .Custom = _resurrectFrozen }, .checks_will = false };
+fn _resurrectFrozen(spell: Spell, opts: SpellOptions, coord: Coord) void {
+    const corpse = state.dungeon.at(coord).surface.?.Corpse;
+    if (corpse.raiseAsUndead(coord)) {
+        if (state.player.cansee(coord)) {
+            state.message(.SpellCast, "The {} glows with a cold light!", .{
+                corpse.displayName(),
+            });
+        }
+        corpse.tile = 'Z';
+        corpse.immobile = true;
+        corpse.max_HP = corpse.max_HP * 2;
+        corpse.HP = corpse.max_HP;
+        corpse.innate_resists.rFire = -2;
+        corpse.base_strength = corpse.base_strength * 130 / 100;
+        corpse.base_dexterity = 0;
+        corpse.deg360_vision = true;
+
+        corpse.addStatus(.Fast, 0, 0, true);
+        corpse.addStatus(.Lifespan, 0, opts.power, false);
+    }
+}
+
+pub const CAST_POLAR_LAYER = Spell{ .name = "polar casing", .cast_type = .Smite, .smite_target_type = .Mob, .check_has_effect = _hasEffectPolarLayer, .effect_type = .{ .Custom = _effectPolarLayer }, .checks_will = false };
+fn _hasEffectPolarLayer(caster: *Mob, spell: SpellOptions, target: Coord) bool {
+    return state.dungeon.neighboringWalls(target, false) > 0;
+}
+fn _effectPolarLayer(spell: Spell, opts: SpellOptions, coord: Coord) void {
+    const mob = state.dungeon.at(coord).mob.?;
+    for (&CARDINAL_DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
+        if (state.dungeon.at(neighbor).type == .Wall) {
+            state.dungeon.at(neighbor).type = .Floor;
+            // FIXME: passing allocator directly is anti-pattern?
+            const w = mobs.placeMob(&state.GPA.allocator, &mobs.LivingIceTemplate, neighbor, .{});
+            w.addStatus(.Lifespan, 0, opts.power, false);
+        }
+    };
+
+    if (mob == state.player) {
+        state.message(.SpellCast, "The walls near you transmute into living ice!", .{});
+    } else if (state.player.cansee(mob.coord)) {
+        state.message(.SpellCast, "The walls near the {} transmute into living ice!", .{mob.displayName()});
     }
 }
 
@@ -107,6 +153,8 @@ pub const Spell = struct {
     } = .Mob,
 
     checks_will: bool = false,
+
+    check_has_effect: ?fn (*Mob, SpellOptions, Coord) bool = null,
 
     noise: sound.SoundIntensity = .Silent,
 

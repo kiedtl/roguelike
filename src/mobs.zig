@@ -1,7 +1,12 @@
+const std = @import("std");
+const mem = std.mem;
+
 const ai = @import("ai.zig");
+const state = @import("state.zig");
 const items = @import("items.zig");
 const buffer = @import("buffer.zig");
 const spells = @import("spells.zig");
+const err = @import("err.zig");
 usingnamespace @import("types.zig");
 
 const Evocable = items.Evocable;
@@ -335,6 +340,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
         .memory_duration = 1,
         .base_speed = 100,
         .blood = null,
+        .corpse = .Wall,
         .immobile = true,
         .innate_resists = .{ .rPois = 3, .rFire = 3, .rElec = 3, .rMlee = 3, .rFume = 3 },
 
@@ -371,6 +377,7 @@ pub const NebroStatueTemplate = MobTemplate{
         .memory_duration = 1,
         .base_speed = 100,
         .blood = null,
+        .corpse = .Wall,
         .immobile = true,
         .innate_resists = .{ .rPois = 3, .rFire = 3, .rElec = 3, .rMlee = 3, .rFume = 3 },
 
@@ -407,6 +414,7 @@ pub const CrystalStatueTemplate = MobTemplate{
         .memory_duration = 1,
         .base_speed = 100,
         .blood = null,
+        .corpse = .Wall,
         .immobile = true,
         .innate_resists = .{ .rPois = 3, .rFire = 3, .rElec = 3, .rMlee = 3, .rFume = 3 },
 
@@ -581,7 +589,7 @@ pub const BurningBruteTemplate = MobTemplate{
         .allegiance = .Necromancer,
         .vision = 5,
         .spells = &[_]SpellOptions{
-            .{ .spell = &spells.CAST_RESURRECT_FIRE, .power = 5, .duration = 10 },
+            .{ .spell = &spells.CAST_RESURRECT_FIRE, .power = 100, .duration = 10 },
             .{ .spell = &spells.BOLT_FIRE, .power = 5, .duration = 10 },
         },
 
@@ -592,12 +600,51 @@ pub const BurningBruteTemplate = MobTemplate{
         .memory_duration = 6,
         .base_speed = 100,
         .blood = null,
+        .corpse = .None,
 
         .innate_resists = .{ .rPois = 3, .rFire = 3, .rElec = -1 },
 
         .base_strength = 40,
     },
     .statuses = &[_]StatusDataInfo{.{ .status = .Fire, .permanent = true }},
+};
+
+pub const FrozenFiendTemplate = MobTemplate{
+    .id = "frozen_fiend",
+    .mob = .{
+        .species = &Species{ .name = "frozen fiend" },
+        .tile = 'F',
+        .ai = AI{
+            .profession_name = null,
+            .profession_description = "patrolling",
+            .work_fn = ai.patrolWork,
+            .fight_fn = ai.mageFight,
+            .is_combative = true,
+            .is_curious = true,
+            .is_fearless = true,
+        },
+        .allegiance = .Necromancer,
+        .vision = 7,
+        .spells = &[_]SpellOptions{
+            .{ .spell = &spells.CAST_POLAR_LAYER, .power = 14 },
+            .{ .spell = &spells.CAST_RESURRECT_FROZEN, .power = 21 },
+        },
+
+        .willpower = 8,
+        .base_dexterity = 15,
+        .hearing = 6,
+        .max_HP = 50,
+        .memory_duration = 6,
+        .base_speed = 100,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rPois = 2, .rFire = 0, .rElec = 2 },
+
+        .base_strength = 27,
+    },
+    .weapon = &items.MorningstarWeapon,
+    .armor = &items.ChainmailArmor,
 };
 
 pub const TanusExperiment = MobTemplate{
@@ -720,6 +767,47 @@ pub const PhytinExperiment = MobTemplate{
     .statuses = &[_]StatusDataInfo{.{ .status = .NightBlindness, .permanent = true }},
 };
 
+pub const LivingIceTemplate = MobTemplate{
+    .id = "living_ice",
+    .mob = .{
+        .species = &Species{
+            .name = "living ice",
+            .default_attack = &items.LivingIceHitWeapon,
+        },
+        .tile = '8',
+        .ai = AI{
+            .profession_name = null,
+            .profession_description = "watching",
+            .work_fn = ai.dummyWork,
+            .fight_fn = ai.meleeFight,
+            .is_combative = true,
+            .is_curious = false,
+            .is_fearless = true,
+        },
+        .allegiance = .Necromancer,
+
+        .vision = 2,
+        .deg360_vision = true,
+        .no_show_fov = true,
+        .immobile = true,
+        .willpower = 1,
+        .base_dexterity = 0,
+        .hearing = 5,
+        .max_HP = 100,
+        .memory_duration = 1,
+        .base_speed = 100,
+
+        .blood = .Water,
+        .corpse = .Wall,
+
+        .base_strength = 30,
+
+        .innate_resists = .{ .rPois = 3, .rFire = -2, .rElec = 3, .rMlee = 1, .rFume = 3 },
+    },
+    // This status should be added by whatever spell created it.
+    //.statuses = &[_]StatusDataInfo{.{ .status = .Lifespan, .duration = 10 }},
+};
+
 pub const MOBS = [_]MobTemplate{
     ExecutionerTemplate,
     WatcherTemplate,
@@ -739,6 +827,7 @@ pub const MOBS = [_]MobTemplate{
     HaulerTemplate,
     TorturerNecromancerTemplate,
     BurningBruteTemplate,
+    FrozenFiendTemplate,
     TanusExperiment,
     CatalineExperiment,
     FlouinExperiment,
@@ -761,3 +850,50 @@ pub const EXPERIMENTS = [_]MobTemplate{
     FlouinExperiment,
     PhytinExperiment,
 };
+
+pub const PlaceMobOptions = struct {
+    facing: ?Direction = null,
+    phase: AIPhase = .Work,
+    work_area: ?Coord = null,
+};
+
+pub fn placeMob(
+    alloc: *mem.Allocator,
+    template: *const MobTemplate,
+    coord: Coord,
+    opts: PlaceMobOptions,
+) *Mob {
+    var mob = template.mob;
+    mob.init(alloc);
+    mob.coord = coord;
+    mob.ai.phase = opts.phase;
+
+    if (template.weapon) |w| mob.inventory.wielded = items.createItem(Weapon, w.*);
+    if (template.backup_weapon) |w| mob.inventory.backup = items.createItem(Weapon, w.*);
+    if (template.armor) |a| mob.inventory.armor = items.createItem(Armor, a.*);
+    if (template.cloak) |c| mob.inventory.cloak = c;
+
+    if (opts.facing) |dir| mob.facing = dir;
+    mob.ai.work_area.append(opts.work_area orelse coord) catch err.wat();
+
+    for (template.evocables) |evocable_template| {
+        var evocable = items.createItem(Evocable, evocable_template);
+        evocable.charges = evocable.max_charges;
+        mob.inventory.pack.append(Item{ .Evocable = evocable }) catch err.wat();
+    }
+
+    if (template.projectile) |proj| {
+        while (!mob.inventory.pack.isFull()) {
+            mob.inventory.pack.append(Item{ .Projectile = proj }) catch err.wat();
+        }
+    }
+
+    for (template.statuses) |status_info| {
+        mob.addStatus(status_info.status, status_info.power, status_info.duration, status_info.permanent);
+    }
+
+    state.mobs.append(mob) catch err.wat();
+    const ptr = state.mobs.last().?;
+    state.dungeon.at(coord).mob = ptr;
+    return ptr;
+}

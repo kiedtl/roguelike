@@ -769,8 +769,10 @@ pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
 
     if (mob.coord.distance(target.coord) == 1) {
         _ = mob.fight(target);
-    } else {
+    } else if (!mob.immobile) {
         mob.tryMoveTo(target.coord);
+    } else {
+        _ = mob.rest();
     }
 }
 
@@ -853,6 +855,11 @@ fn _isValidTargetForSpell(caster: *Mob, spell: SpellOptions, target: *Mob) bool 
 
     if (meta.activeTag(spell.spell.effect_type) == .Status) {
         if (target.isUnderStatus(spell.spell.effect_type.Status)) |_|
+            return false;
+    }
+
+    if (spell.spell.check_has_effect) |func| {
+        if (!(func)(caster, spell, target.coord))
             return false;
     }
 

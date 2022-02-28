@@ -477,6 +477,24 @@ const LACERATING_STRS = [_][]DamageStr{
     dmgstr(150, "mangle", "mangles", " beyond recognition"),
 };
 
+pub const LivingIceHitWeapon = Weapon{
+    .id = "none",
+    .name = "none",
+    .delay = 80,
+    .damages = .{
+        .Crushing = 15,
+        .Pulping = 0,
+        .Slashing = 0,
+        .Piercing = 0,
+        .Lacerating = 0,
+    },
+    .main_damage = .Crushing,
+    .secondary_damage = null,
+    .strs = &[_]DamageStr{
+        dmgstr(010, "hit", "hits", ""),
+    },
+};
+
 pub const FistWeapon = Weapon{
     .id = "none",
     .name = "none",
@@ -633,6 +651,21 @@ pub const KnoutWeapon = Weapon{
     .strs = &CRUSHING_STRS,
 };
 
+pub const MorningstarWeapon = Weapon{
+    .id = "morningstar",
+    .name = "morningstar",
+    .damages = .{
+        .Crushing = 5,
+        .Pulping = 10,
+        .Slashing = 0,
+        .Piercing = 0,
+        .Lacerating = 5,
+    },
+    .main_damage = .Pulping,
+    .secondary_damage = .Crushing,
+    .strs = &CRUSHING_STRS,
+};
+
 pub const ClubWeapon = Weapon{
     .id = "club",
     .name = "stone club",
@@ -706,4 +739,29 @@ fn triggerDecimatePotion(_dork: ?*Mob, coord: Coord) void {
         .strength = MIN_EXPLOSION_RADIUS * 100,
         .culprit = state.player,
     });
+}
+
+// ----------------------------------------------------------------------------
+
+pub fn createItem(comptime T: type, item: T) *T {
+    comptime const list = switch (T) {
+        Potion => &state.potions,
+        Ring => &state.rings,
+        Armor => &state.armors,
+        Weapon => &state.weapons,
+        Evocable => &state.evocables,
+        else => @compileError("uh wat"),
+    };
+    return list.appendAndReturn(item) catch err.oom();
+}
+
+pub fn createItemFromTemplate(template: ItemTemplate) Item {
+    return switch (template.i) {
+        .W => |i| Item{ .Weapon = createItem(Weapon, i) },
+        .A => |i| Item{ .Armor = createItem(Armor, i) },
+        .P => |i| Item{ .Potion = createItem(Potion, i) },
+        .E => |i| Item{ .Evocable = createItem(Evocable, i) },
+        .C => |i| Item{ .Cloak = i },
+        //else => err.todo(),
+    };
 }

@@ -188,53 +188,6 @@ fn choosePoster(level: usize) ?*const Poster {
     return null;
 }
 
-const PlaceMobOptions = struct {
-    facing: ?Direction = null,
-    phase: AIPhase = .Work,
-    work_area: ?Coord = null,
-};
-
-fn placeMob(
-    alloc: *mem.Allocator,
-    template: *const mobs.MobTemplate,
-    coord: Coord,
-    opts: PlaceMobOptions,
-) *Mob {
-    var mob = template.mob;
-    mob.init(alloc);
-    mob.coord = coord;
-    mob.ai.phase = opts.phase;
-
-    if (template.weapon) |w| mob.inventory.wielded = _createItem(Weapon, w.*);
-    if (template.backup_weapon) |w| mob.inventory.backup = _createItem(Weapon, w.*);
-    if (template.armor) |a| mob.inventory.armor = _createItem(Armor, a.*);
-    if (template.cloak) |c| mob.inventory.cloak = c;
-
-    if (opts.facing) |dir| mob.facing = dir;
-    mob.ai.work_area.append(opts.work_area orelse coord) catch err.wat();
-
-    for (template.evocables) |evocable_template| {
-        var evocable = _createItem(Evocable, evocable_template);
-        evocable.charges = evocable.max_charges;
-        mob.inventory.pack.append(Item{ .Evocable = evocable }) catch err.wat();
-    }
-
-    if (template.projectile) |proj| {
-        while (!mob.inventory.pack.isFull()) {
-            mob.inventory.pack.append(Item{ .Projectile = proj }) catch err.wat();
-        }
-    }
-
-    for (template.statuses) |status_info| {
-        mob.addStatus(status_info.status, status_info.power, status_info.duration, status_info.permanent);
-    }
-
-    state.mobs.append(mob) catch err.wat();
-    const ptr = state.mobs.last().?;
-    state.dungeon.at(coord).mob = ptr;
-    return ptr;
-}
-
 // Given a parent and child room, return the direction a corridor between the two
 // would go
 fn getConnectionSide(parent: *const Room, child: *const Room) ?Direction {
@@ -273,29 +226,6 @@ fn randomWallCoord(rect: *const Rect, i: ?usize) Coord {
     const x = rng.rangeClumping(usize, range.from.x, range.to.x, 2);
     const y = rng.rangeClumping(usize, range.from.y, range.to.y, 2);
     return Coord.new2(rect.start.z, x, y);
-}
-
-fn _createItem(comptime T: type, item: T) *T {
-    comptime const list = switch (T) {
-        Potion => &state.potions,
-        Ring => &state.rings,
-        Armor => &state.armors,
-        Weapon => &state.weapons,
-        Evocable => &state.evocables,
-        else => @compileError("uh wat"),
-    };
-    return list.appendAndReturn(item) catch err.oom();
-}
-
-fn _createItemFromTemplate(template: ItemTemplate) Item {
-    return switch (template.i) {
-        .W => |i| Item{ .Weapon = _createItem(Weapon, i) },
-        .A => |i| Item{ .Armor = _createItem(Armor, i) },
-        .P => |i| Item{ .Potion = _createItem(Potion, i) },
-        .E => |i| Item{ .Evocable = _createItem(Evocable, i) },
-        .C => |i| Item{ .Cloak = i },
-        //else => err.todo(),
-    };
 }
 
 fn _chooseLootItem(item_weights: []usize, value_range: MinMax(usize)) ItemTemplate {
@@ -348,10 +278,10 @@ fn placeDoor(coord: Coord, locked: bool) void {
 }
 
 fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
-    const echoring = _createItem(Ring, items.EcholocationRing);
+    const echoring = items.createItem(Ring, items.EcholocationRing);
     echoring.worn_since = state.ticks;
 
-    state.player = placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
+    state.player = mobs.placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
     state.player.inventory.rings[0] = echoring;
     state.player.prisoner_status = Prisoner{ .of = .Necromancer };
 }
@@ -546,7 +476,7 @@ fn excavatePrefab(
                         switch (feature) {
                             .Potion => |pid| {
                                 if (utils.findById(&items.POTIONS, pid)) |potion_i| {
-                                    const potion_o = _createItem(Potion, items.POTIONS[potion_i]);
+                                    const potion_o = items.createItem(Potion, items.POTIONS[potion_i]);
                                     state.dungeon.itemsAt(rc).append(Item{ .Potion = potion_o }) catch err.wat();
                                 } else {
                                     std.log.err(
@@ -599,9 +529,9 @@ fn excavatePrefab(
                     const p_ind = utils.findById(surfaces.props.items, Configs[room.rect.start.z].bars);
                     _ = placeProp(rc, &surfaces.props.items[p_ind.?]);
                 },
-                .Loot1 => state.dungeon.itemsAt(rc).append(_createItemFromTemplate(loot_item1)) catch err.wat(),
-                .Loot2 => state.dungeon.itemsAt(rc).append(_createItemFromTemplate(loot_item2)) catch err.wat(),
-                .RareLoot => state.dungeon.itemsAt(rc).append(_createItemFromTemplate(rare_loot_item)) catch err.wat(),
+                .Loot1 => state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(loot_item1)) catch err.wat(),
+                .Loot2 => state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(loot_item2)) catch err.wat(),
+                .RareLoot => state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(rare_loot_item)) catch err.wat(),
                 else => {},
             }
         }
@@ -630,7 +560,7 @@ fn excavatePrefab(
                     (mob_f.work_at orelse mob_f.spawn_at).y + room.rect.start.y + starty,
                 );
 
-                _ = placeMob(allocator, &mobs.MOBS[mob_template], coord, .{
+                _ = mobs.placeMob(allocator, &mobs.MOBS[mob_template], coord, .{
                     .work_area = work_area,
                 });
             } else {
@@ -1650,7 +1580,7 @@ pub fn placeItems(level: usize) void {
             }
 
             const t = _chooseLootItem(&item_weights, minmax(usize, 0, 100));
-            const item = _createItemFromTemplate(t);
+            const item = items.createItemFromTemplate(t);
             state.dungeon.itemsAt(item_coord).append(item) catch err.wat();
         }
     }
@@ -1728,7 +1658,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
                 const coord = Coord.new2(level, x, y);
                 if (!isTileAvailable(coord)) continue;
 
-                const guard = placeMob(alloc, &mobs.PatrolTemplate, coord, .{});
+                const guard = mobs.placeMob(alloc, &mobs.PatrolTemplate, coord, .{});
                 if (patrol_warden) |warden| {
                     warden.squad_members.append(guard) catch err.wat();
                 } else {
@@ -1754,7 +1684,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
                 while (tries > 0) : (tries -= 1) {
                     const post_coord = room.rect.randomCoord();
                     if (isTileAvailable(post_coord) and !state.dungeon.at(post_coord).prison) {
-                        _ = placeMob(alloc, mob.template, post_coord, .{
+                        _ = mobs.placeMob(alloc, mob.template, post_coord, .{
                             .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
                         });
                         break;
@@ -1775,7 +1705,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
                 const post_coord = room.rect.randomCoord();
                 if (isTileAvailable(post_coord) and !state.dungeon.at(post_coord).prison) {
                     placed_ctr -= 1;
-                    _ = placeMob(alloc, required_mob.template, post_coord, .{});
+                    _ = mobs.placeMob(alloc, required_mob.template, post_coord, .{});
                     break;
                 }
             }
@@ -1934,7 +1864,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                 1 => {
                     if (Configs[level].allow_statues and statues == 0 and rng.onein(2)) {
                         const statue = rng.chooseUnweighted(mobs.MobTemplate, &mobs.STATUES);
-                        _ = placeMob(alloc, &statue, coord, .{});
+                        _ = mobs.placeMob(alloc, &statue, coord, .{});
                         statues += 1;
                     } else if (props < 3) {
                         const prop = rng.chooseUnweighted(Prop, Configs[level].props.*);
@@ -2116,7 +2046,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
         if (!d.is_diagonal()) continue;
         if (up_staircase.move(d, state.mapgeometry)) |neighbor| {
             if (state.is_walkable(neighbor, .{ .right_now = true })) {
-                _ = placeMob(alloc, &mobs.SentinelTemplate, neighbor, .{});
+                _ = mobs.placeMob(alloc, &mobs.SentinelTemplate, neighbor, .{});
                 break;
             }
         }
@@ -2399,7 +2329,7 @@ fn levelFeaturePrisonersMaybe(c: usize, coord: Coord, room: *const Room, prefab:
 
 fn levelFeaturePrisoners(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
     const prisoner_t = rng.chooseUnweighted(mobs.MobTemplate, &mobs.PRISONERS);
-    const prisoner = placeMob(alloc, &prisoner_t, coord, .{});
+    const prisoner = mobs.placeMob(alloc, &prisoner_t, coord, .{});
     prisoner.prisoner_status = Prisoner{ .of = .Necromancer };
 
     for (&CARDINAL_DIRECTIONS) |direction|
@@ -2430,7 +2360,7 @@ fn levelFeatureVials(c: usize, coord: Coord, room: *const Room, prefab: *const P
 
 fn levelFeatureExperiments(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
     const exp_t = rng.chooseUnweighted(mobs.MobTemplate, &mobs.EXPERIMENTS);
-    const exp = placeMob(alloc, &exp_t, coord, .{});
+    const exp = mobs.placeMob(alloc, &exp_t, coord, .{});
 }
 
 // Randomly place a vial ore. If the Y coordinate is even, create a container and
