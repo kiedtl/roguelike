@@ -11,9 +11,7 @@ const rng = @import("rng.zig");
 
 pub const ExplosionOpts = struct {
     // The "strength" of the explosion determines the radius of the expl.
-    // Generally, ((strength / 100) * 2) will be the maximum radius, attainable
-    // if the explosion is unimpeded by walls, and (strength / 100) will be the
-    // minimum radius, if only walls were mulched by the explosion.
+    // Generally, (strength / 100) will be the maximum radius.
     strength: usize,
 
     // Whether to pulverise the player if the blast hits them. The only time
@@ -21,19 +19,6 @@ pub const ExplosionOpts = struct {
     spare_player: bool = false,
 
     // Who created the explosion, and is thus responsible for the damage to mobs?
-    // Should always be either the player or null.
-    //
-    // (Or... could there be explosions from spells cast by sorcerors? Hmmmmmmm:
-    //   - The burning brute gestures horribly at the sentinel!
-    //   - The sentinel explodes in a blast of fire!
-    //   - KABOOM!
-    //   - The blast pulverises the patrol!! (130% dmg) (×2)
-    //   - The blast hits you!!
-    //   - The blast hits the guard! (59% dmg)
-    //   - The sentinel dies.
-    //   - The patrol dies. (×2)
-    // )
-    //
     culprit: ?*Mob = null,
 };
 
@@ -84,7 +69,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
     var deg: usize = 0;
     while (deg < 360) : (deg += 30) {
         const s = rng.range(usize, opts.strength / 2, opts.strength);
-        fov.rayCastOctants(ground0, (s / 100) * 2, s, S._opacityFunc, &result, deg, deg + 31);
+        fov.rayCastOctants(ground0, (s / 100), s, S._opacityFunc, &result, deg, deg + 31);
     }
 
     result[ground0.y][ground0.x] = 100; // Ground zero is always harmed
@@ -97,7 +82,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
         if (cell > 0) {
             const coord = Coord.new2(ground0.z, x, y);
 
-            const max_range = (opts.strength / 100) * 2;
+            const max_range = opts.strength / 100;
             const chance_for_fire = 100 - (coord.distance(ground0) * 100 / max_range);
             if (rng.percent(chance_for_fire)) {
                 fire.setTileOnFire(coord);

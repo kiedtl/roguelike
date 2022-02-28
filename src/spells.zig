@@ -54,6 +54,7 @@ fn _resurrectFire(spell: Spell, opts: SpellOptions, coord: Coord) void {
         }
         corpse.addStatus(.Fire, 0, 0, true);
         corpse.addStatus(.Fast, 0, 0, true);
+        corpse.addStatus(.Shove, 0, 0, true);
         corpse.addStatus(.Explosive, opts.power, 20, false);
     }
 }
