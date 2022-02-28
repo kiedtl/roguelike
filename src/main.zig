@@ -309,8 +309,6 @@ fn tickGame() void {
             continue;
         }
 
-        var is_first = true;
-
         while (mob.energy >= 0) {
             if (mob.is_dead) {
                 break;
@@ -351,6 +349,10 @@ fn tickGame() void {
                 }
             }
 
+            if (state.dungeon.at(mob.coord).mob == null) {
+                err.bug("Mob {} is dancing around the chessboard!", .{mob.displayName()});
+            }
+
             mob.tickFOV();
 
             if (mob == state.player) {
@@ -360,8 +362,6 @@ fn tickGame() void {
             if (prev_energy <= mob.energy) {
                 err.bug("Mob {} did nothing during its turn!", .{mob.displayName()});
             }
-
-            is_first = false;
         }
     }
 }
@@ -398,6 +398,12 @@ fn viewerTickGame(cur_level: usize) void {
             mob.tickRings();
             mob.tickStatuses();
 
+            if (state.dungeon.at(mob.coord).mob == null) {
+                err.bug("Mob {} isn't where it is! (mob.coord: {}, last activity: {})", .{
+                    mob.displayName(), mob.coord, mob.activities.current(),
+                });
+            }
+
             if (mob.isUnderStatus(.Paralysis)) |_| {
                 _ = mob.rest();
                 continue;
@@ -406,6 +412,12 @@ fn viewerTickGame(cur_level: usize) void {
             }
 
             mob.tickFOV();
+
+            if (state.dungeon.at(mob.coord).mob == null) {
+                err.bug("Mob {} isn't where it is! (mob.coord: {}, last activity: {})", .{
+                    mob.displayName(), mob.coord, mob.activities.current(),
+                });
+            }
 
             assert(prev_energy > mob.energy);
         }

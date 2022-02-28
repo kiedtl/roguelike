@@ -22,9 +22,7 @@ const DEFENDER_ENRAGED_NBONUS: isize = 20;
 const DEFENDER_HELD_NBONUS: isize = 14;
 const DEFENDER_STEALTH_BONUS: isize = 7;
 
-pub fn damageOutput(attacker: *const Mob, recipient: *const Mob, is_stab: bool) usize {
-    const weapon = attacker.inventory.wielded orelse &items.UnarmedWeapon;
-
+pub fn damageOutput(attacker: *const Mob, recipient: *const Mob, weapon: *const Weapon, is_stab: bool) usize {
     const recipient_armor = recipient.inventory.armor orelse &items.NoneArmor;
     const max_damage = weapon.damages.resultOf(&recipient_armor.resists).sum();
 
@@ -40,12 +38,11 @@ pub fn damageOutput(attacker: *const Mob, recipient: *const Mob, is_stab: bool) 
     return damage;
 }
 
-pub fn chanceOfAttackLanding(attacker: *const Mob, defender: *const Mob) usize {
+pub fn chanceOfAttackLanding(attacker: *const Mob, defender: *const Mob, weapon: *const Weapon) usize {
     if (rng.onein(CHANCE_OF_AUTO_HIT)) return 100;
     if (rng.onein(CHANCE_OF_AUTO_MISS)) return 0;
 
     const tile_light = state.dungeon.lightAt(defender.coord).*;
-    const attacker_weapon = attacker.inventory.wielded orelse &items.UnarmedWeapon;
 
     var chance: isize = 70;
 

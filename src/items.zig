@@ -332,11 +332,7 @@ fn _triggerWarningHorn(mob: *Mob, evoc: *Evocable) Evocable.EvokeError!void {
     if (mob == state.player) {
         state.message(.Info, "You blow the horn!", .{});
     } else if (state.player.cansee(mob.coord)) {
-        // ↓ this isn't needed, but it's a workaround for a Zig compiler bug
-        // FIXME: when upgraded to Zig v9, poke this code and see if the bug's
-        // still there
-        const mobname = mob.ai.profession_name orelse mob.species;
-        state.message(.Info, "The {} blows its warning horn!", .{mobname});
+        state.message(.Info, "The {} blows its warning horn!", .{mob.displayName()});
     }
 }
 
@@ -481,7 +477,7 @@ const LACERATING_STRS = [_][]DamageStr{
     dmgstr(150, "mangle", "mangles", " beyond recognition"),
 };
 
-pub const UnarmedWeapon = Weapon{
+pub const FistWeapon = Weapon{
     .id = "none",
     .name = "none",
     .delay = 80,
@@ -499,6 +495,49 @@ pub const UnarmedWeapon = Weapon{
         dmgstr(030, "hit", "hits", ""),
         dmgstr(040, "bludgeon", "bludgeons", ""),
         dmgstr(060, "pummel", "pummels", ""),
+    },
+};
+
+pub const ClawWeapon = Weapon{
+    .id = "none",
+    .name = "none",
+    .delay = 90,
+    .damages = .{
+        .Crushing = 0,
+        .Pulping = 3,
+        .Slashing = 0,
+        .Piercing = 0,
+        .Lacerating = 9,
+    },
+    .main_damage = .Lacerating,
+    .secondary_damage = .Pulping,
+    .strs = &[_]DamageStr{
+        dmgstr(010, "scratch", "scratches", ""),
+        dmgstr(030, "claw", "claws", ""),
+        dmgstr(050, "shred", "shreds", ""),
+        dmgstr(090, "shred", "shreds", " like wet paper"),
+        dmgstr(100, "tear", "tears", " into pieces"),
+        dmgstr(150, "tear", "tears", " into tiny pieces"),
+        dmgstr(200, "mangle", "mangles", " beyond recognition"),
+    },
+};
+
+pub const KickWeapon = Weapon{
+    .id = "none",
+    .name = "none",
+    .delay = 100,
+    .damages = .{
+        .Crushing = 0,
+        .Pulping = 3,
+        .Slashing = 0,
+        .Piercing = 0,
+        .Lacerating = 9,
+    },
+    .main_damage = .Lacerating,
+    .secondary_damage = .Pulping,
+    .strs = &[_]DamageStr{
+        dmgstr(010, "kick", "kicks", ""),
+        dmgstr(080, "curbstomp", "curbstomps", ""),
     },
 };
 

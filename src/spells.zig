@@ -27,6 +27,21 @@ fn _effectBoltLightning(spell: Spell, opts: SpellOptions, coord: Coord) void {
     }
 }
 
+pub const BOLT_FIRE = Spell{ .name = "bolt of fire", .cast_type = .Bolt, .noise = .Medium, .effect_type = .{ .Custom = _effectBoltFire } };
+fn _effectBoltFire(spell: Spell, opts: SpellOptions, coord: Coord) void {
+    if (state.dungeon.at(coord).mob) |victim| {
+        const avg_dmg = opts.power;
+        const dmg = rng.rangeClumping(usize, avg_dmg / 2, avg_dmg * 2, 2);
+        victim.takeDamage(.{
+            .amount = @intToFloat(f64, dmg),
+            .source = .RangedAttack,
+            .kind = .Fire,
+            .blood = false,
+        });
+        victim.addStatus(.Fire, 0, opts.duration, false);
+    }
+}
+
 pub const CAST_RESURRECT_NORMAL = Spell{ .name = "resurrection", .cast_type = .Smite, .smite_target_type = .Corpse, .effect_type = .{ .Custom = _resurrectNormal }, .checks_will = false };
 fn _resurrectNormal(spell: Spell, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;

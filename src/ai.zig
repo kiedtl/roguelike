@@ -78,7 +78,7 @@ pub fn currentEnemy(me: *Mob) *EnemyRecord {
 //
 // TODO: flee if flanked and there are no allies in sight
 pub fn shouldFlee(me: *Mob) bool {
-    if (me.is_undead) return false;
+    if (me.ai.is_fearless or me.is_undead) return false;
 
     var result = false;
 
@@ -742,6 +742,8 @@ pub fn tortureWork(mob: *Mob, alloc: *mem.Allocator) void {
 // Check if we can evoke anything.
 // - Move towards hostile, bapping it if we can.
 pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
+    assert(state.dungeon.at(mob.coord).mob != null);
+
     const target = currentEnemy(mob).mob;
     assert(mob.isHostileTo(target));
 
@@ -838,6 +840,8 @@ pub fn sentinelFight(mob: *Mob, alloc: *mem.Allocator) void {
 }
 
 fn _isValidTargetForSpell(caster: *Mob, spell: SpellOptions, target: *Mob) bool {
+    assert(!target.is_dead);
+
     if (!caster.cansee(target.coord))
         return false;
 
@@ -861,7 +865,7 @@ fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
     } else {
         return for (caster.enemies.items) |enemy_record| {
             if (_isValidTargetForSpell(caster, spell, enemy_record.mob))
-                return enemy_record.last_seen;
+                return enemy_record.mob.coord;
         } else null;
     }
 }
@@ -874,7 +878,11 @@ pub fn mageFight(mob: *Mob, alloc: *mem.Allocator) void {
         }
     }
 
-    _ = mob.rest();
+    if (mob.coord.distance(currentEnemy(mob).mob.coord) == 1) {
+        _ = mob.fight(currentEnemy(mob).mob);
+    } else {
+        _ = mob.rest();
+    }
 }
 
 // - Are there allies within view?

@@ -10,6 +10,18 @@ const Projectile = items.Projectile;
 const StackBuffer = buffer.StackBuffer;
 const SpellOptions = spells.SpellOptions;
 
+pub const HumanSpecies = Species{ .name = "human" };
+pub const GoblinSpecies = Species{ .name = "goblin" };
+pub const ImpSpecies = Species{ .name = "imp" };
+pub const BurningBruteSpecies = Species{
+    .name = "burning brute",
+    .default_attack = &items.ClawWeapon,
+    .aux_attacks = &[_]*const Weapon{
+        &items.ClawWeapon,
+        &items.KickWeapon,
+    },
+};
+
 pub const MobTemplate = struct {
     id: []const u8,
     mob: Mob,
@@ -25,7 +37,7 @@ pub const MobTemplate = struct {
 pub const ExecutionerTemplate = MobTemplate{
     .id = "executioner",
     .mob = .{
-        .species = "human",
+        .species = &GoblinSpecies,
         .tile = 'א',
         .ai = AI{
             .profession_name = "executioner",
@@ -53,7 +65,7 @@ pub const ExecutionerTemplate = MobTemplate{
 pub const WatcherTemplate = MobTemplate{
     .id = "watcher",
     .mob = .{
-        .species = "imp",
+        .species = &ImpSpecies,
         .tile = 'ש',
         .ai = AI{
             .profession_name = "watcher",
@@ -80,7 +92,7 @@ pub const WatcherTemplate = MobTemplate{
 pub const WardenTemplate = MobTemplate{
     .id = "warden",
     .mob = .{
-        .species = "goblin",
+        .species = &GoblinSpecies,
         .tile = 'ם',
         .ai = AI{
             .profession_name = "warden",
@@ -111,7 +123,7 @@ pub const WardenTemplate = MobTemplate{
 pub const GuardTemplate = MobTemplate{
     .id = "guard",
     .mob = .{
-        .species = "goblin",
+        .species = &GoblinSpecies,
         .tile = 'ט',
         .ai = AI{
             .profession_name = "guard",
@@ -140,7 +152,7 @@ pub const GuardTemplate = MobTemplate{
 pub const SentinelTemplate = MobTemplate{
     .id = "sentinel",
     .mob = .{
-        .species = "human",
+        .species = &HumanSpecies,
         .tile = 'ל',
         .ai = AI{
             .profession_name = "sentinel",
@@ -175,7 +187,7 @@ pub const SentinelTemplate = MobTemplate{
 pub const PatrolTemplate = MobTemplate{
     .id = "patrol",
     .mob = .{
-        .species = "goblin",
+        .species = &GoblinSpecies,
         .tile = 'ק',
         .ai = AI{
             .profession_name = "patrol",
@@ -204,7 +216,7 @@ pub const PatrolTemplate = MobTemplate{
 pub const PlayerTemplate = MobTemplate{
     .id = "player",
     .mob = .{
-        .species = "human",
+        .species = &HumanSpecies,
         .tile = '@',
         .prisoner_status = .{ .of = .Necromancer },
         .ai = AI{
@@ -240,7 +252,7 @@ pub const PlayerTemplate = MobTemplate{
 pub const InteractionLaborerTemplate = MobTemplate{
     .id = "interaction_laborer",
     .mob = .{
-        .species = "goblin",
+        .species = &GoblinSpecies,
         .tile = 'w',
         .ai = AI{
             .profession_name = "slave",
@@ -267,7 +279,7 @@ pub const InteractionLaborerTemplate = MobTemplate{
 pub const GoblinTemplate = MobTemplate{
     .id = "goblin",
     .mob = .{
-        .species = "goblin",
+        .species = &GoblinSpecies,
         .tile = 'g',
         .ai = AI{
             .profession_name = null,
@@ -281,7 +293,7 @@ pub const GoblinTemplate = MobTemplate{
         .vision = 8,
 
         .willpower = 3,
-        .base_dexterity = 30,
+        .base_dexterity = 20,
         .hearing = 5,
         .max_HP = 50,
         .memory_duration = 8,
@@ -297,7 +309,7 @@ pub const GoblinTemplate = MobTemplate{
 pub const KyaniteStatueTemplate = MobTemplate{
     .id = "kyanite_statue",
     .mob = .{
-        .species = "kyanite statue",
+        .species = &Species{ .name = "kyanite statue" },
         .tile = '☺',
         .ai = AI{
             .profession_name = null,
@@ -333,7 +345,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
 pub const NebroStatueTemplate = MobTemplate{
     .id = "nebro_statue",
     .mob = .{
-        .species = "nebro statue",
+        .species = &Species{ .name = "nebro statue" },
         .tile = '☻',
         .ai = AI{
             .profession_name = null,
@@ -369,7 +381,7 @@ pub const NebroStatueTemplate = MobTemplate{
 pub const CrystalStatueTemplate = MobTemplate{
     .id = "crystal_statue",
     .mob = .{
-        .species = "crystal statue",
+        .species = &Species{ .name = "crystal statue" },
         .tile = '☻',
         .ai = AI{
             .profession_name = null,
@@ -405,7 +417,7 @@ pub const CrystalStatueTemplate = MobTemplate{
 pub const AlchemistTemplate = MobTemplate{
     .id = "alchemist",
     .mob = .{
-        .species = "human",
+        .species = &HumanSpecies,
         .tile = 'w',
         .ai = AI{
             .profession_name = "alchemist",
@@ -432,7 +444,7 @@ pub const AlchemistTemplate = MobTemplate{
 pub const CleanerTemplate = MobTemplate{
     .id = "cleaner",
     .mob = .{
-        .species = "human",
+        .species = &GoblinSpecies,
         .tile = 'w',
         .ai = AI{
             .profession_name = "cleaner",
@@ -460,7 +472,7 @@ pub const CleanerTemplate = MobTemplate{
 pub const HaulerTemplate = MobTemplate{
     .id = "hauler",
     .mob = .{
-        .species = "goblin",
+        .species = &GoblinSpecies,
         .tile = 'w',
         .ai = AI{
             .profession_name = "hauler",
@@ -488,7 +500,7 @@ pub const HaulerTemplate = MobTemplate{
 pub const EngineerTemplate = MobTemplate{
     .id = "engineer",
     .mob = .{
-        .species = "goblin",
+        .species = &GoblinSpecies,
         .tile = 'w',
         .ai = AI{
             .profession_name = "engineer",
@@ -517,7 +529,7 @@ pub const EngineerTemplate = MobTemplate{
 pub const TorturerNecromancerTemplate = MobTemplate{
     .id = "torturer_necromancer",
     .mob = .{
-        .species = "necromancer",
+        .species = &HumanSpecies,
         .tile = 'Ñ',
         .ai = AI{
             .profession_name = "necromancer",
@@ -550,10 +562,44 @@ pub const TorturerNecromancerTemplate = MobTemplate{
     .armor = &items.ChainmailArmor,
 };
 
+pub const BurningBruteTemplate = MobTemplate{
+    .id = "burning_brute",
+    .mob = .{
+        .species = &BurningBruteSpecies,
+        .tile = 'B',
+        .ai = AI{
+            .profession_name = null,
+            .profession_description = "sulking",
+            .work_fn = ai.patrolWork,
+            .fight_fn = ai.mageFight,
+            .is_combative = true,
+            .is_curious = true,
+            .is_fearless = true,
+        },
+        .allegiance = .Necromancer,
+        .vision = 5,
+        .spells = &[_]SpellOptions{
+            .{ .spell = &spells.BOLT_FIRE, .power = 5, .duration = 10 },
+        },
+
+        .willpower = 8,
+        .base_dexterity = 20,
+        .hearing = 6,
+        .max_HP = 50,
+        .memory_duration = 6,
+        .base_speed = 100,
+        .blood = null,
+
+        .innate_resists = .{ .rPois = 3, .rFire = 3, .rElec = -1 },
+
+        .base_strength = 40,
+    },
+};
+
 pub const TanusExperiment = MobTemplate{
     .id = "tanus_experiment",
     .mob = .{
-        .species = "tanusian experiment",
+        .species = &Species{ .name = "tanusian experiment" },
         .tile = 'e',
         .ai = AI{
             .profession_name = null,
@@ -583,7 +629,7 @@ pub const TanusExperiment = MobTemplate{
 pub const CatalineExperiment = MobTemplate{
     .id = "cataline_experiment",
     .mob = .{
-        .species = "catalinic experiment",
+        .species = &Species{ .name = "catalinic experiment" },
         .tile = 'e',
         .ai = AI{
             .profession_name = null,
@@ -613,7 +659,7 @@ pub const CatalineExperiment = MobTemplate{
 pub const FlouinExperiment = MobTemplate{
     .id = "flouin_experiment",
     .mob = .{
-        .species = "flouinian experiment",
+        .species = &Species{ .name = "flouinian experiment" },
         .tile = 'e',
         .ai = AI{
             .profession_name = null,
@@ -643,7 +689,7 @@ pub const FlouinExperiment = MobTemplate{
 pub const PhytinExperiment = MobTemplate{
     .id = "phytin_experiment",
     .mob = .{
-        .species = "phytinic experiment",
+        .species = &Species{ .name = "phytinic experiment" },
         .tile = 'e',
         .ai = AI{
             .profession_name = null,
@@ -688,6 +734,7 @@ pub const MOBS = [_]MobTemplate{
     EngineerTemplate,
     HaulerTemplate,
     TorturerNecromancerTemplate,
+    BurningBruteTemplate,
     TanusExperiment,
     CatalineExperiment,
     FlouinExperiment,

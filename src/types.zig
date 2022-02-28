@@ -692,7 +692,7 @@ pub const Activity = union(enum) {
     Interact,
     Rest,
     Move: Direction,
-    Attack: struct { coord: Coord, weapon_delay: usize },
+    Attack: struct { coord: Coord, delay: usize },
     Teleport: Coord,
     Grab,
     Drop,
@@ -706,7 +706,7 @@ pub const Activity = union(enum) {
             .Interact => 90,
             .Rest, .Move, .Teleport, .Grab, .Drop, .Use => 100,
             .Cast, .Throw, .Fire => 120,
-            .Attack => |a| 120 * a.weapon_delay / 100,
+            .Attack => |a| 120 * a.delay / 100,
         };
     }
 };
@@ -1059,6 +1059,9 @@ pub const AI = struct {
     // Should the mob investigate noises?
     is_curious: bool,
 
+    // Should the mob ever flee at low health?
+    is_fearless: bool = false,
+
     flee_effect: ?StatusDataInfo = .{
         .status = .Fast,
         .duration = 10,
@@ -1104,12 +1107,18 @@ pub const Prisoner = struct {
     }
 };
 
+pub const Species = struct {
+    name: []const u8,
+    default_attack: *const Weapon = &items.FistWeapon,
+    aux_attacks: []const *const Weapon = &[_]*const Weapon{},
+};
+
 pub const Mob = struct { // {{{
     // linked list stuff
     __next: ?*Mob = null,
     __prev: ?*Mob = null,
 
-    species: []const u8,
+    species: *const Species,
     tile: u21,
     allegiance: Allegiance,
 
@@ -1196,7 +1205,7 @@ pub const Mob = struct { // {{{
             var buf: [32]u8 = undefined;
         };
 
-        const base_name = self.ai.profession_name orelse self.species;
+        const base_name = self.ai.profession_name orelse self.species.name;
 
         if (self.is_undead) {
             var fbs = std.io.fixedBufferStream(&Static.buf);
@@ -1650,14 +1659,14 @@ pub const Mob = struct { // {{{
 
         if (state.dungeon.at(dest).mob) |other| {
             if (!self.canSwapWith(other, direction)) return false;
-            state.dungeon.at(dest).mob = self;
-            state.dungeon.at(coord).mob = other;
             self.coord = dest;
+            state.dungeon.at(dest).mob = self;
             other.coord = coord;
+            state.dungeon.at(coord).mob = other;
         } else {
+            self.coord = dest;
             state.dungeon.at(dest).mob = self;
             state.dungeon.at(coord).mob = null;
-            self.coord = dest;
         }
 
         if (state.dungeon.at(dest).surface) |surface| {
@@ -1688,17 +1697,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn fight(attacker: *Mob, recipient: *Mob) void {
-        assert(!attacker.is_dead);
-        assert(!recipient.is_dead);
-
-        assert(attacker.strength() > 0);
-        assert(recipient.strength() > 0);
-
-        const attacker_weapon = attacker.inventory.wielded orelse &items.UnarmedWeapon;
-
-        attacker.declareAction(.{
-            .Attack = .{ .coord = recipient.coord, .weapon_delay = attacker_weapon.delay },
-        });
+        assert(attacker.coord.distance(recipient.coord) == 1);
 
         // If the defender didn't know about the attacker's existence now's a
         // good time to find out
@@ -1708,8 +1707,30 @@ pub const Mob = struct { // {{{
             .last_seen = attacker.coord,
         });
 
-        // const chance_of_land = combat.chanceOfAttackLanding(attacker, recipient);
-        // const chance_of_dodge = combat.chanceOfAttackDodged(recipient, attacker);
+        var weapons = StackBuffer(*const Weapon, 7).init(null);
+        weapons.append(attacker.inventory.wielded orelse attacker.species.default_attack) catch unreachable;
+        for (attacker.species.aux_attacks) |w| weapons.append(w) catch unreachable;
+
+        var longest_delay: usize = 0;
+        for (weapons.constSlice()) |weapon| {
+            if (weapon.delay > longest_delay) longest_delay = weapon.delay;
+            _fightWithWeapon(attacker, recipient, weapon);
+        }
+
+        attacker.declareAction(.{
+            .Attack = .{ .coord = recipient.coord, .delay = longest_delay },
+        });
+    }
+
+    fn _fightWithWeapon(attacker: *Mob, recipient: *Mob, attacker_weapon: *const Weapon) void {
+        assert(!attacker.is_dead);
+        assert(!recipient.is_dead);
+
+        assert(attacker.strength() > 0);
+        assert(recipient.strength() > 0);
+
+        // const chance_of_land = combat.chanceOfAttackLanding(attacker, recipient, weapon);
+        // const chance_of_dodge = combat.chanceOfAttackDodged(recipient, attacker, weapon);
         // if (attacker.coord.eq(state.player.coord)) {
         //     state.message(.Info, "you attack: chance of land: {}, chance of dodge: {}", .{ chance_of_land, chance_of_dodge });
         // } else if (recipient.coord.eq(state.player.coord)) {
@@ -1717,7 +1738,7 @@ pub const Mob = struct { // {{{
         // }
 
         const hit =
-            (rng.range(usize, 1, 100) <= combat.chanceOfAttackLanding(attacker, recipient)) and
+            (rng.range(usize, 1, 100) <= combat.chanceOfAttackLanding(attacker, recipient, attacker_weapon)) and
             (rng.range(usize, 1, 100) >= combat.chanceOfAttackDodged(recipient, attacker));
 
         if (!hit) {
@@ -1763,7 +1784,7 @@ pub const Mob = struct { // {{{
         }
 
         const is_stab = !recipient.isAwareOfAttack(attacker.coord);
-        const damage = combat.damageOutput(attacker, recipient, is_stab);
+        const damage = combat.damageOutput(attacker, recipient, attacker_weapon, is_stab);
 
         recipient.takeDamage(.{
             .amount = @intToFloat(f64, damage),
@@ -1897,9 +1918,10 @@ pub const Mob = struct { // {{{
     pub fn raiseAsUndead(self: *Mob, corpse_coord: Coord) void {
         self.is_dead = false;
         self.init(&state.GPA.allocator); // FIXME: antipattern?
-        self.coord = corpse_coord;
 
         self.is_undead = true;
+
+        self.energy = 0;
 
         self.ai = .{
             .profession_name = null,
@@ -1911,6 +1933,8 @@ pub const Mob = struct { // {{{
             .is_curious = false,
             .flee_effect = null,
         };
+
+        self.blood = null;
 
         // FIXME: don't assume this (the player might be raising a corpse too!)
         self.allegiance = .Necromancer;
@@ -1927,10 +1951,11 @@ pub const Mob = struct { // {{{
         self.innate_resists.rElec = math.clamp(self.innate_resists.rElec - 1, -2, 3);
         self.innate_resists.rFume = 2;
 
-        self.willpower = 0;
+        self.willpower = 1;
 
         state.dungeon.at(corpse_coord).surface = null;
         state.dungeon.at(corpse_coord).mob = self;
+        self.coord = corpse_coord;
     }
 
     pub fn kill(self: *Mob) void {
@@ -1968,6 +1993,7 @@ pub const Mob = struct { // {{{
         self.ai.work_area.deinit();
 
         self.is_dead = true;
+        state.dungeon.at(self.coord).mob = null;
 
         if (!self.is_undead) {
             // Generate a corpse if possible.
@@ -1981,11 +2007,10 @@ pub const Mob = struct { // {{{
                 if (state.dungeon.at(child).surface == null) break child;
             } else null;
 
-            if (corpsetile) |c|
+            if (corpsetile) |c| {
                 state.dungeon.at(c).surface = .{ .Corpse = self };
+            }
         }
-
-        state.dungeon.at(self.coord).mob = null;
     }
 
     pub fn should_be_dead(self: *const Mob) bool {
