@@ -594,6 +594,7 @@ pub const BurningBruteTemplate = MobTemplate{
 
         .base_strength = 40,
     },
+    .statuses = &[_]StatusDataInfo{.{ .status = .Fire, .permanent = true }},
 };
 
 pub const TanusExperiment = MobTemplate{
