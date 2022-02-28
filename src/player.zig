@@ -37,7 +37,6 @@ pub const PlayerUpgrade = enum {
     Mana,
     Stealthy,
     Will,
-    Sniffing,
     Echolocating,
 
     pub fn announce(self: PlayerUpgrade) []const u8 {
@@ -52,7 +51,6 @@ pub const PlayerUpgrade = enum {
             .Mana => "You sense your inner strength grow.",
             .Stealthy => "You move stealthily.",
             .Will => "Your will hardens.",
-            .Sniffing => "Your sense of smell becomes acute.",
             .Echolocating => "Your sense of hearing becomes acute.",
         };
     }
@@ -81,7 +79,6 @@ pub const PlayerUpgrade = enum {
             .Mana => err.todo(),
             .Stealthy => state.player.base_stealth += 1,
             .Will => state.player.willpower = math.clamp(state.player.willpower + 3, 0, 10),
-            .Sniffing => err.todo(),
             .Echolocating => state.player.addStatus(.Echolocation, 1, 7, true),
         }
     }
