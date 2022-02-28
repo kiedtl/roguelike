@@ -846,6 +846,12 @@ pub const Status = enum {
     // Power field is explosion strength.
     Explosive,
 
+    // Makes the mob explode in a blast of electricty upon dying or the status
+    // running out.
+    //
+    // Power field is maximum damage dealt.
+    ExplosiveElec,
+
     // Makes the mob automatically suicide when the status runs out.
     //
     // Doesn't have a power field.
@@ -878,6 +884,7 @@ pub const Status = enum {
             .Enraged => "enraged",
             .Exhausted => "exhausted",
             .Explosive => "explosive",
+            .ExplosiveElec => "charged",
             .Lifespan => "lifespan",
         };
     }
@@ -902,13 +909,14 @@ pub const Status = enum {
             .Exhausted => .{ "feel", "looks", " exhausted" },
             .Lifespan => null,
             .Explosive => null,
+            .ExplosiveElec => null,
             .Echolocation => null,
             .Recuperate => null,
             .NightVision,
             .Backvision,
             .NightBlindness,
             .DayBlindness,
-            => err.wat(),
+            => null,
         };
     }
 
@@ -931,6 +939,7 @@ pub const Status = enum {
             .Enraged => .{ "stop", "stops", " raging" },
             .Exhausted => .{ "are no longer", "is no longer", " exhausted" },
             .Explosive => null,
+            .ExplosiveElec => null,
             .Lifespan => null,
             .Echolocation => null,
             .Recuperate => null,
@@ -938,7 +947,7 @@ pub const Status = enum {
             .Backvision,
             .NightBlindness,
             .DayBlindness,
-            => err.wat(),
+            => null,
         };
     }
 
@@ -2033,6 +2042,10 @@ pub const Mob = struct { // {{{
             explosions.kaboom(self.coord, .{ .strength = s.power });
         }
 
+        if (self.isUnderStatus(.ExplosiveElec)) |s| {
+            explosions.elecBurst(self.coord, s.power, self);
+        }
+
         self.squad_members.deinit();
         self.enemies.deinit();
         self.allies.deinit();
@@ -2167,10 +2180,6 @@ pub const Mob = struct { // {{{
             if (was_exhausting or s.exhausting)
                 self.addStatus(.Exhausted, 0, 10, false);
 
-            if (p_se.status == .Explosive) {
-                explosions.kaboom(self.coord, .{ .strength = p_se.power });
-            }
-
             if (p_se.status == .Lifespan) {
                 self.takeDamage(.{ .amount = self.HP * 1000 });
             }
@@ -2191,7 +2200,7 @@ pub const Mob = struct { // {{{
 
     pub fn isUnderStatus(self: *const Mob, status: Status) ?*const StatusDataInfo {
         const se = self.statuses.getPtrConst(status);
-        return if (se.permanent or se.duration == 0) null else se;
+        return if (!se.permanent and se.duration == 0) null else se;
     }
 
     pub fn lastDamagePercentage(self: *const Mob) usize {

@@ -741,6 +741,50 @@ pub fn tortureWork(mob: *Mob, alloc: *mem.Allocator) void {
     _ = mob.rest();
 }
 
+pub fn ballLightningWorkOrFight(mob: *Mob, alloc: *mem.Allocator) void {
+    var walkability_map: [HEIGHT][WIDTH]bool = undefined;
+    for (walkability_map) |*row, y| for (row) |*cell, x| {
+        const coord = Coord.new2(mob.coord.z, x, y);
+        cell.* = state.is_walkable(coord, .{ .mob = mob });
+    };
+
+    var conductivity_dijkmap: [HEIGHT][WIDTH]?f64 = undefined;
+    for (conductivity_dijkmap) |*row, y| for (row) |*cell, x| {
+        const coord = Coord.new2(mob.coord.z, x, y);
+
+        if (state.dungeon.at(coord).mob) |othermob| {
+            const rElec = othermob.resistance(.rElec);
+            cell.* = switch (rElec) {
+                100 => -4,
+                125 => -8,
+                150 => -16,
+                else => 0,
+            };
+            if (mob.isHostileTo(othermob) and rElec <= 0) {
+                cell.* = cell.*.? - 8;
+            }
+        } else cell.* = null;
+    };
+
+    dijkstra.dijkRollUphill(&conductivity_dijkmap, &DIRECTIONS, &walkability_map);
+
+    var direction: ?Direction = null;
+    var lowest_val: f64 = 999;
+    for (&DIRECTIONS) |d| if (mob.coord.move(d, state.mapgeometry)) |neighbor| {
+        if (conductivity_dijkmap[neighbor.y][neighbor.x]) |v| {
+            if (v < lowest_val) {
+                lowest_val = v;
+                direction = d;
+            }
+        }
+    };
+    direction = direction orelse rng.chooseUnweighted(Direction, &DIRECTIONS);
+
+    if (!mob.moveInDirection(direction.?)) {
+        _ = mob.rest();
+    }
+}
+
 // Check if we can evoke anything.
 // - Move towards hostile, bapping it if we can.
 pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
@@ -868,6 +912,10 @@ fn _isValidTargetForSpell(caster: *Mob, spell: SpellOptions, target: *Mob) bool 
 
 fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
     if (spell.spell.cast_type == .Smite and
+        spell.spell.smite_target_type == .Self)
+    {
+        return caster.coord;
+    } else if (spell.spell.cast_type == .Smite and
         spell.spell.smite_target_type == .Corpse)
     {
         return getNearestCorpse(caster);

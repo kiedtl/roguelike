@@ -9,10 +9,23 @@ const meta = std.meta;
 
 usingnamespace @import("types.zig");
 const err = @import("err.zig");
+const gas = @import("gas.zig");
 const mobs = @import("mobs.zig");
 const sound = @import("sound.zig");
 const state = @import("state.zig");
 const rng = @import("rng.zig");
+
+pub const CAST_CONJ_BALL_LIGHTNING = Spell{ .name = "conjure ball lightning", .cast_type = .Smite, .smite_target_type = .Self, .noise = .Quiet, .effect_type = .{ .Custom = _effectConjureBL } };
+fn _effectConjureBL(spell: Spell, opts: SpellOptions, coord: Coord) void {
+    for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
+        if (state.is_walkable(neighbor, .{ .right_now = true })) {
+            // FIXME: passing allocator directly is anti-pattern?
+            const w = mobs.placeMob(&state.GPA.allocator, &mobs.BallLightningTemplate, neighbor, .{});
+            w.addStatus(.Lifespan, 0, opts.power, false);
+            return;
+        }
+    };
+}
 
 pub const BOLT_LIGHTNING = Spell{ .name = "bolt of electricity", .cast_type = .Bolt, .noise = .Medium, .effect_type = .{ .Custom = _effectBoltLightning } };
 fn _effectBoltLightning(spell: Spell, opts: SpellOptions, coord: Coord) void {
@@ -43,6 +56,19 @@ fn _effectBoltFire(spell: Spell, opts: SpellOptions, coord: Coord) void {
     }
 }
 
+pub const CAST_HASTEN_ROT = Spell{ .name = "hasten rot", .cast_type = .Smite, .smite_target_type = .Corpse, .effect_type = .{ .Custom = _effectHastenRot }, .checks_will = false };
+fn _effectHastenRot(spell: Spell, opts: SpellOptions, coord: Coord) void {
+    const corpse = state.dungeon.at(coord).surface.?.Corpse;
+    state.dungeon.at(coord).surface = null;
+
+    state.dungeon.atGas(coord)[gas.Miasma.id] = @intToFloat(f64, opts.power) / 100;
+    if (state.player.cansee(coord)) {
+        state.message(.SpellCast, "The {} corpse explodes in a blast of foul miasma!", .{
+            corpse.displayName(),
+        });
+    }
+}
+
 pub const CAST_RESURRECT_FIRE = Spell{ .name = "burnt offering", .cast_type = .Smite, .smite_target_type = .Corpse, .effect_type = .{ .Custom = _resurrectFire }, .checks_will = false };
 fn _resurrectFire(spell: Spell, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
@@ -55,7 +81,8 @@ fn _resurrectFire(spell: Spell, opts: SpellOptions, coord: Coord) void {
         corpse.addStatus(.Fire, 0, 0, true);
         corpse.addStatus(.Fast, 0, 0, true);
         corpse.addStatus(.Shove, 0, 0, true);
-        corpse.addStatus(.Explosive, opts.power, 20, false);
+        corpse.addStatus(.Explosive, opts.power, 0, true);
+        corpse.addStatus(.Lifespan, opts.power, 20, false);
     }
 }
 
@@ -150,7 +177,7 @@ pub const Spell = struct {
 
     // Only used if cast_type == .Smite.
     smite_target_type: enum {
-        Mob, Corpse
+        Self, Mob, Corpse
     } = .Mob,
 
     checks_will: bool = false,
@@ -237,7 +264,7 @@ pub const Spell = struct {
             },
             .Smite => {
                 switch (self.smite_target_type) {
-                    .Mob => {
+                    .Self, .Mob => {
                         if (state.dungeon.at(target).mob == null) {
                             err.bug("Mage used smite-targeted spell on empty target!", .{});
                         }

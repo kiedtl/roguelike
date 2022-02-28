@@ -300,7 +300,7 @@ pub const GoblinTemplate = MobTemplate{
         .willpower = 3,
         .base_dexterity = 20,
         .hearing = 5,
-        .max_HP = 50,
+        .max_HP = 40,
         .memory_duration = 8,
         .base_speed = 100,
         .blood = .Blood,
@@ -609,6 +609,44 @@ pub const BurningBruteTemplate = MobTemplate{
     .statuses = &[_]StatusDataInfo{.{ .status = .Fire, .permanent = true }},
 };
 
+pub const SulfurFiendTemplate = MobTemplate{
+    .id = "sulfur_fiend",
+    .mob = .{
+        .species = &Species{ .name = "sulfur fiend" },
+        .tile = 'S',
+        .ai = AI{
+            .profession_name = null,
+            .profession_description = "sulking",
+            .work_fn = ai.patrolWork,
+            .fight_fn = ai.mageFight,
+            .is_combative = true,
+            .is_curious = true,
+            .is_fearless = true,
+        },
+        .allegiance = .Necromancer,
+        .vision = 5,
+        .spells = &[_]SpellOptions{
+            .{ .spell = &spells.CAST_HASTEN_ROT, .power = 150 },
+            .{ .spell = &spells.CAST_CONJ_BALL_LIGHTNING, .power = 12 },
+        },
+
+        .willpower = 10,
+        .base_dexterity = 25,
+        .hearing = 6,
+        .max_HP = 60,
+        .memory_duration = 6,
+        .base_speed = 100,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rPois = 3, .rFire = 1, .rElec = 3, .rFume = 2 },
+
+        .base_strength = 30,
+    },
+    .weapon = &items.MaceWeapon,
+    .armor = &items.GambesonArmor,
+};
+
 pub const FrozenFiendTemplate = MobTemplate{
     .id = "frozen_fiend",
     .mob = .{
@@ -808,6 +846,47 @@ pub const LivingIceTemplate = MobTemplate{
     //.statuses = &[_]StatusDataInfo{.{ .status = .Lifespan, .duration = 10 }},
 };
 
+pub const BallLightningTemplate = MobTemplate{
+    .id = "ball_lightning",
+    .mob = .{
+        .species = &Species{ .name = "ball lightning" },
+        .tile = 'b',
+        .ai = AI{
+            .profession_name = null,
+            .profession_description = "wandering",
+            .work_fn = ai.ballLightningWorkOrFight,
+            .fight_fn = ai.ballLightningWorkOrFight,
+            .is_combative = true,
+            .is_curious = false,
+            .is_fearless = true,
+        },
+        .allegiance = .Necromancer,
+
+        .hearing = 0,
+        .vision = 20,
+        .deg360_vision = true,
+        .no_show_fov = true,
+        .immobile = false,
+        .willpower = 1,
+        .base_dexterity = 50,
+        .deaf = true,
+        .max_HP = 3,
+        .memory_duration = 1,
+        .base_speed = 33,
+
+        .blood = null,
+        .corpse = .None,
+
+        .base_strength = 1,
+
+        .innate_resists = .{ .rPois = 3, .rFire = 1, .rElec = 3, .rMlee = 1, .rFume = 3 },
+    },
+    // This status should be added by whatever spell created it.
+    .statuses = &[_]StatusDataInfo{
+        .{ .status = .ExplosiveElec, .power = 20, .permanent = true },
+    },
+};
+
 pub const MOBS = [_]MobTemplate{
     ExecutionerTemplate,
     WatcherTemplate,
@@ -828,6 +907,7 @@ pub const MOBS = [_]MobTemplate{
     TorturerNecromancerTemplate,
     BurningBruteTemplate,
     FrozenFiendTemplate,
+    SulfurFiendTemplate,
     TanusExperiment,
     CatalineExperiment,
     FlouinExperiment,

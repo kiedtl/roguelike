@@ -9,6 +9,70 @@ const fire = @import("fire.zig");
 const sound = @import("sound.zig");
 const rng = @import("rng.zig");
 
+pub fn elecBurst(ground0: Coord, max_damage: usize, by: ?*Mob) void {
+    const S = struct {
+        pub fn _opacityFunc(coord: Coord) usize {
+            return switch (state.dungeon.at(coord).type) {
+                .Wall => 100,
+                .Lava, .Water, .Floor => b: {
+                    var hind: usize = 0;
+                    if (state.dungeon.at(coord).mob != null) {
+                        hind += 50;
+                    }
+                    if (state.dungeon.at(coord).surface) |surf| switch (surf) {
+                        .Machine => |m| if (m.isWalkable()) {
+                            hind += 50;
+                        } else {
+                            hind += 100;
+                        },
+                        .Prop => |p| if (p.walkable) {
+                            hind += 50;
+                        } else {
+                            hind += 100;
+                        },
+                        .Container => hind += 100,
+                        else => {},
+                    };
+                    break :b hind;
+                },
+            };
+        }
+    };
+
+    sound.makeNoise(ground0, .Explosion, .Loudest);
+    state.message(.Info, "KABOOM!", .{});
+
+    var result: [HEIGHT][WIDTH]usize = undefined;
+    for (result) |*row| for (row) |*cell| {
+        cell.* = 0;
+    };
+
+    var deg: usize = 0;
+    while (deg < 360) : (deg += 30) {
+        const s = rng.range(usize, 1, 2);
+        fov.rayCastOctants(ground0, s, 100, S._opacityFunc, &result, deg, deg + 31);
+    }
+
+    result[ground0.y][ground0.x] = 100; // Ground zero is always harmed
+    for (result) |row, y| for (row) |cell, x| {
+        if (cell > 0) {
+            const coord = Coord.new2(ground0.z, x, y);
+            const dmg = @intToFloat(f64, max_damage * cell / 100);
+            if (state.dungeon.at(coord).mob) |mob|
+                if (mob.resistance(.rElec) > 0) {
+                    mob.takeDamage(.{
+                        .amount = rng.range(f64, dmg / 2, dmg),
+                        .by_mob = by,
+                        .source = .Explosion,
+                        .kind = .Electric,
+                        .indirect = true,
+                    });
+                    state.messageAboutMob(mob, mob.coord, .Info, "are struck by a blast of electricity!", .{}, "is struck by a blast of electricity!", .{});
+                };
+        }
+    };
+}
+
 pub const ExplosionOpts = struct {
     // The "strength" of the explosion determines the radius of the expl.
     // Generally, (strength / 100) will be the maximum radius.

@@ -72,8 +72,16 @@ pub const Steam = Gas{
     .id = 7,
 };
 
+pub const Miasma = Gas{
+    .color = 0xd77fd7,
+    .dissipation_rate = 0.08,
+    .opacity = 0.00,
+    .trigger = triggerMiasma,
+    .id = 8,
+};
+
 pub const Gases = [_]Gas{
-    Poison, Paralysis, SmokeGas, Confusion, Slow, Healing, Dust, Steam,
+    Poison, Paralysis, SmokeGas, Confusion, Slow, Healing, Dust, Steam, Miasma,
 };
 pub const GAS_NUM: usize = Gases.len;
 
@@ -85,29 +93,34 @@ comptime {
 
 fn triggerNone(_: *Mob, __: f64) void {}
 
-fn triggerPoison(idiot: *Mob, quantity: f64) void {
+fn triggerPoison(mob: *Mob, quantity: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
-    idiot.addStatus(.Poison, 0, Status.MAX_DURATION, false);
+    mob.addStatus(.Poison, 0, Status.MAX_DURATION, false);
 }
 
-fn triggerParalysis(idiot: *Mob, quantity: f64) void {
+fn triggerParalysis(mob: *Mob, quantity: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
-    idiot.addStatus(.Paralysis, 0, Status.MAX_DURATION, false);
+    mob.addStatus(.Paralysis, 0, Status.MAX_DURATION, false);
 }
 
-fn triggerConfusion(idiot: *Mob, quantity: f64) void {
+fn triggerConfusion(mob: *Mob, quantity: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
-    idiot.addStatus(.Confusion, 0, Status.MAX_DURATION, false);
+    mob.addStatus(.Confusion, 0, Status.MAX_DURATION, false);
 }
 
-fn triggerSlow(idiot: *Mob, quantity: f64) void {
+fn triggerSlow(mob: *Mob, quantity: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
-    idiot.addStatus(.Slow, 0, Status.MAX_DURATION, false);
+    mob.addStatus(.Slow, 0, Status.MAX_DURATION, false);
 }
 
 fn triggerHealing(mob: *Mob, quantity: f64) void {
     mob.HP *= 1.1 * (quantity + 1.0);
     mob.HP = math.clamp(mob.HP, 0, mob.max_HP);
+}
+
+fn triggerMiasma(mob: *Mob, quantity: f64) void {
+    // TODO: Make the duration a clumping random value, depending on quantity
+    mob.addStatus(.Nausea, 0, Status.MAX_DURATION, false);
 }
 
 fn triggerDust(mob: *Mob, quantity: f64) void {}
