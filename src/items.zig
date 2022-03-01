@@ -552,8 +552,8 @@ pub const KickWeapon = Weapon{
     .main_damage = .Lacerating,
     .secondary_damage = .Pulping,
     .strs = &[_]DamageStr{
-        dmgstr(010, "kick", "kicks", ""),
-        dmgstr(080, "curbstomp", "curbstomps", ""),
+        dmgstr(080, "kick", "kicks", ""),
+        dmgstr(081, "curbstomp", "curbstomps", ""),
     },
 };
 
