@@ -29,6 +29,7 @@ pub fn damageOutput(attacker: *const Mob, recipient: *const Mob, weapon: *const 
     var damage: usize = 0;
     damage += rng.rangeClumping(usize, max_damage / 2, max_damage, 2);
     damage += if (attacker.isUnderStatus(.Enraged) != null) damage / 5 else 0;
+    damage += damage * (attacker.strength() / 2) / 100;
 
     if (is_stab) {
         const bonus = DamageType.stabBonus(weapon.main_damage);
