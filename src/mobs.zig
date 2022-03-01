@@ -90,7 +90,7 @@ pub const WatcherTemplate = MobTemplate{
         .base_speed = 60,
         .blood = .Blood,
 
-        .base_strength = 15, // weakling!
+        .base_strength = 8, // weakling!
     },
 };
 
@@ -118,7 +118,7 @@ pub const WardenTemplate = MobTemplate{
         .base_speed = 120,
         .blood = .Blood,
 
-        .base_strength = 24,
+        .base_strength = 20,
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.ChainmailArmor,
@@ -148,7 +148,7 @@ pub const GuardTemplate = MobTemplate{
         .base_speed = 100,
         .blood = .Blood,
 
-        .base_strength = 20,
+        .base_strength = 10,
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
@@ -182,7 +182,7 @@ pub const JavelineerTemplate = MobTemplate{
         .base_speed = 110,
         .blood = .Blood,
 
-        .base_strength = 25,
+        .base_strength = 15,
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
@@ -217,7 +217,7 @@ pub const SentinelTemplate = MobTemplate{
         .base_speed = 90,
         .blood = .Blood,
 
-        .base_strength = 25,
+        .base_strength = 18,
     },
     .weapon = &items.KnifeWeapon,
     .armor = &items.LeatherArmor,
@@ -276,12 +276,12 @@ pub const PlayerTemplate = MobTemplate{
         .willpower = 6,
         .base_dexterity = 25,
         .hearing = 5,
-        .max_HP = 60,
+        .max_HP = 80,
         .memory_duration = 10,
         .base_speed = 100,
         .blood = .Blood,
 
-        .base_strength = 18,
+        .base_strength = 20,
     },
     .weapon = &items.KnifeWeapon,
     .armor = &items.RobeArmor,
