@@ -244,6 +244,11 @@ fn readInput() bool {
                     _ = state.player.rest();
                     break :blk true;
                 },
+                termbox.TB_KEY_F5 => blk: {
+                    state.player.HP = state.player.max_HP;
+                    state.player.MP = state.player.max_MP;
+                    break :blk false;
+                },
                 else => false,
             };
         } else if (ev.ch != 0) {

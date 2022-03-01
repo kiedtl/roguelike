@@ -329,9 +329,11 @@ pub const KyaniteStatueTemplate = MobTemplate{
         .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
+
         .spells = &[_]SpellOptions{
-            .{ .spell = &spells.CAST_FREEZE, .duration = 2 },
+            .{ .MP_cost = 7, .spell = &spells.CAST_FREEZE, .duration = 2 },
         },
+        .max_MP = 7,
 
         .willpower = 8,
         .base_dexterity = 0,
@@ -366,9 +368,11 @@ pub const NebroStatueTemplate = MobTemplate{
         .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
+
         .spells = &[_]SpellOptions{
-            .{ .spell = &spells.CAST_FAMOUS, .duration = 5, .power = 30 },
+            .{ .MP_cost = 7, .spell = &spells.CAST_FAMOUS, .duration = 5, .power = 30 },
         },
+        .max_MP = 7,
 
         .willpower = 8,
         .base_dexterity = 0,
@@ -403,9 +407,11 @@ pub const CrystalStatueTemplate = MobTemplate{
         .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
+
         .spells = &[_]SpellOptions{
-            .{ .spell = &spells.CAST_FERMENT, .duration = 10, .power = 0 },
+            .{ .MP_cost = 7, .spell = &spells.CAST_FERMENT, .duration = 10, .power = 0 },
         },
+        .max_MP = 7,
 
         .willpower = 8,
         .base_dexterity = 0,
@@ -547,15 +553,18 @@ pub const TorturerNecromancerTemplate = MobTemplate{
             .is_combative = true,
             .is_curious = true,
             .is_fearless = true,
+            .spellcaster_backup_action = .KeepDistance,
         },
         .allegiance = .Necromancer,
         .vision = 5,
         .no_show_fov = false,
+
         .spells = &[_]SpellOptions{
-            .{ .spell = &spells.CAST_RESURRECT_NORMAL },
-            .{ .spell = &spells.CAST_FEAR, .duration = 9 },
-            .{ .spell = &spells.CAST_PAIN, .duration = 5, .power = 5 },
+            .{ .MP_cost = 3, .spell = &spells.CAST_RESURRECT_NORMAL },
+            .{ .MP_cost = 1, .spell = &spells.CAST_FEAR, .duration = 9 },
+            .{ .MP_cost = 1, .spell = &spells.CAST_PAIN, .duration = 5, .power = 5 },
         },
+        .max_MP = 10,
 
         .willpower = 10,
         .base_dexterity = 15,
@@ -585,13 +594,16 @@ pub const BurningBruteTemplate = MobTemplate{
             .is_curious = true,
             //.is_fearless = true, // Flee effect won't trigger otherwise.
             .flee_effect = .{ .status = .Enraged, .duration = 10, .exhausting = true },
+            .spellcaster_backup_action = .Melee,
         },
         .allegiance = .Necromancer,
         .vision = 5,
+
         .spells = &[_]SpellOptions{
-            .{ .spell = &spells.CAST_RESURRECT_FIRE, .power = 200, .duration = 10 },
-            .{ .spell = &spells.BOLT_FIRE, .power = 5, .duration = 10 },
+            .{ .MP_cost = 4, .spell = &spells.CAST_RESURRECT_FIRE, .power = 200, .duration = 10 },
+            .{ .MP_cost = 3, .spell = &spells.BOLT_FIRE, .power = 5, .duration = 10 },
         },
+        .max_MP = 10,
 
         .willpower = 8,
         .base_dexterity = 20,
@@ -622,18 +634,20 @@ pub const SulfurFiendTemplate = MobTemplate{
             .is_combative = true,
             .is_curious = true,
             .is_fearless = true,
+            .spellcaster_backup_action = .KeepDistance,
         },
         .allegiance = .Necromancer,
         .vision = 5,
         .spells = &[_]SpellOptions{
-            .{ .spell = &spells.CAST_HASTEN_ROT, .power = 150 },
-            .{ .spell = &spells.CAST_CONJ_BALL_LIGHTNING, .power = 12 },
+            .{ .MP_cost = 1, .spell = &spells.CAST_HASTEN_ROT, .power = 150 },
+            .{ .MP_cost = 4, .spell = &spells.CAST_CONJ_BALL_LIGHTNING, .power = 12 },
         },
+        .max_MP = 10,
 
         .willpower = 10,
         .base_dexterity = 25,
         .hearing = 6,
-        .max_HP = 60,
+        .max_HP = 40,
         .memory_duration = 6,
         .base_speed = 100,
         .blood = null,
@@ -660,26 +674,29 @@ pub const FrozenFiendTemplate = MobTemplate{
             .is_combative = true,
             .is_curious = true,
             .is_fearless = true,
+            .spellcaster_backup_action = .Melee,
         },
         .allegiance = .Necromancer,
         .vision = 7,
+
         .spells = &[_]SpellOptions{
-            .{ .spell = &spells.CAST_POLAR_LAYER, .power = 14 },
-            .{ .spell = &spells.CAST_RESURRECT_FROZEN, .power = 21 },
+            .{ .MP_cost = 2, .spell = &spells.CAST_POLAR_LAYER, .power = 14 },
+            .{ .MP_cost = 3, .spell = &spells.CAST_RESURRECT_FROZEN, .power = 21 },
         },
+        .max_MP = 15,
 
         .willpower = 8,
-        .base_dexterity = 15,
+        .base_dexterity = 20,
         .hearing = 6,
-        .max_HP = 50,
+        .max_HP = 55,
         .memory_duration = 6,
         .base_speed = 100,
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rPois = 2, .rFire = 0, .rElec = 2 },
+        .innate_resists = .{ .rPois = 2, .rElec = 2 },
 
-        .base_strength = 27,
+        .base_strength = 35,
     },
     .weapon = &items.MorningstarWeapon,
     .armor = &items.ChainmailArmor,

@@ -1088,6 +1088,13 @@ pub const AI = struct {
     // Should the mob ever flee at low health?
     is_fearless: bool = false,
 
+    // What should a mage-fighter do when it didn't/couldn't cast a spell?
+    //
+    // Obviously, only makes sense on mages.
+    spellcaster_backup_action: enum {
+        KeepDistance, Melee
+    } = .Melee,
+
     flee_effect: ?StatusDataInfo = .{
         .status = .Fast,
         .duration = 10,
@@ -1210,6 +1217,9 @@ pub const Mob = struct { // {{{
     // Listed in order of preference.
     spells: []const SpellOptions = &[_]SpellOptions{},
 
+    max_MP: usize = 0,
+    MP: usize = 0,
+
     pub const Inventory = struct {
         pack: PackBuffer = PackBuffer.init(&[_]Item{}),
 
@@ -1272,9 +1282,10 @@ pub const Mob = struct { // {{{
         };
     }
 
-    // Check surrounding temperature/gas/water and drown, burn, freeze, or
-    // corrode mob.
+    // Misc stuff.
     pub fn tick_env(self: *Mob) void {
+        self.MP = math.clamp(self.MP + 1, 0, self.max_MP);
+
         const gases = state.dungeon.atGas(self.coord);
         for (gases) |quantity, gasi| {
             if ((rng.range(usize, 0, 100) < self.resistance(.rFume) or gas.Gases[gasi].not_breathed) and quantity > 0.0) {
@@ -1936,6 +1947,7 @@ pub const Mob = struct { // {{{
 
     pub fn init(self: *Mob, alloc: *mem.Allocator) void {
         self.HP = self.max_HP;
+        self.MP = self.max_MP;
         self.squad_members = MobArrayList.init(alloc);
         self.enemies = std.ArrayList(EnemyRecord).init(alloc);
         self.allies = MobArrayList.init(alloc);
@@ -1950,8 +1962,6 @@ pub const Mob = struct { // {{{
             var membuf: [4096]u8 = undefined;
             var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
-            // FIXME: this will shove zombies through walls, since we're not
-            // checking if a tile is walkable!!
             var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 10, state.is_walkable, .{ .right_now = true }, &fba.allocator);
             defer dijk.deinit();
 

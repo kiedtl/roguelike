@@ -160,6 +160,7 @@ pub const SpellOptions = struct {
     caster_name: ?[]const u8 = null,
     duration: usize = Status.MAX_DURATION,
     power: usize = 0,
+    MP_cost: usize = 1,
 };
 
 pub const Spell = struct {
@@ -199,6 +200,14 @@ pub const Spell = struct {
         opts: SpellOptions,
         comptime message: ?[]const u8,
     ) void {
+        if (caster) |caster_mob| {
+            if (opts.MP_cost > caster_mob.MP) {
+                err.bug("Spellcaster casting spell without enough MP!", .{});
+            }
+
+            caster_mob.MP -= opts.MP_cost;
+        }
+
         if (self.checks_will and caster == null) {
             err.bug("Non-mob entity attempting to cast will-checked spell!", .{});
         }

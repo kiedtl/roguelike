@@ -112,7 +112,7 @@ pub fn alertAllyOfHostile(mob: *Mob) void {
 //   - No?
 //     - Move away from the hostile.
 //
-pub fn keepDistance(mob: *Mob, from: Coord, distance: usize) void {
+pub fn keepDistance(mob: *Mob, from: Coord, distance: usize) bool {
     var moved = false;
 
     const current_distance = mob.coord.distance(from);
@@ -163,9 +163,10 @@ pub fn keepDistance(mob: *Mob, from: Coord, distance: usize) void {
     }
 
     if (!moved) {
-        _ = mob.rest();
         mob.facing = mob.coord.closestDirectionTo(from, state.mapgeometry);
     }
+
+    return moved;
 }
 
 pub fn dummyWork(m: *Mob, _: *mem.Allocator) void {
@@ -824,14 +825,15 @@ pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
 pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
     const target = currentEnemy(mob).mob;
 
+    mob.makeNoise(.Shout, .Loud);
+
     if (!mob.cansee(target.coord)) {
         mob.tryMoveTo(target.coord);
     } else {
         alertAllyOfHostile(mob);
-        keepDistance(mob, target.coord, 8);
+        if (!keepDistance(mob, target.coord, 8))
+            meleeFight(mob, alloc);
     }
-
-    mob.makeNoise(.Shout, .Loud);
 }
 
 // - Iterate through enemies. Foreach:
@@ -930,16 +932,19 @@ fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
 
 pub fn mageFight(mob: *Mob, alloc: *mem.Allocator) void {
     for (mob.spells) |spell| {
+        if (spell.MP_cost > mob.MP) continue;
         if (_findValidTargetForSpell(mob, spell)) |coord| {
             spell.spell.use(mob, mob.coord, coord, spell, null);
             return;
         }
     }
 
-    if (mob.coord.distance(currentEnemy(mob).mob.coord) == 1) {
-        _ = mob.fight(currentEnemy(mob).mob);
-    } else {
-        _ = mob.rest();
+    switch (mob.ai.spellcaster_backup_action) {
+        .Melee => meleeFight(mob, alloc),
+        .KeepDistance => {
+            const moved = keepDistance(mob, currentEnemy(mob).mob.coord, mob.vision - 1);
+            if (!moved) meleeFight(mob, alloc);
+        },
     }
 }
 
@@ -951,7 +956,9 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
 
     const target = currentEnemy(mob).mob;
 
-    if (!target.cansee(mob.coord)) {
+    if (!target.cansee(mob.coord) or
+        mob.MP < mob.spells[0].MP_cost)
+    {
         _ = mob.rest();
         return;
     }
@@ -983,7 +990,8 @@ pub fn flee(mob: *Mob, alloc: *mem.Allocator) void {
     const target = currentEnemy(mob).mob;
 
     alertAllyOfHostile(mob);
-    keepDistance(mob, target.coord, 20);
+    if (!keepDistance(mob, target.coord, 8))
+        meleeFight(mob, alloc);
 
     mob.makeNoise(.Shout, .Loud);
 }
