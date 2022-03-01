@@ -58,7 +58,7 @@ pub const PlayerUpgrade = enum {
     pub fn implement(self: PlayerUpgrade) void {
         switch (self) {
             .Fast => state.player.base_speed = state.player.base_speed * 90 / 100,
-            .Strong => state.player.base_strength = state.player.base_strength * 130 / 100,
+            .Strong => state.player.base_strength = state.player.base_strength * 150 / 100,
             .Agile => state.player.base_dexterity = state.player.base_dexterity * 130 / 100,
             .OI_Enraged => state.player.ai.flee_effect = .{
                 .status = .Enraged,
