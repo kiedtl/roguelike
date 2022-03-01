@@ -18,7 +18,7 @@ const ATTACKER_ENRAGED_BONUS: isize = 20;
 const ATTACKER_HELD_NBONUS: isize = 21;
 const DIM_LIGHT_NBONUS: isize = 14;
 
-const DEFENDER_ENRAGED_NBONUS: isize = 20;
+const DEFENDER_ENRAGED_NBONUS: isize = 10;
 const DEFENDER_FLANKED_NBONUS: isize = 10;
 const DEFENDER_HELD_NBONUS: isize = 14;
 const DEFENDER_STEALTH_BONUS: isize = 7;
