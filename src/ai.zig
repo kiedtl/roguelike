@@ -78,7 +78,8 @@ pub fn currentEnemy(me: *Mob) *EnemyRecord {
 //
 // TODO: flee if flanked and there are no allies in sight
 pub fn shouldFlee(me: *Mob) bool {
-    if (me.ai.is_fearless or me.is_undead) return false;
+    if (me.isUnderStatus(.Enraged) != null or me.ai.is_fearless or me.is_undead)
+        return false;
 
     var result = false;
 
@@ -90,11 +91,11 @@ pub fn shouldFlee(me: *Mob) bool {
     if (me.HP <= (me.max_HP / 5) and me.HP < enemy.HP)
         result = true;
 
-    if (me.isUnderStatus(.Fear) != null or me.isUnderStatus(.Fire) != null)
+    if (me.isUnderStatus(.Fear) != null)
         result = true;
 
-    if (me.isUnderStatus(.Enraged) != null)
-        result = false;
+    if (me.resistance(.rFire) >= 100 and me.isUnderStatus(.Fire) != null)
+        result = true;
 
     return result;
 }
