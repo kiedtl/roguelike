@@ -2452,6 +2452,20 @@ pub const Mob = struct { // {{{
         return dex;
     }
 
+    pub fn isFlanked(self: *const Mob) bool {
+        var counter: usize = 0;
+        return for (&DIRECTIONS) |d| {
+            if (self.coord.move(d, state.mapgeometry)) |neighbor| {
+                if (state.dungeon.at(neighbor).mob) |mob| {
+                    if (mob.isHostileTo(self) and mob.ai.phase == .Hunt) {
+                        counter += 1;
+                        if (counter > 1) return true;
+                    }
+                }
+            }
+        } else false;
+    }
+
     pub fn isCreeping(self: *const Mob) bool {
         return self.turnsSpentMoving() < self.activities.len;
     }

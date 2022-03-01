@@ -19,6 +19,7 @@ const ATTACKER_HELD_NBONUS: isize = 21;
 const DIM_LIGHT_NBONUS: isize = 14;
 
 const DEFENDER_ENRAGED_NBONUS: isize = 20;
+const DEFENDER_FLANKED_NBONUS: isize = 10;
 const DEFENDER_HELD_NBONUS: isize = 14;
 const DEFENDER_STEALTH_BONUS: isize = 7;
 
@@ -70,6 +71,7 @@ pub fn chanceOfAttackDodged(defender: *const Mob, attacker: ?*const Mob) usize {
 
     chance -= if (defender.isUnderStatus(.Held)) |_| DEFENDER_HELD_NBONUS else 0;
     chance -= if (defender.isUnderStatus(.Enraged) != null) DEFENDER_ENRAGED_NBONUS else 0;
+    chance -= if (defender.isFlanked()) DEFENDER_FLANKED_NBONUS else 0;
 
     return @intCast(usize, math.clamp(chance, 0, 100));
 }

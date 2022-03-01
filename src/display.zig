@@ -377,6 +377,12 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         0xffffff,
     );
     y += 1;
+
+    if (state.player.isFlanked()) {
+        _draw_bar(y, startx, endx, 1, 1, "flanked", 0x773037, 0xffffff);
+        y += 1;
+    }
+
     _draw_bar(
         y,
         startx,
