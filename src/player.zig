@@ -76,7 +76,7 @@ pub const PlayerUpgrade = enum {
                 .exhausting = true,
             },
             .Healthy => state.player.max_HP = state.player.max_HP * 150 / 100,
-            .Mana => err.todo(),
+            .Mana => state.player.max_MP = state.player.max_MP * 150 / 100,
             .Stealthy => state.player.base_stealth += 1,
             .Will => state.player.willpower = math.clamp(state.player.willpower + 3, 0, 10),
             .Echolocating => state.player.addStatus(.Echolocation, 1, 7, true),
