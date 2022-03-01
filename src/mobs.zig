@@ -741,7 +741,7 @@ pub const TanusExperiment = MobTemplate{
     .id = "tanus_experiment",
     .mob = .{
         .species = &Species{ .name = "tanusian experiment" },
-        .tile = 'e',
+        .tile = 'ג',
         .ai = AI{
             .profession_name = null,
             .profession_description = "wandering",
@@ -771,7 +771,7 @@ pub const CatalineExperiment = MobTemplate{
     .id = "cataline_experiment",
     .mob = .{
         .species = &Species{ .name = "catalinic experiment" },
-        .tile = 'e',
+        .tile = 'ג',
         .ai = AI{
             .profession_name = null,
             .profession_description = "wandering",
@@ -801,7 +801,7 @@ pub const FlouinExperiment = MobTemplate{
     .id = "flouin_experiment",
     .mob = .{
         .species = &Species{ .name = "flouinian experiment" },
-        .tile = 'e',
+        .tile = 'ג',
         .ai = AI{
             .profession_name = null,
             .profession_description = "wandering",
@@ -831,7 +831,7 @@ pub const PhytinExperiment = MobTemplate{
     .id = "phytin_experiment",
     .mob = .{
         .species = &Species{ .name = "phytinic experiment" },
-        .tile = 'e',
+        .tile = 'ג',
         .ai = AI{
             .profession_name = null,
             .profession_description = "wandering",
