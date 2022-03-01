@@ -2187,7 +2187,7 @@ pub const Mob = struct { // {{{
             msg_parts = s.status.messageWhenAdded();
         }
 
-        if (msg_parts) |_| {
+        if (!p_se.permanent and msg_parts != null) {
             if (self == state.player) {
                 state.message(.Status, "You {}{}.", .{ msg_parts.?[0], msg_parts.?[2] });
             } else if (state.player.cansee(self.coord)) {
