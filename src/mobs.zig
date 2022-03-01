@@ -600,10 +600,10 @@ pub const BurningBruteTemplate = MobTemplate{
         .vision = 5,
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 4, .spell = &spells.CAST_RESURRECT_FIRE, .power = 200, .duration = 10 },
+            .{ .MP_cost = 2, .spell = &spells.CAST_RESURRECT_FIRE, .power = 200, .duration = 10 },
             .{ .MP_cost = 3, .spell = &spells.BOLT_FIRE, .power = 5, .duration = 10 },
         },
-        .max_MP = 10,
+        .max_MP = 12,
 
         .willpower = 8,
         .base_dexterity = 20,
