@@ -37,8 +37,11 @@ New mobs
 	- When player is in LOS of cat, messages:
 		- "You feel like something is watching you."
 		- "You feel uneasy." (just before cat charges)
-- sulfur/decaying fiend
-	- Spits out sulfuric/miasmic gas, which raises corpses and slows living creatures.
+x sulfur fiend
+	x rElec∞ and rFire+.
+	x Hasten Rot: makes a corpse emit a cloud of miasma, destroying the
+	  corpse in the process. Miasma causes nausea.
+	x Summon Ball Lightning: conjures a ball lightning mobs.
 - fuming fiend
 	- "A strange winged figure, cloaked in dirty rags. It is holding a
 	   crystal sceptre."
@@ -46,18 +49,30 @@ New mobs
 	  open LOS in order to see enemy.
 	- Dispel Fumes: removes all clouds in caster's LOS, Used to remove gas
 	  obscuring enemy.
+	- Meat Offering: creates a dustling from a corpse, using it up in the
+	  process.
 	- Vunerable to fire, immune to electricity.
+	- Fragile (20-30 HP) and slow (110).
 	- Airstrike: moderate damage, smite-targeted.
 	  - "The fuming fiend waves its arms around in wide circles!"
 	  - "The air whirls around and strikes you!"
 	  - "The air twists around and strikes you!"
 	  - "The air twists itself inside-out and smites you!!"
-- freezing fiend
+x frozen fiend
 	- "A winged humanoid, clothed in watery-blue robes. It whispers grimly
-	   to itself as it patrols its home, inspecting its underlings with
-	   an expression of frozen contempt.
-	- Creates icy obstacles to block player (but obstacles melt after 2-4 turns).
-	- Has Frozen Ramparts-like spell to damage foes surrounded by walls.
+	   to itself as it patrols the dungeon, inspecting its underlings with
+	   an expression of cold contempt.
+	x Raises corpses into stationary foes. Such undead are very fast,
+	  have good armor, and are quite tanky, but are very vunerable to fire.
+	x Polar Casing: transforms a wall near the target to ice, damaging all
+	  (yes, all) adjacent monsters. Reverts back to a wall in 5-6 turns.
+	  - "The freezing fiend stares at you."
+- dustling
+	- Exceedingly fragile (1-5 HP) and no armor/weapons.
+	- Carries a strong punch, though.
+	- Fast (55% speed)
+	- Vunerable to fire, electricity.
+	- Summoned solely by fuming fiends.
 - crystal servitor
 	- "A humanoid statue carved out of a white crystal, imbued with an evil
 	  spirit. It radiates an intense aura of palpable malice."
@@ -104,22 +119,26 @@ x warden
 	- Tries to blink around so as to not be adjacent to allies.
 	- Teleports away (or suicides?) when no allies visible.
 	- Immune to weapon damage.
-- burning brute
+x burning brute
 	- "A raging winged demon composed primarily of boiling basalt,
 	  feared even by its peers for its vicious fire attacks."
-	- Has rFire∞, but rElec-.
-	- Hurls bolts of fire.
-	- Burnt offering: Gives a visible ally the .InnerFire status. Effects:
+	x Has rFire∞, but rElec-.
+	x Hurls bolts of fire.
+	x Burnt offering: Raises a visible corpse, and gives it the .InnerFire
+	  status. Effects:
+	  - 50% slower.
 	  - Every 2-3 turns, flames seep out of mob and ignite nearby tiles.
 	  - When timer is over, mob explodes, damaging all nearby mobs.
-	  - Such a mob will recieve a strength boost, and will try to stay close
-	    to hostile at all costs.
-	- Has kicking (x1) and clawing (x2) attack (need species struct for this).
-- [ancient] sorcerer
-	- Summons orbs of living lightning.
-	- Summons wretched stars.
+	x Has kicking (x1) and clawing (x1) attack (need species struct for this).
+- ancient mage
+	- Summons ball lightning, orbs of devastation, wretched stars.
 	- Hurls crystal shards.
-	- Hurls bolts of calcifying dust (same as DCSS' catoblepas).
+	- Hurls bolts of paralysing dust (same as DCSS' catoblepas).
+- death mage
+	- Bufs nearby undead for a short time (and fights as well).
+	- Haste: give .Fast to nearby undead ally.
+	- Heal: Uses up a corpse to restore 90% of lost health for nearby undead ally.
+	- morningstar + chain mail.
 - jellies
 	- Split on hit?
 - bats
@@ -137,6 +156,9 @@ Intelligence
   (morale system).
 - Extra stupid (<Moron) mobs will employ ranged attacks even when it might hit
   another ally.
+- Stupid (<Human) mobs will step on traps, mines, etc.
+- Moron/mindless mobs will not reposition during a fight, and will not move off
+  of dangerous terrain intelligently (they'll just move randomly).
 - Mindless mobs will never flee.
 - Unintelligent mobs cannot use doors and machines marked as requiring INT.
 
@@ -151,13 +173,9 @@ Undead:
 - Cannot hear noises.
 - Have a .memory of ~7.
 - Are vunerable to fire and electricity (rFire- rElec-).
-- Emit miasma.
-  - Miasma has no effect, but may decrease morale in AI'd mobs.
-  - Serves to give early warning of undead's presence.
 - Are immune to Pain and Fear.
 - Never flee, unless commanded so by their squad leader.
 - Don't breath gases, and are thus not affected by most of them.
-- Are immune to stabbing.
 - Have a willpower of basically zero, and can thus be affected by any spell.
 - Can be "called forth" by necromancers to assist in combat.
 
@@ -517,20 +535,18 @@ x Stair overhaul
     x Merge poison and deceleration
   x Fountains to drink from
   x Apply "upgrade" and healing to player on ascension
-- Runes and scoring
 - Add tougher monsters; balancing
-  - Make fleeing monsters tell allies of foe
-  - Flee effects (speed, enraged, shoving)
-  - Burning brutes, frozen fiends, sulfur fiends, sorcerers
-  - smelling mechanic, dogs, hounds, creeping deaths
-  - javelineers, beastmasters
+  x Make fleeing monsters tell allies of foe
+  x Flee effects (speed, enraged, shoving)
+  x Necromancers, burning brutes, frozen fiends, sulfur fiends
+  x Javelineers
   - Fuming fiends, other Smithing-only monsters
-  - Reaching weapon effects for beastmasters and patrols
-  - Add `Flanked` effect + UI element
-  - Add mana system
-  - Repositioning AI (flanking and allowing allies w/reaching weapons to hit foe)
-  - Reinforcements on guard deaths + security force when alert level rises.
-- Air purifiers, mob AI to move out of gases/dangerous cells
+  x Add `Flanked` effect + UI element
+  x Add mana system
+  - Ancient mages, death mages and skeletal warrior squads
+  - Place monsters in various areas
+- Runes and scoring
+- Air purifiers, mob repositioning AI to move out of dangerous tiles and flank foes
 - More potions stuff
   - Dilution/concentration:
     - Potion of dilution   (dilution)
@@ -554,14 +570,15 @@ x LOS/lighting revamp
   x Change lighting algorithm
   x Remove partial lighting?
   x Show walls as always lit?
+- Fix/reimplement item-choosing screen
+- Fix/reimplement tile-choosing screen
 - Informational screens
   - "?" screen
   - "@" screen
   - Item info screen, 'i' key
   - E(x)amine screen
   - Poster description screen
-- Fix/reimplement item-choosing screen
-- Fix/reimplement tile-choosing screen
+- Add basic animations
 - Weapon tiers
   - Ensure rarer tiers don't spawn on easy floors.
   - Add grindstones.
@@ -617,6 +634,7 @@ Room features/Mapgen:
 - Terrain/floor types
   - camoflaging fungi (Stlth+)
   - metal (rElec-)
+  - copper (elec dmg propagation?)
   - wood (rFire- rElec+)
   - carpet (Muffle+)
   - gravel (Muffle-)
@@ -712,6 +730,10 @@ x Define what undead are somewhere (combat bonuses, stat increases, miasma
   corner, or maybe perpare for one final all-out assault
   - Would provide excuse for .Enraged status implementation.
 - Enemies that suicide when cornered and about to die.
+- New: Smelling mechanics, dogs, hounds, creeping deaths
+- New: Beastmasters
+- Reaching weapon effects for beastmasters and patrols
+- Make sentinels and javelineers pickup projectiles they've thrown
 
 User Interface
 ==============
