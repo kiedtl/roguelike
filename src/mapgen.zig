@@ -1678,7 +1678,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
         if (room.type == .Corridor) continue;
         if (room.rect.height * room.rect.width < 25) continue;
 
-        for (Configs[level].mob_options.data) |mob| {
+        for (Configs[level].mob_options.constSlice()) |mob| {
             if (rng.tenin(mob.chance)) {
                 var tries: usize = 100;
                 while (tries > 0) : (tries -= 1) {
@@ -2983,8 +2983,9 @@ pub const LevelConfig = struct {
 
     patrol_squads: usize,
     mob_options: MCBuf = MCBuf.init(&[_]MobConfig{
-        .{ .chance = 12, .template = &mobs.GuardTemplate },
-        .{ .chance = 50, .template = &mobs.ExecutionerTemplate },
+        .{ .chance = 20, .template = &mobs.GuardTemplate },
+        .{ .chance = 30, .template = &mobs.JavelineerTemplate },
+        .{ .chance = 55, .template = &mobs.ExecutionerTemplate },
         .{ .chance = 70, .template = &mobs.WatcherTemplate },
     }),
     required_mobs: []const RequiredMob = &[_]RequiredMob{
@@ -3019,7 +3020,7 @@ pub const LevelConfig = struct {
 
     blobs: []const BlobConfig = &[_]BlobConfig{},
 
-    pub const MCBuf = StackBuffer(MobConfig, 3);
+    pub const MCBuf = StackBuffer(MobConfig, 8);
     pub const LevelFeatureFunc = fn (usize, Coord, *const Room, *const Prefab, *mem.Allocator) void;
 
     pub const RequiredMob = struct {
@@ -3082,7 +3083,8 @@ pub const VLT_BASE_LEVELCONFIG = LevelConfig{
     .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
         .{ .chance = 15, .template = &mobs.GuardTemplate },
         .{ .chance = 30, .template = &mobs.WatcherTemplate },
-        .{ .chance = 70, .template = &mobs.WardenTemplate },
+        .{ .chance = 40, .template = &mobs.JavelineerTemplate },
+        .{ .chance = 90, .template = &mobs.WardenTemplate },
     }),
 
     .no_windows = true,

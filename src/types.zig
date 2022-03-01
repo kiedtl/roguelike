@@ -1467,6 +1467,10 @@ pub const Mob = struct { // {{{
             .Projectile => |proj| {
                 if (landed != null and state.dungeon.at(landed.?).mob != null) {
                     const mob = state.dungeon.at(landed.?).mob.?;
+                    if (proj.damages) |dmgs| {
+                        const damage = combat.damageOutput(self, mob, dmgs, proj.main_damage.?, false);
+                        mob.takeDamage(.{ .amount = @intToFloat(f64, damage), .source = .RangedAttack, .by_mob = self });
+                    }
                     switch (proj.effect) {
                         .Status => |s| mob.addStatus(s.status, s.power, s.duration, s.permanent),
                     }
@@ -1824,7 +1828,7 @@ pub const Mob = struct { // {{{
         }
 
         const is_stab = !recipient.isAwareOfAttack(attacker.coord);
-        const damage = combat.damageOutput(attacker, recipient, attacker_weapon, is_stab);
+        const damage = combat.damageOutput(attacker, recipient, attacker_weapon.damages, attacker_weapon.main_damage, is_stab);
 
         recipient.takeDamage(.{
             .amount = @intToFloat(f64, damage),
@@ -2795,12 +2799,12 @@ pub const Weapon = struct {
     __next: ?*Weapon = null,
     __prev: ?*Weapon = null,
 
-    id: []const u8,
-    name: []const u8,
+    id: []const u8 = "",
+    name: []const u8 = "",
     delay: usize = 100, // Percentage (100 = normal speed, 200 = twice as slow)
     damages: Damages,
     main_damage: DamageType,
-    secondary_damage: ?DamageType,
+    secondary_damage: ?DamageType = null,
     strs: []const DamageStr,
 };
 

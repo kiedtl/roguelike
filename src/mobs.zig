@@ -154,6 +154,41 @@ pub const GuardTemplate = MobTemplate{
     .armor = &items.GambesonArmor,
 };
 
+pub const JavelineerTemplate = MobTemplate{
+    .id = "javelineer",
+    .mob = .{
+        .species = &GoblinSpecies,
+        .tile = 'פ',
+        .ai = AI{
+            .profession_name = "javelineer",
+            .profession_description = "guarding",
+            .work_fn = ai.guardWork,
+            .fight_fn = ai.rangedFight,
+            .is_combative = true,
+            .is_curious = true,
+            .flee_effect = .{
+                .status = .Enraged,
+                .duration = 10,
+                .exhausting = true,
+            },
+        },
+        .allegiance = .Necromancer,
+
+        .willpower = 2,
+        .base_dexterity = 15,
+        .hearing = 7,
+        .max_HP = 30,
+        .memory_duration = 6,
+        .base_speed = 110,
+        .blood = .Blood,
+
+        .base_strength = 25,
+    },
+    .weapon = &items.MaceWeapon,
+    .armor = &items.GambesonArmor,
+    .projectile = &items.JavelinProj,
+};
+
 pub const SentinelTemplate = MobTemplate{
     .id = "sentinel",
     .mob = .{
@@ -163,7 +198,7 @@ pub const SentinelTemplate = MobTemplate{
             .profession_name = "sentinel",
             .profession_description = "guarding",
             .work_fn = ai.watcherWork,
-            .fight_fn = ai.sentinelFight,
+            .fight_fn = ai.rangedFight,
             .is_combative = true,
             .is_curious = false,
             .flee_effect = .{
@@ -909,6 +944,7 @@ pub const MOBS = [_]MobTemplate{
     WatcherTemplate,
     WardenTemplate,
     GuardTemplate,
+    JavelineerTemplate,
     SentinelTemplate,
     PatrolTemplate,
     PlayerTemplate,

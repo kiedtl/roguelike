@@ -837,22 +837,17 @@ pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
 }
 
 // - Iterate through enemies. Foreach:
-//      - Is it .Held?
-//          - No:
-//              - Can we throw a net at it?
-//                  - Yes:
-//                    - Action: Throw net.
-//                  - No:
-//                    - Action: Move towards enemy.
+//      - Is it adjacent, or does it have the status bestowed by our projectiles?
+//          - No:  Can we throw a projectile at it?
+//                  - Yes: Throw net.
+//                  - No:  Move towards enemy.
 //                    - TODO: try to smartly move into a position where net
 //                      can be fired, not brainlessly move towards foe.
-// - Can we attack the nearest enemy?
-//      - No:
-//          - Action: Move towards enemy.
-//      - Yes:
-//          - Action: Attack.
+//          - Yes: Can we attack the nearest enemy?
+//                  - No:  Move towards enemy.
+//                  - Yes: Attack.
 //
-pub fn sentinelFight(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn rangedFight(mob: *Mob, alloc: *mem.Allocator) void {
     const target = currentEnemy(mob).mob;
 
     // if we can't see the enemy because it's outside of our range of vision,
@@ -860,20 +855,21 @@ pub fn sentinelFight(mob: *Mob, alloc: *mem.Allocator) void {
     if (!mob.cansee(target.coord) and mob.coord.distance(target.coord) > mob.vision)
         mob.tryMoveTo(target.coord);
 
-    // hack to give breathing space to enemy who just escaped net
-    const spare_enemy_net = rng.tenin(25);
+    // hack to give breathing space to enemy who just got projectile thrown at it
+    const spare_enemy_proj = rng.tenin(25);
 
-    const net_item: ?usize = for (mob.inventory.pack.constSlice()) |item, id| {
-        if (meta.activeTag(item) == .Projectile and
-            mem.eql(u8, item.Projectile.id, "net"))
-        {
-            break id;
-        }
+    const inventory = mob.inventory.pack.constSlice();
+    const proj_item: ?usize = for (inventory) |item, id| {
+        if (meta.activeTag(item) == .Projectile) break id;
     } else null;
+    const proj_status: ?Status = if (proj_item) |i|
+        inventory[i].Projectile.effect.Status.status
+    else
+        null;
 
     if (target.coord.distance(mob.coord) == 1 or
-        target.isUnderStatus(.Held) != null or
-        spare_enemy_net or net_item == null or
+        spare_enemy_proj or proj_item == null or
+        target.isUnderStatus(proj_status.?) != null or
         !utils.hasClearLOF(mob.coord, target.coord))
     {
         // attack
@@ -883,8 +879,8 @@ pub fn sentinelFight(mob: *Mob, alloc: *mem.Allocator) void {
             mob.tryMoveTo(target.coord);
         }
     } else {
-        // fire net
-        const item = mob.inventory.pack.orderedRemove(net_item.?) catch err.wat();
+        // fire projectile
+        const item = mob.inventory.pack.orderedRemove(proj_item.?) catch err.wat();
         const s = mob.throwItem(&item, target.coord, alloc);
         assert(s);
     }

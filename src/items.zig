@@ -87,6 +87,8 @@ pub const Projectile = struct {
     id: []const u8,
     name: []const u8,
     color: u32,
+    damages: ?Damages = null,
+    main_damage: ?DamageType = null,
     effect: union(enum) {
         Status: StatusDataInfo,
     },
@@ -100,6 +102,20 @@ pub const NetProj = Projectile{
         .Status = .{
             .status = .Held,
             .duration = 10,
+        },
+    },
+};
+
+pub const JavelinProj = Projectile{
+    .id = "javelin",
+    .name = "poisoned javelin",
+    .color = 0xffd7d7,
+    .damages = .{ .Piercing = 15 },
+    .main_damage = .Piercing,
+    .effect = .{
+        .Status = .{
+            .status = .Poison,
+            .duration = 3,
         },
     },
 };
