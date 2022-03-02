@@ -2051,6 +2051,16 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
             }
         }
     }
+
+    // Remove mobs nearby upstairs.
+    var dijk = dijkstra.Dijkstra.init(down_staircase, state.mapgeometry, 8, state.is_walkable, .{ .ignore_mobs = true, .right_now = true }, alloc);
+    defer dijk.deinit();
+    while (dijk.next()) |child| {
+        if (state.dungeon.at(child).mob) |mob|
+            if (mob.ai.is_combative and mob.isHostileTo(state.player)) {
+                mob.deinit();
+            };
+    }
 }
 
 pub fn placeBlobs(level: usize) void {
