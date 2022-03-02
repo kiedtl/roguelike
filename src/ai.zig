@@ -529,7 +529,7 @@ pub fn interactionLaborerWork(mob: *Mob, _: *mem.Allocator) void {
     const machine = state.dungeon.at(machine_coord).surface.?.Machine;
     assert(!mob.coord.eq(machine_coord)); // Machine should not be walkable
 
-    if (!machine.isPowered() and rng.onein(2)) {
+    if (!machine.isPowered()) {
         mob.tryMoveTo(machine_coord);
     } else {
         _ = mob.rest();
