@@ -277,8 +277,8 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     const strength = state.player.strength();
     const dexterity = state.player.dexterity();
     const speed = state.player.speed();
-    const pursued = b: for (moblist) |mob| {
-        if (!mob.no_show_fov and mob.isHostileTo(state.player)) {
+    const spotted = b: for (moblist) |mob| {
+        if (!mob.no_show_fov and mob.ai.is_combative and mob.isHostileTo(state.player)) {
             for (mob.enemies.items) |enemyrecord| {
                 if (enemyrecord.mob == state.player) {
                     break :b true;
@@ -393,9 +393,9 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         endx,
         1,
         1,
-        if (pursued) "pursued" else "unseen",
-        if (pursued) 0x99bbcc else 0x222222,
-        if (pursued) 0x222222 else 0xcccccc,
+        if (spotted) "spotted" else "unseen",
+        if (spotted) 0x99bbcc else 0x222222,
+        if (spotted) 0x222222 else 0xcccccc,
     );
     y += 2;
 
