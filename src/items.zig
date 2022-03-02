@@ -372,11 +372,11 @@ pub const ChainmailArmor = Armor{
     .id = "chainmail_armor",
     .name = "chainmail",
     .resists = .{
-        .Crushing = 5,
-        .Pulping = 10,
+        .Crushing = 15,
+        .Pulping = 20,
         .Slashing = 50,
-        .Piercing = 30,
-        .Lacerating = 90,
+        .Piercing = 35,
+        .Lacerating = 80,
     },
     .speed_penalty = 40,
 };
@@ -385,11 +385,11 @@ pub const ScalemailArmor = Armor{
     .id = "scalemail_armor",
     .name = "scale mail",
     .resists = .{
-        .Crushing = 15,
-        .Pulping = 25,
+        .Crushing = 25,
+        .Pulping = 20,
         .Slashing = 50,
-        .Piercing = 25,
-        .Lacerating = 90,
+        .Piercing = 30,
+        .Lacerating = 80,
     },
     .speed_penalty = 20,
     .dex_penalty = 40,
@@ -403,7 +403,7 @@ pub const RobeArmor = Armor{
         .Pulping = 5,
         .Slashing = 2,
         .Piercing = 2,
-        .Lacerating = 10,
+        .Lacerating = 8,
     },
 };
 
@@ -411,7 +411,7 @@ pub const GambesonArmor = Armor{
     .id = "gambeson_armor",
     .name = "gambeson",
     .resists = .{
-        .Crushing = 8,
+        .Crushing = 10,
         .Pulping = 8,
         .Slashing = 15,
         .Piercing = 10,
