@@ -5,7 +5,40 @@ const meta = std.meta;
 const mem = std.mem;
 
 const state = @import("state.zig");
+const err = @import("err.zig");
+const rng = @import("rng.zig");
+const buffer = @import("buffer.zig");
 usingnamespace @import("types.zig");
+
+const StackBuffer = buffer.StackBuffer;
+
+pub fn getNearestCorpse(me: *Mob) ?Coord {
+    var buf = StackBuffer(Coord, 32).init(null);
+
+    search: for (me.fov) |row, y| for (row) |cell, x| {
+        if (buf.isFull()) break :search;
+
+        if (cell == 0) continue;
+        const coord = Coord.new2(me.coord.z, x, y);
+
+        if (state.dungeon.at(coord).surface) |s| switch (s) {
+            .Corpse => |_| buf.append(coord) catch err.wat(),
+            else => {},
+        };
+    };
+
+    if (buf.len == 0) return null;
+
+    // Sort according to distance.
+    const _sortFunc = struct {
+        fn _fn(mob: *Mob, a: Coord, b: Coord) bool {
+            return a.distance(mob.coord) > b.distance(mob.coord);
+        }
+    };
+    std.sort.insertionSort(Coord, buf.slice(), me, _sortFunc._fn);
+
+    return buf.last().?;
+}
 
 pub fn hasClearLOF(from: Coord, to: Coord) bool {
     const line = from.drawLine(to, state.mapgeometry);

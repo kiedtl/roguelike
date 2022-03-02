@@ -575,6 +575,82 @@ pub const EngineerTemplate = MobTemplate{
     .cloak = &items.FurCloak,
 };
 
+pub const DeathMageTemplate = MobTemplate{
+    .id = "death_mage",
+    .mob = .{
+        .species = &HumanSpecies,
+        .tile = 'מ',
+        .ai = AI{
+            .profession_name = "death mage",
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.mageFight,
+            .is_combative = true,
+            .is_curious = true,
+            .is_fearless = false,
+            .spellcaster_backup_action = .KeepDistance,
+        },
+        .allegiance = .Necromancer,
+        .vision = 5,
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 10, .spell = &spells.CAST_HEAL_UNDEAD },
+            .{ .MP_cost = 20, .spell = &spells.CAST_HASTE_UNDEAD, .duration = 12 },
+        },
+        .max_MP = 20,
+
+        .willpower = 8,
+        .base_dexterity = 15,
+        .hearing = 6,
+        .max_HP = 40,
+        .memory_duration = 6,
+        .base_speed = 100,
+        .blood = .Blood,
+
+        .base_strength = 15,
+    },
+    .weapon = &items.DaggerWeapon,
+    .armor = &items.LeatherArmor,
+};
+
+pub const SkeletalAxemasterTemplate = MobTemplate{
+    .id = "skeletal_axemaster",
+    .mob = .{
+        .species = &HumanSpecies,
+        .tile = 'ע',
+        .undead_prefix = "",
+        .ai = AI{
+            .profession_name = "skeletal axemaster",
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.meleeFight,
+            .is_combative = true,
+            .is_curious = false,
+            .is_fearless = true,
+        },
+        .allegiance = .Necromancer,
+        .vision = 4,
+
+        .deaf = true,
+        .is_undead = true,
+
+        .willpower = 2,
+        .base_dexterity = 15,
+        .hearing = 6,
+        .max_HP = 50,
+        .memory_duration = 4,
+        .base_speed = 110,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rPois = 3, .rFume = 3, .rFire = -1 },
+
+        .base_strength = 30,
+    },
+    .weapon = &items.AxeWeapon,
+    .armor = &items.ScalemailArmor,
+};
+
 pub const TorturerNecromancerTemplate = MobTemplate{
     .id = "torturer_necromancer",
     .mob = .{
@@ -957,6 +1033,8 @@ pub const MOBS = [_]MobTemplate{
     CleanerTemplate,
     EngineerTemplate,
     HaulerTemplate,
+    DeathMageTemplate,
+    SkeletalAxemasterTemplate,
     TorturerNecromancerTemplate,
     BurningBruteTemplate,
     FrozenFiendTemplate,

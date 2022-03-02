@@ -386,9 +386,9 @@ pub const ScalemailArmor = Armor{
     .name = "scale mail",
     .resists = .{
         .Crushing = 15,
-        .Pulping = 20,
+        .Pulping = 25,
         .Slashing = 50,
-        .Piercing = 20,
+        .Piercing = 25,
         .Lacerating = 90,
     },
     .speed_penalty = 20,
@@ -460,9 +460,8 @@ const CRUSHING_STRS = [_]DamageStr{
     dmgstr(400, "pulverise", "pulverises", " into a thin bloody mist"),
 };
 const SLASHING_STRS = [_]DamageStr{
-    dmgstr(000, "nip", "nips", ""),
-    dmgstr(010, "hit", "hits", ""),
-    dmgstr(030, "slash", "slashes", ""),
+    dmgstr(000, "hit", "hits", ""),
+    dmgstr(020, "slash", "slashes", ""),
     dmgstr(040, "slice", "slices", ""),
     dmgstr(050, "shred", "shreds", ""),
     dmgstr(070, "chop", "chops", " into pieces"),
@@ -709,6 +708,23 @@ pub const MaceWeapon = Weapon{
     .main_damage = .Crushing,
     .secondary_damage = null,
     .strs = &CRUSHING_STRS,
+};
+
+// Purely for skeletal axemasters for now; lore describes axes as being
+// experimental
+//
+pub const AxeWeapon = Weapon{
+    .id = "battleaxe",
+    .name = "battleaxe",
+    .delay = 110,
+    .damages = .{
+        .Crushing = 7,
+        .Pulping = 5,
+        .Slashing = 9,
+    },
+    .main_damage = .Slashing,
+    .secondary_damage = .Crushing,
+    .strs = &SLASHING_STRS,
 };
 
 fn triggerIncineratePotion(_dork: ?*Mob, coord: Coord) void {

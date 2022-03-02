@@ -6,17 +6,19 @@
 
 const std = @import("std");
 const meta = std.meta;
+const math = std.math;
 
 usingnamespace @import("types.zig");
 const err = @import("err.zig");
 const gas = @import("gas.zig");
+const utils = @import("utils.zig");
 const mobs = @import("mobs.zig");
 const sound = @import("sound.zig");
 const state = @import("state.zig");
 const rng = @import("rng.zig");
 
 pub const CAST_CONJ_BALL_LIGHTNING = Spell{ .name = "conjure ball lightning", .cast_type = .Smite, .smite_target_type = .Self, .noise = .Quiet, .effect_type = .{ .Custom = _effectConjureBL } };
-fn _effectConjureBL(spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _effectConjureBL(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
     for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
         if (state.is_walkable(neighbor, .{ .right_now = true })) {
             // FIXME: passing allocator directly is anti-pattern?
@@ -28,7 +30,7 @@ fn _effectConjureBL(spell: Spell, opts: SpellOptions, coord: Coord) void {
 }
 
 pub const BOLT_LIGHTNING = Spell{ .name = "bolt of electricity", .cast_type = .Bolt, .noise = .Medium, .effect_type = .{ .Custom = _effectBoltLightning } };
-fn _effectBoltLightning(spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _effectBoltLightning(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
     if (state.dungeon.at(coord).mob) |victim| {
         const avg_dmg = opts.power;
         const dmg = rng.rangeClumping(usize, avg_dmg / 2, avg_dmg * 2, 2);
@@ -42,7 +44,7 @@ fn _effectBoltLightning(spell: Spell, opts: SpellOptions, coord: Coord) void {
 }
 
 pub const BOLT_FIRE = Spell{ .name = "bolt of fire", .cast_type = .Bolt, .noise = .Medium, .effect_type = .{ .Custom = _effectBoltFire } };
-fn _effectBoltFire(spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _effectBoltFire(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
     if (state.dungeon.at(coord).mob) |victim| {
         const avg_dmg = opts.power;
         const dmg = rng.rangeClumping(usize, avg_dmg / 2, avg_dmg * 2, 2);
@@ -56,8 +58,29 @@ fn _effectBoltFire(spell: Spell, opts: SpellOptions, coord: Coord) void {
     }
 }
 
+pub const CAST_HASTE_UNDEAD = Spell{ .name = "hasten undead", .cast_type = .Smite, .smite_target_type = .UndeadAlly, .effect_type = .{ .Status = .Fast }, .checks_will = false };
+
+pub const CAST_HEAL_UNDEAD = Spell{ .name = "heal undead", .cast_type = .Smite, .smite_target_type = .UndeadAlly, .check_has_effect = _hasEffectHealUndead, .effect_type = .{ .Custom = _effectHealUndead }, .checks_will = false };
+fn _hasEffectHealUndead(caster: *Mob, spell: SpellOptions, target: Coord) bool {
+    const mob = state.dungeon.at(target).mob.?;
+    return mob.HP < (mob.max_HP / 2) and utils.getNearestCorpse(caster) != null;
+}
+fn _effectHealUndead(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+    const caster_mob = state.dungeon.at(caster).mob.?;
+    const corpse_coord = utils.getNearestCorpse(caster_mob).?;
+    const corpse_name = state.dungeon.at(corpse_coord).surface.?.Corpse.displayName();
+    state.dungeon.at(corpse_coord).surface = null;
+
+    const ally = state.dungeon.at(coord).mob.?;
+    ally.HP = math.clamp(ally.HP + ((ally.max_HP - ally.HP) / 2), 0, ally.max_HP);
+
+    state.message(.SpellCast, "The {} corpse dissolves away, healing the {}!", .{
+        corpse_name, ally.displayName(),
+    });
+}
+
 pub const CAST_HASTEN_ROT = Spell{ .name = "hasten rot", .cast_type = .Smite, .smite_target_type = .Corpse, .effect_type = .{ .Custom = _effectHastenRot }, .checks_will = false };
-fn _effectHastenRot(spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _effectHastenRot(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     state.dungeon.at(coord).surface = null;
 
@@ -70,7 +93,7 @@ fn _effectHastenRot(spell: Spell, opts: SpellOptions, coord: Coord) void {
 }
 
 pub const CAST_RESURRECT_FIRE = Spell{ .name = "burnt offering", .cast_type = .Smite, .smite_target_type = .Corpse, .effect_type = .{ .Custom = _resurrectFire }, .checks_will = false };
-fn _resurrectFire(spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _resurrectFire(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     if (corpse.raiseAsUndead(coord)) {
         if (state.player.cansee(coord)) {
@@ -87,7 +110,7 @@ fn _resurrectFire(spell: Spell, opts: SpellOptions, coord: Coord) void {
 }
 
 pub const CAST_RESURRECT_FROZEN = Spell{ .name = "frozen resurrection", .cast_type = .Smite, .smite_target_type = .Corpse, .effect_type = .{ .Custom = _resurrectFrozen }, .checks_will = false };
-fn _resurrectFrozen(spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _resurrectFrozen(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     if (corpse.raiseAsUndead(coord)) {
         if (state.player.cansee(coord)) {
@@ -113,7 +136,7 @@ pub const CAST_POLAR_LAYER = Spell{ .name = "polar casing", .cast_type = .Smite,
 fn _hasEffectPolarLayer(caster: *Mob, spell: SpellOptions, target: Coord) bool {
     return state.dungeon.neighboringWalls(target, false) > 0;
 }
-fn _effectPolarLayer(spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _effectPolarLayer(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
     const mob = state.dungeon.at(coord).mob.?;
     for (&CARDINAL_DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
         if (state.dungeon.at(neighbor).type == .Wall) {
@@ -132,7 +155,7 @@ fn _effectPolarLayer(spell: Spell, opts: SpellOptions, coord: Coord) void {
 }
 
 pub const CAST_RESURRECT_NORMAL = Spell{ .name = "resurrection", .cast_type = .Smite, .smite_target_type = .Corpse, .effect_type = .{ .Custom = _resurrectNormal }, .checks_will = false };
-fn _resurrectNormal(spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _resurrectNormal(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     if (corpse.raiseAsUndead(coord)) {
         if (state.player.cansee(coord)) {
@@ -178,7 +201,7 @@ pub const Spell = struct {
 
     // Only used if cast_type == .Smite.
     smite_target_type: enum {
-        Self, Mob, Corpse
+        Self, UndeadAlly, Mob, Corpse
     } = .Mob,
 
     checks_will: bool = false,
@@ -189,7 +212,7 @@ pub const Spell = struct {
 
     effect_type: union(enum) {
         Status: Status,
-        Custom: fn (spell: Spell, opts: SpellOptions, coord: Coord) void,
+        Custom: fn (caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void,
     },
 
     pub fn use(
@@ -264,7 +287,7 @@ pub const Spell = struct {
                             .Status => |s| if (hit_mob) |victim| {
                                 victim.addStatus(s, opts.power, opts.duration, false);
                             },
-                            .Custom => |cu| cu(self, opts, c),
+                            .Custom => |cu| cu(caster_coord, self, opts, c),
                         }
 
                         if (hit_mob == null) break;
@@ -273,7 +296,7 @@ pub const Spell = struct {
             },
             .Smite => {
                 switch (self.smite_target_type) {
-                    .Self, .Mob => {
+                    .Self, .Mob, .UndeadAlly => {
                         if (state.dungeon.at(target).mob == null) {
                             err.bug("Mage used smite-targeted spell on empty target!", .{});
                         }
@@ -287,7 +310,7 @@ pub const Spell = struct {
 
                         switch (self.effect_type) {
                             .Status => |s| mob.addStatus(s, opts.power, opts.duration, false),
-                            .Custom => |c| c(self, opts, target),
+                            .Custom => |c| c(caster_coord, self, opts, target),
                         }
                     },
                     .Corpse => {
@@ -299,7 +322,7 @@ pub const Spell = struct {
 
                         switch (self.effect_type) {
                             .Status => err.bug("Mage tried to induce a status on a corpse!!", .{}),
-                            .Custom => |c| c(self, opts, target),
+                            .Custom => |c| c(caster_coord, self, opts, target),
                         }
                     },
                 }

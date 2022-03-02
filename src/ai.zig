@@ -23,34 +23,6 @@ fn flingRandomSpell(me: *Mob, target: *Mob) void {
     spell.spell.use(me, me.coord, target.coord, spell, null);
 }
 
-pub fn getNearestCorpse(me: *Mob) ?Coord {
-    var buf = StackBuffer(Coord, 32).init(null);
-
-    search: for (me.fov) |row, y| for (row) |cell, x| {
-        if (buf.isFull()) break :search;
-
-        if (cell == 0) continue;
-        const coord = Coord.new2(me.coord.z, x, y);
-
-        if (state.dungeon.at(coord).surface) |s| switch (s) {
-            .Corpse => |_| buf.append(coord) catch err.wat(),
-            else => {},
-        };
-    };
-
-    if (buf.len == 0) return null;
-
-    // Sort according to distance.
-    const _sortFunc = struct {
-        fn _fn(mob: *Mob, a: Coord, b: Coord) bool {
-            return a.distance(mob.coord) > b.distance(mob.coord);
-        }
-    };
-    std.sort.insertionSort(Coord, buf.slice(), me, _sortFunc._fn);
-
-    return buf.last().?;
-}
-
 // Find the nearest enemy.
 pub fn currentEnemy(me: *Mob) *EnemyRecord {
     assert(me.ai.phase == .Hunt or me.ai.phase == .Flee);
@@ -1016,7 +988,15 @@ fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
     } else if (spell.spell.cast_type == .Smite and
         spell.spell.smite_target_type == .Corpse)
     {
-        return getNearestCorpse(caster);
+        return utils.getNearestCorpse(caster);
+    } else if (spell.spell.cast_type == .Smite and
+        spell.spell.smite_target_type == .UndeadAlly)
+    {
+        return for (caster.allies.items) |ally| {
+            if (!ally.is_undead) continue;
+            if (_isValidTargetForSpell(caster, spell, ally))
+                return ally.coord;
+        } else null;
     } else {
         return for (caster.enemies.items) |enemy_record| {
             if (_isValidTargetForSpell(caster, spell, enemy_record.mob))

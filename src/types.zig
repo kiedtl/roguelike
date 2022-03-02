@@ -1152,6 +1152,7 @@ pub const Mob = struct { // {{{
     __prev: ?*Mob = null,
 
     species: *const Species,
+    undead_prefix: []const u8 = "former ",
     tile: u21,
     allegiance: Allegiance,
 
@@ -1246,7 +1247,9 @@ pub const Mob = struct { // {{{
 
         if (self.is_undead) {
             var fbs = std.io.fixedBufferStream(&Static.buf);
-            std.fmt.format(fbs.writer(), "former {}", .{base_name}) catch |_| err.wat();
+            std.fmt.format(fbs.writer(), "{}{}", .{
+                self.undead_prefix, base_name,
+            }) catch |_| err.wat();
             return fbs.getWritten();
         } else {
             return base_name;
@@ -2012,7 +2015,7 @@ pub const Mob = struct { // {{{
         self.base_speed = self.base_speed * 120 / 100;
 
         self.vision = 4;
-        self.memory_duration = 7;
+        self.memory_duration = 4;
         self.deaf = true;
 
         self.innate_resists.rFire = math.clamp(self.innate_resists.rFire - 1, -2, 3);
