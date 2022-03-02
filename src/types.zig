@@ -1773,8 +1773,8 @@ pub const Mob = struct { // {{{
         assert(attacker.strength() > 0);
         assert(recipient.strength() > 0);
 
-        // const chance_of_land = combat.chanceOfAttackLanding(attacker, recipient, weapon);
-        // const chance_of_dodge = combat.chanceOfAttackDodged(recipient, attacker, weapon);
+        // const chance_of_land = combat.chanceOfAttackLanding(attacker);
+        // const chance_of_dodge = combat.chanceOfAttackDodged(recipient, attacker);
         // if (attacker.coord.eq(state.player.coord)) {
         //     state.message(.Info, "you attack: chance of land: {}, chance of dodge: {}", .{ chance_of_land, chance_of_dodge });
         // } else if (recipient.coord.eq(state.player.coord)) {
@@ -1782,7 +1782,7 @@ pub const Mob = struct { // {{{
         // }
 
         const hit =
-            (rng.range(usize, 1, 100) <= combat.chanceOfAttackLanding(attacker, recipient, attacker_weapon)) and
+            (rng.range(usize, 1, 100) <= combat.chanceOfAttackLanding(attacker)) and
             (rng.range(usize, 1, 100) >= combat.chanceOfAttackDodged(recipient, attacker));
 
         if (!hit) {

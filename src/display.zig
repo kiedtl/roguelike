@@ -5,6 +5,7 @@ const math = std.math;
 const assert = std.debug.assert;
 
 const termbox = @import("termbox.zig");
+const combat = @import("combat.zig");
 const utils = @import("utils.zig");
 const gas = @import("gas.zig");
 const err = @import("err.zig");
@@ -303,28 +304,31 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         const diff = @intCast(isize, strength) - @intCast(isize, state.player.base_strength);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "STR  {} ({}{})", .{ strength, sign, adiff }) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "strength  {} ({}{})", .{ strength, sign, adiff }) catch unreachable;
     } else {
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "STR  {}", .{strength}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "strength  {}", .{strength}) catch unreachable;
     }
 
     if (dexterity != state.player.base_dexterity) {
         const diff = @intCast(isize, dexterity) - @intCast(isize, state.player.base_dexterity);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "DEX  {} ({}{})", .{ dexterity, sign, adiff }) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "dexterity {} ({}{})", .{ dexterity, sign, adiff }) catch unreachable;
     } else {
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "DEX  {}", .{dexterity}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "dexterity {}", .{dexterity}) catch unreachable;
     }
 
     if (speed != state.player.base_speed) {
         const diff = @intCast(isize, speed) - @intCast(isize, state.player.base_speed);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "SPD  {}% ({}{}%)", .{ speed, sign, adiff }) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "speed     {}% ({}{}%)", .{ speed, sign, adiff }) catch unreachable;
     } else {
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "SPD  {}%", .{speed}) catch unreachable;
+        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "speed     {}%", .{speed}) catch unreachable;
     }
+
+    y = _draw_string(startx, y, endx, 0xffffff, 0, false, "hit%      {}%", .{combat.chanceOfAttackLanding(state.player)}) catch unreachable;
+    y = _draw_string(startx, y, endx, 0xffffff, 0, false, "dodge%    {}%", .{combat.chanceOfAttackDodged(state.player, null)}) catch unreachable;
 
     y += 1;
 
