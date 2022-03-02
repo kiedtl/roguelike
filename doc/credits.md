@@ -1,6 +1,7 @@
 # Influences and credits
 
 Oathbreaker draws ideas and inspiration from a wide selection of roguelikes:
+- Upgrades are inspired by Boohu's aptitudes.
 - The resistances system was stolen from DCSS.
 - Simplified inventory management, with only one armor/weapon/cloak at a time,
   is from Boohu and Harmonist.
@@ -12,9 +13,9 @@ Oathbreaker draws ideas and inspiration from a wide selection of roguelikes:
   original idea, but was influenced by Boohu and (in the case of fluorescent
   fungi) Brogue and TGGW.
 - Positioning-based confusion effects was inspired by Boohu.
-- Many monsters and their abilities were inspired by DCSS, such as fuming
-  fiends (servant of whispers), sorcerers (liches), wardens (vault sentinels),
-  etc.
+- Many monsters and their abilities were inspired by DCSS, such as ether
+  fiends (servant of whispers), ancient magi (liches), wardens (vault sentinels),
+  dustlings (saltlings), death magi (death knights... sort of), etc.
 - Gas traps (and gases in general) were taken from Brogue.
 - The UI layout was also inspired by Brogue, as is a single `a`pply key to use
   potions and other consumables.
