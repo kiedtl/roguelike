@@ -423,6 +423,7 @@ pub const LockedDoor = Machine{
     .flammability = 15,
     .can_be_jammed = true,
     .on_power = powerNone,
+    .pathfinding_penalty = 5,
 };
 
 pub const Mine = Machine{
