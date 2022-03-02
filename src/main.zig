@@ -49,6 +49,8 @@ fn initGame() bool {
 
     rng.init(&state.GPA.allocator) catch |_| return false;
 
+    player.choosePlayerUpgrades();
+
     state.chardata.init(&state.GPA.allocator);
     state.memory = state.MemoryTileMap.init(&state.GPA.allocator);
 
@@ -248,6 +250,11 @@ fn readInput() bool {
                     state.player.HP = state.player.max_HP;
                     state.player.MP = state.player.max_MP;
                     break :blk false;
+                },
+                termbox.TB_KEY_F6 => blk: {
+                    const stairlocs = state.dungeon.stairs[state.player.coord.z];
+                    const stairloc = rng.chooseUnweighted(Coord, stairlocs.constSlice());
+                    break :blk state.player.teleportTo(stairloc, null);
                 },
                 else => false,
             };

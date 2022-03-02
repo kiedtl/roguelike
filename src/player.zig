@@ -39,6 +39,8 @@ pub const PlayerUpgrade = enum {
     Will,
     Echolocating,
 
+    pub const UPGRADES = [_]PlayerUpgrade{ .Fast, .Strong, .Agile, .OI_Enraged, .OI_Fast, .OI_Shove, .Healthy, .Mana, .Stealthy, .Will, .Echolocating };
+
     pub fn announce(self: PlayerUpgrade) []const u8 {
         return switch (self) {
             .Fast => "You feel yourself moving faster.",
@@ -52,6 +54,22 @@ pub const PlayerUpgrade = enum {
             .Stealthy => "You move stealthily.",
             .Will => "Your will hardens.",
             .Echolocating => "Your sense of hearing becomes acute.",
+        };
+    }
+
+    pub fn description(self: PlayerUpgrade) []const u8 {
+        return switch (self) {
+            .Fast => "You have a 10% speed bonus.",
+            .Strong => "You have a +50% strength bonus.",
+            .Agile => "You have a +30% dodging bonus.",
+            .OI_Enraged => "You become enraged when badly hurt.",
+            .OI_Fast => "You put on a burst of speed when injured.",
+            .OI_Shove => "You begin shoving past foes when injured.",
+            .Healthy => "You have 50% more health than usual.",
+            .Mana => "You have 50% more mana than usual.",
+            .Stealthy => "You have one pip of intrinsic stealth.",
+            .Will => "You have 3 extra pips of willpower.",
+            .Echolocating => "You passively echolocate areas around sound.",
         };
     }
 
@@ -88,13 +106,11 @@ pub fn choosePlayerUpgrades() void {
     var i: usize = 0;
     for (state.levelinfo) |level| if (level.upgr) {
         var upgrade: PlayerUpgrade = while (true) {
-            const upgrades = meta.fields(PlayerUpgrade);
-            const upgrade_i = rng.chooseUnweighted(std.builtin.TypeInfo.EnumField, upgrades);
-            const upgrade_v = @intToEnum(PlayerUpgrade, upgrade_i.value);
-            const already_picked = for (state.player.upgrades) |existing_upgr| {
-                if (existing_upgr.upgrade == upgrade_v) break true;
+            const upgrade_c = rng.chooseUnweighted(PlayerUpgrade, &PlayerUpgrade.UPGRADES);
+            const already_picked = for (state.player_upgrades) |existing_upgr| {
+                if (existing_upgr.upgrade == upgrade_c) break true;
             } else false;
-            if (!already_picked) break upgrade;
+            if (!already_picked) break upgrade_c;
         } else err.wat();
         state.player_upgrades[i] = .{ .recieved = false, .upgrade = upgrade };
         i += 1;
@@ -123,12 +139,17 @@ pub fn triggerStair(stair: Coord, dest_stair: Coord) void {
     state.player.HP = state.player.max_HP;
 
     if (state.levelinfo[state.player.coord.z].upgr) {
-        const upgrade = for (state.player_upgrades) |u| {
-            if (!u.recieved) break u.upgrade;
-        } else err.bug("Cannot find upgrade to grant!", .{});
-        upgrade.implement();
-
-        state.message(.Info, "You feel different... {}", .{upgrade.announce()});
+        for (state.player_upgrades) |*u| {
+            if (!u.recieved) {
+                u.recieved = true;
+                state.message(.Info, "You feel different... {}", .{u.upgrade.announce()});
+                u.upgrade.implement();
+                break;
+            }
+        } else
+            err.bug("Cannot find upgrade to grant! (upgrades: {} {} {})", .{
+                state.player_upgrades[0], state.player_upgrades[1], state.player_upgrades[2],
+            });
     }
 }
 

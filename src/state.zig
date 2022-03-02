@@ -93,7 +93,7 @@ pub var chardata: struct {
     }
 } = .{};
 
-pub const player_upgrades: [3]player_m.PlayerUpgradeInfo = undefined;
+pub var player_upgrades: [3]player_m.PlayerUpgradeInfo = undefined;
 
 pub const MemoryTile = struct {
     fg: u32 = 0x000000,
@@ -596,6 +596,11 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
         else
             "<none>",
     });
+    try w.print("\n", .{});
+    try w.print("Aptitudes:\n", .{});
+    for (player_upgrades) |upgr| if (upgr.recieved) {
+        try w.print("- {}\n", .{upgr.upgrade.description()});
+    };
     try w.print("\n", .{});
     try w.print("Inventory:\n", .{});
     for (player.inventory.pack.constSlice()) |item| {
