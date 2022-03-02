@@ -2983,10 +2983,10 @@ pub const LevelConfig = struct {
 
     patrol_squads: usize,
     mob_options: MCBuf = MCBuf.init(&[_]MobConfig{
-        .{ .chance = 20, .template = &mobs.GuardTemplate },
-        .{ .chance = 30, .template = &mobs.JavelineerTemplate },
-        .{ .chance = 55, .template = &mobs.ExecutionerTemplate },
-        .{ .chance = 70, .template = &mobs.WatcherTemplate },
+        .{ .chance = 30, .template = &mobs.GuardTemplate },
+        .{ .chance = 40, .template = &mobs.JavelineerTemplate },
+        .{ .chance = 50, .template = &mobs.WatcherTemplate },
+        .{ .chance = 75, .template = &mobs.ExecutionerTemplate },
     }),
     required_mobs: []const RequiredMob = &[_]RequiredMob{
         .{ .count = 3, .template = &mobs.CleanerTemplate },
@@ -3081,9 +3081,9 @@ pub const VLT_BASE_LEVELCONFIG = LevelConfig{
 
     .patrol_squads = 2,
     .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
-        .{ .chance = 15, .template = &mobs.GuardTemplate },
         .{ .chance = 30, .template = &mobs.WatcherTemplate },
-        .{ .chance = 40, .template = &mobs.JavelineerTemplate },
+        .{ .chance = 40, .template = &mobs.GuardTemplate },
+        .{ .chance = 50, .template = &mobs.JavelineerTemplate },
         .{ .chance = 90, .template = &mobs.WardenTemplate },
     }),
 
@@ -3122,9 +3122,9 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
 
     .patrol_squads = 1,
     .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
-        .{ .chance = 21, .template = &mobs.SentinelTemplate },
-        .{ .chance = 35, .template = &mobs.WatcherTemplate },
-        .{ .chance = 56, .template = &mobs.GuardTemplate },
+        .{ .chance = 31, .template = &mobs.SentinelTemplate },
+        .{ .chance = 45, .template = &mobs.WatcherTemplate },
+        .{ .chance = 66, .template = &mobs.GuardTemplate },
     }),
 
     .door_chance = 10,
@@ -3168,9 +3168,9 @@ pub const SMI_BASE_LEVELCONFIG = LevelConfig{
 
     .patrol_squads = 3,
     .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
-        .{ .chance = 10, .template = &mobs.WatcherTemplate },
+        .{ .chance = 20, .template = &mobs.WatcherTemplate },
         .{ .chance = 30, .template = &mobs.HaulerTemplate },
-        .{ .chance = 56, .template = &mobs.GuardTemplate },
+        .{ .chance = 60, .template = &mobs.GuardTemplate },
     }),
 
     .material = &materials.Basalt,

@@ -280,13 +280,13 @@ pub fn checkForHostiles(mob: *Mob) void {
     std.sort.insertionSort(*Mob, mob.allies.items, mob, _sortFunc._sortAllies);
 }
 
-fn _guardGlanceRandom(mob: *Mob) void {
+pub fn guardGlanceRandom(mob: *Mob) void {
     if (rng.onein(6)) {
         mob.facing = rng.chooseUnweighted(Direction, &DIRECTIONS);
     }
 }
 
-fn _guardGlanceAround(mob: *Mob) void {
+pub fn guardGlanceAround(mob: *Mob) void {
     if (rng.tenin(15)) return;
 
     if (rng.boolean()) {
@@ -316,7 +316,7 @@ fn _guardGlanceAround(mob: *Mob) void {
     }
 }
 
-fn _guardGlanceLeftRight(mob: *Mob, prev_direction: Direction) void {
+fn guardGlanceLeftRight(mob: *Mob, prev_direction: Direction) void {
     var newdirection: Direction = switch (mob.facing) {
         .North => .NorthEast,
         .East => .SouthEast,
@@ -375,26 +375,125 @@ pub fn patrolWork(mob: *Mob, alloc: *mem.Allocator) void {
 
     const prev_facing = mob.facing;
     mob.tryMoveTo(to);
-    _guardGlanceLeftRight(mob, prev_facing);
+    guardGlanceLeftRight(mob, prev_facing);
 }
 
 pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
     var post = mob.ai.work_area.items[0];
 
+    // Choose a nearby room to watch as well, if we haven't already.
+    if (mob.ai.work_area.items.len < 2) {
+        const cur_room = switch (state.layout[mob.coord.z][post.y][post.x]) {
+            .Unknown => {
+                // Give up, don't patrol
+                _ = mob.rest();
+                mob.ai.work_area.append(post) catch unreachable;
+                return;
+            },
+            .Room => |r| state.rooms[mob.coord.z].items[r],
+        };
+
+        // Chance to not patrol, or only patrol current room
+        if (rng.tenin(25)) {
+            _ = mob.rest();
+            mob.ai.work_area.append(post) catch unreachable;
+            return;
+        } else if (rng.tenin(15)) {
+            var tries: usize = 200;
+            var farthest: Coord = post;
+            while (tries > 0) : (tries -= 1) {
+                const rndcoord = cur_room.rect.randomCoord();
+                if (!state.is_walkable(rndcoord, .{ .mob = mob, .right_now = true }) or
+                    state.dungeon.at(rndcoord).prison or
+                    mob.nextDirectionTo(rndcoord) == null)
+                {
+                    continue;
+                }
+
+                if (rndcoord.distance(post) > farthest.distance(post)) {
+                    farthest = rndcoord;
+                }
+            }
+
+            mob.ai.work_area.append(farthest) catch unreachable;
+        } else {
+            var nearest: ?mapgen.Room = null;
+            var nearest_distance: usize = 99999;
+            for (state.rooms[mob.coord.z].items) |room| {
+                if (room.rect.start.eq(cur_room.rect.start) or room.type != .Room) {
+                    continue;
+                }
+
+                const dist = room.rect.start.distance(cur_room.rect.start);
+                if (dist < nearest_distance) {
+                    nearest = room;
+                    nearest_distance = dist;
+                }
+            }
+
+            assert(nearest != null);
+
+            var tries: usize = 500;
+            const post2 = while (tries > 0) : (tries -= 1) {
+                const rndcoord = nearest.?.rect.randomCoord();
+                if (!state.is_walkable(rndcoord, .{ .mob = mob, .right_now = true }) or
+                    state.dungeon.at(rndcoord).prison)
+                {
+                    continue;
+                }
+
+                if (mob.nextDirectionTo(rndcoord)) |_| {
+                    break rndcoord;
+                }
+            } else {
+                // Give up, don't patrol
+                _ = mob.rest();
+                mob.ai.work_area.append(post) catch unreachable;
+                return;
+            };
+
+            mob.ai.work_area.append(post2) catch unreachable;
+        }
+    }
+
     if (mob.coord.eq(post)) {
         _ = mob.rest();
 
-        _guardGlanceAround(mob);
+        if (rng.onein(10)) {
+            const tmp = mob.ai.work_area.items[0];
+            mob.ai.work_area.items[0] = mob.ai.work_area.items[1];
+            mob.ai.work_area.items[1] = tmp;
+        }
+
+        guardGlanceAround(mob);
     } else {
         // We're not at our post, return there
         if (!mob.isCreeping()) {
             _ = mob.rest();
-            return;
+        } else {
+            const prev_facing = mob.facing;
+            mob.tryMoveTo(post);
+            guardGlanceLeftRight(mob, prev_facing);
         }
+    }
+}
 
-        const prev_facing = mob.facing;
-        mob.tryMoveTo(post);
-        _guardGlanceLeftRight(mob, prev_facing);
+pub fn standStillAndGuardWork(mob: *Mob, alloc: *mem.Allocator) void {
+    var post = mob.ai.work_area.items[0];
+
+    if (mob.coord.eq(post)) {
+        _ = mob.rest();
+
+        guardGlanceAround(mob);
+    } else {
+        // We're not at our post, return there
+        if (!mob.isCreeping()) {
+            _ = mob.rest();
+        } else {
+            const prev_facing = mob.facing;
+            mob.tryMoveTo(post);
+            guardGlanceLeftRight(mob, prev_facing);
+        }
     }
 }
 
@@ -404,7 +503,7 @@ pub fn watcherWork(mob: *Mob, alloc: *mem.Allocator) void {
     if (mob.coord.eq(post)) {
         _ = mob.rest();
 
-        _guardGlanceRandom(mob);
+        guardGlanceRandom(mob);
     } else {
         // We're not at our post, return there
         if (!mob.isCreeping()) {
@@ -414,7 +513,7 @@ pub fn watcherWork(mob: *Mob, alloc: *mem.Allocator) void {
 
         const prev_facing = mob.facing;
         mob.tryMoveTo(post);
-        _guardGlanceLeftRight(mob, prev_facing);
+        guardGlanceLeftRight(mob, prev_facing);
     }
 }
 
