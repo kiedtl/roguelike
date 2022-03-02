@@ -63,5 +63,5 @@ leer of cruel contempt.
 
 % m skeletal_axemaster
 
-A vicious animated skeleton, armed to the teeth. It was created for the purpose
-of testing the efficiency of the war axe in battle.
+A vicious and surprisingly durable skeleton, armed to the teeth. It was created
+for the purpose of testing the efficiency of war axes in battle.
