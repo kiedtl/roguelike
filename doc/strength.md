@@ -3,6 +3,17 @@
 Strength affects a number of areas, specifically combat and unjamming. A mob's
 strength is always in the range 0-50.
 
+## Combat
+
+Damage dealt in melee receives a (Strength / 2)% bonus. Examples:
+
+| Strength | Bonus |
+|:--------:|:-----:|
+| 10       |  5%   |
+| 20       | 10%   |
+| 40       | 20%   |
+| 50       | 25%   |
+
 ## Unjamming
 
 The mob's strength determines the chance each turn for the jammed machine to
