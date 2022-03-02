@@ -17,7 +17,13 @@ const sound = @import("sound.zig");
 const state = @import("state.zig");
 const rng = @import("rng.zig");
 
-pub const CAST_CONJ_BALL_LIGHTNING = Spell{ .name = "conjure ball lightning", .cast_type = .Smite, .smite_target_type = .Self, .noise = .Quiet, .effect_type = .{ .Custom = _effectConjureBL } };
+pub const CAST_CONJ_BALL_LIGHTNING = Spell{
+    .name = "conjure ball lightning",
+    .cast_type = .Smite,
+    .smite_target_type = .Self,
+    .noise = .Quiet,
+    .effect_type = .{ .Custom = _effectConjureBL },
+};
 fn _effectConjureBL(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
     for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
         if (state.is_walkable(neighbor, .{ .right_now = true })) {
@@ -29,7 +35,12 @@ fn _effectConjureBL(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coor
     };
 }
 
-pub const BOLT_LIGHTNING = Spell{ .name = "bolt of electricity", .cast_type = .Bolt, .noise = .Medium, .effect_type = .{ .Custom = _effectBoltLightning } };
+pub const BOLT_LIGHTNING = Spell{
+    .name = "bolt of electricity",
+    .cast_type = .Bolt,
+    .noise = .Medium,
+    .effect_type = .{ .Custom = _effectBoltLightning },
+};
 fn _effectBoltLightning(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
     if (state.dungeon.at(coord).mob) |victim| {
         const avg_dmg = opts.power;
@@ -43,7 +54,12 @@ fn _effectBoltLightning(caster: Coord, spell: Spell, opts: SpellOptions, coord: 
     }
 }
 
-pub const BOLT_FIRE = Spell{ .name = "bolt of fire", .cast_type = .Bolt, .noise = .Medium, .effect_type = .{ .Custom = _effectBoltFire } };
+pub const BOLT_FIRE = Spell{
+    .name = "bolt of fire",
+    .cast_type = .Bolt,
+    .noise = .Medium,
+    .effect_type = .{ .Custom = _effectBoltFire },
+};
 fn _effectBoltFire(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
     if (state.dungeon.at(coord).mob) |victim| {
         const avg_dmg = opts.power;
@@ -58,9 +74,22 @@ fn _effectBoltFire(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord
     }
 }
 
-pub const CAST_HASTE_UNDEAD = Spell{ .name = "hasten undead", .cast_type = .Smite, .smite_target_type = .UndeadAlly, .effect_type = .{ .Status = .Fast }, .checks_will = false };
+pub const CAST_HASTE_UNDEAD = Spell{
+    .name = "hasten undead",
+    .cast_type = .Smite,
+    .smite_target_type = .UndeadAlly,
+    .effect_type = .{ .Status = .Fast },
+    .checks_will = false,
+};
 
-pub const CAST_HEAL_UNDEAD = Spell{ .name = "heal undead", .cast_type = .Smite, .smite_target_type = .UndeadAlly, .check_has_effect = _hasEffectHealUndead, .effect_type = .{ .Custom = _effectHealUndead }, .checks_will = false };
+pub const CAST_HEAL_UNDEAD = Spell{
+    .name = "heal undead",
+    .cast_type = .Smite,
+    .smite_target_type = .UndeadAlly,
+    .check_has_effect = _hasEffectHealUndead,
+    .effect_type = .{ .Custom = _effectHealUndead },
+    .checks_will = false,
+};
 fn _hasEffectHealUndead(caster: *Mob, spell: SpellOptions, target: Coord) bool {
     const mob = state.dungeon.at(target).mob.?;
     return mob.HP < (mob.max_HP / 2) and utils.getNearestCorpse(caster) != null;
@@ -79,7 +108,13 @@ fn _effectHealUndead(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coo
     });
 }
 
-pub const CAST_HASTEN_ROT = Spell{ .name = "hasten rot", .cast_type = .Smite, .smite_target_type = .Corpse, .effect_type = .{ .Custom = _effectHastenRot }, .checks_will = false };
+pub const CAST_HASTEN_ROT = Spell{
+    .name = "hasten rot",
+    .cast_type = .Smite,
+    .smite_target_type = .Corpse,
+    .effect_type = .{ .Custom = _effectHastenRot },
+    .checks_will = false,
+};
 fn _effectHastenRot(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     state.dungeon.at(coord).surface = null;
@@ -92,7 +127,13 @@ fn _effectHastenRot(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coor
     }
 }
 
-pub const CAST_RESURRECT_FIRE = Spell{ .name = "burnt offering", .cast_type = .Smite, .smite_target_type = .Corpse, .effect_type = .{ .Custom = _resurrectFire }, .checks_will = false };
+pub const CAST_RESURRECT_FIRE = Spell{
+    .name = "burnt offering",
+    .cast_type = .Smite,
+    .smite_target_type = .Corpse,
+    .effect_type = .{ .Custom = _resurrectFire },
+    .checks_will = false,
+};
 fn _resurrectFire(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     if (corpse.raiseAsUndead(coord)) {
@@ -109,7 +150,13 @@ fn _resurrectFire(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord)
     }
 }
 
-pub const CAST_RESURRECT_FROZEN = Spell{ .name = "frozen resurrection", .cast_type = .Smite, .smite_target_type = .Corpse, .effect_type = .{ .Custom = _resurrectFrozen }, .checks_will = false };
+pub const CAST_RESURRECT_FROZEN = Spell{
+    .name = "frozen resurrection",
+    .cast_type = .Smite,
+    .smite_target_type = .Corpse,
+    .effect_type = .{ .Custom = _resurrectFrozen },
+    .checks_will = false,
+};
 fn _resurrectFrozen(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     if (corpse.raiseAsUndead(coord)) {
@@ -132,7 +179,14 @@ fn _resurrectFrozen(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coor
     }
 }
 
-pub const CAST_POLAR_LAYER = Spell{ .name = "polar casing", .cast_type = .Smite, .smite_target_type = .Mob, .check_has_effect = _hasEffectPolarLayer, .effect_type = .{ .Custom = _effectPolarLayer }, .checks_will = false };
+pub const CAST_POLAR_LAYER = Spell{
+    .name = "polar casing",
+    .cast_type = .Smite,
+    .smite_target_type = .Mob,
+    .check_has_effect = _hasEffectPolarLayer,
+    .effect_type = .{ .Custom = _effectPolarLayer },
+    .checks_will = false,
+};
 fn _hasEffectPolarLayer(caster: *Mob, spell: SpellOptions, target: Coord) bool {
     return state.dungeon.neighboringWalls(target, false) > 0;
 }
@@ -154,7 +208,13 @@ fn _effectPolarLayer(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coo
     }
 }
 
-pub const CAST_RESURRECT_NORMAL = Spell{ .name = "resurrection", .cast_type = .Smite, .smite_target_type = .Corpse, .effect_type = .{ .Custom = _resurrectNormal }, .checks_will = false };
+pub const CAST_RESURRECT_NORMAL = Spell{
+    .name = "resurrection",
+    .cast_type = .Smite,
+    .smite_target_type = .Corpse,
+    .effect_type = .{ .Custom = _resurrectNormal },
+    .checks_will = false,
+};
 fn _resurrectNormal(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     if (corpse.raiseAsUndead(coord)) {
@@ -166,11 +226,36 @@ fn _resurrectNormal(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coor
     }
 }
 
-pub const CAST_FREEZE = Spell{ .name = "freeze", .cast_type = .Smite, .effect_type = .{ .Status = .Paralysis }, .checks_will = true };
-pub const CAST_FAMOUS = Spell{ .name = "famous", .cast_type = .Smite, .effect_type = .{ .Status = .Corona }, .checks_will = true };
-pub const CAST_FERMENT = Spell{ .name = "ferment", .cast_type = .Smite, .effect_type = .{ .Status = .Confusion }, .checks_will = true };
-pub const CAST_FEAR = Spell{ .name = "fear", .cast_type = .Smite, .effect_type = .{ .Status = .Fear }, .checks_will = true };
-pub const CAST_PAIN = Spell{ .name = "pain", .cast_type = .Smite, .effect_type = .{ .Status = .Pain }, .checks_will = true };
+pub const CAST_FREEZE = Spell{
+    .name = "freeze",
+    .cast_type = .Smite,
+    .effect_type = .{ .Status = .Paralysis },
+    .checks_will = true,
+};
+pub const CAST_FAMOUS = Spell{
+    .name = "famous",
+    .cast_type = .Smite,
+    .effect_type = .{ .Status = .Corona },
+    .checks_will = true,
+};
+pub const CAST_FERMENT = Spell{
+    .name = "ferment",
+    .cast_type = .Smite,
+    .effect_type = .{ .Status = .Confusion },
+    .checks_will = true,
+};
+pub const CAST_FEAR = Spell{
+    .name = "fear",
+    .cast_type = .Smite,
+    .effect_type = .{ .Status = .Fear },
+    .checks_will = true,
+};
+pub const CAST_PAIN = Spell{
+    .name = "pain",
+    .cast_type = .Smite,
+    .effect_type = .{ .Status = .Pain },
+    .checks_will = true,
+};
 
 fn willSucceedAgainstMob(caster: *const Mob, target: *const Mob) bool {
     if (rng.onein(10)) return false;
