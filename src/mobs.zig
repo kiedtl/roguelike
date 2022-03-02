@@ -56,7 +56,6 @@ pub const ExecutionerTemplate = MobTemplate{
 
         .willpower = 3,
         .base_dexterity = 18,
-        .hearing = 7,
         .max_HP = 40,
         .memory_duration = 5,
         .base_speed = 100,
@@ -84,7 +83,6 @@ pub const WatcherTemplate = MobTemplate{
 
         .willpower = 3,
         .base_dexterity = 30,
-        .hearing = 5,
         .max_HP = 40,
         .memory_duration = 10,
         .base_speed = 60,
@@ -112,7 +110,6 @@ pub const WardenTemplate = MobTemplate{
 
         .willpower = 3,
         .base_dexterity = 15,
-        .hearing = 7,
         .max_HP = 30,
         .memory_duration = 6,
         .base_speed = 120,
@@ -142,7 +139,6 @@ pub const GuardTemplate = MobTemplate{
 
         .willpower = 2,
         .base_dexterity = 20,
-        .hearing = 7,
         .max_HP = 35,
         .memory_duration = 5,
         .base_speed = 100,
@@ -176,7 +172,6 @@ pub const JavelineerTemplate = MobTemplate{
 
         .willpower = 2,
         .base_dexterity = 15,
-        .hearing = 7,
         .max_HP = 30,
         .memory_duration = 6,
         .base_speed = 110,
@@ -211,7 +206,6 @@ pub const SentinelTemplate = MobTemplate{
 
         .willpower = 5,
         .base_dexterity = 25,
-        .hearing = 6,
         .max_HP = 40,
         .memory_duration = 7,
         .base_speed = 90,
@@ -241,7 +235,6 @@ pub const PatrolTemplate = MobTemplate{
 
         .willpower = 2,
         .base_dexterity = 20,
-        .hearing = 7,
         .max_HP = 30,
         .memory_duration = 3,
         .base_speed = 110,
@@ -275,7 +268,6 @@ pub const PlayerTemplate = MobTemplate{
 
         .willpower = 6,
         .base_dexterity = 25,
-        .hearing = 5,
         .max_HP = 80,
         .memory_duration = 10,
         .base_speed = 100,
@@ -306,7 +298,6 @@ pub const InteractionLaborerTemplate = MobTemplate{
 
         .willpower = 2,
         .base_dexterity = 15,
-        .hearing = 10,
         .max_HP = 60,
         .memory_duration = 5,
         .base_speed = 100,
@@ -334,7 +325,6 @@ pub const GoblinTemplate = MobTemplate{
 
         .willpower = 3,
         .base_dexterity = 20,
-        .hearing = 5,
         .max_HP = 40,
         .memory_duration = 8,
         .base_speed = 100,
@@ -372,7 +362,6 @@ pub const KyaniteStatueTemplate = MobTemplate{
 
         .willpower = 8,
         .base_dexterity = 0,
-        .hearing = 0,
         .max_HP = 100,
         .memory_duration = 1,
         .base_speed = 100,
@@ -411,7 +400,6 @@ pub const NebroStatueTemplate = MobTemplate{
 
         .willpower = 8,
         .base_dexterity = 0,
-        .hearing = 0,
         .max_HP = 1000,
         .memory_duration = 1,
         .base_speed = 100,
@@ -450,7 +438,6 @@ pub const CrystalStatueTemplate = MobTemplate{
 
         .willpower = 8,
         .base_dexterity = 0,
-        .hearing = 0,
         .max_HP = 1000,
         .memory_duration = 1,
         .base_speed = 100,
@@ -480,7 +467,6 @@ pub const AlchemistTemplate = MobTemplate{
 
         .willpower = 5,
         .base_dexterity = 30,
-        .hearing = 6,
         .max_HP = 65,
         .memory_duration = 7,
         .base_speed = 90,
@@ -508,7 +494,6 @@ pub const CleanerTemplate = MobTemplate{
 
         .willpower = 2,
         .base_dexterity = 15,
-        .hearing = 10,
         .max_HP = 60,
         .memory_duration = 5,
         .base_speed = 100,
@@ -536,7 +521,6 @@ pub const HaulerTemplate = MobTemplate{
 
         .willpower = 2,
         .base_dexterity = 25,
-        .hearing = 8,
         .max_HP = 50,
         .memory_duration = 8,
         .base_speed = 55,
@@ -564,7 +548,6 @@ pub const EngineerTemplate = MobTemplate{
 
         .willpower = 2,
         .base_dexterity = 25,
-        .hearing = 8,
         .max_HP = 50,
         .memory_duration = 8,
         .base_speed = 55,
@@ -601,7 +584,6 @@ pub const DeathMageTemplate = MobTemplate{
 
         .willpower = 8,
         .base_dexterity = 15,
-        .hearing = 6,
         .max_HP = 40,
         .memory_duration = 6,
         .base_speed = 100,
@@ -636,7 +618,6 @@ pub const SkeletalAxemasterTemplate = MobTemplate{
 
         .willpower = 2,
         .base_dexterity = 15,
-        .hearing = 6,
         .max_HP = 50,
         .memory_duration = 4,
         .base_speed = 110,
@@ -679,7 +660,6 @@ pub const TorturerNecromancerTemplate = MobTemplate{
 
         .willpower = 10,
         .base_dexterity = 15,
-        .hearing = 6,
         .max_HP = 50,
         .memory_duration = 10,
         .base_speed = 100,
@@ -718,7 +698,6 @@ pub const BurningBruteTemplate = MobTemplate{
 
         .willpower = 8,
         .base_dexterity = 20,
-        .hearing = 6,
         .max_HP = 50,
         .memory_duration = 6,
         .base_speed = 100,
@@ -757,7 +736,6 @@ pub const SulfurFiendTemplate = MobTemplate{
 
         .willpower = 10,
         .base_dexterity = 25,
-        .hearing = 6,
         .max_HP = 40,
         .memory_duration = 6,
         .base_speed = 100,
@@ -798,7 +776,6 @@ pub const FrozenFiendTemplate = MobTemplate{
 
         .willpower = 8,
         .base_dexterity = 20,
-        .hearing = 6,
         .max_HP = 55,
         .memory_duration = 6,
         .base_speed = 100,
@@ -830,7 +807,6 @@ pub const TanusExperiment = MobTemplate{
 
         .willpower = 3,
         .base_dexterity = 30,
-        .hearing = 5,
         .max_HP = 50,
         .memory_duration = 8,
         .base_speed = 100,
@@ -860,7 +836,6 @@ pub const CatalineExperiment = MobTemplate{
 
         .willpower = 3,
         .base_dexterity = 30,
-        .hearing = 5,
         .max_HP = 50,
         .memory_duration = 8,
         .base_speed = 100,
@@ -890,7 +865,6 @@ pub const FlouinExperiment = MobTemplate{
 
         .willpower = 3,
         .base_dexterity = 30,
-        .hearing = 5,
         .max_HP = 50,
         .memory_duration = 15,
         .base_speed = 100,
@@ -920,7 +894,6 @@ pub const PhytinExperiment = MobTemplate{
 
         .willpower = 3,
         .base_dexterity = 30,
-        .hearing = 5,
         .max_HP = 50,
         .memory_duration = 15,
         .base_speed = 100,
@@ -958,7 +931,6 @@ pub const LivingIceTemplate = MobTemplate{
         .immobile = true,
         .willpower = 1,
         .base_dexterity = 0,
-        .hearing = 5,
         .max_HP = 100,
         .memory_duration = 1,
         .base_speed = 100,
@@ -990,14 +962,13 @@ pub const BallLightningTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .hearing = 0,
+        .deaf = true,
         .vision = 20,
         .deg360_vision = true,
         .no_show_fov = true,
         .immobile = false,
         .willpower = 1,
         .base_dexterity = 50,
-        .deaf = true,
         .max_HP = 3,
         .memory_duration = 1,
         .base_speed = 33,

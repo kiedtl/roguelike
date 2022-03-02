@@ -314,7 +314,7 @@ fn guardGlanceLeftRight(mob: *Mob, prev_direction: Direction) void {
         };
     }
 
-    _ = mob.gaze(newdirection);
+    mob.facing = newdirection;
 }
 
 pub fn patrolWork(mob: *Mob, alloc: *mem.Allocator) void {

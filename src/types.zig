@@ -118,11 +118,6 @@ pub const Direction = enum { // {{{
         }
     }
 
-    // FIXME: deprecated!
-    pub fn from_coords(a: Coord, b: Coord) !Self {
-        return if (Direction.from(a, b)) |d| d else error.NotNeighbor;
-    }
-
     pub fn is_adjacent(base: Self, other: Self) bool {
         const adjacent: [2]Direction = switch (base) {
             .North => .{ .NorthWest, .NorthEast },
@@ -176,10 +171,6 @@ pub const Direction = enum { // {{{
         return self.turnleft().opposite();
     }
 }; // }}}
-
-test "from_coords" {
-    std.testing.expectEqual(Direction.from_coords(Coord.new(0, 0), Coord.new(1, 0)), .East);
-}
 
 pub const Coord = struct { // {{{
     x: usize,
@@ -570,14 +561,7 @@ pub const Material = struct {
     id: ?[]const u8 = null,
     name: []const u8,
 
-    // Description. e.g. "A sooty, flexible material used to make fire-proof
-    // cloaks."
-    description: []const u8,
-
     type: MaterialType = .I_Stone,
-
-    // Material density in g/cm³
-    density: f64,
 
     // Tile used to represent walls.
     color_fg: u32,
@@ -586,22 +570,12 @@ pub const Material = struct {
     tileset: usize,
     floor_tile: u21 = '·',
 
-    // Melting point in Celsius, and combust temperature, also in Celsius.
-    melting_point: usize,
-    combust_point: ?usize,
-
     smelt_result: ?*const Material = null,
-
-    // Specific heat in kJ/(kg K)
-    specific_heat: f64,
 
     // How much light this thing emits
     luminescence: usize,
 
     opacity: f64,
-
-    pub const AIR_SPECIFIC_HEAT = 200.5;
-    pub const AIR_DENSITY = 0.012;
 
     pub const MaterialType = enum {
         Metal,
@@ -1186,8 +1160,6 @@ pub const Mob = struct { // {{{
     // base_dexterity:     Controls the likelihood of a mob dodging an attack.
     // base_strength:      TODO: define!
     // base_stealth:       Innate stealth.
-    // hearing:            The minimum intensity of a noise source before it can be
-    //                     heard by a mob. The lower the value, the better.
     // vision:             Maximum radius of the mob's field of vision.
     // base_night_vision:  Whether the mob can see in darkness.
     // deg360_vision:      Mob's FOV ignores the facing mechanic and can see in all
@@ -1205,7 +1177,6 @@ pub const Mob = struct { // {{{
     base_night_vision: bool = false,
     deg360_vision: bool = false,
     no_show_fov: bool = false,
-    hearing: usize,
     memory_duration: usize,
     deaf: bool = false,
     base_speed: usize,
@@ -1728,11 +1699,6 @@ pub const Mob = struct { // {{{
         return true;
     }
 
-    pub fn gaze(self: *Mob, direction: Direction) bool {
-        self.facing = direction;
-        return true;
-    }
-
     pub fn rest(self: *Mob) bool {
         if (self.isUnderStatus(.Pain) != null and !self.immobile) {
             if (!self.moveInDirection(rng.chooseUnweighted(Direction, &DIRECTIONS)))
@@ -2114,9 +2080,9 @@ pub const Mob = struct { // {{{
                 return null;
 
         if (!is_confused) {
-            if (Direction.from_coords(self.coord, to)) |direction| {
+            if (Direction.from(self.coord, to)) |direction| {
                 return direction;
-            } else |_err| {}
+            }
         }
 
         const pathobj = Path{ .from = self.coord, .to = to, .confused_state = is_confused };
@@ -2155,7 +2121,7 @@ pub const Mob = struct { // {{{
         // If it is not, set the path to null, ensuring that the path will be
         // recalculated next time.
         if (self.path_cache.get(pathobj)) |next| {
-            const direction = Direction.from_coords(self.coord, next) catch err.wat();
+            const direction = Direction.from(self.coord, next).?;
             if (!next.eq(to) and !state.is_walkable(next, .{ .mob = self })) {
                 _ = self.path_cache.remove(pathobj);
                 return null;
