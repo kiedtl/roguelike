@@ -416,17 +416,17 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     if (state.player.inventory.wielded) |weapon| {
         const item = Item{ .Weapon = weapon };
         const dest = (item.shortName() catch unreachable).constSlice();
-        y = _drawStr(startx, y, endx, "-) {}", .{dest}, .{});
+        y = _drawStr(startx, y, endx, "$cweapon$. {}", .{dest}, .{});
     }
     if (state.player.inventory.backup) |backup| {
         const item = Item{ .Weapon = backup };
         const dest = (item.shortName() catch unreachable).constSlice();
-        y = _drawStr(startx, y, endx, "2) {}", .{dest}, .{});
+        y = _drawStr(startx, y, endx, "$cbackup$. {}", .{dest}, .{});
     }
     if (state.player.inventory.armor) |armor| {
         const item = Item{ .Armor = armor };
         const dest = (item.shortName() catch unreachable).constSlice();
-        y = _drawStr(startx, y, endx, "&) {}", .{dest}, .{});
+        y = _drawStr(startx, y, endx, "$c armor$. {}", .{dest}, .{});
     }
     y += 1;
 
@@ -434,10 +434,10 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     if (inventory.len == 0) {
         y = _drawStr(startx, y, endx, "Your pack is empty.", .{}, .{});
     } else {
-        y = _drawStr(startx, y, endx, "Inventory:", .{}, .{});
+        y = _drawStr(startx, y, endx, "$cInventory$.", .{}, .{});
         for (inventory) |item, i| {
             const dest = (item.shortName() catch unreachable).constSlice();
-            y = _drawStr(startx, y, endx, "  {}) {}", .{ i, dest }, .{});
+            y = _drawStr(startx, y, endx, "$c{} -$. {}", .{ i, dest }, .{});
         }
     }
 }

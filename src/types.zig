@@ -1149,6 +1149,7 @@ pub const Mob = struct { // {{{
     activities: RingBuffer(Activity, MAX_ACTIVITY_BUFFER_SZ) = .{},
     last_attempted_move: ?Direction = null,
     last_damage: ?Damage = null,
+
     inventory: Inventory = .{},
 
     is_undead: bool = false,
