@@ -52,9 +52,9 @@ pub fn checkWindowSize(min_width: isize, min_height: isize) bool {
             return true;
         }
 
-        _ = _draw_string(1, 1, cur_w, 0xffffff, 0, false, "Your terminal is too small.", .{}) catch unreachable;
-        _ = _draw_string(1, 3, cur_w, 0xffffff, 0, false, "Minimum: {}x{}.", .{ min_width, min_height }) catch unreachable;
-        _ = _draw_string(1, 4, cur_w, 0xffffff, 0, false, "Current size: {}x{}.", .{ cur_w, cur_h }) catch unreachable;
+        _ = _drawStr(1, 1, cur_w, "Your terminal is too small.", .{}, .{});
+        _ = _drawStr(1, 3, cur_w, "Minimum: {}x{}.", .{ min_width, min_height }, .{});
+        _ = _drawStr(1, 4, cur_w, "Current size: {}x{}.", .{ cur_w, cur_h }, .{});
 
         termbox.tb_present();
 
@@ -141,27 +141,34 @@ fn _clear_line(from: isize, to: isize, y: isize) void {
     _clearLineWith(from, to, y, ' ', 0xffffff, 0x000000);
 }
 
-fn _draw_string(
+const DrawStrOpts = struct {
+    bg: ?u32 = 0x000000,
+    fg: u32 = 0xe6e6e6,
+    fold: bool = false,
+};
+
+fn _drawStr(
     _x: isize,
     _y: isize,
     endx: isize,
-    bg: u32,
-    fg: u32,
-    fold: bool,
     comptime format: []const u8,
     args: anytype,
-) !isize {
+    opts: DrawStrOpts,
+) isize {
+    const termbox_width = termbox.tb_width();
+    const termbox_buffer = termbox.tb_cell_buffer();
+
     var buf: [256]u8 = [_]u8{0} ** 256;
     var fbs = std.io.fixedBufferStream(&buf);
-    try std.fmt.format(fbs.writer(), format, args);
+    std.fmt.format(fbs.writer(), format, args) catch err.bug("format error!", .{});
     const str = fbs.getWritten();
 
     var x = _x;
     var y = _y;
 
-    var utf8 = (try std.unicode.Utf8View.init(str)).iterator();
+    var utf8 = (std.unicode.Utf8View.init(str) catch err.bug("bad utf8", .{})).iterator();
     while (utf8.nextCodepointSlice()) |encoded_codepoint| {
-        const codepoint = try std.unicode.utf8Decode(encoded_codepoint);
+        const codepoint = std.unicode.utf8Decode(encoded_codepoint) catch err.bug("bad utf8", .{});
 
         if (codepoint == '\n') {
             x = _x;
@@ -169,11 +176,12 @@ fn _draw_string(
             continue;
         }
 
-        termbox.tb_change_cell(x, y, codepoint, bg, fg);
+        const bg = opts.bg orelse termbox_buffer[@intCast(usize, x * termbox_width + y)].bg;
+        termbox.tb_change_cell(x, y, codepoint, opts.fg, bg);
         x += 1;
 
         if (x == endx) {
-            if (fold) {
+            if (opts.fold) {
                 x = _x + 2;
                 y += 1;
             } else {
@@ -200,8 +208,8 @@ fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, d
 
     const bar_len = bar_end - startx;
     const description2 = description[math.min(@intCast(usize, bar_len), description.len)..];
-    _ = _draw_string(labelx, y, endx, fg, bg, false, "{s}", .{description}) catch unreachable;
-    _ = _draw_string(labelx + bar_len, y, endx, fg, bg2, false, "{s}", .{description2}) catch unreachable;
+    _ = _drawStr(labelx, y, endx, "{s}", .{description}, .{ .fg = fg, .bg = bg });
+    _ = _drawStr(labelx + bar_len, y, endx, "{s}", .{description2}, .{ .fg = fg, .bg = bg2 });
 }
 
 fn drawEnemyInfo(
@@ -224,7 +232,7 @@ fn drawEnemyInfo(
         var mobcell = Tile.displayAs(mob.coord, false);
         termbox.tb_put_cell(startx, y, &mobcell);
 
-        y = _draw_string(startx + 1, y, endx, 0xffffff, 0, false, ": {}", .{mob.displayName()}) catch unreachable;
+        y = _drawStr(startx + 1, y, endx, ": {}", .{mob.displayName()}, .{});
 
         _draw_bar(
             y,
@@ -253,16 +261,14 @@ fn drawEnemyInfo(
         }
 
         const activity = if (mob.prisoner_status != null) if (mob.prisoner_status.?.held_by != null) "(chained)" else "(prisoner)" else mob.activity_description();
-        y = _draw_string(
+        y = _drawStr(
             endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2),
             y,
             endx,
-            0x9a9a9a,
-            0,
-            false,
             "{}",
             .{activity},
-        ) catch unreachable;
+            .{ .fg = 0x9a9a9a },
+        );
 
         y += 2;
     }
@@ -292,43 +298,40 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     while (y < endy) : (y += 1) _clear_line(startx, endx, y);
     y = starty + 1;
 
-    y = _draw_string(startx, y, endx, 0xffffff, 0, false, "depth: {}", .{
+    y = _drawStr(startx, y, endx, "--- {} ---", .{
         state.levelinfo[state.player.coord.z].name,
-    }) catch unreachable;
-    y = _draw_string(startx, y, endx, 0xffffff, 0, false, "turns: {} ({e:.1})", .{
-        state.ticks, last_action_cost,
-    }) catch unreachable;
+    }, .{ .fg = 0xffffff });
     y += 1;
 
     if (strength != state.player.base_strength) {
         const diff = @intCast(isize, strength) - @intCast(isize, state.player.base_strength);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "strength  {} ({}{})", .{ strength, sign, adiff }) catch unreachable;
+        y = _drawStr(startx, y, endx, "strength  {} ({}{})", .{ strength, sign, adiff }, .{});
     } else {
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "strength  {}", .{strength}) catch unreachable;
+        y = _drawStr(startx, y, endx, "strength  {}", .{strength}, .{});
     }
 
     if (dexterity != state.player.base_dexterity) {
         const diff = @intCast(isize, dexterity) - @intCast(isize, state.player.base_dexterity);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "dexterity {} ({}{})", .{ dexterity, sign, adiff }) catch unreachable;
+        y = _drawStr(startx, y, endx, "dexterity {} ({}{})", .{ dexterity, sign, adiff }, .{});
     } else {
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "dexterity {}", .{dexterity}) catch unreachable;
+        y = _drawStr(startx, y, endx, "dexterity {}", .{dexterity}, .{});
     }
 
     if (speed != state.player.base_speed) {
         const diff = @intCast(isize, speed) - @intCast(isize, state.player.base_speed);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "speed     {}% ({}{}%)", .{ speed, sign, adiff }) catch unreachable;
+        y = _drawStr(startx, y, endx, "speed     {}% ({}{}%)", .{ speed, sign, adiff }, .{});
     } else {
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "speed     {}%", .{speed}) catch unreachable;
+        y = _drawStr(startx, y, endx, "speed     {}%", .{speed}, .{});
     }
 
-    y = _draw_string(startx, y, endx, 0xffffff, 0, false, "hit%      {}%", .{combat.chanceOfAttackLanding(state.player)}) catch unreachable;
-    y = _draw_string(startx, y, endx, 0xffffff, 0, false, "dodge%    {}%", .{combat.chanceOfAttackDodged(state.player, null)}) catch unreachable;
+    y = _drawStr(startx, y, endx, "hit%      {}%", .{combat.chanceOfAttackLanding(state.player)}, .{});
+    y = _drawStr(startx, y, endx, "dodge%    {}%", .{combat.chanceOfAttackDodged(state.player, null)}, .{});
 
     y += 1;
 
@@ -399,31 +402,36 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     );
     y += 2;
 
+    y = _drawStr(startx, y, endx, "turns: {} ({e:.1})", .{
+        state.ticks, last_action_cost,
+    }, .{});
+    y += 1;
+
     if (state.player.inventory.wielded) |weapon| {
         const item = Item{ .Weapon = weapon };
         const dest = (item.shortName() catch unreachable).constSlice();
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "-) {}", .{dest}) catch unreachable;
+        y = _drawStr(startx, y, endx, "-) {}", .{dest}, .{});
     }
     if (state.player.inventory.backup) |backup| {
         const item = Item{ .Weapon = backup };
         const dest = (item.shortName() catch unreachable).constSlice();
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "2) {}", .{dest}) catch unreachable;
+        y = _drawStr(startx, y, endx, "2) {}", .{dest}, .{});
     }
     if (state.player.inventory.armor) |armor| {
         const item = Item{ .Armor = armor };
         const dest = (item.shortName() catch unreachable).constSlice();
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "&) {}", .{dest}) catch unreachable;
+        y = _drawStr(startx, y, endx, "&) {}", .{dest}, .{});
     }
     y += 1;
 
     const inventory = state.player.inventory.pack.slice();
     if (inventory.len == 0) {
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "Your pack is empty.", .{}) catch unreachable;
+        y = _drawStr(startx, y, endx, "Your pack is empty.", .{}, .{});
     } else {
-        y = _draw_string(startx, y, endx, 0xffffff, 0, false, "Inventory:", .{}) catch unreachable;
+        y = _drawStr(startx, y, endx, "Inventory:", .{}, .{});
         for (inventory) |item, i| {
             const dest = (item.shortName() catch unreachable).constSlice();
-            y = _draw_string(startx, y, endx, 0xffffff, 0, false, "  {}) {}", .{ i, dest }) catch unreachable;
+            y = _drawStr(startx, y, endx, "  {}) {}", .{ i, dest }, .{});
         }
     }
 }
@@ -453,13 +461,13 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
         _clear_line(startx, endx, y);
 
         if (msg.dups == 0) {
-            y = _draw_string(startx, y, endx, col, 0, true, "{}{}", .{
+            y = _drawStr(startx, y, endx, "{}{}", .{
                 prefix, msgtext,
-            }) catch unreachable;
+            }, .{ .fg = col, .fold = true });
         } else {
-            y = _draw_string(startx, y, endx, col, 0, true, "{}{} (×{})", .{
+            y = _drawStr(startx, y, endx, "{}{} (×{})", .{
                 prefix, msgtext, msg.dups + 1,
-            }) catch unreachable;
+            }, .{ .fg = col, .fold = true });
         }
     }
 }
@@ -760,8 +768,8 @@ pub fn chooseOption(msg: []const u8, options: []const []const u8) ?usize {
     const x = @divFloor(termbox.tb_width(), 2) - @divFloor(line_width, 2);
     const endx = termbox.tb_width() - 1;
 
-    y = _draw_string(x, y, endx, WHITE, 0, false, "{s}", .{msg}) catch unreachable;
-    y = _draw_string(x, y, endx, GREY, 0, false, usage_str, .{}) catch unreachable;
+    y = _drawStr(x, y, endx, "{s}", .{msg}, .{ .fg = WHITE });
+    y = _drawStr(x, y, endx, usage_str, .{}, .{ .fg = GREY });
     y += 1;
     const starty = y;
 
@@ -784,19 +792,11 @@ pub fn chooseOption(msg: []const u8, options: []const []const u8) ?usize {
             y += 1;
 
             if (i == chosen) {
-                _ = _draw_string(x, y, endx, 0xffd700, BG_GREY, false, "▎", .{}) catch unreachable;
+                _ = _drawStr(x, y, endx, "▎", .{}, .{ .fg = 0xffd700, .bg = BG_GREY });
             }
 
-            y = _draw_string(
-                x + 1,
-                y,
-                endx,
-                if (i == chosen) WHITE else utils.percentageOfColor(GREY, darkening),
-                dark_bg_grey,
-                false,
-                " {} - {}",
-                .{ i, name },
-            ) catch unreachable;
+            const fg = if (i == chosen) WHITE else utils.percentageOfColor(GREY, darkening);
+            y = _drawStr(x + 1, y, endx, " {} - {}", .{ i, name }, .{ .fg = fg, .bg = dark_bg_grey });
 
             y += 1;
         }
