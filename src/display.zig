@@ -740,14 +740,21 @@ pub fn chooseCell() ?Coord {
 pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
     assert(items.len > 0); // This should have been handled previously.
 
-    // Messy.
-    var namebuf = StackBuffer(StackBuffer(u8, 128), 100).init(null);
-    var namebuf_strings = StackBuffer([]const u8, 100).init(null);
-    for (items) |item| {
-        namebuf.append(item.longName() catch err.wat()) catch err.wat();
-        namebuf_strings.append(namebuf.last().?.constSlice()) catch err.wat();
+    // A bit messy.
+    var namebuf = std.ArrayList([]const u8).init(&state.GPA.allocator);
+    defer {
+        for (namebuf.items) |str| state.GPA.allocator.free(str);
+        namebuf.deinit();
     }
-    return chooseOption(msg, namebuf_strings.constSlice());
+
+    for (items) |item| {
+        const itemname = item.longName() catch err.wat();
+        const string = state.GPA.allocator.alloc(u8, itemname.len) catch err.wat();
+        std.mem.copy(u8, string, itemname.constSlice());
+        namebuf.append(string) catch err.wat();
+    }
+
+    return chooseOption(msg, namebuf.items);
 }
 
 pub fn chooseOption(msg: []const u8, options: []const []const u8) ?usize {
