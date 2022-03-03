@@ -13,23 +13,24 @@ const StackBuffer = @import("buffer.zig").StackBuffer;
 const ai = @import("ai.zig");
 const astar = @import("astar.zig");
 const combat = @import("combat.zig");
-const err = @import("err.zig");
-const explosions = @import("explosions.zig");
+const colors = @import("colors.zig");
 const dijkstra = @import("dijkstra.zig");
 const display = @import("display.zig");
+const err = @import("err.zig");
+const explosions = @import("explosions.zig");
 const fire = @import("fire.zig");
-const player = @import("player.zig");
 const fov = @import("fov.zig");
 const gas = @import("gas.zig");
 const items = @import("items.zig");
 const literature = @import("literature.zig");
 const mapgen = @import("mapgen.zig");
 const materials = @import("materials.zig");
-const termbox = @import("termbox.zig");
-const utils = @import("utils.zig");
+const player = @import("player.zig");
 const rng = @import("rng.zig");
 const state = @import("state.zig");
 const spells = @import("spells.zig");
+const termbox = @import("termbox.zig");
+const utils = @import("utils.zig");
 
 const Evocable = @import("items.zig").Evocable;
 const Projectile = @import("items.zig").Projectile;
@@ -3175,7 +3176,7 @@ pub const Tile = struct {
 
         if (!ignore_lights and self.type == .Floor) {
             if (!state.dungeon.lightAt(coord).*) {
-                cell.fg = utils.percentageOfColor(cell.fg, 40);
+                cell.fg = colors.percentageOf(cell.fg, 40);
             }
         }
 
@@ -3186,14 +3187,14 @@ pub const Tile = struct {
             const sp_color = spatter.color();
             const q = @intToFloat(f64, num / 10);
             const aq = 1 - math.clamp(q, 0.19, 0.40);
-            if (num > 0) cell.bg = utils.mixColors(sp_color, cell.bg, aq);
+            if (num > 0) cell.bg = colors.mix(sp_color, cell.bg, aq);
         }
 
         const gases = state.dungeon.atGas(coord);
         for (gases) |q, g| {
             const gcolor = gas.Gases[g].color;
             const aq = 1 - math.clamp(q, 0.19, 1);
-            if (q > 0) cell.bg = utils.mixColors(gcolor, cell.bg, aq);
+            if (q > 0) cell.bg = colors.mix(gcolor, cell.bg, aq);
         }
 
         return cell;

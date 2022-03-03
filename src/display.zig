@@ -4,12 +4,13 @@ const std = @import("std");
 const math = std.math;
 const assert = std.debug.assert;
 
-const termbox = @import("termbox.zig");
+const colors = @import("colors.zig");
 const combat = @import("combat.zig");
-const utils = @import("utils.zig");
-const gas = @import("gas.zig");
 const err = @import("err.zig");
+const gas = @import("gas.zig");
 const state = @import("state.zig");
+const termbox = @import("termbox.zig");
+const utils = @import("utils.zig");
 usingnamespace @import("types.zig");
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
@@ -147,14 +148,10 @@ const DrawStrOpts = struct {
     fold: bool = false,
 };
 
-fn _drawStr(
-    _x: isize,
-    _y: isize,
-    endx: isize,
-    comptime format: []const u8,
-    args: anytype,
-    opts: DrawStrOpts,
-) isize {
+// Escape characters:
+//     $c       fg = LIGHT_CONCRETE
+//     $.       reset fg and bg to defaults
+fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args: anytype, opts: DrawStrOpts) isize {
     const termbox_width = termbox.tb_width();
     const termbox_buffer = termbox.tb_cell_buffer();
 
@@ -166,19 +163,35 @@ fn _drawStr(
     var x = _x;
     var y = _y;
 
+    var fg = opts.fg;
+    var bg: ?u32 = opts.bg;
+
     var utf8 = (std.unicode.Utf8View.init(str) catch err.bug("bad utf8", .{})).iterator();
     while (utf8.nextCodepointSlice()) |encoded_codepoint| {
         const codepoint = std.unicode.utf8Decode(encoded_codepoint) catch err.bug("bad utf8", .{});
+        const def_bg = termbox_buffer[@intCast(usize, y * termbox_width + x)].bg;
 
-        if (codepoint == '\n') {
-            x = _x;
-            y += 1;
-            continue;
+        switch (codepoint) {
+            '\r', '\n' => err.bug("Bad character found in string.", .{}),
+            '$' => {
+                const next_encoded_codepoint = utf8.nextCodepointSlice() orelse
+                    err.bug("Found incomplete escape sequence", .{});
+                const next_codepoint = std.unicode.utf8Decode(next_encoded_codepoint) catch err.bug("bad utf8", .{});
+                switch (next_codepoint) {
+                    '.' => {
+                        fg = opts.fg;
+                        bg = opts.bg;
+                    },
+                    'c' => fg = colors.LIGHT_CONCRETE,
+                    else => err.bug("Found unknown escape sequence", .{}),
+                }
+                continue;
+            },
+            else => {
+                termbox.tb_change_cell(x, y, codepoint, fg, bg orelse def_bg);
+                x += 1;
+            },
         }
-
-        const bg = opts.bg orelse termbox_buffer[@intCast(usize, x * termbox_width + y)].bg;
-        termbox.tb_change_cell(x, y, codepoint, opts.fg, bg);
-        x += 1;
 
         if (x == endx) {
             if (opts.fold) {
@@ -194,22 +207,15 @@ fn _drawStr(
 }
 
 fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, description: []const u8, bg: u32, fg: u32) void {
-    const bar_max = endx;
-    const bg2 = utils.darkenColor(bg, 3); // Color used to display depleted bar
-    const labelx = startx + 1; // Start of label
-
-    var barx = startx;
+    const bg2 = colors.darken(bg, 3); // Color used to display depleted bar
     const percent = (current * 100) / max;
+    const bar = @divTrunc((endx - startx - 1) * @intCast(isize, percent), 100);
+    const bar_end = startx + bar;
 
-    const bar = @divTrunc((bar_max - barx - 1) * @intCast(isize, percent), 100);
-    const bar_end = barx + bar;
-    while (barx < bar_end) : (barx += 1) termbox.tb_change_cell(barx, y, ' ', fg, bg);
-    while (barx < (bar_max - 1)) : (barx += 1) termbox.tb_change_cell(barx, y, ' ', fg, bg2);
+    _clearLineWith(startx, bar_end, y, ' ', fg, bg);
+    _clearLineWith(bar_end, endx - 1, y, ' ', fg, bg2);
 
-    const bar_len = bar_end - startx;
-    const description2 = description[math.min(@intCast(usize, bar_len), description.len)..];
-    _ = _drawStr(labelx, y, endx, "{s}", .{description}, .{ .fg = fg, .bg = bg });
-    _ = _drawStr(labelx + bar_len, y, endx, "{s}", .{description2}, .{ .fg = fg, .bg = bg2 });
+    _ = _drawStr(startx + 1, y, endx, "{s}", .{description}, .{ .fg = fg, .bg = null });
 }
 
 fn drawEnemyInfo(
@@ -307,31 +313,31 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         const diff = @intCast(isize, strength) - @intCast(isize, state.player.base_strength);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _drawStr(startx, y, endx, "strength  {} ({}{})", .{ strength, sign, adiff }, .{});
+        y = _drawStr(startx, y, endx, "$cstrength$.  {: >4} ({}{})", .{ strength, sign, adiff }, .{});
     } else {
-        y = _drawStr(startx, y, endx, "strength  {}", .{strength}, .{});
+        y = _drawStr(startx, y, endx, "$cstrength$.  {: >4}", .{strength}, .{});
     }
 
     if (dexterity != state.player.base_dexterity) {
         const diff = @intCast(isize, dexterity) - @intCast(isize, state.player.base_dexterity);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _drawStr(startx, y, endx, "dexterity {} ({}{})", .{ dexterity, sign, adiff }, .{});
+        y = _drawStr(startx, y, endx, "$cdexterity$. {: >4} ({}{})", .{ dexterity, sign, adiff }, .{});
     } else {
-        y = _drawStr(startx, y, endx, "dexterity {}", .{dexterity}, .{});
+        y = _drawStr(startx, y, endx, "$cdexterity$. {: >4}", .{dexterity}, .{});
     }
 
     if (speed != state.player.base_speed) {
         const diff = @intCast(isize, speed) - @intCast(isize, state.player.base_speed);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _drawStr(startx, y, endx, "speed     {}% ({}{}%)", .{ speed, sign, adiff }, .{});
+        y = _drawStr(startx, y, endx, "$cspeed$.     {: >4}% ({}{}%)", .{ speed, sign, adiff }, .{});
     } else {
-        y = _drawStr(startx, y, endx, "speed     {}%", .{speed}, .{});
+        y = _drawStr(startx, y, endx, "$cspeed$.     {: >4}%", .{speed}, .{});
     }
 
-    y = _drawStr(startx, y, endx, "hit%      {}%", .{combat.chanceOfAttackLanding(state.player)}, .{});
-    y = _drawStr(startx, y, endx, "dodge%    {}%", .{combat.chanceOfAttackDodged(state.player, null)}, .{});
+    y = _drawStr(startx, y, endx, "$chit%$.      {: >4}%", .{combat.chanceOfAttackLanding(state.player)}, .{});
+    y = _drawStr(startx, y, endx, "$cdodge%$.    {: >4}%", .{combat.chanceOfAttackDodged(state.player, null)}, .{});
 
     y += 1;
 
@@ -402,7 +408,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     );
     y += 2;
 
-    y = _drawStr(startx, y, endx, "turns: {} ({e:.1})", .{
+    y = _drawStr(startx, y, endx, "$cturns:$. {} ({e:.1})", .{
         state.ticks, last_action_cost,
     }, .{});
     y += 1;
@@ -451,7 +457,7 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
         const col = if (msg.turn >= utils.saturating_sub(state.ticks, 3) or i == msgcount)
             msg.type.color()
         else
-            utils.darkenColor(msg.type.color(), 2);
+            colors.darken(msg.type.color(), 2);
 
         const prefix: []const u8 = switch (msg.type) {
             .MetaError => "ERROR: ",
@@ -532,8 +538,8 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
                     tile = .{ .fg = memt.fg, .bg = memt.bg, .ch = memt.ch };
                 }
 
-                tile.fg = utils.darkenColor(utils.filterColorGrayscale(tile.fg), 4);
-                tile.bg = utils.darkenColor(utils.filterColorGrayscale(tile.bg), 4);
+                tile.fg = colors.darken(colors.filterGrayscale(tile.fg), 4);
+                tile.bg = colors.darken(colors.filterGrayscale(tile.bg), 4);
 
                 // Can we hear anything
                 if (state.player.canHear(coord)) |noise| {
@@ -565,7 +571,7 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
                             .Dead => unreachable,
                         };
                         if (has_stuff) {
-                            tile.bg = utils.darkenColor(green, 3);
+                            tile.bg = colors.darken(green, 3);
                         } else {
                             tile.fg = green;
                             tile.ch = '!';
@@ -749,11 +755,6 @@ pub fn chooseOption(msg: []const u8, options: []const []const u8) ?usize {
 
     termbox.tb_clear();
 
-    const GREY: u32 = 0xafafaf;
-    const WHITE: u32 = 0xffffff;
-    const BG_GREY: u32 = 0x1e1e1e;
-    const BLACK: u32 = 0x000000;
-
     const usage_str = "ESC/q/Ctrl+C to cancel, Enter/Space to select.";
 
     var longest_width: isize = 0;
@@ -768,8 +769,8 @@ pub fn chooseOption(msg: []const u8, options: []const []const u8) ?usize {
     const x = @divFloor(termbox.tb_width(), 2) - @divFloor(line_width, 2);
     const endx = termbox.tb_width() - 1;
 
-    y = _drawStr(x, y, endx, "{s}", .{msg}, .{ .fg = WHITE });
-    y = _drawStr(x, y, endx, usage_str, .{}, .{ .fg = GREY });
+    y = _drawStr(x, y, endx, "{s}", .{msg}, .{ .fg = colors.WHITE });
+    y = _drawStr(x, y, endx, usage_str, .{}, .{ .fg = colors.GREY });
     y += 1;
     const starty = y;
 
@@ -783,19 +784,19 @@ pub fn chooseOption(msg: []const u8, options: []const []const u8) ?usize {
                 @intCast(isize, i) - @intCast(isize, chosen),
             ) catch unreachable);
             const darkening = math.max(30, 100 - math.min(100, dist_from_chosen * 10));
-            const dark_bg_grey = utils.percentageOfColor(BG_GREY, darkening);
+            const dark_bg_grey = colors.percentageOf(colors.BG_GREY, darkening);
 
-            _clearLineWith(x, x + line_width, y + 0, '▂', dark_bg_grey, BLACK);
-            _clearLineWith(x, x + line_width, y + 1, ' ', BLACK, dark_bg_grey);
-            _clearLineWith(x, x + line_width, y + 2, '▆', BLACK, dark_bg_grey);
+            _clearLineWith(x, x + line_width, y + 0, '▂', dark_bg_grey, colors.BLACK);
+            _clearLineWith(x, x + line_width, y + 1, ' ', colors.BLACK, dark_bg_grey);
+            _clearLineWith(x, x + line_width, y + 2, '▆', colors.BLACK, dark_bg_grey);
 
             y += 1;
 
             if (i == chosen) {
-                _ = _drawStr(x, y, endx, "▎", .{}, .{ .fg = 0xffd700, .bg = BG_GREY });
+                _ = _drawStr(x, y, endx, "▎", .{}, .{ .fg = 0xffd700, .bg = colors.BG_GREY });
             }
 
-            const fg = if (i == chosen) WHITE else utils.percentageOfColor(GREY, darkening);
+            const fg = if (i == chosen) colors.WHITE else colors.percentageOf(colors.GREY, darkening);
             y = _drawStr(x + 1, y, endx, " {} - {}", .{ i, name }, .{ .fg = fg, .bg = dark_bg_grey });
 
             y += 1;

@@ -1,5 +1,6 @@
 usingnamespace @import("types.zig");
 const state = @import("state.zig");
+const colors = @import("colors.zig");
 
 pub const MATERIALS = [_]*const Material{
     &Iron,
@@ -152,7 +153,7 @@ pub const Dobalene = Material{
 pub const Concrete = Material{
     .name = "concrete",
     .color_fg = 0x404040,
-    .color_bg = 0x968f74,
+    .color_bg = colors.CONCRETE,
     .color_floor = 0xa79f85,
     .tileset = 0,
     .luminescence = 0,
