@@ -782,7 +782,9 @@ pub fn createItem(comptime T: type, item: T) *T {
         Evocable => &state.evocables,
         else => @compileError("uh wat"),
     };
-    return list.appendAndReturn(item) catch err.oom();
+    const it = list.appendAndReturn(item) catch err.oom();
+    if (T == Evocable) it.charges = it.max_charges;
+    return it;
 }
 
 pub fn createItemFromTemplate(template: ItemTemplate) Item {
