@@ -3074,6 +3074,15 @@ pub const PRI_BASE_LEVELCONFIG = LevelConfig{
     },
 
     .patrol_squads = 2,
+    .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
+        .{ .chance = 030, .template = &mobs.GuardTemplate },
+        .{ .chance = 040, .template = &mobs.JavelineerTemplate },
+        .{ .chance = 050, .template = &mobs.WatcherTemplate },
+        .{ .chance = 075, .template = &mobs.ExecutionerTemplate },
+        .{ .chance = 090, .template = &mobs.DeathMageTemplate },
+        .{ .chance = 090, .template = &mobs.TorturerNecromancerTemplate },
+        .{ .chance = 150, .template = &mobs.AncientMageTemplate },
+    }),
 
     .machine = &surfaces.Drain,
     .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
@@ -3095,6 +3104,8 @@ pub const VLT_BASE_LEVELCONFIG = LevelConfig{
         .{ .chance = 40, .template = &mobs.GuardTemplate },
         .{ .chance = 50, .template = &mobs.JavelineerTemplate },
         .{ .chance = 90, .template = &mobs.WardenTemplate },
+        .{ .chance = 90, .template = &mobs.FrozenFiendTemplate },
+        .{ .chance = 90, .template = &mobs.TorturerNecromancerTemplate },
     }),
 
     .no_windows = true,
@@ -3135,6 +3146,9 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
         .{ .chance = 31, .template = &mobs.SentinelTemplate },
         .{ .chance = 45, .template = &mobs.WatcherTemplate },
         .{ .chance = 66, .template = &mobs.GuardTemplate },
+        .{ .chance = 90, .template = &mobs.BurningBruteTemplate },
+        .{ .chance = 90, .template = &mobs.SulfurFiendTemplate },
+        .{ .chance = 90, .template = &mobs.DeathMageTemplate },
     }),
 
     .door_chance = 10,
@@ -3181,6 +3195,7 @@ pub const SMI_BASE_LEVELCONFIG = LevelConfig{
         .{ .chance = 20, .template = &mobs.WatcherTemplate },
         .{ .chance = 30, .template = &mobs.HaulerTemplate },
         .{ .chance = 60, .template = &mobs.GuardTemplate },
+        .{ .chance = 90, .template = &mobs.BurningBruteTemplate },
     }),
 
     .material = &materials.Basalt,
@@ -3219,8 +3234,8 @@ pub const SMI_BASE_LEVELCONFIG = LevelConfig{
 };
 
 pub var Configs = [LEVELS]LevelConfig{
-    PRI_BASE_LEVELCONFIG, // TODO: ENT_start
-    PRI_BASE_LEVELCONFIG, // TODO: ENT_start
+    PRI_BASE_LEVELCONFIG,
+    PRI_BASE_LEVELCONFIG,
     VLT_BASE_LEVELCONFIG,
     VLT_BASE_LEVELCONFIG,
     VLT_BASE_LEVELCONFIG,
@@ -3232,7 +3247,7 @@ pub var Configs = [LEVELS]LevelConfig{
     LAB_BASE_LEVELCONFIG,
     LAB_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
-    PRI_BASE_LEVELCONFIG, // TODO: PRI_start
+    PRI_BASE_LEVELCONFIG,
 };
 
 // TODO: convert this to a comptime expression

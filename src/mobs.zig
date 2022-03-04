@@ -1,10 +1,13 @@
 const std = @import("std");
 const mem = std.mem;
+const assert = std.debug.assert;
 
 const ai = @import("ai.zig");
 const state = @import("state.zig");
 const items = @import("items.zig");
 const buffer = @import("buffer.zig");
+const dijkstra = @import("dijkstra.zig");
+const rng = @import("rng.zig");
 const spells = @import("spells.zig");
 const err = @import("err.zig");
 usingnamespace @import("types.zig");
@@ -37,6 +40,13 @@ pub const MobTemplate = struct {
     statuses: []const StatusDataInfo = &[_]StatusDataInfo{},
     projectile: ?*const Projectile = null,
     evocables: []const Evocable = &[_]Evocable{},
+    squad: []const []const SquadMember = &[_][]const SquadMember{},
+
+    pub const SquadMember = struct {
+        mob: *const MobTemplate,
+        weight: usize, // percentage
+        count: MinMax(usize),
+    };
 };
 
 pub const ExecutionerTemplate = MobTemplate{
@@ -648,6 +658,12 @@ pub const DeathMageTemplate = MobTemplate{
     },
     .weapon = &items.DaggerWeapon,
     .armor = &items.LeatherArmor,
+
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = &SkeletalAxemasterTemplate, .weight = 1, .count = minmax(usize, 2, 5) },
+        },
+    },
 };
 
 pub const SkeletalAxemasterTemplate = MobTemplate{
@@ -1093,6 +1109,7 @@ pub const PlaceMobOptions = struct {
     facing: ?Direction = null,
     phase: AIPhase = .Work,
     work_area: ?Coord = null,
+    no_squads: bool = false,
 };
 
 pub fn placeMob(
@@ -1128,6 +1145,40 @@ pub fn placeMob(
 
     for (template.statuses) |status_info| {
         mob.addStatus(status_info.status, status_info.power, status_info.duration, status_info.permanent);
+    }
+
+    if (!opts.no_squads and template.squad.len > 0) {
+        const squad_template = rng.chooseUnweighted([]const MobTemplate.SquadMember, template.squad);
+
+        var squad_member_weights = StackBuffer(usize, 20).init(null);
+        for (squad_template) |s| squad_member_weights.append(s.weight) catch err.wat();
+
+        const squad_mob = rng.choose(
+            MobTemplate.SquadMember,
+            squad_template,
+            squad_member_weights.constSlice(),
+        ) catch err.wat();
+
+        const squad_mob_count = rng.range(usize, squad_mob.count.min, squad_mob.count.max);
+
+        var i: usize = squad_mob_count;
+        while (i > 0) : (i -= 1) {
+            var dijk = dijkstra.Dijkstra.init(coord, state.mapgeometry, 3, state.is_walkable, .{ .right_now = true }, alloc);
+            defer dijk.deinit();
+
+            const s_coord = while (dijk.next()) |child| {
+                // This *should* hold true but for some reason it doesn't. Too
+                // lazy to investigate.
+                //assert(state.dungeon.at(child).mob == null);
+                if (state.dungeon.at(child).mob == null)
+                    break child;
+            } else null;
+
+            if (s_coord) |c| {
+                const underling = placeMob(alloc, squad_mob.mob, c, .{});
+                mob.squad_members.append(underling) catch err.wat();
+            }
+        }
     }
 
     state.mobs.append(mob) catch err.wat();
