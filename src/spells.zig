@@ -9,13 +9,149 @@ const meta = std.meta;
 const math = std.math;
 
 usingnamespace @import("types.zig");
+const combat = @import("combat.zig");
 const err = @import("err.zig");
+const items = @import("items.zig");
 const gas = @import("gas.zig");
-const utils = @import("utils.zig");
 const mobs = @import("mobs.zig");
 const sound = @import("sound.zig");
 const state = @import("state.zig");
+const utils = @import("utils.zig");
 const rng = @import("rng.zig");
+
+pub const CAST_MASS_DISMISSAL = Spell{
+    .name = "mass dismissal",
+    .cast_type = .Smite,
+    .smite_target_type = .Self,
+    .check_has_effect = _hasEffectMassDismissal,
+    .noise = .Quiet,
+    .effect_type = .{ .Custom = _effectMassDismissal },
+};
+fn _hasEffectMassDismissal(caster: *Mob, spell: SpellOptions, target: Coord) bool {
+    for (caster.enemies.items) |enemy_record| {
+        if (caster.cansee(enemy_record.mob.coord) and
+            !enemy_record.mob.is_undead and
+            enemy_record.mob.isUnderStatus(.Fear) == null)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+fn _effectMassDismissal(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+    const caster_mob = state.dungeon.at(caster).mob.?;
+
+    for (caster_mob.enemies.items) |enemy_record| {
+        if (caster_mob.cansee(enemy_record.mob.coord) and
+            !enemy_record.mob.is_undead and
+            enemy_record.mob.isUnderStatus(.Fear) == null)
+        {
+            if (!willSucceedAgainstMob(caster_mob, enemy_record.mob))
+                continue;
+            enemy_record.mob.addStatus(.Fear, 0, opts.power, false);
+        }
+    }
+}
+
+pub const CAST_SUMMON_ENEMY = Spell{
+    .name = "summon enemy",
+    .cast_type = .Smite,
+    .smite_target_type = .Mob,
+    .checks_will = true,
+    .needs_visible_target = false,
+    .check_has_effect = _hasEffectSummonEnemy,
+    .noise = .Quiet,
+    .effect_type = .{ .Custom = _effectSummonEnemy },
+};
+fn _hasEffectSummonEnemy(caster: *Mob, spell: SpellOptions, target: Coord) bool {
+    const mob = state.dungeon.at(target).mob.?;
+    return (mob == state.player or mob.ai.phase == .Flee) and
+        !caster.cansee(mob.coord);
+}
+fn _effectSummonEnemy(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+    const caster_mob = state.dungeon.at(caster).mob.?;
+    const target_mob = state.dungeon.at(coord).mob.?;
+
+    // Find a spot in caster's LOS
+    var new: ?Coord = null;
+    var farthest_dist: usize = 0;
+    for (caster_mob.fov) |row, y| {
+        for (row) |cell, x| {
+            const fitem = Coord.new2(caster_mob.coord.z, x, y);
+            const dist = fitem.distance(caster);
+            if (cell == 0 or dist == 1)
+                continue;
+            if (state.is_walkable(fitem, .{ .right_now = true })) {
+                if (dist > farthest_dist) {
+                    farthest_dist = dist;
+                    new = fitem;
+                }
+            }
+        }
+    }
+
+    if (new) |newcoord| {
+        _ = target_mob.teleportTo(newcoord, null, true);
+
+        state.messageAboutMob(target_mob, caster, .SpellCast, "are dragged back to the {}!", .{caster_mob.displayName()}, "is dragged back to the {}!", .{caster_mob.displayName()});
+    }
+}
+
+pub const CAST_AURA_DISPERSAL = Spell{
+    .name = "aura of dismissal",
+    .cast_type = .Smite,
+    .smite_target_type = .Self,
+    .check_has_effect = _hasEffectAuraDispersal,
+    .noise = .Quiet,
+    .effect_type = .{ .Custom = _effectAuraDispersal },
+};
+fn _hasEffectAuraDispersal(caster: *Mob, spell: SpellOptions, target: Coord) bool {
+    for (&DIRECTIONS) |d| if (target.move(d, state.mapgeometry)) |neighbor| {
+        if (state.dungeon.at(neighbor).mob) |mob|
+            if (mob.isHostileTo(caster)) {
+                return true;
+            };
+    };
+    return false;
+}
+fn _effectAuraDispersal(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+    const caster_mob = state.dungeon.at(caster).mob.?;
+    var had_visible_effect = false;
+    for (&DIRECTIONS) |d| if (caster.move(d, state.mapgeometry)) |neighbor| {
+        if (state.dungeon.at(neighbor).mob) |mob|
+            if (mob.isHostileTo(caster_mob)) {
+                // Find a new home
+                var new: ?Coord = null;
+                var farthest_dist: usize = 0;
+                for (caster_mob.fov) |row, y| {
+                    for (row) |cell, x| {
+                        const fitem = Coord.new2(caster_mob.coord.z, x, y);
+                        const dist = fitem.distance(caster);
+                        if (cell == 0 or dist == 1)
+                            continue;
+                        if (state.is_walkable(fitem, .{ .right_now = true })) {
+                            if (dist > farthest_dist) {
+                                farthest_dist = dist;
+                                new = fitem;
+                            }
+                        }
+                    }
+                }
+                if (new) |newcoord| {
+                    _ = mob.teleportTo(newcoord, null, true);
+                    mob.addStatus(.Daze, 2, 0, false);
+                    mob.takeDamage(.{ .amount = 10, .source = .RangedAttack });
+                    if (state.player.cansee(mob.coord) or state.player.cansee(caster))
+                        had_visible_effect = true;
+                }
+            };
+    };
+
+    if (had_visible_effect)
+        state.message(.SpellCast, "Space bends horribly around the {}!", .{
+            caster_mob.displayName(),
+        });
+}
 
 pub const CAST_CONJ_BALL_LIGHTNING = Spell{
     .name = "conjure ball lightning",
@@ -33,6 +169,32 @@ fn _effectConjureBL(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coor
             return;
         }
     };
+}
+
+pub const BOLT_CRYSTAL = Spell{
+    .name = "crystal shard",
+    .cast_type = .Bolt,
+    .bolt_dodgeable = true,
+    .bolt_multitarget = false,
+    .noise = .Medium,
+    .effect_type = .{ .Custom = _effectBoltCrystal },
+};
+fn _effectBoltCrystal(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+    if (state.dungeon.at(coord).mob) |victim| {
+        const damages = Damages{
+            .Piercing = opts.power * 90 / 100,
+            .Slashing = opts.power * 10 / 100,
+        };
+
+        const armor = victim.inventory.armor orelse &items.NoneArmor;
+        const max_damage = damages.resultOf(&armor.resists).sum();
+        const damage = rng.rangeClumping(usize, max_damage / 2, max_damage, 2);
+
+        victim.takeDamage(.{
+            .amount = @intToFloat(f64, damage),
+            .source = .RangedAttack,
+        });
+    } else err.wat();
 }
 
 pub const BOLT_LIGHTNING = Spell{
@@ -277,7 +439,7 @@ pub const Spell = struct {
     cast_type: union(enum) {
         Ray,
 
-        // Single-target, requires line-of-fire.
+        // Line-targeted, requires line-of-fire.
         Bolt,
 
         // Doesn't require line-of-fire (aka smite-targeted).
@@ -289,7 +451,12 @@ pub const Spell = struct {
         Self, UndeadAlly, Mob, Corpse
     } = .Mob,
 
+    // Only used if cast_type == .Bolt
+    bolt_dodgeable: bool = false,
+    bolt_multitarget: bool = true,
+
     checks_will: bool = false,
+    needs_visible_target: bool = true,
 
     check_has_effect: ?fn (*Mob, SpellOptions, Coord) bool = null,
 
@@ -300,14 +467,7 @@ pub const Spell = struct {
         Custom: fn (caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void,
     },
 
-    pub fn use(
-        self: Spell,
-        caster: ?*Mob,
-        caster_coord: Coord,
-        target: Coord,
-        opts: SpellOptions,
-        comptime message: ?[]const u8,
-    ) void {
+    pub fn use(self: Spell, caster: ?*Mob, caster_coord: Coord, target: Coord, opts: SpellOptions, comptime message: ?[]const u8) void {
         if (caster) |caster_mob| {
             if (opts.MP_cost > caster_mob.MP) {
                 err.bug("Spellcaster casting spell without enough MP!", .{});
@@ -357,6 +517,13 @@ pub const Spell = struct {
                                     continue;
                             }
 
+                            if (self.bolt_dodgeable) {
+                                if (rng.percent(combat.chanceOfAttackDodged(victim, caster))) {
+                                    state.messageAboutMob(victim, caster_coord, .Info, "dodge the {}.", .{self.name}, "dodges the {}.", .{self.name});
+                                    continue;
+                                }
+                            }
+
                             if (victim == state.player) {
                                 state.message(.Info, "The {} hits you!", .{self.name});
                             } else if (state.player.cansee(victim.coord)) {
@@ -375,7 +542,8 @@ pub const Spell = struct {
                             .Custom => |cu| cu(caster_coord, self, opts, c),
                         }
 
-                        if (hit_mob == null) break;
+                        if (!self.bolt_multitarget or hit_mob == null)
+                            break;
                     }
                 }
             },

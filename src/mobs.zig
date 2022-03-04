@@ -558,6 +558,61 @@ pub const EngineerTemplate = MobTemplate{
     .cloak = &items.FurCloak,
 };
 
+pub const AncientMageTemplate = MobTemplate{
+    .id = "ancient_mage",
+    .mob = .{
+        .species = &HumanSpecies,
+        .tile = 'A',
+        .undead_prefix = "",
+        .ai = AI{
+            .profession_name = "ancient mage",
+            .profession_description = "watching",
+            .work_fn = ai.guardWork,
+            .fight_fn = ai.mageFight,
+            .is_combative = true,
+            .is_curious = true,
+            .is_fearless = true,
+            .spellcaster_backup_action = .KeepDistance,
+        },
+        .allegiance = .Necromancer,
+        .vision = 6,
+
+        .spells = &[_]SpellOptions{
+            // On spell ordering: our priorities are:
+            //    - Disperse nearby enemies.
+            //    - Cast crystal spears at anything we can see.
+            //    - If we still have MP, or we couldn't cast spears at anyone,
+            //      summon nonvisible enemies. This is after BOLT_CRYSTAL to
+            //      ensure that the mob doesn't waste time summoning enemies
+            //      while a hundred goblins are trying to tear it apart.
+            //    - Conjure a ball lightning. Hopefully it'll track something
+            //      down.
+            .{ .MP_cost = 0, .spell = &spells.CAST_AURA_DISPERSAL },
+            .{ .MP_cost = 0, .spell = &spells.CAST_MASS_DISMISSAL, .power = 15 },
+            .{ .MP_cost = 8, .spell = &spells.BOLT_CRYSTAL, .power = 30 },
+            .{ .MP_cost = 7, .spell = &spells.CAST_SUMMON_ENEMY },
+            .{ .MP_cost = 2, .spell = &spells.CAST_CONJ_BALL_LIGHTNING, .power = 12 },
+        },
+        .max_MP = 30,
+
+        .deaf = false,
+        .is_undead = true,
+
+        .willpower = 10,
+        .base_dexterity = 20,
+        .max_HP = 80,
+        .memory_duration = 4,
+        .base_speed = 110,
+        .blood = null,
+        .corpse = .None,
+
+        .base_strength = 25,
+
+        .innate_resists = .{ .rPois = 3, .rFume = 3, .rElec = 3 },
+    },
+    .armor = &items.ChainmailArmor,
+};
+
 pub const DeathMageTemplate = MobTemplate{
     .id = "death_mage",
     .mob = .{
@@ -1004,6 +1059,7 @@ pub const MOBS = [_]MobTemplate{
     CleanerTemplate,
     EngineerTemplate,
     HaulerTemplate,
+    AncientMageTemplate,
     DeathMageTemplate,
     SkeletalAxemasterTemplate,
     TorturerNecromancerTemplate,

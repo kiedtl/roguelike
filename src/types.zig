@@ -1614,7 +1614,7 @@ pub const Mob = struct { // {{{
 
         var succeeded = false;
         if (coord.move(direction, state.mapgeometry)) |dest| {
-            succeeded = self.teleportTo(dest, direction);
+            succeeded = self.teleportTo(dest, direction, false);
         } else {
             succeeded = false;
         }
@@ -1631,7 +1631,7 @@ pub const Mob = struct { // {{{
         } else return succeeded;
     }
 
-    pub fn teleportTo(self: *Mob, dest: Coord, direction: ?Direction) bool {
+    pub fn teleportTo(self: *Mob, dest: Coord, direction: ?Direction, instant: bool) bool {
         assert(!self.immobile);
 
         const coord = self.coord;
@@ -1645,7 +1645,8 @@ pub const Mob = struct { // {{{
                 switch (surface) {
                     .Machine => |m| if (!m.isWalkable()) {
                         if (m.addPower(self)) {
-                            self.declareAction(.Interact);
+                            if (!instant)
+                                self.declareAction(.Interact);
                             return true;
                         } else {
                             return false;
@@ -1671,10 +1672,12 @@ pub const Mob = struct { // {{{
 
         if (!self.isCreeping()) self.makeNoise(.Movement, .Medium);
 
-        if (direction) |d| {
-            self.declareAction(Activity{ .Move = d });
-        } else {
-            self.declareAction(Activity{ .Teleport = dest });
+        if (!instant) {
+            if (direction) |d| {
+                self.declareAction(Activity{ .Move = d });
+            } else {
+                self.declareAction(Activity{ .Teleport = dest });
+            }
         }
 
         if (state.dungeon.at(dest).mob) |other| {
@@ -3050,7 +3053,7 @@ pub const Tile = struct {
             cell.fg = switch (mob.ai.phase) {
                 .Work, .Flee => 0xffffff,
                 .Investigate => 0xffd700,
-                .Hunt => 0xffbbbb,
+                .Hunt => 0xff9999,
             };
             if (mob == state.player or
                 mob.isUnderStatus(.Paralysis) != null or

@@ -215,7 +215,7 @@ fn readInput() bool {
                         const l = state.player.coord.z - 1;
                         const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
                         const c = r.rect.randomCoord();
-                        break :blk state.player.teleportTo(c, null);
+                        break :blk state.player.teleportTo(c, null, false);
                     } else {
                         break :blk false;
                     }
@@ -225,7 +225,7 @@ fn readInput() bool {
                         const l = state.player.coord.z + 1;
                         const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
                         const c = r.rect.randomCoord();
-                        break :blk state.player.teleportTo(c, null);
+                        break :blk state.player.teleportTo(c, null, false);
                     } else {
                         break :blk false;
                     }
@@ -254,7 +254,7 @@ fn readInput() bool {
                 termbox.TB_KEY_F6 => blk: {
                     const stairlocs = state.dungeon.stairs[state.player.coord.z];
                     const stairloc = rng.chooseUnweighted(Coord, stairlocs.constSlice());
-                    break :blk state.player.teleportTo(stairloc, null);
+                    break :blk state.player.teleportTo(stairloc, null, false);
                 },
                 else => false,
             };

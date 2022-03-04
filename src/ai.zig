@@ -960,7 +960,7 @@ pub fn rangedFight(mob: *Mob, alloc: *mem.Allocator) void {
 fn _isValidTargetForSpell(caster: *Mob, spell: SpellOptions, target: *Mob) bool {
     assert(!target.is_dead);
 
-    if (!caster.cansee(target.coord))
+    if (spell.spell.needs_visible_target and !caster.cansee(target.coord))
         return false;
 
     if (spell.spell.cast_type == .Bolt)
@@ -984,7 +984,10 @@ fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
     if (spell.spell.cast_type == .Smite and
         spell.spell.smite_target_type == .Self)
     {
-        return caster.coord;
+        if (_isValidTargetForSpell(caster, spell, caster))
+            return caster.coord
+        else
+            return null;
     } else if (spell.spell.cast_type == .Smite and
         spell.spell.smite_target_type == .Corpse)
     {
