@@ -313,18 +313,18 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         const diff = @intCast(isize, strength) - @intCast(isize, state.player.base_strength);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _drawStr(startx, y, endx, "$cstrength$.  {: >4} ({}{})", .{ strength, sign, adiff }, .{});
+        y = _drawStr(startx, y, endx, "$cstrength$.  {: >5} ({}{})", .{ strength, sign, adiff }, .{});
     } else {
-        y = _drawStr(startx, y, endx, "$cstrength$.  {: >4}", .{strength}, .{});
+        y = _drawStr(startx, y, endx, "$cstrength$.  {: >5}", .{strength}, .{});
     }
 
     if (dexterity != state.player.base_dexterity) {
         const diff = @intCast(isize, dexterity) - @intCast(isize, state.player.base_dexterity);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _drawStr(startx, y, endx, "$cdexterity$. {: >4} ({}{})", .{ dexterity, sign, adiff }, .{});
+        y = _drawStr(startx, y, endx, "$cdexterity$. {: >5} ({}{})", .{ dexterity, sign, adiff }, .{});
     } else {
-        y = _drawStr(startx, y, endx, "$cdexterity$. {: >4}", .{dexterity}, .{});
+        y = _drawStr(startx, y, endx, "$cdexterity$. {: >5}", .{dexterity}, .{});
     }
 
     if (speed != state.player.base_speed) {
