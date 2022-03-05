@@ -42,37 +42,41 @@ x sulfur fiend
 	x Hasten Rot: makes a corpse emit a cloud of miasma, destroying the
 	  corpse in the process. Miasma causes nausea.
 	x Summon Ball Lightning: conjures a ball lightning mobs.
-- fuming fiend
+- ether fiend
 	- "A strange winged figure, cloaked in dirty rags. It is holding a
 	   crystal sceptre."
-	- Bolt of Dispersal: resistably blinks all affected mobs away. Used to
-	  open LOS in order to see enemy.
-	- Dispel Fumes: removes all clouds in caster's LOS, Used to remove gas
+	- Travels with packs of dustlings.
+	- Aura of Dispersal: resistably blinks all affected mobs away (range: 2).
+	  Used to remove surrounding enemies.
+	- Dispel Fumes: removes all clouds in caster's LOS. Used to remove gas
 	  obscuring enemy.
-	- Meat Offering: creates a dustling from a corpse, using it up in the
-	  process.
+	- Meat Offering: creates a vile protector from a corpse, using it up in
+	  the process. Vile protector redirects damage done to allies to itself.
+	  Vile protector is very tanky (80 HP) but immobile; shielding ends if
+	  the dustlings/allies move out of its LOS.
 	- Vunerable to fire, immune to electricity.
 	- Fragile (20-30 HP) and slow (110).
-	- Airstrike: moderate damage, smite-targeted.
-	  - "The fuming fiend waves its arms around in wide circles!"
+	- Windlash: moderate damage, smite-targeted.
+	  - "The ether fiend waves its arms around in wide circles!"
 	  - "The air whirls around and strikes you!"
 	  - "The air twists around and strikes you!"
 	  - "The air twists itself inside-out and smites you!!"
-x frozen fiend
-	- "A winged humanoid, clothed in watery-blue robes. It whispers grimly
-	   to itself as it patrols the dungeon, inspecting its underlings with
-	   an expression of cold contempt.
-	x Raises corpses into stationary foes. Such undead are very fast,
-	  have good armor, and are quite tanky, but are very vunerable to fire.
-	x Polar Casing: transforms a wall near the target to ice, damaging all
-	  (yes, all) adjacent monsters. Reverts back to a wall in 5-6 turns.
-	  - "The freezing fiend stares at you."
 - dustling
 	- Exceedingly fragile (1-5 HP) and no armor/weapons.
 	- Carries a strong punch, though.
 	- Fast (55% speed)
 	- Vunerable to fire, electricity.
-	- Summoned solely by fuming fiends.
+	- Found solely with ether fiends in Smithing.
+x frozen fiend
+	- "A winged humanoid, clothed in watery-blue robes. It whispers grimly
+	   to itself as it patrols the dungeon, inspecting its underlings with
+	   an expression of cold contempt.
+	x Polar resurrection: Raises corpses into stationary foes. Such undead
+	  are very fast, have good armor, and are quite tanky, but are very
+	  vunerable to fire.
+	x Polar Casing: transforms a wall near the target to ice, damaging all
+	  (yes, all) adjacent monsters. Reverts back to a wall in 5-6 turns.
+	  - "The freezing fiend stares at you."
 - crystal servitor
 	- "A humanoid statue carved out of a white crystal, imbued with an evil
 	  spirit. It radiates an intense aura of palpable malice."
@@ -130,15 +134,30 @@ x burning brute
 	  - Every 2-3 turns, flames seep out of mob and ignite nearby tiles.
 	  - When timer is over, mob explodes, damaging all nearby mobs.
 	x Has kicking (x1) and clawing (x1) attack (need species struct for this).
+- Archmage
+	- (Idea still TODO)
+	- Upscaled ancient mage, as archliche is to master liche.
+	- Cons: why a separate monster from ancient mage?
+	- Mass Confusion, Mass Dismissal
 - ancient mage
-	- Summons ball lightning, orbs of devastation, wretched stars.
-	- Hurls crystal shards.
+	- "Even the most powerful of human mages cannot hope to wield the full
+	  power of the Necromancer. Instead, it is invested in this undead mage,
+	  an immeasurably ancient skeleton resurrected for this purpose."
+	x Summons ball lightning. (TODO: replace with orbs of devastation.)
+	x Mass Dismissal: gives .Fear to all attacking monsters in LOS. Resistible.
+	x Aura of Dispersal: blinks away all creatures in caster's immediate
+	  vicinity.
+	x Summon Enemy: resistibly teleport enemy/player back into its LOS, if
+	  it cannot see enemy.
+	x Hurls crystal shards.
+	- rPois∞ rFume∞ rElec∞
+- some nasty monster
 	- Hurls bolts of paralysing dust (same as DCSS' catoblepas).
-- death mage
-	- Bufs nearby undead for a short time (and fights as well).
-	- Haste: give .Fast to nearby undead ally.
-	- Heal: Uses up a corpse to restore 90% of lost health for nearby undead ally.
-	- morningstar + chain mail.
+x death mage
+	x Bufs nearby undead for a short time.
+	x Haste: give .Fast to nearby undead ally.
+	x Heal: Uses up a corpse to restore 90% of lost health for nearby undead ally.
+	x Prefers to keep distance.
 - jellies
 	- Split on hit?
 - bats
@@ -157,6 +176,9 @@ Intelligence
 - Extra stupid (<Moron) mobs will employ ranged attacks even when it might hit
   another ally.
 - Stupid (<Human) mobs will step on traps, mines, etc.
+- Stupid (<Human) mobs will assign a pathfinding penalty to areas they cannot
+  see, thus preferring to travel in areas they can vs areas they can't, even if
+  it's shorter.
 - Moron/mindless mobs will not reposition during a fight, and will not move off
   of dangerous terrain intelligently (they'll just move randomly).
 - Mindless mobs will never flee.
@@ -506,7 +528,6 @@ x Rework and implement some items stuff
   x Place evocables, potions, weapons, armor around dungeon
   x Place item "stockpiles" in PRI and VLT; remove some PRI subrooms to make place for it
   x Add messages when player finds evocable, recharging station, potion, or stairs
-  - Prevent some rare items from spawning at all on lower floors
 x Add recharging stations (and ensure they can't recharge mine kits!)
 x Revamp confuse; add "daze" status
   x Fix: add mob to enemy list when they stab, and 90% chance to daze enemy (unless undead)
@@ -540,11 +561,12 @@ x Stair overhaul
   x Flee effects (speed, enraged, shoving)
   x Necromancers, burning brutes, frozen fiends, sulfur fiends
   x Javelineers
-  - Fuming fiends, other Smithing-only monsters
   x Add `Flanked` effect + UI element
   x Add mana system
-  - Ancient mages, death mages and skeletal warrior squads
+  x Ancient mages, death mages and skeletal warrior squads
   - Place monsters in various areas
+  - Increase frequency of dangerous monsters in more dangerous floors
+  - Prevent some rare items from spawning at all on lower floors
 - Runes and scoring
 - Air purifiers, mob repositioning AI to move out of dangerous tiles and flank foes
 - More potions stuff
@@ -552,6 +574,7 @@ x Stair overhaul
     - Potion of dilution   (dilution)
     - Grills + kitchen set (concentration)
   - Potion of defumigation
+  - Potion of dispellation
   - Nerf potions of acceleration
 - Add fungi, plants, terrain
 - Implement intelligence
@@ -559,10 +582,12 @@ x Stair overhaul
   - Prevent sentinels from shooting allies and such
 - Revisit and revamp SMI mapgen
   - toxic sludge pools and bridges over them
+  - Ether fiends, drakes, dustlings
 - Revisit Laboratory
   - Add spires and spire kits
   - Add command stones and transporter stones
-  - Add bosses
+  - Add abominations
+  - Place more experiments around
   - Add traps of blinding gas
 - Show information characters next to mob in enemy pane
 x LOS/lighting revamp
@@ -631,8 +656,10 @@ Room features/Mapgen:
   - fluorescent fungi
   - dead, flammable fungi
   - tall fungi (very reduced LOS)
-- Terrain/floor types
   - camoflaging fungi (Stlth+)
+  - XXX fungi (haste undead)
+  - XXX fungi (slow living)
+- Terrain/floor types
   - metal (rElec-)
   - copper (elec dmg propagation?)
   - wood (rFire- rElec+)
@@ -734,6 +761,7 @@ x Define what undead are somewhere (combat bonuses, stat increases, miasma
 - New: Beastmasters
 - Reaching weapon effects for beastmasters and patrols
 - Make sentinels and javelineers pickup projectiles they've thrown
+- Add orbs of destruction spell for ancient mages
 
 User Interface
 ==============
@@ -742,8 +770,8 @@ x Make it easier to tell the heavily wounded from dead
 x Fix showing of display percentage of last damage
 x UI for status effects (paralysis, etc)
 - Show red/yellow/orange for low health bars
-x Use proper CP407 arrows for staircases
-- Show prisoner's activity as "prisoner" instead of {"investigate","attack"}, etc
+~ Use proper CP407 arrows for staircases
+x Show prisoner's activity as "prisoner" instead of {"investigate","attack"}, etc
 x Make bg of cell with noise green
 - @ command to see player's full AC and stats
 - Show information characters next to mob in enemy pane
@@ -844,8 +872,8 @@ Message pane
   - On mob refusing to swap with player
   - On enemy turning to flee
   x On recieving a status (Confuse, Daze, etc)
-  x On having the duration of status extended/lessened
-  - On seeing a mob cast a spell
+  - On having the duration of status extended/lessened
+  x On seeing a mob cast a spell
   x On dodging by enemy or player
   x On death
   - On resisting a spell
@@ -856,6 +884,7 @@ x Only print trap messages when culprit is player
 x Group identical messages in msgpane
 x Attack messages should be nice and descriptive ("You skewer the goblin!")
   x Even more descriptive! ("The troll smashes you like an overripe mango!!")
+- Put some messages on same line as previous.
 
 Fixes
 =====
@@ -896,18 +925,18 @@ x Lighting system and torches
     light color, gas, or something else?"
 x Ring of echolocation to magic-map neighbors of sound-producing tiles
 - "Night", when guards sleep, torches go out, and night creatures awaken
-- "Seed database" that stores bones for players who died during game, then
+- "Ghost database" that stores bones for players who died during game, then
   shows ingame bones/corpses/undead on other games
 - Candles that destory people/objects/rooms when quenched
 - "Permeability" instead of walkability, that lets creatures pass if they are
-  small enough (e.g., rats and small spires could pass through iron bars)
+  small enough (e.g., rats and small spiders could pass through iron bars)
 ~ Tile "integrity" that reduces when tile is hit with explosion
   - obsolete: too complex
 ~ Radioactivity system: nuclear reactors, uranium, corium, nuclear bombs that
   the player can blow up for fun
   - obsolete: too complex
 ~ Orchestra/Concert, that sings/players instruments and distracts guards
-	- Bonus: use Nazi singer names
+	- Bonus: use Nazi singer names (Wagner!)
   - obsolete: making all the guards move to one corner of the map suddenly is
     obviously going to make things easier for player /s
 - Goblin "organizations" (purely eye candy)
@@ -939,7 +968,7 @@ x Mobile traps that can be placed by player and used to lure guards on top
 	x {Bombs/landmines, bear trap, damage trap} "kits"
 x Item/lever player can trigger to unlock locked doors in room, releasing
   prisoners and creating maximum chaos.
-+ Use Dijkstra for lighting/FOV?
+~ Use Dijkstra for lighting/FOV?
 ~ Potion and Ring ID system.
   - obsolete: too complex
 x Blood spattering?
@@ -967,14 +996,15 @@ x Add braziers that are built into the walls (aka torches), and use that
   or swarmers (Cogmind 7DRL)
 - "cameras kits" that create surface items that keep the surrounding area in the
   FOV of all mobs that have a certain ring on
-- Experiment with "bouncing" rays in raycasting routines
-- Ring/item that has leaving a vunerable "copy" of yourself where that item/ring
+~ Experiment with "bouncing" rays in raycasting routines
+~ Ring/item that has leaving a vunerable "copy" of yourself where that item/ring
   was activated (that is, *two* tiles have the .mob field pointing to the player,
   while the player.coord field points to only one of them).
+  - obsolete: could lead to subtle bugs
 - weapon runes:
 	- interleaving: Swap on hit
 	- banishing:    Teleports away
-- MP-like system that limits how often spellcasters can cast spells (providing
+x MP-like system that limits how often spellcasters can cast spells (providing
   a way to tweak dangerous-ness) and how often player can use ring effects.
 - Extremely dangerous (but lucrative) vaults that have golden walls, warning
   player of danger.
