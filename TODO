@@ -556,7 +556,7 @@ x Stair overhaul
     x Merge poison and deceleration
   x Fountains to drink from
   x Apply "upgrade" and healing to player on ascension
-- Add tougher monsters; balancing
+x Add tougher monsters; balancing
   x Make fleeing monsters tell allies of foe
   x Flee effects (speed, enraged, shoving)
   x Necromancers, burning brutes, frozen fiends, sulfur fiends
@@ -564,7 +564,8 @@ x Stair overhaul
   x Add `Flanked` effect + UI element
   x Add mana system
   x Ancient mages, death mages and skeletal warrior squads
-  - Place monsters in various areas
+  x Place monsters in various areas
+- Balancing
   - Increase frequency of dangerous monsters in more dangerous floors
   - Prevent some rare items from spawning at all on lower floors
 - Runes and scoring
