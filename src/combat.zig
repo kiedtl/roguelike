@@ -19,9 +19,9 @@ const DEFENDER_FLANKED_NBONUS: isize = 10;
 const DEFENDER_HELD_NBONUS: isize = 10;
 const DEFENDER_STEALTH_BONUS: isize = 5;
 
-pub fn damageOutput(attacker: *const Mob, recipient: *const Mob, weapon_damages: Damages, main_damage: DamageType, is_stab: bool) usize {
+pub fn damageOutput(attacker: *const Mob, recipient: *const Mob, weapon_damage: usize, is_stab: bool) usize {
     const recipient_armor = recipient.inventory.armor orelse &items.NoneArmor;
-    const max_damage = weapon_damages.resultOf(&recipient_armor.resists).sum();
+    const max_damage = weapon_damage - (weapon_damage * recipient_armor.shave / 100);
 
     var damage: usize = 0;
     damage += rng.rangeClumping(usize, max_damage / 2, max_damage, 2);
@@ -29,8 +29,7 @@ pub fn damageOutput(attacker: *const Mob, recipient: *const Mob, weapon_damages:
     damage += damage * (attacker.strength() / 2) / 100;
 
     if (is_stab) {
-        const bonus = DamageType.stabBonus(main_damage);
-        damage = utils.percentOf(usize, damage, bonus);
+        damage = utils.percentOf(usize, damage, 600);
     }
 
     return damage;

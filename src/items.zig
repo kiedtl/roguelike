@@ -87,8 +87,7 @@ pub const Projectile = struct {
     id: []const u8,
     name: []const u8,
     color: u32,
-    damages: ?Damages = null,
-    main_damage: ?DamageType = null,
+    damage: ?usize = null,
     effect: union(enum) {
         Status: StatusDataInfo,
     },
@@ -110,8 +109,7 @@ pub const JavelinProj = Projectile{
     .id = "javelin",
     .name = "poisoned javelin",
     .color = 0xffd7d7,
-    .damages = .{ .Piercing = 15 },
-    .main_damage = .Piercing,
+    .damage = 10,
     .effect = .{
         .Status = .{
             .status = .Poison,
@@ -371,13 +369,7 @@ pub const DecimatePotion = Potion{ .id = "potion_decimate", .name = "decimation"
 pub const ChainmailArmor = Armor{
     .id = "chainmail_armor",
     .name = "chainmail",
-    .resists = .{
-        .Crushing = 15,
-        .Pulping = 20,
-        .Slashing = 50,
-        .Piercing = 35,
-        .Lacerating = 80,
-    },
+    .shave = 30,
     .speed_penalty = 40,
     .evasion_penalty = 5,
 };
@@ -385,13 +377,7 @@ pub const ChainmailArmor = Armor{
 pub const ScalemailArmor = Armor{
     .id = "scalemail_armor",
     .name = "scale mail",
-    .resists = .{
-        .Crushing = 25,
-        .Pulping = 20,
-        .Slashing = 50,
-        .Piercing = 30,
-        .Lacerating = 80,
-    },
+    .shave = 25,
     .speed_penalty = 20,
     .evasion_penalty = 10,
 };
@@ -399,49 +385,25 @@ pub const ScalemailArmor = Armor{
 pub const RobeArmor = Armor{
     .id = "robe_armor",
     .name = "robe",
-    .resists = .{
-        .Crushing = 0,
-        .Pulping = 5,
-        .Slashing = 2,
-        .Piercing = 2,
-        .Lacerating = 8,
-    },
+    .shave = 5,
 };
 
 pub const GambesonArmor = Armor{
     .id = "gambeson_armor",
     .name = "gambeson",
-    .resists = .{
-        .Crushing = 10,
-        .Pulping = 8,
-        .Slashing = 15,
-        .Piercing = 10,
-        .Lacerating = 15,
-    },
+    .shave = 15,
 };
 
 pub const LeatherArmor = Armor{
     .id = "leather_armor",
     .name = "leather",
-    .resists = .{
-        .Crushing = 8,
-        .Pulping = 10,
-        .Slashing = 18,
-        .Piercing = 15,
-        .Lacerating = 25,
-    },
+    .shave = 20,
 };
 
 pub const NoneArmor = Armor{
     .id = "none",
     .name = "none",
-    .resists = .{
-        .Crushing = 1,
-        .Pulping = 1,
-        .Slashing = 1,
-        .Piercing = 1,
-        .Lacerating = 1,
-    },
+    .shave = 0,
 };
 
 fn dmgstr(p: usize, vself: []const u8, vother: []const u8, vdeg: []const u8) DamageStr {
@@ -495,15 +457,7 @@ pub const LivingIceHitWeapon = Weapon{
     .id = "none",
     .name = "none",
     .delay = 80,
-    .damages = .{
-        .Crushing = 15,
-        .Pulping = 0,
-        .Slashing = 0,
-        .Piercing = 0,
-        .Lacerating = 0,
-    },
-    .main_damage = .Crushing,
-    .secondary_damage = null,
+    .damage = 15,
     .strs = &[_]DamageStr{
         dmgstr(010, "hit", "hits", ""),
     },
@@ -513,15 +467,7 @@ pub const FistWeapon = Weapon{
     .id = "none",
     .name = "none",
     .delay = 80,
-    .damages = .{
-        .Crushing = 10,
-        .Pulping = 0,
-        .Slashing = 0,
-        .Piercing = 0,
-        .Lacerating = 0,
-    },
-    .main_damage = .Crushing,
-    .secondary_damage = null,
+    .damage = 10,
     .strs = &[_]DamageStr{
         dmgstr(020, "punch", "punches", ""),
         dmgstr(030, "hit", "hits", ""),
@@ -534,15 +480,7 @@ pub const ClawWeapon = Weapon{
     .id = "none",
     .name = "none",
     .delay = 90,
-    .damages = .{
-        .Crushing = 0,
-        .Pulping = 3,
-        .Slashing = 0,
-        .Piercing = 0,
-        .Lacerating = 9,
-    },
-    .main_damage = .Lacerating,
-    .secondary_damage = .Pulping,
+    .damage = 12,
     .strs = &[_]DamageStr{
         dmgstr(010, "scratch", "scratches", ""),
         dmgstr(030, "claw", "claws", ""),
@@ -558,15 +496,7 @@ pub const KickWeapon = Weapon{
     .id = "none",
     .name = "none",
     .delay = 100,
-    .damages = .{
-        .Crushing = 0,
-        .Pulping = 3,
-        .Slashing = 0,
-        .Piercing = 0,
-        .Lacerating = 9,
-    },
-    .main_damage = .Lacerating,
-    .secondary_damage = .Pulping,
+    .damage = 12,
     .strs = &[_]DamageStr{
         dmgstr(080, "kick", "kicks", ""),
         dmgstr(081, "curbstomp", "curbstomps", ""),
@@ -576,60 +506,28 @@ pub const KickWeapon = Weapon{
 pub const KnifeWeapon = Weapon{
     .id = "knife",
     .name = "knife",
-    .damages = .{
-        .Crushing = 0,
-        .Pulping = 1,
-        .Slashing = 1,
-        .Piercing = 10,
-        .Lacerating = 1,
-    },
-    .main_damage = .Piercing,
-    .secondary_damage = null,
+    .damage = 10,
     .strs = &PIERCING_STRS,
 };
 
 pub const DaggerWeapon = Weapon{
     .id = "dagger",
     .name = "dagger",
-    .damages = .{
-        .Crushing = 0,
-        .Pulping = 0,
-        .Slashing = 3,
-        .Piercing = 15,
-        .Lacerating = 2,
-    },
-    .main_damage = .Piercing,
-    .secondary_damage = null,
+    .damage = 15,
     .strs = &PIERCING_STRS,
 };
 
 pub const StilettoWeapon = Weapon{
     .id = "stiletto",
     .name = "stiletto",
-    .damages = .{
-        .Crushing = 0,
-        .Pulping = 0,
-        .Slashing = 2,
-        .Piercing = 19,
-        .Lacerating = 2,
-    },
-    .main_damage = .Piercing,
-    .secondary_damage = null,
+    .damage = 25,
     .strs = &PIERCING_STRS,
 };
 
 pub const RapierWeapon = Weapon{
     .id = "rapier",
     .name = "rapier",
-    .damages = .{
-        .Crushing = 0,
-        .Pulping = 0,
-        .Slashing = 1,
-        .Piercing = 24,
-        .Lacerating = 1,
-    },
-    .main_damage = .Piercing,
-    .secondary_damage = null,
+    .damage = 20,
     .strs = &PIERCING_STRS,
 };
 
@@ -637,15 +535,7 @@ pub const SpearWeapon = Weapon{
     .id = "spear",
     .name = "spear",
     .delay = 110,
-    .damages = .{
-        .Crushing = 0,
-        .Pulping = 0,
-        .Slashing = 2,
-        .Piercing = 15,
-        .Lacerating = 1,
-    },
-    .main_damage = .Piercing,
-    .secondary_damage = null,
+    .damage = 15,
     .strs = &PIERCING_STRS,
 };
 
@@ -653,61 +543,29 @@ pub const KnoutWeapon = Weapon{
     .id = "knout",
     .name = "knout",
     .delay = 150,
-    .damages = .{
-        .Crushing = 12,
-        .Pulping = 19,
-        .Slashing = 2,
-        .Piercing = 5,
-        .Lacerating = 5,
-    },
-    .main_damage = .Pulping,
-    .secondary_damage = .Crushing,
+    .damage = 30,
     .strs = &CRUSHING_STRS,
 };
 
 pub const MorningstarWeapon = Weapon{
     .id = "morningstar",
     .name = "morningstar",
-    .damages = .{
-        .Crushing = 5,
-        .Pulping = 10,
-        .Slashing = 0,
-        .Piercing = 0,
-        .Lacerating = 5,
-    },
-    .main_damage = .Pulping,
-    .secondary_damage = .Crushing,
+    .damage = 20,
     .strs = &CRUSHING_STRS,
 };
 
 pub const ClubWeapon = Weapon{
     .id = "club",
-    .name = "stone club",
+    .name = "club",
     .delay = 110,
-    .damages = .{
-        .Crushing = 12,
-        .Pulping = 2,
-        .Slashing = 0,
-        .Piercing = 0,
-        .Lacerating = 2,
-    },
-    .main_damage = .Crushing,
-    .secondary_damage = .Pulping,
+    .damage = 12,
     .strs = &CRUSHING_STRS,
 };
 
 pub const MaceWeapon = Weapon{
     .id = "mace",
     .name = "mace",
-    .damages = .{
-        .Crushing = 15,
-        .Pulping = 1,
-        .Slashing = 0,
-        .Piercing = 0,
-        .Lacerating = 1,
-    },
-    .main_damage = .Crushing,
-    .secondary_damage = null,
+    .damage = 15,
     .strs = &CRUSHING_STRS,
 };
 
@@ -717,14 +575,8 @@ pub const MaceWeapon = Weapon{
 pub const AxeWeapon = Weapon{
     .id = "battleaxe",
     .name = "battleaxe",
-    .delay = 110,
-    .damages = .{
-        .Crushing = 7,
-        .Pulping = 5,
-        .Slashing = 9,
-    },
-    .main_damage = .Slashing,
-    .secondary_damage = .Crushing,
+    .delay = 120,
+    .damage = 25,
     .strs = &SLASHING_STRS,
 };
 

@@ -1452,8 +1452,8 @@ pub const Mob = struct { // {{{
             .Projectile => |proj| {
                 if (landed != null and state.dungeon.at(landed.?).mob != null) {
                     const mob = state.dungeon.at(landed.?).mob.?;
-                    if (proj.damages) |dmgs| {
-                        const damage = combat.damageOutput(self, mob, dmgs, proj.main_damage.?, false);
+                    if (proj.damage) |max_damage| {
+                        const damage = combat.damageOutput(self, mob, max_damage, false);
                         mob.takeDamage(.{ .amount = @intToFloat(f64, damage), .source = .RangedAttack, .by_mob = self });
                     }
                     switch (proj.effect) {
@@ -1811,7 +1811,7 @@ pub const Mob = struct { // {{{
         }
 
         const is_stab = !recipient.isAwareOfAttack(attacker.coord);
-        const damage = combat.damageOutput(attacker, recipient, attacker_weapon.damages, attacker_weapon.main_damage, is_stab);
+        const damage = combat.damageOutput(attacker, recipient, attacker_weapon.damage, is_stab);
 
         recipient.takeDamage(.{
             .amount = @intToFloat(f64, damage),
@@ -2692,81 +2692,11 @@ pub const SurfaceItem = union(SurfaceItemTag) {
     Stair: ?Coord, // null = downstairs
 };
 
-// Each weapon and armor has a specific amount of maximum damage it can create
-// or prevent. That damage comes in several different types:
-//      - Crushing: clubs, maces, morningstars, battleaxes, warhammers.
-//      - Slashing: swords, battleaxes.
-//      - Pulping: morningstars.
-//      - Puncture: spears, daggers, swords, warhammers.
-//      - Lacerate: warwhips, morningstars.
-//
-// Just as each weapon may cause one or more of each type of damage, each armor
-// may prevent one or more of each damage as well.
-
-pub const DamageType = enum {
-    Crushing,
-    Pulping,
-    Slashing,
-    Piercing,
-    Lacerating,
-
-    // Return a percentile bonus with which to multiply the base damage
-    // amount when an attack is a stabbing attack.
-    pub fn stabBonus(d: DamageType) usize {
-        return switch (d) {
-            .Crushing => 420,
-            .Pulping => 350,
-            .Slashing => 540,
-            .Piercing => 700,
-            .Lacerating => 210,
-        };
-    }
-};
-
 pub const DamageStr = struct {
     dmg_percent: usize,
     verb_self: []const u8,
     verb_other: []const u8,
     verb_degree: []const u8,
-};
-
-//pub const Damages = enums.EnumFieldStruct(DamageType, 0);
-pub const Damages = struct {
-    Crushing: usize = 0,
-    Pulping: usize = 0,
-    Slashing: usize = 0,
-    Piercing: usize = 0,
-    Lacerating: usize = 0,
-
-    pub const Self = @This();
-
-    pub fn sum(self: *const Self) usize {
-        return self.Crushing +
-            self.Pulping +
-            self.Slashing +
-            self.Piercing +
-            self.Lacerating;
-    }
-
-    pub fn resultOf(attack: *const Self, defense: *const Self) Self {
-        return .{
-            .Crushing = attack.Crushing - (attack.Crushing * defense.Crushing / 100),
-            .Pulping = attack.Pulping - (attack.Pulping * defense.Pulping / 100),
-            .Slashing = attack.Slashing - (attack.Slashing * defense.Slashing / 100),
-            .Piercing = attack.Piercing - (attack.Piercing * defense.Piercing / 100),
-            .Lacerating = attack.Lacerating - (attack.Lacerating * defense.Lacerating / 100),
-        };
-    }
-
-    pub fn damageOf(self: *Self, d: DamageType) *usize {
-        const fields = @typeInfo(Self).fields;
-        var found_at: 0 = 0;
-        inline for (fields) |field, i| {
-            if (mem.eql(u8, @tagName(d), field.name))
-                found_at = i;
-        }
-        return @field(self, fields[found_at].name);
-    }
 };
 
 pub const Armor = struct {
@@ -2776,7 +2706,7 @@ pub const Armor = struct {
 
     id: []const u8,
     name: []const u8,
-    resists: Damages,
+    shave: usize,
     speed_penalty: ?usize = null, // percentage
     evasion_penalty: ?usize = null, // fixed number
 };
@@ -2789,9 +2719,7 @@ pub const Weapon = struct {
     id: []const u8 = "",
     name: []const u8 = "",
     delay: usize = 100, // Percentage (100 = normal speed, 200 = twice as slow)
-    damages: Damages,
-    main_damage: DamageType,
-    secondary_damage: ?DamageType = null,
+    damage: usize,
     strs: []const DamageStr,
 };
 

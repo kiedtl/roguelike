@@ -181,13 +181,8 @@ pub const BOLT_CRYSTAL = Spell{
 };
 fn _effectBoltCrystal(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
     if (state.dungeon.at(coord).mob) |victim| {
-        const damages = Damages{
-            .Piercing = opts.power * 90 / 100,
-            .Slashing = opts.power * 10 / 100,
-        };
-
         const armor = victim.inventory.armor orelse &items.NoneArmor;
-        const max_damage = damages.resultOf(&armor.resists).sum();
+        const max_damage = opts.power - (opts.power * armor.shave / 100);
         const damage = rng.rangeClumping(usize, max_damage / 2, max_damage, 2);
 
         victim.takeDamage(.{
