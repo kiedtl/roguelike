@@ -2906,7 +2906,8 @@ pub const Prefab = struct {
     }
 
     pub fn lesserThan(_: void, a: Prefab, b: Prefab) bool {
-        return (a.priority > b.priority) or (a.height * a.width) > (b.height * b.width);
+        //return (a.priority > b.priority) or (a.height * a.width) > (b.height * b.width);
+        return a.priority > b.priority;
     }
 };
 
@@ -2960,6 +2961,7 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
         };
     }
 
+    rng.shuffle(Prefab, s_fabs.items);
     std.sort.insertionSort(Prefab, s_fabs.items, {}, Prefab.lesserThan);
 }
 

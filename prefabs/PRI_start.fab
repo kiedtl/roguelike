@@ -7,25 +7,15 @@
 :invisible
 :restriction 0
 :noguards
-:nolights
 :notraps
-:prison 2,2 7 4
-@0 p bed
 
-@a P potion_paralysis
-@b P potion_smoke
-@c P potion_recuperate
-@d P potion_fast
-@e P potion_incinerate
-
-#*########******#
-*...............•
-*.########..aa..*
-*.#0.....#.bbe..*
-•.#......±@cc...*
-*.##≡≡≡≡##..dd..*
-*...............•
-#***************#
+#*****#
+*.....*
+*.....*
+*..@..*
+*.....*
+*.....*
+#*****#
 
 % Test prefab for testing various things
 %
