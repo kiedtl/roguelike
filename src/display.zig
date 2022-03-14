@@ -15,8 +15,9 @@ usingnamespace @import("types.zig");
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
-pub const MIN_WIN_WIDTH: isize = 80;
-pub const MIN_WIN_HEIGHT: isize = 30;
+pub const LEFT_INFO_WIDTH: usize = 24;
+pub const RIGHT_INFO_WIDTH: usize = 24;
+pub const LOG_HEIGHT: usize = 8;
 
 // tb_shutdown() calls abort() if tb_init() wasn't called, or if tb_shutdown()
 // was called twice. Keep track of termbox's state to prevent this.
@@ -42,7 +43,10 @@ pub fn init() !void {
 // Check that the window is the minimum size.
 //
 // Return true if the user resized the window, false if the user press Ctrl+C.
-pub fn checkWindowSize(min_width: isize, min_height: isize) bool {
+pub fn checkWindowSize() bool {
+    const min_height = HEIGHT + LOG_HEIGHT + 2;
+    const min_width = WIDTH + LEFT_INFO_WIDTH + RIGHT_INFO_WIDTH + 2;
+
     while (true) {
         const cur_w = termbox.tb_width();
         const cur_h = termbox.tb_height();
@@ -95,12 +99,13 @@ pub fn dimensions(w: DisplayWindow) Dimension {
     const height = @intCast(usize, termbox.tb_height());
     const width = @intCast(usize, termbox.tb_width());
 
-    const log_height = 10;
-    const playerinfo_width = 25;
-    const enemyinfo_width = 25;
+    const playerinfo_width = LEFT_INFO_WIDTH;
+    const enemyinfo_width = RIGHT_INFO_WIDTH;
+
     const playerinfo_start = 1;
     const main_start = playerinfo_start + playerinfo_width + 1;
-    const main_width = width - 1 - playerinfo_width - enemyinfo_width;
+    const main_width = WIDTH;
+    const main_height = HEIGHT;
     const log_start = main_start;
     const enemyinfo_start = main_start + main_width + 1;
 
@@ -112,22 +117,22 @@ pub fn dimensions(w: DisplayWindow) Dimension {
             .height = height - 1,
         },
         .Main => .{
-            .from = Coord.new(main_start, 0),
-            .to = Coord.new(main_start + main_width, height - 1 - log_height),
+            .from = Coord.new(main_start, 1),
+            .to = Coord.new(main_start + main_width, main_height + 2),
             .width = main_width,
-            .height = height - 1 - log_height,
+            .height = main_height,
         },
         .EnemyInfo => .{
             .from = Coord.new(enemyinfo_start, 0),
             .to = Coord.new(width - 1, height - 1),
-            .width = enemyinfo_width,
+            .width = math.max(enemyinfo_width, width - enemyinfo_start),
             .height = height - 1,
         },
         .Log => .{
-            .from = Coord.new(log_start, height - 1 - log_height),
+            .from = Coord.new(log_start, 2 + main_height),
             .to = Coord.new(log_start + main_width, height - 1),
             .width = main_width,
-            .height = log_height,
+            .height = math.max(LOG_HEIGHT, height - (2 + main_height) - 1),
         },
     };
 }
@@ -242,18 +247,9 @@ fn drawEnemyInfo(
         var mobcell = Tile.displayAs(mob.coord, false);
         termbox.tb_put_cell(startx, y, &mobcell);
 
-        y = _drawStr(startx + 1, y, endx, ": {}", .{mob.displayName()}, .{});
+        y = _drawStr(startx + 1, y, endx, " {}", .{mob.displayName()}, .{});
 
-        _draw_bar(
-            y,
-            startx,
-            endx,
-            @floatToInt(usize, mob.HP),
-            @floatToInt(usize, mob.max_HP),
-            "health",
-            0x232faa,
-            0xffffff,
-        );
+        _draw_bar(y, startx, endx, @floatToInt(usize, mob.HP), @floatToInt(usize, mob.max_HP), "health", 0x232faa, 0xffffff);
         y += 1;
 
         var statuses = mob.statuses.iterator();
@@ -271,14 +267,7 @@ fn drawEnemyInfo(
         }
 
         const activity = if (mob.prisoner_status != null) if (mob.prisoner_status.?.held_by != null) "(chained)" else "(prisoner)" else mob.activity_description();
-        y = _drawStr(
-            endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2),
-            y,
-            endx,
-            "{}",
-            .{activity},
-            .{ .fg = 0x9a9a9a },
-        );
+        y = _drawStr(endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2), y, endx, "{}", .{activity}, .{ .fg = 0x9a9a9a });
 
         y += 2;
     }
@@ -286,10 +275,10 @@ fn drawEnemyInfo(
 
 fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, endy: isize) void {
     const is_running = state.player.turnsSpentMoving() == state.player.activities.len;
-    const last_action_cost = if (state.player.activities.current()) |lastaction| b: {
-        const spd = @intToFloat(f64, state.player.speed());
-        break :b (spd * @intToFloat(f64, lastaction.cost())) / 100.0 / 10.0;
-    } else 0.0;
+    // const last_action_cost = if (state.player.activities.current()) |lastaction| b: {
+    //     const spd = @intToFloat(f64, state.player.speed());
+    //     break :b (spd * @intToFloat(f64, lastaction.cost())) / 100.0 / 10.0;
+    // } else 0.0;
     const strength = state.player.strength();
     const evasion = combat.chanceOfAttackEvaded(state.player, null);
     const missile = combat.chanceOfMissileLanding(state.player);
@@ -421,9 +410,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     );
     y += 2;
 
-    y = _drawStr(startx, y, endx, "$cturns:$. {} ({e:.1})", .{
-        state.ticks, last_action_cost,
-    }, .{});
+    y = _drawStr(startx, y, endx, "$cturns:$. {}", .{state.ticks}, .{});
     y += 1;
 
     if (state.player.inventory.wielded) |weapon| {
@@ -442,17 +429,6 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         y = _drawStr(startx, y, endx, "$c armor$. {}", .{dest}, .{});
     }
     y += 1;
-
-    const inventory = state.player.inventory.pack.slice();
-    if (inventory.len == 0) {
-        y = _drawStr(startx, y, endx, "Your pack is empty.", .{}, .{});
-    } else {
-        y = _drawStr(startx, y, endx, "$cInventory$.", .{}, .{});
-        for (inventory) |item, i| {
-            const dest = (item.shortName() catch unreachable).constSlice();
-            y = _drawStr(startx, y, endx, "$c{} -$. {}", .{ i, dest }, .{});
-        }
-    }
 }
 
 fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
@@ -506,16 +482,20 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
     const playerx = @intCast(isize, state.player.coord.x);
     const level = state.player.coord.z;
 
-    const main_window = dimensions(.Main);
     var cursory: isize = starty;
-    var cursorx: isize = 0;
+    var cursorx: isize = startx;
 
     const height = @intCast(usize, endy - starty);
     const width = @intCast(usize, endx - startx);
-    const map_starty = playery - @intCast(isize, height / 2);
-    const map_endy = playery + @intCast(isize, height / 2);
-    const map_startx = playerx - @intCast(isize, width / 2);
-    const map_endx = playerx + @intCast(isize, width / 2);
+
+    // const map_starty = playery - @intCast(isize, height / 2);
+    // const map_endy = playery + @intCast(isize, height / 2);
+    // const map_startx = playerx - @intCast(isize, width / 2);
+    // const map_endx = playerx + @intCast(isize, width / 2);
+    const map_starty: isize = 0;
+    const map_endy: isize = HEIGHT;
+    const map_startx: isize = 0;
+    const map_endx: isize = WIDTH;
 
     var y = map_starty;
     while (y < map_endy and cursory < endy) : ({
@@ -529,7 +509,7 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
             cursorx += 1;
         }) {
             // if out of bounds on the map, draw a black tile
-            if (y < 0 or x < 0 or y >= state.HEIGHT or x >= state.WIDTH) {
+            if (y < 0 or x < 0 or y >= HEIGHT or x >= WIDTH) {
                 termbox.tb_change_cell(cursorx, cursory, ' ', 0xffffff, 0);
                 continue;
             }

@@ -43,7 +43,7 @@ fn initGame() bool {
         error.PipeTrapFailed => @panic("Internal termbox error"),
     }
 
-    if (!display.checkWindowSize(display.MIN_WIN_WIDTH, display.MIN_WIN_HEIGHT)) {
+    if (!display.checkWindowSize()) {
         return false;
     }
 

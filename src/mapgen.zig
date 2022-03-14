@@ -2985,9 +2985,9 @@ pub const LevelConfig = struct {
     // Dimensions include the first wall, so a minimum width of 2 guarantee that
     // there will be one empty space in the room, minimum.
     min_room_width: usize = 7,
-    min_room_height: usize = 5,
-    max_room_width: usize = 20,
-    max_room_height: usize = 15,
+    min_room_height: usize = 4,
+    max_room_width: usize = 15,
+    max_room_height: usize = 11,
 
     level_features: [4]?LevelFeatureFunc = [_]?LevelFeatureFunc{ null, null, null, null },
 
@@ -3129,9 +3129,9 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
     },
     .prefab_chance = 100, // No prefabs for LAB
     .mapgen_iters = 2048,
-    .min_room_width = 8,
-    .min_room_height = 6,
-    .max_room_width = 30,
+    .min_room_width = 9,
+    .min_room_height = 7,
+    .max_room_width = 25,
     .max_room_height = 20,
 
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
@@ -3181,7 +3181,7 @@ pub const SMI_BASE_LEVELCONFIG = LevelConfig{
     },
     .shrink_corridors_to_fit = false,
     .prefab_chance = 1, // Only prefabs for SMI
-    .mapgen_iters = 512,
+    .mapgen_iters = 1024,
 
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
         levelFeatureIronOres,
@@ -3207,24 +3207,24 @@ pub const SMI_BASE_LEVELCONFIG = LevelConfig{
 
     .blobs = &[_]LevelConfig.BlobConfig{
         .{
-            .number = MinMax(usize){ .min = 6, .max = 8 },
+            .number = MinMax(usize){ .min = 1, .max = 4 },
             .type = .Wall,
-            .min_blob_width = MinMax(usize){ .min = 7, .max = 8 },
-            .min_blob_height = MinMax(usize){ .min = 7, .max = 8 },
-            .max_blob_width = MinMax(usize){ .min = 10, .max = 15 },
-            .max_blob_height = MinMax(usize){ .min = 9, .max = 15 },
+            .min_blob_width = MinMax(usize){ .min = 3, .max = 4 },
+            .min_blob_height = MinMax(usize){ .min = 3, .max = 4 },
+            .max_blob_width = MinMax(usize){ .min = 7, .max = 8 },
+            .max_blob_height = MinMax(usize){ .min = 7, .max = 8 },
             .ca_rounds = 5,
             .ca_percent_seeded = 55,
             .ca_birth_params = "ffffffttt",
             .ca_survival_params = "ffffttttt",
         },
         .{
-            .number = MinMax(usize){ .min = 5, .max = 7 },
+            .number = MinMax(usize){ .min = 2, .max = 4 },
             .type = .Lava,
-            .min_blob_width = MinMax(usize){ .min = 6, .max = 8 },
-            .min_blob_height = MinMax(usize){ .min = 6, .max = 8 },
-            .max_blob_width = MinMax(usize){ .min = 10, .max = 14 },
-            .max_blob_height = MinMax(usize){ .min = 9, .max = 14 },
+            .min_blob_width = MinMax(usize){ .min = 4, .max = 5 },
+            .min_blob_height = MinMax(usize){ .min = 4, .max = 5 },
+            .max_blob_width = MinMax(usize){ .min = 8, .max = 10 },
+            .max_blob_height = MinMax(usize){ .min = 8, .max = 10 },
             .ca_rounds = 5,
             .ca_percent_seeded = 55,
             .ca_birth_params = "ffffftttt",

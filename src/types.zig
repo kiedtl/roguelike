@@ -44,8 +44,8 @@ const SpellOptions = spells.SpellOptions;
 const Spell = spells.Spell;
 const Poster = literature.Poster;
 
-pub const HEIGHT = 40;
-pub const WIDTH = 85;
+pub const HEIGHT = 30;
+pub const WIDTH = 70;
 pub const LEVELS = 14;
 pub const PLAYER_STARTING_LEVEL = 13; // TODO: define in data file
 
