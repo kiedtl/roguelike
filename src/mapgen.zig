@@ -950,12 +950,6 @@ fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, allo
             continue;
         }
 
-        // Don't allow loot subrooms unless opts.loot==true, and in that case
-        // only take loot subrooms.
-        if (opts.loot != subroom.is_loot) {
-            continue;
-        }
-
         if (subroom.center_align) {
             if (subroom.height % 2 != area.height % 2 or
                 subroom.width % 2 != area.width % 2)
@@ -2474,7 +2468,6 @@ pub const Prefab = struct {
     invisible: bool = false,
     restriction: usize = 1,
     priority: usize = 0,
-    is_loot: bool = false, // Is this a loot prefab?
     noitems: bool = false,
     noguards: bool = false,
     nolights: bool = false,
@@ -2678,9 +2671,6 @@ pub const Prefab = struct {
                     } else if (mem.eql(u8, key, "notraps")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.notraps = true;
-                    } else if (mem.eql(u8, key, "is_loot")) {
-                        if (val.len != 0) return error.UnexpectedMetadataValue;
-                        f.is_loot = true;
                     } else if (mem.eql(u8, key, "spawn")) {
                         const spawn_at_str = words.next() orelse return error.ExpectedMetadataValue;
                         const maybe_work_at_str: ?[]const u8 = words.next() orelse null;

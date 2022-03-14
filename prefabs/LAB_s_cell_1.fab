@@ -7,7 +7,7 @@
 % ⊺ ⌨╜╘⊡┘
 
 :subroom
-:restriction 2
+:restriction 1
 
 @0 m research_core
 @1 p small_transformer
@@ -39,23 +39,3 @@
 #β#ef#g
 #≡#1h#i
 2.3jk4l
-
-\
-
-:prison 1,1 1 1
-#≡#
-#β#
-###
-
-\
-
-:prison 1,1 1 1
-###
-#β≡
-###
-
-\
-:prison 1,1 1 1
-###
-≡β#
-###
