@@ -149,6 +149,7 @@ const DrawStrOpts = struct {
 };
 
 // Escape characters:
+//     $g       fg = GREY
 //     $c       fg = LIGHT_CONCRETE
 //     $p       fg = PINK
 //     $.       reset fg and bg to defaults
@@ -183,6 +184,7 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
                         fg = opts.fg;
                         bg = opts.bg;
                     },
+                    'g' => fg = colors.GREY,
                     'c' => fg = colors.LIGHT_CONCRETE,
                     'p' => fg = colors.PINK,
                     else => err.bug("Found unknown escape sequence", .{}),
@@ -289,7 +291,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         break :b (spd * @intToFloat(f64, lastaction.cost())) / 100.0 / 10.0;
     } else 0.0;
     const strength = state.player.strength();
-    const dexterity = state.player.dexterity();
+    const evasion = combat.chanceOfAttackEvaded(state.player, null);
     const speed = state.player.speed();
     const spotted = b: for (moblist) |mob| {
         if (!mob.no_show_fov and mob.ai.is_combative and mob.isHostileTo(state.player)) {
@@ -315,31 +317,30 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         const diff = @intCast(isize, strength) - @intCast(isize, state.player.base_strength);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _drawStr(startx, y, endx, "$cstrength$.  {: >5} ({}{})", .{ strength, sign, adiff }, .{});
+        y = _drawStr(startx, y, endx, "$cstrength$. {: >5} $g({}{})$.", .{ strength, sign, adiff }, .{});
     } else {
-        y = _drawStr(startx, y, endx, "$cstrength$.  {: >5}", .{strength}, .{});
+        y = _drawStr(startx, y, endx, "$cstrength$. {: >5}", .{strength}, .{});
     }
 
-    if (dexterity != state.player.base_dexterity) {
-        const diff = @intCast(isize, dexterity) - @intCast(isize, state.player.base_dexterity);
+    if (evasion != state.player.base_evasion) {
+        const diff = @intCast(isize, evasion) - @intCast(isize, state.player.base_evasion);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _drawStr(startx, y, endx, "$cdexterity$. {: >5} ({}{})", .{ dexterity, sign, adiff }, .{});
+        y = _drawStr(startx, y, endx, "$cevade%$.   {: >4}% $g({}{})$.", .{ evasion, sign, adiff }, .{});
     } else {
-        y = _drawStr(startx, y, endx, "$cdexterity$. {: >5}", .{dexterity}, .{});
+        y = _drawStr(startx, y, endx, "$cevade%$.   {: >4}%", .{evasion}, .{});
     }
+
+    y = _drawStr(startx, y, endx, "$cmelee%$.   {: >4}%", .{combat.chanceOfMeleeLanding(state.player)}, .{});
 
     if (speed != state.player.base_speed) {
         const diff = @intCast(isize, speed) - @intCast(isize, state.player.base_speed);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _drawStr(startx, y, endx, "$cspeed$.     {: >4}% ({}{}%)", .{ speed, sign, adiff }, .{});
+        y = _drawStr(startx, y, endx, "$cspeed$.    {: >4}% ({}{}%)", .{ speed, sign, adiff }, .{});
     } else {
-        y = _drawStr(startx, y, endx, "$cspeed$.     {: >4}%", .{speed}, .{});
+        y = _drawStr(startx, y, endx, "$cspeed$.    {: >4}%", .{speed}, .{});
     }
-
-    y = _drawStr(startx, y, endx, "$chit%$.      {: >4}%", .{combat.chanceOfAttackLanding(state.player)}, .{});
-    y = _drawStr(startx, y, endx, "$cdodge%$.    {: >4}%", .{combat.chanceOfAttackDodged(state.player, null)}, .{});
 
     y += 1;
 

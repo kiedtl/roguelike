@@ -65,7 +65,7 @@ pub const ExecutionerTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 3,
-        .base_dexterity = 18,
+        .base_evasion = 10,
         .max_HP = 40,
         .memory_duration = 5,
         .base_speed = 100,
@@ -92,7 +92,7 @@ pub const WatcherTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 3,
-        .base_dexterity = 30,
+        .base_evasion = 30,
         .max_HP = 40,
         .memory_duration = 10,
         .base_speed = 60,
@@ -119,7 +119,7 @@ pub const WardenTemplate = MobTemplate{
         .vision = 5,
 
         .willpower = 3,
-        .base_dexterity = 15,
+        .base_evasion = 10,
         .max_HP = 30,
         .memory_duration = 6,
         .base_speed = 120,
@@ -148,7 +148,7 @@ pub const GuardTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 2,
-        .base_dexterity = 20,
+        .base_evasion = 10,
         .max_HP = 35,
         .memory_duration = 5,
         .base_speed = 100,
@@ -181,7 +181,7 @@ pub const JavelineerTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 2,
-        .base_dexterity = 15,
+        .base_evasion = 10,
         .max_HP = 30,
         .memory_duration = 6,
         .base_speed = 110,
@@ -215,7 +215,7 @@ pub const SentinelTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 5,
-        .base_dexterity = 25,
+        .base_evasion = 15,
         .max_HP = 40,
         .memory_duration = 7,
         .base_speed = 90,
@@ -244,7 +244,7 @@ pub const PatrolTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 2,
-        .base_dexterity = 20,
+        .base_evasion = 15,
         .max_HP = 30,
         .memory_duration = 3,
         .base_speed = 110,
@@ -277,7 +277,7 @@ pub const PlayerTemplate = MobTemplate{
         .no_show_fov = true,
 
         .willpower = 6,
-        .base_dexterity = 25,
+        .base_evasion = 10,
         .max_HP = 80,
         .memory_duration = 10,
         .base_speed = 100,
@@ -307,7 +307,7 @@ pub const InteractionLaborerTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 2,
-        .base_dexterity = 15,
+        .base_evasion = 15,
         .max_HP = 60,
         .memory_duration = 5,
         .base_speed = 100,
@@ -334,7 +334,7 @@ pub const GoblinTemplate = MobTemplate{
         .vision = 8,
 
         .willpower = 3,
-        .base_dexterity = 20,
+        .base_evasion = 15,
         .max_HP = 40,
         .memory_duration = 8,
         .base_speed = 100,
@@ -371,7 +371,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
         .max_MP = 7,
 
         .willpower = 8,
-        .base_dexterity = 0,
+        .base_evasion = 0,
         .max_HP = 100,
         .memory_duration = 1,
         .base_speed = 100,
@@ -409,7 +409,7 @@ pub const NebroStatueTemplate = MobTemplate{
         .max_MP = 7,
 
         .willpower = 8,
-        .base_dexterity = 0,
+        .base_evasion = 0,
         .max_HP = 1000,
         .memory_duration = 1,
         .base_speed = 100,
@@ -447,7 +447,7 @@ pub const CrystalStatueTemplate = MobTemplate{
         .max_MP = 7,
 
         .willpower = 8,
-        .base_dexterity = 0,
+        .base_evasion = 0,
         .max_HP = 1000,
         .memory_duration = 1,
         .base_speed = 100,
@@ -476,7 +476,7 @@ pub const AlchemistTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 5,
-        .base_dexterity = 30,
+        .base_evasion = 30,
         .max_HP = 65,
         .memory_duration = 7,
         .base_speed = 90,
@@ -503,7 +503,7 @@ pub const CleanerTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 2,
-        .base_dexterity = 15,
+        .base_evasion = 15,
         .max_HP = 60,
         .memory_duration = 5,
         .base_speed = 100,
@@ -530,7 +530,7 @@ pub const HaulerTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 2,
-        .base_dexterity = 25,
+        .base_evasion = 25,
         .max_HP = 50,
         .memory_duration = 8,
         .base_speed = 55,
@@ -557,7 +557,7 @@ pub const EngineerTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 2,
-        .base_dexterity = 25,
+        .base_evasion = 25,
         .max_HP = 50,
         .memory_duration = 8,
         .base_speed = 55,
@@ -609,7 +609,7 @@ pub const AncientMageTemplate = MobTemplate{
         .is_undead = true,
 
         .willpower = 10,
-        .base_dexterity = 20,
+        .base_evasion = 10,
         .max_HP = 80,
         .memory_duration = 4,
         .base_speed = 110,
@@ -648,7 +648,7 @@ pub const DeathMageTemplate = MobTemplate{
         .max_MP = 20,
 
         .willpower = 8,
-        .base_dexterity = 15,
+        .base_evasion = 10,
         .max_HP = 40,
         .memory_duration = 6,
         .base_speed = 100,
@@ -688,7 +688,7 @@ pub const SkeletalAxemasterTemplate = MobTemplate{
         .is_undead = true,
 
         .willpower = 2,
-        .base_dexterity = 15,
+        .base_evasion = 5,
         .max_HP = 50,
         .memory_duration = 4,
         .base_speed = 110,
@@ -730,7 +730,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
         .max_MP = 10,
 
         .willpower = 10,
-        .base_dexterity = 15,
+        .base_evasion = 10,
         .max_HP = 50,
         .memory_duration = 10,
         .base_speed = 100,
@@ -768,7 +768,7 @@ pub const BurningBruteTemplate = MobTemplate{
         .max_MP = 12,
 
         .willpower = 8,
-        .base_dexterity = 20,
+        .base_evasion = 15,
         .max_HP = 50,
         .memory_duration = 6,
         .base_speed = 100,
@@ -806,7 +806,7 @@ pub const SulfurFiendTemplate = MobTemplate{
         .max_MP = 10,
 
         .willpower = 10,
-        .base_dexterity = 25,
+        .base_evasion = 10,
         .max_HP = 40,
         .memory_duration = 6,
         .base_speed = 100,
@@ -846,7 +846,7 @@ pub const FrozenFiendTemplate = MobTemplate{
         .max_MP = 15,
 
         .willpower = 8,
-        .base_dexterity = 20,
+        .base_evasion = 10,
         .max_HP = 55,
         .memory_duration = 6,
         .base_speed = 100,
@@ -877,7 +877,7 @@ pub const TanusExperiment = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 3,
-        .base_dexterity = 30,
+        .base_evasion = 10,
         .max_HP = 50,
         .memory_duration = 8,
         .base_speed = 100,
@@ -906,7 +906,7 @@ pub const CatalineExperiment = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 3,
-        .base_dexterity = 30,
+        .base_evasion = 10,
         .max_HP = 50,
         .memory_duration = 8,
         .base_speed = 100,
@@ -935,7 +935,7 @@ pub const FlouinExperiment = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 3,
-        .base_dexterity = 30,
+        .base_evasion = 10,
         .max_HP = 50,
         .memory_duration = 15,
         .base_speed = 100,
@@ -964,7 +964,7 @@ pub const PhytinExperiment = MobTemplate{
         .allegiance = .Necromancer,
 
         .willpower = 3,
-        .base_dexterity = 30,
+        .base_evasion = 10,
         .max_HP = 50,
         .memory_duration = 15,
         .base_speed = 100,
@@ -1001,7 +1001,7 @@ pub const LivingIceTemplate = MobTemplate{
         .no_show_fov = true,
         .immobile = true,
         .willpower = 1,
-        .base_dexterity = 0,
+        .base_evasion = 0,
         .max_HP = 100,
         .memory_duration = 1,
         .base_speed = 100,
@@ -1039,7 +1039,7 @@ pub const BallLightningTemplate = MobTemplate{
         .no_show_fov = true,
         .immobile = false,
         .willpower = 1,
-        .base_dexterity = 50,
+        .base_evasion = 0,
         .max_HP = 3,
         .memory_duration = 1,
         .base_speed = 33,

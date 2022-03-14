@@ -379,6 +379,7 @@ pub const ChainmailArmor = Armor{
         .Lacerating = 80,
     },
     .speed_penalty = 40,
+    .evasion_penalty = 5,
 };
 
 pub const ScalemailArmor = Armor{
@@ -392,7 +393,7 @@ pub const ScalemailArmor = Armor{
         .Lacerating = 80,
     },
     .speed_penalty = 20,
-    .dex_penalty = 40,
+    .evasion_penalty = 10,
 };
 
 pub const RobeArmor = Armor{

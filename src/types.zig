@@ -1163,7 +1163,7 @@ pub const Mob = struct { // {{{
     // Immutable instrinsic attributes.
     //
     // willpower:          Controls the ability to resist and cast spells.
-    // base_dexterity:     Controls the likelihood of a mob dodging an attack.
+    // base_evasion:       Controls the likelihood of a mob dodging an attack.
     // base_strength:      TODO: define!
     // base_stealth:       Innate stealth.
     // vision:             Maximum radius of the mob's field of vision.
@@ -1177,7 +1177,7 @@ pub const Mob = struct { // {{{
     //
     willpower: usize, // Range: 0 < willpower < 10
     base_strength: usize,
-    base_dexterity: usize, // Range: 0 < dexterity < 100
+    base_evasion: usize, // Range: 0 < dexterity < 100
     base_stealth: usize = 0,
     vision: usize = 6,
     base_night_vision: bool = false,
@@ -1430,10 +1430,10 @@ pub const Mob = struct { // {{{
                 .only_if_breaks_lof = true,
             })) {
                 if (state.dungeon.at(coord).mob) |mob| {
-                    const chance = combat.chanceOfAttackDodged(mob, null);
+                    const chance = combat.chanceOfAttackEvaded(mob, null);
                     if (dodgeable and rng.percent(chance)) {
                         state.messageAboutMob(mob, self.coord, .CombatUnimportant, "dodge the {}.", .{item_name}, "dodges the {}.", .{item_name});
-                        continue; // Dodged, onward!
+                        continue; // Evaded, onward!
                     } else {
                         state.messageAboutMob(mob, self.coord, .Combat, "are hit by the {}.", .{item_name}, "is hit by the {}.", .{item_name});
                     }
@@ -1751,8 +1751,8 @@ pub const Mob = struct { // {{{
         assert(attacker.strength() > 0);
         assert(recipient.strength() > 0);
 
-        // const chance_of_land = combat.chanceOfAttackLanding(attacker);
-        // const chance_of_dodge = combat.chanceOfAttackDodged(recipient, attacker);
+        // const chance_of_land = combat.chanceOfMeleeLanding(attacker);
+        // const chance_of_dodge = combat.chanceOfAttackEvaded(recipient, attacker);
         // if (attacker.coord.eq(state.player.coord)) {
         //     state.message(.Info, "you attack: chance of land: {}, chance of dodge: {}", .{ chance_of_land, chance_of_dodge });
         // } else if (recipient.coord.eq(state.player.coord)) {
@@ -1760,8 +1760,8 @@ pub const Mob = struct { // {{{
         // }
 
         const hit =
-            (rng.range(usize, 1, 100) <= combat.chanceOfAttackLanding(attacker)) and
-            (rng.range(usize, 1, 100) >= combat.chanceOfAttackDodged(recipient, attacker));
+            (rng.range(usize, 1, 100) <= combat.chanceOfMeleeLanding(attacker)) and
+            (rng.range(usize, 1, 100) >= combat.chanceOfAttackEvaded(recipient, attacker));
 
         if (!hit) {
             if (attacker == state.player) {
@@ -1986,7 +1986,7 @@ pub const Mob = struct { // {{{
         self.allegiance = .Necromancer;
 
         self.base_strength = self.base_strength * 120 / 100;
-        self.base_dexterity = self.base_dexterity * 60 / 100;
+        self.base_evasion = self.base_evasion * 60 / 100;
         self.base_speed = self.base_speed * 120 / 100;
 
         self.vision = 4;
@@ -2420,16 +2420,6 @@ pub const Mob = struct { // {{{
         return str;
     }
 
-    pub inline fn dexterity(self: *const Mob) usize {
-        var dex = self.base_dexterity;
-        if (self.isUnderStatus(.Invigorate)) |_| dex = dex * 150 / 100;
-        if (self.inventory.armor) |a|
-            if (a.dex_penalty) |pen| {
-                dex = dex * pen / 100;
-            };
-        return dex;
-    }
-
     pub fn isFlanked(self: *const Mob) bool {
         var counter: usize = 0;
         return for (&DIRECTIONS) |d| {
@@ -2782,8 +2772,8 @@ pub const Armor = struct {
     id: []const u8,
     name: []const u8,
     resists: Damages,
-    speed_penalty: ?usize = null,
-    dex_penalty: ?usize = null,
+    speed_penalty: ?usize = null, // percentage
+    evasion_penalty: ?usize = null, // fixed number
 };
 
 pub const Weapon = struct {

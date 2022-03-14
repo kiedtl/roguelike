@@ -333,7 +333,7 @@ fn _resurrectFrozen(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coor
         corpse.HP = corpse.max_HP;
         corpse.innate_resists.rFire = -2;
         corpse.base_strength = corpse.base_strength * 130 / 100;
-        corpse.base_dexterity = 0;
+        corpse.base_evasion = 0;
         corpse.deg360_vision = true;
 
         corpse.addStatus(.Fast, 0, 0, true);
@@ -518,20 +518,20 @@ pub const Spell = struct {
                             }
 
                             if (self.bolt_dodgeable) {
-                                if (rng.percent(combat.chanceOfAttackDodged(victim, caster))) {
-                                    state.messageAboutMob(victim, caster_coord, .Info, "dodge the {}.", .{self.name}, "dodges the {}.", .{self.name});
+                                if (rng.percent(combat.chanceOfAttackEvaded(victim, caster))) {
+                                    state.messageAboutMob(victim, caster_coord, .CombatUnimportant, "dodge the {}.", .{self.name}, "dodges the {}.", .{self.name});
                                     continue;
                                 }
                             }
 
                             if (victim == state.player) {
-                                state.message(.Info, "The {} hits you!", .{self.name});
+                                state.message(.Combat, "The {} hits you!", .{self.name});
                             } else if (state.player.cansee(victim.coord)) {
-                                state.message(.Info, "The {} hits the {}!", .{
+                                state.message(.Combat, "The {} hits the {}!", .{
                                     self.name, victim.displayName(),
                                 });
                             } else if (state.player.cansee(caster_coord)) {
-                                state.message(.Info, "The {} hits something!", .{self.name});
+                                state.message(.Combat, "The {} hits something!", .{self.name});
                             }
                         }
 

@@ -61,7 +61,7 @@ pub const PlayerUpgrade = enum {
         return switch (self) {
             .Fast => "You have a 10% speed bonus.",
             .Strong => "You have a +50% strength bonus.",
-            .Agile => "You have a +30% dodging bonus.",
+            .Agile => "You have a +20% dodging bonus.",
             .OI_Enraged => "You become enraged when badly hurt.",
             .OI_Fast => "You put on a burst of speed when injured.",
             .OI_Shove => "You begin shoving past foes when injured.",
@@ -77,7 +77,7 @@ pub const PlayerUpgrade = enum {
         switch (self) {
             .Fast => state.player.base_speed = state.player.base_speed * 90 / 100,
             .Strong => state.player.base_strength = state.player.base_strength * 150 / 100,
-            .Agile => state.player.base_dexterity = state.player.base_dexterity * 130 / 100,
+            .Agile => state.player.base_evasion = state.player.base_evasion * 120 / 100,
             .OI_Enraged => state.player.ai.flee_effect = .{
                 .status = .Enraged,
                 .duration = 10,
@@ -343,7 +343,7 @@ pub fn grabItem() bool {
             if (state.player.inventory.wielded) |old_w| {
                 state.dungeon.itemsAt(state.player.coord).append(Item{ .Weapon = old_w }) catch err.wat();
                 state.player.declareAction(.Drop);
-                state.message(.Info, "You drop the {} to wield the {}.", .{ old_w.name, weapon.name });
+                state.message(.Info, "You drop the {}.", .{old_w.name});
             }
 
             state.player.inventory.wielded = weapon;
@@ -354,20 +354,18 @@ pub fn grabItem() bool {
             if (state.player.inventory.armor) |a| {
                 state.dungeon.itemsAt(state.player.coord).append(Item{ .Armor = a }) catch err.wat();
                 state.player.declareAction(.Drop);
-                state.message(.Info, "You drop the {} to wear the {}.", .{ a.name, armor.name });
+                state.message(.Info, "You drop the {}.", .{a.name});
             }
 
             state.player.inventory.armor = armor;
             state.player.declareAction(.Use);
             state.message(.Info, "Now wearing a {}.", .{armor.name});
-            if (armor.speed_penalty != null or armor.dex_penalty != null)
-                state.message(.Info, "This armor is going to be annoying to wear.", .{});
         },
         .Cloak => |cloak| {
             if (state.player.inventory.cloak) |c| {
                 state.dungeon.itemsAt(state.player.coord).append(Item{ .Cloak = c }) catch err.wat();
                 state.player.declareAction(.Drop);
-                state.message(.Info, "You drop the {} to wear the {}.", .{ c.name, cloak.name });
+                state.message(.Info, "You drop the {}.", .{c.name});
             }
 
             state.player.inventory.cloak = cloak;
