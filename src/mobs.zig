@@ -182,6 +182,7 @@ pub const JavelineerTemplate = MobTemplate{
 
         .willpower = 2,
         .base_evasion = 10,
+        .base_missile = 80,
         .max_HP = 30,
         .memory_duration = 6,
         .base_speed = 110,
@@ -216,6 +217,7 @@ pub const SentinelTemplate = MobTemplate{
 
         .willpower = 5,
         .base_evasion = 15,
+        .base_missile = 70,
         .max_HP = 40,
         .memory_duration = 7,
         .base_speed = 90,

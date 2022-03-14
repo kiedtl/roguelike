@@ -292,6 +292,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     } else 0.0;
     const strength = state.player.strength();
     const evasion = combat.chanceOfAttackEvaded(state.player, null);
+    const missile = combat.chanceOfMissileLanding(state.player);
     const speed = state.player.speed();
     const spotted = b: for (moblist) |mob| {
         if (!mob.no_show_fov and mob.ai.is_combative and mob.isHostileTo(state.player)) {
@@ -332,6 +333,15 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     }
 
     y = _drawStr(startx, y, endx, "$cmelee%$.   {: >4}%", .{combat.chanceOfMeleeLanding(state.player)}, .{});
+
+    if (missile != state.player.base_missile) {
+        const diff = @intCast(isize, missile) - @intCast(isize, state.player.base_missile);
+        const adiff = math.absInt(diff) catch unreachable;
+        const sign = if (diff > 0) "+" else "-";
+        y = _drawStr(startx, y, endx, "$cmissile%$. {: >4}% $g({}{})$.", .{ missile, sign, adiff }, .{});
+    } else {
+        y = _drawStr(startx, y, endx, "$cmissile%$. {: >4}%", .{missile}, .{});
+    }
 
     if (speed != state.player.base_speed) {
         const diff = @intCast(isize, speed) - @intCast(isize, state.player.base_speed);

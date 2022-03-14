@@ -36,8 +36,14 @@ pub fn damageOutput(attacker: *const Mob, recipient: *const Mob, weapon_damages:
     return damage;
 }
 
+pub fn chanceOfMissileLanding(attacker: *const Mob) usize {
+    var chance: isize = @intCast(isize, attacker.base_missile);
+
+    return @intCast(usize, math.clamp(chance, 0, 100));
+}
+
 pub fn chanceOfMeleeLanding(attacker: *const Mob) usize {
-    var chance: isize = 80;
+    var chance: isize = @intCast(isize, attacker.base_melee);
 
     chance += if (attacker.isUnderStatus(.Enraged) != null) ATTACKER_ENRAGED_BONUS else 0;
 

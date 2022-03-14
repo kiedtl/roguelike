@@ -1164,7 +1164,9 @@ pub const Mob = struct { // {{{
     //
     // willpower:          Controls the ability to resist and cast spells.
     // base_evasion:       Controls the likelihood of a mob dodging an attack.
-    // base_strength:      TODO: define!
+    // base_melee:         Controls the likelihood of a mob landing an attack.
+    // base_missile:       Controls the likelihood of a mob landing a missile.
+    // base_strength:      (See doc/strength.md)
     // base_stealth:       Innate stealth.
     // vision:             Maximum radius of the mob's field of vision.
     // base_night_vision:  Whether the mob can see in darkness.
@@ -1177,7 +1179,9 @@ pub const Mob = struct { // {{{
     //
     willpower: usize, // Range: 0 < willpower < 10
     base_strength: usize,
-    base_evasion: usize, // Range: 0 < dexterity < 100
+    base_evasion: usize, // Range: 0..100
+    base_melee: usize = 60, // Range: 0..100
+    base_missile: usize = 40, // Range: 0..100
     base_stealth: usize = 0,
     vision: usize = 6,
     base_night_vision: bool = false,
@@ -1430,8 +1434,9 @@ pub const Mob = struct { // {{{
                 .only_if_breaks_lof = true,
             })) {
                 if (state.dungeon.at(coord).mob) |mob| {
-                    const chance = combat.chanceOfAttackEvaded(mob, null);
-                    if (dodgeable and rng.percent(chance)) {
+                    const land_chance = combat.chanceOfMissileLanding(mob);
+                    const evade_chance = combat.chanceOfAttackEvaded(mob, null);
+                    if (dodgeable and (!rng.percent(land_chance) or rng.percent(evade_chance))) {
                         state.messageAboutMob(mob, self.coord, .CombatUnimportant, "dodge the {}.", .{item_name}, "dodges the {}.", .{item_name});
                         continue; // Evaded, onward!
                     } else {
