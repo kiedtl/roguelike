@@ -67,7 +67,8 @@ pub fn elecBurst(ground0: Coord, max_damage: usize, by: ?*Mob) void {
                         .kind = .Electric,
                         .indirect = true,
                     });
-                    state.messageAboutMob(mob, mob.coord, .Info, "are struck by a blast of electricity!", .{}, "is struck by a blast of electricity!", .{});
+                    var dmg_percent = mob.lastDamagePercentage();
+                    state.messageAboutMob(mob, mob.coord, .Info, "are struck by a blast of electricity! ($p{}% dmg$.)", .{dmg_percent}, "is struck by a blast of electricity! ($p{}% dmg$.)", .{dmg_percent});
                 };
         }
     };
@@ -176,7 +177,8 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                             .source = .Explosion,
                             .kind = .Fire,
                         });
-                        state.message(.Info, "The blast hits you!!", .{});
+                        const ldp = unfortunate.lastDamagePercentage();
+                        state.message(.Info, "The blast hits you!! ($p{}% dmg$.)", .{ldp});
                     }
                 } else {
                     unfortunate.takeDamage(.{
@@ -189,11 +191,11 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                     if (state.player.cansee(unfortunate.coord)) {
                         const ldp = unfortunate.lastDamagePercentage();
                         if (ldp > 200) {
-                            state.message(.Info, "The blast grinds the {} to powder!!! ({}% dmg)", .{ unfortunate.displayName(), ldp });
+                            state.message(.Info, "The blast grinds the {} to powder!!! ($p{}% dmg$.)", .{ unfortunate.displayName(), ldp });
                         } else if (ldp > 100) {
-                            state.message(.Info, "The blast pulverises the {}!! ({}% dmg)", .{ unfortunate.displayName(), ldp });
+                            state.message(.Info, "The blast pulverises the {}!! ($p{}% dmg$.)", .{ unfortunate.displayName(), ldp });
                         } else {
-                            state.message(.Info, "The blast hits the {}! ({}% dmg)", .{ unfortunate.displayName(), ldp });
+                            state.message(.Info, "The blast hits the {}! ($p{}% dmg$.)", .{ unfortunate.displayName(), ldp });
                         }
                     }
                 }

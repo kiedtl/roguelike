@@ -8,6 +8,7 @@ pub const BG_GREY: u32 = 0x1e1e1e;
 pub const BLACK: u32 = 0x000000;
 pub const CONCRETE: u32 = 0x968f74;
 pub const LIGHT_CONCRETE: u32 = 0xe6dfc4;
+pub const PINK: u32 = 0xffc0cb;
 
 // Interpolate linearly between two vals.
 //

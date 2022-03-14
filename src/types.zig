@@ -607,6 +607,8 @@ pub const MessageType = union(enum) {
     Prompt, // Prompt for a choice/input, or respond to result from previous prompt
     MetaError, // Player tried to do something invalid.
     Status, // A status effect was added or removed.
+    Combat, // X hit you! You hit X!
+    CombatUnimportant, // X missed you! You miss X!
     Info,
     Move,
     Trap,
@@ -617,12 +619,14 @@ pub const MessageType = union(enum) {
         return switch (self) {
             .Prompt => 0x34cdff, // cyan blue
             .MetaError => 0xffffff, // white
-            .Info => 0xfafefa, // creamy white
-            .Move => 0xfafefe, // creamy white
+            .Info => 0xdadeda, // creamy white
+            .Move => 0xdadeda, // creamy white
             .Trap => 0xed254d, // pinkish red
             .Damage => 0xed254d, // pinkish red
             .SpellCast => 0xff7750, // golden yellow
             .Status => 0x7fffd4, // aquamarine
+            .Combat => 0xdadeda, // creamy white
+            .CombatUnimportant => 0x7a9cc7, // steel blue
         };
     }
 };
@@ -1428,10 +1432,10 @@ pub const Mob = struct { // {{{
                 if (state.dungeon.at(coord).mob) |mob| {
                     const chance = combat.chanceOfAttackDodged(mob, null);
                     if (dodgeable and rng.percent(chance)) {
-                        state.messageAboutMob(mob, self.coord, .Info, "dodge the {}.", .{item_name}, "dodges the {}.", .{item_name});
+                        state.messageAboutMob(mob, self.coord, .CombatUnimportant, "dodge the {}.", .{item_name}, "dodges the {}.", .{item_name});
                         continue; // Dodged, onward!
                     } else {
-                        state.messageAboutMob(mob, self.coord, .Info, "are hit by the {}.", .{item_name}, "is hit by the {}.", .{item_name});
+                        state.messageAboutMob(mob, self.coord, .Combat, "are hit by the {}.", .{item_name}, "is hit by the {}.", .{item_name});
                     }
                 }
 
@@ -1761,9 +1765,9 @@ pub const Mob = struct { // {{{
 
         if (!hit) {
             if (attacker == state.player) {
-                state.message(.Info, "You miss the {}.", .{recipient.displayName()});
+                state.message(.CombatUnimportant, "You miss the {}.", .{recipient.displayName()});
             } else if (recipient == state.player) {
-                state.message(.Info, "The {} misses you.", .{attacker.displayName()});
+                state.message(.CombatUnimportant, "The {} misses you.", .{attacker.displayName()});
             } else {
                 const cansee_a = state.player.cansee(attacker.coord);
                 const cansee_r = state.player.cansee(recipient.coord);
@@ -1790,7 +1794,7 @@ pub const Mob = struct { // {{{
                     const dmg_percent = attacker.lastDamagePercentage();
 
                     const n = if (recipient == state.player) "your" else recipient.displayName();
-                    state.messageAboutMob2(attacker, attacker.coord, .Info, "is hurt by {}{}{} thorny cloak! ({}% dmg)", .{
+                    state.messageAboutMob2(attacker, attacker.coord, .Combat, "is hurt by {}{}{} thorny cloak! ($p{}% dmg$.)", .{
                         if (recipient == state.player) @as([]const u8, "") else "the ",
                         n,
                         if (recipient == state.player) @as([]const u8, "") else "'s",
@@ -1837,7 +1841,7 @@ pub const Mob = struct { // {{{
         if (dmg_percent >= 80) punctuation = "!!!!";
 
         if (recipient.coord.eq(state.player.coord)) {
-            state.message(.Info, "The {} {} you{}{} ({}% dmg)", .{
+            state.message(.Combat, "The {} {} you{}{} ($p{}% dmg$.)", .{
                 attacker.displayName(),
                 hitstrs.verb_other,
                 hitstrs.verb_degree,
@@ -1845,7 +1849,7 @@ pub const Mob = struct { // {{{
                 dmg_percent,
             });
         } else if (attacker.coord.eq(state.player.coord)) {
-            state.message(.Info, "You {} the {}{}{} ({}% dmg)", .{
+            state.message(.Combat, "You {} the {}{}{} ($p{}% dmg$.)", .{
                 hitstrs.verb_self,
                 recipient.displayName(),
                 hitstrs.verb_degree,
@@ -1863,7 +1867,7 @@ pub const Mob = struct { // {{{
             //
             // FIXME TODO
             if (cansee_a or cansee_r) {
-                state.message(.Info, "{}{} {} {}{}{}{} ({}% dmg)", .{
+                state.message(.Combat, "{}{} {} {}{}{}{} ($p{}% dmg$.)", .{
                     if (cansee_a) @as([]const u8, "The ") else "",
                     if (cansee_a) attacker.displayName() else "Something",
                     hitstrs.verb_other,

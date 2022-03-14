@@ -150,6 +150,7 @@ const DrawStrOpts = struct {
 
 // Escape characters:
 //     $c       fg = LIGHT_CONCRETE
+//     $p       fg = PINK
 //     $.       reset fg and bg to defaults
 fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args: anytype, opts: DrawStrOpts) isize {
     const termbox_width = termbox.tb_width();
@@ -183,6 +184,7 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
                         bg = opts.bg;
                     },
                     'c' => fg = colors.LIGHT_CONCRETE,
+                    'p' => fg = colors.PINK,
                     else => err.bug("Found unknown escape sequence", .{}),
                 }
                 continue;
