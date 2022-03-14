@@ -22,7 +22,7 @@ will be 30, thus receiving a 15% damage bonus instead of 10%.
 
 > "You are good at evading blows.",
 
-You have a +30% bonus to your base dexterity. (25 + 7 == 32 new dexterity).
+You have a +20% bonus to your base dexterity.
 
 ## OI_Enraged
 
@@ -49,7 +49,7 @@ takes 50% of your HP off, or an attack leaves you at below 10% HP).
 
 > "You are unusually robust.",
 
-You have 50% more health than usual. You will usually need an extra pip or
+You have 50% more health than usual. You will usually need an extra pip of
 rHubris if you receive this upgrade.
 
 ## Mana
