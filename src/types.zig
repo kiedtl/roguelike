@@ -1076,7 +1076,7 @@ pub const AI = struct {
 
     flee_effect: ?StatusDataInfo = .{
         .status = .Fast,
-        .duration = 10,
+        .duration = 0,
         .exhausting = true,
     },
 
@@ -1914,18 +1914,16 @@ pub const Mob = struct { // {{{
             }
         }
 
-        // Should we give the player its flee-effect?
+        // Should we give the mob its flee-effect?
         //
         // FIXME: this probably shouldn't be handled here.
-        if (self == state.player) {
-            if (self.lastDamagePercentage() >= 50 or
-                (self.HP <= (self.max_HP / 10) and old_HP > (self.max_HP / 10)))
-            {
-                if (self.isUnderStatus(.Exhausted) == null) {
-                    if (self.ai.flee_effect) |s| {
-                        if (self.isUnderStatus(s.status) == null) {
-                            self.applyStatus(s);
-                        }
+        if (self.lastDamagePercentage() >= 50 or
+            (self.HP <= (self.max_HP / 10) and old_HP > (self.max_HP / 10)))
+        {
+            if (self.isUnderStatus(.Exhausted) == null) {
+                if (self.ai.flee_effect) |s| {
+                    if (self.isUnderStatus(s.status) == null) {
+                        self.applyStatus(s);
                     }
                 }
             }
@@ -2175,7 +2173,7 @@ pub const Mob = struct { // {{{
             msg_parts = s.status.messageWhenRemoved();
 
             if (was_exhausting or s.exhausting)
-                self.addStatus(.Exhausted, 0, 10, false);
+                self.addStatus(.Exhausted, 0, Status.MAX_DURATION, false);
 
             if (p_se.status == .Lifespan) {
                 self.takeDamage(.{ .amount = self.HP * 1000 });
