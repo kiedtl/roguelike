@@ -278,29 +278,8 @@ ring of hexing [a]
 	  If resisted by willpower, will reveal player's location to them.
 
 
-Potions/Vials
--------------
-Potions: [s]tatus, [g]as, [c]ustom
-x potion of confuzzlementation [g]
-  Confusion.
-x potion of petrification [g]
-  Paralysis.
-x potion of fog (TODO: name) [g]
-  Fog.
-x potion of acceleration [s]
-  Haste.
-x potion of coagulation
-  Poison (occasional damage, slowness)
-x potion of invigoration [s]
-  Temporarily increases strength and dexterity.
-- potion of incineration [c]
-  Explodes when opened, setting surroundings on fire.
-x potion of decimation [c]
-  Explosion that destroys walls.
-- potion of refrigeration [g]
-  Freezes the surrounding air, slowing down cold-blooded mobs.
-- potion of defoliation [g]
-  Poison that destroys plants and/or fungi (releasing spores? hmmmm....).
+Vials
+-----
 - vial of tanus
   Status: backvision
     Makes mob see directly behind them as well as in front of them.
@@ -333,7 +312,6 @@ Strange mobs found on LAB levels.
   - Refuses to move into a tile that doesn't have at least one wall as a neighbor.
   - When spotted, IF the spotter is an enemy and has half of it's normal HP, it
     moves in and attacks, still keeping close to walls.
-    Otherwise, it turns into a piece of artwork.
   - Game description should describe it as having an extremely hideous appearance.
 - Undulating Abomination
   - Slow (speed == ~180?)
@@ -345,7 +323,7 @@ Strange mobs found on LAB levels.
   - Hydra, multiple attacks per turn
 - Tentacled Abomination
   - Abomination with twenty tentacles, like DCSS tile for ugly things
-  - Almost as fast as player (85%).
+  - Faster than player.
   - Ranged attack: throws boulders at player (i.e., DCSS' cyclops).
   - Melee  attack: throws player across room to get more ranged hits.
   - Usually tries to attack ranged, but may occasionally rush across room
@@ -569,23 +547,36 @@ x Add tougher monsters; balancing
   - Increase frequency of dangerous monsters in more dangerous floors
   - Prevent some rare items from spawning at all on lower floors
 - Runes and scoring
-- Air purifiers, mob repositioning AI to move out of dangerous tiles and flank foes
+- Air purifiers
+- Mob repositioning AI to move out of dangerous tiles and flank foes
 - More potions stuff
   - Dilution/concentration:
     - Potion of dilution   (dilution)
     - Grills + kitchen set (concentration)
   - Potion of defumigation
-  - Potion of dispellation
+  - Potion of disruption
+  - Potion of insubstantiation
+  - Potion of fortification
   - Nerf potions of acceleration
 - Add fungi, plants, terrain
 - Implement intelligence
   - Prevent dumb monsters from opening doors
   - Prevent sentinels from shooting allies and such
+  - Smart archer movement
+- Armor, weapon stuff
+  - Weapon tiers
+    - Ensure rarer tiers don't spawn on easy floors.
+    - Add grindstones for sharp weapons.
+  - Weapon effects
+  - Armor effects
+  - Bone weapons
+  - Silver weapons
 - Revisit and revamp SMI mapgen
   - toxic sludge pools and bridges over them
   - Ether fiends, drakes, dustlings
 - Revisit Laboratory
-  - Add spires and spire kits
+  - Battery packs, silver-weapon-wielding guards
+  - Spires and spire kits
   - Add command stones and transporter stones
   - Add abominations
   - Place more experiments around
@@ -598,16 +589,17 @@ x LOS/lighting revamp
   x Show walls as always lit?
 - Fix/reimplement item-choosing screen
 - Fix/reimplement tile-choosing screen
+  - Remove 't' key
+  - Remove 'r' key, revamp recharging station appearance
+- Revamp input prompts
 - Informational screens
+  - features/items screen, remove announcement of items
   - "?" screen
   - "@" screen
   - Item info screen, 'i' key
   - E(x)amine screen
   - Poster description screen
 - Add basic animations
-- Weapon tiers
-  - Ensure rarer tiers don't spawn on easy floors.
-  - Add grindstones.
 - Posters/books
   - Poster types (graffiti, announcement, engraving, etc)
   - Add bookshelves and book types
@@ -652,21 +644,29 @@ Room features/Mapgen:
 =====================
 - Allow close prefabs
 - Make connectors flanked by floors a floor or door
-- Add some lichen and fungi to rooms
-  - brambles (retaliation; dmg on movement; 150% slowness)
-  - fluorescent fungi
-  - dead, flammable fungi
-  - tall fungi (very reduced LOS)
-  - camoflaging fungi (Stlth+)
-  - XXX fungi (haste undead)
-  - XXX fungi (slow living)
-- Terrain/floor types
-  - metal (rElec-)
-  - copper (elec dmg propagation?)
-  - wood (rFire- rElec+)
-  - carpet (Muffle+)
-  - gravel (Muffle-)
-  - ashes/gypsum (cloud of dust on movement)
+- Terrain system
+  - Add some lichen and fungi to rooms
+    - brambles (retaliation; dmg on movement; 150% slowness)
+    - fluorescent fungi
+    - dead, flammable fungi
+    - tall fungi (very reduced LOS)
+    - camoflaging fungi (Stlth+)
+    - XXX fungi (haste undead)
+    - XXX fungi (slow living)
+    - XXX fungi (ctx corrupt effect)
+  - Terrain/floor types
+    - metal (rElec-)
+    - copper (elec dmg propagation?)
+    - wood (rFire- rElec+)
+    - carpet (Noise-)
+    - gravel (Noise+)
+    - ashes/gypsum (cloud of dust on movement)
+    - shallow water (Noise+ rFire++ rElec--)
+    - deep water (v. slow unless can swim, rFire∞ rElec--)
+    - lava (v. slow unless can swim, 30 Fire damage each turn)
+  - Other terrain
+    - platform (less evade%, more hit%)
+    - pillar (25% evade% boost if not flanked)
 x Add statues and chests to corners of rooms
 x Add posters
 ~ Allow for prefabs to be rotated
@@ -760,6 +760,10 @@ x Define what undead are somewhere (combat bonuses, stat increases, miasma
 - Enemies that suicide when cornered and about to die.
 - New: Smelling mechanics, dogs, hounds, creeping deaths
 - New: Beastmasters
+- New: Robots (Laboratory)
+  - Archers: shoot missiles that whittle down health, keeps distance
+  - Brawlers: pummels player, pushing them 3 tiles away
+  - rail terrain that hastes robots
 - Reaching weapon effects for beastmasters and patrols
 - Make sentinels and javelineers pickup projectiles they've thrown
 - Add orbs of destruction spell for ancient mages
@@ -1023,6 +1027,7 @@ x MP-like system that limits how often spellcasters can cast spells (providing
   - Bri(b)ing key to bribe lone monsters
 - "Doormat" poster that has welcoming messages on it, right next to stairs
   - Maybe describes level's challenges for new players?
++ Put actual loot in chests + plus new TGGW-like interace for containers
 
 Optimizations
 =============
