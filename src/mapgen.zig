@@ -1550,7 +1550,7 @@ pub fn placeItems(level: usize) void {
             continue;
         }
 
-        const max_items = rng.range(usize, 1, 3);
+        const max_items = rng.range(usize, 1, 2);
         var items_placed: usize = 0;
 
         while (items_placed < max_items) : (items_placed += 1) {
