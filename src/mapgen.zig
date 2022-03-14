@@ -420,7 +420,6 @@ fn excavatePrefab(
     // Generate loot items.
     //
     var loot_item1: ItemTemplate = undefined;
-    var loot_item2: ItemTemplate = undefined;
     var rare_loot_item: ItemTemplate = undefined;
     {
         // FIXME: generate this once at comptime.
@@ -428,7 +427,6 @@ fn excavatePrefab(
         for (items.ITEM_DROPS) |item, i| item_weights[i] = item.w;
 
         loot_item1 = _chooseLootItem(&item_weights, minmax(usize, 30, 100));
-        loot_item2 = _chooseLootItem(&item_weights, minmax(usize, 30, 100));
         rare_loot_item = _chooseLootItem(&item_weights, minmax(usize, 0, 40));
     }
 
@@ -455,7 +453,6 @@ fn excavatePrefab(
                 .Brazier,
                 .Floor,
                 .Loot1,
-                .Loot2,
                 .RareLoot,
                 => .Floor,
                 .Water => .Water,
@@ -530,7 +527,6 @@ fn excavatePrefab(
                     _ = placeProp(rc, &surfaces.props.items[p_ind.?]);
                 },
                 .Loot1 => state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(loot_item1)) catch err.wat(),
-                .Loot2 => state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(loot_item2)) catch err.wat(),
                 .RareLoot => state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(rare_loot_item)) catch err.wat(),
                 else => {},
             }
@@ -940,9 +936,7 @@ fn createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?C
     };
 }
 
-const SubroomPlacementOptions = struct {
-    loot: bool = false
-};
+const SubroomPlacementOptions = struct {};
 
 fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, alloc: *mem.Allocator, opts: SubroomPlacementOptions) void {
     for (s_fabs.items) |*subroom| {
@@ -1103,15 +1097,11 @@ fn _place_rooms(
                 .start = Coord.new(0, 0),
                 .width = child.rect.width,
                 .height = child.rect.height,
-            }, allocator, .{
-                .loot = rng.onein(3),
-            });
+            }, allocator, .{});
         }
     } else if (child.prefab.?.subroom_areas.len > 0) {
         for (child.prefab.?.subroom_areas.constSlice()) |subroom_area| {
-            placeSubroom(s_fabs, &child, &subroom_area, allocator, .{
-                .loot = rng.onein(5),
-            });
+            placeSubroom(s_fabs, &child, &subroom_area, allocator, .{});
         }
     }
 
@@ -1380,7 +1370,7 @@ pub fn placeBSPRooms(
                 .start = Coord.new(0, 0),
                 .width = room.rect.width,
                 .height = room.rect.height,
-            }, allocator, .{ .loot = rng.onein(3) });
+            }, allocator, .{});
         }
 
         container_node.index = rooms.items.len;
@@ -2509,7 +2499,6 @@ pub const Prefab = struct {
         Feature: u8,
         LevelFeature: usize,
         Loot1,
-        Loot2,
         RareLoot,
         Any,
     };
@@ -2876,7 +2865,6 @@ pub const Prefab = struct {
                             'α'...'δ' => FabTile{ .LevelFeature = @as(usize, c - 'α') },
                             '0'...'9', 'a'...'z' => FabTile{ .Feature = @intCast(u8, c) },
                             'L' => .Loot1,
-                            'X' => .Loot2,
                             'R' => .RareLoot,
                             else => return error.InvalidFabTile,
                         };
