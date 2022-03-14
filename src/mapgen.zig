@@ -1671,6 +1671,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
         if (room.prefab) |rfb| if (rfb.noguards) continue;
         if (room.type == .Corridor) continue;
         if (room.rect.height * room.rect.width < 25) continue;
+        if (rng.percent(@as(usize, 40))) continue;
 
         for (Configs[level].mob_options.constSlice()) |mob| {
             if (rng.tenin(mob.chance)) {
