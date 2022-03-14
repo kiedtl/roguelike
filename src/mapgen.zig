@@ -1796,7 +1796,8 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
         placeLights(room);
         placeWindow(room);
 
-        if (room.prefab != null or room.has_subroom) continue;
+        if (room.prefab != null) continue;
+        if (room.has_subroom and (rect.width * rect.height) < 64) continue;
         if (rng.tenin(25)) continue;
 
         const rect_end = rect.end();
@@ -1816,7 +1817,8 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
 
         var forbidden_range: ?usize = null;
 
-        if (rng.percent(Configs[level].chance_for_single_prop_placement) and
+        if ((rect.width * rect.height) > 64 and
+            rng.percent(Configs[level].chance_for_single_prop_placement) and
             Configs[level].single_props.len > 0)
         {
             const prop_id = rng.chooseUnweighted([]const u8, Configs[level].single_props);
@@ -1871,7 +1873,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                     }
                 },
                 4 => {
-                    if ((rect.width * rect.height) > 25 and posters < 2) {
+                    if ((rect.width * rect.height) > 64 and posters < 1) {
                         if (choosePoster(level)) |poster| {
                             state.dungeon.at(coord).surface = SurfaceItem{ .Poster = poster };
                             posters += 1;
@@ -3099,7 +3101,7 @@ pub const VLT_BASE_LEVELCONFIG = LevelConfig{
     .single_props = &[_][]const u8{
         "gold_chest", "fuel_barrel", "iron_ingots", "steel_ingots", "gold_ingots",
     },
-    .chance_for_single_prop_placement = 100,
+    .chance_for_single_prop_placement = 90,
 };
 
 pub const LAB_BASE_LEVELCONFIG = LevelConfig{
