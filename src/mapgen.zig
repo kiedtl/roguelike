@@ -411,7 +411,7 @@ fn roomIntersects(
 }
 
 fn excavatePrefab(
-    room: *const Room,
+    room: *Room,
     fab: *const Prefab,
     allocator: *mem.Allocator,
     startx: usize,
@@ -1142,7 +1142,7 @@ pub fn placeRandomRooms(
         const x = rng.rangeClumping(usize, 1, state.WIDTH - fab.width - 1, 2);
         const y = rng.rangeClumping(usize, 1, state.HEIGHT - fab.height - 1, 2);
 
-        const room = Room{
+        var room = Room{
             .rect = Rect{
                 .start = Coord.new2(level, x, y),
                 .width = fab.width,
@@ -1626,7 +1626,8 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
     var squads: usize = Configs[level].patrol_squads;
 
     while (squads > 0) {
-        const room = rng.chooseUnweighted(Room, state.rooms[level].items);
+        const room_i = rng.range(usize, 0, state.rooms[level].items.len - 1);
+        const room = &state.rooms[level].items[room_i];
 
         if (room.prefab) |rfb| if (rfb.noguards) continue;
         if (room.type == .Corridor) continue;
@@ -1651,39 +1652,54 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
                 }
 
                 placed_units += 1;
+                room.hostile_mob_count += 1;
             }
         }
 
         if (placed_units > 0) squads -= 1;
     }
 
-    for (state.rooms[level].items) |room| {
+    room_iter_chance: for (state.rooms[level].items) |*room| {
         if (room.prefab) |rfb| if (rfb.noguards) continue;
         if (room.type == .Corridor) continue;
         if (room.rect.height * room.rect.width < 25) continue;
         if (rng.percent(@as(usize, 40))) continue;
 
         for (Configs[level].mob_options.constSlice()) |mob| {
-            if (rng.tenin(mob.chance)) {
-                var tries: usize = 100;
-                while (tries > 0) : (tries -= 1) {
-                    const post_coord = room.rect.randomCoord();
-                    if (isTileAvailable(post_coord) and !state.dungeon.at(post_coord).prison) {
-                        _ = mobs.placeMob(alloc, mob.template, post_coord, .{
-                            .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
-                        });
-                        break;
-                    }
+            if (mob.template.mob.allegiance != .OtherGood and mob.template.mob.ai.is_combative and
+                room.hostile_mob_count >= Configs[level].room_crowd_max)
+                continue :room_iter_chance;
+
+            if (!rng.tenin(mob.chance)) continue;
+
+            var tries: usize = 100;
+            while (tries > 0) : (tries -= 1) {
+                const post_coord = room.rect.randomCoord();
+                if (isTileAvailable(post_coord) and !state.dungeon.at(post_coord).prison) {
+                    _ = mobs.placeMob(alloc, mob.template, post_coord, .{
+                        .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
+                    });
+
+                    if (mob.template.mob.allegiance != .OtherGood and mob.template.mob.ai.is_combative)
+                        room.hostile_mob_count += 1;
+
+                    break;
                 }
             }
         }
     }
 
-    for (Configs[level].required_mobs) |required_mob| {
+    room_iter_required: for (Configs[level].required_mobs) |required_mob| {
         var placed_ctr: usize = required_mob.count;
         while (placed_ctr > 0) {
-            const room = rng.chooseUnweighted(Room, state.rooms[level].items);
+            const room_i = rng.range(usize, 0, state.rooms[level].items.len - 1);
+            const room = &state.rooms[level].items[room_i];
+
             if (room.type == .Corridor) continue;
+            if (required_mob.template.mob.allegiance != .OtherGood and
+                required_mob.template.mob.ai.is_combative and
+                room.hostile_mob_count >= Configs[level].room_crowd_max)
+                continue :room_iter_required;
 
             var tries: usize = 10;
             while (tries > 0) : (tries -= 1) {
@@ -1691,6 +1707,11 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
                 if (isTileAvailable(post_coord) and !state.dungeon.at(post_coord).prison) {
                     placed_ctr -= 1;
                     _ = mobs.placeMob(alloc, required_mob.template, post_coord, .{});
+
+                    if (required_mob.template.mob.allegiance != .OtherGood and
+                        required_mob.template.mob.ai.is_combative)
+                        room.hostile_mob_count += 1;
+
                     break;
                 }
             }
@@ -2447,6 +2468,7 @@ pub const Room = struct {
     has_subroom: bool = false,
     has_window: bool = false,
     has_stair: bool = false,
+    hostile_mob_count: usize = 0,
 
     connections: usize = 0,
 
@@ -2985,6 +3007,7 @@ pub const LevelConfig = struct {
         .{ .count = 3, .template = &mobs.CleanerTemplate },
         .{ .count = 3, .template = &mobs.EngineerTemplate },
     },
+    room_crowd_max: usize = 2,
 
     no_lights: bool = false,
     no_windows: bool = false,
@@ -3254,5 +3277,12 @@ pub fn fixConfigs() void {
     Configs[11].stairs_to = &[_]usize{8, 10}; // -6/Laboratory   -> -6/Laboratory/2, -5/Smithing
     Configs[12].stairs_to = &[_]usize{   11}; // -7/Prison       -> -6/Laboratory
     Configs[13].stairs_to = &[_]usize{   12}; // -8/Prison       -> -7/Prison
+
+
+    // Increase crowd sizes for difficult levels.
+    Configs[ 0].room_crowd_max = 4;      Configs[ 1].room_crowd_max = 3; // Upper prison
+    Configs[ 2].room_crowd_max = 5;      Configs[ 3].room_crowd_max = 4; // Vaults
+    Configs[ 6].room_crowd_max = 4;      Configs[ 7].room_crowd_max = 3; // Smithing
+    Configs[ 9].room_crowd_max = 4;      Configs[10].room_crowd_max = 3; // Laboratory
 }
 // zig fmt: on
