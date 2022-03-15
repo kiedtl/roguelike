@@ -68,6 +68,7 @@ fn initGame() bool {
 
     surfaces.readProps(&state.GPA.allocator);
     literature.readPosters(&state.GPA.allocator);
+    mapgen.readSpawnTables(&state.GPA.allocator);
 
     for (state.dungeon.map) |*map, level| {
         state.stockpiles[level] = StockpileArrayList.init(&state.GPA.allocator);
@@ -171,6 +172,7 @@ fn deinitGame() void {
     literature.posters.deinit();
 
     surfaces.freeProps(&state.GPA.allocator);
+    mapgen.freeSpawnTables(&state.GPA.allocator);
 
     _ = state.GPA.deinit();
 }

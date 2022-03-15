@@ -966,7 +966,7 @@ pub fn readProps(alloc: *mem.Allocator) void {
     );
 
     if (!result.is_ok()) {
-        std.log.err(
+        err.bug(
             "Cannot read props: {} (line {}, field {})",
             .{ result.Err.type, result.Err.context.lineno, result.Err.context.field },
         );
@@ -988,10 +988,10 @@ pub fn readProps(alloc: *mem.Allocator) void {
             };
 
             switch (propdata.function) {
-                .Laboratory => laboratory_props.append(prop) catch unreachable,
-                .LaboratoryItem => laboratory_item_props.append(prop) catch unreachable,
-                .Vault => vault_props.append(prop) catch unreachable,
-                .Statue => statue_props.append(prop) catch unreachable,
+                .Laboratory => laboratory_props.append(prop) catch err.oom(),
+                .LaboratoryItem => laboratory_item_props.append(prop) catch err.oom(),
+                .Vault => vault_props.append(prop) catch err.oom(),
+                .Statue => statue_props.append(prop) catch err.oom(),
                 else => {},
             }
 

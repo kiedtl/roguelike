@@ -17,6 +17,7 @@ const literature = @import("literature.zig");
 const materials = @import("materials.zig");
 const utils = @import("utils.zig");
 const state = @import("state.zig");
+const tsv = @import("tsv.zig");
 usingnamespace @import("types.zig");
 
 const ItemTemplate = items.ItemTemplate;
@@ -1652,39 +1653,58 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
                 }
 
                 placed_units += 1;
-                room.hostile_mob_count += 1;
+                room.mob_count += 1;
             }
         }
 
         if (placed_units > 0) squads -= 1;
     }
 
-    room_iter_chance: for (state.rooms[level].items) |*room| {
+    // Create spawn tables.
+    var spawn_table_ids = std.ArrayList([]const u8).init(alloc);
+    var spawn_table_weights = std.ArrayList(usize).init(alloc);
+    {
+        var iter = mob_spawn_tables.iterator();
+        while (iter.next()) |mob_spawn_data| {
+            if (mob_spawn_data.value[level] == 0) continue;
+            spawn_table_ids.append(mob_spawn_data.key) catch err.oom();
+            spawn_table_weights.append(mob_spawn_data.value[level]) catch err.oom();
+        }
+    }
+    defer spawn_table_ids.deinit();
+    defer spawn_table_weights.deinit();
+
+    for (state.rooms[level].items) |*room| {
         if (room.prefab) |rfb| if (rfb.noguards) continue;
         if (room.type == .Corridor) continue;
         if (room.rect.height * room.rect.width < 25) continue;
-        if (rng.percent(@as(usize, 40))) continue;
 
-        for (Configs[level].mob_options.constSlice()) |mob| {
-            if (mob.template.mob.allegiance != .OtherGood and mob.template.mob.ai.is_combative and
-                room.hostile_mob_count >= Configs[level].room_crowd_max)
-                continue :room_iter_chance;
+        const max_crowd = rng.range(usize, 0, Configs[level].room_crowd_max);
 
-            if (!rng.tenin(mob.chance)) continue;
+        while (room.mob_count < max_crowd) {
+            const mob_id = rng.choose(
+                []const u8,
+                spawn_table_ids.items,
+                spawn_table_weights.items,
+            ) catch err.wat();
+            const mob_ind = utils.findById(&mobs.MOBS, mob_id) orelse err.bug(
+                "Mob {}, mentioned in spawn tables, doesn't exist.",
+                .{mob_id},
+            );
+            const mob = &mobs.MOBS[mob_ind];
 
             var tries: usize = 100;
             while (tries > 0) : (tries -= 1) {
                 const post_coord = room.rect.randomCoord();
-                if (isTileAvailable(post_coord) and !state.dungeon.at(post_coord).prison) {
-                    _ = mobs.placeMob(alloc, mob.template, post_coord, .{
-                        .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
-                    });
+                if (!isTileAvailable(post_coord) or state.dungeon.at(post_coord).prison)
+                    continue;
 
-                    if (mob.template.mob.allegiance != .OtherGood and mob.template.mob.ai.is_combative)
-                        room.hostile_mob_count += 1;
+                _ = mobs.placeMob(alloc, mob, post_coord, .{
+                    .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
+                });
+                room.mob_count += 1;
 
-                    break;
-                }
+                break;
             }
         }
     }
@@ -1696,9 +1716,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
             const room = &state.rooms[level].items[room_i];
 
             if (room.type == .Corridor) continue;
-            if (required_mob.template.mob.allegiance != .OtherGood and
-                required_mob.template.mob.ai.is_combative and
-                room.hostile_mob_count >= Configs[level].room_crowd_max)
+            if (room.mob_count >= Configs[level].room_crowd_max)
                 continue :room_iter_required;
 
             var tries: usize = 10;
@@ -1708,9 +1726,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
                     placed_ctr -= 1;
                     _ = mobs.placeMob(alloc, required_mob.template, post_coord, .{});
 
-                    if (required_mob.template.mob.allegiance != .OtherGood and
-                        required_mob.template.mob.ai.is_combative)
-                        room.hostile_mob_count += 1;
+                    room.mob_count += 1;
 
                     break;
                 }
@@ -2468,7 +2484,7 @@ pub const Room = struct {
     has_subroom: bool = false,
     has_window: bool = false,
     has_stair: bool = false,
-    hostile_mob_count: usize = 0,
+    mob_count: usize = 0,
 
     connections: usize = 0,
 
@@ -2968,6 +2984,102 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
     std.sort.insertionSort(Prefab, s_fabs.items, {}, Prefab.lesserThan);
 }
 
+pub var mob_spawn_tables: std.StringHashMap([LEVELS]usize) = undefined;
+
+pub fn readSpawnTables(alloc: *mem.Allocator) void {
+    const _MobSpawnData = struct {
+        id: []u8 = undefined,
+
+        _8_pri_: usize = undefined,
+        _7_pri_: usize = undefined,
+        _6_lab_: usize = undefined,
+        _6_lab2: usize = undefined,
+        _6_lab3: usize = undefined,
+        _5_smi_: usize = undefined,
+        _5_smi2: usize = undefined,
+        _5_smi3: usize = undefined,
+        _4_pri_: usize = undefined,
+        _3_vlt_: usize = undefined,
+        _3_vlt2: usize = undefined,
+        _3_vlt3: usize = undefined,
+        _2_pri_: usize = undefined,
+        _1_pri_: usize = undefined,
+    };
+
+    mob_spawn_tables = @TypeOf(mob_spawn_tables).init(alloc);
+
+    const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
+    const data_file = data_dir.openFile("spawns.tsv", .{
+        .read = true,
+        .lock = .None,
+    }) catch unreachable;
+
+    var rbuf: [65535]u8 = undefined;
+    const read = data_file.readAll(rbuf[0..]) catch unreachable;
+
+    const result = tsv.parse(
+        _MobSpawnData,
+        &[_]tsv.TSVSchemaItem{
+            .{ .field_name = "id", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
+            .{ .field_name = "_8_pri_", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
+            .{ .field_name = "_7_pri_", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
+            .{ .field_name = "_6_lab_", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
+            .{ .field_name = "_6_lab2", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
+            .{ .field_name = "_6_lab3", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
+            .{ .field_name = "_5_smi_", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
+            .{ .field_name = "_5_smi2", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
+            .{ .field_name = "_5_smi3", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
+            .{ .field_name = "_4_pri_", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
+            .{ .field_name = "_3_vlt_", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
+            .{ .field_name = "_3_vlt2", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
+            .{ .field_name = "_3_vlt3", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
+            .{ .field_name = "_2_pri_", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
+            .{ .field_name = "_1_pri_", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
+        },
+        .{},
+        rbuf[0..read],
+        alloc,
+    );
+
+    if (!result.is_ok()) {
+        err.bug(
+            "Cannot read spawn table: {} (line {}, field {})",
+            .{ result.Err.type, result.Err.context.lineno, result.Err.context.field },
+        );
+    } else {
+        const spawndatas = result.unwrap();
+        defer spawndatas.deinit();
+
+        for (spawndatas.items) |spawndata| {
+            var weights = [LEVELS]usize{
+                spawndata._1_pri_,
+                spawndata._2_pri_,
+                spawndata._3_vlt3,
+                spawndata._3_vlt2,
+                spawndata._3_vlt_,
+                spawndata._4_pri_,
+                spawndata._5_smi3,
+                spawndata._5_smi2,
+                spawndata._5_smi_,
+                spawndata._6_lab3,
+                spawndata._6_lab2,
+                spawndata._6_lab_,
+                spawndata._7_pri_,
+                spawndata._8_pri_,
+            };
+            mob_spawn_tables.putNoClobber(spawndata.id, weights) catch err.oom();
+        }
+
+        std.log.info("Loaded spawn tables.", .{});
+    }
+}
+
+pub fn freeSpawnTables(alloc: *mem.Allocator) void {
+    var iter = mob_spawn_tables.iterator();
+    while (iter.next()) |entry| alloc.free(entry.key);
+    mob_spawn_tables.clearAndFree();
+}
+
 pub const LevelConfig = struct {
     stairs_to: []const usize = &[_]usize{},
 
@@ -2997,17 +3109,11 @@ pub const LevelConfig = struct {
     level_features: [4]?LevelFeatureFunc = [_]?LevelFeatureFunc{ null, null, null, null },
 
     patrol_squads: usize,
-    mob_options: MCBuf = MCBuf.init(&[_]MobConfig{
-        .{ .chance = 30, .template = &mobs.GuardTemplate },
-        .{ .chance = 40, .template = &mobs.JavelineerTemplate },
-        .{ .chance = 50, .template = &mobs.WatcherTemplate },
-        .{ .chance = 75, .template = &mobs.ExecutionerTemplate },
-    }),
     required_mobs: []const RequiredMob = &[_]RequiredMob{
         .{ .count = 3, .template = &mobs.CleanerTemplate },
         .{ .count = 3, .template = &mobs.EngineerTemplate },
     },
-    room_crowd_max: usize = 2,
+    room_crowd_max: usize = 3,
 
     no_lights: bool = false,
     no_windows: bool = false,
@@ -3036,7 +3142,6 @@ pub const LevelConfig = struct {
 
     blobs: []const BlobConfig = &[_]BlobConfig{},
 
-    pub const MCBuf = StackBuffer(MobConfig, 8);
     pub const LevelFeatureFunc = fn (usize, Coord, *const Room, *const Prefab, *mem.Allocator) void;
 
     pub const RequiredMob = struct {
@@ -3080,15 +3185,6 @@ pub const PRI_BASE_LEVELCONFIG = LevelConfig{
     },
 
     .patrol_squads = 2,
-    .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
-        .{ .chance = 030, .template = &mobs.GuardTemplate },
-        .{ .chance = 040, .template = &mobs.JavelineerTemplate },
-        .{ .chance = 050, .template = &mobs.WatcherTemplate },
-        .{ .chance = 075, .template = &mobs.ExecutionerTemplate },
-        .{ .chance = 090, .template = &mobs.DeathMageTemplate },
-        .{ .chance = 090, .template = &mobs.TorturerNecromancerTemplate },
-        .{ .chance = 150, .template = &mobs.AncientMageTemplate },
-    }),
 
     .machine = &surfaces.Drain,
     .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
@@ -3105,14 +3201,6 @@ pub const VLT_BASE_LEVELCONFIG = LevelConfig{
     .max_room_height = 6,
 
     .patrol_squads = 2,
-    .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
-        .{ .chance = 30, .template = &mobs.WatcherTemplate },
-        .{ .chance = 40, .template = &mobs.GuardTemplate },
-        .{ .chance = 50, .template = &mobs.JavelineerTemplate },
-        .{ .chance = 90, .template = &mobs.WardenTemplate },
-        .{ .chance = 90, .template = &mobs.FrozenFiendTemplate },
-        .{ .chance = 90, .template = &mobs.TorturerNecromancerTemplate },
-    }),
 
     .no_windows = true,
     .allow_statues = false,
@@ -3148,14 +3236,6 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
     },
 
     .patrol_squads = 1,
-    .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
-        .{ .chance = 31, .template = &mobs.SentinelTemplate },
-        .{ .chance = 45, .template = &mobs.WatcherTemplate },
-        .{ .chance = 66, .template = &mobs.GuardTemplate },
-        .{ .chance = 90, .template = &mobs.BurningBruteTemplate },
-        .{ .chance = 90, .template = &mobs.SulfurFiendTemplate },
-        .{ .chance = 90, .template = &mobs.DeathMageTemplate },
-    }),
 
     .door_chance = 10,
     .material = &materials.Dobalene,
@@ -3197,12 +3277,6 @@ pub const SMI_BASE_LEVELCONFIG = LevelConfig{
     },
 
     .patrol_squads = 3,
-    .mob_options = LevelConfig.MCBuf.init(&[_]LevelConfig.MobConfig{
-        .{ .chance = 20, .template = &mobs.WatcherTemplate },
-        .{ .chance = 30, .template = &mobs.HaulerTemplate },
-        .{ .chance = 60, .template = &mobs.GuardTemplate },
-        .{ .chance = 90, .template = &mobs.BurningBruteTemplate },
-    }),
 
     .material = &materials.Basalt,
     .tiletype = .Floor,
@@ -3280,9 +3354,9 @@ pub fn fixConfigs() void {
 
 
     // Increase crowd sizes for difficult levels.
-    Configs[ 0].room_crowd_max = 4;      Configs[ 1].room_crowd_max = 3; // Upper prison
-    Configs[ 2].room_crowd_max = 5;      Configs[ 3].room_crowd_max = 4; // Vaults
-    Configs[ 6].room_crowd_max = 4;      Configs[ 7].room_crowd_max = 3; // Smithing
-    Configs[ 9].room_crowd_max = 4;      Configs[10].room_crowd_max = 3; // Laboratory
+    Configs[ 0].room_crowd_max = 5;      Configs[ 1].room_crowd_max = 4; // Upper prison
+    Configs[ 2].room_crowd_max = 6;      Configs[ 3].room_crowd_max = 5; // Vaults
+    Configs[ 6].room_crowd_max = 5;      Configs[ 7].room_crowd_max = 4; // Smithing
+    Configs[ 9].room_crowd_max = 5;      Configs[10].room_crowd_max = 4; // Laboratory
 }
 // zig fmt: on

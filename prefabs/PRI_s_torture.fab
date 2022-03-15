@@ -11,8 +11,8 @@
 
 :prison 0,0 9 5
 
-:spawn  interaction_laborer 9,1 9,2
-:spawn torturer_necromancer 4,5 4,5
+:spawn interaction_laborer 9,1 9,2
+:spawn         necromancer 4,5 4,5
 
 @0 p medium_sieve
 @1 m healing_gas_pump 7,1

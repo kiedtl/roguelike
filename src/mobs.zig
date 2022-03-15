@@ -706,7 +706,7 @@ pub const SkeletalAxemasterTemplate = MobTemplate{
 };
 
 pub const TorturerNecromancerTemplate = MobTemplate{
-    .id = "torturer_necromancer",
+    .id = "necromancer",
     .mob = .{
         .species = &HumanSpecies,
         .tile = 'Ñ',
@@ -864,7 +864,7 @@ pub const FrozenFiendTemplate = MobTemplate{
 };
 
 pub const TanusExperiment = MobTemplate{
-    .id = "tanus_experiment",
+    .id = "tanus_exp",
     .mob = .{
         .species = &Species{ .name = "tanusian experiment" },
         .tile = 'ג',
@@ -893,7 +893,7 @@ pub const TanusExperiment = MobTemplate{
 };
 
 pub const CatalineExperiment = MobTemplate{
-    .id = "cataline_experiment",
+    .id = "cataline_exp",
     .mob = .{
         .species = &Species{ .name = "catalinic experiment" },
         .tile = 'ג',
@@ -922,7 +922,7 @@ pub const CatalineExperiment = MobTemplate{
 };
 
 pub const FlouinExperiment = MobTemplate{
-    .id = "flouin_experiment",
+    .id = "flouin_exp",
     .mob = .{
         .species = &Species{ .name = "flouinian experiment" },
         .tile = 'ג',
@@ -951,7 +951,7 @@ pub const FlouinExperiment = MobTemplate{
 };
 
 pub const PhytinExperiment = MobTemplate{
-    .id = "phytin_experiment",
+    .id = "phytin_exp",
     .mob = .{
         .species = &Species{ .name = "phytinic experiment" },
         .tile = 'ג',
