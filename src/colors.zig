@@ -10,6 +10,8 @@ pub const CONCRETE: u32 = 0x968f74;
 pub const LIGHT_CONCRETE: u32 = 0xe6dfc4;
 pub const PINK: u32 = 0xffc0cb;
 
+pub const BG: u32 = darken(CONCRETE, 6);
+
 // Interpolate linearly between two vals.
 //
 // (addendum 22-03-03: I have no idea what this means)

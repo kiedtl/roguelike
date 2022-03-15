@@ -37,7 +37,7 @@ pub fn init() !void {
 
     _ = termbox.tb_select_output_mode(termbox.TB_OUTPUT_TRUECOLOR);
     _ = termbox.tb_set_clear_attributes(termbox.TB_WHITE, termbox.TB_BLACK);
-    _ = termbox.tb_clear();
+    clearScreen();
 }
 
 // Check that the window is the minimum size.
@@ -53,7 +53,7 @@ pub fn checkWindowSize() bool {
 
         if (cur_w >= min_width and cur_h >= min_height) {
             // All's well
-            termbox.tb_clear();
+            clearScreen();
             return true;
         }
 
@@ -141,6 +141,15 @@ fn _clearLineWith(from: isize, to: isize, y: isize, ch: u32, fg: u32, bg: u32) v
     var x = from;
     while (x < to) : (x += 1)
         termbox.tb_change_cell(x, y, ch, fg, bg);
+}
+
+pub fn clearScreen() void {
+    const height = termbox.tb_height();
+    const width = termbox.tb_width();
+
+    var y: isize = 0;
+    while (y < height) : (y += 1)
+        _clearLineWith(0, width, y, ' ', colors.BG, 0);
 }
 
 fn _clear_line(from: isize, to: isize, y: isize) void {
@@ -753,7 +762,7 @@ pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
 pub fn chooseOption(msg: []const u8, options: []const []const u8) ?usize {
     assert(options.len > 0); // This should have been handled previously.
 
-    termbox.tb_clear();
+    clearScreen();
 
     const usage_str = "ESC/q/Ctrl+C to cancel, Enter/Space to select.";
 
@@ -856,7 +865,7 @@ pub fn chooseOption(msg: []const u8, options: []const []const u8) ?usize {
         }
     }
 
-    termbox.tb_clear();
+    clearScreen();
     return if (cancelled) null else chosen;
 }
 
