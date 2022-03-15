@@ -35,3 +35,6 @@ Explosion that destroys walls.
 # potion of fortification
 - rMlee+ rFire+ rElec+
 - Will-∞
+
+# potion of veilification
+Status: blindings.
