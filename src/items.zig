@@ -47,7 +47,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     // Armor
     .{ .w = 40, .i = .{ .A = GambesonArmor } },
     .{ .w = 15, .i = .{ .A = LeatherArmor } },
-    .{ .w = 05, .i = .{ .A = ChainmailArmor } },
+    .{ .w = 05, .i = .{ .A = HauberkArmor } },
     .{ .w = 02, .i = .{ .A = ScalemailArmor } },
     // Potions
     .{ .w = 40, .i = .{ .P = SmokePotion } },
@@ -366,7 +366,7 @@ pub const InvigoratePotion = Potion{ .id = "potion_invigorate", .name = "invigor
 pub const IncineratePotion = Potion{ .id = "potion_incinerate", .name = "incineration", .type = .{ .Custom = triggerIncineratePotion }, .ingested = false, .color = 0xff3434 }; // TODO: unique color
 pub const DecimatePotion = Potion{ .id = "potion_decimate", .name = "decimation", .type = .{ .Custom = triggerDecimatePotion }, .color = 0xda5353 }; // TODO: unique color
 
-pub const ChainmailArmor = Armor{
+pub const HauberkArmor = Armor{
     .id = "chainmail_armor",
     .name = "chainmail",
     .resists = .{ .Armor = 30 },

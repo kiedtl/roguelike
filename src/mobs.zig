@@ -128,7 +128,7 @@ pub const WardenTemplate = MobTemplate{
         .base_strength = 20,
     },
     .weapon = &items.MaceWeapon,
-    .armor = &items.ChainmailArmor,
+    .armor = &items.LeatherArmor,
     .evocables = &[_]Evocable{items.WarningHornEvoc},
 };
 
@@ -622,7 +622,7 @@ pub const AncientMageTemplate = MobTemplate{
 
         .innate_resists = .{ .rPois = 100, .rFume = 100, .rElec = 100 },
     },
-    .armor = &items.ChainmailArmor,
+    .armor = &items.HauberkArmor,
 };
 
 pub const DeathMageTemplate = MobTemplate{
@@ -741,7 +741,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
         .base_strength = 25,
     },
     .weapon = &items.MaceWeapon,
-    .armor = &items.ChainmailArmor,
+    .armor = &items.LeatherArmor,
 };
 
 pub const BurningBruteTemplate = MobTemplate{
@@ -860,7 +860,7 @@ pub const FrozenFiendTemplate = MobTemplate{
         .base_strength = 35,
     },
     .weapon = &items.MorningstarWeapon,
-    .armor = &items.ChainmailArmor,
+    .armor = &items.HauberkArmor,
 };
 
 pub const TanusExperiment = MobTemplate{
