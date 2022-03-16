@@ -1679,7 +1679,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
         if (room.type == .Corridor) continue;
         if (room.rect.height * room.rect.width < 25) continue;
 
-        const max_crowd = rng.range(usize, 0, Configs[level].room_crowd_max);
+        const max_crowd = rng.range(usize, 1, Configs[level].room_crowd_max);
 
         while (room.mob_count < max_crowd) {
             const mob_id = rng.choose(
@@ -3380,7 +3380,7 @@ pub fn fixConfigs() void {
 
     // Increase crowd sizes for difficult levels.
     Configs[ 0].room_crowd_max = 5;      Configs[ 1].room_crowd_max = 4; // Upper prison
-    Configs[ 2].room_crowd_max = 6;      Configs[ 3].room_crowd_max = 5; // Vaults
+    Configs[ 2].room_crowd_max = 4;      Configs[ 3].room_crowd_max = 3; // Vaults
     Configs[ 6].room_crowd_max = 5;      Configs[ 7].room_crowd_max = 4; // Smithing
     Configs[ 9].room_crowd_max = 5;      Configs[10].room_crowd_max = 4; // Laboratory
 }
