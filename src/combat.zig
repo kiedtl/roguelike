@@ -38,7 +38,9 @@ pub fn chanceOfMissileLanding(attacker: *const Mob) usize {
     return @intCast(usize, math.clamp(chance, 0, 100));
 }
 
-pub fn chanceOfMeleeLanding(attacker: *const Mob) usize {
+pub fn chanceOfMeleeLanding(attacker: *const Mob, defender: ?*const Mob) usize {
+    if (defender) |d| if (!d.isAwareOfAttack(attacker.coord)) return 100;
+
     var chance: isize = @intCast(isize, attacker.base_melee);
 
     chance += if (attacker.isUnderStatus(.Enraged) != null) ATTACKER_ENRAGED_BONUS else 0;

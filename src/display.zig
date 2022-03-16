@@ -332,7 +332,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     }
 
     y = _drawStr(startx, y, endx, "$carmor%$.   {: >4}%", .{armor}, .{});
-    y = _drawStr(startx, y, endx, "$cmelee%$.   {: >4}%", .{combat.chanceOfMeleeLanding(state.player)}, .{});
+    y = _drawStr(startx, y, endx, "$cmelee%$.   {: >4}%", .{combat.chanceOfMeleeLanding(state.player, null)}, .{});
 
     if (missile != state.player.base_missile) {
         const diff = @intCast(isize, missile) - @intCast(isize, state.player.base_missile);
