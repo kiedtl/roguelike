@@ -352,7 +352,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
     .id = "kyanite_statue",
     .mob = .{
         .species = &Species{ .name = "kyanite statue" },
-        .tile = '☺',
+        .tile = '☻',
         .ai = AI{
             .profession_name = null,
             .profession_description = "gazing",

@@ -51,7 +51,7 @@
 # Statues
 "gold_statue"          	 "gold statue"          	 '☺' 	 0xfff720 	 -        	 nay 	 - 	 - 	 .Statue
 "realgar_statue"       	 "realgar statue"       	 '☺' 	 0xff343f 	 -        	 nay 	 - 	 - 	 .Statue
-"iron_statue"          	 "iron statue"          	 '☻' 	 0xcacad2 	 -        	 nay 	 - 	 - 	 .Statue
+"iron_statue"          	 "iron statue"          	 '☹' 	 0xcacad2 	 -        	 nay 	 - 	 - 	 .Statue
 "sodalite_statue"      	 "sodalite statue"      	 '☺' 	 0xa4cfff 	 -        	 nay 	 - 	 - 	 .Statue
 "hematite_statue"      	 "hematite statue"      	 '☺' 	 0xff7f70 	 -        	 nay 	 - 	 - 	 .Statue
 
