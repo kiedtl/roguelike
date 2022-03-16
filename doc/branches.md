@@ -8,13 +8,13 @@ Branch order:
 .   └───┘ └───┘ └───┘ ╟──────────╢   ┌───┐↑┌───┐↑┌───┐ ↑ ┌────────────┐↑┌───┐↑┌───┐ ↑
 .                     ║  Vaults  ╟─┬─┤Vlt├┴┤Vlt├┴┤Vlt├─┴─┤  Solitary  ├┴┤Sol├┴┤Sol├─┘
 .                     ╟──────────╢ │ └─┬─┘ └─┬─┘ └─┬─┘   └──────┬─────┘ └───┘ └───┘
-. ┌──────┬─────┬─────>║  Prison  ║ └───┴─────┴─────┴────────────┘
+. ┌──────┬─────┬─────>║  Prison  ║ └──>└────>└────>└────────────┘
 . ↑ ┌───┐↑┌───┐↑┌───┐ ╟──────────╢
 . └─┤Smi├┴┤Smi├┴┤Smi├─╢ Smithing ║<───────┬─────┬──────┬───────────────┬─────┬──────┐
 .   └───┘ └───┘ └───┘ ╟──────────╢   ┌───┐↑┌───┐↑┌───┐ ↑ ┌────────────┐↑┌───┐↑┌───┐ ↑
 .                     ║Laboratory╟─┬─┤Lab├┴┤Lab├┴┤Lab├─┴─┤ Watchtower ├┴┤Wch├┴┤Wch├─┘
 .                     ╟──────────╢ │ └─┬─┘ └─┬─┘ └─┬─┘   └──────┬─────┘ └───┘ └───┘
-.                     ║  Prison  ║ └───┴─────┴─────┴────────────┘
+.                     ║  Prison  ║ └──>└────>└────>└────────────┘
 .                     ╟──────────╢
 .             Start ─>║  Prison  ║
 .                     ╙──────────╜
@@ -26,14 +26,14 @@ Smithing/3 contains the Iron Rune.
 - Open terrain makes it a bit more difficult to run.
 - Steam vents, smoke clouds, and noxious fumes make hanging around in certain
   areas dangerous.
-- Fuming fiends are a Smithing-only speciality.
+- Fuming fiends with their dustling friends are a Smithing-only speciality.
 - Smoke clouds and large splotches of fungi obscure vision...
 - ...Until fuming fiends dispel clouds, and fungi is set on fire.
 
 ## Prison
 
 - The starting area.
-- Drains that are unique to the Prison allow teleporting across level.
+- Drains (unique to the Prison) allow teleporting across level.
 - Executioners wander a single room, making it difficult to stab. They carry
   a giant knout capable of two-shotting you, but attack slowly.
 - Later levels may contain the occasional Abomination.
@@ -49,7 +49,8 @@ Laboratory/3 contains the Learned Rune.
 - The so-called Experiments wander around rooms in the manner of an executioner;
   there are multiple kinds of experiments, each with their own unique bufs
   that make it more difficult to get rid of.
-- There are much more Abominations here than in other branches.
+- There are more Abominations here than in other branches.
+- Lead turtles and silver wasps are a Laboratory-only speciality.
 - Spires make fighting in certain rooms extremely dangerous. Most of them will
   not attack unless an ally is present. However, you can set up your own spire
   with a spire kit, which are only found in the Laboratory and Smithing.
