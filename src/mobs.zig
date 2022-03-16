@@ -602,8 +602,8 @@ pub const AncientMageTemplate = MobTemplate{
             .{ .MP_cost = 0, .spell = &spells.CAST_AURA_DISPERSAL },
             .{ .MP_cost = 0, .spell = &spells.CAST_MASS_DISMISSAL, .power = 15 },
             .{ .MP_cost = 8, .spell = &spells.BOLT_CRYSTAL, .power = 30 },
-            .{ .MP_cost = 7, .spell = &spells.CAST_SUMMON_ENEMY },
-            .{ .MP_cost = 2, .spell = &spells.CAST_CONJ_BALL_LIGHTNING, .power = 12 },
+            .{ .MP_cost = 9, .spell = &spells.CAST_SUMMON_ENEMY },
+            .{ .MP_cost = 9, .spell = &spells.CAST_CONJ_BALL_LIGHTNING, .power = 12 },
         },
         .max_MP = 30,
 
@@ -803,7 +803,7 @@ pub const SulfurFiendTemplate = MobTemplate{
         .vision = 5,
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 1, .spell = &spells.CAST_HASTEN_ROT, .power = 150 },
-            .{ .MP_cost = 4, .spell = &spells.CAST_CONJ_BALL_LIGHTNING, .power = 12 },
+            .{ .MP_cost = 6, .spell = &spells.CAST_CONJ_BALL_LIGHTNING, .power = 12 },
         },
         .max_MP = 10,
 
