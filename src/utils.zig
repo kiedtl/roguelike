@@ -3,6 +3,7 @@ const assert = std.debug.assert;
 const math = std.math;
 const meta = std.meta;
 const mem = std.mem;
+const enums = @import("std/enums.zig");
 
 const state = @import("state.zig");
 const err = @import("err.zig");
@@ -11,6 +12,19 @@ const buffer = @import("buffer.zig");
 usingnamespace @import("types.zig");
 
 const StackBuffer = buffer.StackBuffer;
+
+pub fn getFieldByEnum(
+    comptime E: type,
+    struct_: anytype,
+    variant: E,
+) @typeInfo(@TypeOf(struct_)).Struct.fields[0].field_type {
+    inline for (@typeInfo(E).Enum.fields) |enumv| {
+        const e = @intToEnum(E, enumv.value);
+        if (e == variant)
+            return @field(struct_, @tagName(e));
+    }
+    unreachable;
+}
 
 pub fn getNearestCorpse(me: *Mob) ?Coord {
     var buf = StackBuffer(Coord, 32).init(null);

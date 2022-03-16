@@ -380,7 +380,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
         .blood = null,
         .corpse = .Wall,
         .immobile = true,
-        .innate_resists = .{ .rPois = 3, .rFire = 3, .rElec = 3, .rMlee = 3, .rFume = 3 },
+        .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = 100, .Armor = 100, .rFume = 100 },
 
         .base_strength = 1,
     },
@@ -418,7 +418,7 @@ pub const NebroStatueTemplate = MobTemplate{
         .blood = null,
         .corpse = .Wall,
         .immobile = true,
-        .innate_resists = .{ .rPois = 3, .rFire = 3, .rElec = 3, .rMlee = 3, .rFume = 3 },
+        .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = 100, .Armor = 100, .rFume = 100 },
 
         .base_strength = 2,
     },
@@ -456,7 +456,7 @@ pub const CrystalStatueTemplate = MobTemplate{
         .blood = null,
         .corpse = .Wall,
         .immobile = true,
-        .innate_resists = .{ .rPois = 3, .rFire = 3, .rElec = 3, .rMlee = 3, .rFume = 3 },
+        .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = 100, .Armor = 100, .rFume = 100 },
 
         .base_strength = 2,
     },
@@ -620,7 +620,7 @@ pub const AncientMageTemplate = MobTemplate{
 
         .base_strength = 25,
 
-        .innate_resists = .{ .rPois = 3, .rFume = 3, .rElec = 3 },
+        .innate_resists = .{ .rPois = 100, .rFume = 100, .rElec = 100 },
     },
     .armor = &items.ChainmailArmor,
 };
@@ -697,7 +697,7 @@ pub const SkeletalAxemasterTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rPois = 3, .rFume = 3, .rFire = -1 },
+        .innate_resists = .{ .rPois = 100, .rFume = 100, .rFire = -25 },
 
         .base_strength = 30,
     },
@@ -777,7 +777,7 @@ pub const BurningBruteTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rPois = 3, .rFire = 3, .rElec = -1 },
+        .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = -25 },
 
         .base_strength = 40,
     },
@@ -815,7 +815,7 @@ pub const SulfurFiendTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rPois = 3, .rFire = 1, .rElec = 3, .rFume = 2 },
+        .innate_resists = .{ .rPois = 100, .rFire = 50, .rElec = 100, .rFume = 80 },
 
         .base_strength = 30,
     },
@@ -855,7 +855,7 @@ pub const FrozenFiendTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rPois = 2, .rElec = 2 },
+        .innate_resists = .{ .rPois = 75, .rElec = 75, .rFire = -25 },
 
         .base_strength = 35,
     },
@@ -1013,7 +1013,7 @@ pub const LivingIceTemplate = MobTemplate{
 
         .base_strength = 30,
 
-        .innate_resists = .{ .rPois = 3, .rFire = -2, .rElec = 3, .rMlee = 1, .rFume = 3 },
+        .innate_resists = .{ .rPois = 100, .rFire = -50, .rElec = 100, .Armor = 50, .rFume = 100 },
     },
     // This status should be added by whatever spell created it.
     //.statuses = &[_]StatusDataInfo{.{ .status = .Lifespan, .duration = 10 }},
@@ -1051,7 +1051,7 @@ pub const BallLightningTemplate = MobTemplate{
 
         .base_strength = 1,
 
-        .innate_resists = .{ .rPois = 3, .rFire = 1, .rElec = 3, .rMlee = 1, .rFume = 3 },
+        .innate_resists = .{ .rPois = 100, .rFire = 50, .rElec = 100, .rFume = 100 },
     },
     // This status should be added by whatever spell created it.
     .statuses = &[_]StatusDataInfo{

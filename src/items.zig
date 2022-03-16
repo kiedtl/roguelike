@@ -369,7 +369,7 @@ pub const DecimatePotion = Potion{ .id = "potion_decimate", .name = "decimation"
 pub const ChainmailArmor = Armor{
     .id = "chainmail_armor",
     .name = "chainmail",
-    .shave = 30,
+    .resists = .{ .Armor = 30 },
     .speed_penalty = 40,
     .evasion_penalty = 5,
 };
@@ -377,7 +377,7 @@ pub const ChainmailArmor = Armor{
 pub const ScalemailArmor = Armor{
     .id = "scalemail_armor",
     .name = "scale mail",
-    .shave = 25,
+    .resists = .{ .Armor = 25 },
     .speed_penalty = 20,
     .evasion_penalty = 10,
 };
@@ -385,25 +385,19 @@ pub const ScalemailArmor = Armor{
 pub const RobeArmor = Armor{
     .id = "robe_armor",
     .name = "robe",
-    .shave = 5,
+    .resists = .{ .Armor = 0 },
 };
 
 pub const GambesonArmor = Armor{
     .id = "gambeson_armor",
     .name = "gambeson",
-    .shave = 15,
+    .resists = .{ .Armor = 15 },
 };
 
 pub const LeatherArmor = Armor{
     .id = "leather_armor",
     .name = "leather",
-    .shave = 20,
-};
-
-pub const NoneArmor = Armor{
-    .id = "none",
-    .name = "none",
-    .shave = 0,
+    .resists = .{ .Armor = 20 },
 };
 
 fn dmgstr(p: usize, vself: []const u8, vother: []const u8, vdeg: []const u8) DamageStr {

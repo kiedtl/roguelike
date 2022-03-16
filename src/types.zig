@@ -632,7 +632,7 @@ pub const MessageType = union(enum) {
 };
 
 pub const Resistance = enum {
-    rFire, rElec, rMlee, rFume, rPois, rPara
+    rFire, rElec, Armor, rFume, rPois
 };
 
 pub const Damage = struct {
@@ -656,7 +656,7 @@ pub const Damage = struct {
 
         pub fn resist(self: DamageKind) Resistance {
             return switch (self) {
-                .Physical => .rMlee,
+                .Physical => .Armor,
                 .Fire => .rFire,
                 .Electric => .rElec,
                 .Poison => .rPois,
@@ -1453,7 +1453,7 @@ pub const Mob = struct { // {{{
                 if (landed != null and state.dungeon.at(landed.?).mob != null) {
                     const mob = state.dungeon.at(landed.?).mob.?;
                     if (proj.damage) |max_damage| {
-                        const damage = combat.damageOutput(self, mob, max_damage, false);
+                        const damage = rng.range(usize, max_damage / 2, max_damage);
                         mob.takeDamage(.{ .amount = @intToFloat(f64, damage), .source = .RangedAttack, .by_mob = self });
                     }
                     switch (proj.effect) {
@@ -1811,7 +1811,7 @@ pub const Mob = struct { // {{{
         }
 
         const is_stab = !recipient.isAwareOfAttack(attacker.coord);
-        const damage = combat.damageOutput(attacker, recipient, attacker_weapon.damage, is_stab);
+        const damage = combat.damageOfMeleeAttack(attacker, recipient, attacker_weapon.damage, is_stab);
 
         recipient.takeDamage(.{
             .amount = @intToFloat(f64, damage),
@@ -1996,9 +1996,9 @@ pub const Mob = struct { // {{{
         self.memory_duration = 4;
         self.deaf = true;
 
-        self.innate_resists.rFire = math.clamp(self.innate_resists.rFire - 1, -2, 3);
-        self.innate_resists.rElec = math.clamp(self.innate_resists.rElec - 1, -2, 3);
-        self.innate_resists.rFume = 2;
+        self.innate_resists.rFire = math.clamp(self.innate_resists.rFire - 25, -100, 100);
+        self.innate_resists.rElec = math.clamp(self.innate_resists.rElec - 25, -100, 100);
+        self.innate_resists.rFume = 100;
 
         self.willpower = 1;
 
@@ -2363,58 +2363,39 @@ pub const Mob = struct { // {{{
 
     // Returns different things depending on what resist is.
     //
-    // For all resists except rPara and rFume, returns damage mitigated.
+    // For all resists except rFume, returns damage mitigated.
     // For rFume, returns chance for gas to trigger.
-    // For rPara, returns... hmm, this isn't implemented yet.
     pub inline fn resistance(self: *const Mob, resist: Resistance) usize {
-        var pips: isize = 0;
+        var r: isize = 0;
 
-        // Add the mob's innate resistance. This is a bit clumsy.
-        inline for (@typeInfo(Resistance).Enum.fields) |variant| {
-            const e = @intToEnum(Resistance, variant.value);
-            if (e == resist) pips += @field(self.innate_resists, @tagName(e));
-        }
+        // Add the mob's innate resistance.
+        const innate = utils.getFieldByEnum(Resistance, self.innate_resists, resist);
+        assert(innate <= 100 and innate >= -100);
+        r += innate;
 
         // Check armor
         if (self.inventory.cloak) |clk| switch (clk.ego) {
-            .Resist => |r| if (r == resist) {
-                pips += 1;
+            .Resist => |clk_r| if (clk_r == resist) {
+                r += 50;
             },
             else => {},
         };
+        if (self.inventory.armor) |arm| {
+            r += utils.getFieldByEnum(Resistance, arm.resists, resist);
+        }
 
         // Check statuses
         switch (resist) {
-            .rMlee => if (self.isUnderStatus(.Recuperate) != null) {
-                pips -= 1;
+            .Armor => if (self.isUnderStatus(.Recuperate) != null) {
+                r -= 25;
             },
             else => {},
         }
 
-        pips = switch (resist) {
-            .rFume => math.clamp(pips, 0, 2),
-            .rPara => math.clamp(pips, 0, 3),
-            else => math.clamp(pips, -2, 3),
-        };
+        r = math.clamp(r, -100, 100);
 
-        // FIXME: handle rPara
-        return switch (resist) {
-            .rFume => @as(usize, switch (pips) {
-                0 => 100,
-                1 => 20,
-                2 => 0,
-                else => err.wat(),
-            }),
-            else => @as(usize, switch (pips) {
-                -2 => 150,
-                -1 => 125,
-                00 => 100,
-                01 => 50,
-                02 => 25,
-                03 => 0,
-                else => err.wat(),
-            }),
-        };
+        // Value is between -100 and 100. Change it to be between 100 and 200.
+        return @intCast(usize, 100 - r);
     }
 
     pub inline fn strength(self: *const Mob) usize {
@@ -2704,7 +2685,7 @@ pub const Armor = struct {
 
     id: []const u8,
     name: []const u8,
-    shave: usize,
+    resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
     speed_penalty: ?usize = null, // percentage
     evasion_penalty: ?usize = null, // fixed number
 };

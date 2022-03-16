@@ -19,12 +19,9 @@ const DEFENDER_FLANKED_NBONUS: isize = 10;
 const DEFENDER_HELD_NBONUS: isize = 10;
 const DEFENDER_STEALTH_BONUS: isize = 5;
 
-pub fn damageOutput(attacker: *const Mob, recipient: *const Mob, weapon_damage: usize, is_stab: bool) usize {
-    const recipient_armor = recipient.inventory.armor orelse &items.NoneArmor;
-    const max_damage = weapon_damage - (weapon_damage * recipient_armor.shave / 100);
-
+pub fn damageOfMeleeAttack(attacker: *const Mob, recipient: *const Mob, w_damage: usize, is_stab: bool) usize {
     var damage: usize = 0;
-    damage += rng.rangeClumping(usize, max_damage / 2, max_damage, 2);
+    damage += rng.rangeClumping(usize, w_damage / 2, w_damage, 2);
     damage += if (attacker.isUnderStatus(.Enraged) != null) damage / 5 else 0;
     damage += damage * (attacker.strength() / 2) / 100;
 

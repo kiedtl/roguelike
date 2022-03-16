@@ -290,6 +290,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     // } else 0.0;
     const strength = state.player.strength();
     const evasion = combat.chanceOfAttackEvaded(state.player, null);
+    const armor = 100 - @intCast(isize, state.player.resistance(.Armor));
     const missile = combat.chanceOfMissileLanding(state.player);
     const speed = state.player.speed();
     const spotted = b: for (moblist) |mob| {
@@ -330,6 +331,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         y = _drawStr(startx, y, endx, "$cevade%$.   {: >4}%", .{evasion}, .{});
     }
 
+    y = _drawStr(startx, y, endx, "$carmor%$.   {: >4}%", .{armor}, .{});
     y = _drawStr(startx, y, endx, "$cmelee%$.   {: >4}%", .{combat.chanceOfMeleeLanding(state.player)}, .{});
 
     if (missile != state.player.base_missile) {
@@ -432,8 +434,8 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         const dest = (item.shortName() catch unreachable).constSlice();
         y = _drawStr(startx, y, endx, "$cbackup$. {}", .{dest}, .{});
     }
-    if (state.player.inventory.armor) |armor| {
-        const item = Item{ .Armor = armor };
+    if (state.player.inventory.armor) |armor_item| {
+        const item = Item{ .Armor = armor_item };
         const dest = (item.shortName() catch unreachable).constSlice();
         y = _drawStr(startx, y, endx, "$c armor$. {}", .{dest}, .{});
     }
