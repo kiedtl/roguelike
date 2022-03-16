@@ -3035,10 +3035,11 @@ pub const Tile = struct {
                 },
                 .Container => |c| cont: {
                     if (!self.broken) {
-                        if (c.capacity >= 14) {
-                            cell.fg = 0x000000;
-                            cell.bg = 0x808000;
-                        }
+                        // if (c.capacity >= 14) {
+                        //     cell.fg = 0x000000;
+                        //     cell.bg = 0x808000;
+                        // }
+                        cell.fg = 0xb0c4de;
                     }
                     break :cont if (self.broken) 'x' else c.tile;
                 },

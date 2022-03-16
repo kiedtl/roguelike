@@ -1821,12 +1821,10 @@ fn _placePropAlongRange(level: usize, where: Range, prop: *const Prop, max: usiz
 pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
     for (state.rooms[level].items) |*room| {
         const rect = room.rect;
+        const room_area = rect.height * rect.width;
 
         // Don't fill small rooms or corridors.
-        if ((rect.width * rect.height) < 16 or
-            room.type == .Corridor or
-            room.type == .Sideroom)
-        {
+        if (room_area < 16 or room.type == .Corridor or room.type == .Sideroom) {
             continue;
         }
 
@@ -1834,8 +1832,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
         placeWindow(room);
 
         if (room.prefab != null) continue;
-        if (room.has_subroom and (rect.width * rect.height) < 64) continue;
-        if (rng.tenin(25)) continue;
+        if (room.has_subroom and room_area < 25) continue;
 
         const rect_end = rect.end();
 
@@ -1848,13 +1845,15 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
 
         var statues: usize = 0;
         var props: usize = 0;
-        var capacity: usize = 0;
+        var containers: usize = 0;
         var machs: usize = 0;
         var posters: usize = 0;
 
+        const max_containers = math.log(usize, 2, room_area);
+
         var forbidden_range: ?usize = null;
 
-        if ((rect.width * rect.height) > 64 and
+        if (room_area > 64 and
             rng.percent(Configs[level].chance_for_single_prop_placement) and
             Configs[level].single_props.len > 0)
         {
@@ -1866,11 +1865,28 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
             forbidden_range = range_ind;
             const range = ranges[range_ind];
 
-            const tries = math.max(rect.width, rect.height) * 3;
+            const tries = math.max(rect.width, rect.height) * 150 / 100;
             props += _placePropAlongRange(rect.start.z, range, &prop, tries);
+
+            return;
         }
 
-        var tries = math.sqrt(rect.width * rect.height) * 5;
+        const Mode = enum {
+            Statues, Containers, Machine, Poster, None
+        };
+        const modes = [_]Mode{ .Statues, .Containers, .Machine, .Poster, .None };
+        const mode_weights = [_]usize{
+            if (Configs[level].allow_statues) 10 else 0,
+            if (Configs[level].containers.len > 0) 10 else 0,
+            if (Configs[level].machines.len > 0) 10 else 0,
+            if (room_area >= 25) 6 else 0,
+            5,
+        };
+        const mode = rng.choose(Mode, &modes, &mode_weights) catch err.wat();
+
+        if (mode == .None) return;
+
+        var tries = math.sqrt(room_area) * 5;
         while (tries > 0) : (tries -= 1) {
             const range_ind = tries % ranges.len;
             if (forbidden_range) |fr| if (range_ind == fr) continue;
@@ -1884,33 +1900,36 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
                 utils.findPatternMatch(coord, &VALID_FEATURE_TILE_PATTERNS) == null)
                 continue;
 
-            switch (rng.range(usize, 1, 4)) {
-                1 => {
-                    if (Configs[level].allow_statues and statues == 0 and rng.onein(2)) {
+            switch (mode) {
+                .Statues => {
+                    assert(Configs[level].allow_statues);
+                    if (statues == 0 and rng.onein(2)) {
                         const statue = rng.chooseUnweighted(mobs.MobTemplate, &mobs.STATUES);
                         _ = mobs.placeMob(alloc, &statue, coord, .{});
                         statues += 1;
-                    } else if (props < 3) {
+                    } else if (props < 2) {
                         const prop = rng.chooseUnweighted(Prop, Configs[level].props.*);
                         _ = placeProp(coord, &prop);
                         props += 1;
                     }
                 },
-                2 => {
-                    if (capacity < (math.sqrt(rect.width * rect.height) * 4)) {
+                .Containers => {
+                    if (containers < max_containers) {
                         var cont = rng.chooseUnweighted(Container, Configs[level].containers);
                         placeContainer(coord, &cont);
-                        capacity += cont.capacity;
+                        containers += 1;
                     }
                 },
-                3 => {
-                    if (machs < 1 and Configs[level].machine != null) {
-                        _place_machine(coord, Configs[level].machine.?);
+                .Machine => {
+                    if (machs < 1) {
+                        assert(Configs[level].machines.len > 0);
+                        var m = rng.chooseUnweighted(*const Machine, Configs[level].machines);
+                        _place_machine(coord, m);
                         machs += 1;
                     }
                 },
-                4 => {
-                    if ((rect.width * rect.height) > 64 and posters < 1) {
+                .Poster => {
+                    if (posters < 1) {
                         if (choosePoster(level)) |poster| {
                             state.dungeon.at(coord).surface = SurfaceItem{ .Poster = poster };
                             posters += 1;
@@ -3124,7 +3143,7 @@ pub const LevelConfig = struct {
     door: *const Machine = &surfaces.NormalDoor,
     vent: []const u8 = "gas_vent",
     bars: []const u8 = "iron_bars",
-    machine: ?*const Machine = null,
+    machines: []const *const Machine = null,
     props: *[]const Prop = &surfaces.statue_props.items,
     // Props that can be placed in bulk along a single wall.
     single_props: []const []const u8 = &[_][]const u8{},
@@ -3186,7 +3205,7 @@ pub const PRI_BASE_LEVELCONFIG = LevelConfig{
 
     .patrol_squads = 2,
 
-    .machine = &surfaces.Drain,
+    .machines = &[_]*const Machine{ &surfaces.Fountain, &surfaces.Drain },
     .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
 };
 
@@ -3213,6 +3232,8 @@ pub const VLT_BASE_LEVELCONFIG = LevelConfig{
         "gold_chest", "fuel_barrel", "iron_ingots", "steel_ingots", "gold_ingots",
     },
     .chance_for_single_prop_placement = 90,
+
+    .machines = &[_]*const Machine{&surfaces.Fountain},
 };
 
 pub const LAB_BASE_LEVELCONFIG = LevelConfig{
@@ -3251,6 +3272,8 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
     .single_props = &[_][]const u8{"table"},
 
     .allow_statues = false,
+
+    .machines = &[_]*const Machine{&surfaces.Fountain},
 };
 
 pub const SMI_BASE_LEVELCONFIG = LevelConfig{
@@ -3311,6 +3334,8 @@ pub const SMI_BASE_LEVELCONFIG = LevelConfig{
             .ca_survival_params = "ffffttttt",
         },
     },
+
+    .machines = &[_]*const Machine{&surfaces.Fountain},
 };
 
 pub var Configs = [LEVELS]LevelConfig{
