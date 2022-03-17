@@ -1200,7 +1200,7 @@ pub fn placeMob(
             } else null;
 
             if (s_coord) |c| {
-                const underling = placeMob(alloc, squad_mob.mob, c, .{});
+                const underling = placeMob(alloc, squad_mob, c, .{ .no_squads = true });
                 mob.squad_members.append(underling) catch err.wat();
             }
         }

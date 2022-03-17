@@ -2609,7 +2609,8 @@ pub const Prefab = struct {
     pub fn reset(self: *Prefab, level: usize) void {
         self.used[level] = 0;
 
-        for (self.connections) |_, i| {
+        for (self.connections) |maybe_con, i| {
+            if (maybe_con == null) break;
             self.connections[i].?.used = false;
         }
     }

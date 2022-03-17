@@ -89,7 +89,10 @@ pub fn used(slice: anytype) rt: {
         else => @compileError("Expected slice, got " ++ @typeName(SliceType)),
     };
 } {
-    return slice[0..mem.len(slice)];
+    const sentry = sentinel(@TypeOf(slice)) orelse return slice[0..];
+    var i: usize = 0;
+    while (slice[i] != sentry) i += 1;
+    return slice[0..i];
 }
 
 pub fn findById(haystack: anytype, _needle: anytype) ?usize {
@@ -130,7 +133,7 @@ pub fn copyZ(dest: anytype, src: anytype) void {
         @compileError("Expected source to be " ++ d ++ ", got " ++ s);
     }
 
-    const srclen = mem.len(src);
+    const srclen = mem.sliceTo(src, '0').len;
 
     assert(dest.len >= srclen);
 
