@@ -386,7 +386,7 @@ pub const HauberkArmor = Armor{
     .id = "chainmail_armor",
     .name = "chainmail",
     .resists = .{ .Armor = 30 },
-    .speed_penalty = 40,
+    .speed_penalty = 10,
     .evasion_penalty = 5,
 };
 
@@ -394,7 +394,7 @@ pub const ScalemailArmor = Armor{
     .id = "scalemail_armor",
     .name = "scale mail",
     .resists = .{ .Armor = 25 },
-    .speed_penalty = 20,
+    .speed_penalty = 10,
     .evasion_penalty = 10,
 };
 
@@ -416,51 +416,51 @@ pub const LeatherArmor = Armor{
     .resists = .{ .Armor = 20 },
 };
 
-fn dmgstr(p: usize, vself: []const u8, vother: []const u8, vdeg: []const u8) DamageStr {
+pub fn _dmgstr(p: usize, vself: []const u8, vother: []const u8, vdeg: []const u8) DamageStr {
     return .{ .dmg_percent = p, .verb_self = vself, .verb_other = vother, .verb_degree = vdeg };
 }
 
 const CRUSHING_STRS = [_]DamageStr{
-    dmgstr(000, "whack", "whacks", ""),
-    dmgstr(010, "cudgel", "cudgels", ""),
-    dmgstr(030, "bash", "bashes", ""),
-    dmgstr(040, "hammer", "hammers", ""),
-    dmgstr(060, "batter", "batters", ""),
-    dmgstr(070, "thrash", "thrashes", ""),
-    dmgstr(120, "flatten", "flattens", " like a chapati"),
-    dmgstr(150, "smash", "smashes", " like an overripe mango"),
-    dmgstr(200, "grind", "grinds", " into powder"),
-    dmgstr(400, "pulverise", "pulverises", " into a thin bloody mist"),
+    _dmgstr(000, "whack", "whacks", ""),
+    _dmgstr(010, "cudgel", "cudgels", ""),
+    _dmgstr(030, "bash", "bashes", ""),
+    _dmgstr(040, "hammer", "hammers", ""),
+    _dmgstr(060, "batter", "batters", ""),
+    _dmgstr(070, "thrash", "thrashes", ""),
+    _dmgstr(120, "flatten", "flattens", " like a chapati"),
+    _dmgstr(150, "smash", "smashes", " like an overripe mango"),
+    _dmgstr(200, "grind", "grinds", " into powder"),
+    _dmgstr(400, "pulverise", "pulverises", " into a thin bloody mist"),
 };
 const SLASHING_STRS = [_]DamageStr{
-    dmgstr(000, "hit", "hits", ""),
-    dmgstr(020, "slash", "slashes", ""),
-    dmgstr(040, "slice", "slices", ""),
-    dmgstr(050, "shred", "shreds", ""),
-    dmgstr(070, "chop", "chops", " into pieces"),
-    dmgstr(090, "chop", "chops", " into tiny pieces"),
-    dmgstr(110, "slice", "slices", " into ribbons"),
-    dmgstr(140, "cut", "cuts", " asunder"),
-    dmgstr(200, "mince", "minces", " like boiled poultry"),
+    _dmgstr(000, "hit", "hits", ""),
+    _dmgstr(020, "slash", "slashes", ""),
+    _dmgstr(040, "slice", "slices", ""),
+    _dmgstr(050, "shred", "shreds", ""),
+    _dmgstr(070, "chop", "chops", " into pieces"),
+    _dmgstr(090, "chop", "chops", " into tiny pieces"),
+    _dmgstr(110, "slice", "slices", " into ribbons"),
+    _dmgstr(140, "cut", "cuts", " asunder"),
+    _dmgstr(200, "mince", "minces", " like boiled poultry"),
 };
 const PIERCING_STRS = [_]DamageStr{
-    dmgstr(010, "prick", "pricks", ""),
-    dmgstr(020, "puncture", "punctures", ""),
-    dmgstr(030, "hit", "hits", ""),
-    dmgstr(040, "perforate", "perforates", ""),
-    dmgstr(050, "skewer", "skewers", ""),
-    dmgstr(070, "impale", "impales", ""),
-    dmgstr(100, "skewer", "skewers", " like a kebab"),
-    dmgstr(110, "spit", "spits", " like a pig"),
-    dmgstr(120, "perforate", "perforates", " like a sieve"),
+    _dmgstr(010, "prick", "pricks", ""),
+    _dmgstr(020, "puncture", "punctures", ""),
+    _dmgstr(030, "hit", "hits", ""),
+    _dmgstr(040, "perforate", "perforates", ""),
+    _dmgstr(050, "skewer", "skewers", ""),
+    _dmgstr(070, "impale", "impales", ""),
+    _dmgstr(100, "skewer", "skewers", " like a kebab"),
+    _dmgstr(110, "spit", "spits", " like a pig"),
+    _dmgstr(120, "perforate", "perforates", " like a sieve"),
 };
 const LACERATING_STRS = [_][]DamageStr{
-    dmgstr(020, "whip", "whips", ""),
-    dmgstr(040, "lash", "lashes", ""),
-    dmgstr(050, "lacerate", "lacerates", ""),
-    dmgstr(070, "shred", "shreds", ""),
-    dmgstr(090, "shred", "shreds", " like wet paper"),
-    dmgstr(150, "mangle", "mangles", " beyond recognition"),
+    _dmgstr(020, "whip", "whips", ""),
+    _dmgstr(040, "lash", "lashes", ""),
+    _dmgstr(050, "lacerate", "lacerates", ""),
+    _dmgstr(070, "shred", "shreds", ""),
+    _dmgstr(090, "shred", "shreds", " like wet paper"),
+    _dmgstr(150, "mangle", "mangles", " beyond recognition"),
 };
 
 pub const LivingIceHitWeapon = Weapon{
@@ -469,7 +469,7 @@ pub const LivingIceHitWeapon = Weapon{
     .delay = 80,
     .damage = 15,
     .strs = &[_]DamageStr{
-        dmgstr(010, "hit", "hits", ""),
+        _dmgstr(010, "hit", "hits", ""),
     },
 };
 
@@ -479,10 +479,10 @@ pub const FistWeapon = Weapon{
     .delay = 80,
     .damage = 10,
     .strs = &[_]DamageStr{
-        dmgstr(020, "punch", "punches", ""),
-        dmgstr(030, "hit", "hits", ""),
-        dmgstr(040, "bludgeon", "bludgeons", ""),
-        dmgstr(060, "pummel", "pummels", ""),
+        _dmgstr(020, "punch", "punches", ""),
+        _dmgstr(030, "hit", "hits", ""),
+        _dmgstr(040, "bludgeon", "bludgeons", ""),
+        _dmgstr(060, "pummel", "pummels", ""),
     },
 };
 
@@ -492,13 +492,13 @@ pub const ClawWeapon = Weapon{
     .delay = 90,
     .damage = 12,
     .strs = &[_]DamageStr{
-        dmgstr(010, "scratch", "scratches", ""),
-        dmgstr(030, "claw", "claws", ""),
-        dmgstr(050, "shred", "shreds", ""),
-        dmgstr(090, "shred", "shreds", " like wet paper"),
-        dmgstr(100, "tear", "tears", " into pieces"),
-        dmgstr(150, "tear", "tears", " into tiny pieces"),
-        dmgstr(200, "mangle", "mangles", " beyond recognition"),
+        _dmgstr(010, "scratch", "scratches", ""),
+        _dmgstr(030, "claw", "claws", ""),
+        _dmgstr(050, "shred", "shreds", ""),
+        _dmgstr(090, "shred", "shreds", " like wet paper"),
+        _dmgstr(100, "tear", "tears", " into pieces"),
+        _dmgstr(150, "tear", "tears", " into tiny pieces"),
+        _dmgstr(200, "mangle", "mangles", " beyond recognition"),
     },
 };
 
@@ -508,8 +508,8 @@ pub const KickWeapon = Weapon{
     .delay = 100,
     .damage = 12,
     .strs = &[_]DamageStr{
-        dmgstr(080, "kick", "kicks", ""),
-        dmgstr(081, "curbstomp", "curbstomps", ""),
+        _dmgstr(080, "kick", "kicks", ""),
+        _dmgstr(081, "curbstomp", "curbstomps", ""),
     },
 };
 

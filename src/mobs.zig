@@ -11,6 +11,7 @@ const rng = @import("rng.zig");
 const spells = @import("spells.zig");
 const err = @import("err.zig");
 const types = @import("types.zig");
+const utils = @import("utils.zig");
 
 const MinMax = types.MinMax;
 const minmax = types.minmax;
@@ -66,7 +67,9 @@ pub const MobTemplate = struct {
     squad: []const []const SquadMember = &[_][]const SquadMember{},
 
     pub const SquadMember = struct {
-        mob: *const MobTemplate,
+        // FIXME: when Zig's #131 issue is resolved, change this to a
+        // *MobTemplate instead of the mob's ID
+        mob: []const u8,
         weight: usize, // percentage
         count: MinMax(usize),
     };
@@ -251,6 +254,52 @@ pub const SentinelTemplate = MobTemplate{
     .weapon = &items.KnifeWeapon,
     .armor = &items.LeatherArmor,
     .projectile = &items.NetProj,
+};
+
+pub const IronWaspTemplate = MobTemplate{
+    .id = "iron_wasp",
+    .mob = .{
+        .species = &Species{
+            .name = "iron wasp",
+            .default_attack = &Weapon{
+                .damage = 5,
+                .effects = &[_]StatusDataInfo{
+                    .{ .status = .Poison, .duration = 5 },
+                },
+                .strs = &[_]DamageStr{
+                    items._dmgstr(005, "jab", "jabs", ""),
+                    items._dmgstr(100, "sting", "stings", ""),
+                },
+            },
+        },
+        .tile = 'ײ',
+        .ai = AI{
+            .profession_name = null,
+            .profession_description = "resting",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.meleeFight,
+            .is_combative = true,
+            .is_curious = true,
+            .is_fearless = true,
+        },
+        .allegiance = .Necromancer,
+
+        .vision = 3,
+        .willpower = 1,
+        .base_evasion = 50,
+        .max_HP = 5,
+        .memory_duration = 3,
+        .base_speed = 55,
+        .blood = null,
+
+        .base_strength = 2,
+    },
+
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "iron_wasp", .weight = 1, .count = minmax(usize, 1, 3) },
+        },
+    },
 };
 
 pub const PatrolTemplate = MobTemplate{
@@ -686,7 +735,7 @@ pub const DeathMageTemplate = MobTemplate{
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
-            .{ .mob = &SkeletalAxemasterTemplate, .weight = 1, .count = minmax(usize, 2, 5) },
+            .{ .mob = "skeletal_axemaster", .weight = 1, .count = minmax(usize, 2, 5) },
         },
     },
 };
@@ -1089,6 +1138,7 @@ pub const MOBS = [_]MobTemplate{
     GuardTemplate,
     JavelineerTemplate,
     SentinelTemplate,
+    IronWaspTemplate,
     PatrolTemplate,
     PlayerTemplate,
     InteractionLaborerTemplate,
@@ -1178,13 +1228,15 @@ pub fn placeMob(
         var squad_member_weights = StackBuffer(usize, 20).init(null);
         for (squad_template) |s| squad_member_weights.append(s.weight) catch err.wat();
 
-        const squad_mob = rng.choose(
+        const squad_mob_info = rng.choose(
             MobTemplate.SquadMember,
             squad_template,
             squad_member_weights.constSlice(),
         ) catch err.wat();
+        const squad_mob_ind = utils.findById(MOBS, squad_mob_info.mob) orelse err.bug("Mob {s} specified in template couldn't be found.", .{squad_mob_info.mob});
+        const squad_mob = &MOBS[squad_mob_ind];
 
-        const squad_mob_count = rng.range(usize, squad_mob.count.min, squad_mob.count.max);
+        const squad_mob_count = rng.range(usize, squad_mob_info.count.min, squad_mob_info.count.max);
 
         var i: usize = squad_mob_count;
         while (i > 0) : (i -= 1) {

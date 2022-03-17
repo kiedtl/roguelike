@@ -151,8 +151,7 @@ pub fn triggerStair(_: Coord, dest_stair: Coord) void {
 
     // Remove all statuses and heal player.
     inline for (@typeInfo(Status).Enum.fields) |status| {
-        const status_e = @field(Status, status.name);
-        state.player.addStatus(status_e, 0, 0, false);
+        state.player.cancelStatus(@field(Status, status.name));
     }
     state.player.HP = state.player.max_HP;
 

@@ -55,7 +55,7 @@ const EvocableList = items.EvocableList;
 const Cloak = items.Cloak;
 const Poster = literature.Poster;
 
-const CONNECTIONS_MAX = 5;
+const CONNECTIONS_MAX = 4;
 
 // TODO: replace with MinMax
 const Range = struct { from: Coord, to: Coord };
@@ -1713,7 +1713,7 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
                 spawn_table_weights.items,
             ) catch err.wat();
             const mob_ind = utils.findById(&mobs.MOBS, mob_id) orelse err.bug(
-                "Mob {s}, mentioned in spawn tables, doesn't exist.",
+                "Mob {s} specified in spawn tables couldn't be found.",
                 .{mob_id},
             );
             const mob = &mobs.MOBS[mob_ind];

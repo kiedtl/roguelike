@@ -920,10 +920,10 @@ fn interact1Fountain(_: *Machine, mob: *Mob) bool {
     state.player.HP = math.clamp(HP + ((state.player.max_HP - HP) / 2), 0, state.player.max_HP);
 
     // Remove some harmful statuses.
-    state.player.addStatus(.Fire, 0, 0, false);
-    state.player.addStatus(.Poison, 0, 0, false);
-    state.player.addStatus(.Nausea, 0, 0, false);
-    state.player.addStatus(.Pain, 0, 0, false);
+    state.player.cancelStatus(.Fire);
+    state.player.cancelStatus(.Poison);
+    state.player.cancelStatus(.Nausea);
+    state.player.cancelStatus(.Pain);
 
     return true;
 }
