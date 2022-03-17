@@ -29,11 +29,11 @@ Explosion that destroys walls.
 - coating: 50% more damage to undead
 
 # potion of insubstantiation
-- Will+++ Noise-
-- rMlee- rFire- rElec-
+- Will+++ Sneak++ Stealth++
+- -25% Armor, rFire- rElec-
 
 # potion of fortification
-- rMlee+ rFire+ rElec+
+- +25% Armor, rFire+ rElec+
 - Will-∞
 
 # potion of veilification
