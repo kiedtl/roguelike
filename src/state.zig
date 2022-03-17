@@ -2,7 +2,7 @@ const std = @import("std");
 const mem = std.mem;
 const math = std.math;
 const assert = std.debug.assert;
-const enums = @import("std/enums.zig");
+const enums = std.enums;
 
 const ai = @import("ai.zig");
 const astar = @import("astar.zig");
@@ -17,7 +17,31 @@ const gas = @import("gas.zig");
 const rng = @import("rng.zig");
 const literature = @import("literature.zig");
 const fov = @import("fov.zig");
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
+
+const Mob = types.Mob;
+const MessageType = types.MessageType;
+const Item = types.Item;
+const Coord = types.Coord;
+const Dungeon = types.Dungeon;
+const Tile = types.Tile;
+const Status = types.Status;
+const Stockpile = types.Stockpile;
+const StockpileArrayList = types.StockpileArrayList;
+const Rect = types.Rect;
+const MobList = types.MobList;
+const RingList = types.RingList;
+const PotionList = types.PotionList;
+const ArmorList = types.ArmorList;
+const WeaponList = types.WeaponList;
+const MachineList = types.MachineList;
+const PropList = types.PropList;
+const ContainerList = types.ContainerList;
+const Message = types.Message;
+const MessageArrayList = types.MessageArrayList;
+const MobArrayList = types.MobArrayList;
+const Direction = types.Direction;
+const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
 
 const SoundState = @import("sound.zig").SoundState;
 const TaskArrayList = @import("tasks.zig").TaskArrayList;
@@ -26,6 +50,11 @@ const PosterArrayList = literature.PosterArrayList;
 
 pub const GameState = union(enum) { Game, Win, Lose, Quit };
 pub const Layout = union(enum) { Unknown, Room: usize };
+
+pub const HEIGHT = 30;
+pub const WIDTH = 70;
+pub const LEVELS = 14;
+pub const PLAYER_STARTING_LEVEL = 13; // TODO: define in data file
 
 // Should only be used directly by functions in main.zig. For other applications,
 // should be passed as a parameter by caller.
@@ -74,16 +103,16 @@ pub const levelinfo = [LEVELS]struct {
 pub var chardata: struct {
     foes_killed_total: usize = 0,
     foes_stabbed: usize = 0,
-    foes_killed: std.AutoHashMap([]const u8, usize) = undefined,
+    foes_killed: std.StringHashMap(usize) = undefined,
     time_with_statuses: enums.EnumArray(Status, usize) = enums.EnumArray(Status, usize).initFill(0),
     time_on_levels: [LEVELS]usize = [1]usize{0} ** LEVELS,
-    potions_quaffed: std.AutoHashMap([]const u8, usize) = undefined,
-    evocs_used: std.AutoHashMap([]const u8, usize) = undefined,
+    potions_quaffed: std.StringHashMap(usize) = undefined,
+    evocs_used: std.StringHashMap(usize) = undefined,
 
-    pub fn init(self: *@This(), alloc: *mem.Allocator) void {
-        self.foes_killed = std.AutoHashMap([]const u8, usize).init(alloc);
-        self.potions_quaffed = std.AutoHashMap([]const u8, usize).init(alloc);
-        self.evocs_used = std.AutoHashMap([]const u8, usize).init(alloc);
+    pub fn init(self: *@This(), alloc: mem.Allocator) void {
+        self.foes_killed = std.StringHashMap(usize).init(alloc);
+        self.potions_quaffed = std.StringHashMap(usize).init(alloc);
+        self.evocs_used = std.StringHashMap(usize).init(alloc);
     }
 
     pub fn deinit(self: *@This()) void {
@@ -137,9 +166,9 @@ pub var score: usize = 0;
 // Note, non-full containers are considered a "valid" space for dropping an
 // item here.
 //
-pub fn nextAvailableSpaceForItem(c: Coord, a: *mem.Allocator) ?Coord {
+pub fn nextAvailableSpaceForItem(c: Coord, a: mem.Allocator) ?Coord {
     const S = struct {
-        pub fn _helper(strict: bool, crd: Coord, alloc: *mem.Allocator) ?Coord {
+        pub fn _helper(strict: bool, crd: Coord, alloc: mem.Allocator) ?Coord {
             const S = struct {
                 pub fn _isFull(strict_: bool, coord: Coord) bool {
                     if (dungeon.at(coord).surface) |surface| {
@@ -244,7 +273,7 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
 }
 
 // TODO: move this to utils.zig?
-pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, alloc: *mem.Allocator) MobArrayList {
+pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, alloc: mem.Allocator) MobArrayList {
     var moblist = std.ArrayList(*Mob).init(alloc);
     var y: usize = 0;
     while (y < HEIGHT) : (y += 1) {
@@ -293,7 +322,7 @@ fn _canHearNoise(mob: *Mob) ?Coord {
     return null;
 }
 
-pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn _mob_occupation_tick(mob: *Mob, alloc: mem.Allocator) void {
     for (mob.squad_members.items) |lmob| if (!lmob.is_dead) {
         lmob.ai.target = mob.ai.target;
         lmob.ai.phase = mob.ai.phase;
@@ -317,7 +346,7 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: *mem.Allocator) void {
         if (mob.isUnderStatus(.Exhausted) == null) {
             if (mob.ai.flee_effect) |s| {
                 if (mob.isUnderStatus(s.status) == null) {
-                    mob.applyStatus(s);
+                    mob.applyStatus(s, .{});
                 }
             }
         }
@@ -443,13 +472,13 @@ pub fn messageAboutMob(
 
     if (mob == player) {
         std.fmt.format(fbs.writer(), mob_is_me_fmt, mob_is_me_args) catch err.wat();
-        message(mtype, "You {}", .{fbs.getWritten()});
+        message(mtype, "You {s}", .{fbs.getWritten()});
     } else if (player.cansee(mob.coord)) {
         std.fmt.format(fbs.writer(), mob_is_else_fmt, mob_is_else_args) catch err.wat();
-        message(mtype, "The {} {}", .{ mob.displayName(), fbs.getWritten() });
+        message(mtype, "The {s} {s}", .{ mob.displayName(), fbs.getWritten() });
     } else if (ref_coord != null and player.cansee(ref_coord.?)) {
         std.fmt.format(fbs.writer(), mob_is_else_fmt, mob_is_else_args) catch err.wat();
-        message(mtype, "Something {}", .{fbs.getWritten()});
+        message(mtype, "Something {s}", .{fbs.getWritten()});
     }
 }
 
@@ -457,7 +486,7 @@ pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void
     var buf: [128]u8 = undefined;
     for (buf) |*i| i.* = 0;
     var fbs = std.io.fixedBufferStream(&buf);
-    std.fmt.format(fbs.writer(), fmt, args) catch |_| err.bug("format error", .{});
+    std.fmt.format(fbs.writer(), fmt, args) catch err.bug("format error", .{});
 
     var msg: Message = .{
         .msg = undefined,
@@ -523,7 +552,7 @@ pub fn messageKeyPrompt(
     }
 }
 
-pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
+pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
     const S = struct {
         fn _damageString() []const u8 {
             const ldp = player.lastDamagePercentage();
@@ -542,23 +571,23 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
     try w.print("\n", .{});
     try w.print("Seed: {}\n", .{rng.seed});
     try w.print("\n", .{});
-    try w.print("{} {} after {} turns\n", .{
+    try w.print("{s} {s} after {} turns\n", .{
         std.os.getenv("USER").?, // FIXME: should have backup option if null
         if (state == .Win) @as([]const u8, "escaped") else "died",
         ticks,
     });
     if (state == .Lose) {
         if (player.killed_by) |by| {
-            try w.print("        ...{} by a {} ({}% dmg)\n", .{
+            try w.print("        ...{s} by a {s} ({}% dmg)\n", .{
                 S._damageString(),
                 by.displayName(),
                 player.lastDamagePercentage(),
             });
         }
-        try w.print("        ...on level {} of the Dungeon\n", .{levelinfo[player.coord.z].name});
+        try w.print("        ...on level {s} of the Dungeon\n", .{levelinfo[player.coord.z].name});
     }
     try w.print("\n", .{});
-    try w.print("-) {: <40} &) {}\n", .{
+    try w.print("-) {s: <40} &) {s}\n", .{
         if (player.inventory.wielded) |i|
             ((Item{ .Weapon = i }).longName() catch unreachable).constSlice()
         else
@@ -568,7 +597,7 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
         else
             "<none>",
     });
-    try w.print("2) {}\n", .{
+    try w.print("2) {s}\n", .{
         if (player.inventory.backup) |b|
             ((Item{ .Weapon = b }).longName() catch unreachable).constSlice()
         else
@@ -576,7 +605,7 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
     });
     try w.print("\n", .{});
     try w.print("Rings:\n", .{});
-    try w.print("1) {: <40} 2) {}\n", .{
+    try w.print("1) {s: <40} 2) {s}\n", .{
         if (player.inventory.rings[0]) |b|
             ((Item{ .Ring = b }).longName() catch unreachable).constSlice()
         else
@@ -586,7 +615,7 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
         else
             "<none>",
     });
-    try w.print("3) {: <40} 4) {}\n", .{
+    try w.print("3) {s: <40} 4) {s}\n", .{
         if (player.inventory.rings[2]) |b|
             ((Item{ .Ring = b }).longName() catch unreachable).constSlice()
         else
@@ -599,13 +628,13 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
     try w.print("\n", .{});
     try w.print("Aptitudes:\n", .{});
     for (player_upgrades) |upgr| if (upgr.recieved) {
-        try w.print("- {}\n", .{upgr.upgrade.description()});
+        try w.print("- {s}\n", .{upgr.upgrade.description()});
     };
     try w.print("\n", .{});
     try w.print("Inventory:\n", .{});
     for (player.inventory.pack.constSlice()) |item| {
         const itemname = (item.longName() catch unreachable).constSlice();
-        try w.print("- {}\n", .{itemname});
+        try w.print("- {s}\n", .{itemname});
     }
     try w.print("\n", .{});
     try w.print("You were: ", .{});
@@ -615,15 +644,15 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
             const status_e = @field(Status, status.name);
             if (player.isUnderStatus(status_e)) |_| {
                 if (comma)
-                    try w.print(", {}", .{status_e.string()})
+                    try w.print(", {s}", .{status_e.string()})
                 else
-                    try w.print("{}", .{status_e.string()});
+                    try w.print("{s}", .{status_e.string()});
                 comma = true;
             }
         }
     }
     try w.print(".\n", .{});
-    try w.print("You killed {} foe{}, stabbing {} of them.\n", .{
+    try w.print("You killed {} foe{s}, stabbing {} of them.\n", .{
         chardata.foes_killed_total,
         if (chardata.foes_killed_total > 0) @as([]const u8, "s") else "",
         chardata.foes_stabbed,
@@ -643,9 +672,9 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
             };
 
             if (msg.dups == 0) {
-                try w.print("- {}{}\n", .{ prefix, msgtext });
+                try w.print("- {s}{s}\n", .{ prefix, msgtext });
             } else {
-                try w.print("- {}{} (×{})\n", .{ prefix, msgtext, msg.dups + 1 });
+                try w.print("- {s}{s} (×{})\n", .{ prefix, msgtext, msg.dups + 1 });
             }
         }
     }
@@ -653,10 +682,10 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
     try w.print("Surroundings:\n", .{});
     {
         const radius: usize = 14;
-        var y: usize = utils.saturating_sub(player.coord.y, radius);
+        var y: usize = player.coord.y -| radius;
         while (y < math.min(player.coord.y + radius, HEIGHT)) : (y += 1) {
             try w.print("        ", .{});
-            var x: usize = utils.saturating_sub(player.coord.x, radius);
+            var x: usize = player.coord.x -| radius;
             while (x < math.min(player.coord.x + radius, WIDTH)) : (x += 1) {
                 const coord = Coord.new2(player.coord.z, x, y);
 
@@ -673,10 +702,7 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
                 var ch = @intCast(u21, Tile.displayAs(coord, false).ch);
                 if (ch == ' ') ch = '.';
 
-                // TODO: after zig v9 upgrade, change this to use {u} format specifier
-                var utf8buf: [4]u8 = undefined;
-                const sz = std.unicode.utf8Encode(ch, &utf8buf) catch unreachable;
-                try w.print("{}", .{utf8buf[0..sz]});
+                try w.print("{u}", .{ch});
             }
             try w.print("\n", .{});
         }
@@ -686,16 +712,16 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
     {
         const can_see = createMobList(false, true, player.coord.z, alloc);
         defer can_see.deinit();
-        var can_see_counted = std.AutoHashMap([]const u8, usize).init(alloc);
+        var can_see_counted = std.StringHashMap(usize).init(alloc);
         defer can_see_counted.deinit();
         for (can_see.items) |mob| {
-            const prevtotal = (can_see_counted.getOrPutValue(mob.displayName(), 0) catch unreachable).value;
+            const prevtotal = (can_see_counted.getOrPutValue(mob.displayName(), 0) catch unreachable).value_ptr.*;
             can_see_counted.put(mob.displayName(), prevtotal + 1) catch unreachable;
         }
 
         var iter = can_see_counted.iterator();
         while (iter.next()) |mobcount| {
-            try w.print("- {: >2} {}\n", .{ mobcount.value, mobcount.key });
+            try w.print("- {: >2} {s}\n", .{ mobcount.value_ptr.*, mobcount.key_ptr.* });
         }
     }
     try w.print("\n", .{});
@@ -703,7 +729,7 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
     {
         var iter = chardata.foes_killed.iterator();
         while (iter.next()) |mobcount| {
-            try w.print("- {: >2} {}\n", .{ mobcount.value, mobcount.key });
+            try w.print("- {: >2} {s}\n", .{ mobcount.value_ptr.*, mobcount.key_ptr.* });
         }
     }
     try w.print("\n", .{});
@@ -712,7 +738,7 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
         const status_e = @field(Status, status.name);
         const turns = chardata.time_with_statuses.get(status_e);
         if (turns > 0) {
-            try w.print("- {: <20} {: >5} turns\n", .{ status_e.string(), turns });
+            try w.print("- {s: <20} {: >5} turns\n", .{ status_e.string(), turns });
         }
     }
     try w.print("\n", .{});
@@ -720,19 +746,19 @@ pub fn formatMorgue(alloc: *mem.Allocator) !std.ArrayList(u8) {
     {
         var iter = chardata.potions_quaffed.iterator();
         while (iter.next()) |item| {
-            try w.print("- {: <20} {: >5}\n", .{ item.value, item.key });
+            try w.print("- {: <20} {s: >5}\n", .{ item.value_ptr.*, item.key_ptr.* });
         }
     }
     {
         var iter = chardata.evocs_used.iterator();
         while (iter.next()) |item| {
-            try w.print("- {: <20} {: >5}\n", .{ item.value, item.key });
+            try w.print("- {: <20} {s: >5}\n", .{ item.value_ptr.*, item.key_ptr.* });
         }
     }
     try w.print("\n", .{});
     try w.print("Time spent on levels:\n", .{});
     for (chardata.time_on_levels[0..]) |turns, level| {
-        try w.print("- {: <20} {: >5}\n", .{ levelinfo[level].name, turns });
+        try w.print("- {s: <20} {: >5}\n", .{ levelinfo[level].name, turns });
     }
 
     return buf;

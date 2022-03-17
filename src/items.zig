@@ -12,7 +12,27 @@ const display = @import("display.zig");
 const rng = @import("rng.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
+
+const Coord = types.Coord;
+const Item = types.Item;
+const Potion = types.Potion;
+const Ring = types.Ring;
+const DamageStr = types.DamageStr;
+const Weapon = types.Weapon;
+const Resistance = types.Resistance;
+const StatusDataInfo = types.StatusDataInfo;
+const Armor = types.Armor;
+const SurfaceItem = types.SurfaceItem;
+const Mob = types.Mob;
+const Spatter = types.Spatter;
+const Status = types.Status;
+const Direction = types.Direction;
+const DIRECTIONS = types.DIRECTIONS;
+
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
 
 const LinkedList = @import("list.zig").LinkedList;
 
@@ -33,9 +53,7 @@ pub const POTIONS = [_]Potion{
 //
 pub const ItemTemplate = struct {
     w: usize,
-    i: union(enum) {
-        W: Weapon, A: Armor, C: *const Cloak, P: Potion, E: Evocable
-    },
+    i: union(enum) { W: Weapon, A: Armor, C: *const Cloak, P: Potion, E: Evocable },
 };
 pub const ITEM_DROPS = [_]ItemTemplate{
     // Weapons
@@ -73,9 +91,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
 
 pub const Cloak = struct {
     name: []const u8,
-    ego: union(enum) {
-        Resist: Resistance, Stealth, Retaliate
-    },
+    ego: union(enum) { Resist: Resistance, Stealth, Retaliate },
 };
 
 pub const SiliconCloak = Cloak{ .name = "silicon", .ego = .{ .Resist = .rFire } };
@@ -184,7 +200,7 @@ pub const HammerEvoc = Evocable{
     .purpose = .Other,
     .trigger_fn = _triggerHammerEvoc,
 };
-fn _triggerHammerEvoc(mob: *Mob, evoc: *Evocable) Evocable.EvokeError!void {
+fn _triggerHammerEvoc(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
     assert(mob == state.player);
 
     const dest = display.chooseCell() orelse return error.BadPosition;
@@ -209,10 +225,10 @@ fn _triggerHammerEvoc(mob: *Mob, evoc: *Evocable) Evocable.EvokeError!void {
     mob.makeNoise(.Crash, .Medium);
 
     switch (rng.range(usize, 0, 3)) {
-        0 => state.message(.Info, "You viciously smash the {}.", .{machine.name}),
-        1 => state.message(.Info, "You noisily break the {}.", .{machine.name}),
-        2 => state.message(.Info, "You pound the {} into fine dust!", .{machine.name}),
-        3 => state.message(.Info, "You smash the {} savagely.", .{machine.name}),
+        0 => state.message(.Info, "You viciously smash the {s}.", .{machine.name}),
+        1 => state.message(.Info, "You noisily break the {s}.", .{machine.name}),
+        2 => state.message(.Info, "You pound the {s} into fine dust!", .{machine.name}),
+        3 => state.message(.Info, "You smash the {s} savagely.", .{machine.name}),
         else => err.wat(),
     }
 }
@@ -228,7 +244,7 @@ pub const IronSpikeEvoc = Evocable{
     .trigger_fn = _triggerIronSpikeEvoc,
 };
 
-fn _triggerIronSpikeEvoc(mob: *Mob, evoc: *Evocable) Evocable.EvokeError!void {
+fn _triggerIronSpikeEvoc(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
     assert(mob == state.player);
 
     const dest = display.chooseCell() orelse return error.BadPosition;
@@ -252,7 +268,7 @@ fn _triggerIronSpikeEvoc(mob: *Mob, evoc: *Evocable) Evocable.EvokeError!void {
     machine.jammed = true;
     machine.power = 0;
 
-    state.message(.Info, "You jam the {}...", .{machine.name});
+    state.message(.Info, "You jam the {s}...", .{machine.name});
 }
 
 pub const MineKitEvoc = Evocable{
@@ -265,7 +281,7 @@ pub const MineKitEvoc = Evocable{
     .purpose = .Other,
     .trigger_fn = _triggerMineKit,
 };
-fn _triggerMineKit(mob: *Mob, evoc: *Evocable) Evocable.EvokeError!void {
+fn _triggerMineKit(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
     assert(mob == state.player);
 
     if (state.dungeon.at(mob.coord).surface) |_| {
@@ -289,7 +305,7 @@ pub const EldritchLanternEvoc = Evocable{
     .purpose = .EnemyDebuff,
     .trigger_fn = _triggerEldritchLantern,
 };
-fn _triggerEldritchLantern(mob: *Mob, evoc: *Evocable) Evocable.EvokeError!void {
+fn _triggerEldritchLantern(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
     var affected: usize = 0;
     var player_was_affected: bool = false;
 
@@ -323,7 +339,7 @@ fn _triggerEldritchLantern(mob: *Mob, evoc: *Evocable) Evocable.EvokeError!void 
             state.message(.Info, "You are dazed by the light.", .{});
         }
     } else if (state.player.cansee(mob.coord)) {
-        state.message(.Info, "The {} flashes an eldritch lantern!", .{mob.displayName()});
+        state.message(.Info, "The {s} flashes an eldritch lantern!", .{mob.displayName()});
         if (player_was_affected) { // Player *should* always be affected...
             state.message(.Info, "You feel dazed by the blinding light.", .{});
         }
@@ -338,13 +354,13 @@ pub const WarningHornEvoc = Evocable{
     .purpose = .SelfBuff,
     .trigger_fn = _triggerWarningHorn,
 };
-fn _triggerWarningHorn(mob: *Mob, evoc: *Evocable) Evocable.EvokeError!void {
+fn _triggerWarningHorn(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
     mob.makeNoise(.Alarm, .Loudest);
 
     if (mob == state.player) {
         state.message(.Info, "You blow the horn!", .{});
     } else if (state.player.cansee(mob.coord)) {
-        state.message(.Info, "The {} blows its warning horn!", .{mob.displayName()});
+        state.message(.Info, "The {s} blows its warning horn!", .{mob.displayName()});
     }
 }
 
@@ -574,7 +590,7 @@ pub const AxeWeapon = Weapon{
     .strs = &SLASHING_STRS,
 };
 
-fn triggerIncineratePotion(_dork: ?*Mob, coord: Coord) void {
+fn triggerIncineratePotion(_: ?*Mob, coord: Coord) void {
     const mean_radius: usize = 4;
     const S = struct {
         pub fn _opacityFunc(c: Coord) usize {
@@ -610,7 +626,7 @@ fn triggerIncineratePotion(_dork: ?*Mob, coord: Coord) void {
     };
 }
 
-fn triggerDecimatePotion(_dork: ?*Mob, coord: Coord) void {
+fn triggerDecimatePotion(_: ?*Mob, coord: Coord) void {
     const MIN_EXPLOSION_RADIUS: usize = 2;
     explosions.kaboom(coord, .{
         .strength = MIN_EXPLOSION_RADIUS * 100,
@@ -621,7 +637,7 @@ fn triggerDecimatePotion(_dork: ?*Mob, coord: Coord) void {
 // ----------------------------------------------------------------------------
 
 pub fn createItem(comptime T: type, item: T) *T {
-    comptime const list = switch (T) {
+    const list = switch (T) {
         Potion => &state.potions,
         Ring => &state.rings,
         Armor => &state.armors,

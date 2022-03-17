@@ -183,7 +183,7 @@ const Parser = struct {
         return error.UnterminatedString;
     }
 
-    pub fn parse(self: *Self, alloc: *mem.Allocator) ParserError!KVList {
+    pub fn parse(self: *Self, alloc: mem.Allocator) ParserError!KVList {
         self.stack += 1;
 
         if (self.stack > 1) {
@@ -230,7 +230,7 @@ const Parser = struct {
                     key = Key{ .Numeric = 0 };
                 }
 
-                list.append(KV{ .key = key, .value = value }) catch |_| {
+                list.append(KV{ .key = key, .value = value }) catch {
                     return error.OutOfMemory;
                 };
             }
@@ -445,7 +445,7 @@ pub fn deserializeStruct(comptime T: type, data: *KVList) !T {
             .String => |s| {
                 var found = false;
                 inline for (fields) |f, i| {
-                    if (mem.eql(u8, s, fields[i].name)) {
+                    if (mem.eql(u8, s, f.name)) {
                         if (deserializeValue(fields[i].field_type, node.value)) |v| {
                             @field(output, fields[i].name) = v;
                         }

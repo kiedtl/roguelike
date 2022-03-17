@@ -12,7 +12,7 @@ pub const TSVSchemaItem = struct {
     optional: bool = false,
     default_val: anytype = undefined, // Only applicable if schema.optional == true
 
-    fn _dummy_parse(comptime T: type, _: *T, __: []const u8, alloc: *mem.Allocator) bool {
+    fn _dummy_parse(comptime T: type, _: *T, _: []const u8, _: mem.Allocator) bool {
         return false;
     }
 };
@@ -57,7 +57,7 @@ pub const TSVParseError = struct {
     };
 };
 
-pub fn parseCharacter(comptime T: type, result: *T, input: []const u8, alloc: *mem.Allocator) bool {
+pub fn parseCharacter(comptime T: type, result: *T, input: []const u8, _: mem.Allocator) bool {
     switch (@typeInfo(T)) {
         .Int => {},
         else => @compileError("Expected int for parsing result type, found '" ++ @typeName(T) ++ "'"),
@@ -68,13 +68,13 @@ pub fn parseCharacter(comptime T: type, result: *T, input: []const u8, alloc: *m
     }
 
     var found_char = false;
-    var utf8 = (std.unicode.Utf8View.init(input) catch |_| {
+    var utf8 = (std.unicode.Utf8View.init(input) catch {
         return false; // ERROR: Invalid unicode dumbass
     }).iterator();
     _ = utf8.nextCodepointSlice(); // skip beginning quote
 
     while (utf8.nextCodepointSlice()) |encoded_codepoint| {
-        const codepoint = std.unicode.utf8Decode(encoded_codepoint) catch |_| {
+        const codepoint = std.unicode.utf8Decode(encoded_codepoint) catch {
             return false; // ERROR: Invalid unicode dumbass
         };
         switch (codepoint) {
@@ -97,7 +97,7 @@ pub fn parseCharacter(comptime T: type, result: *T, input: []const u8, alloc: *m
                 const encoded_next = utf8.nextCodepointSlice() orelse {
                     return false; // ERROR: incomplete escape sequence
                 };
-                const next = std.unicode.utf8Decode(encoded_next) catch |_| {
+                const next = std.unicode.utf8Decode(encoded_next) catch {
                     return false; // ERROR: Invalid unicode dumbass
                 };
 
@@ -130,7 +130,7 @@ pub fn parseCharacter(comptime T: type, result: *T, input: []const u8, alloc: *m
     return false; // ERROR: unterminated literal
 }
 
-pub fn parseUtf8String(comptime T: type, result: *T, input: []const u8, alloc: *mem.Allocator) bool {
+pub fn parseUtf8String(comptime T: type, result: *T, input: []const u8, alloc: mem.Allocator) bool {
     if (T != []u8) {
         @compileError("Expected []u8, found '" ++ @typeName(T) ++ "'");
     }
@@ -187,7 +187,7 @@ pub fn parseUtf8String(comptime T: type, result: *T, input: []const u8, alloc: *
     return false; // ERROR: unterminated string
 }
 
-pub fn parsePrimitive(comptime T: type, result: *T, input: []const u8, alloc: *mem.Allocator) bool {
+pub fn parsePrimitive(comptime T: type, result: *T, input: []const u8, alloc: mem.Allocator) bool {
     switch (@typeInfo(T)) {
         .Int => {
             var inp_start: usize = 0;
@@ -245,7 +245,7 @@ pub fn parsePrimitive(comptime T: type, result: *T, input: []const u8, alloc: *m
         },
         .Union => |union_info| {
             if (union_info.tag_type) |_| {
-                var input_split = mem.split(input, "=");
+                var input_split = mem.split(u8, input, "=");
                 const input_field1 = input_split.next() orelse return false;
                 const input_field2 = input_split.next() orelse return false;
 
@@ -279,7 +279,7 @@ pub fn parse(
     comptime schema: []const TSVSchemaItem,
     comptime start_val: T,
     input: []const u8,
-    alloc: *mem.Allocator,
+    alloc: mem.Allocator,
 ) Result(std.ArrayList(T), TSVParseError) {
     const S = struct {
         pub fn _err(
@@ -300,7 +300,7 @@ pub fn parse(
 
     var results = std.ArrayList(T).init(alloc);
 
-    var lines = mem.split(input, "\n");
+    var lines = mem.split(u8, input, "\n");
     var lineno: usize = 0;
 
     while (lines.next()) |line| {
@@ -313,7 +313,7 @@ pub fn parse(
             continue;
         }
 
-        var input_fields = mem.split(line, "\t");
+        var input_fields = mem.split(u8, line, "\t");
 
         inline for (schema) |schema_item, i| {
             var input_field = mem.trim(u8, input_fields.next() orelse "", " ");

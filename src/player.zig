@@ -16,10 +16,28 @@ const gas = @import("gas.zig");
 const mapgen = @import("mapgen.zig");
 const surfaces = @import("surfaces.zig");
 const display = @import("display.zig");
-const types = @import("types.zig");
 const state = @import("state.zig");
+const types = @import("types.zig");
 const err = @import("err.zig");
-usingnamespace @import("types.zig");
+
+const Coord = types.Coord;
+const Tile = types.Tile;
+const Item = types.Item;
+const Ring = types.Ring;
+const Weapon = types.Weapon;
+const Resistance = types.Resistance;
+const StatusDataInfo = types.StatusDataInfo;
+const Armor = types.Armor;
+const SurfaceItem = types.SurfaceItem;
+const Mob = types.Mob;
+const Status = types.Status;
+const Machine = types.Machine;
+const Direction = types.Direction;
+
+const DIRECTIONS = types.DIRECTIONS;
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
 
 pub const PlayerUpgradeInfo = struct {
     recieved: bool = false,
@@ -117,7 +135,7 @@ pub fn choosePlayerUpgrades() void {
     };
 }
 
-pub fn triggerStair(stair: Coord, dest_stair: Coord) void {
+pub fn triggerStair(_: Coord, dest_stair: Coord) void {
     const dest = for (&DIRECTIONS) |d| {
         if (dest_stair.move(d, state.mapgeometry)) |neighbor| {
             if (state.is_walkable(neighbor, .{ .right_now = true }))
@@ -126,7 +144,7 @@ pub fn triggerStair(stair: Coord, dest_stair: Coord) void {
     } else err.bug("Unable to find passable tile near upstairs!", .{});
 
     if (state.player.teleportTo(dest, null, true)) {
-        state.message(.Move, "You ascend. Welcome to {}!", .{state.levelinfo[dest_stair.z].name});
+        state.message(.Move, "You ascend. Welcome to {s}!", .{state.levelinfo[dest_stair.z].name});
     } else {
         err.bug("Unable to ascend stairs! (something's in the way, maybe?)", .{});
     }
@@ -142,14 +160,13 @@ pub fn triggerStair(stair: Coord, dest_stair: Coord) void {
         for (state.player_upgrades) |*u| {
             if (!u.recieved) {
                 u.recieved = true;
-                state.message(.Info, "You feel different... {}", .{u.upgrade.announce()});
+                state.message(.Info, "You feel different... {s}", .{u.upgrade.announce()});
                 u.upgrade.implement();
                 break;
             }
-        } else
-            err.bug("Cannot find upgrade to grant! (upgrades: {} {} {})", .{
-                state.player_upgrades[0], state.player_upgrades[1], state.player_upgrades[2],
-            });
+        } else err.bug("Cannot find upgrade to grant! (upgrades: {} {} {})", .{
+            state.player_upgrades[0], state.player_upgrades[1], state.player_upgrades[2],
+        });
     }
 }
 
@@ -162,7 +179,7 @@ pub fn bookkeepingFOV() void {
     const Announcement = struct { count: usize, name: SBuf };
     const AList = std.ArrayList(Announcement);
 
-    var announcements = AList.init(&state.GPA.allocator);
+    var announcements = AList.init(state.GPA.allocator());
     defer announcements.deinit();
 
     const S = struct {
@@ -216,9 +233,9 @@ pub fn bookkeepingFOV() void {
         for (announcements.items) |ann| {
             const n = ann.name.constSlice();
             if (ann.count == 1) {
-                state.message(.Info, "Found a {}.", .{n});
+                state.message(.Info, "Found a {s}.", .{n});
             } else {
-                state.message(.Info, "Found {} {}.", .{ ann.count, n });
+                state.message(.Info, "Found {} {s}.", .{ ann.count, n });
             }
         }
     }
@@ -242,7 +259,7 @@ pub fn moveOrFight(direction: Direction) bool {
 
         if (state.dungeon.at(dest).surface) |surf| switch (surf) {
             .Machine => |m| if (m.evoke_confirm) |msg| {
-                const r = state.messageKeyPrompt("{} [y/N]", .{msg}, 'n', "YyNn ", "yynnn");
+                const r = state.messageKeyPrompt("{s} [y/N]", .{msg}, 'n', "YyNn ", "yynnn");
                 if (r == null or r.? == 'n') {
                     if (r != null)
                         state.message(.Prompt, "Okay then.", .{});
@@ -262,21 +279,21 @@ fn _invokeMachine(mach: *Machine) bool {
     const interaction = &mach.interact1.?;
     mach.evoke(state.player, interaction) catch |e| {
         switch (e) {
-            error.NotPowered => state.message(.MetaError, "The {} has no power!", .{mach.name}),
-            error.UsedMax => state.message(.MetaError, "You can't use {} anymore.", .{mach.name}),
-            error.NoEffect => state.message(.MetaError, "{}", .{interaction.no_effect_msg}),
+            error.NotPowered => state.message(.MetaError, "The {s} has no power!", .{mach.name}),
+            error.UsedMax => state.message(.MetaError, "You can't use {s} anymore.", .{mach.name}),
+            error.NoEffect => state.message(.MetaError, "{s}", .{interaction.no_effect_msg}),
         }
         return false;
     };
 
     state.player.declareAction(.Interact);
-    state.message(.Info, "{}", .{interaction.success_msg});
+    state.message(.Info, "{s}", .{interaction.success_msg});
 
     const left = mach.interact1.?.max_use - mach.interact1.?.used;
     if (left == 0) {
-        state.message(.Info, "The {} becomes inert.", .{mach.name});
+        state.message(.Info, "The {s} becomes inert.", .{mach.name});
     } else {
-        state.message(.Info, "You can use this {} {} more times.", .{ mach.name, left });
+        state.message(.Info, "You can use this {s} {} more times.", .{ mach.name, left });
     }
 
     return true;
@@ -317,7 +334,7 @@ pub fn grabItem() bool {
         switch (surface) {
             .Container => |container| {
                 if (container.items.len == 0) {
-                    state.message(.MetaError, "There's nothing in the {}.", .{container.name});
+                    state.message(.MetaError, "There's nothing in the {s}.", .{container.name});
                     return false;
                 } else {
                     const index = display.chooseInventoryItem(
@@ -343,39 +360,39 @@ pub fn grabItem() bool {
             if (state.player.inventory.wielded) |old_w| {
                 state.dungeon.itemsAt(state.player.coord).append(Item{ .Weapon = old_w }) catch err.wat();
                 state.player.declareAction(.Drop);
-                state.message(.Info, "You drop the {}.", .{old_w.name});
+                state.message(.Info, "You drop the {s}.", .{old_w.name});
             }
 
             state.player.inventory.wielded = weapon;
             state.player.declareAction(.Use);
-            state.message(.Info, "Now wielding a {}.", .{weapon.name});
+            state.message(.Info, "Now wielding a {s}.", .{weapon.name});
         },
         .Armor => |armor| {
             if (state.player.inventory.armor) |a| {
                 state.dungeon.itemsAt(state.player.coord).append(Item{ .Armor = a }) catch err.wat();
                 state.player.declareAction(.Drop);
-                state.message(.Info, "You drop the {}.", .{a.name});
+                state.message(.Info, "You drop the {s}.", .{a.name});
             }
 
             state.player.inventory.armor = armor;
             state.player.declareAction(.Use);
-            state.message(.Info, "Now wearing a {}.", .{armor.name});
+            state.message(.Info, "Now wearing a {s}.", .{armor.name});
         },
         .Cloak => |cloak| {
             if (state.player.inventory.cloak) |c| {
                 state.dungeon.itemsAt(state.player.coord).append(Item{ .Cloak = c }) catch err.wat();
                 state.player.declareAction(.Drop);
-                state.message(.Info, "You drop the {}.", .{c.name});
+                state.message(.Info, "You drop the {s}.", .{c.name});
             }
 
             state.player.inventory.cloak = cloak;
             state.player.declareAction(.Use);
-            state.message(.Info, "Now wearing a cloak of {}.", .{cloak.name});
+            state.message(.Info, "Now wearing a cloak of {s}.", .{cloak.name});
         },
         else => {
             state.player.inventory.pack.append(item) catch err.wat();
             state.player.declareAction(.Grab);
-            state.message(.Info, "Acquired: {}", .{
+            state.message(.Info, "Acquired: {s}", .{
                 (state.player.inventory.pack.last().?.longName() catch err.wat()).constSlice(),
             });
         },
@@ -396,7 +413,7 @@ pub fn throwItem() bool {
     const dest = display.chooseCell() orelse return false;
     const item = &state.player.inventory.pack.slice()[index];
 
-    if (state.player.throwItem(item, dest, &state.GPA.allocator)) {
+    if (state.player.throwItem(item, dest, state.GPA.allocator())) {
         _ = state.player.removeItem(index) catch err.wat();
         return true;
     } else {
@@ -458,27 +475,27 @@ fn _useItem() bool {
             }
 
             state.player.quaffPotion(p, true);
-            const prevtotal = (state.chardata.potions_quaffed.getOrPutValue(p.id, 0) catch err.wat()).value;
+            const prevtotal = (state.chardata.potions_quaffed.getOrPutValue(p.id, 0) catch err.wat()).value_ptr.*;
             state.chardata.potions_quaffed.put(p.id, prevtotal + 1) catch err.wat();
         },
-        .Vial => |v| err.todo(),
+        .Vial => |_| err.todo(),
         .Projectile, .Boulder => {
             state.message(.MetaError, "You want to *eat* that?", .{});
             return false;
         },
         .Prop => |p| {
-            state.message(.Info, "You admire the {}.", .{p.name});
+            state.message(.Info, "You admire the {s}.", .{p.name});
             return false;
         },
         .Evocable => |v| {
             v.evoke(state.player) catch |e| {
                 if (e == error.NoCharges) {
-                    state.message(.MetaError, "You can't use the {} anymore!", .{v.name});
+                    state.message(.MetaError, "You can't use the {s} anymore!", .{v.name});
                 }
                 return false;
             };
 
-            const prevtotal = (state.chardata.evocs_used.getOrPutValue(v.id, 0) catch err.wat()).value;
+            const prevtotal = (state.chardata.evocs_used.getOrPutValue(v.id, 0) catch err.wat()).value_ptr.*;
             state.chardata.evocs_used.put(v.id, prevtotal + 1) catch err.wat();
         },
     }
@@ -501,7 +518,7 @@ pub fn dropItem() bool {
         return false;
     }
 
-    if (state.nextAvailableSpaceForItem(state.player.coord, &state.GPA.allocator)) |coord| {
+    if (state.nextAvailableSpaceForItem(state.player.coord, state.GPA.allocator())) |coord| {
         const index = display.chooseInventoryItem(
             "Drop what?",
             state.player.inventory.pack.constSlice(),
@@ -511,7 +528,7 @@ pub fn dropItem() bool {
         const dropped = state.player.dropItem(item, coord);
         assert(dropped);
 
-        state.message(.Info, "Dropped: {}.", .{
+        state.message(.Info, "Dropped: {s}.", .{
             (item.shortName() catch err.wat()).constSlice(),
         });
         return true;

@@ -4,7 +4,7 @@ const mem = std.mem;
 const meta = std.meta;
 const fmt = std.fmt;
 const assert = std.debug.assert;
-const enums = @import("std/enums.zig");
+const enums = std.enums;
 
 const LinkedList = @import("list.zig").LinkedList;
 const RingBuffer = @import("ringbuffer.zig").RingBuffer;
@@ -32,6 +32,10 @@ const spells = @import("spells.zig");
 const termbox = @import("termbox.zig");
 const utils = @import("utils.zig");
 
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
+
 const Evocable = @import("items.zig").Evocable;
 const Projectile = @import("items.zig").Projectile;
 const Cloak = @import("items.zig").Cloak;
@@ -43,11 +47,6 @@ const SoundType = @import("sound.zig").SoundType;
 const SpellOptions = spells.SpellOptions;
 const Spell = spells.Spell;
 const Poster = literature.Poster;
-
-pub const HEIGHT = 30;
-pub const WIDTH = 70;
-pub const LEVELS = 14;
-pub const PLAYER_STARTING_LEVEL = 13; // TODO: define in data file
 
 pub const CARDINAL_DIRECTIONS = [_]Direction{ .North, .South, .East, .West };
 pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .NorthWest, .SouthEast, .SouthWest };
@@ -346,8 +345,8 @@ pub const Coord = struct { // {{{
         return buf;
     }
 
-    pub fn draw_circle(center: Coord, radius: usize, limit: Coord, alloc: *mem.Allocator) CoordArrayList {
-        const circum = @floatToInt(usize, math.ceil(math.tau * @intToFloat(f64, radius)));
+    pub fn draw_circle(center: Coord, radius: usize, limit: Coord, alloc: mem.Allocator) CoordArrayList {
+        //const circum = @floatToInt(usize, math.ceil(math.tau * @intToFloat(f64, radius)));
 
         var buf = CoordArrayList.init(alloc);
 
@@ -434,9 +433,9 @@ pub const Rect = struct {
         const a_end = a.end();
         const b_end = b.end();
 
-        const ca = utils.saturating_sub(a.start.x, padding) < b_end.x;
+        const ca = (a.start.x -| padding) < b_end.x;
         const cb = (a_end.x + padding) > b.start.x;
-        const cc = utils.saturating_sub(a.start.y, padding) < b_end.y;
+        const cc = (a.start.y -| padding) < b_end.y;
         const cd = (a_end.y + padding) > b.start.y;
 
         return ca and cb and cc and cd;
@@ -631,9 +630,7 @@ pub const MessageType = union(enum) {
     }
 };
 
-pub const Resistance = enum {
-    rFire, rElec, Armor, rFume, rPois
-};
+pub const Resistance = enum { rFire, rElec, Armor, rFume, rPois };
 
 pub const Damage = struct {
     amount: f64,
@@ -664,9 +661,7 @@ pub const Damage = struct {
         }
     };
 
-    pub const DamageSource = enum {
-        Other, MeleeAttack, RangedAttack, Stab, Explosion
-    };
+    pub const DamageSource = enum { Other, MeleeAttack, RangedAttack, Stab, Explosion };
 };
 pub const Activity = union(enum) {
     Interact,
@@ -981,9 +976,9 @@ pub const Status = enum {
 
         const radius = state.player.vision;
         const z = state.player.coord.z;
-        const ystart = utils.saturating_sub(state.player.coord.y, radius);
+        const ystart = state.player.coord.y -| radius;
         const yend = math.min(state.player.coord.y + radius, HEIGHT);
-        const xstart = utils.saturating_sub(state.player.coord.x, radius);
+        const xstart = state.player.coord.x -| radius;
         const xend = math.min(state.player.coord.x + radius, WIDTH);
 
         var tile: state.MemoryTile = .{ .fg = 0xffffff, .ch = '#', .type = .Echolocated };
@@ -1002,7 +997,7 @@ pub const Status = enum {
                     st.power,
                     dijkstra.dummyIsValid,
                     .{},
-                    &fba.allocator,
+                    fba.allocator(),
                 );
                 defer dijk.deinit();
                 while (dijk.next()) |item| {
@@ -1055,8 +1050,8 @@ pub const AI = struct {
     //     - work_fn:  on each tick when the mob is doing work.
     //     - fight_fn: on each tick when the mob is pursuing a hostile mob.
     //
-    work_fn: fn (*Mob, *mem.Allocator) void,
-    fight_fn: ?fn (*Mob, *mem.Allocator) void,
+    work_fn: fn (*Mob, mem.Allocator) void,
+    fight_fn: ?fn (*Mob, mem.Allocator) void,
 
     // Should the mob attack hostiles?
     is_combative: bool,
@@ -1070,9 +1065,7 @@ pub const AI = struct {
     // What should a mage-fighter do when it didn't/couldn't cast a spell?
     //
     // Obviously, only makes sense on mages.
-    spellcaster_backup_action: enum {
-        KeepDistance, Melee
-    } = .Melee,
+    spellcaster_backup_action: enum { KeepDistance, Melee } = .Melee,
 
     flee_effect: ?StatusDataInfo = .{
         .status = .Fast,
@@ -1228,9 +1221,9 @@ pub const Mob = struct { // {{{
 
         if (self.is_undead) {
             var fbs = std.io.fixedBufferStream(&Static.buf);
-            std.fmt.format(fbs.writer(), "{}{}", .{
+            std.fmt.format(fbs.writer(), "{s}{s}", .{
                 self.undead_prefix, base_name,
-            }) catch |_| err.wat();
+            }) catch err.wat();
             return fbs.getWritten();
         } else {
             return base_name;
@@ -1295,11 +1288,11 @@ pub const Mob = struct { // {{{
             // Decrement
             if (self.isUnderStatus(status_e)) |status_data| {
                 var n_status_data = status_data.*;
-                n_status_data.duration = utils.saturating_sub(n_status_data.duration, 1);
-                self.applyStatus(n_status_data);
+                n_status_data.duration -|= 1;
+                self.applyStatus(n_status_data, .{ .add_duration = false });
             }
 
-            if (self.isUnderStatus(status_e)) |status_data| {
+            if (self.isUnderStatus(status_e)) |_| {
                 if (self == state.player) {
                     state.chardata.time_with_statuses.getPtr(status_e).* += 1;
                 }
@@ -1336,7 +1329,7 @@ pub const Mob = struct { // {{{
         if (self.isUnderStatus(.Held)) |se| {
             const held_remove_max = self.strength() / 2;
             const held_remove = rng.rangeClumping(usize, 2, held_remove_max, 2);
-            const new_duration = utils.saturating_sub(se.duration, held_remove);
+            const new_duration = se.duration -| held_remove;
             self.addStatus(.Held, 0, new_duration, false);
 
             if (self.isUnderStatus(.Held)) |_| {
@@ -1358,7 +1351,7 @@ pub const Mob = struct { // {{{
         }
 
         if (direct) {
-            state.messageAboutMob(self, self.coord, .Info, "slurp a potion of {}", .{potion.name}, "quaffs a potion of {}!", .{potion.name});
+            state.messageAboutMob(self, self.coord, .Info, "slurp a potion of {s}", .{potion.name}, "quaffs a potion of {s}!", .{potion.name});
         }
 
         // TODO: make the duration of potion status effect random (clumping, ofc)
@@ -1370,7 +1363,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn evokeOrRest(self: *Mob, evocable: *Evocable) void {
-        evocable.evoke(self) catch |_| {
+        evocable.evoke(self) catch {
             _ = self.rest();
             return;
         };
@@ -1408,7 +1401,7 @@ pub const Mob = struct { // {{{
         }
     }
 
-    pub fn throwItem(self: *Mob, item: *const Item, at: Coord, alloc: *mem.Allocator) bool {
+    pub fn throwItem(self: *Mob, item: *const Item, at: Coord, alloc: mem.Allocator) bool {
         switch (item.*) {
             .Projectile, .Potion => {},
             else => return false,
@@ -1417,7 +1410,7 @@ pub const Mob = struct { // {{{
         const item_name = (item.*.shortName() catch err.wat()).constSlice();
 
         self.declareAction(.Throw);
-        state.messageAboutMob(self, self.coord, .Info, "throw a {}!", .{item_name}, "throws a {}!", .{item_name});
+        state.messageAboutMob(self, self.coord, .Info, "throw a {s}!", .{item_name}, "throws a {s}!", .{item_name});
 
         const dodgeable = switch (item.*) {
             .Projectile => true,
@@ -1437,10 +1430,10 @@ pub const Mob = struct { // {{{
                     const land_chance = combat.chanceOfMissileLanding(mob);
                     const evade_chance = combat.chanceOfAttackEvaded(mob, null);
                     if (dodgeable and (!rng.percent(land_chance) or rng.percent(evade_chance))) {
-                        state.messageAboutMob(mob, self.coord, .CombatUnimportant, "dodge the {}.", .{item_name}, "dodges the {}.", .{item_name});
+                        state.messageAboutMob(mob, self.coord, .CombatUnimportant, "dodge the {s}.", .{item_name}, "dodges the {s}.", .{item_name});
                         continue; // Evaded, onward!
                     } else {
-                        state.messageAboutMob(mob, self.coord, .Combat, "are hit by the {}.", .{item_name}, "is hit by the {}.", .{item_name});
+                        state.messageAboutMob(mob, self.coord, .Combat, "are hit by the {s}.", .{item_name}, "is hit by the {s}.", .{item_name});
                     }
                 }
 
@@ -1528,7 +1521,7 @@ pub const Mob = struct { // {{{
     pub fn canSwapWith(self: *const Mob, other: *Mob, direction: ?Direction) bool {
         var can = false;
 
-        if (other.isUnderStatus(.Paralysis)) |se| {
+        if (other.isUnderStatus(.Paralysis)) |_| {
             can = true;
         }
         if (self.strength() > other.strength()) {
@@ -1632,7 +1625,7 @@ pub const Mob = struct { // {{{
             if (self == state.player) {
                 state.message(.Info, "You stumble around in a daze.", .{});
             } else if (state.player.cansee(self.coord)) {
-                state.message(.Info, "The {} stumbles around in a daze.", .{self.displayName()});
+                state.message(.Info, "The {s} stumbles around in a daze.", .{self.displayName()});
             }
 
             _ = self.rest();
@@ -1662,7 +1655,7 @@ pub const Mob = struct { // {{{
                         }
                     },
                     .Poster => |p| {
-                        state.message(.Info, "You read the poster: '{}'", .{p.text});
+                        state.message(.Info, "You read the poster: '{s}'", .{p.text});
                     },
                     .Stair => |s| if (self == state.player) {
                         if (s) |floor| {
@@ -1770,15 +1763,15 @@ pub const Mob = struct { // {{{
 
         if (!hit) {
             if (attacker == state.player) {
-                state.message(.CombatUnimportant, "You miss the {}.", .{recipient.displayName()});
+                state.message(.CombatUnimportant, "You miss the {s}.", .{recipient.displayName()});
             } else if (recipient == state.player) {
-                state.message(.CombatUnimportant, "The {} misses you.", .{attacker.displayName()});
+                state.message(.CombatUnimportant, "The {s} misses you.", .{attacker.displayName()});
             } else {
                 const cansee_a = state.player.cansee(attacker.coord);
                 const cansee_r = state.player.cansee(recipient.coord);
 
                 if (cansee_a or cansee_r) {
-                    state.message(.Info, "{}{} misses {}{}.", .{
+                    state.message(.Info, "{s}{s} misses {s}{s}.", .{
                         if (cansee_a) @as([]const u8, "The ") else "",
                         if (cansee_a) attacker.displayName() else "Something",
                         if (cansee_r) @as([]const u8, "the ") else "",
@@ -1793,13 +1786,13 @@ pub const Mob = struct { // {{{
                     rng.range(usize, 0, 100) < 14)
                 {
                     const max_dmg = @floatToInt(usize, attacker.HP * 21 / 100);
-                    const min_dmg = @floatToInt(usize, attacker.HP * 14 / 100);
+                    //const min_dmg = @floatToInt(usize, attacker.HP * 14 / 100);
                     const dmg = @intToFloat(f64, rng.range(usize, max_dmg / 2, max_dmg));
                     attacker.takeDamage(.{ .amount = dmg });
                     const dmg_percent = attacker.lastDamagePercentage();
 
                     const n = if (recipient == state.player) "your" else recipient.displayName();
-                    state.messageAboutMob2(attacker, attacker.coord, .Combat, "is hurt by {}{}{} thorny cloak! ($p{}% dmg$.)", .{
+                    state.messageAboutMob2(attacker, attacker.coord, .Combat, "is hurt by {s}{s}{s} thorny cloak! ($p{}% dmg$.)", .{
                         if (recipient == state.player) @as([]const u8, "") else "the ",
                         n,
                         if (recipient == state.player) @as([]const u8, "") else "'s",
@@ -1811,7 +1804,7 @@ pub const Mob = struct { // {{{
         }
 
         const is_stab = !recipient.isAwareOfAttack(attacker.coord);
-        const damage = combat.damageOfMeleeAttack(attacker, recipient, attacker_weapon.damage, is_stab);
+        const damage = combat.damageOfMeleeAttack(attacker, attacker_weapon.damage, is_stab);
 
         recipient.takeDamage(.{
             .amount = @intToFloat(f64, damage),
@@ -1831,7 +1824,7 @@ pub const Mob = struct { // {{{
         // the player makes results in "You puncture the XXX like a sieve!!!!"
         // which gets boring after a bit.
         {
-            for (attacker_weapon.strs) |strset, i| {
+            for (attacker_weapon.strs) |strset| {
                 if (strset.dmg_percent > dmg_percent) {
                     hitstrs = strset;
                     break;
@@ -1846,7 +1839,7 @@ pub const Mob = struct { // {{{
         if (dmg_percent >= 80) punctuation = "!!!!";
 
         if (recipient.coord.eq(state.player.coord)) {
-            state.message(.Combat, "The {} {} you{}{} ($p{}% dmg$.)", .{
+            state.message(.Combat, "The {s} {s} you{s}{s} ($p{}% dmg$.)", .{
                 attacker.displayName(),
                 hitstrs.verb_other,
                 hitstrs.verb_degree,
@@ -1854,7 +1847,7 @@ pub const Mob = struct { // {{{
                 dmg_percent,
             });
         } else if (attacker.coord.eq(state.player.coord)) {
-            state.message(.Combat, "You {} the {}{}{} ($p{}% dmg$.)", .{
+            state.message(.Combat, "You {s} the {s}{s}{s} ($p{}% dmg$.)", .{
                 hitstrs.verb_self,
                 recipient.displayName(),
                 hitstrs.verb_degree,
@@ -1865,14 +1858,8 @@ pub const Mob = struct { // {{{
             const cansee_a = state.player.cansee(attacker.coord);
             const cansee_r = state.player.cansee(recipient.coord);
 
-            // XXX: this and the above "something misses something" message
-            // thing will print stuff like "The Something misses the goblin!" I
-            // suspect this is a miscompilation, because test code runs fine
-            // otherwise. Must check after upgrading to Zig v9.
-            //
-            // FIXME TODO
             if (cansee_a or cansee_r) {
-                state.message(.Combat, "{}{} {} {}{}{}{} ($p{}% dmg$.)", .{
+                state.message(.Combat, "{s}{s} {s} {s}{s}{s}{s} ($p{}% dmg$.)", .{
                     if (cansee_a) @as([]const u8, "The ") else "",
                     if (cansee_a) attacker.displayName() else "Something",
                     hitstrs.verb_other,
@@ -1883,6 +1870,10 @@ pub const Mob = struct { // {{{
                     dmg_percent,
                 });
             }
+        }
+
+        for (attacker_weapon.effects) |effect| {
+            recipient.applyStatus(effect, .{});
         }
 
         // Daze stabbed mobs.
@@ -1909,7 +1900,7 @@ pub const Mob = struct { // {{{
                 state.chardata.foes_killed_total += 1;
                 if (d.source == .Stab) state.chardata.foes_stabbed += 1;
 
-                const prevtotal = (state.chardata.foes_killed.getOrPutValue(self.displayName(), 0) catch err.wat()).value;
+                const prevtotal = (state.chardata.foes_killed.getOrPutValue(self.displayName(), 0) catch err.wat()).value_ptr.*;
                 state.chardata.foes_killed.put(self.displayName(), prevtotal + 1) catch err.wat();
             }
         }
@@ -1923,14 +1914,14 @@ pub const Mob = struct { // {{{
             if (self.isUnderStatus(.Exhausted) == null) {
                 if (self.ai.flee_effect) |s| {
                     if (self.isUnderStatus(s.status) == null) {
-                        self.applyStatus(s);
+                        self.applyStatus(s, .{});
                     }
                 }
             }
         }
     }
 
-    pub fn init(self: *Mob, alloc: *mem.Allocator) void {
+    pub fn init(self: *Mob, alloc: mem.Allocator) void {
         self.HP = self.max_HP;
         self.MP = self.max_MP;
         self.squad_members = MobArrayList.init(alloc);
@@ -1947,7 +1938,7 @@ pub const Mob = struct { // {{{
             var membuf: [4096]u8 = undefined;
             var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
-            var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 10, state.is_walkable, .{ .right_now = true }, &fba.allocator);
+            var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 10, state.is_walkable, .{ .right_now = true }, fba.allocator());
             defer dijk.deinit();
 
             newcoord = while (dijk.next()) |child| {
@@ -1964,7 +1955,7 @@ pub const Mob = struct { // {{{
         }
 
         self.is_dead = false;
-        self.init(&state.GPA.allocator); // FIXME: antipattern?
+        self.init(state.GPA.allocator()); // FIXME: antipattern?
 
         self.tile = 'z';
         self.is_undead = true;
@@ -2009,13 +2000,13 @@ pub const Mob = struct { // {{{
         if (self != state.player) {
             if (self.killed_by) |by_mob| {
                 if (by_mob == state.player) {
-                    state.message(.Damage, "You slew the {}.", .{self.displayName()});
+                    state.message(.Damage, "You slew the {s}.", .{self.displayName()});
                 } else if (state.player.cansee(by_mob.coord)) {
-                    state.message(.Damage, "The {} killed the {}.", .{ by_mob.displayName(), self.displayName() });
+                    state.message(.Damage, "The {s} killed the {s}.", .{ by_mob.displayName(), self.displayName() });
                 }
             } else {
                 if (state.player.cansee(self.coord)) {
-                    state.message(.Damage, "The {} dies.", .{self.displayName()});
+                    state.message(.Damage, "The {s} dies.", .{self.displayName()});
                 }
             }
         }
@@ -2055,7 +2046,7 @@ pub const Mob = struct { // {{{
             var membuf: [4096]u8 = undefined;
             var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
-            var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 2, S._isNotWall, .{}, &fba.allocator);
+            var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 2, S._isNotWall, .{}, fba.allocator());
             defer dijk.deinit();
 
             const corpsetile: ?Coord = while (dijk.next()) |child| {
@@ -2112,7 +2103,7 @@ pub const Mob = struct { // {{{
                 state.is_walkable,
                 .{ .mob = self },
                 if (is_confused) &CARDINAL_DIRECTIONS else &DIRECTIONS,
-                &fba.allocator,
+                fba.allocator(),
             ) orelse return null;
 
             assert(pth.items[0].eq(self.coord));
@@ -2151,17 +2142,26 @@ pub const Mob = struct { // {{{
             .duration = duration orelse Status.MAX_DURATION,
             .power = power,
             .permanent = permanent,
-        });
+        }, .{});
     }
 
-    pub fn applyStatus(self: *Mob, s: StatusDataInfo) void {
+    pub fn cancelStatus(self: *Mob, s: Status) void {
+        self.applyStatus(.{ .status = s, .duration = 0 }, .{ .add_duration = false });
+    }
+
+    pub fn applyStatus(self: *Mob, s: StatusDataInfo, opts: struct {
+        add_power: bool = false,
+        add_duration: bool = true,
+    }) void {
         const had_status_before = self.isUnderStatus(s.status) != null;
 
         const p_se = self.statuses.getPtr(s.status);
         const was_exhausting = p_se.exhausting;
         p_se.status = s.status;
-        p_se.power = s.power;
-        p_se.duration = s.duration;
+
+        p_se.power = if (opts.add_power) p_se.power + s.power else s.power;
+        p_se.duration = if (opts.add_duration) p_se.duration + s.duration else s.duration;
+
         p_se.permanent = s.permanent;
         p_se.exhausting = s.exhausting;
 
@@ -2184,9 +2184,9 @@ pub const Mob = struct { // {{{
 
         if (!p_se.permanent and msg_parts != null) {
             if (self == state.player) {
-                state.message(.Status, "You {}{}.", .{ msg_parts.?[0], msg_parts.?[2] });
+                state.message(.Status, "You {s}{s}.", .{ msg_parts.?[0], msg_parts.?[2] });
             } else if (state.player.cansee(self.coord)) {
-                state.message(.Status, "The {} {}{}.", .{
+                state.message(.Status, "The {s} {s}{s}.", .{
                     self.displayName(), msg_parts.?[1], msg_parts.?[2],
                 });
             }
@@ -2254,10 +2254,7 @@ pub const Mob = struct { // {{{
         }
 
         // If there are a lot of walls in the way, quiet the noise
-        const radius = utils.saturating_sub(
-            sound.intensity.radiusHeard(),
-            walls_in_way * 2,
-        );
+        const radius = sound.intensity.radiusHeard() -| (walls_in_way * 2);
 
         if (self != state.player) // Player can always hear sounds
             if (self.coord.distance(coord) > radius)
@@ -2562,26 +2559,26 @@ pub const Machine = struct {
                 if (by) |mob| mob.makeNoise(.Crash, .Medium);
 
                 if (by) |mob| {
-                    state.messageAboutMob(mob, self.coord, .Info, "break down the jammed {}!", .{self.name}, "breaks down the jammed {}!", .{self.name});
+                    state.messageAboutMob(mob, self.coord, .Info, "break down the jammed {s}!", .{self.name}, "breaks down the jammed {s}!", .{self.name});
                 } else {
-                    state.message(.Info, "The {} breaks down!", .{self.name});
+                    state.message(.Info, "The {s} breaks down!", .{self.name});
                 }
             } else {
                 if (by) |mob| mob.makeNoise(.Crash, .Quiet);
 
                 if (by) |mob| {
-                    state.messageAboutMob(mob, self.coord, .Info, "push on {} and unjam it!", .{self.name}, "pushes on the {}, and unjams it!", .{self.name});
+                    state.messageAboutMob(mob, self.coord, .Info, "push on {s} and unjam it!", .{self.name}, "pushes on the {s}, and unjams it!", .{self.name});
                 } else {
-                    state.message(.Info, "The {} unjams itself!", .{self.name});
+                    state.message(.Info, "The {s} unjams itself!", .{self.name});
                 }
             }
 
             return true;
         } else {
             if (by) |mob| {
-                state.messageAboutMob(mob, self.coord, .Info, "push on the jammed {}, but nothing happens.", .{self.name}, "pushes on the jammed {}, but nothing happens.", .{self.name});
+                state.messageAboutMob(mob, self.coord, .Info, "push on the jammed {s}, but nothing happens.", .{self.name}, "pushes on the jammed {s}, but nothing happens.", .{self.name});
             } else {
-                state.message(.Info, "The jammed {} groans and fumes!", .{self.name});
+                state.message(.Info, "The jammed {s} groans!", .{self.name});
             }
 
             return false;
@@ -2632,7 +2629,7 @@ pub const Prop = struct {
     flammability: usize,
     coord: Coord = Coord.new(0, 0),
 
-    pub fn deinit(self: *const Prop, alloc: *mem.Allocator) void {
+    pub fn deinit(self: *const Prop, alloc: mem.Allocator) void {
         alloc.free(self.id);
         alloc.free(self.name);
     }
@@ -2699,6 +2696,7 @@ pub const Weapon = struct {
     name: []const u8 = "",
     delay: usize = 100, // Percentage (100 = normal speed, 200 = twice as slow)
     damage: usize,
+    effects: []const StatusDataInfo = &[_]StatusDataInfo{},
     strs: []const DamageStr,
 };
 
@@ -2826,9 +2824,7 @@ pub const Ring = struct {
     }
 };
 
-pub const ItemType = enum {
-    Ring, Potion, Vial, Projectile, Armor, Cloak, Weapon, Boulder, Prop, Evocable
-};
+pub const ItemType = enum { Ring, Potion, Vial, Projectile, Armor, Cloak, Weapon, Boulder, Prop, Evocable };
 
 pub const Item = union(ItemType) {
     Ring: *Ring,
@@ -2855,16 +2851,16 @@ pub const Item = union(ItemType) {
         var buf = StackBuffer(u8, 64).init(&([_]u8{0} ** 64));
         var fbs = std.io.fixedBufferStream(buf.slice());
         switch (self.*) {
-            .Ring => |r| try fmt.format(fbs.writer(), "*{}", .{r.name}),
-            .Potion => |p| try fmt.format(fbs.writer(), "¡{}", .{p.name}),
-            .Vial => |v| try fmt.format(fbs.writer(), "♪{}", .{v.name()}),
-            .Projectile => |p| try fmt.format(fbs.writer(), "{}", .{p.name}),
-            .Armor => |a| try fmt.format(fbs.writer(), "]{}", .{a.name}),
-            .Cloak => |c| try fmt.format(fbs.writer(), "clk of {}", .{c.name}),
-            .Weapon => |w| try fmt.format(fbs.writer(), "){}", .{w.name}),
-            .Boulder => |b| try fmt.format(fbs.writer(), "•{} of {}", .{ b.chunkName(), b.name }),
-            .Prop => |b| try fmt.format(fbs.writer(), "{}", .{b.name}),
-            .Evocable => |v| try fmt.format(fbs.writer(), "}}{}", .{v.name}),
+            .Ring => |r| try fmt.format(fbs.writer(), "*{s}", .{r.name}),
+            .Potion => |p| try fmt.format(fbs.writer(), "¡{s}", .{p.name}),
+            .Vial => |v| try fmt.format(fbs.writer(), "♪{s}", .{v.name()}),
+            .Projectile => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
+            .Armor => |a| try fmt.format(fbs.writer(), "]{s}", .{a.name}),
+            .Cloak => |c| try fmt.format(fbs.writer(), "clk of {s}", .{c.name}),
+            .Weapon => |w| try fmt.format(fbs.writer(), "){s}", .{w.name}),
+            .Boulder => |b| try fmt.format(fbs.writer(), "•{s} of {s}", .{ b.chunkName(), b.name }),
+            .Prop => |b| try fmt.format(fbs.writer(), "{s}", .{b.name}),
+            .Evocable => |v| try fmt.format(fbs.writer(), "}}{s}", .{v.name}),
         }
         buf.resizeTo(@intCast(usize, fbs.getPos() catch err.wat()));
         return buf;
@@ -2875,16 +2871,16 @@ pub const Item = union(ItemType) {
         var buf = StackBuffer(u8, 128).init(&([_]u8{0} ** 128));
         var fbs = std.io.fixedBufferStream(buf.slice());
         switch (self.*) {
-            .Ring => |r| try fmt.format(fbs.writer(), "ring of {}", .{r.name}),
-            .Potion => |p| try fmt.format(fbs.writer(), "potion of {}", .{p.name}),
-            .Vial => |v| try fmt.format(fbs.writer(), "vial of {}", .{v.name()}),
-            .Projectile => |p| try fmt.format(fbs.writer(), "{}", .{p.name}),
-            .Armor => |a| try fmt.format(fbs.writer(), "{} armor", .{a.name}),
-            .Cloak => |c| try fmt.format(fbs.writer(), "cloak of {}", .{c.name}),
-            .Weapon => |w| try fmt.format(fbs.writer(), "{}", .{w.name}),
-            .Boulder => |b| try fmt.format(fbs.writer(), "{} of {}", .{ b.chunkName(), b.name }),
-            .Prop => |b| try fmt.format(fbs.writer(), "{}", .{b.name}),
-            .Evocable => |v| try fmt.format(fbs.writer(), "{}", .{v.name}),
+            .Ring => |r| try fmt.format(fbs.writer(), "ring of {s}", .{r.name}),
+            .Potion => |p| try fmt.format(fbs.writer(), "potion of {s}", .{p.name}),
+            .Vial => |v| try fmt.format(fbs.writer(), "vial of {s}", .{v.name()}),
+            .Projectile => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
+            .Armor => |a| try fmt.format(fbs.writer(), "{s} armor", .{a.name}),
+            .Cloak => |c| try fmt.format(fbs.writer(), "cloak of {s}", .{c.name}),
+            .Weapon => |w| try fmt.format(fbs.writer(), "{s}", .{w.name}),
+            .Boulder => |b| try fmt.format(fbs.writer(), "{s} of {s}", .{ b.chunkName(), b.name }),
+            .Prop => |b| try fmt.format(fbs.writer(), "{s}", .{b.name}),
+            .Evocable => |v| try fmt.format(fbs.writer(), "{s}", .{v.name}),
         }
         buf.resizeTo(@intCast(usize, fbs.getPos() catch err.wat()));
         return buf;
@@ -3061,7 +3057,7 @@ pub const Tile = struct {
                     }
                     break :prop if (self.broken) '·' else p.tile;
                 },
-                .Poster => |p| poster: {
+                .Poster => |_| poster: {
                     if (!self.broken) {
                         cell.fg = self.material.color_bg orelse self.material.color_fg;
                     }
@@ -3319,14 +3315,4 @@ pub const Spatter = enum {
             .Water => 0x12356e,
         };
     }
-};
-
-pub const Gas = struct {
-    color: u32,
-    dissipation_rate: f64,
-    opacity: f64,
-    trigger: fn (*Mob, f64) void,
-    not_breathed: bool = false, // if true, will affect nonbreathing mobs
-    id: usize,
-    residue: ?Spatter = null,
 };

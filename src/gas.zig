@@ -3,7 +3,28 @@ const math = std.math;
 
 const state = @import("state.zig");
 const rng = @import("rng.zig");
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
+
+const Coord = types.Coord;
+const Mob = types.Mob;
+const Spatter = types.Spatter;
+const Status = types.Status;
+const Direction = types.Direction;
+const DIRECTIONS = types.DIRECTIONS;
+
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
+
+pub const Gas = struct {
+    color: u32,
+    dissipation_rate: f64,
+    opacity: f64,
+    trigger: fn (*Mob, f64) void,
+    not_breathed: bool = false, // if true, will affect nonbreathing mobs
+    id: usize,
+    residue: ?Spatter = null,
+};
 
 pub const Poison = Gas{
     .color = 0xa7e234,
@@ -91,24 +112,24 @@ comptime {
         if (i != gas.id) @compileError("Gas's ID doesn't match index");
 }
 
-fn triggerNone(_: *Mob, __: f64) void {}
+fn triggerNone(_: *Mob, _: f64) void {}
 
-fn triggerPoison(mob: *Mob, quantity: f64) void {
+fn triggerPoison(mob: *Mob, _: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
     mob.addStatus(.Poison, 0, Status.MAX_DURATION, false);
 }
 
-fn triggerParalysis(mob: *Mob, quantity: f64) void {
+fn triggerParalysis(mob: *Mob, _: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
     mob.addStatus(.Paralysis, 0, Status.MAX_DURATION, false);
 }
 
-fn triggerConfusion(mob: *Mob, quantity: f64) void {
+fn triggerConfusion(mob: *Mob, _: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
     mob.addStatus(.Confusion, 0, Status.MAX_DURATION, false);
 }
 
-fn triggerSlow(mob: *Mob, quantity: f64) void {
+fn triggerSlow(mob: *Mob, _: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
     mob.addStatus(.Slow, 0, Status.MAX_DURATION, false);
 }
@@ -118,12 +139,12 @@ fn triggerHealing(mob: *Mob, quantity: f64) void {
     mob.HP = math.clamp(mob.HP, 0, mob.max_HP);
 }
 
-fn triggerMiasma(mob: *Mob, quantity: f64) void {
+fn triggerMiasma(mob: *Mob, _: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
     mob.addStatus(.Nausea, 0, Status.MAX_DURATION, false);
 }
 
-fn triggerDust(mob: *Mob, quantity: f64) void {}
+fn triggerDust(_: *Mob, _: f64) void {}
 
 // Create and dissipate gas.
 pub fn tickGases(cur_lev: usize, cur_gas: usize) void {
@@ -173,7 +194,7 @@ pub fn tickGases(cur_lev: usize, cur_gas: usize) void {
 
                 var avg: f64 = state.dungeon.atGas(coord)[cur_gas];
                 var neighbors: f64 = 1;
-                for (&DIRECTIONS) |d, i| {
+                for (&DIRECTIONS) |d| {
                     if (coord.move(d, state.mapgeometry)) |n| {
                         if (state.dungeon.atGas(n)[cur_gas] < 0.1)
                             continue;

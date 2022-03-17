@@ -18,7 +18,36 @@ const materials = @import("materials.zig");
 const utils = @import("utils.zig");
 const state = @import("state.zig");
 const tsv = @import("tsv.zig");
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
+
+const Coord = types.Coord;
+const Rect = types.Rect;
+const Direction = types.Direction;
+const MinMax = types.MinMax;
+const minmax = types.minmax;
+const Prop = types.Prop;
+const Mob = types.Mob;
+const Machine = types.Machine;
+const Container = types.Container;
+const SurfaceItem = types.SurfaceItem;
+const Item = types.Item;
+const Ring = types.Ring;
+const Prisoner = types.Prisoner;
+const SpatterType = types.SpatterType;
+const TileType = types.TileType;
+const Potion = types.Potion;
+const SpatterArray = types.SpatterArray;
+const Stockpile = types.Stockpile;
+const ContainerArrayList = types.ContainerArrayList;
+const CoordArrayList = types.CoordArrayList;
+const Material = types.Material;
+const Vial = types.Vial;
+
+const DIRECTIONS = types.DIRECTIONS;
+const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
 
 const ItemTemplate = items.ItemTemplate;
 const Evocable = items.Evocable;
@@ -167,12 +196,8 @@ const VALID_FEATURE_TILE_PATTERNS = [_][]const u8{
 };
 
 fn isTileAvailable(coord: Coord) bool {
-    return state.dungeon.at(coord).type == .Floor and
-        state.dungeon.at(coord).mob == null and
-        state.dungeon.at(coord).surface == null and
-        state.dungeon.itemsAt(coord).len == 0;
+    return state.dungeon.at(coord).type == .Floor and state.dungeon.at(coord).mob == null and state.dungeon.at(coord).surface == null and state.dungeon.itemsAt(coord).len == 0;
 }
-
 fn choosePoster(level: usize) ?*const Poster {
     var tries: usize = 256;
     while (tries > 0) : (tries -= 1) {
@@ -278,7 +303,7 @@ fn placeDoor(coord: Coord, locked: bool) void {
     state.dungeon.at(coord).type = .Floor;
 }
 
-fn _add_player(coord: Coord, alloc: *mem.Allocator) void {
+fn _add_player(coord: Coord, alloc: mem.Allocator) void {
     const echoring = items.createItem(Ring, items.EcholocationRing);
     echoring.worn_since = state.ticks;
 
@@ -334,21 +359,21 @@ fn attachRect(parent: *const Room, d: Direction, width: usize, height: usize, di
             parent.rect.start.x + parent_con.x,
             parent.rect.start.y + parent_con.y,
         );
-        preferred_x = utils.saturating_sub(parent_con_abs.x, child_con.x);
-        preferred_y = utils.saturating_sub(parent_con_abs.y, child_con.y);
+        preferred_x = parent_con_abs.x -| child_con.x;
+        preferred_y = parent_con_abs.y -| child_con.y;
     } else if (parent.prefab) |pafab| {
         const con = pafab.connectorFor(d) orelse return null;
         preferred_x = parent.rect.start.x + con.x;
         preferred_y = parent.rect.start.y + con.y;
     } else if (fab) |chfab| {
         const con = chfab.connectorFor(d.opposite()) orelse return null;
-        preferred_x = utils.saturating_sub(parent.rect.start.x, con.x);
-        preferred_y = utils.saturating_sub(parent.rect.start.y, con.y);
+        preferred_x = parent.rect.start.x -| con.x;
+        preferred_y = parent.rect.start.y -| con.y;
     }
 
     return switch (d) {
         .North => Rect{
-            .start = Coord.new2(parent.rect.start.z, preferred_x, utils.saturating_sub(parent.rect.start.y, height + distance)),
+            .start = Coord.new2(parent.rect.start.z, preferred_x, parent.rect.start.y -| (height + distance)),
             .height = height,
             .width = width,
         },
@@ -363,7 +388,7 @@ fn attachRect(parent: *const Room, d: Direction, width: usize, height: usize, di
             .width = width,
         },
         .West => Rect{
-            .start = Coord.new2(parent.rect.start.z, utils.saturating_sub(parent.rect.start.x, width + distance), preferred_y),
+            .start = Coord.new2(parent.rect.start.z, parent.rect.start.x -| (width + distance), preferred_y),
             .width = width,
             .height = height,
         },
@@ -408,13 +433,13 @@ fn roomIntersects(
     ignore2: ?*const Room,
     ign_c: bool,
 ) bool {
-    return if (findIntersectingRoom(rooms, room, ignore, ignore2, ign_c)) |r| true else false;
+    return if (findIntersectingRoom(rooms, room, ignore, ignore2, ign_c)) |_| true else false;
 }
 
 fn excavatePrefab(
     room: *Room,
     fab: *const Prefab,
-    allocator: *mem.Allocator,
+    allocator: mem.Allocator,
     startx: usize,
     starty: usize,
 ) void {
@@ -478,7 +503,7 @@ fn excavatePrefab(
                                     state.dungeon.itemsAt(rc).append(Item{ .Potion = potion_o }) catch err.wat();
                                 } else {
                                     std.log.err(
-                                        "{}: Couldn't load potion {}, skipping.",
+                                        "{s}: Couldn't load potion {s}, skipping.",
                                         .{ fab.name.constSlice(), utils.used(pid) },
                                     );
                                 }
@@ -488,7 +513,7 @@ fn excavatePrefab(
                                     _ = placeProp(rc, &surfaces.props.items[prop]);
                                 } else {
                                     std.log.err(
-                                        "{}: Couldn't load prop {}, skipping.",
+                                        "{s}: Couldn't load prop {s}, skipping.",
                                         .{ fab.name.constSlice(), utils.used(pid) },
                                     );
                                 }
@@ -497,7 +522,7 @@ fn excavatePrefab(
                                 if (utils.findById(&surfaces.MACHINES, mid.id)) |mach| {
                                     _place_machine(rc, &surfaces.MACHINES[mach]);
                                     const machine = state.dungeon.at(rc).surface.?.Machine;
-                                    for (mid.points.constSlice()) |point, i| {
+                                    for (mid.points.constSlice()) |point| {
                                         const adj_point = Coord.new2(
                                             room.rect.start.z,
                                             point.x + room.rect.start.x + startx,
@@ -507,7 +532,7 @@ fn excavatePrefab(
                                     }
                                 } else {
                                     std.log.err(
-                                        "{}: Couldn't load machine {}, skipping.",
+                                        "{s}: Couldn't load machine {s}, skipping.",
                                         .{ fab.name.constSlice(), utils.used(mid.id) },
                                     );
                                 }
@@ -515,7 +540,7 @@ fn excavatePrefab(
                         }
                     } else {
                         std.log.err(
-                            "{}: Feature '{c}' not present, skipping.",
+                            "{s}: Feature '{c}' not present, skipping.",
                             .{ fab.name.constSlice(), feature_id },
                         );
                     }
@@ -545,7 +570,7 @@ fn excavatePrefab(
 
                 if (state.dungeon.at(coord).type == .Wall) {
                     std.log.err(
-                        "{}: Tried to place mob in wall. (this is a bug.)",
+                        "{s}: Tried to place mob in wall. (this is a bug.)",
                         .{fab.name.constSlice()},
                     );
                     continue;
@@ -562,7 +587,7 @@ fn excavatePrefab(
                 });
             } else {
                 std.log.err(
-                    "{}: Couldn't load mob {}, skipping.",
+                    "{s}: Couldn't load mob {s}, skipping.",
                     .{ fab.name.constSlice(), utils.used(mob_f.id) },
                 );
             }
@@ -606,7 +631,7 @@ fn excavatePrefab(
         };
         const inferred = stckpl.inferType();
         if (!inferred) {
-            std.log.err("{}: Couldn't infer type for stockpile! (skipping)", .{fab.name.constSlice()});
+            std.log.err("{s}: Couldn't infer type for stockpile! (skipping)", .{fab.name.constSlice()});
         } else {
             state.stockpiles[room.rect.start.z].append(stckpl) catch err.wat();
         }
@@ -641,7 +666,7 @@ fn excavatePrefab(
         };
         const inferred = input_stckpl.inferType();
         if (!inferred) {
-            std.log.err("{}: Couldn't infer type for input area! (skipping)", .{fab.name.constSlice()});
+            std.log.err("{s}: Couldn't infer type for input area! (skipping)", .{fab.name.constSlice()});
         } else {
             state.inputs[room.rect.start.z].append(input_stckpl) catch err.wat();
         }
@@ -729,7 +754,7 @@ pub fn setLevelMaterial(level: usize) void {
 
 pub fn validateLevel(
     level: usize,
-    alloc: *mem.Allocator,
+    alloc: mem.Allocator,
     n_fabs: *PrefabArrayList,
     s_fabs: *PrefabArrayList,
 ) bool {
@@ -755,7 +780,7 @@ pub fn validateLevel(
             err.wat();
         }
 
-        pub fn _isWalkable(coord: Coord, opts: state.IsWalkableOptions) bool {
+        pub fn _isWalkable(coord: Coord, _: state.IsWalkableOptions) bool {
             return state.dungeon.at(coord).type != .Wall;
         }
     };
@@ -793,7 +818,7 @@ pub fn validateLevel(
     return true;
 }
 
-pub fn placeMoarCorridors(level: usize, alloc: *mem.Allocator) void {
+pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
     var newrooms = Room.ArrayList.init(alloc);
     defer newrooms.deinit();
 
@@ -803,7 +828,7 @@ pub fn placeMoarCorridors(level: usize, alloc: *mem.Allocator) void {
     while (i < rooms.items.len) : (i += 1) {
         const parent = &rooms.items[i];
 
-        child_search: for (rooms.items) |*child, child_i| {
+        for (rooms.items) |*child| {
             if (parent.connections > CONNECTIONS_MAX) break;
             if (child.connections > CONNECTIONS_MAX) continue;
 
@@ -939,7 +964,7 @@ fn createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?C
 
 const SubroomPlacementOptions = struct {};
 
-fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, alloc: *mem.Allocator, opts: SubroomPlacementOptions) void {
+fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, alloc: mem.Allocator, _: SubroomPlacementOptions) void {
     for (s_fabs.items) |*subroom| {
         if (!prefabIsValid(parent.rect.start.z, subroom)) {
             continue;
@@ -973,7 +998,7 @@ fn _place_rooms(
     n_fabs: *PrefabArrayList,
     s_fabs: *PrefabArrayList,
     level: usize,
-    allocator: *mem.Allocator,
+    allocator: mem.Allocator,
 ) void {
     const parent_i = rng.range(usize, 0, rooms.items.len - 1);
     var parent = &rooms.items[parent_i];
@@ -1118,7 +1143,7 @@ pub fn placeRandomRooms(
     n_fabs: *PrefabArrayList,
     s_fabs: *PrefabArrayList,
     level: usize,
-    allocator: *mem.Allocator,
+    allocator: mem.Allocator,
 ) void {
     var first: ?Room = null;
     const rooms = &state.rooms[level];
@@ -1175,7 +1200,7 @@ pub fn placeRandomRooms(
         rooms.append(first.?) catch err.wat();
     }
 
-    if (level == PLAYER_STARTING_LEVEL) {
+    if (level == state.PLAYER_STARTING_LEVEL) {
         var p = Coord.new2(level, first.?.rect.start.x + 1, first.?.rect.start.y + 1);
         if (first.?.prefab) |prefab|
             if (prefab.player_position) |pos| {
@@ -1191,10 +1216,10 @@ pub fn placeRandomRooms(
 }
 
 pub fn placeBSPRooms(
-    n_fabs: *PrefabArrayList,
+    _: *PrefabArrayList,
     s_fabs: *PrefabArrayList,
     level: usize,
-    allocator: *mem.Allocator,
+    allocator: mem.Allocator,
 ) void {
     const Node = struct {
         const Self = @This();
@@ -1211,7 +1236,7 @@ pub fn placeBSPRooms(
 
         pub const Group = enum { Root, Branch, Leaf, Failed };
 
-        pub fn freeRecursively(self: *Self, alloc: *mem.Allocator) void {
+        pub fn freeRecursively(self: *Self, alloc: mem.Allocator) void {
             const childs = self.childs;
 
             // Don't free grandparent node, which is stack-allocated
@@ -1256,7 +1281,7 @@ pub fn placeBSPRooms(
             failed: *ArrayList,
             leaves: *ArrayList,
             maplevel: usize,
-            alloc: *mem.Allocator,
+            alloc: mem.Allocator,
         ) mem.Allocator.Error!void {
             var branches = ArrayList.init(alloc);
             defer branches.deinit();
@@ -1392,7 +1417,7 @@ pub fn placeBSPRooms(
             return null;
         }
 
-        fn tryNodeConnection(maplevel: usize, parent: Rect, child: Rect, roomlist: *Room.ArrayList) ?Corridor {
+        fn tryNodeConnection(maplevel: usize, parent: Rect, child: Rect) ?Corridor {
             var parentr = Room{ .rect = parent };
             var childr = Room{ .rect = child };
 
@@ -1424,7 +1449,7 @@ pub fn placeBSPRooms(
         ) ?Corridor {
             if (child_tree.group == .Leaf or child_tree.group == .Failed) {
                 const child = roomlist.items[child_tree.index].rect;
-                return tryNodeConnection(maplevel, parent.*, child, roomlist);
+                return tryNodeConnection(maplevel, parent.*, child);
             }
 
             if (child_tree.childs[0]) |child|
@@ -1476,7 +1501,7 @@ pub fn placeBSPRooms(
             maplevel: usize,
             node: *Node,
             roomlist: *Room.ArrayList,
-            alloc: *mem.Allocator,
+            alloc: mem.Allocator,
         ) void {
             var doorlist = CoordArrayList.init(alloc);
             defer doorlist.deinit();
@@ -1623,7 +1648,7 @@ pub fn placeTraps(level: usize) void {
     }
 }
 
-pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
+pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
     var squads: usize = Configs[level].patrol_squads;
 
     while (squads > 0) {
@@ -1666,9 +1691,9 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
     {
         var iter = mob_spawn_tables.iterator();
         while (iter.next()) |mob_spawn_data| {
-            if (mob_spawn_data.value[level] == 0) continue;
-            spawn_table_ids.append(mob_spawn_data.key) catch err.oom();
-            spawn_table_weights.append(mob_spawn_data.value[level]) catch err.oom();
+            if (mob_spawn_data.value_ptr[level] == 0) continue;
+            spawn_table_ids.append(mob_spawn_data.key_ptr.*) catch err.oom();
+            spawn_table_weights.append(mob_spawn_data.value_ptr.*[level]) catch err.oom();
         }
     }
     defer spawn_table_ids.deinit();
@@ -1688,7 +1713,7 @@ pub fn placeMobs(level: usize, alloc: *mem.Allocator) void {
                 spawn_table_weights.items,
             ) catch err.wat();
             const mob_ind = utils.findById(&mobs.MOBS, mob_id) orelse err.bug(
-                "Mob {}, mentioned in spawn tables, doesn't exist.",
+                "Mob {s}, mentioned in spawn tables, doesn't exist.",
                 .{mob_id},
             );
             const mob = &mobs.MOBS[mob_ind];
@@ -1818,7 +1843,7 @@ fn _placePropAlongRange(level: usize, where: Range, prop: *const Prop, max: usiz
     return placed;
 }
 
-pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
+pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
     for (state.rooms[level].items) |*room| {
         const rect = room.rect;
         const room_area = rect.height * rect.width;
@@ -1871,9 +1896,7 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
             return;
         }
 
-        const Mode = enum {
-            Statues, Containers, Machine, Poster, None
-        };
+        const Mode = enum { Statues, Containers, Machine, Poster, None };
         const modes = [_]Mode{ .Statues, .Containers, .Machine, .Poster, .None };
         const mode_weights = [_]usize{
             if (Configs[level].allow_statues) 10 else 0,
@@ -1942,12 +1965,12 @@ pub fn placeRoomFeatures(level: usize, alloc: *mem.Allocator) void {
     }
 }
 
-pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
+pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     assert(level != 0);
 
     // Find a location for the "reciever" staircase.
     const down_staircase = b: for (state.dungeon.map[dest_floor]) |*row, y| {
-        for (row) |tile, x| {
+        for (row) |_, x| {
             const room: ?*Room = switch (state.layout[dest_floor][y][x]) {
                 .Unknown => null,
                 .Room => |r| &state.rooms[dest_floor].items[r],
@@ -1966,7 +1989,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
                 break :b coord;
             }
         }
-    } else err.bug("Couldn't place a downstair on {}!", .{state.levelinfo[dest_floor].name});
+    } else err.bug("Couldn't place a downstair on {s}!", .{state.levelinfo[dest_floor].name});
 
     // Find coord candidates for stairs placement. Usually this will be in a room,
     // but we're not forcing it because that wouldn't work well for Smithing.
@@ -1974,7 +1997,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
     var locations = CoordArrayList.init(alloc);
     defer locations.deinit();
     for (state.dungeon.map[level]) |*row, y| {
-        for (row) |tile, x| {
+        for (row) |_, x| {
             const room: ?*Room = switch (state.layout[level][y][x]) {
                 .Unknown => null,
                 .Room => |r| &state.rooms[level].items[r],
@@ -1996,13 +2019,13 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
     }
 
     if (locations.items.len == 0) {
-        err.bug("Couldn't place stairs anywhere on {}!", .{state.levelinfo[level].name});
+        err.bug("Couldn't place stairs anywhere on {s}!", .{state.levelinfo[level].name});
     }
 
     // Map out the locations in a grid, so that we can easily tell what's in the
     // location list without scanning the whole list each time.
     var location_map: [HEIGHT][WIDTH]bool = undefined;
-    for (location_map) |*row, y| for (row) |*cell, x| {
+    for (location_map) |*row| for (row) |*cell| {
         cell.* = false;
     };
     for (locations.items) |c| {
@@ -2033,7 +2056,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
                 };
         }
     }
-    if (level == PLAYER_STARTING_LEVEL)
+    if (level == state.PLAYER_STARTING_LEVEL)
         stair_dijkmap[state.player.coord.y][state.player.coord.x] = 0;
 
     // Now fill out the dijkstra map to assign a score to each coordinate.
@@ -2042,7 +2065,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: *mem.Allocator) void {
 
     // Debugging code.
     //
-    // std.log.info("{}", .{state.levelinfo[level].name});
+    // std.log.info("{s}", .{state.levelinfo[level].name});
     // for (stair_dijkmap) |*row, y| {
     //     for (row) |cell, x| {
     //         if (cell == null) {
@@ -2376,11 +2399,11 @@ pub fn generateLayoutMap(level: usize) void {
     }
 }
 
-fn levelFeaturePrisonersMaybe(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+fn levelFeaturePrisonersMaybe(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: mem.Allocator) void {
     if (rng.onein(2)) levelFeaturePrisoners(c, coord, room, prefab, alloc);
 }
 
-fn levelFeaturePrisoners(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+fn levelFeaturePrisoners(_: usize, coord: Coord, _: *const Room, _: *const Prefab, alloc: mem.Allocator) void {
     const prisoner_t = rng.chooseUnweighted(mobs.MobTemplate, &mobs.PRISONERS);
     const prisoner = mobs.placeMob(alloc, &prisoner_t, coord, .{});
     prisoner.prisoner_status = Prisoner{ .of = .Necromancer };
@@ -2397,7 +2420,7 @@ fn levelFeaturePrisoners(c: usize, coord: Coord, room: *const Room, prefab: *con
         };
 }
 
-fn levelFeaturePotions(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+fn levelFeaturePotions(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _: mem.Allocator) void {
     const potion = rng.chooseUnweighted(Potion, &items.POTIONS);
     state.potions.append(potion) catch err.wat();
     state.dungeon.itemsAt(coord).append(
@@ -2405,20 +2428,20 @@ fn levelFeaturePotions(c: usize, coord: Coord, room: *const Room, prefab: *const
     ) catch err.wat();
 }
 
-fn levelFeatureVials(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+fn levelFeatureVials(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _: mem.Allocator) void {
     state.dungeon.itemsAt(coord).append(
         Item{ .Vial = rng.choose(Vial, &Vial.VIALS, &Vial.VIAL_COMMONICITY) catch err.wat() },
     ) catch err.wat();
 }
 
-fn levelFeatureExperiments(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+fn levelFeatureExperiments(_: usize, coord: Coord, _: *const Room, _: *const Prefab, alloc: mem.Allocator) void {
     const exp_t = rng.chooseUnweighted(mobs.MobTemplate, &mobs.EXPERIMENTS);
-    const exp = mobs.placeMob(alloc, &exp_t, coord, .{});
+    _ = mobs.placeMob(alloc, &exp_t, coord, .{});
 }
 
 // Randomly place a vial ore. If the Y coordinate is even, create a container and
 // fill it up halfway; otherwise, place only one item on the ground.
-fn levelFeatureOres(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+fn levelFeatureOres(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _: mem.Allocator) void {
     var using_container: ?*Container = null;
 
     if ((coord.y % 2) == 0) {
@@ -2447,7 +2470,7 @@ fn levelFeatureOres(c: usize, coord: Coord, room: *const Room, prefab: *const Pr
 
 // Randomly place an iron ore. Randomly, create a container and
 // fill it up halfway; otherwise, place only one item on the ground.
-fn levelFeatureIronOres(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+fn levelFeatureIronOres(_: usize, coord: Coord, room: *const Room, _: *const Prefab, _: mem.Allocator) void {
     const ores = [_]Material{materials.Hematite};
     var using_container: ?*Container = null;
 
@@ -2471,14 +2494,14 @@ fn levelFeatureIronOres(c: usize, coord: Coord, room: *const Room, prefab: *cons
 }
 
 // Randomly place an metal ingot.
-fn levelFeatureMetals(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+fn levelFeatureMetals(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _: mem.Allocator) void {
     const metals = [_]*const Material{&materials.Iron};
     const mat = rng.chooseUnweighted(*const Material, metals[0..]);
     state.dungeon.itemsAt(coord).append(Item{ .Boulder = mat }) catch err.wat();
 }
 
 // Randomly place a random metal prop.
-fn levelFeatureMetalProducts(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: *mem.Allocator) void {
+fn levelFeatureMetalProducts(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _: mem.Allocator) void {
     const prop_ids = [_][]const u8{"chain"};
     const prop_id = prop_ids[rng.range(usize, 0, prop_ids.len - 1)];
     const prop_idx = utils.findById(surfaces.props.items, prop_id).?;
@@ -2586,8 +2609,7 @@ pub const Prefab = struct {
     pub fn reset(self: *Prefab, level: usize) void {
         self.used[level] = 0;
 
-        for (self.connections) |maybe_con, i| {
-            const con = maybe_con orelse break;
+        for (self.connections) |_, i| {
             self.connections[i].?.used = false;
         }
     }
@@ -2661,7 +2683,7 @@ pub const Prefab = struct {
         var w: usize = 0;
         var y: usize = 0;
 
-        var lines = mem.tokenize(from, "\n");
+        var lines = mem.tokenize(u8, from, "\n");
         while (lines.next()) |line| {
             switch (line[0]) {
                 '%' => {}, // ignore comments
@@ -2686,7 +2708,7 @@ pub const Prefab = struct {
                     f.output = null;
                 },
                 ':' => {
-                    var words = mem.tokenize(line[1..], " ");
+                    var words = mem.tokenize(u8, line[1..], " ");
                     const key = words.next() orelse return error.MalformedMetadata;
                     const val = words.next() orelse "";
 
@@ -2707,10 +2729,10 @@ pub const Prefab = struct {
                         } else return error.InvalidMetadataValue;
                     } else if (mem.eql(u8, key, "restriction")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
-                        f.restriction = std.fmt.parseInt(usize, val, 0) catch |_| return error.InvalidMetadataValue;
+                        f.restriction = std.fmt.parseInt(usize, val, 0) catch return error.InvalidMetadataValue;
                     } else if (mem.eql(u8, key, "priority")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
-                        f.priority = std.fmt.parseInt(usize, val, 0) catch |_| return error.InvalidMetadataValue;
+                        f.priority = std.fmt.parseInt(usize, val, 0) catch return error.InvalidMetadataValue;
                     } else if (mem.eql(u8, key, "noguards")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.noguards = true;
@@ -2725,11 +2747,11 @@ pub const Prefab = struct {
                         const maybe_work_at_str: ?[]const u8 = words.next() orelse null;
 
                         var spawn_at = Coord.new(0, 0);
-                        var spawn_at_tokens = mem.tokenize(spawn_at_str, ",");
+                        var spawn_at_tokens = mem.tokenize(u8, spawn_at_str, ",");
                         const spawn_at_str_a = spawn_at_tokens.next() orelse return error.InvalidMetadataValue;
                         const spawn_at_str_b = spawn_at_tokens.next() orelse return error.InvalidMetadataValue;
-                        spawn_at.x = std.fmt.parseInt(usize, spawn_at_str_a, 0) catch |_| return error.InvalidMetadataValue;
-                        spawn_at.y = std.fmt.parseInt(usize, spawn_at_str_b, 0) catch |_| return error.InvalidMetadataValue;
+                        spawn_at.x = std.fmt.parseInt(usize, spawn_at_str_a, 0) catch return error.InvalidMetadataValue;
+                        spawn_at.y = std.fmt.parseInt(usize, spawn_at_str_b, 0) catch return error.InvalidMetadataValue;
 
                         f.mobs[cm] = FeatureMob{
                             .id = undefined,
@@ -2740,11 +2762,11 @@ pub const Prefab = struct {
 
                         if (maybe_work_at_str) |work_at_str| {
                             var work_at = Coord.new(0, 0);
-                            var work_at_tokens = mem.tokenize(work_at_str, ",");
+                            var work_at_tokens = mem.tokenize(u8, work_at_str, ",");
                             const work_at_str_a = work_at_tokens.next() orelse return error.InvalidMetadataValue;
                             const work_at_str_b = work_at_tokens.next() orelse return error.InvalidMetadataValue;
-                            work_at.x = std.fmt.parseInt(usize, work_at_str_a, 0) catch |_| return error.InvalidMetadataValue;
-                            work_at.y = std.fmt.parseInt(usize, work_at_str_b, 0) catch |_| return error.InvalidMetadataValue;
+                            work_at.x = std.fmt.parseInt(usize, work_at_str_a, 0) catch return error.InvalidMetadataValue;
+                            work_at.y = std.fmt.parseInt(usize, work_at_str_b, 0) catch return error.InvalidMetadataValue;
                             f.mobs[cm].?.work_at = work_at;
                         }
 
@@ -2754,35 +2776,35 @@ pub const Prefab = struct {
                         var width: usize = 0;
                         var height: usize = 0;
 
-                        var rect_start_tokens = mem.tokenize(val, ",");
+                        var rect_start_tokens = mem.tokenize(u8, val, ",");
                         const rect_start_str_a = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
                         const rect_start_str_b = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
-                        rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
-                        rect_start.y = std.fmt.parseInt(usize, rect_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
+                        rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch return error.InvalidMetadataValue;
+                        rect_start.y = std.fmt.parseInt(usize, rect_start_str_b, 0) catch return error.InvalidMetadataValue;
 
                         const width_str = words.next() orelse return error.ExpectedMetadataValue;
                         const height_str = words.next() orelse return error.ExpectedMetadataValue;
-                        width = std.fmt.parseInt(usize, width_str, 0) catch |_| return error.InvalidMetadataValue;
-                        height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
+                        width = std.fmt.parseInt(usize, width_str, 0) catch return error.InvalidMetadataValue;
+                        height = std.fmt.parseInt(usize, height_str, 0) catch return error.InvalidMetadataValue;
 
-                        f.prisons.append(.{ .start = rect_start, .width = width, .height = height }) catch |_| return error.TooManyPrisons;
+                        f.prisons.append(.{ .start = rect_start, .width = width, .height = height }) catch return error.TooManyPrisons;
                     } else if (mem.eql(u8, key, "subroom_area")) {
                         var rect_start = Coord.new(0, 0);
                         var width: usize = 0;
                         var height: usize = 0;
 
-                        var rect_start_tokens = mem.tokenize(val, ",");
+                        var rect_start_tokens = mem.tokenize(u8, val, ",");
                         const rect_start_str_a = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
                         const rect_start_str_b = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
-                        rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
-                        rect_start.y = std.fmt.parseInt(usize, rect_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
+                        rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch return error.InvalidMetadataValue;
+                        rect_start.y = std.fmt.parseInt(usize, rect_start_str_b, 0) catch return error.InvalidMetadataValue;
 
                         const width_str = words.next() orelse return error.ExpectedMetadataValue;
                         const height_str = words.next() orelse return error.ExpectedMetadataValue;
-                        width = std.fmt.parseInt(usize, width_str, 0) catch |_| return error.InvalidMetadataValue;
-                        height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
+                        width = std.fmt.parseInt(usize, width_str, 0) catch return error.InvalidMetadataValue;
+                        height = std.fmt.parseInt(usize, height_str, 0) catch return error.InvalidMetadataValue;
 
-                        f.subroom_areas.append(.{ .start = rect_start, .width = width, .height = height }) catch |_| return error.TooManySubrooms;
+                        f.subroom_areas.append(.{ .start = rect_start, .width = width, .height = height }) catch return error.TooManySubrooms;
                     } else if (mem.eql(u8, key, "stockpile")) {
                         if (f.stockpile) |_| return error.StockpileAlreadyDefined;
 
@@ -2790,16 +2812,16 @@ pub const Prefab = struct {
                         var width: usize = 0;
                         var height: usize = 0;
 
-                        var rect_start_tokens = mem.tokenize(val, ",");
+                        var rect_start_tokens = mem.tokenize(u8, val, ",");
                         const rect_start_str_a = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
                         const rect_start_str_b = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
-                        rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
-                        rect_start.y = std.fmt.parseInt(usize, rect_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
+                        rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch return error.InvalidMetadataValue;
+                        rect_start.y = std.fmt.parseInt(usize, rect_start_str_b, 0) catch return error.InvalidMetadataValue;
 
                         const width_str = words.next() orelse return error.ExpectedMetadataValue;
                         const height_str = words.next() orelse return error.ExpectedMetadataValue;
-                        width = std.fmt.parseInt(usize, width_str, 0) catch |_| return error.InvalidMetadataValue;
-                        height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
+                        width = std.fmt.parseInt(usize, width_str, 0) catch return error.InvalidMetadataValue;
+                        height = std.fmt.parseInt(usize, height_str, 0) catch return error.InvalidMetadataValue;
 
                         f.stockpile = .{ .start = rect_start, .width = width, .height = height };
                     } else if (mem.eql(u8, key, "output")) {
@@ -2809,16 +2831,16 @@ pub const Prefab = struct {
                         var width: usize = 0;
                         var height: usize = 0;
 
-                        var rect_start_tokens = mem.tokenize(val, ",");
+                        var rect_start_tokens = mem.tokenize(u8, val, ",");
                         const rect_start_str_a = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
                         const rect_start_str_b = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
-                        rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
-                        rect_start.y = std.fmt.parseInt(usize, rect_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
+                        rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch return error.InvalidMetadataValue;
+                        rect_start.y = std.fmt.parseInt(usize, rect_start_str_b, 0) catch return error.InvalidMetadataValue;
 
                         const width_str = words.next() orelse return error.ExpectedMetadataValue;
                         const height_str = words.next() orelse return error.ExpectedMetadataValue;
-                        width = std.fmt.parseInt(usize, width_str, 0) catch |_| return error.InvalidMetadataValue;
-                        height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
+                        width = std.fmt.parseInt(usize, width_str, 0) catch return error.InvalidMetadataValue;
+                        height = std.fmt.parseInt(usize, height_str, 0) catch return error.InvalidMetadataValue;
 
                         f.output = .{ .start = rect_start, .width = width, .height = height };
                     } else if (mem.eql(u8, key, "input")) {
@@ -2828,22 +2850,22 @@ pub const Prefab = struct {
                         var width: usize = 0;
                         var height: usize = 0;
 
-                        var rect_start_tokens = mem.tokenize(val, ",");
+                        var rect_start_tokens = mem.tokenize(u8, val, ",");
                         const rect_start_str_a = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
                         const rect_start_str_b = rect_start_tokens.next() orelse return error.InvalidMetadataValue;
-                        rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch |_| return error.InvalidMetadataValue;
-                        rect_start.y = std.fmt.parseInt(usize, rect_start_str_b, 0) catch |_| return error.InvalidMetadataValue;
+                        rect_start.x = std.fmt.parseInt(usize, rect_start_str_a, 0) catch return error.InvalidMetadataValue;
+                        rect_start.y = std.fmt.parseInt(usize, rect_start_str_b, 0) catch return error.InvalidMetadataValue;
 
                         const width_str = words.next() orelse return error.ExpectedMetadataValue;
                         const height_str = words.next() orelse return error.ExpectedMetadataValue;
-                        width = std.fmt.parseInt(usize, width_str, 0) catch |_| return error.InvalidMetadataValue;
-                        height = std.fmt.parseInt(usize, height_str, 0) catch |_| return error.InvalidMetadataValue;
+                        width = std.fmt.parseInt(usize, width_str, 0) catch return error.InvalidMetadataValue;
+                        height = std.fmt.parseInt(usize, height_str, 0) catch return error.InvalidMetadataValue;
 
                         f.input = .{ .start = rect_start, .width = width, .height = height };
                     }
                 },
                 '@' => {
-                    var words = mem.tokenize(line, " ");
+                    var words = mem.tokenize(u8, line, " ");
                     _ = words.next(); // Skip the '@<ident>' bit
 
                     const identifier = line[1];
@@ -2864,11 +2886,11 @@ pub const Prefab = struct {
                             var points = StackBuffer(Coord, 16).init(null);
                             while (words.next()) |word| {
                                 var coord = Coord.new2(0, 0, 0);
-                                var coord_tokens = mem.tokenize(word, ",");
+                                var coord_tokens = mem.tokenize(u8, word, ",");
                                 const coord_str_a = coord_tokens.next() orelse return error.InvalidMetadataValue;
                                 const coord_str_b = coord_tokens.next() orelse return error.InvalidMetadataValue;
-                                coord.x = std.fmt.parseInt(usize, coord_str_a, 0) catch |_| return error.InvalidMetadataValue;
-                                coord.y = std.fmt.parseInt(usize, coord_str_b, 0) catch |_| return error.InvalidMetadataValue;
+                                coord.x = std.fmt.parseInt(usize, coord_str_a, 0) catch return error.InvalidMetadataValue;
+                                coord.y = std.fmt.parseInt(usize, coord_str_b, 0) catch return error.InvalidMetadataValue;
                                 points.append(coord) catch err.wat();
                             }
                             f.features[identifier] = Feature{
@@ -2886,14 +2908,14 @@ pub const Prefab = struct {
                     if (y > f.content.len) return error.FabTooTall;
 
                     var x: usize = 0;
-                    var utf8view = std.unicode.Utf8View.init(line) catch |_| {
+                    var utf8view = std.unicode.Utf8View.init(line) catch {
                         return error.InvalidUtf8;
                     };
                     var utf8 = utf8view.iterator();
                     while (utf8.nextCodepointSlice()) |encoded_codepoint| : (x += 1) {
                         if (x > f.content[0].len) return error.FabTooWide;
 
-                        const c = std.unicode.utf8Decode(encoded_codepoint) catch |_| {
+                        const c = std.unicode.utf8Decode(encoded_codepoint) catch {
                             return error.InvalidUtf8;
                         };
 
@@ -2953,7 +2975,7 @@ pub const PrefabArrayList = std.ArrayList(Prefab);
 
 // FIXME: error handling
 // FIXME: warn if prefab is zerowidth/zeroheight (prefabs file might not have fit in buffer)
-pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *PrefabArrayList) void {
+pub fn readPrefabs(alloc: mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *PrefabArrayList) void {
     var buf: [8192]u8 = undefined;
 
     n_fabs.* = PrefabArrayList.init(alloc);
@@ -2994,7 +3016,7 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
                 error.ExpectedMetadataValue => "Expected value for metadata",
                 error.InvalidUtf8 => "Encountered invalid UTF-8",
             };
-            std.log.info("{}: Couldn't load prefab: {}", .{ fab_file.name, msg });
+            std.log.info("{s}: Couldn't load prefab: {s}", .{ fab_file.name, msg });
             continue;
         };
     }
@@ -3005,7 +3027,7 @@ pub fn readPrefabs(alloc: *mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pre
 
 pub var mob_spawn_tables: std.StringHashMap([LEVELS]usize) = undefined;
 
-pub fn readSpawnTables(alloc: *mem.Allocator) void {
+pub fn readSpawnTables(alloc: mem.Allocator) void {
     const _MobSpawnData = struct {
         id: []u8 = undefined,
 
@@ -3093,9 +3115,9 @@ pub fn readSpawnTables(alloc: *mem.Allocator) void {
     }
 }
 
-pub fn freeSpawnTables(alloc: *mem.Allocator) void {
+pub fn freeSpawnTables(alloc: mem.Allocator) void {
     var iter = mob_spawn_tables.iterator();
-    while (iter.next()) |entry| alloc.free(entry.key);
+    while (iter.next()) |entry| alloc.free(entry.key_ptr.*);
     mob_spawn_tables.clearAndFree();
 }
 
@@ -3110,7 +3132,7 @@ pub const LevelConfig = struct {
     shrink_corridors_to_fit: bool = true,
     prefab_chance: usize,
 
-    mapgen_func: fn (*PrefabArrayList, *PrefabArrayList, usize, *mem.Allocator) void = placeRandomRooms,
+    mapgen_func: fn (*PrefabArrayList, *PrefabArrayList, usize, mem.Allocator) void = placeRandomRooms,
 
     // Determines the number of iterations used by the mapgen algorithm.
     //
@@ -3161,11 +3183,9 @@ pub const LevelConfig = struct {
 
     blobs: []const BlobConfig = &[_]BlobConfig{},
 
-    pub const LevelFeatureFunc = fn (usize, Coord, *const Room, *const Prefab, *mem.Allocator) void;
+    pub const LevelFeatureFunc = fn (usize, Coord, *const Room, *const Prefab, mem.Allocator) void;
 
-    pub const RequiredMob = struct {
-        count: usize, template: *const mobs.MobTemplate
-    };
+    pub const RequiredMob = struct { count: usize, template: *const mobs.MobTemplate };
 
     pub const MobConfig = struct {
         chance: usize, // Ten in <chance>
@@ -3359,7 +3379,7 @@ pub var Configs = [LEVELS]LevelConfig{
 // zig fmt: off
 pub fn fixConfigs() void {
     Configs[0].prefabs = &[_][]const u8{ "ENT_start", "PRI_power", "ANY_s_recharging" };
-    Configs[PLAYER_STARTING_LEVEL].prefabs = &[_][]const u8{ "PRI_start", "PRI_power", "ANY_s_recharging" };
+    Configs[state.PLAYER_STARTING_LEVEL].prefabs = &[_][]const u8{ "PRI_start", "PRI_power", "ANY_s_recharging" };
 
     // Be careful when editing this
     Configs[00].stairs_to = &[_]usize{};      // -1/Prison       -> nothing

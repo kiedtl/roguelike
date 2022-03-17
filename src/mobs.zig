@@ -10,7 +10,30 @@ const dijkstra = @import("dijkstra.zig");
 const rng = @import("rng.zig");
 const spells = @import("spells.zig");
 const err = @import("err.zig");
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
+
+const MinMax = types.MinMax;
+const minmax = types.minmax;
+const Coord = types.Coord;
+const Item = types.Item;
+const Ring = types.Ring;
+const DamageStr = types.DamageStr;
+const Weapon = types.Weapon;
+const Resistance = types.Resistance;
+const StatusDataInfo = types.StatusDataInfo;
+const Armor = types.Armor;
+const SurfaceItem = types.SurfaceItem;
+const Mob = types.Mob;
+const AI = types.AI;
+const AIPhase = types.AIPhase;
+const Species = types.Species;
+const Status = types.Status;
+const Direction = types.Direction;
+const DIRECTIONS = types.DIRECTIONS;
+
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
 
 const Evocable = items.Evocable;
 const Cloak = items.Cloak;
@@ -1115,7 +1138,7 @@ pub const PlaceMobOptions = struct {
 };
 
 pub fn placeMob(
-    alloc: *mem.Allocator,
+    alloc: mem.Allocator,
     template: *const MobTemplate,
     coord: Coord,
     opts: PlaceMobOptions,

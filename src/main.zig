@@ -21,16 +21,36 @@ const termbox = @import("termbox.zig");
 const types = @import("types.zig");
 const state = @import("state.zig");
 const err = @import("err.zig");
-usingnamespace @import("types.zig");
 
-pub const TaskArrayList = tasks.TaskArrayList;
-pub const PosterArrayList = literature.PosterArrayList;
-pub const EvocableList = items.EvocableList;
+const Coord = types.Coord;
+const Rect = types.Rect;
+const Tile = types.Tile;
+
+const MobList = types.MobList;
+const RingList = types.RingList;
+const PotionList = types.PotionList;
+const ArmorList = types.ArmorList;
+const WeaponList = types.WeaponList;
+const MachineList = types.MachineList;
+const PropList = types.PropList;
+const ContainerList = types.ContainerList;
+const Message = types.Message;
+const MessageArrayList = types.MessageArrayList;
+const MobArrayList = types.MobArrayList;
+const StockpileArrayList = types.StockpileArrayList;
+
+const TaskArrayList = tasks.TaskArrayList;
+const PosterArrayList = literature.PosterArrayList;
+const EvocableList = items.EvocableList;
+
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
 
 // Install a panic handler that tries to shutdown termbox and print the RNG
 // seed before calling the default panic handler.
 pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) noreturn {
-    display.deinit() catch |e| {};
+    display.deinit() catch {};
     std.log.err("Fatal error encountered. (Seed: {})", .{rng.seed});
     std.builtin.default_panic(msg, error_return_trace);
 }
@@ -47,34 +67,34 @@ fn initGame() bool {
         return false;
     }
 
-    rng.init(&state.GPA.allocator) catch |_| return false;
+    rng.init(state.GPA.allocator()) catch return false;
 
     player.choosePlayerUpgrades();
 
-    state.chardata.init(&state.GPA.allocator);
-    state.memory = state.MemoryTileMap.init(&state.GPA.allocator);
+    state.chardata.init(state.GPA.allocator());
+    state.memory = state.MemoryTileMap.init(state.GPA.allocator());
 
-    state.tasks = TaskArrayList.init(&state.GPA.allocator);
-    state.mobs = MobList.init(&state.GPA.allocator);
-    state.rings = RingList.init(&state.GPA.allocator);
-    state.potions = PotionList.init(&state.GPA.allocator);
-    state.armors = ArmorList.init(&state.GPA.allocator);
-    state.weapons = WeaponList.init(&state.GPA.allocator);
-    state.machines = MachineList.init(&state.GPA.allocator);
-    state.props = PropList.init(&state.GPA.allocator);
-    state.containers = ContainerList.init(&state.GPA.allocator);
-    state.evocables = EvocableList.init(&state.GPA.allocator);
-    state.messages = MessageArrayList.init(&state.GPA.allocator);
+    state.tasks = TaskArrayList.init(state.GPA.allocator());
+    state.mobs = MobList.init(state.GPA.allocator());
+    state.rings = RingList.init(state.GPA.allocator());
+    state.potions = PotionList.init(state.GPA.allocator());
+    state.armors = ArmorList.init(state.GPA.allocator());
+    state.weapons = WeaponList.init(state.GPA.allocator());
+    state.machines = MachineList.init(state.GPA.allocator());
+    state.props = PropList.init(state.GPA.allocator());
+    state.containers = ContainerList.init(state.GPA.allocator());
+    state.evocables = EvocableList.init(state.GPA.allocator());
+    state.messages = MessageArrayList.init(state.GPA.allocator());
 
-    surfaces.readProps(&state.GPA.allocator);
-    literature.readPosters(&state.GPA.allocator);
-    mapgen.readSpawnTables(&state.GPA.allocator);
+    surfaces.readProps(state.GPA.allocator());
+    literature.readPosters(state.GPA.allocator());
+    mapgen.readSpawnTables(state.GPA.allocator());
 
     for (state.dungeon.map) |*map, level| {
-        state.stockpiles[level] = StockpileArrayList.init(&state.GPA.allocator);
-        state.inputs[level] = StockpileArrayList.init(&state.GPA.allocator);
-        state.outputs[level] = Rect.ArrayList.init(&state.GPA.allocator);
-        state.rooms[level] = mapgen.Room.ArrayList.init(&state.GPA.allocator);
+        state.stockpiles[level] = StockpileArrayList.init(state.GPA.allocator());
+        state.inputs[level] = StockpileArrayList.init(state.GPA.allocator());
+        state.outputs[level] = Rect.ArrayList.init(state.GPA.allocator());
+        state.rooms[level] = mapgen.Room.ArrayList.init(state.GPA.allocator());
 
         for (map) |*row| for (row) |*tile| {
             tile.rand = rng.int(usize);
@@ -83,7 +103,7 @@ fn initGame() bool {
 
     var s_fabs: mapgen.PrefabArrayList = undefined;
     var n_fabs: mapgen.PrefabArrayList = undefined;
-    mapgen.readPrefabs(&state.GPA.allocator, &n_fabs, &s_fabs);
+    mapgen.readPrefabs(state.GPA.allocator(), &n_fabs, &s_fabs);
     defer s_fabs.deinit();
     defer n_fabs.deinit();
 
@@ -96,17 +116,17 @@ fn initGame() bool {
 
         mapgen.resetLevel(level, &n_fabs, &s_fabs);
         mapgen.placeBlobs(level);
-        (mapgen.Configs[level].mapgen_func)(&n_fabs, &s_fabs, level, &state.GPA.allocator);
-        mapgen.placeMoarCorridors(level, &state.GPA.allocator);
+        (mapgen.Configs[level].mapgen_func)(&n_fabs, &s_fabs, level, state.GPA.allocator());
+        mapgen.placeMoarCorridors(level, state.GPA.allocator());
 
-        if (!mapgen.validateLevel(level, &state.GPA.allocator, &n_fabs, &s_fabs)) {
+        if (!mapgen.validateLevel(level, state.GPA.allocator(), &n_fabs, &s_fabs)) {
             if (tries < 27) {
-                std.log.info("Map {} invalid, regenerating...", .{state.levelinfo[level].name});
+                std.log.info("Map {s} invalid, regenerating...", .{state.levelinfo[level].name});
                 continue; // try again
             } else {
                 // Give up!
                 err.bug(
-                    "Couldn't generate a valid map for {}!",
+                    "Couldn't generate a valid map for {s}!",
                     .{state.levelinfo[level].name},
                 );
             }
@@ -115,12 +135,12 @@ fn initGame() bool {
         mapgen.setLevelMaterial(level);
 
         mapgen.placeTraps(level);
-        mapgen.placeRoomFeatures(level, &state.GPA.allocator);
+        mapgen.placeRoomFeatures(level, state.GPA.allocator());
         mapgen.placeItems(level);
-        mapgen.placeMobs(level, &state.GPA.allocator);
+        mapgen.placeMobs(level, state.GPA.allocator());
         mapgen.generateLayoutMap(level);
 
-        std.log.info("Generated map {}.", .{state.levelinfo[level].name});
+        std.log.info("Generated map {s}.", .{state.levelinfo[level].name});
 
         level += 1;
         tries = 0;
@@ -129,7 +149,7 @@ fn initGame() bool {
     var f_level: usize = LEVELS - 1;
     while (f_level > 0) : (f_level -= 1) {
         for (mapgen.Configs[f_level].stairs_to) |dst_floor|
-            mapgen.placeStair(f_level, dst_floor, &state.GPA.allocator);
+            mapgen.placeStair(f_level, dst_floor, state.GPA.allocator());
     }
 
     display.draw();
@@ -168,11 +188,11 @@ fn deinitGame() void {
     state.evocables.deinit();
 
     for (literature.posters.items) |poster|
-        poster.deinit(&state.GPA.allocator);
+        poster.deinit(state.GPA.allocator());
     literature.posters.deinit();
 
-    surfaces.freeProps(&state.GPA.allocator);
-    mapgen.freeSpawnTables(&state.GPA.allocator);
+    surfaces.freeProps(state.GPA.allocator());
+    mapgen.freeSpawnTables(state.GPA.allocator());
 
     _ = state.GPA.deinit();
 }
@@ -359,12 +379,12 @@ fn tickGame() void {
                     while (!readInput()) display.draw();
                     if (state.state == .Quit) break;
                 } else {
-                    state._mob_occupation_tick(mob, &state.GPA.allocator);
+                    state._mob_occupation_tick(mob, state.GPA.allocator());
                 }
             }
 
             if (state.dungeon.at(mob.coord).mob == null) {
-                err.bug("Mob {} is dancing around the chessboard!", .{mob.displayName()});
+                err.bug("Mob {s} is dancing around the chessboard!", .{mob.displayName()});
             }
 
             mob.tickFOV();
@@ -374,7 +394,7 @@ fn tickGame() void {
             }
 
             if (prev_energy <= mob.energy) {
-                err.bug("Mob {} did nothing during its turn!", .{mob.displayName()});
+                err.bug("Mob {s} did nothing during its turn!", .{mob.displayName()});
             }
         }
     }
@@ -413,7 +433,7 @@ fn viewerTickGame(cur_level: usize) void {
             mob.tickStatuses();
 
             if (state.dungeon.at(mob.coord).mob == null) {
-                err.bug("Mob {} isn't where it is! (mob.coord: {}, last activity: {})", .{
+                err.bug("Mob {s} isn't where it is! (mob.coord: {}, last activity: {})", .{
                     mob.displayName(), mob.coord, mob.activities.current(),
                 });
             }
@@ -422,13 +442,13 @@ fn viewerTickGame(cur_level: usize) void {
                 _ = mob.rest();
                 continue;
             } else {
-                state._mob_occupation_tick(mob, &state.GPA.allocator);
+                state._mob_occupation_tick(mob, state.GPA.allocator());
             }
 
             mob.tickFOV();
 
             if (state.dungeon.at(mob.coord).mob == null) {
-                err.bug("Mob {} isn't where it is! (mob.coord: {}, last activity: {})", .{
+                err.bug("Mob {s} isn't where it is! (mob.coord: {}, last activity: {})", .{
                     mob.displayName(), mob.coord, mob.activities.current(),
                 });
             }
@@ -463,7 +483,7 @@ fn viewerDisplay(tty_height: usize, level: usize, sy: usize) void {
 fn viewerMain() void {
     state.player.kill();
 
-    var level: usize = PLAYER_STARTING_LEVEL;
+    var level: usize = state.PLAYER_STARTING_LEVEL;
     var y: usize = 0;
     var running: bool = false;
 
@@ -499,7 +519,7 @@ fn viewerMain() void {
                     'j' => if (y < HEIGHT) {
                         y = math.min(y + (tty_height / 2), HEIGHT - 1);
                     },
-                    'k' => y = utils.saturating_sub(y, (tty_height / 2)),
+                    'k' => y -|= tty_height / 2,
                     'e' => explosions.kaboom(
                         Coord.new2(
                             level,
@@ -529,9 +549,9 @@ pub fn main() anyerror!void {
 
     var use_viewer: bool = undefined;
 
-    if (std.process.getEnvVarOwned(&state.GPA.allocator, "RL_MODE")) |v| {
+    if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_MODE")) |v| {
         use_viewer = mem.eql(u8, v, "viewer");
-        state.GPA.allocator.free(v);
+        state.GPA.allocator().free(v);
     } else |_| {
         use_viewer = false;
     }
@@ -553,10 +573,10 @@ pub fn main() anyerror!void {
         };
     }
 
-    const morgue = state.formatMorgue(&state.GPA.allocator) catch err.wat();
+    const morgue = state.formatMorgue(state.GPA.allocator()) catch err.wat();
     const filename = "dump.txt";
     try std.fs.cwd().writeFile(filename, morgue.items[0..]);
-    std.log.info("Morgue file written to {}.", .{filename});
+    std.log.info("Morgue file written to {s}.", .{filename});
     morgue.deinit(); // We can't defer{} this because we're deinit'ing the allocator
 
     deinitGame();

@@ -13,10 +13,23 @@ const mapgen = @import("mapgen.zig");
 const dijkstra = @import("dijkstra.zig");
 const buffer = @import("buffer.zig");
 const rng = @import("rng.zig");
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
+
+const Mob = types.Mob;
+const EnemyRecord = types.EnemyRecord;
+const Coord = types.Coord;
+const Direction = types.Direction;
+const Status = types.Status;
 
 const StackBuffer = buffer.StackBuffer;
 const SpellOptions = spells.SpellOptions;
+
+const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
+const DIRECTIONS = types.DIRECTIONS;
+
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
 
 fn flingRandomSpell(me: *Mob, target: *Mob) void {
     const spell = rng.chooseUnweighted(SpellOptions, me.spells);
@@ -141,13 +154,13 @@ pub fn keepDistance(mob: *Mob, from: Coord, distance: usize) bool {
     return moved;
 }
 
-pub fn dummyWork(m: *Mob, _: *mem.Allocator) void {
+pub fn dummyWork(m: *Mob, _: mem.Allocator) void {
     _ = m.rest();
 }
 
 pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
     // Search for an existing record.
-    for (mob.enemies.items) |*enemyrec, i| {
+    for (mob.enemies.items) |*enemyrec| {
         if (enemyrec.mob == new.mob) {
             enemyrec.counter = mob.memory_duration;
             enemyrec.last_seen = new.mob.coord;
@@ -188,7 +201,7 @@ pub fn checkForHostiles(mob: *Mob) void {
 
         if (state.dungeon.at(fitem).mob) |othermob| {
             if (othermob.is_dead) {
-                err.bug("Mob {} is dead but walking around!", .{othermob.displayName()});
+                err.bug("Mob {s} is dead but walking around!", .{othermob.displayName()});
             }
 
             if (othermob == mob) continue;
@@ -317,7 +330,7 @@ fn guardGlanceLeftRight(mob: *Mob, prev_direction: Direction) void {
     mob.facing = newdirection;
 }
 
-pub fn patrolWork(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn patrolWork(mob: *Mob, _: mem.Allocator) void {
     assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.ai.phase == .Work);
 
@@ -350,7 +363,7 @@ pub fn patrolWork(mob: *Mob, alloc: *mem.Allocator) void {
     guardGlanceLeftRight(mob, prev_facing);
 }
 
-pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn guardWork(mob: *Mob, _: mem.Allocator) void {
     var post = mob.ai.work_area.items[0];
 
     // Choose a nearby room to watch as well, if we haven't already.
@@ -450,7 +463,7 @@ pub fn guardWork(mob: *Mob, alloc: *mem.Allocator) void {
     }
 }
 
-pub fn standStillAndGuardWork(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn standStillAndGuardWork(mob: *Mob, _: mem.Allocator) void {
     var post = mob.ai.work_area.items[0];
 
     if (mob.coord.eq(post)) {
@@ -469,7 +482,7 @@ pub fn standStillAndGuardWork(mob: *Mob, alloc: *mem.Allocator) void {
     }
 }
 
-pub fn watcherWork(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn watcherWork(mob: *Mob, _: mem.Allocator) void {
     const post = mob.ai.work_area.items[0];
 
     if (mob.coord.eq(post)) {
@@ -489,7 +502,7 @@ pub fn watcherWork(mob: *Mob, alloc: *mem.Allocator) void {
     }
 }
 
-pub fn interactionLaborerWork(mob: *Mob, _: *mem.Allocator) void {
+pub fn interactionLaborerWork(mob: *Mob, _: mem.Allocator) void {
     assert(mob.ai.work_area.items.len == 1);
 
     const machine_coord = mob.ai.work_area.items[0];
@@ -508,7 +521,7 @@ pub fn interactionLaborerWork(mob: *Mob, _: *mem.Allocator) void {
     }
 }
 
-pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
+pub fn cleanerWork(mob: *Mob, _: mem.Allocator) void {
     switch (mob.ai.work_phase) {
         .CleanerScan => {
             if (mob.ai.work_area.items.len > 0 and
@@ -523,7 +536,7 @@ pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
             for (state.tasks.items) |*task, id|
                 if (!task.completed and task.assigned_to == null) {
                     switch (task.type) {
-                        .Clean => |c| {
+                        .Clean => |_| {
                             mob.ai.task_id = id;
                             task.assigned_to = mob;
                             mob.ai.work_phase = .CleanerClean;
@@ -569,7 +582,7 @@ pub fn cleanerWork(mob: *Mob, _: *mem.Allocator) void {
     }
 }
 
-pub fn engineerWork(mob: *Mob, _: *mem.Allocator) void {
+pub fn engineerWork(mob: *Mob, _: mem.Allocator) void {
     switch (mob.ai.work_phase) {
         .EngineerScan => {
             if (mob.ai.work_area.items.len > 0 and
@@ -639,7 +652,7 @@ pub fn engineerWork(mob: *Mob, _: *mem.Allocator) void {
     }
 }
 
-pub fn haulerWork(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn haulerWork(mob: *Mob, alloc: mem.Allocator) void {
     switch (mob.ai.work_phase) {
         .HaulerScan => {
             if (mob.ai.work_area.items.len > 0 and
@@ -654,7 +667,7 @@ pub fn haulerWork(mob: *Mob, alloc: *mem.Allocator) void {
             for (state.tasks.items) |*task, id|
                 if (!task.completed and task.assigned_to == null) {
                     switch (task.type) {
-                        .Haul => |c| {
+                        .Haul => |_| {
                             mob.ai.task_id = id;
                             task.assigned_to = mob;
                             mob.ai.work_phase = .HaulerTake;
@@ -675,7 +688,7 @@ pub fn haulerWork(mob: *Mob, alloc: *mem.Allocator) void {
                     mob.tryMoveTo(itemcoord);
                 }
             } else {
-                const item = state.dungeon.getItem(itemcoord) catch |_| {
+                const item = state.dungeon.getItem(itemcoord) catch {
                     // Somehow the item disappeared, resume job-hunting
                     _ = mob.rest();
                     state.tasks.items[mob.ai.task_id.?].completed = true;
@@ -716,7 +729,7 @@ pub fn haulerWork(mob: *Mob, alloc: *mem.Allocator) void {
     }
 }
 
-pub fn wanderWork(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn wanderWork(mob: *Mob, _: mem.Allocator) void {
     assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.ai.phase == .Work);
 
@@ -767,7 +780,7 @@ pub fn wanderWork(mob: *Mob, alloc: *mem.Allocator) void {
 // - Go through list.
 //      - Skip ones that are already affected by Pain.
 //      - When cast spell, return.
-pub fn tortureWork(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn tortureWork(mob: *Mob, _: mem.Allocator) void {
     const post = mob.ai.work_area.items[0];
 
     if (!mob.coord.eq(post)) {
@@ -814,7 +827,7 @@ pub fn tortureWork(mob: *Mob, alloc: *mem.Allocator) void {
     _ = mob.rest();
 }
 
-pub fn ballLightningWorkOrFight(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn ballLightningWorkOrFight(mob: *Mob, _: mem.Allocator) void {
     var walkability_map: [HEIGHT][WIDTH]bool = undefined;
     for (walkability_map) |*row, y| for (row) |*cell, x| {
         const coord = Coord.new2(mob.coord.z, x, y);
@@ -860,7 +873,7 @@ pub fn ballLightningWorkOrFight(mob: *Mob, alloc: *mem.Allocator) void {
 
 // Check if we can evoke anything.
 // - Move towards hostile, bapping it if we can.
-pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn meleeFight(mob: *Mob, _: mem.Allocator) void {
     assert(state.dungeon.at(mob.coord).mob != null);
 
     const target = currentEnemy(mob).mob;
@@ -893,7 +906,7 @@ pub fn meleeFight(mob: *Mob, alloc: *mem.Allocator) void {
     }
 }
 
-pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn watcherFight(mob: *Mob, alloc: mem.Allocator) void {
     const target = currentEnemy(mob).mob;
 
     mob.makeNoise(.Shout, .Loud);
@@ -918,7 +931,7 @@ pub fn watcherFight(mob: *Mob, alloc: *mem.Allocator) void {
 //                  - No:  Move towards enemy.
 //                  - Yes: Attack.
 //
-pub fn rangedFight(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn rangedFight(mob: *Mob, alloc: mem.Allocator) void {
     const target = currentEnemy(mob).mob;
 
     // if we can't see the enemy because it's outside of our range of vision,
@@ -1008,7 +1021,7 @@ fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
     }
 }
 
-pub fn mageFight(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
     for (mob.spells) |spell| {
         if (spell.MP_cost > mob.MP) continue;
         if (_findValidTargetForSpell(mob, spell)) |coord| {
@@ -1029,7 +1042,7 @@ pub fn mageFight(mob: *Mob, alloc: *mem.Allocator) void {
 // - Are there allies within view?
 //    - Yes: are they attacking the hostile?
 //        - Yes: paralyze the hostile
-pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn statueFight(mob: *Mob, _: mem.Allocator) void {
     assert(mob.spells.len > 0);
 
     const target = currentEnemy(mob).mob;
@@ -1058,13 +1071,13 @@ pub fn statueFight(mob: *Mob, alloc: *mem.Allocator) void {
 
     if (found_ally and rng.onein(10)) {
         const spell = mob.spells[0];
-        spell.spell.use(mob, mob.coord, target.coord, spell, "The {0} glitters ominously!");
+        spell.spell.use(mob, mob.coord, target.coord, spell, "The {0s} glitters ominously!");
     } else {
         _ = mob.rest();
     }
 }
 
-pub fn flee(mob: *Mob, alloc: *mem.Allocator) void {
+pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
     const target = currentEnemy(mob).mob;
 
     alertAllyOfHostile(mob);

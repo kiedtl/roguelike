@@ -1,5 +1,9 @@
 const state = @import("state.zig");
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
+
+const Mob = types.Mob;
+const Machine = types.Machine;
+const Coord = types.Coord;
 
 pub const SoundIntensity = enum {
     Silent,
@@ -21,9 +25,7 @@ pub const SoundIntensity = enum {
     }
 };
 
-pub const SoundType = enum {
-    None, Movement, Combat, Shout, Alarm, Scream, Explosion, Crash
-};
+pub const SoundType = enum { None, Movement, Combat, Shout, Alarm, Scream, Explosion, Crash };
 
 // .New: sound has just been made
 // .Old: it was made a few turns ago, but mobs will still show up to investigate

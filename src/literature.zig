@@ -11,7 +11,7 @@ pub const Poster = struct {
     text: []u8,
     placement_counter: usize = 0,
 
-    pub fn deinit(self: *const Poster, alloc: *mem.Allocator) void {
+    pub fn deinit(self: *const Poster, alloc: mem.Allocator) void {
         alloc.free(self.level);
         alloc.free(self.text);
     }
@@ -21,7 +21,7 @@ pub const PosterArrayList = std.ArrayList(Poster);
 
 pub var posters: PosterArrayList = undefined;
 
-pub fn readPosters(alloc: *mem.Allocator) void {
+pub fn readPosters(alloc: mem.Allocator) void {
     const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
     const data_file = data_dir.openFile("posters.tsv", .{
         .read = true,

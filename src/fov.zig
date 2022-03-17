@@ -4,7 +4,16 @@ const assert = std.debug.assert;
 
 const state = @import("state.zig");
 const utils = @import("utils.zig");
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
+
+const Mob = types.Mob;
+const Coord = types.Coord;
+const Direction = types.Direction;
+const DIRECTIONS = types.DIRECTIONS;
+
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
 
 // Memoized values for {sin,cos}(ray_number * PI / 180). Optimization.
 // TODO: figure out a way to populate these arrays with a comptime expression.
@@ -307,8 +316,8 @@ pub fn rayCast(
         rayCastOctants(center, radius, energy, opacity_func, buffer, 0, 360);
     }
 
-    const x_min = utils.saturating_sub(center.x, radius);
-    const y_min = utils.saturating_sub(center.y, radius);
+    const x_min = center.x -| radius;
+    const y_min = center.y -| radius;
     const x_max = math.clamp(center.x + radius + 1, 0, WIDTH - 1);
     const y_max = math.clamp(center.y + radius + 1, 0, HEIGHT - 1);
 
@@ -360,7 +369,7 @@ pub fn rayCastOctants(
                 buffer[coord.y][coord.x] = energy_percent;
             }
 
-            ray_energy = utils.saturating_sub(ray_energy, opacity_func(coord));
+            ray_energy -|= opacity_func(coord);
             if (ray_energy == 0) break;
         }
     }
@@ -516,7 +525,6 @@ fn _cast_light(
         const dy = -j;
         var dx = -j - 1;
         var blocked = false;
-        var pblocked = false;
 
         while (dx <= 0) {
             dx += 1;

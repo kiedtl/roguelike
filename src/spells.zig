@@ -8,7 +8,7 @@ const std = @import("std");
 const meta = std.meta;
 const math = std.math;
 
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
 const combat = @import("combat.zig");
 const err = @import("err.zig");
 const items = @import("items.zig");
@@ -19,6 +19,27 @@ const state = @import("state.zig");
 const utils = @import("utils.zig");
 const rng = @import("rng.zig");
 
+const Coord = types.Coord;
+const Tile = types.Tile;
+const Item = types.Item;
+const Ring = types.Ring;
+const Weapon = types.Weapon;
+const StatusDataInfo = types.StatusDataInfo;
+const Armor = types.Armor;
+const SurfaceItem = types.SurfaceItem;
+const Mob = types.Mob;
+const Status = types.Status;
+const Machine = types.Machine;
+const Direction = types.Direction;
+
+const DIRECTIONS = types.DIRECTIONS;
+const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
+
+// -----------------------------------------------------------------------------
+
 pub const CAST_MASS_DISMISSAL = Spell{
     .name = "mass dismissal",
     .cast_type = .Smite,
@@ -27,7 +48,7 @@ pub const CAST_MASS_DISMISSAL = Spell{
     .noise = .Quiet,
     .effect_type = .{ .Custom = _effectMassDismissal },
 };
-fn _hasEffectMassDismissal(caster: *Mob, spell: SpellOptions, target: Coord) bool {
+fn _hasEffectMassDismissal(caster: *Mob, _: SpellOptions, _: Coord) bool {
     for (caster.enemies.items) |enemy_record| {
         if (caster.cansee(enemy_record.mob.coord) and
             !enemy_record.mob.is_undead and
@@ -38,7 +59,7 @@ fn _hasEffectMassDismissal(caster: *Mob, spell: SpellOptions, target: Coord) boo
     }
     return false;
 }
-fn _effectMassDismissal(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _effectMassDismissal(caster: Coord, _: Spell, opts: SpellOptions, _: Coord) void {
     const caster_mob = state.dungeon.at(caster).mob.?;
 
     for (caster_mob.enemies.items) |enemy_record| {
@@ -63,12 +84,12 @@ pub const CAST_SUMMON_ENEMY = Spell{
     .noise = .Quiet,
     .effect_type = .{ .Custom = _effectSummonEnemy },
 };
-fn _hasEffectSummonEnemy(caster: *Mob, spell: SpellOptions, target: Coord) bool {
+fn _hasEffectSummonEnemy(caster: *Mob, _: SpellOptions, target: Coord) bool {
     const mob = state.dungeon.at(target).mob.?;
     return (mob == state.player or mob.ai.phase == .Flee) and
         !caster.cansee(mob.coord);
 }
-fn _effectSummonEnemy(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _effectSummonEnemy(caster: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
     const caster_mob = state.dungeon.at(caster).mob.?;
     const target_mob = state.dungeon.at(coord).mob.?;
 
@@ -93,7 +114,7 @@ fn _effectSummonEnemy(caster: Coord, spell: Spell, opts: SpellOptions, coord: Co
     if (new) |newcoord| {
         _ = target_mob.teleportTo(newcoord, null, true);
 
-        state.messageAboutMob(target_mob, caster, .SpellCast, "are dragged back to the {}!", .{caster_mob.displayName()}, "is dragged back to the {}!", .{caster_mob.displayName()});
+        state.messageAboutMob(target_mob, caster, .SpellCast, "are dragged back to the {s}!", .{caster_mob.displayName()}, "is dragged back to the {s}!", .{caster_mob.displayName()});
     }
 }
 
@@ -105,7 +126,7 @@ pub const CAST_AURA_DISPERSAL = Spell{
     .noise = .Quiet,
     .effect_type = .{ .Custom = _effectAuraDispersal },
 };
-fn _hasEffectAuraDispersal(caster: *Mob, spell: SpellOptions, target: Coord) bool {
+fn _hasEffectAuraDispersal(caster: *Mob, _: SpellOptions, target: Coord) bool {
     for (&DIRECTIONS) |d| if (target.move(d, state.mapgeometry)) |neighbor| {
         if (state.dungeon.at(neighbor).mob) |mob|
             if (mob.isHostileTo(caster)) {
@@ -114,7 +135,7 @@ fn _hasEffectAuraDispersal(caster: *Mob, spell: SpellOptions, target: Coord) boo
     };
     return false;
 }
-fn _effectAuraDispersal(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _effectAuraDispersal(caster: Coord, _: Spell, _: SpellOptions, _: Coord) void {
     const caster_mob = state.dungeon.at(caster).mob.?;
     var had_visible_effect = false;
     for (&DIRECTIONS) |d| if (caster.move(d, state.mapgeometry)) |neighbor| {
@@ -148,7 +169,7 @@ fn _effectAuraDispersal(caster: Coord, spell: Spell, opts: SpellOptions, coord: 
     };
 
     if (had_visible_effect)
-        state.message(.SpellCast, "Space bends horribly around the {}!", .{
+        state.message(.SpellCast, "Space bends horribly around the {s}!", .{
             caster_mob.displayName(),
         });
 }
@@ -160,11 +181,11 @@ pub const CAST_CONJ_BALL_LIGHTNING = Spell{
     .noise = .Quiet,
     .effect_type = .{ .Custom = _effectConjureBL },
 };
-fn _effectConjureBL(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _effectConjureBL(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
     for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
         if (state.is_walkable(neighbor, .{ .right_now = true })) {
             // FIXME: passing allocator directly is anti-pattern?
-            const w = mobs.placeMob(&state.GPA.allocator, &mobs.BallLightningTemplate, neighbor, .{});
+            const w = mobs.placeMob(state.GPA.allocator(), &mobs.BallLightningTemplate, neighbor, .{});
             w.addStatus(.Lifespan, 0, opts.power, false);
             return;
         }
@@ -179,7 +200,7 @@ pub const BOLT_CRYSTAL = Spell{
     .noise = .Medium,
     .effect_type = .{ .Custom = _effectBoltCrystal },
 };
-fn _effectBoltCrystal(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _effectBoltCrystal(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
     if (state.dungeon.at(coord).mob) |victim| {
         const damage = rng.rangeClumping(usize, opts.power / 2, opts.power, 2);
         victim.takeDamage(.{
@@ -195,7 +216,7 @@ pub const BOLT_LIGHTNING = Spell{
     .noise = .Medium,
     .effect_type = .{ .Custom = _effectBoltLightning },
 };
-fn _effectBoltLightning(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _effectBoltLightning(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
     if (state.dungeon.at(coord).mob) |victim| {
         const avg_dmg = opts.power;
         const dmg = rng.rangeClumping(usize, avg_dmg / 2, avg_dmg * 2, 2);
@@ -214,7 +235,7 @@ pub const BOLT_FIRE = Spell{
     .noise = .Medium,
     .effect_type = .{ .Custom = _effectBoltFire },
 };
-fn _effectBoltFire(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _effectBoltFire(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
     if (state.dungeon.at(coord).mob) |victim| {
         const avg_dmg = opts.power;
         const dmg = rng.rangeClumping(usize, avg_dmg / 2, avg_dmg * 2, 2);
@@ -244,11 +265,11 @@ pub const CAST_HEAL_UNDEAD = Spell{
     .effect_type = .{ .Custom = _effectHealUndead },
     .checks_will = false,
 };
-fn _hasEffectHealUndead(caster: *Mob, spell: SpellOptions, target: Coord) bool {
+fn _hasEffectHealUndead(caster: *Mob, _: SpellOptions, target: Coord) bool {
     const mob = state.dungeon.at(target).mob.?;
     return mob.HP < (mob.max_HP / 2) and utils.getNearestCorpse(caster) != null;
 }
-fn _effectHealUndead(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _effectHealUndead(caster: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
     const caster_mob = state.dungeon.at(caster).mob.?;
     const corpse_coord = utils.getNearestCorpse(caster_mob).?;
     const corpse_name = state.dungeon.at(corpse_coord).surface.?.Corpse.displayName();
@@ -257,7 +278,7 @@ fn _effectHealUndead(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coo
     const ally = state.dungeon.at(coord).mob.?;
     ally.HP = math.clamp(ally.HP + ((ally.max_HP - ally.HP) / 2), 0, ally.max_HP);
 
-    state.message(.SpellCast, "The {} corpse dissolves away, healing the {}!", .{
+    state.message(.SpellCast, "The {s} corpse dissolves away, healing the {s}!", .{
         corpse_name, ally.displayName(),
     });
 }
@@ -269,13 +290,13 @@ pub const CAST_HASTEN_ROT = Spell{
     .effect_type = .{ .Custom = _effectHastenRot },
     .checks_will = false,
 };
-fn _effectHastenRot(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _effectHastenRot(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     state.dungeon.at(coord).surface = null;
 
     state.dungeon.atGas(coord)[gas.Miasma.id] = @intToFloat(f64, opts.power) / 100;
     if (state.player.cansee(coord)) {
-        state.message(.SpellCast, "The {} corpse explodes in a blast of foul miasma!", .{
+        state.message(.SpellCast, "The {s} corpse explodes in a blast of foul miasma!", .{
             corpse.displayName(),
         });
     }
@@ -288,11 +309,11 @@ pub const CAST_RESURRECT_FIRE = Spell{
     .effect_type = .{ .Custom = _resurrectFire },
     .checks_will = false,
 };
-fn _resurrectFire(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _resurrectFire(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     if (corpse.raiseAsUndead(coord)) {
         if (state.player.cansee(coord)) {
-            state.message(.SpellCast, "The {} rises, burning with an unearthly flame!", .{
+            state.message(.SpellCast, "The {s} rises, burning with an unearthly flame!", .{
                 corpse.displayName(),
             });
         }
@@ -311,11 +332,11 @@ pub const CAST_RESURRECT_FROZEN = Spell{
     .effect_type = .{ .Custom = _resurrectFrozen },
     .checks_will = false,
 };
-fn _resurrectFrozen(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _resurrectFrozen(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     if (corpse.raiseAsUndead(coord)) {
         if (state.player.cansee(coord)) {
-            state.message(.SpellCast, "The {} glows with a cold light!", .{
+            state.message(.SpellCast, "The {s} glows with a cold light!", .{
                 corpse.displayName(),
             });
         }
@@ -341,16 +362,16 @@ pub const CAST_POLAR_LAYER = Spell{
     .effect_type = .{ .Custom = _effectPolarLayer },
     .checks_will = false,
 };
-fn _hasEffectPolarLayer(caster: *Mob, spell: SpellOptions, target: Coord) bool {
+fn _hasEffectPolarLayer(_: *Mob, _: SpellOptions, target: Coord) bool {
     return state.dungeon.neighboringWalls(target, false) > 0;
 }
-fn _effectPolarLayer(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _effectPolarLayer(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
     const mob = state.dungeon.at(coord).mob.?;
     for (&CARDINAL_DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
         if (state.dungeon.at(neighbor).type == .Wall) {
             state.dungeon.at(neighbor).type = .Floor;
             // FIXME: passing allocator directly is anti-pattern?
-            const w = mobs.placeMob(&state.GPA.allocator, &mobs.LivingIceTemplate, neighbor, .{});
+            const w = mobs.placeMob(state.GPA.allocator(), &mobs.LivingIceTemplate, neighbor, .{});
             w.addStatus(.Lifespan, 0, opts.power, false);
         }
     };
@@ -358,7 +379,7 @@ fn _effectPolarLayer(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coo
     if (mob == state.player) {
         state.message(.SpellCast, "The walls near you transmute into living ice!", .{});
     } else if (state.player.cansee(mob.coord)) {
-        state.message(.SpellCast, "The walls near the {} transmute into living ice!", .{mob.displayName()});
+        state.message(.SpellCast, "The walls near the {s} transmute into living ice!", .{mob.displayName()});
     }
 }
 
@@ -369,11 +390,11 @@ pub const CAST_RESURRECT_NORMAL = Spell{
     .effect_type = .{ .Custom = _resurrectNormal },
     .checks_will = false,
 };
-fn _resurrectNormal(caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void {
+fn _resurrectNormal(_: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     if (corpse.raiseAsUndead(coord)) {
         if (state.player.cansee(coord)) {
-            state.message(.SpellCast, "The {} is imbued with a spirit of malice and rises!", .{
+            state.message(.SpellCast, "The {s} is imbued with a spirit of malice and rises!", .{
                 corpse.displayName(),
             });
         }
@@ -439,9 +460,7 @@ pub const Spell = struct {
     },
 
     // Only used if cast_type == .Smite.
-    smite_target_type: enum {
-        Self, UndeadAlly, Mob, Corpse
-    } = .Mob,
+    smite_target_type: enum { Self, UndeadAlly, Mob, Corpse } = .Mob,
 
     // Only used if cast_type == .Bolt
     bolt_dodgeable: bool = false,
@@ -477,7 +496,7 @@ pub const Spell = struct {
                 if (caster) |c| c.displayName() else "giant tomato";
             state.message(
                 .SpellCast,
-                message orelse "The {0} gestures ominously!",
+                message orelse "The {0s} gestures ominously!",
                 .{name},
             );
         }
@@ -511,19 +530,19 @@ pub const Spell = struct {
 
                             if (self.bolt_dodgeable) {
                                 if (rng.percent(combat.chanceOfAttackEvaded(victim, caster))) {
-                                    state.messageAboutMob(victim, caster_coord, .CombatUnimportant, "dodge the {}.", .{self.name}, "dodges the {}.", .{self.name});
+                                    state.messageAboutMob(victim, caster_coord, .CombatUnimportant, "dodge the {s}.", .{self.name}, "dodges the {s}.", .{self.name});
                                     continue;
                                 }
                             }
 
                             if (victim == state.player) {
-                                state.message(.Combat, "The {} hits you!", .{self.name});
+                                state.message(.Combat, "The {s} hits you!", .{self.name});
                             } else if (state.player.cansee(victim.coord)) {
-                                state.message(.Combat, "The {} hits the {}!", .{
+                                state.message(.Combat, "The {s} hits the {s}!", .{
                                     self.name, victim.displayName(),
                                 });
                             } else if (state.player.cansee(caster_coord)) {
-                                state.message(.Combat, "The {} hits something!", .{self.name});
+                                state.message(.Combat, "The {s} hits something!", .{self.name});
                             }
                         }
 

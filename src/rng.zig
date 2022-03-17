@@ -10,11 +10,11 @@ var rng: rand.Isaac64 = undefined;
 pub var seed: u64 = undefined;
 //seed = 0xdefaced_cafe;
 
-pub fn init(alloc: *std.mem.Allocator) !void {
+pub fn init(alloc: std.mem.Allocator) !void {
     if (std.process.getEnvVarOwned(alloc, "RL_SEED")) |seed_str| {
         defer alloc.free(seed_str);
         seed = std.fmt.parseInt(u64, seed_str, 0) catch |err| {
-            std.log.err("{} is an invalid seed.", .{seed_str});
+            std.log.err("{s} is an invalid seed.", .{seed_str});
             return err;
         };
     } else |_| {
@@ -26,14 +26,14 @@ pub fn init(alloc: *std.mem.Allocator) !void {
 
 pub fn int(comptime T: type) T {
     return switch (@typeInfo(T)) {
-        .Int => rng.random.int(T),
-        .Float => rng.random.float(T),
+        .Int => rng.random().int(T),
+        .Float => rng.random().float(T),
         else => @compileError("Expected int or float, got " ++ @typeName(T)),
     };
 }
 
 pub fn boolean() bool {
-    return rng.random.int(u1) == 1;
+    return rng.random().int(u1) == 1;
 }
 
 pub fn percent(number: anytype) bool {
@@ -74,7 +74,7 @@ pub fn range(comptime T: type, min: T, max: T) T {
 }
 
 pub fn shuffle(comptime T: type, arr: []T) void {
-    rng.random.shuffle(T, arr);
+    rng.random().shuffle(T, arr);
 }
 
 pub fn chooseUnweighted(comptime T: type, arr: []const T) T {
@@ -91,7 +91,7 @@ pub fn choose(comptime T: type, arr: []const T, weights: []const usize) !T {
         const weight = weights[index];
         if (weight == 0) continue;
 
-        const rnd = rng.random.int(usize) % (weight_total + weight);
+        const rnd = rng.random().int(usize) % (weight_total + weight);
         if (rnd >= weight_total) // probability is weight/(total+weight)
             selected = item;
 
@@ -111,8 +111,8 @@ test "range" {
         const r_u8 = range(u8, 10, 200);
         const r_usize = range(usize, 34234, 89821);
 
-        std.testing.expect(r_u8 >= 10 and r_u8 < 200);
-        std.testing.expect(r_usize >= 34234 and r_usize < 89821);
+        testing.expect(r_u8 >= 10 and r_u8 < 200);
+        testing.expect(r_usize >= 34234 and r_usize < 89821);
     }
 }
 

@@ -1,7 +1,30 @@
 const std = @import("std");
 
 const state = @import("state.zig");
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
+
+const Coord = types.Coord;
+const Direction = types.Direction;
+const Tile = types.Tile;
+const Item = types.Item;
+const Ring = types.Ring;
+const Weapon = types.Weapon;
+const StatusDataInfo = types.StatusDataInfo;
+const Armor = types.Armor;
+const SurfaceItem = types.SurfaceItem;
+const Mob = types.Mob;
+const Status = types.Status;
+const Machine = types.Machine;
+const PropArrayList = types.PropArrayList;
+const Container = types.Container;
+const Material = types.Material;
+const Prop = types.Prop;
+
+const DIRECTIONS = types.DIRECTIONS;
+const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
 
 pub const TaskArrayList = std.ArrayList(Task);
 
@@ -54,7 +77,6 @@ pub fn tickTasks(level: usize) void {
 
                     var spattering = state.dungeon.at(coord).spatter.iterator();
                     while (spattering.next()) |entry| {
-                        const num = entry.value.*;
                         if (entry.value.* > 0) {
                             clean = false;
                             break;
@@ -108,7 +130,7 @@ pub fn tickTasks(level: usize) void {
                     {
                         var already_reported = false;
 
-                        for (state.tasks.items) |task, id| switch (task.type) {
+                        for (state.tasks.items) |task| switch (task.type) {
                             .Haul => |h| if (h.from.eq(coord) and !task.completed) {
                                 already_reported = true;
                                 break;
@@ -164,7 +186,7 @@ pub fn tickTasks(level: usize) void {
                 {
                     var already_reported = false;
 
-                    for (state.tasks.items) |task, id| switch (task.type) {
+                    for (state.tasks.items) |task| switch (task.type) {
                         .Haul => |h| if (h.to.eq(coord) and !task.completed) {
                             already_reported = true;
                             break;

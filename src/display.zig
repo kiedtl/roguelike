@@ -11,9 +11,24 @@ const gas = @import("gas.zig");
 const state = @import("state.zig");
 const termbox = @import("termbox.zig");
 const utils = @import("utils.zig");
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
+
+const Mob = types.Mob;
+const Coord = types.Coord;
+const Direction = types.Direction;
+const Tile = types.Tile;
+const Status = types.Status;
+const Item = types.Item;
+const CoordArrayList = types.CoordArrayList;
+const DIRECTIONS = types.DIRECTIONS;
+
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
+
+// -----------------------------------------------------------------------------
 
 pub const LEFT_INFO_WIDTH: usize = 24;
 pub const RIGHT_INFO_WIDTH: usize = 24;
@@ -256,7 +271,7 @@ fn drawEnemyInfo(
         var mobcell = Tile.displayAs(mob.coord, false);
         termbox.tb_put_cell(startx, y, &mobcell);
 
-        y = _drawStr(startx + 1, y, endx, " {}", .{mob.displayName()}, .{});
+        y = _drawStr(startx + 1, y, endx, " {s}", .{mob.displayName()}, .{});
 
         _draw_bar(y, startx, endx, @floatToInt(usize, mob.HP), @floatToInt(usize, mob.max_HP), "health", 0x232faa, 0xffffff);
         y += 1;
@@ -276,7 +291,7 @@ fn drawEnemyInfo(
         }
 
         const activity = if (mob.prisoner_status != null) if (mob.prisoner_status.?.held_by != null) "(chained)" else "(prisoner)" else mob.activity_description();
-        y = _drawStr(endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2), y, endx, "{}", .{activity}, .{ .fg = 0x9a9a9a });
+        y = _drawStr(endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2), y, endx, "{s}", .{activity}, .{ .fg = 0x9a9a9a });
 
         y += 2;
     }
@@ -308,7 +323,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     while (y < endy) : (y += 1) _clear_line(startx, endx, y);
     y = starty + 1;
 
-    y = _drawStr(startx, y, endx, "--- {} ---", .{
+    y = _drawStr(startx, y, endx, "--- {s} ---", .{
         state.levelinfo[state.player.coord.z].name,
     }, .{ .fg = 0xffffff });
     y += 1;
@@ -317,7 +332,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         const diff = @intCast(isize, strength) - @intCast(isize, state.player.base_strength);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _drawStr(startx, y, endx, "$cstrength$. {: >5} $g({}{})$.", .{ strength, sign, adiff }, .{});
+        y = _drawStr(startx, y, endx, "$cstrength$. {: >5} $g({s}{})$.", .{ strength, sign, adiff }, .{});
     } else {
         y = _drawStr(startx, y, endx, "$cstrength$. {: >5}", .{strength}, .{});
     }
@@ -326,7 +341,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         const diff = @intCast(isize, evasion) - @intCast(isize, state.player.base_evasion);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _drawStr(startx, y, endx, "$cevade%$.   {: >4}% $g({}{})$.", .{ evasion, sign, adiff }, .{});
+        y = _drawStr(startx, y, endx, "$cevade%$.   {: >4}% $g({s}{})$.", .{ evasion, sign, adiff }, .{});
     } else {
         y = _drawStr(startx, y, endx, "$cevade%$.   {: >4}%", .{evasion}, .{});
     }
@@ -338,7 +353,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         const diff = @intCast(isize, missile) - @intCast(isize, state.player.base_missile);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _drawStr(startx, y, endx, "$cmissile%$. {: >4}% $g({}{})$.", .{ missile, sign, adiff }, .{});
+        y = _drawStr(startx, y, endx, "$cmissile%$. {: >4}% $g({s}{})$.", .{ missile, sign, adiff }, .{});
     } else {
         y = _drawStr(startx, y, endx, "$cmissile%$. {: >4}%", .{missile}, .{});
     }
@@ -347,7 +362,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         const diff = @intCast(isize, speed) - @intCast(isize, state.player.base_speed);
         const adiff = math.absInt(diff) catch unreachable;
         const sign = if (diff > 0) "+" else "-";
-        y = _drawStr(startx, y, endx, "$cspeed$.    {: >4}% ({}{}%)", .{ speed, sign, adiff }, .{});
+        y = _drawStr(startx, y, endx, "$cspeed$.    {: >4}% ({s}{}%)", .{ speed, sign, adiff }, .{});
     } else {
         y = _drawStr(startx, y, endx, "$cspeed$.    {: >4}%", .{speed}, .{});
     }
@@ -427,17 +442,17 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     if (state.player.inventory.wielded) |weapon| {
         const item = Item{ .Weapon = weapon };
         const dest = (item.shortName() catch unreachable).constSlice();
-        y = _drawStr(startx, y, endx, "$cweapon$. {}", .{dest}, .{});
+        y = _drawStr(startx, y, endx, "$cweapon$. {s}", .{dest}, .{});
     }
     if (state.player.inventory.backup) |backup| {
         const item = Item{ .Weapon = backup };
         const dest = (item.shortName() catch unreachable).constSlice();
-        y = _drawStr(startx, y, endx, "$cbackup$. {}", .{dest}, .{});
+        y = _drawStr(startx, y, endx, "$cbackup$. {s}", .{dest}, .{});
     }
     if (state.player.inventory.armor) |armor_item| {
         const item = Item{ .Armor = armor_item };
         const dest = (item.shortName() catch unreachable).constSlice();
-        y = _drawStr(startx, y, endx, "$c armor$. {}", .{dest}, .{});
+        y = _drawStr(startx, y, endx, "$c armor$. {s}", .{dest}, .{});
     }
     y += 1;
 }
@@ -454,7 +469,7 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
         const msg = state.messages.items[i];
         const msgtext = utils.used(msg.msg);
 
-        const col = if (msg.turn >= utils.saturating_sub(state.ticks, 3) or i == msgcount)
+        const col = if (msg.turn >= state.ticks -| 3 or i == msgcount)
             msg.type.color()
         else
             colors.darken(msg.type.color(), 2);
@@ -467,11 +482,11 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
         _clear_line(startx, endx, y);
 
         if (msg.dups == 0) {
-            y = _drawStr(startx, y, endx, "{}{}", .{
+            y = _drawStr(startx, y, endx, "{s}{s}", .{
                 prefix, msgtext,
             }, .{ .fg = col, .fold = true });
         } else {
-            y = _drawStr(startx, y, endx, "{}{} (×{})", .{
+            y = _drawStr(startx, y, endx, "{s}{s} (×{})", .{
                 prefix, msgtext, msg.dups + 1,
             }, .{ .fg = col, .fold = true });
         }
@@ -489,20 +504,20 @@ fn _mobs_can_see(moblist: []const *Mob, coord: Coord) bool {
 }
 
 pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize, endy: isize) void {
-    const playery = @intCast(isize, state.player.coord.y);
-    const playerx = @intCast(isize, state.player.coord.x);
+    //const playery = @intCast(isize, state.player.coord.y);
+    //const playerx = @intCast(isize, state.player.coord.x);
     const level = state.player.coord.z;
 
     var cursory: isize = starty;
     var cursorx: isize = startx;
 
-    const height = @intCast(usize, endy - starty);
-    const width = @intCast(usize, endx - startx);
+    //const height = @intCast(usize, endy - starty);
+    //const width = @intCast(usize, endx - startx);
+    //const map_starty = playery - @intCast(isize, height / 2);
+    //const map_endy = playery + @intCast(isize, height / 2);
+    //const map_startx = playerx - @intCast(isize, width / 2);
+    //const map_endx = playerx + @intCast(isize, width / 2);
 
-    // const map_starty = playery - @intCast(isize, height / 2);
-    // const map_endy = playery + @intCast(isize, height / 2);
-    // const map_startx = playerx - @intCast(isize, width / 2);
-    // const map_endx = playerx + @intCast(isize, width / 2);
     const map_starty: isize = 0;
     const map_endy: isize = HEIGHT;
     const map_startx: isize = 0;
@@ -529,7 +544,6 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
             const u_y: usize = @intCast(usize, y);
             const coord = Coord.new2(level, u_x, u_y);
 
-            const material = state.dungeon.at(coord).material;
             var tile = Tile.displayAs(coord, false);
 
             // if player can't see area, draw a blank/grey tile, depending on
@@ -622,7 +636,7 @@ pub fn draw() void {
     // shouldn't know what's in the FOV of an invisible mob!
     //
     // Then, sort list to put nonhostiles last, and closer mobs first.
-    const moblist = state.createMobList(false, true, state.player.coord.z, &fba.allocator);
+    const moblist = state.createMobList(false, true, state.player.coord.z, fba.allocator());
     {
         const S = struct {
             pub fn _sortFunc(_: void, a: *Mob, b: *Mob) bool {
@@ -680,7 +694,7 @@ pub fn chooseCell() ?Coord {
     // Create a list of all mobs on the map so that we can calculate what tiles
     // are in the FOV of any mob. Use only mobs that the player can see, the player
     // shouldn't know what's in the FOV of an invisible mob!
-    const moblist = state.createMobList(false, true, state.player.coord.z, &fba.allocator);
+    const moblist = state.createMobList(false, true, state.player.coord.z, fba.allocator());
 
     var coord: Coord = state.player.coord;
 
@@ -745,15 +759,15 @@ pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
     assert(items.len > 0); // This should have been handled previously.
 
     // A bit messy.
-    var namebuf = std.ArrayList([]const u8).init(&state.GPA.allocator);
+    var namebuf = std.ArrayList([]const u8).init(state.GPA.allocator());
     defer {
-        for (namebuf.items) |str| state.GPA.allocator.free(str);
+        for (namebuf.items) |str| state.GPA.allocator().free(str);
         namebuf.deinit();
     }
 
     for (items) |item| {
         const itemname = item.longName() catch err.wat();
-        const string = state.GPA.allocator.alloc(u8, itemname.len) catch err.wat();
+        const string = state.GPA.allocator().alloc(u8, itemname.len) catch err.wat();
         std.mem.copy(u8, string, itemname.constSlice());
         namebuf.append(string) catch err.wat();
     }
@@ -808,7 +822,7 @@ pub fn chooseOption(msg: []const u8, options: []const []const u8) ?usize {
             }
 
             const fg = if (i == chosen) colors.WHITE else colors.percentageOf(colors.GREY, darkening);
-            y = _drawStr(x + 1, y, endx, " {} - {}", .{ i, name }, .{ .fg = fg, .bg = dark_bg_grey });
+            y = _drawStr(x + 1, y, endx, " {} - {s}", .{ i, name }, .{ .fg = fg, .bg = dark_bg_grey });
 
             y += 1;
         }

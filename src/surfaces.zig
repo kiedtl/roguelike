@@ -16,7 +16,25 @@ const gas = @import("gas.zig");
 const tsv = @import("tsv.zig");
 const rng = @import("rng.zig");
 const materials = @import("materials.zig");
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
+
+const Coord = types.Coord;
+const Direction = types.Direction;
+const Item = types.Item;
+const Weapon = types.Weapon;
+const Mob = types.Mob;
+const Machine = types.Machine;
+const PropArrayList = types.PropArrayList;
+const Container = types.Container;
+const Material = types.Material;
+const Vial = types.Vial;
+const Prop = types.Prop;
+
+const DIRECTIONS = types.DIRECTIONS;
+const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
@@ -646,7 +664,7 @@ fn powerBlastFurnace(machine: *Machine) void {
     const input_areas = areas[0..4];
     const furnace_area = areas[4];
     const output_areas = areas[5..7];
-    const refuse_areas = areas[7..9];
+    //const refuse_areas = areas[7..9];
 
     // Move input items to furnace
     for (input_areas) |input_area| {
@@ -848,7 +866,7 @@ fn powerMine(machine: *Machine) void {
     }
 }
 
-fn interact1RechargingStation(machine: *Machine, by: *Mob) bool {
+fn interact1RechargingStation(_: *Machine, by: *Mob) bool {
     // XXX: All messages are printed in invokeRecharger().
     assert(by == state.player);
 
@@ -868,8 +886,8 @@ fn interact1Drain(machine: *Machine, mob: *Mob) bool {
     assert(mob == state.player);
 
     var drains = StackBuffer(*Machine, 32).init(null);
-    for (state.dungeon.map[state.player.coord.z]) |*row, y| {
-        for (row) |*tile, x| {
+    for (state.dungeon.map[state.player.coord.z]) |*row| {
+        for (row) |*tile| {
             if (tile.surface) |s|
                 if (meta.activeTag(s) == .Machine and
                     s.Machine != machine and
@@ -895,7 +913,7 @@ fn interact1Drain(machine: *Machine, mob: *Mob) bool {
     return true;
 }
 
-fn interact1Fountain(machine: *Machine, mob: *Mob) bool {
+fn interact1Fountain(_: *Machine, mob: *Mob) bool {
     assert(mob == state.player);
 
     const HP = state.player.HP;
@@ -912,7 +930,7 @@ fn interact1Fountain(machine: *Machine, mob: *Mob) bool {
 
 // ----------------------------------------------------------------------------
 
-pub fn readProps(alloc: *mem.Allocator) void {
+pub fn readProps(alloc: mem.Allocator) void {
     const PropData = struct {
         id: []u8 = undefined,
         name: []u8 = undefined,
@@ -925,9 +943,7 @@ pub fn readProps(alloc: *mem.Allocator) void {
         function: Function = undefined,
         holder: bool = undefined,
 
-        pub const Function = enum {
-            Laboratory, Vault, LaboratoryItem, Statue, None
-        };
+        pub const Function = enum { Laboratory, Vault, LaboratoryItem, Statue, None };
     };
 
     props = PropArrayList.init(alloc);
@@ -1002,7 +1018,7 @@ pub fn readProps(alloc: *mem.Allocator) void {
     }
 }
 
-pub fn freeProps(alloc: *mem.Allocator) void {
+pub fn freeProps(alloc: mem.Allocator) void {
     for (props.items) |prop| prop.deinit(alloc);
 
     props.deinit();
@@ -1029,23 +1045,24 @@ pub fn tickMachines(level: usize) void {
 
             if (machine.isPowered()) {
                 machine.on_power(machine);
-                machine.power = utils.saturating_sub(machine.power, machine.power_drain);
+                machine.power = machine.power -| machine.power_drain;
             } else if (state.dungeon.at(machine.coord).broken and machine.malfunctioning) {
                 if (machine.malfunction_effect) |effect| switch (effect) {
                     .Electrocute => |e| {
                         if (rng.tenin(e.chance)) {
-                            var zy: usize = utils.saturating_sub(coord.y, e.radius);
+                            var zy: usize = coord.y -| e.radius;
                             find_mob: while (zy < math.min(zy + e.radius, HEIGHT)) : (zy += 1) {
-                                var zx: usize = utils.saturating_sub(coord.x, e.radius);
+                                var zx: usize = coord.x -| e.radius;
                                 while (zx < math.min(zx + e.radius, WIDTH)) : (zx += 1) {
                                     const zcoord = Coord.new2(level, zx, zy);
-                                    const target = state.dungeon.at(zcoord).mob orelse continue;
+                                    if (state.dungeon.at(zcoord).mob == null) continue;
                                     if (!utils.hasClearLOF(coord, zcoord)) continue;
+
                                     spells.BOLT_LIGHTNING.use(null, coord, zcoord, .{
                                         .spell = &spells.BOLT_LIGHTNING,
                                         .caster_name = machine.name,
                                         .power = e.damage,
-                                    }, "The broken {0} shoots a spark!");
+                                    }, "The broken {0s} shoots a spark!");
                                     break :find_mob;
                                 }
                             }
@@ -1055,7 +1072,7 @@ pub fn tickMachines(level: usize) void {
                         if (rng.tenin(e.chance)) {
                             explosions.kaboom(coord, .{ .strength = e.power });
                         } else if (state.player.cansee(coord)) {
-                            state.message(.Info, "The broken {} hums ominously!", .{machine.name});
+                            state.message(.Info, "The broken {s} hums ominously!", .{machine.name});
                         }
                     },
                 };

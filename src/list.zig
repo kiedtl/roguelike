@@ -33,7 +33,6 @@ pub fn LinkedList(comptime T: type) type {
 
             pub fn next(iter: *Iterator) ?*T {
                 const current = iter.current;
-                var result: ?*T = undefined;
 
                 if (current) |c| {
                     iter.current = c.__next;
@@ -46,9 +45,9 @@ pub fn LinkedList(comptime T: type) type {
 
         head: ?*T,
         tail: ?*T,
-        allocator: *mem.Allocator,
+        allocator: mem.Allocator,
 
-        pub fn init(allocator: *mem.Allocator) Self {
+        pub fn init(allocator: mem.Allocator) Self {
             return Self{
                 .head = null,
                 .tail = null,

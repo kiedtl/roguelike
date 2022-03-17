@@ -3,13 +3,23 @@ const assert = std.debug.assert;
 const math = std.math;
 const meta = std.meta;
 const mem = std.mem;
-const enums = @import("std/enums.zig");
+const enums = std.enums;
 
 const state = @import("state.zig");
 const err = @import("err.zig");
 const rng = @import("rng.zig");
 const buffer = @import("buffer.zig");
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
+
+const Coord = types.Coord;
+const Direction = types.Direction;
+const Tile = types.Tile;
+const TileType = types.TileType;
+const Mob = types.Mob;
+
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
 
 const StackBuffer = buffer.StackBuffer;
 
@@ -65,14 +75,6 @@ pub fn hasClearLOF(from: Coord, to: Coord) bool {
     } else true;
 }
 
-pub fn saturating_sub(a: anytype, b: anytype) @TypeOf(a, b) {
-    return switch (@typeInfo(@TypeOf(a))) {
-        .ComptimeInt, .Int => if ((a -% b) > a) 0 else a - b,
-        .ComptimeFloat, .Float => if ((a - b) > a) 0 else a - b,
-        else => @compileError("Type '" ++ @typeName(a) ++ "' not supported"),
-    };
-}
-
 pub fn percentOf(comptime T: type, x: T, percent: T) T {
     return x * percent / 100;
 }
@@ -87,7 +89,7 @@ pub fn used(slice: anytype) rt: {
         else => @compileError("Expected slice, got " ++ @typeName(SliceType)),
     };
 } {
-    return slice[0..mem.lenZ(slice)];
+    return slice[0..mem.len(slice)];
 }
 
 pub fn findById(haystack: anytype, _needle: anytype) ?usize {
@@ -128,7 +130,7 @@ pub fn copyZ(dest: anytype, src: anytype) void {
         @compileError("Expected source to be " ++ d ++ ", got " ++ s);
     }
 
-    const srclen = mem.lenZ(src);
+    const srclen = mem.len(src);
 
     assert(dest.len >= srclen);
 

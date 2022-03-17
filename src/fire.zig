@@ -7,7 +7,15 @@ const explosions = @import("explosions.zig");
 const utils = @import("utils.zig");
 const sound = @import("sound.zig");
 const rng = @import("rng.zig");
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
+
+const Mob = types.Mob;
+const Coord = types.Coord;
+const DIRECTIONS = types.DIRECTIONS;
+
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
 
 pub fn tileFlammability(c: Coord) usize {
     var f: usize = 0;
@@ -126,7 +134,7 @@ pub fn tickFire(level: usize) void {
                 else => state.dungeon.at(coord).broken = true,
             };
 
-            newfire = utils.saturating_sub(newfire, rng.range(usize, 1, 2));
+            newfire -|= rng.range(usize, 1, 2);
 
             // Release ash if going out
             if (newfire == 0) {

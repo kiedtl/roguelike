@@ -5,8 +5,18 @@ const math = std.math;
 const assert = std.debug.assert;
 
 const fire = @import("fire.zig");
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
 const state = @import("state.zig");
+
+const Mob = types.Mob;
+const Coord = types.Coord;
+const Direction = types.Direction;
+const Path = types.Path;
+const CoordArrayList = types.CoordArrayList;
+
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
 
 var cache: std.AutoHashMap(Path, Direction) = undefined;
 
@@ -22,13 +32,15 @@ const Node = struct {
         return n.g + n.h;
     }
 
-    pub fn betterThan(a: *Node, b: *Node) bool {
-        return a.f() < b.f();
+    pub fn betterThan(_: void, a: *Node, b: *Node) math.Order {
+        const af = a.f();
+        const bf = b.f();
+        return if (af < bf) math.Order.lt else if (bf > af) math.Order.gt else math.Order.eq;
     }
 };
 
 const NodeArrayList = std.ArrayList(Node);
-const NodePriorityQueue = std.PriorityQueue(*Node);
+const NodePriorityQueue = std.PriorityQueue(*Node, void, Node.betterThan);
 
 // Do some pointer stuff to extract x/y coordinates from a node's pointer
 // location relative to the matrix start
@@ -82,14 +94,14 @@ pub fn path(
     is_walkable: fn (Coord, state.IsWalkableOptions) bool,
     opts: state.IsWalkableOptions,
     directions: []const Direction,
-    alloc: *std.mem.Allocator,
+    alloc: std.mem.Allocator,
 ) ?CoordArrayList {
     if (start.z != goal.z) {
         // TODO: add support for pathfinding between levels
         return null;
     }
 
-    var open_list = NodePriorityQueue.init(alloc, Node.betterThan);
+    var open_list = NodePriorityQueue.init(alloc, {});
     var nodes: [HEIGHT][WIDTH]Node = [_][WIDTH]Node{[_]Node{.{}} ** WIDTH} ** HEIGHT;
 
     nodes[start.y][start.x] = Node{
@@ -124,8 +136,8 @@ pub fn path(
         current_node.state = .Closed;
 
         const neighbors = directions;
-        neighbor: for (neighbors) |neighbor| {
-            if (cur_coord.move(neighbor, state.mapgeometry)) |coord| {
+        for (neighbors) |neighbor| {
+            if (cur_coord.move(neighbor, limit)) |coord| {
                 if (nodes[coord.y][coord.x].state == .Closed)
                     continue;
 

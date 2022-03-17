@@ -3,8 +3,19 @@
 const std = @import("std");
 const mem = std.mem;
 
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
 const state = @import("state.zig");
+
+const Mob = types.Mob;
+const Coord = types.Coord;
+const Direction = types.Direction;
+const Path = types.Path;
+const CoordArrayList = types.CoordArrayList;
+const DIRECTIONS = types.DIRECTIONS;
+
+const LEVELS = state.LEVELS;
+const HEIGHT = state.HEIGHT;
+const WIDTH = state.WIDTH;
 
 // Dijkstra maps, aka influence maps
 
@@ -58,7 +69,7 @@ const Node = struct {
 };
 const NodeArrayList = std.ArrayList(Node);
 
-pub fn dummyIsValid(_: Coord, __: state.IsWalkableOptions) bool {
+pub fn dummyIsValid(_: Coord, _: state.IsWalkableOptions) bool {
     return true;
 }
 
@@ -81,7 +92,7 @@ pub const Dijkstra = struct {
         max_distance: usize,
         is_valid: fn (Coord, state.IsWalkableOptions) bool,
         is_valid_opts: state.IsWalkableOptions,
-        allocator: *mem.Allocator,
+        allocator: mem.Allocator,
     ) Self {
         const n = Node{ .c = start, .n = 0 };
         var s = Self{

@@ -3,10 +3,17 @@ const math = std.math;
 const assert = std.debug.assert;
 
 const items = @import("items.zig");
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
 const rng = @import("rng.zig");
 const state = @import("state.zig");
 const utils = @import("utils.zig");
+
+const Mob = types.Mob;
+const Coord = types.Coord;
+const Direction = types.Direction;
+const Path = types.Path;
+const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
+const CoordArrayList = types.CoordArrayList;
 
 const ATTACKER_ENRAGED_BONUS: isize = 20;
 const ATTACKER_HELD_NBONUS: isize = 20;
@@ -19,7 +26,7 @@ const DEFENDER_FLANKED_NBONUS: isize = 10;
 const DEFENDER_HELD_NBONUS: isize = 10;
 const DEFENDER_STEALTH_BONUS: isize = 5;
 
-pub fn damageOfMeleeAttack(attacker: *const Mob, recipient: *const Mob, w_damage: usize, is_stab: bool) usize {
+pub fn damageOfMeleeAttack(attacker: *const Mob, w_damage: usize, is_stab: bool) usize {
     var damage: usize = 0;
     damage += rng.rangeClumping(usize, w_damage / 2, w_damage, 2);
     damage += if (attacker.isUnderStatus(.Enraged) != null) damage / 5 else 0;

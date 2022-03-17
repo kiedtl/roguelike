@@ -1,6 +1,9 @@
-usingnamespace @import("types.zig");
+const types = @import("types.zig");
 const state = @import("state.zig");
 const colors = @import("colors.zig");
+
+const Material = types.Material;
+const Coord = types.Coord;
 
 pub const MATERIALS = [_]*const Material{
     &Iron,
