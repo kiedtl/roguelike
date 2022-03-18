@@ -302,6 +302,7 @@ pub const IronWaspTemplate = MobTemplate{
             .{ .mob = "iron_wasp", .weight = 1, .count = minmax(usize, 1, 3) },
         },
     },
+    .statuses = &[_]StatusDataInfo{.{ .status = .Sleeping, .permanent = true }},
 };
 
 pub const PatrolTemplate = MobTemplate{

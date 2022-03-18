@@ -340,6 +340,16 @@ pub fn _mob_occupation_tick(mob: *Mob, alloc: mem.Allocator) void {
         }
     }
 
+    // Should I wake up?
+    if (mob.isUnderStatus(.Sleeping)) |_| {
+        switch (mob.ai.phase) {
+            .Hunt, .Investigate => mob.cancelStatus(.Sleeping),
+            .Work => _ = mob.rest(),
+            .Flee => err.bug("Fleeing mob was put to sleep...?", .{}),
+        }
+    }
+
+    // Should I flee (or stop fleeing?)
     if (mob.ai.phase == .Hunt and ai.shouldFlee(mob)) {
         mob.ai.phase = .Flee;
 
@@ -644,9 +654,9 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
             const status_e = @field(Status, status.name);
             if (player.isUnderStatus(status_e)) |_| {
                 if (comma)
-                    try w.print(", {s}", .{status_e.string()})
+                    try w.print(", {s}", .{status_e.string(player)})
                 else
-                    try w.print("{s}", .{status_e.string()});
+                    try w.print("{s}", .{status_e.string(player)});
                 comma = true;
             }
         }
@@ -738,7 +748,7 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
         const status_e = @field(Status, status.name);
         const turns = chardata.time_with_statuses.get(status_e);
         if (turns > 0) {
-            try w.print("- {s: <20} {: >5} turns\n", .{ status_e.string(), turns });
+            try w.print("- {s: <20} {: >5} turns\n", .{ status_e.string(player), turns });
         }
     }
     try w.print("\n", .{});

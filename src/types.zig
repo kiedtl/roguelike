@@ -706,6 +706,12 @@ pub const Allegiance = enum {
 };
 
 pub const Status = enum {
+    // Prevents a mob from doing their work AI and checking FOV for enemies.
+    // If it hears a noise, it will awake.
+    //
+    // Doesn't have a power field.
+    Sleeping,
+
     // Prevents a mob from taking their turn.
     //
     // Doesn't have a power field.
@@ -833,8 +839,12 @@ pub const Status = enum {
 
     pub const MAX_DURATION: usize = 20;
 
-    pub fn string(self: Status) []const u8 {
+    pub fn string(self: Status, mob: *const Mob) []const u8 {
         return switch (self) {
+            .Sleeping => switch (mob.life_type) {
+                .Living => "sleeping",
+                .Construct, .Undead => "dormant",
+            },
             .Paralysis => "paralyzed",
             .Held => "held",
             .Echolocation => "echolocating",
@@ -865,6 +875,7 @@ pub const Status = enum {
 
     pub fn messageWhenAdded(self: Status) ?[3][]const u8 {
         return switch (self) {
+            .Sleeping => .{ "go", "goes", " to sleep" }, // FIXME: bad wording for unliving
             .Paralysis => .{ "are", "is", " paralyzed" },
             .Held => .{ "are", "is", " entangled" },
             .Corona => .{ "begin", "starts", " glowing" },
@@ -896,6 +907,7 @@ pub const Status = enum {
 
     pub fn messageWhenRemoved(self: Status) ?[3][]const u8 {
         return switch (self) {
+            .Sleeping => .{ "wake", "wakes", " up" },
             .Paralysis => .{ "can move again", "starts moving again", "" },
             .Held => .{ "break", "breaks", " free" },
             .Corona => .{ "stop", "stops", " glowing" },
@@ -1235,7 +1247,9 @@ pub const Mob = struct { // {{{
             cell.* = 0;
         };
 
-        const light_requirements = [_]bool{ self.canSeeInLight(false), self.canSeeInLight(true) };
+        if (self.isUnderStatus(.Sleeping)) |_| return;
+
+        const light_needs = [_]bool{ self.canSeeInLight(false), self.canSeeInLight(true) };
 
         const energy = math.clamp(self.vision * Dungeon.FLOOR_OPACITY, 0, 100);
         const direction = if (self.deg360_vision) null else self.facing;
@@ -1251,7 +1265,7 @@ pub const Mob = struct { // {{{
 
                 // If a tile is too dim to be seen by a mob and the tile isn't
                 // adjacent to that mob, mark it as unlit.
-                if (fc.distance(self.coord) > 1 and !light_requirements[@boolToInt(light)]) {
+                if (fc.distance(self.coord) > 1 and !light_needs[@boolToInt(light)]) {
                     self.fov[y][x] = 0;
                     continue;
                 }
@@ -2967,6 +2981,8 @@ pub const Tile = struct {
                 mob.isUnderStatus(.Paralysis) != null or
                 mob.isUnderStatus(.Daze) != null)
                 cell.fg = 0xffffff;
+            if (mob.isUnderStatus(.Sleeping) != null)
+                cell.fg = 0xb0c4de;
 
             const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);
             if (hp_loss_percent > 0) {

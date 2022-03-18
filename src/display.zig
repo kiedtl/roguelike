@@ -286,7 +286,7 @@ fn drawEnemyInfo(
 
             if (duration == 0) continue;
 
-            _draw_bar(y, startx, endx, duration, Status.MAX_DURATION, status.string(), 0x77452e, 0xffffff);
+            _draw_bar(y, startx, endx, duration, Status.MAX_DURATION, status.string(mob), 0x77452e, 0xffffff);
             y += 1;
         }
 
@@ -391,7 +391,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
 
         if (duration == 0) continue;
 
-        _draw_bar(y, startx, endx, duration, Status.MAX_DURATION, status.string(), 0x77452e, 0xffffff);
+        _draw_bar(y, startx, endx, duration, Status.MAX_DURATION, status.string(state.player), 0x77452e, 0xffffff);
         y += 1;
     }
     y += 1;
