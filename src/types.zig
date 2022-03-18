@@ -1149,7 +1149,7 @@ pub const Mob = struct { // {{{
 
     inventory: Inventory = .{},
 
-    is_undead: bool = false,
+    life_type: enum { Living, Construct, Undead } = .Living,
     is_dead: bool = false,
     killed_by: ?*Mob = null,
 
@@ -1219,7 +1219,7 @@ pub const Mob = struct { // {{{
 
         const base_name = self.ai.profession_name orelse self.species.name;
 
-        if (self.is_undead) {
+        if (self.life_type == .Undead) {
             var fbs = std.io.fixedBufferStream(&Static.buf);
             std.fmt.format(fbs.writer(), "{s}{s}", .{
                 self.undead_prefix, base_name,
@@ -1962,7 +1962,7 @@ pub const Mob = struct { // {{{
         self.init(state.GPA.allocator()); // FIXME: antipattern?
 
         self.tile = 'z';
-        self.is_undead = true;
+        self.life_type = .Undead;
 
         self.energy = 0;
 

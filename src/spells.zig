@@ -51,7 +51,7 @@ pub const CAST_MASS_DISMISSAL = Spell{
 fn _hasEffectMassDismissal(caster: *Mob, _: SpellOptions, _: Coord) bool {
     for (caster.enemies.items) |enemy_record| {
         if (caster.cansee(enemy_record.mob.coord) and
-            !enemy_record.mob.is_undead and
+            enemy_record.mob.life_type == .Living and
             enemy_record.mob.isUnderStatus(.Fear) == null)
         {
             return true;
@@ -64,7 +64,7 @@ fn _effectMassDismissal(caster: Coord, _: Spell, opts: SpellOptions, _: Coord) v
 
     for (caster_mob.enemies.items) |enemy_record| {
         if (caster_mob.cansee(enemy_record.mob.coord) and
-            !enemy_record.mob.is_undead and
+            enemy_record.mob.life_type == .Living and
             enemy_record.mob.isUnderStatus(.Fear) == null)
         {
             if (!willSucceedAgainstMob(caster_mob, enemy_record.mob))

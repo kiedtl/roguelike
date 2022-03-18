@@ -291,6 +291,8 @@ pub const IronWaspTemplate = MobTemplate{
         .memory_duration = 3,
         .base_speed = 55,
         .blood = null,
+        .corpse = .None,
+        .life_type = .Construct,
 
         .base_strength = 2,
     },
@@ -449,6 +451,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
         .max_HP = 100,
         .memory_duration = 1,
         .base_speed = 100,
+        .life_type = .Construct,
         .blood = null,
         .corpse = .Wall,
         .immobile = true,
@@ -487,6 +490,7 @@ pub const NebroStatueTemplate = MobTemplate{
         .max_HP = 1000,
         .memory_duration = 1,
         .base_speed = 100,
+        .life_type = .Construct,
         .blood = null,
         .corpse = .Wall,
         .immobile = true,
@@ -525,6 +529,7 @@ pub const CrystalStatueTemplate = MobTemplate{
         .max_HP = 1000,
         .memory_duration = 1,
         .base_speed = 100,
+        .life_type = .Construct,
         .blood = null,
         .corpse = .Wall,
         .immobile = true,
@@ -680,7 +685,7 @@ pub const AncientMageTemplate = MobTemplate{
         .max_MP = 30,
 
         .deaf = false,
-        .is_undead = true,
+        .life_type = .Undead,
 
         .willpower = 10,
         .base_evasion = 10,
@@ -759,7 +764,7 @@ pub const SkeletalAxemasterTemplate = MobTemplate{
         .vision = 4,
 
         .deaf = true,
-        .is_undead = true,
+        .life_type = .Undead,
 
         .willpower = 2,
         .base_evasion = 5,
@@ -1080,6 +1085,8 @@ pub const LivingIceTemplate = MobTemplate{
         .memory_duration = 1,
         .base_speed = 100,
 
+        .life_type = .Construct,
+
         .blood = .Water,
         .corpse = .Wall,
 
@@ -1118,6 +1125,7 @@ pub const BallLightningTemplate = MobTemplate{
         .memory_duration = 1,
         .base_speed = 33,
 
+        .life_type = .Construct,
         .blood = null,
         .corpse = .None,
 

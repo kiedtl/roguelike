@@ -63,7 +63,7 @@ pub fn currentEnemy(me: *Mob) *EnemyRecord {
 //
 // TODO: flee if flanked and there are no allies in sight
 pub fn shouldFlee(me: *Mob) bool {
-    if (me.isUnderStatus(.Enraged) != null or me.ai.is_fearless or me.is_undead)
+    if (me.isUnderStatus(.Enraged) != null or me.ai.is_fearless or me.life_type != .Living)
         return false;
 
     var result = false;
@@ -1009,7 +1009,7 @@ fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
         spell.spell.smite_target_type == .UndeadAlly)
     {
         return for (caster.allies.items) |ally| {
-            if (!ally.is_undead) continue;
+            if (ally.life_type != .Undead) continue;
             if (_isValidTargetForSpell(caster, spell, ally))
                 return ally.coord;
         } else null;
