@@ -68,7 +68,9 @@ pub var GPA = std.heap.GeneralPurposeAllocator(.{
     // Probably would enable this later?
     .thread_safe = false,
 
-    .never_unmap = false,
+    .never_unmap = true,
+
+    .stack_trace_frames = 6,
 }){};
 
 pub const mapgeometry = Coord.new2(LEVELS, WIDTH, HEIGHT);
