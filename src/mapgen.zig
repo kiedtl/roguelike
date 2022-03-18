@@ -1893,7 +1893,7 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
             const tries = math.max(rect.width, rect.height) * 150 / 100;
             props += _placePropAlongRange(rect.start.z, range, &prop, tries);
 
-            return;
+            continue;
         }
 
         const Mode = enum { Statues, Containers, Machine, Poster, None };
@@ -1907,7 +1907,7 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
         };
         const mode = rng.choose(Mode, &modes, &mode_weights) catch err.wat();
 
-        if (mode == .None) return;
+        if (mode == .None) continue;
 
         var tries = math.sqrt(room_area) * 5;
         while (tries > 0) : (tries -= 1) {
