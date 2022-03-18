@@ -1231,10 +1231,6 @@ pub fn placeMob(
         mob.addStatus(status_info.status, status_info.power, status_info.duration, status_info.permanent);
     }
 
-    state.mobs.append(mob) catch err.wat();
-    const mob_ptr = state.mobs.last().?;
-    state.dungeon.at(coord).mob = mob_ptr;
-
     if (!opts.no_squads and template.squad.len > 0) {
         const squad_template = rng.chooseUnweighted([]const MobTemplate.SquadMember, template.squad);
 
@@ -1260,6 +1256,7 @@ pub fn placeMob(
                 // This *should* hold true but for some reason it doesn't. Too
                 // lazy to investigate.
                 //assert(state.dungeon.at(child).mob == null);
+                if (child.eq(coord)) continue; // Don't place in leader's coord
                 if (state.dungeon.at(child).mob == null)
                     break child;
             } else null;
@@ -1270,6 +1267,10 @@ pub fn placeMob(
             }
         }
     }
+
+    state.mobs.append(mob) catch err.wat();
+    const mob_ptr = state.mobs.last().?;
+    state.dungeon.at(coord).mob = mob_ptr;
 
     return mob_ptr;
 }
