@@ -3041,7 +3041,7 @@ pub const Tile = struct {
                         //     cell.fg = 0x000000;
                         //     cell.bg = 0x808000;
                         // }
-                        cell.fg = 0xb0c4de;
+                        cell.fg = 0xffeeaa;
                     }
                     break :cont if (self.broken) 'x' else c.tile;
                 },
