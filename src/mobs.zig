@@ -273,17 +273,17 @@ pub const IronWaspTemplate = MobTemplate{
             },
         },
         .tile = 'y',
+        .life_type = .Construct,
         .ai = AI{
             .profession_name = null,
             .profession_description = "resting",
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
             .is_combative = true,
-            .is_curious = true,
+            .is_curious = false,
             .is_fearless = true,
         },
         .allegiance = .Necromancer,
-
         .vision = 3,
         .willpower = 1,
         .base_evasion = 50,
@@ -292,8 +292,7 @@ pub const IronWaspTemplate = MobTemplate{
         .base_speed = 55,
         .blood = null,
         .corpse = .None,
-        .life_type = .Construct,
-
+        .innate_resists = .{ .rPois = 100, .rFire = 50, .rFume = 100 },
         .base_strength = 2,
     },
 
