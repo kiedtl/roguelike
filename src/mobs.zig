@@ -1231,6 +1231,10 @@ pub fn placeMob(
         mob.addStatus(status_info.status, status_info.power, status_info.duration, status_info.permanent);
     }
 
+    state.mobs.append(mob) catch err.wat();
+    const mob_ptr = state.mobs.last().?;
+    state.dungeon.at(coord).mob = mob_ptr;
+
     if (!opts.no_squads and template.squad.len > 0) {
         const squad_template = rng.chooseUnweighted([]const MobTemplate.SquadMember, template.squad);
 
@@ -1267,8 +1271,5 @@ pub fn placeMob(
         }
     }
 
-    state.mobs.append(mob) catch err.wat();
-    const ptr = state.mobs.last().?;
-    state.dungeon.at(coord).mob = ptr;
-    return ptr;
+    return mob_ptr;
 }
