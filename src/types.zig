@@ -1273,10 +1273,14 @@ pub const Mob = struct { // {{{
 
     // Update the status powers for the rings
     pub fn tickRings(self: *Mob) void {
-        for (self.inventory.rings) |maybe_ring| {
-            if (maybe_ring) |ring|
-                self.addStatus(ring.status, ring.currentPower(), Status.MAX_DURATION, false);
-        }
+        for (self.inventory.rings) |m_ring| if (m_ring) |ring| {
+            self.applyStatus(.{
+                .status = ring.status,
+                .power = ring.currentPower(),
+                .duration = Status.MAX_DURATION,
+                .permanent = false,
+            }, .{ .add_duration = false });
+        };
     }
 
     // Decrement status durations, and do stuff for various statuses that need
@@ -2160,7 +2164,9 @@ pub const Mob = struct { // {{{
         p_se.status = s.status;
 
         p_se.power = if (opts.add_power) p_se.power + s.power else s.power;
+
         p_se.duration = if (opts.add_duration) p_se.duration + s.duration else s.duration;
+        p_se.duration = math.clamp(p_se.duration, 0, Status.MAX_DURATION);
 
         p_se.permanent = s.permanent;
         p_se.exhausting = s.exhausting;
