@@ -897,7 +897,7 @@ pub fn meleeFight(mob: *Mob, _: mem.Allocator) void {
         else => {},
     };
 
-    if (mob.coord.distance(target.coord) == 1) {
+    if (mob.canMelee(target)) {
         _ = mob.fight(target);
     } else if (!mob.immobile) {
         mob.tryMoveTo(target.coord);
@@ -957,7 +957,7 @@ pub fn rangedFight(mob: *Mob, alloc: mem.Allocator) void {
         !utils.hasClearLOF(mob.coord, target.coord))
     {
         // attack
-        if (mob.coord.distance(target.coord) == 1) {
+        if (mob.canMelee(target)) {
             _ = mob.fight(target);
         } else {
             mob.tryMoveTo(target.coord);

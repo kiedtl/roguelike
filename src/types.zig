@@ -1734,9 +1734,19 @@ pub const Mob = struct { // {{{
         return true;
     }
 
-    pub fn fight(attacker: *Mob, recipient: *Mob) void {
-        assert(attacker.coord.distance(recipient.coord) == 1);
+    pub fn canMelee(attacker: *Mob, defender: *Mob) bool {
+        var weapons = StackBuffer(*const Weapon, 7).init(null);
+        weapons.append(attacker.inventory.wielded orelse attacker.species.default_attack) catch unreachable;
+        for (attacker.species.aux_attacks) |w| weapons.append(w) catch unreachable;
 
+        const distance = attacker.coord.distance(defender.coord);
+
+        return for (weapons.constSlice()) |weapon| {
+            if (weapon.reach >= distance) break true;
+        } else false;
+    }
+
+    pub fn fight(attacker: *Mob, recipient: *Mob) void {
         // If the defender didn't know about the attacker's existence now's a
         // good time to find out
         ai.updateEnemyRecord(recipient, .{
@@ -1751,6 +1761,8 @@ pub const Mob = struct { // {{{
 
         var longest_delay: usize = 0;
         for (weapons.constSlice()) |weapon| {
+            assert(weapon.reach >= attacker.coord.distance(recipient.coord));
+
             if (weapon.delay > longest_delay) longest_delay = weapon.delay;
             _fightWithWeapon(attacker, recipient, weapon);
         }
@@ -2714,6 +2726,7 @@ pub const Weapon = struct {
 
     id: []const u8 = "",
     name: []const u8 = "",
+    reach: usize = 1,
     delay: usize = 100, // Percentage (100 = normal speed, 200 = twice as slow)
     damage: usize,
     effects: []const StatusDataInfo = &[_]StatusDataInfo{},

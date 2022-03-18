@@ -256,6 +256,49 @@ pub const SentinelTemplate = MobTemplate{
     .projectile = &items.NetProj,
 };
 
+pub const LeadTurtleTemplate = MobTemplate{
+    .id = "lead_turtle",
+    .mob = .{
+        .species = &Species{
+            .name = "lead turtle",
+            .default_attack = &Weapon{
+                .reach = 2,
+                .damage = 15,
+                .strs = &[_]DamageStr{
+                    items._dmgstr(005, "bite", "bites", ""),
+                },
+            },
+        },
+        .tile = 't',
+        .life_type = .Construct,
+        .ai = AI{
+            .profession_name = null,
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.meleeFight,
+            .is_combative = true,
+            .is_curious = true,
+            .is_fearless = true,
+        },
+        .allegiance = .Necromancer,
+
+        .vision = 4,
+        .willpower = 5,
+        .base_evasion = 0,
+        .base_melee = 100,
+        .max_HP = 40,
+        .memory_duration = 20,
+        .base_speed = 220,
+        .blood = null,
+        .corpse = .None,
+        .innate_resists = .{ .rPois = 100, .rFire = 100, .Armor = 60, .rFume = 100 },
+
+        .base_strength = 30,
+    },
+
+    .statuses = &[_]StatusDataInfo{.{ .status = .Sleeping, .permanent = true }},
+};
+
 pub const IronWaspTemplate = MobTemplate{
     .id = "iron_wasp",
     .mob = .{
@@ -1146,6 +1189,7 @@ pub const MOBS = [_]MobTemplate{
     GuardTemplate,
     JavelineerTemplate,
     SentinelTemplate,
+    LeadTurtleTemplate,
     IronWaspTemplate,
     PatrolTemplate,
     PlayerTemplate,
