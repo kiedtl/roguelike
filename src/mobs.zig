@@ -272,7 +272,7 @@ pub const IronWaspTemplate = MobTemplate{
                 },
             },
         },
-        .tile = 'ײ',
+        .tile = 'y',
         .ai = AI{
             .profession_name = null,
             .profession_description = "resting",
