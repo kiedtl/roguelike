@@ -1785,18 +1785,7 @@ fn placeLights(room: *const Room) void {
     if (Configs[room.rect.start.z].no_lights) return;
     if (room.prefab) |rfb| if (rfb.nolights) return;
 
-    const area = room.rect.height * room.rect.width;
-
-    var lights_needed: usize = undefined;
-    if (area <= 80) {
-        lights_needed = rng.range(usize, 0, 1);
-    } else if (area <= 100) {
-        lights_needed = rng.range(usize, 1, 2);
-    } else if (area <= 150) {
-        lights_needed = rng.range(usize, 1, 3);
-    } else {
-        lights_needed = rng.range(usize, 2, 4);
-    }
+    const lights_needed = rng.range(usize, 1, 2);
 
     var lights: usize = 0;
     var light_tries: usize = 500;
@@ -1804,8 +1793,7 @@ fn placeLights(room: *const Room) void {
         const coord = randomWallCoord(&room.rect, light_tries);
 
         if (state.dungeon.at(coord).type != .Wall or
-            state.dungeon.at(coord).surface != null or
-            utils.findPatternMatch(coord, &VALID_LIGHT_PLACEMENT_PATTERNS) == null or
+            !utils.hasPatternMatch(coord, &VALID_LIGHT_PLACEMENT_PATTERNS) or
             state.dungeon.neighboringMachines(coord) > 0)
             continue; // invalid coord
 
@@ -1848,8 +1836,8 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
         const rect = room.rect;
         const room_area = rect.height * rect.width;
 
-        // Don't fill small rooms or corridors.
-        if (room_area < 16 or room.type == .Corridor or room.type == .Sideroom) {
+        // Don't fill or light up small rooms or corridors.
+        if (room_area < 16 or rect.height <= 2 or rect.width <= 2 or room.type == .Corridor) {
             continue;
         }
 
