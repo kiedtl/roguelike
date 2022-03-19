@@ -28,6 +28,11 @@ Explosion that destroys walls.
 - cures corruption, corruption-immunity for some time
 - coating: 50% more damage to undead
 
+# potion of debilitation
+- coating: causes -20% melee and -20% block
+
+Inspired by seizure potions in TGGW.
+
 # potion of insubstantiation
 - Will+++ Sneak++ Stealth++
 - -25% Armor, rFire- rElec-
