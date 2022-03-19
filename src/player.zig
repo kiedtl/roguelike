@@ -145,7 +145,7 @@ pub fn triggerStair(_: Coord, dest_stair: Coord) void {
         }
     } else err.bug("Unable to find passable tile near upstairs!", .{});
 
-    if (state.player.teleportTo(dest, null, true)) {
+    if (state.player.teleportTo(dest, null, false)) {
         state.message(.Move, "You ascend. Welcome to {s}!", .{state.levelinfo[dest_stair.z].name});
     } else {
         err.bug("Unable to ascend stairs! (something's in the way, maybe?)", .{});
