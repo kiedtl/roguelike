@@ -124,6 +124,9 @@ pub fn sentinel(comptime T: type) switch (@typeInfo(T)) {
     };
 }
 
+// TODO: remove all uses of this, untyped null-terminated arrays should never
+// be used.
+//
 pub fn copyZ(dest: anytype, src: anytype) void {
     const DestElem = meta.Elem(@TypeOf(dest));
     const SourceChild = meta.Elem(@TypeOf(src));
@@ -133,7 +136,7 @@ pub fn copyZ(dest: anytype, src: anytype) void {
         @compileError("Expected source to be " ++ d ++ ", got " ++ s);
     }
 
-    const srclen = mem.sliceTo(src, '0').len;
+    const srclen = mem.sliceTo(src, 0).len;
 
     assert(dest.len >= srclen);
 

@@ -16,11 +16,11 @@ pub const SoundIntensity = enum {
     pub fn radiusHeard(self: SoundIntensity) usize {
         return switch (self) {
             .Silent => 0,
-            .Quiet => 5,
-            .Medium => 10,
-            .Loud => 14,
-            .Louder => 18,
-            .Loudest => 20,
+            .Quiet => 3,
+            .Medium => 6,
+            .Loud => 9,
+            .Louder => 12,
+            .Loudest => 15,
         };
     }
 };
@@ -36,7 +36,7 @@ pub const SoundState = enum {
     Dead,
 
     pub fn ageToState(age: usize) SoundState {
-        return if (age <= 3) @as(SoundState, .New) else if (age <= 6) @as(SoundState, .Old) else @as(SoundState, .Dead);
+        return if (age <= 1) @as(SoundState, .New) else if (age <= 3) @as(SoundState, .Old) else @as(SoundState, .Dead);
     }
 };
 

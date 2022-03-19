@@ -353,11 +353,6 @@ pub fn patrolWork(mob: *Mob, _: mem.Allocator) void {
         return;
     }
 
-    if (!mob.isCreeping()) {
-        _ = mob.rest();
-        return;
-    }
-
     const prev_facing = mob.facing;
     mob.tryMoveTo(to);
     guardGlanceLeftRight(mob, prev_facing);
@@ -453,13 +448,9 @@ pub fn guardWork(mob: *Mob, _: mem.Allocator) void {
         guardGlanceAround(mob);
     } else {
         // We're not at our post, return there
-        if (!mob.isCreeping()) {
-            _ = mob.rest();
-        } else {
-            const prev_facing = mob.facing;
-            mob.tryMoveTo(post);
-            guardGlanceLeftRight(mob, prev_facing);
-        }
+        const prev_facing = mob.facing;
+        mob.tryMoveTo(post);
+        guardGlanceLeftRight(mob, prev_facing);
     }
 }
 
@@ -472,13 +463,9 @@ pub fn standStillAndGuardWork(mob: *Mob, _: mem.Allocator) void {
         guardGlanceAround(mob);
     } else {
         // We're not at our post, return there
-        if (!mob.isCreeping()) {
-            _ = mob.rest();
-        } else {
-            const prev_facing = mob.facing;
-            mob.tryMoveTo(post);
-            guardGlanceLeftRight(mob, prev_facing);
-        }
+        const prev_facing = mob.facing;
+        mob.tryMoveTo(post);
+        guardGlanceLeftRight(mob, prev_facing);
     }
 }
 
@@ -490,12 +477,6 @@ pub fn watcherWork(mob: *Mob, _: mem.Allocator) void {
 
         guardGlanceRandom(mob);
     } else {
-        // We're not at our post, return there
-        if (!mob.isCreeping()) {
-            _ = mob.rest();
-            return;
-        }
-
         const prev_facing = mob.facing;
         mob.tryMoveTo(post);
         guardGlanceLeftRight(mob, prev_facing);
@@ -525,8 +506,7 @@ pub fn cleanerWork(mob: *Mob, _: mem.Allocator) void {
     switch (mob.ai.work_phase) {
         .CleanerScan => {
             if (mob.ai.work_area.items.len > 0 and
-                mob.coord.distance(mob.ai.work_area.items[0]) > 1 and
-                mob.isCreeping())
+                mob.coord.distance(mob.ai.work_area.items[0]) > 1)
             {
                 mob.tryMoveTo(mob.ai.work_area.items[0]);
             } else {
@@ -551,11 +531,7 @@ pub fn cleanerWork(mob: *Mob, _: mem.Allocator) void {
             const target = task.type.Clean;
 
             if (target.distance(mob.coord) > 1) {
-                if (!mob.isCreeping()) {
-                    _ = mob.rest();
-                } else {
-                    mob.tryMoveTo(target);
-                }
+                mob.tryMoveTo(target);
             } else {
                 _ = mob.rest();
 
@@ -586,8 +562,7 @@ pub fn engineerWork(mob: *Mob, _: mem.Allocator) void {
     switch (mob.ai.work_phase) {
         .EngineerScan => {
             if (mob.ai.work_area.items.len > 0 and
-                mob.coord.distance(mob.ai.work_area.items[0]) > 1 and
-                mob.isCreeping())
+                mob.coord.distance(mob.ai.work_area.items[0]) > 1)
             {
                 mob.tryMoveTo(mob.ai.work_area.items[0]);
             } else {
@@ -628,11 +603,7 @@ pub fn engineerWork(mob: *Mob, _: mem.Allocator) void {
             const target = task.type.Repair;
 
             if (target.distance(mob.coord) > 1) {
-                if (!mob.isCreeping()) {
-                    _ = mob.rest();
-                } else {
-                    mob.tryMoveTo(target);
-                }
+                mob.tryMoveTo(target);
             } else {
                 _ = mob.rest();
 
@@ -656,8 +627,7 @@ pub fn haulerWork(mob: *Mob, alloc: mem.Allocator) void {
     switch (mob.ai.work_phase) {
         .HaulerScan => {
             if (mob.ai.work_area.items.len > 0 and
-                mob.coord.distance(mob.ai.work_area.items[0]) > 1 and
-                mob.isCreeping())
+                mob.coord.distance(mob.ai.work_area.items[0]) > 1)
             {
                 mob.tryMoveTo(mob.ai.work_area.items[0]);
             } else {
@@ -682,11 +652,7 @@ pub fn haulerWork(mob: *Mob, alloc: mem.Allocator) void {
             const itemcoord = task.type.Haul.from;
 
             if (itemcoord.distance(mob.coord) > 1) {
-                if (!mob.isCreeping()) {
-                    _ = mob.rest();
-                } else {
-                    mob.tryMoveTo(itemcoord);
-                }
+                mob.tryMoveTo(itemcoord);
             } else {
                 const item = state.dungeon.getItem(itemcoord) catch {
                     // Somehow the item disappeared, resume job-hunting
@@ -706,11 +672,7 @@ pub fn haulerWork(mob: *Mob, alloc: mem.Allocator) void {
             const dest = task.type.Haul.to;
 
             if (dest.distance(mob.coord) > 1) {
-                if (!mob.isCreeping()) {
-                    _ = mob.rest();
-                } else {
-                    mob.tryMoveTo(dest);
-                }
+                mob.tryMoveTo(dest);
             } else {
                 const item = mob.inventory.pack.pop() catch unreachable;
                 if (!mob.dropItem(item, dest)) {
@@ -767,11 +729,6 @@ pub fn wanderWork(mob: *Mob, _: mem.Allocator) void {
         return;
     }
 
-    if (!mob.isCreeping()) {
-        _ = mob.rest();
-        return;
-    }
-
     mob.tryMoveTo(dest);
 }
 
@@ -785,11 +742,7 @@ pub fn tortureWork(mob: *Mob, _: mem.Allocator) void {
 
     if (!mob.coord.eq(post)) {
         // We're not at our post, return there
-        if (!mob.isCreeping()) {
-            _ = mob.rest();
-        } else {
-            mob.tryMoveTo(post);
-        }
+        mob.tryMoveTo(post);
         return;
     }
 

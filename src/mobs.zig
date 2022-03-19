@@ -344,7 +344,10 @@ pub const IronWaspTemplate = MobTemplate{
             .{ .mob = "iron_wasp", .weight = 1, .count = minmax(usize, 1, 3) },
         },
     },
-    .statuses = &[_]StatusDataInfo{.{ .status = .Sleeping, .permanent = true }},
+    .statuses = &[_]StatusDataInfo{
+        .{ .status = .Sleeping, .permanent = true },
+        .{ .status = .Noisy, .permanent = true },
+    },
 };
 
 pub const PatrolTemplate = MobTemplate{
@@ -401,6 +404,8 @@ pub const PlayerTemplate = MobTemplate{
         .memory_duration = 10,
         .base_speed = 100,
         .blood = .Blood,
+
+        .stats = .{ .Sneak = 4 },
 
         .base_strength = 20,
     },
@@ -901,7 +906,10 @@ pub const BurningBruteTemplate = MobTemplate{
 
         .base_strength = 40,
     },
-    .statuses = &[_]StatusDataInfo{.{ .status = .Fire, .permanent = true }},
+    .statuses = &[_]StatusDataInfo{
+        .{ .status = .Fire, .permanent = true },
+        .{ .status = .Noisy, .permanent = true },
+    },
 };
 
 pub const SulfurFiendTemplate = MobTemplate{
@@ -941,6 +949,7 @@ pub const SulfurFiendTemplate = MobTemplate{
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
+    .statuses = &[_]StatusDataInfo{.{ .status = .Noisy, .permanent = true }},
 };
 
 pub const FrozenFiendTemplate = MobTemplate{

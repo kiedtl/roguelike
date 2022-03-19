@@ -39,6 +39,8 @@ const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
+pub var auto_wait_enabled: bool = true;
+
 pub const PlayerUpgradeInfo = struct {
     recieved: bool = false,
     upgrade: PlayerUpgrade,
@@ -248,30 +250,37 @@ pub fn moveOrFight(direction: Direction) bool {
         return false;
     }
 
-    if (current.move(direction, state.mapgeometry)) |dest| {
-        if (state.dungeon.at(dest).mob) |mob| {
-            if (state.player.isHostileTo(mob) and !state.player.canSwapWith(mob, direction)) {
-                state.player.fight(mob);
-                return true;
-            }
+    const dest = current.move(direction, state.mapgeometry) orelse return false;
+
+    // Does the player want to fight?
+    if (state.dungeon.at(dest).mob) |mob| {
+        if (state.player.isHostileTo(mob) and !state.player.canSwapWith(mob, direction)) {
+            state.player.fight(mob);
+            return true;
         }
-
-        if (state.dungeon.at(dest).surface) |surf| switch (surf) {
-            .Machine => |m| if (m.evoke_confirm) |msg| {
-                const r = state.messageKeyPrompt("{s} [y/N]", .{msg}, 'n', "YyNn ", "yynnn");
-                if (r == null or r.? == 'n') {
-                    if (r != null)
-                        state.message(.Prompt, "Okay then.", .{});
-                    return false;
-                }
-            },
-            else => {},
-        };
-
-        return state.player.moveInDirection(direction);
-    } else {
-        return false;
     }
+
+    // Does the player want to trigger a machine that requires confirmation?
+    if (state.dungeon.at(dest).surface) |surf| switch (surf) {
+        .Machine => |m| if (m.evoke_confirm) |msg| {
+            const r = state.messageKeyPrompt("{s} [y/N]", .{msg}, 'n', "YyNn ", "yynnn");
+            if (r == null or r.? == 'n') {
+                if (r != null)
+                    state.message(.Prompt, "Okay then.", .{});
+                return false;
+            }
+        },
+        else => {},
+    };
+
+    // Should we auto-rest?
+    if (state.player.turnsSpentMoving() >= @intCast(usize, state.player.stat(.Sneak))) {
+        _ = state.player.rest();
+        state.message(.Info, "Auto-waited.", .{});
+        return true;
+    }
+
+    return state.player.moveInDirection(direction);
 }
 
 fn _invokeMachine(mach: *Machine) bool {

@@ -560,15 +560,10 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
                 tile.bg = colors.darken(colors.filterGrayscale(tile.bg), 4);
 
                 // Can we hear anything
-                if (state.player.canHear(coord)) |noise| {
-                    const green: u32 = switch (noise.state) {
-                        .New => 0x00D610,
-                        .Old => 0x00B310,
-                        .Dead => unreachable,
-                    };
-                    tile.fg = green;
-                    tile.ch = '!';
-                }
+                if (state.player.canHear(coord)) |noise| if (noise.state == .New) {
+                    tile.fg = 0x00d610;
+                    tile.ch = if (noise.intensity.radiusHeard() > 6) '♫' else '♩';
+                };
 
                 termbox.tb_put_cell(cursorx, cursory, &tile);
 
@@ -581,20 +576,6 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
                     const has_stuff = state.dungeon.at(coord).surface != null or
                         state.dungeon.at(coord).mob != null or
                         state.dungeon.itemsAt(coord).len > 0;
-
-                    if (state.player.canHear(coord)) |noise| {
-                        const green: u32 = switch (noise.state) {
-                            .New => 0x00D610,
-                            .Old => 0x00B310,
-                            .Dead => unreachable,
-                        };
-                        if (has_stuff) {
-                            tile.bg = colors.darken(green, 3);
-                        } else {
-                            tile.fg = green;
-                            tile.ch = '!';
-                        }
-                    }
 
                     if (_mobs_can_see(moblist, coord)) {
                         // Treat this cell specially if it's the player and the player is

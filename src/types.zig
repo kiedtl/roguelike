@@ -706,6 +706,11 @@ pub const Allegiance = enum {
 };
 
 pub const Status = enum {
+    // Monster always makes noise, unless it has .Sleeping status.
+    //
+    // Doesn't have a power field.
+    Noisy,
+
     // Prevents a mob from doing their work AI and checking FOV for enemies.
     // If it hears a noise, it will awake.
     //
@@ -841,6 +846,7 @@ pub const Status = enum {
 
     pub fn string(self: Status, mob: *const Mob) []const u8 {
         return switch (self) {
+            .Noisy => "noisy",
             .Sleeping => switch (mob.life_type) {
                 .Living => "sleeping",
                 .Construct, .Undead => "dormant",
@@ -875,6 +881,7 @@ pub const Status = enum {
 
     pub fn messageWhenAdded(self: Status) ?[3][]const u8 {
         return switch (self) {
+            .Noisy => null,
             .Sleeping => .{ "go", "goes", " to sleep" }, // FIXME: bad wording for unliving
             .Paralysis => .{ "are", "is", " paralyzed" },
             .Held => .{ "are", "is", " entangled" },
@@ -907,6 +914,7 @@ pub const Status = enum {
 
     pub fn messageWhenRemoved(self: Status) ?[3][]const u8 {
         return switch (self) {
+            .Noisy => null,
             .Sleeping => .{ "wake", "wakes", " up" },
             .Paralysis => .{ "can move again", "starts moving again", "" },
             .Held => .{ "break", "breaks", " free" },
@@ -935,6 +943,11 @@ pub const Status = enum {
             .DayBlindness,
             => null,
         };
+    }
+
+    pub fn tickNoisy(mob: *Mob) void {
+        if (mob.isUnderStatus(.Sleeping) == null)
+            mob.makeNoise(.Movement, .Medium);
     }
 
     pub fn tickRecuperate(mob: *Mob) void {
@@ -1130,6 +1143,8 @@ pub const Species = struct {
     aux_attacks: []const *const Weapon = &[_]*const Weapon{},
 };
 
+pub const Stat = enum { Sneak };
+
 pub const Mob = struct { // {{{
     // linked list stuff
     __next: ?*Mob = null,
@@ -1200,6 +1215,8 @@ pub const Mob = struct { // {{{
     corpse: enum { Normal, Wall, None } = .Normal,
     immobile: bool = false,
     innate_resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
+
+    stats: enums.EnumFieldStruct(Stat, isize, 0) = .{ .Sneak = 1 },
 
     // Listed in order of preference.
     spells: []const SpellOptions = &[_]SpellOptions{},
@@ -1316,6 +1333,7 @@ pub const Mob = struct { // {{{
                 }
 
                 switch (status_e) {
+                    .Noisy => Status.tickNoisy(self),
                     .Echolocation => Status.tickEcholocation(self),
                     .Recuperate => Status.tickRecuperate(self),
                     .Poison => Status.tickPoison(self),
@@ -2286,11 +2304,12 @@ pub const Mob = struct { // {{{
         }
 
         // If there are a lot of walls in the way, quiet the noise
-        const radius = sound.intensity.radiusHeard() -| (walls_in_way * 2);
+        var radius = sound.intensity.radiusHeard();
+        if (self != state.player) radius -|= (walls_in_way * 2);
+        if (self == state.player) radius = radius * 150 / 100;
 
-        if (self != state.player) // Player can always hear sounds
-            if (self.coord.distance(coord) > radius)
-                return null; // Too far away
+        if (self.coord.distance(coord) > radius)
+            return null; // Too far away
 
         return sound;
     }
@@ -2390,11 +2409,21 @@ pub const Mob = struct { // {{{
         return pips;
     }
 
+    pub fn stat(self: *const Mob, _stat: Stat) isize {
+        var val: isize = 0;
+
+        // Add the mob's innate stat.
+        const innate = utils.getFieldByEnum(Stat, self.stats, _stat);
+        val += innate;
+
+        return val;
+    }
+
     // Returns different things depending on what resist is.
     //
     // For all resists except rFume, returns damage mitigated.
     // For rFume, returns chance for gas to trigger.
-    pub inline fn resistance(self: *const Mob, resist: Resistance) usize {
+    pub fn resistance(self: *const Mob, resist: Resistance) usize {
         var r: isize = 0;
 
         // Add the mob's innate resistance.
@@ -2448,7 +2477,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn isCreeping(self: *const Mob) bool {
-        return self.turnsSpentMoving() < self.activities.len;
+        return self.turnsSpentMoving() < @intCast(usize, self.stat(.Sneak));
     }
 
     // Find out how many turns spent in moving
