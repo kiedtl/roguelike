@@ -376,6 +376,12 @@ pub const PatrolTemplate = MobTemplate{
     },
     .weapon = &items.SpearWeapon,
     .armor = &items.GambesonArmor,
+
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "patrol", .weight = 1, .count = minmax(usize, 1, 2) },
+        },
+    },
 };
 
 pub const PlayerTemplate = MobTemplate{

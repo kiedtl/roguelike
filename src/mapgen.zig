@@ -1649,42 +1649,6 @@ pub fn placeTraps(level: usize) void {
 }
 
 pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
-    var squads: usize = Configs[level].patrol_squads;
-
-    while (squads > 0) {
-        const room_i = rng.range(usize, 0, state.rooms[level].items.len - 1);
-        const room = &state.rooms[level].items[room_i];
-
-        if (room.prefab) |rfb| if (rfb.noguards) continue;
-        if (room.type == .Corridor) continue;
-
-        var patrol_warden: ?*Mob = null;
-        const patrol_units = rng.range(usize, 3, 4);
-
-        var placed_units: usize = 0;
-        var y: usize = room.rect.start.y;
-        while (y < room.rect.end().y and placed_units < patrol_units) : (y += 1) {
-            var x: usize = room.rect.start.x;
-            while (x < room.rect.end().x and placed_units < patrol_units) : (x += 1) {
-                const coord = Coord.new2(level, x, y);
-                if (!isTileAvailable(coord)) continue;
-
-                const guard = mobs.placeMob(alloc, &mobs.PatrolTemplate, coord, .{});
-                if (patrol_warden) |warden| {
-                    warden.squad_members.append(guard) catch err.wat();
-                } else {
-                    guard.base_strength += 2;
-                    patrol_warden = guard;
-                }
-
-                placed_units += 1;
-                room.mob_count += 1;
-            }
-        }
-
-        if (placed_units > 0) squads -= 1;
-    }
-
     // Create spawn tables.
     var spawn_table_ids = std.ArrayList([]const u8).init(alloc);
     var spawn_table_weights = std.ArrayList(usize).init(alloc);
@@ -3138,7 +3102,6 @@ pub const LevelConfig = struct {
 
     level_features: [4]?LevelFeatureFunc = [_]?LevelFeatureFunc{ null, null, null, null },
 
-    patrol_squads: usize,
     required_mobs: []const RequiredMob = &[_]RequiredMob{
         .{ .count = 3, .template = &mobs.CleanerTemplate },
         .{ .count = 3, .template = &mobs.EngineerTemplate },
@@ -3212,8 +3175,6 @@ pub const PRI_BASE_LEVELCONFIG = LevelConfig{
         null,
     },
 
-    .patrol_squads = 2,
-
     .machines = &[_]*const Machine{ &surfaces.Fountain, &surfaces.Drain },
     .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
 };
@@ -3227,8 +3188,6 @@ pub const VLT_BASE_LEVELCONFIG = LevelConfig{
     .min_room_height = 5,
     .max_room_width = 10,
     .max_room_height = 6,
-
-    .patrol_squads = 2,
 
     .no_windows = true,
     .allow_statues = false,
@@ -3264,8 +3223,6 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
         levelFeatureExperiments,
         levelFeatureOres,
     },
-
-    .patrol_squads = 1,
 
     .door_chance = 10,
     .material = &materials.Dobalene,
@@ -3307,8 +3264,6 @@ pub const SMI_BASE_LEVELCONFIG = LevelConfig{
         levelFeatureMetalProducts,
         null,
     },
-
-    .patrol_squads = 3,
 
     .material = &materials.Basalt,
     .tiletype = .Floor,
