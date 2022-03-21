@@ -274,7 +274,9 @@ pub fn moveOrFight(direction: Direction) bool {
     };
 
     // Should we auto-rest?
-    if (state.player.turnsSpentMoving() >= @intCast(usize, state.player.stat(.Sneak))) {
+    if (auto_wait_enabled and
+        state.player.turnsSpentMoving() >= @intCast(usize, state.player.stat(.Sneak)))
+    {
         _ = state.player.rest();
         state.message(.Info, "Auto-waited.", .{});
         return true;
