@@ -91,7 +91,7 @@ pub const CarpetTerrain = Terrain{
     .name = "carpet",
     .color = 0xdda711,
     .tile = '·',
-    .stats = .{ .Sneak = 1 },
+    .stats = .{ .Sneak = 2 },
     .flammability = 5,
 
     .for_levels = &[_][]const u8{ "PRI", "VLT" },
