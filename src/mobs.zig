@@ -417,7 +417,7 @@ pub const PlayerTemplate = MobTemplate{
     },
     .weapon = &items.KnifeWeapon,
     .armor = &items.RobeArmor,
-    .evocables = &[_]Evocable{items.IronSpikeEvoc},
+    //.evocables = &[_]Evocable{items.IronSpikeEvoc},
     //.cloak = &items.ThornsCloak,
 };
 
