@@ -17,6 +17,7 @@ const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
 pub const Gas = struct {
+    name: []const u8,
     color: u32,
     dissipation_rate: f64,
     opacity: f64,
@@ -27,6 +28,7 @@ pub const Gas = struct {
 };
 
 pub const Poison = Gas{
+    .name = "poison",
     .color = 0xa7e234,
     .dissipation_rate = 0.01,
     .opacity = 0.05,
@@ -35,6 +37,7 @@ pub const Poison = Gas{
 };
 
 pub const Paralysis = Gas{
+    .name = "paralysing gas",
     .color = 0xaaaaff,
     .dissipation_rate = 0.05,
     .opacity = 0.03,
@@ -43,6 +46,7 @@ pub const Paralysis = Gas{
 };
 
 pub const SmokeGas = Gas{
+    .name = "smoke",
     .color = 0xffffff,
     .dissipation_rate = 0.02,
     // Lava emits smoke. If opacity >= 1.0, this causes massive lighting
@@ -53,6 +57,7 @@ pub const SmokeGas = Gas{
 };
 
 pub const Confusion = Gas{
+    .name = "confusing fumes",
     .color = 0x33cbca,
     .dissipation_rate = 0.05,
     .opacity = 0.0,
@@ -61,6 +66,7 @@ pub const Confusion = Gas{
 };
 
 pub const Slow = Gas{
+    .name = "slowing gas",
     .color = 0x8e77dd,
     .dissipation_rate = 0.02,
     .opacity = 0.0,
@@ -69,6 +75,7 @@ pub const Slow = Gas{
 };
 
 pub const Healing = Gas{
+    .name = "healing gas",
     .color = 0xbb97aa,
     .dissipation_rate = 0.02,
     .opacity = 0.0,
@@ -77,6 +84,7 @@ pub const Healing = Gas{
 };
 
 pub const Dust = Gas{
+    .name = "dust",
     .color = 0xd2b48c,
     .dissipation_rate = 0.07,
     .opacity = 0.1,
@@ -86,6 +94,7 @@ pub const Dust = Gas{
 };
 
 pub const Steam = Gas{
+    .name = "steam",
     .color = 0x5f5f5f,
     .dissipation_rate = 0.12,
     .opacity = 0.00,
@@ -94,6 +103,7 @@ pub const Steam = Gas{
 };
 
 pub const Miasma = Gas{
+    .name = "miasma",
     .color = 0xd77fd7,
     .dissipation_rate = 0.08,
     .opacity = 0.00,

@@ -2,9 +2,11 @@
 
 const std = @import("std");
 const math = std.math;
+const io = std.io;
 const assert = std.debug.assert;
 
 const colors = @import("colors.zig");
+const player = @import("player.zig");
 const combat = @import("combat.zig");
 const err = @import("err.zig");
 const gas = @import("gas.zig");
@@ -138,7 +140,7 @@ pub fn dimensions(w: DisplayWindow) Dimension {
             .height = main_height,
         },
         .EnemyInfo => .{
-            .from = Coord.new(enemyinfo_start, 0),
+            .from = Coord.new(enemyinfo_start, 1),
             .to = Coord.new(width - 1, height - 1),
             .width = math.max(enemyinfo_width, width - enemyinfo_start),
             .height = height - 1,
@@ -179,6 +181,7 @@ const DrawStrOpts = struct {
 
 // Escape characters:
 //     $g       fg = GREY
+//     $G       fg = DARK_GREY
 //     $c       fg = LIGHT_CONCRETE
 //     $p       fg = PINK
 //     $.       reset fg and bg to defaults
@@ -186,7 +189,7 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
     const termbox_width = termbox.tb_width();
     const termbox_buffer = termbox.tb_cell_buffer();
 
-    var buf: [256]u8 = [_]u8{0} ** 256;
+    var buf: [65535]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buf);
     std.fmt.format(fbs.writer(), format, args) catch err.bug("format error!", .{});
     const str = fbs.getWritten();
@@ -203,7 +206,12 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
         const def_bg = termbox_buffer[@intCast(usize, y * termbox_width + x)].bg;
 
         switch (codepoint) {
-            '\r', '\n' => err.bug("Bad character found in string.", .{}),
+            '\n' => {
+                y += 1;
+                x = _x;
+                continue;
+            },
+            '\r' => err.bug("Bad character found in string.", .{}),
             '$' => {
                 const next_encoded_codepoint = utf8.nextCodepointSlice() orelse
                     err.bug("Found incomplete escape sequence", .{});
@@ -214,6 +222,7 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
                         bg = opts.bg;
                     },
                     'g' => fg = colors.GREY,
+                    'G' => fg = colors.DARK_GREY,
                     'c' => fg = colors.LIGHT_CONCRETE,
                     'p' => fg = colors.PINK,
                     else => err.bug("Found unknown escape sequence", .{}),
@@ -231,7 +240,7 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
                 x = _x + 2;
                 y += 1;
             } else {
-                break;
+                x -= 1;
             }
         }
     }
@@ -612,23 +621,7 @@ pub fn draw() void {
     var membuf: [65535]u8 = undefined;
     var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
-    // Create a list of all mobs on the map so that we can calculate what tiles
-    // are in the FOV of any mob. Use only mobs that the player can see, the player
-    // shouldn't know what's in the FOV of an invisible mob!
-    //
-    // Then, sort list to put nonhostiles last, and closer mobs first.
     const moblist = state.createMobList(false, true, state.player.coord.z, fba.allocator());
-    {
-        const S = struct {
-            pub fn _sortFunc(_: void, a: *Mob, b: *Mob) bool {
-                const p = state.player;
-                if (p.isHostileTo(a) and !p.isHostileTo(b)) return true;
-                if (!p.isHostileTo(a) and p.isHostileTo(b)) return false;
-                return p.coord.distance(a.coord) < p.coord.distance(b.coord);
-            }
-        };
-        std.sort.insertionSort(*Mob, moblist.items, {}, S._sortFunc);
-    }
 
     const playerinfo_window = dimensions(.PlayerInfo);
     const main_window = dimensions(.Main);
@@ -672,9 +665,6 @@ pub fn chooseCell() ?Coord {
     var membuf: [65535]u8 = undefined;
     var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
 
-    // Create a list of all mobs on the map so that we can calculate what tiles
-    // are in the FOV of any mob. Use only mobs that the player can see, the player
-    // shouldn't know what's in the FOV of an invisible mob!
     const moblist = state.createMobList(false, true, state.player.coord.z, fba.allocator());
 
     var coord: Coord = state.player.coord;
@@ -889,6 +879,190 @@ pub fn waitForInput(default_input: ?u8) ?u32 {
             if (ev.ch != 0) {
                 return ev.ch;
             }
+        }
+    }
+}
+
+pub fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewidth: usize) void {
+    const S = struct {
+        pub fn append(writer: io.FixedBufferStream([]u8).Writer, comptime fmt: []const u8, args: anytype) void {
+            writer.print(fmt, args) catch err.wat();
+        }
+
+        pub fn appendChar(writer: io.FixedBufferStream([]u8).Writer, ch: u21, count: usize) void {
+            var utf8buf: [4]u8 = undefined;
+            const seqlen = std.unicode.utf8Encode(ch, &utf8buf) catch err.wat();
+            var i: usize = 0;
+            while (i < count) : (i += 1)
+                writer.writeAll(utf8buf[0..seqlen]) catch err.wat();
+        }
+    };
+
+    const shortname = (item.shortName() catch err.wat()).constSlice();
+
+    //S.appendChar(w, ' ', (linewidth / 2) -| (shortname.len / 2));
+    S.append(w, "$c{s}$.\n", .{shortname});
+
+    S.append(w, "$G", .{});
+    S.appendChar(w, '─', linewidth);
+    S.append(w, "$.\n", .{});
+
+    S.append(w, "\n", .{});
+
+    var usable = false;
+    var throwable = false;
+
+    switch (item) {
+        .Ring => S.append(w, "TODO: ring descriptions.", .{}),
+        .Potion => |p| {
+            S.append(w, "$ceffects$.:\n", .{});
+            switch (p.type) {
+                .Gas => |g| S.append(w, "$gGas$. {s}\n", .{gas.Gases[g].name}),
+                .Status => |s| S.append(w, "$gTmp$. {s}\n", .{s.string(state.player)}),
+                .Custom => S.append(w, "TODO: describe this potion\n", .{}),
+            }
+            usable = true;
+            throwable = true;
+        },
+        .Projectile => |p| {
+            const dmg = p.damage orelse @as(usize, 0);
+            S.append(w, "$cdamage$.: {}\n", .{dmg});
+            switch (p.effect) {
+                .Status => |sinfo| {
+                    S.append(w, "$ceffects$.:\n", .{});
+                    if (sinfo.permanent) {
+                        S.append(w, "$gPrm$. {s}\n", .{sinfo.status.string(state.player)});
+                    } else {
+                        S.append(w, "$gTmp$. {s} ({})\n", .{
+                            sinfo.status.string(state.player), sinfo.duration,
+                        });
+                    }
+                    throwable = true;
+                },
+            }
+        },
+        .Armor, .Cloak, .Weapon, .Evocable => S.append(w, "TODO", .{}),
+        .Boulder, .Prop, .Vial => S.append(w, "You cannot use this item.", .{}),
+    }
+
+    S.append(w, "\n", .{});
+    if (usable) S.append(w, "$cSPACE$. to use.", .{});
+    if (throwable) S.append(w, "$ct$. to throw.", .{});
+}
+
+pub fn drawInventoryScreen() bool {
+    const playerinfo_window = dimensions(.PlayerInfo);
+    const main_window = dimensions(.Main);
+    const iteminfo_window = dimensions(.EnemyInfo);
+    //const log_window = dimensions(.Log);
+
+    // TODO: do some tests and figure out what's the practical limit to memory
+    // usage, and reduce the buffer's size to that.
+    var membuf: [65535]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
+    const moblist = state.createMobList(false, true, state.player.coord.z, fba.allocator());
+
+    clearScreen();
+
+    var chosen: usize = 0;
+    var y: isize = 0;
+
+    while (true) {
+        drawPlayerInfo(
+            moblist.items,
+            @intCast(isize, playerinfo_window.from.x),
+            @intCast(isize, playerinfo_window.from.y),
+            @intCast(isize, playerinfo_window.to.x),
+            @intCast(isize, playerinfo_window.to.y),
+        );
+
+        y = @intCast(isize, main_window.from.y);
+        const x = @intCast(isize, main_window.from.x);
+        const endx = @intCast(isize, main_window.to.x);
+
+        const inventory_len = state.player.inventory.pack.len;
+
+        // Draw list of items
+        {
+            for (state.player.inventory.pack.constSlice()) |item, i| {
+                const name = (item.longName() catch err.wat()).constSlice();
+                const color = if (i == chosen) colors.LIGHT_CONCRETE else colors.GREY;
+
+                _clear_line(x, endx, y);
+                y = _drawStr(x, y, endx, "{s} {s}", .{
+                    if (i == chosen) ">" else " ", name,
+                }, .{ .fg = color });
+
+                y += 1;
+            }
+        }
+
+        // Draw item info
+        if (inventory_len > 0) {
+            var descbuf: [4096]u8 = undefined;
+            var descbuf_stream = io.fixedBufferStream(&descbuf);
+            _getItemDescription(
+                descbuf_stream.writer(),
+                state.player.inventory.pack.data[chosen],
+                RIGHT_INFO_WIDTH - 1,
+            );
+            _ = _drawStr(
+                @intCast(isize, iteminfo_window.from.x),
+                @intCast(isize, iteminfo_window.from.y),
+                @intCast(isize, iteminfo_window.to.x),
+                "{s}",
+                .{descbuf_stream.getWritten()},
+                .{},
+            );
+        }
+
+        termbox.tb_present();
+
+        var ev: termbox.tb_event = undefined;
+        const t = termbox.tb_poll_event(&ev);
+
+        if (t == -1) @panic("Fatal termbox error");
+
+        if (t == termbox.TB_EVENT_KEY) {
+            if (ev.key != 0) {
+                switch (ev.key) {
+                    termbox.TB_KEY_ARROW_DOWN,
+                    termbox.TB_KEY_ARROW_LEFT,
+                    => if (chosen < inventory_len - 1) {
+                        chosen += 1;
+                    },
+                    termbox.TB_KEY_ARROW_UP,
+                    termbox.TB_KEY_ARROW_RIGHT,
+                    => if (chosen > 0) {
+                        chosen -= 1;
+                    },
+                    termbox.TB_KEY_CTRL_C,
+                    termbox.TB_KEY_CTRL_G,
+                    termbox.TB_KEY_ESC,
+                    => return false,
+                    termbox.TB_KEY_SPACE,
+                    termbox.TB_KEY_ENTER,
+                    => if (inventory_len > 0)
+                        return player.useItem(chosen),
+                    else => {},
+                }
+                continue;
+            } else if (ev.ch != 0) {
+                switch (ev.ch) {
+                    'd' => if (inventory_len > 0)
+                        return player.dropItem(chosen),
+                    't' => if (inventory_len > 0)
+                        return player.throwItem(chosen),
+                    'j', 'h' => if (chosen < inventory_len - 1) {
+                        chosen += 1;
+                    },
+                    'k', 'l' => if (chosen > 0) {
+                        chosen -= 1;
+                    },
+                    else => {},
+                }
+            } else unreachable;
         }
     }
 }

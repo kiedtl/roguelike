@@ -283,53 +283,6 @@ pub fn moveOrFight(direction: Direction) bool {
     return state.player.moveInDirection(direction);
 }
 
-fn _invokeMachine(mach: *Machine) bool {
-    const interaction = &mach.interact1.?;
-    mach.evoke(state.player, interaction) catch |e| {
-        switch (e) {
-            error.NotPowered => state.message(.MetaError, "The {s} has no power!", .{mach.name}),
-            error.UsedMax => state.message(.MetaError, "You can't use {s} anymore.", .{mach.name}),
-            error.NoEffect => state.message(.MetaError, "{s}", .{interaction.no_effect_msg}),
-        }
-        return false;
-    };
-
-    state.player.declareAction(.Interact);
-    state.message(.Info, "{s}", .{interaction.success_msg});
-
-    const left = mach.interact1.?.max_use - mach.interact1.?.used;
-    if (left == 0) {
-        state.message(.Info, "The {s} becomes inert.", .{mach.name});
-    } else {
-        state.message(.Info, "You can use this {s} {} more times.", .{ mach.name, left });
-    }
-
-    return true;
-}
-
-pub fn invokeRecharger() bool {
-    var recharger: ?*Machine = null;
-
-    for (state.player.fov) |row, y| for (row) |_, x| {
-        if (state.player.fov[y][x] > 0) {
-            const fc = Coord.new2(state.player.coord.z, x, y);
-            if (state.dungeon.at(fc).surface) |surf| switch (surf) {
-                .Machine => |m| if (mem.eql(u8, m.id, "recharging_station")) {
-                    recharger = m;
-                },
-                else => {},
-            };
-        }
-    };
-
-    if (recharger) |mach| {
-        return _invokeMachine(mach);
-    } else {
-        state.message(.MetaError, "No recharging station in sight!", .{});
-        return false;
-    }
-}
-
 pub fn grabItem() bool {
     if (state.player.inventory.pack.isFull()) {
         state.message(.MetaError, "Your pack is full.", .{});
@@ -408,16 +361,9 @@ pub fn grabItem() bool {
     return true;
 }
 
-pub fn throwItem() bool {
-    if (state.player.inventory.pack.len == 0) {
-        state.message(.MetaError, "Your pack is empty.", .{});
-        return false;
-    }
+pub fn throwItem(index: usize) bool {
+    assert(state.player.inventory.pack.len > index);
 
-    const index = display.chooseInventoryItem(
-        "Throw what?",
-        state.player.inventory.pack.constSlice(),
-    ) orelse return false;
     const dest = display.chooseCell() orelse return false;
     const item = &state.player.inventory.pack.slice()[index];
 
@@ -430,40 +376,43 @@ pub fn throwItem() bool {
     }
 }
 
-pub fn useSomething() bool {
-    var mach: ?*Machine = null;
+pub fn activateSurfaceItem() bool {
+    var mach: *Machine = undefined;
     if (state.dungeon.at(state.player.coord).surface) |s| switch (s) {
         .Machine => |m| if (m.interact1) |_| {
             mach = m;
         },
-        else => {},
+        else => {
+            state.message(.MetaError, "There's nothing here to activate.", .{});
+            return false;
+        },
     };
 
-    if (mach) |machine| {
-        const choice = display.chooseOption(
-            "Use what?",
-            &[_][]const u8{ machine.name, "<Inventory>" },
-        ) orelse return false;
-        return switch (choice) {
-            0 => _invokeMachine(machine),
-            1 => _useItem(),
-            else => err.wat(),
-        };
+    const interaction = &mach.interact1.?;
+    mach.evoke(state.player, interaction) catch |e| {
+        switch (e) {
+            error.NotPowered => state.message(.MetaError, "The {s} has no power!", .{mach.name}),
+            error.UsedMax => state.message(.MetaError, "You can't use {s} anymore.", .{mach.name}),
+            error.NoEffect => state.message(.MetaError, "{s}", .{interaction.no_effect_msg}),
+        }
+        return false;
+    };
+
+    state.player.declareAction(.Interact);
+    state.message(.Info, "{s}", .{interaction.success_msg});
+
+    const left = mach.interact1.?.max_use - mach.interact1.?.used;
+    if (left == 0) {
+        state.message(.Info, "The {s} becomes inert.", .{mach.name});
     } else {
-        return _useItem();
+        state.message(.Info, "You can use this {s} {} more times.", .{ mach.name, left });
     }
+
+    return true;
 }
 
-fn _useItem() bool {
-    if (state.player.inventory.pack.len == 0) {
-        state.message(.MetaError, "Your pack is empty.", .{});
-        return false;
-    }
-
-    const index = display.chooseInventoryItem(
-        "Use what item?",
-        state.player.inventory.pack.constSlice(),
-    ) orelse return false;
+pub fn useItem(index: usize) bool {
+    assert(state.player.inventory.pack.len > index);
 
     switch (state.player.inventory.pack.slice()[index]) {
         .Ring => |_| {
@@ -520,17 +469,10 @@ fn _useItem() bool {
     return true;
 }
 
-pub fn dropItem() bool {
-    if (state.player.inventory.pack.len == 0) {
-        state.message(.MetaError, "Your pack is empty.", .{});
-        return false;
-    }
+pub fn dropItem(index: usize) bool {
+    assert(state.player.inventory.pack.len > index);
 
     if (state.nextAvailableSpaceForItem(state.player.coord, state.GPA.allocator())) |coord| {
-        const index = display.chooseInventoryItem(
-            "Drop what?",
-            state.player.inventory.pack.constSlice(),
-        ) orelse return false;
         const item = state.player.removeItem(index) catch err.wat();
 
         const dropped = state.player.dropItem(item, coord);

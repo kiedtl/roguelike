@@ -3,6 +3,7 @@ const math = std.math;
 const assert = std.debug.assert;
 
 pub const GREY: u32 = 0xafafaf;
+pub const DARK_GREY: u32 = 0x8a8a8a;
 pub const WHITE: u32 = 0xffffff;
 pub const BG_GREY: u32 = 0x1e1e1e;
 pub const BLACK: u32 = 0x000000;

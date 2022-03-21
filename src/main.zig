@@ -292,11 +292,9 @@ fn readInput() bool {
                     });
                     break :b false;
                 },
-                'x' => state.player.swapWeapons(),
-                'r' => player.invokeRecharger(),
-                't' => player.throwItem(),
-                'a' => player.useSomething(),
-                'd' => player.dropItem(),
+                '\'' => state.player.swapWeapons(),
+                'a' => player.activateSurfaceItem(),
+                'i' => display.drawInventoryScreen(),
                 ',' => player.grabItem(),
                 '.' => state.player.rest(),
                 'h' => player.moveOrFight(.West),

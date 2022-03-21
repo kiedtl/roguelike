@@ -294,6 +294,16 @@ pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, al
             }
         }
     }
+
+    const S = struct {
+        pub fn _sortFunc(_: void, a: *Mob, b: *Mob) bool {
+            if (player.isHostileTo(a) and !player.isHostileTo(b)) return true;
+            if (!player.isHostileTo(a) and player.isHostileTo(b)) return false;
+            return player.coord.distance(a.coord) < player.coord.distance(b.coord);
+        }
+    };
+    std.sort.insertionSort(*Mob, moblist.items, {}, S._sortFunc);
+
     return moblist;
 }
 
