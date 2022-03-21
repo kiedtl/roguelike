@@ -206,8 +206,8 @@ pub fn checkForHostiles(mob: *Mob) void {
 
             if (othermob == mob) continue;
 
-            // Stealth check
-            if (rng.range(usize, 0, 100) < othermob.stealth() * 10)
+            // Camoflage check
+            if (rng.range(isize, 0, 100) < othermob.stat(.Camoflage) * 10)
                 continue;
 
             if (othermob.isHostileTo(mob)) {
@@ -887,9 +887,8 @@ pub fn watcherFight(mob: *Mob, alloc: mem.Allocator) void {
 pub fn rangedFight(mob: *Mob, alloc: mem.Allocator) void {
     const target = currentEnemy(mob).mob;
 
-    // if we can't see the enemy because it's outside of our range of vision,
-    // move towards it
-    if (!mob.cansee(target.coord) and mob.coord.distance(target.coord) > mob.vision)
+    // if we can't see the enemy, move towards it
+    if (!mob.cansee(target.coord))
         mob.tryMoveTo(target.coord);
 
     // hack to give breathing space to enemy who just got projectile thrown at it
@@ -986,7 +985,8 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
     switch (mob.ai.spellcaster_backup_action) {
         .Melee => meleeFight(mob, alloc),
         .KeepDistance => {
-            const moved = keepDistance(mob, currentEnemy(mob).mob.coord, mob.vision - 1);
+            const dist = @intCast(usize, mob.stat(.Vision) -| 1);
+            const moved = keepDistance(mob, currentEnemy(mob).mob.coord, dist);
             if (!moved) meleeFight(mob, alloc);
         },
     }

@@ -55,11 +55,11 @@ pub const PlayerUpgrade = enum {
     OI_Shove,
     Healthy,
     Mana,
-    Stealthy,
+    Camoflaged,
     Will,
     Echolocating,
 
-    pub const UPGRADES = [_]PlayerUpgrade{ .Fast, .Strong, .Agile, .OI_Enraged, .OI_Fast, .OI_Shove, .Healthy, .Mana, .Stealthy, .Will, .Echolocating };
+    pub const UPGRADES = [_]PlayerUpgrade{ .Fast, .Strong, .Agile, .OI_Enraged, .OI_Fast, .OI_Shove, .Healthy, .Mana, .Camoflaged, .Will, .Echolocating };
 
     pub fn announce(self: PlayerUpgrade) []const u8 {
         return switch (self) {
@@ -71,7 +71,7 @@ pub const PlayerUpgrade = enum {
             .OI_Shove => "You begin shoving past foes when injured.",
             .Healthy => "You are unusually robust.",
             .Mana => "You sense your inner strength grow.",
-            .Stealthy => "You move stealthily.",
+            .Camoflaged => "Only observant foes notice you.",
             .Will => "Your will hardens.",
             .Echolocating => "Your sense of hearing becomes acute.",
         };
@@ -87,7 +87,7 @@ pub const PlayerUpgrade = enum {
             .OI_Shove => "You begin shoving past foes when injured.",
             .Healthy => "You have 50% more health than usual.",
             .Mana => "You have 50% more mana than usual.",
-            .Stealthy => "You have one pip of intrinsic stealth.",
+            .Camoflaged => "You have one level of intrinsic camoflage.",
             .Will => "You have 3 extra pips of willpower.",
             .Echolocating => "You passively echolocate areas around sound.",
         };
@@ -95,9 +95,9 @@ pub const PlayerUpgrade = enum {
 
     pub fn implement(self: PlayerUpgrade) void {
         switch (self) {
-            .Fast => state.player.base_speed = state.player.base_speed * 90 / 100,
-            .Strong => state.player.base_strength = state.player.base_strength * 150 / 100,
-            .Agile => state.player.base_evasion = state.player.base_evasion * 120 / 100,
+            .Fast => state.player.stats.Speed -= 10,
+            .Strong => state.player.stats.Strength += 15,
+            .Agile => state.player.stats.Evade += 10,
             .OI_Enraged => state.player.ai.flee_effect = .{
                 .status = .Enraged,
                 .duration = 10,
@@ -115,8 +115,8 @@ pub const PlayerUpgrade = enum {
             },
             .Healthy => state.player.max_HP = state.player.max_HP * 150 / 100,
             .Mana => state.player.max_MP = state.player.max_MP * 150 / 100,
-            .Stealthy => state.player.base_stealth += 1,
-            .Will => state.player.willpower = math.clamp(state.player.willpower + 3, 0, 10),
+            .Camoflaged => state.player.stats.Camoflage += 1,
+            .Will => state.player.stats.Willpower += 3,
             .Echolocating => state.player.addStatus(.Echolocation, 1, 7, true),
         }
     }

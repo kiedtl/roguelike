@@ -5,6 +5,7 @@ const assert = std.debug.assert;
 const mem = std.mem;
 const meta = std.meta;
 const math = std.math;
+const enums = std.enums;
 
 const spells = @import("spells.zig");
 const err = @import("err.zig");
@@ -29,6 +30,9 @@ const Container = types.Container;
 const Material = types.Material;
 const Vial = types.Vial;
 const Prop = types.Prop;
+const Stat = types.Stat;
+const Resistance = types.Resistance;
+const StatusDataInfo = types.StatusDataInfo;
 
 const DIRECTIONS = types.DIRECTIONS;
 const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
@@ -38,12 +42,81 @@ const WIDTH = state.WIDTH;
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
+// ---
+
 pub var props: PropArrayList = undefined;
 pub var prison_item_props: PropArrayList = undefined;
 pub var laboratory_item_props: PropArrayList = undefined;
 pub var laboratory_props: PropArrayList = undefined;
 pub var vault_props: PropArrayList = undefined;
 pub var statue_props: PropArrayList = undefined;
+
+pub const Terrain = struct {
+    id: []const u8,
+    name: []const u8,
+    color: u32,
+    tile: u21,
+    stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
+    resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
+    effects: []const StatusDataInfo = &[_]StatusDataInfo{},
+    flammability: usize = 0,
+    fire_retardant: bool = false,
+    luminescence: usize = 0,
+
+    for_levels: []const []const u8,
+    placement: TerrainPlacement,
+    weight: usize,
+
+    pub const TerrainPlacement = union(enum) {
+        EntireRoom,
+    };
+};
+
+pub const DefaultTerrain = Terrain{
+    .id = "t_default",
+    .name = "",
+    .color = 0xbababa,
+    .tile = '·',
+
+    // for_levels and placement have no effect, since this is the default
+    // terrain.
+    .for_levels = &[_][]const u8{"ANY"},
+    .placement = .EntireRoom,
+
+    .weight = 50,
+};
+
+pub const CarpetTerrain = Terrain{
+    .id = "t_carpet",
+    .name = "carpet",
+    .color = 0xdda711,
+    .tile = '·',
+    .stats = .{ .Sneak = 1 },
+    .flammability = 5,
+
+    .for_levels = &[_][]const u8{ "PRI", "VLT" },
+    .placement = .EntireRoom,
+    .weight = 10,
+};
+
+pub const GravelTerrain = Terrain{
+    .id = "t_gravel",
+    .name = "gravel",
+    .color = 0xdadada,
+    .tile = ',',
+    .stats = .{ .Sneak = -1 },
+    .flammability = 5,
+
+    .for_levels = &[_][]const u8{"SMI"},
+    .placement = .EntireRoom,
+    .weight = 10,
+};
+
+pub const TERRAIN = [_]*const Terrain{
+    &DefaultTerrain,
+    &CarpetTerrain,
+    &GravelTerrain,
+};
 
 pub const MACHINES = [_]Machine{
     ChainPress,

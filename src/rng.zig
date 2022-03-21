@@ -56,11 +56,11 @@ pub fn rangeClumping(comptime T: type, min: T, max: T, clump: T) T {
     std.debug.assert(max >= min);
     if (clump <= 1) return range(T, min, max);
 
-    const sides = (max - min) / clump;
-    var i: usize = 0;
-    var total: usize = 0;
+    const sides = @divTrunc(max - min, clump);
+    var i: T = 0;
+    var total: T = 0;
 
-    while (i < (max - min) % clump) : (i += 1) total += range(T, 0, sides + 1);
+    while (i < @mod(max - min, clump)) : (i += 1) total += range(T, 0, sides + 1);
     while (i < clump) : (i += 1) total += range(T, 0, sides);
 
     return total + min;

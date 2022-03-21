@@ -4,6 +4,7 @@ const std = @import("std");
 const math = std.math;
 const io = std.io;
 const assert = std.debug.assert;
+const mem = std.mem;
 
 const colors = @import("colors.zig");
 const player = @import("player.zig");
@@ -18,6 +19,8 @@ const types = @import("types.zig");
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const Mob = types.Mob;
+const Stat = types.Stat;
+const Resistance = types.Resistance;
 const Coord = types.Coord;
 const Direction = types.Direction;
 const Tile = types.Tile;
@@ -312,11 +315,6 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     //     const spd = @intToFloat(f64, state.player.speed());
     //     break :b (spd * @intToFloat(f64, lastaction.cost())) / 100.0 / 10.0;
     // } else 0.0;
-    const strength = state.player.strength();
-    const evasion = combat.chanceOfAttackEvaded(state.player, null);
-    const armor = 100 - @intCast(isize, state.player.resistance(.Armor));
-    const missile = combat.chanceOfMissileLanding(state.player);
-    const speed = state.player.speed();
     const spotted = b: for (moblist) |mob| {
         if (!mob.no_show_fov and mob.ai.is_combative and mob.isHostileTo(state.player)) {
             for (mob.enemies.items) |enemyrecord| {
@@ -337,44 +335,27 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     }, .{ .fg = 0xffffff });
     y += 1;
 
-    if (strength != state.player.base_strength) {
-        const diff = @intCast(isize, strength) - @intCast(isize, state.player.base_strength);
-        const adiff = math.absInt(diff) catch unreachable;
-        const sign = if (diff > 0) "+" else "-";
-        y = _drawStr(startx, y, endx, "$cstrength$. {: >5} $g({s}{})$.", .{ strength, sign, adiff }, .{});
-    } else {
-        y = _drawStr(startx, y, endx, "$cstrength$. {: >5}", .{strength}, .{});
+    inline for (@typeInfo(Stat).Enum.fields) |statv| {
+        const stat = @intToEnum(Stat, statv.value);
+        const base_stat_val = utils.getFieldByEnum(Stat, state.player.stats, stat);
+        const cur_stat_val = state.player.stat(stat);
+
+        if (cur_stat_val > 0 or base_stat_val > 0) {
+            if (cur_stat_val != base_stat_val) {
+                const diff = cur_stat_val - base_stat_val;
+                const abs = math.absInt(diff) catch unreachable;
+                const sign = if (diff > 0) "+" else "-";
+                y = _drawStr(startx, y, endx, "$c{s: <8}$. {: >4} ({s}{})", .{
+                    stat.string(), cur_stat_val, sign, abs,
+                }, .{});
+            } else {
+                y = _drawStr(startx, y, endx, "$c{s: <8}$. {: >4}", .{ stat.string(), cur_stat_val }, .{});
+            }
+        }
     }
 
-    if (evasion != state.player.base_evasion) {
-        const diff = @intCast(isize, evasion) - @intCast(isize, state.player.base_evasion);
-        const adiff = math.absInt(diff) catch unreachable;
-        const sign = if (diff > 0) "+" else "-";
-        y = _drawStr(startx, y, endx, "$cevade%$.   {: >4}% $g({s}{})$.", .{ evasion, sign, adiff }, .{});
-    } else {
-        y = _drawStr(startx, y, endx, "$cevade%$.   {: >4}%", .{evasion}, .{});
-    }
-
+    const armor = 100 - @intCast(isize, state.player.resistance(.Armor));
     y = _drawStr(startx, y, endx, "$carmor%$.   {: >4}%", .{armor}, .{});
-    y = _drawStr(startx, y, endx, "$cmelee%$.   {: >4}%", .{combat.chanceOfMeleeLanding(state.player, null)}, .{});
-
-    if (missile != state.player.base_missile) {
-        const diff = @intCast(isize, missile) - @intCast(isize, state.player.base_missile);
-        const adiff = math.absInt(diff) catch unreachable;
-        const sign = if (diff > 0) "+" else "-";
-        y = _drawStr(startx, y, endx, "$cmissile%$. {: >4}% $g({s}{})$.", .{ missile, sign, adiff }, .{});
-    } else {
-        y = _drawStr(startx, y, endx, "$cmissile%$. {: >4}%", .{missile}, .{});
-    }
-
-    if (speed != state.player.base_speed) {
-        const diff = @intCast(isize, speed) - @intCast(isize, state.player.base_speed);
-        const adiff = math.absInt(diff) catch unreachable;
-        const sign = if (diff > 0) "+" else "-";
-        y = _drawStr(startx, y, endx, "$cspeed$.    {: >4}% ({s}{}%)", .{ speed, sign, adiff }, .{});
-    } else {
-        y = _drawStr(startx, y, endx, "$cspeed$.    {: >4}%", .{speed}, .{});
-    }
 
     y += 1;
 
@@ -464,6 +445,42 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         y = _drawStr(startx, y, endx, "$c armor$. {s}", .{dest}, .{});
     }
     y += 1;
+
+    const terrain = state.dungeon.at(state.player.coord).terrain;
+    if (!mem.eql(u8, terrain.id, "t_default")) {
+        y = _drawStr(startx, y, endx, "$cterrain$.: {s}", .{terrain.name}, .{});
+
+        inline for (@typeInfo(Stat).Enum.fields) |statv| {
+            const stat = @intToEnum(Stat, statv.value);
+            const stat_val = utils.getFieldByEnum(Stat, terrain.stats, stat);
+            if (stat_val != 0) {
+                const abs = math.absInt(stat_val) catch unreachable;
+                const sign = if (stat_val > 0) "+" else "-";
+                y = _drawStr(startx, y, endx, "· $c{s: <5}$. {s}{}", .{
+                    stat.string(), sign, abs,
+                }, .{});
+            }
+        }
+
+        inline for (@typeInfo(Resistance).Enum.fields) |resistv| {
+            const resist = @intToEnum(Resistance, resistv.value);
+            const resist_val = utils.getFieldByEnum(Resistance, terrain.resists, resist);
+            if (resist_val != 0) {
+                const abs = math.absInt(resist_val) catch unreachable;
+                const sign = if (resist_val > 0) "+" else "-";
+                y = _drawStr(startx, y, endx, "· {s: <5} {s}{}", .{
+                    resist.string(), sign, abs,
+                }, .{});
+            }
+        }
+
+        for (terrain.effects) |effect| {
+            assert(!effect.permanent);
+            y = _drawStr(startx, y, endx, "$gTmp$. {s} ({})", .{
+                effect.status.string(state.player), effect.duration,
+            }, .{});
+        }
+    }
 }
 
 fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {

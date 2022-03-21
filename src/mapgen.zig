@@ -1917,6 +1917,50 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
     }
 }
 
+pub fn placeTerrain(level: usize) void {
+    var weights = StackBuffer(usize, surfaces.TERRAIN.len).init(null);
+    var terrains = StackBuffer(*const surfaces.Terrain, surfaces.TERRAIN.len).init(null);
+    for (&surfaces.TERRAIN) |terrain| {
+        var allowed_for_level = for (terrain.for_levels) |allowed_id| {
+            if (mem.eql(u8, allowed_id, state.levelinfo[level].id) or
+                mem.eql(u8, allowed_id, "ANY"))
+            {
+                break true;
+            }
+        } else false;
+
+        if (allowed_for_level) {
+            weights.append(terrain.weight) catch err.wat();
+            terrains.append(terrain) catch err.wat();
+        }
+    }
+
+    for (state.rooms[level].items) |*room| {
+        if (room.has_subroom) continue;
+
+        const rect = room.rect;
+
+        const chosen_terrain = rng.choose(
+            *const surfaces.Terrain,
+            terrains.constSlice(),
+            weights.constSlice(),
+        ) catch err.wat();
+
+        switch (chosen_terrain.placement) {
+            .EntireRoom => {
+                var y: usize = rect.start.y;
+                while (y < rect.end().y) : (y += 1) {
+                    var x: usize = rect.start.x;
+                    while (x < rect.end().x) : (x += 1) {
+                        const coord = Coord.new2(level, x, y);
+                        state.dungeon.at(coord).terrain = chosen_terrain;
+                    }
+                }
+            },
+        }
+    }
+}
+
 pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     assert(level != 0);
 

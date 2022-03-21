@@ -67,7 +67,7 @@ fn pathfindingPenalty(coord: Coord, opts: state.IsWalkableOptions) usize {
             c += m.pathfinding_penalty;
             if (m.jammed)
                 if (opts.mob) |mob| {
-                    c += 100 / mob.strength();
+                    c += 100 / @intCast(usize, mob.stat(.Strength));
                 };
         },
         .Container => |_| c += 30,

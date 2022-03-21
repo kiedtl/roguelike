@@ -345,8 +345,8 @@ fn _resurrectFrozen(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
         corpse.max_HP = corpse.max_HP * 2;
         corpse.HP = corpse.max_HP;
         corpse.innate_resists.rFire = -2;
-        corpse.base_strength = corpse.base_strength * 130 / 100;
-        corpse.base_evasion = 0;
+        corpse.stats.Strength += 10;
+        corpse.stats.Evade = 0;
         corpse.deg360_vision = true;
 
         corpse.addStatus(.Fast, 0, 0, true);
@@ -434,8 +434,8 @@ pub const CAST_PAIN = Spell{
 
 fn willSucceedAgainstMob(caster: *const Mob, target: *const Mob) bool {
     if (rng.onein(10)) return false;
-    return (rng.rangeClumping(usize, 1, 100, 2) * caster.willpower) >
-        (rng.rangeClumping(usize, 1, 100, 2) * target.willpower);
+    return (rng.rangeClumping(isize, 1, 100, 2) * caster.stat(.Willpower)) >
+        (rng.rangeClumping(isize, 1, 100, 2) * target.stat(.Willpower));
 }
 
 pub const SpellOptions = struct {

@@ -90,14 +90,10 @@ pub const ExecutionerTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .willpower = 3,
-        .base_evasion = 10,
         .max_HP = 40,
         .memory_duration = 5,
-        .base_speed = 100,
         .blood = .Blood,
-
-        .base_strength = 20,
+        .stats = .{ .Willpower = 3, .Evade = 10, .Strength = 20, .Speed = 100 },
     },
     .weapon = &items.KnoutWeapon,
 };
@@ -117,14 +113,10 @@ pub const WatcherTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .willpower = 3,
-        .base_evasion = 30,
         .max_HP = 40,
         .memory_duration = 10,
-        .base_speed = 60,
         .blood = .Blood,
-
-        .base_strength = 8, // weakling!
+        .stats = .{ .Willpower = 3, .Evade = 30, .Strength = 8, .Speed = 60 },
     },
 };
 
@@ -142,16 +134,11 @@ pub const WardenTemplate = MobTemplate{
             .is_curious = true,
         },
         .allegiance = .Necromancer,
-        .vision = 5,
 
-        .willpower = 3,
-        .base_evasion = 10,
         .max_HP = 30,
         .memory_duration = 6,
-        .base_speed = 120,
         .blood = .Blood,
-
-        .base_strength = 20,
+        .stats = .{ .Willpower = 3, .Evade = 10, .Strength = 20, .Speed = 120, .Vision = 5 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.LeatherArmor,
@@ -173,14 +160,11 @@ pub const GuardTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .willpower = 2,
-        .base_evasion = 10,
         .max_HP = 35,
         .memory_duration = 5,
-        .base_speed = 100,
         .blood = .Blood,
 
-        .base_strength = 10,
+        .stats = .{ .Willpower = 2, .Evade = 10, .Strength = 10, .Speed = 100 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
@@ -206,15 +190,10 @@ pub const JavelineerTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .willpower = 2,
-        .base_evasion = 10,
-        .base_missile = 80,
         .max_HP = 30,
         .memory_duration = 6,
-        .base_speed = 110,
         .blood = .Blood,
-
-        .base_strength = 15,
+        .stats = .{ .Willpower = 2, .Evade = 10, .Missile = 80, .Strength = 15, .Speed = 110, .Vision = 5 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
@@ -241,15 +220,10 @@ pub const SentinelTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .willpower = 5,
-        .base_evasion = 15,
-        .base_missile = 70,
         .max_HP = 40,
         .memory_duration = 7,
-        .base_speed = 90,
         .blood = .Blood,
-
-        .base_strength = 18,
+        .stats = .{ .Willpower = 5, .Evade = 15, .Missile = 70, .Strength = 20, .Speed = 90 },
     },
     .weapon = &items.KnifeWeapon,
     .armor = &items.LeatherArmor,
@@ -282,18 +256,12 @@ pub const LeadTurtleTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .vision = 4,
-        .willpower = 5,
-        .base_evasion = 0,
-        .base_melee = 100,
         .max_HP = 40,
         .memory_duration = 20,
-        .base_speed = 220,
         .blood = null,
         .corpse = .None,
         .innate_resists = .{ .rPois = 100, .rFire = 100, .Armor = 60, .rFume = 100 },
-
-        .base_strength = 30,
+        .stats = .{ .Willpower = 5, .Evade = 0, .Melee = 100, .Strength = 40, .Speed = 220, .Vision = 4 },
     },
 
     .statuses = &[_]StatusDataInfo{.{ .status = .Sleeping, .permanent = true }},
@@ -327,16 +295,12 @@ pub const IronWaspTemplate = MobTemplate{
             .is_fearless = true,
         },
         .allegiance = .Necromancer,
-        .vision = 3,
-        .willpower = 1,
-        .base_evasion = 50,
         .max_HP = 5,
         .memory_duration = 3,
-        .base_speed = 55,
         .blood = null,
         .corpse = .None,
         .innate_resists = .{ .rPois = 100, .rFire = 50, .rFume = 100 },
-        .base_strength = 2,
+        .stats = .{ .Willpower = 1, .Evade = 50, .Strength = 2, .Speed = 55, .Vision = 3 },
     },
 
     .squad = &[_][]const MobTemplate.SquadMember{
@@ -365,14 +329,10 @@ pub const PatrolTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .willpower = 2,
-        .base_evasion = 15,
         .max_HP = 30,
         .memory_duration = 3,
-        .base_speed = 110,
         .blood = .Blood,
-
-        .base_strength = 20,
+        .stats = .{ .Willpower = 2, .Evade = 15, .Strength = 20, .Speed = 110 },
     },
     .weapon = &items.SpearWeapon,
     .armor = &items.GambesonArmor,
@@ -399,21 +359,15 @@ pub const PlayerTemplate = MobTemplate{
             .is_curious = false,
         },
         .allegiance = .OtherGood,
-        .vision = 10,
         .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
 
-        .willpower = 6,
-        .base_evasion = 10,
         .max_HP = 80,
         .memory_duration = 10,
-        .base_speed = 100,
         .blood = .Blood,
 
-        .stats = .{ .Sneak = 4 },
-
-        .base_strength = 20,
+        .stats = .{ .Willpower = 5, .Evade = 10, .Strength = 20, .Speed = 100, .Vision = 10, .Sneak = 4 },
     },
     .weapon = &items.KnifeWeapon,
     .armor = &items.RobeArmor,
@@ -436,14 +390,11 @@ pub const InteractionLaborerTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .willpower = 2,
-        .base_evasion = 15,
         .max_HP = 60,
         .memory_duration = 5,
-        .base_speed = 100,
         .blood = .Blood,
 
-        .base_strength = 10,
+        .stats = .{ .Willpower = 2, .Evade = 10, .Strength = 10, .Speed = 100 },
     },
 };
 
@@ -461,16 +412,10 @@ pub const GoblinTemplate = MobTemplate{
             .is_curious = true,
         },
         .allegiance = .OtherEvil,
-        .vision = 8,
-
-        .willpower = 3,
-        .base_evasion = 15,
         .max_HP = 40,
         .memory_duration = 8,
-        .base_speed = 100,
         .blood = .Blood,
-
-        .base_strength = 18,
+        .stats = .{ .Willpower = 4, .Evade = 15, .Strength = 20, .Speed = 100, .Vision = 8 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.LeatherArmor,
@@ -490,7 +435,6 @@ pub const KyaniteStatueTemplate = MobTemplate{
             .is_curious = false,
         },
         .allegiance = .Necromancer,
-        .vision = 20,
         .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
@@ -500,18 +444,14 @@ pub const KyaniteStatueTemplate = MobTemplate{
         },
         .max_MP = 7,
 
-        .willpower = 8,
-        .base_evasion = 0,
         .max_HP = 100,
         .memory_duration = 1,
-        .base_speed = 100,
         .life_type = .Construct,
         .blood = null,
         .corpse = .Wall,
         .immobile = true,
         .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = 100, .Armor = 100, .rFume = 100 },
-
-        .base_strength = 1,
+        .stats = .{ .Willpower = 9, .Evade = 0, .Strength = 1, .Speed = 100, .Vision = 20 },
     },
 };
 
@@ -529,7 +469,6 @@ pub const NebroStatueTemplate = MobTemplate{
             .is_curious = false,
         },
         .allegiance = .Necromancer,
-        .vision = 20,
         .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
@@ -539,18 +478,14 @@ pub const NebroStatueTemplate = MobTemplate{
         },
         .max_MP = 7,
 
-        .willpower = 8,
-        .base_evasion = 0,
         .max_HP = 1000,
         .memory_duration = 1,
-        .base_speed = 100,
         .life_type = .Construct,
         .blood = null,
         .corpse = .Wall,
         .immobile = true,
         .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = 100, .Armor = 100, .rFume = 100 },
-
-        .base_strength = 2,
+        .stats = .{ .Willpower = 9, .Evade = 0, .Strength = 1, .Speed = 100, .Vision = 20 },
     },
 };
 
@@ -568,7 +503,6 @@ pub const CrystalStatueTemplate = MobTemplate{
             .is_curious = false,
         },
         .allegiance = .Necromancer,
-        .vision = 20,
         .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
@@ -578,18 +512,14 @@ pub const CrystalStatueTemplate = MobTemplate{
         },
         .max_MP = 7,
 
-        .willpower = 8,
-        .base_evasion = 0,
         .max_HP = 1000,
         .memory_duration = 1,
-        .base_speed = 100,
         .life_type = .Construct,
         .blood = null,
         .corpse = .Wall,
         .immobile = true,
         .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = 100, .Armor = 100, .rFume = 100 },
-
-        .base_strength = 2,
+        .stats = .{ .Willpower = 9, .Evade = 0, .Strength = 1, .Speed = 100, .Vision = 20 },
     },
 };
 
@@ -608,14 +538,11 @@ pub const AlchemistTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .willpower = 5,
-        .base_evasion = 30,
         .max_HP = 65,
         .memory_duration = 7,
-        .base_speed = 90,
         .blood = .Blood,
 
-        .base_strength = 28,
+        .stats = .{ .Willpower = 2, .Evade = 10, .Strength = 10, .Speed = 100 },
     },
 };
 
@@ -635,14 +562,10 @@ pub const CleanerTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .willpower = 2,
-        .base_evasion = 15,
         .max_HP = 60,
         .memory_duration = 5,
-        .base_speed = 100,
         .blood = .Blood,
-
-        .base_strength = 10,
+        .stats = .{ .Willpower = 2, .Evade = 10, .Strength = 10, .Speed = 100 },
     },
 };
 
@@ -662,14 +585,10 @@ pub const HaulerTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .willpower = 2,
-        .base_evasion = 25,
         .max_HP = 50,
         .memory_duration = 8,
-        .base_speed = 55,
         .blood = .Blood,
-
-        .base_strength = 10,
+        .stats = .{ .Willpower = 2, .Evade = 10, .Strength = 10, .Speed = 60 },
     },
 };
 
@@ -689,14 +608,10 @@ pub const EngineerTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .willpower = 2,
-        .base_evasion = 25,
         .max_HP = 50,
         .memory_duration = 8,
-        .base_speed = 55,
         .blood = .Blood,
-
-        .base_strength = 10,
+        .stats = .{ .Willpower = 2, .Evade = 10, .Strength = 10, .Speed = 90 },
     },
     .cloak = &items.FurCloak,
 };
@@ -718,7 +633,6 @@ pub const AncientMageTemplate = MobTemplate{
             .spellcaster_backup_action = .KeepDistance,
         },
         .allegiance = .Necromancer,
-        .vision = 6,
 
         .spells = &[_]SpellOptions{
             // On spell ordering: our priorities are:
@@ -741,17 +655,12 @@ pub const AncientMageTemplate = MobTemplate{
         .deaf = false,
         .life_type = .Undead,
 
-        .willpower = 10,
-        .base_evasion = 10,
         .max_HP = 80,
         .memory_duration = 4,
-        .base_speed = 110,
         .blood = null,
         .corpse = .None,
-
-        .base_strength = 25,
-
         .innate_resists = .{ .rPois = 100, .rFume = 100, .rElec = 100 },
+        .stats = .{ .Willpower = 10, .Evade = 10, .Strength = 25, .Speed = 110 },
     },
     .armor = &items.HauberkArmor,
 };
@@ -772,7 +681,6 @@ pub const DeathMageTemplate = MobTemplate{
             .spellcaster_backup_action = .KeepDistance,
         },
         .allegiance = .Necromancer,
-        .vision = 5,
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 10, .spell = &spells.CAST_HEAL_UNDEAD },
@@ -780,14 +688,10 @@ pub const DeathMageTemplate = MobTemplate{
         },
         .max_MP = 20,
 
-        .willpower = 8,
-        .base_evasion = 10,
         .max_HP = 40,
         .memory_duration = 6,
-        .base_speed = 100,
         .blood = .Blood,
-
-        .base_strength = 15,
+        .stats = .{ .Willpower = 8, .Evade = 10, .Strength = 15, .Speed = 100, .Vision = 5 },
     },
     .weapon = &items.DaggerWeapon,
     .armor = &items.LeatherArmor,
@@ -815,22 +719,17 @@ pub const SkeletalAxemasterTemplate = MobTemplate{
             .is_fearless = true,
         },
         .allegiance = .Necromancer,
-        .vision = 4,
 
         .deaf = true,
         .life_type = .Undead,
 
-        .willpower = 2,
-        .base_evasion = 5,
         .max_HP = 50,
-        .memory_duration = 4,
-        .base_speed = 110,
+        .memory_duration = 5,
         .blood = null,
         .corpse = .None,
 
         .innate_resists = .{ .rPois = 100, .rFume = 100, .rFire = -25 },
-
-        .base_strength = 30,
+        .stats = .{ .Willpower = 2, .Evade = 0, .Strength = 25, .Speed = 110, .Vision = 4 },
     },
     .weapon = &items.AxeWeapon,
     .armor = &items.ScalemailArmor,
@@ -852,7 +751,6 @@ pub const TorturerNecromancerTemplate = MobTemplate{
             .spellcaster_backup_action = .KeepDistance,
         },
         .allegiance = .Necromancer,
-        .vision = 5,
         .no_show_fov = false,
 
         .spells = &[_]SpellOptions{
@@ -862,14 +760,10 @@ pub const TorturerNecromancerTemplate = MobTemplate{
         },
         .max_MP = 10,
 
-        .willpower = 10,
-        .base_evasion = 10,
         .max_HP = 50,
         .memory_duration = 10,
-        .base_speed = 100,
         .blood = .Blood,
-
-        .base_strength = 25,
+        .stats = .{ .Willpower = 8, .Evade = 10, .Strength = 25, .Speed = 100, .Vision = 5 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.LeatherArmor,
@@ -883,7 +777,7 @@ pub const BurningBruteTemplate = MobTemplate{
         .ai = AI{
             .profession_name = null,
             .profession_description = "sulking",
-            .work_fn = ai.patrolWork,
+            .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
             .is_combative = true,
             .is_curious = true,
@@ -892,7 +786,6 @@ pub const BurningBruteTemplate = MobTemplate{
             .spellcaster_backup_action = .Melee,
         },
         .allegiance = .Necromancer,
-        .vision = 5,
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 2, .spell = &spells.CAST_RESURRECT_FIRE, .power = 200, .duration = 10 },
@@ -900,17 +793,13 @@ pub const BurningBruteTemplate = MobTemplate{
         },
         .max_MP = 12,
 
-        .willpower = 8,
-        .base_evasion = 15,
         .max_HP = 50,
         .memory_duration = 6,
-        .base_speed = 100,
         .blood = null,
         .corpse = .None,
 
         .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = -25 },
-
-        .base_strength = 40,
+        .stats = .{ .Willpower = 8, .Evade = 15, .Strength = 40, .Speed = 100, .Vision = 5 },
     },
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Fire, .permanent = true },
@@ -934,24 +823,19 @@ pub const SulfurFiendTemplate = MobTemplate{
             .spellcaster_backup_action = .KeepDistance,
         },
         .allegiance = .Necromancer,
-        .vision = 5,
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 1, .spell = &spells.CAST_HASTEN_ROT, .power = 150 },
             .{ .MP_cost = 6, .spell = &spells.CAST_CONJ_BALL_LIGHTNING, .power = 12 },
         },
         .max_MP = 10,
 
-        .willpower = 10,
-        .base_evasion = 10,
         .max_HP = 40,
         .memory_duration = 6,
-        .base_speed = 100,
         .blood = null,
         .corpse = .None,
 
         .innate_resists = .{ .rPois = 100, .rFire = 50, .rElec = 100, .rFume = 80 },
-
-        .base_strength = 30,
+        .stats = .{ .Willpower = 10, .Evade = 10, .Strength = 30, .Speed = 100, .Vision = 5 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
@@ -974,7 +858,6 @@ pub const FrozenFiendTemplate = MobTemplate{
             .spellcaster_backup_action = .Melee,
         },
         .allegiance = .Necromancer,
-        .vision = 7,
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 2, .spell = &spells.CAST_POLAR_LAYER, .power = 14 },
@@ -982,17 +865,13 @@ pub const FrozenFiendTemplate = MobTemplate{
         },
         .max_MP = 15,
 
-        .willpower = 8,
-        .base_evasion = 10,
         .max_HP = 55,
         .memory_duration = 6,
-        .base_speed = 100,
         .blood = null,
         .corpse = .None,
 
         .innate_resists = .{ .rPois = 75, .rElec = 75, .rFire = -25 },
-
-        .base_strength = 35,
+        .stats = .{ .Willpower = 8, .Evade = 10, .Strength = 30, .Speed = 100, .Vision = 7 },
     },
     .weapon = &items.MorningstarWeapon,
     .armor = &items.HauberkArmor,
@@ -1013,14 +892,10 @@ pub const TanusExperiment = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .willpower = 3,
-        .base_evasion = 10,
         .max_HP = 50,
         .memory_duration = 8,
-        .base_speed = 100,
         .blood = .Blood,
-
-        .base_strength = 18,
+        .stats = .{ .Willpower = 3, .Evade = 10, .Strength = 15, .Speed = 100 },
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
@@ -1042,14 +917,10 @@ pub const CatalineExperiment = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .willpower = 3,
-        .base_evasion = 10,
         .max_HP = 50,
         .memory_duration = 8,
-        .base_speed = 100,
         .blood = .Blood,
-
-        .base_strength = 18,
+        .stats = .{ .Willpower = 3, .Evade = 10, .Strength = 15, .Speed = 100 },
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
@@ -1071,14 +942,10 @@ pub const FlouinExperiment = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .willpower = 3,
-        .base_evasion = 10,
         .max_HP = 50,
         .memory_duration = 15,
-        .base_speed = 100,
         .blood = .Blood,
-
-        .base_strength = 18,
+        .stats = .{ .Willpower = 3, .Evade = 10, .Strength = 15, .Speed = 100 },
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
@@ -1100,14 +967,10 @@ pub const PhytinExperiment = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .willpower = 3,
-        .base_evasion = 10,
         .max_HP = 50,
         .memory_duration = 15,
-        .base_speed = 100,
         .blood = .Blood,
-
-        .base_strength = 18,
+        .stats = .{ .Willpower = 3, .Evade = 10, .Strength = 15, .Speed = 100 },
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
@@ -1133,24 +996,19 @@ pub const LivingIceTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .vision = 2,
         .deg360_vision = true,
         .no_show_fov = true,
         .immobile = true,
-        .willpower = 1,
-        .base_evasion = 0,
         .max_HP = 100,
         .memory_duration = 1,
-        .base_speed = 100,
 
         .life_type = .Construct,
 
         .blood = .Water,
         .corpse = .Wall,
 
-        .base_strength = 30,
-
         .innate_resists = .{ .rPois = 100, .rFire = -50, .rElec = 100, .Armor = 50, .rFume = 100 },
+        .stats = .{ .Willpower = 5, .Evade = 0, .Melee = 100, .Strength = 30, .Speed = 100, .Vision = 2 },
     },
     // This status should be added by whatever spell created it.
     //.statuses = &[_]StatusDataInfo{.{ .status = .Lifespan, .duration = 10 }},
@@ -1173,23 +1031,18 @@ pub const BallLightningTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .deaf = true,
-        .vision = 20,
         .deg360_vision = true,
         .no_show_fov = true,
         .immobile = false,
-        .willpower = 1,
-        .base_evasion = 0,
         .max_HP = 3,
         .memory_duration = 1,
-        .base_speed = 33,
 
         .life_type = .Construct,
         .blood = null,
         .corpse = .None,
 
-        .base_strength = 1,
-
         .innate_resists = .{ .rPois = 100, .rFire = 50, .rElec = 100, .rFume = 100 },
+        .stats = .{ .Willpower = 1000, .Evade = 0, .Strength = 1, .Speed = 30, .Vision = 20 },
     },
     // This status should be added by whatever spell created it.
     .statuses = &[_]StatusDataInfo{

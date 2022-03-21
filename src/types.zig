@@ -27,8 +27,9 @@ const mapgen = @import("mapgen.zig");
 const materials = @import("materials.zig");
 const player = @import("player.zig");
 const rng = @import("rng.zig");
-const state = @import("state.zig");
 const spells = @import("spells.zig");
+const state = @import("state.zig");
+const surfaces = @import("surfaces.zig");
 const termbox = @import("termbox.zig");
 const utils = @import("utils.zig");
 
@@ -630,7 +631,23 @@ pub const MessageType = union(enum) {
     }
 };
 
-pub const Resistance = enum { rFire, rElec, Armor, rFume, rPois };
+pub const Resistance = enum {
+    rFire,
+    rElec,
+    Armor,
+    rFume,
+    rPois,
+
+    pub fn string(self: Resistance) []const u8 {
+        return switch (self) {
+            .rFire => "rFire",
+            .rElec => "rElec",
+            .Armor => "Armor",
+            .rFume => "rFume",
+            .rPois => "rPois",
+        };
+    }
+};
 
 pub const Damage = struct {
     amount: f64,
@@ -970,6 +987,11 @@ pub const Status = enum {
     }
 
     pub fn tickFire(mob: *Mob) void {
+        if (state.dungeon.at(mob.coord).terrain.fire_retardant) {
+            mob.cancelStatus(.Fire);
+            return;
+        }
+
         mob.takeDamage(.{
             .amount = @intToFloat(f64, rng.range(usize, 1, 2)),
             .kind = .Fire,
@@ -999,7 +1021,7 @@ pub const Status = enum {
 
         const st = state.player.isUnderStatus(.Echolocation).?;
 
-        const radius = state.player.vision;
+        const radius = @intCast(usize, state.player.stat(.Vision));
         const z = state.player.coord.z;
         const ystart = state.player.coord.y -| radius;
         const yend = math.min(state.player.coord.y + radius, HEIGHT);
@@ -1143,7 +1165,31 @@ pub const Species = struct {
     aux_attacks: []const *const Weapon = &[_]*const Weapon{},
 };
 
-pub const Stat = enum { Sneak };
+pub const Stat = enum {
+    Melee,
+    Missile,
+    Evade,
+    Strength,
+    Camoflage,
+    Speed,
+    Sneak,
+    Vision,
+    Willpower,
+
+    pub fn string(self: Stat) []const u8 {
+        return switch (self) {
+            .Melee => "melee%",
+            .Missile => "missile%",
+            .Evade => "evade%",
+            .Strength => "strength",
+            .Camoflage => "camoflage",
+            .Speed => "speed",
+            .Sneak => "sneak",
+            .Vision => "vision",
+            .Willpower => "will",
+        };
+    }
+};
 
 pub const Mob = struct { // {{{
     // linked list stuff
@@ -1182,13 +1228,6 @@ pub const Mob = struct { // {{{
 
     // Immutable instrinsic attributes.
     //
-    // willpower:          Controls the ability to resist and cast spells.
-    // base_evasion:       Controls the likelihood of a mob dodging an attack.
-    // base_melee:         Controls the likelihood of a mob landing an attack.
-    // base_missile:       Controls the likelihood of a mob landing a missile.
-    // base_strength:      (See doc/strength.md)
-    // base_stealth:       Innate stealth.
-    // vision:             Maximum radius of the mob's field of vision.
     // base_night_vision:  Whether the mob can see in darkness.
     // deg360_vision:      Mob's FOV ignores the facing mechanic and can see in all
     //                     directions (e.g., player, statues)
@@ -1197,26 +1236,31 @@ pub const Mob = struct { // {{{
     //                     an enemy.
     // deaf:               Whether it can hear sounds.
     //
-    willpower: usize, // Range: 0 < willpower < 10
-    base_strength: usize,
-    base_evasion: usize, // Range: 0..100
-    base_melee: usize = 60, // Range: 0..100
-    base_missile: usize = 40, // Range: 0..100
-    base_stealth: usize = 0,
-    vision: usize = 6,
     base_night_vision: bool = false,
     deg360_vision: bool = false,
     no_show_fov: bool = false,
     memory_duration: usize,
     deaf: bool = false,
-    base_speed: usize,
     max_HP: f64,
     blood: ?Spatter,
     corpse: enum { Normal, Wall, None } = .Normal,
     immobile: bool = false,
     innate_resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
 
-    stats: enums.EnumFieldStruct(Stat, isize, 0) = .{ .Sneak = 1 },
+    // Don't use EnumFieldStruct here because we want to provide per-field
+    // defaults.
+    //stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
+    stats: struct {
+        Melee: isize = 60,
+        Missile: isize = 40,
+        Evade: isize = 10,
+        Strength: isize = 10,
+        Camoflage: isize = 0,
+        Speed: isize = 100,
+        Sneak: isize = 1,
+        Vision: isize = 6,
+        Willpower: isize = 3,
+    } = .{},
 
     // Listed in order of preference.
     spells: []const SpellOptions = &[_]SpellOptions{},
@@ -1268,12 +1312,13 @@ pub const Mob = struct { // {{{
 
         const light_needs = [_]bool{ self.canSeeInLight(false), self.canSeeInLight(true) };
 
-        const energy = math.clamp(self.vision * Dungeon.FLOOR_OPACITY, 0, 100);
+        const vision = @intCast(usize, self.stat(.Vision));
+        const energy = math.clamp(vision * Dungeon.FLOOR_OPACITY, 0, 100);
         const direction = if (self.deg360_vision) null else self.facing;
 
-        fov.rayCast(self.coord, self.vision, energy, Dungeon.tileOpacity, &self.fov, direction, self == state.player);
+        fov.rayCast(self.coord, vision, energy, Dungeon.tileOpacity, &self.fov, direction, self == state.player);
         if (self.isUnderStatus(.Backvision) != null and direction != null)
-            fov.rayCast(self.coord, self.vision, energy, Dungeon.tileOpacity, &self.fov, direction.?.opposite(), self == state.player);
+            fov.rayCast(self.coord, vision, energy, Dungeon.tileOpacity, &self.fov, direction.?.opposite(), self == state.player);
 
         for (self.fov) |row, y| for (row) |_, x| {
             if (self.fov[y][x] > 0) {
@@ -1363,7 +1408,7 @@ pub const Mob = struct { // {{{
     // If held, flail around trying to get free.
     pub fn flailAround(self: *Mob) void {
         if (self.isUnderStatus(.Held)) |se| {
-            const held_remove_max = self.strength() / 2;
+            const held_remove_max = @intCast(usize, self.stat(.Strength)) / 2;
             const held_remove = rng.rangeClumping(usize, 2, held_remove_max, 2);
             const new_duration = se.duration -| held_remove;
             self.addStatus(.Held, 0, new_duration, false);
@@ -1560,7 +1605,7 @@ pub const Mob = struct { // {{{
         if (other.isUnderStatus(.Paralysis)) |_| {
             can = true;
         }
-        if (self.strength() > other.strength()) {
+        if (self.stat(.Strength) > other.stat(.Strength)) {
             can = true;
         }
         if (self.speed() > other.speed()) {
@@ -1794,8 +1839,8 @@ pub const Mob = struct { // {{{
         assert(!attacker.is_dead);
         assert(!recipient.is_dead);
 
-        assert(attacker.strength() > 0);
-        assert(recipient.strength() > 0);
+        assert(attacker.stat(.Strength) > 0);
+        assert(recipient.stat(.Strength) > 0);
 
         // const chance_of_land = combat.chanceOfMeleeLanding(attacker, recipient);
         // const chance_of_dodge = combat.chanceOfAttackEvaded(recipient, attacker);
@@ -2027,19 +2072,18 @@ pub const Mob = struct { // {{{
         // FIXME: don't assume this (the player might be raising a corpse too!)
         self.allegiance = .Necromancer;
 
-        self.base_strength = self.base_strength * 120 / 100;
-        self.base_evasion = self.base_evasion * 60 / 100;
-        self.base_speed = self.base_speed * 120 / 100;
+        self.stats.Strength += 10;
+        self.stats.Speed += 10;
+        self.stats.Evade -= 10;
+        self.stats.Willpower -= 2;
+        self.stats.Vision = 4;
 
-        self.vision = 4;
         self.memory_duration = 4;
         self.deaf = true;
 
         self.innate_resists.rFire = math.clamp(self.innate_resists.rFire - 25, -100, 100);
         self.innate_resists.rElec = math.clamp(self.innate_resists.rElec - 25, -100, 100);
         self.innate_resists.rFume = 100;
-
-        self.willpower = 1;
 
         return true;
     }
@@ -2339,7 +2383,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn cansee(self: *const Mob, coord: Coord) bool {
-        if (self.coord.distance(coord) > self.vision)
+        if (self.coord.distance(coord) > self.stat(.Vision))
             return false;
 
         // Can always see yourself
@@ -2385,7 +2429,7 @@ pub const Mob = struct { // {{{
                 speed_perc += @intCast(isize, pen);
             };
 
-        return @divTrunc(@intCast(isize, self.base_speed) * math.max(0, speed_perc), 100);
+        return @divTrunc(@intCast(isize, self.stats.Speed) * math.max(0, speed_perc), 100);
     }
 
     pub fn canSeeInLight(self: *const Mob, light: bool) bool {
@@ -2400,21 +2444,31 @@ pub const Mob = struct { // {{{
         }
     }
 
-    pub inline fn stealth(self: *const Mob) usize {
-        var pips = self.base_stealth;
-        if (self.inventory.cloak) |clk|
-            if (meta.activeTag(clk.ego) == .Stealth) {
-                pips += 1;
-            };
-        return pips;
-    }
-
     pub fn stat(self: *const Mob, _stat: Stat) isize {
         var val: isize = 0;
 
         // Add the mob's innate stat.
         const innate = utils.getFieldByEnum(Stat, self.stats, _stat);
         val += innate;
+
+        // Check terrain.
+        const terrain = state.dungeon.at(self.coord).terrain;
+        val += utils.getFieldByEnum(Stat, terrain.stats, _stat);
+
+        // Check statuses.
+        switch (_stat) {
+            .Strength => {
+                if (self.isUnderStatus(.Invigorate)) |_| val += 10;
+            },
+            else => {},
+        }
+
+        // Check cloaks.
+        if (self.inventory.cloak) |clk| {
+            if (_stat == .Camoflage and meta.activeTag(clk.ego) == .Camoflage) {
+                val += 1;
+            }
+        }
 
         return val;
     }
@@ -2430,6 +2484,10 @@ pub const Mob = struct { // {{{
         const innate = utils.getFieldByEnum(Resistance, self.innate_resists, resist);
         assert(innate <= 100 and innate >= -100);
         r += innate;
+
+        // Check terrain.
+        const terrain = state.dungeon.at(self.coord).terrain;
+        r += utils.getFieldByEnum(Resistance, terrain.resists, resist);
 
         // Check armor
         if (self.inventory.cloak) |clk| switch (clk.ego) {
@@ -2454,12 +2512,6 @@ pub const Mob = struct { // {{{
 
         // Value is between -100 and 100. Change it to be between 100 and 200.
         return @intCast(usize, 100 - r);
-    }
-
-    pub inline fn strength(self: *const Mob) usize {
-        var str = self.base_strength;
-        if (self.isUnderStatus(.Invigorate)) |_| str = str * 180 / 100;
-        return str;
     }
 
     pub fn isFlanked(self: *const Mob) bool {
@@ -2608,7 +2660,7 @@ pub const Machine = struct {
     fn _tryUnjam(self: *Machine, by: ?*Mob) bool {
         assert(self.jammed and self.can_be_jammed);
 
-        const strength = if (by) |mob| mob.strength() else 50;
+        const strength = if (by) |mob| mob.stat(.Strength) else 50;
 
         if (rng.range(usize, 0, 100) < strength) {
             // unjammed!
@@ -2963,6 +3015,7 @@ pub const Tile = struct {
     material: *const Material = &materials.Basalt,
     mob: ?*Mob = null,
     surface: ?SurfaceItem = null,
+    terrain: *const surfaces.Terrain = &surfaces.DefaultTerrain,
     spatter: SpatterArray = SpatterArray.initFill(0),
 
     // A random value that's set at the beginning of the game.
@@ -2994,20 +3047,17 @@ pub const Tile = struct {
                 .bg = self.material.color_bg orelse 0x000000,
             },
             .Floor => {
-                cell.ch = self.material.floor_tile;
-                cell.fg = 0xcacbca;
+                cell.ch = self.terrain.tile;
+                cell.fg = self.terrain.color;
             },
         }
 
         if (self.broken) {
-            cell.fg = 0xcacbca;
             cell.bg = 0x000000;
 
             const chars = [_]u32{ '`', ',', '^', '\'', '*', '"' };
             if (self.rand % 100 < 15) {
                 cell.ch = chars[self.rand % chars.len];
-            } else {
-                cell.ch = '·';
             }
         }
 
@@ -3242,7 +3292,7 @@ pub const Dungeon = struct {
     pub fn emittedLight(self: *Dungeon, coord: Coord) usize {
         const tile: *Tile = state.dungeon.at(coord);
 
-        var l: usize = 0;
+        var l: usize = tile.terrain.luminescence;
 
         if (tile.type == .Lava)
             l += 50;
