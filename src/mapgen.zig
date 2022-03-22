@@ -3252,10 +3252,11 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
     .prefabs = &[_][]const u8{ "LAB_power", "ANY_s_recharging" },
     .distances = [2][10]usize{
         .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-        .{ 9, 2, 1, 1, 1, 1, 0, 0, 0, 0 },
+        .{ 9, 3, 2, 1, 1, 1, 0, 0, 0, 0 },
     },
+    .shrink_corridors_to_fit = true,
     .prefab_chance = 100, // No prefabs for LAB
-    .mapgen_iters = 2048,
+    .mapgen_iters = 4096,
     .min_room_width = 9,
     .min_room_height = 7,
     .max_room_width = 25,
