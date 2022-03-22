@@ -167,15 +167,58 @@ x burning brute
 	- Like silver hornet, but gives no silver damage.
 	- Sting attack that gives poisoning.
 	- Very occasionally found in swarms of fellow iron wasps.
-- lead turtle
+x lead turtle
 	- Slow enough that dying to one is strictly optional (in theory).
-	- rFire∞ rElec+ rPois∞ rFume∞
+	- rFire∞ rPois∞ rFume∞
 	- Hits hard, strength == 50, reach == 2.
 	- Huge amount of innate armor. Maybe, 60%?
 	- Found in the Laboratory.
+- bone mage
+	- Enrage Undead: gives all nearby undead .Enraged status
+	- Bone longsword
+	- Travels with packs of bone rats, with rare zombie
+- bone rat
+	- fast, evasive, and moderately fragile.
+	- rPois∞ rFume∞ rFire-
+- zombie
+	- very slow
+	- aura of nausea
+- ember mage
+	- Can hurl bolts of fire for low damage
+	- Fire attack with weapon
+	- Can create 3-4 emberlings from a corpse
+	- Travels with packs of emberlings
+- emberling
+	- Attacks that do fire damage
+	- Leaves trails of fire behind
+	- Fast
+- fire mage
+	- Has abilities of ember mage
+	- Can set player on fire (will-checked)
+	- Avoids melee
+	- Travels with packs of emberlings
+- blood mage
+	- Toned-down pain spell
+	- Can make a corpse explode in a wave of blood
+	- Can create 3-4 bloodlings from a corpse
+- bloodlings
+	- Slow
+	- Heals when traveling over blood-stained ground
+- spark mage
+	- Can convert corpse to sparklings
+	- Can hurl electricity
+- sparklings
+	- Attacks that do electric damage
+	- Aura of electricity vunerability
+- lightning mage
+	- Has all abilities of spark mage
+	- Can summon a lightning spire from a corpse
+	- Can briefly paralyse player
+	- Keeps distance
 - iron mage
 	- Spectral Sword: summons four spectral swords, which are very fast but
 	  have just 1 HP and do little damage. Like Brogue's staff of conjuration.
+	  Spell won't work if there are any spectral swords alive on the level.
 	- Found in Laboratory and Smithing.
 x ancient mage
 	- "Even the most powerful of human mages cannot hope to wield the full
@@ -245,13 +288,42 @@ Movement patterns
 x sneak         [move, move, rest, move]
 - merciless     [move(A), attack(A), move(A), attack(A)]
 - counterattack [move(S), move(S), move(N), attack(A)]
-- lunge         [move(A), move(A), move(A), attack(A)]
-  - Daze/stun/paralyse/shove defender?
-- sideswipe     [attack(N), move(NE), attack(W)]
 - backstab      [attack(N), move(NE), move(NW), attack(S)]
 - whirlwind     [attack(N), attack(S), attack(E), attack(W)]
   - (attack in four unique directions four times in a row)
   - active AoE ring abilities?
+
+- lunge:       ....   ....
+               .m.@ → .m@.
+               ....   ....
+  i.e.: step into a square next to enemy.
+  automatic attack that doesn't miss and deals 2x damage.
+
+- charge:      ........   ........   ........   ........
+               m......@ → .m....@. → ..m..@.. → ...m@...
+               ........   ........   ........   ........
+  i.e.: move three spaces in the same direction towards enemy, ending adjacent
+  to enemy.
+  automatic attack that doesn't miss, and knocks opponent back three spaces,
+  dealing extra damage if they slam into a wall or another mob.
+
+- pin:         ...   ...              ....
+               .m. → .m@ → attack m → .m.@
+               .@.   ...              ....
+  gives foe .Held status for 3 turns, just enough to set up a charge.
+
+- sideswipe:   ...   ...              ..@
+               .m. → .m@ → attack m → .m.
+               ..@   ...              ...
+  free attack that doesn't miss, evade += 10% for two turns
+
+- partng shot: .m..                               .m..
+               .m@. → attack from top to bottom → .m.@
+               .m..                               .m..
+  i.e.: attack three foes consectively, where the first and third are both
+  adjacent to the second, then step away.
+  gives a 20% speed boost for five turns, and increases evade by +10%.
+
 (See rings for other movement patterns.)
 
 
@@ -296,8 +368,6 @@ vampiric ring of draining [a/p]
 	- The drained mob immedietely becomes an enemy to everyone.
 	- If the enemy dies, the player is teleported there in its place?
 	- Movement pattern: ???
-	- Also: when worn, allows player to sense nearby mobs.
-		- Movement pattern: ???
 ring of fire [a]
 	- Causes dark gas to emanate from player. Gas is opaque and blocks all light.
 		- Movement pattern:
@@ -452,7 +522,7 @@ manuals
 	- extremely rare, found in golden rooms
 	- provides boost to a stat the player may or may not be able to take
 	  advantage of, depending on build type.
-	- stats: missile%, evade%, martial combo
+	- stats: missile%, evade%, martial combo, sneak
 	- (*not* melee% stat, as every build would be able to take advantage
 	  of that.)
 
@@ -589,18 +659,10 @@ x Add tougher monsters; balancing
   x Ancient mages, death mages and skeletal warrior squads
   x Place monsters in various areas
 x Balancing: fix mob placement (more on dangerous floors, less otherwise)
-- More potions stuff
-  - Potion of disrupt, insubst/fortif, blinding
-  - Nerf potions of acceleration
-  - Dilution/concentration:
-    - Potion of dilution   (dilution)
-    - Grills + kitchen set (concentration)
 - Add fungi, plants, terrain
 - More items, item features
   - Weapon and armor effects
   - Weapon coatings/dipping
-  - Bone, silver, masterpiece weapons
-  - Headgear, footgear
 - Implement intelligence
 - Mob repositioning AI
   - AI to move out of dangerous tiles (gas/terrain)
@@ -610,9 +672,7 @@ x Balancing: fix mob placement (more on dangerous floors, less otherwise)
   - toxic sludge pools and bridges over them
   - Ether fiends, drakes, dustlings
 - Revisit Laboratory
-  - Battery packs, silver-weapon-wielding guards
   - Spires and spire kits
-  - Add command stones and transporter stones
   - Add abominations, more experiments
   - Add traps of blinding gas
 - Morgue level
@@ -620,6 +680,7 @@ x Balancing: fix mob placement (more on dangerous floors, less otherwise)
   - Monsters
 - Show information characters next to mob in enemy pane
 - Startup screen, map generation loading bar
+x Noise revamp
 x LOS/lighting revamp
   x Nerf player's LOS, buf enemies' LOS
   x Change lighting algorithm
@@ -644,17 +705,29 @@ x LOS/lighting revamp
   - Add bookshelves and book types
     - Maps
     - Useless books
-- Squad overhaul
-  - Patrol squads
-  - Prisoner squads + goblin commanders
-- Upgrade to Zig v9
-  - Remove usage of usingnamespace
-  - Petition khuxkm/ben for update
-  - Remove utils.saturating_sub
-  - Fix "*mem.Allocator" params
+x Upgrade to Zig v9
+  x Remove usage of usingnamespace
+  x Petition khuxkm/ben for update
+  x Remove utils.saturating_sub
+  x Fix "*mem.Allocator" params
 - Runes and scoring
 *** v1.0.0 release ***
 - Air purifiers
+- Blood, iron, ember, fire, spark, lightning mage bands
+- Night creatures (night reapers, creeping deaths)
+- Silver weapons and battery packs, silver hornets
+- Bone, masterpiece, and shadow weapons
+- Headgear, footgear, auxiliary items
+- Laboratory: command stones and transporter stones
+- Squad overhaul
+  - Patrol squads
+  - Prisoner squads + goblin commanders
+- More potions stuff
+  - Potion of disrupt, insubst/fortif, blinding
+  - Dilution/concentration:
+    - Potion of dilution   (dilution)
+    - Grills + kitchen set (concentration)
+- Corruption effects
 
 Ring and movements:
 ===================
@@ -687,28 +760,26 @@ Room features/Mapgen:
 - Allow close prefabs
 - Make connectors flanked by floors a floor or door
 - Terrain system
-  - Add some lichen and fungi to rooms
-    - brambles (retaliation; dmg on movement; 150% slowness)
-    - fluorescent fungi
-    - dead, flammable fungi
-    - tall fungi (very reduced LOS)
-    - camoflaging fungi (Stlth+)
-    - XXX fungi (haste undead)
-    - XXX fungi (slow living)
-    - XXX fungi (ctx corrupt effect)
-  - Terrain/floor types
-    - metal (rElec-)
+  - Lichen:
+    x fluorescent fungi
+    x dead, flammable fungi
+    x tall fungi (very reduced LOS)
+    x camoflaging fungi (Camo++)
+    - (v1.1.0) brambles (retaliation; dmg on movement; 150% slowness)
+    - (v1.1.0) XXX fungi (haste undead)
+    - (v1.1.0) XXX fungi (slow living)
+    - (v1.1.0) XXX fungi (ctx corrupt effect)
+  - Floor materials:
+    x metal (rElec-)
     - copper (elec dmg propagation?)
-    - wood (rFire- rElec+)
-    - carpet (Noise-)
-    - gravel (Noise+)
-    - ashes/gypsum (cloud of dust on movement)
-    - shallow water (Noise+ rFire++ rElec--)
-    - deep water (v. slow unless can swim, rFire∞ rElec--)
-    - lava (v. slow unless can swim, 30 Fire damage each turn)
-  - Other terrain
-    - platform (less evade%, more hit%)
-    - pillar (25% evade% boost if not flanked)
+    x wood (rFire- rElec+)
+    x carpet (Noise-)
+    x gravel (Noise+)
+    x shallow water (Noise+ rFire++ rElec--)
+    - (v1.1.0) ashes/gypsum (cloud of dust on movement)
+  - Other:
+    x platform (less evade%, more melee% and missile%, vision++)
+    x pillar (+25 evade%)
 x Add statues and chests to corners of rooms
 x Add posters
 ~ Allow for prefabs to be rotated
