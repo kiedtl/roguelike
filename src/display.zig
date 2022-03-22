@@ -310,7 +310,6 @@ fn drawEnemyInfo(
 }
 
 fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, endy: isize) void {
-    const is_running = state.player.turnsSpentMoving() == state.player.activities.len;
     // const last_action_cost = if (state.player.activities.current()) |lastaction| b: {
     //     const spd = @intToFloat(f64, state.player.speed());
     //     break :b (spd * @intToFloat(f64, lastaction.cost())) / 100.0 / 10.0;
@@ -386,17 +385,11 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     }
     y += 1;
 
-    _draw_bar(
-        y,
-        startx,
-        endx,
-        state.player.turnsSpentMoving(),
-        state.player.activities.len,
-        if (is_running) "running" else "walking",
-        if (is_running) 0x45772e else 0x25570e,
-        0xffffff,
-    );
+    const sneak = @intCast(usize, state.player.stat(.Sneak));
+    const is_walking = state.player.turnsSpentMoving() >= sneak;
+    _draw_bar(y, startx, endx, math.min(sneak, state.player.turnsSpentMoving()), sneak, if (is_walking) "walking" else "sneaking", if (is_walking) 0x45772e else 0x25570e, 0xffffff);
     y += 1;
+
     _draw_bar(
         y,
         startx,
