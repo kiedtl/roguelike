@@ -3197,7 +3197,7 @@ pub const Tile = struct {
 
         if (!ignore_lights and self.type == .Floor) {
             if (!state.dungeon.lightAt(coord).*) {
-                cell.fg = colors.percentageOf(cell.fg, 40);
+                cell.fg = colors.percentageOf(cell.fg, 60);
             }
         }
 
@@ -3267,6 +3267,8 @@ pub const Dungeon = struct {
 
         if (tile.type == .Wall and !tile.broken)
             return @floatToInt(usize, tile.material.opacity * 100);
+
+        o += tile.terrain.opacity;
 
         if (tile.mob) |_|
             o += MOB_OPACITY;

@@ -62,6 +62,7 @@ pub const Terrain = struct {
     flammability: usize = 0,
     fire_retardant: bool = false,
     luminescence: usize = 0,
+    opacity: usize = 0,
 
     for_levels: []const []const u8,
     placement: TerrainPlacement,
@@ -69,6 +70,9 @@ pub const Terrain = struct {
 
     pub const TerrainPlacement = union(enum) {
         EntireRoom,
+        RoomSpotty: usize, // place_num = min(number, room_area * number / 100),
+        RoomBlob,
+        RoomPortion,
     };
 };
 
@@ -83,20 +87,20 @@ pub const DefaultTerrain = Terrain{
     .for_levels = &[_][]const u8{"ANY"},
     .placement = .EntireRoom,
 
-    .weight = 50,
+    .weight = 20,
 };
 
 pub const CarpetTerrain = Terrain{
     .id = "t_carpet",
     .name = "carpet",
-    .color = 0xdda711,
+    .color = 0xff5011, // orange red
     .tile = '·',
     .stats = .{ .Sneak = 2 },
     .flammability = 5,
 
     .for_levels = &[_][]const u8{ "PRI", "VLT" },
     .placement = .EntireRoom,
-    .weight = 10,
+    .weight = 7,
 };
 
 pub const GravelTerrain = Terrain{
@@ -105,17 +109,143 @@ pub const GravelTerrain = Terrain{
     .color = 0xdadada,
     .tile = ',',
     .stats = .{ .Sneak = -1 },
-    .flammability = 5,
 
     .for_levels = &[_][]const u8{"SMI"},
     .placement = .EntireRoom,
-    .weight = 10,
+    .weight = 5,
+};
+
+pub const MetalTerrain = Terrain{
+    .id = "t_metal",
+    .name = "metal",
+    .color = 0xa0b4ce, // light steel blue
+    .tile = ',',
+    .resists = .{ .rElec = -25 },
+
+    .for_levels = &[_][]const u8{ "PRI", "LAB", "VLT" },
+    .placement = .RoomPortion,
+    .weight = 5,
+};
+
+pub const WoodTerrain = Terrain{
+    .id = "t_wood",
+    .name = "wood",
+    .color = 0xdaa520, // wood
+    .tile = '·',
+    .stats = .{ .Sneak = -1 },
+    .resists = .{ .rFire = -25, .rElec = 25 },
+
+    .for_levels = &[_][]const u8{ "PRI", "VLT" },
+    .placement = .RoomPortion,
+    .weight = 5,
+};
+
+pub const ShallowWaterTerrain = Terrain{
+    .id = "t_water",
+    .name = "shallow water",
+    .color = 0x3c73b1, // medium blue
+    .tile = '~',
+    .stats = .{ .Sneak = -1 },
+    .resists = .{ .rFire = 50, .rElec = -50 },
+    .fire_retardant = true,
+
+    .for_levels = &[_][]const u8{ "PRI", "VLT", "SMI" },
+    .placement = .RoomBlob,
+    .weight = 3,
+};
+
+pub const LuminescentFungiTerrain = Terrain{
+    .id = "t_f_lumi",
+    .name = "glowing fungi",
+    .color = 0x3cb371, // medium sea blue
+    .tile = '"',
+    .luminescence = 45,
+    .flammability = 3,
+
+    .for_levels = &[_][]const u8{"ANY"},
+    .placement = .{ .RoomSpotty = 10 },
+    .weight = 8,
+};
+
+pub const DeadFungiTerrain = Terrain{
+    .id = "t_f_dead",
+    .name = "dead fungi",
+    .color = 0xaaaaaa,
+    .tile = '"',
+    .resists = .{ .rFire = -25 },
+    .flammability = 15,
+
+    .for_levels = &[_][]const u8{"ANY"},
+    .placement = .RoomBlob,
+    .weight = 5,
+};
+
+pub const TallFungiTerrain = Terrain{
+    .id = "t_f_tall",
+    .name = "tall fungi",
+    .color = 0x0a8505,
+    .tile = '&',
+    .opacity = 100,
+    .flammability = 20,
+
+    .for_levels = &[_][]const u8{ "PRI", "VLT" },
+    .placement = .RoomBlob,
+    .weight = 7,
+};
+
+pub const CamoflagingFungiTerrain = Terrain{
+    .id = "t_f_camo",
+    .name = "camoflaging fungi",
+    .color = 0x109000,
+    .tile = '"',
+    .stats = .{ .Camoflage = 2 },
+    .opacity = 30,
+    .flammability = 5,
+
+    .for_levels = &[_][]const u8{ "PRI", "VLT" },
+    .placement = .RoomBlob,
+    .weight = 5,
+};
+
+pub const PillarTerrain = Terrain{
+    .id = "t_pillar",
+    .name = "pillar",
+    .color = 0xffffff,
+    .tile = '8',
+    .stats = .{ .Evade = 25 },
+    .opacity = 50,
+
+    .for_levels = &[_][]const u8{ "PRI", "LAB", "VLT" },
+    .placement = .{ .RoomSpotty = 5 },
+    .weight = 8,
+};
+
+pub const PlatformTerrain = Terrain{
+    .id = "t_platform",
+    .name = "platform",
+    .color = 0xffffff,
+    .tile = '_',
+    .stats = .{ .Evade = -10, .Melee = 10, .Vision = 3 },
+    .opacity = 20,
+
+    .for_levels = &[_][]const u8{ "PRI", "LAB", "VLT" },
+    .placement = .{ .RoomSpotty = 5 },
+    .weight = 8,
 };
 
 pub const TERRAIN = [_]*const Terrain{
     &DefaultTerrain,
     &CarpetTerrain,
     &GravelTerrain,
+    &MetalTerrain,
+    &WoodTerrain,
+    &ShallowWaterTerrain,
+    &LuminescentFungiTerrain,
+    &DeadFungiTerrain,
+    &TallFungiTerrain,
+    &CamoflagingFungiTerrain,
+    &PillarTerrain,
+    &PlatformTerrain,
 };
 
 pub const MACHINES = [_]Machine{

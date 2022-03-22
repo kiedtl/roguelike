@@ -1917,7 +1917,7 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
     }
 }
 
-pub fn placeTerrain(level: usize) void {
+pub fn placeRoomTerrain(level: usize) void {
     var weights = StackBuffer(usize, surfaces.TERRAIN.len).init(null);
     var terrains = StackBuffer(*const surfaces.Terrain, surfaces.TERRAIN.len).init(null);
     for (&surfaces.TERRAIN) |terrain| {
@@ -1936,7 +1936,11 @@ pub fn placeTerrain(level: usize) void {
     }
 
     for (state.rooms[level].items) |*room| {
-        if (room.has_subroom) continue;
+        if (rng.percent(40) or
+            room.rect.width <= 4 or room.rect.height <= 4)
+        {
+            continue;
+        }
 
         const rect = room.rect;
 
@@ -1947,15 +1951,65 @@ pub fn placeTerrain(level: usize) void {
         ) catch err.wat();
 
         switch (chosen_terrain.placement) {
-            .EntireRoom => {
-                var y: usize = rect.start.y;
-                while (y < rect.end().y) : (y += 1) {
-                    var x: usize = rect.start.x;
-                    while (x < rect.end().x) : (x += 1) {
+            .EntireRoom, .RoomPortion => {
+                var location = rect;
+                if (chosen_terrain.placement == .RoomPortion) {
+                    location = Rect{
+                        .width = rng.range(usize, rect.width / 2, rect.width),
+                        .height = rng.range(usize, rect.height / 2, rect.height),
+                        .start = rect.start,
+                    };
+                    location.start = location.start.add(Coord.new(
+                        rng.range(usize, 0, rect.width / 2),
+                        rng.range(usize, 0, rect.height / 2),
+                    ));
+                }
+
+                var y: usize = location.start.y;
+                while (y < location.end().y) : (y += 1) {
+                    var x: usize = location.start.x;
+                    while (x < location.end().x) : (x += 1) {
                         const coord = Coord.new2(level, x, y);
+                        if (coord.x >= WIDTH or coord.y >= HEIGHT)
+                            continue;
                         state.dungeon.at(coord).terrain = chosen_terrain;
                     }
                 }
+            },
+            .RoomSpotty => |r| {
+                const count = math.min(r, (rect.width * rect.height) * r / 100);
+
+                var placed: usize = 0;
+                while (placed < count) {
+                    const coord = room.rect.randomCoord();
+                    if (state.dungeon.at(coord).type == .Floor and
+                        state.dungeon.at(coord).surface == null)
+                    {
+                        state.dungeon.at(coord).terrain = chosen_terrain;
+                        placed += 1;
+                    }
+                }
+            },
+            .RoomBlob => {
+                const config_min_width = minmax(usize, rect.width / 2, rect.width / 2);
+                const config_max_width = minmax(usize, rect.width, rect.width);
+                const config_min_height = minmax(usize, rect.height / 2, rect.height / 2);
+                const config_max_height = minmax(usize, rect.height, rect.height);
+
+                const config = BlobConfig{
+                    .type = null,
+                    .terrain = chosen_terrain,
+                    .min_blob_width = config_min_width,
+                    .min_blob_height = config_min_height,
+                    .max_blob_width = config_max_width,
+                    .max_blob_height = config_max_height,
+                    .ca_rounds = 5,
+                    .ca_percent_seeded = 55,
+                    .ca_birth_params = "ffffffttt",
+                    .ca_survival_params = "ffffttttt",
+                };
+
+                placeBlob(config, rect.start);
             },
         }
     }
@@ -2125,45 +2179,70 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     }
 }
 
-pub fn placeBlobs(level: usize) void {
+pub const BlobConfig = struct {
+    // This is ignored by placeBlob, only used by placeBlobs
+    number: MinMax(usize) = MinMax(usize){ .min = 1, .max = 1 },
+
+    type: ?TileType,
+    terrain: *const surfaces.Terrain = &surfaces.DefaultTerrain,
+    min_blob_width: MinMax(usize),
+    min_blob_height: MinMax(usize),
+    max_blob_width: MinMax(usize),
+    max_blob_height: MinMax(usize),
+    ca_rounds: usize,
+    ca_percent_seeded: usize,
+    ca_birth_params: *const [9]u8,
+    ca_survival_params: *const [9]u8,
+};
+
+fn placeBlob(cfg: BlobConfig, start: Coord) void {
     var grid: [WIDTH][HEIGHT]usize = undefined;
+
+    const blob = createBlob(
+        &grid,
+        cfg.ca_rounds,
+        rng.range(usize, cfg.min_blob_width.min, cfg.min_blob_width.max),
+        rng.range(usize, cfg.min_blob_height.min, cfg.min_blob_height.max),
+        rng.range(usize, cfg.max_blob_width.min, cfg.max_blob_width.max),
+        rng.range(usize, cfg.max_blob_height.min, cfg.max_blob_height.max),
+        cfg.ca_percent_seeded,
+        cfg.ca_birth_params,
+        cfg.ca_survival_params,
+    );
+
+    var map_y: usize = 0;
+    var blob_y = blob.start.y;
+    while (blob_y < blob.end().y) : ({
+        blob_y += 1;
+        map_y += 1;
+    }) {
+        var map_x: usize = 0;
+        var blob_x = blob.start.x;
+        while (blob_x < blob.end().x) : ({
+            blob_x += 1;
+            map_x += 1;
+        }) {
+            const coord = Coord.new2(start.z, map_x, map_y).add(start);
+            if (coord.x >= WIDTH or coord.y >= HEIGHT)
+                continue;
+
+            if (grid[blob_x][blob_y] != 0) {
+                if (cfg.type) |tiletype| state.dungeon.at(coord).type = tiletype;
+                state.dungeon.at(coord).terrain = cfg.terrain;
+            }
+        }
+    }
+}
+
+pub fn placeBlobs(level: usize) void {
     const blob_configs = Configs[level].blobs;
     for (blob_configs) |cfg| {
         var i: usize = rng.range(usize, cfg.number.min, cfg.number.max);
         while (i > 0) : (i -= 1) {
-            const blob = createBlob(
-                &grid,
-                cfg.ca_rounds,
-                rng.range(usize, cfg.min_blob_width.min, cfg.min_blob_width.max),
-                rng.range(usize, cfg.min_blob_height.min, cfg.min_blob_height.max),
-                rng.range(usize, cfg.max_blob_width.min, cfg.max_blob_width.max),
-                rng.range(usize, cfg.max_blob_height.min, cfg.max_blob_height.max),
-                cfg.ca_percent_seeded,
-                cfg.ca_birth_params,
-                cfg.ca_survival_params,
-            );
-
-            const start_y = rng.range(usize, 1, HEIGHT - blob.height - 1);
-            const start_x = rng.range(usize, 1, WIDTH - blob.width - 1);
+            const start_y = rng.range(usize, 1, HEIGHT - 1);
+            const start_x = rng.range(usize, 1, WIDTH - 1);
             const start = Coord.new2(level, start_x, start_y);
-
-            var map_y: usize = 0;
-            var blob_y = blob.start.y;
-            while (blob_y < blob.end().y) : ({
-                blob_y += 1;
-                map_y += 1;
-            }) {
-                var map_x: usize = 0;
-                var blob_x = blob.start.x;
-                while (blob_x < blob.end().x) : ({
-                    blob_x += 1;
-                    map_x += 1;
-                }) {
-                    const coord = Coord.new2(level, map_x, map_y).add(start);
-                    if (grid[blob_x][blob_y] != 0)
-                        state.dungeon.at(coord).type = cfg.type;
-                }
-            }
+            placeBlob(cfg, start);
         }
     }
 }
@@ -3187,19 +3266,6 @@ pub const LevelConfig = struct {
         chance: usize, // Ten in <chance>
         template: *const mobs.MobTemplate,
     };
-
-    pub const BlobConfig = struct {
-        number: MinMax(usize),
-        type: TileType,
-        min_blob_width: MinMax(usize),
-        min_blob_height: MinMax(usize),
-        max_blob_width: MinMax(usize),
-        max_blob_height: MinMax(usize),
-        ca_rounds: usize,
-        ca_percent_seeded: usize,
-        ca_birth_params: *const [9]u8,
-        ca_survival_params: *const [9]u8,
-    };
 };
 
 // -----------------------------------------------------------------------------
@@ -3317,7 +3383,7 @@ pub const SMI_BASE_LEVELCONFIG = LevelConfig{
     .door_chance = 0,
     .allow_corridors = false,
 
-    .blobs = &[_]LevelConfig.BlobConfig{
+    .blobs = &[_]BlobConfig{
         .{
             .number = MinMax(usize){ .min = 1, .max = 4 },
             .type = .Wall,
