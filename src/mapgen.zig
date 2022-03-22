@@ -1936,7 +1936,7 @@ pub fn placeRoomTerrain(level: usize) void {
     }
 
     for (state.rooms[level].items) |*room| {
-        if (rng.percent(40) or
+        if (rng.percent(@as(usize, 40)) or
             room.rect.width <= 4 or room.rect.height <= 4)
         {
             continue;

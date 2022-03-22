@@ -7,11 +7,13 @@ pub const DARK_GREY: u32 = 0x8a8a8a;
 pub const WHITE: u32 = 0xffffff;
 pub const BG_GREY: u32 = 0x1e1e1e;
 pub const BLACK: u32 = 0x000000;
-pub const CONCRETE: u32 = 0x968f74;
-pub const LIGHT_CONCRETE: u32 = 0xe6dfc4;
+pub const CONCRETE: u32 = 0x9f8f74;
+pub const LIGHT_CONCRETE: u32 = 0xefdfc4;
 pub const PINK: u32 = 0xffc0cb;
+pub const DOBALENE_BLUE: u32 = 0xb5d0ff;
 
 pub const BG: u32 = darken(CONCRETE, 6);
+//pub const BG: u32 = darken(DOBALENE_BLUE, 4);
 
 // Interpolate linearly between two vals.
 //

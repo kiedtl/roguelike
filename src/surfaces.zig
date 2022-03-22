@@ -8,6 +8,7 @@ const math = std.math;
 const enums = std.enums;
 
 const spells = @import("spells.zig");
+const colors = @import("colors.zig");
 const err = @import("err.zig");
 const main = @import("root");
 const utils = @import("utils.zig");
@@ -79,7 +80,7 @@ pub const Terrain = struct {
 pub const DefaultTerrain = Terrain{
     .id = "t_default",
     .name = "",
-    .color = 0xbababa,
+    .color = colors.DOBALENE_BLUE,
     .tile = '·',
 
     // for_levels and placement have no effect, since this is the default
