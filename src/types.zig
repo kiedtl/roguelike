@@ -1000,7 +1000,7 @@ pub const Status = enum {
     }
 
     pub fn tickFire(mob: *Mob) void {
-        if (state.dungeon.at(mob.coord).terrain.fire_retardant) {
+        if (state.dungeon.terrainAt(mob.coord).fire_retardant) {
             mob.cancelStatus(.Fire);
             return;
         }
@@ -1378,7 +1378,7 @@ pub const Mob = struct { // {{{
     // Decrement status durations, and do stuff for various statuses that need
     // babysitting each turn.
     pub fn tickStatuses(self: *Mob) void {
-        const terrain = state.dungeon.at(self.coord).terrain;
+        const terrain = state.dungeon.terrainAt(self.coord);
         for (terrain.effects) |effect| {
             var adj_effect = effect;
 
@@ -2385,7 +2385,7 @@ pub const Mob = struct { // {{{
         const has_status = switch (se.duration) {
             .Prm => true,
             .Tmp => |turns| turns > 0,
-            .Ctx => se.duration.Ctx == state.dungeon.at(self.coord).terrain,
+            .Ctx => se.duration.Ctx == state.dungeon.terrainAt(self.coord),
         };
         return if (has_status) se else null;
     }
@@ -2550,7 +2550,7 @@ pub const Mob = struct { // {{{
         val += innate;
 
         // Check terrain.
-        const terrain = state.dungeon.at(self.coord).terrain;
+        const terrain = state.dungeon.terrainAt(self.coord);
         val += utils.getFieldByEnum(Stat, terrain.stats, _stat);
 
         // Check statuses.
@@ -2584,7 +2584,7 @@ pub const Mob = struct { // {{{
         r += innate;
 
         // Check terrain.
-        const terrain = state.dungeon.at(self.coord).terrain;
+        const terrain = state.dungeon.terrainAt(self.coord);
         r += utils.getFieldByEnum(Resistance, terrain.resists, resist);
 
         // Check armor
@@ -3336,6 +3336,13 @@ pub const Dungeon = struct {
 
     pub const MOB_OPACITY: usize = 10;
     pub const FLOOR_OPACITY: usize = 10;
+
+    // Return the terrain if no surface item, else the default terrain.
+    //
+    pub fn terrainAt(self: *Dungeon, coord: Coord) *const surfaces.Terrain {
+        const tile = self.at(coord);
+        return if (tile.surface == null) tile.terrain else &surfaces.DefaultTerrain;
+    }
 
     pub fn isTileOpaque(coord: Coord) bool {
         const tile = state.dungeon.at(coord);

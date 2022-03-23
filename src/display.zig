@@ -444,7 +444,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     }
     y += 1;
 
-    const terrain = state.dungeon.at(state.player.coord).terrain;
+    const terrain = state.dungeon.terrainAt(state.player.coord);
     if (!mem.eql(u8, terrain.id, "t_default")) {
         y = _drawStr(startx, y, endx, "$cterrain$.: {s}", .{terrain.name}, .{});
 

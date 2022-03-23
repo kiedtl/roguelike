@@ -20,7 +20,7 @@ const WIDTH = state.WIDTH;
 pub fn tileFlammability(c: Coord) usize {
     var f: usize = 0;
 
-    f += state.dungeon.at(c).terrain.flammability;
+    f += state.dungeon.terrainAt(c).flammability;
 
     if (state.dungeon.at(c).mob) |mob| {
         if (mob.resistance(.rFire) >= 100) {
@@ -41,7 +41,7 @@ pub fn tileFlammability(c: Coord) usize {
 pub fn setTileOnFire(c: Coord) void {
     if (state.dungeon.at(c).type != .Floor)
         return;
-    if (state.dungeon.at(c).terrain.fire_retardant)
+    if (state.dungeon.terrainAt(c).fire_retardant)
         return;
 
     const flammability = tileFlammability(c);
