@@ -662,6 +662,12 @@ pub const Damage = struct {
     // by_mob.
     indirect: bool = false,
 
+    // Whether to propagate electric damage to the surroundings if the mob
+    // is conductive. Usually this will be true, but it will be false when
+    // takeDamage is called recursively to prevent an infinite recursion.
+    //
+    propagate_elec_damage: bool = true,
+
     pub const DamageKind = enum {
         Physical,
         Fire,
@@ -2012,6 +2018,39 @@ pub const Mob = struct { // {{{
         self.HP = math.clamp(self.HP - amount, 0, self.max_HP);
         if (d.blood) if (self.blood) |s| state.dungeon.spatter(self.coord, s);
         self.last_damage = d;
+
+        // Propagate electric damage
+        if (d.kind == .Electric and d.propagate_elec_damage) {
+            const S = struct {
+                pub fn isConductive(c: Coord, _: state.IsWalkableOptions) bool {
+                    if (state.dungeon.at(c).mob) |m|
+                        if (m.isUnderStatus(.Conductive) != null)
+                            return true;
+                    return false;
+                }
+            };
+
+            var membuf: [4096]u8 = undefined;
+            var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
+            var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 9, S.isConductive, .{}, fba.allocator());
+            defer dijk.deinit();
+
+            while (dijk.next()) |child| {
+                const mob = state.dungeon.at(child).mob.?;
+                const damage_percent = 10 - child.distance(self.coord);
+                const damage = d.amount * @intToFloat(f64, damage_percent) / 100.0;
+
+                mob.takeDamage(.{
+                    .amount = damage,
+                    .by_mob = d.by_mob,
+                    .source = d.source,
+                    .kind = .Electric,
+                    .indirect = d.indirect,
+                    .propagate_elec_damage = false,
+                });
+            }
+        }
 
         // Player kill-count bookkeeping.
         if (!was_already_dead and self.HP == 0 and d.by_mob != null) {

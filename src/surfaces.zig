@@ -163,6 +163,9 @@ pub const ShallowWaterTerrain = Terrain{
     .tile = '~',
     .stats = .{ .Sneak = -1 },
     .resists = .{ .rFire = 50, .rElec = -50 },
+    .effects = &[_]StatusDataInfo{
+        .{ .status = .Conductive, .duration = .{ .Ctx = null } },
+    },
     .fire_retardant = true,
 
     .for_levels = &[_][]const u8{ "PRI", "VLT", "SMI" },
