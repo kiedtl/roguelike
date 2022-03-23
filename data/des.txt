@@ -68,7 +68,49 @@ A vicious and surprisingly durable skeleton, armed to the teeth. It was created
 for the purpose of testing the efficiency of war axes in battle. Battles are
 slow in coming, however, so you'll just have to do for now...
 
+% potion_smoke
+$cA potion of smoke.$.
+
+Releases a cloud of smoke. Useful for obscuring vision.
+
+% potion_confusion
+$cA potion of confuzzlementation.$.
+
+Confuses the heck out of you, preventing you from moving in diagonal directions.
+You can still attack diagonally though.
+
+% potion_paralysis
+$cA potion of petrification.$.
+
+Releases paralysing gas.
+
+% potion_fast
+$cA potion of acceleration.$.
+
+Makes you faster. This potion cannot be thrown.
+
+% potion_recuperate
+$cA potion of recuperation.$.
+
+Heals you over a period of time, but reduces your armor as well for that
+duration.
+
+% potion_poison
+$cA potion of coagulation.$.
+
+Induces poisoning, both damaging and slowing the victim.
+
+% potion_invigorate
+$cA potion of invigoration.$.
+
+Gives a strength and evasion bonus for a period of time.
+
 % potion_incinerate
 $cA potion of incineration.$.
 
 This will set you and your surroundings on fire in a 8-tile radius.
+
+% potion_decimate
+$cA potion of decimation.$.
+
+Creates a nasty explosion in a 3-tile radius, pulverising anyone caught in it.
