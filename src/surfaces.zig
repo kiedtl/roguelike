@@ -128,6 +128,21 @@ pub const MetalTerrain = Terrain{
     .weight = 5,
 };
 
+pub const CopperTerrain = Terrain{
+    .id = "t_copper",
+    .name = "copper",
+    .color = 0xff7035, // orange red
+    .tile = ',',
+    .resists = .{ .rElec = -25 },
+    .effects = &[_]StatusDataInfo{
+        .{ .status = .Conductive, .duration = .{ .Ctx = null } },
+    },
+
+    .for_levels = &[_][]const u8{ "PRI", "LAB", "VLT" },
+    .placement = .RoomPortion,
+    .weight = 6,
+};
+
 pub const WoodTerrain = Terrain{
     .id = "t_wood",
     .name = "wood",
@@ -239,6 +254,7 @@ pub const TERRAIN = [_]*const Terrain{
     &CarpetTerrain,
     &GravelTerrain,
     &MetalTerrain,
+    &CopperTerrain,
     &WoodTerrain,
     &ShallowWaterTerrain,
     &LuminescentFungiTerrain,
@@ -1111,7 +1127,7 @@ fn interact1Drain(machine: *Machine, mob: *Mob) bool {
     assert(succeeded);
 
     if (rng.onein(3)) {
-        mob.addStatus(.Nausea, 0, 10, false);
+        mob.addStatus(.Nausea, 0, .{ .Tmp = 10 });
     }
 
     return true;

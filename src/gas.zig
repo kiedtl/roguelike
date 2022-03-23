@@ -126,22 +126,22 @@ fn triggerNone(_: *Mob, _: f64) void {}
 
 fn triggerPoison(mob: *Mob, _: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
-    mob.addStatus(.Poison, 0, Status.MAX_DURATION, false);
+    mob.addStatus(.Poison, 0, .{ .Tmp = Status.MAX_DURATION });
 }
 
 fn triggerParalysis(mob: *Mob, _: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
-    mob.addStatus(.Paralysis, 0, Status.MAX_DURATION, false);
+    mob.addStatus(.Paralysis, 0, .{ .Tmp = Status.MAX_DURATION });
 }
 
 fn triggerConfusion(mob: *Mob, _: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
-    mob.addStatus(.Confusion, 0, Status.MAX_DURATION, false);
+    mob.addStatus(.Confusion, 0, .{ .Tmp = Status.MAX_DURATION });
 }
 
 fn triggerSlow(mob: *Mob, _: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
-    mob.addStatus(.Slow, 0, Status.MAX_DURATION, false);
+    mob.addStatus(.Slow, 0, .{ .Tmp = Status.MAX_DURATION });
 }
 
 fn triggerHealing(mob: *Mob, quantity: f64) void {
@@ -151,7 +151,7 @@ fn triggerHealing(mob: *Mob, quantity: f64) void {
 
 fn triggerMiasma(mob: *Mob, _: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
-    mob.addStatus(.Nausea, 0, Status.MAX_DURATION, false);
+    mob.addStatus(.Nausea, 0, .{ .Tmp = Status.MAX_DURATION });
 }
 
 fn triggerDust(_: *Mob, _: f64) void {}

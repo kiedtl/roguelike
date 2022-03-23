@@ -184,7 +184,7 @@ pub const JavelineerTemplate = MobTemplate{
             .is_curious = true,
             .flee_effect = .{
                 .status = .Enraged,
-                .duration = 10,
+                .duration = .{ .Tmp = 10 },
                 .exhausting = true,
             },
         },
@@ -214,7 +214,7 @@ pub const SentinelTemplate = MobTemplate{
             .is_curious = false,
             .flee_effect = .{
                 .status = .Enraged,
-                .duration = 10,
+                .duration = .{ .Tmp = 10 },
                 .exhausting = true,
             },
         },
@@ -264,7 +264,7 @@ pub const LeadTurtleTemplate = MobTemplate{
         .stats = .{ .Willpower = 5, .Evade = 0, .Melee = 100, .Strength = 40, .Speed = 220, .Vision = 4 },
     },
 
-    .statuses = &[_]StatusDataInfo{.{ .status = .Sleeping, .permanent = true }},
+    .statuses = &[_]StatusDataInfo{.{ .status = .Sleeping, .duration = .Prm }},
 };
 
 pub const IronWaspTemplate = MobTemplate{
@@ -275,7 +275,7 @@ pub const IronWaspTemplate = MobTemplate{
             .default_attack = &Weapon{
                 .damage = 5,
                 .effects = &[_]StatusDataInfo{
-                    .{ .status = .Poison, .duration = 5 },
+                    .{ .status = .Poison, .duration = .{ .Tmp = 5 } },
                 },
                 .strs = &[_]DamageStr{
                     items._dmgstr(005, "jab", "jabs", ""),
@@ -309,8 +309,8 @@ pub const IronWaspTemplate = MobTemplate{
         },
     },
     .statuses = &[_]StatusDataInfo{
-        .{ .status = .Sleeping, .permanent = true },
-        .{ .status = .Noisy, .permanent = true },
+        .{ .status = .Sleeping, .duration = .Prm },
+        .{ .status = .Noisy, .duration = .Prm },
     },
 };
 
@@ -782,7 +782,7 @@ pub const BurningBruteTemplate = MobTemplate{
             .is_combative = true,
             .is_curious = true,
             //.is_fearless = true, // Flee effect won't trigger otherwise.
-            .flee_effect = .{ .status = .Enraged, .duration = 10, .exhausting = true },
+            .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
             .spellcaster_backup_action = .Melee,
         },
         .allegiance = .Necromancer,
@@ -802,8 +802,8 @@ pub const BurningBruteTemplate = MobTemplate{
         .stats = .{ .Willpower = 8, .Evade = 15, .Strength = 40, .Speed = 100, .Vision = 5 },
     },
     .statuses = &[_]StatusDataInfo{
-        .{ .status = .Fire, .permanent = true },
-        .{ .status = .Noisy, .permanent = true },
+        .{ .status = .Fire, .duration = .Prm },
+        .{ .status = .Noisy, .duration = .Prm },
     },
 };
 
@@ -839,7 +839,7 @@ pub const SulfurFiendTemplate = MobTemplate{
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
-    .statuses = &[_]StatusDataInfo{.{ .status = .Noisy, .permanent = true }},
+    .statuses = &[_]StatusDataInfo{.{ .status = .Noisy, .duration = .Prm }},
 };
 
 pub const FrozenFiendTemplate = MobTemplate{
@@ -899,7 +899,7 @@ pub const TanusExperiment = MobTemplate{
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
-    .statuses = &[_]StatusDataInfo{.{ .status = .Backvision, .permanent = true }},
+    .statuses = &[_]StatusDataInfo{.{ .status = .Backvision, .duration = .Prm }},
 };
 
 pub const CatalineExperiment = MobTemplate{
@@ -924,7 +924,7 @@ pub const CatalineExperiment = MobTemplate{
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
-    .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .permanent = true }},
+    .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
 };
 
 pub const FlouinExperiment = MobTemplate{
@@ -949,7 +949,7 @@ pub const FlouinExperiment = MobTemplate{
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
-    .statuses = &[_]StatusDataInfo{.{ .status = .DayBlindness, .permanent = true }},
+    .statuses = &[_]StatusDataInfo{.{ .status = .DayBlindness, .duration = .Prm }},
 };
 
 pub const PhytinExperiment = MobTemplate{
@@ -974,7 +974,7 @@ pub const PhytinExperiment = MobTemplate{
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
-    .statuses = &[_]StatusDataInfo{.{ .status = .NightBlindness, .permanent = true }},
+    .statuses = &[_]StatusDataInfo{.{ .status = .NightBlindness, .duration = .Prm }},
 };
 
 pub const LivingIceTemplate = MobTemplate{
@@ -1011,7 +1011,7 @@ pub const LivingIceTemplate = MobTemplate{
         .stats = .{ .Willpower = 5, .Evade = 0, .Melee = 100, .Strength = 30, .Speed = 100, .Vision = 2 },
     },
     // This status should be added by whatever spell created it.
-    //.statuses = &[_]StatusDataInfo{.{ .status = .Lifespan, .duration = 10 }},
+    //.statuses = &[_]StatusDataInfo{.{ .status = .Lifespan, .duration = .{.Tmp=10} }},
 };
 
 pub const BallLightningTemplate = MobTemplate{
@@ -1046,7 +1046,7 @@ pub const BallLightningTemplate = MobTemplate{
     },
     // This status should be added by whatever spell created it.
     .statuses = &[_]StatusDataInfo{
-        .{ .status = .ExplosiveElec, .power = 20, .permanent = true },
+        .{ .status = .ExplosiveElec, .power = 20, .duration = .Prm },
     },
 };
 
@@ -1139,7 +1139,7 @@ pub fn placeMob(
     }
 
     for (template.statuses) |status_info| {
-        mob.addStatus(status_info.status, status_info.power, status_info.duration, status_info.permanent);
+        mob.addStatus(status_info.status, status_info.power, status_info.duration);
     }
 
     if (!opts.no_squads and template.squad.len > 0) {

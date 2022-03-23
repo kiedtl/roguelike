@@ -293,8 +293,10 @@ fn drawEnemyInfo(
             const status = entry.key;
             const se = entry.value.*;
 
-            var duration = se.duration;
-            if (se.permanent) duration = Status.MAX_DURATION;
+            const duration = switch (se.duration) {
+                .Prm, .Ctx => Status.MAX_DURATION,
+                .Tmp => |t| t,
+            };
 
             if (duration == 0) continue;
 
@@ -375,10 +377,13 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         const status = entry.key;
         const se = entry.value.*;
 
-        var duration = se.duration;
-        if (se.permanent) duration = Status.MAX_DURATION;
+        if (state.player.isUnderStatus(status) == null)
+            continue;
 
-        if (duration == 0) continue;
+        const duration = switch (se.duration) {
+            .Prm, .Ctx => Status.MAX_DURATION,
+            .Tmp => |t| t,
+        };
 
         _draw_bar(y, startx, endx, duration, Status.MAX_DURATION, status.string(state.player), 0x77452e, 0xffffff);
         y += 1;
@@ -468,10 +473,12 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         }
 
         for (terrain.effects) |effect| {
-            assert(!effect.permanent);
-            y = _drawStr(startx, y, endx, "$gTmp$. {s} ({})", .{
-                effect.status.string(state.player), effect.duration,
-            }, .{});
+            const str = effect.status.string(state.player);
+            y = switch (effect.duration) {
+                .Prm => _drawStr(startx, y, endx, "$gPrm$. {s}\n", .{str}, .{}),
+                .Tmp => _drawStr(startx, y, endx, "$gTmp$. {s} ({})\n", .{ str, effect.duration }, .{}),
+                .Ctx => _drawStr(startx, y, endx, "$gCtx$. {s}\n", .{str}, .{}),
+            };
         }
     }
 }
@@ -940,12 +947,11 @@ pub fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, lin
             switch (p.effect) {
                 .Status => |sinfo| {
                     S.append(w, "$ceffects$.:\n", .{});
-                    if (sinfo.permanent) {
-                        S.append(w, "$gPrm$. {s}\n", .{sinfo.status.string(state.player)});
-                    } else {
-                        S.append(w, "$gTmp$. {s} ({})\n", .{
-                            sinfo.status.string(state.player), sinfo.duration,
-                        });
+                    const str = sinfo.status.string(state.player);
+                    switch (sinfo.duration) {
+                        .Prm => S.append(w, "$gPrm$. {s}\n", .{str}),
+                        .Tmp => S.append(w, "$gTmp$. {s} ({})\n", .{ str, sinfo.duration }),
+                        .Ctx => S.append(w, "$gCtx$. {s}\n", .{str}),
                     }
                     throwable = true;
                 },

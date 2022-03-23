@@ -69,7 +69,7 @@ fn _effectMassDismissal(caster: Coord, _: Spell, opts: SpellOptions, _: Coord) v
         {
             if (!willSucceedAgainstMob(caster_mob, enemy_record.mob))
                 continue;
-            enemy_record.mob.addStatus(.Fear, 0, opts.power, false);
+            enemy_record.mob.addStatus(.Fear, 0, .{ .Tmp = opts.power });
         }
     }
 }
@@ -160,7 +160,7 @@ fn _effectAuraDispersal(caster: Coord, _: Spell, _: SpellOptions, _: Coord) void
                 }
                 if (new) |newcoord| {
                     _ = mob.teleportTo(newcoord, null, true);
-                    mob.addStatus(.Daze, 2, 0, false);
+                    mob.addStatus(.Daze, 0, .{ .Tmp = 2 });
                     mob.takeDamage(.{ .amount = 10, .source = .RangedAttack });
                     if (state.player.cansee(mob.coord) or state.player.cansee(caster))
                         had_visible_effect = true;
@@ -186,7 +186,7 @@ fn _effectConjureBL(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
         if (state.is_walkable(neighbor, .{ .right_now = true })) {
             // FIXME: passing allocator directly is anti-pattern?
             const w = mobs.placeMob(state.GPA.allocator(), &mobs.BallLightningTemplate, neighbor, .{});
-            w.addStatus(.Lifespan, 0, opts.power, false);
+            w.addStatus(.Lifespan, 0, .{ .Tmp = opts.power });
             return;
         }
     };
@@ -245,7 +245,7 @@ fn _effectBoltFire(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             .kind = .Fire,
             .blood = false,
         });
-        victim.addStatus(.Fire, 0, opts.duration, false);
+        victim.addStatus(.Fire, 0, .{ .Tmp = opts.duration });
     }
 }
 
@@ -317,11 +317,11 @@ fn _resurrectFire(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
                 corpse.displayName(),
             });
         }
-        corpse.addStatus(.Fire, 0, 0, true);
-        corpse.addStatus(.Fast, 0, 0, true);
-        corpse.addStatus(.Shove, 0, 0, true);
-        corpse.addStatus(.Explosive, opts.power, 0, true);
-        corpse.addStatus(.Lifespan, opts.power, 20, false);
+        corpse.addStatus(.Fire, 0, .Prm);
+        corpse.addStatus(.Fast, 0, .Prm);
+        corpse.addStatus(.Shove, 0, .Prm);
+        corpse.addStatus(.Explosive, opts.power, .Prm);
+        corpse.addStatus(.Lifespan, opts.power, .{ .Tmp = 20 });
     }
 }
 
@@ -349,8 +349,8 @@ fn _resurrectFrozen(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
         corpse.stats.Evade = 0;
         corpse.deg360_vision = true;
 
-        corpse.addStatus(.Fast, 0, 0, true);
-        corpse.addStatus(.Lifespan, 0, opts.power, false);
+        corpse.addStatus(.Fast, 0, .Prm);
+        corpse.addStatus(.Lifespan, 0, .{ .Tmp = opts.power });
     }
 }
 
@@ -372,7 +372,7 @@ fn _effectPolarLayer(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void 
             state.dungeon.at(neighbor).type = .Floor;
             // FIXME: passing allocator directly is anti-pattern?
             const w = mobs.placeMob(state.GPA.allocator(), &mobs.LivingIceTemplate, neighbor, .{});
-            w.addStatus(.Lifespan, 0, opts.power, false);
+            w.addStatus(.Lifespan, 0, .{ .Tmp = opts.power });
         }
     };
 
@@ -548,7 +548,7 @@ pub const Spell = struct {
 
                         switch (self.effect_type) {
                             .Status => |s| if (hit_mob) |victim| {
-                                victim.addStatus(s, opts.power, opts.duration, false);
+                                victim.addStatus(s, opts.power, .{ .Tmp = opts.duration });
                             },
                             .Custom => |cu| cu(caster_coord, self, opts, c),
                         }
@@ -573,7 +573,7 @@ pub const Spell = struct {
                         }
 
                         switch (self.effect_type) {
-                            .Status => |s| mob.addStatus(s, opts.power, opts.duration, false),
+                            .Status => |s| mob.addStatus(s, opts.power, .{ .Tmp = opts.duration }),
                             .Custom => |c| c(caster_coord, self, opts, target),
                         }
                     },

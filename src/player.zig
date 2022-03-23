@@ -100,24 +100,24 @@ pub const PlayerUpgrade = enum {
             .Agile => state.player.stats.Evade += 10,
             .OI_Enraged => state.player.ai.flee_effect = .{
                 .status = .Enraged,
-                .duration = 10,
+                .duration = .{ .Tmp = 10 },
                 .exhausting = true,
             },
             .OI_Fast => state.player.ai.flee_effect = .{
                 .status = .Fast,
-                .duration = 10,
+                .duration = .{ .Tmp = 10 },
                 .exhausting = true,
             },
             .OI_Shove => state.player.ai.flee_effect = .{
                 .status = .Shove,
-                .duration = 10,
+                .duration = .{ .Tmp = 10 },
                 .exhausting = true,
             },
             .Healthy => state.player.max_HP = state.player.max_HP * 150 / 100,
             .Mana => state.player.max_MP = state.player.max_MP * 150 / 100,
             .Camoflaged => state.player.stats.Camoflage += 1,
             .Will => state.player.stats.Willpower += 3,
-            .Echolocating => state.player.addStatus(.Echolocation, 1, 7, true),
+            .Echolocating => state.player.addStatus(.Echolocation, 7, .Prm),
         }
     }
 };

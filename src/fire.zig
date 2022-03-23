@@ -99,7 +99,7 @@ pub fn tickFire(level: usize) void {
             if (oldfire > 3 and rng.percent(oldfire * 10)) {
                 if (state.dungeon.at(coord).mob) |mob| {
                     if (mob.isUnderStatus(.Fire) == null)
-                        mob.addStatus(.Fire, 0, math.min(oldfire, 10), false);
+                        mob.addStatus(.Fire, 0, .{ .Tmp = math.min(oldfire, 10) });
                 }
             }
 

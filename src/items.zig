@@ -116,7 +116,7 @@ pub const NetProj = Projectile{
     .effect = .{
         .Status = .{
             .status = .Held,
-            .duration = 10,
+            .duration = .{ .Tmp = 10 },
         },
     },
 };
@@ -129,7 +129,7 @@ pub const JavelinProj = Projectile{
     .effect = .{
         .Status = .{
             .status = .Poison,
-            .duration = 3,
+            .duration = .{ .Tmp = 3 },
         },
     },
 };
@@ -319,7 +319,7 @@ fn _triggerEldritchLantern(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
                 continue;
 
             const dur = rng.rangeClumping(usize, 5, 20, 2);
-            othermob.addStatus(.Confusion, 0, dur, false);
+            othermob.addStatus(.Confusion, 0, .{ .Tmp = dur });
 
             affected += 1;
             if (othermob == state.player)
@@ -327,7 +327,7 @@ fn _triggerEldritchLantern(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
         }
     };
 
-    mob.addStatus(.Confusion, 0, rng.range(usize, 1, 4), false);
+    mob.addStatus(.Confusion, 0, .{ .Tmp = rng.range(usize, 1, 4) });
     mob.makeNoise(.Explosion, .Quiet);
 
     if (mob == state.player) {

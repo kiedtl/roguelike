@@ -723,6 +723,12 @@ pub const Allegiance = enum {
 };
 
 pub const Status = enum {
+    // Makes monster "share" electric damage to nearby mobs and through
+    // conductive terrain.
+    //
+    // Doesn't have a power field.
+    Conductive,
+
     // Monster always makes noise, unless it has .Sleeping status.
     //
     // Doesn't have a power field.
@@ -863,6 +869,7 @@ pub const Status = enum {
 
     pub fn string(self: Status, mob: *const Mob) []const u8 {
         return switch (self) {
+            .Conductive => "conductive",
             .Noisy => "noisy",
             .Sleeping => switch (mob.life_type) {
                 .Living => "sleeping",
@@ -898,7 +905,7 @@ pub const Status = enum {
 
     pub fn messageWhenAdded(self: Status) ?[3][]const u8 {
         return switch (self) {
-            .Noisy => null,
+            .Conductive, .Noisy => null,
             .Sleeping => .{ "go", "goes", " to sleep" }, // FIXME: bad wording for unliving
             .Paralysis => .{ "are", "is", " paralyzed" },
             .Held => .{ "are", "is", " entangled" },
@@ -931,7 +938,7 @@ pub const Status = enum {
 
     pub fn messageWhenRemoved(self: Status) ?[3][]const u8 {
         return switch (self) {
-            .Noisy => null,
+            .Conductive, .Noisy => null,
             .Sleeping => .{ "wake", "wakes", " up" },
             .Paralysis => .{ "can move again", "starts moving again", "" },
             .Held => .{ "break", "breaks", " free" },
@@ -1069,15 +1076,19 @@ pub const StatusDataInfo = struct {
     // mean anything at all.
     power: usize = 0, // What's the "power" of the status
 
-    // How long the status should last. Decremented each turn.
-    duration: usize = 0, // How long
-
-    // If the status is permanent.
-    // If set, the duration doesn't matter.
-    permanent: bool = false,
+    // How long the status should last.
+    //
+    // If Tmp, decremented each turn.
+    duration: Duration = .{ .Tmp = 0 },
 
     // Whether to give the .Exhaust status after the effect is over.
     exhausting: bool = false,
+
+    pub const Duration = union(enum) {
+        Tmp: usize,
+        Prm,
+        Ctx: ?*const surfaces.Terrain,
+    };
 };
 
 pub const AIPhase = enum { Work, Hunt, Investigate, Flee };
@@ -1116,7 +1127,7 @@ pub const AI = struct {
 
     flee_effect: ?StatusDataInfo = .{
         .status = .Fast,
-        .duration = 0,
+        .duration = .{ .Tmp = 0 },
         .exhausting = true,
     },
 
@@ -1353,8 +1364,7 @@ pub const Mob = struct { // {{{
             self.applyStatus(.{
                 .status = ring.status,
                 .power = ring.currentPower(),
-                .duration = Status.MAX_DURATION,
-                .permanent = false,
+                .duration = .{ .Tmp = Status.MAX_DURATION },
             }, .{ .add_duration = false });
         };
     }
@@ -1362,14 +1372,36 @@ pub const Mob = struct { // {{{
     // Decrement status durations, and do stuff for various statuses that need
     // babysitting each turn.
     pub fn tickStatuses(self: *Mob) void {
+        const terrain = state.dungeon.at(self.coord).terrain;
+        for (terrain.effects) |effect| {
+            var adj_effect = effect;
+
+            // Set the dummy .Ctx durations' values.
+            //
+            // (See surfaces.Terrain.)
+            //
+            if (meta.activeTag(effect.duration) == .Ctx) {
+                adj_effect.duration = .{ .Ctx = terrain };
+            }
+
+            self.applyStatus(adj_effect, .{});
+        }
+
         inline for (@typeInfo(Status).Enum.fields) |status| {
             const status_e = @field(Status, status.name);
 
             // Decrement
             if (self.isUnderStatus(status_e)) |status_data| {
-                var n_status_data = status_data.*;
-                n_status_data.duration -|= 1;
-                self.applyStatus(n_status_data, .{ .add_duration = false });
+                const status_type = meta.activeTag(status_data.duration);
+                if (status_type == .Tmp) {
+                    var n_status_data = status_data.*;
+                    n_status_data.duration = .{ .Tmp = n_status_data.duration.Tmp -| 1 };
+                    self.applyStatus(n_status_data, .{ .add_duration = false });
+                } else if (status_type == .Ctx) {
+                    if (status_data.duration.Ctx != terrain) {
+                        self.cancelStatus(status_e);
+                    }
+                }
             }
 
             if (self.isUnderStatus(status_e)) |_| {
@@ -1410,8 +1442,8 @@ pub const Mob = struct { // {{{
         if (self.isUnderStatus(.Held)) |se| {
             const held_remove_max = @intCast(usize, self.stat(.Strength)) / 2;
             const held_remove = rng.rangeClumping(usize, 2, held_remove_max, 2);
-            const new_duration = se.duration -| held_remove;
-            self.addStatus(.Held, 0, new_duration, false);
+            const new_duration = se.duration.Tmp -| held_remove;
+            self.addStatus(.Held, 0, .{ .Tmp = new_duration });
 
             if (self.isUnderStatus(.Held)) |_| {
                 state.messageAboutMob(self, self.coord, .Info, "flail around helplessly.", .{}, "flails around helplessly.", .{});
@@ -1437,7 +1469,7 @@ pub const Mob = struct { // {{{
 
         // TODO: make the duration of potion status effect random (clumping, ofc)
         switch (potion.type) {
-            .Status => |s| self.addStatus(s, 0, Status.MAX_DURATION, false),
+            .Status => |s| self.addStatus(s, 0, .{ .Tmp = Status.MAX_DURATION }),
             .Gas => |s| state.dungeon.atGas(self.coord)[s] = 1.0,
             .Custom => |c| c(self, self.coord),
         }
@@ -1531,7 +1563,7 @@ pub const Mob = struct { // {{{
                         mob.takeDamage(.{ .amount = @intToFloat(f64, damage), .source = .RangedAttack, .by_mob = self });
                     }
                     switch (proj.effect) {
-                        .Status => |s| mob.addStatus(s.status, s.power, s.duration, s.permanent),
+                        .Status => |s| mob.addStatus(s.status, s.power, s.duration),
                     }
                 } else {
                     const spot = state.nextAvailableSpaceForItem(at, alloc);
@@ -1788,12 +1820,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn rest(self: *Mob) bool {
-        if (self.isUnderStatus(.Pain) != null and !self.immobile) {
-            if (!self.moveInDirection(rng.chooseUnweighted(Direction, &DIRECTIONS)))
-                self.declareAction(.Rest);
-        } else {
-            self.declareAction(.Rest);
-        }
+        self.declareAction(.Rest);
         return true;
     }
 
@@ -1971,7 +1998,7 @@ pub const Mob = struct { // {{{
 
         // Daze stabbed mobs.
         if (is_stab and !recipient.should_be_dead()) {
-            recipient.addStatus(.Daze, 0, rng.range(usize, 3, 5), false);
+            recipient.addStatus(.Daze, 0, .{ .Tmp = rng.range(usize, 3, 5) });
         }
     }
 
@@ -2104,6 +2131,14 @@ pub const Mob = struct { // {{{
         }
 
         self.deinit();
+
+        if (self.isUnderStatus(.Explosive)) |s| {
+            explosions.kaboom(self.coord, .{ .strength = s.power });
+        }
+
+        if (self.isUnderStatus(.ExplosiveElec)) |s| {
+            explosions.elecBurst(self.coord, s.power, self);
+        }
     }
 
     // Separate from kill() because some code (e.g., mapgen) cannot rely on the player
@@ -2115,14 +2150,6 @@ pub const Mob = struct { // {{{
                     state.dungeon.at(c).surface == null;
             }
         };
-
-        if (self.isUnderStatus(.Explosive)) |s| {
-            explosions.kaboom(self.coord, .{ .strength = s.power });
-        }
-
-        if (self.isUnderStatus(.ExplosiveElec)) |s| {
-            explosions.elecBurst(self.coord, s.power, self);
-        }
 
         self.squad_members.deinit();
         self.enemies.deinit();
@@ -2228,23 +2255,25 @@ pub const Mob = struct { // {{{
         }
     }
 
-    pub fn addStatus(self: *Mob, status: Status, power: usize, duration: ?usize, permanent: bool) void {
-        self.applyStatus(.{
-            .status = status,
-            .duration = duration orelse Status.MAX_DURATION,
-            .power = power,
-            .permanent = permanent,
-        }, .{});
+    pub fn addStatus(self: *Mob, status: Status, power: usize, duration: StatusDataInfo.Duration) void {
+        self.applyStatus(.{ .status = status, .duration = duration, .power = power }, .{});
     }
 
     pub fn cancelStatus(self: *Mob, s: Status) void {
-        self.applyStatus(.{ .status = s, .duration = 0 }, .{ .add_duration = false });
+        self.applyStatus(.{ .status = s, .duration = .{ .Tmp = 0 } }, .{ .add_duration = false });
     }
 
-    pub fn applyStatus(self: *Mob, s: StatusDataInfo, opts: struct {
-        add_power: bool = false,
-        add_duration: bool = true,
-    }) void {
+    pub fn applyStatus(
+        self: *Mob,
+        s: StatusDataInfo,
+        opts: struct {
+            add_power: bool = false,
+            // Add .Tmp durations together, instead of replacing it.
+            add_duration: bool = true,
+            // Force the duration to be set to the new one.
+            replace_duration: bool = false,
+        },
+    ) void {
         const had_status_before = self.isUnderStatus(s.status) != null;
 
         const p_se = self.statuses.getPtr(s.status);
@@ -2253,10 +2282,35 @@ pub const Mob = struct { // {{{
 
         p_se.power = if (opts.add_power) p_se.power + s.power else s.power;
 
-        p_se.duration = if (opts.add_duration) p_se.duration + s.duration else s.duration;
-        p_se.duration = math.clamp(p_se.duration, 0, Status.MAX_DURATION);
+        // Only change the duration if the new one is a "higher" duration.
+        //
+        // i.e., if the old status was .Prm we won't change it if the newer status
+        // is .Tmp. Or if the old status was .Tmp, we won't change it if the
+        // newer one is .Ctx.
+        //
+        const new_dur_type = meta.activeTag(s.duration);
+        const replace_anyway = opts.replace_duration or self.isUnderStatus(s.status) == null;
+        switch (p_se.duration) {
+            .Prm => if (replace_anyway or new_dur_type == .Prm) {
+                p_se.duration = s.duration;
+            },
+            .Tmp => |dur| {
+                if (replace_anyway or new_dur_type == .Prm or new_dur_type == .Tmp) {
+                    if (opts.add_duration and new_dur_type == .Tmp) {
+                        var newdur = if (opts.add_duration) p_se.duration.Tmp + dur else dur;
+                        newdur = math.clamp(newdur, 0, Status.MAX_DURATION);
 
-        p_se.permanent = s.permanent;
+                        p_se.duration = .{ .Tmp = newdur };
+                    } else if (replace_anyway or
+                        (new_dur_type == .Tmp and s.duration.Tmp >= p_se.duration.Tmp))
+                    {
+                        p_se.duration = s.duration;
+                    }
+                }
+            },
+            .Ctx => p_se.duration = s.duration,
+        }
+
         p_se.exhausting = s.exhausting;
 
         const has_status_now = self.isUnderStatus(s.status) != null;
@@ -2267,7 +2321,7 @@ pub const Mob = struct { // {{{
             msg_parts = s.status.messageWhenRemoved();
 
             if (was_exhausting or s.exhausting)
-                self.addStatus(.Exhausted, 0, Status.MAX_DURATION, false);
+                self.addStatus(.Exhausted, 0, .{ .Tmp = Status.MAX_DURATION });
 
             if (p_se.status == .Lifespan) {
                 self.takeDamage(.{ .amount = self.HP * 1000 });
@@ -2276,7 +2330,7 @@ pub const Mob = struct { // {{{
             msg_parts = s.status.messageWhenAdded();
         }
 
-        if (!p_se.permanent and msg_parts != null) {
+        if (meta.activeTag(p_se.duration) == .Tmp and msg_parts != null) {
             if (self == state.player) {
                 state.message(.Status, "You {s}{s}.", .{ msg_parts.?[0], msg_parts.?[2] });
             } else if (state.player.cansee(self.coord)) {
@@ -2289,7 +2343,12 @@ pub const Mob = struct { // {{{
 
     pub fn isUnderStatus(self: *const Mob, status: Status) ?*const StatusDataInfo {
         const se = self.statuses.getPtrConst(status);
-        return if (!se.permanent and se.duration == 0) null else se;
+        const has_status = switch (se.duration) {
+            .Prm => true,
+            .Tmp => |turns| turns > 0,
+            .Ctx => se.duration.Ctx == state.dungeon.at(self.coord).terrain,
+        };
+        return if (has_status) se else null;
     }
 
     pub fn lastDamagePercentage(self: *const Mob) usize {

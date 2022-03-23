@@ -157,7 +157,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
         if (cell > 0) {
             const coord = Coord.new2(ground0.z, x, y);
 
-            const max_range = opts.strength / 100;
+            const max_range = math.max(1, opts.strength / 100);
             const chance_for_fire = 100 - (coord.distance(ground0) * 100 / max_range);
             if (rng.percent(chance_for_fire)) {
                 fire.setTileOnFire(coord);
