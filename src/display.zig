@@ -333,7 +333,13 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     inline for (@typeInfo(Stat).Enum.fields) |statv| {
         const stat = @intToEnum(Stat, statv.value);
         const base_stat_val = utils.getFieldByEnum(Stat, state.player.stats, stat);
-        const cur_stat_val = state.player.stat(stat);
+
+        const cur_stat_val = @intCast(isize, switch (stat) {
+            .Missile => combat.chanceOfMissileLanding(state.player),
+            .Melee => combat.chanceOfMeleeLanding(state.player, null),
+            .Evade => combat.chanceOfAttackEvaded(state.player, null),
+            else => state.player.stat(stat),
+        });
 
         if (cur_stat_val > 0 or base_stat_val > 0) {
             if (cur_stat_val != base_stat_val) {
