@@ -950,7 +950,7 @@ pub fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, lin
                     const str = sinfo.status.string(state.player);
                     switch (sinfo.duration) {
                         .Prm => S.append(w, "$gPrm$. {s}\n", .{str}),
-                        .Tmp => S.append(w, "$gTmp$. {s} ({})\n", .{ str, sinfo.duration }),
+                        .Tmp => S.append(w, "$gTmp$. {s} ({})\n", .{ str, sinfo.duration.Tmp }),
                         .Ctx => S.append(w, "$gCtx$. {s}\n", .{str}),
                     }
                     throwable = true;
