@@ -1287,16 +1287,46 @@ pub const Mob = struct { // {{{
 
     pub const Inventory = struct {
         pack: PackBuffer = PackBuffer.init(&[_]Item{}),
+        equ_slots: [EQU_SLOT_SIZE]?Item = [_]?Item{null} ** EQU_SLOT_SIZE,
 
         rings: [4]?*Ring = [4]?*Ring{ null, null, null, null },
 
-        armor: ?*Armor = null,
-        cloak: ?*const Cloak = null,
-        wielded: ?*Weapon = null,
-        backup: ?*Weapon = null,
+        pub const EquSlot = enum(usize) {
+            Weapon = 0,
+            Backup = 1,
+            Armor = 2,
+            Cloak = 3,
 
+            pub fn slotFor(item: Item) EquSlot {
+                return switch (item) {
+                    .Weapon => .Weapon,
+                    .Armor => .Armor,
+                    .Cloak => .Cloak,
+                    else => err.wat(),
+                };
+            }
+
+            pub fn name(self: EquSlot) []const u8 {
+                return switch (self) {
+                    .Weapon => "weapon",
+                    .Backup => "backup",
+                    .Armor => "armor",
+                    .Cloak => "cloak",
+                };
+            }
+        };
+
+        pub const EQU_SLOT_SIZE = utils.directEnumArrayLen(EquSlot);
         pub const PACK_SIZE: usize = 10;
         pub const PackBuffer = StackBuffer(Item, PACK_SIZE);
+
+        pub fn equipment(self: *Inventory, eq: EquSlot) *?Item {
+            return &self.equ_slots[@enumToInt(eq)];
+        }
+
+        pub fn equipmentConst(self: *const Inventory, eq: EquSlot) *const ?Item {
+            return &self.equ_slots[@enumToInt(eq)];
+        }
     };
 
     // Size of `activities` Ringbuffer
@@ -1433,9 +1463,9 @@ pub const Mob = struct { // {{{
     }
 
     pub fn swapWeapons(self: *Mob) bool {
-        const tmp = self.inventory.wielded;
-        self.inventory.wielded = self.inventory.backup;
-        self.inventory.backup = tmp;
+        const tmp = self.inventory.equipment(.Weapon).*;
+        self.inventory.equipment(.Weapon).* = self.inventory.equipment(.Backup).*;
+        self.inventory.equipment(.Backup).* = tmp;
         return false; // zero-cost action
     }
 
@@ -1843,7 +1873,7 @@ pub const Mob = struct { // {{{
 
     pub fn canMelee(attacker: *Mob, defender: *Mob) bool {
         var weapons = StackBuffer(*const Weapon, 7).init(null);
-        weapons.append(attacker.inventory.wielded orelse attacker.species.default_attack) catch unreachable;
+        weapons.append(if (attacker.inventory.equipment(.Weapon).*) |w| w.Weapon else attacker.species.default_attack) catch unreachable;
         for (attacker.species.aux_attacks) |w| weapons.append(w) catch unreachable;
 
         const distance = attacker.coord.distance(defender.coord);
@@ -1863,7 +1893,7 @@ pub const Mob = struct { // {{{
         });
 
         var weapons = StackBuffer(*const Weapon, 7).init(null);
-        weapons.append(attacker.inventory.wielded orelse attacker.species.default_attack) catch unreachable;
+        weapons.append(if (attacker.inventory.equipment(.Weapon).*) |w| w.Weapon else attacker.species.default_attack) catch unreachable;
         for (attacker.species.aux_attacks) |w| weapons.append(w) catch unreachable;
 
         var longest_delay: usize = 0;
@@ -1918,8 +1948,8 @@ pub const Mob = struct { // {{{
             }
 
             // Retaliation damage?
-            if (recipient.inventory.cloak) |clk|
-                if (meta.activeTag(clk.ego) == .Retaliate and
+            if (recipient.inventory.equipment(.Cloak).*) |clk|
+                if (meta.activeTag(clk.Cloak.ego) == .Retaliate and
                     rng.range(usize, 0, 100) < 14)
                 {
                     const max_dmg = @floatToInt(usize, attacker.HP * 21 / 100);
@@ -2534,8 +2564,8 @@ pub const Mob = struct { // {{{
         if (self.isUnderStatus(.Poison)) |_| speed_perc = @divTrunc(speed_perc * 150, 100);
         if (self.isUnderStatus(.Nausea)) |_| speed_perc = @divTrunc(speed_perc * 150, 100);
 
-        if (self.inventory.armor) |a|
-            if (a.speed_penalty) |pen| {
+        if (self.inventory.equipmentConst(.Armor).*) |a|
+            if (a.Armor.speed_penalty) |pen| {
                 speed_perc += @intCast(isize, pen);
             };
 
@@ -2574,8 +2604,8 @@ pub const Mob = struct { // {{{
         }
 
         // Check cloaks.
-        if (self.inventory.cloak) |clk| {
-            if (_stat == .Camoflage and meta.activeTag(clk.ego) == .Camoflage) {
+        if (self.inventory.equipmentConst(.Cloak).*) |clk| {
+            if (_stat == .Camoflage and meta.activeTag(clk.Cloak.ego) == .Camoflage) {
                 val += 1;
             }
         }
@@ -2600,14 +2630,15 @@ pub const Mob = struct { // {{{
         r += utils.getFieldByEnum(Resistance, terrain.resists, resist);
 
         // Check armor
-        if (self.inventory.cloak) |clk| switch (clk.ego) {
-            .Resist => |clk_r| if (clk_r == resist) {
-                r += 50;
-            },
-            else => {},
-        };
-        if (self.inventory.armor) |arm| {
-            r += utils.getFieldByEnum(Resistance, arm.resists, resist);
+        if (self.inventory.equipmentConst(.Cloak).*) |clk|
+            switch (clk.Cloak.ego) {
+                .Resist => |clk_r| if (clk_r == resist) {
+                    r += 50;
+                },
+                else => {},
+            };
+        if (self.inventory.equipmentConst(.Armor).*) |arm| {
+            r += utils.getFieldByEnum(Resistance, arm.Armor.resists, resist);
         }
 
         // Check statuses

@@ -611,22 +611,16 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
         try w.print("        ...on level {s} of the Dungeon\n", .{levelinfo[player.coord.z].name});
     }
     try w.print("\n", .{});
-    try w.print("-) {s: <40} &) {s}\n", .{
-        if (player.inventory.wielded) |i|
-            ((Item{ .Weapon = i }).longName() catch unreachable).constSlice()
-        else
-            "<none>",
-        if (player.inventory.armor) |a|
-            ((Item{ .Armor = a }).longName() catch unreachable).constSlice()
-        else
-            "<none>",
-    });
-    try w.print("2) {s}\n", .{
-        if (player.inventory.backup) |b|
-            ((Item{ .Weapon = b }).longName() catch unreachable).constSlice()
-        else
-            "<none>",
-    });
+    inline for (@typeInfo(Mob.Inventory.EquSlot).Enum.fields) |slots_f| {
+        const slot = @intToEnum(Mob.Inventory.EquSlot, slots_f.value);
+        try w.print("{s: <7} {s}\n", .{
+            slot.name(),
+            if (player.inventory.equipment(slot).*) |i|
+                (i.longName() catch unreachable).constSlice()
+            else
+                "<none>",
+        });
+    }
     try w.print("\n", .{});
     try w.print("Rings:\n", .{});
     try w.print("1) {s: <40} 2) {s}\n", .{

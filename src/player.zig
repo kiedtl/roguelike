@@ -319,38 +319,21 @@ pub fn grabItem() bool {
     }
 
     switch (item) {
-        .Weapon => |weapon| {
-            if (state.player.inventory.wielded) |old_w| {
-                state.dungeon.itemsAt(state.player.coord).append(Item{ .Weapon = old_w }) catch err.wat();
+        .Weapon, .Armor, .Cloak => {
+            const slot = Mob.Inventory.EquSlot.slotFor(item);
+            if (state.player.inventory.equipment(slot).*) |old_item| {
+                state.dungeon.itemsAt(state.player.coord).append(old_item) catch err.wat();
                 state.player.declareAction(.Drop);
-                state.message(.Info, "You drop the {s}.", .{old_w.name});
+                state.message(.Info, "You drop the {s}.", .{
+                    (old_item.longName() catch err.wat()).constSlice(),
+                });
             }
 
-            state.player.inventory.wielded = weapon;
+            state.player.inventory.equipment(slot).* = item;
             state.player.declareAction(.Use);
-            state.message(.Info, "Now wielding a {s}.", .{weapon.name});
-        },
-        .Armor => |armor| {
-            if (state.player.inventory.armor) |a| {
-                state.dungeon.itemsAt(state.player.coord).append(Item{ .Armor = a }) catch err.wat();
-                state.player.declareAction(.Drop);
-                state.message(.Info, "You drop the {s}.", .{a.name});
-            }
-
-            state.player.inventory.armor = armor;
-            state.player.declareAction(.Use);
-            state.message(.Info, "Now wearing a {s}.", .{armor.name});
-        },
-        .Cloak => |cloak| {
-            if (state.player.inventory.cloak) |c| {
-                state.dungeon.itemsAt(state.player.coord).append(Item{ .Cloak = c }) catch err.wat();
-                state.player.declareAction(.Drop);
-                state.message(.Info, "You drop the {s}.", .{c.name});
-            }
-
-            state.player.inventory.cloak = cloak;
-            state.player.declareAction(.Use);
-            state.message(.Info, "Now wearing a cloak of {s}.", .{cloak.name});
+            state.message(.Info, "Equipped a {s}.", .{
+                (item.longName() catch err.wat()).constSlice(),
+            });
         },
         else => {
             state.player.inventory.pack.append(item) catch err.wat();

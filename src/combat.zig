@@ -77,7 +77,7 @@ pub fn chanceOfAttackEvaded(defender: *const Mob, attacker: ?*const Mob) usize {
     chance += if (!defender.isFlanked() and nearby_walls == 0) DEFENDER_OPEN_SPACE_BONUS else 0;
     chance += if (!tile_light) DEFENDER_UNLIT_BONUS else 0;
 
-    chance -= if (defender.inventory.armor) |a| if (a.evasion_penalty) |pen| @intCast(isize, pen) else 0 else 0;
+    chance -= if (defender.inventory.equipmentConst(.Armor).*) |a| if (a.Armor.evasion_penalty) |pen| @intCast(isize, pen) else 0 else 0;
     chance -= if (defender.isUnderStatus(.Held)) |_| DEFENDER_HELD_NBONUS else 0;
     chance -= if (defender.isUnderStatus(.Enraged) != null) DEFENDER_ENRAGED_NBONUS else 0;
     chance -= if (defender.isFlanked()) DEFENDER_FLANKED_NBONUS else 0;

@@ -23,6 +23,15 @@ const WIDTH = state.WIDTH;
 
 const StackBuffer = buffer.StackBuffer;
 
+// Extract the value of enums.directEnumArrayLen indirectly, since that method
+// is private >_>
+//
+// (Assumes max_unused_slots == 0)
+//
+pub fn directEnumArrayLen(comptime E: type) usize {
+    return enums.directEnumArray(E, void, 0, undefined).len;
+}
+
 pub fn getFieldByEnum(
     comptime E: type,
     struct_: anytype,

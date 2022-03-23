@@ -417,23 +417,6 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     y = _drawStr(startx, y, endx, "$cturns:$. {}", .{state.ticks}, .{});
     y += 1;
 
-    if (state.player.inventory.wielded) |weapon| {
-        const item = Item{ .Weapon = weapon };
-        const dest = (item.shortName() catch unreachable).constSlice();
-        y = _drawStr(startx, y, endx, "$cweapon$. {s}", .{dest}, .{});
-    }
-    if (state.player.inventory.backup) |backup| {
-        const item = Item{ .Weapon = backup };
-        const dest = (item.shortName() catch unreachable).constSlice();
-        y = _drawStr(startx, y, endx, "$cbackup$. {s}", .{dest}, .{});
-    }
-    if (state.player.inventory.armor) |armor_item| {
-        const item = Item{ .Armor = armor_item };
-        const dest = (item.shortName() catch unreachable).constSlice();
-        y = _drawStr(startx, y, endx, "$c armor$. {s}", .{dest}, .{});
-    }
-    y += 1;
-
     const terrain = state.dungeon.terrainAt(state.player.coord);
     if (!mem.eql(u8, terrain.id, "t_default")) {
         y = _drawStr(startx, y, endx, "$cterrain$.: {s}", .{terrain.name}, .{});

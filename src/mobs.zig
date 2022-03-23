@@ -1118,10 +1118,10 @@ pub fn placeMob(
     mob.coord = coord;
     mob.ai.phase = opts.phase;
 
-    if (template.weapon) |w| mob.inventory.wielded = items.createItem(Weapon, w.*);
-    if (template.backup_weapon) |w| mob.inventory.backup = items.createItem(Weapon, w.*);
-    if (template.armor) |a| mob.inventory.armor = items.createItem(Armor, a.*);
-    if (template.cloak) |c| mob.inventory.cloak = c;
+    if (template.weapon) |w| mob.inventory.equipment(.Weapon).* = Item{ .Weapon = items.createItem(Weapon, w.*) };
+    if (template.backup_weapon) |w| mob.inventory.equipment(.Backup).* = Item{ .Weapon = items.createItem(Weapon, w.*) };
+    if (template.armor) |a| mob.inventory.equipment(.Armor).* = Item{ .Armor = items.createItem(Armor, a.*) };
+    if (template.cloak) |c| mob.inventory.equipment(.Cloak).* = Item{ .Cloak = c };
 
     if (opts.facing) |dir| mob.facing = dir;
     mob.ai.work_area.append(opts.work_area orelse coord) catch err.wat();
