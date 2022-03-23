@@ -1443,13 +1443,21 @@ pub const Mob = struct { // {{{
         return self.inventory.pack.orderedRemove(index) catch err.wat();
     }
 
+    // This is what happens when you flail to dodge a net.
+    //
     // If held, flail around trying to get free.
+    //
     pub fn flailAround(self: *Mob) void {
         if (self.isUnderStatus(.Held)) |se| {
             const held_remove_max = @intCast(usize, self.stat(.Strength)) / 2;
             const held_remove = rng.rangeClumping(usize, 2, held_remove_max, 2);
             const new_duration = se.duration.Tmp -| held_remove;
-            self.addStatus(.Held, 0, .{ .Tmp = new_duration });
+
+            self.applyStatus(.{
+                .status = .Held,
+                .power = 0,
+                .duration = .{ .Tmp = new_duration },
+            }, .{ .replace_duration = true, .add_duration = false });
 
             if (self.isUnderStatus(.Held)) |_| {
                 state.messageAboutMob(self, self.coord, .Info, "flail around helplessly.", .{}, "flails around helplessly.", .{});
@@ -1569,7 +1577,7 @@ pub const Mob = struct { // {{{
                         mob.takeDamage(.{ .amount = @intToFloat(f64, damage), .source = .RangedAttack, .by_mob = self });
                     }
                     switch (proj.effect) {
-                        .Status => |s| mob.addStatus(s.status, s.power, s.duration),
+                        .Status => |s| mob.applyStatus(s, .{}),
                     }
                 } else {
                     const spot = state.nextAvailableSpaceForItem(at, alloc);
@@ -2321,14 +2329,15 @@ pub const Mob = struct { // {{{
 
         p_se.power = if (opts.add_power) p_se.power + s.power else s.power;
 
-        // Only change the duration if the new one is a "higher" duration.
+        // Only change the duration if the new one is a "higher" duration, or
+        // we didn't have the status previously.
         //
         // i.e., if the old status was .Prm we won't change it if the newer status
         // is .Tmp. Or if the old status was .Tmp, we won't change it if the
         // newer one is .Ctx.
         //
         const new_dur_type = meta.activeTag(s.duration);
-        const replace_anyway = opts.replace_duration or self.isUnderStatus(s.status) == null;
+        const replace_anyway = opts.replace_duration or !had_status_before;
         switch (p_se.duration) {
             .Prm => if (replace_anyway or new_dur_type == .Prm) {
                 p_se.duration = s.duration;
@@ -2336,7 +2345,7 @@ pub const Mob = struct { // {{{
             .Tmp => |dur| {
                 if (replace_anyway or new_dur_type == .Prm or new_dur_type == .Tmp) {
                     if (opts.add_duration and new_dur_type == .Tmp) {
-                        var newdur = if (opts.add_duration) p_se.duration.Tmp + dur else dur;
+                        var newdur = dur + s.duration.Tmp;
                         newdur = math.clamp(newdur, 0, Status.MAX_DURATION);
 
                         p_se.duration = .{ .Tmp = newdur };
