@@ -279,6 +279,14 @@ fn readInput() bool {
                     const stairloc = rng.chooseUnweighted(Coord, stairlocs.constSlice());
                     break :blk state.player.teleportTo(stairloc, null, false);
                 },
+                termbox.TB_KEY_F7 => blk: {
+                    if (state.player.stats.Speed == 50) {
+                        state.player.stats.Speed = 100;
+                    } else {
+                        state.player.stats.Speed = 50;
+                    }
+                    break :blk false;
+                },
                 else => false,
             };
         } else if (ev.ch != 0) {
@@ -403,7 +411,10 @@ fn tickGame() void {
             }
 
             if (prev_energy <= mob.energy) {
-                err.bug("Mob {s} did nothing during its turn!", .{mob.displayName()});
+                err.bug("Mob {s} (phase: {}) did nothing during its turn!", .{
+                    mob.displayName(),
+                    mob.ai.phase,
+                });
             }
         }
     }
