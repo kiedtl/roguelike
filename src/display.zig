@@ -954,7 +954,7 @@ pub fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, lin
             }
         },
         .Armor, .Cloak, .Weapon, .Evocable => S.append(w, "TODO", .{}),
-        .Boulder, .Prop, .Vial => S.append(w, "You cannot use this item.", .{}),
+        .Boulder, .Prop, .Vial => S.append(w, "$G(This item is useless.)$.", .{}),
     }
 
     S.append(w, "\n", .{});
