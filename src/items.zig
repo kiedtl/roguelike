@@ -90,14 +90,15 @@ pub const ITEM_DROPS = [_]ItemTemplate{
 };
 
 pub const Cloak = struct {
+    id: []const u8,
     name: []const u8,
     ego: union(enum) { Resist: Resistance, Camoflage, Retaliate },
 };
 
-pub const SiliconCloak = Cloak{ .name = "silicon", .ego = .{ .Resist = .rFire } };
-pub const FurCloak = Cloak{ .name = "fur", .ego = .{ .Resist = .rElec } };
-pub const VelvetCloak = Cloak{ .name = "velvet", .ego = .Camoflage };
-pub const ThornsCloak = Cloak{ .name = "thorns", .ego = .Retaliate };
+pub const SiliconCloak = Cloak{ .id = "silicon", .name = "silicon", .ego = .{ .Resist = .rFire } };
+pub const FurCloak = Cloak{ .id = "fur", .name = "fur", .ego = .{ .Resist = .rElec } };
+pub const VelvetCloak = Cloak{ .id = "velvet", .name = "velvet", .ego = .Camoflage };
+pub const ThornsCloak = Cloak{ .id = "thorns", .name = "thorns", .ego = .Retaliate };
 
 pub const Projectile = struct {
     id: []const u8,

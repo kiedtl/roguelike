@@ -1402,7 +1402,10 @@ pub const Mob = struct { // {{{
                 if (status_type == .Tmp) {
                     var n_status_data = status_data.*;
                     n_status_data.duration = .{ .Tmp = n_status_data.duration.Tmp -| 1 };
-                    self.applyStatus(n_status_data, .{ .add_duration = false });
+                    self.applyStatus(n_status_data, .{
+                        .add_duration = false,
+                        .replace_duration = true,
+                    });
                 } else if (status_type == .Ctx) {
                     if (status_data.duration.Ctx != terrain) {
                         self.cancelStatus(status_e);
@@ -3105,6 +3108,19 @@ pub const Item = union(ItemType) {
         }
         buf.resizeTo(@intCast(usize, fbs.getPos() catch err.wat()));
         return buf;
+    }
+
+    pub fn id(self: Item) ?[]const u8 {
+        return switch (self) {
+            .Potion => |p| p.id,
+            .Projectile => |p| p.id,
+            .Armor => |a| a.id,
+            .Cloak => |c| c.id,
+            .Weapon => |w| w.id,
+            .Prop => |p| p.id,
+            .Evocable => |v| v.id,
+            .Vial, .Boulder, .Ring => null,
+        };
     }
 };
 

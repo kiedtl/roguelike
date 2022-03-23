@@ -89,6 +89,7 @@ fn initGame() bool {
     surfaces.readProps(state.GPA.allocator());
     literature.readPosters(state.GPA.allocator());
     mapgen.readSpawnTables(state.GPA.allocator());
+    readDescriptions(state.GPA.allocator());
 
     for (state.dungeon.map) |*map, level| {
         state.stockpiles[level] = StockpileArrayList.init(state.GPA.allocator());
@@ -193,8 +194,76 @@ fn deinitGame() void {
 
     surfaces.freeProps(state.GPA.allocator());
     mapgen.freeSpawnTables(state.GPA.allocator());
+    freeDescriptions(state.GPA.allocator());
 
     _ = state.GPA.deinit();
+}
+
+fn readDescriptions(alloc: mem.Allocator) void {
+    state.descriptions = @TypeOf(state.descriptions).init(alloc);
+
+    const data_dir = std.fs.cwd().openDir("data", .{}) catch err.wat();
+    const data_file = data_dir.openFile("des.txt", .{
+        .read = true,
+        .lock = .None,
+    }) catch err.wat();
+
+    const filesize = data_file.getEndPos() catch err.wat();
+    std.log.info("filesize={}", .{filesize});
+    const filebuf = alloc.alloc(u8, filesize) catch err.wat();
+    defer alloc.free(filebuf);
+    const read = data_file.readAll(filebuf[0..]) catch err.wat();
+
+    var lines = mem.tokenize(u8, filebuf[0..read], "\n");
+    var current_desc_id: ?[]const u8 = null;
+    var current_desc = StackBuffer(u8, 4096).init(null);
+
+    const S = struct {
+        pub fn _finishDescEntry(id: []const u8, desc: []const u8, a: mem.Allocator) void {
+            const key = a.alloc(u8, id.len) catch err.wat();
+            mem.copy(u8, key, id);
+
+            const val = a.alloc(u8, desc.len) catch err.wat();
+            mem.copy(u8, val, desc);
+
+            state.descriptions.putNoClobber(key, val) catch err.bug(
+                "Duplicate description {s} found",
+                .{key},
+            );
+        }
+    };
+
+    while (lines.next()) |line| {
+        if (line[0] == '%') {
+            if (current_desc_id) |id| {
+                S._finishDescEntry(id, current_desc.constSlice(), alloc);
+
+                current_desc.clear();
+                current_desc_id = null;
+            }
+
+            if (line.len <= 2) err.bug("Missing desc ID", .{});
+            current_desc_id = line[2..];
+        } else {
+            if (current_desc_id == null) {
+                err.bug("Description without ID", .{});
+            }
+
+            if (current_desc.len > 0) current_desc.append(' ') catch err.wat();
+            current_desc.appendSlice(line) catch err.wat();
+        }
+    }
+
+    S._finishDescEntry(current_desc_id.?, current_desc.constSlice(), alloc);
+}
+
+fn freeDescriptions(alloc: mem.Allocator) void {
+    var iter = state.descriptions.iterator();
+    while (iter.next()) |entry| {
+        alloc.free(entry.key_ptr.*);
+        alloc.free(entry.value_ptr.*);
+    }
+    state.descriptions.clearAndFree();
 }
 
 fn readNoActionInput(timeout: ?isize) void {

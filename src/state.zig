@@ -138,6 +138,8 @@ pub const MemoryTileMap = std.AutoHashMap(Coord, MemoryTile);
 
 pub var memory: MemoryTileMap = undefined;
 
+pub var descriptions: std.StringHashMap([]const u8) = undefined;
+
 pub var rooms: [LEVELS]mapgen.Room.ArrayList = undefined;
 pub var stockpiles: [LEVELS]StockpileArrayList = undefined;
 pub var inputs: [LEVELS]StockpileArrayList = undefined;

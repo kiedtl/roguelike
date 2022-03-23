@@ -15,7 +15,6 @@ pub const LIGHT_STEEL_BLUE: u32 = 0xb0c4de;
 pub const PALE_VIOLET_RED: u32 = 0xdb7093;
 
 pub const BG: u32 = darken(CONCRETE, 6);
-//pub const BG: u32 = darken(DOBALENE_BLUE, 4);
 
 // Interpolate linearly between two vals.
 //
@@ -43,13 +42,10 @@ pub fn mix(a: u32, b: u32, frac: f64) u32 {
 }
 
 pub fn percentageOf(color: u32, _p: usize) u32 {
-    const percentage = math.clamp(_p, 0, 100);
-    var r = ((color >> 16) & 0xFF) * @intCast(u32, percentage) / 100;
-    var g = ((color >> 08) & 0xFF) * @intCast(u32, percentage) / 100;
-    var b = ((color >> 00) & 0xFF) * @intCast(u32, percentage) / 100;
-    r = math.clamp(r, 0, 0xFF);
-    g = math.clamp(g, 0, 0xFF);
-    b = math.clamp(b, 0, 0xFF);
+    const percentage = @intCast(u32, math.clamp(_p, 0, 100));
+    const r = math.min(((color >> 16) & 0xFF) * percentage / 100, 0xFF);
+    const g = math.min(((color >> 08) & 0xFF) * percentage / 100, 0xFF);
+    const b = math.min(((color >> 00) & 0xFF) * percentage / 100, 0xFF);
     return (r << 16) | (g << 8) | b;
 }
 

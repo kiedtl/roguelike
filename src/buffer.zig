@@ -72,6 +72,10 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
             self.len += 1;
         }
 
+        pub fn appendSlice(self: *Self, items: []const T) !void {
+            for (items) |item| try self.append(item);
+        }
+
         pub inline fn isFull(self: *Self) bool {
             return self.len == self.capacity;
         }

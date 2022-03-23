@@ -207,15 +207,15 @@ pub fn findPatternMatch(coord: Coord, patterns: []const []const u8) ?usize {
 // FIXME: stress-test on abnormal inputs (empty input, input full of whitespace, etc)
 pub const FoldedTextIterator = struct {
     str: []const u8,
-    width: usize,
+    max_width: usize,
     last_space: ?usize = null,
     index: usize = 0,
     line_begin: usize = 0,
 
     const Self = @This();
 
-    pub fn init(str: []const u8, width: usize) Self {
-        return .{ .str = str, .width = width };
+    pub fn init(str: []const u8, max_width: usize) Self {
+        return .{ .str = str, .max_width = max_width };
     }
 
     pub fn next(self: *Self) ?[]const u8 {
@@ -223,13 +223,21 @@ pub const FoldedTextIterator = struct {
             return null;
         }
 
-        while (self.index < self.str.len and (self.index - self.line_begin) < self.width) {
+        var cur_width: usize = 0;
+
+        while (self.index < self.str.len and cur_width < self.max_width) {
             switch (self.str[self.index]) {
+                // Skip our custom formatting directives.
+                '$' => {
+                    self.index += 2;
+                    continue;
+                },
+
                 ' ', '\t', '\n', '\x0b', '\x0c', '\x0d' => {
                     // We've found some whitespace.
                     // If we're at the beginning of a line, ignore it; otherwise,
                     // save the current index.
-                    if ((self.index - self.line_begin) == 0) {
+                    if (cur_width == 0) {
                         self.index += 1;
                         self.line_begin += 1;
                         continue;
@@ -240,13 +248,16 @@ pub const FoldedTextIterator = struct {
                 else => {},
             }
             self.index += 1;
+            cur_width += 1;
         }
 
         // Backup to the last space (if necessary) and return a new
         // line.
-        if (self.last_space) |spc| {
-            self.index = spc;
-            self.last_space = null;
+        if (self.index < self.str.len) {
+            if (self.last_space) |spc| {
+                self.index = spc;
+                self.last_space = null;
+            }
         }
 
         const old_line_begin = self.line_begin;

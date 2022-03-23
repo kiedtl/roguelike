@@ -474,13 +474,19 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
 }
 
 fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
+    var y = starty;
+
+    while (y < endy) : (y += 1) {
+        _clear_line(startx, endx, y);
+    }
+    y = starty;
+
     if (state.messages.items.len == 0)
         return;
 
     const msgcount = state.messages.items.len - 1;
     const first = msgcount - math.min(msgcount, @intCast(usize, endy - 1 - starty));
     var i: usize = first;
-    var y: isize = starty;
     while (i <= msgcount and y < endy) : (i += 1) {
         const msg = state.messages.items[i];
         const msgtext = utils.used(msg.msg);
@@ -952,15 +958,15 @@ pub fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, lin
     }
 
     S.append(w, "\n", .{});
-    if (usable) S.append(w, "$cSPACE$. to use.", .{});
-    if (throwable) S.append(w, "$ct$. to throw.", .{});
+    if (usable) S.append(w, "$cSPACE$. to use.\n", .{});
+    if (throwable) S.append(w, "$ct$. to throw.\n", .{});
 }
 
 pub fn drawInventoryScreen() bool {
     const playerinfo_window = dimensions(.PlayerInfo);
     const main_window = dimensions(.Main);
     const iteminfo_window = dimensions(.EnemyInfo);
-    //const log_window = dimensions(.Log);
+    const log_window = dimensions(.Log);
 
     // TODO: do some tests and figure out what's the practical limit to memory
     // usage, and reduce the buffer's size to that.
@@ -971,6 +977,7 @@ pub fn drawInventoryScreen() bool {
 
     clearScreen();
 
+    var desc_scroll: usize = 0;
     var chosen: usize = 0;
     var y: isize = 0;
 
@@ -999,13 +1006,20 @@ pub fn drawInventoryScreen() bool {
                 y = _drawStr(x, y, endx, "{s} {s}", .{
                     if (i == chosen) ">" else " ", name,
                 }, .{ .fg = color });
-
-                y += 1;
             }
         }
 
         // Draw item info
         if (inventory_len > 0) {
+            const ii_startx = @intCast(isize, iteminfo_window.from.x);
+            const ii_endx = @intCast(isize, iteminfo_window.to.x);
+            const ii_starty = @intCast(isize, iteminfo_window.from.y);
+            const ii_endy = @intCast(isize, iteminfo_window.to.y);
+
+            var ii_y = ii_starty;
+            while (ii_y < ii_endy) : (ii_y += 1)
+                _clear_line(ii_startx, ii_endx, ii_y);
+
             var descbuf: [4096]u8 = undefined;
             var descbuf_stream = io.fixedBufferStream(&descbuf);
             _getItemDescription(
@@ -1013,14 +1027,48 @@ pub fn drawInventoryScreen() bool {
                 state.player.inventory.pack.data[chosen],
                 RIGHT_INFO_WIDTH - 1,
             );
-            _ = _drawStr(
-                @intCast(isize, iteminfo_window.from.x),
-                @intCast(isize, iteminfo_window.from.y),
-                @intCast(isize, iteminfo_window.to.x),
-                "{s}",
-                .{descbuf_stream.getWritten()},
-                .{},
-            );
+            _ = _drawStr(ii_startx, ii_starty, ii_endx, "{s}", .{descbuf_stream.getWritten()}, .{});
+        }
+
+        // Draw item description
+        {
+            const log_startx = @intCast(isize, log_window.from.x);
+            const log_endx = @intCast(isize, log_window.to.x);
+            const log_starty = @intCast(isize, log_window.from.y);
+            const log_endy = @intCast(isize, log_window.to.y);
+
+            if (inventory_len > 0) {
+                const id = state.player.inventory.pack.data[chosen].id();
+                const default_desc = "(Missing description)";
+                const desc: []const u8 = if (id) |i_id| state.descriptions.get(i_id) orelse default_desc else default_desc;
+
+                var log_y = log_starty;
+                var scroll: usize = 0;
+                const linewidth = @intCast(usize, log_endx - log_startx);
+
+                while (log_y < log_endy) : (log_y += 1)
+                    _clear_line(log_startx, log_endx, log_y);
+                log_y = log_starty;
+
+                var fold_iter = utils.FoldedTextIterator.init(desc, linewidth);
+                while (fold_iter.next()) |line| {
+                    if (scroll < desc_scroll) {
+                        scroll += 1;
+                        continue;
+                    }
+
+                    log_y = _drawStr(log_startx, log_y, log_endx, "{s}", .{line}, .{});
+
+                    if (scroll > 0 and log_y == log_starty + 1) {
+                        _ = _drawStr(log_endx - 11, log_y - 1, log_endx, " $p-- PgUp --$.", .{}, .{});
+                    } else if (log_y == log_endy) {
+                        _ = _drawStr(log_endx - 11, log_y - 1, log_endx, " $p-- PgDn --$.", .{}, .{});
+                        break;
+                    }
+                }
+            } else {
+                _ = _drawStr(log_startx, log_starty, log_endx, "Your inventory is empty.", .{}, .{});
+            }
         }
 
         termbox.tb_present();
@@ -1040,9 +1088,9 @@ pub fn drawInventoryScreen() bool {
                     },
                     termbox.TB_KEY_ARROW_UP,
                     termbox.TB_KEY_ARROW_RIGHT,
-                    => if (chosen > 0) {
-                        chosen -= 1;
-                    },
+                    => chosen -|= 1,
+                    termbox.TB_KEY_PGUP => desc_scroll -|= 1,
+                    termbox.TB_KEY_PGDN => desc_scroll += 1,
                     termbox.TB_KEY_CTRL_C,
                     termbox.TB_KEY_CTRL_G,
                     termbox.TB_KEY_ESC,
