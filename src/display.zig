@@ -187,6 +187,8 @@ const DrawStrOpts = struct {
 //     $G       fg = DARK_GREY
 //     $c       fg = LIGHT_CONCRETE
 //     $p       fg = PINK
+//     $b       fg = LIGHT_STEEL_BLUE
+//     $r       fg = PALE_VIOLET_RED
 //     $.       reset fg and bg to defaults
 fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args: anytype, opts: DrawStrOpts) isize {
     const termbox_width = termbox.tb_width();
@@ -228,6 +230,8 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
                     'G' => fg = colors.DARK_GREY,
                     'c' => fg = colors.LIGHT_CONCRETE,
                     'p' => fg = colors.PINK,
+                    'b' => fg = colors.LIGHT_STEEL_BLUE,
+                    'r' => fg = colors.PALE_VIOLET_RED,
                     else => err.bug("Found unknown escape sequence", .{}),
                 }
                 continue;
@@ -316,16 +320,6 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     //     const spd = @intToFloat(f64, state.player.speed());
     //     break :b (spd * @intToFloat(f64, lastaction.cost())) / 100.0 / 10.0;
     // } else 0.0;
-    const spotted = b: for (moblist) |mob| {
-        if (!mob.no_show_fov and mob.ai.is_combative and mob.isHostileTo(state.player)) {
-            for (mob.enemies.items) |enemyrecord| {
-                if (enemyrecord.mob == state.player) {
-                    break :b true;
-                }
-            }
-        }
-    } else false;
-    const light = state.dungeon.lightAt(state.player.coord).*;
 
     var y = starty;
     while (y < endy) : (y += 1) _clear_line(startx, endx, y);
@@ -393,36 +387,26 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     const sneak = @intCast(usize, state.player.stat(.Sneak));
     const is_walking = state.player.turnsSpentMoving() >= sneak;
     _draw_bar(y, startx, endx, math.min(sneak, state.player.turnsSpentMoving()), sneak, if (is_walking) "walking" else "sneaking", if (is_walking) 0x45772e else 0x25570e, 0xffffff);
-    y += 1;
-
-    _draw_bar(
-        y,
-        startx,
-        endx,
-        if (light) 1 else 0,
-        1,
-        if (light) "lit" else "shadowed",
-        0x776644,
-        0xffffff,
-    );
-    y += 1;
-
-    if (state.player.isFlanked()) {
-        _draw_bar(y, startx, endx, 1, 1, "flanked", 0x773037, 0xffffff);
-        y += 1;
-    }
-
-    _draw_bar(
-        y,
-        startx,
-        endx,
-        1,
-        1,
-        if (spotted) "spotted" else "unseen",
-        if (spotted) 0x99bbcc else 0x222222,
-        if (spotted) 0x222222 else 0xcccccc,
-    );
     y += 2;
+
+    const light = state.dungeon.lightAt(state.player.coord).*;
+    const flanked = state.player.isFlanked();
+    const spotted = b: for (moblist) |mob| {
+        if (!mob.no_show_fov and mob.ai.is_combative and mob.isHostileTo(state.player)) {
+            for (mob.enemies.items) |enemyrecord|
+                if (enemyrecord.mob == state.player) break :b true;
+        }
+    } else false;
+
+    const lit_str = if (light) "Lit " else "";
+    const flanked_str = if (flanked) "Flanked " else "";
+    const spotted_str = if (spotted) "Spotted " else "";
+
+    y = _drawStr(startx, y, endx, "$c{s}$.$b{s}$.$r{s}$.", .{
+        lit_str, spotted_str, flanked_str,
+    }, .{});
+
+    y += 1;
 
     y = _drawStr(startx, y, endx, "$cturns:$. {}", .{state.ticks}, .{});
     y += 1;
