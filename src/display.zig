@@ -1109,13 +1109,13 @@ pub fn drawInventoryScreen() bool {
                 switch (ev.ch) {
                     'd' => if (chosen_itemlist == .Pack) {
                         if (itemlist_len > 0)
-                            return player.dropItem(chosen);
+                            if (player.dropItem(chosen)) return true;
                     } else {
                         drawAlert("You can't drop that!", .{});
                     },
                     't' => if (chosen_itemlist == .Pack) {
                         if (itemlist_len > 0)
-                            return player.throwItem(chosen);
+                            if (player.throwItem(chosen)) return true;
                     } else {
                         drawAlert("You can't throw that!", .{});
                     },
