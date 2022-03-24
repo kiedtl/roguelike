@@ -184,6 +184,29 @@ fn _clear_line(from: isize, to: isize, y: isize) void {
     _clearLineWith(from, to, y, ' ', 0, colors.BG);
 }
 
+pub fn _drawBorder(color: u32, d: Dimension) void {
+    var y = d.starty;
+    while (y <= d.endy) : (y += 1) {
+        var x = d.startx;
+        while (x <= d.endx) : (x += 1) {
+            if (y != d.starty and y != d.endy and x != d.startx and x != d.endx) {
+                continue;
+            }
+
+            const char: u21 = if (y == d.starty or y == d.endy) '─' else '│';
+            termbox.tb_change_cell(x, y, char, color, colors.BG);
+        }
+    }
+
+    // Fix corners
+    termbox.tb_change_cell(d.startx, d.starty, '╭', color, colors.BG);
+    termbox.tb_change_cell(d.endx, d.starty, '╮', color, colors.BG);
+    termbox.tb_change_cell(d.startx, d.endy, '╰', color, colors.BG);
+    termbox.tb_change_cell(d.endx, d.endy, '╯', color, colors.BG);
+
+    termbox.tb_present();
+}
+
 const DrawStrOpts = struct {
     bg: ?u32 = colors.BG,
     fg: u32 = 0xe6e6e6,
@@ -467,9 +490,8 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
 fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
     var y = starty;
 
-    while (y < endy) : (y += 1) {
-        _clear_line(startx, endx, y);
-    }
+    // Clear window.
+    while (y < endy) : (y += 1) _clear_line(startx, endx, y);
     y = starty;
 
     if (state.messages.items.len == 0)
@@ -563,8 +585,10 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
                     const memt = state.memory.get(coord) orelse unreachable;
                     tile = .{ .fg = memt.fg, .bg = memt.bg, .ch = memt.ch };
 
-                    tile.fg = colors.darken(colors.filterGrayscale(tile.fg), 4);
                     tile.bg = colors.darken(colors.filterGrayscale(tile.bg), 4);
+                    tile.fg = colors.darken(colors.filterGrayscale(tile.fg), 4);
+
+                    if (tile.bg < colors.BG) tile.bg = colors.BG;
                 }
 
                 // Can we hear anything
@@ -1124,32 +1148,6 @@ pub fn drawAlert(comptime fmt: []const u8, args: anytype) void {
     std.fmt.format(fbs.writer(), fmt, args) catch err.bug("format error!", .{});
     const str = fbs.getWritten();
 
-    const S = struct {
-        pub fn _drawBorder(color: u32, d: Dimension) void {
-            {
-                var y = d.starty;
-                while (y <= d.endy) : (y += 1) {
-                    var x = d.startx;
-                    while (x <= d.endx) : (x += 1) {
-                        if (y != d.starty and y != d.endy and x != d.startx and x != d.endx) {
-                            continue;
-                        }
-                        const char: u21 = if (y == d.starty or y == d.endy) '─' else '│';
-                        termbox.tb_change_cell(x, y, char, color, colors.BG);
-                    }
-                }
-            }
-
-            // Fix corners
-            termbox.tb_change_cell(d.startx, d.starty, '╭', color, colors.BG); // NW
-            termbox.tb_change_cell(d.endx, d.starty, '╮', color, colors.BG); // NE
-            termbox.tb_change_cell(d.startx, d.endy, '╰', color, colors.BG); // SW
-            termbox.tb_change_cell(d.endx, d.endy, '╯', color, colors.BG); // SE
-
-            termbox.tb_present();
-        }
-    };
-
     const linewidth = @intCast(usize, (wind.endx - wind.startx) - 4);
     var folded_text = StackBuffer([]const u8, 32).init(null);
     var fold_iter = utils.FoldedTextIterator.init(str, linewidth);
@@ -1174,15 +1172,15 @@ pub fn drawAlert(comptime fmt: []const u8, args: anytype) void {
 
     termbox.tb_present();
 
-    S._drawBorder(colors.CONCRETE, wind);
+    _drawBorder(colors.CONCRETE, wind);
     std.time.sleep(150_000_000);
-    S._drawBorder(colors.BG, wind);
+    _drawBorder(colors.BG, wind);
     std.time.sleep(150_000_000);
-    S._drawBorder(colors.CONCRETE, wind);
+    _drawBorder(colors.CONCRETE, wind);
     std.time.sleep(150_000_000);
-    S._drawBorder(colors.BG, wind);
+    _drawBorder(colors.BG, wind);
     std.time.sleep(150_000_000);
-    S._drawBorder(colors.CONCRETE, wind);
+    _drawBorder(colors.CONCRETE, wind);
     std.time.sleep(400_000_000);
 }
 

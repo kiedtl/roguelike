@@ -1039,7 +1039,7 @@ pub const Status = enum {
         const xstart = state.player.coord.x -| radius;
         const xend = math.min(state.player.coord.x + radius, WIDTH);
 
-        var tile: state.MemoryTile = .{ .fg = 0xffffff, .ch = '#', .type = .Echolocated };
+        var tile: state.MemoryTile = .{ .fg = 0xffffff, .bg = colors.BG, .ch = '#', .type = .Echolocated };
 
         var y: usize = ystart;
         while (y < yend) : (y += 1) {
