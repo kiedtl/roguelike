@@ -660,6 +660,8 @@ pub fn draw() void {
 }
 
 pub fn chooseCell() ?Coord {
+    const mainw = dimensions(.Main);
+
     // TODO: do some tests and figure out what's the practical limit to memory
     // usage, and reduce the buffer's size to that.
     var membuf: [65535]u8 = undefined;
@@ -669,19 +671,35 @@ pub fn chooseCell() ?Coord {
 
     var coord: Coord = state.player.coord;
 
-    const playery = @intCast(isize, state.player.coord.y);
-    const playerx = @intCast(isize, state.player.coord.x);
-
-    const height = termbox.tb_height() - 1;
-    const width = termbox.tb_width() - 1;
-
-    const starty = playery - @divFloor(height, 2);
-    const startx = playerx - @divFloor(width, 2);
-
-    drawMap(moblist.items, 0, width, 0, height);
-    termbox.tb_present();
-
     while (true) {
+        drawMap(moblist.items, mainw.startx, mainw.endx, mainw.starty, mainw.endy);
+
+        const display_x = mainw.startx + @intCast(isize, coord.x);
+        const display_y = mainw.starty + @intCast(isize, coord.y);
+        termbox.tb_change_cell(display_x - 1, display_y - 1, '╭', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x + 0, display_y - 1, '─', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y - 1, '╮', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x - 1, display_y + 0, '│', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y + 0, '│', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x - 1, display_y + 1, '╰', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x + 0, display_y + 1, '─', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y + 1, '╯', colors.CONCRETE, colors.BG);
+
+        termbox.tb_present();
+
+        // This is a bit of a hack, erase the bordering but don't present the
+        // changes, so that if the user moves to the edge of the map and then moves
+        // away, there won't be bordering left as an artifact (as the map drawing
+        // routines won't erase it, since it's outside its window).
+        termbox.tb_change_cell(display_x - 1, display_y - 1, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x + 0, display_y - 1, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y - 1, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x - 1, display_y + 0, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y + 0, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x - 1, display_y + 1, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x + 0, display_y + 1, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y + 1, ' ', 0, colors.BG);
+
         var ev: termbox.tb_event = undefined;
         const t = termbox.tb_poll_event(&ev);
 
@@ -710,19 +728,6 @@ pub fn chooseCell() ?Coord {
                 }
             } else unreachable;
         }
-
-        drawMap(moblist.items, 0, width, 0, height);
-
-        const relcoordx = @intCast(usize, @intCast(isize, coord.x) - startx);
-        const relcoordy = @intCast(usize, @intCast(isize, coord.y) - starty);
-        const adjcoord = (relcoordy * @intCast(usize, termbox.tb_width())) + relcoordx;
-        const coordtile = &termbox.tb_cell_buffer()[adjcoord];
-
-        const tmp = coordtile.bg;
-        coordtile.bg = coordtile.fg;
-        coordtile.fg = tmp;
-
-        termbox.tb_present();
     }
 }
 
