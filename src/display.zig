@@ -167,7 +167,7 @@ pub fn dimensions(w: DisplayWindow) Dimension {
 
 fn _clearLineWith(from: isize, to: isize, y: isize, ch: u32, fg: u32, bg: u32) void {
     var x = from;
-    while (x < to) : (x += 1)
+    while (x <= to) : (x += 1)
         termbox.tb_change_cell(x, y, ch, fg, bg);
 }
 
@@ -491,7 +491,7 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
     var y = starty;
 
     // Clear window.
-    while (y < endy) : (y += 1) _clear_line(startx, endx, y);
+    while (y <= endy) : (y += 1) _clear_line(startx, endx, y);
     y = starty;
 
     if (state.messages.items.len == 0)
