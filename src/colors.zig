@@ -14,7 +14,7 @@ pub const DOBALENE_BLUE: u32 = 0xb5d0ff;
 pub const LIGHT_STEEL_BLUE: u32 = 0xb0c4de;
 pub const PALE_VIOLET_RED: u32 = 0xdb7093;
 
-pub const BG: u32 = darken(CONCRETE, 6);
+pub const BG: u32 = percentageOf(CONCRETE, 3);
 
 // Interpolate linearly between two vals.
 //

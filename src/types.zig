@@ -3198,16 +3198,17 @@ pub const Tile = struct {
             .Wall => cell = .{
                 .ch = materials.tileFor(coord, self.material.tileset),
                 .fg = self.material.color_fg,
-                .bg = self.material.color_bg orelse 0x000000,
+                .bg = self.material.color_bg orelse colors.BG,
             },
             .Floor => {
                 cell.ch = self.terrain.tile;
                 cell.fg = self.terrain.color;
+                cell.bg = colors.BG;
             },
         }
 
         if (self.broken) {
-            cell.bg = 0x000000;
+            cell.bg = colors.BG;
 
             const chars = [_]u32{ '`', ',', '^', '\'', '*', '"' };
             if (self.rand % 100 < 15) {

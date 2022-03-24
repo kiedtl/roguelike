@@ -113,14 +113,14 @@ pub fn deinit() !void {
 }
 
 pub const DisplayWindow = enum { PlayerInfo, Main, EnemyInfo, Log };
-pub const Dimension = struct { from: Coord, to: Coord, width: usize, height: usize };
+pub const Dimension = struct { startx: isize, endx: isize, starty: isize, endy: isize };
 
 pub fn dimensions(w: DisplayWindow) Dimension {
-    const height = @intCast(usize, termbox.tb_height());
-    const width = @intCast(usize, termbox.tb_width());
+    const height = termbox.tb_height();
+    const width = termbox.tb_width();
 
     const playerinfo_width = LEFT_INFO_WIDTH;
-    const enemyinfo_width = RIGHT_INFO_WIDTH;
+    //const enemyinfo_width = RIGHT_INFO_WIDTH;
 
     const playerinfo_start = 1;
     const main_start = playerinfo_start + playerinfo_width + 1;
@@ -131,28 +131,36 @@ pub fn dimensions(w: DisplayWindow) Dimension {
 
     return switch (w) {
         .PlayerInfo => .{
-            .from = Coord.new(playerinfo_start, 0),
-            .to = Coord.new(playerinfo_start + playerinfo_width, height - 1),
-            .width = playerinfo_width,
-            .height = height - 1,
+            .startx = playerinfo_start,
+            .endx = playerinfo_start + playerinfo_width,
+            .starty = 0,
+            .endy = height - 1,
+            //.width = playerinfo_width,
+            //.height = height - 1,
         },
         .Main => .{
-            .from = Coord.new(main_start, 1),
-            .to = Coord.new(main_start + main_width, main_height + 2),
-            .width = main_width,
-            .height = main_height,
+            .startx = main_start,
+            .endx = main_start + main_width,
+            .starty = 1,
+            .endy = main_height + 2,
+            //.width = main_width,
+            //.height = main_height,
         },
         .EnemyInfo => .{
-            .from = Coord.new(enemyinfo_start, 1),
-            .to = Coord.new(width - 1, height - 1),
-            .width = math.max(enemyinfo_width, width - enemyinfo_start),
-            .height = height - 1,
+            .startx = enemyinfo_start,
+            .endx = width - 1,
+            .starty = 1,
+            .endy = height - 1,
+            //.width = math.max(enemyinfo_width, width - enemyinfo_start),
+            //.height = height - 1,
         },
         .Log => .{
-            .from = Coord.new(log_start, 2 + main_height),
-            .to = Coord.new(log_start + main_width, height - 1),
-            .width = main_width,
-            .height = math.max(LOG_HEIGHT, height - (2 + main_height) - 1),
+            .startx = log_start,
+            .endx = log_start + main_width,
+            .starty = 2 + main_height,
+            .endy = height - 1,
+            //.width = main_width,
+            //.height = math.max(LOG_HEIGHT, height - (2 + main_height) - 1),
         },
     };
 }
@@ -169,15 +177,15 @@ pub fn clearScreen() void {
 
     var y: isize = 0;
     while (y < height) : (y += 1)
-        _clearLineWith(0, width, y, ' ', colors.BG, 0);
+        _clearLineWith(0, width, y, ' ', 0, colors.BG);
 }
 
 fn _clear_line(from: isize, to: isize, y: isize) void {
-    _clearLineWith(from, to, y, ' ', 0xffffff, 0x000000);
+    _clearLineWith(from, to, y, ' ', 0, colors.BG);
 }
 
 const DrawStrOpts = struct {
-    bg: ?u32 = 0x000000,
+    bg: ?u32 = colors.BG,
     fg: u32 = 0xe6e6e6,
     fold: bool = false,
 };
@@ -541,7 +549,7 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
         }) {
             // if out of bounds on the map, draw a black tile
             if (y < 0 or x < 0 or y >= HEIGHT or x >= WIDTH) {
-                termbox.tb_change_cell(cursorx, cursory, ' ', 0xffffff, 0);
+                termbox.tb_change_cell(cursorx, cursory, ' ', 0, colors.BG);
                 continue;
             }
 
@@ -554,15 +562,15 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
             // if player can't see area, draw a blank/grey tile, depending on
             // what they saw last there
             if (!state.player.cansee(coord)) {
-                tile = .{ .fg = 0xffffff, .bg = 0, .ch = ' ' };
+                tile = .{ .fg = 0, .bg = colors.BG, .ch = ' ' };
 
                 if (state.memory.contains(coord)) {
                     const memt = state.memory.get(coord) orelse unreachable;
                     tile = .{ .fg = memt.fg, .bg = memt.bg, .ch = memt.ch };
-                }
 
-                tile.fg = colors.darken(colors.filterGrayscale(tile.fg), 4);
-                tile.bg = colors.darken(colors.filterGrayscale(tile.bg), 4);
+                    tile.fg = colors.darken(colors.filterGrayscale(tile.fg), 4);
+                    tile.bg = colors.darken(colors.filterGrayscale(tile.bg), 4);
+                }
 
                 // Can we hear anything
                 if (state.player.canHear(coord)) |noise| if (noise.state == .New) {
@@ -619,38 +627,15 @@ pub fn draw() void {
 
     const moblist = state.createMobList(false, true, state.player.coord.z, fba.allocator());
 
-    const playerinfo_window = dimensions(.PlayerInfo);
-    const main_window = dimensions(.Main);
-    const enemyinfo_window = dimensions(.EnemyInfo);
+    const pinfo_win = dimensions(.PlayerInfo);
+    const main_win = dimensions(.Main);
+    const einfo_win = dimensions(.EnemyInfo);
     const log_window = dimensions(.Log);
 
-    drawPlayerInfo(
-        moblist.items,
-        @intCast(isize, playerinfo_window.from.x),
-        @intCast(isize, playerinfo_window.from.y),
-        @intCast(isize, playerinfo_window.to.x),
-        @intCast(isize, playerinfo_window.to.y),
-    );
-    drawMap(
-        moblist.items,
-        @intCast(isize, main_window.from.x),
-        @intCast(isize, main_window.to.x),
-        @intCast(isize, main_window.from.y),
-        @intCast(isize, main_window.to.y),
-    );
-    drawEnemyInfo(
-        moblist.items,
-        @intCast(isize, enemyinfo_window.from.x),
-        @intCast(isize, enemyinfo_window.from.y),
-        @intCast(isize, enemyinfo_window.to.x),
-        @intCast(isize, enemyinfo_window.to.y),
-    );
-    drawLog(
-        @intCast(isize, log_window.from.x),
-        @intCast(isize, log_window.to.x),
-        @intCast(isize, log_window.from.y),
-        @intCast(isize, log_window.to.y),
-    );
+    drawPlayerInfo(moblist.items, pinfo_win.startx, pinfo_win.starty, pinfo_win.endx, pinfo_win.endy);
+    drawMap(moblist.items, main_win.startx, main_win.endx, main_win.starty, main_win.endy);
+    drawEnemyInfo(moblist.items, einfo_win.startx, einfo_win.starty, einfo_win.endx, einfo_win.endy);
+    drawLog(log_window.startx, log_window.endx, log_window.starty, log_window.endy);
 
     termbox.tb_present();
 }
@@ -958,46 +943,62 @@ pub fn drawInventoryScreen() bool {
 
     const moblist = state.createMobList(false, true, state.player.coord.z, fba.allocator());
 
-    clearScreen();
+    const ItemListType = enum { Pack, Equip };
 
     var desc_scroll: usize = 0;
     var chosen: usize = 0;
+    var chosen_itemlist: ItemListType = .Pack;
     var y: isize = 0;
 
     while (true) {
-        drawPlayerInfo(
-            moblist.items,
-            @intCast(isize, playerinfo_window.from.x),
-            @intCast(isize, playerinfo_window.from.y),
-            @intCast(isize, playerinfo_window.to.x),
-            @intCast(isize, playerinfo_window.to.y),
-        );
+        clearScreen();
 
-        y = @intCast(isize, main_window.from.y);
-        const x = @intCast(isize, main_window.from.x);
-        const endx = @intCast(isize, main_window.to.x);
+        drawPlayerInfo(moblist.items, playerinfo_window.startx, playerinfo_window.starty, playerinfo_window.endx, playerinfo_window.endy);
 
-        const inventory_len = state.player.inventory.pack.len;
+        const starty = main_window.starty;
+        const x = main_window.startx;
+        const endx = main_window.endx;
+
+        const itemlist_len = if (chosen_itemlist == .Pack) state.player.inventory.pack.len else state.player.inventory.equ_slots.len;
+        const chosen_item: ?Item = if (chosen_itemlist == .Pack) state.player.inventory.pack.data[chosen] else state.player.inventory.equ_slots[chosen];
 
         // Draw list of items
         {
+            y = starty;
             for (state.player.inventory.pack.constSlice()) |item, i| {
-                const name = (item.longName() catch err.wat()).constSlice();
-                const color = if (i == chosen) colors.LIGHT_CONCRETE else colors.GREY;
+                const startx = x;
 
-                _clear_line(x, endx, y);
-                y = _drawStr(x, y, endx, "{s} {s}", .{
-                    if (i == chosen) ">" else " ", name,
-                }, .{ .fg = color });
+                const name = (item.longName() catch err.wat()).constSlice();
+                const color = if (i == chosen and chosen_itemlist == .Pack) colors.LIGHT_CONCRETE else colors.GREY;
+                const arrow = if (i == chosen and chosen_itemlist == .Pack) ">" else " ";
+                _clear_line(startx, endx, y);
+                y = _drawStr(startx, y, endx, "{s} {s}", .{ arrow, name }, .{ .fg = color });
+            }
+
+            y = starty;
+            inline for (@typeInfo(Mob.Inventory.EquSlot).Enum.fields) |slots_f, i| {
+                const startx = endx - @divTrunc(endx - x, 2);
+                const slot = @intToEnum(Mob.Inventory.EquSlot, slots_f.value);
+                const arrow = if (i == chosen and chosen_itemlist == .Equip) ">" else " ";
+                const color = if (i == chosen and chosen_itemlist == .Equip) colors.LIGHT_CONCRETE else colors.GREY;
+
+                _clear_line(startx, endx, y);
+
+                if (state.player.inventory.equipment(slot).*) |item| {
+                    const name = (item.longName() catch unreachable).constSlice();
+                    y = _drawStr(startx, y, endx, "{s} {s: >6}: {s}", .{ arrow, slot.name(), name }, .{ .fg = color });
+                } else {
+                    y = _drawStr(startx, y, endx, "{s} {s: >6}:", .{ arrow, slot.name() }, .{ .fg = color });
+                }
             }
         }
 
         // Draw item info
-        if (inventory_len > 0) {
-            const ii_startx = @intCast(isize, iteminfo_window.from.x);
-            const ii_endx = @intCast(isize, iteminfo_window.to.x);
-            const ii_starty = @intCast(isize, iteminfo_window.from.y);
-            const ii_endy = @intCast(isize, iteminfo_window.to.y);
+        if (chosen_item != null and itemlist_len > 0) {
+            const ii_startx = iteminfo_window.startx;
+            const ii_endx = iteminfo_window.endx;
+            const ii_starty = iteminfo_window.starty;
+            const ii_endy = iteminfo_window.endy;
 
             var ii_y = ii_starty;
             while (ii_y < ii_endy) : (ii_y += 1)
@@ -1007,31 +1008,27 @@ pub fn drawInventoryScreen() bool {
             var descbuf_stream = io.fixedBufferStream(&descbuf);
             _getItemDescription(
                 descbuf_stream.writer(),
-                state.player.inventory.pack.data[chosen],
+                chosen_item.?,
                 RIGHT_INFO_WIDTH - 1,
             );
             _ = _drawStr(ii_startx, ii_starty, ii_endx, "{s}", .{descbuf_stream.getWritten()}, .{});
         }
 
         // Draw item description
-        {
-            const log_startx = @intCast(isize, log_window.from.x);
-            const log_endx = @intCast(isize, log_window.to.x);
-            const log_starty = @intCast(isize, log_window.from.y);
-            const log_endy = @intCast(isize, log_window.to.y);
+        if (chosen_item != null) {
+            const log_startx = log_window.startx;
+            const log_endx = log_window.endx;
+            const log_starty = log_window.starty;
+            const log_endy = log_window.endy;
 
-            if (inventory_len > 0) {
-                const id = state.player.inventory.pack.data[chosen].id();
+            if (itemlist_len > 0) {
+                const id = chosen_item.?.id();
                 const default_desc = "(Missing description)";
                 const desc: []const u8 = if (id) |i_id| state.descriptions.get(i_id) orelse default_desc else default_desc;
 
                 var log_y = log_starty;
                 var scroll: usize = 0;
                 const linewidth = @intCast(usize, log_endx - log_startx);
-
-                while (log_y < log_endy) : (log_y += 1)
-                    _clear_line(log_startx, log_endx, log_y);
-                log_y = log_starty;
 
                 var fold_iter = utils.FoldedTextIterator.init(desc, linewidth);
                 while (fold_iter.next()) |line| {
@@ -1064,14 +1061,18 @@ pub fn drawInventoryScreen() bool {
         if (t == termbox.TB_EVENT_KEY) {
             if (ev.key != 0) {
                 switch (ev.key) {
-                    termbox.TB_KEY_ARROW_DOWN,
-                    termbox.TB_KEY_ARROW_LEFT,
-                    => if (chosen < inventory_len - 1) {
+                    termbox.TB_KEY_ARROW_RIGHT => {
+                        chosen_itemlist = .Equip;
+                        chosen = 0;
+                    },
+                    termbox.TB_KEY_ARROW_LEFT => {
+                        chosen_itemlist = .Pack;
+                        chosen = 0;
+                    },
+                    termbox.TB_KEY_ARROW_DOWN => if (chosen < itemlist_len - 1) {
                         chosen += 1;
                     },
-                    termbox.TB_KEY_ARROW_UP,
-                    termbox.TB_KEY_ARROW_RIGHT,
-                    => chosen -|= 1,
+                    termbox.TB_KEY_ARROW_UP => chosen -|= 1,
                     termbox.TB_KEY_PGUP => desc_scroll -|= 1,
                     termbox.TB_KEY_PGDN => desc_scroll += 1,
                     termbox.TB_KEY_CTRL_C,
@@ -1080,21 +1081,37 @@ pub fn drawInventoryScreen() bool {
                     => return false,
                     termbox.TB_KEY_SPACE,
                     termbox.TB_KEY_ENTER,
-                    => if (inventory_len > 0)
+                    => if (itemlist_len > 0)
                         return player.useItem(chosen),
                     else => {},
                 }
                 continue;
             } else if (ev.ch != 0) {
                 switch (ev.ch) {
-                    'd' => if (inventory_len > 0)
-                        return player.dropItem(chosen),
-                    't' => if (inventory_len > 0)
-                        return player.throwItem(chosen),
-                    'j', 'h' => if (chosen < inventory_len - 1) {
+                    'd' => if (chosen_itemlist == .Pack) {
+                        if (itemlist_len > 0)
+                            return player.dropItem(chosen);
+                    } else {
+                        drawAlert("You can't drop that!", .{});
+                    },
+                    't' => if (chosen_itemlist == .Pack) {
+                        if (itemlist_len > 0)
+                            return player.throwItem(chosen);
+                    } else {
+                        drawAlert("You can't throw that!", .{});
+                    },
+                    'l' => {
+                        chosen_itemlist = .Equip;
+                        chosen = 0;
+                    },
+                    'h' => {
+                        chosen_itemlist = .Pack;
+                        chosen = 0;
+                    },
+                    'j' => if (chosen < itemlist_len - 1) {
                         chosen += 1;
                     },
-                    'k', 'l' => if (chosen > 0) {
+                    'k' => if (chosen > 0) {
                         chosen -= 1;
                     },
                     else => {},
@@ -1102,4 +1119,74 @@ pub fn drawInventoryScreen() bool {
             } else unreachable;
         }
     }
+}
+
+pub fn drawAlert(comptime fmt: []const u8, args: anytype) void {
+    const wind = dimensions(.Log);
+
+    var buf: [65535]u8 = undefined;
+    var fbs = std.io.fixedBufferStream(&buf);
+    std.fmt.format(fbs.writer(), fmt, args) catch err.bug("format error!", .{});
+    const str = fbs.getWritten();
+
+    const S = struct {
+        pub fn _drawBorder(color: u32, d: Dimension) void {
+            {
+                var y = d.starty;
+                while (y <= d.endy) : (y += 1) {
+                    var x = d.startx;
+                    while (x <= d.endx) : (x += 1) {
+                        if (y != d.starty and y != d.endy and x != d.startx and x != d.endx) {
+                            continue;
+                        }
+                        const char: u21 = if (y == d.starty or y == d.endy) '─' else '│';
+                        termbox.tb_change_cell(x, y, char, color, colors.BG);
+                    }
+                }
+            }
+
+            // Fix corners
+            termbox.tb_change_cell(d.startx, d.starty, '╭', color, colors.BG); // NW
+            termbox.tb_change_cell(d.endx, d.starty, '╮', color, colors.BG); // NE
+            termbox.tb_change_cell(d.startx, d.endy, '╰', color, colors.BG); // SW
+            termbox.tb_change_cell(d.endx, d.endy, '╯', color, colors.BG); // SE
+
+            termbox.tb_present();
+        }
+    };
+
+    const linewidth = @intCast(usize, (wind.endx - wind.startx) - 4);
+    var folded_text = StackBuffer([]const u8, 32).init(null);
+    var fold_iter = utils.FoldedTextIterator.init(str, linewidth);
+    while (fold_iter.next()) |line| folded_text.append(line) catch err.wat();
+
+    var y: isize = undefined;
+
+    // Clear log window
+    y = wind.starty;
+    while (y < wind.endy) : (y += 1) _clear_line(wind.startx, wind.endx, y);
+
+    const txt_starty = wind.endy -
+        @divTrunc(wind.endy - wind.starty, 2) -
+        @intCast(isize, folded_text.len + 1 / 2);
+    y = txt_starty;
+    for (folded_text.constSlice()) |line| {
+        const x = wind.endx -
+            @divTrunc(wind.endx - wind.startx, 2) -
+            @intCast(isize, line.len / 2);
+        y = _drawStr(x, y, wind.endx, "{s}", .{str}, .{});
+    }
+
+    termbox.tb_present();
+
+    S._drawBorder(colors.CONCRETE, wind);
+    std.time.sleep(150_000_000);
+    S._drawBorder(colors.BG, wind);
+    std.time.sleep(150_000_000);
+    S._drawBorder(colors.CONCRETE, wind);
+    std.time.sleep(150_000_000);
+    S._drawBorder(colors.BG, wind);
+    std.time.sleep(150_000_000);
+    S._drawBorder(colors.CONCRETE, wind);
+    std.time.sleep(400_000_000);
 }
