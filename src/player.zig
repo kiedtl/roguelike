@@ -246,7 +246,7 @@ pub fn moveOrFight(direction: Direction) bool {
     const current = state.player.coord;
 
     if (direction.is_diagonal() and state.player.isUnderStatus(.Confusion) != null) {
-        state.message(.MetaError, "You cannot move diagonally whilst confused!", .{});
+        display.drawAlertThenLog("You cannot move diagonally whilst confused!", .{});
         return false;
     }
 
@@ -287,7 +287,7 @@ pub fn moveOrFight(direction: Direction) bool {
 
 pub fn grabItem() bool {
     if (state.player.inventory.pack.isFull()) {
-        state.message(.MetaError, "Your pack is full.", .{});
+        display.drawAlertThenLog("Your pack is full!", .{});
         return false;
     }
 
@@ -297,7 +297,7 @@ pub fn grabItem() bool {
         switch (surface) {
             .Container => |container| {
                 if (container.items.len == 0) {
-                    state.message(.MetaError, "There's nothing in the {s}.", .{container.name});
+                    display.drawAlertThenLog("There's nothing in the {s}.", .{container.name});
                     return false;
                 } else {
                     const index = display.chooseInventoryItem(
@@ -314,7 +314,7 @@ pub fn grabItem() bool {
     if (state.dungeon.itemsAt(state.player.coord).last()) |_| {
         item = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
     } else {
-        state.message(.MetaError, "There's nothing here.", .{});
+        display.drawAlertThenLog("There's nothing here.", .{});
         return false;
     }
 
@@ -356,7 +356,7 @@ pub fn throwItem(index: usize) bool {
         _ = state.player.removeItem(index) catch err.wat();
         return true;
     } else {
-        state.message(.MetaError, "You can't throw that.", .{});
+        display.drawAlertThenLog("You can't throw that.", .{});
         return false;
     }
 }
@@ -368,7 +368,7 @@ pub fn activateSurfaceItem() bool {
             mach = m;
         },
         else => {
-            state.message(.MetaError, "There's nothing here to activate.", .{});
+            display.drawAlertThenLog("There's nothing here to activate.", .{});
             return false;
         },
     };
@@ -376,9 +376,9 @@ pub fn activateSurfaceItem() bool {
     const interaction = &mach.interact1.?;
     mach.evoke(state.player, interaction) catch |e| {
         switch (e) {
-            error.NotPowered => state.message(.MetaError, "The {s} has no power!", .{mach.name}),
-            error.UsedMax => state.message(.MetaError, "You can't use {s} anymore.", .{mach.name}),
-            error.NoEffect => state.message(.MetaError, "{s}", .{interaction.no_effect_msg}),
+            error.NotPowered => display.drawAlertThenLog("The {s} has no power!", .{mach.name}),
+            error.UsedMax => display.drawAlertThenLog("You can't use {s} anymore.", .{mach.name}),
+            error.NoEffect => display.drawAlertThenLog("{s}", .{interaction.no_effect_msg}),
         }
         return false;
     };
@@ -406,13 +406,13 @@ pub fn useItem(index: usize) bool {
             // ring, not knowing that there's no such thing.
             //
             // FIXME: so this message can definitely be improved...
-            state.message(.MetaError, "Are you three?", .{});
+            display.drawAlertThenLog("Are you three?", .{});
             return false;
         },
         .Armor, .Cloak, .Weapon => err.wat(),
         .Potion => |p| {
             if (state.player.isUnderStatus(.Nausea) != null) {
-                state.message(.MetaError, "You can't drink potions while nauseated!", .{});
+                display.drawAlertThenLog("You can't drink potions while nauseated!", .{});
                 return false;
             }
 
@@ -422,7 +422,7 @@ pub fn useItem(index: usize) bool {
         },
         .Vial => |_| err.todo(),
         .Projectile, .Boulder => {
-            state.message(.MetaError, "You want to *eat* that?", .{});
+            display.drawAlertThenLog("You want to *eat* that?", .{});
             return false;
         },
         .Prop => |p| {
@@ -432,7 +432,7 @@ pub fn useItem(index: usize) bool {
         .Evocable => |v| {
             v.evoke(state.player) catch |e| {
                 if (e == error.NoCharges) {
-                    state.message(.MetaError, "You can't use the {s} anymore!", .{v.name});
+                    display.drawAlertThenLog("You can't use the {s} anymore!", .{v.name});
                 }
                 return false;
             };
@@ -468,7 +468,7 @@ pub fn dropItem(index: usize) bool {
         });
         return true;
     } else {
-        state.message(.MetaError, "There's no nearby space to drop items.", .{});
+        display.drawAlertThenLog("There's no nearby space to drop items.", .{});
         return false;
     }
 }

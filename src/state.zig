@@ -684,15 +684,10 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
             const msg = messages.items[i];
             const msgtext = utils.used(msg.msg);
 
-            const prefix: []const u8 = switch (msg.type) {
-                .MetaError => "ERROR: ",
-                else => "",
-            };
-
             if (msg.dups == 0) {
-                try w.print("- {s}{s}\n", .{ prefix, msgtext });
+                try w.print("- {s}\n", .{msgtext});
             } else {
-                try w.print("- {s}{s} (×{})\n", .{ prefix, msgtext, msg.dups + 1 });
+                try w.print("- {s} (×{})\n", .{ msgtext, msg.dups + 1 });
             }
         }
     }

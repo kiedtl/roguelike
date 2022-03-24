@@ -206,16 +206,16 @@ fn _triggerHammerEvoc(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
 
     const dest = display.chooseCell() orelse return error.BadPosition;
     if (dest.distance(mob.coord) > 1) {
-        state.message(.MetaError, "Your arms aren't that long!", .{});
+        display.drawAlertThenLog("Your arms aren't that long!", .{});
         return error.BadPosition;
     } else if (state.dungeon.at(dest).surface == null) {
-        state.message(.MetaError, "There's nothing there to break!", .{});
+        display.drawAlertThenLog("There's nothing there to break!", .{});
         return error.BadPosition;
     } else if (meta.activeTag(state.dungeon.at(dest).surface.?) != .Machine) {
-        state.message(.MetaError, "Smashing that would be a waste of time.", .{});
+        display.drawAlertThenLog("Smashing that would be a waste of time.", .{});
         return error.BadPosition;
     } else if (state.dungeon.at(dest).broken) {
-        state.message(.MetaError, "Some rogue already smashed that.", .{});
+        display.drawAlertThenLog("Some rogue already smashed that.", .{});
         return error.BadPosition;
     }
 
@@ -250,18 +250,18 @@ fn _triggerIronSpikeEvoc(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
 
     const dest = display.chooseCell() orelse return error.BadPosition;
     if (dest.distance(mob.coord) > 1) {
-        state.message(.MetaError, "Your arms aren't that long!", .{});
+        display.drawAlertThenLog("Your arms aren't that long!", .{});
         return error.BadPosition;
     } else if (state.dungeon.at(dest).surface == null) {
-        state.message(.MetaError, "There's nothing there to break!", .{});
+        display.drawAlertThenLog("There's nothing there to break!", .{});
         return error.BadPosition;
     } else if (meta.activeTag(state.dungeon.at(dest).surface.?) != .Machine or
         !state.dungeon.at(dest).surface.?.Machine.can_be_jammed)
     {
-        state.message(.MetaError, "You can't jam that!", .{});
+        display.drawAlertThenLog("You can't jam that!", .{});
         return error.BadPosition;
     } else if (state.dungeon.at(dest).surface.?.Machine.jammed) {
-        state.message(.MetaError, "That's already jammed!", .{});
+        display.drawAlertThenLog("That's already jammed!", .{});
         return error.BadPosition;
     }
 
@@ -286,7 +286,7 @@ fn _triggerMineKit(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
     assert(mob == state.player);
 
     if (state.dungeon.at(mob.coord).surface) |_| {
-        state.message(.MetaError, "You can't build a mine where you're standing.", .{});
+        display.drawAlertThenLog("You can't build a mine where you're standing.", .{});
         return error.BadPosition;
     }
 

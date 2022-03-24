@@ -487,20 +487,15 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
         else
             colors.darken(msg.type.color(), 2);
 
-        const prefix: []const u8 = switch (msg.type) {
-            .MetaError => "ERROR: ",
-            else => "",
-        };
-
         _clear_line(startx, endx, y);
 
         if (msg.dups == 0) {
-            y = _drawStr(startx, y, endx, "{s}{s}", .{
-                prefix, msgtext,
+            y = _drawStr(startx, y, endx, "{s}", .{
+                msgtext,
             }, .{ .fg = col, .fold = true });
         } else {
-            y = _drawStr(startx, y, endx, "{s}{s} (×{})", .{
-                prefix, msgtext, msg.dups + 1,
+            y = _drawStr(startx, y, endx, "{s} (×{})", .{
+                msgtext, msg.dups + 1,
             }, .{ .fg = col, .fold = true });
         }
     }
@@ -1189,4 +1184,10 @@ pub fn drawAlert(comptime fmt: []const u8, args: anytype) void {
     std.time.sleep(150_000_000);
     S._drawBorder(colors.CONCRETE, wind);
     std.time.sleep(400_000_000);
+}
+
+pub fn drawAlertThenLog(comptime fmt: []const u8, args: anytype) void {
+    const log_window = dimensions(.Log);
+    drawAlert(fmt, args);
+    drawLog(log_window.startx, log_window.endx, log_window.starty, log_window.endy);
 }

@@ -605,7 +605,6 @@ pub const Material = struct {
 
 pub const MessageType = union(enum) {
     Prompt, // Prompt for a choice/input, or respond to result from previous prompt
-    MetaError, // Player tried to do something invalid.
     Status, // A status effect was added or removed.
     Combat, // X hit you! You hit X!
     CombatUnimportant, // X missed you! You miss X!
@@ -618,7 +617,6 @@ pub const MessageType = union(enum) {
     pub fn color(self: MessageType) u32 {
         return switch (self) {
             .Prompt => 0x34cdff, // cyan blue
-            .MetaError => 0xffffff, // white
             .Info => 0xdadeda, // creamy white
             .Move => 0xdadeda, // creamy white
             .Trap => 0xed254d, // pinkish red
@@ -1822,7 +1820,7 @@ pub const Mob = struct { // {{{
                             player.triggerStair(dest, floor);
                             return true;
                         } else {
-                            state.message(.MetaError, "It's suicide to go back!", .{});
+                            display.drawAlertThenLog("It's suicide to go back!", .{});
                         }
                     },
                     else => {},
