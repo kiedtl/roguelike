@@ -326,6 +326,54 @@ x sneak         [move, move, rest, move]
 
 (See rings for other movement patterns.)
 
+Equipment
+---------
+(damages is after making all hps 1/4)
+
+weapons:
+- quarterstaff      4 damage                OpenMelee, Martial+, +20 Evade
+- battleaxe         5 damage   -15 Melee%   OpenMelee
+- knife             1 damage                Dip
+- dagger            2 damage   -15 Melee%   Dip, Martial
+  - Free attack that doesn't miss on 3rd consecutive non-missing attack
+- rapier            4 damage   -10 Melee%   Dip, +10 Evade, Riposte
+- stiletto          6 damage   -25 Melee%   Dip
+- mace              3 damage   +10 Melee%   Stun
+- morningstar       4 damage   +10 Melee%   Stun
+  - Lunge attack gives 3x damage instead of 2x.
+- knout             7 damage
+- club              2 damage
+- longsword         4 damage                Dip, +10 Evade
+  - "Parting shot" pattern gives 20% evade instead of 10%.
+- halberd           4 damage   +10 Melee%   Reach+
+
+body armor:
+- robe
+- martial robe      5% armor           Martial+
+- gambeson         15% armor   Sneak+
+- leather armor    20% armor           Martial-
+- hauberk          30% armor   Sneak--
+- slvlss hauberk   30% armor   Sneak-- OpenMelee
+- scale mail       25% armor   Sneak-  Martial-
+
+footwear:
+- velvet boots:                Sneak++
+- sabatons:        15% armor   Sneak-
+- sandal:                      Martial++
+- combat boots:    10% armor   +10..+20 evade% when in open areas
+- scale shoes:      5% armor   +10% speed when moving over ground that gives speed, -10% speed
+                                on ground that slows down
+- crimson boots:    5% armor   +20 evade% when move,move,move,move pattern, but stealth-
+- hiking boots:                +10 speed% when move,move,move,move pattern
+
+headgear:
+- mining helmet:    5% armor   Vision+  lights up area *in direction mob is facing*.
+- mail coif:       10% armor            Sneak-
+- cloth hood:                           Sneak+
+- fume hood:                   Vision-  rFume+
+- welding helmet:   5% armor   Vision-  rFire+
+- thief's mask:                Vision-  infravision
+
 
 Rings
 -----
@@ -659,15 +707,34 @@ x Add tougher monsters; balancing
   x Ancient mages, death mages and skeletal warrior squads
   x Place monsters in various areas
 x Balancing: fix mob placement (more on dangerous floors, less otherwise)
-- Add fungi, plants, terrain
+x Add fungi, plants, terrain
+- Add basic (non-ring-based) movement patterns
 - More items, item features
   - Weapon and armor effects
   - Weapon coatings/dipping
+x Noise revamp
+x LOS/lighting revamp
+  x Nerf player's LOS, buf enemies' LOS
+  x Change lighting algorithm
+  x Remove partial lighting?
+  x Show walls as always lit?
+- Fix/reimplement item-choosing screen
+- Fix/reimplement tile-choosing screen
+  - Remove 'r' key, revamp recharging station appearance(?)
+  - Remove hammer evocable, allow always breaking machines/props
+- Add Status/Mob(?)/Item lookup screen
+- Revamp input prompts
+- Informational screens
+  - features/items screen, remove announcement of items
+  - "?" screen
+  - "@" screen
+  x Inventory screen
+    x Remove 't' key, remove 'a' key for items
+  - Poster description screen
+- Show information characters next to mob in enemy pane
+- Startup screen, map generation loading bar
+- Add basic animations
 - Implement intelligence
-- Mob repositioning AI
-  - AI to move out of dangerous tiles (gas/terrain)
-  - AI to move out of reach of enemy, if mob has reaching weapon
-  - AI to move onto advantageous terrain
 - Revisit and revamp SMI mapgen
   - toxic sludge pools and bridges over them
   - Ether fiends, drakes, dustlings
@@ -678,33 +745,13 @@ x Balancing: fix mob placement (more on dangerous floors, less otherwise)
 - Morgue level
   - Cogmind-esque tunneling algorithm
   - Monsters
-- Show information characters next to mob in enemy pane
-- Startup screen, map generation loading bar
-x Noise revamp
-x LOS/lighting revamp
-  x Nerf player's LOS, buf enemies' LOS
-  x Change lighting algorithm
-  x Remove partial lighting?
-  x Show walls as always lit?
-- Fix/reimplement item-choosing screen
-- Fix/reimplement tile-choosing screen
-  - Remove 'r' key, revamp recharging station appearance(?)
-- Revamp input prompts
-- Informational screens
-  - features/items screen, remove announcement of items
-  - "?" screen
-  - "@" screen
-  - Inventory screen
-    - Remove 't' key, remove 'a' key for items
-  - E(x)amine screen
-  - Poster description screen
-- Add basic (non-ring-based) movement patterns
-- Add basic animations
 - Posters/books
   - Poster types (graffiti, announcement, engraving, etc)
   - Add bookshelves and book types
     - Maps
     - Useless books
+- Cleanup machines
+  - Message if player moves over activatable machine
 x Upgrade to Zig v9
   x Remove usage of usingnamespace
   x Petition khuxkm/ben for update
@@ -712,13 +759,11 @@ x Upgrade to Zig v9
   x Fix "*mem.Allocator" params
 - Runes and scoring
 *** v1.0.0 release ***
-- Air purifiers
 - Blood, iron, ember, fire, spark, lightning mage bands
 - Night creatures (night reapers, creeping deaths)
 - Silver weapons and battery packs, silver hornets
 - Bone, masterpiece, and shadow weapons
 - Headgear, footgear, auxiliary items
-- Laboratory: command stones and transporter stones
 - Squad overhaul
   - Patrol squads
   - Prisoner squads + goblin commanders
@@ -728,6 +773,11 @@ x Upgrade to Zig v9
     - Potion of dilution   (dilution)
     - Grills + kitchen set (concentration)
 - Corruption effects
+- Mob repositioning AI
+  - AI to move out of dangerous tiles (gas/terrain)
+  - AI to move out of reach of enemy, if mob has reaching weapon
+  - AI to move onto advantageous terrain
+- Air purifiers
 
 Ring and movements:
 ===================
@@ -771,7 +821,7 @@ Room features/Mapgen:
     - (v1.1.0) XXX fungi (ctx corrupt effect)
   - Floor materials:
     x metal (rElec-)
-    - copper (elec dmg propagation?)
+    x copper (elec dmg propagation)
     x wood (rFire- rElec+)
     x carpet (Noise-)
     x gravel (Noise+)
