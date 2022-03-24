@@ -204,7 +204,7 @@ pub const HammerEvoc = Evocable{
 fn _triggerHammerEvoc(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
     assert(mob == state.player);
 
-    const dest = display.chooseCell() orelse return error.BadPosition;
+    const dest = display.chooseCell(.{}) orelse return error.BadPosition;
     if (dest.distance(mob.coord) > 1) {
         display.drawAlertThenLog("Your arms aren't that long!", .{});
         return error.BadPosition;
@@ -248,7 +248,7 @@ pub const IronSpikeEvoc = Evocable{
 fn _triggerIronSpikeEvoc(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
     assert(mob == state.player);
 
-    const dest = display.chooseCell() orelse return error.BadPosition;
+    const dest = display.chooseCell(.{}) orelse return error.BadPosition;
     if (dest.distance(mob.coord) > 1) {
         display.drawAlertThenLog("Your arms aren't that long!", .{});
         return error.BadPosition;

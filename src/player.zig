@@ -363,7 +363,7 @@ pub fn throwItem(index: usize) bool {
         },
     }
 
-    const dest = display.chooseCell() orelse return false;
+    const dest = display.chooseCell(.{}) orelse return false;
     state.player.throwItem(item, dest, state.GPA.allocator());
     _ = state.player.removeItem(index) catch err.wat();
     return true;

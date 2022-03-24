@@ -659,7 +659,11 @@ pub fn draw() void {
     termbox.tb_present();
 }
 
-pub fn chooseCell() ?Coord {
+pub const ChooseCellOptions = struct {
+    require_seen: bool = true,
+};
+
+pub fn chooseCell(opts: ChooseCellOptions) ?Coord {
     const mainw = dimensions(.Main);
 
     // TODO: do some tests and figure out what's the practical limit to memory
@@ -711,7 +715,15 @@ pub fn chooseCell() ?Coord {
                     termbox.TB_KEY_CTRL_C,
                     termbox.TB_KEY_CTRL_G,
                     => return null,
-                    termbox.TB_KEY_ENTER => return coord,
+                    termbox.TB_KEY_ENTER => {
+                        if (opts.require_seen and !state.player.cansee(coord) and
+                            !state.memory.contains(coord))
+                        {
+                            drawAlert("You haven't seen that place!", .{});
+                        } else {
+                            return coord;
+                        }
+                    },
                     else => continue,
                 }
             } else if (ev.ch != 0) {
