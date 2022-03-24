@@ -1559,12 +1559,7 @@ pub const Mob = struct { // {{{
         }
     }
 
-    pub fn throwItem(self: *Mob, item: *const Item, at: Coord, alloc: mem.Allocator) bool {
-        switch (item.*) {
-            .Projectile, .Potion => {},
-            else => return false,
-        }
-
+    pub fn throwItem(self: *Mob, item: *const Item, at: Coord, alloc: mem.Allocator) void {
         const item_name = (item.*.shortName() catch err.wat()).constSlice();
 
         self.declareAction(.Throw);
@@ -1633,8 +1628,6 @@ pub const Mob = struct { // {{{
             },
             else => err.wat(),
         }
-
-        return true;
     }
 
     pub fn declareAction(self: *Mob, action: Activity) void {

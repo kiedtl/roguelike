@@ -917,8 +917,7 @@ pub fn rangedFight(mob: *Mob, alloc: mem.Allocator) void {
     } else {
         // fire projectile
         const item = mob.inventory.pack.orderedRemove(proj_item.?) catch err.wat();
-        const s = mob.throwItem(&item, target.coord, alloc);
-        assert(s);
+        mob.throwItem(&item, target.coord, alloc);
     }
 }
 

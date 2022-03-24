@@ -292,6 +292,7 @@ pub fn grabItem() bool {
     }
 
     var item: Item = undefined;
+    var found_item = false;
 
     if (state.dungeon.at(state.player.coord).surface) |surface| {
         switch (surface) {
@@ -305,17 +306,20 @@ pub fn grabItem() bool {
                         container.items.constSlice(),
                     ) orelse return false;
                     item = container.items.orderedRemove(index) catch err.wat();
+                    found_item = true;
                 }
             },
             else => {},
         }
     }
 
-    if (state.dungeon.itemsAt(state.player.coord).last()) |_| {
-        item = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
-    } else {
-        display.drawAlertThenLog("There's nothing here.", .{});
-        return false;
+    if (!found_item) {
+        if (state.dungeon.itemsAt(state.player.coord).last()) |_| {
+            item = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
+        } else {
+            display.drawAlertThenLog("There's nothing here.", .{});
+            return false;
+        }
     }
 
     switch (item) {
@@ -349,16 +353,20 @@ pub fn grabItem() bool {
 pub fn throwItem(index: usize) bool {
     assert(state.player.inventory.pack.len > index);
 
-    const dest = display.chooseCell() orelse return false;
     const item = &state.player.inventory.pack.slice()[index];
 
-    if (state.player.throwItem(item, dest, state.GPA.allocator())) {
-        _ = state.player.removeItem(index) catch err.wat();
-        return true;
-    } else {
-        display.drawAlertThenLog("You can't throw that.", .{});
-        return false;
+    switch (item.*) {
+        .Projectile, .Potion => {},
+        else => {
+            display.drawAlertThenLog("You can't throw that.", .{});
+            return false;
+        },
     }
+
+    const dest = display.chooseCell() orelse return false;
+    state.player.throwItem(item, dest, state.GPA.allocator());
+    _ = state.player.removeItem(index) catch err.wat();
+    return true;
 }
 
 pub fn activateSurfaceItem() bool {
