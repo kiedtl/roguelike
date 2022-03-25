@@ -1887,6 +1887,7 @@ pub const Mob = struct { // {{{
         free_attack: bool = false,
         auto_hit: bool = false,
         damage_bonus: usize = 100, // percentage
+        loudness: SoundIntensity = .Medium,
     };
 
     pub fn fight(attacker: *Mob, recipient: *Mob, opts: FightOptions) void {
@@ -1989,8 +1990,7 @@ pub const Mob = struct { // {{{
 
         // XXX: should this be .Loud instead of .Medium?
         if (!is_stab) {
-            attacker.makeNoise(.Combat, .Medium);
-            recipient.makeNoise(.Combat, .Medium);
+            attacker.makeNoise(.Combat, opts.loudness);
         }
 
         var dmg_percent = recipient.lastDamagePercentage();
@@ -2698,15 +2698,34 @@ pub const Mob = struct { // {{{
         {
             if (self.coord.move(activities[2].Move, state.mapgeometry)) |adj_mob_coord| {
                 if (state.dungeon.at(adj_mob_coord).mob) |othermob| {
-                    if (othermob.isHostileTo(self) and othermob.ai.is_combative) {
+                    if (othermob.isHostileTo(self) and othermob.ai.is_combative and othermob.isAwareOfAttack(self.coord)) {
                         if (othermob == state.player) {
                             state.messageAboutMob(self, self.coord, .Combat, "[BUG]", .{}, "charges you!", .{});
                         } else {
                             state.messageAboutMob(self, self.coord, .Combat, "charge the {s}!", .{othermob.displayName()}, "charges the {s}!", .{othermob.displayName()});
                         }
 
-                        self.fight(othermob, .{ .free_attack = true, .auto_hit = true, .damage_bonus = 130 });
+                        self.fight(othermob, .{ .free_attack = true, .auto_hit = true, .damage_bonus = 130, .loudness = .Loud });
                         combat.throwMob(self, othermob, activities[2].Move, 3);
+                        return;
+                    }
+                }
+            }
+        }
+
+        // Lunge pattern
+        if (activities[1] == .Rest and activities[0] == .Move) {
+            if (self.coord.move(activities[0].Move, state.mapgeometry)) |adj_mob_coord| {
+                if (state.dungeon.at(adj_mob_coord).mob) |othermob| {
+                    if (othermob.isHostileTo(self) and othermob.ai.is_combative) {
+                        if (othermob == state.player) {
+                            state.messageAboutMob(self, self.coord, .Combat, "[BUG]", .{}, "lunges at you!", .{});
+                        } else {
+                            state.messageAboutMob(self, self.coord, .Combat, "lunge at the {s}!", .{othermob.displayName()}, "lunges at the {s}!", .{othermob.displayName()});
+                        }
+
+                        self.fight(othermob, .{ .free_attack = true, .auto_hit = true, .damage_bonus = 200, .loudness = .Loud });
+                        return;
                     }
                 }
             }
