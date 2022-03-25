@@ -829,10 +829,15 @@ pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
         const parent = &rooms.items[i];
 
         for (rooms.items) |*child| {
-            if (parent.connections > CONNECTIONS_MAX) break;
-            if (child.connections > CONNECTIONS_MAX) continue;
+            if (parent.connections.isFull() or
+                child.connections.isFull() or
+                parent.connections.linearSearch(child.rect.start, Coord.eqNotInline) or
+                child.connections.linearSearch(parent.rect.start, Coord.eqNotInline))
+            {
+                continue;
+            }
 
-            if (child.type == .Corridor) continue;
+            //if (child.type == .Corridor) continue;
 
             // Skip child prefabs for now, placeCorridor seems to be broken
             if (child.prefab != null) continue;
@@ -860,8 +865,8 @@ pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
                     continue;
                 }
 
-                parent.connections += 1;
-                child.connections += 1;
+                parent.connections.append(child.rect.start) catch err.wat();
+                child.connections.append(parent.rect.start) catch err.wat();
 
                 excavateRect(&corridor.room.rect);
                 corridor.markConnectorsAsUsed(parent, child) catch err.wat();
@@ -1003,7 +1008,7 @@ fn _place_rooms(
     const parent_i = rng.range(usize, 0, rooms.items.len - 1);
     var parent = &rooms.items[parent_i];
 
-    if (parent.connections > CONNECTIONS_MAX) {
+    if (parent.connections.isFull()) {
         return;
     }
 
@@ -1133,8 +1138,8 @@ fn _place_rooms(
 
     // Use parent's index, as we appended the corridor earlier and that may
     // have invalidated parent's pointer
-    child.connections += 1;
-    rooms.items[parent_i].connections += 1;
+    rooms.items[parent_i].connections.append(child.rect.start) catch err.wat();
+    child.connections.append(parent.rect.start) catch err.wat();
 
     rooms.append(child) catch err.wat();
 }
@@ -1484,8 +1489,8 @@ pub fn placeBSPRooms(
                 var child1 = &roomlist.items[getRectFromNode(childs[0].?).?].rect;
 
                 if (tryRecursiveNodeConnection(maplevel, child1, childs[1].?, roomlist)) |corridor| {
-                    corridor.parent.connections += 1;
-                    corridor.child.connections += 1;
+                    corridor.parent.connections.append(corridor.child.rect.start) catch err.wat();
+                    corridor.child.connections.append(corridor.parent.rect.start) catch err.wat();
 
                     excavateRect(&corridor.room.rect);
                     roomlist.append(corridor.room) catch err.wat();
@@ -2603,7 +2608,9 @@ pub const Room = struct {
     has_stair: bool = false,
     mob_count: usize = 0,
 
-    connections: usize = 0,
+    connections: ConnectionsBuf = ConnectionsBuf.init(null),
+
+    pub const ConnectionsBuf = StackBuffer(Coord, CONNECTIONS_MAX);
 
     pub const RoomType = enum { Corridor, Room, Sideroom };
 

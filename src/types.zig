@@ -210,6 +210,13 @@ pub const Coord = struct { // {{{
         return math.max(diff.x, diff.y);
     }
 
+    // Sometimes we want to pass Coord.eq around, but we can't since an inline
+    // function has a different type than a non-inline function.
+    //
+    pub fn eqNotInline(a: Self, b: Self) bool {
+        return a.eq(b);
+    }
+
     pub inline fn eq(a: Self, b: Self) bool {
         return a.x == b.x and a.y == b.y;
     }

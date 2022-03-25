@@ -76,6 +76,12 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
             for (items) |item| try self.append(item);
         }
 
+        pub fn linearSearch(self: *const Self, value: T, eq_fn: fn (a: T, b: T) bool) bool {
+            return for (self.constSlice()) |item| {
+                if ((eq_fn)(value, item)) break true;
+            } else false;
+        }
+
         pub inline fn isFull(self: *Self) bool {
             return self.len == self.capacity;
         }
