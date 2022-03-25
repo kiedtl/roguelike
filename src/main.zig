@@ -468,6 +468,8 @@ fn tickGame() void {
                 }
             }
 
+            mob.checkForPatternUsage();
+
             if (state.dungeon.at(mob.coord).mob == null) {
                 err.bug("Mob {s} is dancing around the chessboard!", .{mob.displayName()});
             }
@@ -533,6 +535,7 @@ fn viewerTickGame(cur_level: usize) void {
                 state._mob_occupation_tick(mob, state.GPA.allocator());
             }
 
+            mob.checkForPatternUsage();
             mob.tickFOV();
 
             if (state.dungeon.at(mob.coord).mob == null) {

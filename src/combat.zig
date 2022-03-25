@@ -84,3 +84,42 @@ pub fn chanceOfAttackEvaded(defender: *const Mob, attacker: ?*const Mob) usize {
 
     return @intCast(usize, math.clamp(chance, 0, 100));
 }
+
+pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: usize) void {
+    state.messageAboutMob(throwee, throwee.coord, .Combat, "are knocked back!", .{}, "is knocked back!", .{});
+
+    var slammed_into_mob: ?*Mob = null;
+    var slammed_into_something = false;
+    var i: usize = 0;
+    var dest_coord = throwee.coord;
+    while (i < distance) : (i += 1) {
+        const new = dest_coord.move(direction, state.mapgeometry) orelse break;
+        if (!state.is_walkable(new, .{ .right_now = true })) {
+            if (state.dungeon.at(new).mob) |mob| {
+                assert(mob != throwee);
+                slammed_into_mob = mob;
+            }
+            slammed_into_something = true;
+            break;
+        }
+        dest_coord = new;
+    }
+
+    if (!dest_coord.eq(throwee.coord))
+        assert(throwee.teleportTo(dest_coord, null, true));
+
+    // Give damage
+    if (slammed_into_something) {
+        throwee.takeDamage(.{
+            .amount = throwee.HP / 20,
+            .by_mob = thrower,
+        });
+
+        if (slammed_into_mob) |othermob| {
+            othermob.takeDamage(.{
+                .amount = othermob.HP / 20,
+                .by_mob = thrower,
+            });
+        }
+    }
+}

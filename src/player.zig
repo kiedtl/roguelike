@@ -255,7 +255,7 @@ pub fn moveOrFight(direction: Direction) bool {
     // Does the player want to fight?
     if (state.dungeon.at(dest).mob) |mob| {
         if (state.player.isHostileTo(mob) and !state.player.canSwapWith(mob, direction)) {
-            state.player.fight(mob);
+            state.player.fight(mob, .{});
             return true;
         }
     }

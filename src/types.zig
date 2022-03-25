@@ -705,6 +705,7 @@ pub const Activity = union(enum) {
     Throw,
     Fire,
     Cast,
+    None,
 
     pub inline fn cost(self: Activity) usize {
         return switch (self) {
@@ -712,6 +713,7 @@ pub const Activity = union(enum) {
             .Rest, .Move, .Teleport, .Grab, .Drop, .Use => 100,
             .Cast, .Throw, .Fire => 120,
             .Attack => |a| 120 * a.delay / 100,
+            .None => err.wat(),
         };
     }
 };
@@ -1832,8 +1834,6 @@ pub const Mob = struct { // {{{
             return false;
         }
 
-        if (!self.isCreeping()) self.makeNoise(.Movement, .Medium);
-
         if (!instant) {
             if (direction) |d| {
                 self.declareAction(Activity{ .Move = d });
@@ -1883,7 +1883,13 @@ pub const Mob = struct { // {{{
         } else false;
     }
 
-    pub fn fight(attacker: *Mob, recipient: *Mob) void {
+    pub const FightOptions = struct {
+        free_attack: bool = false,
+        auto_hit: bool = false,
+        damage_bonus: usize = 100, // percentage
+    };
+
+    pub fn fight(attacker: *Mob, recipient: *Mob, opts: FightOptions) void {
         // If the defender didn't know about the attacker's existence now's a
         // good time to find out
         ai.updateEnemyRecord(recipient, .{
@@ -1901,15 +1907,17 @@ pub const Mob = struct { // {{{
             assert(weapon.reach >= attacker.coord.distance(recipient.coord));
 
             if (weapon.delay > longest_delay) longest_delay = weapon.delay;
-            _fightWithWeapon(attacker, recipient, weapon);
+            _fightWithWeapon(attacker, recipient, weapon, opts);
         }
 
-        attacker.declareAction(.{
-            .Attack = .{ .coord = recipient.coord, .delay = longest_delay },
-        });
+        if (!opts.free_attack) {
+            attacker.declareAction(.{
+                .Attack = .{ .coord = recipient.coord, .delay = longest_delay },
+            });
+        }
     }
 
-    fn _fightWithWeapon(attacker: *Mob, recipient: *Mob, attacker_weapon: *const Weapon) void {
+    fn _fightWithWeapon(attacker: *Mob, recipient: *Mob, attacker_weapon: *const Weapon, opts: FightOptions) void {
         assert(!attacker.is_dead);
         assert(!recipient.is_dead);
 
@@ -1924,9 +1932,9 @@ pub const Mob = struct { // {{{
         //     state.message(.Info, "you defend: chance of land: {}, chance of dodge: {}", .{ chance_of_land, chance_of_dodge });
         // }
 
-        const hit =
-            (rng.range(usize, 1, 100) <= combat.chanceOfMeleeLanding(attacker, recipient)) and
-            (rng.range(usize, 1, 100) >= combat.chanceOfAttackEvaded(recipient, attacker));
+        const hit = opts.auto_hit or
+            ((rng.percent(combat.chanceOfMeleeLanding(attacker, recipient))) and
+            (!rng.percent(combat.chanceOfAttackEvaded(recipient, attacker))));
 
         if (!hit) {
             if (attacker == state.player) {
@@ -1971,7 +1979,7 @@ pub const Mob = struct { // {{{
         }
 
         const is_stab = !recipient.isAwareOfAttack(attacker.coord);
-        const damage = combat.damageOfMeleeAttack(attacker, attacker_weapon.damage, is_stab);
+        const damage = combat.damageOfMeleeAttack(attacker, attacker_weapon.damage, is_stab) * opts.damage_bonus / 100;
 
         recipient.takeDamage(.{
             .amount = @intToFloat(f64, damage),
@@ -2667,6 +2675,42 @@ pub const Mob = struct { // {{{
                 }
             }
         } else false;
+    }
+
+    // This is very very very ugly.
+    //
+    pub fn checkForPatternUsage(self: *Mob) void {
+        var activities: [MAX_ACTIVITY_BUFFER_SZ]Activity = undefined;
+        var activity_iter = self.activities.iterator();
+        while (activity_iter.next()) |activity|
+            activities[activity_iter.counter - 1] = activity;
+
+        // Walking pattern
+        if (!self.isCreeping()) self.makeNoise(.Movement, .Medium);
+
+        // Charging pattern
+        if (activities[3] == .Rest and
+            activities[2] == .Move and
+            activities[1] == .Move and
+            activities[0] == .Move and
+            activities[2].Move == activities[1].Move and
+            activities[2].Move == activities[0].Move)
+        {
+            if (self.coord.move(activities[2].Move, state.mapgeometry)) |adj_mob_coord| {
+                if (state.dungeon.at(adj_mob_coord).mob) |othermob| {
+                    if (othermob.isHostileTo(self) and othermob.ai.is_combative) {
+                        if (othermob == state.player) {
+                            state.messageAboutMob(self, self.coord, .Combat, "[BUG]", .{}, "charges you!", .{});
+                        } else {
+                            state.messageAboutMob(self, self.coord, .Combat, "charge the {s}!", .{othermob.displayName()}, "charges the {s}!", .{othermob.displayName()});
+                        }
+
+                        self.fight(othermob, .{ .free_attack = true, .auto_hit = true, .damage_bonus = 130 });
+                        combat.throwMob(self, othermob, activities[2].Move, 3);
+                    }
+                }
+            }
+        }
     }
 
     pub fn isCreeping(self: *const Mob) bool {
