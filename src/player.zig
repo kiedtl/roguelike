@@ -263,12 +263,7 @@ pub fn moveOrFight(direction: Direction) bool {
     // Does the player want to trigger a machine that requires confirmation?
     if (state.dungeon.at(dest).surface) |surf| switch (surf) {
         .Machine => |m| if (m.evoke_confirm) |msg| {
-            const r = state.messageKeyPrompt("{s} [y/N]", .{msg}, 'n', "YyNn ", "yynnn");
-            if (r == null or r.? == 'n') {
-                if (r != null)
-                    state.message(.Prompt, "Okay then.", .{});
-                return false;
-            }
+            if (!display.drawYesNoPrompt("{s}", .{msg})) return false;
         },
         else => {},
     };
@@ -301,8 +296,9 @@ pub fn grabItem() bool {
                     display.drawAlertThenLog("There's nothing in the {s}.", .{container.name});
                     return false;
                 } else {
-                    const index = display.chooseInventoryItem(
+                    const index = display.drawItemChoicePrompt(
                         "Take what?",
+                        .{},
                         container.items.constSlice(),
                     ) orelse return false;
                     item = container.items.orderedRemove(index) catch err.wat();

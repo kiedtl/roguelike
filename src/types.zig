@@ -608,6 +608,7 @@ pub const MessageType = union(enum) {
     Status, // A status effect was added or removed.
     Combat, // X hit you! You hit X!
     CombatUnimportant, // X missed you! You miss X!
+    Unimportant, // A bit dark, okay if player misses it.
     Info,
     Move,
     Trap,
@@ -625,6 +626,7 @@ pub const MessageType = union(enum) {
             .Status => 0x7fffd4, // aquamarine
             .Combat => 0xdadeda, // creamy white
             .CombatUnimportant => 0x7a9cc7, // steel blue
+            .Unimportant => 0x8019ac,
         };
     }
 };

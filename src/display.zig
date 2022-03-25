@@ -743,136 +743,6 @@ pub fn chooseCell(opts: ChooseCellOptions) ?Coord {
     }
 }
 
-pub fn chooseInventoryItem(msg: []const u8, items: []const Item) ?usize {
-    assert(items.len > 0); // This should have been handled previously.
-
-    // A bit messy.
-    var namebuf = std.ArrayList([]const u8).init(state.GPA.allocator());
-    defer {
-        for (namebuf.items) |str| state.GPA.allocator().free(str);
-        namebuf.deinit();
-    }
-
-    for (items) |item| {
-        const itemname = item.longName() catch err.wat();
-        const string = state.GPA.allocator().alloc(u8, itemname.len) catch err.wat();
-        std.mem.copy(u8, string, itemname.constSlice());
-        namebuf.append(string) catch err.wat();
-    }
-
-    return chooseOption(msg, namebuf.items);
-}
-
-pub fn chooseOption(msg: []const u8, options: []const []const u8) ?usize {
-    assert(options.len > 0); // This should have been handled previously.
-
-    clearScreen();
-
-    const usage_str = "ESC/q/Ctrl+C to cancel, Enter/Space to select.";
-
-    var longest_width: isize = 0;
-    for (options) |opt| {
-        if (opt.len > longest_width)
-            longest_width = @intCast(isize, opt.len);
-    }
-    // + (gold_indicator + number + dash) + padding
-    const line_width = math.max(@intCast(isize, usage_str.len), longest_width + 6 + 10);
-
-    var y = @divFloor(termbox.tb_height(), 2) - @intCast(isize, ((options.len * 3) + 3) / 2);
-    const x = @divFloor(termbox.tb_width(), 2) - @divFloor(line_width, 2);
-    const endx = termbox.tb_width() - 1;
-
-    y = _drawStr(x, y, endx, "{s}", .{msg}, .{ .fg = colors.WHITE });
-    y = _drawStr(x, y, endx, usage_str, .{}, .{ .fg = colors.GREY });
-    y += 1;
-    const starty = y;
-
-    var chosen: usize = 0;
-    var cancelled = false;
-
-    while (true) {
-        y = starty;
-        for (options) |name, i| {
-            const dist_from_chosen = @intCast(u32, math.absInt(
-                @intCast(isize, i) - @intCast(isize, chosen),
-            ) catch unreachable);
-            const darkening = math.max(30, 100 - math.min(100, dist_from_chosen * 10));
-            const dark_bg_grey = colors.percentageOf(colors.BG_GREY, darkening);
-
-            _clearLineWith(x, x + line_width, y + 0, '▂', dark_bg_grey, colors.BLACK);
-            _clearLineWith(x, x + line_width, y + 1, ' ', colors.BLACK, dark_bg_grey);
-            _clearLineWith(x, x + line_width, y + 2, '▆', colors.BLACK, dark_bg_grey);
-
-            y += 1;
-
-            if (i == chosen) {
-                _ = _drawStr(x, y, endx, "▎", .{}, .{ .fg = 0xffd700, .bg = colors.BG_GREY });
-            }
-
-            const fg = if (i == chosen) colors.WHITE else colors.percentageOf(colors.GREY, darkening);
-            y = _drawStr(x + 1, y, endx, " {} - {s}", .{ i, name }, .{ .fg = fg, .bg = dark_bg_grey });
-
-            y += 1;
-        }
-
-        termbox.tb_present();
-        var ev: termbox.tb_event = undefined;
-        const t = termbox.tb_poll_event(&ev);
-
-        if (t == -1) @panic("Fatal termbox error");
-
-        if (t == termbox.TB_EVENT_KEY) {
-            if (ev.key != 0) {
-                switch (ev.key) {
-                    termbox.TB_KEY_ARROW_DOWN,
-                    termbox.TB_KEY_ARROW_LEFT,
-                    => if (chosen < options.len - 1) {
-                        chosen += 1;
-                    },
-                    termbox.TB_KEY_ARROW_UP,
-                    termbox.TB_KEY_ARROW_RIGHT,
-                    => if (chosen > 0) {
-                        chosen -= 1;
-                    },
-                    termbox.TB_KEY_CTRL_C,
-                    termbox.TB_KEY_CTRL_G,
-                    termbox.TB_KEY_ESC,
-                    => {
-                        cancelled = true;
-                        break;
-                    },
-                    termbox.TB_KEY_SPACE, termbox.TB_KEY_ENTER => break,
-                    else => {},
-                }
-                continue;
-            } else if (ev.ch != 0) {
-                switch (ev.ch) {
-                    'q' => {
-                        cancelled = true;
-                        break;
-                    },
-                    'j', 'h' => if (chosen < options.len - 1) {
-                        chosen += 1;
-                    },
-                    'k', 'l' => if (chosen > 0) {
-                        chosen -= 1;
-                    },
-                    '0'...'9' => {
-                        const c: usize = ev.ch - '0';
-                        if (c < options.len) {
-                            chosen = c;
-                        }
-                    },
-                    else => {},
-                }
-            } else unreachable;
-        }
-    }
-
-    clearScreen();
-    return if (cancelled) null else chosen;
-}
-
 // Wait for input. Return null if Ctrl+c or escape was pressed, default_input
 // if <enter> is pressed ,otherwise the key pressed. Will continue waiting if a
 // mouse event or resize event was recieved.
@@ -1184,7 +1054,7 @@ pub fn drawAlert(comptime fmt: []const u8, args: anytype) void {
         const x = wind.endx -
             @divTrunc(wind.endx - wind.startx, 2) -
             @intCast(isize, line.len / 2);
-        y = _drawStr(x, y, wind.endx, "{s}", .{str}, .{});
+        y = _drawStr(x, y, wind.endx, "{s}", .{line}, .{});
     }
 
     termbox.tb_present();
@@ -1205,4 +1075,125 @@ pub fn drawAlertThenLog(comptime fmt: []const u8, args: anytype) void {
     const log_window = dimensions(.Log);
     drawAlert(fmt, args);
     drawLog(log_window.startx, log_window.endx, log_window.starty, log_window.endy);
+}
+
+pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []const []const u8) ?usize {
+    assert(options.len > 0);
+
+    const wind = dimensions(.Log);
+
+    var buf: [65535]u8 = undefined;
+    var fbs = std.io.fixedBufferStream(&buf);
+    std.fmt.format(fbs.writer(), fmt, args) catch err.bug("format error!", .{});
+    const str = fbs.getWritten();
+
+    var y: isize = wind.starty;
+
+    // Clear log window
+    while (y < wind.endy) : (y += 1) _clear_line(wind.startx, wind.endx, y);
+    y = wind.starty;
+
+    var chosen: usize = 0;
+    var cancelled = false;
+
+    while (true) {
+        y = wind.starty;
+
+        const linewidth = @intCast(usize, (wind.endx - wind.startx) - 4);
+        var fold_iter = utils.FoldedTextIterator.init(str, linewidth);
+        while (fold_iter.next()) |line| {
+            y = _drawStr(wind.startx, y, wind.endx, "{s}", .{line}, .{});
+        }
+
+        for (options) |option, i| {
+            const ind = if (chosen == i) ">" else "-";
+            const color = if (chosen == i) colors.LIGHT_CONCRETE else colors.GREY;
+            y = _drawStr(wind.startx, y, wind.endx, "{s} {s}", .{ ind, option }, .{ .fg = color });
+        }
+
+        termbox.tb_present();
+        var ev: termbox.tb_event = undefined;
+        const t = termbox.tb_poll_event(&ev);
+
+        if (t == -1) @panic("Fatal termbox error");
+
+        if (t == termbox.TB_EVENT_KEY) {
+            if (ev.key != 0) {
+                switch (ev.key) {
+                    termbox.TB_KEY_ARROW_DOWN,
+                    termbox.TB_KEY_ARROW_LEFT,
+                    => if (chosen < options.len - 1) {
+                        chosen += 1;
+                    },
+                    termbox.TB_KEY_ARROW_UP,
+                    termbox.TB_KEY_ARROW_RIGHT,
+                    => if (chosen > 0) {
+                        chosen -= 1;
+                    },
+                    termbox.TB_KEY_CTRL_C,
+                    termbox.TB_KEY_CTRL_G,
+                    termbox.TB_KEY_ESC,
+                    => {
+                        cancelled = true;
+                        break;
+                    },
+                    termbox.TB_KEY_SPACE, termbox.TB_KEY_ENTER => break,
+                    else => {},
+                }
+                continue;
+            } else if (ev.ch != 0) {
+                switch (ev.ch) {
+                    'q' => {
+                        cancelled = true;
+                        break;
+                    },
+                    'j', 'h' => if (chosen < options.len - 1) {
+                        chosen += 1;
+                    },
+                    'k', 'l' => if (chosen > 0) {
+                        chosen -= 1;
+                    },
+                    '0'...'9' => {
+                        const c: usize = ev.ch - '0';
+                        if (c < options.len) {
+                            chosen = c;
+                        }
+                    },
+                    else => {},
+                }
+            } else unreachable;
+        }
+    }
+
+    return if (cancelled) null else chosen;
+}
+
+pub fn drawYesNoPrompt(comptime fmt: []const u8, args: anytype) bool {
+    const r = (drawChoicePrompt(fmt, args, &[_][]const u8{ "No", "Yes" }) orelse 0) == 1;
+    if (!r) state.message(.Unimportant, "Cancelled.", .{});
+    return r;
+}
+
+pub fn drawContinuePrompt(comptime fmt: []const u8, args: anytype) void {
+    _ = drawChoicePrompt(fmt, args, &[_][]const u8{"Continue"});
+}
+
+pub fn drawItemChoicePrompt(comptime fmt: []const u8, args: anytype, items: []const Item) ?usize {
+    assert(items.len > 0); // This should have been handled previously.
+
+    // A bit messy.
+    var namebuf = std.ArrayList([]const u8).init(state.GPA.allocator());
+    defer {
+        for (namebuf.items) |str| state.GPA.allocator().free(str);
+        namebuf.deinit();
+    }
+
+    for (items) |item| {
+        const itemname = item.longName() catch err.wat();
+        const string = state.GPA.allocator().alloc(u8, itemname.len) catch err.wat();
+        std.mem.copy(u8, string, itemname.constSlice());
+        namebuf.append(string) catch err.wat();
+    }
+
+    return drawChoicePrompt(fmt, args, namebuf.items);
 }

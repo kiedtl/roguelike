@@ -650,11 +650,19 @@ pub fn main() anyerror!void {
         while (state.state != .Quit) switch (state.state) {
             .Game => tickGame(),
             .Win => {
-                _ = state.messageKeyPrompt("You escaped! (more)", .{}, ' ', "", "");
+                _ = display.drawContinuePrompt("You escaped!", .{});
                 break;
             },
             .Lose => {
-                _ = state.messageKeyPrompt("You die... (more)", .{}, ' ', "", "");
+                const msg = switch (rng.range(usize, 0, 99)) {
+                    00...60 => "You die...",
+                    61...70 => "You died. Not surprising given your playstyle.",
+                    71...80 => "Geez, you just died.",
+                    81...95 => "Congrats! You died!",
+                    96...99 => "You acquire Negative Health Syndrome!",
+                    else => err.wat(),
+                };
+                _ = display.drawContinuePrompt("{s}", .{msg});
                 break;
             },
             .Quit => break,
