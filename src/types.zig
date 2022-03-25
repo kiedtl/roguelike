@@ -697,7 +697,11 @@ pub const Activity = union(enum) {
     Interact,
     Rest,
     Move: Direction,
-    Attack: struct { coord: Coord, delay: usize },
+    Attack: struct {
+        direction: Direction,
+        coord: Coord,
+        delay: usize,
+    },
     Teleport: Coord,
     Grab,
     Drop,
@@ -1339,7 +1343,7 @@ pub const Mob = struct { // {{{
     };
 
     // Size of `activities` Ringbuffer
-    pub const MAX_ACTIVITY_BUFFER_SZ = 4;
+    pub const MAX_ACTIVITY_BUFFER_SZ = 10;
 
     pub fn displayName(self: *const Mob) []const u8 {
         const Static = struct {
@@ -1913,7 +1917,11 @@ pub const Mob = struct { // {{{
 
         if (!opts.free_attack) {
             attacker.declareAction(.{
-                .Attack = .{ .coord = recipient.coord, .delay = longest_delay },
+                .Attack = .{
+                    .coord = recipient.coord,
+                    .direction = attacker.coord.closestDirectionTo(recipient.coord, state.mapgeometry),
+                    .delay = longest_delay,
+                },
             });
         }
     }
@@ -2729,6 +2737,21 @@ pub const Mob = struct { // {{{
                     }
                 }
             }
+        }
+
+        // Counterattack pattern
+        if (activities[4] == .Move and
+            activities[3] == .Attack and
+            activities[2] == .Move and
+            activities[1] == .Attack and
+            activities[0] == .Move and
+            activities[4].Move == activities[2].Move and
+            activities[4].Move == activities[0].Move and
+            activities[3].Attack.direction == activities[1].Attack.direction and
+            activities[3].Attack.direction == activities[4].Move.opposite())
+        {
+            self.addStatus(.Fast, 0, .{ .Tmp = 10 });
+            return;
         }
     }
 
