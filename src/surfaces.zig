@@ -244,7 +244,7 @@ pub const PlatformTerrain = Terrain{
     .name = "platform",
     .color = 0xffffff,
     .tile = '_',
-    .stats = .{ .Evade = -10, .Melee = 10, .Vision = 3 },
+    .stats = .{ .Evade = -10, .Melee = 10, .Missile = 20, .Vision = 3 },
     .opacity = 20,
 
     .for_levels = &[_][]const u8{ "PRI", "LAB", "VLT" },
