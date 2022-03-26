@@ -287,32 +287,34 @@ Movement patterns
 -----------------
 x sneak         [move, move, rest, move]
 - merciless     [move(A), attack(A), move(A), attack(A)]
-- counterattack [move(S), move(S), move(N), attack(A)]
 - backstab      [attack(N), move(NE), move(NW), attack(S)]
 - whirlwind     [attack(N), attack(S), attack(E), attack(W)]
   - (attack in four unique directions four times in a row)
   - active AoE ring abilities?
 
-- lunge:       ....   ....
+x lunge:       ....   ....
                .m.@ → .m@.
                ....   ....
   i.e.: step into a square next to enemy.
-  automatic attack that doesn't miss and deals 2x damage.
+  automatic attack that doesn't miss and deals 2x damage. Noisy.
 
-- charge:      ........   ........   ........   ........
-               m......@ → .m....@. → ..m..@.. → ...m@...
-               ........   ........   ........   ........
-  i.e.: move three spaces in the same direction towards enemy, ending adjacent
-  to enemy.
+x charge:            ........   ........   ........   ........
+          <wait>  →  m......@ → .m....@. → ..m..@.. → ...m@...
+                     ........   ........   ........   ........
+  i.e.: wait, move three spaces in the same direction towards enemy, ending
+  adjacent to enemy.
   automatic attack that doesn't miss, and knocks opponent back three spaces,
-  dealing extra damage if they slam into a wall or another mob.
+  dealing extra damage if they slam into a wall or another mob. Noisy.
 
 - pin:         ...   ...              ....
                .m. → .m@ → attack m → .m.@
                .@.   ...              ....
-  gives foe .Held status for 3 turns, just enough to set up a charge.
+  gives foe .Held status for 5 turns, just enough to set up a charge.
 
-- sideswipe:   ...   ...              ..@
+x cntrattack:  retreat, attack, retreat, attack, retreat.
+  Gives you the .Fast status for 4 turns.
+
+- drive-by:    ...   ...              ..@
                .m. → .m@ → attack m → .m.
                ..@   ...              ...
   free attack that doesn't miss, evade += 10% for two turns
@@ -324,7 +326,10 @@ x sneak         [move, move, rest, move]
   adjacent to the second, then step away.
   gives a 20% speed boost for five turns, and increases evade by +10%.
 
-(See rings for other movement patterns.)
+- rampage:     .m.m.   .m.m.
+               ..... → ..@.. → attack NW → attack NE
+               ..@..   .....
+  i.e.: move adjacent to two enemies, attack both consecutively.
 
 Equipment
 ---------
