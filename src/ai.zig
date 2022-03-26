@@ -231,7 +231,7 @@ pub fn checkForHostiles(mob: *Mob) void {
         const enemy = &mob.enemies.items[i];
         if (enemy.counter == 0 or
             !mob.isHostileTo(enemy.mob) or
-            enemy.coord.z != mob.coord.z or
+            enemy.mob.coord.z != mob.coord.z or
             enemy.mob.is_dead)
         {
             _ = mob.enemies.orderedRemove(i);
