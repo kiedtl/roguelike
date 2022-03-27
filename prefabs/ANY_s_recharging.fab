@@ -1,8 +1,8 @@
 % Recharging station
 %
-% ▂┌≡╥╖┒
-% ╧╪ŸŸŸ¦
-%  └´´´┚
+% ▂┌╥╥╖┒
+% R╧ŸŸŸ┚
+%
 
 :subroom
 :priority 99
@@ -14,16 +14,13 @@
 @c p wire_s2e1w1
 @d p wire_s2w1
 @e p wall_s1w1_thinw
-@f p wire_n1e2w2
-@g p wire_n1s1e2w2
-@h p antenna
-@i p wall_n1s1_slt2
+% @f p wire_n1e2w2
+@g p wire_n1e2w2
+@h m battery_pack
+@i p wall_n1w1_thinw
 @j p wire_n1e1
-@k p antenna_tip
-@l p wall_n1w1_thinw
 
 ........
-.ab0cde.
-.fghhhi.
-..jkkkl.
+.abccde.
+.0ghhhi.
 ........

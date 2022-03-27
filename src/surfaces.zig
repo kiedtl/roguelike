@@ -388,8 +388,11 @@ pub const BatteryPack = Machine{
     .id = "battery_pack",
     .name = "battery pack",
 
-    .powered_tile = '⊠',
-    .unpowered_tile = '⊠',
+    .powered_tile = 'Ÿ',
+    .unpowered_tile = 'Ÿ',
+
+    .powered_fg = 0x90a3b7,
+    .unpowered_fg = 0x90a3b7,
 
     .power_drain = 0,
     .power = 100,
@@ -618,10 +621,11 @@ pub const RechargingStation = Machine{
     .id = "recharging_station",
     .name = "recharging station",
     .announce = true,
-    .powered_tile = '≡',
+    .powered_tile = 'R',
     .unpowered_tile = 'x',
-    .powered_walkable = false,
-    .unpowered_walkable = false,
+    .powered_fg = 0x000000,
+    .unpowered_fg = 0x000000,
+    .bg = 0x90a3b7,
     .power_drain = 0,
     .power = 100,
     .on_power = powerNone,

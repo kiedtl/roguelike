@@ -2788,6 +2788,7 @@ pub const Machine = struct {
     unpowered_fg: ?u32 = null,
     powered_bg: ?u32 = null,
     unpowered_bg: ?u32 = null,
+    bg: ?u32 = null,
 
     power_drain: usize = 100, // Power drained per turn
 
@@ -3396,6 +3397,7 @@ pub const Tile = struct {
                         if (m.unpowered_bg) |mach_bg| cell.bg = mach_bg;
                         if (m.unpowered_fg) |mach_fg| cell.fg = mach_fg;
                     }
+                    if (m.bg) |bg| cell.bg = bg;
 
                     break :mach if (self.broken) 'x' else m.tile();
                 },

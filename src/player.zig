@@ -277,7 +277,18 @@ pub fn moveOrFight(direction: Direction) bool {
         return true;
     }
 
-    return state.player.moveInDirection(direction);
+    const ret = state.player.moveInDirection(direction);
+
+    if (!state.player.coord.eq(current)) {
+        if (state.dungeon.at(state.player.coord).surface) |s| switch (s) {
+            .Machine => |m| if (m.interact1 != null) {
+                state.message(.Info, "$c({s})$. Press $ba$. to activate.", .{m.name});
+            },
+            else => {},
+        };
+    }
+
+    return ret;
 }
 
 pub fn grabItem() bool {
