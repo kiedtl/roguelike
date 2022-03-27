@@ -2619,6 +2619,11 @@ pub const Mob = struct { // {{{
             else => {},
         }
 
+        // Check weapons.
+        if (self.inventory.equipmentConst(.Weapon).*) |weapon| {
+            val += utils.getFieldByEnum(Stat, weapon.Weapon.stats, _stat);
+        }
+
         // Check cloaks.
         if (self.inventory.equipmentConst(.Cloak).*) |clk| {
             if (_stat == .Camoflage and meta.activeTag(clk.Cloak.ego) == .Camoflage) {
@@ -3032,6 +3037,7 @@ pub const Weapon = struct {
     reach: usize = 1,
     delay: usize = 100, // Percentage (100 = normal speed, 200 = twice as slow)
     damage: usize,
+    stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     effects: []const StatusDataInfo = &[_]StatusDataInfo{},
     strs: []const DamageStr,
 };
