@@ -484,25 +484,6 @@ pub fn watcherWork(mob: *Mob, _: mem.Allocator) void {
     }
 }
 
-pub fn interactionLaborerWork(mob: *Mob, _: mem.Allocator) void {
-    assert(mob.ai.work_area.items.len == 1);
-
-    const machine_coord = mob.ai.work_area.items[0];
-    if (state.dungeon.at(machine_coord).broken) {
-        // Oops, our machine disappeared, probably because of an explosion
-        _ = mob.rest();
-        return;
-    }
-    const machine = state.dungeon.at(machine_coord).surface.?.Machine;
-    assert(!mob.coord.eq(machine_coord)); // Machine should not be walkable
-
-    if (!machine.isPowered()) {
-        mob.tryMoveTo(machine_coord);
-    } else {
-        _ = mob.rest();
-    }
-}
-
 pub fn cleanerWork(mob: *Mob, _: mem.Allocator) void {
     switch (mob.ai.work_phase) {
         .CleanerScan => {

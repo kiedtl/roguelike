@@ -274,9 +274,7 @@ pub const MACHINES = [_]Machine{
     ElevatorMotor,
     Extractor,
     BlastFurnace,
-    PowerSupply,
-    NuclearPowerSupply,
-    FuelPowerSupply,
+    BatteryPack,
     TurbinePowerSupply,
     HealingGasPump,
     Brazier,
@@ -309,9 +307,8 @@ pub const ChainPress = Machine{
     .powered_tile = '≡',
     .unpowered_tile = '≡',
 
-    .power_drain = 50,
-    .power_add = 100,
-    .auto_power = true,
+    .power_drain = 0,
+    .power = 100,
 
     .powered_walkable = false,
     .unpowered_walkable = false,
@@ -326,9 +323,8 @@ pub const ResearchCore = Machine{
     .powered_tile = '█',
     .unpowered_tile = '▓',
 
-    .power_drain = 50,
-    .power_add = 100,
-    .auto_power = true,
+    .power_drain = 0,
+    .power = 100,
 
     .powered_walkable = false,
     .unpowered_walkable = false,
@@ -343,9 +339,8 @@ pub const ElevatorMotor = Machine{
     .powered_tile = '⊛',
     .unpowered_tile = '⊚',
 
-    .power_drain = 50,
-    .power_add = 100,
-    .auto_power = true,
+    .power_drain = 0,
+    .power = 100,
 
     .powered_walkable = false,
     .unpowered_walkable = false,
@@ -360,9 +355,8 @@ pub const Extractor = Machine{
     .powered_tile = '⊟',
     .unpowered_tile = '⊞',
 
-    .power_drain = 50,
-    .power_add = 100,
-    .auto_power = true,
+    .power_drain = 0,
+    .power = 100,
 
     .powered_walkable = false,
     .unpowered_walkable = false,
@@ -377,9 +371,8 @@ pub const BlastFurnace = Machine{
     .powered_tile = '≡',
     .unpowered_tile = '≡',
 
-    .power_drain = 50,
-    .power_add = 100,
-    .auto_power = true,
+    .power_drain = 0,
+    .power = 0,
 
     .powered_walkable = false,
     .unpowered_walkable = false,
@@ -391,79 +384,24 @@ pub const BlastFurnace = Machine{
     .on_power = powerBlastFurnace,
 };
 
-pub const PowerSupply = Machine{
-    .id = "power_supply",
-    .name = "machine",
+pub const BatteryPack = Machine{
+    .id = "battery_pack",
+    .name = "battery pack",
 
-    .powered_tile = '█',
-    .unpowered_tile = '▓',
-
-    .power_drain = 30,
-    .power_add = 100,
-
-    .powered_walkable = false,
-    .unpowered_walkable = false,
-
-    .powered_opacity = 0,
-    .unpowered_opacity = 0,
-
-    .powered_luminescence = 75,
-    .unpowered_luminescence = 5,
-
-    .flammability = 8,
-
-    .on_power = powerPowerSupply,
-};
-
-pub const NuclearPowerSupply = Machine{
-    .id = "nuclear_power_supply",
-    .name = "orthire furnace",
-
-    .powered_tile = '≡',
-    .unpowered_tile = '≡',
+    .powered_tile = '⊠',
+    .unpowered_tile = '⊠',
 
     .power_drain = 0,
-    .power_add = 100,
-    .power = 100, // Start out fully powered
+    .power = 100,
 
     .powered_walkable = false,
     .unpowered_walkable = false,
 
-    .powered_opacity = 0,
-    .unpowered_opacity = 0,
+    .on_power = powerNone,
 
-    .powered_luminescence = 100,
-    .unpowered_luminescence = 20,
-
-    .flammability = 15,
-
-    .on_power = powerPowerSupply,
-};
-
-pub const FuelPowerSupply = Machine{
-    .id = "fuel_power_supply",
-    .name = "fuel furnace",
-
-    .powered_tile = '≡',
-    .unpowered_tile = '≡',
-
-    .power_drain = 0,
-    .power_add = 100,
-    .power = 100, // Start out fully powered
-
-    .powered_walkable = false,
-    .unpowered_walkable = false,
-
-    .powered_opacity = 0,
-    .unpowered_opacity = 0,
-
-    .powered_luminescence = 100,
-    .unpowered_luminescence = 20,
-
-    .flammability = 15,
-    .malfunction_effect = .{ .Explode = .{ .chance = 50, .power = 80 } },
-
-    .on_power = powerPowerSupply,
+    .malfunction_effect = Machine.MalfunctionEffect{
+        .Electrocute = .{ .chance = 30, .damage = 10, .radius = 6 },
+    },
 };
 
 pub const TurbinePowerSupply = Machine{
@@ -474,7 +412,6 @@ pub const TurbinePowerSupply = Machine{
     .unpowered_tile = '≡',
 
     .power_drain = 2,
-    .power_add = 100,
     .power = 100, // Start out fully powered
 
     .powered_walkable = false,
@@ -494,7 +431,6 @@ pub const HealingGasPump = Machine{
     .unpowered_tile = '▓',
 
     .power_drain = 100,
-    .power_add = 100,
 
     .powered_walkable = false,
     .unpowered_walkable = false,
@@ -517,9 +453,8 @@ pub const Brazier = Machine{
     .powered_bg = 0xb7b7b7,
     .unpowered_bg = 0xaaaaaa,
 
-    .power_drain = 10,
-    .power_add = 100,
-    .auto_power = true,
+    .power_drain = 0,
+    .power = 100,
 
     .powered_walkable = false,
     .unpowered_walkable = false,
@@ -548,9 +483,8 @@ pub const Lamp = Machine{
     .powered_fg = 0xffdf12,
     .unpowered_fg = 0x88e0ee,
 
-    .power_drain = 10,
-    .power_add = 100,
-    .auto_power = true,
+    .power_drain = 0,
+    .power = 100,
 
     .powered_walkable = false,
     .unpowered_walkable = false,
@@ -624,8 +558,8 @@ pub const LabDoor = Machine{
     .unpowered_tile = 'x',
     .powered_fg = 0xffdf10,
     .unpowered_fg = 0xffbfff,
-    .power_drain = 30,
-    .auto_power = true,
+    .power_drain = 0,
+    .power = 100,
     .powered_walkable = false,
     .unpowered_walkable = true,
     .powered_opacity = 1.0,
@@ -688,8 +622,8 @@ pub const RechargingStation = Machine{
     .unpowered_tile = 'x',
     .powered_walkable = false,
     .unpowered_walkable = false,
-    .power_drain = 99,
-    .auto_power = true,
+    .power_drain = 0,
+    .power = 100,
     .on_power = powerNone,
     .flammability = 15,
     .interact1 = .{
@@ -938,14 +872,6 @@ fn powerBlastFurnace(machine: *Machine) void {
     }
 }
 
-fn powerPowerSupply(machine: *Machine) void {
-    var iter = state.machines.iterator();
-    while (iter.next()) |mach| {
-        if (mach.coord.z == machine.coord.z and mach.auto_power)
-            _ = mach.addPower(null);
-    }
-}
-
 fn powerTurbinePowerSupply(machine: *Machine) void {
     assert(machine.areas.len > 0);
 
@@ -968,12 +894,6 @@ fn powerTurbinePowerSupply(machine: *Machine) void {
 
         steam += state.dungeon.atGas(area)[gas.Steam.id];
     }
-
-    powerPowerSupply(machine);
-
-    // Bypass machine.addPower (addendum 2022-02: Why?)
-    machine.power += @floatToInt(usize, steam * 10);
-    machine.last_interaction = null;
 }
 
 fn powerHealingGasPump(machine: *Machine) void {

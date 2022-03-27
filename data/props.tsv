@@ -78,7 +78,7 @@
 "battery"              	 "battery pack"         	 '▂' 	 0x90a3b7 	 -        	 nay 	 - 	15
 "fuel_burner"          	 "fuel burner"          	 '#' 	 0xffa0a0 	 -        	 nay 	 - 	15
 "steel_gas_reservoir"  	 "steel gas reservoir"  	 '■' 	 0xd7d7ff 	 -        	 nay
-"steel_pin"            	 "steel pin"            	 '+' 	 0xa6c2d4 	 -        	 -
+"steel_pin"            	 "steel pin"            	 '*' 	 0xa6c2d4 	 -        	 -
 
 "antenna_tip"          	 "antenna tip"          	 '´' 	 0x90a3b7 	 -        	 nay 	 - 	 - 	 .Laboratory
 "antenna"              	 "antenna"              	 'Ÿ' 	 0x90a3b7 	 -        	 nay 	 - 	 - 	 .Laboratory
@@ -94,6 +94,8 @@
 "microscope"           	 "microscope"           	 '†' 	 0xffeaca 	 -        	 nay 	 - 	 - 	 .Laboratory
 "calorimeter"          	 "calorimeter"          	 '⊝' 	 0xf5f5dc 	 -        	 nay 	 - 	 7 	 .Laboratory
 "vacuum_chmbr"         	 "vacuum chamber"       	 '⊜' 	 0xffefdf 	 -        	 nay 	 - 	 - 	 .Laboratory
+
+"nuclear_core"         	 "nuclear_core"         	 '≡' 	 0xffefdf 	 -        	 nay 	 - 	30
 
 "wall_n1s1_slt"        	 "vangenite wall"       	 '┋' 	 0xe0f8f2 	 -        	 nay
 "wall_n1s1_slt2"       	 "vangenite wall"       	 '¦' 	 0xe0f8f2 	 -        	 nay
@@ -189,6 +191,8 @@
 "lower_copper_coil"    	 "half copper coil"     	 '▄' 	 0xe99c39 	 -        	 nay
 "upper_copper_coil"    	 "half copper coil"     	 '▀' 	 0xe99c39 	 -        	 nay
 "full_copper_coil"     	 "large copper coil"    	 '█' 	 0xe99c39 	 -        	 nay
+
+"large_magnet"         	 "large magnet"         	 '█' 	 0xffffff 	 -        	 nay
 
 "item_location"        	 "mat"                  	 '░' 	 0x989898 	 -        	 -   	 -
 "workstation"          	 "workstation"          	 '░' 	 0xffffff 	 -        	 -

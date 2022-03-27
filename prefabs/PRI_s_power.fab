@@ -1,7 +1,7 @@
-% Power supply.
+% A power supply. Mostly aesthetics.
 %
 % █▀▐▀░▀▌▀█
-% ══╪╡█╞╪══
+% ⊠═╪╡█╞╪═⊠
 % █▄▐▄░▄▌▄█
 
 @0 p full_copper_coil
@@ -14,18 +14,15 @@
 @7 p steel_support_nse2w2
 @8 p steel_support_nsw2
 @9 p steel_support_nse2
-@a m power_supply
+@a p large_magnet
+@b m battery_pack
 
-:spawn interaction_laborer  6,2  6,3
-:spawn interaction_laborer  6,4  6,3
-
+:subroom
 :restriction 1
 :notrap
 
-###***#***###
-#...........#
-*.013141510.*
-#.6678a9766.#
-*.023242520.*
-#...........#
-###***#***###
+...........
+.013141510.
+.b678a976b.
+.023242520.
+...........

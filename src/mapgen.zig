@@ -3278,7 +3278,7 @@ pub const LevelConfig = struct {
 // -----------------------------------------------------------------------------
 
 pub const PRI_BASE_LEVELCONFIG = LevelConfig{
-    .prefabs = &[_][]const u8{ "PRI_power", "ANY_s_recharging" },
+    .prefabs = &[_][]const u8{"ANY_s_recharging"},
     .distances = [2][10]usize{
         .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
         .{ 5, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
@@ -3297,7 +3297,7 @@ pub const PRI_BASE_LEVELCONFIG = LevelConfig{
 };
 
 pub const VLT_BASE_LEVELCONFIG = LevelConfig{
-    .prefabs = &[_][]const u8{"VLT_power"},
+    .prefabs = &[_][]const u8{"ANY_s_recharging"},
     .prefab_chance = 1000, // No prefabs for VLT
     .mapgen_func = placeBSPRooms,
     .mapgen_iters = 1024,
@@ -3322,7 +3322,7 @@ pub const VLT_BASE_LEVELCONFIG = LevelConfig{
 };
 
 pub const LAB_BASE_LEVELCONFIG = LevelConfig{
-    .prefabs = &[_][]const u8{ "LAB_power", "ANY_s_recharging" },
+    .prefabs = &[_][]const u8{"ANY_s_recharging"},
     .distances = [2][10]usize{
         .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
         .{ 9, 3, 2, 1, 1, 1, 0, 0, 0, 0 },
@@ -3365,7 +3365,6 @@ pub const SMI_BASE_LEVELCONFIG = LevelConfig{
         "SMI_chain_press",
         "SMI_blast_furnace",
         "SMI_stockpiles",
-        "SMI_power",
         "SMI_elevator",
     },
     .distances = [2][10]usize{
@@ -3440,8 +3439,8 @@ pub var Configs = [LEVELS]LevelConfig{
 // TODO: convert this to a comptime expression
 // zig fmt: off
 pub fn fixConfigs() void {
-    Configs[0].prefabs = &[_][]const u8{ "ENT_start", "PRI_power", "ANY_s_recharging" };
-    Configs[state.PLAYER_STARTING_LEVEL].prefabs = &[_][]const u8{ "PRI_start", "PRI_power", "ANY_s_recharging" };
+    Configs[0].prefabs = &[_][]const u8{ "ENT_start", "ANY_s_recharging" };
+    Configs[state.PLAYER_STARTING_LEVEL].prefabs = &[_][]const u8{ "PRI_start", "ANY_s_recharging" };
 
     // Be careful when editing this
     Configs[00].stairs_to = &[_]usize{};      // -1/Prison       -> nothing

@@ -2790,8 +2790,6 @@ pub const Machine = struct {
     unpowered_bg: ?u32 = null,
 
     power_drain: usize = 100, // Power drained per turn
-    power_add: usize = 100, // Power added on interact
-    auto_power: bool = false,
 
     restricted_to: ?Allegiance = null,
     powered_walkable: bool = true,
@@ -2864,13 +2862,9 @@ pub const Machine = struct {
         } else return error.NoEffect;
     }
 
-    pub fn addPower(self: *Machine, by: ?*Mob) bool {
-        if (by) |_by| {
-            if (self.restricted_to) |restriction|
-                if (restriction != _by.allegiance) return false;
-            if (self.auto_power)
-                return false; // Usually this is a bug (TODO: make this an assert()).
-        } else assert(self.auto_power);
+    pub fn addPower(self: *Machine, by: *Mob) bool {
+        if (self.restricted_to) |restriction|
+            if (restriction != by.allegiance) return false;
 
         if (self.jammed) {
             if (!self._tryUnjam(by)) {
@@ -2878,7 +2872,7 @@ pub const Machine = struct {
             }
         }
 
-        self.power = math.min(self.power + self.power_add, 100);
+        self.power = math.min(self.power + 100, 100);
         self.last_interaction = by;
 
         return true;

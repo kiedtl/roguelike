@@ -375,29 +375,6 @@ pub const PlayerTemplate = MobTemplate{
     //.cloak = &items.ThornsCloak,
 };
 
-pub const InteractionLaborerTemplate = MobTemplate{
-    .id = "interaction_laborer",
-    .mob = .{
-        .species = &GoblinSpecies,
-        .tile = 'w',
-        .ai = AI{
-            .profession_name = "slave",
-            .profession_description = "laboring",
-            .work_fn = ai.interactionLaborerWork,
-            .fight_fn = null,
-            .is_combative = false,
-            .is_curious = false,
-        },
-        .allegiance = .Necromancer,
-
-        .max_HP = 60,
-        .memory_duration = 5,
-        .blood = .Blood,
-
-        .stats = .{ .Willpower = 2, .Evade = 10, .Strength = 10, .Speed = 100 },
-    },
-};
-
 pub const GoblinTemplate = MobTemplate{
     .id = "goblin",
     .mob = .{
@@ -1061,7 +1038,6 @@ pub const MOBS = [_]MobTemplate{
     IronWaspTemplate,
     PatrolTemplate,
     PlayerTemplate,
-    InteractionLaborerTemplate,
     GoblinTemplate,
     KyaniteStatueTemplate,
     NebroStatueTemplate,
