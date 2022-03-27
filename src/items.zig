@@ -515,7 +515,7 @@ pub const QuarterstaffWeapon = Weapon{
 pub const SwordWeapon = Weapon{
     .id = "sword",
     .name = "longsword",
-    .damage = 4,
+    .damage = 2,
     .stats = .{ .Evade = 10 },
     .strs = &CRUSHING_STRS,
 };
@@ -538,7 +538,7 @@ pub const DaggerWeapon = Weapon{
 pub const StilettoWeapon = Weapon{
     .id = "stiletto",
     .name = "stiletto",
-    .damage = 6,
+    .damage = 5,
     .stats = .{ .Melee = -25 },
     .strs = &PIERCING_STRS,
 };
@@ -546,7 +546,7 @@ pub const StilettoWeapon = Weapon{
 pub const RapierWeapon = Weapon{
     .id = "rapier",
     .name = "rapier",
-    .damage = 4,
+    .damage = 3,
     .stats = .{ .Melee = -10, .Evade = 10 },
     .strs = &PIERCING_STRS,
 };
@@ -555,7 +555,7 @@ pub const SpearWeapon = Weapon{
     .id = "spear",
     .name = "spear",
     .delay = 110,
-    .damage = 3,
+    .damage = 2,
     .stats = .{ .Melee = 10 },
     .strs = &PIERCING_STRS,
     .reach = 2,
@@ -565,14 +565,14 @@ pub const KnoutWeapon = Weapon{
     .id = "knout",
     .name = "knout",
     .delay = 150,
-    .damage = 7,
+    .damage = 6,
     .strs = &CRUSHING_STRS,
 };
 
 pub const MorningstarWeapon = Weapon{
     .id = "morningstar",
     .name = "morningstar",
-    .damage = 4,
+    .damage = 3,
     .stats = .{ .Melee = 10 },
     .strs = &CRUSHING_STRS,
 };
@@ -581,14 +581,14 @@ pub const ClubWeapon = Weapon{
     .id = "club",
     .name = "club",
     .delay = 110,
-    .damage = 2,
+    .damage = 1,
     .strs = &CRUSHING_STRS,
 };
 
 pub const MaceWeapon = Weapon{
     .id = "mace",
     .name = "mace",
-    .damage = 3,
+    .damage = 2,
     .stats = .{ .Melee = 10 },
     .strs = &CRUSHING_STRS,
 };
@@ -600,7 +600,7 @@ pub const AxeWeapon = Weapon{
     .id = "battleaxe",
     .name = "battleaxe",
     .delay = 120,
-    .damage = 5,
+    .damage = 4,
     .stats = .{ .Melee = -15 },
     .strs = &SLASHING_STRS,
 };

@@ -135,7 +135,7 @@ pub const WardenTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .max_HP = 10,
+        .max_HP = 15,
         .memory_duration = 6,
         .blood = .Blood,
         .stats = .{ .Willpower = 3, .Evade = 10, .Strength = 20, .Speed = 120, .Vision = 5 },
@@ -160,7 +160,7 @@ pub const GuardTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .max_HP = 8,
+        .max_HP = 10,
         .memory_duration = 5,
         .blood = .Blood,
 
