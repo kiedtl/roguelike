@@ -13,21 +13,20 @@ other characteristics of these machines will vary between a powered or unpowered
 state.
 
 **Powered interactive machines.** This includes recharging stations. These
-machines are put into a "powered" state by the level's power station machine,
-but do not perform an action until a mob interacts with them via the callbacks
-in the machine's `interact1`/`interact2` fields. The fact that the machine must
-be "powered" to perform these interactions should normally be an implementation
-detail, unless the level's power station is somehow destroyed. In that case the
-player will be unable to interact with the machine until an engineer shows up
-and repairs the power station.
+machines are permanently in a powered state (which is purely an implementation
+detail for these machines), but do not perform an action until a mob interacts
+with them via the callbacks in the machine's `interact1`/`interact2` fields.
 
 **Powered non-interactive machines.** This includes power stations and the
 various "machines" scattered around Laboratory and Smithing, such as extractors,
 chain presses, ore elevators, etc. These machines are purely for aesthetics and
 serve no purpose to the player, although they will be repaired by engineers if
-destroyed.
+destroyed. (In early versions, the power station was actually responsible for
+putting permanently-powered machines into the powered state. This was removed
+though as it just created additional unnecessary gameplay complexities, e.g., if
+the player accidentally destroyed the power station with a bomb.)
 
 **Powered environmental machines.** Includes lights, braziers, lab doors, and
-air purifiers. They are powered by the level's power station, and the player
-doesn't interact directly with them, but unlike the previous category they do
-affect gameplay in significant ways.
+air purifiers. They are permanently powered, and the player doesn't interact
+directly with them, but unlike the previous category they do affect gameplay in
+significant ways.
