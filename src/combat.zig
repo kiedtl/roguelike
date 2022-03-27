@@ -27,8 +27,7 @@ const DEFENDER_HELD_NBONUS: isize = 10;
 const DEFENDER_CAMOFLAGE_BONUS: isize = 5;
 
 pub fn damageOfMeleeAttack(attacker: *const Mob, w_damage: usize, is_stab: bool) usize {
-    var damage: usize = 0;
-    damage += rng.rangeClumping(usize, w_damage / 2, w_damage, 2);
+    var damage: usize = w_damage;
     damage += if (attacker.isUnderStatus(.Enraged) != null) damage / 5 else 0;
     damage += damage * (@intCast(usize, attacker.stat(.Strength)) / 2) / 100;
 

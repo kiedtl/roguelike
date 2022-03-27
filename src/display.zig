@@ -435,15 +435,16 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         }
     } else false;
 
-    const lit_str = if (light) "Lit " else "";
-    const flanked_str = if (flanked) "Flanked " else "";
-    const spotted_str = if (spotted) "Spotted " else "";
+    if (light or flanked or spotted) {
+        const lit_str = if (light) "Lit " else "";
+        const flanked_str = if (flanked) "Flanked " else "";
+        const spotted_str = if (spotted) "Spotted " else "";
 
-    y = _drawStr(startx, y, endx, "$c{s}$.$b{s}$.$r{s}$.", .{
-        lit_str, spotted_str, flanked_str,
-    }, .{});
-
-    y += 1;
+        y = _drawStr(startx, y, endx, "$c{s}$.$b{s}$.$r{s}$.", .{
+            lit_str, spotted_str, flanked_str,
+        }, .{});
+        y += 1;
+    }
 
     y = _drawStr(startx, y, endx, "$cturns:$. {}", .{state.ticks}, .{});
     y += 1;

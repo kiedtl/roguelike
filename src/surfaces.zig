@@ -403,7 +403,7 @@ pub const BatteryPack = Machine{
     .on_power = powerNone,
 
     .malfunction_effect = Machine.MalfunctionEffect{
-        .Electrocute = .{ .chance = 30, .damage = 10, .radius = 6 },
+        .Electrocute = .{ .chance = 30, .damage = 2, .radius = 6 },
     },
 };
 
@@ -471,7 +471,7 @@ pub const Brazier = Machine{
 
     .flammability = 8,
     .malfunction_effect = Machine.MalfunctionEffect{
-        .Electrocute = .{ .chance = 40, .damage = 1, .radius = 5 },
+        .Electrocute = .{ .chance = 40, .damage = 2, .radius = 5 },
     },
 
     .on_power = powerNone,
@@ -501,7 +501,7 @@ pub const Lamp = Machine{
 
     .flammability = 8,
     .malfunction_effect = Machine.MalfunctionEffect{
-        .Electrocute = .{ .chance = 40, .damage = 10, .radius = 5 },
+        .Electrocute = .{ .chance = 40, .damage = 1, .radius = 5 },
     },
 
     .on_power = powerNone,

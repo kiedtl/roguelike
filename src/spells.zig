@@ -161,7 +161,7 @@ fn _effectAuraDispersal(caster: Coord, _: Spell, _: SpellOptions, _: Coord) void
                 if (new) |newcoord| {
                     _ = mob.teleportTo(newcoord, null, true);
                     mob.addStatus(.Daze, 0, .{ .Tmp = 2 });
-                    mob.takeDamage(.{ .amount = 10, .source = .RangedAttack });
+                    mob.takeDamage(.{ .amount = 2, .source = .RangedAttack });
                     if (state.player.cansee(mob.coord) or state.player.cansee(caster))
                         had_visible_effect = true;
                 }

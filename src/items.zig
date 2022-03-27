@@ -126,7 +126,7 @@ pub const JavelinProj = Projectile{
     .id = "javelin",
     .name = "poisoned javelin",
     .color = 0xffd7d7,
-    .damage = 10,
+    .damage = 2,
     .effect = .{
         .Status = .{
             .status = .Poison,
@@ -464,21 +464,11 @@ const LACERATING_STRS = [_][]DamageStr{
     _dmgstr(150, "mangle", "mangles", " beyond recognition"),
 };
 
-pub const LivingIceHitWeapon = Weapon{
-    .id = "none",
-    .name = "none",
-    .delay = 80,
-    .damage = 15,
-    .strs = &[_]DamageStr{
-        _dmgstr(010, "hit", "hits", ""),
-    },
-};
-
 pub const FistWeapon = Weapon{
     .id = "none",
     .name = "none",
     .delay = 80,
-    .damage = 10,
+    .damage = 2,
     .strs = &[_]DamageStr{
         _dmgstr(020, "punch", "punches", ""),
         _dmgstr(030, "hit", "hits", ""),
@@ -491,7 +481,7 @@ pub const ClawWeapon = Weapon{
     .id = "none",
     .name = "none",
     .delay = 90,
-    .damage = 12,
+    .damage = 3,
     .strs = &[_]DamageStr{
         _dmgstr(010, "scratch", "scratches", ""),
         _dmgstr(030, "claw", "claws", ""),
@@ -507,7 +497,7 @@ pub const KickWeapon = Weapon{
     .id = "none",
     .name = "none",
     .delay = 100,
-    .damage = 12,
+    .damage = 2,
     .strs = &[_]DamageStr{
         _dmgstr(080, "kick", "kicks", ""),
         _dmgstr(081, "curbstomp", "curbstomps", ""),
@@ -517,28 +507,28 @@ pub const KickWeapon = Weapon{
 pub const KnifeWeapon = Weapon{
     .id = "knife",
     .name = "knife",
-    .damage = 10,
+    .damage = 1,
     .strs = &PIERCING_STRS,
 };
 
 pub const DaggerWeapon = Weapon{
     .id = "dagger",
     .name = "dagger",
-    .damage = 15,
+    .damage = 2,
     .strs = &PIERCING_STRS,
 };
 
 pub const StilettoWeapon = Weapon{
     .id = "stiletto",
     .name = "stiletto",
-    .damage = 25,
+    .damage = 6,
     .strs = &PIERCING_STRS,
 };
 
 pub const RapierWeapon = Weapon{
     .id = "rapier",
     .name = "rapier",
-    .damage = 20,
+    .damage = 4,
     .strs = &PIERCING_STRS,
 };
 
@@ -546,7 +536,7 @@ pub const SpearWeapon = Weapon{
     .id = "spear",
     .name = "spear",
     .delay = 110,
-    .damage = 15,
+    .damage = 3,
     .strs = &PIERCING_STRS,
     .reach = 2,
 };
@@ -555,14 +545,14 @@ pub const KnoutWeapon = Weapon{
     .id = "knout",
     .name = "knout",
     .delay = 150,
-    .damage = 30,
+    .damage = 7,
     .strs = &CRUSHING_STRS,
 };
 
 pub const MorningstarWeapon = Weapon{
     .id = "morningstar",
     .name = "morningstar",
-    .damage = 20,
+    .damage = 4,
     .strs = &CRUSHING_STRS,
 };
 
@@ -570,14 +560,14 @@ pub const ClubWeapon = Weapon{
     .id = "club",
     .name = "club",
     .delay = 110,
-    .damage = 12,
+    .damage = 2,
     .strs = &CRUSHING_STRS,
 };
 
 pub const MaceWeapon = Weapon{
     .id = "mace",
     .name = "mace",
-    .damage = 15,
+    .damage = 3,
     .strs = &CRUSHING_STRS,
 };
 
@@ -588,7 +578,7 @@ pub const AxeWeapon = Weapon{
     .id = "battleaxe",
     .name = "battleaxe",
     .delay = 120,
-    .damage = 25,
+    .damage = 5,
     .strs = &SLASHING_STRS,
 };
 
