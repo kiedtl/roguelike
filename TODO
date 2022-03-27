@@ -163,7 +163,7 @@ x burning brute
 	- Gives silver damage (i.e., electrocution if in range of battery pack).
 	- 5 HP and no armor at all.
 	- Found in the Laboratory.
-- iron wasp
+x iron wasp
 	- Like silver hornet, but gives no silver damage.
 	- Sting attack that gives poisoning.
 	- Very occasionally found in swarms of fellow iron wasps.
@@ -198,7 +198,7 @@ x lead turtle
 	- Avoids melee
 	- Travels with packs of emberlings
 - blood mage
-	- Toned-down pain spell
+	- Toned-down pain spell that heals nearby bloodlings
 	- Can make a corpse explode in a wave of blood
 	- Can create 3-4 bloodlings from a corpse
 - bloodlings
@@ -212,8 +212,9 @@ x lead turtle
 	- Aura of electricity vunerability
 - lightning mage
 	- Has all abilities of spark mage
-	- Can summon a lightning spire from a corpse
-	- Can briefly paralyse player
+	- Can summon a lightning spire from a corpse (or not? lightning spires
+	  are supposed to be machines, right?)
+	- Can briefly paralyse player ("stunning burst")
 	- Keeps distance
 - iron mage
 	- Spectral Sword: summons four spectral swords, which are very fast but
@@ -248,6 +249,10 @@ x death mage
 	- Slow (120) and heavily armored, but just a simple club.
 	- Releases chained dogs, hounds, wolves in same room when seeing hostile.
 	- Goads beasts on, possibly giving them .Enraged status
+- sleeping beauty
+	- "A hideous statue of some nameless creature, covered in metal plates."
+	- Sleeps, when hit with electric damage, activates.
+	- rElec∞ rFume∞
 
 Intelligence
 ------------
@@ -336,21 +341,21 @@ Equipment
 (damages is after making all hps 1/4)
 
 weapons:
-- quarterstaff      4 damage                OpenMelee, Martial+, +20 Evade
-- battleaxe         5 damage   -15 Melee%   OpenMelee
+- quarterstaff      3 damage                OpenMelee, Martial+, +15 Evade
+- battleaxe         4 damage   -15 Melee%   OpenMelee
 - knife             1 damage                Dip
-- dagger            2 damage   -15 Melee%   Dip, Martial
+- dagger            2 damage                Dip, Martial
   - Free attack that doesn't miss on 3rd consecutive non-missing attack
-- rapier            4 damage   -10 Melee%   Dip, +10 Evade, Riposte
-- stiletto          6 damage   -25 Melee%   Dip
-- mace              3 damage   +10 Melee%   Stun
-- morningstar       4 damage   +10 Melee%   Stun
+- rapier            3 damage   -10 Melee%   Dip, +10 Evade, Riposte
+- stiletto          5 damage   -25 Melee%   Dip
+- mace              2 damage   +10 Melee%   Stun
+- morningstar       3 damage   +10 Melee%   Stun
   - Lunge attack gives 3x damage instead of 2x.
-- knout             7 damage
-- club              2 damage
-- longsword         4 damage                Dip, +10 Evade
+- knout             6 damage
+- club              1 damage
+- longsword         2 damage                Dip, +10 Evade
   - "Parting shot" pattern gives 20% evade instead of 10%.
-- halberd           4 damage   +10 Melee%   Reach+
+- halberd           2 damage   +10 Melee%   Reach+
 
 body armor:
 - robe
@@ -713,7 +718,7 @@ x Add tougher monsters; balancing
   x Place monsters in various areas
 x Balancing: fix mob placement (more on dangerous floors, less otherwise)
 x Add fungi, plants, terrain
-- Add basic (non-ring-based) movement patterns
+x Add basic (non-ring-based) movement patterns: charge, lunge, counterattack.
 - More items, item features
   - Weapon and armor effects
   - Weapon coatings/dipping
@@ -728,7 +733,7 @@ x LOS/lighting revamp
   - Remove 'r' key, revamp recharging station appearance(?)
   - Remove hammer evocable, allow always breaking machines/props
 - Add Status/Mob(?)/Item lookup screen
-- Revamp input prompts
+x Revamp input prompts
 - Informational screens
   - features/items screen, remove announcement of items
   - "?" screen
@@ -737,8 +742,6 @@ x LOS/lighting revamp
     x Remove 't' key, remove 'a' key for items
   - Poster description screen
 - Show information characters next to mob in enemy pane
-- Startup screen, map generation loading bar
-- Add basic animations
 - Implement intelligence
 - Revisit and revamp SMI mapgen
   - toxic sludge pools and bridges over them
@@ -747,16 +750,13 @@ x LOS/lighting revamp
   - Spires and spire kits
   - Add abominations, more experiments
   - Add traps of blinding gas
-- Morgue level
-  - Cogmind-esque tunneling algorithm
-  - Monsters
 - Posters/books
   - Poster types (graffiti, announcement, engraving, etc)
   - Add bookshelves and book types
     - Maps
     - Useless books
-- Cleanup machines
-  - Message if player moves over activatable machine
+x Cleanup machines
+  x Message if player moves over activatable machine
 x Upgrade to Zig v9
   x Remove usage of usingnamespace
   x Petition khuxkm/ben for update
@@ -764,6 +764,11 @@ x Upgrade to Zig v9
   x Fix "*mem.Allocator" params
 - Runes and scoring
 *** v1.0.0 release ***
+- Startup screen, map generation loading bar
+- Add basic animations
+- Morgue level
+  - Cogmind-esque tunneling algorithm
+  - Monsters
 - Blood, iron, ember, fire, spark, lightning mage bands
 - Night creatures (night reapers, creeping deaths)
 - Silver weapons and battery packs, silver hornets
