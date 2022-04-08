@@ -1926,6 +1926,7 @@ pub const Mob = struct { // {{{
     pub const FightOptions = struct {
         free_attack: bool = false,
         auto_hit: bool = false,
+        disallow_stab: bool = false,
         damage_bonus: usize = 100, // percentage
         loudness: SoundIntensity = .Medium,
     };
@@ -2025,7 +2026,7 @@ pub const Mob = struct { // {{{
             return;
         }
 
-        const is_stab = !recipient.isAwareOfAttack(attacker.coord) and !is_bonus_attack;
+        const is_stab = !opts.disallow_stab and !recipient.isAwareOfAttack(attacker.coord) and !is_bonus_attack;
         const damage = combat.damageOfMeleeAttack(attacker, attacker_weapon.damage, is_stab) * opts.damage_bonus / 100;
 
         recipient.takeDamage(.{
@@ -2793,7 +2794,7 @@ pub const Mob = struct { // {{{
                             state.messageAboutMob(self, self.coord, .Combat, "lunge at the {s}!", .{othermob.displayName()}, "lunges at the {s}!", .{othermob.displayName()});
                         }
 
-                        self.fight(othermob, .{ .free_attack = true, .auto_hit = true, .damage_bonus = 200, .loudness = .Loud });
+                        self.fight(othermob, .{ .free_attack = true, .auto_hit = true, .disallow_stab = true, .damage_bonus = 200, .loudness = .Loud });
                         return;
                     }
                 }
