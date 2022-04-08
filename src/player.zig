@@ -376,15 +376,25 @@ pub fn throwItem(index: usize) bool {
 
 pub fn activateSurfaceItem() bool {
     var mach: *Machine = undefined;
-    if (state.dungeon.at(state.player.coord).surface) |s| switch (s) {
-        .Machine => |m| if (m.interact1) |_| {
-            mach = m;
-        },
-        else => {
-            display.drawAlertThenLog("There's nothing here to activate.", .{});
-            return false;
-        },
-    };
+
+    // FIXME: simplify this, DRY
+    if (state.dungeon.at(state.player.coord).surface) |s| {
+        switch (s) {
+            .Machine => |m| if (m.interact1) |_| {
+                mach = m;
+            } else {
+                display.drawAlertThenLog("You can't activate that.", .{});
+                return false;
+            },
+            else => {
+                display.drawAlertThenLog("There's nothing here to activate.", .{});
+                return false;
+            },
+        }
+    } else {
+        display.drawAlertThenLog("There's nothing here to activate.", .{});
+        return false;
+    }
 
     const interaction = &mach.interact1.?;
     mach.evoke(state.player, interaction) catch |e| {
