@@ -1105,7 +1105,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
         const linewidth = @intCast(usize, (wind.endx - wind.startx) - 4);
         var fold_iter = utils.FoldedTextIterator.init(str, linewidth);
         while (fold_iter.next()) |line| {
-            y = _drawStr(wind.startx, y, wind.endx, "{s}", .{line}, .{});
+            y = _drawStr(wind.startx, y, wind.endx, "$c{s}$.", .{line}, .{});
         }
 
         for (options) |option, i| {
@@ -1178,7 +1178,8 @@ pub fn drawYesNoPrompt(comptime fmt: []const u8, args: anytype) bool {
 }
 
 pub fn drawContinuePrompt(comptime fmt: []const u8, args: anytype) void {
-    _ = drawChoicePrompt(fmt, args, &[_][]const u8{"Continue"});
+    state.message(.Info, fmt, args);
+    _ = drawChoicePrompt(fmt, args, &[_][]const u8{"Press $b<Enter>$. to continue."});
 }
 
 pub fn drawItemChoicePrompt(comptime fmt: []const u8, args: anytype, items: []const Item) ?usize {
