@@ -1205,6 +1205,7 @@ pub const Species = struct {
 pub const Stat = enum {
     Melee,
     Missile,
+    Martial,
     Evade,
     Strength,
     Camoflage,
@@ -1217,6 +1218,7 @@ pub const Stat = enum {
         return switch (self) {
             .Melee => "melee%",
             .Missile => "missile%",
+            .Martial => "martial",
             .Evade => "evade%",
             .Strength => "strength",
             .Camoflage => "camoflage",
@@ -1290,6 +1292,7 @@ pub const Mob = struct { // {{{
     stats: struct {
         Melee: isize = 60,
         Missile: isize = 40,
+        Martial: isize = 0,
         Evade: isize = 10,
         Strength: isize = 10,
         Camoflage: isize = 0,
@@ -1936,6 +1939,8 @@ pub const Mob = struct { // {{{
             .last_seen = attacker.coord,
         });
 
+        const martial = @intCast(usize, attacker.stat(.Martial));
+
         var weapons = StackBuffer(*const Weapon, 7).init(null);
         weapons.append(if (attacker.inventory.equipment(.Weapon).*) |w| w.Weapon else attacker.species.default_attack) catch unreachable;
         for (attacker.species.aux_attacks) |w| weapons.append(w) catch unreachable;
@@ -1945,7 +1950,7 @@ pub const Mob = struct { // {{{
             assert(weapon.reach >= attacker.coord.distance(recipient.coord));
 
             if (weapon.delay > longest_delay) longest_delay = weapon.delay;
-            _fightWithWeapon(attacker, recipient, weapon, opts);
+            _fightWithWeapon(attacker, recipient, weapon, opts, martial, false);
         }
 
         if (!opts.free_attack) {
@@ -1959,7 +1964,7 @@ pub const Mob = struct { // {{{
         }
     }
 
-    fn _fightWithWeapon(attacker: *Mob, recipient: *Mob, attacker_weapon: *const Weapon, opts: FightOptions) void {
+    fn _fightWithWeapon(attacker: *Mob, recipient: *Mob, attacker_weapon: *const Weapon, opts: FightOptions, remaining_bonus_attacks: usize, is_bonus_attack: bool) void {
         assert(!attacker.is_dead);
         assert(!recipient.is_dead);
 
@@ -2020,7 +2025,7 @@ pub const Mob = struct { // {{{
             return;
         }
 
-        const is_stab = !recipient.isAwareOfAttack(attacker.coord);
+        const is_stab = !recipient.isAwareOfAttack(attacker.coord) and !is_bonus_attack;
         const damage = combat.damageOfMeleeAttack(attacker, attacker_weapon.damage, is_stab) * opts.damage_bonus / 100;
 
         recipient.takeDamage(.{
@@ -2054,28 +2059,32 @@ pub const Mob = struct { // {{{
         if (dmg_percent >= 60) punctuation = "!!!";
         if (dmg_percent >= 80) punctuation = "!!!!";
 
+        const martial_str = if (is_bonus_attack) "$b*Martial*$." else "";
+
         if (recipient.coord.eq(state.player.coord)) {
-            state.message(.Combat, "The {s} {s} you{s}{s} ($p{}% dmg$.)", .{
+            state.message(.Combat, "The {s} {s} you{s}{s} ($p{}% dmg$.) {s}", .{
                 attacker.displayName(),
                 hitstrs.verb_other,
                 hitstrs.verb_degree,
                 punctuation,
                 dmg_percent,
+                martial_str,
             });
         } else if (attacker.coord.eq(state.player.coord)) {
-            state.message(.Combat, "You {s} the {s}{s}{s} ($p{}% dmg$.)", .{
+            state.message(.Combat, "You {s} the {s}{s}{s} ($p{}% dmg$.) {s}", .{
                 hitstrs.verb_self,
                 recipient.displayName(),
                 hitstrs.verb_degree,
                 punctuation,
                 dmg_percent,
+                martial_str,
             });
         } else {
             const cansee_a = state.player.cansee(attacker.coord);
             const cansee_r = state.player.cansee(recipient.coord);
 
             if (cansee_a or cansee_r) {
-                state.message(.Combat, "{s}{s} {s} {s}{s}{s}{s} ($p{}% dmg$.)", .{
+                state.message(.Combat, "{s}{s} {s} {s}{s}{s}{s} ($p{}% dmg$.) {s}", .{
                     if (cansee_a) @as([]const u8, "The ") else "",
                     if (cansee_a) attacker.displayName() else "Something",
                     hitstrs.verb_other,
@@ -2084,6 +2093,7 @@ pub const Mob = struct { // {{{
                     hitstrs.verb_degree,
                     punctuation,
                     dmg_percent,
+                    martial_str,
                 });
             }
         }
@@ -2095,6 +2105,13 @@ pub const Mob = struct { // {{{
         // Daze stabbed mobs.
         if (is_stab and !recipient.should_be_dead()) {
             recipient.addStatus(.Daze, 0, .{ .Tmp = rng.range(usize, 3, 5) });
+        }
+
+        // Bonus attacks?
+        if (remaining_bonus_attacks > 0) {
+            var newopts = opts;
+            newopts.auto_hit = false;
+            _fightWithWeapon(attacker, recipient, attacker_weapon, newopts, remaining_bonus_attacks - 1, true);
         }
     }
 

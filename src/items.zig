@@ -507,8 +507,8 @@ pub const KickWeapon = Weapon{
 pub const QuarterstaffWeapon = Weapon{
     .id = "quarterstaff",
     .name = "quarterstaff",
-    .damage = 3,
-    .stats = .{ .Evade = 15 },
+    .damage = 2,
+    .stats = .{ .Martial = 2, .Evade = 15 },
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .OpenMelee, .duration = .Equ },
     },
