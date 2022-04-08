@@ -742,6 +742,11 @@ pub const Allegiance = enum {
 };
 
 pub const Status = enum {
+    // .Melee bonus if surrounded by empty space.
+    //
+    // Doesn't have a power field.
+    OpenMelee,
+
     // Makes monster "share" electric damage to nearby mobs and through
     // conductive terrain.
     //
@@ -888,6 +893,7 @@ pub const Status = enum {
 
     pub fn string(self: Status, mob: *const Mob) []const u8 {
         return switch (self) {
+            .OpenMelee => "open melee",
             .Conductive => "conductive",
             .Noisy => "noisy",
             .Sleeping => switch (mob.life_type) {
@@ -924,7 +930,7 @@ pub const Status = enum {
 
     pub fn messageWhenAdded(self: Status) ?[3][]const u8 {
         return switch (self) {
-            .Conductive, .Noisy => null,
+            .OpenMelee, .Conductive, .Noisy => null,
             .Sleeping => .{ "go", "goes", " to sleep" }, // FIXME: bad wording for unliving
             .Paralysis => .{ "are", "is", " paralyzed" },
             .Held => .{ "are", "is", " entangled" },
@@ -957,7 +963,7 @@ pub const Status = enum {
 
     pub fn messageWhenRemoved(self: Status) ?[3][]const u8 {
         return switch (self) {
-            .Conductive, .Noisy => null,
+            .OpenMelee, .Conductive, .Noisy => null,
             .Sleeping => .{ "wake", "wakes", " up" },
             .Paralysis => .{ "can move again", "starts moving again", "" },
             .Held => .{ "break", "breaks", " free" },
@@ -1104,8 +1110,9 @@ pub const StatusDataInfo = struct {
     exhausting: bool = false,
 
     pub const Duration = union(enum) {
-        Tmp: usize,
         Prm,
+        Equ,
+        Tmp: usize,
         Ctx: ?*const surfaces.Terrain,
     };
 };
@@ -1480,6 +1487,32 @@ pub const Mob = struct { // {{{
         self.inventory.equipment(.Weapon).* = self.inventory.equipment(.Backup).*;
         self.inventory.equipment(.Backup).* = tmp;
         return false; // zero-cost action
+    }
+
+    pub fn equipItem(self: *Mob, slot: Inventory.EquSlot, item: Item) void {
+        switch (item) {
+            .Weapon => |w| for (w.equip_effects) |effect| self.applyStatus(effect, .{}),
+            else => {},
+        }
+        self.inventory.equipment(slot).* = item;
+        self.declareAction(.Use);
+    }
+
+    pub fn dequipItem(self: *Mob, slot: Inventory.EquSlot, drop_coord: Coord) void {
+        const item = self.inventory.equipment(slot).*.?;
+        switch (item) {
+            .Weapon => |w| for (w.equip_effects) |effect| {
+                if (self.isUnderStatus(effect.status)) |effect_info| {
+                    if (effect_info.duration == .Equ) {
+                        self.cancelStatus(effect.status);
+                    }
+                }
+            },
+            else => {},
+        }
+        state.dungeon.itemsAt(drop_coord).append(item) catch err.wat();
+        self.inventory.equipment(slot).* = null;
+        self.declareAction(.Drop);
     }
 
     pub fn removeItem(self: *Mob, index: usize) !Item {
@@ -2356,7 +2389,10 @@ pub const Mob = struct { // {{{
     }
 
     pub fn cancelStatus(self: *Mob, s: Status) void {
-        self.applyStatus(.{ .status = s, .duration = .{ .Tmp = 0 } }, .{ .add_duration = false });
+        self.applyStatus(.{ .status = s, .duration = .{ .Tmp = 0 } }, .{
+            .add_duration = false,
+            .replace_duration = true,
+        });
     }
 
     pub fn applyStatus(
@@ -2389,6 +2425,9 @@ pub const Mob = struct { // {{{
         const replace_anyway = opts.replace_duration or !had_status_before;
         switch (p_se.duration) {
             .Prm => if (replace_anyway or new_dur_type == .Prm) {
+                p_se.duration = s.duration;
+            },
+            .Equ => if (replace_anyway or new_dur_type == .Prm or new_dur_type == .Equ) {
                 p_se.duration = s.duration;
             },
             .Tmp => |dur| {
@@ -2441,7 +2480,7 @@ pub const Mob = struct { // {{{
     pub fn isUnderStatus(self: *const Mob, status: Status) ?*const StatusDataInfo {
         const se = self.statuses.getPtrConst(status);
         const has_status = switch (se.duration) {
-            .Prm => true,
+            .Prm, .Equ => true,
             .Tmp => |turns| turns > 0,
             .Ctx => se.duration.Ctx == state.dungeon.terrainAt(self.coord),
         };
@@ -3039,6 +3078,7 @@ pub const Weapon = struct {
     damage: usize,
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     effects: []const StatusDataInfo = &[_]StatusDataInfo{},
+    equip_effects: []const StatusDataInfo = &[_]StatusDataInfo{},
     strs: []const DamageStr,
 };
 

@@ -13,9 +13,11 @@ const Coord = types.Coord;
 const Direction = types.Direction;
 const Path = types.Path;
 const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
+const DIRECTIONS = types.DIRECTIONS;
 const CoordArrayList = types.CoordArrayList;
 
 const ATTACKER_ENRAGED_BONUS: isize = 20;
+const ATTACKER_OPENMELEE_BONUS: isize = 20;
 const ATTACKER_HELD_NBONUS: isize = 20;
 
 const DEFENDER_UNLIT_BONUS: isize = 5;
@@ -47,9 +49,16 @@ pub fn chanceOfMissileLanding(attacker: *const Mob) usize {
 pub fn chanceOfMeleeLanding(attacker: *const Mob, defender: ?*const Mob) usize {
     if (defender) |d| if (!d.isAwareOfAttack(attacker.coord)) return 100;
 
+    var nearby_walls: isize = 0;
+    for (&DIRECTIONS) |d| if (attacker.coord.move(d, state.mapgeometry)) |neighbor| {
+        if (!state.is_walkable(neighbor, .{ .ignore_mobs = true, .right_now = true }))
+            nearby_walls += 1;
+    };
+
     var chance: isize = attacker.stat(.Melee);
 
     chance += if (attacker.isUnderStatus(.Enraged) != null) ATTACKER_ENRAGED_BONUS else 0;
+    chance += if (attacker.isUnderStatus(.OpenMelee) != null and nearby_walls <= 3) ATTACKER_OPENMELEE_BONUS else 0;
 
     chance -= if (attacker.isUnderStatus(.Held)) |_| ATTACKER_HELD_NBONUS else 0;
 

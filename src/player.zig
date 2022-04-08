@@ -333,15 +333,13 @@ pub fn grabItem() bool {
         .Weapon, .Armor, .Cloak => {
             const slot = Mob.Inventory.EquSlot.slotFor(item);
             if (state.player.inventory.equipment(slot).*) |old_item| {
-                state.dungeon.itemsAt(state.player.coord).append(old_item) catch err.wat();
-                state.player.declareAction(.Drop);
+                state.player.dequipItem(slot, state.player.coord);
                 state.message(.Info, "You drop the {s}.", .{
                     (old_item.longName() catch err.wat()).constSlice(),
                 });
             }
 
-            state.player.inventory.equipment(slot).* = item;
-            state.player.declareAction(.Use);
+            state.player.equipItem(slot, item);
             state.message(.Info, "Equipped a {s}.", .{
                 (item.longName() catch err.wat()).constSlice(),
             });

@@ -509,6 +509,9 @@ pub const QuarterstaffWeapon = Weapon{
     .name = "quarterstaff",
     .damage = 3,
     .stats = .{ .Evade = 15 },
+    .equip_effects = &[_]StatusDataInfo{
+        .{ .status = .OpenMelee, .duration = .Equ },
+    },
     .strs = &CRUSHING_STRS,
 };
 

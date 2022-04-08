@@ -329,7 +329,7 @@ fn drawEnemyInfo(
             const se = entry.value.*;
 
             const duration = switch (se.duration) {
-                .Prm, .Ctx => Status.MAX_DURATION,
+                .Prm, .Equ, .Ctx => Status.MAX_DURATION,
                 .Tmp => |t| t,
             };
 
@@ -412,7 +412,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
             continue;
 
         const duration = switch (se.duration) {
-            .Prm, .Ctx => Status.MAX_DURATION,
+            .Prm, .Equ, .Ctx => Status.MAX_DURATION,
             .Tmp => |t| t,
         };
 
@@ -481,6 +481,7 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
             const str = effect.status.string(state.player);
             y = switch (effect.duration) {
                 .Prm => _drawStr(startx, y, endx, "$gPrm$. {s}\n", .{str}, .{}),
+                .Equ => _drawStr(startx, y, endx, "$gEqu$. {s}\n", .{str}, .{}),
                 .Tmp => _drawStr(startx, y, endx, "$gTmp$. {s} ({})\n", .{ str, effect.duration }, .{}),
                 .Ctx => _drawStr(startx, y, endx, "$gCtx$. {s}\n", .{str}, .{}),
             };
@@ -821,6 +822,7 @@ pub fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, lin
                     const str = sinfo.status.string(state.player);
                     switch (sinfo.duration) {
                         .Prm => S.append(w, "$gPrm$. {s}\n", .{str}),
+                        .Equ => S.append(w, "$gEqu$. {s}\n", .{str}),
                         .Tmp => S.append(w, "$gTmp$. {s} ({})\n", .{ str, sinfo.duration.Tmp }),
                         .Ctx => S.append(w, "$gCtx$. {s}\n", .{str}),
                     }

@@ -369,7 +369,8 @@ pub const PlayerTemplate = MobTemplate{
 
         .stats = .{ .Willpower = 5, .Evade = 10, .Strength = 20, .Speed = 100, .Vision = 10, .Sneak = 4 },
     },
-    .weapon = &items.KnifeWeapon,
+    //.weapon = &items.KnifeWeapon,
+    .weapon = &items.QuarterstaffWeapon,
     .armor = &items.RobeArmor,
     //.evocables = &[_]Evocable{items.IronSpikeEvoc},
     //.cloak = &items.ThornsCloak,
@@ -1099,10 +1100,10 @@ pub fn placeMob(
     mob.coord = coord;
     mob.ai.phase = opts.phase;
 
-    if (template.weapon) |w| mob.inventory.equipment(.Weapon).* = Item{ .Weapon = items.createItem(Weapon, w.*) };
-    if (template.backup_weapon) |w| mob.inventory.equipment(.Backup).* = Item{ .Weapon = items.createItem(Weapon, w.*) };
-    if (template.armor) |a| mob.inventory.equipment(.Armor).* = Item{ .Armor = items.createItem(Armor, a.*) };
-    if (template.cloak) |c| mob.inventory.equipment(.Cloak).* = Item{ .Cloak = c };
+    if (template.weapon) |w| mob.equipItem(.Weapon, Item{ .Weapon = items.createItem(Weapon, w.*) });
+    if (template.backup_weapon) |w| mob.equipItem(.Backup, Item{ .Weapon = items.createItem(Weapon, w.*) });
+    if (template.armor) |a| mob.equipItem(.Armor, Item{ .Armor = items.createItem(Armor, a.*) });
+    if (template.cloak) |c| mob.equipItem(.Cloak, Item{ .Cloak = c });
 
     if (opts.facing) |dir| mob.facing = dir;
     mob.ai.work_area.append(opts.work_area orelse coord) catch err.wat();
