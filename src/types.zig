@@ -2229,7 +2229,7 @@ pub const Mob = struct { // {{{
         self.energy = 0;
 
         self.ai = .{
-            .profession_name = null,
+            .profession_name = self.ai.profession_name,
             .profession_description = "watching",
             .work_area = self.ai.work_area,
             .work_fn = ai.dummyWork,

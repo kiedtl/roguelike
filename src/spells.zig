@@ -394,7 +394,7 @@ fn _resurrectNormal(_: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     if (corpse.raiseAsUndead(coord)) {
         if (state.player.cansee(coord)) {
-            state.message(.SpellCast, "The {s} is imbued with a spirit of malice and rises!", .{
+            state.message(.SpellCast, "The {s} rises from the dead!", .{
                 corpse.displayName(),
             });
         }
