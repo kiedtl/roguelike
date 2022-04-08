@@ -2175,14 +2175,14 @@ pub const Mob = struct { // {{{
         // Should we give the mob its flee-effect?
         //
         // FIXME: this probably shouldn't be handled here.
-        if (self.lastDamagePercentage() >= 50 or
+        if (self.HP > 0 and
+            self.isUnderStatus(.Exhausted) == null and
+            self.lastDamagePercentage() >= 50 or
             (self.HP <= (self.max_HP / 10) and old_HP > (self.max_HP / 10)))
         {
-            if (self.isUnderStatus(.Exhausted) == null) {
-                if (self.ai.flee_effect) |s| {
-                    if (self.isUnderStatus(s.status) == null) {
-                        self.applyStatus(s, .{});
-                    }
+            if (self.ai.flee_effect) |s| {
+                if (self.isUnderStatus(s.status) == null) {
+                    self.applyStatus(s, .{});
                 }
             }
         }
