@@ -2240,6 +2240,11 @@ pub const Mob = struct { // {{{
             .flee_effect = null,
         };
 
+        // Erase/reset all statuses
+        var statuses = self.statuses.iterator();
+        while (statuses.next()) |entry|
+            self.cancelStatus(entry.key);
+
         self.blood = null;
         self.corpse = .None;
 
