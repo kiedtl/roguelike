@@ -17,7 +17,7 @@ const DIRECTIONS = types.DIRECTIONS;
 const CoordArrayList = types.CoordArrayList;
 
 const ATTACKER_ENRAGED_BONUS: isize = 20;
-const ATTACKER_OPENMELEE_BONUS: isize = 20;
+const ATTACKER_OPENMELEE_BONUS: isize = 10;
 const ATTACKER_HELD_NBONUS: isize = 20;
 
 const DEFENDER_UNLIT_BONUS: isize = 5;
