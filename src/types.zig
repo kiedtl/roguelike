@@ -2108,7 +2108,7 @@ pub const Mob = struct { // {{{
         }
 
         // Bonus attacks?
-        if (remaining_bonus_attacks > 0) {
+        if (remaining_bonus_attacks > 0 and !recipient.should_be_dead()) {
             var newopts = opts;
             newopts.auto_hit = false;
             _fightWithWeapon(attacker, recipient, attacker_weapon, newopts, remaining_bonus_attacks - 1, true);
