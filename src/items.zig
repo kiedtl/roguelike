@@ -310,17 +310,26 @@ fn _triggerEldritchLantern(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
     var affected: usize = 0;
     var player_was_affected: bool = false;
 
+    if (mob == state.player) {
+        state.message(.Info, "The eldritch lantern flashes brilliantly!", .{});
+    } else if (state.player.cansee(mob.coord)) {
+        state.message(.Info, "The {s} flashes an eldritch lantern!", .{mob.displayName()});
+    }
+
     for (mob.fov) |row, y| for (row) |cell, x| {
         if (cell == 0) continue;
 
         const coord = Coord.new2(mob.coord.z, x, y);
 
         if (state.dungeon.at(coord).mob) |othermob| {
+            // Treat evoker specially later on
+            if (mob == othermob)
+                continue;
+
             if (!othermob.cansee(mob.coord))
                 continue;
 
-            const dur = rng.rangeClumping(usize, 5, 20, 2);
-            othermob.addStatus(.Confusion, 0, .{ .Tmp = dur });
+            othermob.addStatus(.Daze, 0, .{ .Tmp = 10 });
 
             affected += 1;
             if (othermob == state.player)
@@ -328,23 +337,8 @@ fn _triggerEldritchLantern(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
         }
     };
 
-    mob.addStatus(.Confusion, 0, .{ .Tmp = rng.range(usize, 1, 4) });
-    mob.makeNoise(.Explosion, .Quiet);
-
-    if (mob == state.player) {
-        state.message(.Info, "The eldritch lantern flashes brilliantly!", .{});
-
-        if (affected > 1) {
-            state.message(.Info, "You and those nearby are dazed by the light.", .{});
-        } else {
-            state.message(.Info, "You are dazed by the light.", .{});
-        }
-    } else if (state.player.cansee(mob.coord)) {
-        state.message(.Info, "The {s} flashes an eldritch lantern!", .{mob.displayName()});
-        if (player_was_affected) { // Player *should* always be affected...
-            state.message(.Info, "You feel dazed by the blinding light.", .{});
-        }
-    }
+    mob.addStatus(.Daze, 0, .{ .Tmp = rng.range(usize, 1, 4) });
+    mob.makeNoise(.Explosion, .Medium);
 }
 
 pub const WarningHornEvoc = Evocable{
