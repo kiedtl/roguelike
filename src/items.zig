@@ -548,13 +548,33 @@ pub const RapierWeapon = Weapon{
     .strs = &PIERCING_STRS,
 };
 
+pub const HalberdWeapon = Weapon{
+    .id = "halberd",
+    .name = "halberd",
+    .damage = 2,
+    .equip_effects = &[_]StatusDataInfo{
+        .{ .status = .OpenMelee, .duration = .Equ },
+    },
+    .strs = &SLASHING_STRS,
+    .reach = 2,
+};
+
 pub const GlaiveWeapon = Weapon{
     .id = "glaive",
     .name = "glaive",
     .damage = 2,
     .stats = .{ .Melee = 10 },
-    .strs = &PIERCING_STRS,
+    .strs = &SLASHING_STRS,
     .reach = 2,
+};
+
+pub const MonkSpadeWeapon = Weapon{
+    .id = "monk_spade",
+    .name = "monk's spade",
+    .damage = 1,
+    .delay = 50,
+    .knockback = 1,
+    .strs = &PIERCING_STRS,
 };
 
 pub const KnoutWeapon = Weapon{
@@ -576,7 +596,6 @@ pub const MorningstarWeapon = Weapon{
 pub const ClubWeapon = Weapon{
     .id = "club",
     .name = "club",
-    .delay = 110,
     .damage = 1,
     .strs = &CRUSHING_STRS,
 };
@@ -589,6 +608,16 @@ pub const MaceWeapon = Weapon{
     .strs = &CRUSHING_STRS,
 };
 
+pub const GreatMaceWeapon = Weapon{
+    .id = "great_mace",
+    .name = "great mace",
+    .damage = 2,
+    .effects = &[_]StatusDataInfo{
+        .{ .status = .Stun, .duration = .{ .Tmp = 3 } },
+    },
+    .strs = &CRUSHING_STRS,
+};
+
 // Purely for skeletal axemasters for now; lore describes axes as being
 // experimental
 //
@@ -598,6 +627,9 @@ pub const AxeWeapon = Weapon{
     .delay = 120,
     .damage = 4,
     .stats = .{ .Melee = -15 },
+    .equip_effects = &[_]StatusDataInfo{
+        .{ .status = .OpenMelee, .duration = .Equ },
+    },
     .strs = &SLASHING_STRS,
 };
 

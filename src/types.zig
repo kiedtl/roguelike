@@ -742,6 +742,11 @@ pub const Allegiance = enum {
 };
 
 pub const Status = enum {
+    // Evade, Melee, and Missile nerfs.
+    //
+    // Doesn't have a power field.
+    Stun,
+
     // .Melee bonus if surrounded by empty space.
     //
     // Doesn't have a power field.
@@ -893,6 +898,7 @@ pub const Status = enum {
 
     pub fn string(self: Status, mob: *const Mob) []const u8 {
         return switch (self) {
+            .Stun => "stunned",
             .OpenMelee => "open melee",
             .Conductive => "conductive",
             .Noisy => "noisy",
@@ -930,6 +936,7 @@ pub const Status = enum {
 
     pub fn messageWhenAdded(self: Status) ?[3][]const u8 {
         return switch (self) {
+            .Stun => .{ "are", "is", " stunned" },
             .OpenMelee, .Conductive, .Noisy => null,
             .Sleeping => .{ "go", "goes", " to sleep" }, // FIXME: bad wording for unliving
             .Paralysis => .{ "are", "is", " paralyzed" },
@@ -963,6 +970,7 @@ pub const Status = enum {
 
     pub fn messageWhenRemoved(self: Status) ?[3][]const u8 {
         return switch (self) {
+            .Stun => .{ "are no longer", "is no longer", " stunned" },
             .OpenMelee, .Conductive, .Noisy => null,
             .Sleeping => .{ "wake", "wakes", " up" },
             .Paralysis => .{ "can move again", "starts moving again", "" },
@@ -1948,11 +1956,18 @@ pub const Mob = struct { // {{{
 
         var longest_delay: usize = 0;
         for (weapons.constSlice()) |weapon| {
-            assert(weapon.reach >= attacker.coord.distance(recipient.coord));
+            // recipient could be out of reach, either because the attacker has
+            // multiple attacks and only one of them reaches, or because the
+            // previous attack knocked the defender backwards
+            if (weapon.reach < attacker.coord.distance(recipient.coord))
+                continue;
 
             if (weapon.delay > longest_delay) longest_delay = weapon.delay;
             _fightWithWeapon(attacker, recipient, weapon, opts, martial, false);
         }
+
+        // If longest_delay is still 0, we didn't attack at all!
+        assert(longest_delay > 0);
 
         if (!opts.free_attack) {
             attacker.declareAction(.{
@@ -2101,6 +2116,11 @@ pub const Mob = struct { // {{{
 
         for (attacker_weapon.effects) |effect| {
             recipient.applyStatus(effect, .{});
+        }
+
+        if (attacker_weapon.knockback > 0 and rng.onein(2)) {
+            const d = attacker.coord.closestDirectionTo(recipient.coord, state.mapgeometry);
+            combat.throwMob(attacker, recipient, d, attacker_weapon.knockback);
         }
 
         // Daze stabbed mobs.
@@ -3099,6 +3119,7 @@ pub const Weapon = struct {
     reach: usize = 1,
     delay: usize = 100, // Percentage (100 = normal speed, 200 = twice as slow)
     damage: usize,
+    knockback: usize = 0,
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     effects: []const StatusDataInfo = &[_]StatusDataInfo{},
     equip_effects: []const StatusDataInfo = &[_]StatusDataInfo{},
