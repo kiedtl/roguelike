@@ -2842,7 +2842,9 @@ pub const Mob = struct { // {{{
         if (activities[1] == .Rest and activities[0] == .Move) {
             if (self.coord.move(activities[0].Move, state.mapgeometry)) |adj_mob_coord| {
                 if (state.dungeon.at(adj_mob_coord).mob) |othermob| {
-                    if (othermob.isHostileTo(self) and othermob.ai.is_combative) {
+                    if (othermob.isHostileTo(self) and othermob.ai.is_combative and
+                        othermob.isAwareOfAttack(state.player.coord))
+                    {
                         if (othermob == state.player) {
                             state.messageAboutMob(self, self.coord, .Combat, "[BUG]", .{}, "lunges at you!", .{});
                         } else {
