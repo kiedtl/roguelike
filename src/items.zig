@@ -548,10 +548,9 @@ pub const RapierWeapon = Weapon{
     .strs = &PIERCING_STRS,
 };
 
-pub const SpearWeapon = Weapon{
-    .id = "spear",
-    .name = "spear",
-    .delay = 110,
+pub const GlaiveWeapon = Weapon{
+    .id = "glaive",
+    .name = "glaive",
     .damage = 2,
     .stats = .{ .Melee = 10 },
     .strs = &PIERCING_STRS,
