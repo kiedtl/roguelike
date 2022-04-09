@@ -799,6 +799,7 @@ pub fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, lin
     S.append(w, "\n", .{});
 
     var usable = false;
+    var dippable = false;
     var throwable = false;
 
     switch (item) {
@@ -811,6 +812,7 @@ pub fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, lin
                 .Custom => S.append(w, "TODO: describe this potion\n", .{}),
             }
             usable = true;
+            dippable = p.dip_effect != null;
             throwable = true;
         },
         .Projectile => |p| {
@@ -836,6 +838,7 @@ pub fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, lin
 
     S.append(w, "\n", .{});
     if (usable) S.append(w, "$cSPACE$. to use.\n", .{});
+    if (dippable) S.append(w, "$cD$. to dip your weapon.\n", .{});
     if (throwable) S.append(w, "$ct$. to throw.\n", .{});
 }
 
@@ -1002,6 +1005,12 @@ pub fn drawInventoryScreen() bool {
                             if (player.dropItem(chosen)) return true;
                     } else {
                         drawAlert("You can't drop that!", .{});
+                    },
+                    'D' => if (chosen_itemlist == .Pack) {
+                        if (itemlist_len > 0)
+                            if (player.dipWeapon(chosen)) return true;
+                    } else {
+                        drawAlert("Select a potion and press $bD$. to dip something in it.", .{});
                     },
                     't' => if (chosen_itemlist == .Pack) {
                         if (itemlist_len > 0)

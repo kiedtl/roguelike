@@ -1949,9 +1949,10 @@ pub const Mob = struct { // {{{
         });
 
         const martial = @intCast(usize, attacker.stat(.Martial));
+        const wielded_wp = if (attacker.inventory.equipment(.Weapon).*) |w| w.Weapon else null;
 
         var weapons = StackBuffer(*const Weapon, 7).init(null);
-        weapons.append(if (attacker.inventory.equipment(.Weapon).*) |w| w.Weapon else attacker.species.default_attack) catch unreachable;
+        weapons.append(wielded_wp orelse attacker.species.default_attack) catch unreachable;
         for (attacker.species.aux_attacks) |w| weapons.append(w) catch unreachable;
 
         var longest_delay: usize = 0;
@@ -1963,7 +1964,15 @@ pub const Mob = struct { // {{{
                 continue;
 
             if (weapon.delay > longest_delay) longest_delay = weapon.delay;
-            _fightWithWeapon(attacker, recipient, weapon, opts, martial, false);
+            _fightWithWeapon(
+                attacker,
+                recipient,
+                weapon,
+                if (wielded_wp != null and wielded_wp.? == weapon) wielded_wp else null,
+                opts,
+                martial,
+                false,
+            );
         }
 
         // If longest_delay is still 0, we didn't attack at all!
@@ -1980,7 +1989,15 @@ pub const Mob = struct { // {{{
         }
     }
 
-    fn _fightWithWeapon(attacker: *Mob, recipient: *Mob, attacker_weapon: *const Weapon, opts: FightOptions, remaining_bonus_attacks: usize, is_bonus_attack: bool) void {
+    fn _fightWithWeapon(
+        attacker: *Mob,
+        recipient: *Mob,
+        attacker_weapon: *const Weapon,
+        mut_attacker_weapon: ?*Weapon, // XXX: hack, because not all weapons are mutable
+        opts: FightOptions,
+        remaining_bonus_attacks: usize,
+        is_bonus_attack: bool,
+    ) void {
         assert(!attacker.is_dead);
         assert(!recipient.is_dead);
 
@@ -2118,6 +2135,21 @@ pub const Mob = struct { // {{{
             recipient.applyStatus(effect, .{});
         }
 
+        // Apply weapon dipping effects.
+        if (attacker_weapon.dip_effect) |potion| {
+            assert(attacker_weapon.dip_counter > 0);
+            assert(mut_attacker_weapon != null);
+
+            if (rng.percent(combat.CHANCE_FOR_DIP_EFFECT)) {
+                recipient.applyStatus(potion.dip_effect.?, .{});
+                mut_attacker_weapon.?.dip_counter -= 1;
+
+                if (attacker_weapon.dip_counter == 0) {
+                    mut_attacker_weapon.?.dip_effect = null;
+                }
+            }
+        }
+
         if (attacker_weapon.knockback > 0 and rng.onein(2)) {
             const d = attacker.coord.closestDirectionTo(recipient.coord, state.mapgeometry);
             combat.throwMob(attacker, recipient, d, attacker_weapon.knockback);
@@ -2132,7 +2164,16 @@ pub const Mob = struct { // {{{
         if (remaining_bonus_attacks > 0 and !recipient.should_be_dead()) {
             var newopts = opts;
             newopts.auto_hit = false;
-            _fightWithWeapon(attacker, recipient, attacker_weapon, newopts, remaining_bonus_attacks - 1, true);
+
+            _fightWithWeapon(
+                attacker,
+                recipient,
+                attacker_weapon,
+                mut_attacker_weapon,
+                newopts,
+                remaining_bonus_attacks - 1,
+                true,
+            );
         }
     }
 
@@ -3116,21 +3157,24 @@ pub const Weapon = struct {
 
     id: []const u8 = "",
     name: []const u8 = "",
+
     reach: usize = 1,
     delay: usize = 100, // Percentage (100 = normal speed, 200 = twice as slow)
     damage: usize,
     knockback: usize = 0,
+
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     effects: []const StatusDataInfo = &[_]StatusDataInfo{},
     equip_effects: []const StatusDataInfo = &[_]StatusDataInfo{},
+
+    is_dippable: bool = false,
+    dip_effect: ?*const Potion = null,
+    dip_counter: usize = 0,
+
     strs: []const DamageStr,
 };
 
 pub const Potion = struct {
-    // linked list stuff
-    __next: ?*Potion = null,
-    __prev: ?*Potion = null,
-
     id: []const u8,
 
     // Potion of <name>
@@ -3146,6 +3190,10 @@ pub const Potion = struct {
     // thrown potions will not have any effect, even if they land
     // on a mob.
     ingested: bool = false,
+
+    // If null, the player will be prevented from dipping stuff
+    // in it.
+    dip_effect: ?StatusDataInfo = null,
 
     color: u32,
 };

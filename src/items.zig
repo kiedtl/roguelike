@@ -367,15 +367,79 @@ pub const EcholocationRing = Ring{
     .status_power_increase = 100,
 };
 
-pub const SmokePotion = Potion{ .id = "potion_smoke", .name = "smoke", .type = .{ .Gas = gas.SmokeGas.id }, .color = 0x00A3D9 };
-pub const ConfusionPotion = Potion{ .id = "potion_confusion", .name = "confuzzlementation", .type = .{ .Gas = gas.Confusion.id }, .color = 0x33cbca };
-pub const ParalysisPotion = Potion{ .id = "potion_paralysis", .name = "petrification", .type = .{ .Gas = gas.Paralysis.id }, .color = 0xaaaaff };
-pub const FastPotion = Potion{ .id = "potion_fast", .name = "acceleration", .type = .{ .Status = .Fast }, .ingested = true, .color = 0xbb6c55 };
-pub const RecuperatePotion = Potion{ .id = "potion_recuperate", .name = "recuperation", .type = .{ .Status = .Recuperate }, .color = 0xffffff };
-pub const PoisonPotion = Potion{ .id = "potion_poison", .name = "coagulation", .type = .{ .Gas = gas.Poison.id }, .color = 0xa7e234 };
-pub const InvigoratePotion = Potion{ .id = "potion_invigorate", .name = "invigoration", .type = .{ .Status = .Invigorate }, .ingested = true, .color = 0xdada53 };
-pub const IncineratePotion = Potion{ .id = "potion_incinerate", .name = "incineration", .type = .{ .Custom = triggerIncineratePotion }, .ingested = false, .color = 0xff3434 }; // TODO: unique color
-pub const DecimatePotion = Potion{ .id = "potion_decimate", .name = "decimation", .type = .{ .Custom = triggerDecimatePotion }, .color = 0xda5353 }; // TODO: unique color
+// Potions {{{
+pub const SmokePotion = Potion{
+    .id = "potion_smoke",
+    .name = "smoke",
+    .type = .{ .Gas = gas.SmokeGas.id },
+    .color = 0x00A3D9,
+};
+
+pub const ConfusionPotion = Potion{
+    .id = "potion_confusion",
+    .name = "confuzzlementation",
+    .type = .{ .Gas = gas.Confusion.id },
+    .dip_effect = .{ .status = .Confusion, .duration = .{ .Tmp = 3 } },
+    .color = 0x33cbca,
+};
+
+pub const ParalysisPotion = Potion{
+    .id = "potion_paralysis",
+    .name = "petrification",
+    .type = .{ .Gas = gas.Paralysis.id },
+    .dip_effect = .{ .status = .Paralysis, .duration = .{ .Tmp = 2 } },
+    .color = 0xaaaaff,
+};
+
+pub const FastPotion = Potion{
+    .id = "potion_fast",
+    .name = "acceleration",
+    .type = .{ .Status = .Fast },
+    .ingested = true,
+    .dip_effect = .{ .status = .Fast, .duration = .{ .Tmp = 5 } },
+    .color = 0xbb6c55,
+};
+
+pub const RecuperatePotion = Potion{
+    .id = "potion_recuperate",
+    .name = "recuperation",
+    .type = .{ .Status = .Recuperate },
+    .dip_effect = .{ .status = .Recuperate, .duration = .{ .Tmp = 5 } },
+    .color = 0xffffff,
+};
+
+pub const PoisonPotion = Potion{
+    .id = "potion_poison",
+    .name = "coagulation",
+    .type = .{ .Gas = gas.Poison.id },
+    .dip_effect = .{ .status = .Poison, .duration = .{ .Tmp = 5 } },
+    .color = 0xa7e234,
+};
+
+pub const InvigoratePotion = Potion{
+    .id = "potion_invigorate",
+    .name = "invigoration",
+    .type = .{ .Status = .Invigorate },
+    .ingested = true,
+    .color = 0xdada53,
+};
+
+pub const IncineratePotion = Potion{
+    .id = "potion_incinerate",
+    .name = "incineration",
+    .type = .{ .Custom = triggerIncineratePotion },
+    .ingested = false,
+    .dip_effect = .{ .status = .Fire, .duration = .{ .Tmp = 5 } },
+    .color = 0xff3434, // TODO: unique color
+};
+
+pub const DecimatePotion = Potion{
+    .id = "potion_decimate",
+    .name = "decimation",
+    .type = .{ .Custom = triggerDecimatePotion },
+    .color = 0xda5353, // TODO: unique color
+};
+// }}}
 
 pub const HauberkArmor = Armor{
     .id = "chainmail_armor",
@@ -514,6 +578,7 @@ pub const SwordWeapon = Weapon{
     .name = "longsword",
     .damage = 2,
     .stats = .{ .Evade = 10 },
+    .is_dippable = true,
     .strs = &CRUSHING_STRS,
 };
 
@@ -521,6 +586,7 @@ pub const KnifeWeapon = Weapon{
     .id = "knife",
     .name = "knife",
     .damage = 1,
+    .is_dippable = true,
     .strs = &PIERCING_STRS,
 };
 
@@ -529,6 +595,7 @@ pub const DaggerWeapon = Weapon{
     .name = "dagger",
     .damage = 2,
     .stats = .{ .Melee = -15 },
+    .is_dippable = true,
     .strs = &PIERCING_STRS,
 };
 
@@ -537,6 +604,7 @@ pub const StilettoWeapon = Weapon{
     .name = "stiletto",
     .damage = 5,
     .stats = .{ .Melee = -25 },
+    .is_dippable = true,
     .strs = &PIERCING_STRS,
 };
 
@@ -545,6 +613,7 @@ pub const RapierWeapon = Weapon{
     .name = "rapier",
     .damage = 3,
     .stats = .{ .Melee = -10, .Evade = 10 },
+    .is_dippable = true,
     .strs = &PIERCING_STRS,
 };
 
@@ -556,6 +625,7 @@ pub const HalberdWeapon = Weapon{
         .{ .status = .OpenMelee, .duration = .Equ },
     },
     .strs = &SLASHING_STRS,
+    .is_dippable = true,
     .reach = 2,
 };
 
@@ -565,6 +635,7 @@ pub const GlaiveWeapon = Weapon{
     .damage = 2,
     .stats = .{ .Melee = 10 },
     .strs = &SLASHING_STRS,
+    .is_dippable = true,
     .reach = 2,
 };
 
@@ -630,6 +701,7 @@ pub const AxeWeapon = Weapon{
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .OpenMelee, .duration = .Equ },
     },
+    .is_dippable = true,
     .strs = &SLASHING_STRS,
 };
 

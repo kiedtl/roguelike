@@ -16,6 +16,8 @@ const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
 const DIRECTIONS = types.DIRECTIONS;
 const CoordArrayList = types.CoordArrayList;
 
+pub const CHANCE_FOR_DIP_EFFECT = 33;
+
 const ATTACKER_ENRAGED_BONUS: isize = 20;
 const ATTACKER_OPENMELEE_BONUS: isize = 10;
 const ATTACKER_HELD_NBONUS: isize = 20;

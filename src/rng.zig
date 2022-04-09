@@ -37,7 +37,8 @@ pub fn boolean() bool {
 }
 
 pub fn percent(number: anytype) bool {
-    return range(@TypeOf(number), 1, 100) < math.min(100, number);
+    const n = if (@TypeOf(number) == comptime_int) @as(usize, number) else number;
+    return range(@TypeOf(n), 1, 100) < math.min(100, n);
 }
 
 // TODO: make generic

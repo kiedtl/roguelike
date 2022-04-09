@@ -419,6 +419,41 @@ pub fn activateSurfaceItem() bool {
     return true;
 }
 
+pub fn dipWeapon(potion_index: usize) bool {
+    assert(state.player.inventory.pack.len > potion_index);
+
+    const potion = state.player.inventory.pack.slice()[potion_index].Potion;
+    if (potion.dip_effect == null) {
+        display.drawAlertThenLog("You can't dip your weapon in that!", .{});
+        return false;
+    }
+
+    const weapon = if (state.player.inventory.equipment(.Weapon).*) |w|
+        w.Weapon
+    else {
+        display.drawAlertThenLog("You aren't wielding a weapon!", .{});
+        return false;
+    };
+
+    if (!weapon.is_dippable) {
+        display.drawAlertThenLog("You can't dip that weapon!", .{});
+        return false;
+    }
+
+    if (weapon.dip_counter > 0) {
+        const response = display.drawYesNoPrompt("Really dip again? It's already dipped in a potion of {s}.", .{weapon.dip_effect.?.name});
+        if (!response) return false;
+    }
+
+    weapon.dip_counter = 10;
+    weapon.dip_effect = potion;
+    _ = state.player.inventory.pack.orderedRemove(potion_index) catch err.wat();
+    state.message(.Info, "You dip your {s} in the potion of {s}.", .{ weapon.name, potion.name });
+
+    state.player.declareAction(.Use);
+    return true;
+}
+
 pub fn useItem(index: usize) bool {
     assert(state.player.inventory.pack.len > index);
 
