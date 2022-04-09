@@ -100,6 +100,8 @@ pub const FurCloak = Cloak{ .id = "fur", .name = "fur", .ego = .{ .Resist = .rEl
 pub const VelvetCloak = Cloak{ .id = "velvet", .name = "velvet", .ego = .Camoflage };
 pub const ThornsCloak = Cloak{ .id = "thorns", .name = "thorns", .ego = .Retaliate };
 
+// Projectiles {{{
+
 pub const Projectile = struct {
     id: []const u8,
     name: []const u8,
@@ -134,6 +136,10 @@ pub const JavelinProj = Projectile{
         },
     },
 };
+
+// }}}
+
+// Evocables {{{
 
 pub const EvocableList = LinkedList(Evocable);
 pub const Evocable = struct {
@@ -359,6 +365,8 @@ fn _triggerWarningHorn(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
     }
 }
 
+// }}}
+
 pub const EcholocationRing = Ring{
     .name = "echolocation",
     .status = .Echolocation,
@@ -439,7 +447,58 @@ pub const DecimatePotion = Potion{
     .type = .{ .Custom = triggerDecimatePotion },
     .color = 0xda5353, // TODO: unique color
 };
+
+// Potion effects {{{
+
+fn triggerIncineratePotion(_: ?*Mob, coord: Coord) void {
+    const mean_radius: usize = 4;
+    const S = struct {
+        pub fn _opacityFunc(c: Coord) usize {
+            return switch (state.dungeon.at(c).type) {
+                .Lava, .Water, .Wall => 100,
+                .Floor => if (state.dungeon.at(c).surface) |surf| switch (surf) {
+                    .Machine => |m| if (m.isWalkable()) @as(usize, 0) else 50,
+                    .Prop => |p| if (p.walkable) @as(usize, 0) else 50,
+                    .Container => 100,
+                    else => 0,
+                } else 0,
+            };
+        }
+    };
+
+    var result: [HEIGHT][WIDTH]usize = undefined;
+    for (result) |*row| for (row) |*cell| {
+        cell.* = 0;
+    };
+
+    var deg: usize = 0;
+    while (deg < 360) : (deg += 60) {
+        const s = rng.range(usize, mean_radius / 2, mean_radius * 2) * 10;
+        fov.rayCastOctants(coord, mean_radius, s, S._opacityFunc, &result, deg, deg + 61);
+    }
+    result[coord.y][coord.x] = 100; // Ground zero is always incinerated
+
+    for (result) |row, y| for (row) |cell, x| {
+        if (cell > 0) {
+            const cellc = Coord.new2(coord.z, x, y);
+            fire.setTileOnFire(cellc);
+        }
+    };
+}
+
+fn triggerDecimatePotion(_: ?*Mob, coord: Coord) void {
+    const MIN_EXPLOSION_RADIUS: usize = 2;
+    explosions.kaboom(coord, .{
+        .strength = MIN_EXPLOSION_RADIUS * 100,
+        .culprit = state.player,
+    });
+}
+
 // }}}
+
+// }}}
+
+// Armors {{{
 
 pub const HauberkArmor = Armor{
     .id = "chainmail_armor",
@@ -474,6 +533,8 @@ pub const LeatherArmor = Armor{
     .name = "leather",
     .resists = .{ .Armor = 20 },
 };
+
+// }}}
 
 pub fn _dmgstr(p: usize, vself: []const u8, vother: []const u8, vdeg: []const u8) DamageStr {
     return .{ .dmg_percent = p, .verb_self = vself, .verb_other = vother, .verb_degree = vdeg };
@@ -522,6 +583,7 @@ const LACERATING_STRS = [_][]DamageStr{
     _dmgstr(150, "mangle", "mangles", " beyond recognition"),
 };
 
+// Body weapons {{{
 pub const FistWeapon = Weapon{
     .id = "none",
     .name = "none",
@@ -562,16 +624,9 @@ pub const KickWeapon = Weapon{
     },
 };
 
-pub const QuarterstaffWeapon = Weapon{
-    .id = "quarterstaff",
-    .name = "quarterstaff",
-    .damage = 2,
-    .stats = .{ .Martial = 2, .Evade = 15 },
-    .equip_effects = &[_]StatusDataInfo{
-        .{ .status = .OpenMelee, .duration = .Equ },
-    },
-    .strs = &CRUSHING_STRS,
-};
+// }}}
+
+// Edged weapons {{{
 
 pub const SwordWeapon = Weapon{
     .id = "sword",
@@ -617,6 +672,26 @@ pub const RapierWeapon = Weapon{
     .strs = &PIERCING_STRS,
 };
 
+// Purely for skeletal axemasters for now; lore describes axes as being
+// experimental
+//
+pub const AxeWeapon = Weapon{
+    .id = "battleaxe",
+    .name = "battleaxe",
+    .delay = 120,
+    .damage = 4,
+    .stats = .{ .Melee = -15 },
+    .equip_effects = &[_]StatusDataInfo{
+        .{ .status = .OpenMelee, .duration = .Equ },
+    },
+    .is_dippable = true,
+    .strs = &SLASHING_STRS,
+};
+
+// }}}
+
+// Polearms {{{
+
 pub const HalberdWeapon = Weapon{
     .id = "halberd",
     .name = "halberd",
@@ -657,6 +732,21 @@ pub const WoldoWeapon = Weapon{
     .is_dippable = true,
     .strs = &SLASHING_STRS,
     .reach = 2,
+};
+
+// }}}
+
+// Blunt weapons {{{
+
+pub const QuarterstaffWeapon = Weapon{
+    .id = "quarterstaff",
+    .name = "quarterstaff",
+    .damage = 2,
+    .stats = .{ .Martial = 2, .Evade = 15 },
+    .equip_effects = &[_]StatusDataInfo{
+        .{ .status = .OpenMelee, .duration = .Equ },
+    },
+    .strs = &CRUSHING_STRS,
 };
 
 pub const KnoutWeapon = Weapon{
@@ -700,65 +790,7 @@ pub const GreatMaceWeapon = Weapon{
     .strs = &CRUSHING_STRS,
 };
 
-// Purely for skeletal axemasters for now; lore describes axes as being
-// experimental
-//
-pub const AxeWeapon = Weapon{
-    .id = "battleaxe",
-    .name = "battleaxe",
-    .delay = 120,
-    .damage = 4,
-    .stats = .{ .Melee = -15 },
-    .equip_effects = &[_]StatusDataInfo{
-        .{ .status = .OpenMelee, .duration = .Equ },
-    },
-    .is_dippable = true,
-    .strs = &SLASHING_STRS,
-};
-
-fn triggerIncineratePotion(_: ?*Mob, coord: Coord) void {
-    const mean_radius: usize = 4;
-    const S = struct {
-        pub fn _opacityFunc(c: Coord) usize {
-            return switch (state.dungeon.at(c).type) {
-                .Lava, .Water, .Wall => 100,
-                .Floor => if (state.dungeon.at(c).surface) |surf| switch (surf) {
-                    .Machine => |m| if (m.isWalkable()) @as(usize, 0) else 50,
-                    .Prop => |p| if (p.walkable) @as(usize, 0) else 50,
-                    .Container => 100,
-                    else => 0,
-                } else 0,
-            };
-        }
-    };
-
-    var result: [HEIGHT][WIDTH]usize = undefined;
-    for (result) |*row| for (row) |*cell| {
-        cell.* = 0;
-    };
-
-    var deg: usize = 0;
-    while (deg < 360) : (deg += 60) {
-        const s = rng.range(usize, mean_radius / 2, mean_radius * 2) * 10;
-        fov.rayCastOctants(coord, mean_radius, s, S._opacityFunc, &result, deg, deg + 61);
-    }
-    result[coord.y][coord.x] = 100; // Ground zero is always incinerated
-
-    for (result) |row, y| for (row) |cell, x| {
-        if (cell > 0) {
-            const cellc = Coord.new2(coord.z, x, y);
-            fire.setTileOnFire(cellc);
-        }
-    };
-}
-
-fn triggerDecimatePotion(_: ?*Mob, coord: Coord) void {
-    const MIN_EXPLOSION_RADIUS: usize = 2;
-    explosions.kaboom(coord, .{
-        .strength = MIN_EXPLOSION_RADIUS * 100,
-        .culprit = state.player,
-    });
-}
+// }}}
 
 // ----------------------------------------------------------------------------
 
