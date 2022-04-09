@@ -55,11 +55,10 @@ pub const PlayerUpgrade = enum {
     OI_Shove,
     Healthy,
     Mana,
-    Camoflaged,
     Will,
     Echolocating,
 
-    pub const UPGRADES = [_]PlayerUpgrade{ .Fast, .Strong, .Agile, .OI_Enraged, .OI_Fast, .OI_Shove, .Healthy, .Mana, .Camoflaged, .Will, .Echolocating };
+    pub const UPGRADES = [_]PlayerUpgrade{ .Fast, .Strong, .Agile, .OI_Enraged, .OI_Fast, .OI_Shove, .Healthy, .Mana, .Will, .Echolocating };
 
     pub fn announce(self: PlayerUpgrade) []const u8 {
         return switch (self) {
@@ -71,7 +70,6 @@ pub const PlayerUpgrade = enum {
             .OI_Shove => "You begin shoving past foes when injured.",
             .Healthy => "You are unusually robust.",
             .Mana => "You sense your inner strength grow.",
-            .Camoflaged => "Only observant foes notice you.",
             .Will => "Your will hardens.",
             .Echolocating => "Your sense of hearing becomes acute.",
         };
@@ -87,7 +85,6 @@ pub const PlayerUpgrade = enum {
             .OI_Shove => "You begin shoving past foes when injured.",
             .Healthy => "You have 50% more health than usual.",
             .Mana => "You have 50% more mana than usual.",
-            .Camoflaged => "You have one level of intrinsic camoflage.",
             .Will => "You have 3 extra pips of willpower.",
             .Echolocating => "You passively echolocate areas around sound.",
         };
@@ -115,7 +112,6 @@ pub const PlayerUpgrade = enum {
             },
             .Healthy => state.player.max_HP = state.player.max_HP * 150 / 100,
             .Mana => state.player.max_MP = state.player.max_MP * 150 / 100,
-            .Camoflaged => state.player.stats.Camoflage += 1,
             .Will => state.player.stats.Willpower += 3,
             .Echolocating => state.player.addStatus(.Echolocation, 7, .Prm),
         }

@@ -212,20 +212,6 @@ pub const TallFungiTerrain = Terrain{
     .weight = 7,
 };
 
-pub const CamoflagingFungiTerrain = Terrain{
-    .id = "t_f_camo",
-    .name = "camoflaging fungi",
-    .color = 0x109000,
-    .tile = '"',
-    .stats = .{ .Camoflage = 2 },
-    .opacity = 30,
-    .flammability = 5,
-
-    .for_levels = &[_][]const u8{ "PRI", "VLT" },
-    .placement = .RoomBlob,
-    .weight = 5,
-};
-
 pub const PillarTerrain = Terrain{
     .id = "t_pillar",
     .name = "pillar",
@@ -263,7 +249,6 @@ pub const TERRAIN = [_]*const Terrain{
     &LuminescentFungiTerrain,
     &DeadFungiTerrain,
     &TallFungiTerrain,
-    &CamoflagingFungiTerrain,
     &PillarTerrain,
     &PlatformTerrain,
 };

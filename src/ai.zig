@@ -206,10 +206,6 @@ pub fn checkForHostiles(mob: *Mob) void {
 
             if (othermob == mob) continue;
 
-            // Camoflage check
-            if (rng.range(isize, 0, 100) < othermob.stat(.Camoflage) * 10)
-                continue;
-
             if (othermob.isHostileTo(mob)) {
                 updateEnemyRecord(mob, .{
                     .mob = othermob,

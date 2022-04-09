@@ -26,7 +26,6 @@ const ATTACKER_STUN_NBONUS: isize = 10;
 const DEFENDER_UNLIT_BONUS: isize = 5;
 const DEFENDER_INVIGORATED_BONUS: isize = 10;
 const DEFENDER_OPEN_SPACE_BONUS: isize = 10;
-const DEFENDER_CAMOFLAGE_BONUS: isize = 5;
 const DEFENDER_ENRAGED_NBONUS: isize = 10;
 const DEFENDER_FLANKED_NBONUS: isize = 10;
 const DEFENDER_HELD_NBONUS: isize = 10;
@@ -87,7 +86,6 @@ pub fn chanceOfAttackEvaded(defender: *const Mob, attacker: ?*const Mob) usize {
 
     var chance: isize = defender.stat(.Evade);
 
-    chance += @intCast(isize, defender.stat(.Camoflage)) * DEFENDER_CAMOFLAGE_BONUS;
     chance += if (defender.isUnderStatus(.Invigorate)) |_| DEFENDER_INVIGORATED_BONUS else 0;
     chance += if (!defender.isFlanked() and nearby_walls == 0) DEFENDER_OPEN_SPACE_BONUS else 0;
     chance += if (!tile_light) DEFENDER_UNLIT_BONUS else 0;
