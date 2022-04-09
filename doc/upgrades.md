@@ -56,12 +56,6 @@ rHubris if you receive this upgrade.
 
 You have 50% more mana than usual.
 
-## Camoflage
-
-> "Only observant foes notice you."
-
-You have one level of intrinsic camoflage.
-
 ## Will
 
 > "Your will hardens."
