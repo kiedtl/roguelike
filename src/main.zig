@@ -359,12 +359,11 @@ fn readInput() bool {
             return switch (ev.ch) {
                 's' => b: {
                     player.auto_wait_enabled = !player.auto_wait_enabled;
-                    state.message(.Info, "Auto-waiting: {s}", .{
-                        if (player.auto_wait_enabled)
-                            @as([]const u8, "enabled")
-                        else
-                            "disabled",
-                    });
+                    const str = if (player.auto_wait_enabled)
+                        @as([]const u8, "enabled")
+                    else
+                        "disabled";
+                    state.message(.Info, "Auto-waiting: {s}", .{str});
                     break :b false;
                 },
                 '\'' => state.player.swapWeapons(),
