@@ -452,8 +452,8 @@ fn excavatePrefab(
         var item_weights: [items.ITEM_DROPS.len]usize = undefined;
         for (items.ITEM_DROPS) |item, i| item_weights[i] = item.w;
 
-        loot_item1 = _chooseLootItem(&item_weights, minmax(usize, 30, 100));
-        rare_loot_item = _chooseLootItem(&item_weights, minmax(usize, 0, 40));
+        loot_item1 = _chooseLootItem(&item_weights, minmax(usize, 60, 200));
+        rare_loot_item = _chooseLootItem(&item_weights, minmax(usize, 0, 60));
     }
 
     var y: usize = 0;
@@ -1594,7 +1594,7 @@ pub fn placeItems(level: usize) void {
                 tries -= 1;
             }
 
-            const t = _chooseLootItem(&item_weights, minmax(usize, 0, 100));
+            const t = _chooseLootItem(&item_weights, minmax(usize, 0, 200));
             const item = items.createItemFromTemplate(t);
             state.dungeon.itemsAt(item_coord).append(item) catch err.wat();
         }
