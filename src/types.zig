@@ -1562,7 +1562,7 @@ pub const Mob = struct { // {{{
     // direct: was the potion quaffed directly (i.e., was it thrown at the
     //   mob or did the mob quaff it?). Used to determine whether to print a
     //   message.
-    pub fn quaffPotion(self: *Mob, potion: *Potion, direct: bool) void {
+    pub fn quaffPotion(self: *Mob, potion: *const Potion, direct: bool) void {
         if (direct and self.isUnderStatus(.Nausea) != null) {
             err.bug("Nauseated mob is quaffing potions!", .{});
         }
@@ -3254,7 +3254,7 @@ pub const ItemType = enum { Ring, Potion, Vial, Projectile, Armor, Cloak, Weapon
 
 pub const Item = union(ItemType) {
     Ring: *Ring,
-    Potion: *Potion,
+    Potion: *const Potion,
     Vial: Vial,
     Projectile: *const Projectile,
     Armor: *Armor,

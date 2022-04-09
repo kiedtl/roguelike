@@ -77,7 +77,6 @@ fn initGame() bool {
     state.tasks = TaskArrayList.init(state.GPA.allocator());
     state.mobs = MobList.init(state.GPA.allocator());
     state.rings = RingList.init(state.GPA.allocator());
-    state.potions = PotionList.init(state.GPA.allocator());
     state.armors = ArmorList.init(state.GPA.allocator());
     state.weapons = WeaponList.init(state.GPA.allocator());
     state.machines = MachineList.init(state.GPA.allocator());
@@ -179,7 +178,6 @@ fn deinitGame() void {
     state.tasks.deinit();
     state.mobs.deinit();
     state.rings.deinit();
-    state.potions.deinit();
     state.armors.deinit();
     state.weapons.deinit();
     state.machines.deinit();

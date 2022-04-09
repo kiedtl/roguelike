@@ -149,7 +149,6 @@ pub var outputs: [LEVELS]Rect.ArrayList = undefined;
 pub var tasks: TaskArrayList = undefined;
 pub var mobs: MobList = undefined;
 pub var rings: RingList = undefined;
-pub var potions: PotionList = undefined;
 pub var armors: ArmorList = undefined;
 pub var weapons: WeaponList = undefined;
 pub var machines: MachineList = undefined;

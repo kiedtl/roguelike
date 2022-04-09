@@ -37,23 +37,23 @@ const WIDTH = state.WIDTH;
 const LinkedList = @import("list.zig").LinkedList;
 
 // TODO: remove
-pub const POTIONS = [_]Potion{
-    SmokePotion,
-    ConfusionPotion,
-    ParalysisPotion,
-    FastPotion,
-    RecuperatePotion,
-    PoisonPotion,
-    InvigoratePotion,
-    DecimatePotion,
-    IncineratePotion,
+pub const POTIONS = [_]*const Potion{
+    &SmokePotion,
+    &ConfusionPotion,
+    &ParalysisPotion,
+    &FastPotion,
+    &RecuperatePotion,
+    &PoisonPotion,
+    &InvigoratePotion,
+    &DecimatePotion,
+    &IncineratePotion,
 };
 
 // Items to be dropped into rooms for the player's use.
 //
 pub const ItemTemplate = struct {
     w: usize,
-    i: union(enum) { W: Weapon, A: Armor, C: *const Cloak, P: Potion, E: Evocable },
+    i: union(enum) { W: Weapon, A: Armor, C: *const Cloak, P: *const Potion, E: Evocable },
 };
 pub const ITEM_DROPS = [_]ItemTemplate{
     // Weapons
@@ -68,15 +68,15 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 05, .i = .{ .A = HauberkArmor } },
     .{ .w = 02, .i = .{ .A = ScalemailArmor } },
     // Potions
-    .{ .w = 40, .i = .{ .P = SmokePotion } },
-    .{ .w = 70, .i = .{ .P = ConfusionPotion } },
-    .{ .w = 40, .i = .{ .P = ParalysisPotion } },
-    .{ .w = 40, .i = .{ .P = FastPotion } },
-    .{ .w = 80, .i = .{ .P = RecuperatePotion } },
-    .{ .w = 70, .i = .{ .P = PoisonPotion } },
-    .{ .w = 70, .i = .{ .P = InvigoratePotion } },
-    .{ .w = 30, .i = .{ .P = IncineratePotion } },
-    .{ .w = 10, .i = .{ .P = DecimatePotion } },
+    .{ .w = 40, .i = .{ .P = &SmokePotion } },
+    .{ .w = 70, .i = .{ .P = &ConfusionPotion } },
+    .{ .w = 40, .i = .{ .P = &ParalysisPotion } },
+    .{ .w = 40, .i = .{ .P = &FastPotion } },
+    .{ .w = 80, .i = .{ .P = &RecuperatePotion } },
+    .{ .w = 70, .i = .{ .P = &PoisonPotion } },
+    .{ .w = 70, .i = .{ .P = &InvigoratePotion } },
+    .{ .w = 30, .i = .{ .P = &IncineratePotion } },
+    .{ .w = 10, .i = .{ .P = &DecimatePotion } },
     // Evocables
     .{ .w = 10, .i = .{ .E = IronSpikeEvoc } },
     .{ .w = 05, .i = .{ .E = MineKitEvoc } },
@@ -681,7 +681,6 @@ fn triggerDecimatePotion(_: ?*Mob, coord: Coord) void {
 
 pub fn createItem(comptime T: type, item: T) *T {
     const list = switch (T) {
-        Potion => &state.potions,
         Ring => &state.rings,
         Armor => &state.armors,
         Weapon => &state.weapons,
@@ -697,7 +696,7 @@ pub fn createItemFromTemplate(template: ItemTemplate) Item {
     return switch (template.i) {
         .W => |i| Item{ .Weapon = createItem(Weapon, i) },
         .A => |i| Item{ .Armor = createItem(Armor, i) },
-        .P => |i| Item{ .Potion = createItem(Potion, i) },
+        .P => |i| Item{ .Potion = i },
         .E => |i| Item{ .Evocable = createItem(Evocable, i) },
         .C => |i| Item{ .Cloak = i },
         //else => err.todo(),

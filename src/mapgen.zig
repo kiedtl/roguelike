@@ -499,7 +499,7 @@ fn excavatePrefab(
                         switch (feature) {
                             .Potion => |pid| {
                                 if (utils.findById(&items.POTIONS, pid)) |potion_i| {
-                                    const potion_o = items.createItem(Potion, items.POTIONS[potion_i]);
+                                    const potion_o = items.POTIONS[potion_i];
                                     state.dungeon.itemsAt(rc).append(Item{ .Potion = potion_o }) catch err.wat();
                                 } else {
                                     std.log.err(
@@ -2502,10 +2502,7 @@ fn levelFeaturePrisoners(_: usize, coord: Coord, _: *const Room, _: *const Prefa
 
 fn levelFeaturePotions(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _: mem.Allocator) void {
     const potion = rng.chooseUnweighted(Potion, &items.POTIONS);
-    state.potions.append(potion) catch err.wat();
-    state.dungeon.itemsAt(coord).append(
-        Item{ .Potion = state.potions.last().? },
-    ) catch err.wat();
+    state.dungeon.itemsAt(coord).append(Item{ .Potion = potion }) catch err.wat();
 }
 
 fn levelFeatureVials(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _: mem.Allocator) void {
