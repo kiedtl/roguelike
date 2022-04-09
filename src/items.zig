@@ -669,6 +669,9 @@ pub const RapierWeapon = Weapon{
     .name = "rapier",
     .damage = 3,
     .stats = .{ .Melee = -10, .Evade = 10 },
+    .equip_effects = &[_]StatusDataInfo{
+        .{ .status = .Riposte, .duration = .Equ },
+    },
     .is_dippable = true,
     .strs = &PIERCING_STRS,
 };

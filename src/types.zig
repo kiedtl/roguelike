@@ -742,6 +742,11 @@ pub const Allegiance = enum {
 };
 
 pub const Status = enum {
+    // Gives a free attack after evading an attack.
+    //
+    // Doesn't have a power field.
+    Riposte,
+
     // Evade, Melee, and Missile nerfs.
     //
     // Doesn't have a power field.
@@ -898,6 +903,7 @@ pub const Status = enum {
 
     pub fn string(self: Status, mob: *const Mob) []const u8 {
         return switch (self) {
+            .Riposte => "riposte",
             .Stun => "stunned",
             .OpenMelee => "open melee",
             .Conductive => "conductive",
@@ -936,6 +942,7 @@ pub const Status = enum {
 
     pub fn messageWhenAdded(self: Status) ?[3][]const u8 {
         return switch (self) {
+            .Riposte => null,
             .Stun => .{ "are", "is", " stunned" },
             .OpenMelee, .Conductive, .Noisy => null,
             .Sleeping => .{ "go", "goes", " to sleep" }, // FIXME: bad wording for unliving
@@ -970,6 +977,7 @@ pub const Status = enum {
 
     pub fn messageWhenRemoved(self: Status) ?[3][]const u8 {
         return switch (self) {
+            .Riposte => null,
             .Stun => .{ "are no longer", "is no longer", " stunned" },
             .OpenMelee, .Conductive, .Noisy => null,
             .Sleeping => .{ "wake", "wakes", " up" },
@@ -1934,6 +1942,9 @@ pub const Mob = struct { // {{{
         disallow_stab: bool = false,
         damage_bonus: usize = 100, // percentage
         loudness: SoundIntensity = .Medium,
+
+        is_bonus: bool = false,
+        is_riposte: bool = false,
     };
 
     pub fn fight(attacker: *Mob, recipient: *Mob, opts: FightOptions) void {
@@ -1968,7 +1979,6 @@ pub const Mob = struct { // {{{
                 if (wielded_wp != null and wielded_wp.? == weapon) wielded_wp else null,
                 opts,
                 martial,
-                false,
             );
         }
 
@@ -1993,7 +2003,6 @@ pub const Mob = struct { // {{{
         mut_attacker_weapon: ?*Weapon, // XXX: hack, because not all weapons are mutable
         opts: FightOptions,
         remaining_bonus_attacks: usize,
-        is_bonus_attack: bool,
     ) void {
         assert(!attacker.is_dead);
         assert(!recipient.is_dead);
@@ -2032,10 +2041,15 @@ pub const Mob = struct { // {{{
                 }
             }
 
+            if (recipient.isUnderStatus(.Riposte)) |_| {
+                if (recipient.canMelee(attacker)) {
+                    recipient.fight(attacker, .{ .free_attack = true, .is_riposte = true });
+                }
+            }
             return;
         }
 
-        const is_stab = !opts.disallow_stab and !recipient.isAwareOfAttack(attacker.coord) and !is_bonus_attack;
+        const is_stab = !opts.disallow_stab and !recipient.isAwareOfAttack(attacker.coord) and !opts.is_bonus;
         const damage = combat.damageOfMeleeAttack(attacker, attacker_weapon.damage, is_stab) * opts.damage_bonus / 100;
 
         recipient.takeDamage(.{
@@ -2069,32 +2083,35 @@ pub const Mob = struct { // {{{
         if (dmg_percent >= 60) punctuation = "!!!";
         if (dmg_percent >= 80) punctuation = "!!!!";
 
-        const martial_str = if (is_bonus_attack) "$b*Martial*$." else "";
+        const martial_str = if (opts.is_bonus) " $b*Martial*$." else "";
+        const riposte_str = if (opts.is_riposte) " $b*Riposte*$." else "";
 
         if (recipient.coord.eq(state.player.coord)) {
-            state.message(.Combat, "The {s} {s} you{s}{s} ($p{}% dmg$.) {s}", .{
+            state.message(.Combat, "The {s} {s} you{s}{s} ($p{}% dmg$.){s}{s}", .{
                 attacker.displayName(),
                 hitstrs.verb_other,
                 hitstrs.verb_degree,
                 punctuation,
                 dmg_percent,
                 martial_str,
+                riposte_str,
             });
         } else if (attacker.coord.eq(state.player.coord)) {
-            state.message(.Combat, "You {s} the {s}{s}{s} ($p{}% dmg$.) {s}", .{
+            state.message(.Combat, "You {s} the {s}{s}{s} ($p{}% dmg$.){s}{s}", .{
                 hitstrs.verb_self,
                 recipient.displayName(),
                 hitstrs.verb_degree,
                 punctuation,
                 dmg_percent,
                 martial_str,
+                riposte_str,
             });
         } else {
             const cansee_a = state.player.cansee(attacker.coord);
             const cansee_r = state.player.cansee(recipient.coord);
 
             if (cansee_a or cansee_r) {
-                state.message(.Combat, "{s}{s} {s} {s}{s}{s}{s} ($p{}% dmg$.) {s}", .{
+                state.message(.Combat, "{s}{s} {s} {s}{s}{s}{s} ($p{}% dmg$.){s}{s}", .{
                     if (cansee_a) @as([]const u8, "The ") else "",
                     if (cansee_a) attacker.displayName() else "Something",
                     hitstrs.verb_other,
@@ -2104,6 +2121,7 @@ pub const Mob = struct { // {{{
                     punctuation,
                     dmg_percent,
                     martial_str,
+                    riposte_str,
                 });
             }
         }
@@ -2141,6 +2159,7 @@ pub const Mob = struct { // {{{
         if (remaining_bonus_attacks > 0 and !recipient.should_be_dead()) {
             var newopts = opts;
             newopts.auto_hit = false;
+            newopts.is_bonus = true;
 
             _fightWithWeapon(
                 attacker,
@@ -2149,7 +2168,6 @@ pub const Mob = struct { // {{{
                 mut_attacker_weapon,
                 newopts,
                 remaining_bonus_attacks - 1,
-                true,
             );
         }
     }
