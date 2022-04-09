@@ -1,5 +1,6 @@
 const std = @import("std");
 const math = std.math;
+const enums = std.enums;
 const meta = std.meta;
 const assert = std.debug.assert;
 
@@ -25,6 +26,7 @@ const StatusDataInfo = types.StatusDataInfo;
 const Armor = types.Armor;
 const SurfaceItem = types.SurfaceItem;
 const Mob = types.Mob;
+const Stat = types.Stat;
 const Spatter = types.Spatter;
 const Status = types.Status;
 const Direction = types.Direction;
@@ -83,22 +85,21 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 05, .i = .{ .E = EldritchLanternEvoc } },
     .{ .w = 02, .i = .{ .E = HammerEvoc } },
     // Cloaks
-    .{ .w = 02, .i = .{ .C = &SiliconCloak } },
+    .{ .w = 02, .i = .{ .C = &SilCloak } },
     .{ .w = 02, .i = .{ .C = &FurCloak } },
     .{ .w = 02, .i = .{ .C = &VelvetCloak } },
-    .{ .w = 02, .i = .{ .C = &ThornsCloak } },
 };
 
 pub const Cloak = struct {
     id: []const u8,
     name: []const u8,
-    ego: union(enum) { Resist: Resistance, Camoflage, Retaliate },
+    stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
+    resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
 };
 
-pub const SiliconCloak = Cloak{ .id = "silicon", .name = "silicon", .ego = .{ .Resist = .rFire } };
-pub const FurCloak = Cloak{ .id = "fur", .name = "fur", .ego = .{ .Resist = .rElec } };
-pub const VelvetCloak = Cloak{ .id = "velvet", .name = "velvet", .ego = .Camoflage };
-pub const ThornsCloak = Cloak{ .id = "thorns", .name = "thorns", .ego = .Retaliate };
+pub const SilCloak = Cloak{ .id = "silicon", .name = "silicon", .resists = .{ .rFire = 25 } };
+pub const FurCloak = Cloak{ .id = "fur", .name = "fur", .resists = .{ .rElec = 25 } };
+pub const VelvetCloak = Cloak{ .id = "velvet", .name = "velvet", .stats = .{ .Sneak = 2 } };
 
 // Projectiles {{{
 

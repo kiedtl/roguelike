@@ -2035,26 +2035,6 @@ pub const Mob = struct { // {{{
                 }
             }
 
-            // Retaliation damage?
-            if (recipient.inventory.equipment(.Cloak).*) |clk|
-                if (meta.activeTag(clk.Cloak.ego) == .Retaliate and
-                    rng.range(usize, 0, 100) < 14)
-                {
-                    const max_dmg = @floatToInt(usize, attacker.HP * 21 / 100);
-                    //const min_dmg = @floatToInt(usize, attacker.HP * 14 / 100);
-                    const dmg = @intToFloat(f64, rng.range(usize, max_dmg / 2, max_dmg));
-                    attacker.takeDamage(.{ .amount = dmg });
-                    const dmg_percent = attacker.lastDamagePercentage();
-
-                    const n = if (recipient == state.player) "your" else recipient.displayName();
-                    state.messageAboutMob2(attacker, attacker.coord, .Combat, "is hurt by {s}{s}{s} thorny cloak! ($p{}% dmg$.)", .{
-                        if (recipient == state.player) @as([]const u8, "") else "the ",
-                        n,
-                        if (recipient == state.player) @as([]const u8, "") else "'s",
-                        dmg_percent,
-                    });
-                };
-
             return;
         }
 
@@ -2749,9 +2729,7 @@ pub const Mob = struct { // {{{
 
         // Check cloaks.
         if (self.inventory.equipmentConst(.Cloak).*) |clk| {
-            if (_stat == .Camoflage and meta.activeTag(clk.Cloak.ego) == .Camoflage) {
-                val += 1;
-            }
+            val += utils.getFieldByEnum(Stat, clk.Cloak.stats, _stat);
         }
 
         return val;
@@ -2774,13 +2752,9 @@ pub const Mob = struct { // {{{
         r += utils.getFieldByEnum(Resistance, terrain.resists, resist);
 
         // Check armor
-        if (self.inventory.equipmentConst(.Cloak).*) |clk|
-            switch (clk.Cloak.ego) {
-                .Resist => |clk_r| if (clk_r == resist) {
-                    r += 50;
-                },
-                else => {},
-            };
+        if (self.inventory.equipmentConst(.Cloak).*) |clk| {
+            r += utils.getFieldByEnum(Resistance, clk.Cloak.resists, resist);
+        }
         if (self.inventory.equipmentConst(.Armor).*) |arm| {
             r += utils.getFieldByEnum(Resistance, arm.Armor.resists, resist);
         }
