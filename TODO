@@ -77,18 +77,18 @@ x frozen fiend
 	x Polar Casing: transforms a wall near the target to ice, damaging all
 	  (yes, all) adjacent monsters. Reverts back to a wall in 5-6 turns.
 	  - "The freezing fiend stares at you."
-- crystal servitor
-	- "A humanoid statue carved out of a white crystal, imbued with an evil
+- hornblende statue
+	- "A humanoid statue imbued with an evil
 	  spirit. It radiates an intense aura of palpable malice."
 	- Appears in pairs in hallways of the Morgue.
 	- Chance to resistibly blink intruders to itself.
-- sapphire servitor
-	- "A humanoid statue carved out of a white crystal, imbued with an evil
+- pitchblende statue
+	- "A humanoid statue imbued with an evil
 	  spirit. It radiates an intense aura of palpable malice."
 	- Appears in pairs in hallways of the Morgue.
 	- Chance to resistibly blink intruders away from itself.
-- jasper servitor
-	- "A humanoid statue carved out of a white crystal, imbued with an evil
+- jasper statue
+	- "A humanoid statue imbued with an evil
 	  spirit. It radiates an intense aura of palpable malice."
 	- Appears in pairs guarding doorways of rooms in the Morgue.
 	- Chance to prevent passage of intruders.
@@ -108,6 +108,8 @@ x frozen fiend
 	- hurls iron shards and orbs of devastation
 	- rFire+ rElec+ rMlee+ rFume∞ rPara∞ rPois∞
 	- immobile, only attacks when other hostile present
+- silver spire
+	- Enables silver weapons.
 x warden
 	- calls for reinforcements by shouting/sounding horn
 - wretched stars
@@ -180,9 +182,10 @@ x lead turtle
 - bone rat
 	- fast, evasive, and moderately fragile.
 	- rPois∞ rFume∞ rFire-
-- zombie
-	- very slow
-	- aura of nausea
+- bloat
+	- Bloated body.
+	- Very slow, 18 HP
+	- Aura of nausea.
 - ember mage
 	- Can hurl bolts of fire for low damage
 	- Fire attack with weapon
@@ -219,7 +222,6 @@ x lead turtle
 - iron mage
 	- Spectral Sword: summons four spectral swords, which are very fast but
 	  have just 1 HP and do little damage. Like Brogue's staff of conjuration.
-	  Spell won't work if there are any spectral swords alive on the level.
 	- Found in Laboratory and Smithing.
 x ancient mage
 	- "Even the most powerful of human mages cannot hope to wield the full
@@ -247,7 +249,8 @@ x death mage
 	- Glows, shedding light on surroundings.
 - beastmaster
 	- Slow (120) and heavily armored, but just a simple club.
-	- Releases chained dogs, hounds, wolves in same room when seeing hostile.
+	- Releases chained allies (dogs, hounds, wolves) in same room when
+	  seeing hostile.
 	- Goads beasts on, possibly giving them .Enraged status
 - sleeping beauty
 	- "A hideous statue of some nameless creature, covered in metal plates."
@@ -341,21 +344,22 @@ Equipment
 (damages is after making all hps 1/4)
 
 weapons:
-- quarterstaff      3 damage                OpenMelee, Martial+, +15 Evade
-- battleaxe         4 damage   -15 Melee%   OpenMelee
-- knife             1 damage                Dip
-- dagger            2 damage                Dip, Martial
-  - Free attack that doesn't miss on 3rd consecutive non-missing attack
-- rapier            3 damage   -10 Melee%   Dip, +10 Evade, Riposte
-- stiletto          5 damage   -25 Melee%   Dip
-- mace              2 damage   +10 Melee%   Stun
-- morningstar       3 damage   +10 Melee%   Stun
-  - Lunge attack gives 3x damage instead of 2x.
-- knout             6 damage
-- club              1 damage
-- longsword         2 damage                Dip, +10 Evade
-  - "Parting shot" pattern gives 20% evade instead of 10%.
-- halberd           2 damage   +10 Melee%   Reach+
+x quarterstaff      2 damage                OpenMelee, Martial++, +15 Evade
+x battleaxe         4 damage   -15 Melee%   OpenMelee
+x knife             1 damage                Dip
+x dagger            2 damage                Dip, Martial+
+x rapier            3 damage   -10 Melee%   Dip, +10 Evade, Riposte
+x stiletto          5 damage   -25 Melee%   Dip
+x mace              2 damage   +10 Melee%
+x great mace        2 damage                Stun
+x morningstar       3 damage   +10 Melee%
+x knout             6 damage
+x club              1 damage
+x longsword         2 damage                Dip, +10 Evade
+x halberd           2 damage                Reach+, OpenMelee, Dip
+x glaive            2 damage   +10 Melee%   Reach+, Dip
+x monk's spade      1 damage                Reach+, Knockback(1), 50% speed
+x woldo             3 damage   -10 Melee%   Reach+, Dip, Martial++
 
 body armor:
 - robe
@@ -788,6 +792,10 @@ x Upgrade to Zig v9
   - AI to move out of reach of enemy, if mob has reaching weapon
   - AI to move onto advantageous terrain
 - Air purifiers
+- BUG: If player wears Equ that grants status X, then get hits with Tmp status
+  X, then removes that equipment, they won't have status even if the Tmp status
+  should have replaced it.
+  - FIX: store statuses in a vector.
 
 Ring and movements:
 ===================
