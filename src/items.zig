@@ -594,7 +594,7 @@ pub const DaggerWeapon = Weapon{
     .id = "dagger",
     .name = "dagger",
     .damage = 2,
-    .stats = .{ .Melee = -15 },
+    .stats = .{ .Martial = 1, .Melee = -15 },
     .is_dippable = true,
     .strs = &PIERCING_STRS,
 };
@@ -624,8 +624,8 @@ pub const HalberdWeapon = Weapon{
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .OpenMelee, .duration = .Equ },
     },
-    .strs = &SLASHING_STRS,
     .is_dippable = true,
+    .strs = &SLASHING_STRS,
     .reach = 2,
 };
 
@@ -634,8 +634,8 @@ pub const GlaiveWeapon = Weapon{
     .name = "glaive",
     .damage = 2,
     .stats = .{ .Melee = 10 },
-    .strs = &SLASHING_STRS,
     .is_dippable = true,
+    .strs = &SLASHING_STRS,
     .reach = 2,
 };
 
@@ -646,6 +646,17 @@ pub const MonkSpadeWeapon = Weapon{
     .delay = 50,
     .knockback = 1,
     .strs = &PIERCING_STRS,
+    .reach = 2,
+};
+
+pub const WoldoWeapon = Weapon{
+    .id = "woldo",
+    .name = "woldo",
+    .damage = 3,
+    .stats = .{ .Melee = -10, .Martial = 2 },
+    .is_dippable = true,
+    .strs = &SLASHING_STRS,
+    .reach = 2,
 };
 
 pub const KnoutWeapon = Weapon{
