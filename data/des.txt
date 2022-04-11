@@ -114,3 +114,51 @@ This will set you and your surroundings on fire in a 8-tile radius.
 $cA potion of decimation.$.
 
 Creates a nasty explosion in a 3-tile radius, pulverising anyone caught in it.
+
+% t_default
+
+% t_carpet
+
+Ornate, cushioned carpet. Your steps make almost no noise while walking on this.
+
+% t_gravel
+
+Very noisy to walk on.
+
+% t_metal
+
+Metal plates have been bolted onto the floor for some reason.
+
+% t_copper
+
+Copper plates have been bolted onto the floor for some reason. While standing on
+this, you share electricity damage with nearby monsters.
+
+% t_wood
+
+Wooden boards. Creaky and flammable, but makes you resistant to electricity.
+
+% t_water
+
+Someone spilled a lot of water here. It's difficult to sneak through, and will
+make you very vulnerable to electricity. You are very resistant to fire though.
+
+% t_f_lumi
+
+Some kind of bluish fungi, glowing serenely in the dim light of the Dungeon.
+
+% t_f_dead
+
+Some dry, flammable fungi.
+
+% t_f_tall
+
+A strange kind of very tall mushroom growth. Easy to hide in.
+
+% t_pillar
+
+A pillar.
+
+% t_platform
+
+A raised platform.
