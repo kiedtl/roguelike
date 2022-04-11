@@ -765,7 +765,7 @@ pub const KnoutWeapon = Weapon{
     .id = "knout",
     .name = "knout",
     .delay = 150,
-    .damage = 6,
+    .damage = 10,
     .strs = &CRUSHING_STRS,
 };
 
