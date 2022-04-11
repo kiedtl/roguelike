@@ -745,6 +745,159 @@ pub fn chooseCell(opts: ChooseCellOptions) ?Coord {
     }
 }
 
+pub fn drawExamineScreen() bool {
+    const mainw = dimensions(.Main);
+    const logw = dimensions(.Log);
+
+    // TODO: do some tests and figure out what's the practical limit to memory
+    // usage, and reduce the buffer's size to that.
+    var membuf: [65535]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
+    const moblist = state.createMobList(false, true, state.player.coord.z, fba.allocator());
+
+    const TileFocus = enum { Nothing, Item, Surface, Mob };
+
+    var coord: Coord = state.player.coord;
+    var tile_focus: TileFocus = .Surface;
+    var desc_scroll: usize = 0;
+
+    while (true) {
+        drawMap(moblist.items, mainw.startx, mainw.endx, mainw.starty, mainw.endy);
+
+        const display_x = mainw.startx + @intCast(isize, coord.x);
+        const display_y = mainw.starty + @intCast(isize, coord.y);
+        termbox.tb_change_cell(display_x - 1, display_y - 1, '╭', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x + 0, display_y - 1, '─', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y - 1, '╮', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x - 1, display_y + 0, '│', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y + 0, '│', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x - 1, display_y + 1, '╰', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x + 0, display_y + 1, '─', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y + 1, '╯', colors.CONCRETE, colors.BG);
+
+        termbox.tb_present();
+
+        // This is a bit of a hack, erase the bordering but don't present the
+        // changes, so that if the user moves to the edge of the map and then moves
+        // away, there won't be bordering left as an artifact (as the map drawing
+        // routines won't erase it, since it's outside its window).
+        termbox.tb_change_cell(display_x - 1, display_y - 1, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x + 0, display_y - 1, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y - 1, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x - 1, display_y + 0, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y + 0, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x - 1, display_y + 1, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x + 0, display_y + 1, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y + 1, ' ', 0, colors.BG);
+
+        var ev: termbox.tb_event = undefined;
+        const t = termbox.tb_poll_event(&ev);
+
+        if (t == -1) @panic("Fatal termbox error");
+
+        if (t == termbox.TB_EVENT_KEY) {
+            if (ev.key != 0) {
+                switch (ev.key) {
+                    termbox.TB_KEY_PGUP => desc_scroll -|= 1,
+                    termbox.TB_KEY_PGDN => desc_scroll += 1,
+                    termbox.TB_KEY_CTRL_C,
+                    termbox.TB_KEY_CTRL_G,
+                    => break,
+                    else => continue,
+                }
+            } else if (ev.ch != 0) {
+                switch (ev.ch) {
+                    'h' => coord = coord.move(.West, state.mapgeometry) orelse coord,
+                    'j' => coord = coord.move(.South, state.mapgeometry) orelse coord,
+                    'k' => coord = coord.move(.North, state.mapgeometry) orelse coord,
+                    'l' => coord = coord.move(.East, state.mapgeometry) orelse coord,
+                    'y' => coord = coord.move(.NorthWest, state.mapgeometry) orelse coord,
+                    'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
+                    'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
+                    'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
+                    else => {},
+                }
+            } else unreachable;
+        }
+
+        if (tile_focus == .Item and state.dungeon.itemsAt(coord).len == 0)
+            tile_focus = .Mob;
+        if (tile_focus == .Mob and state.dungeon.at(coord).mob == null)
+            tile_focus = .Surface;
+        if (tile_focus == .Surface and state.dungeon.at(coord).surface == null)
+            tile_focus = .Item;
+
+        // Draw description pane.
+        {
+            const log_startx = logw.startx;
+            const log_endx = logw.endx;
+            const log_starty = logw.starty;
+            const log_endy = logw.endy;
+
+            var desc = std.ArrayList(u8).init(state.GPA.allocator());
+            defer desc.deinit();
+
+            if (tile_focus == .Mob and state.dungeon.at(coord).mob != null) {
+                const id = state.dungeon.at(coord).mob.?.id;
+                if (state.descriptions.get(id)) |mobdesc| {
+                    desc.appendSlice(mobdesc) catch err.wat();
+                    desc.appendSlice("\n\n") catch err.wat();
+                }
+            }
+
+            if (tile_focus == .Surface and state.dungeon.at(coord).surface != null) {
+                const id = state.dungeon.at(coord).surface.?.id();
+                if (state.descriptions.get(id)) |surfdesc| {
+                    desc.appendSlice(surfdesc) catch err.wat();
+                    desc.appendSlice("\n\n") catch err.wat();
+                }
+            } else {
+                const id = state.dungeon.terrainAt(coord).id;
+                if (state.descriptions.get(id)) |terraindesc| {
+                    desc.appendSlice(terraindesc) catch err.wat();
+                    desc.appendSlice("\n\n") catch err.wat();
+                }
+            }
+
+            if (tile_focus == .Item and state.dungeon.itemsAt(coord).len > 0) {
+                if (state.dungeon.itemsAt(coord).data[0].id()) |id|
+                    if (state.descriptions.get(id)) |itemdesc| {
+                        desc.appendSlice(itemdesc) catch err.wat();
+                        desc.appendSlice("\n\n") catch err.wat();
+                    };
+            }
+
+            var log_y = log_starty;
+            var scroll: usize = 0;
+            const linewidth = @intCast(usize, log_endx - log_startx);
+
+            while (log_y < log_endy) : (log_y += 1)
+                _clear_line(log_startx, log_endx, log_y);
+            log_y = log_starty;
+
+            var fold_iter = utils.FoldedTextIterator.init(desc.items, linewidth);
+            while (fold_iter.next()) |line| {
+                if (scroll < desc_scroll) {
+                    scroll += 1;
+                    continue;
+                }
+
+                log_y = _drawStr(log_startx, log_y, log_endx, "{s}", .{line}, .{});
+
+                if (scroll > 0 and log_y == log_starty + 1) {
+                    _ = _drawStr(log_endx - 11, log_y - 1, log_endx, " $p-- PgUp --$.", .{}, .{});
+                } else if (log_y == log_endy) {
+                    _ = _drawStr(log_endx - 11, log_y - 1, log_endx, " $p-- PgDn --$.", .{}, .{});
+                    break;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
 // Wait for input. Return null if Ctrl+c or escape was pressed, default_input
 // if <enter> is pressed ,otherwise the key pressed. Will continue waiting if a
 // mouse event or resize event was recieved.

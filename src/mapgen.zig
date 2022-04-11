@@ -198,6 +198,7 @@ const VALID_FEATURE_TILE_PATTERNS = [_][]const u8{
 fn isTileAvailable(coord: Coord) bool {
     return state.dungeon.at(coord).type == .Floor and state.dungeon.at(coord).mob == null and state.dungeon.at(coord).surface == null and state.dungeon.itemsAt(coord).len == 0;
 }
+
 fn choosePoster(level: usize) ?*const Poster {
     var tries: usize = 256;
     while (tries > 0) : (tries -= 1) {
@@ -561,7 +562,7 @@ fn excavatePrefab(
 
     for (fab.mobs) |maybe_mob| {
         if (maybe_mob) |mob_f| {
-            if (utils.findById(&mobs.MOBS, mob_f.id)) |mob_template| {
+            if (mobs.findMobById(mob_f.id)) |mob_template| {
                 const coord = Coord.new2(
                     room.rect.start.z,
                     mob_f.spawn_at.x + room.rect.start.x + startx,
@@ -582,7 +583,7 @@ fn excavatePrefab(
                     (mob_f.work_at orelse mob_f.spawn_at).y + room.rect.start.y + starty,
                 );
 
-                _ = mobs.placeMob(allocator, &mobs.MOBS[mob_template], coord, .{
+                _ = mobs.placeMob(allocator, mob_template, coord, .{
                     .work_area = work_area,
                 });
             } else {
@@ -1681,11 +1682,10 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
                 spawn_table_ids.items,
                 spawn_table_weights.items,
             ) catch err.wat();
-            const mob_ind = utils.findById(&mobs.MOBS, mob_id) orelse err.bug(
+            const mob = mobs.findMobById(mob_id) orelse err.bug(
                 "Mob {s} specified in spawn tables couldn't be found.",
                 .{mob_id},
             );
-            const mob = &mobs.MOBS[mob_ind];
 
             var tries: usize = 100;
             while (tries > 0) : (tries -= 1) {

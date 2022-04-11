@@ -55,7 +55,6 @@ pub const BurningBruteSpecies = Species{
 };
 
 pub const MobTemplate = struct {
-    id: []const u8,
     mob: Mob,
     weapon: ?*const Weapon = null,
     backup_weapon: ?*const Weapon = null,
@@ -76,8 +75,8 @@ pub const MobTemplate = struct {
 };
 
 pub const ExecutionerTemplate = MobTemplate{
-    .id = "executioner",
     .mob = .{
+        .id = "executioner",
         .species = &GoblinSpecies,
         .tile = 'א',
         .ai = AI{
@@ -99,8 +98,8 @@ pub const ExecutionerTemplate = MobTemplate{
 };
 
 pub const WatcherTemplate = MobTemplate{
-    .id = "watcher",
     .mob = .{
+        .id = "watcher",
         .species = &ImpSpecies,
         .tile = 'ש',
         .ai = AI{
@@ -121,8 +120,8 @@ pub const WatcherTemplate = MobTemplate{
 };
 
 pub const WardenTemplate = MobTemplate{
-    .id = "warden",
     .mob = .{
+        .id = "warden",
         .species = &GoblinSpecies,
         .tile = 'ח',
         .ai = AI{
@@ -146,8 +145,8 @@ pub const WardenTemplate = MobTemplate{
 };
 
 pub const GuardTemplate = MobTemplate{
-    .id = "guard",
     .mob = .{
+        .id = "guard",
         .species = &GoblinSpecies,
         .tile = 'ה',
         .ai = AI{
@@ -171,8 +170,8 @@ pub const GuardTemplate = MobTemplate{
 };
 
 pub const JavelineerTemplate = MobTemplate{
-    .id = "javelineer",
     .mob = .{
+        .id = "javelineer",
         .species = &GoblinSpecies,
         .tile = 'פ',
         .ai = AI{
@@ -201,8 +200,8 @@ pub const JavelineerTemplate = MobTemplate{
 };
 
 pub const SentinelTemplate = MobTemplate{
-    .id = "sentinel",
     .mob = .{
+        .id = "sentinel",
         .species = &HumanSpecies,
         .tile = 'ץ',
         .ai = AI{
@@ -231,8 +230,8 @@ pub const SentinelTemplate = MobTemplate{
 };
 
 pub const LeadTurtleTemplate = MobTemplate{
-    .id = "lead_turtle",
     .mob = .{
+        .id = "lead_turtle",
         .species = &Species{
             .name = "lead turtle",
             .default_attack = &Weapon{
@@ -268,8 +267,8 @@ pub const LeadTurtleTemplate = MobTemplate{
 };
 
 pub const IronWaspTemplate = MobTemplate{
-    .id = "iron_wasp",
     .mob = .{
+        .id = "iron_wasp",
         .species = &Species{
             .name = "iron wasp",
             .default_attack = &Weapon{
@@ -315,8 +314,8 @@ pub const IronWaspTemplate = MobTemplate{
 };
 
 pub const PatrolTemplate = MobTemplate{
-    .id = "patrol",
     .mob = .{
+        .id = "patrol",
         .species = &GoblinSpecies,
         .tile = 'ק',
         .ai = AI{
@@ -345,8 +344,8 @@ pub const PatrolTemplate = MobTemplate{
 };
 
 pub const PlayerTemplate = MobTemplate{
-    .id = "player",
     .mob = .{
+        .id = "player",
         .species = &HumanSpecies,
         .tile = '@',
         .prisoner_status = .{ .of = .Necromancer },
@@ -376,8 +375,8 @@ pub const PlayerTemplate = MobTemplate{
 };
 
 pub const GoblinTemplate = MobTemplate{
-    .id = "goblin",
     .mob = .{
+        .id = "goblin",
         .species = &GoblinSpecies,
         .tile = 'g',
         .ai = AI{
@@ -399,8 +398,8 @@ pub const GoblinTemplate = MobTemplate{
 };
 
 pub const KyaniteStatueTemplate = MobTemplate{
-    .id = "kyanite_statue",
     .mob = .{
+        .id = "kyanite_statue",
         .species = &Species{ .name = "kyanite statue" },
         .tile = '☻',
         .ai = AI{
@@ -433,8 +432,8 @@ pub const KyaniteStatueTemplate = MobTemplate{
 };
 
 pub const NebroStatueTemplate = MobTemplate{
-    .id = "nebro_statue",
     .mob = .{
+        .id = "nebro_statue",
         .species = &Species{ .name = "nebro statue" },
         .tile = '☻',
         .ai = AI{
@@ -467,8 +466,8 @@ pub const NebroStatueTemplate = MobTemplate{
 };
 
 pub const CrystalStatueTemplate = MobTemplate{
-    .id = "crystal_statue",
     .mob = .{
+        .id = "crystal_statue",
         .species = &Species{ .name = "crystal statue" },
         .tile = '☻',
         .ai = AI{
@@ -501,8 +500,8 @@ pub const CrystalStatueTemplate = MobTemplate{
 };
 
 pub const AlchemistTemplate = MobTemplate{
-    .id = "alchemist",
     .mob = .{
+        .id = "alchemist",
         .species = &HumanSpecies,
         .tile = 'w',
         .ai = AI{
@@ -524,8 +523,8 @@ pub const AlchemistTemplate = MobTemplate{
 };
 
 pub const CleanerTemplate = MobTemplate{
-    .id = "cleaner",
     .mob = .{
+        .id = "cleaner",
         .species = &GoblinSpecies,
         .tile = 'w',
         .ai = AI{
@@ -547,8 +546,8 @@ pub const CleanerTemplate = MobTemplate{
 };
 
 pub const HaulerTemplate = MobTemplate{
-    .id = "hauler",
     .mob = .{
+        .id = "hauler",
         .species = &GoblinSpecies,
         .tile = 'w',
         .ai = AI{
@@ -570,8 +569,8 @@ pub const HaulerTemplate = MobTemplate{
 };
 
 pub const EngineerTemplate = MobTemplate{
-    .id = "engineer",
     .mob = .{
+        .id = "engineer",
         .species = &GoblinSpecies,
         .tile = 'w',
         .ai = AI{
@@ -594,8 +593,8 @@ pub const EngineerTemplate = MobTemplate{
 };
 
 pub const AncientMageTemplate = MobTemplate{
-    .id = "ancient_mage",
     .mob = .{
+        .id = "ancient_mage",
         .species = &HumanSpecies,
         .tile = 'A',
         .undead_prefix = "",
@@ -643,8 +642,8 @@ pub const AncientMageTemplate = MobTemplate{
 };
 
 pub const DeathMageTemplate = MobTemplate{
-    .id = "death_mage",
     .mob = .{
+        .id = "death_mage",
         .species = &HumanSpecies,
         .tile = 'מ',
         .ai = AI{
@@ -681,8 +680,8 @@ pub const DeathMageTemplate = MobTemplate{
 };
 
 pub const SkeletalAxemasterTemplate = MobTemplate{
-    .id = "skeletal_axemaster",
     .mob = .{
+        .id = "skeletal_axemaster",
         .species = &HumanSpecies,
         .tile = 'ע',
         .undead_prefix = "",
@@ -713,8 +712,8 @@ pub const SkeletalAxemasterTemplate = MobTemplate{
 };
 
 pub const TorturerNecromancerTemplate = MobTemplate{
-    .id = "necromancer",
     .mob = .{
+        .id = "necromancer",
         .species = &HumanSpecies,
         .tile = 'Ñ',
         .ai = AI{
@@ -747,8 +746,8 @@ pub const TorturerNecromancerTemplate = MobTemplate{
 };
 
 pub const BurningBruteTemplate = MobTemplate{
-    .id = "burning_brute",
     .mob = .{
+        .id = "burning_brute",
         .species = &BurningBruteSpecies,
         .tile = 'B',
         .ai = AI{
@@ -785,8 +784,8 @@ pub const BurningBruteTemplate = MobTemplate{
 };
 
 pub const SulfurFiendTemplate = MobTemplate{
-    .id = "sulfur_fiend",
     .mob = .{
+        .id = "sulfur_fiend",
         .species = &Species{ .name = "sulfur fiend" },
         .tile = 'S',
         .ai = AI{
@@ -820,8 +819,8 @@ pub const SulfurFiendTemplate = MobTemplate{
 };
 
 pub const FrozenFiendTemplate = MobTemplate{
-    .id = "frozen_fiend",
     .mob = .{
+        .id = "frozen_fiend",
         .species = &Species{ .name = "frozen fiend" },
         .tile = 'F',
         .ai = AI{
@@ -855,8 +854,8 @@ pub const FrozenFiendTemplate = MobTemplate{
 };
 
 pub const TanusExperiment = MobTemplate{
-    .id = "tanus_exp",
     .mob = .{
+        .id = "tanus_exp",
         .species = &Species{ .name = "tanusian experiment" },
         .tile = 'ג',
         .ai = AI{
@@ -880,8 +879,8 @@ pub const TanusExperiment = MobTemplate{
 };
 
 pub const CatalineExperiment = MobTemplate{
-    .id = "cataline_exp",
     .mob = .{
+        .id = "cataline_exp",
         .species = &Species{ .name = "catalinic experiment" },
         .tile = 'ג',
         .ai = AI{
@@ -905,8 +904,8 @@ pub const CatalineExperiment = MobTemplate{
 };
 
 pub const FlouinExperiment = MobTemplate{
-    .id = "flouin_exp",
     .mob = .{
+        .id = "flouin_exp",
         .species = &Species{ .name = "flouinian experiment" },
         .tile = 'ג',
         .ai = AI{
@@ -930,8 +929,8 @@ pub const FlouinExperiment = MobTemplate{
 };
 
 pub const PhytinExperiment = MobTemplate{
-    .id = "phytin_exp",
     .mob = .{
+        .id = "phytin_exp",
         .species = &Species{ .name = "phytinic experiment" },
         .tile = 'ג',
         .ai = AI{
@@ -955,8 +954,8 @@ pub const PhytinExperiment = MobTemplate{
 };
 
 pub const LivingIceTemplate = MobTemplate{
-    .id = "living_ice",
     .mob = .{
+        .id = "living_ice",
         .species = &Species{
             .name = "living ice",
             .default_attack = &Weapon{
@@ -997,8 +996,8 @@ pub const LivingIceTemplate = MobTemplate{
 };
 
 pub const BallLightningTemplate = MobTemplate{
-    .id = "ball_lightning",
     .mob = .{
+        .id = "ball_lightning",
         .species = &Species{ .name = "ball lightning" },
         .tile = 'י',
         .ai = AI{
@@ -1081,6 +1080,14 @@ pub const EXPERIMENTS = [_]MobTemplate{
     PhytinExperiment,
 };
 
+pub fn findMobById(raw_id: anytype) ?*const MobTemplate {
+    const id = utils.used(raw_id);
+    return for (&MOBS) |*mobt| {
+        if (mem.eql(u8, mobt.mob.id, id))
+            break mobt;
+    } else null;
+}
+
 pub const PlaceMobOptions = struct {
     facing: ?Direction = null,
     phase: AIPhase = .Work,
@@ -1134,8 +1141,7 @@ pub fn placeMob(
             squad_template,
             squad_member_weights.constSlice(),
         ) catch err.wat();
-        const squad_mob_ind = utils.findById(MOBS, squad_mob_info.mob) orelse err.bug("Mob {s} specified in template couldn't be found.", .{squad_mob_info.mob});
-        const squad_mob = &MOBS[squad_mob_ind];
+        const squad_mob = findMobById(squad_mob_info.mob) orelse err.bug("Mob {s} specified in template couldn't be found.", .{squad_mob_info.mob});
 
         const squad_mob_count = rng.range(usize, squad_mob_info.count.min, squad_mob_info.count.max);
 

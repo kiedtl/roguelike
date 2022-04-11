@@ -369,6 +369,7 @@ fn readInput() bool {
                 '\'' => state.player.swapWeapons(),
                 'a' => player.activateSurfaceItem(),
                 'i' => display.drawInventoryScreen(),
+                'x' => display.drawExamineScreen(),
                 ',' => player.grabItem(),
                 '.' => state.player.rest(),
                 'h' => player.moveOrFight(.West),

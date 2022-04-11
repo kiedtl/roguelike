@@ -1249,6 +1249,7 @@ pub const Mob = struct { // {{{
     __next: ?*Mob = null,
     __prev: ?*Mob = null,
 
+    id: []const u8,
     species: *const Species,
     undead_prefix: []const u8 = "former ",
     tile: u21,
@@ -3120,6 +3121,17 @@ pub const SurfaceItem = union(SurfaceItemTag) {
     Container: *Container,
     Poster: *const Poster,
     Stair: ?Coord, // null = downstairs
+
+    pub fn id(self: SurfaceItem) []const u8 {
+        return switch (self) {
+            .Corpse => |c| c.id,
+            .Machine => |m| m.id,
+            .Prop => |p| p.id,
+            .Container => "AMBIG_container",
+            .Poster => "AMBIG_poster",
+            .Stair => "AMBIG_stair",
+        };
+    }
 };
 
 pub const DamageStr = struct {
