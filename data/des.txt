@@ -22,15 +22,6 @@ $cA rapier.$.
 A very long needle-like dagger, ending in an incredibly sharp edge, but with
 blunt edges. Its general design, especially the handle, is uncommonly elegant.
 
-% cave_goblin
-$cA cave-goblin.$.
-
-One of the last few remaining prisoners of war, captured at last at the end
-of the battle in which the hill-goblins overran this stronghold. It sits
-here, nursing its wounds and waiting miserably until its execution.
-
-For some reason, its captors haven't bothered to take its mace and armor away...
-
 % mine
 $cA mine.$.
 
@@ -60,13 +51,6 @@ $cA necromancer.$.
 
 A particularly sadistic death mage. His features are perpetually twisted into a
 leer of cruel contempt.
-
-% skeletal_axemaster
-$cA skeletal axemaster.$.
-
-A vicious and surprisingly durable skeleton, armed to the teeth. It was created
-for the purpose of testing the efficiency of war axes in battle. Battles are
-slow in coming, however, so you'll just have to do for now...
 
 % potion_smoke
 $cA potion of smoke.$.
@@ -162,3 +146,156 @@ A pillar.
 % t_platform
 
 A raised platform.
+
+% executioner
+
+One of the many Dungeon executioners, wielding a giant spiked flail that,
+luckily, is good for little else besides its gruesome profession.
+
+% watcher
+
+Despite unusually acute senses that enable its ceaseless vigilance, not to
+mention the fact that it has no need of sleep, this imp is universally despised
+by its comrades. Some even hold that it is the work of an evil wizard, a
+cross-breed between the ugliest of humans and goblins.
+
+% warden
+
+The Dungeon warden. It will call for help with its warning horn if it spots you.
+
+% guard
+
+An ordinary hill-goblin guard, with a crude mace and some light armor. Not much
+to say about it. You can't help but wonder if a glaive would suit it better.
+
+% javelineer
+
+A warrior clad in light armor, able to throw poisoned javelins with surprising
+accuracy.
+
+% sentinel
+
+What a strange sentinel. The devs really need to redo this monster.
+
+% lead_turtle
+
+A monstrous contraption, no doubt the latest invention of the Laboratory
+alchemists. Its heavy shell shines dully in the dim light.
+
+% iron_wasp
+
+A tiny buzzing insect, seemingly forged out of thin metal sheets. It's almost as
+if its four wings are mounted on its back instead of its sides...
+
+% patrol
+
+Ah, finally, a guard who has the sense to carry a polearm.
+
+% player
+
+Always remember that you are completely unique. Just like everyone else. $G(If
+you're seeing this message, something has gone very wrong.)$.
+
+% goblin
+
+One of the last few prisoners of war, captured at last at the end of the battle
+in which the hill-goblins overran this stronghold. It sits here, nursing its
+wounds and waiting miserably until its execution.
+
+For some reason, its captors haven't bothered to take its mace and armor away...
+
+% kyanite_statue
+
+This statue makes you uncomfortable. You somehow want to hide from it.
+
+% nebro_statue
+
+The eyes of this statue seem to glimmer with an unearthly radiance.
+
+% crystal_statue
+
+A statue of some nameless creature, the white crystals encrusted on it
+shimmering horribly. You wish you could smash it into pieces.
+
+% alchemist
+
+A learned goblin alchemist. It delights in breeding horrible creatures and
+creating evil inventions. Somehow it doesn't care about you.
+
+% cleaner
+
+This slave is tasked with keeping the floor of the Dungeon spotless.
+
+% hauler
+
+A very ordinary Dungeon slave, doing very ordinary hauling work.
+
+% engineer
+
+It is carrying a trowel and some mortar.
+
+% ancient_mage
+
+Even the most powerful of human mages cannot hope to wield the full might of the
+Necromancer. Instead, it is invested in this undead mage, an immeasurably
+ancient skeleton resurrected for that purpose.
+
+% death_mage
+
+A human mage, specializing in the manipulations of undead skeletons.
+
+% skeletal_axemaster
+
+A vicious and surprisingly durable skeleton, armed to the teeth. It was created
+for the purpose of testing the efficiency of war axes in battle. Battles are
+slow in coming, however, so you'll just have to do for now...
+
+% necromancer
+
+An unusually sadistic death mage, tasked with making the prisoner's lives as
+miserable as possible. His features are perpetually twisted into a leer of cruel
+contempt.
+
+% burning_brute
+
+A raging winged demon composed of boiling basalt, feared even by its peers for
+its vicious fire attacks.
+
+% sulfur_fiend
+
+A writhing mass of golden sulfur. It has supreme power over electricity.
+
+% frozen_fiend
+
+A winged humanoid, clothed in watery-blue robes. It whispers grimly to itself as
+it patrols the dungeon, inspecting its underlings with an expression of cold
+contempt.
+
+% tanus_exp
+
+An alchemist's experiment. It has seven eyes.
+
+% cataline_exp
+
+An alchemist's experiment. Its giant eye can see just as well in the dark as
+you.
+
+% flouin_exp
+
+An alchemist's experiment. Its silver eyes are incapable of seeing in bright
+light.
+
+% phytin_exp
+
+The devs really need to rework this monster.
+
+% living_ice
+
+A mass of ice, imbued with sapience by a nearby demon. It will revert back to
+being a wall in a little bit.
+
+% ball_lightning
+
+A sphere of pure electricity, encased in a shell of burning sulfur. It will seek
+out nearby conductive creatures, hostile or not, before exploding in a blast of
+fire and lightning.
