@@ -1925,16 +1925,30 @@ pub const Mob = struct { // {{{
         return true;
     }
 
-    pub fn canMelee(attacker: *Mob, defender: *Mob) bool {
-        var weapons = StackBuffer(*const Weapon, 7).init(null);
-        weapons.append(if (attacker.inventory.equipment(.Weapon).*) |w| w.Weapon else attacker.species.default_attack) catch unreachable;
-        for (attacker.species.aux_attacks) |w| weapons.append(w) catch unreachable;
+    pub fn listOfWeapons(self: *Mob) StackBuffer(*const Weapon, 7) {
+        var buf = StackBuffer(*const Weapon, 7).init(null);
 
+        buf.append(if (self.inventory.equipment(.Weapon).*) |w| w.Weapon else self.species.default_attack) catch err.wat();
+        for (self.species.aux_attacks) |w| buf.append(w) catch err.wat();
+
+        return buf;
+    }
+
+    pub fn canMelee(attacker: *Mob, defender: *Mob) bool {
+        const weapons = attacker.listOfWeapons();
         const distance = attacker.coord.distance(defender.coord);
 
         return for (weapons.constSlice()) |weapon| {
             if (weapon.reach >= distance) break true;
         } else false;
+    }
+
+    pub fn totalMeleeOutput(self: *Mob) usize {
+        const weapons = self.listOfWeapons();
+        var total: usize = 0;
+        for (weapons.constSlice()) |weapon|
+            total += combat.damageOfMeleeAttack(self, weapon.damage, false);
+        return total;
     }
 
     pub const FightOptions = struct {
@@ -1958,11 +1972,8 @@ pub const Mob = struct { // {{{
         });
 
         const martial = @intCast(usize, attacker.stat(.Martial));
+        const weapons = attacker.listOfWeapons();
         const wielded_wp = if (attacker.inventory.equipment(.Weapon).*) |w| w.Weapon else null;
-
-        var weapons = StackBuffer(*const Weapon, 7).init(null);
-        weapons.append(wielded_wp orelse attacker.species.default_attack) catch unreachable;
-        for (attacker.species.aux_attacks) |w| weapons.append(w) catch unreachable;
 
         var longest_delay: usize = 0;
         for (weapons.constSlice()) |weapon| {

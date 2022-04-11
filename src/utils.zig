@@ -3,6 +3,7 @@ const assert = std.debug.assert;
 const math = std.math;
 const meta = std.meta;
 const mem = std.mem;
+const unicode = std.unicode;
 const enums = std.enums;
 
 const state = @import("state.zig");
@@ -232,37 +233,50 @@ pub const FoldedTextIterator = struct {
             return null;
         }
 
+        self.last_space = null;
         var cur_width: usize = 0;
 
         while (self.index < self.str.len and cur_width < self.max_width) {
-            switch (self.str[self.index]) {
+            const seqlen = unicode.utf8ByteSequenceLength(self.str[self.index]) catch unreachable;
+            const char = unicode.utf8Decode(self.str[self.index .. self.index + seqlen]) catch unreachable;
+
+            switch (char) {
                 // Skip our custom formatting directives.
                 '$' => {
-                    self.index += 2;
+                    self.index += seqlen + 1;
                     continue;
                 },
 
-                ' ', '\t', '\n', '\x0b', '\x0c', '\x0d' => {
-                    // We've found some whitespace.
-                    // If we're at the beginning of a line, ignore it; otherwise,
+                ' ', '\n', '\t', '\x0b', '\x0c', '\x0d' => {
+                    // We've found some whitespace. If we're at the beginning
+                    // of a line, ignore it (unless it's a newline); otherwise,
                     // save the current index.
-                    if (cur_width == 0) {
-                        self.index += 1;
-                        self.line_begin += 1;
+                    if (char != '\n' and self.index == self.line_begin) {
+                        self.index += seqlen;
+                        self.line_begin += seqlen;
                         continue;
                     }
 
                     self.last_space = self.index;
+
+                    if (char == '\n') {
+                        self.index += seqlen;
+                        if (self.index == self.line_begin) {
+                            self.line_begin += seqlen;
+                        }
+                        break;
+                    }
                 },
                 else => {},
             }
-            self.index += 1;
+
+            self.index += seqlen;
             cur_width += 1;
         }
 
-        // Backup to the last space (if necessary) and return a new
-        // line.
-        if (self.index < self.str.len) {
+        // If we broke out of the loop because we ran over the line limit,
+        // backup to the last space.
+        if (cur_width >= self.max_width) {
             if (self.last_space) |spc| {
                 self.index = spc;
                 self.last_space = null;
@@ -271,7 +285,7 @@ pub const FoldedTextIterator = struct {
 
         const old_line_begin = self.line_begin;
         self.line_begin = self.index;
-        const res = self.str[old_line_begin..self.index];
-        return if (res.len == 0) null else res;
+        const line_end = if (self.str[self.index - 1] == '\n') self.index - 1 else self.index;
+        return self.str[old_line_begin..line_end];
     }
 };
