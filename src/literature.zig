@@ -7,8 +7,13 @@ const meta = std.meta;
 const tsv = @import("tsv.zig");
 
 pub const Poster = struct {
+    // What level this poster belongs on. E.g., "PRI" "LAB" "VLT"
     level: []u8,
+
+    // Contents.
     text: []u8,
+
+    // Mapgen state, storing number of times this poster has been placed.
     placement_counter: usize = 0,
 
     pub fn deinit(self: *const Poster, alloc: mem.Allocator) void {
