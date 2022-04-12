@@ -437,7 +437,10 @@ pub fn _drawBorder(color: u32, d: Dimension) void {
 const DrawStrOpts = struct {
     bg: ?u32 = colors.BG,
     fg: u32 = 0xe6e6e6,
-    fold: bool = false,
+    endy: ?isize = null,
+    fold: bool = true,
+    // When folding text, skip the first X lines. Used to implement scrolling.
+    skip_lines: usize = 0,
 };
 
 // Escape characters:
@@ -459,58 +462,73 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
 
     var x = _x;
     var y = _y;
+    var skipped: usize = 0;
 
     var fg = opts.fg;
     var bg: ?u32 = opts.bg;
 
-    var utf8 = (std.unicode.Utf8View.init(str) catch err.bug("bad utf8", .{})).iterator();
-    while (utf8.nextCodepointSlice()) |encoded_codepoint| {
-        const codepoint = std.unicode.utf8Decode(encoded_codepoint) catch err.bug("bad utf8", .{});
-        const def_bg = termbox_buffer[@intCast(usize, y * termbox_width + x)].bg;
+    const linewidth = if (opts.fold) @intCast(usize, endx - x) else str.len;
 
-        switch (codepoint) {
-            '\n' => {
-                y += 1;
-                x = _x;
-                continue;
-            },
-            '\r' => err.bug("Bad character found in string.", .{}),
-            '$' => {
-                const next_encoded_codepoint = utf8.nextCodepointSlice() orelse
-                    err.bug("Found incomplete escape sequence", .{});
-                const next_codepoint = std.unicode.utf8Decode(next_encoded_codepoint) catch err.bug("bad utf8", .{});
-                switch (next_codepoint) {
-                    '.' => {
-                        fg = opts.fg;
-                        bg = opts.bg;
-                    },
-                    'g' => fg = colors.GREY,
-                    'G' => fg = colors.DARK_GREY,
-                    'c' => fg = colors.LIGHT_CONCRETE,
-                    'p' => fg = colors.PINK,
-                    'b' => fg = colors.LIGHT_STEEL_BLUE,
-                    'r' => fg = colors.PALE_VIOLET_RED,
-                    else => err.bug("Found unknown escape sequence '${u}'", .{next_codepoint}),
-                }
-                continue;
-            },
-            else => {
-                termbox.tb_change_cell(x, y, codepoint, fg, bg orelse def_bg);
-                x += 1;
-            },
+    var fold_iter = utils.FoldedTextIterator.init(str, linewidth);
+    while (fold_iter.next()) |line| : ({
+        y += 1;
+        x = _x;
+    }) {
+        if (skipped < opts.skip_lines) {
+            skipped += 1;
+            continue;
         }
 
-        if (x == endx) {
-            if (opts.fold) {
-                x = _x + 2;
-                y += 1;
-            } else {
+        if (opts.endy) |endy| {
+            if (endy == y) {
+                break;
+            }
+        }
+
+        var utf8 = (std.unicode.Utf8View.init(line) catch err.bug("bad utf8", .{})).iterator();
+        while (utf8.nextCodepointSlice()) |encoded_codepoint| {
+            const codepoint = std.unicode.utf8Decode(encoded_codepoint) catch err.bug("bad utf8", .{});
+            const def_bg = termbox_buffer[@intCast(usize, y * termbox_width + x)].bg;
+
+            switch (codepoint) {
+                '\n' => {
+                    y += 1;
+                    x = _x;
+                    continue;
+                },
+                '\r' => err.bug("Bad character found in string.", .{}),
+                '$' => {
+                    const next_encoded_codepoint = utf8.nextCodepointSlice() orelse
+                        err.bug("Found incomplete escape sequence", .{});
+                    const next_codepoint = std.unicode.utf8Decode(next_encoded_codepoint) catch err.bug("bad utf8", .{});
+                    switch (next_codepoint) {
+                        '.' => {
+                            fg = opts.fg;
+                            bg = opts.bg;
+                        },
+                        'g' => fg = colors.GREY,
+                        'G' => fg = colors.DARK_GREY,
+                        'c' => fg = colors.LIGHT_CONCRETE,
+                        'p' => fg = colors.PINK,
+                        'b' => fg = colors.LIGHT_STEEL_BLUE,
+                        'r' => fg = colors.PALE_VIOLET_RED,
+                        else => err.bug("Found unknown escape sequence '${u}'", .{next_codepoint}),
+                    }
+                    continue;
+                },
+                else => {
+                    termbox.tb_change_cell(x, y, codepoint, fg, bg orelse def_bg);
+                    x += 1;
+                },
+            }
+
+            if (!opts.fold and x == endx) {
                 x -= 1;
             }
         }
     }
 
-    return y + 1;
+    return y;
 }
 
 fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, description: []const u8, bg: u32, fg: u32) void {
@@ -545,7 +563,7 @@ fn drawEnemyInfo(
         var mobcell = Tile.displayAs(mob.coord, false);
         termbox.tb_put_cell(startx, y, &mobcell);
 
-        y = _drawStr(startx + 1, y, endx, " {s}", .{mob.displayName()}, .{});
+        y = _drawStr(startx + 2, y, endx, "{s}", .{mob.displayName()}, .{});
 
         _draw_bar(y, startx, endx, @floatToInt(usize, mob.HP), @floatToInt(usize, mob.max_HP), "health", 0x232faa, 0xffffff);
         y += 1;
@@ -1095,10 +1113,7 @@ pub fn drawExamineScreen() bool {
                 _clear_line(infow.startx, infow.endx, y);
             y = infow.starty;
 
-            var fold_iter = utils.FoldedTextIterator.init(text.getWritten(), linewidth);
-            while (fold_iter.next()) |line| {
-                y = _drawStr(infow.startx, y, infow.endx, "{s}", .{line}, .{});
-            }
+            y = _drawStr(infow.startx, y, infow.endx, "{s}", .{text.getWritten()}, .{});
         } else {
             var y = infow.starty;
             while (y < infow.endy) : (y += 1)
@@ -1145,29 +1160,17 @@ pub fn drawExamineScreen() bool {
                     };
             }
 
-            var log_y = log_starty;
-            var scroll: usize = 0;
-            const linewidth = @intCast(usize, log_endx - log_startx);
+            var y = log_starty;
+            while (y < log_endy) : (y += 1) _clear_line(log_startx, log_endx, y);
 
-            while (log_y < log_endy) : (log_y += 1)
-                _clear_line(log_startx, log_endx, log_y);
-            log_y = log_starty;
-
-            var fold_iter = utils.FoldedTextIterator.init(desc.items, linewidth);
-            while (fold_iter.next()) |line| {
-                if (scroll < desc_scroll) {
-                    scroll += 1;
-                    continue;
-                }
-
-                log_y = _drawStr(log_startx, log_y, log_endx, "{s}", .{line}, .{});
-
-                if (scroll > 0 and log_y == log_starty + 1) {
-                    _ = _drawStr(log_endx - 11, log_y - 1, log_endx, " $p-- PgUp --$.", .{}, .{});
-                } else if (log_y == log_endy) {
-                    _ = _drawStr(log_endx - 11, log_y - 1, log_endx, " $p-- PgDn --$.", .{}, .{});
-                    break;
-                }
+            const lasty = _drawStr(log_startx, log_starty, log_endx, "{s}", .{desc.items}, .{
+                .skip_lines = desc_scroll,
+                .endy = log_endy,
+            });
+            if (desc_scroll > 0) {
+                _ = _drawStr(log_endx - 11, log_startx - 1, log_endx, " $p-- PgUp --$.", .{}, .{});
+            } else if (lasty == log_endy) {
+                _ = _drawStr(log_endx - 11, log_endy - 1, log_endx, " $p-- PgDn --$.", .{}, .{});
             }
         }
     }
@@ -1319,25 +1322,14 @@ pub fn drawInventoryScreen() bool {
                 const default_desc = "(Missing description)";
                 const desc: []const u8 = if (id) |i_id| state.descriptions.get(i_id) orelse default_desc else default_desc;
 
-                var log_y = log_starty;
-                var scroll: usize = 0;
-                const linewidth = @intCast(usize, log_endx - log_startx);
-
-                var fold_iter = utils.FoldedTextIterator.init(desc, linewidth);
-                while (fold_iter.next()) |line| {
-                    if (scroll < desc_scroll) {
-                        scroll += 1;
-                        continue;
-                    }
-
-                    log_y = _drawStr(log_startx, log_y, log_endx, "{s}", .{line}, .{});
-
-                    if (scroll > 0 and log_y == log_starty + 1) {
-                        _ = _drawStr(log_endx - 11, log_y - 1, log_endx, " $p-- PgUp --$.", .{}, .{});
-                    } else if (log_y == log_endy) {
-                        _ = _drawStr(log_endx - 11, log_y - 1, log_endx, " $p-- PgDn --$.", .{}, .{});
-                        break;
-                    }
+                const ending_y = _drawStr(log_startx, log_starty, log_endx, "{s}", .{desc}, .{
+                    .skip_lines = desc_scroll,
+                    .endy = log_endy,
+                });
+                if (desc_scroll > 0) {
+                    _ = _drawStr(log_endx - 11, log_startx - 1, log_endx, " $p-- PgUp --$.", .{}, .{});
+                } else if (ending_y == log_endy) {
+                    _ = _drawStr(log_endx - 11, log_endy - 1, log_endx, " $p-- PgDn --$.", .{}, .{});
                 }
             } else {
                 _ = _drawStr(log_startx, log_starty, log_endx, "Your inventory is empty.", .{}, .{});
@@ -1428,27 +1420,22 @@ pub fn drawAlert(comptime fmt: []const u8, args: anytype) void {
     std.fmt.format(fbs.writer(), fmt, args) catch err.bug("format error!", .{});
     const str = fbs.getWritten();
 
+    // Get height of folded text, so that we can center it vertically
     const linewidth = @intCast(usize, (wind.endx - wind.startx) - 4);
-    var folded_text = StackBuffer([]const u8, 32).init(null);
+    var text_height: usize = 0;
     var fold_iter = utils.FoldedTextIterator.init(str, linewidth);
-    while (fold_iter.next()) |line| folded_text.append(line) catch err.wat();
-
-    var y: isize = undefined;
+    while (fold_iter.next()) |_| text_height += 1;
 
     // Clear log window
-    y = wind.starty;
+    var y = wind.starty;
     while (y < wind.endy) : (y += 1) _clear_line(wind.startx, wind.endx, y);
 
     const txt_starty = wind.endy -
         @divTrunc(wind.endy - wind.starty, 2) -
-        @intCast(isize, folded_text.len + 1 / 2);
+        @intCast(isize, text_height + 1 / 2);
     y = txt_starty;
-    for (folded_text.constSlice()) |line| {
-        const x = wind.endx -
-            @divTrunc(wind.endx - wind.startx, 2) -
-            @intCast(isize, line.len / 2);
-        y = _drawStr(x, y, wind.endx, "{s}", .{line}, .{});
-    }
+
+    _ = _drawStr(wind.startx + 2, txt_starty, wind.endx, "{s}", .{str}, .{});
 
     termbox.tb_present();
 
@@ -1461,7 +1448,7 @@ pub fn drawAlert(comptime fmt: []const u8, args: anytype) void {
     _drawBorder(colors.BG, wind);
     std.time.sleep(150_000_000);
     _drawBorder(colors.CONCRETE, wind);
-    std.time.sleep(400_000_000);
+    std.time.sleep(500_000_000);
 }
 
 pub fn drawAlertThenLog(comptime fmt: []const u8, args: anytype) void {
@@ -1480,9 +1467,8 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
     std.fmt.format(fbs.writer(), fmt, args) catch err.bug("format error!", .{});
     const str = fbs.getWritten();
 
-    var y: isize = wind.starty;
-
     // Clear log window
+    var y: isize = wind.starty;
     while (y < wind.endy) : (y += 1) _clear_line(wind.startx, wind.endx, y);
     y = wind.starty;
 
@@ -1491,12 +1477,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
 
     while (true) {
         y = wind.starty;
-
-        const linewidth = @intCast(usize, (wind.endx - wind.startx) - 4);
-        var fold_iter = utils.FoldedTextIterator.init(str, linewidth);
-        while (fold_iter.next()) |line| {
-            y = _drawStr(wind.startx, y, wind.endx, "$c{s}$.", .{line}, .{});
-        }
+        y = _drawStr(wind.startx, y, wind.endx, "$c{s}$.", .{str}, .{});
 
         for (options) |option, i| {
             const ind = if (chosen == i) ">" else "-";
