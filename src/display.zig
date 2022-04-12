@@ -1493,10 +1493,10 @@ pub fn drawInventoryScreen() bool {
                         chosen_itemlist = .Pack;
                         chosen = 0;
                     },
-                    'j' => if (chosen < itemlist_len - 1) {
+                    'j' => if (itemlist_len > 0 and chosen < itemlist_len - 1) {
                         chosen += 1;
                     },
-                    'k' => if (chosen > 0) {
+                    'k' => if (itemlist_len > 0 and chosen > 0) {
                         chosen -= 1;
                     },
                     else => {},

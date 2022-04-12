@@ -251,7 +251,7 @@ pub const FoldedTextIterator = struct {
                     // We've found some whitespace. If we're at the beginning
                     // of a line, ignore it (unless it's a newline); otherwise,
                     // save the current index.
-                    if (char != '\n' and self.index == self.line_begin) {
+                    if (char != '\n' and self.index == self.line_begin and self.index != 0) {
                         self.index += seqlen;
                         self.line_begin += seqlen;
                         continue;
