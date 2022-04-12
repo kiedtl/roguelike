@@ -19,6 +19,7 @@ const types = @import("types.zig");
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const Mob = types.Mob;
+const SurfaceItem = types.SurfaceItem;
 const Stat = types.Stat;
 const Resistance = types.Resistance;
 const Coord = types.Coord;
@@ -36,7 +37,7 @@ const WIDTH = state.WIDTH;
 // -----------------------------------------------------------------------------
 
 pub const LEFT_INFO_WIDTH: usize = 24;
-pub const RIGHT_INFO_WIDTH: usize = 24;
+pub const RIGHT_INFO_WIDTH: usize = 35;
 pub const LOG_HEIGHT: usize = 8;
 
 // tb_shutdown() calls abort() if tb_init() wasn't called, or if tb_shutdown()
@@ -164,6 +165,232 @@ pub fn dimensions(w: DisplayWindow) Dimension {
         },
     };
 }
+
+// Formatting descriptions for stuff. {{{
+
+fn _writerWrite(writer: io.FixedBufferStream([]u8).Writer, comptime fmt: []const u8, args: anytype) void {
+    writer.print(fmt, args) catch err.wat();
+}
+
+fn _writerHLine(writer: io.FixedBufferStream([]u8).Writer, linewidth: usize) void {
+    var i: usize = 0;
+    while (i < linewidth) : (i += 1)
+        writer.writeAll("─") catch err.wat();
+}
+
+fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceItem, linewidth: usize) void {
+    switch (surface) {
+        .Prop => |p| _writerWrite(w, "$c{s}$.\nProp\n\n$gNothing to see here.$.\n", .{p.name}),
+        .Container => |c| {
+            _writerWrite(w, "$cA {s}$.\nContainer\n\n", .{c.name});
+            _writerWrite(w, "$gPress $b,$. $gover it to see its contents.$.\n", .{});
+        },
+        .Poster => |p| {
+            _writerWrite(w, "$cPoster$.\n\n", .{});
+            _writerWrite(w, "Some writing on a board:\n", .{});
+            _writerHLine(w, linewidth);
+            _writerWrite(w, "$g{s}$.\n", .{p.text});
+            _writerHLine(w, linewidth);
+        },
+        .Stair => |s| {
+            if (s == null) {
+                _writerWrite(w, "$cDownward Stairs$.\n\n", .{});
+                _writerWrite(w, "$gGoing back down would sure be dumb.$.\n", .{});
+            } else {
+                _writerWrite(w, "$cUpward Stairs$.\n\nStairs to {s}.\n", .{
+                    state.levelinfo[s.?.z].name,
+                });
+            }
+        },
+        .Corpse => |c| {
+            // Since the mob object was deinit'd, we can't rely on
+            // mob.displayName() working
+            const name = c.ai.profession_name orelse c.species.name;
+            _writerWrite(w, "$c{s} remains$.\n\n", .{name});
+            _writerWrite(w, "This corpse is just begging for a necromancer to raise it.", .{});
+        },
+        else => @panic("TODO"),
+    }
+}
+
+fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidth: usize) void {
+    _ = linewidth;
+
+    if (mob == state.player) {
+        _writerWrite(w, "$cYou.$.\n", .{});
+        _writerWrite(w, "Press $b@$. or $bc$. for more info.\n", .{});
+        return;
+    }
+
+    _writerWrite(w, "$c{s}$.\n", .{mob.displayName()});
+
+    if (mob.isHostileTo(state.player)) {
+        if (mob.ai.is_combative) {
+            _writerWrite(w, "$rHostile$.\n", .{});
+        } else {
+            _writerWrite(w, "$gNon-combatant$.\n", .{});
+        }
+    } else {
+        _writerWrite(w, "$bNeutral$.\n", .{});
+    }
+    _writerWrite(w, "\n", .{});
+
+    const asterisk_col = if (mob.HP <= (mob.max_HP / 5)) @as(u21, 'r') else '.';
+    _writerWrite(w, "${u}*$. {}/{} HP\n", .{
+        asterisk_col,
+        @floatToInt(usize, math.round(mob.HP)),
+        @floatToInt(usize, math.round(mob.max_HP)),
+    });
+
+    if (mob.prisoner_status) |ps| {
+        const desc = if (ps.held_by) |_| "chained" else "prisoner";
+        _writerWrite(w, "$cp$. {s}\n", .{desc});
+    }
+
+    if (mob.resistance(.rFume) == 0) {
+        _writerWrite(w, "$cu$. unbreathing\n", .{});
+    }
+
+    if (mob.immobile) {
+        _writerWrite(w, "$ci$. immobile\n", .{});
+    }
+
+    if (mob.speed() != state.player.speed()) {
+        const ch = if (mob.speed() < state.player.speed()) @as(u21, 'f') else 's';
+        const desc = if (mob.speed() < state.player.speed()) "faster than you" else "slower than you";
+        const col = if (mob.speed() < state.player.speed()) @as(u21, 'p') else 'b';
+
+        _writerWrite(w, "${u}{u}$. {s}\n", .{ col, ch, desc });
+    }
+
+    if (mob.ai.phase == .Investigate) {
+        var you_str: []const u8 = "";
+        if (state.dungeon.soundAt(mob.ai.target.?).mob_source) |soundsource| {
+            if (soundsource == state.player) {
+                you_str = "you";
+            }
+        }
+        _writerWrite(w, "? investigating {s}\n", .{you_str});
+    } else if (mob.ai.phase == .Flee) {
+        _writerWrite(w, "$b!$. fleeing\n", .{});
+    }
+
+    if (mob.isHostileTo(state.player) and mob.ai.is_combative) {
+        var color: u21 = '.';
+        var text: []const u8 = "this is a bug";
+
+        const Awareness = enum { Seeing, Remember, None };
+        const awareness: Awareness = for (mob.enemies.items) |enemyrec| {
+            if (enemyrec.mob == state.player) {
+                // Zig, why the fuck do I need to cast the below as Awareness?
+                // Wouldn't I like to fucking chop your fucking type checker into
+                // tiny shreds with a +9 halberd of flaming.
+                break if (mob.cansee(state.player.coord)) @as(Awareness, .Seeing) else .Remember;
+            }
+        } else .None;
+
+        switch (awareness) {
+            .Seeing => {
+                color = 'r';
+                text = "aware";
+            },
+            .Remember => {
+                color = 'p';
+                text = "remembers you";
+            },
+            .None => {
+                color = 'b';
+                text = "unaware";
+            },
+        }
+
+        _writerWrite(w, "${u}@$. {s}\n", .{ color, text });
+    } else {
+        _writerWrite(w, "$g@$. doesn't care\n", .{});
+    }
+
+    _writerWrite(w, "\n", .{});
+
+    const you_melee = combat.chanceOfMeleeLanding(state.player, mob);
+    const you_evade = combat.chanceOfAttackEvaded(state.player, null);
+    const mob_melee = combat.chanceOfMeleeLanding(mob, state.player);
+    const mob_evade = combat.chanceOfAttackEvaded(mob, null);
+
+    const c_melee_you = mob_melee * (100 - you_evade) / 100;
+    const c_evade_you = 100 - (you_melee * (100 - mob_evade) / 100);
+
+    const colorsets = [_]u21{ 'g', 'g', 'g', 'g', 'b', 'b', 'b', 'b', 'r', 'r', 'r' };
+    const c_melee_you_color = colorsets[c_melee_you / 10];
+    const c_evade_you_color = colorsets[c_evade_you / 10];
+
+    _writerWrite(w, "${u}{}%$. to hit you.\n", .{ c_melee_you_color, c_melee_you });
+    _writerWrite(w, "${u}{}%$. to evade you.\n", .{ c_evade_you_color, c_evade_you });
+
+    _writerWrite(w, "\n", .{});
+
+    const mob_armor = @intCast(usize, mob.resistance(.Armor));
+    const you_armor = @intCast(usize, state.player.resistance(.Armor));
+
+    const mob_damage_output = math.max(1, mob.totalMeleeOutput() * you_armor / 100);
+    const mob_hits_needed = @floatToInt(usize, state.player.max_HP) / mob_damage_output;
+    const you_damage_output = math.max(1, state.player.totalMeleeOutput() * mob_armor / 100);
+    const you_hits_needed = @floatToInt(usize, mob.max_HP) / you_damage_output;
+
+    _writerWrite(w, "Hits for max $r{}$. damage.\n", .{mob_damage_output});
+    _writerWrite(w, "Can kill you in $r{}$. hits.\n", .{mob_hits_needed});
+
+    _writerWrite(w, "\n", .{});
+
+    _writerWrite(w, "You hit for max $r{}$. damage.\n", .{you_damage_output});
+    _writerWrite(w, "You can kill it in $r{}$. hits.\n", .{you_hits_needed});
+}
+
+fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewidth: usize) void {
+    const shortname = (item.shortName() catch err.wat()).constSlice();
+
+    //S.appendChar(w, ' ', (linewidth / 2) -| (shortname.len / 2));
+    _writerWrite(w, "$c{s}$.\n", .{shortname});
+
+    _writerWrite(w, "$G", .{});
+    _writerHLine(w, linewidth);
+    _writerWrite(w, "$.\n", .{});
+
+    _writerWrite(w, "\n", .{});
+
+    switch (item) {
+        .Ring => _writerWrite(w, "TODO: ring descriptions.", .{}),
+        .Potion => |p| {
+            _writerWrite(w, "$ceffects$.:\n", .{});
+            switch (p.type) {
+                .Gas => |g| _writerWrite(w, "$gGas$. {s}\n", .{gas.Gases[g].name}),
+                .Status => |s| _writerWrite(w, "$gTmp$. {s}\n", .{s.string(state.player)}),
+                .Custom => _writerWrite(w, "TODO: describe this potion\n", .{}),
+            }
+        },
+        .Projectile => |p| {
+            const dmg = p.damage orelse @as(usize, 0);
+            _writerWrite(w, "$cdamage$.: {}\n", .{dmg});
+            switch (p.effect) {
+                .Status => |sinfo| {
+                    _writerWrite(w, "$ceffects$.:\n", .{});
+                    const str = sinfo.status.string(state.player);
+                    switch (sinfo.duration) {
+                        .Prm => _writerWrite(w, "$gPrm$. {s}\n", .{str}),
+                        .Equ => _writerWrite(w, "$gEqu$. {s}\n", .{str}),
+                        .Tmp => _writerWrite(w, "$gTmp$. {s} ({})\n", .{ str, sinfo.duration.Tmp }),
+                        .Ctx => _writerWrite(w, "$gCtx$. {s}\n", .{str}),
+                    }
+                },
+            }
+        },
+        .Armor, .Cloak, .Weapon, .Evocable => _writerWrite(w, "TODO", .{}),
+        .Boulder, .Prop, .Vial => _writerWrite(w, "$G(This item is useless.)$.", .{}),
+    }
+
+    _writerWrite(w, "\n", .{});
+}
+
+// }}}
 
 fn _clearLineWith(from: isize, to: isize, y: isize, ch: u32, fg: u32, bg: u32) void {
     var x = from;
@@ -854,6 +1081,10 @@ pub fn drawExamineScreen() bool {
 
             if (tile_focus == .Mob and has_mons) {
                 _getMonsDescription(writer, state.dungeon.at(coord).mob.?, linewidth);
+            } else if (tile_focus == .Surface and has_surf) {
+                if (state.dungeon.at(coord).surface) |surf| {
+                    _getSurfDescription(writer, surf, linewidth);
+                }
             } else if (tile_focus == .Item and has_item) {
                 _getItemDescription(writer, state.dungeon.itemsAt(coord).last().?, linewidth);
             }
@@ -969,193 +1200,6 @@ pub fn waitForInput(default_input: ?u8) ?u32 {
             }
         }
     }
-}
-
-fn _writerWrite(writer: io.FixedBufferStream([]u8).Writer, comptime fmt: []const u8, args: anytype) void {
-    writer.print(fmt, args) catch err.wat();
-}
-
-fn _writerHLine(writer: io.FixedBufferStream([]u8).Writer, linewidth: usize) void {
-    var i: usize = 0;
-    while (i < linewidth) : (i += 1)
-        writer.writeAll("─") catch err.wat();
-}
-
-fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidth: usize) void {
-    _ = linewidth;
-
-    if (mob == state.player) {
-        _writerWrite(w, "$cYou.$.\n", .{});
-        _writerWrite(w, "Press $b@$. or $bc$. for more info.\n", .{});
-        return;
-    }
-
-    _writerWrite(w, "$c{s}$.\n", .{mob.displayName()});
-
-    if (mob.isHostileTo(state.player)) {
-        if (mob.ai.is_combative) {
-            _writerWrite(w, "$rHostile$.\n", .{});
-        } else {
-            _writerWrite(w, "$gNon-combatant$.\n", .{});
-        }
-    } else {
-        _writerWrite(w, "$bNeutral$.\n", .{});
-    }
-    _writerWrite(w, "\n", .{});
-
-    const asterisk_col = if (mob.HP <= (mob.max_HP / 5)) @as(u21, 'r') else '.';
-    _writerWrite(w, "${u}*$. {}/{} HP\n", .{
-        asterisk_col,
-        @floatToInt(usize, math.round(mob.HP)),
-        @floatToInt(usize, math.round(mob.max_HP)),
-    });
-
-    if (mob.prisoner_status) |ps| {
-        const desc = if (ps.held_by) |_| "chained" else "prisoner";
-        _writerWrite(w, "$cp$. {s}\n", .{desc});
-    }
-
-    if (mob.resistance(.rFume) == 0) {
-        _writerWrite(w, "$cu$. unbreathing\n", .{});
-    }
-
-    if (mob.immobile) {
-        _writerWrite(w, "$ci$. immobile\n", .{});
-    }
-
-    if (mob.speed() != state.player.speed()) {
-        const ch = if (mob.speed() < state.player.speed()) @as(u21, 'f') else 's';
-        const desc = if (mob.speed() < state.player.speed()) "faster than you" else "slower than you";
-        const col = if (mob.speed() < state.player.speed()) @as(u21, 'p') else 'b';
-
-        _writerWrite(w, "${u}{u}$. {s}\n", .{ col, ch, desc });
-    }
-
-    if (mob.ai.phase == .Investigate) {
-        var you_str: []const u8 = "";
-        if (state.dungeon.soundAt(mob.ai.target.?).mob_source) |soundsource| {
-            if (soundsource == state.player) {
-                you_str = "you";
-            }
-        }
-        _writerWrite(w, "? investigating {s}\n", .{you_str});
-    } else if (mob.ai.phase == .Flee) {
-        _writerWrite(w, "$b!$. fleeing\n", .{});
-    }
-
-    if (mob.isHostileTo(state.player) and mob.ai.is_combative) {
-        var color: u21 = '.';
-        var text: []const u8 = "this is a bug";
-
-        const Awareness = enum { Seeing, Remember, None };
-        const awareness: Awareness = for (mob.enemies.items) |enemyrec| {
-            if (enemyrec.mob == state.player) {
-                // Zig, why the fuck do I need to cast the below as Awareness?
-                // Wouldn't I like to fucking chop your fucking type checker into
-                // tiny shreds with a +9 halberd of flaming.
-                break if (mob.cansee(state.player.coord)) @as(Awareness, .Seeing) else .Remember;
-            }
-        } else .None;
-
-        switch (awareness) {
-            .Seeing => {
-                color = 'r';
-                text = "aware";
-            },
-            .Remember => {
-                color = 'p';
-                text = "remembers you";
-            },
-            .None => {
-                color = 'b';
-                text = "unaware";
-            },
-        }
-
-        _writerWrite(w, "${u}@$. {s}\n", .{ color, text });
-    } else {
-        _writerWrite(w, "$g@$. doesn't care\n", .{});
-    }
-
-    _writerWrite(w, "\n", .{});
-
-    const you_melee = combat.chanceOfMeleeLanding(state.player, mob);
-    const you_evade = combat.chanceOfAttackEvaded(state.player, null);
-    const mob_melee = combat.chanceOfMeleeLanding(mob, state.player);
-    const mob_evade = combat.chanceOfAttackEvaded(mob, null);
-
-    const c_melee_you = mob_melee * (100 - you_evade) / 100;
-    const c_evade_you = 100 - (you_melee * (100 - mob_evade) / 100);
-
-    const colorsets = [_]u21{ 'g', 'g', 'g', 'g', 'b', 'b', 'b', 'b', 'r', 'r', 'r' };
-    const c_melee_you_color = colorsets[c_melee_you / 10];
-    const c_evade_you_color = colorsets[c_evade_you / 10];
-
-    _writerWrite(w, "${u}{}%$. to hit you.\n", .{ c_melee_you_color, c_melee_you });
-    _writerWrite(w, "${u}{}%$. to evade you.\n", .{ c_evade_you_color, c_evade_you });
-
-    _writerWrite(w, "\n", .{});
-
-    const mob_armor = @intCast(usize, mob.resistance(.Armor));
-    const you_armor = @intCast(usize, state.player.resistance(.Armor));
-
-    const mob_damage_output = math.max(1, mob.totalMeleeOutput() * you_armor / 100);
-    const mob_hits_needed = @floatToInt(usize, state.player.max_HP) / mob_damage_output;
-    const you_damage_output = math.max(1, state.player.totalMeleeOutput() * mob_armor / 100);
-    const you_hits_needed = @floatToInt(usize, mob.max_HP) / you_damage_output;
-
-    _writerWrite(w, "Hits for max $r{}$. damage.\n", .{mob_damage_output});
-    _writerWrite(w, "Can kill you in $r{}$. hits.\n", .{mob_hits_needed});
-
-    _writerWrite(w, "\n", .{});
-
-    _writerWrite(w, "You hit for max $r{}$. damage.\n", .{you_damage_output});
-    _writerWrite(w, "You can kill it in $r{}$. hits.\n", .{you_hits_needed});
-}
-
-fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewidth: usize) void {
-    const shortname = (item.shortName() catch err.wat()).constSlice();
-
-    //S.appendChar(w, ' ', (linewidth / 2) -| (shortname.len / 2));
-    _writerWrite(w, "$c{s}$.\n", .{shortname});
-
-    _writerWrite(w, "$G", .{});
-    _writerHLine(w, linewidth);
-    _writerWrite(w, "$.\n", .{});
-
-    _writerWrite(w, "\n", .{});
-
-    switch (item) {
-        .Ring => _writerWrite(w, "TODO: ring descriptions.", .{}),
-        .Potion => |p| {
-            _writerWrite(w, "$ceffects$.:\n", .{});
-            switch (p.type) {
-                .Gas => |g| _writerWrite(w, "$gGas$. {s}\n", .{gas.Gases[g].name}),
-                .Status => |s| _writerWrite(w, "$gTmp$. {s}\n", .{s.string(state.player)}),
-                .Custom => _writerWrite(w, "TODO: describe this potion\n", .{}),
-            }
-        },
-        .Projectile => |p| {
-            const dmg = p.damage orelse @as(usize, 0);
-            _writerWrite(w, "$cdamage$.: {}\n", .{dmg});
-            switch (p.effect) {
-                .Status => |sinfo| {
-                    _writerWrite(w, "$ceffects$.:\n", .{});
-                    const str = sinfo.status.string(state.player);
-                    switch (sinfo.duration) {
-                        .Prm => _writerWrite(w, "$gPrm$. {s}\n", .{str}),
-                        .Equ => _writerWrite(w, "$gEqu$. {s}\n", .{str}),
-                        .Tmp => _writerWrite(w, "$gTmp$. {s} ({})\n", .{ str, sinfo.duration.Tmp }),
-                        .Ctx => _writerWrite(w, "$gCtx$. {s}\n", .{str}),
-                    }
-                },
-            }
-        },
-        .Armor, .Cloak, .Weapon, .Evocable => _writerWrite(w, "TODO", .{}),
-        .Boulder, .Prop, .Vial => _writerWrite(w, "$G(This item is useless.)$.", .{}),
-    }
-
-    _writerWrite(w, "\n", .{});
 }
 
 pub fn drawInventoryScreen() bool {
