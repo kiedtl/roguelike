@@ -5,10 +5,11 @@
 #
 
 # Random grafitti that can appear anywhere.
-"ANY"	"Protip! To defeat the death knight, hit him until he's dead."
+"ANY"	"Protip! To defeat the death mage, hit him until he's dead."
 "ANY"	"I hate watchers."
 "ANY"	"I used a grindstone on my best knife and the grindstone BROKE IT."
 "ANY"	"Beware of the @!"
+"ANY"	"Can you believe it, the @ escaped again."
 
 # Prison
 #
@@ -19,12 +20,11 @@
 # and <species>   is one of: (H)uman, (U)ruk (hill goblin)
 #
 "PRI"	"A new shipment of prisoners from Traumbulnahl will arrive next week."
-"PRI"	"Production of human meat rations must increase by 33% by the middle of next week."
 "PRI"	"Please do not feed the prisoners."
 "PRI"	"Prison staffers must strive to be inclusive and welcoming to all new inmates."
 "PRI"	"Prison torturers must strive to be inclusive and welcoming to all new inmates."
 "PRI"	"Absence without leave is punishable by a mandatory interview with the High Priest."
-"PRI"	"WANTED: Orbomus-Nulohelmir, human, escaped prisoner."
+"PRI"	"WANTED: Obnulojmir, human, escaped prisoner."
 "PRI"	"WANTED: kiedtl, human, escaped prisoner."
 "PRI"	"The Necromancer is watching you."
 "PRI"	"The Necromancer can see you."
@@ -33,18 +33,20 @@
 "PRI"	"GH3-Sentinels must report to the Captain of the Guard tomorrow regarding the upcoming transfer to Traummalnahl."
 "PRI"	"Nine patrol troops will be added to unit GU7 in a few months."
 "PRI"	"Twenty-seven infantry troops will be added to unit IU2 in four weeks."
-"PRI"	"Korskuth behl-Dhalsmal, goblin, will be publicly impaled tomorrow morning for attempted cannibalisation of a fellow guard."
+"PRI"	"Korskuth ðalsmalbehl, goblin glaivemaster, will be publicly impaled tomorrow morning for attempted cannibalisation of a fellow guard while drunk."
 "PRI"	"Unauthorized consumption of prisoners is punishable with up to 20 lashes."
 "PRI"	"Naughty prisoners get extra solitary time."
 "PRI"	"Rations will be halved for two weeks in preparation for the upcoming sewer maintenance."
 "PRI"	"An investigation is underway regarding the recent fire on the fourth floor."
 "PRI"	"Rumors that the recent fire was caused by an angry Burning Brute have not been confirmed."
+"PRI"	"Talk to your commander today if your comrades show signs of disloyalty."
+"PRI"	"Don't hesitate to report the numbers of traitorous comrades."
 
-# And now some (satire, kinda) propaganda posters, originally from REC but merged
-# into PRI when that level was deleted. Please don't take these seriously.
+# And now some (satire, kinda) propaganda posters, originally from REC
+# (Recreation) but merged into PRI when that level was deleted. Please don't
+# take these seriously.
 #
 # TODO: move to top level?
-"PRI"	"Talk to your commander today if any comrades show signs of disloyalty."
 "PRI"	"\"Urum-Zhiolum\" is a codeword for goblin genocide."
 "PRI"	"A goblin's honor is his loyalty."
 "PRI"	"We must secure the existence of the Goblin Nation and a future for our seed."
