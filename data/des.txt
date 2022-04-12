@@ -193,8 +193,7 @@ Ah, finally, a guard who has the sense to carry a polearm.
 
 % player
 
-Always remember that you are completely unique. Just like everyone else. $G(If
-you're seeing this message, something has gone very wrong.)$.
+Always remember that you are completely unique. Just like everyone else.
 
 % goblin
 
