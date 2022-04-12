@@ -990,7 +990,8 @@ pub fn chooseCell(opts: ChooseCellOptions) ?Coord {
     }
 }
 
-pub fn drawExamineScreen() bool {
+pub const ExamineTileFocus = enum { Item, Surface, Mob };
+pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
     const mainw = dimensions(.Main);
     const logw = dimensions(.Log);
     const infow = dimensions(.EnemyInfo);
@@ -1002,81 +1003,11 @@ pub fn drawExamineScreen() bool {
 
     const moblist = state.createMobList(false, true, state.player.coord.z, fba.allocator());
 
-    const TileFocus = enum { Item, Surface, Mob };
-
     var coord: Coord = state.player.coord;
-    var tile_focus: TileFocus = .Mob;
+    var tile_focus = starting_focus orelse .Mob;
     var desc_scroll: usize = 0;
 
     while (true) {
-        drawMap(moblist.items, mainw.startx, mainw.endx, mainw.starty, mainw.endy);
-
-        const display_x = mainw.startx + @intCast(isize, coord.x);
-        const display_y = mainw.starty + @intCast(isize, coord.y);
-        termbox.tb_change_cell(display_x - 1, display_y - 1, '╭', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x + 0, display_y - 1, '─', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y - 1, '╮', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x - 1, display_y + 0, '│', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y + 0, '│', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x - 1, display_y + 1, '╰', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x + 0, display_y + 1, '─', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y + 1, '╯', colors.CONCRETE, colors.BG);
-
-        termbox.tb_present();
-
-        // This is a bit of a hack, erase the bordering but don't present the
-        // changes, so that if the user moves to the edge of the map and then moves
-        // away, there won't be bordering left as an artifact (as the map drawing
-        // routines won't erase it, since it's outside its window).
-        termbox.tb_change_cell(display_x - 1, display_y - 1, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x + 0, display_y - 1, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y - 1, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x - 1, display_y + 0, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y + 0, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x - 1, display_y + 1, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x + 0, display_y + 1, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y + 1, ' ', 0, colors.BG);
-
-        var ev: termbox.tb_event = undefined;
-        const t = termbox.tb_poll_event(&ev);
-
-        if (t == -1) @panic("Fatal termbox error");
-
-        if (t == termbox.TB_EVENT_KEY) {
-            if (ev.key != 0) {
-                switch (ev.key) {
-                    termbox.TB_KEY_PGUP => desc_scroll -|= 1,
-                    termbox.TB_KEY_PGDN => desc_scroll += 1,
-                    termbox.TB_KEY_CTRL_C,
-                    termbox.TB_KEY_CTRL_G,
-                    => break,
-                    else => continue,
-                }
-            } else if (ev.ch != 0) {
-                switch (ev.ch) {
-                    'h' => coord = coord.move(.West, state.mapgeometry) orelse coord,
-                    'j' => coord = coord.move(.South, state.mapgeometry) orelse coord,
-                    'k' => coord = coord.move(.North, state.mapgeometry) orelse coord,
-                    'l' => coord = coord.move(.East, state.mapgeometry) orelse coord,
-                    'y' => coord = coord.move(.NorthWest, state.mapgeometry) orelse coord,
-                    'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
-                    'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
-                    'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
-                    '>' => tile_focus = switch (tile_focus) {
-                        .Mob => .Surface,
-                        .Surface => .Item,
-                        .Item => .Mob,
-                    },
-                    '<' => tile_focus = switch (tile_focus) {
-                        .Mob => .Item,
-                        .Surface => .Mob,
-                        .Item => .Surface,
-                    },
-                    else => {},
-                }
-            } else unreachable;
-        }
-
         const has_item = state.dungeon.itemsAt(coord).len > 0;
         const has_mons = state.dungeon.at(coord).mob != null;
         const has_surf = state.dungeon.at(coord).surface != null or !mem.eql(u8, state.dungeon.terrainAt(coord).id, "t_default");
@@ -1172,6 +1103,74 @@ pub fn drawExamineScreen() bool {
             } else if (lasty == log_endy) {
                 _ = _drawStr(log_endx - 11, log_endy - 1, log_endx, " $p-- PgDn --$.", .{}, .{});
             }
+        }
+
+        drawMap(moblist.items, mainw.startx, mainw.endx, mainw.starty, mainw.endy);
+
+        const display_x = mainw.startx + @intCast(isize, coord.x);
+        const display_y = mainw.starty + @intCast(isize, coord.y);
+        termbox.tb_change_cell(display_x - 1, display_y - 1, '╭', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x + 0, display_y - 1, '─', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y - 1, '╮', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x - 1, display_y + 0, '│', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y + 0, '│', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x - 1, display_y + 1, '╰', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x + 0, display_y + 1, '─', colors.CONCRETE, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y + 1, '╯', colors.CONCRETE, colors.BG);
+
+        termbox.tb_present();
+
+        // This is a bit of a hack, erase the bordering but don't present the
+        // changes, so that if the user moves to the edge of the map and then moves
+        // away, there won't be bordering left as an artifact (as the map drawing
+        // routines won't erase it, since it's outside its window).
+        termbox.tb_change_cell(display_x - 1, display_y - 1, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x + 0, display_y - 1, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y - 1, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x - 1, display_y + 0, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y + 0, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x - 1, display_y + 1, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x + 0, display_y + 1, ' ', 0, colors.BG);
+        termbox.tb_change_cell(display_x + 1, display_y + 1, ' ', 0, colors.BG);
+
+        var ev: termbox.tb_event = undefined;
+        const t = termbox.tb_poll_event(&ev);
+
+        if (t == -1) @panic("Fatal termbox error");
+
+        if (t == termbox.TB_EVENT_KEY) {
+            if (ev.key != 0) {
+                switch (ev.key) {
+                    termbox.TB_KEY_PGUP => desc_scroll -|= 1,
+                    termbox.TB_KEY_PGDN => desc_scroll += 1,
+                    termbox.TB_KEY_CTRL_C,
+                    termbox.TB_KEY_CTRL_G,
+                    => break,
+                    else => continue,
+                }
+            } else if (ev.ch != 0) {
+                switch (ev.ch) {
+                    'h' => coord = coord.move(.West, state.mapgeometry) orelse coord,
+                    'j' => coord = coord.move(.South, state.mapgeometry) orelse coord,
+                    'k' => coord = coord.move(.North, state.mapgeometry) orelse coord,
+                    'l' => coord = coord.move(.East, state.mapgeometry) orelse coord,
+                    'y' => coord = coord.move(.NorthWest, state.mapgeometry) orelse coord,
+                    'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
+                    'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
+                    'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
+                    '>' => tile_focus = switch (tile_focus) {
+                        .Mob => .Surface,
+                        .Surface => .Item,
+                        .Item => .Mob,
+                    },
+                    '<' => tile_focus = switch (tile_focus) {
+                        .Mob => .Item,
+                        .Surface => .Mob,
+                        .Item => .Surface,
+                    },
+                    else => {},
+                }
+            } else unreachable;
         }
     }
 

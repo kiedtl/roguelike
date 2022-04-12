@@ -280,6 +280,9 @@ pub fn moveOrFight(direction: Direction) bool {
             .Machine => |m| if (m.interact1 != null) {
                 state.message(.Info, "$c({s})$. Press $ba$. to activate.", .{m.name});
             },
+            .Poster => {
+                state.message(.Info, "$c(poster)$. Press $ba$. to read.", .{});
+            },
             else => {},
         };
     }
@@ -381,6 +384,9 @@ pub fn activateSurfaceItem() bool {
             } else {
                 display.drawAlertThenLog("You can't activate that.", .{});
                 return false;
+            },
+            .Poster => |_| {
+                return display.drawExamineScreen(.Surface);
             },
             else => {
                 display.drawAlertThenLog("There's nothing here to activate.", .{});

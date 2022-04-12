@@ -1870,9 +1870,6 @@ pub const Mob = struct { // {{{
                             return false;
                         }
                     },
-                    .Poster => |p| {
-                        state.message(.Info, "You read the poster: '{s}'", .{p.text});
-                    },
                     .Stair => |s| if (self == state.player) {
                         if (s) |floor| {
                             player.triggerStair(dest, floor);
