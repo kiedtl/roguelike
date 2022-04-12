@@ -12,6 +12,7 @@ const combat = @import("combat.zig");
 const err = @import("err.zig");
 const gas = @import("gas.zig");
 const state = @import("state.zig");
+const surfaces = @import("surfaces.zig");
 const termbox = @import("termbox.zig");
 const utils = @import("utils.zig");
 const types = @import("types.zig");
@@ -19,6 +20,7 @@ const types = @import("types.zig");
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const Mob = types.Mob;
+const StatusDataInfo = types.StatusDataInfo;
 const SurfaceItem = types.SurfaceItem;
 const Stat = types.Stat;
 const Resistance = types.Resistance;
@@ -37,7 +39,7 @@ const WIDTH = state.WIDTH;
 // -----------------------------------------------------------------------------
 
 pub const LEFT_INFO_WIDTH: usize = 24;
-pub const RIGHT_INFO_WIDTH: usize = 35;
+pub const RIGHT_INFO_WIDTH: usize = 30;
 pub const LOG_HEIGHT: usize = 8;
 
 // tb_shutdown() calls abort() if tb_init() wasn't called, or if tb_shutdown()
@@ -168,6 +170,24 @@ pub fn dimensions(w: DisplayWindow) Dimension {
 
 // Formatting descriptions for stuff. {{{
 
+// XXX: Uses a static internal buffer. Buffer must be consumed before next call,
+// not thread safe, etc.
+fn _formatStatusInfo(statusinfo: *const StatusDataInfo) []const u8 {
+    var buf: [65535]u8 = undefined;
+    var fbs = std.io.fixedBufferStream(&buf);
+    var w = fbs.writer();
+
+    const sname = statusinfo.status.string(state.player);
+    switch (statusinfo.duration) {
+        .Prm => _writerWrite(w, "$bPrm$. {s}\n", .{sname}),
+        .Equ => _writerWrite(w, "$bEqu$. {s}\n", .{sname}),
+        .Tmp => _writerWrite(w, "$bTmp$. {s} $g({})$.\n", .{ sname, statusinfo.duration.Tmp }),
+        .Ctx => _writerWrite(w, "$bCtx$. {s}\n", .{sname}),
+    }
+
+    return fbs.getWritten();
+}
+
 fn _writerWrite(writer: io.FixedBufferStream([]u8).Writer, comptime fmt: []const u8, args: anytype) void {
     writer.print(fmt, args) catch err.wat();
 }
@@ -178,9 +198,79 @@ fn _writerHLine(writer: io.FixedBufferStream([]u8).Writer, linewidth: usize) voi
         writer.writeAll("─") catch err.wat();
 }
 
+fn _getTerrDescription(w: io.FixedBufferStream([]u8).Writer, terrain: *const surfaces.Terrain, linewidth: usize) void {
+    _ = linewidth;
+
+    _writerWrite(w, "$c{s}$.\n", .{terrain.name});
+    _writerWrite(w, "terrain\n", .{});
+    _writerWrite(w, "\n", .{});
+
+    if (terrain.fire_retardant) {
+        _writerWrite(w, "It will put out fires.\n", .{});
+        _writerWrite(w, "\n", .{});
+    } else if (terrain.flammability > 0) {
+        _writerWrite(w, "It is flammable.\n", .{});
+        _writerWrite(w, "\n", .{});
+    }
+
+    // TODO: don't manually tabulate this?
+    _writerWrite(w, "$cstat       cur    ->   new$.\n", .{});
+    inline for (@typeInfo(Stat).Enum.fields) |statv| {
+        const stat = @intToEnum(Stat, statv.value);
+
+        const terrain_stat_val = utils.getFieldByEnum(Stat, terrain.stats, stat);
+        var base_stat_val = @intCast(isize, switch (stat) {
+            .Missile => combat.chanceOfMissileLanding(state.player),
+            .Melee => combat.chanceOfMeleeLanding(state.player, null),
+            .Evade => combat.chanceOfAttackEvaded(state.player, null),
+            else => state.player.stat(stat),
+        });
+        if (state.dungeon.terrainAt(state.player.coord) == terrain) {
+            base_stat_val -= terrain_stat_val;
+        }
+        const new_stat_val = base_stat_val + terrain_stat_val;
+
+        if (terrain_stat_val > 0) {
+            // TODO: use $r for negative '->' values, I tried to do this with
+            // Zig v9.1 but ran into a compiler bug where the `color` variable
+            // was replaced with random garbage.
+            _writerWrite(w, "{s: <8} $a{: >5}$. $b{: >5}$. $a{: >5}$.\n", .{
+                stat.string(), base_stat_val, terrain_stat_val, new_stat_val,
+            });
+        }
+    }
+    inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
+        const resist = @intToEnum(Resistance, resistancev.value);
+
+        const terrain_resist_val = utils.getFieldByEnum(Resistance, terrain.resists, resist);
+        var base_resist_val = @intCast(isize, state.player.resistance(resist));
+        if (state.dungeon.terrainAt(state.player.coord) == terrain) {
+            base_resist_val -= terrain_resist_val;
+        }
+        const new_resist_val = base_resist_val + terrain_resist_val;
+
+        if (terrain_resist_val != 0) {
+            // TODO: use $r for negative '->' values, I tried to do this with
+            // Zig v9.1 but ran into a compiler bug where the `color` variable
+            // was replaced with random garbage.
+            _writerWrite(w, "{s: <8} $a{: >5}$. $b{: >5}$. $a{: >5}$.\n", .{
+                resist.string(), base_resist_val, terrain_resist_val, new_resist_val,
+            });
+        }
+    }
+    _writerWrite(w, "\n", .{});
+
+    if (terrain.effects.len > 0) {
+        _writerWrite(w, "$ceffects:$.\n", .{});
+        for (terrain.effects) |effect| {
+            _writerWrite(w, "{s}\n", .{_formatStatusInfo(&effect)});
+        }
+    }
+}
+
 fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceItem, linewidth: usize) void {
     switch (surface) {
-        .Prop => |p| _writerWrite(w, "$c{s}$.\nProp\n\n$gNothing to see here.$.\n", .{p.name}),
+        .Prop => |p| _writerWrite(w, "$c{s}$.\nprop\n\n$gNothing to see here.$.\n", .{p.name}),
         .Container => |c| {
             _writerWrite(w, "$cA {s}$.\nContainer\n\n", .{c.name});
             _writerWrite(w, "$gPress $b,$. $gover it to see its contents.$.\n", .{});
@@ -206,7 +296,8 @@ fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceIte
             // Since the mob object was deinit'd, we can't rely on
             // mob.displayName() working
             const name = c.ai.profession_name orelse c.species.name;
-            _writerWrite(w, "$c{s} remains$.\n\n", .{name});
+            _writerWrite(w, "$c{s} remains$.\n", .{name});
+            _writerWrite(w, "corpse\n\n", .{});
             _writerWrite(w, "This corpse is just begging for a necromancer to raise it.", .{});
         },
         else => @panic("TODO"),
@@ -226,12 +317,12 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
 
     if (mob.isHostileTo(state.player)) {
         if (mob.ai.is_combative) {
-            _writerWrite(w, "$rHostile$.\n", .{});
+            _writerWrite(w, "$rhostile$.\n", .{});
         } else {
-            _writerWrite(w, "$gNon-combatant$.\n", .{});
+            _writerWrite(w, "$gnon-combatant$.\n", .{});
         }
     } else {
-        _writerWrite(w, "$bNeutral$.\n", .{});
+        _writerWrite(w, "$bneutral$.\n", .{});
     }
     _writerWrite(w, "\n", .{});
 
@@ -447,6 +538,7 @@ const DrawStrOpts = struct {
 //     $g       fg = GREY
 //     $G       fg = DARK_GREY
 //     $c       fg = LIGHT_CONCRETE
+//     $a       fg = AQUAMARINE
 //     $p       fg = PINK
 //     $b       fg = LIGHT_STEEL_BLUE
 //     $r       fg = PALE_VIOLET_RED
@@ -512,7 +604,8 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
                         'p' => fg = colors.PINK,
                         'b' => fg = colors.LIGHT_STEEL_BLUE,
                         'r' => fg = colors.PALE_VIOLET_RED,
-                        else => err.bug("Found unknown escape sequence '${u}'", .{next_codepoint}),
+                        'a' => fg = colors.AQUAMARINE,
+                        else => err.bug("Found unknown escape sequence '${u}' (line: '{s}')", .{ next_codepoint, line }),
                     }
                     continue;
                 },
@@ -1033,6 +1126,8 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
             } else if (tile_focus == .Surface and has_surf) {
                 if (state.dungeon.at(coord).surface) |surf| {
                     _getSurfDescription(writer, surf, linewidth);
+                } else {
+                    _getTerrDescription(writer, state.dungeon.terrainAt(coord), linewidth);
                 }
             } else if (tile_focus == .Item and has_item) {
                 _getItemDescription(writer, state.dungeon.itemsAt(coord).last().?, linewidth);
