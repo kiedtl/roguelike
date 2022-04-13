@@ -270,6 +270,41 @@ fn _getTerrDescription(w: io.FixedBufferStream([]u8).Writer, terrain: *const sur
 
 fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceItem, linewidth: usize) void {
     switch (surface) {
+        .Machine => |m| {
+            _writerWrite(w, "$c{s}$.\n", .{m.name});
+            _writerWrite(w, "machine\n", .{});
+            _writerWrite(w, "\n", .{});
+
+            if (m.interact1) |interaction| {
+                const remaining = interaction.max_use - interaction.used;
+                const plural: []const u8 = if (remaining == 1) "" else "s";
+                _writerWrite(w, "You used this machine $b{}$. times.\n", .{interaction.used});
+                _writerWrite(w, "It can be used $b{}$. more time{s}.\n", .{ remaining, plural });
+                _writerWrite(w, "\n", .{});
+            }
+
+            if (m.malfunction_effect) |effect| {
+                switch (effect) {
+                    .Electrocute => |elec_effect| {
+                        const chance = 100 / (elec_effect.chance / 10);
+                        _writerWrite(w, "$cmalfunction effect:$. electrocute\n", .{});
+                        _writerWrite(w, "· $cradius:$. {}\n", .{elec_effect.radius});
+                        _writerWrite(w, "· $cchance:$. {}%\n", .{chance});
+                        _writerWrite(w, "· $cdamage:$. {}\n", .{elec_effect.damage});
+                    },
+                    .Explode => |expl_effect| {
+                        const chance = 100 / (expl_effect.chance / 10);
+                        _writerWrite(w, "$cmalfunction effect:$. explode\n", .{});
+                        _writerWrite(w, "· $cradius:$. ~{}\n", .{expl_effect.power / 100});
+                        _writerWrite(w, "· $cchance:$. {}%\n", .{chance});
+                        _writerWrite(w, "· $cdamage:$. massive\n", .{});
+                    },
+                }
+            } else {
+                _writerWrite(w, "$cmalfunction effect: $gnone$.\n", .{});
+            }
+            _writerWrite(w, "\n", .{});
+        },
         .Prop => |p| _writerWrite(w, "$c{s}$.\nprop\n\n$gNothing to see here.$.\n", .{p.name}),
         .Container => |c| {
             _writerWrite(w, "$cA {s}$.\nContainer\n\n", .{c.name});
@@ -300,7 +335,6 @@ fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceIte
             _writerWrite(w, "corpse\n\n", .{});
             _writerWrite(w, "This corpse is just begging for a necromancer to raise it.", .{});
         },
-        else => @panic("TODO"),
     }
 }
 
