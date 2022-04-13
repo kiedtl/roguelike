@@ -515,15 +515,25 @@ Trying to read a [forbidden] book results in:
 	- "This book has a seal set on it, threatening would-be readers with
 	   death. Really open?"
 [unreadable] "Book of Damnation"
+[unreadable] "Bored of the Rings"
 [unreadable] "Book of the Dead"
 [unreadable] "Book of Torment"
 [unreadable] "Of Men and Muskrats"
 [unreadable] "Is Man a Myth?"
+[unreadable] "The Vale of Fear"/"Skarlef"
 [forbidden]  "Book of Hymns"/"Soraldal"
 [barbarians] "On the Goblins"/"Urukdal"
 	- "You learn that two dark-skinned humans named Valimer and Kaiüs
 	   visited a few hill-goblin settlements a thousand years ago."
-"The Vale of Fear"/"Skarlef"
+"The Hardest Place: Our military entrenched in the Kinon Valley"
+	- "You learn that a half-competent, copper-clad hill-goblin recruits
+	  can completely annihilate any human army."
+"A Choice Collection of Human Poetry"
+	- "You learn that modern human poetry has no merit whatsoever."
+"Darwin's Black Box"
+	- "You learn that some humans are so well of that they have time to
+	  waste on questions like 'Who made the universe?' and 'Where did we
+	  come from?'"
 "Kornalg: The Life and Times of the Ancient Hill-King"
 	- "You learn that Kornalg was undoubtedly the bravest, strongest,
 	   besterestest hill-goblin that ever lived."
@@ -531,8 +541,6 @@ Trying to read a [forbidden] book results in:
 	- "You learn that Kornalg was rightly the king of the whole universe."
 "Meing Krampgh"
 	- "You learn that hill goblins are destined to rule the world."
-	- "You learn that those filthy cave-goblins have been infiltrating
-	   hill-goblin society for centuries."
 "Histories of Men"
 	- "You learn that dark-skinned humans are automatically inferior to other
 	   fang-possessing bipeds."
@@ -541,6 +549,8 @@ Trying to read a [forbidden] book results in:
 "Durgh Stammer"
 	- "You learn that hill goblins are vastly superior to cave goblins."
 "The Path to Goblin Supremacy"
+	- "You learn that those filthy cave-goblins have been infiltrating
+	   hill-goblin society for centuries."
 "The Weekly Hurricane"
 	- "You learn that cave goblins are responsible for just about every
 	   bad thing that happened to hill goblins in the past 10,000 years."
@@ -565,7 +575,7 @@ Trying to read a [forbidden] book results in:
 	- "You learn that some weird humans actually like drinking spoiled tea."
 	- "You learn the ratios of sugar and tea needed to brew kombucha."
 "Oneirical's guide to the DCSS' FeSu"
-	- "You learn that a few humans actually like scaled-down creeping deaths."
+	- "You learn that a few humans actually like miniature creeping deaths."
 	- "You learn that some people like cats. A lot."
 "Honeynutserios' DCSS review"
 	- "You learn that DCSS v0.28 was the worst game in the world."
@@ -622,7 +632,7 @@ s	catasine	Ore of cataline.
 s	phybro		Ore of phytin.
 s	dobalene	Makes up the walls of LAB.
 s	nebro		Like slade in Dwarf Fortress -- extremely heavy.
-			Associated with demonic powers.
+			Supposed to be associated with demonic powers.
 s	vangenite	Makes up the walls of machinery in LAB. Glows dimly.
 s	bolyvese
 s	orthire		Uranium. Nuclear reactors are referred to as
@@ -723,42 +733,31 @@ x Add tougher monsters; balancing
 x Balancing: fix mob placement (more on dangerous floors, less otherwise)
 x Add fungi, plants, terrain
 x Add basic (non-ring-based) movement patterns: charge, lunge, counterattack.
-- More items, item features
-  - Weapon and armor effects
-  - Weapon coatings/dipping
+x More items, item features
+  x Weapon and armor effects
+  x Weapon coatings/dipping
 x Noise revamp
 x LOS/lighting revamp
   x Nerf player's LOS, buf enemies' LOS
   x Change lighting algorithm
   x Remove partial lighting?
   x Show walls as always lit?
-- Fix/reimplement item-choosing screen
-- Fix/reimplement tile-choosing screen
-  - Remove 'r' key, revamp recharging station appearance(?)
-  - Remove hammer evocable, allow always breaking machines/props
-- Add Status/Mob(?)/Item lookup screen
+x Fix/reimplement item-choosing screen
+x Fix/reimplement tile-choosing screen
 x Revamp input prompts
 - Informational screens
-  - features/items screen, remove announcement of items
-  - "?" screen
-  - "@" screen
+  - eXamine screen
+    x Remove 'r' key, revamp recharging station appearance(?)
+    - Remove hammer evocable, allow always breaking machines/props
+    - Subscreens
+      - Player info "@"/"c" screen
+      x Poster description screen
   x Inventory screen
     x Remove 't' key, remove 'a' key for items
-  - Poster description screen
 - Show information characters next to mob in enemy pane
 - Implement intelligence
 - Revisit and revamp SMI mapgen
-  - toxic sludge pools and bridges over them
-  - Ether fiends, drakes, dustlings
-- Revisit Laboratory
-  - Spires and spire kits
-  - Add abominations, more experiments
-  - Add traps of blinding gas
-- Posters/books
-  - Poster types (graffiti, announcement, engraving, etc)
-  - Add bookshelves and book types
-    - Maps
-    - Useless books
+- Fiend of Vapours, dustlings, iron mages for SMI
 x Cleanup machines
   x Message if player moves over activatable machine
 x Upgrade to Zig v9
@@ -768,12 +767,26 @@ x Upgrade to Zig v9
   x Fix "*mem.Allocator" params
 - Runes and scoring
 *** v1.0.0 release ***
+More information screens
+  - Documentation/manuals
+  - status/mob(?)/item description lookup screen
+  - features/items screen, remove announcement of items
+- Posters/books
+  - Poster types (graffiti, announcement, engraving, etc)
+  - Add bookshelves and book types
+    - Maps
+    - Useless books
+- Revisit Laboratory
+  - Spires and spire kits
+  - Add abominations, more experiments
+  - Add traps of blinding gas
+- keybinding help "?" screen
 - Startup screen, map generation loading bar
 - Add basic animations
 - Morgue level
   - Cogmind-esque tunneling algorithm
   - Monsters
-- Blood, iron, ember, fire, spark, lightning mage bands
+- Blood, ember, fire, spark, lightning mage bands
 - Night creatures (night reapers, creeping deaths)
 - Silver weapons and battery packs, silver hornets
 - Bone, masterpiece, and shadow weapons
@@ -781,11 +794,7 @@ x Upgrade to Zig v9
 - Squad overhaul
   - Patrol squads
   - Prisoner squads + goblin commanders
-- More potions stuff
-  - Potion of disrupt, insubst/fortif, blinding
-  - Dilution/concentration:
-    - Potion of dilution   (dilution)
-    - Grills + kitchen set (concentration)
+- Potions of disrupt, insubst/fortif, blinding
 - Corruption effects
 - Mob repositioning AI
   - AI to move out of dangerous tiles (gas/terrain)
@@ -961,14 +970,16 @@ x Show prisoner's activity as "prisoner" instead of {"investigate","attack"}, et
 x Make bg of cell with noise green
 - @ command to see player's full AC and stats
 - Show information characters next to mob in enemy pane
+  - *:   red: low HP, white: HP
   - n:   neutral
-  - *:   ranged attacker (spells/launchers)
-  - $:   carrying valuable items
-  - c:   chained                    p:   prisoner
-  - u:   unbreathing                i:   immobile
-  - f:   faster than player         s:   slower than player
-  - @:   pursuing player            !:   fleeing player
-  - ?:   investigating player's noise
+  - p:   prisoner/chained
+  - u:   rFume∞
+  - i:   immobile
+  - f:   faster than player
+  - s:   slower than player
+  - ?:   investigating noise
+  - !:   fleeing
+  - @:   grey (unaware), red (seen), pink (remembers), blue (fleeing), white (doesn't matter)
 
 Items/Machines
 ==============
@@ -1033,9 +1044,7 @@ Items/Machines
   x recharging stations: 4 charges. 1-2 per level.
     - 'r' key is shortcut to evoke recharging station, when such a station is
       in LOS. Doing so invokes it for everything in inventory.
-  - fountain: Can be evoked to heal player by half of lost health. 2 charges.
-  - grill: Can be evoked to concentrate two potions into one, making its
-    effect stronger. 3 charges. Found in a kitchen-like subroom.
+  x fountain: Can be evoked to heal player by half of lost health. 2 charges.
   - summon stone: Summons a random (1-3) number of guards on the level to come
     to the command stone's location. 1 charge.
   - transporter stone: Teleports a random spire on the level to its location.
