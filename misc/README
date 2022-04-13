@@ -1,0 +1,6 @@
+Misc stuff
+----------
+
+This directory contains prototypes and experiments for various stuff.
+
+* trees.zig: procedurally-generated trees. MIT licensed.
