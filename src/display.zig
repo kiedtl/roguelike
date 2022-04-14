@@ -5,6 +5,7 @@ const math = std.math;
 const io = std.io;
 const assert = std.debug.assert;
 const mem = std.mem;
+const enums = std.enums;
 
 const colors = @import("colors.zig");
 const player = @import("player.zig");
@@ -198,6 +199,65 @@ fn _writerHLine(writer: io.FixedBufferStream([]u8).Writer, linewidth: usize) voi
         writer.writeAll("─") catch err.wat();
 }
 
+fn _writerStats(
+    w: io.FixedBufferStream([]u8).Writer,
+    p_stats: ?enums.EnumFieldStruct(Stat, isize, 0),
+    p_resists: ?enums.EnumFieldStruct(Resistance, isize, 0),
+) void {
+    // TODO: don't manually tabulate this?
+    _writerWrite(w, "$cstat       value$.\n", .{});
+    if (p_stats) |stats| {
+        inline for (@typeInfo(Stat).Enum.fields) |statv| {
+            const stat = @intToEnum(Stat, statv.value);
+
+            const x_stat_val = utils.getFieldByEnum(Stat, stats, stat);
+            // var base_stat_val = @intCast(isize, switch (stat) {
+            //     .Missile => combat.chanceOfMissileLanding(state.player),
+            //     .Melee => combat.chanceOfMeleeLanding(state.player, null),
+            //     .Evade => combat.chanceOfAttackEvaded(state.player, null),
+            //     else => state.player.stat(stat),
+            // });
+            // if (state.dungeon.terrainAt(state.player.coord) == terrain) {
+            //     base_stat_val -= terrain_stat_val;
+            // }
+            // const new_stat_val = base_stat_val + terrain_stat_val;
+
+            if (x_stat_val > 0) {
+                // // TODO: use $r for negative '->' values, I tried to do this with
+                // // Zig v9.1 but ran into a compiler bug where the `color` variable
+                // // was replaced with random garbage.
+                // _writerWrite(w, "{s: <8} $a{: >5}$. $b{: >5}$. $a{: >5}$.\n", .{
+                //     stat.string(), base_stat_val, terrain_stat_val, new_stat_val,
+                // });
+                _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ stat.string(), x_stat_val });
+            }
+        }
+    }
+    if (p_resists) |resists| {
+        inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
+            const resist = @intToEnum(Resistance, resistancev.value);
+
+            const x_resist_val = utils.getFieldByEnum(Resistance, resists, resist);
+            // var base_resist_val = @intCast(isize, state.player.resistance(resist));
+            // if (state.dungeon.terrainAt(state.player.coord) == terrain) {
+            //     base_resist_val -= terrain_resist_val;
+            // }
+            // const new_resist_val = base_resist_val + terrain_resist_val;
+
+            if (x_resist_val != 0) {
+                // // TODO: use $r for negative '->' values, I tried to do this with
+                // // Zig v9.1 but ran into a compiler bug where the `color` variable
+                // // was replaced with random garbage.
+                // _writerWrite(w, "{s: <8} $a{: >5}$. $b{: >5}$. $a{: >5}$.\n", .{
+                //     resist.string(), base_resist_val, terrain_resist_val, new_resist_val,
+                // });
+                _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ resist.string(), x_resist_val });
+            }
+        }
+    }
+    _writerWrite(w, "\n", .{});
+}
+
 fn _getTerrDescription(w: io.FixedBufferStream([]u8).Writer, terrain: *const surfaces.Terrain, linewidth: usize) void {
     _ = linewidth;
 
@@ -214,7 +274,7 @@ fn _getTerrDescription(w: io.FixedBufferStream([]u8).Writer, terrain: *const sur
     }
 
     // TODO: don't manually tabulate this?
-    _writerWrite(w, "$cstat       cur    ->   new$.\n", .{});
+    _writerWrite(w, "$cstat       value$.\n", .{});
     inline for (@typeInfo(Stat).Enum.fields) |statv| {
         const stat = @intToEnum(Stat, statv.value);
 
@@ -380,10 +440,12 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
         _writerWrite(w, "$ci$. immobile\n", .{});
     }
 
-    if (mob.speed() != state.player.speed()) {
-        const ch = if (mob.speed() < state.player.speed()) @as(u21, 'f') else 's';
-        const desc = if (mob.speed() < state.player.speed()) "faster than you" else "slower than you";
-        const col = if (mob.speed() < state.player.speed()) @as(u21, 'p') else 'b';
+    const mobspeed = mob.stat(.Speed);
+    const youspeed = state.player.stat(.Speed);
+    if (mobspeed != youspeed) {
+        const ch = if (mobspeed < youspeed) @as(u21, 'f') else 's';
+        const desc = if (mobspeed < youspeed) "faster than you" else "slower than you";
+        const col = if (mobspeed < youspeed) @as(u21, 'p') else 'b';
 
         _writerWrite(w, "${u}{u}$. {s}\n", .{ col, ch, desc });
     }
@@ -471,14 +533,26 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
 }
 
 fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewidth: usize) void {
+    _ = linewidth;
+
     const shortname = (item.shortName() catch err.wat()).constSlice();
 
     //S.appendChar(w, ' ', (linewidth / 2) -| (shortname.len / 2));
     _writerWrite(w, "$c{s}$.\n", .{shortname});
 
-    _writerWrite(w, "$G", .{});
-    _writerHLine(w, linewidth);
-    _writerWrite(w, "$.\n", .{});
+    const itemtype: []const u8 = switch (item) {
+        .Ring => "ring",
+        .Potion => "potion",
+        .Vial => "vial",
+        .Projectile => "projectile",
+        .Armor => "armor",
+        .Cloak => "cloak",
+        .Weapon => "weapon",
+        .Boulder => "boulder",
+        .Prop => "prop",
+        .Evocable => "evocable",
+    };
+    _writerWrite(w, "{s}", .{itemtype});
 
     _writerWrite(w, "\n", .{});
 
@@ -489,7 +563,7 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
             switch (p.type) {
                 .Gas => |g| _writerWrite(w, "$gGas$. {s}\n", .{gas.Gases[g].name}),
                 .Status => |s| _writerWrite(w, "$gTmp$. {s}\n", .{s.string(state.player)}),
-                .Custom => _writerWrite(w, "TODO: describe this potion\n", .{}),
+                .Custom => _writerWrite(w, "$G(See description)$.\n", .{}),
             }
         },
         .Projectile => |p| {
@@ -498,17 +572,49 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
             switch (p.effect) {
                 .Status => |sinfo| {
                     _writerWrite(w, "$ceffects$.:\n", .{});
-                    const str = sinfo.status.string(state.player);
-                    switch (sinfo.duration) {
-                        .Prm => _writerWrite(w, "$gPrm$. {s}\n", .{str}),
-                        .Equ => _writerWrite(w, "$gEqu$. {s}\n", .{str}),
-                        .Tmp => _writerWrite(w, "$gTmp$. {s} ({})\n", .{ str, sinfo.duration.Tmp }),
-                        .Ctx => _writerWrite(w, "$gCtx$. {s}\n", .{str}),
-                    }
+                    _writerWrite(w, "{s}", .{_formatStatusInfo(&sinfo)});
                 },
             }
         },
-        .Armor, .Cloak, .Weapon, .Evocable => _writerWrite(w, "TODO", .{}),
+        .Cloak => |c| _writerStats(w, c.stats, c.resists),
+        .Armor => |a| _writerStats(w, a.stats, a.resists),
+        .Weapon => |p| {
+            // stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
+            // effects: []const StatusDataInfo = &[_]StatusDataInfo{},
+            // equip_effects: []const StatusDataInfo = &[_]StatusDataInfo{},
+
+            _writerWrite(w, "$cdamage:$. {}\n", .{p.damage});
+            if (p.reach != 1) _writerWrite(w, "$creach:$. {}\n", .{p.reach});
+            if (p.delay != 100) {
+                const col: u21 = if (p.delay > 100) 'r' else 'a';
+                _writerWrite(w, "$cdelay:$. ${u}{}%$.\n", .{ col, p.delay });
+            }
+            if (p.knockback != 0) _writerWrite(w, "$cknockback:$. {}\n", .{p.knockback});
+            _writerWrite(w, "\n", .{});
+
+            if (p.is_dippable) {
+                _writerWrite(w, "$rnot dippable$.\n", .{});
+            } else {
+                _writerWrite(w, "$adippable$.\n", .{});
+            }
+            if (p.dip_effect) |potion| {
+                assert(p.dip_counter > 0);
+                _writerWrite(w, "· {s}", .{_formatStatusInfo(&potion.dip_effect.?)});
+                _writerWrite(w, "· {} attacks left", .{p.dip_counter});
+            }
+            _writerWrite(w, "\n", .{});
+
+            _writerStats(w, p.stats, null);
+
+            _writerWrite(w, "$cequip effects:$.\n", .{});
+            for (p.equip_effects) |effect| _writerWrite(w, "{s}", .{_formatStatusInfo(&effect)});
+            _writerWrite(w, "\n", .{});
+
+            _writerWrite(w, "$cattack effects:$.\n", .{});
+            for (p.effects) |effect| _writerWrite(w, "{s}", .{_formatStatusInfo(&effect)});
+            _writerWrite(w, "\n", .{});
+        },
+        .Evocable => _writerWrite(w, "TODO", .{}),
         .Boulder, .Prop, .Vial => _writerWrite(w, "$G(This item is useless.)$.", .{}),
     }
 

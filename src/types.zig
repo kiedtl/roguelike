@@ -1698,7 +1698,7 @@ pub const Mob = struct { // {{{
     pub fn declareAction(self: *Mob, action: Activity) void {
         assert(!self.is_dead);
         self.activities.append(action);
-        self.energy -= @divTrunc(self.speed() * @intCast(isize, action.cost()), 100);
+        self.energy -= @divTrunc(self.stat(.Speed) * @intCast(isize, action.cost()), 100);
     }
 
     pub fn makeNoise(self: *Mob, s_type: SoundType, intensity: SoundIntensity) void {
@@ -1743,7 +1743,7 @@ pub const Mob = struct { // {{{
         if (self.stat(.Strength) > other.stat(.Strength)) {
             can = true;
         }
-        if (self.speed() > other.speed()) {
+        if (self.stat(.Speed) > other.stat(.Speed)) {
             can = true;
         }
         if (self.ai.phase != .Work and other.ai.phase == .Work) {
@@ -2699,22 +2699,6 @@ pub const Mob = struct { // {{{
         return a.energy < b.energy;
     }
 
-    pub fn speed(self: *const Mob) isize {
-        var speed_perc: isize = 100;
-        if (self.isUnderStatus(.Fast)) |_| speed_perc = @divTrunc(speed_perc * 50, 100);
-        if (self.isUnderStatus(.Enraged)) |_| speed_perc = @divTrunc(speed_perc * 80, 100);
-        if (self.isUnderStatus(.Slow)) |_| speed_perc = @divTrunc(speed_perc * 150, 100);
-        if (self.isUnderStatus(.Poison)) |_| speed_perc = @divTrunc(speed_perc * 150, 100);
-        if (self.isUnderStatus(.Nausea)) |_| speed_perc = @divTrunc(speed_perc * 150, 100);
-
-        if (self.inventory.equipmentConst(.Armor).*) |a|
-            if (a.Armor.speed_penalty) |pen| {
-                speed_perc += @intCast(isize, pen);
-            };
-
-        return @divTrunc(@intCast(isize, self.stats.Speed) * math.max(0, speed_perc), 100);
-    }
-
     pub fn canSeeInLight(self: *const Mob, light: bool) bool {
         if (!light) {
             if (self.isUnderStatus(.NightBlindness) != null) return false;
@@ -2743,6 +2727,12 @@ pub const Mob = struct { // {{{
             .Strength => {
                 if (self.isUnderStatus(.Invigorate)) |_| val += 10;
             },
+            .Speed => {
+                if (self.isUnderStatus(.Fast)) |_| val = @divTrunc(val * 50, 100);
+                if (self.isUnderStatus(.Enraged)) |_| val = @divTrunc(val * 80, 100);
+                if (self.isUnderStatus(.Slow)) |_| val = @divTrunc(val * 150, 100);
+                if (self.isUnderStatus(.Poison)) |_| val = @divTrunc(val * 150, 100);
+            },
             else => {},
         }
 
@@ -2751,10 +2741,11 @@ pub const Mob = struct { // {{{
             val += utils.getFieldByEnum(Stat, weapon.Weapon.stats, _stat);
         }
 
-        // Check cloaks.
-        if (self.inventory.equipmentConst(.Cloak).*) |clk| {
+        // Check armor and cloaks.
+        if (self.inventory.equipmentConst(.Cloak).*) |clk|
             val += utils.getFieldByEnum(Stat, clk.Cloak.stats, _stat);
-        }
+        if (self.inventory.equipmentConst(.Armor).*) |clk|
+            val += utils.getFieldByEnum(Stat, clk.Armor.stats, _stat);
 
         return val;
     }
@@ -2775,13 +2766,11 @@ pub const Mob = struct { // {{{
         const terrain = state.dungeon.terrainAt(self.coord);
         r += utils.getFieldByEnum(Resistance, terrain.resists, resist);
 
-        // Check armor
-        if (self.inventory.equipmentConst(.Cloak).*) |clk| {
+        // Check armor and cloaks
+        if (self.inventory.equipmentConst(.Cloak).*) |clk|
             r += utils.getFieldByEnum(Resistance, clk.Cloak.resists, resist);
-        }
-        if (self.inventory.equipmentConst(.Armor).*) |arm| {
+        if (self.inventory.equipmentConst(.Armor).*) |arm|
             r += utils.getFieldByEnum(Resistance, arm.Armor.resists, resist);
-        }
 
         // Check statuses
         switch (resist) {
@@ -3157,8 +3146,7 @@ pub const Armor = struct {
     id: []const u8,
     name: []const u8,
     resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
-    speed_penalty: ?usize = null, // percentage
-    evasion_penalty: ?usize = null, // fixed number
+    stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
 };
 
 pub const Weapon = struct {
