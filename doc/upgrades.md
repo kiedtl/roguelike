@@ -10,12 +10,6 @@ aptitudes, but only 3 of them can be received in any game.
 
 You take only 90 ticks to move one tile.
 
-## Strong
-
-> "You feel mighty!"
-
-You have +15 strength.
-
 ## Agile
 
 > "You are good at evading blows."

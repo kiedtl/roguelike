@@ -6,11 +6,6 @@ Your evade% is your chance to dodge.  So e.g., a mob with a evade% of 30 will
 have a 30% chance to dodge, and a mob with 10 evade% will have a 10% chance to
 dodge.
 
-## Strength
-
-Strength affects a number of areas, specifically combat and unjamming. A mob's
-strength is always in the range 0-50.
-
 ### Combat
 
 Damage dealt in melee receives a (Strength / 2)% bonus. Examples:
