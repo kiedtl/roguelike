@@ -506,30 +506,19 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
     const c_melee_you = mob_melee * (100 - you_evade) / 100;
     const c_evade_you = 100 - (you_melee * (100 - mob_evade) / 100);
 
-    const colorsets = [_]u21{ 'g', 'g', 'g', 'g', 'b', 'b', 'b', 'b', 'r', 'r', 'r' };
-    const c_melee_you_color = colorsets[c_melee_you / 10];
-    const c_evade_you_color = colorsets[c_evade_you / 10];
+    const m_colorsets = [_]u21{ 'g', 'g', 'g', 'g', 'b', 'b', 'b', 'b', 'r', 'r', 'r' };
+    const e_colorsets = [_]u21{ 'g', 'b', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r' };
+    const c_melee_you_color = m_colorsets[c_melee_you / 10];
+    const c_evade_you_color = e_colorsets[c_evade_you / 10];
 
     _writerWrite(w, "${u}{}%$. to hit you.\n", .{ c_melee_you_color, c_melee_you });
     _writerWrite(w, "${u}{}%$. to evade you.\n", .{ c_evade_you_color, c_evade_you });
-
     _writerWrite(w, "\n", .{});
 
-    const mob_armor = @intCast(usize, mob.resistance(.Armor));
     const you_armor = @intCast(usize, state.player.resistance(.Armor));
-
     const mob_damage_output = math.max(1, mob.totalMeleeOutput() * you_armor / 100);
-    const mob_hits_needed = @floatToInt(usize, state.player.max_HP) / mob_damage_output;
-    const you_damage_output = math.max(1, state.player.totalMeleeOutput() * mob_armor / 100);
-    const you_hits_needed = @floatToInt(usize, mob.max_HP) / you_damage_output;
-
     _writerWrite(w, "Hits for max $r{}$. damage.\n", .{mob_damage_output});
-    _writerWrite(w, "Can kill you in $r{}$. hits.\n", .{mob_hits_needed});
-
     _writerWrite(w, "\n", .{});
-
-    _writerWrite(w, "You hit for max $r{}$. damage.\n", .{you_damage_output});
-    _writerWrite(w, "You can kill it in $r{}$. hits.\n", .{you_hits_needed});
 }
 
 fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewidth: usize) void {
@@ -565,6 +554,14 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
                 .Status => |s| _writerWrite(w, "$gTmp$. {s}\n", .{s.string(state.player)}),
                 .Custom => _writerWrite(w, "$G(See description)$.\n", .{}),
             }
+            _writerWrite(w, "\n", .{});
+
+            _writerWrite(w, "$cdip effect:$.\n", .{});
+            if (p.dip_effect) |effect| {
+                _writerWrite(w, "{s}", .{_formatStatusInfo(&effect)});
+            } else {
+                _writerWrite(w, "$gCannot dip.$.\n", .{});
+            }
         },
         .Projectile => |p| {
             const dmg = p.damage orelse @as(usize, 0);
@@ -574,13 +571,6 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
                     _writerWrite(w, "$ceffects$.:\n", .{});
                     _writerWrite(w, "{s}", .{_formatStatusInfo(&sinfo)});
                 },
-            }
-
-            _writerWrite(w, "$cdip effect:$.\n", .{});
-            if (p.dip_effect) |effect| {
-                _writerWrite(w, "{s}", .{_formatStatusInfo(&effect)});
-            } else {
-                _writerWrite(w, "$gCannot dip.$.\n", .{});
             }
         },
         .Cloak => |c| _writerStats(w, c.stats, c.resists),
