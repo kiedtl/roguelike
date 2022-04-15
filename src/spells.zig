@@ -345,7 +345,6 @@ fn _resurrectFrozen(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
         corpse.max_HP = corpse.max_HP * 2;
         corpse.HP = corpse.max_HP;
         corpse.innate_resists.rFire = -2;
-        corpse.stats.Strength += 10;
         corpse.stats.Evade = 0;
         corpse.deg360_vision = true;
 

@@ -65,10 +65,7 @@ fn pathfindingPenalty(coord: Coord, opts: state.IsWalkableOptions) usize {
     if (state.dungeon.at(coord).surface) |surface| switch (surface) {
         .Machine => |m| {
             c += m.pathfinding_penalty;
-            if (m.jammed)
-                if (opts.mob) |mob| {
-                    c += 100 / @intCast(usize, mob.stat(.Strength));
-                };
+            if (m.jammed) c += 10;
         },
         .Container => |_| c += 30,
         .Prop => c += 15,

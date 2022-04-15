@@ -92,7 +92,7 @@ pub const ExecutionerTemplate = MobTemplate{
         .max_HP = 10,
         .memory_duration = 5,
         .blood = .Blood,
-        .stats = .{ .Willpower = 3, .Evade = 10, .Strength = 20, .Speed = 100 },
+        .stats = .{ .Willpower = 3, .Evade = 10, .Speed = 100 },
     },
     .weapon = &items.KnoutWeapon,
 };
@@ -115,7 +115,7 @@ pub const WatcherTemplate = MobTemplate{
         .max_HP = 6,
         .memory_duration = 10,
         .blood = .Blood,
-        .stats = .{ .Willpower = 3, .Evade = 30, .Strength = 8, .Speed = 60 },
+        .stats = .{ .Willpower = 3, .Evade = 30, .Speed = 60 },
     },
 };
 
@@ -137,7 +137,7 @@ pub const WardenTemplate = MobTemplate{
         .max_HP = 15,
         .memory_duration = 6,
         .blood = .Blood,
-        .stats = .{ .Willpower = 3, .Evade = 10, .Strength = 20, .Speed = 120, .Vision = 5 },
+        .stats = .{ .Willpower = 3, .Evade = 10, .Speed = 120, .Vision = 5 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.LeatherArmor,
@@ -163,7 +163,7 @@ pub const GuardTemplate = MobTemplate{
         .memory_duration = 5,
         .blood = .Blood,
 
-        .stats = .{ .Willpower = 2, .Evade = 10, .Strength = 10, .Speed = 100 },
+        .stats = .{ .Willpower = 2, .Evade = 10, .Speed = 100 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
@@ -192,7 +192,7 @@ pub const JavelineerTemplate = MobTemplate{
         .max_HP = 10,
         .memory_duration = 6,
         .blood = .Blood,
-        .stats = .{ .Willpower = 2, .Evade = 10, .Missile = 80, .Strength = 15, .Speed = 110, .Vision = 5 },
+        .stats = .{ .Willpower = 2, .Evade = 10, .Missile = 80, .Speed = 110, .Vision = 5 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
@@ -222,7 +222,7 @@ pub const SentinelTemplate = MobTemplate{
         .max_HP = 10,
         .memory_duration = 7,
         .blood = .Blood,
-        .stats = .{ .Willpower = 5, .Evade = 15, .Missile = 70, .Strength = 20, .Speed = 90 },
+        .stats = .{ .Willpower = 5, .Evade = 15, .Missile = 70, .Speed = 90 },
     },
     .weapon = &items.KnifeWeapon,
     .armor = &items.LeatherArmor,
@@ -260,7 +260,7 @@ pub const LeadTurtleTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
         .innate_resists = .{ .rPois = 100, .rFire = 100, .Armor = 60, .rFume = 100 },
-        .stats = .{ .Willpower = 5, .Evade = 0, .Melee = 100, .Strength = 40, .Speed = 220, .Vision = 4 },
+        .stats = .{ .Willpower = 5, .Evade = 0, .Melee = 100, .Speed = 220, .Vision = 4 },
     },
 
     .statuses = &[_]StatusDataInfo{.{ .status = .Sleeping, .duration = .Prm }},
@@ -299,7 +299,7 @@ pub const IronWaspTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
         .innate_resists = .{ .rPois = 100, .rFire = 50, .rFume = 100 },
-        .stats = .{ .Willpower = 1, .Evade = 50, .Strength = 2, .Speed = 55, .Vision = 3 },
+        .stats = .{ .Willpower = 1, .Evade = 50, .Speed = 55, .Vision = 3 },
     },
 
     .squad = &[_][]const MobTemplate.SquadMember{
@@ -331,7 +331,7 @@ pub const PatrolTemplate = MobTemplate{
         .max_HP = 8,
         .memory_duration = 3,
         .blood = .Blood,
-        .stats = .{ .Willpower = 2, .Evade = 15, .Strength = 20, .Speed = 110 },
+        .stats = .{ .Willpower = 2, .Evade = 15, .Speed = 110 },
     },
     .weapon = &items.GlaiveWeapon,
     .armor = &items.GambesonArmor,
@@ -366,7 +366,7 @@ pub const PlayerTemplate = MobTemplate{
         .memory_duration = 10,
         .blood = .Blood,
 
-        .stats = .{ .Willpower = 5, .Evade = 10, .Strength = 20, .Speed = 100, .Vision = 10, .Sneak = 4 },
+        .stats = .{ .Willpower = 5, .Evade = 10, .Speed = 100, .Vision = 10, .Sneak = 4 },
     },
     .weapon = &items.KnifeWeapon,
     .armor = &items.RobeArmor,
@@ -391,7 +391,7 @@ pub const GoblinTemplate = MobTemplate{
         .max_HP = 15,
         .memory_duration = 8,
         .blood = .Blood,
-        .stats = .{ .Willpower = 4, .Evade = 15, .Strength = 20, .Speed = 100, .Vision = 8 },
+        .stats = .{ .Willpower = 4, .Evade = 15, .Speed = 100, .Vision = 8 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.LeatherArmor,
@@ -427,7 +427,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
         .corpse = .Wall,
         .immobile = true,
         .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = 100, .Armor = 100, .rFume = 100 },
-        .stats = .{ .Willpower = 9, .Evade = 0, .Strength = 1, .Speed = 100, .Vision = 20 },
+        .stats = .{ .Willpower = 9, .Evade = 0, .Speed = 100, .Vision = 20 },
     },
 };
 
@@ -461,7 +461,7 @@ pub const NebroStatueTemplate = MobTemplate{
         .corpse = .Wall,
         .immobile = true,
         .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = 100, .Armor = 100, .rFume = 100 },
-        .stats = .{ .Willpower = 9, .Evade = 0, .Strength = 1, .Speed = 100, .Vision = 20 },
+        .stats = .{ .Willpower = 9, .Evade = 0, .Speed = 100, .Vision = 20 },
     },
 };
 
@@ -495,7 +495,7 @@ pub const CrystalStatueTemplate = MobTemplate{
         .corpse = .Wall,
         .immobile = true,
         .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = 100, .Armor = 100, .rFume = 100 },
-        .stats = .{ .Willpower = 9, .Evade = 0, .Strength = 1, .Speed = 100, .Vision = 20 },
+        .stats = .{ .Willpower = 9, .Evade = 0, .Speed = 100, .Vision = 20 },
     },
 };
 
@@ -518,7 +518,7 @@ pub const AlchemistTemplate = MobTemplate{
         .memory_duration = 7,
         .blood = .Blood,
 
-        .stats = .{ .Willpower = 2, .Evade = 10, .Strength = 10, .Speed = 100 },
+        .stats = .{ .Willpower = 2, .Evade = 10, .Speed = 100 },
     },
 };
 
@@ -541,7 +541,7 @@ pub const CleanerTemplate = MobTemplate{
         .max_HP = 10,
         .memory_duration = 5,
         .blood = .Blood,
-        .stats = .{ .Willpower = 2, .Evade = 10, .Strength = 10, .Speed = 100 },
+        .stats = .{ .Willpower = 2, .Evade = 10, .Speed = 100 },
     },
 };
 
@@ -564,7 +564,7 @@ pub const HaulerTemplate = MobTemplate{
         .max_HP = 10,
         .memory_duration = 8,
         .blood = .Blood,
-        .stats = .{ .Willpower = 2, .Evade = 10, .Strength = 10, .Speed = 60 },
+        .stats = .{ .Willpower = 2, .Evade = 10, .Speed = 60 },
     },
 };
 
@@ -587,7 +587,7 @@ pub const EngineerTemplate = MobTemplate{
         .max_HP = 10,
         .memory_duration = 8,
         .blood = .Blood,
-        .stats = .{ .Willpower = 2, .Evade = 10, .Strength = 10, .Speed = 90 },
+        .stats = .{ .Willpower = 2, .Evade = 10, .Speed = 90 },
     },
     .cloak = &items.FurCloak,
 };
@@ -636,7 +636,7 @@ pub const AncientMageTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
         .innate_resists = .{ .rPois = 100, .rFume = 100, .rElec = 100 },
-        .stats = .{ .Willpower = 10, .Evade = 10, .Strength = 25, .Speed = 110 },
+        .stats = .{ .Willpower = 10, .Evade = 10, .Speed = 110 },
     },
     .armor = &items.HauberkArmor,
 };
@@ -667,7 +667,7 @@ pub const DeathMageTemplate = MobTemplate{
         .max_HP = 10,
         .memory_duration = 6,
         .blood = .Blood,
-        .stats = .{ .Willpower = 8, .Evade = 10, .Strength = 15, .Speed = 100, .Vision = 5 },
+        .stats = .{ .Willpower = 8, .Evade = 10, .Speed = 100, .Vision = 5 },
     },
     .weapon = &items.DaggerWeapon,
     .armor = &items.LeatherArmor,
@@ -705,7 +705,7 @@ pub const SkeletalAxemasterTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = 100, .rFume = 100, .rFire = -25 },
-        .stats = .{ .Willpower = 2, .Evade = 0, .Strength = 25, .Speed = 110, .Vision = 4 },
+        .stats = .{ .Willpower = 2, .Evade = 0, .Speed = 110, .Vision = 4 },
     },
     .weapon = &items.AxeWeapon,
     .armor = &items.ScalemailArmor,
@@ -739,7 +739,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
         .max_HP = 15,
         .memory_duration = 10,
         .blood = .Blood,
-        .stats = .{ .Willpower = 8, .Evade = 10, .Strength = 25, .Speed = 100, .Vision = 5 },
+        .stats = .{ .Willpower = 8, .Evade = 10, .Speed = 100, .Vision = 5 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.LeatherArmor,
@@ -775,7 +775,7 @@ pub const BurningBruteTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = -25 },
-        .stats = .{ .Willpower = 8, .Evade = 15, .Strength = 40, .Speed = 100, .Vision = 5 },
+        .stats = .{ .Willpower = 8, .Evade = 15, .Speed = 100, .Vision = 5 },
     },
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Fire, .duration = .Prm },
@@ -811,7 +811,7 @@ pub const SulfurFiendTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = 100, .rFire = 50, .rElec = 100, .rFume = 80 },
-        .stats = .{ .Willpower = 10, .Evade = 10, .Strength = 30, .Speed = 100, .Vision = 5 },
+        .stats = .{ .Willpower = 10, .Evade = 10, .Speed = 100, .Vision = 5 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
@@ -847,7 +847,7 @@ pub const FrozenFiendTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = 75, .rElec = 75, .rFire = -25 },
-        .stats = .{ .Willpower = 8, .Evade = 10, .Strength = 30, .Speed = 100, .Vision = 7 },
+        .stats = .{ .Willpower = 8, .Evade = 10, .Speed = 100, .Vision = 7 },
     },
     .weapon = &items.MorningstarWeapon,
     .armor = &items.HauberkArmor,
@@ -871,7 +871,7 @@ pub const TanusExperiment = MobTemplate{
         .max_HP = 10,
         .memory_duration = 8,
         .blood = .Blood,
-        .stats = .{ .Willpower = 3, .Evade = 10, .Strength = 15, .Speed = 100 },
+        .stats = .{ .Willpower = 3, .Evade = 10, .Speed = 100 },
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
@@ -896,7 +896,7 @@ pub const CatalineExperiment = MobTemplate{
         .max_HP = 10,
         .memory_duration = 8,
         .blood = .Blood,
-        .stats = .{ .Willpower = 3, .Evade = 10, .Strength = 15, .Speed = 100 },
+        .stats = .{ .Willpower = 3, .Evade = 10, .Speed = 100 },
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
@@ -921,7 +921,7 @@ pub const FlouinExperiment = MobTemplate{
         .max_HP = 10,
         .memory_duration = 15,
         .blood = .Blood,
-        .stats = .{ .Willpower = 3, .Evade = 10, .Strength = 15, .Speed = 100 },
+        .stats = .{ .Willpower = 3, .Evade = 10, .Speed = 100 },
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
@@ -946,7 +946,7 @@ pub const PhytinExperiment = MobTemplate{
         .max_HP = 10,
         .memory_duration = 15,
         .blood = .Blood,
-        .stats = .{ .Willpower = 3, .Evade = 10, .Strength = 15, .Speed = 100 },
+        .stats = .{ .Willpower = 3, .Evade = 10, .Speed = 100 },
     },
     .weapon = &items.ClubWeapon,
     .armor = &items.LeatherArmor,
@@ -989,7 +989,7 @@ pub const LivingIceTemplate = MobTemplate{
         .corpse = .Wall,
 
         .innate_resists = .{ .rPois = 100, .rFire = -50, .rElec = 100, .Armor = 50, .rFume = 100 },
-        .stats = .{ .Willpower = 5, .Evade = 0, .Melee = 100, .Strength = 30, .Speed = 100, .Vision = 2 },
+        .stats = .{ .Willpower = 5, .Evade = 0, .Melee = 100, .Speed = 100, .Vision = 2 },
     },
     // This status should be added by whatever spell created it.
     //.statuses = &[_]StatusDataInfo{.{ .status = .Lifespan, .duration = .{.Tmp=10} }},
@@ -1023,7 +1023,7 @@ pub const BallLightningTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = 100, .rFire = 50, .rElec = 100, .rFume = 100 },
-        .stats = .{ .Willpower = 1000, .Evade = 0, .Strength = 1, .Speed = 30, .Vision = 20 },
+        .stats = .{ .Willpower = 1000, .Evade = 0, .Speed = 30, .Vision = 20 },
     },
     // This status should be added by whatever spell created it.
     .statuses = &[_]StatusDataInfo{

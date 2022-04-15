@@ -1223,7 +1223,6 @@ pub const Stat = enum {
     Missile,
     Martial,
     Evade,
-    Strength,
     Speed,
     Sneak,
     Vision,
@@ -1235,7 +1234,6 @@ pub const Stat = enum {
             .Missile => "missile%",
             .Martial => "martial",
             .Evade => "evade%",
-            .Strength => "strength",
             .Speed => "speed",
             .Sneak => "sneak",
             .Vision => "vision",
@@ -1309,7 +1307,6 @@ pub const Mob = struct { // {{{
         Missile: isize = 40,
         Martial: isize = 0,
         Evade: isize = 10,
-        Strength: isize = 10,
         Speed: isize = 100,
         Sneak: isize = 1,
         Vision: isize = 6,
@@ -1545,9 +1542,7 @@ pub const Mob = struct { // {{{
     //
     pub fn flailAround(self: *Mob) void {
         if (self.isUnderStatus(.Held)) |se| {
-            const held_remove_max = @intCast(usize, self.stat(.Strength)) / 2;
-            const held_remove = rng.rangeClumping(usize, 2, held_remove_max, 2);
-            const new_duration = se.duration.Tmp -| held_remove;
+            const new_duration = se.duration.Tmp -| 1;
 
             self.applyStatus(.{
                 .status = .Held,
@@ -1738,9 +1733,6 @@ pub const Mob = struct { // {{{
         var can = false;
 
         if (other.isUnderStatus(.Paralysis)) |_| {
-            can = true;
-        }
-        if (self.stat(.Strength) > other.stat(.Strength)) {
             can = true;
         }
         if (self.stat(.Speed) > other.stat(.Speed)) {
@@ -2015,9 +2007,6 @@ pub const Mob = struct { // {{{
     ) void {
         assert(!attacker.is_dead);
         assert(!recipient.is_dead);
-
-        assert(attacker.stat(.Strength) > 0);
-        assert(recipient.stat(.Strength) > 0);
 
         // const chance_of_land = combat.chanceOfMeleeLanding(attacker, recipient);
         // const chance_of_dodge = combat.chanceOfAttackEvaded(recipient, attacker);
@@ -2316,7 +2305,6 @@ pub const Mob = struct { // {{{
         // FIXME: don't assume this (the player might be raising a corpse too!)
         self.allegiance = .Necromancer;
 
-        self.stats.Strength += 10;
         self.stats.Speed += 10;
         self.stats.Evade -= 10;
         self.stats.Willpower -= 2;
@@ -2724,9 +2712,6 @@ pub const Mob = struct { // {{{
 
         // Check statuses.
         switch (_stat) {
-            .Strength => {
-                if (self.isUnderStatus(.Invigorate)) |_| val += 10;
-            },
             .Speed => {
                 if (self.isUnderStatus(.Fast)) |_| val = @divTrunc(val * 50, 100);
                 if (self.isUnderStatus(.Enraged)) |_| val = @divTrunc(val * 80, 100);
@@ -2999,13 +2984,11 @@ pub const Machine = struct {
     fn _tryUnjam(self: *Machine, by: ?*Mob) bool {
         assert(self.jammed and self.can_be_jammed);
 
-        const strength = if (by) |mob| mob.stat(.Strength) else 50;
-
-        if (rng.range(usize, 0, 100) < strength) {
+        if (rng.percent(@as(usize, 10))) {
             // unjammed!
             self.jammed = false;
 
-            if (rng.range(usize, 0, 100) < strength) {
+            if (rng.percent(@as(usize, 10))) {
                 // broken!
                 state.dungeon.at(self.coord).broken = true;
                 if (by) |mob| mob.makeNoise(.Crash, .Medium);

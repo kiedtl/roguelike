@@ -48,7 +48,6 @@ pub const PlayerUpgradeInfo = struct {
 
 pub const PlayerUpgrade = enum {
     Fast,
-    Strong,
     Agile,
     OI_Enraged,
     OI_Fast,
@@ -58,12 +57,11 @@ pub const PlayerUpgrade = enum {
     Will,
     Echolocating,
 
-    pub const UPGRADES = [_]PlayerUpgrade{ .Fast, .Strong, .Agile, .OI_Enraged, .OI_Fast, .OI_Shove, .Healthy, .Mana, .Will, .Echolocating };
+    pub const UPGRADES = [_]PlayerUpgrade{ .Fast, .Agile, .OI_Enraged, .OI_Fast, .OI_Shove, .Healthy, .Mana, .Will, .Echolocating };
 
     pub fn announce(self: PlayerUpgrade) []const u8 {
         return switch (self) {
             .Fast => "You feel yourself moving faster.",
-            .Strong => "You feel mighty!",
             .Agile => "You are good at evading blows.",
             .OI_Enraged => "You feel hatred building up inside.",
             .OI_Fast => "You put on a burst of speed when injured.",
@@ -78,7 +76,6 @@ pub const PlayerUpgrade = enum {
     pub fn description(self: PlayerUpgrade) []const u8 {
         return switch (self) {
             .Fast => "You have a 10% speed bonus.",
-            .Strong => "You have a +50% strength bonus.",
             .Agile => "You have a +20% dodging bonus.",
             .OI_Enraged => "You become enraged when badly hurt.",
             .OI_Fast => "You put on a burst of speed when injured.",
@@ -93,7 +90,6 @@ pub const PlayerUpgrade = enum {
     pub fn implement(self: PlayerUpgrade) void {
         switch (self) {
             .Fast => state.player.stats.Speed -= 10,
-            .Strong => state.player.stats.Strength += 15,
             .Agile => state.player.stats.Evade += 10,
             .OI_Enraged => state.player.ai.flee_effect = .{
                 .status = .Enraged,
