@@ -1637,12 +1637,25 @@ pub fn placeTraps(level: usize) void {
         };
 
         var num_of_vents = rng.range(usize, 1, 3);
-        var v_tries: usize = 100;
+        var v_tries: usize = 1000;
         while (v_tries > 0 and num_of_vents > 0) : (v_tries -= 1) {
-            const vent = randomWallCoord(&room, v_tries);
-            if (state.dungeon.hasMachine(vent) or
-                state.dungeon.at(vent).type != .Wall or
-                state.dungeon.neighboringWalls(vent, true) == 9) continue;
+            const vent = room.randomCoord();
+
+            var avg_dist: usize = undefined;
+            var count: usize = 0;
+            for (trap.props) |maybe_prop| if (maybe_prop) |prop| {
+                avg_dist += vent.distance(prop.coord);
+                count += 1;
+            };
+            avg_dist += vent.distance(trap_coord);
+            avg_dist /= (count + 1);
+
+            if (avg_dist < 4 or
+                state.dungeon.at(vent).surface != null or
+                state.dungeon.at(vent).type != .Floor)
+            {
+                continue;
+            }
 
             state.dungeon.at(vent).type = .Floor;
             const p_ind = utils.findById(surfaces.props.items, Configs[room.start.z].vent);
@@ -3343,7 +3356,6 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
     .material = &materials.Dobalene,
     .window_material = &materials.LabGlass,
     .light = &surfaces.Lamp,
-    .vent = "lab_gas_vent",
     .bars = "titanium_bars",
     .door = &surfaces.LabDoor,
     .props = &surfaces.laboratory_props.items,
