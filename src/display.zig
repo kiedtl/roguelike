@@ -519,6 +519,23 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
     const mob_damage_output = math.max(1, mob.totalMeleeOutput() * you_armor / 100);
     _writerWrite(w, "Hits for max $r{}$. damage.\n", .{mob_damage_output});
     _writerWrite(w, "\n", .{});
+
+    // TODO: don't manually tabulate this?
+    _writerWrite(w, "$cstat       value$.\n", .{});
+    inline for (@typeInfo(Stat).Enum.fields) |statv| {
+        const stat = @intToEnum(Stat, statv.value);
+        const stat_val = utils.getFieldByEnum(Stat, mob.stats, stat);
+        if (stat == .Sneak) continue;
+        _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ stat.string(), stat_val });
+    }
+    inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
+        const resist = @intToEnum(Resistance, resistancev.value);
+        const resist_val = utils.getFieldByEnum(Resistance, mob.innate_resists, resist);
+        if (resist_val != 0) {
+            _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ resist.string(), resist_val });
+        }
+    }
+    _writerWrite(w, "\n", .{});
 }
 
 fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewidth: usize) void {
