@@ -406,7 +406,7 @@ fn _removeArtifacts(
             // addendum 2022-02-21: seems to not be an issue anymore
             // addendum 2022-02-25: it still is, nevermind
             //
-            if (y2 < 0) {
+            if (y2 < 0 or x2 < 0) {
                 continue;
             }
 
