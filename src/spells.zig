@@ -432,9 +432,21 @@ pub const CAST_PAIN = Spell{
 };
 
 fn willSucceedAgainstMob(caster: *const Mob, target: *const Mob) bool {
-    if (rng.onein(10)) return false;
+    if (rng.onein(10) or caster.stat(.Willpower) <= target.stat(.Willpower))
+        return false;
     return (rng.rangeClumping(isize, 1, 100, 2) * caster.stat(.Willpower)) >
-        (rng.rangeClumping(isize, 1, 100, 2) * target.stat(.Willpower));
+        (rng.rangeClumping(isize, 1, 180, 2) * target.stat(.Willpower));
+}
+
+pub fn appxChanceOfWillOverpowered(caster: *const Mob, target: *const Mob) usize {
+    var defeated: usize = 0;
+    var i: usize = 10_000;
+    while (i > 0) : (i -= 1) {
+        if (willSucceedAgainstMob(caster, target)) {
+            defeated += 1;
+        }
+    }
+    return defeated / 100;
 }
 
 pub const SpellOptions = struct {

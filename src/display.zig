@@ -9,6 +9,7 @@ const enums = std.enums;
 
 const colors = @import("colors.zig");
 const player = @import("player.zig");
+const spells = @import("spells.zig");
 const combat = @import("combat.zig");
 const err = @import("err.zig");
 const gas = @import("gas.zig");
@@ -199,6 +200,18 @@ fn _writerHLine(writer: io.FixedBufferStream([]u8).Writer, linewidth: usize) voi
         writer.writeAll("─") catch err.wat();
 }
 
+fn _writerMonsHostility(w: io.FixedBufferStream([]u8).Writer, mob: *Mob) void {
+    if (mob.isHostileTo(state.player)) {
+        if (mob.ai.is_combative) {
+            _writerWrite(w, "$rhostile$.\n", .{});
+        } else {
+            _writerWrite(w, "$gnon-combatant$.\n", .{});
+        }
+    } else {
+        _writerWrite(w, "$bneutral$.\n", .{});
+    }
+}
+
 fn _writerStats(
     w: io.FixedBufferStream([]u8).Writer,
     p_stats: ?enums.EnumFieldStruct(Stat, isize, 0),
@@ -273,51 +286,7 @@ fn _getTerrDescription(w: io.FixedBufferStream([]u8).Writer, terrain: *const sur
         _writerWrite(w, "\n", .{});
     }
 
-    // TODO: don't manually tabulate this?
-    _writerWrite(w, "$cstat       value$.\n", .{});
-    inline for (@typeInfo(Stat).Enum.fields) |statv| {
-        const stat = @intToEnum(Stat, statv.value);
-
-        const terrain_stat_val = utils.getFieldByEnum(Stat, terrain.stats, stat);
-        var base_stat_val = @intCast(isize, switch (stat) {
-            .Missile => combat.chanceOfMissileLanding(state.player),
-            .Melee => combat.chanceOfMeleeLanding(state.player, null),
-            .Evade => combat.chanceOfAttackEvaded(state.player, null),
-            else => state.player.stat(stat),
-        });
-        if (state.dungeon.terrainAt(state.player.coord) == terrain) {
-            base_stat_val -= terrain_stat_val;
-        }
-        const new_stat_val = base_stat_val + terrain_stat_val;
-
-        if (terrain_stat_val > 0) {
-            // TODO: use $r for negative '->' values, I tried to do this with
-            // Zig v9.1 but ran into a compiler bug where the `color` variable
-            // was replaced with random garbage.
-            _writerWrite(w, "{s: <8} $a{: >5}$. $b{: >5}$. $a{: >5}$.\n", .{
-                stat.string(), base_stat_val, terrain_stat_val, new_stat_val,
-            });
-        }
-    }
-    inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
-        const resist = @intToEnum(Resistance, resistancev.value);
-
-        const terrain_resist_val = utils.getFieldByEnum(Resistance, terrain.resists, resist);
-        var base_resist_val = @intCast(isize, state.player.resistance(resist));
-        if (state.dungeon.terrainAt(state.player.coord) == terrain) {
-            base_resist_val -= terrain_resist_val;
-        }
-        const new_resist_val = base_resist_val + terrain_resist_val;
-
-        if (terrain_resist_val != 0) {
-            // TODO: use $r for negative '->' values, I tried to do this with
-            // Zig v9.1 but ran into a compiler bug where the `color` variable
-            // was replaced with random garbage.
-            _writerWrite(w, "{s: <8} $a{: >5}$. $b{: >5}$. $a{: >5}$.\n", .{
-                resist.string(), base_resist_val, terrain_resist_val, new_resist_val,
-            });
-        }
-    }
+    _writerStats(w, terrain.stats, terrain.resists);
     _writerWrite(w, "\n", .{});
 
     if (terrain.effects.len > 0) {
@@ -398,6 +367,67 @@ fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceIte
     }
 }
 
+fn _getMonsSpellsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidth: usize) void {
+    _ = linewidth;
+
+    _writerWrite(w, "$c{s}$.\n", .{mob.displayName()});
+    _writerMonsHostility(w, mob);
+    _writerWrite(w, "\n", .{});
+
+    if (mob.spells.len == 0) {
+        _writerWrite(w, "$gThis monster has no spells, and is thus (relatively) safe to underestimate.$.\n", .{});
+    } else {
+        const chance = spells.appxChanceOfWillOverpowered(mob, state.player);
+        const colorset = [_]u21{ 'g', 'b', 'b', 'p', 'p', 'r', 'r', 'r', 'r', 'r' };
+        _writerWrite(w, "$cChance to overpower your will$.: ${u}{}%$.\n", .{
+            colorset[chance / 10], chance,
+        });
+        _writerWrite(w, "\n", .{});
+
+        for (mob.spells) |spellcfg| {
+            _writerWrite(w, "$c{s}$. ({} mp)\n", .{
+                spellcfg.spell.name, spellcfg.MP_cost,
+            });
+
+            if (spellcfg.spell.cast_type == .Smite) {
+                const target = @as([]const u8, switch (spellcfg.spell.smite_target_type) {
+                    .Self => "$bself$.",
+                    .UndeadAlly => "undead ally",
+                    .Mob => "you",
+                    .Corpse => "corpse",
+                });
+                _writerWrite(w, "· $ctarget$.: {s}\n", .{target});
+            } else if (spellcfg.spell.cast_type == .Bolt) {
+                const dodgeable = spellcfg.spell.bolt_dodgeable;
+                const color: u21 = if (dodgeable) 'b' else 'r';
+                const string = if (dodgeable) @as([]const u8, "yes") else "no";
+                _writerWrite(w, "· $cdodgeable$.: ${u}{s}\n", .{ color, string });
+            }
+
+            const targeting = @as([]const u8, switch (spellcfg.spell.cast_type) {
+                .Ray => @panic("TODO"),
+                .Smite => "smite-targeted",
+                .Bolt => "bolt",
+            });
+            _writerWrite(w, "· $ctype$.: {s}\n", .{targeting});
+
+            if (spellcfg.spell.checks_will) {
+                _writerWrite(w, "· $cwill-checked$.: $byes$.\n", .{});
+            } else {
+                _writerWrite(w, "· $cwill-checked$.: $rno$.\n", .{});
+            }
+
+            if (spellcfg.spell.effect_type == .Status) {
+                _writerWrite(w, "· $gTmp$. {s} ({})\n", .{
+                    spellcfg.spell.effect_type.Status.string(state.player), spellcfg.power,
+                });
+            }
+
+            _writerWrite(w, "\n", .{});
+        }
+    }
+}
+
 fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidth: usize) void {
     _ = linewidth;
 
@@ -408,16 +438,7 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
     }
 
     _writerWrite(w, "$c{s}$.\n", .{mob.displayName()});
-
-    if (mob.isHostileTo(state.player)) {
-        if (mob.ai.is_combative) {
-            _writerWrite(w, "$rhostile$.\n", .{});
-        } else {
-            _writerWrite(w, "$gnon-combatant$.\n", .{});
-        }
-    } else {
-        _writerWrite(w, "$bneutral$.\n", .{});
-    }
+    _writerMonsHostility(w, mob);
     _writerWrite(w, "\n", .{});
 
     const asterisk_col = if (mob.HP <= (mob.max_HP / 5)) @as(u21, 'r') else '.';
@@ -1258,6 +1279,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
 
     var coord: Coord = state.player.coord;
     var tile_focus = starting_focus orelse .Mob;
+    var tile_focus_mob_spells = false;
     var desc_scroll: usize = 0;
 
     while (true) {
@@ -1282,7 +1304,12 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
             _writerWrite(writer, "\n", .{});
 
             if (tile_focus == .Mob and has_mons) {
-                _getMonsDescription(writer, state.dungeon.at(coord).mob.?, linewidth);
+                const mob = state.dungeon.at(coord).mob.?;
+                if (tile_focus_mob_spells) {
+                    _getMonsSpellsDescription(writer, mob, linewidth);
+                } else {
+                    _getMonsDescription(writer, mob, linewidth);
+                }
             } else if (tile_focus == .Surface and has_surf) {
                 if (state.dungeon.at(coord).surface) |surf| {
                     _getSurfDescription(writer, surf, linewidth);
@@ -1291,6 +1318,15 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                 }
             } else if (tile_focus == .Item and has_item) {
                 _getItemDescription(writer, state.dungeon.itemsAt(coord).last().?, linewidth);
+            }
+
+            // Add keybinding descriptions
+            if (tile_focus == .Mob and has_mons) {
+                if (tile_focus_mob_spells) {
+                    _writerWrite(writer, "Press $bx$. to view mob.\n", .{});
+                } else {
+                    _writerWrite(writer, "Press $bx$. to view spells.\n", .{});
+                }
             }
 
             var y = infow.starty;
@@ -1324,17 +1360,19 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                 }
             }
 
-            if (tile_focus == .Surface and state.dungeon.at(coord).surface != null) {
-                const id = state.dungeon.at(coord).surface.?.id();
-                if (state.descriptions.get(id)) |surfdesc| {
-                    desc.appendSlice(surfdesc) catch err.wat();
-                    desc.appendSlice("\n\n") catch err.wat();
-                }
-            } else {
-                const id = state.dungeon.terrainAt(coord).id;
-                if (state.descriptions.get(id)) |terraindesc| {
-                    desc.appendSlice(terraindesc) catch err.wat();
-                    desc.appendSlice("\n\n") catch err.wat();
+            if (tile_focus == .Surface) {
+                if (state.dungeon.at(coord).surface != null) {
+                    const id = state.dungeon.at(coord).surface.?.id();
+                    if (state.descriptions.get(id)) |surfdesc| {
+                        desc.appendSlice(surfdesc) catch err.wat();
+                        desc.appendSlice("\n\n") catch err.wat();
+                    }
+                } else {
+                    const id = state.dungeon.terrainAt(coord).id;
+                    if (state.descriptions.get(id)) |terraindesc| {
+                        desc.appendSlice(terraindesc) catch err.wat();
+                        desc.appendSlice("\n\n") catch err.wat();
+                    }
                 }
             }
 
@@ -1413,15 +1451,26 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                     'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
                     'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
                     'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
-                    '>' => tile_focus = switch (tile_focus) {
-                        .Mob => .Surface,
-                        .Surface => .Item,
-                        .Item => .Mob,
+                    'x' => {
+                        if (tile_focus == .Mob and has_mons) {
+                            tile_focus_mob_spells = !tile_focus_mob_spells;
+                        }
                     },
-                    '<' => tile_focus = switch (tile_focus) {
-                        .Mob => .Item,
-                        .Surface => .Mob,
-                        .Item => .Surface,
+                    '>' => {
+                        tile_focus = switch (tile_focus) {
+                            .Mob => .Surface,
+                            .Surface => .Item,
+                            .Item => .Mob,
+                        };
+                        if (tile_focus == .Mob) tile_focus_mob_spells = false;
+                    },
+                    '<' => {
+                        tile_focus = switch (tile_focus) {
+                            .Mob => .Item,
+                            .Surface => .Mob,
+                            .Item => .Surface,
+                        };
+                        if (tile_focus == .Mob) tile_focus_mob_spells = false;
                     },
                     else => {},
                 }
