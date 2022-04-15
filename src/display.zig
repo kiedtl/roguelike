@@ -552,7 +552,7 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
         .Prop => "prop",
         .Evocable => "evocable",
     };
-    _writerWrite(w, "{s}", .{itemtype});
+    _writerWrite(w, "{s}\n", .{itemtype});
 
     _writerWrite(w, "\n", .{});
 
@@ -575,6 +575,13 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
                     _writerWrite(w, "{s}", .{_formatStatusInfo(&sinfo)});
                 },
             }
+
+            _writerWrite(w, "$cdip effect:$.\n", .{});
+            if (p.dip_effect) |effect| {
+                _writerWrite(w, "{s}", .{_formatStatusInfo(&effect)});
+            } else {
+                _writerWrite(w, "$gCannot dip.$.\n", .{});
+            }
         },
         .Cloak => |c| _writerStats(w, c.stats, c.resists),
         .Armor => |a| _writerStats(w, a.stats, a.resists),
@@ -593,9 +600,9 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
             _writerWrite(w, "\n", .{});
 
             if (p.is_dippable) {
-                _writerWrite(w, "$rnot dippable$.\n", .{});
+                _writerWrite(w, "$aCan be dipped.$.\n", .{});
             } else {
-                _writerWrite(w, "$adippable$.\n", .{});
+                _writerWrite(w, "$rCan't be dipped.$.\n", .{});
             }
             if (p.dip_effect) |potion| {
                 assert(p.dip_counter > 0);
@@ -606,13 +613,19 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
 
             _writerStats(w, p.stats, null);
 
-            _writerWrite(w, "$cequip effects:$.\n", .{});
-            for (p.equip_effects) |effect| _writerWrite(w, "{s}", .{_formatStatusInfo(&effect)});
-            _writerWrite(w, "\n", .{});
+            if (p.equip_effects.len > 0) {
+                _writerWrite(w, "$cequip effects:$.\n", .{});
+                for (p.equip_effects) |effect|
+                    _writerWrite(w, "{s}", .{_formatStatusInfo(&effect)});
+                _writerWrite(w, "\n", .{});
+            }
 
-            _writerWrite(w, "$cattack effects:$.\n", .{});
-            for (p.effects) |effect| _writerWrite(w, "{s}", .{_formatStatusInfo(&effect)});
-            _writerWrite(w, "\n", .{});
+            if (p.effects.len > 0) {
+                _writerWrite(w, "$cattack effects:$.\n", .{});
+                for (p.effects) |effect|
+                    _writerWrite(w, "{s}", .{_formatStatusInfo(&effect)});
+                _writerWrite(w, "\n", .{});
+            }
         },
         .Evocable => _writerWrite(w, "TODO", .{}),
         .Boulder, .Prop, .Vial => _writerWrite(w, "$G(This item is useless.)$.", .{}),
