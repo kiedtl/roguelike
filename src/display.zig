@@ -766,6 +766,7 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
     }) {
         if (skipped < opts.skip_lines) {
             skipped += 1;
+            y -= 1; // Stay on the same line
             continue;
         }
 
@@ -1446,10 +1447,12 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                 .skip_lines = desc_scroll,
                 .endy = log_endy,
             });
+
             if (desc_scroll > 0) {
-                _ = _drawStr(log_endx - 11, log_startx - 1, log_endx, " $p-- PgUp --$.", .{}, .{});
-            } else if (lasty == log_endy) {
-                _ = _drawStr(log_endx - 11, log_endy - 1, log_endx, " $p-- PgDn --$.", .{}, .{});
+                _ = _drawStr(log_endx - 14, log_starty, log_endx, " $p-- PgUp --$.", .{}, .{});
+            }
+            if (lasty == log_endy) {
+                _ = _drawStr(log_endx - 14, log_endy - 1, log_endx, " $p-- PgDn --$.", .{}, .{});
             }
         }
 
@@ -1693,10 +1696,12 @@ pub fn drawInventoryScreen() bool {
                     .skip_lines = desc_scroll,
                     .endy = log_endy,
                 });
+
                 if (desc_scroll > 0) {
-                    _ = _drawStr(log_endx - 11, log_startx - 1, log_endx, " $p-- PgUp --$.", .{}, .{});
-                } else if (ending_y == log_endy) {
-                    _ = _drawStr(log_endx - 11, log_endy - 1, log_endx, " $p-- PgDn --$.", .{}, .{});
+                    _ = _drawStr(log_endx - 14, log_starty, log_endx, " $p-- PgUp --$.", .{}, .{});
+                }
+                if (ending_y == log_endy) {
+                    _ = _drawStr(log_endx - 14, log_endy - 1, log_endx, " $p-- PgDn --$.", .{}, .{});
                 }
             } else {
                 _ = _drawStr(log_startx, log_starty, log_endx, "Your inventory is empty.", .{}, .{});
