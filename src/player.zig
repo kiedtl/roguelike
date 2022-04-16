@@ -528,3 +528,37 @@ pub fn dropItem(index: usize) bool {
         return false;
     }
 }
+
+pub fn breakSomething(coord: Coord) bool {
+    // TODO: change these to asserts, this conditions should never trigger
+    if (coord.distance(state.player.coord) > 1) {
+        display.drawAlertThenLog("Your arms aren't that long!", .{});
+        return false;
+    } else if (state.dungeon.at(coord).surface == null) {
+        display.drawAlertThenLog("There's nothing there to break!", .{});
+        return false;
+    } else if (state.dungeon.at(coord).surface.? != .Machine) {
+        display.drawAlertThenLog("Smashing that would be a waste of time.", .{});
+        return false;
+    } else if (state.dungeon.at(coord).broken) {
+        display.drawAlertThenLog("Some rogue already smashed that.", .{});
+        return false;
+    }
+
+    const machine = state.dungeon.at(coord).surface.?.Machine;
+    machine.malfunctioning = true;
+    state.dungeon.at(coord).broken = true;
+
+    state.player.makeNoise(.Crash, .Loud);
+    state.player.declareAction(.Use);
+
+    switch (rng.range(usize, 0, 3)) {
+        0 => state.message(.Info, "You viciously smash the {s}.", .{machine.name}),
+        1 => state.message(.Info, "You noisily break the {s}.", .{machine.name}),
+        2 => state.message(.Info, "You pound the {s} into fine dust!", .{machine.name}),
+        3 => state.message(.Info, "You destroy the {s} savagely.", .{machine.name}),
+        else => err.wat(),
+    }
+
+    return true;
+}

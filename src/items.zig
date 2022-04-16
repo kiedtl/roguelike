@@ -90,7 +90,6 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     // Evocables
     .{ .w = 020, .i = .{ .E = IronSpikeEvoc } },
     .{ .w = 015, .i = .{ .E = EldritchLanternEvoc } },
-    .{ .w = 015, .i = .{ .E = HammerEvoc } },
     .{ .w = 005, .i = .{ .E = MineKitEvoc } },
     // Cloaks
     .{ .w = 020, .i = .{ .C = &SilCloak } },
@@ -206,48 +205,6 @@ pub const Evocable = struct {
         }
     }
 };
-
-pub const HammerEvoc = Evocable{
-    .id = "hammer",
-    .name = "hammer",
-    .tile_fg = 0xffffff,
-    .max_charges = 0,
-    .rechargable = false,
-    .purpose = .Other,
-    .trigger_fn = _triggerHammerEvoc,
-};
-fn _triggerHammerEvoc(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
-    assert(mob == state.player);
-
-    const dest = display.chooseCell(.{}) orelse return error.BadPosition;
-    if (dest.distance(mob.coord) > 1) {
-        display.drawAlertThenLog("Your arms aren't that long!", .{});
-        return error.BadPosition;
-    } else if (state.dungeon.at(dest).surface == null) {
-        display.drawAlertThenLog("There's nothing there to break!", .{});
-        return error.BadPosition;
-    } else if (meta.activeTag(state.dungeon.at(dest).surface.?) != .Machine) {
-        display.drawAlertThenLog("Smashing that would be a waste of time.", .{});
-        return error.BadPosition;
-    } else if (state.dungeon.at(dest).broken) {
-        display.drawAlertThenLog("Some rogue already smashed that.", .{});
-        return error.BadPosition;
-    }
-
-    const machine = state.dungeon.at(dest).surface.?.Machine;
-    machine.malfunctioning = true;
-    state.dungeon.at(dest).broken = true;
-
-    mob.makeNoise(.Crash, .Medium);
-
-    switch (rng.range(usize, 0, 3)) {
-        0 => state.message(.Info, "You viciously smash the {s}.", .{machine.name}),
-        1 => state.message(.Info, "You noisily break the {s}.", .{machine.name}),
-        2 => state.message(.Info, "You pound the {s} into fine dust!", .{machine.name}),
-        3 => state.message(.Info, "You smash the {s} savagely.", .{machine.name}),
-        else => err.wat(),
-    }
-}
 
 pub const IronSpikeEvoc = Evocable{
     .id = "iron_spike",

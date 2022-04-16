@@ -1301,6 +1301,10 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
     var mob_tile_focus: MobTileFocus = .Main;
     var desc_scroll: usize = 0;
 
+    var kbd_s = false;
+    var kbd_a = false;
+    var kbd_B = false;
+
     while (true) {
         const has_item = state.dungeon.itemsAt(coord).len > 0;
         const has_mons = state.dungeon.at(coord).mob != null;
@@ -1341,10 +1345,28 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
 
             // Add keybinding descriptions
             if (tile_focus == .Mob and has_mons) {
-                switch (mob_tile_focus) {
-                    .Main => _writerWrite(writer, "Press $bs$. to view stats/spells.\n", .{}),
-                    .Stats => _writerWrite(writer, "Press $bs$. to view spells.\n", .{}),
-                    .Spells => _writerWrite(writer, "Press $bs$. to view mob.\n", .{}),
+                const mob = state.dungeon.at(coord).mob.?;
+                if (mob != state.player) {
+                    kbd_s = true;
+                    switch (mob_tile_focus) {
+                        .Main => _writerWrite(writer, "Press $bs$. to see stats.\n", .{}),
+                        .Stats => _writerWrite(writer, "Press $bs$. to see spells.\n", .{}),
+                        .Spells => _writerWrite(writer, "Press $bs$. to see mob.\n", .{}),
+                    }
+                }
+
+                if (mob != state.player and state.player.canMelee(mob)) {
+                    kbd_a = true;
+                    _writerWrite(writer, "Press $ba$. to attack.\n", .{});
+                }
+            } else if (tile_focus == .Surface and has_surf) {
+                if (coord.distance(state.player.coord) <= 1 and
+                    state.dungeon.at(coord).surface != null and
+                    state.dungeon.at(coord).surface.? == .Machine and
+                    !state.dungeon.at(coord).broken)
+                {
+                    kbd_B = true;
+                    _writerWrite(writer, "Press $bB$. to break this.\n", .{});
                 }
             }
 
@@ -1470,14 +1492,19 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                     'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
                     'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
                     'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
-                    's' => {
-                        if (tile_focus == .Mob and has_mons) {
-                            mob_tile_focus = switch (mob_tile_focus) {
-                                .Main => .Stats,
-                                .Stats => .Spells,
-                                .Spells => .Main,
-                            };
-                        }
+                    'B' => if (kbd_B) {
+                        return player.breakSomething(coord);
+                    },
+                    'a' => if (kbd_a) {
+                        state.player.fight(state.dungeon.at(coord).mob.?, .{});
+                        return true;
+                    },
+                    's' => if (kbd_s) {
+                        mob_tile_focus = switch (mob_tile_focus) {
+                            .Main => .Stats,
+                            .Stats => .Spells,
+                            .Spells => .Main,
+                        };
                     },
                     '>' => {
                         tile_focus = switch (tile_focus) {
