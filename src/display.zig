@@ -212,6 +212,28 @@ fn _writerMonsHostility(w: io.FixedBufferStream([]u8).Writer, mob: *Mob) void {
     }
 }
 
+fn _writerMobStats(
+    w: io.FixedBufferStream([]u8).Writer,
+    mob: *Mob,
+) void {
+    // TODO: don't manually tabulate this?
+    _writerWrite(w, "$cstat       value$.\n", .{});
+    inline for (@typeInfo(Stat).Enum.fields) |statv| {
+        const stat = @intToEnum(Stat, statv.value);
+        const stat_val = mob.stat(stat);
+        if (stat == .Sneak) continue;
+        _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ stat.string(), stat_val });
+    }
+    inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
+        const resist = @intToEnum(Resistance, resistancev.value);
+        const resist_val = mob.resistance(resist);
+        if (resist_val != 0) {
+            _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ resist.string(), resist_val });
+        }
+    }
+    _writerWrite(w, "\n", .{});
+}
+
 fn _writerStats(
     w: io.FixedBufferStream([]u8).Writer,
     p_stats: ?enums.EnumFieldStruct(Stat, isize, 0),
@@ -374,22 +396,7 @@ fn _getMonsStatsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, lin
     _writerMonsHostility(w, mob);
     _writerWrite(w, "\n", .{});
 
-    // TODO: don't manually tabulate this?
-    _writerWrite(w, "$cstat       value$.\n", .{});
-    inline for (@typeInfo(Stat).Enum.fields) |statv| {
-        const stat = @intToEnum(Stat, statv.value);
-        const stat_val = utils.getFieldByEnum(Stat, mob.stats, stat);
-        if (stat == .Sneak) continue;
-        _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ stat.string(), stat_val });
-    }
-    inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
-        const resist = @intToEnum(Resistance, resistancev.value);
-        const resist_val = utils.getFieldByEnum(Resistance, mob.innate_resists, resist);
-        if (resist_val != 0) {
-            _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ resist.string(), resist_val });
-        }
-    }
-    _writerWrite(w, "\n", .{});
+    _writerMobStats(w, mob);
 }
 
 fn _getMonsSpellsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidth: usize) void {
@@ -459,7 +466,8 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
 
     if (mob == state.player) {
         _writerWrite(w, "$cYou.$.\n", .{});
-        _writerWrite(w, "Press $b@$. or $bc$. for more info.\n", .{});
+        _writerWrite(w, "\n", .{});
+        _writerMobStats(w, state.player);
         return;
     }
 

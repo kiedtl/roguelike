@@ -370,6 +370,7 @@ fn readInput() bool {
                 'a' => player.activateSurfaceItem(),
                 'i' => display.drawInventoryScreen(),
                 'x' => display.drawExamineScreen(null),
+                '@', 'c' => display.drawExamineScreen(.Mob),
                 ',' => player.grabItem(),
                 '.' => state.player.rest(),
                 'h' => player.moveOrFight(.West),
