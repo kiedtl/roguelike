@@ -367,6 +367,31 @@ fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceIte
     }
 }
 
+fn _getMonsStatsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidth: usize) void {
+    _ = linewidth;
+
+    _writerWrite(w, "$c{s}$.\n", .{mob.displayName()});
+    _writerMonsHostility(w, mob);
+    _writerWrite(w, "\n", .{});
+
+    // TODO: don't manually tabulate this?
+    _writerWrite(w, "$cstat       value$.\n", .{});
+    inline for (@typeInfo(Stat).Enum.fields) |statv| {
+        const stat = @intToEnum(Stat, statv.value);
+        const stat_val = utils.getFieldByEnum(Stat, mob.stats, stat);
+        if (stat == .Sneak) continue;
+        _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ stat.string(), stat_val });
+    }
+    inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
+        const resist = @intToEnum(Resistance, resistancev.value);
+        const resist_val = utils.getFieldByEnum(Resistance, mob.innate_resists, resist);
+        if (resist_val != 0) {
+            _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ resist.string(), resist_val });
+        }
+    }
+    _writerWrite(w, "\n", .{});
+}
+
 fn _getMonsSpellsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidth: usize) void {
     _ = linewidth;
 
@@ -376,6 +401,7 @@ fn _getMonsSpellsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, li
 
     if (mob.spells.len == 0) {
         _writerWrite(w, "$gThis monster has no spells, and is thus (relatively) safe to underestimate.$.\n", .{});
+        _writerWrite(w, "\n", .{});
     } else {
         const chance = spells.appxChanceOfWillOverpowered(mob, state.player);
         const colorset = [_]u21{ 'g', 'b', 'b', 'p', 'p', 'r', 'r', 'r', 'r', 'r' };
@@ -541,20 +567,11 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
     _writerWrite(w, "Hits for max $r{}$. damage.\n", .{mob_damage_output});
     _writerWrite(w, "\n", .{});
 
-    // TODO: don't manually tabulate this?
-    _writerWrite(w, "$cstat       value$.\n", .{});
-    inline for (@typeInfo(Stat).Enum.fields) |statv| {
-        const stat = @intToEnum(Stat, statv.value);
-        const stat_val = utils.getFieldByEnum(Stat, mob.stats, stat);
-        if (stat == .Sneak) continue;
-        _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ stat.string(), stat_val });
-    }
-    inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
-        const resist = @intToEnum(Resistance, resistancev.value);
-        const resist_val = utils.getFieldByEnum(Resistance, mob.innate_resists, resist);
-        if (resist_val != 0) {
-            _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ resist.string(), resist_val });
-        }
+    var statuses = mob.statuses.iterator();
+    while (statuses.next()) |entry| {
+        if (mob.isUnderStatus(entry.key) == null)
+            continue;
+        _writerWrite(w, "{s}", .{_formatStatusInfo(entry.value)});
     }
     _writerWrite(w, "\n", .{});
 }
@@ -1277,9 +1294,11 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
 
     const moblist = state.createMobList(false, true, state.player.coord.z, fba.allocator());
 
+    const MobTileFocus = enum { Main, Stats, Spells };
+
     var coord: Coord = state.player.coord;
     var tile_focus = starting_focus orelse .Mob;
-    var tile_focus_mob_spells = false;
+    var mob_tile_focus: MobTileFocus = .Main;
     var desc_scroll: usize = 0;
 
     while (true) {
@@ -1305,10 +1324,10 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
 
             if (tile_focus == .Mob and has_mons) {
                 const mob = state.dungeon.at(coord).mob.?;
-                if (tile_focus_mob_spells) {
-                    _getMonsSpellsDescription(writer, mob, linewidth);
-                } else {
-                    _getMonsDescription(writer, mob, linewidth);
+                switch (mob_tile_focus) {
+                    .Main => _getMonsDescription(writer, mob, linewidth),
+                    .Spells => _getMonsSpellsDescription(writer, mob, linewidth),
+                    .Stats => _getMonsStatsDescription(writer, mob, linewidth),
                 }
             } else if (tile_focus == .Surface and has_surf) {
                 if (state.dungeon.at(coord).surface) |surf| {
@@ -1322,10 +1341,10 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
 
             // Add keybinding descriptions
             if (tile_focus == .Mob and has_mons) {
-                if (tile_focus_mob_spells) {
-                    _writerWrite(writer, "Press $bx$. to view mob.\n", .{});
-                } else {
-                    _writerWrite(writer, "Press $bx$. to view spells.\n", .{});
+                switch (mob_tile_focus) {
+                    .Main => _writerWrite(writer, "Press $bs$. to view stats/spells.\n", .{}),
+                    .Stats => _writerWrite(writer, "Press $bs$. to view spells.\n", .{}),
+                    .Spells => _writerWrite(writer, "Press $bs$. to view mob.\n", .{}),
                 }
             }
 
@@ -1451,9 +1470,13 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                     'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
                     'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
                     'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
-                    'x' => {
+                    's' => {
                         if (tile_focus == .Mob and has_mons) {
-                            tile_focus_mob_spells = !tile_focus_mob_spells;
+                            mob_tile_focus = switch (mob_tile_focus) {
+                                .Main => .Stats,
+                                .Stats => .Spells,
+                                .Spells => .Main,
+                            };
                         }
                     },
                     '>' => {
@@ -1462,7 +1485,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                             .Surface => .Item,
                             .Item => .Mob,
                         };
-                        if (tile_focus == .Mob) tile_focus_mob_spells = false;
+                        if (tile_focus == .Mob) mob_tile_focus = .Main;
                     },
                     '<' => {
                         tile_focus = switch (tile_focus) {
@@ -1470,7 +1493,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                             .Surface => .Mob,
                             .Item => .Surface,
                         };
-                        if (tile_focus == .Mob) tile_focus_mob_spells = false;
+                        if (tile_focus == .Mob) mob_tile_focus = .Main;
                     },
                     else => {},
                 }
