@@ -298,3 +298,11 @@ being a wall in a little bit.
 A sphere of pure electricity, encased in a shell of burning sulfur. It will seek
 out nearby conductive creatures, hostile or not, before exploding in a blast of
 fire and lightning.
+
+% sp_hasten_undead
+
+Hasten a nearby undead ally, making them twice as fast.
+
+% sp_heal_undead
+
+Use a nearby corpse to heal a nearby undead ally by a significant amount.
