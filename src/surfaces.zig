@@ -456,7 +456,7 @@ pub const Brazier = Machine{
 
     .flammability = 8,
     .malfunction_effect = Machine.MalfunctionEffect{
-        .Electrocute = .{ .chance = 40, .damage = 2, .radius = 5 },
+        .Electrocute = .{ .chance = 40, .damage = 2, .radius = 3 },
     },
 
     .on_power = powerNone,
@@ -1181,15 +1181,19 @@ pub fn tickMachines(level: usize) void {
             } else if (state.dungeon.at(machine.coord).broken and machine.malfunctioning) {
                 if (machine.malfunction_effect) |effect| switch (effect) {
                     .Electrocute => |e| {
-                        if (rng.tenin(e.chance)) {
-                            var zy: usize = coord.y -| e.radius;
-                            find_mob: while (zy < math.min(zy + e.radius, HEIGHT)) : (zy += 1) {
-                                var zx: usize = coord.x -| e.radius;
-                                while (zx < math.min(zx + e.radius, WIDTH)) : (zx += 1) {
-                                    const zcoord = Coord.new2(level, zx, zy);
-                                    if (state.dungeon.at(zcoord).mob == null) continue;
-                                    if (!utils.hasClearLOF(coord, zcoord)) continue;
+                        var zy: usize = coord.y -| e.radius;
+                        find_mob: while (zy < math.min(zy + e.radius, HEIGHT)) : (zy += 1) {
+                            var zx: usize = coord.x -| e.radius;
+                            while (zx < math.min(zx + e.radius, WIDTH)) : (zx += 1) {
+                                const zcoord = Coord.new2(level, zx, zy);
+                                if (state.dungeon.at(zcoord).mob == null or
+                                    !utils.hasClearLOF(coord, zcoord) or
+                                    state.dungeon.at(zcoord).mob.?.resistance(.rElec) == 0)
+                                {
+                                    continue;
+                                }
 
+                                if (rng.tenin(e.chance)) {
                                     spells.BOLT_LIGHTNING.use(null, coord, zcoord, .{
                                         .spell = &spells.BOLT_LIGHTNING,
                                         .caster_name = machine.name,
