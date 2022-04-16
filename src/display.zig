@@ -1390,14 +1390,26 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
             const log_starty = logw.starty;
             const log_endy = logw.endy;
 
-            var desc = std.ArrayList(u8).init(state.GPA.allocator());
-            defer desc.deinit();
+            var descbuf: [4096]u8 = undefined;
+            var descbuf_stream = io.fixedBufferStream(&descbuf);
+            var writer = descbuf_stream.writer();
 
             if (tile_focus == .Mob and state.dungeon.at(coord).mob != null) {
-                const id = state.dungeon.at(coord).mob.?.id;
-                if (state.descriptions.get(id)) |mobdesc| {
-                    desc.appendSlice(mobdesc) catch err.wat();
-                    desc.appendSlice("\n\n") catch err.wat();
+                const mob = state.dungeon.at(coord).mob.?;
+                if (mob_tile_focus == .Spells) {
+                    for (mob.spells) |spell| {
+                        if (state.descriptions.get(spell.spell.id)) |spelldesc| {
+                            _writerWrite(writer, "$c{s}$.: {s}", .{
+                                spell.spell.name, spelldesc,
+                            });
+                            _writerWrite(writer, "\n\n", .{});
+                        }
+                    }
+                } else {
+                    if (state.descriptions.get(mob.id)) |mobdesc| {
+                        _writerWrite(writer, "{s}", .{mobdesc});
+                        _writerWrite(writer, "\n\n", .{});
+                    }
                 }
             }
 
@@ -1405,14 +1417,14 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                 if (state.dungeon.at(coord).surface != null) {
                     const id = state.dungeon.at(coord).surface.?.id();
                     if (state.descriptions.get(id)) |surfdesc| {
-                        desc.appendSlice(surfdesc) catch err.wat();
-                        desc.appendSlice("\n\n") catch err.wat();
+                        _writerWrite(writer, "{s}", .{surfdesc});
+                        _writerWrite(writer, "\n\n", .{});
                     }
                 } else {
                     const id = state.dungeon.terrainAt(coord).id;
                     if (state.descriptions.get(id)) |terraindesc| {
-                        desc.appendSlice(terraindesc) catch err.wat();
-                        desc.appendSlice("\n\n") catch err.wat();
+                        _writerWrite(writer, "{s}", .{terraindesc});
+                        _writerWrite(writer, "\n\n", .{});
                     }
                 }
             }
@@ -1420,15 +1432,17 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
             if (tile_focus == .Item and state.dungeon.itemsAt(coord).len > 0) {
                 if (state.dungeon.itemsAt(coord).data[0].id()) |id|
                     if (state.descriptions.get(id)) |itemdesc| {
-                        desc.appendSlice(itemdesc) catch err.wat();
-                        desc.appendSlice("\n\n") catch err.wat();
+                        _writerWrite(writer, "{s}", .{itemdesc});
+                        _writerWrite(writer, "\n\n", .{});
                     };
             }
 
             var y = log_starty;
             while (y < log_endy) : (y += 1) _clear_line(log_startx, log_endx, y);
 
-            const lasty = _drawStr(log_startx, log_starty, log_endx, "{s}", .{desc.items}, .{
+            const lasty = _drawStr(log_startx, log_starty, log_endx, "{s}", .{
+                descbuf_stream.getWritten(),
+            }, .{
                 .skip_lines = desc_scroll,
                 .endy = log_endy,
             });

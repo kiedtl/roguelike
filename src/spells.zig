@@ -41,6 +41,7 @@ const WIDTH = state.WIDTH;
 // -----------------------------------------------------------------------------
 
 pub const CAST_MASS_DISMISSAL = Spell{
+    .id = "sp_mass_dismissal",
     .name = "mass dismissal",
     .cast_type = .Smite,
     .smite_target_type = .Self,
@@ -75,6 +76,7 @@ fn _effectMassDismissal(caster: Coord, _: Spell, opts: SpellOptions, _: Coord) v
 }
 
 pub const CAST_SUMMON_ENEMY = Spell{
+    .id = "sp_summon_enemy",
     .name = "summon enemy",
     .cast_type = .Smite,
     .smite_target_type = .Mob,
@@ -119,6 +121,7 @@ fn _effectSummonEnemy(caster: Coord, _: Spell, _: SpellOptions, coord: Coord) vo
 }
 
 pub const CAST_AURA_DISPERSAL = Spell{
+    .id = "sp_dismissal_aura",
     .name = "aura of dismissal",
     .cast_type = .Smite,
     .smite_target_type = .Self,
@@ -175,6 +178,7 @@ fn _effectAuraDispersal(caster: Coord, _: Spell, _: SpellOptions, _: Coord) void
 }
 
 pub const CAST_CONJ_BALL_LIGHTNING = Spell{
+    .id = "sp_conj_bl",
     .name = "conjure ball lightning",
     .cast_type = .Smite,
     .smite_target_type = .Self,
@@ -193,6 +197,7 @@ fn _effectConjureBL(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
 }
 
 pub const BOLT_CRYSTAL = Spell{
+    .id = "sp_crystal_shard",
     .name = "crystal shard",
     .cast_type = .Bolt,
     .bolt_dodgeable = true,
@@ -211,6 +216,7 @@ fn _effectBoltCrystal(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void
 }
 
 pub const BOLT_LIGHTNING = Spell{
+    .id = "sp_elec_bolt",
     .name = "bolt of electricity",
     .cast_type = .Bolt,
     .noise = .Medium,
@@ -230,6 +236,7 @@ fn _effectBoltLightning(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) vo
 }
 
 pub const BOLT_FIRE = Spell{
+    .id = "sp_fire_bolt",
     .name = "bolt of fire",
     .cast_type = .Bolt,
     .noise = .Medium,
@@ -250,6 +257,7 @@ fn _effectBoltFire(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
 }
 
 pub const CAST_HASTE_UNDEAD = Spell{
+    .id = "sp_hasten_undead",
     .name = "hasten undead",
     .cast_type = .Smite,
     .smite_target_type = .UndeadAlly,
@@ -258,6 +266,7 @@ pub const CAST_HASTE_UNDEAD = Spell{
 };
 
 pub const CAST_HEAL_UNDEAD = Spell{
+    .id = "sp_heal_undead",
     .name = "heal undead",
     .cast_type = .Smite,
     .smite_target_type = .UndeadAlly,
@@ -284,6 +293,7 @@ fn _effectHealUndead(caster: Coord, _: Spell, _: SpellOptions, coord: Coord) voi
 }
 
 pub const CAST_HASTEN_ROT = Spell{
+    .id = "sp_hasten_rot",
     .name = "hasten rot",
     .cast_type = .Smite,
     .smite_target_type = .Corpse,
@@ -303,6 +313,7 @@ fn _effectHastenRot(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
 }
 
 pub const CAST_RESURRECT_FIRE = Spell{
+    .id = "sp_burnt_offering",
     .name = "burnt offering",
     .cast_type = .Smite,
     .smite_target_type = .Corpse,
@@ -326,6 +337,7 @@ fn _resurrectFire(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
 }
 
 pub const CAST_RESURRECT_FROZEN = Spell{
+    .id = "sp_raise_frozen",
     .name = "frozen resurrection",
     .cast_type = .Smite,
     .smite_target_type = .Corpse,
@@ -354,6 +366,7 @@ fn _resurrectFrozen(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
 }
 
 pub const CAST_POLAR_LAYER = Spell{
+    .id = "sp_polar_casing",
     .name = "polar casing",
     .cast_type = .Smite,
     .smite_target_type = .Mob,
@@ -383,6 +396,7 @@ fn _effectPolarLayer(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void 
 }
 
 pub const CAST_RESURRECT_NORMAL = Spell{
+    .id = "sp_raise",
     .name = "resurrection",
     .cast_type = .Smite,
     .smite_target_type = .Corpse,
@@ -401,30 +415,35 @@ fn _resurrectNormal(_: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
 }
 
 pub const CAST_FREEZE = Spell{
+    .id = "sp_freeze",
     .name = "freeze",
     .cast_type = .Smite,
     .effect_type = .{ .Status = .Paralysis },
     .checks_will = true,
 };
 pub const CAST_FAMOUS = Spell{
+    .id = "sp_famous",
     .name = "famous",
     .cast_type = .Smite,
     .effect_type = .{ .Status = .Corona },
     .checks_will = true,
 };
 pub const CAST_FERMENT = Spell{
+    .id = "sp_ferment",
     .name = "ferment",
     .cast_type = .Smite,
     .effect_type = .{ .Status = .Confusion },
     .checks_will = true,
 };
 pub const CAST_FEAR = Spell{
+    .id = "sp_fear",
     .name = "fear",
     .cast_type = .Smite,
     .effect_type = .{ .Status = .Fear },
     .checks_will = true,
 };
 pub const CAST_PAIN = Spell{
+    .id = "sp_pain",
     .name = "pain",
     .cast_type = .Smite,
     .effect_type = .{ .Status = .Pain },
@@ -458,6 +477,7 @@ pub const SpellOptions = struct {
 };
 
 pub const Spell = struct {
+    id: []const u8,
     name: []const u8,
 
     cast_type: union(enum) {
