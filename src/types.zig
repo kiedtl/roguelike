@@ -1165,7 +1165,7 @@ pub const AI = struct {
     // What should a mage-fighter do when it didn't/couldn't cast a spell?
     //
     // Obviously, only makes sense on mages.
-    spellcaster_backup_action: enum { KeepDistance, Melee } = .Melee,
+    spellcaster_backup_action: union(enum) { KeepDistance, Melee } = .Melee,
 
     flee_effect: ?StatusDataInfo = .{
         .status = .Fast,

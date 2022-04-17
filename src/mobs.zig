@@ -641,6 +641,36 @@ pub const AncientMageTemplate = MobTemplate{
     .armor = &items.HauberkArmor,
 };
 
+pub const SpectreMageTemplate = MobTemplate{
+    .mob = .{
+        .id = "spectre_mage",
+        .species = &HumanSpecies,
+        .tile = 'Ƨ',
+        .ai = AI{
+            .profession_name = "spectre mage",
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.mageFight,
+            .is_combative = true,
+            .is_curious = true,
+            .is_fearless = false,
+            .spellcaster_backup_action = .KeepDistance,
+        },
+        .allegiance = .Necromancer,
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 15, .spell = &spells.CAST_CONJ_SPECTRAL_SWORD },
+        },
+        .max_MP = 15,
+
+        .max_HP = 10,
+        .memory_duration = 6,
+        .blood = .Blood,
+        .stats = .{ .Willpower = 6, .Speed = 100, .Vision = 7 },
+    },
+    .armor = &items.LeatherArmor,
+};
+
 pub const DeathMageTemplate = MobTemplate{
     .mob = .{
         .id = "death_mage",
@@ -1031,6 +1061,47 @@ pub const BallLightningTemplate = MobTemplate{
     },
 };
 
+pub const SpectralSwordTemplate = MobTemplate{
+    .mob = .{
+        .id = "spec_sword",
+        .species = &Species{
+            .name = "spectral sword",
+            .default_attack = &Weapon{
+                .damage = 1,
+                .strs = &[_]DamageStr{items._dmgstr(001, "nick", "nicks", "")},
+            },
+        },
+        .tile = 'ƨ',
+        .ai = AI{
+            .profession_name = null,
+            .profession_description = "[this is a bug]",
+            .work_fn = ai.suicideWork,
+            .fight_fn = ai.meleeFight,
+            .is_combative = true,
+            .is_curious = false,
+            .is_fearless = true,
+        },
+        .allegiance = .Necromancer,
+
+        .deaf = true,
+        .deg360_vision = true,
+        .no_show_fov = true,
+        .max_HP = 1,
+        .memory_duration = 5,
+
+        .life_type = .Construct,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = 100, .rFume = 100 },
+        .stats = .{ .Willpower = 1000, .Melee = 50, .Evade = 0, .Speed = 60, .Vision = 15 },
+    },
+    .statuses = &[_]StatusDataInfo{
+        .{ .status = .Corona, .power = 10, .duration = .Prm },
+        .{ .status = .NightVision, .duration = .Prm },
+    },
+};
+
 pub const MOBS = [_]MobTemplate{
     ExecutionerTemplate,
     WatcherTemplate,
@@ -1051,6 +1122,7 @@ pub const MOBS = [_]MobTemplate{
     EngineerTemplate,
     HaulerTemplate,
     AncientMageTemplate,
+    SpectreMageTemplate,
     DeathMageTemplate,
     SkeletalAxemasterTemplate,
     TorturerNecromancerTemplate,
@@ -1101,6 +1173,8 @@ pub fn placeMob(
     coord: Coord,
     opts: PlaceMobOptions,
 ) *Mob {
+    assert(state.dungeon.at(coord).mob == null);
+
     var mob = template.mob;
     mob.init(alloc);
     mob.coord = coord;

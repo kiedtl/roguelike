@@ -451,6 +451,11 @@ pub fn guardWork(mob: *Mob, _: mem.Allocator) void {
     }
 }
 
+pub fn suicideWork(mob: *Mob, _: mem.Allocator) void {
+    _ = mob.rest();
+    mob.HP = 0;
+}
+
 pub fn standStillAndGuardWork(mob: *Mob, _: mem.Allocator) void {
     var post = mob.ai.work_area.items[0];
 

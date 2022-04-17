@@ -207,7 +207,6 @@ fn readDescriptions(alloc: mem.Allocator) void {
     }) catch err.wat();
 
     const filesize = data_file.getEndPos() catch err.wat();
-    std.log.info("filesize={}", .{filesize});
     const filebuf = alloc.alloc(u8, filesize) catch err.wat();
     defer alloc.free(filebuf);
     const read = data_file.readAll(filebuf[0..]) catch err.wat();

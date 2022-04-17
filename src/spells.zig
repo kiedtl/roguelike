@@ -177,6 +177,26 @@ fn _effectAuraDispersal(caster: Coord, _: Spell, _: SpellOptions, _: Coord) void
         });
 }
 
+pub const CAST_CONJ_SPECTRAL_SWORD = Spell{
+    .id = "sp_conj_ss",
+    .name = "conjure spectral sword",
+    .cast_type = .Smite,
+    .smite_target_type = .Self,
+    .noise = .Quiet,
+    .effect_type = .{
+        .Custom = struct {
+            fn f(_: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
+                for (&CARDINAL_DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
+                    if (state.is_walkable(neighbor, .{ .right_now = true })) {
+                        // FIXME: passing allocator directly is anti-pattern?
+                        _ = mobs.placeMob(state.GPA.allocator(), &mobs.SpectralSwordTemplate, neighbor, .{});
+                    }
+                };
+            }
+        }.f,
+    },
+};
+
 pub const CAST_CONJ_BALL_LIGHTNING = Spell{
     .id = "sp_conj_bl",
     .name = "conjure ball lightning",
