@@ -780,10 +780,6 @@ pub fn validateLevel(
             );
             err.wat();
         }
-
-        pub fn _isWalkable(coord: Coord, _: state.IsWalkableOptions) bool {
-            return state.dungeon.at(coord).type != .Wall;
-        }
     };
 
     const rooms = state.rooms[level].items;
@@ -809,7 +805,9 @@ pub fn validateLevel(
 
         const otherpoint = _f._getWalkablePoint(&otherroom.rect);
 
-        if (astar.path(point, otherpoint, state.mapgeometry, _f._isWalkable, .{}, &DIRECTIONS, alloc)) |p| {
+        if (astar.path(point, otherpoint, state.mapgeometry, state.is_walkable, .{
+            .ignore_mobs = true,
+        }, &DIRECTIONS, alloc)) |p| {
             p.deinit();
         } else {
             return false;
@@ -2060,7 +2058,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     } else err.bug("Couldn't place a downstair on {s}!", .{state.levelinfo[dest_floor].name});
 
     // Find coord candidates for stairs placement. Usually this will be in a room,
-    // but we're not forcing it because that wouldn't work well for Smithing.
+    // but we're not forcing it because that wouldn't work well for Caverns.
     //
     var locations = CoordArrayList.init(alloc);
     defer locations.deinit();
@@ -2556,48 +2554,6 @@ fn levelFeatureOres(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _:
             }
         }
     }
-}
-
-// Randomly place an iron ore. Randomly, create a container and
-// fill it up halfway; otherwise, place only one item on the ground.
-fn levelFeatureIronOres(_: usize, coord: Coord, room: *const Room, _: *const Prefab, _: mem.Allocator) void {
-    const ores = [_]Material{materials.Hematite};
-    var using_container: ?*Container = null;
-
-    if ((room.rect.start.x % 2) == 0) {
-        placeContainer(coord, &surfaces.VOreCrate);
-        using_container = state.dungeon.at(coord).surface.?.Container;
-    }
-
-    var placed: usize = if (using_container == null) 2 else rng.rangeClumping(usize, 3, 8, 2);
-    while (placed > 0) : (placed -= 1) {
-        const mat = &ores[rng.range(usize, 0, ores.len - 1)];
-
-        const item = Item{ .Boulder = mat };
-        if (using_container) |container| {
-            container.items.append(item) catch err.wat();
-            if (placed == 0) break;
-        } else {
-            state.dungeon.itemsAt(coord).append(item) catch err.wat();
-        }
-    }
-}
-
-// Randomly place an metal ingot.
-fn levelFeatureMetals(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _: mem.Allocator) void {
-    const metals = [_]*const Material{&materials.Iron};
-    const mat = rng.chooseUnweighted(*const Material, metals[0..]);
-    state.dungeon.itemsAt(coord).append(Item{ .Boulder = mat }) catch err.wat();
-}
-
-// Randomly place a random metal prop.
-fn levelFeatureMetalProducts(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _: mem.Allocator) void {
-    const prop_ids = [_][]const u8{"chain"};
-    const prop_id = prop_ids[rng.range(usize, 0, prop_ids.len - 1)];
-    const prop_idx = utils.findById(surfaces.props.items, prop_id).?;
-    state.dungeon.itemsAt(coord).append(
-        Item{ .Prop = &surfaces.props.items[prop_idx] },
-    ) catch err.wat();
 }
 
 // Room: "Annotated Room{}"
@@ -3246,7 +3202,7 @@ pub const LevelConfig = struct {
         .{ .count = 3, .template = &mobs.CleanerTemplate },
         .{ .count = 3, .template = &mobs.EngineerTemplate },
     },
-    room_crowd_max: usize = 3,
+    room_crowd_max: usize = 2,
 
     no_lights: bool = false,
     no_windows: bool = false,
@@ -3369,58 +3325,52 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
     .machines = &[_]*const Machine{&surfaces.Fountain},
 };
 
-pub const SMI_BASE_LEVELCONFIG = LevelConfig{
-    .prefabs = &[_][]const u8{
-        "SMI_chain_press",
-        "SMI_blast_furnace",
-        "SMI_stockpiles",
-        "SMI_elevator",
-    },
+pub const CAV_BASE_LEVELCONFIG = LevelConfig{
+    .prefabs = &[_][]const u8{},
     .distances = [2][10]usize{
         .{ 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 },
         .{ 1, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
     },
     .shrink_corridors_to_fit = false,
-    .prefab_chance = 1, // Only prefabs for SMI
-    .mapgen_iters = 1024,
+    .prefab_chance = 2,
+    .mapgen_iters = 64,
 
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
-        levelFeatureIronOres,
-        levelFeatureMetals,
-        levelFeatureMetalProducts,
-        null,
+        null, null, null, null,
     },
 
+    .no_windows = true,
     .material = &materials.Basalt,
     .tiletype = .Floor,
 
     .allow_statues = false,
-    .door_chance = 0,
+    .door_chance = 100,
     .allow_corridors = false,
 
     .blobs = &[_]BlobConfig{
         .{
-            .number = MinMax(usize){ .min = 1, .max = 4 },
-            .type = .Wall,
-            .min_blob_width = MinMax(usize){ .min = 3, .max = 4 },
-            .min_blob_height = MinMax(usize){ .min = 3, .max = 4 },
-            .max_blob_width = MinMax(usize){ .min = 7, .max = 8 },
-            .max_blob_height = MinMax(usize){ .min = 7, .max = 8 },
+            .number = MinMax(usize){ .min = 10, .max = 15 },
+            .type = null,
+            .terrain = &surfaces.DeadFungiTerrain,
+            .min_blob_width = minmax(usize, 2, 8),
+            .min_blob_height = minmax(usize, 2, 8),
+            .max_blob_width = minmax(usize, 9, 20),
+            .max_blob_height = minmax(usize, 9, 20),
+            .ca_rounds = 10,
+            .ca_percent_seeded = 55,
+            .ca_birth_params = "ffffffftt",
+            .ca_survival_params = "ffftttttt",
+        },
+        .{
+            .number = MinMax(usize){ .min = 3, .max = 4 },
+            .type = .Lava,
+            .min_blob_width = minmax(usize, 3, 7),
+            .min_blob_height = minmax(usize, 3, 7),
+            .max_blob_width = minmax(usize, 8, 12),
+            .max_blob_height = minmax(usize, 8, 12),
             .ca_rounds = 5,
             .ca_percent_seeded = 55,
             .ca_birth_params = "ffffffttt",
-            .ca_survival_params = "ffffttttt",
-        },
-        .{
-            .number = MinMax(usize){ .min = 2, .max = 4 },
-            .type = .Lava,
-            .min_blob_width = MinMax(usize){ .min = 4, .max = 5 },
-            .min_blob_height = MinMax(usize){ .min = 4, .max = 5 },
-            .max_blob_width = MinMax(usize){ .min = 8, .max = 10 },
-            .max_blob_height = MinMax(usize){ .min = 8, .max = 10 },
-            .ca_rounds = 5,
-            .ca_percent_seeded = 55,
-            .ca_birth_params = "ffffftttt",
             .ca_survival_params = "ffffttttt",
         },
     },
@@ -3435,9 +3385,9 @@ pub var Configs = [LEVELS]LevelConfig{
     VLT_BASE_LEVELCONFIG,
     VLT_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
-    SMI_BASE_LEVELCONFIG,
-    SMI_BASE_LEVELCONFIG,
-    SMI_BASE_LEVELCONFIG,
+    CAV_BASE_LEVELCONFIG,
+    CAV_BASE_LEVELCONFIG,
+    CAV_BASE_LEVELCONFIG,
     LAB_BASE_LEVELCONFIG,
     LAB_BASE_LEVELCONFIG,
     LAB_BASE_LEVELCONFIG,
@@ -3458,20 +3408,20 @@ pub fn fixConfigs() void {
     Configs[03].stairs_to = &[_]usize{1,  2}; // -3/Vaults/2     -> -3/Vaults/3,     -2/Prison
     Configs[04].stairs_to = &[_]usize{1,  3}; // -3/Vaults       -> -3/Vaults/2,     -2/Prison
     Configs[05].stairs_to = &[_]usize{    4}; // -4/Prison       -> -3/Vaults
-    Configs[06].stairs_to = &[_]usize{    5}; // -5/Smithing/3   -> -4/Prison
-    Configs[07].stairs_to = &[_]usize{5,  6}; // -5/Smithing/2   -> -5/Smithing/3,   -4/Prison
-    Configs[08].stairs_to = &[_]usize{5,  7}; // -5/Smithing     -> -5/Smithing/2,   -4/Prison
-    Configs[09].stairs_to = &[_]usize{    8}; // -6/Laboratory/3 -> -5/Smithing
-    Configs[10].stairs_to = &[_]usize{8,  9}; // -6/Laboratory/2 -> -6/Laboratory/3, -5/Smithing
-    Configs[11].stairs_to = &[_]usize{8, 10}; // -6/Laboratory   -> -6/Laboratory/2, -5/Smithing
+    Configs[06].stairs_to = &[_]usize{    5}; // -5/Caverns/3    -> -4/Prison
+    Configs[07].stairs_to = &[_]usize{5,  6}; // -5/Caverns/2    -> -5/Caverns/3,   -4/Prison
+    Configs[08].stairs_to = &[_]usize{5,  7}; // -5/Caverns      -> -5/Caverns/2,   -4/Prison
+    Configs[09].stairs_to = &[_]usize{    8}; // -6/Laboratory/3 -> -5/Caverns
+    Configs[10].stairs_to = &[_]usize{8,  9}; // -6/Laboratory/2 -> -6/Laboratory/3, -5/Caverns
+    Configs[11].stairs_to = &[_]usize{8, 10}; // -6/Laboratory   -> -6/Laboratory/2, -5/Caverns
     Configs[12].stairs_to = &[_]usize{   11}; // -7/Prison       -> -6/Laboratory
     Configs[13].stairs_to = &[_]usize{   12}; // -8/Prison       -> -7/Prison
 
 
     // Increase crowd sizes for difficult levels.
     Configs[ 0].room_crowd_max = 5;      Configs[ 1].room_crowd_max = 4; // Upper prison
-    Configs[ 2].room_crowd_max = 4;      Configs[ 3].room_crowd_max = 3; // Vaults
-    Configs[ 6].room_crowd_max = 5;      Configs[ 7].room_crowd_max = 4; // Smithing
+    Configs[ 2].room_crowd_max = 2;      Configs[ 3].room_crowd_max = 1; // Vaults
+    Configs[ 6].room_crowd_max = 5;      Configs[ 7].room_crowd_max = 4; // Caverns
     Configs[ 9].room_crowd_max = 5;      Configs[10].room_crowd_max = 4; // Laboratory
 }
 // zig fmt: on

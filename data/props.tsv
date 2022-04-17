@@ -56,11 +56,8 @@
 "hematite_statue"      	 "hematite statue"      	 '☺' 	 0xff7f70 	 -        	 nay 	 - 	 - 	 .Statue
 
 # Smithing stuff
-# NOTE: the glyphs/colors for these are hardcoded in surfaces.zig:powerChainPress()
-"chain_asm1"           	 "chain assembly line"  	 '┉' 	 0xe0e0ff 	 -        	 nay
-"chain_asm2"           	 "chain assembly line"  	 '┅' 	 0xe0e0ff 	 -        	 nay
-"chain_press_upper"    	 "upper chain press"    	 '█' 	 0x606060 	 0xcacbdd 	 nay
-"chain_press_lower"    	 "lower chain press"    	 '█' 	 0xcacbdd 	 0x606060 	 nay
+#
+# TODO: remove this?
 "chain"                	 "chain"                	 '§' 	 0xe0e0ff 	 -        	 nay 	 - 	 - 	               - 	 yea
 
 "table"                	 "table"                	 '⊺' 	 0xffffff 	 -        	 nay 	 - 	 7

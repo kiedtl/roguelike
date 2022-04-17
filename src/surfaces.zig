@@ -111,7 +111,7 @@ pub const GravelTerrain = Terrain{
     .tile = ',',
     .stats = .{ .Sneak = -1 },
 
-    .for_levels = &[_][]const u8{"SMI"},
+    .for_levels = &[_][]const u8{"CAV"},
     .placement = .EntireRoom,
     .weight = 5,
 };
@@ -168,7 +168,7 @@ pub const ShallowWaterTerrain = Terrain{
     },
     .fire_retardant = true,
 
-    .for_levels = &[_][]const u8{ "PRI", "VLT", "SMI" },
+    .for_levels = &[_][]const u8{ "PRI", "VLT", "CAV" },
     .placement = .RoomBlob,
     .weight = 3,
 };
@@ -254,7 +254,6 @@ pub const TERRAIN = [_]*const Terrain{
 };
 
 pub const MACHINES = [_]Machine{
-    ChainPress,
     ResearchCore,
     ElevatorMotor,
     Extractor,
@@ -284,22 +283,6 @@ pub const Cabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 5, .
 //pub const Chest = Container{ .name = "chest", .tile = 'æ', .capacity = 7, .type = .Valuables };
 pub const LabCabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 8, .type = .Utility, .item_repeat = 70 };
 pub const VOreCrate = Container{ .name = "crate", .tile = '∐', .capacity = 21, .type = .VOres, .item_repeat = 60 };
-
-pub const ChainPress = Machine{
-    .id = "chain_press",
-    .name = "chain press",
-
-    .powered_tile = '≡',
-    .unpowered_tile = '≡',
-
-    .power_drain = 0,
-    .power = 100,
-
-    .powered_walkable = false,
-    .unpowered_walkable = false,
-
-    .on_power = powerChainPress,
-};
 
 pub const ResearchCore = Machine{
     .id = "research_core",
@@ -399,7 +382,7 @@ pub const TurbinePowerSupply = Machine{
     .powered_tile = '≡',
     .unpowered_tile = '≡',
 
-    .power_drain = 2,
+    .power_drain = 0,
     .power = 100, // Start out fully powered
 
     .powered_walkable = false,
@@ -668,60 +651,6 @@ pub const Fountain = Machine{
 
 fn powerNone(_: *Machine) void {}
 
-fn powerChainPress(machine: *Machine) void {
-    assert(machine.areas.len == 16);
-
-    const press1 = machine.areas.data[0];
-    const press2 = machine.areas.data[1];
-    const asm1 = machine.areas.data[2..8];
-    const asm2 = machine.areas.data[8..14];
-    const output = machine.areas.data[14];
-    const input = machine.areas.data[15];
-
-    assert(asm1.len == asm2.len);
-
-    const press1_glyphs = [_]u21{ '▆', '▅', '▄', '▃', '▂', ' ' };
-    const press1_glyph = press1_glyphs[state.ticks % press1_glyphs[0..].len];
-    const press2_glyphs = [_]u21{ '▂', '▃', '▄', '▅', '▆', '█' };
-    const press2_glyph = press2_glyphs[state.ticks % press2_glyphs[0..].len];
-
-    state.dungeon.at(press1).surface.?.Prop.tile = press1_glyph;
-    state.dungeon.at(press2).surface.?.Prop.tile = press2_glyph;
-
-    var i: usize = 0;
-    while (i < asm1.len) : (i += 1) {
-        const prop1 = state.dungeon.at(asm1[i]).surface.?.Prop;
-        const prop2 = state.dungeon.at(asm2[i]).surface.?.Prop;
-
-        if (i % ((state.ticks % (asm1.len + 1)) + 1) == 0) {
-            prop1.tile = '━';
-            prop1.fg = 0xffe744;
-        } else {
-            prop1.tile = '┉';
-            prop1.fg = 0xe0e0ff;
-        }
-
-        if ((state.ticks % asm2.len) == (asm2.len - 1 - i)) {
-            prop2.tile = '━';
-            prop2.fg = 0xffe744;
-        } else {
-            prop2.tile = '┅';
-            prop2.fg = 0xe0e0ff;
-        }
-    }
-
-    if ((state.ticks % (asm1.len * 4)) == 0 and
-        !state.dungeon.itemsAt(output).isFull())
-    {
-        if (state.dungeon.getItem(input)) |_| {
-            const prop_idx = utils.findById(props.items, "chain").?;
-            state.dungeon.itemsAt(output).append(
-                Item{ .Prop = &props.items[prop_idx] },
-            ) catch unreachable;
-        } else |_| {}
-    }
-}
-
 fn powerResearchCore(machine: *Machine) void {
     // Only function on every 32nd turn, to give the impression that it takes
     // a while to process vials
@@ -745,19 +674,11 @@ fn powerElevatorMotor(machine: *Machine) void {
     // a while to bring up more ores
     if ((state.ticks % 32) != 0 or rng.onein(3)) return;
 
-    // XXX: should there be a better way than checking level num?
-    const level = state.levelinfo[machine.coord.z].id;
-
     for (machine.areas.constSlice()) |coord| {
         if (!state.dungeon.itemsAt(coord).isFull()) {
             var material: ?*const Material = null;
 
-            if (mem.eql(u8, level, "LAB")) {
-                material = (rng.choose(Vial.OreAndVial, &Vial.VIAL_ORES, &Vial.VIAL_COMMONICITY) catch unreachable).m;
-            } else if (mem.eql(u8, level, "SMI")) {
-                const metals = [_]*const Material{&materials.Hematite};
-                material = metals[rng.range(usize, 0, metals.len - 1)];
-            } else unreachable;
+            material = (rng.choose(Vial.OreAndVial, &Vial.VIAL_ORES, &Vial.VIAL_COMMONICITY) catch unreachable).m;
 
             if (material) |mat| {
                 state.dungeon.itemsAt(coord).append(Item{ .Boulder = mat }) catch unreachable;
