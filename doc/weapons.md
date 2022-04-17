@@ -18,6 +18,5 @@ certain areas:
 - Silver weapons are found in the Laboratory, as well as guards who wield them.
   Battery packs are also more common in the Laboratory, but are found elsewhere
   as well.
-- Masterpiece weapons are a bit more common in Smithing.
 - Bone weapons are the rarest, but are (relatively) very common in the Morgue,
   exactly where they're most useless.

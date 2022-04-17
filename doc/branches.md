@@ -10,7 +10,7 @@ Branch order:
 .                     ╟──────────╢ │ └─┬─┘ └─┬─┘ └─┬─┘   └──────┬─────┘ └───┘ └───┘
 . ┌──────┬─────┬─────>║  Prison  ║ └──>└────>└────>└────────────┘
 . ↑ ┌───┐↑┌───┐↑┌───┐ ╟──────────╢
-. └─┤Smi├┴┤Smi├┴┤Smi├─╢ Smithing ║<───────┬─────┬──────┬───────────────┬─────┬──────┐
+. └─┤Smi├┴┤Smi├┴┤Smi├─╢ Caverns  ║<───────┬─────┬──────┬───────────────┬─────┬──────┐
 .   └───┘ └───┘ └───┘ ╟──────────╢   ┌───┐↑┌───┐↑┌───┐ ↑ ┌────────────┐↑┌───┐↑┌───┐ ↑
 .                     ║Laboratory╟─┬─┤Lab├┴┤Lab├┴┤Lab├─┴─┤ Watchtower ├┴┤Wch├┴┤Wch├─┘
 .                     ╟──────────╢ │ └─┬─┘ └─┬─┘ └─┬─┘   └──────┬─────┘ └───┘ └───┘
@@ -19,14 +19,14 @@ Branch order:
 .             Start ─>║  Prison  ║
 .                     ╙──────────╜
 
-## Smithing
+## Caverns
 
-Smithing/3 contains the Iron Rune.
+Caverns/3 contains the Basalt Rune.
 
 - Open terrain makes it a bit more difficult to run.
 - Steam vents, smoke clouds, and noxious fumes make hanging around in certain
   areas dangerous.
-- Fuming fiends with their dustling friends are a Smithing-only speciality.
+- Fuming fiends with their dustling friends are a Caverns-only speciality.
 - Smoke clouds and large splotches of fungi obscure vision...
 - ...Until fuming fiends dispel clouds, and fungi is set on fire.
 
@@ -53,7 +53,7 @@ Laboratory/3 contains the Learned Rune.
 - Lead turtles and silver wasps are a Laboratory-only speciality.
 - Spires make fighting in certain rooms extremely dangerous. Most of them will
   not attack unless an ally is present. However, you can set up your own spire
-  with a spire kit, which are only found in the Laboratory and Smithing.
+  with a spire kit.
 
 ## Vaults
 

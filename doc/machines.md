@@ -18,13 +18,13 @@ detail for these machines), but do not perform an action until a mob interacts
 with them via the callbacks in the machine's `interact1`/`interact2` fields.
 
 **Powered non-interactive machines.** This includes power stations and the
-various "machines" scattered around Laboratory and Smithing, such as extractors,
-chain presses, ore elevators, etc. These machines are purely for aesthetics and
-serve no purpose to the player, although they will be repaired by engineers if
-destroyed. (In early versions, the power station was actually responsible for
-putting permanently-powered machines into the powered state. This was removed
-though as it just created additional unnecessary gameplay complexities, e.g., if
-the player accidentally destroyed the power station with a bomb.)
+various "machines" scattered around Laboratory, such as extractors, ore
+elevators, etc. These machines are purely for aesthetics and serve no purpose to
+the player, although they will be repaired by engineers if destroyed. (In early
+versions, the power station was actually responsible for putting
+permanently-powered machines into the powered state. This was removed though as
+it just created additional unnecessary gameplay complexities, e.g., if the
+player accidentally destroyed the power station with a bomb.)
 
 **Powered environmental machines.** Includes lights, braziers, lab doors, and
 air purifiers. They are permanently powered, and the player doesn't interact
