@@ -254,6 +254,7 @@ pub const TERRAIN = [_]*const Terrain{
 };
 
 pub const MACHINES = [_]Machine{
+    SteamVent,
     ResearchCore,
     ElevatorMotor,
     Extractor,
@@ -283,6 +284,28 @@ pub const Cabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 5, .
 //pub const Chest = Container{ .name = "chest", .tile = 'æ', .capacity = 7, .type = .Valuables };
 pub const LabCabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 8, .type = .Utility, .item_repeat = 70 };
 pub const VOreCrate = Container{ .name = "crate", .tile = '∐', .capacity = 21, .type = .VOres, .item_repeat = 60 };
+
+pub const SteamVent = Machine{
+    .id = "steam_vent",
+    .name = "steam vent",
+
+    .powered_tile = '=',
+    .unpowered_tile = '=',
+
+    .power_drain = 0,
+    .power = 100,
+
+    .powered_walkable = true,
+    .unpowered_walkable = true,
+
+    .on_power = struct {
+        pub fn f(machine: *Machine) void {
+            if (state.ticks % 40 == 0) {
+                state.dungeon.atGas(machine.coord)[gas.Steam.id] += 2;
+            }
+        }
+    }.f,
+};
 
 pub const ResearchCore = Machine{
     .id = "research_core",

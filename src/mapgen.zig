@@ -3362,12 +3362,12 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
             .ca_survival_params = "ffftttttt",
         },
         .{
-            .number = MinMax(usize){ .min = 3, .max = 4 },
+            .number = MinMax(usize){ .min = 5, .max = 6 },
             .type = .Lava,
-            .min_blob_width = minmax(usize, 3, 7),
-            .min_blob_height = minmax(usize, 3, 7),
-            .max_blob_width = minmax(usize, 8, 12),
-            .max_blob_height = minmax(usize, 8, 12),
+            .min_blob_width = minmax(usize, 2, 9),
+            .min_blob_height = minmax(usize, 2, 9),
+            .max_blob_width = minmax(usize, 9, 15),
+            .max_blob_height = minmax(usize, 9, 15),
             .ca_rounds = 5,
             .ca_percent_seeded = 55,
             .ca_birth_params = "ffffffttt",
@@ -3375,7 +3375,10 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
         },
     },
 
-    .machines = &[_]*const Machine{&surfaces.Fountain},
+    .machines = &[_]*const Machine{
+        &surfaces.SteamVent,
+        &surfaces.Fountain,
+    },
 };
 
 pub var Configs = [LEVELS]LevelConfig{
@@ -3419,9 +3422,9 @@ pub fn fixConfigs() void {
 
 
     // Increase crowd sizes for difficult levels.
-    Configs[ 0].room_crowd_max = 5;      Configs[ 1].room_crowd_max = 4; // Upper prison
+    Configs[ 0].room_crowd_max = 4;      Configs[ 1].room_crowd_max = 3; // Upper prison
     Configs[ 2].room_crowd_max = 2;      Configs[ 3].room_crowd_max = 1; // Vaults
-    Configs[ 6].room_crowd_max = 5;      Configs[ 7].room_crowd_max = 4; // Caverns
-    Configs[ 9].room_crowd_max = 5;      Configs[10].room_crowd_max = 4; // Laboratory
+    Configs[ 6].room_crowd_max = 4;      Configs[ 7].room_crowd_max = 3; // Caverns
+    Configs[ 9].room_crowd_max = 4;      Configs[10].room_crowd_max = 3; // Laboratory
 }
 // zig fmt: on

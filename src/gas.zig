@@ -98,7 +98,16 @@ pub const Steam = Gas{
     .color = 0x5f5f5f,
     .dissipation_rate = 0.05,
     .opacity = 0.00,
-    .trigger = triggerNone,
+    .trigger = struct {
+        pub fn f(mob: *Mob, _: f64) void {
+            if (mob == state.player) {
+                state.message(.Info, "The steam scalds you.", .{});
+            } else if (state.player.cansee(mob.coord)) {
+                state.message(.Info, "The steam scalds the {s}.", .{mob.displayName()});
+            }
+            mob.takeDamage(.{ .amount = 2, .kind = .Fire });
+        }
+    }.f,
     .id = 7,
 };
 
