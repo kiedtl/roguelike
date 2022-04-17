@@ -174,6 +174,20 @@ pub fn dimensions(w: DisplayWindow) Dimension {
 
 // XXX: Uses a static internal buffer. Buffer must be consumed before next call,
 // not thread safe, etc.
+fn _formatBool(val: bool) []const u8 {
+    var buf: [65535]u8 = undefined;
+    var fbs = std.io.fixedBufferStream(&buf);
+    var w = fbs.writer();
+
+    const color: u21 = if (val) 'b' else 'r';
+    const string = if (val) @as([]const u8, "yes") else "no";
+    _writerWrite(w, "${u}{s}$.", .{ color, string });
+
+    return fbs.getWritten();
+}
+
+// XXX: Uses a static internal buffer. Buffer must be consumed before next call,
+// not thread safe, etc.
 fn _formatStatusInfo(statusinfo: *const StatusDataInfo) []const u8 {
     var buf: [65535]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buf);
@@ -432,9 +446,7 @@ fn _getMonsSpellsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, li
                 _writerWrite(w, "· $ctarget$.: {s}\n", .{target});
             } else if (spellcfg.spell.cast_type == .Bolt) {
                 const dodgeable = spellcfg.spell.bolt_dodgeable;
-                const color: u21 = if (dodgeable) 'b' else 'r';
-                const string = if (dodgeable) @as([]const u8, "yes") else "no";
-                _writerWrite(w, "· $cdodgeable$.: ${u}{s}\n", .{ color, string });
+                _writerWrite(w, "· $cdodgeable$.: {s}\n", .{_formatBool(dodgeable)});
             }
 
             const targeting = @as([]const u8, switch (spellcfg.spell.cast_type) {
@@ -639,10 +651,6 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
         .Cloak => |c| _writerStats(w, c.stats, c.resists),
         .Armor => |a| _writerStats(w, a.stats, a.resists),
         .Weapon => |p| {
-            // stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
-            // effects: []const StatusDataInfo = &[_]StatusDataInfo{},
-            // equip_effects: []const StatusDataInfo = &[_]StatusDataInfo{},
-
             _writerWrite(w, "$cdamage:$. {}\n", .{p.damage});
             if (p.reach != 1) _writerWrite(w, "$creach:$. {}\n", .{p.reach});
             if (p.delay != 100) {
@@ -680,7 +688,16 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
                 _writerWrite(w, "\n", .{});
             }
         },
-        .Evocable => _writerWrite(w, "TODO", .{}),
+        .Evocable => |e| {
+            _writerWrite(w, "$b{}$./$b{}$. charges.\n", .{ e.charges, e.max_charges });
+            _writerWrite(w, "$crechargable:$. {s}\n", .{_formatBool(e.rechargable)});
+            _writerWrite(w, "\n", .{});
+
+            if (e.delete_when_inert) {
+                _writerWrite(w, "$bThis item is destroyed on use.$.", .{});
+                _writerWrite(w, "\n", .{});
+            }
+        },
         .Boulder, .Prop, .Vial => _writerWrite(w, "$G(This item is useless.)$.", .{}),
     }
 
