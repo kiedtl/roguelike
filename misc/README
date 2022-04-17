@@ -6,3 +6,4 @@ This directory contains prototypes, experiments and tools for various things.
 * trees.zig: procedurally-generated trees. MIT licensed.
 * check_will_chances.lua: check chance of a caster's willpower overpowering
   other willpowers. Used to balance willpower formulas.
+* blobtest.zig: Test out blob shapes.
