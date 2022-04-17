@@ -3661,7 +3661,7 @@ pub const Dungeon = struct {
         var l: usize = tile.terrain.luminescence;
 
         if (tile.type == .Lava)
-            l += 50;
+            l += 60;
 
         if (tile.mob) |mob| {
             if (mob.isUnderStatus(.Corona)) |se| l += se.power;
