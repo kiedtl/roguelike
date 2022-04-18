@@ -353,7 +353,7 @@ pub const ConfusionPotion = Potion{
     .id = "potion_confusion",
     .name = "confuzzlementation",
     .type = .{ .Gas = gas.Confusion.id },
-    .dip_effect = .{ .status = .Confusion, .duration = .{ .Tmp = 3 } },
+    .dip_effect = .{ .status = .Confusion, .duration = .{ .Tmp = 5 } },
     .color = 0x33cbca,
 };
 
@@ -361,7 +361,7 @@ pub const ParalysisPotion = Potion{
     .id = "potion_paralysis",
     .name = "petrification",
     .type = .{ .Gas = gas.Paralysis.id },
-    .dip_effect = .{ .status = .Paralysis, .duration = .{ .Tmp = 2 } },
+    .dip_effect = .{ .status = .Paralysis, .duration = .{ .Tmp = 3 } },
     .color = 0xaaaaff,
 };
 
