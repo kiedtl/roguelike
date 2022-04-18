@@ -24,8 +24,7 @@ New Levels
 - Plenty of patrols, and guards at hallway junctions
 - Layout leads to interesting gameplay, I think?
 
-New mobs
---------
+New mobs --------
 - creeping death
 	- A sabre-toothed cat, nothing more or less.
 	- Has LOS radius of just one more than player's.
@@ -36,37 +35,46 @@ New mobs
 		- Bite provides chance of paralysis
 	- When player is in LOS of cat, messages:
 		- "You feel like something is watching you."
-		- "You feel uneasy." (just before cat charges)
-x sulfur fiend
-	x rElec∞ and rFire+.
-	x Hasten Rot: makes a corpse emit a cloud of miasma, destroying the
-	  corpse in the process. Miasma causes nausea.
-	x Summon Ball Lightning: conjures a ball lightning mobs.
-- ether fiend
+		- "You feel uneasy." (just before cat charges) x sulfur fiend x
+		  rElec∞ and rFire+.  x Hasten Rot: makes a corpse emit a cloud
+		  of miasma, destroying the corpse in the process. Miasma
+		  causes nausea.  x Summon Ball Lightning: conjures a ball
+		  lightning mobs.
+- fiend of vapours
 	- "A strange winged figure, cloaked in dirty rags. It is holding a
-	   crystal sceptre."
-	- Travels with packs of dustlings.
-	- Aura of Dispersal: resistably blinks all affected mobs away (range: 2).
-	  Used to remove surrounding enemies.
-	- Dispel Fumes: removes all clouds in caster's LOS. Used to remove gas
-	  obscuring enemy.
+	  sceptre."
+	- Aura of Dispersal: resistably blinks all affected mobs away (range:
+	  2).  Used to remove surrounding enemies.
+	- Dispel Cloud: removes all smoke clouds in caster's LOS. Used to
+	  remove gas obscuring enemy.
+	- Dispel Fumes: removes harmful fumes near allies.
 	- Meat Offering: creates a vile protector from a corpse, using it up in
 	  the process. Vile protector redirects damage done to allies to itself.
 	  Vile protector is very tanky (80 HP) but immobile; shielding ends if
 	  the dustlings/allies move out of its LOS.
-	- Vunerable to fire, immune to electricity.
-	- Fragile (20-30 HP) and slow (110).
+	- Airblast: knockback all nearby allies/foes (5 - distance_from_fiend)
+	  spaces
+	- Vunerable to fire, resistant to electricity.
+	- Relatively fragile (12 HP) and slow (110).
+- vapour mage
 	- Windlash: moderate damage, smite-targeted.
 	  - "The ether fiend waves its arms around in wide circles!"
 	  - "The air whirls around and strikes you!"
 	  - "The air twists around and strikes you!"
 	  - "The air twists itself inside-out and smites you!!"
+	- Haste dustling
+	- Meat offering
+	- Has night vision.
+- convult
+	- Keeps distance
+	- Enrage dustling
 - dustling
 	- Exceedingly fragile (1-5 HP) and no armor/weapons.
 	- Carries a strong punch, though.
 	- Fast (55% speed)
+	- Has night vision.
 	- Vunerable to fire, electricity.
-	- Found solely with ether fiends in Smithing.
+	- Found solely in Caverns.
 x frozen fiend
 	- "A winged humanoid, clothed in watery-blue robes. It whispers grimly
 	   to itself as it patrols the dungeon, inspecting its underlings with
@@ -219,10 +227,10 @@ x lead turtle
 	  are supposed to be machines, right?)
 	- Can briefly paralyse player ("stunning burst")
 	- Keeps distance
-- iron mage
-	- Spectral Sword: summons four spectral swords, which are very fast but
+x spectre mage
+	x Spectral Sword: summons four spectral swords, which are very fast but
 	  have just 1 HP and do little damage. Like Brogue's staff of conjuration.
-	- Found in Laboratory and Smithing.
+	x Found in Laboratory and Caverns.
 x ancient mage
 	- "Even the most powerful of human mages cannot hope to wield the full
 	  power of the Necromancer. Instead, it is invested in this undead mage,
@@ -234,7 +242,7 @@ x ancient mage
 	x Summon Enemy: resistibly teleport enemy/player back into its LOS, if
 	  it cannot see enemy.
 	x Hurls crystal shards.
-	- rPois∞ rFume∞ rElec∞
+	x rPois∞ rFume∞ rElec∞
 x death mage
 	x Bufs nearby undead for a short time.
 	x Haste: give .Fast to nearby undead ally.
@@ -272,6 +280,7 @@ Intelligence
   of dangerous terrain intelligently (they'll just move randomly).
 - Mindless mobs will never flee.
 - Unintelligent mobs cannot use doors and machines marked as requiring INT.
+
 
 Undead
 ------
@@ -446,6 +455,14 @@ ring of fire [a]
 ring of hexing [a]
 	- Dismissal: forces all investigating mobs in LOS to return to working.
 	  If resisted by willpower, will reveal player's location to them.
+ring of lightning
+	- Lure: attack in a cardinal direction, move in opposite direction, move
+	  perpendicular.
+	  keeping foe adjacent), move diagonally right/left.
+	  m...        ....   ....
+	  @... attack m...   m...
+	  ....        @...   .@..
+	- Electrocutes locations in four corners next to player.
 
 
 Vials
@@ -745,19 +762,19 @@ x LOS/lighting revamp
 x Fix/reimplement item-choosing screen
 x Fix/reimplement tile-choosing screen
 x Revamp input prompts
-- Informational screens
-  - eXamine screen
+x Informational screens
+  x eXamine screen
     x Remove 'r' key, revamp recharging station appearance(?)
-    - Remove hammer evocable, allow always breaking machines/props
-    - Subscreens
-      - Player info "@"/"c" screen
+    x Remove hammer evocable, allow always breaking machines/props
+    x Subscreens
+      x Player info "@"/"c" screen
       x Poster description screen
   x Inventory screen
     x Remove 't' key, remove 'a' key for items
+- Condense UI
 - Show information characters next to mob in enemy pane
-- Implement intelligence
-- Revisit and revamp SMI mapgen
-- Fiend of Vapours, dustlings, iron mages for SMI
+x Revisit and revamp SMI mapgen, SMI → CAV
+- Fiend of Vapours, dustlings, spectre mages for CAV
 x Cleanup machines
   x Message if player moves over activatable machine
 x Upgrade to Zig v9
@@ -765,12 +782,20 @@ x Upgrade to Zig v9
   x Petition khuxkm/ben for update
   x Remove utils.saturating_sub
   x Fix "*mem.Allocator" params
+- Ring of Lightning
+- Rename VLT back to REC/QRT or something
+  - Bedroom prefabs
 - Runes and scoring
 *** v1.0.0 release ***
-More information screens
+- Multi-tile props: trees and braziers
+- Implement intelligence
+- More information screens
   - Documentation/manuals
   - status/mob(?)/item description lookup screen
   - features/items screen, remove announcement of items
+  - keybinding help "?" screen
+- Startup screen, map generation loading bar
+- Add basic animations
 - Posters/books
   - Poster types (graffiti, announcement, engraving, etc)
   - Add bookshelves and book types
@@ -780,13 +805,11 @@ More information screens
   - Spires and spire kits
   - Add abominations, more experiments
   - Add traps of blinding gas
-- keybinding help "?" screen
-- Startup screen, map generation loading bar
-- Add basic animations
 - Morgue level
   - Cogmind-esque tunneling algorithm
   - Monsters
 - Blood, ember, fire, spark, lightning mage bands
+- Emberling/sparkling summoning trap kits
 - Night creatures (night reapers, creeping deaths)
 - Silver weapons and battery packs, silver hornets
 - Bone, masterpiece, and shadow weapons
@@ -871,11 +894,11 @@ x Make the "lamps" electric "braziers"
   - dice, deck of cards
 - Weapons and armor in cabinets
 - Allow multiple subrooms in rooms (BSP?)
-- Cave-like boundaries around edges of map in SMI
+- Cave-like boundaries around edges of map in CAV
 x Different types of power generators for different maps:
     x VLT:  coal furnace
     x PRI:  normal power plant
-    x SMI:  turbines (geothermal)
+    x CAV:  turbines (geothermal)
     x LAB:  nuclear power plant
 - Allow multi-width corridors (aka hallways)
 - Prisoners chained up to the wall in PRI
@@ -954,9 +977,11 @@ x Define what undead are somewhere (combat bonuses, stat increases, miasma
   - Archers: shoot missiles that whittle down health, keeps distance
   - Brawlers: pummels player, pushing them 3 tiles away
   - rail terrain that hastes robots
-- Reaching weapon effects for beastmasters and patrols
+x Reaching weapon effects for beastmasters and patrols
 - Make sentinels and javelineers pickup projectiles they've thrown
 - Add orbs of destruction spell for ancient mages
+- Ancient mage: give range limit to "summon enemy" spell (don't forget
+  to display that in spell info pane)
 
 User Interface
 ==============
@@ -995,7 +1020,7 @@ Items/Machines
 - Add evocables:
   x "eldritch lantern": dazes or blinds mobs in FOV; blinds player
     for 2 turns. 4 charges.
-  - "cannon kit" (SMI): creates permanent cannon on use (see below). 1 charge.
+  - "cannon kit" (CAV): creates permanent cannon on use (see below). 1 charge.
   - "lightning rod" (LAB): severely damages all mobs without rElec in FOV.
     - Note: implement electricity damage propagation for this.
   - "symbol of torment" (House): Gives .Fear to all mobs in FOV, and halves HP of
@@ -1011,7 +1036,7 @@ Items/Machines
       - Will be avoided if possible by pathfinding AI.
       - Very quiet, maybe even silent.
       - Would be disabled by engineers.
-  - "fume hood" (SMI): Grants rFume∞ for ~10 turns. 4 charges.
+  - "fume hood" (CAV): Grants rFume∞ for ~10 turns. 4 charges.
   x "hammer": Destroys a machine. ∞ charges; cannot be recharged.
   x "iron spike": Jams a door. 1 charge; cannot be recharged.
   - "blinding torch": Basically a laser. Can be evoked on a monster that can
@@ -1033,7 +1058,7 @@ Items/Machines
     Loud sound. 6 charges, pwr-station powered.
   - "floodgates" (PRI): creates permanent pool of shallow water.
     1 charge, pwr-station powered.
-  - "canister of sludge" (SMI): can be "broken open" to release torrent of toxic
+  - "canister of sludge" (CAV): can be "broken open" to release torrent of toxic
     sludge in direction, creating pool and damaging mobs. Takes 2 turns to empty.
     1 charge.
   - "canister of fuel" (VLT): can be "broken open" to release torrent of burning
