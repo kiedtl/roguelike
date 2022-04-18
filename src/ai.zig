@@ -1013,11 +1013,24 @@ pub fn statueFight(mob: *Mob, _: mem.Allocator) void {
 }
 
 pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
-    const target = currentEnemy(mob).mob;
+    const FLEE_GOAL = 20;
+
+    assert(mob.stat(.Vision) < FLEE_GOAL);
+
+    const target = currentEnemy(mob);
 
     alertAllyOfHostile(mob);
-    if (!keepDistance(mob, target.coord, 8))
+    if (!keepDistance(mob, target.last_seen, FLEE_GOAL))
         meleeFight(mob, alloc);
 
     mob.makeNoise(.Shout, .Loud);
+
+    const dist = target.mob.coord.distance(mob.coord);
+    if (dist <= mob.stat(.Vision)) {
+        // Don't forget about him!
+        mob.facing = mob.coord.closestDirectionTo(target.mob.coord, state.mapgeometry);
+    } else if (dist >= FLEE_GOAL) {
+        // Forget about him
+        target.counter = 0;
+    }
 }
