@@ -464,7 +464,7 @@ fn _getMonsSpellsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, li
 
             if (spellcfg.spell.effect_type == .Status) {
                 _writerWrite(w, "· $gTmp$. {s} ({})\n", .{
-                    spellcfg.spell.effect_type.Status.string(state.player), spellcfg.power,
+                    spellcfg.spell.effect_type.Status.string(state.player), spellcfg.duration,
                 });
             }
 
