@@ -20,7 +20,7 @@ pub const Gas = struct {
     name: []const u8,
     color: u32,
     dissipation_rate: f64,
-    opacity: f64,
+    opacity: f64 = 0.0,
     trigger: fn (*Mob, f64) void,
     not_breathed: bool = false, // if true, will affect nonbreathing mobs
     id: usize,
@@ -31,7 +31,6 @@ pub const Poison = Gas{
     .name = "poison",
     .color = 0xa7e234,
     .dissipation_rate = 0.01,
-    .opacity = 0.05,
     .trigger = triggerPoison,
     .id = 0,
 };
@@ -40,7 +39,6 @@ pub const Paralysis = Gas{
     .name = "paralysing gas",
     .color = 0xaaaaff,
     .dissipation_rate = 0.05,
-    .opacity = 0.03,
     .trigger = triggerParalysis,
     .id = 1,
 };
@@ -51,7 +49,7 @@ pub const SmokeGas = Gas{
     .dissipation_rate = 0.02,
     // Lava emits smoke. If opacity >= 1.0, this causes massive lighting
     // fluctuations, which is not desirable.
-    .opacity = 0.8,
+    .opacity = 0.9,
     .trigger = triggerNone,
     .id = 2,
 };
@@ -60,7 +58,6 @@ pub const Confusion = Gas{
     .name = "confusing fumes",
     .color = 0x33cbca,
     .dissipation_rate = 0.05,
-    .opacity = 0.0,
     .trigger = triggerConfusion,
     .id = 3,
 };
@@ -69,7 +66,6 @@ pub const Slow = Gas{
     .name = "slowing gas",
     .color = 0x8e77dd,
     .dissipation_rate = 0.02,
-    .opacity = 0.0,
     .trigger = triggerSlow,
     .id = 4,
 };
@@ -78,7 +74,6 @@ pub const Healing = Gas{
     .name = "healing gas",
     .color = 0xbb97aa,
     .dissipation_rate = 0.02,
-    .opacity = 0.0,
     .trigger = triggerHealing,
     .id = 5,
 };
