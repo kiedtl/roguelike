@@ -264,6 +264,9 @@ x death mage
 	- "A hideous statue of some nameless creature, covered in metal plates."
 	- Sleeps, when hit with electric damage, activates.
 	- rElec∞ rFume∞
+- mellaent
+	- kerejat-like nuisance
+	- noncombatant
 
 Intelligence
 ------------
@@ -774,7 +777,12 @@ x Informational screens
 - Condense UI
 - Show information characters next to mob in enemy pane
 x Revisit and revamp SMI mapgen, SMI → CAV
-- Fiend of Vapours, dustlings, spectre mages for CAV
+- Additional CAV monsters:
+  x spectre mages, spectral swords
+  - dustlings
+  - convults, vapour mages
+  - fiend of vapours
+  - mellaents
 x Cleanup machines
   x Message if player moves over activatable machine
 x Upgrade to Zig v9
