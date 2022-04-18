@@ -191,6 +191,7 @@ pub const DeadFungiTerrain = Terrain{
     .name = "dead fungi",
     .color = 0xaaaaaa,
     .tile = '"',
+    .opacity = 60,
     .resists = .{ .rFire = -25 },
     .flammability = 15,
 
