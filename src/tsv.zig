@@ -343,3 +343,147 @@ pub fn parse(
 
     return .{ .Ok = results };
 }
+
+// tests {{{
+test "integer/float parsing" {
+    {
+        var buf: usize = 0;
+        try testing.expectEqual(true, parsePrimitive(usize, &buf, "3", undefined));
+        try testing.expectEqual(@as(usize, 3), buf);
+
+        try testing.expectEqual(true, parsePrimitive(usize, &buf, "0xa", undefined));
+        try testing.expectEqual(@as(usize, 10), buf);
+
+        try testing.expectEqual(true, parsePrimitive(usize, &buf, "0o10", undefined));
+        try testing.expectEqual(@as(usize, 8), buf);
+    }
+
+    {
+        var buf: f64 = 0;
+        try testing.expectEqual(true, parsePrimitive(f64, &buf, "-3.342e4", undefined));
+        try testing.expectEqual(@as(f64, -3.342e4), buf);
+    }
+}
+
+test "character parsing" {
+    var buf: u21 = 'z';
+
+    try testing.expectEqual(true, parseCharacter(u21, &buf, "'a'", undefined));
+    try testing.expectEqual(@as(u21, 'a'), buf);
+
+    try testing.expectEqual(true, parseCharacter(u21, &buf, "'\\0'", undefined));
+    try testing.expectEqual(@as(u21, '\x00'), buf);
+
+    try testing.expectEqual(true, parseCharacter(u21, &buf, "'\\n'", undefined));
+    try testing.expectEqual(@as(u21, '\n'), buf);
+
+    try testing.expectEqual(false, parseCharacter(u21, &buf, "'\\h'", undefined));
+    try testing.expectEqual(false, parseCharacter(u21, &buf, "'abc'", undefined));
+    try testing.expectEqual(false, parseCharacter(u21, &buf, "'\xc3'", undefined));
+}
+
+test "enum parsing" {
+    const T = enum { Foo, Bar, Baz };
+    var buf: T = undefined;
+
+    try testing.expectEqual(true, parsePrimitive(T, &buf, ".Foo", undefined));
+    try testing.expectEqual(@as(T, .Foo), buf);
+
+    try testing.expectEqual(true, parsePrimitive(T, &buf, ".Bar", undefined));
+    try testing.expectEqual(@as(T, .Bar), buf);
+
+    try testing.expectEqual(true, parsePrimitive(T, &buf, ".Baz", undefined));
+    try testing.expectEqual(@as(T, .Baz), buf);
+}
+
+test "union parsing" {
+    const T = union(enum) { Foo: usize, Bar: usize, Baz: usize };
+    var buf: T = undefined;
+
+    try testing.expectEqual(true, parsePrimitive(T, &buf, ".Foo=3", undefined));
+    try testing.expectEqual(@as(T, .{ .Foo = 3 }), buf);
+
+    try testing.expectEqual(true, parsePrimitive(T, &buf, ".Bar=4", undefined));
+    try testing.expectEqual(@as(T, .{ .Bar = 4 }), buf);
+
+    try testing.expectEqual(true, parsePrimitive(T, &buf, ".Baz=5", undefined));
+    try testing.expectEqual(@as(T, .{ .Baz = 5 }), buf);
+}
+
+test "optional integer parsing" {
+    var buf: ?usize = 0;
+
+    try testing.expectEqual(true, parsePrimitive(?usize, &buf, "342", undefined));
+    try testing.expectEqual(@as(?usize, 342), buf);
+
+    try testing.expectEqual(true, parsePrimitive(?usize, &buf, "nil", undefined));
+    try testing.expectEqual(@as(?usize, null), buf);
+}
+
+test "string parsing" {
+    var membuf: [2048]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
+    var buf: []u8 = undefined;
+
+    try testing.expectEqual(true, parseUtf8String([]u8, &buf, "\"\"", fba.allocator()));
+    try testing.expectEqualSlices(u8, "", buf);
+
+    try testing.expectEqual(true, parseUtf8String([]u8, &buf, "\"test\"", fba.allocator()));
+    try testing.expectEqualSlices(u8, "test", buf);
+
+    try testing.expectEqual(true, parseUtf8String([]u8, &buf, "\"test spaces\"", fba.allocator()));
+    try testing.expectEqualSlices(u8, "test spaces", buf);
+
+    try testing.expectEqual(true, parseUtf8String([]u8, &buf, "\"\\n\"", fba.allocator()));
+    try testing.expectEqualSlices(u8, "\n", buf);
+
+    try testing.expectEqual(true, parseUtf8String([]u8, &buf, "\"\\\"\"", fba.allocator()));
+    try testing.expectEqualSlices(u8, "\"", buf);
+
+    try testing.expectEqual(true, parseUtf8String([]u8, &buf, "\"\\atest\\r\\n\"", fba.allocator()));
+    try testing.expectEqualSlices(u8, "\x07test\r\n", buf);
+}
+
+test "parsing" {
+    var membuf: [2048]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
+    const T = struct {
+        foo: usize = 0,
+        bar: BarT = .Fear,
+        baz: f64 = 1.2121,
+        bap: []u8 = undefined,
+
+        pub const BarT = enum { Fear, Fire, Fry };
+    };
+
+    const schema = [_]TSVSchemaItem{
+        .{ .field_name = "bar", .parse_to = T.BarT, .parse_fn = parsePrimitive },
+        .{ .field_name = "foo", .parse_to = usize, .parse_fn = parsePrimitive, .optional = true, .default_val = 2 },
+        .{ .field_name = "bap", .parse_to = []u8, .parse_fn = parseUtf8String },
+        .{ .field_name = "baz", .parse_to = f64, .parse_fn = parsePrimitive },
+    };
+
+    {
+        const u_result = parse(T, &schema, .{}, ".Fear\t23\t \"simple string here\"\t  19.23 ", fba.allocator());
+        try testing.expect(u_result.is_ok());
+
+        const result = u_result.unwrap();
+        try testing.expectEqual(@as(usize, 23), result.items[0].foo);
+        try testing.expectEqual(@as(T.BarT, .Fear), result.items[0].bar);
+        try testing.expectEqual(@as(f64, 19.23), result.items[0].baz);
+        try testing.expectEqualSlices(u8, "simple string here", result.items[0].bap);
+    }
+    {
+        const u_result = parse(T, &schema, .{}, ".Fire \t-\t\"test\\\"\\n\\r boop\"\t19.23", fba.allocator());
+        try testing.expect(u_result.is_ok());
+
+        const result = u_result.unwrap();
+        try testing.expectEqual(@as(usize, 2), result.items[0].foo);
+        try testing.expectEqual(@as(T.BarT, .Fire), result.items[0].bar);
+        try testing.expectEqual(@as(f64, 19.23), result.items[0].baz);
+        try testing.expectEqualSlices(u8, "test\"\n\r boop", result.items[0].bap);
+    }
+}
+// }}}

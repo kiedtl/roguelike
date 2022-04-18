@@ -1,5 +1,6 @@
 const std = @import("std");
 const assert = std.debug.assert;
+const testing = std.testing;
 const math = std.math;
 const meta = std.meta;
 const mem = std.mem;
@@ -289,3 +290,81 @@ pub const FoldedTextIterator = struct {
         return self.str[old_line_begin..line_end];
     }
 };
+
+// tests {{{
+test "sentinel" {
+    try testing.expectEqual(@TypeOf(sentinel([]const u8)), ?u8);
+    try testing.expectEqual(@TypeOf(sentinel([32:0]u23)), ?u23);
+    try testing.expectEqual(@TypeOf(sentinel([128:3]u23)), ?u23);
+    try testing.expectEqual(@TypeOf(sentinel([28]u64)), ?u64);
+    try testing.expectEqual(@TypeOf(sentinel([18:0.34]f64)), ?f64);
+    try testing.expectEqual(@TypeOf(sentinel(*[32:0]u8)), ?u8);
+    try testing.expectEqual(@TypeOf(sentinel(***[32:0]u8)), ?u8);
+    try testing.expectEqual(@TypeOf(sentinel(***[10]isize)), ?isize);
+
+    try testing.expectEqual(sentinel([]const u8), null);
+    try testing.expectEqual(sentinel([32:0]u23), 0);
+    try testing.expectEqual(sentinel([128:3]u23), 3);
+    try testing.expectEqual(sentinel([28]u64), null);
+    try testing.expectEqual(sentinel([18:0.34]f64), 0.34);
+    try testing.expectEqual(sentinel(*[32:0]u8), 0);
+    try testing.expectEqual(sentinel(***[32:0]u8), 0);
+    try testing.expectEqual(sentinel(***[10]isize), null);
+}
+
+test "copy" {
+    var one: [32:0]u8 = undefined;
+    var two: [32:0]u8 = undefined;
+    var three: [15]u8 = [_]u8{0} ** 15;
+
+    // []const u8 => *[32:0]u8
+    copyZ(&one, "Hello, world!");
+    try testing.expect(mem.eql(u8, used(&one), "Hello, world!"));
+
+    // []const u8 => *[32:0]u8
+    copyZ(&two, "This is a test!");
+    try testing.expect(mem.eql(u8, used(&two), "This is a test!"));
+
+    // *[32:0]u8 => *[32:0]u8
+    copyZ(&one, &two);
+    try testing.expect(mem.eql(u8, used(&one), "This is a test!"));
+
+    // *[32:0]u8 => []u8
+    copyZ(&three, &one);
+    try testing.expectEqualSlices(u8, &three, "This is a test!");
+
+    // []u8 => []u8
+    copyZ(&three, "str is 15 chars");
+    try testing.expectEqualSlices(u8, &three, "str is 15 chars");
+}
+
+test "folding text" {
+    {
+        const str = "  abcd efgh  ijkl mnop ";
+        var folder = FoldedTextIterator.init(str, 4);
+        try testing.expectEqualSlices(u8, folder.next().?, "abcd");
+        try testing.expectEqualSlices(u8, folder.next().?, "efgh");
+        try testing.expectEqualSlices(u8, folder.next().?, "ijkl");
+        try testing.expectEqualSlices(u8, folder.next().?, "mnop");
+        try testing.expectEqual(folder.next(), null);
+    }
+
+    {
+        const str = "I had a vision when the night was late: a youth came riding toward the palace-gate.";
+        var folder = FoldedTextIterator.init(str, 10);
+        try testing.expectEqualSlices(u8, folder.next().?, "I had a");
+        try testing.expectEqualSlices(u8, folder.next().?, "vision");
+        try testing.expectEqualSlices(u8, folder.next().?, "when the");
+        try testing.expectEqualSlices(u8, folder.next().?, "night was");
+        try testing.expectEqualSlices(u8, folder.next().?, "late: a");
+        try testing.expectEqualSlices(u8, folder.next().?, "youth");
+        try testing.expectEqualSlices(u8, folder.next().?, "came");
+        try testing.expectEqualSlices(u8, folder.next().?, "riding");
+        try testing.expectEqualSlices(u8, folder.next().?, "toward");
+        try testing.expectEqualSlices(u8, folder.next().?, "the");
+        try testing.expectEqualSlices(u8, folder.next().?, "palace-gat");
+        try testing.expectEqualSlices(u8, folder.next().?, "e.");
+        try testing.expectEqual(folder.next(), null);
+    }
+}
+// }}}
