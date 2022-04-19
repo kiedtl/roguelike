@@ -203,6 +203,16 @@ wounds and waiting miserably until its execution.
 
 For some reason, its captors haven't bothered to take its mace and armor away...
 
+% dustling
+
+A humanoid construct created by a minor sorcerer. It seems to be more or less
+harmless...
+
+% mellaent
+
+An annoying species of underground bat, shimmering conspicuously in the
+darkness.
+
 % kyanite_statue
 
 This statue makes you uncomfortable. You somehow want to hide from it.
