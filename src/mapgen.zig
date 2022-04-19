@@ -3368,6 +3368,9 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
     .max_room_width = 7,
     .max_room_height = 7,
 
+    .required_mobs = &[_]LevelConfig.RequiredMob{
+        .{ .count = 3, .template = &mobs.MellaentTemplate },
+    },
     .room_crowd_max = 4,
 
     .require_dry_rooms = true,

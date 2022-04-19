@@ -432,6 +432,28 @@ pub const DustlingTemplate = MobTemplate{
     },
 };
 
+pub const MellaentTemplate = MobTemplate{
+    .mob = .{
+        .id = "mellaent",
+        .species = &Species{ .name = "mellaent" },
+        .tile = 'b',
+        .ai = AI{
+            .profession_name = null,
+            .profession_description = "wandering",
+            .work_fn = ai.patrolWork,
+            .fight_fn = ai.meleeFight,
+            .is_combative = false,
+            .is_curious = false,
+        },
+        .allegiance = .Necromancer,
+        .max_HP = 5,
+        .stats = .{ .Willpower = 1, .Evade = 40, .Speed = 120, .Vision = 8 },
+    },
+    .statuses = &[_]StatusDataInfo{
+        .{ .status = .Corona, .power = 50, .duration = .Prm },
+    },
+};
+
 pub const KyaniteStatueTemplate = MobTemplate{
     .mob = .{
         .id = "kyanite_statue",
@@ -1150,6 +1172,7 @@ pub const MOBS = [_]MobTemplate{
     PlayerTemplate,
     GoblinTemplate,
     DustlingTemplate,
+    MellaentTemplate,
     KyaniteStatueTemplate,
     NebroStatueTemplate,
     CrystalStatueTemplate,

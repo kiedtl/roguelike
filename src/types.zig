@@ -1291,10 +1291,10 @@ pub const Mob = struct { // {{{
     base_night_vision: bool = false,
     deg360_vision: bool = false,
     no_show_fov: bool = false,
-    memory_duration: usize,
+    memory_duration: usize = 4,
     deaf: bool = false,
     max_HP: f64,
-    blood: ?Spatter,
+    blood: ?Spatter = .Blood,
     blood_spray: ?usize = null, // Gas ID
     corpse: enum { Normal, Wall, None } = .Normal,
     immobile: bool = false,
