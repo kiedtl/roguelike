@@ -4,6 +4,7 @@ const assert = std.debug.assert;
 
 const ai = @import("ai.zig");
 const state = @import("state.zig");
+const gas = @import("gas.zig");
 const items = @import("items.zig");
 const buffer = @import("buffer.zig");
 const dijkstra = @import("dijkstra.zig");
@@ -395,6 +396,40 @@ pub const GoblinTemplate = MobTemplate{
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.LeatherArmor,
+};
+
+pub const DustlingTemplate = MobTemplate{
+    .mob = .{
+        .id = "dustling",
+        .species = &Species{
+            .name = "dustling",
+            .default_attack = &items.FistWeapon,
+        },
+        .tile = 'ð',
+        .ai = AI{
+            .profession_name = null,
+            .profession_description = "wandering",
+            .work_fn = ai.patrolWork,
+            .fight_fn = ai.meleeFight,
+            .is_combative = true,
+            .is_curious = true,
+        },
+        .allegiance = .Necromancer,
+        .max_HP = 5,
+        .memory_duration = 5,
+        .life_type = .Construct,
+        .blood = .Dust,
+        .blood_spray = gas.Dust.id,
+        .corpse = .None,
+        .innate_resists = .{ .rFire = -25, .rElec = -25 },
+        .stats = .{ .Willpower = 4, .Evade = 15, .Speed = 80, .Vision = 8 },
+    },
+    .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "dustling", .weight = 1, .count = minmax(usize, 2, 6) },
+        },
+    },
 };
 
 pub const KyaniteStatueTemplate = MobTemplate{
@@ -1114,6 +1149,7 @@ pub const MOBS = [_]MobTemplate{
     PatrolTemplate,
     PlayerTemplate,
     GoblinTemplate,
+    DustlingTemplate,
     KyaniteStatueTemplate,
     NebroStatueTemplate,
     CrystalStatueTemplate,

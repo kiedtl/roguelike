@@ -1295,6 +1295,7 @@ pub const Mob = struct { // {{{
     deaf: bool = false,
     max_HP: f64,
     blood: ?Spatter,
+    blood_spray: ?usize = null, // Gas ID
     corpse: enum { Normal, Wall, None } = .Normal,
     immobile: bool = false,
     innate_resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
@@ -2178,7 +2179,14 @@ pub const Mob = struct { // {{{
         const amount = d.amount * resist / 100.0;
 
         self.HP = math.clamp(self.HP - amount, 0, self.max_HP);
-        if (d.blood) if (self.blood) |s| state.dungeon.spatter(self.coord, s);
+
+        if (d.blood) {
+            if (self.blood) |s|
+                state.dungeon.spatter(self.coord, s);
+            if (self.blood_spray) |g|
+                state.dungeon.atGas(self.coord)[g] += 0.2;
+        }
+
         self.last_damage = d;
 
         // Propagate electric damage
