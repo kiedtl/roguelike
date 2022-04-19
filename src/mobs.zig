@@ -421,13 +421,13 @@ pub const DustlingTemplate = MobTemplate{
         .blood = .Dust,
         .blood_spray = gas.Dust.id,
         .corpse = .None,
-        .innate_resists = .{ .rFire = -25, .rElec = -25 },
+        .innate_resists = .{ .rFire = -25, .rElec = -25, .rFume = 100 },
         .stats = .{ .Willpower = 4, .Evade = 15, .Speed = 80, .Vision = 8 },
     },
     .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
-            .{ .mob = "dustling", .weight = 1, .count = minmax(usize, 2, 6) },
+            .{ .mob = "dustling", .weight = 1, .count = minmax(usize, 2, 3) },
         },
     },
 };

@@ -109,12 +109,12 @@ const VALID_WINDOW_PLACEMENT_PATTERNS = [_][]const u8{
 
 const VALID_DOOR_PLACEMENT_PATTERNS = [_][]const u8{
     // ?.?
-    // #.#
+    // #?#
     // ?.?
     "?.?#.#?.?",
 
     // ?#?
-    // ...
+    // .?.
     // ?#?
     "?#?...?#?",
 };
@@ -427,14 +427,37 @@ fn findIntersectingRoom(
     return null;
 }
 
-fn roomIntersects(
+fn isRoomValid(
     rooms: *const Room.ArrayList,
     room: *const Room,
     ignore: ?*const Room,
     ignore2: ?*const Room,
     ign_c: bool,
 ) bool {
-    return if (findIntersectingRoom(rooms, room, ignore, ignore2, ign_c)) |_| true else false;
+    if (room.rect.overflowsLimit(&LIMIT)) {
+        return false;
+    }
+
+    if (Configs[room.rect.start.z].require_dry_rooms) {
+        var y: usize = room.rect.start.y;
+        while (y < room.rect.end().y) : (y += 1) {
+            var x: usize = room.rect.start.x;
+            while (x < room.rect.end().x) : (x += 1) {
+                const coord = Coord.new2(room.rect.start.z, x, y);
+                if (state.dungeon.at(coord).type == .Lava or
+                    state.dungeon.at(coord).type == .Water)
+                {
+                    return true;
+                }
+            }
+        }
+    }
+
+    if (findIntersectingRoom(rooms, room, ignore, ignore2, ign_c)) |_| {
+        return true;
+    }
+
+    return false;
 }
 
 fn excavatePrefab(
@@ -446,16 +469,9 @@ fn excavatePrefab(
 ) void {
     // Generate loot items.
     //
-    var loot_item1: ItemTemplate = undefined;
-    var rare_loot_item: ItemTemplate = undefined;
-    {
-        // FIXME: generate this once at comptime.
-        var item_weights: [items.ITEM_DROPS.len]usize = undefined;
-        for (items.ITEM_DROPS) |item, i| item_weights[i] = item.w;
-
-        loot_item1 = _chooseLootItem(&item_weights, minmax(usize, 60, 200));
-        rare_loot_item = _chooseLootItem(&item_weights, minmax(usize, 0, 60));
-    }
+    // FIXME: generate this once at comptime.
+    var item_weights: [items.ITEM_DROPS.len]usize = undefined;
+    for (items.ITEM_DROPS) |item, i| item_weights[i] = item.w;
 
     var y: usize = 0;
     while (y < fab.height) : (y += 1) {
@@ -553,8 +569,14 @@ fn excavatePrefab(
                     const p_ind = utils.findById(surfaces.props.items, Configs[room.rect.start.z].bars);
                     _ = placeProp(rc, &surfaces.props.items[p_ind.?]);
                 },
-                .Loot1 => state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(loot_item1)) catch err.wat(),
-                .RareLoot => state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(rare_loot_item)) catch err.wat(),
+                .Loot1 => {
+                    const loot_item1 = _chooseLootItem(&item_weights, minmax(usize, 60, 200));
+                    state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(loot_item1)) catch err.wat();
+                },
+                .RareLoot => {
+                    const rare_loot_item = _chooseLootItem(&item_weights, minmax(usize, 0, 60));
+                    state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(rare_loot_item)) catch err.wat();
+                },
                 else => {},
             }
         }
@@ -858,8 +880,8 @@ pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
                     continue;
                 }
 
-                if (roomIntersects(rooms, &corridor.room, parent, child, false) or
-                    roomIntersects(&newrooms, &corridor.room, parent, child, false))
+                if (isRoomValid(rooms, &corridor.room, parent, child, false) or
+                    isRoomValid(&newrooms, &corridor.room, parent, child, false))
                 {
                     continue;
                 }
@@ -1022,11 +1044,11 @@ fn _place_rooms(
         fab = choosePrefab(level, n_fabs) orelse return;
         var childrect = attachRect(parent, side, fab.?.width, fab.?.height, distance, fab) orelse return;
 
-        if (roomIntersects(rooms, &Room{ .rect = childrect }, parent, null, false) or
+        if (isRoomValid(rooms, &Room{ .rect = childrect }, parent, null, false) or
             childrect.overflowsLimit(&LIMIT))
         {
             if (Configs[level].shrink_corridors_to_fit) {
-                while (roomIntersects(rooms, &Room{ .rect = childrect }, parent, null, true) or
+                while (isRoomValid(rooms, &Room{ .rect = childrect }, parent, null, true) or
                     childrect.overflowsLimit(&LIMIT))
                 {
                     if (distance == 1) {
@@ -1050,7 +1072,7 @@ fn _place_rooms(
         var childrect = attachRect(parent, side, child_w, child_h, distance, null) orelse return;
 
         var i: usize = 0;
-        while (roomIntersects(rooms, &Room{ .rect = childrect }, parent, null, true) or
+        while (isRoomValid(rooms, &Room{ .rect = childrect }, parent, null, true) or
             childrect.overflowsLimit(&LIMIT)) : (i += 1)
         {
             if (child_w < Configs[level].min_room_width or
@@ -1075,7 +1097,7 @@ fn _place_rooms(
 
     if (distance > 0 and Configs[level].allow_corridors) {
         if (createCorridor(level, parent, &child, side)) |maybe_corridor| {
-            if (roomIntersects(rooms, &maybe_corridor.room, parent, null, true)) {
+            if (isRoomValid(rooms, &maybe_corridor.room, parent, null, true)) {
                 return;
             }
             corridor = maybe_corridor;
@@ -1122,7 +1144,7 @@ fn _place_rooms(
         f.used[level] += 1;
 
     if (child.prefab == null) {
-        if (rng.tenin(15)) {
+        if (rng.percent(Configs[level].subroom_chance)) {
             placeSubroom(s_fabs, &child, &Rect{
                 .start = Coord.new(0, 0),
                 .width = child.rect.width,
@@ -1181,7 +1203,7 @@ pub fn placeRandomRooms(
             .prefab = fab,
         };
 
-        if (roomIntersects(rooms, &room, null, null, false))
+        if (isRoomValid(rooms, &room, null, null, false))
             continue;
 
         if (first == null) first = room;
@@ -1395,7 +1417,7 @@ pub fn placeBSPRooms(
 
         excavateRect(&room.rect);
 
-        if (rng.tenin(15)) {
+        if (rng.percent(Configs[level].subroom_chance)) {
             placeSubroom(s_fabs, &room, &Rect{
                 .start = Coord.new(0, 0),
                 .width = room.rect.width,
@@ -1436,7 +1458,7 @@ pub fn placeBSPRooms(
                 // is trying to connect to a room in front of it? Need a way
                 // to find another parent node if it's not valid.
                 //
-                // if (roomIntersects(roomlist, &corridor.room, parent, child, false))
+                // if (isRoomValid(roomlist, &corridor.room, parent, child, false))
                 //     return null;
                 return corridor;
             } else {
@@ -1609,7 +1631,8 @@ pub fn placeTraps(level: usize) void {
         if (room.height == 1 or room.width == 1 or maproom.type != .Room)
             continue;
 
-        if (rng.onein(2)) continue;
+        if (!rng.percent(Configs[level].room_trapped_chance))
+            continue;
 
         var tries: usize = 30;
         var trap_coord: Coord = undefined;
@@ -3183,6 +3206,9 @@ pub const LevelConfig = struct {
 
     mapgen_func: fn (*PrefabArrayList, *PrefabArrayList, usize, mem.Allocator) void = placeRandomRooms,
 
+    // If true, will not place rooms on top of lava/water.
+    require_dry_rooms: bool = false,
+
     // Determines the number of iterations used by the mapgen algorithm.
     //
     // On placeRandomRooms: try mapgen_iters times to place a rooms randomly.
@@ -3227,6 +3253,8 @@ pub const LevelConfig = struct {
     utility_items: *[]const Prop = &surfaces.prison_item_props.items,
     allow_statues: bool = true,
     door_chance: usize = 30,
+    room_trapped_chance: usize = 40,
+    subroom_chance: usize = 60,
     allow_corridors: bool = true,
 
     blobs: []const BlobConfig = &[_]BlobConfig{},
@@ -3333,7 +3361,16 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
     },
     .shrink_corridors_to_fit = false,
     .prefab_chance = 2,
-    .mapgen_iters = 64,
+    .mapgen_iters = 512,
+
+    .min_room_width = 3,
+    .min_room_height = 3,
+    .max_room_width = 7,
+    .max_room_height = 7,
+
+    .room_crowd_max = 4,
+
+    .require_dry_rooms = true,
 
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
         null, null, null, null,
@@ -3344,8 +3381,11 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
     .tiletype = .Floor,
 
     .allow_statues = false,
-    .door_chance = 100,
+    .door_chance = 10,
+    .room_trapped_chance = 0,
+    .subroom_chance = 60,
     .allow_corridors = false,
+    .door = &surfaces.VaultDoor,
 
     .blobs = &[_]BlobConfig{
         .{
@@ -3376,8 +3416,7 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
     },
 
     .machines = &[_]*const Machine{
-        &surfaces.SteamVent,
-        &surfaces.Fountain,
+        // All machines are provided as subrooms
     },
 };
 
@@ -3424,7 +3463,7 @@ pub fn fixConfigs() void {
     // Increase crowd sizes for difficult levels.
     Configs[ 0].room_crowd_max = 4;      Configs[ 1].room_crowd_max = 3; // Upper prison
     Configs[ 2].room_crowd_max = 2;      Configs[ 3].room_crowd_max = 1; // Vaults
-    Configs[ 6].room_crowd_max = 4;      Configs[ 7].room_crowd_max = 3; // Caverns
+    Configs[ 6].room_crowd_max = 6;      Configs[ 7].room_crowd_max = 5; // Caverns
     Configs[ 9].room_crowd_max = 4;      Configs[10].room_crowd_max = 3; // Laboratory
 }
 // zig fmt: on

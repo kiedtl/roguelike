@@ -1,0 +1,10 @@
+% Disabled until Mob's AI is fixed to avoid
+% dangerous areas.
+%
+% :restriction 6
+% :subroom
+% 
+% @0 m steam_vent
+% ...
+% .0.
+% ...
