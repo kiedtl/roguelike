@@ -62,6 +62,7 @@ pub const Terrain = struct {
     effects: []const StatusDataInfo = &[_]StatusDataInfo{},
     flammability: usize = 0,
     fire_retardant: bool = false,
+    repairable: bool = true,
     luminescence: usize = 0,
     opacity: usize = 0,
 
@@ -179,7 +180,8 @@ pub const LuminescentFungiTerrain = Terrain{
     .color = 0x3cb371, // medium sea blue
     .tile = '"',
     .luminescence = 45,
-    .flammability = 3,
+    .flammability = 5,
+    .repairable = false,
 
     .for_levels = &[_][]const u8{"ANY"},
     .placement = .{ .RoomSpotty = 10 },
@@ -194,6 +196,7 @@ pub const DeadFungiTerrain = Terrain{
     .opacity = 60,
     .resists = .{ .rFire = -25 },
     .flammability = 15,
+    .repairable = false,
 
     .for_levels = &[_][]const u8{"ANY"},
     .placement = .RoomBlob,
@@ -207,6 +210,7 @@ pub const TallFungiTerrain = Terrain{
     .tile = '&',
     .opacity = 100,
     .flammability = 20,
+    .repairable = false,
 
     .for_levels = &[_][]const u8{ "PRI", "VLT" },
     .placement = .RoomBlob,
@@ -220,6 +224,7 @@ pub const PillarTerrain = Terrain{
     .tile = '8',
     .stats = .{ .Evade = 25 },
     .opacity = 50,
+    .repairable = false,
 
     .for_levels = &[_][]const u8{ "PRI", "LAB", "VLT" },
     .placement = .{ .RoomSpotty = 5 },

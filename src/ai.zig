@@ -5,6 +5,7 @@ const math = std.math;
 const meta = std.meta;
 
 const state = @import("state.zig");
+const surfaces = @import("surfaces.zig");
 const err = @import("err.zig");
 const utils = @import("utils.zig");
 const items = @import("items.zig");
@@ -595,6 +596,10 @@ pub fn engineerWork(mob: *Mob, _: mem.Allocator) void {
                 //
                 if (state.dungeon.at(target).mob == null) {
                     state.dungeon.at(target).broken = false;
+
+                    if (!state.dungeon.terrainAt(target).repairable) {
+                        state.dungeon.at(target).terrain = &surfaces.DefaultTerrain;
+                    }
                 }
 
                 mob.ai.work_phase = .EngineerScan;

@@ -3418,11 +3418,7 @@ pub const Tile = struct {
 
         if (self.broken) {
             cell.bg = colors.BG;
-
-            const chars = [_]u32{ '`', ',', '^', '\'', '*', '"' };
-            if (self.rand % 100 < 15) {
-                cell.ch = chars[self.rand % chars.len];
-            }
+            cell.ch = '·';
         }
 
         if (self.mob) |mob| {
@@ -3608,6 +3604,7 @@ pub const Dungeon = struct {
     //
     pub fn terrainAt(self: *Dungeon, coord: Coord) *const surfaces.Terrain {
         const tile = self.at(coord);
+        if (tile.broken) return &surfaces.DefaultTerrain;
         return if (tile.surface == null) tile.terrain else &surfaces.DefaultTerrain;
     }
 
@@ -3640,7 +3637,7 @@ pub const Dungeon = struct {
         if (tile.type == .Wall and !tile.broken)
             return @floatToInt(usize, tile.material.opacity * 100);
 
-        o += tile.terrain.opacity;
+        o += state.dungeon.terrainAt(coord).opacity;
 
         if (tile.mob) |_|
             o += MOB_OPACITY;

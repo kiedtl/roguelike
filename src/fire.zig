@@ -1,5 +1,6 @@
 const std = @import("std");
 const math = std.math;
+const mem = std.mem;
 
 const state = @import("state.zig");
 const gas = @import("gas.zig");
@@ -110,7 +111,7 @@ pub fn tickFire(level: usize) void {
                     switch (state.dungeon.at(neighbor).type) {
                         .Floor => {
                             const neighborfire = state.dungeon.fireAt(coord).*;
-                            if (neighborfire == 0 and rng.percent(oldfire))
+                            if (neighborfire == 0 and rng.percent(oldfire * 5))
                                 setTileOnFire(neighbor);
                         },
                         .Water => {
@@ -129,15 +130,18 @@ pub fn tickFire(level: usize) void {
             //
             // Otherwise, mark the tile as broken (but don't set any machines as
             // malfunctioning).
-            if (state.dungeon.at(coord).surface) |s| switch (s) {
-                .Corpse => |_| state.dungeon.at(coord).surface = null,
-                .Machine => |m| if (m.malfunction_effect) |eff| switch (eff) {
-                    .Explode => |e| if (rng.percent(oldfire * 10))
-                        explosions.kaboom(coord, .{ .strength = e.power }),
-                    else => state.dungeon.at(coord).broken = true,
-                },
-                else => state.dungeon.at(coord).broken = true,
-            };
+            if (state.dungeon.at(coord).surface) |s| {
+                switch (s) {
+                    .Corpse => |_| state.dungeon.at(coord).surface = null,
+                    .Machine => |m| if (m.malfunction_effect) |eff| switch (eff) {
+                        .Explode => |e| if (rng.percent(oldfire * 10))
+                            explosions.kaboom(coord, .{ .strength = e.power }),
+                        else => state.dungeon.at(coord).broken = true,
+                    },
+                    else => {},
+                }
+            }
+            state.dungeon.at(coord).broken = true;
 
             newfire -|= rng.range(usize, 1, 2);
 
