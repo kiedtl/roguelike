@@ -13,6 +13,7 @@ const spells = @import("spells.zig");
 const combat = @import("combat.zig");
 const err = @import("err.zig");
 const gas = @import("gas.zig");
+const mobs = @import("mobs.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
 const termbox = @import("termbox.zig");
@@ -439,6 +440,10 @@ fn _getMonsSpellsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, li
             if (spellcfg.spell.cast_type == .Smite) {
                 const target = @as([]const u8, switch (spellcfg.spell.smite_target_type) {
                     .Self => "$bself$.",
+                    .SpecificMob => |id| b: {
+                        const t = mobs.findMobById(id).?;
+                        break :b t.mob.ai.profession_name orelse t.mob.species.name;
+                    },
                     .UndeadAlly => "undead ally",
                     .Mob => "you",
                     .Corpse => "corpse",
@@ -768,6 +773,7 @@ const DrawStrOpts = struct {
 //     $.       reset fg and bg to defaults
 fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args: anytype, opts: DrawStrOpts) isize {
     const termbox_width = termbox.tb_width();
+    const termbox_height = termbox.tb_height();
     const termbox_buffer = termbox.tb_cell_buffer();
 
     var buf: [65535]u8 = undefined;
@@ -795,10 +801,8 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
             continue;
         }
 
-        if (opts.endy) |endy| {
-            if (endy == y) {
-                break;
-            }
+        if (y >= termbox_height or (opts.endy != null and y >= opts.endy.?)) {
+            break;
         }
 
         var utf8 = (std.unicode.Utf8View.init(line) catch err.bug("bad utf8", .{})).iterator();

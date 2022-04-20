@@ -427,7 +427,7 @@ fn findIntersectingRoom(
     return null;
 }
 
-fn isRoomValid(
+fn isRoomInvalid(
     rooms: *const Room.ArrayList,
     room: *const Room,
     ignore: ?*const Room,
@@ -435,7 +435,7 @@ fn isRoomValid(
     ign_c: bool,
 ) bool {
     if (room.rect.overflowsLimit(&LIMIT)) {
-        return false;
+        return true;
     }
 
     if (Configs[room.rect.start.z].require_dry_rooms) {
@@ -880,8 +880,8 @@ pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
                     continue;
                 }
 
-                if (isRoomValid(rooms, &corridor.room, parent, child, false) or
-                    isRoomValid(&newrooms, &corridor.room, parent, child, false))
+                if (isRoomInvalid(rooms, &corridor.room, parent, child, false) or
+                    isRoomInvalid(&newrooms, &corridor.room, parent, child, false))
                 {
                     continue;
                 }
@@ -1044,11 +1044,11 @@ fn _place_rooms(
         fab = choosePrefab(level, n_fabs) orelse return;
         var childrect = attachRect(parent, side, fab.?.width, fab.?.height, distance, fab) orelse return;
 
-        if (isRoomValid(rooms, &Room{ .rect = childrect }, parent, null, false) or
+        if (isRoomInvalid(rooms, &Room{ .rect = childrect }, parent, null, false) or
             childrect.overflowsLimit(&LIMIT))
         {
             if (Configs[level].shrink_corridors_to_fit) {
-                while (isRoomValid(rooms, &Room{ .rect = childrect }, parent, null, true) or
+                while (isRoomInvalid(rooms, &Room{ .rect = childrect }, parent, null, true) or
                     childrect.overflowsLimit(&LIMIT))
                 {
                     if (distance == 1) {
@@ -1072,7 +1072,7 @@ fn _place_rooms(
         var childrect = attachRect(parent, side, child_w, child_h, distance, null) orelse return;
 
         var i: usize = 0;
-        while (isRoomValid(rooms, &Room{ .rect = childrect }, parent, null, true) or
+        while (isRoomInvalid(rooms, &Room{ .rect = childrect }, parent, null, true) or
             childrect.overflowsLimit(&LIMIT)) : (i += 1)
         {
             if (child_w < Configs[level].min_room_width or
@@ -1097,7 +1097,7 @@ fn _place_rooms(
 
     if (distance > 0 and Configs[level].allow_corridors) {
         if (createCorridor(level, parent, &child, side)) |maybe_corridor| {
-            if (isRoomValid(rooms, &maybe_corridor.room, parent, null, true)) {
+            if (isRoomInvalid(rooms, &maybe_corridor.room, parent, null, true)) {
                 return;
             }
             corridor = maybe_corridor;
@@ -1203,7 +1203,7 @@ pub fn placeRandomRooms(
             .prefab = fab,
         };
 
-        if (isRoomValid(rooms, &room, null, null, false))
+        if (isRoomInvalid(rooms, &room, null, null, false))
             continue;
 
         if (first == null) first = room;
@@ -1458,7 +1458,7 @@ pub fn placeBSPRooms(
                 // is trying to connect to a room in front of it? Need a way
                 // to find another parent node if it's not valid.
                 //
-                // if (isRoomValid(roomlist, &corridor.room, parent, child, false))
+                // if (isRoomInvalid(roomlist, &corridor.room, parent, child, false))
                 //     return null;
                 return corridor;
             } else {
@@ -1703,7 +1703,15 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
     defer spawn_table_ids.deinit();
     defer spawn_table_weights.deinit();
 
+    var level_mob_count: usize = 0;
+
     for (state.rooms[level].items) |*room| {
+        if (Configs[level].level_crowd_max) |level_crowd_max| {
+            if (level_mob_count >= level_crowd_max) {
+                continue;
+            }
+        }
+
         if (room.prefab) |rfb| if (rfb.noguards) continue;
         if (room.type == .Corridor) continue;
         if (room.rect.height * room.rect.width < 25) continue;
@@ -1727,10 +1735,13 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
                 if (!isTileAvailable(post_coord) or state.dungeon.at(post_coord).prison)
                     continue;
 
-                _ = mobs.placeMob(alloc, mob, post_coord, .{
+                const m = mobs.placeMob(alloc, mob, post_coord, .{
                     .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
                 });
-                room.mob_count += 1;
+                const new_mobs = 1 + m.squad_members.items.len;
+
+                room.mob_count += new_mobs;
+                level_mob_count += new_mobs;
 
                 break;
             }
@@ -3229,6 +3240,7 @@ pub const LevelConfig = struct {
         .{ .count = 3, .template = &mobs.EngineerTemplate },
     },
     room_crowd_max: usize = 2,
+    level_crowd_max: ?usize = null,
 
     no_lights: bool = false,
     no_windows: bool = false,
@@ -3359,19 +3371,25 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
         .{ 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 },
         .{ 1, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
     },
-    .shrink_corridors_to_fit = false,
-    .prefab_chance = 2,
-    .mapgen_iters = 512,
+    .shrink_corridors_to_fit = true,
+    .prefab_chance = 3,
+    .mapgen_iters = 4096,
 
     .min_room_width = 3,
     .min_room_height = 3,
-    .max_room_width = 7,
-    .max_room_height = 7,
+    .max_room_width = 5,
+    .max_room_height = 4,
 
     .required_mobs = &[_]LevelConfig.RequiredMob{
         .{ .count = 3, .template = &mobs.MellaentTemplate },
+
+        // TODO: remove these entries when the mob placer is fixed
+        // and stops dumping treacherously low numbers of enemies
+        .{ .count = 3, .template = &mobs.ConvultTemplate },
+        .{ .count = 3, .template = &mobs.VapourMageTemplate },
     },
     .room_crowd_max = 4,
+    .level_crowd_max = 40,
 
     .require_dry_rooms = true,
 
@@ -3464,9 +3482,11 @@ pub fn fixConfigs() void {
 
 
     // Increase crowd sizes for difficult levels.
-    Configs[ 0].room_crowd_max = 4;      Configs[ 1].room_crowd_max = 3; // Upper prison
-    Configs[ 2].room_crowd_max = 2;      Configs[ 3].room_crowd_max = 1; // Vaults
-    Configs[ 6].room_crowd_max = 6;      Configs[ 7].room_crowd_max = 5; // Caverns
-    Configs[ 9].room_crowd_max = 4;      Configs[10].room_crowd_max = 3; // Laboratory
+    Configs[ 0].room_crowd_max = 4;      Configs[ 1].room_crowd_max = 3;   // Upper prison
+    Configs[ 2].room_crowd_max = 2;      Configs[ 3].room_crowd_max = 1;   // Vaults
+    Configs[ 6].room_crowd_max = 6;      Configs[ 7].room_crowd_max = 5;   // Caverns
+    Configs[ 9].room_crowd_max = 4;      Configs[10].room_crowd_max = 3;   // Laboratory
+
+    Configs[ 6].level_crowd_max = 50;    Configs[ 7].level_crowd_max = 50; // Caverns
 }
 // zig fmt: on

@@ -398,6 +398,69 @@ pub const GoblinTemplate = MobTemplate{
     .armor = &items.LeatherArmor,
 };
 
+pub const ConvultTemplate = MobTemplate{
+    .mob = .{
+        .id = "convult",
+        .species = &HumanSpecies,
+        .tile = 'Ç',
+        .ai = AI{
+            .profession_name = "convult",
+            .profession_description = "watching",
+            .work_fn = ai.patrolWork,
+            .fight_fn = ai.mageFight,
+            .is_combative = true,
+            .is_curious = true,
+            .spellcaster_backup_action = .KeepDistance,
+        },
+        .allegiance = .Necromancer,
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 3, .spell = &spells.CAST_ENRAGE_DUSTLING, .power = 9 },
+        },
+        .max_MP = 6,
+
+        .max_HP = 15,
+        .memory_duration = 8,
+        .stats = .{ .Willpower = 3, .Speed = 100 },
+    },
+    .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
+};
+
+pub const VapourMageTemplate = MobTemplate{
+    .mob = .{
+        .id = "vapour_mage",
+        .species = &HumanSpecies,
+        .tile = 'Ð',
+        .ai = AI{
+            .profession_name = "vapour mage",
+            .profession_description = "watching",
+            .work_fn = ai.patrolWork,
+            .fight_fn = ai.mageFight,
+            .is_combative = true,
+            .is_curious = true,
+            .spellcaster_backup_action = .KeepDistance,
+        },
+        .allegiance = .Necromancer,
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 8, .spell = &spells.BOLT_AIRBLAST, .power = 5 },
+            .{ .MP_cost = 2, .spell = &spells.CAST_HASTE_DUSTLING, .power = 10 },
+        },
+        .max_MP = 15,
+
+        .max_HP = 13,
+        .memory_duration = 10,
+        .stats = .{ .Willpower = 6, .Speed = 110, .Vision = 7 },
+    },
+    .armor = &items.LeatherArmor,
+    .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "dustling", .weight = 1, .count = minmax(usize, 2, 3) },
+        },
+    },
+};
+
 pub const DustlingTemplate = MobTemplate{
     .mob = .{
         .id = "dustling",
@@ -422,7 +485,7 @@ pub const DustlingTemplate = MobTemplate{
         .blood_spray = gas.Dust.id,
         .corpse = .None,
         .innate_resists = .{ .rFire = -25, .rElec = -25, .rFume = 100 },
-        .stats = .{ .Willpower = 4, .Evade = 15, .Speed = 80, .Vision = 8 },
+        .stats = .{ .Willpower = 4, .Evade = 15, .Speed = 80, .Vision = 4 },
     },
     .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
     .squad = &[_][]const MobTemplate.SquadMember{
@@ -1171,6 +1234,8 @@ pub const MOBS = [_]MobTemplate{
     PatrolTemplate,
     PlayerTemplate,
     GoblinTemplate,
+    ConvultTemplate,
+    VapourMageTemplate,
     DustlingTemplate,
     MellaentTemplate,
     KyaniteStatueTemplate,

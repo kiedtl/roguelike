@@ -7,6 +7,8 @@
 const std = @import("std");
 const meta = std.meta;
 const math = std.math;
+const assert = std.debug.assert;
+const mem = std.mem;
 
 const types = @import("types.zig");
 const combat = @import("combat.zig");
@@ -39,6 +41,47 @@ const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
 // -----------------------------------------------------------------------------
+
+pub const CAST_ENRAGE_DUSTLING = Spell{
+    .id = "sp_enrage_dustling",
+    .name = "enrage dustling",
+    .cast_type = .Smite,
+    .smite_target_type = .{ .SpecificMob = "dustling" },
+    .effect_type = .{ .Status = .Enraged },
+};
+
+pub const CAST_HASTE_DUSTLING = Spell{
+    .id = "sp_haste_dustling",
+    .name = "haste dustling",
+    .cast_type = .Smite,
+    .smite_target_type = .{ .SpecificMob = "dustling" },
+    .effect_type = .{ .Status = .Fast },
+};
+
+pub const BOLT_AIRBLAST = Spell{
+    .id = "sp_airblast",
+    .name = "airblast",
+    .cast_type = .Bolt,
+    .bolt_dodgeable = false,
+    .bolt_multitarget = false,
+    .check_has_effect = struct {
+        fn f(caster: *Mob, opts: SpellOptions, c: Coord) bool {
+            return caster.coord.distance(c) < opts.power;
+        }
+    }.f,
+    .noise = .Loud,
+    .effect_type = .{ .Custom = struct {
+        fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
+            if (state.dungeon.at(coord).mob) |victim| {
+                const distance = victim.coord.distance(caster_c);
+                assert(distance < opts.power);
+                const knockback = opts.power - distance;
+                const direction = caster_c.closestDirectionTo(coord, state.mapgeometry);
+                combat.throwMob(state.dungeon.at(caster_c).mob, victim, direction, knockback);
+            } else err.wat();
+        }
+    }.f },
+};
 
 pub const CAST_MASS_DISMISSAL = Spell{
     .id = "sp_mass_dismissal",
@@ -511,7 +554,13 @@ pub const Spell = struct {
     },
 
     // Only used if cast_type == .Smite.
-    smite_target_type: enum { Self, UndeadAlly, Mob, Corpse } = .Mob,
+    smite_target_type: union(enum) {
+        SpecificMob: []const u8, // mob's ID
+        Self,
+        UndeadAlly,
+        Mob,
+        Corpse,
+    } = .Mob,
 
     // Only used if cast_type == .Bolt
     bolt_dodgeable: bool = false,
@@ -611,9 +660,19 @@ pub const Spell = struct {
             },
             .Smite => {
                 switch (self.smite_target_type) {
-                    .Self, .Mob, .UndeadAlly => {
+                    .Self, .Mob, .SpecificMob, .UndeadAlly => {
                         if (state.dungeon.at(target).mob == null) {
                             err.bug("Mage used smite-targeted spell on empty target!", .{});
+                        }
+
+                        if (self.smite_target_type == .SpecificMob) {
+                            const wanted_id = self.smite_target_type.SpecificMob;
+                            const got_id = state.dungeon.at(target).mob.?.id;
+                            if (!mem.eql(u8, got_id, wanted_id)) {
+                                err.bug("Mage cast {s} at wrong mob! (Wanted {s}; got {s})", .{
+                                    self.id, wanted_id, got_id,
+                                });
+                            }
                         }
 
                         const mob = state.dungeon.at(target).mob.?;

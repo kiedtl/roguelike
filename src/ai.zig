@@ -910,6 +910,13 @@ fn _isValidTargetForSpell(caster: *Mob, spell: SpellOptions, target: *Mob) bool 
     if (spell.spell.needs_visible_target and !caster.cansee(target.coord))
         return false;
 
+    if (spell.spell.cast_type == .Smite) {
+        switch (spell.spell.smite_target_type) {
+            .SpecificMob => |id| if (!mem.eql(u8, id, target.id)) return false,
+            else => {},
+        }
+    }
+
     if (spell.spell.cast_type == .Bolt)
         if (!utils.hasClearLOF(caster.coord, target.coord))
             return false;

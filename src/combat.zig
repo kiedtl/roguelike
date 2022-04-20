@@ -33,7 +33,8 @@ const DEFENDER_STUN_NBONUS: isize = 10;
 
 pub fn damageOfMeleeAttack(attacker: *const Mob, w_damage: usize, is_stab: bool) usize {
     var damage: usize = w_damage;
-    damage += if (attacker.isUnderStatus(.Enraged) != null) damage / 5 else 0;
+    damage += if (attacker.isUnderStatus(.Enraged) != null) math.min(1, damage / 2) else 0;
+    damage += if (attacker.isUnderStatus(.Invigorate) != null) math.min(1, damage / 2) else 0;
 
     if (is_stab) {
         damage = utils.percentOf(usize, damage, 600);
