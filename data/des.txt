@@ -203,6 +203,16 @@ wounds and waiting miserably until its execution.
 
 For some reason, its captors haven't bothered to take its mace and armor away...
 
+% convult
+
+A foul apprentice mage, specializing in the manipulation of emotions. His craft,
+however, has caused him to lose control over his own, and now his features
+writhe and contort with irrepressible hatred.
+
+% vapour_mage
+
+Wow, he really does look weak on his own.
+
 % dustling
 
 A humanoid construct created by a minor sorcerer. It seems to be more or less
