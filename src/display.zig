@@ -404,6 +404,120 @@ fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceIte
     }
 }
 
+const MobInfoLine = struct {
+    char: u21,
+    color: u21 = '.',
+    string: std.ArrayList(u8) = std.ArrayList(u8).init(state.GPA.allocator()),
+
+    pub const ArrayList = std.ArrayList(@This());
+
+    pub fn deinitList(list: ArrayList) void {
+        for (list.items) |item| item.string.deinit();
+        list.deinit();
+    }
+};
+
+fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
+    var list = MobInfoLine.ArrayList.init(state.GPA.allocator());
+
+    {
+        var i = MobInfoLine{ .char = '*' };
+        i.color = if (mob.HP <= (mob.max_HP / 5)) @as(u21, 'r') else '.';
+        i.string.writer().print("{}/{} HP", .{
+            @floatToInt(usize, math.round(mob.HP)),
+            @floatToInt(usize, math.round(mob.max_HP)),
+        }) catch err.wat();
+        list.append(i) catch err.wat();
+    }
+
+    if (mob.prisoner_status) |ps| {
+        var i = MobInfoLine{ .char = 'p' };
+        const str = if (ps.held_by) |_| "chained" else "prisoner";
+        i.string.writer().print("{s}", .{str}) catch err.wat();
+        list.append(i) catch err.wat();
+    }
+
+    if (mob.resistance(.rFume) == 0) {
+        var i = MobInfoLine{ .char = 'u' };
+        i.string.writer().print("unbreathing", .{}) catch err.wat();
+        list.append(i) catch err.wat();
+    }
+
+    if (mob.immobile) {
+        var i = MobInfoLine{ .char = 'i' };
+        i.string.writer().print("immobile", .{}) catch err.wat();
+        list.append(i) catch err.wat();
+    }
+
+    const mobspeed = mob.stat(.Speed);
+    const youspeed = state.player.stat(.Speed);
+    if (mobspeed != youspeed) {
+        var i = MobInfoLine{ .char = if (mobspeed < youspeed) @as(u21, 'f') else 's' };
+        i.color = if (mobspeed < youspeed) @as(u21, 'p') else 'b';
+        i.string.writer().print("{s}", .{
+            if (mobspeed < youspeed) "faster than you" else "slower than you",
+        }) catch err.wat();
+        list.append(i) catch err.wat();
+    }
+
+    if (mob.ai.phase == .Investigate) {
+        var i = MobInfoLine{ .char = '?' };
+        var you_str: []const u8 = "";
+        if (state.dungeon.soundAt(mob.ai.target.?).mob_source) |soundsource| {
+            if (soundsource == state.player) {
+                you_str = "you";
+            }
+        }
+        i.string.writer().print("investigating {s}", .{you_str}) catch err.wat();
+
+        list.append(i) catch err.wat();
+    } else if (mob.ai.phase == .Flee) {
+        var i = MobInfoLine{ .char = '!' };
+        i.string.writer().print("fleeing", .{}) catch err.wat();
+        list.append(i) catch err.wat();
+    }
+
+    {
+        var i = MobInfoLine{ .char = '@' };
+
+        if (mob.isHostileTo(state.player) and mob.ai.is_combative) {
+            var text: []const u8 = "this is a bug";
+
+            const Awareness = enum { Seeing, Remember, None };
+            const awareness: Awareness = for (mob.enemies.items) |enemyrec| {
+                if (enemyrec.mob == state.player) {
+                    // Zig, why the fuck do I need to cast the below as Awareness?
+                    // Wouldn't I like to fucking chop your fucking type checker into
+                    // tiny shreds with a +9 halberd of flaming.
+                    break if (mob.cansee(state.player.coord)) @as(Awareness, .Seeing) else .Remember;
+                }
+            } else .None;
+
+            switch (awareness) {
+                .Seeing => {
+                    i.color = 'r';
+                    text = "aware";
+                },
+                .Remember => {
+                    i.color = 'p';
+                    text = "remembers you";
+                },
+                .None => {
+                    i.color = 'b';
+                    text = "unaware";
+                },
+            }
+
+            i.string.writer().print("{s}", .{text}) catch err.wat();
+        } else {
+            i.string.writer().print("doesn't care", .{}) catch err.wat();
+        }
+
+        list.append(i) catch err.wat();
+    }
+    return list;
+}
+
 fn _getMonsStatsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidth: usize) void {
     _ = linewidth;
 
@@ -492,80 +606,10 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
     _writerMonsHostility(w, mob);
     _writerWrite(w, "\n", .{});
 
-    const asterisk_col = if (mob.HP <= (mob.max_HP / 5)) @as(u21, 'r') else '.';
-    _writerWrite(w, "${u}*$. {}/{} HP\n", .{
-        asterisk_col,
-        @floatToInt(usize, math.round(mob.HP)),
-        @floatToInt(usize, math.round(mob.max_HP)),
-    });
-
-    if (mob.prisoner_status) |ps| {
-        const desc = if (ps.held_by) |_| "chained" else "prisoner";
-        _writerWrite(w, "$cp$. {s}\n", .{desc});
-    }
-
-    if (mob.resistance(.rFume) == 0) {
-        _writerWrite(w, "$cu$. unbreathing\n", .{});
-    }
-
-    if (mob.immobile) {
-        _writerWrite(w, "$ci$. immobile\n", .{});
-    }
-
-    const mobspeed = mob.stat(.Speed);
-    const youspeed = state.player.stat(.Speed);
-    if (mobspeed != youspeed) {
-        const ch = if (mobspeed < youspeed) @as(u21, 'f') else 's';
-        const desc = if (mobspeed < youspeed) "faster than you" else "slower than you";
-        const col = if (mobspeed < youspeed) @as(u21, 'p') else 'b';
-
-        _writerWrite(w, "${u}{u}$. {s}\n", .{ col, ch, desc });
-    }
-
-    if (mob.ai.phase == .Investigate) {
-        var you_str: []const u8 = "";
-        if (state.dungeon.soundAt(mob.ai.target.?).mob_source) |soundsource| {
-            if (soundsource == state.player) {
-                you_str = "you";
-            }
-        }
-        _writerWrite(w, "? investigating {s}\n", .{you_str});
-    } else if (mob.ai.phase == .Flee) {
-        _writerWrite(w, "$b!$. fleeing\n", .{});
-    }
-
-    if (mob.isHostileTo(state.player) and mob.ai.is_combative) {
-        var color: u21 = '.';
-        var text: []const u8 = "this is a bug";
-
-        const Awareness = enum { Seeing, Remember, None };
-        const awareness: Awareness = for (mob.enemies.items) |enemyrec| {
-            if (enemyrec.mob == state.player) {
-                // Zig, why the fuck do I need to cast the below as Awareness?
-                // Wouldn't I like to fucking chop your fucking type checker into
-                // tiny shreds with a +9 halberd of flaming.
-                break if (mob.cansee(state.player.coord)) @as(Awareness, .Seeing) else .Remember;
-            }
-        } else .None;
-
-        switch (awareness) {
-            .Seeing => {
-                color = 'r';
-                text = "aware";
-            },
-            .Remember => {
-                color = 'p';
-                text = "remembers you";
-            },
-            .None => {
-                color = 'b';
-                text = "unaware";
-            },
-        }
-
-        _writerWrite(w, "${u}@$. {s}\n", .{ color, text });
-    } else {
-        _writerWrite(w, "$g@$. doesn't care\n", .{});
+    const infoset = _getMonsInfoSet(mob);
+    defer MobInfoLine.deinitList(infoset);
+    for (infoset.items) |info| {
+        _writerWrite(w, "${u}{u}$. {s}\n", .{ info.color, info.char, info.string.items });
     }
 
     _writerWrite(w, "\n", .{});
@@ -884,31 +928,33 @@ fn drawEnemyInfo(
         var mobcell = Tile.displayAs(mob.coord, false);
         termbox.tb_put_cell(startx, y, &mobcell);
 
-        y = _drawStr(startx + 2, y, endx, "{s}", .{mob.displayName()}, .{});
+        const name = mob.displayName();
+        _ = _drawStr(startx + 2, y, endx, "$c{s}$.", .{name}, .{});
 
-        _draw_bar(y, startx, endx, @floatToInt(usize, mob.HP), @floatToInt(usize, mob.max_HP), "health", 0x232faa, 0xffffff);
+        const infoset = _getMonsInfoSet(mob);
+        defer MobInfoLine.deinitList(infoset);
+        var info_x: isize = startx + 2 + @intCast(isize, name.len) + 2;
+        //var info_x: isize = endx - @intCast(isize, name.len) - 1;
+        for (infoset.items) |info| {
+            _ = _drawStr(info_x, y, endx, "${u}{u}$.", .{ info.color, info.char }, .{});
+            info_x += 1;
+        }
         y += 1;
+
+        //_draw_bar(y, startx, endx, @floatToInt(usize, mob.HP), @floatToInt(usize, mob.max_HP), "health", 0x232faa, 0xffffff);
+        //y += 1;
 
         var statuses = mob.statuses.iterator();
         while (statuses.next()) |entry| {
-            const status = entry.key;
-            const se = entry.value.*;
-
-            const duration = switch (se.duration) {
-                .Prm, .Equ, .Ctx => Status.MAX_DURATION,
-                .Tmp => |t| t,
-            };
-
-            if (duration == 0) continue;
-
-            _draw_bar(y, startx, endx, duration, Status.MAX_DURATION, status.string(mob), 0x77452e, 0xffffff);
-            y += 1;
+            if (mob.isUnderStatus(entry.key) == null or entry.value.duration != .Tmp)
+                continue;
+            y = _drawStr(startx, y, endx, "{s}", .{_formatStatusInfo(entry.value)}, .{});
         }
 
-        const activity = if (mob.prisoner_status != null) if (mob.prisoner_status.?.held_by != null) "(chained)" else "(prisoner)" else mob.activity_description();
-        y = _drawStr(endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2), y, endx, "{s}", .{activity}, .{ .fg = 0x9a9a9a });
+        //const activity = if (mob.prisoner_status != null) if (mob.prisoner_status.?.held_by != null) "(chained)" else "(prisoner)" else mob.activity_description();
+        //y = _drawStr(endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2), y, endx, "{s}", .{activity}, .{ .fg = 0x9a9a9a });
 
-        y += 2;
+        //y += 2;
     }
 }
 
