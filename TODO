@@ -24,7 +24,8 @@ New Levels
 - Plenty of patrols, and guards at hallway junctions
 - Layout leads to interesting gameplay, I think?
 
-New mobs --------
+New mobs
+--------
 - creeping death
 	- A sabre-toothed cat, nothing more or less.
 	- Has LOS radius of just one more than player's.
@@ -35,11 +36,12 @@ New mobs --------
 		- Bite provides chance of paralysis
 	- When player is in LOS of cat, messages:
 		- "You feel like something is watching you."
-		- "You feel uneasy." (just before cat charges) x sulfur fiend x
-		  rElec∞ and rFire+.  x Hasten Rot: makes a corpse emit a cloud
-		  of miasma, destroying the corpse in the process. Miasma
-		  causes nausea.  x Summon Ball Lightning: conjures a ball
-		  lightning mobs.
+		- "You feel uneasy." (just before cat charges)
+x sulfur fiend x
+	x rElec∞ and rFire+.
+	x Hasten Rot: makes a corpse emit a cloud of miasma, destroying the
+	  corpse in the process. Miasma causes nausea.
+	x Summon Ball Lightning: conjures a ball lightning mobs.
 - fiend of vapours
 	- "A strange winged figure, cloaked in dirty rags. It is holding a
 	  sceptre."
@@ -50,31 +52,28 @@ New mobs --------
 	- Dispel Fumes: removes harmful fumes near allies.
 	- Meat Offering: creates a vile protector from a corpse, using it up in
 	  the process. Vile protector redirects damage done to allies to itself.
-	  Vile protector is very tanky (80 HP) but immobile; shielding ends if
+	  Vile protector is fairly tanky (10 HP) but immobile; shielding ends if
 	  the dustlings/allies move out of its LOS.
-	- Airblast: knockback all nearby allies/foes (5 - distance_from_fiend)
-	  spaces
-	- Vunerable to fire, resistant to electricity.
-	- Relatively fragile (12 HP) and slow (110).
-- vapour mage
 	- Windlash: moderate damage, smite-targeted.
-	  - "The ether fiend waves its arms around in wide circles!"
+	  - "The vapour mage waves its arms around in wide circles!"
 	  - "The air whirls around and strikes you!"
 	  - "The air twists around and strikes you!"
 	  - "The air twists itself inside-out and smites you!!"
+	- Vunerable to fire, resistant to electricity.
+	- Relatively fragile (12 HP) and slow (110).
+- vapour mage
+	- Airblast: knockback foe (5 - distance_from_mage) spaces
 	- Haste dustling
-	- Meat offering
 	- Has night vision.
 - convult
 	- Keeps distance
 	- Enrage dustling
-- dustling
-	- Exceedingly fragile (1-5 HP) and no armor/weapons.
-	- Carries a strong punch, though.
-	- Fast (55% speed)
-	- Has night vision.
-	- Vunerable to fire, electricity.
-	- Found solely in Caverns.
+x dustling
+	x Exceedingly fragile (5 HP) and no armor/weapons. Carries a strong
+	  punch, though.
+	x Fast (55% speed) and has night vision.
+	x Vunerable to fire and electricity.
+	x Found solely in Caverns.
 x frozen fiend
 	- "A winged humanoid, clothed in watery-blue robes. It whispers grimly
 	   to itself as it patrols the dungeon, inspecting its underlings with
@@ -95,7 +94,7 @@ x frozen fiend
 	  spirit. It radiates an intense aura of palpable malice."
 	- Appears in pairs in hallways of the Morgue.
 	- Chance to resistibly blink intruders away from itself.
-- jasper statue
+- schalenblende statue
 	- "A humanoid statue imbued with an evil
 	  spirit. It radiates an intense aura of palpable malice."
 	- Appears in pairs guarding doorways of rooms in the Morgue.
@@ -103,18 +102,16 @@ x frozen fiend
 - lightning spire
 	- like dcss' lightning spire
 	- hurls powerful bolts of electricity
-	- rFire+ rElec+ rMlee+ rFume∞ rPara∞ rPois∞
+	- rFire+ rElec+ Armor=30% rFume∞ rPara∞ rPois∞
 	- immobile, only attacks when other hostile present
 - torpor spire
 	- like dcss' torpor snail
 	- attempts to slows player when in FOV
-	- rFire+ rElec+ rMlee+ rFume∞ rPara∞ rPois∞
+	- rFire+ rElec+ Armor=30% rFume∞ rPara∞ rPois∞
 	- immobile
 - iron spire
-	- "A towering demonic spire, with a thousand eyes leering through its
-	  iron plates. It shreds its enemies with shards of metal."
 	- hurls iron shards and orbs of devastation
-	- rFire+ rElec+ rMlee+ rFume∞ rPara∞ rPois∞
+	- rFire+ rElec+ Armor=30% rFume∞ rPois∞
 	- immobile, only attacks when other hostile present
 - silver spire
 	- Enables silver weapons.
@@ -129,7 +126,7 @@ x warden
 	- Emanates opaque gas.
 	  - Mobs that step in gas will be irresistibly blinked away.
 	- When allies are about to die, gives them a status them makes them
-	  very briefly invunerable and sends them insane. (Death's Door?)
+	  very briefly invunerable and sends them insane.
 	- Tries to blink around so as to not be adjacent to allies.
 	- Teleports away (or suicides?) when no allies visible.
 	- Immune to weapon damage.
@@ -144,33 +141,28 @@ x burning brute
 	  - Every 2-3 turns, flames seep out of mob and ignite nearby tiles.
 	  - When timer is over, mob explodes, damaging all nearby mobs.
 	x Has kicking (x1) and clawing (x1) attack (need species struct for this).
-- Archmage
-	- (Idea still TODO)
-	- Upscaled ancient mage, as archliche is to master liche.
-	- Cons: why a separate monster from ancient mage?
-	- Mass Confusion, Mass Dismissal
-- hunter
+- destroyer
 	- Travels with a swarm of stalkers (see below).
 	- Memory duration of 9.
-	- Leather armor and rapier, ~50 HP.
+	- Chain mail and rapier, ~15 HP.
 	- Slower than player.
 - stalkers
-	- "A small flying creature, its four wings buzzing ominously as it
+	- "A small flying creature, its four wings humming ominously as it
 	  follows you at the behest of its owner. Its copper-colored entrails
-	  loop around its silvery torso."
+	  loop disgustingly around its silver torso."
 	- A small aluminum drone, with copper wires sticking out. The player
 	  wouldn't know that of course.
-	- Travels with a hunter captain.
-	- "Sticks" near to player, keeping hunter aware of player's location.
+	- Travels with a destroyer captain.
+	- "Sticks" near to player, keeping destroyer aware of player's location.
 	- Does not actually attack player, keeps distance of 3 tiles.
 	- Completely deaf, won't investigate on its own. Vision of 3 tiles,
 	  has night vision.
-	- ~20 HP, 25% armor, has evasion of ~40, and very fast.
+	- 5 HP, 25% armor, has evasion of 40%, and very fast.
 - silver hornet
 	- "A tiny buzzing insect, seemingly made of some lightweight silvery metal.
 	   It's trying to sting you!"
 	- Very fast, and base evade% of 50.
-	- Gives silver damage (i.e., electrocution if in range of battery pack).
+	- Gives silver damage (i.e., electrocution if in aura of silver spire).
 	- 5 HP and no armor at all.
 	- Found in the Laboratory.
 x iron wasp
@@ -190,10 +182,6 @@ x lead turtle
 - bone rat
 	- fast, evasive, and moderately fragile.
 	- rPois∞ rFume∞ rFire-
-- bloat
-	- Bloated body.
-	- Very slow, 18 HP
-	- Aura of nausea.
 - ember mage
 	- Can hurl bolts of fire for low damage
 	- Fire attack with weapon
@@ -248,13 +236,6 @@ x death mage
 	x Haste: give .Fast to nearby undead ally.
 	x Heal: Uses up a corpse to restore 90% of lost health for nearby undead ally.
 	x Prefers to keep distance.
-- some nasty monster
-	- Hurls bolts of paralysing dust (same as DCSS' catoblepas).
-- jellies
-	- Split on hit?
-- bats
-	- Harmless and multicolored, like DCSS' butterflies.
-	- Glows, shedding light on surroundings.
 - beastmaster
 	- Slow (120) and heavily armored, but just a simple club.
 	- Releases chained allies (dogs, hounds, wolves) in same room when
@@ -267,6 +248,27 @@ x death mage
 - mellaent
 	- kerejat-like nuisance
 	- noncombatant
+- tentacling
+	- "A horrible twisted abomination, writhing and fidgeting. It retained
+	  its intelligence despite countless years of experiments practiced on it.
+	- Monster with twenty tentacles, like DCSS tile for ugly things
+	- Faster than player.
+	- Ranged attack: throws boulders at player (i.e., DCSS' cyclops).
+	- Melee  attack: knock player across room to get more ranged hits.
+	- Usually tries to attack ranged, but may occasionally rush across room
+	  and throw player around just for the heck of it.
+- revealer
+	- Casts glowing (will-checked).
+	- Uncommon. Found in Lab, Vaults, Smithing, higher Prison.
+- bloat
+	- Bloated 
+	- Very slow, 18 HP
+	- Aura of nausea.
+- new monsters
+	- hydra-like monster, multiple attacks per turn
+	- Hurls bolts of paralysing dust (same as DCSS' catoblepas).
+
+
 
 Intelligence
 ------------
@@ -492,32 +494,6 @@ Vials
   Status: nightblindness
     Makes mob unable to see in dimly-lit tiles.
 
-
-Abominations
-------------
-Strange mobs found on LAB levels.
-- Creeping Abomination
-  - Like Blue Monk (in Hazard Level) or weeping angels.
-- Slinking Abomination
-  - Refuses to move into a tile that doesn't have at least one wall as a neighbor.
-  - When spotted, IF the spotter is an enemy and has half of it's normal HP, it
-    moves in and attacks, still keeping close to walls.
-  - Game description should describe it as having an extremely hideous appearance.
-- Undulating Abomination
-  - Slow (speed == ~180?)
-  - If enemy is less than X spaces away, it moves toward enemy.
-  - Doesn't attack.
-  - Emits gas that doesn't spread far. Gas slows down affected mobs. (100s => 150s)
-  - If attacked, paralyzes player.
-- Lacertilian Abomination
-  - Hydra, multiple attacks per turn
-- Tentacled Abomination
-  - Abomination with twenty tentacles, like DCSS tile for ugly things
-  - Faster than player.
-  - Ranged attack: throws boulders at player (i.e., DCSS' cyclops).
-  - Melee  attack: throws player across room to get more ranged hits.
-  - Usually tries to attack ranged, but may occasionally rush across room
-    and throw player around just for the heck of it.
 
 Posters
 -------
@@ -774,15 +750,14 @@ x Informational screens
       x Poster description screen
   x Inventory screen
     x Remove 't' key, remove 'a' key for items
-- Condense UI
-- Show information characters next to mob in enemy pane
+x Show information characters next to mob in enemy pane
+x Condense UI
 x Revisit and revamp SMI mapgen, SMI → CAV
-- Additional CAV monsters:
+x Additional CAV monsters:
   x spectre mages, spectral swords
-  - dustlings
-  - convults, vapour mages
-  - fiend of vapours
-  - mellaents
+  x dustlings
+  x convults, vapour mages
+  x mellaents
 x Cleanup machines
   x Message if player moves over activatable machine
 x Upgrade to Zig v9
@@ -810,14 +785,14 @@ x Upgrade to Zig v9
     - Maps
     - Useless books
 - Revisit Laboratory
-  - Spires and spire kits
-  - Add abominations, more experiments
+  - Spires and spire kits; more monsters
   - Add traps of blinding gas
 - Morgue level
   - Cogmind-esque tunneling algorithm
   - Monsters
 - Blood, ember, fire, spark, lightning mage bands
 - Emberling/sparkling summoning trap kits
+- Fiend of vapours
 - Night creatures (night reapers, creeping deaths)
 - Silver weapons and battery packs, silver hornets
 - Bone, masterpiece, and shadow weapons
@@ -829,7 +804,7 @@ x Upgrade to Zig v9
 - Corruption effects
 - Mob repositioning AI
   - AI to move out of dangerous tiles (gas/terrain)
-  - AI to move out of reach of enemy, if mob has reaching weapon
+  - AI to move out of reach of enemy, if mob has reaching weapon and is faster
   - AI to move onto advantageous terrain
 - Air purifiers
 - BUG: If player wears Equ that grants status X, then get hits with Tmp status
@@ -1160,7 +1135,6 @@ x Ring of echolocation to magic-map neighbors of sound-producing tiles
   the player can blow up for fun
   - obsolete: too complex
 ~ Orchestra/Concert, that sings/players instruments and distracts guards
-	- Bonus: use Nazi singer names (Wagner!)
   - obsolete: making all the guards move to one corner of the map suddenly is
     obviously going to make things easier for player /s
 - Goblin "organizations" (purely eye candy)
@@ -1203,8 +1177,9 @@ x Blood spattering?
   - On seeing a dead ally, killed by a nonvisible hostile ("Oh no!", "Noo!",
    "Noo! Not Bert!")
   - On pursuing a fleeing hostile ("Coward!", "Wimp!", "Clown!")
+  - On pursuing a fleeing, but slower hostile ("Haha, you cannot run from me!")
   - On investigating a noise ("...?", "What?")
-  - On completing investigation of a noise ("Must have been rats!")
+  - On completing investigation of a noise ("Must've been rats!")
   - On finding an pursued enemy ("Its here!", "I've got you now!", "Now you're mine!",
     "I'll tear you into pieces!", "You miserable <species>!", "You miserable @!")
   - On about to kill player ("Not very good at this, hm?", "Times up!")
@@ -1213,7 +1188,7 @@ x Blood spattering?
     - Show it over the health/AI bar.
 - Smell mechanics that allow, say, hellhounds and snakes to detect intruders
   even if they can't see them.
-- Ranged melee weapons, e.g., spear and whips
+x Ranged melee weapons, e.g., spear and whips
 x Add braziers that are built into the walls (aka torches), and use that
   instead for corridors
 - Some kind of squad-forming fast-moving swarming mob, like killer bees (DCSS)
@@ -1233,13 +1208,13 @@ x MP-like system that limits how often spellcasters can cast spells (providing
 - Extremely dangerous (but lucrative) vaults that have golden walls, warning
   player of danger.
 - Nice floor tile patterns, like Ultima Ratio Regum.
-  E.g.:      #############    #############
-             #·,·,·,·,·,·#    #·,·,·,·,·,·#
-             #`.`.`.`.`.`#    #—.—.—.—.—.—#
-             #,`,`,`,`,`,#    #—,—,—,—,—,—#
-             #·,·,·,·,·,·#    #—.—.—.—.—.—#
-             #`.`.`.`.`.`#    #·,·,·,·,·,·#
-             #############    #############
+  E.g.:      #############    #############    #############
+             #·,·,·,·,·,·#    #·,·,·,·,·,·#    #▲▼▲▼▲▼▲▼▲▼▲#
+             #`.`.`.`.`.`#    #—.—.—.—.—.—#    #▼▲▼▲▼▲▼▲▼▲▼#
+             #,`,`,`,`,`,#    #—,—,—,—,—,—#    #▲▼▲▼▲▼▲▼▲▼▲#
+             #·,·,·,·,·,·#    #—.—.—.—.—.—#    #▼▲▼▲▼▲▼▲▼▲▼#
+             #`.`.`.`.`.`#    #·,·,·,·,·,·#    #▲▼▲▼▲▼▲▼▲▼▲#
+             #############    #############    #############
 - Bribing: bribe lone monsters to stay quiet, but they'll turn hostile again if
   an unbribed comrade shows up
   - Gold + jewelry collection
