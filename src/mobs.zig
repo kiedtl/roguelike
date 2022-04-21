@@ -443,7 +443,7 @@ pub const VapourMageTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 8, .spell = &spells.BOLT_AIRBLAST, .power = 5 },
+            .{ .MP_cost = 8, .spell = &spells.BOLT_AIRBLAST, .power = 6 },
             .{ .MP_cost = 2, .spell = &spells.CAST_HASTE_DUSTLING, .power = 10 },
         },
         .max_MP = 15,
@@ -485,7 +485,7 @@ pub const DustlingTemplate = MobTemplate{
         .blood_spray = gas.Dust.id,
         .corpse = .None,
         .innate_resists = .{ .rFire = -25, .rElec = -25, .rFume = 100 },
-        .stats = .{ .Willpower = 4, .Evade = 15, .Speed = 80, .Vision = 4 },
+        .stats = .{ .Willpower = 4, .Evade = 0, .Speed = 80, .Vision = 4 },
     },
     .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
     .squad = &[_][]const MobTemplate.SquadMember{
