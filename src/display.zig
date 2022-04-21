@@ -282,7 +282,8 @@ fn _writerStats(
                 // _writerWrite(w, "{s: <8} $a{: >5}$. $b{: >5}$. $a{: >5}$.\n", .{
                 //     stat.string(), base_stat_val, terrain_stat_val, new_stat_val,
                 // });
-                _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ stat.string(), x_stat_val });
+                const fmt_val = utils.SignedFormatter{ .v = x_stat_val };
+                _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ stat.string(), fmt_val });
             }
         }
     }
@@ -304,7 +305,8 @@ fn _writerStats(
                 // _writerWrite(w, "{s: <8} $a{: >5}$. $b{: >5}$. $a{: >5}$.\n", .{
                 //     resist.string(), base_resist_val, terrain_resist_val, new_resist_val,
                 // });
-                _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ resist.string(), x_resist_val });
+                const fmt_val = utils.SignedFormatter{ .v = x_resist_val };
+                _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ resist.string(), fmt_val });
             }
         }
     }
@@ -1011,8 +1013,9 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     };
 
     for (stats) |stat, i| {
-        const x = if (i % 2 == 0) startx else @divTrunc(endx - startx, 2);
-        _ = _drawStr(x, y, endx, "$c{s}$. {: >4}{s}", .{ stat.b, stat.v, stat.a }, .{});
+        const x = if (i % 2 == 0) startx else @divTrunc(endx - startx, 2) + 2;
+        const v = utils.SignedFormatter{ .v = stat.v };
+        _ = _drawStr(x, y, endx, "$c{s}$. {: >4}{s}", .{ stat.b, v, stat.a }, .{});
         if (i % 2 == 1) y += 1;
     }
 

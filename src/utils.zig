@@ -25,6 +25,28 @@ const WIDTH = state.WIDTH;
 
 const StackBuffer = buffer.StackBuffer;
 
+// A utility struct to get around the fact that std.fmt puts a "+" on signed
+// integers if padding is used.
+//
+// Cheers to tsmanner_ on #zig@libera.chat for this tip:
+//
+// > 2022-04-12 18:28:16  <tsmanner_> cot: Yeah, that makes sense. If you're
+// > feeling motivated, the check-if-positive-maybe-cast when printing them could
+// > be put in a single function, or contained inside a `struct SignedFormatter {
+// > value: isize, }` that implements that logic in it's format method.
+//
+pub const SignedFormatter = struct {
+    v: isize,
+
+    pub fn format(value: @This(), comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
+        if (value.v >= 0) {
+            try std.fmt.formatType(@intCast(usize, value.v), fmt, options, writer, 0);
+        } else {
+            try std.fmt.formatType(value.v, fmt, options, writer, 0);
+        }
+    }
+};
+
 // Extract the value of enums.directEnumArrayLen indirectly, since that method
 // is private >_>
 //
