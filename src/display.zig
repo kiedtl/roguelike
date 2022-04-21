@@ -190,8 +190,11 @@ fn _formatBool(val: bool) []const u8 {
 // XXX: Uses a static internal buffer. Buffer must be consumed before next call,
 // not thread safe, etc.
 fn _formatStatusInfo(statusinfo: *const StatusDataInfo) []const u8 {
-    var buf: [65535]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buf);
+    const S = struct {
+        var buf: [65535]u8 = undefined;
+    };
+
+    var fbs = std.io.fixedBufferStream(&S.buf);
     var w = fbs.writer();
 
     const sname = statusinfo.status.string(state.player);
@@ -454,9 +457,8 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
     if (mobspeed != youspeed) {
         var i = MobInfoLine{ .char = if (mobspeed < youspeed) @as(u21, 'f') else 's' };
         i.color = if (mobspeed < youspeed) @as(u21, 'p') else 'b';
-        i.string.writer().print("{s}", .{
-            if (mobspeed < youspeed) "faster than you" else "slower than you",
-        }) catch err.wat();
+        const str = if (mobspeed < youspeed) "faster than you" else "slower than you";
+        i.string.writer().print("{s}", .{str}) catch err.wat();
         list.append(i) catch err.wat();
     }
 
@@ -824,6 +826,7 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
     var fbs = std.io.fixedBufferStream(&buf);
     std.fmt.format(fbs.writer(), format, args) catch err.bug("format error!", .{});
     const str = fbs.getWritten();
+    std.log.info("format: {s}, str: {s}", .{ format, str });
 
     var x = _x;
     var y = _y;
@@ -933,8 +936,8 @@ fn drawEnemyInfo(
 
         const infoset = _getMonsInfoSet(mob);
         defer MobInfoLine.deinitList(infoset);
-        var info_x: isize = startx + 2 + @intCast(isize, name.len) + 2;
-        //var info_x: isize = endx - @intCast(isize, name.len) - 1;
+        //var info_x: isize = startx + 2 + @intCast(isize, name.len) + 2;
+        var info_x: isize = endx - @intCast(isize, infoset.items.len) - 1;
         for (infoset.items) |info| {
             _ = _drawStr(info_x, y, endx, "${u}{u}$.", .{ info.color, info.char }, .{});
             info_x += 1;
@@ -944,12 +947,15 @@ fn drawEnemyInfo(
         //_draw_bar(y, startx, endx, @floatToInt(usize, mob.HP), @floatToInt(usize, mob.max_HP), "health", 0x232faa, 0xffffff);
         //y += 1;
 
+        var status_drawn = false;
         var statuses = mob.statuses.iterator();
         while (statuses.next()) |entry| {
             if (mob.isUnderStatus(entry.key) == null or entry.value.duration != .Tmp)
                 continue;
             y = _drawStr(startx, y, endx, "{s}", .{_formatStatusInfo(entry.value)}, .{});
+            status_drawn = true;
         }
+        if (status_drawn) y += 1;
 
         //const activity = if (mob.prisoner_status != null) if (mob.prisoner_status.?.held_by != null) "(chained)" else "(prisoner)" else mob.activity_description();
         //y = _drawStr(endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2), y, endx, "{s}", .{activity}, .{ .fg = 0x9a9a9a });
