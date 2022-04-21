@@ -545,7 +545,7 @@ fn _getMonsSpellsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, li
         _writerWrite(w, "\n", .{});
 
         for (mob.spells) |spellcfg| {
-            _writerWrite(w, "$c{s}$. ({} mp)\n", .{
+            _writerWrite(w, "$c{s}$. $g($b{}$. $gmp)$.\n", .{
                 spellcfg.spell.name, spellcfg.MP_cost,
             });
 
