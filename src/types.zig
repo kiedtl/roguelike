@@ -2662,6 +2662,9 @@ pub const Mob = struct { // {{{
     }
 
     pub fn cansee(self: *const Mob, coord: Coord) bool {
+        if (self == state.player and player.wiz_lidless_eye)
+            return true;
+
         if (self.coord.distance(coord) > self.stat(.Vision))
             return false;
 

@@ -39,6 +39,8 @@ const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
+pub var wiz_lidless_eye: bool = false;
+
 pub var auto_wait_enabled: bool = true;
 
 pub const PlayerUpgradeInfo = struct {

@@ -41,8 +41,8 @@ const WIDTH = state.WIDTH;
 
 // -----------------------------------------------------------------------------
 
-pub const LEFT_INFO_WIDTH: usize = 24;
-pub const RIGHT_INFO_WIDTH: usize = 30;
+pub const LEFT_INFO_WIDTH: usize = 30;
+//pub const RIGHT_INFO_WIDTH: usize = 24;
 pub const LOG_HEIGHT: usize = 8;
 
 // tb_shutdown() calls abort() if tb_init() wasn't called, or if tb_shutdown()
@@ -71,7 +71,8 @@ pub fn init() !void {
 // Return true if the user resized the window, false if the user press Ctrl+C.
 pub fn checkWindowSize() bool {
     const min_height = HEIGHT + LOG_HEIGHT + 2;
-    const min_width = WIDTH + LEFT_INFO_WIDTH + RIGHT_INFO_WIDTH + 2;
+    //const min_width = WIDTH + LEFT_INFO_WIDTH + RIGHT_INFO_WIDTH + 2;
+    const min_width = WIDTH + LEFT_INFO_WIDTH + 2;
 
     while (true) {
         const cur_w = termbox.tb_width();
@@ -118,28 +119,29 @@ pub fn deinit() !void {
     is_tb_inited = false;
 }
 
-pub const DisplayWindow = enum { PlayerInfo, Main, EnemyInfo, Log };
+pub const DisplayWindow = enum { PlayerInfo, Main, Log };
 pub const Dimension = struct { startx: isize, endx: isize, starty: isize, endy: isize };
 
 pub fn dimensions(w: DisplayWindow) Dimension {
     const height = termbox.tb_height();
-    const width = termbox.tb_width();
+    //const width = termbox.tb_width();
 
     const playerinfo_width = LEFT_INFO_WIDTH;
+    //const playerinfo_width = width - WIDTH - 2;
     //const enemyinfo_width = RIGHT_INFO_WIDTH;
 
-    const playerinfo_start = 1;
-    const main_start = playerinfo_start + playerinfo_width + 1;
+    const main_start = 1;
     const main_width = WIDTH;
     const main_height = HEIGHT;
+    const playerinfo_start = main_start + main_width + 1;
     const log_start = main_start;
-    const enemyinfo_start = main_start + main_width + 1;
+    //const enemyinfo_start = main_start + main_width + 1;
 
     return switch (w) {
         .PlayerInfo => .{
             .startx = playerinfo_start,
             .endx = playerinfo_start + playerinfo_width,
-            .starty = 0,
+            .starty = 1,
             .endy = height - 1,
             //.width = playerinfo_width,
             //.height = height - 1,
@@ -151,14 +153,6 @@ pub fn dimensions(w: DisplayWindow) Dimension {
             .endy = main_height + 2,
             //.width = main_width,
             //.height = main_height,
-        },
-        .EnemyInfo => .{
-            .startx = enemyinfo_start,
-            .endx = width - 1,
-            .starty = 1,
-            .endy = height - 1,
-            //.width = math.max(enemyinfo_width, width - enemyinfo_start),
-            //.height = height - 1,
         },
         .Log => .{
             .startx = log_start,
@@ -932,60 +926,7 @@ fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, d
     _ = _drawStr(endx - info_width - 1, y, endx, "{}/{}", .{ current, max }, .{ .fg = fg, .bg = null });
 }
 
-fn drawEnemyInfo(
-    moblist: []const *Mob,
-    startx: isize,
-    starty: isize,
-    endx: isize,
-    endy: isize,
-) void {
-    var y = starty;
-    while (y < endy) : (y += 1) _clear_line(startx, endx, y);
-    y = starty;
-
-    for (moblist) |mob| {
-        if (mob.is_dead) continue;
-
-        _clear_line(startx, endx, y);
-        _clear_line(startx, endx, y + 1);
-
-        var mobcell = Tile.displayAs(mob.coord, false);
-        termbox.tb_put_cell(startx, y, &mobcell);
-
-        const name = mob.displayName();
-        _ = _drawStr(startx + 2, y, endx, "$c{s}$.", .{name}, .{});
-
-        const infoset = _getMonsInfoSet(mob);
-        defer MobInfoLine.deinitList(infoset);
-        //var info_x: isize = startx + 2 + @intCast(isize, name.len) + 2;
-        var info_x: isize = endx - @intCast(isize, infoset.items.len) - 1;
-        for (infoset.items) |info| {
-            _ = _drawStr(info_x, y, endx, "${u}{u}$.", .{ info.color, info.char }, .{});
-            info_x += 1;
-        }
-        y += 1;
-
-        //_draw_bar(y, startx, endx, @floatToInt(usize, mob.HP), @floatToInt(usize, mob.max_HP), "health", 0x232faa, 0xffffff);
-        //y += 1;
-
-        var status_drawn = false;
-        var statuses = mob.statuses.iterator();
-        while (statuses.next()) |entry| {
-            if (mob.isUnderStatus(entry.key) == null or entry.value.duration != .Tmp)
-                continue;
-            y = _drawStr(startx, y, endx, "{s}", .{_formatStatusInfo(entry.value)}, .{});
-            status_drawn = true;
-        }
-        if (status_drawn) y += 1;
-
-        //const activity = if (mob.prisoner_status != null) if (mob.prisoner_status.?.held_by != null) "(chained)" else "(prisoner)" else mob.activity_description();
-        //y = _drawStr(endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2), y, endx, "{s}", .{activity}, .{ .fg = 0x9a9a9a });
-
-        //y += 2;
-    }
-}
-
-fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, endy: isize) void {
+fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, endy: isize) void {
     // const last_action_cost = if (state.player.activities.current()) |lastaction| b: {
     //     const spd = @intToFloat(f64, state.player.speed());
     //     break :b (spd * @intToFloat(f64, lastaction.cost())) / 100.0 / 10.0;
@@ -993,23 +934,23 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
 
     var y = starty;
     while (y < endy) : (y += 1) _clear_line(startx, endx, y);
-    y = starty + 1;
+    y = starty;
 
     _clearLineWith(startx, endx - 1, y, '═', colors.GREY, colors.BG);
     const lvlstr = state.levelinfo[state.player.coord.z].name;
-    const lvlstrx = @divTrunc(endx - startx - 1, 2) - @intCast(isize, lvlstr.len / 2);
+    const lvlstrx = startx + @divTrunc(endx - startx - 1, 2) - @intCast(isize, lvlstr.len / 2);
     y = _drawStr(lvlstrx, y, endx, " $c{s}$. ", .{lvlstr}, .{});
     y += 1;
 
     const stats = [_]struct { b: []const u8, a: []const u8, v: isize }{
-        .{ .b = "hit", .a = "%", .v = state.player.stat(.Melee) },
-        .{ .b = "msl", .a = "%", .v = state.player.stat(.Missile) },
-        .{ .b = "evd", .a = "%", .v = state.player.stat(.Evade) },
-        .{ .b = "mar", .a = " ", .v = state.player.stat(.Martial) },
-        .{ .b = "vsn", .a = " ", .v = state.player.stat(.Vision) },
-        .{ .b = "arm", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.Armor)) },
-        .{ .b = "rF ", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.rFire)) },
-        .{ .b = "rE ", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.rElec)) },
+        .{ .b = "melee", .a = "%", .v = state.player.stat(.Melee) },
+        .{ .b = "mrtl ", .a = " ", .v = state.player.stat(.Martial) },
+        .{ .b = "mssl ", .a = "%", .v = state.player.stat(.Missile) },
+        .{ .b = "evade", .a = "%", .v = state.player.stat(.Evade) },
+        .{ .b = "sight", .a = " ", .v = state.player.stat(.Vision) },
+        .{ .b = "armor", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.Armor)) },
+        .{ .b = "rFire", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.rFire)) },
+        .{ .b = "rElec", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.rElec)) },
     };
 
     for (stats) |stat, i| {
@@ -1036,15 +977,17 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     _draw_bar(y, startx, endx, math.min(sneak, state.player.turnsSpentMoving()), sneak, if (is_walking) "walking" else "sneaking", if (is_walking) 0x45772e else 0x25570e, 0xffffff);
     y += 2;
 
-    var status_drawn = false;
-    var statuses = state.player.statuses.iterator();
-    while (statuses.next()) |entry| {
-        if (state.player.isUnderStatus(entry.key) == null or entry.value.duration != .Tmp)
-            continue;
-        y = _drawStr(startx, y, endx, "{s}", .{_formatStatusInfo(entry.value)}, .{});
-        status_drawn = true;
+    {
+        var status_drawn = false;
+        var statuses = state.player.statuses.iterator();
+        while (statuses.next()) |entry| {
+            if (state.player.isUnderStatus(entry.key) == null or entry.value.duration != .Tmp)
+                continue;
+            y = _drawStr(startx, y, endx, "{s}", .{_formatStatusInfo(entry.value)}, .{});
+            status_drawn = true;
+        }
+        if (status_drawn) y += 1;
     }
-    if (status_drawn) y += 1;
 
     const light = state.dungeon.lightAt(state.player.coord).*;
     const flanked = state.player.isFlanked();
@@ -1072,6 +1015,52 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     const terrain = state.dungeon.terrainAt(state.player.coord);
     if (!mem.eql(u8, terrain.id, "t_default")) {
         y = _drawStr(startx, y, endx, "$cterrain$.: {s}", .{terrain.name}, .{});
+        y += 1;
+    }
+
+    // ------------------------------------------------------------------------
+
+    for (moblist) |mob| {
+        if (mob.is_dead) continue;
+
+        _clear_line(startx, endx, y);
+        _clear_line(startx, endx, y + 1);
+
+        var mobcell = Tile.displayAs(mob.coord, false);
+        termbox.tb_put_cell(startx, y, &mobcell);
+
+        const name = mob.displayName();
+        _ = _drawStr(startx + 2, y, endx, "$c{s}$.", .{name}, .{});
+
+        const infoset = _getMonsInfoSet(mob);
+        defer MobInfoLine.deinitList(infoset);
+        //var info_x: isize = startx + 2 + @intCast(isize, name.len) + 2;
+        var info_x: isize = endx - @intCast(isize, infoset.items.len) - 1;
+        for (infoset.items) |info| {
+            _ = _drawStr(info_x, y, endx, "${u}{u}$.", .{ info.color, info.char }, .{});
+            info_x += 1;
+        }
+        y += 1;
+
+        //_draw_bar(y, startx, endx, @floatToInt(usize, mob.HP), @floatToInt(usize, mob.max_HP), "health", 0x232faa, 0xffffff);
+        //y += 1;
+
+        {
+            var status_drawn = false;
+            var statuses = mob.statuses.iterator();
+            while (statuses.next()) |entry| {
+                if (mob.isUnderStatus(entry.key) == null or entry.value.duration != .Tmp)
+                    continue;
+                y = _drawStr(startx, y, endx, "{s}", .{_formatStatusInfo(entry.value)}, .{});
+                status_drawn = true;
+            }
+            if (status_drawn) y += 1;
+        }
+
+        //const activity = if (mob.prisoner_status != null) if (mob.prisoner_status.?.held_by != null) "(chained)" else "(prisoner)" else mob.activity_description();
+        //y = _drawStr(endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2), y, endx, "{s}", .{activity}, .{ .fg = 0x9a9a9a });
+
+        //y += 2;
     }
 }
 
@@ -1236,12 +1225,10 @@ pub fn draw() void {
 
     const pinfo_win = dimensions(.PlayerInfo);
     const main_win = dimensions(.Main);
-    const einfo_win = dimensions(.EnemyInfo);
     const log_window = dimensions(.Log);
 
-    drawPlayerInfo(moblist.items, pinfo_win.startx, pinfo_win.starty, pinfo_win.endx, pinfo_win.endy);
+    drawInfo(moblist.items, pinfo_win.startx, pinfo_win.starty, pinfo_win.endx, pinfo_win.endy);
     drawMap(moblist.items, main_win.startx, main_win.endx, main_win.starty, main_win.endy);
-    drawEnemyInfo(moblist.items, einfo_win.startx, einfo_win.starty, einfo_win.endx, einfo_win.endy);
     drawLog(log_window.startx, log_window.endx, log_window.starty, log_window.endy);
 
     termbox.tb_present();
@@ -1335,7 +1322,7 @@ pub const ExamineTileFocus = enum { Item, Surface, Mob };
 pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
     const mainw = dimensions(.Main);
     const logw = dimensions(.Log);
-    const infow = dimensions(.EnemyInfo);
+    const infow = dimensions(.PlayerInfo);
 
     // TODO: do some tests and figure out what's the practical limit to memory
     // usage, and reduce the buffer's size to that.
@@ -1625,17 +1612,9 @@ pub fn waitForInput(default_input: ?u8) ?u32 {
 }
 
 pub fn drawInventoryScreen() bool {
-    const playerinfo_window = dimensions(.PlayerInfo);
     const main_window = dimensions(.Main);
-    const iteminfo_window = dimensions(.EnemyInfo);
+    const iteminfo_window = dimensions(.PlayerInfo);
     const log_window = dimensions(.Log);
-
-    // TODO: do some tests and figure out what's the practical limit to memory
-    // usage, and reduce the buffer's size to that.
-    var membuf: [65535]u8 = undefined;
-    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-
-    const moblist = state.createMobList(false, true, state.player.coord.z, fba.allocator());
 
     const ItemListType = enum { Pack, Equip };
 
@@ -1646,8 +1625,6 @@ pub fn drawInventoryScreen() bool {
 
     while (true) {
         clearScreen();
-
-        drawPlayerInfo(moblist.items, playerinfo_window.startx, playerinfo_window.starty, playerinfo_window.endx, playerinfo_window.endy);
 
         const starty = main_window.starty;
         const x = main_window.startx;
@@ -1719,7 +1696,7 @@ pub fn drawInventoryScreen() bool {
             _getItemDescription(
                 descbuf_stream.writer(),
                 chosen_item.?,
-                RIGHT_INFO_WIDTH - 1,
+                LEFT_INFO_WIDTH - 1,
             );
 
             if (usable) writer.print("$cSPACE$. to use.\n", .{}) catch err.wat();

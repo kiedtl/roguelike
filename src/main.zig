@@ -327,11 +327,8 @@ fn readInput() bool {
                     break :blk false;
                 },
                 termbox.TB_KEY_F4 => blk: {
-                    explosions.kaboom(state.player.coord, .{
-                        .strength = 10 * 100,
-                        .spare_player = true,
-                    });
-                    _ = state.player.rest();
+                    player.wiz_lidless_eye = !player.wiz_lidless_eye;
+                    _ = state.player.rest(); // Update LOS
                     break :blk true;
                 },
                 termbox.TB_KEY_F5 => blk: {
