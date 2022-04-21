@@ -100,7 +100,7 @@ pub const CarpetTerrain = Terrain{
     .stats = .{ .Sneak = 2 },
     .flammability = 5,
 
-    .for_levels = &[_][]const u8{ "PRI", "VLT" },
+    .for_levels = &[_][]const u8{ "PRI", "QRT" },
     .placement = .EntireRoom,
     .weight = 7,
 };
@@ -124,7 +124,7 @@ pub const MetalTerrain = Terrain{
     .tile = ',',
     .resists = .{ .rElec = -25 },
 
-    .for_levels = &[_][]const u8{ "PRI", "LAB", "VLT" },
+    .for_levels = &[_][]const u8{ "PRI", "LAB", "QRT" },
     .placement = .RoomPortion,
     .weight = 5,
 };
@@ -139,7 +139,7 @@ pub const CopperTerrain = Terrain{
         .{ .status = .Conductive, .duration = .{ .Ctx = null } },
     },
 
-    .for_levels = &[_][]const u8{ "PRI", "LAB", "VLT" },
+    .for_levels = &[_][]const u8{ "PRI", "LAB", "QRT" },
     .placement = .RoomPortion,
     .weight = 6,
 };
@@ -152,7 +152,7 @@ pub const WoodTerrain = Terrain{
     .stats = .{ .Sneak = -1 },
     .resists = .{ .rFire = -25, .rElec = 25 },
 
-    .for_levels = &[_][]const u8{ "PRI", "VLT" },
+    .for_levels = &[_][]const u8{ "PRI", "QRT" },
     .placement = .RoomPortion,
     .weight = 5,
 };
@@ -161,15 +161,15 @@ pub const ShallowWaterTerrain = Terrain{
     .id = "t_water",
     .name = "shallow water",
     .color = 0x3c73b1, // medium blue
-    .tile = '~',
-    .stats = .{ .Sneak = -1 },
+    .tile = '≈',
+    .stats = .{ .Sneak = -2 },
     .resists = .{ .rFire = 50, .rElec = -50 },
     .effects = &[_]StatusDataInfo{
         .{ .status = .Conductive, .duration = .{ .Ctx = null } },
     },
     .fire_retardant = true,
 
-    .for_levels = &[_][]const u8{ "PRI", "VLT", "CAV" },
+    .for_levels = &[_][]const u8{"CAV"},
     .placement = .RoomBlob,
     .weight = 3,
 };
@@ -212,7 +212,7 @@ pub const TallFungiTerrain = Terrain{
     .flammability = 20,
     .repairable = false,
 
-    .for_levels = &[_][]const u8{ "PRI", "VLT" },
+    .for_levels = &[_][]const u8{ "PRI", "QRT" },
     .placement = .RoomBlob,
     .weight = 7,
 };
@@ -226,7 +226,7 @@ pub const PillarTerrain = Terrain{
     .opacity = 50,
     .repairable = false,
 
-    .for_levels = &[_][]const u8{ "PRI", "LAB", "VLT" },
+    .for_levels = &[_][]const u8{ "PRI", "LAB", "QRT" },
     .placement = .{ .RoomSpotty = 5 },
     .weight = 8,
 };
@@ -239,7 +239,7 @@ pub const PlatformTerrain = Terrain{
     .stats = .{ .Evade = -10, .Melee = 10, .Missile = 20, .Vision = 3 },
     .opacity = 20,
 
-    .for_levels = &[_][]const u8{ "PRI", "LAB", "VLT" },
+    .for_levels = &[_][]const u8{ "PRI", "LAB", "QRT" },
     .placement = .{ .RoomSpotty = 5 },
     .weight = 8,
 };
@@ -661,8 +661,8 @@ pub const Fountain = Machine{
     .id = "fountain",
     .name = "fountain",
     .announce = true,
-    .powered_tile = '⌠',
-    .unpowered_tile = '⌠',
+    .powered_tile = '¶',
+    .unpowered_tile = '¶',
     .powered_fg = 0x00d7ff,
     .unpowered_fg = 0x00d7ff,
     .powered_walkable = true,
@@ -673,7 +673,7 @@ pub const Fountain = Machine{
         .success_msg = "The fountain refreshes you.",
         .no_effect_msg = "The fountain is dry!",
         .needs_power = false,
-        .max_use = 2,
+        .max_use = 1,
         .func = interact1Fountain,
     },
 };

@@ -3302,9 +3302,9 @@ pub const PRI_BASE_LEVELCONFIG = LevelConfig{
     .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
 };
 
-pub const VLT_BASE_LEVELCONFIG = LevelConfig{
+pub const QRT_BASE_LEVELCONFIG = LevelConfig{
     .prefabs = &[_][]const u8{"ANY_s_recharging"},
-    .prefab_chance = 1000, // No prefabs for VLT
+    .prefab_chance = 1000, // No prefabs for QRT
     .mapgen_func = placeBSPRooms,
     .mapgen_iters = 1024,
     .min_room_width = 8,
@@ -3319,9 +3319,7 @@ pub const VLT_BASE_LEVELCONFIG = LevelConfig{
 
     .props = &surfaces.vault_props.items,
     //.containers = &[_]Container{surfaces.Chest},
-    .single_props = &[_][]const u8{
-        "gold_chest", "fuel_barrel", "iron_ingots", "steel_ingots", "gold_ingots",
-    },
+    .single_props = &[_][]const u8{"fuel_barrel"},
     .chance_for_single_prop_placement = 90,
 
     .machines = &[_]*const Machine{&surfaces.Fountain},
@@ -3444,9 +3442,9 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
 pub var Configs = [LEVELS]LevelConfig{
     PRI_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
-    VLT_BASE_LEVELCONFIG,
-    VLT_BASE_LEVELCONFIG,
-    VLT_BASE_LEVELCONFIG,
+    QRT_BASE_LEVELCONFIG,
+    QRT_BASE_LEVELCONFIG,
+    QRT_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
@@ -3467,13 +3465,13 @@ pub fn fixConfigs() void {
     // Be careful when editing this
     Configs[00].stairs_to = &[_]usize{};      // -1/Prison       -> nothing
     Configs[01].stairs_to = &[_]usize{    0}; // -2/Prison       -> -1/Prison
-    Configs[02].stairs_to = &[_]usize{    1}; // -3/Vaults/3     -> -2/Prison
-    Configs[03].stairs_to = &[_]usize{1,  2}; // -3/Vaults/2     -> -3/Vaults/3,     -2/Prison
-    Configs[04].stairs_to = &[_]usize{1,  3}; // -3/Vaults       -> -3/Vaults/2,     -2/Prison
-    Configs[05].stairs_to = &[_]usize{    4}; // -4/Prison       -> -3/Vaults
+    Configs[02].stairs_to = &[_]usize{    1}; // -3/Quarters/3   -> -2/Prison
+    Configs[03].stairs_to = &[_]usize{1,  2}; // -3/Quarters/2   -> -3/Quarters/3,   -2/Prison
+    Configs[04].stairs_to = &[_]usize{1,  3}; // -3/Quarters     -> -3/Quarters/2,   -2/Prison
+    Configs[05].stairs_to = &[_]usize{    4}; // -4/Prison       -> -3/Quarters
     Configs[06].stairs_to = &[_]usize{    5}; // -5/Caverns/3    -> -4/Prison
-    Configs[07].stairs_to = &[_]usize{5,  6}; // -5/Caverns/2    -> -5/Caverns/3,   -4/Prison
-    Configs[08].stairs_to = &[_]usize{5,  7}; // -5/Caverns      -> -5/Caverns/2,   -4/Prison
+    Configs[07].stairs_to = &[_]usize{5,  6}; // -5/Caverns/2    -> -5/Caverns/3,    -4/Prison
+    Configs[08].stairs_to = &[_]usize{5,  7}; // -5/Caverns      -> -5/Caverns/2,    -4/Prison
     Configs[09].stairs_to = &[_]usize{    8}; // -6/Laboratory/3 -> -5/Caverns
     Configs[10].stairs_to = &[_]usize{8,  9}; // -6/Laboratory/2 -> -6/Laboratory/3, -5/Caverns
     Configs[11].stairs_to = &[_]usize{8, 10}; // -6/Laboratory   -> -6/Laboratory/2, -5/Caverns
@@ -3483,7 +3481,7 @@ pub fn fixConfigs() void {
 
     // Increase crowd sizes for difficult levels.
     Configs[ 0].room_crowd_max = 4;      Configs[ 1].room_crowd_max = 3;   // Upper prison
-    Configs[ 2].room_crowd_max = 2;      Configs[ 3].room_crowd_max = 1;   // Vaults
+    Configs[ 2].room_crowd_max = 2;      Configs[ 3].room_crowd_max = 1;   // Quarters
     Configs[ 6].room_crowd_max = 6;      Configs[ 7].room_crowd_max = 5;   // Caverns
     Configs[ 9].room_crowd_max = 4;      Configs[10].room_crowd_max = 3;   // Laboratory
 

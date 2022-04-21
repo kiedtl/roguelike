@@ -2743,6 +2743,12 @@ pub const Mob = struct { // {{{
         if (self.inventory.equipmentConst(.Armor).*) |clk|
             val += utils.getFieldByEnum(Stat, clk.Armor.stats, _stat);
 
+        // Clamp value.
+        val = switch (_stat) {
+            .Sneak => math.clamp(val, 0, 10),
+            else => val,
+        };
+
         return val;
     }
 

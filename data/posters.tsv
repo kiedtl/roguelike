@@ -7,7 +7,7 @@
 # Random grafitti that can appear anywhere.
 "ANY"	"Protip! To defeat the death mage, hit him until he's dead."
 "ANY"	"I hate watchers."
-"ANY"	"I used a grindstone on my best knife and the grindstone BROKE IT."
+"ANY"	"I used a grindstone on my best knife and IT BROKE."
 "ANY"	"Beware of the @!"
 "ANY"	"Can you believe it, the @ escaped again."
 
@@ -26,10 +26,6 @@
 "PRI"	"Absence without leave is punishable by a mandatory interview with the High Priest."
 "PRI"	"WANTED: Obnulojmir, human, escaped prisoner."
 "PRI"	"WANTED: kiedtl, human, escaped prisoner."
-"PRI"	"The Necromancer is watching you."
-"PRI"	"The Necromancer can see you."
-"PRI"	"The Necromancer knows your thoughts."
-"PRI"	"The Necromancer knows your loyalties."
 "PRI"	"GH3-Sentinels must report to the Captain of the Guard tomorrow regarding the upcoming transfer to Traummalnahl."
 "PRI"	"Nine patrol troops will be added to unit GU7 in a few months."
 "PRI"	"Twenty-seven infantry troops will be added to unit IU2 in four weeks."
@@ -38,20 +34,27 @@
 "PRI"	"Naughty prisoners get extra solitary time."
 "PRI"	"Rations will be halved for two weeks in preparation for the upcoming sewer maintenance."
 "PRI"	"An investigation is underway regarding the recent fire on the fourth floor."
-"PRI"	"Rumors that the recent fire was caused by an angry Burning Brute have not been confirmed."
-"PRI"	"Talk to your commander today if your comrades show signs of disloyalty."
-"PRI"	"Don't hesitate to report the numbers of traitorous comrades."
+"QRT"	"Rumors that the recent fire was caused by an angry Burning Brute have not yet been confirmed."
 
 # And now some (satire, kinda) propaganda posters, originally from REC
 # (Recreation) but merged into PRI when that level was deleted. Please don't
 # take these seriously.
 #
-# TODO: move to top level?
-"PRI"	"\"Urum-Zhiolum\" is a codeword for goblin genocide."
-"PRI"	"A goblin's honor is his loyalty."
-"PRI"	"We must secure the existence of the Goblin Nation and a future for our seed."
-"PRI"	"The Cave Goblins will not replace us."
-"PRI"	"The Urumderm will not replace us."
+# Addendum 2022-04-21: ...and then merged into QRT, the latest reincarnation of
+# REC, when it emerged from the ashes of the Vaults.
+"QRT"	"\"Urum-Zhiolum\" is a codeword for goblin genocide."
+"QRT"	"A goblin's honor is his loyalty."
+"QRT"	"We must secure the existence of the Goblin Nation and a future for our seed."
+"QRT"	"The Cave Goblins will not replace us."
+"QRT"	"The Urumderm will not replace us."
+
+# More QRT posters
+"QRT"	"Talk to your commander today if your comrades show signs of disloyalty."
+"QRT"	"Don't hesitate to report the numbers of traitorous comrades."
+"QRT"	"The Necromancer is watching you."
+"QRT"	"The Necromancer can see you."
+"QRT"	"The Necromancer knows your thoughts."
+"QRT"	"The Necromancer knows your loyalties."
 
 # Laboratory
 #
