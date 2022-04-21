@@ -810,7 +810,7 @@ pub fn _drawBorder(color: u32, d: Dimension) void {
 
 const DrawStrOpts = struct {
     bg: ?u32 = colors.BG,
-    fg: u32 = 0xe6e6e6,
+    fg: u32 = colors.OFF_WHITE,
     endy: ?isize = null,
     fold: bool = true,
     // When folding text, skip the first X lines. Used to implement scrolling.
@@ -835,7 +835,6 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
     var fbs = std.io.fixedBufferStream(&buf);
     std.fmt.format(fbs.writer(), format, args) catch err.bug("format error!", .{});
     const str = fbs.getWritten();
-    std.log.info("format: {s}, str: {s}", .{ format, str });
 
     var x = _x;
     var y = _y;
@@ -909,15 +908,26 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
 }
 
 fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, description: []const u8, bg: u32, fg: u32) void {
-    const bg2 = colors.darken(bg, 3); // Color used to display depleted bar
-    const percent = (current * 100) / max;
+    assert(current <= max);
+
+    const depleted_bg = colors.percentageOf(bg, 40);
+    const percent = if (max == 0) 100 else (current * 100) / max;
     const bar = @divTrunc((endx - startx - 1) * @intCast(isize, percent), 100);
     const bar_end = startx + bar;
 
-    _clearLineWith(startx, bar_end, y, ' ', fg, bg);
-    _clearLineWith(bar_end, endx - 1, y, ' ', fg, bg2);
+    _clearLineWith(startx, endx - 1, y, ' ', fg, depleted_bg);
+    if (percent != 0)
+        _clearLineWith(startx, bar_end, y, ' ', fg, bg);
 
     _ = _drawStr(startx + 1, y, endx, "{s}", .{description}, .{ .fg = fg, .bg = null });
+
+    // Find out the width of "<current>/<max>" so we can right-align it
+    var buf: [4096]u8 = undefined;
+    var fbs = std.io.fixedBufferStream(&buf);
+    std.fmt.format(fbs.writer(), "{}/{}", .{ current, max }) catch err.wat();
+    const info_width = @intCast(isize, fbs.getWritten().len);
+
+    _ = _drawStr(endx - info_width - 1, y, endx, "{}/{}", .{ current, max }, .{ .fg = fg, .bg = null });
 }
 
 fn drawEnemyInfo(
@@ -1008,17 +1018,20 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
 
     y += 1;
 
-    _draw_bar(
-        y,
-        startx,
-        endx,
-        @floatToInt(usize, state.player.HP),
-        @floatToInt(usize, state.player.max_HP),
-        "health",
-        0x232faa,
-        0xffffff,
-    );
+    const color: u32 = if (state.player.HP < state.player.max_HP / 3)
+        colors.percentageOf(colors.PALE_VIOLET_RED, 50)
+    else
+        colors.percentageOf(colors.LIGHT_STEEL_BLUE, 40);
+    _draw_bar(y, startx, endx, @floatToInt(usize, state.player.HP), @floatToInt(usize, state.player.max_HP), "health", color, colors.OFF_WHITE);
     y += 1;
+
+    _draw_bar(y, startx, endx, state.player.MP, state.player.max_MP, "magic", colors.percentageOf(colors.GOLD, 40), colors.OFF_WHITE);
+    y += 1;
+
+    const sneak = @intCast(usize, state.player.stat(.Sneak));
+    const is_walking = state.player.turnsSpentMoving() >= sneak;
+    _draw_bar(y, startx, endx, math.min(sneak, state.player.turnsSpentMoving()), sneak, if (is_walking) "walking" else "sneaking", if (is_walking) 0x45772e else 0x25570e, 0xffffff);
+    y += 2;
 
     var status_drawn = false;
     var statuses = state.player.statuses.iterator();
@@ -1029,11 +1042,6 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
         status_drawn = true;
     }
     if (status_drawn) y += 1;
-
-    const sneak = @intCast(usize, state.player.stat(.Sneak));
-    const is_walking = state.player.turnsSpentMoving() >= sneak;
-    _draw_bar(y, startx, endx, math.min(sneak, state.player.turnsSpentMoving()), sneak, if (is_walking) "walking" else "sneaking", if (is_walking) 0x45772e else 0x25570e, 0xffffff);
-    y += 2;
 
     const light = state.dungeon.lightAt(state.player.coord).*;
     const flanked = state.player.isFlanked();
