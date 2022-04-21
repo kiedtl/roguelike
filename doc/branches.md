@@ -6,7 +6,7 @@ Branch order:
 . ↑ ┌───┐↑┌───┐↑┌───┐ ╟──────────╢
 . └─┤Mor├┴┤Mor├┴┤Mor├─╢  Morgue  ║<───────┬─────┬──────┬───────────────┬─────┬──────┐
 .   └───┘ └───┘ └───┘ ╟──────────╢   ┌───┐↑┌───┐↑┌───┐ ↑ ┌────────────┐↑┌───┐↑┌───┐ ↑
-.                     ║  Vaults  ╟─┬─┤Vlt├┴┤Vlt├┴┤Vlt├─┴─┤  Solitary  ├┴┤Sol├┴┤Sol├─┘
+.                     ║ Quarters ╟─┬─┤Qrt├┴┤Qrt├┴┤Qrt├─┴─┤  Solitary  ├┴┤Sol├┴┤Sol├─┘
 .                     ╟──────────╢ │ └─┬─┘ └─┬─┘ └─┬─┘   └──────┬─────┘ └───┘ └───┘
 . ┌──────┬─────┬─────>║  Prison  ║ └──>└────>└────>└────────────┘
 . ↑ ┌───┐↑┌───┐↑┌───┐ ╟──────────╢
@@ -26,7 +26,8 @@ Caverns/3 contains the Basalt Rune.
 - Open terrain makes it a bit more difficult to run.
 - Steam vents, smoke clouds, and noxious fumes make hanging around in certain
   areas dangerous.
-- Fuming fiends with their dustling friends are a Caverns-only speciality.
+- Vapour fiends, vapour mages, convults, and their dustling friends are a
+  Caverns-only speciality.
 - Smoke clouds and large splotches of fungi obscure vision...
 - ...Until fuming fiends dispel clouds, and fungi is set on fire.
 
@@ -36,7 +37,6 @@ Caverns/3 contains the Basalt Rune.
 - Drains (unique to the Prison) allow teleporting across level.
 - Executioners wander a single room, making it difficult to stab. They carry
   a giant knout capable of two-shotting you, but attack slowly.
-- Later levels may contain the occasional Abomination.
 
 ## Laboratory
 
@@ -55,16 +55,14 @@ Laboratory/3 contains the Learned Rune.
   not attack unless an ally is present. However, you can set up your own spire
   with a spire kit.
 
-## Vaults
+## Quarters
 
-Vaults/3 contains the Hidden Rune.
+Quarters/3 contains the Golden Rune.
 
 - Home of the Wardens, slow-moving guards that sound the alarm at the sight
   of you, pulling in a ton more guards to investigate.
 - Layout is very regular.
 - Many rooms are completely lit, but many rooms are completely dark as well.
-- No fungi to hide in, unfortunately. But no abominations either.
-- More loot than usual.
 
 ## Morgue
 
