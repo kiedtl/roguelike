@@ -600,6 +600,15 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
     if (mob == state.player) {
         _writerWrite(w, "$cYou.$.\n", .{});
         _writerWrite(w, "\n", .{});
+
+        var statuses = state.player.statuses.iterator();
+        while (statuses.next()) |entry| {
+            if (state.player.isUnderStatus(entry.key) == null)
+                continue;
+            _writerWrite(w, "{s}", .{_formatStatusInfo(entry.value)});
+        }
+        _writerWrite(w, "\n", .{});
+
         _writerMobStats(w, state.player);
         return;
     }
@@ -974,38 +983,28 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     while (y < endy) : (y += 1) _clear_line(startx, endx, y);
     y = starty + 1;
 
-    y = _drawStr(startx, y, endx, "--- {s} ---", .{
-        state.levelinfo[state.player.coord.z].name,
-    }, .{ .fg = 0xffffff });
+    _clearLineWith(startx, endx - 1, y, '═', colors.GREY, colors.BG);
+    const lvlstr = state.levelinfo[state.player.coord.z].name;
+    const lvlstrx = @divTrunc(endx - startx - 1, 2) - @intCast(isize, lvlstr.len / 2);
+    y = _drawStr(lvlstrx, y, endx, " $c{s}$. ", .{lvlstr}, .{});
     y += 1;
 
-    inline for (@typeInfo(Stat).Enum.fields) |statv| {
-        const stat = @intToEnum(Stat, statv.value);
-        const base_stat_val = utils.getFieldByEnum(Stat, state.player.stats, stat);
+    const stats = [_]struct { b: []const u8, a: []const u8, v: isize }{
+        .{ .b = "hit", .a = "%", .v = state.player.stat(.Melee) },
+        .{ .b = "msl", .a = "%", .v = state.player.stat(.Missile) },
+        .{ .b = "evd", .a = "%", .v = state.player.stat(.Evade) },
+        .{ .b = "mar", .a = " ", .v = state.player.stat(.Martial) },
+        .{ .b = "vsn", .a = " ", .v = state.player.stat(.Vision) },
+        .{ .b = "arm", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.Armor)) },
+        .{ .b = "rF ", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.rFire)) },
+        .{ .b = "rE ", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.rElec)) },
+    };
 
-        const cur_stat_val = @intCast(isize, switch (stat) {
-            .Missile => combat.chanceOfMissileLanding(state.player),
-            .Melee => combat.chanceOfMeleeLanding(state.player, null),
-            .Evade => combat.chanceOfAttackEvaded(state.player, null),
-            else => state.player.stat(stat),
-        });
-
-        if (cur_stat_val > 0 or base_stat_val > 0) {
-            if (cur_stat_val != base_stat_val) {
-                const diff = cur_stat_val - base_stat_val;
-                const abs = math.absInt(diff) catch unreachable;
-                const sign = if (diff > 0) "+" else "-";
-                y = _drawStr(startx, y, endx, "$c{s: <8}$. {: >4} ({s}{})", .{
-                    stat.string(), cur_stat_val, sign, abs,
-                }, .{});
-            } else {
-                y = _drawStr(startx, y, endx, "$c{s: <8}$. {: >4}", .{ stat.string(), cur_stat_val }, .{});
-            }
-        }
+    for (stats) |stat, i| {
+        const x = if (i % 2 == 0) startx else @divTrunc(endx - startx, 2);
+        _ = _drawStr(x, y, endx, "$c{s}$. {: >4}{s}", .{ stat.b, stat.v, stat.a }, .{});
+        if (i % 2 == 1) y += 1;
     }
-
-    const armor = 100 - @intCast(isize, state.player.resistance(.Armor));
-    y = _drawStr(startx, y, endx, "$carmor%$.   {: >4}%", .{armor}, .{});
 
     y += 1;
 
@@ -1021,23 +1020,15 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     );
     y += 1;
 
+    var status_drawn = false;
     var statuses = state.player.statuses.iterator();
     while (statuses.next()) |entry| {
-        const status = entry.key;
-        const se = entry.value.*;
-
-        if (state.player.isUnderStatus(status) == null)
+        if (state.player.isUnderStatus(entry.key) == null or entry.value.duration != .Tmp)
             continue;
-
-        const duration = switch (se.duration) {
-            .Prm, .Equ, .Ctx => Status.MAX_DURATION,
-            .Tmp => |t| t,
-        };
-
-        _draw_bar(y, startx, endx, duration, Status.MAX_DURATION, status.string(state.player), 0x77452e, 0xffffff);
-        y += 1;
+        y = _drawStr(startx, y, endx, "{s}", .{_formatStatusInfo(entry.value)}, .{});
+        status_drawn = true;
     }
-    y += 1;
+    if (status_drawn) y += 1;
 
     const sneak = @intCast(usize, state.player.stat(.Sneak));
     const is_walking = state.player.turnsSpentMoving() >= sneak;
@@ -1070,40 +1061,6 @@ fn drawPlayerInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isi
     const terrain = state.dungeon.terrainAt(state.player.coord);
     if (!mem.eql(u8, terrain.id, "t_default")) {
         y = _drawStr(startx, y, endx, "$cterrain$.: {s}", .{terrain.name}, .{});
-
-        inline for (@typeInfo(Stat).Enum.fields) |statv| {
-            const stat = @intToEnum(Stat, statv.value);
-            const stat_val = utils.getFieldByEnum(Stat, terrain.stats, stat);
-            if (stat_val != 0) {
-                const abs = math.absInt(stat_val) catch unreachable;
-                const sign = if (stat_val > 0) "+" else "-";
-                y = _drawStr(startx, y, endx, "· $c{s: <5}$. {s}{}", .{
-                    stat.string(), sign, abs,
-                }, .{});
-            }
-        }
-
-        inline for (@typeInfo(Resistance).Enum.fields) |resistv| {
-            const resist = @intToEnum(Resistance, resistv.value);
-            const resist_val = utils.getFieldByEnum(Resistance, terrain.resists, resist);
-            if (resist_val != 0) {
-                const abs = math.absInt(resist_val) catch unreachable;
-                const sign = if (resist_val > 0) "+" else "-";
-                y = _drawStr(startx, y, endx, "· {s: <5} {s}{}", .{
-                    resist.string(), sign, abs,
-                }, .{});
-            }
-        }
-
-        for (terrain.effects) |effect| {
-            const str = effect.status.string(state.player);
-            y = switch (effect.duration) {
-                .Prm => _drawStr(startx, y, endx, "$gPrm$. {s}\n", .{str}, .{}),
-                .Equ => _drawStr(startx, y, endx, "$gEqu$. {s}\n", .{str}, .{}),
-                .Tmp => _drawStr(startx, y, endx, "$gTmp$. {s} ({})\n", .{ str, effect.duration }, .{}),
-                .Ctx => _drawStr(startx, y, endx, "$gCtx$. {s}\n", .{str}, .{}),
-            };
-        }
     }
 }
 
