@@ -7,6 +7,7 @@ const Coord = types.Coord;
 
 pub const MATERIALS = [_]*const Material{
     &Iron,
+    &Vangenite,
 };
 
 pub const LabGlass = Material{
@@ -134,8 +135,9 @@ pub const Phybro = Material{
 };
 
 pub const Vangenite = Material{
+    .id = "vangenite",
     .name = "vangenite",
-    .color_fg = 0xb6efe0,
+    .color_fg = 0xe0f8f2, //0xb6efe0,
     .color_bg = null,
     .color_floor = 0xb6efe0,
     .tileset = 1,
