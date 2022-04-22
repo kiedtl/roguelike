@@ -954,7 +954,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
     };
 
     for (stats) |stat, i| {
-        const x = if (i % 2 == 0) startx else @divTrunc(endx - startx, 2) + 2;
+        const x = if (i % 2 == 0) startx else startx + @divTrunc(endx - startx, 2) + 2;
         const v = utils.SignedFormatter{ .v = stat.v };
         _ = _drawStr(x, y, endx, "$c{s}$. {: >4}{s}", .{ stat.b, v, stat.a }, .{});
         if (i % 2 == 1) y += 1;
