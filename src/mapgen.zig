@@ -494,6 +494,7 @@ fn excavatePrefab(
                 .Door,
                 .Bars,
                 .Brazier,
+                .ShallowWater,
                 .Floor,
                 .Loot1,
                 .RareLoot,
@@ -565,6 +566,7 @@ fn excavatePrefab(
                 .LockedDoor => placeDoor(rc, true),
                 .Door => placeDoor(rc, false),
                 .Brazier => _place_machine(rc, Configs[room.rect.start.z].light),
+                .ShallowWater => state.dungeon.at(rc).terrain = &surfaces.ShallowWaterTerrain,
                 .Bars => {
                     const p_ind = utils.findById(surfaces.props.items, Configs[room.rect.start.z].bars);
                     _ = placeProp(rc, &surfaces.props.items[p_ind.?]);
@@ -1967,6 +1969,12 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
     }
 }
 
+fn _setTerrain(coord: Coord, terrain: *const surfaces.Terrain) void {
+    if (mem.eql(u8, state.dungeon.at(coord).terrain.id, "t_default")) {
+        state.dungeon.at(coord).terrain = terrain;
+    }
+}
+
 pub fn placeRoomTerrain(level: usize) void {
     var weights = StackBuffer(usize, surfaces.TERRAIN.len).init(null);
     var terrains = StackBuffer(*const surfaces.Terrain, surfaces.TERRAIN.len).init(null);
@@ -2022,7 +2030,7 @@ pub fn placeRoomTerrain(level: usize) void {
                         const coord = Coord.new2(level, x, y);
                         if (coord.x >= WIDTH or coord.y >= HEIGHT)
                             continue;
-                        state.dungeon.at(coord).terrain = chosen_terrain;
+                        _setTerrain(coord, chosen_terrain);
                     }
                 }
             },
@@ -2035,7 +2043,7 @@ pub fn placeRoomTerrain(level: usize) void {
                     if (state.dungeon.at(coord).type == .Floor and
                         state.dungeon.at(coord).surface == null)
                     {
-                        state.dungeon.at(coord).terrain = chosen_terrain;
+                        _setTerrain(coord, chosen_terrain);
                         placed += 1;
                     }
                 }
@@ -2278,7 +2286,7 @@ fn placeBlob(cfg: BlobConfig, start: Coord) void {
 
             if (grid[blob_x][blob_y] != 0) {
                 if (cfg.type) |tiletype| state.dungeon.at(coord).type = tiletype;
-                state.dungeon.at(coord).terrain = cfg.terrain;
+                _setTerrain(coord, cfg.terrain);
             }
         }
     }
@@ -2655,6 +2663,7 @@ pub const Prefab = struct {
         LockedDoor,
         Door,
         Brazier,
+        ShallowWater,
         Floor,
         Connection,
         Water,
@@ -3008,6 +3017,7 @@ pub const Prefab = struct {
                             '+' => .Door,
                             '±' => .LockedDoor,
                             '•' => .Brazier,
+                            '˜' => .ShallowWater,
                             '@' => player: {
                                 f.player_position = Coord.new(x, y);
                                 break :player .Floor;

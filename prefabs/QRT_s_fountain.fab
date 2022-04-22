@@ -1,0 +1,33 @@
+% Fountain
+%
+% ○═══○
+% ║≈≈≈║
+% ║≈¶≈║
+% ○═══○
+
+:subroom
+
+@0 p small_fountain
+@a p low_wall_e2w2
+@b p low_wall_n2s2
+@c p low_wall_corner
+
+caaac
+b˜˜˜b
+b˜0˜b
+caaac
+
+\
+
+% ○═══○
+% ║≈¶≈║
+% ○═══○
+
+@0 p small_fountain
+@a p low_wall_e2w2
+@b p low_wall_n2s2
+@c p low_wall_corner
+
+caaac
+b˜0˜b
+caaac

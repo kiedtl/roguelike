@@ -41,12 +41,9 @@
 ""                     	 "Buchner funnel"       	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
 ""                     	 "Erlenmeyer flask"     	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
 
-# Vaults stuff
-"gold_ingots"          	 "gold ingots"          	 '╳' 	 0x000000 	 0xffd700 	 nay 	 - 	 - 	 .Vault
-"gold_chest"           	 "gold chest"           	 'æ' 	 0xffd700 	 -        	 nay 	 - 	 - 	 .Vault
-"iron_ingots"          	 "iron ingots"          	 '╳' 	 0x000000 	 0xcacbca 	 nay 	 - 	 - 	 .Vault
-"steel_ingots"         	 "steel ingots"         	 '╳' 	 0x000000 	 0xeeeeee 	 nay 	 - 	 - 	 .Vault
+# Quarters stuff
 "fuel_barrel"          	 "barrel of fuel"       	 'ʊ' 	 0xdaa520 	 -        	 nay 	 - 	20 	 .Vault
+"small_fountain"       	 "small fountain"       	 '¶' 	 0xa4cfff 	 -        	 -   	 - 	 -
 
 # Statues
 "gold_statue"          	 "gold statue"          	 '☺' 	 0xfff720 	 -        	 nay 	 - 	 - 	 .Statue
@@ -94,6 +91,10 @@
 "vacuum_chmbr"         	 "vacuum chamber"       	 '⊜' 	 0xffefdf 	 -        	 nay 	 - 	 - 	 .Laboratory
 
 "nuclear_core"         	 "nuclear_core"         	 '≡' 	 0xffefdf 	 -        	 nay 	 - 	30
+
+"low_wall_n2s2"        	 "low wall"             	 '║' 	 0xefefef 	 -        	 nay 	 - 	 -
+"low_wall_e2w2"        	 "low wall"             	 '═' 	 0xefefef 	 -        	 nay 	 - 	 -
+"low_wall_corner"      	 "low wall"             	 '○' 	 0xefefef 	 -        	 nay 	 - 	 -
 
 "wall_n1s1_slt"        	 "vangenite wall"       	 '┋' 	 0xe0f8f2 	 -        	 nay
 "wall_n1s1_slt2"       	 "vangenite wall"       	 '¦' 	 0xe0f8f2 	 -        	 nay
