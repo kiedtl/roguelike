@@ -27,246 +27,246 @@ New Levels
 New mobs
 --------
 - creeping death
-	- A sabre-toothed cat, nothing more or less.
-	- Has LOS radius of just one more than player's.
-	- Stalks player around.
-	- After a bit, the cat charges and attacks player.
-	- While charging:
-		- 50% increased speed
-		- Bite provides chance of paralysis
-	- When player is in LOS of cat, messages:
-		- "You feel like something is watching you."
-		- "You feel uneasy." (just before cat charges)
+  - A sabre-toothed cat, nothing more or less.
+  - Has LOS radius of just one more than player's.
+  - Stalks player around.
+  - After a bit, the cat charges and attacks player.
+  - While charging:
+    - 50% increased speed
+    - Bite provides chance of paralysis
+  - When player is in LOS of cat, messages:
+    - "You feel like something is watching you."
+    - "You feel uneasy." (just before cat charges)
 x sulfur fiend x
-	x rElec∞ and rFire+.
-	x Hasten Rot: makes a corpse emit a cloud of miasma, destroying the
-	  corpse in the process. Miasma causes nausea.
-	x Summon Ball Lightning: conjures a ball lightning mobs.
+  x rElec∞ and rFire+.
+  x Hasten Rot: makes a corpse emit a cloud of miasma, destroying the
+    corpse in the process. Miasma causes nausea.
+  x Summon Ball Lightning: conjures a ball lightning mobs.
 - fiend of vapours
-	- "A strange winged figure, cloaked in dirty rags. It is holding a
-	  sceptre."
-	- Aura of Dispersal: resistably blinks all affected mobs away (range:
-	  2).  Used to remove surrounding enemies.
-	- Dispel Cloud: removes all smoke clouds in caster's LOS. Used to
-	  remove gas obscuring enemy.
-	- Dispel Fumes: removes harmful fumes near allies.
-	- Meat Offering: creates a vile protector from a corpse, using it up in
-	  the process. Vile protector redirects damage done to allies to itself.
-	  Vile protector is fairly tanky (10 HP) but immobile; shielding ends if
-	  the dustlings/allies move out of its LOS.
-	- Windlash: moderate damage, smite-targeted.
-	  - "The vapour mage waves its arms around in wide circles!"
-	  - "The air whirls around and strikes you!"
-	  - "The air twists around and strikes you!"
-	  - "The air twists itself inside-out and smites you!!"
-	- Vunerable to fire, resistant to electricity.
-	- Relatively fragile (12 HP) and slow (110).
+  - "A strange winged figure, cloaked in dirty rags. It is holding a
+    sceptre."
+  - Aura of Dispersal: resistably blinks all affected mobs away (range:
+    2).  Used to remove surrounding enemies.
+  - Dispel Cloud: removes all smoke clouds in caster's LOS. Used to
+    remove gas obscuring enemy.
+  - Dispel Fumes: removes harmful fumes near allies.
+  - Meat Offering: creates a vile protector from a corpse, using it up in
+    the process. Vile protector redirects damage done to allies to itself.
+    Vile protector is fairly tanky (10 HP) but immobile; shielding ends if
+    the dustlings/allies move out of its LOS.
+  - Windlash: moderate damage, smite-targeted.
+    - "The vapour mage waves its arms around in wide circles!"
+    - "The air whirls around and strikes you!"
+    - "The air twists around and strikes you!"
+    - "The air twists itself inside-out and smites you!!"
+  - Vunerable to fire, resistant to electricity.
+  - Relatively fragile (12 HP) and slow (110).
 - vapour mage
-	- Airblast: knockback foe (5 - distance_from_mage) spaces
-	- Haste dustling
-	- Has night vision.
+  - Airblast: knockback foe (5 - distance_from_mage) spaces
+  - Haste dustling
+  - Has night vision.
 - convult
-	- Keeps distance
-	- Enrage dustling
+  - Keeps distance
+  - Enrage dustling
 x dustling
-	x Exceedingly fragile (5 HP) and no armor/weapons. Carries a strong
-	  punch, though.
-	x Fast (55% speed) and has night vision.
-	x Vunerable to fire and electricity.
-	x Found solely in Caverns.
+  x Exceedingly fragile (5 HP) and no armor/weapons. Carries a strong
+    punch, though.
+  x Fast (55% speed) and has night vision.
+  x Vunerable to fire and electricity.
+  x Found solely in Caverns.
 x frozen fiend
-	- "A winged humanoid, clothed in watery-blue robes. It whispers grimly
-	   to itself as it patrols the dungeon, inspecting its underlings with
-	   an expression of cold contempt.
-	x Polar resurrection: Raises corpses into stationary foes. Such undead
-	  are very fast, have good armor, and are quite tanky, but are very
-	  vunerable to fire.
-	x Polar Casing: transforms a wall near the target to ice, damaging all
-	  (yes, all) adjacent monsters. Reverts back to a wall in 5-6 turns.
-	  - "The freezing fiend stares at you."
+  - "A winged humanoid, clothed in watery-blue robes. It whispers grimly
+     to itself as it patrols the dungeon, inspecting its underlings with
+     an expression of cold contempt.
+  x Polar resurrection: Raises corpses into stationary foes. Such undead
+    are very fast, have good armor, and are quite tanky, but are very
+    vunerable to fire.
+  x Polar Casing: transforms a wall near the target to ice, damaging all
+    (yes, all) adjacent monsters. Reverts back to a wall in 5-6 turns.
+    - "The freezing fiend stares at you."
 - hornblende statue
-	- "A humanoid statue imbued with an evil
-	  spirit. It radiates an intense aura of palpable malice."
-	- Appears in pairs in hallways of the Morgue.
-	- Chance to resistibly blink intruders to itself.
+  - "A humanoid statue imbued with an evil
+    spirit. It radiates an intense aura of palpable malice."
+  - Appears in pairs in hallways of the Morgue.
+  - Chance to resistibly blink intruders to itself.
 - pitchblende statue
-	- "A humanoid statue imbued with an evil
-	  spirit. It radiates an intense aura of palpable malice."
-	- Appears in pairs in hallways of the Morgue.
-	- Chance to resistibly blink intruders away from itself.
+  - "A humanoid statue imbued with an evil
+    spirit. It radiates an intense aura of palpable malice."
+  - Appears in pairs in hallways of the Morgue.
+  - Chance to resistibly blink intruders away from itself.
 - schalenblende statue
-	- "A humanoid statue imbued with an evil
-	  spirit. It radiates an intense aura of palpable malice."
-	- Appears in pairs guarding doorways of rooms in the Morgue.
-	- Chance to prevent passage of intruders.
+  - "A humanoid statue imbued with an evil
+    spirit. It radiates an intense aura of palpable malice."
+  - Appears in pairs guarding doorways of rooms in the Morgue.
+  - Chance to prevent passage of intruders.
 - lightning spire
-	- like dcss' lightning spire
-	- hurls powerful bolts of electricity
-	- rFire+ rElec+ Armor=30% rFume∞ rPara∞ rPois∞
-	- immobile, only attacks when other hostile present
+  - like dcss' lightning spire
+  - hurls powerful bolts of electricity
+  - rFire+ rElec+ Armor=30% rFume∞ rPara∞ rPois∞
+  - immobile, only attacks when other hostile present
 - torpor spire
-	- like dcss' torpor snail
-	- attempts to slows player when in FOV
-	- rFire+ rElec+ Armor=30% rFume∞ rPara∞ rPois∞
-	- immobile
+  - like dcss' torpor snail
+  - attempts to slows player when in FOV
+  - rFire+ rElec+ Armor=30% rFume∞ rPara∞ rPois∞
+  - immobile
 - iron spire
-	- hurls iron shards and orbs of devastation
-	- rFire+ rElec+ Armor=30% rFume∞ rPois∞
-	- immobile, only attacks when other hostile present
+  - hurls iron shards and orbs of devastation
+  - rFire+ rElec+ Armor=30% rFume∞ rPois∞
+  - immobile, only attacks when other hostile present
 - silver spire
-	- Enables silver weapons.
+  - Enables silver weapons.
 x warden
-	- calls for reinforcements by shouting/sounding horn
+  - calls for reinforcements by shouting/sounding horn
 - wretched stars
-	- "A fiery apparition, wreathed in unapproachable darkness. It has the
-	  appearance of a wheel with broken spokes, covered within and without
-	  in glazed eyes."
-	- Extremely fast.
-	- Mights allies.
-	- Emanates opaque gas.
-	  - Mobs that step in gas will be irresistibly blinked away.
-	- When allies are about to die, gives them a status them makes them
-	  very briefly invunerable and sends them insane.
-	- Tries to blink around so as to not be adjacent to allies.
-	- Teleports away (or suicides?) when no allies visible.
-	- Immune to weapon damage.
+  - "A fiery apparition, wreathed in unapproachable darkness. It has the
+    appearance of a wheel with broken spokes, covered within and without
+    in glazed eyes."
+  - Extremely fast.
+  - Mights allies.
+  - Emanates opaque gas.
+    - Mobs that step in gas will be irresistibly blinked away.
+  - When allies are about to die, gives them a status them makes them
+    very briefly invunerable and sends them insane.
+  - Tries to blink around so as to not be adjacent to allies.
+  - Teleports away (or suicides?) when no allies visible.
+  - Immune to weapon damage.
 x burning brute
-	- "A raging winged demon composed primarily of boiling basalt,
-	  feared even by its peers for its vicious fire attacks."
-	x Has rFire∞, but rElec-.
-	x Hurls bolts of fire.
-	x Burnt offering: Raises a visible corpse, and gives it the .InnerFire
-	  status. Effects:
-	  - 50% slower.
-	  - Every 2-3 turns, flames seep out of mob and ignite nearby tiles.
-	  - When timer is over, mob explodes, damaging all nearby mobs.
-	x Has kicking (x1) and clawing (x1) attack (need species struct for this).
+  - "A raging winged demon composed primarily of boiling basalt,
+    feared even by its peers for its vicious fire attacks."
+  x Has rFire∞, but rElec-.
+  x Hurls bolts of fire.
+  x Burnt offering: Raises a visible corpse, and gives it the .InnerFire
+    status. Effects:
+    - 50% slower.
+    - Every 2-3 turns, flames seep out of mob and ignite nearby tiles.
+    - When timer is over, mob explodes, damaging all nearby mobs.
+  x Has kicking (x1) and clawing (x1) attack (need species struct for this).
 - destroyer
-	- Travels with a swarm of stalkers (see below).
-	- Memory duration of 9.
-	- Chain mail and rapier, ~15 HP.
-	- Slower than player.
+  - Travels with a swarm of stalkers (see below).
+  - Memory duration of 9.
+  - Chain mail and rapier, ~15 HP.
+  - Slower than player.
 - stalkers
-	- "A small flying creature, its four wings humming ominously as it
-	  follows you at the behest of its owner. Its copper-colored entrails
-	  loop disgustingly around its silver torso."
-	- A small aluminum drone, with copper wires sticking out. The player
-	  wouldn't know that of course.
-	- Travels with a destroyer captain.
-	- "Sticks" near to player, keeping destroyer aware of player's location.
-	- Does not actually attack player, keeps distance of 3 tiles.
-	- Completely deaf, won't investigate on its own. Vision of 3 tiles,
-	  has night vision.
-	- 5 HP, 25% armor, has evasion of 40%, and very fast.
+  - "A small flying creature, its four wings humming ominously as it
+    follows you at the behest of its owner. Its copper-colored entrails
+    loop disgustingly around its silver torso."
+  - A small aluminum drone, with copper wires sticking out. The player
+    wouldn't know that of course.
+  - Travels with a destroyer captain.
+  - "Sticks" near to player, keeping destroyer aware of player's location.
+  - Does not actually attack player, keeps distance of 3 tiles.
+  - Completely deaf, won't investigate on its own. Vision of 3 tiles,
+    has night vision.
+  - 5 HP, 25% armor, has evasion of 40%, and very fast.
 - silver hornet
-	- "A tiny buzzing insect, seemingly made of some lightweight silvery metal.
-	   It's trying to sting you!"
-	- Very fast, and base evade% of 50.
-	- Gives silver damage (i.e., electrocution if in aura of silver spire).
-	- 5 HP and no armor at all.
-	- Found in the Laboratory.
+  - "A tiny buzzing insect, seemingly made of some lightweight silvery metal.
+     It's trying to sting you!"
+  - Very fast, and base evade% of 50.
+  - Gives silver damage (i.e., electrocution if in aura of silver spire).
+  - 5 HP and no armor at all.
+  - Found in the Laboratory.
 x iron wasp
-	- Like silver hornet, but gives no silver damage.
-	- Sting attack that gives poisoning.
-	- Very occasionally found in swarms of fellow iron wasps.
+  - Like silver hornet, but gives no silver damage.
+  - Sting attack that gives poisoning.
+  - Very occasionally found in swarms of fellow iron wasps.
 x lead turtle
-	- Slow enough that dying to one is strictly optional (in theory).
-	- rFire∞ rPois∞ rFume∞
-	- Hits hard, strength == 50, reach == 2.
-	- Huge amount of innate armor. Maybe, 60%?
-	- Found in the Laboratory.
+  - Slow enough that dying to one is strictly optional (in theory).
+  - rFire∞ rPois∞ rFume∞
+  - Hits hard, strength == 50, reach == 2.
+  - Huge amount of innate armor. Maybe, 60%?
+  - Found in the Laboratory.
 - bone mage
-	- Enrage Undead: gives all nearby undead .Enraged status
-	- Bone longsword
-	- Travels with packs of bone rats, with rare zombie
+  - Enrage Undead: gives all nearby undead .Enraged status
+  - Bone longsword
+  - Travels with packs of bone rats, with rare zombie
 - bone rat
-	- fast, evasive, and moderately fragile.
-	- rPois∞ rFume∞ rFire-
+  - fast, evasive, and moderately fragile.
+  - rPois∞ rFume∞ rFire-
 - ember mage
-	- Can hurl bolts of fire for low damage
-	- Fire attack with weapon
-	- Can create 3-4 emberlings from a corpse
-	- Travels with packs of emberlings
+  - Can hurl bolts of fire for low damage
+  - Fire attack with weapon
+  - Can create 3-4 emberlings from a corpse
+  - Travels with packs of emberlings
 - emberling
-	- Attacks that do fire damage
-	- Leaves trails of fire behind
-	- Fast
+  - Attacks that do fire damage
+  - Leaves trails of fire behind
+  - Fast
 - fire mage
-	- Has abilities of ember mage
-	- Can set player on fire (will-checked)
-	- Avoids melee
-	- Travels with packs of emberlings
+  - Has abilities of ember mage
+  - Can set player on fire (will-checked)
+  - Avoids melee
+  - Travels with packs of emberlings
 - blood mage
-	- Toned-down pain spell that heals nearby bloodlings
-	- Can make a corpse explode in a wave of blood
-	- Can create 3-4 bloodlings from a corpse
+  - Toned-down pain spell that heals nearby bloodlings
+  - Can make a corpse explode in a wave of blood
+  - Can create 3-4 bloodlings from a corpse
 - bloodlings
-	- Slow
-	- Heals when traveling over blood-stained ground
+  - Slow
+  - Heals when traveling over blood-stained ground
 - spark mage
-	- Can convert corpse to sparklings
-	- Can hurl electricity
+  - Can convert corpse to sparklings
+  - Can hurl electricity
 - sparklings
-	- Attacks that do electric damage
-	- Aura of electricity vunerability
+  - Attacks that do electric damage
+  - Aura of electricity vunerability
 - lightning mage
-	- Has all abilities of spark mage
-	- Can summon a lightning spire from a corpse (or not? lightning spires
-	  are supposed to be machines, right?)
-	- Can briefly paralyse player ("stunning burst")
-	- Keeps distance
+  - Has all abilities of spark mage
+  - Can summon a lightning spire from a corpse (or not? lightning spires
+    are supposed to be machines, right?)
+  - Can briefly paralyse player ("stunning burst")
+  - Keeps distance
 x spectre mage
-	x Spectral Sword: summons four spectral swords, which are very fast but
-	  have just 1 HP and do little damage. Like Brogue's staff of conjuration.
-	x Found in Laboratory and Caverns.
+  x Spectral Sword: summons four spectral swords, which are very fast but
+    have just 1 HP and do little damage. Like Brogue's staff of conjuration.
+  x Found in Laboratory and Caverns.
 x ancient mage
-	- "Even the most powerful of human mages cannot hope to wield the full
-	  power of the Necromancer. Instead, it is invested in this undead mage,
-	  an immeasurably ancient skeleton resurrected for this purpose."
-	x Summons ball lightning. (TODO: replace with orbs of devastation.)
-	x Mass Dismissal: gives .Fear to all attacking monsters in LOS. Resistible.
-	x Aura of Dispersal: blinks away all creatures in caster's immediate
-	  vicinity.
-	x Summon Enemy: resistibly teleport enemy/player back into its LOS, if
-	  it cannot see enemy.
-	x Hurls crystal shards.
-	x rPois∞ rFume∞ rElec∞
+  - "Even the most powerful of human mages cannot hope to wield the full
+    power of the Necromancer. Instead, it is invested in this undead mage,
+    an immeasurably ancient skeleton resurrected for this purpose."
+  x Summons ball lightning. (TODO: replace with orbs of devastation.)
+  x Mass Dismissal: gives .Fear to all attacking monsters in LOS. Resistible.
+  x Aura of Dispersal: blinks away all creatures in caster's immediate
+    vicinity.
+  x Summon Enemy: resistibly teleport enemy/player back into its LOS, if
+    it cannot see enemy.
+  x Hurls crystal shards.
+  x rPois∞ rFume∞ rElec∞
 x death mage
-	x Bufs nearby undead for a short time.
-	x Haste: give .Fast to nearby undead ally.
-	x Heal: Uses up a corpse to restore 90% of lost health for nearby undead ally.
-	x Prefers to keep distance.
+  x Bufs nearby undead for a short time.
+  x Haste: give .Fast to nearby undead ally.
+  x Heal: Uses up a corpse to restore 90% of lost health for nearby undead ally.
+  x Prefers to keep distance.
 - beastmaster
-	- Slow (120) and heavily armored, but just a simple club.
-	- Releases chained allies (dogs, hounds, wolves) in same room when
-	  seeing hostile.
-	- Goads beasts on, possibly giving them .Enraged status
+  - Slow (120) and heavily armored, but just a simple club.
+  - Releases chained allies (dogs, hounds, wolves) in same room when
+    seeing hostile.
+  - Goads beasts on, possibly giving them .Enraged status
 - sleeping beauty
-	- "A hideous statue of some nameless creature, covered in metal plates."
-	- Sleeps, when hit with electric damage, activates.
-	- rElec∞ rFume∞
+  - "A hideous statue of some nameless creature, covered in metal plates."
+  - Sleeps, when hit with electric damage, activates.
+  - rElec∞ rFume∞
 - mellaent
-	- kerejat-like nuisance
-	- noncombatant
+  - kerejat-like nuisance
+  - noncombatant
 - tentacling
-	- "A horrible twisted abomination, writhing and fidgeting. It retained
-	  its intelligence despite countless years of experiments practiced on it.
-	- Monster with twenty tentacles, like DCSS tile for ugly things
-	- Faster than player.
-	- Ranged attack: throws boulders at player (i.e., DCSS' cyclops).
-	- Melee  attack: knock player across room to get more ranged hits.
-	- Usually tries to attack ranged, but may occasionally rush across room
-	  and throw player around just for the heck of it.
+  - "A horrible twisted abomination, writhing and fidgeting. It retained
+    its intelligence despite countless years of experiments practiced on it.
+  - Monster with twenty tentacles, like DCSS tile for ugly things
+  - Faster than player.
+  - Ranged attack: throws boulders at player (i.e., DCSS' cyclops).
+  - Melee  attack: knock player across room to get more ranged hits.
+  - Usually tries to attack ranged, but may occasionally rush across room
+    and throw player around just for the heck of it.
 - revealer
-	- Casts glowing (will-checked).
-	- Uncommon. Found in Lab, Vaults, Smithing, higher Prison.
+  - Casts glowing (will-checked).
+  - Uncommon. Found in Lab, Vaults, Smithing, higher Prison.
 - bloat
-	- Bloated 
-	- Very slow, 18 HP
-	- Aura of nausea.
+  - Bloated 
+  - Very slow, 18 HP
+  - Aura of nausea.
 - new monsters
-	- hydra-like monster, multiple attacks per turn
-	- Hurls bolts of paralysing dust (same as DCSS' catoblepas).
+  - hydra-like monster, multiple attacks per turn
+  - Hurls bolts of paralysing dust (same as DCSS' catoblepas).
 
 
 
@@ -285,24 +285,6 @@ Intelligence
   of dangerous terrain intelligently (they'll just move randomly).
 - Mindless mobs will never flee.
 - Unintelligent mobs cannot use doors and machines marked as requiring INT.
-
-
-Undead
-------
-Undead:
-- Intelligent: mindless.
-- Has 150% strength bonus.
-- Has -20% speed nerf.
-- Has -40% dexterity nerf.
-- Can only see 3-4 tiles ahead of them.
-- Cannot hear noises.
-- Have a .memory of ~7.
-- Are vunerable to fire and electricity (rFire- rElec-).
-- Are immune to Pain and Fear.
-- Never flee, unless commanded so by their squad leader.
-- Don't breath gases, and are thus not affected by most of them.
-- Have a willpower of basically zero, and can thus be affected by any spell.
-- Can be "called forth" by necromancers to assist in combat.
 
 
 Movement patterns
@@ -411,105 +393,75 @@ Rings
   silver, and iron).
 - Rings: [p]assive (acting each turn) or [a]ctive (requiring user to move in pattern)
 ring of knowledge [a/p]
-	- Passively allows player to know if they're still being pursued.
-	- Allows player to see spots near pursuers (but not the pursuers
-	  themselves?) for ~3-5 turns.
-	  - Movement pattern:
+  - Passively allows player to know if they're still being pursued.
+  - Allows player to see spots near pursuers (but not the pursuers
+    themselves?) for ~3-5 turns.
+    - Movement pattern:
 ring of devastation [a]
-	- Confers either stun or fear on mob when moving toward mob.
-	  - Must land right next to mob.
-	  - Movement pattern: [move(N), move(N), move(N), move(N)]
-	- Can hurl crystal lance, to halve foe's health and knock them back,
-	  halving health again if they are thrown into a wall.
-	  .Loudest noise.
-	- Can destroy a wall tile, sending shards of lethally sharp stone
-	  hurtling towards adjacent mobs. Harder stones == more damage.
-	  .Deafening noise.
+  - Confers either stun or fear on mob when moving toward mob.
+    - Must land right next to mob.
+    - Movement pattern: [move(N), move(N), move(N), move(N)]
+  - Can hurl crystal lance, to halve foe's health and knock them back,
+    halving health again if they are thrown into a wall.
+    .Loudest noise.
+  - Can destroy a wall tile, sending shards of lethally sharp stone
+    hurtling towards adjacent mobs. Harder stones == more damage.
+    .Deafening noise.
 ring of distortion [a]
-	- Bend space: blink all mobs in FOV (& player) at random.
-	  Twists space violently around player, reducing HP by 10%.
-	- Aura of dispersal: creates aura around player where any mob in the
-	  aura will be blinked away (& possibly paralysed) for 2-3 turns.
-	  Twists space violently around player, reducing HP by 10%.
-	- Scatter: teleport all mobs in FOV (& player) around floor. Player
-	  should land in area without nearby mobs.
-	  Twists space violently around player, reducing HP by 10%.
+  - Bend space: blink all mobs in FOV (& player) at random.
+    Twists space violently around player, reducing HP by 10%.
+  - Aura of dispersal: creates aura around player where any mob in the
+    aura will be blinked away (& possibly paralysed) for 2-3 turns.
+    Twists space violently around player, reducing HP by 10%.
+  - Scatter: teleport all mobs in FOV (& player) around floor. Player
+    should land in area without nearby mobs.
+    Twists space violently around player, reducing HP by 10%.
 ring of singing [a/p]
-	- Aura of silence: mutes all sound in vicinity for ~10 turns.
+  - Aura of silence: mutes all sound in vicinity for ~10 turns.
 vampiric ring of draining [a/p]
-	- Drains an enemy for {speed,health,HP}.
-	- Allows player to see that mob and all tiles within two spaces.
-	- Player will get a status (paralyzed? slowed? negative regen? traumatize? stun?)
-	  for a bit when the enemy dies OR the enemy sees the player.
-	- The drained mob immedietely becomes an enemy to everyone.
-	- If the enemy dies, the player is teleported there in its place?
-	- Movement pattern: ???
+  - Drains an enemy for {speed,health,HP}.
+  - Allows player to see that mob and all tiles within two spaces.
+  - Player will get a status (paralyzed? slowed? negative regen? traumatize? stun?)
+    for a bit when the enemy dies OR the enemy sees the player.
+  - The drained mob immedietely becomes an enemy to everyone.
+  - If the enemy dies, the player is teleported there in its place?
+  - Movement pattern: ???
 ring of fire [a]
-	- Causes dark gas to emanate from player. Gas is opaque and blocks all light.
-		- Movement pattern:
-	- Causes all nearby machines to lose power for a bit (aka turn out the lights).
-		- Movement pattern:
-	- Raises all nearby corpses to attack enemies for a brief period of time.
-		- Movement pattern:
-	- Causes tiles in 3-space radius around player to burst into flame.
-		- Movement pattern:
-	- Summons orbs of fire when moving straight away from foe. Orbs create
-	  smoke/fog as they move and attack foes. Like Foxfire.
-	- Ignition/Hellfire: fill all tiles with foes with fire. Sets caster on fire.
-	  Puts clouds of fire around at random (potentially impeding escape).
+  - Causes dark gas to emanate from player. Gas is opaque and blocks all light.
+    - Movement pattern:
+  - Causes all nearby machines to lose power for a bit (aka turn out the lights).
+    - Movement pattern:
+  - Raises all nearby corpses to attack enemies for a brief period of time.
+    - Movement pattern:
+  - Causes tiles in 3-space radius around player to burst into flame.
+    - Movement pattern:
+  - Summons orbs of fire when moving straight away from foe. Orbs create
+    smoke/fog as they move and attack foes. Like Foxfire.
+  - Ignition/Hellfire: fill all tiles with foes with fire. Sets caster on fire.
+    Puts clouds of fire around at random (potentially impeding escape).
 ring of hexing [a]
-	- Dismissal: forces all investigating mobs in LOS to return to working.
-	  If resisted by willpower, will reveal player's location to them.
+  - Dismissal: forces all investigating mobs in LOS to return to working.
+    If resisted by willpower, will reveal player's location to them.
 ring of lightning
-	- Lure: attack in a cardinal direction, move in opposite direction, move
-	  perpendicular.
-	  keeping foe adjacent), move diagonally right/left.
-	  m...        ....   ....
-	  @... attack m...   m...
-	  ....        @...   .@..
-	- Electrocutes locations in four corners next to player.
-
-
-Vials
------
-- vial of tanus
-  Status: backvision
-    Makes mob see directly behind them as well as in front of them.
-- vial of slade
-  Status: bishop
-    Makes mob unable to move in cardinal directions.
-- vial of pholenine
-  Status: rook
-    Makes mob unable to move in diagonal directions.
-- vial of chloroforon
-- vial of hyine
-- vial of quagenin
-- vial of cataline
-  Status: nightvision
-    Gives mob perfect night vision.
-- vial of flouin
-  Status: dayblindness
-    Makes mob unable to see in brightly-lit tiles.
-- vial of phytin
-  Status: nightblindness
-    Makes mob unable to see in dimly-lit tiles.
-
-
-Posters
--------
-(moved to data/posters.tsv)
+  - Lure: attack in a cardinal direction, move in opposite direction, move
+    perpendicular.
+    keeping foe adjacent), move diagonally right/left.
+    m...        ....   ....
+    @... attack m...   m...
+    ....        @...   .@..
+  - Electrocutes locations in four corners next to player.
 
 
 Books
 -----
 Trying to read an [unreadable] book results in:
-	- "This book is written in Old Dramamos and you cannot read it."
+  - "This book is written in Old Dramamos and you cannot read it."
 Trying to read an [barbarians] book results in:
-	- "This book is written in the language of the Western barbarians. You
-	   read the book with great difficulty."
+  - "This book is written in the language of the Western barbarians. You
+     read the book with great difficulty."
 Trying to read a [forbidden] book results in:
-	- "This book has a seal set on it, threatening would-be readers with
-	   death. Really open?"
+  - "This book has a seal set on it, threatening would-be readers with
+     death. Really open?"
 [unreadable] "Book of Damnation"
 [unreadable] "Bored of the Rings"
 [unreadable] "Book of the Dead"
@@ -519,121 +471,121 @@ Trying to read a [forbidden] book results in:
 [unreadable] "The Vale of Fear"/"Skarlef"
 [forbidden]  "Book of Hymns"/"Soraldal"
 [barbarians] "On the Goblins"/"Urukdal"
-	- "You learn that two dark-skinned humans named Valimer and Kaiüs
-	   visited a few hill-goblin settlements a thousand years ago."
+  - "You learn that two dark-skinned humans named Valimer and Kaiüs
+     visited a few hill-goblin settlements a thousand years ago."
 "The Hardest Place: Our military entrenched in the Kinon Valley"
-	- "You learn that a half-competent, copper-clad hill-goblin recruits
-	  can completely annihilate any human army."
+  - "You learn that a half-competent, copper-clad hill-goblin recruits
+    can completely annihilate any human army."
 "A Choice Collection of Human Poetry"
-	- "You learn that modern human poetry has no merit whatsoever."
+  - "You learn that modern human poetry has no merit whatsoever."
 "Darwin's Black Box"
-	- "You learn that some humans are so well of that they have time to
-	  waste on questions like 'Who made the universe?' and 'Where did we
-	  come from?'"
+  - "You learn that some humans are so well of that they have time to
+    waste on questions like 'Who made the universe?' and 'Where did we
+    come from?'"
 "Kornalg: The Life and Times of the Ancient Hill-King"
-	- "You learn that Kornalg was undoubtedly the bravest, strongest,
-	   besterestest hill-goblin that ever lived."
+  - "You learn that Kornalg was undoubtedly the bravest, strongest,
+     besterestest hill-goblin that ever lived."
 "This was Kornalg"
-	- "You learn that Kornalg was rightly the king of the whole universe."
+  - "You learn that Kornalg was rightly the king of the whole universe."
 "Meing Krampgh"
-	- "You learn that hill goblins are destined to rule the world."
+  - "You learn that hill goblins are destined to rule the world."
 "Histories of Men"
-	- "You learn that dark-skinned humans are automatically inferior to other
-	   fang-possessing bipeds."
+  - "You learn that dark-skinned humans are automatically inferior to other
+     fang-possessing bipeds."
 "On the Descent of Goblins"
-	- "You learn about the Hill Goblin Master Race."
+  - "You learn about the Hill Goblin Master Race."
 "Durgh Stammer"
-	- "You learn that hill goblins are vastly superior to cave goblins."
+  - "You learn that hill goblins are vastly superior to cave goblins."
 "The Path to Goblin Supremacy"
-	- "You learn that those filthy cave-goblins have been infiltrating
-	   hill-goblin society for centuries."
+  - "You learn that those filthy cave-goblins have been infiltrating
+     hill-goblin society for centuries."
 "The Weekly Hurricane"
-	- "You learn that cave goblins are responsible for just about every
-	   bad thing that happened to hill goblins in the past 10,000 years."
+  - "You learn that cave goblins are responsible for just about every
+     bad thing that happened to hill goblins in the past 10,000 years."
 "On the Origins of Slade"
 "An Inquiry into the Chemical Properties of Phytin"
 "On the Molecular Structure of Tanus"
 "Operating Traumbulnahl Machinery"
-	- "You learn that human-leather gloves are required while operating
-	  extractors."
+  - "You learn that human-leather gloves are required while operating
+    extractors."
 "Optimizing Distance Functions"
-	- "You learn that Chebyshev distance is to be preferred to Euclidean
-	  distance for tile-based games."
+  - "You learn that Chebyshev distance is to be preferred to Euclidean
+    distance for tile-based games."
 "Optimizing the A* Algorithm"
-	- "You learn about the Manhattan distance function."
+  - "You learn about the Manhattan distance function."
 "Origins of the Kaborego-Zin"/"Origins of the Creeping Death"
-	- "You learn that the origins of the creeping death are a complete mystery."
+  - "You learn that the origins of the creeping death are a complete mystery."
 "Daily Consumption of Butter Tea"
-	- "You learn that some wacko humans actually like drinking rancid
-	  butter mash."
-	- "You learn the ratios of butter and tea needed to produce butter tea."
+  - "You learn that some wacko humans actually like drinking rancid
+    butter mash."
+  - "You learn the ratios of butter and tea needed to produce butter tea."
 "A Short Guide on Brewing Kombucha"
-	- "You learn that some weird humans actually like drinking spoiled tea."
-	- "You learn the ratios of sugar and tea needed to brew kombucha."
+  - "You learn that some weird humans actually like drinking spoiled tea."
+  - "You learn the ratios of sugar and tea needed to brew kombucha."
 "Oneirical's guide to the DCSS' FeSu"
-	- "You learn that a few humans actually like miniature creeping deaths."
-	- "You learn that some people like cats. A lot."
+  - "You learn that a few humans actually like miniature creeping deaths."
+  - "You learn that some people like cats. A lot."
 "Honeynutserios' DCSS review"
-	- "You learn that DCSS v0.28 was the worst game in the world."
-	- "You learn that DCSS v0.16 was the peak of DCSS."
-	- "You learn that DCSS' dev team is a cabal of fun-hating baby eaters."
+  - "You learn that DCSS v0.28 was the worst game in the world."
+  - "You learn that DCSS v0.16 was the peak of DCSS."
+  - "You learn that DCSS' dev team is a cabal of fun-hating baby eaters."
 recipe books
-	- "You learn how to pickle goblin roasts."
-	- "You learn how to properly butcher humans carcases."
+  - "You learn how to pickle goblin roasts."
+  - "You learn how to properly butcher humans carcases."
 dungeon maps
-	- maps of just mob stations
-	- maps of just presence of walls/floors
-	- maps of special item locations (rings/potions)
-	- maps of machine locations (recharging stations/drains)
-	- maps of possible stair locations
+  - maps of just mob stations
+  - maps of just presence of walls/floors
+  - maps of special item locations (rings/potions)
+  - maps of machine locations (recharging stations/drains)
+  - maps of possible stair locations
 manuals
-	- extremely rare, found in golden rooms
-	- provides boost to a stat the player may or may not be able to take
-	  advantage of, depending on build type.
-	- stats: missile%, evade%, martial combo, sneak
-	- (*not* melee% stat, as every build would be able to take advantage
-	  of that.)
+  - extremely rare, found in golden rooms
+  - provides boost to a stat the player may or may not be able to take
+    advantage of, depending on build type.
+  - stats: missile%, evade%, martial combo, sneak
+  - (*not* melee% stat, as every build would be able to take advantage
+    of that.)
 
 
 Materials (v = vial, s = stone, g = gem, o = ore/metal)
 ---------
-g	vaand
-g	chlorovese
-g	chlus
-g	caus
-g	magenus
-g	silus		Silicate, composes fire-proof cloaks.
-g	chlade		Like mese in Minetest. Composes crystal statues. Glows.
-			Associated with demonic powers.
-o	magonium
-o	beus
-o	sylvium
-o	magalt
-o	vibonium
-v	tanus		Extracted from talonium.
-v	slade		Extracted from sulon.
-v	pholenine	Extracted from phosire.
-v	chloroforon
-v	hyine		Extracted from hyalt.
-v	quagenine	Extracted from quaese.
-v	flouine
-v	cataline	Extracted from catasine.
-v	phytin		Extracted from phybro.
-s	talonium	Ore of tanus.
-s	sulon		Ore of slade.
-s	phosire		Ore of pholenine.
-s	hyalt		Ore of hyine.
-s	quaese		Ore of quagenine.
-s	catasine	Ore of cataline.
-s	phybro		Ore of phytin.
-s	dobalene	Makes up the walls of LAB.
-s	nebro		Like slade in Dwarf Fortress -- extremely heavy.
-			Supposed to be associated with demonic powers.
-s	vangenite	Makes up the walls of machinery in LAB. Glows dimly.
-s	bolyvese
-s	orthire		Uranium. Nuclear reactors are referred to as
-			"Orthire Furnaces".
-s	maron
+g  vaand
+g  chlorovese
+g  chlus
+g  caus
+g  magenus
+g  silus    Silicate, composes fire-proof cloaks.
+g  chlade    Like mese in Minetest. Composes crystal statues. Glows.
+      Associated with demonic powers.
+o  magonium
+o  beus
+o  sylvium
+o  magalt
+o  vibonium
+v  tanus    Extracted from talonium.
+v  slade    Extracted from sulon.
+v  pholenine  Extracted from phosire.
+v  chloroforon
+v  hyine    Extracted from hyalt.
+v  quagenine  Extracted from quaese.
+v  flouine
+v  cataline  Extracted from catasine.
+v  phytin    Extracted from phybro.
+s  talonium  Ore of tanus.
+s  sulon    Ore of slade.
+s  phosire    Ore of pholenine.
+s  hyalt    Ore of hyine.
+s  quaese    Ore of quagenine.
+s  catasine  Ore of cataline.
+s  phybro    Ore of phytin.
+s  dobalene  Makes up the walls of LAB.
+s  nebro    Like slade in Dwarf Fortress -- extremely heavy.
+      Supposed to be associated with demonic powers.
+s  vangenite  Makes up the walls of machinery in LAB. Glows dimly.
+s  bolyvese
+s  orthire    Uranium. Nuclear reactors are referred to as
+      "Orthire Furnaces".
+s  maron
 
 
 Roadmap
@@ -1138,15 +1090,15 @@ x Ring of echolocation to magic-map neighbors of sound-producing tiles
   - obsolete: making all the guards move to one corner of the map suddenly is
     obviously going to make things easier for player /s
 - Goblin "organizations" (purely eye candy)
-	- the Goblin Brotherhood, the ProudGobbos, the Seven Percenters, the
-	  Goblin Nations, etc
+  - the Goblin Brotherhood, the ProudGobbos, the Seven Percenters, the
+    Goblin Nations, etc
 - Night creatures should pop out of artwork at night
 ~ Stone guardians that patrol map and cast confusion at enemies, but move at 1
   tile per 10-20 turns
   - obsolete: that's abominations now
 - Headstones with previous player's comments on them, or ghosts that mourn
   previous player's carelessnes (think DCSS ghosts)
-	- Bonus: the ghosts/gravestones are found in the temple in prison cells
+  - Bonus: the ghosts/gravestones are found in the temple in prison cells
 ~ Pub for guards to get drunk
   - obsolete: how would this affect gameplay? (maybe just a vault would be fine?)
 - Ring to detect powered machines
@@ -1157,13 +1109,13 @@ x Ring of echolocation to magic-map neighbors of sound-producing tiles
 - Lava flans
 - Undead have other interesting kinds of negative effects when they score a
   hit?
-	- Reduced max HP, less regen rate, reduced stealth
+  - Reduced max HP, less regen rate, reduced stealth
 - Areas that speed up or slow down mobs
 - Lichen/fungi that puts mobs to sleep (enchanted ground)
 - Ice/oily floor that randomizes movement
 - Sticky ground that reduces evasion
 x Mobile traps that can be placed by player and used to lure guards on top
-	x {Bombs/landmines, bear trap, damage trap} "kits"
+  x {Bombs/landmines, bear trap, damage trap} "kits"
 x Item/lever player can trigger to unlock locked doors in room, releasing
   prisoners and creating maximum chaos.
 ~ Use Dijkstra for lighting/FOV?
@@ -1201,8 +1153,8 @@ x Add braziers that are built into the walls (aka torches), and use that
   while the player.coord field points to only one of them).
   - obsolete: could lead to subtle bugs
 - weapon runes:
-	- interleaving: Swap on hit
-	- banishing:    Teleports away
+  - interleaving: Swap on hit
+  - banishing:    Teleports away
 x MP-like system that limits how often spellcasters can cast spells (providing
   a way to tweak dangerous-ness) and how often player can use ring effects.
 - Extremely dangerous (but lucrative) vaults that have golden walls, warning
