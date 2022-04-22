@@ -7,6 +7,7 @@
 %    .   floor
 %    •   lamp
 %    *   connection
+%    ˜   shallow water terrain
 %    ~   water
 %    ≈   lava
 %    ;   window
