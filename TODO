@@ -465,7 +465,6 @@ Trying to read a [forbidden] book results in:
 [unreadable] "Book of Damnation"
 [unreadable] "Bored of the Rings"
 [unreadable] "Book of the Dead"
-[unreadable] "Book of Torment"
 [unreadable] "Of Men and Muskrats"
 [unreadable] "Is Man a Myth?"
 [unreadable] "The Vale of Fear"/"Skarlef"
@@ -474,12 +473,12 @@ Trying to read a [forbidden] book results in:
   - "You learn that two dark-skinned humans named Valimer and Kaiüs
      visited a few hill-goblin settlements a thousand years ago."
 "The Hardest Place: Our military entrenched in the Kinon Valley"
-  - "You learn that a half-competent, copper-clad hill-goblin recruits
-    can completely annihilate any human army."
+  - "You learn that a any half-competent, copper-clad hill-goblin recruit
+    militia can completely annihilate human armies."
 "A Choice Collection of Human Poetry"
   - "You learn that modern human poetry has no merit whatsoever."
 "Darwin's Black Box"
-  - "You learn that some humans are so well of that they have time to
+  - "You learn that some humans are so well off that they have time to
     waste on questions like 'Who made the universe?' and 'Where did we
     come from?'"
 "Kornalg: The Life and Times of the Ancient Hill-King"
@@ -494,7 +493,7 @@ Trying to read a [forbidden] book results in:
      fang-possessing bipeds."
 "On the Descent of Goblins"
   - "You learn about the Hill Goblin Master Race."
-"Durgh Stammer"
+"Goblins: Problems and Solutions"
   - "You learn that hill goblins are vastly superior to cave goblins."
 "The Path to Goblin Supremacy"
   - "You learn that those filthy cave-goblins have been infiltrating
@@ -513,7 +512,7 @@ Trying to read a [forbidden] book results in:
     distance for tile-based games."
 "Optimizing the A* Algorithm"
   - "You learn about the Manhattan distance function."
-"Origins of the Kaborego-Zin"/"Origins of the Creeping Death"
+"Origins of the Zinkabold"/"Origins of the Creeping Death"
   - "You learn that the origins of the creeping death are a complete mystery."
 "Daily Consumption of Butter Tea"
   - "You learn that some wacko humans actually like drinking rancid
@@ -529,6 +528,8 @@ Trying to read a [forbidden] book results in:
   - "You learn that DCSS v0.28 was the worst game in the world."
   - "You learn that DCSS v0.16 was the peak of DCSS."
   - "You learn that DCSS' dev team is a cabal of fun-hating baby eaters."
+"Scroll of Random Uselessness"
+  - "You have a momentary feeling of inescapable doom!"
 recipe books
   - "You learn how to pickle goblin roasts."
   - "You learn how to properly butcher humans carcases."
@@ -545,6 +546,11 @@ manuals
   - stats: missile%, evade%, martial combo, sneak
   - (*not* melee% stat, as every build would be able to take advantage
     of that.)
+  - idea: ability to attack more quickly (decreased weapon delay)
+  - idea: mp * 1.5, mp * 2, mp * 2.5
+  - idea: permanent riposte effect
+  - idea: closed melee effect (book teaches how to fight effectively in corridors)
+  - idea: book of torment -> 25% bloodlust
 
 
 Materials (v = vial, s = stone, g = gem, o = ore/metal)
@@ -586,6 +592,14 @@ s  bolyvese
 s  orthire    Uranium. Nuclear reactors are referred to as
       "Orthire Furnaces".
 s  maron
+
+
+Headaches
+---------
+- Prevent usage of all (or nearly all) evocables (inability to focus).
+- Cure: potion of ibuprofenication (10% chance of "heartburn" aka 1-2 dmg)
+- Possible source: monster that shoots beams of migraine-inducing energy
+- Possible source: aura of microwave radiation (havana sickness? hah)
 
 
 Roadmap
@@ -718,11 +732,13 @@ x Upgrade to Zig v9
   x Remove utils.saturating_sub
   x Fix "*mem.Allocator" params
 - Ring of Lightning
-- Rename VLT back to REC/QRT or something
-  - Bedroom prefabs
+x Rename VLT back to REC/QRT or something
+  x Bedroom prefabs
 - Runes and scoring
+- Fix morgue file generation
 *** v1.0.0 release ***
 - Multi-tile props: trees and braziers
+- Fix torture chambers; add more of them
 - Implement intelligence
 - More information screens
   - Documentation/manuals
