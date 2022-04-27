@@ -520,7 +520,7 @@ pub fn _dmgstr(p: usize, vself: []const u8, vother: []const u8, vdeg: []const u8
     return .{ .dmg_percent = p, .verb_self = vself, .verb_other = vother, .verb_degree = vdeg };
 }
 
-const CRUSHING_STRS = [_]DamageStr{
+pub const CRUSHING_STRS = [_]DamageStr{
     _dmgstr(000, "whack", "whacks", ""),
     _dmgstr(010, "cudgel", "cudgels", ""),
     _dmgstr(030, "bash", "bashes", ""),
@@ -532,7 +532,7 @@ const CRUSHING_STRS = [_]DamageStr{
     _dmgstr(200, "grind", "grinds", " into powder"),
     _dmgstr(400, "pulverise", "pulverises", " into a thin bloody mist"),
 };
-const SLASHING_STRS = [_]DamageStr{
+pub const SLASHING_STRS = [_]DamageStr{
     _dmgstr(000, "hit", "hits", ""),
     _dmgstr(020, "slash", "slashes", ""),
     _dmgstr(040, "slice", "slices", ""),
@@ -543,7 +543,7 @@ const SLASHING_STRS = [_]DamageStr{
     _dmgstr(140, "cut", "cuts", " asunder"),
     _dmgstr(200, "mince", "minces", " like boiled poultry"),
 };
-const PIERCING_STRS = [_]DamageStr{
+pub const PIERCING_STRS = [_]DamageStr{
     _dmgstr(010, "prick", "pricks", ""),
     _dmgstr(020, "puncture", "punctures", ""),
     _dmgstr(030, "hit", "hits", ""),
@@ -554,7 +554,7 @@ const PIERCING_STRS = [_]DamageStr{
     _dmgstr(110, "spit", "spits", " like a pig"),
     _dmgstr(120, "perforate", "perforates", " like a sieve"),
 };
-const LACERATING_STRS = [_][]DamageStr{
+pub const LACERATING_STRS = [_]DamageStr{
     _dmgstr(020, "whip", "whips", ""),
     _dmgstr(040, "lash", "lashes", ""),
     _dmgstr(050, "lacerate", "lacerates", ""),
@@ -563,18 +563,20 @@ const LACERATING_STRS = [_][]DamageStr{
     _dmgstr(150, "mangle", "mangles", " beyond recognition"),
 };
 
+pub const FIST_STRS = [_]DamageStr{
+    _dmgstr(020, "punch", "punches", ""),
+    _dmgstr(030, "hit", "hits", ""),
+    _dmgstr(040, "bludgeon", "bludgeons", ""),
+    _dmgstr(060, "pummel", "pummels", ""),
+};
+
 // Body weapons {{{
 pub const FistWeapon = Weapon{
     .id = "none",
     .name = "none",
     .delay = 80,
     .damage = 2,
-    .strs = &[_]DamageStr{
-        _dmgstr(020, "punch", "punches", ""),
-        _dmgstr(030, "hit", "hits", ""),
-        _dmgstr(040, "bludgeon", "bludgeons", ""),
-        _dmgstr(060, "pummel", "pummels", ""),
-    },
+    .strs = &FIST_STRS,
 };
 
 pub const ClawWeapon = Weapon{
@@ -614,22 +616,13 @@ pub const SwordWeapon = Weapon{
     .damage = 2,
     .stats = .{ .Evade = 10 },
     .is_dippable = true,
-    .strs = &CRUSHING_STRS,
-};
-
-pub const KnifeWeapon = Weapon{
-    .id = "knife",
-    .name = "knife",
-    .damage = 1,
-    .is_dippable = true,
-    .strs = &PIERCING_STRS,
+    .strs = &SLASHING_STRS,
 };
 
 pub const DaggerWeapon = Weapon{
     .id = "dagger",
     .name = "dagger",
     .damage = 2,
-    .stats = .{ .Martial = 1, .Melee = -15 },
     .is_dippable = true,
     .strs = &PIERCING_STRS,
 };

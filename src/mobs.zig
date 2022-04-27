@@ -223,9 +223,9 @@ pub const SentinelTemplate = MobTemplate{
         .max_HP = 10,
         .memory_duration = 7,
         .blood = .Blood,
-        .stats = .{ .Willpower = 5, .Evade = 15, .Missile = 70, .Speed = 90 },
+        .stats = .{ .Willpower = 5, .Evade = 15, .Missile = 80, .Speed = 90 },
     },
-    .weapon = &items.KnifeWeapon,
+    .weapon = &items.SwordWeapon,
     .armor = &items.LeatherArmor,
     .projectile = &items.NetProj,
 };
@@ -369,7 +369,7 @@ pub const PlayerTemplate = MobTemplate{
 
         .stats = .{ .Willpower = 3, .Evade = 10, .Speed = 100, .Vision = 10, .Sneak = 4 },
     },
-    .weapon = &items.KnifeWeapon,
+    .weapon = &items.DaggerWeapon,
     .armor = &items.RobeArmor,
     //.evocables = &[_]Evocable{items.IronSpikeEvoc},
     //.cloak = &items.ThornsCloak,
@@ -466,7 +466,10 @@ pub const DustlingTemplate = MobTemplate{
         .id = "dustling",
         .species = &Species{
             .name = "dustling",
-            .default_attack = &items.FistWeapon,
+            .default_attack = &Weapon{
+                .damage = 1,
+                .strs = &items.FIST_STRS,
+            },
         },
         .tile = 'ð',
         .ai = AI{
@@ -478,14 +481,14 @@ pub const DustlingTemplate = MobTemplate{
             .is_curious = true,
         },
         .allegiance = .Necromancer,
-        .max_HP = 5,
-        .memory_duration = 5,
+        .max_HP = 2,
+        .memory_duration = 3,
         .life_type = .Construct,
         .blood = .Dust,
         .blood_spray = gas.Dust.id,
         .corpse = .None,
         .innate_resists = .{ .rFire = -25, .rElec = -25, .rFume = 100 },
-        .stats = .{ .Willpower = 4, .Evade = 0, .Speed = 80, .Vision = 4 },
+        .stats = .{ .Willpower = 4, .Melee = 50, .Evade = 0, .Speed = 80, .Vision = 3 },
     },
     .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
     .squad = &[_][]const MobTemplate.SquadMember{
