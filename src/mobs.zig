@@ -260,7 +260,7 @@ pub const LeadTurtleTemplate = MobTemplate{
         .memory_duration = 20,
         .blood = null,
         .corpse = .None,
-        .innate_resists = .{ .rPois = 100, .rFire = 100, .Armor = 60, .rFume = 100 },
+        .innate_resists = .{ .rElec = -100, .rPois = 100, .rFire = 100, .Armor = 60, .rFume = 100 },
         .stats = .{ .Willpower = 5, .Evade = 0, .Melee = 100, .Speed = 220, .Vision = 4 },
     },
 
