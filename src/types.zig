@@ -3413,7 +3413,7 @@ pub const Item = union(ItemType) {
         var buf = StackBuffer(u8, 128).init(&([_]u8{0} ** 128));
         var fbs = std.io.fixedBufferStream(buf.slice());
         switch (self.*) {
-            .Rune => |r| try fmt.format(fbs.writer(), "rune of {s}", .{r.name()}),
+            .Rune => |r| try fmt.format(fbs.writer(), "{s} Rune", .{r.name()}),
             .Ring => |r| try fmt.format(fbs.writer(), "ring of {s}", .{r.name}),
             .Potion => |p| try fmt.format(fbs.writer(), "potion of {s}", .{p.name}),
             .Vial => |v| try fmt.format(fbs.writer(), "vial of {s}", .{v.name()}),

@@ -232,15 +232,17 @@ fn _writerMobStats(
     _writerWrite(w, "$cstat       value$.\n", .{});
     inline for (@typeInfo(Stat).Enum.fields) |statv| {
         const stat = @intToEnum(Stat, statv.value);
-        const stat_val = mob.stat(stat);
+        const stat_val = utils.SignedFormatter{ .v = mob.stat(stat) };
         if (stat == .Sneak) continue;
-        _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ stat.string(), stat_val });
+        _writerWrite(w, "$c{s: <8}$.   {: >5}\n", .{ stat.string(), stat_val });
     }
     inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
         const resist = @intToEnum(Resistance, resistancev.value);
-        const resist_val = mob.resistance(resist);
-        if (resist_val != 0) {
-            _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ resist.string(), resist_val });
+        const resist_val = utils.SignedFormatter{
+            .v = 100 - @intCast(isize, mob.resistance(resist)),
+        };
+        if (resist_val.v != 0) {
+            _writerWrite(w, "$c{s: <8}$.   {: >5}%\n", .{ resist.string(), resist_val });
         }
     }
     _writerWrite(w, "\n", .{});
@@ -611,7 +613,7 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
         _writerWrite(w, "$ccollected runes:$.\n", .{});
         var runes_iter = state.collected_runes.iterator();
         while (runes_iter.next()) |rune| if (rune.value.*) {
-            _writerWrite(w, "· rune of $b{s}$.", .{rune.key.name()});
+            _writerWrite(w, "· $b{s}$. Rune", .{rune.key.name()});
         };
 
         return;

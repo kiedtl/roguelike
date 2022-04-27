@@ -106,9 +106,9 @@ pub const Rune = enum {
 
     pub fn name(self: Rune) []const u8 {
         return switch (self) {
-            .Basalt => "basalt",
-            .Twisted => "twisted",
-            .Golden => "golden",
+            .Basalt => "Basalt",
+            .Twisted => "Twisted",
+            .Golden => "Golden",
         };
     }
 };
