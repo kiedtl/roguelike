@@ -444,10 +444,9 @@ ring of hexing [a]
     If resisted by willpower, will reveal player's location to them.
 ring of lightning
   - Lure: attack in a cardinal direction, move in opposite direction, move
-    perpendicular.
-    keeping foe adjacent), move diagonally right/left.
+    perpendicular, attack again
     m...        ....   ....
-    @... attack m...   m...
+    @... attack m...   m... attack
     ....        @...   .@..
   - Electrocutes locations in four corners next to player.
 
@@ -737,6 +736,11 @@ x Rename VLT back to REC/QRT or something
 - Runes and scoring
 - Fix morgue file generation
 *** v1.0.0 release ***
+- Ring changes/additions/simplifications:
+  - More ring types (fire, etc)
+  - Random ring drops, equipping/deequipping rings
+  - Use Eqp status-type (while keeping incremental power increases)
+  - Refactor pattern checks
 - Multi-tile props: trees and braziers
 - Fix torture chambers; add more of them
 - Implement intelligence
