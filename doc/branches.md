@@ -40,7 +40,7 @@ Caverns/3 contains the Basalt Rune.
 
 ## Laboratory
 
-Laboratory/3 contains the Learned Rune.
+Laboratory/3 contains the Twisted Rune.
 
 - More sentinels than usual. Sentinels are watcher-like guards that shoot nets
   at you before moving in to stab with a knife.
