@@ -2942,7 +2942,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn isCreeping(self: *const Mob) bool {
-        return self.turnsSpentMoving() < @intCast(usize, self.stat(.Sneak));
+        return self.turnsSpentMoving() <= @intCast(usize, self.stat(.Sneak));
     }
 
     // Find out how many turns spent in moving
