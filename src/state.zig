@@ -547,9 +547,10 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
         fn _damageString() []const u8 {
             const ldp = player.lastDamagePercentage();
             var str: []const u8 = "killed";
-            if (ldp > 30) str = "demolished";
-            if (ldp > 50) str = "miserably destroyed";
-            if (ldp > 80) str = "utterly destroyed";
+            if (ldp > 20) str = "demolished";
+            if (ldp > 40) str = "exterminated";
+            if (ldp > 60) str = "utterly destroyed";
+            if (ldp > 80) str = "miserably destroyed";
             return str;
         }
     };
@@ -561,11 +562,14 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
     try w.print("\n", .{});
     try w.print("Seed: {}\n", .{rng.seed});
     try w.print("\n", .{});
-    try w.print("{s} {s} after {} turns\n", .{
-        std.os.getenv("USER").?, // FIXME: should have backup option if null
-        if (state == .Win) @as([]const u8, "escaped") else "died",
-        ticks,
-    });
+
+    const username = std.os.getenv("USER").?; // FIXME: should have backup option if null
+    const gamestate = switch (state) {
+        .Win => "escaped",
+        .Lose => "died",
+        else => "quit",
+    };
+    try w.print("{s} {s} after {} turns\n", .{ username, gamestate, ticks });
     if (state == .Lose) {
         if (player.killed_by) |by| {
             try w.print("        ...{s} by a {s} ({}% dmg)\n", .{
@@ -610,38 +614,47 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
             "<none>",
     });
     try w.print("\n", .{});
+
     try w.print("Aptitudes:\n", .{});
     for (player_upgrades) |upgr| if (upgr.recieved) {
         try w.print("- {s}\n", .{upgr.upgrade.description()});
     };
     try w.print("\n", .{});
+
+    try w.print("Runes:\n", .{});
+    {
+        var runes_iter = collected_runes.iterator();
+        while (runes_iter.next()) |rune| if (rune.value.*) {
+            try w.print("· {s} Rune\n", .{rune.key.name()});
+        };
+    }
+    try w.print("\n", .{});
+
     try w.print("Inventory:\n", .{});
     for (player.inventory.pack.constSlice()) |item| {
         const itemname = (item.longName() catch unreachable).constSlice();
         try w.print("- {s}\n", .{itemname});
     }
     try w.print("\n", .{});
-    try w.print("You were: ", .{});
+
+    try w.print("Statuses:\n", .{});
     {
-        var comma = false;
         inline for (@typeInfo(Status).Enum.fields) |status| {
             const status_e = @field(Status, status.name);
             if (player.isUnderStatus(status_e)) |_| {
-                if (comma)
-                    try w.print(", {s}", .{status_e.string(player)})
-                else
-                    try w.print("{s}", .{status_e.string(player)});
-                comma = true;
+                try w.print("- {s}\n", .{status_e.string(player)});
             }
         }
     }
-    try w.print(".\n", .{});
+    try w.print("\n", .{});
+
     try w.print("You killed {} foe{s}, stabbing {} of them.\n", .{
         chardata.foes_killed_total,
         if (chardata.foes_killed_total > 0) @as([]const u8, "s") else "",
         chardata.foes_stabbed,
     });
     try w.print("\n", .{});
+
     try w.print("Last messages:\n", .{});
     if (messages.items.len > 0) {
         const msgcount = messages.items.len - 1;
@@ -658,6 +671,7 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
         }
     }
     try w.print("\n", .{});
+
     try w.print("Surroundings:\n", .{});
     {
         const radius: usize = 14;
@@ -687,6 +701,7 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
         }
     }
     try w.print("\n", .{});
+
     try w.print("You could see:\n", .{});
     {
         const can_see = createMobList(false, true, player.coord.z, alloc);
@@ -704,6 +719,7 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
         }
     }
     try w.print("\n", .{});
+
     try w.print("Vanquished foes:\n", .{});
     {
         var iter = chardata.foes_killed.iterator();
