@@ -16,11 +16,11 @@ pub const SoundIntensity = enum {
     pub fn radiusHeard(self: SoundIntensity) usize {
         return switch (self) {
             .Silent => 0,
-            .Quiet => 3,
-            .Medium => 6,
-            .Loud => 9,
-            .Louder => 12,
-            .Loudest => 15,
+            .Quiet => 4,
+            .Medium => 7,
+            .Loud => 10,
+            .Louder => 13,
+            .Loudest => 16,
         };
     }
 };
