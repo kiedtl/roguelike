@@ -97,6 +97,22 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 020, .i = .{ .C = &VelvetCloak } },
 };
 
+pub const Rune = enum {
+    Basalt, // Caverns
+    Twisted, // Laboratory
+    Golden, // Quarters
+
+    pub const COUNT = 3;
+
+    pub fn name(self: Rune) []const u8 {
+        return switch (self) {
+            .Basalt => "basalt",
+            .Twisted => "twisted",
+            .Golden => "golden",
+        };
+    }
+};
+
 pub const Cloak = struct {
     id: []const u8,
     name: []const u8,

@@ -25,6 +25,18 @@ const WIDTH = state.WIDTH;
 
 const StackBuffer = buffer.StackBuffer;
 
+pub fn findFirstNeedle(
+    haystack: anytype,
+    ctx: anytype,
+    func: fn (meta.Elem(@TypeOf(haystack)), @TypeOf(ctx)) bool,
+) ?meta.Elem(@TypeOf(haystack)) {
+    return for (haystack) |straw| {
+        if ((func)(straw, ctx)) {
+            break straw;
+        }
+    } else null;
+}
+
 // A utility struct to get around the fact that std.fmt puts a "+" on signed
 // integers if padding is used.
 //

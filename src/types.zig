@@ -37,9 +37,10 @@ const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
-const Evocable = @import("items.zig").Evocable;
-const Projectile = @import("items.zig").Projectile;
-const Cloak = @import("items.zig").Cloak;
+const Rune = items.Rune;
+const Evocable = items.Evocable;
+const Projectile = items.Projectile;
+const Cloak = items.Cloak;
 
 const Sound = @import("sound.zig").Sound;
 const SoundIntensity = @import("sound.zig").SoundIntensity;
@@ -610,12 +611,13 @@ pub const MessageType = union(enum) {
     Prompt, // Prompt for a choice/input, or respond to result from previous prompt
     Status, // A status effect was added or removed.
     Combat, // X hit you! You hit X!
-    CombatUnimportant, // X missed you! You miss X!
+    CombatUnimportant, // X missed you! You miss X! You slew X!
     Unimportant, // A bit dark, okay if player misses it.
     Info,
     Move,
     Trap,
     Damage,
+    Important,
     SpellCast,
 
     pub fn color(self: MessageType) u32 {
@@ -625,6 +627,7 @@ pub const MessageType = union(enum) {
             .Move => 0xdadeda, // creamy white
             .Trap => 0xed254d, // pinkish red
             .Damage => 0xed254d, // pinkish red
+            .Important => 0xed254d, // pinkish red
             .SpellCast => 0xff7750, // golden yellow
             .Status => colors.AQUAMARINE, // aquamarine
             .Combat => 0xdadeda, // creamy white
@@ -3361,9 +3364,10 @@ pub const Ring = struct {
     }
 };
 
-pub const ItemType = enum { Ring, Potion, Vial, Projectile, Armor, Cloak, Weapon, Boulder, Prop, Evocable };
+pub const ItemType = enum { Rune, Ring, Potion, Vial, Projectile, Armor, Cloak, Weapon, Boulder, Prop, Evocable };
 
 pub const Item = union(ItemType) {
+    Rune: Rune,
     Ring: *Ring,
     Potion: *const Potion,
     Vial: Vial,
@@ -3379,7 +3383,7 @@ pub const Item = union(ItemType) {
     pub fn announce(self: Item) bool {
         return switch (self) {
             .Vial, .Boulder, .Prop => false,
-            .Cloak, .Projectile, .Ring, .Potion, .Armor, .Weapon, .Evocable => true,
+            .Rune, .Projectile, .Cloak, .Ring, .Potion, .Armor, .Weapon, .Evocable => true,
         };
     }
 
@@ -3388,6 +3392,7 @@ pub const Item = union(ItemType) {
         var buf = StackBuffer(u8, 64).init(&([_]u8{0} ** 64));
         var fbs = std.io.fixedBufferStream(buf.slice());
         switch (self.*) {
+            .Rune => |r| try fmt.format(fbs.writer(), "ß{s}", .{r.name()}),
             .Ring => |r| try fmt.format(fbs.writer(), "*{s}", .{r.name}),
             .Potion => |p| try fmt.format(fbs.writer(), "¡{s}", .{p.name}),
             .Vial => |v| try fmt.format(fbs.writer(), "♪{s}", .{v.name()}),
@@ -3408,6 +3413,7 @@ pub const Item = union(ItemType) {
         var buf = StackBuffer(u8, 128).init(&([_]u8{0} ** 128));
         var fbs = std.io.fixedBufferStream(buf.slice());
         switch (self.*) {
+            .Rune => |r| try fmt.format(fbs.writer(), "rune of {s}", .{r.name()}),
             .Ring => |r| try fmt.format(fbs.writer(), "ring of {s}", .{r.name}),
             .Potion => |p| try fmt.format(fbs.writer(), "potion of {s}", .{p.name}),
             .Vial => |v| try fmt.format(fbs.writer(), "vial of {s}", .{v.name()}),
@@ -3432,6 +3438,7 @@ pub const Item = union(ItemType) {
             .Weapon => |w| w.id,
             .Prop => |p| p.id,
             .Evocable => |v| v.id,
+            .Rune => "AMBIG_rune",
             .Vial, .Boulder, .Ring => null,
         };
     }
@@ -3532,6 +3539,10 @@ pub const Tile = struct {
             cell.fg = 0xffffff;
 
             switch (item) {
+                .Rune => |_| {
+                    cell.ch = 'ß';
+                    cell.fg = colors.AQUAMARINE;
+                },
                 .Potion => |potion| {
                     cell.ch = '¡';
                     cell.fg = potion.color;

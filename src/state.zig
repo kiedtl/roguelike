@@ -12,6 +12,7 @@ const display = @import("display.zig");
 const dijkstra = @import("dijkstra.zig");
 const mapgen = @import("mapgen.zig");
 const fire = @import("fire.zig");
+const items = @import("items.zig");
 const utils = @import("utils.zig");
 const gas = @import("gas.zig");
 const rng = @import("rng.zig");
@@ -19,6 +20,7 @@ const literature = @import("literature.zig");
 const fov = @import("fov.zig");
 const types = @import("types.zig");
 
+const Rune = items.Rune;
 const Mob = types.Mob;
 const MessageType = types.MessageType;
 const Item = types.Item;
@@ -93,11 +95,19 @@ pub const levelinfo = [LEVELS]struct {
     .{ .id = "CAV", .upgr = false, .optional = true,  .name = "-5/Caverns/3"    },
     .{ .id = "CAV", .upgr = false, .optional = true,  .name = "-5/Caverns/2"    },
     .{ .id = "CAV", .upgr = true,  .optional = false, .name = "-5/Caverns"      },
-    .{ .id = "LAB", .upgr = false, .optional = true,  .name = "-6/Laboratory/2" },
     .{ .id = "LAB", .upgr = false, .optional = true,  .name = "-6/Laboratory/3" },
+    .{ .id = "LAB", .upgr = false, .optional = true,  .name = "-6/Laboratory/2" },
     .{ .id = "LAB", .upgr = true,  .optional = false, .name = "-6/Laboratory"   },
     .{ .id = "PRI", .upgr = false, .optional = false, .name = "-7/Prison"       },
     .{ .id = "PRI", .upgr = false, .optional = false, .name = "-8/Prison"       },
+};
+
+pub const RUNE_PLACEMENT = [Rune.COUNT]struct {
+    floorstr: []const u8, rune: Rune
+}{
+    .{ .floorstr = "-3/Quarters/3",   .rune = .Golden  },
+    .{ .floorstr = "-5/Caverns/3",    .rune = .Basalt  },
+    .{ .floorstr = "-6/Laboratory/3", .rune = .Twisted },
 };
 // zig fmt: on
 
@@ -123,6 +133,8 @@ pub var chardata: struct {
         self.evocs_used.clearAndFree();
     }
 } = .{};
+
+pub var collected_runes = enums.EnumArray(Rune, bool).initFill(false);
 
 pub var player_upgrades: [3]player_m.PlayerUpgradeInfo = undefined;
 

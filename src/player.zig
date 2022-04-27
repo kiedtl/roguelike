@@ -327,6 +327,18 @@ pub fn grabItem() bool {
     }
 
     switch (item) {
+        .Rune => |rune| {
+            const verb = rng.chooseUnweighted([]const u8, &[_][]const u8{
+                "snigger", "laugh spitefully", "snicker",
+            });
+            state.message(.Info, "You {s} as you grab the {s} rune.", .{ verb, rune.name() });
+            state.collected_runes.set(rune, true);
+
+            state.message(.Important, "The alarm goes off!!", .{});
+            state.player.makeNoise(.Alarm, .Loudest);
+
+            state.player.declareAction(.Grab);
+        },
         .Weapon, .Armor, .Cloak => {
             const slot = Mob.Inventory.EquSlot.slotFor(item);
             if (state.player.inventory.equipment(slot).*) |old_item| {
@@ -467,7 +479,7 @@ pub fn useItem(index: usize) bool {
             display.drawAlertThenLog("Are you three?", .{});
             return false;
         },
-        .Armor, .Cloak, .Weapon => err.wat(),
+        .Rune, .Armor, .Cloak, .Weapon => err.wat(),
         .Potion => |p| {
             if (state.player.isUnderStatus(.Nausea) != null) {
                 display.drawAlertThenLog("You can't drink potions while nauseated!", .{});

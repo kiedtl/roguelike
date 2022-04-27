@@ -30,6 +30,7 @@ const Mob = types.Mob;
 const Machine = types.Machine;
 const Container = types.Container;
 const SurfaceItem = types.SurfaceItem;
+const Rune = items.Rune;
 const Item = types.Item;
 const Ring = types.Ring;
 const Prisoner = types.Prisoner;
@@ -1967,6 +1968,30 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
             }
         }
     }
+}
+
+pub fn placeRuneAnywhere(level: usize, rune: Rune) bool {
+    room_iter: for (state.rooms[level].items) |*room| {
+        var tries: usize = 500;
+        var coord: Coord = undefined;
+
+        while (true) {
+            coord = room.rect.randomCoord();
+
+            if (isTileAvailable(coord) and !state.dungeon.at(coord).prison)
+                break; // we found a valid coord
+
+            // didn't find a coord, continue to the next room...
+            if (tries == 0) continue :room_iter;
+            tries -= 1;
+        }
+
+        const rune_item = Item{ .Rune = rune };
+        state.dungeon.itemsAt(coord).append(rune_item) catch err.wat();
+        return true;
+    }
+
+    return false;
 }
 
 fn _setTerrain(coord: Coord, terrain: *const surfaces.Terrain) void {

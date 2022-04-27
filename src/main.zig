@@ -2,6 +2,7 @@ const std = @import("std");
 const math = std.math;
 const assert = std.debug.assert;
 const mem = std.mem;
+const meta = std.meta;
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
@@ -114,14 +115,31 @@ fn initGame() bool {
     while (level < LEVELS) {
         tries += 1;
 
+        var placed_rune = true;
+
         mapgen.resetLevel(level, &n_fabs, &s_fabs);
         mapgen.placeBlobs(level);
         (mapgen.Configs[level].mapgen_func)(&n_fabs, &s_fabs, level, state.GPA.allocator());
         mapgen.placeMoarCorridors(level, state.GPA.allocator());
 
-        if (!mapgen.validateLevel(level, state.GPA.allocator(), &n_fabs, &s_fabs)) {
+        // Generate a rune?
+        //
+        // Do this now, before placing anything else, because we'll have to
+        // start over if we fail this.
+        //
+        if (utils.findFirstNeedle(state.RUNE_PLACEMENT[0..], level, struct {
+            pub fn f(straw: meta.Elem(@TypeOf(state.RUNE_PLACEMENT)), lvl: usize) bool {
+                return mem.eql(u8, state.levelinfo[lvl].name, straw.floorstr);
+            }
+        }.f)) |runeinfo| {
+            placed_rune = mapgen.placeRuneAnywhere(level, runeinfo.rune);
+        }
+
+        var map_valid = mapgen.validateLevel(level, state.GPA.allocator(), &n_fabs, &s_fabs);
+
+        if (!map_valid or !placed_rune) {
             if (tries < 27) {
-                std.log.info("Map {s} invalid, regenerating...", .{state.levelinfo[level].name});
+                std.log.info("Map {s} invalid, retrying...", .{state.levelinfo[level].name});
                 continue; // try again
             } else {
                 // Give up!
