@@ -93,7 +93,7 @@ pub const ExecutionerTemplate = MobTemplate{
         .max_HP = 10,
         .memory_duration = 5,
         .blood = .Blood,
-        .stats = .{ .Willpower = 3, .Evade = 10, .Speed = 100 },
+        .stats = .{ .Willpower = 3, .Speed = 100 },
     },
     .weapon = &items.KnoutWeapon,
 };
@@ -160,11 +160,11 @@ pub const GuardTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .max_HP = 10,
+        .max_HP = 8,
         .memory_duration = 5,
         .blood = .Blood,
 
-        .stats = .{ .Willpower = 2, .Evade = 10, .Speed = 100 },
+        .stats = .{ .Willpower = 2, .Speed = 100 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
@@ -190,7 +190,7 @@ pub const JavelineerTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .max_HP = 10,
+        .max_HP = 8,
         .memory_duration = 6,
         .blood = .Blood,
         .stats = .{ .Willpower = 2, .Evade = 10, .Missile = 80, .Speed = 110, .Vision = 5 },
@@ -223,7 +223,7 @@ pub const SentinelTemplate = MobTemplate{
         .max_HP = 10,
         .memory_duration = 7,
         .blood = .Blood,
-        .stats = .{ .Willpower = 5, .Evade = 15, .Missile = 80, .Speed = 90 },
+        .stats = .{ .Willpower = 5, .Evade = 10, .Missile = 80, .Speed = 90 },
     },
     .weapon = &items.SwordWeapon,
     .armor = &items.LeatherArmor,
@@ -261,7 +261,7 @@ pub const LeadTurtleTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
         .innate_resists = .{ .rElec = -100, .rPois = 100, .rFire = 100, .Armor = 60, .rFume = 100 },
-        .stats = .{ .Willpower = 5, .Evade = 0, .Melee = 100, .Speed = 220, .Vision = 4 },
+        .stats = .{ .Willpower = 5, .Melee = 100, .Speed = 220, .Vision = 4 },
     },
 
     .statuses = &[_]StatusDataInfo{.{ .status = .Sleeping, .duration = .Prm }},
@@ -329,10 +329,10 @@ pub const PatrolTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .max_HP = 8,
+        .max_HP = 10,
         .memory_duration = 3,
         .blood = .Blood,
-        .stats = .{ .Willpower = 2, .Evade = 15, .Speed = 110 },
+        .stats = .{ .Willpower = 2, .Evade = 10, .Speed = 110 },
     },
     .weapon = &items.GlaiveWeapon,
     .armor = &items.GambesonArmor,
@@ -389,7 +389,7 @@ pub const GoblinTemplate = MobTemplate{
             .is_curious = true,
         },
         .allegiance = .OtherEvil,
-        .max_HP = 15,
+        .max_HP = 12,
         .memory_duration = 8,
         .blood = .Blood,
         .stats = .{ .Willpower = 4, .Evade = 15, .Speed = 100, .Vision = 8 },
@@ -488,7 +488,7 @@ pub const DustlingTemplate = MobTemplate{
         .blood_spray = gas.Dust.id,
         .corpse = .None,
         .innate_resists = .{ .rFire = -25, .rElec = -25, .rFume = 100 },
-        .stats = .{ .Willpower = 4, .Melee = 50, .Evade = 0, .Speed = 80, .Vision = 3 },
+        .stats = .{ .Willpower = 4, .Melee = 50, .Speed = 80, .Vision = 3 },
     },
     .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
     .squad = &[_][]const MobTemplate.SquadMember{
@@ -550,7 +550,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
         .corpse = .Wall,
         .immobile = true,
         .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = 100, .Armor = 100, .rFume = 100 },
-        .stats = .{ .Willpower = 9, .Evade = 0, .Speed = 100, .Vision = 20 },
+        .stats = .{ .Willpower = 9, .Speed = 100, .Vision = 20 },
     },
 };
 
@@ -584,7 +584,7 @@ pub const NebroStatueTemplate = MobTemplate{
         .corpse = .Wall,
         .immobile = true,
         .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = 100, .Armor = 100, .rFume = 100 },
-        .stats = .{ .Willpower = 9, .Evade = 0, .Speed = 100, .Vision = 20 },
+        .stats = .{ .Willpower = 9, .Speed = 100, .Vision = 20 },
     },
 };
 
@@ -618,7 +618,7 @@ pub const CrystalStatueTemplate = MobTemplate{
         .corpse = .Wall,
         .immobile = true,
         .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = 100, .Armor = 100, .rFume = 100 },
-        .stats = .{ .Willpower = 9, .Evade = 0, .Speed = 100, .Vision = 20 },
+        .stats = .{ .Willpower = 9, .Speed = 100, .Vision = 20 },
     },
 };
 
@@ -858,7 +858,7 @@ pub const SkeletalAxemasterTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = 100, .rFume = 100, .rFire = -25 },
-        .stats = .{ .Willpower = 2, .Evade = 0, .Speed = 110, .Vision = 4 },
+        .stats = .{ .Willpower = 2, .Speed = 110, .Vision = 4 },
     },
     .weapon = &items.AxeWeapon,
     .armor = &items.ScalemailArmor,
@@ -1142,7 +1142,7 @@ pub const LivingIceTemplate = MobTemplate{
         .corpse = .Wall,
 
         .innate_resists = .{ .rPois = 100, .rFire = -50, .rElec = 100, .Armor = 50, .rFume = 100 },
-        .stats = .{ .Willpower = 5, .Evade = 0, .Melee = 100, .Speed = 100, .Vision = 2 },
+        .stats = .{ .Willpower = 5, .Melee = 100, .Speed = 100, .Vision = 2 },
     },
     // This status should be added by whatever spell created it.
     //.statuses = &[_]StatusDataInfo{.{ .status = .Lifespan, .duration = .{.Tmp=10} }},
@@ -1176,7 +1176,7 @@ pub const BallLightningTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = 100, .rFire = 50, .rElec = 100, .rFume = 100 },
-        .stats = .{ .Willpower = 1000, .Evade = 0, .Speed = 30, .Vision = 20 },
+        .stats = .{ .Willpower = 1000, .Speed = 30, .Vision = 20 },
     },
     // This status should be added by whatever spell created it.
     .statuses = &[_]StatusDataInfo{
@@ -1217,7 +1217,7 @@ pub const SpectralSwordTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = 100, .rFume = 100 },
-        .stats = .{ .Willpower = 1000, .Melee = 50, .Evade = 0, .Speed = 60, .Vision = 15 },
+        .stats = .{ .Willpower = 1000, .Melee = 50, .Speed = 60, .Vision = 15 },
     },
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Corona, .power = 10, .duration = .Prm },
