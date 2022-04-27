@@ -711,7 +711,7 @@ pub const WoldoWeapon = Weapon{
     .id = "woldo",
     .name = "woldo",
     .damage = 3,
-    .stats = .{ .Melee = -10, .Martial = 2 },
+    .stats = .{ .Melee = -15, .Martial = 2 },
     .is_dippable = true,
     .strs = &SLASHING_STRS,
     .reach = 2,
@@ -724,7 +724,7 @@ pub const WoldoWeapon = Weapon{
 pub const QuarterstaffWeapon = Weapon{
     .id = "quarterstaff",
     .name = "quarterstaff",
-    .damage = 2,
+    .damage = 1,
     .stats = .{ .Martial = 2, .Evade = 15 },
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .OpenMelee, .duration = .Equ },
