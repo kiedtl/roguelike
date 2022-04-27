@@ -469,7 +469,7 @@ fn triggerIncineratePotion(_: ?*Mob, coord: Coord) void {
 }
 
 fn triggerDecimatePotion(_: ?*Mob, coord: Coord) void {
-    const MIN_EXPLOSION_RADIUS: usize = 2;
+    const MIN_EXPLOSION_RADIUS: usize = 3;
     explosions.kaboom(coord, .{
         .strength = MIN_EXPLOSION_RADIUS * 100,
         .culprit = state.player,
