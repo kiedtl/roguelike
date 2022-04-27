@@ -348,11 +348,13 @@ fn _canHearNoise(mob: *Mob) ?Coord {
 }
 
 pub fn _mob_occupation_tick(mob: *Mob, alloc: mem.Allocator) void {
-    for (mob.squad_members.items) |lmob| if (!lmob.is_dead) {
-        lmob.ai.target = mob.ai.target;
-        lmob.ai.phase = mob.ai.phase;
-        lmob.ai.work_area.items[0] = mob.ai.work_area.items[0];
-    };
+    for (mob.squad_members.items) |lmob| {
+        if (!lmob.is_dead and lmob.ai.phase == .Work) {
+            lmob.ai.target = mob.ai.target;
+            lmob.ai.phase = mob.ai.phase;
+            lmob.ai.work_area.items[0] = mob.ai.work_area.items[0];
+        }
+    }
 
     ai.checkForHostiles(mob);
 
