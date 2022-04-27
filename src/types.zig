@@ -131,11 +131,7 @@ pub const Direction = enum { // {{{
             .SouthEast => .{ .South, .East },
         };
 
-        for (adjacent) |adj| {
-            if (other == adj)
-                return true;
-        }
-        return false;
+        return other == adjacent[0] or other == adjacent[1];
     }
 
     pub fn is_diagonal(self: Self) bool {
@@ -691,13 +687,20 @@ pub const Damage = struct {
         }
     };
 
-    pub const DamageSource = enum { Other, MeleeAttack, RangedAttack, Stab, Explosion };
+    pub const DamageSource = enum {
+        Other,
+        MeleeAttack,
+        RangedAttack,
+        Stab,
+        Explosion,
+    };
 };
 pub const Activity = union(enum) {
     Interact,
     Rest,
     Move: Direction,
     Attack: struct {
+        who: *Mob,
         direction: Direction,
         coord: Coord,
         delay: usize,
@@ -735,6 +738,10 @@ pub const Message = struct {
     dups: usize = 0,
 };
 
+// Note, this is outdated. Cave goblins are just as nice as plains humans,
+// and southern humans are supposed to be the protoganists (sort of) in this
+// universe.
+//
 pub const Allegiance = enum {
     Necromancer,
     OtherGood, // Humans in the plains
@@ -742,6 +749,10 @@ pub const Allegiance = enum {
 };
 
 pub const Status = enum {
+    // Status list {{{
+
+    RingLightning,
+
     // Gives a free attack after evading an attack.
     //
     // Doesn't have a power field.
@@ -899,10 +910,14 @@ pub const Status = enum {
     // Doesn't have a power field.
     Lifespan,
 
+    // }}}
+
     pub const MAX_DURATION: usize = 20;
 
-    pub fn string(self: Status, mob: *const Mob) []const u8 {
+    pub fn string(self: Status, mob: *const Mob) []const u8 { // {{{
         return switch (self) {
+            .RingLightning => "[ring] lightning",
+
             .Riposte => "riposte",
             .Stun => "stunned",
             .OpenMelee => "open melee",
@@ -938,10 +953,12 @@ pub const Status = enum {
             .ExplosiveElec => "charged",
             .Lifespan => "lifespan",
         };
-    }
+    } // }}}
 
-    pub fn messageWhenAdded(self: Status) ?[3][]const u8 {
+    pub fn messageWhenAdded(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .RingLightning => null,
+
             .Riposte => null,
             .Stun => .{ "are", "is", " stunned" },
             .OpenMelee, .Conductive, .Noisy => null,
@@ -973,10 +990,12 @@ pub const Status = enum {
             .DayBlindness,
             => null,
         };
-    }
+    } // }}}
 
-    pub fn messageWhenRemoved(self: Status) ?[3][]const u8 {
+    pub fn messageWhenRemoved(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .RingLightning => null,
+
             .Riposte => null,
             .Stun => .{ "are no longer", "is no longer", " stunned" },
             .OpenMelee, .Conductive, .Noisy => null,
@@ -1008,7 +1027,9 @@ pub const Status = enum {
             .DayBlindness,
             => null,
         };
-    }
+    } // }}}
+
+    // Tick functions {{{
 
     pub fn tickNoisy(mob: *Mob) void {
         if (mob.isUnderStatus(.Sleeping) == null)
@@ -1107,6 +1128,8 @@ pub const Status = enum {
             }
         }
     }
+
+    // }}}
 };
 
 pub const StatusDataInfo = struct {
@@ -1987,15 +2010,14 @@ pub const Mob = struct { // {{{
         // If longest_delay is still 0, we didn't attack at all!
         assert(longest_delay > 0);
 
-        if (!opts.free_attack) {
-            attacker.declareAction(.{
-                .Attack = .{
-                    .coord = recipient.coord,
-                    .direction = attacker.coord.closestDirectionTo(recipient.coord, state.mapgeometry),
-                    .delay = longest_delay,
-                },
-            });
-        }
+        attacker.declareAction(.{
+            .Attack = .{
+                .who = recipient,
+                .coord = recipient.coord,
+                .direction = attacker.coord.closestDirectionTo(recipient.coord, state.mapgeometry),
+                .delay = if (opts.free_attack) 0 else longest_delay,
+            },
+        });
     }
 
     fn _fightWithWeapon(
@@ -2871,6 +2893,48 @@ pub const Mob = struct { // {{{
         {
             self.addStatus(.Fast, 0, .{ .Tmp = 10 });
             return;
+        }
+
+        // Ring of Lightning
+        //
+        // Shock
+        if (self.isUnderStatus(.RingLightning) != null and
+            // Correct actions
+            activities[3] == .Attack and
+            activities[2] == .Move and
+            activities[1] == .Move and
+            activities[0] == .Attack and
+            // Either diagonal/cardinal
+            !activities[3].Attack.direction.is_diagonal() and
+            !activities[2].Move.is_diagonal() and
+            !activities[1].Move.is_diagonal() and
+            activities[0].Attack.direction.is_diagonal() and
+            // Correct directions
+            activities[2].Move == activities[3].Attack.direction.opposite() and
+            (activities[1].Move == activities[2].Move.turnleft() or
+            activities[1].Move == activities[2].Move.turnright()) and
+            activities[0].Attack.direction.is_adjacent(activities[1].Move.opposite()) and
+            // Correct mobs
+            activities[3].Attack.who == activities[0].Attack.who)
+        {
+            const status = self.isUnderStatus(.RingLightning).?;
+            for (&DIRECTIONS) |d| {
+                if (!d.is_diagonal()) {
+                    continue;
+                }
+
+                if (self.coord.move(d, state.mapgeometry)) |neighbor| {
+                    if (state.dungeon.at(neighbor).mob) |target| {
+                        if (!target.isHostileTo(self)) continue;
+                        state.messageAboutMob(target, self.coord, .Info, "are struck by lightning!", .{}, "is struck by lightning!", .{});
+                        target.takeDamage(.{
+                            .amount = @intToFloat(f64, status.power),
+                            .by_mob = self,
+                            .kind = .Electric,
+                        });
+                    }
+                }
+            }
         }
     }
 

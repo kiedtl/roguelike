@@ -333,12 +333,12 @@ fn _triggerWarningHorn(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
 
 // }}}
 
-pub const EcholocationRing = Ring{
-    .name = "echolocation",
-    .status = .Echolocation,
-    .status_start_power = 1,
-    .status_max_power = 5,
-    .status_power_increase = 100,
+pub const LightningRing = Ring{
+    .name = "lightning",
+    .status = .RingLightning,
+    .status_start_power = 0,
+    .status_max_power = 3,
+    .status_power_increase = 10,
 };
 
 // Potions {{{

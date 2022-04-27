@@ -305,7 +305,7 @@ fn placeDoor(coord: Coord, locked: bool) void {
 }
 
 fn _add_player(coord: Coord, alloc: mem.Allocator) void {
-    const echoring = items.createItem(Ring, items.EcholocationRing);
+    const echoring = items.createItem(Ring, items.LightningRing);
     echoring.worn_since = state.ticks;
 
     state.player = mobs.placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
