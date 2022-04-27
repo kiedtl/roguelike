@@ -73,6 +73,7 @@ pub const BOLT_AIRBLAST = Spell{
     .effect_type = .{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             if (state.dungeon.at(coord).mob) |victim| {
+                state.message(.Combat, "The blast of air hits {s}!", .{victim.formatName(.{})});
                 const distance = victim.coord.distance(caster_c);
                 assert(distance < opts.power);
                 const knockback = opts.power - distance;
@@ -207,7 +208,6 @@ fn _effectAuraDispersal(caster: Coord, _: Spell, _: SpellOptions, _: Coord) void
                 if (new) |newcoord| {
                     _ = mob.teleportTo(newcoord, null, true);
                     mob.addStatus(.Daze, 0, .{ .Tmp = 2 });
-                    mob.takeDamage(.{ .amount = 2, .source = .RangedAttack });
                     if (state.player.cansee(mob.coord) or state.player.cansee(caster))
                         had_visible_effect = true;
                 }
@@ -274,7 +274,7 @@ fn _effectBoltCrystal(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void
         victim.takeDamage(.{
             .amount = @intToFloat(f64, damage),
             .source = .RangedAttack,
-        });
+        }, .{ .noun = "The crystal shard" });
     } else err.wat();
 }
 
@@ -294,7 +294,7 @@ fn _effectBoltLightning(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) vo
             .source = .RangedAttack,
             .kind = .Electric,
             .blood = false,
-        });
+        }, .{ .noun = "lightning bolt" });
     }
 }
 
@@ -314,7 +314,7 @@ fn _effectBoltFire(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             .source = .RangedAttack,
             .kind = .Fire,
             .blood = false,
-        });
+        }, .{ .noun = "bolt of fire" });
         victim.addStatus(.Fire, 0, .{ .Tmp = opts.duration });
     }
 }
@@ -633,16 +633,6 @@ pub const Spell = struct {
                                     state.messageAboutMob(victim, caster_coord, .CombatUnimportant, "dodge the {s}.", .{self.name}, "dodges the {s}.", .{self.name});
                                     continue;
                                 }
-                            }
-
-                            if (victim == state.player) {
-                                state.message(.Combat, "The {s} hits you!", .{self.name});
-                            } else if (state.player.cansee(victim.coord)) {
-                                state.message(.Combat, "The {s} hits the {s}!", .{
-                                    self.name, victim.displayName(),
-                                });
-                            } else if (state.player.cansee(caster_coord)) {
-                                state.message(.Combat, "The {s} hits something!", .{self.name});
                             }
                         }
 

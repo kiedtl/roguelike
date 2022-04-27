@@ -1048,6 +1048,9 @@ pub const Status = enum {
             .amount = @intToFloat(f64, rng.range(usize, 0, 1)),
             .blood = false,
             .kind = .Poison,
+        }, .{
+            .noun = "The poison",
+            .strs = &[_]DamageStr{items._dmgstr(0, "weaken", "weakens", "")},
         });
     }
 
@@ -1068,7 +1071,11 @@ pub const Status = enum {
             .amount = @intToFloat(f64, rng.range(usize, 1, 2)),
             .kind = .Fire,
             .blood = false,
+        }, .{
+            .noun = "The fire",
+            .strs = &[_]DamageStr{items._dmgstr(0, "burn", "burns", "")},
         });
+
         if (state.dungeon.fireAt(mob.coord).* == 0)
             fire.setTileOnFire(mob.coord);
     }
@@ -1080,6 +1087,9 @@ pub const Status = enum {
         mob.takeDamage(.{
             .amount = @intToFloat(f64, rng.rangeClumping(usize, 0, st.power, 2)),
             .blood = false,
+        }, .{
+            .noun = "The pain",
+            .strs = &[_]DamageStr{items._dmgstr(0, "weaken", "weakens", "")},
         });
     }
 
@@ -1411,6 +1421,29 @@ pub const Mob = struct { // {{{
         }
     }
 
+    pub fn formatName(self: *const Mob, opts: struct {
+        caps: bool = false,
+    }) []const u8 {
+        const Static = struct {
+            var buf: [32]u8 = undefined;
+        };
+        var fbs = std.io.fixedBufferStream(&Static.buf);
+
+        if (self == state.player) {
+            return if (opts.caps) "You" else "you";
+        } else {
+            if (!state.player.cansee(self.coord)) {
+                return if (opts.caps) "Something" else "something";
+            } else {
+                const the = if (opts.caps) "The" else "the";
+                std.fmt.format(fbs.writer(), "{s} {s}", .{
+                    the, self.displayName(),
+                }) catch err.wat();
+                return fbs.getWritten();
+            }
+        }
+    }
+
     pub fn tickFOV(self: *Mob) void {
         for (self.fov) |*row| for (row) |*cell| {
             cell.* = 0;
@@ -1673,7 +1706,7 @@ pub const Mob = struct { // {{{
                         state.messageAboutMob(mob, self.coord, .CombatUnimportant, "dodge the {s}.", .{item_name}, "dodges the {s}.", .{item_name});
                         continue; // Evaded, onward!
                     } else {
-                        state.messageAboutMob(mob, self.coord, .Combat, "are hit by the {s}.", .{item_name}, "is hit by the {s}.", .{item_name});
+                        //state.messageAboutMob(mob, self.coord, .Combat, "are hit by the {s}.", .{item_name}, "is hit by the {s}.", .{item_name});
                     }
                 }
 
@@ -1687,7 +1720,7 @@ pub const Mob = struct { // {{{
                     const mob = state.dungeon.at(landed.?).mob.?;
                     if (proj.damage) |max_damage| {
                         const damage = rng.range(usize, max_damage / 2, max_damage);
-                        mob.takeDamage(.{ .amount = @intToFloat(f64, damage), .source = .RangedAttack, .by_mob = self });
+                        mob.takeDamage(.{ .amount = @intToFloat(f64, damage), .source = .RangedAttack, .by_mob = self }, .{ .noun = proj.name });
                     }
                     switch (proj.effect) {
                         .Status => |s| mob.applyStatus(s, .{}),
@@ -2080,74 +2113,15 @@ pub const Mob = struct { // {{{
             .amount = @intToFloat(f64, damage),
             .source = if (is_stab) .Stab else .MeleeAttack,
             .by_mob = attacker,
+        }, .{
+            .strs = attacker_weapon.strs,
+            .is_bonus = opts.is_bonus,
+            .is_riposte = opts.is_riposte,
         });
 
         // XXX: should this be .Loud instead of .Medium?
         if (!is_stab) {
             attacker.makeNoise(.Combat, opts.loudness);
-        }
-
-        var dmg_percent = recipient.lastDamagePercentage();
-        var hitstrs = attacker_weapon.strs[attacker_weapon.strs.len - 1];
-        // FIXME: insert some randomization here. Currently every single stab
-        // the player makes results in "You puncture the XXX like a sieve!!!!"
-        // which gets boring after a bit.
-        {
-            for (attacker_weapon.strs) |strset| {
-                if (strset.dmg_percent > dmg_percent) {
-                    hitstrs = strset;
-                    break;
-                }
-            }
-        }
-
-        var punctuation: []const u8 = ".";
-        if (dmg_percent >= 20) punctuation = "!";
-        if (dmg_percent >= 40) punctuation = "!!";
-        if (dmg_percent >= 60) punctuation = "!!!";
-        if (dmg_percent >= 80) punctuation = "!!!!";
-
-        const martial_str = if (opts.is_bonus) " $b*Martial*$." else "";
-        const riposte_str = if (opts.is_riposte) " $b*Riposte*$." else "";
-
-        if (recipient.coord.eq(state.player.coord)) {
-            state.message(.Combat, "The {s} {s} you{s}{s} ($p{}% dmg$.){s}{s}", .{
-                attacker.displayName(),
-                hitstrs.verb_other,
-                hitstrs.verb_degree,
-                punctuation,
-                dmg_percent,
-                martial_str,
-                riposte_str,
-            });
-        } else if (attacker.coord.eq(state.player.coord)) {
-            state.message(.Combat, "You {s} the {s}{s}{s} ($p{}% dmg$.){s}{s}", .{
-                hitstrs.verb_self,
-                recipient.displayName(),
-                hitstrs.verb_degree,
-                punctuation,
-                dmg_percent,
-                martial_str,
-                riposte_str,
-            });
-        } else {
-            const cansee_a = state.player.cansee(attacker.coord);
-            const cansee_r = state.player.cansee(recipient.coord);
-
-            if (cansee_a or cansee_r) {
-                state.message(.Combat, "{s}{s} {s} {s}{s}{s}{s} ($p{}% dmg$.){s}{s}", .{
-                    if (cansee_a) @as([]const u8, "The ") else "",
-                    if (cansee_a) attacker.displayName() else "Something",
-                    hitstrs.verb_other,
-                    if (cansee_r) @as([]const u8, "the ") else "",
-                    if (cansee_r) recipient.displayName() else "something",
-                    hitstrs.verb_degree,
-                    punctuation,
-                    dmg_percent,
-                    martial_str,
-                    riposte_str,
-                });
-            }
         }
 
         for (attacker_weapon.effects) |effect| {
@@ -2196,14 +2170,76 @@ pub const Mob = struct { // {{{
         }
     }
 
-    pub fn takeDamage(self: *Mob, d: Damage) void {
+    pub fn takeDamage(self: *Mob, d: Damage, msg: struct {
+        noun: ?[]const u8 = null,
+        strs: []const DamageStr = &[_]DamageStr{
+            items._dmgstr(000, "hit", "hits", ""),
+        },
+        is_bonus: bool = false,
+        is_riposte: bool = false,
+    }) void {
         const was_already_dead = self.should_be_dead();
         const old_HP = self.HP;
 
         const resist = @intToFloat(f64, self.resistance(d.kind.resist()));
-        const amount = d.amount * resist / 100.0;
+        const amount = math.floor(d.amount * resist / 100.0);
+        const dmg_percent = @floatToInt(usize, amount * 100 / self.HP);
 
         self.HP = math.clamp(self.HP - amount, 0, self.max_HP);
+
+        // Print message
+        if (state.player.cansee(self.coord) or (d.by_mob != null and state.player.cansee(d.by_mob.?.coord))) {
+            var punctuation: []const u8 = ".";
+            if (dmg_percent >= 20) punctuation = "!";
+            if (dmg_percent >= 40) punctuation = "!!";
+            if (dmg_percent >= 60) punctuation = "!!!";
+            if (dmg_percent >= 80) punctuation = "!!!!";
+
+            var hitstrs = msg.strs[msg.strs.len - 1];
+            // FIXME: insert some randomization here. Currently every single stab
+            // the player makes results in "You puncture the XXX like a sieve!!!!"
+            // which gets boring after a bit.
+            {
+                for (msg.strs) |strset| {
+                    if (strset.dmg_percent > dmg_percent) {
+                        hitstrs = strset;
+                        break;
+                    }
+                }
+            }
+
+            const martial_str = if (msg.is_bonus) " $b*Martial*$." else "";
+            const riposte_str = if (msg.is_riposte) " $b*Riposte*$." else "";
+
+            const noun = msg.noun orelse d.by_mob.?.formatName(.{ .caps = true });
+            const verb = if (d.by_mob != null and d.by_mob.? == state.player) hitstrs.verb_self else hitstrs.verb_other;
+
+            const dmgtype = switch (d.kind) {
+                .Physical => "dmg",
+                .Fire => "fire",
+                .Electric => "elec",
+                .Poison => "poison",
+            };
+            const resist_str = if (d.kind == .Physical) "armor" else "resist";
+
+            state.message(
+                .Combat,
+                "{s} {s} {s}{s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.) {s} {s}",
+                .{
+                    noun,
+                    verb,
+                    self.formatName(.{}),
+                    hitstrs.verb_degree,
+                    punctuation,
+                    @floatToInt(usize, amount),
+                    dmgtype,
+                    @floatToInt(isize, d.amount - amount),
+                    resist_str,
+                    martial_str,
+                    riposte_str,
+                },
+            );
+        }
 
         if (d.blood) {
             if (self.blood) |s|
@@ -2233,6 +2269,8 @@ pub const Mob = struct { // {{{
 
             while (dijk.next()) |child| {
                 const mob = state.dungeon.at(child).mob.?;
+                if (mob == self) continue;
+
                 const damage_percent = 10 - child.distance(self.coord);
                 const damage = d.amount * @intToFloat(f64, damage_percent) / 100.0;
 
@@ -2243,7 +2281,7 @@ pub const Mob = struct { // {{{
                     .kind = .Electric,
                     .indirect = d.indirect,
                     .propagate_elec_damage = false,
-                });
+                }, msg);
             }
         }
 
@@ -2569,7 +2607,7 @@ pub const Mob = struct { // {{{
                 self.addStatus(.Exhausted, 0, .{ .Tmp = Status.MAX_DURATION });
 
             if (p_se.status == .Lifespan) {
-                self.takeDamage(.{ .amount = self.HP * 1000 });
+                self.HP = 0;
             }
         } else if (!had_status_before and has_status_now) {
             msg_parts = s.status.messageWhenAdded();
@@ -2929,12 +2967,11 @@ pub const Mob = struct { // {{{
                 if (self.coord.move(d, state.mapgeometry)) |neighbor| {
                     if (state.dungeon.at(neighbor).mob) |target| {
                         if (!target.isHostileTo(self)) continue;
-                        state.messageAboutMob(target, self.coord, .Info, "are struck by lightning!", .{}, "is struck by lightning!", .{});
                         target.takeDamage(.{
                             .amount = @intToFloat(f64, status.power),
                             .by_mob = self,
                             .kind = .Electric,
-                        });
+                        }, .{ .noun = "Lightning" });
                     }
                 }
             }

@@ -4,9 +4,11 @@ const math = std.math;
 const state = @import("state.zig");
 const rng = @import("rng.zig");
 const types = @import("types.zig");
+const items = @import("items.zig");
 
 const Coord = types.Coord;
 const Mob = types.Mob;
+const DamageStr = types.DamageStr;
 const Spatter = types.Spatter;
 const Status = types.Status;
 const Direction = types.Direction;
@@ -95,12 +97,13 @@ pub const Steam = Gas{
     .opacity = 0.00,
     .trigger = struct {
         pub fn f(mob: *Mob, _: f64) void {
-            if (mob == state.player) {
-                state.message(.Info, "The steam scalds you.", .{});
-            } else if (state.player.cansee(mob.coord)) {
-                state.message(.Info, "The steam scalds the {s}.", .{mob.displayName()});
-            }
-            mob.takeDamage(.{ .amount = 2, .kind = .Fire });
+            mob.takeDamage(.{ .amount = 2, .kind = .Fire }, .{
+                .noun = "The steam",
+                .strs = &[_]types.DamageStr{
+                    items._dmgstr(00, "BUG", "scalds", ""),
+                    items._dmgstr(20, "BUG", "burns", ""),
+                },
+            });
         }
     }.f,
     .id = 7,

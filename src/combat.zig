@@ -8,6 +8,7 @@ const rng = @import("rng.zig");
 const state = @import("state.zig");
 const utils = @import("utils.zig");
 
+const DamageStr = types.DamageStr;
 const Mob = types.Mob;
 const Coord = types.Coord;
 const Direction = types.Direction;
@@ -99,8 +100,6 @@ pub fn chanceOfAttackEvaded(defender: *const Mob, attacker: ?*const Mob) usize {
 }
 
 pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: usize) void {
-    state.messageAboutMob(throwee, throwee.coord, .Combat, "are knocked back!", .{}, "is knocked back!", .{});
-
     var slammed_into_mob: ?*Mob = null;
     var slammed_into_something = false;
     var i: usize = 0;
@@ -124,15 +123,31 @@ pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: u
     // Give damage
     if (slammed_into_something) {
         throwee.takeDamage(.{
-            .amount = throwee.HP / 20,
+            .amount = 3.0,
             .by_mob = thrower,
+        }, .{
+            .strs = &[_]DamageStr{
+                items._dmgstr(0, "knock", "knocks", " back"),
+            },
         });
 
         if (slammed_into_mob) |othermob| {
             othermob.takeDamage(.{
-                .amount = othermob.HP / 20,
+                .amount = 3.0,
                 .by_mob = thrower,
+            }, .{
+                .strs = &[_]DamageStr{
+                    items._dmgstr(0, "slam into", "slams into", ""),
+                },
             });
+        }
+    } else {
+        if (thrower) |thrower_mob| {
+            state.message(.Combat, "{s} knocks {s} back!", .{
+                thrower_mob.formatName(.{ .caps = true }), throwee.formatName(.{}),
+            });
+        } else {
+            state.message(.Combat, "{s} is knocked back!", .{throwee.formatName(.{})});
         }
     }
 }

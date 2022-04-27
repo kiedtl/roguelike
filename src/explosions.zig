@@ -6,10 +6,12 @@ const types = @import("types.zig");
 const fov = @import("fov.zig");
 const state = @import("state.zig");
 const fire = @import("fire.zig");
+const items = @import("items.zig");
 const sound = @import("sound.zig");
 const rng = @import("rng.zig");
 
 const Mob = types.Mob;
+const DamageStr = types.DamageStr;
 const Coord = types.Coord;
 const Direction = types.Direction;
 const Tile = types.Tile;
@@ -76,9 +78,10 @@ pub fn elecBurst(ground0: Coord, max_damage: usize, by: ?*Mob) void {
                         .source = .Explosion,
                         .kind = .Electric,
                         .indirect = true,
+                    }, .{
+                        .noun = "The blast of electricity",
+                        .strs = &[_]DamageStr{items._dmgstr(0, "strike", "strikes", "")},
                     });
-                    var dmg_percent = mob.lastDamagePercentage();
-                    state.messageAboutMob(mob, mob.coord, .Info, "are struck by a blast of electricity! ($p{}% dmg$.)", .{dmg_percent}, "is struck by a blast of electricity! ($p{}% dmg$.)", .{dmg_percent});
                 };
         }
     };
@@ -178,7 +181,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                 state.dungeon.at(coord).broken = true;
 
             if (state.dungeon.at(coord).mob) |unfortunate| {
-                const total_dmg = @intToFloat(f64, opts.strength * cell / 100);
+                const total_dmg = @intToFloat(f64, opts.strength * cell / 100 / 5);
 
                 if (unfortunate == state.player) {
                     if (!opts.spare_player) {
@@ -186,9 +189,9 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                             .amount = math.min(total_dmg, state.player.HP * 0.50),
                             .source = .Explosion,
                             .kind = .Fire,
+                        }, .{
+                            .noun = "The explosion",
                         });
-                        const ldp = unfortunate.lastDamagePercentage();
-                        state.message(.Info, "The blast hits you!! ($p{}% dmg$.)", .{ldp});
                     }
                 } else {
                     unfortunate.takeDamage(.{
@@ -197,17 +200,14 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                         .source = .Explosion,
                         .kind = .Fire,
                         .indirect = true,
+                    }, .{
+                        .noun = "The explosion",
+                        .strs = &[_]DamageStr{
+                            items._dmgstr(000, "BUG", "hits", ""),
+                            items._dmgstr(100, "BUG", "pulverises", ""),
+                            items._dmgstr(300, "BUG", "grinds", " to powder"),
+                        },
                     });
-                    if (state.player.cansee(unfortunate.coord)) {
-                        const ldp = unfortunate.lastDamagePercentage();
-                        if (ldp > 200) {
-                            state.message(.Info, "The blast grinds the {s} to powder!!! ($p{}% dmg$.)", .{ unfortunate.displayName(), ldp });
-                        } else if (ldp > 100) {
-                            state.message(.Info, "The blast pulverises the {s}!! ($p{}% dmg$.)", .{ unfortunate.displayName(), ldp });
-                        } else {
-                            state.message(.Info, "The blast hits the {s}! ($p{}% dmg$.)", .{ unfortunate.displayName(), ldp });
-                        }
-                    }
                 }
             }
         }
