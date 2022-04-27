@@ -237,7 +237,7 @@ pub const LeadTurtleTemplate = MobTemplate{
             .name = "lead turtle",
             .default_attack = &Weapon{
                 .reach = 2,
-                .damage = 15,
+                .damage = 4,
                 .strs = &[_]DamageStr{
                     items._dmgstr(005, "bite", "bites", ""),
                 },
@@ -273,7 +273,7 @@ pub const IronWaspTemplate = MobTemplate{
         .species = &Species{
             .name = "iron wasp",
             .default_attack = &Weapon{
-                .damage = 5,
+                .damage = 1,
                 .effects = &[_]StatusDataInfo{
                     .{ .status = .Poison, .duration = .{ .Tmp = 5 } },
                 },

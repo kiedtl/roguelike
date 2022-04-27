@@ -581,7 +581,7 @@ pub const ClawWeapon = Weapon{
     .id = "none",
     .name = "none",
     .delay = 90,
-    .damage = 3,
+    .damage = 2,
     .strs = &[_]DamageStr{
         _dmgstr(010, "scratch", "scratches", ""),
         _dmgstr(030, "claw", "claws", ""),
