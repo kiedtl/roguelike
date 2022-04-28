@@ -750,6 +750,13 @@ pub const ClubWeapon = Weapon{
     .strs = &CRUSHING_STRS,
 };
 
+pub const BludgeonWeapon = Weapon{
+    .id = "bludgeon",
+    .name = "bludgeon",
+    .damage = 1,
+    .strs = &CRUSHING_STRS,
+};
+
 pub const MaceWeapon = Weapon{
     .id = "mace",
     .name = "mace",

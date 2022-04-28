@@ -166,7 +166,7 @@ pub const GuardTemplate = MobTemplate{
 
         .stats = .{ .Willpower = 2, .Speed = 100 },
     },
-    .weapon = &items.MaceWeapon,
+    .weapon = &items.BludgeonWeapon,
     .armor = &items.GambesonArmor,
 };
 
