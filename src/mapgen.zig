@@ -121,25 +121,25 @@ const VALID_DOOR_PLACEMENT_PATTERNS = [_][]const u8{
 };
 
 const VALID_STAIR_PLACEMENT_PATTERNS = [_][]const u8{
-    // ???
+    // ###
     // ###
     // ?.?
-    "???###?.?",
+    "######?.?",
 
     // ?.?
     // ###
-    // ???
-    "?.?###???",
+    // ###
+    "?.?######",
 
-    // ?#?
-    // .#?
-    // ?#?
-    "?#?.#??#?",
+    // ?##
+    // .##
+    // ?##
+    "?##.##?##",
 
-    // ?#?
-    // ?#.
-    // ?#?
-    "?#??#.?#?",
+    // ##?
+    // ##.
+    // ##?
+    "##?##.##?",
 };
 
 const VALID_LIGHT_PLACEMENT_PATTERNS = [_][]const u8{
@@ -2125,28 +2125,35 @@ pub fn placeRoomTerrain(level: usize) void {
 pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     assert(level != 0);
 
-    // Find a location for the "reciever" staircase.
-    const down_staircase = b: for (state.dungeon.map[dest_floor]) |*row, y| {
-        for (row) |_, x| {
-            const room: ?*Room = switch (state.layout[dest_floor][y][x]) {
-                .Unknown => null,
-                .Room => |r| &state.rooms[dest_floor].items[r],
-            };
+    // Find a location for the "reciever" staircase on the destination floor.
+    var reciever_locations = CoordArrayList.init(alloc);
+    defer reciever_locations.deinit();
 
-            if (room != null and room.?.has_stair) {
-                continue;
-            }
+    for (state.dungeon.map[dest_floor]) |*row, y| for (row) |_, x| {
+        const room: ?*Room = switch (state.layout[dest_floor][y][x]) {
+            .Unknown => null,
+            .Room => |r| &state.rooms[dest_floor].items[r],
+        };
 
-            const coord = Coord.new2(dest_floor, x, y);
-
-            if (state.dungeon.at(coord).type == .Wall and
-                !state.dungeon.at(coord).prison and
-                utils.hasPatternMatch(coord, &VALID_STAIR_PLACEMENT_PATTERNS))
-            {
-                break :b coord;
-            }
+        if (room != null and room.?.has_stair) {
+            continue;
         }
-    } else err.bug("Couldn't place a downstair on {s}!", .{state.levelinfo[dest_floor].name});
+
+        const coord = Coord.new2(dest_floor, x, y);
+
+        if (state.dungeon.at(coord).type == .Wall and
+            !state.dungeon.at(coord).prison and
+            utils.hasPatternMatch(coord, &VALID_STAIR_PLACEMENT_PATTERNS))
+        {
+            reciever_locations.append(coord) catch err.wat();
+        }
+    };
+
+    if (reciever_locations.items.len == 0) {
+        err.bug("Couldn't place a downstair on {s}!", .{state.levelinfo[dest_floor].name});
+    }
+
+    const down_staircase = rng.chooseUnweighted(Coord, reciever_locations.items);
 
     // Find coord candidates for stairs placement. Usually this will be in a room,
     // but we're not forcing it because that wouldn't work well for Caverns.
