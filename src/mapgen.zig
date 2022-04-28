@@ -1028,7 +1028,16 @@ fn _place_rooms(
     s_fabs: *PrefabArrayList,
     level: usize,
     allocator: mem.Allocator,
-) void {
+) !void {
+    // Iterate through all rooms, looking for a room that we can attack the new
+    // one to
+    // var c: usize = 0;
+    // const parent_i = while (c < rooms.items.len) : (c += 1) {
+    //     if (!rooms.items[c].connections.isFull())
+    //         break c;
+    // } else return error.NoValidParent;
+    // var parent: *Room = &rooms.items[parent_i];
+
     const parent_i = rng.range(usize, 0, rooms.items.len - 1);
     var parent = &rooms.items[parent_i];
 
@@ -1070,24 +1079,35 @@ fn _place_rooms(
     } else {
         if (parent.prefab != null and distance == 0) distance += 1;
 
-        var child_w = rng.rangeClumping(usize, Configs[level].min_room_width, Configs[level].max_room_width, 2);
-        var child_h = rng.rangeClumping(usize, Configs[level].min_room_height, Configs[level].max_room_height, 2);
+        var child_w = rng.range(usize, Configs[level].min_room_width, Configs[level].max_room_width);
+        var child_h = rng.range(usize, Configs[level].min_room_height, Configs[level].max_room_height);
         var childrect = attachRect(parent, side, child_w, child_h, distance, null) orelse return;
 
         var i: usize = 0;
         while (isRoomInvalid(rooms, &Room{ .rect = childrect }, parent, null, true) or
             childrect.overflowsLimit(&LIMIT)) : (i += 1)
         {
-            if (child_w < Configs[level].min_room_width or
-                child_h < Configs[level].min_room_height)
+            if ((child_w <= Configs[level].min_room_width and
+                child_h <= Configs[level].min_room_height) and
+                (!Configs[level].shrink_corridors_to_fit or distance <= 1))
+            {
+                // We can't shrink the corridor and we can't resize the room,
+                // bail out now
                 return;
+            }
 
             // Alternate between shrinking the corridor and shrinking the room
-            if (i % 2 == 0 and Configs[level].shrink_corridors_to_fit and distance > 1) {
-                distance -= 1;
-            } else {
-                child_w -= 1;
-                child_h -= 1;
+            switch (i % 2) {
+                0 => {
+                    if (Configs[level].shrink_corridors_to_fit and distance > 1) {
+                        distance -= 1;
+                    }
+                },
+                1 => {
+                    if (child_w > Configs[level].min_room_width) child_w -= 1;
+                    if (child_h > Configs[level].min_room_height) child_h -= 1;
+                },
+                else => unreachable,
             }
 
             childrect = attachRect(parent, side, child_w, child_h, distance, null) orelse return;
@@ -1194,8 +1214,8 @@ pub fn placeRandomRooms(
             continue;
         };
 
-        const x = rng.rangeClumping(usize, 1, state.WIDTH - fab.width - 1, 2);
-        const y = rng.rangeClumping(usize, 1, state.HEIGHT - fab.height - 1, 2);
+        const x = rng.rangeClumping(usize, fab.width, state.WIDTH - fab.width - 1, 2);
+        const y = rng.rangeClumping(usize, fab.height, state.HEIGHT - fab.height - 1, 2);
 
         var room = Room{
             .rect = Rect{
@@ -1240,7 +1260,9 @@ pub fn placeRandomRooms(
 
     var c = Configs[level].mapgen_iters;
     while (c > 0) : (c -= 1) {
-        _place_rooms(rooms, n_fabs, s_fabs, level, allocator);
+        _place_rooms(rooms, n_fabs, s_fabs, level, allocator) catch |e| switch (e) {
+            error.NoValidParent => break,
+        };
     }
 }
 
