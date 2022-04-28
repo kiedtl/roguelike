@@ -2106,7 +2106,7 @@ pub const Mob = struct { // {{{
             return;
         }
 
-        const is_stab = !opts.disallow_stab and !recipient.isAwareOfAttack(attacker.coord) and !opts.is_bonus;
+        const is_stab = !opts.disallow_stab and combat.isAttackStab(attacker, recipient) and !opts.is_bonus;
         const damage = combat.damageOfMeleeAttack(attacker, attacker_weapon.damage, is_stab) * opts.damage_bonus / 100;
 
         recipient.takeDamage(.{
@@ -2642,34 +2642,6 @@ pub const Mob = struct { // {{{
         }
     }
 
-    // Check if a mob is capable of dodging an attack. Return false if:
-    //  - Mob was in .Work AI phase
-    //  - Is in Investigate/Hunt phase and:
-    //    - is incapitated by a status effect (e.g. Paralysis)
-    //
-    // Player is always aware of attacks. Stabs are there in the first place
-    // to "reward" the player for catching a hostile off guard, but allowing
-    // enemies to stab a paralyzed player is too harsh of a punishment.
-    //
-    pub fn isAwareOfAttack(self: *const Mob, attacker: Coord) bool {
-        if (self.coord.eq(state.player.coord))
-            return true;
-
-        return switch (self.ai.phase) {
-            .Flee, .Hunt, .Investigate => b: {
-                if (self.isUnderStatus(.Paralysis)) |_| break :b false;
-                if (self.isUnderStatus(.Daze)) |_| break :b false;
-
-                if (self.ai.phase == .Flee and !self.cansee(attacker)) {
-                    break :b false;
-                }
-
-                break :b true;
-            },
-            .Work => false,
-        };
-    }
-
     pub fn canHear(self: *const Mob, coord: Coord) ?*Sound {
         if (self.deaf) return null;
 
@@ -2886,7 +2858,7 @@ pub const Mob = struct { // {{{
         {
             if (self.coord.move(activities[2].Move, state.mapgeometry)) |adj_mob_coord| {
                 if (state.dungeon.at(adj_mob_coord).mob) |othermob| {
-                    if (othermob.isHostileTo(self) and othermob.ai.is_combative and othermob.isAwareOfAttack(self.coord)) {
+                    if (othermob.isHostileTo(self) and othermob.ai.is_combative and !combat.isAttackStab(self, othermob)) {
                         if (othermob == state.player) {
                             state.messageAboutMob(self, self.coord, .Combat, "[BUG]", .{}, "charges you!", .{});
                         } else {
@@ -2906,7 +2878,7 @@ pub const Mob = struct { // {{{
             if (self.coord.move(activities[0].Move, state.mapgeometry)) |adj_mob_coord| {
                 if (state.dungeon.at(adj_mob_coord).mob) |othermob| {
                     if (othermob.isHostileTo(self) and othermob.ai.is_combative and
-                        othermob.isAwareOfAttack(state.player.coord))
+                        !combat.isAttackStab(self, othermob))
                     {
                         if (othermob == state.player) {
                             state.messageAboutMob(self, self.coord, .Combat, "[BUG]", .{}, "lunges at you!", .{});

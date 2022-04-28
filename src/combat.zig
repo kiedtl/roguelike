@@ -53,7 +53,7 @@ pub fn chanceOfMissileLanding(attacker: *const Mob) usize {
 }
 
 pub fn chanceOfMeleeLanding(attacker: *const Mob, defender: ?*const Mob) usize {
-    if (defender) |d| if (!d.isAwareOfAttack(attacker.coord)) return 100;
+    if (defender) |d| if (isAttackStab(attacker, d)) return 100;
 
     var nearby_walls: isize = 0;
     for (&DIRECTIONS) |d| if (attacker.coord.move(d, state.mapgeometry)) |neighbor| {
@@ -73,8 +73,7 @@ pub fn chanceOfMeleeLanding(attacker: *const Mob, defender: ?*const Mob) usize {
 }
 
 pub fn chanceOfAttackEvaded(defender: *const Mob, attacker: ?*const Mob) usize {
-    if (attacker) |a|
-        if (!defender.isAwareOfAttack(a.coord)) return 0;
+    if (attacker) |a| if (isAttackStab(a, defender)) return 0;
     if (defender.immobile) return 0;
 
     const tile_light = state.dungeon.lightAt(defender.coord).*;
@@ -150,4 +149,37 @@ pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: u
             state.message(.Combat, "{s} is knocked back!", .{throwee.formatName(.{})});
         }
     }
+}
+
+// Check if an attack is a stab attack.
+//
+// Return true if:
+// - Mob was in .Work AI phase
+// - Is in Investigate/Hunt phase and:
+//   - is incapitated by a status effect (e.g. Paralysis)
+//
+// Return false if:
+// - Attacker isn't right next to defender
+//
+// Player is always aware of attacks. Stabs are there in the first place to
+// "reward" the player for catching a hostile off guard, but allowing enemies
+// to stab a paralyzed player is too harsh of a punishment.
+//
+pub fn isAttackStab(attacker: *const Mob, defender: *const Mob) bool {
+    if (defender.coord.eq(state.player.coord))
+        return false;
+
+    return switch (defender.ai.phase) {
+        .Flee, .Hunt, .Investigate => b: {
+            if (defender.isUnderStatus(.Paralysis)) |_| break :b true;
+            if (defender.isUnderStatus(.Daze)) |_| break :b true;
+
+            if (defender.ai.phase == .Flee and !defender.cansee(attacker.coord)) {
+                break :b true;
+            }
+
+            break :b false;
+        },
+        .Work => true,
+    };
 }
