@@ -672,6 +672,7 @@ pub const HalberdWeapon = Weapon{
     .id = "halberd",
     .name = "halberd",
     .damage = 2,
+    .stats = .{ .Sneak = -1 },
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .OpenMelee, .duration = .Equ },
     },
@@ -684,7 +685,7 @@ pub const GlaiveWeapon = Weapon{
     .id = "glaive",
     .name = "glaive",
     .damage = 2,
-    .stats = .{ .Melee = 10 },
+    .stats = .{ .Melee = 10, .Sneak = -1 },
     .is_dippable = true,
     .strs = &SLASHING_STRS,
     .reach = 2,
@@ -696,6 +697,7 @@ pub const MonkSpadeWeapon = Weapon{
     .damage = 1,
     .delay = 50,
     .knockback = 1,
+    .stats = .{ .Sneak = -1 },
     .strs = &PIERCING_STRS,
     .reach = 2,
 };
@@ -704,7 +706,7 @@ pub const WoldoWeapon = Weapon{
     .id = "woldo",
     .name = "woldo",
     .damage = 3,
-    .stats = .{ .Melee = -15, .Martial = 2 },
+    .stats = .{ .Melee = -15, .Martial = 2, .Sneak = -1 },
     .is_dippable = true,
     .strs = &SLASHING_STRS,
     .reach = 2,
