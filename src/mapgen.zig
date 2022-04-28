@@ -1650,6 +1650,8 @@ pub fn placeItems(level: usize) void {
 pub fn placeTraps(level: usize) void {
     room_iter: for (state.rooms[level].items) |maproom| {
         if (maproom.prefab) |rfb| if (rfb.notraps) continue;
+        if (maproom.has_subroom) continue; // Too cluttered
+
         const room = maproom.rect;
 
         // Don't place traps in places where it's impossible to avoid
@@ -1927,10 +1929,10 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
         const modes = [_]Mode{ .Statues, .Containers, .Machine, .Poster, .None };
         const mode_weights = [_]usize{
             if (Configs[level].allow_statues) 10 else 0,
-            if (Configs[level].containers.len > 0) 10 else 0,
+            if (Configs[level].containers.len > 0) 8 else 0,
             if (Configs[level].machines.len > 0) 10 else 0,
-            if (room_area >= 25) 6 else 0,
-            5,
+            if (room_area >= 25) 5 else 0,
+            8,
         };
         const mode = rng.choose(Mode, &modes, &mode_weights) catch err.wat();
 
