@@ -23,6 +23,12 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
             }
         }
 
+        pub fn fmt(self: *Self, comptime format: []const u8, args: anytype) void {
+            var fbs = std.io.fixedBufferStream(&self.data);
+            std.fmt.format(fbs.writer(), format, args) catch unreachable;
+            self.resizeTo(@intCast(usize, fbs.getPos() catch unreachable));
+        }
+
         pub fn slice(self: *Self) []T {
             return self.data[0..self.len];
         }

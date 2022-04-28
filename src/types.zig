@@ -1421,26 +1421,28 @@ pub const Mob = struct { // {{{
         }
     }
 
-    pub fn formatName(self: *const Mob, opts: struct {
-        caps: bool = false,
-    }) []const u8 {
-        const Static = struct {
-            var buf: [32]u8 = undefined;
-        };
-        var fbs = std.io.fixedBufferStream(&Static.buf);
+    pub fn format(self: *const Mob, comptime f: []const u8, opts: fmt.FormatOptions, writer: anytype) !void {
+        _ = opts;
+
+        comptime var caps = false;
+
+        if (comptime mem.eql(u8, f, "")) {
+            //
+        } else if (comptime mem.eql(u8, f, "c")) {
+            caps = true;
+        } else {
+            @compileError("Unknown format string: '" ++ f ++ "'");
+        }
 
         if (self == state.player) {
-            return if (opts.caps) "You" else "you";
+            const n = if (caps) "You" else "you";
+            try fmt.format(writer, "{s}", .{n});
+        } else if (!state.player.cansee(self.coord)) {
+            const n = if (caps) "Something" else "something";
+            try fmt.format(writer, "{s}", .{n});
         } else {
-            if (!state.player.cansee(self.coord)) {
-                return if (opts.caps) "Something" else "something";
-            } else {
-                const the = if (opts.caps) "The" else "the";
-                std.fmt.format(fbs.writer(), "{s} {s}", .{
-                    the, self.displayName(),
-                }) catch err.wat();
-                return fbs.getWritten();
-            }
+            const the = if (caps) "The" else "the";
+            try fmt.format(writer, "{s} {s}", .{ the, self.displayName() });
         }
     }
 
@@ -2075,25 +2077,22 @@ pub const Mob = struct { // {{{
         //     state.message(.Info, "you defend: chance of land: {}, chance of dodge: {}", .{ chance_of_land, chance_of_dodge });
         // }
 
-        const hit = opts.auto_hit or
-            ((rng.percent(combat.chanceOfMeleeLanding(attacker, recipient))) and
-            (!rng.percent(combat.chanceOfAttackEvaded(recipient, attacker))));
+        const missed = !rng.percent(combat.chanceOfMeleeLanding(attacker, recipient));
+        const evaded = rng.percent(combat.chanceOfAttackEvaded(recipient, attacker));
+
+        const hit = opts.auto_hit or (!missed and !evaded);
 
         if (!hit) {
-            if (attacker == state.player) {
-                state.message(.CombatUnimportant, "You miss the {s}.", .{recipient.displayName()});
-            } else if (recipient == state.player) {
-                state.message(.CombatUnimportant, "The {s} misses you.", .{attacker.displayName()});
-            } else {
-                const cansee_a = state.player.cansee(attacker.coord);
-                const cansee_r = state.player.cansee(recipient.coord);
-
-                if (cansee_a or cansee_r) {
-                    state.message(.Info, "{s}{s} misses {s}{s}.", .{
-                        if (cansee_a) @as([]const u8, "The ") else "",
-                        if (cansee_a) attacker.displayName() else "Something",
-                        if (cansee_r) @as([]const u8, "the ") else "",
-                        if (cansee_r) recipient.displayName() else "something",
+            if (state.player.cansee(attacker.coord) or state.player.cansee(recipient.coord)) {
+                if (missed) {
+                    const verb = if (attacker == state.player) "miss" else "misses";
+                    state.message(.CombatUnimportant, "{c} {s} {}.", .{
+                        attacker, verb, recipient,
+                    });
+                } else if (evaded) {
+                    const verb = if (attacker == state.player) "evade" else "evades";
+                    state.message(.CombatUnimportant, "{c} {s} {}.", .{
+                        recipient, verb, attacker,
                     });
                 }
             }
@@ -2183,7 +2182,7 @@ pub const Mob = struct { // {{{
 
         const resist = @intToFloat(f64, self.resistance(d.kind.resist()));
         const amount = math.floor(d.amount * resist / 100.0);
-        const dmg_percent = @floatToInt(usize, amount * 100 / self.HP);
+        const dmg_percent = @floatToInt(usize, math.floor(amount * 100 / self.HP));
 
         self.HP = math.clamp(self.HP - amount, 0, self.max_HP);
 
@@ -2211,7 +2210,13 @@ pub const Mob = struct { // {{{
             const martial_str = if (msg.is_bonus) " $b*Martial*$." else "";
             const riposte_str = if (msg.is_riposte) " $b*Riposte*$." else "";
 
-            const noun = msg.noun orelse d.by_mob.?.formatName(.{ .caps = true });
+            var noun = StackBuffer(u8, 64).init(null);
+            if (msg.noun) |m_noun| {
+                noun.fmt("{s}", .{m_noun});
+            } else {
+                noun.fmt("{c}", .{d.by_mob.?});
+            }
+
             const verb = if (d.by_mob != null and d.by_mob.? == state.player) hitstrs.verb_self else hitstrs.verb_other;
 
             const dmgtype = switch (d.kind) {
@@ -2224,11 +2229,11 @@ pub const Mob = struct { // {{{
 
             state.message(
                 .Combat,
-                "{s} {s} {s}{s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.) {s} {s}",
+                "{s} {s} {}{s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.) {s} {s}",
                 .{
-                    noun,
+                    noun.constSlice(),
                     verb,
-                    self.formatName(.{}),
+                    self,
                     hitstrs.verb_degree,
                     punctuation,
                     @floatToInt(usize, amount),

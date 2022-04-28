@@ -142,11 +142,9 @@ pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: u
         }
     } else {
         if (thrower) |thrower_mob| {
-            state.message(.Combat, "{s} knocks {s} back!", .{
-                thrower_mob.formatName(.{ .caps = true }), throwee.formatName(.{}),
-            });
+            state.message(.Combat, "{c} knocks {} back!", .{ thrower_mob, throwee });
         } else {
-            state.message(.Combat, "{s} is knocked back!", .{throwee.formatName(.{})});
+            state.message(.Combat, "{} is knocked back!", .{throwee});
         }
     }
 }

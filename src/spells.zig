@@ -73,7 +73,7 @@ pub const BOLT_AIRBLAST = Spell{
     .effect_type = .{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             if (state.dungeon.at(coord).mob) |victim| {
-                state.message(.Combat, "The blast of air hits {s}!", .{victim.formatName(.{})});
+                state.message(.Combat, "The blast of air hits {}!", .{victim});
                 const distance = victim.coord.distance(caster_c);
                 assert(distance < opts.power);
                 const knockback = opts.power - distance;
