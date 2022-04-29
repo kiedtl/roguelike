@@ -746,6 +746,8 @@ x Rename VLT back to REC/QRT or something
 x Runes and scoring
 x Fix morgue file generation
 *** v1.0.0 release ***
+- Condense UI even more (3 columns for stats, put turncount on level str, etc)
+- Show items, notable machines on info pane
 - Ring changes/additions/simplifications:
   - More ring types (fire, etc)
   - Random ring drops, equipping/deequipping rings
