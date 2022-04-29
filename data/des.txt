@@ -36,6 +36,11 @@ mine in a corridor to ensure it is stepped on.
 
 It will create an explosion with a radius of about 3 tiles.
 
+% recharging_station
+$cA recharging station.$.
+
+You can activate this to recharge some of your evocables.
+
 % eldritch_lantern
 $cAn eldritch lantern.$.
 
