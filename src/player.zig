@@ -573,6 +573,7 @@ pub fn breakSomething(coord: Coord) bool {
         3 => state.message(.Info, "You destroy the {s} savagely.", .{machine.name}),
         else => err.wat(),
     }
+    state.markMessageNoisy();
 
     return true;
 }

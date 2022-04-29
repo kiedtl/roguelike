@@ -27,6 +27,7 @@ const mapgen = @import("mapgen.zig");
 const materials = @import("materials.zig");
 const player = @import("player.zig");
 const rng = @import("rng.zig");
+const sound = @import("sound.zig");
 const spells = @import("spells.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
@@ -739,6 +740,7 @@ pub const Message = struct {
     type: MessageType,
     turn: usize,
     dups: usize = 0,
+    noise: bool = false,
 };
 
 // Note, this is outdated. Cave goblins are just as nice as plains humans,
@@ -1760,6 +1762,7 @@ pub const Mob = struct { // {{{
 
     pub fn makeNoise(self: *Mob, s_type: SoundType, intensity: SoundIntensity) void {
         assert(!self.is_dead);
+
         state.dungeon.soundAt(self.coord).* = .{
             .mob_source = self,
             .intensity = intensity,
@@ -1767,6 +1770,8 @@ pub const Mob = struct { // {{{
             .state = .New,
             .when = state.ticks,
         };
+
+        sound.announceSound(self.coord);
     }
 
     // Check if a mob, when trying to move into a space that already has a mob,
@@ -1789,7 +1794,7 @@ pub const Mob = struct { // {{{
     //     - The other mob is immobile (e.g., a statue).
     //     - The other mob is a prisoner that's tied up somewhere.
     //
-    // TODO: cleanup this, express login in a cleaner way.
+    // TODO: cleanup this, express logic in a cleaner way.
     //
     pub fn canSwapWith(self: *const Mob, other: *Mob, direction: ?Direction) bool {
         var can = false;
@@ -2650,12 +2655,12 @@ pub const Mob = struct { // {{{
     pub fn canHear(self: *const Mob, coord: Coord) ?*Sound {
         if (self.deaf) return null;
 
-        const sound = state.dungeon.soundAt(coord);
+        const noise = state.dungeon.soundAt(coord);
 
         if (self.coord.z != coord.z)
             return null; // Can't hear across levels
 
-        if (sound.state == .Dead or sound.intensity == .Silent)
+        if (noise.state == .Dead or noise.intensity == .Silent)
             return null; // Sound was made a while back, or is silent
 
         const line = self.coord.drawLine(coord, state.mapgeometry);
@@ -2667,14 +2672,14 @@ pub const Mob = struct { // {{{
         }
 
         // If there are a lot of walls in the way, quiet the noise
-        var radius = sound.intensity.radiusHeard();
+        var radius = noise.intensity.radiusHeard();
         if (self != state.player) radius -|= (walls_in_way * 2);
         if (self == state.player) radius = radius * 150 / 100;
 
         if (self.coord.distance(coord) > radius)
             return null; // Too far away
 
-        return sound;
+        return noise;
     }
 
     pub fn isHostileTo(self: *const Mob, othermob: *const Mob) bool {

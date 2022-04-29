@@ -544,6 +544,11 @@ pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void
     }
 }
 
+pub fn markMessageNoisy() void {
+    assert(messages.items.len > 0);
+    messages.items[messages.items.len - 1].noise = true;
+}
+
 pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
     const S = struct {
         fn _damageString() []const u8 {

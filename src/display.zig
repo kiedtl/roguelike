@@ -1100,13 +1100,15 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
 
         _clear_line(startx, endx, y);
 
+        const noisetext: []const u8 = if (msg.noise) "$a♫$.  " else "$c·$.  ";
+
         if (msg.dups == 0) {
-            y = _drawStr(startx, y, endx, "{s}", .{
-                msgtext,
+            y = _drawStr(startx, y, endx, "{s}{s}", .{
+                noisetext, msgtext,
             }, .{ .fg = col, .fold = true });
         } else {
-            y = _drawStr(startx, y, endx, "{s} (×{})", .{
-                msgtext, msg.dups + 1,
+            y = _drawStr(startx, y, endx, "{s}{s} (×{})", .{
+                noisetext, msgtext, msg.dups + 1,
             }, .{ .fg = col, .fold = true });
         }
     }
@@ -1330,7 +1332,9 @@ pub fn chooseCell(opts: ChooseCellOptions) ?Coord {
     }
 }
 
+// Examine mode {{{
 pub const ExamineTileFocus = enum { Item, Surface, Mob };
+
 pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
     const mainw = dimensions(.Main);
     const logw = dimensions(.Log);
@@ -1360,7 +1364,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
         const has_surf = state.dungeon.at(coord).surface != null or !mem.eql(u8, state.dungeon.terrainAt(coord).id, "t_default");
 
         // Draw side info pane.
-        if (has_mons or has_surf or has_item) {
+        if (!state.player.cansee(coord) and has_mons or has_surf or has_item) {
             const linewidth = @intCast(usize, infow.endx - infow.startx);
 
             var textbuf: [4096]u8 = undefined;
@@ -1433,7 +1437,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
         }
 
         // Draw description pane.
-        {
+        if (!state.player.cansee(coord)) {
             const log_startx = logw.startx;
             const log_endx = logw.endx;
             const log_starty = logw.starty;
@@ -1595,6 +1599,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
 
     return false;
 }
+// }}}
 
 // Wait for input. Return null if Ctrl+c or escape was pressed, default_input
 // if <enter> is pressed ,otherwise the key pressed. Will continue waiting if a

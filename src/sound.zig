@@ -56,4 +56,43 @@ pub fn makeNoise(coord: Coord, s_type: SoundType, intensity: SoundIntensity) voi
         .state = .New,
         .when = state.ticks,
     };
+
+    announceSound(coord);
+}
+
+pub fn announceSound(coord: Coord) void {
+    const sound = state.dungeon.soundAt(coord);
+
+    if (state.player.canHear(coord) == null)
+        return;
+
+    if (sound.mob_source == null or !state.player.cansee(coord)) {
+        const text: ?[]const u8 = switch (sound.type) {
+            .None => unreachable,
+            .Movement => null,
+            .Combat => "fighting.",
+            .Shout => "a shout!",
+            .Alarm => "an alarm!",
+            .Scream => "a scream!",
+            .Explosion => "an explosion!",
+            .Crash => "a crash!",
+        };
+
+        if (text) |_text| {
+            state.message(.Info, "You hear {s}", .{_text});
+            state.markMessageNoisy();
+        }
+    } else {
+        const text: ?[]const u8 = switch (sound.type) {
+            .None => unreachable,
+            .Explosion, .Crash, .Movement, .Combat, .Alarm => null,
+            .Shout => "shouts!",
+            .Scream => "screams!",
+        };
+
+        if (text) |_text| {
+            state.message(.Info, "{c} {s}", .{ sound.mob_source.?, _text });
+            state.markMessageNoisy();
+        }
+    }
 }
