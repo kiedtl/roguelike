@@ -2053,14 +2053,10 @@ pub const Mob = struct { // {{{
         // If longest_delay is still 0, we didn't attack at all!
         assert(longest_delay > 0);
 
-        attacker.declareAction(.{
-            .Attack = .{
-                .who = recipient,
-                .coord = recipient.coord,
-                .direction = attacker.coord.closestDirectionTo(recipient.coord, state.mapgeometry),
-                .delay = if (opts.free_attack) 0 else longest_delay,
-            },
-        });
+        if (!opts.free_attack) {
+            const d = attacker.coord.closestDirectionTo(recipient.coord, state.mapgeometry);
+            attacker.declareAction(.{ .Attack = .{ .who = recipient, .coord = recipient.coord, .direction = d, .delay = longest_delay } });
+        }
     }
 
     fn _fightWithWeapon(
