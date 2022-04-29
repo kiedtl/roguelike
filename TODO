@@ -264,6 +264,16 @@ x death mage
   - Bloated 
   - Very slow, 18 HP
   - Aura of nausea.
+- predator
+  - 10 HP, fast, no armor
+  - Vicious bite (3 dmg); may cause bleeding effect if it's added
+  - May be found chained w/ beastmasters
+- destroyer
+  - Armored executioner, w/ more HP + more evade% + more melee%
+  - Found instead of executioners above Caverns
+- sentinel
+  - 10 HP
+  - Armored, sword-wielding version of guard
 - new monsters
   - hydra-like monster, multiple attacks per turn
   - Hurls bolts of paralysing dust (same as DCSS' catoblepas).
@@ -730,11 +740,11 @@ x Upgrade to Zig v9
   x Petition khuxkm/ben for update
   x Remove utils.saturating_sub
   x Fix "*mem.Allocator" params
-- Ring of Lightning
+x Ring of Lightning
 x Rename VLT back to REC/QRT or something
   x Bedroom prefabs
-- Runes and scoring
-- Fix morgue file generation
+x Runes and scoring
+x Fix morgue file generation
 *** v1.0.0 release ***
 - Ring changes/additions/simplifications:
   - More ring types (fire, etc)
@@ -756,6 +766,9 @@ x Rename VLT back to REC/QRT or something
   - Add bookshelves and book types
     - Maps
     - Useless books
+- eXamine screen:
+  - Show last remembered items on out-of-sight tiles
+  - Show floor spattering, floor material, gas
 - Revisit Laboratory
   - Spires and spire kits; more monsters
   - Add traps of blinding gas
