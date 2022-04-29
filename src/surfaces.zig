@@ -631,7 +631,7 @@ pub const RechargingStation = Machine{
         .name = "recharge",
         .success_msg = "All evocables recharged.",
         .no_effect_msg = "No evocables to recharge!",
-        .max_use = 3,
+        .max_use = 1,
         .func = interact1RechargingStation,
     },
 };
