@@ -1364,7 +1364,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
         const has_surf = state.dungeon.at(coord).surface != null or !mem.eql(u8, state.dungeon.terrainAt(coord).id, "t_default");
 
         // Draw side info pane.
-        if (!state.player.cansee(coord) and has_mons or has_surf or has_item) {
+        if (state.player.cansee(coord) and has_mons or has_surf or has_item) {
             const linewidth = @intCast(usize, infow.endx - infow.startx);
 
             var textbuf: [4096]u8 = undefined;
@@ -1437,7 +1437,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
         }
 
         // Draw description pane.
-        if (!state.player.cansee(coord)) {
+        if (state.player.cansee(coord)) {
             const log_startx = logw.startx;
             const log_endx = logw.endx;
             const log_starty = logw.starty;
