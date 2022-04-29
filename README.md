@@ -1,12 +1,19 @@
-# roguelike
+# Oathbreaker
 
-This is a WIP roguelike that I've been working on for some time,
-stealth-focused.
+A stealth-focused roguelike. See the [intro](doc/intro.md) for more info.
 
-WIP name: "Oathbreaker: Guests of the Iron Warden"
+[Here's](https://tilde.team/~kiedtl/blog/roguelike) the (very outdated) initial
+writeup back when I started the project in May 2021.
 
-TODO: writeup
+*Getting caught by a bunch of javelineers after being spotted by a watcher:*
+![screenshot](//tilde.team/~kiedtl/images/rl/apr29-release1.png)
 
-TODO: screenshots?
+*Inspecting a (wounded) lead turtle:*
+![screenshot](//tilde.team/~kiedtl/images/rl/apr29-release2.png)
+![screenshot](//tilde.team/~kiedtl/images/rl/apr29-release3.png)
 
-TODO: building instructions
+*Inspecting a Frozen Fiend:*
+![screenshot](//tilde.team/~kiedtl/images/rl/apr29-release4.png)
+
+*Getting into an argument with said Frozen Fiend:*
+![screenshot](//tilde.team/~kiedtl/images/rl/apr29-release5.png)
