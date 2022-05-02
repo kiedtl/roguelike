@@ -515,6 +515,13 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
 
         list.append(i) catch err.wat();
     }
+
+    if (mob.isUnderStatus(.Sleeping) != null) {
+        var i = MobInfoLine{ .char = 'Z' };
+        i.string.writer().print("{s}", .{Status.string(.Sleeping, mob)}) catch err.wat();
+        list.append(i) catch err.wat();
+    }
+
     return list;
 }
 
