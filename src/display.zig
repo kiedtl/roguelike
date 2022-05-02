@@ -948,28 +948,41 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
     while (y < endy) : (y += 1) _clear_line(startx, endx, y);
     y = starty;
 
-    _clearLineWith(startx, endx - 1, y, '═', colors.GREY, colors.BG);
+    _clearLineWith(startx, endx - 1, y, '─', colors.DARK_GREY, colors.BG);
     const lvlstr = state.levelinfo[state.player.coord.z].name;
-    const lvlstrx = startx + @divTrunc(endx - startx - 1, 2) - @intCast(isize, lvlstr.len / 2);
-    y = _drawStr(lvlstrx, y, endx, " $c{s}$. ", .{lvlstr}, .{});
+    const lvlstrx = startx + @divTrunc(endx - startx - 1, 2) - @intCast(isize, (lvlstr.len + 4) / 2);
+    y = _drawStr(lvlstrx, y, endx, "$G┤$. $c{s}$. $G├$.", .{lvlstr}, .{});
     y += 1;
 
+    y = _drawStr(startx, y, endx, "$cturns:$. {}", .{state.ticks}, .{});
+    y += 1;
+
+    // zig fmt: off
     const stats = [_]struct { b: []const u8, a: []const u8, v: isize }{
-        .{ .b = "melee", .a = "%", .v = state.player.stat(.Melee) },
-        .{ .b = "mrtl ", .a = " ", .v = state.player.stat(.Martial) },
-        .{ .b = "mssl ", .a = "%", .v = state.player.stat(.Missile) },
-        .{ .b = "evade", .a = "%", .v = state.player.stat(.Evade) },
-        .{ .b = "sight", .a = " ", .v = state.player.stat(.Vision) },
-        .{ .b = "armor", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.Armor)) },
-        .{ .b = "rFire", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.rFire)) },
-        .{ .b = "rElec", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.rElec)) },
+        .{ .b = "hit", .a = "%", .v = state.player.stat(.Melee) },
+        .{ .b = "mrt", .a = "",  .v = state.player.stat(.Martial) },
+        .{ .b = "msl", .a = "%", .v = state.player.stat(.Missile) },
+        .{ .b = "evd", .a = "%", .v = state.player.stat(.Evade) },
+        .{ .b = "fov", .a = "",  .v = state.player.stat(.Vision) },
+        .{ .b = "arm", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.Armor)) },
+        .{ .b = "rFi", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.rFire)) },
+        .{ .b = "rEl", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.rElec)) },
     };
+    // zig fmt: on
 
     for (stats) |stat, i| {
-        const x = if (i % 2 == 0) startx else startx + @divTrunc(endx - startx, 2) + 2;
+        const is_last = i == stats.len - 1;
+
+        const x = switch (i % 3) {
+            0 => startx,
+            1 => startx + @divTrunc(endx - startx, 3) + 1,
+            2 => startx + (@divTrunc(endx - startx, 3) * 2) + 1,
+            else => unreachable,
+        };
         const v = utils.SignedFormatter{ .v = stat.v };
-        _ = _drawStr(x, y, endx, "$c{s}$. {: >4}{s}", .{ stat.b, v, stat.a }, .{});
-        if (i % 2 == 1) y += 1;
+        _ = _drawStr(x, y, endx, "$c{s}$. {: >3}{s}", .{ stat.b, v, stat.a }, .{});
+        if (i % 3 == 2 or is_last)
+            y += 1;
     }
 
     y += 1;
@@ -1020,9 +1033,6 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         }, .{});
         y += 1;
     }
-
-    y = _drawStr(startx, y, endx, "$cturns:$. {}", .{state.ticks}, .{});
-    y += 1;
 
     const terrain = state.dungeon.terrainAt(state.player.coord);
     if (!mem.eql(u8, terrain.id, "t_default")) {
