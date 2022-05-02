@@ -2091,7 +2091,7 @@ pub const Mob = struct { // {{{
                         attacker, verb, recipient,
                     });
                 } else if (evaded) {
-                    const verb = if (attacker == state.player) "evade" else "evades";
+                    const verb = if (recipient == state.player) "evade" else "evades";
                     state.message(.CombatUnimportant, "{c} {s} {}.", .{
                         recipient, verb, attacker,
                     });
