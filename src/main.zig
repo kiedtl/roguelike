@@ -571,7 +571,7 @@ fn viewerDisplay(tty_height: usize, level: usize, sy: usize) void {
     }) {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
-            var t = Tile.displayAs(Coord.new2(level, x, dy), false);
+            var t = Tile.displayAs(Coord.new2(level, x, dy), false, false);
             termbox.tb_put_cell(@intCast(isize, x), @intCast(isize, y), &t);
         }
     }

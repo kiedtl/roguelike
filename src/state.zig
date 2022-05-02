@@ -699,7 +699,7 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
                     continue;
                 }
 
-                var ch = @intCast(u21, Tile.displayAs(coord, false).ch);
+                var ch = @intCast(u21, Tile.displayAs(coord, false, false).ch);
                 if (ch == ' ') ch = '.';
 
                 try w.print("{u}", .{ch});

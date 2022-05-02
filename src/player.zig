@@ -216,7 +216,7 @@ pub fn bookkeepingFOV() void {
                     };
             }
 
-            const t = Tile.displayAs(fc, true);
+            const t = Tile.displayAs(fc, true, false);
             const memt = state.MemoryTile{ .bg = t.bg, .fg = t.fg, .ch = t.ch };
             state.memory.put(fc, memt) catch err.wat();
         }

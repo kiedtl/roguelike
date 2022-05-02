@@ -3484,7 +3484,7 @@ pub const Tile = struct {
     // Is the surface item (or wall) on the tile broken?
     broken: bool = false,
 
-    pub fn displayAs(coord: Coord, ignore_lights: bool) termbox.tb_cell {
+    pub fn displayAs(coord: Coord, ignore_lights: bool, ignore_mobs: bool) termbox.tb_cell {
         var self = state.dungeon.at(coord);
         var cell = termbox.tb_cell{};
 
@@ -3516,8 +3516,10 @@ pub const Tile = struct {
             cell.ch = '·';
         }
 
-        if (self.mob) |mob| {
+        if (self.mob != null and !ignore_mobs) {
             if (!self.broken) assert(self.type != .Wall);
+
+            const mob = self.mob.?;
 
             cell.fg = switch (mob.ai.phase) {
                 .Work, .Flee => 0xffffff,
@@ -3703,7 +3705,7 @@ pub const Dungeon = struct {
     //
     pub fn terrainAt(self: *Dungeon, coord: Coord) *const surfaces.Terrain {
         const tile = self.at(coord);
-        if (tile.broken) return &surfaces.DefaultTerrain;
+        if (tile.type != .Floor or tile.broken) return &surfaces.DefaultTerrain;
         return if (tile.surface == null) tile.terrain else &surfaces.DefaultTerrain;
     }
 

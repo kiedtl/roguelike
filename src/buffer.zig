@@ -5,6 +5,8 @@ const std = @import("std");
 const mem = std.mem;
 const assert = std.debug.assert;
 
+pub const StringBuf64 = StackBuffer(u8, 64);
+
 pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
     return struct {
         data: [capacity]T = undefined,

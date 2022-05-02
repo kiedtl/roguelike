@@ -21,6 +21,7 @@ const utils = @import("utils.zig");
 const types = @import("types.zig");
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
+const StringBuf64 = @import("buffer.zig").StringBuf64;
 
 const Mob = types.Mob;
 const StatusDataInfo = types.StatusDataInfo;
@@ -1041,11 +1042,94 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         y += 1;
     }
 
-    const terrain = state.dungeon.terrainAt(state.player.coord);
-    if (!mem.eql(u8, terrain.id, "t_default")) {
-        y = _drawStr(startx, y, endx, "$cterrain$.: {s}", .{terrain.name}, .{});
-        y += 1;
+    // ------------------------------------------------------------------------
+
+    {
+        const FeatureInfo = struct {
+            name: StringBuf64,
+            tile: termbox.tb_cell,
+            priority: usize,
+            player: bool,
+        };
+
+        var features = std.ArrayList(FeatureInfo).init(state.GPA.allocator());
+        defer features.deinit();
+
+        for (state.player.fov) |row, iy| for (row) |_, ix| {
+            const coord = Coord.new2(state.player.coord.z, ix, iy);
+
+            if (state.player.fov[iy][ix] > 0) {
+                var name = StringBuf64.init(null);
+                var priority: usize = 0;
+
+                if (state.dungeon.itemsAt(coord).len > 0) {
+                    const item = state.dungeon.itemsAt(coord).last().?;
+                    if (item != .Vial and item != .Prop and item != .Boulder) {
+                        name.appendSlice((item.shortName() catch err.wat()).constSlice()) catch err.wat();
+                    }
+                    priority = 3;
+                } else if (state.dungeon.at(coord).surface) |surf| {
+                    priority = 2;
+                    name.appendSlice(switch (surf) {
+                        .Machine => |m| if (m.interact1 != null) m.name else "",
+                        .Prop => "",
+                        .Corpse => "corpse",
+                        .Container => |c| c.name,
+                        .Poster => "poster",
+                        .Stair => |s| if (s != null) "upward stairs" else "",
+                    }) catch err.wat();
+                } else if (!mem.eql(u8, state.dungeon.terrainAt(coord).id, "t_default")) {
+                    priority = 1;
+                    name.appendSlice(state.dungeon.terrainAt(coord).name) catch err.wat();
+                } else if (state.dungeon.at(coord).type != .Wall) {
+                    const material = state.dungeon.at(coord).material;
+                    switch (state.dungeon.at(coord).type) {
+                        .Wall => name.fmt("{s} wall", .{material.name}),
+                        .Floor => name.fmt("{s} floor", .{material.name}),
+                        .Lava => name.appendSlice("lava") catch err.wat(),
+                        .Water => name.appendSlice("water") catch err.wat(),
+                    }
+                }
+
+                if (name.len > 0) {
+                    const existing = utils.findFirstNeedlePtr(features.items, name, struct {
+                        pub fn func(f: *const FeatureInfo, n: StringBuf64) bool {
+                            return mem.eql(u8, n.constSlice(), f.name.constSlice());
+                        }
+                    }.func);
+                    if (existing == null) {
+                        features.append(FeatureInfo{
+                            .name = name,
+                            .tile = Tile.displayAs(coord, true, true),
+                            .player = state.player.coord.eq(coord),
+                            .priority = priority,
+                        }) catch err.wat();
+                    } else {
+                        existing.?.player = state.player.coord.eq(coord);
+                    }
+                }
+            }
+        };
+
+        std.sort.sort(FeatureInfo, features.items, {}, struct {
+            pub fn f(_: void, a: FeatureInfo, b: FeatureInfo) bool {
+                return a.priority < b.priority;
+            }
+        }.f);
+
+        for (features.items) |feature| {
+            var tile = feature.tile;
+            termbox.tb_put_cell(startx, y, &tile);
+
+            _ = _drawStr(startx + 2, y, endx, "$c{s}$.", .{feature.name.constSlice()}, .{});
+            if (feature.player) {
+                _ = _drawStr(endx - 1, y, endx, "@", .{}, .{});
+            }
+
+            y += 1;
+        }
     }
+    y += 1;
 
     // ------------------------------------------------------------------------
 
@@ -1055,7 +1139,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         _clear_line(startx, endx, y);
         _clear_line(startx, endx, y + 1);
 
-        var mobcell = Tile.displayAs(mob.coord, false);
+        var mobcell = Tile.displayAs(mob.coord, true, false);
         termbox.tb_put_cell(startx, y, &mobcell);
 
         const name = mob.displayName();
@@ -1182,7 +1266,7 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
             const u_y: usize = @intCast(usize, y);
             const coord = Coord.new2(level, u_x, u_y);
 
-            var tile = Tile.displayAs(coord, false);
+            var tile = Tile.displayAs(coord, false, false);
 
             // if player can't see area, draw a blank/grey tile, depending on
             // what they saw last there
