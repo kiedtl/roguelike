@@ -43,7 +43,7 @@ const WIDTH = state.WIDTH;
 
 pub const LEFT_INFO_WIDTH: usize = 30;
 //pub const RIGHT_INFO_WIDTH: usize = 24;
-pub const LOG_HEIGHT: usize = 8;
+pub const LOG_HEIGHT: usize = 4;
 
 // tb_shutdown() calls abort() if tb_init() wasn't called, or if tb_shutdown()
 // was called twice. Keep track of termbox's state to prevent this.
