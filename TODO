@@ -24,6 +24,52 @@ New Levels
 - Plenty of patrols, and guards at hallway junctions
 - Layout leads to interesting gameplay, I think?
 
+Mob speech
+----------
+- On spotting an enemy
+  - "Aha!"
+  - "It's a <species>!"
+  - "It's <name>!"
+  - "It's the @!!"
+- On fleeing
+  - "He's coming!"
+  - "I'm dying!"
+- On being cornered
+  - "Please no!"
+  - "Mercy!"
+  - "Don't touch me!"
+  - "Go away!"
+  - "No farther!"
+- On seeing a dead ally, killed by a visible hostile
+  - "Murderer!"
+  - "Screw you!"
+- On seeing a dead ally, killed by a nonvisible hostile
+  - "Oh no!"
+- On pursuing a fleeing hostile
+  - "Coward!"
+  - "Wimp!"
+  - "Clown!"
+  - "Haha, you cannot outrun me!" if faster
+  - "You can run but you can't hide!" if slower
+- On pursuing an unseen hostile
+  - "Where are you?!"
+  - "Where is he?"
+- On investigating a noise ("...?", "What?")
+  - "What?"
+  - "...?"
+- On completing investigation of a noise
+  - "Must've been rats!"
+- On finding an pursued enemy ("Its here!", "I've got you now!", "Now you're mine!",
+  - "It's here!"
+- On cornering an enemy
+  - "I've got you now!"
+  - "Now you're mine!"
+  - "You miserable <species>!"
+  - "You miserable @!"
+- On about to kill player
+  - "Time's up, <name>!"
+  - "You're finished now!"
+
 New mobs
 --------
 - creeping death
@@ -61,11 +107,11 @@ x sulfur fiend x
     - "The air twists itself inside-out and smites you!!"
   - Vunerable to fire, resistant to electricity.
   - Relatively fragile (12 HP) and slow (110).
-- vapour mage
+x vapour mage
   - Airblast: knockback foe (5 - distance_from_mage) spaces
   - Haste dustling
   - Has night vision.
-- convult
+x convult
   - Keeps distance
   - Enrage dustling
 x dustling
@@ -245,7 +291,7 @@ x death mage
   - "A hideous statue of some nameless creature, covered in metal plates."
   - Sleeps, when hit with electric damage, activates.
   - rElec∞ rFume∞
-- mellaent
+x mellaent
   - kerejat-like nuisance
   - noncombatant
 - tentacling
@@ -274,6 +320,34 @@ x death mage
 - sentinel
   - 10 HP
   - Armored, sword-wielding version of guard
+- brooder
+  - Smite-targeted electrical attack; does more damage if surrounded by
+    empty squares (i.e., DCSS' Airstrike)
+- cinder worm
+  - Fire attacks, Prm burning
+  - Pyroclastic surge: set surroundings of fire (ie fire blast)
+  - Sometimes found as neutral prisoners
+- cinder brute
+  - Just plain fire attacks, Prm burning
+  - Hurls fireballs?
+  - Sometimes found as neutral prisoners
+- silver fiend
+  - Smite-targeted electrical attack; does more damage the farther away the
+    target is from the caster
+- war olg
+  - Also known as "troll" to humans. Naturally peaceful grazing herbivores,
+    but this one has been trained for war.
+  - Three pairs of legs/hands.
+  - Fast regeneration (0.5 per turn)
+- grey skuth
+  - Basically a war-trained jackrabbit.
+  - Joke monster. Hilariously weak creature that some bored alchemist trained
+    for war.
+  - 3 HP, 30% evade, 50% melee
+- lava flans
+  - Lava-dwelling monsters.
+  - 6 HP, normal speed.
+  - Conjures lava orbs (i.e. buffed fire orbs)
 - new monsters
   - hydra-like monster, multiple attacks per turn
   - Hurls bolts of paralysing dust (same as DCSS' catoblepas).
@@ -449,6 +523,12 @@ ring of fire [a]
     smoke/fog as they move and attack foes. Like Foxfire.
   - Ignition/Hellfire: fill all tiles with foes with fire. Sets caster on fire.
     Puts clouds of fire around at random (potentially impeding escape).
+  - Ring of flames: move forward against guard, move right/left, move forward
+    m...        ....   ....
+    @... attack m...   m... attack
+    ....        @...   .@..
+    Makes all adjacent foes temporarily vulnerable to fire, and creates ring
+    of flames in all adjacent squares
 ring of hexing [a]
   - Dismissal: forces all investigating mobs in LOS to return to working.
     If resisted by willpower, will reveal player's location to them.
@@ -458,7 +538,7 @@ ring of lightning
     m...        ....   ....
     @... attack m...   m... attack
     ....        @...   .@..
-  - Electrocutes locations in four corners next to player.
+    Electrocutes locations in four corners next to player.
 
 
 Books
@@ -746,8 +826,11 @@ x Rename VLT back to REC/QRT or something
 x Runes and scoring
 x Fix morgue file generation
 *** v1.0.0 release ***
-- Condense UI even more (3 columns for stats, put turncount on level str, etc)
-- Show items, notable machines on info pane
+x Condense UI even more (3 columns for stats, put turncount on level str, etc)
+x Show items, notable machines on info pane
+x Consumable reworking + kit refactoring
+x More evocables: silver ingot, coal, red-hot poker
+x More kits and traps: fire, shock, incineration, knockback
 - Ring changes/additions/simplifications:
   - More ring types (fire, etc)
   - Random ring drops, equipping/deequipping rings
@@ -755,6 +838,43 @@ x Fix morgue file generation
   - Refactor pattern checks
 - Multi-tile props: trees and braziers
 - Fix torture chambers; add more of them
+- Revisit Laboratory
+  - Spires and spire kits
+  - Add traps of blinding gas
+- More mundane weapons: hammer, poker
+- Guards in cubbyholes (both corridors and rooms)
+- Dungeon features: barrel of water, barrel of toxic sludge
+- Blood, ember, fire, spark, lightning mage bands
+- Emberling/sparkling summoning trap kits
+- Fiend of vapours
+- Silver weapons and battery packs, silver hornets
+- Bone and masterpiece weapons
+- Headgear, footgear, auxiliary items
+- Potions of disrupt, insubst/fortif, blinding, distraction, glowing
+- Basic speeches by mobs
+*** v1.1.0 release ***
+- Lava and Water rework
+  - Rework as terrain
+  - Addition of submerged creatures
+  - Lava flans
+- Acid damage; related potions, monsters, machines
+- WFC mapgen algorithm
+  - Research possible usage for Morgue level
+  - Research possible usage to augment Cavern mapgen
+  - Use for Solitary, Armory, Watchtower
+- Squad overhaul
+  - Patrol squads
+  - Prisoner squads + goblin commanders
+- Corruption effects
+- Mob repositioning AI
+  - AI to move out of dangerous tiles (gas/terrain)
+  - AI to move out of reach of enemy, if mob has reaching weapon and is faster
+  - AI to move onto advantageous terrain
+- Air purifiers
+- BUG: If player wears Equ that grants status X, then get hits with Tmp status
+  X, then removes that equipment, they won't have status even if the Tmp status
+  should have replaced it.
+  - FIX: store statuses in a vector.
 - Implement intelligence
 - More information screens
   - Documentation/manuals
@@ -771,33 +891,11 @@ x Fix morgue file generation
 - eXamine screen:
   - Show last remembered items on out-of-sight tiles
   - Show floor spattering, floor material, gas
-- Revisit Laboratory
-  - Spires and spire kits; more monsters
-  - Add traps of blinding gas
 - Morgue level
   - Cogmind-esque tunneling algorithm
   - Monsters
-- Blood, ember, fire, spark, lightning mage bands
-- Emberling/sparkling summoning trap kits
-- Fiend of vapours
-- Night creatures (night reapers, creeping deaths)
-- Silver weapons and battery packs, silver hornets
-- Bone, masterpiece, and shadow weapons
-- Headgear, footgear, auxiliary items
-- Squad overhaul
-  - Patrol squads
-  - Prisoner squads + goblin commanders
-- Potions of disrupt, insubst/fortif, blinding
-- Corruption effects
-- Mob repositioning AI
-  - AI to move out of dangerous tiles (gas/terrain)
-  - AI to move out of reach of enemy, if mob has reaching weapon and is faster
-  - AI to move onto advantageous terrain
-- Air purifiers
-- BUG: If player wears Equ that grants status X, then get hits with Tmp status
-  X, then removes that equipment, they won't have status even if the Tmp status
-  should have replaced it.
-  - FIX: store statuses in a vector.
+- Night creatures (night reapers, creeping deaths, grues, winged terrors)
+- Shadow weapons
 
 Ring and movements:
 ===================
@@ -1141,7 +1239,6 @@ x Ring of echolocation to magic-map neighbors of sound-producing tiles
 - Radioactive gas leaking from a warehouse on a few levels, so a kind of food
   clock
 - Ability to rifle sleeping/drunk/stunned guards as well as corpses
-- Lava flans
 - Undead have other interesting kinds of negative effects when they score a
   hit?
   - Reduced max HP, less regen rate, reduced stealth
@@ -1157,22 +1254,7 @@ x Item/lever player can trigger to unlock locked doors in room, releasing
 ~ Potion and Ring ID system.
   - obsolete: too complex
 x Blood spattering?
-- Speech bubbles in following situations:
-  - On spotting an enemy ("Aha!", "It's a <species>!", "It's the @!!")
-  - On being cornered ("Don't touch me!", "Go away!", "No farther!")
-  - On seeing a dead ally, killed by a visible hostile ("Murderer!", "F*** you!")
-  - On seeing a dead ally, killed by a nonvisible hostile ("Oh no!", "Noo!",
-   "Noo! Not Bert!")
-  - On pursuing a fleeing hostile ("Coward!", "Wimp!", "Clown!")
-  - On pursuing a fleeing, but slower hostile ("Haha, you cannot run from me!")
-  - On investigating a noise ("...?", "What?")
-  - On completing investigation of a noise ("Must've been rats!")
-  - On finding an pursued enemy ("Its here!", "I've got you now!", "Now you're mine!",
-    "I'll tear you into pieces!", "You miserable <species>!", "You miserable @!")
-  - On about to kill player ("Not very good at this, hm?", "Times up!")
-  - Two ways to possibly show such messages:
-    - Show it like Smart Kobold, on the map.
-    - Show it over the health/AI bar.
+x Speech bubbles in following situations: (removed)
 - Smell mechanics that allow, say, hellhounds and snakes to detect intruders
   even if they can't see them.
 x Ranged melee weapons, e.g., spear and whips
