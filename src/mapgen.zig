@@ -1431,14 +1431,6 @@ pub fn placeBSPRooms(
 
         excavateRect(&room.rect);
 
-        if (rng.percent(Configs[level].subroom_chance)) {
-            placeSubroom(s_fabs, &room, &Rect{
-                .start = Coord.new(0, 0),
-                .width = room.rect.width,
-                .height = room.rect.height,
-            }, allocator, .{});
-        }
-
         container_node.index = rooms.items.len;
         rooms.append(room) catch err.wat();
     }
@@ -1558,6 +1550,21 @@ pub fn placeBSPRooms(
     };
 
     S.addCorridorsAndDoors(level, &grandma_node, rooms, allocator);
+
+    // Add subrooms only after everything is placed and corridors are dug.
+    //
+    // This is a workaround for a bug where corridors are excavated right
+    // through subrooms, destroying prisons and wreaking all sort of havoc.
+    //
+    for (rooms.items) |*room| {
+        if (rng.percent(Configs[level].subroom_chance)) {
+            placeSubroom(s_fabs, room, &Rect{
+                .start = Coord.new(0, 0),
+                .width = room.rect.width,
+                .height = room.rect.height,
+            }, allocator, .{});
+        }
+    }
 }
 
 pub fn placeItems(level: usize) void {
