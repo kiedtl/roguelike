@@ -75,6 +75,10 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 140, .i = .{ .P = &FastPotion } },
     .{ .w = 130, .i = .{ .P = &IncineratePotion } },
     .{ .w = 100, .i = .{ .P = &DecimatePotion } },
+    // Consumables
+    .{ .w = 080, .i = .{ .P = &HotPokerConsumable } },
+    .{ .w = 090, .i = .{ .P = &CoalConsumable } },
+    .{ .w = 050, .i = .{ .P = &SilverIngotConsumable } },
     // Kits
     .{ .w = 005, .i = .{ .P = &MineKit } },
     // Evocables
