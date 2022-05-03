@@ -667,6 +667,8 @@ pub const DaggerWeapon = Weapon{
     .id = "dagger",
     .name = "dagger",
     .damage = 2,
+    .martial = true,
+    .stats = .{ .Martial = 1 },
     .is_dippable = true,
     .strs = &PIERCING_STRS,
 };
@@ -750,7 +752,8 @@ pub const WoldoWeapon = Weapon{
     .id = "woldo",
     .name = "woldo",
     .damage = 3,
-    .stats = .{ .Melee = -15, .Martial = 2, .Sneak = -1 },
+    .martial = true,
+    .stats = .{ .Melee = -15, .Sneak = -1 },
     .is_dippable = true,
     .strs = &SLASHING_STRS,
     .reach = 2,
@@ -763,8 +766,9 @@ pub const WoldoWeapon = Weapon{
 pub const QuarterstaffWeapon = Weapon{
     .id = "quarterstaff",
     .name = "quarterstaff",
-    .damage = 1,
-    .stats = .{ .Martial = 2, .Evade = 15 },
+    .damage = 2,
+    .martial = true,
+    .stats = .{ .Martial = 1, .Evade = 15 },
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .OpenMelee, .duration = .Equ },
     },

@@ -2053,7 +2053,7 @@ pub const Mob = struct { // {{{
                 weapon,
                 if (wielded_wp != null and wielded_wp.? == weapon) wielded_wp else null,
                 opts,
-                martial,
+                if (weapon.martial) martial else 0,
             );
         }
 
@@ -2161,7 +2161,7 @@ pub const Mob = struct { // {{{
         }
 
         // Bonus attacks?
-        if (remaining_bonus_attacks > 0 and !recipient.should_be_dead()) {
+        if (!is_stab and remaining_bonus_attacks > 0 and !recipient.should_be_dead()) {
             var newopts = opts;
             newopts.auto_hit = false;
             newopts.is_bonus = true;
@@ -3250,6 +3250,7 @@ pub const Weapon = struct {
     delay: usize = 100, // Percentage (100 = normal speed, 200 = twice as slow)
     damage: usize,
     knockback: usize = 0,
+    martial: bool = false,
 
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     effects: []const StatusDataInfo = &[_]StatusDataInfo{},

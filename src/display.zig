@@ -699,7 +699,7 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
         .Projectile => "projectile",
         .Armor => "armor",
         .Cloak => "cloak",
-        .Weapon => "weapon",
+        .Weapon => |wp| if (wp.martial) "martial weapon" else "weapon",
         .Boulder => "boulder",
         .Prop => "prop",
         .Evocable => "evocable",
