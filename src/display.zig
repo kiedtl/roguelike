@@ -730,7 +730,6 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
         .Cloak => |c| _writerStats(w, c.stats, c.resists),
         .Armor => |a| _writerStats(w, a.stats, a.resists),
         .Weapon => |p| {
-            _writerWrite(w, "$cdamage:$. {}\n", .{p.damage});
             if (p.reach != 1) _writerWrite(w, "$creach:$. {}\n", .{p.reach});
             if (p.delay != 100) {
                 const col: u21 = if (p.delay > 100) 'r' else 'a';
@@ -756,16 +755,15 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
             if (p.equip_effects.len > 0) {
                 _writerWrite(w, "$cequip effects:$.\n", .{});
                 for (p.equip_effects) |effect|
-                    _writerWrite(w, "{s}", .{_formatStatusInfo(&effect)});
+                    _writerWrite(w, "· {s}", .{_formatStatusInfo(&effect)});
                 _writerWrite(w, "\n", .{});
             }
 
-            if (p.effects.len > 0) {
-                _writerWrite(w, "$cattack effects:$.\n", .{});
-                for (p.effects) |effect|
-                    _writerWrite(w, "{s}", .{_formatStatusInfo(&effect)});
-                _writerWrite(w, "\n", .{});
-            }
+            _writerWrite(w, "$cattack effects:$.\n", .{});
+            _writerWrite(w, "· $gIns$. damage <{}>\n", .{p.damage});
+            for (p.effects) |effect|
+                _writerWrite(w, "· {s}", .{_formatStatusInfo(&effect)});
+            _writerWrite(w, "\n", .{});
         },
         .Evocable => |e| {
             _writerWrite(w, "$b{}$./$b{}$. charges.\n", .{ e.charges, e.max_charges });
