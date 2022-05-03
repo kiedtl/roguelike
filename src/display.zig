@@ -207,6 +207,22 @@ fn _writerWrite(writer: io.FixedBufferStream([]u8).Writer, comptime fmt: []const
     writer.print(fmt, args) catch err.wat();
 }
 
+fn _writerHeader(writer: io.FixedBufferStream([]u8).Writer, linewidth: usize, comptime fmt: []const u8, args: anytype) void {
+    writer.writeAll("─($c ") catch err.wat();
+
+    const prev_pos = writer.context.getPos() catch err.wat();
+    writer.print(fmt, args) catch err.wat();
+    const new_pos = writer.context.getPos() catch err.wat();
+
+    writer.writeAll(" $.)─") catch err.wat();
+
+    var i: usize = linewidth - (new_pos - prev_pos) - 3 - 3 - 1;
+    while (i > 0) : (i -= 1)
+        writer.writeAll("─") catch err.wat();
+
+    writer.writeAll("\n\n") catch err.wat();
+}
+
 fn _writerHLine(writer: io.FixedBufferStream([]u8).Writer, linewidth: usize) void {
     var i: usize = 0;
     while (i < linewidth) : (i += 1)
@@ -311,8 +327,6 @@ fn _writerStats(
 }
 
 fn _getTerrDescription(w: io.FixedBufferStream([]u8).Writer, terrain: *const surfaces.Terrain, linewidth: usize) void {
-    _ = linewidth;
-
     _writerWrite(w, "$c{s}$.\n", .{terrain.name});
     _writerWrite(w, "terrain\n", .{});
     _writerWrite(w, "\n", .{});
@@ -329,7 +343,7 @@ fn _getTerrDescription(w: io.FixedBufferStream([]u8).Writer, terrain: *const sur
     _writerWrite(w, "\n", .{});
 
     if (terrain.effects.len > 0) {
-        _writerWrite(w, "$ceffects:$.\n", .{});
+        _writerHeader(w, linewidth, "effects", .{});
         for (terrain.effects) |effect| {
             _writerWrite(w, "{s}\n", .{_formatStatusInfo(&effect)});
         }
@@ -351,25 +365,24 @@ fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceIte
                 _writerWrite(w, "\n", .{});
             }
 
+            _writerHeader(w, linewidth, "malfunction effect", .{});
             if (m.malfunction_effect) |effect| {
                 switch (effect) {
                     .Electrocute => |elec_effect| {
                         const chance = 100 / (elec_effect.chance / 10);
-                        _writerWrite(w, "$cmalfunction effect:$. electrocute\n", .{});
+                        _writerWrite(w, "· $cElectrocution$.\n", .{});
                         _writerWrite(w, "· $cradius:$. {}\n", .{elec_effect.radius});
                         _writerWrite(w, "· $cchance:$. {}%\n", .{chance});
                         _writerWrite(w, "· $cdamage:$. {}\n", .{elec_effect.damage});
                     },
                     .Explode => |expl_effect| {
                         const chance = 100 / (expl_effect.chance / 10);
-                        _writerWrite(w, "$cmalfunction effect:$. explode\n", .{});
+                        _writerWrite(w, "· $cExplosion$.\n", .{});
                         _writerWrite(w, "· $cradius:$. ~{}\n", .{expl_effect.power / 100});
                         _writerWrite(w, "· $cchance:$. {}%\n", .{chance});
                         _writerWrite(w, "· $cdamage:$. massive\n", .{});
                     },
                 }
-            } else {
-                _writerWrite(w, "$cmalfunction effect: $gnone$.\n", .{});
             }
             _writerWrite(w, "\n", .{});
         },
@@ -618,7 +631,7 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
         _writerMobStats(w, state.player);
         _writerWrite(w, "\n", .{});
 
-        _writerWrite(w, "$ccollected runes:$.\n", .{});
+        _writerHeader(w, linewidth, "collected runes", .{});
         var runes_iter = state.collected_runes.iterator();
         while (runes_iter.next()) |rune| if (rune.value.*) {
             _writerWrite(w, "· $b{s}$. Rune", .{rune.key.name()});
@@ -699,7 +712,7 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
         .Rune => err.wat(),
         .Ring => _writerWrite(w, "TODO: ring descriptions.", .{}),
         .Consumable => |p| {
-            _writerWrite(w, "$ceffects$.:\n", .{});
+            _writerHeader(w, linewidth, "effects", .{});
             for (p.effects) |effect| switch (effect) {
                 .Kit => |m| _writerWrite(w, "· $gMachine$. {s}\n", .{m.name}),
                 .Resist => |r| _writerWrite(w, "· $gPrm$. {s: <7} $b{:>4}$.\n", .{ r.r.string(), r.change }),
@@ -710,7 +723,7 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
             };
             _writerWrite(w, "\n", .{});
 
-            _writerWrite(w, "$cdip effect:$.\n", .{});
+            _writerHeader(w, linewidth, "dip effects", .{});
             if (p.dip_effect) |effect| {
                 _writerWrite(w, "{s}", .{_formatStatusInfo(&effect)});
             } else {
@@ -722,7 +735,7 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
             _writerWrite(w, "$cdamage$.: {}\n", .{dmg});
             switch (p.effect) {
                 .Status => |sinfo| {
-                    _writerWrite(w, "$ceffects$.:\n", .{});
+                    _writerHeader(w, linewidth, "effects", .{});
                     _writerWrite(w, "{s}", .{_formatStatusInfo(&sinfo)});
                 },
             }
@@ -753,13 +766,13 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
             _writerStats(w, p.stats, null);
 
             if (p.equip_effects.len > 0) {
-                _writerWrite(w, "$cequip effects:$.\n", .{});
+                _writerHeader(w, linewidth, "on equip", .{});
                 for (p.equip_effects) |effect|
                     _writerWrite(w, "· {s}", .{_formatStatusInfo(&effect)});
                 _writerWrite(w, "\n", .{});
             }
 
-            _writerWrite(w, "$cattack effects:$.\n", .{});
+            _writerHeader(w, linewidth, "on attack", .{});
             _writerWrite(w, "· $gIns$. damage <{}>\n", .{p.damage});
             for (p.effects) |effect|
                 _writerWrite(w, "· {s}", .{_formatStatusInfo(&effect)});
@@ -1473,10 +1486,10 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
             var text = io.fixedBufferStream(&textbuf);
             var writer = text.writer();
 
-            const mons_tab = if (tile_focus == .Mob) "*$cMob$.*" else "$g Mob ";
-            const surf_tab = if (tile_focus == .Surface) "*$cSurface$.*" else "$g Surface ";
-            const item_tab = if (tile_focus == .Item) "*$cItem$.*" else "$g Item ";
-            _writerWrite(writer, "{s} {s} {s}$.\n", .{ mons_tab, surf_tab, item_tab });
+            const mons_tab = if (tile_focus == .Mob) "$cMob$." else "$gMob$.";
+            const surf_tab = if (tile_focus == .Surface) "$cSurface$." else "$gSurface$.";
+            const item_tab = if (tile_focus == .Item) "$cItem$." else "$gItem$.";
+            _writerWrite(writer, "{s} · {s} · {s}$.\n", .{ mons_tab, surf_tab, item_tab });
 
             _writerWrite(writer, "Press $b<>$. to switch tabs.\n", .{});
             _writerWrite(writer, "\n", .{});
