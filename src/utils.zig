@@ -80,15 +80,18 @@ pub fn directEnumArrayLen(comptime E: type) usize {
     return enums.directEnumArray(E, void, 0, undefined).len;
 }
 
-pub fn getFieldByEnum(
-    comptime E: type,
-    struct_: anytype,
-    variant: E,
-) @typeInfo(@TypeOf(struct_)).Struct.fields[0].field_type {
+pub fn getFieldByEnumPtr(comptime E: type, comptime V: type, s: anytype, v: E) V {
     inline for (@typeInfo(E).Enum.fields) |enumv| {
         const e = @intToEnum(E, enumv.value);
-        if (e == variant)
-            return @field(struct_, @tagName(e));
+        if (e == v) return &@field(s, @tagName(e));
+    }
+    unreachable;
+}
+
+pub fn getFieldByEnum(comptime E: type, s: anytype, v: E) @typeInfo(@TypeOf(s)).Struct.fields[0].field_type {
+    inline for (@typeInfo(E).Enum.fields) |enumv| {
+        const e = @intToEnum(E, enumv.value);
+        if (e == v) return @field(s, @tagName(e));
     }
     unreachable;
 }

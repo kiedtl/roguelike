@@ -700,12 +700,14 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
         .Ring => _writerWrite(w, "TODO: ring descriptions.", .{}),
         .Consumable => |p| {
             _writerWrite(w, "$ceffects$.:\n", .{});
-            switch (p.effect) {
-                .Kit => |m| _writerWrite(w, "$gMachine$. {s}\n", .{m.name}),
-                .Gas => |g| _writerWrite(w, "$gGas$. {s}\n", .{gas.Gases[g].name}),
-                .Status => |s| _writerWrite(w, "$gTmp$. {s}\n", .{s.string(state.player)}),
-                .Custom => _writerWrite(w, "$G(See description)$.\n", .{}),
-            }
+            for (p.effects) |effect| switch (effect) {
+                .Kit => |m| _writerWrite(w, "· $gMachine$. {s}\n", .{m.name}),
+                .Resist => |r| _writerWrite(w, "· $gPrm$. {s: <7} $b{:>4}$.\n", .{ r.r.string(), r.change }),
+                .Stat => |s| _writerWrite(w, "· $gPrm$. {s: <7} $b{:>4}$.\n", .{ s.s.string(), s.change }),
+                .Gas => |g| _writerWrite(w, "· $gGas$. {s}\n", .{gas.Gases[g].name}),
+                .Status => |s| _writerWrite(w, "· $gTmp$. {s}\n", .{s.string(state.player)}),
+                .Custom => _writerWrite(w, "· $G(See description)$.\n", .{}),
+            };
             _writerWrite(w, "\n", .{});
 
             _writerWrite(w, "$cdip effect:$.\n", .{});

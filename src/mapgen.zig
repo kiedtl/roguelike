@@ -311,6 +311,7 @@ fn _add_player(coord: Coord, alloc: mem.Allocator) void {
 
     state.player = mobs.placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
     state.player.inventory.rings[0] = echoring;
+    state.player.inventory.pack.append(Item{ .Consumable = &items.SilverIngotConsumable }) catch err.wat();
     state.player.prisoner_status = Prisoner{ .of = .Necromancer };
 }
 

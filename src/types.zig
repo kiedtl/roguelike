@@ -1638,10 +1638,11 @@ pub const Mob = struct { // {{{
             state.message(.Info, "{c} {s} a {s}!", .{ self, verb, item.name });
         }
 
-        switch (item.effect) {
+        for (item.effects) |effect| switch (effect) {
             .Status => |s| if (direct) self.addStatus(s, 0, .{ .Tmp = Status.MAX_DURATION }),
             .Gas => |s| state.dungeon.atGas(self.coord)[s] = 1.0,
-            .Custom => |c| if (direct) c(self, self.coord),
+            .Resist => |r| utils.getFieldByEnumPtr(Resistance, *isize, &self.innate_resists, r.r).* += r.change,
+            .Stat => |s| utils.getFieldByEnumPtr(Stat, *isize, &self.stats, s.s).* += s.change,
             .Kit => |template| {
                 // TODO: generalize this code for all mobs & remove assert
                 assert(self == state.player);
@@ -1655,7 +1656,8 @@ pub const Mob = struct { // {{{
                 state.machines.append(mach) catch err.wat();
                 state.dungeon.at(self.coord).surface = SurfaceItem{ .Machine = state.machines.last().? };
             },
-        }
+            .Custom => |c| if (direct) c(self, self.coord),
+        };
     }
 
     pub fn evokeOrRest(self: *Mob, evocable: *Evocable) void {

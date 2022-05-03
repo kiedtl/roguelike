@@ -326,17 +326,21 @@ pub const Consumable = struct {
     id: []const u8,
     name: []const u8,
     color: u32,
-    effect: union(enum) {
-        Status: Status,
-        Gas: usize,
-        Kit: *const Machine,
-        Custom: fn (?*Mob, Coord) void,
-    },
+    effects: []const Effect,
     is_potion: bool = false,
     throwable: bool = false,
     dip_effect: ?StatusDataInfo = null,
     verbs_player: []const []const u8,
     verbs_other: []const []const u8,
+
+    const Effect = union(enum) {
+        Status: Status,
+        Gas: usize,
+        Kit: *const Machine,
+        Resist: struct { r: Resistance, change: isize },
+        Stat: struct { s: Stat, change: isize },
+        Custom: fn (?*Mob, Coord) void,
+    };
 
     const VERBS_PLAYER_POTION = &[_][]const u8{ "slurp", "quaff" };
     const VERBS_OTHER_POTION = &[_][]const u8{ "slurps", "quaffs" };
@@ -345,10 +349,23 @@ pub const Consumable = struct {
     const VERBS_OTHER_KIT = &[_][]const u8{"uses"};
 };
 
+pub const SilverIngotConsumable = Consumable{
+    .id = "cons_silver_ingot",
+    .name = "silver ingot",
+    .effects = &[_]Consumable.Effect{
+        .{ .Stat = .{ .s = .Martial, .change = -1 } },
+        .{ .Stat = .{ .s = .Evade, .change = -5 } },
+        .{ .Resist = .{ .r = .rElec, .change = 25 } },
+    },
+    .color = 0xcacbca,
+    .verbs_player = &[_][]const u8{ "choke down", "swallow" },
+    .verbs_other = &[_][]const u8{"chokes down"},
+};
+
 pub const MineKit = Consumable{
     .id = "kit_mine",
     .name = "mine kit",
-    .effect = .{ .Kit = &surfaces.Mine },
+    .effects = &[_]Consumable.Effect{.{ .Kit = &surfaces.Mine }},
     .color = 0xffd7d7,
     .verbs_player = Consumable.VERBS_PLAYER_KIT,
     .verbs_other = Consumable.VERBS_OTHER_KIT,
@@ -357,7 +374,7 @@ pub const MineKit = Consumable{
 pub const SmokePotion = Consumable{
     .id = "potion_smoke",
     .name = "potion of smoke",
-    .effect = .{ .Gas = gas.SmokeGas.id },
+    .effects = &[_]Consumable.Effect{.{ .Gas = gas.SmokeGas.id }},
     .is_potion = true,
     .color = 0x00A3D9,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
@@ -368,7 +385,7 @@ pub const SmokePotion = Consumable{
 pub const ConfusionPotion = Consumable{
     .id = "potion_confusion",
     .name = "potion of confuzzlementation",
-    .effect = .{ .Gas = gas.Confusion.id },
+    .effects = &[_]Consumable.Effect{.{ .Gas = gas.Confusion.id }},
     .dip_effect = .{ .status = .Confusion, .duration = .{ .Tmp = 5 } },
     .is_potion = true,
     .color = 0x33cbca,
@@ -380,7 +397,7 @@ pub const ConfusionPotion = Consumable{
 pub const ParalysisPotion = Consumable{
     .id = "potion_paralysis",
     .name = "potion of petrification",
-    .effect = .{ .Gas = gas.Paralysis.id },
+    .effects = &[_]Consumable.Effect{.{ .Gas = gas.Paralysis.id }},
     .dip_effect = .{ .status = .Paralysis, .duration = .{ .Tmp = 3 } },
     .is_potion = true,
     .color = 0xaaaaff,
@@ -392,7 +409,7 @@ pub const ParalysisPotion = Consumable{
 pub const FastPotion = Consumable{
     .id = "potion_fast",
     .name = "potion of acceleration",
-    .effect = .{ .Status = .Fast },
+    .effects = &[_]Consumable.Effect{.{ .Status = .Fast }},
     .dip_effect = .{ .status = .Fast, .duration = .{ .Tmp = 5 } },
     .is_potion = true,
     .color = 0xbb6c55,
@@ -404,7 +421,7 @@ pub const FastPotion = Consumable{
 pub const RecuperatePotion = Consumable{
     .id = "potion_recuperate",
     .name = "potion of recuperation",
-    .effect = .{ .Status = .Recuperate },
+    .effects = &[_]Consumable.Effect{.{ .Status = .Recuperate }},
     .dip_effect = .{ .status = .Recuperate, .duration = .{ .Tmp = 5 } },
     .is_potion = true,
     .color = 0xffffff,
@@ -415,7 +432,7 @@ pub const RecuperatePotion = Consumable{
 pub const PoisonPotion = Consumable{
     .id = "potion_poison",
     .name = "potion of coagulation",
-    .effect = .{ .Gas = gas.Poison.id },
+    .effects = &[_]Consumable.Effect{.{ .Gas = gas.Poison.id }},
     .dip_effect = .{ .status = .Poison, .duration = .{ .Tmp = 5 } },
     .is_potion = true,
     .color = 0xa7e234,
@@ -427,7 +444,7 @@ pub const PoisonPotion = Consumable{
 pub const InvigoratePotion = Consumable{
     .id = "potion_invigorate",
     .name = "potion of invigoration",
-    .effect = .{ .Status = .Invigorate },
+    .effects = &[_]Consumable.Effect{.{ .Status = .Invigorate }},
     .is_potion = true,
     .color = 0xdada53,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
@@ -437,7 +454,7 @@ pub const InvigoratePotion = Consumable{
 pub const IncineratePotion = Consumable{
     .id = "potion_incinerate",
     .name = "potion of incineration",
-    .effect = .{ .Custom = triggerIncineratePotion },
+    .effects = &[_]Consumable.Effect{.{ .Custom = triggerIncineratePotion }},
     .dip_effect = .{ .status = .Fire, .duration = .{ .Tmp = 5 } },
     .is_potion = true,
     .color = 0xff3434, // TODO: unique color
@@ -449,7 +466,7 @@ pub const IncineratePotion = Consumable{
 pub const DecimatePotion = Consumable{
     .id = "potion_decimate",
     .name = "potion of decimation",
-    .effect = .{ .Custom = triggerDecimatePotion },
+    .effects = &[_]Consumable.Effect{.{ .Custom = triggerDecimatePotion }},
     .is_potion = true,
     .color = 0xda5353, // TODO: unique color
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
