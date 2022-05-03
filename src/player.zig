@@ -367,18 +367,15 @@ pub fn grabItem() bool {
 pub fn throwItem(index: usize) bool {
     assert(state.player.inventory.pack.len > index);
 
-    const item = &state.player.inventory.pack.slice()[index];
+    const item = state.player.inventory.pack.slice()[index];
 
-    switch (item.*) {
-        .Projectile, .Potion => {},
-        else => {
-            display.drawAlertThenLog("You can't throw that.", .{});
-            return false;
-        },
+    if (item != .Projectile and !(item == .Consumable and item.Consumable.throwable)) {
+        display.drawAlertThenLog("You can't throw that.", .{});
+        return false;
     }
 
     const dest = display.chooseCell(.{}) orelse return false;
-    state.player.throwItem(item, dest, state.GPA.allocator());
+    state.player.throwItem(&item, dest, state.GPA.allocator());
     _ = state.player.removeItem(index) catch err.wat();
     return true;
 }
@@ -434,8 +431,8 @@ pub fn activateSurfaceItem() bool {
 pub fn dipWeapon(potion_index: usize) bool {
     assert(state.player.inventory.pack.len > potion_index);
 
-    const potion = state.player.inventory.pack.slice()[potion_index].Potion;
-    if (potion.dip_effect == null) {
+    const potion = state.player.inventory.pack.slice()[potion_index].Consumable;
+    if (!potion.is_potion or potion.dip_effect == null) {
         display.drawAlertThenLog("You can't dip your weapon in that!", .{});
         return false;
     }
@@ -480,15 +477,15 @@ pub fn useItem(index: usize) bool {
             return false;
         },
         .Rune, .Armor, .Cloak, .Weapon => err.wat(),
-        .Potion => |p| {
-            if (state.player.isUnderStatus(.Nausea) != null) {
+        .Consumable => |p| {
+            if (p.is_potion and state.player.isUnderStatus(.Nausea) != null) {
                 display.drawAlertThenLog("You can't drink potions while nauseated!", .{});
                 return false;
             }
 
-            state.player.quaffPotion(p, true);
-            const prevtotal = (state.chardata.potions_quaffed.getOrPutValue(p.id, 0) catch err.wat()).value_ptr.*;
-            state.chardata.potions_quaffed.put(p.id, prevtotal + 1) catch err.wat();
+            state.player.useConsumable(p, true);
+            const prevtotal = (state.chardata.items_used.getOrPutValue(p.id, 0) catch err.wat()).value_ptr.*;
+            state.chardata.items_used.put(p.id, prevtotal + 1) catch err.wat();
         },
         .Vial => |_| err.todo(),
         .Projectile, .Boulder => {

@@ -17,7 +17,6 @@ const types = @import("types.zig");
 
 const Coord = types.Coord;
 const Item = types.Item;
-const Potion = types.Potion;
 const Ring = types.Ring;
 const DamageStr = types.DamageStr;
 const Weapon = types.Weapon;
@@ -38,24 +37,11 @@ const WIDTH = state.WIDTH;
 
 const LinkedList = @import("list.zig").LinkedList;
 
-// TODO: remove
-pub const POTIONS = [_]*const Potion{
-    &SmokePotion,
-    &ConfusionPotion,
-    &ParalysisPotion,
-    &FastPotion,
-    &RecuperatePotion,
-    &PoisonPotion,
-    &InvigoratePotion,
-    &DecimatePotion,
-    &IncineratePotion,
-};
-
 // Items to be dropped into rooms for the player's use.
 //
 pub const ItemTemplate = struct {
     w: usize,
-    i: union(enum) { W: Weapon, A: Armor, C: *const Cloak, P: *const Potion, E: Evocable },
+    i: union(enum) { W: Weapon, A: Armor, C: *const Cloak, P: *const Consumable, E: Evocable },
 };
 pub const ITEM_DROPS = [_]ItemTemplate{
     // Weapons
@@ -77,7 +63,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 010, .i = .{ .A = LeatherArmor } },
     .{ .w = 010, .i = .{ .A = HauberkArmor } },
     .{ .w = 010, .i = .{ .A = ScalemailArmor } },
-    // Potions
+    // Consumables
     .{ .w = 170, .i = .{ .P = &RecuperatePotion } },
     .{ .w = 170, .i = .{ .P = &ConfusionPotion } },
     .{ .w = 170, .i = .{ .P = &PoisonPotion } },
@@ -357,77 +343,129 @@ pub const LightningRing = Ring{
     .status_power_increase = 10,
 };
 
-// Potions {{{
-pub const SmokePotion = Potion{
+// Consumables {{{
+//
+
+pub const Consumable = struct {
+    id: []const u8,
+    name: []const u8,
+    color: u32,
+    effect: union(enum) {
+        Status: Status,
+        Gas: usize,
+        Custom: fn (?*Mob, Coord) void,
+    },
+    is_potion: bool = false,
+    throwable: bool = false,
+    dip_effect: ?StatusDataInfo = null,
+    verbs_player: []const []const u8,
+    verbs_other: []const []const u8,
+
+    const VERBS_PLAYER_POTION = &[_][]const u8{ "slurp", "quaff" };
+    const VERBS_OTHER_POTION = &[_][]const u8{ "slurps", "quaffs" };
+};
+
+pub const SmokePotion = Consumable{
     .id = "potion_smoke",
-    .name = "smoke",
-    .type = .{ .Gas = gas.SmokeGas.id },
+    .name = "potion of smoke",
+    .effect = .{ .Gas = gas.SmokeGas.id },
+    .is_potion = true,
     .color = 0x00A3D9,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = true,
 };
 
-pub const ConfusionPotion = Potion{
+pub const ConfusionPotion = Consumable{
     .id = "potion_confusion",
-    .name = "confuzzlementation",
-    .type = .{ .Gas = gas.Confusion.id },
+    .name = "potion of confuzzlementation",
+    .effect = .{ .Gas = gas.Confusion.id },
     .dip_effect = .{ .status = .Confusion, .duration = .{ .Tmp = 5 } },
+    .is_potion = true,
     .color = 0x33cbca,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = true,
 };
 
-pub const ParalysisPotion = Potion{
+pub const ParalysisPotion = Consumable{
     .id = "potion_paralysis",
-    .name = "petrification",
-    .type = .{ .Gas = gas.Paralysis.id },
+    .name = "potion of petrification",
+    .effect = .{ .Gas = gas.Paralysis.id },
     .dip_effect = .{ .status = .Paralysis, .duration = .{ .Tmp = 3 } },
+    .is_potion = true,
     .color = 0xaaaaff,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = true,
 };
 
-pub const FastPotion = Potion{
+pub const FastPotion = Consumable{
     .id = "potion_fast",
-    .name = "acceleration",
-    .type = .{ .Status = .Fast },
-    .ingested = true,
+    .name = "potion of acceleration",
+    .effect = .{ .Status = .Fast },
     .dip_effect = .{ .status = .Fast, .duration = .{ .Tmp = 5 } },
+    .is_potion = true,
     .color = 0xbb6c55,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = true,
 };
 
-pub const RecuperatePotion = Potion{
+pub const RecuperatePotion = Consumable{
     .id = "potion_recuperate",
-    .name = "recuperation",
-    .type = .{ .Status = .Recuperate },
+    .name = "potion of recuperation",
+    .effect = .{ .Status = .Recuperate },
     .dip_effect = .{ .status = .Recuperate, .duration = .{ .Tmp = 5 } },
+    .is_potion = true,
     .color = 0xffffff,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
 };
 
-pub const PoisonPotion = Potion{
+pub const PoisonPotion = Consumable{
     .id = "potion_poison",
-    .name = "coagulation",
-    .type = .{ .Gas = gas.Poison.id },
+    .name = "potion of coagulation",
+    .effect = .{ .Gas = gas.Poison.id },
     .dip_effect = .{ .status = .Poison, .duration = .{ .Tmp = 5 } },
+    .is_potion = true,
     .color = 0xa7e234,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = true,
 };
 
-pub const InvigoratePotion = Potion{
+pub const InvigoratePotion = Consumable{
     .id = "potion_invigorate",
-    .name = "invigoration",
-    .type = .{ .Status = .Invigorate },
-    .ingested = true,
+    .name = "potion of invigoration",
+    .effect = .{ .Status = .Invigorate },
+    .is_potion = true,
     .color = 0xdada53,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
 };
 
-pub const IncineratePotion = Potion{
+pub const IncineratePotion = Consumable{
     .id = "potion_incinerate",
-    .name = "incineration",
-    .type = .{ .Custom = triggerIncineratePotion },
-    .ingested = false,
+    .name = "potion of incineration",
+    .effect = .{ .Custom = triggerIncineratePotion },
     .dip_effect = .{ .status = .Fire, .duration = .{ .Tmp = 5 } },
+    .is_potion = true,
     .color = 0xff3434, // TODO: unique color
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = true,
 };
 
-pub const DecimatePotion = Potion{
+pub const DecimatePotion = Consumable{
     .id = "potion_decimate",
-    .name = "decimation",
-    .type = .{ .Custom = triggerDecimatePotion },
+    .name = "potion of decimation",
+    .effect = .{ .Custom = triggerDecimatePotion },
+    .is_potion = true,
     .color = 0xda5353, // TODO: unique color
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = true,
 };
 
 // Potion effects {{{
@@ -796,7 +834,7 @@ pub fn createItemFromTemplate(template: ItemTemplate) Item {
     return switch (template.i) {
         .W => |i| Item{ .Weapon = createItem(Weapon, i) },
         .A => |i| Item{ .Armor = createItem(Armor, i) },
-        .P => |i| Item{ .Potion = i },
+        .P => |i| Item{ .Consumable = i },
         .E => |i| Item{ .Evocable = createItem(Evocable, i) },
         .C => |i| Item{ .Cloak = i },
         //else => err.todo(),

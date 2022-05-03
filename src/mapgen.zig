@@ -516,17 +516,6 @@ fn excavatePrefab(
                 .Feature => |feature_id| {
                     if (fab.features[feature_id]) |feature| {
                         switch (feature) {
-                            .Potion => |pid| {
-                                if (utils.findById(&items.POTIONS, pid)) |potion_i| {
-                                    const potion_o = items.POTIONS[potion_i];
-                                    state.dungeon.itemsAt(rc).append(Item{ .Potion = potion_o }) catch err.wat();
-                                } else {
-                                    std.log.err(
-                                        "{s}: Couldn't load potion {s}, skipping.",
-                                        .{ fab.name.constSlice(), utils.used(pid) },
-                                    );
-                                }
-                            },
                             .Prop => |pid| {
                                 if (utils.findById(surfaces.props.items, pid)) |prop| {
                                     _ = placeProp(rc, &surfaces.props.items[prop]);
@@ -2609,11 +2598,6 @@ fn levelFeaturePrisoners(_: usize, coord: Coord, _: *const Room, _: *const Prefa
         };
 }
 
-fn levelFeaturePotions(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _: mem.Allocator) void {
-    const potion = rng.chooseUnweighted(Potion, &items.POTIONS);
-    state.dungeon.itemsAt(coord).append(Item{ .Potion = potion }) catch err.wat();
-}
-
 fn levelFeatureVials(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _: mem.Allocator) void {
     state.dungeon.itemsAt(coord).append(
         Item{ .Vial = rng.choose(Vial, &Vial.VIALS, &Vial.VIAL_COMMONICITY) catch err.wat() },
@@ -2744,7 +2728,6 @@ pub const Prefab = struct {
             points: StackBuffer(Coord, 16),
         },
         Prop: [32:0]u8,
-        Potion: [32:0]u8,
     };
 
     pub const Connection = struct {
@@ -3022,10 +3005,6 @@ pub const Prefab = struct {
                     const id = words.next() orelse return error.MalformedFeatureDefinition;
 
                     switch (feature_type[0]) {
-                        'P' => {
-                            f.features[identifier] = Feature{ .Potion = [_:0]u8{0} ** 32 };
-                            mem.copy(u8, &f.features[identifier].?.Potion, id);
-                        },
                         'p' => {
                             f.features[identifier] = Feature{ .Prop = [_:0]u8{0} ** 32 };
                             mem.copy(u8, &f.features[identifier].?.Prop, id);

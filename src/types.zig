@@ -41,6 +41,7 @@ const WIDTH = state.WIDTH;
 const Rune = items.Rune;
 const Evocable = items.Evocable;
 const Projectile = items.Projectile;
+const Consumable = items.Consumable;
 const Cloak = items.Cloak;
 
 const Sound = @import("sound.zig").Sound;
@@ -62,7 +63,6 @@ pub const SpatterArray = enums.EnumArray(Spatter, usize);
 pub const MobList = LinkedList(Mob);
 pub const MobArrayList = std.ArrayList(*Mob);
 pub const RingList = LinkedList(Ring);
-pub const PotionList = LinkedList(Potion);
 pub const ArmorList = LinkedList(Armor);
 pub const WeaponList = LinkedList(Weapon);
 pub const PropList = LinkedList(Prop);
@@ -1622,25 +1622,26 @@ pub const Mob = struct { // {{{
         } else err.bug("Tried to make a non-.Held mob flail around!", .{});
     }
 
-    // Quaff a potion, applying its effects to a Mob.
+    // Use a consumable.
     //
-    // direct: was the potion quaffed directly (i.e., was it thrown at the
-    //   mob or did the mob quaff it?). Used to determine whether to print a
+    // direct: was the consumable used directly (i.e., was it thrown at the
+    //   mob or did the mob use it?). Used to determine whether to print a
     //   message.
-    pub fn quaffPotion(self: *Mob, potion: *const Potion, direct: bool) void {
-        if (direct and self.isUnderStatus(.Nausea) != null) {
+    pub fn useConsumable(self: *Mob, item: *const Consumable, direct: bool) void {
+        if (item.is_potion and direct and self.isUnderStatus(.Nausea) != null) {
             err.bug("Nauseated mob is quaffing potions!", .{});
         }
 
         if (direct) {
-            state.messageAboutMob(self, self.coord, .Info, "slurp a potion of {s}", .{potion.name}, "quaffs a potion of {s}!", .{potion.name});
+            const verbs = if (state.player == self) item.verbs_player else item.verbs_other;
+            const verb = rng.chooseUnweighted([]const u8, verbs);
+            state.message(.Info, "{c} {s} a {s}!", .{ self, verb, item.name });
         }
 
-        // TODO: make the duration of potion status effect random (clumping, ofc)
-        switch (potion.type) {
-            .Status => |s| self.addStatus(s, 0, .{ .Tmp = Status.MAX_DURATION }),
+        switch (item.effect) {
+            .Status => |s| if (direct) self.addStatus(s, 0, .{ .Tmp = Status.MAX_DURATION }),
             .Gas => |s| state.dungeon.atGas(self.coord)[s] = 1.0,
-            .Custom => |c| c(self, self.coord),
+            .Custom => |c| if (direct) c(self, self.coord),
         }
     }
 
@@ -1691,7 +1692,7 @@ pub const Mob = struct { // {{{
 
         const dodgeable = switch (item.*) {
             .Projectile => true,
-            .Potion => false,
+            .Consumable => |c| if (c.throwable) false else err.wat(),
             else => err.wat(),
         };
 
@@ -1735,20 +1736,10 @@ pub const Mob = struct { // {{{
                         state.dungeon.itemsAt(_spot).append(item.*) catch err.wat();
                 }
             },
-            .Potion => |potion| {
-                const crd = landed orelse at;
-                if (!potion.ingested) {
-                    if (state.dungeon.at(crd).mob) |mob| {
-                        mob.quaffPotion(potion, false);
-                    } else switch (potion.type) {
-                        .Status => {},
-                        .Gas => |s| state.dungeon.atGas(crd)[s] = 1.0,
-                        .Custom => |f| f(null, crd),
-                    }
+            .Consumable => |c| {
+                if (state.dungeon.at(landed orelse at).mob) |mob| {
+                    mob.useConsumable(c, false);
                 }
-
-                // TODO: have cases where thrower misses and potion lands (unused?)
-                // in adjacent square
             },
             else => err.wat(),
         }
@@ -3249,34 +3240,10 @@ pub const Weapon = struct {
     equip_effects: []const StatusDataInfo = &[_]StatusDataInfo{},
 
     is_dippable: bool = false,
-    dip_effect: ?*const Potion = null,
+    dip_effect: ?*const Consumable = null,
     dip_counter: usize = 0,
 
     strs: []const DamageStr,
-};
-
-pub const Potion = struct {
-    id: []const u8,
-
-    // Potion of <name>
-    name: []const u8,
-
-    type: union(enum) {
-        Status: Status,
-        Gas: usize,
-        Custom: fn (?*Mob, Coord) void,
-    },
-
-    // Whether the potion needs to be quaffed to work. If false,
-    // thrown potions will not have any effect, even if they land
-    // on a mob.
-    ingested: bool = false,
-
-    // If null, the player will be prevented from dipping stuff
-    // in it.
-    dip_effect: ?StatusDataInfo = null,
-
-    color: u32,
 };
 
 pub const Vial = enum {
@@ -3379,12 +3346,12 @@ pub const Ring = struct {
     }
 };
 
-pub const ItemType = enum { Rune, Ring, Potion, Vial, Projectile, Armor, Cloak, Weapon, Boulder, Prop, Evocable };
+pub const ItemType = enum { Rune, Ring, Consumable, Vial, Projectile, Armor, Cloak, Weapon, Boulder, Prop, Evocable };
 
 pub const Item = union(ItemType) {
     Rune: Rune,
     Ring: *Ring,
-    Potion: *const Potion,
+    Consumable: *const Consumable,
     Vial: Vial,
     Projectile: *const Projectile,
     Armor: *Armor,
@@ -3398,7 +3365,7 @@ pub const Item = union(ItemType) {
     pub fn announce(self: Item) bool {
         return switch (self) {
             .Vial, .Boulder, .Prop => false,
-            .Rune, .Projectile, .Cloak, .Ring, .Potion, .Armor, .Weapon, .Evocable => true,
+            .Rune, .Projectile, .Cloak, .Ring, .Consumable, .Armor, .Weapon, .Evocable => true,
         };
     }
 
@@ -3409,7 +3376,7 @@ pub const Item = union(ItemType) {
         switch (self.*) {
             .Rune => |r| try fmt.format(fbs.writer(), "ß{s}", .{r.name()}),
             .Ring => |r| try fmt.format(fbs.writer(), "*{s}", .{r.name}),
-            .Potion => |p| try fmt.format(fbs.writer(), "¡{s}", .{p.name}),
+            .Consumable => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
             .Vial => |v| try fmt.format(fbs.writer(), "♪{s}", .{v.name()}),
             .Projectile => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
             .Armor => |a| try fmt.format(fbs.writer(), "]{s}", .{a.name}),
@@ -3430,7 +3397,7 @@ pub const Item = union(ItemType) {
         switch (self.*) {
             .Rune => |r| try fmt.format(fbs.writer(), "{s} Rune", .{r.name()}),
             .Ring => |r| try fmt.format(fbs.writer(), "ring of {s}", .{r.name}),
-            .Potion => |p| try fmt.format(fbs.writer(), "potion of {s}", .{p.name}),
+            .Consumable => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
             .Vial => |v| try fmt.format(fbs.writer(), "vial of {s}", .{v.name()}),
             .Projectile => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
             .Armor => |a| try fmt.format(fbs.writer(), "{s} armor", .{a.name}),
@@ -3446,7 +3413,7 @@ pub const Item = union(ItemType) {
 
     pub fn id(self: Item) ?[]const u8 {
         return switch (self) {
-            .Potion => |p| p.id,
+            .Consumable => |p| p.id,
             .Projectile => |p| p.id,
             .Armor => |a| a.id,
             .Cloak => |c| c.id,
@@ -3560,9 +3527,9 @@ pub const Tile = struct {
                     cell.ch = 'ß';
                     cell.fg = colors.AQUAMARINE;
                 },
-                .Potion => |potion| {
-                    cell.ch = '¡';
-                    cell.fg = potion.color;
+                .Consumable => |cons| {
+                    cell.ch = if (cons.is_potion) '¡' else '&';
+                    cell.fg = cons.color;
                 },
                 .Vial => |v| {
                     cell.ch = '♪';

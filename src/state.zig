@@ -118,18 +118,18 @@ pub var chardata: struct {
     foes_killed: std.StringHashMap(usize) = undefined,
     time_with_statuses: enums.EnumArray(Status, usize) = enums.EnumArray(Status, usize).initFill(0),
     time_on_levels: [LEVELS]usize = [1]usize{0} ** LEVELS,
-    potions_quaffed: std.StringHashMap(usize) = undefined,
+    items_used: std.StringHashMap(usize) = undefined,
     evocs_used: std.StringHashMap(usize) = undefined,
 
     pub fn init(self: *@This(), alloc: mem.Allocator) void {
         self.foes_killed = std.StringHashMap(usize).init(alloc);
-        self.potions_quaffed = std.StringHashMap(usize).init(alloc);
+        self.items_used = std.StringHashMap(usize).init(alloc);
         self.evocs_used = std.StringHashMap(usize).init(alloc);
     }
 
     pub fn deinit(self: *@This()) void {
         self.foes_killed.clearAndFree();
-        self.potions_quaffed.clearAndFree();
+        self.items_used.clearAndFree();
         self.evocs_used.clearAndFree();
     }
 } = .{};
@@ -746,7 +746,7 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
     try w.print("\n", .{});
     try w.print("Items used:\n", .{});
     {
-        var iter = chardata.potions_quaffed.iterator();
+        var iter = chardata.items_used.iterator();
         while (iter.next()) |item| {
             try w.print("- {: <20} {s: >5}\n", .{ item.value_ptr.*, item.key_ptr.* });
         }

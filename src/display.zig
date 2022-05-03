@@ -681,7 +681,7 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
     const itemtype: []const u8 = switch (item) {
         .Rune => err.wat(),
         .Ring => "ring",
-        .Potion => "potion",
+        .Consumable => |c| if (c.is_potion) "potion" else "consumable",
         .Vial => "vial",
         .Projectile => "projectile",
         .Armor => "armor",
@@ -698,9 +698,9 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
     switch (item) {
         .Rune => err.wat(),
         .Ring => _writerWrite(w, "TODO: ring descriptions.", .{}),
-        .Potion => |p| {
+        .Consumable => |p| {
             _writerWrite(w, "$ceffects$.:\n", .{});
-            switch (p.type) {
+            switch (p.effect) {
                 .Gas => |g| _writerWrite(w, "$gGas$. {s}\n", .{gas.Gases[g].name}),
                 .Status => |s| _writerWrite(w, "$gTmp$. {s}\n", .{s.string(state.player)}),
                 .Custom => _writerWrite(w, "$G(See description)$.\n", .{}),
@@ -1787,10 +1787,10 @@ pub fn drawInventoryScreen() bool {
         var throwable = false;
 
         if (chosen_item != null and itemlist_len > 0) switch (chosen_item.?) {
-            .Potion => |p| {
+            .Consumable => |p| {
                 usable = true;
                 dippable = p.dip_effect != null;
-                throwable = true;
+                throwable = p.throwable;
             },
             .Evocable => usable = true,
             .Projectile => throwable = true,
