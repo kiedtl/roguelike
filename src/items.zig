@@ -25,6 +25,7 @@ const StatusDataInfo = types.StatusDataInfo;
 const Armor = types.Armor;
 const SurfaceItem = types.SurfaceItem;
 const Mob = types.Mob;
+const Damage = types.Damage;
 const Stat = types.Stat;
 const Spatter = types.Spatter;
 const Status = types.Status;
@@ -337,6 +338,8 @@ pub const Consumable = struct {
         Status: Status,
         Gas: usize,
         Kit: *const Machine,
+        Damage: struct { amount: usize, kind: Damage.DamageKind },
+        Heal: usize,
         Resist: struct { r: Resistance, change: isize },
         Stat: struct { s: Stat, change: isize },
         Custom: fn (?*Mob, Coord) void,
@@ -347,6 +350,33 @@ pub const Consumable = struct {
 
     const VERBS_PLAYER_KIT = &[_][]const u8{"use"};
     const VERBS_OTHER_KIT = &[_][]const u8{"uses"};
+
+    const VERBS_PLAYER_CAUT = &[_][]const u8{"cauterise your wounds with"};
+    const VERBS_OTHER_CAUT = &[_][]const u8{"cauterises itself with"};
+};
+
+pub const HotPokerConsumable = Consumable{
+    .id = "cons_hot_poker",
+    .name = "red-hot poker",
+    .effects = &[_]Consumable.Effect{
+        .{ .Heal = 20 },
+        .{ .Damage = .{ .amount = 20, .kind = .Fire } },
+    },
+    .color = 0xdd1010,
+    .verbs_player = Consumable.VERBS_PLAYER_CAUT,
+    .verbs_other = Consumable.VERBS_OTHER_CAUT,
+};
+
+pub const CoalConsumable = Consumable{
+    .id = "cons_coal",
+    .name = "burning coal",
+    .effects = &[_]Consumable.Effect{
+        .{ .Heal = 10 },
+        .{ .Damage = .{ .amount = 10, .kind = .Fire } },
+    },
+    .color = 0xdd3a3a,
+    .verbs_player = Consumable.VERBS_PLAYER_CAUT,
+    .verbs_other = Consumable.VERBS_OTHER_CAUT,
 };
 
 pub const SilverIngotConsumable = Consumable{

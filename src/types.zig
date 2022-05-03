@@ -657,6 +657,7 @@ pub const Resistance = enum {
 };
 
 pub const Damage = struct {
+    lethal: bool = true, // If false, extra damage will be shaved
     amount: f64,
     by_mob: ?*Mob = null,
     source: DamageSource = .Other,
@@ -687,6 +688,15 @@ pub const Damage = struct {
                 .Fire => .rFire,
                 .Electric => .rElec,
                 .Poison => .rPois,
+            };
+        }
+
+        pub fn string(self: DamageKind) []const u8 {
+            return switch (self) {
+                .Physical => "dmg",
+                .Fire => "fire",
+                .Electric => "elec",
+                .Poison => "poison",
             };
         }
     };
@@ -1050,10 +1060,7 @@ pub const Status = enum {
             .amount = @intToFloat(f64, rng.range(usize, 0, 1)),
             .blood = false,
             .kind = .Poison,
-        }, .{
-            .noun = "The poison",
-            .strs = &[_]DamageStr{items._dmgstr(0, "weaken", "weakens", "")},
-        });
+        }, .{ .basic = true });
     }
 
     pub fn tickNausea(mob: *Mob) void {
@@ -1075,7 +1082,11 @@ pub const Status = enum {
             .blood = false,
         }, .{
             .noun = "The fire",
-            .strs = &[_]DamageStr{items._dmgstr(0, "burn", "burns", "")},
+            .strs = &[_]DamageStr{
+                items._dmgstr(000, "BUG", "scorches", ""),
+                items._dmgstr(020, "BUG", "burns", ""),
+                items._dmgstr(100, "BUG", "burns", "horribly"),
+            },
         });
 
         if (state.dungeon.fireAt(mob.coord).* == 0)
@@ -1641,6 +1652,13 @@ pub const Mob = struct { // {{{
         for (item.effects) |effect| switch (effect) {
             .Status => |s| if (direct) self.addStatus(s, 0, .{ .Tmp = Status.MAX_DURATION }),
             .Gas => |s| state.dungeon.atGas(self.coord)[s] = 1.0,
+            .Damage => |d| self.takeDamage(.{
+                .lethal = false,
+                .amount = @intToFloat(f64, d.amount),
+                .kind = d.kind,
+                .by_mob = self,
+            }, .{ .basic = true }),
+            .Heal => |h| self.takeHealing(h),
             .Resist => |r| utils.getFieldByEnumPtr(Resistance, *isize, &self.innate_resists, r.r).* += r.change,
             .Stat => |s| utils.getFieldByEnumPtr(Stat, *isize, &self.stats, s.s).* += s.change,
             .Kit => |template| {
@@ -2177,7 +2195,17 @@ pub const Mob = struct { // {{{
         }
     }
 
+    pub fn takeHealing(self: *Mob, h: usize) void {
+        self.HP = math.clamp(self.HP + @intToFloat(f64, h), 0, self.max_HP);
+
+        const verb: []const u8 = if (self == state.player) "are" else "is";
+        const fully_adj: []const u8 = if (self.HP == self.max_HP) "fully " else "";
+        const punc: []const u8 = if (self.HP == self.max_HP) "!" else ".";
+        state.message(.Info, "{c} {s} {s}healed{s} $g($c{}$g HP)", .{ self, verb, fully_adj, punc, h });
+    }
+
     pub fn takeDamage(self: *Mob, d: Damage, msg: struct {
+        basic: bool = false,
         noun: ?[]const u8 = null,
         strs: []const DamageStr = &[_]DamageStr{
             items._dmgstr(000, "hit", "hits", ""),
@@ -2189,7 +2217,11 @@ pub const Mob = struct { // {{{
         const old_HP = self.HP;
 
         const resist = @intToFloat(f64, self.resistance(d.kind.resist()));
-        const amount = math.floor(d.amount * resist / 100.0);
+        const unshaved_amount = math.floor(d.amount * resist / 100.0);
+        const amount = if (!d.lethal and unshaved_amount > self.HP - 1)
+            self.HP - 1
+        else
+            unshaved_amount;
         const dmg_percent = @floatToInt(usize, amount * 100 / math.max(1, self.HP));
 
         self.HP = math.clamp(self.HP - amount, 0, self.max_HP);
@@ -2215,43 +2247,54 @@ pub const Mob = struct { // {{{
                 }
             }
 
-            const martial_str = if (msg.is_bonus) " $b*Martial*$." else "";
-            const riposte_str = if (msg.is_riposte) " $b*Riposte*$." else "";
-
-            var noun = StackBuffer(u8, 64).init(null);
-            if (msg.noun) |m_noun| {
-                noun.fmt("{s}", .{m_noun});
-            } else {
-                noun.fmt("{c}", .{d.by_mob.?});
-            }
-
-            const verb = if (d.by_mob != null and d.by_mob.? == state.player) hitstrs.verb_self else hitstrs.verb_other;
-
-            const dmgtype = switch (d.kind) {
-                .Physical => "dmg",
-                .Fire => "fire",
-                .Electric => "elec",
-                .Poison => "poison",
-            };
+            const resisted = @floatToInt(isize, d.amount - amount);
             const resist_str = if (d.kind == .Physical) "armor" else "resist";
 
-            state.message(
-                .Combat,
-                "{s} {s} {}{s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.) {s} {s}",
-                .{
-                    noun.constSlice(),
-                    verb,
-                    self,
-                    hitstrs.verb_degree,
-                    punctuation,
-                    @floatToInt(usize, amount),
-                    dmgtype,
-                    @floatToInt(isize, d.amount - amount),
-                    resist_str,
-                    martial_str,
-                    riposte_str,
-                },
-            );
+            if (msg.basic) {
+                const basic_helper_verb: []const u8 = if (self == state.player) "are" else "is";
+                const basic_verb = switch (d.kind) {
+                    .Physical => "damaged",
+                    .Fire => "burnt with fire",
+                    .Electric => "electrocuted",
+                    .Poison => "weakened",
+                };
+
+                state.message(
+                    .Combat,
+                    "{c} {s} {s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.)",
+                    .{
+                        self,        basic_helper_verb,          basic_verb,
+                        punctuation, @floatToInt(usize, amount), d.kind.string(),
+                        resisted,    resist_str,
+                    },
+                );
+            } else {
+                const martial_str = if (msg.is_bonus) " $b*Martial*$." else "";
+                const riposte_str = if (msg.is_riposte) " $b*Riposte*$." else "";
+
+                var noun = StackBuffer(u8, 64).init(null);
+                if (msg.noun) |m_noun| {
+                    noun.fmt("{s}", .{m_noun});
+                } else {
+                    noun.fmt("{c}", .{d.by_mob.?});
+                }
+
+                const verb = if (d.by_mob != null and d.by_mob.? == state.player)
+                    hitstrs.verb_self
+                else
+                    hitstrs.verb_other;
+
+                state.message(
+                    .Combat,
+                    "{s} {s} {}{s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.) {s} {s}",
+                    .{
+                        noun.constSlice(),   verb,        self,
+                        hitstrs.verb_degree, punctuation, @floatToInt(usize, amount),
+                        d.kind.string(),     resisted,    resist_str,
+                        martial_str,         riposte_str,
+                    },
+                );
+            }
         }
 
         if (d.blood) {
