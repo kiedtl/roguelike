@@ -1,0 +1,21 @@
+%
+% #####  "torture" room
+% #g..#
+% #.g.#
+% #gg.#
+% #####
+% ..Ñ..
+
+:subroom
+:priority 10
+
+:prison 0,0 5 5
+
+:spawn necromancer 2,5 2,5
+
+#&•&#
+±...#
+#...#
+#ααα#
+#&&&#
+.....

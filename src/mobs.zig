@@ -883,9 +883,9 @@ pub const TorturerNecromancerTemplate = MobTemplate{
         .no_show_fov = false,
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 3, .spell = &spells.CAST_RESURRECT_NORMAL },
-            .{ .MP_cost = 1, .spell = &spells.CAST_FEAR, .duration = 9 },
-            .{ .MP_cost = 1, .spell = &spells.CAST_PAIN, .duration = 5, .power = 5 },
+            .{ .MP_cost = 5, .spell = &spells.CAST_RESURRECT_NORMAL },
+            .{ .MP_cost = 2, .spell = &spells.CAST_PAIN, .duration = 5, .power = 1 },
+            .{ .MP_cost = 1, .spell = &spells.CAST_FEAR, .duration = 10 },
         },
         .max_MP = 10,
 

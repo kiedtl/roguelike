@@ -956,7 +956,7 @@ pub const Status = enum {
             .Fire => "burning",
             .Invigorate => "invigorated",
             .Pain => "tormented",
-            .Fear => "fearful",
+            .Fear => "terrified",
             .Backvision => "reverse-sighted",
             .NightVision => "night-sighted",
             .DayBlindness => "day-blinded",
@@ -990,7 +990,7 @@ pub const Status = enum {
             .Fire => .{ "catch", "catches", " fire" },
             .Invigorate => .{ "feel", "looks", " invigorated" },
             .Pain => .{ "are", "is", " wracked with pain" },
-            .Fear => .{ "feel", "looks", " troubled" },
+            .Fear => .{ "are crazed", "is crazed", " with fear" },
             .Shove => .{ "begin", "starts", " violently shoving past foes" },
             .Enraged => .{ "fly", "flies", " into a rage" },
             .Exhausted => .{ "feel", "looks", " exhausted" },
@@ -1027,7 +1027,7 @@ pub const Status = enum {
             .Fire => .{ "are no longer", "is no longer", " on fire" },
             .Invigorate => .{ "no longer feel", "no longer looks", " invigorated" },
             .Pain => .{ "are no longer", "is no longer", " wracked with pain" },
-            .Fear => .{ "no longer feel", "no longer looks", " troubled" },
+            .Fear => .{ "are no longer", "is no longer", " crazed with fear" },
             .Shove => .{ "stop", "stops", " shoving past foes" },
             .Enraged => .{ "stop", "stops", " raging" },
             .Exhausted => .{ "are no longer", "is no longer", " exhausted" },
@@ -1097,13 +1097,29 @@ pub const Status = enum {
         const st = mob.isUnderStatus(.Pain).?;
 
         mob.makeNoise(.Scream, .Louder);
-        mob.takeDamage(.{
-            .amount = @intToFloat(f64, rng.rangeClumping(usize, 0, st.power, 2)),
-            .blood = false,
-        }, .{
-            .noun = "The pain",
-            .strs = &[_]DamageStr{items._dmgstr(0, "weaken", "weakens", "")},
-        });
+
+        if (st.power > 0) {
+            mob.takeDamage(.{
+                .amount = @intToFloat(f64, rng.rangeClumping(usize, 0, st.power, 2)),
+                .blood = false,
+            }, .{
+                .noun = "The pain",
+                .strs = &[_]DamageStr{items._dmgstr(0, "weaken", "weakens", "")},
+            });
+        }
+
+        if (rng.percent(@as(usize, 50))) {
+            const direction = rng.chooseUnweighted(Direction, &DIRECTIONS);
+            if (mob.coord.move(direction, state.mapgeometry)) |dest_coord| {
+                if (mob.teleportTo(dest_coord, direction, true)) {
+                    // Deliberately ignore non-player writhers because that'd
+                    // result in a barrage of messages from "torture" chambers.
+                    if (state.player == mob) {
+                        state.message(.Info, "You writhe in agony.", .{});
+                    }
+                }
+            }
+        }
     }
 
     pub fn tickEcholocation(mob: *Mob) void {

@@ -723,7 +723,7 @@ pub fn wanderWork(mob: *Mob, _: mem.Allocator) void {
 // - Get list of prisoners within view.
 // - Sort according to distance.
 // - Go through list.
-//      - Skip ones that are already affected by Pain.
+//      - Skip ones that are already affected by Fear.
 //      - When cast spell, return.
 pub fn tortureWork(mob: *Mob, _: mem.Allocator) void {
     const post = mob.ai.work_area.items[0];
@@ -759,8 +759,8 @@ pub fn tortureWork(mob: *Mob, _: mem.Allocator) void {
 
         spells.CAST_PAIN.use(mob, mob.coord, prisoner.coord, .{
             .spell = &spells.CAST_PAIN,
-            .duration = 10,
-            .power = 4,
+            .duration = rng.range(usize, 10, 20),
+            .power = 0,
         }, null);
         return;
     }
@@ -1032,10 +1032,15 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
     const target = currentEnemy(mob);
 
     alertAllyOfHostile(mob);
-    if (!keepDistance(mob, target.last_seen, FLEE_GOAL))
-        meleeFight(mob, alloc);
 
-    mob.makeNoise(.Shout, .Loud);
+    if (!keepDistance(mob, target.last_seen, FLEE_GOAL)) {
+        meleeFight(mob, alloc);
+    }
+
+    if (mob.isUnderStatus(.Fear) != null)
+        mob.makeNoise(.Scream, .Loud)
+    else
+        mob.makeNoise(.Shout, .Loud);
 
     const dist = target.mob.coord.distance(mob.coord);
     if (dist <= mob.stat(.Vision)) {

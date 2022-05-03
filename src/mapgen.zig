@@ -3357,6 +3357,13 @@ pub const QRT_BASE_LEVELCONFIG = LevelConfig{
     .max_room_width = 10,
     .max_room_height = 6,
 
+    .level_features = [_]?LevelConfig.LevelFeatureFunc{
+        levelFeaturePrisoners,
+        levelFeaturePrisonersMaybe,
+        null,
+        null,
+    },
+
     .no_windows = true,
     .allow_statues = false,
     .door_chance = 10,
@@ -3364,7 +3371,7 @@ pub const QRT_BASE_LEVELCONFIG = LevelConfig{
 
     .props = &surfaces.vault_props.items,
     //.containers = &[_]Container{surfaces.Chest},
-    .single_props = &[_][]const u8{"fuel_barrel"},
+    .single_props = &[_][]const u8{ "fuel_barrel", "bed" },
     .chance_for_single_prop_placement = 90,
 
     .machines = &[_]*const Machine{&surfaces.Fountain},
