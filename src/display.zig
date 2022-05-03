@@ -725,11 +725,9 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
             };
             _writerWrite(w, "\n", .{});
 
-            _writerHeader(w, linewidth, "dip effects", .{});
             if (p.dip_effect) |effect| {
+                _writerHeader(w, linewidth, "dip effects", .{});
                 _writerWrite(w, "{s}", .{_formatStatusInfo(&effect)});
-            } else {
-                _writerWrite(w, "$gCannot dip.$.\n", .{});
             }
         },
         .Projectile => |p| {

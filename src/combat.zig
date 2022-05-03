@@ -121,32 +121,23 @@ pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: u
     if (!dest_coord.eq(throwee.coord))
         assert(throwee.teleportTo(dest_coord, null, true));
 
-    // Give damage
+    // Give damage and print messages
+
+    if (thrower) |thrower_mob| {
+        state.message(.Combat, "{c} knocks {} back!", .{ thrower_mob, throwee });
+    } else {
+        state.message(.Combat, "{} is knocked back!", .{throwee});
+    }
+
     if (slammed_into_something) {
-        throwee.takeDamage(.{
-            .amount = 3.0,
-            .by_mob = thrower,
-        }, .{
-            .strs = &[_]DamageStr{
-                items._dmgstr(0, "knock", "knocks", " back"),
-            },
-        });
+        throwee.takeDamage(.{ .amount = 3.0, .by_mob = thrower }, .{ .basic = true });
 
         if (slammed_into_mob) |othermob| {
-            othermob.takeDamage(.{
-                .amount = 3.0,
-                .by_mob = thrower,
-            }, .{
+            othermob.takeDamage(.{ .amount = 3.0, .by_mob = throwee }, .{
                 .strs = &[_]DamageStr{
                     items._dmgstr(0, "slam into", "slams into", ""),
                 },
             });
-        }
-    } else {
-        if (thrower) |thrower_mob| {
-            state.message(.Combat, "{c} knocks {} back!", .{ thrower_mob, throwee });
-        } else {
-            state.message(.Combat, "{} is knocked back!", .{throwee});
         }
     }
 }

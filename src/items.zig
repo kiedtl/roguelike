@@ -5,6 +5,7 @@ const meta = std.meta;
 const assert = std.debug.assert;
 
 const colors = @import("colors.zig");
+const combat = @import("combat.zig");
 const err = @import("err.zig");
 const explosions = @import("explosions.zig");
 const fire = @import("fire.zig");
@@ -83,6 +84,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     // Kits
     .{ .w = 030, .i = .{ .P = &FireTrapKit } },
     .{ .w = 030, .i = .{ .P = &ShockTrapKit } },
+    .{ .w = 020, .i = .{ .P = &AirblastTrapKit } },
     .{ .w = 005, .i = .{ .P = &MineKit } },
     .{ .w = 002, .i = .{ .P = &BigFireTrapKit } },
     // Evocables
@@ -365,7 +367,7 @@ pub const Consumable = struct {
     pub fn createTrapKit(
         comptime id: []const u8,
         comptime name: []const u8,
-        func: fn (*Machine) void,
+        func: fn (*Machine, *Mob) void,
     ) Consumable {
         return Consumable{
             .id = id,
@@ -384,7 +386,7 @@ pub const Consumable = struct {
                                 if (state.player.cansee(machine.coord))
                                     state.message(.Info, "{c} triggers the {s}!", .{ mob, name });
                                 state.dungeon.at(machine.coord).surface = null;
-                                func(machine);
+                                func(machine, mob);
                             }
                         }
                     }.f,
@@ -435,20 +437,26 @@ pub const SilverIngotConsumable = Consumable{
     .verbs_other = &[_][]const u8{"chokes down"},
 };
 
+pub const AirblastTrapKit = Consumable.createTrapKit("kit_trap_airblast", "airblast trap", struct {
+    pub fn f(_: *Machine, mob: *Mob) void {
+        combat.throwMob(null, mob, rng.chooseUnweighted(Direction, &DIRECTIONS), 10);
+    }
+}.f);
+
 pub const ShockTrapKit = Consumable.createTrapKit("kit_trap_shock", "shock trap", struct {
-    pub fn f(machine: *Machine) void {
+    pub fn f(machine: *Machine, _: *Mob) void {
         explosions.elecBurst(machine.coord, 5, state.player);
     }
 }.f);
 
 pub const BigFireTrapKit = Consumable.createTrapKit("kit_trap_bigfire", "incineration trap", struct {
-    pub fn f(machine: *Machine) void {
+    pub fn f(machine: *Machine, _: *Mob) void {
         explosions.fireBurst(machine.coord, 7);
     }
 }.f);
 
 pub const FireTrapKit = Consumable.createTrapKit("kit_trap_fire", "fire trap", struct {
-    pub fn f(machine: *Machine) void {
+    pub fn f(machine: *Machine, _: *Mob) void {
         explosions.fireBurst(machine.coord, 3);
     }
 }.f);
