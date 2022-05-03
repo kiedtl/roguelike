@@ -1085,7 +1085,7 @@ pub const Status = enum {
             .strs = &[_]DamageStr{
                 items._dmgstr(000, "BUG", "scorches", ""),
                 items._dmgstr(020, "BUG", "burns", ""),
-                items._dmgstr(100, "BUG", "burns", "horribly"),
+                items._dmgstr(100, "BUG", "burns", " horribly"),
             },
         });
 
