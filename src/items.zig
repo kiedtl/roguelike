@@ -28,6 +28,7 @@ const Mob = types.Mob;
 const Stat = types.Stat;
 const Spatter = types.Spatter;
 const Status = types.Status;
+const Machine = types.Machine;
 const Direction = types.Direction;
 const DIRECTIONS = types.DIRECTIONS;
 
@@ -63,7 +64,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 010, .i = .{ .A = LeatherArmor } },
     .{ .w = 010, .i = .{ .A = HauberkArmor } },
     .{ .w = 010, .i = .{ .A = ScalemailArmor } },
-    // Consumables
+    // Potions
     .{ .w = 170, .i = .{ .P = &RecuperatePotion } },
     .{ .w = 170, .i = .{ .P = &ConfusionPotion } },
     .{ .w = 170, .i = .{ .P = &PoisonPotion } },
@@ -73,10 +74,11 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 140, .i = .{ .P = &FastPotion } },
     .{ .w = 130, .i = .{ .P = &IncineratePotion } },
     .{ .w = 100, .i = .{ .P = &DecimatePotion } },
+    // Kits
+    .{ .w = 005, .i = .{ .P = &MineKit } },
     // Evocables
     .{ .w = 020, .i = .{ .E = IronSpikeEvoc } },
     .{ .w = 015, .i = .{ .E = EldritchLanternEvoc } },
-    .{ .w = 005, .i = .{ .E = MineKitEvoc } },
     // Cloaks
     .{ .w = 020, .i = .{ .C = &SilCloak } },
     .{ .w = 020, .i = .{ .C = &FurCloak } },
@@ -246,32 +248,6 @@ fn _triggerIronSpikeEvoc(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
     state.message(.Info, "You jam the {s}...", .{machine.name});
 }
 
-pub const MineKitEvoc = Evocable{
-    .id = "mine_kit",
-    .name = "mine kit",
-    .tile_fg = 0xffd7d7,
-    .max_charges = 2,
-    .delete_when_inert = true,
-    .rechargable = false,
-    .purpose = .Other,
-    .trigger_fn = _triggerMineKit,
-};
-fn _triggerMineKit(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
-    assert(mob == state.player);
-
-    if (state.dungeon.at(mob.coord).surface) |_| {
-        display.drawAlertThenLog("You can't build a mine where you're standing.", .{});
-        return error.BadPosition;
-    }
-
-    var mine = surfaces.Mine;
-    mine.coord = mob.coord;
-    state.machines.append(mine) catch unreachable;
-    state.dungeon.at(mob.coord).surface = SurfaceItem{ .Machine = state.machines.last().? };
-
-    state.message(.Info, "You build a mine. You'd better be far away when it detonates!", .{});
-}
-
 pub const EldritchLanternEvoc = Evocable{
     .id = "eldritch_lantern",
     .name = "eldritch lantern",
@@ -353,6 +329,7 @@ pub const Consumable = struct {
     effect: union(enum) {
         Status: Status,
         Gas: usize,
+        Kit: *const Machine,
         Custom: fn (?*Mob, Coord) void,
     },
     is_potion: bool = false,
@@ -363,6 +340,18 @@ pub const Consumable = struct {
 
     const VERBS_PLAYER_POTION = &[_][]const u8{ "slurp", "quaff" };
     const VERBS_OTHER_POTION = &[_][]const u8{ "slurps", "quaffs" };
+
+    const VERBS_PLAYER_KIT = &[_][]const u8{"use"};
+    const VERBS_OTHER_KIT = &[_][]const u8{"uses"};
+};
+
+pub const MineKit = Consumable{
+    .id = "kit_mine",
+    .name = "mine kit",
+    .effect = .{ .Kit = &surfaces.Mine },
+    .color = 0xffd7d7,
+    .verbs_player = Consumable.VERBS_PLAYER_KIT,
+    .verbs_other = Consumable.VERBS_OTHER_KIT,
 };
 
 pub const SmokePotion = Consumable{

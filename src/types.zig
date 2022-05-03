@@ -1627,7 +1627,7 @@ pub const Mob = struct { // {{{
     // direct: was the consumable used directly (i.e., was it thrown at the
     //   mob or did the mob use it?). Used to determine whether to print a
     //   message.
-    pub fn useConsumable(self: *Mob, item: *const Consumable, direct: bool) void {
+    pub fn useConsumable(self: *Mob, item: *const Consumable, direct: bool) !void {
         if (item.is_potion and direct and self.isUnderStatus(.Nausea) != null) {
             err.bug("Nauseated mob is quaffing potions!", .{});
         }
@@ -1642,6 +1642,19 @@ pub const Mob = struct { // {{{
             .Status => |s| if (direct) self.addStatus(s, 0, .{ .Tmp = Status.MAX_DURATION }),
             .Gas => |s| state.dungeon.atGas(self.coord)[s] = 1.0,
             .Custom => |c| if (direct) c(self, self.coord),
+            .Kit => |template| {
+                // TODO: generalize this code for all mobs & remove assert
+                assert(self == state.player);
+
+                if (state.dungeon.at(self.coord).surface) |_| {
+                    return error.BadPosition;
+                }
+
+                var mach = template.*;
+                mach.coord = self.coord;
+                state.machines.append(mach) catch err.wat();
+                state.dungeon.at(self.coord).surface = SurfaceItem{ .Machine = state.machines.last().? };
+            },
         }
     }
 
@@ -1738,7 +1751,8 @@ pub const Mob = struct { // {{{
             },
             .Consumable => |c| {
                 if (state.dungeon.at(landed orelse at).mob) |mob| {
-                    mob.useConsumable(c, false);
+                    mob.useConsumable(c, false) catch |e|
+                        err.bug("Couldn't use thrown consumable: {}", .{e});
                 }
             },
             else => err.wat(),

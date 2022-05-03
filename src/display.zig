@@ -701,6 +701,7 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
         .Consumable => |p| {
             _writerWrite(w, "$ceffects$.:\n", .{});
             switch (p.effect) {
+                .Kit => |m| _writerWrite(w, "$gMachine$. {s}\n", .{m.name}),
                 .Gas => |g| _writerWrite(w, "$gGas$. {s}\n", .{gas.Gases[g].name}),
                 .Status => |s| _writerWrite(w, "$gTmp$. {s}\n", .{s.string(state.player)}),
                 .Custom => _writerWrite(w, "$G(See description)$.\n", .{}),

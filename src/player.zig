@@ -483,7 +483,13 @@ pub fn useItem(index: usize) bool {
                 return false;
             }
 
-            state.player.useConsumable(p, true);
+            state.player.useConsumable(p, true) catch |e| switch (e) {
+                error.BadPosition => {
+                    display.drawAlertThenLog("You can't use this kit here.", .{});
+                    return false;
+                },
+            };
+
             const prevtotal = (state.chardata.items_used.getOrPutValue(p.id, 0) catch err.wat()).value_ptr.*;
             state.chardata.items_used.put(p.id, prevtotal + 1) catch err.wat();
         },
