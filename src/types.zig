@@ -2188,7 +2188,7 @@ pub const Mob = struct { // {{{
 
         const resist = @intToFloat(f64, self.resistance(d.kind.resist()));
         const amount = math.floor(d.amount * resist / 100.0);
-        const dmg_percent = @floatToInt(usize, math.floor(amount * 100 / self.HP));
+        const dmg_percent = @floatToInt(usize, amount * 100 / math.max(1, self.HP));
 
         self.HP = math.clamp(self.HP - amount, 0, self.max_HP);
 
