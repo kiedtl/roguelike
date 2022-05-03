@@ -21,6 +21,41 @@ const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
+pub fn fireBurst(ground0: Coord, max_radius: usize) void {
+    const S = struct {
+        pub fn _opacityFunc(c: Coord) usize {
+            return switch (state.dungeon.at(c).type) {
+                .Lava, .Water, .Wall => 100,
+                .Floor => if (state.dungeon.at(c).surface) |surf| switch (surf) {
+                    .Machine => |m| if (m.isWalkable()) @as(usize, 0) else 50,
+                    .Prop => |p| if (p.walkable) @as(usize, 0) else 50,
+                    .Container => 100,
+                    else => 0,
+                } else 0,
+            };
+        }
+    };
+
+    var result: [HEIGHT][WIDTH]usize = undefined;
+    for (result) |*row| for (row) |*cell| {
+        cell.* = 0;
+    };
+
+    var deg: usize = 0;
+    while (deg < 360) : (deg += 30) {
+        const s = rng.range(usize, max_radius / 2, max_radius) * 10;
+        fov.rayCastOctants(ground0, max_radius, s, S._opacityFunc, &result, deg, deg + 31);
+    }
+    result[ground0.y][ground0.x] = 100; // Ground zero is always incinerated
+
+    for (result) |row, y| for (row) |cell, x| {
+        if (cell > 0) {
+            const cellc = Coord.new2(ground0.z, x, y);
+            fire.setTileOnFire(cellc);
+        }
+    };
+}
+
 pub fn elecBurst(ground0: Coord, max_damage: usize, by: ?*Mob) void {
     const S = struct {
         pub fn _opacityFunc(coord: Coord) usize {
@@ -79,8 +114,8 @@ pub fn elecBurst(ground0: Coord, max_damage: usize, by: ?*Mob) void {
                         .kind = .Electric,
                         .indirect = true,
                     }, .{
-                        .noun = "The blast of electricity",
-                        .strs = &[_]DamageStr{items._dmgstr(0, "strike", "strikes", "")},
+                        .noun = "The electric arc",
+                        .strs = &[_]DamageStr{items._dmgstr(0, "strikes", "strikes", "")},
                     });
                 };
         }

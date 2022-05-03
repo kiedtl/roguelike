@@ -4,6 +4,7 @@ const enums = std.enums;
 const meta = std.meta;
 const assert = std.debug.assert;
 
+const colors = @import("colors.zig");
 const err = @import("err.zig");
 const explosions = @import("explosions.zig");
 const fire = @import("fire.zig");
@@ -80,7 +81,10 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 090, .i = .{ .P = &CoalConsumable } },
     .{ .w = 050, .i = .{ .P = &SilverIngotConsumable } },
     // Kits
+    .{ .w = 030, .i = .{ .P = &FireTrapKit } },
+    .{ .w = 030, .i = .{ .P = &ShockTrapKit } },
     .{ .w = 005, .i = .{ .P = &MineKit } },
+    .{ .w = 002, .i = .{ .P = &BigFireTrapKit } },
     // Evocables
     .{ .w = 020, .i = .{ .E = IronSpikeEvoc } },
     .{ .w = 015, .i = .{ .E = EldritchLanternEvoc } },
@@ -357,6 +361,41 @@ pub const Consumable = struct {
 
     const VERBS_PLAYER_CAUT = &[_][]const u8{"cauterise your wounds with"};
     const VERBS_OTHER_CAUT = &[_][]const u8{"cauterises itself with"};
+
+    pub fn createTrapKit(
+        comptime id: []const u8,
+        comptime name: []const u8,
+        func: fn (*Machine) void,
+    ) Consumable {
+        return Consumable{
+            .id = id,
+            .name = name ++ " kit",
+            .effects = &[_]Consumable.Effect{.{
+                .Kit = &Machine{
+                    .name = name,
+                    .powered_fg = colors.PINK,
+                    .unpowered_fg = colors.LIGHT_STEEL_BLUE,
+                    .powered_tile = '^',
+                    .unpowered_tile = '^',
+                    .restricted_to = .Necromancer,
+                    .on_power = struct {
+                        pub fn f(machine: *Machine) void {
+                            if (machine.last_interaction) |mob| {
+                                if (state.player.cansee(machine.coord))
+                                    state.message(.Info, "{c} triggers the {s}!", .{ mob, name });
+                                state.dungeon.at(machine.coord).surface = null;
+                                func(machine);
+                            }
+                        }
+                    }.f,
+                    .pathfinding_penalty = 10,
+                },
+            }},
+            .color = colors.GOLD,
+            .verbs_player = Consumable.VERBS_PLAYER_KIT,
+            .verbs_other = Consumable.VERBS_OTHER_KIT,
+        };
+    }
 };
 
 pub const HotPokerConsumable = Consumable{
@@ -395,6 +434,24 @@ pub const SilverIngotConsumable = Consumable{
     .verbs_player = &[_][]const u8{ "choke down", "swallow" },
     .verbs_other = &[_][]const u8{"chokes down"},
 };
+
+pub const ShockTrapKit = Consumable.createTrapKit("kit_trap_shock", "shock trap", struct {
+    pub fn f(machine: *Machine) void {
+        explosions.elecBurst(machine.coord, 5, state.player);
+    }
+}.f);
+
+pub const BigFireTrapKit = Consumable.createTrapKit("kit_trap_bigfire", "incineration trap", struct {
+    pub fn f(machine: *Machine) void {
+        explosions.fireBurst(machine.coord, 7);
+    }
+}.f);
+
+pub const FireTrapKit = Consumable.createTrapKit("kit_trap_fire", "fire trap", struct {
+    pub fn f(machine: *Machine) void {
+        explosions.fireBurst(machine.coord, 3);
+    }
+}.f);
 
 pub const MineKit = Consumable{
     .id = "kit_mine",
@@ -511,39 +568,7 @@ pub const DecimatePotion = Consumable{
 // Potion effects {{{
 
 fn triggerIncineratePotion(_: ?*Mob, coord: Coord) void {
-    const mean_radius: usize = 4;
-    const S = struct {
-        pub fn _opacityFunc(c: Coord) usize {
-            return switch (state.dungeon.at(c).type) {
-                .Lava, .Water, .Wall => 100,
-                .Floor => if (state.dungeon.at(c).surface) |surf| switch (surf) {
-                    .Machine => |m| if (m.isWalkable()) @as(usize, 0) else 50,
-                    .Prop => |p| if (p.walkable) @as(usize, 0) else 50,
-                    .Container => 100,
-                    else => 0,
-                } else 0,
-            };
-        }
-    };
-
-    var result: [HEIGHT][WIDTH]usize = undefined;
-    for (result) |*row| for (row) |*cell| {
-        cell.* = 0;
-    };
-
-    var deg: usize = 0;
-    while (deg < 360) : (deg += 60) {
-        const s = rng.range(usize, mean_radius / 2, mean_radius * 2) * 10;
-        fov.rayCastOctants(coord, mean_radius, s, S._opacityFunc, &result, deg, deg + 61);
-    }
-    result[coord.y][coord.x] = 100; // Ground zero is always incinerated
-
-    for (result) |row, y| for (row) |cell, x| {
-        if (cell > 0) {
-            const cellc = Coord.new2(coord.z, x, y);
-            fire.setTileOnFire(cellc);
-        }
-    };
+    explosions.fireBurst(coord, 4);
 }
 
 fn triggerDecimatePotion(_: ?*Mob, coord: Coord) void {
