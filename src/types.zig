@@ -9,6 +9,7 @@ const enums = std.enums;
 const LinkedList = @import("list.zig").LinkedList;
 const RingBuffer = @import("ringbuffer.zig").RingBuffer;
 const StackBuffer = @import("buffer.zig").StackBuffer;
+const StringBuf64 = @import("buffer.zig").StringBuf64;
 
 const ai = @import("ai.zig");
 const astar = @import("astar.zig");
@@ -1772,7 +1773,8 @@ pub const Mob = struct { // {{{
                     const mob = state.dungeon.at(landed.?).mob.?;
                     if (proj.damage) |max_damage| {
                         const damage = rng.range(usize, max_damage / 2, max_damage);
-                        mob.takeDamage(.{ .amount = @intToFloat(f64, damage), .source = .RangedAttack, .by_mob = self }, .{ .noun = proj.name });
+                        const msg_noun = StringBuf64.initFmt("The {s}", .{proj.name});
+                        mob.takeDamage(.{ .amount = @intToFloat(f64, damage), .source = .RangedAttack, .by_mob = self }, .{ .noun = msg_noun.constSlice() });
                     }
                     switch (proj.effect) {
                         .Status => |s| mob.applyStatus(s, .{}),

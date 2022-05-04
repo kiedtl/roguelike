@@ -86,8 +86,8 @@ pub fn announceSound(coord: Coord) void {
         const text: ?[]const u8 = switch (sound.type) {
             .None => unreachable,
             .Explosion, .Crash, .Movement, .Combat, .Alarm => null,
-            .Shout => "shouts!",
-            .Scream => "screams!",
+            .Shout => if (sound.mob_source.? == state.player) "shout!" else "shouts!",
+            .Scream => if (sound.mob_source.? == state.player) "scream!" else "screams!",
         };
 
         if (text) |_text| {
