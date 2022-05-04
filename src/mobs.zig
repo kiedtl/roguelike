@@ -170,6 +170,31 @@ pub const GuardTemplate = MobTemplate{
     .armor = &items.GambesonArmor,
 };
 
+pub const SentinelTemplate = MobTemplate{
+    .mob = .{
+        .id = "sentinel",
+        .species = &GoblinSpecies,
+        .tile = 'ת',
+        .ai = AI{
+            .profession_name = "sentinel",
+            .profession_description = "guarding",
+            .work_fn = ai.guardWork,
+            .fight_fn = ai.meleeFight,
+            .is_combative = true,
+            .is_curious = true,
+        },
+        .allegiance = .Necromancer,
+
+        .max_HP = 12,
+        .memory_duration = 5,
+        .blood = .Blood,
+
+        .stats = .{ .Willpower = 2, .Melee = 70 },
+    },
+    .weapon = &items.SwordWeapon,
+    .armor = &items.LeatherArmor,
+};
+
 pub const JavelineerTemplate = MobTemplate{
     .mob = .{
         .id = "javelineer",
@@ -200,13 +225,13 @@ pub const JavelineerTemplate = MobTemplate{
     .projectile = &items.JavelinProj,
 };
 
-pub const SentinelTemplate = MobTemplate{
+pub const DefenderTemplate = MobTemplate{
     .mob = .{
-        .id = "sentinel",
+        .id = "defender",
         .species = &HumanSpecies,
         .tile = 'ץ',
         .ai = AI{
-            .profession_name = "sentinel",
+            .profession_name = "defender",
             .profession_description = "guarding",
             .work_fn = ai.watcherWork,
             .fight_fn = ai.rangedFight,
@@ -221,9 +246,9 @@ pub const SentinelTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .max_HP = 10,
-        .memory_duration = 7,
+        .memory_duration = 4,
         .blood = .Blood,
-        .stats = .{ .Willpower = 5, .Evade = 10, .Missile = 80, .Speed = 90 },
+        .stats = .{ .Willpower = 4, .Evade = 10, .Missile = 90 },
     },
     .weapon = &items.SwordWeapon,
     .armor = &items.LeatherArmor,
@@ -1230,8 +1255,9 @@ pub const MOBS = [_]MobTemplate{
     WatcherTemplate,
     WardenTemplate,
     GuardTemplate,
-    JavelineerTemplate,
     SentinelTemplate,
+    JavelineerTemplate,
+    DefenderTemplate,
     LeadTurtleTemplate,
     IronWaspTemplate,
     PatrolTemplate,

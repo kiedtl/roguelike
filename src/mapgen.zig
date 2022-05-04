@@ -46,6 +46,7 @@ const Vial = types.Vial;
 
 const DIRECTIONS = types.DIRECTIONS;
 const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
+const DIAGONAL_DIRECTIONS = types.DIAGONAL_DIRECTIONS;
 const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
@@ -2268,15 +2269,16 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     }
 
     // Place a guardian near the stairs in a diagonal position, if possible.
-    for (&DIRECTIONS) |d| {
-        if (!d.is_diagonal()) continue;
-        if (up_staircase.move(d, state.mapgeometry)) |neighbor| {
-            if (state.is_walkable(neighbor, .{ .right_now = true })) {
-                _ = mobs.placeMob(alloc, &mobs.SentinelTemplate, neighbor, .{});
-                break;
-            }
+    const guardian = rng.chooseUnweighted(*const mobs.MobTemplate, &[_]*const mobs.MobTemplate{
+        &mobs.SentinelTemplate,
+        &mobs.DefenderTemplate,
+    });
+    for (&DIAGONAL_DIRECTIONS) |d| if (up_staircase.move(d, state.mapgeometry)) |neighbor| {
+        if (state.is_walkable(neighbor, .{ .right_now = true })) {
+            _ = mobs.placeMob(alloc, guardian, neighbor, .{});
+            break;
         }
-    }
+    };
 
     // Remove mobs nearby upstairs.
     var dijk = dijkstra.Dijkstra.init(down_staircase, state.mapgeometry, 8, state.is_walkable, .{ .ignore_mobs = true, .right_now = true }, alloc);

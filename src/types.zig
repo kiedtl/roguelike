@@ -52,6 +52,7 @@ const SpellOptions = spells.SpellOptions;
 const Spell = spells.Spell;
 const Poster = literature.Poster;
 
+pub const DIAGONAL_DIRECTIONS = [_]Direction{ .NorthWest, .SouthWest, .NorthEast, .SouthEast };
 pub const CARDINAL_DIRECTIONS = [_]Direction{ .North, .South, .East, .West };
 pub const DIRECTIONS = [_]Direction{ .North, .South, .East, .West, .NorthEast, .NorthWest, .SouthEast, .SouthWest };
 

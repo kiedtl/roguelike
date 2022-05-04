@@ -178,6 +178,10 @@ The Dungeon warden. It will call for help with its warning horn if it spots you.
 An ordinary hill-goblin guard, with a crude mace and some light armor. Not much
 to say about it. You can't help but wonder if a glaive would suit it better.
 
+% defender
+
+A lone guard, standing motionless in the stagnant air of the Dungeon.
+
 % javelineer
 
 A warrior clad in light armor, able to throw poisoned javelins with surprising
@@ -185,7 +189,7 @@ accuracy.
 
 % sentinel
 
-What a strange sentinel. The devs really need to redo this monster.
+A highly-trained guard.
 
 % lead_turtle
 
