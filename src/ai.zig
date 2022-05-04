@@ -18,6 +18,7 @@ const types = @import("types.zig");
 
 const Mob = types.Mob;
 const EnemyRecord = types.EnemyRecord;
+const SuspiciousTileRecord = types.SuspiciousTileRecord;
 const Coord = types.Coord;
 const Direction = types.Direction;
 const Status = types.Status;
@@ -31,6 +32,11 @@ const DIRECTIONS = types.DIRECTIONS;
 const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
+
+// ----------------------------------------------------------------------------
+
+const NOISE_FORGET_AGE = 30;
+const NOISE_DONE_CHECKING = 5;
 
 fn flingRandomSpell(me: *Mob, target: *Mob) void {
     const spell = rng.chooseUnweighted(SpellOptions, me.spells);
@@ -261,6 +267,72 @@ pub fn checkForHostiles(mob: *Mob) void {
     };
     std.sort.insertionSort(EnemyRecord, mob.enemies.items, mob, _sortFunc._sortEnemies);
     std.sort.insertionSort(*Mob, mob.allies.items, mob, _sortFunc._sortAllies);
+}
+
+fn checkForNoises(mob: *Mob) void {
+    if (!mob.ai.is_curious) {
+        return;
+    }
+
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            const coord = Coord.new2(mob.coord.z, x, y);
+            if (mob.canHear(coord)) |sound| {
+                if (sound.mob_source) |othermob| {
+                    // Just because one guard made some noise running over to
+                    // the player doesn't mean we want to whole level to
+                    // run over and investigate the guard's noise.
+                    //
+                    if (sound.type == .Movement and !mob.isHostileTo(othermob))
+                        continue;
+
+                    if (state.dungeon.at(coord).prison)
+                        continue;
+                }
+
+                if (utils.findFirstNeedlePtr(mob.sustiles.items, coord, struct {
+                    fn f(r: *SuspiciousTileRecord, c: Coord) bool {
+                        return c.eq(r.coord);
+                    }
+                }.f)) |record| {
+                    // Reset everything
+                    record.age = 0;
+                    record.time_stared_at = 0;
+                } else {
+                    mob.sustiles.append(.{ .coord = coord }) catch err.wat();
+                }
+            }
+        }
+    }
+
+    // Increment counters, remove dead ones
+    var new_sustiles = std.ArrayList(SuspiciousTileRecord).init(state.GPA.allocator());
+    for (mob.sustiles.items) |*record| {
+        record.age += 1;
+
+        if (record.age < NOISE_FORGET_AGE and
+            record.time_stared_at < NOISE_DONE_CHECKING)
+        {
+            new_sustiles.append(record.*) catch err.wat();
+        }
+    }
+    mob.sustiles.deinit();
+    mob.sustiles = new_sustiles;
+
+    // Sort coords according to distance.
+    std.sort.insertionSort(SuspiciousTileRecord, mob.sustiles.items, mob, struct {
+        fn f(me: *Mob, a: SuspiciousTileRecord, b: SuspiciousTileRecord) bool {
+            return a.coord.distance(me.coord) > b.coord.distance(me.coord);
+        }
+    }.f);
+
+    if (mob.ai.phase == .Work and mob.sustiles.items.len > 0) {
+        mob.ai.phase = .Investigate;
+    } else if (mob.ai.phase == .Investigate and mob.sustiles.items.len == 0) {
+        mob.ai.phase = .Work;
+    }
 }
 
 pub fn guardGlanceRandom(mob: *Mob) void {
@@ -1049,5 +1121,86 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
     } else if (dist >= FLEE_GOAL) {
         // Forget about him
         target.counter = 0;
+    }
+}
+
+pub fn main(mob: *Mob, alloc: mem.Allocator) void {
+    for (mob.squad_members.items) |lmob| {
+        if (!lmob.is_dead and lmob.ai.phase == .Work) {
+            lmob.ai.target = mob.ai.target;
+            lmob.ai.phase = mob.ai.phase;
+            lmob.ai.work_area.items[0] = mob.ai.work_area.items[0];
+        }
+    }
+
+    checkForHostiles(mob);
+    checkForNoises(mob);
+
+    // Should I wake up?
+    if (mob.isUnderStatus(.Sleeping)) |_| {
+        switch (mob.ai.phase) {
+            .Hunt, .Investigate => mob.cancelStatus(.Sleeping),
+            .Work => {
+                _ = mob.rest();
+                return;
+            },
+            .Flee => err.bug("Fleeing mob was put to sleep...?", .{}),
+        }
+    }
+
+    // Should I flee (or stop fleeing?)
+    if (mob.ai.phase == .Hunt and shouldFlee(mob)) {
+        mob.ai.phase = .Flee;
+
+        if (mob.isUnderStatus(.Exhausted) == null) {
+            if (mob.ai.flee_effect) |s| {
+                if (mob.isUnderStatus(s.status) == null) {
+                    mob.applyStatus(s, .{});
+                }
+            }
+        }
+    } else if (mob.ai.phase == .Flee and !shouldFlee(mob)) {
+        mob.ai.phase = .Hunt;
+    }
+
+    if (mob.ai.phase == .Work) {
+        (mob.ai.work_fn)(mob, alloc);
+        return;
+    }
+
+    if (mob.ai.phase == .Investigate) {
+        assert(mob.ai.is_curious);
+        assert(mob.sustiles.items.len > 0);
+
+        const target = mob.sustiles.items[0];
+
+        if (mob.cansee(target.coord)) {
+            for (mob.sustiles.items) |*record| {
+                if (mob.cansee(record.coord)) {
+                    record.time_stared_at += 1;
+                }
+            }
+
+            guardGlanceAround(mob);
+
+            _ = mob.rest();
+        } else {
+            mob.tryMoveTo(target.coord);
+            mob.facing = mob.coord.closestDirectionTo(target.coord, state.mapgeometry);
+        }
+    }
+
+    if (mob.ai.phase == .Hunt) {
+        assert(mob.ai.is_combative);
+        assert(mob.enemies.items.len > 0);
+
+        (mob.ai.fight_fn.?)(mob, alloc);
+
+        const target = mob.enemies.items[0].mob;
+        mob.facing = mob.coord.closestDirectionTo(target.coord, state.mapgeometry);
+    }
+
+    if (mob.ai.phase == .Flee) {
+        flee(mob, alloc);
     }
 }

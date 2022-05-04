@@ -477,7 +477,8 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
     if (mob.ai.phase == .Investigate) {
         var i = MobInfoLine{ .char = '?' };
         var you_str: []const u8 = "";
-        if (state.dungeon.soundAt(mob.ai.target.?).mob_source) |soundsource| {
+        const cur_sustile = mob.sustiles.items[0].coord;
+        if (state.dungeon.soundAt(cur_sustile).mob_source) |soundsource| {
             if (soundsource == state.player) {
                 you_str = "you";
             }

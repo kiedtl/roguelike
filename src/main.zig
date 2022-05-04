@@ -6,6 +6,7 @@ const meta = std.meta;
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
+const ai = @import("ai.zig");
 const rng = @import("rng.zig");
 const player = @import("player.zig");
 const literature = @import("literature.zig");
@@ -477,7 +478,7 @@ fn tickGame() void {
                     while (!readInput()) display.draw();
                     if (state.state == .Quit) break;
                 } else {
-                    state._mob_occupation_tick(mob, state.GPA.allocator());
+                    ai.main(mob, state.GPA.allocator());
                 }
             }
 
@@ -545,7 +546,7 @@ fn viewerTickGame(cur_level: usize) void {
                 _ = mob.rest();
                 continue;
             } else {
-                state._mob_occupation_tick(mob, state.GPA.allocator());
+                ai.main(mob, state.GPA.allocator());
             }
 
             mob.checkForPatternUsage();

@@ -746,6 +746,12 @@ pub const EnemyRecord = struct {
     counter: usize,
 };
 
+pub const SuspiciousTileRecord = struct {
+    coord: Coord,
+    time_stared_at: usize = 0,
+    age: usize = 0,
+};
+
 pub const Message = struct {
     msg: [128:0]u8,
     type: MessageType,
@@ -1326,6 +1332,7 @@ pub const Mob = struct { // {{{
     path_cache: std.AutoHashMap(Path, Coord) = undefined,
     enemies: std.ArrayList(EnemyRecord) = undefined,
     allies: MobArrayList = undefined,
+    sustiles: std.ArrayList(SuspiciousTileRecord) = undefined,
 
     facing: Direction = .North,
     coord: Coord = Coord.new(0, 0),
@@ -2392,6 +2399,7 @@ pub const Mob = struct { // {{{
         self.squad_members = MobArrayList.init(alloc);
         self.enemies = std.ArrayList(EnemyRecord).init(alloc);
         self.allies = MobArrayList.init(alloc);
+        self.sustiles = std.ArrayList(SuspiciousTileRecord).init(alloc);
         self.activities.init();
         self.path_cache = std.AutoHashMap(Path, Coord).init(alloc);
         self.ai.work_area = CoordArrayList.init(alloc);
@@ -2503,6 +2511,7 @@ pub const Mob = struct { // {{{
         self.squad_members.deinit();
         self.enemies.deinit();
         self.allies.deinit();
+        self.sustiles.deinit();
         self.path_cache.clearAndFree();
         self.ai.work_area.deinit();
 
