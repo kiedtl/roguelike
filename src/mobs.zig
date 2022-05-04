@@ -1054,106 +1054,6 @@ pub const FrozenFiendTemplate = MobTemplate{
     .armor = &items.HauberkArmor,
 };
 
-pub const TanusExperiment = MobTemplate{
-    .mob = .{
-        .id = "tanus_exp",
-        .species = &Species{ .name = "tanusian experiment" },
-        .tile = 'ג',
-        .ai = AI{
-            .profession_name = null,
-            .profession_description = "wandering",
-            .work_fn = ai.wanderWork,
-            .fight_fn = ai.meleeFight,
-            .is_combative = true,
-            .is_curious = true,
-        },
-        .allegiance = .Necromancer,
-
-        .max_HP = 10,
-        .memory_duration = 8,
-        .blood = .Blood,
-        .stats = .{ .Willpower = 3, .Evade = 10, .Speed = 100 },
-    },
-    .weapon = &items.ClubWeapon,
-    .armor = &items.LeatherArmor,
-    .statuses = &[_]StatusDataInfo{.{ .status = .Backvision, .duration = .Prm }},
-};
-
-pub const CatalineExperiment = MobTemplate{
-    .mob = .{
-        .id = "cataline_exp",
-        .species = &Species{ .name = "catalinic experiment" },
-        .tile = 'ג',
-        .ai = AI{
-            .profession_name = null,
-            .profession_description = "wandering",
-            .work_fn = ai.wanderWork,
-            .fight_fn = ai.meleeFight,
-            .is_combative = true,
-            .is_curious = true,
-        },
-        .allegiance = .Necromancer,
-
-        .max_HP = 10,
-        .memory_duration = 8,
-        .blood = .Blood,
-        .stats = .{ .Willpower = 3, .Evade = 10, .Speed = 100 },
-    },
-    .weapon = &items.ClubWeapon,
-    .armor = &items.LeatherArmor,
-    .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
-};
-
-pub const FlouinExperiment = MobTemplate{
-    .mob = .{
-        .id = "flouin_exp",
-        .species = &Species{ .name = "flouinian experiment" },
-        .tile = 'ג',
-        .ai = AI{
-            .profession_name = null,
-            .profession_description = "wandering",
-            .work_fn = ai.wanderWork,
-            .fight_fn = ai.meleeFight,
-            .is_combative = true,
-            .is_curious = true,
-        },
-        .allegiance = .Necromancer,
-
-        .max_HP = 10,
-        .memory_duration = 15,
-        .blood = .Blood,
-        .stats = .{ .Willpower = 3, .Evade = 10, .Speed = 100 },
-    },
-    .weapon = &items.ClubWeapon,
-    .armor = &items.LeatherArmor,
-    .statuses = &[_]StatusDataInfo{.{ .status = .DayBlindness, .duration = .Prm }},
-};
-
-pub const PhytinExperiment = MobTemplate{
-    .mob = .{
-        .id = "phytin_exp",
-        .species = &Species{ .name = "phytinic experiment" },
-        .tile = 'ג',
-        .ai = AI{
-            .profession_name = null,
-            .profession_description = "wandering",
-            .work_fn = ai.wanderWork,
-            .fight_fn = ai.meleeFight,
-            .is_combative = true,
-            .is_curious = true,
-        },
-        .allegiance = .Necromancer,
-
-        .max_HP = 10,
-        .memory_duration = 15,
-        .blood = .Blood,
-        .stats = .{ .Willpower = 3, .Evade = 10, .Speed = 100 },
-    },
-    .weapon = &items.ClubWeapon,
-    .armor = &items.LeatherArmor,
-    .statuses = &[_]StatusDataInfo{.{ .status = .NightBlindness, .duration = .Prm }},
-};
-
 pub const LivingIceTemplate = MobTemplate{
     .mob = .{
         .id = "living_ice",
@@ -1306,10 +1206,6 @@ pub const MOBS = [_]MobTemplate{
     BurningBruteTemplate,
     FrozenFiendTemplate,
     SulfurFiendTemplate,
-    TanusExperiment,
-    CatalineExperiment,
-    FlouinExperiment,
-    PhytinExperiment,
 };
 
 pub const PRISONERS = [_]MobTemplate{
@@ -1320,13 +1216,6 @@ pub const STATUES = [_]MobTemplate{
     KyaniteStatueTemplate,
     NebroStatueTemplate,
     CrystalStatueTemplate,
-};
-
-pub const EXPERIMENTS = [_]MobTemplate{
-    TanusExperiment,
-    CatalineExperiment,
-    FlouinExperiment,
-    PhytinExperiment,
 };
 
 pub fn findMobById(raw_id: anytype) ?*const MobTemplate {

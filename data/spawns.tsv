@@ -29,10 +29,6 @@
 # special Lab monsters
 "lead_turtle"    	   - 	   - 	  60 	  60 	  70 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
 "iron_wasp"      	   - 	   - 	  40 	  50 	  60 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
-"tanus_exp"      	   - 	   - 	  25 	  30 	  40 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
-"cataline_exp"   	   - 	   - 	  25 	  30 	  40 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
-"flouin_exp"     	   - 	   - 	  25 	  30 	  40 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
-"phytin_exp"     	   - 	   - 	  25 	  30 	  40 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
 
 # special Cavern monsters
 "dustling"       	   - 	   - 	   - 	   - 	   - 	  60 	  60 	  50 	   - 	   - 	   - 	   - 	   - 	   -

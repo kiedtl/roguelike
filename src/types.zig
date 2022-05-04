@@ -880,11 +880,6 @@ pub const Status = enum {
     // Doesn't have a power field.
     Fear,
 
-    // Allows mob to see directly behind them as well as in front of them.
-    //
-    // Doesn't have a power field.
-    Backvision,
-
     // Allows mob to see completely in dark areas.
     //
     // Doesn't have a power field.
@@ -964,7 +959,6 @@ pub const Status = enum {
             .Invigorate => "invigorated",
             .Pain => "tormented",
             .Fear => "terrified",
-            .Backvision => "reverse-sighted",
             .NightVision => "night-sighted",
             .DayBlindness => "day-blinded",
             .NightBlindness => "night-blinded",
@@ -1007,7 +1001,6 @@ pub const Status = enum {
             .Echolocation => null,
             .Recuperate => null,
             .NightVision,
-            .Backvision,
             .NightBlindness,
             .DayBlindness,
             => null,
@@ -1044,7 +1037,6 @@ pub const Status = enum {
             .Echolocation => null,
             .Recuperate => null,
             .NightVision,
-            .Backvision,
             .NightBlindness,
             .DayBlindness,
             => null,
@@ -1497,8 +1489,6 @@ pub const Mob = struct { // {{{
         const direction = if (self.deg360_vision) null else self.facing;
 
         fov.rayCast(self.coord, vision, energy, Dungeon.tileOpacity, &self.fov, direction, self == state.player);
-        if (self.isUnderStatus(.Backvision) != null and direction != null)
-            fov.rayCast(self.coord, vision, energy, Dungeon.tileOpacity, &self.fov, direction.?.opposite(), self == state.player);
 
         for (self.fov) |row, y| for (row) |_, x| {
             if (self.fov[y][x] > 0) {

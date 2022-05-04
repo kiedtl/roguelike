@@ -2613,11 +2613,6 @@ fn levelFeatureVials(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _
     ) catch err.wat();
 }
 
-fn levelFeatureExperiments(_: usize, coord: Coord, _: *const Room, _: *const Prefab, alloc: mem.Allocator) void {
-    const exp_t = rng.chooseUnweighted(mobs.MobTemplate, &mobs.EXPERIMENTS);
-    _ = mobs.placeMob(alloc, &exp_t, coord, .{});
-}
-
 // Randomly place a vial ore. If the Y coordinate is even, create a container and
 // fill it up halfway; otherwise, place only one item on the ground.
 fn levelFeatureOres(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _: mem.Allocator) void {
@@ -3403,7 +3398,7 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
         levelFeatureVials,
         levelFeaturePrisoners,
-        levelFeatureExperiments,
+        null,
         levelFeatureOres,
     },
 
