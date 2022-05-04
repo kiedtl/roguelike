@@ -98,6 +98,29 @@ pub const ExecutionerTemplate = MobTemplate{
     .weapon = &items.KnoutWeapon,
 };
 
+pub const DestroyerTemplate = MobTemplate{
+    .mob = .{
+        .id = "destroyer",
+        .species = &GoblinSpecies,
+        .tile = 'ד',
+        .ai = AI{
+            .profession_name = "destroyer",
+            .profession_description = "wandering",
+            .work_fn = ai.wanderWork,
+            .fight_fn = ai.meleeFight,
+            .is_combative = true,
+            .is_curious = true,
+        },
+        .allegiance = .Necromancer,
+
+        .max_HP = 12,
+        .memory_duration = 5,
+        .stats = .{ .Willpower = 4, .Evade = 10, .Melee = 70 },
+    },
+    .weapon = &items.KnoutWeapon,
+    .armor = &items.HauberkArmor,
+};
+
 pub const WatcherTemplate = MobTemplate{
     .mob = .{
         .id = "watcher",
@@ -1252,6 +1275,7 @@ pub const SpectralSwordTemplate = MobTemplate{
 
 pub const MOBS = [_]MobTemplate{
     ExecutionerTemplate,
+    DestroyerTemplate,
     WatcherTemplate,
     WardenTemplate,
     GuardTemplate,

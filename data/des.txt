@@ -159,8 +159,12 @@ A raised platform.
 
 % executioner
 
-One of the many Dungeon executioners, wielding a giant spiked flail that,
+One of the many Dungeon executioners. It wields a giant spiked flail that,
 luckily, is good for little else besides its gruesome profession.
+
+% destroyer
+
+A heavily-armored and highly trained executioner.
 
 % watcher
 
