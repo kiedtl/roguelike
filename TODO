@@ -187,7 +187,7 @@ x burning brute
     - Every 2-3 turns, flames seep out of mob and ignite nearby tiles.
     - When timer is over, mob explodes, damaging all nearby mobs.
   x Has kicking (x1) and clawing (x1) attack (need species struct for this).
-- destroyer
+- hunter
   - Travels with a swarm of stalkers (see below).
   - Memory duration of 9.
   - Chain mail and rapier, ~15 HP.
@@ -198,8 +198,8 @@ x burning brute
     loop disgustingly around its silver torso."
   - A small aluminum drone, with copper wires sticking out. The player
     wouldn't know that of course.
-  - Travels with a destroyer captain.
-  - "Sticks" near to player, keeping destroyer aware of player's location.
+  - Travels with a hunter captain.
+  - "Sticks" near to player, keeping hunter aware of player's location.
   - Does not actually attack player, keeps distance of 3 tiles.
   - Completely deaf, won't investigate on its own. Vision of 3 tiles,
     has night vision.
@@ -314,12 +314,11 @@ x mellaent
   - 10 HP, fast, no armor
   - Vicious bite (3 dmg); may cause bleeding effect if it's added
   - May be found chained w/ beastmasters
-- destroyer
+x destroyer
   - Armored executioner, w/ more HP + more evade% + more melee%
   - Found instead of executioners above Caverns
-- sentinel
-  - 10 HP
-  - Armored, sword-wielding version of guard
+x sentinel
+  - 12 HP. Armored, sword-wielding version of guard
 - brooder
   - Smite-targeted electrical attack; does more damage if surrounded by
     empty squares (i.e., DCSS' Airstrike)
@@ -837,20 +836,21 @@ x More kits and traps: fire, shock, incineration, knockback
   - Use Eqp status-type (while keeping incremental power increases)
   - Refactor pattern checks
 - Multi-tile props: trees and braziers
-- Fix torture chambers; add more of them
+x Fix trtr chambers; add more of them
 - Revisit Laboratory
   - Spires and spire kits
   - Add traps of blinding gas
 - More mundane weapons: hammer, poker
 - Guards in cubbyholes (both corridors and rooms)
 - Dungeon features: barrel of water, barrel of toxic sludge
+- War olgs, cinder worms/brutes, silver fiends, brooders, destroyers
 - Blood, ember, fire, spark, lightning mage bands
 - Emberling/sparkling summoning trap kits
 - Fiend of vapours
 - Silver weapons and battery packs, silver hornets
 - Bone and masterpiece weapons
 - Headgear, footgear, auxiliary items
-- Potions of disrupt, insubst/fortif, blinding, distraction, glowing
+- Potions of insubst/fortif, debilitation, veilification, distraction, glowing
 - Basic speeches by mobs
 *** v1.1.0 release ***
 - Lava and Water rework
@@ -866,6 +866,7 @@ x More kits and traps: fire, shock, incineration, knockback
   - Patrol squads
   - Prisoner squads + goblin commanders
 - Corruption effects
+  - Potions of disruption
 - Mob repositioning AI
   - AI to move out of dangerous tiles (gas/terrain)
   - AI to move out of reach of enemy, if mob has reaching weapon and is faster
@@ -1008,7 +1009,7 @@ x Ensure that the EnemyRecord counter is only decremented if the pursuer can
 x Make watchers smack intruders when they can't run
 - Mobs that throw potions of light at hostiles that are in areas too dark for
   them to see
-- Fleeing mobs and mobs that have just spotted an enemy "tell" nearby allies
+x Fleeing mobs and mobs that have just spotted an enemy "tell" nearby allies
   about the hostile
 x Define what undead are somewhere (combat bonuses, stat increases, miasma
   emissions, etc)
@@ -1037,7 +1038,7 @@ x Define what undead are somewhere (combat bonuses, stat increases, miasma
   - Buffs on self or allies (haste, might, etc)
 - Enemies that surrender or start whimpering when fleeing and trapped in a
   corner, or maybe perpare for one final all-out assault
-  - Would provide excuse for .Enraged status implementation.
+  x Would provide excuse for .Enraged status implementation.
 - Enemies that suicide when cornered and about to die.
 - New: Smelling mechanics, dogs, hounds, creeping deaths
 - New: Beastmasters
@@ -1057,22 +1058,22 @@ x Add padding between infopane/msgpane and map
 x Make it easier to tell the heavily wounded from dead
 x Fix showing of display percentage of last damage
 x UI for status effects (paralysis, etc)
-- Show red/yellow/orange for low health bars
+x Show red/yellow/orange for low health bars
 ~ Use proper CP407 arrows for staircases
 x Show prisoner's activity as "prisoner" instead of {"investigate","attack"}, etc
 x Make bg of cell with noise green
-- @ command to see player's full AC and stats
-- Show information characters next to mob in enemy pane
-  - *:   red: low HP, white: HP
-  - n:   neutral
-  - p:   prisoner/chained
-  - u:   rFume∞
-  - i:   immobile
-  - f:   faster than player
-  - s:   slower than player
-  - ?:   investigating noise
-  - !:   fleeing
-  - @:   grey (unaware), red (seen), pink (remembers), blue (fleeing), white (doesn't matter)
+x @ command to see player's full AC and stats
+x Show information characters next to mob in enemy pane
+  x *:   red: low HP, white: HP
+  x n:   neutral
+  x p:   prisoner/chained
+  x u:   rFume∞
+  x i:   immobile
+  x f:   faster than player
+  x s:   slower than player
+  x ?:   investigating noise
+  x !:   fleeing
+  x @:   grey (unaware), red (seen), pink (remembers), blue (fleeing), white (doesn't matter)
 
 Items/Machines
 ==============
@@ -1162,7 +1163,7 @@ Message pane
   x On death
   - On resisting a spell
   - On swapping weapon
-  - On making a noise, or mob making a noise
+  x On making a noise, or mob making a noise
 x Messages that require confirm/keypress
 x Only print trap messages when culprit is player
 x Group identical messages in msgpane
@@ -1308,8 +1309,8 @@ x Use Manhattan distance for A* algorithm (overestimating heuristic might be bet
 
 Code cleanups
 =============
-- Defined unimplemented(), todo(), and oom()
-- Stop using the `catch unreachable` syntax:
+x Defined unimplemented(), todo(), and oom()
+x Stop using the `catch unreachable` syntax:
     libera#zig 19:58 <ikskuh> "catch unreachable" will happily continue to execute code
                               after the error in non-safe build modes
 - Remove all floats from color functions, sound systems, gas systems, etc.
@@ -1322,7 +1323,7 @@ Code cleanups
 
 Refactorings
 ============
-- Define Species struct and carry immutable data for each mob in it
+x Define Species struct and carry immutable data for each mob in it
 x Convert enum+union pair to union(enum) (see std/fifo.zig) where needed
 x Research Manhattan distance vs Euclidian distance vs Moore neighborhood:
   https://reddit.com/r/roguelikedev/comments/nev1jg/a_pathfinding_unstablenondeterministic/
@@ -1331,7 +1332,7 @@ x Use Chebyshev instead of Manhattan distance
 - Use arrays and indexes for state.* instead of linked lists and pointers
 - Use linked list for roomslist, and use raw pointers instead of indexes
   whenever needed in mapgen code.
-- Keep track of each connected room in mapgen, so that no room connects to the
+x Keep track of each connected room in mapgen, so that no room connects to the
   same room twice.
 
 Tests
