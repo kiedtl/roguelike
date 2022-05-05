@@ -631,6 +631,10 @@ pub fn _dmgstr(p: usize, vself: []const u8, vother: []const u8, vdeg: []const u8
     return .{ .dmg_percent = p, .verb_self = vself, .verb_other = vother, .verb_degree = vdeg };
 }
 
+pub const BITING_STRS = [_]DamageStr{
+    _dmgstr(080, "bite", "bites", ""),
+    _dmgstr(081, "mangle", "mangles", ""),
+};
 pub const CRUSHING_STRS = [_]DamageStr{
     _dmgstr(000, "whack", "whacks", ""),
     _dmgstr(010, "cudgel", "cudgels", ""),
@@ -638,10 +642,11 @@ pub const CRUSHING_STRS = [_]DamageStr{
     _dmgstr(040, "hammer", "hammers", ""),
     _dmgstr(060, "batter", "batters", ""),
     _dmgstr(070, "thrash", "thrashes", ""),
-    _dmgstr(120, "flatten", "flattens", " like a chapati"),
-    _dmgstr(150, "smash", "smashes", " like an overripe mango"),
+    _dmgstr(130, "smash", "smashes", " like an overripe mango"),
+    _dmgstr(160, "flatten", "flattens", " like a pancake"),
+    _dmgstr(190, "flatten", "flattens", " like a chapati"),
     _dmgstr(200, "grind", "grinds", " into powder"),
-    _dmgstr(400, "pulverise", "pulverises", " into a thin bloody mist"),
+    _dmgstr(400, "pulverise", "pulverises", " into a bloody mist"),
 };
 pub const SLASHING_STRS = [_]DamageStr{
     _dmgstr(000, "hit", "hits", ""),

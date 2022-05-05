@@ -286,15 +286,12 @@ pub const LeadTurtleTemplate = MobTemplate{
             .default_attack = &Weapon{
                 .reach = 2,
                 .damage = 4,
-                .strs = &[_]DamageStr{
-                    items._dmgstr(005, "bite", "bites", ""),
-                },
+                .strs = &items.BITING_STRS,
             },
         },
         .tile = 't',
         .life_type = .Construct,
         .ai = AI{
-            .profession_name = null,
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
@@ -334,7 +331,6 @@ pub const IronWaspTemplate = MobTemplate{
         .tile = 'y',
         .life_type = .Construct,
         .ai = AI{
-            .profession_name = null,
             .profession_description = "resting",
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
@@ -429,7 +425,6 @@ pub const GoblinTemplate = MobTemplate{
         .species = &GoblinSpecies,
         .tile = 'g',
         .ai = AI{
-            .profession_name = null,
             .profession_description = "wandering",
             .work_fn = ai.patrolWork,
             .fight_fn = ai.meleeFight,
@@ -521,7 +516,6 @@ pub const DustlingTemplate = MobTemplate{
         },
         .tile = 'ð',
         .ai = AI{
-            .profession_name = null,
             .profession_description = "wandering",
             .work_fn = ai.patrolWork,
             .fight_fn = ai.meleeFight,
@@ -546,13 +540,55 @@ pub const DustlingTemplate = MobTemplate{
     },
 };
 
+pub const CinderWormTemplate = MobTemplate{
+    .mob = .{
+        .id = "cinder_worm",
+        .species = &Species{
+            .name = "cinder worm",
+            .default_attack = &Weapon{
+                .damage = 1,
+                .delay = 150,
+                .strs = &items.BITING_STRS,
+            },
+        },
+        .tile = '¢',
+        .ai = AI{
+            .profession_description = "wandering",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.mageFight,
+        },
+        .allegiance = .Necromancer,
+        .max_HP = 8,
+
+        .spells = &[_]SpellOptions{
+            // Have cooldown period that matches time needed for flames to
+            // die out, so that the worm isn't constantly vomiting fire when
+            // its surroundings are already in flames
+            //
+            // TODO: check this in spells.zig
+            .{ .MP_cost = 10, .spell = &spells.CAST_FIREBLAST, .power = 4 },
+        },
+        .max_MP = 10,
+
+        .memory_duration = 5,
+        .blood = .Ash,
+        .blood_spray = gas.SmokeGas.id,
+        .corpse = .None,
+        .innate_resists = .{ .rFire = 100, .rElec = 25, .rFume = 100 },
+        .stats = .{ .Willpower = 6, .Melee = 80, .Speed = 80, .Vision = 4 },
+    },
+    .statuses = &[_]StatusDataInfo{
+        .{ .status = .Fire, .duration = .Prm },
+        .{ .status = .Noisy, .duration = .Prm },
+    },
+};
+
 pub const MellaentTemplate = MobTemplate{
     .mob = .{
         .id = "mellaent",
         .species = &Species{ .name = "mellaent" },
         .tile = 'b',
         .ai = AI{
-            .profession_name = null,
             .profession_description = "wandering",
             .work_fn = ai.patrolWork,
             .fight_fn = ai.meleeFight,
@@ -574,7 +610,6 @@ pub const KyaniteStatueTemplate = MobTemplate{
         .species = &Species{ .name = "kyanite statue" },
         .tile = '☻',
         .ai = AI{
-            .profession_name = null,
             .profession_description = "gazing",
             .work_fn = ai.dummyWork,
             .fight_fn = ai.statueFight,
@@ -608,7 +643,6 @@ pub const NebroStatueTemplate = MobTemplate{
         .species = &Species{ .name = "nebro statue" },
         .tile = '☻',
         .ai = AI{
-            .profession_name = null,
             .profession_description = "gazing",
             .work_fn = ai.dummyWork,
             .fight_fn = ai.statueFight,
@@ -642,7 +676,6 @@ pub const CrystalStatueTemplate = MobTemplate{
         .species = &Species{ .name = "crystal statue" },
         .tile = '☻',
         .ai = AI{
-            .profession_name = null,
             .profession_description = "gazing",
             .work_fn = ai.dummyWork,
             .fight_fn = ai.statueFight,
@@ -952,7 +985,6 @@ pub const BurningBruteTemplate = MobTemplate{
         .species = &BurningBruteSpecies,
         .tile = 'B',
         .ai = AI{
-            .profession_name = null,
             .profession_description = "sulking",
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
@@ -990,7 +1022,6 @@ pub const SulfurFiendTemplate = MobTemplate{
         .species = &Species{ .name = "sulfur fiend" },
         .tile = 'S',
         .ai = AI{
-            .profession_name = null,
             .profession_description = "sulking",
             .work_fn = ai.patrolWork,
             .fight_fn = ai.mageFight,
@@ -1025,7 +1056,6 @@ pub const FrozenFiendTemplate = MobTemplate{
         .species = &Species{ .name = "frozen fiend" },
         .tile = 'F',
         .ai = AI{
-            .profession_name = null,
             .profession_description = "patrolling",
             .work_fn = ai.patrolWork,
             .fight_fn = ai.mageFight,
@@ -1068,7 +1098,6 @@ pub const LivingIceTemplate = MobTemplate{
         },
         .tile = 'I',
         .ai = AI{
-            .profession_name = null,
             .profession_description = "watching",
             .work_fn = ai.dummyWork,
             .fight_fn = ai.meleeFight,
@@ -1102,7 +1131,6 @@ pub const BallLightningTemplate = MobTemplate{
         .species = &Species{ .name = "ball lightning" },
         .tile = 'י',
         .ai = AI{
-            .profession_name = null,
             .profession_description = "wandering",
             .work_fn = ai.ballLightningWorkOrFight,
             .fight_fn = ai.ballLightningWorkOrFight,
@@ -1144,7 +1172,6 @@ pub const SpectralSwordTemplate = MobTemplate{
         },
         .tile = 'ƨ',
         .ai = AI{
-            .profession_name = null,
             .profession_description = "[this is a bug]",
             .work_fn = ai.suicideWork,
             .fight_fn = ai.meleeFight,
@@ -1190,6 +1217,7 @@ pub const MOBS = [_]MobTemplate{
     ConvultTemplate,
     VapourMageTemplate,
     DustlingTemplate,
+    CinderWormTemplate,
     MellaentTemplate,
     KyaniteStatueTemplate,
     NebroStatueTemplate,

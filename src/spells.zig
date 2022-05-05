@@ -13,6 +13,7 @@ const mem = std.mem;
 const types = @import("types.zig");
 const combat = @import("combat.zig");
 const err = @import("err.zig");
+const explosions = @import("explosions.zig");
 const items = @import("items.zig");
 const gas = @import("gas.zig");
 const mobs = @import("mobs.zig");
@@ -56,6 +57,28 @@ pub const CAST_HASTE_DUSTLING = Spell{
     .cast_type = .Smite,
     .smite_target_type = .{ .SpecificMob = "dustling" },
     .effect_type = .{ .Status = .Fast },
+};
+
+pub const CAST_FIREBLAST = Spell{
+    .id = "sp_fireblast",
+    .name = "vomit flames",
+    .cast_type = .Smite,
+    .smite_target_type = .Self,
+    .check_has_effect = struct {
+        fn f(caster: *Mob, opts: SpellOptions, target: Coord) bool {
+            return opts.power >= target.distance(caster.coord);
+        }
+    }.f,
+    .noise = .Quiet,
+    .effect_type = .{ .Custom = struct {
+        fn f(caster: Coord, _: Spell, opts: SpellOptions, target: Coord) void {
+            if (state.player.cansee(target)) {
+                const caster_m = state.dungeon.at(caster).mob.?;
+                state.message(.SpellCast, "{c} belches forth flames!", .{caster_m});
+            }
+            explosions.fireBurst(target, opts.power);
+        }
+    }.f },
 };
 
 pub const BOLT_AIRBLAST = Spell{

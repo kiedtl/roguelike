@@ -236,6 +236,10 @@ Wow, he really does look weak on his own.
 A humanoid construct created by a minor sorcerer. It seems to be more or less
 harmless...
 
+% cinder_worm
+
+An ancient demon, incarnate as a writhing mass of molten granite.
+
 % mellaent
 
 An annoying species of underground bat, shimmering conspicuously in the
@@ -344,3 +348,7 @@ Hasten a nearby undead ally, making them twice as fast.
 % sp_heal_undead
 
 Use a nearby corpse to heal a nearby undead ally by a significant amount.
+
+% sp_fireblast
+
+Vomit fire, engulfing the surrounding area in blazing flames.

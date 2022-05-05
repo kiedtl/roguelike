@@ -1076,18 +1076,20 @@ pub const Status = enum {
             return;
         }
 
-        mob.takeDamage(.{
-            .amount = @intToFloat(f64, rng.range(usize, 1, 2)),
-            .kind = .Fire,
-            .blood = false,
-        }, .{
-            .noun = "The fire",
-            .strs = &[_]DamageStr{
-                items._dmgstr(000, "BUG", "scorches", ""),
-                items._dmgstr(020, "BUG", "burns", ""),
-                items._dmgstr(100, "BUG", "burns", " horribly"),
-            },
-        });
+        if (mob.resistance(.rFire) != 0) {
+            mob.takeDamage(.{
+                .amount = @intToFloat(f64, rng.range(usize, 1, 2)),
+                .kind = .Fire,
+                .blood = false,
+            }, .{
+                .noun = "The fire",
+                .strs = &[_]DamageStr{
+                    items._dmgstr(020, "BUG", "scorches", ""),
+                    items._dmgstr(080, "BUG", "burns", ""),
+                    items._dmgstr(100, "BUG", "burns", " horribly"),
+                },
+            });
+        }
 
         if (state.dungeon.fireAt(mob.coord).* == 0)
             fire.setTileOnFire(mob.coord);
@@ -1202,7 +1204,7 @@ pub const AIPhase = enum { Work, Hunt, Investigate, Flee };
 
 pub const AI = struct {
     // Name of mob doing the profession.
-    profession_name: ?[]const u8,
+    profession_name: ?[]const u8 = null,
 
     // Description of what the mob is doing. Examples: Guard("patrolling"),
     // Smith("forging"), Demon("sulking")
@@ -1219,10 +1221,10 @@ pub const AI = struct {
     fight_fn: ?fn (*Mob, mem.Allocator) void,
 
     // Should the mob attack hostiles?
-    is_combative: bool,
+    is_combative: bool = true,
 
     // Should the mob investigate noises?
-    is_curious: bool,
+    is_curious: bool = true,
 
     // Should the mob ever flee at low health?
     is_fearless: bool = false,
