@@ -43,8 +43,8 @@ pub fn fireBurst(ground0: Coord, max_radius: usize) void {
 
     var deg: usize = 0;
     while (deg < 360) : (deg += 30) {
-        const s = rng.range(usize, max_radius / 2, max_radius) * 10;
-        fov.rayCastOctants(ground0, max_radius, s, S._opacityFunc, &result, deg, deg + 31);
+        const radius = rng.range(usize, max_radius / 2, max_radius);
+        fov.rayCastOctants(ground0, radius, radius * 10, S._opacityFunc, &result, deg, deg + 31);
     }
     result[ground0.y][ground0.x] = 100; // Ground zero is always incinerated
 
