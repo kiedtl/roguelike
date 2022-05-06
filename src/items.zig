@@ -632,10 +632,11 @@ pub fn _dmgstr(p: usize, vself: []const u8, vother: []const u8, vdeg: []const u8
 }
 
 pub const CRUSHING_STRS = [_]DamageStr{
-    _dmgstr(000, "whack", "whacks", ""),
+    _dmgstr(005, "whack", "whacks", ""),
     _dmgstr(010, "cudgel", "cudgels", ""),
     _dmgstr(030, "bash", "bashes", ""),
-    _dmgstr(040, "hammer", "hammers", ""),
+    _dmgstr(040, "hit", "hits", ""),
+    _dmgstr(050, "hammer", "hammers", ""),
     _dmgstr(060, "batter", "batters", ""),
     _dmgstr(070, "thrash", "thrashes", ""),
     _dmgstr(130, "smash", "smashes", " like an overripe mango"),
@@ -645,26 +646,23 @@ pub const CRUSHING_STRS = [_]DamageStr{
     _dmgstr(400, "pulverise", "pulverises", " into a bloody mist"),
 };
 pub const SLASHING_STRS = [_]DamageStr{
-    _dmgstr(000, "hit", "hits", ""),
-    _dmgstr(020, "slash", "slashes", ""),
-    _dmgstr(040, "slice", "slices", ""),
-    _dmgstr(050, "shred", "shreds", ""),
-    _dmgstr(070, "chop", "chops", " into pieces"),
-    _dmgstr(090, "chop", "chops", " into tiny pieces"),
-    _dmgstr(110, "slice", "slices", " into ribbons"),
-    _dmgstr(140, "cut", "cuts", " asunder"),
-    _dmgstr(200, "mince", "minces", " like boiled poultry"),
+    _dmgstr(040, "hit", "hits", ""),
+    _dmgstr(050, "slash", "slashes", ""),
+    _dmgstr(090, "chop", "chops", " into pieces"),
+    _dmgstr(110, "chop", "chops", " into tiny pieces"),
+    _dmgstr(150, "slice", "slices", " into ribbons"),
+    _dmgstr(200, "cut", "cuts", " asunder"),
+    _dmgstr(250, "mince", "minces", " like boiled poultry"),
 };
 pub const PIERCING_STRS = [_]DamageStr{
-    _dmgstr(010, "prick", "pricks", ""),
-    _dmgstr(020, "puncture", "punctures", ""),
+    _dmgstr(005, "prick", "pricks", ""),
     _dmgstr(030, "hit", "hits", ""),
-    _dmgstr(040, "perforate", "perforates", ""),
+    _dmgstr(040, "impale", "impales", ""),
     _dmgstr(050, "skewer", "skewers", ""),
-    _dmgstr(070, "impale", "impales", ""),
+    _dmgstr(060, "perforate", "perforates", ""),
     _dmgstr(100, "skewer", "skewers", " like a kebab"),
-    _dmgstr(110, "spit", "spits", " like a pig"),
-    _dmgstr(120, "perforate", "perforates", " like a sieve"),
+    _dmgstr(200, "spit", "spits", " like a pig"),
+    _dmgstr(300, "perforate", "perforates", " like a sieve"),
 };
 pub const LACERATING_STRS = [_]DamageStr{
     _dmgstr(020, "whip", "whips", ""),
