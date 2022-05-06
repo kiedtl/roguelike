@@ -590,12 +590,16 @@ fn _getMonsSpellsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, li
                 _writerWrite(w, "· $cdodgeable$.: {s}\n", .{_formatBool(dodgeable)});
             }
 
-            const targeting = @as([]const u8, switch (spellcfg.spell.cast_type) {
-                .Ray => @panic("TODO"),
-                .Smite => "smite-targeted",
-                .Bolt => "bolt",
-            });
-            _writerWrite(w, "· $ctype$.: {s}\n", .{targeting});
+            if (!(spellcfg.spell.cast_type == .Smite and
+                spellcfg.spell.smite_target_type == .Self))
+            {
+                const targeting = @as([]const u8, switch (spellcfg.spell.cast_type) {
+                    .Ray => @panic("TODO"),
+                    .Smite => "smite-targeted",
+                    .Bolt => "bolt",
+                });
+                _writerWrite(w, "· $ctype$.: {s}\n", .{targeting});
+            }
 
             if (spellcfg.spell.checks_will) {
                 _writerWrite(w, "· $cwill-checked$.: $byes$.\n", .{});
