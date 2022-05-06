@@ -2200,6 +2200,7 @@ pub const Mob = struct { // {{{
         if (!is_stab and remaining_bonus_attacks > 0 and !recipient.should_be_dead()) {
             var newopts = opts;
             newopts.auto_hit = false;
+            newopts.damage_bonus = 100;
             newopts.is_bonus = true;
 
             _fightWithWeapon(
