@@ -475,12 +475,16 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
     }
 
     if (mob.ai.phase == .Investigate) {
+        assert(mob.sustiles.items.len > 0);
+
         var i = MobInfoLine{ .char = '?' };
         var you_str: []const u8 = "";
-        const cur_sustile = mob.sustiles.items[0].coord;
-        if (state.dungeon.soundAt(cur_sustile).mob_source) |soundsource| {
-            if (soundsource == state.player) {
-                you_str = "you";
+        {
+            const cur_sustile = mob.sustiles.items[0].coord;
+            if (state.dungeon.soundAt(cur_sustile).mob_source) |soundsource| {
+                if (soundsource == state.player) {
+                    you_str = "you";
+                }
             }
         }
         i.string.writer().print("investigating {s}", .{you_str}) catch err.wat();

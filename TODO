@@ -237,7 +237,7 @@ x lead turtle
   - Attacks that do fire damage
   - Leaves trails of fire behind
   - Fast
-- fire mage
+- brimstone mage
   - Has abilities of ember mage
   - Can set player on fire (will-checked)
   - Avoids melee
@@ -324,7 +324,7 @@ x sentinel
     empty squares (i.e., DCSS' Airstrike)
 - cinder worm
   - Fire attacks, Prm burning
-  - Pyroclastic surge: set surroundings of fire (ie fire blast)
+  - vomit fire: set surroundings of fire
   - Sometimes found as neutral prisoners
 - cinder brute
   - Just plain fire attacks, Prm burning
@@ -852,6 +852,7 @@ x Fix trtr chambers; add more of them
 - Headgear, footgear, auxiliary items
 - Potions of insubst/fortif, debilitation, veilification, distraction, glowing
 - Basic speeches by mobs
+- Cinder worms as prisoners somehow
 *** v1.1.0 release ***
 - Lava and Water rework
   - Rework as terrain

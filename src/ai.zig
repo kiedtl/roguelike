@@ -328,6 +328,7 @@ fn checkForNoises(mob: *Mob) void {
         }
     }.f);
 
+    // Start investigating or go back to work?
     if (mob.ai.phase == .Work and mob.sustiles.items.len > 0) {
         mob.ai.phase = .Investigate;
     } else if (mob.ai.phase == .Investigate and mob.sustiles.items.len == 0) {
