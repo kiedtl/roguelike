@@ -46,14 +46,6 @@ const SpellOptions = spells.SpellOptions;
 pub const HumanSpecies = Species{ .name = "human" };
 pub const GoblinSpecies = Species{ .name = "goblin" };
 pub const ImpSpecies = Species{ .name = "imp" };
-pub const BurningBruteSpecies = Species{
-    .name = "burning brute",
-    .default_attack = &items.ClawWeapon,
-    .aux_attacks = &[_]*const Weapon{
-        &items.ClawWeapon,
-        &items.KickWeapon,
-    },
-};
 
 pub const MobTemplate = struct {
     mob: Mob,
@@ -979,13 +971,27 @@ pub const TorturerNecromancerTemplate = MobTemplate{
     .armor = &items.LeatherArmor,
 };
 
+const BURNING_BRUTE_CLAW_WEAPON = Weapon{
+    .damage = 2,
+    .strs = &items.CLAW_STRS,
+};
+
 pub const BurningBruteTemplate = MobTemplate{
     .mob = .{
         .id = "burning_brute",
-        .species = &BurningBruteSpecies,
+        .species = &Species{
+            .name = "burning brute",
+            .default_attack = &BURNING_BRUTE_CLAW_WEAPON,
+            .aux_attacks = &[_]*const Weapon{
+                &BURNING_BRUTE_CLAW_WEAPON,
+                &Weapon{ .knockback = 3, .damage = 1, .strs = &items.KICK_STRS },
+            },
+        },
         .tile = 'B',
         .ai = AI{
             .profession_description = "sulking",
+            // *must* be stand_still_and_guard, otherwise it'll spread fire
+            // everywhere.
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
             .is_combative = true,
@@ -998,7 +1004,7 @@ pub const BurningBruteTemplate = MobTemplate{
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 2, .spell = &spells.CAST_RESURRECT_FIRE, .power = 200, .duration = 10 },
-            .{ .MP_cost = 3, .spell = &spells.BOLT_FIRE, .power = 3, .duration = 10 },
+            .{ .MP_cost = 3, .spell = &spells.BOLT_FIREBALL, .power = 2, .duration = 5 },
         },
         .max_MP = 12,
 
@@ -1008,7 +1014,7 @@ pub const BurningBruteTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = 100, .rFire = 100, .rElec = -25 },
-        .stats = .{ .Willpower = 8, .Evade = 15, .Speed = 100, .Vision = 5 },
+        .stats = .{ .Willpower = 8, .Evade = 10, .Melee = 80, .Speed = 100, .Vision = 5 },
     },
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Fire, .duration = .Prm },

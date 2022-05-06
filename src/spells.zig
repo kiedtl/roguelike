@@ -69,7 +69,7 @@ pub const CAST_FIREBLAST = Spell{
             return opts.power >= target.distance(caster.coord);
         }
     }.f,
-    .noise = .Quiet,
+    .noise = .Loud,
     .effect_type = .{ .Custom = struct {
         fn f(caster: Coord, _: Spell, opts: SpellOptions, target: Coord) void {
             if (state.player.cansee(target)) {
@@ -321,26 +321,30 @@ fn _effectBoltLightning(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) vo
     }
 }
 
-pub const BOLT_FIRE = Spell{
-    .id = "sp_fire_bolt",
-    .name = "bolt of fire",
+pub const BOLT_FIREBALL = Spell{
+    .id = "sp_fireball",
+    .name = "fireball",
     .cast_type = .Bolt,
-    .noise = .Medium,
-    .effect_type = .{ .Custom = _effectBoltFire },
+    // Has effect if:
+    //    mob isn't fire-immune
+    // && mob isn't on fire
+    // && caster isn't near mob
+    .check_has_effect = struct {
+        fn f(caster: *Mob, opts: SpellOptions, target: Coord) bool {
+            const mob = state.dungeon.at(target).mob.?;
+            return caster.coord.distance(mob.coord) > opts.power and
+                mob.resistance(.rFire) > 0 and
+                mob.isUnderStatus(.Fire) == null;
+        }
+    }.f,
+    .noise = .Loud,
+    .effect_type = .{ .Custom = struct {
+        fn f(_: Coord, _: Spell, opts: SpellOptions, target: Coord) void {
+            explosions.fireBurst(target, opts.power);
+            state.dungeon.at(target).mob.?.addStatus(.Fire, 0, .{ .Tmp = opts.duration });
+        }
+    }.f },
 };
-fn _effectBoltFire(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
-    if (state.dungeon.at(coord).mob) |victim| {
-        const avg_dmg = opts.power;
-        const dmg = rng.rangeClumping(usize, avg_dmg / 2, avg_dmg * 2, 2);
-        victim.takeDamage(.{
-            .amount = @intToFloat(f64, dmg),
-            .source = .RangedAttack,
-            .kind = .Fire,
-            .blood = false,
-        }, .{ .noun = "bolt of fire" });
-        victim.addStatus(.Fire, 0, .{ .Tmp = opts.duration });
-    }
-}
 
 pub const CAST_HASTE_UNDEAD = Spell{
     .id = "sp_hasten_undead",

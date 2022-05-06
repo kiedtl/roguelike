@@ -631,10 +631,6 @@ pub fn _dmgstr(p: usize, vself: []const u8, vother: []const u8, vdeg: []const u8
     return .{ .dmg_percent = p, .verb_self = vself, .verb_other = vother, .verb_degree = vdeg };
 }
 
-pub const BITING_STRS = [_]DamageStr{
-    _dmgstr(080, "bite", "bites", ""),
-    _dmgstr(081, "mangle", "mangles", ""),
-};
 pub const CRUSHING_STRS = [_]DamageStr{
     _dmgstr(000, "whack", "whacks", ""),
     _dmgstr(010, "cudgel", "cudgels", ""),
@@ -679,11 +675,28 @@ pub const LACERATING_STRS = [_]DamageStr{
     _dmgstr(150, "mangle", "mangles", " beyond recognition"),
 };
 
+pub const BITING_STRS = [_]DamageStr{
+    _dmgstr(080, "bite", "bites", ""),
+    _dmgstr(081, "mangle", "mangles", ""),
+};
+pub const CLAW_STRS = [_]DamageStr{
+    _dmgstr(010, "scratch", "scratches", ""),
+    _dmgstr(030, "claw", "claws", ""),
+    _dmgstr(050, "shred", "shreds", ""),
+    _dmgstr(090, "shred", "shreds", " like wet paper"),
+    _dmgstr(100, "tear", "tears", " into pieces"),
+    _dmgstr(150, "tear", "tears", " into tiny pieces"),
+    _dmgstr(200, "mangle", "mangles", " beyond recognition"),
+};
 pub const FIST_STRS = [_]DamageStr{
     _dmgstr(020, "punch", "punches", ""),
     _dmgstr(030, "hit", "hits", ""),
     _dmgstr(040, "bludgeon", "bludgeons", ""),
     _dmgstr(060, "pummel", "pummels", ""),
+};
+pub const KICK_STRS = [_]DamageStr{
+    _dmgstr(080, "kick", "kicks", ""),
+    _dmgstr(081, "curbstomp", "curbstomps", ""),
 };
 
 // Body weapons {{{
@@ -693,33 +706,6 @@ pub const FistWeapon = Weapon{
     .delay = 80,
     .damage = 2,
     .strs = &FIST_STRS,
-};
-
-pub const ClawWeapon = Weapon{
-    .id = "none",
-    .name = "none",
-    .delay = 90,
-    .damage = 2,
-    .strs = &[_]DamageStr{
-        _dmgstr(010, "scratch", "scratches", ""),
-        _dmgstr(030, "claw", "claws", ""),
-        _dmgstr(050, "shred", "shreds", ""),
-        _dmgstr(090, "shred", "shreds", " like wet paper"),
-        _dmgstr(100, "tear", "tears", " into pieces"),
-        _dmgstr(150, "tear", "tears", " into tiny pieces"),
-        _dmgstr(200, "mangle", "mangles", " beyond recognition"),
-    },
-};
-
-pub const KickWeapon = Weapon{
-    .id = "none",
-    .name = "none",
-    .delay = 100,
-    .damage = 2,
-    .strs = &[_]DamageStr{
-        _dmgstr(080, "kick", "kicks", ""),
-        _dmgstr(081, "curbstomp", "curbstomps", ""),
-    },
 };
 
 // }}}
