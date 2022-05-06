@@ -26,7 +26,20 @@ collect if you wish. (See the [list of branches](branches.md) for more info.)
 
 Unlike other roguelikes, stealth is very deterministic; enemies have a 100%
 chance do detect you inside their (smaller) FOV, which you must take care to
-stay out of. Since you automatically make a noise when you move more than
-`Sneak` times in a row (where `Sneak` is one of your stats), they may also come
-to investigate noises you make while moving around. (Your `Sneak` will be
-affected by different terrain, like soft carpet or creaky wooden floorboards.)
+stay out of. All creatures have a conical FOV shape, in the direction they're
+currently facing. Many monsters will glance around them as they stand still, and
+some monsters (such as guards and sentinels) will occasionally wander off to
+another room to guard. While you'll need to stay agile and aware of your
+surroundings to avoid acquiring negative health syndrome, the deterministic
+stealth system ensures that it's *always* your fault, and not the RNG's, when
+you inevitably get caught.
+
+Since you automatically make a noise when you move more than `Sneak` times in a
+row (where `Sneak` is one of your stats), they may also come to investigate
+noises you make while moving around. (Your `Sneak` will be affected by different
+terrain, like soft carpet or creaky wooden floorboards.) While you'll have the
+luxury of being able to stay silent much of the time, you'll often have to make
+a dash for it when being chased or when trying to stay out of vision. (Of
+course, since all of your foes have a `Sneak` value of 1, you'll always be able
+to hear them -- as long as they moved in their last turn. A few enemies have the
+`Noisy` status, meaning you'll always hear them.)
