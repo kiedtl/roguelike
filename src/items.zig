@@ -680,9 +680,9 @@ pub const BITING_STRS = [_]DamageStr{
     _dmgstr(081, "mangle", "mangles", ""),
 };
 pub const CLAW_STRS = [_]DamageStr{
-    _dmgstr(010, "scratch", "scratches", ""),
-    _dmgstr(030, "claw", "claws", ""),
-    _dmgstr(050, "shred", "shreds", ""),
+    _dmgstr(005, "scratch", "scratches", ""),
+    _dmgstr(060, "claw", "claws", ""),
+    _dmgstr(061, "mangle", "mangles", ""),
     _dmgstr(090, "shred", "shreds", " like wet paper"),
     _dmgstr(100, "tear", "tears", " into pieces"),
     _dmgstr(150, "tear", "tears", " into tiny pieces"),
