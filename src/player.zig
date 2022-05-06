@@ -275,8 +275,12 @@ pub fn moveOrFight(direction: Direction) bool {
 
     if (!state.player.coord.eq(current)) {
         if (state.dungeon.at(state.player.coord).surface) |s| switch (s) {
-            .Machine => |m| if (m.interact1 != null) {
-                state.message(.Info, "$c({s})$. Press $ba$. to activate.", .{m.name});
+            .Machine => |m| if (m.interact1) |interaction| {
+                if (m.canBeInteracted(state.player, &interaction)) {
+                    state.message(.Info, "$c({s})$. Press $ba$. to activate.", .{m.name});
+                } else {
+                    state.message(.Info, "$c({s})$. $gCannot be activated.$.", .{m.name});
+                }
             },
             .Poster => {
                 state.message(.Info, "$c(poster)$. Press $ba$. to read.", .{});
@@ -408,8 +412,7 @@ pub fn activateSurfaceItem() bool {
     const interaction = &mach.interact1.?;
     mach.evoke(state.player, interaction) catch |e| {
         switch (e) {
-            error.NotPowered => display.drawAlertThenLog("The {s} has no power!", .{mach.name}),
-            error.UsedMax => display.drawAlertThenLog("You can't use {s} anymore.", .{mach.name}),
+            error.UsedMax => display.drawAlertThenLog("You can't use the {s} again.", .{mach.name}),
             error.NoEffect => display.drawAlertThenLog("{s}", .{interaction.no_effect_msg}),
         }
         return false;

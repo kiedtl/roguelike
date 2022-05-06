@@ -3122,11 +3122,15 @@ pub const Machine = struct {
         func: fn (*Machine, *Mob) bool,
     };
 
-    pub fn evoke(self: *Machine, mob: *Mob, interaction: *MachInteract) !void {
+    pub fn canBeInteracted(self: *Machine, mob: *Mob, interaction: *const MachInteract) bool {
+        _ = mob;
         if (interaction.needs_power and !self.isPowered())
-            return error.NotPowered;
+            return false;
+        return interaction.max_use == 0 or interaction.used < interaction.max_use;
+    }
 
-        if (interaction.max_use > 0 and interaction.used >= interaction.max_use)
+    pub fn evoke(self: *Machine, mob: *Mob, interaction: *MachInteract) !void {
+        if (!canBeInteracted(self, mob, interaction))
             return error.UsedMax;
 
         if ((interaction.func)(self, mob)) {
