@@ -80,7 +80,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     // Consumables
     .{ .w = 080, .i = .{ .P = &HotPokerConsumable } },
     .{ .w = 090, .i = .{ .P = &CoalConsumable } },
-    .{ .w = 050, .i = .{ .P = &SilverIngotConsumable } },
+    .{ .w = 050, .i = .{ .P = &CopperIngotConsumable } },
     // Kits
     .{ .w = 030, .i = .{ .P = &FireTrapKit } },
     .{ .w = 030, .i = .{ .P = &ShockTrapKit } },
@@ -424,9 +424,9 @@ pub const CoalConsumable = Consumable{
     .verbs_other = Consumable.VERBS_OTHER_CAUT,
 };
 
-pub const SilverIngotConsumable = Consumable{
-    .id = "cons_silver_ingot",
-    .name = "silver ingot",
+pub const CopperIngotConsumable = Consumable{
+    .id = "cons_copper_ingot",
+    .name = "copper ingot",
     .effects = &[_]Consumable.Effect{
         .{ .Stat = .{ .s = .Martial, .change = -1 } },
         .{ .Stat = .{ .s = .Evade, .change = -5 } },

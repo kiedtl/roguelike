@@ -52,7 +52,7 @@ Laboratory/3 contains the Twisted Rune.
   there are multiple kinds of experiments, each with their own unique bufs
   that make it more difficult to get rid of.
 - There are more Abominations here than in other branches.
-- Lead turtles and silver wasps are a Laboratory-only speciality.
+- Lead turtles and copper wasps are a Laboratory-only speciality.
 - Spires make fighting in certain rooms extremely dangerous. Most of them will
   not attack unless an ally is present. However, you can set up your own spire
   with a spire kit.
