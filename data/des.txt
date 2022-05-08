@@ -312,24 +312,6 @@ A winged humanoid, clothed in watery-blue robes. It whispers grimly to itself as
 it patrols the dungeon, inspecting its underlings with an expression of cold
 contempt.
 
-% tanus_exp
-
-An alchemist's experiment. It has seven eyes.
-
-% cataline_exp
-
-An alchemist's experiment. Its giant eye can see just as well in the dark as
-you.
-
-% flouin_exp
-
-An alchemist's experiment. Its silver eyes are incapable of seeing in bright
-light.
-
-% phytin_exp
-
-The devs really need to rework this monster.
-
 % living_ice
 
 A mass of ice, imbued with sapience by a nearby demon. It will revert back to
