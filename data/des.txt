@@ -240,6 +240,12 @@ harmless...
 
 An ancient demon, incarnate as a writhing mass of molten granite.
 
+% war_olg
+
+Also known as the plains-troll to the swarthy men, the olg is a naturally
+peaceful grazing animal, equipped with three pairs of legs and a protective coat
+of shaggy fur. It makes a competent fighter when trained for war, however.
+
 % mellaent
 
 An annoying species of underground bat, shimmering conspicuously in the
