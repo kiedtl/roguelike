@@ -43,6 +43,27 @@ const WIDTH = state.WIDTH;
 
 // -----------------------------------------------------------------------------
 
+// TODO: generalize into a healing spell?
+pub const CAST_REGEN = Spell{
+    .id = "sp_regen",
+    .name = "regenerate",
+    .cast_type = .Smite,
+    .smite_target_type = .Self,
+    .check_has_effect = struct {
+        // Only use the spell if the caster's HP is below
+        // the (regeneration_amount * 2).
+        //
+        // TODO: we should have a way to flag this spell as an "emergency"
+        // spell, ensuring it's only used when the caster is clearly losing a
+        // fight
+        fn f(caster: *Mob, opts: SpellOptions, _: Coord) bool {
+            return @floatToInt(usize, caster.HP) <= (opts.power * 2);
+        }
+    }.f,
+    .noise = .Loud,
+    .effect_type = .Heal,
+};
+
 pub const CAST_ENRAGE_DUSTLING = Spell{
     .id = "sp_enrage_dustling",
     .name = "enrage dustling",
@@ -602,6 +623,7 @@ pub const Spell = struct {
 
     effect_type: union(enum) {
         Status: Status,
+        Heal,
         Custom: fn (caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void,
     },
 
@@ -667,6 +689,7 @@ pub const Spell = struct {
                             .Status => |s| if (hit_mob) |victim| {
                                 victim.addStatus(s, opts.power, .{ .Tmp = opts.duration });
                             },
+                            .Heal => err.bug("Bolt of healing? really?", .{}),
                             .Custom => |cu| cu(caster_coord, self, opts, c),
                         }
 
@@ -701,6 +724,7 @@ pub const Spell = struct {
 
                         switch (self.effect_type) {
                             .Status => |s| mob.addStatus(s, opts.power, .{ .Tmp = opts.duration }),
+                            .Heal => mob.takeHealing(opts.power),
                             .Custom => |c| c(caster_coord, self, opts, target),
                         }
                     },
@@ -713,6 +737,7 @@ pub const Spell = struct {
 
                         switch (self.effect_type) {
                             .Status => err.bug("Mage tried to induce a status on a corpse!!", .{}),
+                            .Heal => err.bug("Mage tried to heal a corpse!!!", .{}),
                             .Custom => |c| c(caster_coord, self, opts, target),
                         }
                     },

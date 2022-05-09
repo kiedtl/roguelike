@@ -611,10 +611,12 @@ fn _getMonsSpellsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, li
                 _writerWrite(w, "· $cwill-checked$.: $rno$.\n", .{});
             }
 
-            if (spellcfg.spell.effect_type == .Status) {
-                _writerWrite(w, "· $gTmp$. {s} ({})\n", .{
-                    spellcfg.spell.effect_type.Status.string(state.player), spellcfg.duration,
-                });
+            switch (spellcfg.spell.effect_type) {
+                .Status => |s| _writerWrite(w, "· $gTmp$. {s} ({})\n", .{
+                    s.string(state.player), spellcfg.duration,
+                }),
+                .Heal => _writerWrite(w, "· $gIns$. Heal <{}>\n", .{spellcfg.power}),
+                .Custom => {},
             }
 
             _writerWrite(w, "\n", .{});

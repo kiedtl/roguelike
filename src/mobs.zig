@@ -575,6 +575,42 @@ pub const CinderWormTemplate = MobTemplate{
     },
 };
 
+const WAR_OLG_CLAW_WEAPON = Weapon{
+    .damage = 1,
+    .strs = &items.CLAW_STRS,
+};
+
+pub const WarOlgTemplate = MobTemplate{
+    .mob = .{
+        .id = "war_olg",
+        .species = &Species{
+            .name = "war olg",
+            .default_attack = &Weapon{ .damage = 1, .strs = &items.BITING_STRS },
+            .aux_attacks = &[_]*const Weapon{
+                &WAR_OLG_CLAW_WEAPON,
+                &WAR_OLG_CLAW_WEAPON,
+            },
+        },
+        .tile = 'ò',
+        .ai = AI{
+            .profession_description = "wandering",
+            .work_fn = ai.guardWork,
+            .fight_fn = ai.mageFight,
+            .is_fearless = true, // don't just run away when you've got a regen spell, dumbass
+        },
+        .allegiance = .Necromancer,
+        .max_HP = 15,
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 3, .spell = &spells.CAST_REGEN, .power = 3 },
+        },
+        .max_MP = 3,
+
+        .memory_duration = 3,
+        .stats = .{ .Willpower = 2, .Melee = 90, .Vision = 4 },
+    },
+};
+
 pub const MellaentTemplate = MobTemplate{
     .mob = .{
         .id = "mellaent",
@@ -1224,6 +1260,7 @@ pub const MOBS = [_]MobTemplate{
     VapourMageTemplate,
     DustlingTemplate,
     CinderWormTemplate,
+    WarOlgTemplate,
     MellaentTemplate,
     KyaniteStatueTemplate,
     NebroStatueTemplate,
