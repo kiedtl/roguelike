@@ -159,8 +159,8 @@ x frozen fiend
   - hurls iron shards and orbs of devastation
   - rFire+ rElec+ Armor=30% rFume∞ rPois∞
   - immobile, only attacks when other hostile present
-- silver spire
-  - Enables silver weapons.
+- copper spire
+  - Enables copper weapons.
 x warden
   - calls for reinforcements by shouting/sounding horn
 - wretched stars
@@ -204,15 +204,14 @@ x burning brute
   - Completely deaf, won't investigate on its own. Vision of 3 tiles,
     has night vision.
   - 5 HP, 25% armor, has evasion of 40%, and very fast.
-- silver hornet
-  - "A tiny buzzing insect, seemingly made of some lightweight silvery metal.
-     It's trying to sting you!"
+- copper hornet
+  - "A tiny buzzing insect, seemingly made of copper. It's trying to sting you!"
   - Very fast, and base evade% of 50.
-  - Gives silver damage (i.e., electrocution if in aura of silver spire).
+  - Gives copper damage (i.e., electrocution if in aura of copper spire).
   - 5 HP and no armor at all.
   - Found in the Laboratory.
 x iron wasp
-  - Like silver hornet, but gives no silver damage.
+  - Like copper hornet, but gives no copper damage.
   - Sting attack that gives poisoning.
   - Very occasionally found in swarms of fellow iron wasps.
 x lead turtle
@@ -251,15 +250,14 @@ x lead turtle
   - Heals when traveling over blood-stained ground
 - spark mage
   - Can convert corpse to sparklings
-  - Can hurl electricity
+  - Can briefly paralyse player ("stunning burst")
 - sparklings
   - Attacks that do electric damage
   - Aura of electricity vunerability
 - lightning mage
   - Has all abilities of spark mage
-  - Can summon a lightning spire from a corpse (or not? lightning spires
-    are supposed to be machines, right?)
-  - Can briefly paralyse player ("stunning burst")
+  - Smite-targeted electrical attack; does more damage if surrounded by
+    empty squares (i.e., DCSS' Airstrike)
   - Keeps distance
 x spectre mage
   x Spectral Sword: summons four spectral swords, which are very fast but
@@ -319,9 +317,6 @@ x destroyer
   - Found instead of executioners above Caverns
 x sentinel
   - 12 HP. Armored, sword-wielding version of guard
-- brooder
-  - Smite-targeted electrical attack; does more damage if surrounded by
-    empty squares (i.e., DCSS' Airstrike)
 - cinder worm
   - Fire attacks, Prm burning
   - vomit fire: set surroundings of fire
@@ -330,7 +325,7 @@ x sentinel
   - Just plain fire attacks, Prm burning
   - Hurls fireballs?
   - Sometimes found as neutral prisoners
-- silver fiend
+- cuprite fiend
   - Smite-targeted electrical attack; does more damage the farther away the
     target is from the caster
 - war olg
@@ -828,7 +823,7 @@ x Fix morgue file generation
 x Condense UI even more (3 columns for stats, put turncount on level str, etc)
 x Show items, notable machines on info pane
 x Consumable reworking + kit refactoring
-x More evocables: silver ingot, coal, red-hot poker
+x More evocables: copper ingot, coal, red-hot poker
 x More kits and traps: fire, shock, incineration, knockback
 - Ring changes/additions/simplifications:
   - More ring types (fire, etc)
@@ -843,11 +838,11 @@ x Fix trtr chambers; add more of them
 - More mundane weapons: hammer, poker
 - Guards in cubbyholes (both corridors and rooms)
 - Dungeon features: barrel of water, barrel of toxic sludge
-- War olgs, cinder worms/brutes, silver fiends, brooders, destroyers
+x War olgs, cinder worms, destroyers
 - Blood, ember, fire, spark, lightning mage bands
 - Emberling/sparkling summoning trap kits
 - Fiend of vapours
-- Silver weapons and battery packs, silver hornets
+- Copper weapons and battery packs, copper hornets
 - Bone and masterpiece weapons
 - Headgear, footgear, auxiliary items
 - Potions of insubst/fortif, debilitation, veilification, distraction, glowing
