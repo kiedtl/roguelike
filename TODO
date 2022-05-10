@@ -250,10 +250,11 @@ x lead turtle
   - Heals when traveling over blood-stained ground
 - spark mage
   - Can convert corpse to sparklings
-  - Can briefly paralyse player ("stunning burst")
+  - Smite-targeted electrical attack; does more damage the farther away the
+    target is from the caster
 - sparklings
   - Attacks that do electric damage
-  - Aura of electricity vunerability
+  - Can briefly paralyse player ("stunning burst")
 - lightning mage
   - Has all abilities of spark mage
   - Smite-targeted electrical attack; does more damage if surrounded by
@@ -326,8 +327,8 @@ x sentinel
   - Hurls fireballs?
   - Sometimes found as neutral prisoners
 - cuprite fiend
-  - Smite-targeted electrical attack; does more damage the farther away the
-    target is from the caster
+  - Sulfur fiend's electrical attack (TODO: think of replacement for sulfur
+    fiend)
 - war olg
   - Also known as "troll" to humans. Naturally peaceful grazing herbivores,
     but this one has been trained for war.
