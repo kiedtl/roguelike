@@ -43,6 +43,7 @@ const Rune = items.Rune;
 const Evocable = items.Evocable;
 const Projectile = items.Projectile;
 const Consumable = items.Consumable;
+const PatternChecker = items.PatternChecker;
 const Cloak = items.Cloak;
 
 const Sound = @import("sound.zig").Sound;
@@ -2985,46 +2986,13 @@ pub const Mob = struct { // {{{
             return;
         }
 
-        // Ring of Lightning
+        // Check rings
         //
-        // Shock
-        if (self.isUnderStatus(.RingLightning) != null and
-            // Correct actions
-            activities[3] == .Attack and
-            activities[2] == .Move and
-            activities[1] == .Move and
-            activities[0] == .Attack and
-            // Either diagonal/cardinal
-            !activities[3].Attack.direction.is_diagonal() and
-            !activities[2].Move.is_diagonal() and
-            !activities[1].Move.is_diagonal() and
-            activities[0].Attack.direction.is_diagonal() and
-            // Correct directions
-            activities[2].Move == activities[3].Attack.direction.opposite() and
-            (activities[1].Move == activities[2].Move.turnleft() or
-            activities[1].Move == activities[2].Move.turnright()) and
-            activities[0].Attack.direction.is_adjacent(activities[1].Move.opposite()) and
-            // Correct mobs
-            activities[3].Attack.who == activities[0].Attack.who)
-        {
-            const status = self.isUnderStatus(.RingLightning).?;
-            for (&DIRECTIONS) |d| {
-                if (!d.is_diagonal()) {
-                    continue;
-                }
-
-                if (self.coord.move(d, state.mapgeometry)) |neighbor| {
-                    if (state.dungeon.at(neighbor).mob) |target| {
-                        if (!target.isHostileTo(self)) continue;
-                        target.takeDamage(.{
-                            .amount = @intToFloat(f64, status.power),
-                            .by_mob = self,
-                            .kind = .Electric,
-                        }, .{ .noun = "Lightning" });
-                    }
-                }
+        for (self.inventory.rings) |r| if (r) |ring| {
+            if (ring.pattern_checker.checkState(self)) {
+                ring.effect(self);
             }
-        }
+        };
     }
 
     pub fn isCreeping(self: *const Mob) bool {
@@ -3414,6 +3382,9 @@ pub const Ring = struct {
     status_start_power: usize,
     status_max_power: usize,
     status_power_increase: usize,
+
+    pattern_checker: PatternChecker,
+    effect: fn (*Mob) void,
 
     worn_since: ?usize = null,
 

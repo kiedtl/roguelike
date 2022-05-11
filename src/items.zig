@@ -2,6 +2,7 @@ const std = @import("std");
 const math = std.math;
 const enums = std.enums;
 const meta = std.meta;
+const mem = std.mem;
 const assert = std.debug.assert;
 
 const colors = @import("colors.zig");
@@ -16,6 +17,7 @@ const rng = @import("rng.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
 const types = @import("types.zig");
+const ringbuffer = @import("ringbuffer.zig");
 
 const Coord = types.Coord;
 const Item = types.Item;
@@ -33,7 +35,9 @@ const Spatter = types.Spatter;
 const Status = types.Status;
 const Machine = types.Machine;
 const Direction = types.Direction;
+
 const DIRECTIONS = types.DIRECTIONS;
+const DIAGONAL_DIRECTIONS = types.DIAGONAL_DIRECTIONS;
 
 const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
@@ -322,12 +326,135 @@ fn _triggerWarningHorn(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
 
 // }}}
 
+pub const PatternChecker = struct {
+    pub const MAX_TURNS = 10;
+    pub const Func = fn (*Mob, *State) bool;
+
+    pub const State = struct {
+        history: ringbuffer.RingBuffer(bool, MAX_TURNS),
+        mobs: [10]?*Mob = undefined,
+        directions: [10]?Direction = undefined,
+        coords: [10]?Coord = undefined,
+    };
+
+    turns: usize,
+    funcs: [MAX_TURNS]Func,
+    state: [MAX_TURNS]State = undefined,
+
+    pub fn init(self: *PatternChecker) void {
+        for (self.state) |*state_set| {
+            state_set.history.init();
+            mem.set(?*Mob, state_set.mobs[0..], null);
+            mem.set(?Direction, state_set.directions[0..], null);
+            mem.set(?Coord, state_set.coords[0..], null);
+        }
+    }
+
+    pub fn _getConsecutiveTrues(self: *State) usize {
+        var consecutive_true: usize = 0;
+        {
+            var iter = self.history.iterator();
+            while (iter.next()) |item|
+                if (item) {
+                    consecutive_true += 1;
+                } else {
+                    break;
+                };
+        }
+        return consecutive_true;
+    }
+
+    pub fn checkState(self: *PatternChecker, mob: *Mob) bool {
+        for (self.state) |*state_i, i| {
+            if (state.ticks < i) continue;
+            const consecs = _getConsecutiveTrues(state_i);
+            assert(consecs < self.turns);
+            const r = (self.funcs[consecs])(mob, state_i);
+            state_i.history.append(r);
+            if (_getConsecutiveTrues(state_i) == self.turns) {
+                self.init();
+                return true;
+            }
+        }
+        return false;
+    }
+};
+
 pub const LightningRing = Ring{
     .name = "lightning",
     .status = .RingLightning,
     .status_start_power = 0,
     .status_max_power = 3,
     .status_power_increase = 10,
+    .pattern_checker = .{
+        // mobs[0] is the attacked enemy.
+        // coords[0] is the original coord of the attacked enemy.
+        // directions[0] is the attacked direction.
+        // directions[1] is the first move away from the enemy.
+        .turns = 3,
+        .funcs = [_]PatternChecker.Func{
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
+                    const cur = mob.activities.current().?;
+                    const r = cur == .Attack and
+                        !cur.Attack.direction.is_diagonal();
+                    if (r) {
+                        stt.mobs[0] = cur.Attack.who;
+                        stt.directions[0] = cur.Attack.direction;
+                        stt.coords[0] = cur.Attack.coord;
+                    }
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
+                    const cur = mob.activities.current().?;
+                    const r = cur == .Move and
+                        !cur.Move.is_diagonal() and
+                        cur.Move == stt.directions[0].?.opposite();
+                    if (r) {
+                        stt.directions[1] = cur.Move;
+                    }
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
+                    const cur = mob.activities.current().?;
+                    const r = cur == .Move and
+                        !cur.Move.is_diagonal() and
+                        (cur.Move == stt.directions[1].?.turnleft() or
+                        cur.Move == stt.directions[1].?.turnright()) and
+                        mob.coord.distance(stt.coords[0].?) == 2 and
+                        mob.coord.distance(stt.mobs[0].?.coord) == 1; // he's still there?
+                    return r;
+                }
+            }.f,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        },
+    },
+    .effect = struct {
+        pub fn f(self: *Mob) void {
+            const status = self.isUnderStatus(.RingLightning).?;
+            for (&DIAGONAL_DIRECTIONS) |d|
+                if (self.coord.move(d, state.mapgeometry)) |neighbor| {
+                    if (state.dungeon.at(neighbor).mob) |target| {
+                        if (!target.isHostileTo(self)) continue;
+                        target.takeDamage(.{
+                            .amount = @intToFloat(f64, status.power),
+                            .by_mob = self,
+                            .kind = .Electric,
+                        }, .{ .noun = "Lightning" });
+                    }
+                };
+        }
+    }.f,
 };
 
 // Consumables {{{
@@ -892,6 +1019,7 @@ pub fn createItem(comptime T: type, item: T) *T {
         else => @compileError("uh wat"),
     };
     const it = list.appendAndReturn(item) catch err.oom();
+    if (T == Ring) it.pattern_checker.init();
     if (T == Evocable) it.charges = it.max_charges;
     return it;
 }

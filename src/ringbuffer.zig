@@ -7,7 +7,6 @@ pub fn RingBuffer(comptime T: type, size: usize) type {
         len: usize = size,
         buffer: [size]?T = undefined,
         top: usize = 0,
-
         const Self = @This();
 
         pub const Iterator = struct {
@@ -25,6 +24,7 @@ pub fn RingBuffer(comptime T: type, size: usize) type {
         };
 
         pub fn init(self: *Self) void {
+            self.len = size;
             for (self.buffer) |*i| i.* = null;
             self.top = 0;
         }
@@ -48,6 +48,21 @@ pub fn RingBuffer(comptime T: type, size: usize) type {
 
         pub fn prevIndex(self: *const Self, index: usize) usize {
             return if (index == 0) self.len - 1 else index - 1;
+        }
+
+        pub fn format(value: Self, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
+            _ = fmt;
+            _ = options;
+            try writer.print("rb({}):[", .{value.len});
+            for (value.buffer) |val, i| {
+                if (i == value.top) {
+                    try writer.print("\x1b[1m", .{});
+                }
+                try writer.print("{}\x1b[m", .{val});
+                if (i != value.len - 1)
+                    try writer.print(", ", .{});
+            }
+            try writer.print("]", .{});
         }
     };
 }
