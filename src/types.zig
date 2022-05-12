@@ -775,8 +775,6 @@ pub const Allegiance = enum {
 pub const Status = enum {
     // Status list {{{
 
-    RingLightning,
-
     // Gives a free attack after evading an attack.
     //
     // Doesn't have a power field.
@@ -935,8 +933,6 @@ pub const Status = enum {
 
     pub fn string(self: Status, mob: *const Mob) []const u8 { // {{{
         return switch (self) {
-            .RingLightning => "[ring] lightning",
-
             .Riposte => "riposte",
             .Stun => "stunned",
             .OpenMelee => "open melee",
@@ -975,8 +971,6 @@ pub const Status = enum {
 
     pub fn messageWhenAdded(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
-            .RingLightning => null,
-
             .Riposte => null,
             .Stun => .{ "are", "is", " stunned" },
             .OpenMelee, .Conductive, .Noisy => null,
@@ -1011,8 +1005,6 @@ pub const Status = enum {
 
     pub fn messageWhenRemoved(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
-            .RingLightning => null,
-
             .Riposte => null,
             .Stun => .{ "are no longer", "is no longer", " stunned" },
             .OpenMelee, .Conductive, .Noisy => null,
@@ -1519,17 +1511,6 @@ pub const Mob = struct { // {{{
                 gas.Gases[gasi].trigger(self, quantity);
             }
         }
-    }
-
-    // Update the status powers for the rings
-    pub fn tickRings(self: *Mob) void {
-        for (self.inventory.rings) |m_ring| if (m_ring) |ring| {
-            self.applyStatus(.{
-                .status = ring.status,
-                .power = ring.currentPower(),
-                .duration = .{ .Tmp = Status.MAX_DURATION },
-            }, .{ .add_duration = false });
-        };
     }
 
     // Decrement status durations, and do stuff for various statuses that need
@@ -3370,36 +3351,10 @@ pub const Ring = struct {
     // Ring of <name>
     name: []const u8,
 
-    status: Status,
-
-    // So, statuses have a concept of "power". And rings work by conferring a status
-    // when worn, and removing it when taken off.
-    //
-    // However, ring's don't give the full power all at once -- rather, the power starts
-    // at a certain amount ($status_start_power), increases by 1 every $status_power_increase
-    // turns, until it reaches $status_max_power.
-    //
-    status_start_power: usize,
-    status_max_power: usize,
-    status_power_increase: usize,
-
     pattern_checker: PatternChecker,
     effect: fn (*Mob) void,
 
     worn_since: ?usize = null,
-
-    pub fn currentPower(self: *Ring) usize {
-        if (self.worn_since) |worn_since| {
-            assert(worn_since <= state.ticks);
-
-            const turns_passed = state.ticks - worn_since;
-            const base_pow = turns_passed / self.status_power_increase;
-            const max = self.status_max_power;
-            return math.min(self.status_start_power + base_pow, max);
-        } else {
-            return 0;
-        }
-    }
 };
 
 pub const ItemType = enum { Rune, Ring, Consumable, Vial, Projectile, Armor, Cloak, Weapon, Boulder, Prop, Evocable };

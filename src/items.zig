@@ -381,11 +381,7 @@ pub const PatternChecker = struct {
 };
 
 pub const LightningRing = Ring{
-    .name = "lightning",
-    .status = .RingLightning,
-    .status_start_power = 0,
-    .status_max_power = 3,
-    .status_power_increase = 10,
+    .name = "electrocution",
     .pattern_checker = .{
         // mobs[0] is the attacked enemy.
         // coords[0] is the original coord of the attacked enemy.
@@ -441,13 +437,12 @@ pub const LightningRing = Ring{
     },
     .effect = struct {
         pub fn f(self: *Mob) void {
-            const status = self.isUnderStatus(.RingLightning).?;
             for (&DIAGONAL_DIRECTIONS) |d|
                 if (self.coord.move(d, state.mapgeometry)) |neighbor| {
                     if (state.dungeon.at(neighbor).mob) |target| {
                         if (!target.isHostileTo(self)) continue;
                         target.takeDamage(.{
-                            .amount = @intToFloat(f64, status.power),
+                            .amount = @intToFloat(f64, 3),
                             .by_mob = self,
                             .kind = .Electric,
                         }, .{ .noun = "Lightning" });

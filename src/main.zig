@@ -454,7 +454,6 @@ fn tickGame() void {
 
             mob.tick_env();
             mob.tickFOV();
-            mob.tickRings();
             mob.tickStatuses();
 
             if (mob == state.player) {
@@ -533,7 +532,6 @@ fn viewerTickGame(cur_level: usize) void {
 
             mob.tick_env();
             mob.tickFOV();
-            mob.tickRings();
             mob.tickStatuses();
 
             if (state.dungeon.at(mob.coord).mob == null) {
