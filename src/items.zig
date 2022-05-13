@@ -452,6 +452,69 @@ pub const LightningRing = Ring{
     }.f,
 };
 
+pub const CremationRing = Ring{
+    .name = "cremation",
+    .pattern_checker = .{
+        .turns = 3,
+        .funcs = [_]PatternChecker.Func{
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
+                    const cur = mob.activities.current().?;
+                    if (cur == .Move and !cur.Move.is_diagonal()) {
+                        if (mob.coord.move(cur.Move, state.mapgeometry)) |adj_mob_c| {
+                            if (state.dungeon.at(adj_mob_c).mob) |other| {
+                                if (other.isHostileTo(mob) and other.ai.is_combative) {
+                                    stt.mobs[0] = other;
+                                    stt.directions[0] = cur.Move;
+                                    stt.coords[0] = adj_mob_c;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    return false;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
+                    const cur = mob.activities.current().?;
+                    const r = cur == .Move and
+                        !cur.Move.is_diagonal() and
+                        (cur.Move == stt.directions[0].?.turnleft() or
+                        cur.Move == stt.directions[0].?.turnright()) and
+                        mob.coord.distance(stt.coords[0].?) == 1;
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
+                    const cur = mob.activities.current().?;
+                    const r = cur == .Move and
+                        cur.Move == stt.directions[0].? and
+                        mob.coord.distance(stt.mobs[0].?.coord) == 1; // he's still there?
+                    return r;
+                }
+            }.f,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        },
+    },
+    .effect = struct {
+        pub fn f(self: *Mob) void {
+            for (&DIRECTIONS) |d|
+                if (self.coord.move(d, state.mapgeometry)) |neighbor| {
+                    fire.setTileOnFire(neighbor);
+                    // TODO: fire vuln
+                };
+        }
+    }.f,
+};
+
 // Consumables {{{
 //
 

@@ -3353,8 +3353,6 @@ pub const Ring = struct {
 
     pattern_checker: PatternChecker,
     effect: fn (*Mob) void,
-
-    worn_since: ?usize = null,
 };
 
 pub const ItemType = enum { Rune, Ring, Consumable, Vial, Projectile, Armor, Cloak, Weapon, Boulder, Prop, Evocable };
