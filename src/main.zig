@@ -72,6 +72,7 @@ fn initGame() bool {
     rng.init(state.GPA.allocator()) catch return false;
 
     player.choosePlayerUpgrades();
+    for (state.default_patterns) |*r| r.pattern_checker.init();
 
     state.chardata.init(state.GPA.allocator());
     state.memory = state.MemoryTileMap.init(state.GPA.allocator());

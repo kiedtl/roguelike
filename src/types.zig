@@ -2967,11 +2967,20 @@ pub const Mob = struct { // {{{
             return;
         }
 
+        // Check default patterns for player
+        if (self == state.player) {
+            for (state.default_patterns) |*ring| {
+                if (ring.pattern_checker.checkState(self)) |stt| {
+                    ring.effect(self, stt);
+                }
+            }
+        }
+
         // Check rings
         //
         for (self.inventory.rings) |r| if (r) |ring| {
-            if (ring.pattern_checker.checkState(self)) {
-                ring.effect(self);
+            if (ring.pattern_checker.checkState(self)) |stt| {
+                ring.effect(self, stt);
             }
         };
     }
@@ -3352,7 +3361,7 @@ pub const Ring = struct {
     name: []const u8,
 
     pattern_checker: PatternChecker,
-    effect: fn (*Mob) void,
+    effect: fn (*Mob, PatternChecker.State) void,
 };
 
 pub const ItemType = enum { Rune, Ring, Consumable, Vial, Projectile, Armor, Cloak, Weapon, Boulder, Prop, Evocable };

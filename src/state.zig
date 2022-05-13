@@ -138,6 +138,10 @@ pub var collected_runes = enums.EnumArray(Rune, bool).initFill(false);
 
 pub var player_upgrades: [3]player_m.PlayerUpgradeInfo = undefined;
 
+pub var default_patterns = [_]types.Ring{
+    items.DefaultPinRing,
+};
+
 pub const MemoryTile = struct {
     fg: u32 = 0x000000,
     bg: u32 = 0x000000,

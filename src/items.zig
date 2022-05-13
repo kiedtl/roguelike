@@ -326,7 +326,7 @@ fn _triggerWarningHorn(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
 
 // }}}
 
-pub const PatternChecker = struct {
+pub const PatternChecker = struct { // {{{
     pub const MAX_TURNS = 10;
     pub const Func = fn (*Mob, *State) bool;
 
@@ -364,7 +364,7 @@ pub const PatternChecker = struct {
         return consecutive_true;
     }
 
-    pub fn checkState(self: *PatternChecker, mob: *Mob) bool {
+    pub fn checkState(self: *PatternChecker, mob: *Mob) ?PatternChecker.State {
         for (self.state) |*state_i, i| {
             if (state.ticks < i) continue;
             const consecs = _getConsecutiveTrues(state_i);
@@ -372,15 +372,16 @@ pub const PatternChecker = struct {
             const r = (self.funcs[consecs])(mob, state_i);
             state_i.history.append(r);
             if (_getConsecutiveTrues(state_i) == self.turns) {
+                const oldstate = state_i.*;
                 self.init();
-                return true;
+                return oldstate;
             }
         }
-        return false;
+        return null;
     }
-};
+}; // }}}
 
-pub const LightningRing = Ring{
+pub const LightningRing = Ring{ // {{{
     .name = "electrocution",
     .pattern_checker = .{
         // mobs[0] is the attacked enemy.
@@ -436,13 +437,14 @@ pub const LightningRing = Ring{
         },
     },
     .effect = struct {
-        pub fn f(self: *Mob) void {
+        pub fn f(self: *Mob, stt: PatternChecker.State) void {
+            _ = stt;
             for (&DIAGONAL_DIRECTIONS) |d|
                 if (self.coord.move(d, state.mapgeometry)) |neighbor| {
                     if (state.dungeon.at(neighbor).mob) |target| {
                         if (!target.isHostileTo(self)) continue;
                         target.takeDamage(.{
-                            .amount = @intToFloat(f64, 3),
+                            .amount = @intToFloat(f64, 2),
                             .by_mob = self,
                             .kind = .Electric,
                         }, .{ .noun = "Lightning" });
@@ -450,9 +452,9 @@ pub const LightningRing = Ring{
                 };
         }
     }.f,
-};
+}; // }}}
 
-pub const CremationRing = Ring{
+pub const CremationRing = Ring{ // {{{
     .name = "cremation",
     .pattern_checker = .{
         .turns = 3,
@@ -505,7 +507,8 @@ pub const CremationRing = Ring{
         },
     },
     .effect = struct {
-        pub fn f(self: *Mob) void {
+        pub fn f(self: *Mob, stt: PatternChecker.State) void {
+            _ = stt;
             for (&DIRECTIONS) |d|
                 if (self.coord.move(d, state.mapgeometry)) |neighbor| {
                     fire.setTileOnFire(neighbor);
@@ -513,7 +516,78 @@ pub const CremationRing = Ring{
                 };
         }
     }.f,
-};
+}; // }}}
+
+pub const DefaultPinRing = Ring{ // {{{
+    .name = "[BUG] pin attack",
+    .pattern_checker = .{
+        .turns = 4,
+        .funcs = [_]PatternChecker.Func{
+            // mobs[0]: attacked mob
+            // directions[0]: first attack direction
+            // coords[0]: initial coordinate
+            // coords[1]: attacked mob's initial coordinate
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
+                    const cur = mob.activities.current().?;
+                    const r = cur == .Attack and
+                        !cur.Attack.direction.is_diagonal();
+                    if (r) {
+                        stt.mobs[0] = cur.Attack.who;
+                        stt.directions[0] = cur.Attack.direction;
+                        stt.coords[0] = mob.coord;
+                        stt.coords[1] = cur.Attack.coord;
+                    }
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
+                    const cur = mob.activities.current().?;
+                    const r = cur == .Move and
+                        cur.Move.is_diagonal() and
+                        // Is the new coord adjacent to both the attacked mob and
+                        // the previous location?
+                        mob.coord.distance(stt.coords[0].?) == 1 and
+                        mob.coord.distance(stt.coords[1].?) == 1;
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
+                    const cur = mob.activities.current().?;
+                    const r = cur == .Attack and
+                        cur.Attack.who == stt.mobs[0].? and
+                        cur.Attack.coord.eq(stt.coords[1].?);
+                    if (r) {
+                        stt.directions[1] = cur.Attack.direction;
+                    }
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
+                    const cur = mob.activities.current().?;
+                    const r = cur == .Move and
+                        cur.Move == stt.directions[1].?.opposite();
+                    return r;
+                }
+            }.f,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        },
+    },
+    .effect = struct {
+        pub fn f(self: *Mob, stt: PatternChecker.State) void {
+            _ = self;
+            stt.mobs[0].?.addStatus(.Held, 0, .{ .Tmp = 5 });
+        }
+    }.f,
+}; // }}}
 
 // Consumables {{{
 //
