@@ -2227,6 +2227,18 @@ pub const Mob = struct { // {{{
 
         self.HP = math.clamp(self.HP - amount, 0, self.max_HP);
 
+        // Inform defender of attacker
+        //
+        // We already do this in fight() but this takes care of ranged combat,
+        // spell damage, etc.
+        if (d.by_mob) |attacker| {
+            ai.updateEnemyRecord(self, .{
+                .mob = attacker,
+                .counter = self.memory_duration,
+                .last_seen = attacker.coord,
+            });
+        }
+
         // Print message
         if (state.player.cansee(self.coord) or (d.by_mob != null and state.player.cansee(d.by_mob.?.coord))) {
             var punctuation: []const u8 = ".";
