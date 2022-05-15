@@ -936,7 +936,8 @@ pub const DeathMageTemplate = MobTemplate{
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
-            .{ .mob = "skeletal_axemaster", .weight = 1, .count = minmax(usize, 2, 5) },
+            .{ .mob = "skeletal_blademaster", .weight = 6, .count = minmax(usize, 2, 4) },
+            .{ .mob = "skeletal_axemaster", .weight = 4, .count = minmax(usize, 2, 4) },
         },
     },
 };
@@ -945,15 +946,13 @@ pub const SkeletalAxemasterTemplate = MobTemplate{
     .mob = .{
         .id = "skeletal_axemaster",
         .species = &HumanSpecies,
-        .tile = 'ע',
+        .tile = 'á',
         .undead_prefix = "",
         .ai = AI{
             .profession_name = "skeletal axemaster",
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
-            .is_combative = true,
-            .is_curious = false,
             .is_fearless = true,
         },
         .allegiance = .Necromancer,
@@ -967,9 +966,40 @@ pub const SkeletalAxemasterTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = 100, .rFume = 100, .rFire = -25 },
-        .stats = .{ .Willpower = 2, .Speed = 110, .Vision = 4 },
+        .stats = .{ .Willpower = 5, .Speed = 110, .Vision = 4 },
     },
     .weapon = &items.AxeWeapon,
+    .armor = &items.ScalemailArmor,
+};
+
+pub const SkeletalBlademasterTemplate = MobTemplate{
+    .mob = .{
+        .id = "skeletal_blademaster",
+        .species = &HumanSpecies,
+        .tile = 'ƀ',
+        .undead_prefix = "",
+        .ai = AI{
+            .profession_name = "skeletal blademaster",
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.meleeFight,
+            .is_fearless = true,
+        },
+        .allegiance = .Necromancer,
+
+        .deaf = true,
+        .life_type = .Undead,
+
+        .max_HP = 15,
+        .memory_duration = 6,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rPois = 100, .rFume = 100, .rFire = -25 },
+        // Melee is 100% but in practice will be 90% due to penalty from rapier
+        .stats = .{ .Willpower = 4, .Melee = 100, .Speed = 110, .Vision = 4 },
+    },
+    .weapon = &items.RapierWeapon,
     .armor = &items.ScalemailArmor,
 };
 
@@ -1273,6 +1303,7 @@ pub const MOBS = [_]MobTemplate{
     SpectreMageTemplate,
     DeathMageTemplate,
     SkeletalAxemasterTemplate,
+    SkeletalBlademasterTemplate,
     TorturerNecromancerTemplate,
     BurningBruteTemplate,
     FrozenFiendTemplate,

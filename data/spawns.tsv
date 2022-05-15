@@ -5,50 +5,52 @@
 
 #
 # monster id          -8/Pri  -7/Pri  -6/Lab  -6/Lab2 -6/Lab3  -5/Smi -5/Smi2 -5/Smi3  -4/Pri -3/Vlt -3/Vlt2 -3/Vlt3  -2/Pri  -1/Pri
-"cleaner"        	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
-"engineer"       	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
-"hauler"         	   - 	   - 	   5 	   5 	   5 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
+"cleaner"             	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
+"engineer"            	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
+"hauler"              	   - 	   - 	   5 	   5 	   5 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
 
 # nuisances
-"mellaent"       	   - 	   - 	   5 	   5 	   5 	  10 	  10 	  10 	   2 	   2 	   2 	   2 	   2 	   2
+"mellaent"            	   - 	   - 	   5 	   5 	   5 	  10 	  10 	  10 	   2 	   2 	   2 	   2 	   2 	   2
 
 # guards
-"guard"          	 100 	  90 	  25 	  20 	  15 	  10 	   7 	   5 	  70 	  60 	  50 	  40 	  50 	  40
-"sentinel"       	   - 	   - 	   - 	   5 	  10 	   5 	   8 	  10 	  30 	  40 	  50 	  60 	  50 	  60
+"guard"               	 100 	  90 	  25 	  20 	  15 	  10 	   7 	   5 	  70 	  60 	  50 	  40 	  50 	  40
+"sentinel"            	   - 	   - 	   - 	   5 	  10 	   5 	   8 	  10 	  30 	  40 	  50 	  60 	  50 	  60
 
 # special mundane mobs
-"javelineer"     	  80 	  80 	   - 	   - 	   - 	   - 	   - 	   - 	  80 	  45 	  45 	  45 	  80 	  80
-"watcher"        	  45 	  45 	 100 	  90 	  80 	  45 	  35 	  25 	  45 	 100 	 100 	 100 	  45 	  45
-"patrol"         	  25 	  25 	  25 	  25 	  25 	  25 	  25 	  25 	  25 	   - 	   - 	   - 	  25 	  25
-"defender"       	   - 	   - 	 100 	 100 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
+"javelineer"          	  80 	  80 	   - 	   - 	   - 	   - 	   - 	   - 	  80 	  45 	  45 	  45 	  80 	  80
+"watcher"             	  45 	  45 	 100 	  90 	  80 	  45 	  35 	  25 	  45 	 100 	 100 	 100 	  45 	  45
+"patrol"              	  25 	  25 	  25 	  25 	  25 	  25 	  25 	  25 	  25 	   - 	   - 	   - 	  25 	  25
+"defender"            	   - 	   - 	 100 	 100 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
 
 # executioner
-"executioner"    	  60 	  60 	   - 	   - 	   - 	   - 	   - 	   - 	  50 	  50 	  40 	  40 	  30 	  20
-"destroyer"      	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  20 	  10 	  10 	  20 	  20 	  30 	  40
+"executioner"         	  60 	  60 	   - 	   - 	   - 	   - 	   - 	   - 	  50 	  50 	  40 	  40 	  30 	  20
+"destroyer"           	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  20 	  10 	  10 	  20 	  20 	  30 	  40
 
 # special Lab monsters
-"lead_turtle"    	   - 	   - 	  60 	  60 	  70 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
-"iron_wasp"      	   - 	   - 	  40 	  50 	  60 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
+"lead_turtle"         	   - 	   - 	  60 	  60 	  70 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
+"iron_wasp"           	   - 	   - 	  40 	  50 	  60 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
 
 # special Cavern monsters
-"dustling"       	   - 	   - 	   - 	   - 	   - 	  60 	  60 	  50 	   - 	   - 	   - 	   - 	   - 	   -
-"vapour_mage"    	   - 	   - 	   - 	   - 	   - 	  60 	  60 	  70 	   - 	   - 	   - 	   - 	   - 	   -
-"convult"        	   - 	   - 	   - 	   - 	   - 	  30 	  30 	  35 	   - 	   - 	   - 	   - 	   - 	   -
+"dustling"            	   - 	   - 	   - 	   - 	   - 	  60 	  60 	  50 	   - 	   - 	   - 	   - 	   - 	   -
+"vapour_mage"         	   - 	   - 	   - 	   - 	   - 	  60 	  60 	  70 	   - 	   - 	   - 	   - 	   - 	   -
+"convult"             	   - 	   - 	   - 	   - 	   - 	  30 	  30 	  35 	   - 	   - 	   - 	   - 	   - 	   -
 
 # medium-difficulty monsters
-"spectre_mage"   	   - 	   - 	  10 	  10 	  15 	  10 	  10 	  15 	   - 	   - 	   - 	  10 	  10 	  10
-"necromancer"    	  10 	  10 	  10 	  10 	  10 	  10 	  10 	  10 	  10 	  10 	  10 	  10 	  10 	  20
-"cinder_worm"    	   - 	   - 	   - 	   - 	   - 	  10 	  20 	  30 	  20 	  20 	  20 	  30 	  25 	  25
-"war_olg"        	   - 	   - 	   - 	  10 	  10 	  15 	  20 	  30 	  20 	  25 	  25 	  30 	  30 	  30
+"warden"              	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
+"spectre_mage"        	   - 	   - 	  10 	  10 	  15 	  10 	  10 	  15 	   - 	   - 	   - 	  10 	  10 	  10
+"cinder_worm"         	   - 	   - 	   - 	   - 	   - 	  10 	  20 	  30 	  20 	  20 	  20 	  30 	  25 	  25
+"war_olg"             	   - 	   - 	   - 	  10 	  10 	  15 	  20 	  30 	  20 	  25 	  25 	  30 	  30 	  30
+"necromancer"         	   - 	   - 	   5 	  10 	  15 	   5 	  10 	  15 	  10 	  15 	  15 	  10 	  10 	  20
+"skeletal_blademaster"	   - 	   - 	   - 	   5 	  10 	   5 	  10 	  15 	  10 	  15 	  15 	  10 	  15 	  25
+"skeletal_axemaster"  	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   5 	  10 	  15 	  15 	  10 	  15 	  25
 
 # higher-difficulty monsters
-"death_mage"     	   - 	   1 	   5 	   5 	   5 	   - 	   - 	   - 	  10 	   1 	   5 	   5 	  10 	  15
-"warden"         	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
+"death_mage"          	   - 	   - 	   - 	   5 	   5 	   1 	   5 	   5 	  10 	  10 	  15 	  15 	  15 	  20
 
 # boss monsters
-"frozen_fiend"   	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   1 	   3 	   5 	   1 	   3
-"sulfur_fiend"   	   - 	   - 	   2 	   3 	   5 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   1
-"burning_brute"  	   - 	   - 	   1 	   3 	   5 	   1 	   3 	   5 	   2 	   - 	   - 	   - 	   3 	   5
-"ancient_mage"   	   - 	   1 	   - 	   - 	   - 	   - 	   - 	   - 	   1 	   - 	   - 	   - 	   2 	   2
+"frozen_fiend"        	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   1 	   3 	   5 	   1 	   3
+"sulfur_fiend"        	   - 	   - 	   2 	   3 	   5 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   1
+"burning_brute"       	   - 	   - 	   1 	   3 	   5 	   1 	   3 	   5 	   2 	   - 	   - 	   - 	   3 	   5
+"ancient_mage"        	   - 	   1 	   - 	   - 	   - 	   - 	   - 	   - 	   1 	   - 	   - 	   - 	   2 	   2
 
 # monster id          -8/Pri  -7/Pri  -6/Lab  -6/Lab2 -6/Lab3  -5/Smi -5/Smi2 -5/Smi3  -4/Pri -3/Vlt -3/Vlt2 -3/Vlt3  -2/Pri  -1/Pri
