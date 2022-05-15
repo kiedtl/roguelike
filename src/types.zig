@@ -2883,7 +2883,7 @@ pub const Mob = struct { // {{{
         // Check statuses
         switch (resist) {
             .Armor => if (self.isUnderStatus(.Recuperate) != null) {
-                r -= 25;
+                r -= 50;
             },
             else => {},
         }

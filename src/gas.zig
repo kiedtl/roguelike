@@ -74,8 +74,8 @@ pub const Slow = Gas{
 
 pub const Healing = Gas{
     .name = "healing gas",
-    .color = 0xbb97aa,
-    .dissipation_rate = 0.02,
+    .color = 0xdd6565,
+    .dissipation_rate = 0.04,
     .trigger = triggerHealing,
     .id = 5,
 };
@@ -152,8 +152,8 @@ fn triggerSlow(mob: *Mob, _: f64) void {
 }
 
 fn triggerHealing(mob: *Mob, quantity: f64) void {
-    mob.HP *= 1.1 * (quantity + 1.0);
-    mob.HP = math.clamp(mob.HP, 0, mob.max_HP);
+    _ = quantity;
+    mob.addStatus(.Recuperate, 0, .{ .Tmp = 15 });
 }
 
 fn triggerMiasma(mob: *Mob, _: f64) void {
