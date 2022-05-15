@@ -990,7 +990,7 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
         .deaf = true,
         .life_type = .Undead,
 
-        .max_HP = 15,
+        .max_HP = 12,
         .memory_duration = 6,
         .blood = null,
         .corpse = .None,
