@@ -308,11 +308,13 @@ fn placeDoor(coord: Coord, locked: bool) void {
 
 fn _add_player(coord: Coord, alloc: mem.Allocator) void {
     const lring = items.createItem(Ring, items.LightningRing);
+    const ering = items.createItem(Ring, items.ExterminationRing);
     const cring = items.createItem(Ring, items.CremationRing);
 
     state.player = mobs.placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
     state.player.inventory.rings[0] = lring;
-    state.player.inventory.rings[1] = cring;
+    state.player.inventory.rings[1] = ering;
+    state.player.inventory.rings[2] = cring;
     state.player.prisoner_status = Prisoner{ .of = .Necromancer };
 }
 

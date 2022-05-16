@@ -478,6 +478,82 @@ pub const LightningRing = Ring{ // {{{
 pub const CremationRing = Ring{ // {{{
     .name = "cremation",
     .pattern_checker = .{
+        .turns = 4,
+        .funcs = [_]PatternChecker.Func{
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
+                    const cur = mob.activities.current().?;
+                    const r = cur == .Attack and
+                        !cur.Attack.direction.is_diagonal();
+                    if (r) {
+                        stt.coords[0] = cur.Attack.coord;
+                        stt.coords[1] = mob.coord;
+                    }
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
+                    const cur = mob.activities.current().?;
+                    const r = cur == .Move and
+                        cur.Move.is_diagonal() and
+                        mob.coord.distance(stt.coords[0].?) == 1 and
+                        !mob.coord.eq(stt.coords[1].?);
+                    if (r) {
+                        stt.coords[2] = mob.coord;
+                    }
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
+                    const cur = mob.activities.current().?;
+                    const r = cur == .Move and
+                        cur.Move.is_diagonal() and
+                        mob.coord.distance(stt.coords[0].?) == 1 and
+                        !mob.coord.eq(stt.coords[1].?) and
+                        !mob.coord.eq(stt.coords[2].?);
+                    if (r) {
+                        stt.coords[3] = mob.coord;
+                    }
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
+                    const cur = mob.activities.current().?;
+                    const r = cur == .Move and
+                        cur.Move.is_diagonal() and
+                        mob.coord.distance(stt.coords[0].?) == 1 and
+                        !mob.coord.eq(stt.coords[1].?) and
+                        !mob.coord.eq(stt.coords[2].?) and
+                        !mob.coord.eq(stt.coords[3].?);
+                    return r;
+                }
+            }.f,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        },
+    },
+    .effect = struct {
+        pub fn f(self: *Mob, stt: PatternChecker.State) void {
+            _ = stt;
+            for (&DIRECTIONS) |d|
+                if (self.coord.move(d, state.mapgeometry)) |neighbor| {
+                    fire.setTileOnFire(neighbor);
+                    // TODO: fire vuln
+                };
+        }
+    }.f,
+}; // }}}
+
+pub const ExterminationRing = Ring{ // {{{
+    .name = "extermination",
+    .pattern_checker = .{
         .turns = 3,
         .funcs = [_]PatternChecker.Func{
             struct {
@@ -515,6 +591,9 @@ pub const CremationRing = Ring{ // {{{
                     const r = cur == .Move and
                         cur.Move == stt.directions[0].? and
                         mob.coord.distance(stt.mobs[0].?.coord) == 1; // he's still there?
+                    if (r) {
+                        stt.directions[1] = cur.Move;
+                    }
                     return r;
                 }
             }.f,
@@ -529,12 +608,18 @@ pub const CremationRing = Ring{ // {{{
     },
     .effect = struct {
         pub fn f(self: *Mob, stt: PatternChecker.State) void {
-            _ = stt;
-            for (&DIRECTIONS) |d|
-                if (self.coord.move(d, state.mapgeometry)) |neighbor| {
-                    fire.setTileOnFire(neighbor);
-                    // TODO: fire vuln
-                };
+            const direction = stt.directions[1].?;
+            while (true) {
+                const coord = self.coord.move(direction, state.mapgeometry) orelse break;
+                explosions.fireBurst(coord, 1);
+                if (!state.is_walkable(coord, .{
+                    .right_now = true,
+                    .only_if_breaks_lof = true,
+                })) {
+                    break;
+                }
+            }
+            state.message(.Info, "Fire bursts out of you!", .{});
         }
     }.f,
 }; // }}}
