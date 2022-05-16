@@ -41,6 +41,10 @@ $cA recharging station.$.
 
 You can activate this to recharge some of your evocables.
 
+% evoc_flamethrower
+
+This device can spray a fountain of sparks at a nearby tile, igniting it.
+
 % eldritch_lantern
 $cAn eldritch lantern.$.
 

@@ -1374,11 +1374,12 @@ pub fn draw() void {
     termbox.tb_present();
 }
 
-pub const ChooseCellOptions = struct {
+pub const ChooseCellOpts = struct {
     require_seen: bool = true,
+    max_distance: ?usize = null,
 };
 
-pub fn chooseCell(opts: ChooseCellOptions) ?Coord {
+pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
     const mainw = dimensions(.Main);
 
     // TODO: do some tests and figure out what's the practical limit to memory
@@ -1435,6 +1436,10 @@ pub fn chooseCell(opts: ChooseCellOptions) ?Coord {
                             !state.memory.contains(coord))
                         {
                             drawAlert("You haven't seen that place!", .{});
+                        } else if (opts.max_distance != null and
+                            coord.distance(state.player.coord) > opts.max_distance.?)
+                        {
+                            drawAlert("Out of range!", .{});
                         } else {
                             return coord;
                         }
