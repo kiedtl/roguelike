@@ -238,6 +238,7 @@ pub const FlamethrowerEvoc = Evocable{
             const dest = display.chooseCell(.{
                 .require_seen = true,
                 .max_distance = 7,
+                .show_trajectory = true,
             }) orelse return error.BadPosition;
 
             explosions.fireBurst(dest, 2);

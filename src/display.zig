@@ -1377,6 +1377,7 @@ pub fn draw() void {
 pub const ChooseCellOpts = struct {
     require_seen: bool = true,
     max_distance: ?usize = null,
+    show_trajectory: bool = false,
 };
 
 pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
@@ -1393,6 +1394,30 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
 
     while (true) {
         drawMap(moblist.items, mainw.startx, mainw.endx, mainw.starty, mainw.endy);
+
+        if (opts.show_trajectory) {
+            const trajectory = state.player.coord.drawLine(coord, state.mapgeometry);
+            const fg = if (utils.hasClearLOF(state.player.coord, coord))
+                colors.CONCRETE
+            else
+                colors.PALE_VIOLET_RED;
+
+            for (trajectory.constSlice()) |traj_c| {
+                const d_traj_c_y = mainw.starty + @intCast(isize, traj_c.y);
+                const d_traj_c_x = mainw.startx + @intCast(isize, traj_c.x);
+
+                if (state.player.coord.eq(traj_c)) continue;
+                if (coord.eq(traj_c)) break;
+
+                if (!state.is_walkable(traj_c, .{
+                    .right_now = true,
+                    .only_if_breaks_lof = true,
+                }))
+                    break;
+
+                termbox.tb_change_cell(d_traj_c_x, d_traj_c_y, 'x', fg, colors.BG);
+            }
+        }
 
         const display_x = mainw.startx + @intCast(isize, coord.x);
         const display_y = mainw.starty + @intCast(isize, coord.y);
