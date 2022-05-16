@@ -84,7 +84,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     // Consumables
     .{ .w = 080, .i = .{ .P = &HotPokerConsumable } },
     .{ .w = 090, .i = .{ .P = &CoalConsumable } },
-    .{ .w = 050, .i = .{ .P = &CopperIngotConsumable } },
+    .{ .w = 001, .i = .{ .P = &CopperIngotConsumable } },
     // Kits
     .{ .w = 030, .i = .{ .P = &FireTrapKit } },
     .{ .w = 030, .i = .{ .P = &ShockTrapKit } },
