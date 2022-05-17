@@ -1385,17 +1385,20 @@ pub const Mob = struct { // {{{
         pack: PackBuffer = PackBuffer.init(&[_]Item{}),
         equ_slots: [EQU_SLOT_SIZE]?Item = [_]?Item{null} ** EQU_SLOT_SIZE,
 
-        rings: [4]?*Ring = [4]?*Ring{ null, null, null, null },
-
         pub const EquSlot = enum(usize) {
             Weapon = 0,
             Backup = 1,
-            Armor = 2,
-            Cloak = 3,
+            Ring1 = 2,
+            Ring2 = 3,
+            Ring3 = 4,
+            Ring4 = 5,
+            Armor = 6,
+            Cloak = 7,
 
             pub fn slotFor(item: Item) EquSlot {
                 return switch (item) {
                     .Weapon => .Weapon,
+                    .Ring => err.bug("Tried to get equipment slot for ring", .{}),
                     .Armor => .Armor,
                     .Cloak => .Cloak,
                     else => err.wat(),
@@ -1406,6 +1409,7 @@ pub const Mob = struct { // {{{
                 return switch (self) {
                     .Weapon => "weapon",
                     .Backup => "backup",
+                    .Ring1, .Ring2, .Ring3, .Ring4 => "ring",
                     .Armor => "armor",
                     .Cloak => "cloak",
                 };
@@ -2990,7 +2994,9 @@ pub const Mob = struct { // {{{
 
         // Check rings
         //
-        for (self.inventory.rings) |r| if (r) |ring| {
+        const rings = [_]Inventory.EquSlot{ .Ring1, .Ring2, .Ring3, .Ring4 };
+        for (rings) |r| if (self.inventory.equipment(r).*) |ring_item| {
+            const ring = ring_item.Ring;
             if (ring.pattern_checker.checkState(self)) |stt| {
                 ring.effect(self, stt);
             }
@@ -3450,8 +3456,9 @@ pub const Item = union(ItemType) {
             .Weapon => |w| w.id,
             .Prop => |p| p.id,
             .Evocable => |v| v.id,
+            .Ring => |r| r.name,
             .Rune => "AMBIG_rune",
-            .Vial, .Boulder, .Ring => null,
+            .Vial, .Boulder => null,
         };
     }
 };

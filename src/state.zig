@@ -483,28 +483,6 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
         });
     }
     try w.print("\n", .{});
-    try w.print("Rings:\n", .{});
-    try w.print("1) {s: <40} 2) {s}\n", .{
-        if (player.inventory.rings[0]) |b|
-            ((Item{ .Ring = b }).longName() catch unreachable).constSlice()
-        else
-            "<none>",
-        if (player.inventory.rings[1]) |b|
-            ((Item{ .Ring = b }).longName() catch unreachable).constSlice()
-        else
-            "<none>",
-    });
-    try w.print("3) {s: <40} 4) {s}\n", .{
-        if (player.inventory.rings[2]) |b|
-            ((Item{ .Ring = b }).longName() catch unreachable).constSlice()
-        else
-            "<none>",
-        if (player.inventory.rings[3]) |b|
-            ((Item{ .Ring = b }).longName() catch unreachable).constSlice()
-        else
-            "<none>",
-    });
-    try w.print("\n", .{});
 
     try w.print("Aptitudes:\n", .{});
     for (player_upgrades) |upgr| if (upgr.recieved) {

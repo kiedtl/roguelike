@@ -231,7 +231,7 @@ fn readDescriptions(alloc: mem.Allocator) void {
     defer alloc.free(filebuf);
     const read = data_file.readAll(filebuf[0..]) catch err.wat();
 
-    var lines = mem.tokenize(u8, filebuf[0..read], "\n");
+    var lines = mem.split(u8, filebuf[0..read], "\n");
     var current_desc_id: ?[]const u8 = null;
     var current_desc = StackBuffer(u8, 4096).init(null);
 
@@ -251,7 +251,9 @@ fn readDescriptions(alloc: mem.Allocator) void {
     };
 
     while (lines.next()) |line| {
-        if (line[0] == '%') {
+        if (line.len == 0) {
+            current_desc.appendSlice("\n") catch err.wat();
+        } else if (line[0] == '%') {
             if (current_desc_id) |id| {
                 S._finishDescEntry(id, current_desc.constSlice(), alloc);
 
@@ -266,8 +268,8 @@ fn readDescriptions(alloc: mem.Allocator) void {
                 err.bug("Description without ID", .{});
             }
 
-            if (current_desc.len > 0) current_desc.append(' ') catch err.wat();
             current_desc.appendSlice(line) catch err.wat();
+            current_desc.appendSlice("\n") catch err.wat();
         }
     }
 

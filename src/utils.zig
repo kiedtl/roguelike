@@ -263,25 +263,25 @@ pub fn findPatternMatch(coord: Coord, patterns: []const []const u8) ?usize {
 // FIXME: split long words along '-'
 // FIXME: add tests to ensure that long words aren't put on separate lines with
 //        nothing on the previous line, like the fold implementation in lurch
-// FIXME: don't break unicode codepoints
 // FIXME: stress-test on abnormal inputs (empty input, input full of whitespace, etc)
 pub const FoldedTextIterator = struct {
     str: []const u8,
     max_width: usize,
     last_space: ?usize = null,
     index: usize = 0,
-    line_begin: usize = 0,
 
     const Self = @This();
 
-    pub fn init(str: []const u8, max_width: usize) Self {
-        return .{ .str = str, .max_width = max_width };
+    pub fn init(str: []const u8, w: usize) Self {
+        return .{ .str = str, .max_width = w };
     }
 
-    pub fn next(self: *Self) ?[]const u8 {
+    pub fn next(self: *Self, line_buf: anytype) ?[]const u8 {
         if (self.index >= self.str.len) {
             return null;
         }
+
+        line_buf.clear();
 
         self.last_space = null;
         var cur_width: usize = 0;
@@ -289,10 +289,13 @@ pub const FoldedTextIterator = struct {
         while (self.index < self.str.len and cur_width < self.max_width) {
             const seqlen = unicode.utf8ByteSequenceLength(self.str[self.index]) catch unreachable;
             const char = unicode.utf8Decode(self.str[self.index .. self.index + seqlen]) catch unreachable;
+            const slice = self.str[self.index..(self.index + seqlen)];
 
             switch (char) {
                 // Skip our custom formatting directives.
                 '$' => {
+                    const esc_slice = self.str[self.index..(self.index + seqlen + 1)];
+                    line_buf.appendSlice(esc_slice) catch unreachable;
                     self.index += seqlen + 1;
                     continue;
                 },
@@ -301,26 +304,31 @@ pub const FoldedTextIterator = struct {
                     // We've found some whitespace. If we're at the beginning
                     // of a line, ignore it (unless it's a newline); otherwise,
                     // save the current index.
-                    if (char != '\n' and self.index == self.line_begin and self.index != 0) {
+                    if (char != '\n' and line_buf.len == 0 and self.index != 0) {
                         self.index += seqlen;
-                        self.line_begin += seqlen;
                         continue;
                     }
 
                     self.last_space = self.index;
 
                     if (char == '\n') {
-                        self.index += seqlen;
-                        if (self.index == self.line_begin) {
-                            self.line_begin += seqlen;
+                        if (self.index != 0 and self.str[self.index - 1] == '\n') {
+                            self.index += seqlen;
+                            break;
+                        } else {
+                            self.index += seqlen;
+                            if (line_buf.len > 0) {
+                                line_buf.append(' ') catch unreachable;
+                            }
+                            continue;
                         }
-                        break;
                     }
                 },
                 else => {},
             }
 
             self.index += seqlen;
+            line_buf.appendSlice(slice) catch unreachable;
             cur_width += 1;
         }
 
@@ -328,15 +336,13 @@ pub const FoldedTextIterator = struct {
         // backup to the last space.
         if (cur_width >= self.max_width) {
             if (self.last_space) |spc| {
+                line_buf.resizeTo(line_buf.len - (self.index - spc));
                 self.index = spc;
                 self.last_space = null;
             }
         }
 
-        const old_line_begin = self.line_begin;
-        self.line_begin = self.index;
-        const line_end = if (self.str[self.index - 1] == '\n') self.index - 1 else self.index;
-        return self.str[old_line_begin..line_end];
+        return line_buf.constSlice();
     }
 };
 

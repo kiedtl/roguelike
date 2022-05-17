@@ -886,8 +886,9 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
 
     const linewidth = if (opts.fold) @intCast(usize, endx - x) else str.len;
 
+    var fibuf = StackBuffer(u8, 4096).init(null);
     var fold_iter = utils.FoldedTextIterator.init(str, linewidth);
-    while (fold_iter.next()) |line| : ({
+    while (fold_iter.next(&fibuf)) |line| : ({
         y += 1;
         x = _x;
     }) {
@@ -1994,8 +1995,9 @@ pub fn drawAlert(comptime fmt: []const u8, args: anytype) void {
     // Get height of folded text, so that we can center it vertically
     const linewidth = @intCast(usize, (wind.endx - wind.startx) - 4);
     var text_height: usize = 0;
+    var fibuf = StackBuffer(u8, 4096).init(null);
     var fold_iter = utils.FoldedTextIterator.init(str, linewidth);
-    while (fold_iter.next()) |_| text_height += 1;
+    while (fold_iter.next(&fibuf)) |_| text_height += 1;
 
     // Clear log window
     var y = wind.starty;
