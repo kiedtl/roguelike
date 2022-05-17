@@ -366,54 +366,6 @@ Intelligence
 - Unintelligent mobs cannot use doors and machines marked as requiring INT.
 
 
-Movement patterns
------------------
-x sneak         [move, move, rest, move]
-- merciless     [move(A), attack(A), move(A), attack(A)]
-- backstab      [attack(N), move(NE), move(NW), attack(S)]
-- whirlwind     [attack(N), attack(S), attack(E), attack(W)]
-  - (attack in four unique directions four times in a row)
-  - active AoE ring abilities?
-
-x lunge:       ....   ....
-               .m.@ → .m@.
-               ....   ....
-  i.e.: step into a square next to enemy.
-  automatic attack that doesn't miss and deals 2x damage. Noisy.
-
-x charge:            ........   ........   ........   ........
-          <wait>  →  m......@ → .m....@. → ..m..@.. → ...m@...
-                     ........   ........   ........   ........
-  i.e.: wait, move three spaces in the same direction towards enemy, ending
-  adjacent to enemy.
-  automatic attack that doesn't miss, and knocks opponent back three spaces,
-  dealing extra damage if they slam into a wall or another mob. Noisy.
-
-- pin:         ...   ...              ....
-               .m. → .m@ → attack m → .m.@
-               .@.   ...              ....
-  gives foe .Held status for 5 turns, just enough to set up a charge.
-
-x cntrattack:  retreat, attack, retreat, attack, retreat.
-  Gives you the .Fast status for 4 turns.
-
-- drive-by:    ...   ...              ..@
-               .m. → .m@ → attack m → .m.
-               ..@   ...              ...
-  free attack that doesn't miss, evade += 10% for two turns
-
-- partng shot: .m..                               .m..
-               .m@. → attack from top to bottom → .m.@
-               .m..                               .m..
-  i.e.: attack three foes consectively, where the first and third are both
-  adjacent to the second, then step away.
-  gives a 20% speed boost for five turns, and increases evade by +10%.
-
-- rampage:     .m.m.   .m.m.
-               ..... → ..@.. → attack NW → attack NE
-               ..@..   .....
-  i.e.: move adjacent to two enemies, attack both consecutively.
-
 Equipment
 ---------
 (damages is after making all hps 1/4)
@@ -463,77 +415,178 @@ headgear:
 - welding helmet:   5% armor   Vision-  rFire+
 - thief's mask:                Vision-  infravision
 
+utility items:
+- Detect undead
+- Vampirism (charm of transference)
+- bucker (3 knockback on block, +15% block)
+
+
+Movement patterns
+-----------------
+x sneak         [move, move, rest, move]
+- merciless     [move(A), attack(A), move(A), attack(A)]
+- backstab      [attack(N), move(NE), move(NW), attack(S)]
+- whirlwind     [attack(N), attack(S), attack(E), attack(W)]
+  - (attack in four unique directions four times in a row)
+  - active AoE ring abilities?
+
+x lunge:       ....   ....
+               .m.@ → .m@.
+               ....   ....
+  i.e.: step into a square next to enemy.
+  automatic attack that doesn't miss and deals 2x damage. Noisy.
+
+x charge:            ........   ........   ........   ........
+          <wait>  →  m......@ → .m....@. → ..m..@.. → ...m@...
+                     ........   ........   ........   ........
+  i.e.: wait, move three spaces in the same direction towards enemy, ending
+  adjacent to enemy.
+  automatic attack that doesn't miss, and knocks opponent back three spaces,
+  dealing extra damage if they slam into a wall or another mob. Noisy.
+
+x pin:         ...            ...              ....
+               .m. → attack → .m@ → attack m → .m.@
+               .@.            ...              ....
+  gives foe .Held status for 5 turns, just enough to set up a charge.
+
+x cntrattack:  retreat, attack, retreat, attack, retreat.
+  Gives you the .Fast status for 4 turns.
+
+- drive-by:    ...   ...              ..@
+               .m. → .m@ → attack m → .m.
+               ..@   ...              ...
+  free attack that doesn't miss, evade += 10% for two turns
+
+- partng shot: .m..                               .m..
+               .m@. → attack from top to bottom → .m.@
+               .m..                               .m..
+  i.e.: attack three foes consectively, where the first and third are both
+  adjacent to the second, then step away.
+  gives a 20% speed boost for five turns, and increases evade by +10%.
+
+- rampage:     .m.m.   .m.m.
+               ..... → ..@.. → attack NW → attack NE
+               ..@..   .....
+  i.e.: move adjacent to two enemies, attack both consecutively.
+
+
 
 Rings
 -----
-- Rings will not work as soon as they are wielded, but must be worn for a few
-  hundred turns to reach their full potential.
-- Rings don't have an "enchantment" level, but "tiers" instead (mithril, gold,
-  silver, and iron).
-- Rings: [p]assive (acting each turn) or [a]ctive (requiring user to move in pattern)
-ring of knowledge [a/p]
-  - Passively allows player to know if they're still being pursued.
-  - Allows player to see spots near pursuers (but not the pursuers
-    themselves?) for ~3-5 turns.
-    - Movement pattern:
-ring of devastation [a]
-  - Confers either stun or fear on mob when moving toward mob.
-    - Must land right next to mob.
-    - Movement pattern: [move(N), move(N), move(N), move(N)]
-  - Can hurl crystal lance, to halve foe's health and knock them back,
-    halving health again if they are thrown into a wall.
-    .Loudest noise.
-  - Can destroy a wall tile, sending shards of lethally sharp stone
-    hurtling towards adjacent mobs. Harder stones == more damage.
-    .Deafening noise.
-ring of distortion [a]
-  - Bend space: blink all mobs in FOV (& player) at random.
-    Twists space violently around player, reducing HP by 10%.
-  - Aura of dispersal: creates aura around player where any mob in the
-    aura will be blinked away (& possibly paralysed) for 2-3 turns.
-    Twists space violently around player, reducing HP by 10%.
-  - Scatter: teleport all mobs in FOV (& player) around floor. Player
-    should land in area without nearby mobs.
-    Twists space violently around player, reducing HP by 10%.
-ring of singing [a/p]
-  - Aura of silence: mutes all sound in vicinity for ~10 turns.
-vampiric ring of draining [a/p]
-  - Drains an enemy for {speed,health,HP}.
-  - Allows player to see that mob and all tiles within two spaces.
-  - Player will get a status (paralyzed? slowed? negative regen? traumatize? stun?)
-    for a bit when the enemy dies OR the enemy sees the player.
-  - The drained mob immedietely becomes an enemy to everyone.
-  - If the enemy dies, the player is teleported there in its place?
-  - Movement pattern: ???
-ring of fire [a]
-  - Causes dark gas to emanate from player. Gas is opaque and blocks all light.
-    - Movement pattern:
-  - Causes all nearby machines to lose power for a bit (aka turn out the lights).
-    - Movement pattern:
-  - Raises all nearby corpses to attack enemies for a brief period of time.
-    - Movement pattern:
-  - Causes tiles in 3-space radius around player to burst into flame.
-    - Movement pattern:
-  - Summons orbs of fire when moving straight away from foe. Orbs create
-    smoke/fog as they move and attack foes. Like Foxfire.
-  - Ignition/Hellfire: fill all tiles with foes with fire. Sets caster on fire.
-    Puts clouds of fire around at random (potentially impeding escape).
-  - Ring of flames: move forward against guard, move right/left, move forward
-    m...        ....   ....
-    @... attack m...   m... attack
-    ....        @...   .@..
-    Makes all adjacent foes temporarily vulnerable to fire, and creates ring
-    of flames in all adjacent squares
-ring of hexing [a]
-  - Dismissal: forces all investigating mobs in LOS to return to working.
-    If resisted by willpower, will reveal player's location to them.
-ring of lightning
-  - Lure: attack in a cardinal direction, move in opposite direction, move
+Rings have "tiers" instead of an "enchantment" level (gold, silver, iron).
+
+- bolt of something (beus lance?)
+  ..m..   .....   .....   .....
+  ..@..   ..m..   .....   .....
+  .....   ..@..   ..m..   ..m@.
+  .....   .....   ...@.   .....
+
+  .....
+  ..m..
+  .m@m. attack each direction
+  ..m..
+  .....
+
+  .....   .....   .....   .....
+  ..m..   .....   .....   ..@..
+  ..@..   ..m..   .@m..   ..m..
+  .....   ..@..   .....   .....
+
+- ring of electrification: Electrocute all mobs on two sides.
+  - Move two tiles backwards into corridor (ie with walls on the other two sides
+    of your character), wait, attack forwards
+    ##....   ##.....   ##.....
+    ##..m.   ##.m...   ##m....
+    ...@..   ..@M...   .@M....   wait   attack(M)
+    ##..M.   ##.m...   ##m....
+    ##.m..   ##.....   ##.....
+
+- ring of magnetization: cause knockback of all nearby foes onto a single foe.
+  Like Gell's Gravitas in DCSS.
+
+- ring of intimidation: confer stun/fear to mob when moving towards it, while
+  enraging all other monsters in FOV.
+
+- ring of devastation: hurl beus lance, halving foe's health and causing 3-6
+  knockback.
+
+- ring of distortion: bend space, blinking away all mobs in 3-5 tile radius of
+  player. Blinks player as well. All affected mobs, including player, have
+  health reduced by 10%.
+
+- ring of conscription: raise 2-6 nearby corpses to fight a specific mob, for
+  8-24 turns. Zombies are completely blind and won't fight any other monster
+  unless attacked.
+
+- ring of damnation: ignite tiles near/on foes (2-3 tile radius) for 5-15
+  turns.
+  - Attack two enemies in opposite directions, move in cardinal direction,
+    move back, wait.
+    .....                           .....   .....
+    .....                           .....   .....
+    .1@2.   attack(1)   attack(2)   .1.2.   .1@2.   wait
+    .....                           ..@..   .....
+    .....                           .....   .....
+  - Will also knockback the two foes 3 spaces.
+
+x ring of electrocution: Electrocute tiles in four corners next to player.
+  - Attack in a cardinal direction, move in opposite direction, move
     perpendicular, attack again
     m...        ....   ....
     @... attack m...   m... attack
     ....        @...   .@..
-    Electrocutes locations in four corners next to player.
+  x Iron:   2 damage.
+  - Silver: 3 damage.
+  - Gold:   4 damage.
+
+x ring of cremation: Makes all adjacent foes temporarily vulnerable to fire,
+  and creates ring of flames in all adjacent squares.
+  - Move all around mob in four turns (w/o attacking or resting).
+    .....          .....   .....   .....
+    .....          .....   .....   ..@..
+    ..m@.  attack  ..m..   .@m..   ..m..
+    .....          ..@..   .....   .....
+    .....          .....   .....   .....
+  - Silver: create ring of flames in 2-tile radius.
+  - Gold:   create ring of flames in 3-tile radius.
+
+x ring of extermination: fire bolt of fire in direction.
+  - Move forward against guard, move right/left, move forward
+    ....   ....   ....   ....
+    @.m.   .@m.   ..m.   ..m.
+    ....   ....   .@..   ..@.
+
+- ring of ignition: Summon orbs of lava (a la DCSS' Foxfire).
+  - Move in zig-zag direction away from mob.
+    .....   .....   ......   ......   ......
+    m@...   m....   m..@..   m.....   m....@
+    .....   ..@..   ......   ....@.   ......
+    smoke/fog as they move and attack foes. Like Foxfire.
+
+- ring of debilitation: -15-25% melee, -15-25% missile
+
+- ring of encumberation (gold only): melee,missile=100%, evade=0%
+
+Other ideas:
+  - Passively allows player to know if they're still being pursued.
+  - Allows player to see spots near pursuers (but not the pursuers
+    themselves?) for ~3-5 turns.
+    - Movement pattern:
+  - Can destroy a wall tile, sending shards of lethally sharp stone
+    hurtling towards adjacent mobs. Harder stones == more damage.
+    .Deafening noise.
+  - Vampirism idea: vampiric ring of draining
+    - Drains an enemy for {speed,health,HP}.
+    - Allows player to see that mob and all tiles within two spaces.
+    - Player will get a status (paralyzed? slowed? negative regen? traumatize? stun?)
+      for a bit when the enemy dies OR the enemy sees the player.
+    - The drained mob immedietely becomes an enemy to everyone.
+    - If the enemy dies, the player is teleported there in its place?
+    - Movement pattern: ???
+  - Causes dark gas to emanate from player. Gas is opaque and blocks all light.
+  - Causes all nearby machines to lose power for a bit (aka turn out the lights).
+  - Dismissal: forces all investigating mobs in LOS to return to working.
+    If resisted by willpower, will reveal player's location to them.
 
 
 Books
@@ -557,7 +610,7 @@ Trying to read a [forbidden] book results in:
   - "You learn that two dark-skinned humans named Valimer and Kaiüs
      visited a few hill-goblin settlements a thousand years ago."
 "The Hardest Place: Our military entrenched in the Kinon Valley"
-  - "You learn that a any half-competent, copper-clad hill-goblin recruit
+  - "You learn that any half-competent, copper-clad hill-goblin recruit
     militia can completely annihilate human armies."
 "A Choice Collection of Human Poetry"
   - "You learn that modern human poetry has no merit whatsoever."
@@ -645,10 +698,8 @@ g  chlus
 g  caus
 g  magenus
 g  silus    Silicate, composes fire-proof cloaks.
-g  chlade    Like mese in Minetest. Composes crystal statues. Glows.
-      Associated with demonic powers.
+g  beus    Yellow-white crystal, like mese in Minetest. Composes crystal statues.
 o  magonium
-o  beus
 o  sylvium
 o  magalt
 o  vibonium
@@ -827,10 +878,11 @@ x Consumable reworking + kit refactoring
 x More evocables: copper ingot, coal, red-hot poker
 x More kits and traps: fire, shock, incineration, knockback
 - Ring changes/additions/simplifications:
+  x Refactor pattern checks
   - More ring types (fire, etc)
   - Random ring drops, equipping/deequipping rings
   - Use Eqp status-type (while keeping incremental power increases)
-  - Refactor pattern checks
+  - MP costs for rings
 - Multi-tile props: trees and braziers
 x Fix trtr chambers; add more of them
 - Revisit Laboratory
@@ -1070,7 +1122,13 @@ x Show information characters next to mob in enemy pane
   x s:   slower than player
   x ?:   investigating noise
   x !:   fleeing
-  x @:   grey (unaware), red (seen), pink (remembers), blue (fleeing), white (doesn't matter)
+  x @:   grey (unaware), red (seen), pink (remembers), blue (fleeing), white
+  x Z:   sleeping/dormand
+  - >:   drained attribute
+  - <:   increased attribute
+  - D:   unhearing (deaf or not curious)
+  - <M>: making noise
+  - ~:   off balance (ie won't act again before player's next turn)
 
 Items/Machines
 ==============
