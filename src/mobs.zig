@@ -62,7 +62,7 @@ pub const MobTemplate = struct {
         // FIXME: when Zig's #131 issue is resolved, change this to a
         // *MobTemplate instead of the mob's ID
         mob: []const u8,
-        weight: usize, // percentage
+        weight: usize = 1, // percentage
         count: MinMax(usize),
     };
 };
@@ -1003,6 +1003,42 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
     .armor = &items.ScalemailArmor,
 };
 
+pub const BoneRatTemplate = MobTemplate{
+    .mob = .{
+        .id = "bone_rat",
+        .species = &Species{
+            .name = "bone rat",
+            .default_attack = &Weapon{ .damage = 1, .strs = &items.BITING_STRS },
+        },
+        .tile = 'r',
+        .undead_prefix = "",
+        .ai = AI{
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.meleeFight,
+            .is_fearless = true,
+        },
+        .allegiance = .Necromancer,
+
+        .deaf = true,
+        .life_type = .Undead,
+
+        .max_HP = 4,
+        .memory_duration = 4,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rPois = 100, .rFume = 100, .rFire = -25 },
+        .stats = .{ .Willpower = 1, .Evade = 20, .Melee = 70, .Speed = 60, .Vision = 4 },
+    },
+
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "bone_rat", .count = minmax(usize, 0, 2) },
+        },
+    },
+};
+
 pub const TorturerNecromancerTemplate = MobTemplate{
     .mob = .{
         .id = "necromancer",
@@ -1304,6 +1340,7 @@ pub const MOBS = [_]MobTemplate{
     DeathMageTemplate,
     SkeletalAxemasterTemplate,
     SkeletalBlademasterTemplate,
+    BoneRatTemplate,
     TorturerNecromancerTemplate,
     BurningBruteTemplate,
     FrozenFiendTemplate,
