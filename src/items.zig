@@ -588,11 +588,12 @@ pub const ExterminationRing = Ring{ // {{{
             struct {
                 pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
                     const cur = mob.activities.current().?;
+                    const foe_coord = stt.mobs[0].?.coord;
                     const r = cur == .Move and
                         cur.Move == stt.directions[0].? and
-                        mob.coord.distance(stt.mobs[0].?.coord) == 1; // he's still there?
+                        mob.coord.distance(foe_coord) == 1; // he's still there?
                     if (r) {
-                        stt.directions[1] = cur.Move;
+                        stt.directions[1] = Direction.from(mob.coord, foe_coord);
                     }
                     return r;
                 }
@@ -609,15 +610,15 @@ pub const ExterminationRing = Ring{ // {{{
     .effect = struct {
         pub fn f(self: *Mob, stt: PatternChecker.State) void {
             const direction = stt.directions[1].?;
+            var coord = self.coord;
             while (true) {
-                const coord = self.coord.move(direction, state.mapgeometry) orelse break;
-                explosions.fireBurst(coord, 1);
-                if (!state.is_walkable(coord, .{
-                    .right_now = true,
-                    .only_if_breaks_lof = true,
-                })) {
+                coord = coord.move(direction, state.mapgeometry) orelse break;
+                // This is special -- only stop if we land at a non-floor cell,
+                // instead of stopping at the first breaking-LOF tile.
+                if (state.dungeon.at(coord).type != .Floor)
                     break;
-                }
+
+                explosions.fireBurst(coord, 1);
             }
             state.message(.Info, "Fire bursts out of you!", .{});
         }
