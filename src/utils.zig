@@ -312,16 +312,16 @@ pub const FoldedTextIterator = struct {
                     self.last_space = self.index;
 
                     if (char == '\n') {
-                        if (self.index != 0 and self.str[self.index - 1] == '\n') {
-                            self.index += seqlen;
-                            break;
-                        } else {
-                            self.index += seqlen;
-                            if (line_buf.len > 0) {
-                                line_buf.append(' ') catch unreachable;
-                            }
-                            continue;
-                        }
+                        // if (self.index != 0 and self.str[self.index - 1] == '\n') {
+                        self.index += seqlen;
+                        break;
+                        // } else {
+                        //     self.index += seqlen;
+                        //     if (line_buf.len > 0) {
+                        //         line_buf.append(' ') catch unreachable;
+                        //     }
+                        //     continue;
+                        // }
                     }
                 },
                 else => {},

@@ -242,6 +242,7 @@ fn readDescriptions(alloc: mem.Allocator) void {
 
             const val = a.alloc(u8, desc.len) catch err.wat();
             mem.copy(u8, val, desc);
+            std.log.info("{s}: '{s}'\n", .{ key, val });
 
             state.descriptions.putNoClobber(key, val) catch err.bug(
                 "Duplicate description {s} found",
@@ -250,26 +251,37 @@ fn readDescriptions(alloc: mem.Allocator) void {
         }
     };
 
+    var prev_was_nl = false;
     while (lines.next()) |line| {
         if (line.len == 0) {
-            current_desc.appendSlice("\n") catch err.wat();
-        } else if (line[0] == '%') {
-            if (current_desc_id) |id| {
-                S._finishDescEntry(id, current_desc.constSlice(), alloc);
-
-                current_desc.clear();
-                current_desc_id = null;
+            if (prev_was_nl) {
+                current_desc.appendSlice("\n") catch err.wat();
             }
-
-            if (line.len <= 2) err.bug("Missing desc ID", .{});
-            current_desc_id = line[2..];
+            prev_was_nl = true;
         } else {
-            if (current_desc_id == null) {
-                err.bug("Description without ID", .{});
+            if (prev_was_nl) {
+                current_desc.appendSlice(" ") catch err.wat();
             }
+            prev_was_nl = false;
 
-            current_desc.appendSlice(line) catch err.wat();
-            current_desc.appendSlice("\n") catch err.wat();
+            if (line[0] == '%') {
+                if (current_desc_id) |id| {
+                    S._finishDescEntry(id, current_desc.constSlice(), alloc);
+
+                    current_desc.clear();
+                    current_desc_id = null;
+                }
+
+                if (line.len <= 2) err.bug("Missing desc ID", .{});
+                current_desc_id = line[2..];
+            } else {
+                if (current_desc_id == null) {
+                    err.bug("Description without ID", .{});
+                }
+
+                current_desc.appendSlice(line) catch err.wat();
+                prev_was_nl = true;
+            }
         }
     }
 
