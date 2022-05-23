@@ -23,7 +23,7 @@ const ATTACKER_ENRAGED_BONUS: isize = 20;
 const ATTACKER_OPENMELEE_BONUS: isize = 10;
 const ATTACKER_FEAR_NBONUS: isize = 10;
 const ATTACKER_HELD_NBONUS: isize = 20;
-const ATTACKER_STUN_NBONUS: isize = 10;
+const ATTACKER_STUN_NBONUS: isize = 15;
 
 const DEFENDER_UNLIT_BONUS: isize = 5;
 const DEFENDER_INVIGORATED_BONUS: isize = 10;
@@ -31,7 +31,7 @@ const DEFENDER_OPEN_SPACE_BONUS: isize = 10;
 const DEFENDER_ENRAGED_NBONUS: isize = 10;
 const DEFENDER_FLANKED_NBONUS: isize = 10;
 const DEFENDER_HELD_NBONUS: isize = 10;
-const DEFENDER_STUN_NBONUS: isize = 10;
+const DEFENDER_STUN_NBONUS: isize = 15;
 
 pub fn damageOfMeleeAttack(attacker: *const Mob, w_damage: usize, is_stab: bool) usize {
     var damage: usize = w_damage;
@@ -48,7 +48,7 @@ pub fn damageOfMeleeAttack(attacker: *const Mob, w_damage: usize, is_stab: bool)
 pub fn chanceOfMissileLanding(attacker: *const Mob) usize {
     var chance: isize = attacker.stat(.Missile);
 
-    chance -= if (attacker.isUnderStatus(.Stun)) |_| ATTACKER_STUN_NBONUS else 0;
+    chance -= if (attacker.isUnderStatus(.Debil)) |_| ATTACKER_STUN_NBONUS else 0;
 
     return @intCast(usize, math.clamp(chance, 0, 100));
 }
@@ -69,7 +69,7 @@ pub fn chanceOfMeleeLanding(attacker: *const Mob, defender: ?*const Mob) usize {
 
     chance -= if (attacker.isUnderStatus(.Fear)) |_| ATTACKER_FEAR_NBONUS else 0;
     chance -= if (attacker.isUnderStatus(.Held)) |_| ATTACKER_HELD_NBONUS else 0;
-    chance -= if (attacker.isUnderStatus(.Stun)) |_| ATTACKER_STUN_NBONUS else 0;
+    chance -= if (attacker.isUnderStatus(.Debil)) |_| ATTACKER_STUN_NBONUS else 0;
 
     return @intCast(usize, math.clamp(chance, 0, 100));
 }
@@ -93,7 +93,7 @@ pub fn chanceOfAttackEvaded(defender: *const Mob, attacker: ?*const Mob) usize {
     chance += if (!tile_light) DEFENDER_UNLIT_BONUS else 0;
 
     chance -= if (defender.isUnderStatus(.Held)) |_| DEFENDER_HELD_NBONUS else 0;
-    chance -= if (defender.isUnderStatus(.Stun)) |_| DEFENDER_STUN_NBONUS else 0;
+    chance -= if (defender.isUnderStatus(.Debil)) |_| DEFENDER_STUN_NBONUS else 0;
     chance -= if (defender.isUnderStatus(.Enraged) != null) DEFENDER_ENRAGED_NBONUS else 0;
     chance -= if (defender.isFlanked()) DEFENDER_FLANKED_NBONUS else 0;
 

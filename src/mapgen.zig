@@ -36,7 +36,7 @@ const Ring = types.Ring;
 const Prisoner = types.Prisoner;
 const SpatterType = types.SpatterType;
 const TileType = types.TileType;
-const Potion = types.Potion;
+const Consumable = items.Consumable;
 const SpatterArray = types.SpatterArray;
 const Stockpile = types.Stockpile;
 const ContainerArrayList = types.ContainerArrayList;
@@ -315,7 +315,10 @@ fn _add_player(coord: Coord, alloc: mem.Allocator) void {
     state.player.inventory.equipment(.Ring1).* = Item{ .Ring = lring };
     state.player.inventory.equipment(.Ring2).* = Item{ .Ring = ering };
     state.player.inventory.equipment(.Ring3).* = Item{ .Ring = cring };
+
     state.player.prisoner_status = Prisoner{ .of = .Necromancer };
+
+    state.player.inventory.pack.append(Item{ .Consumable = &items.DebilitatePotion }) catch err.wat();
 }
 
 fn prefabIsValid(level: usize, prefab: *Prefab) bool {

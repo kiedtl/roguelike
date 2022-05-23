@@ -783,7 +783,7 @@ pub const Status = enum {
     // Evade, Melee, and Missile nerfs.
     //
     // Doesn't have a power field.
-    Stun,
+    Debil,
 
     // .Melee bonus if surrounded by empty space.
     //
@@ -934,7 +934,7 @@ pub const Status = enum {
     pub fn string(self: Status, mob: *const Mob) []const u8 { // {{{
         return switch (self) {
             .Riposte => "riposte",
-            .Stun => "stunned",
+            .Debil => "debilitated",
             .OpenMelee => "open melee",
             .Conductive => "conductive",
             .Noisy => "noisy",
@@ -972,7 +972,7 @@ pub const Status = enum {
     pub fn messageWhenAdded(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
             .Riposte => null,
-            .Stun => .{ "are", "is", " stunned" },
+            .Debil => .{ "are", "is", " debilitated" },
             .OpenMelee, .Conductive, .Noisy => null,
             .Sleeping => .{ "go", "goes", " to sleep" }, // FIXME: bad wording for unliving
             .Paralysis => .{ "are", "is", " paralyzed" },
@@ -1006,7 +1006,7 @@ pub const Status = enum {
     pub fn messageWhenRemoved(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
             .Riposte => null,
-            .Stun => .{ "are no longer", "is no longer", " stunned" },
+            .Debil => .{ "are no longer", "is no longer", " debilitated" },
             .OpenMelee, .Conductive, .Noisy => null,
             .Sleeping => .{ "wake", "wakes", " up" },
             .Paralysis => .{ "can move again", "starts moving again", "" },
@@ -1774,10 +1774,15 @@ pub const Mob = struct { // {{{
                 }
             },
             .Consumable => |c| {
-                if (state.dungeon.at(landed orelse at).mob) |mob| {
+                const coord = landed orelse at;
+                if (state.dungeon.at(coord).mob) |mob| {
                     mob.useConsumable(c, false) catch |e|
                         err.bug("Couldn't use thrown consumable: {}", .{e});
-                }
+                } else for (c.effects) |effect| switch (effect) {
+                    .Gas => |s| state.dungeon.atGas(coord)[s] = 1.0,
+                    .Custom => |f| f(null, coord),
+                    else => {},
+                };
             },
             else => err.wat(),
         }

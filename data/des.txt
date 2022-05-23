@@ -46,6 +46,10 @@ You can evoke it to build a small mine where you are standing.
 A particularly sadistic death mage. His features are perpetually twisted into a
 leer of cruel contempt.
 
+% potion_debilitate
+Releases a cloud of vile-smelling gas, causing minor seizures in victims and
+severely impeding effective combat.
+
 % potion_smoke
 Releases a cloud of smoke. Useful for obscuring vision.
 

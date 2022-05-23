@@ -118,8 +118,21 @@ pub const Miasma = Gas{
     .id = 8,
 };
 
+pub const Seizure = Gas{
+    .name = "seizure",
+    .color = 0xd7d77f,
+    .dissipation_rate = 0.04,
+    .opacity = 0.00,
+    .trigger = struct {
+        pub fn f(mob: *Mob, _: f64) void {
+            mob.addStatus(.Debil, 0, .{ .Tmp = Status.MAX_DURATION });
+        }
+    }.f,
+    .id = 9,
+};
+
 pub const Gases = [_]Gas{
-    Poison, Paralysis, SmokeGas, Confusion, Slow, Healing, Dust, Steam, Miasma,
+    Poison, Paralysis, SmokeGas, Confusion, Slow, Healing, Dust, Steam, Miasma, Seizure,
 };
 pub const GAS_NUM: usize = Gases.len;
 

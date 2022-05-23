@@ -72,14 +72,15 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 010, .i = .{ .A = HauberkArmor } },
     .{ .w = 010, .i = .{ .A = ScalemailArmor } },
     // Potions
-    .{ .w = 170, .i = .{ .P = &RecuperatePotion } },
     .{ .w = 170, .i = .{ .P = &ConfusionPotion } },
     .{ .w = 170, .i = .{ .P = &PoisonPotion } },
-    .{ .w = 170, .i = .{ .P = &InvigoratePotion } },
+    .{ .w = 170, .i = .{ .P = &DebilitatePotion } },
     .{ .w = 140, .i = .{ .P = &SmokePotion } },
     .{ .w = 140, .i = .{ .P = &ParalysisPotion } },
-    .{ .w = 140, .i = .{ .P = &FastPotion } },
+    .{ .w = 130, .i = .{ .P = &InvigoratePotion } },
+    .{ .w = 130, .i = .{ .P = &FastPotion } },
     .{ .w = 130, .i = .{ .P = &IncineratePotion } },
+    .{ .w = 100, .i = .{ .P = &RecuperatePotion } },
     .{ .w = 100, .i = .{ .P = &DecimatePotion } },
     // Consumables
     .{ .w = 080, .i = .{ .P = &HotPokerConsumable } },
@@ -836,6 +837,18 @@ pub const MineKit = Consumable{
     .verbs_other = Consumable.VERBS_OTHER_KIT,
 };
 
+pub const DebilitatePotion = Consumable{
+    .id = "potion_debilitate",
+    .name = "potion of debilitation",
+    .effects = &[_]Consumable.Effect{.{ .Gas = gas.Seizure.id }},
+    .dip_effect = .{ .status = .Debil, .duration = .{ .Tmp = 4 } },
+    .is_potion = true,
+    .color = 0xd7d77f,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = true,
+};
+
 pub const SmokePotion = Consumable{
     .id = "potion_smoke",
     .name = "potion of smoke",
@@ -1240,7 +1253,7 @@ pub const GreatMaceWeapon = Weapon{
     .name = "great mace",
     .damage = 2,
     .effects = &[_]StatusDataInfo{
-        .{ .status = .Stun, .duration = .{ .Tmp = 3 } },
+        .{ .status = .Debil, .duration = .{ .Tmp = 6 } },
     },
     .strs = &CRUSHING_STRS,
 };
