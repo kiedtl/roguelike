@@ -242,7 +242,6 @@ fn readDescriptions(alloc: mem.Allocator) void {
 
             const val = a.alloc(u8, desc.len) catch err.wat();
             mem.copy(u8, val, desc);
-            std.log.info("{s}: '{s}'\n", .{ key, val });
 
             state.descriptions.putNoClobber(key, val) catch err.bug(
                 "Duplicate description {s} found",
