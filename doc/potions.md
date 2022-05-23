@@ -29,16 +29,17 @@ Explosion that destroys walls.
 - coating: 50% more damage to undead
 
 # potion of debilitation
+Releases seizure gas.
 - coating: causes -20% melee and -20% block
 
 Inspired by seizure potions in TGGW.
 
 # potion of insubstantiation
-- Will+++ Sneak++ Stealth++
-- -25% Armor, rFire- rElec-
+- Will+++ Sneak++++
+- -30% Armor, rFire- rElec-
 
 # potion of fortification
-- +25% Armor, rFire+ rElec+
+- +30% Armor, rFire+ rElec+
 - Will-∞
 
 # potion of veilification
