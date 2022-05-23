@@ -18,9 +18,9 @@ pub const SoundIntensity = enum {
             .Silent => 0,
             .Quiet => 4,
             .Medium => 7,
-            .Loud => 10,
-            .Louder => 13,
-            .Loudest => 16,
+            .Loud => 12,
+            .Louder => 16,
+            .Loudest => 20,
         };
     }
 };
