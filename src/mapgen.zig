@@ -318,7 +318,7 @@ fn _add_player(coord: Coord, alloc: mem.Allocator) void {
 
     state.player.prisoner_status = Prisoner{ .of = .Necromancer };
 
-    state.player.inventory.pack.append(Item{ .Consumable = &items.DebilitatePotion }) catch err.wat();
+    //state.player.inventory.pack.append(Item{ .Consumable = &items.DebilitatePotion }) catch err.wat();
 }
 
 fn prefabIsValid(level: usize, prefab: *Prefab) bool {
