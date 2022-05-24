@@ -92,6 +92,8 @@ const Corridor = struct {
     // Return the parent/child again because in certain cases callers
     // don't know what child was passed, e.g., the BSP algorithm
     //
+    // TODO: 2022-05-23: what the hell? need to remove this
+    //
     parent: *Room,
     child: *Room,
 
