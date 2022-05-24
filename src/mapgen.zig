@@ -72,8 +72,9 @@ pub const TRAPS = &[_]*const Machine{
     &surfaces.ParalysisGasTrap,
     &surfaces.ConfusionGasTrap,
     &surfaces.SeizureGasTrap,
+    &surfaces.BlindingGasTrap,
 };
-pub const TRAP_WEIGHTS = &[_]usize{ 3, 3, 1, 2 };
+pub const TRAP_WEIGHTS = &[_]usize{ 3, 3, 1, 2, 1 };
 
 // }}}
 

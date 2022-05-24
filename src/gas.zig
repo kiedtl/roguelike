@@ -121,7 +121,7 @@ pub const Miasma = Gas{
 pub const Seizure = Gas{
     .name = "seizure gas",
     .color = 0xd7d77f,
-    .dissipation_rate = 0.04,
+    .dissipation_rate = 0.03,
     .opacity = 0.00,
     .trigger = struct {
         pub fn f(mob: *Mob, _: f64) void {
@@ -131,8 +131,23 @@ pub const Seizure = Gas{
     .id = 9,
 };
 
+pub const Blinding = Gas{
+    .name = "tear gas",
+    .color = 0x7fe7f7,
+    .dissipation_rate = 0.08,
+    .opacity = 0.00,
+    .trigger = struct {
+        pub fn f(mob: *Mob, _: f64) void {
+            mob.addStatus(.Blind, 0, .{ .Tmp = Status.MAX_DURATION });
+        }
+    }.f,
+    .id = 10,
+};
+
 pub const Gases = [_]Gas{
-    Poison, Paralysis, SmokeGas, Confusion, Slow, Healing, Dust, Steam, Miasma, Seizure,
+    Poison,   Paralysis, SmokeGas, Confusion, Slow,
+    Healing,  Dust,      Steam,    Miasma,    Seizure,
+    Blinding,
 };
 pub const GAS_NUM: usize = Gases.len;
 

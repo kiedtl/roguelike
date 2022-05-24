@@ -775,6 +775,11 @@ pub const Allegiance = enum {
 pub const Status = enum {
     // Status list {{{
 
+    // Prevents mob from seeing more than 1 tile in any direction.
+    //
+    // Doesn't have a power field.
+    Blind,
+
     // Gives a free attack after evading an attack.
     //
     // Doesn't have a power field.
@@ -933,6 +938,7 @@ pub const Status = enum {
 
     pub fn string(self: Status, mob: *const Mob) []const u8 { // {{{
         return switch (self) {
+            .Blind => "blind",
             .Riposte => "riposte",
             .Debil => "debilitated",
             .OpenMelee => "open melee",
@@ -971,6 +977,7 @@ pub const Status = enum {
 
     pub fn messageWhenAdded(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .Blind => .{ "are", "is", " blinded" },
             .Riposte => null,
             .Debil => .{ "are", "is", " debilitated" },
             .OpenMelee, .Conductive, .Noisy => null,
@@ -1005,6 +1012,7 @@ pub const Status = enum {
 
     pub fn messageWhenRemoved(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .Blind => .{ "are no longer", "is no longer", " blinded" },
             .Riposte => null,
             .Debil => .{ "are no longer", "is no longer", " debilitated" },
             .OpenMelee, .Conductive, .Noisy => null,
@@ -1482,6 +1490,7 @@ pub const Mob = struct { // {{{
 
         if (self.isUnderStatus(.Sleeping)) |_| return;
 
+        const is_blinded = self.isUnderStatus(.Blind) != null;
         const light_needs = [_]bool{ self.canSeeInLight(false), self.canSeeInLight(true) };
 
         const vision = @intCast(usize, self.stat(.Vision));
@@ -1497,7 +1506,9 @@ pub const Mob = struct { // {{{
 
                 // If a tile is too dim to be seen by a mob and the tile isn't
                 // adjacent to that mob, mark it as unlit.
-                if (fc.distance(self.coord) > 1 and !light_needs[@boolToInt(light)]) {
+                if (fc.distance(self.coord) > 1 and
+                    (!light_needs[@boolToInt(light)] or is_blinded))
+                {
                     self.fov[y][x] = 0;
                     continue;
                 }
@@ -3815,7 +3826,9 @@ pub const Dungeon = struct {
             l += 60;
 
         if (tile.mob) |mob| {
-            if (mob.isUnderStatus(.Corona)) |se| l += se.power;
+            if (mob.isUnderStatus(.Corona)) |se| {
+                l += if (se.power > 0) se.power else 50;
+            }
         }
 
         if (tile.surface) |surface| {

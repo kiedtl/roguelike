@@ -278,6 +278,8 @@ pub const MACHINES = [_]Machine{
     ParalysisGasTrap,
     PoisonGasTrap,
     ConfusionGasTrap,
+    SeizureGasTrap,
+    BlindingGasTrap,
     Mine,
     RechargingStation,
     Drain,
@@ -516,6 +518,7 @@ pub const PoisonGasTrap = Machine.createGasTrap("poison gas", &gas.Poison);
 pub const ParalysisGasTrap = Machine.createGasTrap("paralysing gas", &gas.Paralysis);
 pub const ConfusionGasTrap = Machine.createGasTrap("confusing gas", &gas.Confusion);
 pub const SeizureGasTrap = Machine.createGasTrap("seizure gas", &gas.Seizure);
+pub const BlindingGasTrap = Machine.createGasTrap("tear gas", &gas.Blinding);
 
 pub const NormalDoor = Machine{
     .name = "door",

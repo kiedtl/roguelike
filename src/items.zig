@@ -75,6 +75,8 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 170, .i = .{ .P = &ConfusionPotion } },
     .{ .w = 170, .i = .{ .P = &PoisonPotion } },
     .{ .w = 170, .i = .{ .P = &DebilitatePotion } },
+    .{ .w = 140, .i = .{ .P = &BlindPotion } },
+    .{ .w = 140, .i = .{ .P = &GlowPotion } },
     .{ .w = 140, .i = .{ .P = &SmokePotion } },
     .{ .w = 140, .i = .{ .P = &ParalysisPotion } },
     .{ .w = 130, .i = .{ .P = &InvigoratePotion } },
@@ -844,6 +846,30 @@ pub const DebilitatePotion = Consumable{
     .dip_effect = .{ .status = .Debil, .duration = .{ .Tmp = 4 } },
     .is_potion = true,
     .color = 0xd7d77f,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = true,
+};
+
+pub const BlindPotion = Consumable{
+    .id = "potion_blind",
+    .name = "potion of irritation",
+    .effects = &[_]Consumable.Effect{.{ .Gas = gas.Blinding.id }},
+    .dip_effect = .{ .status = .Blind, .duration = .{ .Tmp = 3 } },
+    .is_potion = true,
+    .color = 0x7fe7f7,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = true,
+};
+
+pub const GlowPotion = Consumable{
+    .id = "potion_glow",
+    .name = "potion of illumination",
+    .effects = &[_]Consumable.Effect{.{ .Status = .Corona }},
+    .dip_effect = .{ .status = .Corona, .duration = .{ .Tmp = 4 } },
+    .is_potion = true,
+    .color = 0xffffff,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
     .verbs_other = Consumable.VERBS_OTHER_POTION,
     .throwable = true,
