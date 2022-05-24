@@ -30,7 +30,7 @@ pub const Gas = struct {
 };
 
 pub const Poison = Gas{
-    .name = "poison",
+    .name = "poison gas",
     .color = 0xa7e234,
     .dissipation_rate = 0.01,
     .trigger = triggerPoison,
@@ -119,7 +119,7 @@ pub const Miasma = Gas{
 };
 
 pub const Seizure = Gas{
-    .name = "seizure",
+    .name = "seizure gas",
     .color = 0xd7d77f,
     .dissipation_rate = 0.04,
     .opacity = 0.00,

@@ -3201,6 +3201,34 @@ pub const Machine = struct {
         else
             self.unpowered_luminescence;
     }
+
+    // Utility funcs to aid machine definition creation
+
+    pub fn createGasTrap(comptime gstr: []const u8, g: *const gas.Gas) Machine {
+        return Machine{
+            .name = gstr ++ " trap",
+            .powered_tile = '^',
+            .unpowered_tile = '^',
+            .evoke_confirm = "Really trigger the " ++ gstr ++ " trap?",
+            .on_power = struct {
+                fn f(machine: *Machine) void {
+                    if (machine.last_interaction) |mob| {
+                        if (mob.allegiance == .Necromancer) return;
+
+                        for (machine.props) |maybe_prop| if (maybe_prop) |vent| {
+                            state.dungeon.atGas(vent.coord)[g.id] = 1.0;
+                        };
+
+                        state.message(.Trap, "{c} triggers a " ++ gstr ++ " trap!", .{mob});
+                        state.message(.Trap, "Noxious fumes seep through nearby vents!", .{});
+
+                        machine.disabled = true;
+                        state.dungeon.at(machine.coord).surface = null;
+                    }
+                }
+            }.f,
+        };
+    }
 };
 
 pub const Prop = struct {

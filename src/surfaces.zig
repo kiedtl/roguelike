@@ -512,29 +512,10 @@ pub const StairExit = Machine{
     .on_power = powerStairExit,
 };
 
-pub const PoisonGasTrap = Machine{
-    .name = "poison gas trap",
-    .powered_tile = '^',
-    .unpowered_tile = '^',
-    .evoke_confirm = "Really trigger the poison gas trap?",
-    .on_power = powerPoisonGasTrap,
-};
-
-pub const ParalysisGasTrap = Machine{
-    .name = "paralysis gas trap",
-    .powered_tile = '^',
-    .unpowered_tile = '^',
-    .evoke_confirm = "Really trigger the paralysis gas trap?",
-    .on_power = powerParalysisGasTrap,
-};
-
-pub const ConfusionGasTrap = Machine{
-    .name = "confusion gas trap",
-    .powered_tile = '^',
-    .unpowered_tile = '^',
-    .evoke_confirm = "Really trigger the confusion gas trap?",
-    .on_power = powerConfusionGasTrap,
-};
+pub const PoisonGasTrap = Machine.createGasTrap("poison gas", &gas.Poison);
+pub const ParalysisGasTrap = Machine.createGasTrap("paralysing gas", &gas.Paralysis);
+pub const ConfusionGasTrap = Machine.createGasTrap("confusing gas", &gas.Confusion);
+pub const SeizureGasTrap = Machine.createGasTrap("seizure gas", &gas.Seizure);
 
 pub const NormalDoor = Machine{
     .name = "door",
@@ -845,60 +826,6 @@ fn powerHealingGasPump(machine: *Machine) void {
 
     for (machine.areas.constSlice()) |coord| {
         state.dungeon.atGas(coord)[gas.Healing.id] = 1.0;
-    }
-}
-
-fn powerPoisonGasTrap(machine: *Machine) void {
-    if (machine.last_interaction) |culprit| {
-        if (culprit.allegiance == .Necromancer) return;
-
-        for (machine.props) |maybe_prop| {
-            if (maybe_prop) |vent| {
-                state.dungeon.atGas(vent.coord)[gas.Poison.id] = 1.0;
-            }
-        }
-
-        if (culprit == state.player)
-            state.message(.Trap, "Noxious fumes seep through the gas vents!", .{});
-
-        machine.disabled = true;
-        state.dungeon.at(machine.coord).surface = null;
-    }
-}
-
-fn powerParalysisGasTrap(machine: *Machine) void {
-    if (machine.last_interaction) |culprit| {
-        if (culprit.allegiance == .Necromancer) return;
-
-        for (machine.props) |maybe_prop| {
-            if (maybe_prop) |vent| {
-                state.dungeon.atGas(vent.coord)[gas.Paralysis.id] = 1.0;
-            }
-        }
-
-        if (culprit == state.player)
-            state.message(.Trap, "Paralytic gas seeps out of the gas vents!", .{});
-
-        machine.disabled = true;
-        state.dungeon.at(machine.coord).surface = null;
-    }
-}
-
-fn powerConfusionGasTrap(machine: *Machine) void {
-    if (machine.last_interaction) |culprit| {
-        if (culprit.allegiance == .Necromancer) return;
-
-        for (machine.props) |maybe_prop| {
-            if (maybe_prop) |vent| {
-                state.dungeon.atGas(vent.coord)[gas.Confusion.id] = 1.0;
-            }
-        }
-
-        if (culprit == state.player)
-            state.message(.Trap, "Confusing gas seeps out of the gas vents!", .{});
-
-        machine.disabled = true;
-        state.dungeon.at(machine.coord).surface = null;
     }
 }
 

@@ -57,7 +57,25 @@ const EvocableList = items.EvocableList;
 const Cloak = items.Cloak;
 const Poster = literature.Poster;
 
+// Individual configurations.
+//
+// Deliberately kept separate from LevelConfigs because it applies as a whole
+// to all levels.
+//
+// TODO: some of these will eventually (when?) be moved to level configs.
+//
+// {{{
 const CONNECTIONS_MAX = 4;
+
+pub const TRAPS = &[_]*const Machine{
+    &surfaces.PoisonGasTrap,
+    &surfaces.ParalysisGasTrap,
+    &surfaces.ConfusionGasTrap,
+    &surfaces.SeizureGasTrap,
+};
+pub const TRAP_WEIGHTS = &[_]usize{ 3, 3, 1, 2 };
+
+// }}}
 
 // TODO: replace with MinMax
 const Range = struct { from: Coord, to: Coord };
@@ -1673,19 +1691,16 @@ pub fn placeTraps(level: usize) void {
             if (isTileAvailable(trap_coord) and
                 !state.dungeon.at(trap_coord).prison and
                 state.dungeon.neighboringWalls(trap_coord, true) <= 1)
+            {
                 break; // we found a valid coord
+            }
 
             // didn't find a coord, continue to the next room
             if (tries == 0) continue :room_iter;
             tries -= 1;
         }
 
-        var trap = switch (rng.range(usize, 0, 4)) {
-            0, 1 => surfaces.ConfusionGasTrap,
-            2, 3 => surfaces.ParalysisGasTrap,
-            4 => surfaces.PoisonGasTrap,
-            else => err.wat(),
-        };
+        var trap = (rng.choose(*const Machine, TRAPS, TRAP_WEIGHTS) catch err.wat()).*;
 
         var num_of_vents = rng.range(usize, 1, 3);
         var v_tries: usize = 1000;
@@ -3318,6 +3333,7 @@ pub const LevelConfig = struct {
         //surfaces.Chest,
     },
     utility_items: *[]const Prop = &surfaces.prison_item_props.items,
+
     allow_statues: bool = true,
     door_chance: usize = 30,
     room_trapped_chance: usize = 40,
