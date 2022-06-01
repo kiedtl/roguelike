@@ -775,6 +775,11 @@ pub const Allegiance = enum {
 pub const Status = enum {
     // Status list {{{
 
+    // Fire vulnerability.
+    //
+    // Doesn't have a power field to keep things simple.
+    Flammable,
+
     // Prevents mob from seeing more than 1 tile in any direction.
     //
     // Doesn't have a power field.
@@ -938,6 +943,7 @@ pub const Status = enum {
 
     pub fn string(self: Status, mob: *const Mob) []const u8 { // {{{
         return switch (self) {
+            .Flammable => "flammable",
             .Blind => "blind",
             .Riposte => "riposte",
             .Debil => "debilitated",
@@ -977,6 +983,7 @@ pub const Status = enum {
 
     pub fn messageWhenAdded(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .Flammable => .{ "are", "is", " vulnerable to fire" },
             .Blind => .{ "are", "is", " blinded" },
             .Riposte => null,
             .Debil => .{ "are", "is", " debilitated" },
@@ -1012,6 +1019,7 @@ pub const Status = enum {
 
     pub fn messageWhenRemoved(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .Flammable => .{ "are no longer", "is no longer", " vulnerable to fire" },
             .Blind => .{ "are no longer", "is no longer", " blinded" },
             .Riposte => null,
             .Debil => .{ "are no longer", "is no longer", " debilitated" },
@@ -2156,6 +2164,7 @@ pub const Mob = struct { // {{{
 
         recipient.takeDamage(.{
             .amount = @intToFloat(f64, damage),
+            .kind = attacker_weapon.damage_kind,
             .source = if (is_stab) .Stab else .MeleeAttack,
             .by_mob = attacker,
         }, .{
@@ -2905,6 +2914,9 @@ pub const Mob = struct { // {{{
             .Armor => if (self.isUnderStatus(.Recuperate) != null) {
                 r -= 50;
             },
+            .rFire => if (self.isUnderStatus(.Flammable) != null) {
+                r -= 25;
+            },
             else => {},
         }
 
@@ -3337,6 +3349,7 @@ pub const Weapon = struct {
     reach: usize = 1,
     delay: usize = 100, // Percentage (100 = normal speed, 200 = twice as slow)
     damage: usize,
+    damage_kind: Damage.DamageKind = .Physical,
     knockback: usize = 0,
     martial: bool = false,
 

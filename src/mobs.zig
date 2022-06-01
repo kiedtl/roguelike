@@ -942,6 +942,86 @@ pub const DeathMageTemplate = MobTemplate{
     },
 };
 
+pub const EmberMageTemplate = MobTemplate{
+    .mob = .{
+        .id = "ember_mage",
+        .species = &HumanSpecies,
+        .tile = 'Ë',
+        .ai = AI{
+            .profession_name = "ember mage",
+            .profession_description = "watching",
+            // Stand still and don't be curious; don't want emberling followers
+            // to burn the world down
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.mageFight,
+            .is_curious = false,
+            .spellcaster_backup_action = .Melee,
+        },
+        .allegiance = .Necromancer,
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 05, .spell = &spells.CAST_CALL_EMBERLING },
+            .{ .MP_cost = 10, .spell = &spells.CAST_FLAMMABLE, .power = 20 },
+        },
+        .max_MP = 15,
+
+        .max_HP = 6,
+        .memory_duration = 5,
+        .stats = .{ .Willpower = 4, .Evade = 0, .Vision = 5 },
+    },
+    .weapon = &items.DaggerWeapon,
+    .cloak = &items.SilCloak,
+
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "emberling", .weight = 1, .count = minmax(usize, 2, 4) },
+        },
+    },
+};
+
+pub const EmberlingTemplate = MobTemplate{
+    .mob = .{
+        .id = "emberling",
+        .species = &Species{
+            .name = "emberling",
+            .default_attack = &Weapon{
+                .damage = 1,
+                .damage_kind = .Fire,
+                .strs = &items.CLAW_STRS,
+            },
+        },
+        .tile = 'ë',
+        .ai = AI{
+            .profession_description = "watching",
+            // Stand still and don't be curious; don't want emberlings to burn
+            // the world down
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.meleeFight,
+            .is_curious = false,
+        },
+        .allegiance = .Necromancer,
+
+        .blood = null,
+        .corpse = .None,
+
+        .max_HP = 4,
+        .memory_duration = 3,
+        .innate_resists = .{ .rPois = 100, .rFume = 100, .rFire = 100 },
+        .stats = .{ .Willpower = 1, .Evade = 10, .Speed = 60, .Vision = 4 },
+    },
+    // XXX: Emberlings are never placed alone, this determines number of
+    // summoned emberlings from CAST_CALL_EMBERLING
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "emberling", .weight = 1, .count = minmax(usize, 2, 3) },
+        },
+    },
+    .statuses = &[_]StatusDataInfo{
+        .{ .status = .Fire, .duration = .Prm },
+        .{ .status = .Noisy, .duration = .Prm },
+    },
+};
+
 pub const SkeletalAxemasterTemplate = MobTemplate{
     .mob = .{
         .id = "skeletal_axemaster",
@@ -1338,6 +1418,8 @@ pub const MOBS = [_]MobTemplate{
     AncientMageTemplate,
     SpectreMageTemplate,
     DeathMageTemplate,
+    EmberMageTemplate,
+    EmberlingTemplate,
     SkeletalAxemasterTemplate,
     SkeletalBlademasterTemplate,
     BoneRatTemplate,

@@ -43,6 +43,29 @@ const WIDTH = state.WIDTH;
 
 // -----------------------------------------------------------------------------
 
+pub const CAST_CALL_EMBERLING = Spell{
+    .id = "sp_call_emberling",
+    .name = "call emberling",
+    .cast_type = .Smite,
+    .smite_target_type = .Corpse,
+    .effect_type = .{ .Custom = struct {
+        fn f(_: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
+            const corpse = state.dungeon.at(coord).surface.?.Corpse;
+            state.dungeon.at(coord).surface = null;
+
+            _ = mobs.placeMob(state.GPA.allocator(), &mobs.EmberlingTemplate, coord, .{});
+
+            if (state.player.cansee(coord)) {
+                state.message(
+                    .SpellCast,
+                    "A swarm of emberlings bursts out of the {s} corpse!",
+                    .{corpse.displayName()},
+                );
+            }
+        }
+    }.f },
+};
+
 // TODO: generalize into a healing spell?
 pub const CAST_REGEN = Spell{
     .id = "sp_regen",
@@ -525,6 +548,13 @@ fn _resurrectNormal(_: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
     }
 }
 
+pub const CAST_FLAMMABLE = Spell{
+    .id = "sp_flammable",
+    .name = "flammabilification",
+    .cast_type = .Smite,
+    .effect_type = .{ .Status = .Flammable },
+    .checks_will = true,
+};
 pub const CAST_FREEZE = Spell{
     .id = "sp_freeze",
     .name = "freeze",
