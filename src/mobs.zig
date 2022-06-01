@@ -968,7 +968,7 @@ pub const EmberMageTemplate = MobTemplate{
         .memory_duration = 5,
         .stats = .{ .Willpower = 4, .Evade = 0, .Vision = 5 },
     },
-    .weapon = &items.DaggerWeapon,
+    .weapon = &items.BludgeonWeapon,
     .cloak = &items.SilCloak,
 
     .squad = &[_][]const MobTemplate.SquadMember{
