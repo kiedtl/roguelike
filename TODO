@@ -98,7 +98,7 @@ x sulfur fiend x
   - Dispel Fumes: removes harmful fumes near allies.
   - Meat Offering: creates a vile protector from a corpse, using it up in
     the process. Vile protector redirects damage done to allies to itself.
-    Vile protector is fairly tanky (10 HP) but immobile; shielding ends if
+    Vile protector is fairly tanky (15 HP) but immobile; shielding ends if
     the dustlings/allies move out of its LOS.
   - Windlash: moderate damage, smite-targeted.
     - "The vapour mage waves its arms around in wide circles!"
@@ -189,7 +189,7 @@ x burning brute
   x Has kicking (x1) and clawing (x1) attack (need species struct for this).
 - hunter
   - Travels with a swarm of stalkers (see below).
-  - Memory duration of 9.
+  - Memory duration of 15.
   - Chain mail and rapier, ~15 HP.
   - Slower than player.
 - stalkers
@@ -221,25 +221,28 @@ x lead turtle
   - Huge amount of innate armor. Maybe, 60%?
   - Found in the Laboratory.
 - bone mage
-  - Enrage Undead: gives all nearby undead .Enraged status
+  - Enrage Undead: gives undead .Enraged status
   - Bone longsword
+  - TODO: bone longsword is too powerful
+    - TODO: maybe give bone longsword to death mage, & make bone mage keep dist?
   - Travels with packs of bone rats, with rare zombie
-- bone rat
+x bone rat
   - fast, evasive, and moderately fragile.
   - rPois∞ rFume∞ rFire-
-- ember mage
-  - Can hurl bolts of fire for low damage
+x ember mage
   - Fire attack with weapon
-  - Can create 3-4 emberlings from a corpse
   - Travels with packs of emberlings
-- emberling
-  - Attacks that do fire damage
-  - Leaves trails of fire behind
+  - 50% fire resistance via cloak of silicon
+  - Spell: Flammable: (will-checked) make target 25% fire-vulnerable
+  - Spell: Call Emberling: create 3-4 emberlings from a corpse
+x emberling
   - Fast
+  - Attacks that do fire damage
+  - Prm burning; leaves trails of fire behind
 - brimstone mage
-  - Has abilities of ember mage
-  - Can set player on fire (will-checked)
-  - Avoids melee
+  - Has abilities of ember mage (fire resists, fire weapon, spells)
+  - Spell: Brimstone: (will-checked) set player on fire
+  - Avoids melee (despite fire attack weapon)
   - Travels with packs of emberlings
 - blood mage
   - Toned-down pain spell that heals nearby bloodlings
@@ -289,7 +292,7 @@ x death mage
 - sleeping beauty
   - "A hideous statue of some nameless creature, covered in metal plates."
   - Sleeps, when hit with electric damage, activates.
-  - rElec∞ rFume∞
+  - rElec+75% rFume∞ rFire∞
 x mellaent
   - kerejat-like nuisance
   - noncombatant
@@ -304,7 +307,7 @@ x mellaent
     and throw player around just for the heck of it.
 - revealer
   - Casts glowing (will-checked).
-  - Uncommon. Found in Lab, Vaults, Smithing, higher Prison.
+  - Uncommon. Found in Vaults, Morgue, higher Prison.
 - bloat
   - Bloated 
   - Very slow, 18 HP
@@ -318,7 +321,7 @@ x destroyer
   - Found instead of executioners above Caverns
 x sentinel
   - 12 HP. Armored, sword-wielding version of guard
-- cinder worm
+x cinder worm
   - Fire attacks, Prm burning
   - vomit fire: set surroundings of fire
   - Sometimes found as neutral prisoners
@@ -326,6 +329,7 @@ x sentinel
   - Just plain fire attacks, Prm burning
   - Hurls fireballs?
   - Sometimes found as neutral prisoners
+  - TODO: think of unique ability
 - cuprite fiend
   - Sulfur fiend's electrical attack (TODO: think of replacement for sulfur
     fiend)
@@ -473,7 +477,7 @@ x cntrattack:  retreat, attack, retreat, attack, retreat.
 
 Rings
 -----
-Rings have "tiers" instead of an "enchantment" level (gold, silver, iron).
+Rings have "tiers" instead of an enchantment level (gold, silver, iron).
 
 - bolt of something (beus lance?)
   ..m..   .....   .....   .....
@@ -487,11 +491,6 @@ Rings have "tiers" instead of an "enchantment" level (gold, silver, iron).
   ..m..
   .....
 
-  .....   .....   .....   .....
-  ..m..   .....   .....   ..@..
-  ..@..   ..m..   .@m..   ..m..
-  .....   ..@..   .....   .....
-
 - ring of electrification: Electrocute all mobs on two sides.
   - Move two tiles backwards into corridor (ie with walls on the other two sides
     of your character), wait, attack forwards
@@ -502,7 +501,8 @@ Rings have "tiers" instead of an "enchantment" level (gold, silver, iron).
     ##.m..   ##.....   ##.....
 
 - ring of magnetization: cause knockback of all nearby foes onto a single foe.
-  Like Gell's Gravitas in DCSS.
+  Like Gell's Gravitas in DCSS. Knockbacked foes could possibly hit player, so
+  player must plan accordingly.
 
 - ring of intimidation: confer stun/fear to mob when moving towards it, while
   enraging all other monsters in FOV.
@@ -542,11 +542,9 @@ x ring of electrocution: Electrocute tiles in four corners next to player.
 x ring of cremation: Makes all adjacent foes temporarily vulnerable to fire,
   and creates ring of flames in all adjacent squares.
   - Move all around mob in four turns (w/o attacking or resting).
-    .....          .....   .....   .....
     .....          .....   .....   ..@..
     ..m@.  attack  ..m..   .@m..   ..m..
     .....          ..@..   .....   .....
-    .....          .....   .....   .....
   - Silver: create ring of flames in 2-tile radius.
   - Gold:   create ring of flames in 3-tile radius.
 
@@ -561,9 +559,13 @@ x ring of extermination: fire bolt of fire in direction.
     .....   .....   ......   ......   ......
     m@...   m....   m..@..   m.....   m....@
     .....   ..@..   ......   ....@.   ......
-    smoke/fog as they move and attack foes. Like Foxfire.
 
-- ring of debilitation: -15-25% melee, -15-25% missile
+- ring of debilitation: -10-30% melee, -10-30% missile
+  .....   .....   .....   .....
+  ..m..   .....   .....   ..@..
+  ..@..   ..m..   .@m..   ..m..
+  .....   ..@..   .....   .....
+
 
 - ring of encumberation (gold only): melee,missile=100%, evade=0%
 
@@ -879,15 +881,13 @@ x More evocables: copper ingot, coal, red-hot poker
 x More kits and traps: fire, shock, incineration, knockback
 - Ring changes/additions/simplifications:
   x Refactor pattern checks
-  - More ring types (fire, etc)
+  x More ring types (fire, etc)
   - Random ring drops, equipping/deequipping rings
-  - Use Eqp status-type (while keeping incremental power increases)
+  x Remove ring statuses
   - MP costs for rings
 - Multi-tile props: trees and braziers
 x Fix trtr chambers; add more of them
-- Revisit Laboratory
-  - Spires and spire kits
-  - Add traps of blinding gas
+- Spires and spire kits
 - More mundane weapons: hammer, poker
 - Guards in cubbyholes (both corridors and rooms)
 - Dungeon features: barrel of water, barrel of toxic sludge
@@ -898,10 +898,20 @@ x War olgs, cinder worms, destroyers
 - Copper weapons and battery packs, copper hornets
 - Bone and masterpiece weapons
 - Headgear, footgear, auxiliary items
-- Potions of insubst/fortif, debilitation, veilification, distraction, glowing
+- More potions
+  x Potion of debilitation, traps of seizure gas
+  x Potion of irritation, traps of blinding gas
+  x Potion of illumination
+  - Potion of insubstantiation and fortification
 - Basic speeches by mobs
 - Cinder worms as prisoners somehow
 *** v1.1.0 release ***
+- Rework gases
+  - Remove usage of floats entirely
+  - Quantize all gas dissipation rates into VSLOW, SLOW, MED, FAST, VFAST, etc
+  - SIMD where possible
+- Make some kinds of traps (e.g. seizure, blinding) {rare,nonexistant,more
+  common} on some levels (ie blinding gas more common on Lab, etc)
 - Lava and Water rework
   - Rework as terrain
   - Addition of submerged creatures
