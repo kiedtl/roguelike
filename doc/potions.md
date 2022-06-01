@@ -42,5 +42,10 @@ Inspired by seizure potions in TGGW.
 - +30% Armor, rFire+ rElec+
 - Will-∞
 
-# potion of veilification
-Status: blindings.
+# potion of irritation
+Releases tear gas.
+
+Status: blind.
+
+# potion of illumination
+Status: corona.
