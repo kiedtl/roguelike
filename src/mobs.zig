@@ -828,7 +828,7 @@ pub const AncientMageTemplate = MobTemplate{
     .mob = .{
         .id = "ancient_mage",
         .species = &HumanSpecies,
-        .tile = 'A',
+        .tile = 'Ã',
         .undead_prefix = "",
         .ai = AI{
             .profession_name = "ancient mage",
@@ -850,27 +850,26 @@ pub const AncientMageTemplate = MobTemplate{
             //      summon nonvisible enemies. This is after BOLT_CRYSTAL to
             //      ensure that the mob doesn't waste time summoning enemies
             //      while a hundred goblins are trying to tear it apart.
-            //    - Conjure a ball lightning. Hopefully it'll track something
-            //      down.
             .{ .MP_cost = 0, .spell = &spells.CAST_AURA_DISPERSAL },
             .{ .MP_cost = 0, .spell = &spells.CAST_MASS_DISMISSAL, .power = 15 },
             .{ .MP_cost = 8, .spell = &spells.BOLT_CRYSTAL, .power = 4 },
             .{ .MP_cost = 9, .spell = &spells.CAST_SUMMON_ENEMY },
-            .{ .MP_cost = 9, .spell = &spells.CAST_CONJ_BALL_LIGHTNING, .power = 12 },
         },
         .max_MP = 30,
 
         .deaf = false,
         .life_type = .Undead,
 
-        .max_HP = 15,
-        .memory_duration = 4,
+        .max_HP = 30,
+        .memory_duration = 8,
         .blood = null,
         .corpse = .None,
-        .innate_resists = .{ .rPois = 100, .rFume = 100, .rElec = 100 },
-        .stats = .{ .Willpower = 10, .Evade = 10, .Speed = 110 },
+        .innate_resists = .{ .rPois = 100, .rFume = 100, .rElec = 75 },
+        .stats = .{ .Willpower = 10, .Evade = 20, .Speed = 120 },
     },
+    .weapon = &items.GreatMaceWeapon,
     .armor = &items.HauberkArmor,
+    .cloak = &items.SilCloak,
 };
 
 pub const SpectreMageTemplate = MobTemplate{
