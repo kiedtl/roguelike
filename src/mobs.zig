@@ -48,6 +48,8 @@ pub const GoblinSpecies = Species{ .name = "goblin" };
 pub const ImpSpecies = Species{ .name = "imp" };
 
 pub const MobTemplate = struct {
+    ignore_conflicting_tiles: bool = false,
+
     mob: Mob,
     weapon: ?*const Weapon = null,
     backup_weapon: ?*const Weapon = null,
@@ -633,6 +635,8 @@ pub const MellaentTemplate = MobTemplate{
 };
 
 pub const KyaniteStatueTemplate = MobTemplate{
+    .ignore_conflicting_tiles = true, // conflicts w/ other statues
+
     .mob = .{
         .id = "kyanite_statue",
         .species = &Species{ .name = "kyanite statue" },
@@ -666,6 +670,8 @@ pub const KyaniteStatueTemplate = MobTemplate{
 };
 
 pub const NebroStatueTemplate = MobTemplate{
+    .ignore_conflicting_tiles = true, // conflicts w/ other statues
+
     .mob = .{
         .id = "nebro_statue",
         .species = &Species{ .name = "nebro statue" },
@@ -699,6 +705,8 @@ pub const NebroStatueTemplate = MobTemplate{
 };
 
 pub const CrystalStatueTemplate = MobTemplate{
+    .ignore_conflicting_tiles = true, // conflicts w/ other statues
+
     .mob = .{
         .id = "crystal_statue",
         .species = &Species{ .name = "crystal statue" },
@@ -735,7 +743,7 @@ pub const AlchemistTemplate = MobTemplate{
     .mob = .{
         .id = "alchemist",
         .species = &HumanSpecies,
-        .tile = 'w',
+        .tile = 'a',
         .ai = AI{
             .profession_name = "alchemist",
             .profession_description = "experimenting",
@@ -781,7 +789,7 @@ pub const HaulerTemplate = MobTemplate{
     .mob = .{
         .id = "hauler",
         .species = &GoblinSpecies,
-        .tile = 'w',
+        .tile = 'h',
         .ai = AI{
             .profession_name = "hauler",
             .profession_description = "hauling",
@@ -804,7 +812,7 @@ pub const EngineerTemplate = MobTemplate{
     .mob = .{
         .id = "engineer",
         .species = &GoblinSpecies,
-        .tile = 'w',
+        .tile = 'e',
         .ai = AI{
             .profession_name = "engineer",
             .profession_description = "repairing",
@@ -1572,4 +1580,24 @@ pub fn placeMob(
     state.dungeon.at(coord).mob = mob_ptr;
 
     return mob_ptr;
+}
+
+// Ensure no monsters have conflicting tiles
+comptime {
+    @setEvalBranchQuota(MOBS.len * MOBS.len * 10);
+
+    inline for (&MOBS) |monster| {
+        const pu: ?[]const u8 = inline for (&MOBS) |othermonster| {
+            if (!mem.eql(u8, monster.mob.id, othermonster.mob.id) and
+                monster.mob.tile == othermonster.mob.tile and
+                !monster.ignore_conflicting_tiles and
+                !othermonster.ignore_conflicting_tiles)
+            {
+                break othermonster.mob.id;
+            }
+        } else null;
+        if (pu) |prevuse| {
+            @compileError("Monster " ++ prevuse ++ " tile conflicts w/ " ++ monster.mob.id);
+        }
+    }
 }
