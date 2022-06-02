@@ -53,7 +53,12 @@ pub const CAST_CALL_EMBERLING = Spell{
             const corpse = state.dungeon.at(coord).surface.?.Corpse;
             state.dungeon.at(coord).surface = null;
 
-            _ = mobs.placeMob(state.GPA.allocator(), &mobs.EmberlingTemplate, coord, .{});
+            for (&CARDINAL_DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
+                if (state.is_walkable(neighbor, .{ .right_now = true })) {
+                    _ = mobs.placeMob(state.GPA.allocator(), &mobs.EmberlingTemplate, neighbor, .{});
+                    break;
+                }
+            };
 
             if (state.player.cansee(coord)) {
                 state.message(
