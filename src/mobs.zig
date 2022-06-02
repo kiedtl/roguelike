@@ -1040,13 +1040,13 @@ pub const EmberlingTemplate = MobTemplate{
         .tile = 'ë',
         .ai = AI{
             .profession_description = "watching",
-            // Stand still and don't be curious; don't want emberlings to burn
-            // the world down
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
             .is_curious = false,
+            .is_fearless = true,
         },
         .allegiance = .Necromancer,
+        .life_type = .Construct,
 
         .blood = null,
         .corpse = .None,
