@@ -49,7 +49,8 @@
 "skeletal_axemaster"  	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   5 	  10 	  15 	  15 	  10 	  15 	  25
 
 # higher-difficulty monsters. late-game.
-"death_mage"          	   - 	   - 	   - 	   5 	   5 	   1 	   5 	   5 	  10 	  10 	  15 	  15 	  15 	  20
+"death_mage"          	   - 	   - 	   - 	   - 	   5 	   - 	   - 	   5 	   5 	  10 	  15 	  15 	  15 	  20
+"brimstone_mage"      	   - 	   - 	   - 	   - 	   5 	   - 	   - 	   5 	   5 	  10 	  15 	  15 	  15 	  20
 
 # boss monsters
 "frozen_fiend"        	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   1 	   3 	   5 	   1 	   3

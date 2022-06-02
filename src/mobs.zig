@@ -978,6 +978,46 @@ pub const EmberMageTemplate = MobTemplate{
     },
 };
 
+pub const BrimstoneMageTemplate = MobTemplate{
+    .mob = .{
+        .id = "brimstone_mage",
+        .species = &HumanSpecies,
+        .tile = 'R',
+        .ai = AI{
+            .profession_name = "brimstone mage",
+            .profession_description = "watching",
+            // Stand still and don't be curious; don't want emberling followers
+            // to burn the world down
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.mageFight,
+            .is_curious = false,
+            .spellcaster_backup_action = .KeepDistance,
+        },
+        .allegiance = .Necromancer,
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 15, .spell = &spells.CAST_CALL_EMBERLING },
+            .{ .MP_cost = 01, .spell = &spells.CAST_FLAMMABLE, .power = 20 },
+            .{ .MP_cost = 15, .spell = &spells.CAST_FRY, .power = 7 },
+            .{ .MP_cost = 10, .spell = &spells.CAST_HASTE_EMBERLING, .power = 7 },
+        },
+        .max_MP = 15,
+
+        .max_HP = 8,
+        .memory_duration = 7,
+        .stats = .{ .Willpower = 6, .Evade = 10, .Vision = 7 },
+    },
+    .weapon = &items.MaceWeapon,
+    .armor = &items.LeatherArmor,
+    .cloak = &items.SilCloak,
+
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "emberling", .weight = 1, .count = minmax(usize, 2, 4) },
+        },
+    },
+};
+
 pub const EmberlingTemplate = MobTemplate{
     .mob = .{
         .id = "emberling",
@@ -1418,6 +1458,7 @@ pub const MOBS = [_]MobTemplate{
     SpectreMageTemplate,
     DeathMageTemplate,
     EmberMageTemplate,
+    BrimstoneMageTemplate,
     EmberlingTemplate,
     SkeletalAxemasterTemplate,
     SkeletalBlademasterTemplate,

@@ -87,6 +87,14 @@ pub const CAST_REGEN = Spell{
     .effect_type = .Heal,
 };
 
+pub const CAST_HASTE_EMBERLING = Spell{
+    .id = "sp_haste_emberling",
+    .name = "haste emberling",
+    .cast_type = .Smite,
+    .smite_target_type = .{ .SpecificMob = "emberling" },
+    .effect_type = .{ .Status = .Fast },
+};
+
 pub const CAST_ENRAGE_DUSTLING = Spell{
     .id = "sp_enrage_dustling",
     .name = "enrage dustling",
@@ -548,6 +556,13 @@ fn _resurrectNormal(_: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
     }
 }
 
+pub const CAST_FRY = Spell{
+    .id = "sp_fry",
+    .name = "ignite",
+    .cast_type = .Smite,
+    .effect_type = .{ .Status = .Fire },
+    .checks_will = true,
+};
 pub const CAST_FLAMMABLE = Spell{
     .id = "sp_flammable",
     .name = "flammabilification",
