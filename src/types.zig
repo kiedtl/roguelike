@@ -1100,8 +1100,14 @@ pub const Status = enum {
             });
         }
 
-        if (state.dungeon.fireAt(mob.coord).* == 0)
-            fire.setTileOnFire(mob.coord);
+        if (state.dungeon.fireAt(mob.coord).* == 0) {
+            // Don't create too much fire from permanently-burning monsters, or
+            // they'll burn the entire dungeon down when exploring/investigating
+            if (mob.isUnderStatus(.Fire).?.duration == .Prm)
+                fire.setTileOnFire(mob.coord, 3)
+            else
+                fire.setTileOnFire(mob.coord, null);
+        }
     }
 
     pub fn tickPain(mob: *Mob) void {

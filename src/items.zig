@@ -547,7 +547,7 @@ pub const CremationRing = Ring{ // {{{
             _ = stt;
             for (&DIRECTIONS) |d|
                 if (self.coord.move(d, state.mapgeometry)) |neighbor| {
-                    fire.setTileOnFire(neighbor);
+                    fire.setTileOnFire(neighbor, null);
                     // TODO: fire vuln
                 };
         }

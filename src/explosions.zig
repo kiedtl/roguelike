@@ -51,7 +51,7 @@ pub fn fireBurst(ground0: Coord, max_radius: usize) void {
     for (result) |row, y| for (row) |cell, x| {
         if (cell > 0) {
             const cellc = Coord.new2(ground0.z, x, y);
-            fire.setTileOnFire(cellc);
+            fire.setTileOnFire(cellc, null);
         }
     };
 }
@@ -198,7 +198,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
             const max_range = math.max(1, opts.strength / 100);
             const chance_for_fire = 100 - (coord.distance(ground0) * 100 / max_range);
             if (rng.percent(chance_for_fire)) {
-                fire.setTileOnFire(coord);
+                fire.setTileOnFire(coord, null);
             }
 
             var break_tile = true;

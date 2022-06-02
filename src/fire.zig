@@ -39,14 +39,14 @@ pub fn tileFlammability(c: Coord) usize {
     return f;
 }
 
-pub fn setTileOnFire(c: Coord) void {
+pub fn setTileOnFire(c: Coord, amount: ?usize) void {
     if (state.dungeon.at(c).type != .Floor)
         return;
     if (state.dungeon.terrainAt(c).fire_retardant)
         return;
 
     const flammability = tileFlammability(c);
-    const newfire = math.max(flammability, 5);
+    const newfire = amount orelse math.max(flammability, 5);
     state.dungeon.fireAt(c).* = newfire;
 }
 
@@ -112,7 +112,7 @@ pub fn tickFire(level: usize) void {
                         .Floor => {
                             const neighborfire = state.dungeon.fireAt(coord).*;
                             if (neighborfire == 0 and rng.percent(oldfire * 5))
-                                setTileOnFire(neighbor);
+                                setTileOnFire(neighbor, null);
                         },
                         .Water => {
                             if (oldfire >= 7 and rng.onein(3))
