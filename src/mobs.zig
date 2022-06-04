@@ -1391,7 +1391,7 @@ pub const BallLightningTemplate = MobTemplate{
     },
     // This status should be added by whatever spell created it.
     .statuses = &[_]StatusDataInfo{
-        .{ .status = .ExplosiveElec, .power = 20, .duration = .Prm },
+        .{ .status = .ExplosiveElec, .power = 5, .duration = .Prm },
     },
 };
 
