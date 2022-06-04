@@ -255,9 +255,7 @@ fn _writerMobStats(
     }
     inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
         const resist = @intToEnum(Resistance, resistancev.value);
-        const resist_val = utils.SignedFormatter{
-            .v = 100 - @intCast(isize, mob.resistance(resist)),
-        };
+        const resist_val = utils.SignedFormatter{ .v = mob.resistance(resist) };
         if (resist_val.v != 0) {
             _writerWrite(w, "$c{s: <8}$.   {: >5}%\n", .{ resist.string(), resist_val });
         }

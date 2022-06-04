@@ -174,3 +174,38 @@ pub fn isAttackStab(attacker: *const Mob, defender: *const Mob) bool {
         .Work => true,
     };
 }
+
+// Algorithm to shave damage due to resistance
+pub fn shaveDamage(amount: f64, resist: isize) f64 {
+    var new_amount: f64 = 0;
+    var ctr = @floatToInt(usize, amount);
+    while (ctr > 0) : (ctr -= 1) {
+        new_amount += 1;
+
+        if (resist > 0) {
+            if (rng.percent(resist)) {
+                new_amount -= 1;
+            }
+        } else if (resist < 0) {
+            if (rng.percent(-resist)) {
+                new_amount += 1;
+            }
+        }
+    }
+    return new_amount;
+}
+
+test {
+    try rng.init(std.testing.allocator);
+
+    var i: usize = 10;
+    while (i > 0) : (i -= 1) {
+        var resist = rng.range(isize, -4, 4) * 25;
+        var damage = @intToFloat(f64, rng.range(usize, 1, 9));
+        var ndmg = shaveDamage(damage, resist);
+        _ = ndmg;
+        // std.log.warn("damage: {}\tresist: {}\tnew: {}\tshaved: {}", .{
+        //     damage, resist, ndmg, @intCast(isize, damage) - @intCast(isize, ndmg),
+        // });
+    }
+}

@@ -24,7 +24,7 @@ pub fn tileFlammability(c: Coord) usize {
     f += state.dungeon.terrainAt(c).flammability;
 
     if (state.dungeon.at(c).mob) |mob| {
-        if (mob.resistance(.rFire) >= 100) {
+        if (mob.isVulnerable(.rFire)) {
             f += if (mob.isUnderStatus(.Fire) == null) @as(usize, 10) else 5;
         }
     }
@@ -57,7 +57,7 @@ pub fn setTileOnFire(c: Coord, amount: ?usize) void {
 pub inline fn fireIsSafeFor(mob: *const Mob, amount: usize) bool {
     if (amount <= 3) return true;
     if (mob.isUnderStatus(.Fire) != null) return true;
-    if (mob.resistance(.rFire) == 0) return true;
+    if (mob.isFullyResistant(.rFire)) return true;
     return false;
 }
 

@@ -1058,7 +1058,7 @@ pub fn tickMachines(level: usize) void {
                                 const zcoord = Coord.new2(level, zx, zy);
                                 if (state.dungeon.at(zcoord).mob == null or
                                     !utils.hasClearLOF(coord, zcoord) or
-                                    state.dungeon.at(zcoord).mob.?.resistance(.rElec) == 0)
+                                    state.dungeon.at(zcoord).mob.?.isFullyResistant(.rElec))
                                 {
                                     continue;
                                 }

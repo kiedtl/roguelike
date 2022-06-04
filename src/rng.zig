@@ -105,15 +105,15 @@ pub fn choose(comptime T: type, arr: []const T, weights: []const usize) !T {
 test "range" {
     const testing = std.testing;
 
-    init();
+    try init(testing.allocator);
 
     var i: usize = 0;
     while (i < 1000) : (i += 1) {
         const r_u8 = range(u8, 10, 200);
         const r_usize = range(usize, 34234, 89821);
 
-        testing.expect(r_u8 >= 10 and r_u8 < 200);
-        testing.expect(r_usize >= 34234 and r_usize < 89821);
+        try testing.expect(r_u8 >= 10 and r_u8 <= 200);
+        try testing.expect(r_usize >= 34234 and r_usize <= 89821);
     }
 }
 

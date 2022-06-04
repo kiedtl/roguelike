@@ -390,7 +390,7 @@ pub const BOLT_FIREBALL = Spell{
         fn f(caster: *Mob, opts: SpellOptions, target: Coord) bool {
             const mob = state.dungeon.at(target).mob.?;
             return caster.coord.distance(mob.coord) > opts.power and
-                mob.resistance(.rFire) > 0 and
+                !mob.isFullyResistant(.rFire) and
                 mob.isUnderStatus(.Fire) == null;
         }
     }.f,

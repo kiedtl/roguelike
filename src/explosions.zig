@@ -106,7 +106,7 @@ pub fn elecBurst(ground0: Coord, max_damage: usize, by: ?*Mob) void {
             const coord = Coord.new2(ground0.z, x, y);
             const dmg = @intToFloat(f64, max_damage * cell / 100);
             if (state.dungeon.at(coord).mob) |mob|
-                if (mob.resistance(.rElec) > 0) {
+                if (!mob.isFullyResistant(.rElec)) {
                     mob.takeDamage(.{
                         .amount = rng.range(f64, dmg / 2, dmg),
                         .by_mob = by,

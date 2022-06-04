@@ -1085,7 +1085,7 @@ pub const Status = enum {
             return;
         }
 
-        if (mob.resistance(.rFire) != 0) {
+        if (!mob.isFullyResistant(.rFire)) { // Don't spam "you are scorched" messages
             mob.takeDamage(.{
                 .amount = @intToFloat(f64, rng.range(usize, 1, 2)),
                 .kind = .Fire,
@@ -2252,8 +2252,8 @@ pub const Mob = struct { // {{{
         const was_already_dead = self.should_be_dead();
         const old_HP = self.HP;
 
-        const resist = @intToFloat(f64, self.resistance(d.kind.resist()));
-        const unshaved_amount = math.floor(d.amount * resist / 100.0);
+        const resist = self.resistance(d.kind.resist());
+        const unshaved_amount = combat.shaveDamage(d.amount, resist);
         const amount = if (!d.lethal and unshaved_amount > self.HP - 1)
             self.HP - 1
         else
@@ -2893,11 +2893,19 @@ pub const Mob = struct { // {{{
         return val;
     }
 
+    pub fn isVulnerable(self: *const Mob, resist: Resistance) bool {
+        return self.resistance(resist) < 0;
+    }
+
+    pub fn isFullyResistant(self: *const Mob, resist: Resistance) bool {
+        return self.resistance(resist) >= 100;
+    }
+
     // Returns different things depending on what resist is.
     //
     // For all resists except rFume, returns damage mitigated.
     // For rFume, returns chance for gas to trigger.
-    pub fn resistance(self: *const Mob, resist: Resistance) usize {
+    pub fn resistance(self: *const Mob, resist: Resistance) isize {
         var r: isize = 0;
 
         // Add the mob's innate resistance.
@@ -2928,8 +2936,8 @@ pub const Mob = struct { // {{{
 
         r = math.clamp(r, -100, 100);
 
-        // Value is between -100 and 100. Change it to be between 100 and 200.
-        return @intCast(usize, 100 - r);
+        // For rFume, make the value a percentage
+        return if (resist == .rFume) 100 - r else r;
     }
 
     pub fn isFlanked(self: *const Mob) bool {
