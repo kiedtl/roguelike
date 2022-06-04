@@ -46,9 +46,9 @@
 "war_olg"             	   - 	   - 	   - 	  10 	  10 	  15 	  20 	  30 	  20 	  25 	  25 	  30 	  30 	  30
 "necromancer"         	   - 	   - 	   5 	  10 	  15 	   5 	  10 	  15 	  10 	  15 	  15 	  10 	  10 	  20
 "skeletal_blademaster"	   - 	   - 	   - 	   5 	  10 	   5 	  10 	  15 	  10 	  15 	  15 	  10 	  15 	  25
-"skeletal_axemaster"  	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   5 	  10 	  15 	  15 	  10 	  15 	  25
 
 # higher-difficulty monsters. late-game.
+"skeletal_axemaster"  	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   5 	  10 	  15 	  15 	  10 	  15 	  25
 "death_mage"          	   - 	   - 	   - 	   - 	   5 	   - 	   - 	   5 	   5 	  10 	  15 	  15 	  15 	  20
 "brimstone_mage"      	   - 	   - 	   - 	   - 	   5 	   - 	   - 	   5 	   5 	  10 	  15 	  15 	  15 	  20
 
