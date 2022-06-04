@@ -1074,7 +1074,7 @@ pub const Status = enum {
 
     pub fn tickNausea(mob: *Mob) void {
         if (state.ticks % 3 == 0) {
-            state.messageAboutMob(mob, null, .Status, "retch profusely.", .{}, "retches profusely", .{});
+            state.messageAboutMob(mob, null, .Unimportant, "retch profusely.", .{}, "retches profusely.", .{});
             state.dungeon.spatter(mob.coord, .Vomit);
         }
     }
