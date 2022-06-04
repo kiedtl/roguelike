@@ -446,7 +446,7 @@ fn tickGame() void {
         mob.energy += 100;
 
         if (mob.energy < 0) {
-            if (mob.coord.eq(state.player.coord)) {
+            if (mob == state.player) {
                 display.draw();
                 readNoActionInput(130);
                 display.draw();
@@ -456,7 +456,8 @@ fn tickGame() void {
             continue;
         }
 
-        while (mob.energy >= 0) {
+        var actions_taken: usize = 0;
+        while (mob.energy >= 0) : (actions_taken += 0) {
             if (mob.is_dead) {
                 break;
             } else if (mob.should_be_dead()) {
@@ -512,6 +513,13 @@ fn tickGame() void {
                     mob.displayName(),
                     mob.ai.phase,
                 });
+            }
+
+            if (actions_taken > 1 and state.player.cansee(mob.coord)) {
+                display.draw();
+                readNoActionInput(130);
+                display.draw();
+                if (state.state == .Quit) break;
             }
         }
     }
