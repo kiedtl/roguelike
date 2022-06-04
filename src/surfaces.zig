@@ -174,20 +174,6 @@ pub const ShallowWaterTerrain = Terrain{
     .weight = 3,
 };
 
-pub const LuminescentFungiTerrain = Terrain{
-    .id = "t_f_lumi",
-    .name = "glowing fungi",
-    .color = 0x3cb371, // medium sea blue
-    .tile = '"',
-    .luminescence = 45,
-    .flammability = 5,
-    .repairable = false,
-
-    .for_levels = &[_][]const u8{"ANY"},
-    .placement = .{ .RoomSpotty = 10 },
-    .weight = 8,
-};
-
 pub const DeadFungiTerrain = Terrain{
     .id = "t_f_dead",
     .name = "dead fungi",
@@ -252,7 +238,6 @@ pub const TERRAIN = [_]*const Terrain{
     &CopperTerrain,
     &WoodTerrain,
     &ShallowWaterTerrain,
-    &LuminescentFungiTerrain,
     &DeadFungiTerrain,
     &TallFungiTerrain,
     &PillarTerrain,
