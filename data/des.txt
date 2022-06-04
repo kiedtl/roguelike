@@ -198,7 +198,7 @@ This statue makes you uncomfortable. You somehow want to hide from it.
 The eyes of this statue seem to glimmer with an unearthly radiance.
 
 % crystal_statue
-A statue of some nameless creature, the white crystals encrusted on it
+A statue of some nameless creature, the iridescent crystals encrusted on it
 shimmering horribly. You wish you could smash it into pieces.
 
 % alchemist
@@ -218,6 +218,20 @@ It is carrying a trowel and some mortar.
 Even the most powerful of human mages cannot hope to wield the full might of the
 Necromancer. Instead, it is invested in this undead mage, an immeasurably
 ancient skeleton resurrected for that purpose.
+
+% ember_mage
+A rather stocky fellow, wearing a maroon tunic. He is tasked with leading a band
+of emberlings, and has been given the power to create more from a fallen
+friend's corpse.
+
+% brimstone_mage
+This unassuming human is one of the dreaded Brimstone Mages, learned in the ways
+of fiery sorcerery. The ornate lettering on her armor testifies to the power she
+has been allowed to wield.
+
+% emberling
+A construct of smoldering ash, imbued with false life and commanded by a
+human sorcerer.
 
 % death_mage
 A human mage, specializing in the manipulations of undead skeletons.
