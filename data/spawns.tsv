@@ -36,8 +36,10 @@
 "convult"             	   - 	   - 	   - 	   - 	   - 	  30 	  30 	  35 	   - 	   - 	   - 	   - 	   - 	   -
 
 # easier mobs, intended for early game
+# TODO: spark mage should be mid-game due to `paralysing zap` spell?
 "bone_rat"            	  15 	  15 	  15 	  10 	   5 	  10 	   5 	   - 	   - 	   - 	   - 	   - 	   - 	   -
 "ember_mage"          	  15 	  15 	  15 	  10 	   5 	  10 	   5 	   - 	   - 	   - 	   - 	   - 	   - 	   -
+"spark_mage"          	  15 	  15 	  15 	  10 	   5 	  10 	   5 	   - 	   - 	   - 	   - 	   - 	   - 	   -
 
 # medium-difficulty monsters, middle-late game
 "warden"              	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -

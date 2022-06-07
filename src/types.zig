@@ -307,7 +307,7 @@ pub const Coord = struct { // {{{
         buf.append(Coord.new2(z, @intCast(usize, x), @intCast(usize, y))) catch err.wat();
     }
 
-    pub fn drawLine(from: Coord, to: Coord, limit: Coord) StackBuffer(Coord, 2048) {
+    pub fn drawLine(from: Coord, to: Coord, limit: Coord, extra: usize) StackBuffer(Coord, 2048) {
         assert(from.z == to.z);
 
         var buf = StackBuffer(Coord, 2048).init(null);
@@ -325,9 +325,21 @@ pub const Coord = struct { // {{{
         var x = @intCast(isize, from.x);
         var y = @intCast(isize, from.y);
 
+        var extra_ctr: usize = extra;
+
         if (dx > dy) {
             errmarg = dx / 2.0;
-            while (x != xend) {
+            var reached_goal = false;
+            while (true) {
+                if (x == xend) {
+                    reached_goal = true;
+                }
+                if (reached_goal) {
+                    if (extra_ctr == 0) {
+                        break;
+                    }
+                    extra_ctr -= 1;
+                }
                 insert_if_valid(from.z, x, y, &buf, limit);
                 errmarg -= dy;
                 if (errmarg < 0) {
@@ -339,7 +351,17 @@ pub const Coord = struct { // {{{
             insert_if_valid(from.z, x, y, &buf, limit);
         } else {
             errmarg = dy / 2.0;
-            while (y != yend) {
+            var reached_goal = false;
+            while (true) {
+                if (x == xend) {
+                    reached_goal = true;
+                }
+                if (reached_goal) {
+                    if (extra_ctr == 0) {
+                        break;
+                    }
+                    extra_ctr -= 1;
+                }
                 insert_if_valid(from.z, x, y, &buf, limit);
                 errmarg -= dx;
                 if (errmarg < 0) {
@@ -1757,7 +1779,7 @@ pub const Mob = struct { // {{{
             else => err.wat(),
         };
 
-        const trajectory = self.coord.drawLine(at, state.mapgeometry);
+        const trajectory = self.coord.drawLine(at, state.mapgeometry, 3);
         const landed: ?Coord = for (trajectory.constSlice()) |coord| {
             if (self.coord.eq(coord)) continue;
 
@@ -2759,7 +2781,7 @@ pub const Mob = struct { // {{{
         if (noise.state == .Dead or noise.intensity == .Silent)
             return null; // Sound was made a while back, or is silent
 
-        const line = self.coord.drawLine(coord, state.mapgeometry);
+        const line = self.coord.drawLine(coord, state.mapgeometry, 0);
         var walls_in_way: usize = 0;
         for (line.constSlice()) |c| {
             if (state.dungeon.at(c).type == .Wall) {

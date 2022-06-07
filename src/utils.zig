@@ -125,7 +125,7 @@ pub fn getNearestCorpse(me: *Mob) ?Coord {
 }
 
 pub fn hasClearLOF(from: Coord, to: Coord) bool {
-    const line = from.drawLine(to, state.mapgeometry);
+    const line = from.drawLine(to, state.mapgeometry, 0);
     return for (line.constSlice()) |c| {
         if (!c.eq(from) and !c.eq(to) and
             !state.is_walkable(c, .{ .right_now = true, .only_if_breaks_lof = true }))

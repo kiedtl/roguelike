@@ -1026,6 +1026,42 @@ pub const BrimstoneMageTemplate = MobTemplate{
     },
 };
 
+pub const SparkMageTemplate = MobTemplate{
+    .mob = .{
+        .id = "spark_mage",
+        .species = &GoblinSpecies,
+        .tile = 'P',
+        .ai = AI{
+            .profession_name = "spark mage",
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.mageFight,
+            .is_curious = false,
+            .spellcaster_backup_action = .Melee,
+        },
+        .allegiance = .Necromancer,
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 6, .spell = &spells.CAST_CALL_SPARKLING },
+            // About five turn's delay until next cast (power<3> - MP_cost<8> = 5)
+            .{ .MP_cost = 8, .spell = &spells.BOLT_PARALYSE, .power = 1 },
+        },
+        .max_MP = 10,
+
+        .max_HP = 6,
+        .memory_duration = 5,
+        .stats = .{ .Willpower = 4, .Evade = 0, .Vision = 5 },
+    },
+    .weapon = &items.BludgeonWeapon,
+    .cloak = &items.FurCloak,
+
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "sparkling", .weight = 1, .count = minmax(usize, 2, 3) },
+        },
+    },
+};
+
 pub const EmberlingTemplate = MobTemplate{
     .mob = .{
         .id = "emberling",
@@ -1066,6 +1102,51 @@ pub const EmberlingTemplate = MobTemplate{
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Fire, .duration = .Prm },
         .{ .status = .Noisy, .duration = .Prm },
+    },
+};
+
+pub const SparklingTemplate = MobTemplate{
+    .mob = .{
+        .id = "sparkling",
+        .species = &Species{
+            .name = "sparkling",
+            .default_attack = &Weapon{
+                .damage = 1,
+                .damage_kind = .Electric,
+                .strs = &items.SHOCK_STRS,
+            },
+        },
+        .tile = 'p',
+        .ai = AI{
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.mageFight,
+            .is_curious = false,
+            .is_fearless = true,
+            .spellcaster_backup_action = .Melee,
+        },
+        .allegiance = .Necromancer,
+        .life_type = .Construct,
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 7, .spell = &spells.BOLT_BLINKBOLT, .power = 2 },
+        },
+        .max_MP = 7,
+
+        .blood = null,
+        .corpse = .None,
+
+        .max_HP = 4,
+        .memory_duration = 3,
+        .innate_resists = .{ .rPois = 100, .rFume = 100, .rElec = 100 },
+        .stats = .{ .Willpower = 1, .Evade = 10, .Speed = 60, .Vision = 4 },
+    },
+    // XXX: Sparklings are never placed alone, this determines number of
+    // summoned sparklings from CAST_CALL_SPARKLING
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "sparkling", .weight = 1, .count = minmax(usize, 2, 3) },
+        },
     },
 };
 
@@ -1466,8 +1547,10 @@ pub const MOBS = [_]MobTemplate{
     SpectreMageTemplate,
     DeathMageTemplate,
     EmberMageTemplate,
+    SparkMageTemplate,
     BrimstoneMageTemplate,
     EmberlingTemplate,
+    SparklingTemplate,
     SkeletalAxemasterTemplate,
     SkeletalBlademasterTemplate,
     BoneRatTemplate,

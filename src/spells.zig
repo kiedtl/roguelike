@@ -43,33 +43,45 @@ const WIDTH = state.WIDTH;
 
 // -----------------------------------------------------------------------------
 
-pub const CAST_CALL_EMBERLING = Spell{
-    .id = "sp_call_emberling",
-    .name = "call emberling",
-    .cast_type = .Smite,
-    .smite_target_type = .Corpse,
-    .effect_type = .{ .Custom = struct {
-        fn f(_: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
-            const corpse = state.dungeon.at(coord).surface.?.Corpse;
-            state.dungeon.at(coord).surface = null;
+// Create spell that summons creatures from a corpse.
+fn createCorpseCallingSpell(
+    comptime mob_id: []const u8,
+    comptime name: []const u8,
+    template: *const mobs.MobTemplate,
+) Spell {
+    return Spell{
+        .id = "sp_call_" ++ mob_id,
+        .name = "call " ++ name,
+        .cast_type = .Smite,
+        .smite_target_type = .Corpse,
+        .effect_type = .{ .Custom = struct {
+            fn f(_: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
+                const corpse = state.dungeon.at(coord).surface.?.Corpse;
+                state.dungeon.at(coord).surface = null;
 
-            for (&CARDINAL_DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
-                if (state.is_walkable(neighbor, .{ .right_now = true })) {
-                    _ = mobs.placeMob(state.GPA.allocator(), &mobs.EmberlingTemplate, neighbor, .{});
-                    break;
+                for (&CARDINAL_DIRECTIONS) |d| {
+                    if (coord.move(d, state.mapgeometry)) |neighbor| {
+                        if (state.is_walkable(neighbor, .{ .right_now = true })) {
+                            _ = mobs.placeMob(state.GPA.allocator(), template, neighbor, .{});
+                            break;
+                        }
+                    }
                 }
-            };
 
-            if (state.player.cansee(coord)) {
-                state.message(
-                    .SpellCast,
-                    "A swarm of emberlings bursts out of the {s} corpse!",
-                    .{corpse.displayName()},
-                );
+                if (state.player.cansee(coord)) {
+                    state.message(
+                        .SpellCast,
+                        "A swarm of " ++ name ++ "s bursts out of the {s} corpse!",
+                        .{corpse.displayName()},
+                    );
+                }
             }
-        }
-    }.f },
-};
+        }.f },
+    };
+}
+
+pub const CAST_CALL_EMBERLING = createCorpseCallingSpell("emberling", "emberling", &mobs.EmberlingTemplate);
+pub const CAST_CALL_SPARKLING = createCorpseCallingSpell("sparkling", "sparkling", &mobs.SparklingTemplate);
 
 // TODO: generalize into a healing spell?
 pub const CAST_REGEN = Spell{
@@ -92,29 +104,24 @@ pub const CAST_REGEN = Spell{
     .effect_type = .Heal,
 };
 
-pub const CAST_HASTE_EMBERLING = Spell{
-    .id = "sp_haste_emberling",
-    .name = "haste emberling",
-    .cast_type = .Smite,
-    .smite_target_type = .{ .SpecificMob = "emberling" },
-    .effect_type = .{ .Status = .Fast },
-};
+// Spells that give specific status to specific class of mobs. {{{
 
-pub const CAST_ENRAGE_DUSTLING = Spell{
-    .id = "sp_enrage_dustling",
-    .name = "enrage dustling",
-    .cast_type = .Smite,
-    .smite_target_type = .{ .SpecificMob = "dustling" },
-    .effect_type = .{ .Status = .Enraged },
-};
+fn _createSpecificStatusSp(comptime id: []const u8, name: []const u8, s: Status) Spell {
+    return Spell{
+        .id = "sp_haste_" ++ id,
+        .name = "haste " ++ name,
+        .cast_type = .Smite,
+        .smite_target_type = .{ .SpecificMob = id },
+        .effect_type = .{ .Status = s },
+    };
+}
 
-pub const CAST_HASTE_DUSTLING = Spell{
-    .id = "sp_haste_dustling",
-    .name = "haste dustling",
-    .cast_type = .Smite,
-    .smite_target_type = .{ .SpecificMob = "dustling" },
-    .effect_type = .{ .Status = .Fast },
-};
+pub const CAST_HASTE_EMBERLING = _createSpecificStatusSp("emberling", "emberling", .Fast);
+pub const CAST_HASTE_SPARKLING = _createSpecificStatusSp("sparkling", "sparkling", .Fast);
+pub const CAST_HASTE_DUSTLING = _createSpecificStatusSp("dustling", "dustling", .Fast);
+pub const CAST_ENRAGE_DUSTLING = _createSpecificStatusSp("dustling", "dustling", .Enraged);
+
+// }}}
 
 pub const CAST_FIREBLAST = Spell{
     .id = "sp_fireblast",
@@ -339,6 +346,62 @@ fn _effectConjureBL(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
     };
 }
 
+pub const BOLT_PARALYSE = Spell{
+    .id = "sp_elec_paralyse",
+    .name = "paralysing zap",
+    .cast_type = .Bolt,
+    .noise = .Medium,
+    .check_has_effect = struct {
+        fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
+            const mob = state.dungeon.at(target).mob.?;
+            return !mob.isFullyResistant(.rElec);
+        }
+    }.f,
+    .effect_type = .{ .Custom = struct {
+        fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
+            if (state.dungeon.at(coord).mob) |victim| {
+                victim.takeDamage(.{
+                    .amount = @intToFloat(f64, opts.power),
+                    .source = .RangedAttack,
+                    .by_mob = state.dungeon.at(caster_c).mob,
+                    .kind = .Electric,
+                    .blood = false,
+                }, .{ .strs = &items.SHOCK_STRS });
+                const dmg_taken = @floatToInt(usize, victim.last_damage.?.amount);
+                victim.addStatus(.Paralysis, 0, .{ .Tmp = dmg_taken });
+            }
+        }
+    }.f },
+};
+
+pub const BOLT_BLINKBOLT = Spell{
+    .id = "sp_elec_blinkbolt",
+    .name = "living lightning",
+    .cast_type = .Bolt,
+    .noise = .Loud,
+    .effect_type = .{ .Custom = struct {
+        fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
+            if (state.dungeon.at(coord).mob) |victim| {
+                victim.takeDamage(.{
+                    .amount = @intToFloat(f64, opts.power),
+                    .source = .RangedAttack,
+                    .by_mob = state.dungeon.at(caster_c).mob,
+                    .kind = .Electric,
+                    .blood = false,
+                }, .{ .strs = &items.SHOCK_STRS });
+            }
+        }
+    }.f },
+    .bolt_last_coord_effect = struct {
+        pub fn f(caster_coord: Coord, _: SpellOptions, coord: Coord) void {
+            if (state.is_walkable(coord, .{ .right_now = true })) {
+                const caster = state.dungeon.at(caster_coord).mob.?;
+                _ = caster.teleportTo(coord, null, true);
+            }
+        }
+    }.f,
+};
+
 pub const BOLT_CRYSTAL = Spell{
     .id = "sp_crystal_shard",
     .name = "crystal shard",
@@ -348,12 +411,13 @@ pub const BOLT_CRYSTAL = Spell{
     .noise = .Medium,
     .effect_type = .{ .Custom = _effectBoltCrystal },
 };
-fn _effectBoltCrystal(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
+fn _effectBoltCrystal(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
     if (state.dungeon.at(coord).mob) |victim| {
         const damage = rng.rangeClumping(usize, opts.power / 2, opts.power, 2);
         victim.takeDamage(.{
             .amount = @intToFloat(f64, damage),
             .source = .RangedAttack,
+            .by_mob = state.dungeon.at(caster_c).mob,
         }, .{ .noun = "The crystal shard" });
     } else err.wat();
 }
@@ -365,7 +429,7 @@ pub const BOLT_LIGHTNING = Spell{
     .noise = .Medium,
     .effect_type = .{ .Custom = _effectBoltLightning },
 };
-fn _effectBoltLightning(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
+fn _effectBoltLightning(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
     if (state.dungeon.at(coord).mob) |victim| {
         const avg_dmg = opts.power;
         const dmg = rng.rangeClumping(usize, avg_dmg / 2, avg_dmg * 2, 2);
@@ -374,6 +438,7 @@ fn _effectBoltLightning(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) vo
             .source = .RangedAttack,
             .kind = .Electric,
             .blood = false,
+            .by_mob = state.dungeon.at(caster_c).mob,
         }, .{ .noun = "lightning bolt" });
     }
 }
@@ -677,6 +742,11 @@ pub const Spell = struct {
         Custom: fn (caster: Coord, spell: Spell, opts: SpellOptions, coord: Coord) void,
     },
 
+    // Options effect callback for the very last coord the bolt passed through.
+    //
+    // Added for Blinkbolt.
+    bolt_last_coord_effect: ?fn (caster: Coord, spell: SpellOptions, coord: Coord) void = null,
+
     pub fn use(self: Spell, caster: ?*Mob, caster_coord: Coord, target: Coord, opts: SpellOptions, comptime message: ?[]const u8) void {
         if (caster) |caster_mob| {
             if (opts.MP_cost > caster_mob.MP) {
@@ -716,7 +786,9 @@ pub const Spell = struct {
             .Ray => err.todo(),
             .Bolt => {
                 // Fling a bolt and let it hit whatever
-                const line = caster_coord.drawLine(target, state.mapgeometry);
+                const line = caster_coord.drawLine(target, state.mapgeometry, 3);
+                assert(line.len > 0);
+                var last_processed_coord: Coord = undefined;
                 for (line.constSlice()) |c| {
                     if (!c.eq(caster_coord) and !state.is_walkable(c, .{ .right_now = true })) {
                         const hit_mob = state.dungeon.at(c).mob;
@@ -743,10 +815,16 @@ pub const Spell = struct {
                             .Custom => |cu| cu(caster_coord, self, opts, c),
                         }
 
+                        // Stop if we're not multi-targeting or if the blocking object
+                        // isn't a mob
                         if (!self.bolt_multitarget or hit_mob == null)
                             break;
                     }
+                    last_processed_coord = c;
                 }
+
+                if (self.bolt_last_coord_effect) |func|
+                    (func)(caster_coord, opts, last_processed_coord);
             },
             .Smite => {
                 switch (self.smite_target_type) {

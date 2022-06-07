@@ -1102,6 +1102,13 @@ pub const KICK_STRS = [_]DamageStr{
     _dmgstr(081, "curbstomp", "curbstomps", ""),
 };
 
+pub const SHOCK_STRS = [_]DamageStr{
+    _dmgstr(010, "zap", "zaps", ""),
+    _dmgstr(040, "shock", "shocks", ""),
+    _dmgstr(070, "strike", "strikes", ""),
+    _dmgstr(100, "electrocute", "electrocutes", ""),
+};
+
 // Body weapons {{{
 pub const FistWeapon = Weapon{
     .id = "none",

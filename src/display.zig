@@ -1395,7 +1395,7 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
         drawMap(moblist.items, mainw.startx, mainw.endx, mainw.starty, mainw.endy);
 
         if (opts.show_trajectory) {
-            const trajectory = state.player.coord.drawLine(coord, state.mapgeometry);
+            const trajectory = state.player.coord.drawLine(coord, state.mapgeometry, 0);
             const fg = if (utils.hasClearLOF(state.player.coord, coord))
                 colors.CONCRETE
             else
