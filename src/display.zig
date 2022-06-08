@@ -1129,7 +1129,8 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
                             .priority = priority,
                         }) catch err.wat();
                     } else {
-                        existing.?.player = state.player.coord.eq(coord);
+                        if (state.player.coord.eq(coord))
+                            existing.?.player = true;
                     }
                 }
             }
