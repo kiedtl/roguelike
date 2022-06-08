@@ -39,8 +39,17 @@ When evoked, it will create a powerful flash of light, dazing all mobs in your
 field of vision for 8 turns. It will daze you as well, hopefully not for very
 long.
 
-% mine_kit
+% kit_mine
 You can evoke it to build a small mine where you are standing.
+
+% kit_trap_emberling
+Creates an emberling trap, which releases a pack of allied emberlings when
+triggered.
+
+% kit_trap_sparkling
+Creates a sparkling trap, which releases a pack of allied sparkling when
+triggered. Be careful: the sparklings are not mindful of what they may
+electrocute.
 
 % torturer_necromancer
 A particularly sadistic death mage. His features are perpetually twisted into a
@@ -218,6 +227,18 @@ It is carrying a trowel and some mortar.
 Even the most powerful of human mages cannot hope to wield the full might of the
 Necromancer. Instead, it is invested in this undead mage, an immeasurably
 ancient skeleton resurrected for that purpose.
+
+% spark_mage
+An arrogant goblin mage with thick spectacles. He has been tasked with leading a
+band of sparklings, and can create more from a fallen friend's corpse.
+
+% lightning_mage
+One of the feared Lightning Mages, wielding unparalleled power over the
+atmosphere. She can call on the surrounding air to discharge a powerful
+lightning bolt into unsuspecting foes.
+
+% sparkling
+An insubstantial construct. It's trying to electrocute you!
 
 % ember_mage
 A rather stocky fellow, wearing a maroon tunic. He is tasked with leading a band
