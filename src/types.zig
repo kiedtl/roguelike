@@ -1087,11 +1087,14 @@ pub const Status = enum {
     }
 
     pub fn tickPoison(mob: *Mob) void {
-        mob.takeDamage(.{
-            .amount = @intToFloat(f64, rng.range(usize, 0, 1)),
-            .blood = false,
-            .kind = .Poison,
-        }, .{ .basic = true });
+        const damage = rng.range(usize, 0, 1);
+        if (damage > 0) { // Don't spam "You are weakened (0 damage, 0 resist)"
+            mob.takeDamage(.{
+                .amount = @intToFloat(f64, damage),
+                .blood = false,
+                .kind = .Poison,
+            }, .{ .basic = true });
+        }
     }
 
     pub fn tickNausea(mob: *Mob) void {
