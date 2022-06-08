@@ -1622,6 +1622,7 @@ pub const PlaceMobOptions = struct {
     phase: AIPhase = .Work,
     work_area: ?Coord = null,
     no_squads: bool = false,
+    allegiance: ?types.Allegiance = null,
 };
 
 pub fn placeMob(
@@ -1634,7 +1635,9 @@ pub fn placeMob(
 
     var mob = template.mob;
     mob.init(alloc);
+
     mob.coord = coord;
+    mob.allegiance = opts.allegiance orelse mob.allegiance;
     mob.ai.phase = opts.phase;
 
     if (template.weapon) |w| mob.equipItem(.Weapon, Item{ .Weapon = items.createItem(Weapon, w.*) });
@@ -1702,6 +1705,14 @@ pub fn placeMob(
     state.dungeon.at(coord).mob = mob_ptr;
 
     return mob_ptr;
+}
+
+pub fn placeMobSurrounding(c: Coord, t: *const MobTemplate, opts: PlaceMobOptions) void {
+    for (&DIRECTIONS) |d| if (c.move(d, state.mapgeometry)) |neighbor| {
+        if (state.is_walkable(neighbor, .{ .right_now = true })) {
+            _ = placeMob(state.GPA.allocator(), t, neighbor, opts);
+        }
+    };
 }
 
 // Ensure no monsters have conflicting tiles

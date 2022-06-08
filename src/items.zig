@@ -14,6 +14,7 @@ const fov = @import("fov.zig");
 const gas = @import("gas.zig");
 const display = @import("display.zig");
 const rng = @import("rng.zig");
+const mobs = @import("mobs.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
 const types = @import("types.zig");
@@ -91,6 +92,8 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     // Kits
     .{ .w = 030, .i = .{ .P = &FireTrapKit } },
     .{ .w = 030, .i = .{ .P = &ShockTrapKit } },
+    .{ .w = 020, .i = .{ .P = &SparklingTrapKit } },
+    .{ .w = 020, .i = .{ .P = &EmberlingTrapKit } },
     .{ .w = 020, .i = .{ .P = &AirblastTrapKit } },
     .{ .w = 005, .i = .{ .P = &MineKit } },
     .{ .w = 002, .i = .{ .P = &BigFireTrapKit } },
@@ -827,6 +830,18 @@ pub const BigFireTrapKit = Consumable.createTrapKit("kit_trap_bigfire", "inciner
 pub const FireTrapKit = Consumable.createTrapKit("kit_trap_fire", "fire trap", struct {
     pub fn f(machine: *Machine, _: *Mob) void {
         explosions.fireBurst(machine.coord, 3);
+    }
+}.f);
+
+pub const EmberlingTrapKit = Consumable.createTrapKit("kit_trap_emberling", "emberling trap", struct {
+    pub fn f(machine: *Machine, _: *Mob) void {
+        mobs.placeMobSurrounding(machine.coord, &mobs.EmberlingTemplate, .{ .no_squads = true, .allegiance = state.player.allegiance });
+    }
+}.f);
+
+pub const SparklingTrapKit = Consumable.createTrapKit("kit_trap_sparkling", "sparkling trap", struct {
+    pub fn f(machine: *Machine, _: *Mob) void {
+        mobs.placeMobSurrounding(machine.coord, &mobs.SparklingTemplate, .{ .no_squads = true, .allegiance = state.player.allegiance });
     }
 }.f);
 
