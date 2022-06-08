@@ -1173,7 +1173,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         const infoset = _getMonsInfoSet(mob);
         defer MobInfoLine.deinitList(infoset);
         //var info_x: isize = startx + 2 + @intCast(isize, name.len) + 2;
-        var info_x: isize = endx - @intCast(isize, infoset.items.len) - 1;
+        var info_x: isize = endx - @intCast(isize, infoset.items.len);
         for (infoset.items) |info| {
             _ = _drawStr(info_x, y, endx, "${u}{u}$.", .{ info.color, info.char }, .{});
             info_x += 1;
