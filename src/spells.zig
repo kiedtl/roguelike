@@ -626,6 +626,41 @@ fn _resurrectNormal(_: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
     }
 }
 
+pub const CAST_DISCHARGE = Spell{
+    .id = "sp_discharge",
+    .name = "static discharge",
+    .cast_type = .Smite,
+    .check_has_effect = struct {
+        fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
+            const mob = state.dungeon.at(target).mob.?;
+            return !mob.isFullyResistant(.rElec);
+        }
+    }.f,
+    .effect_type = .{ .Custom = struct {
+        fn f(caster_c: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
+            if (state.dungeon.at(coord).mob) |victim| {
+                var empty_spaces: usize = 0;
+                for (&DIRECTIONS) |d| if (victim.coord.move(d, state.mapgeometry)) |neighbor| {
+                    if (state.dungeon.at(neighbor).mob == null and
+                        state.dungeon.at(neighbor).surface == null and
+                        state.dungeon.at(neighbor).type == .Floor)
+                    {
+                        empty_spaces += 1;
+                    }
+                };
+                const damage = math.clamp(empty_spaces / 2, 1, 4);
+                victim.takeDamage(.{
+                    .amount = @intToFloat(f64, damage),
+                    .source = .RangedAttack,
+                    .by_mob = state.dungeon.at(caster_c).mob,
+                    .kind = .Electric,
+                    .blood = false,
+                }, .{ .basic = true });
+            }
+        }
+    }.f },
+};
+
 pub const CAST_FRY = Spell{
     .id = "sp_fry",
     .name = "ignite",

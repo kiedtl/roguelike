@@ -1062,6 +1062,44 @@ pub const SparkMageTemplate = MobTemplate{
     },
 };
 
+pub const LightningMageTemplate = MobTemplate{
+    .mob = .{
+        .id = "lightning_mage",
+        .species = &GoblinSpecies,
+        .tile = 'L',
+        .ai = AI{
+            .profession_name = "lightning mage",
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.mageFight,
+            .is_curious = false,
+            .spellcaster_backup_action = .KeepDistance,
+        },
+        .allegiance = .Necromancer,
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 06, .spell = &spells.CAST_CALL_SPARKLING },
+            .{ .MP_cost = 10, .spell = &spells.BOLT_PARALYSE, .power = 2 },
+            .{ .MP_cost = 03, .spell = &spells.CAST_DISCHARGE },
+            .{ .MP_cost = 15, .spell = &spells.CAST_HASTE_SPARKLING, .power = 7 },
+        },
+        .max_MP = 15,
+
+        .max_HP = 8,
+        .memory_duration = 7,
+        .stats = .{ .Willpower = 6, .Evade = 10, .Vision = 7 },
+    },
+    .weapon = &items.MaceWeapon,
+    .armor = &items.LeatherArmor,
+    .cloak = &items.SilCloak,
+
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "sparkling", .weight = 1, .count = minmax(usize, 2, 4) },
+        },
+    },
+};
+
 pub const EmberlingTemplate = MobTemplate{
     .mob = .{
         .id = "emberling",
@@ -1547,8 +1585,9 @@ pub const MOBS = [_]MobTemplate{
     SpectreMageTemplate,
     DeathMageTemplate,
     EmberMageTemplate,
-    SparkMageTemplate,
     BrimstoneMageTemplate,
+    SparkMageTemplate,
+    LightningMageTemplate,
     EmberlingTemplate,
     SparklingTemplate,
     SkeletalAxemasterTemplate,
