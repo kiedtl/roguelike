@@ -996,9 +996,9 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         .{ .b = "msl", .a = "%", .v = state.player.stat(.Missile) },
         .{ .b = "evd", .a = "%", .v = state.player.stat(.Evade) },
         .{ .b = "fov", .a = "",  .v = state.player.stat(.Vision) },
-        .{ .b = "arm", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.Armor)) },
-        .{ .b = "rFi", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.rFire)) },
-        .{ .b = "rEl", .a = "%", .v = 100 - @intCast(isize, state.player.resistance(.rElec)) },
+        .{ .b = "arm", .a = "%", .v = state.player.resistance(.Armor) },
+        .{ .b = "rFi", .a = "%", .v = state.player.resistance(.rFire) },
+        .{ .b = "rEl", .a = "%", .v = state.player.resistance(.rElec) },
     };
     // zig fmt: on
 
@@ -1012,7 +1012,8 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
             else => unreachable,
         };
         const v = utils.SignedFormatter{ .v = stat.v };
-        _ = _drawStr(x, y, endx, "$c{s}$. {: >3}{s}", .{ stat.b, v, stat.a }, .{});
+        const c: u21 = if (stat.v < 0) 'p' else '.';
+        _ = _drawStr(x, y, endx, "$c{s}$. ${u}{: >3}{s}$.", .{ stat.b, c, v, stat.a }, .{});
         if (i % 3 == 2 or is_last)
             y += 1;
     }
