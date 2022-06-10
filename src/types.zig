@@ -282,7 +282,7 @@ pub const Coord = struct { // {{{
     }
 
     pub fn closestDirectionTo(self: Coord, to: Coord, limit: Coord) Direction {
-        var closest_distance: usize = 10000000000;
+        var closest_distance: usize = @as(usize, 0) -% 1;
         var closest_direction: Direction = .North;
 
         for (&DIRECTIONS) |direction| if (self.move(direction, limit)) |neighbor| {

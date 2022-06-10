@@ -484,7 +484,7 @@ pub fn shadowCast(
     if (max_radius == 0) {
         const max_radius_x = math.max(limit.x - coord.x, coord.x);
         const max_radius_y = math.max(limit.y - coord.y, coord.y);
-        max_radius = @floatToInt(usize, math.sqrt(@intToFloat(f64, max_radius_x * max_radius_x + max_radius_y * max_radius_y))) + 1;
+        max_radius = math.sqrt(max_radius_x * max_radius_x + max_radius_y * max_radius_y) + 1;
     }
 
     const octants = [_]usize{ 0, 1, 2, 3, 4, 5, 6, 7 };

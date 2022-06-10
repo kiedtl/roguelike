@@ -210,9 +210,9 @@ fn _writerWrite(writer: io.FixedBufferStream([]u8).Writer, comptime fmt: []const
 fn _writerHeader(writer: io.FixedBufferStream([]u8).Writer, linewidth: usize, comptime fmt: []const u8, args: anytype) void {
     writer.writeAll("─($c ") catch err.wat();
 
-    const prev_pos = writer.context.getPos() catch err.wat();
+    const prev_pos = @intCast(usize, writer.context.getPos() catch err.wat());
     writer.print(fmt, args) catch err.wat();
-    const new_pos = writer.context.getPos() catch err.wat();
+    const new_pos = @intCast(usize, writer.context.getPos() catch err.wat());
 
     writer.writeAll(" $.)─") catch err.wat();
 
