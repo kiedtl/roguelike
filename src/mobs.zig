@@ -460,7 +460,8 @@ pub const ConvultTemplate = MobTemplate{
         .memory_duration = 8,
         .stats = .{ .Willpower = 3, .Speed = 100 },
     },
-    .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
+    // Disabled for now, needs playtesting
+    //.statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
 };
 
 pub const VapourMageTemplate = MobTemplate{
