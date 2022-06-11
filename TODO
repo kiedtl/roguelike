@@ -101,7 +101,7 @@ x sulfur fiend x
     Vile protector is fairly tanky (15 HP) but immobile; shielding ends if
     the dustlings/allies move out of its LOS.
   - Windlash: moderate damage, smite-targeted.
-    - "The vapour mage waves its arms around in wide circles!"
+    - "The vapour fiend waves its arms around in wide circles!"
     - "The air whirls around and strikes you!"
     - "The air twists around and strikes you!"
     - "The air twists itself inside-out and smites you!!"
@@ -145,6 +145,11 @@ x frozen fiend
     spirit. It radiates an intense aura of palpable malice."
   - Appears in pairs guarding doorways of rooms in the Morgue.
   - Chance to prevent passage of intruders.
+
+- operator
+  - "Activates" spire, allowing attacks without other present allies. (Range: 1)
+  - "Repairs" spire, healing them completely. (Range: 1)
+  - "Reprograms" spire, reseting any player commands. (Range: 1)
 - lightning spire
   - like dcss' lightning spire
   - hurls powerful bolts of electricity
@@ -161,6 +166,7 @@ x frozen fiend
   - immobile, only attacks when other hostile present
 - copper spire
   - Enables copper weapons.
+
 x warden
   - calls for reinforcements by shouting/sounding horn
 - wretched stars
@@ -220,6 +226,13 @@ x lead turtle
   - Hits hard, strength == 50, reach == 2.
   - Huge amount of innate armor. Maybe, 60%?
   - Found in the Laboratory.
+
+- warrior
+  - Heavily armored (25%), good stats (90% melee, 15% evade), tanky (13 HP).
+- recruit
+  - "warrior" monster for lower levels.
+  - 10% armor, 70% melee, 10% evade, 8 HP
+
 - bone mage
   - Enrage Undead: gives undead .Enraged status
   - Bone longsword
@@ -229,6 +242,7 @@ x lead turtle
 x bone rat
   - fast, evasive, and moderately fragile.
   - rPois∞ rFume∞ rFire-
+
 x ember mage
   - Fire attack with weapon
   - Travels with packs of emberlings
@@ -239,30 +253,35 @@ x emberling
   - Fast
   - Attacks that do fire damage
   - Prm burning; leaves trails of fire behind
-- brimstone mage
+x brimstone mage
   - Has abilities of ember mage (fire resists, fire weapon, spells)
   - Spell: Brimstone: (will-checked) set player on fire
-  - Avoids melee (despite fire attack weapon)
+  - Spell: Haste emberling: what is says on the label
+  - Avoids melee.
   - Travels with packs of emberlings
-- blood mage
+
+- blood mage (IN DESIGN)
   - Toned-down pain spell that heals nearby bloodlings
   - Can make a corpse explode in a wave of blood
   - Can create 3-4 bloodlings from a corpse
-- bloodlings
+- bloodlings (IN DESIGN)
   - Slow
   - Heals when traveling over blood-stained ground
-- spark mage
+
+x sparklings
+  - Attacks that do electric damage
+  - Spell: blinkbolt
+x spark mage
   - Can convert corpse to sparklings
+  - Can very briefly paralyse player ("stunning burst")
+x lightning mage
+  - Has all abilities of spark mage
   - Smite-targeted electrical attack; does more damage the farther away the
     target is from the caster
-- sparklings
-  - Attacks that do electric damage
-  - Can briefly paralyse player ("stunning burst")
-- lightning mage
-  - Has all abilities of spark mage
-  - Smite-targeted electrical attack; does more damage if surrounded by
-    empty squares (i.e., DCSS' Airstrike)
+    - Has potential to work well with mage's desire to keep distance
+  - Can haste sparklings
   - Keeps distance
+
 x spectre mage
   x Spectral Sword: summons four spectral swords, which are very fast but
     have just 1 HP and do little damage. Like Brogue's staff of conjuration.
@@ -333,7 +352,7 @@ x cinder worm
 - cuprite fiend
   - Sulfur fiend's electrical attack (TODO: think of replacement for sulfur
     fiend)
-- war olg
+x war olg
   - Also known as "troll" to humans. Naturally peaceful grazing herbivores,
     but this one has been trained for war.
   - Three pairs of legs/hands.
@@ -342,7 +361,7 @@ x cinder worm
   - Basically a war-trained jackrabbit.
   - Joke monster. Hilariously weak creature that some bored alchemist trained
     for war.
-  - 3 HP, 30% evade, 50% melee
+  - 1 HP, 30% evade, 50% melee
 - lava flans
   - Lava-dwelling monsters.
   - 6 HP, normal speed.
@@ -490,6 +509,9 @@ Rings have "tiers" instead of an enchantment level (gold, silver, iron).
   .m@m. attack each direction
   ..m..
   .....
+
+- ring of teleportation: Zap an enemy, then teleport to where the zap ended
+  (i.e. Blinkbolt spell).
 
 - ring of electrification: Electrocute all mobs on two sides.
   - Move two tiles backwards into corridor (ie with walls on the other two sides
@@ -884,16 +906,15 @@ x More kits and traps: fire, shock, incineration, knockback
   x More ring types (fire, etc)
   - Random ring drops, equipping/deequipping rings
   x Remove ring statuses
-  - MP costs for rings
-- Multi-tile props: trees and braziers
+  - MP costs for rings?
 x Fix trtr chambers; add more of them
 - Spires and spire kits
 - More mundane weapons: hammer, poker
 - Guards in cubbyholes (both corridors and rooms)
 - Dungeon features: barrel of water, barrel of toxic sludge
 x War olgs, cinder worms, destroyers
-- Blood, ember, fire, spark, lightning mage bands
-- Emberling/sparkling summoning trap kits
+x Ember, brimstone, spark, lightning mage bands
+x Emberling/sparkling summoning trap kits
 - Fiend of vapours
 - Copper weapons and battery packs, copper hornets
 - Bone and masterpiece weapons
@@ -905,7 +926,14 @@ x War olgs, cinder worms, destroyers
   - Potion of insubstantiation and fortification
 - Basic speeches by mobs
 - Cinder worms as prisoners somehow
+- Lore-related prefabs (e.g. washroom, trophy rooms, etc)
+- Multi-tile props: trees and braziers
+- Info character: ~
+- Playtest game, especially CAV and make adjustments
 *** v1.1.0 release ***
+- Bloodlings and related mages
+- Operators
+- Warriors, recruits
 - Rework gases
   - Remove usage of floats entirely
   - Quantize all gas dissipation rates into VSLOW, SLOW, MED, FAST, VFAST, etc
@@ -1244,9 +1272,9 @@ x Fix sound propagation
 - Reject maps without enough open space
 - Give player credit for deaths caused by malfunctioning machines
 - Give player credit for deaths caused by fires
-- Show appropriate number of exclamation points on messages about
-  spell damage
+- Show appropriate number of exclamation points on messages about spell damage
 - Don't allow confused monsters to attack diagonally.
+- Consider LOF clear if bolt is multi-target & only enemies are blocking LOF
 
 Ideas
 =====
