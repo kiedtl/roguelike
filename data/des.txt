@@ -28,6 +28,10 @@ It will create an explosion with a radius of about 3 tiles.
 % recharging_station
 You can activate this to recharge some of your evocables.
 
+% barrel_water
+You can break open this barrel to make a puddle of water. If you lure foes into
+the water, they will be vulnerable to electricity.
+
 % evoc_flamethrower
 This device can spray a fountain of sparks at a nearby tile, igniting it.
 
