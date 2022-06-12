@@ -522,6 +522,11 @@ fn tickGame() void {
                 if (state.state == .Quit) break;
             }
         }
+
+        if (mob.should_be_dead()) {
+            mob.kill();
+            continue;
+        }
     }
 }
 

@@ -2594,10 +2594,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn should_be_dead(self: *const Mob) bool {
-        if (self.HP == 0)
-            return true;
-
-        return false;
+        return self.HP == 0;
     }
 
     pub fn nextDirectionTo(self: *Mob, to: Coord) ?Direction {
