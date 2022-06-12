@@ -825,9 +825,10 @@ pub const Spell = struct {
                         const hit_mob = state.dungeon.at(c).mob;
 
                         if (hit_mob) |victim| {
-                            if (self.checks_will) {
-                                if (!willSucceedAgainstMob(caster.?, victim))
-                                    continue;
+                            if (self.checks_will and !willSucceedAgainstMob(caster.?, victim)) {
+                                const chance = 100 - appxChanceOfWillOverpowered(caster.?, victim);
+                                state.message(.SpellCast, "{c} resisted $g($c{}%$g chance)$.", .{ victim, chance });
+                                return;
                             }
 
                             if (self.bolt_dodgeable) {
@@ -876,9 +877,10 @@ pub const Spell = struct {
 
                         const mob = state.dungeon.at(target).mob.?;
 
-                        if (self.checks_will) {
-                            if (!willSucceedAgainstMob(caster.?, mob))
-                                return;
+                        if (self.checks_will and !willSucceedAgainstMob(caster.?, mob)) {
+                            const chance = 100 - appxChanceOfWillOverpowered(caster.?, mob);
+                            state.message(.SpellCast, "{c} resisted $g($c{}%$g chance)$.", .{ mob, chance });
+                            return;
                         }
 
                         switch (self.effect_type) {
