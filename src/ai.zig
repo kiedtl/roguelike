@@ -40,7 +40,7 @@ const NOISE_DONE_CHECKING = 5;
 
 fn flingRandomSpell(me: *Mob, target: *Mob) void {
     const spell = rng.chooseUnweighted(SpellOptions, me.spells);
-    spell.spell.use(me, me.coord, target.coord, spell, null);
+    spell.spell.use(me, me.coord, target.coord, spell);
 }
 
 // Find the nearest enemy.
@@ -834,7 +834,7 @@ pub fn tortureWork(mob: *Mob, _: mem.Allocator) void {
             .spell = &spells.CAST_PAIN,
             .duration = rng.range(usize, 10, 20),
             .power = 0,
-        }, null);
+        });
         return;
     }
 
@@ -1044,7 +1044,7 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
     for (mob.spells) |spell| {
         if (spell.MP_cost > mob.MP) continue;
         if (_findValidTargetForSpell(mob, spell)) |coord| {
-            spell.spell.use(mob, mob.coord, coord, spell, null);
+            spell.spell.use(mob, mob.coord, coord, spell);
             return;
         }
     }
@@ -1091,7 +1091,7 @@ pub fn statueFight(mob: *Mob, _: mem.Allocator) void {
 
     if (found_ally and rng.onein(10)) {
         const spell = mob.spells[0];
-        spell.spell.use(mob, mob.coord, target.coord, spell, "The {0s} glitters ominously!");
+        spell.spell.use(mob, mob.coord, target.coord, spell);
     } else {
         _ = mob.rest();
     }

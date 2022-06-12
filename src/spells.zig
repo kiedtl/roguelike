@@ -782,7 +782,7 @@ pub const Spell = struct {
     // Added for Blinkbolt.
     bolt_last_coord_effect: ?fn (caster: Coord, spell: SpellOptions, coord: Coord) void = null,
 
-    pub fn use(self: Spell, caster: ?*Mob, caster_coord: Coord, target: Coord, opts: SpellOptions, comptime message: ?[]const u8) void {
+    pub fn use(self: Spell, caster: ?*Mob, caster_coord: Coord, target: Coord, opts: SpellOptions) void {
         if (caster) |caster_mob| {
             if (opts.MP_cost > caster_mob.MP) {
                 err.bug("Spellcaster casting spell without enough MP!", .{});
@@ -798,11 +798,7 @@ pub const Spell = struct {
         if (state.player.cansee(caster_coord)) {
             const name = opts.caster_name orelse
                 if (caster) |c| c.displayName() else "giant tomato";
-            state.message(
-                .SpellCast,
-                message orelse "The {0s} gestures ominously!",
-                .{name},
-            );
+            state.message(.SpellCast, "The {s} uses $r{s}$.!", .{ name, self.name });
         }
 
         if (caster) |_| {

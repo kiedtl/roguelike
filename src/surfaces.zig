@@ -1068,7 +1068,7 @@ pub fn tickMachines(level: usize) void {
                                         .spell = &spells.BOLT_LIGHTNING,
                                         .caster_name = machine.name,
                                         .power = e.damage,
-                                    }, "The broken {0s} shoots a spark!");
+                                    });
                                     break :find_mob;
                                 }
                             }
