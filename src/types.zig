@@ -211,6 +211,11 @@ pub const Coord = struct { // {{{
         return math.max(diff.x, diff.y);
     }
 
+    pub inline fn distanceManhattan(a: Self, b: Self) usize {
+        const diff = a.difference(b);
+        return diff.x + diff.y;
+    }
+
     // Sometimes we want to pass Coord.eq around, but we can't since an inline
     // function has a different type than a non-inline function.
     //
@@ -286,8 +291,7 @@ pub const Coord = struct { // {{{
         var closest_direction: Direction = .North;
 
         for (&DIRECTIONS) |direction| if (self.move(direction, limit)) |neighbor| {
-            const diff = neighbor.difference(to);
-            const dist = diff.x + diff.y;
+            const dist = neighbor.distanceManhattan(to);
 
             if (dist < closest_distance) {
                 closest_distance = dist;

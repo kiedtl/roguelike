@@ -3372,7 +3372,7 @@ pub const PRI_BASE_LEVELCONFIG = LevelConfig{
         null,
     },
 
-    .machines = &[_]*const Machine{ &surfaces.Fountain, &surfaces.Drain },
+    .machines = &[_]*const Machine{ &surfaces.Fountain, &surfaces.Drain, &surfaces.WaterBarrel },
     .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
 };
 
@@ -3403,7 +3403,7 @@ pub const QRT_BASE_LEVELCONFIG = LevelConfig{
     .single_props = &[_][]const u8{ "fuel_barrel", "bed" },
     .chance_for_single_prop_placement = 90,
 
-    .machines = &[_]*const Machine{&surfaces.Fountain},
+    .machines = &[_]*const Machine{ &surfaces.Fountain, &surfaces.WaterBarrel },
 };
 
 pub const LAB_BASE_LEVELCONFIG = LevelConfig{
