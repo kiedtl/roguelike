@@ -864,6 +864,7 @@ const DrawStrOpts = struct {
 //     $p       fg = PINK
 //     $b       fg = LIGHT_STEEL_BLUE
 //     $r       fg = PALE_VIOLET_RED
+//     $o       fg = GOLD
 //     $.       reset fg and bg to defaults
 fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args: anytype, opts: DrawStrOpts) isize {
     const termbox_width = termbox.tb_width();
@@ -928,6 +929,7 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
                         'b' => fg = colors.LIGHT_STEEL_BLUE,
                         'r' => fg = colors.PALE_VIOLET_RED,
                         'a' => fg = colors.AQUAMARINE,
+                        'o' => fg = colors.GOLD,
                         else => err.bug("Found unknown escape sequence '${u}' (line: '{s}')", .{ next_codepoint, line }),
                     }
                     continue;
@@ -1251,6 +1253,42 @@ fn _mobs_can_see(moblist: []const *Mob, coord: Coord) bool {
     return false;
 }
 
+fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: termbox.tb_cell) termbox.tb_cell {
+    var tile = p_tile;
+
+    // Draw noise and indicate if that tile is visible by another mob
+    switch (state.dungeon.at(coord).type) {
+        .Floor => {
+            const has_stuff = state.dungeon.at(coord).surface != null or
+                state.dungeon.at(coord).mob != null or
+                state.dungeon.itemsAt(coord).len > 0;
+
+            if (_mobs_can_see(moblist, coord)) {
+                // Treat this cell specially if it's the player and the player is
+                // being watched.
+                if (state.player.coord.eq(coord) and _mobs_can_see(moblist, coord)) {
+                    return .{ .bg = colors.LIGHT_CONCRETE, .fg = colors.BG, .ch = '@' };
+                }
+
+                if (has_stuff) {
+                    if (state.is_walkable(coord, .{ .right_now = true })) {
+                        // Swap.
+                        tile.fg ^= tile.bg;
+                        tile.bg ^= tile.fg;
+                        tile.fg ^= tile.bg;
+                    }
+                } else {
+                    tile.ch = '⬞';
+                    //tile.fg = 0xffffff;
+                }
+            }
+        },
+        else => {},
+    }
+
+    return tile;
+}
+
 pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize, endy: isize) void {
     //const playery = @intCast(isize, state.player.coord.y);
     //const playerx = @intCast(isize, state.player.coord.x);
@@ -1292,7 +1330,7 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
             const u_y: usize = @intCast(usize, y);
             const coord = Coord.new2(level, u_x, u_y);
 
-            var tile = Tile.displayAs(coord, false, false);
+            var tile: termbox.tb_cell = undefined;
 
             // if player can't see area, draw a blank/grey tile, depending on
             // what they saw last there
@@ -1314,41 +1352,9 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
                     tile.fg = 0x00d610;
                     tile.ch = if (noise.intensity.radiusHeard() > 6) '♫' else '♩';
                 };
-
-                termbox.tb_put_cell(cursorx, cursory, &tile);
-
-                continue;
-            }
-
-            // Draw noise and indicate if that tile is visible by another mob
-            switch (state.dungeon.at(coord).type) {
-                .Floor => {
-                    const has_stuff = state.dungeon.at(coord).surface != null or
-                        state.dungeon.at(coord).mob != null or
-                        state.dungeon.itemsAt(coord).len > 0;
-
-                    if (_mobs_can_see(moblist, coord)) {
-                        // Treat this cell specially if it's the player and the player is
-                        // being watched.
-                        if (state.player.coord.eq(coord) and _mobs_can_see(moblist, coord)) {
-                            termbox.tb_change_cell(cursorx, cursory, '@', 0, 0xffffff);
-                            continue;
-                        }
-
-                        if (has_stuff) {
-                            if (state.is_walkable(coord, .{ .right_now = true })) {
-                                // Swap.
-                                tile.fg ^= tile.bg;
-                                tile.bg ^= tile.fg;
-                                tile.fg ^= tile.bg;
-                            }
-                        } else {
-                            tile.ch = '⬞';
-                            //tile.fg = 0xffffff;
-                        }
-                    }
-                },
-                else => {},
+            } else {
+                tile = Tile.displayAs(coord, false, false);
+                tile = modifyTile(moblist, coord, tile);
             }
 
             termbox.tb_put_cell(cursorx, cursory, &tile);
@@ -2145,3 +2151,38 @@ pub fn drawItemChoicePrompt(comptime fmt: []const u8, args: anytype, items: []co
 
     return drawChoicePrompt(fmt, args, namebuf.items);
 }
+
+// Animations {{{
+
+pub const Animation = union(enum) {
+    BlinkChar: struct {
+        coord: Coord,
+        char: u32,
+        fg: ?u32 = null,
+    },
+
+    pub fn blink(coord: Coord, char: u32, fg: ?u32) Animation {
+        return Animation{ .BlinkChar = .{ .coord = coord, .char = char, .fg = fg } };
+    }
+
+    pub fn apply(self: Animation) void {
+        const mapwin = dimensions(.Main);
+
+        draw();
+
+        switch (self) {
+            .BlinkChar => |anim| if (state.player.cansee(anim.coord)) {
+                const dx = @intCast(isize, anim.coord.x) + mapwin.startx;
+                const dy = @intCast(isize, anim.coord.y) + mapwin.starty;
+                const old = termbox.oldCell(dx, dy);
+
+                termbox.tb_change_cell(dx, dy, anim.char, anim.fg orelse old.fg, colors.BG);
+                termbox.tb_present();
+                std.time.sleep(170_000_000);
+                termbox.tb_change_cell(dx, dy, old.ch, old.fg, old.bg);
+            },
+        }
+    }
+};
+
+// }}}

@@ -2178,16 +2178,19 @@ pub const Mob = struct { // {{{
                     state.message(.CombatUnimportant, "{c} {s} {}.", .{
                         attacker, verb, recipient,
                     });
+                    display.Animation.blink(recipient.coord, '/', colors.LIGHT_STEEL_BLUE).apply();
                 } else if (evaded) {
                     const verb = if (recipient == state.player) "evade" else "evades";
                     state.message(.CombatUnimportant, "{c} {s} {}.", .{
                         recipient, verb, attacker,
                     });
+                    display.Animation.blink(recipient.coord, ')', colors.LIGHT_STEEL_BLUE).apply();
                 }
             }
 
             if (recipient.isUnderStatus(.Riposte)) |_| {
                 if (recipient.canMelee(attacker)) {
+                    display.Animation.blink(recipient.coord, 'R', colors.LIGHT_STEEL_BLUE).apply();
                     recipient.fight(attacker, .{ .free_attack = true, .is_riposte = true });
                 }
             }
@@ -2249,6 +2252,8 @@ pub const Mob = struct { // {{{
             newopts.damage_bonus = 100;
             newopts.is_bonus = true;
 
+            display.Animation.blink(attacker.coord, 'M', colors.LIGHT_STEEL_BLUE).apply();
+
             _fightWithWeapon(
                 attacker,
                 recipient,
@@ -2302,6 +2307,11 @@ pub const Mob = struct { // {{{
                 .last_seen = attacker.coord,
             });
         }
+
+        // Make animations
+        const clamped_dmg = math.clamp(@floatToInt(u21, amount), 0, 9);
+        const damage_char = if (self.should_be_dead()) '∞' else '0' + clamped_dmg;
+        display.Animation.blink(self.coord, damage_char, colors.PALE_VIOLET_RED).apply();
 
         // Print message
         if (state.player.cansee(self.coord) or (d.by_mob != null and state.player.cansee(d.by_mob.?.coord))) {
@@ -3636,8 +3646,8 @@ pub const Tile = struct {
 
             const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);
             if (hp_loss_percent > 0) {
-                const red = @floatToInt(u32, (255 * (hp_loss_percent / 2)) / 100) + 0x22;
-                cell.bg = math.clamp(red, 0x66, 0xff) << 16;
+                //const red = @floatToInt(u32, (255 * (hp_loss_percent / 2)) / 100) + 0x22;
+                //cell.bg = math.clamp(red, 0x66, 0xff) << 16;
             }
 
             if (mob.prisoner_status) |ps| {
