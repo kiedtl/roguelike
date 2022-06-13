@@ -23,8 +23,8 @@
 "defender"            	   - 	   - 	 100 	 100 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
 
 # executioner
-"executioner"         	  60 	  60 	   - 	   - 	   - 	   - 	   - 	   - 	  50 	  50 	  40 	  40 	  30 	  20
-"destroyer"           	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  20 	  10 	  10 	  20 	  20 	  30 	  40
+"executioner"         	   - 	  40 	   - 	   - 	   - 	   - 	  20 	  20 	  60 	  50 	  40 	  40 	  30 	  20
+"destroyer"           	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  20 	  20 	  30 	  40
 
 # special Lab monsters
 "lead_turtle"         	   - 	   - 	  60 	  60 	  70 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -

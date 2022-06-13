@@ -1281,7 +1281,7 @@ pub const BoneRatTemplate = MobTemplate{
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
-            .{ .mob = "bone_rat", .count = minmax(usize, 0, 2) },
+            .{ .mob = "bone_rat", .count = minmax(usize, 0, 1) },
         },
     },
 };
