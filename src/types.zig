@@ -1809,6 +1809,14 @@ pub const Mob = struct { // {{{
             }
         } else null;
 
+        const tile = item.*.tile();
+        display.Animation.apply(.{ .TraverseLine = .{
+            .start = self.coord,
+            .end = landed orelse at,
+            .char = tile.ch,
+            .fg = tile.fg,
+        } });
+
         switch (item.*) {
             .Projectile => |proj| {
                 if (landed != null and state.dungeon.at(landed.?).mob != null) {
@@ -3512,6 +3520,51 @@ pub const Item = union(ItemType) {
         };
     }
 
+    pub fn tile(self: Item) termbox.tb_cell {
+        var cell = termbox.tb_cell{ .fg = 0xffffff, .bg = colors.BG, .ch = ' ' };
+
+        switch (self) {
+            .Rune => |_| {
+                cell.ch = 'ß';
+                cell.fg = colors.AQUAMARINE;
+            },
+            .Consumable => |cons| {
+                cell.ch = if (cons.is_potion) '¡' else '&';
+                cell.fg = cons.color;
+            },
+            .Vial => |v| {
+                cell.ch = '♪';
+                cell.fg = v.color();
+            },
+            .Projectile => |p| {
+                cell.ch = '(';
+                cell.fg = p.color;
+            },
+            .Ring => |_| {
+                cell.ch = '*';
+            },
+            .Weapon => |_| {
+                cell.ch = ')';
+            },
+            .Cloak, .Armor => {
+                cell.ch = '[';
+            },
+            .Boulder => |b| {
+                cell.ch = b.chunkTile();
+                cell.fg = b.color_floor;
+            },
+            .Prop => |p| {
+                cell.ch = p.tile;
+                cell.fg = p.fg orelse 0xffffff;
+            },
+            .Evocable => |v| {
+                cell.ch = '}';
+                cell.fg = v.tile_fg;
+            },
+        }
+        return cell;
+    }
+
     // FIXME: can't we just return the constSlice() of the stack buffer?
     pub fn shortName(self: *const Item) !StackBuffer(u8, 64) {
         var buf = StackBuffer(u8, 64).init(&([_]u8{0} ** 64));
@@ -3663,48 +3716,7 @@ pub const Tile = struct {
             cell.fg = fire.fireColor(famount);
         } else if (state.dungeon.itemsAt(coord).last()) |item| {
             if (!self.broken) assert(self.type != .Wall);
-
-            cell.fg = 0xffffff;
-
-            switch (item) {
-                .Rune => |_| {
-                    cell.ch = 'ß';
-                    cell.fg = colors.AQUAMARINE;
-                },
-                .Consumable => |cons| {
-                    cell.ch = if (cons.is_potion) '¡' else '&';
-                    cell.fg = cons.color;
-                },
-                .Vial => |v| {
-                    cell.ch = '♪';
-                    cell.fg = v.color();
-                },
-                .Projectile => |p| {
-                    cell.ch = '(';
-                    cell.fg = p.color;
-                },
-                .Ring => |_| {
-                    cell.ch = '*';
-                },
-                .Weapon => |_| {
-                    cell.ch = ')';
-                },
-                .Cloak, .Armor => {
-                    cell.ch = '[';
-                },
-                .Boulder => |b| {
-                    cell.ch = b.chunkTile();
-                    cell.fg = b.color_floor;
-                },
-                .Prop => |p| {
-                    cell.ch = p.tile;
-                    cell.fg = p.fg orelse 0xffffff;
-                },
-                .Evocable => |v| {
-                    cell.ch = '}';
-                    cell.fg = v.tile_fg;
-                },
-            }
+            cell = item.tile();
         } else if (state.dungeon.at(coord).surface) |surfaceitem| {
             if (!self.broken) {
                 if (self.type == .Wall) {

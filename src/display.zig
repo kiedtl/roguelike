@@ -2160,6 +2160,14 @@ pub const Animation = union(enum) {
         char: u32,
         fg: ?u32 = null,
     },
+    TraverseLine: struct {
+        start: Coord,
+        end: Coord,
+        extra: usize = 0,
+        char: u32,
+        fg: ?u32 = null,
+        path_char: ?u32 = null,
+    },
 
     pub fn blink(coord: Coord, char: u32, fg: ?u32) Animation {
         return Animation{ .BlinkChar = .{ .coord = coord, .char = char, .fg = fg } };
@@ -2169,6 +2177,8 @@ pub const Animation = union(enum) {
         const mapwin = dimensions(.Main);
 
         draw();
+
+        state.player.tickFOV();
 
         switch (self) {
             .BlinkChar => |anim| if (state.player.cansee(anim.coord)) {
@@ -2181,7 +2191,34 @@ pub const Animation = union(enum) {
                 std.time.sleep(170_000_000);
                 termbox.tb_change_cell(dx, dy, old.ch, old.fg, old.bg);
             },
+            .TraverseLine => |anim| {
+                const line = anim.start.drawLine(anim.end, state.mapgeometry, anim.extra);
+                for (line.constSlice()) |coord| {
+                    if (!state.player.cansee(coord)) {
+                        continue;
+                    }
+
+                    const dx = @intCast(isize, coord.x) + mapwin.startx;
+                    const dy = @intCast(isize, coord.y) + mapwin.starty;
+                    const old = termbox.oldCell(dx, dy);
+
+                    termbox.tb_change_cell(dx, dy, anim.char, anim.fg orelse old.fg, colors.BG);
+                    termbox.tb_present();
+
+                    std.time.sleep(80_000_000);
+
+                    if (anim.path_char) |path_char| {
+                        termbox.tb_change_cell(dx, dy, path_char, colors.CONCRETE, old.bg);
+                    } else {
+                        termbox.tb_change_cell(dx, dy, old.ch, old.fg, old.bg);
+                    }
+
+                    termbox.tb_present();
+                }
+            },
         }
+
+        draw();
     }
 };
 

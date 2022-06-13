@@ -6,6 +6,7 @@ const items = @import("items.zig");
 const types = @import("types.zig");
 const rng = @import("rng.zig");
 const state = @import("state.zig");
+const display = @import("display.zig");
 const utils = @import("utils.zig");
 
 const DamageStr = types.DamageStr;
@@ -101,6 +102,8 @@ pub fn chanceOfAttackEvaded(defender: *const Mob, attacker: ?*const Mob) usize {
 }
 
 pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: usize) void {
+    const previous_coord = throwee.coord;
+
     var slammed_into_mob: ?*Mob = null;
     var slammed_into_something = false;
     var i: usize = 0;
@@ -123,10 +126,17 @@ pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: u
 
     // Give damage and print messages
 
+    display.Animation.apply(.{ .TraverseLine = .{
+        .start = previous_coord,
+        .end = dest_coord,
+        .char = throwee.tile,
+        .path_char = '×',
+    } });
+
     if (thrower) |thrower_mob| {
         state.message(.Combat, "{c} knocks {} back!", .{ thrower_mob, throwee });
     } else {
-        state.message(.Combat, "{} is knocked back!", .{throwee});
+        state.message(.Combat, "{c} is/are knocked back!", .{throwee});
     }
 
     if (slammed_into_something) {
