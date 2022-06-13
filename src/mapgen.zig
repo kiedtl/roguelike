@@ -3330,9 +3330,9 @@ pub const LevelConfig = struct {
     single_props: []const []const u8 = &[_][]const u8{},
     chance_for_single_prop_placement: usize = 33, // percentage
     containers: []const Container = &[_]Container{
-        surfaces.Bin,
-        surfaces.Barrel,
-        surfaces.Cabinet,
+        //surfaces.Bin,
+        //surfaces.Barrel,
+        //surfaces.Cabinet,
         //surfaces.Chest,
     },
     utility_items: *[]const Prop = &surfaces.prison_item_props.items,
