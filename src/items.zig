@@ -762,7 +762,6 @@ pub const Consumable = struct {
                             }
                         }
                     }.f,
-                    .pathfinding_penalty = 10,
                 },
             }},
             .color = colors.GOLD,

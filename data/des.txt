@@ -20,8 +20,7 @@ blunt edges. Its general design, especially the handle, is uncommonly elegant.
 
 % mine
 It will activate when a non-player monster steps on it, but it may not explode
-immediately. However, monsters will avoid the mine if they can do so. Place the
-mine in a corridor to ensure it is stepped on.
+immediately.
 
 It will create an explosion with a radius of about 3 tiles.
 
