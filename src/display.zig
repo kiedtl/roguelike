@@ -678,7 +678,7 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
     _writerWrite(w, "${u}{}%$. to evade you.\n", .{ c_evade_you_color, c_evade_you });
     _writerWrite(w, "\n", .{});
 
-    const you_armor = @intCast(usize, state.player.resistance(.Armor));
+    const you_armor = @intCast(usize, 100 - state.player.resistance(.Armor));
     const mob_damage_output = math.max(1, mob.totalMeleeOutput() * you_armor / 100);
     _writerWrite(w, "Hits for max $r{}$. damage.\n", .{mob_damage_output});
     _writerWrite(w, "\n", .{});
