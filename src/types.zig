@@ -3010,8 +3010,7 @@ pub const Mob = struct { // {{{
         if (!self.isCreeping()) self.makeNoise(.Movement, .Medium);
 
         // Charging pattern
-        if (activities[3] == .Rest and
-            activities[2] == .Move and
+        if (activities[2] == .Move and
             activities[1] == .Move and
             activities[0] == .Move and
             activities[2].Move == activities[1].Move and
