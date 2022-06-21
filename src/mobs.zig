@@ -410,7 +410,7 @@ pub const PlayerTemplate = MobTemplate{
         .memory_duration = 10,
         .blood = .Blood,
 
-        .stats = .{ .Willpower = 3, .Evade = 10, .Speed = 100, .Vision = 10, .Sneak = 4 },
+        .stats = .{ .Willpower = 3, .Missile = 60, .Evade = 10, .Speed = 100, .Vision = 10, .Sneak = 4 },
     },
     .weapon = &items.DaggerWeapon,
     .armor = &items.RobeArmor,
