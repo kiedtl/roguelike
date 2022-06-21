@@ -966,10 +966,10 @@ fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, d
     // Find out the width of "<current>/<max>" so we can right-align it
     var buf: [4096]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buf);
-    std.fmt.format(fbs.writer(), "{}/{}", .{ current, max }) catch err.wat();
+    std.fmt.format(fbs.writer(), "{} / {}", .{ current, max }) catch err.wat();
     const info_width = @intCast(isize, fbs.getWritten().len);
 
-    _ = _drawStr(endx - info_width - 1, y, endx, "{}/{}", .{ current, max }, .{ .fg = fg, .bg = null });
+    _ = _drawStr(endx - info_width - 1, y, endx, "{} / {}", .{ current, max }, .{ .fg = fg, .bg = null });
 }
 
 fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, endy: isize) void {
@@ -994,11 +994,11 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
     // zig fmt: off
     const stats = [_]struct { b: []const u8, a: []const u8, v: isize }{
         .{ .b = "hit", .a = "%", .v = state.player.stat(.Melee) },
-        .{ .b = "mrt", .a = "",  .v = state.player.stat(.Martial) },
         .{ .b = "msl", .a = "%", .v = state.player.stat(.Missile) },
+        .{ .b = "arm", .a = "%", .v = state.player.resistance(.Armor) },
+        .{ .b = "mrt", .a = "",  .v = state.player.stat(.Martial) },
         .{ .b = "evd", .a = "%", .v = state.player.stat(.Evade) },
         .{ .b = "fov", .a = "",  .v = state.player.stat(.Vision) },
-        .{ .b = "arm", .a = "%", .v = state.player.resistance(.Armor) },
         .{ .b = "rFi", .a = "%", .v = state.player.resistance(.rFire) },
         .{ .b = "rEl", .a = "%", .v = state.player.resistance(.rElec) },
     };
@@ -1022,19 +1022,20 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
 
     y += 1;
 
-    const color: u32 = if (state.player.HP < state.player.max_HP / 3)
-        colors.percentageOf(colors.PALE_VIOLET_RED, 50)
+    // Use red if below 40% health
+    const color: [2]u32 = if (state.player.HP < (state.player.max_HP / 5) * 2)
+        [_]u32{ colors.percentageOf(colors.PALE_VIOLET_RED, 25), colors.LIGHT_PALE_VIOLET_RED }
     else
-        colors.percentageOf(colors.LIGHT_STEEL_BLUE, 40);
-    _draw_bar(y, startx, endx, @floatToInt(usize, state.player.HP), @floatToInt(usize, state.player.max_HP), "health", color, colors.OFF_WHITE);
+        [_]u32{ colors.percentageOf(colors.DOBALENE_BLUE, 25), colors.DOBALENE_BLUE };
+    _draw_bar(y, startx, endx, @floatToInt(usize, state.player.HP), @floatToInt(usize, state.player.max_HP), "health", color[0], color[1]);
     y += 1;
 
-    _draw_bar(y, startx, endx, state.player.MP, state.player.max_MP, "magic", colors.percentageOf(colors.GOLD, 40), colors.OFF_WHITE);
+    _draw_bar(y, startx, endx, state.player.MP, state.player.max_MP, "magic", colors.percentageOf(colors.GOLD, 25), colors.LIGHT_GOLD);
     y += 1;
 
     const sneak = @intCast(usize, state.player.stat(.Sneak));
     const is_walking = state.player.turnsSpentMoving() >= sneak;
-    _draw_bar(y, startx, endx, math.min(sneak, state.player.turnsSpentMoving()), sneak, if (is_walking) "walking" else "sneaking", if (is_walking) 0x45772e else 0x25570e, 0xffffff);
+    _draw_bar(y, startx, endx, math.min(sneak, state.player.turnsSpentMoving()), sneak, if (is_walking) "walking" else "sneaking", if (is_walking) 0x25570e else 0x154705, 0xa5d78e);
     y += 2;
 
     {
