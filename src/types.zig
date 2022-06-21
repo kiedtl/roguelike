@@ -1116,12 +1116,13 @@ pub const Status = enum {
 
         if (!mob.isFullyResistant(.rFire)) { // Don't spam "you are scorched" messages
             mob.takeDamage(.{
-                .amount = @intToFloat(f64, rng.range(usize, 1, 2)),
+                .amount = @intToFloat(f64, 1),
                 .kind = .Fire,
                 .blood = false,
             }, .{
                 .noun = "The fire",
                 .strs = &[_]DamageStr{
+                    items._dmgstr(000, "BUG", "BUG", ""),
                     items._dmgstr(020, "BUG", "scorches", ""),
                     items._dmgstr(080, "BUG", "burns", ""),
                     items._dmgstr(100, "BUG", "burns", " horribly"),
@@ -2954,6 +2955,10 @@ pub const Mob = struct { // {{{
 
         // Add the mob's innate resistance.
         const innate = utils.getFieldByEnum(Resistance, self.innate_resists, resist);
+        // Special case for immunity
+        if (resist != .rFume and innate == 1000) {
+            return 100;
+        }
         assert(innate <= 100 and innate >= -100);
         r += innate;
 
