@@ -42,7 +42,7 @@ const WIDTH = state.WIDTH;
 
 // -----------------------------------------------------------------------------
 
-pub const LEFT_INFO_WIDTH: usize = 30;
+pub const LEFT_INFO_WIDTH: usize = 35;
 //pub const RIGHT_INFO_WIDTH: usize = 24;
 pub const LOG_HEIGHT: usize = 4;
 
@@ -883,7 +883,7 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
     var fg = opts.fg;
     var bg: ?u32 = opts.bg;
 
-    const linewidth = if (opts.fold) @intCast(usize, endx - x) else str.len;
+    const linewidth = if (opts.fold) @intCast(usize, endx - x + 1) else str.len;
 
     var fibuf = StackBuffer(u8, 4096).init(null);
     var fold_iter = utils.FoldedTextIterator.init(str, linewidth);
@@ -964,7 +964,7 @@ fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, d
     _ = _drawStr(startx + 1, y, endx, "{s}", .{description}, .{ .fg = fg, .bg = null });
 
     // Find out the width of "<current>/<max>" so we can right-align it
-    var buf: [4096]u8 = undefined;
+    var buf: [256]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buf);
     std.fmt.format(fbs.writer(), "{} / {}", .{ current, max }) catch err.wat();
     const info_width = @intCast(isize, fbs.getWritten().len);
@@ -982,60 +982,68 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
     while (y < endy) : (y += 1) _clear_line(startx, endx, y);
     y = starty;
 
-    _clearLineWith(startx, endx - 1, y, '─', colors.DARK_GREY, colors.BG);
     const lvlstr = state.levelinfo[state.player.coord.z].name;
-    const lvlstrx = startx + @divTrunc(endx - startx - 1, 2) - @intCast(isize, (lvlstr.len + 4) / 2);
-    y = _drawStr(lvlstrx, y, endx, "$G┤$. $c{s}$. $G├$.", .{lvlstr}, .{});
-    y += 1;
-
-    y = _drawStr(startx, y, endx, "$cturns:$. {}", .{state.ticks}, .{});
+    //_clearLineWith(startx, endx - 1, y, '─', colors.DARK_GREY, colors.BG);
+    //const lvlstrx = startx + @divTrunc(endx - startx - 1, 2) - @intCast(isize, (lvlstr.len + 4) / 2);
+    //y = _drawStr(lvlstrx, y, endx, "$G┤$. $c{s}$. $G├$.", .{lvlstr}, .{});
+    //y += 1;
+    _ = _drawStr(startx, y, endx, "$cturns:$. {}", .{state.ticks}, .{});
+    y = _drawStr(endx - @intCast(isize, lvlstr.len), y, endx, "$c{s}$.", .{lvlstr}, .{});
     y += 1;
 
     // zig fmt: off
     const stats = [_]struct { b: []const u8, a: []const u8, v: isize }{
-        .{ .b = "hit", .a = "%", .v = state.player.stat(.Melee) },
-        .{ .b = "msl", .a = "%", .v = state.player.stat(.Missile) },
-        .{ .b = "arm", .a = "%", .v = state.player.resistance(.Armor) },
-        .{ .b = "mrt", .a = "",  .v = state.player.stat(.Martial) },
-        .{ .b = "evd", .a = "%", .v = state.player.stat(.Evade) },
-        .{ .b = "fov", .a = "",  .v = state.player.stat(.Vision) },
-        .{ .b = "rFi", .a = "%", .v = state.player.resistance(.rFire) },
-        .{ .b = "rEl", .a = "%", .v = state.player.resistance(.rElec) },
+        .{ .b = "martial: ", .a = "",  .v = state.player.stat(.Martial) },
+        .{ .b = "vision:  ", .a = "",  .v = state.player.stat(.Vision) },
+        .{ .b = "rFire:  ",  .a = "%", .v = state.player.resistance(.rFire) },
+        .{ .b = "rElec:  ",  .a = "%", .v = state.player.resistance(.rElec) },
     };
     // zig fmt: on
 
     for (stats) |stat, i| {
-        const is_last = i == stats.len - 1;
-
-        const x = switch (i % 3) {
+        const v = utils.SignedFormatter{ .v = stat.v };
+        const x = switch (i % 2) {
             0 => startx,
-            1 => startx + @divTrunc(endx - startx, 3) + 1,
+            1 => b: {
+                // Find out the width of the string so we can right-align it.
+                var buf: [256]u8 = undefined;
+                var fbs = std.io.fixedBufferStream(&buf);
+                std.fmt.format(fbs.writer(), "{s} {: >3}{s}", .{ stat.b, v, stat.a }) catch err.wat();
+                break :b endx - @intCast(isize, fbs.getWritten().len);
+            },
             2 => startx + (@divTrunc(endx - startx, 3) * 2) + 1,
             else => unreachable,
         };
-        const v = utils.SignedFormatter{ .v = stat.v };
         const c: u21 = if (stat.v < 0) 'p' else '.';
         _ = _drawStr(x, y, endx, "$c{s}$. ${u}{: >3}{s}$.", .{ stat.b, c, v, stat.a }, .{});
-        if (i % 3 == 2 or is_last)
+        if (i % 2 == 1 or i == stats.len - 1)
             y += 1;
     }
 
     y += 1;
+
+    const bar_endx = endx - 9;
 
     // Use red if below 40% health
     const color: [2]u32 = if (state.player.HP < (state.player.max_HP / 5) * 2)
         [_]u32{ colors.percentageOf(colors.PALE_VIOLET_RED, 25), colors.LIGHT_PALE_VIOLET_RED }
     else
         [_]u32{ colors.percentageOf(colors.DOBALENE_BLUE, 25), colors.DOBALENE_BLUE };
-    _draw_bar(y, startx, endx, @floatToInt(usize, state.player.HP), @floatToInt(usize, state.player.max_HP), "health", color[0], color[1]);
+    _draw_bar(y, startx, bar_endx, @floatToInt(usize, state.player.HP), @floatToInt(usize, state.player.max_HP), "health", color[0], color[1]);
+    const hit = utils.SignedFormatter{ .v = state.player.stat(.Melee) };
+    _ = _drawStr(bar_endx + 1, y, endx, "$.hit {: >3}%$.", .{hit}, .{});
     y += 1;
 
-    _draw_bar(y, startx, endx, state.player.MP, state.player.max_MP, "magic", colors.percentageOf(colors.GOLD, 25), colors.LIGHT_GOLD);
+    _draw_bar(y, startx, bar_endx, state.player.MP, state.player.max_MP, "magic", colors.percentageOf(colors.GOLD, 25), colors.LIGHT_GOLD);
+    const ev = utils.SignedFormatter{ .v = state.player.stat(.Evade) };
+    _ = _drawStr(bar_endx + 1, y, endx, "$pev  {: >3}%$.", .{ev}, .{});
     y += 1;
 
     const sneak = @intCast(usize, state.player.stat(.Sneak));
     const is_walking = state.player.turnsSpentMoving() >= sneak;
-    _draw_bar(y, startx, endx, math.min(sneak, state.player.turnsSpentMoving()), sneak, if (is_walking) "walking" else "sneaking", if (is_walking) 0x25570e else 0x154705, 0xa5d78e);
+    _draw_bar(y, startx, bar_endx, math.min(sneak, state.player.turnsSpentMoving()), sneak, if (is_walking) "walking" else "sneaking", if (is_walking) 0x25570e else 0x154705, 0xa5d78e);
+    const arm = utils.SignedFormatter{ .v = state.player.resistance(.Armor) };
+    _ = _drawStr(bar_endx + 1, y, endx, "$barm {: >3}%$.", .{arm}, .{});
     y += 2;
 
     {
