@@ -406,7 +406,7 @@ pub const PlayerTemplate = MobTemplate{
         .deg360_vision = true,
         .no_show_fov = true,
 
-        .max_HP = 24,
+        .max_HP = 12,
         .memory_duration = 10,
         .blood = .Blood,
 

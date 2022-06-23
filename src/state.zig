@@ -146,9 +146,9 @@ pub const MemoryTile = struct {
     fg: u32 = 0x000000,
     bg: u32 = 0x000000,
     ch: u32 = ' ',
-    type: MTileType = .Immediate,
+    type: Type = .Immediate,
 
-    pub const MTileType = enum { Immediate, Echolocated };
+    pub const Type = enum { Immediate, Echolocated, DetectUndead };
 };
 pub const MemoryTileMap = std.AutoHashMap(Coord, MemoryTile);
 

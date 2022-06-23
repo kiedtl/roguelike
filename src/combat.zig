@@ -13,6 +13,7 @@ const DamageStr = types.DamageStr;
 const Mob = types.Mob;
 const Coord = types.Coord;
 const Direction = types.Direction;
+const Weapon = types.Weapon;
 const Path = types.Path;
 const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
 const DIRECTIONS = types.DIRECTIONS;
@@ -33,6 +34,18 @@ const DEFENDER_ENRAGED_NBONUS: isize = 10;
 const DEFENDER_FLANKED_NBONUS: isize = 10;
 const DEFENDER_HELD_NBONUS: isize = 10;
 const DEFENDER_STUN_NBONUS: isize = 15;
+
+pub fn damageOfWeapon(attacker: ?*const Mob, weapon: *const Weapon, recipient: ?*const Mob) usize {
+    var damage: usize = weapon.damage;
+    if (attacker != null and recipient != null) {
+        if (attacker.?.isUnderStatus(.Corruption) != null and recipient.?.life_type == .Living)
+            damage += weapon.damage / 2;
+        if (attacker.?.life_type == .Undead and recipient.?.isUnderStatus(.Corruption) != null)
+            damage += weapon.damage / 2;
+    }
+
+    return damage;
+}
 
 pub fn damageOfMeleeAttack(attacker: *const Mob, w_damage: usize, is_stab: bool) usize {
     var damage: usize = w_damage;
@@ -102,6 +115,10 @@ pub fn chanceOfAttackEvaded(defender: *const Mob, attacker: ?*const Mob) usize {
 }
 
 pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: usize) void {
+    if (throwee.immobile) {
+        return; // Don't do anything.
+    }
+
     const previous_coord = throwee.coord;
 
     var slammed_into_mob: ?*Mob = null;

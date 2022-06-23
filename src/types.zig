@@ -801,6 +801,11 @@ pub const Allegiance = enum {
 pub const Status = enum {
     // Status list {{{
 
+    // Variety of effects.
+    //
+    // Doesn't have a power field (yet?)
+    Corruption,
+
     // Fire vulnerability.
     //
     // Doesn't have a power field to keep things simple.
@@ -969,6 +974,7 @@ pub const Status = enum {
 
     pub fn string(self: Status, mob: *const Mob) []const u8 { // {{{
         return switch (self) {
+            .Corruption => "corrupted",
             .Flammable => "flammable",
             .Blind => "blind",
             .Riposte => "riposte",
@@ -1009,6 +1015,7 @@ pub const Status = enum {
 
     pub fn messageWhenAdded(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .Corruption => .{ "are", "is", " corrupted" },
             .Flammable => .{ "are", "is", " vulnerable to fire" },
             .Blind => .{ "are", "is", " blinded" },
             .Riposte => null,
@@ -1045,6 +1052,7 @@ pub const Status = enum {
 
     pub fn messageWhenRemoved(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .Corruption => .{ "are no longer", "is no longer", " corrupted" },
             .Flammable => .{ "are no longer", "is no longer", " vulnerable to fire" },
             .Blind => .{ "are no longer", "is no longer", " blinded" },
             .Riposte => null,
@@ -1080,6 +1088,25 @@ pub const Status = enum {
     } // }}}
 
     // Tick functions {{{
+
+    pub fn tickCorruption(mob: *Mob) void {
+        // Implement detect undead.
+        var y: usize = 0;
+        while (y < HEIGHT) : (y += 1) {
+            var x: usize = 0;
+            while (x < WIDTH) : (x += 1) {
+                const coord = Coord.new2(mob.coord.z, x, y);
+                if (state.dungeon.at(coord).mob) |othermob| {
+                    if (othermob.life_type == .Undead) {
+                        for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |n| {
+                            mob.fov[n.y][n.x] = 100;
+                        };
+                        mob.fov[y][x] = 100;
+                    }
+                }
+            }
+        }
+    }
 
     pub fn tickNoisy(mob: *Mob) void {
         if (mob.isUnderStatus(.Sleeping) == null)
@@ -1570,6 +1597,23 @@ pub const Mob = struct { // {{{
                 gas.Gases[gasi].trigger(self, quantity);
             }
         }
+
+        // Corruption effects
+        if (self.life_type == .Living and self.isUnderStatus(.Corruption) == null) {
+            for (&DIRECTIONS) |d| if (self.coord.move(d, state.mapgeometry)) |neighbor| {
+                if (state.dungeon.at(neighbor).mob) |mob|
+                    if (mob.life_type == .Undead and mob.isHostileTo(self) and
+                        rng.percent(@as(usize, 10)))
+                    {
+                        if (state.player.cansee(self.coord)) {
+                            state.message(.Combat, "{c} corrupts {}!", .{ mob, self });
+                        }
+                        self.addStatus(.Corruption, 0, .{ .Tmp = 7 });
+                        ai.updateEnemyKnowledge(mob, self, null);
+                        break;
+                    };
+            };
+        }
     }
 
     // Decrement status durations, and do stuff for various statuses that need
@@ -1616,6 +1660,7 @@ pub const Mob = struct { // {{{
                 }
 
                 switch (status_e) {
+                    .Corruption => Status.tickCorruption(self),
                     .Noisy => Status.tickNoisy(self),
                     .Echolocation => Status.tickEcholocation(self),
                     .Recuperate => Status.tickRecuperate(self),
@@ -2207,7 +2252,8 @@ pub const Mob = struct { // {{{
         }
 
         const is_stab = !opts.disallow_stab and combat.isAttackStab(attacker, recipient) and !opts.is_bonus;
-        const damage = combat.damageOfMeleeAttack(attacker, attacker_weapon.damage, is_stab) * opts.damage_bonus / 100;
+        const weapon_damage = combat.damageOfWeapon(attacker, attacker_weapon, recipient);
+        const damage = combat.damageOfMeleeAttack(attacker, weapon_damage, is_stab) * opts.damage_bonus / 100;
 
         recipient.takeDamage(.{
             .amount = @intToFloat(f64, damage),
@@ -2851,8 +2897,15 @@ pub const Mob = struct { // {{{
         if (self == state.player and player.wiz_lidless_eye)
             return true;
 
-        if (self.coord.distance(coord) > self.stat(.Vision))
-            return false;
+        // This was added previously as an "optimization", but it messes with
+        // Detect Undead when the detected undead are outside normal field of
+        // vision.
+        //
+        // Anyway, it wouldn't have saved much processing time considering how
+        // fast the actual vision-check is...
+        //
+        //if (self.coord.distance(coord) > self.stat(.Vision))
+        //    return false;
 
         // Can always see yourself
         if (self.coord.eq(coord))
@@ -2914,6 +2967,9 @@ pub const Mob = struct { // {{{
                 if (self.isUnderStatus(.Enraged)) |_| val = @divTrunc(val * 80, 100);
                 if (self.isUnderStatus(.Slow)) |_| val = @divTrunc(val * 150, 100);
                 if (self.isUnderStatus(.Poison)) |_| val = @divTrunc(val * 150, 100);
+            },
+            .Willpower => {
+                if (self.isUnderStatus(.Corruption)) |_| val -|= 2;
             },
             else => {},
         }

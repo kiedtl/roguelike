@@ -165,6 +165,15 @@ pub fn dummyWork(m: *Mob, _: mem.Allocator) void {
     _ = m.rest();
 }
 
+// Same as updateEnemyRecord, just better interface
+pub fn updateEnemyKnowledge(mob: *Mob, enemy: *Mob, last_seen: ?Coord) void {
+    updateEnemyRecord(mob, .{
+        .mob = enemy,
+        .counter = mob.memory_duration,
+        .last_seen = last_seen orelse enemy.coord,
+    });
+}
+
 pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
     // Search for an existing record.
     for (mob.enemies.items) |*enemyrec| {

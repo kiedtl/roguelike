@@ -216,9 +216,7 @@ pub fn bookkeepingFOV() void {
                     };
             }
 
-            const t = Tile.displayAs(fc, true, false);
-            const memt = state.MemoryTile{ .bg = t.bg, .fg = t.fg, .ch = t.ch };
-            state.memory.put(fc, memt) catch err.wat();
+            memorizeTile(fc, .Immediate);
         }
     };
 
@@ -586,4 +584,10 @@ pub fn breakSomething(coord: Coord) bool {
     state.markMessageNoisy();
 
     return true;
+}
+
+pub fn memorizeTile(fc: Coord, mtype: state.MemoryTile.Type) void {
+    const t = Tile.displayAs(fc, true, false);
+    const memt = state.MemoryTile{ .bg = t.bg, .fg = t.fg, .ch = t.ch, .type = mtype };
+    state.memory.put(fc, memt) catch err.wat();
 }
