@@ -60,7 +60,7 @@ function get_chance(mine, their)
     return defeated_times / 100
 end
 
-local their = 8
+local their = tonumber(arg[1] or "8")
 
 for mine = 0, their do
     print(their .. " against " .. mine .. ": " .. get_chance(mine, their) .. "%")
