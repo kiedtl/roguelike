@@ -26,6 +26,7 @@ Explosion that destroys walls.
 
 # potion of disruption
 - cures corruption, corruption-immunity for some time
+- scare undead status.
 - coating: 50% more damage to undead
 
 # potion of debilitation
