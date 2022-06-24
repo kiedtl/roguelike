@@ -3470,6 +3470,7 @@ pub const Weapon = struct {
     damage_kind: Damage.DamageKind = .Physical,
     knockback: usize = 0,
     martial: bool = false,
+    ego: Ego = .None,
 
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     effects: []const StatusDataInfo = &[_]StatusDataInfo{},
@@ -3480,6 +3481,17 @@ pub const Weapon = struct {
     dip_counter: usize = 0,
 
     strs: []const DamageStr,
+
+    pub const Ego = enum { None, Bone };
+
+    pub fn createBoneWeapon(comptime weapon: *const Weapon, opts: struct {}) Weapon {
+        _ = opts;
+        var new = weapon.*;
+        new.id = "bone_" ++ weapon.id;
+        new.name = "bone " ++ weapon.name;
+        new.ego = .Bone;
+        return new;
+    }
 };
 
 pub const Vial = enum {

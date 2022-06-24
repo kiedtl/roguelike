@@ -50,57 +50,74 @@ const LinkedList = @import("list.zig").LinkedList;
 //
 pub const ItemTemplate = struct {
     w: usize,
-    i: union(enum) { W: Weapon, A: Armor, C: *const Cloak, P: *const Consumable, E: Evocable },
+    i: union(enum) {
+        W: Weapon,
+        A: Armor,
+        C: *const Cloak,
+        P: *const Consumable,
+        E: Evocable,
+        List: []const ItemTemplate,
+    },
+};
+pub const RARE_ITEM_DROPS = [_]ItemTemplate{
+    // Bone weapons
+    .{ .w = 001, .i = .{ .W = BoneSwordWeapon } },
+    .{ .w = 001, .i = .{ .W = BoneDaggerWeapon } },
+    .{ .w = 001, .i = .{ .W = BoneStilettoWeapon } },
+    .{ .w = 001, .i = .{ .W = BoneMaceWeapon } },
+    .{ .w = 001, .i = .{ .W = BoneGreatMaceWeapon } },
+    .{ .w = 001, .i = .{ .W = BoneHalberdWeapon } },
 };
 pub const ITEM_DROPS = [_]ItemTemplate{
+    .{ .w = 001, .i = .{ .List = &RARE_ITEM_DROPS } },
     // Weapons
-    .{ .w = 020, .i = .{ .W = SwordWeapon } },
-    .{ .w = 020, .i = .{ .W = DaggerWeapon } },
-    .{ .w = 010, .i = .{ .W = StilettoWeapon } },
-    .{ .w = 015, .i = .{ .W = RapierWeapon } },
+    .{ .w = 030, .i = .{ .W = SwordWeapon } },
+    .{ .w = 030, .i = .{ .W = DaggerWeapon } },
+    .{ .w = 020, .i = .{ .W = StilettoWeapon } },
+    .{ .w = 025, .i = .{ .W = RapierWeapon } },
     .{ .w = 001, .i = .{ .W = AxeWeapon } },
-    .{ .w = 015, .i = .{ .W = QuarterstaffWeapon } },
-    .{ .w = 020, .i = .{ .W = MaceWeapon } },
-    .{ .w = 015, .i = .{ .W = GreatMaceWeapon } },
-    .{ .w = 020, .i = .{ .W = MorningstarWeapon } },
-    .{ .w = 020, .i = .{ .W = HalberdWeapon } },
-    .{ .w = 020, .i = .{ .W = GlaiveWeapon } },
-    .{ .w = 015, .i = .{ .W = MonkSpadeWeapon } },
-    .{ .w = 005, .i = .{ .W = WoldoWeapon } },
+    .{ .w = 025, .i = .{ .W = QuarterstaffWeapon } },
+    .{ .w = 030, .i = .{ .W = MaceWeapon } },
+    .{ .w = 025, .i = .{ .W = GreatMaceWeapon } },
+    .{ .w = 030, .i = .{ .W = MorningstarWeapon } },
+    .{ .w = 030, .i = .{ .W = HalberdWeapon } },
+    .{ .w = 030, .i = .{ .W = GlaiveWeapon } },
+    .{ .w = 025, .i = .{ .W = MonkSpadeWeapon } },
+    .{ .w = 015, .i = .{ .W = WoldoWeapon } },
     // Armor
-    .{ .w = 010, .i = .{ .A = GambesonArmor } },
-    .{ .w = 010, .i = .{ .A = LeatherArmor } },
-    .{ .w = 010, .i = .{ .A = HauberkArmor } },
-    .{ .w = 010, .i = .{ .A = ScalemailArmor } },
+    .{ .w = 020, .i = .{ .A = GambesonArmor } },
+    .{ .w = 020, .i = .{ .A = LeatherArmor } },
+    .{ .w = 020, .i = .{ .A = HauberkArmor } },
+    .{ .w = 020, .i = .{ .A = ScalemailArmor } },
     // Potions
-    .{ .w = 170, .i = .{ .P = &ConfusionPotion } },
-    .{ .w = 170, .i = .{ .P = &PoisonPotion } },
-    .{ .w = 170, .i = .{ .P = &DebilitatePotion } },
-    .{ .w = 140, .i = .{ .P = &BlindPotion } },
-    .{ .w = 140, .i = .{ .P = &GlowPotion } },
-    .{ .w = 140, .i = .{ .P = &SmokePotion } },
-    .{ .w = 140, .i = .{ .P = &ParalysisPotion } },
-    .{ .w = 130, .i = .{ .P = &InvigoratePotion } },
-    .{ .w = 130, .i = .{ .P = &FastPotion } },
-    .{ .w = 130, .i = .{ .P = &IncineratePotion } },
-    .{ .w = 100, .i = .{ .P = &RecuperatePotion } },
-    .{ .w = 100, .i = .{ .P = &DecimatePotion } },
+    .{ .w = 190, .i = .{ .P = &ConfusionPotion } },
+    .{ .w = 190, .i = .{ .P = &PoisonPotion } },
+    .{ .w = 190, .i = .{ .P = &DebilitatePotion } },
+    .{ .w = 160, .i = .{ .P = &BlindPotion } },
+    .{ .w = 160, .i = .{ .P = &GlowPotion } },
+    .{ .w = 160, .i = .{ .P = &SmokePotion } },
+    .{ .w = 160, .i = .{ .P = &ParalysisPotion } },
+    .{ .w = 150, .i = .{ .P = &InvigoratePotion } },
+    .{ .w = 150, .i = .{ .P = &FastPotion } },
+    .{ .w = 150, .i = .{ .P = &IncineratePotion } },
+    .{ .w = 120, .i = .{ .P = &RecuperatePotion } },
+    .{ .w = 120, .i = .{ .P = &DecimatePotion } },
     // Consumables
     .{ .w = 080, .i = .{ .P = &HotPokerConsumable } },
     .{ .w = 090, .i = .{ .P = &CoalConsumable } },
     .{ .w = 001, .i = .{ .P = &CopperIngotConsumable } },
     // Kits
-    .{ .w = 030, .i = .{ .P = &FireTrapKit } },
-    .{ .w = 030, .i = .{ .P = &ShockTrapKit } },
-    .{ .w = 020, .i = .{ .P = &SparklingTrapKit } },
-    .{ .w = 020, .i = .{ .P = &EmberlingTrapKit } },
-    .{ .w = 020, .i = .{ .P = &AirblastTrapKit } },
-    .{ .w = 005, .i = .{ .P = &MineKit } },
-    .{ .w = 002, .i = .{ .P = &BigFireTrapKit } },
+    .{ .w = 050, .i = .{ .P = &FireTrapKit } },
+    .{ .w = 050, .i = .{ .P = &ShockTrapKit } },
+    .{ .w = 040, .i = .{ .P = &SparklingTrapKit } },
+    .{ .w = 040, .i = .{ .P = &EmberlingTrapKit } },
+    .{ .w = 040, .i = .{ .P = &AirblastTrapKit } },
+    .{ .w = 010, .i = .{ .P = &MineKit } },
+    .{ .w = 010, .i = .{ .P = &BigFireTrapKit } },
     // Evocables
-    .{ .w = 020, .i = .{ .E = FlamethrowerEvoc } },
-    .{ .w = 020, .i = .{ .E = IronSpikeEvoc } },
-    .{ .w = 015, .i = .{ .E = EldritchLanternEvoc } },
+    .{ .w = 030, .i = .{ .E = FlamethrowerEvoc } },
+    .{ .w = 030, .i = .{ .E = IronSpikeEvoc } },
+    .{ .w = 020, .i = .{ .E = EldritchLanternEvoc } },
     // Cloaks
     .{ .w = 020, .i = .{ .C = &SilCloak } },
     .{ .w = 020, .i = .{ .C = &FurCloak } },
@@ -1144,6 +1161,7 @@ pub const SwordWeapon = Weapon{
     .is_dippable = true,
     .strs = &SLASHING_STRS,
 };
+pub const BoneSwordWeapon = Weapon.createBoneWeapon(&SwordWeapon, .{});
 
 pub const DaggerWeapon = Weapon{
     .id = "dagger",
@@ -1154,6 +1172,7 @@ pub const DaggerWeapon = Weapon{
     .is_dippable = true,
     .strs = &PIERCING_STRS,
 };
+pub const BoneDaggerWeapon = Weapon.createBoneWeapon(&DaggerWeapon, .{});
 
 pub const StilettoWeapon = Weapon{
     .id = "stiletto",
@@ -1163,6 +1182,7 @@ pub const StilettoWeapon = Weapon{
     .is_dippable = true,
     .strs = &PIERCING_STRS,
 };
+pub const BoneStilettoWeapon = Weapon.createBoneWeapon(&StilettoWeapon, .{});
 
 pub const RapierWeapon = Weapon{
     .id = "rapier",
@@ -1208,6 +1228,7 @@ pub const HalberdWeapon = Weapon{
     .strs = &SLASHING_STRS,
     .reach = 2,
 };
+pub const BoneHalberdWeapon = Weapon.createBoneWeapon(&HalberdWeapon, .{});
 
 pub const GlaiveWeapon = Weapon{
     .id = "glaive",
@@ -1294,6 +1315,7 @@ pub const MaceWeapon = Weapon{
     .stats = .{ .Melee = 10 },
     .strs = &CRUSHING_STRS,
 };
+pub const BoneMaceWeapon = Weapon.createBoneWeapon(&MaceWeapon, .{});
 
 pub const GreatMaceWeapon = Weapon{
     .id = "great_mace",
@@ -1304,6 +1326,7 @@ pub const GreatMaceWeapon = Weapon{
     },
     .strs = &CRUSHING_STRS,
 };
+pub const BoneGreatMaceWeapon = Weapon.createBoneWeapon(&GreatMaceWeapon, .{});
 
 // }}}
 
@@ -1330,6 +1353,7 @@ pub fn createItemFromTemplate(template: ItemTemplate) Item {
         .P => |i| Item{ .Consumable = i },
         .E => |i| Item{ .Evocable = createItem(Evocable, i) },
         .C => |i| Item{ .Cloak = i },
+        .List => unreachable,
         //else => err.todo(),
     };
 }

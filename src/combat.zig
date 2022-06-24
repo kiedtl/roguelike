@@ -38,10 +38,20 @@ const DEFENDER_STUN_NBONUS: isize = 15;
 pub fn damageOfWeapon(attacker: ?*const Mob, weapon: *const Weapon, recipient: ?*const Mob) usize {
     var damage: usize = weapon.damage;
     if (attacker != null and recipient != null) {
+        // If attacker is corrupted and defender is living, +1 dmg.
         if (attacker.?.isUnderStatus(.Corruption) != null and recipient.?.life_type == .Living)
-            damage += weapon.damage / 2;
+            damage += 1;
+        // If attacker is undead and defender is corrupted, +1 dmg.
         if (attacker.?.life_type == .Undead and recipient.?.isUnderStatus(.Corruption) != null)
-            damage += weapon.damage / 2;
+            damage += 1;
+    }
+    if (recipient != null) {
+        // If bone weapon and defender is living, +1 dmg.
+        if (weapon.ego == .Bone and recipient.?.life_type == .Living)
+            damage += 1;
+        // If bone weapon and defender is undead, -1 dmg.
+        if (weapon.ego == .Bone and recipient.?.life_type == .Undead)
+            damage += 1;
     }
 
     return damage;

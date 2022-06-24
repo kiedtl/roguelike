@@ -82,6 +82,7 @@ pub fn chooseUnweighted(comptime T: type, arr: []const T) T {
     return arr[range(usize, 0, arr.len - 1)];
 }
 
+// TODO: reduce duplicate code between choose2 and choose
 pub fn choose(comptime T: type, arr: []const T, weights: []const usize) !T {
     if (arr.len != weights.len) return error.InvalidWeights;
 
@@ -90,6 +91,25 @@ pub fn choose(comptime T: type, arr: []const T, weights: []const usize) !T {
 
     for (arr) |item, index| {
         const weight = weights[index];
+        if (weight == 0) continue;
+
+        const rnd = rng.random().int(usize) % (weight_total + weight);
+        if (rnd >= weight_total) // probability is weight/(total+weight)
+            selected = item;
+
+        weight_total += weight;
+    }
+
+    return selected;
+}
+
+// TODO: reduce duplicate code between choose2 and choose
+pub fn choose2(comptime T: type, arr: []const T, comptime weight_field: []const u8) !T {
+    var weight_total: usize = 0;
+    var selected = arr[0];
+
+    for (arr) |item, index| {
+        const weight = @field(arr[index], weight_field);
         if (weight == 0) continue;
 
         const rnd = rng.random().int(usize) % (weight_total + weight);

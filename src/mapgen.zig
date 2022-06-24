@@ -278,18 +278,18 @@ fn randomWallCoord(rect: *const Rect, i: ?usize) Coord {
     return Coord.new2(rect.start.z, x, y);
 }
 
-fn _chooseLootItem(item_weights: []usize, value_range: MinMax(usize)) ItemTemplate {
+fn _chooseLootItem(value_range: MinMax(usize)) ItemTemplate {
     while (true) {
-        const item_info = rng.choose(
-            @TypeOf(items.ITEM_DROPS[0]),
-            &items.ITEM_DROPS,
-            item_weights,
-        ) catch err.wat();
+        var item_info = rng.choose2(ItemTemplate, &items.ITEM_DROPS, "w") catch err.wat();
 
         if (!value_range.contains(item_info.w))
             continue;
 
-        return item_info;
+        if (item_info.i == .List) {
+            return rng.choose2(ItemTemplate, item_info.i.List, "w") catch err.wat();
+        } else {
+            return item_info;
+        }
     }
 }
 
@@ -496,12 +496,6 @@ fn excavatePrefab(
     startx: usize,
     starty: usize,
 ) void {
-    // Generate loot items.
-    //
-    // FIXME: generate this once at comptime.
-    var item_weights: [items.ITEM_DROPS.len]usize = undefined;
-    for (items.ITEM_DROPS) |item, i| item_weights[i] = item.w;
-
     var y: usize = 0;
     while (y < fab.height) : (y += 1) {
         var x: usize = 0;
@@ -590,11 +584,11 @@ fn excavatePrefab(
                     _ = placeProp(rc, &surfaces.props.items[p_ind.?]);
                 },
                 .Loot1 => {
-                    const loot_item1 = _chooseLootItem(&item_weights, minmax(usize, 60, 200));
+                    const loot_item1 = _chooseLootItem(minmax(usize, 60, 200));
                     state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(loot_item1)) catch err.wat();
                 },
                 .RareLoot => {
-                    const rare_loot_item = _chooseLootItem(&item_weights, minmax(usize, 0, 60));
+                    const rare_loot_item = _chooseLootItem(minmax(usize, 0, 60));
                     state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(rare_loot_item)) catch err.wat();
                 },
                 else => {},
@@ -1596,10 +1590,6 @@ pub fn placeBSPRooms(
 }
 
 pub fn placeItems(level: usize) void {
-    // FIXME: generate this at comptime.
-    var item_weights: [items.ITEM_DROPS.len]usize = undefined;
-    for (items.ITEM_DROPS) |item, i| item_weights[i] = item.w;
-
     // Fill up containers first.
     var containers = state.containers.iterator();
     while (containers.next()) |container| {
@@ -1636,7 +1626,7 @@ pub fn placeItems(level: usize) void {
         if (room.type == .Corridor or
             room.has_subroom or
             (room.prefab != null and room.prefab.?.noitems) or
-            rng.tenin(15))
+            rng.tenin(25))
         {
             continue;
         }
@@ -1664,7 +1654,7 @@ pub fn placeItems(level: usize) void {
                 tries -= 1;
             }
 
-            const t = _chooseLootItem(&item_weights, minmax(usize, 0, 200));
+            const t = _chooseLootItem(minmax(usize, 0, 200));
             const item = items.createItemFromTemplate(t);
             state.dungeon.itemsAt(item_coord).append(item) catch err.wat();
         }
