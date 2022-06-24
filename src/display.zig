@@ -286,7 +286,7 @@ fn _writerStats(
             // }
             // const new_stat_val = base_stat_val + terrain_stat_val;
 
-            if (x_stat_val > 0) {
+            if (x_stat_val != 0) {
                 // // TODO: use $r for negative '->' values, I tried to do this with
                 // // Zig v9.1 but ran into a compiler bug where the `color` variable
                 // // was replaced with random garbage.
