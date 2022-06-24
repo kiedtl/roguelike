@@ -3490,6 +3490,7 @@ pub const Weapon = struct {
         new.id = "bone_" ++ weapon.id;
         new.name = "bone " ++ weapon.name;
         new.ego = .Bone;
+        new.stats.Willpower -= 2;
         return new;
     }
 };
