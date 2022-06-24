@@ -7,16 +7,55 @@ Typically used for cutting rope and making holes in cloth, this knife will make
 holes in wardens and guards just fine. Hopefully you'll find a better weapon
 before long.
 
+% sword
+A longsword, the razor-sharp edges glimmering reassuringly in the gloomy
+atmosphere of the Dungeon.
+
+% bone_sword
+A longsword of ancient bone. It is wound about with a curse to inflict more
+damage on the living, but less on the undead.
+
 % dagger
 An medium-sized double-edged knife, useful for stabbing foes.
+
+% bone_dagger
+A shortsword of ancient bone. It is wound about with a curse to inflict more
+damage on the living, but less on the undead.
 
 % stiletto
 A long dagger, ending in a razor-sharp point but with rather dull edges. It
 works very well for stabbing unaware enemies.
 
+% bone_stiletto
+A stiletto carved out of ancient bone. It is wound about with a curse to inflict
+more damage on the living, but less on the undead.
+
 % rapier
 A very long needle-like dagger, ending in an incredibly sharp edge, but with
 blunt edges. Its general design, especially the handle, is uncommonly elegant.
+
+% halberd
+A axe-headed polearm, with a hook on the blade's backside.
+
+% bone_halberd
+The fool's silver pole is topped with a solid piece of bone, carved into an
+axe-head. It is wound about with a curse to inflict more damage on the living,
+but less on the undead.
+
+% mace
+A simple mace, with a smallish but very heavy leaden head.
+
+% bone_mace
+A mace with a head of solid bone, unnaturally heavy. It is wound about with a
+curse to inflict more damage on the living, but less on the undead.
+
+% great_mace
+The blow of this large mace stuns your victims, rendering them less likely to
+dodge blows and land hits.
+
+% bone_great_mace
+An evil mace crafted for the bane of the Necromancer's enemies. It is wound
+about with a curse to inflict more damage on the living, but less on the undead.
 
 % mine
 It will activate when a non-player monster steps on it, but it may not explode
