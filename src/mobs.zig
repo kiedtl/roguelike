@@ -424,6 +424,7 @@ pub const GoblinTemplate = MobTemplate{
         .species = &GoblinSpecies,
         .tile = 'g',
         .ai = AI{
+            .profession_name = "cave goblin",
             .profession_description = "wandering",
             .work_fn = ai.patrolWork,
             .fight_fn = ai.meleeFight,
