@@ -1809,7 +1809,7 @@ pub fn drawInventoryScreen() bool {
 
     var desc_scroll: usize = 0;
     var chosen: usize = 0;
-    var chosen_itemlist: ItemListType = .Pack;
+    var chosen_itemlist: ItemListType = if (state.player.inventory.pack.len == 0) .Equip else .Pack;
     var y: isize = 0;
 
     while (true) {
