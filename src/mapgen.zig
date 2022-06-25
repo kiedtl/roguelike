@@ -3291,10 +3291,10 @@ pub const LevelConfig = struct {
 
     // Dimensions include the first wall, so a minimum width of 2 guarantee that
     // there will be one empty space in the room, minimum.
-    min_room_width: usize = 7,
-    min_room_height: usize = 4,
-    max_room_width: usize = 15,
-    max_room_height: usize = 11,
+    min_room_width: usize = 9,
+    min_room_height: usize = 5,
+    max_room_width: usize = 17,
+    max_room_height: usize = 9,
 
     level_features: [4]?LevelFeatureFunc = [_]?LevelFeatureFunc{ null, null, null, null },
 
@@ -3371,10 +3371,10 @@ pub const QRT_BASE_LEVELCONFIG = LevelConfig{
     .prefab_chance = 1000, // No prefabs for QRT
     .mapgen_func = placeBSPRooms,
     .mapgen_iters = 1024,
-    .min_room_width = 8,
-    .min_room_height = 5,
-    .max_room_width = 10,
-    .max_room_height = 6,
+    .min_room_width = 10,
+    .min_room_height = 6,
+    .max_room_width = 20,
+    .max_room_height = 9,
 
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
         levelFeaturePrisoners,
@@ -3405,10 +3405,10 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
     .shrink_corridors_to_fit = true,
     .prefab_chance = 100, // No prefabs for LAB
     .mapgen_iters = 4096,
-    .min_room_width = 8,
-    .min_room_height = 7,
-    .max_room_width = 20,
-    .max_room_height = 17,
+    .min_room_width = 11,
+    .min_room_height = 6,
+    .max_room_width = 22,
+    .max_room_height = 12,
 
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
         levelFeatureVials,
@@ -3444,10 +3444,10 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
     .prefab_chance = 3,
     .mapgen_iters = 4096,
 
-    .min_room_width = 3,
-    .min_room_height = 3,
-    .max_room_width = 5,
-    .max_room_height = 4,
+    .min_room_width = 4,
+    .min_room_height = 4,
+    .max_room_width = 6,
+    .max_room_height = 5,
 
     .required_mobs = &[_]LevelConfig.RequiredMob{
         .{ .count = 3, .template = &mobs.MellaentTemplate },

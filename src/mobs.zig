@@ -688,6 +688,7 @@ fn createSpireTemplate(
 
 pub const IronSpireTemplate = createSpireTemplate("iron", '1', .{ .MP_cost = 4, .spell = &spells.BOLT_IRON, .power = 3 }, .{});
 pub const TorporSpireTemplate = createSpireTemplate("torpor", '2', .{ .MP_cost = 4, .spell = &spells.CAST_FEEBLE, .duration = 4 }, .{ .willpower = 7 });
+pub const LightningSpireTemplate = createSpireTemplate("lightning", '3', .{ .MP_cost = 4, .spell = &spells.BOLT_LIGHTNING, .power = 2 }, .{});
 // }}}
 
 pub const KyaniteStatueTemplate = MobTemplate{
@@ -1632,6 +1633,7 @@ pub const MOBS = [_]MobTemplate{
     MellaentTemplate,
     IronSpireTemplate,
     TorporSpireTemplate,
+    LightningSpireTemplate,
     KyaniteStatueTemplate,
     NebroStatueTemplate,
     CrystalStatueTemplate,

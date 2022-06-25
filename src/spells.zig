@@ -10,6 +10,7 @@ const math = std.math;
 const assert = std.debug.assert;
 const mem = std.mem;
 
+const colors = @import("colors.zig");
 const display = @import("display.zig");
 const types = @import("types.zig");
 const combat = @import("combat.zig");
@@ -380,6 +381,15 @@ pub const BOLT_BLINKBOLT = Spell{
     .name = "living lightning",
     .cast_type = .Bolt,
     .noise = .Loud,
+    .bolt_animation = .{
+        .Type2 = .{
+            .chars = display.Animation.ELEC_LINE_CHARS,
+            .fg = display.Animation.ELEC_LINE_FG,
+            .bg = display.Animation.ELEC_LINE_BG,
+            .bg_mix = display.Animation.ELEC_LINE_MIX,
+            .approach = 1,
+        },
+    },
     .effect_type = .{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             if (state.dungeon.at(coord).mob) |victim| {
@@ -448,22 +458,41 @@ pub const BOLT_LIGHTNING = Spell{
     .id = "sp_elec_bolt",
     .name = "bolt of electricity",
     .cast_type = .Bolt,
-    .noise = .Medium,
-    .effect_type = .{ .Custom = _effectBoltLightning },
+    .bolt_dodgeable = false,
+    .bolt_multitarget = true,
+    //.bolt_animation = .{ .Type2 = .{ .chars = "EFHIKLMNTVWXYZ\\/|-=+#", .fg = 0x73c5ff } },
+    .bolt_animation = .{
+        .Type2 = .{
+            .chars = display.Animation.ELEC_LINE_CHARS,
+            .fg = display.Animation.ELEC_LINE_FG,
+            .bg = display.Animation.ELEC_LINE_BG,
+            .bg_mix = display.Animation.ELEC_LINE_MIX,
+            .approach = 2,
+        },
+    },
+    .check_has_effect = struct {
+        fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
+            const mob = state.dungeon.at(target).mob.?;
+            return !mob.isFullyResistant(.rElec);
+        }
+    }.f,
+    .noise = .Loud,
+    .effect_type = .{ .Custom = struct {
+        fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
+            if (state.dungeon.at(coord).mob) |victim| {
+                const avg_dmg = opts.power;
+                const dmg = rng.rangeClumping(usize, avg_dmg / 2, avg_dmg * 2, 2);
+                victim.takeDamage(.{
+                    .amount = @intToFloat(f64, dmg),
+                    .source = .RangedAttack,
+                    .kind = .Electric,
+                    .blood = false,
+                    .by_mob = state.dungeon.at(caster_c).mob,
+                }, .{ .noun = "lightning bolt" });
+            }
+        }
+    }.f },
 };
-fn _effectBoltLightning(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
-    if (state.dungeon.at(coord).mob) |victim| {
-        const avg_dmg = opts.power;
-        const dmg = rng.rangeClumping(usize, avg_dmg / 2, avg_dmg * 2, 2);
-        victim.takeDamage(.{
-            .amount = @intToFloat(f64, dmg),
-            .source = .RangedAttack,
-            .kind = .Electric,
-            .blood = false,
-            .by_mob = state.dungeon.at(caster_c).mob,
-        }, .{ .noun = "lightning bolt" });
-    }
-}
 
 pub const BOLT_FIREBALL = Spell{
     .id = "sp_fireball",
@@ -797,6 +826,13 @@ pub const Spell = struct {
             char: u32,
             fg: u32 = 0xffffff,
         },
+        Type2: struct {
+            chars: []const u8,
+            fg: u32,
+            bg: ?u32 = null,
+            bg_mix: ?f64 = null,
+            approach: ?usize = null,
+        },
     } = null,
 
     checks_will: bool = false,
@@ -886,9 +922,6 @@ pub const Spell = struct {
                     last_processed_coord = c;
                 }
 
-                if (self.bolt_last_coord_effect) |func|
-                    (func)(caster_coord, opts, last_processed_coord);
-
                 if (self.bolt_animation) |anim_type| switch (anim_type) {
                     .Simple => |simple_anim| {
                         display.Animation.apply(.{ .TraverseLine = .{
@@ -898,7 +931,21 @@ pub const Spell = struct {
                             .fg = simple_anim.fg,
                         } });
                     },
+                    .Type2 => |type2_anim| {
+                        display.Animation.apply(.{ .AnimatedLine = .{
+                            .start = caster_coord,
+                            .end = last_processed_coord,
+                            .approach = type2_anim.approach,
+                            .chars = type2_anim.chars,
+                            .fg = type2_anim.fg,
+                            .bg = type2_anim.bg,
+                            .bg_mix = type2_anim.bg_mix,
+                        } });
+                    },
                 };
+
+                if (self.bolt_last_coord_effect) |func|
+                    (func)(caster_coord, opts, last_processed_coord);
 
                 for (affected_tiles.items) |coord| {
                     switch (self.effect_type) {

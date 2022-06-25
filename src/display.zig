@@ -19,6 +19,7 @@ const surfaces = @import("surfaces.zig");
 const termbox = @import("termbox.zig");
 const utils = @import("utils.zig");
 const types = @import("types.zig");
+const rng = @import("rng.zig");
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
 const StringBuf64 = @import("buffer.zig").StringBuf64;
@@ -2187,6 +2188,23 @@ pub const Animation = union(enum) {
         fg: ?u32 = null,
         path_char: ?u32 = null,
     },
+    // Used for elec bolt.
+    //
+    // TODO: merge with TraverseLine?
+    AnimatedLine: struct {
+        approach: ?usize = null,
+        start: Coord,
+        end: Coord,
+        chars: []const u8,
+        fg: u32,
+        bg: ?u32,
+        bg_mix: ?f64,
+    },
+
+    pub const ELEC_LINE_CHARS = "AEFHIKLMNTYZ13457*-=+~?!@#%&";
+    pub const ELEC_LINE_FG = 0x9fefff;
+    pub const ELEC_LINE_BG = 0x8fdfff;
+    pub const ELEC_LINE_MIX = 0.02;
 
     pub fn blink(coord: Coord, char: u32, fg: ?u32) Animation {
         return Animation{ .BlinkChar = .{ .coord = coord, .char = char, .fg = fg } };
@@ -2233,6 +2251,47 @@ pub const Animation = union(enum) {
                     }
 
                     termbox.tb_present();
+                }
+            },
+            .AnimatedLine => |anim| {
+                const line = anim.start.drawLine(anim.end, state.mapgeometry, 0);
+
+                var animated_len: usize = if (anim.approach != null) 1 else line.len;
+                var animated: []const Coord = line.data[0..animated_len];
+
+                const iters: usize = 15;
+                var counter: usize = iters;
+                while (counter > 0) : (counter -= 1) {
+                    for (animated) |coord| {
+                        if (!state.player.cansee(coord)) {
+                            continue;
+                        }
+
+                        const dx = @intCast(isize, coord.x) + mapwin.startx;
+                        const dy = @intCast(isize, coord.y) + mapwin.starty;
+                        const old = termbox.oldCell(dx, dy);
+
+                        const char = rng.chooseUnweighted(u8, anim.chars);
+                        const fg = colors.percentageOf(anim.fg, counter * 100 / (iters / 2));
+                        const bg = if (anim.bg) |color|
+                            colors.mix(
+                                old.bg,
+                                colors.percentageOf(color, counter * 100 / iters),
+                                anim.bg_mix.?,
+                            )
+                        else
+                            colors.BG;
+
+                        termbox.tb_change_cell(dx, dy, char, fg, bg);
+                    }
+
+                    termbox.tb_present();
+                    std.time.sleep(40_000_000);
+
+                    if (anim.approach != null and animated_len < line.len) {
+                        animated_len = math.min(line.len, animated_len + anim.approach.?);
+                        animated = line.data[0..animated_len];
+                    }
                 }
             },
         }
