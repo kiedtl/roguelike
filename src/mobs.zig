@@ -642,7 +642,14 @@ pub const MellaentTemplate = MobTemplate{
 };
 
 // Spires {{{
-fn createSpireTemplate(comptime name: []const u8, tile: u32, spell: SpellOptions) MobTemplate {
+fn createSpireTemplate(
+    comptime name: []const u8,
+    tile: u32,
+    spell: SpellOptions,
+    opts: struct {
+        willpower: usize = WILL_IMMUNE,
+    },
+) MobTemplate {
     assert(spell.MP_cost == 4);
     return MobTemplate{
         .mob = .{
@@ -672,14 +679,15 @@ fn createSpireTemplate(comptime name: []const u8, tile: u32, spell: SpellOptions
             .corpse = .Wall,
             .immobile = true,
             .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = 25, .rElec = 25, .Armor = 20 },
-            .stats = .{ .Willpower = WILL_IMMUNE, .Evade = 0, .Vision = 6 },
+            .stats = .{ .Willpower = opts.willpower, .Evade = 0, .Vision = 6 },
         },
 
         .statuses = &[_]StatusDataInfo{.{ .status = .Sleeping, .duration = .Prm }},
     };
 }
 
-pub const IronSpireTemplate = createSpireTemplate("iron", '1', .{ .MP_cost = 3, .spell = &spells.BOLT_IRON, .power = 4 });
+pub const IronSpireTemplate = createSpireTemplate("iron", '1', .{ .MP_cost = 4, .spell = &spells.BOLT_IRON, .power = 3 }, .{});
+pub const TorporSpireTemplate = createSpireTemplate("torpor", '2', .{ .MP_cost = 4, .spell = &spells.CAST_FEEBLE, .duration = 4 }, .{ .willpower = 7 });
 // }}}
 
 pub const KyaniteStatueTemplate = MobTemplate{
@@ -1623,6 +1631,7 @@ pub const MOBS = [_]MobTemplate{
     WarOlgTemplate,
     MellaentTemplate,
     IronSpireTemplate,
+    TorporSpireTemplate,
     KyaniteStatueTemplate,
     NebroStatueTemplate,
     CrystalStatueTemplate,
