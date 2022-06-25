@@ -690,6 +690,15 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
         _writerWrite(w, "{s}", .{_formatStatusInfo(entry.value)});
     }
     _writerWrite(w, "\n", .{});
+
+    _writerHeader(w, linewidth, "behaviour", .{});
+    if (mob.ai.is_curious)
+        _writerWrite(w, "· investigates noises\n", .{});
+    if (!mob.ai.is_curious or mob.deaf)
+        _writerWrite(w, "· won't investigate noises\n", .{});
+    if (mob.ai.flag(.SocialFighter))
+        _writerWrite(w, "· won't attack alone\n", .{});
+    _writerWrite(w, "\n", .{});
 }
 
 fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewidth: usize) void {
