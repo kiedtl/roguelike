@@ -1325,6 +1325,17 @@ pub const AI = struct {
     // The particular phase of a mob's work phase. For instance a working Cleaner
     // might be scanning, idling, or cleaning.
     work_phase: AIWorkPhase = undefined,
+
+    flags: []const Flag = &[_]Flag{},
+
+    pub const Flag = enum {
+        AwakesNearAllies, // If the monster is dormant, it awakes near allies.
+        SocialFighter, // Won't fight unless there are aware allies around.
+    };
+
+    pub fn flag(self: *const AI, f: Flag) bool {
+        return mem.containsAtLeast(Flag, self.flags, 1, &[_]Flag{f});
+    }
 };
 
 pub const AIWorkPhase = enum {

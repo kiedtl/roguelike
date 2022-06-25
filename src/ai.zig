@@ -203,13 +203,8 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
 // This approach was stolen from Cogmind:
 // https://old.reddit.com/r/roguelikedev/comments/57dnqk/faq_friday_49_awareness_systems/d8r1ztp/
 //
-// If the mob is an ally, add it to the ally list.
-//
 pub fn checkForHostiles(mob: *Mob) void {
     assert(!mob.is_dead);
-
-    // Reset the ally list.
-    mob.allies.shrinkRetainingCapacity(0);
 
     for (mob.fov) |row, y| for (row) |cell, x| {
         if (cell == 0) continue;
@@ -228,8 +223,6 @@ pub fn checkForHostiles(mob: *Mob) void {
                     .counter = mob.memory_duration,
                     .last_seen = othermob.coord,
                 });
-            } else if (othermob.allegiance == mob.allegiance) {
-                mob.allies.append(othermob) catch err.wat();
             }
         }
     };
@@ -270,12 +263,38 @@ pub fn checkForHostiles(mob: *Mob) void {
         fn _sortEnemies(me: *Mob, a: EnemyRecord, b: EnemyRecord) bool {
             return a.mob.coord.distance(me.coord) > b.mob.coord.distance(me.coord);
         }
-        fn _sortAllies(me: *Mob, a: *Mob, b: *Mob) bool {
-            return a.coord.distance(me.coord) > b.coord.distance(me.coord);
-        }
     };
     std.sort.insertionSort(EnemyRecord, mob.enemies.items, mob, _sortFunc._sortEnemies);
-    std.sort.insertionSort(*Mob, mob.allies.items, mob, _sortFunc._sortAllies);
+}
+
+// Get a list of all nearby allies, visible or not.
+pub fn checkForAllies(mob: *Mob) void {
+    const vision = mob.stat(.Vision);
+
+    // Reset the ally list.
+    mob.allies.shrinkRetainingCapacity(0);
+
+    // We're iterating over FOV because it's the lazy thing to do.
+    for (mob.fov) |row, y| for (row) |_, x| {
+        const fitem = Coord.new2(mob.coord.z, x, y);
+
+        if (fitem.distance(mob.coord) > vision) {
+            continue;
+        }
+
+        if (state.dungeon.at(fitem).mob) |othermob| {
+            if (othermob.allegiance == mob.allegiance) {
+                mob.allies.append(othermob) catch err.wat();
+            }
+        }
+    };
+
+    // Sort allies according to distance.
+    std.sort.insertionSort(*Mob, mob.allies.items, mob, struct {
+        fn f(me: *Mob, a: *Mob, b: *Mob) bool {
+            return a.coord.distance(me.coord) > b.coord.distance(me.coord);
+        }
+    }.f);
 }
 
 fn checkForNoises(mob: *Mob) void {
@@ -349,6 +368,19 @@ pub fn guardGlanceRandom(mob: *Mob) void {
     if (rng.onein(6)) {
         mob.facing = rng.chooseUnweighted(Direction, &DIRECTIONS);
     }
+}
+
+pub fn guardGlanceRight(mob: *Mob) void {
+    mob.facing = switch (mob.facing) {
+        .North => .NorthEast,
+        .NorthEast => .East,
+        .East => .SouthEast,
+        .SouthEast => .South,
+        .South => .SouthWest,
+        .SouthWest => .West,
+        .West => .NorthWest,
+        .NorthWest => .North,
+    };
 }
 
 pub fn guardGlanceAround(mob: *Mob) void {
@@ -551,6 +583,15 @@ pub fn standStillAndGuardWork(mob: *Mob, _: mem.Allocator) void {
         const prev_facing = mob.facing;
         mob.tryMoveTo(post);
         guardGlanceLeftRight(mob, prev_facing);
+    }
+}
+
+pub fn spireWork(mob: *Mob, _: mem.Allocator) void {
+    guardGlanceRight(mob);
+    _ = mob.rest();
+
+    if (mob.allies.items.len == 0) {
+        mob.addStatus(.Sleeping, 0, .Prm);
     }
 }
 
@@ -1050,6 +1091,26 @@ fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
 }
 
 pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
+    if (mob.ai.flag(.SocialFighter)) {
+        // Check if there's an ally that satisfies the following conditions
+        //      - Isn't the current mob
+        //      - Isn't another immobile mob
+        //      - Is seen by the target
+        //      - Is either investigating or attacking
+        const found_ally = for (mob.allies.items) |ally| {
+            if (ally != mob and !ally.immobile and
+                (ally.ai.phase == .Hunt or ally.ai.phase == .Investigate))
+            {
+                break true;
+            }
+        } else false;
+
+        if (!found_ally) {
+            _ = mob.rest();
+            return;
+        }
+    }
+
     for (mob.spells) |spell| {
         if (spell.MP_cost > mob.MP) continue;
         if (_findValidTargetForSpell(mob, spell)) |coord| {
@@ -1060,14 +1121,19 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
 
     switch (mob.ai.spellcaster_backup_action) {
         .Melee => meleeFight(mob, alloc),
-        .KeepDistance => {
+        .KeepDistance => if (!mob.immobile) {
             const dist = @intCast(usize, mob.stat(.Vision) -| 1);
             const moved = keepDistance(mob, currentEnemy(mob).mob.coord, dist);
             if (!moved) meleeFight(mob, alloc);
+        } else {
+            _ = mob.rest();
         },
     }
 }
 
+// TODO: with the addition of the .SocialFighter flag, this is
+// redundant. Should be merged into mageFight().
+//
 // - Are there allies within view?
 //    - Yes: are they attacking the hostile?
 //        - Yes: paralyze the hostile
@@ -1087,12 +1153,11 @@ pub fn statueFight(mob: *Mob, _: mem.Allocator) void {
     //      - Isn't the current mob
     //      - Isn't another immobile mob
     //      - Is seen by the target
-    //      - Is either investigating a noise, or
-    //      - Is attacking the hostile mob
+    //      - Is either investigating or attacking
     const found_ally = for (mob.allies.items) |ally| {
-        if (ally.immobile and target.cansee(ally.coord) and
-            ((ally.ai.phase == .Hunt and ally.enemies.items.len > 0) or
-            (ally.ai.phase == .Investigate)))
+        if (ally != mob and !ally.immobile and
+            target.cansee(ally.coord) and
+            (ally.ai.phase == .Hunt or ally.ai.phase == .Investigate))
         {
             break true;
         }
@@ -1143,6 +1208,7 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
         }
     }
 
+    checkForAllies(mob);
     checkForHostiles(mob);
     checkForNoises(mob);
 
@@ -1151,8 +1217,12 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
         switch (mob.ai.phase) {
             .Hunt, .Investigate => mob.cancelStatus(.Sleeping),
             .Work => {
-                _ = mob.rest();
-                return;
+                if ((mob.ai.flag(.AwakesNearAllies) and mob.allies.items.len > 0)) {
+                    mob.cancelStatus(.Sleeping);
+                } else {
+                    _ = mob.rest();
+                    return;
+                }
             },
             .Flee => err.bug("Fleeing mob was put to sleep...?", .{}),
         }

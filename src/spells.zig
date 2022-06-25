@@ -10,6 +10,7 @@ const math = std.math;
 const assert = std.debug.assert;
 const mem = std.mem;
 
+const display = @import("display.zig");
 const types = @import("types.zig");
 const combat = @import("combat.zig");
 const err = @import("err.zig");
@@ -402,6 +403,27 @@ pub const BOLT_BLINKBOLT = Spell{
     }.f,
 };
 
+pub const BOLT_IRON = Spell{
+    .id = "sp_iron_bolt",
+    .name = "iron arrow",
+    .cast_type = .Bolt,
+    .bolt_dodgeable = true,
+    .bolt_multitarget = false,
+    .bolt_animation = .{ .Simple = .{ .char = '+' } },
+    .noise = .Medium,
+    .effect_type = .{ .Custom = struct {
+        fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
+            if (state.dungeon.at(coord).mob) |victim| {
+                victim.takeDamage(.{
+                    .amount = @intToFloat(f64, opts.power),
+                    .source = .RangedAttack,
+                    .by_mob = state.dungeon.at(caster_c).mob,
+                }, .{ .noun = "The iron arrow" });
+            }
+        }
+    }.f },
+};
+
 pub const BOLT_CRYSTAL = Spell{
     .id = "sp_crystal_shard",
     .name = "crystal shard",
@@ -763,6 +785,12 @@ pub const Spell = struct {
     // Only used if cast_type == .Bolt
     bolt_dodgeable: bool = false,
     bolt_multitarget: bool = true,
+    bolt_animation: ?union(enum) {
+        Simple: struct {
+            char: u32,
+            fg: u32 = 0xffffff,
+        },
+    } = null,
 
     checks_will: bool = false,
     needs_visible_target: bool = true,
@@ -817,9 +845,11 @@ pub const Spell = struct {
             .Ray => err.todo(),
             .Bolt => {
                 // Fling a bolt and let it hit whatever
+                var last_processed_coord: Coord = undefined;
+                var affected_tiles = types.CoordArrayList.init(state.GPA.allocator());
+                defer affected_tiles.deinit();
                 const line = caster_coord.drawLine(target, state.mapgeometry, 3);
                 assert(line.len > 0);
-                var last_processed_coord: Coord = undefined;
                 for (line.constSlice()) |c| {
                     if (!c.eq(caster_coord) and !state.is_walkable(c, .{ .right_now = true })) {
                         const hit_mob = state.dungeon.at(c).mob;
@@ -828,7 +858,7 @@ pub const Spell = struct {
                             if (self.checks_will and !willSucceedAgainstMob(caster.?, victim)) {
                                 const chance = 100 - appxChanceOfWillOverpowered(caster.?, victim);
                                 state.message(.SpellCast, "{c} resisted $g($c{}%$g chance)$.", .{ victim, chance });
-                                return;
+                                continue;
                             }
 
                             if (self.bolt_dodgeable) {
@@ -839,13 +869,7 @@ pub const Spell = struct {
                             }
                         }
 
-                        switch (self.effect_type) {
-                            .Status => |s| if (hit_mob) |victim| {
-                                victim.addStatus(s, opts.power, .{ .Tmp = opts.duration });
-                            },
-                            .Heal => err.bug("Bolt of healing? really?", .{}),
-                            .Custom => |cu| cu(caster_coord, self, opts, c),
-                        }
+                        affected_tiles.append(c) catch err.wat();
 
                         // Stop if we're not multi-targeting or if the blocking object
                         // isn't a mob
@@ -857,6 +881,27 @@ pub const Spell = struct {
 
                 if (self.bolt_last_coord_effect) |func|
                     (func)(caster_coord, opts, last_processed_coord);
+
+                if (self.bolt_animation) |anim_type| switch (anim_type) {
+                    .Simple => |simple_anim| {
+                        display.Animation.apply(.{ .TraverseLine = .{
+                            .start = caster_coord,
+                            .end = last_processed_coord,
+                            .char = simple_anim.char,
+                            .fg = simple_anim.fg,
+                        } });
+                    },
+                };
+
+                for (affected_tiles.items) |coord| {
+                    switch (self.effect_type) {
+                        .Status => |s| if (state.dungeon.at(coord).mob) |victim| {
+                            victim.addStatus(s, opts.power, .{ .Tmp = opts.duration });
+                        },
+                        .Heal => err.bug("Bolt of healing? really?", .{}),
+                        .Custom => |cu| cu(caster_coord, self, opts, coord),
+                    }
+                }
             },
             .Smite => {
                 switch (self.smite_target_type) {

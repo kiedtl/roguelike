@@ -641,6 +641,47 @@ pub const MellaentTemplate = MobTemplate{
     },
 };
 
+// Spires {{{
+fn createSpireTemplate(comptime name: []const u8, tile: u32, spell: SpellOptions) MobTemplate {
+    assert(spell.MP_cost == 4);
+    return MobTemplate{
+        .mob = .{
+            .id = name ++ "_spire",
+            .species = &Species{ .name = name ++ " spire" },
+            .tile = tile,
+            .ai = AI{
+                .profession_description = "watching",
+                .work_fn = ai.spireWork,
+                .fight_fn = ai.mageFight,
+                .is_combative = true,
+                .is_curious = false,
+                .spellcaster_backup_action = .KeepDistance,
+                .flags = &[_]AI.Flag{ .AwakesNearAllies, .SocialFighter },
+            },
+            .allegiance = .Necromancer,
+
+            .base_night_vision = true,
+
+            .spells = &[_]SpellOptions{spell},
+            .max_MP = 4,
+
+            .max_HP = 12,
+            .memory_duration = 999,
+            .life_type = .Construct,
+            .blood = null,
+            .corpse = .Wall,
+            .immobile = true,
+            .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = 25, .rElec = 25, .Armor = 20 },
+            .stats = .{ .Willpower = WILL_IMMUNE, .Evade = 0, .Vision = 6 },
+        },
+
+        .statuses = &[_]StatusDataInfo{.{ .status = .Sleeping, .duration = .Prm }},
+    };
+}
+
+pub const IronSpireTemplate = createSpireTemplate("iron", '1', .{ .MP_cost = 3, .spell = &spells.BOLT_IRON, .power = 4 });
+// }}}
+
 pub const KyaniteStatueTemplate = MobTemplate{
     .ignore_conflicting_tiles = true, // conflicts w/ other statues
 
@@ -1581,6 +1622,7 @@ pub const MOBS = [_]MobTemplate{
     CinderWormTemplate,
     WarOlgTemplate,
     MellaentTemplate,
+    IronSpireTemplate,
     KyaniteStatueTemplate,
     NebroStatueTemplate,
     CrystalStatueTemplate,
