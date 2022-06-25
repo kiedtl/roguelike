@@ -1727,6 +1727,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                 switch (ev.key) {
                     termbox.TB_KEY_PGUP => desc_scroll -|= 1,
                     termbox.TB_KEY_PGDN => desc_scroll += 1,
+                    termbox.TB_KEY_ESC,
                     termbox.TB_KEY_CTRL_C,
                     termbox.TB_KEY_CTRL_G,
                     => break,
