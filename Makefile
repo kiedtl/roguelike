@@ -1,5 +1,5 @@
 NAME     = oathbreaker
-VERSION  = 1.0.0
+VERSION  = 1.0.1
 PKGNAME  = $(NAME)-$(shell uname -s)-$(shell uname -m)-$(VERSION)
 CMD      = @
 
