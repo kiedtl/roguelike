@@ -24,11 +24,13 @@ pub fn build(b: *Builder) void {
         "-std=c99",
         "-Wpedantic",
         "-Wall",
-        "-Werror",
+        //"-Werror", // Disabled to keep clang from tantruming about unused
+        //              function results in memstream.c
         "-g",
         "-I./tb/src",
         "-D_POSIX_C_SOURCE=200809L",
         "-D_XOPEN_SOURCE",
+        "-D_DARWIN_C_SOURCE", // Needed for macOS and SIGWINCH def
     };
 
     const exe = b.addExecutable("rl", "src/main.zig");
