@@ -158,6 +158,7 @@ x frozen fiend
 - torpor spire
   - like dcss' torpor snail
   - attempts to slows player when in FOV
+  - TODO: slow *all* mobs in FOV? that might lead to interesting gameplay...
   - rFire+ rElec+ Armor=30% rFume∞ rPara∞ rPois∞
   - immobile
 - iron spire
@@ -238,6 +239,7 @@ x lead turtle
   - Bone longsword
   - TODO: bone longsword is too powerful
     - TODO: maybe give bone longsword to death mage, & make bone mage keep dist?
+    - TODO: or maybe, just give bone mage sufficiently low melee% and evade%?
   - Travels with packs of bone rats, with rare zombie
 x bone rat
   - fast, evasive, and moderately fragile.
@@ -441,7 +443,7 @@ headgear:
 utility items:
 - Detect undead
 - Vampirism (charm of transference)
-- bucker (3 knockback on block, +15% block)
+- buckler (3 knockback on block, +15% block)
 
 
 Movement patterns
@@ -498,6 +500,11 @@ Rings
 -----
 Rings have "tiers" instead of an enchantment level (gold, silver, iron).
 
+  .....   .....   .....   .....
+  m@...   .m@..   ..m..   .....
+  .....   .....   ...@.   ...m.
+  .....   .....   .....   ...@.
+
 - bolt of something (beus lance?)
   ..m..   .....   .....   .....
   ..@..   ..m..   .....   .....
@@ -536,9 +543,13 @@ Rings have "tiers" instead of an enchantment level (gold, silver, iron).
   player. Blinks player as well. All affected mobs, including player, have
   health reduced by 10%.
 
-- ring of conscription: raise 2-6 nearby corpses to fight a specific mob, for
+- ring of insurrection: raise 2-6 nearby corpses to fight a specific mob, for
   8-24 turns. Zombies are completely blind and won't fight any other monster
   unless attacked.
+
+- ring of conscription: raise the corpse the player stands on at the end of the
+  pattern to fight, giving it impressive tankiness and stat boosts (but
+  slowness?).
 
 - ring of damnation: ignite tiles near/on foes (2-3 tile radius) for 5-15
   turns.
@@ -903,34 +914,44 @@ x More evocables: copper ingot, coal, red-hot poker
 x More kits and traps: fire, shock, incineration, knockback
 - Ring changes/additions/simplifications:
   x Refactor pattern checks
-  x More ring types (fire, etc)
+  - More ring types (fire, etc); at least 8
   - Random ring drops, equipping/deequipping rings
   x Remove ring statuses
   - MP costs for rings?
 x Fix trtr chambers; add more of them
 - Spires and spire kits
-- More mundane weapons: hammer, poker
-- Guards in cubbyholes (both corridors and rooms)
-- Dungeon features: barrel of water, barrel of toxic sludge
-x War olgs, cinder worms, destroyers
-x Ember, brimstone, spark, lightning mage bands
-x Emberling/sparkling summoning trap kits
-- Fiend of vapours
-- Copper weapons and battery packs, copper hornets
-- Bone and masterpiece weapons
-- Headgear, footgear, auxiliary items
+x Bone weapons, corruption effects
 - More potions
   x Potion of debilitation, traps of seizure gas
   x Potion of irritation, traps of blinding gas
   x Potion of illumination
   - Potion of insubstantiation and fortification
-- Basic speeches by mobs
-- Cinder worms as prisoners somehow
+  - Potions of disruption
+- More mundane weapons: hammer, poker
+- Guards in cubbyholes (both corridors and rooms)
+x Add barrel of water
+x War olgs, cinder worms, destroyers
+x Ember, brimstone, spark, lightning mage bands
+x Emberling/sparkling summoning trap kits
+- Fiend of vapours
+- Copper weapons and battery packs, copper hornets
+- Masterpiece weapons
+- Headgear, footgear, auxiliary items
 - Lore-related prefabs (e.g. washroom, trophy rooms, etc)
+- Treasure vaults
+  - Marble vault
+  - Iron vault
+  - Golden vault
+  - Tavern vault (maybe next release?)
 - Multi-tile props: trees and braziers
-- Info character: ~
 - Playtest game, especially CAV and make adjustments
 *** v1.1.0 release ***
+- Basic speeches by mobs
+- Warn when next to spreading gas and resting
+- Warn when stepping into enemy's FOV
+- Auto-wait: don't wait while in combat or in dangerous area
+- More messages
+*** v1.2.0 release ***
 - Bloodlings and related mages
 - Operators
 - Warriors, recruits
@@ -952,8 +973,6 @@ x Emberling/sparkling summoning trap kits
 - Squad overhaul
   - Patrol squads
   - Prisoner squads + goblin commanders
-- Corruption effects
-  - Potions of disruption
 - Mob repositioning AI
   - AI to move out of dangerous tiles (gas/terrain)
   - AI to move out of reach of enemy, if mob has reaching weapon and is faster
@@ -970,7 +989,6 @@ x Emberling/sparkling summoning trap kits
   - features/items screen, remove announcement of items
   - keybinding help "?" screen
 - Startup screen, map generation loading bar
-- Add basic animations
 - Posters/books
   - Poster types (graffiti, announcement, engraving, etc)
   - Add bookshelves and book types
@@ -984,6 +1002,20 @@ x Emberling/sparkling summoning trap kits
   - Monsters
 - Night creatures (night reapers, creeping deaths, grues, winged terrors)
 - Shadow weapons
+
+Animations
+==========
+x Basic combat animations
+- Throwing items
+- Zaps, blinkbolt, etc
+- Bolts of fire
+- Knockback
+- Fire explosion
+- Electricity explosion
+- Normal explosion
+- Hostile turning to fleeing
+- Hostile turning back to fight
+- Hostile noticing you
 
 Ring and movements:
 ===================
@@ -1021,10 +1053,10 @@ Room features/Mapgen:
     x dead, flammable fungi
     x tall fungi (very reduced LOS)
     x camoflaging fungi (Camo++)
-    - (v1.1.0) brambles (retaliation; dmg on movement; 150% slowness)
-    - (v1.1.0) XXX fungi (haste undead)
-    - (v1.1.0) XXX fungi (slow living)
-    - (v1.1.0) XXX fungi (ctx corrupt effect)
+    - (v1.x.0) brambles (retaliation; dmg on movement; 150% slowness)
+    - (v1.x.0) XXX fungi (haste undead)
+    - (v1.x.0) XXX fungi (slow living)
+    - (v1.x.0) XXX fungi (ctx corrupt effect)
   - Floor materials:
     x metal (rElec-)
     x copper (elec dmg propagation)
@@ -1032,7 +1064,7 @@ Room features/Mapgen:
     x carpet (Noise-)
     x gravel (Noise+)
     x shallow water (Noise+ rFire++ rElec--)
-    - (v1.1.0) ashes/gypsum (cloud of dust on movement)
+    - (v1.x.0) ashes/gypsum (cloud of dust on movement)
   - Other:
     x platform (less evade%, more melee% and missile%, vision++)
     x pillar (+25 evade%)
@@ -1173,7 +1205,7 @@ Items/Machines
 - Add cloaks:
   x cloak of silicon (fire resistance)
   x cloak of fur     (electricty resistance)
-  x cloak of velvet
+  ~ cloak of velvet
     - 30% chance for hostile to not notice mob, even when mob is in hostile's FOV
     - Slightly increases dexterity
   x cloak of thorns
@@ -1194,12 +1226,12 @@ Items/Machines
   - "blade trap kit": Creates blade trap on tile. 6 charges; cannot be recharged.
     - Blade trap:
       - Deals massive damage to *any* mob that steps on it, with 10% chance to
-        evade trap. (Note, damage should not be enough to one-shot player.)
+        evade trap.
       - Will be avoided if possible by pathfinding AI.
       - Very quiet, maybe even silent.
       - Would be disabled by engineers.
-  - "fume hood" (CAV): Grants rFume∞ for ~10 turns. 4 charges.
-  x "hammer": Destroys a machine. ∞ charges; cannot be recharged.
+  ~ "fume hood" (CAV): Grants rFume∞ for ~10 turns. 4 charges.
+  ~ "hammer": Destroys a machine. ∞ charges; cannot be recharged.
   x "iron spike": Jams a door. 1 charge; cannot be recharged.
   - "blinding torch": Basically a laser. Can be evoked on a monster that can
     currently see the player (or *could* see the player, if its LOS was long
@@ -1234,8 +1266,8 @@ Items/Machines
   x fountain: Can be evoked to heal player by half of lost health. 2 charges.
   - summon stone: Summons a random (1-3) number of guards on the level to come
     to the command stone's location. 1 charge.
-  - transporter stone: Teleports a random spire on the level to its location.
-    1 charge.
+  - transporter stone: "Signals" a nearby spire to come nearby. Reprograms spire
+    additionally.
 
 Fires/explosions
 ================
@@ -1249,6 +1281,7 @@ Message pane
   - On swapping with mob
   - On mob refusing to swap with player
   - On enemy turning to flee
+  - On enemy noticing player
   x On recieving a status (Confuse, Daze, etc)
   - On having the duration of status extended/lessened
   x On seeing a mob cast a spell
@@ -1263,6 +1296,8 @@ x Group identical messages in msgpane
 x Attack messages should be nice and descriptive ("You skewer the goblin!")
   x Even more descriptive! ("The troll smashes you like an overripe mango!!")
 - Put some messages on same line as previous.
+- Unify messages when using ring abilities
+- Append "*Stab*" to attack messages as appropriate
 
 Fixes
 =====
