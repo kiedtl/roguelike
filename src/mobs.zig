@@ -372,7 +372,7 @@ pub const PatrolTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
-        .max_HP = 10,
+        .max_HP = 8,
         .memory_duration = 3,
         .blood = .Blood,
         .stats = .{ .Willpower = 2, .Evade = 10, .Speed = 110 },
@@ -406,7 +406,7 @@ pub const PlayerTemplate = MobTemplate{
         .deg360_vision = true,
         .no_show_fov = true,
 
-        .max_HP = 12,
+        .max_HP = 15,
         .memory_duration = 10,
         .blood = .Blood,
 
