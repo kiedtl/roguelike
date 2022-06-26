@@ -150,27 +150,29 @@ x frozen fiend
   - "Activates" spire, allowing attacks without other present allies. (Range: 1)
   - "Repairs" spire, healing them completely. (Range: 1)
   - "Reprograms" spire, reseting any player commands. (Range: 1)
-- lightning spire
-  - like dcss' lightning spire
-  - hurls powerful bolts of electricity
-  - rFire+ rElec+ Armor=30% rFume∞ rPara∞ rPois∞
-  - immobile, only attacks when other hostile present
-- torpor spire
-  - like dcss' torpor snail
-  - attempts to slows player when in FOV
-  - TODO: slow *all* mobs in FOV? that might lead to interesting gameplay...
-  - rFire+ rElec+ Armor=30% rFume∞ rPara∞ rPois∞
-  - immobile
-- iron spire
-  - hurls iron shards and orbs of devastation
+
+x lightning spire
+  - Like dcss' lightning spire. Hurls powerful bolts of electricity.
   - rFire+ rElec+ Armor=30% rFume∞ rPois∞
-  - immobile, only attacks when other hostile present
+  - Immobile, only attacks when other hostile present
+x torpor spire
+  - Like DCSS' torpor snail. Casts Slow on player.
+  - rFire+ rElec+ Armor=50% rFume∞ rPois∞
+  - Immobile, only attacks when other hostile present
+x iron spire
+  - hurls iron shards.
+  - rFire+ rElec+ Armor=50% rFume∞ rPois∞
+  - Immobile, only attacks when other hostile present
+- calcite spire
+  - Summons a single undead on the level to come to the spire's location.
+  - rFire+ rElec+ Armor=10% rFume∞ rPois∞
+  - Immobile, only attacks when other hostile are present
 - copper spire
   - Enables copper weapons.
 
 x warden
   - calls for reinforcements by shouting/sounding horn
-- wretched stars
+- wretched stars (TODO: rework this theming, no longer fits w/ lore)
   - "A fiery apparition, wreathed in unapproachable darkness. It has the
     appearance of a wheel with broken spokes, covered within and without
     in glazed eyes."
@@ -500,16 +502,10 @@ Rings
 -----
 Rings have "tiers" instead of an enchantment level (gold, silver, iron).
 
-  .....   .....   .....   .....
-  m@...   .m@..   ..m..   .....
-  .....   .....   ...@.   ...m.
-  .....   .....   .....   ...@.
-
-- bolt of something (beus lance?)
-  ..m..   .....   .....   .....
-  ..@..   ..m..   .....   .....
-  .....   ..@..   ..m..   ..m@.
-  .....   .....   ...@.   .....
+  .....           .....   .....   .....
+  m@...           .m@..   ..m..   .....
+  ..... attack(m) .....   ...@.   ...m.
+  .....           .....   .....   ...@.
 
   .....
   ..m..
@@ -520,24 +516,8 @@ Rings have "tiers" instead of an enchantment level (gold, silver, iron).
 - ring of teleportation: Zap an enemy, then teleport to where the zap ended
   (i.e. Blinkbolt spell).
 
-- ring of electrification: Electrocute all mobs on two sides.
-  - Move two tiles backwards into corridor (ie with walls on the other two sides
-    of your character), wait, attack forwards
-    ##....   ##.....   ##.....
-    ##..m.   ##.m...   ##m....
-    ...@..   ..@M...   .@M....   wait   attack(M)
-    ##..M.   ##.m...   ##m....
-    ##.m..   ##.....   ##.....
-
-- ring of magnetization: cause knockback of all nearby foes onto a single foe.
-  Like Gell's Gravitas in DCSS. Knockbacked foes could possibly hit player, so
-  player must plan accordingly.
-
 - ring of intimidation: confer stun/fear to mob when moving towards it, while
   enraging all other monsters in FOV.
-
-- ring of devastation: hurl beus lance, halving foe's health and causing 3-6
-  knockback.
 
 - ring of distortion: bend space, blinking away all mobs in 3-5 tile radius of
   player. Blinks player as well. All affected mobs, including player, have
@@ -551,8 +531,40 @@ Rings have "tiers" instead of an enchantment level (gold, silver, iron).
   pattern to fight, giving it impressive tankiness and stat boosts (but
   slowness?).
 
-- ring of damnation: ignite tiles near/on foes (2-3 tile radius) for 5-15
-  turns.
+- ring of electrification: Electrocute all mobs on two sides.
+  - Move two tiles backwards into corridor (ie with walls on the other two sides
+    of your character), wait, attack forwards
+    ##....   ##.....   ##.....
+    ##..m.   ##.m...   ##m....
+    ...@..   ..@M...   .@M....   wait   attack(M)
+    ##..M.   ##.m...   ##m....
+    ##.m..   ##.....   ##.....
+
+- ring of magnetization: cause knockback of all nearby foes onto a single foe.
+  Like Gell's Gravitas in DCSS. Knockbacked foes could possibly hit player, so
+  player must plan accordingly.
+  .....   .....   .....   .....
+  ..m..   .....   .....   ..@..
+  ..@..   ..m..   .@m..   ..m..
+  .....   ..@..   .....   .....
+
+- ring of devastation: hurl beus lance, halving foe's health and causing 3-6
+  knockback.
+  - Move backwards from enemy, move right/left, move up.
+    ..m..   .....   .....   .....
+    ..@..   ..m..   .....   .....
+    .....   ..@..   ..m..   ..m@.
+    .....   .....   ...@.   .....
+
+- ring of damnation: create a fire explosion on all tiles containing foes.
+  - Move in a diagonal direction towards a wall, wait, attack in the opposite
+    direction (still diagonally).
+    .m...   .....
+    ..@..   ..m..
+    .....   ...@. wait, attack(m)
+    ....#   ....#
+
+- ring of XXX: knockback two foes next to you 5-9 spaces.
   - Attack two enemies in opposite directions, move in cardinal direction,
     move back, wait.
     .....                           .....   .....
@@ -560,7 +572,6 @@ Rings have "tiers" instead of an enchantment level (gold, silver, iron).
     .1@2.   attack(1)   attack(2)   .1.2.   .1@2.   wait
     .....                           ..@..   .....
     .....                           .....   .....
-  - Will also knockback the two foes 3 spaces.
 
 x ring of electrocution: Electrocute tiles in four corners next to player.
   - Attack in a cardinal direction, move in opposite direction, move
@@ -593,12 +604,8 @@ x ring of extermination: fire bolt of fire in direction.
     m@...   m....   m..@..   m.....   m....@
     .....   ..@..   ......   ....@.   ......
 
-- ring of debilitation: -10-30% melee, -10-30% missile
-  .....   .....   .....   .....
-  ..m..   .....   .....   ..@..
-  ..@..   ..m..   .@m..   ..m..
-  .....   ..@..   .....   .....
-
+~ ring of debilitation: -10-30% melee, -10-30% missile
+  - Obsolete: covered by potions of debilitation, seizure traps
 
 - ring of encumberation (gold only): melee,missile=100%, evade=0%
 
@@ -639,7 +646,6 @@ Trying to read a [forbidden] book results in:
 [unreadable] "Book of the Dead"
 [unreadable] "Of Men and Muskrats"
 [unreadable] "Is Man a Myth?"
-[unreadable] "The Vale of Fear"/"Skarlef"
 [forbidden]  "Book of Hymns"/"Soraldal"
 [barbarians] "On the Goblins"/"Urukdal"
   - "You learn that two dark-skinned humans named Valimer and Kaiüs
@@ -715,12 +721,11 @@ manuals
   - extremely rare, found in golden rooms
   - provides boost to a stat the player may or may not be able to take
     advantage of, depending on build type.
-  - stats: missile%, evade%, martial combo, sneak
-  - (*not* melee% stat, as every build would be able to take advantage
-    of that.)
+  - stats: missile%, evade%, martial combo, sneak, missile%
   - idea: ability to attack more quickly (decreased weapon delay)
   - idea: mp * 1.5, mp * 2, mp * 2.5
   - idea: permanent riposte effect
+  - idea: open melee effect (book teaches you melee methods that only work in the open)
   - idea: closed melee effect (book teaches how to fight effectively in corridors)
   - idea: book of torment -> 25% bloodlust
 
@@ -951,6 +956,7 @@ x Emberling/sparkling summoning trap kits
 - Warn when stepping into enemy's FOV
 - Auto-wait: don't wait while in combat or in dangerous area
 - More messages
+- Startup screen, map generation loading bar
 *** v1.2.0 release ***
 - Bloodlings and related mages
 - Operators
@@ -988,7 +994,6 @@ x Emberling/sparkling summoning trap kits
   - status/mob(?)/item description lookup screen
   - features/items screen, remove announcement of items
   - keybinding help "?" screen
-- Startup screen, map generation loading bar
 - Posters/books
   - Poster types (graffiti, announcement, engraving, etc)
   - Add bookshelves and book types
