@@ -2179,6 +2179,8 @@ pub const Animation = union(enum) {
         coord: Coord,
         char: u32,
         fg: ?u32 = null,
+        delay: usize = 170,
+        repeat: usize = 1,
     },
     TraverseLine: struct {
         start: Coord,
@@ -2206,8 +2208,17 @@ pub const Animation = union(enum) {
     pub const ELEC_LINE_BG = 0x8fdfff;
     pub const ELEC_LINE_MIX = 0.02;
 
-    pub fn blink(coord: Coord, char: u32, fg: ?u32) Animation {
-        return Animation{ .BlinkChar = .{ .coord = coord, .char = char, .fg = fg } };
+    pub fn blink(coord: Coord, char: u32, fg: ?u32, opts: struct {
+        repeat: usize = 1,
+        delay: usize = 170,
+    }) Animation {
+        return Animation{ .BlinkChar = .{
+            .coord = coord,
+            .char = char,
+            .fg = fg,
+            .repeat = opts.repeat,
+            .delay = opts.delay,
+        } };
     }
 
     pub fn apply(self: Animation) void {
@@ -2223,10 +2234,17 @@ pub const Animation = union(enum) {
                 const dy = @intCast(isize, anim.coord.y) + mapwin.starty;
                 const old = termbox.oldCell(dx, dy);
 
-                termbox.tb_change_cell(dx, dy, anim.char, anim.fg orelse old.fg, colors.BG);
-                termbox.tb_present();
-                std.time.sleep(170_000_000);
-                termbox.tb_change_cell(dx, dy, old.ch, old.fg, old.bg);
+                var ctr: usize = anim.repeat;
+                while (ctr > 0) : (ctr -= 1) {
+                    termbox.tb_change_cell(dx, dy, anim.char, anim.fg orelse old.fg, colors.BG);
+                    termbox.tb_present();
+                    std.time.sleep(anim.delay * 1_000_000);
+                    termbox.tb_change_cell(dx, dy, old.ch, old.fg, old.bg);
+                    if (ctr > 0) {
+                        termbox.tb_present();
+                        std.time.sleep(anim.delay * 1_000_000);
+                    }
+                }
             },
             .TraverseLine => |anim| {
                 const line = anim.start.drawLine(anim.end, state.mapgeometry, anim.extra);

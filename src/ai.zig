@@ -4,6 +4,8 @@ const assert = std.debug.assert;
 const math = std.math;
 const meta = std.meta;
 
+const colors = @import("colors.zig");
+const display = @import("display.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
 const err = @import("err.zig");
@@ -186,6 +188,14 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
 
     // No existing record, append.
     mob.enemies.append(new) catch unreachable;
+
+    // Animation
+    if (new.mob == state.player and state.player.cansee(mob.coord)) {
+        display.Animation.blink(mob.coord, '!', colors.AQUAMARINE, .{
+            .repeat = 2,
+            .delay = 120,
+        }).apply();
+    }
 }
 
 // For every enemy in the mob's FOV, create an "enemy record" with a pointer to
