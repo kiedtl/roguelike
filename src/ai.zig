@@ -177,6 +177,15 @@ pub fn updateEnemyKnowledge(mob: *Mob, enemy: *Mob, last_seen: ?Coord) void {
 }
 
 pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
+    // Avoid updating record (and thus printing an animation) if the mob is
+    // already dead
+    //
+    // (this can happen if the mob was attacked via stab, killed, but then
+    // fight() is still informing mob of attack)
+    if (mob.should_be_dead()) {
+        return;
+    }
+
     // Search for an existing record.
     for (mob.enemies.items) |*enemyrec| {
         if (enemyrec.mob == new.mob) {

@@ -2176,14 +2176,6 @@ pub const Mob = struct { // {{{
     };
 
     pub fn fight(attacker: *Mob, recipient: *Mob, opts: FightOptions) void {
-        // If the defender didn't know about the attacker's existence now's a
-        // good time to find out
-        ai.updateEnemyRecord(recipient, .{
-            .mob = attacker,
-            .counter = recipient.memory_duration,
-            .last_seen = attacker.coord,
-        });
-
         const martial = @intCast(usize, attacker.stat(.Martial));
         const weapons = attacker.listOfWeapons();
         const wielded_wp = if (attacker.inventory.equipment(.Weapon).*) |w| w.Weapon else null;
@@ -2214,6 +2206,13 @@ pub const Mob = struct { // {{{
             const d = attacker.coord.closestDirectionTo(recipient.coord, state.mapgeometry);
             attacker.declareAction(.{ .Attack = .{ .who = recipient, .coord = recipient.coord, .direction = d, .delay = longest_delay } });
         }
+
+        // If the defender didn't know about the attacker's existence now's a
+        // good time to find out
+        //
+        // (Do this after actually attacking to avoid blinking the '!'
+        // animation, then immediately the '∞' animation for stabs.)
+        ai.updateEnemyKnowledge(recipient, attacker, null);
     }
 
     fn _fightWithWeapon(
@@ -2368,14 +2367,10 @@ pub const Mob = struct { // {{{
 
         // Inform defender of attacker
         //
-        // We already do this in fight() but this takes care of ranged combat,
-        // spell damage, etc.
+        // We already do this in fight() for missed attacks, but this takes
+        // care of ranged combat, spell damage, etc.
         if (d.by_mob) |attacker| {
-            ai.updateEnemyRecord(self, .{
-                .mob = attacker,
-                .counter = self.memory_duration,
-                .last_seen = attacker.coord,
-            });
+            ai.updateEnemyKnowledge(self, attacker, null);
         }
 
         // Make animations
