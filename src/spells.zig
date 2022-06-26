@@ -10,8 +10,10 @@ const math = std.math;
 const assert = std.debug.assert;
 const mem = std.mem;
 
+const ai = @import("ai.zig");
 const colors = @import("colors.zig");
 const display = @import("display.zig");
+const dijkstra = @import("dijkstra.zig");
 const types = @import("types.zig");
 const combat = @import("combat.zig");
 const err = @import("err.zig");
@@ -46,7 +48,7 @@ const WIDTH = state.WIDTH;
 // -----------------------------------------------------------------------------
 
 // Create spell that summons creatures from a corpse.
-fn createCorpseCallingSpell(
+fn createCorpseCreationSpell(
     comptime mob_id: []const u8,
     comptime name: []const u8,
     template: *const mobs.MobTemplate,
@@ -82,8 +84,67 @@ fn createCorpseCallingSpell(
     };
 }
 
-pub const CAST_CALL_EMBERLING = createCorpseCallingSpell("emberling", "emberling", &mobs.EmberlingTemplate);
-pub const CAST_CALL_SPARKLING = createCorpseCallingSpell("sparkling", "sparkling", &mobs.SparklingTemplate);
+pub const CAST_CREATE_EMBERLING = createCorpseCreationSpell("emberling", "emberling", &mobs.EmberlingTemplate);
+pub const CAST_CREATE_SPARKLING = createCorpseCreationSpell("sparkling", "sparkling", &mobs.SparklingTemplate);
+
+pub const CAST_CALL_UNDEAD = Spell{
+    .id = "sp_call_undead",
+    .name = "call undead",
+    .cast_type = .Smite,
+    .checks_will = true,
+    .effect_type = .{
+        .Custom = struct {
+            fn f(caster_coord: Coord, _: Spell, opts: SpellOptions, target: Coord) void {
+                _ = opts;
+                const caster = state.dungeon.at(caster_coord).mob.?;
+                const target_mob = state.dungeon.at(target).mob.?;
+
+                // Find the closest undead ally
+                var mob: ?*Mob = null;
+                var y: usize = 0;
+                undead_search: while (y < HEIGHT) : (y += 1) {
+                    var x: usize = 0;
+                    while (x < WIDTH) : (x += 1) {
+                        const coord = Coord.new2(caster_coord.z, x, y);
+                        if (state.dungeon.at(coord).mob) |candidate| {
+                            if (candidate.allegiance == caster.allegiance and
+                                (candidate.life_type == .Undead or
+                                candidate.ai.flag(.CalledWithUndead)) and
+                                candidate.ai.phase != .Hunt)
+                            {
+                                mob = candidate;
+                                break :undead_search;
+                            }
+                        }
+                    }
+                }
+
+                if (mob) |undead| {
+                    if (undead.ai.phase == .Work) {
+                        undead.sustiles.append(.{ .coord = target, .unforgettable = true }) catch err.wat();
+                    } else if (undead.ai.phase == .Investigate) {
+                        ai.updateEnemyKnowledge(undead, target_mob, null);
+                    } else unreachable;
+
+                    display.Animation.apply(.{ .EncircleChar = .{
+                        .coord = caster_coord,
+                        .char = '!',
+                        .fg = colors.PALE_VIOLET_RED,
+                    } });
+                    if (target_mob == state.player and state.player.cansee(caster_coord) and
+                        !state.player.cansee(undead.coord))
+                    {
+                        state.message(.Info, "You feel like something is searching for you.", .{});
+                    }
+                } else {
+                    if (target_mob == state.player and state.player.cansee(caster_coord)) {
+                        state.message(.Unimportant, "Nothing seems to happen...", .{});
+                    }
+                }
+            }
+        }.f,
+    },
+};
 
 // TODO: generalize into a healing spell?
 pub const CAST_REGEN = Spell{

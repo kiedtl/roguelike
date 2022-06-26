@@ -689,6 +689,7 @@ fn createSpireTemplate(
 pub const IronSpireTemplate = createSpireTemplate("iron", '1', .{ .MP_cost = 4, .spell = &spells.BOLT_IRON, .power = 3 }, .{});
 pub const TorporSpireTemplate = createSpireTemplate("torpor", '2', .{ .MP_cost = 4, .spell = &spells.CAST_FEEBLE, .duration = 4 }, .{ .willpower = 7 });
 pub const LightningSpireTemplate = createSpireTemplate("lightning", '3', .{ .MP_cost = 4, .spell = &spells.BOLT_LIGHTNING, .power = 2 }, .{});
+pub const CalciteSpireTemplate = createSpireTemplate("calcite", '4', .{ .MP_cost = 4, .spell = &spells.CAST_CALL_UNDEAD }, .{ .willpower = 8 });
 // }}}
 
 pub const KyaniteStatueTemplate = MobTemplate{
@@ -981,6 +982,7 @@ pub const DeathMageTemplate = MobTemplate{
             .is_curious = true,
             .is_fearless = false,
             .spellcaster_backup_action = .KeepDistance,
+            .flags = &[_]AI.Flag{.CalledWithUndead},
         },
         .allegiance = .Necromancer,
 
@@ -1024,7 +1026,7 @@ pub const EmberMageTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 05, .spell = &spells.CAST_CALL_EMBERLING },
+            .{ .MP_cost = 05, .spell = &spells.CAST_CREATE_EMBERLING },
             .{ .MP_cost = 10, .spell = &spells.CAST_FLAMMABLE, .power = 20 },
         },
         .max_MP = 15,
@@ -1061,7 +1063,7 @@ pub const BrimstoneMageTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 15, .spell = &spells.CAST_CALL_EMBERLING },
+            .{ .MP_cost = 15, .spell = &spells.CAST_CREATE_EMBERLING },
             .{ .MP_cost = 01, .spell = &spells.CAST_FLAMMABLE, .power = 20 },
             .{ .MP_cost = 15, .spell = &spells.CAST_FRY, .power = 7 },
             .{ .MP_cost = 10, .spell = &spells.CAST_HASTE_EMBERLING, .power = 7 },
@@ -1099,7 +1101,7 @@ pub const SparkMageTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 6, .spell = &spells.CAST_CALL_SPARKLING },
+            .{ .MP_cost = 6, .spell = &spells.CAST_CREATE_SPARKLING },
             // About five turn's delay until next cast (power<3> - MP_cost<8> = 5)
             .{ .MP_cost = 8, .spell = &spells.BOLT_PARALYSE, .power = 1 },
         },
@@ -1135,7 +1137,7 @@ pub const LightningMageTemplate = MobTemplate{
         .allegiance = .Necromancer,
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 06, .spell = &spells.CAST_CALL_SPARKLING },
+            .{ .MP_cost = 06, .spell = &spells.CAST_CREATE_SPARKLING },
             .{ .MP_cost = 10, .spell = &spells.BOLT_PARALYSE, .power = 2 },
             .{ .MP_cost = 03, .spell = &spells.CAST_DISCHARGE },
             .{ .MP_cost = 15, .spell = &spells.CAST_HASTE_SPARKLING, .power = 7 },
@@ -1188,7 +1190,7 @@ pub const EmberlingTemplate = MobTemplate{
         .stats = .{ .Willpower = 1, .Evade = 10, .Speed = 60, .Vision = 4 },
     },
     // XXX: Emberlings are never placed alone, this determines number of
-    // summoned emberlings from CAST_CALL_EMBERLING
+    // summoned emberlings from CAST_CREATE_EMBERLING
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
             .{ .mob = "emberling", .weight = 1, .count = minmax(usize, 2, 3) },
@@ -1237,7 +1239,7 @@ pub const SparklingTemplate = MobTemplate{
         .stats = .{ .Willpower = 1, .Evade = 10, .Speed = 60, .Vision = 4 },
     },
     // XXX: Sparklings are never placed alone, this determines number of
-    // summoned sparklings from CAST_CALL_SPARKLING
+    // summoned sparklings from CAST_CREATE_SPARKLING
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
             .{ .mob = "sparkling", .weight = 1, .count = minmax(usize, 2, 3) },
@@ -1634,6 +1636,7 @@ pub const MOBS = [_]MobTemplate{
     IronSpireTemplate,
     TorporSpireTemplate,
     LightningSpireTemplate,
+    CalciteSpireTemplate,
     KyaniteStatueTemplate,
     NebroStatueTemplate,
     CrystalStatueTemplate,

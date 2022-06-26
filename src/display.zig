@@ -2182,6 +2182,11 @@ pub const Animation = union(enum) {
         delay: usize = 170,
         repeat: usize = 1,
     },
+    EncircleChar: struct {
+        coord: Coord,
+        char: u32,
+        fg: u32,
+    },
     TraverseLine: struct {
         start: Coord,
         end: Coord,
@@ -2245,6 +2250,22 @@ pub const Animation = union(enum) {
                         std.time.sleep(anim.delay * 1_000_000);
                     }
                 }
+            },
+            .EncircleChar => |anim| {
+                const directions = [_]Direction{ .NorthWest, .North, .NorthEast, .East, .SouthEast, .South, .SouthWest, .West, .NorthWest, .North, .NorthEast };
+                for (&directions) |d| if (anim.coord.move(d, state.mapgeometry)) |neighbor| {
+                    const dx = @intCast(isize, neighbor.x) + mapwin.startx;
+                    const dy = @intCast(isize, neighbor.y) + mapwin.starty;
+                    const old = termbox.oldCell(dx, dy);
+
+                    termbox.tb_change_cell(dx, dy, anim.char, anim.fg, colors.BG);
+                    termbox.tb_present();
+
+                    std.time.sleep(90_000_000);
+
+                    termbox.tb_change_cell(dx, dy, old.ch, old.fg, old.bg);
+                    termbox.tb_present();
+                };
             },
             .TraverseLine => |anim| {
                 const line = anim.start.drawLine(anim.end, state.mapgeometry, anim.extra);

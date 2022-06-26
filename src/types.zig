@@ -778,6 +778,7 @@ pub const SuspiciousTileRecord = struct {
     coord: Coord,
     time_stared_at: usize = 0,
     age: usize = 0,
+    unforgettable: bool = false,
 };
 
 pub const Message = struct {
@@ -791,6 +792,8 @@ pub const Message = struct {
 // Note, this is outdated. Cave goblins are just as nice as plains humans,
 // and southern humans are supposed to be the protoganists (sort of) in this
 // universe.
+//
+// TODO: rewrite allegiances (and rename to 'Factions' maybe?)
 //
 pub const Allegiance = enum {
     Necromancer,
@@ -1331,6 +1334,7 @@ pub const AI = struct {
     pub const Flag = enum {
         AwakesNearAllies, // If the monster is dormant, it awakes near allies.
         SocialFighter, // Won't fight unless there are aware allies around.
+        CalledWithUndead, // Can be called by CAST_CALL_UNDEAD, even if not undead.
     };
 
     pub fn flag(self: *const AI, f: Flag) bool {

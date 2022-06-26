@@ -350,7 +350,7 @@ fn checkForNoises(mob: *Mob) void {
     for (mob.sustiles.items) |*record| {
         record.age += 1;
 
-        if (record.age < NOISE_FORGET_AGE and
+        if ((record.unforgettable or record.age < NOISE_FORGET_AGE) and
             record.time_stared_at < NOISE_DONE_CHECKING)
         {
             new_sustiles.append(record.*) catch err.wat();
