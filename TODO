@@ -924,7 +924,7 @@ x More kits and traps: fire, shock, incineration, knockback
   x Remove ring statuses
   - MP costs for rings?
 x Fix trtr chambers; add more of them
-- Spires and spire kits
+x Iron, lightning, torpor, and calcite spires
 x Bone weapons, corruption effects
 - More potions
   x Potion of debilitation, traps of seizure gas
@@ -1010,17 +1010,22 @@ x Emberling/sparkling summoning trap kits
 
 Animations
 ==========
-x Basic combat animations
-- Throwing items
-- Zaps, blinkbolt, etc
-- Bolts of fire
-- Knockback
-- Fire explosion
-- Electricity explosion
-- Normal explosion
-- Hostile turning to fleeing
-- Hostile turning back to fight
-- Hostile noticing you
+- Event animations:
+  x Basic combat animations
+  x Throwing items
+  x lightning bolt, blinkbolt
+  - Bolts of fire
+  x Knockback
+  - Fire explosion
+  - Electricity explosion
+  - Normal explosion
+  - Hostile turning to fleeing
+  - Hostile turning back to fight
+  x Hostile noticing you
+- Persistent animations:
+  - Dormant/sleeping monsters (blinking 'Z')
+  - Shimmering golden/obsidian/cuprite doors/walls
+  - Lava and water
 
 Ring and movements:
 ===================
