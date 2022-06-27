@@ -2156,11 +2156,13 @@ pub const Mob = struct { // {{{
         } else false;
     }
 
-    pub fn totalMeleeOutput(self: *Mob) usize {
+    pub fn totalMeleeOutput(self: *Mob, defender: *Mob) usize {
         const weapons = self.listOfWeapons();
         var total: usize = 0;
-        for (weapons.constSlice()) |weapon|
-            total += combat.damageOfMeleeAttack(self, weapon.damage, false);
+        for (weapons.constSlice()) |weapon| {
+            const weapon_damage = combat.damageOfWeapon(self, weapon, defender);
+            total += combat.damageOfMeleeAttack(self, weapon_damage, false);
+        }
         return total;
     }
 
