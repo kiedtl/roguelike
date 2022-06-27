@@ -46,8 +46,9 @@ pub fn damageOfWeapon(attacker: ?*const Mob, weapon: *const Weapon, recipient: ?
             damage += 1;
     }
     if (recipient != null) {
-        // If bone weapon and defender is living, +1 dmg.
-        if (weapon.ego == .Bone and recipient.?.life_type == .Living)
+        // If bone weapon and defender is living and not corrupted, +1 dmg.
+        if (weapon.ego == .Bone and recipient.?.life_type == .Living and
+            recipient.?.isUnderStatus(.Corruption) == null)
             damage += 1;
         // If bone weapon and defender is undead, -1 dmg.
         if (weapon.ego == .Bone and recipient.?.life_type == .Undead)
