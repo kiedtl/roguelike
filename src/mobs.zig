@@ -510,10 +510,7 @@ pub const DustlingTemplate = MobTemplate{
         .id = "dustling",
         .species = &Species{
             .name = "dustling",
-            .default_attack = &Weapon{
-                .damage = 1,
-                .strs = &items.FIST_STRS,
-            },
+            .default_attack = &Weapon{ .damage = 1, .strs = &items.FIST_STRS },
         },
         .tile = 'ð',
         .ai = AI{
@@ -968,11 +965,75 @@ pub const SpectreMageTemplate = MobTemplate{
     .armor = &items.LeatherArmor,
 };
 
+pub const BoneMageTemplate = MobTemplate{
+    .mob = .{
+        .id = "bone_mage",
+        .species = &HumanSpecies,
+        .tile = 'm',
+        .ai = AI{
+            .profession_name = "bone mage",
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.mageFight,
+            .is_combative = true,
+            .is_curious = true,
+            .spellcaster_backup_action = .Melee,
+            .flags = &[_]AI.Flag{.CalledWithUndead},
+        },
+        .allegiance = .Necromancer,
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 25, .spell = &spells.CAST_HASTE_UNDEAD, .duration = 5 },
+        },
+        .max_MP = 20,
+
+        .max_HP = 7,
+        .memory_duration = 6,
+        .stats = .{ .Willpower = 4, .Vision = 5, .Melee = 50 },
+    },
+    .weapon = &items.BoneMaceWeapon,
+
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "bone_rat", .weight = 4, .count = minmax(usize, 2, 3) },
+        },
+    },
+};
+
+pub const DeathKnightTemplate = MobTemplate{
+    .mob = .{
+        .id = "death_knight",
+        .species = &HumanSpecies,
+        .tile = 'k',
+        .ai = AI{
+            .profession_name = "death knight",
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.meleeFight,
+            .is_fearless = true,
+            .flags = &[_]AI.Flag{.CalledWithUndead},
+        },
+        .allegiance = .Necromancer,
+
+        .max_HP = 10,
+        .memory_duration = 5,
+        .stats = .{ .Willpower = 6, .Melee = 70, .Evade = 10, .Speed = 100, .Vision = 5 },
+    },
+    .weapon = &items.BoneSwordWeapon,
+    .armor = &items.HauberkArmor,
+
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "skeleton", .weight = 1, .count = minmax(usize, 2, 3) },
+        },
+    },
+};
+
 pub const DeathMageTemplate = MobTemplate{
     .mob = .{
         .id = "death_mage",
         .species = &HumanSpecies,
-        .tile = 'מ',
+        .tile = 'M',
         .ai = AI{
             .profession_name = "death mage",
             .profession_description = "watching",
@@ -1159,6 +1220,72 @@ pub const LightningMageTemplate = MobTemplate{
     },
 };
 
+pub const SkeletonTemplate = MobTemplate{
+    .mob = .{
+        .id = "skeleton",
+        .species = &Species{
+            .name = "skeleton",
+            .default_attack = &Weapon{ .damage = 1, .strs = &items.FIST_STRS },
+        },
+        .tile = 's',
+        .ai = AI{
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.meleeFight,
+            .is_fearless = true,
+            .flags = &[_]AI.Flag{.CalledWithUndead},
+        },
+        .allegiance = .Necromancer,
+
+        .max_HP = 5,
+        .memory_duration = 5,
+
+        .deaf = true,
+        .life_type = .Undead,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = -25 },
+        .stats = .{ .Willpower = 6, .Speed = 100, .Vision = 5 },
+    },
+};
+
+pub const BoneRatTemplate = MobTemplate{
+    .mob = .{
+        .id = "bone_rat",
+        .species = &Species{
+            .name = "bone rat",
+            .default_attack = &Weapon{ .damage = 1, .strs = &items.BITING_STRS },
+        },
+        .tile = 'r',
+        .undead_prefix = "",
+        .ai = AI{
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.meleeFight,
+            .is_fearless = true,
+        },
+        .allegiance = .Necromancer,
+
+        .deaf = true,
+        .life_type = .Undead,
+
+        .max_HP = 2,
+        .memory_duration = 4,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = -25 },
+        .stats = .{ .Willpower = 1, .Evade = 10, .Melee = 70, .Speed = 60, .Vision = 4 },
+    },
+
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "bone_rat", .count = minmax(usize, 0, 1) },
+        },
+    },
+};
+
 pub const EmberlingTemplate = MobTemplate{
     .mob = .{
         .id = "emberling",
@@ -1306,42 +1433,6 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
     },
     .weapon = &items.RapierWeapon,
     .armor = &items.ScalemailArmor,
-};
-
-pub const BoneRatTemplate = MobTemplate{
-    .mob = .{
-        .id = "bone_rat",
-        .species = &Species{
-            .name = "bone rat",
-            .default_attack = &Weapon{ .damage = 1, .strs = &items.BITING_STRS },
-        },
-        .tile = 'r',
-        .undead_prefix = "",
-        .ai = AI{
-            .profession_description = "watching",
-            .work_fn = ai.standStillAndGuardWork,
-            .fight_fn = ai.meleeFight,
-            .is_fearless = true,
-        },
-        .allegiance = .Necromancer,
-
-        .deaf = true,
-        .life_type = .Undead,
-
-        .max_HP = 4,
-        .memory_duration = 4,
-        .blood = null,
-        .corpse = .None,
-
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = -25 },
-        .stats = .{ .Willpower = 1, .Evade = 10, .Melee = 70, .Speed = 60, .Vision = 4 },
-    },
-
-    .squad = &[_][]const MobTemplate.SquadMember{
-        &[_]MobTemplate.SquadMember{
-            .{ .mob = "bone_rat", .count = minmax(usize, 0, 1) },
-        },
-    },
 };
 
 pub const TorturerNecromancerTemplate = MobTemplate{
@@ -1646,16 +1737,19 @@ pub const MOBS = [_]MobTemplate{
     HaulerTemplate,
     AncientMageTemplate,
     SpectreMageTemplate,
+    BoneMageTemplate,
+    DeathKnightTemplate,
     DeathMageTemplate,
     EmberMageTemplate,
     BrimstoneMageTemplate,
     SparkMageTemplate,
     LightningMageTemplate,
+    SkeletonTemplate,
+    BoneRatTemplate,
     EmberlingTemplate,
     SparklingTemplate,
     SkeletalAxemasterTemplate,
     SkeletalBlademasterTemplate,
-    BoneRatTemplate,
     TorturerNecromancerTemplate,
     BurningBruteTemplate,
     FrozenFiendTemplate,

@@ -44,15 +44,20 @@
 # easier mobs, intended for early game
 # TODO: spark mage should be mid-game due to `paralysing zap` spell?
 "bone_rat"            	  15 	  15 	  15 	  10 	   5 	  10 	   5 	   - 	   - 	   - 	   - 	   - 	   - 	   -
+"bone_mage"           	  15 	  15 	  15 	  10 	   5 	  10 	   5 	   - 	   - 	   - 	   - 	   - 	   - 	   -
 "ember_mage"          	  15 	  15 	  15 	  10 	   5 	  10 	   5 	   - 	   - 	   - 	   - 	   - 	   - 	   -
 "spark_mage"          	  15 	  15 	  15 	  10 	   5 	  10 	   5 	   - 	   - 	   - 	   - 	   - 	   - 	   -
 
+# medium-difficulty monsters, early-middle game
+"skeleton"            	   - 	   - 	   - 	  10 	  15 	  10 	  10 	  15 	  15 	   - 	   - 	   - 	   - 	   -
+
 # medium-difficulty monsters, middle-late game
 "warden"              	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
-"spectre_mage"        	   - 	   - 	  10 	  10 	  15 	  10 	  10 	  15 	   - 	   - 	   - 	  10 	  10 	  10
+"spectre_mage"        	   - 	   - 	   - 	  10 	  15 	  10 	  10 	  15 	  15 	   - 	   - 	  10 	  10 	  10
 "cinder_worm"         	   - 	   - 	   - 	   - 	   - 	  10 	  20 	  30 	  20 	  20 	  20 	  30 	  25 	  25
 "war_olg"             	   - 	   - 	   - 	  10 	  10 	  15 	  20 	  30 	  20 	  25 	  25 	  30 	  30 	  30
-"necromancer"         	   - 	   - 	   5 	  10 	  15 	   5 	  10 	  15 	  10 	  15 	  15 	  10 	  10 	  20
+"necromancer"         	   - 	   - 	   - 	  10 	  15 	   5 	  10 	  15 	  10 	  15 	  15 	  10 	  10 	  20
+"death_knight"        	   - 	   - 	   - 	  10 	  15 	   5 	  10 	  15 	  10 	  15 	  15 	  10 	  10 	  20
 "skeletal_blademaster"	   - 	   - 	   - 	   5 	  10 	   5 	  10 	  15 	  10 	  15 	  15 	  10 	  15 	  25
 
 # higher-difficulty monsters. late-game.
