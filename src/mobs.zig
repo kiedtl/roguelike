@@ -933,7 +933,7 @@ pub const AncientMageTemplate = MobTemplate{
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rElec = 75 },
         .stats = .{ .Willpower = 10, .Evade = 20, .Speed = 120 },
     },
-    .weapon = &items.GreatMaceWeapon,
+    .weapon = &items.BoneGreatMaceWeapon,
     .armor = &items.HauberkArmor,
     .cloak = &items.SilCloak,
 };
@@ -997,7 +997,7 @@ pub const DeathMageTemplate = MobTemplate{
         .blood = .Blood,
         .stats = .{ .Willpower = 8, .Evade = 10, .Speed = 100, .Vision = 5 },
     },
-    .weapon = &items.DaggerWeapon,
+    .weapon = &items.BoneSwordWeapon,
     .armor = &items.LeatherArmor,
 
     .squad = &[_][]const MobTemplate.SquadMember{
