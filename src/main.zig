@@ -386,7 +386,7 @@ fn readInput() bool {
             };
         } else if (ev.ch != 0) {
             return switch (ev.ch) {
-                's' => b: {
+                't' => b: {
                     player.auto_wait_enabled = !player.auto_wait_enabled;
                     const str = if (player.auto_wait_enabled)
                         @as([]const u8, "enabled")
@@ -396,20 +396,20 @@ fn readInput() bool {
                     break :b false;
                 },
                 '\'' => state.player.swapWeapons(),
-                'a' => player.activateSurfaceItem(),
+                'A' => player.activateSurfaceItem(),
                 'i' => display.drawInventoryScreen(),
-                'x' => display.drawExamineScreen(null),
-                '@', 'c' => display.drawExamineScreen(.Mob),
+                'v' => display.drawExamineScreen(null),
+                '@' => display.drawExamineScreen(.Mob),
                 ',' => player.grabItem(),
-                '.' => state.player.rest(),
-                'h' => player.moveOrFight(.West),
-                'j' => player.moveOrFight(.South),
-                'k' => player.moveOrFight(.North),
-                'l' => player.moveOrFight(.East),
-                'y' => player.moveOrFight(.NorthWest),
-                'u' => player.moveOrFight(.NorthEast),
-                'b' => player.moveOrFight(.SouthWest),
-                'n' => player.moveOrFight(.SouthEast),
+                's', '.' => state.player.rest(),
+                'q', 'y' => player.moveOrFight(.NorthWest),
+                'w', 'k' => player.moveOrFight(.North),
+                'e', 'u' => player.moveOrFight(.NorthEast),
+                'd', 'l' => player.moveOrFight(.East),
+                'c', 'n' => player.moveOrFight(.SouthEast),
+                'x', 'j' => player.moveOrFight(.South),
+                'z', 'b' => player.moveOrFight(.SouthWest),
+                'a', 'h' => player.moveOrFight(.West),
                 else => false,
             };
         } else err.wat();

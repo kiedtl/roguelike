@@ -275,13 +275,13 @@ pub fn moveOrFight(direction: Direction) bool {
         if (state.dungeon.at(state.player.coord).surface) |s| switch (s) {
             .Machine => |m| if (m.interact1) |interaction| {
                 if (m.canBeInteracted(state.player, &interaction)) {
-                    state.message(.Info, "$c({s})$. Press $ba$. to activate.", .{m.name});
+                    state.message(.Info, "$c({s})$. Press $bA$. to activate.", .{m.name});
                 } else {
                     state.message(.Info, "$c({s})$. $gCannot be activated.$.", .{m.name});
                 }
             },
             .Poster => {
-                state.message(.Info, "$c(poster)$. Press $ba$. to read.", .{});
+                state.message(.Info, "$c(poster)$. Press $bA$. to read.", .{});
             },
             else => {},
         };
