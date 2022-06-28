@@ -1010,7 +1010,7 @@ pub const DeathKnightTemplate = MobTemplate{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
-            .is_fearless = true,
+            .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
             .flags = &[_]AI.Flag{.CalledWithUndead},
         },
         .allegiance = .Necromancer,
