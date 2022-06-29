@@ -2871,7 +2871,7 @@ pub const Mob = struct { // {{{
 
         // If there are a lot of walls in the way, quiet the noise
         var radius = noise.intensity.radiusHeard();
-        if (self != state.player) radius -|= (walls_in_way * 2);
+        if (self != state.player) radius -|= walls_in_way;
         if (self == state.player) radius = radius * 150 / 100;
 
         if (self.coord.distance(coord) > radius)
