@@ -1868,6 +1868,7 @@ pub fn placeMob(
             }
         }
 
+        squad.leader = mob_ptr;
         mob_ptr.squad = squad;
     }
 

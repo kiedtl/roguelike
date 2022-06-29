@@ -1382,7 +1382,7 @@ pub const Squad = struct {
     __prev: ?*Squad = null,
 
     members: StackBuffer(*Mob, 5) = StackBuffer(*Mob, 5).init(null),
-    leader: ?*Mob = null,
+    leader: ?*Mob = null, // FIXME: Should never be null in practice!
     enemies: EnemyRecord.AList = undefined,
 
     pub const List = LinkedList(Squad);

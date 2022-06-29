@@ -174,9 +174,14 @@ pub fn dummyWork(m: *Mob, _: mem.Allocator) void {
 
 // Same as updateEnemyRecord, just better interface
 pub fn updateEnemyKnowledge(mob: *Mob, enemy: *Mob, last_seen: ?Coord) void {
+    const memory = if (mob.squad != null and mob.squad.?.leader != null)
+        mob.squad.?.leader.?.memory_duration
+    else
+        mob.memory_duration;
+
     updateEnemyRecord(mob, .{
         .mob = enemy,
-        .counter = mob.memory_duration,
+        .counter = memory,
         .last_seen = last_seen orelse enemy.coord,
     });
 }
@@ -251,23 +256,28 @@ pub fn checkForHostiles(mob: *Mob) void {
         }
     };
 
-    // Decrement enemy counters.
+    // Decrement enemy counters. (If we're part of a squad, just let the squad
+    // leader do that to avoid every squad member decrementing counters and
+    // forgetting about enemy too quickly.)
     //
     // FIXME: iterating over a container with a loop that potentially modifies
     // that container is just begging for trouble.
-    var i: usize = 0;
-    while (i < mob.enemyList().items.len) {
-        const enemy = &mob.enemyList().items[i];
-        if (enemy.counter == 0 or
-            !mob.isHostileTo(enemy.mob) or
-            enemy.mob.coord.z != mob.coord.z or
-            enemy.mob.is_dead)
-        {
-            _ = mob.enemyList().orderedRemove(i);
-        } else {
-            if (!mob.cansee(enemy.last_seen) and mob.ai.phase != .Flee)
-                enemy.counter -= 1;
-            i += 1;
+    //
+    if (mob.squad == null or mob == mob.squad.?.leader.?) {
+        var i: usize = 0;
+        while (i < mob.enemyList().items.len) {
+            const enemy = &mob.enemyList().items[i];
+            if (enemy.counter == 0 or
+                !mob.isHostileTo(enemy.mob) or
+                enemy.mob.coord.z != mob.coord.z or
+                enemy.mob.is_dead)
+            {
+                _ = mob.enemyList().orderedRemove(i);
+            } else {
+                if (!mob.cansee(enemy.last_seen) and mob.ai.phase != .Flee)
+                    enemy.counter -= 1;
+                i += 1;
+            }
         }
     }
 
@@ -281,14 +291,6 @@ pub fn checkForHostiles(mob: *Mob) void {
         // No enemies sighted, we're done hunting.
         mob.ai.phase = .Work;
     }
-
-    // Sort allies/enemies according to distance.
-    const _sortFunc = struct {
-        fn _sortEnemies(me: *Mob, a: EnemyRecord, b: EnemyRecord) bool {
-            return a.mob.coord.distance(me.coord) > b.mob.coord.distance(me.coord);
-        }
-    };
-    std.sort.insertionSort(EnemyRecord, mob.enemyList().items, mob, _sortFunc._sortEnemies);
 }
 
 // Get a list of all nearby allies, visible or not.
