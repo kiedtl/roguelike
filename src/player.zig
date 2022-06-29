@@ -244,11 +244,6 @@ pub fn bookkeepingFOV() void {
 pub fn moveOrFight(direction: Direction) bool {
     const current = state.player.coord;
 
-    if (direction.is_diagonal() and state.player.isUnderStatus(.Confusion) != null) {
-        display.drawAlertThenLog("You cannot move diagonally whilst confused!", .{});
-        return false;
-    }
-
     const dest = current.move(direction, state.mapgeometry) orelse return false;
 
     // Does the player want to fight?
@@ -257,6 +252,11 @@ pub fn moveOrFight(direction: Direction) bool {
             state.player.fight(mob, .{});
             return true;
         }
+    }
+
+    if (direction.is_diagonal() and state.player.isUnderStatus(.Confusion) != null) {
+        display.drawAlertThenLog("You cannot move diagonally whilst confused!", .{});
+        return false;
     }
 
     // Does the player want to trigger a machine that requires confirmation?
