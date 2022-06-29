@@ -88,7 +88,11 @@ x sulfur fiend x
   x Hasten Rot: makes a corpse emit a cloud of miasma, destroying the
     corpse in the process. Miasma causes nausea.
   x Summon Ball Lightning: conjures a ball lightning mobs.
+
 - fiend of vapours
+  - CANCELED: abilities just aren't that impressive, and would fit
+    better in Garrison on some other minor spellcaster.
+  -
   - "A strange winged figure, cloaked in dirty rags. It is holding a
     sceptre."
   - Aura of Dispersal: resistably blinks all affected mobs away (range:
@@ -107,6 +111,7 @@ x sulfur fiend x
     - "The air twists itself inside-out and smites you!!"
   - Vunerable to fire, resistant to electricity.
   - Relatively fragile (12 HP) and slow (110).
+
 x vapour mage
   - Airblast: knockback foe (5 - distance_from_mage) spaces
   - Haste dustling
@@ -236,13 +241,9 @@ x lead turtle
   - "warrior" monster for lower levels.
   - 10% armor, 70% melee, 10% evade, 8 HP
 
-- bone mage
-  - Enrage Undead: gives undead .Enraged status
-  - Bone longsword
-  - TODO: bone longsword is too powerful
-    - TODO: maybe give bone longsword to death mage, & make bone mage keep dist?
-    - TODO: or maybe, just give bone mage sufficiently low melee% and evade%?
-  - Travels with packs of bone rats, with rare zombie
+x bone mage
+  - Limited haste undead spell
+  - Bone mace, no armor.
 x bone rat
   - fast, evasive, and moderately fragile.
   - rPois∞ rFume∞ rFire-
@@ -923,34 +924,38 @@ x More kits and traps: fire, shock, incineration, knockback
   - Random ring drops, equipping/deequipping rings
   x Remove ring statuses
   - MP costs for rings?
+  - Rings spawn with stat modifiers (Will+ Will- Will++ Will--)
 x Fix trtr chambers; add more of them
 x Iron, lightning, torpor, and calcite spires
 x Bone weapons, corruption effects
-- More potions
+x More potions
   x Potion of debilitation, traps of seizure gas
   x Potion of irritation, traps of blinding gas
   x Potion of illumination
-  - Potion of insubstantiation and fortification
-  - Potions of disruption
-- More mundane weapons: hammer, poker
 - Guards in cubbyholes (both corridors and rooms)
 x Add barrel of water
 x War olgs, cinder worms, destroyers
 x Ember, brimstone, spark, lightning mage bands
 x Emberling/sparkling summoning trap kits
-- Fiend of vapours
-- Copper weapons and battery packs, copper hornets
-- Masterpiece weapons
+~ Fiend of vapours [canceled]
+- Copper weapons and copper spires/battery packs, copper hornets
 - Headgear, footgear, auxiliary items
 - Lore-related prefabs (e.g. washroom, trophy rooms, etc)
+- Warriors, recruits
 - Treasure vaults
   - Marble vault
   - Iron vault
   - Golden vault
   - Tavern vault (maybe next release?)
-- Multi-tile props: trees and braziers
 - Playtest game, especially CAV and make adjustments
 *** v1.1.0 release ***
+- Masterpiece weapons
+- Multi-tile props: trees and braziers
+- More mundane weapons: hammer, poker
+- More undead mobs, to make !disruption/calcite spire/etc relevant
+- More potions:
+  - Potion of insubstantiation and fortification
+  - Potions of disruption
 - Basic speeches by mobs
 - Warn when next to spreading gas and resting
 - Warn when stepping into enemy's FOV
@@ -960,7 +965,6 @@ x Emberling/sparkling summoning trap kits
 *** v1.2.0 release ***
 - Bloodlings and related mages
 - Operators
-- Warriors, recruits
 - Rework gases
   - Remove usage of floats entirely
   - Quantize all gas dissipation rates into VSLOW, SLOW, MED, FAST, VFAST, etc
