@@ -591,7 +591,7 @@ pub fn suicideWork(mob: *Mob, _: mem.Allocator) void {
 }
 
 pub fn standStillAndGuardWork(mob: *Mob, _: mem.Allocator) void {
-    var post = mob.ai.work_area.items[0];
+    const post = mob.ai.work_area.items[0];
 
     if (mob.coord.eq(post)) {
         _ = mob.rest();
