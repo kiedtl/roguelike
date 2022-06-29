@@ -126,6 +126,10 @@ pub const CAST_CALL_UNDEAD = Spell{
                         ai.updateEnemyKnowledge(undead, target_mob, null);
                     } else unreachable;
 
+                    if (undead.coord.distance(target) > 30) {
+                        undead.addStatus(.Fast, 0, .{ .Tmp = 10 });
+                    }
+
                     display.Animation.apply(.{ .EncircleChar = .{
                         .coord = caster_coord,
                         .char = '!',
