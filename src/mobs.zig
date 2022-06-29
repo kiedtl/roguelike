@@ -131,15 +131,31 @@ pub const WatcherTemplate = MobTemplate{
             .profession_description = "guarding",
             .work_fn = ai.watcherWork,
             .fight_fn = ai.watcherFight,
-            .is_combative = true,
             .is_curious = false,
         },
         .allegiance = .Necromancer,
-
         .max_HP = 6,
         .memory_duration = 10,
-        .blood = .Blood,
         .stats = .{ .Willpower = 3, .Evade = 30, .Speed = 60 },
+    },
+};
+
+pub const ShriekerTemplate = MobTemplate{
+    .mob = .{
+        .id = "shrieker",
+        .species = &ImpSpecies,
+        .tile = 'ל',
+        .ai = AI{
+            .profession_name = "shrieker",
+            .profession_description = "guarding",
+            .work_fn = ai.watcherWork,
+            .fight_fn = ai.shriekerFight,
+            .is_curious = false,
+        },
+        .allegiance = .Necromancer,
+        .max_HP = 3,
+        .memory_duration = 15,
+        .stats = .{ .Willpower = 4, .Evade = 40, .Speed = 50 },
     },
 };
 
@@ -1684,6 +1700,7 @@ pub const MOBS = [_]MobTemplate{
     ExecutionerTemplate,
     DestroyerTemplate,
     WatcherTemplate,
+    ShriekerTemplate,
     GuardTemplate,
     SentinelTemplate,
     JavelineerTemplate,

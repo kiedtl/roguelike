@@ -2205,6 +2205,8 @@ pub const Mob = struct { // {{{
     };
 
     pub fn fight(attacker: *Mob, recipient: *Mob, opts: FightOptions) void {
+        assert(!recipient.is_dead);
+
         const martial = @intCast(usize, attacker.stat(.Martial));
         const weapons = attacker.listOfWeapons();
         const wielded_wp = if (attacker.inventory.equipment(.Weapon).*) |w| w.Weapon else null;
