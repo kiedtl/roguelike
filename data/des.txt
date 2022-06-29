@@ -290,7 +290,7 @@ of fiery sorcerery. The ornate lettering on her armor testifies to the power she
 has been allowed to wield.
 
 % bone_rat
-Some apprentice bone mage's necromancy experiment.
+The necromancy experiment of some apprentice bone mage.
 
 % skeleton
 A mouldering skeleton, imbued with a parody of life.
