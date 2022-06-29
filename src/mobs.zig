@@ -158,6 +158,11 @@ pub const WardenTemplate = MobTemplate{
         },
         .allegiance = .Necromancer,
 
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 10, .spell = &spells.CAST_ALARM },
+        },
+        .max_MP = 10,
+
         .max_HP = 15,
         .memory_duration = 6,
         .blood = .Blood,
@@ -165,7 +170,6 @@ pub const WardenTemplate = MobTemplate{
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.LeatherArmor,
-    .evocables = &[_]Evocable{items.WarningHornEvoc},
 };
 
 pub const GuardTemplate = MobTemplate{

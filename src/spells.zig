@@ -156,6 +156,25 @@ pub const CAST_CALL_UNDEAD = Spell{
     },
 };
 
+pub const CAST_ALARM = Spell{
+    .id = "sp_alarm",
+    .name = "warning alarm",
+    .cast_type = .Smite,
+    .smite_target_type = .Self,
+    .noise = .Silent, // Don't interfere with alarm noise
+    .effect_type = .{ .Custom = struct {
+        fn f(caster_coord: Coord, _: Spell, _: SpellOptions, _: Coord) void {
+            const caster = state.dungeon.at(caster_coord).mob.?;
+            caster.makeNoise(.Alarm, .Loudest);
+
+            if (state.player.cansee(caster_coord)) {
+                state.message(.Important, "{c} blows its warning horn!", .{caster});
+                state.markMessageNoisy();
+            }
+        }
+    }.f },
+};
+
 // TODO: generalize into a healing spell?
 pub const CAST_REGEN = Spell{
     .id = "sp_regen",

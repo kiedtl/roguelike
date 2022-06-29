@@ -204,7 +204,6 @@ pub const Evocable = struct {
 
     charges: usize = 0,
     max_charges: usize, // Zero for infinite charges
-    last_used: usize = 0,
 
     // Whether to destroy the evocable when it's finished.
     delete_when_inert: bool = false,
@@ -214,24 +213,7 @@ pub const Evocable = struct {
     // Must be false if max_charges == 0.
     rechargable: bool = true,
 
-    purpose: Purpose,
-
     trigger_fn: fn (*Mob, *Evocable) EvokeError!void,
-
-    // The AI uses this to determine whether to active an evocable in a mob's
-    // inventory.
-    pub const Purpose = enum {
-        // The evocable can be activated during a fight, to debuff enemies.
-        EnemyDebuff,
-
-        // The evocable can be activated during a fight, to buff allies.
-        AllyBuff,
-
-        // The evocable can be activated during a fight, to buff self.
-        SelfBuff,
-
-        Other,
-    };
 
     // TODO: targeting functionality
 
@@ -241,7 +223,6 @@ pub const Evocable = struct {
         if (self.max_charges == 0 or self.charges > 0) {
             if (self.max_charges > 0)
                 self.charges -= 1;
-            self.last_used = state.ticks;
             try self.trigger_fn(by, self);
         } else {
             return error.NoCharges;
@@ -255,7 +236,6 @@ pub const FlamethrowerEvoc = Evocable{
     .tile_fg = 0xff0000,
     .max_charges = 4,
     .rechargable = true,
-    .purpose = .Other,
     .trigger_fn = struct {
         fn f(_: *Mob, _: *Evocable) Evocable.EvokeError!void {
             const dest = display.chooseCell(.{
@@ -276,7 +256,6 @@ pub const IronSpikeEvoc = Evocable{
     .max_charges = 1,
     .delete_when_inert = true,
     .rechargable = false,
-    .purpose = .Other,
     .trigger_fn = _triggerIronSpikeEvoc,
 };
 
@@ -312,7 +291,6 @@ pub const EldritchLanternEvoc = Evocable{
     .name = "eldritch lantern",
     .tile_fg = 0x23abef,
     .max_charges = 5,
-    .purpose = .EnemyDebuff,
     .trigger_fn = _triggerEldritchLantern,
 };
 fn _triggerEldritchLantern(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
@@ -348,24 +326,6 @@ fn _triggerEldritchLantern(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
 
     mob.addStatus(.Daze, 0, .{ .Tmp = rng.range(usize, 1, 4) });
     mob.makeNoise(.Explosion, .Medium);
-}
-
-pub const WarningHornEvoc = Evocable{
-    .id = "warning_horn",
-    .name = "warning horn",
-    .tile_fg = 0xefab23,
-    .max_charges = 3,
-    .purpose = .SelfBuff,
-    .trigger_fn = _triggerWarningHorn,
-};
-fn _triggerWarningHorn(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
-    mob.makeNoise(.Alarm, .Loudest);
-
-    if (mob == state.player) {
-        state.message(.Info, "You blow the horn!", .{});
-    } else if (state.player.cansee(mob.coord)) {
-        state.message(.Info, "The {s} blows its warning horn!", .{mob.displayName()});
-    }
 }
 
 // }}}

@@ -970,24 +970,6 @@ pub fn meleeFight(mob: *Mob, _: mem.Allocator) void {
 
     const target = currentEnemy(mob).mob;
 
-    // Check if there's any evocables in our inventory that we can smack.
-    //
-    // TODO: handle EnemyDebuff/AllyBuff
-    //
-    // TODO: in the future we want to have a Evocable.willHaveEffect() function
-    // that will tell us if there's any used in evoking the evocable.
-    // For now though, we'll just evoke it every 10 turns.
-    for (mob.inventory.pack.slice()) |item| switch (item) {
-        .Evocable => |v| switch (v.purpose) {
-            .SelfBuff => if ((state.ticks - v.last_used) > 5 and v.charges > 0) {
-                mob.evokeOrRest(v);
-                return;
-            },
-            else => {},
-        },
-        else => {},
-    };
-
     if (mob.canMelee(target)) {
         _ = mob.fight(target, .{});
     } else if (!mob.immobile) {
