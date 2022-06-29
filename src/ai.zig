@@ -1001,7 +1001,7 @@ pub fn watcherFight(mob: *Mob, alloc: mem.Allocator) void {
     if (!mob.cansee(target.coord)) {
         mob.tryMoveTo(target.coord);
     } else {
-        alertAllyOfHostile(mob);
+        //alertAllyOfHostile(mob);
         if (!keepDistance(mob, target.coord, 8))
             meleeFight(mob, alloc);
     }
