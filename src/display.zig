@@ -505,7 +505,7 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
             var text: []const u8 = "this is a bug";
 
             const Awareness = enum { Seeing, Remember, None };
-            const awareness: Awareness = for (mob.enemies.items) |enemyrec| {
+            const awareness: Awareness = for (mob.enemyList().items) |enemyrec| {
                 if (enemyrec.mob == state.player) {
                     // Zig, why the fuck do I need to cast the below as Awareness?
                     // Wouldn't I like to fucking chop your fucking type checker into
@@ -1094,7 +1094,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
     const flanked = state.player.isFlanked();
     const spotted = b: for (moblist) |mob| {
         if (!mob.no_show_fov and mob.ai.is_combative and mob.isHostileTo(state.player)) {
-            for (mob.enemies.items) |enemyrecord|
+            for (mob.enemyList().items) |enemyrecord|
                 if (enemyrecord.mob == state.player) break :b true;
         }
     } else false;

@@ -774,6 +774,8 @@ pub const EnemyRecord = struct {
     mob: *Mob,
     last_seen: Coord,
     counter: usize,
+
+    pub const AList = std.ArrayList(EnemyRecord);
 };
 
 pub const SuspiciousTileRecord = struct {
@@ -1374,6 +1376,30 @@ pub const Species = struct {
     aux_attacks: []const *const Weapon = &[_]*const Weapon{},
 };
 
+pub const Squad = struct {
+    // linked list stuff
+    __next: ?*Squad = null,
+    __prev: ?*Squad = null,
+
+    members: StackBuffer(*Mob, 5) = StackBuffer(*Mob, 5).init(null),
+    leader: ?*Mob = null,
+    enemies: EnemyRecord.AList = undefined,
+
+    pub const List = LinkedList(Squad);
+
+    pub fn allocNew() *Squad {
+        const squad = Squad{
+            .enemies = EnemyRecord.AList.init(state.GPA.allocator()),
+        };
+        state.squads.append(squad) catch err.wat();
+        return state.squads.last().?;
+    }
+
+    pub fn deinit(self: *Squad) void {
+        self.enemies.deinit();
+    }
+};
+
 pub const Stat = enum {
     Melee,
     Missile,
@@ -1409,12 +1435,12 @@ pub const Mob = struct { // {{{
     tile: u21,
     allegiance: Allegiance,
 
-    squad_members: MobArrayList = undefined,
+    squad: ?*Squad = null,
     prisoner_status: ?Prisoner = null,
 
     fov: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT,
     path_cache: std.AutoHashMap(Path, Coord) = undefined,
-    enemies: std.ArrayList(EnemyRecord) = undefined,
+    enemies: EnemyRecord.AList = undefined,
     allies: MobArrayList = undefined,
     sustiles: std.ArrayList(SuspiciousTileRecord) = undefined,
 
@@ -2527,8 +2553,7 @@ pub const Mob = struct { // {{{
     pub fn init(self: *Mob, alloc: mem.Allocator) void {
         self.HP = self.max_HP;
         self.MP = self.max_MP;
-        self.squad_members = MobArrayList.init(alloc);
-        self.enemies = std.ArrayList(EnemyRecord).init(alloc);
+        self.enemies = EnemyRecord.AList.init(alloc);
         self.allies = MobArrayList.init(alloc);
         self.sustiles = std.ArrayList(SuspiciousTileRecord).init(alloc);
         self.activities.init();
@@ -2639,7 +2664,6 @@ pub const Mob = struct { // {{{
             }
         };
 
-        self.squad_members.deinit();
         self.enemies.deinit();
         self.allies.deinit();
         self.sustiles.deinit();
@@ -3174,6 +3198,18 @@ pub const Mob = struct { // {{{
             if (ac != .Move) return turns else turns += 1;
         }
         return turns;
+    }
+
+    // XXX: returning &self.enemies might be a really terrible idea, since if
+    // we somehow invalidate the current `self` pointer while we're appending
+    // to self.enemies (say, we change self.mobs to an ArrayList and append to
+    // it or something, triggering a realloc) then havoc can happen
+    pub fn enemyList(self: *Mob) *EnemyRecord.AList {
+        if (self.squad) |squad| {
+            return &squad.enemies;
+        } else {
+            return &self.enemies;
+        }
     }
 }; // }}}
 

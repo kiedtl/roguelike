@@ -21,6 +21,7 @@ const fov = @import("fov.zig");
 const types = @import("types.zig");
 
 const Rune = items.Rune;
+const Squad = types.Squad;
 const Mob = types.Mob;
 const MessageType = types.MessageType;
 const Item = types.Item;
@@ -163,6 +164,7 @@ pub var outputs: [LEVELS]Rect.ArrayList = undefined;
 
 // Data objects
 pub var tasks: TaskArrayList = undefined;
+pub var squads: Squad.List = undefined;
 pub var mobs: MobList = undefined;
 pub var rings: RingList = undefined;
 pub var armors: ArmorList = undefined;

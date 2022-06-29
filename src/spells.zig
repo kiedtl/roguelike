@@ -248,7 +248,7 @@ pub const CAST_MASS_DISMISSAL = Spell{
     .effect_type = .{ .Custom = _effectMassDismissal },
 };
 fn _hasEffectMassDismissal(caster: *Mob, _: SpellOptions, _: Coord) bool {
-    for (caster.enemies.items) |enemy_record| {
+    for (caster.enemyList().items) |enemy_record| {
         if (caster.cansee(enemy_record.mob.coord) and
             enemy_record.mob.life_type == .Living and
             enemy_record.mob.isUnderStatus(.Fear) == null)
@@ -261,7 +261,7 @@ fn _hasEffectMassDismissal(caster: *Mob, _: SpellOptions, _: Coord) bool {
 fn _effectMassDismissal(caster: Coord, _: Spell, opts: SpellOptions, _: Coord) void {
     const caster_mob = state.dungeon.at(caster).mob.?;
 
-    for (caster_mob.enemies.items) |enemy_record| {
+    for (caster_mob.enemyList().items) |enemy_record| {
         if (caster_mob.cansee(enemy_record.mob.coord) and
             enemy_record.mob.life_type == .Living and
             enemy_record.mob.isUnderStatus(.Fear) == null)

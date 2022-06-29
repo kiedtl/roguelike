@@ -25,6 +25,7 @@ const Resistance = types.Resistance;
 const StatusDataInfo = types.StatusDataInfo;
 const Armor = types.Armor;
 const SurfaceItem = types.SurfaceItem;
+const Squad = types.Squad;
 const Mob = types.Mob;
 const AI = types.AI;
 const AIPhase = types.AIPhase;
@@ -1821,6 +1822,13 @@ pub fn placeMob(
         mob.addStatus(status_info.status, status_info.power, status_info.duration);
     }
 
+    state.mobs.append(mob) catch err.wat();
+    const mob_ptr = state.mobs.last().?;
+
+    // ---
+    // --------------- `mob` mustn't be modified after this point! --------------
+    // ---
+
     if (!opts.no_squads and template.squad.len > 0) {
         const squad_template = rng.chooseUnweighted([]const MobTemplate.SquadMember, template.squad);
 
@@ -1837,6 +1845,9 @@ pub fn placeMob(
         const squad_mob_count = rng.range(usize, squad_mob_info.count.min, squad_mob_info.count.max);
 
         var i: usize = squad_mob_count;
+
+        const squad = Squad.allocNew();
+
         while (i > 0) : (i -= 1) {
             var dijk = dijkstra.Dijkstra.init(coord, state.mapgeometry, 3, state.is_walkable, .{ .right_now = true }, alloc);
             defer dijk.deinit();
@@ -1852,13 +1863,14 @@ pub fn placeMob(
 
             if (s_coord) |c| {
                 const underling = placeMob(alloc, squad_mob, c, .{ .no_squads = true });
-                mob.squad_members.append(underling) catch err.wat();
+                underling.squad = squad;
+                squad.members.append(underling) catch err.wat();
             }
         }
+
+        mob_ptr.squad = squad;
     }
 
-    state.mobs.append(mob) catch err.wat();
-    const mob_ptr = state.mobs.last().?;
     state.dungeon.at(coord).mob = mob_ptr;
 
     return mob_ptr;

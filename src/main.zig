@@ -28,6 +28,7 @@ const Coord = types.Coord;
 const Rect = types.Rect;
 const Tile = types.Tile;
 
+const Squad = types.Squad;
 const MobList = types.MobList;
 const RingList = types.RingList;
 const PotionList = types.PotionList;
@@ -78,6 +79,7 @@ fn initGame() bool {
     state.memory = state.MemoryTileMap.init(state.GPA.allocator());
 
     state.tasks = TaskArrayList.init(state.GPA.allocator());
+    state.squads = Squad.List.init(state.GPA.allocator());
     state.mobs = MobList.init(state.GPA.allocator());
     state.rings = RingList.init(state.GPA.allocator());
     state.armors = ArmorList.init(state.GPA.allocator());
@@ -188,6 +190,9 @@ fn deinitGame() void {
         if (mob.is_dead) continue;
         mob.kill();
     }
+    var s_iter = state.squads.iterator();
+    while (s_iter.next()) |squad|
+        squad.deinit();
     for (state.dungeon.map) |_, level| {
         state.stockpiles[level].deinit();
         state.inputs[level].deinit();
@@ -196,6 +201,7 @@ fn deinitGame() void {
     }
 
     state.tasks.deinit();
+    state.squads.deinit();
     state.mobs.deinit();
     state.rings.deinit();
     state.armors.deinit();

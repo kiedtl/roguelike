@@ -1776,7 +1776,11 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
                 const m = mobs.placeMob(alloc, mob, post_coord, .{
                     .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
                 });
-                const new_mobs = 1 + m.squad_members.items.len;
+
+                var new_mobs: usize = 1;
+                if (m.squad) |squad| {
+                    new_mobs += squad.members.len;
+                }
 
                 room.mob_count += new_mobs;
                 level_mob_count += new_mobs;

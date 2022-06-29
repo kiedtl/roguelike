@@ -50,21 +50,21 @@ fn flingRandomSpell(me: *Mob, target: *Mob) void {
 // Find the nearest enemy.
 pub fn currentEnemy(me: *Mob) *EnemyRecord {
     assert(me.ai.phase == .Hunt or me.ai.phase == .Flee);
-    assert(me.enemies.items.len > 0);
+    assert(me.enemyList().items.len > 0);
 
     var nearest: usize = 0;
     var nearest_distance: usize = 10000;
     var i: usize = 0;
 
-    while (i < me.enemies.items.len) : (i += 1) {
-        const distance = me.coord.distance(me.enemies.items[i].last_seen);
+    while (i < me.enemyList().items.len) : (i += 1) {
+        const distance = me.coord.distance(me.enemyList().items[i].last_seen);
         if (distance < nearest_distance) {
             nearest = i;
             nearest_distance = distance;
         }
     }
 
-    return &me.enemies.items[nearest];
+    return &me.enemyList().items[nearest];
 }
 
 // Flee if:
@@ -98,7 +98,7 @@ pub fn shouldFlee(me: *Mob) bool {
 
 // Notify nearest ally of a hostile.
 pub fn alertAllyOfHostile(mob: *Mob) void {
-    const hostile = mob.enemies.items[0];
+    const hostile = mob.enemyList().items[0];
     if (mob.allies.items.len > 0) {
         updateEnemyRecord(mob.allies.items[0], hostile);
     }
@@ -125,7 +125,7 @@ pub fn keepDistance(mob: *Mob, from: Coord, distance: usize) bool {
             cell.* = null;
         };
 
-        for (mob.enemies.items) |enemy| {
+        for (mob.enemyList().items) |enemy| {
             const coord = enemy.last_seen;
             flee_dijkmap[coord.y][coord.x] = 0;
         }
@@ -189,7 +189,7 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
     }
 
     // Search for an existing record.
-    for (mob.enemies.items) |*enemyrec| {
+    for (mob.enemyList().items) |*enemyrec| {
         if (enemyrec.mob == new.mob) {
             enemyrec.counter = mob.memory_duration;
             enemyrec.last_seen = new.mob.coord;
@@ -198,7 +198,7 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
     }
 
     // No existing record, append.
-    mob.enemies.append(new) catch unreachable;
+    mob.enemyList().append(new) catch unreachable;
 
     // Animation
     if (new.mob == state.player and state.player.cansee(mob.coord)) {
@@ -253,14 +253,14 @@ pub fn checkForHostiles(mob: *Mob) void {
     // FIXME: iterating over a container with a loop that potentially modifies
     // that container is just begging for trouble.
     var i: usize = 0;
-    while (i < mob.enemies.items.len) {
-        const enemy = &mob.enemies.items[i];
+    while (i < mob.enemyList().items.len) {
+        const enemy = &mob.enemyList().items[i];
         if (enemy.counter == 0 or
             !mob.isHostileTo(enemy.mob) or
             enemy.mob.coord.z != mob.coord.z or
             enemy.mob.is_dead)
         {
-            _ = mob.enemies.orderedRemove(i);
+            _ = mob.enemyList().orderedRemove(i);
         } else {
             if (!mob.cansee(enemy.last_seen) and mob.ai.phase != .Flee)
                 enemy.counter -= 1;
@@ -268,12 +268,12 @@ pub fn checkForHostiles(mob: *Mob) void {
         }
     }
 
-    if (mob.ai.is_combative and mob.enemies.items.len > 0) {
+    if (mob.ai.is_combative and mob.enemyList().items.len > 0) {
         mob.ai.phase = .Hunt;
     }
 
     if ((mob.ai.phase == .Hunt or mob.ai.phase == .Flee) and
-        mob.enemies.items.len == 0)
+        mob.enemyList().items.len == 0)
     {
         // No enemies sighted, we're done hunting.
         mob.ai.phase = .Work;
@@ -285,7 +285,7 @@ pub fn checkForHostiles(mob: *Mob) void {
             return a.mob.coord.distance(me.coord) > b.mob.coord.distance(me.coord);
         }
     };
-    std.sort.insertionSort(EnemyRecord, mob.enemies.items, mob, _sortFunc._sortEnemies);
+    std.sort.insertionSort(EnemyRecord, mob.enemyList().items, mob, _sortFunc._sortEnemies);
 }
 
 // Get a list of all nearby allies, visible or not.
@@ -1106,7 +1106,7 @@ fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
                 return ally.coord;
         } else null;
     } else {
-        return for (caster.enemies.items) |enemy_record| {
+        return for (caster.enemyList().items) |enemy_record| {
             if (_isValidTargetForSpell(caster, spell, enemy_record.mob))
                 return enemy_record.mob.coord;
         } else null;
@@ -1223,14 +1223,6 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
 }
 
 pub fn main(mob: *Mob, alloc: mem.Allocator) void {
-    for (mob.squad_members.items) |lmob| {
-        if (!lmob.is_dead and lmob.ai.phase == .Work) {
-            lmob.ai.target = mob.ai.target;
-            lmob.ai.phase = mob.ai.phase;
-            lmob.ai.work_area.items[0] = mob.ai.work_area.items[0];
-        }
-    }
-
     checkForAllies(mob);
     checkForHostiles(mob);
     checkForNoises(mob);
@@ -1295,11 +1287,11 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
 
     if (mob.ai.phase == .Hunt) {
         assert(mob.ai.is_combative);
-        assert(mob.enemies.items.len > 0);
+        assert(mob.enemyList().items.len > 0);
 
         (mob.ai.fight_fn.?)(mob, alloc);
 
-        const target = mob.enemies.items[0].mob;
+        const target = mob.enemyList().items[0].mob;
         mob.facing = mob.coord.closestDirectionTo(target.coord, state.mapgeometry);
     }
 
