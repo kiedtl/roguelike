@@ -1092,12 +1092,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
 
     const light = state.dungeon.lightAt(state.player.coord).*;
     const flanked = state.player.isFlanked();
-    const spotted = b: for (moblist) |mob| {
-        if (!mob.no_show_fov and mob.ai.is_combative and mob.isHostileTo(state.player)) {
-            for (mob.enemyList().items) |enemyrecord|
-                if (enemyrecord.mob == state.player) break :b true;
-        }
-    } else false;
+    const spotted = player.isPlayerSpotted();
 
     if (light or flanked or spotted) {
         const lit_str = if (light) "Lit " else "";

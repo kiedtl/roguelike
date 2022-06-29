@@ -41,7 +41,7 @@ const WIDTH = state.WIDTH;
 
 pub var wiz_lidless_eye: bool = false;
 
-pub var auto_wait_enabled: bool = true;
+pub var auto_wait_enabled: bool = false;
 
 pub const PlayerUpgradeInfo = struct {
     recieved: bool = false,
@@ -269,9 +269,7 @@ pub fn moveOrFight(direction: Direction) bool {
     };
 
     // Should we auto-rest?
-    if (auto_wait_enabled and
-        state.player.turnsSpentMoving() >= @intCast(usize, state.player.stat(.Sneak)))
-    {
+    if (shouldAutoWait()) {
         _ = state.player.rest();
         state.message(.Info, "Auto-waited.", .{});
         return true;
@@ -595,4 +593,44 @@ pub fn memorizeTile(fc: Coord, mtype: state.MemoryTile.Type) void {
     const t = Tile.displayAs(fc, true, false);
     const memt = state.MemoryTile{ .bg = t.bg, .fg = t.fg, .ch = t.ch, .type = mtype };
     state.memory.put(fc, memt) catch err.wat();
+}
+
+pub fn shouldAutoWait() bool {
+    if (!auto_wait_enabled)
+        return false;
+
+    if (state.player.turnsSpentMoving() < @intCast(usize, state.player.stat(.Sneak)))
+        return false;
+
+    if (isPlayerSpotted())
+        return false;
+
+    return true;
+}
+
+// Returns true if player is known by any nearby enemies.
+pub fn isPlayerSpotted() bool {
+    if (state.player_is_spotted.turn_cached == state.player_turns) {
+        return state.player_is_spotted.is_spotted;
+    }
+
+    const moblist = state.createMobList(false, false, state.player.coord.z, state.GPA.allocator());
+    defer moblist.deinit();
+
+    const is_spotted = b: for (moblist.items) |mob| {
+        if (mob.cansee(state.player.coord)) {
+            break :b true;
+        }
+        if (!mob.no_show_fov and mob.ai.is_combative and mob.isHostileTo(state.player)) {
+            for (mob.enemyList().items) |enemyrecord|
+                if (enemyrecord.mob == state.player) break :b true;
+        }
+    } else false;
+
+    state.player_is_spotted = .{
+        .is_spotted = is_spotted,
+        .turn_cached = state.player_turns,
+    };
+
+    return is_spotted;
 }

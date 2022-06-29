@@ -139,6 +139,12 @@ pub var collected_runes = enums.EnumArray(Rune, bool).initFill(false);
 
 pub var player_upgrades: [3]player_m.PlayerUpgradeInfo = undefined;
 
+// Cached return value of player.isPlayerSpotted()
+pub var player_is_spotted: struct {
+    is_spotted: bool,
+    turn_cached: usize,
+} = .{ .is_spotted = false, .turn_cached = 0 };
+
 pub var default_patterns = [_]types.Ring{
     items.DefaultPinRing,
 };
@@ -175,6 +181,7 @@ pub var containers: ContainerList = undefined;
 pub var evocables: EvocableList = undefined;
 
 pub var ticks: usize = 0;
+pub var player_turns: usize = 0;
 pub var messages: MessageArrayList = undefined;
 pub var score: usize = 0;
 

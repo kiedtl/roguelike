@@ -478,6 +478,7 @@ fn tickGame() void {
             mob.tickStatuses();
 
             if (mob == state.player) {
+                state.player_turns += 1;
                 state.chardata.time_on_levels[mob.coord.z] += 1;
                 player.bookkeepingFOV();
             }
