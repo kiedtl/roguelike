@@ -959,7 +959,17 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
     return y;
 }
 
-fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, description: []const u8, bg: u32, fg: u32) void {
+fn _drawBar(
+    y: isize,
+    startx: isize,
+    endx: isize,
+    current: usize,
+    max: usize,
+    description: []const u8,
+    bg: u32,
+    fg: u32,
+    opts: struct { detail: bool = true },
+) void {
     assert(current <= max);
 
     const depleted_bg = colors.percentageOf(bg, 40);
@@ -973,13 +983,15 @@ fn _draw_bar(y: isize, startx: isize, endx: isize, current: usize, max: usize, d
 
     _ = _drawStr(startx + 1, y, endx, "{s}", .{description}, .{ .fg = fg, .bg = null });
 
-    // Find out the width of "<current>/<max>" so we can right-align it
-    var buf: [256]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buf);
-    std.fmt.format(fbs.writer(), "{} / {}", .{ current, max }) catch err.wat();
-    const info_width = @intCast(isize, fbs.getWritten().len);
+    if (opts.detail) {
+        // Find out the width of "<current>/<max>" so we can right-align it
+        var buf: [256]u8 = undefined;
+        var fbs = std.io.fixedBufferStream(&buf);
+        std.fmt.format(fbs.writer(), "{} / {}", .{ current, max }) catch err.wat();
+        const info_width = @intCast(isize, fbs.getWritten().len);
 
-    _ = _drawStr(endx - info_width - 1, y, endx, "{} / {}", .{ current, max }, .{ .fg = fg, .bg = null });
+        _ = _drawStr(endx - info_width - 1, y, endx, "{} / {}", .{ current, max }, .{ .fg = fg, .bg = null });
+    }
 }
 
 fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, endy: isize) void {
@@ -1039,19 +1051,19 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         [_]u32{ colors.percentageOf(colors.PALE_VIOLET_RED, 25), colors.LIGHT_PALE_VIOLET_RED }
     else
         [_]u32{ colors.percentageOf(colors.DOBALENE_BLUE, 25), colors.DOBALENE_BLUE };
-    _draw_bar(y, startx, bar_endx, @floatToInt(usize, state.player.HP), @floatToInt(usize, state.player.max_HP), "health", color[0], color[1]);
+    _drawBar(y, startx, bar_endx, @floatToInt(usize, state.player.HP), @floatToInt(usize, state.player.max_HP), "health", color[0], color[1], .{});
     const hit = utils.SignedFormatter{ .v = state.player.stat(.Melee) };
     _ = _drawStr(bar_endx + 1, y, endx, "$.hit {: >3}%$.", .{hit}, .{});
     y += 1;
 
-    _draw_bar(y, startx, bar_endx, state.player.MP, state.player.max_MP, "magic", colors.percentageOf(colors.GOLD, 25), colors.LIGHT_GOLD);
+    _drawBar(y, startx, bar_endx, state.player.MP, state.player.max_MP, "magic", colors.percentageOf(colors.GOLD, 25), colors.LIGHT_GOLD, .{});
     const ev = utils.SignedFormatter{ .v = state.player.stat(.Evade) };
     _ = _drawStr(bar_endx + 1, y, endx, "$pev  {: >3}%$.", .{ev}, .{});
     y += 1;
 
     const sneak = @intCast(usize, state.player.stat(.Sneak));
     const is_walking = state.player.turnsSpentMoving() >= sneak;
-    _draw_bar(y, startx, bar_endx, math.min(sneak, state.player.turnsSpentMoving()), sneak, if (is_walking) "walking" else "sneaking", if (is_walking) 0x25570e else 0x154705, 0xa5d78e);
+    _drawBar(y, startx, bar_endx, math.min(sneak, state.player.turnsSpentMoving()), sneak, if (is_walking) "walking" else "sneaking", if (is_walking) 0x25570e else 0x154705, 0xa5d78e, .{});
     const arm = utils.SignedFormatter{ .v = state.player.resistance(.Armor) };
     _ = _drawStr(bar_endx + 1, y, endx, "$barm {: >3}%$.", .{arm}, .{});
     y += 2;
@@ -1062,7 +1074,14 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         while (statuses.next()) |entry| {
             if (state.player.isUnderStatus(entry.key) == null or entry.value.duration != .Tmp)
                 continue;
-            y = _drawStr(startx, y, endx, "{s}", .{_formatStatusInfo(entry.value)}, .{});
+
+            const statusinfo = state.player.isUnderStatus(entry.key).?;
+            const duration = statusinfo.duration.Tmp;
+            const sname = statusinfo.status.string(state.player);
+
+            _drawBar(y, startx, endx, duration, Status.MAX_DURATION, sname, 0x30055c, 0xd069fc, .{});
+            //y = _drawStr(startx, y, endx, "{s} ({} turns)", .{ sname, duration }, .{ .fg = 0x8019ac, .bg = null });
+            y += 1;
             status_drawn = true;
         }
         if (status_drawn) y += 1;
@@ -1190,19 +1209,19 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         termbox.tb_put_cell(startx, y, &mobcell);
 
         const name = mob.displayName();
-        _ = _drawStr(startx + 2, y, endx, "$c{s}$.", .{name}, .{});
+        _ = _drawStr(startx + 2, y, endx, "$c{s}$.", .{name}, .{ .bg = null });
 
         const infoset = _getMonsInfoSet(mob);
         defer MobInfoLine.deinitList(infoset);
         //var info_x: isize = startx + 2 + @intCast(isize, name.len) + 2;
         var info_x: isize = endx - @intCast(isize, infoset.items.len);
         for (infoset.items) |info| {
-            _ = _drawStr(info_x, y, endx, "${u}{u}$.", .{ info.color, info.char }, .{});
+            _ = _drawStr(info_x, y, endx, "${u}{u}$.", .{ info.color, info.char }, .{ .bg = null });
             info_x += 1;
         }
         y += 1;
 
-        //_draw_bar(y, startx, endx, @floatToInt(usize, mob.HP), @floatToInt(usize, mob.max_HP), "health", 0x232faa, 0xffffff);
+        //_drawBar(y, startx, endx, @floatToInt(usize, mob.HP), @floatToInt(usize, mob.max_HP), "health", 0x232faa, 0xffffff, .{});
         //y += 1;
 
         {
@@ -1211,7 +1230,14 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
             while (statuses.next()) |entry| {
                 if (mob.isUnderStatus(entry.key) == null or entry.value.duration != .Tmp)
                     continue;
-                y = _drawStr(startx, y, endx, "{s}", .{_formatStatusInfo(entry.value)}, .{});
+
+                const statusinfo = mob.isUnderStatus(entry.key).?;
+                const duration = statusinfo.duration.Tmp;
+                const sname = statusinfo.status.string(state.player);
+
+                _drawBar(y, startx, endx, duration, Status.MAX_DURATION, sname, 0x30055c, 0xd069fc, .{});
+                //y = _drawStr(startx, y, endx, "{s}", .{_formatStatusInfo(entry.value)}, .{ .bg = null });
+                y += 1;
                 status_drawn = true;
             }
             if (status_drawn) y += 1;
