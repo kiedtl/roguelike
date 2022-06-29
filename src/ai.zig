@@ -64,7 +64,10 @@ pub fn currentEnemy(me: *Mob) *EnemyRecord {
         }
     }
 
-    return &me.enemyList().items[nearest];
+    const target = &me.enemyList().items[nearest];
+    assert(me.isHostileTo(target.mob));
+
+    return target;
 }
 
 // Flee if:
@@ -238,7 +241,7 @@ pub fn checkForHostiles(mob: *Mob) void {
 
             if (othermob == mob) continue;
 
-            if (othermob.isHostileTo(mob)) {
+            if (mob.isHostileTo(othermob)) {
                 updateEnemyRecord(mob, .{
                     .mob = othermob,
                     .counter = mob.memory_duration,
@@ -964,7 +967,6 @@ pub fn meleeFight(mob: *Mob, _: mem.Allocator) void {
     assert(state.dungeon.at(mob.coord).mob != null);
 
     const target = currentEnemy(mob).mob;
-    assert(mob.isHostileTo(target));
 
     // Check if there's any evocables in our inventory that we can smack.
     //
