@@ -1012,7 +1012,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
     //const lvlstrx = startx + @divTrunc(endx - startx - 1, 2) - @intCast(isize, (lvlstr.len + 4) / 2);
     //y = _drawStr(lvlstrx, y, endx, "$G┤$. $c{s}$. $G├$.", .{lvlstr}, .{});
     //y += 1;
-    _ = _drawStr(startx, y, endx, "$cturns:$. {}", .{state.ticks}, .{});
+    _ = _drawStr(startx, y, endx, "$cturns:$. {}", .{state.player_turns}, .{});
     y = _drawStr(endx - @intCast(isize, lvlstr.len), y, endx, "$c{s}$.", .{lvlstr}, .{});
     y += 1;
 
