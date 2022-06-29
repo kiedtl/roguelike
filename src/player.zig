@@ -262,7 +262,8 @@ pub fn moveOrFight(direction: Direction) bool {
     // Does the player want to trigger a machine that requires confirmation?
     if (state.dungeon.at(dest).surface) |surf| switch (surf) {
         .Machine => |m| if (m.evoke_confirm) |msg| {
-            if (!display.drawYesNoPrompt("{s}", .{msg})) return false;
+            if (!display.drawYesNoPrompt("{s}", .{msg}))
+                return false;
         },
         else => {},
     };
@@ -337,10 +338,7 @@ pub fn grabItem() bool {
 
     switch (item) {
         .Rune => |rune| {
-            const verb = rng.chooseUnweighted([]const u8, &[_][]const u8{
-                "snigger", "laugh spitefully", "snicker",
-            });
-            state.message(.Info, "You {s} as you grab the {s} rune.", .{ verb, rune.name() });
+            state.message(.Info, "You grab the {s} rune.", .{rune.name()});
             state.collected_runes.set(rune, true);
 
             state.message(.Important, "The alarm goes off!!", .{});
@@ -352,20 +350,20 @@ pub fn grabItem() bool {
             const slot = Mob.Inventory.EquSlot.slotFor(item);
             if (state.player.inventory.equipment(slot).*) |old_item| {
                 state.player.dequipItem(slot, state.player.coord);
-                state.message(.Info, "You drop the {s}.", .{
+                state.message(.Inventory, "You drop the {s}.", .{
                     (old_item.longName() catch err.wat()).constSlice(),
                 });
             }
 
             state.player.equipItem(slot, item);
-            state.message(.Info, "Equipped a {s}.", .{
+            state.message(.Inventory, "Equipped a {s}.", .{
                 (item.longName() catch err.wat()).constSlice(),
             });
         },
         else => {
             state.player.inventory.pack.append(item) catch err.wat();
             state.player.declareAction(.Grab);
-            state.message(.Info, "Acquired: {s}", .{
+            state.message(.Inventory, "Acquired: {s}", .{
                 (state.player.inventory.pack.last().?.longName() catch err.wat()).constSlice(),
             });
         },
@@ -548,7 +546,7 @@ pub fn dropItem(index: usize) bool {
         const dropped = state.player.dropItem(item, coord);
         assert(dropped);
 
-        state.message(.Info, "Dropped: {s}.", .{
+        state.message(.Inventory, "Dropped: {s}.", .{
             (item.shortName() catch err.wat()).constSlice(),
         });
         return true;

@@ -649,6 +649,7 @@ pub const MessageType = union(enum) {
     Damage,
     Important,
     SpellCast,
+    Inventory, // Grabbing, dropping, or equipping item
 
     pub fn color(self: MessageType) u32 {
         return switch (self) {
@@ -663,6 +664,7 @@ pub const MessageType = union(enum) {
             .Combat => 0xdadeda, // creamy white
             .CombatUnimportant => 0x7a9cc7, // steel blue
             .Unimportant => 0x8019ac,
+            .Inventory => 0x7a9cc7,
         };
     }
 };
