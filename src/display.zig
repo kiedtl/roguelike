@@ -406,6 +406,9 @@ fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceIte
                     state.levelinfo[s.?.z].name,
                 });
             }
+            if (state.levelinfo[s.?.z].optional) {
+                _writerWrite(w, "\nThese stairs are $coptional$. and lead to more difficult floors.\n", .{});
+            }
         },
         .Corpse => |c| {
             // Since the mob object was deinit'd, we can't rely on
