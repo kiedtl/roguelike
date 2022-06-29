@@ -517,7 +517,7 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
             switch (awareness) {
                 .Seeing => {
                     i.color = 'r';
-                    text = "aware";
+                    text = "sees you";
                 },
                 .Remember => {
                     i.color = 'p';
