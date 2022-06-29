@@ -143,35 +143,6 @@ pub const WatcherTemplate = MobTemplate{
     },
 };
 
-pub const WardenTemplate = MobTemplate{
-    .mob = .{
-        .id = "warden",
-        .species = &GoblinSpecies,
-        .tile = 'ח',
-        .ai = AI{
-            .profession_name = "warden",
-            .profession_description = "guarding",
-            .work_fn = ai.standStillAndGuardWork,
-            .fight_fn = ai.meleeFight,
-            .is_combative = true,
-            .is_curious = true,
-        },
-        .allegiance = .Necromancer,
-
-        .spells = &[_]SpellOptions{
-            .{ .MP_cost = 10, .spell = &spells.CAST_ALARM },
-        },
-        .max_MP = 10,
-
-        .max_HP = 15,
-        .memory_duration = 6,
-        .blood = .Blood,
-        .stats = .{ .Willpower = 3, .Evade = 10, .Speed = 120, .Vision = 5 },
-    },
-    .weapon = &items.MaceWeapon,
-    .armor = &items.LeatherArmor,
-};
-
 pub const GuardTemplate = MobTemplate{
     .mob = .{
         .id = "guard",
@@ -1713,7 +1684,6 @@ pub const MOBS = [_]MobTemplate{
     ExecutionerTemplate,
     DestroyerTemplate,
     WatcherTemplate,
-    WardenTemplate,
     GuardTemplate,
     SentinelTemplate,
     JavelineerTemplate,
