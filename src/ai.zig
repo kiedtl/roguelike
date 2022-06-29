@@ -6,6 +6,7 @@ const meta = std.meta;
 
 const colors = @import("colors.zig");
 const display = @import("display.zig");
+const fov = @import("fov.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
 const err = @import("err.zig");
@@ -18,6 +19,7 @@ const buffer = @import("buffer.zig");
 const rng = @import("rng.zig");
 const types = @import("types.zig");
 
+const Dungeon = types.Dungeon;
 const Mob = types.Mob;
 const EnemyRecord = types.EnemyRecord;
 const SuspiciousTileRecord = types.SuspiciousTileRecord;
@@ -297,7 +299,9 @@ pub fn checkForAllies(mob: *Mob) void {
     for (mob.fov) |row, y| for (row) |_, x| {
         const fitem = Coord.new2(mob.coord.z, x, y);
 
-        if (fitem.distance(mob.coord) > vision) {
+        if (fitem.distance(mob.coord) > vision or
+            !fov.quickLOSCheck(mob.coord, fitem, Dungeon.tileOpacity))
+        {
             continue;
         }
 

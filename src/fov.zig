@@ -577,3 +577,22 @@ fn _cast_light(
         }
     }
 }
+
+// Quickly check if a single coord is in LOS with a bresenham line algorithm.
+//
+// Used for creating list of allies (since we don't want to take directional FOV
+// into account for that case).
+pub fn quickLOSCheck(refpoint: Coord, coord: Coord, opacity_func: fn (Coord) usize) bool {
+    var energy: usize = 100;
+    const trajectory = refpoint.drawLine(coord, state.mapgeometry, 0);
+    for (trajectory.constSlice()) |line_coord| {
+        if (line_coord.eq(refpoint) or line_coord.eq(coord))
+            continue;
+
+        energy -|= opacity_func(line_coord);
+
+        if (energy == 0 and !line_coord.eq(coord))
+            return false;
+    }
+    return true;
+}
