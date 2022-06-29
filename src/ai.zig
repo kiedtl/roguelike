@@ -293,6 +293,15 @@ pub fn checkForHostiles(mob: *Mob) void {
     }
 }
 
+// If mob's squad leader is dead, assume leadership.
+pub fn checkForLeadership(mob: *Mob) void {
+    if (mob.squad) |squad| {
+        if (squad.leader.?.is_dead) {
+            squad.leader = mob;
+        }
+    }
+}
+
 // Get a list of all nearby allies, visible or not.
 pub fn checkForAllies(mob: *Mob) void {
     const vision = mob.stat(.Vision);
@@ -1228,6 +1237,8 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
 }
 
 pub fn main(mob: *Mob, alloc: mem.Allocator) void {
+    checkForLeadership(mob);
+
     checkForAllies(mob);
     checkForHostiles(mob);
     checkForNoises(mob);
