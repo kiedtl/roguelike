@@ -2088,8 +2088,7 @@ pub const Mob = struct { // {{{
                     },
                     .Stair => |s| if (self == state.player) {
                         if (s) |floor| {
-                            player.triggerStair(dest, floor);
-                            return true;
+                            return player.triggerStair(dest, floor);
                         } else {
                             display.drawAlertThenLog("It's suicide to go back!", .{});
                         }

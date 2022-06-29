@@ -131,7 +131,12 @@ pub fn choosePlayerUpgrades() void {
     };
 }
 
-pub fn triggerStair(_: Coord, dest_stair: Coord) void {
+pub fn triggerStair(_: Coord, dest_stair: Coord) bool {
+    if (state.levelinfo[dest_stair.z].optional) {
+        if (!display.drawYesNoPrompt("Really travel to optional level?", .{}))
+            return false;
+    }
+
     const dest = for (&DIRECTIONS) |d| {
         if (dest_stair.move(d, state.mapgeometry)) |neighbor| {
             if (state.is_walkable(neighbor, .{ .right_now = true }))
@@ -163,6 +168,8 @@ pub fn triggerStair(_: Coord, dest_stair: Coord) void {
             state.player_upgrades[0], state.player_upgrades[1], state.player_upgrades[2],
         });
     }
+
+    return true;
 }
 
 // Iterate through each tile in FOV:
