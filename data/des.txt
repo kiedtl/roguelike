@@ -279,9 +279,6 @@ One of the feared Lightning Mages, wielding unparalleled power over the
 atmosphere. She can call on the surrounding air to discharge a powerful
 lightning bolt into unsuspecting foes.
 
-% sparkling
-An insubstantial construct. It's trying to electrocute you!
-
 % ember_mage
 A rather stocky fellow, wearing a maroon tunic. He is tasked with leading a band
 of emberlings, and has been given the power to create more from a fallen
@@ -292,9 +289,25 @@ This unassuming human is one of the dreaded Brimstone Mages, learned in the ways
 of fiery sorcerery. The ornate lettering on her armor testifies to the power she
 has been allowed to wield.
 
+% bone_rat
+Some apprentice bone mage's necromancy experiment.
+
+% skeleton
+A mouldering skeleton, imbued with a parody of life.
+
 % emberling
 A construct of smoldering ash, imbued with false life and commanded by a
 human sorcerer.
+
+% sparkling
+An insubstantial construct. It's trying to electrocute you!
+
+% bone_mage
+She may not be as experienced as the dreaded Death Mages she is apprenticed to,
+but she quite capable of killing you all the same.
+
+% death_knight
+His bone longsword is inscribed with crude engravings of torment and death.
 
 % death_mage
 A human mage, specializing in the manipulations of undead skeletons.
@@ -335,6 +348,21 @@ being a wall in a little bit.
 A sphere of pure electricity, encased in a shell of burning sulfur. It will seek
 out nearby conductive creatures, hostile or not, before exploding in a blast of
 fire and lightning.
+
+% iron_spire
+A metal contraption. The thick iron plates covering it muffle an ominous
+whirring from within.
+
+% lightning_spire
+A tall steel contraption. You seem to hear a buzzing sound from its top,
+punctuated by intermittent clicks.
+
+% torpor_spire
+The top of this brass spire rotates slowly.
+
+% calcite_spire
+Engraved on this deathly white spire are the words: "Gyil gimboredro
+Gyilthor-drauglâ".
 
 % sp_hasten_undead
 Hasten a nearby undead ally, making them twice as fast.
