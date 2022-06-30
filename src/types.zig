@@ -3584,6 +3584,7 @@ pub const Weapon = struct {
         new.name = "copper " ++ weapon.name;
         new.ego = .Copper;
         new.damage_kind = .Electric;
+        new.damage -= 1;
         return new;
     }
 };
