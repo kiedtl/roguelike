@@ -2201,7 +2201,7 @@ pub const Mob = struct { // {{{
         var total: usize = 0;
         for (weapons.constSlice()) |weapon| {
             const weapon_damage = combat.damageOfWeapon(self, weapon, defender);
-            total += combat.damageOfMeleeAttack(self, weapon_damage, false);
+            total += combat.damageOfMeleeAttack(self, weapon_damage.total, false);
         }
         return total;
     }
@@ -2320,7 +2320,7 @@ pub const Mob = struct { // {{{
 
         const is_stab = !opts.disallow_stab and combat.isAttackStab(attacker, recipient) and !opts.is_bonus;
         const weapon_damage = combat.damageOfWeapon(attacker, attacker_weapon, recipient);
-        const damage = combat.damageOfMeleeAttack(attacker, weapon_damage, is_stab) * opts.damage_bonus / 100;
+        const damage = combat.damageOfMeleeAttack(attacker, weapon_damage.total, is_stab) * opts.damage_bonus / 100;
 
         recipient.takeDamage(.{
             .amount = @intToFloat(f64, damage),
@@ -2331,6 +2331,9 @@ pub const Mob = struct { // {{{
             .strs = attacker_weapon.strs,
             .is_bonus = opts.is_bonus,
             .is_riposte = opts.is_riposte,
+            .is_bone = weapon_damage.bone_bonus,
+            .is_nbone = weapon_damage.bone_nbonus,
+            .is_copper = weapon_damage.copper_bonus,
         });
 
         // XXX: should this be .Loud instead of .Medium?
@@ -2404,6 +2407,9 @@ pub const Mob = struct { // {{{
         },
         is_bonus: bool = false,
         is_riposte: bool = false,
+        is_bone: bool = false,
+        is_nbone: bool = false,
+        is_copper: bool = false,
     }) void {
         const was_already_dead = self.should_be_dead();
         const old_HP = self.HP;
@@ -2474,8 +2480,11 @@ pub const Mob = struct { // {{{
                     },
                 );
             } else {
-                const martial_str = if (msg.is_bonus) " $b*Martial*$." else "";
-                const riposte_str = if (msg.is_riposte) " $b*Riposte*$." else "";
+                const martial_str = if (msg.is_bonus) " $b*Martial*$. " else "";
+                const riposte_str = if (msg.is_riposte) " $b*Riposte*$. " else "";
+                const bone_str = if (msg.is_bone) " $b*Bone*$. " else "";
+                const nbone_str = if (msg.is_nbone) " $b*-Bone*$. " else "";
+                const copper_str = if (msg.is_copper) " $b*Copper*$. " else "";
 
                 var noun = StackBuffer(u8, 64).init(null);
                 if (msg.noun) |m_noun| {
@@ -2491,12 +2500,13 @@ pub const Mob = struct { // {{{
 
                 state.message(
                     .Combat,
-                    "{s} {s} {}{s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.) {s} {s}",
+                    "{s} {s} {}{s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.) {s}{s}{s}{s}{s}",
                     .{
                         noun.constSlice(),   verb,        self,
                         hitstrs.verb_degree, punctuation, @floatToInt(usize, amount),
                         d.kind.string(),     resisted,    resist_str,
-                        martial_str,         riposte_str,
+                        martial_str,         riposte_str, bone_str,
+                        nbone_str,           copper_str,
                     },
                 );
             }

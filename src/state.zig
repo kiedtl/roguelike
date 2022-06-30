@@ -582,10 +582,11 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
 
     try w.print("You could see:\n", .{});
     {
-        const can_see = createMobList(false, true, player.coord.z, alloc);
-        defer can_see.deinit();
         var can_see_counted = std.StringHashMap(usize).init(alloc);
         defer can_see_counted.deinit();
+
+        const can_see = createMobList(false, true, player.coord.z, alloc);
+        defer can_see.deinit();
         for (can_see.items) |mob| {
             const prevtotal = (can_see_counted.getOrPutValue(mob.displayName(), 0) catch unreachable).value_ptr.*;
             can_see_counted.put(mob.displayName(), prevtotal + 1) catch unreachable;
