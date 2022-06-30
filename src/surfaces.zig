@@ -121,28 +121,31 @@ pub const GravelTerrain = Terrain{
 pub const MetalTerrain = Terrain{
     .id = "t_metal",
     .name = "metal",
-    .color = 0xa0b4ce, // light steel blue
-    .tile = ',',
-    .resists = .{ .rElec = -25 },
-
-    .for_levels = &[_][]const u8{ "PRI", "LAB", "QRT" },
-    .placement = .RoomPortion,
-    .weight = 5,
-};
-
-pub const CopperTerrain = Terrain{
-    .id = "t_copper",
-    .name = "copper",
-    .color = 0xff7035, // orange red
-    .tile = ',',
+    .color = 0x8094ae, // steel blue
+    .tile = '∷',
     .resists = .{ .rElec = -25 },
     .effects = &[_]StatusDataInfo{
         .{ .status = .Conductive, .duration = .{ .Ctx = null } },
     },
 
     .for_levels = &[_][]const u8{ "PRI", "LAB", "QRT" },
-    .placement = .RoomPortion,
+    .placement = .EntireRoom,
     .weight = 6,
+};
+
+pub const CopperTerrain = Terrain{
+    .id = "t_copper",
+    .name = "copper",
+    .color = 0x884734, // copperish red
+    .tile = ':',
+    .resists = .{ .rElec = -25 },
+    .effects = &[_]StatusDataInfo{
+        .{ .status = .CopperWeapon, .duration = .{ .Ctx = null } },
+    },
+
+    .for_levels = &[_][]const u8{ "PRI", "LAB", "QRT" },
+    .placement = .EntireRoom,
+    .weight = 8,
 };
 
 pub const WoodTerrain = Terrain{

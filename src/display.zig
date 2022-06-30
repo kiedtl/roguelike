@@ -466,6 +466,12 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
         list.append(i) catch err.wat();
     }
 
+    if (mob.isUnderStatus(.CopperWeapon) != null and mob.hasWeaponOfEgo(.Copper)) {
+        var i = MobInfoLine{ .char = 'C', .color = 'r' };
+        i.string.writer().print("has copper weapon", .{}) catch err.wat();
+        list.append(i) catch err.wat();
+    }
+
     const mobspeed = mob.stat(.Speed);
     const youspeed = state.player.stat(.Speed);
     if (mobspeed != youspeed) {
@@ -682,9 +688,7 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
     _writerWrite(w, "${u}{}%$. to evade you.\n", .{ c_evade_you_color, c_evade_you });
     _writerWrite(w, "\n", .{});
 
-    const you_armor = @intCast(usize, 100 - state.player.resistance(.Armor));
-    const mob_damage_output = math.max(1, mob.totalMeleeOutput(state.player) * you_armor / 100);
-    _writerWrite(w, "Hits for max $r{}$. damage.\n", .{mob_damage_output});
+    _writerWrite(w, "Hits for ~$r{}$. damage.\n", .{mob.totalMeleeOutput(state.player)});
     _writerWrite(w, "\n", .{});
 
     var statuses = mob.statuses.iterator();
@@ -1075,14 +1079,18 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         var status_drawn = false;
         var statuses = state.player.statuses.iterator();
         while (statuses.next()) |entry| {
-            if (state.player.isUnderStatus(entry.key) == null or entry.value.duration != .Tmp)
+            if (state.player.isUnderStatus(entry.key) == null)
                 continue;
 
             const statusinfo = state.player.isUnderStatus(entry.key).?;
-            const duration = statusinfo.duration.Tmp;
             const sname = statusinfo.status.string(state.player);
 
-            _drawBar(y, startx, endx, duration, Status.MAX_DURATION, sname, 0x30055c, 0xd069fc, .{});
+            if (statusinfo.duration == .Tmp) {
+                _drawBar(y, startx, endx, statusinfo.duration.Tmp, Status.MAX_DURATION, sname, 0x30055c, 0xd069fc, .{});
+            } else {
+                _drawBar(y, startx, endx, Status.MAX_DURATION, Status.MAX_DURATION, sname, 0x054c20, 0x69fcd0, .{ .detail = false });
+            }
+
             //y = _drawStr(startx, y, endx, "{s} ({} turns)", .{ sname, duration }, .{ .fg = 0x8019ac, .bg = null });
             y += 1;
             status_drawn = true;

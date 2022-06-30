@@ -808,6 +808,11 @@ pub const Allegiance = enum {
 pub const Status = enum {
     // Status list {{{
 
+    // Enables copper weapons.
+    //
+    // Doesn't have a power field.
+    CopperWeapon,
+
     // Variety of effects.
     //
     // Doesn't have a power field (yet?)
@@ -981,6 +986,7 @@ pub const Status = enum {
 
     pub fn string(self: Status, mob: *const Mob) []const u8 { // {{{
         return switch (self) {
+            .CopperWeapon => "copper",
             .Corruption => "corrupted",
             .Flammable => "flammable",
             .Blind => "blind",
@@ -1022,6 +1028,7 @@ pub const Status = enum {
 
     pub fn messageWhenAdded(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .CopperWeapon => null,
             .Corruption => .{ "are", "is", " corrupted" },
             .Flammable => .{ "are", "is", " vulnerable to fire" },
             .Blind => .{ "are", "is", " blinded" },
@@ -1059,6 +1066,7 @@ pub const Status = enum {
 
     pub fn messageWhenRemoved(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .CopperWeapon => null,
             .Corruption => .{ "are no longer", "is no longer", " corrupted" },
             .Flammable => .{ "are no longer", "is no longer", " vulnerable to fire" },
             .Blind => .{ "are no longer", "is no longer", " blinded" },
@@ -2169,7 +2177,12 @@ pub const Mob = struct { // {{{
         var buf = StackBuffer(*const Weapon, 7).init(null);
 
         buf.append(if (self.inventory.equipment(.Weapon).*) |w| w.Weapon else self.species.default_attack) catch err.wat();
-        for (self.species.aux_attacks) |w| buf.append(w) catch err.wat();
+
+        if (self.inventory.equipment(.Backup).*) |w| {
+            buf.append(w.Weapon) catch err.wat();
+        }
+        for (self.species.aux_attacks) |w|
+            buf.append(w) catch err.wat();
 
         return buf;
     }
@@ -2191,6 +2204,15 @@ pub const Mob = struct { // {{{
             total += combat.damageOfMeleeAttack(self, weapon_damage, false);
         }
         return total;
+    }
+
+    pub fn hasWeaponOfEgo(self: *Mob, ego: Weapon.Ego) bool {
+        const weapons = self.listOfWeapons();
+        return for (weapons.constSlice()) |weapon| {
+            if (weapon.ego == ego) {
+                break true;
+            }
+        } else false;
     }
 
     pub const FightOptions = struct {
@@ -3533,7 +3555,7 @@ pub const Weapon = struct {
 
     strs: []const DamageStr,
 
-    pub const Ego = enum { None, Bone };
+    pub const Ego = enum { None, Bone, Copper };
 
     pub fn createBoneWeapon(comptime weapon: *const Weapon, opts: struct {}) Weapon {
         _ = opts;
@@ -3542,6 +3564,16 @@ pub const Weapon = struct {
         new.name = "bone " ++ weapon.name;
         new.ego = .Bone;
         new.stats.Willpower -= 2;
+        return new;
+    }
+
+    pub fn createCopperWeapon(comptime weapon: *const Weapon, opts: struct {}) Weapon {
+        _ = opts;
+        var new = weapon.*;
+        new.id = "copper_" ++ weapon.id;
+        new.name = "copper " ++ weapon.name;
+        new.ego = .Copper;
+        new.damage_kind = .Electric;
         return new;
     }
 };

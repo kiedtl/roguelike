@@ -45,6 +45,11 @@ pub fn damageOfWeapon(attacker: ?*const Mob, weapon: *const Weapon, recipient: ?
         if (attacker.?.life_type == .Undead and recipient.?.isUnderStatus(.Corruption) != null)
             damage += 1;
     }
+    if (attacker != null) {
+        // If copper weapon and attacker is on copper ground, +2 damage.
+        if (weapon.ego == .Copper and attacker.?.isUnderStatus(.CopperWeapon) != null)
+            damage += 3;
+    }
     if (recipient != null) {
         // If bone weapon and defender is living and not corrupted, +1 dmg.
         if (weapon.ego == .Bone and recipient.?.life_type == .Living and

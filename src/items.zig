@@ -1122,6 +1122,7 @@ pub const SwordWeapon = Weapon{
     .strs = &SLASHING_STRS,
 };
 pub const BoneSwordWeapon = Weapon.createBoneWeapon(&SwordWeapon, .{});
+pub const CopperSwordWeapon = Weapon.createCopperWeapon(&SwordWeapon, .{});
 
 pub const DaggerWeapon = Weapon{
     .id = "dagger",
