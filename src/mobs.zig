@@ -991,6 +991,57 @@ pub const SpectreMageTemplate = MobTemplate{
     .armor = &items.LeatherArmor,
 };
 
+pub const RecruitTemplate = MobTemplate{
+    .mob = .{
+        .id = "recruit",
+        .species = &GoblinSpecies,
+        .tile = 'c',
+        .ai = AI{
+            .profession_name = "recruit",
+            .profession_description = "resting",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.meleeFight,
+            .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
+        },
+        .allegiance = .Necromancer,
+
+        .max_HP = 7,
+        .memory_duration = 5,
+        .stats = .{ .Willpower = 1, .Melee = 70, .Vision = 5 },
+    },
+    .weapon = &items.BludgeonWeapon,
+    .armor = &items.LeatherArmor,
+};
+
+pub const WarriorTemplate = MobTemplate{
+    .mob = .{
+        .id = "warrior",
+        .species = &GoblinSpecies,
+        .tile = 'W',
+        .ai = AI{
+            .profession_name = "warrior",
+            .profession_description = "resting",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.meleeFight,
+            .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
+        },
+        .allegiance = .Necromancer,
+
+        .max_HP = 10,
+        .memory_duration = 4,
+        .stats = .{ .Willpower = 2, .Melee = 80, .Evade = 15, .Vision = 6 },
+    },
+    .weapon = &items.MaceWeapon,
+    .armor = &items.CuirassArmor,
+
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "warrior", .weight = 10, .count = minmax(usize, 1, 2) },
+            .{ .mob = "recruit", .weight = 1, .count = minmax(usize, 2, 3) },
+        },
+    },
+};
+
 pub const BoneMageTemplate = MobTemplate{
     .mob = .{
         .id = "bone_mage",
@@ -1764,6 +1815,8 @@ pub const MOBS = [_]MobTemplate{
     HaulerTemplate,
     AncientMageTemplate,
     SpectreMageTemplate,
+    RecruitTemplate,
+    WarriorTemplate,
     BoneMageTemplate,
     DeathKnightTemplate,
     DeathMageTemplate,

@@ -94,6 +94,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 020, .i = .{ .A = GambesonArmor } },
     .{ .w = 020, .i = .{ .A = LeatherArmor } },
     .{ .w = 020, .i = .{ .A = HauberkArmor } },
+    .{ .w = 020, .i = .{ .A = CuirassArmor } },
     .{ .w = 020, .i = .{ .A = ScalemailArmor } },
     // Potions
     .{ .w = 190, .i = .{ .P = &ConfusionPotion } },
@@ -994,11 +995,18 @@ fn triggerDecimatePotion(_: ?*Mob, coord: Coord) void {
 // }}}
 
 // Armors {{{
+//
+pub const CuirassArmor = Armor{
+    .id = "cuirass_armor",
+    .name = "cuirass",
+    .resists = .{ .Armor = 35 },
+    .resists = .{ .rElec = -25 },
+};
 
 pub const HauberkArmor = Armor{
     .id = "chainmail_armor",
     .name = "chainmail",
-    .resists = .{ .Armor = 30 },
+    .resists = .{ .Armor = 25 },
     .stats = .{ .Speed = 10 },
 };
 

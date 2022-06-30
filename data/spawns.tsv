@@ -53,6 +53,7 @@
 "spark_mage"          	  15 	  15 	  15 	  10 	   5 	  10 	   5 	   - 	   - 	   - 	   - 	   - 	   - 	   -
 
 # medium-difficulty monsters, early-middle game
+"recruit"             	   - 	   - 	   - 	  10 	  15 	  10 	  10 	  15 	  15 	   - 	   - 	   - 	   - 	   -
 "skeleton"            	   - 	   - 	   - 	  10 	  15 	  10 	  10 	  15 	  15 	   - 	   - 	   - 	   - 	   -
 
 # medium-difficulty monsters, middle-late game
@@ -64,6 +65,7 @@
 "skeletal_blademaster"	   - 	   - 	   - 	   5 	  10 	   5 	  10 	  15 	  10 	  15 	  15 	  10 	  15 	  25
 
 # higher-difficulty monsters. late-game.
+"warrior"             	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   5 	  10 	  15 	  15 	  10 	  15 	  25
 "skeletal_axemaster"  	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   5 	  10 	  15 	  15 	  10 	  15 	  25
 "death_mage"          	   - 	   - 	   - 	   - 	   5 	   - 	   - 	   5 	   5 	  10 	  15 	  15 	  15 	  20
 "brimstone_mage"      	   - 	   - 	   - 	   - 	   5 	   - 	   - 	   5 	   5 	  10 	  15 	  15 	  15 	  20
