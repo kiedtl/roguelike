@@ -971,7 +971,9 @@ pub const Spell = struct {
                         if (hit_mob) |victim| {
                             if (self.checks_will and !willSucceedAgainstMob(caster.?, victim)) {
                                 const chance = 100 - appxChanceOfWillOverpowered(caster.?, victim);
-                                state.message(.SpellCast, "{c} resisted $g($c{}%$g chance)$.", .{ victim, chance });
+                                if (state.player.cansee(victim.coord) or state.player.cansee(caster_coord)) {
+                                    state.message(.SpellCast, "{c} resisted $g($c{}%$g chance)$.", .{ victim, chance });
+                                }
                                 continue;
                             }
 
@@ -1049,7 +1051,9 @@ pub const Spell = struct {
 
                         if (self.checks_will and !willSucceedAgainstMob(caster.?, mob)) {
                             const chance = 100 - appxChanceOfWillOverpowered(caster.?, mob);
-                            state.message(.SpellCast, "{c} resisted $g($c{}%$g chance)$.", .{ mob, chance });
+                            if (state.player.cansee(mob.coord) or state.player.cansee(caster_coord)) {
+                                state.message(.SpellCast, "{c} resisted $g($c{}%$g chance)$.", .{ mob, chance });
+                            }
                             return;
                         }
 
