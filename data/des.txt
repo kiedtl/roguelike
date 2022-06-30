@@ -43,7 +43,7 @@ axe-head. It is wound about with a curse to inflict more damage on the living,
 but less on the undead.
 
 % mace
-A simple mace, with a smallish but very heavy leaden head.
+The leaden head on this heavy mace menaces with hardened steel flanges.
 
 % bone_mace
 A mace with a head of solid bone, unnaturally heavy. It is wound about with a
