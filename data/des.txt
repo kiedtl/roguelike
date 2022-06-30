@@ -306,6 +306,12 @@ human sorcerer.
 % sparkling
 An insubstantial construct. It's trying to electrocute you!
 
+% recruit
+A goblin warrior in training. It's waving its wooden mace wildly in the air.
+
+% warrior
+A competent and highly trained infantry-goblin wearing a battle cuirass.
+
 % bone_mage
 She may not be as experienced as the dreaded Death Mages she is apprenticed to,
 but she quite capable of killing you all the same.
