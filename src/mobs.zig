@@ -325,8 +325,6 @@ pub const IronWaspTemplate = MobTemplate{
             .profession_description = "resting",
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
-            .is_combative = true,
-            .is_curious = false,
             .is_fearless = true,
         },
         .allegiance = .Necromancer,
@@ -346,6 +344,42 @@ pub const IronWaspTemplate = MobTemplate{
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Sleeping, .duration = .Prm },
         .{ .status = .Noisy, .duration = .Prm },
+    },
+};
+
+pub const CopperHornetTemplate = MobTemplate{
+    .mob = .{
+        .id = "copper_hornet",
+        .species = &Species{
+            .name = "copper hornet",
+            .default_attack = &Weapon{
+                .damage = 1,
+                .ego = .Copper,
+                .strs = &[_]DamageStr{
+                    items._dmgstr(005, "jab", "jabs", ""),
+                    items._dmgstr(100, "sting", "stings", ""),
+                },
+            },
+        },
+        .tile = 'ÿ',
+        .life_type = .Construct,
+        .ai = AI{
+            .profession_description = "resting",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.meleeFight,
+            .is_fearless = true,
+        },
+        .allegiance = .Necromancer,
+        .max_HP = 5,
+        .memory_duration = 7,
+        .blood = null,
+        .corpse = .None,
+        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rElec = 25, .rFire = 50, .rFume = 100 },
+        .stats = .{ .Willpower = 0, .Evade = 40, .Speed = 60, .Vision = 5 },
+    },
+
+    .statuses = &[_]StatusDataInfo{
+        .{ .status = .Sleeping, .duration = .Prm }, .{ .status = .Noisy, .duration = .Prm },
     },
 };
 
@@ -1707,6 +1741,7 @@ pub const MOBS = [_]MobTemplate{
     DefenderTemplate,
     LeadTurtleTemplate,
     IronWaspTemplate,
+    CopperHornetTemplate,
     PatrolTemplate,
     PlayerTemplate,
     GoblinTemplate,
