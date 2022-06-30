@@ -168,6 +168,11 @@ pub var stockpiles: [LEVELS]StockpileArrayList = undefined;
 pub var inputs: [LEVELS]StockpileArrayList = undefined;
 pub var outputs: [LEVELS]Rect.ArrayList = undefined;
 
+pub const MapgenInfos = struct {
+    has_vault: bool = false,
+};
+pub var mapgen_infos = [1]MapgenInfos{.{}} ** LEVELS;
+
 // Data objects
 pub var tasks: TaskArrayList = undefined;
 pub var squads: Squad.List = undefined;

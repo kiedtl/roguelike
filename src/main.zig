@@ -124,6 +124,7 @@ fn initGame() bool {
         mapgen.resetLevel(level, &n_fabs, &s_fabs);
         mapgen.placeBlobs(level);
         (mapgen.Configs[level].mapgen_func)(&n_fabs, &s_fabs, level, state.GPA.allocator());
+        mapgen.selectLevelVault(level);
         mapgen.placeMoarCorridors(level, state.GPA.allocator());
 
         // Generate a rune?

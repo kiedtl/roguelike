@@ -10,6 +10,16 @@ pub const MATERIALS = [_]*const Material{
     &Vangenite,
 };
 
+pub const Rust = Material{
+    .name = "rust",
+    .color_fg = 0x0,
+    .color_bg = 0x884734, // copperish red
+    .color_floor = 0x0,
+    .tileset = 0,
+    .luminescence = 0,
+    .opacity = 1.0,
+};
+
 pub const LabGlass = Material{
     .id = "lab_glass",
     .name = "colored glass",

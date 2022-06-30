@@ -262,16 +262,28 @@ fn getConnectionSide(parent: *const Room, child: *const Room) ?Direction {
     } else err.wat();
 }
 
-fn randomWallCoord(rect: *const Rect, i: ?usize) Coord {
+fn computeWallAreas(rect: *const Rect, include_corners: bool) [4]Range {
     const rect_end = rect.end();
 
-    const ranges = [_]Range{
-        .{ .from = Coord.new(rect.start.x + 1, rect.start.y - 1), .to = Coord.new(rect_end.x - 2, rect.start.y - 1) }, // top
-        .{ .from = Coord.new(rect.start.x + 1, rect_end.y), .to = Coord.new(rect_end.x - 2, rect_end.y) }, // bottom
-        .{ .from = Coord.new(rect.start.x, rect.start.y + 1), .to = Coord.new(rect.start.x, rect_end.y - 2) }, // left
-        .{ .from = Coord.new(rect_end.x, rect.start.y + 1), .to = Coord.new(rect_end.x, rect_end.y - 2) }, // left
-    };
+    if (include_corners) {
+        return [_]Range{
+            .{ .from = Coord.new(rect.start.x, rect.start.y - 1), .to = Coord.new(rect_end.x, rect.start.y - 1) }, // top
+            .{ .from = Coord.new(rect.start.x, rect_end.y), .to = Coord.new(rect_end.x, rect_end.y) }, // bottom
+            .{ .from = Coord.new(rect.start.x - 1, rect.start.y - 1), .to = Coord.new(rect.start.x - 1, rect_end.y) }, // left
+            .{ .from = Coord.new(rect_end.x, rect.start.y), .to = Coord.new(rect_end.x, rect_end.y - 1) }, // right
+        };
+    } else {
+        return [_]Range{
+            .{ .from = Coord.new(rect.start.x + 1, rect.start.y - 1), .to = Coord.new(rect_end.x - 2, rect.start.y - 1) }, // top
+            .{ .from = Coord.new(rect.start.x + 1, rect_end.y), .to = Coord.new(rect_end.x - 2, rect_end.y) }, // bottom
+            .{ .from = Coord.new(rect.start.x - 1, rect.start.y + 1), .to = Coord.new(rect.start.x - 1, rect_end.y - 2) }, // left
+            .{ .from = Coord.new(rect_end.x, rect.start.y + 1), .to = Coord.new(rect_end.x, rect_end.y - 2) }, // right
+        };
+    }
+}
 
+fn randomWallCoord(rect: *const Rect, i: ?usize) Coord {
+    const ranges = computeWallAreas(rect, false);
     const range = if (i) |_i| ranges[(_i + 1) % ranges.len] else rng.chooseUnweighted(Range, &ranges);
     const x = rng.rangeClumping(usize, range.from.x, range.to.x, 2);
     const y = rng.rangeClumping(usize, range.from.y, range.to.y, 2);
@@ -853,6 +865,27 @@ pub fn validateLevel(
     return true;
 }
 
+pub fn selectLevelVault(level: usize) void {
+    var candidates = std.ArrayList(usize).init(state.GPA.allocator());
+    defer candidates.deinit();
+
+    for (state.rooms[level].items) |room, i| {
+        if (room.connections.len == 1 and
+            !room.is_extension_room and !room.has_subroom and room.prefab == null and
+            !state.mapgen_infos[level].has_vault)
+        {
+            candidates.append(i) catch err.wat();
+        }
+    }
+
+    if (candidates.items.len == 0) {
+        return;
+    }
+
+    const selected_room_i = rng.chooseUnweighted(usize, candidates.items);
+    state.rooms[level].items[selected_room_i].is_vault = true;
+}
+
 pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
     var newrooms = Room.ArrayList.init(alloc);
     defer newrooms.deinit();
@@ -864,7 +897,8 @@ pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
         const parent = &rooms.items[i];
 
         for (rooms.items) |*child| {
-            if (parent.connections.isFull() or
+            if (child.is_vault or
+                parent.connections.isFull() or
                 child.connections.isFull() or
                 parent.connections.linearSearch(child.rect.start, Coord.eqNotInline) or
                 child.connections.linearSearch(parent.rect.start, Coord.eqNotInline))
@@ -875,6 +909,7 @@ pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
             //if (child.type == .Corridor) continue;
 
             // Skip child prefabs for now, placeCorridor seems to be broken
+            // FIXME
             if (child.prefab != null) continue;
 
             if (parent.rect.intersects(&child.rect, 1)) {
@@ -1040,15 +1075,6 @@ fn _place_rooms(
     level: usize,
     allocator: mem.Allocator,
 ) !void {
-    // Iterate through all rooms, looking for a room that we can attack the new
-    // one to
-    // var c: usize = 0;
-    // const parent_i = while (c < rooms.items.len) : (c += 1) {
-    //     if (!rooms.items[c].connections.isFull())
-    //         break c;
-    // } else return error.NoValidParent;
-    // var parent: *Room = &rooms.items[parent_i];
-
     const parent_i = rng.range(usize, 0, rooms.items.len - 1);
     var parent = &rooms.items[parent_i];
 
@@ -1125,6 +1151,10 @@ fn _place_rooms(
         }
 
         child = Room{ .rect = childrect };
+    }
+
+    if (distance == 0) {
+        child.is_extension_room = true;
     }
 
     var corridor: ?Corridor = null;
@@ -1887,6 +1917,22 @@ fn _placePropAlongRange(level: usize, where: Range, prop: *const Prop, max: usiz
     return placed;
 }
 
+pub fn setVaultWalls(room: *Room) void {
+    const level = room.rect.start.z;
+
+    const wall_areas = computeWallAreas(&room.rect, true);
+    for (&wall_areas) |wall_area| {
+        var y: usize = wall_area.from.y;
+        while (y <= wall_area.to.y) : (y += 1) {
+            var x: usize = wall_area.from.x;
+            while (x <= wall_area.to.x) : (x += 1) {
+                const coord = Coord.new2(level, x, y);
+                state.dungeon.at(coord).material = &materials.Rust;
+            }
+        }
+    }
+}
+
 pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
     for (state.rooms[level].items) |*room| {
         const rect = room.rect;
@@ -1902,6 +1948,10 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
 
         if (room.prefab != null) continue;
         if (room.has_subroom and room_area < 25) continue;
+
+        if (room.is_vault) {
+            setVaultWalls(room);
+        }
 
         const rect_end = rect.end();
 
@@ -2182,7 +2232,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
                 .Room => |r| &state.rooms[level].items[r],
             };
 
-            if (room != null and room.?.has_stair) {
+            if (room != null and (room.?.has_stair or room.?.is_vault)) {
                 continue;
             }
 
@@ -2677,6 +2727,8 @@ pub const Room = struct {
     has_window: bool = false,
     has_stair: bool = false,
     mob_count: usize = 0,
+    is_vault: bool = false,
+    is_extension_room: bool = false,
 
     connections: ConnectionsBuf = ConnectionsBuf.init(null),
 
