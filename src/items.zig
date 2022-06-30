@@ -60,6 +60,9 @@ pub const ItemTemplate = struct {
     },
 };
 pub const RARE_ITEM_DROPS = [_]ItemTemplate{
+    // Dilute this list by adding a few more common weapon
+    .{ .w = 050, .i = .{ .W = MaceWeapon } },
+    .{ .w = 050, .i = .{ .W = SwordWeapon } },
     // Bone weapons
     .{ .w = 001, .i = .{ .W = BoneSwordWeapon } },
     .{ .w = 001, .i = .{ .W = BoneDaggerWeapon } },
@@ -67,6 +70,10 @@ pub const RARE_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 001, .i = .{ .W = BoneMaceWeapon } },
     .{ .w = 001, .i = .{ .W = BoneGreatMaceWeapon } },
     .{ .w = 001, .i = .{ .W = BoneHalberdWeapon } },
+    // Copper weapons
+    .{ .w = 001, .i = .{ .W = CopperSwordWeapon } },
+    .{ .w = 001, .i = .{ .W = CopperRapierWeapon } },
+    .{ .w = 001, .i = .{ .W = CopperMaceWeapon } },
 };
 pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 001, .i = .{ .List = &RARE_ITEM_DROPS } },
@@ -75,7 +82,6 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 030, .i = .{ .W = DaggerWeapon } },
     .{ .w = 020, .i = .{ .W = StilettoWeapon } },
     .{ .w = 025, .i = .{ .W = RapierWeapon } },
-    .{ .w = 001, .i = .{ .W = AxeWeapon } },
     .{ .w = 025, .i = .{ .W = QuarterstaffWeapon } },
     .{ .w = 030, .i = .{ .W = MaceWeapon } },
     .{ .w = 025, .i = .{ .W = GreatMaceWeapon } },
@@ -1156,6 +1162,7 @@ pub const RapierWeapon = Weapon{
     .is_dippable = true,
     .strs = &PIERCING_STRS,
 };
+pub const CopperRapierWeapon = Weapon.createCopperWeapon(&RapierWeapon, .{});
 
 // Purely for skeletal axemasters for now; lore describes axes as being
 // experimental
@@ -1176,6 +1183,10 @@ pub const AxeWeapon = Weapon{
 // }}}
 
 // Polearms {{{
+//
+// XXX: no copper weapons for polearms, as it might create some imbalance
+// with players being allowed to stand on copper ground and attack safely at a
+// distance...?
 
 pub const HalberdWeapon = Weapon{
     .id = "halberd",
@@ -1277,6 +1288,7 @@ pub const MaceWeapon = Weapon{
     .strs = &CRUSHING_STRS,
 };
 pub const BoneMaceWeapon = Weapon.createBoneWeapon(&MaceWeapon, .{});
+pub const CopperMaceWeapon = Weapon.createCopperWeapon(&MaceWeapon, .{});
 
 pub const GreatMaceWeapon = Weapon{
     .id = "great_mace",
