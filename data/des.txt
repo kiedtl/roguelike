@@ -205,6 +205,10 @@ alchemists. Its heavy shell shines dully in the dim light.
 A tiny buzzing insect, seemingly forged out of thin metal sheets. It's almost as
 if its four wings are mounted on its back instead of its sides...
 
+% copper_hornet
+A tiny buzzing insect, seemingly forged out of thin metal sheets. Its
+copper-colored entrails wrap around its silver abdomen.
+
 % patrol
 Ah, finally, a guard who has the sense to carry a polearm.
 
