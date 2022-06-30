@@ -999,8 +999,7 @@ fn triggerDecimatePotion(_: ?*Mob, coord: Coord) void {
 pub const CuirassArmor = Armor{
     .id = "cuirass_armor",
     .name = "cuirass",
-    .resists = .{ .Armor = 35 },
-    .resists = .{ .rElec = -25 },
+    .resists = .{ .rElec = -25, .Armor = 35 },
 };
 
 pub const HauberkArmor = Armor{
