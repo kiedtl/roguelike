@@ -595,6 +595,7 @@ pub const IronVaultDoor = Machine{
     .powered_bg = colors.percentageOf(colors.COPPER_RED, 40),
     .unpowered_bg = colors.percentageOf(colors.COPPER_RED, 40),
     .power_drain = 0,
+    .restricted_to = .OtherGood,
     .powered_walkable = true,
     .unpowered_walkable = false,
     .powered_opacity = 0,
