@@ -1099,16 +1099,14 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
     }
 
     const light = state.dungeon.lightAt(state.player.coord).*;
-    const flanked = state.player.isFlanked();
     const spotted = player.isPlayerSpotted();
 
-    if (light or flanked or spotted) {
+    if (light or spotted) {
         const lit_str = if (light) "Lit " else "";
-        const flanked_str = if (flanked) "Flanked " else "";
         const spotted_str = if (spotted) "Spotted " else "";
 
-        y = _drawStr(startx, y, endx, "$c{s}$.$b{s}$.$r{s}$.", .{
-            lit_str, spotted_str, flanked_str,
+        y = _drawStr(startx, y, endx, "$c{s}$.$b{s}$.", .{
+            lit_str, spotted_str,
         }, .{});
         y += 1;
     }

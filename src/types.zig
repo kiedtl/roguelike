@@ -3116,20 +3116,6 @@ pub const Mob = struct { // {{{
         return if (resist == .rFume) 100 - r else r;
     }
 
-    pub fn isFlanked(self: *const Mob) bool {
-        var counter: usize = 0;
-        return for (&DIRECTIONS) |d| {
-            if (self.coord.move(d, state.mapgeometry)) |neighbor| {
-                if (state.dungeon.at(neighbor).mob) |mob| {
-                    if (mob.isHostileTo(self) and mob.ai.phase == .Hunt) {
-                        counter += 1;
-                        if (counter > 1) return true;
-                    }
-                }
-            }
-        } else false;
-    }
-
     // This is very very very ugly.
     //
     pub fn checkForPatternUsage(self: *Mob) void {
