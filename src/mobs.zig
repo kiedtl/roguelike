@@ -1305,6 +1305,7 @@ pub const SkeletonTemplate = MobTemplate{
             .default_attack = &Weapon{ .damage = 1, .strs = &items.FIST_STRS },
         },
         .tile = 's',
+        .undead_prefix = "",
         .ai = AI{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
