@@ -1757,20 +1757,6 @@ pub fn placeTraps(level: usize) void {
 }
 
 pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
-    // Create spawn tables.
-    var spawn_table_ids = std.ArrayList([]const u8).init(alloc);
-    var spawn_table_weights = std.ArrayList(usize).init(alloc);
-    {
-        var iter = mob_spawn_tables.iterator();
-        while (iter.next()) |mob_spawn_data| {
-            if (mob_spawn_data.value_ptr[level] == 0) continue;
-            spawn_table_ids.append(mob_spawn_data.key_ptr.*) catch err.oom();
-            spawn_table_weights.append(mob_spawn_data.value_ptr.*[level]) catch err.oom();
-        }
-    }
-    defer spawn_table_ids.deinit();
-    defer spawn_table_weights.deinit();
-
     var level_mob_count: usize = 0;
 
     for (state.rooms[level].items) |*room| {
@@ -1787,14 +1773,10 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
         const max_crowd = rng.range(usize, 1, Configs[level].room_crowd_max);
 
         while (room.mob_count < max_crowd) {
-            const mob_id = rng.choose(
-                []const u8,
-                spawn_table_ids.items,
-                spawn_table_weights.items,
-            ) catch err.wat();
-            const mob = mobs.findMobById(mob_id) orelse err.bug(
+            const mob_spawn_info = rng.choose2(MobSpawnInfo, mob_spawn_tables[level].items, "weight") catch err.wat();
+            const mob = mobs.findMobById(mob_spawn_info.id) orelse err.bug(
                 "Mob {s} specified in spawn tables couldn't be found.",
-                .{mob_id},
+                .{mob_spawn_info.id},
             );
 
             var tries: usize = 100;
@@ -3227,100 +3209,65 @@ pub fn readPrefabs(alloc: mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pref
     std.sort.insertionSort(Prefab, s_fabs.items, {}, Prefab.lesserThan);
 }
 
-pub var mob_spawn_tables: std.StringHashMap([LEVELS]usize) = undefined;
+pub const MobSpawnInfo = struct {
+    id: []const u8 = undefined,
+    weight: usize,
+
+    const AList = std.ArrayList(@This());
+};
+pub var mob_spawn_tables: [LEVELS]MobSpawnInfo.AList = undefined;
 
 pub fn readSpawnTables(alloc: mem.Allocator) void {
-    const _MobSpawnData = struct {
+    const TmpMobSpawnData = struct {
         id: []u8 = undefined,
-
-        _8_pri_: usize = undefined,
-        _7_pri_: usize = undefined,
-        _6_lab_: usize = undefined,
-        _6_lab2: usize = undefined,
-        _6_lab3: usize = undefined,
-        _5_smi_: usize = undefined,
-        _5_smi2: usize = undefined,
-        _5_smi3: usize = undefined,
-        _4_pri_: usize = undefined,
-        _3_vlt_: usize = undefined,
-        _3_vlt2: usize = undefined,
-        _3_vlt3: usize = undefined,
-        _2_pri_: usize = undefined,
-        _1_pri_: usize = undefined,
+        levels: [LEVELS]usize = undefined,
     };
 
-    mob_spawn_tables = @TypeOf(mob_spawn_tables).init(alloc);
-
     const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
-    const data_file = data_dir.openFile("spawns.tsv", .{
-        .read = true,
-        .lock = .None,
-    }) catch unreachable;
+    const data_file = data_dir.openFile("spawns.tsv", .{ .read = true }) catch unreachable;
 
     var rbuf: [65535]u8 = undefined;
+
     const read = data_file.readAll(rbuf[0..]) catch unreachable;
 
-    const result = tsv.parse(
-        _MobSpawnData,
-        &[_]tsv.TSVSchemaItem{
-            .{ .field_name = "id", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
-            .{ .field_name = "_8_pri_", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-            .{ .field_name = "_7_pri_", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-            .{ .field_name = "_6_lab_", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-            .{ .field_name = "_6_lab2", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-            .{ .field_name = "_6_lab3", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-            .{ .field_name = "_5_smi_", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-            .{ .field_name = "_5_smi2", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-            .{ .field_name = "_5_smi3", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-            .{ .field_name = "_4_pri_", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-            .{ .field_name = "_3_vlt_", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-            .{ .field_name = "_3_vlt2", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-            .{ .field_name = "_3_vlt3", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-            .{ .field_name = "_2_pri_", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-            .{ .field_name = "_1_pri_", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-        },
-        .{},
-        rbuf[0..read],
-        alloc,
-    );
+    const result = tsv.parse(TmpMobSpawnData, &[_]tsv.TSVSchemaItem{
+        .{ .field_name = "id", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
+        .{ .field_name = "levels", .parse_to = usize, .is_array = LEVELS, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
+    }, .{}, rbuf[0..read], alloc);
 
     if (!result.is_ok()) {
         err.bug(
-            "Cannot read spawn table: {} (line {}, field {})",
+            "Can't load spawn table: {} (line {}, field {})",
             .{ result.Err.type, result.Err.context.lineno, result.Err.context.field },
         );
-    } else {
-        const spawndatas = result.unwrap();
-        defer spawndatas.deinit();
-
-        for (spawndatas.items) |spawndata| {
-            var weights = [LEVELS]usize{
-                spawndata._1_pri_,
-                spawndata._2_pri_,
-                spawndata._3_vlt3,
-                spawndata._3_vlt2,
-                spawndata._3_vlt_,
-                spawndata._4_pri_,
-                spawndata._5_smi3,
-                spawndata._5_smi2,
-                spawndata._5_smi_,
-                spawndata._6_lab3,
-                spawndata._6_lab2,
-                spawndata._6_lab_,
-                spawndata._7_pri_,
-                spawndata._8_pri_,
-            };
-            mob_spawn_tables.putNoClobber(spawndata.id, weights) catch err.oom();
-        }
-
-        std.log.info("Loaded spawn tables.", .{});
     }
+
+    const spawndatas = result.unwrap();
+    defer spawndatas.deinit();
+
+    for (mob_spawn_tables) |*table, i| {
+        table.* = @TypeOf(table.*).init(alloc);
+        for (spawndatas.items) |spawndata| {
+            table.append(.{
+                .id = utils.cloneStr(spawndata.id, state.GPA.allocator()) catch err.oom(),
+                .weight = spawndata.levels[(LEVELS - 1) - i],
+            }) catch err.wat();
+        }
+    }
+
+    for (spawndatas.items) |spawndata| {
+        alloc.free(spawndata.id);
+    }
+
+    std.log.info("Loaded spawn tables.", .{});
 }
 
 pub fn freeSpawnTables(alloc: mem.Allocator) void {
-    var iter = mob_spawn_tables.iterator();
-    while (iter.next()) |entry| alloc.free(entry.key_ptr.*);
-    mob_spawn_tables.clearAndFree();
+    for (mob_spawn_tables) |table| {
+        for (table.items) |spawn_info|
+            alloc.free(spawn_info.id);
+        table.deinit();
+    }
 }
 
 pub const LevelConfig = struct {

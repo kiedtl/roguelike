@@ -9,6 +9,7 @@ pub const TSVSchemaItem = struct {
     field_name: []const u8 = "",
     parse_to: type = usize,
     parse_fn: @TypeOf(_dummy_parse),
+    is_array: ?usize = null,
     optional: bool = false,
     default_val: anytype = undefined, // Only applicable if schema.optional == true
 
@@ -316,24 +317,46 @@ pub fn parse(
         var input_fields = mem.split(u8, line, "\t");
 
         inline for (schema) |schema_item, i| {
-            var input_field = mem.trim(u8, input_fields.next() orelse "", " ");
+            if (schema_item.is_array) |array_len| {
+                var arr_i: usize = 0;
+                while (arr_i < array_len) : (arr_i += 1) {
+                    var input_field = mem.trim(u8, input_fields.next() orelse "", " ");
 
-            // Handle empty fields
-            if (input_field.len == 0 or input_field[0] == '-') {
-                if (schema_item.optional) {
-                    @field(result, schema_item.field_name) = schema_item.default_val;
-                } else {
-                    return S._err(.MissingField, lineno, i);
+                    if (input_field.len == 0 or input_field[0] == '-') {
+                        @field(result, schema_item.field_name)[arr_i] = schema_item.default_val;
+                        continue;
+                    }
+
+                    const r = schema_item.parse_fn(
+                        schema_item.parse_to,
+                        &@field(result, schema_item.field_name)[arr_i],
+                        input_field,
+                        alloc,
+                    );
+                    if (!r) {
+                        return S._err(.ErrorParsingField, lineno, i);
+                    }
                 }
             } else {
-                const r = schema_item.parse_fn(
-                    schema_item.parse_to,
-                    &@field(result, schema_item.field_name),
-                    input_field,
-                    alloc,
-                );
-                if (!r) {
-                    return S._err(.ErrorParsingField, lineno, i);
+                var input_field = mem.trim(u8, input_fields.next() orelse "", " ");
+
+                // Handle empty fields
+                if (input_field.len == 0 or input_field[0] == '-') {
+                    if (schema_item.optional) {
+                        @field(result, schema_item.field_name) = schema_item.default_val;
+                    } else {
+                        return S._err(.MissingField, lineno, i);
+                    }
+                } else {
+                    const r = schema_item.parse_fn(
+                        schema_item.parse_to,
+                        &@field(result, schema_item.field_name),
+                        input_field,
+                        alloc,
+                    );
+                    if (!r) {
+                        return S._err(.ErrorParsingField, lineno, i);
+                    }
                 }
             }
         }
@@ -484,6 +507,46 @@ test "parsing" {
         try testing.expectEqual(@as(T.BarT, .Fire), result.items[0].bar);
         try testing.expectEqual(@as(f64, 19.23), result.items[0].baz);
         try testing.expectEqualSlices(u8, "test\"\n\r boop", result.items[0].bap);
+    }
+}
+
+test "array parsing" {
+    const T = struct {
+        name: []u8 = undefined,
+        array: [3]usize = undefined,
+    };
+
+    const schema = [_]TSVSchemaItem{
+        .{ .field_name = "name", .parse_to = []u8, .parse_fn = parseUtf8String },
+        .{ .field_name = "array", .parse_to = usize, .is_array = 3, .parse_fn = parsePrimitive, .optional = true, .default_val = 0 },
+    };
+
+    {
+        const u_result = parse(T, &schema, .{}, "\"watcher\"\t1\t2\t3", testing.allocator);
+        try testing.expect(u_result.is_ok());
+
+        const result = u_result.unwrap();
+        defer result.deinit();
+        defer testing.allocator.free(result.items[0].name);
+
+        try testing.expectEqualSlices(u8, "watcher", result.items[0].name);
+        try testing.expectEqual(@as(usize, 1), result.items[0].array[0]);
+        try testing.expectEqual(@as(usize, 2), result.items[0].array[1]);
+        try testing.expectEqual(@as(usize, 3), result.items[0].array[2]);
+    }
+
+    {
+        const u_result = parse(T, &schema, .{}, "\"foobar\"\t - \t83942  \t-", testing.allocator);
+        try testing.expect(u_result.is_ok());
+
+        const result = u_result.unwrap();
+        defer result.deinit();
+        defer testing.allocator.free(result.items[0].name);
+
+        try testing.expectEqualSlices(u8, "foobar", result.items[0].name);
+        try testing.expectEqual(@as(usize, 0), result.items[0].array[0]);
+        try testing.expectEqual(@as(usize, 83942), result.items[0].array[1]);
+        try testing.expectEqual(@as(usize, 0), result.items[0].array[2]);
     }
 }
 // }}}

@@ -184,6 +184,12 @@ pub fn sentinel(comptime T: type) switch (@typeInfo(T)) {
     };
 }
 
+pub fn cloneStr(str: []const u8, alloc: mem.Allocator) ![]const u8 {
+    var new = alloc.alloc(u8, str.len) catch return error.OutOfMemory;
+    mem.copy(u8, new, str);
+    return new;
+}
+
 // TODO: remove all uses of this, untyped null-terminated arrays should never
 // be used.
 //
