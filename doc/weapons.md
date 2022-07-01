@@ -11,4 +11,4 @@ Weapons may come with an "ego" which adds a special characteristic, mostly good:
   aura of a battery pack. Otherwise they deal up to -50% normal damage.
 - **Masterpiece** weapons are 20% faster than usual and give a +10% melee bonus.
 - **Bone** weapons deal 1 *less* damage to undead, but 1 *more* damage to
-  the living.
+  the living (as long as they're not corrupted).
