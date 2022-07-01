@@ -897,7 +897,8 @@ pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
         const parent = &rooms.items[i];
 
         for (rooms.items) |*child| {
-            if (child.is_vault or
+            if (parent.is_vault or
+                child.is_vault or
                 parent.connections.isFull() or
                 child.connections.isFull() or
                 parent.connections.linearSearch(child.rect.start, Coord.eqNotInline) or
