@@ -76,6 +76,8 @@ pub const TRAPS = &[_]*const Machine{
 };
 pub const TRAP_WEIGHTS = &[_]usize{ 3, 3, 1, 2, 1 };
 
+pub const VAULT_KINDS = 1;
+pub const VAULT_CROWD = minmax(usize, 7, 14);
 // }}}
 
 // TODO: replace with MinMax
@@ -1662,7 +1664,7 @@ pub fn placeItems(level: usize) void {
             continue;
         }
 
-        const max_items = rng.range(usize, 1, 2);
+        const max_items = if (room.is_vault) rng.range(usize, 3, 7) else rng.range(usize, 1, 2);
         var items_placed: usize = 0;
 
         while (items_placed < max_items) : (items_placed += 1) {
@@ -1771,10 +1773,17 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
         if (room.type == .Corridor) continue;
         if (room.rect.height * room.rect.width < 25) continue;
 
-        const max_crowd = rng.range(usize, 1, Configs[level].room_crowd_max);
+        const max_crowd = if (room.is_vault)
+            rng.range(usize, VAULT_CROWD.min, VAULT_CROWD.max)
+        else
+            rng.range(usize, 1, Configs[level].room_crowd_max);
+        const sptable: *MobSpawnInfo.AList = if (room.is_vault)
+            &spawn_tables_vaults[0]
+        else
+            &spawn_tables[level];
 
         while (room.mob_count < max_crowd) {
-            const mob_spawn_info = rng.choose2(MobSpawnInfo, mob_spawn_tables[level].items, "weight") catch err.wat();
+            const mob_spawn_info = rng.choose2(MobSpawnInfo, sptable.items, "weight") catch err.wat();
             const mob = mobs.findMobById(mob_spawn_info.id) orelse err.bug(
                 "Mob {s} specified in spawn tables couldn't be found.",
                 .{mob_spawn_info.id},
@@ -1900,7 +1909,7 @@ fn _placePropAlongRange(level: usize, where: Range, prop: *const Prop, max: usiz
     return placed;
 }
 
-pub fn setVaultWalls(room: *Room) void {
+pub fn setVaultFeatures(room: *Room) void {
     const level = room.rect.start.z;
 
     const wall_areas = computeWallAreas(&room.rect, true);
@@ -1911,6 +1920,21 @@ pub fn setVaultWalls(room: *Room) void {
             while (x <= wall_area.to.x) : (x += 1) {
                 const coord = Coord.new2(level, x, y);
                 state.dungeon.at(coord).material = &materials.Rust;
+
+                // XXX: hacky, in the future we should store door coords.
+                if ((state.dungeon.at(coord).surface != null and
+                    state.dungeon.at(coord).surface.? == .Machine and
+                    mem.startsWith(u8, state.dungeon.at(coord).surface.?.Machine.id, "door")) or
+                    (state.dungeon.at(coord).surface == null and
+                    state.dungeon.at(coord).type == .Floor))
+                {
+                    assert(state.dungeon.at(coord).type == .Floor);
+                    if (state.dungeon.at(coord).surface != null) {
+                        state.dungeon.at(coord).surface.?.Machine.disabled = true;
+                        state.dungeon.at(coord).surface = null;
+                    }
+                    _place_machine(coord, &surfaces.IronVaultDoor);
+                }
             }
         }
     }
@@ -1933,7 +1957,7 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
         if (room.has_subroom and room_area < 25) continue;
 
         if (room.is_vault) {
-            setVaultWalls(room);
+            setVaultFeatures(room);
         }
 
         const rect_end = rect.end();
@@ -2183,7 +2207,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
             .Room => |r| &state.rooms[dest_floor].items[r],
         };
 
-        if (room != null and room.?.has_stair) {
+        if (room != null and (room.?.has_stair or room.?.is_vault)) {
             continue;
         }
 
@@ -3216,7 +3240,8 @@ pub const MobSpawnInfo = struct {
 
     const AList = std.ArrayList(@This());
 };
-pub var mob_spawn_tables: [LEVELS]MobSpawnInfo.AList = undefined;
+pub var spawn_tables: [LEVELS]MobSpawnInfo.AList = undefined;
+pub var spawn_tables_vaults: [VAULT_KINDS]MobSpawnInfo.AList = undefined;
 
 pub fn readSpawnTables(alloc: mem.Allocator) void {
     const TmpMobSpawnData = struct {
@@ -3225,46 +3250,67 @@ pub fn readSpawnTables(alloc: mem.Allocator) void {
     };
 
     const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
-    const data_file = data_dir.openFile("spawns.tsv", .{ .read = true }) catch unreachable;
-
     var rbuf: [65535]u8 = undefined;
 
-    const read = data_file.readAll(rbuf[0..]) catch unreachable;
+    const spawn_table_files = [_]struct {
+        filename: []const u8,
+        sptable: []MobSpawnInfo.AList,
+        backwards: bool = false,
+    }{
+        .{ .filename = "spawns.tsv", .sptable = &spawn_tables, .backwards = true },
+        .{ .filename = "spawns_vaults.tsv", .sptable = &spawn_tables_vaults },
+    };
 
-    const result = tsv.parse(TmpMobSpawnData, &[_]tsv.TSVSchemaItem{
-        .{ .field_name = "id", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
-        .{ .field_name = "levels", .parse_to = usize, .is_array = LEVELS, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-    }, .{}, rbuf[0..read], alloc);
+    // We need `inline for` because the schema needs to be comptime...
+    //
+    inline for (spawn_table_files) |sptable_file| {
+        const data_file = data_dir.openFile(sptable_file.filename, .{ .read = true }) catch unreachable;
+        const len = sptable_file.sptable.len;
 
-    if (!result.is_ok()) {
-        err.bug(
-            "Can't load spawn table: {} (line {}, field {})",
-            .{ result.Err.type, result.Err.context.lineno, result.Err.context.field },
-        );
-    }
+        const read = data_file.readAll(rbuf[0..]) catch unreachable;
 
-    const spawndatas = result.unwrap();
-    defer spawndatas.deinit();
+        const result = tsv.parse(TmpMobSpawnData, &[_]tsv.TSVSchemaItem{
+            .{ .field_name = "id", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
+            .{ .field_name = "levels", .parse_to = usize, .is_array = len, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
+        }, .{}, rbuf[0..read], alloc);
 
-    for (mob_spawn_tables) |*table, i| {
-        table.* = @TypeOf(table.*).init(alloc);
-        for (spawndatas.items) |spawndata| {
-            table.append(.{
-                .id = utils.cloneStr(spawndata.id, state.GPA.allocator()) catch err.oom(),
-                .weight = spawndata.levels[(LEVELS - 1) - i],
-            }) catch err.wat();
+        if (!result.is_ok()) {
+            err.bug("Can't load {s}: {} (line {}, field {})", .{
+                sptable_file.filename,
+                result.Err.type,
+                result.Err.context.lineno,
+                result.Err.context.field,
+            });
         }
-    }
 
-    for (spawndatas.items) |spawndata| {
-        alloc.free(spawndata.id);
-    }
+        const spawndatas = result.unwrap();
+        defer spawndatas.deinit();
 
-    std.log.info("Loaded spawn tables.", .{});
+        for (sptable_file.sptable) |*table, i| {
+            table.* = @TypeOf(table.*).init(alloc);
+            for (spawndatas.items) |spawndata| {
+                table.append(.{
+                    .id = utils.cloneStr(spawndata.id, state.GPA.allocator()) catch err.oom(),
+                    .weight = spawndata.levels[if (sptable_file.backwards) (len - 1) - i else i],
+                }) catch err.wat();
+            }
+        }
+
+        for (spawndatas.items) |spawndata| {
+            alloc.free(spawndata.id);
+        }
+        std.log.info("Loaded spawn tables ({s}).", .{sptable_file.filename});
+    }
 }
 
 pub fn freeSpawnTables(alloc: mem.Allocator) void {
-    for (mob_spawn_tables) |table| {
+    for (spawn_tables) |table| {
+        for (table.items) |spawn_info|
+            alloc.free(spawn_info.id);
+        table.deinit();
+    }
+
+    for (spawn_tables_vaults) |table| {
         for (table.items) |spawn_info|
             alloc.free(spawn_info.id);
         table.deinit();

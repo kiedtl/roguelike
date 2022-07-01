@@ -340,6 +340,7 @@ pub fn grabItem() bool {
             state.collected_runes.set(rune, true);
 
             state.message(.Important, "The alarm goes off!!", .{});
+            state.markMessageNoisy();
             state.player.makeNoise(.Alarm, .Loudest);
 
             state.player.declareAction(.Grab);

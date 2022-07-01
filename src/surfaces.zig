@@ -264,6 +264,7 @@ pub const MACHINES = [_]Machine{
     LabDoor,
     VaultDoor,
     LockedDoor,
+    IronVaultDoor,
     ParalysisGasTrap,
     PoisonGasTrap,
     ConfusionGasTrap,
@@ -511,6 +512,7 @@ pub const SeizureGasTrap = Machine.createGasTrap("seizure gas", &gas.Seizure);
 pub const BlindingGasTrap = Machine.createGasTrap("tear gas", &gas.Blinding);
 
 pub const NormalDoor = Machine{
+    .id = "door_normal",
     .name = "door",
     .powered_tile = '\'',
     .unpowered_tile = '+',
@@ -529,6 +531,7 @@ pub const NormalDoor = Machine{
 };
 
 pub const LabDoor = Machine{
+    .id = "door_lab",
     .name = "door",
     .powered_tile = '+',
     .unpowered_tile = 'x',
@@ -546,6 +549,7 @@ pub const LabDoor = Machine{
 };
 
 pub const VaultDoor = Machine{
+    .id = "door_qrt",
     .name = "door",
     .powered_tile = '░',
     .unpowered_tile = '+',
@@ -563,6 +567,7 @@ pub const VaultDoor = Machine{
 };
 
 pub const LockedDoor = Machine{
+    .id = "door_locked",
     .name = "locked door",
     .powered_tile = '\'',
     .unpowered_tile = '+',
@@ -578,6 +583,35 @@ pub const LockedDoor = Machine{
     .can_be_jammed = true,
     .on_power = powerNone,
     .pathfinding_penalty = 5,
+};
+
+pub const IronVaultDoor = Machine{
+    .id = "door_vault_iron",
+    .name = "iron door",
+    .powered_tile = ' ',
+    .unpowered_tile = '+',
+    .powered_fg = colors.percentageOf(colors.COPPER_RED, 130),
+    .unpowered_fg = colors.percentageOf(colors.COPPER_RED, 130),
+    .powered_bg = colors.percentageOf(colors.COPPER_RED, 40),
+    .unpowered_bg = colors.percentageOf(colors.COPPER_RED, 40),
+    .power_drain = 0,
+    .powered_walkable = true,
+    .unpowered_walkable = false,
+    .powered_opacity = 0,
+    .unpowered_opacity = 1.0,
+    .evoke_confirm = "Really open a treasure vault door?",
+    .on_power = struct {
+        pub fn f(machine: *Machine) void {
+            machine.disabled = true;
+            state.dungeon.at(machine.coord).surface = null;
+
+            if (rng.percent(@as(usize, 30))) {
+                state.message(.Important, "The alarm goes off!!", .{});
+                state.markMessageNoisy();
+                state.player.makeNoise(.Alarm, .Loudest);
+            }
+        }
+    }.f,
 };
 
 pub const Mine = Machine{

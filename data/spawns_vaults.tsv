@@ -1,0 +1,32 @@
+# vim: nowrap
+#
+# Spawn tables for vaults.
+#
+
+#
+# monster id            Iron
+
+# typical iron vault fodder
+"recruit"             	 100
+"defender"            	 100
+"javelineer"          	  90
+"death_knight"        	  70
+"sentinel"            	  50
+"bone_mage"           	  50
+"iron_spire"          	  10
+"lightning_spire"     	  10
+
+# Some shriekers and watchers, to dilute the monster-pool and to create some
+# noise
+"watcher"             	  10
+"shrieker"            	  10
+
+# rarer monsters, because it rapidly increases difficulty
+#
+# war olg is hard: "why wont this thing just die??"
+# necromancer is hard: "i thought i killed that recruit?!"
+"warrior"             	   3
+"war_olg"             	   2
+"necromancer"         	   1
+
+# monster id            Iron

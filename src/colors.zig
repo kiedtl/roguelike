@@ -18,6 +18,7 @@ pub const LIGHT_PALE_VIOLET_RED: u32 = 0xfb90b3;
 pub const AQUAMARINE: u32 = 0x7fffd4;
 pub const GOLD: u32 = 0xddb733;
 pub const LIGHT_GOLD: u32 = 0xfdd753;
+pub const COPPER_RED: u32 = 0x985744;
 
 pub const BG: u32 = percentageOf(CONCRETE, 3);
 
