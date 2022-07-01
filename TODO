@@ -924,7 +924,6 @@ x More kits and traps: fire, shock, incineration, knockback
   - Random ring drops, equipping/deequipping rings
   x Remove ring statuses
   - MP costs for rings?
-  - Rings spawn with stat modifiers (Will+ Will- Will++ Will--)
 x Fix trtr chambers; add more of them
 x Iron, lightning, torpor, and calcite spires
 x Bone weapons, corruption effects
@@ -937,18 +936,28 @@ x Add barrel of water
 x War olgs, cinder worms, destroyers
 x Ember, brimstone, spark, lightning mage bands
 x Emberling/sparkling summoning trap kits
-~ Fiend of vapours [canceled]
-- Copper weapons and copper spires/battery packs, copper hornets
-- Headgear, footgear, auxiliary items
+~ [canceled] Fiend of vapours
+x Copper weapons and copper spires/battery packs, copper hornets
 - Lore-related prefabs (e.g. washroom, trophy rooms, etc)
 - Warriors, recruits
 - Treasure vaults
   - Marble vault
-  - Iron vault
+  x Iron vault
   - Golden vault
   - Tavern vault (maybe next release?)
+- Scoring
+- Rework mapgen for -1/Prison and rename to Entry
 - Playtest game, especially CAV and make adjustments
 *** v1.1.0 release ***
+- Basic save system
+- Warn when next to spreading gas and resting
+- Warn when stepping into enemy's FOV
+- Auto-wait: don't wait while in combat or in dangerous area
+- More messages
+- Startup screen, map generation loading bar
+*** v1.2.0 release ***
+- Rings spawn with stat modifiers (Will+ Will- Will++ Will--)
+- Headgear, footgear, auxiliary items
 - Masterpiece weapons
 - Multi-tile props: trees and braziers
 - More mundane weapons: hammer, poker
@@ -957,12 +966,6 @@ x Emberling/sparkling summoning trap kits
   - Potion of insubstantiation and fortification
   - Potions of disruption
 - Basic speeches by mobs
-- Warn when next to spreading gas and resting
-- Warn when stepping into enemy's FOV
-- Auto-wait: don't wait while in combat or in dangerous area
-- More messages
-- Startup screen, map generation loading bar
-*** v1.2.0 release ***
 - Bloodlings and related mages
 - Operators
 - Rework gases
