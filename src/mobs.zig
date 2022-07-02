@@ -355,6 +355,7 @@ pub const CopperHornetTemplate = MobTemplate{
             .default_attack = &Weapon{
                 .damage = 1,
                 .ego = .Copper,
+                .damage_kind = .Electric,
                 .strs = &[_]DamageStr{
                     items._dmgstr(005, "jab", "jabs", ""),
                     items._dmgstr(100, "sting", "stings", ""),
