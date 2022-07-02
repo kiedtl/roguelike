@@ -947,6 +947,8 @@ x Copper weapons and copper spires/battery packs, copper hornets
   - Tavern vault (maybe next release?)
 - Scoring
 - Rework mapgen for -1/Prison and rename to Entry
+- Fix pushing past monsters
+x Remove boring `Flanked' mechanic
 - Playtest game, especially CAV and make adjustments
 *** v1.1.0 release ***
 - Basic save system
@@ -1436,7 +1438,9 @@ x MP-like system that limits how often spellcasters can cast spells (providing
   - Bri(b)ing key to bribe lone monsters
 - "Doormat" poster that has welcoming messages on it, right next to stairs
   - Maybe describes level's challenges for new players?
-+ Put actual loot in chests + plus new TGGW-like interace for containers
+- Put actual loot in chests + plus new TGGW-like interace for containers
+- Monster: has strong ranged attack with copper weapon, and tries to lure you
+  into copper ground
 
 Optimizations
 =============
