@@ -190,6 +190,21 @@ pub var player_turns: usize = 0;
 pub var messages: MessageArrayList = undefined;
 pub var score: usize = 0;
 
+// Find the nearest space near a coord in which a monster can be placed.
+//
+// Will *not* return crd.
+//
+// Uses state.GPA.allocator()
+//
+pub fn nextSpotForMob(crd: Coord, mob: ?*Mob) ?Coord {
+    var dijk = dijkstra.Dijkstra.init(crd, mapgeometry, 2, is_walkable, .{ .mob = mob, .right_now = true }, GPA.allocator());
+    defer dijk.deinit();
+
+    return while (dijk.next()) |child| {
+        break child;
+    } else null;
+}
+
 // Find the nearest space in which an item can be dropped.
 //
 // First attempt to find a tile without any items on it; if there are no such

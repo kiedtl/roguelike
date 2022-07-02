@@ -839,6 +839,25 @@ pub fn haulerWork(mob: *Mob, alloc: mem.Allocator) void {
     }
 }
 
+pub fn stayNearLeaderWork(mob: *Mob, _: mem.Allocator) void {
+    assert(mob.squad != null);
+    assert(mob.squad.?.leader != null);
+
+    const leader = mob.squad.?.leader.?;
+    assert(!leader.is_dead);
+
+    if (mob.coord.distance(leader.coord) > 2) {
+        if (state.nextSpotForMob(leader.coord, mob)) |nearest| {
+            // Disabled assertion: it can be the leader's coord, since you could push past it
+            //assert(!nearest.eq(leader.coord));
+
+            mob.tryMoveTo(nearest);
+        } else _ = mob.rest();
+    } else {
+        _ = mob.rest();
+    }
+}
+
 pub fn wanderWork(mob: *Mob, _: mem.Allocator) void {
     assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.ai.phase == .Work);
