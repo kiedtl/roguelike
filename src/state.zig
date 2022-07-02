@@ -54,7 +54,7 @@ const PosterArrayList = literature.PosterArrayList;
 pub const GameState = union(enum) { Game, Win, Lose, Quit };
 pub const Layout = union(enum) { Unknown, Room: usize };
 
-pub const HEIGHT = 35;
+pub const HEIGHT = 30;
 pub const WIDTH = 70;
 pub const LEVELS = 14;
 pub const PLAYER_STARTING_LEVEL = 13; // TODO: define in data file

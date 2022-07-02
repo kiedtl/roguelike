@@ -1529,14 +1529,14 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
                 }
             } else if (ev.ch != 0) {
                 switch (ev.ch) {
-                    'h' => coord = coord.move(.West, state.mapgeometry) orelse coord,
-                    'j' => coord = coord.move(.South, state.mapgeometry) orelse coord,
-                    'k' => coord = coord.move(.North, state.mapgeometry) orelse coord,
-                    'l' => coord = coord.move(.East, state.mapgeometry) orelse coord,
-                    'y' => coord = coord.move(.NorthWest, state.mapgeometry) orelse coord,
-                    'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
-                    'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
-                    'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
+                    'a', 'h' => coord = coord.move(.West, state.mapgeometry) orelse coord,
+                    'x', 'j' => coord = coord.move(.South, state.mapgeometry) orelse coord,
+                    'w', 'k' => coord = coord.move(.North, state.mapgeometry) orelse coord,
+                    'd', 'l' => coord = coord.move(.East, state.mapgeometry) orelse coord,
+                    'q', 'y' => coord = coord.move(.NorthWest, state.mapgeometry) orelse coord,
+                    'e', 'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
+                    'z', 'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
+                    'c', 'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
                     else => {},
                 }
             } else unreachable;
@@ -1622,7 +1622,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
 
                 if (mob != state.player and state.player.canMelee(mob)) {
                     kbd_a = true;
-                    _writerWrite(writer, "Press $ba$. to attack.\n", .{});
+                    _writerWrite(writer, "Press $bA$. to attack.\n", .{});
                 }
             } else if (tile_focus == .Surface and has_surf) {
                 if (coord.distance(state.player.coord) <= 1 and
@@ -1766,18 +1766,18 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                 }
             } else if (ev.ch != 0) {
                 switch (ev.ch) {
-                    'h' => coord = coord.move(.West, state.mapgeometry) orelse coord,
-                    'j' => coord = coord.move(.South, state.mapgeometry) orelse coord,
-                    'k' => coord = coord.move(.North, state.mapgeometry) orelse coord,
-                    'l' => coord = coord.move(.East, state.mapgeometry) orelse coord,
-                    'y' => coord = coord.move(.NorthWest, state.mapgeometry) orelse coord,
-                    'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
-                    'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
-                    'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
+                    'a', 'h' => coord = coord.move(.West, state.mapgeometry) orelse coord,
+                    'x', 'j' => coord = coord.move(.South, state.mapgeometry) orelse coord,
+                    'w', 'k' => coord = coord.move(.North, state.mapgeometry) orelse coord,
+                    'd', 'l' => coord = coord.move(.East, state.mapgeometry) orelse coord,
+                    'q', 'y' => coord = coord.move(.NorthWest, state.mapgeometry) orelse coord,
+                    'e', 'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
+                    'z', 'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
+                    'c', 'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
                     'B' => if (kbd_B) {
                         return player.breakSomething(coord);
                     },
-                    'a' => if (kbd_a) {
+                    'A' => if (kbd_a) {
                         state.player.fight(state.dungeon.at(coord).mob.?, .{});
                         return true;
                     },
