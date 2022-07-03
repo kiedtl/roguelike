@@ -4,6 +4,7 @@ const assert = std.debug.assert;
 
 const items = @import("items.zig");
 const types = @import("types.zig");
+const player = @import("player.zig");
 const rng = @import("rng.zig");
 const state = @import("state.zig");
 const display = @import("display.zig");
@@ -181,10 +182,16 @@ pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: u
         .path_char = '×',
     } });
 
-    if (thrower) |thrower_mob| {
-        state.message(.Combat, "{c} knocks {} back!", .{ thrower_mob, throwee });
-    } else {
-        state.message(.Combat, "{c} is/are knocked back!", .{throwee});
+    if (player.canSeeAny(&.{
+        @as(?Coord, if (thrower) |m| m.coord else null),
+        previous_coord,
+        dest_coord,
+    })) {
+        if (thrower) |thrower_mob| {
+            state.message(.Combat, "{c} knocks {} back!", .{ thrower_mob, throwee });
+        } else {
+            state.message(.Combat, "{c} is/are knocked back!", .{throwee});
+        }
     }
 
     if (slammed_into_something) {

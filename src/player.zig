@@ -635,3 +635,13 @@ pub fn isPlayerSpotted() bool {
 
     return is_spotted;
 }
+
+pub fn canSeeAny(coords: []const ?Coord) bool {
+    return for (coords) |m_coord| {
+        if (m_coord) |coord| {
+            if (state.player.cansee(coord)) {
+                break true;
+            }
+        }
+    } else false;
+}
