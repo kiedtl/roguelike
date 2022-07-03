@@ -1994,8 +1994,18 @@ pub fn drawInventoryScreen() bool {
                     => return false,
                     termbox.TB_KEY_SPACE,
                     termbox.TB_KEY_ENTER,
-                    => if (itemlist_len > 0)
-                        return player.useItem(chosen),
+                    => if (chosen_itemlist == .Pack) {
+                        if (itemlist_len > 0)
+                            return player.useItem(chosen);
+                    } else if (chosen_item) |item| {
+                        switch (item) {
+                            .Weapon => drawAlert("Bump into enemies to attack.", .{}),
+                            .Ring => drawAlert("Follow the ring's pattern to use it.", .{}),
+                            else => drawAlert("You can't use that!", .{}),
+                        }
+                    } else {
+                        drawAlert("You can't use that!", .{});
+                    },
                     else => {},
                 }
                 continue;
