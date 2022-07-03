@@ -76,7 +76,41 @@ pub const TRAPS = &[_]*const Machine{
 };
 pub const TRAP_WEIGHTS = &[_]usize{ 3, 3, 1, 2, 1 };
 
-pub const VAULT_KINDS = 1;
+pub const VaultType = enum(usize) {
+    Iron = 0,
+    Gold = 1,
+    Cuprite = 2,
+    Obsidian = 3,
+    Tavern = 4,
+    Marble = 5,
+};
+pub const VAULT_MATERIALS = [VAULT_KINDS]*const Material{
+    &materials.Rust,
+    &materials.Gold,
+};
+pub const VAULT_DOORS = [VAULT_KINDS]*const Machine{
+    &surfaces.IronVaultDoor,
+    &surfaces.GoldVaultDoor,
+};
+// zig fmt: off
+pub const VAULT_LEVELS = [LEVELS][]const VaultType{
+    &.{ .Gold  }, // -1/Prison
+    &.{ .Gold  }, // -2/Prison
+    &.{ .Gold  }, // -3/Quarters/3
+    &.{ .Gold  }, // -3/Quarters/2
+    &.{ .Gold  }, // -3/Quarters
+    &.{ .Gold  }, // -4/Prison
+    &.{        }, // -5/Caverns/3
+    &.{        }, // -5/Caverns/2
+    &.{        }, // -5/Caverns
+    &.{ .Iron  }, // -6/Laboratory/3
+    &.{ .Iron  }, // -6/Laboratory/2
+    &.{ .Iron  }, // -6/Laboratory
+    &.{ .Iron  }, // -7/Prison
+    &.{ .Iron  }, // -8/Prison
+};
+// zig fmt: on
+pub const VAULT_KINDS = 2;
 pub const VAULT_CROWD = minmax(usize, 7, 14);
 // }}}
 
@@ -868,6 +902,12 @@ pub fn validateLevel(
 }
 
 pub fn selectLevelVault(level: usize) void {
+    if (VAULT_LEVELS[level].len == 0) {
+        return;
+    }
+
+    const vault_kind = rng.chooseUnweighted(VaultType, VAULT_LEVELS[level]);
+
     var candidates = std.ArrayList(usize).init(state.GPA.allocator());
     defer candidates.deinit();
 
@@ -885,7 +925,7 @@ pub fn selectLevelVault(level: usize) void {
     }
 
     const selected_room_i = rng.chooseUnweighted(usize, candidates.items);
-    state.rooms[level].items[selected_room_i].is_vault = true;
+    state.rooms[level].items[selected_room_i].is_vault = vault_kind;
 }
 
 pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
@@ -899,8 +939,8 @@ pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
         const parent = &rooms.items[i];
 
         for (rooms.items) |*child| {
-            if (parent.is_vault or
-                child.is_vault or
+            if (parent.is_vault != null or
+                child.is_vault != null or
                 parent.connections.isFull() or
                 child.connections.isFull() or
                 parent.connections.linearSearch(child.rect.start, Coord.eqNotInline) or
@@ -1664,7 +1704,7 @@ pub fn placeItems(level: usize) void {
             continue;
         }
 
-        const max_items = if (room.is_vault) rng.range(usize, 3, 7) else rng.range(usize, 1, 2);
+        const max_items = if (room.is_vault != null) rng.range(usize, 3, 7) else rng.range(usize, 1, 2);
         var items_placed: usize = 0;
 
         while (items_placed < max_items) : (items_placed += 1) {
@@ -1773,12 +1813,12 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
         if (room.type == .Corridor) continue;
         if (room.rect.height * room.rect.width < 25) continue;
 
-        const max_crowd = if (room.is_vault)
+        const max_crowd = if (room.is_vault != null)
             rng.range(usize, VAULT_CROWD.min, VAULT_CROWD.max)
         else
             rng.range(usize, 1, Configs[level].room_crowd_max);
-        const sptable: *MobSpawnInfo.AList = if (room.is_vault)
-            &spawn_tables_vaults[0]
+        const sptable: *MobSpawnInfo.AList = if (room.is_vault != null)
+            &spawn_tables_vaults[@enumToInt(room.is_vault.?)]
         else
             &spawn_tables[level];
 
@@ -1919,7 +1959,7 @@ pub fn setVaultFeatures(room: *Room) void {
             var x: usize = wall_area.from.x;
             while (x <= wall_area.to.x) : (x += 1) {
                 const coord = Coord.new2(level, x, y);
-                state.dungeon.at(coord).material = &materials.Rust;
+                state.dungeon.at(coord).material = VAULT_MATERIALS[@enumToInt(room.is_vault.?)];
 
                 // XXX: hacky, in the future we should store door coords.
                 if ((state.dungeon.at(coord).surface != null and
@@ -1933,7 +1973,7 @@ pub fn setVaultFeatures(room: *Room) void {
                         state.dungeon.at(coord).surface.?.Machine.disabled = true;
                         state.dungeon.at(coord).surface = null;
                     }
-                    _place_machine(coord, &surfaces.IronVaultDoor);
+                    _place_machine(coord, VAULT_DOORS[@enumToInt(room.is_vault.?)]);
                 }
             }
         }
@@ -1956,7 +1996,7 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
         if (room.prefab != null) continue;
         if (room.has_subroom and room_area < 25) continue;
 
-        if (room.is_vault) {
+        if (room.is_vault != null) {
             setVaultFeatures(room);
         }
 
@@ -2207,7 +2247,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
             .Room => |r| &state.rooms[dest_floor].items[r],
         };
 
-        if (room != null and (room.?.has_stair or room.?.is_vault)) {
+        if (room != null and (room.?.has_stair or room.?.is_vault != null)) {
             continue;
         }
 
@@ -2239,7 +2279,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
                 .Room => |r| &state.rooms[level].items[r],
             };
 
-            if (room != null and (room.?.has_stair or room.?.is_vault)) {
+            if (room != null and (room.?.has_stair or room.?.is_vault != null)) {
                 continue;
             }
 
@@ -2734,7 +2774,7 @@ pub const Room = struct {
     has_window: bool = false,
     has_stair: bool = false,
     mob_count: usize = 0,
-    is_vault: bool = false,
+    is_vault: ?VaultType = null,
     is_extension_room: bool = false,
 
     connections: ConnectionsBuf = ConnectionsBuf.init(null),

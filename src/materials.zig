@@ -10,6 +10,16 @@ pub const MATERIALS = [_]*const Material{
     &Vangenite,
 };
 
+pub const Gold = Material{
+    .name = "rust",
+    .color_fg = colors.percentageOf(colors.GOLD, 40),
+    .color_bg = colors.percentageOf(colors.GOLD, 80),
+    .color_floor = colors.percentageOf(colors.GOLD, 40),
+    .tileset = 0,
+    .luminescence = 0,
+    .opacity = 1.0,
+};
+
 pub const Rust = Material{
     .name = "rust",
     .color_fg = 0x0,

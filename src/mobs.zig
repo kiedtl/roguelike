@@ -1034,13 +1034,6 @@ pub const WarriorTemplate = MobTemplate{
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.CuirassArmor,
-
-    .squad = &[_][]const MobTemplate.SquadMember{
-        &[_]MobTemplate.SquadMember{
-            .{ .mob = "warrior", .weight = 10, .count = minmax(usize, 1, 2) },
-            .{ .mob = "recruit", .weight = 1, .count = minmax(usize, 2, 3) },
-        },
-    },
 };
 
 pub const BoneMageTemplate = MobTemplate{

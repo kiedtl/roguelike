@@ -265,6 +265,7 @@ pub const MACHINES = [_]Machine{
     VaultDoor,
     LockedDoor,
     IronVaultDoor,
+    GoldVaultDoor,
     ParalysisGasTrap,
     PoisonGasTrap,
     ConfusionGasTrap,
@@ -585,35 +586,40 @@ pub const LockedDoor = Machine{
     .pathfinding_penalty = 5,
 };
 
-pub const IronVaultDoor = Machine{
-    .id = "door_vault_iron",
-    .name = "iron door",
-    .powered_tile = ' ',
-    .unpowered_tile = '+',
-    .powered_fg = colors.percentageOf(colors.COPPER_RED, 130),
-    .unpowered_fg = colors.percentageOf(colors.COPPER_RED, 130),
-    .powered_bg = colors.percentageOf(colors.COPPER_RED, 40),
-    .unpowered_bg = colors.percentageOf(colors.COPPER_RED, 40),
-    .power_drain = 0,
-    .restricted_to = .OtherGood,
-    .powered_walkable = true,
-    .unpowered_walkable = false,
-    .powered_opacity = 0,
-    .unpowered_opacity = 1.0,
-    .evoke_confirm = "Really open a treasure vault door?",
-    .on_power = struct {
-        pub fn f(machine: *Machine) void {
-            machine.disabled = true;
-            state.dungeon.at(machine.coord).surface = null;
+fn createVaultDoor(comptime id_suffix: []const u8, comptime name_prefix: []const u8, color: u32, alarm_chance: usize) Machine {
+    return Machine{
+        .id = "door_vault_" ++ id_suffix,
+        .name = name_prefix ++ " door",
+        .powered_tile = ' ',
+        .unpowered_tile = '+',
+        .powered_fg = colors.percentageOf(color, 130),
+        .unpowered_fg = colors.percentageOf(color, 130),
+        .powered_bg = colors.percentageOf(color, 40),
+        .unpowered_bg = colors.percentageOf(color, 40),
+        .power_drain = 0,
+        .restricted_to = .OtherGood,
+        .powered_walkable = true,
+        .unpowered_walkable = false,
+        .powered_opacity = 0,
+        .unpowered_opacity = 1.0,
+        .evoke_confirm = "Really open a treasure vault door?",
+        .on_power = struct {
+            pub fn f(machine: *Machine) void {
+                machine.disabled = true;
+                state.dungeon.at(machine.coord).surface = null;
 
-            if (rng.percent(@as(usize, 30))) {
-                state.message(.Important, "The alarm goes off!!", .{});
-                state.markMessageNoisy();
-                state.player.makeNoise(.Alarm, .Loudest);
+                if (rng.percent(alarm_chance)) {
+                    state.message(.Important, "The alarm goes off!!", .{});
+                    state.markMessageNoisy();
+                    state.player.makeNoise(.Alarm, .Loudest);
+                }
             }
-        }
-    }.f,
-};
+        }.f,
+    };
+}
+
+pub const IronVaultDoor = createVaultDoor("iron", "iron", colors.COPPER_RED, 30);
+pub const GoldVaultDoor = createVaultDoor("gold", "golden", colors.GOLD, 60);
 
 pub const Mine = Machine{
     .name = "mine",
