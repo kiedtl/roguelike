@@ -615,14 +615,15 @@ pub fn isPlayerSpotted() bool {
         return state.player_is_spotted.is_spotted;
     }
 
-    const moblist = state.createMobList(false, false, state.player.coord.z, state.GPA.allocator());
+    const moblist = state.createMobList(false, true, state.player.coord.z, state.GPA.allocator());
     defer moblist.deinit();
 
     const is_spotted = b: for (moblist.items) |mob| {
-        if (mob.cansee(state.player.coord)) {
-            break :b true;
-        }
         if (!mob.no_show_fov and mob.ai.is_combative and mob.isHostileTo(state.player)) {
+            if (mob.cansee(state.player.coord)) {
+                break :b true;
+            }
+
             for (mob.enemyList().items) |enemyrecord|
                 if (enemyrecord.mob == state.player) break :b true;
         }
