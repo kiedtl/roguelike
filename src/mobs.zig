@@ -46,6 +46,15 @@ const SpellOptions = spells.SpellOptions;
 
 // -----------------------------------------------------------------------------
 
+const NONE_WEAPON = Weapon{
+    .id = "",
+    .name = "",
+    .damage = 0,
+    .strs = &[_]DamageStr{
+        items._dmgstr(080, "hurl", "hurls", " at kiedtl"),
+    },
+};
+
 pub const RESIST_IMMUNE = 1000;
 pub const WILL_IMMUNE = 1000;
 
@@ -724,7 +733,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
 
     .mob = .{
         .id = "kyanite_statue",
-        .species = &Species{ .name = "kyanite statue" },
+        .species = &Species{ .name = "kyanite statue", .default_attack = &NONE_WEAPON },
         .tile = '☻',
         .ai = AI{
             .profession_description = "gazing",
@@ -759,7 +768,7 @@ pub const NebroStatueTemplate = MobTemplate{
 
     .mob = .{
         .id = "nebro_statue",
-        .species = &Species{ .name = "nebro statue" },
+        .species = &Species{ .name = "nebro statue", .default_attack = &NONE_WEAPON },
         .tile = '☻',
         .ai = AI{
             .profession_description = "gazing",
@@ -794,7 +803,7 @@ pub const CrystalStatueTemplate = MobTemplate{
 
     .mob = .{
         .id = "crystal_statue",
-        .species = &Species{ .name = "crystal statue" },
+        .species = &Species{ .name = "crystal statue", .default_attack = &NONE_WEAPON },
         .tile = '☻',
         .ai = AI{
             .profession_description = "gazing",
