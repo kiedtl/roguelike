@@ -12,6 +12,13 @@ can easily draw half the floor onto you when they turn to flee and call for
 help, so the few fights you do end up in have to be ended quickly and with
 extreme prejudice.
 
+**tl;dr**:
+- Stay out of enemy's sight.
+- Don't fight if you can help it. Avoid melee as much as possible.
+- Don't make noise.
+- Use your inventory (e.g. potions) to end fights quickly.
+- Use movement patterns to supplement fights.
+
 The only thing that matters in this game is getting off the floor quickly.
 You'll be leveraging poisonous potions, toxic gas, drains, other prisoners, and
 the like to get out of fights quickly and make a run for it. The occasional
