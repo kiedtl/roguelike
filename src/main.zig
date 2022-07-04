@@ -681,6 +681,9 @@ pub fn main() anyerror!void {
         return;
     }
 
+    state.message(.Info, "You've just escaped from prison.", .{});
+    state.message(.Info, "Hurry to the stairs before the guards find you!", .{});
+
     var use_viewer: bool = undefined;
 
     if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_MODE")) |v| {
