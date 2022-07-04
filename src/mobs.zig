@@ -1938,7 +1938,6 @@ pub fn placeMob(
             if (s_coord) |c| {
                 const underling = placeMob(alloc, squad_mob, c, .{ .no_squads = true });
                 underling.squad = squad;
-                underling.ai.work_fn = ai.stayNearLeaderWork;
                 squad.members.append(underling) catch err.wat();
             }
         }

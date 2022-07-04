@@ -3225,11 +3225,19 @@ pub const Mob = struct { // {{{
     // to self.enemies (say, we change self.mobs to an ArrayList and append to
     // it or something, triggering a realloc) then havoc can happen
     pub fn enemyList(self: *Mob) *EnemyRecord.AList {
+        assert(@TypeOf(state.mobs) == LinkedList(Mob));
+
         if (self.squad) |squad| {
             return &squad.enemies;
         } else {
             return &self.enemies;
         }
+    }
+
+    pub fn isAloneOrLeader(self: *const Mob) bool {
+        if (self.squad == null) return true;
+        if (self.squad.?.leader == self) return true;
+        return false;
     }
 }; // }}}
 

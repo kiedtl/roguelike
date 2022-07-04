@@ -1294,7 +1294,12 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
     }
 
     if (mob.ai.phase == .Work) {
-        (mob.ai.work_fn)(mob, alloc);
+        var work_fn = mob.ai.work_fn;
+        if (!mob.isAloneOrLeader()) {
+            work_fn = stayNearLeaderWork;
+        }
+
+        (work_fn)(mob, alloc);
         return;
     }
 
