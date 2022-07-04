@@ -216,11 +216,22 @@ pub fn bookkeepingFOV() void {
                         S._addToAnnouncements(SBuf.init("upward stairs"), &announcements),
                     else => {},
                 };
-                if (state.dungeon.itemsAt(fc).last()) |item|
-                    if (item.announce()) {
-                        const n = item.shortName() catch err.wat();
-                        S._addToAnnouncements(n, &announcements);
-                    };
+
+                // Disabled for now. Will need to decide if it's worth keeping in
+                // later on from player feedback.
+                //
+                // Reasons to keep:
+                //   - New players realize that there are items they can pick up/use
+                //   - ???
+                //
+                // Reasons to remove:
+                //   - Clutters map, especially in loot-heavy areas (vaults, Cavern)
+                //
+                // if (state.dungeon.itemsAt(fc).last()) |item|
+                //     if (item.announce()) {
+                //         const n = item.shortName() catch err.wat();
+                //         S._addToAnnouncements(n, &announcements);
+                //     };
             }
 
             memorizeTile(fc, .Immediate);
