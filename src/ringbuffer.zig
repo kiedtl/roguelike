@@ -70,25 +70,25 @@ pub fn RingBuffer(comptime T: type, size: usize) type {
 test "basic RingBuffer usage" {
     var t = RingBuffer(usize, 4){};
 
-    testing.expectEqual(t.len, 4);
+    try testing.expectEqual(t.len, 4);
 
     t.append(1);
-    testing.expectEqual(t.current().?, 1);
+    try testing.expectEqual(t.current().?, 1);
     t.append(2);
-    testing.expectEqual(t.current().?, 2);
+    try testing.expectEqual(t.current().?, 2);
     t.append(3);
-    testing.expectEqual(t.current().?, 3);
+    try testing.expectEqual(t.current().?, 3);
     t.append(4);
-    testing.expectEqual(t.current().?, 4);
+    try testing.expectEqual(t.current().?, 4);
     t.append(5);
-    testing.expectEqual(t.current().?, 5);
+    try testing.expectEqual(t.current().?, 5);
 
     const items = [_]usize{ 5, 4, 3, 2 };
     var ctr: usize = 0;
     var iter = t.iterator();
     while (iter.next()) |item| {
-        testing.expectEqual(item, items[ctr]);
+        try testing.expectEqual(item, items[ctr]);
         ctr += 1;
     }
-    testing.expectEqual(ctr, items.len);
+    try testing.expectEqual(ctr, items.len);
 }

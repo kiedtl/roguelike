@@ -425,15 +425,15 @@ pub const Coord = struct { // {{{
 }; // }}}
 
 test "coord.distance" {
-    std.testing.expectEqual(Coord.new(0, 0).distance(Coord.new(0, 1)), 1);
-    std.testing.expectEqual(Coord.new(0, 0).distance(Coord.new(1, 1)), 1);
-    std.testing.expectEqual(Coord.new(0, 0).distance(Coord.new(0, 2)), 2);
+    try std.testing.expectEqual(Coord.new(0, 0).distance(Coord.new(0, 1)), 1);
+    try std.testing.expectEqual(Coord.new(0, 0).distance(Coord.new(1, 1)), 1);
+    try std.testing.expectEqual(Coord.new(0, 0).distance(Coord.new(0, 2)), 2);
 }
 
 test "coord.move" {
     const limit = Coord.new(9, 9);
     const c = Coord.new(0, 0);
-    std.testing.expectEqual(c.move(.East, limit), Coord.new(1, 0));
+    try std.testing.expectEqual(c.move(.East, limit), Coord.new(1, 0));
 }
 
 pub const Rect = struct {
@@ -582,11 +582,11 @@ pub const Stockpile = struct {
 };
 
 test "stockpile type equality" {
-    std.testing.expect((Stockpile{ .room = undefined, .type = .Weapon }).isOfSameType(&Item{ .Weapon = undefined }));
-    std.testing.expect((Stockpile{ .room = undefined, .type = .Boulder, .boulder_material_type = .Metal }).isOfSameType(&Item{ .Boulder = &materials.Iron }));
-    std.testing.expect((Stockpile{ .room = undefined, .type = .Boulder, .boulder_material_type = .I_Stone }).isOfSameType(&Item{ .Boulder = &materials.Basalt }));
-    std.testing.expect(!(Stockpile{ .room = undefined, .type = .Boulder, .boulder_material_type = .I_Stone }).isOfSameType(&Item{ .Boulder = &materials.Iron }));
-    std.testing.expect(!(Stockpile{ .room = undefined, .type = .Boulder, .boulder_material_type = .Metal }).isOfSameType(&Item{ .Boulder = &materials.Hematite }));
+    try std.testing.expect((Stockpile{ .room = undefined, .type = .Weapon }).isItemOfSameType(&Item{ .Weapon = undefined }));
+    try std.testing.expect((Stockpile{ .room = undefined, .type = .Boulder, .boulder_material_type = .Metal }).isItemOfSameType(&Item{ .Boulder = &materials.Iron }));
+    try std.testing.expect((Stockpile{ .room = undefined, .type = .Boulder, .boulder_material_type = .I_Stone }).isItemOfSameType(&Item{ .Boulder = &materials.Basalt }));
+    try std.testing.expect(!(Stockpile{ .room = undefined, .type = .Boulder, .boulder_material_type = .I_Stone }).isItemOfSameType(&Item{ .Boulder = &materials.Iron }));
+    try std.testing.expect(!(Stockpile{ .room = undefined, .type = .Boulder, .boulder_material_type = .Metal }).isItemOfSameType(&Item{ .Boulder = &materials.Hematite }));
 }
 
 pub const Path = struct { from: Coord, to: Coord, confused_state: bool };
