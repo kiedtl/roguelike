@@ -1315,8 +1315,13 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
 
             _ = mob.rest();
         } else {
-            mob.tryMoveTo(target.coord);
-            mob.facing = mob.coord.closestDirectionTo(target.coord, state.mapgeometry);
+            const d = mob.coord.closestDirectionTo(target.coord, state.mapgeometry);
+            if (mob.facing == d) {
+                mob.tryMoveTo(target.coord);
+            } else {
+                mob.facing = d;
+                _ = mob.rest();
+            }
         }
     }
 
