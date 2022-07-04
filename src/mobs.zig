@@ -94,15 +94,11 @@ pub const ExecutionerTemplate = MobTemplate{
             .profession_description = "wandering",
             .work_fn = ai.wanderWork,
             .fight_fn = ai.meleeFight,
-            .is_combative = true,
-            .is_curious = true,
         },
-        .allegiance = .Necromancer,
 
         .max_HP = 10,
         .memory_duration = 5,
-        .blood = .Blood,
-        .stats = .{ .Willpower = 3, .Speed = 100 },
+        .stats = .{ .Willpower = 3 },
     },
     .weapon = &items.KnoutWeapon,
 };
@@ -117,10 +113,7 @@ pub const DestroyerTemplate = MobTemplate{
             .profession_description = "wandering",
             .work_fn = ai.wanderWork,
             .fight_fn = ai.meleeFight,
-            .is_combative = true,
-            .is_curious = true,
         },
-        .allegiance = .Necromancer,
 
         .max_HP = 12,
         .memory_duration = 5,
@@ -143,7 +136,6 @@ pub const WatcherTemplate = MobTemplate{
             .is_curious = false,
             .flags = &[_]AI.Flag{.FearsDarkness},
         },
-        .allegiance = .Necromancer,
         .max_HP = 6,
         .memory_duration = 10,
         .stats = .{ .Willpower = 3, .Evade = 30, .Speed = 60 },
@@ -163,7 +155,6 @@ pub const ShriekerTemplate = MobTemplate{
             .is_curious = false,
             .flags = &[_]AI.Flag{.FearsDarkness},
         },
-        .allegiance = .Necromancer,
         .max_HP = 3,
         .memory_duration = 15,
         .stats = .{ .Willpower = 4, .Evade = 40, .Speed = 50 },
@@ -180,16 +171,12 @@ pub const GuardTemplate = MobTemplate{
             .profession_description = "guarding",
             .work_fn = ai.guardWork,
             .fight_fn = ai.meleeFight,
-            .is_combative = true,
-            .is_curious = true,
         },
-        .allegiance = .Necromancer,
 
         .max_HP = 8,
         .memory_duration = 5,
-        .blood = .Blood,
 
-        .stats = .{ .Willpower = 2, .Speed = 100 },
+        .stats = .{ .Willpower = 2 },
     },
     .weapon = &items.BludgeonWeapon,
     .armor = &items.GambesonArmor,
@@ -205,14 +192,10 @@ pub const SentinelTemplate = MobTemplate{
             .profession_description = "guarding",
             .work_fn = ai.guardWork,
             .fight_fn = ai.meleeFight,
-            .is_combative = true,
-            .is_curious = true,
         },
-        .allegiance = .Necromancer,
 
         .max_HP = 12,
         .memory_duration = 5,
-        .blood = .Blood,
 
         .stats = .{ .Willpower = 2, .Melee = 70 },
     },
@@ -230,19 +213,15 @@ pub const JavelineerTemplate = MobTemplate{
             .profession_description = "guarding",
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.rangedFight,
-            .is_combative = true,
-            .is_curious = true,
             .flee_effect = .{
                 .status = .Enraged,
                 .duration = .{ .Tmp = 10 },
                 .exhausting = true,
             },
         },
-        .allegiance = .Necromancer,
 
         .max_HP = 8,
         .memory_duration = 6,
-        .blood = .Blood,
         .stats = .{ .Willpower = 2, .Evade = 10, .Missile = 80, .Speed = 110, .Vision = 5 },
     },
     .weapon = &items.MaceWeapon,
@@ -260,7 +239,6 @@ pub const DefenderTemplate = MobTemplate{
             .profession_description = "guarding",
             .work_fn = ai.watcherWork,
             .fight_fn = ai.rangedFight,
-            .is_combative = true,
             .is_curious = false,
             .flee_effect = .{
                 .status = .Enraged,
@@ -268,11 +246,9 @@ pub const DefenderTemplate = MobTemplate{
                 .exhausting = true,
             },
         },
-        .allegiance = .Necromancer,
 
         .max_HP = 10,
         .memory_duration = 4,
-        .blood = .Blood,
         .stats = .{ .Willpower = 4, .Evade = 10, .Missile = 90 },
     },
     .weapon = &items.SwordWeapon,
@@ -297,11 +273,8 @@ pub const LeadTurtleTemplate = MobTemplate{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
-            .is_combative = true,
-            .is_curious = true,
             .is_fearless = true,
         },
-        .allegiance = .Necromancer,
 
         .max_HP = 20,
         .memory_duration = 20,
@@ -338,7 +311,6 @@ pub const IronWaspTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
             .is_fearless = true,
         },
-        .allegiance = .Necromancer,
         .max_HP = 2,
         .memory_duration = 3,
         .blood = null,
@@ -381,7 +353,6 @@ pub const CopperHornetTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
             .is_fearless = true,
         },
-        .allegiance = .Necromancer,
         .max_HP = 5,
         .memory_duration = 7,
         .blood = null,
@@ -405,15 +376,11 @@ pub const PatrolTemplate = MobTemplate{
             .profession_description = "patrolling",
             .work_fn = ai.patrolWork,
             .fight_fn = ai.meleeFight,
-            .is_combative = true,
-            .is_curious = true,
             .flags = &[_]AI.Flag{.FearsDarkness},
         },
-        .allegiance = .Necromancer,
 
         .max_HP = 8,
         .memory_duration = 3,
-        .blood = .Blood,
         .stats = .{ .Willpower = 2, .Evade = 10, .Speed = 110 },
     },
     .weapon = &items.GlaiveWeapon,
@@ -447,9 +414,8 @@ pub const PlayerTemplate = MobTemplate{
 
         .max_HP = 15,
         .memory_duration = 10,
-        .blood = .Blood,
 
-        .stats = .{ .Willpower = 3, .Missile = 60, .Evade = 10, .Speed = 100, .Vision = 10, .Sneak = 4 },
+        .stats = .{ .Willpower = 3, .Missile = 60, .Evade = 10, .Vision = 10, .Sneak = 4 },
     },
     .weapon = &items.DaggerWeapon,
     .armor = &items.RobeArmor,
@@ -467,14 +433,11 @@ pub const GoblinTemplate = MobTemplate{
             .profession_description = "wandering",
             .work_fn = ai.patrolWork,
             .fight_fn = ai.meleeFight,
-            .is_combative = true,
-            .is_curious = true,
         },
         .allegiance = .OtherEvil,
         .max_HP = 12,
         .memory_duration = 8,
-        .blood = .Blood,
-        .stats = .{ .Willpower = 4, .Evade = 15, .Speed = 100, .Vision = 8 },
+        .stats = .{ .Willpower = 4, .Evade = 15, .Vision = 8 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.LeatherArmor,
@@ -490,11 +453,8 @@ pub const ConvultTemplate = MobTemplate{
             .profession_description = "watching",
             .work_fn = ai.patrolWork,
             .fight_fn = ai.mageFight,
-            .is_combative = true,
-            .is_curious = true,
             .spellcaster_backup_action = .KeepDistance,
         },
-        .allegiance = .Necromancer,
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 3, .spell = &spells.CAST_ENRAGE_DUSTLING, .power = 9 },
@@ -503,7 +463,7 @@ pub const ConvultTemplate = MobTemplate{
 
         .max_HP = 15,
         .memory_duration = 8,
-        .stats = .{ .Willpower = 3, .Speed = 100 },
+        .stats = .{ .Willpower = 3 },
     },
     // Disabled for now, needs playtesting
     //.statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
@@ -519,11 +479,8 @@ pub const VapourMageTemplate = MobTemplate{
             .profession_description = "watching",
             .work_fn = ai.patrolWork,
             .fight_fn = ai.mageFight,
-            .is_combative = true,
-            .is_curious = true,
             .spellcaster_backup_action = .KeepDistance,
         },
-        .allegiance = .Necromancer,
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 8, .spell = &spells.BOLT_AIRBLAST, .power = 6 },
@@ -556,10 +513,7 @@ pub const DustlingTemplate = MobTemplate{
             .profession_description = "wandering",
             .work_fn = ai.patrolWork,
             .fight_fn = ai.meleeFight,
-            .is_combative = true,
-            .is_curious = true,
         },
-        .allegiance = .Necromancer,
         .max_HP = 2,
         .memory_duration = 3,
         .life_type = .Construct,
@@ -594,7 +548,6 @@ pub const CinderWormTemplate = MobTemplate{
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
         },
-        .allegiance = .Necromancer,
         .max_HP = 8,
 
         .spells = &[_]SpellOptions{
@@ -643,7 +596,6 @@ pub const WarOlgTemplate = MobTemplate{
             .fight_fn = ai.mageFight,
             .is_fearless = true, // don't just run away when you've got a regen spell, dumbass
         },
-        .allegiance = .Necromancer,
         .max_HP = 15,
 
         .spells = &[_]SpellOptions{
@@ -668,7 +620,6 @@ pub const MellaentTemplate = MobTemplate{
             .is_combative = false,
             .is_curious = false,
         },
-        .allegiance = .Necromancer,
         .max_HP = 5,
         .stats = .{ .Willpower = 1, .Evade = 40, .Speed = 120, .Vision = 8 },
     },
@@ -696,12 +647,10 @@ fn createSpireTemplate(
                 .profession_description = "watching",
                 .work_fn = ai.spireWork,
                 .fight_fn = ai.mageFight,
-                .is_combative = true,
                 .is_curious = false,
                 .spellcaster_backup_action = .KeepDistance,
                 .flags = &[_]AI.Flag{ .AwakesNearAllies, .SocialFighter },
             },
-            .allegiance = .Necromancer,
 
             .base_night_vision = true,
 
@@ -739,10 +688,8 @@ pub const KyaniteStatueTemplate = MobTemplate{
             .profession_description = "gazing",
             .work_fn = ai.dummyWork,
             .fight_fn = ai.statueFight,
-            .is_combative = true,
             .is_curious = false,
         },
-        .allegiance = .Necromancer,
         .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
@@ -759,7 +706,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
         .corpse = .Wall,
         .immobile = true,
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .Armor = RESIST_IMMUNE, .rFume = 100 },
-        .stats = .{ .Willpower = 9, .Speed = 100, .Vision = 20 },
+        .stats = .{ .Willpower = 9, .Vision = 20 },
     },
 };
 
@@ -774,10 +721,8 @@ pub const NebroStatueTemplate = MobTemplate{
             .profession_description = "gazing",
             .work_fn = ai.dummyWork,
             .fight_fn = ai.statueFight,
-            .is_combative = true,
             .is_curious = false,
         },
-        .allegiance = .Necromancer,
         .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
@@ -794,7 +739,7 @@ pub const NebroStatueTemplate = MobTemplate{
         .corpse = .Wall,
         .immobile = true,
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .Armor = RESIST_IMMUNE, .rFume = 100 },
-        .stats = .{ .Willpower = 9, .Speed = 100, .Vision = 20 },
+        .stats = .{ .Willpower = 9, .Vision = 20 },
     },
 };
 
@@ -809,10 +754,8 @@ pub const CrystalStatueTemplate = MobTemplate{
             .profession_description = "gazing",
             .work_fn = ai.dummyWork,
             .fight_fn = ai.statueFight,
-            .is_combative = true,
             .is_curious = false,
         },
-        .allegiance = .Necromancer,
         .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
@@ -829,7 +772,7 @@ pub const CrystalStatueTemplate = MobTemplate{
         .corpse = .Wall,
         .immobile = true,
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .Armor = RESIST_IMMUNE, .rFume = 100 },
-        .stats = .{ .Willpower = 9, .Speed = 100, .Vision = 20 },
+        .stats = .{ .Willpower = 9, .Vision = 20 },
     },
 };
 
@@ -846,13 +789,11 @@ pub const AlchemistTemplate = MobTemplate{
             .is_combative = false,
             .is_curious = false,
         },
-        .allegiance = .Necromancer,
 
         .max_HP = 10,
         .memory_duration = 7,
-        .blood = .Blood,
 
-        .stats = .{ .Willpower = 2, .Evade = 10, .Speed = 100 },
+        .stats = .{ .Willpower = 2, .Evade = 10 },
     },
 };
 
@@ -870,12 +811,10 @@ pub const CleanerTemplate = MobTemplate{
             .is_curious = false,
             .work_phase = .CleanerScan,
         },
-        .allegiance = .Necromancer,
 
         .max_HP = 10,
         .memory_duration = 5,
-        .blood = .Blood,
-        .stats = .{ .Willpower = 2, .Evade = 10, .Speed = 100 },
+        .stats = .{ .Willpower = 2, .Evade = 10 },
     },
 };
 
@@ -893,11 +832,9 @@ pub const HaulerTemplate = MobTemplate{
             .is_curious = false,
             .work_phase = .HaulerScan,
         },
-        .allegiance = .Necromancer,
 
         .max_HP = 10,
         .memory_duration = 8,
-        .blood = .Blood,
         .stats = .{ .Willpower = 2, .Evade = 10, .Speed = 60 },
     },
 };
@@ -916,11 +853,9 @@ pub const EngineerTemplate = MobTemplate{
             .is_curious = false,
             .work_phase = .EngineerScan,
         },
-        .allegiance = .Necromancer,
 
         .max_HP = 10,
         .memory_duration = 8,
-        .blood = .Blood,
         .stats = .{ .Willpower = 2, .Evade = 10, .Speed = 90 },
     },
     .cloak = &items.FurCloak,
@@ -937,12 +872,9 @@ pub const AncientMageTemplate = MobTemplate{
             .profession_description = "watching",
             .work_fn = ai.guardWork,
             .fight_fn = ai.mageFight,
-            .is_combative = true,
-            .is_curious = true,
             .is_fearless = true,
             .spellcaster_backup_action = .KeepDistance,
         },
-        .allegiance = .Necromancer,
 
         .spells = &[_]SpellOptions{
             // On spell ordering: our priorities are:
@@ -984,12 +916,8 @@ pub const SpectreMageTemplate = MobTemplate{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
-            .is_combative = true,
-            .is_curious = true,
-            .is_fearless = false,
             .spellcaster_backup_action = .KeepDistance,
         },
-        .allegiance = .Necromancer,
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 15, .spell = &spells.CAST_CONJ_SPECTRAL_SWORD },
@@ -998,8 +926,7 @@ pub const SpectreMageTemplate = MobTemplate{
 
         .max_HP = 10,
         .memory_duration = 6,
-        .blood = .Blood,
-        .stats = .{ .Willpower = 6, .Speed = 100, .Vision = 7 },
+        .stats = .{ .Willpower = 6, .Vision = 7 },
     },
     .armor = &items.LeatherArmor,
 };
@@ -1016,7 +943,6 @@ pub const RecruitTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
             .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
         },
-        .allegiance = .Necromancer,
 
         .max_HP = 7,
         .memory_duration = 5,
@@ -1038,7 +964,6 @@ pub const WarriorTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
             .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
         },
-        .allegiance = .Necromancer,
 
         .max_HP = 10,
         .memory_duration = 4,
@@ -1058,12 +983,9 @@ pub const BoneMageTemplate = MobTemplate{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
-            .is_combative = true,
-            .is_curious = true,
             .spellcaster_backup_action = .Melee,
             .flags = &[_]AI.Flag{.CalledWithUndead},
         },
-        .allegiance = .Necromancer,
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 25, .spell = &spells.CAST_HASTE_UNDEAD, .duration = 5 },
@@ -1096,11 +1018,10 @@ pub const DeathKnightTemplate = MobTemplate{
             .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
             .flags = &[_]AI.Flag{.CalledWithUndead},
         },
-        .allegiance = .Necromancer,
 
         .max_HP = 10,
         .memory_duration = 5,
-        .stats = .{ .Willpower = 6, .Melee = 70, .Evade = 10, .Speed = 100, .Vision = 5 },
+        .stats = .{ .Willpower = 6, .Melee = 70, .Evade = 10, .Vision = 5 },
     },
     .weapon = &items.BoneSwordWeapon,
     .armor = &items.HauberkArmor,
@@ -1122,13 +1043,9 @@ pub const DeathMageTemplate = MobTemplate{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
-            .is_combative = true,
-            .is_curious = true,
-            .is_fearless = false,
             .spellcaster_backup_action = .KeepDistance,
             .flags = &[_]AI.Flag{.CalledWithUndead},
         },
-        .allegiance = .Necromancer,
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 10, .spell = &spells.CAST_HEAL_UNDEAD },
@@ -1138,8 +1055,7 @@ pub const DeathMageTemplate = MobTemplate{
 
         .max_HP = 10,
         .memory_duration = 6,
-        .blood = .Blood,
-        .stats = .{ .Willpower = 8, .Evade = 10, .Speed = 100, .Vision = 5 },
+        .stats = .{ .Willpower = 8, .Evade = 10, .Vision = 5 },
     },
     .weapon = &items.BoneSwordWeapon,
     .armor = &items.LeatherArmor,
@@ -1167,7 +1083,6 @@ pub const EmberMageTemplate = MobTemplate{
             .is_curious = false,
             .spellcaster_backup_action = .Melee,
         },
-        .allegiance = .Necromancer,
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 05, .spell = &spells.CAST_CREATE_EMBERLING },
@@ -1204,7 +1119,6 @@ pub const BrimstoneMageTemplate = MobTemplate{
             .is_curious = false,
             .spellcaster_backup_action = .KeepDistance,
         },
-        .allegiance = .Necromancer,
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 15, .spell = &spells.CAST_CREATE_EMBERLING },
@@ -1242,7 +1156,6 @@ pub const SparkMageTemplate = MobTemplate{
             .is_curious = false,
             .spellcaster_backup_action = .Melee,
         },
-        .allegiance = .Necromancer,
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 6, .spell = &spells.CAST_CREATE_SPARKLING },
@@ -1278,7 +1191,6 @@ pub const LightningMageTemplate = MobTemplate{
             .is_curious = false,
             .spellcaster_backup_action = .KeepDistance,
         },
-        .allegiance = .Necromancer,
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 06, .spell = &spells.CAST_CREATE_SPARKLING },
@@ -1319,7 +1231,6 @@ pub const SkeletonTemplate = MobTemplate{
             .is_fearless = true,
             .flags = &[_]AI.Flag{.CalledWithUndead},
         },
-        .allegiance = .Necromancer,
 
         .max_HP = 5,
         .memory_duration = 5,
@@ -1330,7 +1241,7 @@ pub const SkeletonTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = -25 },
-        .stats = .{ .Willpower = 6, .Speed = 100, .Vision = 5 },
+        .stats = .{ .Willpower = 6, .Vision = 5 },
     },
 };
 
@@ -1349,7 +1260,6 @@ pub const BoneRatTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
             .is_fearless = true,
         },
-        .allegiance = .Necromancer,
 
         .deaf = true,
         .life_type = .Undead,
@@ -1389,7 +1299,6 @@ pub const EmberlingTemplate = MobTemplate{
             .is_curious = false,
             .is_fearless = true,
         },
-        .allegiance = .Necromancer,
         .life_type = .Construct,
 
         .blood = null,
@@ -1433,7 +1342,6 @@ pub const SparklingTemplate = MobTemplate{
             .is_fearless = true,
             .spellcaster_backup_action = .Melee,
         },
-        .allegiance = .Necromancer,
         .life_type = .Construct,
 
         .spells = &[_]SpellOptions{
@@ -1471,7 +1379,6 @@ pub const SkeletalAxemasterTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
             .is_fearless = true,
         },
-        .allegiance = .Necromancer,
 
         .deaf = true,
         .life_type = .Undead,
@@ -1501,7 +1408,6 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
             .is_fearless = true,
         },
-        .allegiance = .Necromancer,
 
         .deaf = true,
         .life_type = .Undead,
@@ -1529,12 +1435,9 @@ pub const TorturerNecromancerTemplate = MobTemplate{
             .profession_description = "tormenting",
             .work_fn = ai.tortureWork,
             .fight_fn = ai.mageFight,
-            .is_combative = true,
-            .is_curious = true,
             .is_fearless = true,
             .spellcaster_backup_action = .KeepDistance,
         },
-        .allegiance = .Necromancer,
         .no_show_fov = false,
 
         .spells = &[_]SpellOptions{
@@ -1546,8 +1449,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
 
         .max_HP = 15,
         .memory_duration = 10,
-        .blood = .Blood,
-        .stats = .{ .Willpower = 8, .Evade = 10, .Speed = 100, .Vision = 5 },
+        .stats = .{ .Willpower = 8, .Evade = 10, .Vision = 5 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.LeatherArmor,
@@ -1576,13 +1478,10 @@ pub const BurningBruteTemplate = MobTemplate{
             // everywhere.
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
-            .is_combative = true,
-            .is_curious = true,
             //.is_fearless = true, // Flee effect won't trigger otherwise.
             .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
             .spellcaster_backup_action = .Melee,
         },
-        .allegiance = .Necromancer,
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 2, .spell = &spells.CAST_RESURRECT_FIRE, .power = 200, .duration = 10 },
@@ -1596,7 +1495,7 @@ pub const BurningBruteTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = -25 },
-        .stats = .{ .Willpower = 8, .Evade = 10, .Melee = 80, .Speed = 100, .Vision = 5 },
+        .stats = .{ .Willpower = 8, .Evade = 10, .Melee = 80, .Vision = 5 },
     },
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Fire, .duration = .Prm },
@@ -1613,12 +1512,9 @@ pub const SulfurFiendTemplate = MobTemplate{
             .profession_description = "sulking",
             .work_fn = ai.patrolWork,
             .fight_fn = ai.mageFight,
-            .is_combative = true,
-            .is_curious = true,
             .is_fearless = true,
             .spellcaster_backup_action = .KeepDistance,
         },
-        .allegiance = .Necromancer,
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 1, .spell = &spells.CAST_HASTEN_ROT, .power = 150 },
             .{ .MP_cost = 6, .spell = &spells.CAST_CONJ_BALL_LIGHTNING, .power = 12 },
@@ -1631,7 +1527,7 @@ pub const SulfurFiendTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = 50, .rElec = RESIST_IMMUNE, .rFume = 80 },
-        .stats = .{ .Willpower = 10, .Evade = 10, .Speed = 100, .Vision = 5 },
+        .stats = .{ .Willpower = 10, .Evade = 10, .Vision = 5 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
@@ -1647,12 +1543,9 @@ pub const FrozenFiendTemplate = MobTemplate{
             .profession_description = "patrolling",
             .work_fn = ai.patrolWork,
             .fight_fn = ai.mageFight,
-            .is_combative = true,
-            .is_curious = true,
             .is_fearless = true,
             .spellcaster_backup_action = .Melee,
         },
-        .allegiance = .Necromancer,
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 2, .spell = &spells.CAST_POLAR_LAYER, .power = 14 },
@@ -1666,7 +1559,7 @@ pub const FrozenFiendTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = 75, .rElec = 75, .rFire = -25 },
-        .stats = .{ .Willpower = 8, .Evade = 10, .Speed = 100, .Vision = 7 },
+        .stats = .{ .Willpower = 8, .Evade = 10, .Vision = 7 },
     },
     .weapon = &items.MorningstarWeapon,
     .armor = &items.HauberkArmor,
@@ -1689,11 +1582,9 @@ pub const LivingIceTemplate = MobTemplate{
             .profession_description = "watching",
             .work_fn = ai.dummyWork,
             .fight_fn = ai.meleeFight,
-            .is_combative = true,
             .is_curious = false,
             .is_fearless = true,
         },
-        .allegiance = .Necromancer,
 
         .deg360_vision = true,
         .no_show_fov = true,
@@ -1707,7 +1598,7 @@ pub const LivingIceTemplate = MobTemplate{
         .corpse = .Wall,
 
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = -50, .rElec = RESIST_IMMUNE, .Armor = 50, .rFume = 100 },
-        .stats = .{ .Willpower = 5, .Melee = 100, .Speed = 100, .Vision = 2 },
+        .stats = .{ .Willpower = 5, .Melee = 100, .Vision = 2 },
     },
     // This status should be added by whatever spell created it.
     //.statuses = &[_]StatusDataInfo{.{ .status = .Lifespan, .duration = .{.Tmp=10} }},
@@ -1722,11 +1613,9 @@ pub const BallLightningTemplate = MobTemplate{
             .profession_description = "wandering",
             .work_fn = ai.ballLightningWorkOrFight,
             .fight_fn = ai.ballLightningWorkOrFight,
-            .is_combative = true,
             .is_curious = false,
             .is_fearless = true,
         },
-        .allegiance = .Necromancer,
 
         .deaf = true,
         .deg360_vision = true,
@@ -1763,11 +1652,9 @@ pub const SpectralSwordTemplate = MobTemplate{
             .profession_description = "[this is a bug]",
             .work_fn = ai.suicideWork,
             .fight_fn = ai.meleeFight,
-            .is_combative = true,
             .is_curious = false,
             .is_fearless = true,
         },
-        .allegiance = .Necromancer,
 
         .deaf = true,
         .deg360_vision = true,

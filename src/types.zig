@@ -1442,7 +1442,7 @@ pub const Mob = struct { // {{{
     species: *const Species,
     undead_prefix: []const u8 = "former ",
     tile: u21,
-    allegiance: Allegiance,
+    allegiance: Allegiance = .Necromancer,
 
     squad: ?*Squad = null,
     prisoner_status: ?Prisoner = null,
