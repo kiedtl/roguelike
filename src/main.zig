@@ -382,11 +382,7 @@ fn readInput() bool {
                     break :blk state.player.teleportTo(stairloc, null, false);
                 },
                 termbox.TB_KEY_F7 => blk: {
-                    if (state.player.stats.Speed == 50) {
-                        state.player.stats.Speed = 100;
-                    } else {
-                        state.player.stats.Speed = 50;
-                    }
+                    state.message(.Info, "Lorem ipsum, dolor sit amet. Lorem ipsum, dolor sit amet.. Lorem ipsum, dolor sit amet. {}", .{rng.int(usize)});
                     break :blk false;
                 },
                 else => false,

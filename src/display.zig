@@ -1265,7 +1265,23 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
         return;
 
     const msgcount = state.messages.items.len - 1;
-    const first = msgcount - math.min(msgcount, @intCast(usize, endy - 1 - starty));
+
+    const linewidth = @intCast(usize, endx - startx - 1);
+    var fibuf = StackBuffer(u8, 4096).init(null);
+    var ia = msgcount;
+    var height: isize = 0;
+    const first = while (ia > 0) : (ia -= 1) {
+        const msg = state.messages.items[ia];
+        const msgtext = utils.used(msg.msg);
+        var fold_iter = utils.FoldedTextIterator.init(msgtext, linewidth);
+        while (fold_iter.next(&fibuf)) |_| {
+            height += 1;
+        }
+        if (height + y >= endy - 1)
+            break ia;
+    } else 0;
+
+    //const first = msgcount - math.min(msgcount, @intCast(usize, endy - 1 - starty));
     var i: usize = first;
     while (i <= msgcount and y < endy) : (i += 1) {
         const msg = state.messages.items[i];
@@ -1275,8 +1291,6 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
             msg.type.color()
         else
             colors.darken(msg.type.color(), 2);
-
-        _clear_line(startx, endx, y);
 
         const noisetext: []const u8 = if (msg.noise) "$a♫$.  " else "$c·$.  ";
 
