@@ -68,13 +68,12 @@ fn pathfindingPenalty(coord: Coord, opts: state.IsWalkableOptions) usize {
             if (m.jammed) c += 10;
         },
         .Container => |_| c += 30,
-        .Prop => c += 15,
         else => {},
     };
 
     if (opts.mob) |mob| {
-        if (!mob.canSeeInLight(state.dungeon.lightAt(coord).*)) {
-            c += 10;
+        if (mob.ai.flag(.FearsDarkness)) {
+            c += 30;
         }
 
         if (!fire.fireIsSafeFor(mob, state.dungeon.fireAt(coord).*))

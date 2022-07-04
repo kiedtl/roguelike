@@ -132,6 +132,7 @@ pub const WatcherTemplate = MobTemplate{
             .work_fn = ai.watcherWork,
             .fight_fn = ai.watcherFight,
             .is_curious = false,
+            .flags = &[_]AI.Flag{.FearsDarkness},
         },
         .allegiance = .Necromancer,
         .max_HP = 6,
@@ -151,6 +152,7 @@ pub const ShriekerTemplate = MobTemplate{
             .work_fn = ai.watcherWork,
             .fight_fn = ai.shriekerFight,
             .is_curious = false,
+            .flags = &[_]AI.Flag{.FearsDarkness},
         },
         .allegiance = .Necromancer,
         .max_HP = 3,
@@ -396,6 +398,7 @@ pub const PatrolTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
             .is_combative = true,
             .is_curious = true,
+            .flags = &[_]AI.Flag{.FearsDarkness},
         },
         .allegiance = .Necromancer,
 

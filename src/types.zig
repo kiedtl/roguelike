@@ -1347,6 +1347,7 @@ pub const AI = struct {
         AwakesNearAllies, // If the monster is dormant, it awakes near allies.
         SocialFighter, // Won't fight unless there are aware allies around.
         CalledWithUndead, // Can be called by CAST_CALL_UNDEAD, even if not undead.
+        FearsDarkness, // Tries very hard to stay in light areas (pathfinding).
     };
 
     pub fn flag(self: *const AI, f: Flag) bool {
