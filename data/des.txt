@@ -70,6 +70,9 @@ You can activate this to recharge some of your evocables.
 You can break open this barrel to make a puddle of water. If you lure foes into
 the water, they will be vulnerable to electricity.
 
+% fountain
+Drinking from this fountain will refresh you, healing some of your injuries.
+
 % evoc_flamethrower
 This device can spray a fountain of sparks at a nearby tile, igniting it.
 
@@ -80,6 +83,10 @@ overran it. What use the cave-goblins might have had for it is a mystery.
 When evoked, it will create a powerful flash of light, dazing all mobs in your
 field of vision for 8 turns. It will daze you as well, hopefully not for very
 long.
+
+% cons_coal
+You can cauterise your wounds with this coal. Only useful if you have fire
+resistance (rFire).
 
 % kit_mine
 You can evoke it to build a small mine where you are standing.
@@ -98,8 +105,8 @@ A particularly sadistic death mage. His features are perpetually twisted into a
 leer of cruel contempt.
 
 % potion_debilitate
-Releases a cloud of vile-smelling gas, causing minor seizures in victims and
-severely impeding effective combat.
+Releases a cloud of vile smelling gas, causing minor seizures in victims and
+impeding effective combat.
 
 % potion_smoke
 Releases a cloud of smoke. Useful for obscuring vision.
