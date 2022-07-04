@@ -456,7 +456,7 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
 
     if (mob.resistance(.rFume) == 0) {
         var i = MobInfoLine{ .char = 'u' };
-        i.string.writer().print("unbreathing", .{}) catch err.wat();
+        i.string.writer().print("unbreathing $g(100% rFume)$.", .{}) catch err.wat();
         list.append(i) catch err.wat();
     }
 
@@ -491,7 +491,7 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
             const cur_sustile = mob.sustiles.items[0].coord;
             if (state.dungeon.soundAt(cur_sustile).mob_source) |soundsource| {
                 if (soundsource == state.player) {
-                    you_str = "you";
+                    you_str = "your noise";
                 }
             }
         }
@@ -531,7 +531,7 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
                 },
                 .None => {
                     i.color = 'b';
-                    text = "unaware";
+                    text = "unaware of you";
                 },
             }
 
