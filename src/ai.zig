@@ -846,7 +846,7 @@ pub fn stayNearLeaderWork(mob: *Mob, _: mem.Allocator) void {
     const leader = mob.squad.?.leader.?;
     assert(!leader.is_dead);
 
-    if (mob.coord.distance(leader.coord) > 2) {
+    if (mob.coord.distance(leader.coord) > 1) {
         if (state.nextSpotForMob(leader.coord, mob)) |nearest| {
             // Disabled assertion: it can be the leader's coord, since you could push past it
             //assert(!nearest.eq(leader.coord));
