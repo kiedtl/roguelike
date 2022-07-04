@@ -263,21 +263,22 @@ pub fn checkForHostiles(mob: *Mob) void {
     // FIXME: iterating over a container with a loop that potentially modifies
     // that container is just begging for trouble.
     //
-    if (mob.squad == null or mob == mob.squad.?.leader.?) {
-        var i: usize = 0;
-        while (i < mob.enemyList().items.len) {
-            const enemy = &mob.enemyList().items[i];
-            if (enemy.counter == 0 or
-                !mob.isHostileTo(enemy.mob) or
-                enemy.mob.coord.z != mob.coord.z or
-                enemy.mob.is_dead)
+    var i: usize = 0;
+    while (i < mob.enemyList().items.len) {
+        const enemy = &mob.enemyList().items[i];
+        if (enemy.counter == 0 or
+            !mob.isHostileTo(enemy.mob) or
+            enemy.mob.coord.z != mob.coord.z or
+            enemy.mob.is_dead)
+        {
+            _ = mob.enemyList().orderedRemove(i);
+        } else {
+            if (!mob.cansee(enemy.last_seen) and mob.ai.phase != .Flee and
+                mob.isAloneOrLeader())
             {
-                _ = mob.enemyList().orderedRemove(i);
-            } else {
-                if (!mob.cansee(enemy.last_seen) and mob.ai.phase != .Flee)
-                    enemy.counter -= 1;
-                i += 1;
+                enemy.counter -= 1;
             }
+            i += 1;
         }
     }
 
