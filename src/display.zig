@@ -1593,6 +1593,12 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
 
             if (tile_focus == .Mob and has_mons) {
                 const mob = state.dungeon.at(coord).mob.?;
+
+                // Sanitize mob_tile_focus
+                if (mob == state.player) {
+                    mob_tile_focus = .Main;
+                }
+
                 switch (mob_tile_focus) {
                     .Main => _getMonsDescription(writer, mob, linewidth),
                     .Spells => _getMonsSpellsDescription(writer, mob, linewidth),
