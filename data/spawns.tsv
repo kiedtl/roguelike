@@ -63,6 +63,7 @@
 "necromancer"         	   - 	   - 	   - 	  10 	  15 	   5 	  10 	  15 	  10 	  15 	  15 	  10 	  10 	  20
 "death_knight"        	   - 	   - 	   - 	  10 	  15 	   5 	  10 	  15 	  10 	  15 	  15 	  10 	  10 	  20
 "skeletal_blademaster"	   - 	   - 	   - 	   5 	  10 	   5 	  10 	  15 	  10 	  15 	  15 	  10 	  15 	  25
+"bloat"               	   - 	   - 	   - 	   5 	  10 	   5 	  10 	  15 	  10 	  15 	  15 	  10 	  10 	  10
 
 # higher-difficulty monsters. late-game.
 "warrior"             	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   5 	  10 	  15 	  15 	  10 	  15 	  25

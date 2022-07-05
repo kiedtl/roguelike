@@ -281,7 +281,7 @@ pub const LeadTurtleTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
         .innate_resists = .{ .rElec = -100, .rPois = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .Armor = 60, .rFume = 100 },
-        .stats = .{ .Willpower = 5, .Melee = 100, .Speed = 220, .Vision = 4 },
+        .stats = .{ .Willpower = 5, .Melee = 100, .Speed = 250, .Vision = 4 },
     },
 
     .statuses = &[_]StatusDataInfo{.{ .status = .Sleeping, .duration = .Prm }},
@@ -1215,6 +1215,40 @@ pub const LightningMageTemplate = MobTemplate{
     },
 };
 
+pub const BloatTemplate = MobTemplate{
+    .mob = .{
+        .id = "bloat",
+        .species = &Species{
+            .name = "bloat",
+            .default_attack = &Weapon{ .damage = 1, .strs = &items.FIST_STRS },
+        },
+        .tile = 'n',
+        .undead_prefix = "",
+        .ai = AI{
+            .profession_description = "dormant",
+            .work_fn = ai.dummyWork,
+            .fight_fn = ai.meleeFight,
+            .is_fearless = true,
+        },
+
+        .max_HP = 18,
+        .memory_duration = 10,
+
+        //.deaf = true,
+        .life_type = .Undead,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100 },
+        .stats = .{ .Willpower = 3, .Speed = 200, .Vision = 5 },
+    },
+
+    .statuses = &[_]StatusDataInfo{
+        .{ .status = .Sleeping, .duration = .Prm },
+        .{ .status = .NightVision, .duration = .Prm },
+    },
+};
+
 pub const SkeletonTemplate = MobTemplate{
     .mob = .{
         .id = "skeleton",
@@ -1718,6 +1752,7 @@ pub const MOBS = [_]MobTemplate{
     BrimstoneMageTemplate,
     SparkMageTemplate,
     LightningMageTemplate,
+    BloatTemplate,
     SkeletonTemplate,
     BoneRatTemplate,
     EmberlingTemplate,

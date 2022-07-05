@@ -168,10 +168,6 @@ pub fn keepDistance(mob: *Mob, from: Coord, distance: usize) bool {
     return moved;
 }
 
-pub fn dummyWork(m: *Mob, _: mem.Allocator) void {
-    _ = m.rest();
-}
-
 // Same as updateEnemyRecord, just better interface
 pub fn updateEnemyKnowledge(mob: *Mob, enemy: *Mob, last_seen: ?Coord) void {
     const memory = if (mob.squad != null and mob.squad.?.leader != null)
@@ -607,6 +603,10 @@ pub fn guardWork(mob: *Mob, _: mem.Allocator) void {
 pub fn suicideWork(mob: *Mob, _: mem.Allocator) void {
     _ = mob.rest();
     mob.HP = 0;
+}
+
+pub fn dummyWork(m: *Mob, _: mem.Allocator) void {
+    _ = m.rest();
 }
 
 pub fn standStillAndGuardWork(mob: *Mob, _: mem.Allocator) void {
