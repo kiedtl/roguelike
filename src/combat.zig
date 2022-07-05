@@ -242,22 +242,36 @@ pub fn isAttackStab(attacker: *const Mob, defender: *const Mob) bool {
 
 // Algorithm to shave damage due to resistance
 pub fn shaveDamage(amount: f64, resist: isize) f64 {
-    var new_amount: f64 = 0;
-    var ctr = @floatToInt(usize, amount);
-    while (ctr > 0) : (ctr -= 1) {
-        new_amount += 1;
+    assert(amount > 0);
+    assert(resist >= -100 and resist <= 100);
 
-        if (resist > 0) {
-            if (rng.percent(resist)) {
-                new_amount -= 1;
+    const S = struct {
+        pub fn _helper(a: f64, r: isize) isize {
+            var n: isize = 0;
+            var ctr = @floatToInt(usize, a);
+            while (ctr > 0) : (ctr -= 1) {
+                n += 1;
+
+                if (r > 0) {
+                    if (rng.percent(r)) {
+                        n -= 1;
+                    }
+                } else if (r < 0) {
+                    if (rng.percent(-r)) {
+                        n += 1;
+                    }
+                }
             }
-        } else if (resist < 0) {
-            if (rng.percent(-resist)) {
-                new_amount += 1;
-            }
+            return n;
         }
-    }
-    return new_amount;
+    };
+
+    return @intToFloat(f64, @divTrunc(
+        S._helper(amount, resist) +
+            S._helper(amount, resist) +
+            S._helper(amount, resist),
+        3,
+    ));
 }
 
 test {
@@ -270,7 +284,7 @@ test {
         var ndmg = shaveDamage(damage, resist);
         _ = ndmg;
         // std.log.warn("damage: {}\tresist: {}\tnew: {}\tshaved: {}", .{
-        //     damage, resist, ndmg, @intCast(isize, damage) - @intCast(isize, ndmg),
+        //     damage, resist, ndmg, @floatToInt(isize, damage) - @floatToInt(isize, ndmg),
         // });
     }
 }
