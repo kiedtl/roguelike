@@ -54,7 +54,7 @@ const PosterArrayList = literature.PosterArrayList;
 pub const GameState = union(enum) { Game, Win, Lose, Quit };
 pub const Layout = union(enum) { Unknown, Room: usize };
 
-pub const HEIGHT = 30;
+pub const HEIGHT = 35;
 pub const WIDTH = 70;
 pub const LEVELS = 14;
 pub const PLAYER_STARTING_LEVEL = 13; // TODO: define in data file
@@ -602,14 +602,22 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
 
     try w.print("You could see:\n", .{});
     {
+        // Memory buffer to hold mob displayName()'s, because StringHashMap
+        // doesn't clone the strings...
+        //
+        // (We're using this so we don't have to try to deallocate stuff.)
+        var membuf: [65535]u8 = undefined;
+        var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
         var can_see_counted = std.StringHashMap(usize).init(alloc);
         defer can_see_counted.deinit();
 
         const can_see = createMobList(false, true, player.coord.z, alloc);
         defer can_see.deinit();
         for (can_see.items) |mob| {
-            const prevtotal = (can_see_counted.getOrPutValue(mob.displayName(), 0) catch unreachable).value_ptr.*;
-            can_see_counted.put(mob.displayName(), prevtotal + 1) catch unreachable;
+            const name = try utils.cloneStr(mob.displayName(), fba.allocator());
+            const prevtotal = (can_see_counted.getOrPutValue(name, 0) catch err.wat()).value_ptr.*;
+            can_see_counted.put(name, prevtotal + 1) catch unreachable;
         }
 
         var iter = can_see_counted.iterator();
