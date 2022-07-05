@@ -1231,16 +1231,17 @@ pub const BloatTemplate = MobTemplate{
             .is_fearless = true,
         },
 
-        .max_HP = 18,
+        .max_HP = 28,
         .memory_duration = 10,
 
         //.deaf = true,
         .life_type = .Undead,
         .blood = null,
+        .blood_spray = gas.Miasma.id,
         .corpse = .None,
 
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100 },
-        .stats = .{ .Willpower = 3, .Speed = 200, .Vision = 5 },
+        .stats = .{ .Willpower = 6, .Melee = 80, .Speed = 150, .Vision = 5 },
     },
 
     .statuses = &[_]StatusDataInfo{
