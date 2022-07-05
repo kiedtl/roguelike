@@ -73,6 +73,9 @@ the water, they will be vulnerable to electricity.
 % fountain
 Drinking from this fountain will refresh you, healing some of your injuries.
 
+% drain
+Crawling into this will make you teleport to another place. Hopefully.
+
 % evoc_flamethrower
 This device can spray a fountain of sparks at a nearby tile, igniting it.
 
