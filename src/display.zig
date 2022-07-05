@@ -876,6 +876,7 @@ const DrawStrOpts = struct {
 // Escape characters:
 //     $g       fg = GREY
 //     $G       fg = DARK_GREY
+//     $C       fg = CONCRETE
 //     $c       fg = LIGHT_CONCRETE
 //     $a       fg = AQUAMARINE
 //     $p       fg = PINK
@@ -883,6 +884,7 @@ const DrawStrOpts = struct {
 //     $r       fg = PALE_VIOLET_RED
 //     $o       fg = GOLD
 //     $.       reset fg and bg to defaults
+//     $~       inverg fg/bg
 fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args: anytype, opts: DrawStrOpts) isize {
     const termbox_width = termbox.tb_width();
     const termbox_height = termbox.tb_height();
@@ -939,8 +941,14 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
                             fg = opts.fg;
                             bg = opts.bg;
                         },
+                        '~' => {
+                            const t = fg;
+                            fg = bg orelse def_bg;
+                            bg = t;
+                        },
                         'g' => fg = colors.GREY,
                         'G' => fg = colors.DARK_GREY,
+                        'C' => fg = colors.CONCRETE,
                         'c' => fg = colors.LIGHT_CONCRETE,
                         'p' => fg = colors.PINK,
                         'b' => fg = colors.LIGHT_STEEL_BLUE,
@@ -1102,10 +1110,10 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
     const spotted = player.isPlayerSpotted();
 
     if (light or spotted) {
-        const lit_str = if (light) "Lit " else "";
-        const spotted_str = if (spotted) "Spotted " else "";
+        const lit_str = if (light) "$C$~ Lit $. " else "";
+        const spotted_str = if (spotted) "$bSpotted$. " else "";
 
-        y = _drawStr(startx, y, endx, "$c{s}$.$b{s}$.", .{
+        y = _drawStr(startx, y, endx, "{s}{s}", .{
             lit_str, spotted_str,
         }, .{});
         y += 1;
@@ -1325,6 +1333,11 @@ fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: termbox.tb_cell) term
             const has_stuff = state.dungeon.at(coord).surface != null or
                 state.dungeon.at(coord).mob != null or
                 state.dungeon.itemsAt(coord).len > 0;
+
+            const light = state.dungeon.lightAt(state.player.coord).*;
+            if (state.player.coord.eq(coord)) {
+                tile.fg = if (light) colors.LIGHT_CONCRETE else colors.DARK_GREY;
+            }
 
             if (_mobs_can_see(moblist, coord)) {
                 // Treat this cell specially if it's the player and the player is
