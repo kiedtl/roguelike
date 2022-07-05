@@ -306,6 +306,9 @@ has been allowed to wield.
 % bone_rat
 The necromancy experiment of some apprentice bone mage.
 
+% bloat
+A bloated, rotting corpse.
+
 % skeleton
 A mouldering skeleton, imbued with a parody of life.
 
