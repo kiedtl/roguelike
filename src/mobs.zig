@@ -415,7 +415,7 @@ pub const PlayerTemplate = MobTemplate{
         .max_HP = 15,
         .memory_duration = 10,
 
-        .stats = .{ .Willpower = 3, .Missile = 60, .Evade = 10, .Vision = 10, .Sneak = 4 },
+        .stats = .{ .Willpower = 3, .Missile = 60, .Evade = 10, .Vision = 8, .Sneak = 4 },
     },
     .weapon = &items.DaggerWeapon,
     .armor = &items.RobeArmor,
@@ -437,7 +437,7 @@ pub const GoblinTemplate = MobTemplate{
         .allegiance = .OtherEvil,
         .max_HP = 12,
         .memory_duration = 8,
-        .stats = .{ .Willpower = 4, .Evade = 15, .Vision = 8 },
+        .stats = .{ .Willpower = 4, .Evade = 15, .Vision = 6 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.LeatherArmor,
@@ -463,7 +463,7 @@ pub const ConvultTemplate = MobTemplate{
 
         .max_HP = 15,
         .memory_duration = 8,
-        .stats = .{ .Willpower = 3 },
+        .stats = .{ .Willpower = 3, .Vision = 4 },
     },
     // Disabled for now, needs playtesting
     //.statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
@@ -490,7 +490,7 @@ pub const VapourMageTemplate = MobTemplate{
 
         .max_HP = 13,
         .memory_duration = 10,
-        .stats = .{ .Willpower = 6, .Speed = 110, .Vision = 7 },
+        .stats = .{ .Willpower = 6, .Speed = 120, .Vision = 6 },
     },
     .armor = &items.LeatherArmor,
     .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
@@ -926,7 +926,7 @@ pub const SpectreMageTemplate = MobTemplate{
 
         .max_HP = 10,
         .memory_duration = 6,
-        .stats = .{ .Willpower = 6, .Vision = 7 },
+        .stats = .{ .Willpower = 6, .Vision = 5 },
     },
     .armor = &items.LeatherArmor,
 };
@@ -967,7 +967,7 @@ pub const WarriorTemplate = MobTemplate{
 
         .max_HP = 10,
         .memory_duration = 4,
-        .stats = .{ .Willpower = 2, .Melee = 80, .Evade = 15, .Vision = 6 },
+        .stats = .{ .Willpower = 2, .Melee = 80, .Evade = 15, .Vision = 5 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.CuirassArmor,
@@ -1055,7 +1055,7 @@ pub const DeathMageTemplate = MobTemplate{
 
         .max_HP = 10,
         .memory_duration = 6,
-        .stats = .{ .Willpower = 8, .Evade = 10, .Vision = 5 },
+        .stats = .{ .Willpower = 8, .Evade = 10, .Vision = 6 },
     },
     .weapon = &items.BoneSwordWeapon,
     .armor = &items.LeatherArmor,
@@ -1130,7 +1130,7 @@ pub const BrimstoneMageTemplate = MobTemplate{
 
         .max_HP = 8,
         .memory_duration = 7,
-        .stats = .{ .Willpower = 6, .Evade = 10, .Vision = 7 },
+        .stats = .{ .Willpower = 6, .Evade = 10, .Vision = 6 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.LeatherArmor,
@@ -1202,7 +1202,7 @@ pub const LightningMageTemplate = MobTemplate{
 
         .max_HP = 8,
         .memory_duration = 7,
-        .stats = .{ .Willpower = 6, .Evade = 10, .Vision = 7 },
+        .stats = .{ .Willpower = 6, .Evade = 10, .Vision = 6 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.LeatherArmor,
@@ -1241,7 +1241,7 @@ pub const SkeletonTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = -25 },
-        .stats = .{ .Willpower = 6, .Vision = 5 },
+        .stats = .{ .Willpower = 6, .Vision = 4 },
     },
 };
 
@@ -1389,7 +1389,7 @@ pub const SkeletalAxemasterTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = -25 },
-        .stats = .{ .Willpower = 5, .Speed = 110, .Vision = 4 },
+        .stats = .{ .Willpower = 5, .Speed = 110, .Vision = 5 },
     },
     .weapon = &items.AxeWeapon,
     .armor = &items.ScalemailArmor,
@@ -1419,7 +1419,7 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
 
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = -25 },
         // Melee is 100% but in practice will be 90% due to penalty from rapier
-        .stats = .{ .Willpower = 4, .Melee = 100, .Speed = 110, .Vision = 4 },
+        .stats = .{ .Willpower = 4, .Melee = 100, .Speed = 110, .Vision = 5 },
     },
     .weapon = &items.RapierWeapon,
     .armor = &items.ScalemailArmor,
@@ -1449,7 +1449,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
 
         .max_HP = 15,
         .memory_duration = 10,
-        .stats = .{ .Willpower = 8, .Evade = 10, .Vision = 5 },
+        .stats = .{ .Willpower = 8, .Evade = 10, .Vision = 6 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.LeatherArmor,
@@ -1495,7 +1495,7 @@ pub const BurningBruteTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = -25 },
-        .stats = .{ .Willpower = 8, .Evade = 10, .Melee = 80, .Vision = 5 },
+        .stats = .{ .Willpower = 8, .Evade = 10, .Melee = 80, .Vision = 6 },
     },
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Fire, .duration = .Prm },
@@ -1527,7 +1527,7 @@ pub const SulfurFiendTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = 50, .rElec = RESIST_IMMUNE, .rFume = 80 },
-        .stats = .{ .Willpower = 10, .Evade = 10, .Vision = 5 },
+        .stats = .{ .Willpower = 10, .Evade = 10, .Vision = 6 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
@@ -1559,7 +1559,7 @@ pub const FrozenFiendTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = 75, .rElec = 75, .rFire = -25 },
-        .stats = .{ .Willpower = 8, .Evade = 10, .Vision = 7 },
+        .stats = .{ .Willpower = 8, .Evade = 10, .Vision = 6 },
     },
     .weapon = &items.MorningstarWeapon,
     .armor = &items.HauberkArmor,
@@ -1667,7 +1667,7 @@ pub const SpectralSwordTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rFume = 100 },
-        .stats = .{ .Willpower = WILL_IMMUNE, .Melee = 50, .Speed = 60, .Vision = 15 },
+        .stats = .{ .Willpower = WILL_IMMUNE, .Melee = 50, .Speed = 60, .Vision = 20 },
     },
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Corona, .power = 10, .duration = .Prm },
