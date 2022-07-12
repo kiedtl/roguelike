@@ -6,7 +6,9 @@ pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace) noreturn {
     nosuspend switch (__panic_stage) {
         0 => {
             __panic_stage = 1;
-            reportError("0.1.0", null, "Panic", msg, trace, @returnAddress());
+            reportError("0.1.0", null, "Panic", msg, trace, @returnAddress()) catch |err| {
+                std.log.err("zig-sentry: Fail: {s}", .{@errorName(err)});
+            };
             std.builtin.default_panic(msg, trace);
         },
         1 => {
@@ -19,21 +21,61 @@ pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace) noreturn {
     };
 }
 
-pub fn reportError(release: []const u8, dist: ?[]const u8, ename: []const u8, msg: []const u8, trace: ?*std.builtin.StackTrace, addr: ?usize) void {
+pub fn reportError(release: []const u8, dist: ?[]const u8, ename: []const u8, msg: []const u8, trace: ?*std.builtin.StackTrace, addr: ?usize) !void {
     var rng = std.rand.DefaultPrng.init(@intCast(u64, std.time.timestamp()));
     var membuf: [65535]u8 = undefined;
     var alloc = std.heap.FixedBufferAllocator.init(membuf[0..]).allocator();
 
     const uuid = rng.random().int(u128);
-    const m = createEvent(uuid, release, dist, .Error, ename, msg, trace, addr, alloc) catch {
-        unreachable; // TODO: flesh out
-    };
+    const m = try createEvent(uuid, release, dist, .Error, ename, msg, trace, addr, alloc);
+    try uploadError(&m);
+}
 
-    std.json.stringify(
-        m.sentry_event,
-        .{ .string = .{ .String = .{} } },
-        std.io.getStdOut().writer(),
-    ) catch {};
+const net = @import("net.zig");
+
+pub fn uploadError(ev: *const SentryEvent) !void {
+    const HOST = "sentry.io";
+    const PORT = 80;
+    const DSN = "https://029cc3a31c3740d4a60e3747e48c4aa2@o110999.ingest.sentry.io/6550409";
+    const DSN_HASH = "029cc3a31c3740d4a60e3747e48c4aa2";
+    const DSN_ID = 6550409;
+    const UA_STR = "zig-sentry";
+    const UA_VER = "0.1.0";
+
+    var membuf: [65535]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+    var alloc = fba.allocator();
+
+    std.log.info("zig-sentry: connecting...", .{});
+    const stream = std.net.tcpConnectToHost(alloc, HOST, PORT) catch |e| return e;
+    defer stream.close();
+
+    var buf: [65535]u8 = undefined;
+    var fbs = std.io.fixedBufferStream(&buf);
+    try std.json.stringify(ev.sentry_event, .{ .string = .{ .String = .{} } }, fbs.writer());
+
+    std.log.info("zig-sentry: sending content...", .{});
+    try stream.writer().print("POST /api/{}/store/ HTTP/1.1\r\n", .{DSN_ID});
+    try stream.writer().print("Host: {s}\r\n", .{HOST});
+    try stream.writer().print("User-Agent: {s}/{s}\r\n", .{ UA_STR, UA_VER });
+    try stream.writer().print("Accept: */*\r\n", .{}); // TODO: is this necessary
+    try stream.writer().print("Content-Type: application/json\r\n", .{});
+    try stream.writer().print("X-Sentry-Auth: Sentry sentry_key={s}\r\n", .{DSN_HASH});
+    try stream.writer().print("Authorization: DSN {s}\r\n", .{DSN});
+    try stream.writer().print("Content-Length: {}\r\n", .{fbs.getWritten().len});
+    try stream.writer().print("\r\n", .{});
+    try stream.writer().print("{s}", .{fbs.getWritten()});
+    try stream.writer().print("\r\n", .{});
+
+    // ---
+    std.log.info("zig-sentry: waiting for response...", .{});
+    var response: [2048]u8 = undefined;
+    if (stream.read(&response)) |ret| {
+        std.log.info("zig-sentry: response: {s}", .{response[0..ret]});
+    } else |err| {
+        std.log.info("zig-sentry: error when reading response: {s}", .{@errorName(err)});
+    }
+    // ---
 }
 
 pub const SentryEvent = struct {
@@ -45,9 +87,21 @@ pub const SentryEvent = struct {
         event_id: [32]u8,
         timestamp: u64, // Seconds since Unix epoch
         level: Level = .Error,
+        logger: []const u8 = "zig-sentry",
         release: []const u8,
         dist: ?[]const u8 = null,
+        tags: ?TagSet,
         exception: []const Value,
+    };
+
+    pub const TagSet = struct {
+        build: []const u8 = "",
+        os: []const u8 = "",
+        windows_version: [64]u8 = [1]u8{0} ** 64,
+        zig_version: [64]u8 = [1]u8{0} ** 64,
+        abi: []const u8 = "",
+        cpu_arch: []const u8 = "",
+        cpu_model: []const u8 = "",
     };
 
     const Frame = struct {
@@ -139,6 +193,23 @@ pub fn createEvent(
         }
     }
 
+    var tagset = SentryEvent.TagSet{};
+    {
+        tagset.build = @tagName(builtin.mode);
+        tagset.os = @tagName(builtin.os.tag);
+        if (builtin.os.tag == .windows) {
+            var winver_fbs = std.io.fixedBufferStream(&tagset.windows_version);
+            try std.fmt.format(winver_fbs.writer(), "{s}", .{builtin.os.version_range.windows});
+        }
+        {
+            var zigver_fbs = std.io.fixedBufferStream(&tagset.zig_version);
+            try std.fmt.format(zigver_fbs.writer(), "{}", .{builtin.zig_version});
+        }
+        tagset.abi = @tagName(builtin.abi);
+        tagset.cpu_arch = @tagName(builtin.cpu.arch);
+        tagset.cpu_model = builtin.cpu.model.name;
+    }
+
     return SentryEvent{
         .sentry_event = .{
             .event_id = uuid_buf,
@@ -147,6 +218,7 @@ pub fn createEvent(
             .release = release,
             .dist = dist,
             .exception = values.items[0..],
+            .tags = tagset,
         },
         .exception = values,
         .frames = frames,
@@ -205,13 +277,15 @@ pub fn recordError(
 }
 
 pub fn actualMain() anyerror!void {
-    @panic("This is a giant test");
+    @panic("This is a very big test");
 }
 
 pub fn main() void {
     actualMain() catch |err| {
         if (@errorReturnTrace()) |trace| {
-            reportError("0.1.0", null, @errorName(err), "error", trace, null);
+            reportError("0.1.0", null, @errorName(err), "error", trace, null) catch |zs_err| {
+                std.log.err("zig-sentry: Fail: {s}", .{@errorName(zs_err)});
+            };
         }
     };
 }
