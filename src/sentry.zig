@@ -1,3 +1,25 @@
+// zig-sentry Sentry SDK.
+// (c) Kiëd Llaentenn 2022
+//
+// ## TODO list to make this a standalone library:
+// - Completely rework the API to be more like standard SDK APIs
+// - DSN configuration/parsing
+// - Gracefully failing when unable to connect to sentry server
+// - Setting `extra' data
+// - Support for Windows
+// - Logging framework integration?
+// - Non-blocking event submission (if possible, not high priority)
+// - Context data helpers (e.g. setting current user)
+// - Event sampling
+// - Honor Sentry's Rate Limiting HTTP headers
+// - Pre/Post event send hooks
+// - Check if it's possible to get local variable values in stack trace
+// - Send an `environment` on each event
+// - gzip/zlib-deflate/brotli compression of payload
+// - Gracefully handle non-200 responses from Sentry
+// - Support for threads
+// - Support for async
+
 const std = @import("std");
 const builtin = @import("builtin");
 
