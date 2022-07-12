@@ -5,7 +5,7 @@
 # (c) Kiëd Llaentenn <kiedtl@tilde.team>
 # See the COPYING file for copyright information.
 
-VERSION=1.0.2
+VERSION=$(cat RELEASE)
 
 set -e
 

@@ -1,3 +1,5 @@
+const build_options = @import("build_options");
+
 const std = @import("std");
 const math = std.math;
 const assert = std.debug.assert;
@@ -21,6 +23,7 @@ const surfaces = @import("surfaces.zig");
 const display = @import("display.zig");
 const termbox = @import("termbox.zig");
 const types = @import("types.zig");
+const sentry = @import("sentry.zig");
 const state = @import("state.zig");
 const err = @import("err.zig");
 
@@ -51,11 +54,45 @@ const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
 // Install a panic handler that tries to shutdown termbox and print the RNG
-// seed before calling the default panic handler.
-pub fn panic(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace) noreturn {
-    display.deinit() catch {};
-    std.log.err("Fatal error encountered. (Seed: {})", .{rng.seed});
-    std.builtin.default_panic(msg, error_return_trace);
+// seed before calling sentry and then the default panic handler.
+var __panic_stage: usize = 0;
+pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace) noreturn {
+    nosuspend switch (__panic_stage) {
+        0 => {
+            __panic_stage = 1;
+            display.deinit() catch {};
+            std.log.err("Fatal error encountered. (Seed: {})", .{rng.seed});
+
+            var membuf: [65535]u8 = undefined;
+            var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+            var alloc = fba.allocator();
+
+            sentry.captureError(
+                build_options.release,
+                build_options.dist,
+                "Panic",
+                msg,
+                &[_]sentry.SentryEvent.TagSet.Tag{.{
+                    .name = "seed",
+                    .value = std.fmt.allocPrint(alloc, "{}", .{rng.seed}) catch unreachable,
+                }},
+                trace,
+                @returnAddress(),
+                alloc,
+            ) catch |err| {
+                std.log.err("zig-sentry: Fail: {s}", .{@errorName(err)});
+            };
+
+            std.builtin.default_panic(msg, trace);
+        },
+        1 => {
+            __panic_stage = 2;
+            std.builtin.default_panic(msg, trace);
+        },
+        else => {
+            std.os.abort();
+        },
+    };
 }
 
 fn initGame() bool {
@@ -385,6 +422,9 @@ fn readInput() bool {
                     state.message(.Info, "Lorem ipsum, dolor sit amet. Lorem ipsum, dolor sit amet.. Lorem ipsum, dolor sit amet. {}", .{rng.int(usize)});
                     break :blk false;
                 },
+                termbox.TB_KEY_F8 => {
+                    @panic("This is a test exception.");
+                },
                 else => false,
             };
         } else if (ev.ch != 0) {
@@ -675,7 +715,7 @@ fn viewerMain() void {
     }
 }
 
-pub fn main() anyerror!void {
+pub fn actualMain() anyerror!void {
     if (!initGame()) {
         deinitGame();
         return;
@@ -725,4 +765,30 @@ pub fn main() anyerror!void {
     morgue.deinit(); // We can't defer{} this because we're deinit'ing the allocator
 
     deinitGame();
+}
+
+pub fn main() void {
+    actualMain() catch |err| {
+        if (@errorReturnTrace()) |error_trace| {
+            var membuf: [65535]u8 = undefined;
+            var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+            var alloc = fba.allocator();
+
+            sentry.captureError(
+                build_options.release,
+                build_options.dist,
+                @errorName(err),
+                "propagated error trace",
+                &[_]sentry.SentryEvent.TagSet.Tag{.{
+                    .name = "seed",
+                    .value = std.fmt.allocPrint(alloc, "{}", .{rng.seed}) catch unreachable,
+                }},
+                error_trace,
+                null,
+                alloc,
+            ) catch |zs_err| {
+                std.log.err("zig-sentry: Fail: {s}", .{@errorName(zs_err)});
+            };
+        }
+    };
 }

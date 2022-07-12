@@ -1,6 +1,26 @@
-const Builder = @import("std").build.Builder;
+const std = @import("std");
+const Builder = std.build.Builder;
 
 pub fn build(b: *Builder) void {
+    var release_buf: [64]u8 = undefined;
+    const slice = (std.fs.cwd().openDir(b.build_root, .{}) catch unreachable)
+        .readFile("RELEASE", &release_buf) catch @panic("Couldn't read RELEASE");
+    const release = std.mem.trim(u8, slice, "\n");
+
+    const dist: []const u8 = blk: {
+        var ret: u8 = undefined;
+        const output = b.execAllowFail(
+            &[_][]const u8{ "git", "-C", b.build_root, "rev-parse", "HEAD" },
+            &ret,
+            .Inherit,
+        ) catch break :blk "UNKNOWN";
+        break :blk output[0..7];
+    };
+
+    const options = b.addOptions();
+    options.addOption([]const u8, "release", release);
+    options.addOption([]const u8, "dist", dist);
+
     // Standard target options allows the person running `zig build` to choose
     // what target to build for. Here we do not override the defaults, which
     // means any target is allowed, and the default is native. Other options
@@ -39,6 +59,7 @@ pub fn build(b: *Builder) void {
     exe.linkLibC();
     exe.setTarget(target);
     exe.setBuildMode(mode);
+    exe.addOptions("build_options", options);
     exe.install();
 
     const run_cmd = exe.run();
@@ -51,6 +72,6 @@ pub fn build(b: *Builder) void {
     tests.setBuildMode(mode);
     tests.addPackagePath("src", "src/test.zig");
     const tests_step = b.step("tests", "Run the various tests");
-    tests_step.dependOn(&exe.step);
+    //tests_step.dependOn(&exe.step);
     tests_step.dependOn(&tests.step);
 }
