@@ -1354,8 +1354,10 @@ fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: termbox.tb_cell) term
                         tile.fg ^= tile.bg;
                     }
                 } else {
-                    tile.ch = '⬞';
+                    //tile.ch = '⬞';
+                    //tile.ch = '÷';
                     //tile.fg = 0xffffff;
+                    tile.fg = 0xff6666;
                 }
             }
         },

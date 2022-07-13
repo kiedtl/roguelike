@@ -136,7 +136,7 @@ pub const MetalTerrain = Terrain{
 pub const CopperTerrain = Terrain{
     .id = "t_copper",
     .name = "copper",
-    .color = 0x884734, // copperish red
+    .color = 0x783724, // copperish red
     .tile = ':',
     .resists = .{ .rElec = -25 },
     .effects = &[_]StatusDataInfo{

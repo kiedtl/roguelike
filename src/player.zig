@@ -30,6 +30,7 @@ const StatusDataInfo = types.StatusDataInfo;
 const Armor = types.Armor;
 const SurfaceItem = types.SurfaceItem;
 const Mob = types.Mob;
+const MobArrayList = types.MobArrayList;
 const Status = types.Status;
 const Machine = types.Machine;
 const Direction = types.Direction;
@@ -268,6 +269,12 @@ pub fn moveOrFight(direction: Direction) bool {
     if (direction.is_diagonal() and state.player.isUnderStatus(.Confusion) != null) {
         display.drawAlertThenLog("You cannot move diagonally whilst confused!", .{});
         return false;
+    }
+
+    // Does the player want to move into a surveilled location?
+    if (!isPlayerSpotted() and enemiesCanSee(dest)) {
+        if (!display.drawYesNoPrompt("Really move into an enemy's view?", .{}))
+            return false;
     }
 
     // Does the player want to trigger a machine that requires confirmation?
@@ -620,6 +627,19 @@ pub fn shouldAutoWait() bool {
     return true;
 }
 
+pub fn enemiesCanSee(coord: Coord) bool {
+    const moblist = state.createMobList(false, true, state.player.coord.z, state.GPA.allocator());
+    defer moblist.deinit();
+
+    return b: for (moblist.items) |mob| {
+        if (!mob.no_show_fov and mob.ai.is_combative and mob.isHostileTo(state.player)) {
+            if (mob.cansee(coord)) {
+                break :b true;
+            }
+        }
+    } else false;
+}
+
 // Returns true if player is known by any nearby enemies.
 pub fn isPlayerSpotted() bool {
     if (state.player_is_spotted.turn_cached == state.player_turns) {
@@ -629,16 +649,12 @@ pub fn isPlayerSpotted() bool {
     const moblist = state.createMobList(false, true, state.player.coord.z, state.GPA.allocator());
     defer moblist.deinit();
 
-    const is_spotted = b: for (moblist.items) |mob| {
+    const is_spotted = enemiesCanSee(state.player.coord) or (b: for (moblist.items) |mob| {
         if (!mob.no_show_fov and mob.ai.is_combative and mob.isHostileTo(state.player)) {
-            if (mob.cansee(state.player.coord)) {
-                break :b true;
-            }
-
             for (mob.enemyList().items) |enemyrecord|
                 if (enemyrecord.mob == state.player) break :b true;
         }
-    } else false;
+    } else false);
 
     state.player_is_spotted = .{
         .is_spotted = is_spotted,
