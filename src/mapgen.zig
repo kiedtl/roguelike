@@ -412,7 +412,9 @@ fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool) bool {
         return false; // Prefab isn't for this level.
     }
 
-    if (prefab.used[level] >= prefab.restriction) {
+    if (prefab.used[level] >= prefab.restriction or
+        prefab.global_used >= prefab.global_restriction)
+    {
         return false; // Prefab was used too many times.
     }
 
@@ -1137,6 +1139,7 @@ fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, allo
 
             excavatePrefab(&parent_adj, subroom, alloc, rx, ry);
             subroom.used[parent.rect.start.z] += 1;
+            subroom.global_used += 1;
             parent.has_subroom = true;
 
             if (subroom.subroom_areas.len > 0) {
@@ -1293,8 +1296,10 @@ fn _place_rooms(
         }
     }
 
-    if (child.prefab) |f|
+    if (child.prefab) |f| {
         f.used[level] += 1;
+        f.global_used += 1;
+    }
 
     if (child.prefab == null) {
         if (rng.percent(Configs[level].subroom_chance)) {
@@ -1363,6 +1368,7 @@ pub fn placeRandomRooms(
 
         if (first == null) first = room;
         fab.used[level] += 1;
+        fab.global_used += 1;
         excavatePrefab(&room, fab, allocator, 0, 0);
         rooms.append(room) catch err.wat();
 
@@ -2856,6 +2862,7 @@ pub const Prefab = struct {
     subroom: bool = false,
     center_align: bool = false,
     invisible: bool = false,
+    global_restriction: usize = LEVELS,
     restriction: usize = 1,
     priority: usize = 0,
     noitems: bool = false,
@@ -2882,6 +2889,7 @@ pub const Prefab = struct {
     output: ?Rect = null,
 
     used: [LEVELS]usize = [_]usize{0} ** LEVELS,
+    global_used: usize = 0,
 
     pub const MAX_NAME_SIZE = 64;
 
@@ -3055,6 +3063,9 @@ pub const Prefab = struct {
                     } else if (mem.eql(u8, key, "restriction")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
                         f.restriction = std.fmt.parseInt(usize, val, 0) catch return error.InvalidMetadataValue;
+                    } else if (mem.eql(u8, key, "g_global_restriction")) {
+                        if (val.len == 0) return error.ExpectedMetadataValue;
+                        f.global_restriction = std.fmt.parseInt(usize, val, 0) catch return error.InvalidMetadataValue;
                     } else if (mem.eql(u8, key, "priority")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
                         f.priority = std.fmt.parseInt(usize, val, 0) catch return error.InvalidMetadataValue;
