@@ -7,59 +7,70 @@
 #
 
 #
-# monster id            Iron    Gold
+# monster id            Iron    Gold  Marble
 
 # -- Iron vaults ---------------------------------------------------------------
 
 # typical iron vault fodder
-"recruit"             	 100 	   -
-"defender"            	 100 	   -
-"javelineer"          	  90 	   -
-"death_knight"        	  70 	   -
-"sentinel"            	  50 	   -
-"bone_mage"           	  50 	   -
-"iron_spire"          	  10 	   -
-"lightning_spire"     	  10 	   -
+"recruit"             	 100 	   - 	   -
+"defender"            	 100 	   - 	   -
+"javelineer"          	  90 	   - 	   -
+"death_knight"        	  70 	   - 	   -
+"sentinel"            	  50 	   - 	   -
+"bone_mage"           	  50 	   - 	   -
+"iron_spire"          	  10 	   - 	   -
+"lightning_spire"     	  10 	   - 	   -
 
 # Some nuisances, to dilute the monster-pool and to create some challenge
-"watcher"             	  10 	   -
-"shrieker"            	  10 	   -
-"mellaent"            	  10 	   -
+"watcher"             	  10 	   - 	   -
+"shrieker"            	  10 	   - 	   -
+"mellaent"            	  10 	   - 	   -
 
 # rarer monsters, because it rapidly increases difficulty
 #
 # war olg is hard: "why wont this thing just die??"
 # necromancer is hard: "i thought i killed that recruit?!"
-"warrior"             	   3 	   -
-"war_olg"             	   2 	   -
-"necromancer"         	   1 	   -
+"warrior"             	   3 	   - 	   -
+"war_olg"             	   2 	   - 	   -
+"necromancer"         	   1 	   - 	   -
 
 # -- Gold vaults ---------------------------------------------------------------
 
 # typical gold vault guardians
 #
 # death knight is at the end because it's relatively weak
-"death_mage"          	   - 	 100
-"warrior"             	   - 	 100
-"destroyer"           	   - 	 100
-"necromancer"         	   - 	  70
-"war_olg"             	   - 	  70
-"bloat"               	   - 	  70
-"death_knight"        	   - 	  50
+"death_mage"          	   - 	 100 	   -
+"warrior"             	   - 	 100 	   -
+"destroyer"           	   - 	 100 	   -
+"necromancer"         	   - 	  70 	   -
+"war_olg"             	   - 	  70 	   -
+"bloat"               	   - 	  70 	   -
+"death_knight"        	   - 	  50 	   -
 
 # spires
-"iron_spire"          	   - 	  30
-"lightning_spire"     	   - 	  30
-"torpor_spire"        	   - 	  30
-"calcite_spire"       	   - 	  30
+"iron_spire"          	   - 	  30 	   -
+"lightning_spire"     	   - 	  30 	   -
+"torpor_spire"        	   - 	  30 	   -
+"calcite_spire"       	   - 	  30 	   -
 
 # non-themed monsters
-"brimstone_mage"      	   - 	  20
-"lightning_mage"      	   - 	  20
-"lead_turtle"         	   - 	  20
+"brimstone_mage"      	   - 	  20 	   -
+"lightning_mage"      	   - 	  20 	   -
+"lead_turtle"         	   - 	  20 	   -
 
 # boss monsters
-"frozen_fiend"        	   - 	  20
-"ancient_mage"        	   - 	  20
+"frozen_fiend"        	   - 	  20 	   -
+"ancient_mage"        	   - 	  20 	   -
 
-# monster id            Iron    Gold
+# -- Marble vaults ---------------------------------------------------------------
+
+# NOTE: main monsters are provided via prefabs
+
+"calcite_spire"       	   - 	   - 	  10
+"bloat"               	   - 	   - 	  20
+"skeleton"            	   - 	   - 	  20
+"skeletal_axemaster"  	   - 	   - 	  20
+"skeletal_blademaster"	   - 	   - 	  20
+"ancient_mage"        	   - 	   - 	   1
+
+# monster id            Iron    Gold  Marble

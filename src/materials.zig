@@ -10,6 +10,16 @@ pub const MATERIALS = [_]*const Material{
     &Vangenite,
 };
 
+pub const Marble = Material{
+    .name = "marble",
+    .color_fg = 0xcacaca,
+    .color_bg = 0xffffff,
+    .color_floor = 0xcacbca,
+    .tileset = 0,
+    .luminescence = 0,
+    .opacity = 1.0,
+};
+
 pub const Gold = Material{
     .name = "rust",
     .color_fg = colors.percentageOf(colors.GOLD, 40),

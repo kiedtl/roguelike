@@ -1,0 +1,35 @@
+% Prefabs (subrooms) for flavoring Marble vaults and providing
+% the main monsters.
+
+:invisible
+:subroom
+
+% 7x4
+
+@t p wood_table
+@c p wood_chair
+:spawn death_mage 1,1
+tttt...
+t.c....
+t......
+tt.....
+
+\
+
+% 6x2
+
+@t p wood_table
+@c p wood_chair
+:spawn death_mage 1,1
+ttttt.
+...ct.
+
+\
+
+% 5x2
+
+@t p wood_table
+@c p wood_chair
+:spawn death_mage 1,1
+t.c..
+ttttt

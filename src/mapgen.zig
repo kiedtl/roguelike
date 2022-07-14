@@ -79,39 +79,50 @@ pub const TRAP_WEIGHTS = &[_]usize{ 3, 3, 1, 2, 1 };
 pub const VaultType = enum(usize) {
     Iron = 0,
     Gold = 1,
-    Cuprite = 2,
-    Obsidian = 3,
-    Tavern = 4,
-    Marble = 5,
+    Marble = 2,
+    Cuprite = 3,
+    Obsidian = 4,
+    Tavern = 5,
 };
 pub const VAULT_MATERIALS = [VAULT_KINDS]*const Material{
     &materials.Rust,
     &materials.Gold,
+    &materials.Marble,
 };
 pub const VAULT_DOORS = [VAULT_KINDS]*const Machine{
     &surfaces.IronVaultDoor,
     &surfaces.GoldVaultDoor,
+    &surfaces.MarbleVaultDoor,
 };
 // zig fmt: off
 pub const VAULT_LEVELS = [LEVELS][]const VaultType{
-    &.{ .Gold  }, // -1/Prison
-    &.{ .Gold  }, // -2/Prison
-    &.{ .Gold  }, // -3/Quarters/3
-    &.{ .Gold  }, // -3/Quarters/2
-    &.{ .Gold  }, // -3/Quarters
-    &.{ .Gold  }, // -4/Prison
-    &.{        }, // -5/Caverns/3
-    &.{        }, // -5/Caverns/2
-    &.{        }, // -5/Caverns
-    &.{ .Iron  }, // -6/Laboratory/3
-    &.{ .Iron  }, // -6/Laboratory/2
-    &.{ .Iron  }, // -6/Laboratory
-    &.{ .Iron  }, // -7/Prison
-    &.{ .Iron  }, // -8/Prison
+    &.{ .Gold, .Marble  }, // -1/Prison
+    &.{ .Gold, .Marble  }, // -2/Prison
+    &.{ .Gold, .Marble  }, // -3/Quarters/3
+    &.{ .Gold, .Marble  }, // -3/Quarters/2
+    &.{ .Gold, .Marble  }, // -3/Quarters
+    &.{ .Gold, .Marble  }, // -4/Prison
+    &.{                 }, // -5/Caverns/3
+    &.{                 }, // -5/Caverns/2
+    &.{                 }, // -5/Caverns
+    &.{ .Iron, .Marble  }, // -6/Laboratory/3
+    &.{ .Iron           }, // -6/Laboratory/2
+    &.{ .Iron           }, // -6/Laboratory
+    &.{ .Iron           }, // -7/Prison
+    &.{ .Iron           }, // -8/Prison
 };
 // zig fmt: on
-pub const VAULT_KINDS = 2;
-pub const VAULT_CROWD = minmax(usize, 7, 14);
+pub const VAULT_KINDS = 3;
+pub const VAULT_SUBROOMS = [VAULT_KINDS]?[]const u8{
+    null,
+    null,
+    "ANY_s_marble_vlts",
+};
+pub const VAULT_CROWD = [VAULT_KINDS]MinMax(usize){
+    minmax(usize, 7, 14),
+    minmax(usize, 7, 14),
+    minmax(usize, 1, 4),
+};
 // }}}
 
 // TODO: replace with MinMax
@@ -390,8 +401,8 @@ fn _add_player(coord: Coord, alloc: mem.Allocator) void {
     //state.player.inventory.pack.append(Item{ .Consumable = &items.ConfusionPotion }) catch err.wat();
 }
 
-fn prefabIsValid(level: usize, prefab: *Prefab) bool {
-    if (prefab.invisible) {
+fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool) bool {
+    if (prefab.invisible and !allow_invis) {
         return false; // Can't be used unless specifically called for by name.
     }
 
@@ -414,7 +425,7 @@ fn choosePrefab(level: usize, prefabs: *PrefabArrayList) ?*Prefab {
         // Don't use rng.chooseUnweighted, as we need a pointer
         const p = &prefabs.items[rng.range(usize, 0, prefabs.items.len - 1)];
 
-        if (prefabIsValid(level, p)) return p;
+        if (prefabIsValid(level, p, false)) return p;
     }
 
     return null;
@@ -1080,12 +1091,19 @@ fn createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?C
     };
 }
 
-const SubroomPlacementOptions = struct {};
+const SubroomPlacementOptions = struct {
+    specific_id: ?[]const u8 = null,
+};
 
-fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, alloc: mem.Allocator, _: SubroomPlacementOptions) void {
+fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, alloc: mem.Allocator, opts: SubroomPlacementOptions) void {
     for (s_fabs.items) |*subroom| {
-        if (!prefabIsValid(parent.rect.start.z, subroom)) {
+        if (!prefabIsValid(parent.rect.start.z, subroom, opts.specific_id != null)) {
             continue;
+        }
+
+        if (opts.specific_id) |id| {
+            if (!mem.eql(u8, subroom.name.constSlice(), id))
+                continue;
         }
 
         if (subroom.center_align) {
@@ -1813,12 +1831,14 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
         if (room.type == .Corridor) continue;
         if (room.rect.height * room.rect.width < 25) continue;
 
+        const vault_type: ?usize = if (room.is_vault) |v| @enumToInt(v) else null;
+
         const max_crowd = if (room.is_vault != null)
-            rng.range(usize, VAULT_CROWD.min, VAULT_CROWD.max)
+            rng.range(usize, VAULT_CROWD[vault_type.?].min, VAULT_CROWD[vault_type.?].max)
         else
             rng.range(usize, 1, Configs[level].room_crowd_max);
         const sptable: *MobSpawnInfo.AList = if (room.is_vault != null)
-            &spawn_tables_vaults[@enumToInt(room.is_vault.?)]
+            &spawn_tables_vaults[vault_type.?]
         else
             &spawn_tables[level];
 
@@ -1949,7 +1969,7 @@ fn _placePropAlongRange(level: usize, where: Range, prop: *const Prop, max: usiz
     return placed;
 }
 
-pub fn setVaultFeatures(room: *Room) void {
+pub fn setVaultFeatures(s_fabs: *PrefabArrayList, room: *Room) void {
     const level = room.rect.start.z;
 
     const wall_areas = computeWallAreas(&room.rect, true);
@@ -1959,8 +1979,11 @@ pub fn setVaultFeatures(room: *Room) void {
             var x: usize = wall_area.from.x;
             while (x <= wall_area.to.x) : (x += 1) {
                 const coord = Coord.new2(level, x, y);
+
+                // Material
                 state.dungeon.at(coord).material = VAULT_MATERIALS[@enumToInt(room.is_vault.?)];
 
+                // Door
                 // XXX: hacky, in the future we should store door coords.
                 if ((state.dungeon.at(coord).surface != null and
                     state.dungeon.at(coord).surface.? == .Machine and
@@ -1978,9 +2001,18 @@ pub fn setVaultFeatures(room: *Room) void {
             }
         }
     }
+
+    // Subroom, if any
+    if (VAULT_SUBROOMS[@enumToInt(room.is_vault.?)]) |fab_name| {
+        placeSubroom(s_fabs, room, &Rect{
+            .start = Coord.new(0, 0),
+            .width = room.rect.width,
+            .height = room.rect.height,
+        }, state.GPA.allocator(), .{ .specific_id = fab_name });
+    }
 }
 
-pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
+pub fn placeRoomFeatures(level: usize, s_fabs: *PrefabArrayList, alloc: mem.Allocator) void {
     for (state.rooms[level].items) |*room| {
         const rect = room.rect;
         const room_area = rect.height * rect.width;
@@ -1997,7 +2029,7 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
         if (room.has_subroom and room_area < 25) continue;
 
         if (room.is_vault != null) {
-            setVaultFeatures(room);
+            setVaultFeatures(s_fabs, room);
         }
 
         const rect_end = rect.end();
@@ -2241,17 +2273,19 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     var reciever_locations = CoordArrayList.init(alloc);
     defer reciever_locations.deinit();
 
-    for (state.dungeon.map[dest_floor]) |*row, y| for (row) |_, x| {
-        const room: ?*Room = switch (state.layout[dest_floor][y][x]) {
-            .Unknown => null,
-            .Room => |r| &state.rooms[dest_floor].items[r],
-        };
-
-        if (room != null and (room.?.has_stair or room.?.is_vault != null)) {
-            continue;
-        }
-
+    coord_search: for (state.dungeon.map[dest_floor]) |*row, y| for (row) |_, x| {
         const coord = Coord.new2(dest_floor, x, y);
+
+        for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
+            const room: ?*Room = switch (state.layout[dest_floor][neighbor.y][neighbor.x]) {
+                .Unknown => null,
+                .Room => |r| &state.rooms[dest_floor].items[r],
+            };
+
+            if (room != null and (room.?.has_stair or room.?.is_vault != null)) {
+                continue :coord_search;
+            }
+        };
 
         if (state.dungeon.at(coord).type == .Wall and
             !state.dungeon.at(coord).prison and
@@ -2272,18 +2306,20 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     //
     var locations = CoordArrayList.init(alloc);
     defer locations.deinit();
-    for (state.dungeon.map[level]) |*row, y| {
+    coord_search: for (state.dungeon.map[level]) |*row, y| {
         for (row) |_, x| {
-            const room: ?*Room = switch (state.layout[level][y][x]) {
-                .Unknown => null,
-                .Room => |r| &state.rooms[level].items[r],
-            };
-
-            if (room != null and (room.?.has_stair or room.?.is_vault != null)) {
-                continue;
-            }
-
             const coord = Coord.new2(level, x, y);
+
+            for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
+                const room: ?*Room = switch (state.layout[level][neighbor.y][neighbor.x]) {
+                    .Unknown => null,
+                    .Room => |r| &state.rooms[level].items[r],
+                };
+
+                if (room != null and (room.?.has_stair or room.?.is_vault != null)) {
+                    continue :coord_search;
+                }
+            };
 
             if (state.dungeon.at(coord).type == .Wall and
                 !state.dungeon.at(coord).prison and

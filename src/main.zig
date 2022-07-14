@@ -193,7 +193,7 @@ fn initGame() bool {
         }
 
         mapgen.placeTraps(level);
-        mapgen.placeRoomFeatures(level, state.GPA.allocator());
+        mapgen.placeRoomFeatures(level, &s_fabs, state.GPA.allocator());
         mapgen.placeRoomTerrain(level);
         mapgen.placeItems(level);
         mapgen.placeMobs(level, state.GPA.allocator());
