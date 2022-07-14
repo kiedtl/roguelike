@@ -52,7 +52,9 @@ implemented in the future.
 Marble treasure vault. Themed as the study/experimentation room of a death mage.
 
 - Marble walls/doors.
+- Generally, less dangerous than a Golden Room.
 - Will always have a Death Mage band, next to some tables and chairs.
+- May have some rows of corpses nearby for the Death Mage to use.
 - Other undead monsters may occasionally occur. Bloats, skeletons, skeletal
   warriors (blademasters/axemasters), calcite spires, etc.
 - Possibility of an Ancient Mage.
