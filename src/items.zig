@@ -61,8 +61,10 @@ pub const ItemTemplate = struct {
 };
 pub const RARE_ITEM_DROPS = [_]ItemTemplate{
     // Dilute this list by adding a few more common weapon
-    .{ .w = 050, .i = .{ .W = MaceWeapon } },
-    .{ .w = 050, .i = .{ .W = SwordWeapon } },
+    .{ .w = 100, .i = .{ .W = MaceWeapon } },
+    .{ .w = 100, .i = .{ .W = SwordWeapon } },
+    // Rare weapons
+    .{ .w = 050, .i = .{ .W = MartialSwordWeapon } },
     // Bone weapons
     .{ .w = 001, .i = .{ .W = BoneSwordWeapon } },
     .{ .w = 001, .i = .{ .W = BoneDaggerWeapon } },
@@ -1136,6 +1138,21 @@ pub const SwordWeapon = Weapon{
 };
 pub const BoneSwordWeapon = Weapon.createBoneWeapon(&SwordWeapon, .{});
 pub const CopperSwordWeapon = Weapon.createCopperWeapon(&SwordWeapon, .{});
+
+// Rare foreign weapon, so no copper/bone weapons (since that'd have
+// to be produced at home in Irtraummisem).
+//
+// .Melee-10 represents difficulty for Obmirnul to use since it's foreign (of
+// course, it's also there for balance :P)
+//
+pub const MartialSwordWeapon = Weapon{
+    .id = "martial_sword",
+    .name = "martial sword",
+    .damage = 2,
+    .stats = .{ .Evade = 10, .Martial = 1, .Melee = -10 },
+    .is_dippable = true,
+    .strs = &SLASHING_STRS,
+};
 
 pub const DaggerWeapon = Weapon{
     .id = "dagger",
