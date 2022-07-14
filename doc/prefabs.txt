@@ -20,15 +20,27 @@
 %    γ   depends on level
 %    L   any non-rare loot item
 %    R   any rare loot item
+%    C   a goblin-prisoner corpse
 %
 % Metadata:
+%    :g_nopadding
+%        Don't require enough space for an empty floor padding.
+%        Global.
+%
+%    :subroom_area <x>,<y> <height> <width> [prefab_id]
+%        Try to place a subroom in the following rectangle. May take an optional
+%        prefab id.
+%        Reset on /.
+%
 %    :material <name>
 %        Use <name> as the material for floor and wall tiles.
 %        Reset on /.
+%
 %    :center_align
 %        Disallow placing a subroom if it wouldn't be aligned in the center of
 %        the parent room.
 %
+
 % Example:
 
 ?##*##?

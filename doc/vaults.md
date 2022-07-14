@@ -38,3 +38,21 @@ implemented in the future.
 - Rare chance of necromancers, war olgs, or warriors.
 - Currently found throughout the Dungeon. (This will change in the future as
   more vaults are added.)
+
+## Golden Vaults
+
+- Golden walls.
+- Pure developer sadism. Imagine a room full of OOFs on D:12 in DCSS.
+- Death mages and knights, warriors, destroyers, necromancers, war olgs, bloats,
+  spires, brimstone and lightning mages, lead turtles, frozen fiends.
+- Possiblity of an Ancient Mage.
+
+## Marble Vaults
+
+Marble treasure vault. Themed as the study/experimentation room of a death mage.
+
+- Marble walls/doors.
+- Will always have a Death Mage band, next to some tables and chairs.
+- Other undead monsters may occasionally occur. Bloats, skeletons, skeletal
+  warriors (blademasters/axemasters), calcite spires, etc.
+- Possibility of an Ancient Mage.
