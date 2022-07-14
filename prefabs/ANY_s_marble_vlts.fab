@@ -19,6 +19,17 @@
 
 \
 
+% 5x6
+
+@t p wood_table
+@c p wood_chair
+:spawn death_mage 1,1
+#t#tt
+#c+.C
+#####
+
+\
+
 % 7x4
 
 @t p wood_table
