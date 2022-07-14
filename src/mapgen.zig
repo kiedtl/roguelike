@@ -580,6 +580,7 @@ fn excavatePrefab(
                 .Floor,
                 .Loot1,
                 .RareLoot,
+                .Corpse,
                 => .Floor,
                 .Water => .Water,
                 .Lava => .Lava,
@@ -649,6 +650,11 @@ fn excavatePrefab(
                 .RareLoot => {
                     const rare_loot_item = _chooseLootItem(minmax(usize, 0, 60));
                     state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(rare_loot_item)) catch err.wat();
+                },
+                .Corpse => {
+                    const prisoner = mobs.placeMob(allocator, &mobs.GoblinTemplate, rc, .{});
+                    prisoner.prisoner_status = Prisoner{ .of = .Necromancer };
+                    prisoner.deinit();
                 },
                 else => {},
             }
@@ -1096,14 +1102,17 @@ const SubroomPlacementOptions = struct {
 };
 
 fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, alloc: mem.Allocator, opts: SubroomPlacementOptions) void {
+    assert(area.end().y < HEIGHT and area.end().x < WIDTH);
+
     for (s_fabs.items) |*subroom| {
-        if (!prefabIsValid(parent.rect.start.z, subroom, opts.specific_id != null)) {
-            continue;
+        if (opts.specific_id) |id| {
+            if (!mem.eql(u8, subroom.name.constSlice(), id)) {
+                continue;
+            }
         }
 
-        if (opts.specific_id) |id| {
-            if (!mem.eql(u8, subroom.name.constSlice(), id))
-                continue;
+        if (!prefabIsValid(parent.rect.start.z, subroom, opts.specific_id != null)) {
+            continue;
         }
 
         if (subroom.center_align) {
@@ -1114,16 +1123,35 @@ fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, allo
             }
         }
 
-        if ((subroom.height + 2) < area.height and (subroom.width + 2) < area.width) {
+        const minheight = subroom.height + if (subroom.nopadding) @as(usize, 0) else 2;
+        const minwidth = subroom.width + if (subroom.nopadding) @as(usize, 0) else 2;
+
+        if (minheight <= area.height and minwidth <= area.width) {
             const rx = (area.width / 2) - (subroom.width / 2);
             const ry = (area.height / 2) - (subroom.height / 2);
 
             var parent_adj = parent.*;
             parent_adj.rect = parent_adj.rect.add(area);
 
+            //std.log.debug("mapgen: Using subroom {s} at ({}x{}+{}+{})", .{ subroom.name.constSlice(), parent_adj.rect.start.x, parent_adj.rect.start.y, rx, ry });
+
             excavatePrefab(&parent_adj, subroom, alloc, rx, ry);
             subroom.used[parent.rect.start.z] += 1;
             parent.has_subroom = true;
+
+            if (subroom.subroom_areas.len > 0) {
+                for (subroom.subroom_areas.constSlice()) |subroom_area| {
+                    const actual_subroom_area = Rect{
+                        .start = Coord.new2(0, subroom_area.rect.start.x + rx, subroom_area.rect.start.y + ry),
+                        .height = subroom_area.rect.height,
+                        .width = subroom_area.rect.width,
+                    };
+                    placeSubroom(s_fabs, &parent_adj, &actual_subroom_area, alloc, .{
+                        .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
+                    });
+                }
+            }
+
             break;
         }
     }
@@ -1278,7 +1306,9 @@ fn _place_rooms(
         }
     } else if (child.prefab.?.subroom_areas.len > 0) {
         for (child.prefab.?.subroom_areas.constSlice()) |subroom_area| {
-            placeSubroom(s_fabs, &child, &subroom_area, allocator, .{});
+            placeSubroom(s_fabs, &child, &subroom_area.rect, allocator, .{
+                .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
+            });
         }
     }
 
@@ -2832,6 +2862,7 @@ pub const Prefab = struct {
     noguards: bool = false,
     nolights: bool = false,
     notraps: bool = false,
+    nopadding: bool = false,
 
     name: StackBuffer(u8, MAX_NAME_SIZE) = StackBuffer(u8, MAX_NAME_SIZE).init(null),
 
@@ -2845,7 +2876,7 @@ pub const Prefab = struct {
     features: [128]?Feature = [_]?Feature{null} ** 128,
     mobs: [45]?FeatureMob = [_]?FeatureMob{null} ** 45,
     prisons: StackBuffer(Rect, 16) = StackBuffer(Rect, 16).init(null),
-    subroom_areas: StackBuffer(Rect, 8) = StackBuffer(Rect, 8).init(null),
+    subroom_areas: StackBuffer(SubroomArea, 8) = StackBuffer(SubroomArea, 8).init(null),
     stockpile: ?Rect = null,
     input: ?Rect = null,
     output: ?Rect = null,
@@ -2853,6 +2884,11 @@ pub const Prefab = struct {
     used: [LEVELS]usize = [_]usize{0} ** LEVELS,
 
     pub const MAX_NAME_SIZE = 64;
+
+    pub const SubroomArea = struct {
+        rect: Rect,
+        specific_id: ?StackBuffer(u8, 64) = null,
+    };
 
     pub const FabTile = union(enum) {
         Window,
@@ -2870,6 +2906,7 @@ pub const Prefab = struct {
         LevelFeature: usize,
         Loot1,
         RareLoot,
+        Corpse,
         Any,
     };
 
@@ -3091,8 +3128,15 @@ pub const Prefab = struct {
                         const height_str = words.next() orelse return error.ExpectedMetadataValue;
                         width = std.fmt.parseInt(usize, width_str, 0) catch return error.InvalidMetadataValue;
                         height = std.fmt.parseInt(usize, height_str, 0) catch return error.InvalidMetadataValue;
+                        const specific_id = words.next();
 
-                        f.subroom_areas.append(.{ .start = rect_start, .width = width, .height = height }) catch return error.TooManySubrooms;
+                        f.subroom_areas.append(.{
+                            .rect = Rect{ .start = rect_start, .width = width, .height = height },
+                            .specific_id = if (specific_id) |str| StackBuffer(u8, 64).init(str) else null,
+                        }) catch return error.TooManySubrooms;
+                    } else if (mem.eql(u8, key, "g_nopadding")) {
+                        if (val.len != 0) return error.UnexpectedMetadataValue;
+                        f.nopadding = true;
                     } else if (mem.eql(u8, key, "stockpile")) {
                         if (f.stockpile) |_| return error.StockpileAlreadyDefined;
 
@@ -3232,6 +3276,7 @@ pub const Prefab = struct {
                             '0'...'9', 'a'...'z' => FabTile{ .Feature = @intCast(u8, c) },
                             'L' => .Loot1,
                             'R' => .RareLoot,
+                            'C' => .Corpse,
                             else => return error.InvalidFabTile,
                         };
                     }

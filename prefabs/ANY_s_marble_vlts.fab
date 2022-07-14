@@ -4,32 +4,58 @@
 :invisible
 :subroom
 
+% 5x6
+
+@t p wood_table
+@c p wood_chair
+:spawn death_mage 1,1
+:subroom_area 0,0 5 1 ANY_s_s_marble_vlts_furniture
+.....
+.....
+#t#tt
+#c+..
+#####
+
+\
+
 % 7x4
 
 @t p wood_table
 @c p wood_chair
 :spawn death_mage 1,1
+:subroom_area 5,0 2 3 ANY_s_s_marble_vlts_furniture
 tttt...
-t.c....
+t.tc...
 t......
-tt.....
 
 \
+
+% 6x3
+
+@t p table
+:spawn death_mage 4,1
+:subroom_area 0,0 2 3 ANY_s_s_marble_vlts_furniture
+...##t
+...+.t
+...##t
 
 % 6x2
 
 @t p wood_table
 @c p wood_chair
 :spawn death_mage 1,1
-ttttt.
-...ct.
+:subroom_area 5,0 1 1 ANY_s_s_marble_vlts_furniture
+tttt..
+..ct..
 
 \
 
-% 5x2
+% 5x3
 
 @t p wood_table
 @c p wood_chair
 :spawn death_mage 1,1
+:subroom_area 3,0 2 2 ANY_s_s_marble_vlts_furniture
+t....
 t.c..
 ttttt
