@@ -23,6 +23,11 @@
 %    C   a goblin-prisoner corpse
 %
 % Metadata:
+%    :g_global_restriction <number>
+%        Set a restriction on how many times a prefab can be used across the
+%        entire dungeon.
+%        Global.
+%
 %    :g_nopadding
 %        Don't require enough space for an empty floor padding.
 %        Global.
