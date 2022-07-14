@@ -1008,14 +1008,14 @@ pub const HauberkArmor = Armor{
     .id = "chainmail_armor",
     .name = "chainmail",
     .resists = .{ .Armor = 25 },
-    .stats = .{ .Speed = 10 },
+    .stats = .{ .Speed = 10, .Martial = -1 },
 };
 
 pub const ScalemailArmor = Armor{
     .id = "scalemail_armor",
     .name = "scale mail",
     .resists = .{ .Armor = 25 },
-    .stats = .{ .Evade = -10 },
+    .stats = .{ .Evade = -10, .Martial = -1 },
 };
 
 pub const RobeArmor = Armor{
