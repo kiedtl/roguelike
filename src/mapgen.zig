@@ -2318,7 +2318,9 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
                 .Room => |r| &state.rooms[dest_floor].items[r],
             };
 
-            if (room != null and (room.?.has_stair or room.?.is_vault != null)) {
+            if (state.dungeon.at(coord).prison or
+                room != null and (room.?.has_stair or room.?.is_vault != null))
+            {
                 continue :coord_search;
             }
         };
@@ -2352,7 +2354,9 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
                     .Room => |r| &state.rooms[level].items[r],
                 };
 
-                if (room != null and (room.?.has_stair or room.?.is_vault != null)) {
+                if (state.dungeon.at(coord).prison or
+                    room != null and (room.?.has_stair or room.?.is_vault != null))
+                {
                     continue :coord_search;
                 }
             };
