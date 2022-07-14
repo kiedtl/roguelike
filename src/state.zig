@@ -147,6 +147,7 @@ pub var player_is_spotted: struct {
 
 pub var default_patterns = [_]types.Ring{
     items.DefaultPinRing,
+    items.DefaultChargeRing,
 };
 
 pub const MemoryTile = struct {

@@ -761,10 +761,8 @@ pub const Activity = union(enum) {
 
     pub inline fn cost(self: Activity) usize {
         return switch (self) {
-            .Interact => 90,
-            .Rest, .Move, .Teleport, .Grab, .Drop, .Use => 100,
-            .Cast, .Throw, .Fire => 120,
-            .Attack => |a| 120 * a.delay / 100,
+            .Interact, .Cast, .Throw, .Fire, .Rest, .Move, .Teleport, .Grab, .Drop, .Use => 100,
+            .Attack => |a| a.delay,
             .None => err.wat(),
         };
     }
@@ -3127,30 +3125,6 @@ pub const Mob = struct { // {{{
 
         // Walking pattern
         if (!self.isCreeping()) self.makeNoise(.Movement, .Medium);
-
-        // Charging pattern
-        if (activities[2] == .Move and
-            activities[1] == .Move and
-            activities[0] == .Move and
-            activities[2].Move == activities[1].Move and
-            activities[2].Move == activities[0].Move)
-        {
-            if (self.coord.move(activities[2].Move, state.mapgeometry)) |adj_mob_coord| {
-                if (state.dungeon.at(adj_mob_coord).mob) |othermob| {
-                    if (othermob.isHostileTo(self) and othermob.ai.is_combative and !combat.isAttackStab(self, othermob)) {
-                        if (othermob == state.player) {
-                            state.messageAboutMob(self, self.coord, .Combat, "[BUG]", .{}, "charges you!", .{});
-                        } else {
-                            state.messageAboutMob(self, self.coord, .Combat, "charge the {s}!", .{othermob.displayName()}, "charges the {s}!", .{othermob.displayName()});
-                        }
-
-                        self.fight(othermob, .{ .free_attack = true, .auto_hit = true, .damage_bonus = 130, .loudness = .Loud });
-                        combat.throwMob(self, othermob, activities[2].Move, 3);
-                        return;
-                    }
-                }
-            }
-        }
 
         // Lunge pattern
         if (activities[1] == .Rest and activities[0] == .Move) {

@@ -188,9 +188,13 @@ pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: u
         dest_coord,
     })) {
         if (thrower) |thrower_mob| {
+            thrower_mob.makeNoise(.Combat, .Loud);
             state.message(.Combat, "{c} knocks {} back!", .{ thrower_mob, throwee });
+            state.markMessageNoisy();
         } else {
+            throwee.makeNoise(.Combat, .Loud);
             state.message(.Combat, "{c} is/are knocked back!", .{throwee});
+            state.markMessageNoisy();
         }
     }
 

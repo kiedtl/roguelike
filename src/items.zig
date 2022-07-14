@@ -19,6 +19,7 @@ const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
 const types = @import("types.zig");
 const ringbuffer = @import("ringbuffer.zig");
+const player = @import("player.zig");
 
 const Coord = types.Coord;
 const Item = types.Item;
@@ -684,6 +685,67 @@ pub const DefaultPinRing = Ring{ // {{{
         pub fn f(self: *Mob, stt: PatternChecker.State) void {
             _ = self;
             stt.mobs[0].?.addStatus(.Held, 0, .{ .Tmp = 5 });
+        }
+    }.f,
+}; // }}}
+
+pub const DefaultChargeRing = Ring{ // {{{
+    .name = "[BUG] charge attack",
+    .pattern_checker = .{
+        .turns = 3,
+        .funcs = [_]PatternChecker.Func{
+            // directions[0]: first movement direction
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
+                    _ = stt;
+                    const cur = mob.activities.current().?;
+                    const r = cur == .Rest;
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
+                    const cur = mob.activities.current().?;
+                    const r = cur == .Move;
+                    if (r) {
+                        stt.directions[0] = cur.Move;
+                    }
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
+                    const cur = mob.activities.current().?;
+                    if (cur == .Move and cur.Move == stt.directions[0].?.opposite()) {
+                        if (mob.coord.move(cur.Move, state.mapgeometry)) |adj_mob_c| {
+                            if (state.dungeon.at(adj_mob_c).mob) |other| {
+                                if (other.isHostileTo(mob) and other.ai.is_combative) {
+                                    stt.mobs[0] = other;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    return false;
+                }
+            }.f,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        },
+    },
+    .effect = struct {
+        pub fn f(self: *Mob, stt: PatternChecker.State) void {
+            const target = stt.mobs[0].?;
+            const verb = if (self == state.player) "charge" else "charges";
+            if (player.canSeeAny(&.{ self.coord, target.coord })) {
+                state.message(.Info, "{c} {s} {}!", .{ self, verb, target });
+            }
+            combat.throwMob(self, stt.mobs[0].?, stt.directions[0].?.opposite(), 7);
         }
     }.f,
 }; // }}}
