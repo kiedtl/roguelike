@@ -15,6 +15,10 @@ atmosphere of the Dungeon.
 A longsword of ancient bone. It is wound about with a curse to inflict more
 damage on the living, but less on the undead.
 
+% martial_sword
+A strangely curved foreign longsword. You can attack enemies multiple times in a
+turn with this, if you're skilled enough.
+
 % dagger
 An medium-sized double-edged knife, useful for stabbing foes.
 
