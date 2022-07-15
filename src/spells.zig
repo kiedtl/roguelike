@@ -87,6 +87,30 @@ fn createCorpseCreationSpell(
 pub const CAST_CREATE_EMBERLING = createCorpseCreationSpell("emberling", "emberling", &mobs.EmberlingTemplate);
 pub const CAST_CREATE_SPARKLING = createCorpseCreationSpell("sparkling", "sparkling", &mobs.SparklingTemplate);
 
+pub const CAST_ALERT_ALLY = Spell{
+    .id = "sp_alert_ally",
+    .name = "alert ally",
+    .cast_type = .Smite,
+    .smite_target_type = .Self,
+    .check_has_effect = struct {
+        fn f(caster: *Mob, _: SpellOptions, _: Coord) bool {
+            const hostile = caster.enemyList().items[0];
+            return for (caster.allies.items) |ally| {
+                if (!ai.isEnemyKnown(ally, hostile.mob)) {
+                    break true;
+                }
+            } else false;
+        }
+    }.f,
+    .effect_type = .{
+        .Custom = struct {
+            fn f(caster_coord: Coord, _: Spell, _: SpellOptions, _: Coord) void {
+                ai.alertAllyOfHostile(state.dungeon.at(caster_coord).mob.?);
+            }
+        }.f,
+    },
+};
+
 pub const CAST_CALL_UNDEAD = Spell{
     .id = "sp_call_undead",
     .name = "call undead",

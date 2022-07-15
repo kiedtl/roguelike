@@ -99,11 +99,20 @@ pub fn shouldFlee(me: *Mob) bool {
     return result;
 }
 
+pub fn isEnemyKnown(mob: *Mob, enemy: *Mob) bool {
+    return for (mob.enemyList().items) |enemyrecord| {
+        if (enemyrecord.mob == enemy) break true;
+    } else false;
+}
+
 // Notify nearest ally of a hostile.
 pub fn alertAllyOfHostile(mob: *Mob) void {
     const hostile = mob.enemyList().items[0];
-    if (mob.allies.items.len > 0) {
-        updateEnemyRecord(mob.allies.items[0], hostile);
+    for (mob.allies.items) |ally| {
+        if (!isEnemyKnown(ally, hostile.mob)) {
+            updateEnemyRecord(ally, hostile);
+            break;
+        }
     }
 }
 
@@ -1301,10 +1310,7 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
         }
 
         (work_fn)(mob, alloc);
-        return;
-    }
-
-    if (mob.ai.phase == .Investigate) {
+    } else if (mob.ai.phase == .Investigate) {
         assert(mob.ai.is_curious);
         assert(mob.sustiles.items.len > 0);
 
@@ -1329,9 +1335,7 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
                 _ = mob.rest();
             }
         }
-    }
-
-    if (mob.ai.phase == .Hunt) {
+    } else if (mob.ai.phase == .Hunt) {
         assert(mob.ai.is_combative);
         assert(mob.enemyList().items.len > 0);
 
@@ -1339,9 +1343,7 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
 
         const target = mob.enemyList().items[0].mob;
         mob.facing = mob.coord.closestDirectionTo(target.coord, state.mapgeometry);
-    }
-
-    if (mob.ai.phase == .Flee) {
+    } else if (mob.ai.phase == .Flee) {
         flee(mob, alloc);
-    }
+    } else unreachable;
 }

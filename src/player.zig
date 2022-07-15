@@ -6,6 +6,7 @@ const meta = std.meta;
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
+const ai = @import("ai.zig");
 const rng = @import("rng.zig");
 const literature = @import("literature.zig");
 const explosions = @import("explosions.zig");
@@ -651,8 +652,8 @@ pub fn isPlayerSpotted() bool {
 
     const is_spotted = enemiesCanSee(state.player.coord) or (b: for (moblist.items) |mob| {
         if (!mob.no_show_fov and mob.ai.is_combative and mob.isHostileTo(state.player)) {
-            for (mob.enemyList().items) |enemyrecord|
-                if (enemyrecord.mob == state.player) break :b true;
+            if (ai.isEnemyKnown(mob, state.player))
+                break :b true;
         }
     } else false);
 
