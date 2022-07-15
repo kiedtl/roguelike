@@ -5,28 +5,30 @@
 :subroom
 :g_global_restriction 2
 
-% 5x6
+% 5x5
 
 @t p wood_table
 @c p wood_chair
+:spawn sentry_spire 1,4
 :spawn death_mage 1,1
 :subroom_area 0,0 5 1 ANY_s_s_marble_vlts_furniture
 .....
 .....
 #t#tt
 #c+..
-#####
+#.###
 
 \
 
-% 5x6
+% 5x3
 
 @t p wood_table
 @c p wood_chair
+:spawn sentry_spire 1,2
 :spawn death_mage 1,1
 #t#tt
 #c+.C
-#####
+#.###
 
 \
 
@@ -34,6 +36,7 @@
 
 @t p wood_table
 @c p wood_chair
+:spawn sentry_spire 2,2
 :spawn death_mage 1,1
 :subroom_area 5,0 2 3 ANY_s_s_marble_vlts_furniture
 tttt...
@@ -45,6 +48,8 @@ t......
 % 6x3
 
 @t p table
+:spawn sentry_spire 2,0
+:spawn sentry_spire 2,2
 :spawn death_mage 4,1
 :subroom_area 0,0 2 3 ANY_s_s_marble_vlts_furniture
 ...##t
@@ -55,6 +60,7 @@ t......
 
 @t p wood_table
 @c p wood_chair
+:spawn sentry_spire 0,1
 :spawn death_mage 1,1
 :subroom_area 5,0 1 1 ANY_s_s_marble_vlts_furniture
 tttt..
@@ -66,6 +72,7 @@ tttt..
 
 @t p wood_table
 @c p wood_chair
+:spawn sentry_spire 4,2
 :spawn death_mage 1,1
 :subroom_area 3,0 2 2 ANY_s_s_marble_vlts_furniture
 t....

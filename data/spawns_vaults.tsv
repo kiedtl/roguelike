@@ -19,6 +19,7 @@
 "sentinel"            	  50 	   - 	   -
 "bone_mage"           	  50 	   - 	   -
 "iron_spire"          	  10 	   - 	   -
+"sentry_spire"        	  10 	   - 	   -
 "lightning_spire"     	  10 	   - 	   -
 
 # Some nuisances, to dilute the monster-pool and to create some challenge
@@ -52,6 +53,7 @@
 "lightning_spire"     	   - 	  30 	   -
 "torpor_spire"        	   - 	  30 	   -
 "calcite_spire"       	   - 	  30 	   -
+"sentry_spire"        	   - 	  30 	   -
 
 # non-themed monsters
 "brimstone_mage"      	   - 	  20 	   -
