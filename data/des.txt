@@ -388,8 +388,12 @@ punctuated by intermittent clicks.
 The top of this brass spire rotates slowly.
 
 % calcite_spire
-Engraved on this deathly white spire are the words: "Gyil gimboredro
+Engraved on this deathly white spire are the words: "Gyil gimboredru
 Gyilthor-drauglâ".
+
+% sentry_spire
+A segmented wooden spire, resting on cast iron supports. A single black pupil,
+carved out of ceramic, rests on its top.
 
 % sp_hasten_undead
 Hasten a nearby undead ally, making them twice as fast.
