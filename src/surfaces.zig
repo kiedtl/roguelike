@@ -96,14 +96,14 @@ pub const DefaultTerrain = Terrain{
 pub const CarpetTerrain = Terrain{
     .id = "t_carpet",
     .name = "carpet",
-    .color = 0xff5011, // orange red
-    .tile = '·',
-    .stats = .{ .Sneak = 2 },
+    .color = 0xdaa520, // goldenish
+    .tile = '÷',
+    .stats = .{ .Sneak = 3 },
     .flammability = 5,
 
     .for_levels = &[_][]const u8{ "PRI", "QRT" },
     .placement = .EntireRoom,
-    .weight = 7,
+    .weight = 8,
 };
 
 pub const GravelTerrain = Terrain{
