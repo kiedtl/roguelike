@@ -2,6 +2,7 @@ const std = @import("std");
 const math = std.math;
 const assert = std.debug.assert;
 
+const ai = @import("ai.zig");
 const items = @import("items.zig");
 const types = @import("types.zig");
 const player = @import("player.zig");
@@ -151,6 +152,10 @@ pub fn chanceOfAttackEvaded(defender: *const Mob, attacker: ?*const Mob) usize {
 pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: usize) void {
     if (throwee.immobile) {
         return; // Don't do anything.
+    }
+
+    if (thrower) |enemy| {
+        ai.updateEnemyKnowledge(throwee, enemy, null);
     }
 
     const previous_coord = throwee.coord;

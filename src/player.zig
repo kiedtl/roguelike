@@ -674,3 +674,16 @@ pub fn canSeeAny(coords: []const ?Coord) bool {
         }
     } else false;
 }
+
+pub fn getRingByIndex(index: usize) ?*Ring {
+    assert(index <= 9);
+
+    if (index >= state.default_patterns.len) {
+        const rel_index = index - state.default_patterns.len;
+        const slots = [_]Mob.Inventory.EquSlot{ .Ring1, .Ring2, .Ring3, .Ring4 };
+        if (rel_index >= slots.len) return null;
+        return if (state.player.inventory.equipment(slots[rel_index]).*) |r| r.Ring else null;
+    } else {
+        return &state.default_patterns[index];
+    }
+}

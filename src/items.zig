@@ -345,7 +345,8 @@ pub const PatternChecker = struct { // {{{
     pub const Func = fn (*Mob, *State) bool;
 
     pub const State = struct {
-        history: ringbuffer.RingBuffer(bool, MAX_TURNS),
+        //history: ringbuffer.RingBuffer(bool, MAX_TURNS),
+        //history: [MAX_TURNS]bool = undefined,
         mobs: [10]?*Mob = undefined,
         directions: [10]?Direction = undefined,
         coords: [10]?Coord = undefined,
@@ -353,45 +354,40 @@ pub const PatternChecker = struct { // {{{
 
     turns: usize,
     funcs: [MAX_TURNS]Func,
-    state: [MAX_TURNS]State = undefined,
+    //state: [MAX_TURNS]State = undefined,
+    state: State = undefined,
+    turns_taken: usize = undefined,
 
     pub fn init(self: *PatternChecker) void {
-        for (self.state) |*state_set| {
-            state_set.history.init();
-            mem.set(?*Mob, state_set.mobs[0..], null);
-            mem.set(?Direction, state_set.directions[0..], null);
-            mem.set(?Coord, state_set.coords[0..], null);
-        }
+        //state_set.history.init();
+        //mem.set(bool, self.state.history[0..], false);
+        self.turns_taken = 0;
+        mem.set(?*Mob, self.state.mobs[0..], null);
+        mem.set(?Direction, self.state.directions[0..], null);
+        mem.set(?Coord, self.state.coords[0..], null);
     }
 
-    pub fn _getConsecutiveTrues(self: *State) usize {
-        var consecutive_true: usize = 0;
-        {
-            var iter = self.history.iterator();
-            while (iter.next()) |item|
-                if (item) {
-                    consecutive_true += 1;
-                } else {
-                    break;
-                };
-        }
-        return consecutive_true;
-    }
+    pub fn advance(self: *PatternChecker, mob: *Mob) union(enum) {
+        Completed: PatternChecker.State,
+        Failed,
+        Continued,
+    } {
+        assert(self.turns_taken < state.player_turns);
+        assert(self.turns_taken < self.turns);
 
-    pub fn checkState(self: *PatternChecker, mob: *Mob) ?PatternChecker.State {
-        for (self.state) |*state_i, i| {
-            if (state.ticks < i) continue;
-            const consecs = _getConsecutiveTrues(state_i);
-            assert(consecs < self.turns);
-            const r = (self.funcs[consecs])(mob, state_i);
-            state_i.history.append(r);
-            if (_getConsecutiveTrues(state_i) == self.turns) {
-                const oldstate = state_i.*;
+        if ((self.funcs[self.turns_taken])(mob, &self.state)) {
+            self.turns_taken += 1;
+            if (self.turns_taken == self.turns) {
+                const oldstate = self.state;
                 self.init();
-                return oldstate;
+                return .{ .Completed = oldstate };
+            } else {
+                return .Continued;
             }
+        } else {
+            self.init();
+            return .Failed;
         }
-        return null;
     }
 }; // }}}
 
@@ -619,7 +615,7 @@ pub const ExterminationRing = Ring{ // {{{
 }; // }}}
 
 pub const DefaultPinRing = Ring{ // {{{
-    .name = "[BUG] pin attack",
+    .name = "pin foe",
     .pattern_checker = .{
         .turns = 4,
         .funcs = [_]PatternChecker.Func{
@@ -690,7 +686,7 @@ pub const DefaultPinRing = Ring{ // {{{
 }; // }}}
 
 pub const DefaultChargeRing = Ring{ // {{{
-    .name = "[BUG] charge attack",
+    .name = "charge",
     .pattern_checker = .{
         .turns = 3,
         .funcs = [_]PatternChecker.Func{

@@ -3188,24 +3188,36 @@ pub const Mob = struct { // {{{
             return;
         }
 
-        // Check default patterns for player
-        if (self == state.player) {
-            for (state.default_patterns) |*ring| {
-                if (ring.pattern_checker.checkState(self)) |stt| {
-                    ring.effect(self, stt);
+        self.forEachRing(struct {
+            pub fn f(mself: *Mob, ring: *Ring) void {
+                if (ring.activated) {
+                    switch (ring.pattern_checker.advance(mself)) {
+                        .Completed => |stt| {
+                            ring.activated = false;
+                            ring.effect(mself, stt);
+                        },
+                        .Failed => {
+                            ring.activated = false;
+                            if (state.player.cansee(mself.coord)) {
+                                state.message(.Info, "{c} failed to use $o{s}$.", .{ mself, ring.name });
+                            }
+                        },
+                        .Continued => {},
+                    }
                 }
             }
+        }.f);
+    }
+
+    pub fn forEachRing(self: *Mob, func: fn (*Mob, *Ring) void) void {
+        if (self == state.player) {
+            for (state.default_patterns) |*ring|
+                (func)(self, ring);
         }
 
-        // Check rings
-        //
         const rings = [_]Inventory.EquSlot{ .Ring1, .Ring2, .Ring3, .Ring4 };
-        for (rings) |r| if (self.inventory.equipment(r).*) |ring_item| {
-            const ring = ring_item.Ring;
-            if (ring.pattern_checker.checkState(self)) |stt| {
-                ring.effect(self, stt);
-            }
-        };
+        for (rings) |r| if (self.inventory.equipment(r).*) |ring_item|
+            (func)(self, ring_item.Ring);
     }
 
     pub fn isCreeping(self: *const Mob) bool {
@@ -3658,6 +3670,8 @@ pub const Ring = struct {
 
     pattern_checker: PatternChecker,
     effect: fn (*Mob, PatternChecker.State) void,
+
+    activated: bool = false,
 };
 
 pub const ItemType = enum { Rune, Ring, Consumable, Vial, Projectile, Armor, Cloak, Weapon, Boulder, Prop, Evocable };

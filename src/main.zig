@@ -430,6 +430,13 @@ fn readInput() bool {
             };
         } else if (ev.ch != 0) {
             return switch (ev.ch) {
+                '0'...'9' => b: {
+                    if (player.getRingByIndex(ev.ch - '0')) |ring| {
+                        state.message(.Info, "Activated ring $o{s}$....", .{ring.name});
+                        ring.activated = true;
+                    }
+                    break :b false;
+                },
                 't' => b: {
                     player.auto_wait_enabled = !player.auto_wait_enabled;
                     const str = if (player.auto_wait_enabled)
