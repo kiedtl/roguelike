@@ -270,6 +270,9 @@ The eyes of this statue seem to glimmer with an unearthly radiance.
 A statue of some nameless creature, the iridescent crystals encrusted on it
 shimmering horribly. You wish you could smash it into pieces.
 
+% bartender
+He's holding a pitcher of some kind of liquor.
+
 % alchemist
 A learned goblin alchemist. It delights in breeding horrible creatures and
 creating evil inventions. Somehow it doesn't care about you.
