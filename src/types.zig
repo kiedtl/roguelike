@@ -124,8 +124,8 @@ pub const Direction = enum { // {{{
         }
     }
 
-    pub fn is_adjacent(base: Self, other: Self) bool {
-        const adjacent: [2]Direction = switch (base) {
+    pub fn adjacentDirectionsTo(base: Self) [2]Direction {
+        return switch (base) {
             .North => .{ .NorthWest, .NorthEast },
             .East => .{ .NorthEast, .SouthEast },
             .South => .{ .SouthWest, .SouthEast },
@@ -135,7 +135,10 @@ pub const Direction = enum { // {{{
             .SouthWest => .{ .South, .West },
             .SouthEast => .{ .South, .East },
         };
+    }
 
+    pub fn is_adjacent(base: Self, other: Self) bool {
+        const adjacent = adjacentDirectionsTo(base);
         return other == adjacent[0] or other == adjacent[1];
     }
 
@@ -806,6 +809,11 @@ pub const Allegiance = enum {
 pub const Status = enum {
     // Status list {{{
 
+    // Hampers movement.
+    //
+    // Doesn't have a power field.
+    Drunk,
+
     // Enables copper weapons.
     //
     // Doesn't have a power field.
@@ -984,6 +992,7 @@ pub const Status = enum {
 
     pub fn string(self: Status, mob: *const Mob) []const u8 { // {{{
         return switch (self) {
+            .Drunk => "drunk",
             .CopperWeapon => "copper",
             .Corruption => "corrupted",
             .Flammable => "flammable",
@@ -1026,6 +1035,7 @@ pub const Status = enum {
 
     pub fn messageWhenAdded(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .Drunk => .{ "feel", "looks", " a bit drunk" },
             .CopperWeapon => null,
             .Corruption => .{ "are", "is", " corrupted" },
             .Flammable => .{ "are", "is", " vulnerable to fire" },
@@ -1064,6 +1074,7 @@ pub const Status = enum {
 
     pub fn messageWhenRemoved(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .Drunk => .{ "feel", "looks", " more sober" },
             .CopperWeapon => null,
             .Corruption => .{ "are no longer", "is no longer", " corrupted" },
             .Flammable => .{ "are no longer", "is no longer", " vulnerable to fire" },
@@ -2067,6 +2078,22 @@ pub const Mob = struct { // {{{
         //
         if (direction.is_diagonal() and self.isUnderStatus(.Confusion) != null)
             err.bug("Confused mob is trying to move diagonally!", .{});
+
+        if (self.isUnderStatus(.Drunk)) |_| {
+            if (rng.percent(@as(usize, 60))) {
+                var adjacents = Direction.adjacentDirectionsTo(direction);
+                rng.shuffle(Direction, &adjacents);
+
+                if (coord.move(adjacents[0], state.mapgeometry)) |candidate|
+                    if (state.is_walkable(candidate, .{ .mob = self })) {
+                        direction = adjacents[0];
+                    };
+                if (coord.move(adjacents[1], state.mapgeometry)) |candidate|
+                    if (state.is_walkable(candidate, .{ .mob = self })) {
+                        direction = adjacents[1];
+                    };
+            }
+        }
 
         if (self.isUnderStatus(.Daze)) |_|
             direction = rng.chooseUnweighted(Direction, &DIRECTIONS);

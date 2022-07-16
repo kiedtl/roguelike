@@ -777,6 +777,29 @@ pub const CrystalStatueTemplate = MobTemplate{
     },
 };
 
+pub const BartenderTemplate = MobTemplate{
+    .ignore_conflicting_tiles = true,
+    .mob = .{
+        .id = "bartender",
+        .species = &HumanSpecies,
+        .tile = 'a',
+        .ai = AI{
+            .profession_name = "bartender",
+            .profession_description = "serving",
+            .work_fn = ai.bartenderWork,
+            .fight_fn = ai.shriekerFight,
+            .is_combative = true,
+            .is_curious = false,
+        },
+
+        .no_show_fov = true,
+        .max_HP = 10,
+        .memory_duration = 28,
+
+        .stats = .{ .Willpower = 10, .Vision = 20, .Evade = 10 },
+    },
+};
+
 pub const AlchemistTemplate = MobTemplate{
     .mob = .{
         .id = "alchemist",
@@ -1741,6 +1764,7 @@ pub const MOBS = [_]MobTemplate{
     NebroStatueTemplate,
     CrystalStatueTemplate,
     AlchemistTemplate,
+    BartenderTemplate,
     CleanerTemplate,
     EngineerTemplate,
     HaulerTemplate,

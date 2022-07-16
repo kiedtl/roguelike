@@ -807,6 +807,13 @@ pub const CAST_DISCHARGE = Spell{
     }.f },
 };
 
+pub const CAST_BARTENDER_FERMENT = Spell{
+    .id = "sp_ferment_bartender",
+    .name = "ferment",
+    .cast_type = .Smite,
+    .effect_type = .{ .Status = .Drunk },
+    //.checks_will = true,
+};
 pub const CAST_FEEBLE = Spell{
     .id = "sp_feeble",
     .name = "slow",
@@ -844,7 +851,7 @@ pub const CAST_FAMOUS = Spell{
 };
 pub const CAST_FERMENT = Spell{
     .id = "sp_ferment",
-    .name = "ferment",
+    .name = "confusion",
     .cast_type = .Smite,
     .effect_type = .{ .Status = .Confusion },
     .checks_will = true,

@@ -621,6 +621,7 @@ fn createVaultDoor(comptime id_suffix: []const u8, comptime name_prefix: []const
 pub const IronVaultDoor = createVaultDoor("iron", "iron", colors.COPPER_RED, 30);
 pub const GoldVaultDoor = createVaultDoor("gold", "golden", colors.GOLD, 60);
 pub const MarbleVaultDoor = createVaultDoor("marble", "marble", colors.OFF_WHITE, 90);
+pub const TavernVaultDoor = createVaultDoor("tavern", "tavern", 0x77440f, 100);
 
 pub const Mine = Machine{
     .name = "mine",

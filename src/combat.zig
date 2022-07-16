@@ -26,6 +26,7 @@ const ATTACKER_ENRAGED_BONUS: isize = 20;
 const ATTACKER_OPENMELEE_BONUS: isize = 10;
 const ATTACKER_FEAR_NBONUS: isize = 10;
 const ATTACKER_HELD_NBONUS: isize = 20;
+const ATTACKER_DRUNK_NBONUS: isize = 10;
 const ATTACKER_STUN_NBONUS: isize = 15;
 
 const DEFENDER_UNLIT_BONUS: isize = 5;
@@ -116,6 +117,7 @@ pub fn chanceOfMeleeLanding(attacker: *const Mob, defender: ?*const Mob) usize {
 
     chance -= if (attacker.isUnderStatus(.Fear)) |_| ATTACKER_FEAR_NBONUS else 0;
     chance -= if (attacker.isUnderStatus(.Held)) |_| ATTACKER_HELD_NBONUS else 0;
+    chance -= if (attacker.isUnderStatus(.Drunk)) |_| ATTACKER_DRUNK_NBONUS else 0;
     chance -= if (attacker.isUnderStatus(.Debil)) |_| ATTACKER_STUN_NBONUS else 0;
 
     return @intCast(usize, math.clamp(chance, 0, 100));
@@ -246,7 +248,7 @@ pub fn isAttackStab(attacker: *const Mob, defender: *const Mob) bool {
 
 // Algorithm to shave damage due to resistance
 pub fn shaveDamage(amount: f64, resist: isize) f64 {
-    assert(amount > 0);
+    //assert(amount > 0);
     assert(resist >= -100 and resist <= 100);
 
     const S = struct {

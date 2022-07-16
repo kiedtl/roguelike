@@ -80,48 +80,52 @@ pub const VaultType = enum(usize) {
     Iron = 0,
     Gold = 1,
     Marble = 2,
-    Cuprite = 3,
-    Obsidian = 4,
-    Tavern = 5,
+    Tavern = 3,
+    Cuprite = 4,
+    Obsidian = 5,
 };
 pub const VAULT_MATERIALS = [VAULT_KINDS]*const Material{
     &materials.Rust,
     &materials.Gold,
     &materials.Marble,
+    &materials.PaintedConcrete,
 };
 pub const VAULT_DOORS = [VAULT_KINDS]*const Machine{
     &surfaces.IronVaultDoor,
     &surfaces.GoldVaultDoor,
     &surfaces.MarbleVaultDoor,
+    &surfaces.TavernVaultDoor,
 };
 // zig fmt: off
 pub const VAULT_LEVELS = [LEVELS][]const VaultType{
-    &.{ .Gold, .Marble  }, // -1/Prison
-    &.{ .Gold, .Marble  }, // -2/Prison
-    &.{ .Gold, .Marble  }, // -3/Quarters/3
-    &.{ .Gold, .Marble  }, // -3/Quarters/2
-    &.{ .Gold, .Marble  }, // -3/Quarters
-    &.{ .Gold, .Marble  }, // -4/Prison
-    &.{                 }, // -5/Caverns/3
-    &.{                 }, // -5/Caverns/2
-    &.{                 }, // -5/Caverns
-    &.{ .Iron, .Marble  }, // -6/Laboratory/3
-    &.{ .Iron           }, // -6/Laboratory/2
-    &.{ .Iron           }, // -6/Laboratory
-    &.{ .Iron           }, // -7/Prison
-    &.{ .Iron           }, // -8/Prison
+    &.{ .Gold, .Marble           }, // -1/Prison
+    &.{ .Gold, .Marble           }, // -2/Prison
+    &.{ .Gold, .Marble, .Tavern  }, // -3/Quarters/3
+    &.{ .Gold, .Marble, .Tavern  }, // -3/Quarters/2
+    &.{ .Gold, .Marble, .Tavern  }, // -3/Quarters
+    &.{ .Gold, .Marble, .Tavern  }, // -4/Prison
+    &.{                          }, // -5/Caverns/3
+    &.{                          }, // -5/Caverns/2
+    &.{                          }, // -5/Caverns
+    &.{ .Iron, .Marble, .Tavern  }, // -6/Laboratory/3
+    &.{ .Iron,          .Tavern  }, // -6/Laboratory/2
+    &.{ .Iron,          .Tavern  }, // -6/Laboratory
+    &.{ .Iron,          .Tavern  }, // -7/Prison
+    &.{ .Iron                    }, // -8/Prison
 };
 // zig fmt: on
-pub const VAULT_KINDS = 3;
+pub const VAULT_KINDS = 4;
 pub const VAULT_SUBROOMS = [VAULT_KINDS]?[]const u8{
     null,
     null,
     "ANY_s_marble_vlts",
+    "ANY_s_tavern_vlts",
 };
 pub const VAULT_CROWD = [VAULT_KINDS]MinMax(usize){
     minmax(usize, 7, 14),
     minmax(usize, 7, 14),
     minmax(usize, 1, 4),
+    minmax(usize, 14, 28),
 };
 // }}}
 
@@ -654,9 +658,14 @@ fn excavatePrefab(
                     state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(rare_loot_item)) catch err.wat();
                 },
                 .Corpse => {
-                    const prisoner = mobs.placeMob(allocator, &mobs.GoblinTemplate, rc, .{});
-                    prisoner.prisoner_status = Prisoner{ .of = .Necromancer };
-                    prisoner.deinit();
+                    if (state.dungeon.at(rc).mob != null) {
+                        // TODO: we should create the prisoner corpse somewhere else
+                        // and then move it here.
+                    } else {
+                        const prisoner = mobs.placeMob(allocator, &mobs.GoblinTemplate, rc, .{});
+                        prisoner.prisoner_status = Prisoner{ .of = .Necromancer };
+                        prisoner.deinit();
+                    }
                 },
                 else => {},
             }

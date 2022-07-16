@@ -8,6 +8,19 @@ const Coord = types.Coord;
 pub const MATERIALS = [_]*const Material{
     &Iron,
     &Vangenite,
+    &PaintedConcrete,
+    &Marble,
+};
+
+pub const PaintedConcrete = Material{
+    .id = "painted_concrete",
+    .name = "painted concrete",
+    .color_fg = 0x77440f, //colors.COPPER_RED,
+    .color_bg = 0xbb7711, //colors.percentageOf(colors.DOBALENE_BLUE, 40),
+    .color_floor = colors.DOBALENE_BLUE,
+    .tileset = 0,
+    .luminescence = 0,
+    .opacity = 1.0,
 };
 
 pub const Marble = Material{

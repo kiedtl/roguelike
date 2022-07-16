@@ -1,0 +1,18 @@
+:invisible
+:subroom
+:material painted_concrete
+%:g_global_restriction 2
+
+@t p wood_table
+:spawn bartender 1,1 1,1
+ttt.t.t
+t.t.t.t
+t.t.t.t
+
+\
+
+@t p wood_table
+:spawn bartender 1,1 1,1
+#tt.t
+±.t.t
+#tt.t
