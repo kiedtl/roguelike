@@ -1119,6 +1119,19 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         y += 1;
     }
 
+    var ring_i: usize = 0;
+    while (ring_i <= 9) : (ring_i += 1)
+        if (player.getRingByIndex(ring_i)) |ring| {
+            if (ring.activated) {
+                const bg = colors.percentageOf(colors.CONCRETE, 10);
+                _clearLineWith(startx, endx, y, ' ', bg, bg);
+                y = _drawStr(startx, y, endx, "$c· {s}$.", .{ring.name}, .{ .bg = bg });
+            } else {
+                y = _drawStr(startx, y, endx, "$b{}$. $c{s}$.", .{ ring_i, ring.name }, .{});
+            }
+        };
+    y += 1;
+
     // ------------------------------------------------------------------------
 
     {
