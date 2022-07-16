@@ -321,8 +321,9 @@ x mellaent
   - kerejat-like nuisance
   - noncombatant
 - tentacling
-  - "A horrible twisted abomination, writhing and fidgeting. It retained
-    its intelligence despite countless years of experiments practiced on it.
+  - "A horrible twisted abomination, writhing and fidgeting uncontrollably. It
+    has retained its intelligence despite the countless decades of experiments
+    practiced on it.
   - Monster with twenty tentacles, like DCSS tile for ugly things
   - Faster than player.
   - Ranged attack: throws boulders at player (i.e., DCSS' cyclops).
@@ -332,10 +333,11 @@ x mellaent
 - revealer
   - Casts glowing (will-checked).
   - Uncommon. Found in Vaults, Morgue, higher Prison.
-- bloat
-  - Bloated 
-  - Very slow, 18 HP
-  - Aura of nausea.
+x bloat
+  - Bloated, very slow (150/200), 18 HP
+  - When wounded, bursts forth miasma.
+  - Analagous to TGGW's zombie.
+  - Can see in the dark.
 - predator
   - 10 HP, fast, no armor
   - Vicious bite (3 dmg); may cause bleeding effect if it's added
@@ -447,6 +449,11 @@ utility items:
 - Detect undead
 - Vampirism (charm of transference)
 - buckler (3 knockback on block, +15% block)
+- Detect electricity
+  - Theme: something something "detects magnetic interference" w/ e.g. fancy
+    compass, or something along those lines
+  - Detects powered machines, sparklings/spark mages, anything wearing rElec
+    stuff, sulfur fiends, lightning spires, etc
 
 
 Movement patterns
@@ -927,10 +934,13 @@ x More kits and traps: fire, shock, incineration, knockback
 x Fix trtr chambers; add more of them
 x Iron, lightning, torpor, and calcite spires
 x Bone weapons, corruption effects
-x More potions
+- More potions
   x Potion of debilitation, traps of seizure gas
   x Potion of irritation, traps of blinding gas
   x Potion of illumination
+  - Potion of disruption
+  - Potion of intimidation
+  - Potion of leavenation
 - Guards in cubbyholes (both corridors and rooms)
 x Add barrel of water
 x War olgs, cinder worms, destroyers
@@ -939,26 +949,28 @@ x Emberling/sparkling summoning trap kits
 ~ [canceled] Fiend of vapours
 x Copper weapons and copper spires/battery packs, copper hornets
 - Lore-related prefabs (e.g. washroom, trophy rooms, etc)
-- Warriors, recruits
-- Treasure vaults
-  - Marble vault
+x Warriors, recruits
+x Treasure vaults
+  x Marble vault
   x Iron vault
-  - Golden vault
-  - Tavern vault (maybe next release?)
+  x Golden vault
+  x Tavern vault (maybe next release?)
 - Scoring
-- Rework mapgen for -1/Prison and rename to Entry
 - Fix pushing past monsters
 x Remove boring `Flanked' mechanic
 - Playtest game, especially CAV and make adjustments
 *** v1.1.0 release ***
 - Basic save system
 - Warn when next to spreading gas and resting
-- Warn when stepping into enemy's FOV
+- Rewrite popups/confirms/alerts in Ruby UI
+- Rewrite inventory system UI in Ruby
+x Warn when stepping into enemy's FOV
 - Auto-wait: don't wait while in combat or in dangerous area
 - More messages
 - Startup screen, map generation loading bar
 *** v1.2.0 release ***
 - Rings spawn with stat modifiers (Will+ Will- Will++ Will--)
+- Rework mapgen for -1/Prison and rename to Entry
 - Headgear, footgear, auxiliary items
 - Masterpiece weapons
 - Multi-tile props: trees and braziers
@@ -966,7 +978,6 @@ x Remove boring `Flanked' mechanic
 - More undead mobs, to make !disruption/calcite spire/etc relevant
 - More potions:
   - Potion of insubstantiation and fortification
-  - Potions of disruption
 - Basic speeches by mobs
 - Bloodlings and related mages
 - Operators
@@ -1011,9 +1022,9 @@ x Remove boring `Flanked' mechanic
 - eXamine screen:
   - Show last remembered items on out-of-sight tiles
   - Show floor spattering, floor material, gas
-- Morgue level
+- Garrison/Morgue level
   - Cogmind-esque tunneling algorithm
-  - Monsters
+  - *blende statues
 - Night creatures (night reapers, creeping deaths, grues, winged terrors)
 - Shadow weapons
 
@@ -1366,7 +1377,7 @@ x Ring of echolocation to magic-map neighbors of sound-producing tiles
   - obsolete: too complex
 ~ Radioactivity system: nuclear reactors, uranium, corium, nuclear bombs that
   the player can blow up for fun
-  - obsolete: too complex
+  - obsolete: too complex, and wouldn't fit lore well
 ~ Orchestra/Concert, that sings/players instruments and distracts guards
   - obsolete: making all the guards move to one corner of the map suddenly is
     obviously going to make things easier for player /s
@@ -1374,9 +1385,9 @@ x Ring of echolocation to magic-map neighbors of sound-producing tiles
   - the Goblin Brotherhood, the ProudGobbos, the Seven Percenters, the
     Goblin Nations, etc
 - Night creatures should pop out of artwork at night
-~ Stone guardians that patrol map and cast confusion at enemies, but move at 1
+- Stone guardians that patrol map and cast confusion at enemies, but move at 1
   tile per 10-20 turns
-  - obsolete: that's abominations now
+  //- obsolete: that's abominations now
 - Headstones with previous player's comments on them, or ghosts that mourn
   previous player's carelessnes (think DCSS ghosts)
   - Bonus: the ghosts/gravestones are found in the temple in prison cells
@@ -1408,8 +1419,9 @@ x Speech bubbles in following situations: (removed)
 x Ranged melee weapons, e.g., spear and whips
 x Add braziers that are built into the walls (aka torches), and use that
   instead for corridors
-- Some kind of squad-forming fast-moving swarming mob, like killer bees (DCSS)
+x Some kind of squad-forming fast-moving swarming mob, like killer bees (DCSS)
   or swarmers (Cogmind 7DRL)
+  - done: bone rats
 - "cameras kits" that create surface items that keep the surrounding area in the
   FOV of all mobs that have a certain ring on
 ~ Experiment with "bouncing" rays in raycasting routines
@@ -1422,7 +1434,7 @@ x Add braziers that are built into the walls (aka torches), and use that
   - banishing:    Teleports away
 x MP-like system that limits how often spellcasters can cast spells (providing
   a way to tweak dangerous-ness) and how often player can use ring effects.
-- Extremely dangerous (but lucrative) vaults that have golden walls, warning
+x Extremely dangerous (but lucrative) vaults that have golden walls, warning
   player of danger.
 - Nice floor tile patterns, like Ultima Ratio Regum.
   E.g.:      #############    #############    #############
@@ -1441,6 +1453,17 @@ x MP-like system that limits how often spellcasters can cast spells (providing
 - Put actual loot in chests + plus new TGGW-like interace for containers
 - Monster: has strong ranged attack with copper weapon, and tries to lure you
   into copper ground
+- Monster: spell that grants .Explosive status to nearby ally (while keeping
+  distance)
+- Monster: remotely hurl a single ally at player. Both projectile and player
+  take some damage. Eventually, player is completely surrounded.
+- Monster: shoots blinding gas at player from a distance
+- Sometimes monsters leave useless limbs behind instead of a corpse
+- Spell/item: makes nearby enemies forget about you faster
+  - Downside: if it fails, makes them remember you longer.
+  - Inspired by Cogmind's ECM suite
+- Spell/item: flingable lava orb! (ie: fiery orb-of-destruction, normally used
+  by lava flans)
 
 Optimizations
 =============
@@ -1463,7 +1486,7 @@ x Stop using the `catch unreachable` syntax:
     libera#zig 19:58 <ikskuh> "catch unreachable" will happily continue to execute code
                               after the error in non-safe build modes
 - Remove all floats from color functions, sound systems, gas systems, etc.
-- Review usage of usize and change to u64/u32 where needed to prevent portability issues
+x Review usage of usize and change to u64/u32 where needed to prevent portability issues
 - Define custom assert() that can give additional context
 - Define Lua API and move the following to Lua data files:
   - levelFeature definitions (see mapgen.zig)
