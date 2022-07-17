@@ -551,17 +551,26 @@ pub const ExterminationRing = Ring{ // {{{
     .name = "extermination",
     .pattern_checker = .{
         .turns = 3,
+        .init = struct {
+            pub fn f(d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+                if (d.is_diagonal())
+                    return error.NeedCardinalDirection;
+                stt.directions[0] = d;
+                return Activity{ .Move = d };
+            }
+        }.f,
         .funcs = [_]PatternChecker.Func{
             struct {
-                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
-                    const cur = mob.activities.current().?;
+                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
                     if (cur == .Move and !cur.Move.is_diagonal()) {
-                        if (mob.coord.move(cur.Move, state.mapgeometry)) |adj_mob_c| {
+                        const new_coord = if (dry) mob.coord.move(cur.Move, state.mapgeometry).? else mob.coord;
+                        if (new_coord.move(cur.Move, state.mapgeometry)) |adj_mob_c| {
                             if (state.dungeon.at(adj_mob_c).mob) |other| {
                                 if (other.isHostileTo(mob) and other.ai.is_combative) {
-                                    stt.mobs[0] = other;
-                                    stt.directions[0] = cur.Move;
-                                    stt.coords[0] = adj_mob_c;
+                                    if (!dry) {
+                                        stt.mobs[0] = other;
+                                        stt.coords[0] = adj_mob_c;
+                                    }
                                     return true;
                                 }
                             }
@@ -571,24 +580,24 @@ pub const ExterminationRing = Ring{ // {{{
                 }
             }.f,
             struct {
-                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
-                    const cur = mob.activities.current().?;
-                    const r = cur == .Move and
-                        !cur.Move.is_diagonal() and
+                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    if (cur != .Move)
+                        return false;
+                    const new_coord = if (dry) mob.coord.move(cur.Move, state.mapgeometry).? else mob.coord;
+                    const r = !cur.Move.is_diagonal() and
                         (cur.Move == stt.directions[0].?.turnleft() or
                         cur.Move == stt.directions[0].?.turnright()) and
-                        mob.coord.distance(stt.coords[0].?) == 1;
+                        new_coord.distance(stt.coords[0].?) == 1;
                     return r;
                 }
             }.f,
             struct {
-                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
-                    const cur = mob.activities.current().?;
+                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
                     const foe_coord = stt.mobs[0].?.coord;
                     const r = cur == .Move and
                         cur.Move == stt.directions[0].? and
                         mob.coord.distance(foe_coord) == 1; // he's still there?
-                    if (r) {
+                    if (r and !dry) {
                         stt.directions[1] = Direction.from(mob.coord, foe_coord);
                     }
                     return r;
@@ -1415,7 +1424,7 @@ pub fn createItem(comptime T: type, item: T) *T {
         else => @compileError("uh wat"),
     };
     const it = list.appendAndReturn(item) catch err.oom();
-    if (T == Ring) it.pattern_checker.init();
+    if (T == Ring) it.pattern_checker.reset();
     if (T == Evocable) it.charges = it.max_charges;
     return it;
 }
