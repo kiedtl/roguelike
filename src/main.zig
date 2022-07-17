@@ -44,6 +44,7 @@ const Message = types.Message;
 const MessageArrayList = types.MessageArrayList;
 const MobArrayList = types.MobArrayList;
 const StockpileArrayList = types.StockpileArrayList;
+const DIRECTIONS = types.DIRECTIONS;
 
 const TaskArrayList = tasks.TaskArrayList;
 const PosterArrayList = literature.PosterArrayList;
@@ -110,7 +111,7 @@ fn initGame() bool {
     rng.init(state.GPA.allocator()) catch return false;
 
     player.choosePlayerUpgrades();
-    for (state.default_patterns) |*r| r.pattern_checker.init();
+    for (state.default_patterns) |*r| r.pattern_checker.reset();
 
     state.chardata.init(state.GPA.allocator());
     state.memory = state.MemoryTileMap.init(state.GPA.allocator());
@@ -431,9 +432,38 @@ fn readInput() bool {
         } else if (ev.ch != 0) {
             return switch (ev.ch) {
                 '0'...'9' => b: {
+                    if (player.getActiveRing()) |ring| {
+                        ring.activated = false;
+                    }
                     if (player.getRingByIndex(ev.ch - '0')) |ring| {
                         state.message(.Info, "Activated ring $o{s}$....", .{ring.name});
-                        ring.activated = true;
+
+                        if (display.drawChoicePrompt("Choose a direction", .{}, &.{
+                            "North",
+                            "South",
+                            "East",
+                            "West",
+                            "Norteast",
+                            "Northwest",
+                            "Southeast",
+                            "Southwest",
+                        })) |dir_i| {
+                            const dir = DIRECTIONS[dir_i];
+
+                            if (ring.pattern_checker.init.?(dir, &ring.pattern_checker.state)) |hint| {
+                                ring.activated = true;
+                                switch (hint) {
+                                    .Move => |d| state.message(.Info, "[$o{s}$.] Move {s}", .{ ring.name, @tagName(d) }),
+                                    .Attack => |d| state.message(.Info, "[$o{s}$.] Attack {s}", .{ ring.name, @tagName(d) }),
+                                    .None => {},
+                                }
+                            } else |derr| {
+                                ring.activated = false;
+                                switch (derr) {
+                                    error.NeedCardinalDirection => state.message(.Info, "Error: need a cardinal direction", .{}),
+                                }
+                            }
+                        }
                     }
                     break :b false;
                 },
@@ -526,6 +556,8 @@ fn tickGame() void {
                 state.player_turns += 1;
                 state.chardata.time_on_levels[mob.coord.z] += 1;
                 player.bookkeepingFOV();
+                if (player.getActiveRing()) |r|
+                    player.getRingHints(r);
             }
 
             if (mob.isUnderStatus(.Paralysis)) |_| {

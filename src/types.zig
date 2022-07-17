@@ -3153,6 +3153,26 @@ pub const Mob = struct { // {{{
         // Walking pattern
         if (!self.isCreeping()) self.makeNoise(.Movement, .Medium);
 
+        self.forEachRing(struct {
+            pub fn f(mself: *Mob, ring: *Ring) void {
+                if (ring.activated) {
+                    switch (ring.pattern_checker.advance(mself)) {
+                        .Completed => |stt| {
+                            ring.activated = false;
+                            ring.effect(mself, stt);
+                        },
+                        .Failed => {
+                            ring.activated = false;
+                            if (state.player.cansee(mself.coord)) {
+                                state.message(.Info, "{c} failed to use $o{s}$.", .{ mself, ring.name });
+                            }
+                        },
+                        .Continued => {},
+                    }
+                }
+            }
+        }.f);
+
         // Lunge pattern
         if (activities[1] == .Rest and activities[0] == .Move) {
             if (self.coord.move(activities[0].Move, state.mapgeometry)) |adj_mob_coord| {
@@ -3187,26 +3207,6 @@ pub const Mob = struct { // {{{
             self.addStatus(.Fast, 0, .{ .Tmp = 10 });
             return;
         }
-
-        self.forEachRing(struct {
-            pub fn f(mself: *Mob, ring: *Ring) void {
-                if (ring.activated) {
-                    switch (ring.pattern_checker.advance(mself)) {
-                        .Completed => |stt| {
-                            ring.activated = false;
-                            ring.effect(mself, stt);
-                        },
-                        .Failed => {
-                            ring.activated = false;
-                            if (state.player.cansee(mself.coord)) {
-                                state.message(.Info, "{c} failed to use $o{s}$.", .{ mself, ring.name });
-                            }
-                        },
-                        .Continued => {},
-                    }
-                }
-            }
-        }.f);
     }
 
     pub fn forEachRing(self: *Mob, func: fn (*Mob, *Ring) void) void {
@@ -3672,6 +3672,12 @@ pub const Ring = struct {
     effect: fn (*Mob, PatternChecker.State) void,
 
     activated: bool = false,
+
+    pub const Hint = union(enum) {
+        Move: Direction,
+        Attack: Direction,
+        None,
+    };
 };
 
 pub const ItemType = enum { Rune, Ring, Consumable, Vial, Projectile, Armor, Cloak, Weapon, Boulder, Prop, Evocable };

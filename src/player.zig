@@ -21,6 +21,7 @@ const state = @import("state.zig");
 const types = @import("types.zig");
 const err = @import("err.zig");
 
+const Activity = types.Activity;
 const Coord = types.Coord;
 const Tile = types.Tile;
 const Item = types.Item;
@@ -686,4 +687,47 @@ pub fn getRingByIndex(index: usize) ?*Ring {
     } else {
         return &state.default_patterns[index];
     }
+}
+
+pub fn getActiveRing() ?*Ring {
+    var i: usize = 0;
+    return while (i <= 9) : (i += 1) {
+        if (getRingByIndex(i)) |ring| {
+            if (ring.activated)
+                break ring;
+        }
+    } else null;
+}
+
+pub fn getRingHints(ring: *Ring) void { //, buf: *StackBuffer(Activity, 16)) void {
+    const chk_func = ring.pattern_checker.funcs[ring.pattern_checker.turns_taken];
+
+    for (&DIRECTIONS) |d| if (state.player.coord.move(d, state.mapgeometry)) |neighbor_tile| {
+        const dname = @tagName(d);
+
+        const move_activity = Activity{ .Move = d };
+        if (state.is_walkable(neighbor_tile, .{ .mob = state.player })) {
+            if ((chk_func)(state.player, &ring.pattern_checker.state, move_activity, true))
+                //buf.append(move_activity) catch err.wat();
+                state.message(.Info, "[$o{s}$.] Move {s}", .{ ring.name, dname });
+        }
+
+        if (state.dungeon.at(neighbor_tile).mob) |neighbor_mob| {
+            if (neighbor_mob.isHostileTo(state.player) and neighbor_mob.ai.is_combative) {
+                const attack_activity = Activity{ .Attack = .{
+                    .who = neighbor_mob,
+                    .direction = d,
+                    .coord = neighbor_tile,
+                    .delay = 0,
+                } };
+                if ((chk_func)(state.player, &ring.pattern_checker.state, attack_activity, true))
+                    //buf.append(attack_activity) catch err.wat();
+                    state.message(.Info, "[$o{s}$.] Attack {s}", .{ ring.name, dname });
+            }
+        }
+    };
+
+    const wait_activity: Activity = .Rest;
+    if ((chk_func)(state.player, &ring.pattern_checker.state, wait_activity, true))
+        state.message(.Info, "[$o{s}$.] Wait", .{ring.name});
 }
