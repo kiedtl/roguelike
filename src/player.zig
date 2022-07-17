@@ -699,17 +699,16 @@ pub fn getActiveRing() ?*Ring {
     } else null;
 }
 
-pub fn getRingHints(ring: *Ring) void { //, buf: *StackBuffer(Activity, 16)) void {
+pub fn getRingHints(ring: *Ring) void {
+    var buf = StackBuffer(Activity, 16).init(null);
+
     const chk_func = ring.pattern_checker.funcs[ring.pattern_checker.turns_taken];
 
     for (&DIRECTIONS) |d| if (state.player.coord.move(d, state.mapgeometry)) |neighbor_tile| {
-        const dname = @tagName(d);
-
         const move_activity = Activity{ .Move = d };
         if (state.is_walkable(neighbor_tile, .{ .mob = state.player })) {
             if ((chk_func)(state.player, &ring.pattern_checker.state, move_activity, true))
-                //buf.append(move_activity) catch err.wat();
-                state.message(.Info, "[$o{s}$.] Move {s}", .{ ring.name, dname });
+                buf.append(move_activity) catch err.wat();
         }
 
         if (state.dungeon.at(neighbor_tile).mob) |neighbor_mob| {
@@ -721,13 +720,39 @@ pub fn getRingHints(ring: *Ring) void { //, buf: *StackBuffer(Activity, 16)) voi
                     .delay = 0,
                 } };
                 if ((chk_func)(state.player, &ring.pattern_checker.state, attack_activity, true))
-                    //buf.append(attack_activity) catch err.wat();
-                    state.message(.Info, "[$o{s}$.] Attack {s}", .{ ring.name, dname });
+                    buf.append(attack_activity) catch err.wat();
             }
         }
     };
 
     const wait_activity: Activity = .Rest;
     if ((chk_func)(state.player, &ring.pattern_checker.state, wait_activity, true))
-        state.message(.Info, "[$o{s}$.] Wait", .{ring.name});
+        buf.append(wait_activity) catch err.wat();
+
+    if (buf.len == 0) {
+        state.message(.Info, "[$o{s}$.] No valid moves!", .{ring.name});
+    }
+
+    var strbuf = std.ArrayList(u8).init(state.GPA.allocator());
+    defer strbuf.deinit();
+    const writer = strbuf.writer();
+    writer.print("[$o{s}$.] ", .{ring.name}) catch err.wat();
+    formatActivityList(buf.constSlice(), writer);
+    state.message(.Info, "{s}", .{strbuf.items});
+}
+
+pub fn formatActivityList(activities: []const Activity, writer: anytype) void {
+    for (activities) |activity, i| {
+        if (i != 0 and i < activities.len - 2)
+            writer.print(", ", .{}) catch err.wat()
+        else if (i != 0 and i < activities.len - 1)
+            writer.print(" or ", .{}) catch err.wat();
+
+        (switch (activity) {
+            .Rest => writer.print("wait", .{}),
+            .Attack => |d| writer.print("attack {}", .{d}),
+            .Move => |d| writer.print("go {}", .{d}),
+            else => unreachable,
+        }) catch err.wat();
+    }
 }

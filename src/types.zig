@@ -175,6 +175,25 @@ pub const Direction = enum { // {{{
     pub fn turnright(self: *const Self) Self {
         return self.turnleft().opposite();
     }
+
+    pub fn format(self: Self, comptime f: []const u8, _: fmt.FormatOptions, writer: anytype) !void {
+        if (comptime !mem.eql(u8, f, "")) {
+            @compileError("Unknown format string: '" ++ f ++ "'");
+        }
+
+        const s = switch (self) {
+            .North => "north",
+            .South => "south",
+            .East => "east",
+            .West => "west",
+            .NorthEast => "north-east",
+            .NorthWest => "north-west",
+            .SouthEast => "south-east",
+            .SouthWest => "south-west",
+        };
+
+        try writer.writeAll(s);
+    }
 }; // }}}
 
 pub const Coord = struct { // {{{
@@ -3672,12 +3691,6 @@ pub const Ring = struct {
     effect: fn (*Mob, PatternChecker.State) void,
 
     activated: bool = false,
-
-    pub const Hint = union(enum) {
-        Move: Direction,
-        Attack: Direction,
-        None,
-    };
 };
 
 pub const ItemType = enum { Rune, Ring, Consumable, Vial, Projectile, Armor, Cloak, Weapon, Boulder, Prop, Evocable };

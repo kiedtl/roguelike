@@ -354,7 +354,7 @@ pub const PatternChecker = struct { // {{{
     };
 
     turns: usize,
-    init: ?fn (Direction, *State) InitFnErr!Ring.Hint,
+    init: ?fn (Direction, *State) InitFnErr!Activity,
     funcs: [MAX_TURNS]Func,
     //state: [MAX_TURNS]State = undefined,
     state: State = undefined,
@@ -630,11 +630,16 @@ pub const DefaultPinRing = Ring{ // {{{
         // coords[1]: attacked mob's initial coordinate
         .turns = 4,
         .init = struct {
-            pub fn f(d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Ring.Hint {
+            pub fn f(d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
                 if (d.is_diagonal())
                     return error.NeedCardinalDirection;
                 stt.directions[0] = d;
-                return Ring.Hint{ .Attack = d };
+                return Activity{ .Attack = .{
+                    .direction = d,
+                    .who = undefined,
+                    .coord = undefined,
+                    .delay = undefined,
+                } };
             }
         }.f,
         .funcs = [_]PatternChecker.Func{
@@ -703,9 +708,9 @@ pub const DefaultChargeRing = Ring{ // {{{
     .pattern_checker = .{
         .turns = 3,
         .init = struct {
-            pub fn f(d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Ring.Hint {
+            pub fn f(d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
                 stt.directions[0] = d;
-                return Ring.Hint{ .Move = d.opposite() };
+                return Activity{ .Move = d.opposite() };
             }
         }.f,
         .funcs = [_]PatternChecker.Func{

@@ -452,11 +452,13 @@ fn readInput() bool {
 
                             if (ring.pattern_checker.init.?(dir, &ring.pattern_checker.state)) |hint| {
                                 ring.activated = true;
-                                switch (hint) {
-                                    .Move => |d| state.message(.Info, "[$o{s}$.] Move {s}", .{ ring.name, @tagName(d) }),
-                                    .Attack => |d| state.message(.Info, "[$o{s}$.] Attack {s}", .{ ring.name, @tagName(d) }),
-                                    .None => {},
-                                }
+
+                                var strbuf = std.ArrayList(u8).init(state.GPA.allocator());
+                                defer strbuf.deinit();
+                                const writer = strbuf.writer();
+                                writer.print("[$o{s}$.] ", .{ring.name}) catch err.wat();
+                                player.formatActivityList(&.{hint}, writer);
+                                state.message(.Info, "{s}", .{strbuf.items});
                             } else |derr| {
                                 ring.activated = false;
                                 switch (derr) {
