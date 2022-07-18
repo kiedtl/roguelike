@@ -475,13 +475,25 @@ pub const CremationRing = Ring{ // {{{
     .name = "cremation",
     .pattern_checker = .{
         .turns = 4,
+        .init = struct {
+            pub fn f(d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+                if (d.is_diagonal())
+                    return error.NeedCardinalDirection;
+                stt.directions[0] = d;
+                return Activity{ .Attack = .{
+                    .direction = d,
+                    .who = undefined,
+                    .coord = undefined,
+                    .delay = undefined,
+                } };
+            }
+        }.f,
         .funcs = [_]PatternChecker.Func{
             struct {
-                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
-                    const cur = mob.activities.current().?;
+                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
                     const r = cur == .Attack and
-                        !cur.Attack.direction.is_diagonal();
-                    if (r) {
+                        cur.Attack.direction == stt.directions[0].?;
+                    if (r and !dry) {
                         stt.coords[0] = cur.Attack.coord;
                         stt.coords[1] = mob.coord;
                     }
@@ -489,41 +501,44 @@ pub const CremationRing = Ring{ // {{{
                 }
             }.f,
             struct {
-                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
-                    const cur = mob.activities.current().?;
-                    const r = cur == .Move and
-                        cur.Move.is_diagonal() and
-                        mob.coord.distance(stt.coords[0].?) == 1 and
-                        !mob.coord.eq(stt.coords[1].?);
-                    if (r) {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    if (cur != .Move)
+                        return false;
+                    const new_coord = if (dry) mob.coord.move(cur.Move, state.mapgeometry).? else mob.coord;
+                    const r = cur.Move.is_diagonal() and
+                        new_coord.distance(stt.coords[0].?) == 1 and
+                        !new_coord.eq(stt.coords[1].?);
+                    if (r and !dry) {
                         stt.coords[2] = mob.coord;
                     }
                     return r;
                 }
             }.f,
             struct {
-                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
-                    const cur = mob.activities.current().?;
-                    const r = cur == .Move and
-                        cur.Move.is_diagonal() and
-                        mob.coord.distance(stt.coords[0].?) == 1 and
-                        !mob.coord.eq(stt.coords[1].?) and
-                        !mob.coord.eq(stt.coords[2].?);
-                    if (r) {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    if (cur != .Move)
+                        return false;
+                    const new_coord = if (dry) mob.coord.move(cur.Move, state.mapgeometry).? else mob.coord;
+                    const r = cur.Move.is_diagonal() and
+                        new_coord.distance(stt.coords[0].?) == 1 and
+                        !new_coord.eq(stt.coords[1].?) and
+                        !new_coord.eq(stt.coords[2].?);
+                    if (r and !dry) {
                         stt.coords[3] = mob.coord;
                     }
                     return r;
                 }
             }.f,
             struct {
-                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
-                    const cur = mob.activities.current().?;
-                    const r = cur == .Move and
-                        cur.Move.is_diagonal() and
-                        mob.coord.distance(stt.coords[0].?) == 1 and
-                        !mob.coord.eq(stt.coords[1].?) and
-                        !mob.coord.eq(stt.coords[2].?) and
-                        !mob.coord.eq(stt.coords[3].?);
+                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    if (cur != .Move)
+                        return false;
+                    const new_coord = if (dry) mob.coord.move(cur.Move, state.mapgeometry).? else mob.coord;
+                    const r = cur.Move.is_diagonal() and
+                        new_coord.distance(stt.coords[0].?) == 1 and
+                        !new_coord.eq(stt.coords[1].?) and
+                        !new_coord.eq(stt.coords[2].?) and
+                        !new_coord.eq(stt.coords[3].?);
                     return r;
                 }
             }.f,
@@ -541,7 +556,10 @@ pub const CremationRing = Ring{ // {{{
             for (&DIRECTIONS) |d|
                 if (self.coord.move(d, state.mapgeometry)) |neighbor| {
                     fire.setTileOnFire(neighbor, null);
-                    // TODO: fire vuln
+                    if (state.dungeon.at(neighbor).mob) |mob| {
+                        // Deliberately make both friend and foe flammable
+                        mob.addStatus(.Flammable, 0, .{ .Tmp = 20 });
+                    }
                 };
         }
     }.f,

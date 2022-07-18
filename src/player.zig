@@ -743,15 +743,15 @@ pub fn getRingHints(ring: *Ring) void {
 
 pub fn formatActivityList(activities: []const Activity, writer: anytype) void {
     for (activities) |activity, i| {
-        if (i != 0 and i < activities.len - 2)
+        if (i != 0 and i < activities.len - 1)
             writer.print(", ", .{}) catch err.wat()
-        else if (i != 0 and i < activities.len - 1)
-            writer.print(" or ", .{}) catch err.wat();
+        else if (i != 0 and i == activities.len - 1)
+            writer.print(", or ", .{}) catch err.wat();
 
         (switch (activity) {
             .Rest => writer.print("wait", .{}),
-            .Attack => |d| writer.print("attack {}", .{d}),
-            .Move => |d| writer.print("go {}", .{d}),
+            .Attack => |d| writer.print("attack $b{}$.", .{d.direction}),
+            .Move => |d| writer.print("go $b{}$.", .{d}),
             else => unreachable,
         }) catch err.wat();
     }

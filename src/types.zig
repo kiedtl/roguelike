@@ -176,12 +176,8 @@ pub const Direction = enum { // {{{
         return self.turnleft().opposite();
     }
 
-    pub fn format(self: Self, comptime f: []const u8, _: fmt.FormatOptions, writer: anytype) !void {
-        if (comptime !mem.eql(u8, f, "")) {
-            @compileError("Unknown format string: '" ++ f ++ "'");
-        }
-
-        const s = switch (self) {
+    pub fn name(self: Self) []const u8 {
+        return switch (self) {
             .North => "north",
             .South => "south",
             .East => "east",
@@ -191,8 +187,21 @@ pub const Direction = enum { // {{{
             .SouthEast => "south-east",
             .SouthWest => "south-west",
         };
+    }
 
-        try writer.writeAll(s);
+    pub fn fromStr(str: []const u8) !Self {
+        return for (&DIRECTIONS) |d| {
+            if (mem.eql(u8, str, d.name()))
+                break d;
+        } else error.NoSuchDirection;
+    }
+
+    pub fn format(self: Self, comptime f: []const u8, _: fmt.FormatOptions, writer: anytype) !void {
+        if (comptime !mem.eql(u8, f, "")) {
+            @compileError("Unknown format string: '" ++ f ++ "'");
+        }
+
+        try writer.writeAll(self.name());
     }
 }; // }}}
 

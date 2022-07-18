@@ -27,6 +27,7 @@ const sentry = @import("sentry.zig");
 const state = @import("state.zig");
 const err = @import("err.zig");
 
+const Direction = types.Direction;
 const Coord = types.Coord;
 const Rect = types.Rect;
 const Tile = types.Tile;
@@ -438,17 +439,11 @@ fn readInput() bool {
                     if (player.getRingByIndex(ev.ch - '0')) |ring| {
                         state.message(.Info, "Activated ring $o{s}$....", .{ring.name});
 
-                        if (display.drawChoicePrompt("Choose a direction", .{}, &.{
-                            "North",
-                            "South",
-                            "East",
-                            "West",
-                            "Norteast",
-                            "Northwest",
-                            "Southeast",
-                            "Southwest",
-                        })) |dir_i| {
-                            const dir = DIRECTIONS[dir_i];
+                        const directions = [_][]const u8{
+                            "north", "south", "east", "west", "north-east", "north-west", "south-east", "south-west",
+                        };
+                        if (display.drawChoicePrompt("Choose a direction", .{}, &directions)) |dir_i| {
+                            const dir = Direction.fromStr(directions[dir_i]) catch err.wat();
 
                             if (ring.pattern_checker.init.?(dir, &ring.pattern_checker.state)) |hint| {
                                 ring.activated = true;
