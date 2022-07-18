@@ -47,6 +47,7 @@ const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
 const LinkedList = @import("list.zig").LinkedList;
+const StackBuffer = @import("buffer.zig").StackBuffer;
 
 // Items to be dropped into rooms for the player's use.
 //
@@ -406,41 +407,52 @@ pub const LightningRing = Ring{ // {{{
         // directions[0] is the attacked direction.
         // directions[1] is the first move away from the enemy.
         .turns = 3,
+        .init = struct {
+            pub fn f(d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+                if (d.is_diagonal())
+                    return error.NeedCardinalDirection;
+                stt.directions[0] = d;
+                return Activity{ .Attack = .{
+                    .direction = d,
+                    .who = undefined,
+                    .coord = undefined,
+                    .delay = undefined,
+                } };
+            }
+        }.f,
         .funcs = [_]PatternChecker.Func{
             struct {
-                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
-                    const cur = mob.activities.current().?;
+                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
                     const r = cur == .Attack and
-                        !cur.Attack.direction.is_diagonal();
-                    if (r) {
+                        cur.Attack.direction == stt.directions[0].?;
+                    if (r and !dry) {
                         stt.mobs[0] = cur.Attack.who;
-                        stt.directions[0] = cur.Attack.direction;
                         stt.coords[0] = cur.Attack.coord;
                     }
                     return r;
                 }
             }.f,
             struct {
-                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
-                    const cur = mob.activities.current().?;
+                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
                     const r = cur == .Move and
                         !cur.Move.is_diagonal() and
                         cur.Move == stt.directions[0].?.opposite();
-                    if (r) {
+                    if (r and !dry) {
                         stt.directions[1] = cur.Move;
                     }
                     return r;
                 }
             }.f,
             struct {
-                pub fn f(mob: *Mob, stt: *PatternChecker.State) bool {
-                    const cur = mob.activities.current().?;
-                    const r = cur == .Move and
-                        !cur.Move.is_diagonal() and
+                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    if (cur != .Move)
+                        return false;
+                    const new_coord = if (dry) mob.coord.move(cur.Move, state.mapgeometry).? else mob.coord;
+                    const r = !cur.Move.is_diagonal() and
                         (cur.Move == stt.directions[1].?.turnleft() or
                         cur.Move == stt.directions[1].?.turnright()) and
-                        mob.coord.distance(stt.coords[0].?) == 2 and
-                        mob.coord.distance(stt.mobs[0].?.coord) == 1; // he's still there?
+                        new_coord.distance(stt.coords[0].?) == 2 and
+                        new_coord.distance(stt.mobs[0].?.coord) == 1; // he's still there?
                     return r;
                 }
             }.f,
@@ -454,8 +466,14 @@ pub const LightningRing = Ring{ // {{{
         },
     },
     .effect = struct {
-        pub fn f(self: *Mob, stt: PatternChecker.State) void {
-            _ = stt;
+        pub fn f(self: *Mob, _: PatternChecker.State) void {
+            var anim_buf = StackBuffer(Coord, 4).init(null);
+            for (&DIAGONAL_DIRECTIONS) |d|
+                if (self.coord.move(d, state.mapgeometry)) |c|
+                    anim_buf.append(c) catch err.wat();
+
+            display.Animation.blink(anim_buf.constSlice(), '*', display.Animation.ELEC_LINE_FG, .{}).apply();
+
             for (&DIAGONAL_DIRECTIONS) |d|
                 if (self.coord.move(d, state.mapgeometry)) |neighbor| {
                     if (state.dungeon.at(neighbor).mob) |target| {

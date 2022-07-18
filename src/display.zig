@@ -2264,7 +2264,7 @@ pub fn drawItemChoicePrompt(comptime fmt: []const u8, args: anytype, items: []co
 
 pub const Animation = union(enum) {
     BlinkChar: struct {
-        coord: Coord,
+        coords: []const Coord,
         char: u32,
         fg: ?u32 = null,
         delay: usize = 170,
@@ -2301,12 +2301,12 @@ pub const Animation = union(enum) {
     pub const ELEC_LINE_BG = 0x8fdfff;
     pub const ELEC_LINE_MIX = 0.02;
 
-    pub fn blink(coord: Coord, char: u32, fg: ?u32, opts: struct {
+    pub fn blink(coords: []const Coord, char: u32, fg: ?u32, opts: struct {
         repeat: usize = 1,
         delay: usize = 170,
     }) Animation {
         return Animation{ .BlinkChar = .{
-            .coord = coord,
+            .coords = coords,
             .char = char,
             .fg = fg,
             .repeat = opts.repeat,
@@ -2322,17 +2322,34 @@ pub const Animation = union(enum) {
         state.player.tickFOV();
 
         switch (self) {
-            .BlinkChar => |anim| if (state.player.cansee(anim.coord)) {
-                const dx = @intCast(isize, anim.coord.x) + mapwin.startx;
-                const dy = @intCast(isize, anim.coord.y) + mapwin.starty;
-                const old = termbox.oldCell(dx, dy);
+            .BlinkChar => |anim| {
+                assert(anim.coords.len < 32); // XXX: increase if necessary
+                var old_cells = StackBuffer(termbox.tb_cell, 32).init(null);
+                for (anim.coords) |coord| {
+                    const dx = @intCast(isize, coord.x) + mapwin.startx;
+                    const dy = @intCast(isize, coord.y) + mapwin.starty;
+                    old_cells.append(termbox.oldCell(dx, dy)) catch err.wat();
+                }
 
                 var ctr: usize = anim.repeat;
                 while (ctr > 0) : (ctr -= 1) {
-                    termbox.tb_change_cell(dx, dy, anim.char, anim.fg orelse old.fg, colors.BG);
+                    for (anim.coords) |coord, i| if (state.player.cansee(coord)) {
+                        const dx = @intCast(isize, coord.x) + mapwin.startx;
+                        const dy = @intCast(isize, coord.y) + mapwin.starty;
+                        const old = old_cells.constSlice()[i];
+                        termbox.tb_change_cell(dx, dy, anim.char, anim.fg orelse old.fg, colors.BG);
+                    };
+
                     termbox.tb_present();
                     std.time.sleep(anim.delay * 1_000_000);
-                    termbox.tb_change_cell(dx, dy, old.ch, old.fg, old.bg);
+
+                    for (anim.coords) |coord, i| if (state.player.cansee(coord)) {
+                        const dx = @intCast(isize, coord.x) + mapwin.startx;
+                        const dy = @intCast(isize, coord.y) + mapwin.starty;
+                        const old = old_cells.constSlice()[i];
+                        termbox.tb_change_cell(dx, dy, old.ch, old.fg, old.bg);
+                    };
+
                     if (ctr > 0) {
                         termbox.tb_present();
                         std.time.sleep(anim.delay * 1_000_000);
