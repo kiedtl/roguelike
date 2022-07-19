@@ -1363,7 +1363,7 @@ pub const EmberlingTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .max_HP = 4,
+        .max_HP = 3,
         .memory_duration = 3,
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = RESIST_IMMUNE },
         .stats = .{ .Willpower = 1, .Evade = 10, .Speed = 60, .Vision = 4 },
@@ -1411,7 +1411,7 @@ pub const SparklingTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .max_HP = 4,
+        .max_HP = 3,
         .memory_duration = 3,
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rElec = RESIST_IMMUNE },
         .stats = .{ .Willpower = 1, .Evade = 10, .Speed = 100, .Vision = 4 },
