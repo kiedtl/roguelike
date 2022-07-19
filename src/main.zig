@@ -438,13 +438,8 @@ fn readInput() bool {
                         ring.pattern_checker.reset();
                     }
                     if (player.getRingByIndex(ev.ch - '0')) |ring| {
-                        state.message(.Info, "Activated ring $o{s}$....", .{ring.name});
-
-                        const directions = [_][]const u8{
-                            "north", "south", "east", "west", "north-east", "north-west", "south-east", "south-west",
-                        };
-                        if (display.drawChoicePrompt("Choose a direction", .{}, &directions)) |dir_i| {
-                            const dir = Direction.fromStr(directions[dir_i]) catch err.wat();
+                        if (display.chooseDirection()) |dir| {
+                            state.message(.Info, "Activated ring $o{s}$....", .{ring.name});
 
                             if (ring.pattern_checker.init.?(dir, &ring.pattern_checker.state)) |hint| {
                                 ring.activated = true;

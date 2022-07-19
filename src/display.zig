@@ -1586,6 +1586,81 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
     }
 }
 
+pub fn chooseDirection() ?Direction {
+    const mainw = dimensions(.Main);
+
+    // TODO: do some tests and figure out what's the practical limit to memory
+    // usage, and reduce the buffer's size to that.
+    var membuf: [65535]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+
+    const moblist = state.createMobList(false, true, state.player.coord.z, fba.allocator());
+
+    var direction: Direction = .North;
+
+    while (true) {
+        drawMap(moblist.items, mainw.startx, mainw.endx, mainw.starty, mainw.endy);
+
+        const maybe_coord = state.player.coord.move(direction, state.mapgeometry);
+
+        if (maybe_coord) |coord| {
+            const display_x = mainw.startx + @intCast(isize, coord.x);
+            const display_y = mainw.starty + @intCast(isize, coord.y);
+            const char: u21 = switch (direction) {
+                .North => '↑',
+                .South => '↓',
+                .East => '→',
+                .West => '←',
+                .NorthEast => '↗',
+                .NorthWest => '↖',
+                .SouthEast => '↘',
+                .SouthWest => '↙',
+            };
+            termbox.tb_change_cell(display_x, display_y, char, colors.LIGHT_CONCRETE, colors.BG);
+        }
+
+        termbox.tb_present();
+
+        drawModalText(colors.CONCRETE, "direction: {}", .{direction});
+
+        var ev: termbox.tb_event = undefined;
+        const t = termbox.tb_poll_event(&ev);
+
+        if (t == -1) @panic("Fatal termbox error");
+
+        if (t == termbox.TB_EVENT_KEY) {
+            if (ev.key != 0) {
+                switch (ev.key) {
+                    termbox.TB_KEY_CTRL_C,
+                    termbox.TB_KEY_CTRL_G,
+                    => return null,
+                    termbox.TB_KEY_ENTER => {
+                        if (maybe_coord == null) {
+                            //drawAlert("Invalid coord!", .{});
+                            drawModalText(0xffaaaa, "Invalid direction!", .{});
+                        } else {
+                            return direction;
+                        }
+                    },
+                    else => continue,
+                }
+            } else if (ev.ch != 0) {
+                switch (ev.ch) {
+                    'a', 'h' => direction = .West,
+                    'x', 'j' => direction = .South,
+                    'w', 'k' => direction = .North,
+                    'd', 'l' => direction = .East,
+                    'q', 'y' => direction = .NorthWest,
+                    'e', 'u' => direction = .NorthEast,
+                    'z', 'b' => direction = .SouthWest,
+                    'c', 'n' => direction = .SouthEast,
+                    else => {},
+                }
+            } else unreachable;
+        }
+    }
+}
+
 // Examine mode {{{
 pub const ExamineTileFocus = enum { Item, Surface, Mob };
 
@@ -2096,6 +2171,26 @@ pub fn drawInventoryScreen() bool {
             } else unreachable;
         }
     }
+}
+
+pub fn drawModalText(color: u32, comptime fmt: []const u8, args: anytype) void {
+    const wind = dimensions(.Main);
+
+    var buf: [65535]u8 = undefined;
+    var fbs = std.io.fixedBufferStream(&buf);
+    std.fmt.format(fbs.writer(), fmt, args) catch err.bug("format error!", .{});
+    const str = fbs.getWritten();
+
+    assert(str.len < WIDTH - 4);
+
+    const y = if (state.player.coord.y > (HEIGHT / 2) * 2) wind.starty + 2 else wind.endy - 2;
+    const x = 1;
+
+    termbox.tb_change_cell(x, y, '█', color, colors.BG);
+    _ = _drawStr(x + 1, y, wind.endx, " {s} ", .{str}, .{ .bg = colors.percentageOf(color, 30) });
+    termbox.tb_change_cell(x + @intCast(isize, str.len) + 3, y, '█', color, colors.BG);
+
+    termbox.tb_present();
 }
 
 pub fn drawAlert(comptime fmt: []const u8, args: anytype) void {
