@@ -247,7 +247,7 @@ pub const DefenderTemplate = MobTemplate{
             },
         },
 
-        .max_HP = 10,
+        .max_HP = 8,
         .memory_duration = 4,
         .stats = .{ .Willpower = 4, .Evade = 10, .Missile = 90 },
     },
