@@ -1404,9 +1404,9 @@ pub const SparklingTemplate = MobTemplate{
         .life_type = .Construct,
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 7, .spell = &spells.BOLT_BLINKBOLT, .power = 2 },
+            .{ .MP_cost = 14, .spell = &spells.BOLT_BLINKBOLT, .power = 2 },
         },
-        .max_MP = 7,
+        .max_MP = 14,
 
         .blood = null,
         .corpse = .None,
@@ -1414,7 +1414,7 @@ pub const SparklingTemplate = MobTemplate{
         .max_HP = 4,
         .memory_duration = 3,
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rElec = RESIST_IMMUNE },
-        .stats = .{ .Willpower = 1, .Evade = 10, .Speed = 60, .Vision = 4 },
+        .stats = .{ .Willpower = 1, .Evade = 10, .Speed = 100, .Vision = 4 },
     },
     // XXX: Sparklings are never placed alone, this determines number of
     // summoned sparklings from CAST_CREATE_SPARKLING
