@@ -97,7 +97,7 @@ pub fn tickFire(level: usize) void {
             var newfire = oldfire;
 
             // Set mob on fire
-            if (oldfire > 3 and rng.percent(oldfire * 10)) {
+            if (oldfire > 3) {
                 if (state.dungeon.at(coord).mob) |mob| {
                     if (mob.isUnderStatus(.Fire) == null)
                         mob.addStatus(.Fire, 0, .{ .Tmp = math.min(oldfire, 10) });
