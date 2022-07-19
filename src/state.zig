@@ -82,6 +82,10 @@ pub var layout: [LEVELS][HEIGHT][WIDTH]Layout = undefined;
 pub var player: *Mob = undefined;
 pub var state: GameState = .Game;
 
+pub fn mapRect(level: usize) Rect {
+    return Rect{ .start = Coord.new2(level, 0, 0), .width = WIDTH, .height = HEIGHT };
+}
+
 // zig fmt: off
 // field upgr: whether to grant an upgrade on this floor.
 pub const levelinfo = [LEVELS]struct {

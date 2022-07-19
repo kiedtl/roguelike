@@ -394,11 +394,13 @@ fn _add_player(coord: Coord, alloc: mem.Allocator) void {
     const lring = items.createItem(Ring, items.LightningRing);
     const ering = items.createItem(Ring, items.ExterminationRing);
     const cring = items.createItem(Ring, items.CremationRing);
+    const dring = items.createItem(Ring, items.DamnationRing);
 
     state.player = mobs.placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
     state.player.inventory.equipment(.Ring1).* = Item{ .Ring = lring };
     state.player.inventory.equipment(.Ring2).* = Item{ .Ring = ering };
     state.player.inventory.equipment(.Ring3).* = Item{ .Ring = cring };
+    state.player.inventory.equipment(.Ring4).* = Item{ .Ring = dring };
 
     state.player.prisoner_status = Prisoner{ .of = .Necromancer };
 

@@ -35,6 +35,7 @@ const Mob = types.Mob;
 const Damage = types.Damage;
 const Stat = types.Stat;
 const Spatter = types.Spatter;
+const Rect = types.Rect;
 const Status = types.Status;
 const Machine = types.Machine;
 const Direction = types.Direction;
@@ -46,6 +47,8 @@ const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
+const Generator = @import("generators.zig").Generator;
+const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const LinkedList = @import("list.zig").LinkedList;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
@@ -355,7 +358,7 @@ pub const PatternChecker = struct { // {{{
     };
 
     turns: usize,
-    init: ?fn (Direction, *State) InitFnErr!Activity,
+    init: ?fn (*Mob, Direction, *State) InitFnErr!Activity,
     funcs: [MAX_TURNS]Func,
     //state: [MAX_TURNS]State = undefined,
     state: State = undefined,
@@ -363,6 +366,8 @@ pub const PatternChecker = struct { // {{{
 
     pub const InitFnErr = error{
         NeedCardinalDirection,
+        NeedOppositeWalkableTile,
+        NeedOppositeTileNearWalls,
     };
 
     pub fn reset(self: *PatternChecker) void {
@@ -408,7 +413,7 @@ pub const LightningRing = Ring{ // {{{
         // directions[1] is the first move away from the enemy.
         .turns = 3,
         .init = struct {
-            pub fn f(d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+            pub fn f(_: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
                 if (d.is_diagonal())
                     return error.NeedCardinalDirection;
                 stt.directions[0] = d;
@@ -494,7 +499,7 @@ pub const CremationRing = Ring{ // {{{
     .pattern_checker = .{
         .turns = 4,
         .init = struct {
-            pub fn f(d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+            pub fn f(_: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
                 if (d.is_diagonal())
                     return error.NeedCardinalDirection;
                 stt.directions[0] = d;
@@ -588,7 +593,7 @@ pub const ExterminationRing = Ring{ // {{{
     .pattern_checker = .{
         .turns = 3,
         .init = struct {
-            pub fn f(d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+            pub fn f(_: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
                 if (d.is_diagonal())
                     return error.NeedCardinalDirection;
                 stt.directions[0] = d;
@@ -666,6 +671,73 @@ pub const ExterminationRing = Ring{ // {{{
     }.f,
 }; // }}}
 
+pub const DamnationRing = Ring{ // {{{
+    .name = "damnation",
+    .pattern_checker = .{
+        .turns = 3,
+        .init = struct {
+            pub fn f(mob: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+                if (mob.coord.move(d.opposite(), state.mapgeometry)) |nextcoord| {
+                    if (!state.is_walkable(nextcoord, .{ .mob = mob })) {
+                        return error.NeedOppositeWalkableTile;
+                    }
+                    if (state.dungeon.neighboringWalls(nextcoord, true) == 0) {
+                        return error.NeedOppositeTileNearWalls;
+                    }
+                } else {
+                    return error.NeedOppositeWalkableTile;
+                }
+
+                stt.directions[0] = d;
+                return Activity{ .Move = d.opposite() };
+            }
+        }.f,
+        .funcs = [_]PatternChecker.Func{
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    if (cur != .Move)
+                        return false;
+                    const new_coord = if (dry) mob.coord.move(cur.Move, state.mapgeometry).? else mob.coord;
+                    const r = cur.Move == stt.directions[0].?.opposite() and
+                        state.dungeon.neighboringWalls(new_coord, false) > 0;
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(_: *Mob, _: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    return cur == .Rest;
+                }
+            }.f,
+            struct {
+                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    const r = cur == .Attack and
+                        cur.Attack.direction == stt.directions[0].?;
+                    return r;
+                }
+            }.f,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        },
+    },
+    .effect = struct {
+        pub fn f(self: *Mob, _: PatternChecker.State) void {
+            var gen = Generator(Rect.rectIter).init(state.mapRect(self.coord.z));
+            while (gen.next()) |coord| if (self.coord.distance(coord) == 1) {
+                if (state.dungeon.at(coord).mob) |othermob| {
+                    if (othermob.isHostileTo(self)) { // damnation doesn't care about is_combative
+                        explosions.fireBurst(coord, 1);
+                    }
+                }
+            };
+        }
+    }.f,
+}; // }}}
+
 pub const DefaultPinRing = Ring{ // {{{
     .name = "pin foe",
     .pattern_checker = .{
@@ -675,7 +747,7 @@ pub const DefaultPinRing = Ring{ // {{{
         // coords[1]: attacked mob's initial coordinate
         .turns = 4,
         .init = struct {
-            pub fn f(d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+            pub fn f(_: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
                 if (d.is_diagonal())
                     return error.NeedCardinalDirection;
                 stt.directions[0] = d;
@@ -753,7 +825,7 @@ pub const DefaultChargeRing = Ring{ // {{{
     .pattern_checker = .{
         .turns = 3,
         .init = struct {
-            pub fn f(d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+            pub fn f(_: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
                 stt.directions[0] = d;
                 return Activity{ .Move = d.opposite() };
             }
@@ -815,7 +887,7 @@ pub const DefaultLungeRing = Ring{ // {{{
     .pattern_checker = .{
         .turns = 2,
         .init = struct {
-            pub fn f(d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+            pub fn f(_: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
                 stt.directions[0] = d;
                 return .Rest;
             }
@@ -875,7 +947,7 @@ pub const DefaultCounterattackRing = Ring{ // {{{
         // coords[1]: attacked mob's initial coordinate
         .turns = 4,
         .init = struct {
-            pub fn f(d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+            pub fn f(_: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
                 if (d.is_diagonal())
                     return error.NeedCardinalDirection;
                 stt.directions[0] = d;

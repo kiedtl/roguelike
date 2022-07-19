@@ -532,7 +532,7 @@ pub const Rect = struct {
 // Tests that rectIter visits each coordinate exactly once.
 test "rectIter" {
     const height = 100;
-    const width = 100;
+    const width = 70;
 
     var matrix = [_][width]usize{[_]usize{0} ** width} ** height;
     const matrix_rect = Rect{ .start = Coord.new(0, 0), .width = width, .height = height };

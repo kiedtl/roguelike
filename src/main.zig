@@ -441,7 +441,7 @@ fn readInput() bool {
                         if (display.chooseDirection()) |dir| {
                             state.message(.Info, "Activated ring $o{s}$....", .{ring.name});
 
-                            if (ring.pattern_checker.init.?(dir, &ring.pattern_checker.state)) |hint| {
+                            if (ring.pattern_checker.init.?(state.player, dir, &ring.pattern_checker.state)) |hint| {
                                 ring.activated = true;
 
                                 var strbuf = std.ArrayList(u8).init(state.GPA.allocator());
@@ -453,7 +453,10 @@ fn readInput() bool {
                             } else |derr| {
                                 ring.activated = false;
                                 switch (derr) {
-                                    error.NeedCardinalDirection => state.message(.Info, "Error: need a cardinal direction", .{}),
+                                    error.NeedCardinalDirection => state.message(.Info, "[$o{s}$.] error: need a cardinal direction", .{ring.name}),
+                                    error.NeedOppositeWalkableTile => state.message(.Info, "[$o{s}$.] error: needs to have walkable space in the opposite direction", .{ring.name}),
+
+                                    error.NeedOppositeTileNearWalls => state.message(.Info, "[$o{s}$.] error: needs to have walkable space near walls in the opposite direction", .{ring.name}),
                                 }
                             }
                         }
