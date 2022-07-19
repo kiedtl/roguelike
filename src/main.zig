@@ -435,6 +435,7 @@ fn readInput() bool {
                 '0'...'9' => b: {
                     if (player.getActiveRing()) |ring| {
                         ring.activated = false;
+                        ring.pattern_checker.reset();
                     }
                     if (player.getRingByIndex(ev.ch - '0')) |ring| {
                         state.message(.Info, "Activated ring $o{s}$....", .{ring.name});

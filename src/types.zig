@@ -3200,41 +3200,6 @@ pub const Mob = struct { // {{{
                 }
             }
         }.f);
-
-        // Lunge pattern
-        if (activities[1] == .Rest and activities[0] == .Move) {
-            if (self.coord.move(activities[0].Move, state.mapgeometry)) |adj_mob_coord| {
-                if (state.dungeon.at(adj_mob_coord).mob) |othermob| {
-                    if (othermob.isHostileTo(self) and othermob.ai.is_combative and
-                        !combat.isAttackStab(self, othermob))
-                    {
-                        if (othermob == state.player) {
-                            state.messageAboutMob(self, self.coord, .Combat, "[BUG]", .{}, "lunges at you!", .{});
-                        } else {
-                            state.messageAboutMob(self, self.coord, .Combat, "lunge at the {s}!", .{othermob.displayName()}, "lunges at the {s}!", .{othermob.displayName()});
-                        }
-
-                        self.fight(othermob, .{ .free_attack = true, .auto_hit = true, .disallow_stab = true, .damage_bonus = 200, .loudness = .Loud });
-                        return;
-                    }
-                }
-            }
-        }
-
-        // Counterattack pattern
-        if (activities[4] == .Move and
-            activities[3] == .Attack and
-            activities[2] == .Move and
-            activities[1] == .Attack and
-            activities[0] == .Move and
-            activities[4].Move == activities[2].Move and
-            activities[4].Move == activities[0].Move and
-            activities[3].Attack.direction == activities[1].Attack.direction and
-            activities[3].Attack.direction == activities[4].Move.opposite())
-        {
-            self.addStatus(.Fast, 0, .{ .Tmp = 10 });
-            return;
-        }
     }
 
     pub fn forEachRing(self: *Mob, func: fn (*Mob, *Ring) void) void {
