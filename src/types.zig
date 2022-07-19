@@ -5,7 +5,10 @@ const meta = std.meta;
 const fmt = std.fmt;
 const assert = std.debug.assert;
 const enums = std.enums;
+const testing = std.testing;
 
+const Generator = @import("generators.zig").Generator;
+const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const LinkedList = @import("list.zig").LinkedList;
 const RingBuffer = @import("ringbuffer.zig").RingBuffer;
 const StackBuffer = @import("buffer.zig").StackBuffer;
@@ -512,7 +515,37 @@ pub const Rect = struct {
         const y = rng.range(usize, self.start.y, self.end().y - 1);
         return Coord.new2(self.start.z, x, y);
     }
+
+    pub fn rectIter(ctx: *GeneratorCtx(Coord), rect: Rect) void {
+        var y: usize = rect.start.y;
+        while (y < rect.end().y) : (y += 1) {
+            var x: usize = rect.start.x;
+            while (x < rect.end().x) : (x += 1) {
+                ctx.yield(Coord.new2(rect.start.z, x, y));
+            }
+        }
+
+        ctx.finish();
+    }
 };
+
+// Tests that rectIter visits each coordinate exactly once.
+test "rectIter" {
+    const height = 100;
+    const width = 100;
+
+    var matrix = [_][width]usize{[_]usize{0} ** width} ** height;
+    const matrix_rect = Rect{ .start = Coord.new(0, 0), .width = width, .height = height };
+
+    var gen = Generator(Rect.rectIter).init(matrix_rect);
+    while (gen.next()) |coord| {
+        matrix[coord.y][coord.x] += 1;
+    }
+
+    for (matrix) |row| {
+        try testing.expect(mem.allEqual(usize, row[0..], 1));
+    }
+}
 
 pub const Stockpile = struct {
     room: Rect,
