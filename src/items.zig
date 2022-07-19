@@ -734,6 +734,8 @@ pub const DamnationRing = Ring{ // {{{
                     }
                 }
             };
+            if (self == state.player)
+                state.message(.Info, "Fire bursts out of your enemies!", .{});
         }
     }.f,
 }; // }}}
