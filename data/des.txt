@@ -460,3 +460,23 @@ $G    .....            ..$.@$G..   .....   .....
 
 $cEffect:$. Makes all adjacent foes temporarily vulnerable to fire, and creates
 a ring of flames in all adjacent squares.
+
+% damnation
+An ancient talisman, created to enhance the fighting prowess of the
+Necromancer's warriors.
+
+
+$cPattern:$. Move towards a wall, wait, attack in the opposite direction.
+
+
+$G    .$rm$G...   .....
+
+$G    ..$.@$G..   ..$rm$G..
+
+$G    .....   ...$.@$G.    $.<wait>$G    $.<attack any foe>$G
+
+$G    ...$C$~##$.$G   ...$C$~##$.$G
+
+
+$cEffect:$. Makes all adjacent foes temporarily vulnerable to fire, and creates
+a ring of flames in all adjacent squares.
