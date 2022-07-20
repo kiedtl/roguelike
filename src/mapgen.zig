@@ -43,6 +43,7 @@ const ContainerArrayList = types.ContainerArrayList;
 const CoordArrayList = types.CoordArrayList;
 const Material = types.Material;
 const Vial = types.Vial;
+const Squad = types.Squad;
 
 const DIRECTIONS = types.DIRECTIONS;
 const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
@@ -392,18 +393,21 @@ fn placeDoor(coord: Coord, locked: bool) void {
 
 fn _add_player(coord: Coord, alloc: mem.Allocator) void {
     //const lring = items.createItem(Ring, items.LightningRing);
-    const tring = items.createItem(Ring, items.ElectrificationRing);
+    const iring = items.createItem(Ring, items.InsurrectionRing);
     const ering = items.createItem(Ring, items.ExterminationRing);
     const cring = items.createItem(Ring, items.CremationRing);
     const dring = items.createItem(Ring, items.DamnationRing);
 
     state.player = mobs.placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
-    state.player.inventory.equipment(.Ring1).* = Item{ .Ring = tring };
+    state.player.inventory.equipment(.Ring1).* = Item{ .Ring = iring };
     state.player.inventory.equipment(.Ring2).* = Item{ .Ring = ering };
     state.player.inventory.equipment(.Ring3).* = Item{ .Ring = cring };
     state.player.inventory.equipment(.Ring4).* = Item{ .Ring = dring };
 
     state.player.prisoner_status = Prisoner{ .of = .Necromancer };
+
+    state.player.squad = Squad.allocNew();
+    state.player.squad.?.leader = state.player;
 
     //state.player.inventory.pack.append(Item{ .Consumable = &items.ConfusionPotion }) catch err.wat();
 }

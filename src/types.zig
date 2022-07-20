@@ -2702,6 +2702,8 @@ pub const Mob = struct { // {{{
         self.ai.work_area = CoordArrayList.init(alloc);
     }
 
+    // Returns false if there wasn't any nearby walkable spot to put the new
+    // zombie
     pub fn raiseAsUndead(self: *Mob, corpse_coord: Coord) bool {
         var newcoord: ?Coord = corpse_coord;
         if (state.dungeon.at(corpse_coord).mob != null) {
@@ -2725,7 +2727,7 @@ pub const Mob = struct { // {{{
         }
 
         self.is_dead = false;
-        self.init(state.GPA.allocator()); // FIXME: antipattern?
+        self.init(state.GPA.allocator());
 
         self.tile = 'z';
         self.life_type = .Undead;

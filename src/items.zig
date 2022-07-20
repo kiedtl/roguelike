@@ -5,6 +5,7 @@ const meta = std.meta;
 const mem = std.mem;
 const assert = std.debug.assert;
 
+const ai = @import("ai.zig");
 const colors = @import("colors.zig");
 const combat = @import("combat.zig");
 const err = @import("err.zig");
@@ -928,6 +929,112 @@ pub const ElectrificationRing = Ring{ // {{{
                         .kind = .Electric,
                     }, .{ .noun = "Lightning" });
                 } else |_| {};
+        }
+    }.f,
+}; // }}}
+
+pub const InsurrectionRing = Ring{ // {{{
+    .name = "insurrection",
+    .pattern_checker = .{
+        .turns = 5,
+        .init = struct {
+            pub fn f(mob: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+                if (d.is_diagonal())
+                    return error.NeedCardinalDirection;
+
+                stt.directions[0] = d;
+                stt.coords[0] = mob.coord;
+                stt.mobs[0] = try PatternChecker._util_getHostileInDirection(mob, d);
+                stt.coords[1] = stt.mobs[0].?.coord;
+
+                return .Rest;
+            }
+        }.f,
+        .funcs = [_]PatternChecker.Func{
+            struct {
+                pub fn f(_: *Mob, _: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    return cur == .Rest;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    const r = cur == .Move and
+                        (cur.Move == stt.directions[0].?.turnLeftDiagonally() or
+                        cur.Move == stt.directions[0].?.turnRightDiagonally()) and
+                        stt.mobs[0].?.coord.eq(stt.coords[1].?); // Ensure he's still there
+                    if (r and !dry) {
+                        stt.coords[2] = mob.coord;
+                    }
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    if (cur != .Move)
+                        return false;
+                    const new_coord = if (dry) mob.coord.move(cur.Move, state.mapgeometry).? else mob.coord;
+                    const r = new_coord.eq(stt.coords[0].?) and
+                        stt.mobs[0].?.coord.eq(stt.coords[1].?); // Ensure he's still there
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    if (cur != .Move)
+                        return false;
+                    const new_coord = if (dry) mob.coord.move(cur.Move, state.mapgeometry).? else mob.coord;
+                    const r = !new_coord.eq(stt.coords[2].?) and
+                        (cur.Move == stt.directions[0].?.turnLeftDiagonally() or
+                        cur.Move == stt.directions[0].?.turnRightDiagonally()) and
+                        stt.mobs[0].?.coord.eq(stt.coords[1].?); // Ensure he's still there
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    if (cur != .Move)
+                        return false;
+                    const new_coord = if (dry) mob.coord.move(cur.Move, state.mapgeometry).? else mob.coord;
+                    const r = new_coord.eq(stt.coords[0].?) and
+                        stt.mobs[0].?.coord.eq(stt.coords[1].?); // Ensure he's still there
+                    return r;
+                }
+            }.f,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        },
+    },
+    .effect = struct {
+        pub fn f(self: *Mob, stt: PatternChecker.State) void {
+            const lifetime = 14;
+            const max_corpses = 3;
+
+            var corpses_raised: usize = 0;
+            while (utils.getNearestCorpse(self)) |corpse_coord| {
+                const corpse_mob = state.dungeon.at(corpse_coord).surface.?.Corpse;
+                if (corpse_mob.raiseAsUndead(corpse_coord)) {
+                    corpses_raised += 1;
+
+                    corpse_mob.addStatus(.Lifespan, 0, .{ .Tmp = lifetime });
+                    corpse_mob.addStatus(.Blind, 0, .Prm);
+                    corpse_mob.allegiance = .OtherGood;
+                    corpse_mob.squad = state.player.squad.?;
+                    state.player.squad.?.members.append(corpse_mob) catch err.wat();
+                    ai.updateEnemyKnowledge(corpse_mob, stt.mobs[0].?, null);
+                }
+
+                if (corpses_raised > max_corpses)
+                    break;
+            }
+
+            if (corpses_raised > 0) {
+                state.message(.Info, "Nearby corpses rise to defend you!", .{});
+            } else {
+                state.message(.Info, "You feel lonely for a moment.", .{});
+            }
         }
     }.f,
 }; // }}}
