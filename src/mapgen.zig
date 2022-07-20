@@ -392,7 +392,7 @@ fn placeDoor(coord: Coord, locked: bool) void {
 
 fn _add_player(coord: Coord, alloc: mem.Allocator) void {
     //const lring = items.createItem(Ring, items.LightningRing);
-    const tring = items.createItem(Ring, items.TeleportationRing);
+    const tring = items.createItem(Ring, items.ElectrificationRing);
     const ering = items.createItem(Ring, items.ExterminationRing);
     const cring = items.createItem(Ring, items.CremationRing);
     const dring = items.createItem(Ring, items.DamnationRing);

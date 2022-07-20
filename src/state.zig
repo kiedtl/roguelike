@@ -77,7 +77,7 @@ pub var GPA = std.heap.GeneralPurposeAllocator(.{
 }){};
 
 pub const mapgeometry = Coord.new2(LEVELS, WIDTH, HEIGHT);
-pub var dungeon: Dungeon = .{};
+pub var dungeon: *Dungeon = undefined;
 pub var layout: [LEVELS][HEIGHT][WIDTH]Layout = undefined;
 pub var player: *Mob = undefined;
 pub var state: GameState = .Game;

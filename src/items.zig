@@ -371,6 +371,7 @@ pub const PatternChecker = struct { // {{{
         NeedOppositeWalkableTile,
         NeedOppositeTileNearWalls,
         NeedHostileOnTile,
+        NeedOpenSpace,
     };
 
     pub fn reset(self: *PatternChecker) void {
@@ -404,6 +405,14 @@ pub const PatternChecker = struct { // {{{
             self.reset();
             return .Failed;
         }
+    }
+
+    // Utility methods for use in Ring definitions
+    pub fn _util_getHostileInDirection(mob: *Mob, d: Direction) InitFnErr!*Mob {
+        return utils.getHostileInDirection(mob, d) catch |e| switch (e) {
+            error.NoHostileThere => return error.NeedHostileOnTile,
+            error.OutOfMapBounds => unreachable, // Direction chooser should've taken care of this
+        };
     }
 }; // }}}
 
@@ -483,16 +492,13 @@ pub const LightningRing = Ring{ // {{{
             display.Animation.blink(anim_buf.constSlice(), '*', display.Animation.ELEC_LINE_FG, .{}).apply();
 
             for (&DIAGONAL_DIRECTIONS) |d|
-                if (self.coord.move(d, state.mapgeometry)) |neighbor| {
-                    if (state.dungeon.at(neighbor).mob) |target| {
-                        if (!target.isHostileTo(self)) continue;
-                        target.takeDamage(.{
-                            .amount = @intToFloat(f64, 2),
-                            .by_mob = self,
-                            .kind = .Electric,
-                        }, .{ .noun = "Lightning" });
-                    }
-                };
+                if (utils.getHostileInDirection(self, d)) |hostile| {
+                    hostile.takeDamage(.{
+                        .amount = @intToFloat(f64, 2),
+                        .by_mob = self,
+                        .kind = .Electric,
+                    }, .{ .noun = "Lightning" });
+                } else |_| {};
         }
     }.f,
 }; // }}}
@@ -756,13 +762,8 @@ pub const TeleportationRing = Ring{ // {{{
                 if (d.is_diagonal())
                     return error.NeedCardinalDirection;
 
-                const hostile = utils.getHostileInDirection(mob, d) catch |e| switch (e) {
-                    error.NoHostileThere => return error.NeedHostileOnTile,
-                    error.OutOfMapBounds => unreachable, // Direction chooser should've taken care of this
-                };
-
                 stt.directions[0] = d;
-                stt.mobs[0] = hostile;
+                stt.mobs[0] = try PatternChecker._util_getHostileInDirection(mob, d);
 
                 return Activity{ .Attack = .{
                     .direction = d,
@@ -835,6 +836,98 @@ pub const TeleportationRing = Ring{ // {{{
                 .spell = &spells.BOLT_BLINKBOLT,
                 .power = 3,
             });
+        }
+    }.f,
+}; // }}}
+
+pub const ElectrificationRing = Ring{ // {{{
+    .name = "electrification",
+    .pattern_checker = .{
+        .turns = 3,
+        .init = struct {
+            pub fn f(mob: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+                if (d.is_diagonal())
+                    return error.NeedCardinalDirection;
+
+                if (state.dungeon.neighboringWalls(mob.coord, false) > 0)
+                    return error.NeedOpenSpace;
+
+                stt.directions[0] = d;
+                stt.mobs[0] = try PatternChecker._util_getHostileInDirection(mob, d);
+
+                return Activity{ .Attack = .{
+                    .direction = d,
+                    .who = undefined,
+                    .coord = undefined,
+                    .delay = undefined,
+                } };
+            }
+        }.f,
+        .funcs = [_]PatternChecker.Func{
+            struct {
+                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    const r = cur == .Attack and
+                        cur.Attack.direction == stt.directions[0].? and
+                        cur.Attack.who == stt.mobs[0].?;
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    if (cur != .Move or cur.Move.is_diagonal())
+                        return false;
+                    const new_coord = if (dry) mob.coord.move(cur.Move, state.mapgeometry).? else mob.coord;
+                    const side1_coord = new_coord.move(cur.Move.turnright(), state.mapgeometry) orelse return false;
+                    const side2_coord = new_coord.move(cur.Move.turnleft(), state.mapgeometry) orelse return false;
+                    const r = cur.Move == stt.directions[0].?.opposite() and
+                        state.dungeon.at(side1_coord).type == .Wall and
+                        state.dungeon.at(side2_coord).type == .Wall;
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(_: *Mob, _: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    return cur == .Rest;
+                }
+            }.f,
+            struct {
+                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    const r = cur == .Attack and
+                        cur.Attack.who == stt.mobs[0].?;
+                    return r;
+                }
+            }.f,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        },
+    },
+    .effect = struct {
+        pub fn f(self: *Mob, stt: PatternChecker.State) void {
+            const directions = [_]Direction{
+                stt.directions[0].?,
+                stt.directions[0].?.turnLeftDiagonally(),
+                stt.directions[0].?.turnRightDiagonally(),
+            };
+
+            var anim_buf = StackBuffer(Coord, 4).init(null);
+            for (&directions) |d|
+                if (self.coord.move(d, state.mapgeometry)) |c|
+                    anim_buf.append(c) catch err.wat();
+
+            display.Animation.blink(anim_buf.constSlice(), '*', display.Animation.ELEC_LINE_FG, .{}).apply();
+
+            for (&directions) |d|
+                if (utils.getHostileInDirection(self, d)) |hostile| {
+                    hostile.takeDamage(.{
+                        .amount = @intToFloat(f64, 2),
+                        .by_mob = self,
+                        .kind = .Electric,
+                    }, .{ .noun = "Lightning" });
+                } else |_| {};
         }
     }.f,
 }; // }}}

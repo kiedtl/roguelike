@@ -179,6 +179,26 @@ pub const Direction = enum { // {{{
         return self.turnleft().opposite();
     }
 
+    pub fn turnLeftDiagonally(self: *const Self) Self {
+        return switch (self.*) {
+            .North => .NorthWest,
+            .South => .SouthEast,
+            .East => .NorthEast,
+            .West => .SouthWest,
+            else => err.wat(),
+        };
+    }
+
+    pub fn turnRightDiagonally(self: *const Self) Self {
+        return switch (self.*) {
+            .North => .NorthEast,
+            .South => .SouthWest,
+            .East => .SouthEast,
+            .West => .NorthWest,
+            else => err.wat(),
+        };
+    }
+
     pub fn name(self: Self) []const u8 {
         return switch (self) {
             .North => "north",
