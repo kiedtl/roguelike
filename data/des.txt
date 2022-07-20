@@ -501,3 +501,21 @@ $G    .....               .....    .....    ...$.@$G.
 $cEffect:$. Fire a bolt of lightning at an enemy for $b3$. electric damage, then
 teleport yourself to the last tile the bolt touched. (If that tile is
 unwalkable, you won't be teleported).
+
+% electrification
+An ancient talisman, created to enhance the fighting prowess of the
+Necromancer's warriors.
+
+
+$cPattern:$. Attack foe, move one tile backwards into corridor (i.e., with walls
+on the other two sides of your character), wait, attack forwards.
+
+
+$G    $C$~##$.$G.$rm$G...                 $C$~##$.$G$rm$G....
+
+$G    $G$G..$G$.@$rM$G...    $.<attack $GM$.>$G   .$.@$rM$G....    $.<wait>$G    $.<attack $rM$.>$G
+
+$G    $C$~##$.$G.$rm$G...                 $C$~##$.$G$rm$G....
+
+
+$cEffect:$. All foes on your side are zapped with electricity for $b2$. damage.
