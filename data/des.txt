@@ -519,3 +519,22 @@ $G    $C$~##$.$G.$rm$G...                 $C$~##$.$G$rm$G....
 
 
 $cEffect:$. All foes on your side are zapped with electricity for $b2$. damage.
+
+% insurrection
+An ancient talisman, created to enhance the fighting prowess of the
+Necromancer's warriors.
+
+
+$cPattern:$. Wait, then move to the two sides of the foe and back.
+
+
+$G    .....              .$.@$G...    .....    .....    .....
+
+$G    $.@$G$rm$G...    $.<wait>$G    .$rm$G...    $.@$G$rm$G...    .$rm$G...    $.@$G$rm$G...
+
+$G    .....              .....    .....    .$.@$G...    .....
+
+
+$cEffect:$. Three corpses in your LOS wake up and attack the enemy for 14 turns
+before self-destructing. They are blind and won't hunt any other enemy unless
+attacked.
