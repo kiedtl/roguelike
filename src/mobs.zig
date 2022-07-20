@@ -1366,7 +1366,7 @@ pub const EmberlingTemplate = MobTemplate{
         .max_HP = 3,
         .memory_duration = 3,
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = RESIST_IMMUNE },
-        .stats = .{ .Willpower = 1, .Evade = 10, .Speed = 60, .Vision = 4 },
+        .stats = .{ .Willpower = 1, .Evade = 10, .Speed = 60, .Vision = 4, .Melee = 50 },
     },
     // XXX: Emberlings are never placed alone, this determines number of
     // summoned emberlings from CAST_CREATE_EMBERLING
