@@ -25,6 +25,18 @@ const WIDTH = state.WIDTH;
 
 const StackBuffer = buffer.StackBuffer;
 
+pub fn getHostileInDirection(self: *Mob, d: Direction) !*Mob {
+    if (self.coord.move(d, state.mapgeometry)) |neighbor| {
+        if (state.dungeon.at(neighbor).mob) |othermob| {
+            if (othermob.isHostileTo(self) and othermob.ai.is_combative) {
+                return othermob;
+            } else return error.NoHostileThere;
+        } else return error.NoHostileThere;
+    } else {
+        return error.OutOfMapBounds;
+    }
+}
+
 pub fn findFirstNeedlePtr(
     haystack: anytype,
     ctx: anytype,

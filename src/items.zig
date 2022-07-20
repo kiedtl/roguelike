@@ -20,6 +20,8 @@ const surfaces = @import("surfaces.zig");
 const types = @import("types.zig");
 const ringbuffer = @import("ringbuffer.zig");
 const player = @import("player.zig");
+const spells = @import("spells.zig");
+const utils = @import("utils.zig");
 
 const Activity = types.Activity;
 const Coord = types.Coord;
@@ -368,6 +370,7 @@ pub const PatternChecker = struct { // {{{
         NeedCardinalDirection,
         NeedOppositeWalkableTile,
         NeedOppositeTileNearWalls,
+        NeedHostileOnTile,
     };
 
     pub fn reset(self: *PatternChecker) void {
@@ -736,6 +739,102 @@ pub const DamnationRing = Ring{ // {{{
             };
             if (self == state.player)
                 state.message(.Info, "Fire bursts out of your enemies!", .{});
+        }
+    }.f,
+}; // }}}
+
+pub const TeleportationRing = Ring{ // {{{
+    .name = "teleportation",
+    .pattern_checker = .{
+        // mobs[0] is the attacked enemy.
+        // coords[0] is the original coord of the attacked enemy.
+        // directions[0] is the attacked direction.
+        // directions[1] is the first move away from the enemy.
+        .turns = 5,
+        .init = struct {
+            pub fn f(mob: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+                if (d.is_diagonal())
+                    return error.NeedCardinalDirection;
+
+                const hostile = utils.getHostileInDirection(mob, d) catch |e| switch (e) {
+                    error.NoHostileThere => return error.NeedHostileOnTile,
+                    error.OutOfMapBounds => unreachable, // Direction chooser should've taken care of this
+                };
+
+                stt.directions[0] = d;
+                stt.mobs[0] = hostile;
+
+                return Activity{ .Attack = .{
+                    .direction = d,
+                    .who = undefined,
+                    .coord = undefined,
+                    .delay = undefined,
+                } };
+            }
+        }.f,
+        .funcs = [_]PatternChecker.Func{
+            struct {
+                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    const r = cur == .Attack and
+                        cur.Attack.direction == stt.directions[0].? and
+                        cur.Attack.who == stt.mobs[0].?;
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    const r = cur == .Move and
+                        !cur.Move.is_diagonal() and
+                        cur.Move == stt.directions[0].?.opposite();
+                    if (r and !dry) {
+                        stt.directions[1] = cur.Move;
+                    }
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    const r = cur == .Move and
+                        !cur.Move.is_diagonal() and
+                        (cur.Move == stt.directions[1].?.turnleft() or
+                        cur.Move == stt.directions[1].?.turnright());
+                    if (r and !dry) {
+                        stt.directions[2] = cur.Move;
+                    }
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    const r = cur == .Move and
+                        !cur.Move.is_diagonal() and
+                        cur.Move == stt.directions[2].?;
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    const r = cur == .Attack;
+                    if (r and !dry) {
+                        stt.mobs[1] = cur.Attack.who;
+                    }
+                    return r;
+                }
+            }.f,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        },
+    },
+    .effect = struct {
+        pub fn f(self: *Mob, stt: PatternChecker.State) void {
+            spells.BOLT_BLINKBOLT.use(self, self.coord, stt.mobs[1].?.coord, .{
+                .MP_cost = 0,
+                .spell = &spells.BOLT_BLINKBOLT,
+                .power = 3,
+            });
         }
     }.f,
 }; // }}}
