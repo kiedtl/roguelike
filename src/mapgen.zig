@@ -290,6 +290,10 @@ fn choosePoster(level: usize) ?*const Poster {
     return null;
 }
 
+fn chooseRing() Ring {
+    return rng.chooseUnweighted(Ring, &items.RINGS);
+}
+
 // Given a parent and child room, return the direction a corridor between the two
 // would go
 fn getConnectionSide(parent: *const Room, child: *const Room) ?Direction {
@@ -392,17 +396,7 @@ fn placeDoor(coord: Coord, locked: bool) void {
 }
 
 fn _add_player(coord: Coord, alloc: mem.Allocator) void {
-    //const lring = items.createItem(Ring, items.LightningRing);
-    const iring = items.createItem(Ring, items.InsurrectionRing);
-    const ering = items.createItem(Ring, items.ExterminationRing);
-    const cring = items.createItem(Ring, items.CremationRing);
-    const dring = items.createItem(Ring, items.DamnationRing);
-
     state.player = mobs.placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
-    state.player.inventory.equipment(.Ring1).* = Item{ .Ring = iring };
-    state.player.inventory.equipment(.Ring2).* = Item{ .Ring = ering };
-    state.player.inventory.equipment(.Ring3).* = Item{ .Ring = cring };
-    state.player.inventory.equipment(.Ring4).* = Item{ .Ring = dring };
 
     state.player.prisoner_status = Prisoner{ .of = .Necromancer };
 
@@ -594,6 +588,7 @@ fn excavatePrefab(
                 .Loot1,
                 .RareLoot,
                 .Corpse,
+                .Ring,
                 => .Floor,
                 .Water => .Water,
                 .Lava => .Lava,
@@ -673,6 +668,10 @@ fn excavatePrefab(
                         prisoner.prisoner_status = Prisoner{ .of = .Necromancer };
                         prisoner.deinit();
                     }
+                },
+                .Ring => {
+                    const ring = items.createItem(Ring, chooseRing());
+                    state.dungeon.itemsAt(rc).append(.{ .Ring = ring }) catch err.wat();
                 },
                 else => {},
             }
@@ -2935,6 +2934,7 @@ pub const Prefab = struct {
         Loot1,
         RareLoot,
         Corpse,
+        Ring,
         Any,
     };
 
@@ -3302,6 +3302,7 @@ pub const Prefab = struct {
                             '~' => .Water,
                             '≈' => .Lava,
                             '≡' => .Bars,
+                            '=' => .Ring,
                             '?' => .Any,
                             'α'...'δ' => FabTile{ .LevelFeature = @as(usize, c - 'α') },
                             '0'...'9', 'a'...'z' => FabTile{ .Feature = @intCast(u8, c) },

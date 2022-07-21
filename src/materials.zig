@@ -10,6 +10,7 @@ pub const MATERIALS = [_]*const Material{
     &Vangenite,
     &PaintedConcrete,
     &Marble,
+    &Gold,
 };
 
 pub const PaintedConcrete = Material{
@@ -24,6 +25,7 @@ pub const PaintedConcrete = Material{
 };
 
 pub const Marble = Material{
+    .id = "marble",
     .name = "marble",
     .color_fg = 0xcacaca,
     .color_bg = 0xffffff,
@@ -34,7 +36,8 @@ pub const Marble = Material{
 };
 
 pub const Gold = Material{
-    .name = "rust",
+    .id = "gold",
+    .name = "gold",
     .color_fg = colors.percentageOf(colors.GOLD, 40),
     .color_bg = colors.percentageOf(colors.GOLD, 80),
     .color_floor = colors.percentageOf(colors.GOLD, 40),

@@ -142,6 +142,16 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 020, .i = .{ .C = &VelvetCloak } },
 };
 
+pub const RINGS = [_]Ring{
+    LightningRing,
+    CremationRing,
+    ExterminationRing,
+    DamnationRing,
+    TeleportationRing,
+    ElectrificationRing,
+    InsurrectionRing,
+};
+
 pub const Rune = enum {
     Basalt, // Caverns
     Twisted, // Laboratory

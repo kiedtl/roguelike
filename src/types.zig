@@ -1608,6 +1608,8 @@ pub const Mob = struct { // {{{
         pack: PackBuffer = PackBuffer.init(&[_]Item{}),
         equ_slots: [EQU_SLOT_SIZE]?Item = [_]?Item{null} ** EQU_SLOT_SIZE,
 
+        pub const RING_SLOTS = [_]EquSlot{ .Ring1, .Ring2, .Ring3, .Ring4 };
+
         pub const EquSlot = enum(usize) {
             Weapon = 0,
             Backup = 1,
@@ -3769,6 +3771,7 @@ pub const Item = union(ItemType) {
             },
             .Ring => |_| {
                 cell.ch = '*';
+                cell.fg = colors.GOLD;
             },
             .Weapon => |_| {
                 cell.ch = ')';

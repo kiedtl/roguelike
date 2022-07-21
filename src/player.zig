@@ -36,6 +36,7 @@ const MobArrayList = types.MobArrayList;
 const Status = types.Status;
 const Machine = types.Machine;
 const Direction = types.Direction;
+const Inventory = types.Mob.Inventory;
 
 const DIRECTIONS = types.DIRECTIONS;
 const LEVELS = state.LEVELS;
@@ -379,6 +380,31 @@ pub fn grabItem() bool {
                 (item.longName() catch err.wat()).constSlice(),
             });
         },
+        .Ring => |r| {
+            var empty_slot: ?Inventory.EquSlot = for (Inventory.RING_SLOTS) |slot| {
+                if (state.player.inventory.equipment(slot).* == null)
+                    break slot;
+            } else null;
+
+            if (empty_slot == null) {
+                const index = display.drawChoicePrompt(
+                    "Replace what ring with the $b{s}$.?",
+                    .{r.name},
+                    &[Inventory.RING_SLOTS.len][]const u8{
+                        state.player.inventory.equipment(.Ring1).*.?.Ring.name,
+                        state.player.inventory.equipment(.Ring2).*.?.Ring.name,
+                        state.player.inventory.equipment(.Ring3).*.?.Ring.name,
+                        state.player.inventory.equipment(.Ring4).*.?.Ring.name,
+                    },
+                ) orelse return false;
+                empty_slot = Inventory.RING_SLOTS[index];
+            }
+
+            state.player.equipItem(empty_slot.?, item);
+            state.message(.Inventory, "Equipped the {s}.", .{
+                (item.longName() catch err.wat()).constSlice(),
+            });
+        },
         else => {
             state.player.inventory.pack.append(item) catch err.wat();
             state.player.declareAction(.Grab);
@@ -681,9 +707,8 @@ pub fn getRingByIndex(index: usize) ?*Ring {
 
     if (index >= state.default_patterns.len) {
         const rel_index = index - state.default_patterns.len;
-        const slots = [_]Mob.Inventory.EquSlot{ .Ring1, .Ring2, .Ring3, .Ring4 };
-        if (rel_index >= slots.len) return null;
-        return if (state.player.inventory.equipment(slots[rel_index]).*) |r| r.Ring else null;
+        if (rel_index >= Inventory.RING_SLOTS.len) return null;
+        return if (state.player.inventory.equipment(Inventory.RING_SLOTS[rel_index]).*) |r| r.Ring else null;
     } else {
         return &state.default_patterns[index];
     }
