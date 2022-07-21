@@ -894,6 +894,8 @@ pub fn bartenderWork(mob: *Mob, _: mem.Allocator) void {
             return;
         }
     }
+
+    _ = mob.rest();
 }
 
 pub fn wanderWork(mob: *Mob, _: mem.Allocator) void {
