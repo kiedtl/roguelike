@@ -152,10 +152,10 @@ pub const Gases = [_]Gas{
 pub const GAS_NUM: usize = Gases.len;
 
 // Ensure that each gas's ID matches the index that it appears as in Gases.
-comptime {
-    for (&Gases) |gas, i|
-        if (i != gas.id) @compileError("Gas's ID doesn't match index");
-}
+// comptime {
+//     for (&Gases) |gas, i|
+//         if (i != gas.id) @compileError("Gas's ID doesn't match index");
+// }
 
 fn triggerNone(_: *Mob, _: f64) void {}
 

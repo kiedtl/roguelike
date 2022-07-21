@@ -1920,34 +1920,34 @@ pub fn placeMobSurrounding(c: Coord, t: *const MobTemplate, opts: PlaceMobOption
     };
 }
 
-comptime {
-    @setEvalBranchQuota(MOBS.len * MOBS.len * 10);
+//comptime {
+//    @setEvalBranchQuota(MOBS.len * MOBS.len * 10);
 
-    inline for (&MOBS) |monster| {
-        // Ensure no monsters have conflicting tiles
-        const pu: ?[]const u8 = inline for (&MOBS) |othermonster| {
-            if (!mem.eql(u8, monster.mob.id, othermonster.mob.id) and
-                monster.mob.tile == othermonster.mob.tile and
-                !monster.ignore_conflicting_tiles and
-                !othermonster.ignore_conflicting_tiles)
-            {
-                break othermonster.mob.id;
-            }
-        } else null;
-        if (pu) |prevuse| {
-            @compileError("Monster " ++ prevuse ++ " tile conflicts w/ " ++ monster.mob.id);
-        }
+//    inline for (&MOBS) |monster| {
+//        // Ensure no monsters have conflicting tiles
+//        const pu: ?[]const u8 = inline for (&MOBS) |othermonster| {
+//            if (!mem.eql(u8, monster.mob.id, othermonster.mob.id) and
+//                monster.mob.tile == othermonster.mob.tile and
+//                !monster.ignore_conflicting_tiles and
+//                !othermonster.ignore_conflicting_tiles)
+//            {
+//                break othermonster.mob.id;
+//            }
+//        } else null;
+//        if (pu) |prevuse| {
+//            @compileError("Monster " ++ prevuse ++ " tile conflicts w/ " ++ monster.mob.id);
+//        }
 
-        // Ensure that no resist is equal to 100
-        //
-        // (Because that usually means that I intended to make them immune to
-        // that damage type, but forgot that terrain and spells can affect that
-        // resist and occasionally make them less-than-immune.)
-        if (monster.mob.innate_resists.rFire == 100 or
-            monster.mob.innate_resists.rElec == 100 or
-            monster.mob.innate_resists.Armor == 100)
-        {
-            @compileError("Monster " ++ monster.mob.id ++ " has false immunity in one or more resistances");
-        }
-    }
-}
+//        // Ensure that no resist is equal to 100
+//        //
+//        // (Because that usually means that I intended to make them immune to
+//        // that damage type, but forgot that terrain and spells can affect that
+//        // resist and occasionally make them less-than-immune.)
+//        if (monster.mob.innate_resists.rFire == 100 or
+//            monster.mob.innate_resists.rElec == 100 or
+//            monster.mob.innate_resists.Armor == 100)
+//        {
+//            @compileError("Monster " ++ monster.mob.id ++ " has false immunity in one or more resistances");
+//        }
+//    }
+//}
