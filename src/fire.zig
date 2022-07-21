@@ -18,6 +18,8 @@ const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
+pub const MOB_BURN_DURATION = 7;
+
 pub fn tileFlammability(c: Coord) usize {
     var f: usize = 0;
 
@@ -100,7 +102,7 @@ pub fn tickFire(level: usize) void {
             if (oldfire > 3) {
                 if (state.dungeon.at(coord).mob) |mob| {
                     if (mob.isUnderStatus(.Fire) == null)
-                        mob.addStatus(.Fire, 0, .{ .Tmp = math.min(oldfire, 10) });
+                        mob.addStatus(.Fire, 0, .{ .Tmp = MOB_BURN_DURATION });
                 }
             }
 
