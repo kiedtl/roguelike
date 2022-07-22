@@ -3169,6 +3169,12 @@ pub const Mob = struct { // {{{
         if (self.inventory.equipmentConst(.Armor).*) |clk|
             val += utils.getFieldByEnum(Stat, clk.Armor.stats, _stat);
 
+        // Check rings.
+        for (Inventory.RING_SLOTS) |ring_slot|
+            if (self.inventory.equipmentConst(ring_slot).*) |ring| {
+                val += utils.getFieldByEnum(Stat, ring.Ring.stats, _stat);
+            };
+
         // Clamp value.
         val = switch (_stat) {
             .Sneak => math.clamp(val, 0, 10),
@@ -3720,6 +3726,7 @@ pub const Ring = struct {
     // Ring of <name>
     name: []const u8,
 
+    stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     pattern_checker: PatternChecker,
     effect: fn (*Mob, PatternChecker.State) void,
 
