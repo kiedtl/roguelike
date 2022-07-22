@@ -150,6 +150,7 @@ pub const RINGS = [_]Ring{
     TeleportationRing,
     ElectrificationRing,
     InsurrectionRing,
+    MagnetizationRing,
 };
 
 pub const Rune = enum {
@@ -1045,6 +1046,94 @@ pub const InsurrectionRing = Ring{ // {{{
             } else {
                 state.message(.Info, "You feel lonely for a moment.", .{});
             }
+        }
+    }.f,
+}; // }}}
+
+pub const MagnetizationRing = Ring{ // {{{
+    .name = "magnetization",
+    .pattern_checker = .{
+        // mobs[0] is the attacked enemy.
+        // directions[0] is the original attacking direction.
+        // coords[0] is the attacked enemy's initial coordinate.
+        .turns = 3,
+        .init = struct {
+            pub fn f(mob: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+                if (d.is_diagonal())
+                    return error.NeedCardinalDirection;
+
+                stt.mobs[0] = try PatternChecker._util_getHostileInDirection(mob, d);
+                stt.directions[0] = d;
+                stt.coords[0] = stt.mobs[0].?.coord;
+
+                return Activity{ .Attack = .{
+                    .direction = d,
+                    .who = undefined,
+                    .coord = undefined,
+                    .delay = undefined,
+                } };
+            }
+        }.f,
+        .funcs = [_]PatternChecker.Func{
+            struct {
+                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    const r = cur == .Attack and
+                        cur.Attack.who == stt.mobs[0].? and
+                        cur.Attack.direction == stt.directions[0].?;
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    const r = cur == .Move and
+                        (cur.Move == stt.directions[0].?.turnLeftDiagonally() or
+                        cur.Move == stt.directions[0].?.turnRightDiagonally()) and
+                        cur.Move.is_diagonal() and
+                        stt.mobs[0].?.coord.eq(stt.coords[0].?); // Ensure he's still there
+                    if (r and !dry) {
+                        stt.directions[1] = cur.Move;
+                    }
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    const next_d = if (stt.directions[1].? == stt.directions[0].?.turnLeftDiagonally())
+                        stt.directions[0].?.turnRightDiagonally()
+                    else
+                        stt.directions[0].?.turnLeftDiagonally();
+                    const r = cur == .Move and
+                        cur.Move == next_d and
+                        stt.mobs[0].?.coord.eq(stt.coords[0].?); // Ensure he's still there
+                    return r;
+                }
+            }.f,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        },
+    },
+    .effect = struct {
+        pub fn f(self: *Mob, stt: PatternChecker.State) void {
+            const magnet = stt.mobs[0].?;
+
+            var gen = Generator(Rect.rectIter).init(state.mapRect(self.coord.z));
+            while (gen.next()) |coord| if (self.cansee(coord)) {
+                if (state.dungeon.at(coord).mob) |othermob| {
+                    if (othermob != magnet and
+                        othermob.isHostileTo(self))
+                    {
+                        const d = othermob.coord.closestDirectionTo(magnet.coord, state.mapgeometry);
+                        combat.throwMob(self, othermob, d, othermob.coord.distance(magnet.coord));
+                    }
+                }
+            };
+            if (state.player.cansee(magnet.coord))
+                state.message(.Info, "{c} becomes magnetic!", .{magnet});
         }
     }.f,
 }; // }}}

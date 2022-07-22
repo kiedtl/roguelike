@@ -185,7 +185,10 @@ pub const Direction = enum { // {{{
             .South => .SouthEast,
             .East => .NorthEast,
             .West => .SouthWest,
-            else => err.wat(),
+            .NorthEast => .North,
+            .NorthWest => .West,
+            .SouthEast => .East,
+            .SouthWest => .South,
         };
     }
 
@@ -195,7 +198,10 @@ pub const Direction = enum { // {{{
             .South => .SouthWest,
             .East => .SouthEast,
             .West => .NorthWest,
-            else => err.wat(),
+            .NorthEast => .East,
+            .NorthWest => .North,
+            .SouthEast => .South,
+            .SouthWest => .West,
         };
     }
 

@@ -398,6 +398,9 @@ fn placeDoor(coord: Coord, locked: bool) void {
 fn _add_player(coord: Coord, alloc: mem.Allocator) void {
     state.player = mobs.placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
 
+    //const ring = items.createItem(Ring, items.MagnetizationRing);
+    //state.player.inventory.equipment(.Ring1).* = Item{ .Ring = ring };
+
     state.player.prisoner_status = Prisoner{ .of = .Necromancer };
 
     state.player.squad = Squad.allocNew();
