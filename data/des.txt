@@ -538,3 +538,21 @@ $G    .....              .....    .....    .$.@$G...    .....
 $cEffect:$. Three corpses in your LOS wake up and attack the enemy for 14 turns
 before self-destructing. They are blind and won't hunt any other enemy unless
 attacked.
+
+% magnetization
+An ancient talisman, created to enhance the fighting prowess of the
+Necromancer's warriors.
+
+
+$cPattern:$. Attack a foe, then move behind it.
+
+
+$G    ....                  .$.@$G..    ....
+
+$G    $.@$G$rm$G..    $.<attack $rm$.>$G    .$rm$G..    .$rm$G$.@$G.    $.<attack $rm$.>$G
+
+$G    ....                  ....    ....
+
+
+$cEffect:$. All other enemies in your LOS will go flying towards the enemy you
+attacked.
