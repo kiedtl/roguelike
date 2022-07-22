@@ -10,10 +10,11 @@
 %    ˜   shallow water terrain
 %    ~   water
 %    ≈   lava
-%    ;   window
+%    &   window
 %    +   door
 %    ±   locked door
 %    ≡   bars
+%    =   ring
 %    ?   anything
 %    α   depends on level
 %    β   depends on level
