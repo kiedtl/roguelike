@@ -19,6 +19,7 @@ const rng = @import("rng.zig");
 const literature = @import("literature.zig");
 const fov = @import("fov.zig");
 const types = @import("types.zig");
+const tsv = @import("tsv.zig");
 
 const Rune = items.Rune;
 const Squad = types.Squad;
@@ -86,35 +87,20 @@ pub fn mapRect(level: usize) Rect {
     return Rect{ .start = Coord.new2(level, 0, 0), .width = WIDTH, .height = HEIGHT };
 }
 
-// zig fmt: off
-// field upgr: whether to grant an upgrade on this floor.
-pub const levelinfo = [LEVELS]struct {
-    id: []const u8, upgr: bool, optional: bool, name: []const u8
-}{
-    .{ .id = "PRI", .upgr = false, .optional = false, .name = "-1/Prison"       },
-    .{ .id = "PRI", .upgr = false, .optional = false, .name = "-2/Prison"       },
-    .{ .id = "QRT", .upgr = false, .optional = true,  .name = "-3/Quarters/3"   },
-    .{ .id = "QRT", .upgr = false, .optional = true,  .name = "-3/Quarters/2"   },
-    .{ .id = "QRT", .upgr = true,  .optional = false, .name = "-3/Quarters"     },
-    .{ .id = "PRI", .upgr = false, .optional = false, .name = "-4/Prison"       },
-    .{ .id = "CAV", .upgr = false, .optional = true,  .name = "-5/Caverns/3"    },
-    .{ .id = "CAV", .upgr = false, .optional = true,  .name = "-5/Caverns/2"    },
-    .{ .id = "CAV", .upgr = true,  .optional = false, .name = "-5/Caverns"      },
-    .{ .id = "LAB", .upgr = false, .optional = true,  .name = "-6/Laboratory/3" },
-    .{ .id = "LAB", .upgr = false, .optional = true,  .name = "-6/Laboratory/2" },
-    .{ .id = "LAB", .upgr = true,  .optional = false, .name = "-6/Laboratory"   },
-    .{ .id = "PRI", .upgr = false, .optional = false, .name = "-7/Prison"       },
-    .{ .id = "PRI", .upgr = false, .optional = false, .name = "-8/Prison"       },
+// XXX: []u8 instead of '[]const u8` because of tsv parsing limits
+pub const LevelInfo = struct {
+    id: []u8,
+    name: []u8,
+    upgr: bool,
+    optional: bool,
+    rune: ?Rune,
+    stairs: [2]?[]u8,
+
+    pub const STAIR_COUNT = 2;
 };
 
-pub const RUNE_PLACEMENT = [Rune.COUNT]struct {
-    floorstr: []const u8, rune: Rune
-}{
-    .{ .floorstr = "-3/Quarters/3",   .rune = .Golden  },
-    .{ .floorstr = "-5/Caverns/3",    .rune = .Basalt  },
-    .{ .floorstr = "-6/Laboratory/3", .rune = .Twisted },
-};
-// zig fmt: on
+// Loaded at runtime from data/levelinfo.tsv
+pub var levelinfo: [LEVELS]LevelInfo = undefined;
 
 // Information collected over a run to present in a morgue file.
 pub var chardata: struct {
@@ -407,6 +393,64 @@ pub fn tickSound(cur_lev: usize) void {
             const cur_sound = dungeon.soundAt(coord);
             cur_sound.state = SoundState.ageToState(ticks - cur_sound.when);
         }
+    }
+}
+
+pub fn loadLevelInfo() void {
+    const alloc = GPA.allocator();
+
+    var rbuf: [65535]u8 = undefined;
+    const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
+    const data_file = data_dir.openFile("levelinfo.tsv", .{ .read = true }) catch unreachable;
+
+    const read = data_file.readAll(rbuf[0..]) catch unreachable;
+
+    const result = tsv.parse(LevelInfo, &[_]tsv.TSVSchemaItem{
+        .{ .field_name = "id", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
+        .{ .field_name = "name", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
+        .{ .field_name = "upgr", .parse_to = bool, .parse_fn = tsv.parsePrimitive },
+        .{ .field_name = "optional", .parse_to = bool, .parse_fn = tsv.parsePrimitive },
+        .{ .field_name = "rune", .parse_to = ?Rune, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = null },
+        .{ .field_name = "stairs", .parse_to = ?[]u8, .is_array = LevelInfo.STAIR_COUNT, .parse_fn = tsv.parseOptionalUtf8String, .optional = true, .default_val = null },
+    }, .{
+        .id = undefined,
+        .name = undefined,
+        .upgr = undefined,
+        .optional = undefined,
+        .rune = undefined,
+        .stairs = undefined,
+    }, rbuf[0..read], alloc);
+
+    if (!result.is_ok()) {
+        err.bug("Can't load data/levelinfo.tsv: {} (line {}, field {})", .{
+            result.Err.type,
+            result.Err.context.lineno,
+            result.Err.context.field,
+        });
+    }
+
+    const data = result.unwrap();
+    defer data.deinit();
+
+    if (data.items.len != LEVELS) {
+        err.bug("Can't load data/levelinfo.tsv: Incorrect number of entries.", .{});
+    }
+
+    for (data.items) |row, i|
+        levelinfo[i] = row;
+
+    std.log.info("Loaded data/levelinfo.tsv.", .{});
+}
+
+pub fn freeLevelInfo() void {
+    const alloc = GPA.allocator();
+
+    for (levelinfo) |info| {
+        alloc.free(info.id);
+        alloc.free(info.name);
+        for (&info.stairs) |maybe_stair|
+            if (maybe_stair) |stair|
+                alloc.free(stair);
     }
 }
 

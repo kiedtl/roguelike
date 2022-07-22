@@ -131,6 +131,22 @@ pub fn parseCharacter(comptime T: type, result: *T, input: []const u8, _: mem.Al
     return false; // ERROR: unterminated literal
 }
 
+pub fn parseOptionalUtf8String(comptime T: type, result: *T, input: []const u8, alloc: mem.Allocator) bool {
+    if (T != ?[]u8) {
+        @compileError("Expected ?[]u8, found '" ++ @typeName(T) ++ "'");
+    }
+
+    if (mem.eql(u8, input, "nil")) {
+        result.* = null;
+        return true;
+    } else {
+        var result_buf: []u8 = undefined;
+        const r = parseUtf8String([]u8, &result_buf, input, alloc);
+        result.* = result_buf;
+        return r;
+    }
+}
+
 pub fn parseUtf8String(comptime T: type, result: *T, input: []const u8, alloc: mem.Allocator) bool {
     if (T != []u8) {
         @compileError("Expected []u8, found '" ++ @typeName(T) ++ "'");

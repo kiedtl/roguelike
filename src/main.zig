@@ -135,6 +135,7 @@ fn initGame() bool {
     state.evocables = EvocableList.init(state.GPA.allocator());
     state.messages = MessageArrayList.init(state.GPA.allocator());
 
+    state.loadLevelInfo();
     surfaces.readProps(state.GPA.allocator());
     literature.readPosters(state.GPA.allocator());
     mapgen.readSpawnTables(state.GPA.allocator());
@@ -177,12 +178,8 @@ fn initGame() bool {
         // Do this now, before placing anything else, because we'll have to
         // start over if we fail this.
         //
-        if (utils.findFirstNeedle(state.RUNE_PLACEMENT[0..], level, struct {
-            pub fn f(straw: meta.Elem(@TypeOf(state.RUNE_PLACEMENT)), lvl: usize) bool {
-                return mem.eql(u8, state.levelinfo[lvl].name, straw.floorstr);
-            }
-        }.f)) |runeinfo| {
-            placed_rune = mapgen.placeRuneAnywhere(level, runeinfo.rune);
+        if (state.levelinfo[level].rune) |rune| {
+            placed_rune = mapgen.placeRuneAnywhere(level, rune);
         }
 
         var map_valid = mapgen.validateLevel(level, state.GPA.allocator(), &n_fabs, &s_fabs);
@@ -216,8 +213,15 @@ fn initGame() bool {
 
     var f_level: usize = LEVELS - 1;
     while (f_level > 0) : (f_level -= 1) {
-        for (mapgen.Configs[f_level].stairs_to) |dst_floor|
-            mapgen.placeStair(f_level, dst_floor, state.GPA.allocator());
+        for (state.levelinfo[f_level].stairs) |maybe_stair| if (maybe_stair) |dest_stair| {
+            const floor = for (state.levelinfo) |levelinfo, i| {
+                if (mem.eql(u8, levelinfo.name, dest_stair)) {
+                    break i;
+                }
+            } else err.bug("Levelinfo stairs {s} invalid", .{dest_stair});
+
+            mapgen.placeStair(f_level, floor, state.GPA.allocator());
+        };
     }
 
     display.draw();
@@ -264,6 +268,7 @@ fn deinitGame() void {
         poster.deinit(state.GPA.allocator());
     literature.posters.deinit();
 
+    state.freeLevelInfo();
     surfaces.freeProps(state.GPA.allocator());
     mapgen.freeSpawnTables(state.GPA.allocator());
     freeDescriptions(state.GPA.allocator());
