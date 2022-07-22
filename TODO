@@ -512,6 +512,10 @@ Rings have "tiers" instead of an enchantment level (gold, silver, iron).
   ..m..
   .....
 
+  #.....    #.....    #.....    #.....
+  #.@m..    #.m...    #.m...    #.@M..
+  #.....    #@....    #.@...    #.....
+  #####.    #####.    #####.    #####.
 
 - ring of intimidation: confer stun/fear to mob when moving towards it, while
   enraging all other monsters in FOV.
@@ -520,43 +524,42 @@ Rings have "tiers" instead of an enchantment level (gold, silver, iron).
   player. Blinks player as well. All affected mobs, including player, have
   health reduced by 10%.
 
-- ring of insurrection: raise 2-6 nearby corpses to fight a specific mob, for
-  8-24 turns. Zombies are completely blind and won't fight any other monster
-  unless attacked.
-
 - ring of conscription: raise the corpse the player stands on at the end of the
   pattern to fight, giving it impressive tankiness and stat boosts (but
   slowness?).
 
-- ring of electrification: Electrocute all mobs on two sides.
-  - Move two tiles backwards into corridor (ie with walls on the other two sides
-    of your character), wait, attack forwards
-    ##....   ##.....   ##.....
-    ##..m.   ##.m...   ##m....
-    ...@..   ..@M...   .@M....   wait   attack(M)
-    ##..M.   ##.m...   ##m....
-    ##.m..   ##.....   ##.....
+- ring of devastation: hurl beus lance, halving foe's health and causing 3-6
+  knockback.
 
 - ring of magnetization: cause knockback of all nearby foes onto a single foe.
   Like Gell's Gravitas in DCSS. Knockbacked foes could possibly hit player, so
   player must plan accordingly.
-  .....   .....   .....   .....
-  ..m..   .....   .....   ..@..
-  ..@..   ..m..   .@m..   ..m..
-  .....   ..@..   .....   .....
+  - Attack foe and move behind it.
+    ....             .@..  ....
+    @m..  attack(m)  .m..  .m@.  attack(m)
+    ....             ....  ....
 
-- ring of devastation: hurl beus lance, halving foe's health and causing 3-6
-  knockback.
-  - Move backwards from enemy, move right/left, move up.
-    ..m..   .....   .....   .....
-    ..@..   ..m..   .....   .....
-    .....   ..@..   ..m..   ..m@.
-    .....   .....   ...@.   .....
+x ring of insurrection: raise 3-7 nearby corpses to fight a specific mob, for
+  14-28 turns. Zombies are completely blind and won't fight any other monster
+  unless attacked.
+  - Move on both sides of foe, then move back.
+    .....        .@...  .....  .....  .....
+    @M...  wait  .M...  @M...  .M...  @M...
+    .....        .....  .....  .@...  .....
 
-- ring of teleportation: Zap an enemy, then teleport to where the zap ended
+x ring of electrification: Electrocute all mobs on one side.
+  - Attack mob, move one tile backwards into corridor (ie with walls on the
+    other two sides of your character), wait, attack forwards
+    ##.....             ##.....
+    ##.m...             ##m....
+    ..@M...  attack(M)  .@M....   wait   attack(M)
+    ##.m...             ##m....
+    ##.....             ##.....
+
+x ring of teleportation: Zap an enemy, then teleport to where the zap ended
   (i.e. Blinkbolt spell).
   - Attack, move away, move in adjacent cardinal direction, move again in same
-    direction, attack an enemy (not necessarily the same one).
+    direction, attack any enemy.
     .....           .....   .....   .....
     m@...           .m@..   ..m..   .....
     ..... attack(m) .....   ...@.   ...m. attack(any)
@@ -568,15 +571,6 @@ x ring of damnation: create a fire explosion on all tiles containing foes.
     ..@..   ..m..
     .....   ...@. wait, attack(m)
     ...##   ...##
-
-- ring of XXX: knockback two foes next to you 5-9 spaces.
-  - Attack two enemies in opposite directions, move in cardinal direction,
-    move back, wait.
-    .....                           .....   .....
-    .....                           .....   .....
-    .1@2.   attack(1)   attack(2)   .1.2.   .1@2.   wait
-    .....                           ..@..   .....
-    .....                           .....   .....
 
 x ring of electrocution: Electrocute tiles in four corners next to player.
   - Attack in a cardinal direction, move in opposite direction, move
@@ -611,6 +605,16 @@ x ring of extermination: fire bolt of fire in direction.
 
 ~ ring of debilitation: -10-30% melee, -10-30% missile
   - Obsolete: covered by potions of debilitation, seizure traps
+
+~ ring of propulsion: knockback two foes next to you 5-9 spaces.
+  - Attack two enemies in opposite directions, move in cardinal direction,
+    move back, wait.
+  - Canceled: effect is too similar to charging
+    .....                           .....   .....
+    .....                           .....   .....
+    .1@2.   attack(1)   attack(2)   .1.2.   .1@2.   wait
+    .....                           ..@..   .....
+    .....                           .....   .....
 
 - ring of encumberation (gold only): melee,missile=100%, evade=0%
 
@@ -925,9 +929,10 @@ x More kits and traps: fire, shock, incineration, knockback
 - Ring changes/additions/simplifications:
   x Refactor pattern checks
   - More ring types (fire, etc); at least 8
-  - Random ring drops, equipping/deequipping rings
+  x Overhaul usage/UI
+  x Random ring drops, equipping/deequipping rings
   x Remove ring statuses
-  - MP costs for rings?
+  ~ MP costs for rings?
 x Fix trtr chambers; add more of them
 x Iron, lightning, torpor, and calcite spires
 x Bone weapons, corruption effects
@@ -938,15 +943,17 @@ x Bone weapons, corruption effects
   - Potion of disruption
   - Potion of intimidation
   - Potion of leavenation
-- Guards in cubbyholes (both corridors and rooms)
 x Add barrel of water
-x War olgs, cinder worms, destroyers
-x Ember, brimstone, spark, lightning mage bands
-x Emberling/sparkling summoning trap kits
-~ [canceled] Fiend of vapours
+- New monsters
+  x War olgs, cinder worms, destroyers
+  x Ember, brimstone, spark, lightning mage bands
+    x Emberling/sparkling summoning trap kits
+  x Warriors, recruits (for treasure vaults)
+  - Basalt monsters (-fiends, -mages, -lings)?
+  - Slinking terror, thrashing sculptor
+  ~ [canceled] Fiend of vapours
 x Copper weapons and copper spires/battery packs, copper hornets
 - Lore-related prefabs (e.g. washroom, trophy rooms, etc)
-x Warriors, recruits
 x Treasure vaults
   x Marble vault
   x Iron vault
@@ -954,15 +961,25 @@ x Treasure vaults
   x Tavern vault (maybe next release?)
 - Scoring
 - Fix pushing past monsters
-x Remove boring `Flanked' mechanic
+- Remove bad mechanics:
+  x remove boring `Flanked' mechanic
+  - get rid of broken tiles
+    - remove malfunctioning machines
+      - broken doors: bump to knock down
+- Night creatures (night reapers, creeping deaths, grues, winged terrors)
+- Shadow weapons
+- Level progression overhaul
+  - Load stair info from data/stairs.tsv
+  - Load level info from data/levelinfo.tsv
+  - Make CAV optional, extra Prison level to compensate (for now)
 - Playtest game, especially CAV and make adjustments
 *** v1.1.0 release ***
 - Basic save system
 - Warn when next to spreading gas and resting
-- Rewrite popups/confirms/alerts in Ruby UI
-- Rewrite inventory system UI in Ruby
+- Rewrite popups/confirms/alerts in Lua/Moonscript UI
+- Rewrite inventory system UI in Lua/Moonscript
 x Warn when stepping into enemy's FOV
-- Auto-wait: don't wait while in combat or in dangerous area
+x Auto-wait: don't wait while in combat
 - More messages
 - Startup screen, map generation loading bar
 *** v1.2.0 release ***
@@ -1022,8 +1039,7 @@ x Warn when stepping into enemy's FOV
 - Garrison/Morgue level
   - Cogmind-esque tunneling algorithm
   - *blende statues
-- Night creatures (night reapers, creeping deaths, grues, winged terrors)
-- Shadow weapons
+- Guards in cubbyholes (both corridors and rooms)
 
 Animations
 ==========
