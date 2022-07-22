@@ -98,6 +98,12 @@ pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace) noreturn {
 }
 
 fn initGame() bool {
+    // Initialize this *first* because we might have to deinitGame() at
+    // checkWindowSize, and we have no way to tell if state.dungeon was
+    // allocated or not.
+    state.dungeon = state.GPA.allocator().create(types.Dungeon) catch err.oom();
+    state.dungeon.* = types.Dungeon{};
+
     if (display.init()) {} else |e| switch (e) {
         error.AlreadyInitialized => err.wat(),
         error.TTYOpenFailed => @panic("Could not open TTY"),
@@ -108,9 +114,6 @@ fn initGame() bool {
     if (!display.checkWindowSize()) {
         return false;
     }
-
-    state.dungeon = state.GPA.allocator().create(types.Dungeon) catch err.oom();
-    state.dungeon.* = types.Dungeon{};
 
     rng.init(state.GPA.allocator()) catch return false;
 
