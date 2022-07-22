@@ -730,9 +730,9 @@ pub const DamnationRing = Ring{ // {{{
                 }
             }.f,
             struct {
-                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
-                    const r = cur == .Attack and
-                        cur.Attack.direction == stt.directions[0].?;
+                pub fn f(_: *Mob, _: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    const r = cur == .Attack;
+                    //cur.Attack.direction == stt.directions[0].?;
                     return r;
                 }
             }.f,
