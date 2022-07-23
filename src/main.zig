@@ -171,7 +171,8 @@ fn initGame() bool {
         mapgen.placeBlobs(level);
         (mapgen.Configs[level].mapgen_func)(&n_fabs, &s_fabs, level, state.GPA.allocator());
         mapgen.selectLevelVault(level);
-        mapgen.placeMoarCorridors(level, state.GPA.allocator());
+        if (mapgen.Configs[level].allow_extra_corridors)
+            mapgen.placeMoarCorridors(level, state.GPA.allocator());
 
         // Generate a rune?
         //
@@ -182,18 +183,27 @@ fn initGame() bool {
             placed_rune = mapgen.placeRuneAnywhere(level, rune);
         }
 
-        var map_valid = mapgen.validateLevel(level, state.GPA.allocator(), &n_fabs, &s_fabs);
+        if (!placed_rune) {
+            if (tries < 28) {
+                std.log.info("{s}: Couldn't place rune, retrying...", .{state.levelinfo[level].name});
+                continue; // try again
+            } else {
+                err.bug("{s}: Couldn't generate valid map!", .{state.levelinfo[level].name});
+            }
+        }
 
-        if (!map_valid or !placed_rune) {
-            if (tries < 27) {
-                std.log.info("Map {s} invalid, retrying...", .{state.levelinfo[level].name});
+        if (mapgen.validateLevel(level, state.GPA.allocator(), &n_fabs, &s_fabs)) |_| {
+            // .
+        } else |e| {
+            if (tries < 28) {
+                std.log.info("{s}: Invalid map ({s}), retrying...", .{
+                    state.levelinfo[level].name,
+                    @errorName(e),
+                });
                 continue; // try again
             } else {
                 // Give up!
-                err.bug(
-                    "Couldn't generate a valid map for {s}!",
-                    .{state.levelinfo[level].name},
-                );
+                err.bug("{s}: Couldn't generate valid map!", .{state.levelinfo[level].name});
             }
         }
 

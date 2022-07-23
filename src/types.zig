@@ -482,6 +482,22 @@ pub const Coord = struct { // {{{
 
         return buf;
     }
+
+    pub fn iterNeighbors(ctx: *GeneratorCtx(Coord), self: Coord) void {
+        for (&DIRECTIONS) |d| if (self.move(d, state.mapgeometry)) |neighbor| {
+            ctx.yield(neighbor);
+        };
+
+        ctx.finish();
+    }
+
+    pub fn iterCardinalNeighbors(ctx: *GeneratorCtx(Coord), self: Coord) void {
+        for (&CARDINAL_DIRECTIONS) |d| if (self.move(d, state.mapgeometry)) |neighbor| {
+            ctx.yield(neighbor);
+        };
+
+        ctx.finish();
+    }
 }; // }}}
 
 test "coord.distance" {
@@ -4192,19 +4208,23 @@ pub const Dungeon = struct {
     }
 
     pub fn neighboringWalls(self: *Dungeon, c: Coord, diags: bool) usize {
+        return self.neighboringOfType(c, diags, .Wall);
+    }
+
+    pub fn neighboringOfType(self: *Dungeon, c: Coord, diags: bool, ttype: TileType) usize {
         const directions = if (diags) &DIRECTIONS else &CARDINAL_DIRECTIONS;
 
-        var walls: usize = if (self.at(c).type == .Wall) 1 else 0;
+        var ctr: usize = if (self.at(c).type == ttype) 1 else 0;
         for (directions) |d| {
             if (c.move(d, state.mapgeometry)) |neighbor| {
-                if (self.at(neighbor).type == .Wall)
-                    walls += 1;
+                if (self.at(neighbor).type == ttype)
+                    ctr += 1;
             } else {
-                walls += 1;
+                ctr += 1;
                 continue;
             }
         }
-        return walls;
+        return ctr;
     }
 
     // Get an item from the ground or a container (if it exists), otherwise

@@ -10,7 +10,6 @@ const err = @import("err.zig");
 const rng = @import("rng.zig");
 const dijkstra = @import("dijkstra.zig");
 const mobs = @import("mobs.zig");
-const StackBuffer = @import("buffer.zig").StackBuffer;
 const items = @import("items.zig");
 const surfaces = @import("surfaces.zig");
 const literature = @import("literature.zig");
@@ -19,6 +18,10 @@ const utils = @import("utils.zig");
 const state = @import("state.zig");
 const tsv = @import("tsv.zig");
 const types = @import("types.zig");
+
+const Generator = @import("generators.zig").Generator;
+const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const Coord = types.Coord;
 const Rect = types.Rect;
@@ -879,7 +882,7 @@ pub fn validateLevel(
     alloc: mem.Allocator,
     n_fabs: *PrefabArrayList,
     s_fabs: *PrefabArrayList,
-) bool {
+) !void {
     // utility functions
     const _f = struct {
         pub fn _getWalkablePoint(room: *const Rect) Coord {
@@ -916,7 +919,7 @@ pub fn validateLevel(
             Prefab.findPrefabByName(required_fab, s_fabs).?;
 
         if (fab.used[level] == 0) {
-            return false;
+            return error.RequiredPrefabsNotUsed;
         }
     }
 
@@ -931,11 +934,9 @@ pub fn validateLevel(
         }, &DIRECTIONS, alloc)) |p| {
             p.deinit();
         } else {
-            return false;
+            return error.RoomsNotConnected;
         }
     }
-
-    return true;
 }
 
 pub fn selectLevelVault(level: usize) void {
@@ -1420,6 +1421,59 @@ pub fn placeRandomRooms(
             error.NoValidParent => break,
         };
     }
+}
+
+pub fn placeDrunkenWalkerCave(
+    n_fabs: *PrefabArrayList,
+    s_fabs: *PrefabArrayList,
+    level: usize,
+    alloc: mem.Allocator,
+) void {
+    const MIN_OPEN_SPACE = 50;
+
+    var tiles_made_floors: usize = 0;
+    var visited_stack = CoordArrayList.init(alloc);
+    defer visited_stack.deinit();
+    var walker = Coord.new2(level, WIDTH / 2, HEIGHT / 2);
+
+    while ((tiles_made_floors * 100 / (HEIGHT * WIDTH)) < MIN_OPEN_SPACE) {
+        var candidates = StackBuffer(Coord, 4).init(null);
+
+        var gen = Generator(Coord.iterCardinalNeighbors).init(walker);
+        while (gen.next()) |neighbor|
+            if (state.dungeon.at(neighbor).type == .Wall) {
+                candidates.append(neighbor) catch err.wat();
+            };
+
+        if (candidates.len == 0) {
+            if (visited_stack.items.len > 0) {
+                walker = visited_stack.pop();
+                continue;
+            } else break;
+        }
+
+        var picked = rng.chooseUnweighted(Coord, candidates.constSlice());
+        state.dungeon.at(picked).type = .Floor;
+        tiles_made_floors += 1;
+        visited_stack.append(walker) catch err.wat();
+        walker = picked;
+    }
+
+    var walls_to_remove = CoordArrayList.init(alloc);
+    defer walls_to_remove.deinit();
+    var gen = Generator(Rect.rectIter).init(state.mapRect(level));
+    while (gen.next()) |coord| {
+        if (state.dungeon.at(coord).type == .Wall and
+            state.dungeon.neighboringOfType(coord, true, .Floor) >= 4)
+        {
+            walls_to_remove.append(coord) catch err.wat();
+        }
+    }
+
+    for (walls_to_remove.items) |coord|
+        state.dungeon.at(coord).type = .Floor;
+
+    placeRandomRooms(n_fabs, s_fabs, level, alloc);
 }
 
 pub fn placeBSPRooms(
@@ -3538,6 +3592,7 @@ pub const LevelConfig = struct {
     room_trapped_chance: usize = 40,
     subroom_chance: usize = 60,
     allow_corridors: bool = true,
+    allow_extra_corridors: bool = true,
 
     blobs: []const BlobConfig = &[_]BlobConfig{},
 
@@ -3648,7 +3703,8 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
     },
     .shrink_corridors_to_fit = true,
     .prefab_chance = 3,
-    .mapgen_iters = 4096,
+    .mapgen_func = placeDrunkenWalkerCave,
+    .mapgen_iters = 64,
 
     .min_room_width = 4,
     .min_room_height = 4,
@@ -3674,13 +3730,14 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
 
     .no_windows = true,
     .material = &materials.Basalt,
-    .tiletype = .Floor,
+    //.tiletype = .Floor,
 
     .allow_statues = false,
     .door_chance = 10,
     .room_trapped_chance = 0,
     .subroom_chance = 60,
-    .allow_corridors = false,
+    .allow_corridors = true,
+    .allow_extra_corridors = false,
     .door = &surfaces.VaultDoor,
 
     .blobs = &[_]BlobConfig{
@@ -3698,12 +3755,12 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
             .ca_survival_params = "ffftttttt",
         },
         .{
-            .number = MinMax(usize){ .min = 5, .max = 6 },
+            .number = MinMax(usize){ .min = 2, .max = 3 },
             .type = .Lava,
-            .min_blob_width = minmax(usize, 2, 9),
-            .min_blob_height = minmax(usize, 2, 9),
-            .max_blob_width = minmax(usize, 9, 15),
-            .max_blob_height = minmax(usize, 9, 15),
+            .min_blob_width = minmax(usize, 10, 12),
+            .min_blob_height = minmax(usize, 8, 9),
+            .max_blob_width = minmax(usize, 18, 19),
+            .max_blob_height = minmax(usize, 14, 15),
             .ca_rounds = 5,
             .ca_percent_seeded = 55,
             .ca_birth_params = "ffffffttt",
