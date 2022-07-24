@@ -1018,7 +1018,7 @@ pub const BoneMageTemplate = MobTemplate{
 
         .max_HP = 7,
         .memory_duration = 6,
-        .stats = .{ .Willpower = 4, .Vision = 5, .Melee = 50 },
+        .stats = .{ .Willpower = 4, .Vision = 5, .Melee = 40 },
     },
     .weapon = &items.BoneMaceWeapon,
 
@@ -1329,7 +1329,7 @@ pub const BoneRatTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = -25 },
-        .stats = .{ .Willpower = 1, .Evade = 10, .Melee = 70, .Speed = 60, .Vision = 4 },
+        .stats = .{ .Willpower = 1, .Evade = 10, .Speed = 60, .Vision = 4 },
     },
 
     .squad = &[_][]const MobTemplate.SquadMember{
