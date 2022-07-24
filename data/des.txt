@@ -115,6 +115,11 @@ leer of cruel contempt.
 Releases a cloud of vile smelling gas, causing minor seizures in victims and
 impeding effective combat.
 
+% potion_intimidate
+A bottle of some red sticky stuff. Smells like tomato.
+
+If you dump this over your face and sleeves, it might make you look scary.
+
 % potion_smoke
 Releases a cloud of smoke. Useful for obscuring vision.
 
