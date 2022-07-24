@@ -168,11 +168,11 @@ x iron spire
   - hurls iron shards.
   - rFire+ rElec+ Armor=50% rFume∞ rPois∞
   - Immobile, only attacks when other hostile present
-- calcite spire
+x calcite spire
   - Summons a single undead on the level to come to the spire's location.
   - rFire+ rElec+ Armor=10% rFume∞ rPois∞
   - Immobile, only attacks when other hostile are present
-- copper spire
+~ copper spire
   - Enables copper weapons.
 
 x warden
@@ -218,7 +218,7 @@ x burning brute
   - Completely deaf, won't investigate on its own. Vision of 3 tiles,
     has night vision.
   - 5 HP, 25% armor, has evasion of 40%, and very fast.
-- copper hornet
+x copper hornet
   - "A tiny buzzing insect, seemingly made of copper. It's trying to sting you!"
   - Very fast, and base evade% of 50.
   - Gives copper damage (i.e., electrocution if in aura of copper spire).
@@ -235,9 +235,9 @@ x lead turtle
   - Huge amount of innate armor. Maybe, 60%?
   - Found in the Laboratory.
 
-- warrior
+x warrior
   - Heavily armored (25%), good stats (90% melee, 15% evade), tanky (13 HP).
-- recruit
+x recruit
   - "warrior" monster for lower levels.
   - 10% armor, 70% melee, 10% evade, 8 HP
 
@@ -445,15 +445,21 @@ headgear:
 - welding helmet:   5% armor   Vision-  rFire+
 - thief's mask:                Vision-  infravision
 
-utility items:
+utility and auxiliary items:
 - Detect undead
 - Vampirism (charm of transference)
-- buckler (3 knockback on block, +15% block)
+- Buckler (3 knockback on block, +15% block)
 - Detect electricity
   - Theme: something something "detects magnetic interference" w/ e.g. fancy
     compass, or something along those lines
   - Detects powered machines, sparklings/spark mages, anything wearing rElec
     stuff, sulfur fiends, lightning spires, etc
+- Detect heat
+  - Detects 'warm' machines (i.e. braziers and a few others), areas with fire,
+    burning monsters + their surroundings, and otherwise .Warm monsters.
+- Orb of Wolfram
+  - -10% evade (very heavy!), but +25% rElec. (i.e., it routes electric bolts
+    through itself instead of through you.)
 
 
 Movement patterns
@@ -517,9 +523,6 @@ Rings have "tiers" instead of an enchantment level (gold, silver, iron).
   #.....    #@....    #.@...    #.....
   #####.    #####.    #####.    #####.
 
-- ring of intimidation: confer stun/fear to mob when moving towards it, while
-  enraging all other monsters in FOV.
-
 - ring of distortion: bend space, blinking away all mobs in 3-5 tile radius of
   player. Blinks player as well. All affected mobs, including player, have
   health reduced by 10%.
@@ -531,7 +534,7 @@ Rings have "tiers" instead of an enchantment level (gold, silver, iron).
 - ring of devastation: hurl beus lance, halving foe's health and causing 3-6
   knockback.
 
-- ring of magnetization: cause knockback of all nearby foes onto a single foe.
+x ring of magnetization: cause knockback of all nearby foes onto a single foe.
   Like Gell's Gravitas in DCSS. Knockbacked foes could possibly hit player, so
   player must plan accordingly.
   - Attack foe and move behind it.
@@ -605,6 +608,10 @@ x ring of extermination: fire bolt of fire in direction.
 
 ~ ring of debilitation: -10-30% melee, -10-30% missile
   - Obsolete: covered by potions of debilitation, seizure traps
+
+~ ring of intimidation: confer stun/fear to mob when moving towards it, while
+  enraging all other monsters in FOV.
+  - Cancelled: overlaps with !intimidation and effect isn't good enough.
 
 ~ ring of propulsion: knockback two foes next to you 5-9 spaces.
   - Attack two enemies in opposite directions, move in cardinal direction,
@@ -941,7 +948,7 @@ x Bone weapons, corruption effects
   x Potion of irritation, traps of blinding gas
   x Potion of illumination
   - Potion of disruption
-  - Potion of intimidation
+  x Potion of intimidation
   - Potion of leavenation
 x Add barrel of water
 - New monsters
@@ -968,10 +975,9 @@ x Treasure vaults
       - broken doors: bump to knock down
 - Night creatures (night reapers, creeping deaths, grues, winged terrors)
 - Shadow weapons
-- Level progression overhaul
-  - Load stair info from data/stairs.tsv
-  - Load level info from data/levelinfo.tsv
-  - Make CAV optional, extra Prison level to compensate (for now)
+x Level progression overhaul
+  x Load level info, stairs from data/levelinfo.tsv
+  x Make CAV optional, extra Prison level to compensate (for now)
 - Playtest game, especially CAV and make adjustments
 *** v1.1.0 release ***
 - Basic save system
@@ -1353,6 +1359,7 @@ x Fix sound propagation
 - Show appropriate number of exclamation points on messages about spell damage
 - Don't allow confused monsters to attack diagonally.
 - Consider LOF clear if bolt is multi-target & only enemies are blocking LOF
+- Allow vaults to be placed in Quarters
 
 Ideas
 =====
@@ -1477,6 +1484,12 @@ x Extremely dangerous (but lucrative) vaults that have golden walls, warning
   - Inspired by Cogmind's ECM suite
 - Spell/item: flingable lava orb! (ie: fiery orb-of-destruction, normally used
   by lava flans)
+- Spell/pattern/item: Give +X% block bonus on every Xth turn. (inspiration: StS
+  captain's wheel relic)
+- Spell/pattern/item: Give +X% hit bonus on every Xth turn. (inspiration: StS
+  captain's wheel relic)
+- Spell/pattern/item: Deal 3 damage to all visible enemies (or only undead?)
+  after X turns (or every X turn?) (inspiration: StS stone calender relic)
 
 Optimizations
 =============
