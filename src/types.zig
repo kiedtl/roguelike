@@ -932,6 +932,11 @@ pub const Status = enum {
     // Doesn't have a power field (yet?)
     Corruption,
 
+    // Fire resistance.
+    //
+    // Doesn't have a power field to keep things simple.
+    Fireproof,
+
     // Fire vulnerability.
     //
     // Doesn't have a power field to keep things simple.
@@ -1104,6 +1109,7 @@ pub const Status = enum {
             .Drunk => "drunk",
             .CopperWeapon => "copper",
             .Corruption => "corrupted",
+            .Fireproof => "fireproof",
             .Flammable => "flammable",
             .Blind => "blind",
             .Riposte => "riposte",
@@ -1148,6 +1154,7 @@ pub const Status = enum {
             .Drunk => .{ "feel", "looks", " a bit drunk" },
             .CopperWeapon => null,
             .Corruption => .{ "are", "is", " corrupted" },
+            .Fireproof => .{ "are", "is", " resistant to fire" },
             .Flammable => .{ "are", "is", " vulnerable to fire" },
             .Blind => .{ "are", "is", " blinded" },
             .Riposte => null,
@@ -1188,6 +1195,7 @@ pub const Status = enum {
             .Drunk => .{ "feel", "looks", " more sober" },
             .CopperWeapon => null,
             .Corruption => .{ "are no longer", "is no longer", " corrupted" },
+            .Fireproof => .{ "are no longer", "is no longer", " resistant to fire" },
             .Flammable => .{ "are no longer", "is no longer", " vulnerable to fire" },
             .Blind => .{ "are no longer", "is no longer", " blinded" },
             .Riposte => null,
@@ -3261,8 +3269,14 @@ pub const Mob = struct { // {{{
             .Armor => if (self.isUnderStatus(.Recuperate) != null) {
                 r -= 50;
             },
-            .rFire => if (self.isUnderStatus(.Flammable) != null) {
-                r -= 25;
+            .rFire => {
+                if (self.isUnderStatus(.Flammable) != null) {
+                    r -= 25;
+                }
+
+                if (self.isUnderStatus(.Fireproof) != null) {
+                    r += 25;
+                }
             },
             else => {},
         }

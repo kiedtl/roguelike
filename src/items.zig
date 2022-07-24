@@ -116,6 +116,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 160, .i = .{ .P = &GlowPotion } },
     .{ .w = 160, .i = .{ .P = &SmokePotion } },
     .{ .w = 160, .i = .{ .P = &ParalysisPotion } },
+    .{ .w = 150, .i = .{ .P = &LeavenPotion } },
     .{ .w = 150, .i = .{ .P = &InvigoratePotion } },
     .{ .w = 150, .i = .{ .P = &FastPotion } },
     .{ .w = 150, .i = .{ .P = &IncineratePotion } },
@@ -1578,6 +1579,17 @@ pub const IntimidatePotion = Consumable{
     .dip_effect = .{ .status = .Fear, .duration = .{ .Tmp = 2 } },
     .is_potion = true,
     .color = colors.PALE_VIOLET_RED,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = false,
+};
+
+pub const LeavenPotion = Consumable{
+    .id = "potion_leaven",
+    .name = "potion of leavenation",
+    .effects = &[_]Consumable.Effect{.{ .Status = .Fireproof }},
+    .is_potion = true,
+    .color = colors.CONCRETE,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
     .verbs_other = Consumable.VERBS_OTHER_POTION,
     .throwable = false,
