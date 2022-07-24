@@ -111,6 +111,7 @@ pub const VAULT_LEVELS = [LEVELS][]const VaultType{
     &.{                          }, // -5/Caverns/3
     &.{                          }, // -5/Caverns/2
     &.{                          }, // -5/Caverns
+    &.{ .Iron, .Marble, .Tavern  }, // -5/Prison
     &.{ .Iron, .Marble, .Tavern  }, // -6/Laboratory/3
     &.{ .Iron,          .Tavern  }, // -6/Laboratory/2
     &.{ .Iron,          .Tavern  }, // -6/Laboratory
@@ -3632,9 +3633,9 @@ pub const QRT_BASE_LEVELCONFIG = LevelConfig{
     .prefab_chance = 1000, // No prefabs for QRT
     .mapgen_func = placeBSPRooms,
     .mapgen_iters = 1024,
-    .min_room_width = 10,
+    .min_room_width = 7,
     .min_room_height = 6,
-    .max_room_width = 20,
+    .max_room_width = 15,
     .max_room_height = 9,
 
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
@@ -3783,6 +3784,7 @@ pub var Configs = [LEVELS]LevelConfig{
     CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
+    PRI_BASE_LEVELCONFIG,
     LAB_BASE_LEVELCONFIG,
     LAB_BASE_LEVELCONFIG,
     LAB_BASE_LEVELCONFIG,
