@@ -101,6 +101,8 @@ pub fn calculateMorale(self: *Mob) isize {
     for (self.enemyList().items) |enemy_record| {
         const enemy = enemy_record.mob;
 
+        if (enemy.hasStatus(.Intimidating)) base -= 12;
+
         if (enemy.hasStatus(.Enraged)) base -= 4;
         if (enemy.hasStatus(.Fast)) base -= 4;
         if (enemy.hasStatus(.Invigorate)) base -= 4;
@@ -155,22 +157,24 @@ pub fn calculateMorale(self: *Mob) isize {
         if (ally.hasStatus(.Fast)) base += 4;
         if (ally.hasStatus(.Invigorate)) base += 4;
 
-        if (ally.hasStatus(.Sleeping)) base -= 2;
+        if (ally.hasStatus(.Sleeping)) base -= 1;
         if (ally.hasStatus(.Blind)) base -= 2;
-        if (ally.hasStatus(.Debil)) base -= 2;
+        if (ally.hasStatus(.Debil)) base -= 1;
 
         if (ally.hasStatus(.Confusion)) base -= 2;
 
         if (ally.hasStatus(.Fear)) base -= 4;
-        if (ally.hasStatus(.Poison)) base -= 4;
-        if (ally.hasStatus(.Pain)) base -= 4;
-        if (ally.hasStatus(.Slow)) base -= 4;
+        if (ally.hasStatus(.Poison)) base -= 2;
+        if (ally.hasStatus(.Pain)) base -= 2;
+        if (ally.hasStatus(.Slow)) base -= 2;
 
-        if (ally.hasStatus(.Fire) and !ally.isFullyResistant(.rFire)) base -= 4;
+        if (ally.hasStatus(.Fire) and !ally.isFullyResistant(.rFire)) base -= 2;
         if (ally.hasStatus(.Paralysis)) base -= 4;
 
         if (ally.HP < (ally.max_HP / 2)) base -= 4;
         if (ally.HP < (ally.max_HP / 4)) base -= 4;
+
+        if (ally.ai.phase == .Flee) base -= 4;
     }
     // }}}
 

@@ -412,7 +412,7 @@ fn _add_player(coord: Coord, alloc: mem.Allocator) void {
     state.player.squad = Squad.allocNew();
     state.player.squad.?.leader = state.player;
 
-    //state.player.inventory.pack.append(Item{ .Consumable = &items.ConfusionPotion }) catch err.wat();
+    state.player.inventory.pack.append(Item{ .Consumable = &items.IntimidatePotion }) catch err.wat();
 }
 
 fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool) bool {

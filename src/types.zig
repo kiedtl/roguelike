@@ -912,6 +912,11 @@ pub const Allegiance = enum {
 pub const Status = enum {
     // Status list {{{
 
+    // Gives sharp reduction to enemy's morale.
+    //
+    // Doesn't have a power field
+    Intimidating,
+
     // Hampers movement.
     //
     // Doesn't have a power field.
@@ -1095,6 +1100,7 @@ pub const Status = enum {
 
     pub fn string(self: Status, mob: *const Mob) []const u8 { // {{{
         return switch (self) {
+            .Intimidating => "intimidating",
             .Drunk => "drunk",
             .CopperWeapon => "copper",
             .Corruption => "corrupted",
@@ -1138,6 +1144,7 @@ pub const Status = enum {
 
     pub fn messageWhenAdded(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .Intimidating => .{ "assume", "assumes", " a fearsome visage" },
             .Drunk => .{ "feel", "looks", " a bit drunk" },
             .CopperWeapon => null,
             .Corruption => .{ "are", "is", " corrupted" },
@@ -1177,6 +1184,7 @@ pub const Status = enum {
 
     pub fn messageWhenRemoved(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .Intimidating => .{ "no longer seem", "no longer seems", " so scary" },
             .Drunk => .{ "feel", "looks", " more sober" },
             .CopperWeapon => null,
             .Corruption => .{ "are no longer", "is no longer", " corrupted" },
@@ -1299,8 +1307,6 @@ pub const Status = enum {
     pub fn tickPain(mob: *Mob) void {
         const st = mob.isUnderStatus(.Pain).?;
 
-        mob.makeNoise(.Scream, .Louder);
-
         if (st.power > 0) {
             mob.takeDamage(.{
                 .amount = @intToFloat(f64, rng.rangeClumping(usize, 0, st.power, 2)),
@@ -1320,6 +1326,10 @@ pub const Status = enum {
                         if (state.player.cansee(mob.coord)) {
                             const verb: []const u8 = if (state.player == mob) "writhe" else "writhes";
                             state.message(.Unimportant, "{c} {s} in agony.", .{ mob, verb });
+                        }
+
+                        if (rng.percent(@as(usize, 50))) {
+                            mob.makeNoise(.Scream, .Louder);
                         }
                         break;
                     }
@@ -3027,6 +3037,10 @@ pub const Mob = struct { // {{{
                 });
             }
         }
+    }
+
+    pub fn hasStatus(self: *const Mob, status: Status) bool {
+        return self.isUnderStatus(status) != null;
     }
 
     pub fn isUnderStatus(self: *const Mob, status: Status) ?*const StatusDataInfo {

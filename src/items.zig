@@ -111,6 +111,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 190, .i = .{ .P = &ConfusionPotion } },
     .{ .w = 190, .i = .{ .P = &PoisonPotion } },
     .{ .w = 190, .i = .{ .P = &DebilitatePotion } },
+    .{ .w = 190, .i = .{ .P = &IntimidatePotion } },
     .{ .w = 160, .i = .{ .P = &BlindPotion } },
     .{ .w = 160, .i = .{ .P = &GlowPotion } },
     .{ .w = 160, .i = .{ .P = &SmokePotion } },
@@ -1568,6 +1569,18 @@ pub const DebilitatePotion = Consumable{
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
     .verbs_other = Consumable.VERBS_OTHER_POTION,
     .throwable = true,
+};
+
+pub const IntimidatePotion = Consumable{
+    .id = "potion_intimidate",
+    .name = "potion of intimidation",
+    .effects = &[_]Consumable.Effect{.{ .Status = .Intimidating }},
+    .dip_effect = .{ .status = .Fear, .duration = .{ .Tmp = 2 } },
+    .is_potion = true,
+    .color = colors.PALE_VIOLET_RED,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = false,
 };
 
 pub const BlindPotion = Consumable{
