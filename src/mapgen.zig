@@ -101,12 +101,14 @@ pub const VAULT_DOORS = [VAULT_KINDS]*const Machine{
     &surfaces.TavernVaultDoor,
 };
 // zig fmt: off
+//
+// FIXME: add vault to QRT
 pub const VAULT_LEVELS = [LEVELS][]const VaultType{
     &.{ .Gold, .Marble           }, // -1/Prison
     &.{ .Gold, .Marble           }, // -2/Prison
-    &.{ .Gold, .Marble, .Tavern  }, // -3/Quarters/3
-    &.{ .Gold, .Marble, .Tavern  }, // -3/Quarters/2
-    &.{ .Gold, .Marble, .Tavern  }, // -3/Quarters
+    &.{                          }, // -3/Quarters/3
+    &.{                          }, // -3/Quarters/2
+    &.{                          }, // -3/Quarters
     &.{ .Gold, .Marble, .Tavern  }, // -4/Prison
     &.{                          }, // -5/Caverns/3
     &.{                          }, // -5/Caverns/2
@@ -3511,8 +3513,8 @@ pub const PRI_BASE_LEVELCONFIG = LevelConfig{
         .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
         .{ 5, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
     },
-    .prefab_chance = 2,
-    .mapgen_iters = 1024,
+    .prefab_chance = 3,
+    .mapgen_iters = 4096,
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
         levelFeaturePrisoners,
         levelFeaturePrisonersMaybe,

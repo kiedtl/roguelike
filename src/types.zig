@@ -1312,16 +1312,18 @@ pub const Status = enum {
         }
 
         if (rng.percent(@as(usize, 50))) {
-            const direction = rng.chooseUnweighted(Direction, &DIRECTIONS);
-            if (mob.coord.move(direction, state.mapgeometry)) |dest_coord| {
-                if (mob.teleportTo(dest_coord, direction, true)) {
-                    // Deliberately ignore non-player writhers because that'd
-                    // result in a barrage of messages from "torture" chambers.
-                    if (state.player == mob) {
-                        state.message(.Info, "You writhe in agony.", .{});
+            var directions = DIRECTIONS;
+            rng.shuffle(Direction, &directions);
+            for (&directions) |direction|
+                if (mob.coord.move(direction, state.mapgeometry)) |dest_coord| {
+                    if (mob.teleportTo(dest_coord, direction, true)) {
+                        if (state.player.cansee(mob.coord)) {
+                            const verb: []const u8 = if (state.player == mob) "writhe" else "writhes";
+                            state.message(.Unimportant, "{c} {s} in agony.", .{ mob, verb });
+                        }
+                        break;
                     }
-                }
-            }
+                };
         }
     }
 
