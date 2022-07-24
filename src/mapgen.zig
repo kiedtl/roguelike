@@ -1651,6 +1651,11 @@ pub fn placeBSPRooms(
 
         assert(room.rect.width > 0 and room.rect.height > 0);
 
+        // XXX: papering over a BSP bug which sometimes gives overlapping rooms
+        // (with other nasty side effects, like overlapping subrooms and such)
+        if (isRoomInvalid(&state.rooms[level], &room, null, null, true))
+            continue;
+
         excavateRect(&room.rect);
 
         container_node.index = rooms.items.len;
