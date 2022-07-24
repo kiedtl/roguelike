@@ -70,33 +70,118 @@ pub fn currentEnemy(me: *Mob) *EnemyRecord {
     return target;
 }
 
-// Flee if:
-//      - mob is at half of health and enemy's HP is ×4 as high as mob's HP
-//      - mob's HP is 1/5 of normal and enemy's HP is greater than mob's
-//      - mob has .Fear or .Fire status effect
-//
-// TODO: flee if flanked and there are no allies in sight
+pub fn calculateMorale(self: *Mob) isize {
+    var base: isize = 5;
+
+    // Bonuses depending on self's condition {{{
+    if (self.hasStatus(.Enraged)) base += 4;
+    if (self.hasStatus(.Fast)) base += 4;
+    if (self.hasStatus(.Invigorate)) base += 4;
+    // }}}
+
+    // Negative bonuses depending on self's condition {{{
+    if (self.hasStatus(.Blind)) base -= 2;
+    if (self.hasStatus(.Debil)) base -= 2;
+    if (self.hasStatus(.Confusion)) base -= 2;
+
+    if (self.hasStatus(.Poison)) base -= 4;
+    if (self.hasStatus(.Pain)) base -= 4;
+    if (self.hasStatus(.Slow)) base -= 4;
+
+    if (self.hasStatus(.Fire) and !self.isFullyResistant(.rFire))
+        base -= 4;
+
+    if (self.squad != null and self.squad.?.leader.?.ai.phase == .Flee)
+        base -= 16;
+
+    if (self.hasStatus(.Fear)) base -= 16;
+    // }}}
+
+    // Bonuses/neg bonuses depending on enemy's condition {{{
+    for (self.enemyList().items) |enemy_record| {
+        const enemy = enemy_record.mob;
+
+        if (enemy.hasStatus(.Enraged)) base -= 4;
+        if (enemy.hasStatus(.Fast)) base -= 4;
+        if (enemy.hasStatus(.Invigorate)) base -= 4;
+
+        if (enemy.hasStatus(.Sleeping)) base += 2;
+        if (enemy.hasStatus(.Blind)) base += 2;
+        if (enemy.hasStatus(.Debil)) base += 2;
+
+        if (enemy.hasStatus(.Confusion) and
+            (self.squad != null and self.squad.?.members.len >= 4))
+        {
+            base += 2;
+        }
+
+        if (enemy.hasStatus(.Fear)) base += 4;
+        if (enemy.hasStatus(.Poison)) base += 4;
+        if (enemy.hasStatus(.Pain)) base += 4;
+        if (enemy.hasStatus(.Fire) and !enemy.isFullyResistant(.rFire)) base += 4;
+        if (enemy.hasStatus(.Slow)) base += 4;
+
+        // XXX: keep bonuses here in sync with the negative bonuses below, so
+        // that the joy of realizing that enemy is below 50% health can be
+        // properly canceled out by the fact that the mob themself is also
+        // below 50% health
+        //
+        if (enemy.HP < (enemy.max_HP / 2)) base += 4;
+        if (enemy.HP < (enemy.max_HP / 4)) base += 4;
+
+        if (enemy.ai.phase == .Flee) base += 6;
+
+        // Bonus if enemy is paralysed and mob can reach enemy before paralysis
+        // runs out
+        //
+        // FIXME: check to reach enemy is irrelevant if mob isn't a melee brute
+        //
+        if (enemy.isUnderStatus(.Paralysis)) |para_info| {
+            // FIXME: distance check is misleading if enemy is faster than mob
+            //    (This won't be true once status .Tmp durations are fixed, and
+            //     decrement at the same rate for fast and slow mobs.)
+            if (para_info.duration == .Tmp and
+                para_info.duration.Tmp > enemy.coord.distance(self.coord))
+            {
+                base += 8;
+            }
+        }
+    }
+    // }}}
+
+    // Bonuses/neg bonuses depending on enemy's condition {{{
+    for (self.allies.items) |ally| {
+        if (ally.hasStatus(.Enraged)) base += 4;
+        if (ally.hasStatus(.Fast)) base += 4;
+        if (ally.hasStatus(.Invigorate)) base += 4;
+
+        if (ally.hasStatus(.Sleeping)) base -= 2;
+        if (ally.hasStatus(.Blind)) base -= 2;
+        if (ally.hasStatus(.Debil)) base -= 2;
+
+        if (ally.hasStatus(.Confusion)) base -= 2;
+
+        if (ally.hasStatus(.Fear)) base -= 4;
+        if (ally.hasStatus(.Poison)) base -= 4;
+        if (ally.hasStatus(.Pain)) base -= 4;
+        if (ally.hasStatus(.Slow)) base -= 4;
+
+        if (ally.hasStatus(.Fire) and !ally.isFullyResistant(.rFire)) base -= 4;
+        if (ally.hasStatus(.Paralysis)) base -= 4;
+
+        if (ally.HP < (ally.max_HP / 2)) base -= 4;
+        if (ally.HP < (ally.max_HP / 4)) base -= 4;
+    }
+    // }}}
+
+    return base;
+}
+
 pub fn shouldFlee(me: *Mob) bool {
-    if (me.isUnderStatus(.Enraged) != null or me.ai.is_fearless or me.life_type != .Living)
+    if (me.ai.is_fearless or me.life_type != .Living)
         return false;
 
-    var result = false;
-
-    const enemy = currentEnemy(me).mob;
-
-    if (me.HP <= (me.max_HP / 2) and enemy.HP > (me.HP * 4))
-        result = true;
-
-    if (me.HP <= (me.max_HP / 5) and me.HP < enemy.HP)
-        result = true;
-
-    if (me.isUnderStatus(.Fear) != null)
-        result = true;
-
-    if (me.resistance(.rFire) >= 100 and me.isUnderStatus(.Fire) != null)
-        result = true;
-
-    return result;
+    return calculateMorale(me) < 0;
 }
 
 pub fn isEnemyKnown(mob: *Mob, enemy: *Mob) bool {
