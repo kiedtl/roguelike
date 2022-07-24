@@ -10,10 +10,9 @@
 :priority 10
 
 :prison 0,0 5 5
-:spawn necromancer 2,5 2,5
+:spawn necromancer 2,4 2,4
 #&•&#
 ±...#
-#...#
 #βαβ#
 #&&&#
 .....
@@ -22,8 +21,8 @@
 
 :prison 0,0 6 3
 :spawn necromancer 3,4 3,4
-#&&•&&#
-±.....#
+#&&&&&#
+±.....•
 #βαβαβ#
 #&&&&&#
 .......
