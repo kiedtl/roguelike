@@ -120,6 +120,10 @@ A bottle of some red sticky stuff. Smells like tomato.
 
 If you dump this over your face and sleeves, it might make you look scary.
 
+% potion_leaven
+A potion of baking soda. If you drench your clothes in it, fire damage will hurt
+less.
+
 % potion_smoke
 Releases a cloud of smoke. Useful for obscuring vision.
 
