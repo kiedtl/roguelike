@@ -1553,10 +1553,11 @@ pub fn placeBSPRooms(
             while (iters > 0 and branches.items.len > 0) : (iters -= 1) {
                 const cur = branches.swapRemove(rng.range(usize, 0, branches.items.len - 1));
 
-                if (cur.rect.height <= 3 or cur.rect.width <= 3) {
+                if (cur.rect.height <= 4 or cur.rect.width <= 4) {
                     continue;
                 }
 
+                // Out params, set by splitH/splitV
                 var new1: Rect = undefined;
                 var new2: Rect = undefined;
 
@@ -1564,7 +1565,7 @@ pub fn placeBSPRooms(
                 //
                 // e.g., if percent == 30%, then new1 will be 30% of original,
                 // and new2 will be 70% of original.
-                const percent = rng.range(usize, 25, 75);
+                const percent = rng.range(usize, 40, 60);
 
                 // Split horizontally or vertically
                 if ((cur.rect.height * 2) > cur.rect.width) {
@@ -1662,121 +1663,11 @@ pub fn placeBSPRooms(
         rooms.append(room) catch err.wat();
     }
 
-    const S = struct {
-        const Self = @This();
-
-        // Recursively descend tree, looking for a leaf's rectangle
-        fn getRectFromNode(node: *const Node) ?usize {
-            if (node.group == .Leaf or node.group == .Failed)
-                return node.index;
-
-            if (node.childs[0]) |child| return getRectFromNode(child);
-            if (node.childs[1]) |child| return getRectFromNode(child);
-
-            return null;
-        }
-
-        fn tryNodeConnection(maplevel: usize, parent: Rect, child: Rect) ?Corridor {
-            var parentr = Room{ .rect = parent };
-            var childr = Room{ .rect = child };
-
-            const d = getConnectionSide(&parentr, &childr) orelse return null;
-            if (createCorridor(maplevel, &parentr, &childr, d)) |corridor| {
-                // FIXME: 2021-09-18: uncomment this and disable intersecting
-                // corridors, for some weird reason this code doesn't try
-                // connecting another room if its first try fails...? (Far too
-                // tired to fix this now after working on it for 48+ hours...)
-                //
-                // Addendum 2021-09-21: Might be because a room behind another
-                // is trying to connect to a room in front of it? Need a way
-                // to find another parent node if it's not valid.
-                //
-                // if (isRoomInvalid(roomlist, &corridor.room, parent, child, false))
-                //     return null;
-                return corridor;
-            } else {
-                return null;
-            }
-        }
-
-        // Recursively attempt connection.
-        fn tryRecursiveNodeConnection(
-            maplevel: usize,
-            parent: *Rect,
-            child_tree: *const Node,
-            roomlist: *Room.ArrayList,
-        ) ?Corridor {
-            if (child_tree.group == .Leaf or child_tree.group == .Failed) {
-                const child = roomlist.items[child_tree.index].rect;
-                return tryNodeConnection(maplevel, parent.*, child);
-            }
-
-            if (child_tree.childs[0]) |child|
-                if (tryRecursiveNodeConnection(maplevel, parent, child, roomlist)) |c|
-                    return c;
-
-            if (child_tree.childs[1]) |child|
-                if (tryRecursiveNodeConnection(maplevel, parent, child, roomlist)) |c|
-                    return c;
-
-            return null;
-        }
-
-        // Recursively excavate corridors.
-        //
-        // doorlist: a list of possible spots to place a door. Populated as
-        //   such spots are found.
-        //
-        //   NOTE: We cannot place doors right away, because we might end up
-        //   with empty spots next to it as we continue to recursively excavate
-        //   corridors.
-        //
-        fn excavateCorridors(
-            maplevel: usize,
-            node: *Node,
-            roomlist: *Room.ArrayList,
-            doorlist: *CoordArrayList,
-        ) void {
-            const childs = node.childs;
-
-            if (childs[0] != null and childs[1] != null) {
-                var child1 = &roomlist.items[getRectFromNode(childs[0].?).?].rect;
-
-                if (tryRecursiveNodeConnection(maplevel, child1, childs[1].?, roomlist)) |corridor| {
-                    corridor.parent.connections.append(corridor.child.rect.start) catch err.wat();
-                    corridor.child.connections.append(corridor.parent.rect.start) catch err.wat();
-
-                    excavateRect(&corridor.room.rect);
-                    roomlist.append(corridor.room) catch err.wat();
-                    doorlist.append(corridor.room.rect.start) catch err.wat();
-                }
-            }
-
-            if (childs[0]) |child| excavateCorridors(maplevel, child, roomlist, doorlist);
-            if (childs[1]) |child| excavateCorridors(maplevel, child, roomlist, doorlist);
-        }
-
-        pub fn addCorridorsAndDoors(
-            maplevel: usize,
-            node: *Node,
-            roomlist: *Room.ArrayList,
-            alloc: mem.Allocator,
-        ) void {
-            var doorlist = CoordArrayList.init(alloc);
-            defer doorlist.deinit();
-
-            excavateCorridors(maplevel, node, roomlist, &doorlist);
-
-            for (doorlist.items) |doorspot|
-                if (utils.findPatternMatch(doorspot, &VALID_DOOR_PLACEMENT_PATTERNS) != null and
-                    rng.tenin(Configs[maplevel].door_chance))
-                {
-                    placeDoor(doorspot, false);
-                };
-        }
-    };
-
-    S.addCorridorsAndDoors(level, &grandma_node, rooms, allocator);
+    // Rely on placeMoarCorridors, the previous corridor-placing thing was
+    // horribly broken :/
+    //
+    //S.addCorridorsAndDoors(level, &grandma_node, rooms, allocator);
+    placeMoarCorridors(level, allocator);
 
     // Add subrooms only after everything is placed and corridors are dug.
     //
@@ -3637,11 +3528,11 @@ pub const QRT_BASE_LEVELCONFIG = LevelConfig{
     .prefabs = &[_][]const u8{"ANY_s_recharging"},
     .prefab_chance = 1000, // No prefabs for QRT
     .mapgen_func = placeBSPRooms,
-    .mapgen_iters = 1024,
-    .min_room_width = 7,
-    .min_room_height = 6,
-    .max_room_width = 15,
-    .max_room_height = 9,
+    .mapgen_iters = 4096,
+    .min_room_width = 6,
+    .min_room_height = 5,
+    .max_room_width = 14,
+    .max_room_height = 7,
 
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
         levelFeaturePrisoners,
