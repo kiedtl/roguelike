@@ -1,0 +1,30 @@
+%         ┌■  Capacitor arrays
+% ┌|||┐  ╞█
+% └■█■┘  └┘
+
+:priority 50
+:subroom
+:g_global_restriction 2
+:restriction 1
+
+@0 m capacitor_array
+@a p wire_s1e1
+@b p capacitor_discharger
+@c p wire_n1s1e2
+@d p wire_n1e1
+@e p wire_n1w1
+.ab
+c0.
+de.
+
+\
+
+@0 m capacitor_array
+@1 p capacitor_discharger
+@2 p discharger_vane
+@a p wire_s1e1
+@b p wire_s1w1
+@c p wire_n1e1
+@d p wire_n1w1
+a222b
+c101d

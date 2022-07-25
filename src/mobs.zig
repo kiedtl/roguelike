@@ -1230,7 +1230,7 @@ pub const LightningMageTemplate = MobTemplate{
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.LeatherArmor,
-    .cloak = &items.SilCloak,
+    .cloak = &items.FurCloak,
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{

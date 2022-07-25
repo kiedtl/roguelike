@@ -356,7 +356,7 @@ fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceIte
             _writerWrite(w, "machine\n", .{});
             _writerWrite(w, "\n", .{});
 
-            if (m.interact1) |interaction| {
+            if (m.player_interact) |interaction| {
                 const remaining = interaction.max_use - interaction.used;
                 const plural: []const u8 = if (remaining == 1) "" else "s";
                 _writerWrite(w, "You used this machine $b{}$. times.\n", .{interaction.used});
@@ -1161,7 +1161,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
                 } else if (state.dungeon.at(coord).surface) |surf| {
                     priority = 2;
                     name.appendSlice(switch (surf) {
-                        .Machine => |m| if (m.interact1 != null) m.name else "",
+                        .Machine => |m| if (m.player_interact != null) m.name else "",
                         .Prop => "",
                         .Corpse => "corpse",
                         .Container => |c| c.name,

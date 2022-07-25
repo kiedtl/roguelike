@@ -300,7 +300,7 @@ pub fn moveOrFight(direction: Direction) bool {
 
     if (!state.player.coord.eq(current)) {
         if (state.dungeon.at(state.player.coord).surface) |s| switch (s) {
-            .Machine => |m| if (m.interact1) |interaction| {
+            .Machine => |m| if (m.player_interact) |interaction| {
                 if (m.canBeInteracted(state.player, &interaction)) {
                     state.message(.Info, "$c({s})$. Press $bA$. to activate.", .{m.name});
                 } else {
@@ -442,7 +442,7 @@ pub fn activateSurfaceItem() bool {
     // FIXME: simplify this, DRY
     if (state.dungeon.at(state.player.coord).surface) |s| {
         switch (s) {
-            .Machine => |m| if (m.interact1) |_| {
+            .Machine => |m| if (m.player_interact) |_| {
                 mach = m;
             } else {
                 display.drawAlertThenLog("You can't activate that.", .{});
@@ -461,11 +461,13 @@ pub fn activateSurfaceItem() bool {
         return false;
     }
 
-    const interaction = &mach.interact1.?;
+    const interaction = &mach.player_interact.?;
     mach.evoke(state.player, interaction) catch |e| {
         switch (e) {
             error.UsedMax => display.drawAlertThenLog("You can't use the {s} again.", .{mach.name}),
-            error.NoEffect => display.drawAlertThenLog("{s}", .{interaction.no_effect_msg}),
+            error.NoEffect => if (interaction.no_effect_msg) |msg| {
+                display.drawAlertThenLog("{s}", .{msg});
+            },
         }
         return false;
     };
@@ -473,7 +475,7 @@ pub fn activateSurfaceItem() bool {
     state.player.declareAction(.Interact);
     state.message(.Info, "{s}", .{interaction.success_msg});
 
-    const left = mach.interact1.?.max_use - mach.interact1.?.used;
+    const left = mach.player_interact.?.max_use - mach.player_interact.?.used;
     if (left == 0) {
         state.message(.Info, "The {s} becomes inert.", .{mach.name});
     } else {

@@ -444,7 +444,8 @@ fn readInput() bool {
                     break :blk state.player.teleportTo(stairloc, null, false);
                 },
                 termbox.TB_KEY_F7 => blk: {
-                    state.player.addStatus(.Drunk, 0, .{ .Tmp = 20 });
+                    state.player.innate_resists.rElec += 25;
+                    //state.player.addStatus(.Drunk, 0, .{ .Tmp = 20 });
                     //state.message(.Info, "Lorem ipsum, dolor sit amet. Lorem ipsum, dolor sit amet.. Lorem ipsum, dolor sit amet. {}", .{rng.int(usize)});
                     break :blk false;
                 },

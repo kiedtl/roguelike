@@ -7,6 +7,7 @@ const meta = std.meta;
 const math = std.math;
 const enums = std.enums;
 
+const display = @import("display.zig");
 const dijkstra = @import("dijkstra.zig");
 const spells = @import("spells.zig");
 const colors = @import("colors.zig");
@@ -21,6 +22,7 @@ const rng = @import("rng.zig");
 const materials = @import("materials.zig");
 const types = @import("types.zig");
 
+const Rect = types.Rect;
 const Coord = types.Coord;
 const Direction = types.Direction;
 const Item = types.Item;
@@ -42,6 +44,8 @@ const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
+const Generator = @import("generators.zig").Generator;
+const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 // ---
@@ -272,6 +276,7 @@ pub const MACHINES = [_]Machine{
     SeizureGasTrap,
     BlindingGasTrap,
     Mine,
+    CapacitorArray,
     RechargingStation,
     Drain,
     Fountain,
@@ -636,6 +641,65 @@ pub const Mine = Machine{
     .pathfinding_penalty = 10,
 };
 
+pub const CapacitorArray = Machine{
+    .id = "capacitor_array",
+    .name = "capacitor array",
+    .announce = true,
+    .powered_tile = 'C',
+    .unpowered_tile = 'x',
+    .powered_fg = 0x10243e,
+    .unpowered_fg = 0x10243e,
+    .bg = 0xb0c4de,
+    .power_drain = 0,
+    .power = 100,
+    .on_power = powerNone,
+    .flammability = 25,
+    //.evoke_confirm = "Really discharge the capacitor array?",
+    .player_interact = .{
+        .name = "discharge",
+        .success_msg = "You discharge the capacitor.",
+        .no_effect_msg = null,
+        .max_use = 1,
+        .func = struct {
+            fn f(_: *Machine, by: *Mob) bool {
+                assert(by == state.player);
+
+                if (state.player.resistance(.rElec) <= 0) {
+                    display.drawAlertThenLog("Cannot discharge without rElec.", .{});
+                    return false;
+                }
+
+                var affected = StackBuffer(Coord, 128).init(null);
+                var gen = Generator(Rect.rectIter).init(state.mapRect(by.coord.z));
+                while (gen.next()) |coord| if (state.player.cansee(coord)) {
+                    if (utils.getHostileAt(state.player, coord)) |hostile| {
+                        if (hostile.resistance(.rElec) <= 0) {
+                            hostile.takeDamage(.{
+                                .amount = 27.0,
+                                .by_mob = state.player,
+                                .blood = false,
+                                .source = .RangedAttack,
+                                .kind = .Electric,
+                            }, .{ .basic = true });
+                            affected.append(coord) catch err.wat();
+                        }
+                    } else |_| {}
+                };
+
+                if (affected.len == 0) {
+                    display.drawAlertThenLog("No electricity-vulnerable monsters in sight.", .{});
+                    return false;
+                } else {
+                    state.player.makeNoise(.Explosion, .Loudest);
+                    display.Animation.blink(affected.constSlice(), '*', display.Animation.ELEC_LINE_FG, .{}).apply();
+                }
+
+                return true;
+            }
+        }.f,
+    },
+};
+
 pub const RechargingStation = Machine{
     .id = "recharging_station",
     .name = "recharging station",
@@ -649,7 +713,7 @@ pub const RechargingStation = Machine{
     .power = 100,
     .on_power = powerNone,
     .flammability = 15,
-    .interact1 = .{
+    .player_interact = .{
         .name = "recharge",
         .success_msg = "All evocables recharged.",
         .no_effect_msg = "No evocables to recharge!",
@@ -669,7 +733,7 @@ pub const Drain = Machine{
     .powered_walkable = true,
     .unpowered_walkable = true,
     .on_power = powerNone,
-    .interact1 = .{
+    .player_interact = .{
         .name = "crawl",
         .success_msg = "You crawl into the drain and emerge from another!",
         .no_effect_msg = "You crawl into the drain, but it's a dead end!",
@@ -690,7 +754,7 @@ pub const Fountain = Machine{
     .powered_walkable = true,
     .unpowered_walkable = true,
     .on_power = powerNone,
-    .interact1 = .{
+    .player_interact = .{
         .name = "quaff",
         .success_msg = "The fountain refreshes you.",
         .no_effect_msg = "The fountain is dry!",

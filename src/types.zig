@@ -2382,7 +2382,7 @@ pub const Mob = struct { // {{{
     pub fn fight(attacker: *Mob, recipient: *Mob, opts: FightOptions) void {
         assert(!recipient.is_dead);
 
-        const martial = @intCast(usize, attacker.stat(.Martial));
+        const martial = @intCast(usize, math.max(0, attacker.stat(.Martial)));
         const weapons = attacker.listOfWeapons();
         const wielded_wp = if (attacker.inventory.equipment(.Weapon).*) |w| w.Weapon else null;
 
@@ -3415,7 +3415,7 @@ pub const Machine = struct {
     can_be_jammed: bool = false,
     jammed: bool = false,
 
-    interact1: ?MachInteract = null,
+    player_interact: ?MachInteract = null,
 
     // If the player tries to trigger the machine, should we prompt for a
     // confirmation?
@@ -3439,7 +3439,7 @@ pub const Machine = struct {
     pub const MachInteract = struct {
         name: []const u8,
         success_msg: []const u8,
-        no_effect_msg: []const u8,
+        no_effect_msg: ?[]const u8,
         needs_power: bool = true,
         used: usize = 0,
         max_use: usize, // 0 for infinite uses
@@ -4250,7 +4250,8 @@ pub const Dungeon = struct {
                 if (self.at(neighbor).type == ttype)
                     ctr += 1;
             } else {
-                ctr += 1;
+                if (ttype == .Wall)
+                    ctr += 1;
                 continue;
             }
         }

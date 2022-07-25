@@ -27,14 +27,18 @@ const StackBuffer = buffer.StackBuffer;
 
 pub fn getHostileInDirection(self: *Mob, d: Direction) !*Mob {
     if (self.coord.move(d, state.mapgeometry)) |neighbor| {
-        if (state.dungeon.at(neighbor).mob) |othermob| {
-            if (othermob.isHostileTo(self) and othermob.ai.is_combative) {
-                return othermob;
-            } else return error.NoHostileThere;
-        } else return error.NoHostileThere;
+        return getHostileAt(self, neighbor);
     } else {
         return error.OutOfMapBounds;
     }
+}
+
+pub fn getHostileAt(self: *Mob, coord: Coord) !*Mob {
+    if (state.dungeon.at(coord).mob) |othermob| {
+        if (othermob.isHostileTo(self) and othermob.ai.is_combative) {
+            return othermob;
+        } else return error.NoHostileThere;
+    } else return error.NoHostileThere;
 }
 
 pub fn findFirstNeedlePtr(
