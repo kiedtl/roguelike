@@ -82,8 +82,10 @@ pub fn calculateMorale(self: *Mob) isize {
     // Negative bonuses depending on self's condition {{{
     if (self.hasStatus(.Blind)) base -= 2;
     if (self.hasStatus(.Debil)) base -= 2;
+    if (self.hasStatus(.Daze)) base -= 4;
     if (self.hasStatus(.Confusion)) base -= 2;
 
+    if (self.hasStatus(.Daze)) base -= 4;
     if (self.hasStatus(.Poison)) base -= 4;
     if (self.hasStatus(.Pain)) base -= 4;
     if (self.hasStatus(.Slow)) base -= 4;
@@ -118,6 +120,7 @@ pub fn calculateMorale(self: *Mob) isize {
         }
 
         if (enemy.hasStatus(.Fear)) base += 4;
+        if (enemy.hasStatus(.Daze)) base += 4;
         if (enemy.hasStatus(.Poison)) base += 4;
         if (enemy.hasStatus(.Pain)) base += 4;
         if (enemy.hasStatus(.Fire) and !enemy.isFullyResistant(.rFire)) base += 4;
@@ -159,6 +162,7 @@ pub fn calculateMorale(self: *Mob) isize {
 
         if (ally.hasStatus(.Sleeping)) base -= 1;
         if (ally.hasStatus(.Blind)) base -= 2;
+        if (ally.hasStatus(.Daze)) base -= 2;
         if (ally.hasStatus(.Debil)) base -= 1;
 
         if (ally.hasStatus(.Confusion)) base -= 2;
