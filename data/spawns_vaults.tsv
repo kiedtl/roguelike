@@ -46,6 +46,7 @@
 "necromancer"         	   - 	  70 	   - 	   -
 "war_olg"             	   - 	  70 	   - 	   -
 "bloat"               	   - 	  70 	   - 	   -
+"thrashing_sculptor"  	   - 	  70 	   - 	   -
 "death_knight"        	   - 	  50 	   - 	   -
 
 # spires
@@ -70,6 +71,7 @@
 
 "calcite_spire"       	   - 	   - 	  10 	   -
 "bloat"               	   - 	   - 	  20 	   -
+"thrashing_sculptor"  	   - 	   - 	  20 	   -
 "skeleton"            	   - 	   - 	  20 	   -
 "skeletal_axemaster"  	   - 	   - 	  20 	   -
 "skeletal_blademaster"	   - 	   - 	  20 	   -

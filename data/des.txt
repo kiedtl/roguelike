@@ -325,6 +325,10 @@ The necromancy experiment of some apprentice bone mage.
 % bloat
 A bloated, rotting corpse.
 
+% thrashing_sculptor
+A hideous mass of writhing bones and sundry body parts, created by some
+braindamaged death mage.
+
 % skeleton
 A mouldering skeleton, imbued with a parody of life.
 
