@@ -25,9 +25,7 @@ Explodes when opened, setting surroundings on fire.
 Explosion that destroys walls.
 
 # potion of disruption
-- cures corruption, corruption-immunity for some time
-- scare undead status.
-- coating: 50% more damage to undead
+- cures corruption and gives scare undead status.
 
 # potion of debilitation
 Releases seizure gas.
@@ -50,3 +48,6 @@ Status: blind.
 
 # potion of illumination
 Status: corona.
+
+# potion of intimidation
+Status: intimidating.
