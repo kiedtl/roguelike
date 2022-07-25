@@ -46,6 +46,19 @@
 %        Disallow placing a subroom if it wouldn't be aligned in the center of
 %        the parent room.
 %
+%    :priority
+%        Makes sense for subrooms only.
+%        Priority convention:
+%        - 99: subrooms that should appear on every level.
+%              e.g.: recharging station, ring drop areas.
+%        - 50: interact-able machines, or machines/subrooms
+%              that are important for gameplay.
+%              e.g.: capacitor arrays, prisons.
+%        - 10: subrooms that enhance tactical gameplay.
+%              e.g.: diamond centerpieces, pillars, etc.
+%           0: fluff.
+%        Global.
+%
 
 % Example:
 
