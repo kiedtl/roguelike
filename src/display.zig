@@ -1989,6 +1989,7 @@ pub fn drawInventoryScreen() bool {
         // Draw list of items
         {
             y = starty;
+            y = _drawStr(x, y, endx, "$cInventory:$.", .{}, .{});
             for (state.player.inventory.pack.constSlice()) |item, i| {
                 const startx = x;
 
@@ -2000,10 +2001,11 @@ pub fn drawInventoryScreen() bool {
             }
 
             y = starty;
+            const startx = endx - @divTrunc(endx - x, 2);
+            y = _drawStr(startx, y, endx, "$cEquipment:$.", .{}, .{});
             inline for (@typeInfo(Mob.Inventory.EquSlot).Enum.fields) |slots_f, i| {
-                const startx = endx - @divTrunc(endx - x, 2);
                 const slot = @intToEnum(Mob.Inventory.EquSlot, slots_f.value);
-                const arrow = if (i == chosen and chosen_itemlist == .Equip) ">" else " ";
+                const arrow = if (i == chosen and chosen_itemlist == .Equip) ">" else "·";
                 const color = if (i == chosen and chosen_itemlist == .Equip) colors.LIGHT_CONCRETE else colors.GREY;
 
                 _clear_line(startx, endx, y);
