@@ -1,4 +1,5 @@
 :subroom
+:priority 50
 :restriction 2
 :prison 1,1 4 4
 :prison 6,1 4 4

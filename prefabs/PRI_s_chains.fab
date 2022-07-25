@@ -1,5 +1,5 @@
 :subroom
-:restriction 2
+:g_global_restriction 1
 
 @0 p chain
 

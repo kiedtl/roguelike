@@ -3,6 +3,7 @@
 % http://dwarffortresswiki.org/images/1/19/Palin88_Bedroom_Design.png
 
 :noguards
+:g_global_restriction 1
 
 @0 p bed
 ??####*#####
