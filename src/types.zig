@@ -1482,6 +1482,7 @@ pub const AI = struct {
         SocialFighter, // Won't fight unless there are aware allies around.
         CalledWithUndead, // Can be called by CAST_CALL_UNDEAD, even if not undead.
         FearsDarkness, // Tries very hard to stay in light areas (pathfinding).
+        MovesDiagonally, // Usually tries to move diagonally.
     };
 
     pub fn flag(self: *const AI, f: Flag) bool {
@@ -1524,7 +1525,7 @@ pub const Squad = struct {
     __next: ?*Squad = null,
     __prev: ?*Squad = null,
 
-    members: StackBuffer(*Mob, 5) = StackBuffer(*Mob, 5).init(null),
+    members: StackBuffer(*Mob, 16) = StackBuffer(*Mob, 16).init(null),
     leader: ?*Mob = null, // FIXME: Should never be null in practice!
     enemies: EnemyRecord.AList = undefined,
 
@@ -2513,7 +2514,7 @@ pub const Mob = struct { // {{{
             }
         }
 
-        if (attacker_weapon.knockback > 0 and rng.onein(2)) {
+        if (attacker_weapon.knockback > 0) {
             const d = attacker.coord.closestDirectionTo(recipient.coord, state.mapgeometry);
             combat.throwMob(attacker, recipient, d, attacker_weapon.knockback);
         }
@@ -2666,10 +2667,12 @@ pub const Mob = struct { // {{{
         }
 
         if (d.blood) {
-            if (self.blood) |s|
-                state.dungeon.spatter(self.coord, s);
-            if (self.blood_spray) |g|
-                state.dungeon.atGas(self.coord)[g] += 0.2;
+            if (d.amount > 0) {
+                if (self.blood) |s|
+                    state.dungeon.spatter(self.coord, s);
+                if (self.blood_spray) |g|
+                    state.dungeon.atGas(self.coord)[g] += 0.2;
+            }
         }
 
         self.last_damage = d;
@@ -2909,22 +2912,23 @@ pub const Mob = struct { // {{{
         const pathobj = Path{ .from = self.coord, .to = to, .confused_state = is_confused };
 
         if (!self.path_cache.contains(pathobj)) {
-            // TODO: do some tests and figure out what's the practical limit to memory
-            // usage, and reduce the buffer's size to that.
-            var membuf: [65535]u8 = undefined;
-            var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+            const directions = b: {
+                if (is_confused) {
+                    break :b &CARDINAL_DIRECTIONS;
+                } else {
+                    if (self.ai.flag(.MovesDiagonally)) {
+                        break :b &DIAGONAL_DIRECTIONS;
+                    } else {
+                        break :b &DIRECTIONS;
+                    }
+                }
+            };
 
-            const pth = astar.path(
-                self.coord,
-                to,
-                state.mapgeometry,
-                state.is_walkable,
-                .{ .mob = self },
-                if (is_confused) &CARDINAL_DIRECTIONS else &DIRECTIONS,
-                fba.allocator(),
-            ) orelse return null;
+            const pth = astar.path(self.coord, to, state.mapgeometry, state.is_walkable, .{ .mob = self }, directions, state.GPA.allocator()) orelse return null;
+            defer pth.deinit();
 
             assert(pth.items[0].eq(self.coord));
+
             var last: Coord = self.coord;
             for (pth.items[1..]) |coord| {
                 self.path_cache.put(
@@ -2934,8 +2938,6 @@ pub const Mob = struct { // {{{
                 last = coord;
             }
             assert(last.eq(to));
-
-            pth.deinit();
         }
 
         // Return the next direction, ensuring that the next tile is walkable.

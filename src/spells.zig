@@ -51,6 +51,7 @@ const WIDTH = state.WIDTH;
 fn createCorpseCreationSpell(
     comptime mob_id: []const u8,
     comptime name: []const u8,
+    comptime msg_name: []const u8,
     template: *const mobs.MobTemplate,
 ) Spell {
     return Spell{
@@ -59,33 +60,53 @@ fn createCorpseCreationSpell(
         .cast_type = .Smite,
         .smite_target_type = .Corpse,
         .effect_type = .{ .Custom = struct {
-            fn f(_: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
+            fn f(caster_coord: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
+                const caster = state.dungeon.at(caster_coord).mob.?;
+
                 const corpse = state.dungeon.at(coord).surface.?.Corpse;
                 state.dungeon.at(coord).surface = null;
 
-                for (&CARDINAL_DIRECTIONS) |d| {
+                const spawn_loc: ?Coord = for (&CARDINAL_DIRECTIONS) |d| {
                     if (coord.move(d, state.mapgeometry)) |neighbor| {
                         if (state.is_walkable(neighbor, .{ .right_now = true })) {
-                            _ = mobs.placeMob(state.GPA.allocator(), template, neighbor, .{});
-                            break;
+                            break neighbor;
                         }
                     }
-                }
+                } else null;
 
-                if (state.player.cansee(coord)) {
-                    state.message(
-                        .SpellCast,
-                        "A swarm of " ++ name ++ "s bursts out of the {s} corpse!",
-                        .{corpse.displayName()},
-                    );
+                if (spawn_loc) |loc| {
+                    const m = mobs.placeMob(state.GPA.allocator(), template, loc, .{});
+
+                    if (caster.squad) |caster_squad| {
+                        caster_squad.members.append(m) catch {};
+                        if (m.squad) |previous_squad| {
+                            for (previous_squad.members.constSlice()) |sub_member| {
+                                if (caster_squad.members.append(sub_member)) {
+                                    sub_member.squad = caster_squad;
+                                } else |_| {
+                                    sub_member.squad = null;
+                                }
+                            }
+                        }
+                        m.squad = caster_squad;
+                    }
+
+                    if (state.player.cansee(coord)) {
+                        state.message(
+                            .SpellCast,
+                            msg_name ++ "s bursts out of the {s} corpse!",
+                            .{corpse.displayName()},
+                        );
+                    }
                 }
             }
         }.f },
     };
 }
 
-pub const CAST_CREATE_EMBERLING = createCorpseCreationSpell("emberling", "emberling", &mobs.EmberlingTemplate);
-pub const CAST_CREATE_SPARKLING = createCorpseCreationSpell("sparkling", "sparkling", &mobs.SparklingTemplate);
+pub const CAST_CREATE_BLOAT = createCorpseCreationSpell("bloat", "bloat", "Bloats", &mobs.BloatTemplate);
+pub const CAST_CREATE_EMBERLING = createCorpseCreationSpell("emberling", "emberling", "Emberlings", &mobs.EmberlingTemplate);
+pub const CAST_CREATE_SPARKLING = createCorpseCreationSpell("sparkling", "sparkling", "Sparklings", &mobs.SparklingTemplate);
 
 pub const CAST_ALERT_ALLY = Spell{
     .id = "sp_alert_ally",
