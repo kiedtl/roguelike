@@ -2,26 +2,72 @@ Each branch has its own challenges and unique terrain and/or monsters.
 
 Branch order:
 ```
-                    ╓──────────╖
-┌──────┬─────┬─────>║  Prison  ╟─ Escape!
-↑ ┌───┐↑┌───┐↑┌───┐ ╟──────────╢
-└─┤Mor├┴┤Mor├┴┤Mor├─╢  Morgue  ║<───────┬─────┬──────┬───────────────┬─────┬──────┐
-  └───┘ └───┘ └───┘ ╟──────────╢   ┌───┐↑┌───┐↑┌───┐ ↑ ┌────────────┐↑┌───┐↑┌───┐ ↑
-                    ║ Quarters ╟─┬─┤Qrt├┴┤Qrt├┴┤Qrt├─┴─┤  Solitary  ├┴┤Sol├┴┤Sol├─┘
-                    ╟──────────╢ │ └─┬─┘ └─┬─┘ └─┬─┘   └──────┬─────┘ └───┘ └───┘
-┌──────┬─────┬─────>║  Prison  ║ └──>└────>└────>└────────────┘
-↑ ┌───┐↑┌───┐↑┌───┐ ╟──────────╢
-└─┤Smi├┴┤Smi├┴┤Smi├─╢ Caverns  ║<───────┬─────┬──────┬───────────────┬─────┬──────┐
-  └───┘ └───┘ └───┘ ╟──────────╢   ┌───┐↑┌───┐↑┌───┐ ↑ ┌────────────┐↑┌───┐↑┌───┐ ↑
-                    ║Laboratory╟─┬─┤Lab├┴┤Lab├┴┤Lab├─┴─┤ Watchtower ├┴┤Wch├┴┤Wch├─┘
-                    ╟──────────╢ │ └─┬─┘ └─┬─┘ └─┬─┘   └──────┬─────┘ └───┘ └───┘
-                    ║  Prison  ║ └──>└────>└────>└────────────┘
-                    ╟──────────╢
-            Start ─>║  Prison  ║
-                    ╙──────────╜
+   ┌┌─────────┐┐
+   ││-1/Prison││
+   └└─────────┘┘
+    ↑
+   ┌┌─────────┐┐
+   ││-2/Prison││←------┐
+   └└─────────┘┘       ↑
+    ↑                 ┌──────────────┐
+    |                 │-3/Quarters/3─│
+    |                 └──────────────┘
+    |                  ↑
+   ┌┌───────────┐┐    ┌──────────────┐
+   ││-3/Quarters││---→│-3/Quarters/2─│
+   └└───────────┘┘    └──────────────┘
+    ↑
+   ┌┌─────────┐┐
+   ││-4/Prison││←------┐
+   └└─────────┘┘       |
+    ↑                  |
+    |                 ┌────────────┐
+    |                 │-5/Caverns/3│
+    |                 └────────────┘
+    |                  ↑
+    |                 ┌────────────┐
+    |                 │-5/Caverns/2│
+    |                 └────────────┘
+    |                  ↑
+    |                 ┌───────────┐
+    ├→---------------→│-5/Caverns │
+    |                 └───────────┘
+   ┌┌─────────┐┐
+   ││-5/Prison││←------┐
+   └└─────────┘┘       ↑
+    ↑                 ┌───────────────┐
+    |                 │-6/Laboratory/3│
+    |                 └───────────────┘
+    |                  ↑
+   ┌┌─────────────┐┐  ┌───────────────┐
+   ││-6/Laboratory││-→│-6/Laboratory/2│
+   └└─────────────┘┘  └───────────────┘
+    ↑
+   ┌┌─────────┐┐
+   ││-7/Prison││
+   └└─────────┘┘
+    ↑
+   ┌┌─────────┐┐
+   ││-8/Prison││
+   └└─────────┘┘
 ```
 
-## Caverns
+## Prison
+
+- The starting and ending area.
+- Sprawling rooms.
+- Drains (unique to the Prison) allow teleporting across level.
+
+## Laboratory
+
+Laboratory/3 contains the Twisted Rune.
+
+- More defenders than usual. Defenders are watcher-like guards that shoot nets
+  at you before moving in to stab with a knife.
+- Automatic-opening doors make it harder to break FOV of a pursuing monster.
+- Lead turtles and copper wasps are a Laboratory-only speciality.
+
+## Caverns (optional)
 
 Caverns/3 contains the Basalt Rune.
 
@@ -32,23 +78,6 @@ Caverns/3 contains the Basalt Rune.
   Caverns-only speciality.
 - Smoke clouds and large splotches of fungi obscure vision...
 - ...Until fuming fiends dispel clouds, and fungi is set on fire.
-
-## Prison
-
-- The starting area.
-- Drains (unique to the Prison) allow teleporting across level.
-- Executioners wander a single room, making it difficult to stab. They carry
-  a giant knout capable of two-shotting you, but attack slowly.
-
-## Laboratory
-
-Laboratory/3 contains the Twisted Rune.
-
-- More sentinels than usual. Sentinels are watcher-like guards that shoot nets
-  at you before moving in to stab with a knife.
-- Air purifiers scattered in a few rooms make potions harder to use.
-- Automatic-opening doors make it harder to break FOV of a pursuing monster.
-- Lead turtles and copper wasps are a Laboratory-only speciality.
 
 ## Quarters
 
