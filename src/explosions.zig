@@ -51,7 +51,7 @@ pub fn fireBurst(ground0: Coord, max_radius: usize) void {
     for (result) |row, y| for (row) |cell, x| {
         if (cell > 0) {
             const cellc = Coord.new2(ground0.z, x, y);
-            fire.setTileOnFire(cellc, math.min(20, fire.tileFlammability(cellc)));
+            fire.setTileOnFire(cellc, math.max(20, fire.tileFlammability(cellc)));
         }
     };
 }
