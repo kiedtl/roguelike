@@ -145,7 +145,7 @@ duration.
 Induces poisoning, both damaging and slowing the victim.
 
 % potion_invigorate
-Gives a strength and evasion bonus for a period of time.
+Gives a damage/melee and evasion bonus for a period of time.
 
 % potion_incinerate
 This will set you and your surroundings on fire in a 8-tile radius.
