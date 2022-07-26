@@ -31,7 +31,6 @@ pub const TaskArrayList = std.ArrayList(Task);
 pub const TaskType = union(enum) {
     Clean: Coord,
     Haul: struct { from: Coord, to: Coord },
-    Repair: Coord,
 };
 
 pub const Task = struct {
@@ -48,28 +47,6 @@ pub fn tickTasks(level: usize) void {
             var x: usize = 0;
             while (x < WIDTH) : (x += 1) {
                 const coord = Coord.new2(level, x, y);
-
-                // Check for broken tiles
-                if (state.dungeon.at(coord).broken and state.dungeon.fireAt(coord).* == 0) {
-                    var already_reported: ?usize = null;
-
-                    for (state.tasks.items) |task, id| switch (task.type) {
-                        .Repair => |r| if (r.eq(coord)) {
-                            already_reported = id;
-                            break;
-                        },
-                        else => {},
-                    };
-
-                    if (already_reported) |id| {
-                        if (state.tasks.items[id].completed) {
-                            state.tasks.items[id].completed = false;
-                            state.tasks.items[id].assigned_to = null;
-                        }
-                    } else {
-                        state.tasks.append(Task{ .type = TaskType{ .Repair = coord } }) catch unreachable;
-                    }
-                }
 
                 // Check for tile cleanliness
                 if (!state.dungeon.at(coord).prison) { // Let the prisoners wallow in filth

@@ -1496,8 +1496,6 @@ pub const AIWorkPhase = enum {
     HaulerScan,
     HaulerTake,
     HaulerDrop,
-    EngineerScan,
-    EngineerRepair,
 };
 
 pub const Prisoner = struct {
@@ -3429,7 +3427,7 @@ pub const Machine = struct {
     }
 
     pub fn isPowered(self: *const Machine) bool {
-        return !state.dungeon.at(self.coord).broken and self.power > 0;
+        return self.power > 0;
     }
 
     pub fn tile(self: *const Machine) u21 {
@@ -3844,9 +3842,6 @@ pub const Tile = struct {
     // won't change over time, is needed.
     rand: usize = 0,
 
-    // Is the surface item (or wall) on the tile broken?
-    broken: bool = false,
-
     pub fn displayAs(coord: Coord, ignore_lights: bool, ignore_mobs: bool) termbox.tb_cell {
         var self = state.dungeon.at(coord);
         var cell = termbox.tb_cell{};
@@ -3874,13 +3869,8 @@ pub const Tile = struct {
             },
         }
 
-        if (self.broken) {
-            cell.bg = colors.BG;
-            cell.ch = '·';
-        }
-
         if (self.mob != null and !ignore_mobs) {
-            if (!self.broken) assert(self.type != .Wall);
+            assert(self.type != .Wall);
 
             const mob = self.mob.?;
 
@@ -3914,18 +3904,16 @@ pub const Tile = struct {
             cell.ch = fire.fireGlyph(famount);
             cell.fg = fire.fireColor(famount);
         } else if (state.dungeon.itemsAt(coord).last()) |item| {
-            if (!self.broken) assert(self.type != .Wall);
+            assert(self.type != .Wall);
             cell = item.tile();
         } else if (state.dungeon.at(coord).surface) |surfaceitem| {
-            if (!self.broken) {
-                if (self.type == .Wall) {
-                    cell.fg = 0;
-                    cell.bg = 0xff0000;
-                    cell.ch = 'X';
-                    return cell;
-                }
-                //assert(self.type != .Wall);
+            if (self.type == .Wall) {
+                cell.fg = 0;
+                cell.bg = 0xff0000;
+                cell.ch = 'X';
+                return cell;
             }
+            //assert(self.type != .Wall);
 
             cell.fg = 0xffffff;
 
@@ -3935,14 +3923,12 @@ pub const Tile = struct {
                     break :c '%';
                 },
                 .Container => |c| cont: {
-                    if (!self.broken) {
-                        // if (c.capacity >= 14) {
-                        //     cell.fg = 0x000000;
-                        //     cell.bg = 0x808000;
-                        // }
-                        cell.fg = 0xffeeaa;
-                    }
-                    break :cont if (self.broken) 'x' else c.tile;
+                    // if (c.capacity >= 14) {
+                    //     cell.fg = 0x000000;
+                    //     cell.bg = 0x808000;
+                    // }
+                    cell.fg = 0xffeeaa;
+                    break :cont c.tile;
                 },
                 .Machine => |m| mach: {
                     if (m.isPowered()) {
@@ -3954,20 +3940,16 @@ pub const Tile = struct {
                     }
                     if (m.bg) |bg| cell.bg = bg;
 
-                    break :mach if (self.broken) 'x' else m.tile();
+                    break :mach m.tile();
                 },
                 .Prop => |p| prop: {
-                    if (!self.broken) {
-                        if (p.bg) |prop_bg| cell.bg = prop_bg;
-                        if (p.fg) |prop_fg| cell.fg = prop_fg;
-                    }
-                    break :prop if (self.broken) '·' else p.tile;
+                    if (p.bg) |prop_bg| cell.bg = prop_bg;
+                    if (p.fg) |prop_fg| cell.fg = prop_fg;
+                    break :prop p.tile;
                 },
                 .Poster => |_| poster: {
-                    if (!self.broken) {
-                        cell.fg = self.material.color_bg orelse self.material.color_fg;
-                    }
-                    break :poster if (self.broken) @as(u21, '·') else '?';
+                    cell.fg = self.material.color_bg orelse self.material.color_fg;
+                    break :poster '?';
                 },
                 .Stair => |s| stair: {
                     var ch: u21 = '.';
@@ -4035,14 +4017,14 @@ pub const Dungeon = struct {
     //
     pub fn terrainAt(self: *Dungeon, coord: Coord) *const surfaces.Terrain {
         const tile = self.at(coord);
-        if (tile.type != .Floor or tile.broken) return &surfaces.DefaultTerrain;
+        if (tile.type != .Floor) return &surfaces.DefaultTerrain;
         return if (tile.surface == null) tile.terrain else &surfaces.DefaultTerrain;
     }
 
     pub fn isTileOpaque(coord: Coord) bool {
         const tile = state.dungeon.at(coord);
 
-        if (tile.type == .Wall and !tile.broken)
+        if (tile.type == .Wall)
             return true;
 
         if (tile.surface) |surface| {
@@ -4065,7 +4047,7 @@ pub const Dungeon = struct {
         const tile = state.dungeon.at(coord);
         var o: usize = FLOOR_OPACITY;
 
-        if (tile.type == .Wall and !tile.broken)
+        if (tile.type == .Wall)
             return @floatToInt(usize, tile.material.opacity * 100);
 
         o += state.dungeon.terrainAt(coord).opacity;

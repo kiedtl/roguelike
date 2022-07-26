@@ -91,8 +91,7 @@ pub fn tickFire(level: usize) void {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
             const coord = Coord.new2(level, x, y);
-            if (!state.dungeon.at(coord).broken and
-                state.dungeon.at(coord).type != .Floor)
+            if (state.dungeon.at(coord).type != .Floor)
                 continue;
             const oldfire = state.dungeon.fireAt(coord).*;
             if (oldfire == 0) continue;
@@ -125,10 +124,7 @@ pub fn tickFire(level: usize) void {
                 };
             }
 
-            // If there's a corpse on that tile, destroy it.
-            //
-            // Otherwise, mark the tile as broken (but don't set any machines as
-            // malfunctioning).
+            // Destroy surface items
             if (state.dungeon.at(coord).surface) |s| {
                 switch (s) {
                     .Poster, .Machine, .Corpse => state.dungeon.at(coord).surface = null,
