@@ -1807,7 +1807,8 @@ pub fn placeTraps(level: usize) void {
             avg_dist += vent.distance(trap_coord);
             avg_dist /= (count + 1);
 
-            if (avg_dist < 4 or
+            if (vent.distance(trap_coord) < 3 or
+                avg_dist < 4 or
                 state.dungeon.at(vent).surface != null or
                 state.dungeon.at(vent).type != .Floor)
             {
