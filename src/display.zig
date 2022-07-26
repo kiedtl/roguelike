@@ -228,6 +228,7 @@ fn _writerHLine(writer: io.FixedBufferStream([]u8).Writer, linewidth: usize) voi
     var i: usize = 0;
     while (i < linewidth) : (i += 1)
         writer.writeAll("─") catch err.wat();
+    writer.writeAll("\n") catch err.wat();
 }
 
 fn _writerMonsHostility(w: io.FixedBufferStream([]u8).Writer, mob: *Mob) void {
@@ -706,6 +707,8 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
         _writerWrite(w, "· won't investigate noises\n", .{});
     if (mob.ai.flag(.SocialFighter))
         _writerWrite(w, "· won't attack alone\n", .{});
+    if (mob.ai.flag(.MovesDiagonally))
+        _writerWrite(w, "· (usually) moves diagonally\n", .{});
     _writerWrite(w, "\n", .{});
 }
 
