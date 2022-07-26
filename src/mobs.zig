@@ -96,7 +96,7 @@ pub const ExecutionerTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
         },
 
-        .max_HP = 10,
+        .max_HP = 7,
         .memory_duration = 5,
         .stats = .{ .Willpower = 3 },
     },
@@ -115,7 +115,7 @@ pub const DestroyerTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
         },
 
-        .max_HP = 12,
+        .max_HP = 8,
         .memory_duration = 5,
         .stats = .{ .Willpower = 4, .Evade = 10, .Melee = 70 },
     },
