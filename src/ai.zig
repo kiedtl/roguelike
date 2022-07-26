@@ -1382,10 +1382,13 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
         meleeFight(mob, alloc);
     }
 
-    if (mob.isUnderStatus(.Fear) != null)
-        mob.makeNoise(.Scream, .Loud)
-    else
-        mob.makeNoise(.Shout, .Loud);
+    if (mob.hasStatus(.Fear)) {
+        mob.makeNoise(.Scream, .Loud);
+    } else {
+        if (mob.allegiance == .Necromancer) { // Only shout if dungeon full of frens
+            mob.makeNoise(.Shout, .Loud);
+        }
+    }
 
     const dist = target.mob.coord.distance(mob.coord);
     if (dist <= mob.stat(.Vision)) {
