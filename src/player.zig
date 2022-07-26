@@ -375,12 +375,14 @@ pub fn grabItem() bool {
                 state.message(.Inventory, "You drop the {s}.", .{
                     (old_item.longName() catch err.wat()).constSlice(),
                 });
+                state.player.declareAction(.Drop);
             }
 
             state.player.equipItem(slot, item);
             state.message(.Inventory, "Equipped a {s}.", .{
                 (item.longName() catch err.wat()).constSlice(),
             });
+            state.player.declareAction(.Use);
         },
         .Ring => |r| {
             var empty_slot: ?Inventory.EquSlot = for (Inventory.RING_SLOTS) |slot| {
@@ -403,6 +405,7 @@ pub fn grabItem() bool {
             }
 
             state.player.equipItem(empty_slot.?, item);
+            state.player.declareAction(.Use);
             state.message(.Inventory, "Equipped the {s}.", .{
                 (item.longName() catch err.wat()).constSlice(),
             });

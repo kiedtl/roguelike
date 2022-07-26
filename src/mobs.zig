@@ -418,6 +418,7 @@ pub const PlayerTemplate = MobTemplate{
         .stats = .{ .Willpower = 3, .Missile = 60, .Evade = 10, .Vision = 8, .Sneak = 4 },
     },
     .weapon = &items.DaggerWeapon,
+    //.backup_weapon = &items.RapierWeapon,
     .armor = &items.RobeArmor,
     //.evocables = &[_]Evocable{items.FlamethrowerEvoc},
     //.cloak = &items.ThornsCloak,

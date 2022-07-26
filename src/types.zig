@@ -1881,35 +1881,43 @@ pub const Mob = struct { // {{{
     }
 
     pub fn swapWeapons(self: *Mob) void {
-        const tmp = self.inventory.equipment(.Weapon).*;
-        self.inventory.equipment(.Weapon).* = self.inventory.equipment(.Backup).*;
-        self.inventory.equipment(.Backup).* = tmp;
+        const weapon = self.inventory.equipment(.Weapon).*;
+        const backup = self.inventory.equipment(.Backup).*;
+
+        if (weapon) |_| self.dequipItem(.Weapon, null);
+        if (backup) |_| self.dequipItem(.Backup, null);
+
+        if (weapon) |i| self.equipItem(.Backup, i);
+        if (backup) |i| self.equipItem(.Weapon, i);
     }
 
     pub fn equipItem(self: *Mob, slot: Inventory.EquSlot, item: Item) void {
-        switch (item) {
-            .Weapon => |w| for (w.equip_effects) |effect| self.applyStatus(effect, .{}),
-            else => {},
+        if (slot != .Backup) {
+            switch (item) {
+                .Weapon => |w| for (w.equip_effects) |effect| self.applyStatus(effect, .{}),
+                else => {},
+            }
         }
         self.inventory.equipment(slot).* = item;
-        self.declareAction(.Use);
     }
 
-    pub fn dequipItem(self: *Mob, slot: Inventory.EquSlot, drop_coord: Coord) void {
+    pub fn dequipItem(self: *Mob, slot: Inventory.EquSlot, drop_coord: ?Coord) void {
         const item = self.inventory.equipment(slot).*.?;
-        switch (item) {
-            .Weapon => |w| for (w.equip_effects) |effect| {
-                if (self.isUnderStatus(effect.status)) |effect_info| {
-                    if (effect_info.duration == .Equ) {
-                        self.cancelStatus(effect.status);
+        if (slot != .Backup) {
+            switch (item) {
+                .Weapon => |w| for (w.equip_effects) |effect| {
+                    if (self.isUnderStatus(effect.status)) |effect_info| {
+                        if (effect_info.duration == .Equ) {
+                            self.cancelStatus(effect.status);
+                        }
                     }
-                }
-            },
-            else => {},
+                },
+                else => {},
+            }
         }
-        state.dungeon.itemsAt(drop_coord).append(item) catch err.wat();
+        if (drop_coord) |c|
+            state.dungeon.itemsAt(c).append(item) catch err.wat();
         self.inventory.equipment(slot).* = null;
-        self.declareAction(.Drop);
     }
 
     pub fn removeItem(self: *Mob, index: usize) !Item {
