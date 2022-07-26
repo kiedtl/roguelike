@@ -3459,7 +3459,6 @@ pub const LevelConfig = struct {
 
     required_mobs: []const RequiredMob = &[_]RequiredMob{
         .{ .count = 3, .template = &mobs.CleanerTemplate },
-        .{ .count = 3, .template = &mobs.EngineerTemplate },
     },
     room_crowd_max: usize = 2,
     level_crowd_max: ?usize = null,

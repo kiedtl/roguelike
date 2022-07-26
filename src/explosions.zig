@@ -206,7 +206,9 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                 .Corpse => |_| state.dungeon.at(coord).surface = null, // Nuke corpses
                 else => {},
             };
-            state.dungeon.at(coord).broken = true;
+
+            if (state.dungeon.at(coord).type == .Wall)
+                state.dungeon.at(coord).type = .Floor;
 
             if (state.dungeon.at(coord).mob) |unfortunate| {
                 const total_dmg = @intToFloat(f64, opts.strength * cell / 100 / 5);

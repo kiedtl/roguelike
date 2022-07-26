@@ -863,28 +863,6 @@ pub const HaulerTemplate = MobTemplate{
     },
 };
 
-pub const EngineerTemplate = MobTemplate{
-    .mob = .{
-        .id = "engineer",
-        .species = &GoblinSpecies,
-        .tile = 'e',
-        .ai = AI{
-            .profession_name = "engineer",
-            .profession_description = "repairing",
-            .work_fn = ai.engineerWork,
-            .fight_fn = null,
-            .is_combative = false,
-            .is_curious = false,
-            .work_phase = .EngineerScan,
-        },
-
-        .max_HP = 10,
-        .memory_duration = 8,
-        .stats = .{ .Willpower = 2, .Evade = 10, .Speed = 90 },
-    },
-    .cloak = &items.FurCloak,
-};
-
 pub const AncientMageTemplate = MobTemplate{
     .mob = .{
         .id = "ancient_mage",
@@ -1804,7 +1782,6 @@ pub const MOBS = [_]MobTemplate{
     AlchemistTemplate,
     BartenderTemplate,
     CleanerTemplate,
-    EngineerTemplate,
     HaulerTemplate,
     AncientMageTemplate,
     SpectreMageTemplate,

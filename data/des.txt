@@ -292,9 +292,6 @@ This slave is tasked with keeping the floor of the Dungeon spotless.
 % hauler
 A very ordinary Dungeon slave, doing very ordinary hauling work.
 
-% engineer
-It is carrying a trowel and some mortar.
-
 % ancient_mage
 Even the most powerful of human mages cannot hope to wield the full might of the
 Necromancer. Instead, it is invested in this undead mage, an immeasurably
