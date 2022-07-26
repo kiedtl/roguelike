@@ -154,13 +154,9 @@ pub fn triggerStair(_: Coord, dest_stair: Coord) bool {
         err.bug("Unable to ascend stairs! (something's in the way, maybe?)", .{});
     }
 
-    // Remove all statuses and heal player.
-    inline for (@typeInfo(Status).Enum.fields) |status| {
-        state.player.cancelStatus(@field(Status, status.name));
-    }
-    state.player.HP = state.player.max_HP;
-
     if (state.levelinfo[state.player.coord.z].upgr) {
+        state.player.max_HP += 2;
+
         for (state.player_upgrades) |*u| {
             if (!u.recieved) {
                 u.recieved = true;
@@ -172,6 +168,12 @@ pub fn triggerStair(_: Coord, dest_stair: Coord) bool {
             state.player_upgrades[0], state.player_upgrades[1], state.player_upgrades[2],
         });
     }
+
+    // Remove all statuses and heal player.
+    inline for (@typeInfo(Status).Enum.fields) |status| {
+        state.player.cancelStatus(@field(Status, status.name));
+    }
+    state.player.HP = state.player.max_HP;
 
     return true;
 }
