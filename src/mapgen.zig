@@ -1773,7 +1773,7 @@ pub fn placeTraps(level: usize) void {
         if (!rng.percent(Configs[level].room_trapped_chance))
             continue;
 
-        var tries: usize = 30;
+        var tries: usize = 1000;
         var trap_coord: Coord = undefined;
 
         while (true) {
@@ -3487,7 +3487,7 @@ pub const LevelConfig = struct {
 
     allow_statues: bool = true,
     door_chance: usize = 30,
-    room_trapped_chance: usize = 40,
+    room_trapped_chance: usize = 60,
     subroom_chance: usize = 60,
     allow_corridors: bool = true,
     allow_extra_corridors: bool = true,
