@@ -1863,11 +1863,10 @@ pub const Mob = struct { // {{{
         }
     }
 
-    pub fn swapWeapons(self: *Mob) bool {
+    pub fn swapWeapons(self: *Mob) void {
         const tmp = self.inventory.equipment(.Weapon).*;
         self.inventory.equipment(.Weapon).* = self.inventory.equipment(.Backup).*;
         self.inventory.equipment(.Backup).* = tmp;
-        return false; // zero-cost action
     }
 
     pub fn equipItem(self: *Mob, slot: Inventory.EquSlot, item: Item) void {

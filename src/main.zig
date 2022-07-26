@@ -498,7 +498,17 @@ fn readInput() bool {
                     state.message(.Info, "Auto-waiting: {s}", .{str});
                     break :b false;
                 },
-                '\'' => state.player.swapWeapons(),
+                '\'' => b: {
+                    state.player.swapWeapons();
+                    if (state.player.inventory.equipment(.Weapon).*) |weapon| {
+                        state.message(.Inventory, "Now wielding a {s}.", .{
+                            (weapon.longName() catch err.wat()).constSlice(),
+                        });
+                    } else {
+                        state.message(.Inventory, "You aren't wielding anything now.", .{});
+                    }
+                    break :b false;
+                },
                 'A' => player.activateSurfaceItem(),
                 'i' => display.drawInventoryScreen(),
                 'v' => display.drawExamineScreen(null),
