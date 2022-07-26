@@ -2331,9 +2331,6 @@ pub const Mob = struct { // {{{
 
         buf.append(if (self.inventory.equipment(.Weapon).*) |w| w.Weapon else self.species.default_attack) catch err.wat();
 
-        if (self.inventory.equipment(.Backup).*) |w| {
-            buf.append(w.Weapon) catch err.wat();
-        }
         for (self.species.aux_attacks) |w|
             buf.append(w) catch err.wat();
 
