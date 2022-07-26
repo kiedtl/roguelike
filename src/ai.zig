@@ -80,6 +80,15 @@ pub fn calculateMorale(self: *Mob) isize {
     // }}}
 
     // Negative bonuses depending on self's condition {{{
+    //
+    // XXX: keep neg bonuses here in sync with the positive bonuses below, so
+    // that the joy of realizing that enemy is below 50% health can be
+    // properly canceled out by the fact that the mob themself is also
+    // below 50% health
+    //
+    if (self.HP < (self.max_HP / 2)) base -= 2;
+    if (self.HP < (self.max_HP / 4)) base -= 4;
+
     if (self.hasStatus(.Blind)) base -= 2;
     if (self.hasStatus(.Debil)) base -= 2;
     if (self.hasStatus(.Daze)) base -= 4;
@@ -175,7 +184,7 @@ pub fn calculateMorale(self: *Mob) isize {
         if (ally.hasStatus(.Fire) and !ally.isFullyResistant(.rFire)) base -= 2;
         if (ally.hasStatus(.Paralysis)) base -= 4;
 
-        if (ally.HP < (ally.max_HP / 2)) base -= 4;
+        if (ally.HP < (ally.max_HP / 2)) base -= 2;
         if (ally.HP < (ally.max_HP / 4)) base -= 4;
 
         if (ally.ai.phase == .Flee) base -= 4;
