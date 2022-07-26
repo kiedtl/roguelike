@@ -177,17 +177,19 @@ pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: u
         dest_coord = new;
     }
 
-    if (!dest_coord.eq(throwee.coord))
-        assert(throwee.teleportTo(dest_coord, null, true));
-
-    // Give damage and print messages
-
+    // Do animation before actually moving mob
+    //
     display.Animation.apply(.{ .TraverseLine = .{
         .start = previous_coord,
         .end = dest_coord,
         .char = throwee.tile,
         .path_char = '×',
     } });
+
+    if (!dest_coord.eq(throwee.coord))
+        assert(throwee.teleportTo(dest_coord, null, true));
+
+    // Give damage and print messages
 
     if (player.canSeeAny(&.{
         @as(?Coord, if (thrower) |m| m.coord else null),
