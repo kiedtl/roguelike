@@ -532,7 +532,6 @@ pub const NormalDoor = Machine{
     .powered_opacity = 0.2,
     .unpowered_opacity = 1.0,
     .flammability = 15,
-    .can_be_jammed = true,
     .on_power = powerNone,
 };
 
@@ -550,7 +549,6 @@ pub const LabDoor = Machine{
     .powered_opacity = 1.0,
     .unpowered_opacity = 0.0,
     .flammability = 15,
-    .can_be_jammed = true,
     .on_power = powerLabDoor,
 };
 
@@ -568,7 +566,6 @@ pub const VaultDoor = Machine{
     .powered_opacity = 0.0,
     .unpowered_opacity = 1.0,
     .flammability = 15,
-    .can_be_jammed = true,
     .on_power = powerNone,
 };
 
@@ -586,7 +583,6 @@ pub const LockedDoor = Machine{
     .powered_walkable = true,
     .unpowered_walkable = false,
     .flammability = 15,
-    .can_be_jammed = true,
     .on_power = powerNone,
     .pathfinding_penalty = 5,
 };

@@ -136,7 +136,6 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 010, .i = .{ .P = &BigFireTrapKit } },
     // Evocables
     .{ .w = 030, .i = .{ .E = FlamethrowerEvoc } },
-    .{ .w = 030, .i = .{ .E = IronSpikeEvoc } },
     .{ .w = 020, .i = .{ .E = EldritchLanternEvoc } },
     // Cloaks
     .{ .w = 020, .i = .{ .C = &SilCloak } },
@@ -279,43 +278,6 @@ pub const FlamethrowerEvoc = Evocable{
         }
     }.f,
 };
-
-pub const IronSpikeEvoc = Evocable{
-    .id = "iron_spike",
-    .name = "iron spike",
-    .tile_fg = 0xcacbca,
-    .max_charges = 1,
-    .delete_when_inert = true,
-    .rechargable = false,
-    .trigger_fn = _triggerIronSpikeEvoc,
-};
-
-fn _triggerIronSpikeEvoc(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
-    assert(mob == state.player);
-
-    const dest = display.chooseCell(.{}) orelse return error.BadPosition;
-    if (dest.distance(mob.coord) > 1) {
-        display.drawAlertThenLog("Your arms aren't that long!", .{});
-        return error.BadPosition;
-    } else if (state.dungeon.at(dest).surface == null) {
-        display.drawAlertThenLog("There's nothing there to jam!", .{});
-        return error.BadPosition;
-    } else if (meta.activeTag(state.dungeon.at(dest).surface.?) != .Machine or
-        !state.dungeon.at(dest).surface.?.Machine.can_be_jammed)
-    {
-        display.drawAlertThenLog("You can't jam that!", .{});
-        return error.BadPosition;
-    } else if (state.dungeon.at(dest).surface.?.Machine.jammed) {
-        display.drawAlertThenLog("That's already jammed!", .{});
-        return error.BadPosition;
-    }
-
-    const machine = state.dungeon.at(dest).surface.?.Machine;
-    machine.jammed = true;
-    machine.power = 0;
-
-    state.message(.Info, "You jam the {s}...", .{machine.name});
-}
 
 pub const EldritchLanternEvoc = Evocable{
     .id = "eldritch_lantern",
