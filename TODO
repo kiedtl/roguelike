@@ -30,6 +30,9 @@ Mob speech
   - "Aha!"
   - "It's a <species>!"
   - "It's <name>!"
+- On spotting the player
+  - "It's Obmirnul!"
+  - "ALARM!"
   - "It's the @!!"
 - On fleeing
   - "He's coming!"
@@ -40,18 +43,39 @@ Mob speech
   - "Don't touch me!"
   - "Go away!"
   - "No farther!"
+  - "Away!"
+  - "Leave!"
 - On seeing a dead ally, killed by a visible hostile
   - "Murderer!"
   - "Screw you!"
+  - "Killer!"
+  - "Code red!"
 - On seeing a dead ally, killed by a nonvisible hostile
   - "Oh no!"
+  - "Noo! Not <name>!"
 - On pursuing a fleeing hostile
+  - If nearby allies:
+    - "Hunt it down!"
+    - "No mercy!"
+    - "Kill!"
+  - "Mendicant!"
   - "Coward!"
   - "Wimp!"
   - "Clown!"
-  - "Haha, you cannot outrun me!" if faster
+  - "Heh, you can't outrun me!" if faster
   - "You can run but you can't hide!" if slower
+- On killing hostile
+  - "Victory!"
+  - "Phew!" if at low health
+  - "The <name> is dead!"
+  - "The @ is dead!" if hostile is player
+  - "Hurray!"
+- On taunting a hostile
+  - "Mendicant!"
+  - "Coward!"
 - On pursuing an unseen hostile
+  - Coward!"
+  - "Show yourself!"
   - "Where are you?!"
   - "Where is he?"
 - On investigating a noise ("...?", "What?")
@@ -59,35 +83,28 @@ Mob speech
   - "...?"
 - On completing investigation of a noise
   - "Must've been rats!"
-- On finding an pursued enemy ("Its here!", "I've got you now!", "Now you're mine!",
+- On finding an pursued enemy
+  - "Fool!"
   - "It's here!"
+  - "Gotcha!"
 - On cornering an enemy
   - "I've got you now!"
   - "Now you're mine!"
-  - "You miserable <species>!"
-  - "You miserable @!"
-- On about to kill player
+- When player is at critical HP
   - "Time's up, <name>!"
   - "You're finished now!"
+  - "Hehe"
+  - "You miserable <species>!"
+  - "You miserable @!"
 
 New mobs
 --------
-- creeping death
-  - A sabre-toothed cat, nothing more or less.
-  - Has LOS radius of just one more than player's.
-  - Stalks player around.
-  - After a bit, the cat charges and attacks player.
-  - While charging:
-    - 50% increased speed
-    - Bite provides chance of paralysis
-  - When player is in LOS of cat, messages:
-    - "You feel like something is watching you."
-    - "You feel uneasy." (just before cat charges)
 x sulfur fiend x
   x rElec∞ and rFire+.
   x Hasten Rot: makes a corpse emit a cloud of miasma, destroying the
     corpse in the process. Miasma causes nausea.
   x Summon Ball Lightning: conjures a ball lightning mobs.
+
 
 - fiend of vapours
   - CANCELED: abilities just aren't that impressive, and would fit
@@ -286,6 +303,35 @@ x lightning mage
     - Has potential to work well with mage's desire to keep distance
   - Can haste sparklings
   - Keeps distance
+
+slinking terror
+  - creeps near walls, refuses to move while being watched, very fast, attacks nearby enemies, fearless, tanky
+
+- creeping death
+  - A sabre-toothed cat, nothing more or less.
+  - Has LOS radius of just one more than player's.
+  - Stalks player around.
+  - When player is in dark area and is alone, the cat charges and attacks player.
+  - While charging:
+    - 50% increased speed
+    - Bite provides chance of paralysis(?)
+  - When player is in LOS of cat, messages:
+    - "You feel like something is watching you."
+    - "You feel uneasy." (just before cat charges)
+
+night wanderer
+  - "An invisible Presence that stalks the dungeon, clothed in suffocating Darkness."
+  - neutral/non-combatant, wanders around at night without doing anything.
+  - aura of paralysis? (i.e. paralyses mobs that can see it, for effect?)
+
+grue
+  - 20% chance to acquires .Burning when in contact with light
+  - competent melee brute
+  - seeks out and attacks enemies during night
+    - requirement: target is in dark area, and is surrounded in darkness
+    - requirement: target must be alone.
+    - requirement: target must be reachable without going into light areas
+  - after killing, stands over corpse (unless enemy approaches, in which case it flees).
 
 x spectre mage
   x Spectral Sword: summons four spectral swords, which are very fast but
@@ -933,9 +979,9 @@ x Show items, notable machines on info pane
 x Consumable reworking + kit refactoring
 x More evocables: copper ingot, coal, red-hot poker
 x More kits and traps: fire, shock, incineration, knockback
-- Ring changes/additions/simplifications:
+x Ring changes/additions/simplifications:
   x Refactor pattern checks
-  - More ring types (fire, etc); at least 8
+  x More ring types (fire, etc); at least 8
   x Overhaul usage/UI
   x Random ring drops, equipping/deequipping rings
   x Remove ring statuses
@@ -943,13 +989,12 @@ x More kits and traps: fire, shock, incineration, knockback
 x Fix trtr chambers; add more of them
 x Iron, lightning, torpor, and calcite spires
 x Bone weapons, corruption effects
-- More potions
+x More potions
   x Potion of debilitation, traps of seizure gas
   x Potion of irritation, traps of blinding gas
   x Potion of illumination
-  - Potion of disruption
   x Potion of intimidation
-  - Potion of leavenation
+  x Potion of leavenation
 x Add barrel of water
 - New monsters
   x War olgs, cinder worms, destroyers
@@ -957,28 +1002,26 @@ x Add barrel of water
     x Emberling/sparkling summoning trap kits
   x Warriors, recruits (for treasure vaults)
   - Basalt monsters (-fiends, -mages, -lings)?
-  - Slinking terror, thrashing sculptor
+  x Thrashing sculptor
   ~ [canceled] Fiend of vapours
 x Copper weapons and copper spires/battery packs, copper hornets
-- Lore-related prefabs (e.g. washroom, trophy rooms, etc)
+- Fluff prefabs (e.g. washroom, trophy rooms, etc)
 x Treasure vaults
   x Marble vault
   x Iron vault
   x Golden vault
-  x Tavern vault (maybe next release?)
-- Scoring
-- Fix pushing past monsters
+  x Tavern vault
+x Fix pushing past monsters
 - Remove bad mechanics:
   x remove boring `Flanked' mechanic
   - get rid of broken tiles
-    - remove malfunctioning machines
-      - broken doors: bump to knock down
-- Night creatures (night reapers, creeping deaths, grues, winged terrors)
-- Shadow weapons
+    x remove malfunctioning machines
+    x locked doors: bump to knock down
+  x remove jammed doors, iron spikes
 x Level progression overhaul
   x Load level info, stairs from data/levelinfo.tsv
   x Make CAV optional, extra Prison level to compensate (for now)
-- Playtest game, especially CAV and make adjustments
+- Playtest game throughout, especially CAV and make adjustments
 *** v1.1.0 release ***
 - Basic save system
 - Warn when next to spreading gas and resting
@@ -997,6 +1040,7 @@ x Auto-wait: don't wait while in combat
 - More mundane weapons: hammer, poker
 - More undead mobs, to make !disruption/calcite spire/etc relevant
 - More potions:
+  - Potion of disruption
   - Potion of insubstantiation and fortification
 - Basic speeches by mobs
 - Bloodlings and related mages
@@ -1016,9 +1060,7 @@ x Auto-wait: don't wait while in combat
   - Research possible usage for Morgue level
   - Research possible usage to augment Cavern mapgen
   - Use for Solitary, Armory, Watchtower
-- Squad overhaul
-  - Patrol squads
-  - Prisoner squads + goblin commanders
+x Squad overhaul
 - Mob repositioning AI
   - AI to move out of dangerous tiles (gas/terrain)
   - AI to move out of reach of enemy, if mob has reaching weapon and is faster
@@ -1046,6 +1088,10 @@ x Auto-wait: don't wait while in combat
   - Cogmind-esque tunneling algorithm
   - *blende statues
 - Guards in cubbyholes (both corridors and rooms)
+- Night creatures (night reapers, creeping deaths, grues, winged terrors)
+  - Slinking terror
+- Shadow weapons
+- Scoring
 
 Animations
 ==========
@@ -1263,9 +1309,6 @@ Items/Machines
 - Add evocables:
   x "eldritch lantern": dazes or blinds mobs in FOV; blinds player
     for 2 turns. 4 charges.
-  - "cannon kit" (CAV): creates permanent cannon on use (see below). 1 charge.
-  - "lightning rod" (LAB): severely damages all mobs without rElec in FOV.
-    - Note: implement electricity damage propagation for this.
   - "symbol of torment" (House): Gives .Fear to all mobs in FOV, and halves HP of
     all mobs (including evoker). Has no effect on rTorm or undead. ∞ charges.
     - "You raise the Symbol of Torment. Pain wracks your body!"
@@ -1282,41 +1325,15 @@ Items/Machines
   ~ "fume hood" (CAV): Grants rFume∞ for ~10 turns. 4 charges.
   ~ "hammer": Destroys a machine. ∞ charges; cannot be recharged.
   x "iron spike": Jams a door. 1 charge; cannot be recharged.
-  - "blinding torch": Basically a laser. Can be evoked on a monster that can
-    currently see the player (or *could* see the player, if its LOS was long
-    enough), and will blind and daze that monster. 4 charges.
-  - room reader (TODO: name) (LAB): Can be evoked on an opaque tile that's
-    adjacent to the player, such as a door, and it will show player what's
-    behind it as if player was standing there. 6 charges.
-    - Inspired by that article demonstrating ability to roughly determine
-      what's in a room by shining a laser through a keyhole and analysing how
-      the light beams bounced around inside.
   x "mine kit": Creates mine on tile. 2 charges; cannot be recharged.
-  - camera reader (TODO: name)
-    - Can "hack" pre-placed cameras to spy on nearby areas for X turns?
-  - "tinderbox": Ignites a single tile. Like Conjure Flame in DCSS. 6 charges.
-  - "sparkthrower": Shoots a narrow beam of flames at a target. 6 charges.
+  x "tinderbox": Ignites a single tile. Like Conjure Flame in DCSS. 6 charges.
+  x "sparkthrower": Shoots a narrow beam of flames at a target. 6 charges.
 - Add machines:
-  - "cannons" (LAB): fires projectile in direction, eviscerating any mobs.
-    Loud sound. 6 charges, pwr-station powered.
-  - "floodgates" (PRI): creates permanent pool of shallow water.
-    1 charge, pwr-station powered.
-  - "canister of sludge" (CAV): can be "broken open" to release torrent of toxic
-    sludge in direction, creating pool and damaging mobs. Takes 2 turns to empty.
-    1 charge.
-  - "canister of fuel" (VLT): can be "broken open" to release torrent of burning
-    fuel in direction, incinerating mobs and creating pool/cloud of fire. Takes 4
-    turns to completely empty. 1 charge.
-  - "lightning vane" (LAB): kills all mobs without rElec in FOV. Deafening noise.
-    4 charges, pwr-station powered.
+  x "capacitor array": kills all mobs without rElec in FOV. Deafening noise.
   x recharging stations: 4 charges. 1-2 per level.
-    - 'r' key is shortcut to evoke recharging station, when such a station is
+    ~ 'r' key is shortcut to evoke recharging station, when such a station is
       in LOS. Doing so invokes it for everything in inventory.
   x fountain: Can be evoked to heal player by half of lost health. 2 charges.
-  - summon stone: Summons a random (1-3) number of guards on the level to come
-    to the command stone's location. 1 charge.
-  - transporter stone: "Signals" a nearby spire to come nearby. Reprograms spire
-    additionally.
 
 Fires/explosions
 ================
@@ -1490,6 +1507,35 @@ x Extremely dangerous (but lucrative) vaults that have golden walls, warning
   captain's wheel relic)
 - Spell/pattern/item: Deal 3 damage to all visible enemies (or only undead?)
   after X turns (or every X turn?) (inspiration: StS stone calender relic)
+- Canceled evocables/machines that need reworking:
+  - summon stone: Summons a random (1-3) number of guards on the level to come
+    to the command stone's location. 1 charge.
+  - transporter stone: "Signals" a nearby spire to come nearby. Reprograms spire
+    additionally.
+  - "cannons" (LAB): fires projectile in direction, eviscerating any mobs.
+    Loud sound. 6 charges, pwr-station powered.
+  - "floodgates" (PRI): creates permanent pool of shallow water.
+    1 charge, pwr-station powered.
+  - "canister of sludge" (CAV): can be "broken open" to release torrent of toxic
+    sludge in direction, creating pool and damaging mobs. Takes 2 turns to empty.
+    1 charge.
+  - "canister of fuel" (VLT): can be "broken open" to release torrent of burning
+    fuel in direction, incinerating mobs and creating pool/cloud of fire. Takes 4
+    turns to completely empty. 1 charge.
+  - "blinding torch": Basically a laser. Can be evoked on a monster that can
+    currently see the player (or *could* see the player, if its LOS was long
+    enough), and will blind and daze that monster. 4 charges.
+  - room reader (TODO: name) (LAB): Can be evoked on an opaque tile that's
+    adjacent to the player, such as a door, and it will show player what's
+    behind it as if player was standing there. 6 charges.
+    - Inspired by that article demonstrating ability to roughly determine
+      what's in a room by shining a laser through a keyhole and analysing how
+      the light beams bounced around inside.
+  - camera reader (TODO: name)
+    - Can "hack" pre-placed cameras to spy on nearby areas for X turns?
+  - "cannon kit" (CAV): creates permanent cannon on use (see below). 1 charge.
+  - "lightning rod" (LAB): severely damages all mobs without rElec in FOV.
+    - Note: implement electricity damage propagation for this.
 
 Optimizations
 =============
