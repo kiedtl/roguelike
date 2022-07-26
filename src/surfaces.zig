@@ -397,10 +397,6 @@ pub const BatteryPack = Machine{
     .unpowered_walkable = false,
 
     .on_power = powerNone,
-
-    .malfunction_effect = Machine.MalfunctionEffect{
-        .Electrocute = .{ .chance = 30, .damage = 2, .radius = 6 },
-    },
 };
 
 pub const TurbinePowerSupply = Machine{
@@ -466,10 +462,6 @@ pub const Brazier = Machine{
     .unpowered_luminescence = 0,
 
     .flammability = 8,
-    .malfunction_effect = Machine.MalfunctionEffect{
-        .Electrocute = .{ .chance = 40, .damage = 2, .radius = 3 },
-    },
-
     .on_power = powerNone,
 };
 
@@ -496,10 +488,6 @@ pub const Lamp = Machine{
     .unpowered_luminescence = 0,
 
     .flammability = 8,
-    .malfunction_effect = Machine.MalfunctionEffect{
-        .Electrocute = .{ .chance = 40, .damage = 1, .radius = 5 },
-    },
-
     .on_power = powerNone,
 };
 
@@ -585,6 +573,23 @@ pub const LockedDoor = Machine{
     .flammability = 15,
     .on_power = powerNone,
     .pathfinding_penalty = 5,
+    .evoke_confirm = "Break down the locked door?",
+    .player_interact = .{
+        .name = "break down",
+        .needs_power = false,
+        .success_msg = "You break down the door.",
+        .no_effect_msg = "(This is a bug.)",
+        .max_use = 1,
+        .func = struct {
+            fn f(machine: *Machine, by: *Mob) bool {
+                assert(by == state.player);
+
+                machine.disabled = true;
+                state.dungeon.at(machine.coord).surface = null;
+                return true;
+            }
+        }.f,
+    },
 };
 
 fn createVaultDoor(comptime id_suffix: []const u8, comptime name_prefix: []const u8, color: u32, alarm_chance: usize) Machine {
@@ -633,7 +638,6 @@ pub const Mine = Machine{
     .power_drain = 0, // Stay powered on once activated
     .on_power = powerMine,
     .flammability = 15,
-    .malfunction_effect = .{ .Explode = .{ .chance = 50, .power = 80 } },
     .pathfinding_penalty = 10,
 };
 
@@ -1195,40 +1199,6 @@ pub fn tickMachines(level: usize) void {
             if (machine.isPowered()) {
                 machine.on_power(machine);
                 machine.power = machine.power -| machine.power_drain;
-            } else if (state.dungeon.at(machine.coord).broken and machine.malfunctioning) {
-                if (machine.malfunction_effect) |effect| switch (effect) {
-                    .Electrocute => |e| {
-                        var zy: usize = coord.y -| e.radius;
-                        find_mob: while (zy < math.min(zy + e.radius, HEIGHT)) : (zy += 1) {
-                            var zx: usize = coord.x -| e.radius;
-                            while (zx < math.min(zx + e.radius, WIDTH)) : (zx += 1) {
-                                const zcoord = Coord.new2(level, zx, zy);
-                                if (state.dungeon.at(zcoord).mob == null or
-                                    !utils.hasClearLOF(coord, zcoord) or
-                                    state.dungeon.at(zcoord).mob.?.isFullyResistant(.rElec))
-                                {
-                                    continue;
-                                }
-
-                                if (rng.tenin(e.chance)) {
-                                    spells.BOLT_LIGHTNING.use(null, coord, zcoord, .{
-                                        .spell = &spells.BOLT_LIGHTNING,
-                                        .caster_name = machine.name,
-                                        .power = e.damage,
-                                    });
-                                    break :find_mob;
-                                }
-                            }
-                        }
-                    },
-                    .Explode => |e| {
-                        if (rng.tenin(e.chance)) {
-                            explosions.kaboom(coord, .{ .strength = e.power });
-                        } else if (state.player.cansee(coord)) {
-                            state.message(.Info, "The broken {s} hums ominously!", .{machine.name});
-                        }
-                    },
-                };
             }
         }
     }

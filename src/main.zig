@@ -509,7 +509,7 @@ fn readInput() bool {
                     }
                     break :b false;
                 },
-                'A' => player.activateSurfaceItem(),
+                'A' => player.activateSurfaceItem(state.player.coord),
                 'i' => display.drawInventoryScreen(),
                 'v' => display.drawExamineScreen(null),
                 '@' => display.drawExamineScreen(.Mob),

@@ -2223,7 +2223,11 @@ pub const Mob = struct { // {{{
             if (state.dungeon.at(dest).surface) |surface| {
                 switch (surface) {
                     .Machine => |m| if (!m.isWalkable()) {
-                        if (m.addPower(self)) {
+                        if (self == state.player and
+                            m.player_interact != null)
+                        {
+                            return player.activateSurfaceItem(dest);
+                        } else if (m.addPower(self)) {
                             if (!instant)
                                 self.declareAction(.Interact);
                             return true;
@@ -3366,8 +3370,6 @@ pub const Machine = struct {
     last_interaction: ?*Mob = null,
 
     disabled: bool = false,
-    malfunctioning: bool = false, // Should only be true if tile.broken is true
-    malfunction_effect: ?MalfunctionEffect = null,
 
     player_interact: ?MachInteract = null,
 

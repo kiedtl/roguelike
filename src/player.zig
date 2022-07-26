@@ -438,11 +438,11 @@ pub fn throwItem(index: usize) bool {
     return true;
 }
 
-pub fn activateSurfaceItem() bool {
+pub fn activateSurfaceItem(coord: Coord) bool {
     var mach: *Machine = undefined;
 
     // FIXME: simplify this, DRY
-    if (state.dungeon.at(state.player.coord).surface) |s| {
+    if (state.dungeon.at(coord).surface) |s| {
         switch (s) {
             .Machine => |m| if (m.player_interact) |_| {
                 mach = m;
@@ -477,11 +477,13 @@ pub fn activateSurfaceItem() bool {
     state.player.declareAction(.Interact);
     state.message(.Info, "{s}", .{interaction.success_msg});
 
-    const left = mach.player_interact.?.max_use - mach.player_interact.?.used;
-    if (left == 0) {
-        state.message(.Info, "The {s} becomes inert.", .{mach.name});
-    } else {
-        state.message(.Info, "You can use this {s} {} more times.", .{ mach.name, left });
+    if (mach.player_interact.?.max_use != 0) {
+        const left = mach.player_interact.?.max_use - mach.player_interact.?.used;
+        if (left == 0) {
+            state.message(.Unimportant, "You cannot use the {s} again.", .{mach.name});
+        } else {
+            state.message(.Info, "You can use this {s} {} more times.", .{ mach.name, left });
+        }
     }
 
     return true;
@@ -603,41 +605,6 @@ pub fn dropItem(index: usize) bool {
         display.drawAlertThenLog("There's no nearby space to drop items.", .{});
         return false;
     }
-}
-
-pub fn breakSomething(coord: Coord) bool {
-    // TODO: change these to asserts, this conditions should never trigger
-    if (coord.distance(state.player.coord) > 1) {
-        display.drawAlertThenLog("Your arms aren't that long!", .{});
-        return false;
-    } else if (state.dungeon.at(coord).surface == null) {
-        display.drawAlertThenLog("There's nothing there to break!", .{});
-        return false;
-    } else if (state.dungeon.at(coord).surface.? != .Machine) {
-        display.drawAlertThenLog("Smashing that would be a waste of time.", .{});
-        return false;
-    } else if (state.dungeon.at(coord).broken) {
-        display.drawAlertThenLog("Some rogue already smashed that.", .{});
-        return false;
-    }
-
-    const machine = state.dungeon.at(coord).surface.?.Machine;
-    machine.malfunctioning = true;
-    state.dungeon.at(coord).broken = true;
-
-    state.player.makeNoise(.Crash, .Loud);
-    state.player.declareAction(.Use);
-
-    switch (rng.range(usize, 0, 3)) {
-        0 => state.message(.Info, "You viciously smash the {s}.", .{machine.name}),
-        1 => state.message(.Info, "You noisily break the {s}.", .{machine.name}),
-        2 => state.message(.Info, "You pound the {s} into fine dust!", .{machine.name}),
-        3 => state.message(.Info, "You destroy the {s} savagely.", .{machine.name}),
-        else => err.wat(),
-    }
-    state.markMessageNoisy();
-
-    return true;
 }
 
 pub fn memorizeTile(fc: Coord, mtype: state.MemoryTile.Type) void {

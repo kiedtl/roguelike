@@ -201,19 +201,12 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                 fire.setTileOnFire(coord, null);
             }
 
-            var break_tile = true;
             if (state.dungeon.at(coord).surface) |surface| switch (surface) {
-                .Machine => |m| if (m.malfunction_effect) |eff| {
-                    if (meta.activeTag(eff) == .Explode) {
-                        m.malfunctioning = true;
-                        break_tile = false;
-                    }
-                },
+                .Poster, .Prop, .Machine => state.dungeon.at(coord).surface = null,
                 .Corpse => |_| state.dungeon.at(coord).surface = null, // Nuke corpses
                 else => {},
             };
-            if (break_tile)
-                state.dungeon.at(coord).broken = true;
+            state.dungeon.at(coord).broken = true;
 
             if (state.dungeon.at(coord).mob) |unfortunate| {
                 const total_dmg = @intToFloat(f64, opts.strength * cell / 100 / 5);

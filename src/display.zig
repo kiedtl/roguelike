@@ -360,30 +360,12 @@ fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceIte
             if (m.player_interact) |interaction| {
                 const remaining = interaction.max_use - interaction.used;
                 const plural: []const u8 = if (remaining == 1) "" else "s";
+                _writerWrite(w, "$cInteraction:$. {s}.\n\n", .{interaction.name});
                 _writerWrite(w, "You used this machine $b{}$. times.\n", .{interaction.used});
                 _writerWrite(w, "It can be used $b{}$. more time{s}.\n", .{ remaining, plural });
                 _writerWrite(w, "\n", .{});
             }
 
-            _writerHeader(w, linewidth, "malfunction effect", .{});
-            if (m.malfunction_effect) |effect| {
-                switch (effect) {
-                    .Electrocute => |elec_effect| {
-                        const chance = 100 / (elec_effect.chance / 10);
-                        _writerWrite(w, "· $cElectrocution$.\n", .{});
-                        _writerWrite(w, "· $cradius:$. {}\n", .{elec_effect.radius});
-                        _writerWrite(w, "· $cchance:$. {}%\n", .{chance});
-                        _writerWrite(w, "· $cdamage:$. {}\n", .{elec_effect.damage});
-                    },
-                    .Explode => |expl_effect| {
-                        const chance = 100 / (expl_effect.chance / 10);
-                        _writerWrite(w, "· $cExplosion$.\n", .{});
-                        _writerWrite(w, "· $cradius:$. ~{}\n", .{expl_effect.power / 100});
-                        _writerWrite(w, "· $cchance:$. {}%\n", .{chance});
-                        _writerWrite(w, "· $cdamage:$. massive\n", .{});
-                    },
-                }
-            }
             _writerWrite(w, "\n", .{});
         },
         .Prop => |p| _writerWrite(w, "$c{s}$.\nprop\n\n$gNothing to see here.$.\n", .{p.name}),
@@ -1688,7 +1670,6 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
 
     var kbd_s = false;
     var kbd_a = false;
-    var kbd_B = false;
 
     while (true) {
         const has_item = state.dungeon.itemsAt(coord).len > 0;
@@ -1751,14 +1732,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                     _writerWrite(writer, "Press $bA$. to attack.\n", .{});
                 }
             } else if (tile_focus == .Surface and has_surf) {
-                if (coord.distance(state.player.coord) <= 1 and
-                    state.dungeon.at(coord).surface != null and
-                    state.dungeon.at(coord).surface.? == .Machine and
-                    !state.dungeon.at(coord).broken)
-                {
-                    kbd_B = true;
-                    _writerWrite(writer, "Press $bB$. to break this.\n", .{});
-                }
+                // nothing
             }
 
             var y = infow.starty;
@@ -1900,9 +1874,6 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                     'e', 'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
                     'z', 'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
                     'c', 'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
-                    'B' => if (kbd_B) {
-                        return player.breakSomething(coord);
-                    },
                     'A' => if (kbd_a) {
                         state.player.fight(state.dungeon.at(coord).mob.?, .{});
                         return true;

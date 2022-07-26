@@ -125,25 +125,16 @@ pub fn tickFire(level: usize) void {
                 };
             }
 
-            // If there's an explosive machine on this tile, have a chance for it
-            // to explode immediately.
-            //
             // If there's a corpse on that tile, destroy it.
             //
             // Otherwise, mark the tile as broken (but don't set any machines as
             // malfunctioning).
             if (state.dungeon.at(coord).surface) |s| {
                 switch (s) {
-                    .Corpse => |_| state.dungeon.at(coord).surface = null,
-                    .Machine => |m| if (m.malfunction_effect) |eff| switch (eff) {
-                        .Explode => |e| if (rng.percent(oldfire * 10))
-                            explosions.kaboom(coord, .{ .strength = e.power }),
-                        else => state.dungeon.at(coord).broken = true,
-                    },
+                    .Poster, .Machine, .Corpse => state.dungeon.at(coord).surface = null,
                     else => {},
                 }
             }
-            state.dungeon.at(coord).broken = true;
 
             newfire -|= rng.range(usize, 1, 2);
 

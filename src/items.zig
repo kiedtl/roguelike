@@ -136,7 +136,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 010, .i = .{ .P = &BigFireTrapKit } },
     // Evocables
     .{ .w = 030, .i = .{ .E = FlamethrowerEvoc } },
-    .{ .w = 020, .i = .{ .E = EldritchLanternEvoc } },
+    .{ .w = 030, .i = .{ .E = EldritchLanternEvoc } },
     // Cloaks
     .{ .w = 020, .i = .{ .C = &SilCloak } },
     .{ .w = 020, .i = .{ .C = &FurCloak } },
