@@ -274,10 +274,20 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
         }
     }
 
+    // Mob is walkable if:
+    // - It's hostile (it's walkable if it's dead!)
+    // - It *is* the mob
+    // - Mob can swap with it
+    //
     if (!opts.ignore_mobs) {
         if (dungeon.at(coord).mob) |other| {
             if (opts.mob) |mob| {
-                if (mob != other and !mob.canSwapWith(other, null)) return false;
+                if (mob != other and
+                    !mob.isHostileTo(other) and
+                    !mob.canSwapWith(other, null))
+                {
+                    return false;
+                }
             } else return false;
         }
     }

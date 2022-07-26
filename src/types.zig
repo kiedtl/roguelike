@@ -1588,6 +1588,24 @@ pub const Mob = struct { // {{{
     allies: MobArrayList = undefined,
     sustiles: std.ArrayList(SuspiciousTileRecord) = undefined,
 
+    // "Push" flag, set when mob pushes past or is pushed past.
+    // Reset on each turn.
+    //
+    // Taken from Unangband:
+    //
+    // > To avoid this situation, I added the MFLAG_PUSH flag, to which was set
+    // > on both monsters, when one pushes past the other. And when a monster has
+    // > MFLAG_PUSH set, it becomes unpushable, until the start of its next move,
+    // > at which point it is cleared. The flag is set on both monsters to
+    // > prevent either getting 'free moves' by being pushed around by multiple
+    // > monsters: originally I did this to prevent a monster that must swim
+    // > being pushed beyond the edge of water (which requires two consecutive
+    // > pushes), but it equally applied to stop a powerful monster getting
+    // > multiple moves against the player.
+    // -- http://roguelikedeveloper.blogspot.com/2007/10/unangband-monster-ai-part-three.html
+    //
+    push_flag: bool = false,
+
     facing: Direction = .North,
     coord: Coord = Coord.new(0, 0),
 
@@ -1778,6 +1796,7 @@ pub const Mob = struct { // {{{
 
     // Misc stuff.
     pub fn tick_env(self: *Mob) void {
+        self.push_flag = false;
         self.MP = math.clamp(self.MP + 1, 0, self.max_MP);
 
         const gases = state.dungeon.atGas(self.coord);
@@ -2105,78 +2124,15 @@ pub const Mob = struct { // {{{
     }
 
     // Check if a mob, when trying to move into a space that already has a mob,
-    // can swap with that other mob. Return true if:
-    //     - The mob's strength is greater than the other mob's strength.
-    //     - The mob's speed is greater than the other mob's speed.
-    //     - The other mob didn't try to move in the past turn.
-    //     - The other mob was trying to move in the opposite direction, i.e.,
-    //       both mobs were trying to shuffle past each other.
-    //     - The mob wasn't working (e.g., may have been attacking), but the other
-    //       one was.
-    //     - The mob is the player and the other mob is a noncombative enemy (e.g.,
-    //       slaves). The player has no business attacking non-combative enemies.
-    //     - The mob has the .Shove status.
+    // can swap with that other mob.
     //
-    // Return false if:
-    //     - The other mob was trying to move in the same direction. No need to barge
-    //       past, it'll move soon enough.
-    //     - The other mob is the player. No mob should be able to swap with the player.
-    //     - The other mob is immobile (e.g., a statue).
-    //     - The other mob is a prisoner that's tied up somewhere.
-    //
-    // TODO: cleanup this, express logic in a cleaner way.
-    //
-    pub fn canSwapWith(self: *const Mob, other: *Mob, direction: ?Direction) bool {
-        var can = false;
-
-        if (other.isUnderStatus(.Paralysis)) |_| {
-            can = true;
-        }
-        if (self.stat(.Speed) > other.stat(.Speed)) {
-            can = true;
-        }
-        if (self.ai.phase != .Work and other.ai.phase == .Work) {
-            can = true;
-        }
-        if (direction != null and other.last_attempted_move == null) {
-            can = true;
-        }
-        if (direction != null and other.last_attempted_move != null) {
-            if (direction.? == other.last_attempted_move.?.opposite()) {
-                can = true;
-            }
-        }
-
-        if (direction != null and other.last_attempted_move != null) {
-            if (direction.? == other.last_attempted_move.?) {
-                can = false;
-            }
-        }
-        if (self.allegiance != other.allegiance) {
-            can = false;
-        }
-        if (other.coord.eq(state.player.coord)) {
-            can = false;
-        }
-        if (self.coord.eq(state.player.coord) and
-            other.isHostileTo(state.player) and
-            !other.ai.is_combative)
-        {
-            can = true;
-        }
-        if (self.isUnderStatus(.Shove) != null) {
-            can = true;
-        }
-        if (other.prisoner_status) |ps|
-            if (ps.held_by != null) {
-                can = false;
-            };
-
-        if (other.immobile) {
-            can = false;
-        }
-
-        return can;
+    pub fn canSwapWith(self: *const Mob, other: *Mob, _: ?Direction) bool {
+        return other != state.player and
+            (!other.isHostileTo(self) or self.hasStatus(.Shove)) and
+            !other.immobile and
+            (other.prisoner_status == null or other.prisoner_status.?.held_by == null) and
+            (other.hasStatus(.Paralysis) or
+            !other.push_flag);
     }
 
     // Try to move to a destination, one step at a time.
@@ -2303,6 +2259,9 @@ pub const Mob = struct { // {{{
             state.dungeon.at(dest).mob = self;
             other.coord = coord;
             state.dungeon.at(coord).mob = other;
+
+            other.push_flag = true;
+            self.push_flag = true;
         } else {
             self.coord = dest;
             state.dungeon.at(dest).mob = self;
