@@ -83,10 +83,7 @@ Caverns/3 contains the Basalt Rune.
 
 Quarters/3 contains the Golden Rune.
 
-- Home of the Wardens, slow-moving guards that sound the alarm at the sight
-  of you, pulling in a ton more guards to investigate.
-- Layout is very regular.
-- Many rooms are completely lit, but many rooms are completely dark as well.
+- Regular, box-like layout
 
 ## Morgue
 
