@@ -4116,7 +4116,7 @@ pub const Dungeon = struct {
 
     pub const MAX_STAIRS: usize = 2;
 
-    pub const MOB_OPACITY: usize = 10;
+    pub const MOB_OPACITY: usize = 0;
     pub const FLOOR_OPACITY: usize = 10;
 
     // Return the terrain if no surface item, else the default terrain.
