@@ -304,11 +304,6 @@ pub fn moveOrFight(direction: Direction) bool {
 }
 
 pub fn grabItem() bool {
-    if (state.player.inventory.pack.isFull()) {
-        display.drawAlertThenLog("Your pack is full!", .{});
-        return false;
-    }
-
     var item: Item = undefined;
     var found_item = false;
 
@@ -395,6 +390,11 @@ pub fn grabItem() bool {
             });
         },
         else => {
+            if (state.player.inventory.pack.isFull()) {
+                display.drawAlertThenLog("Your pack is full!", .{});
+                return false;
+            }
+
             state.player.inventory.pack.append(item) catch err.wat();
             state.player.declareAction(.Grab);
             state.message(.Inventory, "Acquired: {s}", .{
