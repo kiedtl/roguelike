@@ -27,15 +27,15 @@ pub fn tileFlammability(c: Coord) usize {
 
     if (state.dungeon.at(c).mob) |mob| {
         if (mob.isVulnerable(.rFire)) {
-            f += if (mob.isUnderStatus(.Fire) == null) @as(usize, 10) else 5;
+            f += if (!mob.hasStatus(.Fire)) @as(usize, 20) else 10;
         }
     }
 
     if (state.dungeon.at(c).surface) |s| switch (s) {
         .Prop => |p| f += p.flammability,
         .Machine => |m| f += m.flammability,
-        .Corpse => |_| f += 6,
-        else => f += 4,
+        .Corpse => |_| f += 10,
+        else => f += 5,
     };
 
     return f;
@@ -100,23 +100,23 @@ pub fn tickFire(level: usize) void {
             // Set mob on fire
             if (oldfire > 3) {
                 if (state.dungeon.at(coord).mob) |mob| {
-                    if (mob.isUnderStatus(.Fire) == null)
+                    if (!mob.hasStatus(.Fire))
                         mob.addStatus(.Fire, 0, .{ .Tmp = MOB_BURN_DURATION });
                 }
             }
 
             // Set floor neighbors on fire, if they're not already on fire.
             // Make water neighbors release steam if oldfire >= 7.
-            if (oldfire > 3) {
+            if (oldfire > 7) {
                 for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
                     switch (state.dungeon.at(neighbor).type) {
                         .Floor => {
-                            const neighborfire = state.dungeon.fireAt(coord).*;
-                            if (neighborfire == 0 and rng.percent(oldfire * 5))
+                            const neighborfire = state.dungeon.fireAt(neighbor).*;
+                            if (neighborfire == 0 and rng.percent(oldfire * 10))
                                 setTileOnFire(neighbor, null);
                         },
                         .Water => {
-                            if (oldfire >= 7 and rng.onein(3))
+                            if (rng.onein(3))
                                 state.dungeon.atGas(neighbor)[gas.Steam.id] += 0.2;
                         },
                         else => {},

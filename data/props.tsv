@@ -42,7 +42,7 @@
 ""                     	 "Erlenmeyer flask"     	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
 
 # Quarters stuff
-"fuel_barrel"          	 "barrel of fuel"       	 'ʊ' 	 0xdaa520 	 -        	 nay 	 - 	20 	 .Vault
+"fuel_barrel"          	 "barrel of fuel"       	 'ʊ' 	 0xdaa520 	 -        	 nay 	 - 	99 	 .Vault
 "small_fountain"       	 "small fountain"       	 '¶' 	 0xa4cfff 	 -        	 -   	 - 	 -
 
 # Statues
@@ -57,21 +57,21 @@
 # TODO: remove this?
 "chain"                	 "chain"                	 '§' 	 0xe0e0ff 	 -        	 nay 	 - 	 - 	               - 	 yea
 
-"table"                	 "table"                	 '⊺' 	 0xffffff 	 -        	 nay 	 - 	 7
-"bed"                  	 "bed"                  	 'Θ' 	 0xdaa520 	 -        	 -   	 0.6	15
-"wood_table"           	 "table"                	 '⊺' 	 0xdaa520 	 -        	 nay 	 - 	15
+"table"                	 "table"                	 '⊺' 	 0xffffff 	 -        	 nay 	 - 	10
+"bed"                  	 "bed"                  	 'Θ' 	 0xdaa520 	 -        	 -   	0.6	30
+"wood_table"           	 "table"                	 '⊺' 	 0xdaa520 	 -        	 nay 	 - 	30
 # chairs ⑁
-"wood_chair"           	 "chair"                	 'ⅎ' 	 0xdaa520 	 -        	 yea 	 - 	15
+"wood_chair"           	 "chair"                	 'ⅎ' 	 0xdaa520 	 -        	 yea 	 - 	30
 
-"turbine"              	 "turbine"              	 '◴' 	 0xffd700 	 -        	 nay 	 - 	 7
-"gearbox"              	 "gearbox"              	 '■' 	 0xffffff 	 -        	 nay 	 - 	 7
-"power_switch"         	 "power switch"         	 '♥' 	 0xffffff 	 -        	 nay 	 - 	 7
-"control_panel"        	 "control panel"        	 '⌨' 	 0xffffff 	 -        	 nay 	 - 	 7
-"small_transformer"    	 "transformer"          	 '■' 	 0xffe5d3 	 -        	 nay 	 - 	 7
-"large_transformer"    	 "transformer"          	 'ö' 	 0xffe5d3 	 -        	 nay 	 - 	 7
-"switching_station"    	 "switching station"    	 '⊡' 	 0xffaf9a 	 -        	 nay 	 - 	 7
-"battery"              	 "battery pack"         	 '▂' 	 0x90a3b7 	 -        	 nay 	 - 	15
-"fuel_burner"          	 "fuel burner"          	 '#' 	 0xffa0a0 	 -        	 nay 	 - 	15
+"turbine"              	 "turbine"              	 '◴' 	 0xffd700 	 -        	 nay 	 - 	10
+"gearbox"              	 "gearbox"              	 '■' 	 0xffffff 	 -        	 nay 	 - 	10
+"power_switch"         	 "power switch"         	 '♥' 	 0xffffff 	 -        	 nay 	 - 	10
+"control_panel"        	 "control panel"        	 '⌨' 	 0xffffff 	 -        	 nay 	 - 	10
+"small_transformer"    	 "transformer"          	 '■' 	 0xffe5d3 	 -        	 nay 	 - 	10
+"large_transformer"    	 "transformer"          	 'ö' 	 0xffe5d3 	 -        	 nay 	 - 	10
+"switching_station"    	 "switching station"    	 '⊡' 	 0xffaf9a 	 -        	 nay 	 - 	10
+"battery"              	 "battery pack"         	 '▂' 	 0x90a3b7 	 -        	 nay 	 - 	20
+"fuel_burner"          	 "fuel burner"          	 '#' 	 0xffa0a0 	 -        	 nay 	 - 	20
 "steel_gas_reservoir"  	 "steel gas reservoir"  	 '■' 	 0xd7d7ff 	 -        	 nay
 "steel_pin"            	 "steel pin"            	 '*' 	 0xa6c2d4 	 -        	 -
 
@@ -80,20 +80,20 @@
 
 "antenna_tip"          	 "antenna tip"          	 '´' 	 0x90a3b7 	 -        	 nay 	 - 	 - 	 .Laboratory
 "antenna"              	 "antenna"              	 'Ÿ' 	 0x90a3b7 	 -        	 nay 	 - 	 - 	 .Laboratory
-"compact_turbine"      	 "compact turbine"      	 'Ä' 	 0xffe4e1 	 -        	 nay 	 - 	 7 	 .Laboratory
+"compact_turbine"      	 "compact turbine"      	 'Ä' 	 0xffe4e1 	 -        	 nay 	 - 	10 	 .Laboratory
 "centrifuge"           	 "centrifuge"           	 '⊜' 	 0xffe4e1 	 -        	 nay 	 - 	 - 	 .Laboratory
 "xray_appar"           	 "x-ray machine"        	 '‡' 	 0xa8ffa8 	 -        	 nay 	 - 	 - 	 .Laboratory
 "water_purifi_appar"   	 "water purifier"       	 '⊝' 	 0xe0ffff 	 -        	 nay 	 - 	 - 	 .Laboratory
 "frac_distill_appar"   	 "fractional distiller" 	 '∓' 	 0xe6e6fa 	 -        	 nay 	 - 	 - 	 .Laboratory
 "laser_etcher"         	 "laser etcher"         	 '⊎' 	 0xfff0f5 	 -        	 nay 	 - 	 - 	 .Laboratory
 "simp_distill_appar"   	 "distiller"            	 '∔' 	 0xd0e4fe 	 -        	 nay 	 - 	 - 	 .Laboratory
-"b_burner"             	 "bunsen burner"        	 '⊼' 	 0xffffe0 	 -        	 nay 	 - 	 7 	 .Laboratory
-"t_burner"             	 "tirrill burner"       	 '⊼' 	 0xffffe0 	 -        	 nay 	 - 	 7 	 .Laboratory
+"b_burner"             	 "bunsen burner"        	 '⊼' 	 0xffffe0 	 -        	 nay 	 - 	20 	 .Laboratory
+"t_burner"             	 "tirrill burner"       	 '⊼' 	 0xffffe0 	 -        	 nay 	 - 	20 	 .Laboratory
 "microscope"           	 "microscope"           	 '†' 	 0xffeaca 	 -        	 nay 	 - 	 - 	 .Laboratory
-"calorimeter"          	 "calorimeter"          	 '⊝' 	 0xf5f5dc 	 -        	 nay 	 - 	 7 	 .Laboratory
+"calorimeter"          	 "calorimeter"          	 '⊝' 	 0xf5f5dc 	 -        	 nay 	 - 	20 	 .Laboratory
 "vacuum_chmbr"         	 "vacuum chamber"       	 '⊜' 	 0xffefdf 	 -        	 nay 	 - 	 - 	 .Laboratory
 
-"nuclear_core"         	 "nuclear_core"         	 '≡' 	 0xffefdf 	 -        	 nay 	 - 	30
+"nuclear_core"         	 "nuclear_core"         	 '≡' 	 0xffefdf 	 -        	 nay 	 - 	50
 
 "low_wall_n2s2"        	 "low wall"             	 '║' 	 0xefefef 	 -        	 nay 	 - 	 -
 "low_wall_e2w2"        	 "low wall"             	 '═' 	 0xefefef 	 -        	 nay 	 - 	 -

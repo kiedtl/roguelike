@@ -103,7 +103,7 @@ pub const CarpetTerrain = Terrain{
     .color = 0xdaa520, // goldenish
     .tile = '÷',
     .stats = .{ .Sneak = 3 },
-    .flammability = 5,
+    .flammability = 30,
 
     .for_levels = &[_][]const u8{ "PRI", "QRT" },
     .placement = .EntireRoom,
@@ -159,6 +159,7 @@ pub const WoodTerrain = Terrain{
     .tile = '·',
     .stats = .{ .Sneak = -1 },
     .resists = .{ .rFire = -25, .rElec = 25 },
+    .flammability = 40,
 
     .for_levels = &[_][]const u8{ "PRI", "QRT" },
     .placement = .RoomPortion,
@@ -189,7 +190,7 @@ pub const DeadFungiTerrain = Terrain{
     .tile = '"',
     .opacity = 60,
     .resists = .{ .rFire = -25 },
-    .flammability = 15,
+    .flammability = 30,
     .repairable = false,
 
     .for_levels = &[_][]const u8{"ANY"},
@@ -461,7 +462,7 @@ pub const Brazier = Machine{
     .powered_luminescence = 60,
     .unpowered_luminescence = 0,
 
-    .flammability = 8,
+    .flammability = 20,
     .on_power = powerNone,
 };
 
@@ -487,7 +488,7 @@ pub const Lamp = Machine{
     .powered_luminescence = 100,
     .unpowered_luminescence = 0,
 
-    .flammability = 8,
+    .flammability = 20,
     .on_power = powerNone,
 };
 
@@ -519,7 +520,7 @@ pub const NormalDoor = Machine{
     .unpowered_walkable = true,
     .powered_opacity = 0.2,
     .unpowered_opacity = 1.0,
-    .flammability = 15,
+    .flammability = 30, // wooden door is flammable
     .on_power = powerNone,
 };
 
@@ -536,7 +537,7 @@ pub const LabDoor = Machine{
     .unpowered_walkable = true,
     .powered_opacity = 1.0,
     .unpowered_opacity = 0.0,
-    .flammability = 15,
+    .flammability = 0, // metal door not flammable
     .on_power = powerLabDoor,
 };
 
@@ -553,7 +554,7 @@ pub const VaultDoor = Machine{
     .unpowered_walkable = false,
     .powered_opacity = 0.0,
     .unpowered_opacity = 1.0,
-    .flammability = 15,
+    .flammability = 10, // heavy wood/metal door
     .on_power = powerNone,
 };
 
@@ -570,7 +571,7 @@ pub const LockedDoor = Machine{
     .restricted_to = .Necromancer,
     .powered_walkable = true,
     .unpowered_walkable = false,
-    .flammability = 15,
+    .flammability = 30, // also wooden door
     .on_power = powerNone,
     .pathfinding_penalty = 5,
     .evoke_confirm = "Break down the locked door?",
@@ -637,7 +638,7 @@ pub const Mine = Machine{
     .unpowered_tile = '^',
     .power_drain = 0, // Stay powered on once activated
     .on_power = powerMine,
-    .flammability = 15,
+    .flammability = 100,
     .pathfinding_penalty = 10,
 };
 
@@ -653,8 +654,8 @@ pub const CapacitorArray = Machine{
     .power_drain = 0,
     .power = 100,
     .on_power = powerNone,
-    .flammability = 25,
-    //.evoke_confirm = "Really discharge the capacitor array?",
+    .flammability = 20,
+    .evoke_confirm = "Really discharge the capacitor array?",
     .player_interact = .{
         .name = "discharge",
         .success_msg = "You discharge the capacitor.",
@@ -712,7 +713,7 @@ pub const RechargingStation = Machine{
     .power_drain = 0,
     .power = 100,
     .on_power = powerNone,
-    .flammability = 15,
+    .flammability = 20,
     .player_interact = .{
         .name = "recharge",
         .success_msg = "All evocables recharged.",
