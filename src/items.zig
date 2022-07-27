@@ -103,10 +103,8 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 015, .i = .{ .W = WoldoWeapon } },
     // Armor
     .{ .w = 020, .i = .{ .A = GambesonArmor } },
-    .{ .w = 020, .i = .{ .A = LeatherArmor } },
     .{ .w = 020, .i = .{ .A = HauberkArmor } },
     .{ .w = 020, .i = .{ .A = CuirassArmor } },
-    .{ .w = 020, .i = .{ .A = ScalemailArmor } },
     // Potions
     .{ .w = 190, .i = .{ .P = &ConfusionPotion } },
     .{ .w = 190, .i = .{ .P = &PoisonPotion } },
@@ -1711,13 +1709,6 @@ pub const HauberkArmor = Armor{
     .id = "chainmail_armor",
     .name = "chainmail",
     .resists = .{ .Armor = 25 },
-    .stats = .{ .Speed = 10, .Martial = -1 },
-};
-
-pub const ScalemailArmor = Armor{
-    .id = "scalemail_armor",
-    .name = "scale mail",
-    .resists = .{ .Armor = 25 },
     .stats = .{ .Evade = -10, .Martial = -1 },
 };
 
@@ -1731,12 +1722,6 @@ pub const GambesonArmor = Armor{
     .id = "gambeson_armor",
     .name = "gambeson",
     .resists = .{ .Armor = 15 },
-};
-
-pub const LeatherArmor = Armor{
-    .id = "leather_armor",
-    .name = "leather",
-    .resists = .{ .Armor = 20 },
 };
 
 // }}}
