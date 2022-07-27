@@ -9,14 +9,14 @@
 
 @0 m recharging_station
 
-@a p battery
+@a p antenna
 @b p wire_s1e1
 @c p wire_s2e1w1
 @d p wire_s2w1
 @e p wall_s1w1_thinw
 % @f p wire_n1e2w2
 @g p wire_n1e2w2
-@h m battery_pack
+@h p battery_pack
 @i p wall_n1w1_thinw
 @j p wire_n1e1
 

@@ -259,7 +259,6 @@ pub const MACHINES = [_]Machine{
     ElevatorMotor,
     Extractor,
     BlastFurnace,
-    BatteryPack,
     TurbinePowerSupply,
     HealingGasPump,
     Brazier,
@@ -379,25 +378,6 @@ pub const BlastFurnace = Machine{
     .dims = true,
 
     .on_power = powerBlastFurnace,
-};
-
-pub const BatteryPack = Machine{
-    .id = "battery_pack",
-    .name = "battery pack",
-
-    .powered_tile = 'Ÿ',
-    .unpowered_tile = 'Ÿ',
-
-    .powered_fg = 0x90a3b7,
-    .unpowered_fg = 0x90a3b7,
-
-    .power_drain = 0,
-    .power = 100,
-
-    .powered_walkable = false,
-    .unpowered_walkable = false,
-
-    .on_power = powerNone,
 };
 
 pub const TurbinePowerSupply = Machine{
