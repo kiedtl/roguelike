@@ -417,7 +417,7 @@ pub const Coord = struct { // {{{
             errmarg = dy / 2.0;
             var reached_goal = false;
             while (true) {
-                if (x == xend) {
+                if (y == yend) {
                     reached_goal = true;
                 }
                 if (reached_goal) {
