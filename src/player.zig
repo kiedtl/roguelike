@@ -53,27 +53,21 @@ pub const PlayerUpgradeInfo = struct {
 };
 
 pub const PlayerUpgrade = enum {
-    Fast,
     Agile,
     OI_Enraged,
-    OI_Fast,
     OI_Shove,
     Healthy,
-    Mana,
     Will,
     Echolocating,
 
-    pub const UPGRADES = [_]PlayerUpgrade{ .Fast, .Agile, .OI_Enraged, .OI_Fast, .OI_Shove, .Healthy, .Mana, .Will, .Echolocating };
+    pub const UPGRADES = [_]PlayerUpgrade{ .Agile, .OI_Enraged, .OI_Shove, .Healthy, .Will, .Echolocating };
 
     pub fn announce(self: PlayerUpgrade) []const u8 {
         return switch (self) {
-            .Fast => "You feel yourself moving faster.",
             .Agile => "You are good at evading blows.",
             .OI_Enraged => "You feel hatred building up inside.",
-            .OI_Fast => "You put on a burst of speed when injured.",
             .OI_Shove => "You begin shoving past foes when injured.",
             .Healthy => "You are unusually robust.",
-            .Mana => "You sense your inner strength grow.",
             .Will => "Your will hardens.",
             .Echolocating => "Your sense of hearing becomes acute.",
         };
@@ -81,13 +75,10 @@ pub const PlayerUpgrade = enum {
 
     pub fn description(self: PlayerUpgrade) []const u8 {
         return switch (self) {
-            .Fast => "You have a 10% speed bonus.",
             .Agile => "You have a +20% dodging bonus.",
             .OI_Enraged => "You become enraged when badly hurt.",
-            .OI_Fast => "You put on a burst of speed when injured.",
             .OI_Shove => "You begin shoving past foes when injured.",
             .Healthy => "You have 50% more health than usual.",
-            .Mana => "You have 50% more mana than usual.",
             .Will => "You have 3 extra pips of willpower.",
             .Echolocating => "You passively echolocate areas around sound.",
         };
@@ -95,15 +86,9 @@ pub const PlayerUpgrade = enum {
 
     pub fn implement(self: PlayerUpgrade) void {
         switch (self) {
-            .Fast => state.player.stats.Speed -= 10,
             .Agile => state.player.stats.Evade += 10,
             .OI_Enraged => state.player.ai.flee_effect = .{
                 .status = .Enraged,
-                .duration = .{ .Tmp = 10 },
-                .exhausting = true,
-            },
-            .OI_Fast => state.player.ai.flee_effect = .{
-                .status = .Fast,
                 .duration = .{ .Tmp = 10 },
                 .exhausting = true,
             },
@@ -113,7 +98,6 @@ pub const PlayerUpgrade = enum {
                 .exhausting = true,
             },
             .Healthy => state.player.max_HP = state.player.max_HP * 150 / 100,
-            .Mana => state.player.max_MP = state.player.max_MP * 150 / 100,
             .Will => state.player.stats.Willpower += 3,
             .Echolocating => state.player.addStatus(.Echolocation, 7, .Prm),
         }
