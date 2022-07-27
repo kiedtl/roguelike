@@ -67,6 +67,14 @@ immediately.
 
 It will create an explosion with a radius of about 3 tiles.
 
+% capacitor_array
+If you discharge this capacitor, all creatures in your line of sight without
+electricity resistance will be vaporized by a powerful blast of lightning.
+
+
+Of course, using the capacitor array without rElec yourself would be overly
+suicidal.
+
 % recharging_station
 You can activate this to recharge some of your evocables.
 
