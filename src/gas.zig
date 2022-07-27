@@ -237,6 +237,10 @@ pub fn tickGases(cur_lev: usize, cur_gas: usize) void {
                 if (state.dungeon.at(coord).type == .Wall)
                     continue;
 
+                if (state.dungeon.machineAt(coord)) |mach|
+                    if (!mach.porous)
+                        continue;
+
                 var avg: f64 = state.dungeon.atGas(coord)[cur_gas];
                 var neighbors: f64 = 1;
                 for (&DIRECTIONS) |d| {

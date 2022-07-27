@@ -3367,6 +3367,7 @@ pub const Machine = struct {
     unpowered_luminescence: usize = 0,
     dims: bool = false,
 
+    porous: bool = false,
     flammability: usize = 0,
 
     // A* penalty if the machine is walkable
@@ -4190,6 +4191,13 @@ pub const Dungeon = struct {
 
     pub inline fn at(self: *Dungeon, c: Coord) *Tile {
         return &self.map[c.z][c.y][c.x];
+    }
+
+    pub fn machineAt(self: *Dungeon, c: Coord) ?*Machine {
+        if (self.at(c).surface) |s|
+            if (s == .Machine)
+                return s.Machine;
+        return null;
     }
 
     // STYLE: rename to gasAt

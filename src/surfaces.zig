@@ -301,6 +301,7 @@ pub const SteamVent = Machine{
 
     .powered_walkable = true,
     .unpowered_walkable = true,
+    .porous = true,
 
     .on_power = struct {
         pub fn f(machine: *Machine) void {
@@ -482,6 +483,7 @@ pub const NormalDoor = Machine{
     .powered_opacity = 0.2,
     .unpowered_opacity = 1.0,
     .flammability = 30, // wooden door is flammable
+    .porous = true,
     .on_power = powerNone,
 };
 
@@ -499,6 +501,7 @@ pub const LabDoor = Machine{
     .powered_opacity = 1.0,
     .unpowered_opacity = 0.0,
     .flammability = 0, // metal door not flammable
+    .porous = true,
     .on_power = powerLabDoor,
 };
 
@@ -516,6 +519,7 @@ pub const VaultDoor = Machine{
     .powered_opacity = 0.0,
     .unpowered_opacity = 1.0,
     .flammability = 10, // heavy wood/metal door
+    .porous = true,
     .on_power = powerNone,
 };
 
@@ -533,6 +537,7 @@ pub const LockedDoor = Machine{
     .powered_walkable = true,
     .unpowered_walkable = false,
     .flammability = 30, // also wooden door
+    .porous = true,
     .on_power = powerNone,
     .pathfinding_penalty = 5,
     .evoke_confirm = "Break down the locked door?",
@@ -570,6 +575,12 @@ fn createVaultDoor(comptime id_suffix: []const u8, comptime name_prefix: []const
         .unpowered_walkable = false,
         .powered_opacity = 0,
         .unpowered_opacity = 1.0,
+
+        // Prevent player from tossing coagulation at closed door to empty
+        // everything inside with no risk
+        //
+        .porous = false,
+
         .evoke_confirm = "Really open a treasure vault door?",
         .on_power = struct {
             pub fn f(machine: *Machine) void {
