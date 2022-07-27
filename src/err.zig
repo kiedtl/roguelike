@@ -5,6 +5,7 @@ const build_options = @import("build_options");
 const std = @import("std");
 
 const display = @import("display.zig");
+const state = @import("state.zig");
 const rng = @import("rng.zig");
 const sentry = @import("sentry.zig");
 
@@ -15,25 +16,27 @@ pub fn bug(comptime fmt: []const u8, args: anytype) noreturn {
     std.log.err("Fatal bug encountered. (Seed: {})", .{rng.seed});
     std.log.err("BUG: " ++ fmt, args);
 
-    var membuf: [65535]u8 = undefined;
-    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-    var alloc = fba.allocator();
+    if (!state.sentry_disabled) {
+        var membuf: [65535]u8 = undefined;
+        var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+        var alloc = fba.allocator();
 
-    sentry.captureError(
-        build_options.release,
-        build_options.dist,
-        "Fatal bug",
-        std.fmt.allocPrint(alloc, fmt, args) catch unreachable,
-        &[_]sentry.SentryEvent.TagSet.Tag{.{
-            .name = "seed",
-            .value = std.fmt.allocPrint(alloc, "{}", .{rng.seed}) catch unreachable,
-        }},
-        @errorReturnTrace(),
-        @returnAddress(),
-        alloc,
-    ) catch |err| {
-        std.log.err("zig-sentry: Fail: {s}", .{@errorName(err)});
-    };
+        sentry.captureError(
+            build_options.release,
+            build_options.dist,
+            "Fatal bug",
+            std.fmt.allocPrint(alloc, fmt, args) catch unreachable,
+            &[_]sentry.SentryEvent.TagSet.Tag{.{
+                .name = "seed",
+                .value = std.fmt.allocPrint(alloc, "{}", .{rng.seed}) catch unreachable,
+            }},
+            @errorReturnTrace(),
+            @returnAddress(),
+            alloc,
+        ) catch |err| {
+            std.log.err("zig-sentry: Fail: {s}", .{@errorName(err)});
+        };
+    }
 
     std.os.abort();
     unreachable;

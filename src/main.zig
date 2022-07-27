@@ -65,25 +65,27 @@ pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace) noreturn {
             display.deinit() catch {};
             std.log.err("Fatal error encountered. (Seed: {})", .{rng.seed});
 
-            var membuf: [65535]u8 = undefined;
-            var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-            var alloc = fba.allocator();
+            if (!state.sentry_disabled) {
+                var membuf: [65535]u8 = undefined;
+                var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+                var alloc = fba.allocator();
 
-            sentry.captureError(
-                build_options.release,
-                build_options.dist,
-                "Panic",
-                msg,
-                &[_]sentry.SentryEvent.TagSet.Tag{.{
-                    .name = "seed",
-                    .value = std.fmt.allocPrint(alloc, "{}", .{rng.seed}) catch unreachable,
-                }},
-                trace,
-                @returnAddress(),
-                alloc,
-            ) catch |err| {
-                std.log.err("zig-sentry: Fail: {s}", .{@errorName(err)});
-            };
+                sentry.captureError(
+                    build_options.release,
+                    build_options.dist,
+                    "Panic",
+                    msg,
+                    &[_]sentry.SentryEvent.TagSet.Tag{.{
+                        .name = "seed",
+                        .value = std.fmt.allocPrint(alloc, "{}", .{rng.seed}) catch unreachable,
+                    }},
+                    trace,
+                    @returnAddress(),
+                    alloc,
+                ) catch |err| {
+                    std.log.err("zig-sentry: Fail: {s}", .{@errorName(err)});
+                };
+            }
 
             std.builtin.default_panic(msg, trace);
         },
@@ -788,6 +790,13 @@ fn viewerMain() void {
 }
 
 pub fn actualMain() anyerror!void {
+    if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_NO_SENTRY")) |v| {
+        state.sentry_disabled = true;
+        state.GPA.allocator().free(v);
+    } else |_| {
+        state.sentry_disabled = false;
+    }
+
     if (!initGame()) {
         deinitGame();
         return;

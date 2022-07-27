@@ -83,6 +83,8 @@ pub var layout: [LEVELS][HEIGHT][WIDTH]Layout = undefined;
 pub var player: *Mob = undefined;
 pub var state: GameState = .Game;
 
+pub var sentry_disabled = false;
+
 pub fn mapRect(level: usize) Rect {
     return Rect{ .start = Coord.new2(level, 0, 0), .width = WIDTH, .height = HEIGHT };
 }
