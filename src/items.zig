@@ -306,10 +306,7 @@ fn _triggerEldritchLantern(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
             if (mob == othermob)
                 continue;
 
-            if (!othermob.cansee(mob.coord))
-                continue;
-
-            othermob.addStatus(.Daze, 0, .{ .Tmp = 10 });
+            othermob.addStatus(.Daze, 0, .{ .Tmp = 8 });
 
             affected += 1;
             if (othermob == state.player)
