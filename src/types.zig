@@ -500,6 +500,106 @@ pub const Coord = struct { // {{{
     }
 }; // }}}
 
+test "coord.drawLine straight lines" {
+    const t_height = 5;
+    const t_width = 10;
+    const limit = Coord.new(t_width, t_height);
+
+    const cases = [_][t_height]*const [t_width]u8{
+        .{
+            ".....S....",
+            ".....p....",
+            ".....p....",
+            ".....p....",
+            ".....E....",
+        },
+        .{
+            "..........",
+            "..........",
+            "SppppppppE",
+            "..........",
+            "..........",
+        },
+        .{
+            "..........",
+            "..........",
+            "SpE.......",
+            "..........",
+            "..........",
+        },
+        .{
+            "..........",
+            ".S........",
+            ".p........",
+            ".E........",
+            "..........",
+        },
+        .{
+            "..........",
+            ".S........",
+            "..p.......",
+            "...E......",
+            "..........",
+        },
+    };
+
+    for (cases) |case, bi| {
+        _ = bi;
+        // std.log.warn("testing case {}", .{bi});
+
+        const case_start = b: for (case) |row, y| {
+            for (row) |cell, x|
+                if (cell == 'S')
+                    break :b Coord.new(x, y);
+        } else unreachable;
+
+        const case_end = b: for (case) |row, y| {
+            for (row) |cell, x|
+                if (cell == 'E')
+                    break :b Coord.new(x, y);
+        } else unreachable;
+
+        var case_path_length: usize = 0;
+        for (case) |row| for (row) |cell| {
+            if (cell != '.') case_path_length += 1;
+        };
+
+        const line = case_start.drawLine(case_end, limit, 0);
+
+        try testing.expectEqual(case_path_length, line.len);
+
+        // std.log.info("Got:", .{});
+        // {
+        //     var y: usize = 0;
+        //     while (y < t_height) : (y += 1) {
+        //         var x: usize = 0;
+        //         while (x < t_width) : (x += 1) {
+        //             var path_contains = for (line.constSlice()) |path_coord| {
+        //                 if (path_coord.x == x and path_coord.y == y)
+        //                     break true;
+        //             } else false;
+        //             const ch: u21 = if (path_contains) '#' else '.';
+        //             std.debug.print("{u}", .{ch});
+        //         }
+        //         std.debug.print("\n", .{});
+        //     }
+        // }
+
+        for (line.constSlice()) |path_coord, i| {
+            try testing.expect(path_coord.x < t_width);
+            try testing.expect(path_coord.y < t_height);
+
+            if (i == 0) {
+                try testing.expect(path_coord.eq(case_start));
+            } else if (i == line.len - 1) {
+                try testing.expect(path_coord.eq(case_end));
+            } else {
+                try testing.expect(case[path_coord.y][path_coord.x] == 'p');
+            }
+        }
+    }
+}
+
 test "coord.distance" {
     try std.testing.expectEqual(Coord.new(0, 0).distance(Coord.new(0, 1)), 1);
     try std.testing.expectEqual(Coord.new(0, 0).distance(Coord.new(1, 1)), 1);
@@ -572,7 +672,7 @@ pub const Rect = struct {
 };
 
 // Tests that rectIter visits each coordinate exactly once.
-test "rectIter" {
+test "Rect.rectIter" {
     const height = 100;
     const width = 70;
 

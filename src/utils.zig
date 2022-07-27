@@ -416,35 +416,35 @@ test "copy" {
     try testing.expectEqualSlices(u8, &three, "str is 15 chars");
 }
 
-test "folding text" {
-    {
-        const str = "  abcd efgh  ijkl $.mnop ";
-        var folder = FoldedTextIterator.init(str, 4);
-        var buf = StackBuffer(u8, 4096).init(null);
-        try testing.expectEqualSlices(u8, folder.next(&buf).?, "abcd");
-        try testing.expectEqualSlices(u8, folder.next(&buf).?, "efgh");
-        try testing.expectEqualSlices(u8, folder.next(&buf).?, "ijkl");
-        try testing.expectEqualSlices(u8, folder.next(&buf).?, "mnop");
-        try testing.expectEqual(folder.next(&buf), null);
-    }
+// test "folding text" {
+//     {
+//         const str = "  abcd efgh  ijkl $.mnop ";
+//         var folder = FoldedTextIterator.init(str, 4);
+//         var buf = StackBuffer(u8, 4096).init(null);
+//         try testing.expectEqualSlices(u8, folder.next(&buf).?, "abcd");
+//         try testing.expectEqualSlices(u8, folder.next(&buf).?, "efgh");
+//         try testing.expectEqualSlices(u8, folder.next(&buf).?, "ijkl");
+//         try testing.expectEqualSlices(u8, folder.next(&buf).?, "mnop");
+//         try testing.expectEqual(folder.next(&buf), null);
+//     }
 
-    {
-        const str = "I had a vision when the night was late: a youth came riding toward the palace-gate.";
-        var folder = FoldedTextIterator.init(str, 10);
-        var buf = StackBuffer(u8, 4096).init(null);
-        try testing.expectEqualSlices(u8, folder.next(&buf).?, "I had a");
-        try testing.expectEqualSlices(u8, folder.next(&buf).?, "vision");
-        try testing.expectEqualSlices(u8, folder.next(&buf).?, "when the");
-        try testing.expectEqualSlices(u8, folder.next(&buf).?, "night was");
-        try testing.expectEqualSlices(u8, folder.next(&buf).?, "late: a");
-        try testing.expectEqualSlices(u8, folder.next(&buf).?, "youth");
-        try testing.expectEqualSlices(u8, folder.next(&buf).?, "came");
-        try testing.expectEqualSlices(u8, folder.next(&buf).?, "riding");
-        try testing.expectEqualSlices(u8, folder.next(&buf).?, "toward");
-        try testing.expectEqualSlices(u8, folder.next(&buf).?, "the");
-        try testing.expectEqualSlices(u8, folder.next(&buf).?, "palace-gat");
-        try testing.expectEqualSlices(u8, folder.next(&buf).?, "e.");
-        try testing.expectEqual(folder.next(&buf), null);
-    }
-}
+//     {
+//         const str = "I had a vision when the night was late: a youth came riding toward the palace-gate.";
+//         var folder = FoldedTextIterator.init(str, 10);
+//         var buf = StackBuffer(u8, 4096).init(null);
+//         try testing.expectEqualSlices(u8, folder.next(&buf).?, "I had a");
+//         try testing.expectEqualSlices(u8, folder.next(&buf).?, "vision");
+//         try testing.expectEqualSlices(u8, folder.next(&buf).?, "when the");
+//         try testing.expectEqualSlices(u8, folder.next(&buf).?, "night was");
+//         try testing.expectEqualSlices(u8, folder.next(&buf).?, "late: a");
+//         try testing.expectEqualSlices(u8, folder.next(&buf).?, "youth");
+//         try testing.expectEqualSlices(u8, folder.next(&buf).?, "came");
+//         try testing.expectEqualSlices(u8, folder.next(&buf).?, "riding");
+//         try testing.expectEqualSlices(u8, folder.next(&buf).?, "toward");
+//         try testing.expectEqualSlices(u8, folder.next(&buf).?, "the");
+//         try testing.expectEqualSlices(u8, folder.next(&buf).?, "palace-gat");
+//         try testing.expectEqualSlices(u8, folder.next(&buf).?, "e.");
+//         try testing.expectEqual(folder.next(&buf), null);
+//     }
+// }
 // }}}
