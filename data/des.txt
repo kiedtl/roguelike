@@ -95,6 +95,7 @@ This device can spray a fountain of sparks at a nearby tile, igniting it.
 A very strange device, found in abundance in this place when the hill-goblins
 overran it. What use the cave-goblins might have had for it is a mystery.
 
+
 When evoked, it will create a powerful flash of light, dazing all mobs in your
 field of vision for 8 turns. It will daze you as well, hopefully not for very
 long.
