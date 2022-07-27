@@ -9,6 +9,7 @@ const utils = @import("utils.zig");
 const sound = @import("sound.zig");
 const rng = @import("rng.zig");
 const types = @import("types.zig");
+const surfaces = @import("surfaces.zig");
 
 const Mob = types.Mob;
 const Coord = types.Coord;
@@ -130,6 +131,11 @@ pub fn tickFire(level: usize) void {
                     .Poster, .Machine, .Corpse => state.dungeon.at(coord).surface = null,
                     else => {},
                 }
+            }
+
+            // Destroy terrain, if needed
+            if (state.dungeon.terrainAt(coord).flammability > 0) {
+                state.dungeon.at(coord).terrain = &surfaces.DefaultTerrain;
             }
 
             newfire -|= rng.range(usize, 1, 2);
