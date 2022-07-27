@@ -221,7 +221,7 @@ pub fn createEvent(
     var tagset = SentryEvent.TagSet{ .inner = std.ArrayList(SentryEvent.TagSet.Tag).init(alloc) };
     {
         try tagset.inner.append(.{ .name = "build", .value = @tagName(builtin.mode) });
-        try tagset.inner.append(.{ .name = "os", .value = @tagName(builtin.mode) });
+        try tagset.inner.append(.{ .name = "os", .value = @tagName(builtin.os.tag) });
         if (builtin.os.tag == .windows) {
             const v = try std.fmt.allocPrint(alloc, "{s}", .{builtin.os.version_range.windows});
             try tagset.inner.append(.{ .name = "windows_version", .value = v });
