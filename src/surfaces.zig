@@ -260,7 +260,6 @@ pub const MACHINES = [_]Machine{
     Extractor,
     BlastFurnace,
     TurbinePowerSupply,
-    HealingGasPump,
     Brazier,
     Lamp,
     StairExit,
@@ -397,24 +396,6 @@ pub const TurbinePowerSupply = Machine{
     .unpowered_opacity = 0,
 
     .on_power = powerTurbinePowerSupply,
-};
-
-pub const HealingGasPump = Machine{
-    .id = "healing_gas_pump",
-    .name = "machine",
-
-    .powered_tile = '█',
-    .unpowered_tile = '▓',
-
-    .power_drain = 100,
-
-    .powered_walkable = false,
-    .unpowered_walkable = false,
-
-    .powered_opacity = 0,
-    .unpowered_opacity = 0,
-
-    .on_power = powerHealingGasPump,
 };
 
 pub const Brazier = Machine{
