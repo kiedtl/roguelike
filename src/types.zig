@@ -2411,7 +2411,9 @@ pub const Mob = struct { // {{{
         const distance = attacker.coord.distance(defender.coord);
 
         return for (weapons.constSlice()) |weapon| {
-            if (weapon.reach >= distance) {
+            if (weapon.reach >= distance and
+                utils.hasClearLOF(attacker.coord, defender.coord))
+            {
                 break true;
             }
         } else false;
