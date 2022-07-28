@@ -203,22 +203,19 @@ pub fn nextSpotForMob(crd: Coord, mob: ?*Mob) ?Coord {
 // Find the nearest space in which an item can be dropped.
 //
 // First attempt to find a tile without any items on it; if there are no such
-// spaces within two spaces, grab the nearest place where an item can be
-// dropped.
-//
-// Note, non-full containers are considered a "valid" space for dropping an
-// item here.
+// spaces within 3 spaces, grab the nearest place where an item can be dropped.
 //
 pub fn nextAvailableSpaceForItem(c: Coord, a: mem.Allocator) ?Coord {
     const S = struct {
         pub fn _helper(strict: bool, crd: Coord, alloc: mem.Allocator) ?Coord {
             const S = struct {
                 pub fn _isFull(strict_: bool, coord: Coord) bool {
-                    if (dungeon.at(coord).surface) |surface| {
-                        switch (surface) {
-                            .Container => |container| return container.items.isFull(),
-                            else => if (strict_) return true,
-                        }
+                    if (dungeon.at(coord).surface) |_| {
+                        if (strict_) return true;
+                        // switch (surface) {
+                        //     .Container => |container| return container.items.isFull(),
+                        //     else => if (!strict_) return true,
+                        // }
                     }
 
                     return if (strict_)
@@ -231,7 +228,7 @@ pub fn nextAvailableSpaceForItem(c: Coord, a: mem.Allocator) ?Coord {
             if (is_walkable(crd, .{ .right_now = true }) and !S._isFull(strict, crd))
                 return crd;
 
-            var dijk = dijkstra.Dijkstra.init(crd, mapgeometry, 2, is_walkable, .{ .right_now = true }, alloc);
+            var dijk = dijkstra.Dijkstra.init(crd, mapgeometry, 3, is_walkable, .{ .right_now = true }, alloc);
             defer dijk.deinit();
 
             return while (dijk.next()) |child| {

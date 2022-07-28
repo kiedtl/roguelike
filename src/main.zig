@@ -590,6 +590,7 @@ fn tickGame() void {
                 state.player_turns += 1;
                 state.chardata.time_on_levels[mob.coord.z] += 1;
                 player.bookkeepingFOV();
+                player.checkForGarbage();
                 if (player.getActiveRing()) |r|
                     player.getRingHints(r);
             }

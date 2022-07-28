@@ -371,7 +371,8 @@ fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceIte
         .Prop => |p| _writerWrite(w, "$c{s}$.\nprop\n\n$gNothing to see here.$.\n", .{p.name}),
         .Container => |c| {
             _writerWrite(w, "$cA {s}$.\nContainer\n\n", .{c.name});
-            _writerWrite(w, "$gPress $b,$. $gover it to see its contents.$.\n", .{});
+            _writerWrite(w, "Who knows what goodies lie within?\n\n", .{});
+            _writerWrite(w, "$gBump into it to search for loot.\n", .{});
         },
         .Poster => |p| {
             _writerWrite(w, "$cPoster$.\n\n", .{});

@@ -4,42 +4,50 @@
 # vim: nowrap colorcolumn=0
 #
 
+# Weapon props
+""                     	 "wooden club"          	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
+""                     	 "bludgeon"             	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
+""                     	 "cosh"                 	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
+""                     	 "broken sword"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
+""                     	 "shattered mace"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
+""                     	 "blunt knife"          	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
+
 # Laboratory stuff
-""                     	 "beaker"               	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "large beaker"         	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "mesh"                 	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "strainer"             	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "scale"                	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "lens"                 	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "battery"              	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "test-tube"            	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "large battery"        	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "empty vial"           	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "test-tube holder"     	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "stirring rod"         	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "laboratory balance"   	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "crucible"             	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "crucible tongs"       	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "filter paper"         	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "flask"                	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "filter flask"         	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "pipet"                	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "buret"                	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "ring stand"           	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "double buret clamp"   	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "mortar/pestle"        	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "evaporating dish"     	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "flame spreader"       	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "burner lighter"       	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "utility clamps"       	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "separatory funnel"    	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "reagent bottle"       	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "graduated cylinder"   	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "petri dish"           	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "rubber stopper"       	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "thermometer"          	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "Buchner funnel"       	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "Erlenmeyer flask"     	 '~' 	 0xffffff 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "beaker"               	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "large beaker"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "mesh"                 	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "strainer"             	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "scale"                	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "lens"                 	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "battery"              	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "test-tube"            	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "large battery"        	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "empty vial"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "test-tube holder"     	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "stirring rod"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "laboratory balance"   	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "crucible"             	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "crucible tongs"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "filter paper"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "flask"                	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "filter flask"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "pipet"                	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "buret"                	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "ring stand"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "double buret clamp"   	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "mortar/pestle"        	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "evaporating dish"     	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "flame spreader"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "burner lighter"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "utility clamps"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "separatory funnel"    	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "reagent bottle"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "graduated cylinder"   	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "petri dish"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "rubber stopper"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "thermometer"          	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "Buchner funnel"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "Erlenmeyer flask"     	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
 
 # Quarters stuff
 "fuel_barrel"          	 "barrel of fuel"       	 'ʊ' 	 0xdaa520 	 -        	 nay 	 - 	99 	 .Vault

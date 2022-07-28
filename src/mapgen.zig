@@ -352,12 +352,16 @@ fn randomWallCoord(rect: *const Rect, i: ?usize) Coord {
     return Coord.new2(rect.start.z, x, y);
 }
 
-fn _chooseLootItem(value_range: MinMax(usize)) ItemTemplate {
+fn _chooseLootItem(value_range: MinMax(usize), class: ?ItemTemplate.Type) ItemTemplate {
     while (true) {
         var item_info = rng.choose2(ItemTemplate, &items.ITEM_DROPS, "w") catch err.wat();
 
         if (!value_range.contains(item_info.w))
             continue;
+
+        if (class) |_|
+            if (item_info.i != class.?)
+                continue;
 
         if (item_info.i == .List) {
             return rng.choose2(ItemTemplate, item_info.i.List, "w") catch err.wat();
@@ -661,11 +665,11 @@ fn excavatePrefab(
                     _ = placeProp(rc, &surfaces.props.items[p_ind.?]);
                 },
                 .Loot1 => {
-                    const loot_item1 = _chooseLootItem(minmax(usize, 60, 200));
+                    const loot_item1 = _chooseLootItem(minmax(usize, 60, 200), null);
                     state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(loot_item1)) catch err.wat();
                 },
                 .RareLoot => {
-                    const rare_loot_item = _chooseLootItem(minmax(usize, 0, 60));
+                    const rare_loot_item = _chooseLootItem(minmax(usize, 0, 60), null);
                     state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(rare_loot_item)) catch err.wat();
                 },
                 .Corpse => {
@@ -1688,31 +1692,6 @@ pub fn placeBSPRooms(
 }
 
 pub fn placeItems(level: usize) void {
-    // Fill up containers first.
-    var containers = state.containers.iterator();
-    while (containers.next()) |container| {
-        if (container.coord.z != level) continue;
-
-        // How much should we fill the container?
-        const fill = rng.rangeClumping(usize, 0, container.capacity, 2);
-
-        switch (container.type) {
-            .Utility => if (Configs[level].utility_items.*.len > 0) {
-                const item_list = Configs[level].utility_items.*;
-                var item = &item_list[rng.range(usize, 0, item_list.len - 1)];
-                var i: usize = 0;
-                while (i < fill) : (i += 1) {
-                    if (rng.range(usize, 0, 100) < container.item_repeat) {
-                        item = &item_list[rng.range(usize, 0, item_list.len - 1)];
-                    }
-
-                    container.items.append(Item{ .Prop = item }) catch err.wat();
-                }
-            },
-            else => {},
-        }
-    }
-
     // Now drop items that the player could use.
     room_iter: for (state.rooms[level].items) |room| {
         // Don't place items if:
@@ -1732,29 +1711,93 @@ pub fn placeItems(level: usize) void {
         const max_items = if (room.is_vault != null) rng.range(usize, 3, 7) else rng.range(usize, 1, 2);
         var items_placed: usize = 0;
 
-        while (items_placed < max_items) : (items_placed += 1) {
-            var tries: usize = 500;
-            var item_coord: Coord = undefined;
+        var container: ?*Container = null;
+        var item_class: ?ItemTemplate.Type = null;
 
-            while (true) {
-                item_coord = room.rect.randomCoord();
-
-                // FIXME: uhg, this will reject tiles with mobs on it, even
-                // though that's not what we want. On the other hand, killing
-                // a guard that has a potion underneath it will cause the
-                // corpse to hide the potion...
+        // Put stuff in a container?
+        if (rng.onein(3)) {
+            const container_coord = while (true) {
+                var item_coord = room.rect.randomCoord();
                 if (isTileAvailable(item_coord) and
                     !state.dungeon.at(item_coord).prison)
-                    break; // we found a valid coord
+                {
+                    break item_coord;
+                }
+            } else unreachable;
 
-                // didn't find a coord, continue to the next room...
-                if (tries == 0) continue :room_iter;
-                tries -= 1;
+            placeContainer(container_coord, &surfaces.WeaponRack);
+            container = state.dungeon.at(container_coord).surface.?.Container;
+            item_class = .W;
+        }
+
+        while (items_placed < max_items) : (items_placed += 1) {
+            if (container == null) {
+                var item_coord: Coord = undefined;
+                var tries: usize = 500;
+                while (true) {
+                    item_coord = room.rect.randomCoord();
+
+                    // FIXME: uhg, this will reject tiles with mobs on it, even
+                    // though that's not what we want. On the other hand, killing
+                    // a guard that has a potion underneath it will cause the
+                    // corpse to hide the potion...
+                    if (isTileAvailable(item_coord) and
+                        !state.dungeon.at(item_coord).prison)
+                        break; // we found a valid coord
+
+                    // didn't find a coord, continue to the next room...
+                    if (tries == 0) continue :room_iter;
+                    tries -= 1;
+                }
+
+                const t = _chooseLootItem(minmax(usize, 0, 200), null);
+                const item = items.createItemFromTemplate(t);
+                state.dungeon.itemsAt(item_coord).append(item) catch err.wat();
+            } else {
+                const t = _chooseLootItem(minmax(usize, 0, 200), item_class);
+                const item = items.createItemFromTemplate(t);
+                container.?.items.append(item) catch err.wat();
             }
+        }
+    }
 
-            const t = _chooseLootItem(minmax(usize, 0, 200));
-            const item = items.createItemFromTemplate(t);
-            state.dungeon.itemsAt(item_coord).append(item) catch err.wat();
+    // Now fill up containers, including any ones we placed earlier in this
+    // function
+    //
+    var containers = state.containers.iterator();
+    while (containers.next()) |container| {
+        if (container.coord.z != level) continue;
+
+        // How much should we fill the container?
+        const fill = rng.rangeClumping(usize, 0, container.capacity - container.items.len, 2);
+
+        switch (container.type) {
+            .Weapons => {
+                const item_list = surfaces.weapon_props.items;
+
+                var item = &item_list[rng.range(usize, 0, item_list.len - 1)];
+                var i: usize = 0;
+                while (i < fill) : (i += 1) {
+                    if (rng.percent(container.item_repeat)) {
+                        item = &item_list[rng.range(usize, 0, item_list.len - 1)];
+                    }
+
+                    container.items.append(Item{ .Prop = item }) catch err.wat();
+                }
+            },
+            .Utility => if (Configs[level].utility_items.*.len > 0) {
+                const item_list = Configs[level].utility_items.*;
+                var item = &item_list[rng.range(usize, 0, item_list.len - 1)];
+                var i: usize = 0;
+                while (i < fill) : (i += 1) {
+                    if (rng.percent(container.item_repeat)) {
+                        item = &item_list[rng.range(usize, 0, item_list.len - 1)];
+                    }
+
+                    container.items.append(Item{ .Prop = item }) catch err.wat();
+                }
+            },
+            else => {},
         }
     }
 }

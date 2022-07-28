@@ -59,14 +59,17 @@ const StackBuffer = @import("buffer.zig").StackBuffer;
 //
 pub const ItemTemplate = struct {
     w: usize,
-    i: union(enum) {
+    i: TemplateItem,
+
+    pub const TemplateItem = union(enum) {
         W: Weapon,
         A: Armor,
         C: *const Cloak,
         P: *const Consumable,
         E: Evocable,
         List: []const ItemTemplate,
-    },
+    };
+    pub const Type = meta.Tag(TemplateItem);
 };
 pub const RARE_ITEM_DROPS = [_]ItemTemplate{
     // Dilute this list by adding a few more common weapon

@@ -162,6 +162,25 @@ pub fn triggerStair(_: Coord, dest_stair: Coord) bool {
     return true;
 }
 
+// Called on each player's turn.
+//
+// Checks if there's garbage/useless stuff where the player is standing, and
+// discards it if that's the case.
+//
+// Won't act if the player is currently spotted.
+pub fn checkForGarbage() void {
+    if (isPlayerSpotted()) {
+        return;
+    }
+
+    if (state.dungeon.itemsAt(state.player.coord).last()) |item| {
+        if (item == .Prop) {
+            state.message(.Unimportant, "You toss the useless $g{s}$..", .{item.Prop.name});
+            _ = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
+        }
+    }
+}
+
 // Iterate through each tile in FOV:
 // - Add them to memory.
 // - If they haven't existed in memory before as an .Immediate tile, check for
@@ -266,12 +285,15 @@ pub fn moveOrFight(direction: Direction) bool {
             return false;
     }
 
-    // Does the player want to trigger a machine that requires confirmation?
+    // Does the player want to trigger a machine that requires confirmation, or
+    // maybe rummage a container?
+    //
     if (state.dungeon.at(dest).surface) |surf| switch (surf) {
         .Machine => |m| if (m.evoke_confirm) |msg| {
             if (!display.drawYesNoPrompt("{s}", .{msg}))
                 return false;
         },
+        .Container => |_| return rummageContainer(dest),
         else => {},
     };
 
@@ -303,26 +325,50 @@ pub fn moveOrFight(direction: Direction) bool {
     return ret;
 }
 
+pub fn rummageContainer(coord: Coord) bool {
+    const container = state.dungeon.at(coord).surface.?.Container;
+
+    if (container.items.len == 0) {
+        display.drawAlertThenLog("There's nothing in the {s}.", .{container.name});
+        return false;
+    }
+
+    var found_goodies = false;
+    while (container.items.pop()) |item| {
+        if (item != .Prop)
+            found_goodies = true;
+
+        if (state.nextAvailableSpaceForItem(coord, state.GPA.allocator())) |spot| {
+            state.dungeon.itemsAt(spot).append(item) catch err.wat();
+        } else {
+            // FIXME: an item gets swallowed up here!
+            break;
+        }
+    } else |_| {}
+
+    if (container.items.len == 0) {
+        state.message(.Info, "You rummage through the {s}...", .{container.name});
+    } else {
+        state.message(.Info, "You rummage through part of the {s}...", .{container.name});
+    }
+
+    if (found_goodies) {
+        state.message(.Info, "You found some goodies!", .{});
+    } else {
+        state.message(.Unimportant, "You found some junk.", .{});
+    }
+
+    state.player.declareAction(.Interact);
+    return true;
+}
+
 pub fn grabItem() bool {
     var item: Item = undefined;
     var found_item = false;
 
     if (state.dungeon.at(state.player.coord).surface) |surface| {
         switch (surface) {
-            .Container => |container| {
-                if (container.items.len == 0) {
-                    display.drawAlertThenLog("There's nothing in the {s}.", .{container.name});
-                    return false;
-                } else {
-                    const index = display.drawItemChoicePrompt(
-                        "Take what?",
-                        .{},
-                        container.items.constSlice(),
-                    ) orelse return false;
-                    item = container.items.orderedRemove(index) catch err.wat();
-                    found_item = true;
-                }
-            },
+            .Container => |_| return rummageContainer(state.player.coord),
             else => {},
         }
     }

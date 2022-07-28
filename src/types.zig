@@ -3631,12 +3631,14 @@ pub const Container = struct {
 
     pub const ItemBuffer = StackBuffer(Item, 21);
     pub const ContainerType = enum {
-        Eatables, // All food
-        Wearables, // Weapons, armor, clothing, thread, cloth
-        VOres, // self-explanatory
-        Casual, // dice, deck of cards
-        Utility, // Depends on the level (for PRI: rope, chains, etc)
+        Weapons, // Weapons
+        VOres, // Useless. Vial ores
+        Utility, // Useless. Depends on the level (for PRI: rope, chains, etc).
     };
+
+    pub fn isLootable(self: *const Container) bool {
+        return self.type == .Weapons and self.items.len > 0;
+    }
 };
 
 pub const SurfaceItemTag = enum { Corpse, Machine, Prop, Container, Poster, Stair };
@@ -3864,8 +3866,8 @@ pub const Item = union(ItemType) {
                 cell.fg = b.color_floor;
             },
             .Prop => |p| {
-                cell.ch = p.tile;
-                cell.fg = p.fg orelse 0xffffff;
+                cell.ch = '%';
+                cell.fg = p.fg orelse 0xcacbca;
             },
             .Evocable => |v| {
                 cell.ch = '}';
@@ -4040,7 +4042,7 @@ pub const Tile = struct {
                     //     cell.fg = 0x000000;
                     //     cell.bg = 0x808000;
                     // }
-                    cell.fg = 0xffeeaa;
+                    cell.fg = if (c.isLootable()) colors.GOLD else colors.GREY;
                     break :cont c.tile;
                 },
                 .Machine => |m| mach: {
@@ -4118,7 +4120,7 @@ pub const Dungeon = struct {
     fire: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     stairs: [LEVELS]StairBuffer = [_]StairBuffer{StairBuffer.init(null)} ** LEVELS,
 
-    pub const ItemBuffer = StackBuffer(Item, 7);
+    pub const ItemBuffer = StackBuffer(Item, 4);
     pub const StairBuffer = StackBuffer(Coord, MAX_STAIRS);
 
     pub const MAX_STAIRS: usize = 2;
