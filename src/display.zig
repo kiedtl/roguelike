@@ -2313,6 +2313,8 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
 }
 
 pub fn drawYesNoPrompt(comptime fmt: []const u8, args: anytype) bool {
+    Animation.apply(.{ .PopChar = .{ .coord = state.player.coord, .char = '?', .delay = 120 } });
+
     const r = (drawChoicePrompt(fmt, args, &[_][]const u8{ "No", "Yes" }) orelse 0) == 1;
     if (!r) state.message(.Unimportant, "Cancelled.", .{});
     return r;
@@ -2346,6 +2348,12 @@ pub fn drawItemChoicePrompt(comptime fmt: []const u8, args: anytype, items: []co
 // Animations {{{
 
 pub const Animation = union(enum) {
+    PopChar: struct {
+        coord: Coord,
+        char: u32,
+        fg: u32 = colors.LIGHT_CONCRETE,
+        delay: usize = 80,
+    },
     BlinkChar: struct {
         coords: []const Coord,
         char: u32,
@@ -2405,6 +2413,26 @@ pub const Animation = union(enum) {
         state.player.tickFOV();
 
         switch (self) {
+            .PopChar => |anim| {
+                const dx = @intCast(isize, anim.coord.x) + mapwin.startx;
+                const dy = @intCast(isize, anim.coord.y) + mapwin.starty;
+                const old = termbox.oldCell(dx, dy);
+
+                termbox.tb_change_cell(dx, dy, anim.char, anim.fg, colors.BG);
+                termbox.tb_present();
+
+                std.time.sleep(anim.delay * 1_000_000);
+
+                termbox.tb_change_cell(dx, dy, old.ch, old.fg, old.bg);
+                termbox.tb_change_cell(dx - 1, dy - 1, anim.char, anim.fg, colors.BG);
+                termbox.tb_change_cell(dx + 1, dy - 1, anim.char, anim.fg, colors.BG);
+                termbox.tb_change_cell(dx - 1, dy + 1, anim.char, anim.fg, colors.BG);
+                termbox.tb_change_cell(dx + 1, dy + 1, anim.char, anim.fg, colors.BG);
+
+                termbox.tb_present();
+
+                std.time.sleep(anim.delay * 1_000_000);
+            },
             .BlinkChar => |anim| {
                 assert(anim.coords.len < 32); // XXX: increase if necessary
                 var old_cells = StackBuffer(termbox.tb_cell, 32).init(null);

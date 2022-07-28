@@ -7,6 +7,7 @@ const meta = std.meta;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const ai = @import("ai.zig");
+const colors = @import("colors.zig");
 const rng = @import("rng.zig");
 const literature = @import("literature.zig");
 const explosions = @import("explosions.zig");
@@ -178,6 +179,7 @@ pub fn checkForGarbage() void {
         // and Vials
         //
         if (item == .Prop) {
+            display.Animation.apply(.{ .PopChar = .{ .coord = state.player.coord, .char = '/' } });
             state.message(.Unimportant, "You toss the useless $g{s}$..", .{item.Prop.name});
             _ = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
         }
@@ -336,6 +338,10 @@ pub fn rummageContainer(coord: Coord) bool {
         return false;
     }
 
+    display.Animation.apply(.{
+        .PopChar = .{ .coord = state.player.coord, .char = '?', .fg = colors.GOLD, .delay = 125 },
+    });
+
     var found_goodies = false;
     while (container.items.pop()) |item| {
         if (item.isUseful())
@@ -451,6 +457,9 @@ pub fn grabItem() bool {
             });
         },
     }
+
+    display.Animation.apply(.{ .PopChar = .{ .coord = state.player.coord, .char = '/' } });
+
     return true;
 }
 
