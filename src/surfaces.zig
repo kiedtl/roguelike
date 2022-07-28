@@ -1053,7 +1053,8 @@ fn interact1Fountain(_: *Machine, mob: *Mob) bool {
     assert(mob == state.player);
 
     const HP = state.player.HP;
-    state.player.HP = math.clamp(HP + ((state.player.max_HP - HP) / 2), 0, state.player.max_HP);
+    const heal_amount = @floatToInt(usize, (state.player.max_HP - HP) / 2);
+    state.player.takeHealing(heal_amount);
 
     // Remove some harmful statuses.
     state.player.cancelStatus(.Fire);
