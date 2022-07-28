@@ -485,6 +485,7 @@ fn readInput() bool {
                                     error.NeedOppositeTileNearWalls => state.message(.Info, "[$o{s}$.] error: needs to have walkable space near walls in the opposite direction", .{ring.name}),
                                     error.NeedHostileOnTile => state.message(.Info, "[$o{s}$.] error: hostile in that direction", .{ring.name}),
                                     error.NeedOpenSpace => state.message(.Info, "[$o{s}$.] error: need to be in open space (no walls in cardinal directions)", .{ring.name}),
+                                    error.NeedOppositeWalkableTileInFrontOfWall => state.message(.Info, "[$o{s}$.] error: needs to have walkable space in front of wall in opposite direction", .{ring.name}),
                                 }
                             }
                         }

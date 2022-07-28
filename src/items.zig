@@ -394,6 +394,7 @@ pub const PatternChecker = struct { // {{{
         NeedOppositeTileNearWalls,
         NeedHostileOnTile,
         NeedOpenSpace,
+        NeedOppositeWalkableTileInFrontOfWall,
     };
 
     pub fn reset(self: *PatternChecker) void {
@@ -1413,6 +1414,74 @@ pub const DefaultCounterattackRing = Ring{ // {{{
     .effect = struct {
         pub fn f(self: *Mob, _: PatternChecker.State) void {
             self.addStatus(.Fast, 0, .{ .Tmp = 10 });
+        }
+    }.f,
+}; // }}}
+
+pub const DefaultLeapRing = Ring{ // {{{
+    .name = "leap",
+    .pattern_checker = .{
+        .turns = 3,
+        .init = struct {
+            pub fn f(mob: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+                if (mob.coord.move(d.opposite(), state.mapgeometry)) |opposite_coord| {
+                    if (!state.is_walkable(opposite_coord, .{ .mob = mob })) {
+                        return error.NeedOppositeWalkableTile;
+                    }
+
+                    if (opposite_coord.move(d.opposite(), state.mapgeometry)) |opposite_coord2| {
+                        if (state.dungeon.at(opposite_coord2).type != .Wall) {
+                            return error.NeedOppositeWalkableTileInFrontOfWall;
+                        }
+                    } else {
+                        return error.NeedOppositeWalkableTileInFrontOfWall;
+                    }
+                } else {
+                    return error.NeedOppositeWalkableTile;
+                }
+
+                stt.directions[0] = d;
+
+                return Activity{ .Move = d.opposite() };
+            }
+        }.f,
+        .funcs = [_]PatternChecker.Func{
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    if (cur == .Move and cur.Move == stt.directions[0].?.opposite()) {
+                        const new_coord = if (dry) mob.coord.move(cur.Move, state.mapgeometry).? else mob.coord;
+                        if (new_coord.move(cur.Move, state.mapgeometry)) |adj_coord| {
+                            if (state.dungeon.at(adj_coord).type == .Wall) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                }
+            }.f,
+            struct {
+                pub fn f(_: *Mob, _: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    return cur == .Rest;
+                }
+            }.f,
+            struct {
+                pub fn f(_: *Mob, _: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    return cur == .Rest;
+                }
+            }.f,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        },
+    },
+    .effect = struct {
+        pub fn f(self: *Mob, stt: PatternChecker.State) void {
+            self.makeNoise(.Combat, .Loud);
+            combat.throwMob(null, self, stt.directions[0].?, 7);
         }
     }.f,
 }; // }}}

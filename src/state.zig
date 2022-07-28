@@ -142,6 +142,7 @@ pub var default_patterns = [_]types.Ring{
     items.DefaultChargeRing,
     items.DefaultLungeRing,
     items.DefaultCounterattackRing,
+    items.DefaultLeapRing,
 };
 
 pub const MemoryTile = struct {
