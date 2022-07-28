@@ -4,13 +4,54 @@
 # vim: nowrap colorcolumn=0
 #
 
+# Tools props
+#
+# TODO: once hammer weapon is added, remove useless hammer prop to avoid confusion
+""                     	 "hammer"               	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "screwdriver"          	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "gimlet"               	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "wolfram drill"        	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "circular saw"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "chisel set"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "locksmith kit"        	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "wolfram hammer"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "mallet"               	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "headlight"            	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "tinder box"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
+
+# Wearables props
+""                     	 "torn gambeson"        	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
+""                     	 "split hauberk"        	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
+""                     	 "red tunic"            	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
+""                     	 "teal tunic"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
+""                     	 "green tunic"          	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
+""                     	 "woven belt"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
+""                     	 "undergarment"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
+""                     	 "undershirt"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
+""                     	 "wool sock"            	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
+
+# Potion props
+""                     	 "empty bottle"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
+""                     	 "kombucha"             	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
+""                     	 "passionfruit kombucha"	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
+""                     	 "kefir"                	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
+""                     	 "sanitisation potion"  	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
+""                     	 "fermentation potion"  	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
+""                     	 "caffeination potion"  	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
+""                     	 "porridge potion"      	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
+""                     	 "beer can"             	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
+
 # Weapon props
+""                     	 "shock prod"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
 ""                     	 "wooden club"          	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
 ""                     	 "bludgeon"             	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
 ""                     	 "cosh"                 	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
 ""                     	 "broken sword"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
 ""                     	 "shattered mace"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
 ""                     	 "blunt knife"          	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
+# double/triple sword is a nod to DCSS
+""                     	 "triple sword"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
+""                     	 "double sword"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
 
 # Laboratory stuff
 ""                     	 "beaker"               	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem

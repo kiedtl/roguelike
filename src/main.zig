@@ -851,26 +851,28 @@ pub fn actualMain() anyerror!void {
 
 pub fn main() void {
     actualMain() catch |err| {
-        if (@errorReturnTrace()) |error_trace| {
-            var membuf: [65535]u8 = undefined;
-            var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-            var alloc = fba.allocator();
+        if (!state.sentry_disabled) {
+            if (@errorReturnTrace()) |error_trace| {
+                var membuf: [65535]u8 = undefined;
+                var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+                var alloc = fba.allocator();
 
-            sentry.captureError(
-                build_options.release,
-                build_options.dist,
-                @errorName(err),
-                "propagated error trace",
-                &[_]sentry.SentryEvent.TagSet.Tag{.{
-                    .name = "seed",
-                    .value = std.fmt.allocPrint(alloc, "{}", .{rng.seed}) catch unreachable,
-                }},
-                error_trace,
-                null,
-                alloc,
-            ) catch |zs_err| {
-                std.log.err("zig-sentry: Fail: {s}", .{@errorName(zs_err)});
-            };
+                sentry.captureError(
+                    build_options.release,
+                    build_options.dist,
+                    @errorName(err),
+                    "propagated error trace",
+                    &[_]sentry.SentryEvent.TagSet.Tag{.{
+                        .name = "seed",
+                        .value = std.fmt.allocPrint(alloc, "{}", .{rng.seed}) catch unreachable,
+                    }},
+                    error_trace,
+                    null,
+                    alloc,
+                ) catch |zs_err| {
+                    std.log.err("zig-sentry: Fail: {s}", .{@errorName(zs_err)});
+                };
+            }
         }
     };
 }

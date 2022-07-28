@@ -57,6 +57,9 @@ pub var laboratory_props: PropArrayList = undefined;
 pub var vault_props: PropArrayList = undefined;
 pub var statue_props: PropArrayList = undefined;
 pub var weapon_props: PropArrayList = undefined;
+pub var bottle_props: PropArrayList = undefined;
+pub var tools_props: PropArrayList = undefined;
+pub var armors_props: PropArrayList = undefined;
 
 pub const Terrain = struct {
     id: []const u8,
@@ -254,6 +257,15 @@ pub const TERRAIN = [_]*const Terrain{
     &PlatformTerrain,
 };
 
+pub const ToolChest = Container{ .name = "tool chest", .tile = 'æ', .capacity = 3, .type = .Evocables };
+pub const Wardrobe = Container{ .name = "wardrobe", .tile = 'Æ', .capacity = 4, .type = .Wearables, .item_repeat = 0 };
+pub const PotionShelf = Container{ .name = "potion shelf", .tile = 'Æ', .capacity = 4, .type = .Drinkables, .item_repeat = 0 };
+pub const WeaponRack = Container{ .name = "weapon rack", .tile = 'π', .capacity = 3, .type = .Smackables, .item_repeat = 0 };
+pub const LabCabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 4, .type = .Utility, .item_repeat = 70 };
+pub const VOreCrate = Container{ .name = "crate", .tile = '∐', .capacity = 14, .type = .VOres, .item_repeat = 60 };
+
+pub const LOOT_CONTAINERS = [_]*const Container{ &WeaponRack, &PotionShelf, &Wardrobe, &ToolChest };
+
 pub const MACHINES = [_]Machine{
     SteamVent,
     ResearchCore,
@@ -282,11 +294,6 @@ pub const MACHINES = [_]Machine{
     Fountain,
     WaterBarrel,
 };
-
-//pub const Cabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 4, .type = .Wearables };
-pub const WeaponRack = Container{ .name = "weapon rack", .tile = 'π', .capacity = 3, .type = .Weapons };
-pub const LabCabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 4, .type = .Utility, .item_repeat = 70 };
-pub const VOreCrate = Container{ .name = "crate", .tile = '∐', .capacity = 14, .type = .VOres, .item_repeat = 60 };
 
 pub const SteamVent = Machine{
     .id = "steam_vent",
@@ -1072,7 +1079,7 @@ pub fn readProps(alloc: mem.Allocator) void {
         function: Function = undefined,
         holder: bool = undefined,
 
-        pub const Function = enum { Laboratory, Vault, LaboratoryItem, Statue, Weapons, None };
+        pub const Function = enum { Laboratory, Vault, LaboratoryItem, Statue, Weapons, Bottles, Wearables, Tools, None };
     };
 
     props = PropArrayList.init(alloc);
@@ -1082,6 +1089,9 @@ pub fn readProps(alloc: mem.Allocator) void {
     vault_props = PropArrayList.init(alloc);
     statue_props = PropArrayList.init(alloc);
     weapon_props = PropArrayList.init(alloc);
+    bottle_props = PropArrayList.init(alloc);
+    tools_props = PropArrayList.init(alloc);
+    armors_props = PropArrayList.init(alloc);
 
     const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
     const data_file = data_dir.openFile("props.tsv", .{
@@ -1139,6 +1149,9 @@ pub fn readProps(alloc: mem.Allocator) void {
                 .Vault => vault_props.append(prop) catch err.oom(),
                 .Statue => statue_props.append(prop) catch err.oom(),
                 .Weapons => weapon_props.append(prop) catch err.oom(),
+                .Bottles => bottle_props.append(prop) catch err.oom(),
+                .Tools => tools_props.append(prop) catch err.oom(),
+                .Wearables => armors_props.append(prop) catch err.oom(),
                 else => {},
             }
 
@@ -1159,6 +1172,9 @@ pub fn freeProps(alloc: mem.Allocator) void {
     vault_props.deinit();
     statue_props.deinit();
     weapon_props.deinit();
+    bottle_props.deinit();
+    tools_props.deinit();
+    armors_props.deinit();
 }
 
 pub fn tickMachines(level: usize) void {

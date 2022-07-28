@@ -22,8 +22,21 @@ const Mob = types.Mob;
 const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
+const DIRECTIONS = types.DIRECTIONS;
+const DIAGONAL_DIRECTIONS = types.DIAGONAL_DIRECTIONS;
+const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
 
 const StackBuffer = buffer.StackBuffer;
+
+pub fn walkableNeighbors(c: Coord, diagonals: bool, opts: state.IsWalkableOptions) usize {
+    const directions = if (diagonals) &DIRECTIONS else &CARDINAL_DIRECTIONS;
+    var ctr: usize = 0;
+    for (directions) |d| if (c.move(d, state.mapgeometry)) |neighbor| {
+        if (state.is_walkable(neighbor, opts))
+            ctr += 1;
+    };
+    return ctr;
+}
 
 pub fn getHostileInDirection(self: *Mob, d: Direction) !*Mob {
     if (self.coord.move(d, state.mapgeometry)) |neighbor| {

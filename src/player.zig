@@ -174,6 +174,9 @@ pub fn checkForGarbage() void {
     }
 
     if (state.dungeon.itemsAt(state.player.coord).last()) |item| {
+        // Don't use item.isUseful() here because that would toss Boulders
+        // and Vials
+        //
         if (item == .Prop) {
             state.message(.Unimportant, "You toss the useless $g{s}$..", .{item.Prop.name});
             _ = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
@@ -335,7 +338,7 @@ pub fn rummageContainer(coord: Coord) bool {
 
     var found_goodies = false;
     while (container.items.pop()) |item| {
-        if (item != .Prop)
+        if (item.isUseful())
             found_goodies = true;
 
         if (state.nextAvailableSpaceForItem(coord, state.GPA.allocator())) |spot| {

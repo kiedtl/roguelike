@@ -354,7 +354,7 @@ fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceIte
     switch (surface) {
         .Machine => |m| {
             _writerWrite(w, "$c{s}$.\n", .{m.name});
-            _writerWrite(w, "machine\n", .{});
+            _writerWrite(w, "feature\n", .{});
             _writerWrite(w, "\n", .{});
 
             if (m.player_interact) |interaction| {
@@ -368,11 +368,17 @@ fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceIte
 
             _writerWrite(w, "\n", .{});
         },
-        .Prop => |p| _writerWrite(w, "$c{s}$.\nprop\n\n$gNothing to see here.$.\n", .{p.name}),
+        .Prop => |p| _writerWrite(w, "$c{s}$.\nobject\n\n$gNothing to see here.$.\n", .{p.name}),
         .Container => |c| {
             _writerWrite(w, "$cA {s}$.\nContainer\n\n", .{c.name});
-            _writerWrite(w, "Who knows what goodies lie within?\n\n", .{});
-            _writerWrite(w, "$gBump into it to search for loot.\n", .{});
+            if (c.items.len == 0) {
+                _writerWrite(w, "It appears to be empty...\n", .{});
+            } else if (!c.isLootable()) {
+                _writerWrite(w, "You don't expect to find anything useful inside.\n", .{});
+            } else {
+                _writerWrite(w, "Who knows what goodies lie within?\n\n", .{});
+                _writerWrite(w, "$gBump into it to search for loot.\n", .{});
+            }
         },
         .Poster => |p| {
             _writerWrite(w, "$cPoster$.\n\n", .{});

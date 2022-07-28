@@ -3631,13 +3631,35 @@ pub const Container = struct {
 
     pub const ItemBuffer = StackBuffer(Item, 21);
     pub const ContainerType = enum {
-        Weapons, // Weapons
+        Smackables, // Weapons
+        Drinkables, // Potions, alcohol, etc
+        Wearables, // Cloaks, armors, etc
+        Evocables, // Consumables, evocables
         VOres, // Useless. Vial ores
         Utility, // Useless. Depends on the level (for PRI: rope, chains, etc).
+
+        pub fn itemType(self: ContainerType) ?[]const items.ItemTemplate.Type {
+            return switch (self) {
+                .Smackables => &[_]items.ItemTemplate.Type{.W},
+                .Drinkables => &[_]items.ItemTemplate.Type{.P},
+                .Wearables => &[_]items.ItemTemplate.Type{ .A, .C },
+                .Evocables => &[_]items.ItemTemplate.Type{ .c, .E },
+                else => null,
+            };
+        }
     };
 
+    pub fn isFull(self: *const Container) bool {
+        assert(self.capacity <= self.items.capacity);
+        return self.items.len == self.capacity;
+    }
+
     pub fn isLootable(self: *const Container) bool {
-        return self.type == .Weapons and self.items.len > 0;
+        return self.items.len > 0 and
+            (self.type == .Smackables or
+            self.type == .Drinkables or
+            self.type == .Wearables or
+            self.type == .Evocables);
     }
 };
 
@@ -3823,12 +3845,16 @@ pub const Item = union(ItemType) {
     Prop: *const Prop,
     Evocable: *Evocable,
 
-    // Should we announce the item to the player when we find it?
-    pub fn announce(self: Item) bool {
+    pub fn isUseful(self: Item) bool {
         return switch (self) {
             .Vial, .Boulder, .Prop => false,
             .Rune, .Projectile, .Cloak, .Ring, .Consumable, .Armor, .Weapon, .Evocable => true,
         };
+    }
+
+    // Should we announce the item to the player when we find it?
+    pub fn announce(self: Item) bool {
+        return self.isUseful();
     }
 
     pub fn tile(self: Item) termbox.tb_cell {
