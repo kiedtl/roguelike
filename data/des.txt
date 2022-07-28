@@ -88,6 +88,9 @@ Drinking from this fountain will refresh you, healing some of your injuries.
 % drain
 Crawling into this will make you teleport to another place. Hopefully.
 
+% evoc_brazier_wand
+This wand can fire a beam of electricity at a light source, disabling it.
+
 % evoc_flamethrower
 This device can spray a fountain of sparks at a nearby tile, igniting it.
 
