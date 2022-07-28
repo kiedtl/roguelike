@@ -1062,6 +1062,11 @@ pub const Status = enum {
     // Doesn't have a power field.
     OpenMelee,
 
+    // .Melee bonus if in closed area.
+    //
+    // Doesn't have a power field.
+    ClosedMelee,
+
     // Makes monster "share" electric damage to nearby mobs and through
     // conductive terrain.
     //
@@ -1215,6 +1220,7 @@ pub const Status = enum {
             .Riposte => "riposte",
             .Debil => "debilitated",
             .OpenMelee => "open melee",
+            .ClosedMelee => "closed melee",
             .Conductive => "conductive",
             .Noisy => "noisy",
             .Sleeping => switch (mob.life_type) {
@@ -1259,7 +1265,7 @@ pub const Status = enum {
             .Blind => .{ "are", "is", " blinded" },
             .Riposte => null,
             .Debil => .{ "are", "is", " debilitated" },
-            .OpenMelee, .Conductive, .Noisy => null,
+            .ClosedMelee, .OpenMelee, .Conductive, .Noisy => null,
             .Sleeping => .{ "go", "goes", " to sleep" }, // FIXME: bad wording for unliving
             .Paralysis => .{ "are", "is", " paralyzed" },
             .Held => .{ "are", "is", " entangled" },
@@ -1300,7 +1306,7 @@ pub const Status = enum {
             .Blind => .{ "are no longer", "is no longer", " blinded" },
             .Riposte => null,
             .Debil => .{ "are no longer", "is no longer", " debilitated" },
-            .OpenMelee, .Conductive, .Noisy => null,
+            .ClosedMelee, .OpenMelee, .Conductive, .Noisy => null,
             .Sleeping => .{ "wake", "wakes", " up" },
             .Paralysis => .{ "can move again", "starts moving again", "" },
             .Held => .{ "break", "breaks", " free" },

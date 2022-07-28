@@ -88,7 +88,7 @@ pub const RARE_ITEM_DROPS = [_]ItemTemplate{
     // Copper weapons
     .{ .w = 001, .i = .{ .W = CopperSwordWeapon } },
     .{ .w = 001, .i = .{ .W = CopperRapierWeapon } },
-    .{ .w = 001, .i = .{ .W = CopperMaceWeapon } },
+    //.{ .w = 001, .i = .{ .W = CopperMaceWeapon } },
 };
 pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 001, .i = .{ .List = &RARE_ITEM_DROPS } },
@@ -97,8 +97,8 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 030, .i = .{ .W = DaggerWeapon } },
     .{ .w = 020, .i = .{ .W = StilettoWeapon } },
     .{ .w = 025, .i = .{ .W = RapierWeapon } },
-    .{ .w = 025, .i = .{ .W = QuarterstaffWeapon } },
-    .{ .w = 030, .i = .{ .W = MaceWeapon } },
+    //.{ .w = 025, .i = .{ .W = QuarterstaffWeapon } },
+    //.{ .w = 030, .i = .{ .W = MaceWeapon } },
     .{ .w = 025, .i = .{ .W = GreatMaceWeapon } },
     .{ .w = 030, .i = .{ .W = MorningstarWeapon } },
     .{ .w = 030, .i = .{ .W = HalberdWeapon } },
@@ -1941,6 +1941,9 @@ pub const SwordWeapon = Weapon{
     .name = "longsword",
     .damage = 2,
     .stats = .{ .Evade = 10 },
+    .equip_effects = &[_]StatusDataInfo{
+        .{ .status = .OpenMelee, .duration = .Equ },
+    },
     .is_dippable = true,
     .strs = &SLASHING_STRS,
 };
@@ -1957,7 +1960,8 @@ pub const MartialSwordWeapon = Weapon{
     .id = "martial_sword",
     .name = "martial sword",
     .damage = 2,
-    .stats = .{ .Evade = 10, .Martial = 1, .Melee = -10 },
+    .martial = true,
+    .stats = .{ .Evade = 10, .Martial = 2, .Melee = -10 },
     .is_dippable = true,
     .strs = &SLASHING_STRS,
 };
@@ -2039,6 +2043,9 @@ pub const GlaiveWeapon = Weapon{
     .name = "glaive",
     .damage = 2,
     .stats = .{ .Melee = 10, .Sneak = -1 },
+    .equip_effects = &[_]StatusDataInfo{
+        .{ .status = .ClosedMelee, .duration = .Equ },
+    },
     .is_dippable = true,
     .strs = &SLASHING_STRS,
     .reach = 2,
@@ -2048,9 +2055,8 @@ pub const MonkSpadeWeapon = Weapon{
     .id = "monk_spade",
     .name = "monk's spade",
     .damage = 1,
-    .delay = 50,
-    .knockback = 1,
-    .stats = .{ .Sneak = -1 },
+    .knockback = 2,
+    .stats = .{ .Melee = 20, .Sneak = -1 },
     .strs = &PIERCING_STRS,
     .reach = 2,
 };
@@ -2060,7 +2066,7 @@ pub const WoldoWeapon = Weapon{
     .name = "woldo",
     .damage = 3,
     .martial = true,
-    .stats = .{ .Melee = -15, .Sneak = -1 },
+    .stats = .{ .Melee = -15, .Martial = 1, .Sneak = -1 },
     .is_dippable = true,
     .strs = &SLASHING_STRS,
     .reach = 2,
@@ -2070,17 +2076,23 @@ pub const WoldoWeapon = Weapon{
 
 // Blunt weapons {{{
 
-pub const QuarterstaffWeapon = Weapon{
-    .id = "quarterstaff",
-    .name = "quarterstaff",
-    .damage = 2,
-    .martial = true,
-    .stats = .{ .Martial = 1, .Evade = 15 },
-    .equip_effects = &[_]StatusDataInfo{
-        .{ .status = .OpenMelee, .duration = .Equ },
-    },
-    .strs = &CRUSHING_STRS,
-};
+// Temporarily removed:
+// - Dilutes weapon pool, I'd like to give quarterstaff's gimmicks to another
+//   boring weapon.
+// - High damage doesn't make sense. Quarterstaff is a piece of wood, how
+//   does it do damage?
+//
+// pub const QuarterstaffWeapon = Weapon{
+//     .id = "quarterstaff",
+//     .name = "quarterstaff",
+//     .damage = 2,
+//     .martial = true,
+//     .stats = .{ .Martial = 1, .Evade = 15 },
+//     .equip_effects = &[_]StatusDataInfo{
+//         .{ .status = .OpenMelee, .duration = .Equ },
+//     },
+//     .strs = &CRUSHING_STRS,
+// };
 
 pub const KnoutWeapon = Weapon{
     .id = "knout",
@@ -2112,15 +2124,17 @@ pub const BludgeonWeapon = Weapon{
     .strs = &CRUSHING_STRS,
 };
 
+// XXX: not dropped as loot, as it's not interesting enough to warrant giving
+// it to player
 pub const MaceWeapon = Weapon{
     .id = "mace",
     .name = "mace",
     .damage = 2,
-    .stats = .{ .Melee = 10 },
+    //.stats = .{ .Melee = 10 }, // Not for player, no reason to entice them to use it. Plus spoils balance
     .strs = &CRUSHING_STRS,
 };
 pub const BoneMaceWeapon = Weapon.createBoneWeapon(&MaceWeapon, .{});
-pub const CopperMaceWeapon = Weapon.createCopperWeapon(&MaceWeapon, .{});
+//pub const CopperMaceWeapon = Weapon.createCopperWeapon(&MaceWeapon, .{});
 
 pub const GreatMaceWeapon = Weapon{
     .id = "great_mace",
