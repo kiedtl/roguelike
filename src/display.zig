@@ -774,10 +774,13 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
             } else {
                 _writerWrite(w, "$rCan't be dipped.$.\n", .{});
             }
+            _writerWrite(w, "\n", .{});
+
             if (p.dip_effect) |potion| {
                 assert(p.dip_counter > 0);
+                _writerWrite(w, "$cCurrent dip effect:$.\n", .{});
                 _writerWrite(w, "· {s}", .{_formatStatusInfo(&potion.dip_effect.?)});
-                _writerWrite(w, "· {} attacks left", .{p.dip_counter});
+                _writerWrite(w, "· {} attacks left\n", .{p.dip_counter});
             }
             _writerWrite(w, "\n", .{});
 
