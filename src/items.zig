@@ -266,17 +266,17 @@ pub const FlamethrowerEvoc = Evocable{
     .id = "evoc_flamethrower",
     .name = "flamethrower",
     .tile_fg = 0xff0000,
-    .max_charges = 4,
+    .max_charges = 3,
     .rechargable = true,
     .trigger_fn = struct {
         fn f(_: *Mob, _: *Evocable) Evocable.EvokeError!void {
             const dest = display.chooseCell(.{
                 .require_seen = true,
-                .max_distance = 7,
+                .max_distance = 4,
                 .show_trajectory = true,
             }) orelse return error.BadPosition;
 
-            explosions.fireBurst(dest, 2);
+            fire.setTileOnFire(dest, null);
         }
     }.f,
 };
