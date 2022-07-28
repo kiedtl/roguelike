@@ -1330,6 +1330,27 @@ pub const Status = enum {
         };
     } // }}}
 
+    pub fn isMobImmune(self: Status, mob: *Mob) bool {
+        return switch (self) {
+            .Confusion => mob.life_type == .Construct,
+            .Fire => mob.isFullyResistant(.rFire),
+            .Exhausted,
+            .Pain,
+            .Fear,
+            .Poison,
+            .Nausea,
+            .Recuperate,
+            .Daze,
+            .Paralysis,
+            .Debil,
+            .Drunk,
+            .Corruption,
+            .Blind,
+            => mob.life_type != .Living,
+            else => false,
+        };
+    }
+
     // Tick functions {{{
 
     pub fn tickCorruption(mob: *Mob) void {
@@ -3030,10 +3051,10 @@ pub const Mob = struct { // {{{
     }
 
     pub fn cancelStatus(self: *Mob, s: Status) void {
-        self.applyStatus(.{ .status = s, .duration = .{ .Tmp = 0 } }, .{
-            .add_duration = false,
-            .replace_duration = true,
-        });
+        if (self.isUnderStatus(s)) |_| {
+            const status_state = self.statuses.getPtr(s);
+            status_state.duration = .{ .Tmp = 0 };
+        }
     }
 
     pub fn applyStatus(
@@ -3047,6 +3068,11 @@ pub const Mob = struct { // {{{
             replace_duration: bool = false,
         },
     ) void {
+        if (s.status.isMobImmune(self)) {
+            self.cancelStatus(s.status);
+            return;
+        }
+
         const had_status_before = self.isUnderStatus(s.status) != null;
 
         const p_se = self.statuses.getPtr(s.status);
