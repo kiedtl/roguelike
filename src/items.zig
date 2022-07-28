@@ -139,6 +139,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     // Evocables
     .{ .w = 030, .i = .{ .E = FlamethrowerEvoc } },
     .{ .w = 030, .i = .{ .E = EldritchLanternEvoc } },
+    .{ .w = 030, .i = .{ .E = BrazierWandEvoc } },
     // Cloaks
     .{ .w = 020, .i = .{ .C = &SilCloak } },
     .{ .w = 020, .i = .{ .C = &FurCloak } },
@@ -260,6 +261,52 @@ pub const Evocable = struct {
             return error.NoCharges;
         }
     }
+};
+
+pub const BrazierWandEvoc = Evocable{
+    .id = "evoc_brazier_wand",
+    .name = "brazier wand",
+    .tile_fg = colors.GOLD,
+    .max_charges = 2,
+    .rechargable = true,
+    .trigger_fn = struct {
+        fn f(_: *Mob, _: *Evocable) Evocable.EvokeError!void {
+            const MAX_RANGE = 4;
+
+            const chosen = display.chooseCell(.{
+                .require_seen = true,
+                .max_distance = MAX_RANGE,
+                .show_trajectory = true,
+                .require_lof = true,
+            }) orelse return error.BadPosition;
+
+            if (state.dungeon.machineAt(chosen)) |mach| {
+                if (mem.startsWith(u8, mach.id, "light_")) {
+                    // Don't want to destroy machine, because that
+                    // could make holes in treasure vaults
+                    mach.power = 0;
+
+                    display.Animation.apply(.{ .AnimatedLine = .{
+                        .start = state.player.coord,
+                        .end = chosen,
+                        .approach = MAX_RANGE,
+                        .chars = display.Animation.ELEC_LINE_CHARS,
+                        .fg = display.Animation.ELEC_LINE_FG,
+                        .bg = display.Animation.ELEC_LINE_BG,
+                        .bg_mix = display.Animation.ELEC_LINE_MIX,
+                    } });
+
+                    state.message(.Info, "The wand disables the {s}.", .{mach.name});
+                } else {
+                    display.drawAlertThenLog("That's not a light source.", .{});
+                    return error.BadPosition;
+                }
+            } else {
+                display.drawAlertThenLog("There's no light source there.", .{});
+                return error.BadPosition;
+            }
+        }
+    }.f,
 };
 
 pub const FlamethrowerEvoc = Evocable{

@@ -406,6 +406,7 @@ pub const TurbinePowerSupply = Machine{
 };
 
 pub const Brazier = Machine{
+    .id = "light_brazier",
     .name = "brazier",
 
     .powered_tile = '╋',
@@ -435,6 +436,7 @@ pub const Brazier = Machine{
 };
 
 pub const Lamp = Machine{
+    .id = "light_lamp",
     .name = "lamp",
 
     .powered_tile = '•',

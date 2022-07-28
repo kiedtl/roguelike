@@ -1468,6 +1468,7 @@ pub const ChooseCellOpts = struct {
     require_seen: bool = true,
     max_distance: ?usize = null,
     show_trajectory: bool = false,
+    require_lof: bool = false,
 };
 
 pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
@@ -1555,6 +1556,10 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
                             coord.distance(state.player.coord) > opts.max_distance.?)
                         {
                             drawAlert("Out of range!", .{});
+                        } else if (opts.require_lof and
+                            !utils.hasClearLOF(state.player.coord, coord))
+                        {
+                            drawAlert("There's something in the way.", .{});
                         } else {
                             return coord;
                         }
