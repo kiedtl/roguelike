@@ -2096,7 +2096,7 @@ pub const Mob = struct { // {{{
             .Status => |s| if (direct) self.addStatus(s, 0, .{ .Tmp = Status.MAX_DURATION }),
             .Gas => |s| state.dungeon.atGas(self.coord)[s] = 1.0,
             .Damage => |d| self.takeDamage(.{
-                .lethal = false,
+                .lethal = d.lethal,
                 .amount = @intToFloat(f64, d.amount),
                 .kind = d.kind,
                 .by_mob = self,

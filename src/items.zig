@@ -1504,7 +1504,7 @@ pub const Consumable = struct {
         Status: Status,
         Gas: usize,
         Kit: *const Machine,
-        Damage: struct { amount: usize, kind: Damage.DamageKind },
+        Damage: struct { amount: usize, kind: Damage.DamageKind, lethal: bool = true },
         Heal: usize,
         Resist: struct { r: Resistance, change: isize },
         Stat: struct { s: Stat, change: isize },
@@ -1559,8 +1559,8 @@ pub const HotPokerConsumable = Consumable{
     .id = "cons_hot_poker",
     .name = "red-hot poker",
     .effects = &[_]Consumable.Effect{
+        .{ .Damage = .{ .amount = 20, .kind = .Fire, .lethal = false } },
         .{ .Heal = 20 },
-        .{ .Damage = .{ .amount = 20, .kind = .Fire } },
     },
     .color = 0xdd1010,
     .verbs_player = Consumable.VERBS_PLAYER_CAUT,
@@ -1571,8 +1571,8 @@ pub const CoalConsumable = Consumable{
     .id = "cons_coal",
     .name = "burning coal",
     .effects = &[_]Consumable.Effect{
+        .{ .Damage = .{ .amount = 10, .kind = .Fire, .lethal = false } },
         .{ .Heal = 10 },
-        .{ .Damage = .{ .amount = 10, .kind = .Fire } },
     },
     .color = 0xdd3a3a,
     .verbs_player = Consumable.VERBS_PLAYER_CAUT,
