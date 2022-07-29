@@ -454,6 +454,10 @@ fn readInput() bool {
                 termbox.TB_KEY_F8 => {
                     @panic("This is a test exception.");
                 },
+                termbox.TB_KEY_F9 => b: {
+                    const chosen = display.chooseCell(.{}) orelse break :b false;
+                    break :b state.player.teleportTo(chosen, null, false);
+                },
                 else => false,
             };
         } else if (ev.ch != 0) {
