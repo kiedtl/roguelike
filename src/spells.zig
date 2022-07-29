@@ -990,9 +990,14 @@ pub const Spell = struct {
         }
 
         if (state.player.cansee(caster_coord)) {
-            const name = opts.caster_name orelse
-                if (caster) |c| c.displayName() else "giant tomato";
-            state.message(.SpellCast, "The {s} uses $o{s}$.!", .{ name, self.name });
+            if (opts.caster_name) |name| {
+                state.message(.SpellCast, "The {s} uses $o{s}$.!", .{ name, self.name });
+            } else if (caster) |c| {
+                const verb: []const u8 = if (state.player == c) "use" else "uses";
+                state.message(.SpellCast, "{c} {s} $o{s}$.!", .{ c, verb, self.name });
+            } else {
+                state.message(.SpellCast, "The giant tomato uses $o{s}$.!", .{self.name});
+            }
         }
 
         if (caster) |_| {
