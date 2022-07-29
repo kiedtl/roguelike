@@ -210,8 +210,8 @@ pub fn tickGasEmitters(level: usize) void {
                     c_gas[Steam.id] = near_lavas;
                 },
                 .Lava => {
-                    if (rng.onein(400)) {
-                        c_gas[SmokeGas.id] += 0.15;
+                    if (rng.onein(300)) {
+                        c_gas[SmokeGas.id] += 0.20;
                     }
                 },
                 else => {},
