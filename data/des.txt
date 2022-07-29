@@ -107,6 +107,9 @@ long.
 You can cauterise your wounds with this coal. Only useful if you have fire
 resistance (rFire).
 
+
+The damage from this item is never lethal.
+
 % kit_mine
 You can evoke it to build a small mine where you are standing.
 
