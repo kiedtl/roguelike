@@ -96,9 +96,7 @@ pub const LevelInfo = struct {
     upgr: bool,
     optional: bool,
     rune: ?Rune,
-    stairs: [2]?[]u8,
-
-    pub const STAIR_COUNT = 2;
+    stairs: [Dungeon.MAX_STAIRS]?[]u8,
 };
 
 // Loaded at runtime from data/levelinfo.tsv
@@ -415,7 +413,7 @@ pub fn loadLevelInfo() void {
         .{ .field_name = "upgr", .parse_to = bool, .parse_fn = tsv.parsePrimitive },
         .{ .field_name = "optional", .parse_to = bool, .parse_fn = tsv.parsePrimitive },
         .{ .field_name = "rune", .parse_to = ?Rune, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = null },
-        .{ .field_name = "stairs", .parse_to = ?[]u8, .is_array = LevelInfo.STAIR_COUNT, .parse_fn = tsv.parseOptionalUtf8String, .optional = true, .default_val = null },
+        .{ .field_name = "stairs", .parse_to = ?[]u8, .is_array = Dungeon.MAX_STAIRS, .parse_fn = tsv.parseOptionalUtf8String, .optional = true, .default_val = null },
     }, .{
         .id = undefined,
         .name = undefined,

@@ -191,38 +191,37 @@ fn triggerMiasma(mob: *Mob, _: f64) void {
 
 fn triggerDust(_: *Mob, _: f64) void {}
 
-// Create and dissipate gas.
-pub fn tickGases(cur_lev: usize, cur_gas: usize) void {
-    // First make hot water emit steam, and lava emit smoke.
-    {
-        var y: usize = 0;
-        while (y < HEIGHT) : (y += 1) {
-            var x: usize = 0;
-            while (x < WIDTH) : (x += 1) {
-                const coord = Coord.new2(cur_lev, x, y);
-                const c_gas = state.dungeon.atGas(coord);
-                switch (state.dungeon.at(coord).type) {
-                    .Water => {
-                        var near_lavas: f64 = 0;
-                        for (&DIRECTIONS) |d|
-                            if (coord.move(d, state.mapgeometry)) |neighbor| {
-                                if (state.dungeon.at(neighbor).type == .Lava)
-                                    near_lavas += 1;
-                            };
-                        c_gas[Steam.id] = near_lavas;
-                    },
-                    .Lava => {
-                        if (rng.onein(3000)) {
-                            c_gas[SmokeGas.id] += 0.15;
-                        }
-                    },
-                    else => {},
-                }
+// Make hot water emit steam, and lava emit smoke.
+pub fn tickGasEmitters(level: usize) void {
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            const coord = Coord.new2(level, x, y);
+            const c_gas = state.dungeon.atGas(coord);
+            switch (state.dungeon.at(coord).type) {
+                .Water => {
+                    var near_lavas: f64 = 0;
+                    for (&DIRECTIONS) |d|
+                        if (coord.move(d, state.mapgeometry)) |neighbor| {
+                            if (state.dungeon.at(neighbor).type == .Lava)
+                                near_lavas += 1;
+                        };
+                    c_gas[Steam.id] = near_lavas;
+                },
+                .Lava => {
+                    if (rng.onein(400)) {
+                        c_gas[SmokeGas.id] += 0.15;
+                    }
+                },
+                else => {},
             }
         }
     }
+}
 
-    // ...then spread it.
+// Create and dissipate gas.
+pub fn tickGases(cur_lev: usize, cur_gas: usize) void {
     const std_dissipation = Gases[cur_gas].dissipation_rate;
     const residue = Gases[cur_gas].residue;
 
