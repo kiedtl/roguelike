@@ -102,6 +102,8 @@ pub fn calculateMorale(self: *Mob) isize {
     if (self.hasStatus(.Fire) and !self.isFullyResistant(.rFire))
         base -= 4;
 
+    if (self.ai.phase == .Flee) base -= 8;
+
     if (self.squad != null and self.squad.?.leader.?.ai.phase == .Flee)
         base -= 16;
 
@@ -218,9 +220,9 @@ pub fn alertAllyOfHostile(mob: *Mob) void {
     }
 }
 
-// Are we at least <distance> away from mob?
-//   - No?
-//     - Move away from the hostile.
+// Use Dijkstra Maps to move away from a coordinate.
+// TODO: make it possible to move away from multiple coordinates, i.e. flee from
+// multiple enemies
 //
 pub fn keepDistance(mob: *Mob, from: Coord, distance: usize) bool {
     var moved = false;
@@ -1301,7 +1303,7 @@ pub fn statueFight(mob: *Mob, _: mem.Allocator) void {
 }
 
 pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
-    const FLEE_GOAL = 20;
+    const FLEE_GOAL = 40;
 
     assert(mob.stat(.Vision) < FLEE_GOAL);
 
@@ -1310,7 +1312,11 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
     alertAllyOfHostile(mob);
 
     if (!keepDistance(mob, target.last_seen, FLEE_GOAL)) {
-        meleeFight(mob, alloc);
+        if (mob.canMelee(target.mob)) {
+            meleeFight(mob, alloc);
+        } else {
+            _ = mob.rest();
+        }
     }
 
     if (mob.hasStatus(.Fear)) {
