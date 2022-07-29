@@ -265,6 +265,7 @@ pub const LabCabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 4
 pub const VOreCrate = Container{ .name = "crate", .tile = '∐', .capacity = 14, .type = .VOres, .item_repeat = 60 };
 
 pub const LOOT_CONTAINERS = [_]*const Container{ &WeaponRack, &PotionShelf, &Wardrobe, &ToolChest };
+pub const LOOT_CONTAINER_WEIGHTS = [LOOT_CONTAINERS.len]usize{ 2, 4, 2, 1 };
 
 pub const MACHINES = [_]Machine{
     SteamVent,

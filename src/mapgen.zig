@@ -416,7 +416,7 @@ fn _add_player(coord: Coord, alloc: mem.Allocator) void {
     state.player.squad = Squad.allocNew();
     state.player.squad.?.leader = state.player;
 
-    //state.player.inventory.pack.append(Item{ .Consumable = &items.FireTrapKit }) catch err.wat();
+    //state.player.inventory.pack.append(Item{ .Consumable = &items.CoalConsumable }) catch err.wat();
     //state.player.inventory.pack.append(Item{ .Evocable = items.createItem(Evocable, items.BrazierWandEvoc) }) catch err.wat();
 }
 
@@ -1732,7 +1732,11 @@ pub fn _placeLootChest(room: *Room, max_items: usize) void {
         }
     } else return;
 
-    const container_template = rng.chooseUnweighted(*const Container, &surfaces.LOOT_CONTAINERS);
+    const container_template = rng.choose(
+        *const Container,
+        &surfaces.LOOT_CONTAINERS,
+        &surfaces.LOOT_CONTAINER_WEIGHTS,
+    ) catch err.wat();
     placeContainer(container_coord, container_template);
     const container_ref = state.dungeon.at(container_coord).surface.?.Container;
     const item_class = container_ref.type.itemType().?;
