@@ -697,7 +697,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
         .no_show_fov = true,
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 7, .spell = &spells.CAST_FREEZE, .duration = 2 },
+            .{ .MP_cost = 7, .spell = &spells.CAST_FREEZE, .duration = 5 },
         },
         .max_MP = 7,
 
@@ -730,7 +730,7 @@ pub const NebroStatueTemplate = MobTemplate{
         .no_show_fov = true,
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 7, .spell = &spells.CAST_FAMOUS, .duration = 5, .power = 30 },
+            .{ .MP_cost = 7, .spell = &spells.CAST_FAMOUS, .duration = 8, .power = 50 },
         },
         .max_MP = 7,
 
@@ -763,7 +763,7 @@ pub const CrystalStatueTemplate = MobTemplate{
         .no_show_fov = true,
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 7, .spell = &spells.CAST_FERMENT, .duration = 10, .power = 0 },
+            .{ .MP_cost = 7, .spell = &spells.CAST_FERMENT, .duration = 14, .power = 0 },
         },
         .max_MP = 7,
 
