@@ -76,6 +76,8 @@ pub const PropArrayList = std.ArrayList(Prop);
 pub const MachineList = LinkedList(Machine);
 pub const ContainerList = LinkedList(Container);
 
+pub const MOB_CORRUPTION_CHANCE = 33;
+
 pub fn MinMax(comptime T: type) type {
     return struct {
         min: T,
@@ -1936,7 +1938,7 @@ pub const Mob = struct { // {{{
             for (&DIRECTIONS) |d| if (self.coord.move(d, state.mapgeometry)) |neighbor| {
                 if (state.dungeon.at(neighbor).mob) |mob|
                     if (mob.life_type == .Undead and mob.isHostileTo(self) and
-                        rng.percent(@as(usize, 10)))
+                        rng.percent(@as(usize, MOB_CORRUPTION_CHANCE)))
                     {
                         if (state.player.cansee(self.coord)) {
                             state.message(.Combat, "{c} corrupts {}!", .{ mob, self });
