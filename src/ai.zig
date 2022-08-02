@@ -1115,6 +1115,22 @@ pub fn shriekerFight(mob: *Mob, alloc: mem.Allocator) void {
     }
 }
 
+pub fn stalkerFight(mob: *Mob, alloc: mem.Allocator) void {
+    const target = currentEnemy(mob).mob;
+
+    if (mem.eql(u8, mob.squad.?.leader.?.id, "hunter")) {
+        if (!mob.cansee(target.coord)) {
+            mob.tryMoveTo(target.coord);
+        } else {
+            const dist = @intCast(usize, mob.stat(.Vision) - 1);
+            if (!keepDistance(mob, target.coord, dist))
+                _ = mob.rest();
+        }
+    } else {
+        mageFight(mob, alloc);
+    }
+}
+
 // - Iterate through enemies. Foreach:
 //      - Is it adjacent, or does it have the status bestowed by our projectiles?
 //          - No:  Can we throw a projectile at it?

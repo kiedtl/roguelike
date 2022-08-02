@@ -2500,6 +2500,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     const guardian = rng.chooseUnweighted(*const mobs.MobTemplate, &[_]*const mobs.MobTemplate{
         &mobs.SentinelTemplate,
         &mobs.DefenderTemplate,
+        &mobs.HunterTemplate,
     });
     for (&DIAGONAL_DIRECTIONS) |d| if (up_staircase.move(d, state.mapgeometry)) |neighbor| {
         if (state.is_walkable(neighbor, .{ .right_now = true })) {

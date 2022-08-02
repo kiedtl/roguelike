@@ -980,6 +980,33 @@ pub const WarriorTemplate = MobTemplate{
     .armor = &items.CuirassArmor,
 };
 
+pub const HunterTemplate = MobTemplate{
+    .mob = .{
+        .id = "hunter",
+        .species = &GoblinSpecies,
+        .tile = 'H',
+        .ai = AI{
+            .profession_name = "hunter",
+            .profession_description = "resting",
+            .work_fn = ai.watcherWork,
+            .fight_fn = ai.meleeFight,
+            .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 20 }, .exhausting = true },
+        },
+
+        .max_HP = 10,
+        .memory_duration = 4,
+        .stats = .{ .Willpower = 3, .Melee = 70, .Speed = 150, .Vision = 7 },
+    },
+    .weapon = &items.MaceWeapon,
+    .armor = &items.GambesonArmor,
+
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "stalker", .weight = 4, .count = minmax(usize, 3, 6) },
+        },
+    },
+};
+
 pub const BoneMageTemplate = MobTemplate{
     .mob = .{
         .id = "bone_mage",
@@ -1326,6 +1353,42 @@ pub const SkeletonTemplate = MobTemplate{
 
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = -25 },
         .stats = .{ .Willpower = 3, .Vision = 4 },
+    },
+};
+
+pub const StalkerTemplate = MobTemplate{
+    .mob = .{
+        .id = "stalker",
+        .species = &Species{ .name = "stalker" },
+        .tile = 'e',
+        .ai = AI{
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.stalkerFight,
+            .is_curious = false,
+            .is_fearless = true,
+            .flags = &[_]AI.Flag{.DetectWithElec},
+            .spellcaster_backup_action = .KeepDistance,
+        },
+        .life_type = .Construct,
+
+        // XXX: synchronize MP costs w/ mob speed so that it gets one shot every turn
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 5, .spell = &spells.BOLT_LIGHTNING, .power = 1 },
+        },
+        .max_MP = 5,
+
+        .blood = null,
+        .corpse = .None,
+
+        .max_HP = 2,
+        .memory_duration = 10,
+        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100 },
+        .stats = .{ .Willpower = 1, .Evade = 80, .Speed = 20, .Vision = 4 },
+    },
+    .statuses = &[_]StatusDataInfo{
+        .{ .status = .Sleeping, .duration = .Prm },
+        .{ .status = .NightVision, .duration = .Prm },
     },
 };
 
@@ -1802,6 +1865,7 @@ pub const MOBS = [_]MobTemplate{
     SpectreMageTemplate,
     RecruitTemplate,
     WarriorTemplate,
+    HunterTemplate,
     BoneMageTemplate,
     DeathKnightTemplate,
     DeathMageTemplate,
@@ -1812,6 +1876,7 @@ pub const MOBS = [_]MobTemplate{
     BloatTemplate,
     ThrashingSculptorTemplate,
     SkeletonTemplate,
+    StalkerTemplate,
     BoneRatTemplate,
     EmberlingTemplate,
     SparklingTemplate,
