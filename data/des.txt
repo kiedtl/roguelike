@@ -70,6 +70,13 @@ instead of through you.
 A metal device typically used by miners to navigate the widespread cave systems
 beneath Ir Traummisem and Ir Lehurenkrun.
 
+% aux_dispel_undead
+A powerful artifact used by many of the Necromancer's enemies. If you wear it,
+adjacent undead, both friendly and hostile, will take damage each turn.
+
+% aux_buckler
+A simple wooden buckler, covered in some thin leather.
+
 % mine
 It will activate when a non-player monster steps on it, but it may not explode
 immediately.
