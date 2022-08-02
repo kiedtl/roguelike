@@ -309,6 +309,7 @@ pub const SteamVent = Machine{
     .powered_walkable = true,
     .unpowered_walkable = true,
     .porous = true,
+    .detect_with_heat = true,
 
     .on_power = struct {
         pub fn f(machine: *Machine) void {
@@ -432,6 +433,9 @@ pub const Brazier = Machine{
     .powered_luminescence = 60,
     .unpowered_luminescence = 0,
 
+    .detect_with_elec = true,
+    .detect_with_heat = true, // Inefficient incandescent bulbs!
+
     .flammability = 20,
     .on_power = powerNone,
 };
@@ -454,6 +458,9 @@ pub const Lamp = Machine{
 
     .powered_opacity = 1.0,
     .unpowered_opacity = 1.0,
+
+    .detect_with_elec = true,
+    .detect_with_heat = false, // Efficient LED bulbs!
 
     // maximum, could be lower (see mapgen:placeLights)
     .powered_luminescence = 100,
@@ -511,6 +518,7 @@ pub const LabDoor = Machine{
     .unpowered_opacity = 0.0,
     .flammability = 0, // metal door not flammable
     .porous = true,
+    .detect_with_elec = true,
     .on_power = powerLabDoor,
 };
 
@@ -636,6 +644,7 @@ pub const CapacitorArray = Machine{
     .bg = 0xb0c4de,
     .power_drain = 0,
     .power = 100,
+    .detect_with_elec = true,
     .on_power = powerNone,
     .flammability = 20,
     .evoke_confirm = "Really discharge the capacitor array?",
@@ -694,6 +703,7 @@ pub const RechargingStation = Machine{
     .unpowered_fg = 0x000000,
     .powered_walkable = false,
     .unpowered_walkable = false,
+    .detect_with_elec = true,
     .bg = 0x90a3b7,
     .power_drain = 0,
     .power = 100,

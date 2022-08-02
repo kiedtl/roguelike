@@ -79,6 +79,8 @@ pub const ContainerList = LinkedList(Container);
 
 pub const MOB_CORRUPTION_CHANCE = 33;
 pub const TORMENT_UNDEAD_DAMAGE = 2;
+pub const DETECT_HEAT_RADIUS = 14;
+pub const DETECT_ELEC_RADIUS = 14;
 
 pub fn MinMax(comptime T: type) type {
     return struct {
@@ -1020,6 +1022,12 @@ pub const Allegiance = enum {
 pub const Status = enum {
     // Status list {{{
 
+    // Detects heat/electricity
+    //
+    // Doesn't have a power field.
+    DetectHeat,
+    DetectElec,
+
     // Causes adjacent undead, enemy or not, to take TORMENT_UNDEAD_DAMAGE damage.
     //
     // Doesn't have a power field.
@@ -1223,6 +1231,8 @@ pub const Status = enum {
 
     pub fn string(self: Status, mob: *const Mob) []const u8 { // {{{
         return switch (self) {
+            .DetectHeat => "detect heat",
+            .DetectElec => "detect electricity",
             .TormentUndead => "torment undead",
             .Intimidating => "intimidating",
             .Drunk => "drunk",
@@ -1270,6 +1280,7 @@ pub const Status = enum {
 
     pub fn messageWhenAdded(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .DetectHeat, .DetectElec => null,
             .Intimidating => .{ "assume", "assumes", " a fearsome visage" },
             .Drunk => .{ "feel", "looks", " a bit drunk" },
             .TormentUndead, .CopperWeapon => null,
@@ -1311,6 +1322,7 @@ pub const Status = enum {
 
     pub fn messageWhenRemoved(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .DetectHeat, .DetectElec => null,
             .Intimidating => .{ "no longer seem", "no longer seems", " so scary" },
             .Drunk => .{ "feel", "looks", " more sober" },
             .TormentUndead, .CopperWeapon => null,
@@ -1372,6 +1384,79 @@ pub const Status = enum {
     }
 
     // Tick functions {{{
+
+    pub fn tickDetectHeat(mob: *Mob) void {
+        var y: usize = 0;
+        while (y < HEIGHT) : (y += 1) {
+            var x: usize = 0;
+            while (x < WIDTH) : (x += 1) {
+                const coord = Coord.new2(mob.coord.z, x, y);
+                if (coord.distance(mob.coord) > DETECT_HEAT_RADIUS) {
+                    continue;
+                }
+
+                if (state.dungeon.at(coord).mob) |othermob| {
+                    if (othermob.ai.flag(.DetectWithHeat)) {
+                        mob.fov[y][x] = 100;
+                    }
+
+                    if (othermob.hasStatus(.Fire)) {
+                        mob.fov[y][x] = 100;
+                    }
+                }
+
+                if (state.dungeon.machineAt(coord)) |machine| {
+                    if (machine.detect_with_heat) {
+                        for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |n| {
+                            mob.fov[n.y][n.x] = 100;
+                        };
+                        mob.fov[y][x] = 100;
+                    }
+                }
+
+                if (state.dungeon.fireAt(coord).* > 0 or
+                    state.dungeon.at(coord).type == .Lava)
+                {
+                    for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |n| {
+                        mob.fov[n.y][n.x] = 100;
+                    };
+                    mob.fov[y][x] = 100;
+                }
+            }
+        }
+    }
+
+    pub fn tickDetectElec(mob: *Mob) void {
+        var y: usize = 0;
+        while (y < HEIGHT) : (y += 1) {
+            var x: usize = 0;
+            while (x < WIDTH) : (x += 1) {
+                const coord = Coord.new2(mob.coord.z, x, y);
+                if (coord.distance(mob.coord) > DETECT_ELEC_RADIUS) {
+                    continue;
+                }
+
+                if (state.dungeon.at(coord).mob) |othermob| {
+                    if (othermob.ai.flag(.DetectWithElec)) {
+                        mob.fov[y][x] = 100;
+                    }
+
+                    if (othermob.hasStatus(.ExplosiveElec)) {
+                        mob.fov[y][x] = 100;
+                    }
+                }
+
+                if (state.dungeon.machineAt(coord)) |machine| {
+                    if (machine.detect_with_elec) {
+                        for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |n| {
+                            mob.fov[n.y][n.x] = 100;
+                        };
+                        mob.fov[y][x] = 100;
+                    }
+                }
+            }
+        }
+    }
 
     pub fn tickTormentUndead(mob: *Mob) void {
         for (&DIRECTIONS) |d| if (utils.getMobInDirection(mob, d)) |othermob| {
@@ -1661,6 +1746,8 @@ pub const AI = struct {
         CalledWithUndead, // Can be called by CAST_CALL_UNDEAD, even if not undead.
         FearsDarkness, // Tries very hard to stay in light areas (pathfinding).
         MovesDiagonally, // Usually tries to move diagonally.
+        DetectWithHeat, // Detected with .DetectHeat status
+        DetectWithElec, // Detected with .DetectElec status
     };
 
     pub fn flag(self: *const AI, f: Flag) bool {
@@ -2047,6 +2134,8 @@ pub const Mob = struct { // {{{
                 }
 
                 switch (status_e) {
+                    .DetectHeat => Status.tickDetectHeat(self),
+                    .DetectElec => Status.tickDetectElec(self),
                     .TormentUndead => Status.tickTormentUndead(self),
                     .Corruption => Status.tickCorruption(self),
                     .Noisy => Status.tickNoisy(self),
@@ -3565,6 +3654,8 @@ pub const Machine = struct {
 
     porous: bool = false,
     flammability: usize = 0,
+    detect_with_heat: bool = false,
+    detect_with_elec: bool = false,
 
     // A* penalty if the machine is walkable
     pathfinding_penalty: usize = 0,

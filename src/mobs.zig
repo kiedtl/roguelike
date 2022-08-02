@@ -274,6 +274,7 @@ pub const LeadTurtleTemplate = MobTemplate{
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
             .is_fearless = true,
+            .flags = &[_]AI.Flag{ .DetectWithHeat, .DetectWithElec },
         },
 
         .max_HP = 20,
@@ -310,6 +311,7 @@ pub const IronWaspTemplate = MobTemplate{
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
             .is_fearless = true,
+            .flags = &[_]AI.Flag{ .DetectWithHeat, .DetectWithElec },
         },
         .max_HP = 2,
         .memory_duration = 3,
@@ -352,6 +354,7 @@ pub const CopperHornetTemplate = MobTemplate{
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
             .is_fearless = true,
+            .flags = &[_]AI.Flag{.DetectWithElec},
         },
         .max_HP = 5,
         .memory_duration = 7,
@@ -548,6 +551,7 @@ pub const CinderWormTemplate = MobTemplate{
             .profession_description = "wandering",
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
+            .flags = &[_]AI.Flag{.DetectWithHeat},
         },
         .max_HP = 8,
 
@@ -650,7 +654,7 @@ fn createSpireTemplate(
                 .fight_fn = ai.mageFight,
                 .is_curious = false,
                 .spellcaster_backup_action = .KeepDistance,
-                .flags = &[_]AI.Flag{ .AwakesNearAllies, .SocialFighter },
+                .flags = &[_]AI.Flag{ .AwakesNearAllies, .SocialFighter, .DetectWithElec },
             },
 
             .base_night_vision = true,
@@ -1085,6 +1089,7 @@ pub const EmberMageTemplate = MobTemplate{
             .fight_fn = ai.mageFight,
             .is_curious = false,
             .spellcaster_backup_action = .Melee,
+            .flags = &[_]AI.Flag{.DetectWithHeat},
         },
 
         .spells = &[_]SpellOptions{
@@ -1121,6 +1126,7 @@ pub const BrimstoneMageTemplate = MobTemplate{
             .fight_fn = ai.mageFight,
             .is_curious = false,
             .spellcaster_backup_action = .KeepDistance,
+            .flags = &[_]AI.Flag{.DetectWithHeat},
         },
 
         .spells = &[_]SpellOptions{
@@ -1158,6 +1164,7 @@ pub const SparkMageTemplate = MobTemplate{
             .fight_fn = ai.mageFight,
             .is_curious = false,
             .spellcaster_backup_action = .Melee,
+            .flags = &[_]AI.Flag{.DetectWithElec},
         },
 
         .spells = &[_]SpellOptions{
@@ -1193,6 +1200,7 @@ pub const LightningMageTemplate = MobTemplate{
             .fight_fn = ai.mageFight,
             .is_curious = false,
             .spellcaster_backup_action = .KeepDistance,
+            .flags = &[_]AI.Flag{.DetectWithElec},
         },
 
         .spells = &[_]SpellOptions{
@@ -1374,6 +1382,7 @@ pub const EmberlingTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
             .is_curious = false,
             .is_fearless = true,
+            .flags = &[_]AI.Flag{.DetectWithHeat},
         },
         .life_type = .Construct,
 
@@ -1417,6 +1426,7 @@ pub const SparklingTemplate = MobTemplate{
             .is_curious = false,
             .is_fearless = true,
             .spellcaster_backup_action = .Melee,
+            .flags = &[_]AI.Flag{.DetectWithElec},
         },
         .life_type = .Construct,
 
@@ -1558,6 +1568,7 @@ pub const BurningBruteTemplate = MobTemplate{
             //.is_fearless = true, // Flee effect won't trigger otherwise.
             .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
             .spellcaster_backup_action = .Melee,
+            .flags = &[_]AI.Flag{.DetectWithHeat},
         },
 
         .spells = &[_]SpellOptions{
@@ -1591,6 +1602,7 @@ pub const SulfurFiendTemplate = MobTemplate{
             .fight_fn = ai.mageFight,
             .is_fearless = true,
             .spellcaster_backup_action = .KeepDistance,
+            .flags = &[_]AI.Flag{.DetectWithElec},
         },
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 1, .spell = &spells.CAST_HASTEN_ROT, .power = 150 },
@@ -1692,6 +1704,7 @@ pub const BallLightningTemplate = MobTemplate{
             .fight_fn = ai.ballLightningWorkOrFight,
             .is_curious = false,
             .is_fearless = true,
+            .flags = &[_]AI.Flag{.DetectWithElec},
         },
 
         .deaf = true,

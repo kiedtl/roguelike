@@ -113,6 +113,8 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     // Aux items
     .{ .w = 020, .i = .{ .X = &WolframOrbAux } },
     .{ .w = 020, .i = .{ .X = &MinersMapAux } },
+    .{ .w = 020, .i = .{ .X = &DetectHeatAux } },
+    .{ .w = 020, .i = .{ .X = &DetectElecAux } },
     .{ .w = 010, .i = .{ .X = &DispelUndeadAux } },
     .{ .w = 010, .i = .{ .X = &BucklerAux } },
     // Potions
@@ -216,6 +218,22 @@ pub const MinersMapAux = Aux{
 
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .Echolocation, .duration = .Equ, .power = 3 },
+    },
+};
+
+pub const DetectHeatAux = Aux{
+    .id = "aux_detect_heat",
+    .name = "Detect Heat",
+    .equip_effects = &[_]StatusDataInfo{
+        .{ .status = .DetectHeat, .duration = .Equ },
+    },
+};
+
+pub const DetectElecAux = Aux{
+    .id = "aux_detect_elec",
+    .name = "Detect Electricity",
+    .equip_effects = &[_]StatusDataInfo{
+        .{ .status = .DetectElec, .duration = .Equ },
     },
 };
 

@@ -418,7 +418,8 @@ fn _add_player(coord: Coord, alloc: mem.Allocator) void {
 
     //state.player.inventory.pack.append(Item{ .Consumable = &items.CoalConsumable }) catch err.wat();
     //state.player.inventory.pack.append(Item{ .Evocable = items.createItem(Evocable, items.BrazierWandEvoc) }) catch err.wat();
-    //state.player.inventory.pack.append(Item{ .Aux = &items.BucklerAux }) catch err.wat();
+    state.player.inventory.pack.append(Item{ .Aux = &items.DetectHeatAux }) catch err.wat();
+    state.player.inventory.pack.append(Item{ .Aux = &items.DetectElecAux }) catch err.wat();
 }
 
 fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool) bool {
