@@ -699,6 +699,12 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
     if (mob.ai.flag(.MovesDiagonally))
         _writerWrite(w, "· (usually) moves diagonally\n", .{});
     _writerWrite(w, "\n", .{});
+
+    if (mob.ai.flee_effect) |effect| {
+        _writerHeader(w, linewidth, "flee behaviour", .{});
+        _writerWrite(w, "· {s}", .{_formatStatusInfo(&effect)});
+        _writerWrite(w, "\n", .{});
+    }
 }
 
 fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewidth: usize) void {
