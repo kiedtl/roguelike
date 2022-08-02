@@ -371,37 +371,8 @@ pub fn rummageContainer(coord: Coord) bool {
     return true;
 }
 
-pub fn grabItem() bool {
-    var item: Item = undefined;
-    var found_item = false;
-
-    if (state.dungeon.at(state.player.coord).surface) |surface| {
-        switch (surface) {
-            .Container => |_| return rummageContainer(state.player.coord),
-            else => {},
-        }
-    }
-
-    if (!found_item) {
-        if (state.dungeon.itemsAt(state.player.coord).last()) |_| {
-            item = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
-        } else {
-            display.drawAlertThenLog("There's nothing here.", .{});
-            return false;
-        }
-    }
-
+pub fn equipItem(item: Item) bool {
     switch (item) {
-        .Rune => |rune| {
-            state.message(.Info, "You grab the {s} rune.", .{rune.name()});
-            state.collected_runes.set(rune, true);
-
-            state.message(.Important, "The alarm goes off!!", .{});
-            state.markMessageNoisy();
-            state.player.makeNoise(.Alarm, .Loudest);
-
-            state.player.declareAction(.Grab);
-        },
         .Weapon, .Armor, .Cloak, .Aux => {
             const slot = Mob.Inventory.EquSlot.slotFor(item);
             if (state.player.inventory.equipment(slot).*) |old_item| {
@@ -444,6 +415,43 @@ pub fn grabItem() bool {
                 (item.longName() catch err.wat()).constSlice(),
             });
         },
+        else => unreachable,
+    }
+    return true;
+}
+
+pub fn grabItem() bool {
+    var item: Item = undefined;
+    var found_item = false;
+
+    if (state.dungeon.at(state.player.coord).surface) |surface| {
+        switch (surface) {
+            .Container => |_| return rummageContainer(state.player.coord),
+            else => {},
+        }
+    }
+
+    if (!found_item) {
+        if (state.dungeon.itemsAt(state.player.coord).last()) |_| {
+            item = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
+        } else {
+            display.drawAlertThenLog("There's nothing here.", .{});
+            return false;
+        }
+    }
+
+    switch (item) {
+        .Rune => |rune| {
+            state.message(.Info, "You grab the {s} rune.", .{rune.name()});
+            state.collected_runes.set(rune, true);
+
+            state.message(.Important, "The alarm goes off!!", .{});
+            state.markMessageNoisy();
+            state.player.makeNoise(.Alarm, .Loudest);
+
+            state.player.declareAction(.Grab);
+        },
+        .Ring, .Armor, .Cloak, .Aux, .Weapon => return equipItem(item),
         else => {
             if (state.player.inventory.pack.isFull()) {
                 display.drawAlertThenLog("Your pack is full!", .{});
@@ -572,17 +580,10 @@ pub fn dipWeapon(potion_index: usize) bool {
 pub fn useItem(index: usize) bool {
     assert(state.player.inventory.pack.len > index);
 
-    switch (state.player.inventory.pack.slice()[index]) {
-        .Ring => |_| {
-            // So this message was in response to player going "I want to eat it"
-            // But of course they might have just been intending to "invoke" the
-            // ring, not knowing that there's no such thing.
-            //
-            // FIXME: so this message can definitely be improved...
-            display.drawAlertThenLog("Are you three?", .{});
-            return false;
-        },
-        .Rune, .Armor, .Cloak, .Aux, .Weapon => err.wat(),
+    const item = state.player.inventory.pack.slice()[index];
+    switch (item) {
+        .Rune => err.wat(),
+        .Ring, .Armor, .Cloak, .Aux, .Weapon => return equipItem(item),
         .Consumable => |p| {
             if (p.is_potion and state.player.isUnderStatus(.Nausea) != null) {
                 display.drawAlertThenLog("You can't drink potions while nauseated!", .{});
