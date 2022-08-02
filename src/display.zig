@@ -723,6 +723,7 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
         .Projectile => "projectile",
         .Armor => "armor",
         .Cloak => "cloak",
+        .Aux => "auxiliary item",
         .Weapon => |wp| if (wp.martial) "martial weapon" else "weapon",
         .Boulder => "boulder",
         .Prop => "prop",
@@ -765,6 +766,16 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
             }
         },
         .Cloak => |c| _writerStats(w, c.stats, c.resists),
+        .Aux => |x| {
+            _writerStats(w, x.stats, x.resists);
+
+            if (x.equip_effects.len > 0) {
+                _writerHeader(w, linewidth, "on equip", .{});
+                for (x.equip_effects) |effect|
+                    _writerWrite(w, "· {s}", .{_formatStatusInfo(&effect)});
+                _writerWrite(w, "\n", .{});
+            }
+        },
         .Armor => |a| _writerStats(w, a.stats, a.resists),
         .Weapon => |p| {
             if (p.reach != 1) _writerWrite(w, "$creach:$. {}\n", .{p.reach});

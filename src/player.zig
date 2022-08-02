@@ -402,7 +402,7 @@ pub fn grabItem() bool {
 
             state.player.declareAction(.Grab);
         },
-        .Weapon, .Armor, .Cloak => {
+        .Weapon, .Armor, .Cloak, .Aux => {
             const slot = Mob.Inventory.EquSlot.slotFor(item);
             if (state.player.inventory.equipment(slot).*) |old_item| {
                 state.player.dequipItem(slot, state.player.coord);
@@ -582,7 +582,7 @@ pub fn useItem(index: usize) bool {
             display.drawAlertThenLog("Are you three?", .{});
             return false;
         },
-        .Rune, .Armor, .Cloak, .Weapon => err.wat(),
+        .Rune, .Armor, .Cloak, .Aux, .Weapon => err.wat(),
         .Consumable => |p| {
             if (p.is_potion and state.player.isUnderStatus(.Nausea) != null) {
                 display.drawAlertThenLog("You can't drink potions while nauseated!", .{});

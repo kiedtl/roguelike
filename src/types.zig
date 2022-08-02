@@ -48,6 +48,7 @@ const Projectile = items.Projectile;
 const Consumable = items.Consumable;
 const PatternChecker = items.PatternChecker;
 const Cloak = items.Cloak;
+const Aux = items.Aux;
 
 const Sound = @import("sound.zig").Sound;
 const SoundIntensity = @import("sound.zig").SoundIntensity;
@@ -1801,12 +1802,13 @@ pub const Mob = struct { // {{{
         pub const EquSlot = enum(usize) {
             Weapon = 0,
             Backup = 1,
-            Ring1 = 2,
-            Ring2 = 3,
-            Ring3 = 4,
-            Ring4 = 5,
-            Armor = 6,
-            Cloak = 7,
+            Aux = 2,
+            Ring1 = 3,
+            Ring2 = 4,
+            Ring3 = 5,
+            Ring4 = 6,
+            Armor = 7,
+            Cloak = 8,
 
             pub fn slotFor(item: Item) EquSlot {
                 return switch (item) {
@@ -1814,6 +1816,7 @@ pub const Mob = struct { // {{{
                     .Ring => err.bug("Tried to get equipment slot for ring", .{}),
                     .Armor => .Armor,
                     .Cloak => .Cloak,
+                    .Aux => .Aux,
                     else => err.wat(),
                 };
             }
@@ -1822,6 +1825,7 @@ pub const Mob = struct { // {{{
                 return switch (self) {
                     .Weapon => "weapon",
                     .Backup => "backup",
+                    .Aux => "aux",
                     .Ring1, .Ring2, .Ring3, .Ring4 => "ring",
                     .Armor => "armor",
                     .Cloak => "cloak",
@@ -2024,6 +2028,7 @@ pub const Mob = struct { // {{{
         if (slot != .Backup) {
             switch (item) {
                 .Weapon => |w| for (w.equip_effects) |effect| self.applyStatus(effect, .{}),
+                .Aux => |a| for (a.equip_effects) |effect| self.applyStatus(effect, .{}),
                 else => {},
             }
         }
@@ -2032,16 +2037,21 @@ pub const Mob = struct { // {{{
 
     pub fn dequipItem(self: *Mob, slot: Inventory.EquSlot, drop_coord: ?Coord) void {
         const item = self.inventory.equipment(slot).*.?;
-        if (slot != .Backup) {
-            switch (item) {
-                .Weapon => |w| for (w.equip_effects) |effect| {
-                    if (self.isUnderStatus(effect.status)) |effect_info| {
-                        if (effect_info.duration == .Equ) {
-                            self.cancelStatus(effect.status);
-                        }
+        if (slot != .Backup and
+            (item == .Weapon or item == .Aux))
+        {
+            const equip_effects = switch (item) {
+                .Weapon => |w| w.equip_effects,
+                .Aux => |a| a.equip_effects,
+                else => unreachable,
+            };
+
+            for (equip_effects) |effect| {
+                if (self.isUnderStatus(effect.status)) |effect_info| {
+                    if (effect_info.duration == .Equ) {
+                        self.cancelStatus(effect.status);
                     }
-                },
-                else => {},
+                }
             }
         }
         if (drop_coord) |c|
@@ -3309,16 +3319,15 @@ pub const Mob = struct { // {{{
             else => {},
         }
 
-        // Check weapons.
-        if (self.inventory.equipmentConst(.Weapon).*) |weapon| {
+        // Check equipment.
+        if (self.inventory.equipmentConst(.Weapon).*) |weapon|
             val += utils.getFieldByEnum(Stat, weapon.Weapon.stats, _stat);
-        }
-
-        // Check armor and cloaks.
         if (self.inventory.equipmentConst(.Cloak).*) |clk|
             val += utils.getFieldByEnum(Stat, clk.Cloak.stats, _stat);
         if (self.inventory.equipmentConst(.Armor).*) |clk|
             val += utils.getFieldByEnum(Stat, clk.Armor.stats, _stat);
+        if (self.inventory.equipmentConst(.Aux).*) |aux|
+            val += utils.getFieldByEnum(Stat, aux.Aux.stats, _stat);
 
         // Check rings.
         for (Inventory.RING_SLOTS) |ring_slot|
@@ -3368,6 +3377,8 @@ pub const Mob = struct { // {{{
             r += utils.getFieldByEnum(Resistance, clk.Cloak.resists, resist);
         if (self.inventory.equipmentConst(.Armor).*) |arm|
             r += utils.getFieldByEnum(Resistance, arm.Armor.resists, resist);
+        if (self.inventory.equipmentConst(.Aux).*) |aux|
+            r += utils.getFieldByEnum(Resistance, aux.Aux.resists, resist);
 
         // Check statuses
         switch (resist) {
@@ -3668,7 +3679,7 @@ pub const Container = struct {
         Smackables, // Weapons
         Drinkables, // Potions, alcohol, etc
         Wearables, // Cloaks, armors, etc
-        Evocables, // Consumables, evocables
+        Evocables, // Consumables, evocables, aux items
         VOres, // Useless. Vial ores
         Utility, // Useless. Depends on the level (for PRI: rope, chains, etc).
 
@@ -3677,7 +3688,7 @@ pub const Container = struct {
                 .Smackables => &[_]items.ItemTemplate.Type{.W},
                 .Drinkables => &[_]items.ItemTemplate.Type{.P},
                 .Wearables => &[_]items.ItemTemplate.Type{ .A, .C },
-                .Evocables => &[_]items.ItemTemplate.Type{ .c, .E },
+                .Evocables => &[_]items.ItemTemplate.Type{ .c, .E, .X },
                 else => null,
             };
         }
@@ -3864,7 +3875,7 @@ pub const Ring = struct {
     activated: bool = false,
 };
 
-pub const ItemType = enum { Rune, Ring, Consumable, Vial, Projectile, Armor, Cloak, Weapon, Boulder, Prop, Evocable };
+pub const ItemType = enum { Rune, Ring, Consumable, Vial, Projectile, Armor, Cloak, Aux, Weapon, Boulder, Prop, Evocable };
 
 pub const Item = union(ItemType) {
     Rune: Rune,
@@ -3874,6 +3885,7 @@ pub const Item = union(ItemType) {
     Projectile: *const Projectile,
     Armor: *Armor,
     Cloak: *const Cloak,
+    Aux: *const Aux,
     Weapon: *Weapon,
     Boulder: *const Material,
     Prop: *const Prop,
@@ -3882,7 +3894,7 @@ pub const Item = union(ItemType) {
     pub fn isUseful(self: Item) bool {
         return switch (self) {
             .Vial, .Boulder, .Prop => false,
-            .Rune, .Projectile, .Cloak, .Ring, .Consumable, .Armor, .Weapon, .Evocable => true,
+            .Rune, .Projectile, .Cloak, .Aux, .Ring, .Consumable, .Armor, .Weapon, .Evocable => true,
         };
     }
 
@@ -3918,6 +3930,9 @@ pub const Item = union(ItemType) {
             .Weapon => |_| {
                 cell.ch = ')';
             },
+            .Aux => |_| {
+                cell.ch = ']';
+            },
             .Cloak, .Armor => {
                 cell.ch = '[';
             },
@@ -3949,6 +3964,7 @@ pub const Item = union(ItemType) {
             .Projectile => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
             .Armor => |a| try fmt.format(fbs.writer(), "]{s}", .{a.name}),
             .Cloak => |c| try fmt.format(fbs.writer(), "clk of {s}", .{c.name}),
+            .Aux => |c| try fmt.format(fbs.writer(), "[{s}", .{c.name}),
             .Weapon => |w| try fmt.format(fbs.writer(), "){s}", .{w.name}),
             .Boulder => |b| try fmt.format(fbs.writer(), "•{s} of {s}", .{ b.chunkName(), b.name }),
             .Prop => |b| try fmt.format(fbs.writer(), "{s}", .{b.name}),
@@ -3970,6 +3986,7 @@ pub const Item = union(ItemType) {
             .Projectile => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
             .Armor => |a| try fmt.format(fbs.writer(), "{s} armor", .{a.name}),
             .Cloak => |c| try fmt.format(fbs.writer(), "cloak of {s}", .{c.name}),
+            .Aux => |c| try fmt.format(fbs.writer(), "{s}", .{c.name}),
             .Weapon => |w| try fmt.format(fbs.writer(), "{s}", .{w.name}),
             .Boulder => |b| try fmt.format(fbs.writer(), "{s} of {s}", .{ b.chunkName(), b.name }),
             .Prop => |b| try fmt.format(fbs.writer(), "{s}", .{b.name}),
@@ -3985,6 +4002,7 @@ pub const Item = union(ItemType) {
             .Projectile => |p| p.id,
             .Armor => |a| a.id,
             .Cloak => |c| c.id,
+            .Aux => |a| a.id,
             .Weapon => |w| w.id,
             .Prop => |p| p.id,
             .Evocable => |v| v.id,

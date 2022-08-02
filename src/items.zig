@@ -65,6 +65,7 @@ pub const ItemTemplate = struct {
         W: Weapon,
         A: Armor,
         C: *const Cloak,
+        X: *const Aux,
         P: *const Consumable,
         c: *const Consumable,
         E: Evocable,
@@ -109,6 +110,9 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 020, .i = .{ .A = GambesonArmor } },
     .{ .w = 020, .i = .{ .A = HauberkArmor } },
     .{ .w = 020, .i = .{ .A = CuirassArmor } },
+    // Aux items
+    .{ .w = 020, .i = .{ .X = &WolframOrbAux } },
+    .{ .w = 020, .i = .{ .X = &MinersMapAux } },
     // Potions
     .{ .w = 190, .i = .{ .P = &ConfusionPotion } },
     .{ .w = 190, .i = .{ .P = &PoisonPotion } },
@@ -173,6 +177,7 @@ pub const Rune = enum {
     }
 };
 
+// Cloaks {{{
 pub const Cloak = struct {
     id: []const u8,
     name: []const u8,
@@ -183,6 +188,35 @@ pub const Cloak = struct {
 pub const SilCloak = Cloak{ .id = "silicon", .name = "silicon", .resists = .{ .rFire = 25 } };
 pub const FurCloak = Cloak{ .id = "fur", .name = "fur", .resists = .{ .rElec = 25 } };
 pub const VelvetCloak = Cloak{ .id = "velvet", .name = "velvet", .stats = .{ .Sneak = 2 } };
+// }}}
+
+// Aux items {{{
+pub const Aux = struct {
+    id: []const u8,
+    name: []const u8,
+
+    equip_effects: []const StatusDataInfo = &[_]StatusDataInfo{},
+    stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
+    resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
+};
+
+pub const WolframOrbAux = Aux{
+    .id = "aux_wolfram_orb",
+    .name = "Orb of Wolfram",
+
+    .stats = .{ .Evade = -10, .Martial = -1 },
+    .resists = .{ .rElec = 25 },
+};
+
+pub const MinersMapAux = Aux{
+    .id = "aux_miners_map",
+    .name = "miner's map",
+
+    .equip_effects = &[_]StatusDataInfo{
+        .{ .status = .Echolocation, .duration = .Equ, .power = 3 },
+    },
+};
+// }}}
 
 // Projectiles {{{
 
@@ -2172,6 +2206,7 @@ pub fn createItemFromTemplate(template: ItemTemplate) Item {
         .P, .c => |i| Item{ .Consumable = i },
         .E => |i| Item{ .Evocable = createItem(Evocable, i) },
         .C => |i| Item{ .Cloak = i },
+        .X => |i| Item{ .Aux = i },
         .List => unreachable,
         //else => err.todo(),
     };
