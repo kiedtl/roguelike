@@ -61,6 +61,15 @@ dodge blows and land hits.
 An evil mace crafted for the bane of the Necromancer's enemies. It is wound
 about with a curse to inflict more damage on the living, but less on the undead.
 
+% aux_wolfram_orb
+A heavy sphere of the purest wolfram, polished to a silver sheen. It is
+extraordinarily heavily, but will help conduct electricity through itself
+instead of through you.
+
+% aux_miners_map
+A metal device typically used by miners to navigate the widespread cave systems
+beneath Ir Traummisem and Ir Lehurenkrun.
+
 % mine
 It will activate when a non-player monster steps on it, but it may not explode
 immediately.
