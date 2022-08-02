@@ -38,6 +38,16 @@ pub fn walkableNeighbors(c: Coord, diagonals: bool, opts: state.IsWalkableOption
     return ctr;
 }
 
+pub fn getMobInDirection(self: *Mob, d: Direction) !*Mob {
+    if (self.coord.move(d, state.mapgeometry)) |neighbor| {
+        if (state.dungeon.at(neighbor).mob) |othermob| {
+            return othermob;
+        } else return error.NoMobThere;
+    } else {
+        return error.OutOfMapBounds;
+    }
+}
+
 pub fn getHostileInDirection(self: *Mob, d: Direction) !*Mob {
     if (self.coord.move(d, state.mapgeometry)) |neighbor| {
         return getHostileAt(self, neighbor);

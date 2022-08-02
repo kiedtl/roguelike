@@ -113,6 +113,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     // Aux items
     .{ .w = 020, .i = .{ .X = &WolframOrbAux } },
     .{ .w = 020, .i = .{ .X = &MinersMapAux } },
+    .{ .w = 010, .i = .{ .X = &DispelUndeadAux } },
     // Potions
     .{ .w = 190, .i = .{ .P = &ConfusionPotion } },
     .{ .w = 190, .i = .{ .P = &PoisonPotion } },
@@ -214,6 +215,16 @@ pub const MinersMapAux = Aux{
 
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .Echolocation, .duration = .Equ, .power = 3 },
+    },
+};
+
+pub const DispelUndeadAux = Aux{
+    .id = "aux_dispel_undead",
+    .name = "Dispel Undead",
+
+    .stats = .{ .Willpower = 2 },
+    .equip_effects = &[_]StatusDataInfo{
+        .{ .status = .TormentUndead, .duration = .Equ },
     },
 };
 // }}}

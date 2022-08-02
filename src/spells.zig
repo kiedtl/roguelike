@@ -892,8 +892,8 @@ pub const CAST_PAIN = Spell{
     .checks_will = true,
 };
 
-fn willSucceedAgainstMob(caster: *const Mob, target: *const Mob) bool {
-    if (rng.onein(10) or caster.stat(.Willpower) <= target.stat(.Willpower))
+pub fn willSucceedAgainstMob(caster: *const Mob, target: *const Mob) bool {
+    if (rng.onein(10) or caster.stat(.Willpower) < target.stat(.Willpower))
         return false;
     return (rng.rangeClumping(isize, 1, 100, 2) * caster.stat(.Willpower)) >
         (rng.rangeClumping(isize, 1, 180, 2) * target.stat(.Willpower));

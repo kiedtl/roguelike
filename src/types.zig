@@ -78,6 +78,7 @@ pub const MachineList = LinkedList(Machine);
 pub const ContainerList = LinkedList(Container);
 
 pub const MOB_CORRUPTION_CHANCE = 33;
+pub const TORMENT_UNDEAD_DAMAGE = 2;
 
 pub fn MinMax(comptime T: type) type {
     return struct {
@@ -921,13 +922,15 @@ pub const Damage = struct {
         Fire,
         Electric,
         Poison,
+        Irresistible,
 
-        pub fn resist(self: DamageKind) Resistance {
+        pub fn resist(self: DamageKind) ?Resistance {
             return switch (self) {
                 .Physical => .Armor,
                 .Fire => .rFire,
                 .Electric => .rElec,
                 .Poison => .rPois,
+                .Irresistible => null,
             };
         }
 
@@ -937,6 +940,7 @@ pub const Damage = struct {
                 .Fire => "fire",
                 .Electric => "elec",
                 .Poison => "poison",
+                .Irresistible => "irresistible",
             };
         }
     };
@@ -947,6 +951,7 @@ pub const Damage = struct {
         RangedAttack,
         Stab,
         Explosion,
+        Passive,
     };
 };
 pub const Activity = union(enum) {
@@ -1014,6 +1019,11 @@ pub const Allegiance = enum {
 
 pub const Status = enum {
     // Status list {{{
+
+    // Causes adjacent undead, enemy or not, to take TORMENT_UNDEAD_DAMAGE damage.
+    //
+    // Doesn't have a power field.
+    TormentUndead,
 
     // Gives sharp reduction to enemy's morale.
     //
@@ -1213,6 +1223,7 @@ pub const Status = enum {
 
     pub fn string(self: Status, mob: *const Mob) []const u8 { // {{{
         return switch (self) {
+            .TormentUndead => "torment undead",
             .Intimidating => "intimidating",
             .Drunk => "drunk",
             .CopperWeapon => "copper",
@@ -1261,7 +1272,7 @@ pub const Status = enum {
         return switch (self) {
             .Intimidating => .{ "assume", "assumes", " a fearsome visage" },
             .Drunk => .{ "feel", "looks", " a bit drunk" },
-            .CopperWeapon => null,
+            .TormentUndead, .CopperWeapon => null,
             .Corruption => .{ "are", "is", " corrupted" },
             .Fireproof => .{ "are", "is", " resistant to fire" },
             .Flammable => .{ "are", "is", " vulnerable to fire" },
@@ -1302,7 +1313,7 @@ pub const Status = enum {
         return switch (self) {
             .Intimidating => .{ "no longer seem", "no longer seems", " so scary" },
             .Drunk => .{ "feel", "looks", " more sober" },
-            .CopperWeapon => null,
+            .TormentUndead, .CopperWeapon => null,
             .Corruption => .{ "are no longer", "is no longer", " corrupted" },
             .Fireproof => .{ "are no longer", "is no longer", " resistant to fire" },
             .Flammable => .{ "are no longer", "is no longer", " vulnerable to fire" },
@@ -1361,6 +1372,43 @@ pub const Status = enum {
     }
 
     // Tick functions {{{
+
+    pub fn tickTormentUndead(mob: *Mob) void {
+        for (&DIRECTIONS) |d| if (utils.getMobInDirection(mob, d)) |othermob| {
+            if (othermob.life_type != .Undead)
+                continue;
+
+            // It's adjacent, should be seen...
+            assert(mob.cansee(othermob.coord));
+
+            if (othermob.isHostileTo(mob)) {
+                ai.updateEnemyKnowledge(othermob, mob, null);
+            }
+
+            // FIXME: reduce duplicated will-checking code between this and spells.cast()
+            if (!spells.willSucceedAgainstMob(mob, othermob)) {
+                if (state.player.cansee(othermob.coord) or state.player.cansee(mob.coord)) {
+                    const chance = 100 - spells.appxChanceOfWillOverpowered(mob, othermob);
+                    state.message(.SpellCast, "{c} resisted $oTorment Undead$. $g($c{}%$g chance)$.", .{ othermob, chance });
+                }
+                continue;
+            }
+
+            othermob.takeDamage(.{
+                .amount = TORMENT_UNDEAD_DAMAGE,
+                .by_mob = mob,
+                .kind = .Irresistible,
+                .blood = false,
+                .source = .Passive,
+            }, .{
+                .strs = &[_]DamageStr{
+                    items._dmgstr(099, "torment", "torments", ""),
+                    // When it is completely destroyed, it has been dispelled
+                    items._dmgstr(100, "dispel", "dispels", ""),
+                },
+            });
+        } else |_| {};
+    }
 
     pub fn tickCorruption(mob: *Mob) void {
         // Implement detect undead.
@@ -1999,6 +2047,7 @@ pub const Mob = struct { // {{{
                 }
 
                 switch (status_e) {
+                    .TormentUndead => Status.tickTormentUndead(self),
                     .Corruption => Status.tickCorruption(self),
                     .Noisy => Status.tickNoisy(self),
                     .Echolocation => Status.tickEcholocation(self),
@@ -2676,8 +2725,8 @@ pub const Mob = struct { // {{{
         const was_already_dead = self.should_be_dead();
         const old_HP = self.HP;
 
-        const resist = self.resistance(d.kind.resist());
-        const unshaved_amount = combat.shaveDamage(d.amount, resist);
+        const resist = if (d.kind.resist()) |r| self.resistance(r) else 0;
+        const unshaved_amount = combat.shaveDamage(d.amount, resist); // TODO: change this variable name to "lethal_amount"
         const amount = if (!d.lethal and unshaved_amount > self.HP - 1)
             self.HP - 1
         else
@@ -2726,7 +2775,7 @@ pub const Mob = struct { // {{{
             if (msg.basic) {
                 const basic_helper_verb: []const u8 = if (self == state.player) "are" else "is";
                 const basic_verb = switch (d.kind) {
-                    .Physical => "damaged",
+                    .Irresistible, .Physical => "damaged",
                     .Fire => "burnt with fire",
                     .Electric => "electrocuted",
                     .Poison => "weakened",
@@ -3314,7 +3363,7 @@ pub const Mob = struct { // {{{
                 if (self.isUnderStatus(.Poison)) |_| val = @divTrunc(val * 150, 100);
             },
             .Willpower => {
-                if (self.isUnderStatus(.Corruption)) |_| val -|= 2;
+                if (self.isUnderStatus(.Corruption)) |_| val -|= 1;
             },
             else => {},
         }

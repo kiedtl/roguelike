@@ -415,7 +415,7 @@ pub const PlayerTemplate = MobTemplate{
         .max_HP = 14,
         .memory_duration = 10,
 
-        .stats = .{ .Willpower = 3, .Missile = 60, .Evade = 10, .Vision = 8, .Sneak = 4 },
+        .stats = .{ .Willpower = 4, .Missile = 60, .Evade = 10, .Vision = 8, .Sneak = 4 },
     },
     .weapon = &items.DaggerWeapon,
     //.backup_weapon = &items.RapierWeapon,
@@ -1244,7 +1244,7 @@ pub const BloatTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100 },
-        .stats = .{ .Willpower = 6, .Melee = 80, .Speed = 150, .Vision = 5 },
+        .stats = .{ .Willpower = 4, .Melee = 80, .Speed = 150, .Vision = 5 },
     },
 
     .statuses = &[_]StatusDataInfo{
@@ -1283,7 +1283,7 @@ pub const ThrashingSculptorTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100 },
-        .stats = .{ .Willpower = 7, .Evade = 20, .Melee = 100, .Speed = 100, .Vision = 5 },
+        .stats = .{ .Willpower = 5, .Evade = 20, .Melee = 100, .Speed = 100, .Vision = 5 },
     },
 
     .statuses = &[_]StatusDataInfo{
@@ -1317,7 +1317,7 @@ pub const SkeletonTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = -25 },
-        .stats = .{ .Willpower = 6, .Vision = 4 },
+        .stats = .{ .Willpower = 3, .Vision = 4 },
     },
 };
 
@@ -1346,7 +1346,7 @@ pub const BoneRatTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = -25 },
-        .stats = .{ .Willpower = 1, .Evade = 10, .Speed = 60, .Vision = 4 },
+        .stats = .{ .Willpower = 0, .Evade = 10, .Speed = 60, .Vision = 4 },
     },
 
     .squad = &[_][]const MobTemplate.SquadMember{
