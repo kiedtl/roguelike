@@ -23,11 +23,8 @@
 "sentinel"            	   - 	   - 	   - 	   5 	  10 	   - 	   - 	   - 	   - 	  30 	  40 	  50 	  60 	  50 	  60
 
 # special mundane mobs
-#
-# defender is Lab-only for now -- might reconsider this later
 "javelineer"          	   - 	  10 	  10 	  10 	  10 	  10 	   - 	   - 	   - 	  10 	  20 	  30 	  30 	  45 	  45
 "patrol"              	  25 	  25 	  25 	  25 	  25 	  25 	  25 	  25 	  25 	  25 	   - 	   - 	   - 	  25 	  25
-"defender"            	   - 	   - 	 100 	 100 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
 
 # watcher
 "watcher"             	  45 	  45 	 100 	  90 	  80 	  45 	  25 	  25 	  25 	   - 	   - 	   - 	   - 	   - 	   -
@@ -64,6 +61,7 @@
 "war_olg"             	   - 	   - 	   - 	  10 	  10 	  10 	   - 	   - 	   - 	  20 	  25 	  25 	  30 	  30 	  30
 "necromancer"         	   - 	   - 	   - 	  10 	  15 	  10 	   - 	   - 	   - 	  10 	  15 	  15 	  10 	  10 	  20
 "death_knight"        	   - 	   - 	   - 	  10 	  15 	  10 	   - 	   - 	   - 	  10 	  15 	  15 	  10 	  10 	  20
+"defender"            	   - 	   - 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	  10 	  10 	  10 	  10 	  10 	  10
 "skeletal_blademaster"	   - 	   - 	   - 	   5 	  10 	  10 	   - 	   - 	   - 	  10 	  15 	  15 	  10 	  15 	  25
 "bloat"               	   - 	   - 	   - 	   5 	  10 	  10 	   - 	   - 	   - 	  10 	  15 	  15 	  10 	  10 	  10
 "thrashing_sculptor"  	   - 	   - 	   - 	   5 	  10 	  10 	   - 	   - 	   - 	  10 	  15 	  15 	  10 	  10 	  10
