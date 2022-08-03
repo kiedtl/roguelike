@@ -1928,7 +1928,8 @@ pub const GambesonArmor = Armor{
 pub const SpikedLeatherArmor = Armor{
     .id = "spiked_leather_armor",
     .name = "spiked leather armor",
-    .resists = .{ .Spikes = 1, .Sneak = -1, .Martial = -1, .Armor = 15 },
+    .resists = .{ .Armor = 15 },
+    .stats = .{ .Spikes = 1, .Sneak = -1, .Martial = -1 },
 };
 
 // }}}

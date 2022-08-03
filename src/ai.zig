@@ -1118,7 +1118,9 @@ pub fn shriekerFight(mob: *Mob, alloc: mem.Allocator) void {
 pub fn stalkerFight(mob: *Mob, alloc: mem.Allocator) void {
     const target = currentEnemy(mob).mob;
 
-    if (mem.eql(u8, mob.squad.?.leader.?.id, "hunter")) {
+    if (mob.squad != null and
+        mem.eql(u8, mob.squad.?.leader.?.id, "hunter"))
+    {
         if (!mob.cansee(target.coord)) {
             mob.tryMoveTo(target.coord);
         } else {
@@ -1399,7 +1401,9 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
 
         (work_fn)(mob, alloc);
     } else if (mob.ai.phase == .Investigate) {
-        assert(mob.ai.is_curious);
+        // Even non-curious mobs can investigate, e.g. stalkers sent by player
+        //assert(mob.ai.is_curious);
+
         assert(mob.sustiles.items.len > 0);
 
         const target = mob.sustiles.items[0];

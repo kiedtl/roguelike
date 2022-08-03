@@ -1901,6 +1901,7 @@ pub const Mob = struct { // {{{
     base_night_vision: bool = false,
     deg360_vision: bool = false,
     no_show_fov: bool = false,
+    link_to_player_fov: bool = false,
     memory_duration: usize = 4,
     deaf: bool = false,
     max_HP: f64,
@@ -2058,6 +2059,10 @@ pub const Mob = struct { // {{{
                 {
                     self.fov[y][x] = 0;
                     continue;
+                }
+
+                if (self.link_to_player_fov and !state.player.is_dead) {
+                    state.player.fov[y][x] = 100;
                 }
             }
         };

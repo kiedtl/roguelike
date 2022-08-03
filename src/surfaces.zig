@@ -13,6 +13,7 @@ const spells = @import("spells.zig");
 const colors = @import("colors.zig");
 const err = @import("err.zig");
 const main = @import("root");
+const mobs = @import("mobs.zig");
 const utils = @import("utils.zig");
 const state = @import("state.zig");
 const explosions = @import("explosions.zig");
@@ -289,6 +290,7 @@ pub const MACHINES = [_]Machine{
     SeizureGasTrap,
     BlindingGasTrap,
     Mine,
+    StalkerStation,
     CapacitorArray,
     RechargingStation,
     Drain,
@@ -629,6 +631,92 @@ pub const Mine = Machine{
     .on_power = powerMine,
     .flammability = 100,
     .pathfinding_penalty = 10,
+};
+
+pub const StalkerStation = Machine{
+    .id = "stalker_station",
+    .name = "stalker station",
+    .announce = true,
+    .powered_tile = 'S',
+    .unpowered_tile = 'x',
+    .powered_fg = 0x0,
+    .unpowered_fg = 0x0,
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+    .bg = colors.AQUAMARINE,
+    .power_drain = 0,
+    .power = 100,
+    .detect_with_elec = true,
+    .detect_with_heat = true,
+    .on_power = powerNone,
+    .evoke_confirm = "Really use the stalkers for your own devious purposes?",
+    .player_interact = .{
+        .name = "use",
+        .success_msg = "You let loose the stalkers.",
+        .no_effect_msg = null,
+        .max_use = 1,
+        .func = struct {
+            fn f(_: *Machine, by: *Mob) bool {
+                assert(by == state.player);
+
+                const STALKER_MAX = 5;
+
+                const Action = union(enum) {
+                    SeekStairs,
+                    Guard: Coord,
+                };
+
+                const choices = [_][]const u8{
+                    "Seek nearest stairs and guard",
+                    "Guard an area",
+                };
+                const CHOICE_SEEK = 0;
+                const CHOICE_MOVE = 1;
+
+                const chosen_action_i = display.drawChoicePrompt("Order the stalkers to do what?", .{}, &choices) orelse return false;
+                const action: Action = switch (chosen_action_i) {
+                    CHOICE_SEEK => .SeekStairs,
+                    CHOICE_MOVE => .{ .Guard = display.chooseCell(.{ .require_seen = true }) orelse return false },
+                    else => unreachable,
+                };
+
+                const coord = switch (action) {
+                    .SeekStairs => state.dungeon.stairs[state.player.coord.z].constSlice()[0],
+                    .Guard => |g| g,
+                };
+
+                var spawned_ctr: usize = 0;
+                for (&DIRECTIONS) |d| if (state.player.coord.move(d, state.mapgeometry)) |neighbor| {
+                    if (state.is_walkable(neighbor, .{ .right_now = true })) {
+                        const stalker = mobs.placeMob(state.GPA.allocator(), &mobs.StalkerTemplate, neighbor, .{});
+                        //state.player.squad.?.members.append(stalker) catch break;
+                        //stalker.squad = state.player.squad;
+
+                        stalker.link_to_player_fov = true;
+                        stalker.allegiance = .OtherGood;
+
+                        //stalker.ai.work_area.append(coord) catch err.wat();
+                        stalker.ai.phase = .Investigate;
+                        stalker.sustiles.append(.{ .coord = coord }) catch err.wat();
+
+                        stalker.cancelStatus(.Sleeping);
+                    }
+
+                    spawned_ctr += 1;
+                    if (spawned_ctr == STALKER_MAX) {
+                        break;
+                    }
+                };
+
+                if (spawned_ctr == 0) {
+                    display.drawAlertThenLog("No empty tiles near you to release stalkers.", .{});
+                    return false;
+                }
+
+                return true;
+            }
+        }.f,
+    },
 };
 
 pub const CapacitorArray = Machine{
