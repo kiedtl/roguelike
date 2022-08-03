@@ -1383,7 +1383,7 @@ pub const StalkerTemplate = MobTemplate{
 
         .max_HP = 2,
         .memory_duration = 10,
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100 },
+        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rElec = RESIST_IMMUNE },
         .stats = .{ .Willpower = 1, .Evade = 80, .Speed = 20, .Vision = 4 },
     },
     .statuses = &[_]StatusDataInfo{
