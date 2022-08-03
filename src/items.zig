@@ -194,7 +194,7 @@ pub const Cloak = struct {
 pub const SilCloak = Cloak{ .id = "cloak_silicon", .name = "silicon", .resists = .{ .rFire = 25 } };
 pub const FurCloak = Cloak{ .id = "cloak_fur", .name = "fur", .resists = .{ .rElec = 25 } };
 pub const VelvetCloak = Cloak{ .id = "cloak_velvet", .name = "velvet", .stats = .{ .Sneak = 2 } };
-pub const ThornyCloak = Cloak{ .id = "cloak_thorny", .name = "thorny", .stats = .{ .Spikes = 1 } };
+pub const ThornyCloak = Cloak{ .id = "cloak_thorny", .name = "thorns", .stats = .{ .Spikes = 1 } };
 // }}}
 
 // Aux items {{{
