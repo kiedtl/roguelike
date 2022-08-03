@@ -1816,6 +1816,7 @@ pub const Stat = enum {
     Sneak,
     Vision,
     Willpower,
+    Spikes,
 
     pub fn string(self: Stat) []const u8 {
         return switch (self) {
@@ -1827,6 +1828,7 @@ pub const Stat = enum {
             .Sneak => "sneak",
             .Vision => "vision",
             .Willpower => "will",
+            .Spikes => "spikes",
         };
     }
 };
@@ -1920,6 +1922,7 @@ pub const Mob = struct { // {{{
         Sneak: isize = 1,
         Vision: isize = 6,
         Willpower: isize = 3,
+        Spikes: isize = 0,
     } = .{},
 
     // Listed in order of preference.
@@ -2760,6 +2763,7 @@ pub const Mob = struct { // {{{
             }
         }
 
+        // Knockback
         if (attacker_weapon.knockback > 0) {
             const d = attacker.coord.closestDirectionTo(recipient.coord, state.mapgeometry);
             combat.throwMob(attacker, recipient, d, attacker_weapon.knockback);
@@ -2768,6 +2772,22 @@ pub const Mob = struct { // {{{
         // Daze stabbed mobs.
         if (is_stab and !recipient.should_be_dead()) {
             recipient.addStatus(.Daze, 0, .{ .Tmp = rng.range(usize, 3, 5) });
+        }
+
+        // Retaliation/spikes damage?
+        if (recipient.stat(.Spikes) > 0 and
+            attacker.coord.distance(recipient.coord) == 1)
+        {
+            display.Animation.blink(&.{recipient.coord}, 'S', colors.LIGHT_STEEL_BLUE, .{}).apply();
+
+            attacker.takeDamage(.{
+                .amount = @intToFloat(f64, recipient.stat(.Spikes)),
+                .source = .Passive,
+                .by_mob = recipient,
+            }, .{
+                .strs = &[_]DamageStr{items._dmgstr(0, "spike", "spikes", "")},
+                .is_spikes = true,
+            });
         }
 
         // Bonus attacks?
@@ -2810,6 +2830,7 @@ pub const Mob = struct { // {{{
         is_bone: bool = false,
         is_nbone: bool = false,
         is_copper: bool = false,
+        is_spikes: bool = false,
     }) void {
         const was_already_dead = self.should_be_dead();
         const old_HP = self.HP;
@@ -2885,6 +2906,7 @@ pub const Mob = struct { // {{{
                 const bone_str = if (msg.is_bone) " $b*Bone*$. " else "";
                 const nbone_str = if (msg.is_nbone) " $b*-Bone*$. " else "";
                 const copper_str = if (msg.is_copper) " $b*Copper*$. " else "";
+                const spikes_str = if (msg.is_spikes) " $b*Spikes*$. " else "";
 
                 var noun = StackBuffer(u8, 64).init(null);
                 if (msg.noun) |m_noun| {
@@ -2900,13 +2922,13 @@ pub const Mob = struct { // {{{
 
                 state.message(
                     .Combat,
-                    "{s} {s} {}{s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.) {s}{s}{s}{s}{s}",
+                    "{s} {s} {}{s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.) {s}{s}{s}{s}{s}{s}",
                     .{
                         noun.constSlice(),   verb,        self,
                         hitstrs.verb_degree, punctuation, @floatToInt(usize, amount),
                         d.kind.string(),     resisted,    resist_str,
                         martial_str,         riposte_str, bone_str,
-                        nbone_str,           copper_str,
+                        nbone_str,           copper_str,  spikes_str,
                     },
                 );
             }
@@ -3476,6 +3498,8 @@ pub const Mob = struct { // {{{
         // Clamp value.
         val = switch (_stat) {
             .Sneak => math.clamp(val, 0, 10),
+            // Should never be below 0
+            .Vision, .Spikes => math.max(0, val),
             else => val,
         };
 

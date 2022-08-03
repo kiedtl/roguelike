@@ -75,7 +75,7 @@ pub const ItemTemplate = struct {
 };
 pub const RARE_ITEM_DROPS = [_]ItemTemplate{
     // Dilute this list by adding a few more common weapon
-    .{ .w = 100, .i = .{ .W = MaceWeapon } },
+    .{ .w = 100, .i = .{ .W = GlaiveWeapon } },
     .{ .w = 100, .i = .{ .W = SwordWeapon } },
     // Rare weapons
     .{ .w = 050, .i = .{ .W = MartialSwordWeapon } },
@@ -89,7 +89,6 @@ pub const RARE_ITEM_DROPS = [_]ItemTemplate{
     // Copper weapons
     .{ .w = 001, .i = .{ .W = CopperSwordWeapon } },
     .{ .w = 001, .i = .{ .W = CopperRapierWeapon } },
-    //.{ .w = 001, .i = .{ .W = CopperMaceWeapon } },
 };
 pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 001, .i = .{ .List = &RARE_ITEM_DROPS } },
@@ -108,6 +107,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 015, .i = .{ .W = WoldoWeapon } },
     // Armor
     .{ .w = 020, .i = .{ .A = GambesonArmor } },
+    .{ .w = 010, .i = .{ .A = SpikedLeatherArmor } },
     .{ .w = 020, .i = .{ .A = HauberkArmor } },
     .{ .w = 020, .i = .{ .A = CuirassArmor } },
     // Aux items
@@ -117,6 +117,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 020, .i = .{ .X = &DetectElecAux } },
     .{ .w = 010, .i = .{ .X = &DispelUndeadAux } },
     .{ .w = 010, .i = .{ .X = &BucklerAux } },
+    .{ .w = 010, .i = .{ .X = &SpikedBucklerAux } },
     // Potions
     .{ .w = 190, .i = .{ .P = &ConfusionPotion } },
     .{ .w = 190, .i = .{ .P = &PoisonPotion } },
@@ -152,6 +153,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 020, .i = .{ .C = &SilCloak } },
     .{ .w = 020, .i = .{ .C = &FurCloak } },
     .{ .w = 020, .i = .{ .C = &VelvetCloak } },
+    .{ .w = 010, .i = .{ .C = &ThornyCloak } },
 };
 
 pub const RINGS = [_]Ring{
@@ -189,9 +191,10 @@ pub const Cloak = struct {
     resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
 };
 
-pub const SilCloak = Cloak{ .id = "silicon", .name = "silicon", .resists = .{ .rFire = 25 } };
-pub const FurCloak = Cloak{ .id = "fur", .name = "fur", .resists = .{ .rElec = 25 } };
-pub const VelvetCloak = Cloak{ .id = "velvet", .name = "velvet", .stats = .{ .Sneak = 2 } };
+pub const SilCloak = Cloak{ .id = "cloak_silicon", .name = "silicon", .resists = .{ .rFire = 25 } };
+pub const FurCloak = Cloak{ .id = "cloak_fur", .name = "fur", .resists = .{ .rElec = 25 } };
+pub const VelvetCloak = Cloak{ .id = "cloak_velvet", .name = "velvet", .stats = .{ .Sneak = 2 } };
+pub const ThornyCloak = Cloak{ .id = "cloak_thorny", .name = "thorny", .stats = .{ .Spikes = 1 } };
 // }}}
 
 // Aux items {{{
@@ -252,6 +255,13 @@ pub const BucklerAux = Aux{
     .name = "buckler",
 
     .stats = .{ .Evade = 10 },
+};
+
+pub const SpikedBucklerAux = Aux{
+    .id = "aux_buckler_spiked",
+    .name = "spiked buckler",
+
+    .stats = .{ .Spikes = 1, .Evade = 10 },
 };
 // }}}
 
@@ -1898,7 +1908,7 @@ pub const CuirassArmor = Armor{
 
 pub const HauberkArmor = Armor{
     .id = "chainmail_armor",
-    .name = "chainmail",
+    .name = "hauberk",
     .resists = .{ .Armor = 25 },
     .stats = .{ .Evade = -10, .Martial = -1 },
 };
@@ -1913,6 +1923,12 @@ pub const GambesonArmor = Armor{
     .id = "gambeson_armor",
     .name = "gambeson",
     .resists = .{ .Armor = 15 },
+};
+
+pub const SpikedLeatherArmor = Armor{
+    .id = "spiked_leather_armor",
+    .name = "spiked leather armor",
+    .resists = .{ .Spikes = 1, .Sneak = -1, .Martial = -1, .Armor = 15 },
 };
 
 // }}}

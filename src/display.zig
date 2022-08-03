@@ -251,7 +251,9 @@ fn _writerMobStats(
     _writerWrite(w, "$cstat       value$.\n", .{});
     inline for (@typeInfo(Stat).Enum.fields) |statv| {
         const stat = @intToEnum(Stat, statv.value);
-        const stat_val = utils.SignedFormatter{ .v = mob.stat(stat) };
+        const stat_val_raw = mob.stat(stat);
+        const stat_val = utils.SignedFormatter{ .v = stat_val_raw };
+
         if (stat == .Sneak) continue;
         _writerWrite(w, "$c{s: <8}$.   {: >5}\n", .{ stat.string(), stat_val });
     }
