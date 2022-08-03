@@ -2457,9 +2457,16 @@ pub const Animation = union(enum) {
                 assert(anim.coords.len < 32); // XXX: increase if necessary
                 var old_cells = StackBuffer(termbox.tb_cell, 32).init(null);
                 for (anim.coords) |coord| {
-                    const dx = @intCast(isize, coord.x) + mapwin.startx;
-                    const dy = @intCast(isize, coord.y) + mapwin.starty;
-                    old_cells.append(termbox.oldCell(dx, dy)) catch err.wat();
+                    if (state.player.cansee(coord)) {
+                        const dx = @intCast(isize, coord.x) + mapwin.startx;
+                        const dy = @intCast(isize, coord.y) + mapwin.starty;
+                        old_cells.append(termbox.oldCell(dx, dy)) catch err.wat();
+                    }
+                }
+
+                if (old_cells.len == 0) {
+                    // Player can't see any coord, bail out
+                    return;
                 }
 
                 var ctr: usize = anim.repeat;
