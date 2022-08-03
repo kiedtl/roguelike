@@ -77,6 +77,11 @@ adjacent undead, both friendly and hostile, will take damage each turn.
 % aux_buckler
 A simple wooden buckler, covered in some thin leather.
 
+% aux_buckler_spiked
+A bucker made of thin sheet metal. All craftsmanship is of the highest quality.
+It it adorned with embedded chains of copper and silver. It menaces with spikes
+of hardened foolsilver.
+
 % aux_detect_heat
 A device that can be used to detect sources of heat, such as fires or warm
 machines.
