@@ -96,6 +96,10 @@ immediately.
 
 It will create an explosion with a radius of about 3 tiles.
 
+% stalker_station
+A large machine that houses several stalkers for the purpose of tracking down
+uncooperative death row inmates.
+
 % capacitor_array
 If you discharge this capacitor, all creatures in your line of sight without
 electricity resistance will be vaporized by a powerful blast of lightning.
