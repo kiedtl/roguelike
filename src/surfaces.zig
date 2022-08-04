@@ -644,7 +644,7 @@ pub const StalkerStation = Machine{
     .unpowered_fg = 0x0,
     .powered_walkable = false,
     .unpowered_walkable = false,
-    .bg = colors.AQUAMARINE,
+    .bg = 0x90b7a3,
     .power_drain = 0,
     .power = 100,
     .detect_with_elec = true,
@@ -712,12 +712,10 @@ pub const StalkerStation = Machine{
                         state.player.linked_fovs.append(stalker) catch {};
                         stalker.allegiance = .OtherGood;
 
-                        //stalker.ai.work_area.append(coord) catch err.wat();
-                        stalker.ai.phase = .Investigate;
-                        stalker.sustiles.append(.{
-                            .coord = coord,
-                            .unforgettable = true,
-                        }) catch err.wat();
+                        // Hack to keep stalkers not-hostile to goblin prisoners
+                        stalker.prisoner_status = types.Prisoner{ .of = .Necromancer };
+
+                        stalker.ai.work_area.items[0] = coord;
 
                         stalker.cancelStatus(.Sleeping);
                     }

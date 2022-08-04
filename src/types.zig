@@ -3387,9 +3387,10 @@ pub const Mob = struct { // {{{
     }
 
     pub fn isHostileTo(self: *const Mob, othermob: *const Mob) bool {
-        var hostile = false;
+        if (self.allegiance == othermob.allegiance) return false;
 
-        if (self.allegiance != othermob.allegiance) hostile = true;
+        var hostile = true;
+        assert(self.allegiance != othermob.allegiance);
 
         // If the other mob is a prisoner of my faction (and is actually in
         // prison) or we're both prisoners of the same faction, don't be hostile.
