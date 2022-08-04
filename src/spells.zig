@@ -506,6 +506,12 @@ pub const BOLT_BLINKBOLT = Spell{
             .approach = 1,
         },
     },
+    .check_has_effect = struct {
+        fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
+            const mob = state.dungeon.at(target).mob.?;
+            return !mob.isFullyResistant(.rElec);
+        }
+    }.f,
     .effect_type = .{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             if (state.dungeon.at(coord).mob) |victim| {
@@ -604,7 +610,7 @@ pub const BOLT_LIGHTNING = Spell{
                     .kind = .Electric,
                     .blood = false,
                     .by_mob = state.dungeon.at(caster_c).mob,
-                }, .{ .noun = "lightning bolt" });
+                }, .{ .noun = "The lightning bolt" });
             }
         }
     }.f },

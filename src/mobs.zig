@@ -437,6 +437,7 @@ pub const GoblinTemplate = MobTemplate{
             .profession_description = "wandering",
             .work_fn = ai.patrolWork,
             .fight_fn = ai.meleeFight,
+            .flags = &[_]AI.Flag{.AvoidsEnemies},
         },
         .allegiance = .OtherEvil,
         .max_HP = 12,
@@ -994,7 +995,7 @@ pub const HunterTemplate = MobTemplate{
         },
 
         .max_HP = 10,
-        .memory_duration = 4,
+        .memory_duration = 30,
         .stats = .{ .Willpower = 3, .Melee = 70, .Speed = 150, .Vision = 7 },
     },
     .weapon = &items.MaceWeapon,
@@ -1359,7 +1360,13 @@ pub const SkeletonTemplate = MobTemplate{
 pub const StalkerTemplate = MobTemplate{
     .mob = .{
         .id = "stalker",
-        .species = &Species{ .name = "stalker" },
+        .species = &Species{
+            .name = "stalker",
+            .default_attack = &Weapon{
+                .damage = 0,
+                .strs = &[_]DamageStr{items._dmgstr(0, "ram", "rams", "")},
+            },
+        },
         .tile = 'e',
         .ai = AI{
             .profession_description = "watching",
@@ -1367,10 +1374,11 @@ pub const StalkerTemplate = MobTemplate{
             .fight_fn = ai.stalkerFight,
             .is_curious = false,
             .is_fearless = true,
-            .flags = &[_]AI.Flag{.DetectWithElec},
+            .flags = &[_]AI.Flag{ .DetectWithElec, .AvoidsEnemies },
             .spellcaster_backup_action = .KeepDistance,
         },
         .life_type = .Construct,
+        .deg360_vision = true,
 
         // XXX: synchronize MP costs w/ mob speed so that it gets one shot every turn
         .spells = &[_]SpellOptions{
@@ -1382,9 +1390,9 @@ pub const StalkerTemplate = MobTemplate{
         .corpse = .None,
 
         .max_HP = 2,
-        .memory_duration = 10,
+        .memory_duration = 2, // Forget about enemies quickly in absence of hunter captain
         .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rElec = RESIST_IMMUNE },
-        .stats = .{ .Willpower = 1, .Evade = 80, .Speed = 20, .Vision = 4 },
+        .stats = .{ .Willpower = 0, .Evade = 80, .Speed = 20, .Vision = 3 },
     },
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Sleeping, .duration = .Prm },

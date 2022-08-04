@@ -1495,25 +1495,6 @@ pub const Status = enum {
         } else |_| {};
     }
 
-    pub fn tickCorruption(mob: *Mob) void {
-        // Implement detect undead.
-        var y: usize = 0;
-        while (y < HEIGHT) : (y += 1) {
-            var x: usize = 0;
-            while (x < WIDTH) : (x += 1) {
-                const coord = Coord.new2(mob.coord.z, x, y);
-                if (state.dungeon.at(coord).mob) |othermob| {
-                    if (othermob.life_type == .Undead) {
-                        for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |n| {
-                            mob.fov[n.y][n.x] = 100;
-                        };
-                        mob.fov[y][x] = 100;
-                    }
-                }
-            }
-        }
-    }
-
     pub fn tickNoisy(mob: *Mob) void {
         if (mob.isUnderStatus(.Sleeping) == null)
             mob.makeNoise(.Movement, .Medium);
@@ -1657,6 +1638,27 @@ pub const Status = enum {
         }
     }
 
+    // Helper for tickFOV when Corruption status is active
+    // Implements detect undead.
+    //
+    pub fn _revealUndead(mob: *Mob) void {
+        var y: usize = 0;
+        while (y < HEIGHT) : (y += 1) {
+            var x: usize = 0;
+            while (x < WIDTH) : (x += 1) {
+                const coord = Coord.new2(mob.coord.z, x, y);
+                if (state.dungeon.at(coord).mob) |othermob| {
+                    if (othermob.life_type == .Undead) {
+                        for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |n| {
+                            mob.fov[n.y][n.x] = 100;
+                        };
+                        mob.fov[y][x] = 100;
+                    }
+                }
+            }
+        }
+    }
+
     // }}}
 };
 
@@ -1718,11 +1720,7 @@ pub const AI = struct {
     // Obviously, only makes sense on mages.
     spellcaster_backup_action: union(enum) { KeepDistance, Melee } = .Melee,
 
-    flee_effect: ?StatusDataInfo = .{
-        .status = .Fast,
-        .duration = .{ .Tmp = 0 },
-        .exhausting = true,
-    },
+    flee_effect: ?StatusDataInfo = null,
 
     // The "target" in any phase (except .Hunt, the target for that is in
     // the enemy records).
@@ -1748,6 +1746,7 @@ pub const AI = struct {
         MovesDiagonally, // Usually tries to move diagonally.
         DetectWithHeat, // Detected with .DetectHeat status
         DetectWithElec, // Detected with .DetectElec status
+        AvoidsEnemies, // A* penalty for enemy monsters. For prisoners/stalkers.
     };
 
     pub fn flag(self: *const AI, f: Flag) bool {
@@ -1846,6 +1845,7 @@ pub const Mob = struct { // {{{
 
     squad: ?*Squad = null,
     prisoner_status: ?Prisoner = null,
+    linked_fovs: StackBuffer(*Mob, 16) = StackBuffer(*Mob, 16).init(null),
 
     fov: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT,
     path_cache: std.AutoHashMap(Path, Coord) = undefined,
@@ -1901,7 +1901,6 @@ pub const Mob = struct { // {{{
     base_night_vision: bool = false,
     deg360_vision: bool = false,
     no_show_fov: bool = false,
-    link_to_player_fov: bool = false,
     memory_duration: usize = 4,
     deaf: bool = false,
     max_HP: f64,
@@ -2060,12 +2059,21 @@ pub const Mob = struct { // {{{
                     self.fov[y][x] = 0;
                     continue;
                 }
-
-                if (self.link_to_player_fov and !state.player.is_dead) {
-                    state.player.fov[y][x] = 100;
-                }
             }
         };
+        self.fov[self.coord.y][self.coord.x] = 100;
+
+        for (self.linked_fovs.constSlice()) |linked_fov_mob| {
+            for (linked_fov_mob.fov) |row, y| for (row) |_, x| {
+                if (linked_fov_mob.fov[y][x] > 0) {
+                    state.player.fov[y][x] = 100;
+                }
+            };
+        }
+
+        if (self.hasStatus(.Corruption)) {
+            Status._revealUndead(self);
+        }
     }
 
     // Misc stuff.
@@ -2145,7 +2153,6 @@ pub const Mob = struct { // {{{
                     .DetectHeat => Status.tickDetectHeat(self),
                     .DetectElec => Status.tickDetectElec(self),
                     .TormentUndead => Status.tickTormentUndead(self),
-                    .Corruption => Status.tickCorruption(self),
                     .Noisy => Status.tickNoisy(self),
                     .Echolocation => Status.tickEcholocation(self),
                     .Recuperate => Status.tickRecuperate(self),

@@ -7,6 +7,7 @@ const assert = std.debug.assert;
 const fire = @import("fire.zig");
 const types = @import("types.zig");
 const state = @import("state.zig");
+const utils = @import("utils.zig");
 
 const Mob = types.Mob;
 const Coord = types.Coord;
@@ -73,6 +74,12 @@ fn pathfindingPenalty(coord: Coord, opts: state.IsWalkableOptions) usize {
     if (opts.mob) |mob| {
         if (mob.ai.flag(.FearsDarkness)) {
             c += 30;
+        }
+
+        if (mob.ai.flag(.AvoidsEnemies)) {
+            if (utils.getHostileAt(mob, coord)) |_| {
+                c += 30;
+            } else |_| {}
         }
 
         if (!fire.fireIsSafeFor(mob, state.dungeon.fireAt(coord).*))

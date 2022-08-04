@@ -48,7 +48,7 @@ pub fn getMobInDirection(self: *Mob, d: Direction) !*Mob {
     }
 }
 
-pub fn getHostileInDirection(self: *Mob, d: Direction) !*Mob {
+pub fn getHostileInDirection(self: *const Mob, d: Direction) !*Mob {
     if (self.coord.move(d, state.mapgeometry)) |neighbor| {
         return getHostileAt(self, neighbor);
     } else {
@@ -56,7 +56,7 @@ pub fn getHostileInDirection(self: *Mob, d: Direction) !*Mob {
     }
 }
 
-pub fn getHostileAt(self: *Mob, coord: Coord) !*Mob {
+pub fn getHostileAt(self: *const Mob, coord: Coord) !*Mob {
     if (state.dungeon.at(coord).mob) |othermob| {
         if (othermob.isHostileTo(self) and othermob.ai.is_combative) {
             return othermob;

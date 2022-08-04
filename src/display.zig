@@ -691,7 +691,11 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
     }
     _writerWrite(w, "\n", .{});
 
-    _writerHeader(w, linewidth, "behaviour", .{});
+    _writerHeader(w, linewidth, "info", .{});
+    if (mob.life_type == .Construct)
+        _writerWrite(w, "· is non-living ($bconstruct$.)\n", .{})
+    else
+        _writerWrite(w, "· is non-living ($bundead$.)\n", .{});
     if (mob.ai.is_curious and !mob.deaf)
         _writerWrite(w, "· investigates noises\n", .{})
     else
@@ -700,6 +704,10 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
         _writerWrite(w, "· won't attack alone\n", .{});
     if (mob.ai.flag(.MovesDiagonally))
         _writerWrite(w, "· (usually) moves diagonally\n", .{});
+    if (mob.ai.flag(.DetectWithHeat))
+        _writerWrite(w, "· detected w/ $bDetect Heat$.\n", .{});
+    if (mob.ai.flag(.DetectWithElec))
+        _writerWrite(w, "· detected w/ $bDetect Electricity$.\n", .{});
     _writerWrite(w, "\n", .{});
 
     if (mob.ai.flee_effect) |effect| {

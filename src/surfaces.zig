@@ -29,6 +29,7 @@ const Direction = types.Direction;
 const Item = types.Item;
 const Weapon = types.Weapon;
 const Mob = types.Mob;
+const Squad = types.Squad;
 const Machine = types.Machine;
 const PropArrayList = types.PropArrayList;
 const Container = types.Container;
@@ -685,19 +686,38 @@ pub const StalkerStation = Machine{
                     .Guard => |g| g,
                 };
 
+                // Clear out linked-fovs list for player, as its a fixed size and might be full.
+                var new_linked_fovs = @TypeOf(state.player.linked_fovs).init(null);
+                for (state.player.linked_fovs.constSlice()) |linked_fov_mob|
+                    if (!linked_fov_mob.is_dead)
+                        new_linked_fovs.append(linked_fov_mob) catch unreachable;
+                state.player.linked_fovs = new_linked_fovs;
+
                 var spawned_ctr: usize = 0;
+                var first_stalker: ?*Mob = null;
                 for (&DIRECTIONS) |d| if (state.player.coord.move(d, state.mapgeometry)) |neighbor| {
                     if (state.is_walkable(neighbor, .{ .right_now = true })) {
                         const stalker = mobs.placeMob(state.GPA.allocator(), &mobs.StalkerTemplate, neighbor, .{});
+
                         //state.player.squad.?.members.append(stalker) catch break;
                         //stalker.squad = state.player.squad;
+                        if (first_stalker) |stalker_leader| {
+                            stalker.squad = stalker_leader.squad;
+                        } else {
+                            stalker.squad = Squad.allocNew();
+                            stalker.squad.?.leader = stalker;
+                            first_stalker = stalker;
+                        }
 
-                        stalker.link_to_player_fov = true;
+                        state.player.linked_fovs.append(stalker) catch {};
                         stalker.allegiance = .OtherGood;
 
                         //stalker.ai.work_area.append(coord) catch err.wat();
                         stalker.ai.phase = .Investigate;
-                        stalker.sustiles.append(.{ .coord = coord }) catch err.wat();
+                        stalker.sustiles.append(.{
+                            .coord = coord,
+                            .unforgettable = true,
+                        }) catch err.wat();
 
                         stalker.cancelStatus(.Sleeping);
                     }
