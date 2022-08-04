@@ -1,0 +1,16 @@
+% Stalker stations
+
+:priority 50
+:subroom
+:g_global_restriction 3
+:restriction 1
+
+@0 m stalker_station
+@a p wire_s1e1
+@b p wire_e1w1
+@c p wire_s2e1w1
+@d p wire_n1s1e1
+@e p antenna_controller
+
+abc
+de0

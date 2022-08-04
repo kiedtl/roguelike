@@ -131,6 +131,9 @@
 "antenna"              	 "antenna"              	 '▂' 	 0x90a3b7 	 -        	 nay 	 - 	20
 "battery_pack"         	 "battery pack"         	 'Ÿ' 	 0x90a3b7 	 -        	 nay 	 - 	 - 	 .Laboratory
 
+# stalker station
+"antenna_controller"   	 "control antenna"      	 '▌' 	 0x90b7a3 	 -        	 nay 	 - 	10
+
 # unused?
 #"antenna_tip"          	 "antenna tip"          	 '´' 	 0x90a3b7 	 -        	 nay 	 - 	 - 	 .Laboratory
 
@@ -202,6 +205,7 @@
 "pipe_n1s1e1"          	 "steel pipe"           	 '├' 	 0xa6c2d4 	 -        	 nay
 "pipe_n1e1w1"          	 "steel pipe"           	 '┴' 	 0xa6c2d4 	 -        	 nay
 
+"wire_n1s1e1"          	 "copper wire"          	 '├' 	 0xffe5d3 	 -        	 nay
 "wire_n1e1w1"          	 "copper wire"          	 '┴' 	 0xffe5d3 	 -        	 nay
 "wire_s2e1"            	 "copper wire"          	 '╓' 	 0xffe5d3 	 -        	 nay
 "wire_s2w1"            	 "copper wire"          	 '╖' 	 0xffe5d3 	 -        	 nay
