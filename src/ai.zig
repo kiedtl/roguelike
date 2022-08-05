@@ -4,6 +4,7 @@ const assert = std.debug.assert;
 const math = std.math;
 const meta = std.meta;
 
+const alert = @import("alert.zig");
 const colors = @import("colors.zig");
 const display = @import("display.zig");
 const fov = @import("fov.zig");
@@ -355,7 +356,7 @@ pub fn checkForHostiles(mob: *Mob) void {
 
             if (othermob == mob) continue;
 
-            if (mob.isHostileTo(othermob)) {
+            if (!mob.ai.flag(.IgnoredByEnemies) and mob.isHostileTo(othermob)) {
                 updateEnemyRecord(mob, .{
                     .mob = othermob,
                     .counter = mob.memory_duration,
@@ -382,8 +383,8 @@ pub fn checkForHostiles(mob: *Mob) void {
         {
             _ = mob.enemyList().orderedRemove(i);
         } else {
-            if (!mob.cansee(enemy.last_seen) and mob.ai.phase != .Flee and
-                mob.isAloneOrLeader())
+            if (mob.ai.phase != .Flee and mob.isAloneOrLeader() and
+                (mob.cansee(enemy.last_seen) and !mob.cansee(enemy.mob.coord)))
             {
                 enemy.counter -= 1;
             }
@@ -587,6 +588,33 @@ fn guardGlanceLeftRight(mob: *Mob, prev_direction: Direction) void {
     }
 
     mob.facing = newdirection;
+}
+
+pub fn coronerWork(mob: *Mob, _: mem.Allocator) void {
+    // All done?
+    if (mob.ai.work_area.items.len == 0) {
+        _ = mob.rest();
+        guardGlanceAround(mob);
+        return;
+    }
+
+    const current_task = mob.ai.work_area.items[mob.ai.work_area.items.len - 1];
+
+    if (mob.cansee(current_task)) {
+        if (state.dungeon.corpseAt(current_task)) |current_corpse| {
+            if (current_corpse.killed_by) |killer| {
+                alert.announceEnemyAlert(killer);
+            }
+            current_corpse.is_death_verified = true;
+        }
+        _ = mob.ai.work_area.pop();
+        _ = mob.rest();
+    } else if (mob.nextDirectionTo(current_task) == null) {
+        _ = mob.ai.work_area.pop();
+        _ = mob.rest();
+    } else {
+        mob.tryMoveTo(current_task);
+    }
 }
 
 pub fn patrolWork(mob: *Mob, _: mem.Allocator) void {
@@ -1113,6 +1141,12 @@ pub fn shriekerFight(mob: *Mob, alloc: mem.Allocator) void {
         if (!keepDistance(mob, target.coord, 8))
             meleeFight(mob, alloc);
     }
+}
+
+pub fn coronerFight(mob: *Mob, alloc: mem.Allocator) void {
+    const target = currentEnemy(mob).mob;
+    alert.announceEnemyAlert(target);
+    shriekerFight(mob, alloc);
 }
 
 pub fn stalkerFight(mob: *Mob, alloc: mem.Allocator) void {

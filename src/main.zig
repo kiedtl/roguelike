@@ -9,6 +9,7 @@ const meta = std.meta;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const ai = @import("ai.zig");
+const alert = @import("alert.zig");
 const rng = @import("rng.zig");
 const player = @import("player.zig");
 const literature = @import("literature.zig");
@@ -136,6 +137,7 @@ fn initGame() bool {
     state.containers = ContainerList.init(state.GPA.allocator());
     state.evocables = EvocableList.init(state.GPA.allocator());
     state.messages = MessageArrayList.init(state.GPA.allocator());
+    state.alerts = alert.Alert.List.init(state.GPA.allocator());
 
     state.loadLevelInfo();
     surfaces.readProps(state.GPA.allocator());
@@ -275,6 +277,7 @@ fn deinitGame() void {
     state.props.deinit();
     state.containers.deinit();
     state.evocables.deinit();
+    state.alerts.deinit();
 
     for (literature.posters.items) |poster|
         poster.deinit(state.GPA.allocator());
@@ -546,12 +549,17 @@ fn tickGame() void {
 
     state.ticks += 1;
     surfaces.tickMachines(cur_level);
-    tasks.tickTasks(cur_level);
     fire.tickFire(cur_level);
     gas.tickGasEmitters(cur_level);
     gas.tickGases(cur_level, 0);
     state.tickSound(cur_level);
     state.tickLight(cur_level);
+
+    if (state.ticks % 10 == 0) {
+        alert.tickCheckLevelHealth(cur_level);
+        alert.tickActOnAlert(cur_level);
+        tasks.tickTasks(cur_level);
+    }
 
     var iter = state.mobs.iterator();
     while (iter.next()) |mob| {
@@ -658,12 +666,17 @@ fn tickGame() void {
 fn viewerTickGame(cur_level: usize) void {
     state.ticks += 1;
     surfaces.tickMachines(cur_level);
-    tasks.tickTasks(cur_level);
     fire.tickFire(cur_level);
     gas.tickGasEmitters(cur_level);
     gas.tickGases(cur_level, 0);
     state.tickSound(cur_level);
     state.tickLight(cur_level);
+
+    if (state.ticks % 10 == 0) {
+        alert.tickCheckLevelHealth(cur_level);
+        alert.tickActOnAlert(cur_level);
+        tasks.tickTasks(cur_level);
+    }
 
     var iter = state.mobs.iterator();
     while (iter.next()) |mob| {

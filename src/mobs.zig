@@ -84,6 +84,25 @@ pub const MobTemplate = struct {
     };
 };
 
+pub const CoronerTemplate = MobTemplate{
+    .mob = .{
+        .id = "coroner",
+        .species = &GoblinSpecies,
+        .tile = 'a',
+        .ai = AI{
+            .profession_name = "coroner",
+            .profession_description = "doing autopsy",
+            .work_fn = ai.coronerWork,
+            .fight_fn = ai.coronerFight,
+        },
+
+        .max_HP = 6,
+        .memory_duration = 5,
+
+        .stats = .{ .Willpower = 2 },
+    },
+};
+
 pub const ExecutionerTemplate = MobTemplate{
     .mob = .{
         .id = "executioner",
@@ -696,6 +715,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
             .work_fn = ai.dummyWork,
             .fight_fn = ai.statueFight,
             .is_curious = false,
+            .flags = &[_]AI.Flag{.IgnoredByEnemies},
         },
         .base_night_vision = true,
         .deg360_vision = true,
@@ -729,6 +749,7 @@ pub const NebroStatueTemplate = MobTemplate{
             .work_fn = ai.dummyWork,
             .fight_fn = ai.statueFight,
             .is_curious = false,
+            .flags = &[_]AI.Flag{.IgnoredByEnemies},
         },
         .base_night_vision = true,
         .deg360_vision = true,
@@ -762,6 +783,7 @@ pub const CrystalStatueTemplate = MobTemplate{
             .work_fn = ai.dummyWork,
             .fight_fn = ai.statueFight,
             .is_curious = false,
+            .flags = &[_]AI.Flag{.IgnoredByEnemies},
         },
         .base_night_vision = true,
         .deg360_vision = true,
@@ -1837,6 +1859,7 @@ pub const SpectralSwordTemplate = MobTemplate{
 };
 
 pub const MOBS = [_]MobTemplate{
+    CoronerTemplate,
     ExecutionerTemplate,
     DestroyerTemplate,
     WatcherTemplate,

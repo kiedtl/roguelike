@@ -1747,6 +1747,7 @@ pub const AI = struct {
         DetectWithHeat, // Detected with .DetectHeat status
         DetectWithElec, // Detected with .DetectElec status
         AvoidsEnemies, // A* penalty for enemy monsters. For prisoners/stalkers.
+        IgnoredByEnemies, // Hacky fix for prisoners continually hacking at statues.
     };
 
     pub fn flag(self: *const AI, f: Flag) bool {
@@ -1886,6 +1887,8 @@ pub const Mob = struct { // {{{
 
     life_type: enum { Living, Construct, Undead } = .Living,
     is_dead: bool = false,
+    is_death_reported: bool = false,
+    is_death_verified: bool = false,
     killed_by: ?*Mob = null,
 
     // Immutable instrinsic attributes.
@@ -3160,7 +3163,10 @@ pub const Mob = struct { // {{{
             if (corpsetile) |c| {
                 switch (self.corpse) {
                     .None => err.wat(),
-                    .Normal => state.dungeon.at(c).surface = .{ .Corpse = self },
+                    .Normal => {
+                        state.dungeon.at(c).surface = .{ .Corpse = self };
+                        self.coord = c;
+                    },
                     .Wall => state.dungeon.at(c).type = .Wall,
                 }
             }
@@ -4550,6 +4556,13 @@ pub const Dungeon = struct {
 
     pub inline fn at(self: *Dungeon, c: Coord) *Tile {
         return &self.map[c.z][c.y][c.x];
+    }
+
+    pub fn corpseAt(self: *Dungeon, c: Coord) ?*Mob {
+        if (self.at(c).surface) |s|
+            if (s == .Corpse)
+                return s.Corpse;
+        return null;
     }
 
     pub fn machineAt(self: *Dungeon, c: Coord) ?*Machine {
