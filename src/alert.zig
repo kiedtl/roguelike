@@ -20,6 +20,8 @@ const DIRECTIONS = types.DIRECTIONS;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 const StringBuf64 = @import("buffer.zig").StringBuf64;
 
+pub const MOBS_PERCENT_KILLED_THRESHHOLD = 90;
+
 pub const GUARD_SQUADS = [_][][]const u8{
     &.{ "guard", "watcher", "watcher" },
     &.{ "guard", "shrieker", "watcher" },
@@ -90,8 +92,9 @@ pub fn tickCheckLevelHealth(level: usize) void {
             }
         }
     }
+    const percent_killed = mobs_dead * 100 / mobs_total;
 
-    if (mobs_dead >= ((mobs_total / 4) * 3)) {
+    if (percent_killed > MOBS_PERCENT_KILLED_THRESHHOLD) {
         var locations = StackBuffer(Coord, 64).init(null);
 
         iter = state.mobs.iterator();
@@ -141,10 +144,10 @@ pub fn tickActOnAlert(level: usize) void {
                     }
                 } else null;
                 if (coord) |spawn_coord| {
-                    const knight = mobs.placeMob(state.GPA.allocator(), &mobs.DeathKnightTemplate, spawn_coord, .{});
-                    ai.updateEnemyKnowledge(knight, enemy_alert.enemy, null);
+                    const patrol = mobs.placeMob(state.GPA.allocator(), &mobs.PatrolTemplate, spawn_coord, .{});
+                    ai.updateEnemyKnowledge(patrol, enemy_alert.enemy, null);
                     if (enemy_alert.enemy.squad) |enemy_squad| for (enemy_squad.members.constSlice()) |member| {
-                        ai.updateEnemyKnowledge(knight, member, null);
+                        ai.updateEnemyKnowledge(patrol, member, null);
                     };
                     alert.resolved = true;
                 }
