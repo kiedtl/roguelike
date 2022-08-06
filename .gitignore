@@ -2,5 +2,7 @@ zig-cache
 zig-out
 log
 dump.txt
-recordings
-src/std
+recordings/
+dumps/
+*.ttyrec
+changelog
