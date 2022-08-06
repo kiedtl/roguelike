@@ -64,6 +64,7 @@ pub const Alert = struct {
 
     pub const EnemyAlert = struct {
         enemy: *Mob,
+        in_progress: bool,
     };
 };
 
@@ -138,18 +139,38 @@ pub fn tickActOnAlert(level: usize) void {
                 }
             },
             .EnemyAlert => |enemy_alert| {
-                const coord = for (state.dungeon.stairs[level].constSlice()) |stair| {
-                    if (state.nextSpotForMob(stair, null)) |coord| {
-                        break coord;
+                if (!enemy_alert.in_progress) {
+                    const coord = for (state.dungeon.stairs[level].constSlice()) |stair| {
+                        if (state.nextSpotForMob(stair, null)) |coord| {
+                            break coord;
+                        }
+                    } else null;
+                    if (coord) |spawn_coord| {
+                        const patrol = mobs.placeMob(state.GPA.allocator(), &mobs.PatrolTemplate, spawn_coord, .{});
+                        ai.updateEnemyKnowledge(patrol, enemy_alert.enemy, null);
+                        if (enemy_alert.enemy.squad) |enemy_squad| for (enemy_squad.members.constSlice()) |member| {
+                            ai.updateEnemyKnowledge(patrol, member, null);
+                        };
+                        alert.alert.EnemyAlert.in_progress = true;
                     }
-                } else null;
-                if (coord) |spawn_coord| {
-                    const patrol = mobs.placeMob(state.GPA.allocator(), &mobs.PatrolTemplate, spawn_coord, .{});
-                    ai.updateEnemyKnowledge(patrol, enemy_alert.enemy, null);
-                    if (enemy_alert.enemy.squad) |enemy_squad| for (enemy_squad.members.constSlice()) |member| {
-                        ai.updateEnemyKnowledge(patrol, member, null);
-                    };
-                    alert.resolved = true;
+                } else {
+                    if (enemy_alert.enemy.is_dead) {
+                        if (enemy_alert.enemy.squad) |enemy_squad| {
+                            const living_squadmate = for (enemy_squad.members.constSlice()) |member| {
+                                if (!member.is_dead) {
+                                    break member;
+                                }
+                            } else null;
+                            if (living_squadmate) |remainder| {
+                                alert.alert.EnemyAlert.in_progress = false;
+                                alert.alert.EnemyAlert.enemy = remainder;
+                            } else {
+                                alert.resolved = true;
+                            }
+                        } else {
+                            alert.resolved = true;
+                        }
+                    }
                 }
             },
         }
@@ -178,7 +199,7 @@ pub fn announceEnemyAlert(enemy: *Mob) void {
 
     if (existing_alert == null) {
         const newalert = Alert{
-            .alert = .{ .EnemyAlert = .{ .enemy = enemy } },
+            .alert = .{ .EnemyAlert = .{ .enemy = enemy, .in_progress = false } },
             .filed = state.ticks,
             .by = null,
             .floor = state.player.coord.z,
