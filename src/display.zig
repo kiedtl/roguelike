@@ -500,34 +500,33 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
         var i = MobInfoLine{ .char = '@' };
 
         if (mob.isHostileTo(state.player) and mob.ai.is_combative) {
-            var text: []const u8 = "this is a bug";
-
-            const Awareness = enum { Seeing, Remember, None };
+            const Awareness = union(enum) { Seeing, Remember: usize, None };
             const awareness: Awareness = for (mob.enemyList().items) |enemyrec| {
                 if (enemyrec.mob == state.player) {
                     // Zig, why the fuck do I need to cast the below as Awareness?
                     // Wouldn't I like to fucking chop your fucking type checker into
                     // tiny shreds with a +9 halberd of flaming.
-                    break if (mob.cansee(state.player.coord)) @as(Awareness, .Seeing) else .Remember;
+                    break if (mob.cansee(state.player.coord))
+                        @as(Awareness, .Seeing)
+                    else
+                        Awareness{ .Remember = enemyrec.counter };
                 }
             } else .None;
 
             switch (awareness) {
                 .Seeing => {
                     i.color = 'r';
-                    text = "sees you";
+                    i.string.writer().print("sees you", .{}) catch err.wat();
                 },
-                .Remember => {
+                .Remember => |turns_left| {
                     i.color = 'p';
-                    text = "remembers you";
+                    i.string.writer().print("remembers you (~$b{}$. turns left)", .{turns_left}) catch err.wat();
                 },
                 .None => {
                     i.color = 'b';
-                    text = "unaware of you";
+                    i.string.writer().print("unaware of you", .{}) catch err.wat();
                 },
             }
-
-            i.string.writer().print("{s}", .{text}) catch err.wat();
         } else {
             i.string.writer().print("doesn't care", .{}) catch err.wat();
         }
