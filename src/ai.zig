@@ -58,7 +58,7 @@ pub fn currentEnemy(me: *Mob) *EnemyRecord {
     var i: usize = 0;
 
     while (i < me.enemyList().items.len) : (i += 1) {
-        const distance = me.coord.distance(me.enemyList().items[i].last_seen);
+        const distance = me.coord.distance(me.enemyList().items[i].lastSeenOrCoord());
         if (distance < nearest_distance) {
             nearest = i;
             nearest_distance = distance;
@@ -243,7 +243,7 @@ pub fn keepDistance(mob: *Mob, from: Coord, distance: usize) bool {
         };
 
         for (mob.enemyList().items) |enemy| {
-            const coord = enemy.last_seen;
+            const coord = enemy.lastSeenOrCoord();
             flee_dijkmap[coord.y][coord.x] = 0;
         }
 
@@ -376,15 +376,23 @@ pub fn checkForHostiles(mob: *Mob) void {
     var i: usize = 0;
     while (i < mob.enemyList().items.len) {
         const enemy = &mob.enemyList().items[i];
+
+        if (enemy.last_seen) |last_seen| {
+            if (mob.cansee(last_seen) and !enemy.mob.coord.eq(last_seen)) {
+                enemy.last_seen = null;
+            }
+        }
+
         if (enemy.counter == 0 or
             !mob.isHostileTo(enemy.mob) or
             enemy.mob.coord.z != mob.coord.z or
+            enemy.mob.ai.flag(.IgnoredByEnemies) or
             enemy.mob.is_dead)
         {
             _ = mob.enemyList().orderedRemove(i);
         } else {
             if (mob.ai.phase != .Flee and mob.isAloneOrLeader() and
-                (mob.cansee(enemy.last_seen) and !mob.cansee(enemy.mob.coord)))
+                enemy.last_seen == null)
             {
                 enemy.counter -= 1;
             }
@@ -1363,7 +1371,7 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
 
     alertAllyOfHostile(mob);
 
-    if (!keepDistance(mob, target.last_seen, FLEE_GOAL)) {
+    if (!keepDistance(mob, target.lastSeenOrCoord(), FLEE_GOAL)) {
         if (mob.canMelee(target.mob)) {
             meleeFight(mob, alloc);
         } else {

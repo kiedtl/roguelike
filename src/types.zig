@@ -986,10 +986,14 @@ pub const Activity = union(enum) {
 
 pub const EnemyRecord = struct {
     mob: *Mob,
-    last_seen: Coord,
+    last_seen: ?Coord,
     counter: usize,
 
     pub const AList = std.ArrayList(EnemyRecord);
+
+    pub fn lastSeenOrCoord(self: *const EnemyRecord) Coord {
+        return self.last_seen orelse self.mob.coord;
+    }
 };
 
 pub const SuspiciousTileRecord = struct {
