@@ -1062,14 +1062,8 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         const v = utils.SignedFormatter{ .v = stat.v };
         const x = switch (i % 2) {
             0 => startx,
-            1 => b: {
-                // Find out the width of the string so we can right-align it.
-                var buf: [256]u8 = undefined;
-                var fbs = std.io.fixedBufferStream(&buf);
-                std.fmt.format(fbs.writer(), "{s} {: >3}{s}", .{ stat.b, v, stat.a }) catch err.wat();
-                break :b endx - @intCast(isize, fbs.getWritten().len);
-            },
-            2 => startx + (@divTrunc(endx - startx, 3) * 2) + 1,
+            1 => endx - @intCast(isize, std.fmt.count("{s} {: >3}{s}", .{ stat.b, v, stat.a })),
+            //2 => startx + (@divTrunc(endx - startx, 3) * 2) + 1,
             else => unreachable,
         };
         const c: u21 = if (stat.v < 0) 'p' else '.';
