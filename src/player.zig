@@ -284,8 +284,8 @@ pub fn moveOrFight(direction: Direction) bool {
         }
     }
 
-    if (direction.is_diagonal() and state.player.isUnderStatus(.Confusion) != null) {
-        display.drawAlertThenLog("You cannot move diagonally whilst confused!", .{});
+    if (direction.is_diagonal() and state.player.isUnderStatus(.Disorient) != null) {
+        display.drawAlertThenLog("You cannot move diagonally whilst disoriented!", .{});
         return false;
     }
 

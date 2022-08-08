@@ -1138,7 +1138,7 @@ pub const Status = enum {
     // Prevents mobs from using diagonal moves.
     //
     // Doesn't have a power field.
-    Confusion,
+    Disorient,
 
     // Makes mob fast or slow.
     //
@@ -1260,7 +1260,7 @@ pub const Status = enum {
             .Echolocation => "echolocating",
             .Corona => "glowing",
             .Daze => "dazed",
-            .Confusion => "confused",
+            .Disorient => "disoriented",
             .Fast => "hasted",
             .Slow => "slowed",
             .Recuperate => "recuperating",
@@ -1300,7 +1300,7 @@ pub const Status = enum {
             .Held => .{ "are", "is", " entangled" },
             .Corona => .{ "begin", "starts", " glowing" },
             .Daze => .{ "are", "is", " dazed" },
-            .Confusion => .{ "are", "looks", " confused" },
+            .Disorient => .{ "are", "looks", " disoriented" },
             .Fast => .{ "feel yourself", "starts", " moving faster" },
             .Slow => .{ "feel yourself", "starts", " moving slowly" },
             .Poison => .{ "feel very", "looks very", " sick" },
@@ -1342,7 +1342,7 @@ pub const Status = enum {
             .Held => .{ "break", "breaks", " free" },
             .Corona => .{ "stop", "stops", " glowing" },
             .Daze => .{ "break out of your daze", "breaks out of their daze", "" },
-            .Confusion => .{ "are no longer", "no longer looks", " confused" },
+            .Disorient => .{ "are no longer", "is no longer", " disoriented" },
             .Fast => .{ "are no longer", "is no longer", " moving faster" },
             .Slow => .{ "are no longer", "is no longer", " moving slowly" },
             .Poison => .{ "feel", "looks", " healthier" },
@@ -1368,7 +1368,7 @@ pub const Status = enum {
 
     pub fn isMobImmune(self: Status, mob: *Mob) bool {
         return switch (self) {
-            .Confusion => mob.life_type == .Construct,
+            .Disorient => mob.life_type == .Construct,
             .Fire => mob.isFullyResistant(.rFire),
             .Exhausted,
             .Pain,
@@ -2460,8 +2460,8 @@ pub const Mob = struct { // {{{
         // This should have been handled elsewhere (in the pathfinding code
         // for monsters, or in main:moveOrFight() for the player).
         //
-        if (direction.is_diagonal() and self.isUnderStatus(.Confusion) != null)
-            err.bug("Confused mob is trying to move diagonally!", .{});
+        if (direction.is_diagonal() and self.isUnderStatus(.Disorient) != null)
+            err.bug("Disoriented mob is trying to move diagonally!", .{});
 
         if (self.isUnderStatus(.Drunk)) |_| {
             if (rng.percent(@as(usize, 60))) {
@@ -3179,24 +3179,24 @@ pub const Mob = struct { // {{{
         // themself.
         if (self.coord.eq(to)) return null;
 
-        const is_confused = self.isUnderStatus(.Confusion) != null;
+        const is_disoriented = self.isUnderStatus(.Disorient) != null;
 
         // Cannot move if you're a prisoner (unless you're moving one space away)
         if (self.prisoner_status) |p|
             if (p.held_by != null and p.heldAt().distance(to) > 1)
                 return null;
 
-        if (!is_confused) {
+        if (!is_disoriented) {
             if (Direction.from(self.coord, to)) |direction| {
                 return direction;
             }
         }
 
-        const pathobj = Path{ .from = self.coord, .to = to, .confused_state = is_confused };
+        const pathobj = Path{ .from = self.coord, .to = to, .confused_state = is_disoriented };
 
         if (!self.path_cache.contains(pathobj)) {
             const directions = b: {
-                if (is_confused) {
+                if (is_disoriented) {
                     break :b &CARDINAL_DIRECTIONS;
                 } else {
                     if (self.ai.flag(.MovesDiagonally)) {
@@ -3215,7 +3215,7 @@ pub const Mob = struct { // {{{
             var last: Coord = self.coord;
             for (pth.items[1..]) |coord| {
                 self.path_cache.put(
-                    Path{ .from = last, .to = to, .confused_state = is_confused },
+                    Path{ .from = last, .to = to, .confused_state = is_disoriented },
                     coord,
                 ) catch err.wat();
                 last = coord;

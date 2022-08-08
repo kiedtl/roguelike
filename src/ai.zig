@@ -93,7 +93,7 @@ pub fn calculateMorale(self: *Mob) isize {
     if (self.hasStatus(.Blind)) base -= 2;
     if (self.hasStatus(.Debil)) base -= 2;
     if (self.hasStatus(.Daze)) base -= 4;
-    if (self.hasStatus(.Confusion)) base -= 2;
+    if (self.hasStatus(.Disorient)) base -= 2;
 
     if (self.hasStatus(.Daze)) base -= 4;
     if (self.hasStatus(.Poison)) base -= 4;
@@ -125,7 +125,7 @@ pub fn calculateMorale(self: *Mob) isize {
         if (enemy.hasStatus(.Blind)) base += 2;
         if (enemy.hasStatus(.Debil)) base += 2;
 
-        if (enemy.hasStatus(.Confusion) and
+        if (enemy.hasStatus(.Disorient) and
             (self.squad != null and self.squad.?.members.len >= 4))
         {
             base += 2;
@@ -177,7 +177,7 @@ pub fn calculateMorale(self: *Mob) isize {
         if (ally.hasStatus(.Daze)) base -= 2;
         if (ally.hasStatus(.Debil)) base -= 1;
 
-        if (ally.hasStatus(.Confusion)) base -= 2;
+        if (ally.hasStatus(.Disorient)) base -= 2;
 
         if (ally.hasStatus(.Fear)) base -= 4;
         if (ally.hasStatus(.Poison)) base -= 2;
@@ -253,7 +253,7 @@ pub fn keepDistance(mob: *Mob, from: Coord, distance: usize) bool {
 
         var direction: ?Direction = null;
         var lowest_val: f64 = 999;
-        const directions: []const Direction = if (mob.isUnderStatus(.Confusion)) |_|
+        const directions: []const Direction = if (mob.isUnderStatus(.Disorient)) |_|
             &CARDINAL_DIRECTIONS
         else
             &DIRECTIONS;

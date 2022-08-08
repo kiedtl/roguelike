@@ -175,9 +175,10 @@ less.
 % potion_smoke
 Releases a cloud of smoke. Useful for obscuring vision.
 
-% potion_confusion
-Confuses the heck out of you, preventing you from moving in diagonal directions.
-You can still attack diagonally though.
+% potion_disorient
+Disorient
+Emits disorienting gas, preventing any affected creatures from moving
+diagonally.
 
 % potion_paralysis
 Releases paralysing gas.

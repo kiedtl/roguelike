@@ -119,7 +119,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 010, .i = .{ .X = &BucklerAux } },
     .{ .w = 010, .i = .{ .X = &SpikedBucklerAux } },
     // Potions
-    .{ .w = 190, .i = .{ .P = &ConfusionPotion } },
+    .{ .w = 190, .i = .{ .P = &DisorientPotion } },
     .{ .w = 190, .i = .{ .P = &PoisonPotion } },
     .{ .w = 190, .i = .{ .P = &DebilitatePotion } },
     .{ .w = 190, .i = .{ .P = &IntimidatePotion } },
@@ -1788,11 +1788,11 @@ pub const SmokePotion = Consumable{
     .throwable = true,
 };
 
-pub const ConfusionPotion = Consumable{
-    .id = "potion_confusion",
-    .name = "potion of confuzzlementation",
-    .effects = &[_]Consumable.Effect{.{ .Gas = gas.Confusion.id }},
-    .dip_effect = .{ .status = .Confusion, .duration = .{ .Tmp = 5 } },
+pub const DisorientPotion = Consumable{
+    .id = "potion_disorient",
+    .name = "potion of disorientation",
+    .effects = &[_]Consumable.Effect{.{ .Gas = gas.Disorient.id }},
+    .dip_effect = .{ .status = .Disorient, .duration = .{ .Tmp = 5 } },
     .is_potion = true,
     .color = 0x33cbca,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,

@@ -880,7 +880,7 @@ pub const CAST_FERMENT = Spell{
     .id = "sp_ferment",
     .name = "confusion",
     .cast_type = .Smite,
-    .effect_type = .{ .Status = .Confusion },
+    .effect_type = .{ .Status = .Disorient },
     .checks_will = true,
 };
 pub const CAST_FEAR = Spell{

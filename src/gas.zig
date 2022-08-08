@@ -56,11 +56,11 @@ pub const SmokeGas = Gas{
     .id = 2,
 };
 
-pub const Confusion = Gas{
-    .name = "confusing fumes",
+pub const Disorient = Gas{
+    .name = "disorienting fumes",
     .color = 0x33cbca,
     .dissipation_rate = 0.05,
-    .trigger = triggerConfusion,
+    .trigger = triggerDisorient,
     .id = 3,
 };
 
@@ -85,7 +85,7 @@ pub const Dust = Gas{
     .color = 0xd2b48c,
     .dissipation_rate = 0.07,
     .opacity = 0.4,
-    .trigger = triggerDust,
+    .trigger = triggerNone,
     .residue = .Dust,
     .id = 6,
 };
@@ -145,7 +145,7 @@ pub const Blinding = Gas{
 };
 
 pub const Gases = [_]Gas{
-    Poison,   Paralysis, SmokeGas, Confusion, Slow,
+    Poison,   Paralysis, SmokeGas, Disorient, Slow,
     Healing,  Dust,      Steam,    Miasma,    Seizure,
     Blinding,
 };
@@ -169,9 +169,9 @@ fn triggerParalysis(mob: *Mob, _: f64) void {
     mob.addStatus(.Paralysis, 0, .{ .Tmp = Status.MAX_DURATION });
 }
 
-fn triggerConfusion(mob: *Mob, _: f64) void {
+fn triggerDisorient(mob: *Mob, _: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
-    mob.addStatus(.Confusion, 0, .{ .Tmp = Status.MAX_DURATION });
+    mob.addStatus(.Disorient, 0, .{ .Tmp = Status.MAX_DURATION });
 }
 
 fn triggerSlow(mob: *Mob, _: f64) void {
@@ -188,8 +188,6 @@ fn triggerMiasma(mob: *Mob, _: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity
     mob.addStatus(.Nausea, 0, .{ .Tmp = Status.MAX_DURATION });
 }
-
-fn triggerDust(_: *Mob, _: f64) void {}
 
 // Make hot water emit steam, and lava emit smoke.
 pub fn tickGasEmitters(level: usize) void {

@@ -74,7 +74,7 @@ const CONNECTIONS_MAX = 4;
 pub const TRAPS = &[_]*const Machine{
     &surfaces.PoisonGasTrap,
     &surfaces.ParalysisGasTrap,
-    &surfaces.ConfusionGasTrap,
+    &surfaces.DisorientationGasTrap,
     &surfaces.SeizureGasTrap,
     &surfaces.BlindingGasTrap,
 };
