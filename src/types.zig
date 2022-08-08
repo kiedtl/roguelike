@@ -2891,7 +2891,7 @@ pub const Mob = struct { // {{{
                 }
             }
 
-            const resisted = @intCast(isize, d.amount - amount);
+            const resisted = @intCast(isize, d.amount) - @intCast(isize, amount);
             const resist_str = if (d.kind == .Physical) "armor" else "resist";
 
             if (msg.basic) {
