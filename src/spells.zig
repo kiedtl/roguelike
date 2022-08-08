@@ -215,7 +215,7 @@ pub const CAST_REGEN = Spell{
         // spell, ensuring it's only used when the caster is clearly losing a
         // fight
         fn f(caster: *Mob, opts: SpellOptions, _: Coord) bool {
-            return @floatToInt(usize, caster.HP) <= (opts.power * 2);
+            return caster.HP <= (opts.power * 2);
         }
     }.f,
     .noise = .Loud,
@@ -479,13 +479,13 @@ pub const BOLT_PARALYSE = Spell{
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             if (state.dungeon.at(coord).mob) |victim| {
                 victim.takeDamage(.{
-                    .amount = @intToFloat(f64, opts.power),
+                    .amount = opts.power,
                     .source = .RangedAttack,
                     .by_mob = state.dungeon.at(caster_c).mob,
                     .kind = .Electric,
                     .blood = false,
                 }, .{ .strs = &items.SHOCK_STRS });
-                const dmg_taken = @floatToInt(usize, victim.last_damage.?.amount);
+                const dmg_taken = victim.last_damage.?.amount;
                 victim.addStatus(.Paralysis, 0, .{ .Tmp = dmg_taken });
             }
         }
@@ -516,7 +516,7 @@ pub const BOLT_BLINKBOLT = Spell{
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             if (state.dungeon.at(coord).mob) |victim| {
                 victim.takeDamage(.{
-                    .amount = @intToFloat(f64, opts.power),
+                    .amount = opts.power,
                     .source = .RangedAttack,
                     .by_mob = state.dungeon.at(caster_c).mob,
                     .kind = .Electric,
@@ -547,7 +547,7 @@ pub const BOLT_IRON = Spell{
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
             if (state.dungeon.at(coord).mob) |victim| {
                 victim.takeDamage(.{
-                    .amount = @intToFloat(f64, opts.power),
+                    .amount = opts.power,
                     .source = .RangedAttack,
                     .by_mob = state.dungeon.at(caster_c).mob,
                 }, .{ .noun = "The iron arrow" });
@@ -569,7 +569,7 @@ fn _effectBoltCrystal(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coor
     if (state.dungeon.at(coord).mob) |victim| {
         const damage = rng.rangeClumping(usize, opts.power / 2, opts.power, 2);
         victim.takeDamage(.{
-            .amount = @intToFloat(f64, damage),
+            .amount = damage,
             .source = .RangedAttack,
             .by_mob = state.dungeon.at(caster_c).mob,
         }, .{ .noun = "The crystal shard" });
@@ -605,7 +605,7 @@ pub const BOLT_LIGHTNING = Spell{
                 const avg_dmg = opts.power;
                 const dmg = rng.rangeClumping(usize, avg_dmg / 2, avg_dmg * 2, 2);
                 victim.takeDamage(.{
-                    .amount = @intToFloat(f64, dmg),
+                    .amount = dmg,
                     .source = .RangedAttack,
                     .kind = .Electric,
                     .blood = false,
@@ -823,7 +823,7 @@ pub const CAST_DISCHARGE = Spell{
                 };
                 const damage = math.clamp(empty_spaces / 2, 1, 4);
                 victim.takeDamage(.{
-                    .amount = @intToFloat(f64, damage),
+                    .amount = damage,
                     .source = .RangedAttack,
                     .by_mob = state.dungeon.at(caster_c).mob,
                     .kind = .Electric,

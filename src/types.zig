@@ -901,7 +901,7 @@ pub const Resistance = enum {
 
 pub const Damage = struct {
     lethal: bool = true, // If false, extra damage will be shaved
-    amount: f64,
+    amount: usize,
     by_mob: ?*Mob = null,
     source: DamageSource = .Other,
     blood: bool = true,
@@ -1512,7 +1512,7 @@ pub const Status = enum {
         const damage = rng.range(usize, 0, 1);
         if (damage > 0) { // Don't spam "You are weakened (0 damage, 0 resist)"
             mob.takeDamage(.{
-                .amount = @intToFloat(f64, damage),
+                .amount = damage,
                 .blood = false,
                 .kind = .Poison,
             }, .{ .basic = true });
@@ -1534,11 +1534,7 @@ pub const Status = enum {
 
         if (!mob.isFullyResistant(.rFire)) { // Don't spam "you are scorched" messages
             if (rng.percent(@as(usize, 50))) {
-                mob.takeDamage(.{
-                    .amount = @intToFloat(f64, 1),
-                    .kind = .Fire,
-                    .blood = false,
-                }, .{
+                mob.takeDamage(.{ .amount = 1, .kind = .Fire, .blood = false }, .{
                     .noun = "The fire",
                     .strs = &[_]DamageStr{
                         items._dmgstr(000, "BUG", "BUG", ""),
@@ -1565,7 +1561,7 @@ pub const Status = enum {
 
         if (st.power > 0) {
             mob.takeDamage(.{
-                .amount = @intToFloat(f64, rng.rangeClumping(usize, 0, st.power, 2)),
+                .amount = rng.rangeClumping(usize, 0, st.power, 2),
                 .blood = false,
             }, .{
                 .noun = "The pain",
@@ -1879,7 +1875,7 @@ pub const Mob = struct { // {{{
     facing: Direction = .North,
     coord: Coord = Coord.new(0, 0),
 
-    HP: f64 = undefined,
+    HP: usize = 0xAA,
     energy: isize = 0,
     statuses: StatusArray = StatusArray.initFill(.{}),
     ai: AI,
@@ -1910,7 +1906,7 @@ pub const Mob = struct { // {{{
     no_show_fov: bool = false,
     memory_duration: usize = 4,
     deaf: bool = false,
-    max_HP: f64,
+    max_HP: usize,
     blood: ?Spatter = .Blood,
     blood_spray: ?usize = null, // Gas ID
     corpse: enum { Normal, Wall, None } = .Normal,
@@ -2269,7 +2265,7 @@ pub const Mob = struct { // {{{
             .Gas => |s| state.dungeon.atGas(self.coord)[s] = 1.0,
             .Damage => |d| self.takeDamage(.{
                 .lethal = d.lethal,
-                .amount = @intToFloat(f64, d.amount),
+                .amount = d.amount,
                 .kind = d.kind,
                 .by_mob = self,
             }, .{ .basic = true }),
@@ -2382,7 +2378,7 @@ pub const Mob = struct { // {{{
                     if (proj.damage) |max_damage| {
                         const damage = rng.range(usize, max_damage / 2, max_damage);
                         const msg_noun = StringBuf64.initFmt("The {s}", .{proj.name});
-                        mob.takeDamage(.{ .amount = @intToFloat(f64, damage), .source = .RangedAttack, .by_mob = self }, .{ .noun = msg_noun.constSlice() });
+                        mob.takeDamage(.{ .amount = damage, .source = .RangedAttack, .by_mob = self }, .{ .noun = msg_noun.constSlice() });
                     }
                     switch (proj.effect) {
                         .Status => |s| mob.applyStatus(s, .{}),
@@ -2745,7 +2741,7 @@ pub const Mob = struct { // {{{
         const damage = combat.damageOfMeleeAttack(attacker, weapon_damage.total, is_stab) * opts.damage_bonus / 100;
 
         recipient.takeDamage(.{
-            .amount = @intToFloat(f64, damage),
+            .amount = damage,
             .kind = attacker_weapon.damage_kind,
             .source = if (is_stab) .Stab else .MeleeAttack,
             .by_mob = attacker,
@@ -2800,7 +2796,7 @@ pub const Mob = struct { // {{{
             display.Animation.blink(&.{recipient.coord}, 'S', colors.LIGHT_STEEL_BLUE, .{}).apply();
 
             attacker.takeDamage(.{
-                .amount = @intToFloat(f64, recipient.stat(.Spikes)),
+                .amount = @intCast(usize, recipient.stat(.Spikes)),
                 .source = .Passive,
                 .by_mob = recipient,
             }, .{
@@ -2830,7 +2826,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn takeHealing(self: *Mob, h: usize) void {
-        self.HP = math.clamp(self.HP + @intToFloat(f64, h), 0, self.max_HP);
+        self.HP = math.clamp(self.HP + h, 0, self.max_HP);
 
         const verb: []const u8 = if (self == state.player) "are" else "is";
         const fully_adj: []const u8 = if (self.HP == self.max_HP) "fully " else "";
@@ -2856,11 +2852,8 @@ pub const Mob = struct { // {{{
 
         const resist = if (d.kind.resist()) |r| self.resistance(r) else 0;
         const unshaved_amount = combat.shaveDamage(d.amount, resist); // TODO: change this variable name to "lethal_amount"
-        const amount = if (!d.lethal and unshaved_amount > self.HP - 1)
-            self.HP - 1
-        else
-            unshaved_amount;
-        const dmg_percent = @floatToInt(usize, amount * 100 / math.max(1, self.HP));
+        const amount = if (!d.lethal and unshaved_amount > self.HP - 1) self.HP - 1 else unshaved_amount;
+        const dmg_percent = amount * 100 / math.max(1, self.HP);
 
         self.HP = math.clamp(self.HP - amount, 0, self.max_HP);
 
@@ -2873,7 +2866,7 @@ pub const Mob = struct { // {{{
         }
 
         // Make animations
-        const clamped_dmg = math.clamp(@floatToInt(u21, amount), 0, 9);
+        const clamped_dmg = math.clamp(@intCast(u21, amount), 0, 9);
         const damage_char = if (self.should_be_dead()) '∞' else '0' + clamped_dmg;
         display.Animation.blink(&.{self.coord}, damage_char, colors.PALE_VIOLET_RED, .{}).apply();
 
@@ -2898,7 +2891,7 @@ pub const Mob = struct { // {{{
                 }
             }
 
-            const resisted = @floatToInt(isize, d.amount - amount);
+            const resisted = @intCast(isize, d.amount - amount);
             const resist_str = if (d.kind == .Physical) "armor" else "resist";
 
             if (msg.basic) {
@@ -2914,8 +2907,8 @@ pub const Mob = struct { // {{{
                     .Combat,
                     "{c} {s} {s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.)",
                     .{
-                        self,        basic_helper_verb,          basic_verb,
-                        punctuation, @floatToInt(usize, amount), d.kind.string(),
+                        self,        basic_helper_verb, basic_verb,
+                        punctuation, amount,            d.kind.string(),
                         resisted,    resist_str,
                     },
                 );
@@ -2944,7 +2937,7 @@ pub const Mob = struct { // {{{
                     "{s} {s} {}{s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.) {s}{s}{s}{s}{s}{s}",
                     .{
                         noun.constSlice(),   verb,        self,
-                        hitstrs.verb_degree, punctuation, @floatToInt(usize, amount),
+                        hitstrs.verb_degree, punctuation, amount,
                         d.kind.string(),     resisted,    resist_str,
                         martial_str,         riposte_str, bone_str,
                         nbone_str,           copper_str,  spikes_str,
@@ -2986,7 +2979,7 @@ pub const Mob = struct { // {{{
                 if (mob == self) continue;
 
                 const damage_percent = 10 - child.distance(self.coord);
-                const damage = d.amount * @intToFloat(f64, damage_percent) / 100.0;
+                const damage = d.amount * damage_percent / 100;
 
                 mob.takeDamage(.{
                     .amount = damage,
@@ -3359,11 +3352,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn lastDamagePercentage(self: *const Mob) usize {
-        if (self.last_damage) |dam| {
-            return @floatToInt(usize, (dam.amount * 100) / self.max_HP);
-        } else {
-            return 0;
-        }
+        return if (self.last_damage) |dam| (dam.amount * 100) / self.max_HP else 0;
     }
 
     pub fn canHear(self: *const Mob, coord: Coord) ?*Sound {

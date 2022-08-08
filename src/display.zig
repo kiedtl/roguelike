@@ -432,10 +432,7 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
     {
         var i = MobInfoLine{ .char = '*' };
         i.color = if (mob.HP <= (mob.max_HP / 5)) @as(u21, 'r') else '.';
-        i.string.writer().print("{}/{} HP", .{
-            @floatToInt(usize, math.round(mob.HP)),
-            @floatToInt(usize, math.round(mob.max_HP)),
-        }) catch err.wat();
+        i.string.writer().print("{}/{} HP, {} MP", .{ mob.HP, mob.max_HP, mob.MP }) catch err.wat();
         list.append(i) catch err.wat();
     }
 
@@ -1081,7 +1078,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         [_]u32{ colors.percentageOf(colors.PALE_VIOLET_RED, 25), colors.LIGHT_PALE_VIOLET_RED }
     else
         [_]u32{ colors.percentageOf(colors.DOBALENE_BLUE, 25), colors.DOBALENE_BLUE };
-    _drawBar(y, startx, bar_endx, @floatToInt(usize, state.player.HP), @floatToInt(usize, state.player.max_HP), "health", color[0], color[1], .{});
+    _drawBar(y, startx, bar_endx, state.player.HP, state.player.max_HP, "health", color[0], color[1], .{});
     const hit = utils.SignedFormatter{ .v = state.player.stat(.Melee) };
     _ = _drawStr(bar_endx + 1, y, endx, "$.hit {: >3}%$.", .{hit}, .{});
     y += 1;

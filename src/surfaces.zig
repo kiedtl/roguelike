@@ -774,7 +774,7 @@ pub const CapacitorArray = Machine{
                     if (utils.getHostileAt(state.player, coord)) |hostile| {
                         if (hostile.resistance(.rElec) <= 0) {
                             hostile.takeDamage(.{
-                                .amount = 27.0,
+                                .amount = 27,
                                 .by_mob = state.player,
                                 .blood = false,
                                 .source = .RangedAttack,
@@ -1172,7 +1172,7 @@ fn interact1Fountain(_: *Machine, mob: *Mob) bool {
     assert(mob == state.player);
 
     const HP = state.player.HP;
-    const heal_amount = @floatToInt(usize, (state.player.max_HP - HP) / 2);
+    const heal_amount = (state.player.max_HP - HP) / 2;
     state.player.takeHealing(heal_amount);
 
     // Remove some harmful statuses.

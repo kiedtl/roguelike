@@ -210,10 +210,10 @@ pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: u
     }
 
     if (slammed_into_something) {
-        throwee.takeDamage(.{ .amount = 3.0, .by_mob = thrower }, .{ .basic = true });
+        throwee.takeDamage(.{ .amount = 3, .by_mob = thrower }, .{ .basic = true });
 
         if (slammed_into_mob) |othermob| {
-            othermob.takeDamage(.{ .amount = 3.0, .by_mob = throwee }, .{
+            othermob.takeDamage(.{ .amount = 3, .by_mob = throwee }, .{
                 .strs = &[_]DamageStr{
                     items._dmgstr(0, "slam into", "slams into", ""),
                 },
@@ -256,14 +256,14 @@ pub fn isAttackStab(attacker: *const Mob, defender: *const Mob) bool {
 }
 
 // Algorithm to shave damage due to resistance
-pub fn shaveDamage(amount: f64, resist: isize) f64 {
+pub fn shaveDamage(amount: usize, resist: isize) usize {
     //assert(amount > 0);
     assert(resist >= -100 and resist <= 100);
 
     const S = struct {
-        pub fn _helper(a: f64, r: isize) isize {
+        pub fn _helper(a: usize, r: isize) isize {
             var n: isize = 0;
-            var ctr = @floatToInt(usize, a);
+            var ctr = a;
             while (ctr > 0) : (ctr -= 1) {
                 n += 1;
 
@@ -281,12 +281,7 @@ pub fn shaveDamage(amount: f64, resist: isize) f64 {
         }
     };
 
-    return @intToFloat(f64, @divTrunc(
-        S._helper(amount, resist) +
-            S._helper(amount, resist) +
-            S._helper(amount, resist),
-        3,
-    ));
+    return @intCast(usize, @divTrunc(S._helper(amount, resist) + S._helper(amount, resist) + S._helper(amount, resist), 3));
 }
 
 test {

@@ -104,11 +104,11 @@ pub fn elecBurst(ground0: Coord, max_damage: usize, by: ?*Mob) void {
     for (result) |row, y| for (row) |cell, x| {
         if (cell > 0) {
             const coord = Coord.new2(ground0.z, x, y);
-            const dmg = @intToFloat(f64, max_damage * cell / 100);
+            const dmg = max_damage * cell / 100;
             if (state.dungeon.at(coord).mob) |mob|
                 if (!mob.isFullyResistant(.rElec)) {
                     mob.takeDamage(.{
-                        .amount = rng.range(f64, dmg / 2, dmg),
+                        .amount = rng.range(usize, dmg / 2, dmg),
                         .by_mob = by,
                         .source = .Explosion,
                         .kind = .Electric,
@@ -211,12 +211,12 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                 state.dungeon.at(coord).type = .Floor;
 
             if (state.dungeon.at(coord).mob) |unfortunate| {
-                const total_dmg = @intToFloat(f64, opts.strength * cell / 100 / 5);
+                const total_dmg = opts.strength * cell / 100 / 5;
 
                 if (unfortunate == state.player) {
                     if (!opts.spare_player) {
                         state.player.takeDamage(.{
-                            .amount = math.min(total_dmg, state.player.HP * 0.50),
+                            .amount = math.min(total_dmg, state.player.HP / 2),
                             .source = .Explosion,
                             .kind = .Fire,
                         }, .{
