@@ -2852,10 +2852,10 @@ pub const Mob = struct { // {{{
 
         const resist = if (d.kind.resist()) |r| self.resistance(r) else 0;
         const unshaved_amount = combat.shaveDamage(d.amount, resist); // TODO: change this variable name to "lethal_amount"
-        const amount = if (!d.lethal and unshaved_amount > self.HP - 1) self.HP - 1 else unshaved_amount;
+        const amount = if (!d.lethal and unshaved_amount >= self.HP) self.HP - 1 else unshaved_amount;
         const dmg_percent = amount * 100 / math.max(1, self.HP);
 
-        self.HP = math.clamp(self.HP - amount, 0, self.max_HP);
+        self.HP -|= amount;
 
         // Inform defender of attacker
         //
