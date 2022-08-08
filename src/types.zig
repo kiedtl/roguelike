@@ -2602,6 +2602,12 @@ pub const Mob = struct { // {{{
     }
 
     pub fn canMelee(attacker: *Mob, defender: *Mob) bool {
+        if (attacker.coord.closestDirectionTo(defender.coord, state.mapgeometry).is_diagonal() and
+            attacker.hasStatus(.Disorient))
+        {
+            return false;
+        }
+
         const weapons = attacker.listOfWeapons();
         const distance = attacker.coord.distance(defender.coord);
 
