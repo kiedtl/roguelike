@@ -276,17 +276,17 @@ pub fn moveOrFight(direction: Direction) bool {
 
     const dest = current.move(direction, state.mapgeometry) orelse return false;
 
+    if (direction.is_diagonal() and state.player.isUnderStatus(.Disorient) != null) {
+        display.drawAlertThenLog("You cannot move or attack diagonally whilst disoriented!", .{});
+        return false;
+    }
+
     // Does the player want to fight?
     if (state.dungeon.at(dest).mob) |mob| {
         if (state.player.isHostileTo(mob) and !state.player.canSwapWith(mob, direction)) {
             state.player.fight(mob, .{});
             return true;
         }
-    }
-
-    if (direction.is_diagonal() and state.player.isUnderStatus(.Disorient) != null) {
-        display.drawAlertThenLog("You cannot move diagonally whilst disoriented!", .{});
-        return false;
     }
 
     // Does the player want to move into a surveilled location?

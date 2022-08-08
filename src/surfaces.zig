@@ -286,7 +286,6 @@ pub const MACHINES = [_]Machine{
     IronVaultDoor,
     GoldVaultDoor,
     ParalysisGasTrap,
-    PoisonGasTrap,
     DisorientationGasTrap,
     SeizureGasTrap,
     BlindingGasTrap,
@@ -481,7 +480,6 @@ pub const StairExit = Machine{
     .on_power = powerStairExit,
 };
 
-pub const PoisonGasTrap = Machine.createGasTrap("poison gas", &gas.Poison);
 pub const ParalysisGasTrap = Machine.createGasTrap("paralysing gas", &gas.Paralysis);
 pub const DisorientationGasTrap = Machine.createGasTrap("disorienting gas", &gas.Disorient);
 pub const SeizureGasTrap = Machine.createGasTrap("seizure gas", &gas.Seizure);
@@ -1177,7 +1175,6 @@ fn interact1Fountain(_: *Machine, mob: *Mob) bool {
 
     // Remove some harmful statuses.
     state.player.cancelStatus(.Fire);
-    state.player.cancelStatus(.Poison);
     state.player.cancelStatus(.Nausea);
     state.player.cancelStatus(.Pain);
 

@@ -886,7 +886,6 @@ pub const Resistance = enum {
     rElec,
     Armor,
     rFume,
-    rPois,
 
     pub fn string(self: Resistance) []const u8 {
         return switch (self) {
@@ -894,7 +893,6 @@ pub const Resistance = enum {
             .rElec => "rElec",
             .Armor => "Armor",
             .rFume => "rFume",
-            .rPois => "rPois",
         };
     }
 };
@@ -923,7 +921,6 @@ pub const Damage = struct {
         Physical,
         Fire,
         Electric,
-        Poison,
         Irresistible,
 
         pub fn resist(self: DamageKind) ?Resistance {
@@ -931,7 +928,6 @@ pub const Damage = struct {
                 .Physical => .Armor,
                 .Fire => .rFire,
                 .Electric => .rElec,
-                .Poison => .rPois,
                 .Irresistible => null,
             };
         }
@@ -941,7 +937,6 @@ pub const Damage = struct {
                 .Physical => "dmg",
                 .Fire => "fire",
                 .Electric => "elec",
-                .Poison => "poison",
                 .Irresistible => "irresistible",
             };
         }
@@ -1151,11 +1146,6 @@ pub const Status = enum {
     // Doesn't have a power field.
     Recuperate,
 
-    // Gives damage and slows mob.
-    //
-    // Doesn't have a power field (but probably should).
-    Poison,
-
     // Slows down mob and gives sprays vomit everywhere.
     //
     // Doesn't have a power field.
@@ -1264,7 +1254,6 @@ pub const Status = enum {
             .Fast => "hasted",
             .Slow => "slowed",
             .Recuperate => "recuperating",
-            .Poison => "poisoned",
             .Nausea => "nauseated",
             .Fire => "burning",
             .Invigorate => "invigorated",
@@ -1303,7 +1292,6 @@ pub const Status = enum {
             .Disorient => .{ "are", "looks", " disoriented" },
             .Fast => .{ "feel yourself", "starts", " moving faster" },
             .Slow => .{ "feel yourself", "starts", " moving slowly" },
-            .Poison => .{ "feel very", "looks very", " sick" },
             .Nausea => .{ "feel", "looks", " nauseated" },
             .Fire => .{ "catch", "catches", " fire" },
             .Invigorate => .{ "feel", "looks", " invigorated" },
@@ -1345,7 +1333,6 @@ pub const Status = enum {
             .Disorient => .{ "are no longer", "is no longer", " disoriented" },
             .Fast => .{ "are no longer", "is no longer", " moving faster" },
             .Slow => .{ "are no longer", "is no longer", " moving slowly" },
-            .Poison => .{ "feel", "looks", " healthier" },
             .Nausea => .{ "are no longer", "is no longer", " nauseated" },
             .Fire => .{ "are no longer", "is no longer", " on fire" },
             .Invigorate => .{ "no longer feel", "no longer looks", " invigorated" },
@@ -1373,7 +1360,6 @@ pub const Status = enum {
             .Exhausted,
             .Pain,
             .Fear,
-            .Poison,
             .Nausea,
             .Recuperate,
             .Daze,
@@ -1506,17 +1492,6 @@ pub const Status = enum {
 
     pub fn tickRecuperate(mob: *Mob) void {
         mob.HP = math.clamp(mob.HP + 1, 0, mob.max_HP);
-    }
-
-    pub fn tickPoison(mob: *Mob) void {
-        const damage = rng.range(usize, 0, 1);
-        if (damage > 0) { // Don't spam "You are weakened (0 damage, 0 resist)"
-            mob.takeDamage(.{
-                .amount = damage,
-                .blood = false,
-                .kind = .Poison,
-            }, .{ .basic = true });
-        }
     }
 
     pub fn tickNausea(mob: *Mob) void {
@@ -2159,7 +2134,6 @@ pub const Mob = struct { // {{{
                     .Noisy => Status.tickNoisy(self),
                     .Echolocation => Status.tickEcholocation(self),
                     .Recuperate => Status.tickRecuperate(self),
-                    .Poison => Status.tickPoison(self),
                     .Nausea => Status.tickNausea(self),
                     .Fire => Status.tickFire(self),
                     .Pain => Status.tickPain(self),
@@ -2906,7 +2880,6 @@ pub const Mob = struct { // {{{
                     .Irresistible, .Physical => "damaged",
                     .Fire => "burnt with fire",
                     .Electric => "electrocuted",
-                    .Poison => "weakened",
                 };
 
                 state.message(
@@ -3489,7 +3462,6 @@ pub const Mob = struct { // {{{
                 if (self.isUnderStatus(.Fast)) |_| val = @divTrunc(val * 50, 100);
                 if (self.isUnderStatus(.Enraged)) |_| val = @divTrunc(val * 80, 100);
                 if (self.isUnderStatus(.Slow)) |_| val = @divTrunc(val * 150, 100);
-                if (self.isUnderStatus(.Poison)) |_| val = @divTrunc(val * 150, 100);
             },
             .Willpower => {
                 if (self.isUnderStatus(.Corruption)) |_| val -|= 1;

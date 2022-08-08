@@ -300,7 +300,7 @@ pub const LeadTurtleTemplate = MobTemplate{
         .memory_duration = 20,
         .blood = null,
         .corpse = .None,
-        .innate_resists = .{ .rElec = -100, .rPois = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .Armor = 60, .rFume = 100 },
+        .innate_resists = .{ .rElec = -100, .rFire = RESIST_IMMUNE, .Armor = 60, .rFume = 100 },
         .stats = .{ .Willpower = 5, .Melee = 100, .Speed = 250, .Vision = 4 },
     },
 
@@ -315,7 +315,7 @@ pub const IronWaspTemplate = MobTemplate{
             .default_attack = &Weapon{
                 .damage = 1,
                 .effects = &[_]StatusDataInfo{
-                    .{ .status = .Poison, .duration = .{ .Tmp = 5 } },
+                    .{ .status = .Disorient, .duration = .{ .Tmp = 5 } },
                 },
                 .strs = &[_]DamageStr{
                     items._dmgstr(005, "jab", "jabs", ""),
@@ -336,7 +336,7 @@ pub const IronWaspTemplate = MobTemplate{
         .memory_duration = 3,
         .blood = null,
         .corpse = .None,
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = 50, .rFume = 100 },
+        .innate_resists = .{ .rFire = 50, .rFume = 100 },
         .stats = .{ .Willpower = 1, .Evade = 50, .Speed = 55, .Vision = 3 },
     },
 
@@ -379,7 +379,7 @@ pub const CopperHornetTemplate = MobTemplate{
         .memory_duration = 7,
         .blood = null,
         .corpse = .None,
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rElec = 25, .rFire = 50, .rFume = 100 },
+        .innate_resists = .{ .rElec = 25, .rFire = 50, .rFume = 100 },
         .stats = .{ .Willpower = 0, .Evade = 40, .Speed = 60, .Vision = 5 },
     },
 
@@ -688,7 +688,7 @@ fn createSpireTemplate(
             .blood = null,
             .corpse = .Wall,
             .immobile = true,
-            .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = 25, .rElec = 25, .Armor = 20 },
+            .innate_resists = .{ .rFume = 100, .rFire = 25, .rElec = 25, .Armor = 20 },
             .stats = .{ .Willpower = opts.willpower, .Evade = 0, .Vision = 6 },
         },
 
@@ -732,7 +732,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
         .blood = null,
         .corpse = .Wall,
         .immobile = true,
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .Armor = RESIST_IMMUNE, .rFume = 100 },
+        .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .Armor = RESIST_IMMUNE, .rFume = 100 },
         .stats = .{ .Willpower = 9, .Vision = 20 },
     },
 };
@@ -766,7 +766,7 @@ pub const NebroStatueTemplate = MobTemplate{
         .blood = null,
         .corpse = .Wall,
         .immobile = true,
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .Armor = RESIST_IMMUNE, .rFume = 100 },
+        .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .Armor = RESIST_IMMUNE, .rFume = 100 },
         .stats = .{ .Willpower = 9, .Vision = 20 },
     },
 };
@@ -800,7 +800,7 @@ pub const CrystalStatueTemplate = MobTemplate{
         .blood = null,
         .corpse = .Wall,
         .immobile = true,
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .Armor = RESIST_IMMUNE, .rFume = 100 },
+        .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .Armor = RESIST_IMMUNE, .rFume = 100 },
         .stats = .{ .Willpower = 9, .Vision = 20 },
     },
 };
@@ -928,7 +928,7 @@ pub const AncientMageTemplate = MobTemplate{
         .memory_duration = 8,
         .blood = null,
         .corpse = .None,
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rElec = 75 },
+        .innate_resists = .{ .rFume = 100, .rElec = 75 },
         .stats = .{ .Willpower = 10, .Evade = 20, .Speed = 120 },
     },
     .weapon = &items.BoneGreatMaceWeapon,
@@ -1301,7 +1301,7 @@ pub const BloatTemplate = MobTemplate{
         .blood_spray = gas.Miasma.id,
         .corpse = .None,
 
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100 },
+        .innate_resists = .{ .rFume = 100 },
         .stats = .{ .Willpower = 4, .Melee = 80, .Speed = 150, .Vision = 5 },
     },
 
@@ -1340,7 +1340,7 @@ pub const ThrashingSculptorTemplate = MobTemplate{
         .life_type = .Undead,
         .corpse = .None,
 
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100 },
+        .innate_resists = .{ .rFume = 100 },
         .stats = .{ .Willpower = 5, .Evade = 20, .Melee = 100, .Speed = 100, .Vision = 5 },
     },
 
@@ -1374,7 +1374,7 @@ pub const SkeletonTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = -25 },
+        .innate_resists = .{ .rFume = 100, .rFire = -25 },
         .stats = .{ .Willpower = 3, .Vision = 4 },
     },
 };
@@ -1413,7 +1413,7 @@ pub const StalkerTemplate = MobTemplate{
 
         .max_HP = 2,
         .memory_duration = 2, // Forget about enemies quickly in absence of hunter captain
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rElec = RESIST_IMMUNE },
+        .innate_resists = .{ .rFume = 100, .rElec = RESIST_IMMUNE },
         .stats = .{ .Willpower = 0, .Evade = 80, .Speed = 20, .Vision = 3 },
     },
     .statuses = &[_]StatusDataInfo{
@@ -1446,7 +1446,7 @@ pub const BoneRatTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = -25 },
+        .innate_resists = .{ .rFume = 100, .rFire = -25 },
         .stats = .{ .Willpower = 0, .Evade = 10, .Speed = 60, .Vision = 4 },
     },
 
@@ -1484,7 +1484,7 @@ pub const EmberlingTemplate = MobTemplate{
 
         .max_HP = 3,
         .memory_duration = 3,
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = RESIST_IMMUNE },
+        .innate_resists = .{ .rFume = 100, .rFire = RESIST_IMMUNE },
         .stats = .{ .Willpower = 1, .Evade = 10, .Speed = 60, .Vision = 4, .Melee = 50 },
     },
     // XXX: Emberlings are never placed alone, this determines number of
@@ -1533,7 +1533,7 @@ pub const SparklingTemplate = MobTemplate{
 
         .max_HP = 3,
         .memory_duration = 3,
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rElec = RESIST_IMMUNE },
+        .innate_resists = .{ .rFume = 100, .rElec = RESIST_IMMUNE },
         .stats = .{ .Willpower = 1, .Evade = 10, .Speed = 100, .Vision = 4 },
     },
     // XXX: Sparklings are never placed alone, this determines number of
@@ -1567,7 +1567,7 @@ pub const SkeletalAxemasterTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = -25 },
+        .innate_resists = .{ .rFume = 100, .rFire = -25 },
         .stats = .{ .Willpower = 5, .Speed = 150, .Vision = 5 },
     },
     .weapon = &items.AxeWeapon,
@@ -1597,7 +1597,7 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
         .corpse = .None,
 
         // Will have rElec-25 from Cuirass
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFume = 100, .rFire = -25 },
+        .innate_resists = .{ .rFume = 100, .rFire = -25 },
         // Melee is 100% but in practice will be 90% due to penalty from rapier
         .stats = .{ .Willpower = 4, .Melee = 100, .Speed = 110, .Vision = 5 },
     },
@@ -1675,7 +1675,7 @@ pub const BurningBruteTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = -25 },
+        .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = -25 },
         .stats = .{ .Willpower = 8, .Evade = 10, .Melee = 80, .Vision = 6 },
     },
     .statuses = &[_]StatusDataInfo{
@@ -1708,7 +1708,7 @@ pub const SulfurFiendTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = 50, .rElec = RESIST_IMMUNE, .rFume = 80 },
+        .innate_resists = .{ .rFire = 50, .rElec = RESIST_IMMUNE, .rFume = 80 },
         .stats = .{ .Willpower = 10, .Evade = 10, .Vision = 6 },
     },
     .weapon = &items.MaceWeapon,
@@ -1740,7 +1740,7 @@ pub const FrozenFiendTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rPois = 75, .rElec = 75, .rFire = -25 },
+        .innate_resists = .{ .rElec = 75, .rFire = -25 },
         .stats = .{ .Willpower = 8, .Evade = 10, .Vision = 6 },
     },
     .weapon = &items.MorningstarWeapon,
@@ -1779,7 +1779,7 @@ pub const LivingIceTemplate = MobTemplate{
         .blood = .Water,
         .corpse = .Wall,
 
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = -50, .rElec = RESIST_IMMUNE, .Armor = 50, .rFume = 100 },
+        .innate_resists = .{ .rFire = -50, .rElec = RESIST_IMMUNE, .Armor = 50, .rFume = 100 },
         .stats = .{ .Willpower = 5, .Melee = 100, .Vision = 2 },
     },
     // This status should be added by whatever spell created it.
@@ -1811,7 +1811,7 @@ pub const BallLightningTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = 50, .rElec = RESIST_IMMUNE, .rFume = 100 },
+        .innate_resists = .{ .rFire = 50, .rElec = RESIST_IMMUNE, .rFume = 100 },
         .stats = .{ .Willpower = WILL_IMMUNE, .Speed = 30, .Vision = 20 },
     },
     // This status should be added by whatever spell created it.
@@ -1849,7 +1849,7 @@ pub const SpectralSwordTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rPois = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rFume = 100 },
+        .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rFume = 100 },
         .stats = .{ .Willpower = WILL_IMMUNE, .Melee = 50, .Speed = 60, .Vision = 20 },
     },
     .statuses = &[_]StatusDataInfo{

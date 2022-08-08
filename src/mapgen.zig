@@ -72,13 +72,12 @@ const Poster = literature.Poster;
 const CONNECTIONS_MAX = 4;
 
 pub const TRAPS = &[_]*const Machine{
-    &surfaces.PoisonGasTrap,
     &surfaces.ParalysisGasTrap,
     &surfaces.DisorientationGasTrap,
     &surfaces.SeizureGasTrap,
     &surfaces.BlindingGasTrap,
 };
-pub const TRAP_WEIGHTS = &[_]usize{ 3, 3, 1, 2, 1 };
+pub const TRAP_WEIGHTS = &[_]usize{ 2, 3, 2, 1 };
 
 pub const VaultType = enum(usize) {
     Iron = 0,

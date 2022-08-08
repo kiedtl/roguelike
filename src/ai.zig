@@ -96,7 +96,6 @@ pub fn calculateMorale(self: *Mob) isize {
     if (self.hasStatus(.Disorient)) base -= 2;
 
     if (self.hasStatus(.Daze)) base -= 4;
-    if (self.hasStatus(.Poison)) base -= 4;
     if (self.hasStatus(.Pain)) base -= 4;
     if (self.hasStatus(.Slow)) base -= 4;
 
@@ -133,7 +132,6 @@ pub fn calculateMorale(self: *Mob) isize {
 
         if (enemy.hasStatus(.Fear)) base += 4;
         if (enemy.hasStatus(.Daze)) base += 4;
-        if (enemy.hasStatus(.Poison)) base += 4;
         if (enemy.hasStatus(.Pain)) base += 4;
         if (enemy.hasStatus(.Fire) and !enemy.isFullyResistant(.rFire)) base += 4;
         if (enemy.hasStatus(.Slow)) base += 4;
@@ -180,7 +178,6 @@ pub fn calculateMorale(self: *Mob) isize {
         if (ally.hasStatus(.Disorient)) base -= 2;
 
         if (ally.hasStatus(.Fear)) base -= 4;
-        if (ally.hasStatus(.Poison)) base -= 2;
         if (ally.hasStatus(.Pain)) base -= 2;
         if (ally.hasStatus(.Slow)) base -= 2;
 

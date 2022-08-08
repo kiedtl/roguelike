@@ -29,20 +29,12 @@ pub const Gas = struct {
     residue: ?Spatter = null,
 };
 
-pub const Poison = Gas{
-    .name = "poison gas",
-    .color = 0xa7e234,
-    .dissipation_rate = 0.01,
-    .trigger = triggerPoison,
-    .id = 0,
-};
-
 pub const Paralysis = Gas{
     .name = "paralysing gas",
     .color = 0xaaaaff,
     .dissipation_rate = 0.05,
     .trigger = triggerParalysis,
-    .id = 1,
+    .id = 0,
 };
 
 pub const SmokeGas = Gas{
@@ -53,7 +45,7 @@ pub const SmokeGas = Gas{
     // fluctuations, which is not desirable.
     .opacity = 0.9,
     .trigger = triggerNone,
-    .id = 2,
+    .id = 1,
 };
 
 pub const Disorient = Gas{
@@ -61,7 +53,7 @@ pub const Disorient = Gas{
     .color = 0x33cbca,
     .dissipation_rate = 0.05,
     .trigger = triggerDisorient,
-    .id = 3,
+    .id = 2,
 };
 
 pub const Slow = Gas{
@@ -69,7 +61,7 @@ pub const Slow = Gas{
     .color = 0x8e77dd,
     .dissipation_rate = 0.02,
     .trigger = triggerSlow,
-    .id = 4,
+    .id = 3,
 };
 
 pub const Healing = Gas{
@@ -77,7 +69,7 @@ pub const Healing = Gas{
     .color = 0xdd6565,
     .dissipation_rate = 0.04,
     .trigger = triggerHealing,
-    .id = 5,
+    .id = 4,
 };
 
 pub const Dust = Gas{
@@ -87,7 +79,7 @@ pub const Dust = Gas{
     .opacity = 0.4,
     .trigger = triggerNone,
     .residue = .Dust,
-    .id = 6,
+    .id = 5,
 };
 
 pub const Steam = Gas{
@@ -106,7 +98,7 @@ pub const Steam = Gas{
             });
         }
     }.f,
-    .id = 7,
+    .id = 6,
 };
 
 pub const Miasma = Gas{
@@ -115,7 +107,7 @@ pub const Miasma = Gas{
     .dissipation_rate = 0.08,
     .opacity = 0.00,
     .trigger = triggerMiasma,
-    .id = 8,
+    .id = 7,
 };
 
 pub const Seizure = Gas{
@@ -128,7 +120,7 @@ pub const Seizure = Gas{
             mob.addStatus(.Debil, 0, .{ .Tmp = Status.MAX_DURATION });
         }
     }.f,
-    .id = 9,
+    .id = 8,
 };
 
 pub const Blinding = Gas{
@@ -141,13 +133,13 @@ pub const Blinding = Gas{
             mob.addStatus(.Blind, 0, .{ .Tmp = Status.MAX_DURATION });
         }
     }.f,
-    .id = 10,
+    .id = 9,
 };
 
 pub const Gases = [_]Gas{
-    Poison,   Paralysis, SmokeGas, Disorient, Slow,
-    Healing,  Dust,      Steam,    Miasma,    Seizure,
-    Blinding,
+    Paralysis, SmokeGas, Disorient, Slow,
+    Healing,   Dust,     Steam,     Miasma,
+    Seizure,   Blinding,
 };
 pub const GAS_NUM: usize = Gases.len;
 
@@ -158,11 +150,6 @@ pub const GAS_NUM: usize = Gases.len;
 // }
 
 fn triggerNone(_: *Mob, _: f64) void {}
-
-fn triggerPoison(mob: *Mob, _: f64) void {
-    // TODO: Make the duration a clumping random value, depending on quantity
-    mob.addStatus(.Poison, 0, .{ .Tmp = Status.MAX_DURATION });
-}
 
 fn triggerParalysis(mob: *Mob, _: f64) void {
     // TODO: Make the duration a clumping random value, depending on quantity

@@ -120,7 +120,6 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 010, .i = .{ .X = &SpikedBucklerAux } },
     // Potions
     .{ .w = 190, .i = .{ .P = &DisorientPotion } },
-    .{ .w = 190, .i = .{ .P = &PoisonPotion } },
     .{ .w = 190, .i = .{ .P = &DebilitatePotion } },
     .{ .w = 190, .i = .{ .P = &IntimidatePotion } },
     .{ .w = 160, .i = .{ .P = &BlindPotion } },
@@ -291,12 +290,12 @@ pub const NetProj = Projectile{
 
 pub const JavelinProj = Projectile{
     .id = "javelin",
-    .name = "poisoned javelin",
+    .name = "javelin",
     .color = 0xffd7d7,
     .damage = 2,
     .effect = .{
         .Status = .{
-            .status = .Poison,
+            .status = .Disorient,
             .duration = .{ .Tmp = 3 },
         },
     },
@@ -1833,18 +1832,6 @@ pub const RecuperatePotion = Consumable{
     .color = 0xffffff,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
     .verbs_other = Consumable.VERBS_OTHER_POTION,
-};
-
-pub const PoisonPotion = Consumable{
-    .id = "potion_poison",
-    .name = "potion of coagulation",
-    .effects = &[_]Consumable.Effect{.{ .Gas = gas.Poison.id }},
-    .dip_effect = .{ .status = .Poison, .duration = .{ .Tmp = 5 } },
-    .is_potion = true,
-    .color = 0xa7e234,
-    .verbs_player = Consumable.VERBS_PLAYER_POTION,
-    .verbs_other = Consumable.VERBS_OTHER_POTION,
-    .throwable = true,
 };
 
 pub const InvigoratePotion = Consumable{
