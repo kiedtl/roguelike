@@ -38,9 +38,3 @@ Sources: none currently.
 
 Monsters:
 - Statues (100%)
-
-## rPois
-
-Poison resistance.
-
-Sources: none currently.

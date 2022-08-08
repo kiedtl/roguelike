@@ -7,13 +7,6 @@ Oathbreaker's gases are modelled after Brogue's being clouds that spread over
 the surrounding area, usually at a rate of ~1 tile per turn. They can be created
 by lava (smoke), harmful potions, and many other sources.
 
-## Poison gas
-
-- **Color**: green
-- **Sources**: potion of coagulation, poison gas trap
-
-Poison gas, obviously harmful, will poison you.
-
 ## Paralysis gas
 
 - **Color**: white
