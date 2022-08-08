@@ -449,9 +449,9 @@ fn readInput() bool {
                     break :blk state.player.teleportTo(stairloc, null, false);
                 },
                 termbox.TB_KEY_F7 => blk: {
-                    state.player.innate_resists.rElec += 25;
+                    //state.player.innate_resists.rElec += 25;
                     //state.player.addStatus(.Drunk, 0, .{ .Tmp = 20 });
-                    //state.message(.Info, "Lorem ipsum, dolor sit amet. Lorem ipsum, dolor sit amet.. Lorem ipsum, dolor sit amet. {}", .{rng.int(usize)});
+                    state.message(.Info, "Lorem ipsum, dolor sit amet. Lorem ipsum, dolor sit amet.. Lorem ipsum, dolor sit amet. {}", .{rng.int(usize)});
                     break :blk false;
                 },
                 termbox.TB_KEY_F8 => {
@@ -523,6 +523,10 @@ fn readInput() bool {
                 'i' => display.drawInventoryScreen(),
                 'v' => display.drawExamineScreen(null),
                 '@' => display.drawExamineScreen(.Mob),
+                'M' => b: {
+                    display.drawMessagesScreen();
+                    break :b false;
+                },
                 ',' => player.grabItem(),
                 's', '.' => state.player.rest(),
                 'q', 'y' => player.moveOrFight(.NorthWest),

@@ -1325,15 +1325,24 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
         else
             colors.darken(msg.type.color(), 2);
 
+        const line = if (i > 0 and i < msgcount and (msg.turn != state.messages.items[i - 1].turn and msg.turn != state.messages.items[i + 1].turn))
+            @as(u21, '├')
+        else if (i == 0 or msg.turn > state.messages.items[i - 1].turn)
+            @as(u21, '╭')
+        else if (i == msgcount or msg.turn < state.messages.items[i + 1].turn)
+            @as(u21, '╰')
+        else
+            @as(u21, '│');
+
         const noisetext: []const u8 = if (msg.noise) "$a♫$.  " else "$c·$.  ";
 
         if (msg.dups == 0) {
-            y = _drawStr(startx, y, endx, "{s}{s}", .{
-                noisetext, msgtext,
+            y = _drawStr(startx, y, endx, "$G{u}$. {s}{s}", .{
+                line, noisetext, msgtext,
             }, .{ .fg = col, .fold = true });
         } else {
-            y = _drawStr(startx, y, endx, "{s}{s} (×{})", .{
-                noisetext, msgtext, msg.dups + 1,
+            y = _drawStr(startx, y, endx, "$G{u}$. {s}{s} (×{})", .{
+                line, noisetext, msgtext, msg.dups + 1,
             }, .{ .fg = col, .fold = true });
         }
     }
@@ -1671,6 +1680,49 @@ pub fn chooseDirection() ?Direction {
                     'e', 'u' => direction = .NorthEast,
                     'z', 'b' => direction = .SouthWest,
                     'c', 'n' => direction = .SouthEast,
+                    else => {},
+                }
+            } else unreachable;
+        }
+    }
+}
+
+pub fn drawMessagesScreen() void {
+    const mainw = dimensions(.Main);
+    const logw = dimensions(.Log);
+
+    assert(logw.starty > mainw.starty);
+    assert(logw.endx == mainw.endx);
+
+    var starty = logw.starty;
+    const endy = logw.endy;
+
+    while (true) {
+        if (starty > mainw.starty) {
+            starty -|= 3;
+        }
+
+        drawLog(mainw.startx, mainw.endx, starty, endy);
+
+        termbox.tb_present();
+
+        var ev: termbox.tb_event = undefined;
+        const t = termbox.tb_peek_event(&ev, 70);
+
+        if (t == -1) @panic("Fatal termbox error");
+        if (t == 0) continue; // No input
+
+        if (t == termbox.TB_EVENT_KEY) {
+            if (ev.key != 0) {
+                switch (ev.key) {
+                    termbox.TB_KEY_CTRL_C,
+                    termbox.TB_KEY_ESC,
+                    termbox.TB_KEY_ENTER,
+                    => return,
+                    else => continue,
+                }
+            } else if (ev.ch != 0) {
+                switch (ev.ch) {
                     else => {},
                 }
             } else unreachable;
