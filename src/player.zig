@@ -271,6 +271,16 @@ pub fn bookkeepingFOV() void {
     }
 }
 
+pub fn tryRest() bool {
+    if (state.player.hasStatus(.Pain)) {
+        display.drawAlertThenLog("You cannot rest while in pain!", .{});
+        return false;
+    }
+
+    state.player.rest();
+    return true;
+}
+
 pub fn moveOrFight(direction: Direction) bool {
     const current = state.player.coord;
 
@@ -309,7 +319,7 @@ pub fn moveOrFight(direction: Direction) bool {
 
     // Should we auto-rest?
     if (shouldAutoWait()) {
-        _ = state.player.rest();
+        state.player.rest();
         state.message(.Info, "Auto-waited.", .{});
         return true;
     }
@@ -666,6 +676,9 @@ pub fn memorizeTile(fc: Coord, mtype: state.MemoryTile.Type) void {
 
 pub fn shouldAutoWait() bool {
     if (!auto_wait_enabled)
+        return false;
+
+    if (state.player.hasStatus(.Pain))
         return false;
 
     if (state.player.turnsSpentMoving() < @intCast(usize, state.player.stat(.Sneak)))

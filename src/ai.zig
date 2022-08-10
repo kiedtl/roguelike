@@ -207,6 +207,27 @@ pub fn isEnemyKnown(mob: *Mob, enemy: *Mob) bool {
     } else false;
 }
 
+pub fn tryRest(mob: *Mob) void {
+    if (mob.hasStatus(.Pain)) {
+        var directions = DIRECTIONS;
+        rng.shuffle(Direction, &directions);
+        for (&directions) |direction|
+            if (mob.coord.move(direction, state.mapgeometry)) |dest_coord| {
+                if (mob.teleportTo(dest_coord, direction, true)) {
+                    if (state.player.cansee(mob.coord)) {
+                        state.message(.Unimportant, "{c} writhes in agony.", .{mob});
+                    }
+
+                    if (rng.percent(@as(usize, 50))) {
+                        mob.makeNoise(.Scream, .Louder);
+                    }
+                }
+            };
+    }
+
+    mob.rest();
+}
+
 // Notify nearest ally of a hostile.
 pub fn alertAllyOfHostile(mob: *Mob) void {
     const hostile = mob.enemyList().items[0];
@@ -598,7 +619,7 @@ fn guardGlanceLeftRight(mob: *Mob, prev_direction: Direction) void {
 pub fn coronerWork(mob: *Mob, _: mem.Allocator) void {
     // All done?
     if (mob.ai.work_area.items.len == 0) {
-        _ = mob.rest();
+        tryRest(mob);
         guardGlanceAround(mob);
         return;
     }
@@ -613,10 +634,10 @@ pub fn coronerWork(mob: *Mob, _: mem.Allocator) void {
             current_corpse.is_death_verified = true;
         }
         _ = mob.ai.work_area.pop();
-        _ = mob.rest();
+        tryRest(mob);
     } else if (mob.nextDirectionTo(current_task) == null) {
         _ = mob.ai.work_area.pop();
-        _ = mob.rest();
+        tryRest(mob);
     } else {
         mob.tryMoveTo(current_task);
     }
@@ -644,7 +665,7 @@ pub fn patrolWork(mob: *Mob, _: mem.Allocator) void {
             }
         }
 
-        _ = mob.rest();
+        tryRest(mob);
         return;
     }
 
@@ -661,7 +682,7 @@ pub fn guardWork(mob: *Mob, _: mem.Allocator) void {
         const cur_room = switch (state.layout[mob.coord.z][post.y][post.x]) {
             .Unknown => {
                 // Give up, don't patrol
-                _ = mob.rest();
+                tryRest(mob);
                 mob.ai.work_area.append(post) catch unreachable;
                 return;
             },
@@ -670,7 +691,7 @@ pub fn guardWork(mob: *Mob, _: mem.Allocator) void {
 
         // Chance to not patrol, or only patrol current room
         if (rng.tenin(25)) {
-            _ = mob.rest();
+            tryRest(mob);
             mob.ai.work_area.append(post) catch unreachable;
             return;
         } else if (rng.tenin(15)) {
@@ -722,7 +743,7 @@ pub fn guardWork(mob: *Mob, _: mem.Allocator) void {
                 }
             } else {
                 // Give up, don't patrol
-                _ = mob.rest();
+                tryRest(mob);
                 mob.ai.work_area.append(post) catch unreachable;
                 return;
             };
@@ -732,7 +753,7 @@ pub fn guardWork(mob: *Mob, _: mem.Allocator) void {
     }
 
     if (mob.coord.eq(post)) {
-        _ = mob.rest();
+        tryRest(mob);
 
         if (rng.onein(10)) {
             const tmp = mob.ai.work_area.items[0];
@@ -750,19 +771,19 @@ pub fn guardWork(mob: *Mob, _: mem.Allocator) void {
 }
 
 pub fn suicideWork(mob: *Mob, _: mem.Allocator) void {
-    _ = mob.rest();
+    tryRest(mob);
     mob.HP = 0;
 }
 
 pub fn dummyWork(m: *Mob, _: mem.Allocator) void {
-    _ = m.rest();
+    tryRest(m);
 }
 
 pub fn standStillAndGuardWork(mob: *Mob, _: mem.Allocator) void {
     const post = mob.ai.work_area.items[0];
 
     if (mob.coord.eq(post)) {
-        _ = mob.rest();
+        tryRest(mob);
 
         guardGlanceAround(mob);
     } else {
@@ -775,7 +796,7 @@ pub fn standStillAndGuardWork(mob: *Mob, _: mem.Allocator) void {
 
 pub fn spireWork(mob: *Mob, _: mem.Allocator) void {
     guardGlanceRight(mob);
-    _ = mob.rest();
+    tryRest(mob);
 
     if (mob.allies.items.len == 0) {
         mob.addStatus(.Sleeping, 0, .Prm);
@@ -786,7 +807,7 @@ pub fn watcherWork(mob: *Mob, _: mem.Allocator) void {
     const post = mob.ai.work_area.items[0];
 
     if (mob.coord.eq(post)) {
-        _ = mob.rest();
+        tryRest(mob);
 
         guardGlanceRandom(mob);
     } else {
@@ -804,7 +825,7 @@ pub fn cleanerWork(mob: *Mob, _: mem.Allocator) void {
             {
                 mob.tryMoveTo(mob.ai.work_area.items[0]);
             } else {
-                _ = mob.rest();
+                tryRest(mob);
             }
 
             for (state.tasks.items) |*task, id|
@@ -827,7 +848,7 @@ pub fn cleanerWork(mob: *Mob, _: mem.Allocator) void {
             if (target.distance(mob.coord) > 1) {
                 mob.tryMoveTo(target);
             } else {
-                _ = mob.rest();
+                tryRest(mob);
 
                 var was_clean = true;
                 var spattering = state.dungeon.at(target).spatter.iterator();
@@ -860,7 +881,7 @@ pub fn haulerWork(mob: *Mob, alloc: mem.Allocator) void {
             {
                 mob.tryMoveTo(mob.ai.work_area.items[0]);
             } else {
-                _ = mob.rest();
+                tryRest(mob);
             }
 
             for (state.tasks.items) |*task, id|
@@ -885,7 +906,7 @@ pub fn haulerWork(mob: *Mob, alloc: mem.Allocator) void {
             } else {
                 const item = state.dungeon.getItem(itemcoord) catch {
                     // Somehow the item disappeared, resume job-hunting
-                    _ = mob.rest();
+                    tryRest(mob);
                     state.tasks.items[mob.ai.task_id.?].completed = true;
                     mob.ai.task_id = null;
                     mob.ai.work_phase = .HaulerScan;
@@ -933,9 +954,9 @@ pub fn stayNearLeaderWork(mob: *Mob, _: mem.Allocator) void {
             //assert(!nearest.eq(leader.coord));
 
             mob.tryMoveTo(nearest);
-        } else _ = mob.rest();
+        } else tryRest(mob);
     } else {
-        _ = mob.rest();
+        tryRest(mob);
     }
 }
 
@@ -963,7 +984,7 @@ pub fn bartenderWork(mob: *Mob, _: mem.Allocator) void {
         }
     }
 
-    _ = mob.rest();
+    tryRest(mob);
 }
 
 pub fn wanderWork(mob: *Mob, _: mem.Allocator) void {
@@ -975,7 +996,7 @@ pub fn wanderWork(mob: *Mob, _: mem.Allocator) void {
 
     if (mob.coord.eq(dest) or !state.is_walkable(dest, .{ .right_now = true })) {
         if (rng.tenin(15)) {
-            _ = mob.rest();
+            tryRest(mob);
             return;
         }
 
@@ -1000,7 +1021,7 @@ pub fn wanderWork(mob: *Mob, _: mem.Allocator) void {
             }
         }
 
-        _ = mob.rest();
+        tryRest(mob);
         return;
     }
 
@@ -1052,7 +1073,7 @@ pub fn tortureWork(mob: *Mob, _: mem.Allocator) void {
         return;
     }
 
-    _ = mob.rest();
+    tryRest(mob);
 }
 
 pub fn ballLightningWorkOrFight(mob: *Mob, _: mem.Allocator) void {
@@ -1095,7 +1116,7 @@ pub fn ballLightningWorkOrFight(mob: *Mob, _: mem.Allocator) void {
     direction = direction orelse rng.chooseUnweighted(Direction, &DIRECTIONS);
 
     if (!mob.moveInDirection(direction.?)) {
-        _ = mob.rest();
+        tryRest(mob);
     }
 }
 
@@ -1111,7 +1132,7 @@ pub fn meleeFight(mob: *Mob, _: mem.Allocator) void {
     } else if (!mob.immobile) {
         mob.tryMoveTo(target.coord);
     } else {
-        _ = mob.rest();
+        tryRest(mob);
     }
 }
 
@@ -1165,7 +1186,7 @@ pub fn stalkerFight(mob: *Mob, alloc: mem.Allocator) void {
         } else {
             const dist = @intCast(usize, mob.stat(.Vision) - 1);
             if (!keepDistance(mob, target.coord, dist))
-                _ = mob.rest();
+                tryRest(mob);
         }
     } else {
         mageFight(mob, alloc);
@@ -1294,7 +1315,7 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
         } else false;
 
         if (!found_ally) {
-            _ = mob.rest();
+            tryRest(mob);
             return;
         }
     }
@@ -1314,7 +1335,7 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
             const moved = keepDistance(mob, currentEnemy(mob).mob.coord, dist);
             if (!moved) meleeFight(mob, alloc);
         } else {
-            _ = mob.rest();
+            tryRest(mob);
         },
     }
 }
@@ -1333,7 +1354,7 @@ pub fn statueFight(mob: *Mob, _: mem.Allocator) void {
     if (!target.cansee(mob.coord) or
         mob.MP < mob.spells[0].MP_cost)
     {
-        _ = mob.rest();
+        tryRest(mob);
         return;
     }
 
@@ -1355,7 +1376,7 @@ pub fn statueFight(mob: *Mob, _: mem.Allocator) void {
         const spell = mob.spells[0];
         spell.spell.use(mob, mob.coord, target.coord, spell);
     } else {
-        _ = mob.rest();
+        tryRest(mob);
     }
 }
 
@@ -1372,7 +1393,7 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
         if (mob.canMelee(target.mob)) {
             meleeFight(mob, alloc);
         } else {
-            _ = mob.rest();
+            tryRest(mob);
         }
     }
 
@@ -1409,7 +1430,7 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
                 if ((mob.ai.flag(.AwakesNearAllies) and mob.allies.items.len > 0)) {
                     mob.cancelStatus(.Sleeping);
                 } else {
-                    _ = mob.rest();
+                    tryRest(mob);
                     return;
                 }
             },
@@ -1456,14 +1477,14 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
 
             guardGlanceAround(mob);
 
-            _ = mob.rest();
+            tryRest(mob);
         } else {
             const d = mob.coord.closestDirectionTo(target.coord, state.mapgeometry);
             if (mob.facing == d) {
                 mob.tryMoveTo(target.coord);
             } else {
                 mob.facing = d;
-                _ = mob.rest();
+                tryRest(mob);
             }
         }
     } else if (mob.ai.phase == .Hunt) {

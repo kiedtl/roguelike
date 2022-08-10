@@ -1534,33 +1534,12 @@ pub const Status = enum {
     pub fn tickPain(mob: *Mob) void {
         const st = mob.isUnderStatus(.Pain).?;
 
-        if (st.power > 0) {
-            mob.takeDamage(.{
-                .amount = rng.rangeClumping(usize, 0, st.power, 2),
-                .blood = false,
-            }, .{
+        const damage = rng.rangeClumping(usize, 0, st.power, 2);
+        if (damage > 0) {
+            mob.takeDamage(.{ .amount = damage, .blood = false }, .{
                 .noun = "The pain",
                 .strs = &[_]DamageStr{items._dmgstr(0, "weaken", "weakens", "")},
             });
-        }
-
-        if (rng.percent(@as(usize, 50))) {
-            var directions = DIRECTIONS;
-            rng.shuffle(Direction, &directions);
-            for (&directions) |direction|
-                if (mob.coord.move(direction, state.mapgeometry)) |dest_coord| {
-                    if (mob.teleportTo(dest_coord, direction, true)) {
-                        if (state.player.cansee(mob.coord)) {
-                            const verb: []const u8 = if (state.player == mob) "writhe" else "writhes";
-                            state.message(.Unimportant, "{c} {s} in agony.", .{ mob, verb });
-                        }
-
-                        if (rng.percent(@as(usize, 50))) {
-                            mob.makeNoise(.Scream, .Louder);
-                        }
-                        break;
-                    }
-                };
         }
     }
 
@@ -2214,7 +2193,7 @@ pub const Mob = struct { // {{{
                 state.messageAboutMob(self, self.coord, .Info, "flail around helplessly.", .{}, "flails around helplessly.", .{});
             }
 
-            _ = self.rest();
+            self.rest();
         } else err.bug("Tried to make a non-.Held mob flail around!", .{});
     }
 
@@ -2261,15 +2240,6 @@ pub const Mob = struct { // {{{
             },
             .Custom => |c| if (direct) c(self, self.coord),
         };
-    }
-
-    pub fn evokeOrRest(self: *Mob, evocable: *Evocable) void {
-        evocable.evoke(self) catch {
-            _ = self.rest();
-            return;
-        };
-
-        self.declareAction(.Use);
     }
 
     pub fn dropItem(self: *Mob, item: Item, at: Coord) bool {
@@ -2420,8 +2390,8 @@ pub const Mob = struct { // {{{
         const prev_energy = self.energy;
 
         if (self.nextDirectionTo(dest)) |d| {
-            if (!self.moveInDirection(d)) _ = self.rest();
-        } else _ = self.rest();
+            if (!self.moveInDirection(d)) self.rest();
+        } else self.rest();
 
         assert(prev_energy > self.energy);
     }
@@ -2480,7 +2450,7 @@ pub const Mob = struct { // {{{
                 state.message(.Info, "The {s} stumbles around in a daze.", .{self.displayName()});
             }
 
-            _ = self.rest();
+            self.rest();
             return true;
         } else return succeeded;
     }
@@ -2559,9 +2529,13 @@ pub const Mob = struct { // {{{
         return true;
     }
 
-    pub fn rest(self: *Mob) bool {
+    pub fn rest(self: *Mob) void {
+        // Commenting this out because this fn might need to be used in places
+        // where AI'd mobs cannot writhe around, e.g. when caught in a net
+        //
+        //assert(!self.hasStatus(.Pain));
+
         self.declareAction(.Rest);
-        return true;
     }
 
     pub fn listOfWeapons(self: *Mob) StackBuffer(*const Weapon, 7) {

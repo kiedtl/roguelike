@@ -435,7 +435,7 @@ fn readInput() bool {
                 },
                 termbox.TB_KEY_F4 => blk: {
                     player.wiz_lidless_eye = !player.wiz_lidless_eye;
-                    _ = state.player.rest(); // Update LOS
+                    state.player.rest(); // Update LOS
                     break :blk true;
                 },
                 termbox.TB_KEY_F5 => blk: {
@@ -528,7 +528,7 @@ fn readInput() bool {
                     break :b false;
                 },
                 ',' => player.grabItem(),
-                's', '.' => state.player.rest(),
+                's', '.' => player.tryRest(),
                 'q', 'y' => player.moveOrFight(.NorthWest),
                 'w', 'k' => player.moveOrFight(.North),
                 'e', 'u' => player.moveOrFight(.NorthEast),
@@ -621,7 +621,7 @@ fn tickGame() void {
                     if (state.state == .Quit) break;
                 }
 
-                _ = mob.rest();
+                mob.rest();
                 continue;
             } else {
                 if (mob.coord.eq(state.player.coord)) {
@@ -711,7 +711,7 @@ fn viewerTickGame(cur_level: usize) void {
             }
 
             if (mob.isUnderStatus(.Paralysis)) |_| {
-                _ = mob.rest();
+                mob.rest();
                 continue;
             } else {
                 ai.main(mob, state.GPA.allocator());
