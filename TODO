@@ -37,6 +37,7 @@ Mob speech
 - On fleeing
   - "He's coming!"
   - "I'm dying!"
+  - "Heeelp!"
 - On being cornered
   - "Please no!"
   - "Mercy!"
@@ -152,19 +153,14 @@ x frozen fiend
   x Polar Casing: transforms a wall near the target to ice, damaging all
     (yes, all) adjacent monsters. Reverts back to a wall in 5-6 turns.
     - "The freezing fiend stares at you."
+
 - hornblende statue
-  - "A humanoid statue imbued with an evil
-    spirit. It radiates an intense aura of palpable malice."
   - Appears in pairs in hallways of the Morgue.
   - Chance to resistibly blink intruders to itself.
 - pitchblende statue
-  - "A humanoid statue imbued with an evil
-    spirit. It radiates an intense aura of palpable malice."
   - Appears in pairs in hallways of the Morgue.
   - Chance to resistibly blink intruders away from itself.
 - schalenblende statue
-  - "A humanoid statue imbued with an evil
-    spirit. It radiates an intense aura of palpable malice."
   - Appears in pairs guarding doorways of rooms in the Morgue.
   - Chance to prevent passage of intruders.
 
@@ -218,12 +214,10 @@ x burning brute
     - Every 2-3 turns, flames seep out of mob and ignite nearby tiles.
     - When timer is over, mob explodes, damaging all nearby mobs.
   x Has kicking (x1) and clawing (x1) attack (need species struct for this).
-- hunter
+x hunter
   - Travels with a swarm of stalkers (see below).
-  - Memory duration of 15.
-  - Chain mail and rapier, ~15 HP.
   - Slower than player.
-- stalkers
+x stalkers
   - "A small flying creature, its four wings humming ominously as it
     follows you at the behest of its owner. Its copper-colored entrails
     loop disgustingly around its silver torso."
@@ -234,7 +228,6 @@ x burning brute
   - Does not actually attack player, keeps distance of 3 tiles.
   - Completely deaf, won't investigate on its own. Vision of 3 tiles,
     has night vision.
-  - 5 HP, 25% armor, has evasion of 40%, and very fast.
 x copper hornet
   - "A tiny buzzing insect, seemingly made of copper. It's trying to sting you!"
   - Very fast, and base evade% of 50.
@@ -304,9 +297,10 @@ x lightning mage
   - Can haste sparklings
   - Keeps distance
 
-slinking terror
-  - creeps near walls, refuses to move while being watched, very fast, attacks nearby enemies, fearless, tanky
-
+- slinking terror
+  - creeps near walls, refuses to move while being watched
+  - very fast, attacks nearby enemies
+  - fearless, tanky
 - creeping death
   - A sabre-toothed cat, nothing more or less.
   - Has LOS radius of just one more than player's.
@@ -318,13 +312,12 @@ slinking terror
   - When player is in LOS of cat, messages:
     - "You feel like something is watching you."
     - "You feel uneasy." (just before cat charges)
-
-night wanderer
+  - Is neutral to guards, alone among night creatures.
+- night wanderer
   - "An invisible Presence that stalks the dungeon, clothed in suffocating Darkness."
   - neutral/non-combatant, wanders around at night without doing anything.
   - aura of paralysis? (i.e. paralyses mobs that can see it, for effect?)
-
-grue
+- grue
   - 20% chance to acquires .Burning when in contact with light
   - competent melee brute
   - seeks out and attacks enemies during night
@@ -332,6 +325,12 @@ grue
     - requirement: target must be alone.
     - requirement: target must be reachable without going into light areas
   - after killing, stands over corpse (unless enemy approaches, in which case it flees).
+- ???
+  - Slow, moderately tanky.
+  - Attacks: occasional push attack, otherwise 1-2 damage.
+  - Emits slowing gas. When player is too close to monster, will become too
+    slow to get away.
+    - Like that alien thingy in that horror-themed 7drl.
 
 x spectre mage
   x Spectral Sword: summons four spectral swords, which are very fast but
@@ -461,17 +460,17 @@ x club              1 damage
 x longsword         2 damage                Dip, +10 Evade
 x halberd           2 damage                Reach+, OpenMelee, Dip
 x glaive            2 damage   +10 Melee%   Reach+, Dip
-x monk's spade      1 damage                Reach+, Knockback(1), 50% speed
+x monk's spade      1 damage                Reach+, Knockback(1)
 x woldo             3 damage   -10 Melee%   Reach+, Dip, Martial++
 
 body armor:
-- robe
+x robe
 - martial robe      5% armor           Martial+
-- gambeson         15% armor   Sneak+
-- leather armor    20% armor           Martial-
-- hauberk          30% armor   Sneak--
-- slvlss hauberk   30% armor   Sneak-- OpenMelee
-- scale mail       25% armor   Sneak-  Martial-
+x gambeson         15% armor   Sneak+
+~ leather armor    20% armor           Martial-
+- hauberk          25% armor   Sneak--
+- slvlss hauberk   25% armor   Sneak-- OpenMelee
+- cuirass          35% armor   Sneak-  Martial-
 
 footwear:
 - velvet boots:                Sneak++
@@ -494,18 +493,23 @@ headgear:
 utility and auxiliary items:
 - Detect undead
 - Vampirism (charm of transference)
-- Buckler (3 knockback on block, +15% block)
-- Detect electricity
+x Buckler (+10% block)
+x Spiked buckler (same stats as bucker, but has Retaliation damage)
+x Detect electricity
   - Theme: something something "detects magnetic interference" w/ e.g. fancy
     compass, or something along those lines
-  - Detects powered machines, sparklings/spark mages, anything wearing rElec
-    stuff, sulfur fiends, lightning spires, etc
-- Detect heat
+  - Detects powered machines, sparklings/spark mages, stuff, sulfur fiends,
+    lightning spires, etc
+x Detect heat
   - Detects 'warm' machines (i.e. braziers and a few others), areas with fire,
     burning monsters + their surroundings, and otherwise .Warm monsters.
-- Orb of Wolfram
+x Orb of Wolfram
   - -10% evade (very heavy!), but +25% rElec. (i.e., it routes electric bolts
     through itself instead of through you.)
+x Miner's Map (echolocation)
+x Dispel Undead
+  - Any undead adjacent to you take 2 dmg each turn.
+  - Very powerful, but makes it impossible to sneak around them.
 
 
 Movement patterns
@@ -996,33 +1000,59 @@ x More potions
   x Potion of intimidation
   x Potion of leavenation
 x Add barrel of water
-- New monsters
+x New monsters
   x War olgs, cinder worms, destroyers
   x Ember, brimstone, spark, lightning mage bands
     x Emberling/sparkling summoning trap kits
   x Warriors, recruits (for treasure vaults)
-  - Basalt monsters (-fiends, -mages, -lings)?
+  x Hunter and stalkers
+    x Stalker station
   x Thrashing sculptor
   ~ [canceled] Fiend of vapours
 x Copper weapons and copper spires/battery packs, copper hornets
-- Fluff prefabs (e.g. washroom, trophy rooms, etc)
 x Treasure vaults
   x Marble vault
   x Iron vault
   x Golden vault
   x Tavern vault
 x Fix pushing past monsters
-- Remove bad mechanics:
+x Remove bad mechanics:
   x remove boring `Flanked' mechanic
-  - get rid of broken tiles
+  x get rid of broken tiles
     x remove malfunctioning machines
     x locked doors: bump to knock down
   x remove jammed doors, iron spikes
 x Level progression overhaul
   x Load level info, stairs from data/levelinfo.tsv
   x Make CAV optional, extra Prison level to compensate (for now)
+x Auxiliary items
+- Analyse mob and loot distribution and tweak weights
+- UI
+  - 'M'essages screen
+  - Loading screen and art
+  - Status/mob/item description lookup screen
+  x Features/items screen, remove announcement of items
+  - Keybinding help "?" screen
+  - Basic mouse support
+    - Tooltips for UI labels
+    - Click on tile to move/attack/interact
+    - Right-click for examine/info
+    - Click on message pane for 'M' screen
+    - Click on tabs in examine mode
+    - Click on items/buttons in inventory mode
+- Tutorial
+- Write rest of docs/manual
 - Playtest game throughout, especially CAV and make adjustments
-*** v1.1.0 release ***
+*** v2.0.0 release ***
+- Basalt monsters (-fiends, -mages, -lings)?
+- Add bookshelves and book types
+  - Maps
+  - Books that grant an ability
+  - Misc useless books
+- Consider adding more ugrades
+  - Hit% bonus, martial bonus (is that infringing on books too much?)
+  - Additional patterns (leap, counterattack, ...)
+- Fluff prefabs (e.g. washroom, trophy rooms, etc)
 - Basic save system
 - Warn when next to spreading gas and resting
 - Rewrite popups/confirms/alerts in Lua/Moonscript UI
@@ -1030,14 +1060,17 @@ x Level progression overhaul
 x Warn when stepping into enemy's FOV
 x Auto-wait: don't wait while in combat
 - More messages
-- Startup screen, map generation loading bar
-*** v1.2.0 release ***
+*** v2.1.0 release ***
+- Load colors from data file
+- Minor poster rework
+  - Different poster types (graffiti, announcement, engraving, etc)
+  - Allow placement on walls (or *only* on walls?)
 - Rings spawn with stat modifiers (Will+ Will- Will++ Will--)
 - Rework mapgen for -1/Prison and rename to Entry
-- Headgear, footgear, auxiliary items
-- Masterpiece weapons
+- Headgear, footgear
+~ Masterpiece weapons
 - Multi-tile props: trees and braziers
-- More mundane weapons: hammer, poker
+~ More mundane weapons: hammer, poker
 - More undead mobs, to make !disruption/calcite spire/etc relevant
 - More potions:
   - Potion of disruption
@@ -1071,16 +1104,6 @@ x Squad overhaul
   should have replaced it.
   - FIX: store statuses in a vector.
 - Implement intelligence
-- More information screens
-  - Documentation/manuals
-  - status/mob(?)/item description lookup screen
-  - features/items screen, remove announcement of items
-  - keybinding help "?" screen
-- Posters/books
-  - Poster types (graffiti, announcement, engraving, etc)
-  - Add bookshelves and book types
-    - Maps
-    - Useless books
 - eXamine screen:
   - Show last remembered items on out-of-sight tiles
   - Show floor spattering, floor material, gas
@@ -1089,8 +1112,9 @@ x Squad overhaul
   - *blende statues
 - Guards in cubbyholes (both corridors and rooms)
 - Night creatures (night reapers, creeping deaths, grues, winged terrors)
-  - Slinking terror
-- Shadow weapons
+  - Enclaves for night creatures to hide in
+  - Shadow weapons
+  - Individual night creatures
 - Scoring
 
 Animations
@@ -1107,9 +1131,11 @@ Animations
   - Hostile turning to fleeing
   - Hostile turning back to fight
   x Hostile noticing you
+  x Picking up items
+  x Looting chests
 - Persistent animations:
   - Dormant/sleeping monsters (blinking 'Z')
-  - Shimmering golden/obsidian/cuprite doors/walls
+  - Shimmering golden/obsidian/cuprite/rust doors/walls
   - Lava and water
 
 Ring and movements:
@@ -1487,7 +1513,7 @@ x Extremely dangerous (but lucrative) vaults that have golden walls, warning
   - Bri(b)ing key to bribe lone monsters
 - "Doormat" poster that has welcoming messages on it, right next to stairs
   - Maybe describes level's challenges for new players?
-- Put actual loot in chests + plus new TGGW-like interace for containers
+x Put actual loot in chests + plus new TGGW-like interace for containers
 - Monster: has strong ranged attack with copper weapon, and tries to lure you
   into copper ground
 - Monster: spell that grants .Explosive status to nearby ally (while keeping
@@ -1583,3 +1609,6 @@ Tests
 =====
 x Ensure that distance() treats diagonal moves as more expensive than cardinal moves, or
   the opposite if Chebyshev is used later.
+- Full tests for all Coord.* methods
+- Full tests for all Rect.* methods
+- Full tests for all Direction.* methods
