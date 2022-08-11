@@ -497,7 +497,7 @@ pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void
     var msg: Message = .{
         .msg = undefined,
         .type = mtype,
-        .turn = ticks,
+        .turn = player_turns,
     };
     utils.copyZ(&msg.msg, fbs.getWritten());
 

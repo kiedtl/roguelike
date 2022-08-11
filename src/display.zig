@@ -1288,6 +1288,10 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
 }
 
 fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const alloc = arena.allocator();
+
     var y = starty;
 
     // Clear window.
@@ -1297,11 +1301,76 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
     if (state.messages.items.len == 0)
         return;
 
-    const msgcount = state.messages.items.len - 1;
-
     const linewidth = @intCast(usize, endx - startx - 1);
+    const messages_len = state.messages.items.len - 1;
+
+    var parent_console = Console.init(alloc, linewidth, 512); // TODO: alloc on demand
+    defer parent_console.deinit();
+
+    var total_height: usize = 0;
+    for (state.messages.items) |message, i| {
+        var console = Console.init(alloc, linewidth, 7);
+
+        const col = if (message.turn >= state.player_turns or i == messages_len)
+            message.type.color()
+        else
+            colors.darken(message.type.color(), 2);
+
+        const line = if (i > 0 and i < messages_len and (message.turn != state.messages.items[i - 1].turn and message.turn != state.messages.items[i + 1].turn))
+            @as(u21, ' ')
+        else if (i == 0 or message.turn > state.messages.items[i - 1].turn)
+            @as(u21, '╭')
+        else if (i == messages_len or message.turn < state.messages.items[i + 1].turn)
+            @as(u21, '╰')
+        else
+            @as(u21, '│');
+
+        const noisetext: []const u8 = if (message.noise) "$c─$a♫$. " else "$c─$.  ";
+
+        var lines: usize = undefined;
+        if (message.dups == 0) {
+            lines = console.drawTextAt(0, 0, "$G{u}$.{s}{s}", .{ line, noisetext, utils.used(message.msg) }, .{ .fg = col });
+        } else {
+            lines = console.drawTextAt(0, 0, "$G{u}$.{s}{s} (×{})", .{ line, noisetext, utils.used(message.msg), message.dups + 1 }, .{ .fg = col });
+        }
+
+        total_height += lines;
+        console.changeHeight(lines);
+        parent_console.addSubconsole(console, null, null);
+    }
+
+    parent_console.changeHeight(total_height);
+
+    parent_console.renderAreaAt(
+        @intCast(usize, startx),
+        @intCast(usize, starty),
+        0,
+        parent_console.height -| @intCast(usize, endy - starty),
+        parent_console.width,
+        parent_console.height,
+    );
+
+    // y = endy - 1;
+
+    // if (total_height < @intCast(usize, endy - starty)) {
+    //     y -= (endy - starty) - @intCast(isize, total_height);
+    // }
+
+    // var console_ctr: usize = consoles.items.len - 1;
+    // while (y >= starty and console_ctr > 0) : (console_ctr -= 1) {
+    //     const console = consoles.items[console_ctr];
+    //     const render_height = math.min(@intCast(usize, y - starty), console.height);
+    //     console.renderAreaAt(@intCast(usize, startx), @intCast(usize, y), 0, console.height - render_height, console.width, console.height);
+    //     console.deinit();
+    //     y -= @intCast(isize, render_height);
+    // }
+
+    if (true) return;
+
+    const lastmessage = state.messages.items.len - 1;
+
     var fibuf = StackBuffer(u8, 4096).init(null);
-    var ia = msgcount;
+    var ia = lastmessage;
     var height: isize = 0;
     const first = while (ia > 0) : (ia -= 1) {
         const msg = state.messages.items[ia];
@@ -1314,34 +1383,34 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
             break ia;
     } else 0;
 
-    //const first = msgcount - math.min(msgcount, @intCast(usize, endy - 1 - starty));
+    //const first = lastmessage - math.min(lastmessage, @intCast(usize, endy - 1 - starty));
     var i: usize = first;
-    while (i <= msgcount and y < endy) : (i += 1) {
+    while (i <= lastmessage and y < endy) : (i += 1) {
         const msg = state.messages.items[i];
         const msgtext = utils.used(msg.msg);
 
-        const col = if (msg.turn >= state.ticks -| 3 or i == msgcount)
+        const col = if (msg.turn >= state.ticks -| 3 or i == lastmessage)
             msg.type.color()
         else
             colors.darken(msg.type.color(), 2);
 
-        const line = if (i > 0 and i < msgcount and (msg.turn != state.messages.items[i - 1].turn and msg.turn != state.messages.items[i + 1].turn))
+        const line = if (i > 0 and i < lastmessage and (msg.turn != state.messages.items[i - 1].turn and msg.turn != state.messages.items[i + 1].turn))
             @as(u21, '├')
         else if (i == 0 or msg.turn > state.messages.items[i - 1].turn)
             @as(u21, '╭')
-        else if (i == msgcount or msg.turn < state.messages.items[i + 1].turn)
+        else if (i == lastmessage or msg.turn < state.messages.items[i + 1].turn)
             @as(u21, '╰')
         else
             @as(u21, '│');
 
-        const noisetext: []const u8 = if (msg.noise) "$a♫$.  " else "$c·$.  ";
+        const noisetext: []const u8 = if (msg.noise) "$a♫$.  " else "$c─$.  ";
 
         if (msg.dups == 0) {
-            y = _drawStr(startx, y, endx, "$G{u}$. {s}{s}", .{
+            y = _drawStr(startx, y, endx, "$G{u}$.{s}{s}", .{
                 line, noisetext, msgtext,
             }, .{ .fg = col, .fold = true });
         } else {
-            y = _drawStr(startx, y, endx, "$G{u}$. {s}{s} (×{})", .{
+            y = _drawStr(startx, y, endx, "$G{u}$.{s}{s} (×{})", .{
                 line, noisetext, msgtext, msg.dups + 1,
             }, .{ .fg = col, .fold = true });
         }
@@ -1697,6 +1766,8 @@ pub fn drawMessagesScreen() void {
     var starty = logw.starty;
     const endy = logw.endy;
 
+    var scroll: usize = 0;
+
     while (true) {
         if (starty > mainw.starty) {
             starty -|= 3;
@@ -1707,7 +1778,7 @@ pub fn drawMessagesScreen() void {
         termbox.tb_present();
 
         var ev: termbox.tb_event = undefined;
-        const t = termbox.tb_peek_event(&ev, 70);
+        const t = termbox.tb_peek_event(&ev, 50);
 
         if (t == -1) @panic("Fatal termbox error");
         if (t == 0) continue; // No input
@@ -1723,6 +1794,8 @@ pub fn drawMessagesScreen() void {
                 }
             } else if (ev.ch != 0) {
                 switch (ev.ch) {
+                    'x', 'j' => scroll -|= 1,
+                    'w', 'k' => scroll += 1,
                     else => {},
                 }
             } else unreachable;
@@ -2416,6 +2489,189 @@ pub fn drawItemChoicePrompt(comptime fmt: []const u8, args: anytype, items: []co
 
     return drawChoicePrompt(fmt, args, namebuf.items);
 }
+
+pub const Console = struct {
+    alloc: mem.Allocator,
+    grid: []termbox.tb_cell,
+    width: usize,
+    height: usize,
+    subconsoles: Subconsole.AList,
+
+    pub const Self = @This();
+    pub const AList = std.ArrayList(Self);
+
+    pub const Subconsole = struct {
+        console: Console,
+        x: ?usize = null, // Defaults to 0.
+        y: ?usize = null, // Defaults to last_subconsole.y orelse 0.
+
+        pub const AList = std.ArrayList(@This());
+    };
+
+    pub fn init(alloc: mem.Allocator, width: usize, height: usize) Self {
+        const self = .{
+            .alloc = alloc,
+            .grid = alloc.alloc(termbox.tb_cell, width * height) catch err.wat(),
+            .width = width,
+            .height = height,
+            .subconsoles = Subconsole.AList.init(alloc),
+        };
+        mem.set(termbox.tb_cell, self.grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
+        return self;
+    }
+
+    pub fn deinit(self: *const Self) void {
+        self.alloc.free(self.grid);
+        self.subconsoles.deinit();
+    }
+
+    pub fn addSubconsole(self: *Self, subconsole: Console, x: ?usize, y: ?usize) void {
+        self.subconsoles.append(.{ .console = subconsole, .x = x, .y = y }) catch err.wat();
+    }
+
+    pub fn changeHeight(self: *Self, new_height: usize) void {
+        const new_grid = self.alloc.alloc(termbox.tb_cell, self.width * new_height) catch err.wat();
+        mem.set(termbox.tb_cell, new_grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
+
+        // Copy old grid to new grid
+        var y: usize = 0;
+        while (y < new_height and y < self.height) : (y += 1) {
+            var x: usize = 0;
+            while (x < self.width) : (x += 1) {
+                new_grid[self.width * y + x] = self.grid[self.width * y + x];
+            }
+        }
+
+        self.alloc.free(self.grid);
+
+        self.height = new_height;
+        self.grid = new_grid;
+    }
+
+    pub fn clearTo(self: *const Self, to: termbox.tb_cell) void {
+        mem.set(termbox.tb_cell, self.grid, to);
+    }
+
+    pub fn clear(self: *const Self) void {
+        self.clearTo(.{ .ch = ' ', .fg = 0, .bg = colors.BG });
+    }
+
+    pub fn renderAreaAt(self: *const Self, offset_x: usize, offset_y: usize, begin_x: usize, begin_y: usize, end_x: usize, end_y: usize) void {
+        var dy: isize = @intCast(isize, offset_y);
+        var y: usize = begin_y;
+        while (y < end_y) : (y += 1) {
+            var dx: isize = @intCast(isize, offset_x);
+            var x: usize = begin_x;
+            while (x < end_x) : (x += 1) {
+                const cell = &self.grid[self.width * y + x];
+                termbox.tb_put_cell(dx, dy, cell);
+                dx += 1;
+            }
+            dy += 1;
+        }
+
+        var last_sub_y: usize = 0;
+        var sdy: usize = offset_y;
+        for (self.subconsoles.items) |subconsole| {
+            const sy = subconsole.y orelse last_sub_y;
+            const sx = subconsole.x orelse 0;
+            last_sub_y += subconsole.console.height;
+            if (sy < begin_y or sy > end_y or sx < begin_x or sx > end_x)
+                continue;
+            const sdx = offset_x + sx;
+            subconsole.console.renderAreaAt(sdx, sdy, 0, 0, subconsole.console.width, subconsole.console.height);
+            sdy += subconsole.console.height;
+        }
+    }
+
+    pub fn setCell(self: *const Self, x: usize, y: usize, ch: u21, fg: u32, bg: u32) void {
+        self.grid[self.width * y + x] = .{ .ch = ch, .fg = fg, .bg = bg };
+    }
+
+    // Re-implementation of _drawStr
+    //
+    // Returns lines/rows used
+    pub fn drawTextAt(self: *const Self, startx: usize, starty: usize, comptime format: []const u8, args: anytype, opts: DrawStrOpts) usize {
+        const str = std.fmt.allocPrint(self.alloc, format, args) catch err.oom();
+        defer self.alloc.free(str);
+
+        var x = startx;
+        var y = starty;
+        var skipped: usize = 0; // TODO: remove
+
+        var fg = opts.fg;
+        var bg: ?u32 = opts.bg;
+
+        var fibuf = StackBuffer(u8, 4096).init(null);
+        var fold_iter = utils.FoldedTextIterator.init(str, self.width + 1);
+        while (fold_iter.next(&fibuf)) |line| : ({
+            y += 1;
+            x = startx;
+        }) {
+            if (skipped < opts.skip_lines) {
+                skipped += 1;
+                y -= 1; // Stay on the same line
+                continue;
+            }
+
+            if (y >= self.height or (opts.endy != null and y >= opts.endy.?)) {
+                break;
+            }
+
+            var utf8 = (std.unicode.Utf8View.init(line) catch err.bug("bad utf8", .{})).iterator();
+            while (utf8.nextCodepointSlice()) |encoded_codepoint| {
+                const codepoint = std.unicode.utf8Decode(encoded_codepoint) catch err.bug("bad utf8", .{});
+                const def_bg = self.grid[y * self.width + x].bg;
+
+                switch (codepoint) {
+                    '\n' => {
+                        y += 1;
+                        x = startx;
+                        continue;
+                    },
+                    '\r' => err.bug("Bad character found in string.", .{}),
+                    '$' => {
+                        const next_encoded_codepoint = utf8.nextCodepointSlice() orelse
+                            err.bug("Found incomplete escape sequence", .{});
+                        const next_codepoint = std.unicode.utf8Decode(next_encoded_codepoint) catch err.bug("bad utf8", .{});
+                        switch (next_codepoint) {
+                            '.' => {
+                                fg = opts.fg;
+                                bg = opts.bg;
+                            },
+                            '~' => {
+                                const t = fg;
+                                fg = bg orelse def_bg;
+                                bg = t;
+                            },
+                            'g' => fg = colors.GREY,
+                            'G' => fg = colors.DARK_GREY,
+                            'C' => fg = colors.CONCRETE,
+                            'c' => fg = colors.LIGHT_CONCRETE,
+                            'p' => fg = colors.PINK,
+                            'b' => fg = colors.LIGHT_STEEL_BLUE,
+                            'r' => fg = colors.PALE_VIOLET_RED,
+                            'a' => fg = colors.AQUAMARINE,
+                            'o' => fg = colors.GOLD,
+                            else => err.bug("[Console] Found unknown escape sequence '${u}' (line: '{s}')", .{ next_codepoint, line }),
+                        }
+                        continue;
+                    },
+                    else => {
+                        self.setCell(x, y, codepoint, fg, bg orelse def_bg);
+                        x += 1;
+                    },
+                }
+
+                if (!opts.fold and x == self.width) {
+                    x -= 1;
+                }
+            }
+        }
+
+        return y - starty;
+    }
+};
 
 // Animations {{{
 
