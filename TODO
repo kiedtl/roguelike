@@ -1035,6 +1035,7 @@ x Auxiliary items
   - Keybinding help "?" screen
   - Basic mouse support
     - Tooltips for UI labels
+      - Tooltips/explanations for individual messages?
     - Click on tile to move/attack/interact
     - Right-click for examine/info
     - Click on message pane for 'M' screen
