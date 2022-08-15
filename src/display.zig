@@ -908,10 +908,12 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args
     const termbox_height = termbox.tb_height();
     const termbox_buffer = termbox.tb_cell_buffer();
 
-    var buf: [65535]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buf);
-    std.fmt.format(fbs.writer(), format, args) catch err.bug("format error!", .{});
-    const str = fbs.getWritten();
+    // var buf: [65535]u8 = undefined;
+    // var fbs = std.io.fixedBufferStream(&buf);
+    // std.fmt.format(fbs.writer(), format, args) catch err.bug("format error!", .{});
+    // const str = fbs.getWritten();
+    const str = std.fmt.allocPrint(state.GPA.allocator(), format, args) catch err.oom();
+    defer state.GPA.allocator().free(str);
 
     var x = _x;
     var y = _y;
@@ -1287,25 +1289,15 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
     }
 }
 
-fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const alloc = arena.allocator();
-
-    var y = starty;
-
-    // Clear window.
-    while (y <= endy) : (y += 1) _clear_line(startx, endx, y);
-    y = starty;
-
-    if (state.messages.items.len == 0)
-        return;
-
+fn drawLog(startx: isize, endx: isize, alloc: mem.Allocator) Console {
     const linewidth = @intCast(usize, endx - startx - 1);
-    const messages_len = state.messages.items.len - 1;
 
     var parent_console = Console.init(alloc, linewidth, 512); // TODO: alloc on demand
-    defer parent_console.deinit();
+
+    if (state.messages.items.len == 0)
+        return parent_console;
+
+    const messages_len = state.messages.items.len - 1;
 
     var total_height: usize = 0;
     for (state.messages.items) |message, i| {
@@ -1341,80 +1333,7 @@ fn drawLog(startx: isize, endx: isize, starty: isize, endy: isize) void {
 
     parent_console.changeHeight(total_height);
 
-    parent_console.renderAreaAt(
-        @intCast(usize, startx),
-        @intCast(usize, starty),
-        0,
-        parent_console.height -| @intCast(usize, endy - starty),
-        parent_console.width,
-        parent_console.height,
-    );
-
-    // y = endy - 1;
-
-    // if (total_height < @intCast(usize, endy - starty)) {
-    //     y -= (endy - starty) - @intCast(isize, total_height);
-    // }
-
-    // var console_ctr: usize = consoles.items.len - 1;
-    // while (y >= starty and console_ctr > 0) : (console_ctr -= 1) {
-    //     const console = consoles.items[console_ctr];
-    //     const render_height = math.min(@intCast(usize, y - starty), console.height);
-    //     console.renderAreaAt(@intCast(usize, startx), @intCast(usize, y), 0, console.height - render_height, console.width, console.height);
-    //     console.deinit();
-    //     y -= @intCast(isize, render_height);
-    // }
-
-    if (true) return;
-
-    const lastmessage = state.messages.items.len - 1;
-
-    var fibuf = StackBuffer(u8, 4096).init(null);
-    var ia = lastmessage;
-    var height: isize = 0;
-    const first = while (ia > 0) : (ia -= 1) {
-        const msg = state.messages.items[ia];
-        const msgtext = utils.used(msg.msg);
-        var fold_iter = utils.FoldedTextIterator.init(msgtext, linewidth);
-        while (fold_iter.next(&fibuf)) |_| {
-            height += 1;
-        }
-        if (height + y >= endy - 1)
-            break ia;
-    } else 0;
-
-    //const first = lastmessage - math.min(lastmessage, @intCast(usize, endy - 1 - starty));
-    var i: usize = first;
-    while (i <= lastmessage and y < endy) : (i += 1) {
-        const msg = state.messages.items[i];
-        const msgtext = utils.used(msg.msg);
-
-        const col = if (msg.turn >= state.ticks -| 3 or i == lastmessage)
-            msg.type.color()
-        else
-            colors.darken(msg.type.color(), 2);
-
-        const line = if (i > 0 and i < lastmessage and (msg.turn != state.messages.items[i - 1].turn and msg.turn != state.messages.items[i + 1].turn))
-            @as(u21, '├')
-        else if (i == 0 or msg.turn > state.messages.items[i - 1].turn)
-            @as(u21, '╭')
-        else if (i == lastmessage or msg.turn < state.messages.items[i + 1].turn)
-            @as(u21, '╰')
-        else
-            @as(u21, '│');
-
-        const noisetext: []const u8 = if (msg.noise) "$a♫$.  " else "$c─$.  ";
-
-        if (msg.dups == 0) {
-            y = _drawStr(startx, y, endx, "$G{u}$.{s}{s}", .{
-                line, noisetext, msgtext,
-            }, .{ .fg = col, .fold = true });
-        } else {
-            y = _drawStr(startx, y, endx, "$G{u}$.{s}{s} (×{})", .{
-                line, noisetext, msgtext, msg.dups + 1,
-            }, .{ .fg = col, .fold = true });
-        }
-    }
+    return parent_console;
 }
 
 fn _mobs_can_see(moblist: []const *Mob, coord: Coord) bool {
@@ -1544,12 +1463,11 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
 }
 
 pub fn draw() void {
-    // TODO: do some tests and figure out what's the practical limit to memory
-    // usage, and reduce the buffer's size to that.
-    var membuf: [65535]u8 = undefined;
-    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const alloc = arena.allocator();
 
-    const moblist = state.createMobList(false, true, state.player.coord.z, fba.allocator());
+    const moblist = state.createMobList(false, true, state.player.coord.z, alloc);
 
     const pinfo_win = dimensions(.PlayerInfo);
     const main_win = dimensions(.Main);
@@ -1557,7 +1475,17 @@ pub fn draw() void {
 
     drawInfo(moblist.items, pinfo_win.startx, pinfo_win.starty, pinfo_win.endx, pinfo_win.endy);
     drawMap(moblist.items, main_win.startx, main_win.endx, main_win.starty, main_win.endy);
-    drawLog(log_window.startx, log_window.endx, log_window.starty, log_window.endy);
+
+    const log_console = drawLog(log_window.startx, log_window.endx, alloc);
+    log_console.renderAreaAt(
+        @intCast(usize, log_window.startx),
+        @intCast(usize, log_window.starty),
+        0,
+        log_console.height -| @intCast(usize, log_window.endy - log_window.starty),
+        log_console.width,
+        log_console.height,
+    );
+    log_console.deinit();
 
     termbox.tb_present();
 }
@@ -1757,6 +1685,9 @@ pub fn chooseDirection() ?Direction {
 }
 
 pub fn drawMessagesScreen() void {
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+
     const mainw = dimensions(.Main);
     const logw = dimensions(.Log);
 
@@ -1766,6 +1697,9 @@ pub fn drawMessagesScreen() void {
     var starty = logw.starty;
     const endy = logw.endy;
 
+    const console = drawLog(mainw.startx, mainw.endx, arena.allocator());
+    defer console.deinit();
+
     var scroll: usize = 0;
 
     while (true) {
@@ -1773,7 +1707,20 @@ pub fn drawMessagesScreen() void {
             starty -|= 3;
         }
 
-        drawLog(mainw.startx, mainw.endx, starty, endy);
+        // Clear window.
+        {
+            var y = starty;
+            while (y <= endy) : (y += 1)
+                _clear_line(mainw.startx, mainw.endx, y);
+        }
+
+        const window_height = @intCast(usize, endy - starty);
+
+        scroll = math.min(scroll, console.height -| window_height);
+
+        const first_line = console.height -| window_height -| scroll;
+        const last_line = math.min(first_line + window_height, console.height);
+        console.renderAreaAt(@intCast(usize, mainw.startx), @intCast(usize, starty), 0, first_line, console.width, last_line);
 
         termbox.tb_present();
 
@@ -2368,8 +2315,22 @@ pub fn drawAlert(comptime fmt: []const u8, args: anytype) void {
 
 pub fn drawAlertThenLog(comptime fmt: []const u8, args: anytype) void {
     const log_window = dimensions(.Log);
+
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+
     drawAlert(fmt, args);
-    drawLog(log_window.startx, log_window.endx, log_window.starty, log_window.endy);
+
+    const log_console = drawLog(log_window.startx, log_window.endx, arena.allocator());
+    log_console.renderAreaAt(
+        @intCast(usize, log_window.startx),
+        @intCast(usize, log_window.starty),
+        0,
+        log_console.height -| @intCast(usize, log_window.endy - log_window.starty),
+        log_console.width,
+        log_console.height,
+    );
+    log_console.deinit();
 }
 
 pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []const []const u8) ?usize {
@@ -2560,6 +2521,8 @@ pub const Console = struct {
         var dy: isize = @intCast(isize, offset_y);
         var y: usize = begin_y;
         while (y < end_y) : (y += 1) {
+            _clear_line(@intCast(isize, offset_x), @intCast(isize, offset_x + (end_x - begin_x)), dy);
+
             var dx: isize = @intCast(isize, offset_x);
             var x: usize = begin_x;
             while (x < end_x) : (x += 1) {
