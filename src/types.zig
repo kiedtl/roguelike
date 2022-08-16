@@ -2238,7 +2238,7 @@ pub const Mob = struct { // {{{
                 state.machines.append(mach) catch err.wat();
                 state.dungeon.at(self.coord).surface = SurfaceItem{ .Machine = state.machines.last().? };
             },
-            .Custom => |c| if (direct) c(self, self.coord),
+            .Custom => |c| c(self, self.coord),
         };
     }
 
