@@ -86,6 +86,24 @@ pub inline fn fireOpacity(amount: usize) usize {
     return 10;
 }
 
+// Executes a bunch of triggers and sets the fire amount to 0
+pub fn putFireOut(coord: Coord) void {
+    // Spatter ash
+    //
+    state.dungeon.spatter(coord, .Ash);
+
+    // Remove flammable terrain
+    //
+    // (Do this now instead of in tickFire() to ensure that things like wood
+    //  don't get destroyed immediately and stop giving their rF--)
+    //
+    if (state.dungeon.terrainAt(coord).flammability > 0) {
+        state.dungeon.at(coord).terrain = &surfaces.DefaultTerrain;
+    }
+
+    state.dungeon.fireAt(coord).* = 0;
+}
+
 pub fn tickFire(level: usize) void {
     var y: usize = 0;
     while (y < HEIGHT) : (y += 1) {
@@ -133,16 +151,12 @@ pub fn tickFire(level: usize) void {
                 }
             }
 
-            // Destroy terrain, if needed
-            if (state.dungeon.terrainAt(coord).flammability > 0) {
-                state.dungeon.at(coord).terrain = &surfaces.DefaultTerrain;
-            }
-
             newfire -|= rng.range(usize, 1, 2);
 
             // Release ash if going out
+            // Run triggers if fire went out
             if (newfire == 0) {
-                state.dungeon.spatter(coord, .Ash);
+                putFireOut(coord);
             }
 
             state.dungeon.fireAt(coord).* = newfire;
