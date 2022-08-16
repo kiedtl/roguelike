@@ -1714,7 +1714,7 @@ pub fn drawMessagesScreen() void {
                 _clear_line(mainw.startx, mainw.endx, y);
         }
 
-        const window_height = @intCast(usize, endy - starty);
+        const window_height = @intCast(usize, endy - starty - 1);
 
         scroll = math.min(scroll, console.height -| window_height);
 
@@ -2483,6 +2483,8 @@ pub const Console = struct {
 
     pub fn deinit(self: *const Self) void {
         self.alloc.free(self.grid);
+        for (self.subconsoles.items) |subconsole|
+            subconsole.console.deinit();
         self.subconsoles.deinit();
     }
 
@@ -2536,14 +2538,17 @@ pub const Console = struct {
         var last_sub_y: usize = 0;
         var sdy: usize = offset_y;
         for (self.subconsoles.items) |subconsole| {
-            const sy = subconsole.y orelse last_sub_y;
-            const sx = subconsole.x orelse 0;
-            last_sub_y += subconsole.console.height;
-            if (sy < begin_y or sy > end_y or sx < begin_x or sx > end_x)
-                continue;
-            const sdx = offset_x + sx;
-            subconsole.console.renderAreaAt(sdx, sdy, 0, 0, subconsole.console.width, subconsole.console.height);
-            sdy += subconsole.console.height;
+            var i: usize = 0;
+            while (i < subconsole.console.height) : (i += 1) {
+                const sy = subconsole.y orelse last_sub_y;
+                const sx = subconsole.x orelse 0;
+                last_sub_y += 1;
+                if (sy < begin_y or sy > end_y or sx < begin_x or sx > end_x)
+                    continue;
+                const sdx = offset_x + sx;
+                subconsole.console.renderAreaAt(sdx, sdy, 0, i, subconsole.console.width, i + 1);
+                sdy += 1;
+            }
         }
     }
 
