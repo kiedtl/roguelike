@@ -157,7 +157,7 @@ pub const WatcherTemplate = MobTemplate{
         },
         .max_HP = 6,
         .memory_duration = 10,
-        .stats = .{ .Willpower = 3, .Evade = 30, .Speed = 60 },
+        .stats = .{ .Willpower = 3, .Evade = 30, .Speed = 50 },
     },
 };
 
@@ -241,7 +241,7 @@ pub const JavelineerTemplate = MobTemplate{
 
         .max_HP = 8,
         .memory_duration = 6,
-        .stats = .{ .Willpower = 2, .Evade = 10, .Missile = 80, .Speed = 110, .Vision = 5 },
+        .stats = .{ .Willpower = 2, .Evade = 10, .Missile = 80, .Vision = 5 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
@@ -337,7 +337,7 @@ pub const IronWaspTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
         .innate_resists = .{ .rFire = 50, .rFume = 100 },
-        .stats = .{ .Willpower = 1, .Evade = 50, .Speed = 55, .Vision = 3 },
+        .stats = .{ .Willpower = 1, .Evade = 50, .Speed = 50, .Vision = 3 },
     },
 
     .squad = &[_][]const MobTemplate.SquadMember{
@@ -380,7 +380,7 @@ pub const CopperHornetTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
         .innate_resists = .{ .rElec = 25, .rFire = 50, .rFume = 100 },
-        .stats = .{ .Willpower = 0, .Evade = 40, .Speed = 60, .Vision = 5 },
+        .stats = .{ .Willpower = 0, .Evade = 40, .Speed = 50, .Vision = 5 },
     },
 
     .statuses = &[_]StatusDataInfo{
@@ -403,7 +403,7 @@ pub const PatrolTemplate = MobTemplate{
 
         .max_HP = 8,
         .memory_duration = 3,
-        .stats = .{ .Willpower = 2, .Evade = 10, .Speed = 110 },
+        .stats = .{ .Willpower = 2, .Evade = 10 },
     },
     .weapon = &items.GlaiveWeapon,
     .armor = &items.GambesonArmor,
@@ -514,7 +514,7 @@ pub const VapourMageTemplate = MobTemplate{
 
         .max_HP = 13,
         .memory_duration = 10,
-        .stats = .{ .Willpower = 6, .Speed = 120, .Vision = 6 },
+        .stats = .{ .Willpower = 6, .Speed = 200, .Vision = 6 },
     },
     .armor = &items.HauberkArmor,
     .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
@@ -545,7 +545,7 @@ pub const DustlingTemplate = MobTemplate{
         .blood_spray = gas.Dust.id,
         .corpse = .None,
         .innate_resists = .{ .rFire = -25, .rElec = -25, .rFume = 100 },
-        .stats = .{ .Willpower = 4, .Melee = 50, .Speed = 80, .Vision = 3 },
+        .stats = .{ .Willpower = 4, .Melee = 50, .Vision = 3 },
     },
     .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
     .squad = &[_][]const MobTemplate.SquadMember{
@@ -590,7 +590,7 @@ pub const CinderWormTemplate = MobTemplate{
         .blood_spray = gas.SmokeGas.id,
         .corpse = .None,
         .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = 25, .rFume = 100 },
-        .stats = .{ .Willpower = 6, .Melee = 80, .Speed = 80, .Vision = 4 },
+        .stats = .{ .Willpower = 6, .Melee = 80, .Vision = 4 },
     },
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Fire, .duration = .Prm },
@@ -887,7 +887,9 @@ pub const HaulerTemplate = MobTemplate{
 
         .max_HP = 10,
         .memory_duration = 8,
-        .stats = .{ .Willpower = 2, .Evade = 10, .Speed = 60 },
+        // extra speed doesn't really make sense, but is necessary to prevent it
+        // from being behind on order
+        .stats = .{ .Willpower = 2, .Evade = 10, .Speed = 50 },
     },
 };
 
@@ -929,7 +931,7 @@ pub const AncientMageTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
         .innate_resists = .{ .rFume = 100, .rElec = 75 },
-        .stats = .{ .Willpower = 10, .Evade = 20, .Speed = 120 },
+        .stats = .{ .Willpower = 10, .Evade = 20, .Speed = 150 },
     },
     .weapon = &items.BoneGreatMaceWeapon,
     .armor = &items.HauberkArmor,
@@ -1341,7 +1343,7 @@ pub const ThrashingSculptorTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rFume = 100 },
-        .stats = .{ .Willpower = 5, .Evade = 20, .Melee = 100, .Speed = 100, .Vision = 5 },
+        .stats = .{ .Willpower = 5, .Evade = 20, .Melee = 100, .Vision = 5 },
     },
 
     .statuses = &[_]StatusDataInfo{
@@ -1447,7 +1449,7 @@ pub const BoneRatTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rFume = 100, .rFire = -25 },
-        .stats = .{ .Willpower = 0, .Evade = 10, .Speed = 60, .Vision = 4 },
+        .stats = .{ .Willpower = 0, .Evade = 10, .Speed = 50, .Vision = 4 },
     },
 
     .squad = &[_][]const MobTemplate.SquadMember{
@@ -1485,7 +1487,7 @@ pub const EmberlingTemplate = MobTemplate{
         .max_HP = 3,
         .memory_duration = 3,
         .innate_resists = .{ .rFume = 100, .rFire = RESIST_IMMUNE },
-        .stats = .{ .Willpower = 1, .Evade = 10, .Speed = 60, .Vision = 4, .Melee = 50 },
+        .stats = .{ .Willpower = 1, .Evade = 10, .Vision = 4, .Melee = 50 },
     },
     // XXX: Emberlings are never placed alone, this determines number of
     // summoned emberlings from CAST_CREATE_EMBERLING
@@ -1534,7 +1536,7 @@ pub const SparklingTemplate = MobTemplate{
         .max_HP = 3,
         .memory_duration = 3,
         .innate_resists = .{ .rFume = 100, .rElec = RESIST_IMMUNE },
-        .stats = .{ .Willpower = 1, .Evade = 10, .Speed = 100, .Vision = 4 },
+        .stats = .{ .Willpower = 1, .Evade = 10, .Vision = 4 },
     },
     // XXX: Sparklings are never placed alone, this determines number of
     // summoned sparklings from CAST_CREATE_SPARKLING
@@ -1599,7 +1601,7 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
         // Will have rElec-25 from Cuirass
         .innate_resists = .{ .rFume = 100, .rFire = -25 },
         // Melee is 100% but in practice will be 90% due to penalty from rapier
-        .stats = .{ .Willpower = 4, .Melee = 100, .Speed = 110, .Vision = 5 },
+        .stats = .{ .Willpower = 4, .Melee = 100, .Vision = 5 },
     },
     .weapon = &items.RapierWeapon,
     .armor = &items.CuirassArmor,
@@ -1812,7 +1814,7 @@ pub const BallLightningTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rFire = 50, .rElec = RESIST_IMMUNE, .rFume = 100 },
-        .stats = .{ .Willpower = WILL_IMMUNE, .Speed = 30, .Vision = 20 },
+        .stats = .{ .Willpower = WILL_IMMUNE, .Speed = 20, .Vision = 20 },
     },
     // This status should be added by whatever spell created it.
     .statuses = &[_]StatusDataInfo{
@@ -1830,7 +1832,7 @@ pub const SpectralSwordTemplate = MobTemplate{
                 .strs = &[_]DamageStr{items._dmgstr(001, "nick", "nicks", "")},
             },
         },
-        .tile = 'ƨ',
+        .tile = ')',
         .ai = AI{
             .profession_description = "[this is a bug]",
             .work_fn = ai.suicideWork,
@@ -1850,7 +1852,7 @@ pub const SpectralSwordTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rFume = 100 },
-        .stats = .{ .Willpower = WILL_IMMUNE, .Melee = 50, .Speed = 60, .Vision = 20 },
+        .stats = .{ .Willpower = WILL_IMMUNE, .Melee = 40, .Speed = 50, .Vision = 20 },
     },
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Corona, .power = 10, .duration = .Prm },
