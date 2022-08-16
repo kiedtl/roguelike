@@ -374,7 +374,7 @@ pub fn checkForHostiles(mob: *Mob) void {
 
             if (othermob == mob) continue;
 
-            if (!mob.ai.flag(.IgnoredByEnemies) and mob.isHostileTo(othermob)) {
+            if (!othermob.ai.flag(.IgnoredByEnemies) and mob.isHostileTo(othermob)) {
                 updateEnemyRecord(mob, .{
                     .mob = othermob,
                     .counter = mob.memory_duration,
