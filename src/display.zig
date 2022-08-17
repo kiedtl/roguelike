@@ -121,12 +121,23 @@ pub fn deinit() !void {
     is_tb_inited = false;
 }
 
-pub const DisplayWindow = enum { PlayerInfo, Main, Log };
-pub const Dimension = struct { startx: isize, endx: isize, starty: isize, endy: isize };
+pub const DisplayWindow = enum { Whole, PlayerInfo, Main, Log };
+pub const Dimension = struct {
+    startx: isize,
+    endx: isize,
+    starty: isize,
+    endy: isize,
+    pub fn width(self: @This()) usize {
+        return @intCast(usize, self.endx - self.startx);
+    }
+    pub fn height(self: @This()) usize {
+        return @intCast(usize, self.endy - self.starty);
+    }
+};
 
 pub fn dimensions(w: DisplayWindow) Dimension {
     const height = termbox.tb_height();
-    //const width = termbox.tb_width();
+    const width = termbox.tb_width();
 
     const playerinfo_width = LEFT_INFO_WIDTH;
     //const playerinfo_width = width - WIDTH - 2;
@@ -140,6 +151,12 @@ pub fn dimensions(w: DisplayWindow) Dimension {
     //const enemyinfo_start = main_start + main_width + 1;
 
     return switch (w) {
+        .Whole => .{
+            .startx = 1,
+            .endx = width - 1,
+            .starty = 1,
+            .endy = height - 1,
+        },
         .PlayerInfo => .{
             .startx = playerinfo_start,
             .endx = playerinfo_start + playerinfo_width,
@@ -1681,6 +1698,40 @@ pub fn chooseDirection() ?Direction {
                 }
             } else unreachable;
         }
+    }
+}
+
+pub fn drawLoadingScreen(console: *Console, text_context: []const u8, text: []const u8, percent_done: usize) !void {
+    const win = dimensions(.Whole);
+
+    var y: usize = 0;
+    y += console.drawTextAt(0, y, "{s} ($b{s}$.)", .{ text, text_context }, .{});
+    y += console.drawTextAt(0, y, "{}% done", .{percent_done}, .{});
+
+    console.renderAreaAt(@intCast(usize, win.startx), @intCast(usize, win.starty), 0, 0, console.width, console.height);
+
+    termbox.tb_present();
+
+    var ev: termbox.tb_event = undefined;
+    const t = termbox.tb_peek_event(&ev, 30);
+
+    if (t == -1) @panic("Fatal termbox error");
+    if (t == 0) return; // No input
+
+    if (t == termbox.TB_EVENT_KEY) {
+        if (ev.key != 0) {
+            switch (ev.key) {
+                termbox.TB_KEY_CTRL_C,
+                termbox.TB_KEY_ESC,
+                termbox.TB_KEY_ENTER,
+                => return error.Canceled,
+                else => {},
+            }
+        } else if (ev.ch != 0) {
+            switch (ev.ch) {
+                else => {},
+            }
+        } else unreachable;
     }
 }
 

@@ -156,18 +156,28 @@ fn initGame() bool {
         };
     }
 
+    mapgen.fixConfigs();
+
+    return true;
+}
+
+fn initLevels() bool {
+    const win = display.dimensions(.Whole);
+    var loading_screen = display.Console.init(state.GPA.allocator(), win.width(), win.height());
+    defer loading_screen.deinit();
+
     var s_fabs: mapgen.PrefabArrayList = undefined;
     var n_fabs: mapgen.PrefabArrayList = undefined;
     mapgen.readPrefabs(state.GPA.allocator(), &n_fabs, &s_fabs);
     defer s_fabs.deinit();
     defer n_fabs.deinit();
 
-    mapgen.fixConfigs();
-
     var level: usize = 0;
     var tries: usize = 0;
     while (level < LEVELS) {
         tries += 1;
+
+        display.drawLoadingScreen(&loading_screen, state.levelinfo[level].name, "Generating level layout...", level * 100 / LEVELS) catch return false;
 
         var placed_rune = true;
 
@@ -237,8 +247,6 @@ fn initGame() bool {
             mapgen.placeStair(f_level, floor, state.GPA.allocator());
         };
     }
-
-    display.draw();
 
     return true;
 }
@@ -826,6 +834,12 @@ pub fn actualMain() anyerror!void {
         deinitGame();
         return;
     }
+    if (!initLevels()) {
+        deinitGame();
+        return;
+    }
+
+    display.draw();
 
     state.message(.Info, "You've just escaped from prison.", .{});
     state.message(.Info, "Hurry to the stairs before the guards find you!", .{});
