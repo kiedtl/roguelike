@@ -1704,6 +1704,8 @@ pub fn chooseDirection() ?Direction {
 pub fn drawLoadingScreen(console: *Console, text_context: []const u8, text: []const u8, percent_done: usize) !void {
     const win = dimensions(.Whole);
 
+    console.clear();
+
     var y: usize = 0;
     y += console.drawTextAt(0, y, "{s} ($b{s}$.)", .{ text, text_context }, .{});
     y += console.drawTextAt(0, y, "{}% done", .{percent_done}, .{});
