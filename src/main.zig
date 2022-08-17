@@ -177,7 +177,9 @@ fn initLevels() bool {
     while (level < LEVELS) {
         tries += 1;
 
-        display.drawLoadingScreen(&loading_screen, state.levelinfo[level].name, "Generating level layout...", level * 100 / LEVELS) catch return false;
+        const level_name = state.levelinfo[level].name;
+
+        display.drawLoadingScreen(&loading_screen, level_name, "Generating level layout...", level * 100 / LEVELS) catch return false;
 
         var placed_rune = true;
 
@@ -199,10 +201,10 @@ fn initLevels() bool {
 
         if (!placed_rune) {
             if (tries < 28) {
-                std.log.info("{s}: Couldn't place rune, retrying...", .{state.levelinfo[level].name});
+                std.log.info("{s}: Couldn't place rune, retrying...", .{level_name});
                 continue; // try again
             } else {
-                err.bug("{s}: Couldn't generate valid map!", .{state.levelinfo[level].name});
+                err.bug("{s}: Couldn't generate valid map!", .{level_name});
             }
         }
 

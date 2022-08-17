@@ -1708,7 +1708,7 @@ pub fn drawLoadingScreen(console: *Console, text_context: []const u8, text: []co
 
     var y: usize = 0;
     y += console.drawTextAt(0, y, "{s} ($b{s}$.)", .{ text, text_context }, .{});
-    y += console.drawTextAt(0, y, "{}% done", .{percent_done}, .{});
+    y += console.drawBarAt(0, 10, y, percent_done, 100, "", colors.percentageOf(colors.DOBALENE_BLUE, 25), colors.DOBALENE_BLUE, .{ .detail_type = .Percent });
 
     console.renderAreaAt(@intCast(usize, win.startx), @intCast(usize, win.starty), 0, 0, console.width, console.height);
 
@@ -2568,6 +2568,16 @@ pub const Console = struct {
         mem.set(termbox.tb_cell, self.grid, to);
     }
 
+    fn clearLineTo(self: *const Self, startx: usize, endx: usize, y: usize, cell: termbox.tb_cell) void {
+        var x = startx;
+        while (x <= endx) : (x += 1)
+            self.grid[y * self.width + x] = cell;
+    }
+
+    fn clearLine(self: *const Self, startx: usize, endx: usize, y: usize) void {
+        self.clearLineTo(startx, endx, y, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
+    }
+
     pub fn clear(self: *const Self) void {
         self.clearTo(.{ .ch = ' ', .fg = 0, .bg = colors.BG });
     }
@@ -2691,6 +2701,38 @@ pub const Console = struct {
         }
 
         return y - starty;
+    }
+
+    // Reimplementation of _drawBar
+    fn drawBarAt(self: *const Console, x: usize, endx: usize, y: usize, current: usize, max: usize, description: []const u8, bg: u32, fg: u32, opts: struct {
+        detail: bool = true,
+        detail_type: enum { Specific, Percent } = .Specific,
+    }) usize {
+        assert(current <= max);
+
+        const depleted_bg = colors.percentageOf(bg, 40);
+        const percent = if (max == 0) 100 else (current * 100) / max;
+        const bar = ((endx - x - 1) * percent) / 100;
+        const bar_end = x + bar;
+
+        self.clearLineTo(x, endx - 1, y, .{ .ch = ' ', .fg = fg, .bg = depleted_bg });
+        if (percent != 0)
+            self.clearLineTo(x, bar_end, y, .{ .ch = ' ', .fg = fg, .bg = bg });
+
+        _ = self.drawTextAt(x + 1, y, "{s}", .{description}, .{ .fg = fg, .bg = null });
+
+        if (opts.detail) switch (opts.detail_type) {
+            .Percent => {
+                const info_width = @intCast(usize, std.fmt.count("{}%", .{percent}));
+                _ = self.drawTextAt(endx - info_width - 1, y, "{}%", .{percent}, .{ .fg = fg, .bg = null });
+            },
+            .Specific => {
+                const info_width = @intCast(usize, std.fmt.count("{} / {}", .{ current, max }));
+                _ = self.drawTextAt(endx - info_width - 1, y, "{} / {}", .{ current, max }, .{ .fg = fg, .bg = null });
+            },
+        };
+
+        return y + 1;
     }
 };
 
