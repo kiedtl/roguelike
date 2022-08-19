@@ -1707,8 +1707,8 @@ pub fn drawLoadingScreen(console: *Console, text_context: []const u8, text: []co
     console.clear();
 
     var y: usize = 0;
-    y += console.drawTextAt(0, y, "{s} ($b{s}$.)", .{ text, text_context }, .{});
-    y += console.drawBarAt(0, 10, y, percent_done, 100, "", colors.percentageOf(colors.DOBALENE_BLUE, 25), colors.DOBALENE_BLUE, .{ .detail_type = .Percent });
+    y += console.drawTextAt(0, y, "{s}", .{text}, .{});
+    y += console.drawBarAt(0, 28, y, percent_done, 100, text_context, colors.percentageOf(colors.DOBALENE_BLUE, 25), colors.DOBALENE_BLUE, .{ .detail_type = .Percent });
 
     console.renderAreaAt(@intCast(usize, win.startx), @intCast(usize, win.starty), 0, 0, console.width, console.height);
 
