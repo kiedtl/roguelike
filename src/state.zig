@@ -11,6 +11,7 @@ const player_m = @import("player.zig");
 const display = @import("display.zig");
 const dijkstra = @import("dijkstra.zig");
 const mapgen = @import("mapgen.zig");
+const mobs_m = @import("mobs.zig");
 const fire = @import("fire.zig");
 const items = @import("items.zig");
 const utils = @import("utils.zig");
@@ -81,8 +82,9 @@ pub var GPA = std.heap.GeneralPurposeAllocator(.{
 pub const mapgeometry = Coord.new2(LEVELS, WIDTH, HEIGHT);
 pub var dungeon: *Dungeon = undefined;
 pub var layout: [LEVELS][HEIGHT][WIDTH]Layout = undefined;
-pub var player: *Mob = undefined;
 pub var state: GameState = .Game;
+pub var player: *Mob = undefined;
+pub var player_inited = false;
 
 pub var sentry_disabled = false;
 

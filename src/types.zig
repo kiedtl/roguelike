@@ -1840,7 +1840,7 @@ pub const Mob = struct { // {{{
     inventory: Inventory = .{},
 
     life_type: enum { Living, Construct, Undead } = .Living,
-    is_dead: bool = false,
+    is_dead: bool = true,
     is_death_reported: bool = false,
     is_death_verified: bool = false,
     killed_by: ?*Mob = null,
@@ -2974,6 +2974,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn init(self: *Mob, alloc: mem.Allocator) void {
+        self.is_dead = false;
         self.HP = self.max_HP;
         self.MP = self.max_MP;
         self.enemies = EnemyRecord.AList.init(alloc);

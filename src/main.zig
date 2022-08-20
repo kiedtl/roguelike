@@ -264,7 +264,7 @@ fn deinitGame() void {
     var iter = state.mobs.iterator();
     while (iter.next()) |mob| {
         if (mob.is_dead) continue;
-        mob.kill();
+        mob.deinit();
     }
     var s_iter = state.squads.iterator();
     while (s_iter.next()) |squad|
