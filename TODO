@@ -1028,7 +1028,7 @@ x Level progression overhaul
 x Auxiliary items
 - Analyse mob and loot distribution and tweak weights
 - UI
-  - 'M'essages screen
+  x 'M'essages screen
   - Loading screen and art
   - Status/mob/item description lookup screen
   x Features/items screen, remove announcement of items
