@@ -1045,6 +1045,9 @@ x Auxiliary items
 - Write rest of docs/manual
 - Playtest game throughout, especially CAV and make adjustments
 *** v2.0.0 release ***
+- Add "character" to game
+  - Names for all goblin/human monsters
+  - Named statues
 - Basalt monsters (-fiends, -mages, -lings)?
 - Add bookshelves and book types
   - Maps
