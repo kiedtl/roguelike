@@ -1796,6 +1796,7 @@ pub fn drawMessagesScreen() void {
                 switch (ev.ch) {
                     'x', 'j' => scroll -|= 1,
                     'w', 'k' => scroll += 1,
+                    'M' => return,
                     else => {},
                 }
             } else unreachable;
