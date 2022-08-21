@@ -3277,7 +3277,11 @@ pub const Mob = struct { // {{{
                 self.HP = 0;
             }
         } else if (!had_status_before and has_status_now) {
-            msg_parts = s.status.messageWhenAdded();
+            if (s.status == .Paralysis and self == state.player) {
+                display.drawContinuePrompt("You are paralysed!", .{});
+            } else {
+                msg_parts = s.status.messageWhenAdded();
+            }
         }
 
         if (meta.activeTag(p_se.duration) == .Tmp and msg_parts != null) {
