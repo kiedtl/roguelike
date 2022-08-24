@@ -1728,7 +1728,7 @@ pub fn initLoadingScreen() LoadingScreen {
     defer map.deinit();
 
     win_c.main_con = Console.init(state.GPA.allocator(), win.width(), win.height());
-    win_c.logo_con = Console.init(state.GPA.allocator(), map.width, map.height);
+    win_c.logo_con = Console.init(state.GPA.allocator(), map.width, map.height + 1); // +1 padding
     win_c.text_con = Console.init(state.GPA.allocator(), LoadingScreen.TEXT_CON_WIDTH, LoadingScreen.TEXT_CON_HEIGHT);
 
     const starty = (win.height() / 2) - ((map.height + LoadingScreen.TEXT_CON_HEIGHT + 1) / 2);
@@ -1736,7 +1736,7 @@ pub fn initLoadingScreen() LoadingScreen {
     win_c.logo_con.drawXP(&map);
     win_c.main_con.addSubconsole(win_c.logo_con, win_c.main_con.centerX(map.width), starty);
 
-    win_c.main_con.addSubconsole(win_c.text_con, win_c.main_con.centerX(LoadingScreen.TEXT_CON_WIDTH), null); //starty + map.width + 6);
+    win_c.main_con.addSubconsole(win_c.text_con, win_c.main_con.centerX(LoadingScreen.TEXT_CON_WIDTH), null);
 
     return win_c;
 }
@@ -1760,13 +1760,13 @@ pub fn drawLoadingScreen(loading_win: *LoadingScreen, text_context: []const u8, 
         .{ .detail_type = .Percent },
     );
 
-    loading_win.main_con.renderAreaAt(@intCast(usize, win.startx), @intCast(usize, win.starty), 0, 0, loading_win.main_con.width, loading_win.main_con.height);
+    loading_win.main_con.renderFully(@intCast(usize, win.startx), @intCast(usize, win.starty));
 
     termbox.tb_present();
     termbox.tb_clear();
 
     var ev: termbox.tb_event = undefined;
-    const t = termbox.tb_peek_event(&ev, 30);
+    const t = termbox.tb_peek_event(&ev, 20);
 
     if (t == -1) @panic("Fatal termbox error");
     if (t == 0) return; // No input
@@ -1786,6 +1786,28 @@ pub fn drawLoadingScreen(loading_win: *LoadingScreen, text_context: []const u8, 
             }
         } else unreachable;
     }
+}
+
+pub fn drawLoadingScreenFinish(loading_win: *LoadingScreen) bool {
+    const win = dimensions(.Whole);
+
+    loading_win.text_con.clear();
+
+    const text = switch (rng.range(usize, 0, 99)) {
+        00...97 => "-- Press any key to begin --",
+        98...99 => "-- Press any key to inevitably die --",
+        else => err.wat(),
+    };
+
+    _ = loading_win.text_con.drawTextAt(0, 0, "$b{s}$.", .{text}, .{});
+
+    loading_win.main_con.renderFully(@intCast(usize, win.startx), @intCast(usize, win.starty));
+
+    termbox.tb_present();
+    termbox.tb_clear();
+
+    _ = waitForInput(' ') orelse return false;
+    return true;
 }
 
 pub fn drawMessagesScreen() void {
@@ -2655,6 +2677,8 @@ pub const Console = struct {
             dy += 1;
         }
 
+        // FIXME: subconsoles with non-null y coords are broken
+
         var last_sub_y: usize = 0;
         var sdy: usize = offset_y;
         for (self.subconsoles.items) |subconsole| {
@@ -2670,6 +2694,10 @@ pub const Console = struct {
                 sdy += 1;
             }
         }
+    }
+
+    pub fn renderFully(self: *const Self, offset_x: usize, offset_y: usize) void {
+        self.renderAreaAt(offset_x, offset_y, 0, 0, self.width, self.height);
     }
 
     pub fn setCell(self: *const Self, x: usize, y: usize, ch: u21, fg: u32, bg: u32) void {

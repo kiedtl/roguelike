@@ -178,7 +178,7 @@ fn initLevels() bool {
 
         const level_name = state.levelinfo[level].name;
 
-        display.drawLoadingScreen(&loading_screen, level_name, "Generating level layout...", level * 100 / LEVELS) catch return false;
+        display.drawLoadingScreen(&loading_screen, level_name, "Generating map...", level * 100 / LEVELS) catch return false;
 
         var placed_rune = true;
 
@@ -239,6 +239,8 @@ fn initLevels() bool {
     var f_level: usize = LEVELS - 1;
     while (f_level > 0) : (f_level -= 1) {
         for (state.levelinfo[f_level].stairs) |maybe_stair| if (maybe_stair) |dest_stair| {
+            display.drawLoadingScreen(&loading_screen, dest_stair, "Placing stairs...", (LEVELS - f_level) * 100 / LEVELS) catch return false;
+
             const floor = for (state.levelinfo) |levelinfo, i| {
                 if (mem.eql(u8, levelinfo.name, dest_stair)) {
                     break i;
@@ -249,7 +251,7 @@ fn initLevels() bool {
         };
     }
 
-    return true;
+    return display.drawLoadingScreenFinish(&loading_screen);
 }
 
 fn deinitGame() void {
