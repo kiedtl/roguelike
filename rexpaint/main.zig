@@ -5,7 +5,7 @@ pub fn main() anyerror!void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
 
-    const map = try RexMap.initFromFile(arena.allocator(), "logo.xp");
+    const map = try RexMap.initFromFile(arena.allocator(), "data/logo.xp");
     defer map.deinit();
 
     var y: usize = 0;

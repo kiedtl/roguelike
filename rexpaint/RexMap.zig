@@ -1,9 +1,5 @@
 const std = @import("std");
 
-const zlib = @cImport({
-    @cInclude("zlib.h");
-});
-
 // -----------------------------------------------------------------------------
 
 alloc: std.mem.Allocator,
@@ -57,90 +53,58 @@ pub const DEFAULT_TILEMAP = [256]u21{
 };
 // zig fmt: on
 
-fn _readU32(in: [*c]zlib.gzFile, position: ?usize) u32 {
-    var buffer: [4]u8 = undefined;
-
-    if (position) |pos| {
-        if (zlib.gzseek(in.*, @intCast(c_long, pos), zlib.SEEK_SET) == -1)
-            return 0;
-    }
-
-    _ = zlib.gzread(in.*, &buffer, 4); // TODO: check ret val
-
-    return @bitCast(u32, buffer);
-}
-
-fn _readI32(in: [*c]zlib.gzFile, position: usize) i32 {
-    var buffer: [4]u8 = undefined;
-
-    if (zlib.gzseek(in.*, @intCast(c_long, position), zlib.SEEK_SET) == -1)
-        return 0;
-
-    _ = zlib.gzread(in.*, &buffer, 4); // TODO: check ret val
-
-    return @bitCast(i32, buffer);
-}
-
-fn _readU8(in: [*c]zlib.gzFile, position: ?usize) u8 {
-    var buf: [1]u8 = .{0};
-
-    if (position) |pos| {
-        if (zlib.gzseek(in.*, @intCast(c_long, pos), zlib.SEEK_SET) == -1)
-            return 0;
-    }
-
-    _ = zlib.gzread(in.*, &buf, 1); // TODO: check ret val
-
-    return buf[0];
-}
+const GzipFileStream = std.compress.gzip.GzipStream(std.fs.File.Reader);
 
 pub fn initFromFile(alloc: std.mem.Allocator, filename: []const u8) !Self {
     var self: Self = undefined;
     self.alloc = alloc;
 
-    var filestream = zlib.gzopen(filename.ptr, "rb");
-    if (filestream == null) {
-        return error.GzopenFailed;
+    const file = try std.fs.cwd().openFile(filename, .{ .read = true });
+    defer file.close();
+
+    var gz_stream = try std.compress.gzip.gzipStream(alloc, file.reader());
+    defer gz_stream.deinit();
+
+    const reader = gz_stream.reader();
+
+    const version = try reader.readIntLittle(i32);
+
+    if (version >= 0) {
+        return error.OldFileFormat;
     }
 
-    var layer_offset: usize = 0;
-
-    const version = _readI32(&filestream, 0);
-    if (version < 0) {
-        layer_offset = 4;
-    }
-
-    self.layers = @intCast(usize, _readU32(&filestream, layer_offset));
-    self.width = @intCast(usize, _readU32(&filestream, (layer_offset * 8 + 32) / 8));
-    self.height = @intCast(usize, _readU32(&filestream, (layer_offset * 8 + 32 + 32) / 8));
+    self.layers = @intCast(usize, try reader.readIntLittle(i32));
+    self.width = @intCast(usize, try reader.readIntLittle(i32));
+    self.height = @intCast(usize, try reader.readIntLittle(i32));
 
     self.data = try self.alloc.alloc(Tile, self.layers * self.height * self.width);
 
-    if (zlib.gzseek(filestream, 16, zlib.SEEK_SET) == -1)
-        return error.CorruptFile;
-
     var z: usize = 0;
     while (z < self.layers) : (z += 1) {
+        // If this isn't the first layer, skip the two following u32's, which
+        // are the (redundant) width and height
+        //
+        if (z > 0) {
+            _ = try reader.readIntLittle(i32);
+            _ = try reader.readIntLittle(i32);
+        }
+
         var x: usize = 0;
         while (x < self.width) : (x += 1) {
             var y: usize = 0;
             while (y < self.height) : (y += 1) {
                 var tile: Tile = undefined;
-                tile.ch = _readU32(&filestream, null);
-                tile.fg.r = _readU8(&filestream, null);
-                tile.fg.g = _readU8(&filestream, null);
-                tile.fg.b = _readU8(&filestream, null);
-                tile.bg.r = _readU8(&filestream, null);
-                tile.bg.g = _readU8(&filestream, null);
-                tile.bg.b = _readU8(&filestream, null);
+                tile.ch = try reader.readIntLittle(u32);
+                tile.fg.r = try reader.readIntLittle(u8);
+                tile.fg.g = try reader.readIntLittle(u8);
+                tile.fg.b = try reader.readIntLittle(u8);
+                tile.bg.r = try reader.readIntLittle(u8);
+                tile.bg.g = try reader.readIntLittle(u8);
+                tile.bg.b = try reader.readIntLittle(u8);
 
                 self.getMutPtr(z, x, y).* = tile;
             }
         }
-        const new_offset = 16 + ((10 * self.width * self.height) + 8) * (z + 1);
-
-        if (zlib.gzseek(filestream, @intCast(c_long, new_offset), zlib.SEEK_SET) == -1)
-            return error.CorruptFile;
     }
 
     return self;
