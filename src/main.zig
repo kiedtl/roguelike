@@ -162,8 +162,7 @@ fn initGame() bool {
 }
 
 fn initLevels() bool {
-    const win = display.dimensions(.Whole);
-    var loading_screen = display.Console.init(state.GPA.allocator(), win.width(), win.height());
+    var loading_screen = display.initLoadingScreen();
     defer loading_screen.deinit();
 
     var s_fabs: mapgen.PrefabArrayList = undefined;

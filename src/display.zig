@@ -7,6 +7,8 @@ const assert = std.debug.assert;
 const mem = std.mem;
 const enums = std.enums;
 
+const RexMap = @import("rexpaint").RexMap;
+
 const colors = @import("colors.zig");
 const player = @import("player.zig");
 const spells = @import("spells.zig");
@@ -137,7 +139,7 @@ pub const Dimension = struct {
 
 pub fn dimensions(w: DisplayWindow) Dimension {
     const height = termbox.tb_height();
-    const width = termbox.tb_width();
+    //const width = termbox.tb_width();
 
     const playerinfo_width = LEFT_INFO_WIDTH;
     //const playerinfo_width = width - WIDTH - 2;
@@ -153,7 +155,7 @@ pub fn dimensions(w: DisplayWindow) Dimension {
     return switch (w) {
         .Whole => .{
             .startx = 1,
-            .endx = width - 1,
+            .endx = playerinfo_start + playerinfo_width,
             .starty = 1,
             .endy = height - 1,
         },
@@ -1701,18 +1703,67 @@ pub fn chooseDirection() ?Direction {
     }
 }
 
-pub fn drawLoadingScreen(console: *Console, text_context: []const u8, text: []const u8, percent_done: usize) !void {
+pub const LoadingScreen = struct {
+    main_con: Console,
+    logo_con: Console,
+    text_con: Console,
+
+    pub const TEXT_CON_HEIGHT = 2;
+    pub const TEXT_CON_WIDTH = 28;
+
+    pub fn deinit(self: @This()) void {
+        self.main_con.deinit();
+
+        // Deinit'ing main_con automatically frees subconsoles
+        //self.logo_con.deinit();
+        //self.text_con.deinit();
+    }
+};
+
+pub fn initLoadingScreen() LoadingScreen {
+    const win = dimensions(.Whole);
+    var win_c: LoadingScreen = undefined;
+
+    const map = RexMap.initFromFile(state.GPA.allocator(), "data/logo.xp") catch err.wat();
+    defer map.deinit();
+
+    win_c.main_con = Console.init(state.GPA.allocator(), win.width(), win.height());
+    win_c.logo_con = Console.init(state.GPA.allocator(), map.width, map.height);
+    win_c.text_con = Console.init(state.GPA.allocator(), LoadingScreen.TEXT_CON_WIDTH, LoadingScreen.TEXT_CON_HEIGHT);
+
+    const starty = (win.height() / 2) - ((map.height + LoadingScreen.TEXT_CON_HEIGHT + 1) / 2);
+
+    win_c.logo_con.drawXP(&map);
+    win_c.main_con.addSubconsole(win_c.logo_con, win_c.main_con.centerX(map.width), starty);
+
+    win_c.main_con.addSubconsole(win_c.text_con, win_c.main_con.centerX(LoadingScreen.TEXT_CON_WIDTH), null); //starty + map.width + 6);
+
+    return win_c;
+}
+
+pub fn drawLoadingScreen(loading_win: *LoadingScreen, text_context: []const u8, text: []const u8, percent_done: usize) !void {
     const win = dimensions(.Whole);
 
-    console.clear();
+    loading_win.text_con.clear();
 
     var y: usize = 0;
-    y += console.drawTextAt(0, y, "{s}", .{text}, .{});
-    y += console.drawBarAt(0, 28, y, percent_done, 100, text_context, colors.percentageOf(colors.DOBALENE_BLUE, 25), colors.DOBALENE_BLUE, .{ .detail_type = .Percent });
+    y += loading_win.text_con.drawTextAt(0, y, "{s}", .{text}, .{});
+    y += loading_win.text_con.drawBarAt(
+        0,
+        LoadingScreen.TEXT_CON_WIDTH,
+        y,
+        percent_done,
+        100,
+        text_context,
+        colors.percentageOf(colors.DOBALENE_BLUE, 25),
+        colors.DOBALENE_BLUE,
+        .{ .detail_type = .Percent },
+    );
 
-    console.renderAreaAt(@intCast(usize, win.startx), @intCast(usize, win.starty), 0, 0, console.width, console.height);
+    loading_win.main_con.renderAreaAt(@intCast(usize, win.startx), @intCast(usize, win.starty), 0, 0, loading_win.main_con.width, loading_win.main_con.height);
 
     termbox.tb_present();
+    termbox.tb_clear();
 
     var ev: termbox.tb_event = undefined;
     const t = termbox.tb_peek_event(&ev, 30);
@@ -2546,6 +2597,11 @@ pub const Console = struct {
         self.subconsoles.append(.{ .console = subconsole, .x = x, .y = y }) catch err.wat();
     }
 
+    // Utility function for centering subconsoles
+    pub fn centerX(self: *const Self, subwidth: usize) usize {
+        return (self.width / 2) - (subwidth / 2);
+    }
+
     pub fn changeHeight(self: *Self, new_height: usize) void {
         const new_grid = self.alloc.alloc(termbox.tb_cell, self.width * new_height) catch err.wat();
         mem.set(termbox.tb_cell, new_grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
@@ -2618,6 +2674,23 @@ pub const Console = struct {
 
     pub fn setCell(self: *const Self, x: usize, y: usize, ch: u21, fg: u32, bg: u32) void {
         self.grid[self.width * y + x] = .{ .ch = ch, .fg = fg, .bg = bg };
+    }
+
+    // TODO: draw multiple layers as needed
+    pub fn drawXP(self: *const Self, map: *const RexMap) void {
+        var y: usize = 0;
+        while (y < map.height and y < self.height) : (y += 1) {
+            var x: usize = 0;
+            while (x < map.width and y < self.width) : (x += 1) {
+                const tile = map.get(0, x, y);
+
+                if (tile.bg.r == 255 and tile.bg.g == 0 and tile.bg.b == 255) {
+                    continue;
+                }
+
+                self.setCell(x, y, RexMap.DEFAULT_TILEMAP[tile.ch], tile.fg.asU32(), tile.bg.asU32());
+            }
+        }
     }
 
     // Re-implementation of _drawStr

@@ -1,5 +1,6 @@
 const std = @import("std");
 const Builder = std.build.Builder;
+const Pkg = std.build.Pkg;
 
 pub fn build(b: *Builder) void {
     var release_buf: [64]u8 = undefined;
@@ -57,6 +58,8 @@ pub fn build(b: *Builder) void {
     for (termbox_sources) |termbox_source|
         exe.addCSourceFile(termbox_source, &termbox_cflags);
     exe.linkLibC();
+    exe.linkSystemLibrary("z");
+    exe.addPackagePath("rexpaint", "rexpaint/lib.zig");
     exe.setTarget(target);
     exe.setBuildMode(mode);
     exe.addOptions("build_options", options);
