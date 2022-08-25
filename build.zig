@@ -59,7 +59,7 @@ pub fn build(b: *Builder) void {
         exe.addCSourceFile(termbox_source, &termbox_cflags);
     exe.linkLibC();
     exe.linkSystemLibrary("z");
-    exe.addPackagePath("rexpaint", "rexpaint/lib.zig");
+    exe.addPackagePath("rexpaint", "rx/lib.zig");
     exe.setTarget(target);
     exe.setBuildMode(mode);
     exe.addOptions("build_options", options);

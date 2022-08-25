@@ -2710,7 +2710,7 @@ pub const Console = struct {
         while (y < map.height and y < self.height) : (y += 1) {
             var x: usize = 0;
             while (x < map.width and y < self.width) : (x += 1) {
-                const tile = map.get(0, x, y);
+                const tile = map.get(x, y);
 
                 if (tile.bg.r == 255 and tile.bg.g == 0 and tile.bg.b == 255) {
                     continue;
