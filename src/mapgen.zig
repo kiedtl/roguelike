@@ -118,6 +118,8 @@ pub const VAULT_LEVELS = [LEVELS][]const VaultType{
     &.{ .Iron,          .Tavern  }, // -6/Laboratory
     &.{ .Iron,          .Tavern  }, // -7/Prison
     &.{ .Iron                    }, // -8/Prison
+
+    &.{                          }, // Tutorial
 };
 // zig fmt: on
 pub const VAULT_KINDS = 4;
@@ -1381,8 +1383,18 @@ pub fn placeRandomRooms(
             continue;
         };
 
-        const x = rng.rangeClumping(usize, fab.width, state.WIDTH - fab.width - 1, 2);
-        const y = rng.rangeClumping(usize, fab.height, state.HEIGHT - fab.height - 1, 2);
+        const x = rng.rangeClumping(
+            usize,
+            math.min(fab.width, state.WIDTH - fab.width - 1),
+            math.max(fab.width, state.WIDTH - fab.width - 1),
+            2,
+        );
+        const y = rng.rangeClumping(
+            usize,
+            math.min(fab.height, state.HEIGHT - fab.height - 1),
+            math.max(fab.height, state.HEIGHT - fab.height - 1),
+            2,
+        );
 
         var room = Room{
             .rect = Rect{
@@ -2921,7 +2933,7 @@ pub const Prefab = struct {
     player_position: ?Coord = null,
     height: usize = 0,
     width: usize = 0,
-    content: [40][40]FabTile = undefined,
+    content: [40][60]FabTile = undefined,
     connections: [40]?Connection = undefined,
     features: [128]?Feature = [_]?Feature{null} ** 128,
     mobs: [45]?FeatureMob = [_]?FeatureMob{null} ** 45,
@@ -3540,7 +3552,7 @@ pub const LevelConfig = struct {
     door: *const Machine = &surfaces.NormalDoor,
     vent: []const u8 = "gas_vent",
     bars: []const u8 = "iron_bars",
-    machines: []const *const Machine = null,
+    machines: []const *const Machine = &[_]*const Machine{},
     props: *[]const Prop = &surfaces.statue_props.items,
     // Props that can be placed in bulk along a single wall.
     single_props: []const []const u8 = &[_][]const u8{},
@@ -3739,6 +3751,13 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
     },
 };
 
+pub const TUT_BASE_LEVELCONFIG = LevelConfig{
+    .prefabs = &[_][]const u8{"TUT_basic"},
+    .prefab_chance = 1,
+    .mapgen_iters = 0,
+    .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },
+};
+
 pub var Configs = [LEVELS]LevelConfig{
     PRI_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
@@ -3755,6 +3774,8 @@ pub var Configs = [LEVELS]LevelConfig{
     LAB_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
+
+    TUT_BASE_LEVELCONFIG,
 };
 
 // TODO: convert this to a comptime expression

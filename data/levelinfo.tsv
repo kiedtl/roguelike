@@ -20,3 +20,6 @@
 "LAB" 	        "-6/Laboratory" 	yea 	    nay 	        - 	     "-5/Prison" 	 "-6/Laboratory/2"
 "PRI" 	            "-7/Prison" 	nay 	    nay 	        - 	 "-6/Laboratory" 	                 -
 "PRI" 	            "-8/Prison" 	nay 	    nay 	        - 	     "-7/Prison" 	                 -
+
+#"TUT" 	        "Adv. Tutorial" 	nay 	    nay 	        - 	     "-7/Prison" 	                 -
+"TUT" 	             "Tutorial" 	nay 	    nay 	        - 	               - 	                 -
