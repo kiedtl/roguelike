@@ -1810,6 +1810,48 @@ pub fn drawLoadingScreenFinish(loading_win: *LoadingScreen) bool {
     return true;
 }
 
+pub fn drawTextScreen(comptime fmt: []const u8, args: anytype) void {
+    const mainw = dimensions(.Main);
+
+    const text = std.fmt.allocPrint(state.GPA.allocator(), fmt, args) catch err.wat();
+    defer state.GPA.allocator().free(text);
+
+    var con = Console.init(state.GPA.allocator(), mainw.width(), mainw.height());
+    defer con.deinit();
+
+    var y: usize = 0;
+    y += con.drawTextAt(0, y, "{s}", .{text}, .{});
+
+    con.renderFully(@intCast(usize, mainw.startx), @intCast(usize, mainw.starty));
+
+    termbox.tb_present();
+    termbox.tb_clear();
+
+    while (true) {
+        var ev: termbox.tb_event = undefined;
+        const t = termbox.tb_poll_event(&ev);
+
+        if (t == -1) @panic("Fatal termbox error");
+
+        if (t == termbox.TB_EVENT_KEY) {
+            if (ev.key != 0) {
+                switch (ev.key) {
+                    termbox.TB_KEY_CTRL_C,
+                    termbox.TB_KEY_ESC,
+                    termbox.TB_KEY_SPACE,
+                    termbox.TB_KEY_ENTER,
+                    => return,
+                    else => {},
+                }
+            } else if (ev.ch != 0) {
+                switch (ev.ch) {
+                    else => {},
+                }
+            } else unreachable;
+        }
+    }
+}
+
 pub fn drawMessagesScreen() void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();

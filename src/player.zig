@@ -336,7 +336,7 @@ pub fn moveOrFight(direction: Direction) bool {
                 }
             },
             .Poster => {
-                state.message(.Info, "$c(poster)$. Press $bA$. to read.", .{});
+                state.message(.Info, "$c(sign)$. Press $bA$. to read.", .{});
             },
             else => {},
         };
@@ -518,8 +518,10 @@ pub fn activateSurfaceItem(coord: Coord) bool {
                 display.drawAlertThenLog("You can't activate that.", .{});
                 return false;
             },
-            .Poster => |_| {
-                return display.drawExamineScreen(.Surface);
+            .Poster => |p| {
+                //return display.drawExamineScreen(.Surface);
+                display.drawTextScreen("$oYou read:$.\n\n{s}", .{p.text});
+                return false;
             },
             else => {
                 display.drawAlertThenLog("There's nothing here to activate.", .{});
