@@ -625,6 +625,9 @@ fn excavatePrefab(
                 .Feature => |feature_id| {
                     if (fab.features[feature_id]) |feature| {
                         switch (feature) {
+                            .Poster => |poster| {
+                                state.dungeon.at(rc).surface = SurfaceItem{ .Poster = poster };
+                            },
                             .Prop => |pid| {
                                 if (utils.findById(surfaces.props.items, pid)) |prop| {
                                     _ = placeProp(rc, &surfaces.props.items[prop]);
@@ -2981,6 +2984,7 @@ pub const Prefab = struct {
     };
 
     pub const Feature = union(enum) {
+        Poster: *const Poster,
         Machine: struct {
             id: [32:0]u8,
             points: StackBuffer(Coord, 16),
@@ -3072,8 +3076,12 @@ pub const Prefab = struct {
         var w: usize = 0;
         var y: usize = 0;
 
-        var lines = mem.tokenize(u8, from, "\n");
+        var lines = mem.split(u8, from, "\n");
         while (lines.next()) |line| {
+            if (line.len == 0) {
+                continue;
+            }
+
             switch (line[0]) {
                 '%' => {}, // ignore comments
                 '\\' => {
@@ -3270,12 +3278,34 @@ pub const Prefab = struct {
                     const identifier = line[1];
                     const feature_type = words.next() orelse return error.MalformedFeatureDefinition;
                     if (feature_type.len != 1) return error.InvalidFeatureType;
-                    const id = words.next() orelse return error.MalformedFeatureDefinition;
+                    const id = words.next();
 
                     switch (feature_type[0]) {
+                        'P' => {
+                            var buf = std.ArrayList(u8).init(state.GPA.allocator());
+                            while (lines.next()) |poster_line| {
+                                if (mem.eql(u8, poster_line, "END POSTER")) {
+                                    break;
+                                }
+                                std.log.info("line: {s}", .{poster_line});
+                                if (poster_line.len == 0) {
+                                    try buf.appendSlice("\n");
+                                } else {
+                                    try buf.appendSlice(poster_line);
+                                }
+                                try buf.appendSlice(" ");
+                            }
+                            try literature.posters.append(.{
+                                .level = try state.GPA.allocator().dupe(u8, "NUL"),
+                                .text = buf.items,
+                                .placement_counter = 0,
+                            });
+                            const poster = &literature.posters.items[literature.posters.items.len - 1];
+                            f.features[identifier] = Feature{ .Poster = poster };
+                        },
                         'p' => {
                             f.features[identifier] = Feature{ .Prop = [_:0]u8{0} ** 32 };
-                            mem.copy(u8, &f.features[identifier].?.Prop, id);
+                            mem.copy(u8, &f.features[identifier].?.Prop, id orelse return error.MalformedFeatureDefinition);
                         },
                         'm' => {
                             var points = StackBuffer(Coord, 16).init(null);
@@ -3294,7 +3324,7 @@ pub const Prefab = struct {
                                     .points = points,
                                 },
                             };
-                            mem.copy(u8, &f.features[identifier].?.Machine.id, id);
+                            mem.copy(u8, &f.features[identifier].?.Machine.id, id orelse return error.MalformedFeatureDefinition);
                         },
                         else => return error.InvalidFeatureType,
                     }
@@ -3413,6 +3443,7 @@ pub fn readPrefabs(alloc: mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pref
                 error.UnexpectedMetadataValue => "Unexpected value for metadata",
                 error.ExpectedMetadataValue => "Expected value for metadata",
                 error.InvalidUtf8 => "Encountered invalid UTF-8",
+                else => "Unknown error",
             };
             std.log.info("{s}: Couldn't load prefab: {s}", .{ fab_file.name, msg });
             continue;
