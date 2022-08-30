@@ -48,6 +48,7 @@ const WIDTH = state.WIDTH;
 
 const Generator = @import("generators.zig").Generator;
 const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 // ---
@@ -787,6 +788,7 @@ pub const CapacitorArray = Machine{
                 }
 
                 var affected = StackBuffer(Coord, 128).init(null);
+
                 var gen = Generator(Rect.rectIter).init(state.mapRect(by.coord.z));
                 while (gen.next()) |coord| if (state.player.cansee(coord)) {
                     if (utils.getHostileAt(state.player, coord)) |hostile| {
@@ -802,6 +804,28 @@ pub const CapacitorArray = Machine{
                         }
                     } else |_| {}
                 };
+
+                //                 var y: usize = 0;
+                //                 while (y < HEIGHT) : (y += 1) {
+                //                     var x: usize = 0;
+                //                     while (x < WIDTH) : (x += 1) {
+                //                         const coord = Coord.new2(by.coord.z, x, y);
+                //                         if (state.player.cansee(coord)) {
+                //                             if (utils.getHostileAt(state.player, coord)) |hostile| {
+                //                                 if (hostile.resistance(.rElec) <= 0) {
+                //                                     hostile.takeDamage(.{
+                //                                         .amount = 27,
+                //                                         .by_mob = state.player,
+                //                                         .blood = false,
+                //                                         .source = .RangedAttack,
+                //                                         .kind = .Electric,
+                //                                     }, .{ .basic = true });
+                //                                     affected.append(coord) catch err.wat();
+                //                                 }
+                //                             } else |_| {}
+                //                         }
+                //                     }
+                //                 }
 
                 if (affected.len == 0) {
                     display.drawAlertThenLog("No electricity-vulnerable monsters in sight.", .{});

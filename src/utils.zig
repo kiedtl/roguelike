@@ -189,7 +189,7 @@ pub fn used(slice: anytype) rt: {
         else => @compileError("Expected slice, got " ++ @typeName(SliceType)),
     };
 } {
-    const sentry = sentinel(@TypeOf(slice)) orelse return slice[0..];
+    const sentry = std.meta.sentinel(@TypeOf(slice)) orelse return slice[0..];
     var i: usize = 0;
     while (slice[i] != sentry) i += 1;
     return slice[0..i];
@@ -204,24 +204,6 @@ pub fn findById(haystack: anytype, _needle: anytype) ?usize {
     }
 
     return null;
-}
-
-pub fn sentinel(comptime T: type) switch (@typeInfo(T)) {
-    .Pointer => |p| switch (@typeInfo(p.child)) {
-        .Pointer, .Array => @TypeOf(sentinel(p.child)),
-        else => if (p.sentinel) |s| @TypeOf(s) else ?p.child,
-    },
-    .Array => |a| if (a.sentinel) |s| ?@TypeOf(s) else ?a.child,
-    else => @compileError("Expected array or slice, found " ++ @typeName(T)),
-} {
-    return switch (@typeInfo(T)) {
-        .Pointer => |p| switch (@typeInfo(p.child)) {
-            .Pointer, .Array => sentinel(p.child),
-            else => if (p.sentinel) |s| s else null,
-        },
-        .Array => |a| if (a.sentinel) |s| s else null,
-        else => @compileError("Expected array or slice, found " ++ @typeName(T)),
-    };
 }
 
 pub fn cloneStr(str: []const u8, alloc: mem.Allocator) ![]const u8 {
@@ -250,7 +232,7 @@ pub fn copyZ(dest: anytype, src: anytype) void {
     while (i < srclen) : (i += 1)
         dest[i] = src[i];
 
-    if (sentinel(@TypeOf(dest))) |s| {
+    if (std.meta.sentinel(@TypeOf(dest))) |s| {
         assert((dest.len - 1) > srclen);
         dest[srclen] = s;
     }
@@ -393,26 +375,6 @@ pub const FoldedTextIterator = struct {
 };
 
 // tests {{{
-test "sentinel" {
-    try testing.expectEqual(@TypeOf(sentinel([]const u8)), ?u8);
-    try testing.expectEqual(@TypeOf(sentinel([32:0]u23)), ?u23);
-    try testing.expectEqual(@TypeOf(sentinel([128:3]u23)), ?u23);
-    try testing.expectEqual(@TypeOf(sentinel([28]u64)), ?u64);
-    try testing.expectEqual(@TypeOf(sentinel([18:0.34]f64)), ?f64);
-    try testing.expectEqual(@TypeOf(sentinel(*[32:0]u8)), ?u8);
-    try testing.expectEqual(@TypeOf(sentinel(***[32:0]u8)), ?u8);
-    try testing.expectEqual(@TypeOf(sentinel(***[10]isize)), ?isize);
-
-    try testing.expectEqual(sentinel([]const u8), null);
-    try testing.expectEqual(sentinel([32:0]u23), 0);
-    try testing.expectEqual(sentinel([128:3]u23), 3);
-    try testing.expectEqual(sentinel([28]u64), null);
-    try testing.expectEqual(sentinel([18:0.34]f64), 0.34);
-    try testing.expectEqual(sentinel(*[32:0]u8), 0);
-    try testing.expectEqual(sentinel(***[32:0]u8), 0);
-    try testing.expectEqual(sentinel(***[10]isize), null);
-}
-
 test "copy" {
     var one: [32:0]u8 = undefined;
     var two: [32:0]u8 = undefined;

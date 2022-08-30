@@ -83,8 +83,8 @@ pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace) noreturn {
                     trace,
                     @returnAddress(),
                     alloc,
-                ) catch |err| {
-                    std.log.err("zig-sentry: Fail: {s}", .{@errorName(err)});
+                ) catch |e| {
+                    std.log.err("zig-sentry: Fail: {s}", .{@errorName(e)});
                 };
             }
 
@@ -867,7 +867,7 @@ pub fn actualMain() anyerror!void {
             },
             .Lose => {
                 const msg = switch (rng.range(usize, 0, 99)) {
-                    00...60 => "You die...",
+                    0...60 => "You die...",
                     61...70 => "You died. Not surprising given your playstyle.",
                     71...80 => "Geez, you just died.",
                     81...95 => "Congrats! You died!",
@@ -891,7 +891,7 @@ pub fn actualMain() anyerror!void {
 }
 
 pub fn main() void {
-    actualMain() catch |err| {
+    actualMain() catch |e| {
         if (!state.sentry_disabled) {
             if (@errorReturnTrace()) |error_trace| {
                 var membuf: [65535]u8 = undefined;
@@ -901,7 +901,7 @@ pub fn main() void {
                 sentry.captureError(
                     build_options.release,
                     build_options.dist,
-                    @errorName(err),
+                    @errorName(e),
                     "propagated error trace",
                     &[_]sentry.SentryEvent.TagSet.Tag{.{
                         .name = "seed",

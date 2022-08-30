@@ -78,46 +78,46 @@ pub const RARE_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 100, .i = .{ .W = GlaiveWeapon } },
     .{ .w = 100, .i = .{ .W = SwordWeapon } },
     // Rare weapons
-    .{ .w = 050, .i = .{ .W = MartialSwordWeapon } },
+    .{ .w = 50, .i = .{ .W = MartialSwordWeapon } },
     // Bone weapons
-    .{ .w = 001, .i = .{ .W = BoneSwordWeapon } },
-    .{ .w = 001, .i = .{ .W = BoneDaggerWeapon } },
-    .{ .w = 001, .i = .{ .W = BoneStilettoWeapon } },
-    .{ .w = 001, .i = .{ .W = BoneMaceWeapon } },
-    .{ .w = 001, .i = .{ .W = BoneGreatMaceWeapon } },
-    .{ .w = 001, .i = .{ .W = BoneHalberdWeapon } },
+    .{ .w = 1, .i = .{ .W = BoneSwordWeapon } },
+    .{ .w = 1, .i = .{ .W = BoneDaggerWeapon } },
+    .{ .w = 1, .i = .{ .W = BoneStilettoWeapon } },
+    .{ .w = 1, .i = .{ .W = BoneMaceWeapon } },
+    .{ .w = 1, .i = .{ .W = BoneGreatMaceWeapon } },
+    .{ .w = 1, .i = .{ .W = BoneHalberdWeapon } },
     // Copper weapons
-    .{ .w = 001, .i = .{ .W = CopperSwordWeapon } },
-    .{ .w = 001, .i = .{ .W = CopperRapierWeapon } },
+    .{ .w = 1, .i = .{ .W = CopperSwordWeapon } },
+    .{ .w = 1, .i = .{ .W = CopperRapierWeapon } },
 };
 pub const ITEM_DROPS = [_]ItemTemplate{
-    .{ .w = 001, .i = .{ .List = &RARE_ITEM_DROPS } },
+    .{ .w = 1, .i = .{ .List = &RARE_ITEM_DROPS } },
     // Weapons
-    .{ .w = 030, .i = .{ .W = SwordWeapon } },
-    .{ .w = 030, .i = .{ .W = DaggerWeapon } },
-    .{ .w = 020, .i = .{ .W = StilettoWeapon } },
-    .{ .w = 025, .i = .{ .W = RapierWeapon } },
+    .{ .w = 30, .i = .{ .W = SwordWeapon } },
+    .{ .w = 30, .i = .{ .W = DaggerWeapon } },
+    .{ .w = 20, .i = .{ .W = StilettoWeapon } },
+    .{ .w = 25, .i = .{ .W = RapierWeapon } },
     //.{ .w = 025, .i = .{ .W = QuarterstaffWeapon } },
     //.{ .w = 030, .i = .{ .W = MaceWeapon } },
-    .{ .w = 025, .i = .{ .W = GreatMaceWeapon } },
-    .{ .w = 030, .i = .{ .W = MorningstarWeapon } },
-    .{ .w = 030, .i = .{ .W = HalberdWeapon } },
-    .{ .w = 030, .i = .{ .W = GlaiveWeapon } },
-    .{ .w = 025, .i = .{ .W = MonkSpadeWeapon } },
-    .{ .w = 015, .i = .{ .W = WoldoWeapon } },
+    .{ .w = 25, .i = .{ .W = GreatMaceWeapon } },
+    .{ .w = 30, .i = .{ .W = MorningstarWeapon } },
+    .{ .w = 30, .i = .{ .W = HalberdWeapon } },
+    .{ .w = 30, .i = .{ .W = GlaiveWeapon } },
+    .{ .w = 25, .i = .{ .W = MonkSpadeWeapon } },
+    .{ .w = 15, .i = .{ .W = WoldoWeapon } },
     // Armor
-    .{ .w = 020, .i = .{ .A = GambesonArmor } },
-    .{ .w = 010, .i = .{ .A = SpikedLeatherArmor } },
-    .{ .w = 020, .i = .{ .A = HauberkArmor } },
-    .{ .w = 020, .i = .{ .A = CuirassArmor } },
+    .{ .w = 20, .i = .{ .A = GambesonArmor } },
+    .{ .w = 10, .i = .{ .A = SpikedLeatherArmor } },
+    .{ .w = 20, .i = .{ .A = HauberkArmor } },
+    .{ .w = 20, .i = .{ .A = CuirassArmor } },
     // Aux items
-    .{ .w = 020, .i = .{ .X = &WolframOrbAux } },
-    .{ .w = 020, .i = .{ .X = &MinersMapAux } },
-    .{ .w = 020, .i = .{ .X = &DetectHeatAux } },
-    .{ .w = 020, .i = .{ .X = &DetectElecAux } },
-    .{ .w = 010, .i = .{ .X = &DispelUndeadAux } },
-    .{ .w = 010, .i = .{ .X = &BucklerAux } },
-    .{ .w = 010, .i = .{ .X = &SpikedBucklerAux } },
+    .{ .w = 20, .i = .{ .X = &WolframOrbAux } },
+    .{ .w = 20, .i = .{ .X = &MinersMapAux } },
+    .{ .w = 20, .i = .{ .X = &DetectHeatAux } },
+    .{ .w = 20, .i = .{ .X = &DetectElecAux } },
+    .{ .w = 10, .i = .{ .X = &DispelUndeadAux } },
+    .{ .w = 10, .i = .{ .X = &BucklerAux } },
+    .{ .w = 10, .i = .{ .X = &SpikedBucklerAux } },
     // Potions
     .{ .w = 190, .i = .{ .P = &DisorientPotion } },
     .{ .w = 190, .i = .{ .P = &DebilitatePotion } },
@@ -133,26 +133,26 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 120, .i = .{ .P = &RecuperatePotion } },
     .{ .w = 120, .i = .{ .P = &DecimatePotion } },
     // Consumables
-    .{ .w = 080, .i = .{ .c = &HotPokerConsumable } },
-    .{ .w = 090, .i = .{ .c = &CoalConsumable } },
-    .{ .w = 001, .i = .{ .c = &CopperIngotConsumable } },
+    .{ .w = 80, .i = .{ .c = &HotPokerConsumable } },
+    .{ .w = 90, .i = .{ .c = &CoalConsumable } },
+    .{ .w = 1, .i = .{ .c = &CopperIngotConsumable } },
     // Kits
-    .{ .w = 050, .i = .{ .c = &FireTrapKit } },
-    .{ .w = 050, .i = .{ .c = &ShockTrapKit } },
-    .{ .w = 040, .i = .{ .c = &SparklingTrapKit } },
-    .{ .w = 040, .i = .{ .c = &EmberlingTrapKit } },
-    .{ .w = 040, .i = .{ .c = &AirblastTrapKit } },
-    .{ .w = 010, .i = .{ .c = &MineKit } },
-    .{ .w = 010, .i = .{ .c = &BigFireTrapKit } },
+    .{ .w = 50, .i = .{ .c = &FireTrapKit } },
+    .{ .w = 50, .i = .{ .c = &ShockTrapKit } },
+    .{ .w = 40, .i = .{ .c = &SparklingTrapKit } },
+    .{ .w = 40, .i = .{ .c = &EmberlingTrapKit } },
+    .{ .w = 40, .i = .{ .c = &AirblastTrapKit } },
+    .{ .w = 10, .i = .{ .c = &MineKit } },
+    .{ .w = 10, .i = .{ .c = &BigFireTrapKit } },
     // Evocables
-    .{ .w = 030, .i = .{ .E = FlamethrowerEvoc } },
-    .{ .w = 030, .i = .{ .E = EldritchLanternEvoc } },
-    .{ .w = 030, .i = .{ .E = BrazierWandEvoc } },
+    .{ .w = 30, .i = .{ .E = FlamethrowerEvoc } },
+    .{ .w = 30, .i = .{ .E = EldritchLanternEvoc } },
+    .{ .w = 30, .i = .{ .E = BrazierWandEvoc } },
     // Cloaks
-    .{ .w = 020, .i = .{ .C = &SilCloak } },
-    .{ .w = 020, .i = .{ .C = &FurCloak } },
-    .{ .w = 020, .i = .{ .C = &VelvetCloak } },
-    .{ .w = 010, .i = .{ .C = &ThornyCloak } },
+    .{ .w = 20, .i = .{ .C = &SilCloak } },
+    .{ .w = 20, .i = .{ .C = &FurCloak } },
+    .{ .w = 20, .i = .{ .C = &VelvetCloak } },
+    .{ .w = 10, .i = .{ .C = &ThornyCloak } },
 };
 
 pub const RINGS = [_]Ring{
@@ -846,6 +846,22 @@ pub const DamnationRing = Ring{ // {{{
                     }
                 }
             };
+
+            // var y: usize = 0;
+            // while (y < HEIGHT) : (y += 1) {
+            //     var x: usize = 0;
+            //     while (x < WIDTH) : (x += 1) {
+            //         const coord = Coord.new2(self.coord.z, x, y);
+            //         if (self.coord.distance(coord) == 1) {
+            //             if (state.dungeon.at(coord).mob) |othermob| {
+            //                 if (othermob.isHostileTo(self)) { // damnation doesn't care about is_combative
+            //                     explosions.fireBurst(coord, 1);
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
+
             if (self == state.player)
                 state.message(.Info, "Fire bursts out of your enemies!", .{});
         }
@@ -1223,6 +1239,25 @@ pub const MagnetizationRing = Ring{ // {{{
                     }
                 }
             };
+
+            // var y: usize = 0;
+            // while (y < HEIGHT) : (y += 1) {
+            //     var x: usize = 0;
+            //     while (x < WIDTH) : (x += 1) {
+            //         const coord = Coord.new2(self.coord.z, x, y);
+            //         if (self.cansee(coord)) {
+            //             if (state.dungeon.at(coord).mob) |othermob| {
+            //                 if (othermob != magnet and
+            //                     othermob.isHostileTo(self))
+            //                 {
+            //                     const d = othermob.coord.closestDirectionTo(magnet.coord, state.mapgeometry);
+            //                     combat.throwMob(self, othermob, d, othermob.coord.distance(magnet.coord));
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
+
             if (state.player.cansee(magnet.coord))
                 state.message(.Info, "{c} becomes magnetic!", .{magnet});
         }
@@ -1926,13 +1961,13 @@ pub fn _dmgstr(p: usize, vself: []const u8, vother: []const u8, vdeg: []const u8
 }
 
 pub const CRUSHING_STRS = [_]DamageStr{
-    _dmgstr(005, "whack", "whacks", ""),
-    _dmgstr(010, "cudgel", "cudgels", ""),
-    _dmgstr(030, "bash", "bashes", ""),
-    _dmgstr(040, "hit", "hits", ""),
-    _dmgstr(050, "hammer", "hammers", ""),
-    _dmgstr(060, "batter", "batters", ""),
-    _dmgstr(070, "thrash", "thrashes", ""),
+    _dmgstr(5, "whack", "whacks", ""),
+    _dmgstr(10, "cudgel", "cudgels", ""),
+    _dmgstr(30, "bash", "bashes", ""),
+    _dmgstr(40, "hit", "hits", ""),
+    _dmgstr(50, "hammer", "hammers", ""),
+    _dmgstr(60, "batter", "batters", ""),
+    _dmgstr(70, "thrash", "thrashes", ""),
     _dmgstr(130, "smash", "smashes", " like an overripe mango"),
     _dmgstr(160, "flatten", "flattens", " like a pancake"),
     _dmgstr(190, "flatten", "flattens", " like a chapati"),
@@ -1940,61 +1975,61 @@ pub const CRUSHING_STRS = [_]DamageStr{
     _dmgstr(400, "pulverise", "pulverises", " into a bloody mist"),
 };
 pub const SLASHING_STRS = [_]DamageStr{
-    _dmgstr(040, "hit", "hits", ""),
-    _dmgstr(050, "slash", "slashes", ""),
-    _dmgstr(090, "chop", "chops", " into pieces"),
+    _dmgstr(40, "hit", "hits", ""),
+    _dmgstr(50, "slash", "slashes", ""),
+    _dmgstr(90, "chop", "chops", " into pieces"),
     _dmgstr(110, "chop", "chops", " into tiny pieces"),
     _dmgstr(150, "slice", "slices", " into ribbons"),
     _dmgstr(200, "cut", "cuts", " asunder"),
     _dmgstr(250, "mince", "minces", " like boiled poultry"),
 };
 pub const PIERCING_STRS = [_]DamageStr{
-    _dmgstr(005, "prick", "pricks", ""),
-    _dmgstr(030, "hit", "hits", ""),
-    _dmgstr(040, "impale", "impales", ""),
-    _dmgstr(050, "skewer", "skewers", ""),
-    _dmgstr(060, "perforate", "perforates", ""),
+    _dmgstr(5, "prick", "pricks", ""),
+    _dmgstr(30, "hit", "hits", ""),
+    _dmgstr(40, "impale", "impales", ""),
+    _dmgstr(50, "skewer", "skewers", ""),
+    _dmgstr(60, "perforate", "perforates", ""),
     _dmgstr(100, "skewer", "skewers", " like a kebab"),
     _dmgstr(200, "spit", "spits", " like a pig"),
     _dmgstr(300, "perforate", "perforates", " like a sieve"),
 };
 pub const LACERATING_STRS = [_]DamageStr{
-    _dmgstr(020, "whip", "whips", ""),
-    _dmgstr(040, "lash", "lashes", ""),
-    _dmgstr(050, "lacerate", "lacerates", ""),
-    _dmgstr(070, "shred", "shreds", ""),
-    _dmgstr(090, "shred", "shreds", " like wet paper"),
+    _dmgstr(20, "whip", "whips", ""),
+    _dmgstr(40, "lash", "lashes", ""),
+    _dmgstr(50, "lacerate", "lacerates", ""),
+    _dmgstr(70, "shred", "shreds", ""),
+    _dmgstr(90, "shred", "shreds", " like wet paper"),
     _dmgstr(150, "mangle", "mangles", " beyond recognition"),
 };
 
 pub const BITING_STRS = [_]DamageStr{
-    _dmgstr(080, "bite", "bites", ""),
-    _dmgstr(081, "mangle", "mangles", ""),
+    _dmgstr(80, "bite", "bites", ""),
+    _dmgstr(81, "mangle", "mangles", ""),
 };
 pub const CLAW_STRS = [_]DamageStr{
-    _dmgstr(005, "scratch", "scratches", ""),
-    _dmgstr(060, "claw", "claws", ""),
-    _dmgstr(061, "mangle", "mangles", ""),
-    _dmgstr(090, "shred", "shreds", " like wet paper"),
+    _dmgstr(5, "scratch", "scratches", ""),
+    _dmgstr(60, "claw", "claws", ""),
+    _dmgstr(61, "mangle", "mangles", ""),
+    _dmgstr(90, "shred", "shreds", " like wet paper"),
     _dmgstr(100, "tear", "tears", " into pieces"),
     _dmgstr(150, "tear", "tears", " into tiny pieces"),
     _dmgstr(200, "mangle", "mangles", " beyond recognition"),
 };
 pub const FIST_STRS = [_]DamageStr{
-    _dmgstr(020, "punch", "punches", ""),
-    _dmgstr(030, "hit", "hits", ""),
-    _dmgstr(040, "bludgeon", "bludgeons", ""),
-    _dmgstr(060, "pummel", "pummels", ""),
+    _dmgstr(20, "punch", "punches", ""),
+    _dmgstr(30, "hit", "hits", ""),
+    _dmgstr(40, "bludgeon", "bludgeons", ""),
+    _dmgstr(60, "pummel", "pummels", ""),
 };
 pub const KICK_STRS = [_]DamageStr{
-    _dmgstr(080, "kick", "kicks", ""),
-    _dmgstr(081, "curbstomp", "curbstomps", ""),
+    _dmgstr(80, "kick", "kicks", ""),
+    _dmgstr(81, "curbstomp", "curbstomps", ""),
 };
 
 pub const SHOCK_STRS = [_]DamageStr{
-    _dmgstr(010, "zap", "zaps", ""),
-    _dmgstr(040, "shock", "shocks", ""),
-    _dmgstr(070, "strike", "strikes", ""),
+    _dmgstr(10, "zap", "zaps", ""),
+    _dmgstr(40, "shock", "shocks", ""),
+    _dmgstr(70, "strike", "strikes", ""),
     _dmgstr(100, "electrocute", "electrocutes", ""),
 };
 

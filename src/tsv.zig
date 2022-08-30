@@ -5,6 +5,12 @@ const meta = std.meta;
 const testing = std.testing;
 const assert = std.debug.assert;
 
+// pub fn Schema(comptime T: type) type {
+//     return struct {
+//         field_name: []const u8 = "",
+//         parse_to
+//     };
+// }
 pub const TSVSchemaItem = struct {
     field_name: []const u8 = "",
     parse_to: type = usize,

@@ -88,9 +88,9 @@ pub fn checkWindowSize() bool {
             return true;
         }
 
-        _ = _drawStr(1, 1, cur_w, "Your terminal is too small.", .{}, .{});
-        _ = _drawStr(1, 3, cur_w, "Minimum: {}x{}.", .{ min_width, min_height }, .{});
-        _ = _drawStr(1, 4, cur_w, "Current size: {}x{}.", .{ cur_w, cur_h }, .{});
+        _ = _drawStr(1, 1, cur_w, "Your terminal is too small.", .{});
+        _ = _drawStrf(1, 3, cur_w, "Minimum: {}x{}.", .{ min_width, min_height }, .{});
+        _ = _drawStrf(1, 4, cur_w, "Current size: {}x{}.", .{ cur_w, cur_h }, .{});
 
         termbox.tb_present();
 
@@ -910,6 +910,12 @@ const DrawStrOpts = struct {
     skip_lines: usize = 0,
 };
 
+fn _drawStrf(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args: anytype, opts: DrawStrOpts) isize {
+    const str = std.fmt.allocPrint(state.GPA.allocator(), format, args) catch err.oom();
+    defer state.GPA.allocator().free(str);
+    return _drawStr(_x, _y, endx, str, opts);
+}
+
 // Escape characters:
 //     $g       fg = GREY
 //     $G       fg = DARK_GREY
@@ -922,17 +928,10 @@ const DrawStrOpts = struct {
 //     $o       fg = GOLD
 //     $.       reset fg and bg to defaults
 //     $~       inverg fg/bg
-fn _drawStr(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args: anytype, opts: DrawStrOpts) isize {
+fn _drawStr(_x: isize, _y: isize, endx: isize, str: []const u8, opts: DrawStrOpts) isize {
     const termbox_width = termbox.tb_width();
     const termbox_height = termbox.tb_height();
     const termbox_buffer = termbox.tb_cell_buffer();
-
-    // var buf: [65535]u8 = undefined;
-    // var fbs = std.io.fixedBufferStream(&buf);
-    // std.fmt.format(fbs.writer(), format, args) catch err.bug("format error!", .{});
-    // const str = fbs.getWritten();
-    const str = std.fmt.allocPrint(state.GPA.allocator(), format, args) catch err.oom();
-    defer state.GPA.allocator().free(str);
 
     var x = _x;
     var y = _y;
@@ -1035,7 +1034,7 @@ fn _drawBar(
     if (percent != 0)
         _clearLineWith(startx, bar_end, y, ' ', fg, bg);
 
-    _ = _drawStr(startx + 1, y, endx, "{s}", .{description}, .{ .fg = fg, .bg = null });
+    _ = _drawStr(startx + 1, y, endx, description, .{ .fg = fg, .bg = null });
 
     if (opts.detail) {
         // Find out the width of "<current>/<max>" so we can right-align it
@@ -1044,7 +1043,7 @@ fn _drawBar(
         std.fmt.format(fbs.writer(), "{} / {}", .{ current, max }) catch err.wat();
         const info_width = @intCast(isize, fbs.getWritten().len);
 
-        _ = _drawStr(endx - info_width - 1, y, endx, "{} / {}", .{ current, max }, .{ .fg = fg, .bg = null });
+        _ = _drawStrf(endx - info_width - 1, y, endx, "{} / {}", .{ current, max }, .{ .fg = fg, .bg = null });
     }
 }
 
@@ -1061,10 +1060,10 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
     const lvlstr = state.levelinfo[state.player.coord.z].name;
     //_clearLineWith(startx, endx - 1, y, '─', colors.DARK_GREY, colors.BG);
     //const lvlstrx = startx + @divTrunc(endx - startx - 1, 2) - @intCast(isize, (lvlstr.len + 4) / 2);
-    //y = _drawStr(lvlstrx, y, endx, "$G┤$. $c{s}$. $G├$.", .{lvlstr}, .{});
+    //y = _drawStrf(lvlstrx, y, endx, "$G┤$. $c{s}$. $G├$.", .{lvlstr}, .{});
     //y += 1;
-    _ = _drawStr(startx, y, endx, "$cturns:$. {}", .{state.player_turns}, .{});
-    y = _drawStr(endx - @intCast(isize, lvlstr.len), y, endx, "$c{s}$.", .{lvlstr}, .{});
+    _ = _drawStrf(startx, y, endx, "$cturns:$. {}", .{state.player_turns}, .{});
+    y = _drawStrf(endx - @intCast(isize, lvlstr.len), y, endx, "$c{s}$.", .{lvlstr}, .{});
     y += 1;
 
     // zig fmt: off
@@ -1085,7 +1084,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
             else => unreachable,
         };
         const c: u21 = if (stat.v < 0) 'p' else '.';
-        _ = _drawStr(x, y, endx, "$c{s}$. ${u}{: >3}{s}$.", .{ stat.b, c, v, stat.a }, .{});
+        _ = _drawStrf(x, y, endx, "$c{s}$. ${u}{: >3}{s}$.", .{ stat.b, c, v, stat.a }, .{});
         if (i % 2 == 1 or i == stats.len - 1)
             y += 1;
     }
@@ -1101,19 +1100,19 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         [_]u32{ colors.percentageOf(colors.DOBALENE_BLUE, 25), colors.DOBALENE_BLUE };
     _drawBar(y, startx, bar_endx, state.player.HP, state.player.max_HP, "health", color[0], color[1], .{});
     const hit = utils.SignedFormatter{ .v = state.player.stat(.Melee) };
-    _ = _drawStr(bar_endx + 1, y, endx, "$.hit {: >3}%$.", .{hit}, .{});
+    _ = _drawStrf(bar_endx + 1, y, endx, "$.hit {: >3}%$.", .{hit}, .{});
     y += 1;
 
     _drawBar(y, startx, bar_endx, state.player.MP, state.player.max_MP, "magic", colors.percentageOf(colors.GOLD, 25), colors.LIGHT_GOLD, .{});
     const ev = utils.SignedFormatter{ .v = state.player.stat(.Evade) };
-    _ = _drawStr(bar_endx + 1, y, endx, "$pev  {: >3}%$.", .{ev}, .{});
+    _ = _drawStrf(bar_endx + 1, y, endx, "$pev  {: >3}%$.", .{ev}, .{});
     y += 1;
 
     const sneak = @intCast(usize, state.player.stat(.Sneak));
     const is_walking = state.player.turnsSpentMoving() >= sneak;
     _drawBar(y, startx, bar_endx, math.min(sneak, state.player.turnsSpentMoving()), sneak, if (is_walking) "walking" else "sneaking", if (is_walking) 0x25570e else 0x154705, 0xa5d78e, .{});
     const arm = utils.SignedFormatter{ .v = state.player.resistance(.Armor) };
-    _ = _drawStr(bar_endx + 1, y, endx, "$barm {: >3}%$.", .{arm}, .{});
+    _ = _drawStrf(bar_endx + 1, y, endx, "$barm {: >3}%$.", .{arm}, .{});
     y += 2;
 
     {
@@ -1132,7 +1131,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
                 _drawBar(y, startx, endx, Status.MAX_DURATION, Status.MAX_DURATION, sname, 0x054c20, 0x69fcd0, .{ .detail = false });
             }
 
-            //y = _drawStr(startx, y, endx, "{s} ({} turns)", .{ sname, duration }, .{ .fg = 0x8019ac, .bg = null });
+            //y = _drawStrf(startx, y, endx, "{s} ({} turns)", .{ sname, duration }, .{ .fg = 0x8019ac, .bg = null });
             y += 1;
             status_drawn = true;
         }
@@ -1146,7 +1145,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         const lit_str = if (light) "$C$~ Lit $. " else "";
         const spotted_str = if (spotted) "$bSpotted$. " else "";
 
-        y = _drawStr(startx, y, endx, "{s}{s}", .{
+        y = _drawStrf(startx, y, endx, "{s}{s}", .{
             lit_str, spotted_str,
         }, .{});
         y += 1;
@@ -1158,9 +1157,9 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
             if (ring.activated) {
                 const bg = colors.percentageOf(colors.CONCRETE, 10);
                 _clearLineWith(startx, endx, y, ' ', bg, bg);
-                y = _drawStr(startx, y, endx, "$c· {s}$.", .{ring.name}, .{ .bg = bg });
+                y = _drawStrf(startx, y, endx, "$c· {s}$.", .{ring.name}, .{ .bg = bg });
             } else {
-                y = _drawStr(startx, y, endx, "$b{}$. $c{s}$.", .{ ring_i, ring.name }, .{});
+                y = _drawStrf(startx, y, endx, "$b{}$. $c{s}$.", .{ ring_i, ring.name }, .{});
             }
         };
     y += 1;
@@ -1245,9 +1244,9 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
             var tile = feature.tile;
             termbox.tb_put_cell(startx, y, &tile);
 
-            _ = _drawStr(startx + 2, y, endx, "$c{s}$.", .{feature.name.constSlice()}, .{});
+            _ = _drawStrf(startx + 2, y, endx, "$c{s}$.", .{feature.name.constSlice()}, .{});
             if (feature.player) {
-                _ = _drawStr(endx - 1, y, endx, "@", .{}, .{});
+                _ = _drawStrf(endx - 1, y, endx, "@", .{}, .{});
             }
 
             y += 1;
@@ -1267,14 +1266,14 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         termbox.tb_put_cell(startx, y, &mobcell);
 
         const name = mob.displayName();
-        _ = _drawStr(startx + 2, y, endx, "$c{s}$.", .{name}, .{ .bg = null });
+        _ = _drawStrf(startx + 2, y, endx, "$c{s}$.", .{name}, .{ .bg = null });
 
         const infoset = _getMonsInfoSet(mob);
         defer MobInfoLine.deinitList(infoset);
         //var info_x: isize = startx + 2 + @intCast(isize, name.len) + 2;
         var info_x: isize = endx - @intCast(isize, infoset.items.len);
         for (infoset.items) |info| {
-            _ = _drawStr(info_x, y, endx, "${u}{u}$.", .{ info.color, info.char }, .{ .bg = null });
+            _ = _drawStrf(info_x, y, endx, "${u}{u}$.", .{ info.color, info.char }, .{ .bg = null });
             info_x += 1;
         }
         y += 1;
@@ -1294,7 +1293,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
                 const sname = statusinfo.status.string(state.player);
 
                 _drawBar(y, startx, endx, duration, Status.MAX_DURATION, sname, 0x30055c, 0xd069fc, .{});
-                //y = _drawStr(startx, y, endx, "{s}", .{_formatStatusInfo(entry.value)}, .{ .bg = null });
+                //y = _drawStrf(startx, y, endx, "{s}", .{_formatStatusInfo(entry.value)}, .{ .bg = null });
                 y += 1;
                 status_drawn = true;
             }
@@ -1302,7 +1301,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         }
 
         //const activity = if (mob.prisoner_status != null) if (mob.prisoner_status.?.held_by != null) "(chained)" else "(prisoner)" else mob.activity_description();
-        //y = _drawStr(endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2), y, endx, "{s}", .{activity}, .{ .fg = 0x9a9a9a });
+        //y = _drawStrf(endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2), y, endx, "{s}", .{activity}, .{ .fg = 0x9a9a9a });
 
         //y += 2;
     }
@@ -1794,7 +1793,7 @@ pub fn drawLoadingScreenFinish(loading_win: *LoadingScreen) bool {
     loading_win.text_con.clear();
 
     const text = switch (rng.range(usize, 0, 99)) {
-        00...97 => "-- Press any key to begin --",
+        0...97 => "-- Press any key to begin --",
         98...99 => "-- Press any key to inevitably die --",
         else => err.wat(),
     };
@@ -2014,7 +2013,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                 _clear_line(infow.startx, infow.endx, y);
             y = infow.starty;
 
-            y = _drawStr(infow.startx, y, infow.endx, "{s}", .{text.getWritten()}, .{});
+            y = _drawStr(infow.startx, y, infow.endx, text.getWritten(), .{});
         } else {
             var y = infow.starty;
             while (y < infow.endy) : (y += 1)
@@ -2078,18 +2077,16 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
             var y = log_starty;
             while (y < log_endy) : (y += 1) _clear_line(log_startx, log_endx, y);
 
-            const lasty = _drawStr(log_startx, log_starty, log_endx, "{s}", .{
-                descbuf_stream.getWritten(),
-            }, .{
+            const lasty = _drawStr(log_startx, log_starty, log_endx, descbuf_stream.getWritten(), .{
                 .skip_lines = desc_scroll,
                 .endy = log_endy,
             });
 
             if (desc_scroll > 0) {
-                _ = _drawStr(log_endx - 14, log_starty, log_endx, " $p-- PgUp --$.", .{}, .{});
+                _ = _drawStr(log_endx - 14, log_starty, log_endx, " $p-- PgUp --$.", .{});
             }
             if (lasty == log_endy) {
-                _ = _drawStr(log_endx - 14, log_endy - 1, log_endx, " $p-- PgDn --$.", .{}, .{});
+                _ = _drawStr(log_endx - 14, log_endy - 1, log_endx, " $p-- PgDn --$.", .{});
             }
         }
 
@@ -2236,7 +2233,7 @@ pub fn drawInventoryScreen() bool {
         // Draw list of items
         {
             y = starty;
-            y = _drawStr(x, y, endx, "$cInventory:$.", .{}, .{});
+            y = _drawStr(x, y, endx, "$cInventory:$.", .{});
             for (state.player.inventory.pack.constSlice()) |item, i| {
                 const startx = x;
 
@@ -2244,12 +2241,12 @@ pub fn drawInventoryScreen() bool {
                 const color = if (i == chosen and chosen_itemlist == .Pack) colors.LIGHT_CONCRETE else colors.GREY;
                 const arrow = if (i == chosen and chosen_itemlist == .Pack) ">" else " ";
                 _clear_line(startx, endx, y);
-                y = _drawStr(startx, y, endx, "{s} {s}", .{ arrow, name }, .{ .fg = color });
+                y = _drawStrf(startx, y, endx, "{s} {s}", .{ arrow, name }, .{ .fg = color });
             }
 
             y = starty;
             const startx = endx - @divTrunc(endx - x, 2);
-            y = _drawStr(startx, y, endx, "$cEquipment:$.", .{}, .{});
+            y = _drawStr(startx, y, endx, "$cEquipment:$.", .{});
             inline for (@typeInfo(Mob.Inventory.EquSlot).Enum.fields) |slots_f, i| {
                 const slot = @intToEnum(Mob.Inventory.EquSlot, slots_f.value);
                 const arrow = if (i == chosen and chosen_itemlist == .Equip) ">" else "·";
@@ -2259,9 +2256,9 @@ pub fn drawInventoryScreen() bool {
 
                 if (state.player.inventory.equipment(slot).*) |item| {
                     const name = (item.longName() catch unreachable).constSlice();
-                    y = _drawStr(startx, y, endx, "{s} {s: >6}: {s}", .{ arrow, slot.name(), name }, .{ .fg = color });
+                    y = _drawStrf(startx, y, endx, "{s} {s: >6}: {s}", .{ arrow, slot.name(), name }, .{ .fg = color });
                 } else {
-                    y = _drawStr(startx, y, endx, "{s} {s: >6}:", .{ arrow, slot.name() }, .{ .fg = color });
+                    y = _drawStrf(startx, y, endx, "{s} {s: >6}:", .{ arrow, slot.name() }, .{ .fg = color });
                 }
             }
         }
@@ -2305,7 +2302,7 @@ pub fn drawInventoryScreen() bool {
             if (dippable) writer.print("$cD$. to dip your weapon.\n", .{}) catch err.wat();
             if (throwable) writer.print("$ct$. to throw.\n", .{}) catch err.wat();
 
-            _ = _drawStr(ii_startx, ii_starty, ii_endx, "{s}", .{descbuf_stream.getWritten()}, .{});
+            _ = _drawStr(ii_startx, ii_starty, ii_endx, descbuf_stream.getWritten(), .{});
         }
 
         // Draw item description
@@ -2320,19 +2317,19 @@ pub fn drawInventoryScreen() bool {
                 const default_desc = "(Missing description)";
                 const desc: []const u8 = if (id) |i_id| state.descriptions.get(i_id) orelse default_desc else default_desc;
 
-                const ending_y = _drawStr(log_startx, log_starty, log_endx, "{s}", .{desc}, .{
+                const ending_y = _drawStr(log_startx, log_starty, log_endx, desc, .{
                     .skip_lines = desc_scroll,
                     .endy = log_endy,
                 });
 
                 if (desc_scroll > 0) {
-                    _ = _drawStr(log_endx - 14, log_starty, log_endx, " $p-- PgUp --$.", .{}, .{});
+                    _ = _drawStr(log_endx - 14, log_starty, log_endx, " $p-- PgUp --$.", .{});
                 }
                 if (ending_y == log_endy) {
-                    _ = _drawStr(log_endx - 14, log_endy - 1, log_endx, " $p-- PgDn --$.", .{}, .{});
+                    _ = _drawStr(log_endx - 14, log_endy - 1, log_endx, " $p-- PgDn --$.", .{});
                 }
             } else {
-                _ = _drawStr(log_startx, log_starty, log_endx, "Your inventory is empty.", .{}, .{});
+                _ = _drawStr(log_startx, log_starty, log_endx, "Your inventory is empty.", .{});
             }
         }
 
@@ -2436,7 +2433,7 @@ pub fn drawModalText(color: u32, comptime fmt: []const u8, args: anytype) void {
     const x = 1;
 
     termbox.tb_change_cell(x, y, '█', color, colors.BG);
-    _ = _drawStr(x + 1, y, wind.endx, " {s} ", .{str}, .{ .bg = colors.percentageOf(color, 30) });
+    _ = _drawStrf(x + 1, y, wind.endx, " {s} ", .{str}, .{ .bg = colors.percentageOf(color, 30) });
     termbox.tb_change_cell(x + @intCast(isize, str.len) + 3, y, '█', color, colors.BG);
 
     termbox.tb_present();
@@ -2466,7 +2463,7 @@ pub fn drawAlert(comptime fmt: []const u8, args: anytype) void {
         @intCast(isize, text_height + 1 / 2);
     y = txt_starty;
 
-    _ = _drawStr(wind.startx + 2, txt_starty, wind.endx, "{s}", .{str}, .{});
+    _ = _drawStr(wind.startx + 2, txt_starty, wind.endx, str, .{});
 
     termbox.tb_present();
 
@@ -2522,12 +2519,12 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
 
     while (true) {
         y = wind.starty;
-        y = _drawStr(wind.startx, y, wind.endx, "$c{s}$.", .{str}, .{});
+        y = _drawStrf(wind.startx, y, wind.endx, "$c{s}$.", .{str}, .{});
 
         for (options) |option, i| {
             const ind = if (chosen == i) ">" else "-";
             const color = if (chosen == i) colors.LIGHT_CONCRETE else colors.GREY;
-            y = _drawStr(wind.startx, y, wind.endx, "{s} {s}", .{ ind, option }, .{ .fg = color });
+            y = _drawStrf(wind.startx, y, wind.endx, "{s} {s}", .{ ind, option }, .{ .fg = color });
         }
 
         termbox.tb_present();

@@ -1477,7 +1477,7 @@ pub const Status = enum {
                 .source = .Passive,
             }, .{
                 .strs = &[_]DamageStr{
-                    items._dmgstr(099, "torment", "torments", ""),
+                    items._dmgstr(99, "torment", "torments", ""),
                     // When it is completely destroyed, it has been dispelled
                     items._dmgstr(100, "dispel", "dispels", ""),
                 },
@@ -1512,9 +1512,9 @@ pub const Status = enum {
                 mob.takeDamage(.{ .amount = 1, .kind = .Fire, .blood = false }, .{
                     .noun = "The fire",
                     .strs = &[_]DamageStr{
-                        items._dmgstr(000, "BUG", "BUG", ""),
-                        items._dmgstr(020, "BUG", "scorches", ""),
-                        items._dmgstr(080, "BUG", "burns", ""),
+                        items._dmgstr(0, "BUG", "BUG", ""),
+                        items._dmgstr(20, "BUG", "scorches", ""),
+                        items._dmgstr(80, "BUG", "burns", ""),
                         items._dmgstr(100, "BUG", "burns", " horribly"),
                     },
                 });
@@ -1750,6 +1750,7 @@ pub const Squad = struct {
 
     pub fn allocNew() *Squad {
         const squad = Squad{
+            //.members = MobArrayList.init(state.GPA.allocator()),
             .enemies = EnemyRecord.AList.init(state.GPA.allocator()),
         };
         state.squads.append(squad) catch err.wat();
@@ -2792,7 +2793,7 @@ pub const Mob = struct { // {{{
         basic: bool = false,
         noun: ?[]const u8 = null,
         strs: []const DamageStr = &[_]DamageStr{
-            items._dmgstr(000, "hit", "hits", ""),
+            items._dmgstr(0, "hit", "hits", ""),
         },
         is_bonus: bool = false,
         is_riposte: bool = false,

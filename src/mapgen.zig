@@ -1476,6 +1476,12 @@ pub fn placeDrunkenWalkerCave(
                 candidates.append(neighbor) catch err.wat();
             };
 
+        // for (&CARDINAL_DIRECTIONS) |d| if (walker.move(d, state.mapgeometry)) |neighbor| {
+        //     if (state.dungeon.at(neighbor).type == .Wall) {
+        //         candidates.append(neighbor) catch err.wat();
+        //     }
+        // };
+
         if (candidates.len == 0) {
             if (visited_stack.items.len > 0) {
                 walker = visited_stack.pop();
@@ -1492,6 +1498,7 @@ pub fn placeDrunkenWalkerCave(
 
     var walls_to_remove = CoordArrayList.init(alloc);
     defer walls_to_remove.deinit();
+
     var gen = Generator(Rect.rectIter).init(state.mapRect(level));
     while (gen.next()) |coord| {
         if (state.dungeon.at(coord).type == .Wall and
@@ -1500,6 +1507,19 @@ pub fn placeDrunkenWalkerCave(
             walls_to_remove.append(coord) catch err.wat();
         }
     }
+
+    // var y: usize = 0;
+    // while (y < HEIGHT) : (y += 1) {
+    //     var x: usize = 0;
+    //     while (x < WIDTH) : (x += 1) {
+    //         const coord = Coord.new2(level, x, y);
+    //         if (state.dungeon.at(coord).type == .Wall and
+    //             state.dungeon.neighboringOfType(coord, true, .Floor) >= 4)
+    //         {
+    //             walls_to_remove.append(coord) catch err.wat();
+    //         }
+    //     }
+    // }
 
     for (walls_to_remove.items) |coord|
         state.dungeon.at(coord).type = .Floor;
@@ -3828,23 +3848,6 @@ pub var Configs = [LEVELS]LevelConfig{
 pub fn fixConfigs() void {
     Configs[0].prefabs = &[_][]const u8{ "ENT_start", "ANY_s_recharging" };
     Configs[state.PLAYER_STARTING_LEVEL].prefabs = &[_][]const u8{ "PRI_start", "ANY_s_recharging" };
-
-    // Be careful when editing this
-    Configs[00].stairs_to = &[_]usize{};      // -1/Prison       -> nothing
-    Configs[01].stairs_to = &[_]usize{    0}; // -2/Prison       -> -1/Prison
-    Configs[02].stairs_to = &[_]usize{    1}; // -3/Quarters/3   -> -2/Prison
-    Configs[03].stairs_to = &[_]usize{1,  2}; // -3/Quarters/2   -> -3/Quarters/3,   -2/Prison
-    Configs[04].stairs_to = &[_]usize{1,  3}; // -3/Quarters     -> -3/Quarters/2,   -2/Prison
-    Configs[05].stairs_to = &[_]usize{    4}; // -4/Prison       -> -3/Quarters
-    Configs[06].stairs_to = &[_]usize{    5}; // -5/Caverns/3    -> -4/Prison
-    Configs[07].stairs_to = &[_]usize{5,  6}; // -5/Caverns/2    -> -5/Caverns/3,    -4/Prison
-    Configs[08].stairs_to = &[_]usize{5,  7}; // -5/Caverns      -> -5/Caverns/2,    -4/Prison
-    Configs[09].stairs_to = &[_]usize{    8}; // -6/Laboratory/3 -> -5/Caverns
-    Configs[10].stairs_to = &[_]usize{8,  9}; // -6/Laboratory/2 -> -6/Laboratory/3, -5/Caverns
-    Configs[11].stairs_to = &[_]usize{8, 10}; // -6/Laboratory   -> -6/Laboratory/2, -5/Caverns
-    Configs[12].stairs_to = &[_]usize{   11}; // -7/Prison       -> -6/Laboratory
-    Configs[13].stairs_to = &[_]usize{   12}; // -8/Prison       -> -7/Prison
-
 
     // Increase crowd sizes for difficult levels.
     Configs[ 0].room_crowd_max = 4;      Configs[ 1].room_crowd_max = 3;   // Upper prison

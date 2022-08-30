@@ -92,7 +92,7 @@ pub const Steam = Gas{
             mob.takeDamage(.{ .amount = 2, .kind = .Fire }, .{
                 .noun = "The steam",
                 .strs = &[_]types.DamageStr{
-                    items._dmgstr(00, "BUG", "scalds", ""),
+                    items._dmgstr(0, "BUG", "scalds", ""),
                     items._dmgstr(20, "BUG", "burns", ""),
                 },
             });

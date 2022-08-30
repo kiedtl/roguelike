@@ -51,7 +51,7 @@ const NONE_WEAPON = Weapon{
     .name = "",
     .damage = 0,
     .strs = &[_]DamageStr{
-        items._dmgstr(080, "hurl", "hurls", " at kiedtl"),
+        items._dmgstr(80, "hurl", "hurls", " at kiedtl"),
     },
 };
 
@@ -338,7 +338,7 @@ pub const IronWaspTemplate = MobTemplate{
                     .{ .status = .Disorient, .duration = .{ .Tmp = 5 } },
                 },
                 .strs = &[_]DamageStr{
-                    items._dmgstr(005, "jab", "jabs", ""),
+                    items._dmgstr(5, "jab", "jabs", ""),
                     items._dmgstr(100, "sting", "stings", ""),
                 },
             },
@@ -381,7 +381,7 @@ pub const CopperHornetTemplate = MobTemplate{
                 .ego = .Copper,
                 .damage_kind = .Electric,
                 .strs = &[_]DamageStr{
-                    items._dmgstr(005, "jab", "jabs", ""),
+                    items._dmgstr(5, "jab", "jabs", ""),
                     items._dmgstr(100, "sting", "stings", ""),
                 },
             },
@@ -1165,7 +1165,7 @@ pub const EmberMageTemplate = MobTemplate{
         },
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 05, .spell = &spells.CAST_CREATE_EMBERLING },
+            .{ .MP_cost = 5, .spell = &spells.CAST_CREATE_EMBERLING },
             .{ .MP_cost = 10, .spell = &spells.CAST_FLAMMABLE, .power = 20 },
         },
         .max_MP = 15,
@@ -1203,7 +1203,7 @@ pub const BrimstoneMageTemplate = MobTemplate{
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 15, .spell = &spells.CAST_CREATE_EMBERLING },
-            .{ .MP_cost = 01, .spell = &spells.CAST_FLAMMABLE, .power = 20 },
+            .{ .MP_cost = 1, .spell = &spells.CAST_FLAMMABLE, .power = 20 },
             .{ .MP_cost = 15, .spell = &spells.CAST_FRY, .power = 7 },
             .{ .MP_cost = 10, .spell = &spells.CAST_HASTE_EMBERLING, .power = 7 },
         },
@@ -1276,9 +1276,9 @@ pub const LightningMageTemplate = MobTemplate{
         },
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 06, .spell = &spells.CAST_CREATE_SPARKLING },
+            .{ .MP_cost = 6, .spell = &spells.CAST_CREATE_SPARKLING },
             .{ .MP_cost = 10, .spell = &spells.BOLT_PARALYSE, .power = 2 },
-            .{ .MP_cost = 03, .spell = &spells.CAST_DISCHARGE },
+            .{ .MP_cost = 3, .spell = &spells.CAST_DISCHARGE },
             .{ .MP_cost = 15, .spell = &spells.CAST_HASTE_SPARKLING, .power = 7 },
         },
         .max_MP = 15,
@@ -1777,7 +1777,7 @@ pub const LivingIceTemplate = MobTemplate{
             .default_attack = &Weapon{
                 .damage = 3,
                 .strs = &[_]DamageStr{
-                    items._dmgstr(010, "hit", "hits", ""),
+                    items._dmgstr(10, "hit", "hits", ""),
                 },
             },
         },
@@ -1849,7 +1849,7 @@ pub const SpectralSwordTemplate = MobTemplate{
             .name = "spectral sword",
             .default_attack = &Weapon{
                 .damage = 1,
-                .strs = &[_]DamageStr{items._dmgstr(001, "nick", "nicks", "")},
+                .strs = &[_]DamageStr{items._dmgstr(1, "nick", "nicks", "")},
             },
         },
         .tile = ')',

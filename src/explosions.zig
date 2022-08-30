@@ -233,7 +233,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                     }, .{
                         .noun = "The explosion",
                         .strs = &[_]DamageStr{
-                            items._dmgstr(000, "hits", "BUG", ""),
+                            items._dmgstr(0, "hits", "BUG", ""),
                             items._dmgstr(100, "pulverises", "BUG", ""),
                             items._dmgstr(300, "grinds", "BUG", " to powder"),
                         },
