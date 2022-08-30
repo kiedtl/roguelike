@@ -3319,7 +3319,6 @@ pub const Prefab = struct {
                                 if (mem.eql(u8, poster_line, "END POSTER")) {
                                     break;
                                 }
-                                std.log.info("line: {s}", .{poster_line});
                                 if (poster_line.len == 0) {
                                     try buf.appendSlice("\n");
                                 } else {
