@@ -794,6 +794,11 @@ pub fn standStillAndGuardWork(mob: *Mob, _: mem.Allocator) void {
     }
 }
 
+pub fn combatDummyWork(mob: *Mob, _: mem.Allocator) void {
+    guardGlanceRight(mob);
+    tryRest(mob);
+}
+
 pub fn spireWork(mob: *Mob, _: mem.Allocator) void {
     guardGlanceRight(mob);
     tryRest(mob);
@@ -1119,6 +1124,9 @@ pub fn ballLightningWorkOrFight(mob: *Mob, _: mem.Allocator) void {
         tryRest(mob);
     }
 }
+
+// For combat dummies
+pub fn combatDummyFight(_: *Mob, _: mem.Allocator) void {}
 
 // Check if we can evoke anything.
 // - Move towards hostile, bapping it if we can.

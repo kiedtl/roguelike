@@ -13,6 +13,7 @@
 %    &   window
 %    +   door
 %    ±   locked door
+%    ⊞   double locked door (player cannot open)
 %    ≡   bars
 %    =   ring
 %    ?   anything

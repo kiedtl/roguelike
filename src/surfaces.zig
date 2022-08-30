@@ -283,6 +283,7 @@ pub const MACHINES = [_]Machine{
     LabDoor,
     VaultDoor,
     LockedDoor,
+    HeavyLockedDoor,
     IronVaultDoor,
     GoldVaultDoor,
     ParalysisGasTrap,
@@ -575,6 +576,25 @@ pub const LockedDoor = Machine{
             }
         }.f,
     },
+};
+
+pub const HeavyLockedDoor = Machine{
+    .id = "door_locked_heavy",
+    .name = "locked steel door",
+    .powered_tile = '\'',
+    .unpowered_tile = '+',
+    .powered_fg = 0xaaffaa,
+    .unpowered_fg = 0xaaffaa,
+    .powered_bg = 0x297a14,
+    .unpowered_bg = 0x297a14,
+    .power_drain = 90,
+    .restricted_to = .Necromancer,
+    .powered_walkable = true,
+    .unpowered_walkable = false,
+    .flammability = 0, // not a wooden door at all
+    .porous = true,
+    .on_power = powerNone,
+    .pathfinding_penalty = 5,
 };
 
 fn createVaultDoor(comptime id_suffix: []const u8, comptime name_prefix: []const u8, color: u32, alarm_chance: usize) Machine {

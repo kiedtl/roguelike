@@ -4274,8 +4274,11 @@ pub const Tile = struct {
                     break :prop p.tile;
                 },
                 .Poster => |_| poster: {
-                    cell.fg = self.material.color_bg orelse self.material.color_fg;
-                    break :poster '?';
+                    //cell.fg = self.material.color_bg orelse self.material.color_fg;
+                    //break :poster '?';
+                    cell.bg = colors.GOLD;
+                    cell.fg = 0;
+                    break :poster '≡';
                 },
                 .Stair => |s| stair: {
                     var ch: u21 = '.';

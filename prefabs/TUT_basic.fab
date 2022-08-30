@@ -1,25 +1,92 @@
 :invisible
 
-@0 p table
-@1 p chair
+@a P
+Welcome to Oathbreaker!
 
-%:spawn 
+Throughout the tutorial you'll see posters like these. Bump into them to read
+the instructions.
+END POSTER
+
+@b P
+Your main way of killing enemies is stabbing.
+
+You can only stab when the monster is currently "working" (i.e. isn't attacking
+and isn't investigating a noise).
+
+Stay quiet (rest every 4 turns) and stay out of the monster's vision (the red
+tiles) and you'll be able to land a sneak attack, aka a stab, 100% of the time.
+
+In the next room is a (harmless) combat dummy, which slowly rotates around
+watching for intruders. Try stabbing it to continue to the next room.
+END POSTER
+
+@c P
+TODO: note about releasing goblin prisoners
+(XXX: somehow prisoner needs to stay still and not patrol around...)
+END POSTER
+
+@d P
+TODO: note about traps, fountains, drains, capacitor arrays, stalker stations,
+barrels of water.
+END POSTER
+
+@e P
+TODO: quick intro on patterns; using Leap pattern to get over water/lava
+END POSTER
+
+@f P
+TODO: quick intro on rings
+END POSTER
+
+@g P
+It is your primary goal to find upwards ($o$~$g<$.) stairs. Only escape matters
+-- don't try wandering around the levels or lookinng for loot if you don't know
+where the stairs are, or can't make a safe retreat to it if you're pursued. If
+you can escape to the stairs without fighting enemies, do so.
+
+When you ascend a staircase:
+- Enemies lose track of you
+- You regain your HP and lose bad status effects
+- You may gain 2 extra HP
+- You may also gain a random talent
+
+If you wish, you can also enter optional stairs ($o$~≤$.). These are entirely
+optional, and lead to more dangerous levels with stronger foes.
+END POSTER
+
+@h P
+Congrats! You've completed the tutorial.
+
+You may now proceed for a (completely painless) euthanization.
+END POSTER
+
+@z P
+You can still turn back.
+END POSTER
+
+@0 m door_vault_gold
+
+@1 M sentry_spire
+@2 M lightning_spire
+@3 M iron_spire
+
+@9 M combat_dummy
 
 ##################################################
-##################################################
-##################################################
-##################################################
-##################################################
-##################################################
-##################################################
-##################################################
-##################################################
-##...........#####################################
-##...........#####################################
-##........1..#####################################
-############+#####################################
-##########.....###################################
-##...#####.....###################################
-#@.1...###..0..###################################
-##...##..+..1..###################################
+#................................................#
+#.##########################################⊞###.#
+#.#............#.......+.#...............#.....#.#
+#.#+##########.#.......#.#+#########h##1.1.....#.#
+#.#....#..9..#.#.......#.#.......&.#####.####+##.#
+#.#....+.....#.#.......#.#...g...#####1~.~1&...#.#
+#.#....#.....#.#~~~~~~~#.#.......+..##.~.~.&...#.#
+#±##########+#.#e......#.##########.##2~.~2&...#.#
+#.....±......#.#.......#.#.......##.##.~.~.&...#.#
+#.....≡......#.#.#####.#.#.......##.##3~.~3&...#.#
+#.....≡..c...#.+.......#.#&&&&&&&##.##.~.~.#...#.#
+############+###########..........#.##2~.~2#...#.#
+#########...9.....######..........#.##.....#####.#
+##...####.........•#.###f.........+.##.....#z....#
+#@.a...#########+###..##########################.#
+##...##..+.......b##..0..........................#
 ##################################################

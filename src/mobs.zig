@@ -84,6 +84,26 @@ pub const MobTemplate = struct {
     };
 };
 
+// Combat dummies for tutorial {{{
+pub const CombatDummyNormal = MobTemplate{
+    .mob = .{
+        .id = "combat_dummy",
+        .species = &HumanSpecies, // Too lazy to create own species
+        .tile = '0',
+        .ai = AI{
+            .profession_name = "combat dummy",
+            .profession_description = "crying",
+            .work_fn = ai.combatDummyWork,
+            .fight_fn = ai.combatDummyFight,
+        },
+        .immobile = true,
+        .life_type = .Construct,
+        .max_HP = 1,
+        .stats = .{ .Vision = 4 },
+    },
+};
+// }}}
+
 pub const CoronerTemplate = MobTemplate{
     .mob = .{
         .id = "coroner",
@@ -1861,6 +1881,7 @@ pub const SpectralSwordTemplate = MobTemplate{
 };
 
 pub const MOBS = [_]MobTemplate{
+    CombatDummyNormal,
     CoronerTemplate,
     ExecutionerTemplate,
     DestroyerTemplate,

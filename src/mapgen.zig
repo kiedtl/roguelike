@@ -599,6 +599,7 @@ fn excavatePrefab(
                 .LevelFeature,
                 .Feature,
                 .LockedDoor,
+                .HeavyLockedDoor,
                 .Door,
                 .Bars,
                 .Brazier,
@@ -625,6 +626,9 @@ fn excavatePrefab(
                 .Feature => |feature_id| {
                     if (fab.features[feature_id]) |feature| {
                         switch (feature) {
+                            .Mob => |mob| {
+                                _ = mobs.placeMob(allocator, mob, rc, .{});
+                            },
                             .Poster => |poster| {
                                 state.dungeon.at(rc).surface = SurfaceItem{ .Poster = poster };
                             },
@@ -666,6 +670,7 @@ fn excavatePrefab(
                     }
                 },
                 .LockedDoor => placeDoor(rc, true),
+                .HeavyLockedDoor => _place_machine(rc, &surfaces.HeavyLockedDoor),
                 .Door => placeDoor(rc, false),
                 .Brazier => _place_machine(rc, Configs[room.rect.start.z].light),
                 .ShallowWater => state.dungeon.at(rc).terrain = &surfaces.ShallowWaterTerrain,
@@ -2960,6 +2965,7 @@ pub const Prefab = struct {
         Window,
         Wall,
         LockedDoor,
+        HeavyLockedDoor,
         Door,
         Brazier,
         ShallowWater,
@@ -2984,6 +2990,7 @@ pub const Prefab = struct {
     };
 
     pub const Feature = union(enum) {
+        Mob: *const mobs.MobTemplate,
         Poster: *const Poster,
         Machine: struct {
             id: [32:0]u8,
@@ -3281,6 +3288,11 @@ pub const Prefab = struct {
                     const id = words.next();
 
                     switch (feature_type[0]) {
+                        'M' => {
+                            if (mobs.findMobById(id orelse return error.MalformedFeatureDefinition)) |mob_template| {
+                                f.features[identifier] = Feature{ .Mob = mob_template };
+                            } else return error.NoSuchMob;
+                        },
                         'P' => {
                             var buf = std.ArrayList(u8).init(state.GPA.allocator());
                             while (lines.next()) |poster_line| {
@@ -3349,6 +3361,7 @@ pub const Prefab = struct {
                             '#' => .Wall,
                             '+' => .Door,
                             '±' => .LockedDoor,
+                            '⊞' => .HeavyLockedDoor,
                             '•' => .Brazier,
                             '˜' => .ShallowWater,
                             '@' => player: {
@@ -3438,6 +3451,7 @@ pub fn readPrefabs(alloc: mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pref
                 error.FabTooTall => "Prefab exceeds height limit",
                 error.InvalidFeatureType => "Unknown feature type encountered",
                 error.MalformedFeatureDefinition => "Invalid syntax for feature definition",
+                error.NoSuchMob => "Encountered non-existant MOB id",
                 error.MalformedMetadata => "Malformed metadata",
                 error.InvalidMetadataValue => "Invalid value for metadata",
                 error.UnexpectedMetadataValue => "Unexpected value for metadata",
