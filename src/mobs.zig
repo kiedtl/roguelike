@@ -87,7 +87,7 @@ pub const MobTemplate = struct {
 // Combat dummies for tutorial {{{
 pub const CombatDummyNormal = MobTemplate{
     .mob = .{
-        .id = "combat_dummy",
+        .id = "combat_dummy_normal",
         .species = &HumanSpecies, // Too lazy to create own species
         .tile = '0',
         .ai = AI{
@@ -99,8 +99,28 @@ pub const CombatDummyNormal = MobTemplate{
         .immobile = true,
         .life_type = .Construct,
         .max_HP = 1,
-        .stats = .{ .Vision = 4 },
+        .stats = .{ .Vision = 3 },
     },
+};
+pub const CombatDummyPrisoner = MobTemplate{
+    .mob = .{
+        .id = "combat_dummy_prisoner",
+        .species = &GoblinSpecies,
+        .tile = 'g',
+        .ai = AI{
+            .profession_name = "cave goblin",
+            .profession_description = "wandering",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.meleeFight,
+        },
+        .allegiance = .OtherEvil,
+        .max_HP = 12,
+        .memory_duration = 8,
+        .stats = .{ .Willpower = 4, .Evade = 15, .Vision = 6 },
+        .prisoner_status = types.Prisoner{ .of = .Necromancer },
+    },
+    .weapon = &items.MaceWeapon,
+    .armor = &items.GambesonArmor,
 };
 // }}}
 
@@ -937,8 +957,8 @@ pub const AncientMageTemplate = MobTemplate{
             //      ensure that the mob doesn't waste time summoning enemies
             //      while a hundred goblins are trying to tear it apart.
             .{ .MP_cost = 0, .spell = &spells.CAST_AURA_DISPERSAL },
-            .{ .MP_cost = 0, .spell = &spells.CAST_MASS_DISMISSAL, .power = 15 },
             .{ .MP_cost = 8, .spell = &spells.BOLT_CRYSTAL, .power = 4 },
+            .{ .MP_cost = 0, .spell = &spells.CAST_MASS_DISMISSAL, .power = 15 },
             .{ .MP_cost = 9, .spell = &spells.CAST_SUMMON_ENEMY },
         },
         .max_MP = 30,
@@ -1882,6 +1902,7 @@ pub const SpectralSwordTemplate = MobTemplate{
 
 pub const MOBS = [_]MobTemplate{
     CombatDummyNormal,
+    CombatDummyPrisoner,
     CoronerTemplate,
     ExecutionerTemplate,
     DestroyerTemplate,

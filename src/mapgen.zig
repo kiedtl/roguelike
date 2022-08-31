@@ -3320,7 +3320,7 @@ pub const Prefab = struct {
                                     break;
                                 }
                                 if (poster_line.len == 0) {
-                                    try buf.appendSlice("\n");
+                                    try buf.appendSlice("\n\n");
                                 } else {
                                     try buf.appendSlice(poster_line);
                                 }

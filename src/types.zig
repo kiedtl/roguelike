@@ -2481,6 +2481,9 @@ pub const Mob = struct { // {{{
                             return false;
                         }
                     },
+                    .Poster => |_| if (self == state.player) {
+                            return player.triggerPoster(dest);
+                    },
                     .Stair => |s| if (self == state.player) {
                         if (s) |floor| {
                             return player.triggerStair(dest, floor);
@@ -3130,6 +3133,8 @@ pub const Mob = struct { // {{{
     }
 
     pub fn nextDirectionTo(self: *Mob, to: Coord) ?Direction {
+        if (self.immobile) return null;
+
         // FIXME: make this an assertion; no mob should ever be trying to path to
         // themself.
         if (self.coord.eq(to)) return null;

@@ -371,7 +371,7 @@ fn _effectSummonEnemy(caster: Coord, _: Spell, _: SpellOptions, coord: Coord) vo
 
 pub const CAST_AURA_DISPERSAL = Spell{
     .id = "sp_dismissal_aura",
-    .name = "aura of dismissal",
+    .name = "aura of dispersal",
     .cast_type = .Smite,
     .smite_target_type = .Self,
     .check_has_effect = _hasEffectAuraDispersal,
@@ -902,7 +902,7 @@ pub fn willSucceedAgainstMob(caster: *const Mob, target: *const Mob) bool {
     if (rng.onein(10) or caster.stat(.Willpower) < target.stat(.Willpower))
         return false;
     return (rng.rangeClumping(isize, 1, 100, 2) * caster.stat(.Willpower)) >
-        (rng.rangeClumping(isize, 1, 180, 2) * target.stat(.Willpower));
+        (rng.rangeClumping(isize, 1, 150, 2) * target.stat(.Willpower));
 }
 
 pub fn appxChanceOfWillOverpowered(caster: *const Mob, target: *const Mob) usize {

@@ -16,13 +16,25 @@ and isn't investigating a noise).
 Stay quiet (rest every 4 turns) and stay out of the monster's vision (the red
 tiles) and you'll be able to land a sneak attack, aka a stab, 100% of the time.
 
+Monsters without night vision won't be able to see you in the dark. Sneak around
+in dark tiles to bypass and avoid guards if you can't stay out of their vision
+radius.
+
 In the next room is a (harmless) combat dummy, which slowly rotates around
 watching for intruders. Try stabbing it to continue to the next room.
+
+(If it spotted you or heard your noise, wait for it to "forget" about you first.)
 END POSTER
 
 @c P
-TODO: note about releasing goblin prisoners
-(XXX: somehow prisoner needs to stay still and not patrol around...)
+If a situation is getting out of hand, one option is to release a fellow
+prisoner from their cell.
+
+Releasing a prisoner will cause a terrific commotion as more guards stream in
+to deal with the resulting insurrection, but it may enable you to distract your
+pursuers and make a getaway.
+
+Knock down locked doors (the purple ones) by bumping them.
 END POSTER
 
 @d P
@@ -69,24 +81,29 @@ END POSTER
 @1 M sentry_spire
 @2 M lightning_spire
 @3 M iron_spire
+@4 M calcite_spire
 
-@9 M combat_dummy
+@5 M ancient_mage
+
+@8 M combat_dummy_prisoner
+@9 M combat_dummy_normal
 
 ##################################################
 #................................................#
 #.##########################################⊞###.#
-#.#............#.......+.#...............#.....#.#
-#.#+##########.#.......#.#+#########h##1.1.....#.#
-#.#....#..9..#.#.......#.#.......&.#####.####+##.#
-#.#....+.....#.#.......#.#...g...#####1~.~1&...#.#
-#.#....#.....#.#~~~~~~~#.#.......+..##.~.~.&...#.#
-#±##########+#.#e......#.##########.##2~.~2&...#.#
-#.....±......#.#.......#.#.......##.##.~.~.&...#.#
-#.....≡......#.#.#####.#.#.......##.##3~.~3&...#.#
-#.....≡..c...#.+.......#.#&&&&&&&##.##.~.~.#...#.#
-############+###########..........#.##2~.~2#...#.#
-#########...9.....######..........#.##.....#####.#
-##...####.........•#.###f.........+.##.....#z....#
-#@.a...#########+###..##########################.#
-##...##..+.......b##..0..........................#
-##################################################
+#.########################h##4##4##4##4#4###.###.#
+#.#..........+.#.......+.#...............#.....#.#
+#.#..........#.#.......#.#+############1.1.....#.#
+#.#.........d#.#.......#.#.......&.#####.####+##.#
+#.#..........#.#~~~~~~~#.#...g...#####1~.~1&...#.#
+#±##########+#.#.......#.#.......+..##.~.~.&...#.#
+#...8.≡......#.#e......#.##########.##2~.~2&...#.#
+#.....±......#.#..####.#.#.......##.##.~.~.&...#.#
+#..8..≡..c...#.+.......#.#.......##.##3~.~3&...#.#
+############+###########.#&&&&&&&##.##.~.~.#...#.#
+#########...9.....######..........#.##2~.~2#...#.#
+#########.........•#####..........#.##.....#####.#
+##...####.........######f.........+.##.....#z....#
+#@.a...#########+#####•#########################.#
+##...##..+.......b#•50...........................#
+######################•###########################

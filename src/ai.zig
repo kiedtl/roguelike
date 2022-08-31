@@ -1126,7 +1126,9 @@ pub fn ballLightningWorkOrFight(mob: *Mob, _: mem.Allocator) void {
 }
 
 // For combat dummies
-pub fn combatDummyFight(_: *Mob, _: mem.Allocator) void {}
+pub fn combatDummyFight(mob: *Mob, _: mem.Allocator) void {
+    tryRest(mob);
+}
 
 // Check if we can evoke anything.
 // - Move towards hostile, bapping it if we can.

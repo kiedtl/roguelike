@@ -120,6 +120,12 @@ pub fn choosePlayerUpgrades() void {
     };
 }
 
+pub fn triggerPoster(coord: Coord) bool {
+    const poster = state.dungeon.at(coord).surface.?.Poster;
+    display.drawTextScreen("$oYou read:$.\n\n{s}", .{poster.text});
+    return false;
+}
+
 pub fn triggerStair(_: Coord, dest_stair: Coord) bool {
     if (state.levelinfo[dest_stair.z].optional) {
         if (!display.drawYesNoPrompt("Really travel to optional level?", .{}))
@@ -335,9 +341,6 @@ pub fn moveOrFight(direction: Direction) bool {
                     state.message(.Info, "$c({s})$. $gCannot be activated.$.", .{m.name});
                 }
             },
-            .Poster => {
-                state.message(.Info, "$c(sign)$. Press $bA$. to read.", .{});
-            },
             else => {},
         };
     }
@@ -516,11 +519,6 @@ pub fn activateSurfaceItem(coord: Coord) bool {
                 mach = m;
             } else {
                 display.drawAlertThenLog("You can't activate that.", .{});
-                return false;
-            },
-            .Poster => |p| {
-                //return display.drawExamineScreen(.Surface);
-                display.drawTextScreen("$oYou read:$.\n\n{s}", .{p.text});
                 return false;
             },
             else => {
