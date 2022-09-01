@@ -1,4 +1,5 @@
 :invisible
+:noitems
 
 @a P
 Welcome to Oathbreaker!
@@ -38,8 +39,27 @@ Knock down locked doors (the purple ones) by bumping them.
 END POSTER
 
 @d P
-TODO: note about traps, fountains, drains, capacitor arrays, stalker stations,
-barrels of water.
+Throughout the Dungeon, you'll find various machines and utilities in rooms
+that you can use for your own purposes.
+
+Some examples:
+
+- Fountains ($b¶$.) replenish a portion of your health.
+
+- Traps ($g^$.) and gas vents ($G+$.) release noxious fumes (e.g. paralysing
+  gas, confusing gas) when triggered. With careful positioning, you can
+  debilitate or kill guards this way
+
+- Drains ($G∩$.) can be crawled into to speedily escape pursuit. (Beware:
+  sometimes the drain will turn out to be a dead end.)
+
+- Capacitor arrays ($b$~C$.) discharge a blast of electricity, instantly
+  vaporizing all enemies in view that don't have electricity resistance
+  (rElec). The downside is that enemies with rElec won't be harmed.
+
+- Stalker stations ($a$~S$.) do... something secret :^)
+
+There are a bunch of other dungeon features that aren't mentioned here.
 END POSTER
 
 @e P
@@ -51,7 +71,7 @@ TODO: quick intro on rings
 END POSTER
 
 @g P
-It is your primary goal to find upwards ($o$~$g<$.) stairs. Only escape matters
+It is your primary goal to find upwards ($o$~<$.) stairs. Only escape matters
 -- don't try wandering around the levels or lookinng for loot if you don't know
 where the stairs are, or can't make a safe retreat to it if you're pursued. If
 you can escape to the stairs without fighting enemies, do so.
@@ -76,14 +96,16 @@ END POSTER
 You can still turn back.
 END POSTER
 
-@0 m door_vault_gold
-
-@1 M sentry_spire
-@2 M lightning_spire
+@2 M javelineer
 @3 M iron_spire
 @4 M calcite_spire
 
+@0 m door_vault_gold
 @5 M ancient_mage
+
+@1 m drain
+@6 m fountain
+@7 m capacitor_array
 
 @8 M combat_dummy_prisoner
 @9 M combat_dummy_normal
@@ -91,17 +113,17 @@ END POSTER
 ##################################################
 #................................................#
 #.##########################################⊞###.#
-#.########################h##4##4##4##4#4###.###.#
-#.#..........+.#.......+.#...............#.....#.#
-#.#..........#.#.......#.#+############1.1.....#.#
-#.#.........d#.#.......#.#.......&.#####.####+##.#
-#.#..........#.#~~~~~~~#.#...g...#####1~.~1&...#.#
-#±##########+#.#.......#.#.......+..##.~.~.&...#.#
-#...8.≡......#.#e......#.##########.##2~.~2&...#.#
+#.########################h###44###44###4###.###.#
+#.#...6.≡....+.#.......+.#.+.............#.....#.#
+#.#.....≡....#.#.......#.#+#############.#.....#.#
+#.#.7...≡...d#.#.......#.#.......&.#####.####+##.#
+#.#...1.≡....#.#~~~~~~~#.#...g...#####.~.~.&...#.#
+#±##########+#.#.......#.#.......+..##2~.~2&...#.#
+#...8.≡......#.#e......#.##########.##3~.~3&...#.#
 #.....±......#.#..####.#.#.......##.##.~.~.&...#.#
-#..8..≡..c...#.+.......#.#.......##.##3~.~3&...#.#
-############+###########.#&&&&&&&##.##.~.~.#...#.#
-#########...9.....######..........#.##2~.~2#...#.#
+#..8..≡..c...#.+.......#.#.......##.##2~.~2&...#.#
+############+###########.#&&&&&&&##.##3~.~3#...#.#
+#########...9.....######..........#.##.~.~.#...#.#
 #########.........•#####..........#.##.....#####.#
 ##...####.........######f.........+.##.....#z....#
 #@.a...#########+#####•#########################.#
