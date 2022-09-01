@@ -14,17 +14,21 @@ Your main way of killing foes is stabbing.
 You can only stab when the monster is currently "working" (i.e. isn't attacking
 and isn't investigating a noise).
 
-Stay quiet (rest every 4 turns) and stay out of the monster's vision (the red
-tiles) and you'll be able to land a sneak attack, aka a stab, 100% of the time.
+To remain hidden and land a proper stab:
 
-Monsters without night vision won't be able to see you in the dark. Sneak around
-in dark tiles to bypass and avoid guards if you can't stay out of their vision
-radius.
+- Stay quiet by resting every 4 turns. (See the 'walking' indicator on the HUD.)
 
-In the next room is a (harmless) combat dummy, which slowly rotates around
+- Stay out of the monster's vision (the red tiles).
+
+- If the monster doesn't have night vision, hide in dark areas.
+
+In the next room is a (dangerous) javelineer, which stands in one spot,
 watching for intruders. Try stabbing it to continue to the next room.
 
-(If it spotted you or heard your noise, wait for it to "forget" about you first.)
+If the javelineer heard your noise, hide in the dark areas and wait for it to
+go back to work.
+
+If it spotted you on the other hand... good luck.
 END POSTER
 
 @c P
@@ -108,7 +112,6 @@ END POSTER
 @7 m capacitor_array
 
 @8 M combat_dummy_prisoner
-@9 M combat_dummy_normal
 
 ##################################################
 #................................................#
@@ -120,12 +123,12 @@ END POSTER
 #.#...1.≡....#.#~~~~~~~#.#...g...#####.~.~.&...#.#
 #±##########+#.#.......#.#.......+..##2~.~2&...#.#
 #...8.≡......#.#e......#.##########.##3~.~3&...#.#
-#.....±......#.#..####.#.#.......##.##.~.~.&...#.#
-#..8..≡..c...#.+.......#.#.......##.##2~.~2&...#.#
+#.....±......#.#.......#.#.......##.##.~.~.&...#.#
+#..8..≡..c...#.+.#####.#.#.......##.##2~.~2&...#.#
 ############+###########.#&&&&&&&##.##3~.~3#...#.#
-#########...9.....######..........#.##.~.~.#...#.#
-#########.........•#####..........#.##.....#####.#
-##...####.........######f.........+.##.....#z....#
-#@.a...#########+#####•#########################.#
-##...##..+.......b#•50...........................#
+##...####...2.....######..........#.##.~.~.#...#.#
+#@...a###.........•#####..........#.##.....#####.#
+##...###########.#######f.........+.##.....#z....#
+###+###b########+#####•#########################.#
+###.....+........##•50...........................#
 ######################•###########################
