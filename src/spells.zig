@@ -1028,7 +1028,7 @@ pub const Spell = struct {
                 const line = caster_coord.drawLine(target, state.mapgeometry, 3);
                 assert(line.len > 0);
                 for (line.constSlice()) |c| {
-                    if (!c.eq(caster_coord) and !state.is_walkable(c, .{ .right_now = true })) {
+                    if (!c.eq(caster_coord) and !state.is_walkable(c, .{ .right_now = true, .only_if_breaks_lof = true })) {
                         const hit_mob = state.dungeon.at(c).mob;
 
                         if (hit_mob) |victim| {

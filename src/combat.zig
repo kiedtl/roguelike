@@ -168,7 +168,7 @@ pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: u
     var dest_coord = throwee.coord;
     while (i < distance) : (i += 1) {
         const new = dest_coord.move(direction, state.mapgeometry) orelse break;
-        if (!state.is_walkable(new, .{ .right_now = true })) {
+        if (!state.is_walkable(new, .{ .right_now = true, .only_if_breaks_lof = true })) {
             if (state.dungeon.at(new).mob) |mob| {
                 assert(mob != throwee);
                 slammed_into_mob = mob;
