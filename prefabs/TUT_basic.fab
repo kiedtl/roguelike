@@ -22,13 +22,10 @@ To remain hidden and land a proper stab:
 
 - If the monster doesn't have night vision, hide in dark areas.
 
-In the next room is a (dangerous) javelineer, which stands in one spot,
-watching for intruders. Try stabbing it to continue to the next room.
+In the next room is a combat dummy, which stands in one spot, watching for
+intruders. Try stabbing it to continue to the next room.
 
-If the javelineer heard your noise, hide in the dark areas and wait for it to
-go back to work.
-
-If it spotted you on the other hand... good luck.
+(If the combat dummy spotted you, move out of sight and wait for it to forget you.)
 END POSTER
 
 @c P
@@ -43,8 +40,8 @@ Knock down locked doors (the purple ones) by bumping them.
 END POSTER
 
 @d P
-Throughout the Dungeon, you'll find various machines and utilities in rooms
-that you can use for your own purposes.
+Throughout the Dungeon, you'll find various machines and utilities that you can
+use for your own purposes.
 
 Some examples:
 
@@ -67,23 +64,56 @@ There are a bunch of other dungeon features that aren't mentioned here.
 END POSTER
 
 @e P
-TODO: quick intro on patterns; using Leap pattern to get over water/lava
+Movement patterns are your only way of utilising magic and spellcasting in this
+game. Together with evocables and consumables, they are your only reliable way
+to fight against enemies that you failed to stab.
+
+(Because you're fragile and don't regenerate HP until you reach another floor,
+plain melee isn't recommended.)
+
+By default, you are given a number of movement patterns that appear next to a
+number on the HUD. Press the number to activate the pattern, then follow the
+instructions in the log.
+
+To pass over this stream of water:
+
+- Activate the $cLeap$. pattern while standing next to this poster
+
+- Choose $b<North>$. when prompted.
+
+- Move towards the wall away from the stream, and wait twice.
+
+You will be propelled over.
 END POSTER
 
 @f P
-TODO: quick intro on rings
+On each new level, there will (usually) be a small golden enclosure containing
+a ring ($o*$.). Each ring, of which you can wear 4 at a time, grants a new movement
+pattern and ability.
+
+Simply move over the ring and equip it (press $b,$.) to use it, then press the
+movement pattern's number to activate the ability.
+
+Press $bi$. and check the ring's description for information regarding its
+usage.
 END POSTER
 
 @g P
-It is your primary goal to find upwards ($o$~<$.) stairs. Only escape matters
--- don't try wandering around the levels or lookinng for loot if you don't know
-where the stairs are, or can't make a safe retreat to it if you're pursued. If
-you can escape to the stairs without fighting enemies, do so.
+Remember: your primary goal is to find the upwards ($o$~<$.) stairs and ascend.
+
+Only escape matters -- don't try wandering around the levels or looking for
+loot if you don't know where the stairs are, or can't make a safe retreat to it
+if you're pursued. If you can escape to the stairs without fighting enemies, do
+so.
 
 When you ascend a staircase:
+
 - Enemies lose track of you
+
 - You regain your HP and lose bad status effects
+
 - You may gain 2 extra HP
+
 - You may also gain a random talent
 
 If you wish, you can also enter optional stairs ($o$~≤$.). These are entirely
@@ -100,9 +130,12 @@ END POSTER
 You can still turn back.
 END POSTER
 
-@2 M javelineer
+@w M javelineer
 @3 M iron_spire
 @4 M calcite_spire
+
+@x M skeletal_blademaster
+@y M skeleton
 
 @0 m door_vault_gold
 @5 M ancient_mage
@@ -111,24 +144,27 @@ END POSTER
 @6 m fountain
 @7 m capacitor_array
 
+@2 M combat_dummy_normal
 @8 M combat_dummy_prisoner
+
+:subroom_area 27,10 5 5 ANY_s_ringdrops
 
 ##################################################
 #................................................#
-#.##########################################⊞###.#
-#.########################h###44###44###4###.###.#
-#.#...6.≡....+.#.......+.#.+.............#.....#.#
-#.#.....≡....#.#.......#.#+#############.#.....#.#
-#.#.7...≡...d#.#.......#.#.......&.#####.####+##.#
-#.#...1.≡....#.#~~~~~~~#.#...g...#####.~.~.&...#.#
-#±##########+#.#.......#.#.......+..##2~.~2&...#.#
-#...8.≡......#.#e......#.##########.##3~.~3&...#.#
-#.....±......#.#.......#.#.......##.##.~.~.&...#.#
-#..8..≡..c...#.+.#####.#.#.......##.##2~.~2&...#.#
-############+###########.#&&&&&&&##.##3~.~3#...#.#
-##...####...2.....######..........#.##.~.~.#...#.#
-#@...a###.........•#####..........#.##.....#####.#
-##...###########.#######f.........+.##.....#z....#
+#.##############################################.#
+#.###############•########h###########4•4#######.#
+#.#...6.≡....+.#.......+.#.+...................#.#
+#.#.....≡....#.#.......#.#+###########&&&#.....#.#
+#.#.7...≡...d#.#.......#.#.......#####xyx###+###.#
+#.#...1.≡....#.#~~~~~~~#.#...g...#####..y#.~.~.#.#
+#±##########+#.#.......#.#.......+..##x..#w~.~w#.#
+#...8.≡......#.#.......#.####•#####.##...•3~.~3•.#
+#.....±......#.#e......#.##.....###.⊞...x#.~.~.#.#
+#..8..≡..c...#.+.......#.##.....###.##y..#w~.~w#.#
+############+########•##.##.....###.##..x#3~.~3#.#
+##...####...2.....######.#•.....•##.##...•.~.~.•.#
+#@...a###.........•#####..........#.##x..#######.#
+##...###########.#######.....f....+.##yxy###z....#
 ###+###b########+#####•#########################.#
 ###.....+........##•50...........................#
 ######################•###########################

@@ -575,6 +575,7 @@ fn isRoomInvalid(
 }
 
 fn excavatePrefab(
+    s_fabs: *PrefabArrayList,
     room: *Room,
     fab: *const Prefab,
     allocator: mem.Allocator,
@@ -816,6 +817,12 @@ fn excavatePrefab(
         } else {
             state.inputs[room.rect.start.z].append(input_stckpl) catch err.wat();
         }
+    }
+
+    for (fab.subroom_areas.constSlice()) |subroom_area| {
+        placeSubroom(s_fabs, room, &subroom_area.rect, allocator, .{
+            .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
+        });
     }
 }
 
@@ -1177,7 +1184,7 @@ fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, allo
 
             //std.log.debug("mapgen: Using subroom {s} at ({}x{}+{}+{})", .{ subroom.name.constSlice(), parent_adj.rect.start.x, parent_adj.rect.start.y, rx, ry });
 
-            excavatePrefab(&parent_adj, subroom, alloc, rx, ry);
+            excavatePrefab(s_fabs, &parent_adj, subroom, alloc, rx, ry);
             subroom.used[parent.rect.start.z] += 1;
             subroom.global_used += 1;
             parent.has_subroom = true;
@@ -1305,7 +1312,7 @@ fn _place_rooms(
     // Only now are we actually sure that we'd use the room
 
     if (child.prefab) |_| {
-        excavatePrefab(&child, fab.?, allocator, 0, 0);
+        excavatePrefab(s_fabs, &child, fab.?, allocator, 0, 0);
     } else {
         excavateRect(&child.rect);
     }
@@ -1350,11 +1357,11 @@ fn _place_rooms(
             }, allocator, .{});
         }
     } else if (child.prefab.?.subroom_areas.len > 0) {
-        for (child.prefab.?.subroom_areas.constSlice()) |subroom_area| {
-            placeSubroom(s_fabs, &child, &subroom_area.rect, allocator, .{
-                .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
-            });
-        }
+        // for (child.prefab.?.subroom_areas.constSlice()) |subroom_area| {
+        //     placeSubroom(s_fabs, &child, &subroom_area.rect, allocator, .{
+        //         .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
+        //     });
+        // }
     }
 
     // Use parent's index, as we appended the corridor earlier and that may
@@ -1419,7 +1426,7 @@ pub fn placeRandomRooms(
         if (first == null) first = room;
         fab.used[level] += 1;
         fab.global_used += 1;
-        excavatePrefab(&room, fab, allocator, 0, 0);
+        excavatePrefab(s_fabs, &room, fab, allocator, 0, 0);
         rooms.append(room) catch err.wat();
 
         reqctr += 1;

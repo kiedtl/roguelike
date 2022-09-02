@@ -96,6 +96,7 @@ pub const CombatDummyNormal = MobTemplate{
             .work_fn = ai.combatDummyWork,
             .fight_fn = ai.combatDummyFight,
         },
+        .deaf = true,
         .immobile = true,
         .life_type = .Construct,
         .max_HP = 1,
