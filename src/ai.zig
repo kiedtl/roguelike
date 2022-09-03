@@ -102,7 +102,7 @@ pub fn calculateMorale(self: *Mob) isize {
     if (self.hasStatus(.Fire) and !self.isFullyResistant(.rFire))
         base -= 4;
 
-    if (self.ai.phase == .Flee) base -= 8;
+    if (self.ai.phase == .Flee) base -= 12;
 
     if (self.squad != null and self.squad.?.leader.?.ai.phase == .Flee)
         base -= 16;
