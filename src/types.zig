@@ -302,53 +302,39 @@ pub const Coord = struct { // {{{
     }
 
     pub fn move(self: *const Self, direction: Direction, limit: Self) ?Coord {
-        var dx: isize = 0;
-        var dy: isize = 0;
-
         switch (direction) {
             .North => {
-                dx = 0;
-                dy = -1;
+                if (self.y == 0) return null;
+                return Coord.new2(self.z, self.x, self.y - 1);
             },
             .South => {
-                dx = 0;
-                dy = 1;
+                if (self.y >= limit.y -| 1) return null;
+                return Coord.new2(self.z, self.x, self.y + 1);
             },
             .East => {
-                dx = 1;
-                dy = 0;
+                if (self.x >= limit.x -| 1) return null;
+                return Coord.new2(self.z, self.x + 1, self.y);
             },
             .West => {
-                dx = -1;
-                dy = 0;
+                if (self.x == 0) return null;
+                return Coord.new2(self.z, self.x - 1, self.y);
             },
             .NorthEast => {
-                dx = 1;
-                dy = -1;
+                if (self.x >= limit.x -| 1 or self.y == 0) return null;
+                return Coord.new2(self.z, self.x + 1, self.y - 1);
             },
             .NorthWest => {
-                dx = -1;
-                dy = -1;
+                if (self.x == 0 or self.y == 0) return null;
+                return Coord.new2(self.z, self.x - 1, self.y - 1);
             },
             .SouthEast => {
-                dx = 1;
-                dy = 1;
+                if (self.x >= limit.x -| 1 or self.y >= limit.y -| 1) return null;
+                return Coord.new2(self.z, self.x + 1, self.y + 1);
             },
             .SouthWest => {
-                dx = -1;
-                dy = 1;
+                if (self.y >= limit.y -| 1 or self.x == 0) return null;
+                return Coord.new2(self.z, self.x - 1, self.y + 1);
             },
-        }
-
-        const newx = @intCast(isize, self.x) + dx;
-        const newy = @intCast(isize, self.y) + dy;
-
-        if ((newx >= 0 and @intCast(usize, newx) < limit.x) and
-            (newy >= 0 and @intCast(usize, newy) < limit.y))
-        {
-            return Coord.new2(self.z, @intCast(usize, newx), @intCast(usize, newy));
-        } else {
-            return null;
         }
     }
 
@@ -2482,7 +2468,7 @@ pub const Mob = struct { // {{{
                         }
                     },
                     .Poster => |_| if (self == state.player) {
-                            return player.triggerPoster(dest);
+                        return player.triggerPoster(dest);
                     },
                     .Stair => |s| if (self == state.player) {
                         if (s) |floor| {
