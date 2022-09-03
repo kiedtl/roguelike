@@ -78,7 +78,7 @@ fn pathfindingPenalty(coord: Coord, opts: state.IsWalkableOptions) usize {
 
         if (mob.ai.flag(.AvoidsEnemies)) {
             if (utils.getHostileAt(mob, coord)) |_| {
-                c += 30;
+                c += 20;
             } else |_| {}
         }
 
