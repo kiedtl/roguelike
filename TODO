@@ -1403,10 +1403,11 @@ x Fix sound propagation
 - Reject maps without enough open space
 - Give player credit for deaths caused by malfunctioning machines
 - Give player credit for deaths caused by fires
-- Show appropriate number of exclamation points on messages about spell damage
-- Don't allow confused monsters to attack diagonally.
+x Show appropriate number of exclamation points on messages about spell damage
+x Don't allow confused monsters to attack diagonally.
 - Consider LOF clear if bolt is multi-target & only enemies are blocking LOF
 - Allow vaults to be placed in Quarters
+- Fix bugged liquids with regards to thrown trajectories (fix w/ liquid rework)
 
 Ideas
 =====
