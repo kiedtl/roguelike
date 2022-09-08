@@ -19,7 +19,7 @@ const astar = @import("astar.zig");
 const combat = @import("combat.zig");
 const colors = @import("colors.zig");
 const dijkstra = @import("dijkstra.zig");
-const display = @import("display.zig");
+const ui = @import("ui.zig");
 const err = @import("err.zig");
 const explosions = @import("explosions.zig");
 const fire = @import("fire.zig");
@@ -1837,7 +1837,7 @@ pub const Mob = struct { // {{{
     // base_night_vision:  Whether the mob can see in darkness.
     // deg360_vision:      Mob's FOV ignores the facing mechanic and can see in all
     //                     directions (e.g., player, statues)
-    // no_show_fov:        If false, display code will not show mob's FOV.
+    // no_show_fov:        If false, ui code will not show mob's FOV.
     // memory:             The maximum length of time for which a mob can remember
     //                     an enemy.
     // deaf:               Whether it can hear sounds.
@@ -2295,7 +2295,7 @@ pub const Mob = struct { // {{{
         } else null;
 
         const tile = item.*.tile();
-        display.Animation.apply(.{ .TraverseLine = .{
+        ui.Animation.apply(.{ .TraverseLine = .{
             .start = self.coord,
             .end = landed orelse at,
             .char = tile.ch,
@@ -2474,7 +2474,7 @@ pub const Mob = struct { // {{{
                         if (s) |floor| {
                             return player.triggerStair(dest, floor);
                         } else {
-                            display.drawAlertThenLog("It's suicide to go back!", .{});
+                            ui.drawAlertThenLog("It's suicide to go back!", .{});
                         }
                     },
                     else => {},
@@ -2661,19 +2661,19 @@ pub const Mob = struct { // {{{
                     state.message(.CombatUnimportant, "{c} {s} {}.", .{
                         attacker, verb, recipient,
                     });
-                    display.Animation.blink(&.{recipient.coord}, '/', colors.LIGHT_STEEL_BLUE, .{}).apply();
+                    ui.Animation.blink(&.{recipient.coord}, '/', colors.LIGHT_STEEL_BLUE, .{}).apply();
                 } else if (evaded) {
                     const verb = if (recipient == state.player) "evade" else "evades";
                     state.message(.CombatUnimportant, "{c} {s} {}.", .{
                         recipient, verb, attacker,
                     });
-                    display.Animation.blink(&.{recipient.coord}, ')', colors.LIGHT_STEEL_BLUE, .{}).apply();
+                    ui.Animation.blink(&.{recipient.coord}, ')', colors.LIGHT_STEEL_BLUE, .{}).apply();
                 }
             }
 
             if (recipient.isUnderStatus(.Riposte)) |_| {
                 if (recipient.canMelee(attacker)) {
-                    display.Animation.blink(&.{recipient.coord}, 'R', colors.LIGHT_STEEL_BLUE, .{}).apply();
+                    ui.Animation.blink(&.{recipient.coord}, 'R', colors.LIGHT_STEEL_BLUE, .{}).apply();
                     recipient.fight(attacker, .{ .free_attack = true, .is_riposte = true });
                 }
             }
@@ -2737,7 +2737,7 @@ pub const Mob = struct { // {{{
         if (recipient.stat(.Spikes) > 0 and
             attacker.coord.distance(recipient.coord) == 1)
         {
-            display.Animation.blink(&.{recipient.coord}, 'S', colors.LIGHT_STEEL_BLUE, .{}).apply();
+            ui.Animation.blink(&.{recipient.coord}, 'S', colors.LIGHT_STEEL_BLUE, .{}).apply();
 
             attacker.takeDamage(.{
                 .amount = @intCast(usize, recipient.stat(.Spikes)),
@@ -2756,7 +2756,7 @@ pub const Mob = struct { // {{{
             newopts.damage_bonus = 100;
             newopts.is_bonus = true;
 
-            display.Animation.blink(&.{attacker.coord}, 'M', colors.LIGHT_STEEL_BLUE, .{}).apply();
+            ui.Animation.blink(&.{attacker.coord}, 'M', colors.LIGHT_STEEL_BLUE, .{}).apply();
 
             _fightWithWeapon(
                 attacker,
@@ -2812,7 +2812,7 @@ pub const Mob = struct { // {{{
         // Make animations
         const clamped_dmg = math.clamp(@intCast(u21, amount), 0, 9);
         const damage_char = if (self.should_be_dead()) '∞' else '0' + clamped_dmg;
-        display.Animation.blink(&.{self.coord}, damage_char, colors.PALE_VIOLET_RED, .{}).apply();
+        ui.Animation.blink(&.{self.coord}, damage_char, colors.PALE_VIOLET_RED, .{}).apply();
 
         // Print message
         if (state.player.cansee(self.coord) or (d.by_mob != null and state.player.cansee(d.by_mob.?.coord))) {
@@ -3270,7 +3270,7 @@ pub const Mob = struct { // {{{
             }
         } else if (!had_status_before and has_status_now) {
             if (s.status == .Paralysis and self == state.player) {
-                display.drawContinuePrompt("You are paralysed!", .{});
+                ui.drawContinuePrompt("You are paralysed!", .{});
             } else {
                 msg_parts = s.status.messageWhenAdded();
             }

@@ -12,7 +12,7 @@ const mem = std.mem;
 
 const ai = @import("ai.zig");
 const colors = @import("colors.zig");
-const display = @import("display.zig");
+const ui = @import("ui.zig");
 const dijkstra = @import("dijkstra.zig");
 const types = @import("types.zig");
 const combat = @import("combat.zig");
@@ -181,7 +181,7 @@ pub const CAST_CALL_UNDEAD = Spell{
                         undead.ai.work_area.items[0] = target;
                     }
 
-                    display.Animation.apply(.{ .EncircleChar = .{
+                    ui.Animation.apply(.{ .EncircleChar = .{
                         .coord = caster_coord,
                         .char = '!',
                         .fg = colors.PALE_VIOLET_RED,
@@ -499,10 +499,10 @@ pub const BOLT_BLINKBOLT = Spell{
     .noise = .Loud,
     .bolt_animation = .{
         .Type2 = .{
-            .chars = display.Animation.ELEC_LINE_CHARS,
-            .fg = display.Animation.ELEC_LINE_FG,
-            .bg = display.Animation.ELEC_LINE_BG,
-            .bg_mix = display.Animation.ELEC_LINE_MIX,
+            .chars = ui.Animation.ELEC_LINE_CHARS,
+            .fg = ui.Animation.ELEC_LINE_FG,
+            .bg = ui.Animation.ELEC_LINE_BG,
+            .bg_mix = ui.Animation.ELEC_LINE_MIX,
             .approach = 1,
         },
     },
@@ -585,10 +585,10 @@ pub const BOLT_LIGHTNING = Spell{
     //.bolt_animation = .{ .Type2 = .{ .chars = "EFHIKLMNTVWXYZ\\/|-=+#", .fg = 0x73c5ff } },
     .bolt_animation = .{
         .Type2 = .{
-            .chars = display.Animation.ELEC_LINE_CHARS,
-            .fg = display.Animation.ELEC_LINE_FG,
-            .bg = display.Animation.ELEC_LINE_BG,
-            .bg_mix = display.Animation.ELEC_LINE_MIX,
+            .chars = ui.Animation.ELEC_LINE_CHARS,
+            .fg = ui.Animation.ELEC_LINE_FG,
+            .bg = ui.Animation.ELEC_LINE_BG,
+            .bg_mix = ui.Animation.ELEC_LINE_MIX,
             .approach = 2,
         },
     },
@@ -1060,7 +1060,7 @@ pub const Spell = struct {
 
                 if (self.bolt_animation) |anim_type| switch (anim_type) {
                     .Simple => |simple_anim| {
-                        display.Animation.apply(.{ .TraverseLine = .{
+                        ui.Animation.apply(.{ .TraverseLine = .{
                             .start = caster_coord,
                             .end = last_processed_coord,
                             .char = simple_anim.char,
@@ -1068,7 +1068,7 @@ pub const Spell = struct {
                         } });
                     },
                     .Type2 => |type2_anim| {
-                        display.Animation.apply(.{ .AnimatedLine = .{
+                        ui.Animation.apply(.{ .AnimatedLine = .{
                             .start = caster_coord,
                             .end = last_processed_coord,
                             .approach = type2_anim.approach,

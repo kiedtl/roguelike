@@ -7,7 +7,7 @@ const meta = std.meta;
 const math = std.math;
 const enums = std.enums;
 
-const display = @import("display.zig");
+const ui = @import("ui.zig");
 const dijkstra = @import("dijkstra.zig");
 const spells = @import("spells.zig");
 const colors = @import("colors.zig");
@@ -695,10 +695,10 @@ pub const StalkerStation = Machine{
                 const CHOICE_SEEK = 0;
                 const CHOICE_MOVE = 1;
 
-                const chosen_action_i = display.drawChoicePrompt("Order the stalkers to do what?", .{}, &choices) orelse return false;
+                const chosen_action_i = ui.drawChoicePrompt("Order the stalkers to do what?", .{}, &choices) orelse return false;
                 const action: Action = switch (chosen_action_i) {
                     CHOICE_SEEK => .SeekStairs,
-                    CHOICE_MOVE => .{ .Guard = display.chooseCell(.{ .require_seen = true }) orelse return false },
+                    CHOICE_MOVE => .{ .Guard = ui.chooseCell(.{ .require_seen = true }) orelse return false },
                     else => unreachable,
                 };
 
@@ -748,7 +748,7 @@ pub const StalkerStation = Machine{
                 };
 
                 if (spawned_ctr == 0) {
-                    display.drawAlertThenLog("No empty tiles near you to release stalkers.", .{});
+                    ui.drawAlertThenLog("No empty tiles near you to release stalkers.", .{});
                     return false;
                 }
 
@@ -785,7 +785,7 @@ pub const CapacitorArray = Machine{
                 assert(by == state.player);
 
                 if (state.player.resistance(.rElec) <= 0) {
-                    display.drawAlertThenLog("Cannot discharge without rElec.", .{});
+                    ui.drawAlertThenLog("Cannot discharge without rElec.", .{});
                     return false;
                 }
 
@@ -830,11 +830,11 @@ pub const CapacitorArray = Machine{
                 //                 }
 
                 if (affected.len == 0) {
-                    display.drawAlertThenLog("No electricity-vulnerable monsters in sight.", .{});
+                    ui.drawAlertThenLog("No electricity-vulnerable monsters in sight.", .{});
                     return false;
                 } else {
                     state.player.makeNoise(.Explosion, .Loudest);
-                    display.Animation.blink(affected.constSlice(), '*', display.Animation.ELEC_LINE_FG, .{}).apply();
+                    ui.Animation.blink(affected.constSlice(), '*', ui.Animation.ELEC_LINE_FG, .{}).apply();
                 }
 
                 return true;

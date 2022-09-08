@@ -4,7 +4,7 @@
 const build_options = @import("build_options");
 const std = @import("std");
 
-const display = @import("display.zig");
+const ui = @import("ui.zig");
 const state = @import("state.zig");
 const rng = @import("rng.zig");
 const sentry = @import("sentry.zig");
@@ -12,7 +12,7 @@ const sentry = @import("sentry.zig");
 pub fn bug(comptime fmt: []const u8, args: anytype) noreturn {
     @setCold(true);
 
-    display.deinit() catch {};
+    ui.deinit() catch {};
     std.log.err("Fatal bug encountered. (Seed: {})", .{rng.seed});
     std.log.err("BUG: " ++ fmt, args);
 

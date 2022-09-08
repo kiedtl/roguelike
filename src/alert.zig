@@ -108,7 +108,7 @@ pub fn tickCheckLevelHealth(level: usize) void {
             }
         }
 
-        //_ = @import("display.zig").drawContinuePrompt("ALERT: checking deaths", .{});
+        //_ = @import("ui.zig").drawContinuePrompt("ALERT: checking deaths", .{});
 
         const newalert = Alert{
             .alert = .{ .CheckDeaths = .{ .locations = locations } },

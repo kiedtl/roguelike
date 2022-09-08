@@ -17,7 +17,7 @@ const utils = @import("utils.zig");
 const gas = @import("gas.zig");
 const mapgen = @import("mapgen.zig");
 const surfaces = @import("surfaces.zig");
-const display = @import("display.zig");
+const ui = @import("ui.zig");
 const state = @import("state.zig");
 const types = @import("types.zig");
 const err = @import("err.zig");
@@ -122,13 +122,13 @@ pub fn choosePlayerUpgrades() void {
 
 pub fn triggerPoster(coord: Coord) bool {
     const poster = state.dungeon.at(coord).surface.?.Poster;
-    display.drawTextScreen("$oYou read:$.\n\n{s}", .{poster.text});
+    ui.drawTextScreen("$oYou read:$.\n\n{s}", .{poster.text});
     return false;
 }
 
 pub fn triggerStair(_: Coord, dest_stair: Coord) bool {
     if (state.levelinfo[dest_stair.z].optional) {
-        if (!display.drawYesNoPrompt("Really travel to optional level?", .{}))
+        if (!ui.drawYesNoPrompt("Really travel to optional level?", .{}))
             return false;
     }
 
@@ -190,7 +190,7 @@ pub fn checkForGarbage() void {
         // and Vials
         //
         if (item == .Prop) {
-            display.Animation.apply(.{ .PopChar = .{ .coord = state.player.coord, .char = '/' } });
+            ui.Animation.apply(.{ .PopChar = .{ .coord = state.player.coord, .char = '/' } });
             state.message(.Unimportant, "You toss the useless $g{s}$..", .{item.Prop.name});
             _ = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
         }
@@ -279,7 +279,7 @@ pub fn bookkeepingFOV() void {
 
 pub fn tryRest() bool {
     if (state.player.hasStatus(.Pain)) {
-        display.drawAlertThenLog("You cannot rest while in pain!", .{});
+        ui.drawAlertThenLog("You cannot rest while in pain!", .{});
         return false;
     }
 
@@ -293,7 +293,7 @@ pub fn moveOrFight(direction: Direction) bool {
     const dest = current.move(direction, state.mapgeometry) orelse return false;
 
     if (direction.is_diagonal() and state.player.isUnderStatus(.Disorient) != null) {
-        display.drawAlertThenLog("You cannot move or attack diagonally whilst disoriented!", .{});
+        ui.drawAlertThenLog("You cannot move or attack diagonally whilst disoriented!", .{});
         return false;
     }
 
@@ -307,7 +307,7 @@ pub fn moveOrFight(direction: Direction) bool {
 
     // Does the player want to move into a surveilled location?
     if (!isPlayerSpotted() and enemiesCanSee(dest)) {
-        if (!display.drawYesNoPrompt("Really move into an enemy's view?", .{}))
+        if (!ui.drawYesNoPrompt("Really move into an enemy's view?", .{}))
             return false;
     }
 
@@ -316,7 +316,7 @@ pub fn moveOrFight(direction: Direction) bool {
     //
     if (state.dungeon.at(dest).surface) |surf| switch (surf) {
         .Machine => |m| if (m.evoke_confirm) |msg| {
-            if (!display.drawYesNoPrompt("{s}", .{msg}))
+            if (!ui.drawYesNoPrompt("{s}", .{msg}))
                 return false;
         },
         .Container => |_| return rummageContainer(dest),
@@ -352,11 +352,11 @@ pub fn rummageContainer(coord: Coord) bool {
     const container = state.dungeon.at(coord).surface.?.Container;
 
     if (container.items.len == 0) {
-        display.drawAlertThenLog("There's nothing in the {s}.", .{container.name});
+        ui.drawAlertThenLog("There's nothing in the {s}.", .{container.name});
         return false;
     }
 
-    display.Animation.apply(.{
+    ui.Animation.apply(.{
         .PopChar = .{ .coord = state.player.coord, .char = '?', .fg = colors.GOLD, .delay = 125 },
     });
 
@@ -414,7 +414,7 @@ pub fn equipItem(item: Item) bool {
             } else null;
 
             if (empty_slot == null) {
-                const index = display.drawChoicePrompt(
+                const index = ui.drawChoicePrompt(
                     "Replace what ring with the $b{s}$.?",
                     .{r.name},
                     &[Inventory.RING_SLOTS.len][]const u8{
@@ -453,7 +453,7 @@ pub fn grabItem() bool {
         if (state.dungeon.itemsAt(state.player.coord).last()) |_| {
             item = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
         } else {
-            display.drawAlertThenLog("There's nothing here.", .{});
+            ui.drawAlertThenLog("There's nothing here.", .{});
             return false;
         }
     }
@@ -472,7 +472,7 @@ pub fn grabItem() bool {
         .Ring, .Armor, .Cloak, .Aux, .Weapon => return equipItem(item),
         else => {
             if (state.player.inventory.pack.isFull()) {
-                display.drawAlertThenLog("Your pack is full!", .{});
+                ui.drawAlertThenLog("Your pack is full!", .{});
                 return false;
             }
 
@@ -484,7 +484,7 @@ pub fn grabItem() bool {
         },
     }
 
-    display.Animation.apply(.{ .PopChar = .{ .coord = state.player.coord, .char = '/' } });
+    ui.Animation.apply(.{ .PopChar = .{ .coord = state.player.coord, .char = '/' } });
 
     return true;
 }
@@ -495,11 +495,11 @@ pub fn throwItem(index: usize) bool {
     const item = state.player.inventory.pack.slice()[index];
 
     if (item != .Projectile and !(item == .Consumable and item.Consumable.throwable)) {
-        display.drawAlertThenLog("You can't throw that.", .{});
+        ui.drawAlertThenLog("You can't throw that.", .{});
         return false;
     }
 
-    const dest = display.chooseCell(.{
+    const dest = ui.chooseCell(.{
         .require_seen = true,
         .show_trajectory = true,
     }) orelse return false;
@@ -518,25 +518,25 @@ pub fn activateSurfaceItem(coord: Coord) bool {
             .Machine => |m| if (m.player_interact) |_| {
                 mach = m;
             } else {
-                display.drawAlertThenLog("You can't activate that.", .{});
+                ui.drawAlertThenLog("You can't activate that.", .{});
                 return false;
             },
             else => {
-                display.drawAlertThenLog("There's nothing here to activate.", .{});
+                ui.drawAlertThenLog("There's nothing here to activate.", .{});
                 return false;
             },
         }
     } else {
-        display.drawAlertThenLog("There's nothing here to activate.", .{});
+        ui.drawAlertThenLog("There's nothing here to activate.", .{});
         return false;
     }
 
     const interaction = &mach.player_interact.?;
     mach.evoke(state.player, interaction) catch |e| {
         switch (e) {
-            error.UsedMax => display.drawAlertThenLog("You can't use the {s} again.", .{mach.name}),
+            error.UsedMax => ui.drawAlertThenLog("You can't use the {s} again.", .{mach.name}),
             error.NoEffect => if (interaction.no_effect_msg) |msg| {
-                display.drawAlertThenLog("{s}", .{msg});
+                ui.drawAlertThenLog("{s}", .{msg});
             },
         }
         return false;
@@ -562,24 +562,24 @@ pub fn dipWeapon(potion_index: usize) bool {
 
     const potion = state.player.inventory.pack.slice()[potion_index].Consumable;
     if (!potion.is_potion or potion.dip_effect == null) {
-        display.drawAlertThenLog("You can't dip your weapon in that!", .{});
+        ui.drawAlertThenLog("You can't dip your weapon in that!", .{});
         return false;
     }
 
     const weapon = if (state.player.inventory.equipment(.Weapon).*) |w|
         w.Weapon
     else {
-        display.drawAlertThenLog("You aren't wielding a weapon!", .{});
+        ui.drawAlertThenLog("You aren't wielding a weapon!", .{});
         return false;
     };
 
     if (!weapon.is_dippable) {
-        display.drawAlertThenLog("You can't dip that weapon!", .{});
+        ui.drawAlertThenLog("You can't dip that weapon!", .{});
         return false;
     }
 
     if (weapon.dip_counter > 0) {
-        const response = display.drawYesNoPrompt("Really dip again? It's already dipped in a potion of {s}.", .{weapon.dip_effect.?.name});
+        const response = ui.drawYesNoPrompt("Really dip again? It's already dipped in a potion of {s}.", .{weapon.dip_effect.?.name});
         if (!response) return false;
     }
 
@@ -601,13 +601,13 @@ pub fn useItem(index: usize) bool {
         .Ring, .Armor, .Cloak, .Aux, .Weapon => return equipItem(item),
         .Consumable => |p| {
             if (p.is_potion and state.player.isUnderStatus(.Nausea) != null) {
-                display.drawAlertThenLog("You can't drink potions while nauseated!", .{});
+                ui.drawAlertThenLog("You can't drink potions while nauseated!", .{});
                 return false;
             }
 
             state.player.useConsumable(p, true) catch |e| switch (e) {
                 error.BadPosition => {
-                    display.drawAlertThenLog("You can't use this kit here.", .{});
+                    ui.drawAlertThenLog("You can't use this kit here.", .{});
                     return false;
                 },
             };
@@ -617,7 +617,7 @@ pub fn useItem(index: usize) bool {
         },
         .Vial => |_| err.todo(),
         .Projectile, .Boulder => {
-            display.drawAlertThenLog("You want to *eat* that?", .{});
+            ui.drawAlertThenLog("You want to *eat* that?", .{});
             return false;
         },
         .Prop => |p| {
@@ -627,7 +627,7 @@ pub fn useItem(index: usize) bool {
         .Evocable => |v| {
             v.evoke(state.player) catch |e| {
                 if (e == error.NoCharges) {
-                    display.drawAlertThenLog("You can't use the {s} anymore!", .{v.name});
+                    ui.drawAlertThenLog("You can't use the {s} anymore!", .{v.name});
                 }
                 return false;
             };
@@ -663,7 +663,7 @@ pub fn dropItem(index: usize) bool {
         });
         return true;
     } else {
-        display.drawAlertThenLog("There's no nearby space to drop items.", .{});
+        ui.drawAlertThenLog("There's no nearby space to drop items.", .{});
         return false;
     }
 }

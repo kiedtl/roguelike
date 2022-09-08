@@ -6,7 +6,7 @@ const meta = std.meta;
 
 const alert = @import("alert.zig");
 const colors = @import("colors.zig");
-const display = @import("display.zig");
+const ui = @import("ui.zig");
 const fov = @import("fov.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
@@ -338,7 +338,7 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
 
     // Animation
     if (new.mob == state.player and state.player.cansee(mob.coord)) {
-        display.Animation.blink(&.{mob.coord}, '!', colors.AQUAMARINE, .{
+        ui.Animation.blink(&.{mob.coord}, '!', colors.AQUAMARINE, .{
             .repeat = 2,
             .delay = 120,
         }).apply();

@@ -13,7 +13,7 @@ const explosions = @import("explosions.zig");
 const fire = @import("fire.zig");
 const fov = @import("fov.zig");
 const gas = @import("gas.zig");
-const display = @import("display.zig");
+const ui = @import("ui.zig");
 const rng = @import("rng.zig");
 const mobs = @import("mobs.zig");
 const state = @import("state.zig");
@@ -353,7 +353,7 @@ pub const BrazierWandEvoc = Evocable{
         fn f(_: *Mob, _: *Evocable) Evocable.EvokeError!void {
             const MAX_RANGE = 4;
 
-            const chosen = display.chooseCell(.{
+            const chosen = ui.chooseCell(.{
                 .require_seen = true,
                 .max_distance = MAX_RANGE,
                 .show_trajectory = true,
@@ -366,23 +366,23 @@ pub const BrazierWandEvoc = Evocable{
                     // could make holes in treasure vaults
                     mach.power = 0;
 
-                    display.Animation.apply(.{ .AnimatedLine = .{
+                    ui.Animation.apply(.{ .AnimatedLine = .{
                         .start = state.player.coord,
                         .end = chosen,
                         .approach = MAX_RANGE,
-                        .chars = display.Animation.ELEC_LINE_CHARS,
-                        .fg = display.Animation.ELEC_LINE_FG,
-                        .bg = display.Animation.ELEC_LINE_BG,
-                        .bg_mix = display.Animation.ELEC_LINE_MIX,
+                        .chars = ui.Animation.ELEC_LINE_CHARS,
+                        .fg = ui.Animation.ELEC_LINE_FG,
+                        .bg = ui.Animation.ELEC_LINE_BG,
+                        .bg_mix = ui.Animation.ELEC_LINE_MIX,
                     } });
 
                     state.message(.Info, "The wand disables the {s}.", .{mach.name});
                 } else {
-                    display.drawAlertThenLog("That's not a light source.", .{});
+                    ui.drawAlertThenLog("That's not a light source.", .{});
                     return error.BadPosition;
                 }
             } else {
-                display.drawAlertThenLog("There's no light source there.", .{});
+                ui.drawAlertThenLog("There's no light source there.", .{});
                 return error.BadPosition;
             }
         }
@@ -397,7 +397,7 @@ pub const FlamethrowerEvoc = Evocable{
     .rechargable = true,
     .trigger_fn = struct {
         fn f(_: *Mob, _: *Evocable) Evocable.EvokeError!void {
-            const dest = display.chooseCell(.{
+            const dest = ui.chooseCell(.{
                 .require_seen = true,
                 .max_distance = 4,
                 .show_trajectory = true,
@@ -592,7 +592,7 @@ pub const LightningRing = Ring{ // {{{
                 if (self.coord.move(d, state.mapgeometry)) |c|
                     anim_buf.append(c) catch err.wat();
 
-            display.Animation.blink(anim_buf.constSlice(), '*', display.Animation.ELEC_LINE_FG, .{}).apply();
+            ui.Animation.blink(anim_buf.constSlice(), '*', ui.Animation.ELEC_LINE_FG, .{}).apply();
 
             for (&DIAGONAL_DIRECTIONS) |d|
                 if (utils.getHostileInDirection(self, d)) |hostile| {
@@ -1037,7 +1037,7 @@ pub const ElectrificationRing = Ring{ // {{{
                 if (self.coord.move(d, state.mapgeometry)) |c|
                     anim_buf.append(c) catch err.wat();
 
-            display.Animation.blink(anim_buf.constSlice(), '*', display.Animation.ELEC_LINE_FG, .{}).apply();
+            ui.Animation.blink(anim_buf.constSlice(), '*', ui.Animation.ELEC_LINE_FG, .{}).apply();
 
             for (&directions) |d|
                 if (utils.getHostileInDirection(self, d)) |hostile| {

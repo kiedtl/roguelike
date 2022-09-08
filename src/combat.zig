@@ -8,7 +8,7 @@ const types = @import("types.zig");
 const player = @import("player.zig");
 const rng = @import("rng.zig");
 const state = @import("state.zig");
-const display = @import("display.zig");
+const ui = @import("ui.zig");
 const utils = @import("utils.zig");
 
 const DamageStr = types.DamageStr;
@@ -181,7 +181,7 @@ pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: u
 
     // Do animation before actually moving mob
     //
-    display.Animation.apply(.{ .TraverseLine = .{
+    ui.Animation.apply(.{ .TraverseLine = .{
         .start = previous_coord,
         .end = dest_coord,
         .char = throwee.tile,

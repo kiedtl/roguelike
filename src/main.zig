@@ -21,7 +21,7 @@ const utils = @import("utils.zig");
 const gas = @import("gas.zig");
 const mapgen = @import("mapgen.zig");
 const surfaces = @import("surfaces.zig");
-const display = @import("display.zig");
+const ui = @import("ui.zig");
 const termbox = @import("termbox.zig");
 const types = @import("types.zig");
 const sentry = @import("sentry.zig");
@@ -63,7 +63,7 @@ pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace) noreturn {
     nosuspend switch (__panic_stage) {
         0 => {
             __panic_stage = 1;
-            display.deinit() catch {};
+            ui.deinit() catch {};
             std.log.err("Fatal error encountered. (Seed: {})", .{rng.seed});
 
             if (!state.sentry_disabled) {
@@ -107,14 +107,14 @@ fn initGame() bool {
     state.dungeon = state.GPA.allocator().create(types.Dungeon) catch err.oom();
     state.dungeon.* = types.Dungeon{};
 
-    if (display.init()) {} else |e| switch (e) {
+    if (ui.init()) {} else |e| switch (e) {
         error.AlreadyInitialized => err.wat(),
         error.TTYOpenFailed => @panic("Could not open TTY"),
         error.UnsupportedTerminal => @panic("Unsupported terminal"),
         error.PipeTrapFailed => @panic("Internal termbox error"),
     }
 
-    if (!display.checkWindowSize()) {
+    if (!ui.checkWindowSize()) {
         return false;
     }
 
@@ -162,7 +162,7 @@ fn initGame() bool {
 }
 
 fn initLevels() bool {
-    var loading_screen = display.initLoadingScreen();
+    var loading_screen = ui.initLoadingScreen();
     defer loading_screen.deinit();
 
     var s_fabs: mapgen.PrefabArrayList = undefined;
@@ -178,7 +178,7 @@ fn initLevels() bool {
 
         const level_name = state.levelinfo[level].name;
 
-        display.drawLoadingScreen(&loading_screen, level_name, "Generating map...", level * 100 / LEVELS) catch return false;
+        ui.drawLoadingScreen(&loading_screen, level_name, "Generating map...", level * 100 / LEVELS) catch return false;
 
         var placed_rune = true;
 
@@ -239,7 +239,7 @@ fn initLevels() bool {
     var f_level: usize = LEVELS - 1;
     while (f_level > 0) : (f_level -= 1) {
         for (state.levelinfo[f_level].stairs) |maybe_stair| if (maybe_stair) |dest_stair| {
-            display.drawLoadingScreen(&loading_screen, dest_stair, "Placing stairs...", (LEVELS - f_level) * 100 / LEVELS) catch return false;
+            ui.drawLoadingScreen(&loading_screen, dest_stair, "Placing stairs...", (LEVELS - f_level) * 100 / LEVELS) catch return false;
 
             const floor = for (state.levelinfo) |levelinfo, i| {
                 if (mem.eql(u8, levelinfo.name, dest_stair)) {
@@ -251,11 +251,11 @@ fn initLevels() bool {
         };
     }
 
-    return display.drawLoadingScreenFinish(&loading_screen);
+    return ui.drawLoadingScreenFinish(&loading_screen);
 }
 
 fn deinitGame() void {
-    display.deinit() catch err.wat();
+    ui.deinit() catch err.wat();
 
     state.GPA.allocator().destroy(state.dungeon);
 
@@ -388,7 +388,7 @@ fn readNoActionInput(timeout: ?isize) void {
     if (t == -1) @panic("Fatal termbox error");
 
     if (t == termbox.TB_EVENT_RESIZE) {
-        display.draw();
+        ui.draw();
     } else if (t == termbox.TB_EVENT_KEY) {
         if (ev.key != 0) {
             if (ev.key == termbox.TB_KEY_CTRL_C) {
@@ -405,7 +405,7 @@ fn readInput() bool {
     if (t == -1) @panic("Fatal termbox error");
 
     if (t == termbox.TB_EVENT_RESIZE) {
-        display.draw();
+        ui.draw();
         return false;
     } else if (t == termbox.TB_EVENT_KEY) {
         if (ev.key != 0) {
@@ -469,7 +469,7 @@ fn readInput() bool {
                     @panic("This is a test exception.");
                 },
                 termbox.TB_KEY_F9 => b: {
-                    const chosen = display.chooseCell(.{}) orelse break :b false;
+                    const chosen = ui.chooseCell(.{}) orelse break :b false;
                     break :b state.player.teleportTo(chosen, null, false);
                 },
                 else => false,
@@ -482,7 +482,7 @@ fn readInput() bool {
                         ring.pattern_checker.reset();
                     }
                     if (player.getRingByIndex(ev.ch - '0')) |ring| {
-                        if (display.chooseDirection()) |dir| {
+                        if (ui.chooseDirection()) |dir| {
                             state.message(.Info, "Activated ring $o{s}$....", .{ring.name});
 
                             if (ring.pattern_checker.init.?(state.player, dir, &ring.pattern_checker.state)) |hint| {
@@ -531,11 +531,11 @@ fn readInput() bool {
                     break :b false;
                 },
                 'A' => player.activateSurfaceItem(state.player.coord),
-                'i' => display.drawInventoryScreen(),
-                'v' => display.drawExamineScreen(null),
-                '@' => display.drawExamineScreen(.Mob),
+                'i' => ui.drawInventoryScreen(),
+                'v' => ui.drawExamineScreen(null),
+                '@' => ui.drawExamineScreen(.Mob),
                 'M' => b: {
-                    display.drawMessagesScreen();
+                    ui.drawMessagesScreen();
                     break :b false;
                 },
                 ',' => player.grabItem(),
@@ -591,9 +591,9 @@ fn tickGame() void {
 
         if (mob.energy < 0) {
             if (mob == state.player) {
-                display.draw();
+                ui.draw();
                 readNoActionInput(130);
-                display.draw();
+                ui.draw();
                 if (state.state == .Quit) break;
             }
 
@@ -626,9 +626,9 @@ fn tickGame() void {
 
             if (mob.isUnderStatus(.Paralysis)) |_| {
                 if (mob.coord.eq(state.player.coord)) {
-                    display.draw();
+                    ui.draw();
                     readNoActionInput(130);
-                    display.draw();
+                    ui.draw();
                     if (state.state == .Quit) break;
                 }
 
@@ -636,8 +636,8 @@ fn tickGame() void {
                 continue;
             } else {
                 if (mob.coord.eq(state.player.coord)) {
-                    display.draw();
-                    while (!readInput()) display.draw();
+                    ui.draw();
+                    while (!readInput()) ui.draw();
                     if (state.state == .Quit) break;
                 } else {
                     ai.main(mob, state.GPA.allocator());
@@ -664,9 +664,9 @@ fn tickGame() void {
             }
 
             if (actions_taken > 1 and state.player.cansee(mob.coord)) {
-                display.draw();
+                ui.draw();
                 readNoActionInput(130);
-                display.draw();
+                ui.draw();
                 if (state.state == .Quit) break;
             }
         }
@@ -842,7 +842,7 @@ pub fn actualMain() anyerror!void {
         return;
     }
 
-    display.draw();
+    ui.draw();
 
     state.message(.Info, "You've just escaped from prison.", .{});
     state.message(.Info, "Hurry to the stairs before the guards find you!", .{});
@@ -862,7 +862,7 @@ pub fn actualMain() anyerror!void {
         while (state.state != .Quit) switch (state.state) {
             .Game => tickGame(),
             .Win => {
-                _ = display.drawContinuePrompt("You escaped!", .{});
+                _ = ui.drawContinuePrompt("You escaped!", .{});
                 break;
             },
             .Lose => {
@@ -874,7 +874,7 @@ pub fn actualMain() anyerror!void {
                     96...99 => "You acquire Negative Health Syndrome!",
                     else => err.wat(),
                 };
-                _ = display.drawContinuePrompt("{s}", .{msg});
+                _ = ui.drawContinuePrompt("{s}", .{msg});
                 break;
             },
             .Quit => break,
