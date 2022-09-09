@@ -23,6 +23,7 @@ const mapgen = @import("mapgen.zig");
 const surfaces = @import("surfaces.zig");
 const ui = @import("ui.zig");
 const termbox = @import("termbox.zig");
+const display = @import("display.zig");
 const types = @import("types.zig");
 const sentry = @import("sentry.zig");
 const state = @import("state.zig");
@@ -751,8 +752,8 @@ fn viewerDisplay(tty_height: usize, level: usize, sy: usize) void {
     }) {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
-            var t = Tile.displayAs(Coord.new2(level, x, dy), false, false);
-            termbox.tb_put_cell(@intCast(isize, x), @intCast(isize, y), &t);
+            const t = Tile.displayAs(Coord.new2(level, x, dy), false, false);
+            display.setCell(.Termbox, x, y, t);
         }
     }
     while (y < tty_height) : (y += 1) {

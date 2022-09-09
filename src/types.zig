@@ -35,7 +35,7 @@ const sound = @import("sound.zig");
 const spells = @import("spells.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
-const termbox = @import("termbox.zig");
+const display = @import("display.zig");
 const utils = @import("utils.zig");
 
 const LEVELS = state.LEVELS;
@@ -4028,8 +4028,8 @@ pub const Item = union(ItemType) {
         return self.isUseful();
     }
 
-    pub fn tile(self: Item) termbox.tb_cell {
-        var cell = termbox.tb_cell{ .fg = 0xffffff, .bg = colors.BG, .ch = ' ' };
+    pub fn tile(self: Item) display.Cell {
+        var cell = display.Cell{ .fg = 0xffffff, .bg = colors.BG, .ch = ' ' };
 
         switch (self) {
             .Rune => |_| {
@@ -4160,9 +4160,9 @@ pub const Tile = struct {
     // won't change over time, is needed.
     rand: usize = 0,
 
-    pub fn displayAs(coord: Coord, ignore_lights: bool, ignore_mobs: bool) termbox.tb_cell {
+    pub fn displayAs(coord: Coord, ignore_lights: bool, ignore_mobs: bool) display.Cell {
         var self = state.dungeon.at(coord);
-        var cell = termbox.tb_cell{};
+        var cell = display.Cell{};
 
         switch (self.type) {
             .Water => cell = .{

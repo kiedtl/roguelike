@@ -182,11 +182,6 @@ pub extern fn tb_set_cursor(cx: isize, cy: isize) void;
 pub extern fn tb_put_cell(x: isize, y: isize, cell: [*c]tb_cell) void;
 pub extern fn tb_change_cell(x: isize, y: isize, ch: u32, fg: u32, bg: u32) void;
 
-pub fn oldCell(x: isize, y: isize) tb_cell {
-    const tb_buf = tb_cell_buffer();
-    return tb_buf[@intCast(usize, y * tb_width() + x)];
-}
-
 // Copies the buffer from 'cells' at the specified position, assuming the
 // buffer is a two-dimensional array of size ('w' x 'h'), represented as a
 // one-dimensional buffer containing lines of cells starting from the top.

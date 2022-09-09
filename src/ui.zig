@@ -9,6 +9,7 @@ const enums = std.enums;
 
 const RexMap = @import("rexpaint").RexMap;
 
+const display = @import("display.zig");
 const colors = @import("colors.zig");
 const player = @import("player.zig");
 const spells = @import("spells.zig");
@@ -49,24 +50,8 @@ pub const LEFT_INFO_WIDTH: usize = 35;
 //pub const RIGHT_INFO_WIDTH: usize = 24;
 pub const LOG_HEIGHT: usize = 4;
 
-// tb_shutdown() calls abort() if tb_init() wasn't called, or if tb_shutdown()
-// was called twice. Keep track of termbox's state to prevent this.
-var is_tb_inited = false;
-
 pub fn init() !void {
-    if (is_tb_inited)
-        return error.AlreadyInitialized;
-
-    switch (termbox.tb_init()) {
-        0 => is_tb_inited = true,
-        termbox.TB_EFAILED_TO_OPEN_TTY => return error.TTYOpenFailed,
-        termbox.TB_EUNSUPPORTED_TERMINAL => return error.UnsupportedTerminal,
-        termbox.TB_EPIPE_TRAP_ERROR => return error.PipeTrapFailed,
-        else => unreachable,
-    }
-
-    _ = termbox.tb_select_output_mode(termbox.TB_OUTPUT_TRUECOLOR);
-    _ = termbox.tb_set_clear_attributes(termbox.TB_WHITE, termbox.TB_BLACK);
+    try display.init(.Termbox);
     clearScreen();
 }
 
@@ -79,8 +64,8 @@ pub fn checkWindowSize() bool {
     const min_width = WIDTH + LEFT_INFO_WIDTH + 2;
 
     while (true) {
-        const cur_w = termbox.tb_width();
-        const cur_h = termbox.tb_height();
+        const cur_w = display.width(.Termbox);
+        const cur_h = display.height(.Termbox);
 
         if (cur_w >= min_width and cur_h >= min_height) {
             // All's well
@@ -92,7 +77,7 @@ pub fn checkWindowSize() bool {
         _ = _drawStrf(1, 3, cur_w, "Minimum: {}x{}.", .{ min_width, min_height }, .{});
         _ = _drawStrf(1, 4, cur_w, "Current size: {}x{}.", .{ cur_w, cur_h }, .{});
 
-        termbox.tb_present();
+        display.present(.Termbox);
 
         var ev: termbox.tb_event = undefined;
         const t = termbox.tb_poll_event(&ev);
@@ -117,29 +102,28 @@ pub fn checkWindowSize() bool {
 }
 
 pub fn deinit() !void {
-    if (!is_tb_inited)
-        return error.AlreadyDeinitialized;
-    termbox.tb_shutdown();
-    is_tb_inited = false;
+    try display.deinit(.Termbox);
 }
 
 pub const DisplayWindow = enum { Whole, PlayerInfo, Main, Log };
 pub const Dimension = struct {
-    startx: isize,
-    endx: isize,
-    starty: isize,
-    endy: isize,
+    startx: usize,
+    endx: usize,
+    starty: usize,
+    endy: usize,
+
     pub fn width(self: @This()) usize {
-        return @intCast(usize, self.endx - self.startx);
+        return self.endx - self.startx;
     }
+
     pub fn height(self: @This()) usize {
-        return @intCast(usize, self.endy - self.starty);
+        return self.endy - self.starty;
     }
 };
 
 pub fn dimensions(w: DisplayWindow) Dimension {
-    const height = termbox.tb_height();
-    //const width = termbox.tb_width();
+    const height = display.height(.Termbox);
+    //const width = display.width(.Termbox);
 
     const playerinfo_width = LEFT_INFO_WIDTH;
     //const playerinfo_width = width - WIDTH - 2;
@@ -859,22 +843,22 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
 
 // }}}
 
-fn _clearLineWith(from: isize, to: isize, y: isize, ch: u32, fg: u32, bg: u32) void {
+fn _clearLineWith(from: usize, to: usize, y: usize, ch: u32, fg: u32, bg: u32) void {
     var x = from;
     while (x <= to) : (x += 1)
-        termbox.tb_change_cell(x, y, ch, fg, bg);
+        display.setCell(.Termbox, x, y, .{ .ch = ch, .fg = fg, .bg = bg });
 }
 
 pub fn clearScreen() void {
-    const height = termbox.tb_height();
-    const width = termbox.tb_width();
+    const height = display.height(.Termbox);
+    const width = display.width(.Termbox);
 
-    var y: isize = 0;
+    var y: usize = 0;
     while (y < height) : (y += 1)
         _clearLineWith(0, width, y, ' ', 0, colors.BG);
 }
 
-fn _clear_line(from: isize, to: isize, y: isize) void {
+fn _clear_line(from: usize, to: usize, y: usize) void {
     _clearLineWith(from, to, y, ' ', 0, colors.BG);
 }
 
@@ -888,29 +872,29 @@ pub fn _drawBorder(color: u32, d: Dimension) void {
             }
 
             const char: u21 = if (y == d.starty or y == d.endy) '─' else '│';
-            termbox.tb_change_cell(x, y, char, color, colors.BG);
+            display.setCell(.Termbox, x, y, .{ .ch = char, .fg = color, .bg = colors.BG });
         }
     }
 
     // Fix corners
-    termbox.tb_change_cell(d.startx, d.starty, '╭', color, colors.BG);
-    termbox.tb_change_cell(d.endx, d.starty, '╮', color, colors.BG);
-    termbox.tb_change_cell(d.startx, d.endy, '╰', color, colors.BG);
-    termbox.tb_change_cell(d.endx, d.endy, '╯', color, colors.BG);
+    display.setCell(.Termbox, d.startx, d.starty, .{ .ch = '╭', .fg = color, .bg = colors.BG });
+    display.setCell(.Termbox, d.endx, d.starty, .{ .ch = '╮', .fg = color, .bg = colors.BG });
+    display.setCell(.Termbox, d.startx, d.endy, .{ .ch = '╰', .fg = color, .bg = colors.BG });
+    display.setCell(.Termbox, d.endx, d.endy, .{ .ch = '╯', .fg = color, .bg = colors.BG });
 
-    termbox.tb_present();
+    display.present(.Termbox);
 }
 
 const DrawStrOpts = struct {
     bg: ?u32 = colors.BG,
     fg: u32 = colors.OFF_WHITE,
-    endy: ?isize = null,
+    endy: ?usize = null,
     fold: bool = true,
     // When folding text, skip the first X lines. Used to implement scrolling.
     skip_lines: usize = 0,
 };
 
-fn _drawStrf(_x: isize, _y: isize, endx: isize, comptime format: []const u8, args: anytype, opts: DrawStrOpts) isize {
+fn _drawStrf(_x: usize, _y: usize, endx: usize, comptime format: []const u8, args: anytype, opts: DrawStrOpts) usize {
     const str = std.fmt.allocPrint(state.GPA.allocator(), format, args) catch err.oom();
     defer state.GPA.allocator().free(str);
     return _drawStr(_x, _y, endx, str, opts);
@@ -928,10 +912,9 @@ fn _drawStrf(_x: isize, _y: isize, endx: isize, comptime format: []const u8, arg
 //     $o       fg = GOLD
 //     $.       reset fg and bg to defaults
 //     $~       inverg fg/bg
-fn _drawStr(_x: isize, _y: isize, endx: isize, str: []const u8, opts: DrawStrOpts) isize {
-    const termbox_width = termbox.tb_width();
-    const termbox_height = termbox.tb_height();
-    const termbox_buffer = termbox.tb_cell_buffer();
+fn _drawStr(_x: usize, _y: usize, endx: usize, str: []const u8, opts: DrawStrOpts) usize {
+    // const width = display.width();
+    const height = display.height(.Termbox);
 
     var x = _x;
     var y = _y;
@@ -954,14 +937,14 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, str: []const u8, opts: DrawStrOpt
             continue;
         }
 
-        if (y >= termbox_height or (opts.endy != null and y >= opts.endy.?)) {
+        if (y >= height or (opts.endy != null and y >= opts.endy.?)) {
             break;
         }
 
         var utf8 = (std.unicode.Utf8View.init(line) catch err.bug("bad utf8", .{})).iterator();
         while (utf8.nextCodepointSlice()) |encoded_codepoint| {
             const codepoint = std.unicode.utf8Decode(encoded_codepoint) catch err.bug("bad utf8", .{});
-            const def_bg = termbox_buffer[@intCast(usize, y * termbox_width + x)].bg;
+            const def_bg = display.getCell(.Termbox, x, y).bg;
 
             switch (codepoint) {
                 '\n' => {
@@ -998,7 +981,7 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, str: []const u8, opts: DrawStrOpt
                     continue;
                 },
                 else => {
-                    termbox.tb_change_cell(x, y, codepoint, fg, bg orelse def_bg);
+                    display.setCell(.Termbox, x, y, .{ .ch = codepoint, .fg = fg, .bg = bg orelse def_bg });
                     x += 1;
                 },
             }
@@ -1013,9 +996,9 @@ fn _drawStr(_x: isize, _y: isize, endx: isize, str: []const u8, opts: DrawStrOpt
 }
 
 fn _drawBar(
-    y: isize,
-    startx: isize,
-    endx: isize,
+    y: usize,
+    startx: usize,
+    endx: usize,
     current: usize,
     max: usize,
     description: []const u8,
@@ -1027,7 +1010,7 @@ fn _drawBar(
 
     const depleted_bg = colors.percentageOf(bg, 40);
     const percent = if (max == 0) 100 else (current * 100) / max;
-    const bar = @divTrunc((endx - startx - 1) * @intCast(isize, percent), 100);
+    const bar = @divTrunc((endx - startx - 1) * percent, 100);
     const bar_end = startx + bar;
 
     _clearLineWith(startx, endx - 1, y, ' ', fg, depleted_bg);
@@ -1040,14 +1023,14 @@ fn _drawBar(
         // Find out the width of "<current>/<max>" so we can right-align it
         var buf: [256]u8 = undefined;
         var fbs = std.io.fixedBufferStream(&buf);
-        std.fmt.format(fbs.writer(), "{} / {}", .{ current, max }) catch err.wat();
-        const info_width = @intCast(isize, fbs.getWritten().len);
+        @call(.{ .modifier = .always_inline }, std.fmt.format, .{ fbs.writer(), "{} / {}", .{ current, max } }) catch err.bug("format error", .{});
+        const info_width = fbs.getWritten().len;
 
         _ = _drawStrf(endx - info_width - 1, y, endx, "{} / {}", .{ current, max }, .{ .fg = fg, .bg = null });
     }
 }
 
-fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, endy: isize) void {
+fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, endy: usize) void {
     // const last_action_cost = if (state.player.activities.current()) |lastaction| b: {
     //     const spd = @intToFloat(f64, state.player.speed());
     //     break :b (spd * @intToFloat(f64, lastaction.cost())) / 100.0 / 10.0;
@@ -1063,7 +1046,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
     //y = _drawStrf(lvlstrx, y, endx, "$G┤$. $c{s}$. $G├$.", .{lvlstr}, .{});
     //y += 1;
     _ = _drawStrf(startx, y, endx, "$cturns:$. {}", .{state.player_turns}, .{});
-    y = _drawStrf(endx - @intCast(isize, lvlstr.len), y, endx, "$c{s}$.", .{lvlstr}, .{});
+    y = _drawStrf(endx - lvlstr.len, y, endx, "$c{s}$.", .{lvlstr}, .{});
     y += 1;
 
     // zig fmt: off
@@ -1079,7 +1062,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         const v = utils.SignedFormatter{ .v = stat.v };
         const x = switch (i % 2) {
             0 => startx,
-            1 => endx - @intCast(isize, std.fmt.count("{s} {: >3}{s}", .{ stat.b, v, stat.a })),
+            1 => endx - std.fmt.count("{s} {: >3}{s}", .{ stat.b, v, stat.a }),
             //2 => startx + (@divTrunc(endx - startx, 3) * 2) + 1,
             else => unreachable,
         };
@@ -1169,7 +1152,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
     {
         const FeatureInfo = struct {
             name: StringBuf64,
-            tile: termbox.tb_cell,
+            tile: display.Cell,
             priority: usize,
             player: bool,
         };
@@ -1241,8 +1224,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         }.f);
 
         for (features.items) |feature| {
-            var tile = feature.tile;
-            termbox.tb_put_cell(startx, y, &tile);
+            display.setCell(.Termbox, startx, y, feature.tile);
 
             _ = _drawStrf(startx + 2, y, endx, "$c{s}$.", .{feature.name.constSlice()}, .{});
             if (feature.player) {
@@ -1262,8 +1244,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         _clear_line(startx, endx, y);
         _clear_line(startx, endx, y + 1);
 
-        var mobcell = Tile.displayAs(mob.coord, true, false);
-        termbox.tb_put_cell(startx, y, &mobcell);
+        display.setCell(.Termbox, startx, y, Tile.displayAs(mob.coord, true, false));
 
         const name = mob.displayName();
         _ = _drawStrf(startx + 2, y, endx, "$c{s}$.", .{name}, .{ .bg = null });
@@ -1271,7 +1252,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
         const infoset = _getMonsInfoSet(mob);
         defer MobInfoLine.deinitList(infoset);
         //var info_x: isize = startx + 2 + @intCast(isize, name.len) + 2;
-        var info_x: isize = endx - @intCast(isize, infoset.items.len);
+        var info_x: usize = endx - infoset.items.len;
         for (infoset.items) |info| {
             _ = _drawStrf(info_x, y, endx, "${u}{u}$.", .{ info.color, info.char }, .{ .bg = null });
             info_x += 1;
@@ -1307,7 +1288,7 @@ fn drawInfo(moblist: []const *Mob, startx: isize, starty: isize, endx: isize, en
     }
 }
 
-fn drawLog(startx: isize, endx: isize, alloc: mem.Allocator) Console {
+fn drawLog(startx: usize, endx: usize, alloc: mem.Allocator) Console {
     const linewidth = @intCast(usize, endx - startx - 1);
 
     var parent_console = Console.init(alloc, linewidth, 512); // TODO: alloc on demand
@@ -1339,9 +1320,9 @@ fn drawLog(startx: isize, endx: isize, alloc: mem.Allocator) Console {
 
         var lines: usize = undefined;
         if (message.dups == 0) {
-            lines = console.drawTextAt(0, 0, "$G{u}$.{s}{s}", .{ line, noisetext, utils.used(message.msg) }, .{ .fg = col });
+            lines = console.drawTextAtf(0, 0, "$G{u}$.{s}{s}", .{ line, noisetext, utils.used(message.msg) }, .{ .fg = col });
         } else {
-            lines = console.drawTextAt(0, 0, "$G{u}$.{s}{s} (×{})", .{ line, noisetext, utils.used(message.msg), message.dups + 1 }, .{ .fg = col });
+            lines = console.drawTextAtf(0, 0, "$G{u}$.{s}{s} (×{})", .{ line, noisetext, utils.used(message.msg), message.dups + 1 }, .{ .fg = col });
         }
 
         total_height += lines;
@@ -1364,7 +1345,7 @@ fn _mobs_can_see(moblist: []const *Mob, coord: Coord) bool {
     return false;
 }
 
-fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: termbox.tb_cell) termbox.tb_cell {
+fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display.Cell {
     var tile = p_tile;
 
     // Draw noise and indicate if that tile is visible by another mob
@@ -1407,13 +1388,13 @@ fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: termbox.tb_cell) term
     return tile;
 }
 
-pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize, endy: isize) void {
+pub fn drawMap(moblist: []const *Mob, startx: usize, endx: usize, starty: usize, endy: usize) void {
     //const playery = @intCast(isize, state.player.coord.y);
     //const playerx = @intCast(isize, state.player.coord.x);
     const level = state.player.coord.z;
 
-    var cursory: isize = starty;
-    var cursorx: isize = startx;
+    var cursory = starty;
+    var cursorx = startx;
 
     //const height = @intCast(usize, endy - starty);
     //const width = @intCast(usize, endx - startx);
@@ -1422,10 +1403,10 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
     //const map_startx = playerx - @intCast(isize, width / 2);
     //const map_endx = playerx + @intCast(isize, width / 2);
 
-    const map_starty: isize = 0;
-    const map_endy: isize = HEIGHT;
-    const map_startx: isize = 0;
-    const map_endx: isize = WIDTH;
+    const map_starty: usize = 0;
+    const map_endy: usize = HEIGHT;
+    const map_startx: usize = 0;
+    const map_endx: usize = WIDTH;
 
     var y = map_starty;
     while (y < map_endy and cursory < endy) : ({
@@ -1433,14 +1414,14 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
         cursory += 1;
         cursorx = startx;
     }) {
-        var x: isize = map_startx;
+        var x: usize = map_startx;
         while (x < map_endx and cursorx < endx) : ({
             x += 1;
             cursorx += 1;
         }) {
             // if out of bounds on the map, draw a black tile
             if (y < 0 or x < 0 or y >= HEIGHT or x >= WIDTH) {
-                termbox.tb_change_cell(cursorx, cursory, ' ', 0, colors.BG);
+                display.setCell(.Termbox, cursorx, cursory, .{ .bg = colors.BG });
                 continue;
             }
 
@@ -1448,7 +1429,7 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
             const u_y: usize = @intCast(usize, y);
             const coord = Coord.new2(level, u_x, u_y);
 
-            var tile: termbox.tb_cell = undefined;
+            var tile: display.Cell = undefined;
 
             // if player can't see area, draw a blank/grey tile, depending on
             // what they saw last there
@@ -1475,7 +1456,7 @@ pub fn drawMap(moblist: []const *Mob, startx: isize, endx: isize, starty: isize,
                 tile = modifyTile(moblist, coord, tile);
             }
 
-            termbox.tb_put_cell(cursorx, cursory, &tile);
+            display.setCell(.Termbox, cursorx, cursory, tile);
         }
     }
 }
@@ -1505,7 +1486,7 @@ pub fn draw() void {
     );
     log_console.deinit();
 
-    termbox.tb_present();
+    display.present(.Termbox);
 }
 
 pub const ChooseCellOpts = struct {
@@ -1538,8 +1519,8 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
                 colors.PALE_VIOLET_RED;
 
             for (trajectory.constSlice()) |traj_c| {
-                const d_traj_c_y = mainw.starty + @intCast(isize, traj_c.y);
-                const d_traj_c_x = mainw.startx + @intCast(isize, traj_c.x);
+                const d_traj_c_y = mainw.starty + traj_c.y;
+                const d_traj_c_x = mainw.startx + traj_c.x;
 
                 if (state.player.coord.eq(traj_c)) continue;
                 if (coord.eq(traj_c)) break;
@@ -1550,35 +1531,35 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
                 }))
                     break;
 
-                termbox.tb_change_cell(d_traj_c_x, d_traj_c_y, 'x', fg, colors.BG);
+                display.setCell(.Termbox, d_traj_c_x, d_traj_c_y, .{ .ch = 'x', .fg = fg, .bg = colors.BG });
             }
         }
 
-        const display_x = mainw.startx + @intCast(isize, coord.x);
-        const display_y = mainw.starty + @intCast(isize, coord.y);
-        termbox.tb_change_cell(display_x - 1, display_y - 1, '╭', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x + 0, display_y - 1, '─', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y - 1, '╮', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x - 1, display_y + 0, '│', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y + 0, '│', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x - 1, display_y + 1, '╰', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x + 0, display_y + 1, '─', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y + 1, '╯', colors.CONCRETE, colors.BG);
+        const display_x = mainw.startx + coord.x;
+        const display_y = mainw.starty + coord.y;
+        display.setCell(.Termbox, display_x - 1, display_y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 0, display_y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 1, display_y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(.Termbox, display_x - 1, display_y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 1, display_y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(.Termbox, display_x - 1, display_y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 0, display_y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 1, display_y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG });
 
-        termbox.tb_present();
+        display.present(.Termbox);
 
         // This is a bit of a hack, erase the bordering but don't present the
         // changes, so that if the user moves to the edge of the map and then moves
         // away, there won't be bordering left as an artifact (as the map drawing
         // routines won't erase it, since it's outside its window).
-        termbox.tb_change_cell(display_x - 1, display_y - 1, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x + 0, display_y - 1, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y - 1, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x - 1, display_y + 0, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y + 0, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x - 1, display_y + 1, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x + 0, display_y + 1, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y + 1, ' ', 0, colors.BG);
+        display.setCell(.Termbox, display_x - 1, display_y - 1, .{ .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 0, display_y - 1, .{ .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 1, display_y - 1, .{ .bg = colors.BG });
+        display.setCell(.Termbox, display_x - 1, display_y + 0, .{ .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 1, display_y + 0, .{ .bg = colors.BG });
+        display.setCell(.Termbox, display_x - 1, display_y + 1, .{ .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 0, display_y + 1, .{ .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 1, display_y + 1, .{ .bg = colors.BG });
 
         var ev: termbox.tb_event = undefined;
         const t = termbox.tb_poll_event(&ev);
@@ -1645,8 +1626,8 @@ pub fn chooseDirection() ?Direction {
         const maybe_coord = state.player.coord.move(direction, state.mapgeometry);
 
         if (maybe_coord) |coord| {
-            const display_x = mainw.startx + @intCast(isize, coord.x);
-            const display_y = mainw.starty + @intCast(isize, coord.y);
+            const display_x = mainw.startx + coord.x;
+            const display_y = mainw.starty + coord.y;
             const char: u21 = switch (direction) {
                 .North => '↑',
                 .South => '↓',
@@ -1657,10 +1638,10 @@ pub fn chooseDirection() ?Direction {
                 .SouthEast => '↘',
                 .SouthWest => '↙',
             };
-            termbox.tb_change_cell(display_x, display_y, char, colors.LIGHT_CONCRETE, colors.BG);
+            display.setCell(.Termbox, display_x, display_y, .{ .ch = char, .fg = colors.LIGHT_CONCRETE, .bg = colors.BG });
         }
 
-        termbox.tb_present();
+        display.present(.Termbox);
 
         drawModalText(colors.CONCRETE, "direction: {}", .{direction});
 
@@ -1746,7 +1727,7 @@ pub fn drawLoadingScreen(loading_win: *LoadingScreen, text_context: []const u8, 
     loading_win.text_con.clear();
 
     var y: usize = 0;
-    y += loading_win.text_con.drawTextAt(0, y, "{s}", .{text}, .{});
+    y += loading_win.text_con.drawTextAt(0, y, text, .{});
     y += loading_win.text_con.drawBarAt(
         0,
         LoadingScreen.TEXT_CON_WIDTH,
@@ -1761,8 +1742,8 @@ pub fn drawLoadingScreen(loading_win: *LoadingScreen, text_context: []const u8, 
 
     loading_win.main_con.renderFully(@intCast(usize, win.startx), @intCast(usize, win.starty));
 
-    termbox.tb_present();
-    termbox.tb_clear();
+    display.present(.Termbox);
+    clearScreen();
 
     var ev: termbox.tb_event = undefined;
     const t = termbox.tb_peek_event(&ev, 20);
@@ -1798,12 +1779,12 @@ pub fn drawLoadingScreenFinish(loading_win: *LoadingScreen) bool {
         else => err.wat(),
     };
 
-    _ = loading_win.text_con.drawTextAt(0, 0, "$b{s}$.", .{text}, .{});
+    _ = loading_win.text_con.drawTextAtf(0, 0, "$b{s}$.", .{text}, .{});
 
     loading_win.main_con.renderFully(@intCast(usize, win.startx), @intCast(usize, win.starty));
 
-    termbox.tb_present();
-    termbox.tb_clear();
+    display.present(.Termbox);
+    clearScreen();
 
     _ = waitForInput(' ') orelse return false;
     return true;
@@ -1819,12 +1800,12 @@ pub fn drawTextScreen(comptime fmt: []const u8, args: anytype) void {
     defer con.deinit();
 
     var y: usize = 0;
-    y += con.drawTextAt(0, y, "{s}", .{text}, .{});
+    y += con.drawTextAt(0, y, text, .{});
 
     con.renderFully(@intCast(usize, mainw.startx), @intCast(usize, mainw.starty));
 
-    termbox.tb_present();
-    termbox.tb_clear();
+    display.present(.Termbox);
+    clearScreen();
 
     while (true) {
         var ev: termbox.tb_event = undefined;
@@ -1889,7 +1870,7 @@ pub fn drawMessagesScreen() void {
         const last_line = math.min(first_line + window_height, console.height);
         console.renderAreaAt(@intCast(usize, mainw.startx), @intCast(usize, starty), 0, first_line, console.width, last_line);
 
-        termbox.tb_present();
+        display.present(.Termbox);
 
         var ev: termbox.tb_event = undefined;
         const t = termbox.tb_peek_event(&ev, 50);
@@ -2092,31 +2073,31 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
 
         drawMap(moblist.items, mainw.startx, mainw.endx, mainw.starty, mainw.endy);
 
-        const display_x = mainw.startx + @intCast(isize, coord.x);
-        const display_y = mainw.starty + @intCast(isize, coord.y);
-        termbox.tb_change_cell(display_x - 1, display_y - 1, '╭', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x + 0, display_y - 1, '─', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y - 1, '╮', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x - 1, display_y + 0, '│', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y + 0, '│', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x - 1, display_y + 1, '╰', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x + 0, display_y + 1, '─', colors.CONCRETE, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y + 1, '╯', colors.CONCRETE, colors.BG);
+        const display_x = mainw.startx + coord.x;
+        const display_y = mainw.starty + coord.y;
+        display.setCell(.Termbox, display_x - 1, display_y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 0, display_y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 1, display_y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(.Termbox, display_x - 1, display_y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 1, display_y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(.Termbox, display_x - 1, display_y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 0, display_y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 1, display_y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG });
 
-        termbox.tb_present();
+        display.present(.Termbox);
 
         // This is a bit of a hack, erase the bordering but don't present the
         // changes, so that if the user moves to the edge of the map and then moves
         // away, there won't be bordering left as an artifact (as the map drawing
         // routines won't erase it, since it's outside its window).
-        termbox.tb_change_cell(display_x - 1, display_y - 1, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x + 0, display_y - 1, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y - 1, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x - 1, display_y + 0, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y + 0, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x - 1, display_y + 1, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x + 0, display_y + 1, ' ', 0, colors.BG);
-        termbox.tb_change_cell(display_x + 1, display_y + 1, ' ', 0, colors.BG);
+        display.setCell(.Termbox, display_x - 1, display_y - 1, .{ .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 0, display_y - 1, .{ .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 1, display_y - 1, .{ .bg = colors.BG });
+        display.setCell(.Termbox, display_x - 1, display_y + 0, .{ .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 1, display_y + 0, .{ .bg = colors.BG });
+        display.setCell(.Termbox, display_x - 1, display_y + 1, .{ .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 0, display_y + 1, .{ .bg = colors.BG });
+        display.setCell(.Termbox, display_x + 1, display_y + 1, .{ .bg = colors.BG });
 
         var ev: termbox.tb_event = undefined;
         const t = termbox.tb_poll_event(&ev);
@@ -2218,7 +2199,7 @@ pub fn drawInventoryScreen() bool {
     var desc_scroll: usize = 0;
     var chosen: usize = 0;
     var chosen_itemlist: ItemListType = if (state.player.inventory.pack.len == 0) .Equip else .Pack;
-    var y: isize = 0;
+    var y: usize = 0;
 
     while (true) {
         clearScreen();
@@ -2333,7 +2314,7 @@ pub fn drawInventoryScreen() bool {
             }
         }
 
-        termbox.tb_present();
+        display.present(.Termbox);
 
         var ev: termbox.tb_event = undefined;
         const t = termbox.tb_poll_event(&ev);
@@ -2432,11 +2413,11 @@ pub fn drawModalText(color: u32, comptime fmt: []const u8, args: anytype) void {
     const y = if (state.player.coord.y > (HEIGHT / 2) * 2) wind.starty + 2 else wind.endy - 2;
     const x = 1;
 
-    termbox.tb_change_cell(x, y, '█', color, colors.BG);
+    display.setCell(.Termbox, x, y, .{ .ch = '█', .fg = color, .bg = colors.BG });
     _ = _drawStrf(x + 1, y, wind.endx, " {s} ", .{str}, .{ .bg = colors.percentageOf(color, 30) });
-    termbox.tb_change_cell(x + @intCast(isize, str.len) + 3, y, '█', color, colors.BG);
+    display.setCell(.Termbox, x + str.len + 3, y, .{ .ch = '█', .fg = color, .bg = colors.BG });
 
-    termbox.tb_present();
+    display.present(.Termbox);
 }
 
 pub fn drawAlert(comptime fmt: []const u8, args: anytype) void {
@@ -2460,12 +2441,12 @@ pub fn drawAlert(comptime fmt: []const u8, args: anytype) void {
 
     const txt_starty = wind.endy -
         @divTrunc(wind.endy - wind.starty, 2) -
-        @intCast(isize, text_height + 1 / 2);
+        text_height + 1 / 2;
     y = txt_starty;
 
     _ = _drawStr(wind.startx + 2, txt_starty, wind.endx, str, .{});
 
-    termbox.tb_present();
+    display.present(.Termbox);
 
     _drawBorder(colors.CONCRETE, wind);
     std.time.sleep(150_000_000);
@@ -2506,11 +2487,11 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
 
     var buf: [65535]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buf);
-    std.fmt.format(fbs.writer(), fmt, args) catch err.bug("format error!", .{});
+    @call(.{ .modifier = .always_inline }, std.fmt.format, .{ fbs.writer(), fmt, args }) catch err.bug("format error", .{});
     const str = fbs.getWritten();
 
     // Clear log window
-    var y: isize = wind.starty;
+    var y: usize = wind.starty;
     while (y < wind.endy) : (y += 1) _clear_line(wind.startx, wind.endx, y);
     y = wind.starty;
 
@@ -2527,7 +2508,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
             y = _drawStrf(wind.startx, y, wind.endx, "{s} {s}", .{ ind, option }, .{ .fg = color });
         }
 
-        termbox.tb_present();
+        display.present(.Termbox);
         var ev: termbox.tb_event = undefined;
         const t = termbox.tb_poll_event(&ev);
 
@@ -2619,7 +2600,7 @@ pub fn drawItemChoicePrompt(comptime fmt: []const u8, args: anytype, items: []co
 
 pub const Console = struct {
     alloc: mem.Allocator,
-    grid: []termbox.tb_cell,
+    grid: []display.Cell,
     width: usize,
     height: usize,
     subconsoles: Subconsole.AList,
@@ -2638,12 +2619,12 @@ pub const Console = struct {
     pub fn init(alloc: mem.Allocator, width: usize, height: usize) Self {
         const self = .{
             .alloc = alloc,
-            .grid = alloc.alloc(termbox.tb_cell, width * height) catch err.wat(),
+            .grid = alloc.alloc(display.Cell, width * height) catch err.wat(),
             .width = width,
             .height = height,
             .subconsoles = Subconsole.AList.init(alloc),
         };
-        mem.set(termbox.tb_cell, self.grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
+        mem.set(display.Cell, self.grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
         return self;
     }
 
@@ -2664,8 +2645,8 @@ pub const Console = struct {
     }
 
     pub fn changeHeight(self: *Self, new_height: usize) void {
-        const new_grid = self.alloc.alloc(termbox.tb_cell, self.width * new_height) catch err.wat();
-        mem.set(termbox.tb_cell, new_grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
+        const new_grid = self.alloc.alloc(display.Cell, self.width * new_height) catch err.wat();
+        mem.set(display.Cell, new_grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
 
         // Copy old grid to new grid
         var y: usize = 0;
@@ -2682,11 +2663,11 @@ pub const Console = struct {
         self.grid = new_grid;
     }
 
-    pub fn clearTo(self: *const Self, to: termbox.tb_cell) void {
-        mem.set(termbox.tb_cell, self.grid, to);
+    pub fn clearTo(self: *const Self, to: display.Cell) void {
+        mem.set(display.Cell, self.grid, to);
     }
 
-    fn clearLineTo(self: *const Self, startx: usize, endx: usize, y: usize, cell: termbox.tb_cell) void {
+    fn clearLineTo(self: *const Self, startx: usize, endx: usize, y: usize, cell: display.Cell) void {
         var x = startx;
         while (x <= endx) : (x += 1)
             self.grid[y * self.width + x] = cell;
@@ -2701,16 +2682,15 @@ pub const Console = struct {
     }
 
     pub fn renderAreaAt(self: *const Self, offset_x: usize, offset_y: usize, begin_x: usize, begin_y: usize, end_x: usize, end_y: usize) void {
-        var dy: isize = @intCast(isize, offset_y);
+        var dy: usize = offset_y;
         var y: usize = begin_y;
         while (y < end_y) : (y += 1) {
-            _clear_line(@intCast(isize, offset_x), @intCast(isize, offset_x + (end_x - begin_x)), dy);
+            _clear_line(offset_x, offset_x + (end_x - begin_x), dy);
 
-            var dx: isize = @intCast(isize, offset_x);
+            var dx: usize = offset_x;
             var x: usize = begin_x;
             while (x < end_x) : (x += 1) {
-                const cell = &self.grid[self.width * y + x];
-                termbox.tb_put_cell(dx, dy, cell);
+                display.setCell(.Termbox, dx, dy, self.grid[self.width * y + x]);
                 dx += 1;
             }
             dy += 1;
@@ -2760,13 +2740,16 @@ pub const Console = struct {
         }
     }
 
+    pub fn drawTextAtf(self: *const Self, startx: usize, starty: usize, comptime format: []const u8, args: anytype, opts: DrawStrOpts) usize {
+        const str = std.fmt.allocPrint(state.GPA.allocator(), format, args) catch err.oom();
+        defer state.GPA.allocator().free(str);
+        return self.drawTextAt(startx, starty, str, opts);
+    }
+
     // Re-implementation of _drawStr
     //
     // Returns lines/rows used
-    pub fn drawTextAt(self: *const Self, startx: usize, starty: usize, comptime format: []const u8, args: anytype, opts: DrawStrOpts) usize {
-        const str = std.fmt.allocPrint(self.alloc, format, args) catch err.oom();
-        defer self.alloc.free(str);
-
+    pub fn drawTextAt(self: *const Self, startx: usize, starty: usize, str: []const u8, opts: DrawStrOpts) usize {
         var x = startx;
         var y = starty;
         var skipped: usize = 0; // TODO: remove
@@ -2860,16 +2843,16 @@ pub const Console = struct {
         if (percent != 0)
             self.clearLineTo(x, bar_end, y, .{ .ch = ' ', .fg = fg, .bg = bg });
 
-        _ = self.drawTextAt(x + 1, y, "{s}", .{description}, .{ .fg = fg, .bg = null });
+        _ = self.drawTextAt(x + 1, y, description, .{ .fg = fg, .bg = null });
 
         if (opts.detail) switch (opts.detail_type) {
             .Percent => {
                 const info_width = @intCast(usize, std.fmt.count("{}%", .{percent}));
-                _ = self.drawTextAt(endx - info_width - 1, y, "{}%", .{percent}, .{ .fg = fg, .bg = null });
+                _ = self.drawTextAtf(endx - info_width - 1, y, "{}%", .{percent}, .{ .fg = fg, .bg = null });
             },
             .Specific => {
                 const info_width = @intCast(usize, std.fmt.count("{} / {}", .{ current, max }));
-                _ = self.drawTextAt(endx - info_width - 1, y, "{} / {}", .{ current, max }, .{ .fg = fg, .bg = null });
+                _ = self.drawTextAtf(endx - info_width - 1, y, "{} / {}", .{ current, max }, .{ .fg = fg, .bg = null });
             },
         };
 
@@ -2946,33 +2929,33 @@ pub const Animation = union(enum) {
 
         switch (self) {
             .PopChar => |anim| {
-                const dx = @intCast(isize, anim.coord.x) + mapwin.startx;
-                const dy = @intCast(isize, anim.coord.y) + mapwin.starty;
-                const old = termbox.oldCell(dx, dy);
+                const dx = anim.coord.x + mapwin.startx;
+                const dy = anim.coord.y + mapwin.starty;
+                const old = display.getCell(.Termbox, dx, dy);
 
-                termbox.tb_change_cell(dx, dy, anim.char, anim.fg, colors.BG);
-                termbox.tb_present();
+                display.setCell(.Termbox, dx, dy, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                display.present(.Termbox);
 
                 std.time.sleep(anim.delay * 1_000_000);
 
-                termbox.tb_change_cell(dx, dy, old.ch, old.fg, old.bg);
-                termbox.tb_change_cell(dx - 1, dy - 1, anim.char, anim.fg, colors.BG);
-                termbox.tb_change_cell(dx + 1, dy - 1, anim.char, anim.fg, colors.BG);
-                termbox.tb_change_cell(dx - 1, dy + 1, anim.char, anim.fg, colors.BG);
-                termbox.tb_change_cell(dx + 1, dy + 1, anim.char, anim.fg, colors.BG);
+                display.setCell(.Termbox, dx, dy, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
+                display.setCell(.Termbox, dx - 1, dy - 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                display.setCell(.Termbox, dx + 1, dy - 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                display.setCell(.Termbox, dx - 1, dy + 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                display.setCell(.Termbox, dx + 1, dy + 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
 
-                termbox.tb_present();
+                display.present(.Termbox);
 
                 std.time.sleep(anim.delay * 1_000_000);
             },
             .BlinkChar => |anim| {
                 assert(anim.coords.len < 32); // XXX: increase if necessary
-                var old_cells = StackBuffer(termbox.tb_cell, 32).init(null);
+                var old_cells = StackBuffer(display.Cell, 32).init(null);
                 for (anim.coords) |coord| {
                     if (state.player.cansee(coord)) {
-                        const dx = @intCast(isize, coord.x) + mapwin.startx;
-                        const dy = @intCast(isize, coord.y) + mapwin.starty;
-                        old_cells.append(termbox.oldCell(dx, dy)) catch err.wat();
+                        const dx = coord.x + mapwin.startx;
+                        const dy = coord.y + mapwin.starty;
+                        old_cells.append(display.getCell(.Termbox, dx, dy)) catch err.wat();
                     }
                 }
 
@@ -2984,24 +2967,24 @@ pub const Animation = union(enum) {
                 var ctr: usize = anim.repeat;
                 while (ctr > 0) : (ctr -= 1) {
                     for (anim.coords) |coord, i| if (state.player.cansee(coord)) {
-                        const dx = @intCast(isize, coord.x) + mapwin.startx;
-                        const dy = @intCast(isize, coord.y) + mapwin.starty;
+                        const dx = coord.x + mapwin.startx;
+                        const dy = coord.y + mapwin.starty;
                         const old = old_cells.constSlice()[i];
-                        termbox.tb_change_cell(dx, dy, anim.char, anim.fg orelse old.fg, colors.BG);
+                        display.setCell(.Termbox, dx, dy, .{ .ch = anim.char, .fg = anim.fg orelse old.fg, .bg = colors.BG });
                     };
 
-                    termbox.tb_present();
+                    display.present(.Termbox);
                     std.time.sleep(anim.delay * 1_000_000);
 
                     for (anim.coords) |coord, i| if (state.player.cansee(coord)) {
-                        const dx = @intCast(isize, coord.x) + mapwin.startx;
-                        const dy = @intCast(isize, coord.y) + mapwin.starty;
+                        const dx = coord.x + mapwin.startx;
+                        const dy = coord.y + mapwin.starty;
                         const old = old_cells.constSlice()[i];
-                        termbox.tb_change_cell(dx, dy, old.ch, old.fg, old.bg);
+                        display.setCell(.Termbox, dx, dy, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
                     };
 
                     if (ctr > 0) {
-                        termbox.tb_present();
+                        display.present(.Termbox);
                         std.time.sleep(anim.delay * 1_000_000);
                     }
                 }
@@ -3009,17 +2992,17 @@ pub const Animation = union(enum) {
             .EncircleChar => |anim| {
                 const directions = [_]Direction{ .NorthWest, .North, .NorthEast, .East, .SouthEast, .South, .SouthWest, .West, .NorthWest, .North, .NorthEast };
                 for (&directions) |d| if (anim.coord.move(d, state.mapgeometry)) |neighbor| {
-                    const dx = @intCast(isize, neighbor.x) + mapwin.startx;
-                    const dy = @intCast(isize, neighbor.y) + mapwin.starty;
-                    const old = termbox.oldCell(dx, dy);
+                    const dx = neighbor.x + mapwin.startx;
+                    const dy = neighbor.y + mapwin.starty;
+                    const old = display.getCell(.Termbox, dx, dy);
 
-                    termbox.tb_change_cell(dx, dy, anim.char, anim.fg, colors.BG);
-                    termbox.tb_present();
+                    display.setCell(.Termbox, dx, dy, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                    display.present(.Termbox);
 
                     std.time.sleep(90_000_000);
 
-                    termbox.tb_change_cell(dx, dy, old.ch, old.fg, old.bg);
-                    termbox.tb_present();
+                    display.setCell(.Termbox, dx, dy, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
+                    display.present(.Termbox);
                 };
             },
             .TraverseLine => |anim| {
@@ -3029,22 +3012,22 @@ pub const Animation = union(enum) {
                         continue;
                     }
 
-                    const dx = @intCast(isize, coord.x) + mapwin.startx;
-                    const dy = @intCast(isize, coord.y) + mapwin.starty;
-                    const old = termbox.oldCell(dx, dy);
+                    const dx = coord.x + mapwin.startx;
+                    const dy = coord.y + mapwin.starty;
+                    const old = display.getCell(.Termbox, dx, dy);
 
-                    termbox.tb_change_cell(dx, dy, anim.char, anim.fg orelse old.fg, colors.BG);
-                    termbox.tb_present();
+                    display.setCell(.Termbox, dx, dy, .{ .ch = anim.char, .fg = anim.fg orelse old.fg, .bg = colors.BG });
+                    display.present(.Termbox);
 
                     std.time.sleep(80_000_000);
 
                     if (anim.path_char) |path_char| {
-                        termbox.tb_change_cell(dx, dy, path_char, colors.CONCRETE, old.bg);
+                        display.setCell(.Termbox, dx, dy, .{ .ch = path_char, .fg = colors.CONCRETE, .bg = old.bg });
                     } else {
-                        termbox.tb_change_cell(dx, dy, old.ch, old.fg, old.bg);
+                        display.setCell(.Termbox, dx, dy, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
                     }
 
-                    termbox.tb_present();
+                    display.present(.Termbox);
                 }
             },
             .AnimatedLine => |anim| {
@@ -3061,9 +3044,9 @@ pub const Animation = union(enum) {
                             continue;
                         }
 
-                        const dx = @intCast(isize, coord.x) + mapwin.startx;
-                        const dy = @intCast(isize, coord.y) + mapwin.starty;
-                        const old = termbox.oldCell(dx, dy);
+                        const dx = coord.x + mapwin.startx;
+                        const dy = coord.y + mapwin.starty;
+                        const old = display.getCell(.Termbox, dx, dy);
 
                         const char = rng.chooseUnweighted(u8, anim.chars);
                         const fg = colors.percentageOf(anim.fg, counter * 100 / (iters / 2));
@@ -3076,10 +3059,10 @@ pub const Animation = union(enum) {
                         else
                             colors.BG;
 
-                        termbox.tb_change_cell(dx, dy, char, fg, bg);
+                        display.setCell(.Termbox, dx, dy, .{ .ch = char, .fg = fg, .bg = bg });
                     }
 
-                    termbox.tb_present();
+                    display.present(.Termbox);
                     std.time.sleep(40_000_000);
 
                     if (anim.approach != null and animated_len < line.len) {

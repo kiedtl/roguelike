@@ -494,7 +494,7 @@ pub fn message(mtype: MessageType, comptime fmt: []const u8, args: anytype) void
     var buf: [128]u8 = undefined;
     for (buf) |*i| i.* = 0;
     var fbs = std.io.fixedBufferStream(&buf);
-    std.fmt.format(fbs.writer(), fmt, args) catch err.bug("format error", .{});
+    @call(.{ .modifier = .always_inline }, std.fmt.format, .{ fbs.writer(), fmt, args }) catch err.bug("format error", .{});
 
     var msg: Message = .{
         .msg = undefined,
