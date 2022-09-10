@@ -79,24 +79,16 @@ pub fn checkWindowSize() bool {
 
         display.present(.Termbox);
 
-        var ev: termbox.tb_event = undefined;
-        const t = termbox.tb_poll_event(&ev);
-
-        if (t == -1) @panic("Fatal termbox error");
-
-        if (t == termbox.TB_EVENT_KEY) {
-            if (ev.key != 0) {
-                switch (ev.key) {
-                    termbox.TB_KEY_CTRL_C, termbox.TB_KEY_ESC => return false,
-                    else => {},
-                }
-                continue;
-            } else if (ev.ch != 0) {
-                switch (ev.ch) {
-                    'q' => return false,
-                    else => {},
-                }
-            } else unreachable;
+        switch (display.waitForEvent(.Termbox, null) catch err.wat()) {
+            .Key => |k| switch (k) {
+                .CtrlC, .Esc => return false,
+                else => {},
+            },
+            .Char => |c| switch (c) {
+                'q' => return false,
+                else => {},
+            },
+            else => {},
         }
     }
 }
@@ -1561,49 +1553,40 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
         display.setCell(.Termbox, display_x + 0, display_y + 1, .{ .bg = colors.BG });
         display.setCell(.Termbox, display_x + 1, display_y + 1, .{ .bg = colors.BG });
 
-        var ev: termbox.tb_event = undefined;
-        const t = termbox.tb_poll_event(&ev);
-
-        if (t == -1) @panic("Fatal termbox error");
-
-        if (t == termbox.TB_EVENT_KEY) {
-            if (ev.key != 0) {
-                switch (ev.key) {
-                    termbox.TB_KEY_CTRL_C,
-                    termbox.TB_KEY_CTRL_G,
-                    => return null,
-                    termbox.TB_KEY_ENTER => {
-                        if (opts.require_seen and !state.player.cansee(coord) and
-                            !state.memory.contains(coord))
-                        {
-                            drawAlert("You haven't seen that place!", .{});
-                        } else if (opts.max_distance != null and
-                            coord.distance(state.player.coord) > opts.max_distance.?)
-                        {
-                            drawAlert("Out of range!", .{});
-                        } else if (opts.require_lof and
-                            !utils.hasClearLOF(state.player.coord, coord))
-                        {
-                            drawAlert("There's something in the way.", .{});
-                        } else {
-                            return coord;
-                        }
-                    },
-                    else => continue,
-                }
-            } else if (ev.ch != 0) {
-                switch (ev.ch) {
-                    'a', 'h' => coord = coord.move(.West, state.mapgeometry) orelse coord,
-                    'x', 'j' => coord = coord.move(.South, state.mapgeometry) orelse coord,
-                    'w', 'k' => coord = coord.move(.North, state.mapgeometry) orelse coord,
-                    'd', 'l' => coord = coord.move(.East, state.mapgeometry) orelse coord,
-                    'q', 'y' => coord = coord.move(.NorthWest, state.mapgeometry) orelse coord,
-                    'e', 'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
-                    'z', 'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
-                    'c', 'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
-                    else => {},
-                }
-            } else unreachable;
+        switch (display.waitForEvent(.Termbox, null) catch err.wat()) {
+            .Key => |k| switch (k) {
+                .CtrlC, .CtrlG => return null,
+                .Enter => {
+                    if (opts.require_seen and !state.player.cansee(coord) and
+                        !state.memory.contains(coord))
+                    {
+                        drawAlert("You haven't seen that place!", .{});
+                    } else if (opts.max_distance != null and
+                        coord.distance(state.player.coord) > opts.max_distance.?)
+                    {
+                        drawAlert("Out of range!", .{});
+                    } else if (opts.require_lof and
+                        !utils.hasClearLOF(state.player.coord, coord))
+                    {
+                        drawAlert("There's something in the way.", .{});
+                    } else {
+                        return coord;
+                    }
+                },
+                else => {},
+            },
+            .Char => |c| switch (c) {
+                'a', 'h' => coord = coord.move(.West, state.mapgeometry) orelse coord,
+                'x', 'j' => coord = coord.move(.South, state.mapgeometry) orelse coord,
+                'w', 'k' => coord = coord.move(.North, state.mapgeometry) orelse coord,
+                'd', 'l' => coord = coord.move(.East, state.mapgeometry) orelse coord,
+                'q', 'y' => coord = coord.move(.NorthWest, state.mapgeometry) orelse coord,
+                'e', 'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
+                'z', 'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
+                'c', 'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
+                else => {},
+            },
+            else => {},
         }
     }
 }
@@ -1645,40 +1628,31 @@ pub fn chooseDirection() ?Direction {
 
         drawModalText(colors.CONCRETE, "direction: {}", .{direction});
 
-        var ev: termbox.tb_event = undefined;
-        const t = termbox.tb_poll_event(&ev);
-
-        if (t == -1) @panic("Fatal termbox error");
-
-        if (t == termbox.TB_EVENT_KEY) {
-            if (ev.key != 0) {
-                switch (ev.key) {
-                    termbox.TB_KEY_CTRL_C,
-                    termbox.TB_KEY_CTRL_G,
-                    => return null,
-                    termbox.TB_KEY_ENTER => {
-                        if (maybe_coord == null) {
-                            //drawAlert("Invalid coord!", .{});
-                            drawModalText(0xffaaaa, "Invalid direction!", .{});
-                        } else {
-                            return direction;
-                        }
-                    },
-                    else => continue,
-                }
-            } else if (ev.ch != 0) {
-                switch (ev.ch) {
-                    'a', 'h' => direction = .West,
-                    'x', 'j' => direction = .South,
-                    'w', 'k' => direction = .North,
-                    'd', 'l' => direction = .East,
-                    'q', 'y' => direction = .NorthWest,
-                    'e', 'u' => direction = .NorthEast,
-                    'z', 'b' => direction = .SouthWest,
-                    'c', 'n' => direction = .SouthEast,
-                    else => {},
-                }
-            } else unreachable;
+        switch (display.waitForEvent(.Termbox, null) catch err.wat()) {
+            .Key => |k| switch (k) {
+                .CtrlC, .Esc => return null,
+                .Enter => {
+                    if (maybe_coord == null) {
+                        //drawAlert("Invalid coord!", .{});
+                        drawModalText(0xffaaaa, "Invalid direction!", .{});
+                    } else {
+                        return direction;
+                    }
+                },
+                else => {},
+            },
+            .Char => |c| switch (c) {
+                'a', 'h' => direction = .West,
+                'x', 'j' => direction = .South,
+                'w', 'k' => direction = .North,
+                'd', 'l' => direction = .East,
+                'q', 'y' => direction = .NorthWest,
+                'e', 'u' => direction = .NorthEast,
+                'z', 'b' => direction = .SouthWest,
+                'c', 'n' => direction = .SouthEast,
+                else => {},
+            },
+            else => {},
         }
     }
 }
@@ -1745,27 +1719,13 @@ pub fn drawLoadingScreen(loading_win: *LoadingScreen, text_context: []const u8, 
     display.present(.Termbox);
     clearScreen();
 
-    var ev: termbox.tb_event = undefined;
-    const t = termbox.tb_peek_event(&ev, 20);
-
-    if (t == -1) @panic("Fatal termbox error");
-    if (t == 0) return; // No input
-
-    if (t == termbox.TB_EVENT_KEY) {
-        if (ev.key != 0) {
-            switch (ev.key) {
-                termbox.TB_KEY_CTRL_C,
-                termbox.TB_KEY_ESC,
-                termbox.TB_KEY_ENTER,
-                => return error.Canceled,
-                else => {},
-            }
-        } else if (ev.ch != 0) {
-            switch (ev.ch) {
-                else => {},
-            }
-        } else unreachable;
-    }
+    if (display.waitForEvent(.Termbox, 20)) |ev| switch (ev) {
+        .Key => |k| switch (k) {
+            .CtrlC, .Esc, .Enter => return error.Canceled,
+            else => {},
+        },
+        else => {},
+    } else |e| if (e != error.NoInput) err.wat();
 }
 
 pub fn drawLoadingScreenFinish(loading_win: *LoadingScreen) bool {
@@ -1808,26 +1768,16 @@ pub fn drawTextScreen(comptime fmt: []const u8, args: anytype) void {
     clearScreen();
 
     while (true) {
-        var ev: termbox.tb_event = undefined;
-        const t = termbox.tb_poll_event(&ev);
-
-        if (t == -1) @panic("Fatal termbox error");
-
-        if (t == termbox.TB_EVENT_KEY) {
-            if (ev.key != 0) {
-                switch (ev.key) {
-                    termbox.TB_KEY_CTRL_C,
-                    termbox.TB_KEY_ESC,
-                    termbox.TB_KEY_SPACE,
-                    termbox.TB_KEY_ENTER,
-                    => return,
-                    else => {},
-                }
-            } else if (ev.ch != 0) {
-                switch (ev.ch) {
-                    else => {},
-                }
-            } else unreachable;
+        switch (display.waitForEvent(.Termbox, null) catch err.wat()) {
+            .Key => |k| switch (k) {
+                .CtrlC, .Esc, .Enter => return,
+                else => {},
+            },
+            .Char => |c| switch (c) {
+                ' ' => return,
+                else => {},
+            },
+            else => {},
         }
     }
 }
@@ -1872,30 +1822,19 @@ pub fn drawMessagesScreen() void {
 
         display.present(.Termbox);
 
-        var ev: termbox.tb_event = undefined;
-        const t = termbox.tb_peek_event(&ev, 50);
-
-        if (t == -1) @panic("Fatal termbox error");
-        if (t == 0) continue; // No input
-
-        if (t == termbox.TB_EVENT_KEY) {
-            if (ev.key != 0) {
-                switch (ev.key) {
-                    termbox.TB_KEY_CTRL_C,
-                    termbox.TB_KEY_ESC,
-                    termbox.TB_KEY_ENTER,
-                    => return,
-                    else => continue,
-                }
-            } else if (ev.ch != 0) {
-                switch (ev.ch) {
-                    'x', 'j' => scroll -|= 1,
-                    'w', 'k' => scroll += 1,
-                    'M' => return,
-                    else => {},
-                }
-            } else unreachable;
-        }
+        if (display.waitForEvent(.Termbox, 50)) |ev| switch (ev) {
+            .Key => |k| switch (k) {
+                .CtrlC, .Esc, .Enter => return,
+                else => {},
+            },
+            .Char => |c| switch (c) {
+                'x', 'j' => scroll -|= 1,
+                'w', 'k' => scroll += 1,
+                'M' => return,
+                else => {},
+            },
+            else => {},
+        } else |e| if (e != error.NoInput) break;
     }
 }
 
@@ -2099,62 +2038,52 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
         display.setCell(.Termbox, display_x + 0, display_y + 1, .{ .bg = colors.BG });
         display.setCell(.Termbox, display_x + 1, display_y + 1, .{ .bg = colors.BG });
 
-        var ev: termbox.tb_event = undefined;
-        const t = termbox.tb_poll_event(&ev);
-
-        if (t == -1) @panic("Fatal termbox error");
-
-        if (t == termbox.TB_EVENT_KEY) {
-            if (ev.key != 0) {
-                switch (ev.key) {
-                    termbox.TB_KEY_PGUP => desc_scroll -|= 1,
-                    termbox.TB_KEY_PGDN => desc_scroll += 1,
-                    termbox.TB_KEY_ESC,
-                    termbox.TB_KEY_CTRL_C,
-                    termbox.TB_KEY_CTRL_G,
-                    => break,
-                    else => continue,
-                }
-            } else if (ev.ch != 0) {
-                switch (ev.ch) {
-                    'a', 'h' => coord = coord.move(.West, state.mapgeometry) orelse coord,
-                    'x', 'j' => coord = coord.move(.South, state.mapgeometry) orelse coord,
-                    'w', 'k' => coord = coord.move(.North, state.mapgeometry) orelse coord,
-                    'd', 'l' => coord = coord.move(.East, state.mapgeometry) orelse coord,
-                    'q', 'y' => coord = coord.move(.NorthWest, state.mapgeometry) orelse coord,
-                    'e', 'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
-                    'z', 'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
-                    'c', 'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
-                    'A' => if (kbd_a) {
-                        state.player.fight(state.dungeon.at(coord).mob.?, .{});
-                        return true;
-                    },
-                    's' => if (kbd_s) {
-                        mob_tile_focus = switch (mob_tile_focus) {
-                            .Main => .Stats,
-                            .Stats => .Spells,
-                            .Spells => .Main,
-                        };
-                    },
-                    '>' => {
-                        tile_focus = switch (tile_focus) {
-                            .Mob => .Surface,
-                            .Surface => .Item,
-                            .Item => .Mob,
-                        };
-                        if (tile_focus == .Mob) mob_tile_focus = .Main;
-                    },
-                    '<' => {
-                        tile_focus = switch (tile_focus) {
-                            .Mob => .Item,
-                            .Surface => .Mob,
-                            .Item => .Surface,
-                        };
-                        if (tile_focus == .Mob) mob_tile_focus = .Main;
-                    },
-                    else => {},
-                }
-            } else unreachable;
+        switch (display.waitForEvent(.Termbox, null) catch err.wat()) {
+            .Key => |k| switch (k) {
+                .CtrlC, .CtrlG, .Esc => return false,
+                .PgUp => desc_scroll -|= 1,
+                .PgDn => desc_scroll += 1,
+                else => {},
+            },
+            .Char => |c| switch (c) {
+                'a', 'h' => coord = coord.move(.West, state.mapgeometry) orelse coord,
+                'x', 'j' => coord = coord.move(.South, state.mapgeometry) orelse coord,
+                'w', 'k' => coord = coord.move(.North, state.mapgeometry) orelse coord,
+                'd', 'l' => coord = coord.move(.East, state.mapgeometry) orelse coord,
+                'q', 'y' => coord = coord.move(.NorthWest, state.mapgeometry) orelse coord,
+                'e', 'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
+                'z', 'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
+                'c', 'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
+                'A' => if (kbd_a) {
+                    state.player.fight(state.dungeon.at(coord).mob.?, .{});
+                    return true;
+                },
+                's' => if (kbd_s) {
+                    mob_tile_focus = switch (mob_tile_focus) {
+                        .Main => .Stats,
+                        .Stats => .Spells,
+                        .Spells => .Main,
+                    };
+                },
+                '>' => {
+                    tile_focus = switch (tile_focus) {
+                        .Mob => .Surface,
+                        .Surface => .Item,
+                        .Item => .Mob,
+                    };
+                    if (tile_focus == .Mob) mob_tile_focus = .Main;
+                },
+                '<' => {
+                    tile_focus = switch (tile_focus) {
+                        .Mob => .Item,
+                        .Surface => .Mob,
+                        .Item => .Surface,
+                    };
+                    if (tile_focus == .Mob) mob_tile_focus = .Main;
+                },
+                else => {},
+            },
+            else => {},
         }
     }
 
@@ -2167,24 +2096,14 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
 // mouse event or resize event was recieved.
 pub fn waitForInput(default_input: ?u8) ?u32 {
     while (true) {
-        var ev: termbox.tb_event = undefined;
-        const t = termbox.tb_poll_event(&ev);
-
-        if (t == -1) @panic("Fatal termbox error");
-
-        if (t == termbox.TB_EVENT_RESIZE) {
-            draw();
-        } else if (t == termbox.TB_EVENT_KEY) {
-            if (ev.key != 0) switch (ev.key) {
-                termbox.TB_KEY_ESC, termbox.TB_KEY_CTRL_C => return null,
-                termbox.TB_KEY_ENTER => if (default_input) |def| return def else continue,
-                termbox.TB_KEY_SPACE => return ' ',
-                else => continue,
-            };
-
-            if (ev.ch != 0) {
-                return ev.ch;
-            }
+        switch (display.waitForEvent(.Termbox, null) catch err.wat()) {
+            .Key => |k| switch (k) {
+                .CtrlC, .Esc => return null,
+                .Enter => if (default_input) |def| return def else continue,
+                else => {},
+            },
+            .Char => |c| return c,
+            else => {},
         }
     }
 }
@@ -2316,86 +2235,73 @@ pub fn drawInventoryScreen() bool {
 
         display.present(.Termbox);
 
-        var ev: termbox.tb_event = undefined;
-        const t = termbox.tb_poll_event(&ev);
-
-        if (t == -1) @panic("Fatal termbox error");
-
-        if (t == termbox.TB_EVENT_KEY) {
-            if (ev.key != 0) {
-                switch (ev.key) {
-                    termbox.TB_KEY_ARROW_RIGHT => {
-                        chosen_itemlist = .Equip;
-                        chosen = 0;
-                    },
-                    termbox.TB_KEY_ARROW_LEFT => {
-                        chosen_itemlist = .Pack;
-                        chosen = 0;
-                    },
-                    termbox.TB_KEY_ARROW_DOWN => if (chosen < itemlist_len - 1) {
-                        chosen += 1;
-                    },
-                    termbox.TB_KEY_ARROW_UP => chosen -|= 1,
-                    termbox.TB_KEY_PGUP => desc_scroll -|= 1,
-                    termbox.TB_KEY_PGDN => desc_scroll += 1,
-                    termbox.TB_KEY_CTRL_C,
-                    termbox.TB_KEY_CTRL_G,
-                    termbox.TB_KEY_ESC,
-                    => return false,
-                    termbox.TB_KEY_SPACE,
-                    termbox.TB_KEY_ENTER,
-                    => if (chosen_itemlist == .Pack) {
-                        if (itemlist_len > 0)
-                            return player.useItem(chosen);
-                    } else if (chosen_item) |item| {
-                        switch (item) {
-                            .Weapon => drawAlert("Bump into enemies to attack.", .{}),
-                            .Ring => drawAlert("Follow the ring's pattern to use it.", .{}),
-                            else => drawAlert("You can't use that!", .{}),
-                        }
-                    } else {
-                        drawAlert("You can't use that!", .{});
-                    },
-                    else => {},
-                }
-                continue;
-            } else if (ev.ch != 0) {
-                switch (ev.ch) {
-                    'd' => if (chosen_itemlist == .Pack) {
-                        if (itemlist_len > 0)
-                            if (player.dropItem(chosen)) return true;
-                    } else {
-                        drawAlert("You can't drop that!", .{});
-                    },
-                    'D' => if (chosen_itemlist == .Pack) {
-                        if (itemlist_len > 0)
-                            if (player.dipWeapon(chosen)) return true;
-                    } else {
-                        drawAlert("Select a potion and press $bD$. to dip something in it.", .{});
-                    },
-                    't' => if (chosen_itemlist == .Pack) {
-                        if (itemlist_len > 0)
-                            if (player.throwItem(chosen)) return true;
-                    } else {
-                        drawAlert("You can't throw that!", .{});
-                    },
-                    'l' => {
-                        chosen_itemlist = .Equip;
-                        chosen = 0;
-                    },
-                    'h' => {
-                        chosen_itemlist = .Pack;
-                        chosen = 0;
-                    },
-                    'j' => if (itemlist_len > 0 and chosen < itemlist_len - 1) {
-                        chosen += 1;
-                    },
-                    'k' => if (itemlist_len > 0 and chosen > 0) {
-                        chosen -= 1;
-                    },
-                    else => {},
-                }
-            } else unreachable;
+        switch (display.waitForEvent(.Termbox, null) catch err.wat()) {
+            .Key => |k| switch (k) {
+                .ArrowRight => {
+                    chosen_itemlist = .Equip;
+                    chosen = 0;
+                },
+                .ArrowLeft => {
+                    chosen_itemlist = .Pack;
+                    chosen = 0;
+                },
+                .ArrowDown => if (chosen < itemlist_len - 1) {
+                    chosen += 1;
+                },
+                .ArrowUp => chosen -|= 1,
+                .PgUp => desc_scroll -|= 1,
+                .PgDn => desc_scroll += 1,
+                .CtrlC, .Esc => return false,
+                .Enter => if (chosen_itemlist == .Pack) {
+                    if (itemlist_len > 0)
+                        return player.useItem(chosen);
+                } else if (chosen_item) |item| {
+                    switch (item) {
+                        .Weapon => drawAlert("Bump into enemies to attack.", .{}),
+                        .Ring => drawAlert("Follow the ring's pattern to use it.", .{}),
+                        else => drawAlert("You can't use that!", .{}),
+                    }
+                } else {
+                    drawAlert("You can't use that!", .{});
+                },
+                else => {},
+            },
+            .Char => |c| switch (c) {
+                'd' => if (chosen_itemlist == .Pack) {
+                    if (itemlist_len > 0)
+                        if (player.dropItem(chosen)) return true;
+                } else {
+                    drawAlert("You can't drop that!", .{});
+                },
+                'D' => if (chosen_itemlist == .Pack) {
+                    if (itemlist_len > 0)
+                        if (player.dipWeapon(chosen)) return true;
+                } else {
+                    drawAlert("Select a potion and press $bD$. to dip something in it.", .{});
+                },
+                't' => if (chosen_itemlist == .Pack) {
+                    if (itemlist_len > 0)
+                        if (player.throwItem(chosen)) return true;
+                } else {
+                    drawAlert("You can't throw that!", .{});
+                },
+                'l' => {
+                    chosen_itemlist = .Equip;
+                    chosen = 0;
+                },
+                'h' => {
+                    chosen_itemlist = .Pack;
+                    chosen = 0;
+                },
+                'j' => if (itemlist_len > 0 and chosen < itemlist_len - 1) {
+                    chosen += 1;
+                },
+                'k' => if (itemlist_len > 0 and chosen > 0) {
+                    chosen -= 1;
+                },
+                else => {},
+            },
+            else => {},
         }
     }
 }
@@ -2509,56 +2415,50 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
         }
 
         display.present(.Termbox);
-        var ev: termbox.tb_event = undefined;
-        const t = termbox.tb_poll_event(&ev);
 
-        if (t == -1) @panic("Fatal termbox error");
-
-        if (t == termbox.TB_EVENT_KEY) {
-            if (ev.key != 0) {
-                switch (ev.key) {
-                    termbox.TB_KEY_ARROW_DOWN,
-                    termbox.TB_KEY_ARROW_LEFT,
-                    => if (chosen < options.len - 1) {
-                        chosen += 1;
-                    },
-                    termbox.TB_KEY_ARROW_UP,
-                    termbox.TB_KEY_ARROW_RIGHT,
-                    => if (chosen > 0) {
-                        chosen -= 1;
-                    },
-                    termbox.TB_KEY_CTRL_C,
-                    termbox.TB_KEY_CTRL_G,
-                    termbox.TB_KEY_ESC,
-                    => {
-                        cancelled = true;
-                        break;
-                    },
-                    termbox.TB_KEY_SPACE, termbox.TB_KEY_ENTER => break,
-                    else => {},
-                }
-                continue;
-            } else if (ev.ch != 0) {
-                switch (ev.ch) {
-                    'q' => {
-                        cancelled = true;
-                        break;
-                    },
-                    'j', 'h' => if (chosen < options.len - 1) {
-                        chosen += 1;
-                    },
-                    'k', 'l' => if (chosen > 0) {
-                        chosen -= 1;
-                    },
-                    '0'...'9' => {
-                        const c: usize = ev.ch - '0';
-                        if (c < options.len) {
-                            chosen = c;
-                        }
-                    },
-                    else => {},
-                }
-            } else unreachable;
+        switch (display.waitForEvent(.Termbox, null) catch err.wat()) {
+            .Key => |k| switch (k) {
+                .CtrlC,
+                .Esc,
+                .CtrlG,
+                => {
+                    cancelled = true;
+                    break;
+                },
+                .Enter => break,
+                .ArrowDown,
+                .ArrowLeft,
+                => if (chosen < options.len - 1) {
+                    chosen += 1;
+                },
+                .ArrowUp,
+                .ArrowRight,
+                => if (chosen > 0) {
+                    chosen -= 1;
+                },
+                else => {},
+            },
+            .Char => |c| switch (c) {
+                ' ' => break,
+                'q' => {
+                    cancelled = true;
+                    break;
+                },
+                'j', 'h' => if (chosen < options.len - 1) {
+                    chosen += 1;
+                },
+                'k', 'l' => if (chosen > 0) {
+                    chosen -= 1;
+                },
+                '0'...'9' => {
+                    const num: usize = c - '0';
+                    if (num < options.len) {
+                        chosen = num;
+                    }
+                },
+                else => {},
+            },
+            else => {},
         }
     }
 
