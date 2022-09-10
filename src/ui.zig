@@ -1453,7 +1453,7 @@ pub fn drawMap(moblist: []const *Mob, startx: usize, endx: usize, starty: usize,
     }
 }
 
-pub fn draw() void {
+pub fn drawNoPresent() void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const alloc = arena.allocator();
@@ -1477,7 +1477,10 @@ pub fn draw() void {
         log_console.height,
     );
     log_console.deinit();
+}
 
+pub fn draw() void {
+    drawNoPresent();
     display.present(.Termbox);
 }
 
@@ -2823,7 +2826,7 @@ pub const Animation = union(enum) {
     pub fn apply(self: Animation) void {
         const mapwin = dimensions(.Main);
 
-        draw();
+        drawNoPresent();
 
         state.player.tickFOV();
 
