@@ -753,7 +753,7 @@ fn viewerDisplay(tty_height: usize, level: usize, sy: usize) void {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
             const t = Tile.displayAs(Coord.new2(level, x, dy), false, false);
-            display.setCell(.Termbox, x, y, t);
+            display.setCell(x, y, t);
         }
     }
     while (y < tty_height) : (y += 1) {

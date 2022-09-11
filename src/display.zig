@@ -2,6 +2,8 @@ const std = @import("std");
 
 const termbox = @import("termbox.zig");
 
+pub const driver: Driver = .Termbox;
+
 // tb_shutdown() calls abort() if tb_init() wasn't called, or if tb_shutdown()
 // was called twice. Keep track of termbox's state to prevent this.
 var is_tb_inited = false;
@@ -109,8 +111,8 @@ pub const Key = enum(u16) {
     }
 };
 
-pub fn init(d: Driver) !void {
-    switch (d) {
+pub fn init() !void {
+    switch (driver) {
         .Termbox => {
             if (is_tb_inited)
                 return error.AlreadyInitialized;
@@ -130,8 +132,8 @@ pub fn init(d: Driver) !void {
     }
 }
 
-pub fn deinit(d: Driver) !void {
-    switch (d) {
+pub fn deinit() !void {
+    switch (driver) {
         .Termbox => {
             if (!is_tb_inited)
                 return error.AlreadyDeinitialized;
@@ -143,30 +145,30 @@ pub fn deinit(d: Driver) !void {
 }
 
 // FIXME: handle negative value from tb_width() if called before/after tb_init/tb_shutdown
-pub fn width(d: Driver) usize {
-    return switch (d) {
+pub fn width() usize {
+    return switch (driver) {
         .Termbox => @intCast(usize, termbox.tb_width()),
         .SDL2 => unreachable,
     };
 }
 
 // FIXME: handle negative value from tb_height() if called before/after tb_init/tb_shutdown
-pub fn height(d: Driver) usize {
-    return switch (d) {
+pub fn height() usize {
+    return switch (driver) {
         .Termbox => @intCast(usize, termbox.tb_height()),
         .SDL2 => unreachable,
     };
 }
 
-pub fn present(d: Driver) void {
-    switch (d) {
+pub fn present() void {
+    switch (driver) {
         .Termbox => termbox.tb_present(),
         .SDL2 => unreachable,
     }
 }
 
-pub fn setCell(d: Driver, x: usize, y: usize, cell: Cell) void {
-    switch (d) {
+pub fn setCell(x: usize, y: usize, cell: Cell) void {
+    switch (driver) {
         .Termbox => {
             termbox.tb_change_cell(@intCast(isize, x), @intCast(isize, y), cell.ch, cell.fg, cell.bg);
         },
@@ -174,11 +176,11 @@ pub fn setCell(d: Driver, x: usize, y: usize, cell: Cell) void {
     }
 }
 
-pub fn getCell(d: Driver, x: usize, y: usize) Cell {
-    return switch (d) {
+pub fn getCell(x: usize, y: usize) Cell {
+    return switch (driver) {
         .Termbox => {
             const tb_buf = termbox.tb_cell_buffer();
-            const tb_old = tb_buf[y * width(.Termbox) + x];
+            const tb_old = tb_buf[y * width() + x];
             return .{
                 .ch = tb_old.ch,
                 .fg = tb_old.fg,
@@ -189,8 +191,8 @@ pub fn getCell(d: Driver, x: usize, y: usize) Cell {
     };
 }
 
-pub fn waitForEvent(d: Driver, wait_period: ?usize) !Event {
-    switch (d) {
+pub fn waitForEvent(wait_period: ?usize) !Event {
+    switch (driver) {
         .Termbox => {
             var ev: termbox.tb_event = undefined;
             const t = if (wait_period) |v| termbox.tb_peek_event(&ev, @intCast(isize, v)) else termbox.tb_poll_event(&ev);
