@@ -80,6 +80,10 @@ pub fn checkWindowSize() bool {
         display.present();
 
         switch (display.waitForEvent(null) catch err.wat()) {
+            .Quit => {
+                state.state = .Quit;
+                return false;
+            },
             .Key => |k| switch (k) {
                 .CtrlC, .Esc => return false,
                 else => {},
@@ -1557,6 +1561,10 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
         display.setCell(display_x + 1, display_y + 1, .{ .bg = colors.BG });
 
         switch (display.waitForEvent(null) catch err.wat()) {
+            .Quit => {
+                state.state = .Quit;
+                return null;
+            },
             .Key => |k| switch (k) {
                 .CtrlC, .CtrlG => return null,
                 .Enter => {
@@ -1632,6 +1640,10 @@ pub fn chooseDirection() ?Direction {
         drawModalText(colors.CONCRETE, "direction: {}", .{direction});
 
         switch (display.waitForEvent(null) catch err.wat()) {
+            .Quit => {
+                state.state = .Quit;
+                return null;
+            },
             .Key => |k| switch (k) {
                 .CtrlC, .Esc => return null,
                 .Enter => {
@@ -1723,6 +1735,10 @@ pub fn drawLoadingScreen(loading_win: *LoadingScreen, text_context: []const u8, 
     clearScreen();
 
     if (display.waitForEvent(20)) |ev| switch (ev) {
+        .Quit => {
+            state.state = .Quit;
+            return error.Canceled;
+        },
         .Key => |k| switch (k) {
             .CtrlC, .Esc, .Enter => return error.Canceled,
             else => {},
@@ -1772,6 +1788,10 @@ pub fn drawTextScreen(comptime fmt: []const u8, args: anytype) void {
 
     while (true) {
         switch (display.waitForEvent(null) catch err.wat()) {
+            .Quit => {
+                state.state = .Quit;
+                return;
+            },
             .Key => |k| switch (k) {
                 .CtrlC, .Esc, .Enter => return,
                 else => {},
@@ -1826,6 +1846,10 @@ pub fn drawMessagesScreen() void {
         display.present();
 
         if (display.waitForEvent(50)) |ev| switch (ev) {
+            .Quit => {
+                state.state = .Quit;
+                return;
+            },
             .Key => |k| switch (k) {
                 .CtrlC, .Esc, .Enter => return,
                 else => {},
@@ -2042,6 +2066,10 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
         display.setCell(display_x + 1, display_y + 1, .{ .bg = colors.BG });
 
         switch (display.waitForEvent(null) catch err.wat()) {
+            .Quit => {
+                state.state = .Quit;
+                return false;
+            },
             .Key => |k| switch (k) {
                 .CtrlC, .CtrlG, .Esc => return false,
                 .PgUp => desc_scroll -|= 1,
@@ -2100,6 +2128,10 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
 pub fn waitForInput(default_input: ?u8) ?u32 {
     while (true) {
         switch (display.waitForEvent(null) catch err.wat()) {
+            .Quit => {
+                state.state = .Quit;
+                return null;
+            },
             .Key => |k| switch (k) {
                 .CtrlC, .Esc => return null,
                 .Enter => if (default_input) |def| return def else continue,
@@ -2239,6 +2271,10 @@ pub fn drawInventoryScreen() bool {
         display.present();
 
         switch (display.waitForEvent(null) catch err.wat()) {
+            .Quit => {
+                state.state = .Quit;
+                return false;
+            },
             .Key => |k| switch (k) {
                 .ArrowRight => {
                     chosen_itemlist = .Equip;
@@ -2420,23 +2456,21 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
         display.present();
 
         switch (display.waitForEvent(null) catch err.wat()) {
+            .Quit => {
+                state.state = .Quit;
+                cancelled = true;
+                break;
+            },
             .Key => |k| switch (k) {
-                .CtrlC,
-                .Esc,
-                .CtrlG,
-                => {
+                .CtrlC, .Esc, .CtrlG => {
                     cancelled = true;
                     break;
                 },
                 .Enter => break,
-                .ArrowDown,
-                .ArrowLeft,
-                => if (chosen < options.len - 1) {
+                .ArrowDown, .ArrowLeft => if (chosen < options.len - 1) {
                     chosen += 1;
                 },
-                .ArrowUp,
-                .ArrowRight,
-                => if (chosen > 0) {
+                .ArrowUp, .ArrowRight => if (chosen > 0) {
                     chosen -= 1;
                 },
                 else => {},

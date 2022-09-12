@@ -18,7 +18,6 @@ var is_tb_inited = false;
 // SDL2 state
 var window: ?*sdl.SDL_Window = null;
 var renderer: ?*sdl.SDL_Renderer = null;
-var texture: ?*sdl.SDL_Texture = null;
 var grid: []Cell = undefined;
 var w_height: usize = undefined;
 var w_width: usize = undefined;
@@ -47,12 +46,13 @@ pub const Event = union(enum) {
     Resize: struct { new_width: usize, new_height: usize },
     Key: Key,
     Char: u21,
+    Quit,
 };
 
 // Enum values are in sync with termbox TB_KEY_* constants
 pub const Key = enum(u16) {
     F1 = (0xFFFF - 0),
-    f2 = (0xFFFF - 1),
+    F2 = (0xFFFF - 1),
     F3 = (0xFFFF - 2),
     F4 = (0xFFFF - 3),
     F5 = (0xFFFF - 4),
@@ -63,12 +63,15 @@ pub const Key = enum(u16) {
     F10 = (0xFFFF - 9),
     F11 = (0xFFFF - 10),
     F12 = (0xFFFF - 11),
+
     Insert = (0xFFFF - 12),
     Delete = (0xFFFF - 13),
+
     Home = (0xFFFF - 14),
     End = (0xFFFF - 15),
     PgUp = (0xFFFF - 16),
     PgDn = (0xFFFF - 17),
+
     ArrowUp = (0xFFFF - 18),
     ArrowDown = (0xFFFF - 19),
     ArrowLeft = (0xFFFF - 20),
@@ -124,6 +127,41 @@ pub const Key = enum(u16) {
         // FIXME: handle crash here
         return @intToEnum(Key, v);
     }
+
+    pub fn fromSDL(kcode: i32) ?Key {
+        return switch (kcode) {
+            sdl.SDLK_F1 => .F1,
+            sdl.SDLK_F2 => .F2,
+            sdl.SDLK_F3 => .F3,
+            sdl.SDLK_F4 => .F4,
+            sdl.SDLK_F5 => .F5,
+            sdl.SDLK_F6 => .F6,
+            sdl.SDLK_F7 => .F7,
+            sdl.SDLK_F8 => .F8,
+            sdl.SDLK_F9 => .F9,
+            sdl.SDLK_F10 => .F10,
+            sdl.SDLK_F11 => .F11,
+            sdl.SDLK_F12 => .F12,
+
+            sdl.SDLK_INSERT => .Insert,
+            sdl.SDLK_DELETE => .Delete,
+
+            sdl.SDLK_HOME => .Home,
+            sdl.SDLK_END => .End,
+
+            sdl.SDLK_PAGEUP => .PgUp,
+            sdl.SDLK_PAGEDOWN => .PgDn,
+
+            sdl.SDLK_LEFT => .ArrowLeft,
+            sdl.SDLK_RIGHT => .ArrowRight,
+            sdl.SDLK_UP => .ArrowUp,
+            sdl.SDLK_DOWN => .ArrowDown,
+
+            sdl.SDLK_RETURN => .Enter,
+
+            else => null,
+        };
+    }
 };
 
 const InitErr = error{
@@ -174,16 +212,6 @@ pub fn init(preferred_width: usize, preferred_height: usize) InitErr!void {
             if (renderer == null)
                 return error.SDL2InitError;
 
-            texture = sdl.SDL_CreateTexture(
-                renderer,
-                sdl.SDL_PIXELFORMAT_RGBA8888,
-                sdl.SDL_TEXTUREACCESS_STREAMING,
-                @intCast(c_int, preferred_width * font.FONT_WIDTH),
-                @intCast(c_int, preferred_height * font.FONT_HEIGHT),
-            );
-            if (texture == null)
-                return error.SDL2InitError;
-
             grid = try state.GPA.allocator().alloc(Cell, preferred_width * preferred_height);
             mem.set(Cell, grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
 
@@ -210,7 +238,6 @@ pub fn deinit() !void {
             is_tb_inited = false;
         },
         .SDL2 => {
-            sdl.SDL_DestroyTexture(texture);
             sdl.SDL_DestroyRenderer(renderer);
             sdl.SDL_DestroyWindow(window);
             sdl.SDL_Quit();
@@ -240,18 +267,6 @@ pub fn present() void {
     switch (driver) {
         .Termbox => termbox.tb_present(),
         .SDL2 => {
-            // var pixels: ?[*]u32 = undefined;
-            // var pitch: c_int = undefined;
-            // var format: u32 = undefined;
-
-            // _ = sdl.SDL_QueryTexture(texture, &format, null, null, null);
-
-            // var pixel_fmt: sdl.SDL_PixelFormat = undefined;
-            // pixel_fmt.format = format;
-
-            // // FIXME: don't ignore return value
-            // _ = sdl.SDL_LockTexture(texture, null, @ptrCast(*?*anyopaque, &pixels), &pitch);
-
             _ = sdl.SDL_RenderClear(renderer);
 
             var dy: usize = 0;
@@ -266,14 +281,7 @@ pub fn present() void {
                         var fx: usize = 0;
                         while (fx < font.FONT_WIDTH) : (fx += 1) {
                             const font_ch = font.font_data[((ch - 32) * font.FONT_HEIGHT) + fy][fx];
-
                             const color = if (font_ch == 'x') cell.fg else cell.bg;
-                            // const sdl_color = sdl.SDL_MapRGB(
-                            //     &pixel_fmt,
-                            //     @intCast(u8, color >> 16 & 0xFF),
-                            //     @intCast(u8, color >> 8 & 0xFF),
-                            //     @intCast(u8, color >> 0 & 0xFF),
-                            // );
 
                             _ = sdl.SDL_SetRenderDrawColor(
                                 renderer,
@@ -287,21 +295,11 @@ pub fn present() void {
                                 @intCast(c_int, (dx * font.FONT_WIDTH) + fx),
                                 @intCast(c_int, (dy * font.FONT_HEIGHT) + fy),
                             );
-
-                            //const addr = (((dy * font.FONT_HEIGHT) + fy) * (width() * font.FONT_WIDTH) + ((dx * font.FONT_WIDTH) + fx));
-                            //pixels.?[addr] = sdl_color;
-                            // @ptrCast(?[*]u8, pixels).?[addr + 0] = @intCast(u8, sdl_color >> 16 & 0xFF);
-                            // @ptrCast(?[*]u8, pixels).?[addr + 1] = @intCast(u8, sdl_color >> 8 & 0xFF);
-                            // @ptrCast(?[*]u8, pixels).?[addr + 2] = @intCast(u8, sdl_color >> 0 & 0xFF);
-                            // @ptrCast(?[*]u8, pixels).?[addr + 3] = 0;
                         }
                     }
                 }
             }
 
-            // sdl.SDL_UnlockTexture(texture);
-            // _ = sdl.SDL_RenderClear(renderer);
-            // _ = sdl.SDL_RenderCopy(renderer, texture, null, null);
             _ = sdl.SDL_RenderPresent(renderer);
         },
     }
@@ -361,11 +359,28 @@ pub fn waitForEvent(wait_period: ?usize) !Event {
             }
         },
         .SDL2 => {
-            // TODO
-            if (wait_period == null) {
-                while (true) {}
-            } else {
-                return error.NoInput;
+            var ev: sdl.SDL_Event = undefined;
+
+            while (true) {
+                const r = if (wait_period) |t| sdl.SDL_WaitEventTimeout(&ev, @intCast(c_int, t)) else sdl.SDL_WaitEvent(&ev);
+
+                if (r == 0) {
+                    if (wait_period != null) {
+                        return error.NoInput;
+                    } else {
+                        return error.SDL2InputError;
+                    }
+                }
+
+                switch (ev.type) {
+                    sdl.SDL_QUIT => return .Quit,
+                    sdl.SDL_KEYDOWN => {
+                        if (Key.fromSDL(ev.key.keysym.sym)) |key| {
+                            return Event{ .Key = key };
+                        } else continue;
+                    },
+                    else => continue,
+                }
             }
         },
     }

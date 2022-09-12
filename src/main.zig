@@ -384,177 +384,170 @@ fn freeDescriptions(alloc: mem.Allocator) void {
     state.descriptions.clearAndFree();
 }
 
-fn readNoActionInput(timeout: ?isize) void {
-    var ev: termbox.tb_event = undefined;
-    const t = if (timeout) |t| termbox.tb_peek_event(&ev, t) else termbox.tb_poll_event(&ev);
-
-    if (t == -1) @panic("Fatal termbox error");
-
-    if (t == termbox.TB_EVENT_RESIZE) {
-        ui.draw();
-    } else if (t == termbox.TB_EVENT_KEY) {
-        if (ev.key != 0) {
-            if (ev.key == termbox.TB_KEY_CTRL_C) {
-                state.state = .Quit;
-            }
-        }
+fn readNoActionInput(timeout: ?usize) void {
+    switch (display.waitForEvent(timeout) catch err.wat()) {
+        .Quit => state.state = .Quit,
+        .Resize => ui.draw(),
+        .Key => |k| switch (k) {
+            .CtrlC, .Esc => state.state = .Quit,
+            else => {},
+        },
+        else => {},
     }
 }
 
 fn readInput() bool {
-    var ev: termbox.tb_event = undefined;
-    const t = termbox.tb_poll_event(&ev);
+    return switch (display.waitForEvent(null) catch err.wat()) {
+        .Quit => {
+            state.state = .Quit;
+            return false;
+        },
+        .Resize => {
+            ui.draw();
+            return false;
+        },
+        .Key => |k| switch (k) {
+            .CtrlC => b: {
+                state.state = .Quit;
+                break :b true;
+            },
 
-    if (t == -1) @panic("Fatal termbox error");
-
-    if (t == termbox.TB_EVENT_RESIZE) {
-        ui.draw();
-        return false;
-    } else if (t == termbox.TB_EVENT_KEY) {
-        if (ev.key != 0) {
-            return switch (ev.key) {
-                termbox.TB_KEY_CTRL_C => b: {
-                    state.state = .Quit;
-                    break :b true;
-                },
-
-                // Wizard keys
-                termbox.TB_KEY_F1 => blk: {
-                    if (state.player.coord.z != 0) {
-                        const l = state.player.coord.z - 1;
-                        const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
-                        const c = r.rect.randomCoord();
-                        break :blk state.player.teleportTo(c, null, false);
-                    } else {
-                        break :blk false;
-                    }
-                },
-                termbox.TB_KEY_F2 => blk: {
-                    if (state.player.coord.z < (LEVELS - 1)) {
-                        const l = state.player.coord.z + 1;
-                        const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
-                        const c = r.rect.randomCoord();
-                        break :blk state.player.teleportTo(c, null, false);
-                    } else {
-                        break :blk false;
-                    }
-                },
-                termbox.TB_KEY_F3 => blk: {
-                    state.player.allegiance = switch (state.player.allegiance) {
-                        .OtherGood => .Necromancer,
-                        .Necromancer => .OtherEvil,
-                        .OtherEvil => .OtherGood,
-                    };
+            // Wizard keys
+            .F1 => blk: {
+                if (state.player.coord.z != 0) {
+                    const l = state.player.coord.z - 1;
+                    const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
+                    const c = r.rect.randomCoord();
+                    break :blk state.player.teleportTo(c, null, false);
+                } else {
                     break :blk false;
-                },
-                termbox.TB_KEY_F4 => blk: {
-                    player.wiz_lidless_eye = !player.wiz_lidless_eye;
-                    state.player.rest(); // Update LOS
-                    break :blk true;
-                },
-                termbox.TB_KEY_F5 => blk: {
-                    state.player.HP = state.player.max_HP;
-                    state.player.MP = state.player.max_MP;
+                }
+            },
+            .F2 => blk: {
+                if (state.player.coord.z < (LEVELS - 1)) {
+                    const l = state.player.coord.z + 1;
+                    const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
+                    const c = r.rect.randomCoord();
+                    break :blk state.player.teleportTo(c, null, false);
+                } else {
                     break :blk false;
-                },
-                termbox.TB_KEY_F6 => blk: {
-                    const stairlocs = state.dungeon.stairs[state.player.coord.z];
-                    const stairloc = rng.chooseUnweighted(Coord, stairlocs.constSlice());
-                    break :blk state.player.teleportTo(stairloc, null, false);
-                },
-                termbox.TB_KEY_F7 => blk: {
-                    //state.player.innate_resists.rElec += 25;
-                    //state.player.addStatus(.Drunk, 0, .{ .Tmp = 20 });
-                    state.message(.Info, "Lorem ipsum, dolor sit amet. Lorem ipsum, dolor sit amet.. Lorem ipsum, dolor sit amet. {}", .{rng.int(usize)});
-                    break :blk false;
-                },
-                termbox.TB_KEY_F8 => {
-                    @panic("This is a test exception.");
-                },
-                termbox.TB_KEY_F9 => b: {
-                    const chosen = ui.chooseCell(.{}) orelse break :b false;
-                    break :b state.player.teleportTo(chosen, null, false);
-                },
-                else => false,
-            };
-        } else if (ev.ch != 0) {
-            return switch (ev.ch) {
-                '0'...'9' => b: {
-                    if (player.getActiveRing()) |ring| {
-                        ring.activated = false;
-                        ring.pattern_checker.reset();
-                    }
-                    if (player.getRingByIndex(ev.ch - '0')) |ring| {
-                        if (ui.chooseDirection()) |dir| {
-                            state.message(.Info, "Activated ring $o{s}$....", .{ring.name});
+                }
+            },
+            .F3 => blk: {
+                state.player.allegiance = switch (state.player.allegiance) {
+                    .OtherGood => .Necromancer,
+                    .Necromancer => .OtherEvil,
+                    .OtherEvil => .OtherGood,
+                };
+                break :blk false;
+            },
+            .F4 => blk: {
+                player.wiz_lidless_eye = !player.wiz_lidless_eye;
+                state.player.rest(); // Update LOS
+                break :blk true;
+            },
+            .F5 => blk: {
+                state.player.HP = state.player.max_HP;
+                state.player.MP = state.player.max_MP;
+                break :blk false;
+            },
+            .F6 => blk: {
+                const stairlocs = state.dungeon.stairs[state.player.coord.z];
+                const stairloc = rng.chooseUnweighted(Coord, stairlocs.constSlice());
+                break :blk state.player.teleportTo(stairloc, null, false);
+            },
+            .F7 => blk: {
+                //state.player.innate_resists.rElec += 25;
+                //state.player.addStatus(.Drunk, 0, .{ .Tmp = 20 });
+                state.message(.Info, "Lorem ipsum, dolor sit amet. Lorem ipsum, dolor sit amet.. Lorem ipsum, dolor sit amet. {}", .{rng.int(usize)});
+                break :blk false;
+            },
+            .F8 => {
+                @panic("This is a test exception.");
+            },
+            .F9 => b: {
+                const chosen = ui.chooseCell(.{}) orelse break :b false;
+                break :b state.player.teleportTo(chosen, null, false);
+            },
+            else => false,
+        },
+        .Char => |c| switch (c) {
+            '0'...'9' => b: {
+                if (player.getActiveRing()) |ring| {
+                    ring.activated = false;
+                    ring.pattern_checker.reset();
+                }
+                if (player.getRingByIndex(c - '0')) |ring| {
+                    if (ui.chooseDirection()) |dir| {
+                        state.message(.Info, "Activated ring $o{s}$....", .{ring.name});
 
-                            if (ring.pattern_checker.init.?(state.player, dir, &ring.pattern_checker.state)) |hint| {
-                                ring.activated = true;
+                        if (ring.pattern_checker.init.?(state.player, dir, &ring.pattern_checker.state)) |hint| {
+                            ring.activated = true;
 
-                                var strbuf = std.ArrayList(u8).init(state.GPA.allocator());
-                                defer strbuf.deinit();
-                                const writer = strbuf.writer();
-                                writer.print("[$o{s}$.] ", .{ring.name}) catch err.wat();
-                                player.formatActivityList(&.{hint}, writer);
-                                state.message(.Info, "{s}", .{strbuf.items});
-                            } else |derr| {
-                                ring.activated = false;
-                                switch (derr) {
-                                    error.NeedCardinalDirection => state.message(.Info, "[$o{s}$.] error: need a cardinal direction", .{ring.name}),
-                                    error.NeedOppositeWalkableTile => state.message(.Info, "[$o{s}$.] error: needs to have walkable space in the opposite direction", .{ring.name}),
+                            var strbuf = std.ArrayList(u8).init(state.GPA.allocator());
+                            defer strbuf.deinit();
+                            const writer = strbuf.writer();
+                            writer.print("[$o{s}$.] ", .{ring.name}) catch err.wat();
+                            player.formatActivityList(&.{hint}, writer);
+                            state.message(.Info, "{s}", .{strbuf.items});
+                        } else |derr| {
+                            ring.activated = false;
+                            switch (derr) {
+                                error.NeedCardinalDirection => state.message(.Info, "[$o{s}$.] error: need a cardinal direction", .{ring.name}),
+                                error.NeedOppositeWalkableTile => state.message(.Info, "[$o{s}$.] error: needs to have walkable space in the opposite direction", .{ring.name}),
 
-                                    error.NeedOppositeTileNearWalls => state.message(.Info, "[$o{s}$.] error: needs to have walkable space near walls in the opposite direction", .{ring.name}),
-                                    error.NeedHostileOnTile => state.message(.Info, "[$o{s}$.] error: hostile in that direction", .{ring.name}),
-                                    error.NeedOpenSpace => state.message(.Info, "[$o{s}$.] error: need to be in open space (no walls in cardinal directions)", .{ring.name}),
-                                    error.NeedOppositeWalkableTileInFrontOfWall => state.message(.Info, "[$o{s}$.] error: needs to have walkable space in front of wall in opposite direction", .{ring.name}),
-                                }
+                                error.NeedOppositeTileNearWalls => state.message(.Info, "[$o{s}$.] error: needs to have walkable space near walls in the opposite direction", .{ring.name}),
+                                error.NeedHostileOnTile => state.message(.Info, "[$o{s}$.] error: hostile in that direction", .{ring.name}),
+                                error.NeedOpenSpace => state.message(.Info, "[$o{s}$.] error: need to be in open space (no walls in cardinal directions)", .{ring.name}),
+                                error.NeedOppositeWalkableTileInFrontOfWall => state.message(.Info, "[$o{s}$.] error: needs to have walkable space in front of wall in opposite direction", .{ring.name}),
                             }
                         }
                     }
-                    break :b false;
-                },
-                't' => b: {
-                    player.auto_wait_enabled = !player.auto_wait_enabled;
-                    const str = if (player.auto_wait_enabled)
-                        @as([]const u8, "enabled")
-                    else
-                        "disabled";
-                    state.message(.Info, "Auto-waiting: {s}", .{str});
-                    break :b false;
-                },
-                '\'' => b: {
-                    state.player.swapWeapons();
-                    if (state.player.inventory.equipment(.Weapon).*) |weapon| {
-                        state.message(.Inventory, "Now wielding a {s}.", .{
-                            (weapon.longName() catch err.wat()).constSlice(),
-                        });
-                    } else {
-                        state.message(.Inventory, "You aren't wielding anything now.", .{});
-                    }
-                    break :b false;
-                },
-                'A' => player.activateSurfaceItem(state.player.coord),
-                'i' => ui.drawInventoryScreen(),
-                'v' => ui.drawExamineScreen(null),
-                '@' => ui.drawExamineScreen(.Mob),
-                'M' => b: {
-                    ui.drawMessagesScreen();
-                    break :b false;
-                },
-                ',' => player.grabItem(),
-                's', '.' => player.tryRest(),
-                'q', 'y' => player.moveOrFight(.NorthWest),
-                'w', 'k' => player.moveOrFight(.North),
-                'e', 'u' => player.moveOrFight(.NorthEast),
-                'd', 'l' => player.moveOrFight(.East),
-                'c', 'n' => player.moveOrFight(.SouthEast),
-                'x', 'j' => player.moveOrFight(.South),
-                'z', 'b' => player.moveOrFight(.SouthWest),
-                'a', 'h' => player.moveOrFight(.West),
-                else => false,
-            };
-        } else err.wat();
-    } else return false;
+                }
+                break :b false;
+            },
+            't' => b: {
+                player.auto_wait_enabled = !player.auto_wait_enabled;
+                const str = if (player.auto_wait_enabled)
+                    @as([]const u8, "enabled")
+                else
+                    "disabled";
+                state.message(.Info, "Auto-waiting: {s}", .{str});
+                break :b false;
+            },
+            '\'' => b: {
+                state.player.swapWeapons();
+                if (state.player.inventory.equipment(.Weapon).*) |weapon| {
+                    state.message(.Inventory, "Now wielding a {s}.", .{
+                        (weapon.longName() catch err.wat()).constSlice(),
+                    });
+                } else {
+                    state.message(.Inventory, "You aren't wielding anything now.", .{});
+                }
+                break :b false;
+            },
+            'A' => player.activateSurfaceItem(state.player.coord),
+            'i' => ui.drawInventoryScreen(),
+            'v' => ui.drawExamineScreen(null),
+            '@' => ui.drawExamineScreen(.Mob),
+            'M' => b: {
+                ui.drawMessagesScreen();
+                break :b false;
+            },
+            ',' => player.grabItem(),
+            's', '.' => player.tryRest(),
+            'q', 'y' => player.moveOrFight(.NorthWest),
+            'w', 'k' => player.moveOrFight(.North),
+            'e', 'u' => player.moveOrFight(.NorthEast),
+            'd', 'l' => player.moveOrFight(.East),
+            'c', 'n' => player.moveOrFight(.SouthEast),
+            'x', 'j' => player.moveOrFight(.South),
+            'z', 'b' => player.moveOrFight(.SouthWest),
+            'a', 'h' => player.moveOrFight(.West),
+            else => false,
+        },
+        //else => false,
+    };
 }
 
 fn tickGame() void {
