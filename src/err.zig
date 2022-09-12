@@ -42,6 +42,16 @@ pub fn bug(comptime fmt: []const u8, args: anytype) noreturn {
     unreachable;
 }
 
+pub fn fatal(comptime fmt: []const u8, args: anytype) noreturn {
+    @setCold(true);
+
+    ui.deinit() catch {};
+    std.log.err("ERROR: " ++ fmt, args);
+
+    std.os.abort();
+    unreachable;
+}
+
 pub fn oom() noreturn {
     @setCold(true);
     @panic("Out of memory! Please close a few browser tabs.");

@@ -50,8 +50,12 @@ pub const LEFT_INFO_WIDTH: usize = 35;
 //pub const RIGHT_INFO_WIDTH: usize = 24;
 pub const LOG_HEIGHT: usize = 4;
 
+pub const MIN_HEIGHT = HEIGHT + LOG_HEIGHT + 2;
+//const min_width = WIDTH + LEFT_INFO_WIDTH + RIGHT_INFO_WIDTH + 2;
+pub const MIN_WIDTH = WIDTH + LEFT_INFO_WIDTH + 2;
+
 pub fn init() !void {
-    try display.init();
+    try display.init(MIN_WIDTH, MIN_HEIGHT);
     clearScreen();
 }
 
@@ -59,22 +63,18 @@ pub fn init() !void {
 //
 // Return true if the user resized the window, false if the user press Ctrl+C.
 pub fn checkWindowSize() bool {
-    const min_height = HEIGHT + LOG_HEIGHT + 2;
-    //const min_width = WIDTH + LEFT_INFO_WIDTH + RIGHT_INFO_WIDTH + 2;
-    const min_width = WIDTH + LEFT_INFO_WIDTH + 2;
-
     while (true) {
         const cur_w = display.width();
         const cur_h = display.height();
 
-        if (cur_w >= min_width and cur_h >= min_height) {
+        if (cur_w >= MIN_WIDTH and cur_h >= MIN_HEIGHT) {
             // All's well
             clearScreen();
             return true;
         }
 
         _ = _drawStr(1, 1, cur_w, "Your terminal is too small.", .{});
-        _ = _drawStrf(1, 3, cur_w, "Minimum: {}x{}.", .{ min_width, min_height }, .{});
+        _ = _drawStrf(1, 3, cur_w, "Minimum: {}x{}.", .{ MIN_WIDTH, MIN_HEIGHT }, .{});
         _ = _drawStrf(1, 4, cur_w, "Current size: {}x{}.", .{ cur_w, cur_h }, .{});
 
         display.present();
@@ -837,7 +837,7 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
 
 fn _clearLineWith(from: usize, to: usize, y: usize, ch: u32, fg: u32, bg: u32) void {
     var x = from;
-    while (x <= to) : (x += 1)
+    while (x < to) : (x += 1)
         display.setCell(x, y, .{ .ch = ch, .fg = fg, .bg = bg });
 }
 

@@ -110,9 +110,11 @@ fn initGame() bool {
 
     if (ui.init()) {} else |e| switch (e) {
         error.AlreadyInitialized => err.wat(),
-        error.TTYOpenFailed => @panic("Could not open TTY"),
-        error.UnsupportedTerminal => @panic("Unsupported terminal"),
-        error.PipeTrapFailed => @panic("Internal termbox error"),
+        error.TTYOpenFailed => err.fatal("Could not open TTY", .{}),
+        error.UnsupportedTerminal => err.fatal("Unsupported terminal", .{}),
+        error.PipeTrapFailed => err.fatal("Internal termbox error", .{}),
+        error.SDL2InitError => err.fatal("SDL2 Error: {s}", .{display.sdl.SDL_GetError()}),
+        else => err.fatal("Error when initializing display", .{}),
     }
 
     if (!ui.checkWindowSize()) {

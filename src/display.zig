@@ -1,12 +1,27 @@
 const std = @import("std");
+const mem = std.mem;
 
-const termbox = @import("termbox.zig");
+// For the allocator
+const state = @import("state.zig");
+const colors = @import("colors.zig");
 
-pub const driver: Driver = .Termbox;
+pub const sdl = @cImport(@cInclude("SDL.h"));
+pub const termbox = @import("termbox.zig");
+pub const font = @import("font.zig");
+
+pub const driver: Driver = .SDL2;
 
 // tb_shutdown() calls abort() if tb_init() wasn't called, or if tb_shutdown()
 // was called twice. Keep track of termbox's state to prevent this.
 var is_tb_inited = false;
+
+// SDL2 state
+var window: ?*sdl.SDL_Window = null;
+var renderer: ?*sdl.SDL_Renderer = null;
+var texture: ?*sdl.SDL_Texture = null;
+var grid: []Cell = undefined;
+var w_height: usize = undefined;
+var w_width: usize = undefined;
 
 pub const Driver = enum {
     Termbox,
@@ -111,7 +126,16 @@ pub const Key = enum(u16) {
     }
 };
 
-pub fn init() !void {
+const InitErr = error{
+    AlreadyInitialized,
+    TTYOpenFailed,
+    UnsupportedTerminal,
+    PipeTrapFailed,
+    SDL2InitError,
+    SDL2GetDimensionsError,
+} || mem.Allocator.Error;
+
+pub fn init(preferred_width: usize, preferred_height: usize) InitErr!void {
     switch (driver) {
         .Termbox => {
             if (is_tb_inited)
@@ -128,7 +152,52 @@ pub fn init() !void {
             _ = termbox.tb_select_output_mode(termbox.TB_OUTPUT_TRUECOLOR);
             _ = termbox.tb_set_clear_attributes(termbox.TB_WHITE, termbox.TB_BLACK);
         },
-        .SDL2 => {},
+        .SDL2 => {
+            if (sdl.SDL_Init(sdl.SDL_INIT_EVERYTHING) != 0)
+                return error.SDL2InitError;
+
+            // TODO: get rid of this
+            const SCALE = 2;
+
+            window = sdl.SDL_CreateWindow(
+                "Oathbreaker", // TODO: move to const
+                sdl.SDL_WINDOWPOS_CENTERED,
+                sdl.SDL_WINDOWPOS_CENTERED,
+                @intCast(c_int, preferred_width * font.FONT_WIDTH * SCALE),
+                @intCast(c_int, preferred_height * font.FONT_HEIGHT * SCALE),
+                sdl.SDL_WINDOW_SHOWN,
+            );
+            if (window == null)
+                return error.SDL2InitError;
+
+            renderer = sdl.SDL_CreateRenderer(window, -1, sdl.SDL_RENDERER_SOFTWARE);
+            if (renderer == null)
+                return error.SDL2InitError;
+
+            texture = sdl.SDL_CreateTexture(
+                renderer,
+                sdl.SDL_PIXELFORMAT_RGBA8888,
+                sdl.SDL_TEXTUREACCESS_STREAMING,
+                @intCast(c_int, preferred_width * font.FONT_WIDTH),
+                @intCast(c_int, preferred_height * font.FONT_HEIGHT),
+            );
+            if (texture == null)
+                return error.SDL2InitError;
+
+            grid = try state.GPA.allocator().alloc(Cell, preferred_width * preferred_height);
+            mem.set(Cell, grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
+
+            sdl.SDL_StartTextInput();
+
+            var w: c_int = undefined;
+            var h: c_int = undefined;
+            const r = sdl.SDL_GetRendererOutputSize(renderer, &w, &h);
+            if (r < 0) {
+                return error.SDL2GetDimensionsError;
+            }
+            w_width = @intCast(usize, w) / font.FONT_WIDTH / SCALE;
+            w_height = @intCast(usize, h) / font.FONT_HEIGHT / SCALE;
+        },
     }
 }
 
@@ -140,7 +209,14 @@ pub fn deinit() !void {
             termbox.tb_shutdown();
             is_tb_inited = false;
         },
-        .SDL2 => unreachable,
+        .SDL2 => {
+            sdl.SDL_DestroyTexture(texture);
+            sdl.SDL_DestroyRenderer(renderer);
+            sdl.SDL_DestroyWindow(window);
+            sdl.SDL_Quit();
+
+            state.GPA.allocator().free(grid);
+        },
     }
 }
 
@@ -148,7 +224,7 @@ pub fn deinit() !void {
 pub fn width() usize {
     return switch (driver) {
         .Termbox => @intCast(usize, termbox.tb_width()),
-        .SDL2 => unreachable,
+        .SDL2 => return w_width,
     };
 }
 
@@ -156,14 +232,78 @@ pub fn width() usize {
 pub fn height() usize {
     return switch (driver) {
         .Termbox => @intCast(usize, termbox.tb_height()),
-        .SDL2 => unreachable,
+        .SDL2 => return w_height,
     };
 }
 
 pub fn present() void {
     switch (driver) {
         .Termbox => termbox.tb_present(),
-        .SDL2 => unreachable,
+        .SDL2 => {
+            // var pixels: ?[*]u32 = undefined;
+            // var pitch: c_int = undefined;
+            // var format: u32 = undefined;
+
+            // _ = sdl.SDL_QueryTexture(texture, &format, null, null, null);
+
+            // var pixel_fmt: sdl.SDL_PixelFormat = undefined;
+            // pixel_fmt.format = format;
+
+            // // FIXME: don't ignore return value
+            // _ = sdl.SDL_LockTexture(texture, null, @ptrCast(*?*anyopaque, &pixels), &pitch);
+
+            _ = sdl.SDL_RenderClear(renderer);
+
+            var dy: usize = 0;
+            while (dy < height()) : (dy += 1) {
+                var dx: usize = 0;
+                while (dx < width()) : (dx += 1) {
+                    const cell = grid[dy * width() + dx];
+                    const ch = if (cell.ch < 32 or cell.ch > 126) font.FONT_FALLBACK_GLYPH else cell.ch;
+
+                    var fy: usize = 0;
+                    while (fy < font.FONT_HEIGHT) : (fy += 1) {
+                        var fx: usize = 0;
+                        while (fx < font.FONT_WIDTH) : (fx += 1) {
+                            const font_ch = font.font_data[((ch - 32) * font.FONT_HEIGHT) + fy][fx];
+
+                            const color = if (font_ch == 'x') cell.fg else cell.bg;
+                            // const sdl_color = sdl.SDL_MapRGB(
+                            //     &pixel_fmt,
+                            //     @intCast(u8, color >> 16 & 0xFF),
+                            //     @intCast(u8, color >> 8 & 0xFF),
+                            //     @intCast(u8, color >> 0 & 0xFF),
+                            // );
+
+                            _ = sdl.SDL_SetRenderDrawColor(
+                                renderer,
+                                @intCast(u8, color >> 16 & 0xFF),
+                                @intCast(u8, color >> 8 & 0xFF),
+                                @intCast(u8, color >> 0 & 0xFF),
+                                0,
+                            );
+                            _ = sdl.SDL_RenderDrawPoint(
+                                renderer,
+                                @intCast(c_int, (dx * font.FONT_WIDTH) + fx),
+                                @intCast(c_int, (dy * font.FONT_HEIGHT) + fy),
+                            );
+
+                            //const addr = (((dy * font.FONT_HEIGHT) + fy) * (width() * font.FONT_WIDTH) + ((dx * font.FONT_WIDTH) + fx));
+                            //pixels.?[addr] = sdl_color;
+                            // @ptrCast(?[*]u8, pixels).?[addr + 0] = @intCast(u8, sdl_color >> 16 & 0xFF);
+                            // @ptrCast(?[*]u8, pixels).?[addr + 1] = @intCast(u8, sdl_color >> 8 & 0xFF);
+                            // @ptrCast(?[*]u8, pixels).?[addr + 2] = @intCast(u8, sdl_color >> 0 & 0xFF);
+                            // @ptrCast(?[*]u8, pixels).?[addr + 3] = 0;
+                        }
+                    }
+                }
+            }
+
+            // sdl.SDL_UnlockTexture(texture);
+            // _ = sdl.SDL_RenderClear(renderer);
+            // _ = sdl.SDL_RenderCopy(renderer, texture, null, null);
+            _ = sdl.SDL_RenderPresent(renderer);
+        },
     }
 }
 
@@ -172,7 +312,7 @@ pub fn setCell(x: usize, y: usize, cell: Cell) void {
         .Termbox => {
             termbox.tb_change_cell(@intCast(isize, x), @intCast(isize, y), cell.ch, cell.fg, cell.bg);
         },
-        .SDL2 => unreachable,
+        .SDL2 => grid[y * width() + x] = cell,
     }
 }
 
@@ -187,7 +327,7 @@ pub fn getCell(x: usize, y: usize) Cell {
                 .bg = tb_old.bg,
             };
         },
-        .SDL2 => unreachable,
+        .SDL2 => return grid[y * width() + x],
     };
 }
 
@@ -220,6 +360,13 @@ pub fn waitForEvent(wait_period: ?usize) !Event {
                 else => unreachable,
             }
         },
-        .SDL2 => unreachable,
+        .SDL2 => {
+            // TODO
+            if (wait_period == null) {
+                while (true) {}
+            } else {
+                return error.NoInput;
+            }
+        },
     }
 }
