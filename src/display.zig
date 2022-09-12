@@ -1,5 +1,6 @@
 const std = @import("std");
 const mem = std.mem;
+const assert = std.debug.assert;
 
 // For the allocator
 const state = @import("state.zig");
@@ -119,7 +120,7 @@ pub const Key = enum(u16) {
     Ctrl7 = 0x1F,
     //Ctrl_slash= 0x1F, // clash with 'CTRL_7'
     //Ctrl_underscore= 0x1F, // clash with 'CTRL_7'
-    Space = 0x20,
+    //Space = 0x20,
     Backspace2 = 0x7F,
     //Ctrl_8= 0x7F, // clash with 'BACKSPACE2'
 
@@ -128,7 +129,8 @@ pub const Key = enum(u16) {
         return @intToEnum(Key, v);
     }
 
-    pub fn fromSDL(kcode: i32) ?Key {
+    // TODO: some aren't handled, e.g. CtrlTilde
+    pub fn fromSDL(kcode: i32, mod: i32) ?Key {
         return switch (kcode) {
             sdl.SDLK_F1 => .F1,
             sdl.SDLK_F2 => .F2,
@@ -158,8 +160,42 @@ pub const Key = enum(u16) {
             sdl.SDLK_DOWN => .ArrowDown,
 
             sdl.SDLK_RETURN => .Enter,
+            sdl.SDLK_TAB => .Tab,
 
-            else => null,
+            sdl.SDLK_BACKSPACE => .Backspace,
+            sdl.SDLK_ESCAPE => .Esc,
+
+            else => if (mod & sdl.KMOD_CTRL == sdl.KMOD_CTRL) b: {
+                break :b @as(?Key, switch (kcode) {
+                    sdl.SDLK_a => .CtrlA,
+                    sdl.SDLK_b => .CtrlB,
+                    sdl.SDLK_c => .CtrlC,
+                    sdl.SDLK_d => .CtrlD,
+                    sdl.SDLK_e => .CtrlE,
+                    sdl.SDLK_f => .CtrlF,
+                    sdl.SDLK_g => .CtrlG,
+                    // sdl.SDLK_h => .CtrlH,
+                    // sdl.SDLK_i => .CtrlI,
+                    sdl.SDLK_j => .CtrlJ,
+                    sdl.SDLK_k => .CtrlK,
+                    sdl.SDLK_l => .CtrlL,
+                    // sdl.SDLK_m => .CtrlM,
+                    sdl.SDLK_n => .CtrlN,
+                    sdl.SDLK_o => .CtrlO,
+                    sdl.SDLK_p => .CtrlP,
+                    sdl.SDLK_q => .CtrlQ,
+                    sdl.SDLK_r => .CtrlR,
+                    sdl.SDLK_s => .CtrlS,
+                    sdl.SDLK_t => .CtrlT,
+                    sdl.SDLK_u => .CtrlU,
+                    sdl.SDLK_v => .CtrlV,
+                    sdl.SDLK_w => .CtrlW,
+                    sdl.SDLK_x => .CtrlX,
+                    sdl.SDLK_y => .CtrlY,
+                    sdl.SDLK_z => .CtrlZ,
+                    else => null,
+                });
+            } else null,
         };
     }
 };
@@ -239,6 +275,7 @@ pub fn deinit() !void {
             is_tb_inited = false;
         },
         .SDL2 => {
+            sdl.SDL_StopTextInput();
             sdl.SDL_DestroyRenderer(renderer);
             sdl.SDL_DestroyWindow(window);
             sdl.SDL_Quit();
@@ -375,8 +412,15 @@ pub fn waitForEvent(wait_period: ?usize) !Event {
 
                 switch (ev.type) {
                     sdl.SDL_QUIT => return .Quit,
+                    sdl.SDL_TEXTINPUT => {
+                        const text = ev.text.text[0..try std.unicode.utf8ByteSequenceLength(ev.text.text[0])];
+                        std.log.info("text: {s}", .{ev.text.text[0..]});
+                        return Event{ .Char = try std.unicode.utf8Decode(text) };
+                    },
                     sdl.SDL_KEYDOWN => {
-                        if (Key.fromSDL(ev.key.keysym.sym)) |key| {
+                        const kcode = ev.key.keysym.sym;
+                        std.log.info("key: {s}", .{sdl.SDL_GetKeyName(kcode)});
+                        if (Key.fromSDL(kcode, ev.key.keysym.mod)) |key| {
                             return Event{ .Key = key };
                         } else continue;
                     },
