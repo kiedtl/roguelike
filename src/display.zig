@@ -211,6 +211,7 @@ pub fn init(preferred_width: usize, preferred_height: usize) InitErr!void {
             renderer = sdl.SDL_CreateRenderer(window, -1, sdl.SDL_RENDERER_SOFTWARE);
             if (renderer == null)
                 return error.SDL2InitError;
+            _ = sdl.SDL_RenderSetScale(renderer, SCALE, SCALE);
 
             grid = try state.GPA.allocator().alloc(Cell, preferred_width * preferred_height);
             mem.set(Cell, grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });

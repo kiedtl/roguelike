@@ -52,7 +52,7 @@ pub const LOG_HEIGHT: usize = 4;
 
 pub const MIN_HEIGHT = HEIGHT + LOG_HEIGHT + 2;
 //const min_width = WIDTH + LEFT_INFO_WIDTH + RIGHT_INFO_WIDTH + 2;
-pub const MIN_WIDTH = WIDTH + LEFT_INFO_WIDTH + 2;
+pub const MIN_WIDTH = WIDTH + LEFT_INFO_WIDTH + 2 + 1;
 
 pub fn init() !void {
     try display.init(MIN_WIDTH, MIN_HEIGHT);
