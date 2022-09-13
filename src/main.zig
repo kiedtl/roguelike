@@ -12,6 +12,7 @@ const ai = @import("ai.zig");
 const alert = @import("alert.zig");
 const rng = @import("rng.zig");
 const player = @import("player.zig");
+const font = @import("font.zig");
 const literature = @import("literature.zig");
 const explosions = @import("explosions.zig");
 const tasks = @import("tasks.zig");
@@ -142,6 +143,7 @@ fn initGame() bool {
     state.messages = MessageArrayList.init(state.GPA.allocator());
     state.alerts = alert.Alert.List.init(state.GPA.allocator());
 
+    font.loadFontData();
     state.loadLevelInfo();
     surfaces.readProps(state.GPA.allocator());
     literature.readPosters(state.GPA.allocator());
@@ -297,6 +299,7 @@ fn deinitGame() void {
         poster.deinit(state.GPA.allocator());
     literature.posters.deinit();
 
+    font.freeFontData();
     state.freeLevelInfo();
     surfaces.freeProps(state.GPA.allocator());
     mapgen.freeSpawnTables(state.GPA.allocator());

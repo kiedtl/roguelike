@@ -60,6 +60,7 @@ pub fn build(b: *Builder) void {
     exe.linkLibC();
     exe.linkSystemLibrary("z");
     exe.linkSystemLibrary("sdl2");
+    exe.linkSystemLibrary("png");
     exe.addPackagePath("rexpaint", "rx/lib.zig");
     exe.setTarget(target);
     exe.setBuildMode(mode);

@@ -231,7 +231,7 @@ pub fn init(preferred_width: usize, preferred_height: usize) InitErr!void {
                 return error.SDL2InitError;
 
             // TODO: get rid of this
-            const SCALE = 2;
+            const SCALE = 1;
 
             window = sdl.SDL_CreateWindow(
                 "Oathbreaker", // TODO: move to const
@@ -318,8 +318,15 @@ pub fn present() void {
                     while (fy < font.FONT_HEIGHT) : (fy += 1) {
                         var fx: usize = 0;
                         while (fx < font.FONT_WIDTH) : (fx += 1) {
-                            const font_ch = font.font_data[((ch - 32) * font.FONT_HEIGHT) + fy][fx];
-                            const color = if (font_ch == 'x') cell.fg else cell.bg;
+                            // const font_ch = font.font_data[((ch - 32) * font.FONT_HEIGHT) + fy][fx];
+                            // const font_ch = font.font_data[(ch * font.FONT_HEIGHT) + (fy * font.FONT_WIDTH + fx)];
+
+                            const font_ch_y = ((ch - 32) / 16) * font.FONT_HEIGHT;
+                            const font_ch_x = ((ch - 32) % 16) * font.FONT_WIDTH;
+                            const font_ch = font.font_data[(font_ch_y + fy) * (16 * font.FONT_WIDTH) + font_ch_x + fx];
+
+                            const color = if (font_ch == 0) cell.bg else cell.fg;
+                            //const color = colors.percentageOf(whole_color, @as(usize, font_ch) * 255 / 100);
 
                             _ = sdl.SDL_SetRenderDrawColor(
                                 renderer,
@@ -344,6 +351,10 @@ pub fn present() void {
 }
 
 pub fn setCell(x: usize, y: usize, cell: Cell) void {
+    if (x >= width() or y >= height()) {
+        return;
+    }
+
     switch (driver) {
         .Termbox => {
             termbox.tb_change_cell(@intCast(isize, x), @intCast(isize, y), cell.ch, cell.fg, cell.bg);
@@ -402,7 +413,7 @@ pub fn waitForEvent(wait_period: ?usize) !Event {
             while (true) {
                 const r = if (wait_period) |t| sdl.SDL_WaitEventTimeout(&ev, @intCast(c_int, t)) else sdl.SDL_WaitEvent(&ev);
 
-                if (r == 0) {
+                if (r != 1) {
                     if (wait_period != null) {
                         return error.NoInput;
                     } else {
