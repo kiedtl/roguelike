@@ -17,3 +17,12 @@ writeup back when I started the project in May 2021.
 
 *Getting into an argument with said Frozen Fiend:*
 ![screenshot](https://tilde.team/~kiedtl/images/rl/apr29-release5.png)
+
+## License
+
+The game itself is licensed under the GPL v3 license. I may be willing to
+relicense certain portions if you wish to use it; contact me for details.
+
+The game's font is derived from [Spleen](https://github.com/fcambus/spleen) by
+Frederic Cambus and is licensed under the [BSD 2-clause
+license](https://github.com/fcambus/spleen/blob/master/LICENSE).
