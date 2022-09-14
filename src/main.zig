@@ -388,7 +388,13 @@ fn freeDescriptions(alloc: mem.Allocator) void {
 }
 
 fn readNoActionInput(timeout: ?usize) void {
-    switch (display.waitForEvent(timeout) catch err.wat()) {
+    switch (display.waitForEvent(timeout) catch |e| switch (e) {
+        error.NoInput => {
+            assert(timeout != null);
+            return;
+        },
+        else => err.fatal("{s}", .{@errorName(e)}),
+    }) {
         .Quit => state.state = .Quit,
         .Resize => ui.draw(),
         .Key => |k| switch (k) {
