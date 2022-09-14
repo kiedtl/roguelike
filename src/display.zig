@@ -312,7 +312,7 @@ pub fn present() void {
                 var dx: usize = 0;
                 while (dx < width()) : (dx += 1) {
                     const cell = grid[dy * width() + dx];
-                    const ch = if (cell.ch < 32 or cell.ch > 126) font.FONT_FALLBACK_GLYPH else cell.ch;
+                    const ch = cell.ch;
 
                     var fy: usize = 0;
                     while (fy < font.FONT_HEIGHT) : (fy += 1) {
