@@ -24,6 +24,7 @@ const err = @import("err.zig");
 const explosions = @import("explosions.zig");
 const fire = @import("fire.zig");
 const fov = @import("fov.zig");
+const font = @import("font.zig");
 const gas = @import("gas.zig");
 const items = @import("items.zig");
 const literature = @import("literature.zig");
@@ -799,6 +800,7 @@ pub const Material = struct {
     // Tile used to represent walls.
     color_fg: u32,
     color_bg: ?u32,
+    sprite: ?font.Sprite = null,
     color_sfg: ?u32 = null,
     color_sbg: ?u32 = null,
     color_floor: u32,
@@ -4181,7 +4183,7 @@ pub const Tile = struct {
                 .ch = materials.tileFor(coord, self.material.tileset),
                 .fg = self.material.color_fg,
                 .bg = self.material.color_bg orelse colors.BG,
-                .sch = .S_Z_Wall,
+                .sch = self.material.sprite orelse .S_G_Wall_Rough,
                 .sfg = self.material.color_sfg orelse self.material.color_fg,
                 .sbg = self.material.color_sbg orelse self.material.color_bg orelse colors.BG,
             },

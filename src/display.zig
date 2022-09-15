@@ -331,8 +331,7 @@ pub fn present() void {
                             const font_ch_x = ((ch - 32) % 16) * font.FONT_WIDTH;
                             const font_ch = font.font_data[(font_ch_y + fy) * (16 * font.FONT_WIDTH) + font_ch_x + fx];
 
-                            const color = if (font_ch == 0) bg else fg;
-                            //const color = colors.percentageOf(whole_color, @as(usize, font_ch) * 255 / 100);
+                            const color = if (font_ch == 0) bg else colors.percentageOf(fg, @as(usize, font_ch) * 100 / 255);
 
                             _ = sdl.SDL_SetRenderDrawColor(
                                 renderer,
