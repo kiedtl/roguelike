@@ -799,6 +799,8 @@ pub const Material = struct {
     // Tile used to represent walls.
     color_fg: u32,
     color_bg: ?u32,
+    color_sfg: ?u32 = null,
+    color_sbg: ?u32 = null,
     color_floor: u32,
     tileset: usize,
     floor_tile: u21 = '·',
@@ -4179,6 +4181,9 @@ pub const Tile = struct {
                 .ch = materials.tileFor(coord, self.material.tileset),
                 .fg = self.material.color_fg,
                 .bg = self.material.color_bg orelse colors.BG,
+                .sch = .S_Z_Wall,
+                .sfg = self.material.color_sfg orelse self.material.color_fg,
+                .sbg = self.material.color_sbg orelse self.material.color_bg orelse colors.BG,
             },
             .Floor => {
                 cell.ch = self.terrain.tile;

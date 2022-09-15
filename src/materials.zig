@@ -205,6 +205,7 @@ pub const Concrete = Material{
     .name = "concrete",
     .color_fg = 0x303030,
     .color_bg = colors.CONCRETE,
+    //.color_sfg = colors.BG,
     .color_floor = 0xa79f85,
     .tileset = 0,
     .luminescence = 0,

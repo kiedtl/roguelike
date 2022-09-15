@@ -15,6 +15,7 @@ pub const FONT_HEIGHT = 16; //8;
 pub const FONT_WIDTH = 8; //7;
 pub const FONT_FALLBACK_GLYPH = 0x7F;
 pub const FONT_PATH = "font/spleen.png";
+pub const Sprite = @import("sprites.zig").Sprite;
 
 pub var font_data: []u8 = undefined;
 

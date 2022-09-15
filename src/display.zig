@@ -33,6 +33,10 @@ pub const Cell = struct {
     bg: u32 = 0,
     ch: u32 = ' ', // TODO: change to u21
 
+    sch: ?font.Sprite = null,
+    sfg: u32 = 0,
+    sbg: u32 = 0,
+
     // fl: Flags = .{},
 
     // pub const Flags = packed struct {
@@ -231,7 +235,7 @@ pub fn init(preferred_width: usize, preferred_height: usize) InitErr!void {
                 return error.SDL2InitError;
 
             // TODO: get rid of this
-            const SCALE = 1;
+            const SCALE = 2;
 
             window = sdl.SDL_CreateWindow(
                 "Oathbreaker", // TODO: move to const
@@ -312,7 +316,9 @@ pub fn present() void {
                 var dx: usize = 0;
                 while (dx < width()) : (dx += 1) {
                     const cell = grid[dy * width() + dx];
-                    const ch = cell.ch;
+                    const ch = if (cell.sch) |sch| @enumToInt(sch) else cell.ch;
+                    const bg = if (cell.sch) |_| cell.sbg else cell.bg;
+                    const fg = if (cell.sch) |_| cell.sfg else cell.fg;
 
                     var fy: usize = 0;
                     while (fy < font.FONT_HEIGHT) : (fy += 1) {
@@ -325,7 +331,7 @@ pub fn present() void {
                             const font_ch_x = ((ch - 32) % 16) * font.FONT_WIDTH;
                             const font_ch = font.font_data[(font_ch_y + fy) * (16 * font.FONT_WIDTH) + font_ch_x + fx];
 
-                            const color = if (font_ch == 0) cell.bg else cell.fg;
+                            const color = if (font_ch == 0) bg else fg;
                             //const color = colors.percentageOf(whole_color, @as(usize, font_ch) * 255 / 100);
 
                             _ = sdl.SDL_SetRenderDrawColor(
@@ -425,12 +431,10 @@ pub fn waitForEvent(wait_period: ?usize) !Event {
                     sdl.SDL_QUIT => return .Quit,
                     sdl.SDL_TEXTINPUT => {
                         const text = ev.text.text[0..try std.unicode.utf8ByteSequenceLength(ev.text.text[0])];
-                        std.log.info("text: {s}", .{ev.text.text[0..]});
                         return Event{ .Char = try std.unicode.utf8Decode(text) };
                     },
                     sdl.SDL_KEYDOWN => {
                         const kcode = ev.key.keysym.sym;
-                        std.log.info("key: {s}", .{sdl.SDL_GetKeyName(kcode)});
                         if (Key.fromSDL(kcode, ev.key.keysym.mod)) |key| {
                             return Event{ .Key = key };
                         } else continue;
