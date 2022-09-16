@@ -669,8 +669,7 @@ pub fn dropItem(index: usize) bool {
 }
 
 pub fn memorizeTile(fc: Coord, mtype: state.MemoryTile.Type) void {
-    const t = Tile.displayAs(fc, true, false);
-    const memt = state.MemoryTile{ .bg = t.bg, .fg = t.fg, .ch = t.ch, .type = mtype };
+    const memt = state.MemoryTile{ .tile = Tile.displayAs(fc, true, false), .type = mtype };
     state.memory.put(fc, memt) catch err.wat();
 }
 

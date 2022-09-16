@@ -12,6 +12,7 @@ const dijkstra = @import("dijkstra.zig");
 const spells = @import("spells.zig");
 const colors = @import("colors.zig");
 const err = @import("err.zig");
+const font = @import("font.zig");
 const main = @import("root");
 const mobs = @import("mobs.zig");
 const utils = @import("utils.zig");
@@ -69,6 +70,7 @@ pub const Terrain = struct {
     name: []const u8,
     color: u32,
     tile: u21,
+    sprite: ?font.Sprite = null,
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
     effects: []const StatusDataInfo = &[_]StatusDataInfo{},
@@ -134,6 +136,7 @@ pub const MetalTerrain = Terrain{
     .name = "metal",
     .color = 0x8094ae, // steel blue
     .tile = '∷',
+    .sprite = .S_G_T_Metal,
     .resists = .{ .rElec = -25 },
     .effects = &[_]StatusDataInfo{
         .{ .status = .Conductive, .duration = .{ .Ctx = null } },

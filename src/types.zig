@@ -1550,7 +1550,14 @@ pub const Status = enum {
         const xstart = state.player.coord.x -| radius;
         const xend = math.min(state.player.coord.x + radius, WIDTH);
 
-        var tile: state.MemoryTile = .{ .fg = 0xffffff, .bg = colors.BG, .ch = '#', .type = .Echolocated };
+        var tile: state.MemoryTile = .{
+            .tile = .{
+                .fg = 0xffffff,
+                .bg = colors.BG,
+                .ch = '#',
+            },
+            .type = .Echolocated,
+        };
 
         var y: usize = ystart;
         while (y < yend) : (y += 1) {
@@ -1575,7 +1582,7 @@ pub const Status = enum {
                         continue;
                     }
 
-                    tile.ch = if (state.dungeon.at(item).type == .Wall) '#' else '·';
+                    tile.tile.ch = if (state.dungeon.at(item).type == .Wall) '#' else '·';
                     _ = state.memory.getOrPutValue(item, tile) catch err.wat();
                 }
             }
@@ -4189,6 +4196,7 @@ pub const Tile = struct {
             },
             .Floor => {
                 cell.ch = self.terrain.tile;
+                cell.sch = self.terrain.sprite;
                 cell.fg = self.terrain.color;
                 cell.bg = colors.BG;
             },
@@ -4224,9 +4232,11 @@ pub const Tile = struct {
             }
 
             cell.ch = mob.tile;
+            cell.sch = null;
         } else if (state.dungeon.fireAt(coord).* > 0) {
             const famount = state.dungeon.fireAt(coord).*;
             cell.ch = fire.fireGlyph(famount);
+            cell.sch = null;
             cell.fg = fire.fireColor(famount);
         } else if (state.dungeon.itemsAt(coord).last()) |item| {
             assert(self.type != .Wall);
@@ -4236,6 +4246,7 @@ pub const Tile = struct {
                 cell.fg = 0;
                 cell.bg = 0xff0000;
                 cell.ch = 'X';
+                cell.sch = null;
                 return cell;
             }
             //assert(self.type != .Wall);
@@ -4283,10 +4294,12 @@ pub const Tile = struct {
                     var ch: u21 = '.';
                     if (s == null) {
                         ch = '>';
+                        cell.sch = null;
                         cell.fg = 0xeeeeee;
                         cell.bg = 0x0000ff;
                     } else {
                         ch = if (state.levelinfo[s.?.z].optional) '≤' else '<';
+                        cell.sch = null;
                         cell.bg = 0x997700;
                         cell.fg = 0xffd700;
                     }
@@ -4295,6 +4308,7 @@ pub const Tile = struct {
             };
 
             cell.ch = ch;
+            cell.sch = null;
         }
 
         if (!ignore_lights and self.type == .Floor) {

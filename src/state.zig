@@ -9,6 +9,7 @@ const astar = @import("astar.zig");
 const err = @import("err.zig");
 const player_m = @import("player.zig");
 const ui = @import("ui.zig");
+const display = @import("display.zig");
 const dijkstra = @import("dijkstra.zig");
 const mapgen = @import("mapgen.zig");
 const mobs_m = @import("mobs.zig");
@@ -147,9 +148,7 @@ pub var default_patterns = [_]types.Ring{
 };
 
 pub const MemoryTile = struct {
-    fg: u32 = 0x000000,
-    bg: u32 = 0x000000,
-    ch: u32 = ' ',
+    tile: display.Cell,
     type: Type = .Immediate,
 
     pub const Type = enum { Immediate, Echolocated, DetectUndead };

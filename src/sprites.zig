@@ -7,4 +7,6 @@
 pub const Sprite = enum(u21) {
     S_G_Wall_Finished = 0x2600,
     S_G_Wall_Rough = 0x2601,
+
+    S_G_T_Metal = 0x2610,
 };

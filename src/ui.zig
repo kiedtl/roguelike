@@ -1433,23 +1433,25 @@ pub fn drawMap(moblist: []const *Mob, startx: usize, endx: usize, starty: usize,
                 tile = .{ .fg = 0, .bg = colors.BG, .ch = ' ' };
 
                 if (state.memory.contains(coord)) {
-                    const memt = state.memory.get(coord) orelse unreachable;
-                    tile = .{ .fg = memt.fg, .bg = memt.bg, .ch = memt.ch };
+                    tile = (state.memory.get(coord) orelse unreachable).tile;
 
                     tile.bg = colors.darken(colors.filterGrayscale(tile.bg), 4);
                     tile.fg = colors.darken(colors.filterGrayscale(tile.fg), 4);
+                    tile.sbg = colors.darken(colors.filterGrayscale(tile.sbg), 4);
+                    tile.sfg = colors.darken(colors.filterGrayscale(tile.sfg), 4);
 
                     if (tile.bg < colors.BG) tile.bg = colors.BG;
+                    if (tile.sbg < colors.BG) tile.sbg = colors.BG;
                 }
 
                 // Can we hear anything
                 if (state.player.canHear(coord)) |noise| if (noise.state == .New) {
                     tile.fg = 0x00d610;
                     tile.ch = if (noise.intensity.radiusHeard() > 6) '♫' else '♩';
+                    tile.sch = null;
                 };
             } else {
-                tile = Tile.displayAs(coord, false, false);
-                tile = modifyTile(moblist, coord, tile);
+                tile = modifyTile(moblist, coord, Tile.displayAs(coord, false, false));
             }
 
             display.setCell(cursorx, cursory, tile);

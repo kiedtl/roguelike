@@ -317,8 +317,8 @@ pub fn present() void {
                 while (dx < width()) : (dx += 1) {
                     const cell = grid[dy * width() + dx];
                     const ch = if (cell.sch) |sch| @enumToInt(sch) else cell.ch;
-                    const bg = if (cell.sch) |_| cell.sbg else cell.bg;
-                    const fg = if (cell.sch) |_| cell.sfg else cell.fg;
+                    const bg = if (cell.sch != null and cell.sbg != 0) cell.sbg else cell.bg;
+                    const fg = if (cell.sch != null and cell.sbg != 0) cell.sfg else cell.fg;
 
                     var fy: usize = 0;
                     while (fy < font.FONT_HEIGHT) : (fy += 1) {
