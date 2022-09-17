@@ -493,12 +493,21 @@ pub const BlindingGasTrap = Machine.createGasTrap("tear gas", &gas.Blinding);
 pub const NormalDoor = Machine{
     .id = "door_normal",
     .name = "door",
+
     .powered_tile = '\'',
     .unpowered_tile = '+',
     .powered_fg = 0xffaaaa,
     .unpowered_fg = 0xffaaaa,
     .powered_bg = 0x7a2914,
     .unpowered_bg = 0x7a2914,
+
+    .powered_sprite = .S_O_M_PriDoorOpen,
+    .unpowered_sprite = .S_O_M_PriDoorShut,
+    .powered_sfg = 0xba7964,
+    .unpowered_sfg = 0xba7964,
+    .powered_sbg = colors.BG,
+    .unpowered_sbg = colors.BG,
+
     .power_drain = 49,
     .powered_walkable = true,
     .unpowered_walkable = true,
@@ -512,10 +521,13 @@ pub const NormalDoor = Machine{
 pub const LabDoor = Machine{
     .id = "door_lab",
     .name = "door",
+
     .powered_tile = '+',
     .unpowered_tile = 'x',
     .powered_fg = 0xffdf10,
     .unpowered_fg = 0xffbfff,
+    .powered_sprite = .S_O_M_LabDoorOpen,
+
     .power_drain = 0,
     .power = 100,
     .powered_walkable = false,
@@ -1136,10 +1148,12 @@ fn powerLabDoor(machine: *Machine) void {
 
     if (has_mob) {
         machine.powered_tile = '\\';
+        machine.powered_sprite = .S_O_M_LabDoorOpen;
         machine.powered_walkable = true;
         machine.powered_opacity = 0.0;
     } else {
         machine.powered_tile = '+';
+        machine.powered_sprite = .S_O_M_LabDoorShut;
         machine.powered_walkable = false;
         machine.powered_opacity = 1.0;
     }

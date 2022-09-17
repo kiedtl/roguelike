@@ -3628,12 +3628,20 @@ pub const Machine = struct {
 
     powered_tile: u21,
     unpowered_tile: u21,
+    powered_sprite: ?font.Sprite = null,
+    unpowered_sprite: ?font.Sprite = null,
 
     powered_fg: ?u32 = null,
     unpowered_fg: ?u32 = null,
     powered_bg: ?u32 = null,
     unpowered_bg: ?u32 = null,
     bg: ?u32 = null,
+
+    powered_sfg: ?u32 = null,
+    unpowered_sfg: ?u32 = null,
+    powered_sbg: ?u32 = null,
+    unpowered_sbg: ?u32 = null,
+    sbg: ?u32 = null,
 
     power_drain: usize = 100, // Power drained per turn
 
@@ -3726,6 +3734,10 @@ pub const Machine = struct {
 
     pub fn tile(self: *const Machine) u21 {
         return if (self.isPowered()) self.powered_tile else self.unpowered_tile;
+    }
+
+    pub fn sprite(self: *const Machine) ?font.Sprite {
+        return if (self.isPowered()) self.powered_sprite else self.unpowered_sprite;
     }
 
     pub fn isWalkable(self: *const Machine) bool {
@@ -4253,44 +4265,54 @@ pub const Tile = struct {
 
             cell.fg = 0xffffff;
 
-            const ch: u21 = switch (surfaceitem) {
-                .Corpse => |_| c: {
+            switch (surfaceitem) {
+                .Corpse => |_| {
                     cell.fg = 0xffe0ef;
-                    break :c '%';
+                    cell.ch = '%';
+                    cell.sch = null;
                 },
-                .Container => |c| cont: {
+                .Container => |c| {
                     // if (c.capacity >= 14) {
                     //     cell.fg = 0x000000;
                     //     cell.bg = 0x808000;
                     // }
                     cell.fg = if (c.isLootable()) colors.GOLD else colors.GREY;
-                    break :cont c.tile;
+                    cell.ch = c.tile;
+                    cell.sch = null;
                 },
-                .Machine => |m| mach: {
+                .Machine => |m| {
                     if (m.isPowered()) {
                         if (m.powered_bg) |mach_bg| cell.bg = mach_bg;
                         if (m.powered_fg) |mach_fg| cell.fg = mach_fg;
+                        if (m.powered_sbg) |mach_bg| cell.sbg = mach_bg;
+                        if (m.powered_sfg) |mach_fg| cell.sfg = mach_fg;
                     } else {
                         if (m.unpowered_bg) |mach_bg| cell.bg = mach_bg;
                         if (m.unpowered_fg) |mach_fg| cell.fg = mach_fg;
+                        if (m.unpowered_sbg) |mach_bg| cell.sbg = mach_bg;
+                        if (m.unpowered_sfg) |mach_fg| cell.sfg = mach_fg;
                     }
                     if (m.bg) |bg| cell.bg = bg;
+                    if (m.sbg) |bg| cell.bg = bg;
 
-                    break :mach m.tile();
+                    cell.ch = m.tile();
+                    cell.sch = m.sprite();
                 },
-                .Prop => |p| prop: {
+                .Prop => |p| {
                     if (p.bg) |prop_bg| cell.bg = prop_bg;
                     if (p.fg) |prop_fg| cell.fg = prop_fg;
-                    break :prop p.tile;
+                    cell.ch = p.tile;
+                    cell.sch = null;
                 },
-                .Poster => |_| poster: {
+                .Poster => |_| {
                     //cell.fg = self.material.color_bg orelse self.material.color_fg;
                     //break :poster '?';
                     cell.bg = colors.GOLD;
                     cell.fg = 0;
-                    break :poster '≡';
+                    cell.ch = '≡';
+                    cell.sch = null;
                 },
-                .Stair => |s| stair: {
+                .Stair => |s| {
                     var ch: u21 = '.';
                     if (s == null) {
                         ch = '>';
@@ -4303,12 +4325,10 @@ pub const Tile = struct {
                         cell.bg = 0x997700;
                         cell.fg = 0xffd700;
                     }
-                    break :stair ch;
+                    cell.ch = ch;
+                    cell.sch = null;
                 },
-            };
-
-            cell.ch = ch;
-            cell.sch = null;
+            }
         }
 
         if (!ignore_lights and self.type == .Floor) {
