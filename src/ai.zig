@@ -727,7 +727,13 @@ pub fn guardWork(mob: *Mob, _: mem.Allocator) void {
                 }
             }
 
-            assert(nearest != null);
+            // In rare cases, such as the tutorial map, there might be only one
+            // room. In that case just rest skip turn.
+            //assert(nearest != null);
+            if (nearest == null) {
+                tryRest(mob);
+                return;
+            }
 
             var tries: usize = 500;
             const post2 = while (tries > 0) : (tries -= 1) {
