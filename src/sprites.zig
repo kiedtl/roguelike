@@ -6,16 +6,16 @@
 //
 
 pub const Sprite = enum(u21) {
-    S_G_Wall_Finished = 0x2600,
-    S_G_Wall_Rough = 0x2601,
-    S_G_Wall_Scifish = 0x2602,
-    S_G_Wall_Window = 0x2603,
+    S_G_Wall_Finished = 0x2790,
+    S_G_Wall_Rough = 0x2791,
+    S_G_Wall_Scifish = 0x2792,
+    S_G_Wall_Window = 0x2793,
 
-    S_G_T_Metal = 0x2610,
+    S_G_T_Metal = 0x27A0,
 
-    S_O_M_PriDoorShut = 0x2630,
-    S_O_M_PriDoorOpen = 0x2631,
+    S_O_M_PriDoorShut = 0x27C0,
+    S_O_M_PriDoorOpen = 0x27C1,
 
-    S_O_M_LabDoorShut = 0x2632,
-    S_O_M_LabDoorOpen = 0x2633,
+    S_O_M_LabDoorShut = 0x27C2,
+    S_O_M_LabDoorOpen = 0x27C3,
 };
