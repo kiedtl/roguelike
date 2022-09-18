@@ -420,6 +420,8 @@ pub const Brazier = Machine{
 
     .powered_tile = '╋',
     .unpowered_tile = '┽',
+    .powered_sprite = .S_O_M_PriLight,
+    .unpowered_sprite = .S_O_M_PriLight,
 
     .powered_fg = 0xeee088,
     .unpowered_fg = 0xffffff,
@@ -453,6 +455,8 @@ pub const Lamp = Machine{
 
     .powered_tile = '•',
     .unpowered_tile = '○',
+    .powered_sprite = .S_O_M_LabLight,
+    .unpowered_sprite = .S_O_M_LabLight,
 
     .powered_fg = 0xffdf12,
     .unpowered_fg = 0x88e0ee,
@@ -540,20 +544,29 @@ pub const LabDoor = Machine{
     .on_power = powerLabDoor,
 };
 
-pub const VaultDoor = Machine{
+pub const VaultDoor = Machine{ // TODO: rename to QuartersDoor
     .id = "door_qrt",
-    .name = "door",
+    .name = "iron door",
+
     .powered_tile = '░',
     .unpowered_tile = '+',
     .powered_fg = 0xaaaaaa,
     .unpowered_bg = 0xffffff,
-    .unpowered_fg = 0x000000,
+    .unpowered_fg = colors.BG,
+
+    .powered_sprite = .S_O_M_QrtDoorOpen,
+    .unpowered_sprite = .S_O_M_QrtDoorShut,
+    .powered_sfg = 0xffffff,
+    .powered_sbg = colors.BG,
+    .unpowered_sfg = 0xffffff,
+    .unpowered_sbg = colors.BG,
+
     .power_drain = 49,
     .powered_walkable = true,
     .unpowered_walkable = false,
     .powered_opacity = 0.0,
     .unpowered_opacity = 1.0,
-    .flammability = 10, // heavy wood/metal door
+    .flammability = 0, // metal door, not flammable
     .porous = true,
     .on_power = powerNone,
 };
@@ -561,12 +574,21 @@ pub const VaultDoor = Machine{
 pub const LockedDoor = Machine{
     .id = "door_locked",
     .name = "locked door",
+
     .powered_tile = '\'',
     .unpowered_tile = '+',
     .powered_fg = 0xaaaaff,
     .unpowered_fg = 0xaaaaff,
     .powered_bg = 0x29147a,
     .unpowered_bg = 0x29147a,
+
+    .powered_sprite = .S_O_M_PriDoorOpen,
+    .unpowered_sprite = .S_O_M_PriDoorShut,
+    .powered_sfg = 0x7964ba,
+    .unpowered_sfg = 0x7964ba,
+    .powered_sbg = colors.BG,
+    .unpowered_sbg = colors.BG,
+
     .power_drain = 90,
     .restricted_to = .Necromancer,
     .powered_walkable = true,
@@ -597,12 +619,21 @@ pub const LockedDoor = Machine{
 pub const HeavyLockedDoor = Machine{
     .id = "door_locked_heavy",
     .name = "locked steel door",
+
     .powered_tile = '\'',
     .unpowered_tile = '+',
     .powered_fg = 0xaaffaa,
     .unpowered_fg = 0xaaffaa,
     .powered_bg = 0x297a14,
     .unpowered_bg = 0x297a14,
+
+    .powered_sprite = .S_O_M_PriDoorOpen,
+    .unpowered_sprite = .S_O_M_PriDoorShut,
+    .powered_sfg = 0x64ba79,
+    .unpowered_sfg = 0x64ba79,
+    .powered_sbg = colors.BG,
+    .unpowered_sbg = colors.BG,
+
     .power_drain = 90,
     .restricted_to = .Necromancer,
     .powered_walkable = true,
@@ -619,12 +650,21 @@ fn createVaultDoor(comptime id_suffix: []const u8, comptime name_prefix: []const
     return Machine{
         .id = "door_vault_" ++ id_suffix,
         .name = name_prefix ++ " door",
+
         .powered_tile = ' ',
         .unpowered_tile = '+',
         .powered_fg = colors.percentageOf(color, 130),
         .unpowered_fg = colors.percentageOf(color, 130),
         .powered_bg = colors.percentageOf(color, 40),
         .unpowered_bg = colors.percentageOf(color, 40),
+
+        .powered_sprite = .S_O_M_QrtDoorOpen,
+        .unpowered_sprite = .S_O_M_QrtDoorShut,
+        .powered_sfg = colors.percentageOf(color, 150),
+        .unpowered_sfg = colors.percentageOf(color, 150),
+        .powered_sbg = colors.BG,
+        .unpowered_sbg = colors.BG,
+
         .power_drain = 0,
         .restricted_to = .OtherGood,
         .powered_walkable = true,

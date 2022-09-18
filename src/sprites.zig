@@ -15,7 +15,11 @@ pub const Sprite = enum(u21) {
 
     S_O_M_PriDoorShut = 0x27C0,
     S_O_M_PriDoorOpen = 0x27C1,
-
     S_O_M_LabDoorShut = 0x27C2,
     S_O_M_LabDoorOpen = 0x27C3,
+    S_O_M_QrtDoorShut = 0x27C4,
+    S_O_M_QrtDoorOpen = 0x27C5,
+
+    S_O_M_PriLight = 0x27C6,
+    S_O_M_LabLight = 0x27C7,
 };
