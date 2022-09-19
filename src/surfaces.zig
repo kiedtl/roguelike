@@ -505,8 +505,8 @@ pub const NormalDoor = Machine{
     .powered_bg = 0x7a2914,
     .unpowered_bg = 0x7a2914,
 
-    .powered_sprite = .S_O_M_PriDoorOpen,
-    .unpowered_sprite = .S_O_M_PriDoorShut,
+    .powered_sprite = .S_G_M_DoorOpen,
+    .unpowered_sprite = .S_G_M_DoorShut,
     .powered_sfg = 0xba7964,
     .unpowered_sfg = 0xba7964,
     .powered_sbg = colors.BG,
@@ -582,8 +582,8 @@ pub const LockedDoor = Machine{
     .powered_bg = 0x29147a,
     .unpowered_bg = 0x29147a,
 
-    .powered_sprite = .S_O_M_PriDoorOpen,
-    .unpowered_sprite = .S_O_M_PriDoorShut,
+    .powered_sprite = .S_G_M_DoorOpen,
+    .unpowered_sprite = .S_G_M_DoorShut,
     .powered_sfg = 0x7964ba,
     .unpowered_sfg = 0x7964ba,
     .powered_sbg = colors.BG,
@@ -627,8 +627,8 @@ pub const HeavyLockedDoor = Machine{
     .powered_bg = 0x297a14,
     .unpowered_bg = 0x297a14,
 
-    .powered_sprite = .S_O_M_PriDoorOpen,
-    .unpowered_sprite = .S_O_M_PriDoorShut,
+    .powered_sprite = .S_G_M_DoorOpen,
+    .unpowered_sprite = .S_G_M_DoorShut,
     .powered_sfg = 0x64ba79,
     .unpowered_sfg = 0x64ba79,
     .powered_sbg = colors.BG,

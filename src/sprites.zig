@@ -10,6 +10,7 @@ pub const Sprite = enum(u21) {
     S_G_Wall_Rough = 0x2791,
     S_G_Wall_Scifish = 0x2792,
     S_G_Wall_Window = 0x2793,
+    S_G_StairsUp = 0x279F,
 
     S_G_T_Metal = 0x27A0,
 
@@ -17,8 +18,8 @@ pub const Sprite = enum(u21) {
     S_O_P_Table = 0x27B1,
     S_O_P_Chair = 0x27B2,
 
-    S_O_M_PriDoorShut = 0x27C0,
-    S_O_M_PriDoorOpen = 0x27C1,
+    S_G_M_DoorShut = 0x27C0,
+    S_G_M_DoorOpen = 0x27C1,
     S_O_M_LabDoorShut = 0x27C2,
     S_O_M_LabDoorOpen = 0x27C3,
     S_O_M_QrtDoorShut = 0x27C4,

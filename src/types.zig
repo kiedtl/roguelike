@@ -4314,20 +4314,20 @@ pub const Tile = struct {
                     cell.sch = null;
                 },
                 .Stair => |s| {
-                    var ch: u21 = '.';
                     if (s == null) {
-                        ch = '>';
+                        cell.ch = '>';
                         cell.sch = null;
                         cell.fg = 0xeeeeee;
                         cell.bg = 0x0000ff;
                     } else {
-                        ch = if (state.levelinfo[s.?.z].optional) '≤' else '<';
-                        cell.sch = null;
+                        cell.ch = if (state.levelinfo[s.?.z].optional) '≤' else '<';
                         cell.bg = 0x997700;
                         cell.fg = 0xffd700;
+
+                        cell.sch = if (state.levelinfo[s.?.z].optional) .S_G_M_DoorShut else .S_G_StairsUp;
+                        cell.sbg = colors.BG;
+                        cell.sfg = 0xffd700;
                     }
-                    cell.ch = ch;
-                    cell.sch = null;
                 },
             }
         }
