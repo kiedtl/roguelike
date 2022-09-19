@@ -7,256 +7,256 @@
 # Tools props
 #
 # TODO: once hammer weapon is added, remove useless hammer prop to avoid confusion
-""                     	 "hammer"               	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
-""                     	 "screwdriver"          	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
-""                     	 "gimlet"               	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
-""                     	 "wolfram drill"        	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
-""                     	 "circular saw"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
-""                     	 "chisel set"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
-""                     	 "locksmith kit"        	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
-""                     	 "wolfram hammer"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
-""                     	 "mallet"               	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
-""                     	 "headlight"            	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
-""                     	 "tinder box"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "hammer"               	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "screwdriver"          	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "gimlet"               	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "wolfram drill"        	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "circular saw"         	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "chisel set"           	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "locksmith kit"        	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "wolfram hammer"       	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "mallet"               	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "headlight"            	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Tools
+""                     	 "tinder box"           	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Tools
 
 # Wearables props
-""                     	 "torn gambeson"        	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
-""                     	 "split hauberk"        	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
-""                     	 "red tunic"            	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
-""                     	 "teal tunic"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
-""                     	 "green tunic"          	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
-""                     	 "woven belt"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
-""                     	 "undergarment"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
-""                     	 "undershirt"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
-""                     	 "wool sock"            	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Wearables
+""                     	 "torn gambeson"        	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Wearables
+""                     	 "split hauberk"        	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Wearables
+""                     	 "red tunic"            	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Wearables
+""                     	 "teal tunic"           	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Wearables
+""                     	 "green tunic"          	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Wearables
+""                     	 "woven belt"           	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Wearables
+""                     	 "undergarment"         	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Wearables
+""                     	 "undershirt"           	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Wearables
+""                     	 "wool sock"            	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Wearables
 
 # Potion props
-""                     	 "empty bottle"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
-""                     	 "kombucha"             	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
-""                     	 "passionfruit kombucha"	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
-""                     	 "kefir"                	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
-""                     	 "sanitisation potion"  	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
-""                     	 "fermentation potion"  	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
-""                     	 "caffeination potion"  	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
-""                     	 "porridge potion"      	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
-""                     	 "beer can"             	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Bottles
+""                     	 "empty bottle"         	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
+""                     	 "kombucha"             	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
+""                     	 "passionfruit kombucha"	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
+""                     	 "kefir"                	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
+""                     	 "sanitisation potion"  	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
+""                     	 "fermentation potion"  	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
+""                     	 "caffeination potion"  	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
+""                     	 "porridge potion"      	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
+""                     	 "beer can"             	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
 
 # Weapon props
-""                     	 "shock prod"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
-""                     	 "wooden club"          	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
-""                     	 "bludgeon"             	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
-""                     	 "cosh"                 	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
-""                     	 "broken sword"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
-""                     	 "shattered mace"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
-""                     	 "blunt knife"          	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
+""                     	 "shock prod"           	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Weapons
+""                     	 "wooden club"          	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Weapons
+""                     	 "bludgeon"             	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Weapons
+""                     	 "cosh"                 	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Weapons
+""                     	 "broken sword"         	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Weapons
+""                     	 "shattered mace"       	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Weapons
+""                     	 "blunt knife"          	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Weapons
 # double/triple sword is a nod to DCSS
-""                     	 "triple sword"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
-""                     	 "double sword"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .Weapons
+""                     	 "triple sword"         	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Weapons
+""                     	 "double sword"         	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Weapons
 
 # Laboratory stuff
-""                     	 "beaker"               	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "large beaker"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "mesh"                 	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "strainer"             	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "scale"                	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "lens"                 	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "battery"              	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "test-tube"            	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "large battery"        	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "empty vial"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "test-tube holder"     	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "stirring rod"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "laboratory balance"   	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "crucible"             	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "crucible tongs"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "filter paper"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "flask"                	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "filter flask"         	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "pipet"                	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "buret"                	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "ring stand"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "double buret clamp"   	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "mortar/pestle"        	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "evaporating dish"     	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "flame spreader"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "burner lighter"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "utility clamps"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "separatory funnel"    	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "reagent bottle"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "graduated cylinder"   	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "petri dish"           	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "rubber stopper"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "thermometer"          	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "Buchner funnel"       	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
-""                     	 "Erlenmeyer flask"     	 ' ' 	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "beaker"               	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "large beaker"         	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "mesh"                 	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "strainer"             	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "scale"                	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "lens"                 	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "battery"              	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "test-tube"            	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "large battery"        	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "empty vial"           	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "test-tube holder"     	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "stirring rod"         	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "laboratory balance"   	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "crucible"             	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "crucible tongs"       	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "filter paper"         	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "flask"                	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "filter flask"         	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "pipet"                	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "buret"                	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "ring stand"           	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "double buret clamp"   	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "mortar/pestle"        	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "evaporating dish"     	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "flame spreader"       	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "burner lighter"       	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "utility clamps"       	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "separatory funnel"    	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "reagent bottle"       	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "graduated cylinder"   	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "petri dish"           	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "rubber stopper"       	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "thermometer"          	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "Buchner funnel"       	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
+""                     	 "Erlenmeyer flask"     	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
 
 # Quarters stuff
-"fuel_barrel"          	 "barrel of fuel"       	 'ʊ' 	 0xdaa520 	 -        	 nay 	 - 	99 	 .Vault
-"small_fountain"       	 "small fountain"       	 '¶' 	 0xa4cfff 	 -        	 -   	 - 	 -
+"fuel_barrel"          	 "barrel of fuel"       	 'ʊ' 	                        -  	 0xdaa520 	 -        	 nay 	 - 	99 	 .Vault
+"small_fountain"       	 "small fountain"       	 '¶' 	                        -  	 0xa4cfff 	 -        	 -   	 - 	 -
 
 # Statues
-"gold_statue"          	 "gold statue"          	 '☺' 	 0xfff720 	 -        	 nay 	 - 	 - 	 .Statue
-"realgar_statue"       	 "realgar statue"       	 '☺' 	 0xff343f 	 -        	 nay 	 - 	 - 	 .Statue
-"iron_statue"          	 "iron statue"          	 '☹' 	 0xcacad2 	 -        	 nay 	 - 	 - 	 .Statue
-"sodalite_statue"      	 "sodalite statue"      	 '☺' 	 0xa4cfff 	 -        	 nay 	 - 	 - 	 .Statue
-"hematite_statue"      	 "hematite statue"      	 '☺' 	 0xff7f70 	 -        	 nay 	 - 	 - 	 .Statue
+"gold_statue"          	 "gold statue"          	 '☺' 	                        -  	 0xfff720 	 -        	 nay 	 - 	 - 	 .Statue
+"realgar_statue"       	 "realgar statue"       	 '☺' 	                        -  	 0xff343f 	 -        	 nay 	 - 	 - 	 .Statue
+"iron_statue"          	 "iron statue"          	 '☹' 	                        -  	 0xcacad2 	 -        	 nay 	 - 	 - 	 .Statue
+"sodalite_statue"      	 "sodalite statue"      	 '☺' 	                        -  	 0xa4cfff 	 -        	 nay 	 - 	 - 	 .Statue
+"hematite_statue"      	 "hematite statue"      	 '☺' 	                        -  	 0xff7f70 	 -        	 nay 	 - 	 - 	 .Statue
 
 # Smithing stuff
 #
 # TODO: remove this?
-"chain"                	 "chain"                	 '§' 	 0xe0e0ff 	 -        	 nay 	 - 	 - 	               - 	 yea
+"chain"                	 "chain"                	 '§' 	                        -  	 0xe0e0ff 	 -        	 nay 	 - 	 - 	               - 	 yea
 
-"table"                	 "table"                	 '⊺' 	 0xffffff 	 -        	 nay 	 - 	10
-"bed"                  	 "bed"                  	 'Θ' 	 0xdaa520 	 -        	 -   	0.6	30
-"wood_table"           	 "table"                	 '⊺' 	 0xdaa520 	 -        	 nay 	 - 	30
+"table"                	 "table"                	 '⊺' 	             .S_O_P_Table  	 0xffffff 	 -        	 nay 	 - 	10
+"bed"                  	 "bed"                  	 'Θ' 	                        -  	 0xdaa520 	 -        	 -   	0.6	30
+"wood_table"           	 "table"                	 '⊺' 	             .S_O_P_Table  	 0xdaa520 	 -        	 nay 	 - 	30
 # chairs ⑁
-"wood_chair"           	 "chair"                	 'ⅎ' 	 0xdaa520 	 -        	 yea 	 - 	30
+"wood_chair"           	 "chair"                	 'ⅎ' 	             .S_O_P_Chair  	 0xdaa520 	 -        	 yea 	 - 	30
 
-"turbine"              	 "turbine"              	 '◴' 	 0xffd700 	 -        	 nay 	 - 	10
-"gearbox"              	 "gearbox"              	 '■' 	 0xffffff 	 -        	 nay 	 - 	10
-"power_switch"         	 "power switch"         	 '♥' 	 0xffffff 	 -        	 nay 	 - 	10
-"control_panel"        	 "control panel"        	 '⌨' 	 0xffffff 	 -        	 nay 	 - 	10
-"small_transformer"    	 "transformer"          	 '■' 	 0xffe5d3 	 -        	 nay 	 - 	10
-"large_transformer"    	 "transformer"          	 'ö' 	 0xffe5d3 	 -        	 nay 	 - 	10
-"switching_station"    	 "switching station"    	 '⊡' 	 0xffaf9a 	 -        	 nay 	 - 	10
-"fuel_burner"          	 "fuel burner"          	 '#' 	 0xffa0a0 	 -        	 nay 	 - 	20
-"steel_gas_reservoir"  	 "steel gas reservoir"  	 '■' 	 0xd7d7ff 	 -        	 nay
-"steel_pin"            	 "steel pin"            	 '*' 	 0xa6c2d4 	 -        	 -
+"turbine"              	 "turbine"              	 '◴' 	                        -  	 0xffd700 	 -        	 nay 	 - 	10
+"gearbox"              	 "gearbox"              	 '■' 	                        -  	 0xffffff 	 -        	 nay 	 - 	10
+"power_switch"         	 "power switch"         	 '♥' 	                        -  	 0xffffff 	 -        	 nay 	 - 	10
+"control_panel"        	 "control panel"        	 '⌨' 	                        -  	 0xffffff 	 -        	 nay 	 - 	10
+"small_transformer"    	 "transformer"          	 '■' 	                        -  	 0xffe5d3 	 -        	 nay 	 - 	10
+"large_transformer"    	 "transformer"          	 'ö' 	                        -  	 0xffe5d3 	 -        	 nay 	 - 	10
+"switching_station"    	 "switching station"    	 '⊡' 	                        -  	 0xffaf9a 	 -        	 nay 	 - 	10
+"fuel_burner"          	 "fuel burner"          	 '#' 	                        -  	 0xffa0a0 	 -        	 nay 	 - 	20
+"steel_gas_reservoir"  	 "steel gas reservoir"  	 '■' 	                        -  	 0xd7d7ff 	 -        	 nay
+"steel_pin"            	 "steel pin"            	 '*' 	                        -  	 0xa6c2d4 	 -        	 -
 
 # capacitor array
-"capacitor_discharger" 	 "capacitor discharger" 	 '■' 	 0xb7b7ef 	 -        	 nay
-"discharger_vane"      	 "discharger vane"      	 '|' 	 0xb7b7ef 	 -        	 nay
+"capacitor_discharger" 	 "capacitor discharger" 	 '■' 	                        -  	 0xb7b7ef 	 -        	 nay
+"discharger_vane"      	 "discharger vane"      	 '|' 	                        -  	 0xb7b7ef 	 -        	 nay
 
 # recharging station
-"antenna"              	 "antenna"              	 '▂' 	 0x90a3b7 	 -        	 nay 	 - 	20
-"battery_pack"         	 "battery pack"         	 'Ÿ' 	 0x90a3b7 	 -        	 nay 	 - 	 - 	 .Laboratory
+"antenna"              	 "antenna"              	 '▂' 	                        -  	 0x90a3b7 	 -        	 nay 	 - 	20
+"battery_pack"         	 "battery pack"         	 'Ÿ' 	                        -  	 0x90a3b7 	 -        	 nay 	 - 	 - 	 .Laboratory
 
 # stalker station
-"antenna_controller"   	 "control antenna"      	 '▌' 	 0x90b7a3 	 -        	 nay 	 - 	10
+"antenna_controller"   	 "control antenna"      	 '▌' 	                        -  	 0x90b7a3 	 -        	 nay 	 - 	10
 
 # unused?
-#"antenna_tip"          	 "antenna tip"          	 '´' 	 0x90a3b7 	 -        	 nay 	 - 	 - 	 .Laboratory
+#"antenna_tip"          	 "antenna tip"          	 '´' 	                        -  	 0x90a3b7 	 -        	 nay 	 - 	 - 	 .Laboratory
 
-"compact_turbine"      	 "compact turbine"      	 'Ä' 	 0xffe4e1 	 -        	 nay 	 - 	10 	 .Laboratory
-"centrifuge"           	 "centrifuge"           	 '⊜' 	 0xffe4e1 	 -        	 nay 	 - 	 - 	 .Laboratory
-"xray_appar"           	 "x-ray machine"        	 '‡' 	 0xa8ffa8 	 -        	 nay 	 - 	 - 	 .Laboratory
-"water_purifi_appar"   	 "water purifier"       	 '⊝' 	 0xe0ffff 	 -        	 nay 	 - 	 - 	 .Laboratory
-"frac_distill_appar"   	 "fractional distiller" 	 '∓' 	 0xe6e6fa 	 -        	 nay 	 - 	 - 	 .Laboratory
-"laser_etcher"         	 "laser etcher"         	 '⊎' 	 0xfff0f5 	 -        	 nay 	 - 	 - 	 .Laboratory
-"simp_distill_appar"   	 "distiller"            	 '∔' 	 0xd0e4fe 	 -        	 nay 	 - 	 - 	 .Laboratory
-"b_burner"             	 "bunsen burner"        	 '⊼' 	 0xffffe0 	 -        	 nay 	 - 	20 	 .Laboratory
-"t_burner"             	 "tirrill burner"       	 '⊼' 	 0xffffe0 	 -        	 nay 	 - 	20 	 .Laboratory
-"microscope"           	 "microscope"           	 '†' 	 0xffeaca 	 -        	 nay 	 - 	 - 	 .Laboratory
-"calorimeter"          	 "calorimeter"          	 '⊝' 	 0xf5f5dc 	 -        	 nay 	 - 	20 	 .Laboratory
-"vacuum_chmbr"         	 "vacuum chamber"       	 '⊜' 	 0xffefdf 	 -        	 nay 	 - 	 - 	 .Laboratory
+"compact_turbine"      	 "compact turbine"      	 'Ä' 	       .S_G_P_MiscLabMach  	 0xffe4e1 	 -        	 nay 	 - 	10 	 .Laboratory
+"centrifuge"           	 "centrifuge"           	 '⊜' 	       .S_G_P_MiscLabMach  	 0xffe4e1 	 -        	 nay 	 - 	 - 	 .Laboratory
+"xray_appar"           	 "x-ray machine"        	 '‡' 	       .S_G_P_MiscLabMach  	 0xa8ffa8 	 -        	 nay 	 - 	 - 	 .Laboratory
+"water_purifi_appar"   	 "water purifier"       	 '⊝' 	       .S_G_P_MiscLabMach  	 0xe0ffff 	 -        	 nay 	 - 	 - 	 .Laboratory
+"frac_distill_appar"   	 "fractional distiller" 	 '∓' 	       .S_G_P_MiscLabMach  	 0xe6e6fa 	 -        	 nay 	 - 	 - 	 .Laboratory
+"laser_etcher"         	 "laser etcher"         	 '⊎' 	       .S_G_P_MiscLabMach  	 0xfff0f5 	 -        	 nay 	 - 	 - 	 .Laboratory
+"simp_distill_appar"   	 "distiller"            	 '∔' 	       .S_G_P_MiscLabMach  	 0xd0e4fe 	 -        	 nay 	 - 	 - 	 .Laboratory
+"b_burner"             	 "bunsen burner"        	 '⊼' 	       .S_G_P_MiscLabMach  	 0xffffe0 	 -        	 nay 	 - 	20 	 .Laboratory
+"t_burner"             	 "tirrill burner"       	 '⊼' 	       .S_G_P_MiscLabMach  	 0xffffe0 	 -        	 nay 	 - 	20 	 .Laboratory
+"microscope"           	 "microscope"           	 '†' 	       .S_G_P_MiscLabMach  	 0xffeaca 	 -        	 nay 	 - 	 - 	 .Laboratory
+"calorimeter"          	 "calorimeter"          	 '⊝' 	       .S_G_P_MiscLabMach  	 0xf5f5dc 	 -        	 nay 	 - 	20 	 .Laboratory
+"vacuum_chmbr"         	 "vacuum chamber"       	 '⊜' 	       .S_G_P_MiscLabMach  	 0xffefdf 	 -        	 nay 	 - 	 - 	 .Laboratory
 
-"nuclear_core"         	 "nuclear_core"         	 '≡' 	 0xffefdf 	 -        	 nay 	 - 	50
+"nuclear_core"         	 "nuclear_core"         	 '≡' 	                        -  	 0xffefdf 	 -        	 nay 	 - 	50
 
-"low_wall_n2s2"        	 "low wall"             	 '║' 	 0xefefef 	 -        	 nay 	 - 	 -
-"low_wall_e2w2"        	 "low wall"             	 '═' 	 0xefefef 	 -        	 nay 	 - 	 -
-"low_wall_corner"      	 "low wall"             	 '○' 	 0xefefef 	 -        	 nay 	 - 	 -
+"low_wall_n2s2"        	 "low wall"             	 '║' 	                        -  	 0xefefef 	 -        	 nay 	 - 	 -
+"low_wall_e2w2"        	 "low wall"             	 '═' 	                        -  	 0xefefef 	 -        	 nay 	 - 	 -
+"low_wall_corner"      	 "low wall"             	 '○' 	                        -  	 0xefefef 	 -        	 nay 	 - 	 -
 
-"wall_n1s1_slt"        	 "vangenite wall"       	 '┋' 	 0xe0f8f2 	 -        	 nay
-"wall_n1s1_slt2"       	 "vangenite wall"       	 '¦' 	 0xe0f8f2 	 -        	 nay
-"wall_n1s1e1w1"        	 "vangenite wall"       	 '╋' 	 0xe0f8f2 	 -        	 nay
-"wall_s1w1_thinw"      	 "vangenite wall"       	 '┒' 	 0xe0f8f2 	 -        	 nay
-"wall_n1w1_thinw"      	 "vangenite wall"       	 '┚' 	 0xe0f8f2 	 -        	 nay
-"wall_s1w1_thins"      	 "vangenite wall"       	 '┑' 	 0xe0f8f2 	 -        	 nay
-"wall_s1e1w1"          	 "vangenite wall"       	 '┳' 	 0xe0f8f2 	 -        	 nay
-"wall_n1e1w1"          	 "vangenite wall"       	 '┻' 	 0xe0f8f2 	 -        	 nay
-"wall_e1w1"            	 "vangenite wall"       	 '━' 	 0xe0f8f2 	 -        	 nay
-"wall_s1w1"            	 "vangenite wall"       	 '┓' 	 0xe0f8f2 	 -        	 nay
-"wall_n1s1w1"          	 "vangenite wall"       	 '┫' 	 0xe0f8f2 	 -        	 nay
-"wall_n1s1"            	 "vangenite wall"       	 '┃' 	 0xe0f8f2 	 -        	 nay
-"wall_n1s1e1"          	 "vangenite wall"       	 '┣' 	 0xe0f8f2 	 -        	 nay
-"wall_n1w1"            	 "vangenite wall"       	 '┛' 	 0xe0f8f2 	 -        	 nay
-"wall_n1e1"            	 "vangenite wall"       	 '┗' 	 0xe0f8f2 	 -        	 nay
-"wall_s1e1"            	 "vangenite wall"       	 '┏' 	 0xe0f8f2 	 -        	 nay
-"wall_e1w1_thine"      	 "vangenite wall"       	 '╾' 	 0xe0f8f2 	 -        	 nay
-"wall_e1w1_thinw"      	 "vangenite wall"       	 '╼' 	 0xe0f8f2 	 -        	 nay
-"wall_n1s1_thinn"      	 "vangenite wall"       	 '╽' 	 0xe0f8f2 	 -        	 nay
-"wall_n1s1_thins"      	 "vangenite wall"       	 '╿' 	 0xe0f8f2 	 -        	 nay
+"wall_n1s1_slt"        	 "vangenite wall"       	 '┋' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_n1s1_slt2"       	 "vangenite wall"       	 '¦' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_n1s1e1w1"        	 "vangenite wall"       	 '╋' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_s1w1_thinw"      	 "vangenite wall"       	 '┒' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_n1w1_thinw"      	 "vangenite wall"       	 '┚' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_s1w1_thins"      	 "vangenite wall"       	 '┑' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_s1e1w1"          	 "vangenite wall"       	 '┳' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_n1e1w1"          	 "vangenite wall"       	 '┻' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_e1w1"            	 "vangenite wall"       	 '━' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_s1w1"            	 "vangenite wall"       	 '┓' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_n1s1w1"          	 "vangenite wall"       	 '┫' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_n1s1"            	 "vangenite wall"       	 '┃' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_n1s1e1"          	 "vangenite wall"       	 '┣' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_n1w1"            	 "vangenite wall"       	 '┛' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_n1e1"            	 "vangenite wall"       	 '┗' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_s1e1"            	 "vangenite wall"       	 '┏' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_e1w1_thine"      	 "vangenite wall"       	 '╾' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_e1w1_thinw"      	 "vangenite wall"       	 '╼' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_n1s1_thinn"      	 "vangenite wall"       	 '╽' 	                        -  	 0xe0f8f2 	 -        	 nay
+"wall_n1s1_thins"      	 "vangenite wall"       	 '╿' 	                        -  	 0xe0f8f2 	 -        	 nay
 
-"pipe_s1e2w2"          	 "steel pipe"           	 '╤' 	 0xa6c2d4 	 -        	 nay
-"pipe_n1s1e2w2"        	 "steel pipe"           	 '╪' 	 0xa6c2d4 	 -        	 nay
-"pipe_n1e2w2"          	 "steel pipe"           	 '╧' 	 0xa6c2d4 	 -        	 nay
-"pipe_e2w2"            	 "steel pipe"           	 '═' 	 0xa6c2d4 	 -        	 nay
-"pipe_n2e2"            	 "steel pipe"           	 '╚' 	 0xa6c2d4 	 -        	 nay
-"pipe_s2e1"            	 "steel pipe"           	 '╓' 	 0xa6c2d4 	 -        	 nay
-"pipe_e1w1"            	 "steel pipe"           	 '─' 	 0xa6c2d4 	 -        	 nay
-"pipe_s1w1"            	 "steel pipe"           	 '┐' 	 0xa6c2d4 	 -        	 nay
-"pipe_s1e1"            	 "steel pipe"           	 '┌' 	 0xa6c2d4 	 -        	 nay
-"pipe_n1w1"            	 "steel pipe"           	 '┘' 	 0xa6c2d4 	 -        	 nay
-"pipe_n2s2"            	 "steel pipe"           	 '║' 	 0xa6c2d4 	 -        	 nay
-"pipe_n1s1w1"          	 "steel pipe"           	 '┤' 	 0xa6c2d4 	 -        	 nay
-"pipe_n2w1"            	 "steel pipe"           	 '╜' 	 0xa6c2d4 	 -        	 nay
-"pipe_n1w2"            	 "steel pipe"           	 '╛' 	 0xa6c2d4 	 -        	 nay
-"pipe_n1e2"            	 "steel pipe"           	 '╘' 	 0xa6c2d4 	 -        	 nay
-"pipe_s1w2"            	 "steel pipe"           	 '╕' 	 0xa6c2d4 	 -        	 nay
-"pipe_s1e2"            	 "steel pipe"           	 '╒' 	 0xa6c2d4 	 -        	 nay
-"pipe_n1s1w2"          	 "steel pipe"           	 '╡' 	 0xa6c2d4 	 -        	 nay
-"pipe_n1s1e2"          	 "steel pipe"           	 '╞' 	 0xa6c2d4 	 -        	 nay
-"pipe_n1s1e2w2"        	 "steel pipe"           	 '╪' 	 0xa6c2d4 	 -        	 nay
-"pipe_n1s1"            	 "steel pipe"           	 '│' 	 0xa6c2d4 	 -        	 nay
-"pipe_s1e1w1"          	 "steel pipe"           	 '┬' 	 0xa6c2d4 	 -        	 nay
-"pipe_s2e1w1"          	 "steel pipe"           	 '╥' 	 0xa6c2d4 	 -        	 nay
-"pipe_n2e1w1"          	 "steel pipe"           	 '╨' 	 0xa6c2d4 	 -        	 nay
-"pipe_n1e1"            	 "steel pipe"           	 '└' 	 0xa6c2d4 	 -        	 nay
-"pipe_n1s1e1"          	 "steel pipe"           	 '├' 	 0xa6c2d4 	 -        	 nay
-"pipe_n1e1w1"          	 "steel pipe"           	 '┴' 	 0xa6c2d4 	 -        	 nay
+"pipe_s1e2w2"          	 "steel pipe"           	 '╤' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_n1s1e2w2"        	 "steel pipe"           	 '╪' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_n1e2w2"          	 "steel pipe"           	 '╧' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_e2w2"            	 "steel pipe"           	 '═' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_n2e2"            	 "steel pipe"           	 '╚' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_s2e1"            	 "steel pipe"           	 '╓' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_e1w1"            	 "steel pipe"           	 '─' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_s1w1"            	 "steel pipe"           	 '┐' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_s1e1"            	 "steel pipe"           	 '┌' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_n1w1"            	 "steel pipe"           	 '┘' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_n2s2"            	 "steel pipe"           	 '║' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_n1s1w1"          	 "steel pipe"           	 '┤' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_n2w1"            	 "steel pipe"           	 '╜' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_n1w2"            	 "steel pipe"           	 '╛' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_n1e2"            	 "steel pipe"           	 '╘' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_s1w2"            	 "steel pipe"           	 '╕' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_s1e2"            	 "steel pipe"           	 '╒' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_n1s1w2"          	 "steel pipe"           	 '╡' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_n1s1e2"          	 "steel pipe"           	 '╞' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_n1s1e2w2"        	 "steel pipe"           	 '╪' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_n1s1"            	 "steel pipe"           	 '│' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_s1e1w1"          	 "steel pipe"           	 '┬' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_s2e1w1"          	 "steel pipe"           	 '╥' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_n2e1w1"          	 "steel pipe"           	 '╨' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_n1e1"            	 "steel pipe"           	 '└' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_n1s1e1"          	 "steel pipe"           	 '├' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_n1e1w1"          	 "steel pipe"           	 '┴' 	                        -  	 0xa6c2d4 	 -        	 nay
 
-"wire_n1s1e1"          	 "copper wire"          	 '├' 	 0xffe5d3 	 -        	 nay
-"wire_n1e1w1"          	 "copper wire"          	 '┴' 	 0xffe5d3 	 -        	 nay
-"wire_s2e1"            	 "copper wire"          	 '╓' 	 0xffe5d3 	 -        	 nay
-"wire_s2w1"            	 "copper wire"          	 '╖' 	 0xffe5d3 	 -        	 nay
-"wire_e1w1"            	 "copper wire"          	 '─' 	 0xffe5d3 	 -        	 nay
-"wire_n1e1"            	 "copper wire"          	 '└' 	 0xffe5d3 	 -        	 nay
-"wire_s1w1"            	 "copper wire"          	 '┐' 	 0xffe5d3 	 -        	 nay
-"wire_s1e1"            	 "copper wire"          	 '┌' 	 0xffe5d3 	 -        	 nay
-"wire_n1w1"            	 "copper wire"          	 '┘' 	 0xffe5d3 	 -        	 nay
-"wire_n2s2"            	 "copper wire"          	 '║' 	 0xffe5d3 	 -        	 nay
-"wire_n1s1w1"          	 "copper wire"          	 '┤' 	 0xffe5d3 	 -        	 nay
-"wire_n2w1"            	 "copper wire"          	 '╜' 	 0xffe5d3 	 -        	 nay
-"wire_n1w2"            	 "copper wire"          	 '╛' 	 0xffe5d3 	 -        	 nay
-"wire_n1e2"            	 "copper wire"          	 '╘' 	 0xffe5d3 	 -        	 nay
-"wire_s1w2"            	 "copper wire"          	 '╕' 	 0xffe5d3 	 -        	 nay
-"wire_n1s1w2"          	 "copper wire"          	 '╡' 	 0xffe5d3 	 -        	 nay
-"wire_n1s1e2"          	 "copper wire"          	 '╞' 	 0xffe5d3 	 -        	 nay
-"wire_n1s1e2w2"        	 "copper wire"          	 '╪' 	 0xffe5d3 	 -        	 nay
-"wire_n1e2w2"          	 "copper wire"          	 '╧' 	 0xffe5d3 	 -        	 nay
-"wire_n1s1"            	 "copper wire"          	 '│' 	 0xffe5d3 	 -        	 nay
-"wire_s1e1w1"          	 "copper wire"          	 '┬' 	 0xffe5d3 	 -        	 nay
-"wire_n2e1w1"          	 "copper wire"          	 '╨' 	 0xffe5d3 	 -        	 nay
-"wire_s2e1w1"          	 "copper wire"          	 '╥' 	 0xffe5d3 	 -        	 nay
+"wire_n1s1e1"          	 "copper wire"          	 '├' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n1e1w1"          	 "copper wire"          	 '┴' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_s2e1"            	 "copper wire"          	 '╓' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_s2w1"            	 "copper wire"          	 '╖' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_e1w1"            	 "copper wire"          	 '─' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n1e1"            	 "copper wire"          	 '└' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_s1w1"            	 "copper wire"          	 '┐' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_s1e1"            	 "copper wire"          	 '┌' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n1w1"            	 "copper wire"          	 '┘' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n2s2"            	 "copper wire"          	 '║' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n1s1w1"          	 "copper wire"          	 '┤' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n2w1"            	 "copper wire"          	 '╜' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n1w2"            	 "copper wire"          	 '╛' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n1e2"            	 "copper wire"          	 '╘' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_s1w2"            	 "copper wire"          	 '╕' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n1s1w2"          	 "copper wire"          	 '╡' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n1s1e2"          	 "copper wire"          	 '╞' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n1s1e2w2"        	 "copper wire"          	 '╪' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n1e2w2"          	 "copper wire"          	 '╧' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n1s1"            	 "copper wire"          	 '│' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_s1e1w1"          	 "copper wire"          	 '┬' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_n2e1w1"          	 "copper wire"          	 '╨' 	                        -  	 0xffe5d3 	 -        	 nay
+"wire_s2e1w1"          	 "copper wire"          	 '╥' 	                        -  	 0xffe5d3 	 -        	 nay
 
-"steel_support_ne2"    	 "steel support"        	 '╘' 	 0xa6c2d4 	 -        	 nay
-"steel_support_se2"    	 "steel support"        	 '╒' 	 0xa6c2d4 	 -        	 nay
-"steel_support_nse2"   	 "steel support"        	 '╞' 	 0xa6c2d4 	 -        	 nay
-"steel_support_nsw2"   	 "steel support"        	 '╡' 	 0xa6c2d4 	 -        	 nay
-"steel_support_nse2w2" 	 "steel support"        	 '╪' 	 0xa6c2d4 	 -        	 nay
-"steel_support_e2w2"   	 "steel support"        	 '═' 	 0xa6c2d4 	 -        	 nay
+"steel_support_ne2"    	 "steel support"        	 '╘' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_support_se2"    	 "steel support"        	 '╒' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_support_nse2"   	 "steel support"        	 '╞' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_support_nsw2"   	 "steel support"        	 '╡' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_support_nse2w2" 	 "steel support"        	 '╪' 	                        -  	 0xa6c2d4 	 -        	 nay
+"steel_support_e2w2"   	 "steel support"        	 '═' 	                        -  	 0xa6c2d4 	 -        	 nay
 
-"limestone_wall_upper" 	 "limestone wall"       	 '▀' 	 0xffffef 	 -        	 nay
-"limestone_wall_lower" 	 "limestone wall"       	 '▄' 	 0xffffef 	 -        	 nay
+"limestone_wall_upper" 	 "limestone wall"       	 '▀' 	                        -  	 0xffffef 	 -        	 nay
+"limestone_wall_lower" 	 "limestone wall"       	 '▄' 	                        -  	 0xffffef 	 -        	 nay
 
-"concrete_wall_upper"  	 "concrete wall"        	 '▀' 	 0xa79f85 	 -        	 nay
-"concrete_wall_lower"  	 "concrete wall"        	 '▄' 	 0xa79f85 	 -        	 nay
-"concrete_wall_lower4" 	 "concrete wall"        	 '▂' 	 0xa79f85 	 -        	 nay
-"concrete_wall_right"  	 "concrete wall"        	 '▐' 	 0xa79f85 	 -        	 nay
-"concrete_wall_left"   	 "concrete wall"        	 '▌' 	 0xa79f85 	 -        	 nay
-"concrete_wall_full"   	 "concrete wall"        	 '█' 	 0xa79f85 	 -        	 nay
+"concrete_wall_upper"  	 "concrete wall"        	 '▀' 	                        -  	 0xa79f85 	 -        	 nay
+"concrete_wall_lower"  	 "concrete wall"        	 '▄' 	                        -  	 0xa79f85 	 -        	 nay
+"concrete_wall_lower4" 	 "concrete wall"        	 '▂' 	                        -  	 0xa79f85 	 -        	 nay
+"concrete_wall_right"  	 "concrete wall"        	 '▐' 	                        -  	 0xa79f85 	 -        	 nay
+"concrete_wall_left"   	 "concrete wall"        	 '▌' 	                        -  	 0xa79f85 	 -        	 nay
+"concrete_wall_full"   	 "concrete wall"        	 '█' 	                        -  	 0xa79f85 	 -        	 nay
 
-"left_copper_coil"     	 "half copper coil"     	 '▌' 	 0xe99c39 	 -        	 nay
-"right_copper_coil"    	 "half copper coil"     	 '▐' 	 0xe99c39 	 -        	 nay
-"lower_copper_coil"    	 "half copper coil"     	 '▄' 	 0xe99c39 	 -        	 nay
-"upper_copper_coil"    	 "half copper coil"     	 '▀' 	 0xe99c39 	 -        	 nay
-"full_copper_coil"     	 "large copper coil"    	 '█' 	 0xe99c39 	 -        	 nay
+"left_copper_coil"     	 "half copper coil"     	 '▌' 	                        -  	 0xe99c39 	 -        	 nay
+"right_copper_coil"    	 "half copper coil"     	 '▐' 	                        -  	 0xe99c39 	 -        	 nay
+"lower_copper_coil"    	 "half copper coil"     	 '▄' 	                        -  	 0xe99c39 	 -        	 nay
+"upper_copper_coil"    	 "half copper coil"     	 '▀' 	                        -  	 0xe99c39 	 -        	 nay
+"full_copper_coil"     	 "large copper coil"    	 '█' 	                        -  	 0xe99c39 	 -        	 nay
 
-"large_magnet"         	 "large magnet"         	 '█' 	 0xffffff 	 -        	 nay
+"large_magnet"         	 "large magnet"         	 '█' 	                        -  	 0xffffff 	 -        	 nay
 
-"item_location"        	 "mat"                  	 '░' 	 0x989898 	 -        	 -   	 -
-"workstation"          	 "workstation"          	 '░' 	 0xffffff 	 -        	 -
-"medium_sieve"         	 "medium_sieve"         	 '▒' 	 0xffe7e7 	 -        	 nay 	 -
-"gas_vent"             	 "gas vent"             	 '+' 	 0x888888 	 -        	 -   	 -
-"iron_bars"            	 "iron bars"            	 '#' 	 0x000000 	 0x444444 	 nay
-"titanium_bars"        	 "titanium bars"        	 '*' 	 0xeaecef 	 -        	 nay
+"item_location"        	 "mat"                  	 '░' 	                        -  	 0x989898 	 -        	 -   	 -
+"workstation"          	 "workstation"          	 '░' 	                        -  	 0xffffff 	 -        	 -
+"medium_sieve"         	 "medium_sieve"         	 '▒' 	                        -  	 0xffe7e7 	 -        	 nay 	 -
+"gas_vent"             	 "gas vent"             	 '+' 	                        -  	 0x888888 	 -        	 -   	 -
+"iron_bars"            	 "iron bars"            	 '#' 	                        -  	 0x000000 	 0x444444 	 nay
+"titanium_bars"        	 "titanium bars"        	 '*' 	                        -  	 0xeaecef 	 -        	 nay

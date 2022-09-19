@@ -13,6 +13,10 @@ pub const Sprite = enum(u21) {
 
     S_G_T_Metal = 0x27A0,
 
+    S_G_P_MiscLabMach = 0x27B0,
+    S_O_P_Table = 0x27B1,
+    S_O_P_Chair = 0x27B2,
+
     S_O_M_PriDoorShut = 0x27C0,
     S_O_M_PriDoorOpen = 0x27C1,
     S_O_M_LabDoorShut = 0x27C2,

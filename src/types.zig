@@ -3795,6 +3795,7 @@ pub const Prop = struct {
     id: []const u8,
     name: []const u8,
     tile: u21,
+    sprite: ?font.Sprite,
     fg: ?u32,
     bg: ?u32,
     walkable: bool,
@@ -4302,7 +4303,7 @@ pub const Tile = struct {
                     if (p.bg) |prop_bg| cell.bg = prop_bg;
                     if (p.fg) |prop_fg| cell.fg = prop_fg;
                     cell.ch = p.tile;
-                    cell.sch = null;
+                    cell.sch = p.sprite;
                 },
                 .Poster => |_| {
                     //cell.fg = self.material.color_bg orelse self.material.color_fg;
