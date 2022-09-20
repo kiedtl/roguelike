@@ -115,10 +115,10 @@
 "turbine"              	 "turbine"              	 '◴' 	                        -  	 0xffd700 	 -        	 nay 	 - 	10
 "gearbox"              	 "gearbox"              	 '■' 	                        -  	 0xffffff 	 -        	 nay 	 - 	10
 "power_switch"         	 "power switch"         	 '♥' 	                        -  	 0xffffff 	 -        	 nay 	 - 	10
-"control_panel"        	 "control panel"        	 '⌨' 	                        -  	 0xffffff 	 -        	 nay 	 - 	10
+"control_panel"        	 "control panel"        	 '⌨' 	      .S_O_P_ControlPanel  	 0xffffff 	 -        	 nay 	 - 	10
 "small_transformer"    	 "transformer"          	 '■' 	                        -  	 0xffe5d3 	 -        	 nay 	 - 	10
 "large_transformer"    	 "transformer"          	 'ö' 	                        -  	 0xffe5d3 	 -        	 nay 	 - 	10
-"switching_station"    	 "switching station"    	 '⊡' 	                        -  	 0xffaf9a 	 -        	 nay 	 - 	10
+"switching_station"    	 "switching station"    	 '⊡' 	  .S_O_P_SwitchingStation  	 0xffaf9a 	 -        	 nay 	 - 	10
 "fuel_burner"          	 "fuel burner"          	 '#' 	                        -  	 0xffa0a0 	 -        	 nay 	 - 	20
 "steel_gas_reservoir"  	 "steel gas reservoir"  	 '■' 	                        -  	 0xd7d7ff 	 -        	 nay
 "steel_pin"            	 "steel pin"            	 '*' 	                        -  	 0xa6c2d4 	 -        	 -
@@ -258,5 +258,5 @@
 "workstation"          	 "workstation"          	 '░' 	                        -  	 0xffffff 	 -        	 -
 "medium_sieve"         	 "medium_sieve"         	 '▒' 	                        -  	 0xffe7e7 	 -        	 nay 	 -
 "gas_vent"             	 "gas vent"             	 '+' 	                        -  	 0x888888 	 -        	 -   	 -
-"iron_bars"            	 "iron bars"            	 '#' 	                        -  	 0x000000 	 0x444444 	 nay
+"iron_bars"            	 "iron bars"            	 '#' 	                        -  	 0xeeeeee 	 -        	 nay
 "titanium_bars"        	 "titanium bars"        	 '*' 	                        -  	 0xeaecef 	 -        	 nay

@@ -18,6 +18,9 @@ pub const Sprite = enum(u21) {
     S_G_P_MiscLabMach = 0x27B0,
     S_O_P_Table = 0x27B1,
     S_O_P_Chair = 0x27B2,
+    S_O_P_ControlPanel = 0x27B3,
+    S_O_P_SwitchingStation = 0x27B4,
+    S_G_M_Machine = 0x27BF,
 
     S_G_M_DoorShut = 0x27C0,
     S_G_M_DoorOpen = 0x27C1,
@@ -25,7 +28,7 @@ pub const Sprite = enum(u21) {
     S_O_M_LabDoorOpen = 0x27C3,
     S_O_M_QrtDoorShut = 0x27C4,
     S_O_M_QrtDoorOpen = 0x27C5,
-
     S_O_M_PriLight = 0x27C6,
     S_O_M_LabLight = 0x27C7,
+    S_G_Poster = 0x27CF,
 };

@@ -349,6 +349,8 @@ pub const ElevatorMotor = Machine{
 
     .powered_tile = '⊛',
     .unpowered_tile = '⊚',
+    .powered_sprite = .S_G_M_Machine,
+    .unpowered_sprite = .S_G_M_Machine,
 
     .power_drain = 0,
     .power = 100,
@@ -365,6 +367,8 @@ pub const Extractor = Machine{
 
     .powered_tile = '⊟',
     .unpowered_tile = '⊞',
+    .powered_sprite = .S_G_M_Machine,
+    .unpowered_sprite = .S_G_M_Machine,
 
     .power_drain = 0,
     .power = 100,
@@ -381,6 +385,8 @@ pub const BlastFurnace = Machine{
 
     .powered_tile = '≡',
     .unpowered_tile = '≡',
+    .powered_sprite = .S_G_M_Machine,
+    .unpowered_sprite = .S_G_M_Machine,
 
     .power_drain = 0,
     .power = 0,
@@ -401,6 +407,8 @@ pub const TurbinePowerSupply = Machine{
 
     .powered_tile = '≡',
     .unpowered_tile = '≡',
+    .powered_sprite = .S_G_M_Machine,
+    .unpowered_sprite = .S_G_M_Machine,
 
     .power_drain = 0,
     .power = 100, // Start out fully powered

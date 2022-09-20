@@ -4311,7 +4311,10 @@ pub const Tile = struct {
                     cell.bg = colors.GOLD;
                     cell.fg = 0;
                     cell.ch = '≡';
-                    cell.sch = null;
+
+                    cell.sch = .S_G_Poster;
+                    cell.sfg = colors.GOLD;
+                    cell.sbg = colors.BG;
                 },
                 .Stair => |s| {
                     if (s == null) {
