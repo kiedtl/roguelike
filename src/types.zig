@@ -4316,7 +4316,7 @@ pub const Tile = struct {
                 .Stair => |s| {
                     if (s == null) {
                         cell.ch = '>';
-                        cell.sch = null;
+                        cell.sch = .S_G_StairsDown;
                         cell.fg = 0xeeeeee;
                         cell.bg = 0x0000ff;
                     } else {
