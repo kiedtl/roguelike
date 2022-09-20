@@ -3733,11 +3733,11 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
     .light = &surfaces.Lamp,
     .bars = "titanium_bars",
     .door = &surfaces.LabDoor,
-    .props = &surfaces.laboratory_props.items,
     //.containers = &[_]Container{ surfaces.Chest, surfaces.LabCabinet },
     .containers = &[_]Container{surfaces.LabCabinet},
     .utility_items = &surfaces.laboratory_item_props.items,
-    .single_props = &[_][]const u8{"table"},
+    .props = &surfaces.laboratory_props.items,
+    .single_props = &[_][]const u8{ "table", "centrifuge", "compact_turbine", "water_purifier", "distiller" },
 
     .allow_statues = false,
 
