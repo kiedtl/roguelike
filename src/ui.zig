@@ -1568,7 +1568,7 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
                 return null;
             },
             .Key => |k| switch (k) {
-                .CtrlC, .CtrlG => return null,
+                .Esc, .CtrlC, .CtrlG => return null,
                 .Enter => {
                     if (opts.require_seen and !state.player.cansee(coord) and
                         !state.memory.contains(coord))

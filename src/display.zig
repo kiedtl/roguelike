@@ -135,6 +135,7 @@ pub const Key = enum(u16) {
 
     // TODO: some aren't handled, e.g. CtrlTilde
     pub fn fromSDL(kcode: i32, mod: i32) ?Key {
+        _ = mod;
         return switch (kcode) {
             sdl.SDLK_F1 => .F1,
             sdl.SDLK_F2 => .F2,
@@ -169,37 +170,39 @@ pub const Key = enum(u16) {
             sdl.SDLK_BACKSPACE => .Backspace,
             sdl.SDLK_ESCAPE => .Esc,
 
-            else => if (mod & sdl.KMOD_CTRL == sdl.KMOD_CTRL) b: {
-                break :b @as(?Key, switch (kcode) {
-                    sdl.SDLK_a => .CtrlA,
-                    sdl.SDLK_b => .CtrlB,
-                    sdl.SDLK_c => .CtrlC,
-                    sdl.SDLK_d => .CtrlD,
-                    sdl.SDLK_e => .CtrlE,
-                    sdl.SDLK_f => .CtrlF,
-                    sdl.SDLK_g => .CtrlG,
-                    // sdl.SDLK_h => .CtrlH,
-                    // sdl.SDLK_i => .CtrlI,
-                    sdl.SDLK_j => .CtrlJ,
-                    sdl.SDLK_k => .CtrlK,
-                    sdl.SDLK_l => .CtrlL,
-                    // sdl.SDLK_m => .CtrlM,
-                    sdl.SDLK_n => .CtrlN,
-                    sdl.SDLK_o => .CtrlO,
-                    sdl.SDLK_p => .CtrlP,
-                    sdl.SDLK_q => .CtrlQ,
-                    sdl.SDLK_r => .CtrlR,
-                    sdl.SDLK_s => .CtrlS,
-                    sdl.SDLK_t => .CtrlT,
-                    sdl.SDLK_u => .CtrlU,
-                    sdl.SDLK_v => .CtrlV,
-                    sdl.SDLK_w => .CtrlW,
-                    sdl.SDLK_x => .CtrlX,
-                    sdl.SDLK_y => .CtrlY,
-                    sdl.SDLK_z => .CtrlZ,
-                    else => null,
-                });
-            } else null,
+            else => null,
+            // TODO: fix ctrl keys
+            // else => if (mod & sdl.KMOD_CTRL != 0) b: {
+            //     break :b @as(?Key, switch (kcode) {
+            //         sdl.SDLK_a => .CtrlA,
+            //         sdl.SDLK_b => .CtrlB,
+            //         sdl.SDLK_c => .CtrlC,
+            //         sdl.SDLK_d => .CtrlD,
+            //         sdl.SDLK_e => .CtrlE,
+            //         sdl.SDLK_f => .CtrlF,
+            //         sdl.SDLK_g => .CtrlG,
+            //         // sdl.SDLK_h => .CtrlH,
+            //         // sdl.SDLK_i => .CtrlI,
+            //         sdl.SDLK_j => .CtrlJ,
+            //         sdl.SDLK_k => .CtrlK,
+            //         sdl.SDLK_l => .CtrlL,
+            //         // sdl.SDLK_m => .CtrlM,
+            //         sdl.SDLK_n => .CtrlN,
+            //         sdl.SDLK_o => .CtrlO,
+            //         sdl.SDLK_p => .CtrlP,
+            //         sdl.SDLK_q => .CtrlQ,
+            //         sdl.SDLK_r => .CtrlR,
+            //         sdl.SDLK_s => .CtrlS,
+            //         sdl.SDLK_t => .CtrlT,
+            //         sdl.SDLK_u => .CtrlU,
+            //         sdl.SDLK_v => .CtrlV,
+            //         sdl.SDLK_w => .CtrlW,
+            //         sdl.SDLK_x => .CtrlX,
+            //         sdl.SDLK_y => .CtrlY,
+            //         sdl.SDLK_z => .CtrlZ,
+            //         else => null,
+            //     });
+            // } else null,
         };
     }
 };
