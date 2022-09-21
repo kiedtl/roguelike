@@ -387,7 +387,10 @@ fn freeDescriptions(alloc: mem.Allocator) void {
     state.descriptions.clearAndFree();
 }
 
-fn readNoActionInput(timeout: ?usize) void {
+fn readNoActionInput(timeout: ?usize) !void {
+    ui.draw();
+    if (state.state == .Quit) return error.Quit;
+
     switch (display.waitForEvent(timeout) catch |e| switch (e) {
         error.NoInput => {
             assert(timeout != null);
@@ -395,18 +398,30 @@ fn readNoActionInput(timeout: ?usize) void {
         },
         else => err.fatal("{s}", .{@errorName(e)}),
     }) {
-        .Quit => state.state = .Quit,
+        .Quit => {
+            state.state = .Quit;
+            return error.Quit;
+        },
         .Resize => ui.draw(),
         .Key => |k| switch (k) {
-            .CtrlC, .Esc => state.state = .Quit,
+            .CtrlC => {
+                state.state = .Quit;
+                return error.Quit;
+            },
             else => {},
         },
         else => {},
     }
+
+    if (state.state == .Quit) return error.Quit;
+    ui.draw();
 }
 
-fn readInput() bool {
-    return switch (display.waitForEvent(null) catch err.wat()) {
+fn readInput() !bool {
+    ui.draw();
+    if (state.state == .Quit) return error.Quit;
+
+    const action_taken = switch (display.waitForEvent(null) catch err.wat()) {
         .Quit => {
             state.state = .Quit;
             return false;
@@ -557,9 +572,13 @@ fn readInput() bool {
         },
         //else => false,
     };
+
+    ui.draw();
+    if (state.state == .Quit) return error.Quit;
+    return action_taken;
 }
 
-fn tickGame() void {
+fn tickGame() !void {
     if (state.player.is_dead) {
         state.state = .Lose;
         return;
@@ -596,10 +615,7 @@ fn tickGame() void {
 
         if (mob.energy < 0) {
             if (mob == state.player) {
-                ui.draw();
-                readNoActionInput(130);
-                ui.draw();
-                if (state.state == .Quit) break;
+                try readNoActionInput(130);
             }
 
             continue;
@@ -631,10 +647,7 @@ fn tickGame() void {
 
             if (mob.isUnderStatus(.Paralysis)) |_| {
                 if (mob.coord.eq(state.player.coord)) {
-                    ui.draw();
-                    readNoActionInput(130);
-                    ui.draw();
-                    if (state.state == .Quit) break;
+                    try readNoActionInput(130);
                 }
 
                 mob.rest();
@@ -642,7 +655,8 @@ fn tickGame() void {
             } else {
                 if (mob.coord.eq(state.player.coord)) {
                     ui.draw();
-                    while (!readInput()) ui.draw();
+                    if (state.state == .Quit) break;
+                    while (!try readInput()) ui.draw();
                     if (state.state == .Quit) break;
                 } else {
                     ai.main(mob, state.GPA.allocator());
@@ -669,10 +683,7 @@ fn tickGame() void {
             }
 
             if (actions_taken > 1 and state.player.cansee(mob.coord)) {
-                ui.draw();
-                readNoActionInput(130);
-                ui.draw();
-                if (state.state == .Quit) break;
+                try readNoActionInput(130);
             }
         }
 
@@ -865,7 +876,7 @@ pub fn actualMain() anyerror!void {
         viewerMain();
     } else {
         while (state.state != .Quit) switch (state.state) {
-            .Game => tickGame(),
+            .Game => tickGame() catch {},
             .Win => {
                 _ = ui.drawContinuePrompt("You escaped!", .{});
                 break;
