@@ -1358,10 +1358,6 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
 
 // TODO: with the addition of the .SocialFighter flag, this is
 // redundant. Should be merged into mageFight().
-//
-// - Are there allies within view?
-//    - Yes: are they attacking the hostile?
-//        - Yes: paralyze the hostile
 pub fn statueFight(mob: *Mob, _: mem.Allocator) void {
     assert(mob.spells.len > 0);
 
@@ -1381,8 +1377,7 @@ pub fn statueFight(mob: *Mob, _: mem.Allocator) void {
     //      - Is either investigating or attacking
     const found_ally = for (mob.allies.items) |ally| {
         if (ally != mob and !ally.immobile and
-            target.cansee(ally.coord) and
-            (ally.ai.phase == .Hunt or ally.ai.phase == .Investigate))
+            target.cansee(ally.coord))
         {
             break true;
         }
