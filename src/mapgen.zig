@@ -1009,8 +1009,8 @@ pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
                 child.is_vault != null or
                 parent.connections.isFull() or
                 child.connections.isFull() or
-                parent.connections.linearSearch(child.rect.start, Coord.eqNotInline) or
-                child.connections.linearSearch(parent.rect.start, Coord.eqNotInline))
+                parent.hasCloseConnectionTo(child.rect) or
+                child.hasCloseConnectionTo(parent.rect))
             {
                 continue;
             }
@@ -1367,7 +1367,7 @@ fn _place_rooms(
     // Use parent's index, as we appended the corridor earlier and that may
     // have invalidated parent's pointer
     rooms.items[parent_i].connections.append(child.rect.start) catch err.wat();
-    child.connections.append(parent.rect.start) catch err.wat();
+    child.connections.append(rooms.items[parent_i].rect.start) catch err.wat();
 
     rooms.append(child) catch err.wat();
 }
@@ -2942,10 +2942,27 @@ pub const Room = struct {
     connections: ConnectionsBuf = ConnectionsBuf.init(null),
 
     pub const ConnectionsBuf = StackBuffer(Coord, CONNECTIONS_MAX);
-
     pub const RoomType = enum { Corridor, Room, Sideroom };
-
     pub const ArrayList = std.ArrayList(Room);
+
+    pub fn getByStart(start: Coord) ?*Room {
+        return for (state.rooms[start.z].items) |*room| {
+            if (room.rect.start.eq(start)) break room;
+        } else null;
+    }
+
+    pub fn hasCloseConnectionTo(self: *const Room, room: Rect) bool {
+        for (self.connections.constSlice()) |connection| {
+            if (connection.eq(room.start))
+                return true;
+            if (getByStart(connection)) |connection_r| {
+                for (connection_r.connections.constSlice()) |child_connection|
+                    if (child_connection.eq(room.start))
+                        return true;
+            }
+        }
+        return false;
+    }
 };
 
 pub const Prefab = struct {
