@@ -114,7 +114,9 @@ fn initGame() bool {
         error.TTYOpenFailed => err.fatal("Could not open TTY", .{}),
         error.UnsupportedTerminal => err.fatal("Unsupported terminal", .{}),
         error.PipeTrapFailed => err.fatal("Internal termbox error", .{}),
-        error.SDL2InitError => err.fatal("SDL2 Error: {s}", .{display.sdl.SDL_GetError()}),
+        error.SDL2InitError => if (build_options.use_sdl) {
+            err.fatal("SDL2 Error: {s}", .{display.driver_m.SDL_GetError()});
+        } else unreachable,
         else => err.fatal("Error when initializing display", .{}),
     }
 
@@ -781,62 +783,66 @@ fn viewerDisplay(tty_height: usize, level: usize, sy: usize) void {
 }
 
 fn viewerMain() void {
-    state.player.kill();
+    if (build_options.use_sdl) {
+        assert(false);
+    } else {
+        state.player.kill();
 
-    var level: usize = state.PLAYER_STARTING_LEVEL;
-    var y: usize = 0;
-    var running: bool = false;
+        var level: usize = state.PLAYER_STARTING_LEVEL;
+        var y: usize = 0;
+        var running: bool = false;
 
-    const tty_height = @intCast(usize, termbox.tb_height());
+        const tty_height = @intCast(usize, termbox.tb_height());
 
-    while (true) {
-        viewerDisplay(tty_height, level, y);
+        while (true) {
+            viewerDisplay(tty_height, level, y);
 
-        var ev: termbox.tb_event = undefined;
-        var t: isize = 0;
+            var ev: termbox.tb_event = undefined;
+            var t: isize = 0;
 
-        if (running) {
-            t = termbox.tb_peek_event(&ev, 150);
-            if (t == 0) {
-                viewerTickGame(level);
-                continue;
+            if (running) {
+                t = termbox.tb_peek_event(&ev, 150);
+                if (t == 0) {
+                    viewerTickGame(level);
+                    continue;
+                }
+            } else {
+                t = termbox.tb_poll_event(&ev);
             }
-        } else {
-            t = termbox.tb_poll_event(&ev);
-        }
 
-        if (t == -1) @panic("Fatal termbox error");
+            if (t == -1) @panic("Fatal termbox error");
 
-        if (t == termbox.TB_EVENT_KEY) {
-            if (ev.key != 0) {
-                if (ev.key == termbox.TB_KEY_CTRL_C) {
-                    break;
-                }
-            } else if (ev.ch != 0) {
-                switch (ev.ch) {
-                    '.' => viewerTickGame(level),
-                    'a' => running = !running,
-                    'j' => if (y < HEIGHT) {
-                        y = math.min(y + (tty_height / 2), HEIGHT - 1);
-                    },
-                    'k' => y -|= tty_height / 2,
-                    'e' => explosions.kaboom(
-                        Coord.new2(
-                            level,
-                            rng.range(usize, 20, WIDTH - 20),
-                            rng.range(usize, 20, HEIGHT - 20),
+            if (t == termbox.TB_EVENT_KEY) {
+                if (ev.key != 0) {
+                    if (ev.key == termbox.TB_KEY_CTRL_C) {
+                        break;
+                    }
+                } else if (ev.ch != 0) {
+                    switch (ev.ch) {
+                        '.' => viewerTickGame(level),
+                        'a' => running = !running,
+                        'j' => if (y < HEIGHT) {
+                            y = math.min(y + (tty_height / 2), HEIGHT - 1);
+                        },
+                        'k' => y -|= tty_height / 2,
+                        'e' => explosions.kaboom(
+                            Coord.new2(
+                                level,
+                                rng.range(usize, 20, WIDTH - 20),
+                                rng.range(usize, 20, HEIGHT - 20),
+                            ),
+                            .{ .strength = rng.range(usize, 400, 1500) },
                         ),
-                        .{ .strength = rng.range(usize, 400, 1500) },
-                    ),
-                    '<' => if (level > 0) {
-                        level -= 1;
-                    },
-                    '>' => if (level < (LEVELS - 1)) {
-                        level += 1;
-                    },
-                    else => {},
-                }
-            } else err.wat();
+                        '<' => if (level > 0) {
+                            level -= 1;
+                        },
+                        '>' => if (level < (LEVELS - 1)) {
+                            level += 1;
+                        },
+                        else => {},
+                    }
+                } else err.wat();
+            }
         }
     }
 }

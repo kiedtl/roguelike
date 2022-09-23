@@ -22,6 +22,9 @@ pub fn build(b: *Builder) void {
     options.addOption([]const u8, "release", release);
     options.addOption([]const u8, "dist", dist);
 
+    const opt_use_sdl = b.option(bool, "use-sdl", "Build a graphical tiles version of Oathbreaker") orelse false;
+    options.addOption(bool, "use_sdl", opt_use_sdl);
+
     // Standard target options allows the person running `zig build` to choose
     // what target to build for. Here we do not override the defaults, which
     // means any target is allowed, and the default is native. Other options
@@ -32,36 +35,41 @@ pub fn build(b: *Builder) void {
     // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall.
     const mode = b.standardReleaseOptions();
 
-    const termbox_sources = [_][]const u8{
-        "tb/src/input.c",
-        "tb/src/memstream.c",
-        "tb/src/ringbuffer.c",
-        "tb/src/termbox.c",
-        "tb/src/term.c",
-        "tb/src/utf8.c",
-    };
-
-    const termbox_cflags = [_][]const u8{
-        "-std=c99",
-        "-Wpedantic",
-        "-Wall",
-        //"-Werror", // Disabled to keep clang from tantruming about unused
-        //              function results in memstream.c
-        "-g",
-        "-I./tb/src",
-        "-D_POSIX_C_SOURCE=200809L",
-        "-D_XOPEN_SOURCE",
-        "-D_DARWIN_C_SOURCE", // Needed for macOS and SIGWINCH def
-    };
-
     const exe = b.addExecutable("rl", "src/main.zig");
-    for (termbox_sources) |termbox_source|
-        exe.addCSourceFile(termbox_source, &termbox_cflags);
     exe.linkLibC();
     exe.linkSystemLibrary("z");
-    exe.linkSystemLibrary("sdl2");
     exe.linkSystemLibrary("png");
     exe.addPackagePath("rexpaint", "rx/lib.zig");
+
+    if (!opt_use_sdl) {
+        const termbox_sources = [_][]const u8{
+            "tb/src/input.c",
+            "tb/src/memstream.c",
+            "tb/src/ringbuffer.c",
+            "tb/src/termbox.c",
+            "tb/src/term.c",
+            "tb/src/utf8.c",
+        };
+
+        const termbox_cflags = [_][]const u8{
+            "-std=c99",
+            "-Wpedantic",
+            "-Wall",
+            //"-Werror", // Disabled to keep clang from tantruming about unused
+            //              function results in memstream.c
+            "-g",
+            "-I./tb/src",
+            "-D_POSIX_C_SOURCE=200809L",
+            "-D_XOPEN_SOURCE",
+            "-D_DARWIN_C_SOURCE", // Needed for macOS and SIGWINCH def
+        };
+
+        for (termbox_sources) |termbox_source|
+            exe.addCSourceFile(termbox_source, &termbox_cflags);
+    } else {
+        exe.linkSystemLibrary("sdl2");
+    }
+
     exe.setTarget(target);
     exe.setBuildMode(mode);
     exe.addOptions("build_options", options);
