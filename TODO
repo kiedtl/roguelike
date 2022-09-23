@@ -1,4 +1,3 @@
-New Levels
 ----------
 "Solitary" ("SOL") or "Confinement" ("CON"):
 - Grid layout ("Manhattan-like"?):
@@ -584,6 +583,8 @@ Rings have "tiers" instead of an enchantment level (gold, silver, iron).
 - ring of devastation: hurl beus lance, halving foe's health and causing 3-6
   knockback.
 
+- ring of fear: confer fear on a single enemy.
+
 x ring of magnetization: cause knockback of all nearby foes onto a single foe.
   Like Gell's Gravitas in DCSS. Knockbacked foes could possibly hit player, so
   player must plan accordingly.
@@ -1026,10 +1027,9 @@ x Level progression overhaul
   x Load level info, stairs from data/levelinfo.tsv
   x Make CAV optional, extra Prison level to compensate (for now)
 x Auxiliary items
-- Analyse mob and loot distribution and tweak weights
 - UI
   x 'M'essages screen
-  - Loading screen and art
+  x Loading screen and art
   - Status/mob/item description lookup screen
   x Features/items screen, remove announcement of items
   - Keybinding help "?" screen
@@ -1041,6 +1041,7 @@ x Auxiliary items
     - Click on message pane for 'M' screen
     - Click on tabs in examine mode
     - Click on items/buttons in inventory mode
+x WASM support, or at least SDL2 support for Windows
 - Tutorial
 - Write rest of docs/manual
 - Playtest game throughout, especially CAV and make adjustments
@@ -1048,6 +1049,7 @@ x Auxiliary items
 - Add "character" to game
   - Names for all goblin/human monsters
   - Named statues
+- Analyse mob and loot distribution and tweak weights
 - Basalt monsters (-fiends, -mages, -lings)?
 - Add bookshelves and book types
   - Maps
@@ -1064,6 +1066,17 @@ x Auxiliary items
 x Warn when stepping into enemy's FOV
 x Auto-wait: don't wait while in combat
 - More messages
+- Rework monster spells to be more positional in nature
+  - Pain (range-limited AoE effect?)
+  - Various resurrection spells (limited range?)
+  - Paralysing zap (directional bolt only)
+  - Fry (Cardinal directional bolt only)
+- Animations for spells (w/ particle engine)
+  - Paralysing zap
+  - Fire bolts
+  - Flammabilification
+  - Fry
+  - Pain
 *** v2.1.0 release ***
 - Load colors from data file
 - Minor poster rework
