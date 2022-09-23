@@ -841,7 +841,7 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
 
 fn _clearLineWith(from: usize, to: usize, y: usize, ch: u32, fg: u32, bg: u32) void {
     var x = from;
-    while (x < to) : (x += 1)
+    while (x <= to) : (x += 1)
         display.setCell(x, y, .{ .ch = ch, .fg = fg, .bg = bg });
 }
 
@@ -2922,7 +2922,7 @@ pub const Animation = union(enum) {
                         display.setCell(dx, dy, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
                     };
 
-                    if (ctr > 0) {
+                    if (ctr > 1) {
                         display.present();
                         std.time.sleep(anim.delay * 1_000_000);
                     }
