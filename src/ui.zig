@@ -1827,7 +1827,7 @@ pub fn drawMessagesScreen() void {
 
     while (true) {
         if (starty > mainw.starty) {
-            starty -|= 3;
+            starty = math.max(mainw.starty, starty -| 3);
         }
 
         // Clear window.
