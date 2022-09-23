@@ -91,7 +91,7 @@
 ""                     	 "Erlenmeyer flask"     	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
 
 # Quarters stuff
-"fuel_barrel"          	 "barrel of fuel"       	 'ʊ' 	                        -  	 0xdaa520 	 -        	 nay 	 - 	99 	 .Vault
+"fuel_barrel"          	 "barrel of fuel"       	 'Θ' 	                        -  	 0xdaa520 	 -        	 nay 	 - 	99 	 .Vault
 "small_fountain"       	 "small fountain"       	 '¶' 	                        -  	 0xa4cfff 	 -        	 -   	 - 	 -
 
 # Statues
