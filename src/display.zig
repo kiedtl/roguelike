@@ -20,6 +20,7 @@ var is_tb_inited = false;
 var window: ?*driver_m.SDL_Window = null;
 var renderer: ?*driver_m.SDL_Renderer = null;
 var grid: []Cell = undefined;
+var dirty: []bool = undefined;
 var w_height: usize = undefined;
 var w_width: usize = undefined;
 
@@ -259,6 +260,9 @@ pub fn init(preferred_width: usize, preferred_height: usize) InitErr!void {
             grid = try state.GPA.allocator().alloc(Cell, preferred_width * preferred_height);
             mem.set(Cell, grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
 
+            dirty = try state.GPA.allocator().alloc(bool, preferred_width * preferred_height);
+            mem.set(bool, dirty, true);
+
             driver_m.SDL_StartTextInput();
 
             var w: c_int = undefined;
@@ -288,6 +292,7 @@ pub fn deinit() !void {
             driver_m.SDL_Quit();
 
             state.GPA.allocator().free(grid);
+            state.GPA.allocator().free(dirty);
         },
     }
 }
@@ -312,12 +317,16 @@ pub fn present() void {
     switch (driver) {
         .Termbox => driver_m.tb_present(),
         .SDL2 => {
-            _ = driver_m.SDL_RenderClear(renderer);
+            //_ = driver_m.SDL_RenderClear(renderer);
 
             var dy: usize = 0;
             while (dy < height()) : (dy += 1) {
                 var dx: usize = 0;
                 while (dx < width()) : (dx += 1) {
+                    if (!dirty[dy * width() + dx]) {
+                        continue;
+                    }
+
                     const cell = grid[dy * width() + dx];
                     const ch = if (cell.sch) |sch| @enumToInt(sch) else cell.ch;
                     const bg = if (cell.sch != null and cell.sbg != 0) cell.sbg else cell.bg;
@@ -356,6 +365,8 @@ pub fn present() void {
             _ = driver_m.SDL_RenderPresent(renderer);
         },
     }
+
+    mem.set(bool, dirty, false);
 }
 
 pub fn setCell(x: usize, y: usize, cell: Cell) void {
@@ -367,7 +378,10 @@ pub fn setCell(x: usize, y: usize, cell: Cell) void {
         .Termbox => {
             driver_m.tb_change_cell(@intCast(isize, x), @intCast(isize, y), cell.ch, cell.fg, cell.bg);
         },
-        .SDL2 => grid[y * width() + x] = cell,
+        .SDL2 => {
+            grid[y * width() + x] = cell;
+            dirty[y * width() + x] = true;
+        },
     }
 }
 
