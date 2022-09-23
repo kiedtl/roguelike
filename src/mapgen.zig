@@ -3678,7 +3678,7 @@ pub const PRI_BASE_LEVELCONFIG = LevelConfig{
     .prefabs = &[_][]const u8{"ANY_s_recharging"},
     .distances = [2][10]usize{
         .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-        .{ 5, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
+        .{ 4, 9, 5, 4, 3, 1, 1, 1, 1, 1 },
     },
     .prefab_chance = 3,
     .mapgen_iters = 4096,
@@ -3698,10 +3698,10 @@ pub const QRT_BASE_LEVELCONFIG = LevelConfig{
     .prefab_chance = 1000, // No prefabs for QRT
     .mapgen_func = placeBSPRooms,
     .mapgen_iters = 4096,
-    .min_room_width = 6,
+    .min_room_width = 5,
     .min_room_height = 5,
     .max_room_width = 14,
-    .max_room_height = 7,
+    .max_room_height = 10,
 
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
         levelFeaturePrisoners,
@@ -3727,15 +3727,15 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
     .prefabs = &[_][]const u8{"ANY_s_recharging"},
     .distances = [2][10]usize{
         .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-        .{ 9, 3, 2, 1, 1, 0, 0, 0, 0, 0 },
+        .{ 9, 4, 4, 1, 1, 1, 1, 0, 0, 0 },
     },
     .shrink_corridors_to_fit = true,
     .prefab_chance = 100, // No prefabs for LAB
     .mapgen_iters = 4096,
-    .min_room_width = 11,
-    .min_room_height = 6,
-    .max_room_width = 22,
-    .max_room_height = 12,
+    .min_room_width = 5,
+    .min_room_height = 5,
+    .max_room_width = 18,
+    .max_room_height = 15,
 
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
         levelFeatureVials,
