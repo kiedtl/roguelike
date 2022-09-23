@@ -770,13 +770,6 @@ pub const StalkerStation = Machine{
                     .Guard => |g| g,
                 };
 
-                // Clear out linked-fovs list for player, as its a fixed size and might be full.
-                var new_linked_fovs = @TypeOf(state.player.linked_fovs).init(null);
-                for (state.player.linked_fovs.constSlice()) |linked_fov_mob|
-                    if (!linked_fov_mob.is_dead)
-                        new_linked_fovs.append(linked_fov_mob) catch unreachable;
-                state.player.linked_fovs = new_linked_fovs;
-
                 var spawned_ctr: usize = 0;
                 var first_stalker: ?*Mob = null;
                 for (&DIRECTIONS) |d| if (state.player.coord.move(d, state.mapgeometry)) |neighbor| {

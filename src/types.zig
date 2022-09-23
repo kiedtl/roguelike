@@ -2018,10 +2018,19 @@ pub const Mob = struct { // {{{
         };
         self.fov[self.coord.y][self.coord.x] = 100;
 
+        // Clear out linked-fovs list of dead/non-z-level mobs
+        if (self.linked_fovs.len > 0) {
+            var new_linked_fovs = @TypeOf(self.linked_fovs).init(null);
+            for (self.linked_fovs.constSlice()) |linked_fov_mob|
+                if (!linked_fov_mob.is_dead and linked_fov_mob.coord.z == self.coord.z)
+                    new_linked_fovs.append(linked_fov_mob) catch unreachable;
+            self.linked_fovs = new_linked_fovs;
+        }
+
         for (self.linked_fovs.constSlice()) |linked_fov_mob| {
             for (linked_fov_mob.fov) |row, y| for (row) |_, x| {
                 if (linked_fov_mob.fov[y][x] > 0) {
-                    state.player.fov[y][x] = 100;
+                    self.fov[y][x] = 100;
                 }
             };
         }
@@ -2036,6 +2045,7 @@ pub const Mob = struct { // {{{
         self.push_flag = false;
         self.MP = math.clamp(self.MP + 1, 0, self.max_MP);
 
+        // Gases
         const gases = state.dungeon.atGas(self.coord);
         for (gases) |quantity, gasi| {
             if ((rng.range(usize, 0, 100) < self.resistance(.rFume) or gas.Gases[gasi].not_breathed) and quantity > 0.0) {
