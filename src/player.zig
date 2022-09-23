@@ -126,7 +126,7 @@ pub fn triggerPoster(coord: Coord) bool {
     return false;
 }
 
-pub fn triggerStair(_: Coord, dest_stair: Coord) bool {
+pub fn triggerStair(cur_stair: Coord, dest_stair: Coord) bool {
     if (state.levelinfo[dest_stair.z].optional) {
         if (!ui.drawYesNoPrompt("Really travel to optional level?", .{}))
             return false;
@@ -170,6 +170,13 @@ pub fn triggerStair(_: Coord, dest_stair: Coord) bool {
         }
     }
     state.player.HP = state.player.max_HP;
+
+    // "Garbage-collect" previous level.
+    var iter = state.mobs.iterator();
+    while (iter.next()) |mob| {
+        if (mob.coord.z != cur_stair.z) continue;
+        mob.path_cache.clearAndFree();
+    }
 
     return true;
 }
