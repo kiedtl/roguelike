@@ -138,7 +138,7 @@ pub const CoronerTemplate = MobTemplate{
         },
 
         .max_HP = 6,
-        .memory_duration = 5,
+        .memory_duration = 10,
 
         .stats = .{ .Willpower = 2 },
     },
@@ -157,7 +157,7 @@ pub const ExecutionerTemplate = MobTemplate{
         },
 
         .max_HP = 7,
-        .memory_duration = 5,
+        .memory_duration = 8,
         .stats = .{ .Willpower = 3 },
     },
     .weapon = &items.KnoutWeapon,
@@ -176,7 +176,7 @@ pub const DestroyerTemplate = MobTemplate{
         },
 
         .max_HP = 8,
-        .memory_duration = 5,
+        .memory_duration = 8,
         .stats = .{ .Willpower = 4, .Evade = 10, .Melee = 70 },
     },
     .weapon = &items.KnoutWeapon,
@@ -197,7 +197,7 @@ pub const WatcherTemplate = MobTemplate{
             .flags = &[_]AI.Flag{.FearsDarkness},
         },
         .max_HP = 6,
-        .memory_duration = 10,
+        .memory_duration = 15,
         .stats = .{ .Willpower = 3, .Evade = 30, .Speed = 50 },
     },
 };
@@ -216,7 +216,7 @@ pub const ShriekerTemplate = MobTemplate{
             .flags = &[_]AI.Flag{.FearsDarkness},
         },
         .max_HP = 3,
-        .memory_duration = 15,
+        .memory_duration = 20,
         .stats = .{ .Willpower = 4, .Evade = 40, .Speed = 50 },
     },
 };
@@ -234,7 +234,7 @@ pub const GuardTemplate = MobTemplate{
         },
 
         .max_HP = 8,
-        .memory_duration = 5,
+        .memory_duration = 10,
 
         .stats = .{ .Willpower = 2 },
     },
@@ -255,7 +255,7 @@ pub const SentinelTemplate = MobTemplate{
         },
 
         .max_HP = 12,
-        .memory_duration = 5,
+        .memory_duration = 10,
 
         .stats = .{ .Willpower = 2, .Melee = 70 },
     },
@@ -281,7 +281,7 @@ pub const JavelineerTemplate = MobTemplate{
         },
 
         .max_HP = 8,
-        .memory_duration = 6,
+        .memory_duration = 10,
         .stats = .{ .Willpower = 2, .Evade = 10, .Missile = 80, .Vision = 5 },
     },
     .weapon = &items.MaceWeapon,
@@ -308,7 +308,7 @@ pub const DefenderTemplate = MobTemplate{
         },
 
         .max_HP = 8,
-        .memory_duration = 4,
+        .memory_duration = 20,
         .stats = .{ .Willpower = 4, .Evade = 10, .Missile = 90 },
     },
     .weapon = &items.SwordWeapon,
@@ -374,7 +374,7 @@ pub const IronWaspTemplate = MobTemplate{
             .flags = &[_]AI.Flag{ .DetectWithHeat, .DetectWithElec },
         },
         .max_HP = 2,
-        .memory_duration = 3,
+        .memory_duration = 8,
         .blood = null,
         .corpse = .None,
         .innate_resists = .{ .rFire = 50, .rFume = 100 },
@@ -417,7 +417,7 @@ pub const CopperHornetTemplate = MobTemplate{
             .flags = &[_]AI.Flag{.DetectWithElec},
         },
         .max_HP = 5,
-        .memory_duration = 7,
+        .memory_duration = 8,
         .blood = null,
         .corpse = .None,
         .innate_resists = .{ .rElec = 25, .rFire = 50, .rFume = 100 },
@@ -443,7 +443,7 @@ pub const PatrolTemplate = MobTemplate{
         },
 
         .max_HP = 8,
-        .memory_duration = 3,
+        .memory_duration = 10,
         .stats = .{ .Willpower = 2, .Evade = 10 },
     },
     .weapon = &items.GlaiveWeapon,
@@ -501,7 +501,7 @@ pub const GoblinTemplate = MobTemplate{
         },
         .allegiance = .OtherEvil,
         .max_HP = 12,
-        .memory_duration = 8,
+        .memory_duration = 20,
         .stats = .{ .Willpower = 4, .Evade = 15, .Vision = 6 },
     },
     .weapon = &items.MaceWeapon,
@@ -626,7 +626,7 @@ pub const CinderWormTemplate = MobTemplate{
         },
         .max_MP = 10,
 
-        .memory_duration = 5,
+        .memory_duration = 10,
         .blood = .Ash,
         .blood_spray = gas.SmokeGas.id,
         .corpse = .None,
@@ -669,7 +669,7 @@ pub const WarOlgTemplate = MobTemplate{
         },
         .max_MP = 3,
 
-        .memory_duration = 3,
+        .memory_duration = 10,
         .stats = .{ .Willpower = 2, .Melee = 90, .Vision = 4 },
     },
 };
@@ -1018,7 +1018,7 @@ pub const RecruitTemplate = MobTemplate{
         },
 
         .max_HP = 7,
-        .memory_duration = 5,
+        .memory_duration = 10,
         .stats = .{ .Willpower = 1, .Melee = 70, .Vision = 5 },
     },
     .weapon = &items.BludgeonWeapon,
@@ -1039,7 +1039,7 @@ pub const WarriorTemplate = MobTemplate{
         },
 
         .max_HP = 10,
-        .memory_duration = 4,
+        .memory_duration = 10,
         .stats = .{ .Willpower = 2, .Melee = 80, .Evade = 15, .Vision = 5 },
     },
     .weapon = &items.MaceWeapon,
@@ -1060,7 +1060,7 @@ pub const HunterTemplate = MobTemplate{
         },
 
         .max_HP = 10,
-        .memory_duration = 30,
+        .memory_duration = 40,
         .stats = .{ .Willpower = 3, .Melee = 70, .Speed = 150, .Vision = 7 },
     },
     .weapon = &items.MaceWeapon,
@@ -1093,7 +1093,7 @@ pub const BoneMageTemplate = MobTemplate{
         .max_MP = 20,
 
         .max_HP = 7,
-        .memory_duration = 6,
+        .memory_duration = 10,
         .stats = .{ .Willpower = 4, .Vision = 5, .Melee = 40 },
     },
     .weapon = &items.BoneMaceWeapon,
@@ -1120,7 +1120,7 @@ pub const DeathKnightTemplate = MobTemplate{
         },
 
         .max_HP = 10,
-        .memory_duration = 5,
+        .memory_duration = 8,
         .stats = .{ .Willpower = 6, .Melee = 70, .Evade = 10, .Vision = 5 },
     },
     .weapon = &items.BoneSwordWeapon,
@@ -1154,7 +1154,7 @@ pub const DeathMageTemplate = MobTemplate{
         .max_MP = 20,
 
         .max_HP = 10,
-        .memory_duration = 6,
+        .memory_duration = 15,
         .stats = .{ .Willpower = 8, .Evade = 10, .Vision = 6 },
     },
     .weapon = &items.BoneSwordWeapon,
@@ -1192,7 +1192,7 @@ pub const EmberMageTemplate = MobTemplate{
         .max_MP = 15,
 
         .max_HP = 6,
-        .memory_duration = 5,
+        .memory_duration = 10,
         .stats = .{ .Willpower = 4, .Evade = 0, .Vision = 5 },
     },
     .weapon = &items.BludgeonWeapon,
@@ -1231,7 +1231,7 @@ pub const BrimstoneMageTemplate = MobTemplate{
         .max_MP = 15,
 
         .max_HP = 8,
-        .memory_duration = 7,
+        .memory_duration = 10,
         .stats = .{ .Willpower = 6, .Evade = 10, .Vision = 6 },
     },
     .weapon = &items.MaceWeapon,
@@ -1268,7 +1268,7 @@ pub const SparkMageTemplate = MobTemplate{
         .max_MP = 10,
 
         .max_HP = 6,
-        .memory_duration = 5,
+        .memory_duration = 10,
         .stats = .{ .Willpower = 4, .Evade = 0, .Vision = 5 },
     },
     .weapon = &items.BludgeonWeapon,
@@ -1305,7 +1305,7 @@ pub const LightningMageTemplate = MobTemplate{
         .max_MP = 15,
 
         .max_HP = 8,
-        .memory_duration = 7,
+        .memory_duration = 10,
         .stats = .{ .Willpower = 6, .Evade = 10, .Vision = 6 },
     },
     .weapon = &items.MaceWeapon,
@@ -1336,7 +1336,7 @@ pub const BloatTemplate = MobTemplate{
         },
 
         .max_HP = 28,
-        .memory_duration = 10,
+        .memory_duration = 20,
 
         //.deaf = true,
         .life_type = .Undead,
@@ -1410,7 +1410,7 @@ pub const SkeletonTemplate = MobTemplate{
         },
 
         .max_HP = 5,
-        .memory_duration = 5,
+        .memory_duration = 8,
 
         .deaf = true,
         .life_type = .Undead,
@@ -1485,7 +1485,7 @@ pub const BoneRatTemplate = MobTemplate{
         .life_type = .Undead,
 
         .max_HP = 2,
-        .memory_duration = 4,
+        .memory_duration = 5,
         .blood = null,
         .corpse = .None,
 
@@ -1526,7 +1526,7 @@ pub const EmberlingTemplate = MobTemplate{
         .corpse = .None,
 
         .max_HP = 3,
-        .memory_duration = 3,
+        .memory_duration = 5,
         .innate_resists = .{ .rFume = 100, .rFire = RESIST_IMMUNE },
         .stats = .{ .Willpower = 1, .Evade = 10, .Vision = 4, .Melee = 50 },
     },
@@ -1575,7 +1575,7 @@ pub const SparklingTemplate = MobTemplate{
         .corpse = .None,
 
         .max_HP = 3,
-        .memory_duration = 3,
+        .memory_duration = 5,
         .innate_resists = .{ .rFume = 100, .rElec = RESIST_IMMUNE },
         .stats = .{ .Willpower = 1, .Evade = 10, .Vision = 4 },
     },
@@ -1671,7 +1671,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
         .max_MP = 10,
 
         .max_HP = 15,
-        .memory_duration = 10,
+        .memory_duration = 15,
         .stats = .{ .Willpower = 8, .Evade = 10, .Vision = 6 },
     },
     .weapon = &items.MaceWeapon,
@@ -1714,7 +1714,7 @@ pub const BurningBruteTemplate = MobTemplate{
         .max_MP = 12,
 
         .max_HP = 20,
-        .memory_duration = 6,
+        .memory_duration = 10,
         .blood = null,
         .corpse = .None,
 
@@ -1747,7 +1747,7 @@ pub const SulfurFiendTemplate = MobTemplate{
         .max_MP = 10,
 
         .max_HP = 15,
-        .memory_duration = 6,
+        .memory_duration = 10,
         .blood = null,
         .corpse = .None,
 
@@ -1779,7 +1779,7 @@ pub const FrozenFiendTemplate = MobTemplate{
         .max_MP = 15,
 
         .max_HP = 20,
-        .memory_duration = 6,
+        .memory_duration = 10,
         .blood = null,
         .corpse = .None,
 
