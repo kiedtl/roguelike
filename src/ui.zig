@@ -502,7 +502,7 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
                     // Zig, why the fuck do I need to cast the below as Awareness?
                     // Wouldn't I like to fucking chop your fucking type checker into
                     // tiny shreds with a +9 halberd of flaming.
-                    break if (mob.cansee(state.player.coord))
+                    break if (enemyrec.last_seen != null and enemyrec.last_seen.?.eq(state.player.coord))
                         @as(Awareness, .Seeing)
                     else
                         Awareness{ .Remember = enemyrec.counter };
