@@ -689,7 +689,7 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
     _writerHeader(w, linewidth, "info", .{});
     if (mob.life_type == .Construct)
         _writerWrite(w, "· is non-living ($bconstruct$.)\n", .{})
-    else
+    else if (mob.life_type == .Undead)
         _writerWrite(w, "· is non-living ($bundead$.)\n", .{});
     if (mob.ai.is_curious and !mob.deaf)
         _writerWrite(w, "· investigates noises\n", .{})
