@@ -15,7 +15,7 @@ set -e
 }
 
 mktarball() {
-    pkgname="oathbreaker-${1}-${2}-${VERSION}"
+    pkgname="oathbreaker-${1}-${2}-${3}-${VERSION}"
     [ -d ${pkgname} ] && rm -rf ${pkgname}
     mkdir ${pkgname}
     cp -r zig-out/bin/rl ${pkgname}
@@ -27,14 +27,18 @@ mktarball() {
     rm -rf ${pkgname}
 }
 
-printf "Compiling for host...\n"
-zig build -Drelease-safe
-mktarball $(uname -s) $(uname -m)
+printf "Compiling for host SDL...\n"
+zig build -Drelease-safe -Duse-sdl=true
+mktarball $(uname -s) $(uname -m) SDL
 
-printf "Compiling for x86_64-macos-gnu...\n"
-zig build -Drelease-safe -Dtarget=x86_64-macos-gnu
-mktarball macOS x86_64
+printf "Compiling for host termbox...\n"
+zig build -Drelease-safe -Duse-sdl=false
+mktarball $(uname -s) $(uname -m) termbox
 
-printf "Compiling for aarch64-macos-gnu...\n"
-zig build -Drelease-safe -Dtarget=aarch64-macos-gnu
-mktarball macOS aarch64
+#printf "Compiling for x86_64-macos-gnu...\n"
+#zig build -Drelease-safe -Dtarget=x86_64-macos-gnu -Duse-sdl=true
+#mktarball macOS x86_64 SDL
+
+#printf "Compiling for aarch64-macos-gnu...\n"
+#zig build -Drelease-safe -Dtarget=aarch64-macos-gnu -Duse-sdl=true
+#mktarball macOS aarch64 SDL
