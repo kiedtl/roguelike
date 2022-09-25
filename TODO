@@ -1155,10 +1155,6 @@ Animations
   - Shimmering golden/obsidian/cuprite/rust doors/walls
   - Lava and water
 
-Ring and movements:
-===================
-- Define where rings should be in prefabs/mobs
-
 Lighting/FOV:
 =============
 x Allow for prefabs to "seed" a map
@@ -1235,15 +1231,8 @@ x Different types of power generators for different maps:
   - chairs/tables
   - artwork
 - Useless food items in barrels:
-  - slime molds
-  - mangosteins
-  - (dried) mushrooms
-  - dried meat
-  - kombucha
-  - bread
-  - dried fish
-  - dried salamander
-  - alcohol (should use some made-up names, in gobbo language)
+  - mangosteins, (dried) mushrooms, dried meat, slime molds, bread, dried fish, dried salamander
+  - kombucha, alcohol (should use some made-up names, in gobbo language)
 
 Morgue files
 ============
