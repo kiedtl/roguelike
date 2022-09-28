@@ -17,13 +17,6 @@ You have a +10% bonus to your evade%.
 You will get the `enraged` status when critically injured (i.e., when an attack
 takes 50% of your HP off, or an attack leaves you at below 10% HP).
 
-## OI_Shove
-
-> "You begin shoving past foes when injured."
-
-You will get the `shove` status when critically injured (i.e., when an attack
-takes 50% of your HP off, or an attack leaves you at below 10% HP).
-
 ## Healthy
 
 > "You are unusually robust."

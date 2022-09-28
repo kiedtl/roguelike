@@ -11,11 +11,6 @@ A sleeping monster will wake up:
 - when a nearby ally informs them of your presence
 - if the monster isn't deaf and it hears a noise
 
-## Shove
-
-You will be able to swap places with all monsters, even if they're hostile. This
-prevents you from making melee attacks.
-
 ## Enraged
 
 - +20% chance to land a hit.
