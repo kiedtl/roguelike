@@ -1177,11 +1177,6 @@ pub const Status = enum {
     // Doesn't have a power field.
     NightBlindness,
 
-    // Allows a mob to shove past all other mobs.
-    //
-    // Doesn't have a power field.
-    Shove,
-
     // Gives mob several combat/speed bonuses (and nerfs).
     //
     // Doesn't have a power field.
@@ -1252,7 +1247,6 @@ pub const Status = enum {
             .NightVision => "night-sighted",
             .DayBlindness => "day-blinded",
             .NightBlindness => "night-blinded",
-            .Shove => "shoving",
             .Enraged => "enraged",
             .Exhausted => "exhausted",
             .Explosive => "explosive",
@@ -1287,7 +1281,6 @@ pub const Status = enum {
             .Invigorate => .{ "feel", "looks", " invigorated" },
             .Pain => .{ "are", "is", " wracked with pain" },
             .Fear => .{ "are crazed", "is crazed", " with fear" },
-            .Shove => .{ "begin", "starts", " violently shoving past foes" },
             .Enraged => .{ "fly", "flies", " into a rage" },
             .Exhausted => .{ "feel", "looks", " exhausted" },
             .Lifespan => null,
@@ -1328,7 +1321,6 @@ pub const Status = enum {
             .Invigorate => .{ "no longer feel", "no longer looks", " invigorated" },
             .Pain => .{ "are no longer", "is no longer", " wracked with pain" },
             .Fear => .{ "are no longer", "is no longer", " crazed with fear" },
-            .Shove => .{ "stop", "stops", " shoving past foes" },
             .Enraged => .{ "stop", "stops", " raging" },
             .Exhausted => .{ "are no longer", "is no longer", " exhausted" },
             .Explosive => null,
@@ -2069,6 +2061,19 @@ pub const Mob = struct { // {{{
                     };
             };
         }
+
+        // Player auto-attack.
+        if (self == state.player and
+            !state.player.hasStatus(.Paralysis))
+        {
+            const directions = [_]Direction{ .North, .NorthEast, .East, .SouthEast, .South, .SouthWest, .West, .NorthWest };
+            for (&directions) |d| if (utils.getHostileInDirection(state.player, d)) |hostile| {
+                if (hostile.ai.phase == .Hunt and state.player.canMelee(hostile)) {
+                    state.player.fight(hostile, .{ .free_attack = true });
+                    break;
+                }
+            } else |_| {};
+        }
     }
 
     // Decrement status durations, and do stuff for various statuses that need
@@ -2381,7 +2386,7 @@ pub const Mob = struct { // {{{
     //
     pub fn canSwapWith(self: *const Mob, other: *Mob, _: ?Direction) bool {
         return other != state.player and
-            (!other.isHostileTo(self) or self.hasStatus(.Shove)) and
+            (!other.isHostileTo(self) or self == state.player) and
             !other.immobile and
             (other.prisoner_status == null or other.prisoner_status.?.held_by == null) and
             (other.hasStatus(.Paralysis) or
@@ -2833,7 +2838,11 @@ pub const Mob = struct { // {{{
         // Make animations
         const clamped_dmg = math.clamp(@intCast(u21, amount), 0, 9);
         const damage_char = if (self.should_be_dead()) '∞' else '0' + clamped_dmg;
-        ui.Animation.blink(&.{self.coord}, damage_char, colors.PALE_VIOLET_RED, .{}).apply();
+        if (d.source == .Stab and d.by_mob != null and d.by_mob.? == state.player) {
+            // No animation
+        } else {
+            ui.Animation.blink(&.{self.coord}, damage_char, colors.PALE_VIOLET_RED, .{}).apply();
+        }
 
         // Print message
         if (state.player.cansee(self.coord) or (d.by_mob != null and state.player.cansee(d.by_mob.?.coord))) {

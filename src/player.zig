@@ -56,18 +56,16 @@ pub const PlayerUpgradeInfo = struct {
 pub const PlayerUpgrade = enum {
     Agile,
     OI_Enraged,
-    OI_Shove,
     Healthy,
     Will,
     Echolocating,
 
-    pub const UPGRADES = [_]PlayerUpgrade{ .Agile, .OI_Enraged, .OI_Shove, .Healthy, .Will, .Echolocating };
+    pub const UPGRADES = [_]PlayerUpgrade{ .Agile, .OI_Enraged, .Healthy, .Will, .Echolocating };
 
     pub fn announce(self: PlayerUpgrade) []const u8 {
         return switch (self) {
             .Agile => "You are good at evading blows.",
             .OI_Enraged => "You feel hatred building up inside.",
-            .OI_Shove => "You begin shoving past foes when injured.",
             .Healthy => "You are unusually robust.",
             .Will => "Your will hardens.",
             .Echolocating => "Your sense of hearing becomes acute.",
@@ -78,7 +76,6 @@ pub const PlayerUpgrade = enum {
         return switch (self) {
             .Agile => "You have a +20% dodging bonus.",
             .OI_Enraged => "You become enraged when badly hurt.",
-            .OI_Shove => "You begin shoving past foes when injured.",
             .Healthy => "You have 50% more health than usual.",
             .Will => "You have 3 extra pips of willpower.",
             .Echolocating => "You passively echolocate areas around sound.",
@@ -90,11 +87,6 @@ pub const PlayerUpgrade = enum {
             .Agile => state.player.stats.Evade += 10,
             .OI_Enraged => state.player.ai.flee_effect = .{
                 .status = .Enraged,
-                .duration = .{ .Tmp = 10 },
-                .exhausting = true,
-            },
-            .OI_Shove => state.player.ai.flee_effect = .{
-                .status = .Shove,
                 .duration = .{ .Tmp = 10 },
                 .exhausting = true,
             },
@@ -299,25 +291,6 @@ pub fn moveOrFight(direction: Direction) bool {
 
     const dest = current.move(direction, state.mapgeometry) orelse return false;
 
-    if (direction.is_diagonal() and state.player.isUnderStatus(.Disorient) != null) {
-        ui.drawAlertThenLog("You cannot move or attack diagonally whilst disoriented!", .{});
-        return false;
-    }
-
-    // Does the player want to fight?
-    if (state.dungeon.at(dest).mob) |mob| {
-        if (state.player.isHostileTo(mob) and !state.player.canSwapWith(mob, direction)) {
-            state.player.fight(mob, .{});
-            return true;
-        }
-    }
-
-    // Does the player want to move into a surveilled location?
-    if (!isPlayerSpotted() and enemiesCanSee(dest)) {
-        if (!ui.drawYesNoPrompt("Really move into an enemy's view?", .{}))
-            return false;
-    }
-
     // Does the player want to trigger a machine that requires confirmation, or
     // maybe rummage a container?
     //
@@ -330,11 +303,29 @@ pub fn moveOrFight(direction: Direction) bool {
         else => {},
     };
 
+    if (direction.is_diagonal() and state.player.isUnderStatus(.Disorient) != null) {
+        ui.drawAlertThenLog("You cannot move or attack diagonally whilst disoriented!", .{});
+        return false;
+    }
+
     // Should we auto-rest?
     if (shouldAutoWait()) {
         state.player.rest();
         state.message(.Info, "Auto-waited.", .{});
         return true;
+    }
+
+    // Does the player want to move into a surveilled location?
+    if (!isPlayerSpotted() and enemiesCanSee(dest)) {
+        if (!ui.drawYesNoPrompt("Really move into an enemy's view?", .{}))
+            return false;
+    }
+
+    // Does the player want to stab?
+    if (state.dungeon.at(dest).mob) |mob| {
+        if (state.player.isHostileTo(mob) and mob.ai.phase == .Work) {
+            state.player.fight(mob, .{ .free_attack = true });
+        }
     }
 
     const ret = state.player.moveInDirection(direction);

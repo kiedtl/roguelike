@@ -715,7 +715,6 @@ fn _resurrectFire(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
         }
         corpse.addStatus(.Fire, 0, .Prm);
         corpse.addStatus(.Fast, 0, .Prm);
-        corpse.addStatus(.Shove, 0, .Prm);
         corpse.addStatus(.Explosive, opts.power, .Prm);
         corpse.addStatus(.Lifespan, opts.power, .{ .Tmp = 20 });
     }
