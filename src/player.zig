@@ -325,6 +325,9 @@ pub fn moveOrFight(direction: Direction) bool {
     if (state.dungeon.at(dest).mob) |mob| {
         if (state.player.isHostileTo(mob) and mob.ai.phase == .Work) {
             state.player.fight(mob, .{ .free_attack = true });
+            if (!mob.should_be_dead()) {
+                return false;
+            }
         }
     }
 

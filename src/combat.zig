@@ -89,7 +89,7 @@ pub fn damageOfMeleeAttack(attacker: *const Mob, w_damage: usize, is_stab: bool)
     damage += if (attacker.isUnderStatus(.Invigorate) != null) math.min(1, damage / 2) else 0;
 
     if (is_stab) {
-        damage = utils.percentOf(usize, damage, 600);
+        damage *= 10;
     }
 
     return damage;
