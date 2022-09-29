@@ -315,12 +315,6 @@ pub fn moveOrFight(direction: Direction) bool {
         return true;
     }
 
-    // Does the player want to move into a surveilled location?
-    if (!isPlayerSpotted() and enemiesCanSee(dest)) {
-        if (!ui.drawYesNoPrompt("Really move into an enemy's view?", .{}))
-            return false;
-    }
-
     // Does the player want to stab?
     if (state.dungeon.at(dest).mob) |mob| {
         if (state.player.isHostileTo(mob) and mob.ai.phase == .Work) {
@@ -329,6 +323,12 @@ pub fn moveOrFight(direction: Direction) bool {
                 return false;
             }
         }
+    }
+
+    // Does the player want to move into a surveilled location?
+    if (!isPlayerSpotted() and enemiesCanSee(dest)) {
+        if (!ui.drawYesNoPrompt("Really move into an enemy's view?", .{}))
+            return false;
     }
 
     const ret = state.player.moveInDirection(direction);
@@ -695,7 +695,7 @@ pub fn enemiesCanSee(coord: Coord) bool {
     defer moblist.deinit();
 
     return b: for (moblist.items) |mob| {
-        if (!mob.no_show_fov and mob.ai.is_combative and mob.isHostileTo(state.player)) {
+        if (!mob.no_show_fov and mob.ai.is_combative and mob.isHostileTo(state.player) and !mob.should_be_dead()) {
             if (mob.cansee(coord)) {
                 break :b true;
             }
