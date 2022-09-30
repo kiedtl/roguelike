@@ -317,12 +317,19 @@ pub fn moveOrFight(direction: Direction) bool {
 
     // Does the player want to stab?
     if (state.dungeon.at(dest).mob) |mob| {
-        if (state.player.isHostileTo(mob) and mob.ai.phase == .Work) {
-            state.player.fight(mob, .{ .free_attack = true });
-            if (!mob.should_be_dead()) {
-                return false;
-            }
-        }
+        if (state.player.isHostileTo(mob)) switch (mob.ai.phase) {
+            .Work => {
+                state.player.fight(mob, .{ .free_attack = true });
+                if (!mob.should_be_dead()) {
+                    return false;
+                }
+            },
+            .Hunt, .Investigate => if (!ai.isEnemyKnown(mob, state.player)) {
+                if (!ui.drawYesNoPrompt("Really push past unaware enemy?", .{}))
+                    return false;
+            },
+            else => {},
+        };
     }
 
     // Does the player want to move into a surveilled location?

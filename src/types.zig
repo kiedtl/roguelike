@@ -2068,7 +2068,7 @@ pub const Mob = struct { // {{{
         {
             const directions = [_]Direction{ .North, .NorthEast, .East, .SouthEast, .South, .SouthWest, .West, .NorthWest };
             for (&directions) |d| if (utils.getHostileInDirection(state.player, d)) |hostile| {
-                if (hostile.ai.phase == .Hunt and state.player.canMelee(hostile)) {
+                if (hostile.ai.phase == .Hunt and state.player.canMelee(hostile) and !hostile.immobile) {
                     state.player.fight(hostile, .{ .free_attack = true });
                     break;
                 }
