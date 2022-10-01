@@ -315,12 +315,12 @@ pub fn moveOrFight(direction: Direction) bool {
         return true;
     }
 
-    // Does the player want to stab?
+    // Does the player want to stab or push past?
     if (state.dungeon.at(dest).mob) |mob| {
         if (state.player.isHostileTo(mob)) switch (mob.ai.phase) {
             .Work => {
-                state.player.fight(mob, .{ .free_attack = true });
-                return false;
+                state.player.fight(mob, .{});
+                return true;
             },
             .Hunt, .Investigate => if (!ai.isEnemyKnown(mob, state.player)) {
                 if (!ui.drawYesNoPrompt("Really push past unaware enemy?", .{}))
