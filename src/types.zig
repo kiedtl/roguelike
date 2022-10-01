@@ -2838,11 +2838,7 @@ pub const Mob = struct { // {{{
         // Make animations
         const clamped_dmg = math.clamp(@intCast(u21, amount), 0, 9);
         const damage_char = if (self.should_be_dead()) '∞' else '0' + clamped_dmg;
-        if (d.source == .Stab and d.by_mob != null and d.by_mob.? == state.player) {
-            // No animation
-        } else {
-            ui.Animation.blink(&.{self.coord}, damage_char, colors.PALE_VIOLET_RED, .{}).apply();
-        }
+        ui.Animation.blink(&.{self.coord}, damage_char, colors.PALE_VIOLET_RED, .{}).apply();
 
         // Print message
         if (state.player.cansee(self.coord) or (d.by_mob != null and state.player.cansee(d.by_mob.?.coord))) {
@@ -2853,9 +2849,6 @@ pub const Mob = struct { // {{{
             if (dmg_percent >= 80) punctuation = "!!!!";
 
             var hitstrs = msg.strs[msg.strs.len - 1];
-            // FIXME: insert some randomization here. Currently every single stab
-            // the player makes results in "You puncture the XXX like a sieve!!!!"
-            // which gets boring after a bit.
             {
                 for (msg.strs) |strset| {
                     if (strset.dmg_percent > dmg_percent) {

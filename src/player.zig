@@ -320,9 +320,7 @@ pub fn moveOrFight(direction: Direction) bool {
         if (state.player.isHostileTo(mob)) switch (mob.ai.phase) {
             .Work => {
                 state.player.fight(mob, .{ .free_attack = true });
-                if (!mob.should_be_dead()) {
-                    return false;
-                }
+                return false;
             },
             .Hunt, .Investigate => if (!ai.isEnemyKnown(mob, state.player)) {
                 if (!ui.drawYesNoPrompt("Really push past unaware enemy?", .{}))
