@@ -1353,7 +1353,7 @@ fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display
 
             const light = state.dungeon.lightAt(state.player.coord).*;
             if (state.player.coord.eq(coord)) {
-                tile.fg = if (light) colors.LIGHT_CONCRETE else colors.DARK_GREY;
+                tile.fg = if (light) colors.LIGHT_CONCRETE else colors.LIGHT_STEEL_BLUE;
             }
 
             if (_mobs_can_see(moblist, coord)) {
