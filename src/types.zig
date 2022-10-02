@@ -2064,7 +2064,7 @@ pub const Mob = struct { // {{{
 
         // Player auto-attack.
         if (self == state.player and
-            !state.player.hasStatus(.Paralysis))
+            !state.player.hasStatus(.Paralysis) and player.getActiveRing() == null)
         {
             const directions = [_]Direction{ .North, .NorthEast, .East, .SouthEast, .South, .SouthWest, .West, .NorthWest };
             for (&directions) |d| if (utils.getHostileInDirection(state.player, d)) |hostile| {

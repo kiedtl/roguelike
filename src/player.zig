@@ -322,9 +322,14 @@ pub fn moveOrFight(direction: Direction) bool {
                 state.player.fight(mob, .{});
                 return true;
             },
-            .Hunt, .Investigate => if (!ai.isEnemyKnown(mob, state.player)) {
-                if (!ui.drawYesNoPrompt("Really push past unaware enemy?", .{}))
-                    return false;
+            .Hunt, .Investigate => {
+                if (getActiveRing()) |_| {
+                    state.player.fight(mob, .{});
+                    return true;
+                } else if (!ai.isEnemyKnown(mob, state.player)) {
+                    if (!ui.drawYesNoPrompt("Really push past unaware enemy?", .{}))
+                        return false;
+                }
             },
             else => {},
         };
