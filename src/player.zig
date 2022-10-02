@@ -152,17 +152,6 @@ pub fn triggerStair(cur_stair: Coord, dest_stair: Coord) bool {
         });
     }
 
-    // Remove all statuses and heal player.
-    inline for (@typeInfo(Status).Enum.fields) |status| {
-        const st = @field(Status, status.name);
-        if (state.player.isUnderStatus(st)) |st_info| {
-            if (st_info.duration == .Tmp) {
-                state.player.cancelStatus(st);
-            }
-        }
-    }
-    state.player.HP = state.player.max_HP;
-
     // "Garbage-collect" previous level.
     var iter = state.mobs.iterator();
     while (iter.next()) |mob| {
