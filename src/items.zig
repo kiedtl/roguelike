@@ -2079,7 +2079,7 @@ pub const MartialSwordWeapon = Weapon{
 pub const DaggerWeapon = Weapon{
     .id = "dagger",
     .name = "dagger",
-    .damage = 2,
+    .damage = 1,
     .martial = true,
     .stats = .{ .Martial = 1 },
     .is_dippable = true,
