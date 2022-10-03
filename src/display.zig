@@ -453,6 +453,8 @@ pub fn waitForEvent(wait_period: ?usize) !Event {
                         const kcode = ev.key.keysym.sym;
                         if (Key.fromSDL(kcode, ev.key.keysym.mod)) |key| {
                             return Event{ .Key = key };
+                        } else if (kcode == driver_m.SDLK_SPACE) {
+                            return Event{ .Char = ' ' };
                         } else continue;
                     },
                     else => continue,

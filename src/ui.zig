@@ -2235,7 +2235,7 @@ pub fn drawInventoryScreen() bool {
                 LEFT_INFO_WIDTH - 1,
             );
 
-            if (usable) writer.print("$cSPACE$. to use.\n", .{}) catch err.wat();
+            if (usable) writer.print("$cENTER$. to use.\n", .{}) catch err.wat();
             if (dippable) writer.print("$cD$. to dip your weapon.\n", .{}) catch err.wat();
             if (throwable) writer.print("$ct$. to throw.\n", .{}) catch err.wat();
 
