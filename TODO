@@ -1,28 +1,3 @@
-----------
-"Solitary" ("SOL") or "Confinement" ("CON"):
-- Grid layout ("Manhattan-like"?):
-  ...............................
-  .####...####..####..####..####.
-  .#..#...#..#..#..#..#..#..#..#.
-  .#+##...#+##..#..#..#+##..#+##.
-  ..............#..#.............
-  .####...####..#..+..####..####.
-  .#..#...#..#..#..#..#..#..#..#.
-  .#+##...#+##..####..#+##..#+##.
-  ...............................
-  .####...##########..####..####.
-  .#..#...#........#..#..#..#..#.
-  .#+##...#######+##..#+##..#+##.
-  ...............................
-  .####...####..####..####..####.
-  .#..#...#..#..#..#..#..#..#..#.
-  .#+##...#+##..#+##..#+##..#+##.
-  ...............................
-- (Larger rooms are optional?)
-- Each room has one goblin prisoner.
-- Plenty of patrols, and guards at hallway junctions
-- Layout leads to interesting gameplay, I think?
-
 Mob speech
 ----------
 - On spotting an enemy
@@ -1027,11 +1002,18 @@ x Level progression overhaul
   x Load level info, stairs from data/levelinfo.tsv
   x Make CAV optional, extra Prison level to compensate (for now)
 x Auxiliary items
-- UI
+x UI
   x 'M'essages screen
   x Loading screen and art
-  - Status/mob/item description lookup screen
   x Features/items screen, remove announcement of items
+x WASM support, or at least SDL2 support for Windows
+- Write rest of docs/manual
+  - Status reference
+  - Tutorial
+- Playtest game throughout, especially CAV and make adjustments
+*** v2.0.0 release ***
+- UI
+  - Status/mob/item description lookup screen
   - Keybinding help "?" screen
   - Basic mouse support
     - Tooltips for UI labels
@@ -1041,14 +1023,15 @@ x Auxiliary items
     - Click on message pane for 'M' screen
     - Click on tabs in examine mode
     - Click on items/buttons in inventory mode
-x WASM support, or at least SDL2 support for Windows
-- Tutorial
-- Write rest of docs/manual
-- Playtest game throughout, especially CAV and make adjustments
-*** v2.0.0 release ***
 - Add "character" to game
   - Names for all goblin/human monsters
   - Named statues
+  - More "Living Dungeon" content
+    - Haulers periodically bring prisoners food/alcohol rations
+    - Cleaners occasionally go over cell
+    - Guards drag new prisoners to replace ones which died
+      - Occasionally: MG schedules prisoner to be placed instead of placing one
+    - Executioners periodically demolish a prisoner (new dialog!)
 - Analyse mob and loot distribution and tweak weights
 - Basalt monsters (-fiends, -mages, -lings)?
 - Add bookshelves and book types
@@ -1238,7 +1221,7 @@ Morgue files
 ============
 - Show annotated game notes (a la DCSS/Boohu).
 - Count the number of times the player "got lucky" (i.e., was at critical HP
-  but didn't take a hit hard enough to be killed).
+  but didn't take a hit).
 - Show total (IRL) time duration of game.
 - Show player's title.
 
@@ -1272,26 +1255,20 @@ x Define what undead are somewhere (combat bonuses, stat increases, miasma
   - Rats "spawn" in some way
   - etc
 ~ Make cleaners/engineers remove nets shot out by sentinels
-- Revamp squad AI.
-- Add morale system for each mob, affected by:
-  - Loss of leader (squad)
-  - Battlecry of leader (squad)
-  - Presence of stronger allies
-  - Presence of stronger enemies
-  - Presence of many enemies
-  - Pain,Fear effects
-  - Miasma gas, other gases
-  - Buffs on self or allies (haste, might, etc)
+x Revamp squad AI.
+x Add morale system for each mob, affected by:
+  x Loss of leader (squad)
+  x Battlecry of leader (squad)
+  x Presence of stronger allies
+  x Presence of stronger enemies
+  x Presence of many enemies
+  x Pain,Fear effects
+  x Miasma gas, other gases
+  x Buffs on self or allies (haste, might, etc)
 - Enemies that surrender or start whimpering when fleeing and trapped in a
   corner, or maybe perpare for one final all-out assault
   x Would provide excuse for .Enraged status implementation.
 - Enemies that suicide when cornered and about to die.
-- New: Smelling mechanics, dogs, hounds, creeping deaths
-- New: Beastmasters
-- New: Robots (Laboratory)
-  - Archers: shoot missiles that whittle down health, keeps distance
-  - Brawlers: pummels player, pushing them 3 tiles away
-  - rail terrain that hastes robots
 x Reaching weapon effects for beastmasters and patrols
 - Make sentinels and javelineers pickup projectiles they've thrown
 - Add orbs of destruction spell for ancient mages
