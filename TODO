@@ -1048,7 +1048,9 @@ x WASM support, or at least SDL2 support for Windows
 - Rewrite inventory system UI in Lua/Moonscript
 x Warn when stepping into enemy's FOV
 x Auto-wait: don't wait while in combat
+- Revamp messages for recieving/losing status
 - More messages
+- Revamp "runes" to be more in-theme
 - Rework monster spells to be more positional in nature
   - Pain (range-limited AoE effect?)
   - Various resurrection spells (limited range?)
@@ -1197,7 +1199,7 @@ x Make the "lamps" electric "braziers"
   x Make them explosive and electrocutive!
 * Useless items in bins, cabinets, etc
   - dice, deck of cards
-- Weapons and armor in cabinets
+x Weapons and armor in cabinets
 - Allow multiple subrooms in rooms (BSP?)
 - Cave-like boundaries around edges of map in CAV
 x Different types of power generators for different maps:
@@ -1266,7 +1268,8 @@ x Add morale system for each mob, affected by:
   x Miasma gas, other gases
   x Buffs on self or allies (haste, might, etc)
 - Enemies that surrender or start whimpering when fleeing and trapped in a
-  corner, or maybe perpare for one final all-out assault
+  corner, or maybe prepare for one final all-out assault
+  - Dialog
   x Would provide excuse for .Enraged status implementation.
 - Enemies that suicide when cornered and about to die.
 x Reaching weapon effects for beastmasters and patrols
@@ -1306,7 +1309,7 @@ x Show information characters next to mob in enemy pane
 
 Items/Machines
 ==============
-- Add cloaks:
+j Add cloaks:
   x cloak of silicon (fire resistance)
   x cloak of fur     (electricty resistance)
   ~ cloak of velvet
@@ -1352,18 +1355,17 @@ x Make monsters flee sooner if burning?
 Message pane
 ============
 - Messages:
-  - On using ring (full power, half power, equipped)
+  x On using ring
   - On swapping with mob
   - On mob refusing to swap with player
   - On enemy turning to flee
   - On enemy noticing player
   x On recieving a status (Confuse, Daze, etc)
-  - On having the duration of status extended/lessened
   x On seeing a mob cast a spell
   x On dodging by enemy or player
   x On death
-  - On resisting a spell
-  - On swapping weapon
+  x On resisting a spell
+  x On swapping weapon
   x On making a noise, or mob making a noise
 x Messages that require confirm/keypress
 x Only print trap messages when culprit is player
