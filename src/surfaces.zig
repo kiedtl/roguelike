@@ -494,6 +494,8 @@ pub const StairExit = Machine{
     .name = "exit staircase",
     .powered_tile = '«',
     .unpowered_tile = '«',
+    .powered_sprite = .S_G_StairsUp,
+    .unpowered_sprite = .S_G_StairsUp,
     .on_power = powerStairExit,
 };
 
