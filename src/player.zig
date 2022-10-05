@@ -288,7 +288,7 @@ pub fn moveOrFight(direction: Direction) bool {
             if (!ui.drawYesNoPrompt("{s}", .{msg}))
                 return false;
         },
-        .Container => |_| return rummageContainer(dest),
+        .Container => |c| if (c.items.len > 0) return rummageContainer(dest),
         else => {},
     };
 
@@ -351,10 +351,7 @@ pub fn moveOrFight(direction: Direction) bool {
 pub fn rummageContainer(coord: Coord) bool {
     const container = state.dungeon.at(coord).surface.?.Container;
 
-    if (container.items.len == 0) {
-        ui.drawAlertThenLog("There's nothing in the {s}.", .{container.name});
-        return false;
-    }
+    assert(container.items.len == 0);
 
     ui.Animation.apply(.{
         .PopChar = .{ .coord = state.player.coord, .char = '?', .fg = colors.GOLD, .delay = 125 },

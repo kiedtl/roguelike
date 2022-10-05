@@ -72,7 +72,7 @@ pub fn currentEnemy(me: *Mob) *EnemyRecord {
 }
 
 pub fn calculateMorale(self: *Mob) isize {
-    var base: isize = 5;
+    var base: isize = 6;
 
     // Bonuses depending on self's condition {{{
     if (self.hasStatus(.Enraged)) base += 4;
@@ -88,19 +88,19 @@ pub fn calculateMorale(self: *Mob) isize {
     // below 50% health
     //
     if (self.HP < (self.max_HP / 2)) base -= 2;
-    if (self.HP < (self.max_HP / 4)) base -= 4;
+    if (self.HP < (self.max_HP / 4)) base -= 2;
 
     if (self.hasStatus(.Blind)) base -= 2;
     if (self.hasStatus(.Debil)) base -= 2;
-    if (self.hasStatus(.Daze)) base -= 4;
+    if (self.hasStatus(.Daze)) base -= 2;
     if (self.hasStatus(.Disorient)) base -= 2;
 
-    if (self.hasStatus(.Daze)) base -= 4;
-    if (self.hasStatus(.Pain)) base -= 4;
-    if (self.hasStatus(.Slow)) base -= 4;
+    if (self.hasStatus(.Daze)) base -= 2;
+    if (self.hasStatus(.Pain)) base -= 2;
+    if (self.hasStatus(.Slow)) base -= 2;
 
     if (self.hasStatus(.Fire) and !self.isFullyResistant(.rFire))
-        base -= 4;
+        base -= 2;
 
     if (self.ai.phase == .Flee) base -= 12;
 
@@ -177,17 +177,17 @@ pub fn calculateMorale(self: *Mob) isize {
 
         if (ally.hasStatus(.Disorient)) base -= 2;
 
-        if (ally.hasStatus(.Fear)) base -= 4;
+        if (ally.hasStatus(.Fear)) base -= 2;
         if (ally.hasStatus(.Pain)) base -= 2;
         if (ally.hasStatus(.Slow)) base -= 2;
 
         if (ally.hasStatus(.Fire) and !ally.isFullyResistant(.rFire)) base -= 2;
         if (ally.hasStatus(.Paralysis)) base -= 4;
 
-        if (ally.HP < (ally.max_HP / 2)) base -= 2;
-        if (ally.HP < (ally.max_HP / 4)) base -= 4;
+        if (ally.HP < (ally.max_HP / 2)) base -= 1;
+        if (ally.HP < (ally.max_HP / 4)) base -= 2;
 
-        if (ally.ai.phase == .Flee) base -= 4;
+        if (ally.ai.phase == .Flee) base -= 1;
     }
     // }}}
 

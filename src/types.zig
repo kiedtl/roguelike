@@ -2385,12 +2385,16 @@ pub const Mob = struct { // {{{
     // can swap with that other mob.
     //
     pub fn canSwapWith(self: *const Mob, other: *Mob, _: ?Direction) bool {
-        return other != state.player and
-            (!other.isHostileTo(self) or self == state.player) and
-            !other.immobile and
-            (other.prisoner_status == null or other.prisoner_status.?.held_by == null) and
-            (other.hasStatus(.Paralysis) or
-            !other.push_flag);
+        if (self == state.player) {
+            return !other.immobile and
+                (other.prisoner_status == null or other.prisoner_status.?.held_by == null);
+        } else {
+            return other != state.player and
+                !other.isHostileTo(self) and
+                !other.immobile and
+                (other.prisoner_status == null or other.prisoner_status.?.held_by == null) and
+                (other.hasStatus(.Paralysis) or !other.push_flag);
+        }
     }
 
     // Try to move to a destination, one step at a time.
