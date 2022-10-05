@@ -4242,7 +4242,7 @@ pub const Tile = struct {
                 mob.isUnderStatus(.Daze) != null)
                 cell.fg = 0xffffff;
             if (mob.isUnderStatus(.Sleeping) != null)
-                cell.fg = 0xb0c4de;
+                cell.fg = 0xffcfff;
 
             const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);
             if (hp_loss_percent > 0) {
@@ -4250,9 +4250,13 @@ pub const Tile = struct {
                 //cell.bg = math.clamp(red, 0x66, 0xff) << 16;
             }
 
+            if (!mob.ai.is_combative) {
+                cell.fg = colors.AQUAMARINE;
+            }
+
             if (mob.prisoner_status) |ps| {
                 if (state.dungeon.at(coord).prison or ps.held_by != null) {
-                    cell.fg = 0xffcfff;
+                    cell.fg = 0xb0c4de;
                 }
             }
 
