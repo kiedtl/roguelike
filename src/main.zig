@@ -675,6 +675,7 @@ fn tickGame() !void {
 
             if (mob == state.player) {
                 player.bookkeepingFOV();
+                player.autoAttack();
             }
 
             if (prev_energy <= mob.energy) {

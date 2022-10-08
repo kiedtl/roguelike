@@ -265,6 +265,26 @@ pub fn bookkeepingFOV() void {
     }
 }
 
+// Player auto-attack.
+pub fn autoAttack() void {
+    if (state.player.activities.current()) |cur_a| {
+        if (cur_a == .Move or cur_a == .Attack)
+            return;
+    }
+
+    if (!state.player.hasStatus(.Paralysis) and getActiveRing() == null) {
+        // Redefine direction list to be ordered clockwise
+        const directions = [_]Direction{ .North, .NorthEast, .East, .SouthEast, .South, .SouthWest, .West, .NorthWest };
+
+        for (&directions) |d| if (utils.getHostileInDirection(state.player, d)) |hostile| {
+            if (hostile.ai.phase == .Hunt and state.player.canMelee(hostile) and !hostile.immobile) {
+                state.player.fight(hostile, .{ .free_attack = true });
+                break;
+            }
+        } else |_| {};
+    }
+}
+
 pub fn tryRest() bool {
     if (state.player.hasStatus(.Pain)) {
         ui.drawAlertThenLog("You cannot rest while in pain!", .{});
