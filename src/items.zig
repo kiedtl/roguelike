@@ -2144,9 +2144,19 @@ pub const HalberdWeapon = Weapon{
     },
     .is_dippable = true,
     .strs = &SLASHING_STRS,
-    .reach = 2,
 };
 pub const BoneHalberdWeapon = Weapon.createBoneWeapon(&HalberdWeapon, .{});
+
+// Glaive without the closed-melee effect, and with reaching.
+pub const SpearWeapon = Weapon{
+    .id = "spear",
+    .name = "spear",
+    .damage = 2,
+    .stats = .{ .Melee = 10, .Sneak = -1 },
+    .is_dippable = true,
+    .strs = &SLASHING_STRS,
+    .reach = 2,
+};
 
 pub const GlaiveWeapon = Weapon{
     .id = "glaive",
@@ -2158,7 +2168,6 @@ pub const GlaiveWeapon = Weapon{
     },
     .is_dippable = true,
     .strs = &SLASHING_STRS,
-    .reach = 2,
 };
 
 pub const MonkSpadeWeapon = Weapon{
@@ -2168,7 +2177,6 @@ pub const MonkSpadeWeapon = Weapon{
     .knockback = 2,
     .stats = .{ .Melee = 20, .Sneak = -1 },
     .strs = &PIERCING_STRS,
-    .reach = 2,
 };
 
 pub const WoldoWeapon = Weapon{
@@ -2179,7 +2187,6 @@ pub const WoldoWeapon = Weapon{
     .stats = .{ .Melee = -15, .Martial = 1, .Sneak = -1 },
     .is_dippable = true,
     .strs = &SLASHING_STRS,
-    .reach = 2,
 };
 
 // }}}

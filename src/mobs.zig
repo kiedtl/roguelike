@@ -445,7 +445,7 @@ pub const PatrolTemplate = MobTemplate{
         .memory_duration = 10,
         .stats = .{ .Willpower = 2, .Evade = 10 },
     },
-    .weapon = &items.GlaiveWeapon,
+    .weapon = &items.SpearWeapon,
     .armor = &items.GambesonArmor,
 
     .squad = &[_][]const MobTemplate.SquadMember{
