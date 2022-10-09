@@ -1,6 +1,6 @@
 # Oathbreaker
 
-A stealth-focused roguelike. See the [intro](doc/intro.md) for more info.
+A stealth-focused roguelike.
 
 [Here's](https://tilde.team/~kiedtl/blog/roguelike) the (very outdated) initial
 writeup back when I started the project in May 2021.
@@ -17,6 +17,11 @@ writeup back when I started the project in May 2021.
 
 *Getting into an argument with said Frozen Fiend:*
 ![screenshot](https://tilde.team/~kiedtl/images/rl/apr29-release5.png)
+
+See the [intro](doc/intro.md) for more info.
+
+(Note, the manual is still being written. Feel free to contact the author at
+`$GITHUB_USERNAME @ tilde |dot| team` for questions in the meantime.)
 
 ## License
 

@@ -9,13 +9,13 @@ Branch order:
    ┌┌─────────┐┐
    ││-2/Prison││←------┐
    └└─────────┘┘       ↑
-    ↑                 ┌──────────────┐
-    |                 │-3/Quarters/3─│
-    |                 └──────────────┘
+    ↑                 ┌─────────────┐
+    |                 │-3/Quarters/3│
+    |                 └─────────────┘
     |                  ↑
-   ┌┌───────────┐┐    ┌──────────────┐
-   ││-3/Quarters││---→│-3/Quarters/2─│
-   └└───────────┘┘    └──────────────┘
+   ┌┌───────────┐┐    ┌─────────────┐
+   ││-3/Quarters││---→│-3/Quarters/2│
+   └└───────────┘┘    └─────────────┘
     ↑
    ┌┌─────────┐┐
    ││-4/Prison││←------┐
@@ -69,44 +69,17 @@ Laboratory/3 contains the Twisted Rune.
 
 ## Caverns (optional)
 
-Caverns/3 contains the Basalt Rune.
+Caverns/3 contains the Basalt Rune. This branch is entirely optional.
 
-- Open terrain makes it a bit more difficult to run.
-- Steam vents, smoke clouds, and noxious fumes make hanging around in certain
-  areas dangerous.
+- Open terrain makes it a bit more difficult to run, and more difficult to hide
+  as well.
 - Vapour fiends, vapour mages, convults, and their dustling friends are a
   Caverns-only speciality.
-- Smoke clouds and large splotches of fungi obscure vision...
-- ...Until fuming fiends dispel clouds, and fungi is set on fire.
+- Temporary smoke clouds and large splotches of fungi can be used to obscure
+  vision.
 
 ## Quarters
 
 Quarters/3 contains the Golden Rune.
 
 - Regular, box-like layout
-
-## Morgue
-
-(Unimplemented)
-
-Morgue/3 contains the Ancient Rune.
-
-- All manner of deaf and dumb undead.
-- Occasional packs of skeletal warriors led by death mages, who can see and
-  hear.
-- Many more necromancers and demons than usual.
-- Morgue/3 may contain the Symbol of Torment.
-
-## Solitary
-
-(Unimplemented)
-
-40% chance to appear in any game.
-Solitary/3 contains the Lonely Rune.
-
-## Watchtower
-
-(Unimplemented)
-
-40% chance to appear in any game.
-Watchtower/3 contains the Watchful Rune.

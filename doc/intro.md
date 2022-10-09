@@ -50,3 +50,15 @@ a dash for it when being chased or when trying to stay out of vision. (Of
 course, since all of your foes have a `Sneak` value of 1, you'll always be able
 to hear them -- as long as they moved in their last turn. A few enemies have the
 `Noisy` status, meaning you'll always hear them.)
+
+## Keybindings
+
+- **t** to toggle Auto-wait (which is quite buggy and annoying at present).
+- **qweadzxc** or **hjklyubn** to move.
+- **@** to view character info.
+- **i** to view inventory.
+- **v** to examine the map.
+- **'** to swap weapons.
+- **,** to pickup an item.
+- **s** or **.** to wait a turn.
+- **A** to activate something you're standing on.

@@ -1,14 +1,16 @@
 # Upgrades
 
 Upgrades, loosely inspired by Boohu's aptitudes system, are various permanent
-benefits awarded thrice to the player in a game. There are currently 6
-aptitudes, but only 3 of them can be received in any game.
+benefits awarded thrice to the player in a game when certain levels are reached.
+There are currently 5 aptitudes, but only 3 of them can be received in any game.
+
+Whenever an upgrade is awarded, your maximum HP is increased by 2.
 
 ## Agile
 
 > "You are good at evading blows."
 
-You have a +10% bonus to your evade%.
+You have a hefty +10% bonus to your evade%.
 
 ## OI_Enraged
 

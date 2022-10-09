@@ -16,9 +16,6 @@ don't open them.** They are completely optional.
 - Treasure vaults can generate on the lowest floors, but opening one so soon is
   almost certainly suicidal.
 
-There is currently just one kind of treasure vault. More kinds will be
-implemented in the future.
-
 **Tips** for raiding a vault:
 - Be prepared for some deadly ranged attacks from spires or spellcasters.
 - Ensure you can use AoE consumables (!paralyse, !confuse, !poison) if needed.
@@ -45,7 +42,7 @@ implemented in the future.
 - Pure developer sadism. Imagine a room full of OOFs on D:12 in DCSS.
 - Death mages and knights, warriors, destroyers, necromancers, war olgs, bloats,
   spires, brimstone and lightning mages, lead turtles, frozen fiends.
-- Possiblity of an Ancient Mage.
+- Possibility of an Ancient Mage.
 
 ## Marble Vaults
 
@@ -58,3 +55,12 @@ Marble treasure vault. Themed as the study/experimentation room of a death mage.
 - Other undead monsters may occasionally occur. Bloats, skeletons, skeletal
   warriors (blademasters/axemasters), calcite spires, etc.
 - Possibility of an Ancient Mage.
+
+## Taverns
+
+Wooden rooms. Themed as a bar.
+
+- Probably the least dangerous of all the treasure vault types.
+- All the monsters have the `Drunk` status, causing their movement to be
+  erratic.
+- Tables, chairs, a bartender, etc.

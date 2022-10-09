@@ -12,19 +12,21 @@ benefits given by wearing a cloak of another ego. Each cloak should be equally
 useful; the only reason you'd choose one over the other is because of a
 different strategy or different item set.
 
-You should find at least two cloaks per game.
-
 ## Cloak of fur
 
-A cloak of fur confers rElec+. See [resistances.md](resistances.md) for more
-information.
+A cloak of fur confers rElec+. See [stats.md](stats.md) for more information.
 
 ## Cloak of silicon
 
-A cloak of silicon confers rFire+. See [resistances.md](resistances.md) for more
+A cloak of silicon confers rFire+. See [stats.md](stats.md) for more
 information.
 
 ## Cloak of velvet
 
 A cloak of velvet gives Sneak++, allowing you to move two more steps before
 making noise.
+
+## Cloak of thorns
+
+A cloak of thorns grants you `+1 Spikes` stat. See [spikes.md](spikes.md) for
+info on spiking and retaliation attacks.
