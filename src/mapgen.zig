@@ -2545,11 +2545,11 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     }
 
     // Place a guardian near the stairs in a diagonal position, if possible.
-    const guardian = rng.chooseUnweighted(*const mobs.MobTemplate, &[_]*const mobs.MobTemplate{
-        &mobs.SentinelTemplate,
-        &mobs.DefenderTemplate,
-        &mobs.HunterTemplate,
-    });
+    const mob_spawn_info = rng.choose2(MobSpawnInfo, spawn_tables_stairs[level].items, "weight") catch err.wat();
+    const guardian = mobs.findMobById(mob_spawn_info.id) orelse err.bug(
+        "Mob {s} specified in [stair] spawn tables couldn't be found.",
+        .{mob_spawn_info.id},
+    );
     for (&DIAGONAL_DIRECTIONS) |d| if (up_staircase.move(d, state.mapgeometry)) |neighbor| {
         if (state.is_walkable(neighbor, .{ .right_now = true })) {
             _ = mobs.placeMob(alloc, guardian, neighbor, .{});
@@ -3519,6 +3519,7 @@ pub const MobSpawnInfo = struct {
 };
 pub var spawn_tables: [LEVELS]MobSpawnInfo.AList = undefined;
 pub var spawn_tables_vaults: [VAULT_KINDS]MobSpawnInfo.AList = undefined;
+pub var spawn_tables_stairs: [LEVELS]MobSpawnInfo.AList = undefined;
 
 pub fn readSpawnTables(alloc: mem.Allocator) void {
     const TmpMobSpawnData = struct {
@@ -3536,6 +3537,7 @@ pub fn readSpawnTables(alloc: mem.Allocator) void {
     }{
         .{ .filename = "spawns.tsv", .sptable = &spawn_tables, .backwards = true },
         .{ .filename = "spawns_vaults.tsv", .sptable = &spawn_tables_vaults },
+        .{ .filename = "spawns_stairs.tsv", .sptable = &spawn_tables_stairs, .backwards = true },
     };
 
     // We need `inline for` because the schema needs to be comptime...
@@ -3588,6 +3590,12 @@ pub fn freeSpawnTables(alloc: mem.Allocator) void {
     }
 
     for (spawn_tables_vaults) |table| {
+        for (table.items) |spawn_info|
+            alloc.free(spawn_info.id);
+        table.deinit();
+    }
+
+    for (spawn_tables_stairs) |table| {
         for (table.items) |spawn_info|
             alloc.free(spawn_info.id);
         table.deinit();
