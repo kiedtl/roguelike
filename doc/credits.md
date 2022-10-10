@@ -20,8 +20,9 @@ Oathbreaker draws ideas and inspiration from a wide selection of roguelikes.
 - Lack of traditional regeneration (TGGW, Boohu, Harmonist, Cogmind)
 - Terrain-based positioning (with fungi, metal and wood floors, etc) was an
   original idea, but was influenced by Boohu, TGGW, and Brogue.
-- The Spikes stat.
 - Treasure vaults (TGGW's Stone and Golden rooms).
+- The Spikes stat.
+- Many other items were indirectly inspired by items in TGGW.
 
 **Brogue**:
 - Gas traps (and the gas mechanics in general).

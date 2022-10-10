@@ -12,7 +12,7 @@ Whenever an upgrade is awarded, your maximum HP is increased by 2.
 
 You have a hefty +10% bonus to your evade%.
 
-## OI_Enraged
+## Enraged On Injury
 
 > "You feel hatred building up inside."
 

@@ -33,8 +33,7 @@ don't open them.** They are completely optional.
 - Recruits, defenders, javelineers, death knights, bone mages, iron and
   lightning spires.
 - Rare chance of necromancers, war olgs, or warriors.
-- Currently found throughout the Dungeon. (This will change in the future as
-  more vaults are added.)
+- Found on the lower levels.
 
 ## Golden Vaults
 
@@ -43,6 +42,7 @@ don't open them.** They are completely optional.
 - Death mages and knights, warriors, destroyers, necromancers, war olgs, bloats,
   spires, brimstone and lightning mages, lead turtles, frozen fiends.
 - Possibility of an Ancient Mage.
+- Found on the upper levels.
 
 ## Marble Vaults
 
@@ -55,6 +55,7 @@ Marble treasure vault. Themed as the study/experimentation room of a death mage.
 - Other undead monsters may occasionally occur. Bloats, skeletons, skeletal
   warriors (blademasters/axemasters), calcite spires, etc.
 - Possibility of an Ancient Mage.
+- Found on the middle and upper levels.
 
 ## Taverns
 
@@ -64,3 +65,4 @@ Wooden rooms. Themed as a bar.
 - All the monsters have the `Drunk` status, causing their movement to be
   erratic.
 - Tables, chairs, a bartender, etc.
+- Found on the lower and middle levels.

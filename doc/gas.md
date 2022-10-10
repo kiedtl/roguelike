@@ -3,9 +3,9 @@
 **NOTE**: Current, the Examine mode doesn't show what gas is on a tile. You'll
 have to figure it out yourself for now (by the color), unfortunately.
 
-Oathbreaker's gases are modelled after Brogue's being clouds that spread over
-the surrounding area, usually at a rate of ~1 tile per turn. They can be created
-by lava (smoke), harmful potions, enemy abilities, and other sources.
+Oathbreaker's gases are modelled after Brogue's gas clouds that spread over the
+surrounding area, usually at a rate of ~1 tile per turn. They can be created by
+lava (smoke), harmful potions, enemy abilities, and other sources.
 
 Unlike Brogue, where you stay away from gas traps except for special
 circumstances (e.g. if you have armor of respiration), you are encouraged to use
