@@ -166,6 +166,8 @@ pub fn calculateMorale(self: *Mob) isize {
 
     // Bonuses/neg bonuses depending on enemy's condition {{{
     for (self.allies.items) |ally| {
+        base += 1;
+
         if (ally.hasStatus(.Enraged)) base += 4;
         if (ally.hasStatus(.Fast)) base += 4;
         if (ally.hasStatus(.Invigorate)) base += 4;

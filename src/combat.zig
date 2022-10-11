@@ -59,7 +59,7 @@ pub fn damageOfWeapon(attacker: ?*const Mob, weapon: *const Weapon, recipient: ?
         }
     }
     if (attacker != null) {
-        // If copper weapon and attacker is on copper ground, +2 damage.
+        // If copper weapon and attacker is on copper ground, +3 damage.
         if (weapon.ego == .Copper and attacker.?.isUnderStatus(.CopperWeapon) != null) {
             damage.total += 3;
             damage.copper_bonus = true;
