@@ -116,7 +116,7 @@ pub fn chanceOfMeleeLanding(attacker: *const Mob, defender: ?*const Mob) usize {
 
     chance += if (attacker.isUnderStatus(.Enraged) != null) ATTACKER_ENRAGED_BONUS else 0;
     chance += if (attacker.isUnderStatus(.OpenMelee) != null and nearby_walls <= 3) ATTACKER_OPENMELEE_BONUS else 0;
-    chance += if (attacker.isUnderStatus(.ClosedMelee) != null and nearby_walls <= 3) ATTACKER_CLOSEDMELEE_BONUS else 0;
+    chance += if (attacker.isUnderStatus(.ClosedMelee) != null and nearby_walls >= 5) ATTACKER_CLOSEDMELEE_BONUS else 0;
 
     chance -= if (attacker.isUnderStatus(.Fear)) |_| ATTACKER_FEAR_NBONUS else 0;
     chance -= if (attacker.isUnderStatus(.Held)) |_| ATTACKER_HELD_NBONUS else 0;
