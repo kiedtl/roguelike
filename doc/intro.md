@@ -1,59 +1,8 @@
-# Intro
-
-*This documentation is very much WIP. If you have questions, please contact the
-author at `kiedtl＠tilde.team` (don't copy/paste) or `/msg cot` on
-[libera.chat](https://libera.chat).*
-
-Oathbreaker is a stealth-focused roguelike, a game where the main fighting
-strategy is not fighting at all. Your health is extremely limited and doesn't
-regenerate until you reach a new floor, and most of the weaker enemies can bring
-you to a quarter of your health in a single fight. Even the weakest of enemies
-can easily draw half the floor onto you when they turn to flee and call for
-help, so the few fights you do end up in have to be ended quickly and with
-extreme prejudice.
-
-**tl;dr**:
-- Stay out of enemy's sight.
-- Don't fight if you can help it. Avoid melee as much as possible.
-- Don't make noise.
-- Use your inventory (e.g. potions) to end fights quickly.
-- Use movement patterns to supplement fights.
-
-The only thing that matters in this game is getting off the floor quickly.
-You'll be leveraging poisonous potions, toxic gas, drains, other prisoners, and
-the like to get out of fights quickly and make a run for it. The occasional
-fountain (`¶`) or potion of recuperation can provide some much needed healing;
-other than those two sources, healing is very rare and hard to come by.
-
-You start off at the bottom of the Dungeon, working your way up to the top. Once
-you leave a floor, you cannot go back. There will be occasional optional
-staircases that lead sideways instead of up (`≤`) and that lead to more
-dangerous levels; the second optional floor will have a Rune (`ß`) that you can
-collect if you wish. (See the [list of branches](branches.md) for more info.)
-
-Unlike other roguelikes, stealth is very deterministic; enemies have a 100%
-chance do detect you inside their (smaller) FOV, which you must take care to
-stay out of. All creatures have a conical FOV shape, in the direction they're
-currently facing. Many monsters will glance around them as they stand still, and
-some monsters (such as guards and sentinels) will occasionally wander off to
-another room to guard. While you'll need to stay agile and aware of your
-surroundings to avoid acquiring negative health syndrome, the deterministic
-stealth system ensures that it's *always* your fault, and not the RNG's, when
-you inevitably get caught.
-
-Since you automatically make a noise when you move more than `Sneak` times in a
-row (where `Sneak` is one of your stats), they may also come to investigate
-noises you make while moving around. (Your `Sneak` will be affected by different
-terrain, like soft carpet or creaky wooden floorboards.) While you'll have the
-luxury of being able to stay silent much of the time, you'll often have to make
-a dash for it when being chased or when trying to stay out of vision. (Of
-course, since all of your foes have a `Sneak` value of 1, you'll always be able
-to hear them -- as long as they moved in their last turn. A few enemies have the
-`Noisy` status, meaning you'll always hear them.)
+# Oathbreaker Quickstart
 
 ## Keybindings
 
-- **t** to toggle Auto-wait (which is quite buggy and annoying at present).
+Basics:
 - **qweadzxc** or **hjklyubn** to move.
 - **@** to view character info.
 - **i** to view inventory.
@@ -61,4 +10,45 @@ to hear them -- as long as they moved in their last turn. A few enemies have the
 - **'** to swap weapons.
 - **,** to pickup an item.
 - **s** or **.** to wait a turn.
+- Number keys **0123456789** to activate movement patterns.
+
+Other keybindings:
 - **A** to activate something you're standing on.
+- **M** to view the message log.
+- **t** to toggle Auto-wait (which is quite buggy and annoying at present).
+
+## Gameplay
+
+**Sneak around and stay out of sight.** Stealth is 100%
+deterministic in Oathbreaker, no kludgy "You have 23% chance to be detected."
+You'll either be detected or not. Red tiles == seen by an enemy == bad!
+
+TODO_GIF: hiding in corner while patrol walks right past
+
+TODO_GIF: standing in room as guard walks towards @, then guard spotting player and
+moving one step foward to attack.
+
+**Move without making noise to avoid being detected.** To move quietly, you'll
+have to rest every few turns. Keep an eye on the green bar on the HUD. When the
+green bar fills up, you're making noise.
+
+TODO_GIF: green bar filling up gradually as one moves.
+
+**If you make noise, guards become suspicious.** They'll come to investigate and
+leave only when they're satisfied that there was nothing there. Must've been
+rats!
+
+TODO_GIF: making noise in dark area, guard in corner comes to investigate
+
+**Stab unaware enemies.** Stabs deal 10x more damage and daze the victim.
+Enemies can only be stabbed if they're (a) unaware of you and (b) aren't
+investigating a noise.
+
+TODO_GIF: guard moves into corner and looks other way while player hides in
+opposite corner. player moves over and stabs guard.
+
+TODO_GIF: row of patrol pass by player. player stabs some of them.
+
+**You can't attack aware enemies.** Instead, you'll swap places with them.
+
+TODO_GIF: running away from guard in corridor, then swapping places with them.
