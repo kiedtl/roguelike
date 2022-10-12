@@ -439,7 +439,7 @@ x woldo             3 damage   -10 Melee%   Reach+, Dip, Martial++
 
 body armor:
 x robe
-- martial robe      5% armor           Martial+
+- martial robe      0% armor           Martial+
 x gambeson         15% armor   Sneak+
 ~ leather armor    20% armor           Martial-
 - hauberk          25% armor   Sneak--
@@ -449,23 +449,25 @@ x gambeson         15% armor   Sneak+
 footwear:
 - velvet boots:                Sneak++
 - sabatons:        15% armor   Sneak-
-- sandal:                      Martial++
+- martial shoe:                Martial++
 - combat boots:    10% armor   +10..+20 evade% when in open areas
-- scale shoes:      5% armor   +10% speed when moving over ground that gives speed, -10% speed
+  - "perfectly weighted for combat"
+- alt. combat boots:           +10% melee
+~ scale shoes:      5% armor   +10% speed when moving over ground that gives speed, -10% speed
                                 on ground that slows down
 - crimson boots:    5% armor   +20 evade% when move,move,move,move pattern, but stealth-
-- hiking boots:                +10 speed% when move,move,move,move pattern
+~ hiking boots:                +10 speed% when move,move,move,move pattern
 
 headgear:
 - mining helmet:    5% armor   Vision+  lights up area *in direction mob is facing*.
 - mail coif:       10% armor            Sneak-
-- cloth hood:                           Sneak+
-- fume hood:                   Vision-  rFume+
+- cloth hood:                           Sneak++ rElec+
+- fume hood:                   Vision-  rFume+10
 - welding helmet:   5% armor   Vision-  rFire+
 - thief's mask:                Vision-  infravision
 
 utility and auxiliary items:
-- Detect undead
+- Detect undead (or nah... overlaps with Corruption too much)
 - Vampirism (charm of transference)
 x Buckler (+10% block)
 x Spiked buckler (same stats as bucker, but has Retaliation damage)
@@ -484,6 +486,23 @@ x Miner's Map (echolocation)
 x Dispel Undead
   - Any undead adjacent to you take 2 dmg each turn.
   - Very powerful, but makes it impossible to sneak around them.
+- Demolish Undead
+  - Any undead adjacent burst into fiery explosion, each turn.
+  - Incredibly loud.
+  - Probably need mechanism to swap aux if this is the case...
+  - Does more damage than Dispel Undead
+- Crystal Ball
+  - Small chance to dazzle enemies that can see you if you're running and in
+    light. (daze or disorient?)
+- ?
+  - Cause attacks against large, healthy creatures to do bonus damage.
+- ?
+  - Item that gives damage bonuses inversely proportional to your health.
+- ?
+  - Bloodlust, when killing living monsters with non-stab, heals player for
+    half the monster's max health.
+  - Encourages risky fights, but with lucrative rewards (large amounts of
+    healing.)
 
 
 Movement patterns
