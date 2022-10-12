@@ -19,6 +19,25 @@ Reduces sight vision to 1, so that monsters/you can only see adjacent tiles.
 Very useful for throwing off pursuers, assuming there is already a few tiles of
 distance between.
 
+## closed melee
+
+A status conferred by certain weapons.
+
+Gives a `melee%` bonus if you are in closed space, i.e. there are at least 5
+walls adjacent to you (including in diagonal directions).
+
+See also: open melee.
+
+## conductive
+
+Causes you to share electric damage with nearby mobs. If those monsters are
+conductive as well, the electric arc will propagate through them and into
+monsters adjacent to them as well. (Only full rElec will prevent it from
+propagating).
+
+Conductivity is typically caused by certain terrain, such as metal floors or
+shallow water.
+
 ## copper
 
 A `<Ctx>` status given by copper terrain, that enables you to do +3 more
@@ -38,6 +57,10 @@ unaware or dormant undead could potentially fail catastrophically if the RNG
 decides to screw with you.
 
 In future releases, additional negative effects will be added.
+
+## dazed
+
+Causes all attempts at moving to fail, moving in a random direction instead.
 
 ## debilitated
 
@@ -63,6 +86,10 @@ Depending on your playstyle, it may synergize well with a build that is
 vulnerable to fire, as it allows you to detect common fire-damaging monsters and
 avoid them more easily.
 
+## disoriented
+
+Prevents diagonal movement and diagonal attacks.
+
 ## dormant
 
 See `sleeping`.
@@ -76,6 +103,13 @@ For example, if a drunk monster attempts to move north, they may move either
 northwest or northeast instead (but only if those tiles are passable).
 
 Drunk monsters are typically encountered in Tavern treasure vaults.
+
+## echolocating
+
+When you hear a noise, you will passively map out the areas near that sound.
+
+(No dungeon features etc. will be detected, just whether the tile is a floor or
+a wall.)
 
 ## enraged
 
@@ -92,10 +126,51 @@ Drunk monsters are typically encountered in Tavern treasure vaults.
 
 - -25% fire resistance.
 
+## glowing
+
+You emit light.
+
+Not exactly the best status to have if you're trying to hide from guards in dark
+areas.
+
+## hasted
+
+You are faster than usual.
+
+While you have this status, many movement patterns may be harder or outright
+impossible to use, unfortunately. For that reason, it's best to consider sources
+of this status purely as escape items. (In a future release, this status might
+be removed entirely to mitigate this issue.)
+
+## held
+
+Causes all attempts to move to fail with the message "You flail around
+helplessly." Attempting to move will, however, cause the duration of the status
+to decrease faster.
+
 ## intimidating
 
 Sharply reduces all enemies' morale (the ones that can see you), making it much
 more likely that they'll flee.
+
+## noisy
+
+Causes noise to be emit on each turn, regardless if the mob is moving or not.
+
+Many monsters have this status, allowing you to detect them more easily.
+
+## open melee
+
+A status conferred by certain weapons.
+
+Gives a `melee%` bonus if you are in open space, i.e. there are fewer than 4
+walls adjacent to you (including in diagonal directions).
+
+See also: closed melee.
+
+## paralyzed
+
+Causes you to skip your turn.
 
 ## riposte
 
@@ -112,3 +187,9 @@ A sleeping monster will wake up:
 - when you attack them (or try to)
 - when a nearby ally informs them of your presence
 - if the monster isn't deaf and it hears a noise
+
+## slowed
+
+Your movements, attacks, and other actions are all much slower than usual. A
+fairly rare status, one which will probably be removed in future versions
+because it makes it much harder to execute movement patterns.
