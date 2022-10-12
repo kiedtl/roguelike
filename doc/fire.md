@@ -12,6 +12,9 @@ A tile is flammable when:
 - An object (not an item) is on it
 - Flammable terrain (e.g. wood) is on that tile.
 
+In addition to flammable terrain, there is also fire retardant terrain that puts
+out fires (such as shallow water).
+
 To get a rough idea of how many turns are left for a tile to burn, see the tile
 glyph:
 - `,` (comma): 3 (or fewer) turns. (At this point, the fire is safe to walk on.)

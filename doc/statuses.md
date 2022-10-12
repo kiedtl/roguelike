@@ -19,6 +19,15 @@ Reduces sight vision to 1, so that monsters/you can only see adjacent tiles.
 Very useful for throwing off pursuers, assuming there is already a few tiles of
 distance between.
 
+## burning
+
+You are on fire.
+
+- You have a 50% chance to take damage each turn.
+- You spread fire to the tile you are on, if it isn't already on fire.
+
+See [fire.md](fire.md) for more details.
+
 ## closed melee
 
 A status conferred by certain weapons.
@@ -27,6 +36,11 @@ Gives a `melee%` bonus if you are in closed space, i.e. there are at least 5
 walls adjacent to you (including in diagonal directions).
 
 See also: open melee.
+
+## charged
+
+(Monster-only.) When this monster dies, it will violently explode in a blast of
+electricity.
 
 ## conductive
 
@@ -118,6 +132,15 @@ a wall.)
 - +20% damage for melee hits.
 - +20% speed bonus.
 
+## exhausted
+
+(Monster-only.) The monster is exhausted, and the status that usually triggers
+when they flee (e.g. `hasted` or `enraged`) won't have any effect.
+
+## explosive
+
+(Monster-only.) When this monster dies, it will violently explode.
+
 ## fireproof
 
 - +25% fire resistance.
@@ -153,6 +176,29 @@ to decrease faster.
 Sharply reduces all enemies' morale (the ones that can see you), making it much
 more likely that they'll flee.
 
+## invigorated
+
+- You have a bonus to your evasion.
+- You deal extra damage in melee.
+
+## lifespan
+
+(Monster-only.) When this status runs out, the monster will die or
+self-destruct. Usually found paired with the `explosive` or `charged` statuses.
+
+## nauseated
+
+You are unable to drink potions.
+
+Doesn't affect non-player mobs, since they don't have an AI that drinks potions.
+
+## night-vision
+
+Usually found on monsters. Indicates that they can see in dark tiles.
+
+(The player has innate night-vision, thus making this status meaningless for the
+player.)
+
 ## noisy
 
 Causes noise to be emit on each turn, regardless if the mob is moving or not.
@@ -171,6 +217,11 @@ See also: closed melee.
 ## paralyzed
 
 Causes you to skip your turn.
+
+## recuperating
+
+- You regenerate 1 HP per turn.
+- Your Armor is lowered by 25%.
 
 ## riposte
 
@@ -193,3 +244,17 @@ A sleeping monster will wake up:
 Your movements, attacks, and other actions are all much slower than usual. A
 fairly rare status, one which will probably be removed in future versions
 because it makes it much harder to execute movement patterns.
+
+## terrified
+
+No effect on the player.
+
+For monsters, makes it drastically more likely that they'll flee from you
+(unless they're fearless, undead, or non-living).
+
+## tormented
+
+- You are in agony and cannot rest.
+- You take variable amounts of damage each turn. (For now that amount is
+  dependent on the source of this status; in future releases this will be
+  properly documented.)

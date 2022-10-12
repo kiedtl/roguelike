@@ -20,6 +20,14 @@ Your chance to dodge.
 
 The player has 10% evasion by default.
 
+Your evasion is increased by:
+- Being `invigorated`.
+- Being in an open area.
+- Staying in dark tiles.
+
+You evasion is reduced by:
+- Being `enraged`, `held`, or `debilitated`.
+
 ## Martial
 
 Determines the maximum number of times the player/monster can attack in a single turn if
