@@ -2919,7 +2919,7 @@ pub const Mob = struct { // {{{
             const S = struct {
                 pub fn isConductive(c: Coord, _: state.IsWalkableOptions) bool {
                     if (state.dungeon.at(c).mob) |m|
-                        if (m.isUnderStatus(.Conductive) != null)
+                        if (m.hasStatus(.Conductive) and !m.isFullyResistant(.rElec))
                             return true;
                     return false;
                 }
@@ -2935,17 +2935,18 @@ pub const Mob = struct { // {{{
                 const mob = state.dungeon.at(child).mob.?;
                 if (mob == self) continue;
 
-                const damage_percent = 10 - child.distance(self.coord);
-                const damage = d.amount * damage_percent / 100;
+                const damage = d.amount - (child.distance(self.coord) -| 1);
 
-                mob.takeDamage(.{
-                    .amount = damage,
-                    .by_mob = d.by_mob,
-                    .source = d.source,
-                    .kind = .Electric,
-                    .indirect = d.indirect,
-                    .propagate_elec_damage = false,
-                }, msg);
+                if (damage > 0) {
+                    mob.takeDamage(.{
+                        .amount = damage,
+                        .by_mob = d.by_mob,
+                        .source = d.source,
+                        .kind = .Electric,
+                        .indirect = d.indirect,
+                        .propagate_elec_damage = false,
+                    }, msg);
+                }
             }
         }
 

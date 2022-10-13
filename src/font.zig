@@ -1,6 +1,5 @@
-// This file is a placeholder for a more sophisticated font handling code
-
 const std = @import("std");
+const builtin = @import("builtin");
 
 const c_imp = @cImport({
     @cInclude("png.h");
@@ -14,7 +13,7 @@ const state = @import("state.zig");
 pub const FONT_HEIGHT = 16; //8;
 pub const FONT_WIDTH = 8; //7;
 pub const FONT_FALLBACK_GLYPH = 0x7F;
-pub const FONT_PATH = "font/spleen.png";
+pub const FONT_PATH = "./data/font/spleen.png";
 pub const Sprite = @import("sprites.zig").Sprite;
 
 pub var font_data: []u8 = undefined;
@@ -23,7 +22,7 @@ var png_ctx: ?*c_imp.png_struct = null;
 var png_info: ?*c_imp.png_info = null;
 
 fn _png_err(_: ?*c_imp.png_struct, msg: [*c]const u8) callconv(.C) void {
-    err.fatal("libPNG error: {s}", .{msg});
+    err.fatal("libPNG tantrum: {s}", .{msg});
 }
 
 pub fn loadFontData() void {
@@ -34,12 +33,21 @@ pub fn loadFontData() void {
         err.fatal("Failed to read font data: libPNG error", .{});
     }
 
-    var font_f = (std.fs.cwd().openDir("data", .{}) catch err.wat())
-        .openFile(FONT_PATH, .{ .read = true }) catch |e|
-        err.fatal("Failed to read font data: {s}", .{@errorName(e)});
-    defer font_f.close();
+    // var font_f = std.fs.cwd().openFile(FONT_PATH, .{ .read = true }) catch |e|
+    //     err.fatal("Failed to read font data: {s}", .{@errorName(e)});
+    // defer font_f.close();
 
-    c_imp.png_init_io(png_ctx, c_imp.fdopen(font_f.handle, "r"));
+    // png_init_io call doesn't compile on Windows if we use std.fs, due to
+    // File.Handle being *anyopaque instead of whatever png_FILE_p is.
+    //
+    // So, we directly call the C apis instead.
+
+    const font_f = c_imp.fopen(FONT_PATH, "rb");
+    if (font_f == null) {
+        err.fatal("Failed to read font data (unknown error)", .{});
+    }
+
+    c_imp.png_init_io(png_ctx, font_f);
     c_imp.png_set_strip_alpha(png_ctx);
     c_imp.png_set_scale_16(png_ctx);
     c_imp.png_set_expand(png_ctx);

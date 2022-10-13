@@ -540,7 +540,19 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
     try w.print("Seed: {}\n", .{rng.seed});
     try w.print("\n", .{});
 
-    const username = std.os.getenv("USER").?; // FIXME: should have backup option if null
+    var username: []const u8 = undefined;
+    // FIXME: should be a cleaner way to do this...
+    if (std.process.getEnvVarOwned(alloc, "USER")) |s| {
+        username = s;
+    } else |_| {
+        if (std.process.getEnvVarOwned(alloc, "USERNAME")) |s| {
+            username = s;
+        } else |_| {
+            username = alloc.dupe(u8, "Obmirnul") catch unreachable;
+        }
+    }
+    defer alloc.free(username);
+
     const gamestate = switch (state) {
         .Win => "escaped",
         .Lose => "died",

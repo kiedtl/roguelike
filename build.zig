@@ -37,9 +37,20 @@ pub fn build(b: *Builder) void {
 
     const exe = b.addExecutable("rl", "src/main.zig");
     exe.linkLibC();
-    exe.linkSystemLibrary("z");
-    exe.linkSystemLibrary("png");
     exe.addPackagePath("rexpaint", "rx/lib.zig");
+
+    if (target.os_tag != null and target.os_tag.? == .windows) {
+        exe.addIncludeDir("mingw/zlib/include/");
+        exe.addObjectFile("mingw/zlib/lib/libz.dll.a");
+        b.installBinFile("mingw/zlib/bin/zlib1.dll", "zlib1.dll");
+
+        exe.addIncludeDir("mingw/libpng/include/libpng16/");
+        exe.addObjectFile("mingw/libpng/lib/libpng.dll.a");
+        b.installBinFile("mingw/libpng/bin/libpng16-16.dll", "libpng16-16.dll");
+    } else {
+        exe.linkSystemLibrary("z");
+        exe.linkSystemLibrary("png");
+    }
 
     if (!opt_use_sdl) {
         const termbox_sources = [_][]const u8{
@@ -67,7 +78,13 @@ pub fn build(b: *Builder) void {
         for (termbox_sources) |termbox_source|
             exe.addCSourceFile(termbox_source, &termbox_cflags);
     } else {
-        exe.linkSystemLibrary("sdl2");
+        if (target.os_tag != null and target.os_tag.? == .windows) {
+            exe.addIncludeDir("mingw/SDL2/include/SDL2/");
+            exe.addObjectFile("mingw/SDL2/lib/libSDL2.dll.a");
+            b.installBinFile("mingw/SDL2/bin/SDL2.dll", "SDL2.dll");
+        } else {
+            exe.linkSystemLibrary("sdl2");
+        }
     }
 
     exe.setTarget(target);
