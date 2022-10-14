@@ -241,6 +241,18 @@ pub fn init(preferred_width: usize, preferred_height: usize) InitErr!void {
             // TODO: get rid of this
             const SCALE = 2;
 
+            // SDL2 has scaling issues on Windows when using HiDPI displays.
+            //
+            // Convince Windows it doesn't need to babysit us, we can set our
+            // own pixels just fine.
+            if (@import("builtin").os.tag == .windows) {
+                const win32 = @cImport({
+                    @cInclude("windows.h");
+                    @cInclude("winuser.h");
+                });
+                _ = win32.SetProcessDPIAware();
+            }
+
             window = driver_m.SDL_CreateWindow(
                 "Oathbreaker", // TODO: move to const
                 driver_m.SDL_WINDOWPOS_CENTERED,
