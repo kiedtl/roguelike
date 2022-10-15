@@ -68,7 +68,7 @@ DONE TODO_GIF: chased by group of enemies to cell, unlock cell, bybye
 **Use traps and gas vents to your advantage.** Traps (the pointy `^` things)
 release poisonous gas through the gas vents (`+`) when stepped on.
 
-TODO_GIF: stepping on paralysis gas trap
+DONE TODO_GIF: stepping on paralysis gas trap
 
 Just remember not to get trapped between pockets of expanding gas yourself!
 
@@ -92,13 +92,13 @@ By default, you are given a number of movement patterns that appear next to a
 number on the HUD. Press the number to activate the pattern, then follow the
 instructions in the log.
 
-TODO_GIF: invoking leap pattern and jumping over pool of water.
+DONE TODO_GIF: invoking leap pattern and jumping over pool of water.
 
 **Seek out rings to get more movement patterns.** This is akin to finding a
 spellbook. Rings are always found in gold enclosures. Each level will have a
 single ring.
 
-TODO_GIF: moving across map to a room with ring, walking to ring, equipping it,
+DONE TODO_GIF: moving across map to a room with ring, walking to ring, equipping it,
 opening inventory, and mousing over ring and looking at description.
 
 **Head for the stairs as fast as possible!** Only escape matters -- don't try
