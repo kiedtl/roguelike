@@ -65,7 +65,7 @@ guards.
 **Use traps and gas vents to your advantage.** Traps (the pointy `^` things)
 release poisonous gas through the gas vents (`+`) when stepped on.
 
-![GIF](https://tilde.team/~kiedtl/images/rl/intro/10.gif)
+![GIF](https://tilde.team/~kiedtl/images/rl/intro/11.gif)
 
 Just remember not to get trapped between pockets of expanding gas yourself!
 
@@ -89,13 +89,13 @@ By default, you are given a number of movement patterns that appear next to a
 number on the HUD. Press the number to activate the pattern, then follow the
 instructions in the log.
 
-![GIF](https://tilde.team/~kiedtl/images/rl/intro/11.gif)
+![GIF](https://tilde.team/~kiedtl/images/rl/intro/12.gif)
 
 **Seek out rings to get more movement patterns.** This is akin to finding a
 spellbook. Rings are always found in gold enclosures. Each level will have a
 single ring.
 
-![GIF](https://tilde.team/~kiedtl/images/rl/intro/12.gif)
+![GIF](https://tilde.team/~kiedtl/images/rl/intro/13.gif)
 
 **Head for the stairs as fast as possible!** Only escape matters -- don't try
 wandering around the levels or looking for loot if you don't know where the
@@ -112,3 +112,5 @@ When you ascend a staircase:
 
 If you wish, you can also enter optional stairs. These are entirely optional,
 and lead to more dangerous levels with stronger foes.
+
+![GIF](https://tilde.team/~kiedtl/images/rl/intro/14.gif)
