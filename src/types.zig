@@ -2518,6 +2518,10 @@ pub const Mob = struct { // {{{
 
             other.push_flag = true;
             self.push_flag = true;
+
+            if (other.isHostileTo(self)) {
+                ai.updateEnemyKnowledge(other, self, null);
+            }
         } else {
             self.coord = dest;
             state.dungeon.at(dest).mob = self;

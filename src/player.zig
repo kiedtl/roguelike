@@ -8,6 +8,7 @@ const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const ai = @import("ai.zig");
 const colors = @import("colors.zig");
+const combat = @import("combat.zig");
 const rng = @import("rng.zig");
 const literature = @import("literature.zig");
 const explosions = @import("explosions.zig");
@@ -326,12 +327,11 @@ pub fn moveOrFight(direction: Direction) bool {
 
     // Does the player want to stab or push past?
     if (state.dungeon.at(dest).mob) |mob| {
-        if (state.player.isHostileTo(mob)) switch (mob.ai.phase) {
-            .Work => {
+        if (state.player.isHostileTo(mob))
+            if (mob.ai.phase == .Work or combat.isAttackStab(state.player, mob)) {
                 state.player.fight(mob, .{});
                 return true;
-            },
-            .Hunt, .Investigate => {
+            } else if (mob.ai.phase == .Hunt or mob.ai.phase == .Investigate) {
                 if (getActiveRing()) |_| {
                     state.player.fight(mob, .{});
                     return true;
@@ -339,9 +339,9 @@ pub fn moveOrFight(direction: Direction) bool {
                     if (!ui.drawYesNoPrompt("Really push past unaware enemy?", .{}))
                         return false;
                 }
-            },
-            else => {},
-        };
+            } else {
+                // Nothing
+            };
     }
 
     // Does the player want to move into a surveilled location?
