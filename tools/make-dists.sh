@@ -35,6 +35,10 @@ printf "Compiling for host termbox...\n"
 zig build -Drelease-safe -Duse-sdl=false
 mktarball $(uname -s) $(uname -m) termbox
 
+printf "Compiling for x86_64 Windows SDL...\n"
+zig build -Drelease-safe -Dtarget=x86_64-windows-gnu -Duse-sdl=true
+mktarball windows x86_64 SDL
+
 #printf "Compiling for x86_64-macos-gnu...\n"
 #zig build -Drelease-safe -Dtarget=x86_64-macos-gnu -Duse-sdl=true
 #mktarball macOS x86_64 SDL
