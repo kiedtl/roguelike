@@ -47,23 +47,23 @@ investigating a noise.
 DONE TODO_GIF: guard moves into corner and looks other way while player hides in
 opposite corner. player moves over and stabs guard.
 
-TODO_GIF: row of patrol pass by player. player stabs some of them.
+DONE TODO_GIF: row of patrol pass by player. player stabs some of them.
 
 **You can't attack aware enemies.** Instead, you'll swap places with them.
 
-TODO_GIF: running away from guard in corridor, then swapping places with them.
+DONE TODO_GIF: running away from guard in corridor, then swapping places with them.
 
 **You automatically attack nearby enemies if you stay still.** "Staying still"
 is any action that isn't a movement. Enemies are attacked in clockwise order,
 starting with the northmost enemy.
 
-TODO_GIF: getting surrounded by enemies, moving around them, then waiting (and
+DONE TODO_GIF: getting surrounded by enemies, moving around them, then waiting (and
 auto-attacking)
 
 **Release prisoners for maximum commotion!** Or just to distract a mob of angry
 guards.
 
-TODO_GIF: chased by group of enemies to cell, unlock cell, bybye
+DONE TODO_GIF: chased by group of enemies to cell, unlock cell, bybye
 
 **Use traps and gas vents to your advantage.** Traps (the pointy `^` things)
 release poisonous gas through the gas vents (`+`) when stepped on.
