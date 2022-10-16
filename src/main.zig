@@ -678,7 +678,7 @@ fn tickGame() !void {
                 player.autoAttack();
             }
 
-            err.ensure(prev_energy <= mob.energy, "{c} (phase: {}) did nothing during turn!", .{ mob, mob.ai.phase }) catch {
+            err.ensure(prev_energy > mob.energy, "{c} (phase: {}) did nothing during turn!", .{ mob, mob.ai.phase }) catch {
                 ai.tryRest(mob);
             };
 

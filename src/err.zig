@@ -11,7 +11,7 @@ const sentry = @import("sentry.zig");
 
 pub fn ensure(expr: bool, comptime err_message: []const u8, args: anytype) !void {
     if (!expr) {
-        std.log.err("[non-fatal]" ++ err_message, args);
+        std.log.err("[non-fatal] " ++ err_message, args);
         return error.OhNoes;
     }
 }
