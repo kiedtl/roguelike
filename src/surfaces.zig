@@ -263,11 +263,11 @@ pub const TERRAIN = [_]*const Terrain{
     &PlatformTerrain,
 };
 
-pub const ToolChest = Container{ .name = "tool chest", .tile = 'æ', .capacity = 3, .type = .Evocables };
-pub const Wardrobe = Container{ .name = "wardrobe", .tile = 'Æ', .capacity = 4, .type = .Wearables, .item_repeat = 0 };
-pub const PotionShelf = Container{ .name = "potion shelf", .tile = 'Æ', .capacity = 4, .type = .Drinkables, .item_repeat = 0 };
-pub const WeaponRack = Container{ .name = "weapon rack", .tile = 'π', .capacity = 3, .type = .Smackables, .item_repeat = 0 };
-pub const LabCabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 4, .type = .Utility, .item_repeat = 70 };
+pub const ToolChest = Container{ .name = "tool chest", .tile = 'æ', .capacity = 1, .type = .Evocables };
+pub const Wardrobe = Container{ .name = "wardrobe", .tile = 'Æ', .capacity = 1, .type = .Wearables, .item_repeat = 0 };
+pub const PotionShelf = Container{ .name = "potion shelf", .tile = 'Æ', .capacity = 3, .type = .Drinkables, .item_repeat = 0 };
+pub const WeaponRack = Container{ .name = "weapon rack", .tile = 'π', .capacity = 1, .type = .Smackables, .item_repeat = 0 };
+pub const LabCabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 5, .type = .Utility, .item_repeat = 70 };
 pub const VOreCrate = Container{ .name = "crate", .tile = '∐', .capacity = 14, .type = .VOres, .item_repeat = 60 };
 
 pub const LOOT_CONTAINERS = [_]*const Container{ &WeaponRack, &PotionShelf, &Wardrobe, &ToolChest };

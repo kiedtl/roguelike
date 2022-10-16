@@ -371,7 +371,7 @@ pub fn moveOrFight(direction: Direction) bool {
 pub fn rummageContainer(coord: Coord) bool {
     const container = state.dungeon.at(coord).surface.?.Container;
 
-    assert(container.items.len == 0);
+    assert(container.items.len > 0);
 
     ui.Animation.apply(.{
         .PopChar = .{ .coord = state.player.coord, .char = '?', .fg = colors.GOLD, .delay = 125 },
