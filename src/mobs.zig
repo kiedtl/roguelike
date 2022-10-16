@@ -198,7 +198,7 @@ pub const WatcherTemplate = MobTemplate{
         },
         .max_HP = 6,
         .memory_duration = 15,
-        .stats = .{ .Willpower = 3, .Evade = 30, .Speed = 50 },
+        .stats = .{ .Willpower = 3, .Evade = 30 },
     },
 };
 
@@ -217,7 +217,7 @@ pub const ShriekerTemplate = MobTemplate{
         },
         .max_HP = 3,
         .memory_duration = 20,
-        .stats = .{ .Willpower = 4, .Evade = 40, .Speed = 50 },
+        .stats = .{ .Willpower = 4, .Evade = 40 },
     },
 };
 
@@ -377,7 +377,7 @@ pub const IronWaspTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
         .innate_resists = .{ .rFire = 50, .rFume = 100 },
-        .stats = .{ .Willpower = 1, .Evade = 50, .Speed = 50, .Vision = 3 },
+        .stats = .{ .Willpower = 1, .Evade = 50, .Melee = 50, .Speed = 50, .Vision = 3 },
     },
 
     .squad = &[_][]const MobTemplate.SquadMember{
