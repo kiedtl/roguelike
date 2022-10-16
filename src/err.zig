@@ -9,6 +9,13 @@ const state = @import("state.zig");
 const rng = @import("rng.zig");
 const sentry = @import("sentry.zig");
 
+pub fn ensure(expr: bool, comptime err_message: []const u8, args: anytype) !void {
+    if (!expr) {
+        std.log.err("[non-fatal]" ++ err_message, args);
+        return error.OhNoes;
+    }
+}
+
 pub fn bug(comptime fmt: []const u8, args: anytype) noreturn {
     @setCold(true);
 
@@ -46,7 +53,7 @@ pub fn fatal(comptime fmt: []const u8, args: anytype) noreturn {
     @setCold(true);
 
     ui.deinit() catch {};
-    std.log.err("ERROR: " ++ fmt, args);
+    std.log.err(fmt, args);
 
     std.os.abort();
     unreachable;

@@ -678,12 +678,9 @@ fn tickGame() !void {
                 player.autoAttack();
             }
 
-            if (prev_energy <= mob.energy) {
-                err.bug("Mob {s} (phase: {}) did nothing during its turn!", .{
-                    mob.displayName(),
-                    mob.ai.phase,
-                });
-            }
+            err.ensure(prev_energy <= mob.energy, "{c} (phase: {}) did nothing during turn!", .{ mob, mob.ai.phase }) catch {
+                ai.tryRest(mob);
+            };
 
             if (actions_taken > 1 and state.player.cansee(mob.coord)) {
                 try readNoActionInput(130);
