@@ -687,7 +687,7 @@ fn tickGame() !void {
             }
         }
 
-        if (mob.should_be_dead()) {
+        if (!mob.is_dead and mob.should_be_dead()) {
             mob.kill();
             continue;
         }
