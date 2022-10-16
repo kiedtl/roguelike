@@ -34,27 +34,20 @@
 "PRI"	"Naughty prisoners get extra solitary time."
 "PRI"	"Rations will be halved for two weeks in preparation for the upcoming sewer maintenance."
 "PRI"	"An investigation is underway regarding the recent fire on the fourth floor."
-"QRT"	"Rumors that the recent fire was caused by an angry Burning Brute have not yet been confirmed."
+"PRI"	"Executions will continue until prisoner morale improves."
+"PRI"	"Where there's a whip, there's a will."
 
-# And now some (satire, kinda) propaganda posters, originally from REC
-# (Recreation) but merged into PRI when that level was deleted. Please don't
-# take these seriously.
-#
-# Addendum 2022-04-21: ...and then merged into QRT, the latest reincarnation of
-# REC, when it emerged from the ashes of the Vaults.
-"QRT"	"\"Urum-Zhiolum\" is a codeword for goblin genocide."
-"QRT"	"A goblin's honor is his loyalty."
-"QRT"	"We must secure the existence of the Goblin Nation and a future for our seed."
-"QRT"	"The Cave Goblins will not replace us."
-"QRT"	"The Urumderm will not replace us."
-
-# More QRT posters
+# QRT posters
 "QRT"	"Talk to your commander today if your comrades show signs of disloyalty."
 "QRT"	"Don't hesitate to report the numbers of traitorous comrades."
 "QRT"	"The Necromancer is watching you."
 "QRT"	"The Necromancer can see you."
 "QRT"	"The Necromancer knows your thoughts."
 "QRT"	"The Necromancer knows your loyalties."
+"QRT"	"Rumors that the recent fire was caused by an angry burning brute have not yet been confirmed."
+"QRT"	"A goblin's honor is his loyalty."
+"QRT"	"We must secure the existence of the Goblin Nation and a future for our seed."
+"QRT"	"The Cave Goblins will not replace us."
 
 # Laboratory
 #
@@ -62,11 +55,11 @@
 "LAB"	"Handling slade without permission is strictly forbidden."
 "LAB"	"Handling slade without written permission is strictly forbidden."
 "LAB"	"Handling slade without prior permission from the Head of Research is strictly forbidden."
-"LAB"	"A inspection by the Head of Research on current safety precautions will be conducted next week."
+"LAB"	"A inspection by the Head of Research on current safety practices will be conducted next week."
 "LAB"	"The Head of Research is committed to ensuring that all staff remain safe during work shifts."
 "LAB"	"Please read the appropriate manual(s) before operating machinery."
 "LAB"	"Read the owner's manual before operating extractors."
 "LAB"	"Read the owner's manual before operating grinders."
 "LAB"	"Read the owner's manual before operating research stations."
 "LAB"	"Do not use another staffer's research station."
-"LAB"	"Staffers that molest prisoners outside of research sessions will be scheduled for a mandatory appointment at the Temple."
+"LAB"	"Staffers that molest prisoners outside of research sessions will be scheduled for a mandatory appointment at the Shrine."
