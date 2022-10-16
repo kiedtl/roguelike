@@ -2935,22 +2935,25 @@ pub const Mob = struct { // {{{
             var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 9, S.isConductive, .{}, fba.allocator());
             defer dijk.deinit();
 
+            var list = StackBuffer(Coord, 64).init(null);
+
             while (dijk.next()) |child| {
                 const mob = state.dungeon.at(child).mob.?;
-                if (mob == self) continue;
+                if (mob != self and list.len < list.capacity)
+                    list.append(child) catch unreachable;
+            }
 
-                const damage = d.amount - (child.distance(self.coord) -| 1);
+            ui.Animation.blink(list.constSlice(), '*', ui.Animation.ELEC_LINE_FG, .{}).apply();
 
-                if (damage > 0) {
-                    mob.takeDamage(.{
-                        .amount = damage,
-                        .by_mob = d.by_mob,
-                        .source = d.source,
-                        .kind = .Electric,
-                        .indirect = d.indirect,
-                        .propagate_elec_damage = false,
-                    }, msg);
-                }
+            for (list.constSlice()) |mob_coord| {
+                state.dungeon.at(mob_coord).mob.?.takeDamage(.{
+                    .amount = d.amount,
+                    .by_mob = d.by_mob,
+                    .source = d.source,
+                    .kind = .Electric,
+                    .indirect = d.indirect,
+                    .propagate_elec_damage = false,
+                }, msg);
             }
         }
 
