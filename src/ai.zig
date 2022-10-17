@@ -459,7 +459,7 @@ pub fn checkForAllies(mob: *Mob) void {
         }
 
         if (state.dungeon.at(fitem).mob) |othermob| {
-            if (othermob.allegiance == mob.allegiance) {
+            if (othermob != mob and othermob.allegiance == mob.allegiance) {
                 mob.allies.append(othermob) catch err.wat();
             }
         }
@@ -1206,8 +1206,10 @@ pub fn stalkerFight(mob: *Mob, alloc: mem.Allocator) void {
             if (!keepDistance(mob, target.coord, dist))
                 tryRest(mob);
         }
-    } else {
+    } else if (mob.enemyList().items.len == 1) {
         mageFight(mob, alloc);
+    } else {
+        work(mob, alloc);
     }
 }
 
@@ -1428,6 +1430,15 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
     }
 }
 
+pub fn work(mob: *Mob, alloc: mem.Allocator) void {
+    var work_fn = mob.ai.work_fn;
+    if (!mob.isAloneOrLeader()) {
+        work_fn = stayNearLeaderWork;
+    }
+
+    (work_fn)(mob, alloc);
+}
+
 pub fn main(mob: *Mob, alloc: mem.Allocator) void {
     checkForLeadership(mob);
 
@@ -1467,12 +1478,7 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
     }
 
     if (mob.ai.phase == .Work) {
-        var work_fn = mob.ai.work_fn;
-        if (!mob.isAloneOrLeader()) {
-            work_fn = stayNearLeaderWork;
-        }
-
-        (work_fn)(mob, alloc);
+        work(mob, alloc);
     } else if (mob.ai.phase == .Investigate) {
         // Even non-curious mobs can investigate, e.g. stalkers sent by player
         //assert(mob.ai.is_curious);

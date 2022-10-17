@@ -739,14 +739,14 @@ pub const StalkerStation = Machine{
     .evoke_confirm = "Really use the stalkers for your own devious purposes?",
     .player_interact = .{
         .name = "use",
-        .success_msg = "You let loose the stalkers.",
+        .success_msg = "You loose the stalkers.",
         .no_effect_msg = null,
         .max_use = 1,
         .func = struct {
             fn f(_: *Machine, by: *Mob) bool {
                 assert(by == state.player);
 
-                const STALKER_MAX = 5;
+                const STALKER_MAX = 3;
 
                 const Action = union(enum) {
                     SeekStairs,
