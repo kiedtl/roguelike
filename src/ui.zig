@@ -48,7 +48,7 @@ const WIDTH = state.WIDTH;
 
 pub const LEFT_INFO_WIDTH: usize = 35;
 //pub const RIGHT_INFO_WIDTH: usize = 24;
-pub const LOG_HEIGHT: usize = 4;
+pub const LOG_HEIGHT: usize = 8;
 
 pub const MIN_HEIGHT = HEIGHT + LOG_HEIGHT + 2;
 //const min_width = WIDTH + LEFT_INFO_WIDTH + RIGHT_INFO_WIDTH + 2;
