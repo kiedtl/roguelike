@@ -497,7 +497,7 @@ pub const BOLT_BLINKBOLT = Spell{
     .name = "living lightning",
     .cast_type = .Bolt,
     .noise = .Loud,
-    .bolt_animation = .{
+    .animation = .{
         .Type2 = .{
             .chars = ui.Animation.ELEC_LINE_CHARS,
             .fg = ui.Animation.ELEC_LINE_FG,
@@ -541,7 +541,7 @@ pub const BOLT_IRON = Spell{
     .cast_type = .Bolt,
     .bolt_dodgeable = true,
     .bolt_multitarget = false,
-    .bolt_animation = .{ .Simple = .{ .char = '+' } },
+    .animation = .{ .Simple = .{ .char = '+' } },
     .noise = .Medium,
     .effect_type = .{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
@@ -582,8 +582,8 @@ pub const BOLT_LIGHTNING = Spell{
     .cast_type = .Bolt,
     .bolt_dodgeable = false,
     .bolt_multitarget = true,
-    //.bolt_animation = .{ .Type2 = .{ .chars = "EFHIKLMNTVWXYZ\\/|-=+#", .fg = 0x73c5ff } },
-    .bolt_animation = .{
+    //.animation = .{ .Type2 = .{ .chars = "EFHIKLMNTVWXYZ\\/|-=+#", .fg = 0x73c5ff } },
+    .animation = .{
         .Type2 = .{
             .chars = ui.Animation.ELEC_LINE_CHARS,
             .fg = ui.Animation.ELEC_LINE_FG,
@@ -861,27 +861,45 @@ pub const CAST_FLAMMABLE = Spell{
     .effect_type = .{ .Status = .Flammable },
     .checks_will = true,
 };
+
+const STATUE_SPELL_ANIMATION = .{
+    .Type2 = .{
+        .chars = ".#.#.",
+        .fg = colors.LIGHT_GOLD,
+        .bg = colors.GOLD,
+        .bg_mix = 0.05,
+        .approach = 4,
+    },
+};
+
 pub const CAST_FREEZE = Spell{
     .id = "sp_freeze",
     .name = "freeze",
     .cast_type = .Smite,
     .effect_type = .{ .Status = .Paralysis },
+    .needs_cardinal_direction_target = true,
     .checks_will = true,
+    .animation = STATUE_SPELL_ANIMATION,
 };
 pub const CAST_FAMOUS = Spell{
     .id = "sp_famous",
     .name = "famous",
     .cast_type = .Smite,
     .effect_type = .{ .Status = .Corona },
+    .needs_cardinal_direction_target = true,
     .checks_will = true,
+    .animation = STATUE_SPELL_ANIMATION,
 };
 pub const CAST_FERMENT = Spell{
     .id = "sp_ferment",
     .name = "confusion",
     .cast_type = .Smite,
     .effect_type = .{ .Status = .Disorient },
+    .needs_cardinal_direction_target = true,
     .checks_will = true,
+    .animation = STATUE_SPELL_ANIMATION,
 };
+
 pub const CAST_FEAR = Spell{
     .id = "sp_fear",
     .name = "fear",
@@ -949,7 +967,8 @@ pub const Spell = struct {
     // Only used if cast_type == .Bolt
     bolt_dodgeable: bool = false,
     bolt_multitarget: bool = true,
-    bolt_animation: ?union(enum) {
+
+    animation: ?union(enum) {
         Simple: struct {
             char: u32,
             fg: u32 = 0xffffff,
@@ -965,6 +984,7 @@ pub const Spell = struct {
 
     checks_will: bool = false,
     needs_visible_target: bool = true,
+    needs_cardinal_direction_target: bool = false,
 
     check_has_effect: ?fn (*Mob, SpellOptions, Coord) bool = null,
 
@@ -1057,7 +1077,7 @@ pub const Spell = struct {
                     last_processed_coord = c;
                 }
 
-                if (self.bolt_animation) |anim_type| switch (anim_type) {
+                if (self.animation) |anim_type| switch (anim_type) {
                     .Simple => |simple_anim| {
                         ui.Animation.apply(.{ .TraverseLine = .{
                             .start = caster_coord,
@@ -1139,6 +1159,28 @@ pub const Spell = struct {
                         }
                     },
                 }
+
+                if (self.animation) |anim_type| switch (anim_type) {
+                    .Simple => |simple_anim| {
+                        ui.Animation.apply(.{ .TraverseLine = .{
+                            .start = caster_coord,
+                            .end = target,
+                            .char = simple_anim.char,
+                            .fg = simple_anim.fg,
+                        } });
+                    },
+                    .Type2 => |type2_anim| {
+                        ui.Animation.apply(.{ .AnimatedLine = .{
+                            .start = caster_coord,
+                            .end = target,
+                            .approach = type2_anim.approach,
+                            .chars = type2_anim.chars,
+                            .fg = type2_anim.fg,
+                            .bg = type2_anim.bg,
+                            .bg_mix = type2_anim.bg_mix,
+                        } });
+                    },
+                };
             },
         }
     }

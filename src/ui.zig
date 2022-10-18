@@ -2983,12 +2983,15 @@ pub const Animation = union(enum) {
                             continue;
                         }
 
+                        const special = coord.eq(anim.start) or coord.eq(anim.end);
+
                         const dx = coord.x + mapwin.startx;
                         const dy = coord.y + mapwin.starty;
                         const old = display.getCell(dx, dy);
 
-                        const char = rng.chooseUnweighted(u8, anim.chars);
-                        const fg = colors.percentageOf(anim.fg, counter * 100 / (iters / 2));
+                        const char = if (special) old.ch else rng.chooseUnweighted(u8, anim.chars);
+                        const fg = if (special) old.fg else colors.percentageOf(anim.fg, counter * 100 / (iters / 2));
+
                         const bg = if (anim.bg) |color|
                             colors.mix(
                                 old.bg,

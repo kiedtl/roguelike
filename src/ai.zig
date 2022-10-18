@@ -1264,6 +1264,10 @@ pub fn rangedFight(mob: *Mob, alloc: mem.Allocator) void {
 fn _isValidTargetForSpell(caster: *Mob, spell: SpellOptions, target: *Mob) bool {
     assert(!target.is_dead);
 
+    if (spell.spell.needs_cardinal_direction_target and
+        (target.coord.x != caster.coord.x and target.coord.y != caster.coord.y))
+        return false;
+
     if (spell.spell.needs_visible_target and !caster.cansee(target.coord))
         return false;
 
@@ -1320,15 +1324,14 @@ fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
 }
 
 pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
-    if (mob.ai.flag(.SocialFighter)) {
+    if (mob.ai.flag(.SocialFighter) or mob.ai.flag(.SocialFighter2)) {
         // Check if there's an ally that satisfies the following conditions
         //      - Isn't the current mob
         //      - Isn't another immobile mob
-        //      - Is seen by the target
         //      - Is either investigating or attacking
         const found_ally = for (mob.allies.items) |ally| {
             if (ally != mob and !ally.immobile and
-                (ally.ai.phase == .Hunt or ally.ai.phase == .Investigate))
+                (!mob.ai.flag(.SocialFighter) or ally.ai.phase == .Hunt or ally.ai.phase == .Investigate))
             {
                 break true;
             }
@@ -1357,41 +1360,6 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
         } else {
             tryRest(mob);
         },
-    }
-}
-
-// TODO: with the addition of the .SocialFighter flag, this is
-// redundant. Should be merged into mageFight().
-pub fn statueFight(mob: *Mob, _: mem.Allocator) void {
-    assert(mob.spells.len > 0);
-
-    const target = currentEnemy(mob).mob;
-
-    if (!target.cansee(mob.coord) or
-        mob.MP < mob.spells[0].MP_cost)
-    {
-        tryRest(mob);
-        return;
-    }
-
-    // Check if there's an ally that satisfies the following conditions
-    //      - Isn't the current mob
-    //      - Isn't another immobile mob
-    //      - Is seen by the target
-    //      - Is either investigating or attacking
-    const found_ally = for (mob.allies.items) |ally| {
-        if (ally != mob and !ally.immobile and
-            target.cansee(ally.coord))
-        {
-            break true;
-        }
-    } else false;
-
-    if (found_ally and rng.onein(10)) {
-        const spell = mob.spells[0];
-        spell.spell.use(mob, mob.coord, target.coord, spell);
-    } else {
-        tryRest(mob);
     }
 }
 
