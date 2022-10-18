@@ -345,7 +345,7 @@ pub fn moveOrFight(direction: Direction) bool {
     }
 
     // Does the player want to move into a surveilled location?
-    if (!isPlayerSpotted() and enemiesCanSee(dest)) {
+    if (!isPlayerSpotted() and enemiesCanSee(dest) and state.is_walkable(dest, .{ .mob = state.player })) {
         if (!ui.drawYesNoPrompt("Really move into an enemy's view?", .{}))
             return false;
     }

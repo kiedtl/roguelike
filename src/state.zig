@@ -143,7 +143,7 @@ pub var default_patterns = [_]types.Ring{
     items.DefaultPinRing,
     items.DefaultChargeRing,
     items.DefaultLungeRing,
-    items.DefaultCounterattackRing,
+    items.DefaultEyepunchRing,
     items.DefaultLeapRing,
 };
 

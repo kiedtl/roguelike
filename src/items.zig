@@ -475,6 +475,7 @@ pub const PatternChecker = struct { // {{{
         NeedHostileOnTile,
         NeedOpenSpace,
         NeedOppositeWalkableTileInFrontOfWall,
+        NeedLivingEnemy,
     };
 
     pub fn reset(self: *PatternChecker) void {
@@ -1464,58 +1465,46 @@ pub const DefaultLungeRing = Ring{ // {{{
     }.f,
 }; // }}}
 
-pub const DefaultCounterattackRing = Ring{ // {{{
-    .name = "counterattack",
+pub const DefaultEyepunchRing = Ring{ // {{{
+    .name = "eyepunch",
     .pattern_checker = .{
-        // mobs[0]: attacked mob
-        // directions[0]: first attack direction
-        // coords[0]: initial coordinate
-        // coords[1]: attacked mob's initial coordinate
+        // mobs[0]: enemy
         .turns = 4,
         .init = struct {
-            pub fn f(_: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+            pub fn f(mob: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
                 if (d.is_diagonal())
                     return error.NeedCardinalDirection;
-                stt.directions[0] = d;
-                return Activity{ .Attack = .{
-                    .direction = d,
-                    .who = undefined,
-                    .coord = undefined,
-                    .delay = undefined,
-                } };
+                stt.mobs[0] = try PatternChecker._util_getHostileInDirection(mob, d);
+                if (stt.mobs[0].?.life_type != .Living)
+                    return error.NeedLivingEnemy;
+                return .Rest;
             }
         }.f,
         .funcs = [_]PatternChecker.Func{
             struct {
-                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
-                    const r = cur == .Attack and
-                        cur.Attack.direction == stt.directions[0].?;
-                    if (r and !dry) {
-                        stt.mobs[0] = cur.Attack.who;
-                    }
-                    return r;
+                pub fn f(_: *Mob, _: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    return cur == .Rest;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    if (cur != .Move)
+                        return false;
+                    const new_coord = if (dry) mob.coord.move(cur.Move, state.mapgeometry).? else mob.coord;
+                    return new_coord.distance(stt.mobs[0].?.coord) == 1;
+                }
+            }.f,
+            struct {
+                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    if (cur != .Move)
+                        return false;
+                    const new_coord = if (dry) mob.coord.move(cur.Move, state.mapgeometry).? else mob.coord;
+                    return new_coord.distance(stt.mobs[0].?.coord) == 1;
                 }
             }.f,
             struct {
                 pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
-                    const r = cur == .Move and
-                        cur.Move == stt.directions[0].?.opposite();
-                    return r;
-                }
-            }.f,
-            struct {
-                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
-                    const r = cur == .Attack and
-                        cur.Attack.who == stt.mobs[0].? and
-                        cur.Attack.direction == stt.directions[0].?;
-                    return r;
-                }
-            }.f,
-            struct {
-                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
-                    const r = cur == .Move and
-                        cur.Move == stt.directions[0].?.opposite();
-                    return r;
+                    return cur == .Attack and cur.Attack.who == stt.mobs[0].?;
                 }
             }.f,
             undefined,
@@ -1527,8 +1516,10 @@ pub const DefaultCounterattackRing = Ring{ // {{{
         },
     },
     .effect = struct {
-        pub fn f(self: *Mob, _: PatternChecker.State) void {
-            self.addStatus(.Fast, 0, .{ .Tmp = 10 });
+        pub fn f(_: *Mob, stt: PatternChecker.State) void {
+            assert(stt.mobs[0].?.life_type == .Living);
+            stt.mobs[0].?.addStatus(.Blind, 0, .{ .Tmp = 3 });
+            stt.mobs[0].?.addStatus(.Disorient, 0, .{ .Tmp = 6 });
         }
     }.f,
 }; // }}}
