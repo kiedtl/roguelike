@@ -137,7 +137,7 @@ pub const CoronerTemplate = MobTemplate{
             .fight_fn = ai.coronerFight,
         },
 
-        .max_HP = 6,
+        .max_HP = 8,
         .memory_duration = 10,
 
         .stats = .{ .Willpower = 2 },
@@ -156,7 +156,7 @@ pub const ExecutionerTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
         },
 
-        .max_HP = 7,
+        .max_HP = 5,
         .memory_duration = 8,
         .stats = .{ .Willpower = 3 },
     },
@@ -175,7 +175,7 @@ pub const DestroyerTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
         },
 
-        .max_HP = 8,
+        .max_HP = 6,
         .memory_duration = 8,
         .stats = .{ .Willpower = 4, .Evade = 10, .Melee = 70 },
     },
@@ -196,7 +196,7 @@ pub const WatcherTemplate = MobTemplate{
             .is_curious = false,
             .flags = &[_]AI.Flag{.FearsDarkness},
         },
-        .max_HP = 6,
+        .max_HP = 4,
         .memory_duration = 15,
         .stats = .{ .Willpower = 3, .Evade = 30 },
     },
@@ -233,7 +233,7 @@ pub const GuardTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
         },
 
-        .max_HP = 8,
+        .max_HP = 5,
         .memory_duration = 10,
 
         .stats = .{ .Willpower = 2 },
@@ -253,7 +253,7 @@ pub const SentinelTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
         },
 
-        .max_HP = 12,
+        .max_HP = 8,
         .memory_duration = 10,
 
         .stats = .{ .Willpower = 2, .Melee = 70 },
@@ -279,7 +279,7 @@ pub const JavelineerTemplate = MobTemplate{
             },
         },
 
-        .max_HP = 8,
+        .max_HP = 6,
         .memory_duration = 10,
         .stats = .{ .Willpower = 2, .Evade = 10, .Missile = 80, .Vision = 5 },
     },
@@ -306,7 +306,7 @@ pub const DefenderTemplate = MobTemplate{
             },
         },
 
-        .max_HP = 8,
+        .max_HP = 6,
         .memory_duration = 20,
         .stats = .{ .Willpower = 4, .Evade = 10, .Missile = 90 },
     },
@@ -336,7 +336,7 @@ pub const LeadTurtleTemplate = MobTemplate{
             .flags = &[_]AI.Flag{ .DetectWithHeat, .DetectWithElec },
         },
 
-        .max_HP = 20,
+        .max_HP = 15,
         .memory_duration = 20,
         .blood = null,
         .corpse = .None,
@@ -372,7 +372,7 @@ pub const IronWaspTemplate = MobTemplate{
             .is_fearless = true,
             .flags = &[_]AI.Flag{ .DetectWithHeat, .DetectWithElec },
         },
-        .max_HP = 2,
+        .max_HP = 1,
         .memory_duration = 8,
         .blood = null,
         .corpse = .None,
@@ -415,7 +415,7 @@ pub const CopperHornetTemplate = MobTemplate{
             .is_fearless = true,
             .flags = &[_]AI.Flag{.DetectWithElec},
         },
-        .max_HP = 5,
+        .max_HP = 3,
         .memory_duration = 8,
         .blood = null,
         .corpse = .None,
@@ -441,7 +441,7 @@ pub const PatrolTemplate = MobTemplate{
             .flags = &[_]AI.Flag{.FearsDarkness},
         },
 
-        .max_HP = 8,
+        .max_HP = 6,
         .memory_duration = 10,
         .stats = .{ .Willpower = 2, .Evade = 10 },
     },
@@ -499,12 +499,10 @@ pub const GoblinTemplate = MobTemplate{
             .flags = &[_]AI.Flag{.AvoidsEnemies},
         },
         .allegiance = .OtherEvil,
-        .max_HP = 12,
+        .max_HP = 8,
         .memory_duration = 20,
         .stats = .{ .Willpower = 4, .Evade = 15, .Vision = 6 },
     },
-    .weapon = &items.MaceWeapon,
-    .armor = &items.GambesonArmor,
 };
 
 pub const ConvultTemplate = MobTemplate{
@@ -525,7 +523,7 @@ pub const ConvultTemplate = MobTemplate{
         },
         .max_MP = 6,
 
-        .max_HP = 15,
+        .max_HP = 7,
         .memory_duration = 8,
         .stats = .{ .Willpower = 3, .Vision = 4 },
     },
@@ -552,7 +550,7 @@ pub const VapourMageTemplate = MobTemplate{
         },
         .max_MP = 15,
 
-        .max_HP = 13,
+        .max_HP = 5,
         .memory_duration = 10,
         .stats = .{ .Willpower = 6, .Speed = 200, .Vision = 6 },
     },
@@ -578,7 +576,7 @@ pub const DustlingTemplate = MobTemplate{
             .work_fn = ai.patrolWork,
             .fight_fn = ai.meleeFight,
         },
-        .max_HP = 2,
+        .max_HP = 1,
         .memory_duration = 3,
         .life_type = .Construct,
         .blood = .Dust,
@@ -613,7 +611,7 @@ pub const CinderWormTemplate = MobTemplate{
             .fight_fn = ai.mageFight,
             .flags = &[_]AI.Flag{.DetectWithHeat},
         },
-        .max_HP = 8,
+        .max_HP = 6,
 
         .spells = &[_]SpellOptions{
             // Have cooldown period that matches time needed for flames to
@@ -661,7 +659,7 @@ pub const WarOlgTemplate = MobTemplate{
             .fight_fn = ai.mageFight,
             .is_fearless = true, // don't just run away when you've got a regen spell, dumbass
         },
-        .max_HP = 15,
+        .max_HP = 7,
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 3, .spell = &spells.CAST_REGEN, .power = 3 },
@@ -685,7 +683,7 @@ pub const MellaentTemplate = MobTemplate{
             .is_combative = false,
             .is_curious = false,
         },
-        .max_HP = 5,
+        .max_HP = 3,
         .stats = .{ .Willpower = 1, .Evade = 40, .Speed = 120, .Vision = 8 },
     },
     .statuses = &[_]StatusDataInfo{
@@ -722,7 +720,7 @@ fn createSpireTemplate(
             .spells = &[_]SpellOptions{spell},
             .max_MP = 4,
 
-            .max_HP = 12,
+            .max_HP = 10,
             .memory_duration = 10000,
             .life_type = .Construct,
             .blood = null,
@@ -966,7 +964,7 @@ pub const AncientMageTemplate = MobTemplate{
         .deaf = false,
         .life_type = .Undead,
 
-        .max_HP = 30,
+        .max_HP = 20,
         .memory_duration = 8,
         .blood = null,
         .corpse = .None,
@@ -996,7 +994,7 @@ pub const SpectreMageTemplate = MobTemplate{
         },
         .max_MP = 15,
 
-        .max_HP = 10,
+        .max_HP = 5,
         .memory_duration = 6,
         .stats = .{ .Willpower = 6, .Vision = 5 },
     },
@@ -1016,7 +1014,7 @@ pub const RecruitTemplate = MobTemplate{
             .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
         },
 
-        .max_HP = 7,
+        .max_HP = 5,
         .memory_duration = 10,
         .stats = .{ .Willpower = 1, .Melee = 70, .Vision = 5 },
     },
@@ -1037,7 +1035,7 @@ pub const WarriorTemplate = MobTemplate{
             .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
         },
 
-        .max_HP = 10,
+        .max_HP = 8,
         .memory_duration = 10,
         .stats = .{ .Willpower = 2, .Melee = 80, .Evade = 15, .Vision = 5 },
     },
@@ -1058,7 +1056,7 @@ pub const HunterTemplate = MobTemplate{
             .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 20 }, .exhausting = true },
         },
 
-        .max_HP = 10,
+        .max_HP = 8,
         .memory_duration = 40,
         .stats = .{ .Willpower = 3, .Melee = 70, .Speed = 150, .Vision = 7 },
     },
@@ -1091,7 +1089,7 @@ pub const BoneMageTemplate = MobTemplate{
         },
         .max_MP = 20,
 
-        .max_HP = 7,
+        .max_HP = 4,
         .memory_duration = 10,
         .stats = .{ .Willpower = 4, .Vision = 5, .Melee = 40 },
     },
@@ -1118,7 +1116,7 @@ pub const DeathKnightTemplate = MobTemplate{
             .flags = &[_]AI.Flag{.CalledWithUndead},
         },
 
-        .max_HP = 10,
+        .max_HP = 8,
         .memory_duration = 8,
         .stats = .{ .Willpower = 6, .Melee = 70, .Evade = 10, .Vision = 5 },
     },
@@ -1152,7 +1150,7 @@ pub const DeathMageTemplate = MobTemplate{
         },
         .max_MP = 20,
 
-        .max_HP = 10,
+        .max_HP = 6,
         .memory_duration = 15,
         .stats = .{ .Willpower = 8, .Evade = 10, .Vision = 6 },
     },
@@ -1190,7 +1188,7 @@ pub const EmberMageTemplate = MobTemplate{
         },
         .max_MP = 15,
 
-        .max_HP = 6,
+        .max_HP = 5,
         .memory_duration = 10,
         .stats = .{ .Willpower = 4, .Evade = 0, .Vision = 5 },
     },
@@ -1229,7 +1227,7 @@ pub const BrimstoneMageTemplate = MobTemplate{
         },
         .max_MP = 15,
 
-        .max_HP = 8,
+        .max_HP = 7,
         .memory_duration = 10,
         .stats = .{ .Willpower = 6, .Evade = 10, .Vision = 6 },
     },
@@ -1266,7 +1264,7 @@ pub const SparkMageTemplate = MobTemplate{
         },
         .max_MP = 10,
 
-        .max_HP = 6,
+        .max_HP = 5,
         .memory_duration = 10,
         .stats = .{ .Willpower = 4, .Evade = 0, .Vision = 5 },
     },
@@ -1303,7 +1301,7 @@ pub const LightningMageTemplate = MobTemplate{
         },
         .max_MP = 15,
 
-        .max_HP = 8,
+        .max_HP = 7,
         .memory_duration = 10,
         .stats = .{ .Willpower = 6, .Evade = 10, .Vision = 6 },
     },
@@ -1334,7 +1332,7 @@ pub const BloatTemplate = MobTemplate{
             .is_fearless = true,
         },
 
-        .max_HP = 28,
+        .max_HP = 21,
         .memory_duration = 20,
 
         //.deaf = true,
@@ -1376,7 +1374,7 @@ pub const ThrashingSculptorTemplate = MobTemplate{
         },
         .max_MP = 10,
 
-        .max_HP = 10,
+        .max_HP = 12,
         .memory_duration = 20,
 
         .life_type = .Undead,
@@ -1408,7 +1406,7 @@ pub const SkeletonTemplate = MobTemplate{
             .flags = &[_]AI.Flag{.CalledWithUndead},
         },
 
-        .max_HP = 5,
+        .max_HP = 4,
         .memory_duration = 8,
 
         .deaf = true,
@@ -1524,7 +1522,7 @@ pub const EmberlingTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .max_HP = 3,
+        .max_HP = 2,
         .memory_duration = 5,
         .innate_resists = .{ .rFume = 100, .rFire = RESIST_IMMUNE },
         .stats = .{ .Willpower = 1, .Evade = 10, .Vision = 4, .Melee = 50 },
@@ -1573,7 +1571,7 @@ pub const SparklingTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .max_HP = 3,
+        .max_HP = 2,
         .memory_duration = 5,
         .innate_resists = .{ .rFume = 100, .rElec = RESIST_IMMUNE },
         .stats = .{ .Willpower = 1, .Evade = 10, .Vision = 4 },
@@ -1604,7 +1602,7 @@ pub const SkeletalAxemasterTemplate = MobTemplate{
         .deaf = true,
         .life_type = .Undead,
 
-        .max_HP = 15,
+        .max_HP = 10,
         .memory_duration = 5,
         .blood = null,
         .corpse = .None,
@@ -1633,7 +1631,7 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
         .deaf = true,
         .life_type = .Undead,
 
-        .max_HP = 12,
+        .max_HP = 8,
         .memory_duration = 6,
         .blood = null,
         .corpse = .None,
@@ -1669,7 +1667,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
         },
         .max_MP = 10,
 
-        .max_HP = 15,
+        .max_HP = 8,
         .memory_duration = 15,
         .stats = .{ .Willpower = 8, .Evade = 10, .Vision = 6 },
     },
@@ -1712,7 +1710,7 @@ pub const BurningBruteTemplate = MobTemplate{
         },
         .max_MP = 12,
 
-        .max_HP = 20,
+        .max_HP = 15,
         .memory_duration = 10,
         .blood = null,
         .corpse = .None,
@@ -1777,7 +1775,7 @@ pub const FrozenFiendTemplate = MobTemplate{
         },
         .max_MP = 15,
 
-        .max_HP = 20,
+        .max_HP = 15,
         .memory_duration = 10,
         .blood = null,
         .corpse = .None,
@@ -1813,7 +1811,7 @@ pub const LivingIceTemplate = MobTemplate{
         .deg360_vision = true,
         .no_show_fov = true,
         .immobile = true,
-        .max_HP = 20,
+        .max_HP = 12,
         .memory_duration = 1,
 
         .life_type = .Construct,
