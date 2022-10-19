@@ -188,7 +188,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
         fov.rayCastOctants(ground0, (s / 100), s, S._opacityFunc, &result, deg, deg + 31);
     }
 
-    var animation_coords = StackBuffer(Coord, 2048).init(null);
+    var animation_coords = StackBuffer(Coord, 256).init(null);
 
     result[ground0.y][ground0.x] = 100; // Ground zero is always harmed
     for (result) |row, y| for (row) |cell, x| {
@@ -218,34 +218,20 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                 state.dungeon.at(coord).type = .Floor;
 
             if (state.dungeon.at(coord).mob) |unfortunate| {
-                const total_dmg = opts.strength * cell / 100 / 5;
-
-                if (unfortunate == state.player) {
-                    if (!opts.spare_player) {
-                        state.player.takeDamage(.{
-                            .amount = math.min(total_dmg, state.player.HP / 2),
-                            .source = .Explosion,
-                            .kind = .Fire,
-                        }, .{
-                            .noun = "The explosion",
-                        });
-                    }
-                } else {
-                    unfortunate.takeDamage(.{
-                        .amount = total_dmg,
-                        .by_mob = opts.culprit,
-                        .source = .Explosion,
-                        .kind = .Fire,
-                        .indirect = true,
-                    }, .{
-                        .noun = "The explosion",
-                        .strs = &[_]DamageStr{
-                            items._dmgstr(0, "hits", "BUG", ""),
-                            items._dmgstr(100, "pulverises", "BUG", ""),
-                            items._dmgstr(300, "grinds", "BUG", " to powder"),
-                        },
-                    });
-                }
+                unfortunate.takeDamage(.{
+                    .amount = 3,
+                    .by_mob = opts.culprit,
+                    .source = .Explosion,
+                    .kind = .Fire,
+                    .indirect = true,
+                }, .{
+                    .noun = "The explosion",
+                    .strs = &[_]DamageStr{
+                        items._dmgstr(0, "hits", "BUG", ""),
+                        items._dmgstr(100, "pulverises", "BUG", ""),
+                        items._dmgstr(300, "grinds", "BUG", " to powder"),
+                    },
+                });
             }
         }
     };
