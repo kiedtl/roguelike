@@ -2,6 +2,7 @@ const std = @import("std");
 const meta = std.meta;
 const math = std.math;
 
+const colors = @import("colors.zig");
 const types = @import("types.zig");
 const fov = @import("fov.zig");
 const state = @import("state.zig");
@@ -9,6 +10,8 @@ const fire = @import("fire.zig");
 const items = @import("items.zig");
 const sound = @import("sound.zig");
 const rng = @import("rng.zig");
+const ui = @import("ui.zig");
+const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const Mob = types.Mob;
 const DamageStr = types.DamageStr;
@@ -185,6 +188,8 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
         fov.rayCastOctants(ground0, (s / 100), s, S._opacityFunc, &result, deg, deg + 31);
     }
 
+    var animation_coords = StackBuffer(Coord, 2048).init(null);
+
     result[ground0.y][ground0.x] = 100; // Ground zero is always harmed
     for (result) |row, y| for (row) |cell, x| {
         // Leave edge of map alone.
@@ -194,6 +199,8 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
 
         if (cell > 0) {
             const coord = Coord.new2(ground0.z, x, y);
+
+            animation_coords.append(coord) catch {};
 
             const max_range = math.max(1, opts.strength / 100);
             const chance_for_fire = 100 - (coord.distance(ground0) * 100 / max_range);
@@ -242,4 +249,6 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
             }
         }
     };
+
+    ui.Animation.blink(animation_coords.constSlice(), '#', colors.PALE_VIOLET_RED, .{}).apply();
 }
