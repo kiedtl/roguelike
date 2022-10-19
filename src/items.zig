@@ -598,7 +598,7 @@ pub const LightningRing = Ring{ // {{{
             for (&DIAGONAL_DIRECTIONS) |d|
                 if (utils.getHostileInDirection(self, d)) |hostile| {
                     hostile.takeDamage(.{
-                        .amount = 2,
+                        .amount = 3,
                         .by_mob = self,
                         .kind = .Electric,
                     }, .{ .noun = "Lightning" });
