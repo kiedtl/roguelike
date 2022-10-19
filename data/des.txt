@@ -472,10 +472,6 @@ Use a nearby corpse to heal a nearby undead ally by a significant amount.
 Vomit fire, engulfing the surrounding area in blazing flames.
 
 % electrocution
-An ancient talisman, created to enhance the fighting prowess of the
-Necromancer's warriors.
-
-
 $cPattern:$. Attack in a cardinal direction, move opposite, move perpendicular,
 attack again.
 
@@ -490,10 +486,6 @@ $G    ....          $.@$G...   .$.@$G..
 $cEffect:$. Mobs in your four corners will be electrocuted.
 
 % extermination
-An ancient talisman, created to enhance the fighting prowess of the
-Necromancer's warriors.
-
-
 $cPattern:$. Move forward against foe, move left or right, move forward.
 
 
@@ -507,10 +499,6 @@ $G    ....   ....   .$.@$G..   ..$.@$G.
 $cEffect:$. A bolt of fire will be hurled in the direction you last attacked.
 
 % cremation
-An ancient talisman, created to enhance the fighting prowess of the
-Necromancer's warriors.
-
-
 $cPattern:$. Attack foe, then move all around foe in four turns (without
 attacking or resting).
 
@@ -526,10 +514,6 @@ $cEffect:$. Makes all adjacent foes temporarily vulnerable to fire, and creates
 a ring of flames in all adjacent squares.
 
 % damnation
-An ancient talisman, created to enhance the fighting prowess of the
-Necromancer's warriors.
-
-
 $cPattern:$. Move towards a wall, wait, attack in the opposite direction.
 
 
@@ -545,10 +529,6 @@ $G    ...$C$~##$.$G   ...$C$~##$.$G
 $cEffect:$. Creates a fiery explosion on all tiles containing foes.
 
 % teleportation
-An ancient talisman, created to enhance the fighting prowess of the
-Necromancer's warriors.
-
-
 $cPattern:$. Attack, move away, move in adjacent cardinal direction, move again
 in same direction, attack any enemy.
 
@@ -567,10 +547,6 @@ teleport yourself to the last tile the bolt touched. (If that tile is
 unwalkable, you won't be teleported).
 
 % electrification
-An ancient talisman, created to enhance the fighting prowess of the
-Necromancer's warriors.
-
-
 $cPattern:$. Attack foe, move one tile backwards into corridor (i.e., with walls
 on the other two sides of your character), wait, attack forwards.
 
@@ -585,10 +561,6 @@ $G    $C$~##$.$G.$rm$G...                 $C$~##$.$G$rm$G....
 $cEffect:$. All foes on your side are zapped with electricity for $b2$. damage.
 
 % insurrection
-An ancient talisman, created to enhance the fighting prowess of the
-Necromancer's warriors.
-
-
 $cPattern:$. Wait, then move to the two sides of the foe and back.
 
 
@@ -604,10 +576,6 @@ before self-destructing. They are blind and won't hunt any other enemy unless
 attacked.
 
 % magnetization
-An ancient talisman, created to enhance the fighting prowess of the
-Necromancer's warriors.
-
-
 $cPattern:$. Attack a foe, then move behind it.
 
 
