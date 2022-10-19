@@ -2888,17 +2888,18 @@ pub const Animation = union(enum) {
                 std.time.sleep(anim.delay * 1_000_000);
             },
             .BlinkChar => |anim| {
-                assert(anim.coords.len < 32); // XXX: increase if necessary
-                var old_cells = StackBuffer(display.Cell, 32).init(null);
+                assert(anim.coords.len < 256); // XXX: increase if necessary
+                var old_cells = StackBuffer(display.Cell, 256).init(null);
+                var some_coords_seen = false;
                 for (anim.coords) |coord| {
-                    if (state.player.cansee(coord)) {
-                        const dx = coord.x + mapwin.startx;
-                        const dy = coord.y + mapwin.starty;
-                        old_cells.append(display.getCell(dx, dy)) catch err.wat();
-                    }
+                    if (state.player.cansee(coord))
+                        some_coords_seen = true;
+                    const dx = coord.x + mapwin.startx;
+                    const dy = coord.y + mapwin.starty;
+                    old_cells.append(display.getCell(dx, dy)) catch err.wat();
                 }
 
-                if (old_cells.len == 0) {
+                if (!some_coords_seen) {
                     // Player can't see any coord, bail out
                     return;
                 }
