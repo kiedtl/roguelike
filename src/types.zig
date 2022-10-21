@@ -2721,9 +2721,7 @@ pub const Mob = struct { // {{{
         });
 
         // XXX: should this be .Loud instead of .Medium?
-        if (!is_stab) {
-            attacker.makeNoise(.Combat, opts.loudness);
-        }
+        attacker.makeNoise(.Combat, if (is_stab) .Quiet else opts.loudness);
 
         for (attacker_weapon.effects) |effect| {
             recipient.applyStatus(effect, .{});
@@ -3339,17 +3337,9 @@ pub const Mob = struct { // {{{
         if (noise.state == .Dead or noise.intensity == .Silent)
             return null; // Sound was made a while back, or is silent
 
-        const line = self.coord.drawLine(coord, state.mapgeometry, 0);
-        var walls_in_way: usize = 0;
-        for (line.constSlice()) |c| {
-            if (state.dungeon.at(c).type == .Wall) {
-                walls_in_way += 1;
-            }
-        }
-
-        // If there are a lot of walls in the way, quiet the noise
         var radius = noise.intensity.radiusHeard();
-        if (self != state.player) radius -|= walls_in_way;
+
+        // Make the player hear farther than monsters
         if (self == state.player) radius = radius * 150 / 100;
 
         if (self.coord.distance(coord) > radius)
