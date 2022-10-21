@@ -1461,7 +1461,7 @@ pub const DefaultLungeRing = Ring{ // {{{
             const msg_verb = if (target == state.player) "lunges" else "lunge";
             state.message(.Combat, "{c} {s} at {}!", .{ self, msg_verb, target });
 
-            self.fight(target, .{ .free_attack = true, .auto_hit = true, .disallow_stab = true, .damage_bonus = 200, .loudness = .Loud });
+            self.fight(target, .{ .free_attack = true, .auto_hit = true, .disallow_stab = true, .damage_bonus = 300, .loudness = .Loud });
         }
     }.f,
 }; // }}}

@@ -525,10 +525,11 @@ fn checkForNoises(mob: *Mob) void {
     mob.sustiles.deinit();
     mob.sustiles = new_sustiles;
 
-    // Sort coords according to distance.
+    // Sort coords according to newest sound.
     std.sort.insertionSort(SuspiciousTileRecord, mob.sustiles.items, mob, struct {
-        fn f(me: *Mob, a: SuspiciousTileRecord, b: SuspiciousTileRecord) bool {
-            return a.coord.distance(me.coord) > b.coord.distance(me.coord);
+        fn f(_: *Mob, a: SuspiciousTileRecord, b: SuspiciousTileRecord) bool {
+            // return a.coord.distance(me.coord) > b.coord.distance(me.coord);
+            return state.dungeon.soundAt(a.coord).when < state.dungeon.soundAt(b.coord).when;
         }
     }.f);
 
