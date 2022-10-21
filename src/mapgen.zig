@@ -627,6 +627,9 @@ fn excavatePrefab(
                 .Feature => |feature_id| {
                     if (fab.features[feature_id]) |feature| {
                         switch (feature) {
+                            .Item => |template| {
+                                state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(template.*)) catch err.wat();
+                            },
                             .Mob => |mob| {
                                 _ = mobs.placeMob(allocator, mob, rc, .{});
                             },
@@ -3034,6 +3037,7 @@ pub const Prefab = struct {
     };
 
     pub const Feature = union(enum) {
+        Item: *const items.ItemTemplate,
         Mob: *const mobs.MobTemplate,
         Poster: *const Poster,
         Machine: struct {
@@ -3381,6 +3385,13 @@ pub const Prefab = struct {
                             };
                             mem.copy(u8, &f.features[identifier].?.Machine.id, id orelse return error.MalformedFeatureDefinition);
                         },
+                        'i' => {
+                            if (items.findItemById(id orelse return error.MalformedFeatureDefinition)) |template| {
+                                f.features[identifier] = Feature{ .Item = template };
+                            } else {
+                                return error.NoSuchItem;
+                            }
+                        },
                         else => return error.InvalidFeatureType,
                     }
                 },
@@ -3494,7 +3505,8 @@ pub fn readPrefabs(alloc: mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pref
                 error.FabTooTall => "Prefab exceeds height limit",
                 error.InvalidFeatureType => "Unknown feature type encountered",
                 error.MalformedFeatureDefinition => "Invalid syntax for feature definition",
-                error.NoSuchMob => "Encountered non-existant MOB id",
+                error.NoSuchMob => "Encountered non-existent mob id",
+                error.NoSuchItem => "Encountered non-existent item id",
                 error.MalformedMetadata => "Malformed metadata",
                 error.InvalidMetadataValue => "Invalid value for metadata",
                 error.UnexpectedMetadataValue => "Unexpected value for metadata",
@@ -3502,7 +3514,7 @@ pub fn readPrefabs(alloc: mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pref
                 error.InvalidUtf8 => "Encountered invalid UTF-8",
                 else => "Unknown error",
             };
-            std.log.info("{s}: Couldn't load prefab: {s}", .{ fab_file.name, msg });
+            std.log.err("{s}: Couldn't load prefab: {s}", .{ fab_file.name, msg });
             continue;
         };
     }

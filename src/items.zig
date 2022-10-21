@@ -70,6 +70,19 @@ pub const ItemTemplate = struct {
         c: *const Consumable,
         E: Evocable,
         List: []const ItemTemplate,
+
+        pub fn id(self: TemplateItem) ![]const u8 {
+            return switch (self) {
+                .W => |i| i.id,
+                .A => |i| i.id,
+                .C => |i| i.id,
+                .X => |i| i.id,
+                .P => |i| i.id,
+                .c => |i| i.id,
+                .E => |i| i.id,
+                .List => error.CannotGetListID,
+            };
+        }
     };
     pub const Type = meta.Tag(TemplateItem);
 };
@@ -2272,4 +2285,21 @@ pub fn createItemFromTemplate(template: ItemTemplate) Item {
         .List => unreachable,
         //else => err.todo(),
     };
+}
+
+pub fn findItemById(p_id: []const u8) ?*const ItemTemplate {
+    const _helper = struct {
+        pub fn f(id: []const u8, list: []const ItemTemplate) ?*const ItemTemplate {
+            return for (list) |*entry| {
+                if (entry.i.id()) |entry_id| {
+                    if (mem.eql(u8, entry_id, id)) {
+                        break entry;
+                    }
+                } else |e| if (e == error.CannotGetListID) {
+                    if (f(id, entry.i.List)) |ret| break ret;
+                }
+            } else null;
+        }
+    };
+    return (_helper.f)(p_id, &ITEM_DROPS);
 }

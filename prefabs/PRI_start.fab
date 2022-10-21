@@ -9,12 +9,17 @@
 :noguards
 :notraps
 
+@a i potion_smoke
+@b i potion_paralysis
+@c i potion_blind
+@d i potion_disorient
+
 #*****#
+*a...a*
 *.....*
-*..0..*
-*..@..*
+*c.@.b*
 *.....*
-*.....*
+*d...d*
 #*****#
 
 % Test prefab for testing various things
