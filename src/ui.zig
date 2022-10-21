@@ -1435,13 +1435,18 @@ pub fn drawMap(moblist: []const *Mob, startx: usize, endx: usize, starty: usize,
                 if (state.memory.contains(coord)) {
                     tile = (state.memory.get(coord) orelse unreachable).tile;
 
+                    const old_sbg = tile.sbg;
+
                     tile.bg = colors.darken(colors.filterGrayscale(tile.bg), 4);
                     tile.fg = colors.darken(colors.filterGrayscale(tile.fg), 4);
                     tile.sbg = colors.darken(colors.filterGrayscale(tile.sbg), 4);
                     tile.sfg = colors.darken(colors.filterGrayscale(tile.sfg), 4);
 
                     if (tile.bg < colors.BG) tile.bg = colors.BG;
-                    if (tile.sbg < colors.BG) tile.sbg = colors.BG;
+
+                    // Don't lighten the sbg if it was originally 0 (because
+                    // then we have to fallback to the bg)
+                    if (tile.sbg < colors.BG and old_sbg != 0) tile.sbg = colors.BG;
                 }
 
                 // Can we hear anything
