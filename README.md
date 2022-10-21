@@ -47,7 +47,7 @@ In the future there will be instructions on building from source here.
 ## Gameplay
 
 See the [intro](doc/intro.md) for a quick rundown on how to play. See the
-[docs](docs/README.md) for references on other bits of the game.
+[docs](doc/README.md) for references on other bits of the game.
 
 (Note, the manual is still being written. Feel free to contact the author at
 `$GITHUB_USERNAME @ tilde |dot| team` for questions in the meantime.)
