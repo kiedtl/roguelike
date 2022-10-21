@@ -471,7 +471,9 @@ pub const PatternChecker = struct { // {{{
     pub const InitFnErr = error{
         NeedCardinalDirection,
         NeedOppositeWalkableTile,
+        NeedWalkableTile,
         NeedOppositeTileNearWalls,
+        NeedTileNearWalls,
         NeedHostileOnTile,
         NeedOpenSpace,
         NeedOppositeWalkableTileInFrontOfWall,
@@ -791,19 +793,19 @@ pub const DamnationRing = Ring{ // {{{
         .turns = 3,
         .init = struct {
             pub fn f(mob: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
-                if (mob.coord.move(d.opposite(), state.mapgeometry)) |nextcoord| {
+                if (mob.coord.move(d, state.mapgeometry)) |nextcoord| {
                     if (!state.is_walkable(nextcoord, .{ .mob = mob })) {
-                        return error.NeedOppositeWalkableTile;
+                        return error.NeedWalkableTile;
                     }
                     if (state.dungeon.neighboringWalls(nextcoord, true) == 0) {
-                        return error.NeedOppositeTileNearWalls;
+                        return error.NeedTileNearWalls;
                     }
                 } else {
-                    return error.NeedOppositeWalkableTile;
+                    return error.NeedWalkableTile;
                 }
 
                 stt.directions[0] = d;
-                return Activity{ .Move = d.opposite() };
+                return Activity{ .Move = d };
             }
         }.f,
         .funcs = [_]PatternChecker.Func{
@@ -812,8 +814,8 @@ pub const DamnationRing = Ring{ // {{{
                     if (cur != .Move)
                         return false;
                     const new_coord = if (dry) mob.coord.move(cur.Move, state.mapgeometry).? else mob.coord;
-                    const r = cur.Move == stt.directions[0].?.opposite() and
-                        state.dungeon.neighboringWalls(new_coord, false) > 0;
+                    const r = cur.Move == stt.directions[0].? and
+                        state.dungeon.neighboringWalls(new_coord, true) > 0;
                     return r;
                 }
             }.f,
