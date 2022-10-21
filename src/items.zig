@@ -603,6 +603,7 @@ pub const LightningRing = Ring{ // {{{
                         .kind = .Electric,
                     }, .{ .noun = "Lightning" });
                 } else |_| {};
+            self.makeNoise(.Combat, .Loud);
         }
     }.f,
 }; // }}}
