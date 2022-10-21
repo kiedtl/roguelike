@@ -89,6 +89,9 @@ By default, you are given a number of movement patterns that appear next to a
 number on the HUD. Press the number to activate the pattern, then follow the
 instructions in the log.
 
+Check out the [pattern reference](patterns.md) for information on the movement
+patterns initially given to you.
+
 ![GIF](https://tilde.team/~kiedtl/images/rl/intro/12.gif)
 
 **Seek out rings to get more movement patterns.** This is akin to finding a
