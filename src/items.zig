@@ -872,73 +872,46 @@ pub const DamnationRing = Ring{ // {{{
 pub const TeleportationRing = Ring{ // {{{
     .name = "teleportation",
     .pattern_checker = .{
-        // mobs[0] is the attacked enemy.
-        // coords[0] is the original coord of the attacked enemy.
-        // directions[0] is the attacked direction.
-        // directions[1] is the first move away from the enemy.
+        // mobs[0]: attacked mob
+        // directions[0]: first attack direction
         .turns = 5,
         .init = struct {
             pub fn f(mob: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
-                if (d.is_diagonal())
-                    return error.NeedCardinalDirection;
-
                 stt.directions[0] = d;
                 stt.mobs[0] = try PatternChecker._util_getHostileInDirection(mob, d);
-
-                return Activity{ .Attack = .{
-                    .direction = d,
-                    .who = undefined,
-                    .coord = undefined,
-                    .delay = undefined,
-                } };
+                return Activity{ .Move = d.opposite() };
             }
         }.f,
         .funcs = [_]PatternChecker.Func{
             struct {
                 pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
-                    const r = cur == .Attack and
-                        cur.Attack.direction == stt.directions[0].? and
-                        cur.Attack.who == stt.mobs[0].?;
-                    return r;
-                }
-            }.f,
-            struct {
-                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
                     const r = cur == .Move and
-                        !cur.Move.is_diagonal() and
                         cur.Move == stt.directions[0].?.opposite();
-                    if (r and !dry) {
-                        stt.directions[1] = cur.Move;
-                    }
                     return r;
                 }
             }.f,
             struct {
-                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
-                    const r = cur == .Move and
-                        !cur.Move.is_diagonal() and
-                        (cur.Move == stt.directions[1].?.turnleft() or
-                        cur.Move == stt.directions[1].?.turnright());
-                    if (r and !dry) {
-                        stt.directions[2] = cur.Move;
-                    }
-                    return r;
+                pub fn f(_: *Mob, _: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    return cur == .Rest;
                 }
             }.f,
             struct {
                 pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
                     const r = cur == .Move and
-                        !cur.Move.is_diagonal() and
-                        cur.Move == stt.directions[2].?;
+                        cur.Move == stt.directions[0].?.opposite();
                     return r;
                 }
             }.f,
             struct {
-                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
-                    const r = cur == .Attack;
-                    if (r and !dry) {
-                        stt.mobs[1] = cur.Attack.who;
-                    }
+                pub fn f(_: *Mob, _: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    return cur == .Rest;
+                }
+            }.f,
+            struct {
+                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    const r = cur == .Attack and
+                        cur.Attack.who == stt.mobs[0].? and
+                        cur.Attack.direction == stt.directions[0].?;
                     return r;
                 }
             }.f,
@@ -951,10 +924,22 @@ pub const TeleportationRing = Ring{ // {{{
     },
     .effect = struct {
         pub fn f(self: *Mob, stt: PatternChecker.State) void {
-            spells.BOLT_BLINKBOLT.use(self, self.coord, stt.mobs[1].?.coord, .{
+            // Get last enemy in chain of enemies.
+            var last_mob = stt.mobs[0].?;
+            var chain_count: usize = 0;
+            while (true) {
+                if (last_mob.coord.move(stt.directions[0].?, state.mapgeometry)) |coord| {
+                    if (utils.getHostileAt(self, coord)) |hostile| {
+                        last_mob = hostile;
+                        chain_count += 1;
+                    } else |_| break;
+                } else break;
+            }
+
+            spells.BOLT_BLINKBOLT.use(self, self.coord, last_mob.coord, .{
                 .MP_cost = 0,
                 .spell = &spells.BOLT_BLINKBOLT,
-                .power = 3,
+                .power = chain_count + 2, // minimum 3
             });
         }
     }.f,
