@@ -1456,7 +1456,7 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
 
         assert(mob.sustiles.items.len > 0);
 
-        const target = mob.sustiles.items[0];
+        const target = mob.sustiles.items[mob.sustiles.items.len - 1];
 
         if (mob.cansee(target.coord)) {
             for (mob.sustiles.items) |*record| {

@@ -476,7 +476,7 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
         var i = MobInfoLine{ .char = '?' };
         var you_str: []const u8 = "";
         {
-            const cur_sustile = mob.sustiles.items[0].coord;
+            const cur_sustile = mob.sustiles.items[mob.sustiles.items.len - 1].coord;
             if (state.dungeon.soundAt(cur_sustile).mob_source) |soundsource| {
                 if (soundsource == state.player) {
                     you_str = "your noise";
