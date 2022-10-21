@@ -3454,7 +3454,6 @@ pub const Mob = struct { // {{{
         switch (_stat) {
             .Speed => {
                 if (self.isUnderStatus(.Fast)) |_| val = @divTrunc(val * 50, 100);
-                if (self.isUnderStatus(.Enraged)) |_| val = @divTrunc(val * 80, 100);
                 if (self.isUnderStatus(.Slow)) |_| val = @divTrunc(val * 150, 100);
             },
             .Willpower => {
