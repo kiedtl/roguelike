@@ -1709,7 +1709,7 @@ pub const BurningBruteTemplate = MobTemplate{
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 2, .spell = &spells.CAST_RESURRECT_FIRE, .power = 200, .duration = 10 },
-            .{ .MP_cost = 3, .spell = &spells.BOLT_FIREBALL, .power = 2, .duration = 5 },
+            .{ .MP_cost = 3, .spell = &spells.BOLT_FIREBALL, .power = 3, .duration = 5 },
         },
         .max_MP = 12,
 

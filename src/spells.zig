@@ -254,11 +254,12 @@ pub const CAST_FIREBLAST = Spell{
     .noise = .Loud,
     .effect_type = .{ .Custom = struct {
         fn f(caster: Coord, _: Spell, opts: SpellOptions, target: Coord) void {
+            const caster_mob = state.dungeon.at(caster).mob;
             if (state.player.cansee(target)) {
                 const caster_m = state.dungeon.at(caster).mob.?;
                 state.message(.SpellCast, "{c} belches forth flames!", .{caster_m});
             }
-            explosions.fireBurst(target, opts.power);
+            explosions.fireBurst(target, opts.power, .{ .initial_damage = 0, .culprit = caster_mob });
         }
     }.f },
 };
@@ -634,8 +635,9 @@ pub const BOLT_FIREBALL = Spell{
     }.f,
     .noise = .Loud,
     .effect_type = .{ .Custom = struct {
-        fn f(_: Coord, _: Spell, opts: SpellOptions, target: Coord) void {
-            explosions.fireBurst(target, opts.power);
+        fn f(caster_coord: Coord, _: Spell, opts: SpellOptions, target: Coord) void {
+            const caster = state.dungeon.at(caster_coord).mob;
+            explosions.fireBurst(target, 2, .{ .initial_damage = opts.power, .culprit = caster });
             state.dungeon.at(target).mob.?.addStatus(.Fire, 0, .{ .Tmp = opts.duration });
         }
     }.f },

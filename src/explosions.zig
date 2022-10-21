@@ -24,7 +24,16 @@ const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
-pub fn fireBurst(ground0: Coord, max_radius: usize) void {
+pub const FireBurstOpts = struct {
+    initial_damage: usize = 2,
+
+    min_fire: usize = 20,
+
+    // Who created the explosion, and is thus responsible for the damage to mobs?
+    culprit: ?*Mob = null,
+};
+
+pub fn fireBurst(ground0: Coord, max_radius: usize, opts: FireBurstOpts) void {
     const S = struct {
         pub fn _opacityFunc(c: Coord) usize {
             return switch (state.dungeon.at(c).type) {
@@ -54,7 +63,25 @@ pub fn fireBurst(ground0: Coord, max_radius: usize) void {
     for (result) |row, y| for (row) |cell, x| {
         if (cell > 0) {
             const cellc = Coord.new2(ground0.z, x, y);
-            fire.setTileOnFire(cellc, math.max(20, fire.tileFlammability(cellc)));
+            if (state.dungeon.at(cellc).mob) |mob| {
+                if (opts.initial_damage > 0 and !mob.isFullyResistant(.rFire)) {
+                    mob.takeDamage(.{
+                        .amount = opts.initial_damage,
+                        .by_mob = opts.culprit,
+                        .source = .Explosion,
+                        .kind = .Fire,
+                        .indirect = true,
+                    }, .{
+                        .noun = "The fiery blast",
+                        .strs = &[_]DamageStr{
+                            items._dmgstr(0, "scorches", "BUG", ""),
+                            items._dmgstr(100, "burns", "BUG", ""),
+                            items._dmgstr(300, "incinerates", "BUG", ""),
+                        },
+                    });
+                }
+            }
+            fire.setTileOnFire(cellc, math.max(opts.min_fire, fire.tileFlammability(cellc)));
         }
     };
 }
@@ -175,7 +202,6 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
     };
 
     sound.makeNoise(ground0, .Explosion, .Loudest);
-    state.message(.Info, "KABOOM!", .{});
 
     var result: [HEIGHT][WIDTH]usize = undefined;
     for (result) |*row| for (row) |*cell| {
@@ -222,7 +248,6 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
                     .amount = 3,
                     .by_mob = opts.culprit,
                     .source = .Explosion,
-                    .kind = .Fire,
                     .indirect = true,
                 }, .{
                     .noun = "The explosion",

@@ -526,7 +526,8 @@ $G    .....   ...$.@$G.    $.<wait>$G    $.<attack any foe>$G
 $G    ...$C$~##$.$G   ...$C$~##$.$G
 
 
-$cEffect:$. Creates a fiery explosion on all tiles containing foes.
+$cEffect:$. Creates a fiery explosion on all tiles containing foes that are
+visible to you.
 
 % teleportation
 $cPattern:$. Move away three times, attack an enemy.

@@ -777,7 +777,7 @@ pub const ExterminationRing = Ring{ // {{{
                 if (state.dungeon.at(coord).type != .Floor)
                     break;
 
-                explosions.fireBurst(coord, 1);
+                explosions.fireBurst(coord, 1, .{ .culprit = self, .initial_damage = 2 });
             }
             state.message(.Info, "Fire bursts out of you!", .{});
         }
@@ -840,10 +840,10 @@ pub const DamnationRing = Ring{ // {{{
     .effect = struct {
         pub fn f(self: *Mob, _: PatternChecker.State) void {
             var gen = Generator(Rect.rectIter).init(state.mapRect(self.coord.z));
-            while (gen.next()) |coord| if (self.coord.distance(coord) == 1) {
+            while (gen.next()) |coord| if (self.cansee(coord)) {
                 if (state.dungeon.at(coord).mob) |othermob| {
                     if (othermob.isHostileTo(self)) { // damnation doesn't care about is_combative
-                        explosions.fireBurst(coord, 1);
+                        explosions.fireBurst(coord, 1, .{ .culprit = self, .initial_damage = 1 });
                     }
                 }
             };
@@ -1697,13 +1697,13 @@ pub const ShockTrapKit = Consumable.createTrapKit("kit_trap_shock", "shock trap"
 
 pub const BigFireTrapKit = Consumable.createTrapKit("kit_trap_bigfire", "incineration trap", struct {
     pub fn f(machine: *Machine, _: *Mob) void {
-        explosions.fireBurst(machine.coord, 7);
+        explosions.fireBurst(machine.coord, 7, .{});
     }
 }.f);
 
 pub const FireTrapKit = Consumable.createTrapKit("kit_trap_fire", "fire trap", struct {
     pub fn f(machine: *Machine, _: *Mob) void {
-        explosions.fireBurst(machine.coord, 3);
+        explosions.fireBurst(machine.coord, 3, .{});
     }
 }.f);
 
@@ -1881,7 +1881,7 @@ pub const DecimatePotion = Consumable{
 // Potion effects {{{
 
 fn triggerIncineratePotion(_: ?*Mob, coord: Coord) void {
-    explosions.fireBurst(coord, 4);
+    explosions.fireBurst(coord, 4, .{});
 }
 
 fn triggerDecimatePotion(_: ?*Mob, coord: Coord) void {
