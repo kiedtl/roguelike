@@ -1449,6 +1449,9 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
         work(mob, alloc);
     } else if (mob.ai.phase == .Investigate) {
         // Even non-curious mobs can investigate, e.g. stalkers sent by player
+        //
+        // FIXME: 2022-10-21: add this assertion back, as stalkers no longer investigate
+        //
         //assert(mob.ai.is_curious);
 
         assert(mob.sustiles.items.len > 0);
@@ -1466,13 +1469,8 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
 
             tryRest(mob);
         } else {
-            const d = mob.coord.closestDirectionTo(target.coord, state.mapgeometry);
-            if (mob.facing == d) {
-                mob.tryMoveTo(target.coord);
-            } else {
-                mob.facing = d;
-                tryRest(mob);
-            }
+            mob.facing = mob.coord.closestDirectionTo(target.coord, state.mapgeometry);
+            mob.tryMoveTo(target.coord);
         }
     } else if (mob.ai.phase == .Hunt) {
         assert(mob.ai.is_combative);

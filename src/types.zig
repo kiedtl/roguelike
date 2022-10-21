@@ -2396,7 +2396,7 @@ pub const Mob = struct { // {{{
 
         if (self.nextDirectionTo(dest)) |d| {
             if (!self.moveInDirection(d)) self.rest();
-        } else self.rest();
+        } else ai.tryRest(self);
 
         assert(prev_energy > self.energy);
     }
