@@ -499,7 +499,7 @@ pub const GoblinTemplate = MobTemplate{
             .flags = &[_]AI.Flag{.AvoidsEnemies},
         },
         .allegiance = .OtherEvil,
-        .max_HP = 8,
+        .max_HP = 6,
         .memory_duration = 20,
         .stats = .{ .Willpower = 4, .Evade = 15, .Vision = 6 },
     },
