@@ -456,9 +456,6 @@ pub fn equipItem(item: Item) bool {
 }
 
 pub fn grabItem() bool {
-    var item: Item = undefined;
-    var found_item = false;
-
     if (state.dungeon.at(state.player.coord).surface) |surface| {
         switch (surface) {
             .Container => |_| return rummageContainer(state.player.coord),
@@ -466,14 +463,10 @@ pub fn grabItem() bool {
         }
     }
 
-    if (!found_item) {
-        if (state.dungeon.itemsAt(state.player.coord).last()) |_| {
-            item = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
-        } else {
-            ui.drawAlertThenLog("There's nothing here.", .{});
-            return false;
-        }
-    }
+    const item = state.dungeon.itemsAt(state.player.coord).last() orelse {
+        ui.drawAlertThenLog("There's nothing here.", .{});
+        return false;
+    };
 
     switch (item) {
         .Rune => |rune| {
@@ -498,6 +491,9 @@ pub fn grabItem() bool {
             state.message(.Inventory, "Acquired: {s}", .{
                 (state.player.inventory.pack.last().?.longName() catch err.wat()).constSlice(),
             });
+
+            // Delete item on the ground
+            _ = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
         },
     }
 
