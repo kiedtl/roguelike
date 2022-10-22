@@ -285,11 +285,9 @@ Ah, finally, a guard who has the sense to carry a polearm.
 Always remember that you are completely unique. Just like everyone else.
 
 % goblin
-One of the last few prisoners of war, captured at last at the end of the battle
-in which the hill-goblins overran this stronghold. It sits here, nursing its
+One of the last few prisoners of war captured in the battle in which the
+hill-goblins overran this cave-goblin stronghold. It sits here, nursing its
 wounds and waiting miserably until its execution.
-
-For some reason, its captors haven't bothered to take its mace and armor away...
 
 % convult
 A foul apprentice mage, specializing in the manipulation of emotions. His craft,
