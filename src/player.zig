@@ -478,8 +478,16 @@ pub fn grabItem() bool {
             state.player.makeNoise(.Alarm, .Loudest);
 
             state.player.declareAction(.Grab);
+
+            // Delete item on the ground
+            _ = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
         },
-        .Ring, .Armor, .Cloak, .Aux, .Weapon => return equipItem(item),
+        .Ring, .Armor, .Cloak, .Aux, .Weapon => {
+            // Delete item on the ground
+            _ = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
+
+            return equipItem(item);
+        },
         else => {
             if (state.player.inventory.pack.isFull()) {
                 ui.drawAlertThenLog("Your pack is full!", .{});
