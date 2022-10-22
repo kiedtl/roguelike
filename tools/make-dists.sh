@@ -18,31 +18,42 @@ mktarball() {
     pkgname="oathbreaker-${1}-${2}-${3}-${VERSION}"
     [ -d ${pkgname} ] && rm -rf ${pkgname}
     mkdir ${pkgname}
-    cp -r zig-out/bin/rl ${pkgname}
+
     cp -r data           ${pkgname}
     cp -r doc            ${pkgname}
     cp -r prefabs        ${pkgname}
     cp -r run.sh         ${pkgname}
-    tar -cf - ${pkgname} | xz -qcT0 > ${pkgname}.tar.xz
+
+    if [ ${1} = "windows" ]; then
+        cp -r zig-out/bin/rl.exe ${pkgname}
+        cp -r zig-out/bin/rl.pdb ${pkgname}
+        cp -r zig-out/bin/libpng16-16.dll ${pkgname}
+        cp -r zig-out/bin/SDL2.dll ${pkgname}
+        cp -r zig-out/bin/zlib1.dll ${pkgname}
+    else
+        cp -r zig-out/bin/rl ${pkgname}
+    fi
+
+    if [ ${1} = "windows" ]; then
+        zip -qr ${pkgname}.zip ${pkgname}
+    else
+        tar -cf - ${pkgname} | xz -qcT0 > ${pkgname}.tar.xz
+    fi
+
     rm -rf ${pkgname}
 }
 
-printf "Compiling for host SDL...\n"
+printf "Compiling for x86_64 Linux SDL...\n"
 zig build -Drelease-safe -Duse-sdl=true
-mktarball $(uname -s) $(uname -m) SDL
+mktarball linux x86_64 SDL
 
-printf "Compiling for host termbox...\n"
-zig build -Drelease-safe -Duse-sdl=false
-mktarball $(uname -s) $(uname -m) termbox
+# oathbreaker-termbox crashes with illegal instruction if build with
+# release-safe, so build in debug mode.
+
+printf "Compiling for x86_64 Linux termbox...\n"
+zig build -Duse-sdl=false
+mktarball linux x86_64 termbox
 
 printf "Compiling for x86_64 Windows SDL...\n"
 zig build -Drelease-safe -Dtarget=x86_64-windows-gnu -Duse-sdl=true
 mktarball windows x86_64 SDL
-
-#printf "Compiling for x86_64-macos-gnu...\n"
-#zig build -Drelease-safe -Dtarget=x86_64-macos-gnu -Duse-sdl=true
-#mktarball macOS x86_64 SDL
-
-#printf "Compiling for aarch64-macos-gnu...\n"
-#zig build -Drelease-safe -Dtarget=aarch64-macos-gnu -Duse-sdl=true
-#mktarball macOS aarch64 SDL
