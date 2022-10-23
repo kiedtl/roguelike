@@ -1026,10 +1026,10 @@ x UI
   x Loading screen and art
   x Features/items screen, remove announcement of items
 x WASM support, or at least SDL2 support for Windows
-- Write rest of docs/manual
-  - Status reference
-  - Tutorial
-- Playtest game throughout, especially CAV and make adjustments
+x Write rest of docs/manual
+  x Status reference
+  x Tutorial
+x Playtest game throughout, especially CAV and make adjustments
 *** v2.0.0 release ***
 - UI
   - Status/mob/item description lookup screen
@@ -1133,9 +1133,9 @@ x Squad overhaul
   - *blende statues
 - Guards in cubbyholes (both corridors and rooms)
 - Night creatures (night reapers, creeping deaths, grues, winged terrors)
-  - Enclaves for night creatures to hide in
-  - Shadow weapons
+  - Night creature enclaves
   - Individual night creatures
+  - Shadow weapons
 - Scoring
 
 Animations
