@@ -32,9 +32,9 @@
 "shrieker"            	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  45 	 100 	 100 	 100 	  45 	  45
 
 # special Lab monsters
-"lead_turtle"         	 - 	   - 	   - 	  60 	  60 	  70 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
-"iron_wasp"           	 - 	   - 	   - 	  40 	  50 	  60 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
-"copper_hornet"       	 - 	   - 	   - 	  30 	  50 	  70 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
+"lead_turtle"         	 - 	   - 	   - 	  40 	  50 	  50 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
+"iron_wasp"           	 - 	   - 	   - 	   - 	  40 	  40 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
+"copper_hornet"       	 - 	   - 	   - 	  30 	  30 	  30 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
 
 # special Cavern monsters
 "dustling"            	 - 	   - 	   - 	   - 	   - 	   - 	   - 	  60 	  60 	  50 	   - 	   - 	   - 	   - 	   - 	   -
