@@ -1057,8 +1057,11 @@ x Playtest game throughout, especially CAV and make adjustments
     - Props on map for effect
     - Animation (need particle engine)
 - UI
-  - Status/mob/item description lookup screen
-  - Keybinding help "?" screen
+  - Menu to invoke patterns (via SPACE)
+    - Remove patterns list from HUD
+  - Escape menu
+    - Status/mob/item description lookup screen
+    - Keybinding help "?" screen
   - Basic mouse support
     - Tooltips for UI labels
       - Tooltips/explanations for individual messages?
@@ -1080,7 +1083,7 @@ x Playtest game throughout, especially CAV and make adjustments
   - Haulers periodically bring prisoners food/alcohol rations
   - Cleaners occasionally go over cell
   - Guards drag new prisoners to replace ones which died
-    - Occasionally: MG schedules prisoner to be placed instead of placing one
+    - Occasionally: mapgen schedules prisoner to be placed instead of placing one
   - Executioners periodically demolish a prisoner (new dialog!)
 - Lava and Water rework
   - Rework as terrain
@@ -1159,7 +1162,7 @@ Animations
   x Knockback
   - Fire explosion
   - Electricity explosion
-  - Normal explosion
+  x Normal explosion
   - Hostile turning to fleeing
   - Hostile turning back to fight
   x Hostile noticing you
@@ -1169,6 +1172,7 @@ Animations
   - Dormant/sleeping monsters (blinking 'Z')
   - Shimmering golden/obsidian/cuprite/rust doors/walls
   - Lava and water
+  - Noisemaking monsters (blinking music sigil)
 
 Lighting/FOV:
 =============
@@ -1202,10 +1206,10 @@ Room features/Mapgen:
     x dead, flammable fungi
     x tall fungi (very reduced LOS)
     x camoflaging fungi (Camo++)
-    - (v1.x.0) brambles (retaliation; dmg on movement; 150% slowness)
-    - (v1.x.0) XXX fungi (haste undead)
-    - (v1.x.0) XXX fungi (slow living)
-    - (v1.x.0) XXX fungi (ctx corrupt effect)
+    - brambles (retaliation; dmg on movement; 150% slowness)
+    - XXX fungi (haste undead)
+    - XXX fungi (slow living)
+    - XXX fungi (ctx corrupt effect)
   - Floor materials:
     x metal (rElec-)
     x copper (elec dmg propagation)
@@ -1256,6 +1260,7 @@ Morgue files
   but didn't take a hit).
 - Show total (IRL) time duration of game.
 - Show player's title.
+- Show number of steps player was from stairs when they died.
 
 Mobs, AI
 ========
@@ -1402,8 +1407,8 @@ x Only print trap messages when culprit is player
 x Group identical messages in msgpane
 x Attack messages should be nice and descriptive ("You skewer the goblin!")
   x Even more descriptive! ("The troll smashes you like an overripe mango!!")
-- Put some messages on same line as previous.
-- Unify messages when using ring abilities
+~ Put some messages on same line as previous.
+x Unify messages when using ring abilities
 - Append "*Stab*" to attack messages as appropriate
 
 Fixes
@@ -1412,7 +1417,7 @@ x Add walls to edges of map after mapgen
 x Place stairs only in rooms
 x Fix sound propagation
 - Reject maps without enough open space
-- Give player credit for deaths caused by malfunctioning machines
+~ Give player credit for deaths caused by malfunctioning machines
 - Give player credit for deaths caused by fires
 x Show appropriate number of exclamation points on messages about spell damage
 x Don't allow confused monsters to attack diagonally.
@@ -1476,11 +1481,12 @@ x Ring of echolocation to magic-map neighbors of sound-producing tiles
 - Ring/feature to detect what kind of mob made a noise
 - Radioactive gas leaking from a warehouse on a few levels, so a kind of food
   clock
-- Ability to rifle sleeping/drunk/stunned guards as well as corpses
-- Undead have other interesting kinds of negative effects when they score a
+~ Ability to rifle sleeping/drunk/stunned guards as well as corpses
+x Undead have other interesting kinds of negative effects when they score a
   hit?
   - Reduced max HP, less regen rate, reduced stealth
-- Areas that speed up or slow down mobs
+  - Done: corruption mechanic
+~ Areas that speed up or slow down mobs
 - Lichen/fungi that puts mobs to sleep (enchanted ground)
 - Ice/oily floor that randomizes movement
 - Sticky ground that reduces evasion
