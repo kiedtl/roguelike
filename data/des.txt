@@ -253,8 +253,7 @@ cross-breed between the ugliest of humans and goblins.
 The Dungeon warden. It will call for help with its warning horn if it spots you.
 
 % guard
-An ordinary hill-goblin guard, with a crude mace and some light armor. Not much
-to say about it. You can't help but wonder if a glaive would suit it better.
+Ah, finally, a guard who has the sense to carry a polearm.
 
 % defender
 A lone guard, standing motionless in the stagnant air of the Dungeon.
@@ -279,7 +278,8 @@ A tiny buzzing insect, seemingly forged out of thin metal sheets. Its
 copper-colored entrails wrap around its silver abdomen.
 
 % patrol
-Ah, finally, a guard who has the sense to carry a polearm.
+An ordinary hill-goblin guard, with a crude mace and some light armor. Not much
+to say about it. You can't help but wonder if a glaive would suit it better.
 
 % player
 Always remember that you are completely unique. Just like everyone else.

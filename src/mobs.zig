@@ -238,7 +238,7 @@ pub const GuardTemplate = MobTemplate{
 
         .stats = .{ .Willpower = 2 },
     },
-    .weapon = &items.BludgeonWeapon,
+    .weapon = &items.SpearWeapon,
 };
 
 pub const SentinelTemplate = MobTemplate{
@@ -258,7 +258,7 @@ pub const SentinelTemplate = MobTemplate{
 
         .stats = .{ .Willpower = 2, .Melee = 70 },
     },
-    .weapon = &items.SwordWeapon,
+    .weapon = &items.SpearWeapon,
     .armor = &items.GambesonArmor,
 };
 
@@ -445,7 +445,7 @@ pub const PatrolTemplate = MobTemplate{
         .memory_duration = 10,
         .stats = .{ .Willpower = 2, .Evade = 10 },
     },
-    .weapon = &items.SpearWeapon,
+    .weapon = &items.BludgeonWeapon,
     .armor = &items.GambesonArmor,
 
     .squad = &[_][]const MobTemplate.SquadMember{
