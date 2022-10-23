@@ -474,7 +474,7 @@ pub const PlayerTemplate = MobTemplate{
         .deg360_vision = true,
         .no_show_fov = true,
 
-        .max_HP = 14,
+        .max_HP = 20,
         .memory_duration = 10,
 
         .stats = .{ .Willpower = 4, .Missile = 60, .Evade = 10, .Vision = 8, .Sneak = 4 },
