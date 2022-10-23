@@ -240,9 +240,6 @@ A raised platform.
 One of the many Dungeon executioners. It wields a giant spiked flail that,
 luckily, is good for little else besides its gruesome profession.
 
-% destroyer
-A heavily-armored and highly trained executioner.
-
 % watcher
 Despite unusually acute senses that enable its ceaseless vigilance, not to
 mention the fact that it has no need of sleep, this imp is universally despised

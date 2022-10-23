@@ -42,7 +42,7 @@
 # death knight is at the end because it's relatively weak
 "death_mage"          	   - 	 100 	   - 	   -
 "warrior"             	   - 	 100 	   - 	   -
-"destroyer"           	   - 	 100 	   - 	   -
+"executioner"         	   - 	 100 	   - 	   -
 "necromancer"         	   - 	  70 	   - 	   -
 "war_olg"             	   - 	  70 	   - 	   -
 "bloat"               	   - 	  70 	   - 	   -
@@ -86,7 +86,7 @@
 "defender"            	   - 	   - 	   - 	 100
 "sentinel"            	   - 	   - 	   - 	 100
 "warrior"             	   - 	   - 	   - 	 100
-"destroyer"           	   - 	   - 	   - 	 100
+"executioner"         	   - 	   - 	   - 	 100
 "necromancer"         	   - 	   - 	   - 	 100
 "recruit"             	   - 	   - 	   - 	 100
 

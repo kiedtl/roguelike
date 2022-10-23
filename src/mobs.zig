@@ -163,26 +163,6 @@ pub const ExecutionerTemplate = MobTemplate{
     .weapon = &items.KnoutWeapon,
 };
 
-pub const DestroyerTemplate = MobTemplate{
-    .mob = .{
-        .id = "destroyer",
-        .species = &GoblinSpecies,
-        .tile = 'ד',
-        .ai = AI{
-            .profession_name = "destroyer",
-            .profession_description = "wandering",
-            .work_fn = ai.wanderWork,
-            .fight_fn = ai.meleeFight,
-        },
-
-        .max_HP = 6,
-        .memory_duration = 8,
-        .stats = .{ .Willpower = 4, .Evade = 10, .Melee = 70 },
-    },
-    .weapon = &items.KnoutWeapon,
-    .armor = &items.HauberkArmor,
-};
-
 pub const WatcherTemplate = MobTemplate{
     .mob = .{
         .id = "watcher",
@@ -1906,7 +1886,6 @@ pub const MOBS = [_]MobTemplate{
     CombatDummyPrisoner,
     CoronerTemplate,
     ExecutionerTemplate,
-    DestroyerTemplate,
     WatcherTemplate,
     ShriekerTemplate,
     GuardTemplate,
