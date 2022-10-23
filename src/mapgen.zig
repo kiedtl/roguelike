@@ -1961,6 +1961,7 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
             rng.range(usize, VAULT_CROWD[vault_type.?].min, VAULT_CROWD[vault_type.?].max)
         else
             rng.range(usize, 1, Configs[level].room_crowd_max);
+
         const sptable: *MobSpawnInfo.AList = if (room.is_vault != null)
             &spawn_tables_vaults[vault_type.?]
         else
@@ -1973,7 +1974,7 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
                 .{mob_spawn_info.id},
             );
 
-            var tries: usize = 100;
+            var tries: usize = 300;
             while (tries > 0) : (tries -= 1) {
                 const post_coord = room.rect.randomCoord();
                 if (!isTileAvailable(post_coord) or state.dungeon.at(post_coord).prison)
@@ -1991,6 +1992,12 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
                 room.mob_count += new_mobs;
                 level_mob_count += new_mobs;
 
+                break;
+            }
+
+            // We bailed out trying to place a monster, don't bother filling
+            // the room up full.
+            if (tries == 0) {
                 break;
             }
         }
@@ -3755,7 +3762,7 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
     .min_room_width = 5,
     .min_room_height = 5,
     .max_room_width = 18,
-    .max_room_height = 15,
+    .max_room_height = 7,
 
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
         levelFeatureVials,
