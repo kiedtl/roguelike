@@ -3903,7 +3903,7 @@ pub fn fixConfigs() void {
     Configs[ 0].room_crowd_max = 4;      Configs[ 1].room_crowd_max = 3;   // Upper prison
     Configs[ 2].room_crowd_max = 2;      Configs[ 3].room_crowd_max = 1;   // Quarters
     Configs[ 6].room_crowd_max = 6;      Configs[ 7].room_crowd_max = 5;   // Caverns
-    Configs[ 9].room_crowd_max = 4;      Configs[10].room_crowd_max = 3;   // Laboratory
+    Configs[10].room_crowd_max = 4;      Configs[12].room_crowd_max = 3;   // Laboratory
 
     Configs[ 6].level_crowd_max = 50;    Configs[ 7].level_crowd_max = 50; // Caverns
 }
