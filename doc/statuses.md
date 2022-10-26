@@ -13,6 +13,12 @@ which causes adjacent undead to periodically take damage. Similarly, a potion of
 invigoration grants the `<Tmp> invigorated` status, which boosts your fighting
 and dodging skills.
 
+## amnesia
+
+Causes a monster to forget any noise or enemies they ran across, and return to a
+working state. When the status is depleted, all dementia will be instantly
+cured.
+
 ## blind
 
 Reduces sight vision to 1, so that monsters/you can only see adjacent tiles.
