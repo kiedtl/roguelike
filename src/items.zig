@@ -1462,6 +1462,7 @@ pub const DefaultLungeRing = Ring{ // {{{
             state.message(.Combat, "{c} {s} at {}!", .{ self, msg_verb, target });
 
             self.fight(target, .{ .free_attack = true, .auto_hit = true, .disallow_stab = true, .damage_bonus = 300, .loudness = .Loud });
+            target.addStatus(.Fear, 0, .{ .Tmp = 7 });
         }
     }.f,
 }; // }}}
