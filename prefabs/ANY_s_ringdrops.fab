@@ -1,10 +1,10 @@
 % Area to drop a ring
 
 :subroom
+
 :priority 99
 :restriction 1
 
 :material gold
 ###
 #=#
-...
