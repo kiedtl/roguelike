@@ -50,7 +50,7 @@ Pattern: wait, move forward against foe.
 ```
 
 Effect: You get a free attack against that foe which does triple damage and
-never misses.
+never misses, and the foe gets the `Fear` status for 7 turns.
 
 **Eyepunch**:
 
