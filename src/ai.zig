@@ -365,6 +365,11 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
 pub fn checkForHostiles(mob: *Mob) void {
     assert(!mob.is_dead);
 
+    if (mob.hasStatus(.Amnesia)) {
+        mob.ai.phase = .Work;
+        return;
+    }
+
     for (mob.fov) |row, y| for (row) |cell, x| {
         if (cell == 0) continue;
         const fitem = Coord.new2(mob.coord.z, x, y);
@@ -475,6 +480,11 @@ pub fn checkForAllies(mob: *Mob) void {
 
 fn checkForNoises(mob: *Mob) void {
     if (!mob.ai.is_curious) {
+        return;
+    }
+
+    if (mob.hasStatus(.Amnesia)) {
+        mob.ai.phase = .Work;
         return;
     }
 

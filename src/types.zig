@@ -1011,6 +1011,13 @@ pub const Allegiance = enum {
 pub const Status = enum {
     // Status list {{{
 
+    // Causes a monster to forget any noise or enemies they ran across, and
+    // return to a working state. When the status is depleted, all dementia
+    // will be instantly cured.
+    //
+    // Doesn't have a power field.
+    Amnesia,
+
     // Detects heat/electricity
     //
     // Doesn't have a power field.
@@ -1210,6 +1217,7 @@ pub const Status = enum {
 
     pub fn string(self: Status, mob: *const Mob) []const u8 { // {{{
         return switch (self) {
+            .Amnesia => "amnesia",
             .DetectHeat => "detect heat",
             .DetectElec => "detect electricity",
             .TormentUndead => "torment undead",
@@ -1257,6 +1265,7 @@ pub const Status = enum {
 
     pub fn messageWhenAdded(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .Amnesia => .{ "feel", "looks", " forgetful" },
             .DetectHeat, .DetectElec => null,
             .Intimidating => .{ "assume", "assumes", " a fearsome visage" },
             .Drunk => .{ "feel", "looks", " a bit drunk" },
@@ -1297,6 +1306,7 @@ pub const Status = enum {
 
     pub fn messageWhenRemoved(self: Status) ?[3][]const u8 { // {{{
         return switch (self) {
+            .Amnesia => .{ "snap back", "snaps back", " to reality" },
             .DetectHeat, .DetectElec => null,
             .Intimidating => .{ "no longer seem", "no longer seems", " so scary" },
             .Drunk => .{ "feel", "looks", " more sober" },

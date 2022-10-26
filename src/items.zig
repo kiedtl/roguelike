@@ -8,6 +8,7 @@ const assert = std.debug.assert;
 const ai = @import("ai.zig");
 const colors = @import("colors.zig");
 const combat = @import("combat.zig");
+const dijkstra = @import("dijkstra.zig");
 const err = @import("err.zig");
 const explosions = @import("explosions.zig");
 const fire = @import("fire.zig");
@@ -171,7 +172,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
 pub const RINGS = [_]Ring{
     LightningRing,
     CremationRing,
-    ExterminationRing,
+    DistractionRing,
     DamnationRing,
     TeleportationRing,
     ElectrificationRing,
@@ -717,8 +718,8 @@ pub const CremationRing = Ring{ // {{{
     }.f,
 }; // }}}
 
-pub const ExterminationRing = Ring{ // {{{
-    .name = "extermination",
+pub const DistractionRing = Ring{ // {{{
+    .name = "distraction",
     .pattern_checker = .{
         .turns = 3,
         .init = struct {
@@ -783,19 +784,20 @@ pub const ExterminationRing = Ring{ // {{{
         },
     },
     .effect = struct {
-        pub fn f(self: *Mob, stt: PatternChecker.State) void {
-            const direction = stt.directions[1].?;
-            var coord = self.coord;
-            while (true) {
-                coord = coord.move(direction, state.mapgeometry) orelse break;
-                // This is special -- only stop if we land at a non-floor cell,
-                // instead of stopping at the first breaking-LOF tile.
-                if (state.dungeon.at(coord).type != .Floor)
-                    break;
+        pub fn f(self: *Mob, _: PatternChecker.State) void {
+            const RADIUS = 4;
 
-                explosions.fireBurst(coord, 1, .{ .culprit = self, .initial_damage = 2 });
+            var anim_buf = StackBuffer(Coord, (RADIUS * 2) * (RADIUS * 2)).init(null);
+            var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, RADIUS, state.is_walkable, .{ .ignore_mobs = true, .only_if_breaks_lof = true }, state.GPA.allocator());
+            defer dijk.deinit();
+            while (dijk.next()) |coord2| {
+                if (utils.getHostileAt(self, coord2)) |hostile| {
+                    hostile.addStatus(.Amnesia, 0, .{ .Tmp = 10 });
+                } else |_| {}
+                anim_buf.append(coord2) catch unreachable;
             }
-            state.message(.Info, "Fire bursts out of you!", .{});
+
+            ui.Animation.blink(anim_buf.constSlice(), '?', colors.AQUAMARINE, .{}).apply();
         }
     }.f,
 }; // }}}

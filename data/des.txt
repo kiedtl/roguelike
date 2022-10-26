@@ -480,7 +480,7 @@ $G    ....          $.@$G...   .$.@$G..
 
 $cEffect:$. Mobs in your four corners will be electrocuted.
 
-% extermination
+% distraction
 $cPattern:$. Move forward against foe, move left or right, move forward.
 
 
@@ -491,7 +491,7 @@ $G    $.@$G.$rm$G.   .$.@$G$rm$G.   ..$rm$G.   ..$rm$G.
 $G    ....   ....   .$.@$G..   ..$.@$G.
 
 
-$cEffect:$. A bolt of fire will be hurled in the direction you last attacked.
+$cEffect:$. All enemies within four tiles of you receive the Amnesia status.
 
 % cremation
 $cPattern:$. Attack foe, then move all around foe in four turns (without
