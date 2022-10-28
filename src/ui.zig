@@ -2488,10 +2488,10 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
                     cancelled = true;
                     break;
                 },
-                'j', 'h' => if (chosen < options.len - 1) {
+                'x', 'j', 'h' => if (chosen < options.len - 1) {
                     chosen += 1;
                 },
-                'k', 'l' => if (chosen > 0) {
+                'w', 'k', 'l' => if (chosen > 0) {
                     chosen -= 1;
                 },
                 '0'...'9' => {
