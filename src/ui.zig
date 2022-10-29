@@ -46,13 +46,14 @@ const WIDTH = state.WIDTH;
 
 // -----------------------------------------------------------------------------
 
-pub const LEFT_INFO_WIDTH: usize = 35;
+pub const LEFT_INFO_WIDTH: usize = 30;
 //pub const RIGHT_INFO_WIDTH: usize = 24;
-pub const LOG_HEIGHT: usize = 8;
+pub const LOG_HEIGHT: usize = 6;
+pub const MAP_HEIGHT_R: usize = 10;
+pub const MAP_WIDTH_R: usize = 25;
 
-pub const MIN_HEIGHT = HEIGHT + LOG_HEIGHT + 2;
-//const min_width = WIDTH + LEFT_INFO_WIDTH + RIGHT_INFO_WIDTH + 2;
-pub const MIN_WIDTH = WIDTH + LEFT_INFO_WIDTH + 2 + 1;
+pub const MIN_HEIGHT = (MAP_HEIGHT_R * 2) + LOG_HEIGHT + 2;
+pub const MIN_WIDTH = (MAP_WIDTH_R * 2) + LEFT_INFO_WIDTH + 2 + 1;
 
 pub fn init() !void {
     try display.init(MIN_WIDTH, MIN_HEIGHT);
@@ -63,6 +64,10 @@ pub fn init() !void {
 //
 // Return true if the user resized the window, false if the user press Ctrl+C.
 pub fn checkWindowSize() bool {
+    if (display.driver == .SDL2) {
+        return true;
+    }
+
     while (true) {
         const cur_w = display.width();
         const cur_h = display.height();
@@ -126,11 +131,10 @@ pub fn dimensions(w: DisplayWindow) Dimension {
     //const enemyinfo_width = RIGHT_INFO_WIDTH;
 
     const main_start = 1;
-    const main_width = WIDTH;
-    const main_height = HEIGHT;
+    const main_width = MAP_WIDTH_R * 2;
+    const main_height = MAP_HEIGHT_R * 2;
     const playerinfo_start = main_start + main_width + 1;
     const log_start = main_start;
-    //const enemyinfo_start = main_start + main_width + 1;
 
     return switch (w) {
         .Whole => .{
@@ -1341,6 +1345,22 @@ fn _mobs_can_see(moblist: []const *Mob, coord: Coord) bool {
     return false;
 }
 
+fn coordToScreen(coord: Coord) ?Coord {
+    const mapwin = dimensions(.Main);
+    const refpoint = state.player.coord;
+
+    if (coord.x < refpoint.x -| MAP_WIDTH_R or coord.x > refpoint.x + MAP_WIDTH_R or
+        coord.y < refpoint.y -| MAP_HEIGHT_R or coord.y > refpoint.y + MAP_HEIGHT_R)
+    {
+        return null;
+    }
+    return Coord.new2(
+        0,
+        mapwin.startx + math.max(refpoint.x, coord.x) - math.min(refpoint.x, coord.x),
+        mapwin.starty + math.max(refpoint.y, coord.y) - math.min(refpoint.y, coord.y),
+    );
+}
+
 fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display.Cell {
     var tile = p_tile;
 
@@ -1385,24 +1405,17 @@ fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display
 }
 
 pub fn drawMap(moblist: []const *Mob, startx: usize, endx: usize, starty: usize, endy: usize) void {
-    //const playery = @intCast(isize, state.player.coord.y);
-    //const playerx = @intCast(isize, state.player.coord.x);
+    const playery = @intCast(isize, state.player.coord.y);
+    const playerx = @intCast(isize, state.player.coord.x);
     const level = state.player.coord.z;
 
     var cursory = starty;
     var cursorx = startx;
 
-    //const height = @intCast(usize, endy - starty);
-    //const width = @intCast(usize, endx - startx);
-    //const map_starty = playery - @intCast(isize, height / 2);
-    //const map_endy = playery + @intCast(isize, height / 2);
-    //const map_startx = playerx - @intCast(isize, width / 2);
-    //const map_endx = playerx + @intCast(isize, width / 2);
-
-    const map_starty: usize = 0;
-    const map_endy: usize = HEIGHT;
-    const map_startx: usize = 0;
-    const map_endx: usize = WIDTH;
+    const map_starty = playery - @intCast(isize, MAP_HEIGHT_R);
+    const map_endy = playery + @intCast(isize, MAP_HEIGHT_R);
+    const map_startx = playerx - @intCast(isize, MAP_WIDTH_R);
+    const map_endx = playerx + @intCast(isize, MAP_WIDTH_R);
 
     var y = map_starty;
     while (y < map_endy and cursory < endy) : ({
@@ -1410,7 +1423,7 @@ pub fn drawMap(moblist: []const *Mob, startx: usize, endx: usize, starty: usize,
         cursory += 1;
         cursorx = startx;
     }) {
-        var x: usize = map_startx;
+        var x: usize = @intCast(usize, map_startx);
         while (x < map_endx and cursorx < endx) : ({
             x += 1;
             cursorx += 1;
@@ -2866,27 +2879,25 @@ pub const Animation = union(enum) {
 
     pub fn apply(self: Animation) void {
         const mapwin = dimensions(.Main);
-
         drawNoPresent();
 
         state.player.tickFOV();
 
         switch (self) {
             .PopChar => |anim| {
-                const dx = anim.coord.x + mapwin.startx;
-                const dy = anim.coord.y + mapwin.starty;
-                const old = display.getCell(dx, dy);
+                const dcoord = coordToScreen(anim.coord) orelse return;
+                const old = display.getCell(dcoord.x, dcoord.y);
 
-                display.setCell(dx, dy, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                display.setCell(dcoord.x, dcoord.y, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
                 display.present();
 
                 std.time.sleep(anim.delay * 1_000_000);
 
-                display.setCell(dx, dy, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
-                display.setCell(dx - 1, dy - 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
-                display.setCell(dx + 1, dy - 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
-                display.setCell(dx - 1, dy + 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
-                display.setCell(dx + 1, dy + 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                display.setCell(dcoord.x, dcoord.y, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
+                display.setCell(dcoord.x - 1, dcoord.y - 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                display.setCell(dcoord.x + 1, dcoord.y - 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                display.setCell(dcoord.x - 1, dcoord.y + 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                display.setCell(dcoord.x + 1, dcoord.y + 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
 
                 display.present();
 

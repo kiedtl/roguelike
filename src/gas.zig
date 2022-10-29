@@ -207,6 +207,27 @@ pub fn tickGasEmitters(level: usize) void {
 
 // Create and dissipate gas.
 pub fn tickGases(cur_lev: usize, cur_gas: usize) void {
+    if (cur_gas < (GAS_NUM - 1))
+        tickGases(cur_lev, cur_gas + 1);
+
+    var found_nonzero_value = false;
+    {
+        var y: usize = 0;
+        while (y < HEIGHT) : (y += 1) {
+            var x: usize = 0;
+            while (x < WIDTH) : (x += 1) {
+                const coord = Coord.new2(cur_lev, x, y);
+                if (state.dungeon.atGas(coord)[cur_gas] >= 0.1) {
+                    found_nonzero_value = true;
+                    break;
+                }
+            }
+        }
+    }
+    if (!found_nonzero_value) {
+        return;
+    }
+
     const std_dissipation = Gases[cur_gas].dissipation_rate;
     const residue = Gases[cur_gas].residue;
 
@@ -250,19 +271,16 @@ pub fn tickGases(cur_lev: usize, cur_gas: usize) void {
         }
     }
 
-    {
+    if (residue) |gas_residue| {
         var y: usize = 0;
         while (y < HEIGHT) : (y += 1) {
             var x: usize = 0;
             while (x < WIDTH) : (x += 1) {
                 const coord = Coord.new2(cur_lev, x, y);
                 state.dungeon.atGas(coord)[cur_gas] = new[y][x];
-                if (residue != null and new[y][x] > 0.3)
-                    state.dungeon.spatter(coord, residue.?);
+                if (new[y][x] > 0.3)
+                    state.dungeon.spatter(coord, gas_residue);
             }
         }
     }
-
-    if (cur_gas < (GAS_NUM - 1))
-        tickGases(cur_lev, cur_gas + 1);
 }
