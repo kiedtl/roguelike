@@ -80,8 +80,9 @@ pub const ContainerList = LinkedList(Container);
 
 pub const MOB_CORRUPTION_CHANCE = 33;
 pub const TORMENT_UNDEAD_DAMAGE = 2;
-pub const DETECT_HEAT_RADIUS = 14;
-pub const DETECT_ELEC_RADIUS = 14;
+pub const DETECT_HEAT_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
+pub const DETECT_ELEC_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
+pub const DETECT_UNDEAD_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
 
 pub fn MinMax(comptime T: type) type {
     return struct {
@@ -1600,6 +1601,10 @@ pub const Status = enum {
             var x: usize = 0;
             while (x < WIDTH) : (x += 1) {
                 const coord = Coord.new2(mob.coord.z, x, y);
+                if (coord.distance(mob.coord) > DETECT_UNDEAD_RADIUS) {
+                    continue;
+                }
+
                 if (state.dungeon.at(coord).mob) |othermob| {
                     if (othermob.life_type == .Undead) {
                         for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |n| {
