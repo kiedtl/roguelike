@@ -213,13 +213,13 @@ pub fn tickGases(cur_lev: usize, cur_gas: usize) void {
     var found_nonzero_value = false;
     {
         var y: usize = 0;
-        while (y < HEIGHT) : (y += 1) {
+        w: while (y < HEIGHT) : (y += 1) {
             var x: usize = 0;
             while (x < WIDTH) : (x += 1) {
                 const coord = Coord.new2(cur_lev, x, y);
                 if (state.dungeon.atGas(coord)[cur_gas] >= 0.1) {
                     found_nonzero_value = true;
-                    break;
+                    break :w;
                 }
             }
         }

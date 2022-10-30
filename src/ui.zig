@@ -1354,11 +1354,15 @@ fn coordToScreen(coord: Coord) ?Coord {
     {
         return null;
     }
-    return Coord.new2(
+    const r = Coord.new2(
         0,
-        mapwin.startx + math.max(refpoint.x, coord.x) - math.min(refpoint.x, coord.x),
-        mapwin.starty + math.max(refpoint.y, coord.y) - math.min(refpoint.y, coord.y),
+        mapwin.startx + @intCast(usize, @intCast(isize, coord.x) - (@intCast(isize, refpoint.x) -| MAP_WIDTH_R)),
+        mapwin.starty + @intCast(usize, @intCast(isize, coord.y) - (@intCast(isize, refpoint.y) -| MAP_HEIGHT_R)),
     );
+    if (r.x > mapwin.endx or r.y > mapwin.endy) {
+        return null;
+    }
+    return r;
 }
 
 fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display.Cell {
@@ -1423,7 +1427,7 @@ pub fn drawMap(moblist: []const *Mob, startx: usize, endx: usize, starty: usize,
         cursory += 1;
         cursorx = startx;
     }) {
-        var x: usize = @intCast(usize, map_startx);
+        var x = map_startx;
         while (x < map_endx and cursorx < endx) : ({
             x += 1;
             cursorx += 1;
@@ -1475,6 +1479,24 @@ pub fn drawMap(moblist: []const *Mob, startx: usize, endx: usize, starty: usize,
             display.setCell(cursorx, cursory, tile);
         }
     }
+
+    //    var y: usize = 0;
+    //    while (y < HEIGHT) : (y += 1) {
+    //        var x: usize = 0;
+    //        while (x < WIDTH) : (x += 1) {
+    //            const coord = Coord.new2(level, x, y);
+    //            const dcoord = coordToScreen(coord) orelse {
+    //                //display.setCell(x, y, .{ .bg = colors.BG, .fg = 0, .ch = ' ' });
+    //                continue;
+    //            };
+
+    //            // coordToScreen() should already be taking care of this...
+    //            assert(dcoord.x < endx);
+    //            assert(dcoord.y < endy);
+    //            assert(dcoord.x >= startx);
+    //            assert(dcoord.y >= starty);
+    //        }
+    //    }
 }
 
 pub fn drawNoPresent() void {
