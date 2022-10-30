@@ -1345,9 +1345,8 @@ fn _mobs_can_see(moblist: []const *Mob, coord: Coord) bool {
     return false;
 }
 
-fn coordToScreen(coord: Coord) ?Coord {
+fn coordToScreenFromRefpoint(coord: Coord, refpoint: Coord) ?Coord {
     const mapwin = dimensions(.Main);
-    const refpoint = state.player.coord;
 
     if (coord.x < refpoint.x -| MAP_WIDTH_R or coord.x > refpoint.x + MAP_WIDTH_R or
         coord.y < refpoint.y -| MAP_HEIGHT_R or coord.y > refpoint.y + MAP_HEIGHT_R)
@@ -1363,6 +1362,10 @@ fn coordToScreen(coord: Coord) ?Coord {
         return null;
     }
     return r;
+}
+
+fn coordToScreen(coord: Coord) ?Coord {
+    return coordToScreenFromRefpoint(coord, state.player.coord);
 }
 
 fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display.Cell {
@@ -1408,18 +1411,18 @@ fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display
     return tile;
 }
 
-pub fn drawMap(moblist: []const *Mob, startx: usize, endx: usize, starty: usize, endy: usize) void {
-    const playery = @intCast(isize, state.player.coord.y);
-    const playerx = @intCast(isize, state.player.coord.x);
+pub fn drawMap(moblist: []const *Mob, startx: usize, endx: usize, starty: usize, endy: usize, refpoint: Coord) void {
+    const refpointy = @intCast(isize, refpoint.y);
+    const refpointx = @intCast(isize, refpoint.x);
     const level = state.player.coord.z;
 
     var cursory = starty;
     var cursorx = startx;
 
-    const map_starty = playery - @intCast(isize, MAP_HEIGHT_R);
-    const map_endy = playery + @intCast(isize, MAP_HEIGHT_R);
-    const map_startx = playerx - @intCast(isize, MAP_WIDTH_R);
-    const map_endx = playerx + @intCast(isize, MAP_WIDTH_R);
+    const map_starty = refpointy - @intCast(isize, MAP_HEIGHT_R);
+    const map_endy = refpointy + @intCast(isize, MAP_HEIGHT_R);
+    const map_startx = refpointx - @intCast(isize, MAP_WIDTH_R);
+    const map_endx = refpointx + @intCast(isize, MAP_WIDTH_R);
 
     var y = map_starty;
     while (y < map_endy and cursory < endy) : ({
@@ -1511,7 +1514,7 @@ pub fn drawNoPresent() void {
     const log_window = dimensions(.Log);
 
     drawInfo(moblist.items, pinfo_win.startx, pinfo_win.starty, pinfo_win.endx, pinfo_win.endy);
-    drawMap(moblist.items, main_win.startx, main_win.endx, main_win.starty, main_win.endy);
+    drawMap(moblist.items, main_win.startx, main_win.endx, main_win.starty, main_win.endy, state.player.coord);
 
     const log_console = drawLog(log_window.startx, log_window.endx, alloc);
     log_console.renderAreaAt(
@@ -1550,7 +1553,7 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
     var coord: Coord = state.player.coord;
 
     while (true) {
-        drawMap(moblist.items, mainw.startx, mainw.endx, mainw.starty, mainw.endy);
+        drawMap(moblist.items, mainw.startx, mainw.endx, mainw.starty, mainw.endy, coord);
 
         if (opts.show_trajectory) {
             const trajectory = state.player.coord.drawLine(coord, state.mapgeometry, 0);
@@ -1560,8 +1563,7 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
                 colors.PALE_VIOLET_RED;
 
             for (trajectory.constSlice()) |traj_c| {
-                const d_traj_c_y = mainw.starty + traj_c.y;
-                const d_traj_c_x = mainw.startx + traj_c.x;
+                const d_traj_c = coordToScreenFromRefpoint(traj_c, coord) orelse break;
 
                 if (state.player.coord.eq(traj_c)) continue;
                 if (coord.eq(traj_c)) break;
@@ -1572,20 +1574,19 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
                 }))
                     break;
 
-                display.setCell(d_traj_c_x, d_traj_c_y, .{ .ch = 'x', .fg = fg, .bg = colors.BG });
+                display.setCell(d_traj_c.x, d_traj_c.y, .{ .ch = 'x', .fg = fg, .bg = colors.BG });
             }
         }
 
-        const display_x = mainw.startx + coord.x;
-        const display_y = mainw.starty + coord.y;
-        display.setCell(display_x - 1, display_y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(display_x + 0, display_y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(display_x + 1, display_y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(display_x - 1, display_y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(display_x + 1, display_y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(display_x - 1, display_y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(display_x + 0, display_y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(display_x + 1, display_y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG });
+        const dcoord = coordToScreenFromRefpoint(coord, coord).?;
+        display.setCell(dcoord.x - 1, dcoord.y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(dcoord.x + 1, dcoord.y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(dcoord.x - 1, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(dcoord.x + 1, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(dcoord.x - 1, dcoord.y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(dcoord.x + 1, dcoord.y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG });
 
         display.present();
 
@@ -1593,14 +1594,14 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
         // changes, so that if the user moves to the edge of the map and then moves
         // away, there won't be bordering left as an artifact (as the map drawing
         // routines won't erase it, since it's outside its window).
-        display.setCell(display_x - 1, display_y - 1, .{ .bg = colors.BG });
-        display.setCell(display_x + 0, display_y - 1, .{ .bg = colors.BG });
-        display.setCell(display_x + 1, display_y - 1, .{ .bg = colors.BG });
-        display.setCell(display_x - 1, display_y + 0, .{ .bg = colors.BG });
-        display.setCell(display_x + 1, display_y + 0, .{ .bg = colors.BG });
-        display.setCell(display_x - 1, display_y + 1, .{ .bg = colors.BG });
-        display.setCell(display_x + 0, display_y + 1, .{ .bg = colors.BG });
-        display.setCell(display_x + 1, display_y + 1, .{ .bg = colors.BG });
+        display.setCell(dcoord.x - 1, dcoord.y - 1, .{ .bg = colors.BG });
+        display.setCell(dcoord.x + 0, dcoord.y - 1, .{ .bg = colors.BG });
+        display.setCell(dcoord.x + 1, dcoord.y - 1, .{ .bg = colors.BG });
+        display.setCell(dcoord.x - 1, dcoord.y + 0, .{ .bg = colors.BG });
+        display.setCell(dcoord.x + 1, dcoord.y + 0, .{ .bg = colors.BG });
+        display.setCell(dcoord.x - 1, dcoord.y + 1, .{ .bg = colors.BG });
+        display.setCell(dcoord.x + 0, dcoord.y + 1, .{ .bg = colors.BG });
+        display.setCell(dcoord.x + 1, dcoord.y + 1, .{ .bg = colors.BG });
 
         switch (display.waitForEvent(null) catch err.wat()) {
             .Quit => {
@@ -1657,7 +1658,7 @@ pub fn chooseDirection() ?Direction {
     var direction: Direction = .North;
 
     while (true) {
-        drawMap(moblist.items, mainw.startx, mainw.endx, mainw.starty, mainw.endy);
+        drawMap(moblist.items, mainw.startx, mainw.endx, mainw.starty, mainw.endy, state.player.coord);
 
         const maybe_coord = state.player.coord.move(direction, state.mapgeometry);
 
@@ -2079,18 +2080,17 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
             }
         }
 
-        drawMap(moblist.items, mainw.startx, mainw.endx, mainw.starty, mainw.endy);
+        drawMap(moblist.items, mainw.startx, mainw.endx, mainw.starty, mainw.endy, coord);
 
-        const display_x = mainw.startx + coord.x;
-        const display_y = mainw.starty + coord.y;
-        display.setCell(display_x - 1, display_y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(display_x + 0, display_y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(display_x + 1, display_y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(display_x - 1, display_y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(display_x + 1, display_y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(display_x - 1, display_y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(display_x + 0, display_y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(display_x + 1, display_y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG });
+        const dcoord = coordToScreenFromRefpoint(coord, coord).?;
+        display.setCell(dcoord.x - 1, dcoord.y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(dcoord.x + 1, dcoord.y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(dcoord.x - 1, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(dcoord.x + 1, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(dcoord.x - 1, dcoord.y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
+        display.setCell(dcoord.x + 1, dcoord.y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG });
 
         display.present();
 
@@ -2098,14 +2098,14 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
         // changes, so that if the user moves to the edge of the map and then moves
         // away, there won't be bordering left as an artifact (as the map drawing
         // routines won't erase it, since it's outside its window).
-        display.setCell(display_x - 1, display_y - 1, .{ .bg = colors.BG });
-        display.setCell(display_x + 0, display_y - 1, .{ .bg = colors.BG });
-        display.setCell(display_x + 1, display_y - 1, .{ .bg = colors.BG });
-        display.setCell(display_x - 1, display_y + 0, .{ .bg = colors.BG });
-        display.setCell(display_x + 1, display_y + 0, .{ .bg = colors.BG });
-        display.setCell(display_x - 1, display_y + 1, .{ .bg = colors.BG });
-        display.setCell(display_x + 0, display_y + 1, .{ .bg = colors.BG });
-        display.setCell(display_x + 1, display_y + 1, .{ .bg = colors.BG });
+        display.setCell(dcoord.x - 1, dcoord.y - 1, .{ .bg = colors.BG });
+        display.setCell(dcoord.x + 0, dcoord.y - 1, .{ .bg = colors.BG });
+        display.setCell(dcoord.x + 1, dcoord.y - 1, .{ .bg = colors.BG });
+        display.setCell(dcoord.x - 1, dcoord.y + 0, .{ .bg = colors.BG });
+        display.setCell(dcoord.x + 1, dcoord.y + 0, .{ .bg = colors.BG });
+        display.setCell(dcoord.x - 1, dcoord.y + 1, .{ .bg = colors.BG });
+        display.setCell(dcoord.x + 0, dcoord.y + 1, .{ .bg = colors.BG });
+        display.setCell(dcoord.x + 1, dcoord.y + 1, .{ .bg = colors.BG });
 
         switch (display.waitForEvent(null) catch err.wat()) {
             .Quit => {
