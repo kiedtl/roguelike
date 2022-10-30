@@ -2900,7 +2900,6 @@ pub const Animation = union(enum) {
     }
 
     pub fn apply(self: Animation) void {
-        const mapwin = dimensions(.Main);
         drawNoPresent();
 
         state.player.tickFOV();
@@ -2928,37 +2927,37 @@ pub const Animation = union(enum) {
             .BlinkChar => |anim| {
                 assert(anim.coords.len < 256); // XXX: increase if necessary
                 var old_cells = StackBuffer(display.Cell, 256).init(null);
-                var some_coords_seen = false;
+                var coords = StackBuffer(Coord, 256).init(null);
                 for (anim.coords) |coord| {
-                    if (state.player.cansee(coord))
-                        some_coords_seen = true;
-                    const dx = coord.x + mapwin.startx;
-                    const dy = coord.y + mapwin.starty;
-                    old_cells.append(display.getCell(dx, dy)) catch err.wat();
+                    if (!state.player.cansee(coord)) {
+                        continue;
+                    }
+                    if (coordToScreen(coord)) |dcoord| {
+                        coords.append(coord) catch err.wat();
+                        old_cells.append(display.getCell(dcoord.x, dcoord.y)) catch err.wat();
+                    }
                 }
 
-                if (!some_coords_seen) {
+                if (coords.len == 0) {
                     // Player can't see any coord, bail out
                     return;
                 }
 
                 var ctr: usize = anim.repeat;
                 while (ctr > 0) : (ctr -= 1) {
-                    for (anim.coords) |coord, i| if (state.player.cansee(coord)) {
-                        const dx = coord.x + mapwin.startx;
-                        const dy = coord.y + mapwin.starty;
+                    for (coords.constSlice()) |coord, i| {
+                        const dcoord = coordToScreen(coord).?;
                         const old = old_cells.constSlice()[i];
-                        display.setCell(dx, dy, .{ .ch = anim.char, .fg = anim.fg orelse old.fg, .bg = colors.BG });
-                    };
+                        display.setCell(dcoord.x, dcoord.y, .{ .ch = anim.char, .fg = anim.fg orelse old.fg, .bg = colors.BG });
+                    }
 
                     display.present();
                     std.time.sleep(anim.delay * 1_000_000);
 
                     for (anim.coords) |coord, i| if (state.player.cansee(coord)) {
-                        const dx = coord.x + mapwin.startx;
-                        const dy = coord.y + mapwin.starty;
+                        const dcoord = coordToScreen(coord).?;
                         const old = old_cells.constSlice()[i];
-                        display.setCell(dx, dy, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
+                        display.setCell(dcoord.x, dcoord.y, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
                     };
 
                     if (ctr > 1) {
@@ -2970,17 +2969,17 @@ pub const Animation = union(enum) {
             .EncircleChar => |anim| {
                 const directions = [_]Direction{ .NorthWest, .North, .NorthEast, .East, .SouthEast, .South, .SouthWest, .West, .NorthWest, .North, .NorthEast };
                 for (&directions) |d| if (anim.coord.move(d, state.mapgeometry)) |neighbor| {
-                    const dx = neighbor.x + mapwin.startx;
-                    const dy = neighbor.y + mapwin.starty;
-                    const old = display.getCell(dx, dy);
+                    if (coordToScreen(neighbor)) |dneighbor| {
+                        const old = display.getCell(dneighbor.x, dneighbor.y);
 
-                    display.setCell(dx, dy, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
-                    display.present();
+                        display.setCell(dneighbor.x, dneighbor.y, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                        display.present();
 
-                    std.time.sleep(90_000_000);
+                        std.time.sleep(90_000_000);
 
-                    display.setCell(dx, dy, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
-                    display.present();
+                        display.setCell(dneighbor.x, dneighbor.y, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
+                        display.present();
+                    }
                 };
             },
             .TraverseLine => |anim| {
@@ -2990,19 +2989,18 @@ pub const Animation = union(enum) {
                         continue;
                     }
 
-                    const dx = coord.x + mapwin.startx;
-                    const dy = coord.y + mapwin.starty;
-                    const old = display.getCell(dx, dy);
+                    const dcoord = coordToScreen(coord) orelse continue;
+                    const old = display.getCell(dcoord.x, dcoord.y);
 
-                    display.setCell(dx, dy, .{ .ch = anim.char, .fg = anim.fg orelse old.fg, .bg = colors.BG });
+                    display.setCell(dcoord.x, dcoord.y, .{ .ch = anim.char, .fg = anim.fg orelse old.fg, .bg = colors.BG });
                     display.present();
 
                     std.time.sleep(80_000_000);
 
                     if (anim.path_char) |path_char| {
-                        display.setCell(dx, dy, .{ .ch = path_char, .fg = colors.CONCRETE, .bg = old.bg });
+                        display.setCell(dcoord.x, dcoord.y, .{ .ch = path_char, .fg = colors.CONCRETE, .bg = old.bg });
                     } else {
-                        display.setCell(dx, dy, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
+                        display.setCell(dcoord.x, dcoord.y, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
                     }
 
                     display.present();
@@ -3022,11 +3020,10 @@ pub const Animation = union(enum) {
                             continue;
                         }
 
-                        const special = coord.eq(anim.start) or coord.eq(anim.end);
+                        const dcoord = coordToScreen(coord) orelse continue;
+                        const old = display.getCell(dcoord.x, dcoord.y);
 
-                        const dx = coord.x + mapwin.startx;
-                        const dy = coord.y + mapwin.starty;
-                        const old = display.getCell(dx, dy);
+                        const special = coord.eq(anim.start) or coord.eq(anim.end);
 
                         const char = if (special) old.ch else rng.chooseUnweighted(u8, anim.chars);
                         const fg = if (special) old.fg else colors.percentageOf(anim.fg, counter * 100 / (iters / 2));
@@ -3040,7 +3037,7 @@ pub const Animation = union(enum) {
                         else
                             colors.BG;
 
-                        display.setCell(dx, dy, .{ .ch = char, .fg = fg, .bg = bg });
+                        display.setCell(dcoord.x, dcoord.y, .{ .ch = char, .fg = fg, .bg = bg });
                     }
 
                     display.present();
