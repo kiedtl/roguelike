@@ -19,6 +19,7 @@ var is_tb_inited = false;
 // SDL2 state
 var window: ?*driver_m.SDL_Window = null;
 var renderer: ?*driver_m.SDL_Renderer = null;
+var texture: ?*driver_m.SDL_Texture = null;
 var grid: []Cell = undefined;
 var dirty: []bool = undefined;
 var w_height: usize = undefined;
@@ -264,10 +265,20 @@ pub fn init(preferred_width: usize, preferred_height: usize) InitErr!void {
             if (window == null)
                 return error.SDL2InitError;
 
-            renderer = driver_m.SDL_CreateRenderer(window, -1, driver_m.SDL_RENDERER_SOFTWARE);
+            renderer = driver_m.SDL_CreateRenderer(window, -1, driver_m.SDL_RENDERER_ACCELERATED);
             if (renderer == null)
                 return error.SDL2InitError;
             _ = driver_m.SDL_RenderSetScale(renderer, SCALE, SCALE);
+
+            texture = driver_m.SDL_CreateTexture(
+                renderer,
+                driver_m.SDL_PIXELFORMAT_RGBA8888,
+                driver_m.SDL_TEXTUREACCESS_STREAMING,
+                @intCast(c_int, preferred_width * font.FONT_WIDTH),
+                @intCast(c_int, preferred_height * font.FONT_HEIGHT),
+            );
+            if (texture == null)
+                return error.SDL2InitError;
 
             grid = try state.GPA.allocator().alloc(Cell, preferred_width * preferred_height);
             mem.set(Cell, grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
@@ -299,6 +310,7 @@ pub fn deinit() !void {
         },
         .SDL2 => {
             driver_m.SDL_StopTextInput();
+            driver_m.SDL_DestroyTexture(texture);
             driver_m.SDL_DestroyRenderer(renderer);
             driver_m.SDL_DestroyWindow(window);
             driver_m.SDL_Quit();
@@ -329,7 +341,10 @@ pub fn present() void {
     switch (driver) {
         .Termbox => driver_m.tb_present(),
         .SDL2 => {
-            //_ = driver_m.SDL_RenderClear(renderer);
+            var pixels: [*c]u32 = undefined;
+            var pitch: c_int = undefined;
+
+            _ = driver_m.SDL_LockTexture(texture, null, @ptrCast([*c]?*anyopaque, &pixels), &pitch);
 
             var dy: usize = 0;
             while (dy < height()) : (dy += 1) {
@@ -348,32 +363,20 @@ pub fn present() void {
                     while (fy < font.FONT_HEIGHT) : (fy += 1) {
                         var fx: usize = 0;
                         while (fx < font.FONT_WIDTH) : (fx += 1) {
-                            // const font_ch = font.font_data[((ch - 32) * font.FONT_HEIGHT) + fy][fx];
-                            // const font_ch = font.font_data[(ch * font.FONT_HEIGHT) + (fy * font.FONT_WIDTH + fx)];
-
                             const font_ch_y = ((ch - 32) / 16) * font.FONT_HEIGHT;
                             const font_ch_x = ((ch - 32) % 16) * font.FONT_WIDTH;
                             const font_ch = font.font_data[(font_ch_y + fy) * (16 * font.FONT_WIDTH) + font_ch_x + fx];
 
-                            const color = if (font_ch == 0) bg else colors.percentageOf(fg, @as(usize, font_ch) * 100 / 255);
-
-                            _ = driver_m.SDL_SetRenderDrawColor(
-                                renderer,
-                                @intCast(u8, color >> 16 & 0xFF),
-                                @intCast(u8, color >> 8 & 0xFF),
-                                @intCast(u8, color >> 0 & 0xFF),
-                                0,
-                            );
-                            _ = driver_m.SDL_RenderDrawPoint(
-                                renderer,
-                                @intCast(c_int, (dx * font.FONT_WIDTH) + fx),
-                                @intCast(c_int, (dy * font.FONT_HEIGHT) + fy),
-                            );
+                            const color = (if (font_ch == 0) bg else colors.percentageOf(fg, @as(usize, font_ch) * 100 / 255)) << 8 | 0xFF;
+                            pixels[(((dy * font.FONT_HEIGHT) + fy) * (w_width * font.FONT_WIDTH) + ((dx * font.FONT_WIDTH) + fx))] = color;
                         }
                     }
                 }
             }
 
+            _ = driver_m.SDL_UnlockTexture(texture);
+            _ = driver_m.SDL_RenderClear(renderer);
+            _ = driver_m.SDL_RenderCopy(renderer, texture, null, null);
             _ = driver_m.SDL_RenderPresent(renderer);
         },
     }
