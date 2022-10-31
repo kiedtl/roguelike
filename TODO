@@ -1043,6 +1043,13 @@ x Playtest game throughout, especially CAV and make adjustments
   - Electricity blasts
 - Night creatures
   - Night creature enclaves
+  - Popups explaining UI elements on hover
+    - Quick description for current level indicator
+    - Bars (health, corruption, sneak)
+    - Stats (resists, other stats near bars)
+      - Basic description
+      - Breakdown
+    - Status effects
   - Individual night creatures
   - Reputation mechanics
   - Demolisher specialists
@@ -1060,13 +1067,21 @@ x Playtest game throughout, especially CAV and make adjustments
     - Props on map for effect
     - Animation (need particle engine)
 - UI
+  - Menu to invoke patterns (via SPACE)
+    - Remove patterns list from HUD
   - Map dynamic popups/annotations
     - Label usage of special abilities
     - Label aquirement/disaquirement of a status effect
     - Label new items
-  - Menu to invoke patterns (via SPACE)
-    - Remove patterns list from HUD
+  - Popups explaining UI elements on hover
+    - Quick description for current level indicator
+    - Bars (health, corruption, sneak)
+    - Stats (resists, other stats near bars)
+      - Basic description
+      - Breakdown
+    - Status effects
   - Escape menu
+    - List of visited floors
     - Status/mob/item description lookup screen
     - Keybinding help "?" screen
   - Basic mouse support
