@@ -1031,13 +1031,16 @@ x Write rest of docs/manual
   x Tutorial
 x Playtest game throughout, especially CAV and make adjustments
 *** v2.0.0 release ***
-- Animations for spells (w/ particle engine)
+- Animations (w/ particle engine)
   - Paralysing zap
   - Fire bolts
   - Flammabilification
   - Fry
-  - Pain
-- Guards in cubbyholes (both corridors and rooms)
+  - Pain AoE effect
+  - Regular explosions
+  - Fire explosions
+  - Walls disintegrating (for Lair map)
+  - Electricity blasts
 - Night creatures
   - Night creature enclaves
   - Individual night creatures
@@ -1057,6 +1060,10 @@ x Playtest game throughout, especially CAV and make adjustments
     - Props on map for effect
     - Animation (need particle engine)
 - UI
+  - Map dynamic popups/annotations
+    - Label usage of special abilities
+    - Label aquirement/disaquirement of a status effect
+    - Label new items
   - Menu to invoke patterns (via SPACE)
     - Remove patterns list from HUD
   - Escape menu
@@ -1070,6 +1077,26 @@ x Playtest game throughout, especially CAV and make adjustments
     - Click on message pane for 'M' screen
     - Click on tabs in examine mode
     - Click on items/buttons in inventory mode
+- Corpse-related mechanics
+  - Enemies alerted of player if finding recently-killed corpse w/ player nearby
+  - Patrols and guards report corpses
+  - Cleaners clean area and move corpse to side of room
+  - Coroner comes, examines corpse, & registers threat
+- Mapgen features
+  - Guards in cubbyholes (both corridors and rooms)
+    - Diagonal cubbyholes
+  - "Siderooms"
+    - PRI: prisons and cages
+    - PRI and QRT: misc machinery (boilers, water pipes)
+    - QRT: sinks, washtubs, beer taps
+    - LAB: misc machinery, cages of constructs and animals
+- More "Living Dungeon" content
+  - Patrols report areas that need cleaning
+  - Haulers periodically bring prisoners food/alcohol rations
+  - Cleaners occasionally go over prison cell
+  - Guards drag new prisoners to replace ones which died
+    - Occasionally: mapgen schedules prisoner to be placed instead of placing one
+  - Executioners periodically demolish a prisoner (new dialog!)
 - Add "character" to game
   - Names for all goblin/human monsters
   - Named statues
@@ -1079,18 +1106,16 @@ x Playtest game throughout, especially CAV and make adjustments
     - Trophy room
     - Armory
     - Bathroom
-- More "Living Dungeon" content
-  - Haulers periodically bring prisoners food/alcohol rations
-  - Cleaners occasionally go over cell
-  - Guards drag new prisoners to replace ones which died
-    - Occasionally: mapgen schedules prisoner to be placed instead of placing one
-  - Executioners periodically demolish a prisoner (new dialog!)
+    - Caverns: dustling workshop (paralyzed dustlings inside scanning machine)
+    - Laboratory: insane & paralysed goblins inside scanning machine
 - Lava and Water rework
   - Rework as terrain
   - Addition of submerged creatures
   - Lava flans
 - Analyse mob and loot distribution and tweak weights
 - Basalt monsters (-fiends, -mages, -lings)?
+  - Plus: ability that confers status on player that causes Living Stone to
+    continually spawn around player
 - Add bookshelves and book types
   - Maps
   - Books that grant an ability
@@ -1108,13 +1133,12 @@ x Auto-wait: don't wait while in combat
   - Various resurrection spells (limited range?)
   - Paralysing zap (directional bolt only)
   - Fry (Cardinal directional bolt only)
-*** v2.1.0 release ***
+*** v3.0.0 release ***
 - Load colors from data file
 - Minor poster rework
   - Different poster types (graffiti, announcement, engraving, etc)
   - Allow placement on walls (or *only* on walls?)
-- Rings spawn with stat modifiers (Will+ Will- Will++ Will--)
-- Rework mapgen for -1/Prison and rename to Entry
+- Rings spawn with stat modifiers? (Will+ Will- Will++ Will--)
 - Headgear, footgear
 ~ Masterpiece weapons
 - Multi-tile props: trees and braziers
@@ -1146,11 +1170,11 @@ x Squad overhaul
 - eXamine screen:
   - Show last remembered items on out-of-sight tiles
   - Show floor spattering, floor material, gas
-- Garrison/Morgue level
+- Garrison/Morgue extended-game level
   - Cogmind-esque tunneling algorithm
   - *blende statues
 - Scoring
-- Basic save system
+- Basic save system, replaying of saves, scoresheet uploading
 
 Animations
 ==========
@@ -1160,11 +1184,9 @@ Animations
   x lightning bolt, blinkbolt
   - Bolts of fire
   x Knockback
-  - Fire explosion
+  x Fire explosion
   - Electricity explosion
   x Normal explosion
-  - Hostile turning to fleeing
-  - Hostile turning back to fight
   x Hostile noticing you
   x Picking up items
   x Looting chests
@@ -1173,6 +1195,7 @@ Animations
   - Shimmering golden/obsidian/cuprite/rust doors/walls
   - Lava and water
   - Noisemaking monsters (blinking music sigil)
+  - Fleeing monsters (blinking '!')
 
 Lighting/FOV:
 =============
