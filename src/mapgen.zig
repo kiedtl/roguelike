@@ -3758,11 +3758,11 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
     },
     .shrink_corridors_to_fit = true,
     .prefab_chance = 100, // No prefabs for LAB
-    .mapgen_iters = 4096,
-    .min_room_width = 5,
-    .min_room_height = 5,
-    .max_room_width = 18,
-    .max_room_height = 7,
+    .mapgen_iters = 2048,
+    .min_room_width = 8,
+    .min_room_height = 6,
+    .max_room_width = 25,
+    .max_room_height = 15,
 
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
         levelFeatureVials,
