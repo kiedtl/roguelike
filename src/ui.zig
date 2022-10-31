@@ -1086,8 +1086,11 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
     _ = _drawStrf(bar_endx + 1, y, endx, "$.hit {: >3}%$.", .{hit}, .{});
     y += 1;
 
-    _drawBar(y, startx, bar_endx, state.player.MP, state.player.max_MP, "magic", colors.percentageOf(colors.GOLD, 25), colors.LIGHT_GOLD, .{});
     const ev = utils.SignedFormatter{ .v = state.player.stat(.Evade) };
+    const willpower = @intCast(usize, state.player.stat(.Willpower));
+    const corruption_str = if (state.player.hasStatus(.Corruption)) "corrupted" else "corruption";
+    const corruption_val = if (state.player.hasStatus(.Corruption)) willpower else state.player.corruption_ctr;
+    _drawBar(y, startx, bar_endx, corruption_val, willpower, corruption_str, 0x999999, 0xeeeeee, .{});
     _ = _drawStrf(bar_endx + 1, y, endx, "$pev  {: >3}%$.", .{ev}, .{});
     y += 1;
 

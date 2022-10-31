@@ -1842,6 +1842,7 @@ pub const Mob = struct { // {{{
     activities: RingBuffer(Activity, MAX_ACTIVITY_BUFFER_SZ) = .{},
     last_attempted_move: ?Direction = null,
     last_damage: ?Damage = null,
+    corruption_ctr: usize = 0,
 
     inventory: Inventory = .{},
 
@@ -2063,19 +2064,25 @@ pub const Mob = struct { // {{{
 
         // Corruption effects
         if (self.life_type == .Living and self.isUnderStatus(.Corruption) == null) {
+            var found_undead = false;
             for (&DIRECTIONS) |d| if (self.coord.move(d, state.mapgeometry)) |neighbor| {
                 if (state.dungeon.at(neighbor).mob) |mob|
-                    if (mob.life_type == .Undead and mob.isHostileTo(self) and
-                        rng.percent(@as(usize, MOB_CORRUPTION_CHANCE)))
-                    {
-                        if (state.player.cansee(self.coord)) {
-                            state.message(.Combat, "{c} corrupts {}!", .{ mob, self });
+                    if (mob.life_type == .Undead and mob.isHostileTo(self)) {
+                        self.corruption_ctr += 1;
+                        found_undead = true;
+                        if (self.corruption_ctr >= self.stat(.Willpower)) {
+                            if (state.player.cansee(self.coord)) {
+                                state.message(.Combat, "{c} corrupts {}!", .{ mob, self });
+                            }
+                            self.addStatus(.Corruption, 0, .{ .Tmp = 7 });
+                            ai.updateEnemyKnowledge(mob, self, null);
+                            break;
                         }
-                        self.addStatus(.Corruption, 0, .{ .Tmp = 7 });
-                        ai.updateEnemyKnowledge(mob, self, null);
-                        break;
                     };
             };
+            if (!found_undead) {
+                self.corruption_ctr = 0;
+            }
         }
     }
 
@@ -3460,9 +3467,6 @@ pub const Mob = struct { // {{{
             .Speed => {
                 if (self.isUnderStatus(.Fast)) |_| val = @divTrunc(val * 50, 100);
                 if (self.isUnderStatus(.Slow)) |_| val = @divTrunc(val * 150, 100);
-            },
-            .Willpower => {
-                if (self.isUnderStatus(.Corruption)) |_| val -|= 1;
             },
             else => {},
         }
