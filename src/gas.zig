@@ -206,80 +206,81 @@ pub fn tickGasEmitters(level: usize) void {
 }
 
 // Create and dissipate gas.
-pub fn tickGases(cur_lev: usize, cur_gas: usize) void {
-    if (cur_gas < (GAS_NUM - 1))
-        tickGases(cur_lev, cur_gas + 1);
-
-    var found_nonzero_value = false;
-    {
-        var y: usize = 0;
-        w: while (y < HEIGHT) : (y += 1) {
-            var x: usize = 0;
-            while (x < WIDTH) : (x += 1) {
-                const coord = Coord.new2(cur_lev, x, y);
-                if (state.dungeon.atGas(coord)[cur_gas] >= 0.1) {
-                    found_nonzero_value = true;
-                    break :w;
-                }
-            }
-        }
-    }
-    if (!found_nonzero_value) {
-        return;
-    }
-
-    const std_dissipation = Gases[cur_gas].dissipation_rate;
-    const residue = Gases[cur_gas].residue;
-
-    var new: [HEIGHT][WIDTH]f64 = undefined;
+pub fn tickGases(cur_lev: usize) void {
+    var dirty_flags = [1]bool{false} ** GAS_NUM;
     {
         var y: usize = 0;
         while (y < HEIGHT) : (y += 1) {
             var x: usize = 0;
             while (x < WIDTH) : (x += 1) {
                 const coord = Coord.new2(cur_lev, x, y);
-
-                if (state.dungeon.at(coord).type == .Wall)
-                    continue;
-
-                if (state.dungeon.machineAt(coord)) |mach|
-                    if (!mach.porous)
-                        continue;
-
-                var avg: f64 = state.dungeon.atGas(coord)[cur_gas];
-                var neighbors: f64 = 1;
-                for (&DIRECTIONS) |d| {
-                    if (coord.move(d, state.mapgeometry)) |n| {
-                        if (state.dungeon.atGas(n)[cur_gas] < 0.1)
-                            continue;
-
-                        avg += state.dungeon.atGas(n)[cur_gas];
-                        neighbors += 1;
-                    }
-                }
-
-                const max_dissipation = @floatToInt(usize, std_dissipation * 100);
-                const dissipation = rng.rangeClumping(usize, 0, max_dissipation * 2, 2);
-                const dissipation_f = @intToFloat(f64, dissipation) / 100;
-
-                avg /= neighbors;
-                avg -= dissipation_f;
-                avg = math.max(avg, 0);
-
-                new[y][x] = avg;
+                const gases = state.dungeon.atGas(coord);
+                for (gases) |gas, gas_i| if (gas != 0) {
+                    dirty_flags[gas_i] = true;
+                };
             }
         }
     }
 
-    if (residue) |gas_residue| {
+    var cur_gas: usize = 0;
+    while (cur_gas < GAS_NUM) : (cur_gas += 1) {
+        if (!dirty_flags[cur_gas]) {
+            continue;
+        }
+
+        const std_dissipation = Gases[cur_gas].dissipation_rate;
+        const residue = Gases[cur_gas].residue;
+
+        var new: [HEIGHT][WIDTH]f64 = undefined;
+        {
+            var y: usize = 0;
+            while (y < HEIGHT) : (y += 1) {
+                var x: usize = 0;
+                while (x < WIDTH) : (x += 1) {
+                    const coord = Coord.new2(cur_lev, x, y);
+
+                    if (state.dungeon.at(coord).type == .Wall)
+                        continue;
+
+                    if (state.dungeon.machineAt(coord)) |mach|
+                        if (!mach.porous)
+                            continue;
+
+                    var avg: f64 = state.dungeon.atGas(coord)[cur_gas];
+                    var neighbors: f64 = 1;
+                    for (&DIRECTIONS) |d| {
+                        if (coord.move(d, state.mapgeometry)) |n| {
+                            if (state.dungeon.atGas(n)[cur_gas] < 0.1)
+                                continue;
+
+                            avg += state.dungeon.atGas(n)[cur_gas];
+                            neighbors += 1;
+                        }
+                    }
+
+                    const max_dissipation = @floatToInt(usize, std_dissipation * 100);
+                    const dissipation = rng.rangeClumping(usize, 0, max_dissipation * 2, 2);
+                    const dissipation_f = @intToFloat(f64, dissipation) / 100;
+
+                    avg /= neighbors;
+                    avg -= dissipation_f;
+                    avg = math.max(avg, 0);
+
+                    new[y][x] = avg;
+                }
+            }
+        }
+
         var y: usize = 0;
         while (y < HEIGHT) : (y += 1) {
             var x: usize = 0;
             while (x < WIDTH) : (x += 1) {
                 const coord = Coord.new2(cur_lev, x, y);
                 state.dungeon.atGas(coord)[cur_gas] = new[y][x];
-                if (new[y][x] > 0.3)
-                    state.dungeon.spatter(coord, gas_residue);
+                if (residue != null) {
+                    if (new[y][x] > 0.3)
+                        state.dungeon.spatter(coord, residue.?);
+                }
             }
         }
     }

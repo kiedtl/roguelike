@@ -595,7 +595,7 @@ fn tickGame() !void {
     surfaces.tickMachines(cur_level);
     fire.tickFire(cur_level);
     gas.tickGasEmitters(cur_level);
-    gas.tickGases(cur_level, 0);
+    gas.tickGases(cur_level);
     state.tickSound(cur_level);
     state.tickLight(cur_level);
 
@@ -702,7 +702,7 @@ fn viewerTickGame(cur_level: usize) void {
     surfaces.tickMachines(cur_level);
     fire.tickFire(cur_level);
     gas.tickGasEmitters(cur_level);
-    gas.tickGases(cur_level, 0);
+    gas.tickGases(cur_level);
     state.tickSound(cur_level);
     state.tickLight(cur_level);
 
