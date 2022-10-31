@@ -3645,10 +3645,10 @@ pub const LevelConfig = struct {
 
     // Dimensions include the first wall, so a minimum width of 2 guarantee that
     // there will be one empty space in the room, minimum.
-    min_room_width: usize = 9,
-    min_room_height: usize = 5,
-    max_room_width: usize = 17,
-    max_room_height: usize = 9,
+    min_room_width: usize = 7,
+    min_room_height: usize = 7,
+    max_room_width: usize = 20,
+    max_room_height: usize = 15,
 
     level_features: [4]?LevelFeatureFunc = [_]?LevelFeatureFunc{ null, null, null, null },
 
