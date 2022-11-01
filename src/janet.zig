@@ -1,4 +1,4 @@
-const c = @cImport(@cInclude("janet.h"));
+pub const c = @cImport(@cInclude("janet.h"));
 
 const std = @import("std");
 const mem = std.mem;
@@ -27,7 +27,7 @@ pub fn loadFile(path: []const u8, alloc: mem.Allocator) !c.Janet {
     return out;
 }
 
-pub fn callFunction(func: []const u8, comptime args: anytype) !void {
+pub fn callFunction(func: []const u8, args: anytype) !c.Janet {
     //comptime assert(@Type(args == <tuple type>)); // FIXME: assert this
 
     const j_sym = c.janet_csymbol(@ptrCast([*c]const u8, func));
@@ -38,13 +38,21 @@ pub fn callFunction(func: []const u8, comptime args: anytype) !void {
         }
 
         var args_buf = [1]c.Janet{undefined} ** args.len;
-        inline for (args) |arg, i| {
+        const args_info = @typeInfo(@TypeOf(args)).Struct.fields;
+        comptime var i: usize = 0;
+        inline while (i < args_info.len) : (i += 1) {
+            const arg = @field(args, args_info[i].name);
             const T = @TypeOf(arg);
             switch (T) {
-                []const u8 => args_buf[i] = c.janet_stringv(arg.ptr, @intCast(i32, arg.len)),
+                c.Janet => args_buf[i] = arg,
                 comptime_float, f64 => args_buf[i] = c.janet_wrap_number(@floatCast(f64, arg)),
-                comptime_int => args_buf[i] = c.janet_wrap_number(@intToFloat(f64, arg)),
-                else => @compileError("Unsupported argument of type `" ++ @typeName(T) ++ "` found."),
+                usize, comptime_int => args_buf[i] = c.janet_wrap_number(@intToFloat(f64, arg)),
+                []const u8 => args_buf[i] = c.janet_stringv(arg.ptr, @intCast(i32, arg.len)),
+                else => if (std.meta.trait.isZigString(T)) {
+                    args_buf[i] = c.janet_stringv(arg.ptr, @intCast(i32, arg.len));
+                } else {
+                    @compileError("Unsupported argument of type `" ++ @typeName(T) ++ "` found.");
+                },
             }
         }
 
@@ -54,8 +62,11 @@ pub fn callFunction(func: []const u8, comptime args: anytype) !void {
         const sig = c.janet_pcall(j_fn, args_buf.len, &args_buf, &res, &fiber);
 
         return switch (sig) {
-            c.JANET_SIGNAL_OK => {},
-            c.JANET_SIGNAL_ERROR => error.JanetError, //janet_stacktrace(fiber, res);
+            c.JANET_SIGNAL_OK => res,
+            c.JANET_SIGNAL_ERROR => b: {
+                c.janet_stacktrace(fiber, res);
+                break :b error.JanetError;
+            },
             c.JANET_SIGNAL_DEBUG => error.JanetDebug,
             c.JANET_SIGNAL_YIELD => error.JanetYield,
             c.JANET_SIGNAL_USER0 => error.JanetUser0,

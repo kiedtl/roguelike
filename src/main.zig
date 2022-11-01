@@ -147,7 +147,7 @@ fn initGame() bool {
     state.alerts = alert.Alert.List.init(state.GPA.allocator());
 
     janet.init() catch return false;
-    _ = janet.loadFile("scripts/particles.j", state.GPA.allocator()) catch return false;
+    _ = janet.loadFile("scripts/particles.janet", state.GPA.allocator()) catch return false;
 
     font.loadFontData();
     state.loadLevelInfo();
@@ -493,8 +493,10 @@ fn readInput() !bool {
                 state.message(.Info, "Lorem ipsum, dolor sit amet. Lorem ipsum, dolor sit amet.. Lorem ipsum, dolor sit amet. {}", .{rng.int(usize)});
                 break :blk false;
             },
-            .F8 => {
-                @panic("This is a test exception.");
+            .F8 => b: {
+                const target = ui.chooseCell(.{}) orelse break :b false;
+                ui.Animation.apply(.{ .Particle = .{ .name = "test", .coord = state.player.coord, .target = target } });
+                break :b true;
             },
             .F9 => b: {
                 const chosen = ui.chooseCell(.{}) orelse break :b false;

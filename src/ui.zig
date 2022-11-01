@@ -9,6 +9,7 @@ const enums = std.enums;
 
 const RexMap = @import("rexpaint").RexMap;
 
+const janet = @import("janet.zig");
 const display = @import("display.zig");
 const colors = @import("colors.zig");
 const player = @import("player.zig");
@@ -2883,6 +2884,11 @@ pub const Animation = union(enum) {
         bg: ?u32,
         bg_mix: ?f64,
     },
+    Particle: struct {
+        name: []const u8,
+        coord: Coord,
+        target: Coord,
+    },
 
     pub const ELEC_LINE_CHARS = "AEFHIKLMNTYZ13457*-=+~?!@#%&";
     pub const ELEC_LINE_FG = 0x9fefff;
@@ -3050,6 +3056,46 @@ pub const Animation = union(enum) {
                         animated_len = math.min(line.len, animated_len + anim.approach.?);
                         animated = line.data[0..animated_len];
                     }
+                }
+            },
+            .Particle => |anim| {
+                const mapwin = dimensions(.Main);
+                var old_cells = [_][MAP_WIDTH_R * 2]display.Cell{[1]display.Cell{undefined} ** (MAP_WIDTH_R * 2)} ** (MAP_HEIGHT_R * 2);
+                for (old_cells) |*row, y| for (row) |*cell, x| {
+                    cell.* = display.getCell(mapwin.startx + x, mapwin.starty + y);
+                };
+
+                var ctx = janet.callFunction("animation-init", .{
+                    anim.coord.x,                        anim.coord.y,
+                    anim.target.x,                       anim.target.y,
+                    state.player.coord.x -| MAP_WIDTH_R, state.player.coord.y -| MAP_HEIGHT_R,
+                    MAP_WIDTH_R * 2,                     MAP_HEIGHT_R * 2,
+                    anim.name,
+                }) catch err.wat();
+
+                var j_particles = janet.callFunction("animation-tick", .{ ctx, 0 }) catch err.wat();
+                var tick: usize = 1;
+                while (true) : (tick += 1) {
+                    std.time.sleep(50_000_000);
+                    display.present();
+                    for (old_cells) |*row, y| for (row) |cell, x| {
+                        display.setCell(mapwin.startx + x, mapwin.starty + y, cell);
+                    };
+
+                    var particles = janet.c.janet_unwrap_array(j_particles).*;
+                    if (particles.count == 0) {
+                        break;
+                    }
+                    var i: usize = 0;
+                    while (i < @intCast(usize, particles.count)) : (i += 1) {
+                        const particle = janet.c.janet_unwrap_array(particles.data[i]).*;
+                        const p_tile = 'o'; //janet.c.janet_unwrap_string(particle.data[0])[0];
+                        const p_x = @intCast(usize, janet.c.janet_unwrap_integer(particle.data[1]));
+                        const p_y = @intCast(usize, janet.c.janet_unwrap_integer(particle.data[2]));
+                        const p_dcoord = coordToScreen(Coord.new(p_x, p_y)) orelse continue;
+                        display.setCell(p_dcoord.x, p_dcoord.y, .{ .ch = p_tile, .fg = 0xffffff, .bg = colors.BG });
+                    }
+                    j_particles = janet.callFunction("animation-tick", .{ ctx, tick }) catch err.wat();
                 }
             },
         }
