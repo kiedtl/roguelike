@@ -11,6 +11,7 @@ const StackBuffer = @import("buffer.zig").StackBuffer;
 const ai = @import("ai.zig");
 const alert = @import("alert.zig");
 const rng = @import("rng.zig");
+const janet = @import("janet.zig");
 const player = @import("player.zig");
 const font = @import("font.zig");
 const literature = @import("literature.zig");
@@ -144,6 +145,9 @@ fn initGame() bool {
     state.evocables = EvocableList.init(state.GPA.allocator());
     state.messages = MessageArrayList.init(state.GPA.allocator());
     state.alerts = alert.Alert.List.init(state.GPA.allocator());
+
+    janet.init() catch return false;
+    _ = janet.loadFile("scripts/particles.j", state.GPA.allocator()) catch return false;
 
     font.loadFontData();
     state.loadLevelInfo();
@@ -301,6 +305,7 @@ fn deinitGame() void {
         poster.deinit(state.GPA.allocator());
     literature.posters.deinit();
 
+    janet.deinit();
     font.freeFontData();
     state.freeLevelInfo();
     surfaces.freeProps(state.GPA.allocator());
@@ -858,10 +863,12 @@ pub fn actualMain() anyerror!void {
 
     if (!initGame()) {
         deinitGame();
+        std.log.err("Unknown error occurred while initializing game.", .{});
         return;
     }
     if (!initLevels()) {
         deinitGame();
+        std.log.err("Unknown error occurred while building levels.", .{});
         return;
     }
 

@@ -39,6 +39,9 @@ pub fn build(b: *Builder) void {
     exe.linkLibC();
     exe.addPackagePath("rexpaint", "rx/lib.zig");
 
+    exe.addIncludeDir("jn/"); // janet.h
+    exe.addCSourceFile("jn/janet.c", &[_][]const u8{"-std=c99"});
+
     if (target.os_tag != null and target.os_tag.? == .windows) {
         exe.addIncludeDir("mingw/zlib/include/");
         exe.addObjectFile("mingw/zlib/lib/libz.dll.a");
