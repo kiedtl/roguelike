@@ -3073,11 +3073,18 @@ pub const Animation = union(enum) {
                     anim.name,
                 }) catch err.wat();
 
+                const WAIT_PERIOD = 20_000_000;
+
+                var last_tick_time = std.time.nanoTimestamp();
                 var j_particles = janet.callFunction("animation-tick", .{ ctx, 0 }) catch err.wat();
                 var tick: usize = 1;
-                while (true) : (tick += 1) {
-                    std.time.sleep(50_000_000);
+                while (tick < 200) : (tick += 1) {
+                    const time_since_last_sleep = @intCast(u64, std.time.nanoTimestamp() - last_tick_time);
+                    std.time.sleep(WAIT_PERIOD -| time_since_last_sleep);
+                    last_tick_time = std.time.nanoTimestamp();
+
                     display.present();
+
                     for (old_cells) |*row, y| for (row) |cell, x| {
                         display.setCell(mapwin.startx + x, mapwin.starty + y, cell);
                     };
@@ -3090,10 +3097,17 @@ pub const Animation = union(enum) {
                     while (i < @intCast(usize, particles.count)) : (i += 1) {
                         const particle = janet.c.janet_unwrap_array(particles.data[i]).*;
                         const p_tile = janet.c.janet_unwrap_string(particle.data[0])[0];
-                        const p_x = @intCast(usize, janet.c.janet_unwrap_integer(particle.data[1]));
-                        const p_y = @intCast(usize, janet.c.janet_unwrap_integer(particle.data[2]));
+                        const p_fg = janet.c.janet_unwrap_integer(particle.data[1]);
+                        const p_bg = janet.c.janet_unwrap_integer(particle.data[2]);
+                        const p_bg_mix = janet.c.janet_unwrap_number(particle.data[3]);
+                        const p_x = @intCast(usize, janet.c.janet_unwrap_integer(particle.data[4]));
+                        const p_y = @intCast(usize, janet.c.janet_unwrap_integer(particle.data[5]));
                         const p_dcoord = coordToScreen(Coord.new(p_x, p_y)) orelse continue;
-                        display.setCell(p_dcoord.x, p_dcoord.y, .{ .ch = p_tile, .fg = 0xffffff, .bg = colors.BG });
+                        display.setCell(p_dcoord.x, p_dcoord.y, .{
+                            .ch = p_tile,
+                            .fg = @intCast(u32, p_fg),
+                            .bg = colors.mix(old_cells[p_dcoord.y][p_dcoord.x].bg, @intCast(u32, p_bg), p_bg_mix),
+                        });
                     }
                     j_particles = janet.callFunction("animation-tick", .{ ctx, tick }) catch err.wat();
                 }
