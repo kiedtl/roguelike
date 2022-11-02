@@ -1,3 +1,6 @@
+(def GOLD 0xddb733)
+(def LIGHT_GOLD 0xfdd753)
+
 # TODO: remove if this is accepted into the stdlib and when the next version of
 # Janet is released.
 (defn deepclone [x]
@@ -84,7 +87,7 @@
                         (++ (self :age))
 
                         (or (not (:contains? (ctx :bounds) (self :coord)))
-                            (:eq? (self :coord) (self :target))
+                            (and (> (self :speed) 0) (:eq? (self :coord) (self :target)))
                             (>= (self :age) (self :lifetime))))
 
                 :COND-true (fn [&] true)
@@ -183,42 +186,45 @@
 (defn new-context [target area-size emitters]
   (table/setproto @{ :bounds area-size :target target :emitters emitters } Context))
 
+(defn template-lingering-zap [chars bg fg lifetime]
+  (new-emitter @{
+    #:particle (new-particle @{
+    #  :tile (new-tile @{ :bg-mix 0 })
+    #  #:tile (new-tile @{ :ch "X" :fg 0 :bg 0xff2211 })
+    #  :speed 1
+    #  :triggers @[
+    #    [[:COND-true] [:TRIG-create-emitter (new-emitter @{
+    #      :lifetime 1
+    #    })]]
+    #  ]
+    #})
+    :particle (new-particle @{
+      :tile (new-tile @{ :ch "Z" :fg fg :bg bg :bg-mix 0.7 })
+      :speed 0
+      :triggers @[
+        [[:COND-true] [:TRIG-scramble-glyph chars]]
+        [[:COND-true] [:TRIG-modify-color :bg @(:completed-parent-lifetime 1 3.5)]]
+        [[:COND-parent-dead? 1] [:TRIG-die]]
+      ]
+    })
+    :lifetime lifetime
+    :triggers [ [[:COND-age-eq? 0] [:TRIG-inactivate]] ] # disable after first volley
+    :spawn-count (fn [self &] (+ (:distance ((self :particle) :coord) ((self :particle) :target)) 1))
+    :get-spawn-coord (fn [self ticks ctx]
+                       (let [target ((self :particle) :target)
+                             coord ((self :particle) :coord)
+                             diffx (- (target :x) (coord :x))
+                             diffy (- (target :y) (coord :y))
+                             angle (math/atan2 diffy diffx)
+                             n (+ (% (self :total-spawned) (:distance coord target)) 1)]
+                         (new-coord (+ (coord :x) (* n (math/cos angle)))
+                                    (+ (coord :y) (* n (math/sin angle))))))
+   }))
+
 (def emitters-table @{
-  "test" @[
-    (new-emitter @{
-      #:particle (new-particle @{
-      #  :tile (new-tile @{ :bg-mix 0 })
-      #  #:tile (new-tile @{ :ch "X" :fg 0 :bg 0xff2211 })
-      #  :speed 1
-      #  :triggers @[
-      #    [[:COND-true] [:TRIG-create-emitter (new-emitter @{
-      #      :lifetime 1
-      #    })]]
-      #  ]
-      #})
-      :particle (new-particle @{
-        :tile (new-tile @{ :ch "Z" :fg 0x9fefff :bg 0x8fdfff :bg-mix 0.65 })
-        :speed 0
-        :triggers @[
-          [[:COND-true] [:TRIG-scramble-glyph "AEFHIKLMNTYZ13457*-=+~?!@#%&"]]
-          [[:COND-true] [:TRIG-modify-color :bg @(:completed-parent-lifetime 1 3.5)]]
-          [[:COND-parent-dead? 1] [:TRIG-die]]
-        ]
-      })
-      :lifetime 8
-      :triggers [ [[:COND-age-eq? 0] [:TRIG-inactivate]] ] # disable after first volley
-      :spawn-count (fn [self &] (+ (:distance ((self :particle) :coord) ((self :particle) :target)) 1))
-      :get-spawn-coord (fn [self ticks ctx]
-                         (let [target ((self :particle) :target)
-                               coord ((self :particle) :coord)
-                               diffx (- (target :x) (coord :x))
-                               diffy (- (target :y) (coord :y))
-                               angle (math/atan2 diffy diffx)
-                               n (+ (% (self :total-spawned) (:distance coord target)) 1)]
-                           (new-coord (+ (coord :x) (* n (math/cos angle)))
-                                      (+ (coord :y) (* n (math/sin angle))))))
-     })
-  ]
+  "lzap-electric" @[ (template-lingering-zap "AEFHIKLMNTYZ13457*-=+~?!@#%&" 0x9feff 0x7fc7ef 7) ]
+  "lzap-golden" @[ (template-lingering-zap ".#.#.#." LIGHT_GOLD GOLD 12) ]
+  "test" @[ (template-lingering-zap ".#.#.#." LIGHT_GOLD GOLD 12) ]
 })
 
 (defn animation-init [initialx initialy targetx targety boundsx boundsy bounds-width bounds-height emitters-set]

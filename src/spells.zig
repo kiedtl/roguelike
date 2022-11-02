@@ -498,15 +498,7 @@ pub const BOLT_BLINKBOLT = Spell{
     .name = "living lightning",
     .cast_type = .Bolt,
     .noise = .Loud,
-    .animation = .{
-        .Type2 = .{
-            .chars = ui.Animation.ELEC_LINE_CHARS,
-            .fg = ui.Animation.ELEC_LINE_FG,
-            .bg = ui.Animation.ELEC_LINE_BG,
-            .bg_mix = ui.Animation.ELEC_LINE_MIX,
-            .approach = 1,
-        },
-    },
+    .animation = .{ .Particle = .{ .name = "electric-blue" } },
     .check_has_effect = struct {
         fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
             const mob = state.dungeon.at(target).mob.?;
@@ -584,15 +576,16 @@ pub const BOLT_LIGHTNING = Spell{
     .bolt_dodgeable = false,
     .bolt_multitarget = true,
     //.animation = .{ .Type2 = .{ .chars = "EFHIKLMNTVWXYZ\\/|-=+#", .fg = 0x73c5ff } },
-    .animation = .{
-        .Type2 = .{
-            .chars = ui.Animation.ELEC_LINE_CHARS,
-            .fg = ui.Animation.ELEC_LINE_FG,
-            .bg = ui.Animation.ELEC_LINE_BG,
-            .bg_mix = ui.Animation.ELEC_LINE_MIX,
-            .approach = 2,
-        },
-    },
+    // .animation = .{
+    //     .Type2 = .{
+    //         .chars = ui.Animation.ELEC_LINE_CHARS,
+    //         .fg = ui.Animation.ELEC_LINE_FG,
+    //         .bg = ui.Animation.ELEC_LINE_BG,
+    //         .bg_mix = ui.Animation.ELEC_LINE_MIX,
+    //         .approach = 2,
+    //     },
+    // },
+    .animation = .{ .Particle = .{ .name = "lzap-electric" } },
     .check_has_effect = struct {
         fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
             const mob = state.dungeon.at(target).mob.?;
@@ -865,13 +858,14 @@ pub const CAST_FLAMMABLE = Spell{
 };
 
 const STATUE_SPELL_ANIMATION = .{
-    .Type2 = .{
-        .chars = ".#.#.",
-        .fg = colors.LIGHT_GOLD,
-        .bg = colors.GOLD,
-        .bg_mix = 0.05,
-        .approach = 4,
-    },
+    .Particle = .{ .name = "lzap-golden" },
+    // .Type2 = .{
+    //     .chars = ".#.#.",
+    //     .fg = colors.LIGHT_GOLD,
+    //     .bg = colors.GOLD,
+    //     .bg_mix = 0.05,
+    //     .approach = 4,
+    // },
 };
 
 pub const CAST_FREEZE = Spell{
@@ -981,6 +975,9 @@ pub const Spell = struct {
             bg: ?u32 = null,
             bg_mix: ?f64 = null,
             approach: ?usize = null,
+        },
+        Particle: struct {
+            name: []const u8,
         },
     } = null,
 
@@ -1099,6 +1096,13 @@ pub const Spell = struct {
                             .bg_mix = type2_anim.bg_mix,
                         } });
                     },
+                    .Particle => |particle_anim| {
+                        ui.Animation.apply(.{ .Particle = .{
+                            .name = particle_anim.name,
+                            .coord = caster_coord,
+                            .target = last_processed_coord,
+                        } });
+                    },
                 };
 
                 if (self.bolt_last_coord_effect) |func|
@@ -1180,6 +1184,13 @@ pub const Spell = struct {
                             .fg = type2_anim.fg,
                             .bg = type2_anim.bg,
                             .bg_mix = type2_anim.bg_mix,
+                        } });
+                    },
+                    .Particle => |particle_anim| {
+                        ui.Animation.apply(.{ .Particle = .{
+                            .name = particle_anim.name,
+                            .coord = caster_coord,
+                            .target = target,
                         } });
                     },
                 };
