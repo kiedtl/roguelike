@@ -112,11 +112,13 @@
   (var particles @[])
   (loop [i :range [0 (length (ctx :particles))]]
     (def particle ((ctx :particles) i))
-    (if (and (not (particle :dead))
-             (not (:tick particle ticks ctx)))
-      (array/push particles @[((particle :tile) :ch)
-                              (math/round ((particle :coord) :x))
-                              (math/round ((particle :coord) :y))])))
+    (if (not (particle :dead))
+      (do
+        (array/push particles @[((particle :tile) :ch)
+                                (math/round ((particle :coord) :x))
+                                (math/round ((particle :coord) :y))])
+        (if (:tick particle ticks ctx)
+          (put particle :dead true)))))
 
   particles)
 
