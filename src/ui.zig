@@ -3073,7 +3073,7 @@ pub const Animation = union(enum) {
                     anim.name,
                 }) catch err.wat();
 
-                const WAIT_PERIOD = 20_000_000;
+                const WAIT_PERIOD = 50_000_000;
 
                 var last_tick_time = std.time.nanoTimestamp();
                 var j_particles = janet.callFunction("animation-tick", .{ ctx, 0 }) catch err.wat();
