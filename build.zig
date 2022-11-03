@@ -35,6 +35,8 @@ pub fn build(b: *Builder) void {
     // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall.
     const mode = b.standardReleaseOptions();
 
+    const is_windows = target.os_tag != null and target.os_tag.? == .windows;
+
     const exe = b.addExecutable("rl", "src/main.zig");
     exe.linkLibC();
     exe.addPackagePath("rexpaint", "rx/lib.zig");
@@ -42,7 +44,7 @@ pub fn build(b: *Builder) void {
     exe.addIncludeDir("jn/"); // janet.h
     exe.addCSourceFile("jn/janet.c", &[_][]const u8{"-std=c99"});
 
-    if (target.os_tag != null and target.os_tag.? == .windows) {
+    if (is_windows) {
         exe.addIncludeDir("mingw/zlib/include/");
         exe.addObjectFile("mingw/zlib/lib/libz.dll.a");
         b.installBinFile("mingw/zlib/bin/zlib1.dll", "zlib1.dll");
@@ -81,7 +83,7 @@ pub fn build(b: *Builder) void {
         for (termbox_sources) |termbox_source|
             exe.addCSourceFile(termbox_source, &termbox_cflags);
     } else {
-        if (target.os_tag != null and target.os_tag.? == .windows) {
+        if (is_windows) {
             exe.addIncludeDir("mingw/SDL2/include/SDL2/");
             exe.addObjectFile("mingw/SDL2/lib/libSDL2.dll.a");
             b.installBinFile("mingw/SDL2/bin/SDL2.dll", "SDL2.dll");

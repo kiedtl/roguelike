@@ -1,3 +1,5 @@
+const builtin = @import("builtin");
+
 pub const c = @cImport(@cInclude("janet.h"));
 
 const std = @import("std");
