@@ -3060,7 +3060,7 @@ pub const Animation = union(enum) {
             },
             .Particle => |anim| {
                 const mapwin = dimensions(.Main);
-                var old_cells = [_][MAP_WIDTH_R * 2]display.Cell{[1]display.Cell{undefined} ** (MAP_WIDTH_R * 2)} ** (MAP_HEIGHT_R * 2);
+                var old_cells: [MAP_HEIGHT_R * 2][MAP_WIDTH_R * 2]display.Cell = undefined;
                 for (old_cells) |*row, y| for (row) |*cell, x| {
                     cell.* = display.getCell(mapwin.startx + x, mapwin.starty + y);
                 };
@@ -3097,17 +3097,20 @@ pub const Animation = union(enum) {
                     while (i < @intCast(usize, particles.count)) : (i += 1) {
                         const particle = janet.c.janet_unwrap_array(particles.data[i]).*;
                         const p_tile = janet.c.janet_unwrap_string(particle.data[0])[0];
-                        const p_fg = janet.c.janet_unwrap_integer(particle.data[1]);
-                        const p_bg = janet.c.janet_unwrap_integer(particle.data[2]);
+                        const p_fg = @intCast(u32, janet.c.janet_unwrap_integer(particle.data[1]));
+                        const p_bg = @intCast(u32, janet.c.janet_unwrap_integer(particle.data[2]));
                         const p_bg_mix = janet.c.janet_unwrap_number(particle.data[3]);
                         const p_x = @intCast(usize, janet.c.janet_unwrap_integer(particle.data[4]));
                         const p_y = @intCast(usize, janet.c.janet_unwrap_integer(particle.data[5]));
                         const p_dcoord = coordToScreen(Coord.new(p_x, p_y)) orelse continue;
-                        display.setCell(p_dcoord.x, p_dcoord.y, .{
-                            .ch = p_tile,
-                            .fg = @intCast(u32, p_fg),
-                            .bg = colors.mix(old_cells[p_dcoord.y][p_dcoord.x].bg, @intCast(u32, p_bg), p_bg_mix),
-                        });
+
+                        // TODO: actually fix this bug instead of papering over it
+                        const oldbg = if (p_dcoord.y - mapwin.starty >= old_cells.len or p_dcoord.x - mapwin.startx >= old_cells[0].len)
+                            colors.BG
+                        else
+                            old_cells[p_dcoord.y - mapwin.starty][p_dcoord.x - mapwin.startx].bg;
+
+                        display.setCell(p_dcoord.x, p_dcoord.y, .{ .ch = p_tile, .fg = p_fg, .bg = colors.mix(oldbg, p_bg, p_bg_mix) });
                     }
                     j_particles = janet.callFunction("animation-tick", .{ ctx, tick }) catch err.wat();
                 }
