@@ -63,6 +63,35 @@
                          (let [diffx (math/abs (- (a :x) (b :x)))
                                diffy (math/abs (- (a :y) (b :y)))]
                            (max diffx diffy)))
+             :move (fn [a direction]
+                     (var new (table/clone a))
+                     (case direction
+                       :nw
+                         (do
+                           (put new :x (- (a :x) 1))
+                           (put new :y (- (a :y) 1)))
+                       :n
+                         (put new :y (- (a :y) 1))
+                       :ne
+                         (do
+                           (put new :x (+ (a :x) 1))
+                           (put new :y (- (a :y) 1)))
+                       :e
+                         (put new :x (+ (a :x) 1))
+                       :w
+                         (put new :x (- (a :x) 1))
+                       :sw
+                         (do
+                           (put new :x (- (a :x) 1))
+                           (put new :y (+ (a :y) 1)))
+                       :s
+                         (put new :y (+ (a :y) 1))
+                       :se
+                         (do
+                           (put new :x (+ (a :x) 1))
+                           (put new :y (+ (a :y) 1)))
+                       (assert false))
+                     new)
              })
 (defn new-coord [&opt x y]
   (default x 0)
@@ -97,7 +126,7 @@
 
 (def Particle @{
                 :tile (new-tile @{})
-                :speed 0
+                :speed 1
                 :coord (new-coord)
                 :initial-coord (new-coord)
                 :target (new-coord)
@@ -145,8 +174,8 @@
                 :COND-parent-dead? (fn [self ticks ctx recurse &]
                                      (let [parent (get-parent self recurse)]
                                        (parent :dead)))
-                :COND-reached-target? (fn [self ticks ctx &]
-                                        (:eq? (self :coord) (self :target)))
+                :COND-reached-target? (fn [self ticks ctx bool &]
+                                        (= bool (:eq? (self :coord) (self :target))))
                 :COND-explosion-still-expanding? (fn [self ticks ctx parent]
                                                    (not ((get-parent self parent) :explosion-finished-expanding)))
                 :COND-explosion-done-expanding? (fn [self ticks ctx parent]
@@ -166,6 +195,20 @@
                 :TRIG-scramble-glyph (fn [self ticks ctx chars &]
                                        (def new-char (random-choose chars))
                                        (put (self :tile) :ch (string/from-bytes new-char)))
+                :TRIG-set-glyph (fn [self ticks ctx how]
+                                  (def new
+                                    (case (how 0)
+                                      :overall-cardinal-angle
+                                        (let [diffx (- ((self :target) :x) ((self :initial-coord) :x))
+                                              diffy (- ((self :target) :y) ((self :initial-coord) :y))
+                                              angle (% (+ 360 (/ (* (math/atan2 diffy diffx) 180) math/pi)) 360)]
+                                          (cond
+                                            (and (>= angle  45) (<= angle 135)) ((how 1) 0) # NORTH
+                                            (and (>= angle 135) (<= angle 225)) ((how 1) 3) # WEST
+                                            (and (>= angle 225) (<= angle 315)) ((how 1) 1) # SOUTH
+                                            (or  (<= angle  45) (>= angle 315)) ((how 1) 2) # EAST
+                                            "X"))))
+                                  (put (self :tile) :ch new))
                 :TRIG-modify-color (fn [self ticks ctx which rgb? how &]
                                      (def origcolor ((self :original-tile) which))
                                      (def curcolor  ((self :tile) which))
@@ -288,7 +331,7 @@
                                  :number (self :lifetime)))
 
                # :get-spawn-params presets
-               :SSPC-explosion (fn [self ticks ctx coord target]
+               :SPAR-explosion (fn [self ticks ctx coord target]
                                  (let [angle  (% (* 3 (self :total-spawned)) 360)
                                        dist   (:distance coord target)
                                        ntarg  (new-coord (+ (coord :x) (* dist (math/cos angle)))
@@ -298,6 +341,9 @@
                # :get-spawn-speed presets
                :SSPD-min-sin-ticks (fn [self ticks ctx speed]
                                      (- speed (math/random) (math/abs (math/sin ticks))))
+
+               # :spawn-count presets
+               :SCNT-dist-to-target (fn [self &] (+ (:distance ((self :particle) :coord) ((self :particle) :target)) 1))
 
                :COND-age-eq? (fn [self ticks ctx num]
                                (= (self :age) num))
@@ -318,16 +364,6 @@
 
 (defn template-lingering-zap [chars bg fg lifetime]
   (new-emitter @{
-    #:particle (new-particle @{
-    #  :tile (new-tile @{ :bg-mix 0 })
-    #  #:tile (new-tile @{ :ch "X" :fg 0 :bg 0xff2211 })
-    #  :speed 1
-    #  :triggers @[
-    #    [[:COND-true] [:TRIG-create-emitter (new-emitter @{
-    #      :lifetime 1
-    #    })]]
-    #  ]
-    #})
     :particle (new-particle @{
       :tile (new-tile @{ :ch "Z" :fg fg :bg bg :bg-mix 0.7 })
       :speed 0
@@ -339,7 +375,7 @@
     })
     :lifetime lifetime
     :triggers [ [[:COND-age-eq? 0] [:TRIG-inactivate]] ] # disable after first volley
-    :spawn-count (fn [self &] (+ (:distance ((self :particle) :coord) ((self :particle) :target)) 1))
+    :spawn-count (Emitter :SCNT-dist-to-target)
     :get-spawn-params (fn [self ticks ctx coord target]
                         (let [diffx (- (target :x) (coord :x))
                               diffy (- (target :y) (coord :y))
@@ -350,43 +386,89 @@
                            target]))
    }))
 
+(defn template-explosion []
+  (new-emitter @{
+    :particle (new-particle @{
+      :tile (new-tile @{ :ch " " :fg 0 :bg 0xffff00 :bg-mix 0.8 })
+      :speed 2
+      :triggers @[
+        [[:COND-reached-target? true] [:TRIG-set-explosion-expand-status 1 true]]
+
+        [
+         [:COND-explosion-still-expanding? 1] [:COND-completed-journey-percent-is? > 80]
+         [:TRIG-modify-color :bg "g" [:random-factor 0.80 0.81]]
+        ]
+        [[:COND-explosion-done-expanding? 1] [:TRIG-set-speed 0]]
+        [[:COND-explosion-done-expanding? 1] [:TRIG-reset-lifetime-once 5 0]]
+        [[:COND-explosion-done-expanding? 1] [:TRIG-lerp-color :bg 0x851e00 "rgb" [:completed-journey]]]
+
+        [[:COND-explosion-done-expanding? 1] [:COND-percent? 1] [:TRIG-create-emitter (new-emitter @{
+          :particle (new-particle @{
+            :tile (new-tile @{ :ch " " :fg 0 :bg 0xffff00 :bg-mix 0.8 })
+            :speed 0
+            # XXX: For some reason janet crashes (illegal instruction) when lifetime == 5 or lifetime == 7
+            :lifetime 6
+            :triggers @[
+              [[:COND-true] [:TRIG-modify-color :bg "r" [:completed-lifetime 1.9]]]
+              [[:COND-true] [:TRIG-modify-color :bg "g" [:completed-lifetime 0.5]]]
+            ]
+          })
+          :lifetime 1
+        })]]
+      ]
+    })
+    :lifetime (fn [self &] (:distance ((self :particle) :coord)  ((self :particle) :target)))
+    :spawn-count (fn [&] 360)
+    :get-spawn-params (Emitter :SPAR-explosion)
+    :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
+  }))
+
+(defn _statue-border-effect [color linedraw direction]
+  (new-emitter @{
+    :particle (new-particle @{ :tile (new-tile @{ :ch linedraw :fg color }) :speed 0 :lifetime 1 })
+    :lifetime 1
+    :get-spawn-params (fn [self ticks ctx coord target] [(:move coord direction) target])
+  }))
+
 (def emitters-table @{
-  "lzap-electric" @[ (template-lingering-zap "AEFHIKLMNTYZ13457*-=+~?!@#%&" 0x9feff 0x7fc7ef 7) ]
+  "lzap-electric" @[ (template-lingering-zap "AEFHIKLMNTYZ13457*-=+~?!@#%&" 0x9fefff 0x7fc7ef 7) ]
   "lzap-golden" @[ (template-lingering-zap ".#.#.#." LIGHT_GOLD GOLD 12) ]
-  "test" @[
+  "explosion-simple" @[ (template-explosion) ]
+  "zap-electric" @[(new-emitter @{
+    :particle (new-particle @{
+      :tile (new-tile @{ :ch "Z" :fg 0x9fefff :bg 0x7fc7ef :bg-mix 0.7 })
+      :speed 1
+      :triggers @[
+        [[:COND-true] [:TRIG-scramble-glyph "AEFHIJKLMNTYZ12357*-=+~?!@#%&"]]
+        [[:COND-true] [:TRIG-modify-color :bg "rgb" @(:completed-parent-lifetime 1 4.5)]]
+      ]
+    })
+    :lifetime 5
+    :spawn-count (Emitter :SCNT-dist-to-target)
+   })]
+  "test" @[ #"statue-encircle" @[
     (new-emitter @{
       :particle (new-particle @{
-        :tile (new-tile @{ :ch " " :fg 0 :bg 0xffff00 :bg-mix 0.8 })
+        :tile (new-tile @{ :ch "*" :fg LIGHT_GOLD })
         :speed 2
         :triggers @[
-          [[:COND-reached-target?] [:TRIG-set-explosion-expand-status 1 true]]
-
-          [
-           [:COND-explosion-still-expanding? 1] [:COND-completed-journey-percent-is? > 80]
-           [:TRIG-modify-color :bg "g" [:random-factor 0.80 0.81]]
-          ]
-          [[:COND-explosion-done-expanding? 1] [:TRIG-set-speed 0]]
-          [[:COND-explosion-done-expanding? 1] [:TRIG-reset-lifetime-once 5 0]]
-          [[:COND-explosion-done-expanding? 1] [:TRIG-lerp-color :bg 0x851e00 "rgb" [:completed-journey]]]
-
-          [[:COND-explosion-done-expanding? 1] [:COND-percent? 1] [:TRIG-create-emitter (new-emitter @{
-            :particle (new-particle @{
-              :tile (new-tile @{ :ch " " :fg 0 :bg 0xffff00 :bg-mix 0.8 })
-              :speed 0
-              # XXX: For some reason janet crashes (illegal instruction) when lifetime == 5 or lifetime == 7
-              :lifetime 6
-              :triggers @[
-                [[:COND-true] [:TRIG-modify-color :bg "r" [:completed-lifetime 1.9]]]
-                [[:COND-true] [:TRIG-modify-color :bg "g" [:completed-lifetime 0.5]]]
-              ]
-            })
-            :lifetime 1
-          })]]
+          [[:COND-true]                  [:TRIG-lerp-color :fg 0x5f99ff "rgb" [:completed-journey]]]
+          [[:COND-reached-target? false] [:COND-percent? 90] [:TRIG-set-glyph [:overall-cardinal-angle ["│" "│" "─" "─"]]]]
+          [[:COND-reached-target? false] [:COND-percent? 10] [:TRIG-scramble-glyph "*+~"]]
+          [[:COND-reached-target?  true] [:TRIG-scramble-glyph "$#%&OGBQUDJ08963@?"]]
+          [[:COND-reached-target?  true] [:TRIG-create-emitter (_statue-border-effect 0x5f99ff "╭" :nw)]]
+          [[:COND-reached-target?  true] [:TRIG-create-emitter (_statue-border-effect 0x5f99ff "─" :n)]]
+          [[:COND-reached-target?  true] [:TRIG-create-emitter (_statue-border-effect 0x5f99ff "╮" :ne)]]
+          [[:COND-reached-target?  true] [:TRIG-create-emitter (_statue-border-effect 0x5f99ff "│" :e)]]
+          [[:COND-reached-target?  true] [:TRIG-create-emitter (_statue-border-effect 0x5f99ff "│" :w)]]
+          [[:COND-reached-target?  true] [:TRIG-create-emitter (_statue-border-effect 0x5f99ff "╰" :sw)]]
+          [[:COND-reached-target?  true] [:TRIG-create-emitter (_statue-border-effect 0x5f99ff "─" :s)]]
+          [[:COND-reached-target?  true] [:TRIG-create-emitter (_statue-border-effect 0x5f99ff "╯" :se)]]
+          [[:COND-parent-dead? 1] [:TRIG-die]]
         ]
       })
-      :lifetime (fn [self &] (:distance ((self :particle) :coord)  ((self :particle) :target)))
-      :spawn-count (fn [&] 360)
-      :get-spawn-params (Emitter :SSPC-explosion)
+      :lifetime (fn [self &] (+ 5 (:distance ((self :particle) :coord)  ((self :particle) :target))))
+      :spawn-count (Emitter :SCNT-dist-to-target)
       :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
     })
   ]
