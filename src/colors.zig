@@ -23,9 +23,6 @@ pub const COPPER_RED: u32 = 0x985744;
 pub const BG: u32 = percentageOf(CONCRETE, 3);
 
 // Interpolate linearly between two vals.
-//
-// (addendum 22-03-03: I have no idea what this means)
-//
 fn interpolate(a: u32, b: u32, f: f64) u32 {
     const aa = @intToFloat(f64, a) / 255;
     const ab = @intToFloat(f64, b) / 255;
