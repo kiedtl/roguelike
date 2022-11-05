@@ -1,5 +1,8 @@
+(def ASCII_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`1234567890-=~!@#$%^&*()_+[]\\{}|;':\",./<>?")
 (def GOLD 0xddb733)
 (def LIGHT_GOLD 0xfdd753)
+(def ELEC_BLUE1 0x9fefff)
+(def ELEC_BLUE2 0x7fc7ef)
 (def FIRE_COLORS [
   #0xFFFFFF 0xEFEFC7 0xDFDF9F 0xCFCF6F 0xB7B737 0xB7AF2F 0xBFAF2F 0xBFA727
   #0xEEEEEE 0xEEEEEE 0xEEEEEE 0xEEEEEE 0xEEEEEE 0xEEEEEE 0xEEEEEE 0xEEEEEE
@@ -218,6 +221,10 @@
                                            [curcolor (+ (* (math/random) (- (how 2) (how 1))) (how 1))]
                                          :fixed-factor
                                            [curcolor (how 1)]
+                                         :completed-journey
+                                           (let [orig-dist (:distance (self :initial-coord) (self :target))
+                                                 curr-dist (:distance (self :coord) (self :target))]
+                                             [origcolor (/ (- curr-dist 0) (+ 0.0001 (* 1 orig-dist)))])
                                          :completed-parent-lifetime # (:completed-parent-lifetime parent-recurse factor)
                                            (let [parent (get-parent self (how 1))]
                                              #(eprint "parent-age: " (parent :age) "; parent-lifetime: " (parent :lifetime))
@@ -237,6 +244,8 @@
                                        :completed-journey
                                          (let [orig-dist (:distance (self :initial-coord) (self :target))
                                                curr-dist (:distance (self :coord) (self :target))]
+                                           (if (< (- orig-dist curr-dist) 1)
+                                             (break))
                                            (/ (- orig-dist curr-dist) (+ 0.0001 (* 1.5 orig-dist))))))
                                    (var ar (band (brshift ((self :original-tile) which) 16) 0xFF))
                                    (var ag (band (brshift ((self :original-tile) which)  8) 0xFF))
@@ -269,9 +278,7 @@
                :triggers []
                :get-spawn-params (fn [self ticks ctx coord target] [coord target])
                :get-spawn-speed  (fn [self ticks ctx speed] speed)
-
-               # Unimplemented
-               :birth-delay nil                         # how many ticks to wait before activating
+               :birth-delay 0                           # how many ticks to wait before activating
 
                # Context
                :delay-until-spawn 0
@@ -285,6 +292,10 @@
                :explosion-finished-expanding false
 
                :tick (fn [self ticks ctx]
+                       (if (> (self :birth-delay) 0)
+                         (do
+                           (-- (self :birth-delay))
+                           (break)))
                        (if (and (not (self :inactive))
                                 (<= (self :delay-until-spawn) 0))
                          (do
@@ -323,7 +334,7 @@
                          (if (((trigger 0) 0) self ticks ctx ;(slice (trigger 0) 1))
                            (((trigger 1) 0) self ticks ctx ;(slice (trigger 1) 1))))
                        (++ (self :age))
-                       (-- (self :delay-until-spawn))
+                       (-- (self :birth-delay))
                        (> (self :age) (:get-lifetime self ticks ctx)))
                :get-lifetime (fn [self ticks ctx &]
                                (case (type (self :lifetime))
@@ -340,7 +351,7 @@
 
                # :get-spawn-speed presets
                :SSPD-min-sin-ticks (fn [self ticks ctx speed]
-                                     (- speed (math/random) (math/abs (math/sin ticks))))
+                                     (max 0.1 (- speed (math/random) (math/abs (math/sin ticks)))))
 
                # :spawn-count presets
                :SCNT-dist-to-target (fn [self &] (+ (:distance ((self :particle) :coord) ((self :particle) :target)) 1))
@@ -352,6 +363,7 @@
                                   (put self :inactive true))
                })
 (defn new-emitter [table] (table/setproto table Emitter))
+(defn new-emitter-from [table proto] (table/setproto table (table/proto-flatten proto)))
 
 (def Context @{
                :target (new-coord)
@@ -362,10 +374,11 @@
 (defn new-context [target area-size emitters]
   (table/setproto @{ :bounds area-size :target target :emitters emitters } Context))
 
-(defn template-lingering-zap [chars bg fg lifetime]
+(defn template-lingering-zap [chars bg fg lifetime &named bg-mix]
+  (default bg-mix 0.7)
   (new-emitter @{
     :particle (new-particle @{
-      :tile (new-tile @{ :ch "Z" :fg fg :bg bg :bg-mix 0.7 })
+      :tile (new-tile @{ :ch "Z" :fg fg :bg bg :bg-mix bg-mix })
       :speed 0
       :triggers @[
         [[:COND-true] [:TRIG-scramble-glyph chars]]
@@ -446,7 +459,7 @@
     :lifetime 5
     :spawn-count (Emitter :SCNT-dist-to-target)
    })]
-  "test" @[ #"statue-encircle" @[
+  "zap-statues" @[
     (new-emitter @{
       :particle (new-particle @{
         :tile (new-tile @{ :ch "*" :fg LIGHT_GOLD })
@@ -470,7 +483,31 @@
       :lifetime (fn [self &] (+ 5 (:distance ((self :particle) :coord)  ((self :particle) :target))))
       :spawn-count (Emitter :SCNT-dist-to-target)
       :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
+    })]
+  "test" @[
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch "Z" :fg ELEC_BLUE1 :bg-mix 0.7 })
+        :speed 0.3
+        :triggers @[
+          [[:COND-percent? 40] [:TRIG-scramble-glyph ASCII_CHARS]]
+          # TODO: 0x495356 was taken from a Cogmind animation, and mayyybe doesn't go
+          #       too well with ELEC_BLUE*. Need to check on this after I've cleared
+          #       my brain -- after hours of staring at the same animation the colors
+          #       look to be the exact same hue.
+          [[:COND-true] [:TRIG-lerp-color :fg 0x495355 "rgb" @(:completed-journey)]]
+        ]
+      })
+      :lifetime 7
+      :spawn-count (fn [&] 5)
+      :get-spawn-params (fn [self ticks ctx coord target]
+                          (let [angle  (/ (* (math/random) 360 math/pi) 180)
+                                dist   (max 1 (* (math/random) 3))
+                                ntarg  (new-coord (+ (coord :x) (* dist (math/cos angle)))
+                                                  (+ (coord :y) (* dist (math/sin angle))))]
+                            [coord ntarg]))
     })
+    (new-emitter-from @{ :birth-delay 6 } (template-lingering-zap ASCII_CHARS ELEC_BLUE1 ELEC_BLUE2 4 :bg-mix 0.4))
   ]
 })
 
