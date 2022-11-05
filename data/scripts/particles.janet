@@ -547,14 +547,3 @@
                                 (math/round ((particle :coord) :y))]))))
   (shuffle-in-place particles)
   particles)
-
-# (defn move [initial target speed]
-#   (var new initial)
-#                         (var angle (math/atan2 (- (target :y) (initial :y))
-#                                                (- (target :x) (initial :x))))
-#                         (put new :x (* speed (math/cos angle)))
-#                         (put new :y (* speed (math/sin angle)))
-#                         new
-#                         )
-# (def res (move (new-coord 0 0) (new-coord 4 1) 0.2))
-# (eprint (res :x) ", " (res :y))
