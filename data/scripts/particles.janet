@@ -241,6 +241,8 @@
                 :TRIG-lerp-color (fn [self ticks ctx which color2 rgb? how]
                                    (var factor
                                      (case (how 0)
+                                       :completed-lifetime # (:completed-lifetime factor)
+                                           (min 1 (- 1 (/ (self :age) (* (how 1) (self :lifetime)))))
                                        :completed-journey
                                          (let [orig-dist (:distance (self :initial-coord) (self :target))
                                                curr-dist (:distance (self :coord) (self :target))]
@@ -484,7 +486,7 @@
       :spawn-count (Emitter :SCNT-dist-to-target)
       :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
     })]
-  "test" @[
+  "zap-electric-charging" @[
     (new-emitter @{
       :particle (new-particle @{
         :tile (new-tile @{ :ch "Z" :fg ELEC_BLUE1 :bg-mix 0.7 })
@@ -508,6 +510,28 @@
                             [coord ntarg]))
     })
     (new-emitter-from @{ :birth-delay 6 } (template-lingering-zap ASCII_CHARS ELEC_BLUE1 ELEC_BLUE2 4 :bg-mix 0.4))
+  ]
+  "spawn-sparklings" @[
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch "Z" :fg ELEC_BLUE1 :bg ELEC_BLUE2 :bg-mix 0.2 })
+        :speed 0
+        :lifetime 7
+        :triggers @[
+          [[:COND-percent? 40] [:TRIG-scramble-glyph ASCII_CHARS]]
+          [[:COND-true] [:TRIG-lerp-color :fg 0x495355 "rgb" @(:completed-journey)]]
+          [[:COND-parent-dead? 1] [:TRIG-set-speed 0.1]]
+        ]
+      })
+      :lifetime 3
+      :spawn-count (fn [&] 5)
+      :get-spawn-params (fn [self ticks ctx coord target]
+                          (let [angle  (% (* 3 (self :total-spawned)) 360)
+                                dist   2
+                                ntarg  (new-coord (+ (coord :x) (* dist (math/cos angle)))
+                                                  (+ (coord :y) (* dist (math/sin angle))))]
+                            [ntarg coord]))
+    })
   ]
 })
 
