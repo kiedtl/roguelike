@@ -337,6 +337,7 @@
                            (((trigger 1) 0) self ticks ctx ;(slice (trigger 1) 1))))
                        (++ (self :age))
                        (-- (self :birth-delay))
+                       (-- (self :delay-until-spawn))
                        (> (self :age) (:get-lifetime self ticks ctx)))
                :get-lifetime (fn [self ticks ctx &]
                                (case (type (self :lifetime))
@@ -531,6 +532,29 @@
                                 ntarg  (new-coord (+ (coord :x) (* dist (math/cos angle)))
                                                   (+ (coord :y) (* dist (math/sin angle))))]
                             [ntarg coord]))
+    })
+  ]
+  "test" @[
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch "+" :fg 0xccccdd :bg 0 :bg-mix 0 })
+        :speed 0.6
+        :triggers @[
+          [[:COND-percent? 20] [:TRIG-scramble-glyph "*-=+~?!@#%&"]]
+        ]
+      })
+      :lifetime 3
+      :spawn-delay 2
+      :spawn-count (fn [&] 1)
+      :get-spawn-params (fn [self ticks ctx coord target]
+                          (let [first? (= (self :total-spawned) 0)
+                                diffx (- (target :x) (coord :x))
+                                diffy (- (target :y) (coord :y))
+                                angle (- (math/atan2 diffy diffx) (if first? 0 (* 0.25 (random-choose [-1 0 1]))))
+                                dist  (- (:distance coord target) (if first? 0 (* (+ 0.5 (math/random)) 2.5)))
+                                ntarg  (new-coord (+ (coord :x) (* dist (math/cos angle)))
+                                                  (+ (coord :y) (* dist (math/sin angle))))]
+                            [coord ntarg]))
     })
   ]
 })
