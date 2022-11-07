@@ -1097,6 +1097,17 @@ x Playtest game throughout, especially CAV and make adjustments
   - Patrols and guards report corpses
   - Cleaners clean area and move corpse to side of room
   - Coroner comes, examines corpse, & registers threat
+- Laboratory rework
+  - New mapgen
+  - Enh. sparklings in upper levels
+    - Dep: capacitors (and possibly Wiring levels)
+    - Dep: UI labels to effectively communicate when next discharge is
+      - "discharge 5..." "discharge 4..." "discharge 3...", etc.
+- Capacitor mechanic
+  - Basic capacitor, charging, discharging
+  - Capacitor expansion slots
+  - Wiring floors
+    - map generation
 - Mapgen features
   - Guards in cubbyholes (both corridors and rooms)
     - Diagonal cubbyholes
@@ -1122,7 +1133,10 @@ x Playtest game throughout, especially CAV and make adjustments
     - Armory
     - Bathroom
     - Caverns: dustling workshop (paralyzed dustlings inside scanning machine)
-    - Laboratory: insane & paralysed goblins inside scanning machine
+    - Laboratory: insane & paralysed prisoners inside scanning machine
+    - Laboratory: alchemist bending over workbench, with barrels of glycerin,
+      nitric acid, and sulfuric acid and a pile of potions of decimation
+      nearby.
 - Lava and Water rework
   - Rework as terrain
   - Addition of submerged creatures
