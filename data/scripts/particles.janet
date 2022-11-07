@@ -188,9 +188,13 @@
 
                 :TRIG-custom (fn [self ticks ctx func & args]
                                (func self ticks ctx ;args))
-                :TRIG-reset-lifetime-once (fn [self ticks ctx new-lifetime new-age]
+                :TRIG-reset-lifetime-once (fn [self ticks ctx p-new-lifetime new-age]
                                             (if (not (self :lifetime))
                                               (do
+                                                (def new-lifetime
+                                                  (case (type p-new-lifetime)
+                                                    :number p-new-lifetime
+                                                    :function (p-new-lifetime self ticks ctx)))
                                                 (put self :lifetime new-lifetime)
                                                 (put self :age new-age))))
                 :TRIG-set-speed (fn [self ticks ctx new-speed]
@@ -345,12 +349,14 @@
                                  :number (self :lifetime)))
 
                # :get-spawn-params presets
-               :SPAR-explosion (fn [self ticks ctx coord target]
-                                 (let [angle  (% (* 3 (self :total-spawned)) 360)
-                                       dist   (:distance coord target)
-                                       ntarg  (new-coord (+ (coord :x) (* dist (math/cos angle)))
-                                                         (+ (coord :y) (* dist (math/sin angle))))]
-                                   [coord ntarg]))
+               :SPAR-explosion (fn [&named inverse]
+                                 (default inverse false)
+                                 (fn [self ticks ctx coord target]
+                                   (let [angle  (* (/ (% (* 2 (self :total-spawned)) 360) 180) math/pi)
+                                         dist   (:distance coord target)
+                                         ntarg  (new-coord (+ (coord :x) (* dist (math/cos angle)))
+                                                           (+ (coord :y) (* dist (math/sin angle))))]
+                                     (if inverse [ntarg coord] [coord ntarg]))))
 
                # :get-spawn-speed presets
                :SSPD-min-sin-ticks (fn [self ticks ctx speed]
@@ -434,8 +440,8 @@
       ]
     })
     :lifetime (fn [self &] (:distance ((self :particle) :coord)  ((self :particle) :target)))
-    :spawn-count (fn [&] 360)
-    :get-spawn-params (Emitter :SPAR-explosion)
+    :spawn-count (fn [&] 180)
+    :get-spawn-params (:SPAR-explosion Emitter)
     :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
   }))
 
@@ -534,7 +540,7 @@
                             [ntarg coord]))
     })
   ]
-  "test" @[
+  "zap-inacc-iron" @[
     (new-emitter @{
       :particle (new-particle @{
         :tile (new-tile @{ :ch "+" :fg 0xccccdd :bg 0 :bg-mix 0 })
@@ -557,6 +563,33 @@
                             [coord ntarg]))
     })
   ]
+  "explosion-electric-sparkly" @[(new-emitter @{
+    :particle (new-particle @{
+      :tile (new-tile @{ :ch "·" :fg 0x00e9e9 :bg 0 :bg-mix 0 })
+      :speed 2
+      :lifetime 10
+      :triggers @[
+        [[:COND-reached-target? true] [:TRIG-set-explosion-expand-status 1 true]]
+        [[:COND-explosion-done-expanding? 1] [:TRIG-reset-lifetime-once (fn [&] (+ 7 (* (math/random) 15))) 0]]
+
+        [[:COND-percent? 0.5] [:TRIG-create-emitter (new-emitter @{
+          :particle (new-particle @{
+            :tile (new-tile @{ :ch "·" :fg 0x00ffff :bg 0x007f7f :bg-mix 0.8 })
+            :speed 0
+            :lifetime 5
+            :triggers @[
+              [[:COND-explosion-done-expanding? 1] [:TRIG-lerp-color :bg 0x001212 "rgb" [:completed-lifetime]]]
+            ]
+          })
+          :lifetime 1
+        })]]
+      ]
+    })
+    :lifetime (fn [self &] (* 2 (:distance ((self :particle) :coord)  ((self :particle) :target))))
+    :spawn-count (fn [self &] 180)
+    :get-spawn-params (:SPAR-explosion Emitter :inverse true)
+    :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
+  })]
 })
 
 (defn animation-init [initialx initialy targetx targety boundsx boundsy bounds-width bounds-height emitters-set]
