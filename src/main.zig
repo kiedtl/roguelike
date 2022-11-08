@@ -507,6 +507,10 @@ fn readInput() !bool {
             else => false,
         },
         .Char => |c| switch (c) {
+            ' ' => b: {
+                _ = ui.drawZapScreen();
+                break :b false;
+            },
             '0'...'9' => b: {
                 if (player.getActiveRing()) |ring| {
                     ring.activated = false;

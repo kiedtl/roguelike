@@ -49,16 +49,21 @@ const WIDTH = state.WIDTH;
 
 pub const LEFT_INFO_WIDTH: usize = 30;
 //pub const RIGHT_INFO_WIDTH: usize = 24;
-pub const LOG_HEIGHT: usize = 6;
-pub const MAP_HEIGHT_R: usize = 10;
-pub const MAP_WIDTH_R: usize = 25;
+pub const LOG_HEIGHT = 6;
+pub const ZAP_HEIGHT = 10;
+pub const MAP_HEIGHT_R = 10;
+pub const MAP_WIDTH_R = 25;
 
 pub const MIN_HEIGHT = (MAP_HEIGHT_R * 2) + LOG_HEIGHT + 2;
 pub const MIN_WIDTH = (MAP_WIDTH_R * 2) + LEFT_INFO_WIDTH + 2 + 1;
 
+pub var zap_con: Console = undefined;
+
 pub fn init() !void {
     try display.init(MIN_WIDTH, MIN_HEIGHT);
     clearScreen();
+
+    zap_con = Console.init(state.GPA.allocator(), dimensions(.Zap).width(), dimensions(.Zap).height());
 }
 
 // Check that the window is the minimum size.
@@ -107,7 +112,7 @@ pub fn deinit() !void {
     try display.deinit();
 }
 
-pub const DisplayWindow = enum { Whole, PlayerInfo, Main, Log };
+pub const DisplayWindow = enum { Whole, PlayerInfo, Main, Log, Zap };
 pub const Dimension = struct {
     startx: usize,
     endx: usize,
@@ -136,6 +141,7 @@ pub fn dimensions(w: DisplayWindow) Dimension {
     const main_height = MAP_HEIGHT_R * 2;
     const playerinfo_start = main_start + main_width + 1;
     const log_start = main_start;
+    const zap_start = height / 2 - (ZAP_HEIGHT / 2);
 
     return switch (w) {
         .Whole => .{
@@ -167,6 +173,12 @@ pub fn dimensions(w: DisplayWindow) Dimension {
             .endy = height - 1,
             //.width = main_width,
             //.height = math.max(LOG_HEIGHT, height - (2 + main_height) - 1),
+        },
+        .Zap => .{
+            .startx = 0,
+            .endx = playerinfo_start + playerinfo_width + 1,
+            .starty = zap_start,
+            .endy = zap_start + ZAP_HEIGHT,
         },
     };
 }
@@ -1912,6 +1924,34 @@ pub fn drawMessagesScreen() void {
     }
 }
 
+pub fn drawZapScreen() void {
+    while (true) {
+        zap_con.clearLineTo(0, zap_con.width - 1, 0, .{ .ch = '▄', .fg = colors.LIGHT_CONCRETE, .bg = colors.BG });
+        zap_con.clearLineTo(0, zap_con.width - 1, zap_con.height - 1, .{ .ch = '▀', .fg = colors.LIGHT_CONCRETE, .bg = colors.BG });
+        zap_con.renderFullyW(.Zap);
+        display.present();
+
+        switch (display.waitForEvent(null) catch err.wat()) {
+            .Quit => {
+                state.state = .Quit;
+                break;
+            },
+            .Key => |k| switch (k) {
+                .CtrlC, .CtrlG, .Esc => break,
+                else => {},
+            },
+            .Char => |c| switch (c) {
+                else => {},
+            },
+            else => {},
+        }
+    }
+
+    // FIXME: remove once all of ui.* is converted to subconsole system and
+    // artifacts are auto-cleared
+    clearScreen();
+}
+
 // Examine mode {{{
 pub const ExamineTileFocus = enum { Item, Surface, Mob };
 
@@ -2700,6 +2740,10 @@ pub const Console = struct {
 
     pub fn renderFully(self: *const Self, offset_x: usize, offset_y: usize) void {
         self.renderAreaAt(offset_x, offset_y, 0, 0, self.width, self.height);
+    }
+
+    pub fn renderFullyW(self: *const Self, win: DisplayWindow) void {
+        self.renderAreaAt(dimensions(win).startx, dimensions(win).starty, 0, 0, self.width, self.height);
     }
 
     pub fn setCell(self: *const Self, x: usize, y: usize, ch: u21, fg: u32, bg: u32) void {
