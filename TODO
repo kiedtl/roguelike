@@ -1097,6 +1097,7 @@ x Playtest game throughout, especially CAV and make adjustments
   - Patrols and guards report corpses
   - Cleaners clean area and move corpse to side of room
   - Coroner comes, examines corpse, & registers threat
+  - Fix: don't spawn corpses when removing enemies near staircases
 - Laboratory rework
   - New mapgen
   - Enh. sparklings in upper levels
