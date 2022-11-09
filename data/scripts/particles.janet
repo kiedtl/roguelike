@@ -1,3 +1,20 @@
+# Saved for later:
+#
+# :get-spawn-params (fn [self ticks ctx coord target]
+#                     (let [diffx  (- (target :x) (coord :x))
+#                           diffy  (- (target :y) (coord :y))
+#                           angle  (math/atan2 diffy diffx)
+#                           dist   (:distance coord target)
+#                           offset [(deg-to-rad 90) (deg-to-rad -90) (deg-to-rad 180)]
+#                           nangle (+ angle (offset (% (self :total-spawned) 2)))
+#                           ntarg  (new-coord (+ (coord :x) (* dist (math/cos nangle)))
+#                                             (+ (coord :y) (* dist (math/sin nangle))))]
+#                       [ntarg coord]))
+#
+# Effect: when spliced into flamethrower effect, causes three beams of fire to
+# shoot at target: one from the source, the other two from a few tiles away. A
+# bit of a "backwards ray", spreading in instead of out.
+
 (def ASCII_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`1234567890-=~!@#$%^&*()_+[]\\{}|;':\",./<>?")
 (def GOLD 0xddb733)
 (def LIGHT_GOLD 0xfdd753)
@@ -57,6 +74,9 @@
 (defn random-choose [array]
   (array (math/floor (* (math/random) (length array)))))
 
+(defn deg-to-rad [deg]
+  (* (/ (% deg 360) 180) math/pi))
+
 (def Coord @{
              :x 0 :y 0                                   # Can be fractional.
              :eq? (fn [a b]
@@ -66,6 +86,15 @@
                          (let [diffx (math/abs (- (a :x) (b :x)))
                                diffy (math/abs (- (a :y) (b :y)))]
                            (max diffx diffy)))
+             :angle (fn [a b]
+                      (let [diffx  (- (a :x) (b :x))
+                            diffy  (- (a :y) (b :y))]
+                            (math/atan2 diffy diffx)))
+             :move-angle (fn [self r t]
+                           (var new (table/clone self))
+                           (put new :x (+ (self :x) (* r (math/cos t))))
+                           (put new :y (+ (self :y) (* r (math/sin t))))
+                           new)
              :move (fn [a direction]
                      (var new (table/clone a))
                      (case direction
@@ -217,34 +246,39 @@
                                             "X"))))
                                   (put (self :tile) :ch new))
                 :TRIG-modify-color (fn [self ticks ctx which rgb? how &]
-                                     (def origcolor ((self :original-tile) which))
-                                     (def curcolor  ((self :tile) which))
+                                     (def origtile (self :original-tile))
+                                     (def curtile  (self :tile))
                                      (def [color1 factor]
                                        (case (how 0)
                                          :random-factor
-                                           [curcolor (+ (* (math/random) (- (how 2) (how 1))) (how 1))]
+                                           [curtile (+ (* (math/random) (- (how 2) (how 1))) (how 1))]
                                          :fixed-factor
-                                           [curcolor (how 1)]
+                                           [curtile (how 1)]
                                          :completed-journey
                                            (let [orig-dist (:distance (self :initial-coord) (self :target))
                                                  curr-dist (:distance (self :coord) (self :target))]
-                                             [origcolor (/ (- curr-dist 0) (+ 0.0001 (* 1 orig-dist)))])
+                                             [origtile (/ (- curr-dist 0) (+ 0.0001 (* 1 orig-dist)))])
                                          :completed-parent-lifetime # (:completed-parent-lifetime parent-recurse factor)
                                            (let [parent (get-parent self (how 1))]
                                              #(eprint "parent-age: " (parent :age) "; parent-lifetime: " (parent :lifetime))
-                                             [origcolor (min 1 (- 1 (/ (parent :age) (* (how 2) (parent :lifetime)))))])
+                                             [origtile (min 1 (- 1 (/ (parent :age) (* (how 2) (parent :lifetime)))))])
                                          :completed-lifetime # (:completed-lifetime factor)
-                                             [origcolor (min 1 (- 1 (/ (self :age) (* (how 1) (self :lifetime)))))]))
-                                     (var r (band (brshift color1 16) 0xFF))
-                                     (var g (band (brshift color1  8) 0xFF))
-                                     (var b (band (brshift color1  0) 0xFF))
+                                             [origtile (max 0 (min 1 (- 1 (/ (self :age) (+ 0.00001 (* (how 1) (self :lifetime)))))))]))
+                                     (var r (band (brshift (color1 which) 16) 0xFF))
+                                     (var g (band (brshift (color1 which)  8) 0xFF))
+                                     (var b (band (brshift (color1 which)  0) 0xFF))
+                                     (var a (color1 :bg-mix))
                                      (if (string/find "r" rgb?) (set r (math/floor (* r factor))))
                                      (if (string/find "g" rgb?) (set g (math/floor (* g factor))))
                                      (if (string/find "b" rgb?) (set b (math/floor (* b factor))))
-                                     (put (self :tile) which (bor (blshift r 16) (blshift g 8) b)))
+                                     (if (string/find "a" rgb?) (set a (* a factor)))
+                                     (put (self :tile) which (bor (blshift r 16) (blshift g 8) b))
+                                     (put (self :tile) :bg-mix a))
                 :TRIG-lerp-color (fn [self ticks ctx which color2 rgb? how]
                                    (var factor
                                      (case (how 0)
+                                       # :sine-custom # (:sine (fn [self ticks ctx] ...))
+                                       #     (math/sin (* (/ (% ((how 1) self ticks ctx) 360) 180) math/pi))
                                        :completed-lifetime # (:completed-lifetime factor)
                                            (min 1 (- 1 (/ (self :age) (* (how 1) (self :lifetime)))))
                                        :completed-journey
@@ -282,6 +316,7 @@
                :spawn-count 1                           # number of particles to spawn each tick
                :spawn-delay 0                           # ticks to wait between spawns
                :triggers []
+               :get-spawn-tile   (fn [self ticks ctx tile] tile)
                :get-spawn-params (fn [self ticks ctx coord target] [coord target])
                :get-spawn-speed  (fn [self ticks ctx speed] speed)
                :birth-delay 0                           # how many ticks to wait before activating
@@ -330,8 +365,10 @@
                                  (put new :coord (deepclone coord)) # CLONE the damn coord
                                  (put new :initial-coord (deepclone coord)) # CLONE the damn coord
                                  (put new :target (deepclone target))) # CLONE the damn coord
+                               (let [tile (:get-spawn-tile self ticks ctx (new :tile))]
+                                 (put new :tile (deepclone (new :tile)))
+                                 (put new :original-tile (deepclone (new :tile))))
                                (put new :parent self)
-                               (put new :original-tile (new :tile))
                                (put new :speed (:get-spawn-speed self ticks ctx ((self :particle) :speed)))
                                (array/push (ctx :particles) new)
                                (++ (self :total-spawned))))
@@ -467,6 +504,52 @@
     })
     :lifetime 5
     :spawn-count (Emitter :SCNT-dist-to-target)
+   })]
+  "zap-fire-messy" @[(new-emitter @{
+    :particle (new-particle @{
+      :tile (new-tile @{ :ch " " })
+      :speed 1.7
+      :triggers @[
+        [[:COND-reached-target? true] [:TRIG-set-explosion-expand-status 1 true]]
+        [[:COND-percent? 100] [:TRIG-create-emitter (new-emitter @{
+          :particle (new-particle @{
+            :tile (new-tile @{ :ch " " :fg 0 :bg 0xff9900 :bg-mix 0.9 })
+            :speed 0
+            :triggers @[
+              [[:COND-true] [:TRIG-reset-lifetime-once (fn [&] (random-choose [6 8 10])) 0]]
+              [[:COND-true] [:TRIG-modify-color :bg "a" [:completed-lifetime 0.9]]]
+              [[:COND-explosion-still-expanding? 3] [:COND-percent? 5]
+               [:TRIG-custom (fn [self &]
+                               (put self :lifetime (+ (self :lifetime) 3))
+                               (put (self :tile) :bg-mix 0.9))]
+              ]
+            ]
+          })
+          :lifetime 1
+        })]]
+        [[:COND-percent? 60] [:TRIG-create-emitter (new-emitter @{
+          :particle (new-particle @{
+            :tile (new-tile @{ :ch " " :fg 0 :bg 0xff9900 :bg-mix 0.4 })
+            :speed 0.7
+            :triggers @[
+              [[:COND-reached-target? true] [:TRIG-set-speed 0]]
+              [[:COND-true] [:TRIG-reset-lifetime-once (fn [&] (random-choose [2 5])) 0]]
+              [[:COND-true] [:TRIG-modify-color :bg "a" [:completed-lifetime 0.95]]]
+            ]
+          })
+          :lifetime 1
+          :birth-delay 1
+          :get-spawn-params (fn [self ticks ctx coord target]
+                              (let [nangle (+ (:angle target coord) (random-choose [(deg-to-rad 90) (deg-to-rad -90)]))
+                                    ntarg  (:move-angle coord 1 nangle)]
+                                [coord ntarg]))
+
+        })]]
+      ]
+    })
+    :spawn-count 2
+    :lifetime 0
+    :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
    })]
   "zap-statues" @[
     (new-emitter @{
