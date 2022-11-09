@@ -1,5 +1,3 @@
-// TODO: rename this module to 'ui'
-
 const std = @import("std");
 const math = std.math;
 const io = std.io;
@@ -50,20 +48,42 @@ const WIDTH = state.WIDTH;
 pub const LEFT_INFO_WIDTH: usize = 30;
 //pub const RIGHT_INFO_WIDTH: usize = 24;
 pub const LOG_HEIGHT = 6;
-pub const ZAP_HEIGHT = 10;
+pub const ZAP_HEIGHT = 10 + 4;
 pub const MAP_HEIGHT_R = 10;
 pub const MAP_WIDTH_R = 25;
 
 pub const MIN_HEIGHT = (MAP_HEIGHT_R * 2) + LOG_HEIGHT + 2;
 pub const MIN_WIDTH = (MAP_WIDTH_R * 2) + LEFT_INFO_WIDTH + 2 + 1;
 
-pub var zap_con: Console = undefined;
+pub var zap_win: struct {
+    container: Console,
+    left: Console,
+    right: Console,
+
+    const Self = @This();
+    const LEFT_WIDTH = 20;
+
+    pub fn init(self: *Self) void {
+        const d = dimensions(.Zap);
+
+        self.container = Console.init(state.GPA.allocator(), d.width(), d.height());
+        self.left = Console.init(state.GPA.allocator(), LEFT_WIDTH, d.height() - 4);
+        self.right = Console.init(state.GPA.allocator(), d.width() - LEFT_WIDTH - 3, d.height() - 4);
+
+        self.container.addSubconsole(self.left, 1, 2);
+        self.container.addSubconsole(self.right, LEFT_WIDTH + 2, 2);
+    }
+
+    pub fn deinit(self: *Self) void {
+        self.container.deinit();
+    }
+} = undefined;
 
 pub fn init() !void {
     try display.init(MIN_WIDTH, MIN_HEIGHT);
-    clearScreen();
 
-    zap_con = Console.init(state.GPA.allocator(), dimensions(.Zap).width(), dimensions(.Zap).height());
+    zap_win.init();
+    clearScreen();
 }
 
 // Check that the window is the minimum size.
@@ -110,6 +130,7 @@ pub fn checkWindowSize() bool {
 
 pub fn deinit() !void {
     try display.deinit();
+    zap_win.deinit();
 }
 
 pub const DisplayWindow = enum { Whole, PlayerInfo, Main, Log, Zap };
@@ -1341,9 +1362,9 @@ fn drawLog(startx: usize, endx: usize, alloc: mem.Allocator) Console {
             lines = console.drawTextAtf(0, 0, "$G{u}$.{s}{s} (×{})", .{ line, noisetext, utils.used(message.msg), message.dups + 1 }, .{ .fg = col });
         }
 
-        total_height += lines;
         console.changeHeight(lines);
-        parent_console.addSubconsole(console, null, null);
+        parent_console.addSubconsole(console, 0, total_height);
+        total_height += lines;
     }
 
     parent_console.changeHeight(total_height);
@@ -1759,12 +1780,12 @@ pub fn initLoadingScreen() LoadingScreen {
     win_c.logo_con = Console.init(state.GPA.allocator(), map.width, map.height + 1); // +1 padding
     win_c.text_con = Console.init(state.GPA.allocator(), LoadingScreen.TEXT_CON_WIDTH, LoadingScreen.TEXT_CON_HEIGHT);
 
-    const starty = (win.height() / 2) - ((map.height + LoadingScreen.TEXT_CON_HEIGHT + 1) / 2);
+    const starty = (win.height() / 2) - ((map.height + LoadingScreen.TEXT_CON_HEIGHT + 2) / 2) - 4;
 
     win_c.logo_con.drawXP(&map);
     win_c.main_con.addSubconsole(win_c.logo_con, win_c.main_con.centerX(map.width), starty);
 
-    win_c.main_con.addSubconsole(win_c.text_con, win_c.main_con.centerX(LoadingScreen.TEXT_CON_WIDTH), null);
+    win_c.main_con.addSubconsole(win_c.text_con, win_c.main_con.centerX(LoadingScreen.TEXT_CON_WIDTH), starty + win_c.logo_con.height);
 
     return win_c;
 }
@@ -1907,28 +1928,38 @@ pub fn drawMessagesScreen() void {
         if (display.waitForEvent(50)) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
-                return;
+                break;
             },
             .Key => |k| switch (k) {
-                .CtrlC, .Esc, .Enter => return,
+                .CtrlC, .Esc, .Enter => break,
                 else => {},
             },
             .Char => |c| switch (c) {
                 'x', 'j' => scroll -|= 1,
                 'w', 'k' => scroll += 1,
-                'M' => return,
+                'M' => break,
                 else => {},
             },
             else => {},
         } else |e| if (e != error.NoInput) break;
     }
+
+    // FIXME: remove this when visual artifacts between windows are fixed
+    clearScreen();
 }
 
 pub fn drawZapScreen() void {
     while (true) {
-        zap_con.clearLineTo(0, zap_con.width - 1, 0, .{ .ch = '▄', .fg = colors.LIGHT_CONCRETE, .bg = colors.BG });
-        zap_con.clearLineTo(0, zap_con.width - 1, zap_con.height - 1, .{ .ch = '▀', .fg = colors.LIGHT_CONCRETE, .bg = colors.BG });
-        zap_con.renderFullyW(.Zap);
+        zap_win.container.clearLineTo(0, zap_win.container.width - 1, 0, .{ .ch = '▄', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+        zap_win.container.clearLineTo(0, zap_win.container.width - 1, zap_win.container.height - 1, .{ .ch = '▀', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+        zap_win.container.renderFullyW(.Zap);
+
+        var y: usize = 0;
+        while (y < zap_win.left.height) : (y += 1) {
+            zap_win.left.clearLineTo(0, zap_win.left.width - 1, y, .{ .ch = 'L', .fg = 0xffffff, .bg = 0 });
+            zap_win.right.clearLineTo(0, zap_win.right.width - 1, y, .{ .ch = 'R', .fg = 0xffffff, .bg = 0 });
+        }
+
         display.present();
 
         switch (display.waitForEvent(null) catch err.wat()) {
@@ -2633,8 +2664,8 @@ pub const Console = struct {
 
     pub const Subconsole = struct {
         console: Console,
-        x: ?usize = null, // Defaults to 0.
-        y: ?usize = null, // Defaults to last_subconsole.y orelse 0.
+        x: usize = 0,
+        y: usize = 0,
 
         pub const AList = std.ArrayList(@This());
     };
@@ -2658,7 +2689,7 @@ pub const Console = struct {
         self.subconsoles.deinit();
     }
 
-    pub fn addSubconsole(self: *Self, subconsole: Console, x: ?usize, y: ?usize) void {
+    pub fn addSubconsole(self: *Self, subconsole: Console, x: usize, y: usize) void {
         self.subconsoles.append(.{ .console = subconsole, .x = x, .y = y }) catch err.wat();
     }
 
@@ -2719,20 +2750,16 @@ pub const Console = struct {
             dy += 1;
         }
 
-        // FIXME: subconsoles with non-null y coords are broken
-
-        var last_sub_y: usize = 0;
-        var sdy: usize = offset_y;
         for (self.subconsoles.items) |subconsole| {
             var i: usize = 0;
+            var sdy: usize = subconsole.y -| begin_y;
             while (i < subconsole.console.height) : (i += 1) {
-                const sy = subconsole.y orelse last_sub_y;
-                const sx = subconsole.x orelse 0;
-                last_sub_y += 1;
+                const sy = subconsole.y + i;
+                const sx = subconsole.x;
                 if (sy < begin_y or sy > end_y or sx < begin_x or sx > end_x)
                     continue;
                 const sdx = offset_x + sx;
-                subconsole.console.renderAreaAt(sdx, sdy, 0, i, subconsole.console.width, i + 1);
+                subconsole.console.renderAreaAt(sdx, offset_y + sdy, 0, i, subconsole.console.width, i + 1);
                 sdy += 1;
             }
         }
