@@ -511,43 +511,6 @@ fn readInput() !bool {
                 _ = ui.drawZapScreen();
                 break :b false;
             },
-            '0'...'9' => b: {
-                if (player.getActiveRing()) |ring| {
-                    ring.activated = false;
-                    ring.pattern_checker.reset();
-                }
-                if (player.getRingByIndex(c - '0')) |ring| {
-                    if (ui.chooseDirection()) |dir| {
-                        state.message(.Info, "Activated ring $o{s}$....", .{ring.name});
-
-                        if (ring.pattern_checker.init.?(state.player, dir, &ring.pattern_checker.state)) |hint| {
-                            ring.activated = true;
-
-                            var strbuf = std.ArrayList(u8).init(state.GPA.allocator());
-                            defer strbuf.deinit();
-                            const writer = strbuf.writer();
-                            writer.print("[$o{s}$.] ", .{ring.name}) catch err.wat();
-                            player.formatActivityList(&.{hint}, writer);
-                            state.message(.Info, "{s}", .{strbuf.items});
-                        } else |derr| {
-                            ring.activated = false;
-                            switch (derr) {
-                                error.NeedCardinalDirection => state.message(.Info, "[$o{s}$.] error: need a cardinal direction", .{ring.name}),
-                                error.NeedOppositeWalkableTile => state.message(.Info, "[$o{s}$.] error: needs to have walkable space in the opposite direction", .{ring.name}),
-                                error.NeedWalkableTile => state.message(.Info, "[$o{s}$.] error: need a walkable space in that direction", .{ring.name}),
-
-                                error.NeedOppositeTileNearWalls => state.message(.Info, "[$o{s}$.] error: needs to have walkable space near walls in the opposite direction", .{ring.name}),
-                                error.NeedTileNearWalls => state.message(.Info, "[$o{s}$.] error: need a walkable space near walls in that direction", .{ring.name}),
-                                error.NeedHostileOnTile => state.message(.Info, "[$o{s}$.] error: there needs to be a hostile in that direction", .{ring.name}),
-                                error.NeedOpenSpace => state.message(.Info, "[$o{s}$.] error: need to be in open space (no walls in cardinal directions)", .{ring.name}),
-                                error.NeedOppositeWalkableTileInFrontOfWall => state.message(.Info, "[$o{s}$.] error: needs to have walkable space in front of wall in opposite direction", .{ring.name}),
-                                error.NeedLivingEnemy => state.message(.Info, "[$o{s}$.] error: enemy cannot be a construct or undead", .{ring.name}),
-                            }
-                        }
-                    }
-                }
-                break :b false;
-            },
             't' => b: {
                 player.auto_wait_enabled = !player.auto_wait_enabled;
                 const str = if (player.auto_wait_enabled)

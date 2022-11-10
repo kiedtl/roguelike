@@ -48,7 +48,7 @@ const WIDTH = state.WIDTH;
 pub const LEFT_INFO_WIDTH: usize = 30;
 //pub const RIGHT_INFO_WIDTH: usize = 24;
 pub const LOG_HEIGHT = 6;
-pub const ZAP_HEIGHT = 10 + 4;
+pub const ZAP_HEIGHT = 14 + 4;
 pub const MAP_HEIGHT_R = 10;
 pub const MAP_WIDTH_R = 25;
 
@@ -61,17 +61,17 @@ pub var zap_win: struct {
     right: Console,
 
     const Self = @This();
-    const LEFT_WIDTH = 20;
+    const LEFT_WIDTH = 18; // 15 (length of longest ring name, electrification) + 3 (padding)
 
     pub fn init(self: *Self) void {
         const d = dimensions(.Zap);
 
         self.container = Console.init(state.GPA.allocator(), d.width(), d.height());
-        self.left = Console.init(state.GPA.allocator(), LEFT_WIDTH, d.height() - 4);
-        self.right = Console.init(state.GPA.allocator(), d.width() - LEFT_WIDTH - 3, d.height() - 4);
+        self.left = Console.init(state.GPA.allocator(), LEFT_WIDTH, d.height() - 2);
+        self.right = Console.init(state.GPA.allocator(), d.width() - LEFT_WIDTH - 3, d.height() - 2);
 
-        self.container.addSubconsole(self.left, 1, 2);
-        self.container.addSubconsole(self.right, LEFT_WIDTH + 2, 2);
+        self.container.addSubconsole(self.left, 1, 1);
+        self.container.addSubconsole(self.right, LEFT_WIDTH + 2, 1);
     }
 
     pub fn deinit(self: *Self) void {
@@ -1704,9 +1704,8 @@ pub fn chooseDirection() ?Direction {
 
         const maybe_coord = state.player.coord.move(direction, state.mapgeometry);
 
-        if (maybe_coord) |coord| {
-            const display_x = mainw.startx + coord.x;
-            const display_y = mainw.starty + coord.y;
+        if (maybe_coord != null and coordToScreen(maybe_coord.?) != null) {
+            const dcoord = coordToScreen(maybe_coord.?).?;
             const char: u21 = switch (direction) {
                 .North => '↑',
                 .South => '↓',
@@ -1717,7 +1716,7 @@ pub fn chooseDirection() ?Direction {
                 .SouthEast => '↘',
                 .SouthWest => '↙',
             };
-            display.setCell(display_x, display_y, .{ .ch = char, .fg = colors.LIGHT_CONCRETE, .bg = colors.BG });
+            display.setCell(dcoord.x, dcoord.y, .{ .ch = char, .fg = colors.LIGHT_CONCRETE, .bg = colors.BG });
         }
 
         display.present();
@@ -1957,8 +1956,8 @@ pub fn drawZapScreen() void {
     var selected: usize = 0;
 
     while (true) {
-        zap_win.container.clearLineTo(0, zap_win.container.width - 1, 0, .{ .ch = '▄', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
-        zap_win.container.clearLineTo(0, zap_win.container.width - 1, zap_win.container.height - 1, .{ .ch = '▀', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+        zap_win.container.clearLineTo(0, zap_win.container.width - 1, 0, .{ .ch = '▀', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+        zap_win.container.clearLineTo(0, zap_win.container.width - 1, zap_win.container.height - 1, .{ .ch = '▄', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
 
         var ring_count: usize = 0;
         var y: usize = 0;
@@ -1967,15 +1966,15 @@ pub fn drawZapScreen() void {
             if (player.getRingByIndex(ring_i)) |ring| {
                 ring_count = ring_i;
                 const arrow = if (selected == ring_i) "$c>" else "$.·";
-                const active: []const u8 = if (ring.activated) "$b(active)$." else "";
-                y += zap_win.left.drawTextAtf(0, y, "{s} {s}$. {s}", .{ arrow, ring.name, active }, .{});
+                y += zap_win.left.drawTextAtf(0, y, "{s} {s}$.", .{ arrow, ring.name }, .{});
 
                 if (selected == ring_i) {
-                    if ((Item{ .Ring = ring }).id()) |id|
-                        if (state.descriptions.get(id)) |itemdesc| {
-                            zap_win.right.clear();
-                            _ = zap_win.right.drawTextAt(0, 0, itemdesc, .{});
-                        };
+                    var ry: usize = 0;
+                    const itemdesc = state.descriptions.get((Item{ .Ring = ring }).id().?).?;
+                    zap_win.right.clear();
+                    const active: []const u8 = if (ring.activated) "$b(active)$.\n\n" else "Press $b<Enter>$. to use.\n\n";
+                    ry += zap_win.right.drawTextAt(0, ry, active, .{});
+                    ry += zap_win.right.drawTextAt(0, ry, itemdesc, .{});
                 }
             } else {
                 y += zap_win.left.drawTextAt(0, y, "$g· <none>$.", .{});
@@ -1995,6 +1994,11 @@ pub fn drawZapScreen() void {
                 .CtrlC, .CtrlG, .Esc => break,
                 .ArrowUp => selected -|= 1,
                 .ArrowDown => selected = math.min(ring_count, selected + 1),
+                .Enter => {
+                    clearScreen();
+                    player.beginUsingRing(selected);
+                    break;
+                },
                 else => {},
             },
             .Char => |c| switch (c) {
@@ -2378,9 +2382,9 @@ pub fn drawInventoryScreen() bool {
                 LEFT_INFO_WIDTH - 1,
             );
 
-            if (usable) writer.print("$cENTER$. to use.\n", .{}) catch err.wat();
-            if (dippable) writer.print("$cD$. to dip your weapon.\n", .{}) catch err.wat();
-            if (throwable) writer.print("$ct$. to throw.\n", .{}) catch err.wat();
+            if (usable) writer.print("$b<Enter>$. to use.\n", .{}) catch err.wat();
+            if (dippable) writer.print("$bD$. to dip your weapon.\n", .{}) catch err.wat();
+            if (throwable) writer.print("$bt$. to throw.\n", .{}) catch err.wat();
 
             _ = _drawStr(ii_startx, ii_starty, ii_endx, descbuf_stream.getWritten(), .{});
         }

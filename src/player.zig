@@ -757,6 +757,42 @@ pub fn canSeeAny(coords: []const ?Coord) bool {
     } else false;
 }
 
+pub fn beginUsingRing(index: usize) void {
+    if (getActiveRing()) |ring| {
+        ring.activated = false;
+        ring.pattern_checker.reset();
+    }
+    const ring = getRingByIndex(index).?;
+    if (ui.chooseDirection()) |dir| {
+        state.message(.Info, "Activated ring $o{s}$....", .{ring.name});
+
+        if (ring.pattern_checker.init.?(state.player, dir, &ring.pattern_checker.state)) |hint| {
+            ring.activated = true;
+
+            var strbuf = std.ArrayList(u8).init(state.GPA.allocator());
+            defer strbuf.deinit();
+            const writer = strbuf.writer();
+            writer.print("[$o{s}$.] ", .{ring.name}) catch err.wat();
+            formatActivityList(&.{hint}, writer);
+            state.message(.Info, "{s}", .{strbuf.items});
+        } else |derr| {
+            ring.activated = false;
+            switch (derr) {
+                error.NeedCardinalDirection => state.message(.Info, "[$o{s}$.] error: need a cardinal direction", .{ring.name}),
+                error.NeedOppositeWalkableTile => state.message(.Info, "[$o{s}$.] error: needs to have walkable space in the opposite direction", .{ring.name}),
+                error.NeedWalkableTile => state.message(.Info, "[$o{s}$.] error: need a walkable space in that direction", .{ring.name}),
+
+                error.NeedOppositeTileNearWalls => state.message(.Info, "[$o{s}$.] error: needs to have walkable space near walls in the opposite direction", .{ring.name}),
+                error.NeedTileNearWalls => state.message(.Info, "[$o{s}$.] error: need a walkable space near walls in that direction", .{ring.name}),
+                error.NeedHostileOnTile => state.message(.Info, "[$o{s}$.] error: there needs to be a hostile in that direction", .{ring.name}),
+                error.NeedOpenSpace => state.message(.Info, "[$o{s}$.] error: need to be in open space (no walls in cardinal directions)", .{ring.name}),
+                error.NeedOppositeWalkableTileInFrontOfWall => state.message(.Info, "[$o{s}$.] error: needs to have walkable space in front of wall in opposite direction", .{ring.name}),
+                error.NeedLivingEnemy => state.message(.Info, "[$o{s}$.] error: enemy cannot be a construct or undead", .{ring.name}),
+            }
+        }
+    }
+}
+
 pub fn getRingByIndex(index: usize) ?*Ring {
     assert(index <= 9);
 
