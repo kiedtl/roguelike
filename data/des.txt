@@ -582,3 +582,83 @@ $G    ....                  ....    ....
 
 $cEffect:$. All other enemies in your LOS will go flying towards the enemy you
 attacked.
+
+% pin foe
+$cPattern:$. Attack a foe, move diagonally around it, attack again, move away.
+
+
+$G    .....                  .....                  ......
+
+$G    ..$rm$G..    $.<attack $rm$.>$G    ..$rm$.@$G.    $.<attack $rm$.>$g    ..$rm$G.$.@$G.
+
+$G    ..$.@$G..                  .....                  ......
+
+
+$cEffect:$. $oheld$. status for a few turns, enough to set up a charge or a lunge.
+
+% charge
+$cPattern:$. Step away from a foe, wait, step against foe.
+
+
+$G    .....    ..$.@$G..    ..$.@$G..    .....
+
+$G    ..$.@$G..    .....    .....    ..$.@$G..
+
+$G    .....    .....    ..$rm$G..    ..$rm$G..
+
+$G    .....    ..$rm$G..    .....    .....
+
+$G    ..$rm$G..    .....    .....    .....
+
+
+$cEffect:$. Foe is knocked back 7 tiles.
+
+% lunge
+$cPattern:$. Wait, move forward against foe.
+
+
+$G    .$.@$G.    ..$.@$G..    .....
+
+$G    ...    .....    ..$.@$G..
+
+$G    ...    ..$rm$G..    ..$rm$G..
+
+$G    .$rm$G.    .....    .....
+
+
+$cEffect:$. You get a free attack against that foe which does triple damage and
+never misses, and the foe gets the $ofear$. status for 7 turns.
+
+% eyepunch
+$cPattern:$. Move twice near the enemy you're going to attack, then attack.
+
+
+$G    ......     ......     ......
+
+$G    ......     ......     ......
+
+$G    ..$rm$G$.@$G..     ..$rm$G...     ..$rm$G...     $.<attack $rm$.>$G
+
+$G    ......     ...$.@$G..     ..$.@$G...
+
+$G    ......     ......     ......
+
+
+$cEffect:$. A few turns of blindness, and ~10 turns of disorientation. Tip: use
+this in a large room, then move away diagonally to gain distance quickly.
+
+% leap
+$cPattern:$. Step adjacent to a wall and wait twice.
+
+
+$G    $C$~#$.$G....    $C$~#$.$G....    $C$~#$.$G....    $C$~#$.$G....
+
+$G    $C$~#$.$G.$.@$G..    $C$~#$.$G$.@$G...    $C$~#$.$G$.@$G...    $C$~#$.$G$.@$G...
+
+$G    $C$~#$.$G....    $C$~#$.$G....    $C$~#$.$G....    $C$~#$.$G....
+
+$G    $C$~#$.$G....    $C$~#$.$G....    $C$~#$.$G....    $C$~#$.$G....
+
+
+$cEffect:$. You are launched 7 tiles in the direction opposite to your first
+movement's direction.
