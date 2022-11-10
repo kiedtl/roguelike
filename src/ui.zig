@@ -1171,17 +1171,22 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
         y += 1;
     }
 
+    var ring_count: usize = 0;
+    var ring_active: ?usize = null;
     var ring_i: usize = 0;
     while (ring_i <= 9) : (ring_i += 1)
         if (player.getRingByIndex(ring_i)) |ring| {
-            if (ring.activated) {
-                const bg = colors.percentageOf(colors.CONCRETE, 10);
-                _clearLineWith(startx, endx, y, ' ', bg, bg);
-                y = _drawStrf(startx, y, endx, "$c· {s}$.", .{ring.name}, .{ .bg = bg });
-            } else {
-                y = _drawStrf(startx, y, endx, "$b{}$. $c{s}$.", .{ ring_i, ring.name }, .{});
-            }
+            ring_count += 1;
+            if (ring.activated)
+                ring_active = ring_i;
         };
+
+    if (ring_active) |active_i| {
+        const ring = player.getRingByIndex(active_i).?;
+        y = _drawStrf(startx, y, endx, "Active pattern: $o{s}$.", .{ring.name}, .{});
+    } else {
+        y = _drawStr(startx, y, endx, "$bNo active pattern.$.", .{});
+    }
     y += 1;
 
     // ------------------------------------------------------------------------
@@ -1949,16 +1954,35 @@ pub fn drawMessagesScreen() void {
 }
 
 pub fn drawZapScreen() void {
+    var selected: usize = 0;
+
     while (true) {
         zap_win.container.clearLineTo(0, zap_win.container.width - 1, 0, .{ .ch = '▄', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
         zap_win.container.clearLineTo(0, zap_win.container.width - 1, zap_win.container.height - 1, .{ .ch = '▀', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
-        zap_win.container.renderFullyW(.Zap);
 
+        var ring_count: usize = 0;
         var y: usize = 0;
-        while (y < zap_win.left.height) : (y += 1) {
-            zap_win.left.clearLineTo(0, zap_win.left.width - 1, y, .{ .ch = 'L', .fg = 0xffffff, .bg = 0 });
-            zap_win.right.clearLineTo(0, zap_win.right.width - 1, y, .{ .ch = 'R', .fg = 0xffffff, .bg = 0 });
+        var ring_i: usize = 0;
+        while (ring_i <= 9) : (ring_i += 1) {
+            if (player.getRingByIndex(ring_i)) |ring| {
+                ring_count = ring_i;
+                const arrow = if (selected == ring_i) "$c>" else "$.·";
+                const active: []const u8 = if (ring.activated) "$b(active)$." else "";
+                y += zap_win.left.drawTextAtf(0, y, "{s} {s}$. {s}", .{ arrow, ring.name, active }, .{});
+
+                if (selected == ring_i) {
+                    if ((Item{ .Ring = ring }).id()) |id|
+                        if (state.descriptions.get(id)) |itemdesc| {
+                            zap_win.right.clear();
+                            _ = zap_win.right.drawTextAt(0, 0, itemdesc, .{});
+                        };
+                }
+            } else {
+                y += zap_win.left.drawTextAt(0, y, "$g· <none>$.", .{});
+            }
         }
+
+        zap_win.container.renderFullyW(.Zap);
 
         display.present();
 
@@ -1969,9 +1993,13 @@ pub fn drawZapScreen() void {
             },
             .Key => |k| switch (k) {
                 .CtrlC, .CtrlG, .Esc => break,
+                .ArrowUp => selected -|= 1,
+                .ArrowDown => selected = math.min(ring_count, selected + 1),
                 else => {},
             },
             .Char => |c| switch (c) {
+                'w', 'k' => selected -|= 1,
+                'x', 'j' => selected = math.min(ring_count, selected + 1),
                 else => {},
             },
             else => {},
@@ -2584,10 +2612,10 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
                     break;
                 },
                 .Enter => break,
-                .ArrowDown, .ArrowLeft => if (chosen < options.len - 1) {
+                .ArrowDown => if (chosen < options.len - 1) {
                     chosen += 1;
                 },
-                .ArrowUp, .ArrowRight => if (chosen > 0) {
+                .ArrowUp => if (chosen > 0) {
                     chosen -= 1;
                 },
                 else => {},
