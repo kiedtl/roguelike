@@ -1033,12 +1033,12 @@ x Playtest game throughout, especially CAV and make adjustments
 *** v2.0.0 release ***
 - Animations (w/ particle engine)
   - Paralysing zap
-  - Fire bolts
+  x Fire bolts
   - Flammabilification
   - Fry
   - Pain AoE effect
-  - Regular explosions
-  - Fire explosions
+  x Regular explosions
+  x Fire explosions
   - Walls disintegrating (for Lair map)
   - Electricity blasts
 - Night creatures
@@ -1067,31 +1067,15 @@ x Playtest game throughout, especially CAV and make adjustments
     - Props on map for effect
     - Animation (need particle engine)
 - UI
-  - Menu to invoke patterns (via SPACE)
-    - Remove patterns list from HUD
+  x Menu to invoke patterns (via SPACE)
   - Map dynamic popups/annotations
     - Label usage of special abilities
     - Label aquirement/disaquirement of a status effect
     - Label new items
-  - Popups explaining UI elements on hover
-    - Quick description for current level indicator
-    - Bars (health, corruption, sneak)
-    - Stats (resists, other stats near bars)
-      - Basic description
-      - Breakdown
-    - Status effects
   - Escape menu
-    - List of visited floors
+    - List of visited/unvisited floors
     - Status/mob/item description lookup screen
     - Keybinding help "?" screen
-  - Basic mouse support
-    - Tooltips for UI labels
-      - Tooltips/explanations for individual messages?
-    - Click on tile to move/attack/interact
-    - Right-click for examine/info
-    - Click on message pane for 'M' screen
-    - Click on tabs in examine mode
-    - Click on items/buttons in inventory mode
 - Corpse-related mechanics
   - Enemies alerted of player if finding recently-killed corpse w/ player nearby
   - Patrols and guards report corpses
@@ -1164,6 +1148,22 @@ x Auto-wait: don't wait while in combat
   - Paralysing zap (directional bolt only)
   - Fry (Cardinal directional bolt only)
 *** v3.0.0 release ***
+- UI
+  - Popups explaining UI elements on hover
+    - Quick description for current level indicator
+    - Bars (health, corruption, sneak)
+    - Stats (resists, other stats near bars)
+      - Basic description
+      - Breakdown
+    - Status effects
+  - Basic mouse support
+    - Tooltips for UI labels
+      - Tooltips/explanations for individual messages?
+    - Click on tile to move/attack/interact
+    - Right-click for examine/info
+    - Click on message pane for 'M' screen
+    - Click on tabs in examine mode
+    - Click on items/buttons in inventory mode
 - Load colors from data file
 - Minor poster rework
   - Different poster types (graffiti, announcement, engraving, etc)
