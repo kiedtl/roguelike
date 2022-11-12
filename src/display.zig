@@ -39,6 +39,9 @@ pub const Cell = struct {
     sfg: u32 = 0,
     sbg: u32 = 0,
 
+    // Used for Console{}
+    trans: bool = false,
+
     // fl: Flags = .{},
 
     // pub const Flags = packed struct {

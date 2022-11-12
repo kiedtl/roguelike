@@ -58,9 +58,26 @@ pub const MIN_WIDTH = (MAP_WIDTH_R * 2) + LEFT_INFO_WIDTH + 2 + 1;
 pub var map_win: struct {
     map: Console,
 
+    // For Examine mode, directional choose, etc.
+    annotations: Console,
+
+    // For particle animations and such.
+    animations: Console,
+
     pub fn init(self: *@This()) void {
         const d = dimensions(.Main);
         self.map = Console.init(state.GPA.allocator(), d.width(), d.height());
+
+        self.annotations = Console.init(state.GPA.allocator(), d.width(), d.height());
+        self.annotations.default_transparent = true;
+        self.annotations.clear();
+
+        self.animations = Console.init(state.GPA.allocator(), d.width(), d.height());
+        self.animations.default_transparent = true;
+        self.animations.clear();
+
+        self.map.addSubconsole(self.annotations, 0, 0);
+        self.map.addSubconsole(self.animations, 0, 0);
     }
 
     pub fn deinit(self: *@This()) void {
@@ -1402,8 +1419,6 @@ fn _mobs_can_see(moblist: []const *Mob, coord: Coord) bool {
 }
 
 fn coordToScreenFromRefpoint(coord: Coord, refpoint: Coord) ?Coord {
-    const mapwin = dimensions(.Main);
-
     if (coord.x < refpoint.x -| MAP_WIDTH_R or coord.x > refpoint.x + MAP_WIDTH_R or
         coord.y < refpoint.y -| MAP_HEIGHT_R or coord.y > refpoint.y + MAP_HEIGHT_R)
     {
@@ -1411,10 +1426,10 @@ fn coordToScreenFromRefpoint(coord: Coord, refpoint: Coord) ?Coord {
     }
     const r = Coord.new2(
         0,
-        mapwin.startx + @intCast(usize, @intCast(isize, coord.x) - (@intCast(isize, refpoint.x) -| MAP_WIDTH_R)),
-        mapwin.starty + @intCast(usize, @intCast(isize, coord.y) - (@intCast(isize, refpoint.y) -| MAP_HEIGHT_R)),
+        @intCast(usize, @intCast(isize, coord.x) - (@intCast(isize, refpoint.x) -| MAP_WIDTH_R)),
+        @intCast(usize, @intCast(isize, coord.y) - (@intCast(isize, refpoint.y) -| MAP_HEIGHT_R)),
     );
-    if (r.x > mapwin.endx or r.y > mapwin.endy) {
+    if (r.x >= map_win.map.width or r.y >= map_win.map.height) {
         return null;
     }
     return r;
@@ -1579,17 +1594,18 @@ pub const ChooseCellOpts = struct {
 };
 
 pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
-    // TODO: do some tests and figure out what's the practical limit to memory
-    // usage, and reduce the buffer's size to that.
-    var membuf: [65535]u8 = undefined;
-    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-
-    const moblist = state.createMobList(false, true, state.player.coord.z, fba.allocator());
-
     var coord: Coord = state.player.coord;
+    map_win.annotations.clear();
+
+    defer map_win.annotations.clear();
+    defer map_win.map.renderFullyW(.Main);
+
+    const moblist = state.createMobList(false, true, state.player.coord.z, state.GPA.allocator());
+    defer moblist.deinit();
 
     while (true) {
         drawMap(moblist.items, coord);
+        map_win.annotations.clear();
         map_win.map.renderFullyW(.Main);
 
         if (opts.show_trajectory) {
@@ -1616,29 +1632,17 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
         }
 
         const dcoord = coordToScreenFromRefpoint(coord, coord).?;
-        display.setCell(dcoord.x - 1, dcoord.y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(dcoord.x + 1, dcoord.y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(dcoord.x - 1, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(dcoord.x + 1, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(dcoord.x - 1, dcoord.y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(dcoord.x + 1, dcoord.y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x - 1, dcoord.y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x + 1, dcoord.y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x - 1, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x + 1, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x - 1, dcoord.y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x + 1, dcoord.y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG });
 
+        map_win.map.renderFullyW(.Main);
         display.present();
-
-        // This is a bit of a hack, erase the bordering but don't present the
-        // changes, so that if the user moves to the edge of the map and then moves
-        // away, there won't be bordering left as an artifact (as the map drawing
-        // routines won't erase it, since it's outside its window).
-        display.setCell(dcoord.x - 1, dcoord.y - 1, .{ .bg = colors.BG });
-        display.setCell(dcoord.x + 0, dcoord.y - 1, .{ .bg = colors.BG });
-        display.setCell(dcoord.x + 1, dcoord.y - 1, .{ .bg = colors.BG });
-        display.setCell(dcoord.x - 1, dcoord.y + 0, .{ .bg = colors.BG });
-        display.setCell(dcoord.x + 1, dcoord.y + 0, .{ .bg = colors.BG });
-        display.setCell(dcoord.x - 1, dcoord.y + 1, .{ .bg = colors.BG });
-        display.setCell(dcoord.x + 0, dcoord.y + 1, .{ .bg = colors.BG });
-        display.setCell(dcoord.x + 1, dcoord.y + 1, .{ .bg = colors.BG });
 
         switch (display.waitForEvent(null) catch err.wat()) {
             .Quit => {
@@ -1683,17 +1687,13 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
 }
 
 pub fn chooseDirection() ?Direction {
-    // TODO: do some tests and figure out what's the practical limit to memory
-    // usage, and reduce the buffer's size to that.
-    var membuf: [65535]u8 = undefined;
-    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-
-    const moblist = state.createMobList(false, true, state.player.coord.z, fba.allocator());
-
     var direction: Direction = .North;
 
+    defer map_win.annotations.clear();
+    defer map_win.map.renderFullyW(.Main);
+
     while (true) {
-        drawMap(moblist.items, state.player.coord);
+        map_win.annotations.clear();
         map_win.map.renderFullyW(.Main);
 
         const maybe_coord = state.player.coord.move(direction, state.mapgeometry);
@@ -1710,9 +1710,10 @@ pub fn chooseDirection() ?Direction {
                 .SouthEast => '↘',
                 .SouthWest => '↙',
             };
-            display.setCell(dcoord.x, dcoord.y, .{ .ch = char, .fg = colors.LIGHT_CONCRETE, .bg = colors.BG });
+            map_win.annotations.setCell(dcoord.x, dcoord.y, .{ .ch = char, .fg = colors.LIGHT_CONCRETE, .bg = colors.BG });
         }
 
+        map_win.map.renderFullyW(.Main);
         display.present();
 
         drawModalText(colors.CONCRETE, "direction: {}", .{direction});
@@ -2016,13 +2017,6 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
     const logw = dimensions(.Log);
     const infow = dimensions(.PlayerInfo);
 
-    // TODO: do some tests and figure out what's the practical limit to memory
-    // usage, and reduce the buffer's size to that.
-    var membuf: [65535]u8 = undefined;
-    var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
-
-    const moblist = state.createMobList(false, true, state.player.coord.z, fba.allocator());
-
     const MobTileFocus = enum { Main, Stats, Spells };
 
     var coord: Coord = state.player.coord;
@@ -2032,6 +2026,12 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
 
     var kbd_s = false;
     var kbd_a = false;
+
+    const moblist = state.createMobList(false, true, state.player.coord.z, state.GPA.allocator());
+    defer moblist.deinit();
+
+    defer map_win.annotations.clear();
+    defer map_win.map.renderFullyW(.Main);
 
     while (true) {
         const has_item = state.dungeon.itemsAt(coord).len > 0;
@@ -2180,33 +2180,21 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
             }
         }
 
+        map_win.annotations.clear();
         drawMap(moblist.items, coord);
-        map_win.map.renderFullyW(.Main);
 
         const dcoord = coordToScreenFromRefpoint(coord, coord).?;
-        display.setCell(dcoord.x - 1, dcoord.y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(dcoord.x + 1, dcoord.y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(dcoord.x - 1, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(dcoord.x + 1, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(dcoord.x - 1, dcoord.y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
-        display.setCell(dcoord.x + 1, dcoord.y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x - 1, dcoord.y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x + 1, dcoord.y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x - 1, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x + 1, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x - 1, dcoord.y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x + 1, dcoord.y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG });
 
+        map_win.map.renderFullyW(.Main);
         display.present();
-
-        // This is a bit of a hack, erase the bordering but don't present the
-        // changes, so that if the user moves to the edge of the map and then moves
-        // away, there won't be bordering left as an artifact (as the map drawing
-        // routines won't erase it, since it's outside its window).
-        display.setCell(dcoord.x - 1, dcoord.y - 1, .{ .bg = colors.BG });
-        display.setCell(dcoord.x + 0, dcoord.y - 1, .{ .bg = colors.BG });
-        display.setCell(dcoord.x + 1, dcoord.y - 1, .{ .bg = colors.BG });
-        display.setCell(dcoord.x - 1, dcoord.y + 0, .{ .bg = colors.BG });
-        display.setCell(dcoord.x + 1, dcoord.y + 0, .{ .bg = colors.BG });
-        display.setCell(dcoord.x - 1, dcoord.y + 1, .{ .bg = colors.BG });
-        display.setCell(dcoord.x + 0, dcoord.y + 1, .{ .bg = colors.BG });
-        display.setCell(dcoord.x + 1, dcoord.y + 1, .{ .bg = colors.BG });
 
         switch (display.waitForEvent(null) catch err.wat()) {
             .Quit => {
@@ -2684,6 +2672,7 @@ pub const Console = struct {
     width: usize,
     height: usize,
     subconsoles: Subconsole.AList,
+    default_transparent: bool = false,
 
     pub const Self = @This();
     pub const AList = std.ArrayList(Self);
@@ -2754,23 +2743,25 @@ pub const Console = struct {
     }
 
     fn clearLine(self: *const Self, startx: usize, endx: usize, y: usize) void {
-        self.clearLineTo(startx, endx, y, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
+        self.clearLineTo(startx, endx, y, .{ .ch = ' ', .fg = 0, .bg = colors.BG, .trans = self.default_transparent });
     }
 
     pub fn clear(self: *const Self) void {
-        self.clearTo(.{ .ch = ' ', .fg = 0, .bg = colors.BG });
+        self.clearTo(.{ .ch = ' ', .fg = 0, .bg = colors.BG, .trans = self.default_transparent });
     }
 
     pub fn renderAreaAt(self: *const Self, offset_x: usize, offset_y: usize, begin_x: usize, begin_y: usize, end_x: usize, end_y: usize) void {
         var dy: usize = offset_y;
         var y: usize = begin_y;
         while (y < end_y) : (y += 1) {
-            _clear_line(offset_x, offset_x + (end_x - begin_x), dy);
-
+            //_clear_line(offset_x, offset_x + (end_x - begin_x), dy);
             var dx: usize = offset_x;
             var x: usize = begin_x;
             while (x < end_x) : (x += 1) {
-                display.setCell(dx, dy, self.grid[self.width * y + x]);
+                const cell = self.grid[self.width * y + x];
+                if (!cell.trans) {
+                    display.setCell(dx, dy, cell);
+                }
                 dx += 1;
             }
             dy += 1;
@@ -2799,7 +2790,13 @@ pub const Console = struct {
         self.renderAreaAt(dimensions(win).startx, dimensions(win).starty, 0, 0, self.width, self.height);
     }
 
+    pub fn getCell(self: *const Self, y: usize, x: usize) display.Cell {
+        return self.grid[self.width * y + x];
+    }
+
     pub fn setCell(self: *const Self, x: usize, y: usize, c: display.Cell) void {
+        if (x >= self.width or y >= self.height)
+            return;
         self.grid[self.width * y + x] = c;
     }
 
@@ -3007,6 +3004,7 @@ pub const Animation = union(enum) {
 
     pub fn apply(self: Animation) void {
         drawNoPresent();
+        map_win.animations.clear();
 
         state.player.tickFOV();
 
@@ -3015,17 +3013,19 @@ pub const Animation = union(enum) {
                 const dcoord = coordToScreen(anim.coord) orelse return;
                 const old = display.getCell(dcoord.x, dcoord.y);
 
-                display.setCell(dcoord.x, dcoord.y, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                map_win.map.renderFullyW(.Main);
                 display.present();
 
                 std.time.sleep(anim.delay * 1_000_000);
 
-                display.setCell(dcoord.x, dcoord.y, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
-                display.setCell(dcoord.x - 1, dcoord.y - 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
-                display.setCell(dcoord.x + 1, dcoord.y - 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
-                display.setCell(dcoord.x - 1, dcoord.y + 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
-                display.setCell(dcoord.x + 1, dcoord.y + 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
+                map_win.animations.setCell(dcoord.x - 1, dcoord.y - 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                map_win.animations.setCell(dcoord.x + 1, dcoord.y - 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                map_win.animations.setCell(dcoord.x - 1, dcoord.y + 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                map_win.animations.setCell(dcoord.x + 1, dcoord.y + 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
 
+                map_win.map.renderFullyW(.Main);
                 display.present();
 
                 std.time.sleep(anim.delay * 1_000_000);
@@ -3054,16 +3054,17 @@ pub const Animation = union(enum) {
                     for (coords.constSlice()) |coord, i| {
                         const dcoord = coordToScreen(coord).?;
                         const old = old_cells.constSlice()[i];
-                        display.setCell(dcoord.x, dcoord.y, .{ .ch = anim.char, .fg = anim.fg orelse old.fg, .bg = colors.BG });
+                        map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = anim.char, .fg = anim.fg orelse old.fg, .bg = colors.BG });
                     }
 
+                    map_win.map.renderFullyW(.Main);
                     display.present();
                     std.time.sleep(anim.delay * 1_000_000);
 
                     for (anim.coords) |coord, i| if (state.player.cansee(coord)) {
                         const dcoord = coordToScreen(coord).?;
                         const old = old_cells.constSlice()[i];
-                        display.setCell(dcoord.x, dcoord.y, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
+                        map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
                     };
 
                     if (ctr > 1) {
@@ -3078,12 +3079,14 @@ pub const Animation = union(enum) {
                     if (coordToScreen(neighbor)) |dneighbor| {
                         const old = display.getCell(dneighbor.x, dneighbor.y);
 
-                        display.setCell(dneighbor.x, dneighbor.y, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                        map_win.animations.setCell(dneighbor.x, dneighbor.y, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                        map_win.map.renderFullyW(.Main);
                         display.present();
 
                         std.time.sleep(90_000_000);
 
-                        display.setCell(dneighbor.x, dneighbor.y, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
+                        map_win.animations.setCell(dneighbor.x, dneighbor.y, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
+                        map_win.map.renderFullyW(.Main);
                         display.present();
                     }
                 };
@@ -3098,17 +3101,19 @@ pub const Animation = union(enum) {
                     const dcoord = coordToScreen(coord) orelse continue;
                     const old = display.getCell(dcoord.x, dcoord.y);
 
-                    display.setCell(dcoord.x, dcoord.y, .{ .ch = anim.char, .fg = anim.fg orelse old.fg, .bg = colors.BG });
+                    map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = anim.char, .fg = anim.fg orelse old.fg, .bg = colors.BG });
+                    map_win.map.renderFullyW(.Main);
                     display.present();
 
                     std.time.sleep(80_000_000);
 
                     if (anim.path_char) |path_char| {
-                        display.setCell(dcoord.x, dcoord.y, .{ .ch = path_char, .fg = colors.CONCRETE, .bg = old.bg });
+                        map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = path_char, .fg = colors.CONCRETE, .bg = old.bg });
                     } else {
-                        display.setCell(dcoord.x, dcoord.y, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
+                        map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
                     }
 
+                    map_win.map.renderFullyW(.Main);
                     display.present();
                 }
             },
@@ -3143,9 +3148,10 @@ pub const Animation = union(enum) {
                         else
                             colors.BG;
 
-                        display.setCell(dcoord.x, dcoord.y, .{ .ch = char, .fg = fg, .bg = bg });
+                        map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = char, .fg = fg, .bg = bg });
                     }
 
+                    map_win.map.renderFullyW(.Main);
                     display.present();
                     std.time.sleep(40_000_000);
 
@@ -3156,12 +3162,6 @@ pub const Animation = union(enum) {
                 }
             },
             .Particle => |anim| {
-                const mapwin = dimensions(.Main);
-                var old_cells: [MAP_HEIGHT_R * 2][MAP_WIDTH_R * 2]display.Cell = undefined;
-                for (old_cells) |*row, y| for (row) |*cell, x| {
-                    cell.* = display.getCell(mapwin.startx + x, mapwin.starty + y);
-                };
-
                 var ctx = janet.callFunction("animation-init", .{
                     anim.coord.x,                        anim.coord.y,
                     anim.target.x,                       anim.target.y,
@@ -3180,11 +3180,10 @@ pub const Animation = union(enum) {
                     std.time.sleep(WAIT_PERIOD -| time_since_last_sleep);
                     last_tick_time = std.time.nanoTimestamp();
 
+                    map_win.map.renderFullyW(.Main);
                     display.present();
 
-                    for (old_cells) |*row, y| for (row) |cell, x| {
-                        display.setCell(mapwin.startx + x, mapwin.starty + y, cell);
-                    };
+                    map_win.animations.clear();
 
                     var particles = janet.c.janet_unwrap_array(j_particles).*;
                     if (particles.count == 0) {
@@ -3201,20 +3200,15 @@ pub const Animation = union(enum) {
                         const p_x = @intCast(usize, janet.c.janet_unwrap_integer(particle.data[4]));
                         const p_y = @intCast(usize, janet.c.janet_unwrap_integer(particle.data[5]));
                         const p_dcoord = coordToScreen(Coord.new(p_x, p_y)) orelse continue;
-
-                        // TODO: actually fix this bug instead of papering over it
-                        const oldbg = if (p_dcoord.y - mapwin.starty >= old_cells.len or p_dcoord.x - mapwin.startx >= old_cells[0].len)
-                            colors.BG
-                        else
-                            old_cells[p_dcoord.y - mapwin.starty][p_dcoord.x - mapwin.startx].bg;
-
-                        display.setCell(p_dcoord.x, p_dcoord.y, .{ .ch = p_tile, .fg = p_fg, .bg = colors.mix(oldbg, p_bg, p_bg_mix) });
+                        const mapcell = map_win.map.getCell(p_dcoord.y, p_dcoord.x);
+                        map_win.animations.setCell(p_dcoord.x, p_dcoord.y, .{ .ch = p_tile, .fg = p_fg, .bg = colors.mix(mapcell.bg, p_bg, p_bg_mix) });
                     }
                     j_particles = janet.callFunction("animation-tick", .{ ctx, tick }) catch err.wat();
                 }
             },
         }
 
+        map_win.animations.clear();
         draw();
     }
 };
