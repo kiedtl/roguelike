@@ -82,7 +82,7 @@
              :eq? (fn [a b]
                     (and (= (math/round (a :x)) (math/round (b :x)))
                          (= (math/round (a :y)) (math/round (b :y)))))
-             :distance (fn [a b]
+             :distance (fn [a b] # Chebyshev
                          (let [diffx (math/abs (- (a :x) (b :x)))
                                diffy (math/abs (- (a :y) (b :y)))]
                            (max diffx diffy)))
@@ -277,8 +277,8 @@
                 :TRIG-lerp-color (fn [self ticks ctx which color2 rgb? how]
                                    (var factor
                                      (case (how 0)
-                                       # :sine-custom # (:sine (fn [self ticks ctx] ...))
-                                       #     (math/sin (* (/ (% ((how 1) self ticks ctx) 360) 180) math/pi))
+                                       :sine-custom # (:sine (fn [self ticks ctx] ...))
+                                           (/ (+ (math/sin (deg-to-rad ((how 1) self ticks ctx))) 1) 2)
                                        :completed-lifetime # (:completed-lifetime factor)
                                            (min 1 (- 1 (/ (self :age) (* (how 1) (self :lifetime)))))
                                        :completed-journey
@@ -489,6 +489,27 @@
     :get-spawn-params (fn [self ticks ctx coord target] [(:move coord direction) target])
   }))
 
+(defn _beams-single-emitter [func]
+  (new-emitter @{
+    :particle (new-particle @{
+      :tile (new-tile @{ :ch "O" :fg 0xffffff :bg 0xffffff :bg-mix 1 })
+      :speed 0
+      :lifetime 1
+      :triggers @[
+        [[:COND-true]
+          [:TRIG-lerp-color :bg 0x66665f "rgb"
+            [:sine-custom (fn [self ticks &] (* (:distance (((self :parent) :particle) :target) (self :coord)) ticks))]]]
+        [[:COND-true] [:TRIG-scramble-glyph ".,;:'~*-=_+"]]
+      ]
+    })
+    :lifetime 21
+    :spawn-count (Emitter :SCNT-dist-to-target)
+    :get-spawn-params (fn [self ticks ctx coord target]
+                        (let [angle (deg-to-rad (func (* 8 (/ (self :total-spawned) (:distance target coord)))))
+                              n (+ (% (self :total-spawned) (:distance coord target)) 1)]
+                          [(:move-angle coord n angle) target]))
+  }))
+
 (def emitters-table @{
   "lzap-electric" @[ (template-lingering-zap "AEFHIKLMNTYZ13457*-=+~?!@#%&" 0x9fefff 0x7fc7ef 7) ]
   "lzap-golden" @[ (template-lingering-zap ".#.#.#." LIGHT_GOLD GOLD 12) ]
@@ -673,6 +694,12 @@
     :get-spawn-params (:SPAR-explosion Emitter :inverse true)
     :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
   })]
+  "beams-call-undead" @[
+    (_beams-single-emitter (fn [deg] (+ 180 deg)))
+    (_beams-single-emitter (fn [deg] (- 180 deg)))
+    (_beams-single-emitter (fn [deg] (+ 360 deg)))
+    (_beams-single-emitter (fn [deg] (- 360 deg)))
+  ]
 })
 
 (defn animation-init [initialx initialy targetx targety boundsx boundsy bounds-width bounds-height emitters-set]
