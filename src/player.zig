@@ -456,12 +456,12 @@ pub fn equipItem(item: Item) bool {
 }
 
 pub fn grabItem() bool {
-    if (state.dungeon.at(state.player.coord).surface) |surface| {
-        switch (surface) {
-            .Container => |_| return rummageContainer(state.player.coord),
-            else => {},
-        }
-    }
+    // if (state.dungeon.at(state.player.coord).surface) |surface| {
+    //     switch (surface) {
+    //         .Container => |_| return rummageContainer(state.player.coord),
+    //         else => {},
+    //     }
+    // }
 
     const item = state.dungeon.itemsAt(state.player.coord).last() orelse {
         ui.drawAlertThenLog("There's nothing here.", .{});
