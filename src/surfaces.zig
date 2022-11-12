@@ -236,19 +236,6 @@ pub const PillarTerrain = Terrain{
     .weight = 8,
 };
 
-pub const PlatformTerrain = Terrain{
-    .id = "t_platform",
-    .name = "platform",
-    .color = 0xffffff,
-    .tile = '_',
-    .stats = .{ .Evade = -10, .Melee = 10, .Missile = 20, .Vision = 3 },
-    .opacity = 20,
-
-    .for_levels = &[_][]const u8{ "PRI", "LAB", "QRT" },
-    .placement = .{ .RoomSpotty = 5 },
-    .weight = 8,
-};
-
 pub const TERRAIN = [_]*const Terrain{
     &DefaultTerrain,
     &CarpetTerrain,
@@ -260,7 +247,6 @@ pub const TERRAIN = [_]*const Terrain{
     &DeadFungiTerrain,
     &TallFungiTerrain,
     &PillarTerrain,
-    &PlatformTerrain,
 };
 
 pub const ToolChest = Container{ .name = "tool chest", .tile = 'æ', .capacity = 1, .type = .Evocables };
