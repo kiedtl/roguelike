@@ -55,15 +55,27 @@ pub const MAP_WIDTH_R = 25;
 pub const MIN_HEIGHT = (MAP_HEIGHT_R * 2) + LOG_HEIGHT + 2;
 pub const MIN_WIDTH = (MAP_WIDTH_R * 2) + LEFT_INFO_WIDTH + 2 + 1;
 
+pub var map_win: struct {
+    map: Console,
+
+    pub fn init(self: *@This()) void {
+        const d = dimensions(.Main);
+        self.map = Console.init(state.GPA.allocator(), d.width(), d.height());
+    }
+
+    pub fn deinit(self: *@This()) void {
+        self.map.deinit();
+    }
+} = undefined;
+
 pub var zap_win: struct {
     container: Console,
     left: Console,
     right: Console,
 
-    const Self = @This();
     const LEFT_WIDTH = 18; // 15 (length of longest ring name, electrification) + 3 (padding)
 
-    pub fn init(self: *Self) void {
+    pub fn init(self: *@This()) void {
         const d = dimensions(.Zap);
 
         self.container = Console.init(state.GPA.allocator(), d.width(), d.height());
@@ -74,7 +86,7 @@ pub var zap_win: struct {
         self.container.addSubconsole(self.right, LEFT_WIDTH + 2, 1);
     }
 
-    pub fn deinit(self: *Self) void {
+    pub fn deinit(self: *@This()) void {
         self.container.deinit();
     }
 } = undefined;
@@ -83,6 +95,7 @@ pub fn init() !void {
     try display.init(MIN_WIDTH, MIN_HEIGHT);
 
     zap_win.init();
+    map_win.init();
     clearScreen();
 }
 
@@ -131,6 +144,7 @@ pub fn checkWindowSize() bool {
 pub fn deinit() !void {
     try display.deinit();
     zap_win.deinit();
+    map_win.deinit();
 }
 
 pub const DisplayWindow = enum { Whole, PlayerInfo, Main, Log, Zap };
@@ -1453,13 +1467,13 @@ fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display
     return tile;
 }
 
-pub fn drawMap(moblist: []const *Mob, startx: usize, endx: usize, starty: usize, endy: usize, refpoint: Coord) void {
+pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
     const refpointy = @intCast(isize, refpoint.y);
     const refpointx = @intCast(isize, refpoint.x);
     const level = state.player.coord.z;
 
-    var cursory = starty;
-    var cursorx = startx;
+    var cursory: usize = 0;
+    var cursorx: usize = 0;
 
     const map_starty = refpointy - @intCast(isize, MAP_HEIGHT_R);
     const map_endy = refpointy + @intCast(isize, MAP_HEIGHT_R);
@@ -1467,19 +1481,19 @@ pub fn drawMap(moblist: []const *Mob, startx: usize, endx: usize, starty: usize,
     const map_endx = refpointx + @intCast(isize, MAP_WIDTH_R);
 
     var y = map_starty;
-    while (y < map_endy and cursory < endy) : ({
+    while (y < map_endy and cursory < map_win.map.height) : ({
         y += 1;
         cursory += 1;
-        cursorx = startx;
+        cursorx = 0;
     }) {
         var x = map_startx;
-        while (x < map_endx and cursorx < endx) : ({
+        while (x < map_endx and cursorx < map_win.map.width) : ({
             x += 1;
             cursorx += 1;
         }) {
             // if out of bounds on the map, draw a black tile
             if (y < 0 or x < 0 or y >= HEIGHT or x >= WIDTH) {
-                display.setCell(cursorx, cursory, .{ .bg = colors.BG });
+                map_win.map.setCell(cursorx, cursory, .{ .bg = colors.BG });
                 continue;
             }
 
@@ -1521,27 +1535,9 @@ pub fn drawMap(moblist: []const *Mob, startx: usize, endx: usize, starty: usize,
                 tile = modifyTile(moblist, coord, Tile.displayAs(coord, false, false));
             }
 
-            display.setCell(cursorx, cursory, tile);
+            map_win.map.setCell(cursorx, cursory, tile);
         }
     }
-
-    //    var y: usize = 0;
-    //    while (y < HEIGHT) : (y += 1) {
-    //        var x: usize = 0;
-    //        while (x < WIDTH) : (x += 1) {
-    //            const coord = Coord.new2(level, x, y);
-    //            const dcoord = coordToScreen(coord) orelse {
-    //                //display.setCell(x, y, .{ .bg = colors.BG, .fg = 0, .ch = ' ' });
-    //                continue;
-    //            };
-
-    //            // coordToScreen() should already be taking care of this...
-    //            assert(dcoord.x < endx);
-    //            assert(dcoord.y < endy);
-    //            assert(dcoord.x >= startx);
-    //            assert(dcoord.y >= starty);
-    //        }
-    //    }
 }
 
 pub fn drawNoPresent() void {
@@ -1552,11 +1548,11 @@ pub fn drawNoPresent() void {
     const moblist = state.createMobList(false, true, state.player.coord.z, alloc);
 
     const pinfo_win = dimensions(.PlayerInfo);
-    const main_win = dimensions(.Main);
     const log_window = dimensions(.Log);
 
     drawInfo(moblist.items, pinfo_win.startx, pinfo_win.starty, pinfo_win.endx, pinfo_win.endy);
-    drawMap(moblist.items, main_win.startx, main_win.endx, main_win.starty, main_win.endy, state.player.coord);
+    drawMap(moblist.items, state.player.coord);
+    map_win.map.renderFullyW(.Main);
 
     const log_console = drawLog(log_window.startx, log_window.endx, alloc);
     log_console.renderAreaAt(
@@ -1583,8 +1579,6 @@ pub const ChooseCellOpts = struct {
 };
 
 pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
-    const mainw = dimensions(.Main);
-
     // TODO: do some tests and figure out what's the practical limit to memory
     // usage, and reduce the buffer's size to that.
     var membuf: [65535]u8 = undefined;
@@ -1595,7 +1589,8 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
     var coord: Coord = state.player.coord;
 
     while (true) {
-        drawMap(moblist.items, mainw.startx, mainw.endx, mainw.starty, mainw.endy, coord);
+        drawMap(moblist.items, coord);
+        map_win.map.renderFullyW(.Main);
 
         if (opts.show_trajectory) {
             const trajectory = state.player.coord.drawLine(coord, state.mapgeometry, 0);
@@ -1688,8 +1683,6 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
 }
 
 pub fn chooseDirection() ?Direction {
-    const mainw = dimensions(.Main);
-
     // TODO: do some tests and figure out what's the practical limit to memory
     // usage, and reduce the buffer's size to that.
     var membuf: [65535]u8 = undefined;
@@ -1700,7 +1693,8 @@ pub fn chooseDirection() ?Direction {
     var direction: Direction = .North;
 
     while (true) {
-        drawMap(moblist.items, mainw.startx, mainw.endx, mainw.starty, mainw.endy, state.player.coord);
+        drawMap(moblist.items, state.player.coord);
+        map_win.map.renderFullyW(.Main);
 
         const maybe_coord = state.player.coord.move(direction, state.mapgeometry);
 
@@ -2019,7 +2013,6 @@ pub fn drawZapScreen() void {
 pub const ExamineTileFocus = enum { Item, Surface, Mob };
 
 pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
-    const mainw = dimensions(.Main);
     const logw = dimensions(.Log);
     const infow = dimensions(.PlayerInfo);
 
@@ -2187,7 +2180,8 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
             }
         }
 
-        drawMap(moblist.items, mainw.startx, mainw.endx, mainw.starty, mainw.endy, coord);
+        drawMap(moblist.items, coord);
+        map_win.map.renderFullyW(.Main);
 
         const dcoord = coordToScreenFromRefpoint(coord, coord).?;
         display.setCell(dcoord.x - 1, dcoord.y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG });
@@ -2805,8 +2799,8 @@ pub const Console = struct {
         self.renderAreaAt(dimensions(win).startx, dimensions(win).starty, 0, 0, self.width, self.height);
     }
 
-    pub fn setCell(self: *const Self, x: usize, y: usize, ch: u21, fg: u32, bg: u32) void {
-        self.grid[self.width * y + x] = .{ .ch = ch, .fg = fg, .bg = bg };
+    pub fn setCell(self: *const Self, x: usize, y: usize, c: display.Cell) void {
+        self.grid[self.width * y + x] = c;
     }
 
     // TODO: draw multiple layers as needed
@@ -2821,7 +2815,7 @@ pub const Console = struct {
                     continue;
                 }
 
-                self.setCell(x, y, RexMap.DEFAULT_TILEMAP[tile.ch], tile.fg.asU32(), tile.bg.asU32());
+                self.setCell(x, y, .{ .ch = RexMap.DEFAULT_TILEMAP[tile.ch], .fg = tile.fg.asU32(), .bg = tile.bg.asU32() });
             }
         }
     }
@@ -2899,7 +2893,7 @@ pub const Console = struct {
                         continue;
                     },
                     else => {
-                        self.setCell(x, y, codepoint, fg, bg orelse def_bg);
+                        self.setCell(x, y, .{ .ch = codepoint, .fg = fg, .bg = bg orelse def_bg });
                         x += 1;
                     },
                 }
