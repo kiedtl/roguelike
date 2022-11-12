@@ -348,9 +348,9 @@ pub const Evocable = struct {
 
     pub fn evoke(self: *Evocable, by: *Mob) EvokeError!void {
         if (self.max_charges == 0 or self.charges > 0) {
+            self.trigger_fn(by, self) catch |e| return e;
             if (self.max_charges > 0)
                 self.charges -= 1;
-            try self.trigger_fn(by, self);
         } else {
             return error.NoCharges;
         }
