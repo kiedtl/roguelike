@@ -402,15 +402,10 @@ His bone longsword is inscribed with crude engravings of torment and death.
 A human mage, specializing in the manipulations of undead skeletons.
 
 % skeletal_blademaster
-An ancient skeleton, cloaked in white robes, with golden chains and bracelets
-dangling from its mouldering limbs. Underneath its hood you can catch the
-glimpse of a silver crown.
-
-% skeletal_axemaster
 A vicious and surprisingly durable skeleton, decked in royal robes and armed to
-the teeth. It was created for the purpose of testing the efficiency of war axes
-in battle. Battles are slow in coming, however, so you'll just have to do for
-now...
+the teeth. It was created for the purpose of testing the effects of undead on
+enemy morale during battles. Battles are slow in coming, however, so you'll just
+have to do for now...
 
 % necromancer
 An unusually sadistic death mage, tasked with making the prisoner's lives as

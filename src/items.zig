@@ -2105,22 +2105,6 @@ pub const RapierWeapon = Weapon{
 };
 pub const CopperRapierWeapon = Weapon.createCopperWeapon(&RapierWeapon, .{});
 
-// Purely for skeletal axemasters for now; lore describes axes as being
-// experimental
-//
-pub const AxeWeapon = Weapon{
-    .id = "battleaxe",
-    .name = "battleaxe",
-    .delay = 120,
-    .damage = 4,
-    .stats = .{ .Melee = -15 },
-    .equip_effects = &[_]StatusDataInfo{
-        .{ .status = .OpenMelee, .duration = .Equ },
-    },
-    .is_dippable = true,
-    .strs = &SLASHING_STRS,
-};
-
 // }}}
 
 // Polearms {{{

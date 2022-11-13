@@ -53,7 +53,7 @@ Marble treasure vault. Themed as the study/experimentation room of a death mage.
 - Will always have a Death Mage band, next to some tables and chairs.
 - May have some rows of corpses nearby for the Death Mage to use.
 - Other undead monsters may occasionally occur. Bloats, skeletons, skeletal
-  warriors (blademasters/axemasters), calcite spires, etc.
+  blademasters, calcite spires, etc.
 - Possibility of an Ancient Mage.
 - Found on the middle and upper levels.
 

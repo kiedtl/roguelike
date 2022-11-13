@@ -1142,7 +1142,6 @@ pub const DeathMageTemplate = MobTemplate{
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
             .{ .mob = "skeletal_blademaster", .weight = 6, .count = minmax(usize, 2, 4) },
-            .{ .mob = "skeletal_axemaster", .weight = 4, .count = minmax(usize, 2, 4) },
         },
     },
 };
@@ -1567,35 +1566,6 @@ pub const SparklingTemplate = MobTemplate{
     },
 };
 
-pub const SkeletalAxemasterTemplate = MobTemplate{
-    .mob = .{
-        .id = "skeletal_axemaster",
-        .species = &HumanSpecies,
-        .tile = 'á',
-        .undead_prefix = "",
-        .ai = AI{
-            .profession_name = "skeletal axemaster",
-            .profession_description = "watching",
-            .work_fn = ai.standStillAndGuardWork,
-            .fight_fn = ai.meleeFight,
-            .is_fearless = true,
-        },
-
-        .deaf = true,
-        .life_type = .Undead,
-
-        .max_HP = 10,
-        .memory_duration = 5,
-        .blood = null,
-        .corpse = .None,
-
-        .innate_resists = .{ .rFume = 100, .rFire = -25 },
-        .stats = .{ .Willpower = 5, .Speed = 150, .Vision = 5 },
-    },
-    .weapon = &items.AxeWeapon,
-    .armor = &items.CuirassArmor,
-};
-
 pub const SkeletalBlademasterTemplate = MobTemplate{
     .mob = .{
         .id = "skeletal_blademaster",
@@ -1613,7 +1583,7 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
         .deaf = true,
         .life_type = .Undead,
 
-        .max_HP = 8,
+        .max_HP = 9,
         .memory_duration = 6,
         .blood = null,
         .corpse = .None,
@@ -1933,7 +1903,6 @@ pub const MOBS = [_]MobTemplate{
     BoneRatTemplate,
     EmberlingTemplate,
     SparklingTemplate,
-    SkeletalAxemasterTemplate,
     SkeletalBlademasterTemplate,
     TorturerNecromancerTemplate,
     BurningBruteTemplate,
