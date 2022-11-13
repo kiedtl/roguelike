@@ -835,13 +835,6 @@ pub const CAST_BARTENDER_FERMENT = Spell{
     .effect_type = .{ .Status = .Drunk },
     //.checks_will = true,
 };
-pub const CAST_FEEBLE = Spell{
-    .id = "sp_feeble",
-    .name = "slow",
-    .cast_type = .Smite,
-    .effect_type = .{ .Status = .Slow },
-    .checks_will = true,
-};
 pub const CAST_FRY = Spell{
     .id = "sp_fry",
     .name = "ignite",

@@ -715,10 +715,9 @@ fn createSpireTemplate(
 }
 
 pub const IronSpireTemplate = createSpireTemplate("iron", '1', .{ .MP_cost = 4, .spell = &spells.BOLT_IRON, .power = 3 }, .{});
-pub const TorporSpireTemplate = createSpireTemplate("torpor", '2', .{ .MP_cost = 4, .spell = &spells.CAST_FEEBLE, .duration = 4 }, .{ .willpower = 7 });
-pub const LightningSpireTemplate = createSpireTemplate("lightning", '3', .{ .MP_cost = 4, .spell = &spells.BOLT_LIGHTNING, .power = 2 }, .{});
-pub const CalciteSpireTemplate = createSpireTemplate("calcite", '4', .{ .MP_cost = 4, .spell = &spells.CAST_CALL_UNDEAD }, .{ .willpower = 8 });
-pub const SentrySpireTemplate = createSpireTemplate("sentry", '5', .{ .MP_cost = 4, .spell = &spells.CAST_ALERT_ALLY }, .{});
+pub const LightningSpireTemplate = createSpireTemplate("lightning", '2', .{ .MP_cost = 4, .spell = &spells.BOLT_LIGHTNING, .power = 2 }, .{});
+pub const CalciteSpireTemplate = createSpireTemplate("calcite", '3', .{ .MP_cost = 4, .spell = &spells.CAST_CALL_UNDEAD }, .{ .willpower = 8 });
+pub const SentrySpireTemplate = createSpireTemplate("sentry", '4', .{ .MP_cost = 4, .spell = &spells.CAST_ALERT_ALLY }, .{});
 // }}}
 
 pub const KyaniteStatueTemplate = MobTemplate{
@@ -1905,7 +1904,6 @@ pub const MOBS = [_]MobTemplate{
     WarOlgTemplate,
     MellaentTemplate,
     IronSpireTemplate,
-    TorporSpireTemplate,
     LightningSpireTemplate,
     CalciteSpireTemplate,
     SentrySpireTemplate,

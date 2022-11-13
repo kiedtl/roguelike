@@ -446,9 +446,6 @@ whirring from within.
 A tall steel contraption. You seem to hear a buzzing sound from its top,
 punctuated by intermittent clicks.
 
-% torpor_spire
-The top of this brass spire rotates slowly.
-
 % calcite_spire
 Engraved on this deathly white spire are the words: "Gyil gimboredru
 Gyilthor-drauglâ".
