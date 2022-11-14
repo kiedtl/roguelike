@@ -14,6 +14,34 @@
 # Effect: when spliced into flamethrower effect, causes three beams of fire to
 # shoot at target: one from the source, the other two from a few tiles away. A
 # bit of a "backwards ray", spreading in instead of out.
+#
+# ---
+#
+# Outward-moving explosion, speed modified w/ sine pattern, no embers.
+#
+#  (new-emitter @{
+#    :particle (new-particle @{
+#      :tile (new-tile @{ :ch " " :fg 0 :bg 0x55554f :bg-mix 0.8 })
+#      :speed 0
+#      :triggers @[
+#        # Speed function:
+#        #
+#        #  x := completed-journey
+#        #
+#        #  sin(-(3x - pi/2)) + 1
+#        #  ---------------------
+#        #           2
+#        #
+#        [[:COND-true] [:TRIG-set-speed (fn [self &] (+ 0.1 (/ (+ (math/sin (- (- (* 3 (:completed-journey self)) (/ math/pi 2)))) 1) 2)))]]
+#        [[:COND-true] [:TRIG-scramble-glyph "::;.,;::"]]
+#        [[:COND-true] [:TRIG-lerp-color :bg 0xffffff "rgb" [:completed-journey]]]
+#      ]
+#    })
+#    :lifetime 2
+#    :spawn-count (fn [&] 360)
+#    :get-spawn-params (:SPAR-explosion Emitter :sparsity-factor 1)
+#    :birth-delay 45
+#  })
 
 (def ASCII_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`1234567890-=~!@#$%^&*()_+[]\\{}|;':\",./<>?")
 (def GOLD 0xddb733)
@@ -86,6 +114,10 @@
                          (let [diffx (math/abs (- (a :x) (b :x)))
                                diffy (math/abs (- (a :y) (b :y)))]
                            (max diffx diffy)))
+             :distance-euc (fn [a b]
+                             (let [diffx (math/abs (- (a :x) (b :x)))
+                                   diffy (math/abs (- (a :y) (b :y)))]
+                               (math/sqrt (+ (* diffx diffx) (* diffy diffy)))))
              :angle (fn [a b]
                       (let [diffx  (- (a :x) (b :x))
                             diffy  (- (a :y) (b :y))]
@@ -164,6 +196,7 @@
                 :target (new-coord)
                 :triggers @[]
                 :lifetime nil
+                :territorial false
 
                 :parent nil
                 :dead false
@@ -197,12 +230,23 @@
                             (and (> (self :speed) 0) (:eq? (self :coord) (self :target)))
                             (>= (self :age) (or (self :lifetime) 99999))))
 
+                :completed-journey (fn [self &opt factor]
+                                     (default factor 1)
+                                     (let [orig-dist (:distance (self :initial-coord) (self :target))
+                                           curr-dist (:distance (self :coord) (self :target))]
+                                       (if (or (= orig-dist 0)
+                                               (< (- orig-dist curr-dist) 1))
+                                         (break 0))
+                                       (/ (- orig-dist curr-dist) (* factor orig-dist))))
+
                 :COND-true (fn [&] true)
                 :COND-nth-tick (fn [self ticks ctx n] (% (/ ticks n) 0))
                 :COND-completed-journey-percent-is? (fn [self ticks ctx func rvalue]
                                                       (func (/ (:distance (self :target) (self :coord))
                                                                (:distance (self :target) (self :initial-coord)))
                                                             rvalue))
+                :COND-lifetime-complete? (fn [self &]
+                                           (= (self :age) (- (self :lifetime) 1)))
                 :COND-parent-dead? (fn [self ticks ctx recurse &]
                                      (let [parent (get-parent self recurse)]
                                        (parent :dead)))
@@ -227,7 +271,9 @@
                                                 (put self :lifetime new-lifetime)
                                                 (put self :age new-age))))
                 :TRIG-set-speed (fn [self ticks ctx new-speed]
-                                  (put self :speed new-speed))
+                                  (case (type new-speed)
+                                    :number (put self :speed new-speed)
+                                    :function (put self :speed (new-speed self ticks ctx))))
                 :TRIG-scramble-glyph (fn [self ticks ctx chars &]
                                        (def new-char (random-choose chars))
                                        (put (self :tile) :ch (string/from-bytes new-char)))
@@ -250,6 +296,8 @@
                                      (def curtile  (self :tile))
                                      (def [color1 factor]
                                        (case (how 0)
+                                         :custom # (:custom :curtile|:origtile (func...))
+                                           [(case (how 1) :curtile curtile :origtile origtile) ((how 2) self ticks ctx)]
                                          :random-factor
                                            [curtile (+ (* (math/random) (- (how 2) (how 1))) (how 1))]
                                          :fixed-factor
@@ -281,6 +329,11 @@
                                            (/ (+ (math/sin (deg-to-rad ((how 1) self ticks ctx))) 1) 2)
                                        :completed-lifetime # (:completed-lifetime factor)
                                            (min 1 (- 1 (/ (self :age) (* (how 1) (self :lifetime)))))
+
+                                       # TODO: use and test with (:completed-journey Particle) instead of
+                                       # duplicating the logic here
+                                       #
+                                       # (there are minor differences in the way potential divide-by-zeros are handled)
                                        :completed-journey
                                          (let [orig-dist (:distance (self :initial-coord) (self :target))
                                                curr-dist (:distance (self :coord) (self :target))]
@@ -377,7 +430,6 @@
                          (if (((trigger 0) 0) self ticks ctx ;(slice (trigger 0) 1))
                            (((trigger 1) 0) self ticks ctx ;(slice (trigger 1) 1))))
                        (++ (self :age))
-                       (-- (self :birth-delay))
                        (-- (self :delay-until-spawn))
                        (> (self :age) (:get-lifetime self ticks ctx)))
                :get-lifetime (fn [self ticks ctx &]
@@ -386,14 +438,20 @@
                                  :number (self :lifetime)))
 
                # :get-spawn-params presets
-               :SPAR-explosion (fn [&named inverse]
+               :SPAR-explosion (fn [&named inverse sparsity-factor]
                                  (default inverse false)
+                                 (default sparsity-factor 2)
                                  (fn [self ticks ctx coord target]
-                                   (let [angle  (* (/ (% (* 2 (self :total-spawned)) 360) 180) math/pi)
+                                   (let [angle  (* (/ (% (* sparsity-factor (self :total-spawned)) 360) 180) math/pi)
                                          dist   (:distance coord target)
                                          ntarg  (new-coord (+ (coord :x) (* dist (math/cos angle)))
                                                            (+ (coord :y) (* dist (math/sin angle))))]
                                      (if inverse [ntarg coord] [coord ntarg]))))
+               :SPAR-circle (fn [&named]
+                              (fn [self ticks ctx coord target]
+                                (let [angle (deg-to-rad (* 1 (/ (self :total-spawned) (:distance target coord))))
+                                      n (+ (% (self :total-spawned) (:distance coord target)) 1)]
+                                  [(:move-angle coord n angle) target])))
 
                # :get-spawn-speed presets
                :SSPD-min-sin-ticks (fn [self ticks ctx speed]
@@ -401,6 +459,7 @@
 
                # :spawn-count presets
                :SCNT-dist-to-target (fn [self &] (+ (:distance ((self :particle) :coord) ((self :particle) :target)) 1))
+               :SCNT-dist-to-target-360 (fn [self &] (+ (* 360 (:distance ((self :particle) :coord) ((self :particle) :target)) 1)))
 
                :COND-age-eq? (fn [self ticks ctx num]
                                (= (self :age) num))
@@ -464,13 +523,9 @@
         [[:COND-explosion-done-expanding? 1] [:COND-percent? 1] [:TRIG-create-emitter (new-emitter @{
           :particle (new-particle @{
             :tile (new-tile @{ :ch " " :fg 0 :bg 0xffff00 :bg-mix 0.8 })
-            :speed 0
             # XXX: For some reason janet crashes (illegal instruction) when lifetime == 5 or lifetime == 7
-            :lifetime 6
-            :triggers @[
-              [[:COND-true] [:TRIG-modify-color :bg "r" [:completed-lifetime 1.9]]]
-              [[:COND-true] [:TRIG-modify-color :bg "g" [:completed-lifetime 0.5]]]
-            ]
+            :lifetime 4
+            :triggers @[ [[:COND-true] [:TRIG-lerp-color :bg 0x851e00 "rgb" [:completed-lifetime 2]]] ]
           })
           :lifetime 1
         })]]
@@ -700,6 +755,37 @@
     (_beams-single-emitter (fn [deg] (+ 360 deg)))
     (_beams-single-emitter (fn [deg] (- 360 deg)))
   ]
+  "test" @[
+  (new-emitter @{
+    :particle (new-particle @{
+      :tile (new-tile @{ :ch ":" :fg 0x888888 :bg 0x44443f :bg-mix 0.9 })
+      :speed 0    :lifetime 45   :territorial true
+      :triggers @[
+        [[:COND-true]
+          [:TRIG-modify-color :bg "a" [:custom :origtile
+            (fn [self &] (- 1 (/ (:distance-euc (((self :parent) :particle) :coord) (self :coord))
+                                 (:distance-euc (((self :parent) :particle) :coord) (self :target)))))]]]
+        [[:COND-true] [:TRIG-lerp-color :bg 0xffffff "rgb" [:sine-custom (fn [self ticks &] (* 8.2 ticks))]]]
+      ]
+    })
+    :lifetime 1
+    :spawn-count (Emitter :SCNT-dist-to-target-360)
+    :get-spawn-params (:SPAR-circle Emitter)
+  })
+  (new-emitter @{
+    :particle (new-particle @{
+      :tile (new-tile @{ :ch ":" :fg 0xaaaaaa :bg 0xffffff :bg-mix 1 })
+      :speed 0    :lifetime 12   :territorial true
+      :triggers @[
+        [[:COND-true] [:TRIG-scramble-glyph "~!@#$%^&*()_+`-={}|[]\\;':\",./<>?"]]
+        [[:COND-true] [:TRIG-modify-color :bg "a" [:completed-lifetime 1]]]
+      ]
+    })
+    :lifetime 1
+    :spawn-count (Emitter :SCNT-dist-to-target-360)
+    :get-spawn-params (:SPAR-circle Emitter)
+    :birth-delay 45
+  })]
 })
 
 (defn animation-init [initialx initialy targetx targety boundsx boundsy bounds-width bounds-height emitters-set]
@@ -724,12 +810,18 @@
         (put emitter :dead true))))
 
   (var particles @[])
+  (var particle-map @{})
   (loop [i :range [0 (length (ctx :particles))]]
     (def particle ((ctx :particles) i))
     (if (not (particle :dead))
       (do
         (if (:tick particle ticks ctx)
           (put particle :dead true))
+        (if (and (not (particle :dead)) (particle :territorial))
+          (let [particle-coord [(math/round ((particle :coord) :y)) (math/round ((particle :coord) :x))]]
+            (if (particle-map particle-coord)
+              (put particle :dead true)
+              (put particle-map particle-coord true))))
         (if (:contains? (ctx :bounds) (particle :coord))
           (array/push particles @[((particle :tile) :ch)
                                   ((particle :tile) :fg)
