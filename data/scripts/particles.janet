@@ -420,11 +420,16 @@
                                          ntarg  (new-coord (+ (coord :x) (* dist (math/cos angle)))
                                                            (+ (coord :y) (* dist (math/sin angle))))]
                                      (if inverse [ntarg coord] [coord ntarg]))))
-               :SPAR-circle (fn [&named]
+               :SPAR-circle (fn [&named inverse radius]
+                              (default inverse false)
+                              (default radius :distance)
                               (fn [self ticks ctx coord target]
-                                (let [angle (deg-to-rad (* 1 (/ (self :total-spawned) (:distance target coord))))
-                                      n (+ (% (self :total-spawned) (:distance coord target)) 1)]
-                                  [(:move-angle coord n angle) target])))
+                                (let [lrad (case radius :distance (:distance coord target) radius)
+                                      angle (deg-to-rad (* 1 (/ (self :total-spawned) lrad)))
+                                      n (+ (% (self :total-spawned) lrad) 1)]
+                                  (if inverse
+                                    [(:move-angle target n angle) target]
+                                    [(:move-angle coord n angle) target]))))
 
                # :get-spawn-speed presets
                :SSPD-min-sin-ticks (fn [self ticks ctx speed]
@@ -600,6 +605,28 @@
     :lifetime 0
     :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
    })]
+  "zap-fire-trails" @[(new-emitter @{
+    :particle (new-particle @{
+      :tile (new-tile @{ :ch " " })
+      :speed 1
+      :triggers @[
+        [[:COND-true] [:TRIG-create-emitter (new-emitter @{
+          :particle (new-particle @{
+            :tile (new-tile @{ :ch "0" :fg 0xff9900 :bg 0xff9900 :bg-mix 1 })
+            :speed 0
+            :lifetime 10
+            :triggers @[
+              [[:COND-true] [:TRIG-scramble-glyph "!@#$%^&*(){}|\\][=-+_1234567890"]]
+              [[:COND-true] [:TRIG-modify-color :bg "a" [:completed-lifetime 0.5]]]
+              [[:COND-parent-dead? 2] [:TRIG-modify-color :fg "rgb" [:fixed-factor 0.8]]]
+            ]
+          })
+          :lifetime 0
+        })]]
+      ]
+    })
+    :lifetime 0
+   })]
   "zap-statues" @[
     (new-emitter @{
       :particle (new-particle @{
@@ -649,6 +676,19 @@
                             [coord ntarg]))
     })
     (new-emitter-from @{ :birth-delay 6 } (template-lingering-zap ASCII_CHARS ELEC_BLUE1 ELEC_BLUE2 4 :bg-mix 0.4))
+  ]
+  "spawn-emberlings" @[
+    (template-lingering-zap " " 0xff8800 0 1 :bg-mix 0.5)
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch " " :bg 0xff8800 :bg-mix 0.9 })
+        :speed 0    :lifetime 10   :territorial true
+        :triggers @[ [[:COND-true] [:TRIG-modify-color :bg "rgb" [:fixed-factor 0.8]]] ]
+      })
+      :lifetime 1
+      :spawn-count (Emitter :SCNT-dist-to-target-360)
+      :get-spawn-params ((Emitter :SPAR-circle) :inverse true :radius 2)
+    })
   ]
   "spawn-sparklings" @[
     (new-emitter @{
@@ -791,7 +831,7 @@
       })
       :lifetime 2
       :spawn-count (fn [&] 360)
-      :get-spawn-params (:SPAR-explosion Emitter :sparsity-factor 1)
+      :get-spawn-params ((Emitter :SPAR-explosion) :sparsity-factor 1)
       :birth-delay 45
     })
   ]
