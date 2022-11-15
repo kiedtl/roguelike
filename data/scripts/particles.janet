@@ -15,33 +15,6 @@
 # shoot at target: one from the source, the other two from a few tiles away. A
 # bit of a "backwards ray", spreading in instead of out.
 #
-# ---
-#
-# Outward-moving explosion, speed modified w/ sine pattern, no embers.
-#
-#  (new-emitter @{
-#    :particle (new-particle @{
-#      :tile (new-tile @{ :ch " " :fg 0 :bg 0x55554f :bg-mix 0.8 })
-#      :speed 0
-#      :triggers @[
-#        # Speed function:
-#        #
-#        #  x := completed-journey
-#        #
-#        #  sin(-(3x - pi/2)) + 1
-#        #  ---------------------
-#        #           2
-#        #
-#        [[:COND-true] [:TRIG-set-speed (fn [self &] (+ 0.1 (/ (+ (math/sin (- (- (* 3 (:completed-journey self)) (/ math/pi 2)))) 1) 2)))]]
-#        [[:COND-true] [:TRIG-scramble-glyph "::;.,;::"]]
-#        [[:COND-true] [:TRIG-lerp-color :bg 0xffffff "rgb" [:completed-journey]]]
-#      ]
-#    })
-#    :lifetime 2
-#    :spawn-count (fn [&] 360)
-#    :get-spawn-params (:SPAR-explosion Emitter :sparsity-factor 1)
-#    :birth-delay 45
-#  })
 
 (def ASCII_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`1234567890-=~!@#$%^&*()_+[]\\{}|;':\",./<>?")
 (def GOLD 0xddb733)
@@ -755,37 +728,73 @@
     (_beams-single-emitter (fn [deg] (+ 360 deg)))
     (_beams-single-emitter (fn [deg] (- 360 deg)))
   ]
-  "test" @[
-  (new-emitter @{
-    :particle (new-particle @{
-      :tile (new-tile @{ :ch ":" :fg 0x888888 :bg 0x44443f :bg-mix 0.9 })
-      :speed 0    :lifetime 45   :territorial true
-      :triggers @[
-        [[:COND-true]
-          [:TRIG-modify-color :bg "a" [:custom :origtile
-            (fn [self &] (- 1 (/ (:distance-euc (((self :parent) :particle) :coord) (self :coord))
-                                 (:distance-euc (((self :parent) :particle) :coord) (self :target)))))]]]
-        [[:COND-true] [:TRIG-lerp-color :bg 0xffffff "rgb" [:sine-custom (fn [self ticks &] (* 8.2 ticks))]]]
-      ]
+  "pulse-twice-sparkles" @[
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch ":" :fg 0x888888 :bg 0x33332f :bg-mix 0.8 })
+        :speed 0    :lifetime 45   :territorial true
+        :triggers @[ [[:COND-true] [:TRIG-lerp-color :bg 0xffffff "rgb" [:sine-custom (fn [self ticks &] (* 8.2 ticks))]]] ]
+      })
+      :lifetime 1
+      :spawn-count (Emitter :SCNT-dist-to-target-360)
+      :get-spawn-params (:SPAR-circle Emitter)
     })
-    :lifetime 1
-    :spawn-count (Emitter :SCNT-dist-to-target-360)
-    :get-spawn-params (:SPAR-circle Emitter)
-  })
-  (new-emitter @{
-    :particle (new-particle @{
-      :tile (new-tile @{ :ch ":" :fg 0xaaaaaa :bg 0xffffff :bg-mix 1 })
-      :speed 0    :lifetime 12   :territorial true
-      :triggers @[
-        [[:COND-true] [:TRIG-scramble-glyph "~!@#$%^&*()_+`-={}|[]\\;':\",./<>?"]]
-        [[:COND-true] [:TRIG-modify-color :bg "a" [:completed-lifetime 1]]]
-      ]
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch ":" :fg 0xaaaaaa :bg 0xffffff :bg-mix 1 })
+        :speed 0    :lifetime 12   :territorial true
+        :triggers @[
+          [[:COND-true] [:TRIG-scramble-glyph "~!@#$%^&*()_+`-={}|[]\\;':\",./<>?"]]
+          [[:COND-true] [:TRIG-modify-color :bg "a" [:completed-lifetime 1]]]
+        ]
+      })
+      :lifetime 1
+      :spawn-count (Emitter :SCNT-dist-to-target-360)
+      :get-spawn-params (:SPAR-circle Emitter)
+      :birth-delay 45
     })
-    :lifetime 1
-    :spawn-count (Emitter :SCNT-dist-to-target-360)
-    :get-spawn-params (:SPAR-circle Emitter)
-    :birth-delay 45
-  })]
+  ]
+  "pulse-twice-explosion" @[
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch ":" :fg 0x888888 :bg 0x44443f :bg-mix 0.9 })
+        :speed 0    :lifetime 45   :territorial true
+        :triggers @[
+          [[:COND-true]
+            [:TRIG-modify-color :bg "a" [:custom :origtile
+              (fn [self &] (- 1 (/ (:distance-euc (((self :parent) :particle) :coord) (self :coord))
+                                   (:distance-euc (((self :parent) :particle) :coord) (self :target)))))]]]
+          [[:COND-true] [:TRIG-lerp-color :bg 0xffffff "rgb" [:sine-custom (fn [self ticks &] (* 8.1 ticks))]]]
+        ]
+      })
+      :lifetime 1
+      :spawn-count (Emitter :SCNT-dist-to-target-360)
+      :get-spawn-params (:SPAR-circle Emitter)
+    })
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch " " :fg 0 :bg 0x55554f :bg-mix 0.8 })
+        :speed 0
+        :triggers @[
+          # Speed function:
+          #
+          #  x := completed-journey
+          #
+          #  sin(-(3x - pi/2)) + 1
+          #  --------------------- + 0.15
+          #           2
+          #
+          [[:COND-true] [:TRIG-set-speed (fn [self &] (+ 0.15 (/ (+ (math/sin (- (- (* 3 (:completed-journey self)) (/ math/pi 2)))) 1) 2)))]]
+          [[:COND-true] [:TRIG-scramble-glyph "::;.,;::"]]
+          [[:COND-true] [:TRIG-lerp-color :bg 0xffffff "rgb" [:completed-journey]]]
+        ]
+      })
+      :lifetime 2
+      :spawn-count (fn [&] 360)
+      :get-spawn-params (:SPAR-explosion Emitter :sparsity-factor 1)
+      :birth-delay 45
+    })
+  ]
 })
 
 (defn animation-init [initialx initialy targetx targety boundsx boundsy bounds-width bounds-height emitters-set]
