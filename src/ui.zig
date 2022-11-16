@@ -50,10 +50,10 @@ pub const LEFT_INFO_WIDTH: usize = 30;
 pub const LOG_HEIGHT = 6;
 pub const ZAP_HEIGHT = 14 + 4;
 pub const MAP_HEIGHT_R = 10;
-pub const MAP_WIDTH_R = 25;
+pub const MAP_WIDTH_R = 14;
 
 pub const MIN_HEIGHT = (MAP_HEIGHT_R * 2) + LOG_HEIGHT + 2;
-pub const MIN_WIDTH = (MAP_WIDTH_R * 2) + LEFT_INFO_WIDTH + 2 + 1;
+pub const MIN_WIDTH = (MAP_WIDTH_R * 4) + LEFT_INFO_WIDTH + 2 + 1;
 
 pub var map_win: struct {
     map: Console,
@@ -189,7 +189,7 @@ pub fn dimensions(w: DisplayWindow) Dimension {
     //const enemyinfo_width = RIGHT_INFO_WIDTH;
 
     const main_start = 1;
-    const main_width = MAP_WIDTH_R * 2;
+    const main_width = MAP_WIDTH_R * 4;
     const main_height = MAP_HEIGHT_R * 2;
     const playerinfo_start = main_start + main_width + 1;
     const log_start = main_start;
@@ -1426,7 +1426,7 @@ fn coordToScreenFromRefpoint(coord: Coord, refpoint: Coord) ?Coord {
     }
     const r = Coord.new2(
         0,
-        @intCast(usize, @intCast(isize, coord.x) - (@intCast(isize, refpoint.x) -| MAP_WIDTH_R)),
+        @intCast(usize, @intCast(isize, coord.x) - (@intCast(isize, refpoint.x) -| MAP_WIDTH_R)) * 2,
         @intCast(usize, @intCast(isize, coord.y) - (@intCast(isize, refpoint.y) -| MAP_HEIGHT_R)),
     );
     if (r.x >= map_win.map.width or r.y >= map_win.map.height) {
@@ -1504,11 +1504,11 @@ pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
         var x = map_startx;
         while (x < map_endx and cursorx < map_win.map.width) : ({
             x += 1;
-            cursorx += 1;
+            cursorx += 2;
         }) {
             // if out of bounds on the map, draw a black tile
             if (y < 0 or x < 0 or y >= HEIGHT or x >= WIDTH) {
-                map_win.map.setCell(cursorx, cursory, .{ .bg = colors.BG });
+                map_win.map.setCell(cursorx, cursory, .{ .bg = colors.BG, .fl = .{ .wide = true } });
                 continue;
             }
 
@@ -1550,6 +1550,7 @@ pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
                 tile = modifyTile(moblist, coord, Tile.displayAs(coord, false, false));
             }
 
+            tile.fl.wide = true;
             map_win.map.setCell(cursorx, cursory, tile);
         }
     }
@@ -1632,14 +1633,14 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
         }
 
         const dcoord = coordToScreenFromRefpoint(coord, coord).?;
-        map_win.annotations.setCell(dcoord.x - 1, dcoord.y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG });
-        map_win.annotations.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
-        map_win.annotations.setCell(dcoord.x + 1, dcoord.y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG });
-        map_win.annotations.setCell(dcoord.x - 1, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
-        map_win.annotations.setCell(dcoord.x + 1, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
-        map_win.annotations.setCell(dcoord.x - 1, dcoord.y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG });
-        map_win.annotations.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
-        map_win.annotations.setCell(dcoord.x + 1, dcoord.y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x - 2, dcoord.y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        map_win.annotations.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        map_win.annotations.setCell(dcoord.x + 2, dcoord.y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        map_win.annotations.setCell(dcoord.x - 2, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        map_win.annotations.setCell(dcoord.x + 2, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        map_win.annotations.setCell(dcoord.x - 2, dcoord.y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        map_win.annotations.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        map_win.annotations.setCell(dcoord.x + 2, dcoord.y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
 
         map_win.map.renderFullyW(.Main);
         display.present();
@@ -1710,7 +1711,7 @@ pub fn chooseDirection() ?Direction {
                 .SouthEast => '↘',
                 .SouthWest => '↙',
             };
-            map_win.annotations.setCell(dcoord.x, dcoord.y, .{ .ch = char, .fg = colors.LIGHT_CONCRETE, .bg = colors.BG });
+            map_win.annotations.setCell(dcoord.x, dcoord.y, .{ .ch = char, .fg = colors.LIGHT_CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
         }
 
         map_win.map.renderFullyW(.Main);
@@ -2184,14 +2185,14 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
         drawMap(moblist.items, coord);
 
         const dcoord = coordToScreenFromRefpoint(coord, coord).?;
-        map_win.annotations.setCell(dcoord.x - 1, dcoord.y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG });
-        map_win.annotations.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
-        map_win.annotations.setCell(dcoord.x + 1, dcoord.y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG });
-        map_win.annotations.setCell(dcoord.x - 1, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
-        map_win.annotations.setCell(dcoord.x + 1, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG });
-        map_win.annotations.setCell(dcoord.x - 1, dcoord.y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG });
-        map_win.annotations.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG });
-        map_win.annotations.setCell(dcoord.x + 1, dcoord.y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG });
+        map_win.annotations.setCell(dcoord.x - 2, dcoord.y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        map_win.annotations.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        map_win.annotations.setCell(dcoord.x + 2, dcoord.y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        map_win.annotations.setCell(dcoord.x - 2, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        map_win.annotations.setCell(dcoord.x + 2, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        map_win.annotations.setCell(dcoord.x - 2, dcoord.y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        map_win.annotations.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        map_win.annotations.setCell(dcoord.x + 2, dcoord.y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
 
         map_win.map.renderFullyW(.Main);
         display.present();
@@ -2790,7 +2791,7 @@ pub const Console = struct {
         self.renderAreaAt(dimensions(win).startx, dimensions(win).starty, 0, 0, self.width, self.height);
     }
 
-    pub fn getCell(self: *const Self, y: usize, x: usize) display.Cell {
+    pub fn getCell(self: *const Self, x: usize, y: usize) display.Cell {
         return self.grid[self.width * y + x];
     }
 
@@ -3011,19 +3012,19 @@ pub const Animation = union(enum) {
         switch (self) {
             .PopChar => |anim| {
                 const dcoord = coordToScreen(anim.coord) orelse return;
-                const old = display.getCell(dcoord.x, dcoord.y);
+                const old = map_win.map.getCell(dcoord.x, dcoord.y);
 
-                map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG, .fl = .{ .wide = true } });
                 map_win.map.renderFullyW(.Main);
                 display.present();
 
                 std.time.sleep(anim.delay * 1_000_000);
 
-                map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
-                map_win.animations.setCell(dcoord.x - 1, dcoord.y - 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
-                map_win.animations.setCell(dcoord.x + 1, dcoord.y - 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
-                map_win.animations.setCell(dcoord.x - 1, dcoord.y + 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
-                map_win.animations.setCell(dcoord.x + 1, dcoord.y + 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                map_win.animations.setCell(dcoord.x, dcoord.y, old);
+                map_win.animations.setCell(dcoord.x - 2, dcoord.y - 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG, .fl = .{ .wide = true } });
+                map_win.animations.setCell(dcoord.x + 2, dcoord.y - 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG, .fl = .{ .wide = true } });
+                map_win.animations.setCell(dcoord.x - 2, dcoord.y + 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG, .fl = .{ .wide = true } });
+                map_win.animations.setCell(dcoord.x + 2, dcoord.y + 1, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG, .fl = .{ .wide = true } });
 
                 map_win.map.renderFullyW(.Main);
                 display.present();
@@ -3040,7 +3041,7 @@ pub const Animation = union(enum) {
                     }
                     if (coordToScreen(coord)) |dcoord| {
                         coords.append(coord) catch err.wat();
-                        old_cells.append(display.getCell(dcoord.x, dcoord.y)) catch err.wat();
+                        old_cells.append(map_win.map.getCell(dcoord.x, dcoord.y)) catch err.wat();
                     }
                 }
 
@@ -3054,7 +3055,7 @@ pub const Animation = union(enum) {
                     for (coords.constSlice()) |coord, i| {
                         const dcoord = coordToScreen(coord).?;
                         const old = old_cells.constSlice()[i];
-                        map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = anim.char, .fg = anim.fg orelse old.fg, .bg = colors.BG });
+                        map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = anim.char, .fg = anim.fg orelse old.fg, .bg = colors.BG, .fl = .{ .wide = true } });
                     }
 
                     map_win.map.renderFullyW(.Main);
@@ -3064,7 +3065,7 @@ pub const Animation = union(enum) {
                     for (anim.coords) |coord, i| if (state.player.cansee(coord)) {
                         const dcoord = coordToScreen(coord).?;
                         const old = old_cells.constSlice()[i];
-                        map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
+                        map_win.animations.setCell(dcoord.x, dcoord.y, old);
                     };
 
                     if (ctr > 1) {
@@ -3077,15 +3078,15 @@ pub const Animation = union(enum) {
                 const directions = [_]Direction{ .NorthWest, .North, .NorthEast, .East, .SouthEast, .South, .SouthWest, .West, .NorthWest, .North, .NorthEast };
                 for (&directions) |d| if (anim.coord.move(d, state.mapgeometry)) |neighbor| {
                     if (coordToScreen(neighbor)) |dneighbor| {
-                        const old = display.getCell(dneighbor.x, dneighbor.y);
+                        const old = map_win.map.getCell(dneighbor.x, dneighbor.y);
 
-                        map_win.animations.setCell(dneighbor.x, dneighbor.y, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG });
+                        map_win.animations.setCell(dneighbor.x, dneighbor.y, .{ .ch = anim.char, .fg = anim.fg, .bg = colors.BG, .fl = .{ .wide = true } });
                         map_win.map.renderFullyW(.Main);
                         display.present();
 
                         std.time.sleep(90_000_000);
 
-                        map_win.animations.setCell(dneighbor.x, dneighbor.y, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
+                        map_win.animations.setCell(dneighbor.x, dneighbor.y, old);
                         map_win.map.renderFullyW(.Main);
                         display.present();
                     }
@@ -3099,18 +3100,18 @@ pub const Animation = union(enum) {
                     }
 
                     const dcoord = coordToScreen(coord) orelse continue;
-                    const old = display.getCell(dcoord.x, dcoord.y);
+                    const old = map_win.map.getCell(dcoord.x, dcoord.y);
 
-                    map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = anim.char, .fg = anim.fg orelse old.fg, .bg = colors.BG });
+                    map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = anim.char, .fg = anim.fg orelse old.fg, .bg = colors.BG, .fl = .{ .wide = true } });
                     map_win.map.renderFullyW(.Main);
                     display.present();
 
                     std.time.sleep(80_000_000);
 
                     if (anim.path_char) |path_char| {
-                        map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = path_char, .fg = colors.CONCRETE, .bg = old.bg });
+                        map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = path_char, .fg = colors.CONCRETE, .bg = old.bg, .fl = .{ .wide = true } });
                     } else {
-                        map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = old.ch, .fg = old.fg, .bg = old.bg });
+                        map_win.animations.setCell(dcoord.x, dcoord.y, old);
                     }
 
                     map_win.map.renderFullyW(.Main);
@@ -3132,7 +3133,7 @@ pub const Animation = union(enum) {
                         }
 
                         const dcoord = coordToScreen(coord) orelse continue;
-                        const old = display.getCell(dcoord.x, dcoord.y);
+                        const old = map_win.map.getCell(dcoord.x, dcoord.y);
 
                         const special = coord.eq(anim.start) or coord.eq(anim.end);
 
@@ -3148,7 +3149,7 @@ pub const Animation = union(enum) {
                         else
                             colors.BG;
 
-                        map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = char, .fg = fg, .bg = bg });
+                        map_win.animations.setCell(dcoord.x, dcoord.y, .{ .ch = char, .fg = fg, .bg = bg, .fl = .{ .wide = true } });
                     }
 
                     map_win.map.renderFullyW(.Main);
@@ -3200,8 +3201,8 @@ pub const Animation = union(enum) {
                         const p_x = @intCast(usize, janet.c.janet_unwrap_integer(particle.data[4]));
                         const p_y = @intCast(usize, janet.c.janet_unwrap_integer(particle.data[5]));
                         const p_dcoord = coordToScreen(Coord.new(p_x, p_y)) orelse continue;
-                        const mapcell = map_win.map.getCell(p_dcoord.y, p_dcoord.x);
-                        map_win.animations.setCell(p_dcoord.x, p_dcoord.y, .{ .ch = p_tile, .fg = p_fg, .bg = colors.mix(mapcell.bg, p_bg, p_bg_mix) });
+                        const mapcell = map_win.map.getCell(p_dcoord.x, p_dcoord.y);
+                        map_win.animations.setCell(p_dcoord.x, p_dcoord.y, .{ .ch = p_tile, .fg = p_fg, .bg = colors.mix(mapcell.bg, p_bg, p_bg_mix), .fl = .{ .wide = true } });
                     }
                     j_particles = janet.callFunction("animation-tick", .{ ctx, tick }) catch err.wat();
                 }

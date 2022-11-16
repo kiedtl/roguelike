@@ -40,16 +40,18 @@ pub const Cell = struct {
     sbg: u32 = 0,
 
     // Used for Console{}
+    // TODO: move to flags
     trans: bool = false,
 
-    // fl: Flags = .{},
+    fl: Flags = .{},
 
-    // pub const Flags = packed struct {
-    //     underline: bool = false,
-    //     strikethrough: bool = false,
-    //     bold: bool = false,
-    //     italic: bool = false,
-    // };
+    pub const Flags = packed struct {
+        underline: bool = false,
+        strikethrough: bool = false,
+        bold: bool = false,
+        italic: bool = false,
+        wide: bool = false,
+    };
 };
 
 pub const Event = union(enum) {
@@ -350,31 +352,50 @@ pub fn present() void {
             _ = driver_m.SDL_LockTexture(texture, null, @ptrCast([*c]?*anyopaque, &pixels), &pitch);
 
             var dy: usize = 0;
+            var py: usize = 0;
             while (dy < height()) : (dy += 1) {
                 var dx: usize = 0;
+                var px: usize = 0;
                 while (dx < width()) : (dx += 1) {
+                    const cell = grid[dy * width() + dx];
+
                     if (!dirty[dy * width() + dx]) {
+                        if (cell.fl.wide) {
+                            dx += 1;
+                            px += font.FONT_W_WIDTH;
+                        } else {
+                            px += font.FONT_WIDTH;
+                        }
                         continue;
                     }
 
-                    const cell = grid[dy * width() + dx];
                     const ch = if (cell.sch) |sch| @enumToInt(sch) else cell.ch;
                     const bg = if (cell.sch != null and cell.sbg != 0) cell.sbg else cell.bg;
                     const fg = if (cell.sch != null and cell.sbg != 0) cell.sfg else cell.fg;
 
+                    const f_data = if (cell.fl.wide) font.font_w_data else font.font_data;
+                    const f_width: usize = if (cell.fl.wide) font.FONT_W_WIDTH else font.FONT_WIDTH;
+
                     var fy: usize = 0;
                     while (fy < font.FONT_HEIGHT) : (fy += 1) {
                         var fx: usize = 0;
-                        while (fx < font.FONT_WIDTH) : (fx += 1) {
+                        while (fx < f_width) : (fx += 1) {
                             const font_ch_y = ((ch - 32) / 16) * font.FONT_HEIGHT;
-                            const font_ch_x = ((ch - 32) % 16) * font.FONT_WIDTH;
-                            const font_ch = font.font_data[(font_ch_y + fy) * (16 * font.FONT_WIDTH) + font_ch_x + fx];
+                            const font_ch_x = ((ch - 32) % 16) * f_width;
+                            const font_ch = f_data[(font_ch_y + fy) * (16 * f_width) + font_ch_x + fx];
 
                             const color = (if (font_ch == 0) bg else colors.percentageOf(fg, @as(usize, font_ch) * 100 / 255)) << 8 | 0xFF;
-                            pixels[(((dy * font.FONT_HEIGHT) + fy) * (w_width * font.FONT_WIDTH) + ((dx * font.FONT_WIDTH) + fx))] = color;
+                            pixels[((py + fy) * (w_width * font.FONT_WIDTH) + (px + fx))] = color;
+
+                            //pixels[(((dy * f_height) + fy) * (w_width * font.FONT_WIDTH) + ((dx * f_width) + fx))] = color;
                         }
                     }
+
+                    if (cell.fl.wide)
+                        dx += 1;
+                    px += f_width;
                 }
+                py += font.FONT_HEIGHT;
             }
 
             _ = driver_m.SDL_UnlockTexture(texture);

@@ -188,7 +188,7 @@ pub const Vangenite = Material{
     .color_fg = 0xe0f8f2, //0xb6efe0,
     .color_bg = null,
     .color_floor = 0xb6efe0,
-    .tileset = 1,
+    .tileset = 2,
     .luminescence = 40,
     .opacity = 1.0,
 };
@@ -199,7 +199,7 @@ pub const Dobalene = Material{
     .color_bg = null,
     .color_floor = 0xb5d0ff,
     .sprite = .S_G_Wall_Scifish,
-    .tileset = 2,
+    .tileset = 1,
     .luminescence = 0,
     .opacity = 1.0,
 };

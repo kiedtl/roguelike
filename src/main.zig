@@ -149,7 +149,7 @@ fn initGame() bool {
     janet.init() catch return false;
     _ = janet.loadFile("scripts/particles.janet", state.GPA.allocator()) catch return false;
 
-    font.loadFontData();
+    font.loadFontsData();
     state.loadLevelInfo();
     surfaces.readProps(state.GPA.allocator());
     literature.readPosters(state.GPA.allocator());

@@ -3647,7 +3647,7 @@ pub const LevelConfig = struct {
     // there will be one empty space in the room, minimum.
     min_room_width: usize = 7,
     min_room_height: usize = 7,
-    max_room_width: usize = 20,
+    max_room_width: usize = 15,
     max_room_height: usize = 15,
 
     level_features: [4]?LevelFeatureFunc = [_]?LevelFeatureFunc{ null, null, null, null },
@@ -3759,10 +3759,10 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
     .shrink_corridors_to_fit = true,
     .prefab_chance = 100, // No prefabs for LAB
     .mapgen_iters = 2048,
-    .min_room_width = 8,
-    .min_room_height = 6,
+    .min_room_width = 9,
+    .min_room_height = 9,
     .max_room_width = 25,
-    .max_room_height = 15,
+    .max_room_height = 25,
 
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
         levelFeatureVials,
@@ -3799,10 +3799,10 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
     .mapgen_func = placeDrunkenWalkerCave,
     .mapgen_iters = 64,
 
-    .min_room_width = 4,
-    .min_room_height = 4,
-    .max_room_width = 6,
-    .max_room_height = 5,
+    .min_room_width = 5,
+    .min_room_height = 5,
+    .max_room_width = 7,
+    .max_room_height = 7,
 
     .required_mobs = &[_]LevelConfig.RequiredMob{
         .{ .count = 3, .template = &mobs.MellaentTemplate },

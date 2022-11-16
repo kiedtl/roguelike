@@ -801,7 +801,7 @@ pub const Material = struct {
     // Tile used to represent walls.
     color_fg: u32,
     color_bg: ?u32,
-    sprite: ?font.Sprite = null,
+    sprite: ?font.Sprite = .S_G_Wall_Rough,
     color_sfg: ?u32 = null,
     color_sbg: ?u32 = null,
     color_floor: u32,
@@ -4223,7 +4223,7 @@ pub const Tile = struct {
                 .ch = materials.tileFor(coord, self.material.tileset),
                 .fg = self.material.color_fg,
                 .bg = self.material.color_bg orelse colors.BG,
-                .sch = self.material.sprite orelse .S_G_Wall_Rough,
+                .sch = self.material.sprite,
                 .sfg = self.material.color_sfg orelse self.material.color_fg,
                 .sbg = self.material.color_sbg orelse self.material.color_bg orelse colors.BG,
             },
