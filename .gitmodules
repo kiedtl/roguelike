@@ -1,6 +1,6 @@
 [submodule "tb"]
-	path = tb
+	path = third_party/termbox
 	url = https://github.com/nullgemm/termbox_next
 [submodule "rx"]
-	path = rx
+	path = third_party/zig-rexpaint
 	url = git@github.com:kiedtl/zig-rexpaint.git

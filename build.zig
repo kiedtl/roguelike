@@ -39,19 +39,19 @@ pub fn build(b: *Builder) void {
 
     const exe = b.addExecutable("rl", "src/main.zig");
     exe.linkLibC();
-    exe.addPackagePath("rexpaint", "rx/lib.zig");
+    exe.addPackagePath("rexpaint", "third_party/zig-rexpaint/lib.zig");
 
-    exe.addIncludeDir("jn/"); // janet.h
-    exe.addCSourceFile("jn/janet.c", &[_][]const u8{"-std=c99"});
+    exe.addIncludeDir("third_party/janet/"); // janet.h
+    exe.addCSourceFile("third_party/janet/janet.c", &[_][]const u8{"-std=c99"});
 
     if (is_windows) {
-        exe.addIncludeDir("mingw/zlib/include/");
-        exe.addObjectFile("mingw/zlib/lib/libz.dll.a");
-        b.installBinFile("mingw/zlib/bin/zlib1.dll", "zlib1.dll");
+        exe.addIncludeDir("third_party/mingw/zlib/include/");
+        exe.addObjectFile("third_party/mingw/zlib/lib/libz.dll.a");
+        b.installBinFile("third_party/mingw/zlib/bin/zlib1.dll", "zlib1.dll");
 
-        exe.addIncludeDir("mingw/libpng/include/libpng16/");
-        exe.addObjectFile("mingw/libpng/lib/libpng.dll.a");
-        b.installBinFile("mingw/libpng/bin/libpng16-16.dll", "libpng16-16.dll");
+        exe.addIncludeDir("third_party/mingw/libpng/include/libpng16/");
+        exe.addObjectFile("third_party/mingw/libpng/lib/libpng.dll.a");
+        b.installBinFile("third_party/mingw/libpng/bin/libpng16-16.dll", "libpng16-16.dll");
     } else {
         exe.linkSystemLibrary("z");
         exe.linkSystemLibrary("png");
@@ -59,12 +59,12 @@ pub fn build(b: *Builder) void {
 
     if (!opt_use_sdl) {
         const termbox_sources = [_][]const u8{
-            "tb/src/input.c",
-            "tb/src/memstream.c",
-            "tb/src/ringbuffer.c",
-            "tb/src/termbox.c",
-            "tb/src/term.c",
-            "tb/src/utf8.c",
+            "third_party/termbox/src/input.c",
+            "third_party/termbox/src/memstream.c",
+            "third_party/termbox/src/ringbuffer.c",
+            "third_party/termbox/src/termbox.c",
+            "third_party/termbox/src/term.c",
+            "third_party/termbox/src/utf8.c",
         };
 
         const termbox_cflags = [_][]const u8{
@@ -74,7 +74,7 @@ pub fn build(b: *Builder) void {
             //"-Werror", // Disabled to keep clang from tantruming about unused
             //              function results in memstream.c
             "-g",
-            "-I./tb/src",
+            "-I./third_party/termbox/src",
             "-D_POSIX_C_SOURCE=200809L",
             "-D_XOPEN_SOURCE",
             "-D_DARWIN_C_SOURCE", // Needed for macOS and SIGWINCH def
@@ -84,9 +84,9 @@ pub fn build(b: *Builder) void {
             exe.addCSourceFile(termbox_source, &termbox_cflags);
     } else {
         if (is_windows) {
-            exe.addIncludeDir("mingw/SDL2/include/SDL2/");
-            exe.addObjectFile("mingw/SDL2/lib/libSDL2.dll.a");
-            b.installBinFile("mingw/SDL2/bin/SDL2.dll", "SDL2.dll");
+            exe.addIncludeDir("third_party/mingw/SDL2/include/SDL2/");
+            exe.addObjectFile("third_party/mingw/SDL2/lib/libSDL2.dll.a");
+            b.installBinFile("third_party/mingw/SDL2/bin/SDL2.dll", "SDL2.dll");
         } else {
             exe.linkSystemLibrary("sdl2");
         }
