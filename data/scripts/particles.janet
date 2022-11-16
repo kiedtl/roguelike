@@ -16,6 +16,7 @@
 # bit of a "backwards ray", spreading in instead of out.
 #
 
+(def SYMB1_CHARS "~!@#$%^&*()[]\\{}|/<>?;:1234567890")
 (def ASCII_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`1234567890-=~!@#$%^&*()_+[]\\{}|;':\",./<>?")
 (def GOLD 0xddb733)
 (def LIGHT_GOLD 0xfdd753)
@@ -203,6 +204,7 @@
                             (and (> (self :speed) 0) (:eq? (self :coord) (self :target)))
                             (>= (self :age) (or (self :lifetime) 99999))))
 
+                :get-lifetime (fn [self &] (self :lifetime))
                 :completed-journey (fn [self &opt factor]
                                      (default factor 1)
                                      (let [orig-dist (:distance (self :initial-coord) (self :target))
@@ -264,10 +266,11 @@
                                             (or  (<= angle  45) (>= angle 315)) ((how 1) 2) # EAST
                                             "X"))))
                                   (put (self :tile) :ch new))
-                :TRIG-modify-color (fn [self ticks ctx which rgb? how &]
+                :TRIG-modify-color (fn [self ticks ctx which rgb? how &named inverse]
+                                     (default inverse false)
                                      (def origtile (self :original-tile))
                                      (def curtile  (self :tile))
-                                     (def [color1 factor]
+                                     (var [color1 factor]
                                        (case (how 0)
                                          :custom # (:custom :curtile|:origtile (func...))
                                            [(case (how 1) :curtile curtile :origtile origtile) ((how 2) self ticks ctx)]
@@ -282,9 +285,11 @@
                                          :completed-parent-lifetime # (:completed-parent-lifetime parent-recurse factor)
                                            (let [parent (get-parent self (how 1))]
                                              #(eprint "parent-age: " (parent :age) "; parent-lifetime: " (parent :lifetime))
-                                             [origtile (min 1 (- 1 (/ (parent :age) (* (how 2) (parent :lifetime)))))])
+                                             [origtile (min 1 (- 1 (/ (parent :age) (* (how 2) (:get-lifetime parent ticks ctx)))))])
                                          :completed-lifetime # (:completed-lifetime factor)
                                              [origtile (max 0 (min 1 (- 1 (/ (self :age) (+ 0.00001 (* (how 1) (self :lifetime)))))))]))
+                                     (if inverse
+                                       (set factor (- 1 factor)))
                                      (var r (band (brshift (color1 which) 16) 0xFF))
                                      (var g (band (brshift (color1 which)  8) 0xFF))
                                      (var b (band (brshift (color1 which)  0) 0xFF))
@@ -457,12 +462,14 @@
 (defn new-context [target area-size emitters]
   (table/setproto @{ :bounds area-size :target target :emitters emitters } Context))
 
-(defn template-lingering-zap [chars bg fg lifetime &named bg-mix]
+(defn template-lingering-zap [chars bg fg lifetime &named bg-mix territorial]
   (default bg-mix 0.7)
+  (default territorial false)
   (new-emitter @{
     :particle (new-particle @{
       :tile (new-tile @{ :ch "Z" :fg fg :bg bg :bg-mix bg-mix })
       :speed 0
+      :territorial territorial
       :triggers @[
         [[:COND-true] [:TRIG-scramble-glyph chars]]
         [[:COND-true] [:TRIG-modify-color :bg "rgb" @(:completed-parent-lifetime 1 3.5)]]
@@ -473,13 +480,9 @@
     :triggers [ [[:COND-age-eq? 0] [:TRIG-inactivate]] ] # disable after first volley
     :spawn-count (Emitter :SCNT-dist-to-target)
     :get-spawn-params (fn [self ticks ctx coord target]
-                        (let [diffx (- (target :x) (coord :x))
-                              diffy (- (target :y) (coord :y))
-                              angle (math/atan2 diffy diffx)
+                        (let [angle (:angle target coord)
                               n (+ (% (self :total-spawned) (:distance coord target)) 1)]
-                          [(new-coord (+ (coord :x) (* n (math/cos angle)))
-                                      (+ (coord :y) (* n (math/sin angle))))
-                           target]))
+                          [(:move-angle coord n angle) target]))
    }))
 
 (defn template-explosion []
@@ -676,6 +679,40 @@
                             [coord ntarg]))
     })
     (new-emitter-from @{ :birth-delay 6 } (template-lingering-zap ASCII_CHARS ELEC_BLUE1 ELEC_BLUE2 4 :bg-mix 0.4))
+  ]
+  "zap-crystal-chargeover" @[
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch " " })
+        :speed 0
+        :lifetime 0
+        :triggers @[
+          [[:COND-true] [:TRIG-create-emitter (new-emitter @{
+            :particle (new-particle @{
+              :tile (new-tile @{ :ch "Z" :fg 0x5f6600 :bg 0xd7ff00 :bg-mix 0.8 })
+              :speed 0.3
+              :triggers @[
+                [[:COND-percent? 40] [:TRIG-scramble-glyph SYMB1_CHARS]]
+                [[:COND-true] [:TRIG-modify-color :bg "a" [:completed-journey] :inverse true]]
+              ]
+            })
+            :lifetime 7
+            :spawn-count (fn [&] 5)
+            :get-spawn-params (fn [self ticks ctx coord target]
+                                (let [angle  (deg-to-rad (* (math/random) 360))
+                                      dist   (max 1 (* (math/random) 4))]
+                                  [(:move-angle coord dist angle) coord]))
+          })]]
+        ]
+      })
+      :lifetime 0
+      :spawn-count (Emitter :SCNT-dist-to-target)
+      :get-spawn-params (fn [self ticks ctx coord target]
+                          (let [angle (:angle target coord)
+                                n (+ (% (self :total-spawned) (:distance coord target)) 1)]
+                            [(:move-angle coord n angle) target]))
+    })
+    (new-emitter-from @{ :birth-delay 10 } (template-lingering-zap " " 0xd7ff00 0 10 :bg-mix 0.8 :territorial true))
   ]
   "spawn-emberlings" @[
     (template-lingering-zap " " 0xff8800 0 1 :bg-mix 0.5)
