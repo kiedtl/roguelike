@@ -20,7 +20,7 @@ pub const GOLD: u32 = 0xddb733;
 pub const LIGHT_GOLD: u32 = 0xfdd753;
 pub const COPPER_RED: u32 = 0x985744;
 
-pub const BG: u32 = percentageOf(CONCRETE, 3);
+pub const BG: u32 = percentageOf(CONCRETE, 10);
 
 // Interpolate linearly between two vals.
 fn interpolate(a: u32, b: u32, f: f64) u32 {
