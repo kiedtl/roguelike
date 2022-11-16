@@ -3483,7 +3483,7 @@ pub fn readPrefabs(alloc: mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pref
     n_fabs.* = PrefabArrayList.init(alloc);
     s_fabs.* = PrefabArrayList.init(alloc);
 
-    const fabs_dir = std.fs.cwd().openDir("prefabs", .{
+    const fabs_dir = std.fs.cwd().openDir("data/prefabs", .{
         .iterate = true,
     }) catch err.wat();
 
