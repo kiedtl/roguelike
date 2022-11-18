@@ -2560,14 +2560,13 @@ pub fn drawAlertThenLog(comptime fmt: []const u8, args: anytype) void {
 }
 
 pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []const []const u8) ?usize {
-    const W_WIDTH = 25;
+    const W_WIDTH = 30;
+    const HINT = "$GUse movement keys to select a choice.$.";
 
     assert(options.len > 0);
 
-    var buf: [65535]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buf);
-    @call(.{ .modifier = .always_inline }, std.fmt.format, .{ fbs.writer(), fmt, args }) catch err.bug("format error", .{});
-    const str = fbs.getWritten();
+    const str = std.fmt.allocPrint(state.GPA.allocator(), fmt, args) catch err.oom();
+    defer state.GPA.allocator().free(str);
 
     var text_height: usize = 0;
     var fibuf = StackBuffer(u8, 4096).init(null);
@@ -2577,25 +2576,17 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
     var container_c = Console.init(state.GPA.allocator(), W_WIDTH + 4, text_height + 4 + options.len + 2);
     var text_c = Console.init(state.GPA.allocator(), W_WIDTH, text_height);
     var options_c = Console.init(state.GPA.allocator(), W_WIDTH, options.len);
+    var hint_c = Console.init(state.GPA.allocator(), W_WIDTH, 2);
 
     container_c.addSubconsole(text_c, 2, 2);
     container_c.addSubconsole(options_c, 2, 2 + text_height + 1);
 
     container_c.clearTo(.{ .bg = colors.ABG });
+    container_c.setBorder();
     text_c.clearTo(.{ .bg = colors.ABG });
+    _ = text_c.drawTextAt(0, 0, str, .{ .bg = colors.ABG });
 
     defer container_c.deinit();
-
-    _ = container_c.clearLineTo(0, container_c.width - 1, 0, .{ .ch = '▄', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
-    _ = container_c.clearLineTo(0, container_c.width - 1, container_c.height - 1, .{ .ch = '▀', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
-    _ = container_c.clearColumnTo(1, container_c.height - 1, 0, .{ .ch = '▐', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
-    _ = container_c.clearColumnTo(1, container_c.height - 1, container_c.width - 1, .{ .ch = '▌', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
-    _ = container_c.setCell(0, 0, .{ .ch = '▗', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
-    _ = container_c.setCell(0, container_c.height - 1, .{ .ch = '▙', .bg = colors.LIGHT_STEEL_BLUE, .fg = colors.BG });
-    _ = container_c.setCell(container_c.width - 1, 0, .{ .ch = '▖', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
-    _ = container_c.setCell(container_c.width - 1, container_c.height - 1, .{ .ch = '▘', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
-
-    _ = text_c.drawTextAt(0, 0, str, .{ .bg = colors.ABG });
 
     defer clearScreen();
 
@@ -2638,7 +2629,6 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
                 else => {},
             },
             .Char => |c| switch (c) {
-                ' ' => break,
                 'q' => {
                     cancelled = true;
                     break;
@@ -2655,7 +2645,14 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
                         chosen = num;
                     }
                 },
-                else => {},
+                else => {
+                    container_c.changeHeight(container_c.height + 2 + 1);
+                    container_c.clearTo(.{ .bg = colors.ABG });
+                    container_c.setBorder();
+                    container_c.addSubconsole(hint_c, 2, 2 + text_height + 1 + options.len + 1);
+                    hint_c.clearTo(.{ .bg = colors.ABG });
+                    _ = hint_c.drawTextAt(0, 0, HINT, .{ .bg = colors.ABG });
+                },
             },
             else => {},
         }
@@ -2781,6 +2778,18 @@ pub const Console = struct {
 
     fn clearLine(self: *const Self, startx: usize, endx: usize, y: usize) void {
         self.clearLineTo(startx, endx, y, .{ .ch = ' ', .fg = 0, .bg = colors.BG, .trans = self.default_transparent });
+    }
+
+    pub fn setBorder(self: *const Self) void {
+        _ = self.clearLineTo(0, self.width - 1, 0, .{ .ch = '▄', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+        _ = self.clearLineTo(0, self.width - 1, self.height - 1, .{ .ch = '▀', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+        _ = self.clearColumnTo(1, self.height - 1, 0, .{ .ch = '▐', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+        _ = self.clearColumnTo(1, self.height - 1, self.width - 1, .{ .ch = '▌', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+        _ = self.setCell(0, 0, .{ .ch = '▗', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+        _ = self.setCell(0, self.height - 1, .{ .ch = '▙', .bg = colors.LIGHT_STEEL_BLUE, .fg = colors.BG });
+        _ = self.setCell(self.width - 1, 0, .{ .ch = '▖', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+        _ = self.setCell(self.width - 1, self.height - 1, .{ .ch = '▘', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+        _ = self.setCell(self.width - 1, self.height - 1, .{ .ch = '▘', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
     }
 
     pub fn clear(self: *const Self) void {
