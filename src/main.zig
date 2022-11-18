@@ -490,7 +490,8 @@ fn readInput() !bool {
             .F7 => blk: {
                 //state.player.innate_resists.rElec += 25;
                 //state.player.addStatus(.Drunk, 0, .{ .Tmp = 20 });
-                state.message(.Info, "Lorem ipsum, dolor sit amet. Lorem ipsum, dolor sit amet.. Lorem ipsum, dolor sit amet. {}", .{rng.int(usize)});
+                //state.message(.Info, "Lorem ipsum, dolor sit amet. Lorem ipsum, dolor sit amet.. Lorem ipsum, dolor sit amet. {}", .{rng.int(usize)});
+                _ = ui.drawYesNoPrompt("foo, bar, baz. Lorem ipsum, dolor sit amet. Dolem Lipsum, solor ait smet. Iorem Aipsum, lolor dit asset.", .{});
                 break :blk false;
             },
             .F8 => b: {

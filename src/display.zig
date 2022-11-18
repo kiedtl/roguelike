@@ -358,9 +358,10 @@ pub fn present() void {
                 var px: usize = 0;
                 while (dx < width()) : (dx += 1) {
                     const cell = grid[dy * width() + dx];
+                    const skip_next = cell.fl.wide and grid[dy * w_width + dx + 1].fl.wide;
 
                     if (!dirty[dy * width() + dx]) {
-                        if (cell.fl.wide) {
+                        if (skip_next) {
                             dx += 1;
                             px += font.FONT_W_WIDTH;
                         } else {
@@ -391,7 +392,7 @@ pub fn present() void {
                         }
                     }
 
-                    if (cell.fl.wide)
+                    if (skip_next)
                         dx += 1;
                     px += f_width;
                 }

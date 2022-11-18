@@ -1495,6 +1495,8 @@ pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
     const map_startx = refpointx - @intCast(isize, MAP_WIDTH_R);
     const map_endx = refpointx + @intCast(isize, MAP_WIDTH_R);
 
+    map_win.map.clearTo(.{ .fl = .{ .wide = true } });
+
     var y = map_starty;
     while (y < map_endy and cursory < map_win.map.height) : ({
         y += 1;
@@ -2558,33 +2560,61 @@ pub fn drawAlertThenLog(comptime fmt: []const u8, args: anytype) void {
 }
 
 pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []const []const u8) ?usize {
-    assert(options.len > 0);
+    const W_WIDTH = 25;
 
-    const wind = dimensions(.Log);
+    assert(options.len > 0);
 
     var buf: [65535]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buf);
     @call(.{ .modifier = .always_inline }, std.fmt.format, .{ fbs.writer(), fmt, args }) catch err.bug("format error", .{});
     const str = fbs.getWritten();
 
-    // Clear log window
-    var y: usize = wind.starty;
-    while (y < wind.endy) : (y += 1) _clear_line(wind.startx, wind.endx, y);
-    y = wind.starty;
+    var text_height: usize = 0;
+    var fibuf = StackBuffer(u8, 4096).init(null);
+    var fold_iter = utils.FoldedTextIterator.init(str, W_WIDTH);
+    while (fold_iter.next(&fibuf)) |_| text_height += 1;
+
+    var container_c = Console.init(state.GPA.allocator(), W_WIDTH + 4, text_height + 4 + options.len + 2);
+    var text_c = Console.init(state.GPA.allocator(), W_WIDTH, text_height);
+    var options_c = Console.init(state.GPA.allocator(), W_WIDTH, options.len);
+
+    container_c.addSubconsole(text_c, 2, 2);
+    container_c.addSubconsole(options_c, 2, 2 + text_height + 1);
+
+    container_c.clearTo(.{ .bg = colors.ABG });
+    text_c.clearTo(.{ .bg = colors.ABG });
+
+    defer container_c.deinit();
+
+    _ = container_c.clearLineTo(0, container_c.width - 1, 0, .{ .ch = '▄', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+    _ = container_c.clearLineTo(0, container_c.width - 1, container_c.height - 1, .{ .ch = '▀', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+    _ = container_c.clearColumnTo(1, container_c.height - 1, 0, .{ .ch = '▐', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+    _ = container_c.clearColumnTo(1, container_c.height - 1, container_c.width - 1, .{ .ch = '▌', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+    _ = container_c.setCell(0, 0, .{ .ch = '▗', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+    _ = container_c.setCell(0, container_c.height - 1, .{ .ch = '▙', .bg = colors.LIGHT_STEEL_BLUE, .fg = colors.BG });
+    _ = container_c.setCell(container_c.width - 1, 0, .{ .ch = '▖', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+    _ = container_c.setCell(container_c.width - 1, container_c.height - 1, .{ .ch = '▘', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+
+    _ = text_c.drawTextAt(0, 0, str, .{ .bg = colors.ABG });
+
+    defer clearScreen();
 
     var chosen: usize = 0;
     var cancelled = false;
 
     while (true) {
-        y = wind.starty;
-        y = _drawStrf(wind.startx, y, wind.endx, "$c{s}$.", .{str}, .{});
-
+        var y: usize = 0;
+        options_c.clearTo(.{ .bg = colors.ABG });
         for (options) |option, i| {
             const ind = if (chosen == i) ">" else "-";
             const color = if (chosen == i) colors.LIGHT_CONCRETE else colors.GREY;
-            y = _drawStrf(wind.startx, y, wind.endx, "{s} {s}", .{ ind, option }, .{ .fg = color });
+            y = options_c.drawTextAtf(0, y, "{s} {s}", .{ ind, option }, .{ .fg = color, .bg = colors.ABG });
         }
 
+        container_c.renderFully(
+            display.width() / 2 - container_c.width / 2,
+            display.height() / 2 - container_c.height / 2,
+        );
         display.present();
 
         switch (display.waitForEvent(null) catch err.wat()) {
@@ -2735,6 +2765,12 @@ pub const Console = struct {
 
     pub fn clearTo(self: *const Self, to: display.Cell) void {
         mem.set(display.Cell, self.grid, to);
+    }
+
+    fn clearColumnTo(self: *const Self, starty: usize, endy: usize, x: usize, cell: display.Cell) void {
+        var y = starty;
+        while (y <= endy) : (y += 1)
+            self.grid[y * self.width + x] = cell;
     }
 
     fn clearLineTo(self: *const Self, startx: usize, endx: usize, y: usize, cell: display.Cell) void {
