@@ -389,16 +389,13 @@
                                  # figure out why a single particle updating
                                  # their position would magically move all
                                  # other particles as well (+ the particle
-                                 # template in the emitter table). 2 hours is a
-                                 # LOT of time to waste when you rarely have
-                                 # more than 30 minutes to focus on a hobby
-                                 # project.
+                                 # template in the emitter table).
                                  (put new :coord (deepclone coord)) # CLONE the damn coord
                                  (put new :initial-coord (deepclone coord)) # CLONE the damn coord
                                  (put new :target (deepclone target))) # CLONE the damn coord
                                (let [tile (:get-spawn-tile self ticks ctx (new :tile))]
-                                 (put new :tile (deepclone (new :tile)))
-                                 (put new :original-tile (deepclone (new :tile))))
+                                 (put new :tile (deepclone tile))
+                                 (put new :original-tile (deepclone tile)))
                                (put new :parent self)
                                (put new :speed (:get-spawn-speed self ticks ctx ((self :particle) :speed)))
                                (array/push (ctx :particles) new)
@@ -870,6 +867,25 @@
       :spawn-count (fn [&] 360)
       :get-spawn-params ((Emitter :SPAR-explosion) :sparsity-factor 1)
       :birth-delay 45
+    })
+  ]
+  "zap-air-messy" @[
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch " " :fg 0 :bg 0xffffff :bg-mix 0 })
+        :speed 2
+        :triggers @[ [[:COND-parent-dead? 1] [:TRIG-die]] ]
+      })
+      :lifetime (fn [self &] (* 2 (:distance ((self :particle) :coord) ((self :particle) :target))))
+      :spawn-count 5
+      :get-spawn-tile (fn [self ticks ctx tile]
+                        (new-tile @{ :ch (tile :ch) :fg (tile :fg) :bg (tile :bg) :bg-mix (math/random) }))
+      :get-spawn-params (fn [self ticks ctx coord target]
+                          (let [angle (- (:angle target coord)    (* 0.10 (random-choose [-1 0 1])))
+                                dist  (- (:distance coord target) (* (math/random) 1.5))
+                                ntarg (:move-angle coord dist angle)]
+                            [coord ntarg]))
+      :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
     })
   ]
 })
