@@ -4,8 +4,7 @@ const std = @import("std");
 const mem = std.mem;
 const assert = std.debug.assert;
 
-// For the allocator
-const state = @import("state.zig");
+const state = @import("state.zig"); // For the allocator
 const colors = @import("colors.zig");
 
 pub const driver: Driver = if (build_options.use_sdl) .SDL2 else .Termbox;
@@ -32,7 +31,7 @@ pub const Driver = enum {
 
 pub const Cell = struct {
     fg: u32 = 0,
-    bg: u32 = 0,
+    bg: u32 = colors.BG,
     ch: u32 = ' ', // TODO: change to u21
 
     sch: ?font.Sprite = null,

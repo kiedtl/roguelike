@@ -16,12 +16,16 @@
 # bit of a "backwards ray", spreading in instead of out.
 #
 
+(def PLAYER_LOS_R 8)
+
 (def SYMB1_CHARS "~!@#$%^&*()[]\\{}|/<>?;:1234567890")
 (def ASCII_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`1234567890-=~!@#$%^&*()_+[]\\{}|;':\",./<>?")
+
 (def GOLD 0xddb733)
 (def LIGHT_GOLD 0xfdd753)
 (def ELEC_BLUE1 0x9fefff)
 (def ELEC_BLUE2 0x7fc7ef)
+(def BG 0x0f0e0b)
 (def FIRE_COLORS [
   #0xFFFFFF 0xEFEFC7 0xDFDF9F 0xCFCF6F 0xB7B737 0xB7AF2F 0xBFAF2F 0xBFA727
   #0xEEEEEE 0xEEEEEE 0xEEEEEE 0xEEEEEE 0xEEEEEE 0xEEEEEE 0xEEEEEE 0xEEEEEE
@@ -146,6 +150,9 @@
                             (>= (coord :y) ((self :start) :y))
                             (< (coord :x) (+ ((self :start) :x) (self :width)))
                             (< (coord :y) (+ ((self :start) :y) (self :height)))))
+             :center (fn [self]
+                       (new-coord (+ ((self :start) :x) (/ (self :width) 2))
+                                  (+ ((self :start) :y) (/ (self :height) 2))))
              })
 (defn new-rect [&opt start width height]
   (default start (new-coord))
@@ -153,7 +160,7 @@
   (default height 0)
   (table/setproto @{ :start start :width width :height height } Rect))
 
-(def Tile @{ :ch " " :fg 0xffffff :bg 0 :bg-mix 0.8 })
+(def Tile @{ :ch " " :fg 0xffffff :bg BG :bg-mix 0.8 })
 (defn new-tile [table] (table/setproto table Tile))
 
 # Used by Particle, so must be defined before it
@@ -171,6 +178,8 @@
                 :triggers @[]
                 :lifetime nil
                 :territorial false
+                :require-los 0
+                :filter (fn [self ticks ctx] false)
 
                 :parent nil
                 :dead false
@@ -459,6 +468,30 @@
 (defn new-context [target area-size emitters]
   (table/setproto @{ :bounds area-size :target target :emitters emitters } Context))
 
+(defn template-chargeover [chars color1 color2 &named direction speed lifetime]
+  (default direction :out)
+  (default speed     0.25)
+  (default lifetime     9)
+  (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch "_" :fg color1 :bg-mix 0.6 })
+        :speed speed
+        :triggers @[
+          [[:COND-percent? 40] [:TRIG-scramble-glyph chars]]
+          [[:COND-true] [:TRIG-lerp-color :fg color2 "rgb" @(:completed-journey)]]
+        ]
+      })
+      :lifetime lifetime
+      :spawn-count (fn [&] 5)
+      :get-spawn-params (fn [self ticks ctx coord target]
+                          (let [angle  (/ (* (math/random) 360 math/pi) 180)
+                                dist1  (max 1   (* (math/random) 4))
+                                dist2  (max 2.5 (* (math/random) 4))]
+                            (case direction
+                              :out [coord (:move-angle coord dist1 angle)]
+                              :in  [(:move-angle coord dist2 angle) target])))
+    }))
+
 (defn template-lingering-zap [chars bg fg lifetime &named bg-mix territorial]
   (default bg-mix 0.7)
   (default territorial false)
@@ -653,29 +686,12 @@
       :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
     })]
   "zap-electric-charging" @[
-    (new-emitter @{
-      :particle (new-particle @{
-        :tile (new-tile @{ :ch "Z" :fg ELEC_BLUE1 :bg-mix 0.7 })
-        :speed 0.3
-        :triggers @[
-          [[:COND-percent? 40] [:TRIG-scramble-glyph ASCII_CHARS]]
-          # TODO: 0x495356 was taken from a Cogmind animation, and mayyybe doesn't go
-          #       too well with ELEC_BLUE*. Need to check on this after I've cleared
-          #       my brain -- after hours of staring at the same animation the colors
-          #       look to be the exact same hue.
-          [[:COND-true] [:TRIG-lerp-color :fg 0x495355 "rgb" @(:completed-journey)]]
-        ]
-      })
-      :lifetime 7
-      :spawn-count (fn [&] 5)
-      :get-spawn-params (fn [self ticks ctx coord target]
-                          (let [angle  (/ (* (math/random) 360 math/pi) 180)
-                                dist   (max 1 (* (math/random) 3))
-                                ntarg  (new-coord (+ (coord :x) (* dist (math/cos angle)))
-                                                  (+ (coord :y) (* dist (math/sin angle))))]
-                            [coord ntarg]))
-    })
-    (new-emitter-from @{ :birth-delay 6 } (template-lingering-zap ASCII_CHARS ELEC_BLUE1 ELEC_BLUE2 4 :bg-mix 0.4))
+    # TODO: 0x495356 was taken from a Cogmind animation, and mayyybe doesn't go
+    #       too well with ELEC_BLUE*. Need to check on this after I've cleared
+    #       my brain -- after hours of staring at the same animation the colors
+    #       look to be the exact same hue.
+    (template-chargeover ASCII_CHARS ELEC_BLUE1 0x495355)
+    (new-emitter-from @{ :birth-delay 9 } (template-lingering-zap ASCII_CHARS ELEC_BLUE1 ELEC_BLUE2 9 :bg-mix 0.4))
   ]
   "zap-crystal-chargeover" @[
     (new-emitter @{
@@ -888,6 +904,55 @@
       :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
     })
   ]
+  "chargeover-electric"     @[ (template-chargeover SYMB1_CHARS ELEC_BLUE1 0x453555 :direction :in :speed 0.5 :lifetime 12) ]
+  "chargeover-orange-red"   @[ (template-chargeover SYMB1_CHARS   0xff4500 0x440000 :direction :in :speed 0.5 :lifetime 12) ]
+  "chargeover-white-pink"   @[ (template-chargeover SYMB1_CHARS   0xffffff 0x440000 :direction :in :speed 0.5 :lifetime 12) ]
+  "chargeover-blue-pink"    @[ (template-chargeover SYMB1_CHARS   0x4488aa 0x440000 :direction :in :speed 0.5 :lifetime 12) ]
+  "chargeover-purple-green" @[ (template-chargeover SYMB1_CHARS   0x995599 0x33ff33 :direction :in :speed 0.5 :lifetime 12) ]
+  "chargeover-lines"        @[ (template-chargeover   "|_-=\\/"   0xffffff 0xffffff                :speed 0.3             ) ]
+  "test" @[
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch "?" :fg 0xd7ff00 :bg 0x5f6600 :bg-mix 0.55 })
+        :speed 1.1
+        :require-los 1
+        :triggers @[ [[:COND-true] [:TRIG-scramble-glyph "?!."]] ]
+      })
+      :lifetime 0
+      :spawn-count (fn [self ticks ctx &] ((ctx :bounds) :width))
+      :get-spawn-params (fn [self ticks ctx coord target]
+                          (let [x (+ (((ctx :bounds) :start) :x) (% (self :total-spawned) ((ctx :bounds) :width)))]
+                            [(new-coord x (((ctx :bounds) :start) :y))
+                             (new-coord x (+ (((ctx :bounds) :start) :y) ((ctx :bounds) :height)))]))
+     })
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch "·" :fg 0x777777 :bg 0x999999 :bg-mix 0.1 })
+        :speed 1.1
+        :require-los -1
+        :filter (fn [self _t ctx &] (> (:distance-euc (self :coord) (:center (ctx :bounds))) PLAYER_LOS_R))
+      })
+      :lifetime 0
+      :spawn-count (fn [self ticks ctx &] ((ctx :bounds) :width))
+      :get-spawn-params (fn [self ticks ctx coord target]
+                          (let [x (+ (((ctx :bounds) :start) :x) (% (self :total-spawned) ((ctx :bounds) :width)))]
+                            [(new-coord x (((ctx :bounds) :start) :y))
+                             (new-coord x (+ (((ctx :bounds) :start) :y) ((ctx :bounds) :height)))]))
+     })
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch "·" :fg 0x555555 :bg BG :bg-mix 1 })
+        :territorial true
+        :speed 0
+        :lifetime (+ (* 2 PLAYER_LOS_R) 2)
+        :triggers @[ [[:COND-true] [:TRIG-lerp-color :bg 0x333333 "rgb" [:completed-lifetime 1]]] ]
+      })
+      :lifetime 0
+      :spawn-count (fn [self ticks ctx &] 360)
+      :get-spawn-params (fn [self ticks ctx coord target]
+                          [(:move-angle coord PLAYER_LOS_R (deg-to-rad (self :total-spawned))) target])
+     })
+  ]
 })
 
 (defn animation-init [initialx initialy targetx targety boundsx boundsy bounds-width bounds-height emitters-set]
@@ -924,12 +989,14 @@
             (if (particle-map particle-coord)
               (put particle :dead true)
               (put particle-map particle-coord true))))
-        (if (:contains? (ctx :bounds) (particle :coord))
+        (if (and (:contains? (ctx :bounds) (particle :coord))
+                 (not (:filter particle ticks ctx)))
           (array/push particles @[((particle :tile) :ch)
                                   ((particle :tile) :fg)
                                   ((particle :tile) :bg)
                                   ((particle :tile) :bg-mix)
                                   (math/round ((particle :coord) :x))
-                                  (math/round ((particle :coord) :y))])))))
+                                  (math/round ((particle :coord) :y))
+                                  (particle :require-los)])))))
   (shuffle-in-place particles)
   particles)

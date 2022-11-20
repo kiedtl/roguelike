@@ -3245,7 +3245,14 @@ pub const Animation = union(enum) {
                         const p_bg_mix = janet.c.janet_unwrap_number(particle.data[3]);
                         const p_x = @intCast(usize, janet.c.janet_unwrap_integer(particle.data[4]));
                         const p_y = @intCast(usize, janet.c.janet_unwrap_integer(particle.data[5]));
+                        const p_need_los = janet.c.janet_unwrap_number(particle.data[6]);
                         const p_dcoord = coordToScreen(Coord.new(p_x, p_y)) orelse continue;
+
+                        const cansee = state.player.cansee(Coord.new2(state.player.coord.z, p_x, p_y));
+                        // XXX: this could be a switch statement, but it causes Zig 0.9.1 to segfault
+                        if ((!cansee and p_need_los == 1) or (cansee and p_need_los == -1))
+                            continue;
+
                         const mapcell = map_win.map.getCell(p_dcoord.x, p_dcoord.y);
                         map_win.animations.setCell(p_dcoord.x, p_dcoord.y, .{ .ch = p_tile, .fg = p_fg, .bg = colors.mix(mapcell.bg, p_bg, p_bg_mix), .fl = .{ .wide = true } });
                     }
