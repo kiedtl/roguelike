@@ -441,6 +441,11 @@
                                   (if inverse
                                     [(:move-angle target n angle) target]
                                     [(:move-angle coord n angle) target]))))
+               :SPAR-sweeping-beams (fn [&]
+                                      (fn [self ticks ctx coord target]
+                                        (let [x (+ (((ctx :bounds) :start) :x) (% (self :total-spawned) ((ctx :bounds) :width)))]
+                                          [(new-coord x (((ctx :bounds) :start) :y))
+                                           (new-coord x (+ (((ctx :bounds) :start) :y) ((ctx :bounds) :height)))])))
 
                # :get-spawn-speed presets
                :SSPD-min-sin-ticks (fn [self ticks ctx speed]
@@ -914,30 +919,22 @@
     (new-emitter @{
       :particle (new-particle @{
         :tile (new-tile @{ :ch "?" :fg 0xd7ff00 :bg 0x5f6600 :bg-mix 0.55 })
-        :speed 1.1
-        :require-los 1
+        :speed 1.1 :require-los 1
         :triggers @[ [[:COND-true] [:TRIG-scramble-glyph "?!."]] ]
       })
       :lifetime 0
       :spawn-count (fn [self ticks ctx &] ((ctx :bounds) :width))
-      :get-spawn-params (fn [self ticks ctx coord target]
-                          (let [x (+ (((ctx :bounds) :start) :x) (% (self :total-spawned) ((ctx :bounds) :width)))]
-                            [(new-coord x (((ctx :bounds) :start) :y))
-                             (new-coord x (+ (((ctx :bounds) :start) :y) ((ctx :bounds) :height)))]))
+      :get-spawn-params ((Emitter :SPAR-sweeping-beams))
      })
     (new-emitter @{
       :particle (new-particle @{
         :tile (new-tile @{ :ch "·" :fg 0x777777 :bg 0x999999 :bg-mix 0.1 })
-        :speed 1.1
-        :require-los -1
+        :speed 1.1 :require-los -1
         :filter (fn [self _t ctx &] (> (:distance-euc (self :coord) (:center (ctx :bounds))) PLAYER_LOS_R))
       })
       :lifetime 0
       :spawn-count (fn [self ticks ctx &] ((ctx :bounds) :width))
-      :get-spawn-params (fn [self ticks ctx coord target]
-                          (let [x (+ (((ctx :bounds) :start) :x) (% (self :total-spawned) ((ctx :bounds) :width)))]
-                            [(new-coord x (((ctx :bounds) :start) :y))
-                             (new-coord x (+ (((ctx :bounds) :start) :y) ((ctx :bounds) :height)))]))
+      :get-spawn-params ((Emitter :SPAR-sweeping-beams))
      })
     (new-emitter @{
       :particle (new-particle @{
