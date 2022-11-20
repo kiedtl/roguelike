@@ -890,6 +890,20 @@
       :birth-delay 45
     })
   ]
+  "pulse-brief" @[
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch ":" :fg 0x888888 :bg BG :bg-mix 0.9 })
+        :speed 0    :lifetime 12   :territorial true   :require-los 1
+        :triggers @[
+          [[:COND-true] [:TRIG-lerp-color :bg 0xffffff "rgb" [:sine-custom (fn [self ticks &] (* 16 ticks))]]]
+        ]
+      })
+      :lifetime 1
+      :spawn-count (Emitter :SCNT-dist-to-target-360)
+      :get-spawn-params (:SPAR-circle Emitter)
+    })
+  ]
   "zap-air-messy" @[
     (new-emitter @{
       :particle (new-particle @{
@@ -915,7 +929,7 @@
   "chargeover-blue-pink"    @[ (template-chargeover SYMB1_CHARS   0x4488aa 0x440000 :direction :in :speed 0.5 :lifetime 12) ]
   "chargeover-purple-green" @[ (template-chargeover SYMB1_CHARS   0x995599 0x33ff33 :direction :in :speed 0.5 :lifetime 12) ]
   "chargeover-lines"        @[ (template-chargeover   "|_-=\\/"   0xffffff 0xffffff                :speed 0.3             ) ]
-  "test" @[
+  "beams-ring-distraction" @[
     (new-emitter @{
       :particle (new-particle @{
         :tile (new-tile @{ :ch "?" :fg 0xd7ff00 :bg 0x5f6600 :bg-mix 0.55 })
@@ -938,11 +952,11 @@
      })
     (new-emitter @{
       :particle (new-particle @{
-        :tile (new-tile @{ :ch "·" :fg 0x555555 :bg BG :bg-mix 1 })
+        :tile (new-tile @{ :ch "·" :fg 0x555555 :bg BG :bg-mix 0.4 })
         :territorial true
         :speed 0
-        :lifetime (+ (* 2 PLAYER_LOS_R) 2)
-        :triggers @[ [[:COND-true] [:TRIG-lerp-color :bg 0x333333 "rgb" [:completed-lifetime 1]]] ]
+        :lifetime (+ (* 2 PLAYER_LOS_R) 5)
+        :triggers @[ [[:COND-true] [:TRIG-lerp-color :bg 0x444444 "rgb" [:sine-custom (fn [self ticks &] (* ticks 10))]]] ]
       })
       :lifetime 0
       :spawn-count (fn [self ticks ctx &] 360)
