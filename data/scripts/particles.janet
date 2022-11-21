@@ -730,7 +730,7 @@
                                 n (+ (% (self :total-spawned) (:distance coord target)) 1)]
                             [(:move-angle coord n angle) target]))
     })
-    (new-emitter-from @{ :birth-delay 10 } (template-lingering-zap " " 0xd7ff00 0 10 :bg-mix 0.8 :territorial true))
+    (new-emitter-from @{ :birth-delay 0 } (template-lingering-zap "*" 0xd7ff00 0 24 :bg-mix 0.9 :territorial true))
   ]
   "spawn-emberlings" @[
     (template-lingering-zap " " 0xff8800 0 1 :bg-mix 0.5)
