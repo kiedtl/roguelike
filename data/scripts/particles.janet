@@ -929,8 +929,7 @@
   "chargeover-blue-pink"    @[ (template-chargeover SYMB1_CHARS   0x4488aa 0x440000 :direction :in :speed 0.5 :lifetime 12) ]
   "chargeover-purple-green" @[ (template-chargeover SYMB1_CHARS   0x995599 0x33ff33 :direction :in :speed 0.5 :lifetime 12) ]
   "chargeover-lines"        @[ (template-chargeover   "|_-=\\/"   0xffffff 0xffffff                :speed 0.3             ) ]
-  #"beams-ring-distraction" @[
-  "test" @[
+  "beams-ring-distraction" @[
     (new-emitter @{
       :particle (new-particle @{
         :tile (new-tile @{ :ch "?" :fg 0xd7ff00 :bg 0x5f6600 :bg-mix 0.55 })

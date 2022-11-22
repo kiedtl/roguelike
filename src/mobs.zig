@@ -462,7 +462,7 @@ pub const PlayerTemplate = MobTemplate{
     .weapon = &items.DaggerWeapon,
     //.backup_weapon = &items.RapierWeapon,
     .armor = &items.RobeArmor,
-    .evocables = &[_]Evocable{items.EldritchLanternEvoc},
+    //.evocables = &[_]Evocable{items.EldritchLanternEvoc},
     //.cloak = &items.ThornsCloak,
 };
 
