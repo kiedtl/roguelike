@@ -498,7 +498,7 @@ fn readInput() !bool {
                 _ = janet.loadFile("scripts/particles.janet", state.GPA.allocator()) catch break :b false;
 
                 const target = ui.chooseCell(.{}) orelse break :b false;
-                ui.Animation.apply(.{ .Particle = .{ .name = "test", .coord = state.player.coord, .target = target } });
+                ui.Animation.apply(.{ .Particle = .{ .name = "test", .coord = state.player.coord, .target = .{ .C = target } } });
                 break :b true;
             },
             .F9 => b: {

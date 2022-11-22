@@ -365,11 +365,8 @@ pub const BrazierWandEvoc = Evocable{
     .rechargable = true,
     .trigger_fn = struct {
         fn f(_: *Mob, _: *Evocable) Evocable.EvokeError!void {
-            const MAX_RANGE = 4;
-
             const chosen = ui.chooseCell(.{
                 .require_seen = true,
-                .max_distance = MAX_RANGE,
                 .show_trajectory = true,
                 .require_lof = true,
             }) orelse return error.BadPosition;
@@ -380,14 +377,10 @@ pub const BrazierWandEvoc = Evocable{
                     // could make holes in treasure vaults
                     mach.power = 0;
 
-                    ui.Animation.apply(.{ .AnimatedLine = .{
-                        .start = state.player.coord,
-                        .end = chosen,
-                        .approach = MAX_RANGE,
-                        .chars = ui.Animation.ELEC_LINE_CHARS,
-                        .fg = ui.Animation.ELEC_LINE_FG,
-                        .bg = ui.Animation.ELEC_LINE_BG,
-                        .bg_mix = ui.Animation.ELEC_LINE_MIX,
+                    ui.Animation.apply(.{ .Particle = .{
+                        .name = "lzap-golden",
+                        .coord = state.player.coord,
+                        .target = .{ .C = chosen },
                     } });
 
                     state.message(.Info, "The wand disables the {s}.", .{mach.name});
@@ -413,10 +406,15 @@ pub const FlamethrowerEvoc = Evocable{
         fn f(_: *Mob, _: *Evocable) Evocable.EvokeError!void {
             const dest = ui.chooseCell(.{
                 .require_seen = true,
-                .max_distance = 4,
                 .show_trajectory = true,
+                .require_lof = true,
             }) orelse return error.BadPosition;
 
+            ui.Animation.apply(.{ .Particle = .{
+                .name = "zap-fire-messy",
+                .coord = state.player.coord,
+                .target = .{ .C = dest },
+            } });
             fire.setTileOnFire(dest, null);
         }
     }.f,
@@ -430,14 +428,8 @@ pub const EldritchLanternEvoc = Evocable{
     .trigger_fn = _triggerEldritchLantern,
 };
 fn _triggerEldritchLantern(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
-    var affected: usize = 0;
-    var player_was_affected: bool = false;
-
-    if (mob == state.player) {
-        state.message(.Info, "The eldritch lantern flashes brilliantly!", .{});
-    } else if (state.player.cansee(mob.coord)) {
-        state.message(.Info, "The {s} flashes an eldritch lantern!", .{mob.displayName()});
-    }
+    assert(mob == state.player);
+    state.message(.Info, "The eldritch lantern flashes brilliantly!", .{});
 
     for (mob.fov) |row, y| for (row) |cell, x| {
         if (cell == 0) continue;
@@ -450,12 +442,14 @@ fn _triggerEldritchLantern(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
                 continue;
 
             othermob.addStatus(.Daze, 0, .{ .Tmp = 8 });
-
-            affected += 1;
-            if (othermob == state.player)
-                player_was_affected = true;
         }
     };
+
+    ui.Animation.apply(.{ .Particle = .{
+        .name = "pulse-brief",
+        .coord = state.player.coord,
+        .target = .{ .I = state.player.stat(.Vision) },
+    } });
 
     mob.addStatus(.Daze, 0, .{ .Tmp = rng.range(usize, 1, 4) });
     mob.makeNoise(.Explosion, .Medium);

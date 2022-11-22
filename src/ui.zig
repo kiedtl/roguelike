@@ -3027,7 +3027,10 @@ pub const Animation = union(enum) {
     Particle: struct {
         name: []const u8,
         coord: Coord,
-        target: Coord,
+        target: union(enum) {
+            C: Coord,
+            I: isize,
+        },
     },
 
     pub const ELEC_LINE_CHARS = "AEFHIKLMNTYZ13457*-=+~?!@#%&";
@@ -3208,9 +3211,13 @@ pub const Animation = union(enum) {
                 }
             },
             .Particle => |anim| {
+                const target = switch (anim.target) {
+                    .C => |c| c,
+                    .I => |n| Coord.new(anim.coord.x, anim.coord.y + @intCast(usize, n)),
+                };
                 var ctx = janet.callFunction("animation-init", .{
                     anim.coord.x,                        anim.coord.y,
-                    anim.target.x,                       anim.target.y,
+                    target.x,                            target.y,
                     state.player.coord.x -| MAP_WIDTH_R, state.player.coord.y -| MAP_HEIGHT_R,
                     MAP_WIDTH_R * 2,                     MAP_HEIGHT_R * 2,
                     anim.name,

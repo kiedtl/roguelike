@@ -1093,7 +1093,7 @@ pub const Spell = struct {
                         ui.Animation.apply(.{ .Particle = .{
                             .name = particle_anim.name,
                             .coord = caster_coord,
-                            .target = last_processed_coord,
+                            .target = .{ .C = last_processed_coord },
                         } });
                     },
                 };
@@ -1183,7 +1183,7 @@ pub const Spell = struct {
                         ui.Animation.apply(.{ .Particle = .{
                             .name = particle_anim.name,
                             .coord = caster_coord,
-                            .target = target,
+                            .target = .{ .C = target },
                         } });
                     },
                 };

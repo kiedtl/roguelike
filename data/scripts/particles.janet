@@ -929,7 +929,8 @@
   "chargeover-blue-pink"    @[ (template-chargeover SYMB1_CHARS   0x4488aa 0x440000 :direction :in :speed 0.5 :lifetime 12) ]
   "chargeover-purple-green" @[ (template-chargeover SYMB1_CHARS   0x995599 0x33ff33 :direction :in :speed 0.5 :lifetime 12) ]
   "chargeover-lines"        @[ (template-chargeover   "|_-=\\/"   0xffffff 0xffffff                :speed 0.3             ) ]
-  "beams-ring-distraction" @[
+  #"beams-ring-distraction" @[
+  "test" @[
     (new-emitter @{
       :particle (new-particle @{
         :tile (new-tile @{ :ch "?" :fg 0xd7ff00 :bg 0x5f6600 :bg-mix 0.55 })
@@ -952,11 +953,11 @@
      })
     (new-emitter @{
       :particle (new-particle @{
-        :tile (new-tile @{ :ch "·" :fg 0x555555 :bg BG :bg-mix 0.4 })
+        :tile (new-tile @{ :ch "·" :fg 0x555555 :bg BG :bg-mix 1 })
         :territorial true
         :speed 0
         :lifetime (+ (* 2 PLAYER_LOS_R) 5)
-        :triggers @[ [[:COND-true] [:TRIG-lerp-color :bg 0x444444 "rgb" [:sine-custom (fn [self ticks &] (* ticks 10))]]] ]
+        :triggers @[ [[:COND-true] [:TRIG-lerp-color :bg 0x222222 "rgb" [:sine-custom (fn [self ticks &] (* ticks 10))]]] ]
       })
       :lifetime 0
       :spawn-count (fn [self ticks ctx &] 360)
