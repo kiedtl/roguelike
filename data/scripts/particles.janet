@@ -473,23 +473,32 @@
 (defn new-context [target area-size emitters]
   (table/setproto @{ :bounds area-size :target target :emitters emitters } Context))
 
-(defn template-chargeover [chars color1 color2 &named direction speed lifetime which maxdist]
+(defn template-chargeover [chars color1 color2 &named direction speed lifetime which maxdist style]
   (default direction :out)
   (default speed     0.25)
   (default lifetime     9)
   (default which  :target)
   (default maxdist      4)
+  (default style      :bg)
+  (def special-triggers
+    (case style
+      :bg   @[ [[:COND-true] [:TRIG-lerp-color :bg color2 "rgb" @(:completed-journey)]] ]
+      :nobg @[]))
+  (def tile
+    (case style
+      :bg   (new-tile @{ :ch "_" :fg color2 :bg color1 })
+      :nobg (new-tile @{ :ch "_" :fg color1 :bg-mix 0.6 })))
   (new-emitter @{
       :particle (new-particle @{
-        :tile (new-tile @{ :ch "_" :fg color1 :bg-mix 0.6 })
+        :tile tile
         :speed speed
-        :triggers @[
+        :triggers (array/concat special-triggers @[
           [[:COND-percent? 40] [:TRIG-scramble-glyph chars]]
           [[:COND-true] [:TRIG-lerp-color :fg color2 "rgb" @(:completed-journey)]]
-        ]
+        ])
       })
       :lifetime lifetime
-      :spawn-count (fn [&] 6)
+      :spawn-count (fn [&] 7)
       :get-spawn-params (fn [self ticks ctx origin target]
                           (let [angle  (/ (* (math/random) 360 math/pi) 180)
                                 dist1  (max 1   (* (math/random) maxdist))
@@ -585,7 +594,6 @@
   }))
 
 (def emitters-table @{
-  "test" @[]
   "lzap-electric" @[ (template-lingering-zap "AEFHIKLMNTYZ13457*-=+~?!@#%&" 0x9fefff 0x7fc7ef 7) ]
   "lzap-golden" @[ (template-lingering-zap ".#.#.#." LIGHT_GOLD GOLD 12) ]
   "explosion-simple" @[ (template-explosion) ]
@@ -925,11 +933,11 @@
     })
   ]
   "chargeover-electric"     @[ (template-chargeover SYMB1_CHARS ELEC_BLUE1 0x453555 :direction :in :speed 0.5 :lifetime 12) ]
-  "chargeover-orange-red"   @[ (template-chargeover SYMB1_CHARS   0xff4500 0x440000 :direction :in :speed 0.5 :lifetime 12) ]
+  "chargeover-orange-red"   @[ (template-chargeover SYMB1_CHARS   0xff4500 0x440000 :direction :in :speed 0.5 :lifetime 12 :style :nobg) ]
   "chargeover-white-pink"   @[ (template-chargeover SYMB1_CHARS   0xffffff 0x440000 :direction :in :speed 0.5 :lifetime 12) ]
   "chargeover-blue-pink"    @[ (template-chargeover SYMB1_CHARS   0x4488aa 0x440000 :direction :in :speed 0.5 :lifetime 12) ]
   "chargeover-purple-green" @[ (template-chargeover SYMB1_CHARS   0x995599 0x33ff33 :direction :in :speed 0.5 :lifetime 12) ]
-  "chargeover-lines"        @[ (template-chargeover   "|_-=\\/"   0xffffff 0xffffff                :speed 0.3             ) ]
+  "chargeover-lines"        @[ (template-chargeover   "|_-=\\/"   0xcacbca 0xffffff                :speed 0.3             ) ]
   "beams-ring-distraction" @[
     (new-emitter @{
       :particle (new-particle @{
