@@ -110,7 +110,7 @@ fn newCorpseSpell(
 }
 
 pub const CAST_CREATE_BLOAT = newCorpseSpell("bloat", "bloat", "Bloats", &mobs.BloatTemplate, .{ .name = "chargeover-purple-green" });
-pub const CAST_CREATE_EMBERLING = newCorpseSpell("emberling", "emberling", "Emberlings", &mobs.EmberlingTemplate, .{ .name = "spawn-sparklings" });
+pub const CAST_CREATE_EMBERLING = newCorpseSpell("emberling", "emberling", "Emberlings", &mobs.EmberlingTemplate, .{ .name = "spawn-emberlings" });
 pub const CAST_CREATE_SPARKLING = newCorpseSpell("sparkling", "sparkling", "Sparklings", &mobs.SparklingTemplate, .{ .name = "spawn-sparklings" });
 
 pub const CAST_ALERT_ALLY = Spell{
