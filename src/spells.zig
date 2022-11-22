@@ -48,65 +48,70 @@ const WIDTH = state.WIDTH;
 // -----------------------------------------------------------------------------
 
 // Create spell that summons creatures from a corpse.
-fn createCorpseCreationSpell(
+fn newCorpseSpell(
     comptime mob_id: []const u8,
     comptime name: []const u8,
     comptime msg_name: []const u8,
     template: *const mobs.MobTemplate,
+    animation: Spell.Animation.Particle,
 ) Spell {
     return Spell{
         .id = "sp_call_" ++ mob_id,
         .name = "call " ++ name,
         .cast_type = .Smite,
         .smite_target_type = .Corpse,
-        .effect_type = .{ .Custom = struct {
-            fn f(caster_coord: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
-                const caster = state.dungeon.at(caster_coord).mob.?;
+        .animation = .{ .Particle = animation },
+        .effect_type = .{
+            .Custom = struct {
+                fn f(caster_coord: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
+                    const caster = state.dungeon.at(caster_coord).mob.?;
 
-                const corpse = state.dungeon.at(coord).surface.?.Corpse;
-                state.dungeon.at(coord).surface = null;
+                    const corpse = state.dungeon.at(coord).surface.?.Corpse;
+                    state.dungeon.at(coord).surface = null;
 
-                const spawn_loc: ?Coord = for (&CARDINAL_DIRECTIONS) |d| {
-                    if (coord.move(d, state.mapgeometry)) |neighbor| {
-                        if (state.is_walkable(neighbor, .{ .right_now = true })) {
-                            break neighbor;
-                        }
-                    }
-                } else null;
-
-                if (spawn_loc) |loc| {
-                    const m = mobs.placeMob(state.GPA.allocator(), template, loc, .{});
-
-                    if (caster.squad) |caster_squad| {
-                        caster_squad.members.append(m) catch {};
-                        if (m.squad) |previous_squad| {
-                            for (previous_squad.members.constSlice()) |sub_member| {
-                                if (caster_squad.members.append(sub_member)) {
-                                    sub_member.squad = caster_squad;
-                                } else |_| {
-                                    sub_member.squad = null;
-                                }
+                    const spawn_loc: ?Coord = for (&CARDINAL_DIRECTIONS) |d| {
+                        if (coord.move(d, state.mapgeometry)) |neighbor| {
+                            if (state.is_walkable(neighbor, .{ .right_now = true })) {
+                                break neighbor;
                             }
                         }
-                        m.squad = caster_squad;
-                    }
+                    } else null;
 
-                    if (state.player.cansee(coord)) {
-                        state.message(
-                            .SpellCast,
-                            msg_name ++ "s bursts out of the {s} corpse!",
-                            .{corpse.displayName()},
-                        );
+                    if (spawn_loc) |loc| {
+                        const m = mobs.placeMob(state.GPA.allocator(), template, loc, .{});
+
+                        if (caster.squad) |caster_squad| {
+                            caster_squad.members.append(m) catch {};
+                            if (m.squad) |previous_squad| {
+                                for (previous_squad.members.constSlice()) |sub_member| {
+                                    if (caster_squad.members.append(sub_member)) {
+                                        sub_member.squad = caster_squad;
+                                    } else |_| {
+                                        sub_member.squad = null;
+                                    }
+                                }
+                            }
+                            m.squad = caster_squad;
+                        }
+
+                        // TODO: remove?
+                        if (state.player.cansee(coord)) {
+                            state.message(
+                                .SpellCast,
+                                msg_name ++ " bursts out of the {s} corpse!",
+                                .{corpse.displayName()},
+                            );
+                        }
                     }
                 }
-            }
-        }.f },
+            }.f,
+        },
     };
 }
 
-pub const CAST_CREATE_BLOAT = createCorpseCreationSpell("bloat", "bloat", "Bloats", &mobs.BloatTemplate);
-pub const CAST_CREATE_EMBERLING = createCorpseCreationSpell("emberling", "emberling", "Emberlings", &mobs.EmberlingTemplate);
-pub const CAST_CREATE_SPARKLING = createCorpseCreationSpell("sparkling", "sparkling", "Sparklings", &mobs.SparklingTemplate);
+pub const CAST_CREATE_BLOAT = newCorpseSpell("bloat", "bloat", "Bloats", &mobs.BloatTemplate, .{ .name = "chargeover-purple-green" });
+pub const CAST_CREATE_EMBERLING = newCorpseSpell("emberling", "emberling", "Emberlings", &mobs.EmberlingTemplate, .{ .name = "spawn-sparklings" });
+pub const CAST_CREATE_SPARKLING = newCorpseSpell("sparkling", "sparkling", "Sparklings", &mobs.SparklingTemplate, .{ .name = "spawn-sparklings" });
 
 pub const CAST_ALERT_ALLY = Spell{
     .id = "sp_alert_ally",
@@ -498,7 +503,7 @@ pub const BOLT_BLINKBOLT = Spell{
     .name = "living lightning",
     .cast_type = .Bolt,
     .noise = .Loud,
-    .animation = .{ .Particle = .{ .name = "electric-blue" } },
+    .animation = .{ .Particle = .{ .name = "zap-electric" } },
     .check_has_effect = struct {
         fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
             const mob = state.dungeon.at(target).mob.?;
@@ -957,22 +962,7 @@ pub const Spell = struct {
     bolt_dodgeable: bool = false,
     bolt_multitarget: bool = true,
 
-    animation: ?union(enum) {
-        Simple: struct {
-            char: u32,
-            fg: u32 = 0xffffff,
-        },
-        Type2: struct {
-            chars: []const u8,
-            fg: u32,
-            bg: ?u32 = null,
-            bg_mix: ?f64 = null,
-            approach: ?usize = null,
-        },
-        Particle: struct {
-            name: []const u8,
-        },
-    } = null,
+    animation: ?Animation = null,
 
     checks_will: bool = false,
     needs_visible_target: bool = true,
@@ -992,6 +982,25 @@ pub const Spell = struct {
     //
     // Added for Blinkbolt.
     bolt_last_coord_effect: ?fn (caster: Coord, spell: SpellOptions, coord: Coord) void = null,
+
+    pub const Animation = union(enum) {
+        Simple: struct {
+            char: u32,
+            fg: u32 = 0xffffff,
+        },
+        Type2: struct {
+            chars: []const u8,
+            fg: u32,
+            bg: ?u32 = null,
+            bg_mix: ?f64 = null,
+            approach: ?usize = null,
+        },
+        Particle: Particle,
+
+        pub const Particle = struct {
+            name: []const u8,
+        };
+    };
 
     pub fn use(self: Spell, caster: ?*Mob, caster_coord: Coord, target: Coord, opts: SpellOptions) void {
         if (caster) |caster_mob| {
@@ -1112,6 +1121,35 @@ pub const Spell = struct {
                 }
             },
             .Smite => {
+                if (self.animation) |anim_type| switch (anim_type) {
+                    .Simple => |simple_anim| {
+                        ui.Animation.apply(.{ .TraverseLine = .{
+                            .start = caster_coord,
+                            .end = target,
+                            .char = simple_anim.char,
+                            .fg = simple_anim.fg,
+                        } });
+                    },
+                    .Type2 => |type2_anim| {
+                        ui.Animation.apply(.{ .AnimatedLine = .{
+                            .start = caster_coord,
+                            .end = target,
+                            .approach = type2_anim.approach,
+                            .chars = type2_anim.chars,
+                            .fg = type2_anim.fg,
+                            .bg = type2_anim.bg,
+                            .bg_mix = type2_anim.bg_mix,
+                        } });
+                    },
+                    .Particle => |particle_anim| {
+                        ui.Animation.apply(.{ .Particle = .{
+                            .name = particle_anim.name,
+                            .coord = caster_coord,
+                            .target = .{ .C = target },
+                        } });
+                    },
+                };
+
                 switch (self.smite_target_type) {
                     .Self, .Mob, .SpecificMob, .UndeadAlly => {
                         if (state.dungeon.at(target).mob == null) {
@@ -1158,35 +1196,6 @@ pub const Spell = struct {
                         }
                     },
                 }
-
-                if (self.animation) |anim_type| switch (anim_type) {
-                    .Simple => |simple_anim| {
-                        ui.Animation.apply(.{ .TraverseLine = .{
-                            .start = caster_coord,
-                            .end = target,
-                            .char = simple_anim.char,
-                            .fg = simple_anim.fg,
-                        } });
-                    },
-                    .Type2 => |type2_anim| {
-                        ui.Animation.apply(.{ .AnimatedLine = .{
-                            .start = caster_coord,
-                            .end = target,
-                            .approach = type2_anim.approach,
-                            .chars = type2_anim.chars,
-                            .fg = type2_anim.fg,
-                            .bg = type2_anim.bg,
-                            .bg_mix = type2_anim.bg_mix,
-                        } });
-                    },
-                    .Particle => |particle_anim| {
-                        ui.Animation.apply(.{ .Particle = .{
-                            .name = particle_anim.name,
-                            .coord = caster_coord,
-                            .target = .{ .C = target },
-                        } });
-                    },
-                };
             },
         }
     }

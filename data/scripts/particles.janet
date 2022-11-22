@@ -473,10 +473,12 @@
 (defn new-context [target area-size emitters]
   (table/setproto @{ :bounds area-size :target target :emitters emitters } Context))
 
-(defn template-chargeover [chars color1 color2 &named direction speed lifetime]
+(defn template-chargeover [chars color1 color2 &named direction speed lifetime which maxdist]
   (default direction :out)
   (default speed     0.25)
   (default lifetime     9)
+  (default which  :target)
+  (default maxdist      4)
   (new-emitter @{
       :particle (new-particle @{
         :tile (new-tile @{ :ch "_" :fg color1 :bg-mix 0.6 })
@@ -487,14 +489,15 @@
         ]
       })
       :lifetime lifetime
-      :spawn-count (fn [&] 5)
-      :get-spawn-params (fn [self ticks ctx coord target]
+      :spawn-count (fn [&] 6)
+      :get-spawn-params (fn [self ticks ctx origin target]
                           (let [angle  (/ (* (math/random) 360 math/pi) 180)
-                                dist1  (max 1   (* (math/random) 4))
-                                dist2  (max 2.5 (* (math/random) 4))]
+                                dist1  (max 1   (* (math/random) maxdist))
+                                dist2  (max 2.5 (* (math/random) maxdist))
+                                coord  (case which :target target :origin origin)]
                             (case direction
                               :out [coord (:move-angle coord dist1 angle)]
-                              :in  [(:move-angle coord dist2 angle) target])))
+                              :in  [(:move-angle coord dist2 angle) coord])))
     }))
 
 (defn template-lingering-zap [chars bg fg lifetime &named bg-mix territorial]
@@ -582,6 +585,7 @@
   }))
 
 (def emitters-table @{
+  "test" @[]
   "lzap-electric" @[ (template-lingering-zap "AEFHIKLMNTYZ13457*-=+~?!@#%&" 0x9fefff 0x7fc7ef 7) ]
   "lzap-golden" @[ (template-lingering-zap ".#.#.#." LIGHT_GOLD GOLD 12) ]
   "explosion-simple" @[ (template-explosion) ]
@@ -695,8 +699,8 @@
     #       too well with ELEC_BLUE*. Need to check on this after I've cleared
     #       my brain -- after hours of staring at the same animation the colors
     #       look to be the exact same hue.
-    (template-chargeover ASCII_CHARS ELEC_BLUE1 0x495355)
-    (new-emitter-from @{ :birth-delay 9 } (template-lingering-zap ASCII_CHARS ELEC_BLUE1 ELEC_BLUE2 9 :bg-mix 0.4))
+    (template-chargeover ASCII_CHARS 0x495355 ELEC_BLUE2 :which :origin :speed 0.4 :lifetime 9 :maxdist 3)
+    (new-emitter-from @{ :birth-delay 8 } (template-lingering-zap ASCII_CHARS ELEC_BLUE1 ELEC_BLUE2 9 :bg-mix 0.4))
   ]
   "zap-crystal-chargeover" @[
     (new-emitter @{
@@ -749,8 +753,7 @@
     (new-emitter @{
       :particle (new-particle @{
         :tile (new-tile @{ :ch "Z" :fg ELEC_BLUE1 :bg ELEC_BLUE2 :bg-mix 0.2 })
-        :speed 0
-        :lifetime 7
+        :speed 0 :lifetime 7
         :triggers @[
           [[:COND-percent? 40] [:TRIG-scramble-glyph ASCII_CHARS]]
           [[:COND-true] [:TRIG-lerp-color :fg 0x495355 "rgb" @(:completed-journey)]]
@@ -761,10 +764,8 @@
       :spawn-count (fn [&] 5)
       :get-spawn-params (fn [self ticks ctx coord target]
                           (let [angle  (% (* 3 (self :total-spawned)) 360)
-                                dist   2
-                                ntarg  (new-coord (+ (coord :x) (* dist (math/cos angle)))
-                                                  (+ (coord :y) (* dist (math/sin angle))))]
-                            [ntarg coord]))
+                                ntarg  (:move-angle target 2 angle)]
+                            [ntarg target]))
     })
   ]
   "zap-inacc-iron" @[
@@ -953,8 +954,7 @@
     (new-emitter @{
       :particle (new-particle @{
         :tile (new-tile @{ :ch "·" :fg 0x555555 :bg BG :bg-mix 1 })
-        :territorial true
-        :speed 0
+        :territorial true :speed 0 :require-los 0
         :lifetime (+ (* 2 PLAYER_LOS_R) 5)
         :triggers @[ [[:COND-true] [:TRIG-lerp-color :bg 0x222222 "rgb" [:sine-custom (fn [self ticks &] (* ticks 10))]]] ]
       })
