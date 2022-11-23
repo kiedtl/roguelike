@@ -576,20 +576,20 @@
   (new-emitter @{
     :particle (new-particle @{
       :tile (new-tile @{ :ch "O" :fg 0xffffff :bg 0xffffff :bg-mix 1 })
-      :speed 0
-      :lifetime 1
+      :speed 0 :lifetime 1 :require-los 0
       :triggers @[
         [[:COND-true]
-          [:TRIG-lerp-color :bg 0x66665f "rgb"
-            [:sine-custom (fn [self ticks &] (* (:distance (((self :parent) :particle) :target) (self :coord)) ticks))]]]
+          [:TRIG-lerp-color :bg 0x77776f "rgb"
+            [:sine-custom (fn [self ticks &] (* (:distance (((self :parent) :particle) :target) (self :coord)) 3 ticks))]]]
         [[:COND-true] [:TRIG-scramble-glyph ".,;:'~*-=_+"]]
       ]
     })
     :lifetime 21
-    :spawn-count (Emitter :SCNT-dist-to-target)
+    :spawn-count (fn [self ticks ctx] (* (max ((ctx :bounds) :width) ((ctx :bounds) :height)) 2)) 
     :get-spawn-params (fn [self ticks ctx coord target]
-                        (let [angle (deg-to-rad (func (* 8 (/ (self :total-spawned) (:distance target coord)))))
-                              n (+ (% (self :total-spawned) (:distance coord target)) 1)]
+                        (let [dist  (max ((ctx :bounds) :width) ((ctx :bounds) :height))
+                              angle (deg-to-rad (func (* 4 (/ (self :total-spawned) dist))))
+                              n     (+ (% (self :total-spawned) dist) 1)]
                           [(:move-angle coord n angle) target]))
   }))
 

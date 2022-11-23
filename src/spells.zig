@@ -142,6 +142,7 @@ pub const CAST_CALL_UNDEAD = Spell{
     .name = "call undead",
     .cast_type = .Smite,
     .checks_will = true,
+    .animation = .{ .Particle = .{ .name = "beams-call-undead" } },
     .effect_type = .{
         .Custom = struct {
             fn f(caster_coord: Coord, _: Spell, opts: SpellOptions, target: Coord) void {
@@ -186,11 +187,6 @@ pub const CAST_CALL_UNDEAD = Spell{
                         undead.ai.work_area.items[0] = target;
                     }
 
-                    ui.Animation.apply(.{ .EncircleChar = .{
-                        .coord = caster_coord,
-                        .char = '!',
-                        .fg = colors.PALE_VIOLET_RED,
-                    } });
                     if (target_mob == state.player and state.player.cansee(caster_coord) and
                         !state.player.cansee(undead.coord))
                     {
