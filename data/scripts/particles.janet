@@ -309,7 +309,8 @@
                                      (if (string/find "a" rgb?) (set a (* a factor)))
                                      (put (self :tile) which (bor (blshift r 16) (blshift g 8) b))
                                      (put (self :tile) :bg-mix a))
-                :TRIG-lerp-color (fn [self ticks ctx which color2 rgb? how]
+                :TRIG-lerp-color (fn [self ticks ctx which color2 rgb? how &named inverse]
+                                   (default inverse false)
                                    (var factor
                                      (case (how 0)
                                        :sine-custom # (:sine (fn [self ticks ctx] ...))
@@ -327,6 +328,8 @@
                                            (if (< (- orig-dist curr-dist) 1)
                                              (break))
                                            (/ (- orig-dist curr-dist) (+ 0.0001 (* 1.5 orig-dist))))))
+                                   (if inverse
+                                     (set factor (- 1 factor)))
                                    (var ar (band (brshift ((self :original-tile) which) 16) 0xFF))
                                    (var ag (band (brshift ((self :original-tile) which)  8) 0xFF))
                                    (var ab (band (brshift ((self :original-tile) which)  0) 0xFF))
@@ -542,17 +545,18 @@
 
         [
          [:COND-explosion-still-expanding? 1] [:COND-completed-journey-percent-is? > 80]
-         [:TRIG-modify-color :bg "g" [:random-factor 0.80 0.81]]
+         [:TRIG-modify-color :bg "g" [:random-factor 0.70 0.71]]
         ]
         [[:COND-explosion-done-expanding? 1] [:TRIG-set-speed 0]]
-        [[:COND-explosion-done-expanding? 1] [:TRIG-reset-lifetime-once 5 0]]
-        [[:COND-explosion-done-expanding? 1] [:TRIG-lerp-color :bg 0x851e00 "rgb" [:completed-journey]]]
+        [[:COND-explosion-done-expanding? 1] [:TRIG-reset-lifetime-once 4 0]]
+        [[:COND-explosion-done-expanding? 1] [:TRIG-lerp-color :bg 0x851e00 "rgb" [:completed-lifetime 0.8] :inverse true]]
 
         [[:COND-explosion-done-expanding? 1] [:COND-percent? 1] [:TRIG-create-emitter (new-emitter @{
           :particle (new-particle @{
             :tile (new-tile @{ :ch " " :fg 0 :bg 0xffff00 :bg-mix 0.8 })
             # XXX: For some reason janet crashes (illegal instruction) when lifetime == 5 or lifetime == 7
             :lifetime 4
+            :speed 0
             :triggers @[ [[:COND-true] [:TRIG-lerp-color :bg 0x851e00 "rgb" [:completed-lifetime 2]]] ]
           })
           :lifetime 1
