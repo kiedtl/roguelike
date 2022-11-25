@@ -197,16 +197,17 @@
                           (+= ((self :coord) :y) (* speed (math/sin angle))))
 
                         (each trigger (self :triggers)
-                          (def conditions (slice trigger 0 (- (length trigger) 1)))
-                          (def action     (trigger (- (length trigger) 1)))
-                          (var satisfies-conditions true)
-                          (each trigger-cond conditions
-                            (if (not ((trigger-cond 0) self ticks ctx ;(slice trigger-cond 1)))
-                              (do
-                                (set satisfies-conditions false)
-                                (break))))
-                          (if satisfies-conditions
-                            ((action 0) self ticks ctx ;(slice action 1))))
+                          (if trigger (do
+                            (def conditions (slice trigger 0 (- (length trigger) 1)))
+                            (def action     (trigger (- (length trigger) 1)))
+                            (var satisfies-conditions true)
+                            (each trigger-cond conditions
+                              (if (not ((trigger-cond 0) self ticks ctx ;(slice trigger-cond 1)))
+                                (do
+                                  (set satisfies-conditions false)
+                                  (break))))
+                            (if satisfies-conditions
+                              ((action 0) self ticks ctx ;(slice action 1))))))
                         (++ (self :age))
 
                         (or (not (:contains? (ctx :bounds) (self :coord)))
@@ -245,6 +246,8 @@
 
                 :TRIG-custom (fn [self ticks ctx func & args]
                                (func self ticks ctx ;args))
+                :TRIG-reset-original-tile (fn [self ticks ctx]
+                                            (put self :original-tile (deepclone (self :tile))))
                 :TRIG-reset-lifetime-once (fn [self ticks ctx p-new-lifetime new-age]
                                             (if (not (self :lifetime))
                                               (do
@@ -453,6 +456,8 @@
                # :get-spawn-speed presets
                :SSPD-min-sin-ticks (fn [self ticks ctx speed]
                                      (max 0.1 (- speed (math/random) (math/abs (math/sin ticks)))))
+               :SSPD-min-sin-ticks2 (fn [self ticks ctx speed]
+                                      (max 0.1 (- speed (math/random) (math/abs (math/sin (deg-to-rad (* 10 ticks)))))))
 
                # :spawn-count presets
                :SCNT-dist-to-target (fn [self &] (+ (:distance ((self :particle) :coord) ((self :particle) :target)) 1))
@@ -535,38 +540,66 @@
                           [(:move-angle coord n angle) target]))
    }))
 
-(defn template-explosion []
+(defn template-explosion [&named embers? die-out? speed-variation-preset color1 color2]
+  (default embers?              true)
+  (default die-out?             true)
+  (default color1           0xffff00)
+  (default color2           0x851e00)
+  (default speed-variation-preset :1)
   (new-emitter @{
     :particle (new-particle @{
-      :tile (new-tile @{ :ch " " :fg 0 :bg 0xffff00 :bg-mix 0.8 })
+      :tile (new-tile @{ :ch " " :fg 0 :bg color1 :bg-mix 0.8 })
       :speed 2
       :triggers @[
         [[:COND-reached-target? true] [:TRIG-set-explosion-expand-status 1 true]]
 
         [
-         [:COND-explosion-still-expanding? 1] [:COND-completed-journey-percent-is? > 80]
-         [:TRIG-modify-color :bg "g" [:random-factor 0.70 0.71]]
+         [:COND-explosion-still-expanding? 1] [:COND-percent? 30]
+         [:TRIG-modify-color :bg "g" [:random-factor 0.70 0.72]]
         ]
-        [[:COND-explosion-done-expanding? 1] [:TRIG-set-speed 0]]
-        [[:COND-explosion-done-expanding? 1] [:TRIG-reset-lifetime-once 4 0]]
-        [[:COND-explosion-done-expanding? 1] [:TRIG-lerp-color :bg 0x851e00 "rgb" [:completed-lifetime 0.8] :inverse true]]
+        [[:COND-explosion-still-expanding? 1] [:TRIG-reset-original-tile]]
 
-        [[:COND-explosion-done-expanding? 1] [:COND-percent? 1] [:TRIG-create-emitter (new-emitter @{
-          :particle (new-particle @{
-            :tile (new-tile @{ :ch " " :fg 0 :bg 0xffff00 :bg-mix 0.8 })
-            # XXX: For some reason janet crashes (illegal instruction) when lifetime == 5 or lifetime == 7
-            :lifetime 4
-            :speed 0
-            :triggers @[ [[:COND-true] [:TRIG-lerp-color :bg 0x851e00 "rgb" [:completed-lifetime 2]]] ]
-          })
-          :lifetime 1
-        })]]
+        (if die-out?
+          [[:COND-explosion-done-expanding? 1] [:TRIG-reset-lifetime-once 3 0]]
+          nil)
+        #[[:COND-explosion-done-expanding? 1] [:TRIG-set-speed 0]]
+
+        (if die-out?
+          [[:COND-explosion-done-expanding? 1] [:TRIG-lerp-color :bg color2 "rgb" [:completed-lifetime 0.8] :inverse true]]
+          [[:COND-explosion-done-expanding? 1] [:TRIG-lerp-color :bg color2 "rgb" [:completed-journey]]])
+
+        (if embers?
+          [[:COND-explosion-done-expanding? 1] [:COND-percent? 1] [:TRIG-create-emitter (new-emitter @{
+            :particle (new-particle @{
+              :tile (new-tile @{ :ch " " :fg 0 :bg 0xffff00 :bg-mix 0.8 })
+              # XXX: For some reason janet crashes (illegal instruction) when lifetime == 5 or lifetime == 7
+              :lifetime 3
+              :speed 0
+              :triggers @[ [[:COND-true] [:TRIG-lerp-color :bg 0x851e00 "rgb" [:completed-lifetime 2]]] ]
+            })
+            :lifetime 1
+          })]]
+          nil)
       ]
     })
-    :lifetime (fn [self &] (:distance ((self :particle) :coord)  ((self :particle) :target)))
+    :lifetime 2
     :spawn-count (fn [&] 180)
     :get-spawn-params (:SPAR-explosion Emitter)
-    :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
+    :get-spawn-speed (case speed-variation-preset
+                       :1 (Emitter :SSPD-min-sin-ticks)
+                       :2 (Emitter :SSPD-min-sin-ticks2))
+  }))
+
+(defn template-lerp-single [color1 color2]
+  (new-emitter @{
+    :particle (new-particle @{
+      :tile (new-tile @{ :ch " " :bg color1 :bg-mix 0.9 })
+      :speed 0    :lifetime 3
+      :triggers @[
+        [[:COND-true] [:TRIG-lerp-color :bg color2 "rgb" [:completed-lifetime 1] :inverse true]]
+      ]
+    })
+    :lifetime 1
   }))
 
 (defn _statue-border-effect [color linedraw direction]
@@ -601,6 +634,7 @@
   "lzap-electric" @[ (template-lingering-zap "AEFHIKLMNTYZ13457*-=+~?!@#%&" 0x9fefff 0x7fc7ef 7) ]
   "lzap-golden" @[ (template-lingering-zap ".#.#.#." LIGHT_GOLD GOLD 12) ]
   "explosion-simple" @[ (template-explosion) ]
+  "explosion-fire1" @[ (template-explosion :embers? false :die-out? false :speed-variation-preset :2 :color1 0xff9f00) ]
   "zap-electric" @[(new-emitter @{
     :particle (new-particle @{
       :tile (new-tile @{ :ch "Z" :fg 0x9fefff :bg 0x7fc7ef :bg-mix 0.7 })
@@ -976,6 +1010,8 @@
                           [(:move-angle coord PLAYER_LOS_R (deg-to-rad (self :total-spawned))) target])
      })
   ]
+  "glow-white-gray" @[ (template-lerp-single 0xffffff 0x111111) ]
+  "glow-cream" @[ (template-lerp-single 0xffe377 0x332300) ]
 })
 
 (defn animation-init [initialx initialy targetx targety boundsx boundsy bounds-width bounds-height emitters-set]
