@@ -181,6 +181,7 @@
                 :require-los 1
                 :filter (fn [self ticks ctx] false)
 
+                :id 0
                 :parent nil
                 :dead false
                 :original-tile nil
@@ -306,9 +307,9 @@
                                      (var g (band (brshift (color1 which)  8) 0xFF))
                                      (var b (band (brshift (color1 which)  0) 0xFF))
                                      (var a (color1 :bg-mix))
-                                     (if (string/find "r" rgb?) (set r (math/floor (* r factor))))
-                                     (if (string/find "g" rgb?) (set g (math/floor (* g factor))))
-                                     (if (string/find "b" rgb?) (set b (math/floor (* b factor))))
+                                     (if (string/find "r" rgb?) (set r (math/floor (min 255 (* r factor)))))
+                                     (if (string/find "g" rgb?) (set g (math/floor (min 255 (* g factor)))))
+                                     (if (string/find "b" rgb?) (set b (math/floor (min 255 (* b factor)))))
                                      (if (string/find "a" rgb?) (set a (* a factor)))
                                      (put (self :tile) which (bor (blshift r 16) (blshift g 8) b))
                                      (put (self :tile) :bg-mix a))
@@ -413,6 +414,7 @@
                                  (put new :original-tile (deepclone tile)))
                                (put new :parent self)
                                (put new :speed (:get-spawn-speed self ticks ctx ((self :particle) :speed)))
+                               (put new :id (+ (* (math/random) 100) (math/random)))
                                (array/push (ctx :particles) new)
                                (++ (self :total-spawned))))
                            (put self :delay-until-spawn (self :spawn-delay))))
@@ -758,11 +760,15 @@
         :triggers @[
           [[:COND-true] [:TRIG-create-emitter (new-emitter @{
             :particle (new-particle @{
-              :tile (new-tile @{ :ch "Z" :fg 0x5f6600 :bg 0xd7ff00 :bg-mix 0.8 })
+              :tile (new-tile @{ :ch "Z" :fg 0x5f6600 :bg 0xd7ff00 :bg-mix 0.5 })
               :speed 0.3
               :triggers @[
                 [[:COND-percent? 40] [:TRIG-scramble-glyph SYMB1_CHARS]]
                 [[:COND-true] [:TRIG-modify-color :bg "a" [:completed-journey] :inverse true]]
+                [[:COND-reached-target? true] [:TRIG-set-speed 0]]
+                [[:COND-reached-target? true] [:TRIG-reset-lifetime-once 5 0]]
+                [[:COND-reached-target? true] [:TRIG-modify-color :bg "a" [:fixed-factor 1.3]]]
+                [[:COND-reached-target? true] [:TRIG-scramble-glyph " "]]
               ]
             })
             :lifetime 7
@@ -781,7 +787,17 @@
                                 n (+ (% (self :total-spawned) (:distance coord target)) 1)]
                             [(:move-angle coord n angle) target]))
     })
-    (new-emitter-from @{ :birth-delay 0 } (template-lingering-zap "*" 0xd7ff00 0 24 :bg-mix 0.9 :territorial true))
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch " " :fg 0xd7ff00 :bg-mix 0 })
+        :speed 1.2
+        :triggers @[ [[:COND-true] [:TRIG-set-glyph [:overall-cardinal-angle ["╿" "╽" "╾" "╼"]]]] ]
+      })
+      :birth-delay 22
+      :spawn-delay 3
+      :lifetime (fn [self &] (+ 3 (:distance ((self :particle) :coord) ((self :particle) :target))))
+      :spawn-count (Emitter :SCNT-dist-to-target)
+    })
   ]
   "spawn-emberlings" @[
     (template-lingering-zap " " 0xff8800 0 1 :bg-mix 0.5)
@@ -1030,27 +1046,44 @@
 
 (defn animation-tick [ctx ticks]
 
+  (var live-emitters 0)
   (loop [i :range [0 (length (ctx :emitters))]]
     (def emitter ((ctx :emitters) i))
     (if (not (emitter :dead))
       (if (:tick emitter ticks ctx)
-        (put emitter :dead true))))
+        (put emitter :dead true)
+        (++ live-emitters))))
+
+  # Make a note of each territorial particle for later
+  (var particle-map @{})
+  (each particle (ctx :particles)
+    (if (and (not (particle :dead))
+             (particle :territorial))
+      (let [particle-coord [(math/round ((particle :coord) :y))
+                            (math/round ((particle :coord) :x))]]
+        (put particle-map particle-coord (particle :id)))))
 
   (var particles @[])
-  (var particle-map @{})
   (loop [i :range [0 (length (ctx :particles))]]
     (def particle ((ctx :particles) i))
     (if (not (particle :dead))
       (do
+        (var trespassing false)
         (if (:tick particle ticks ctx)
           (put particle :dead true))
-        (if (and (not (particle :dead)) (particle :territorial))
-          (let [particle-coord [(math/round ((particle :coord) :y)) (math/round ((particle :coord) :x))]]
-            (if (particle-map particle-coord)
-              (put particle :dead true)
-              (put particle-map particle-coord true))))
+
+        # Filter out trespassers
+        (if (not (particle :dead))
+          (let [particle-coord [(math/round ((particle :coord) :y))
+                                (math/round ((particle :coord) :x))]]
+            (if (and (particle-map particle-coord)
+                     (not (= (particle-map particle-coord) (particle :id))))
+              (do (put particle :dead true)
+                  (set trespassing true)))))
+
         (if (and (:contains? (ctx :bounds) (particle :coord))
-                 (not (:filter particle ticks ctx)))
+                 (not (:filter particle ticks ctx))
+                 (not trespassing))
           (array/push particles @[((particle :tile) :ch)
                                   ((particle :tile) :fg)
                                   ((particle :tile) :bg)
@@ -1059,4 +1092,11 @@
                                   (math/round ((particle :coord) :y))
                                   (particle :require-los)])))))
   (shuffle-in-place particles)
+
+  # Insert filler particle if no live particles (but there are still live emitters)
+  # to prevent effect from ending too soon
+  (if (and (= (length particles) 0)
+           (> live-emitters 0))
+    (array/push particles @[" " 0 0 0 99999 99999 0]))
+
   particles)

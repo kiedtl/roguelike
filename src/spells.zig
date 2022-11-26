@@ -556,6 +556,7 @@ pub const BOLT_IRON = Spell{
 pub const BOLT_CRYSTAL = Spell{
     .id = "sp_crystal_shard",
     .name = "crystal shard",
+    .animation = .{ .Particle = .{ .name = "zap-crystal-chargeover" } },
     .cast_type = .Bolt,
     .bolt_dodgeable = true,
     .bolt_multitarget = false,
