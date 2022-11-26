@@ -225,20 +225,20 @@ pub const CAST_REGEN = Spell{
 
 // Spells that give specific status to specific class of mobs. {{{
 
-fn _createSpecificStatusSp(comptime id: []const u8, name: []const u8, s: Status) Spell {
+fn _createSpecificStatusSp(comptime id: []const u8, name: []const u8, anim: []const u8, s: Status) Spell {
     return Spell{
         .id = "sp_haste_" ++ id,
         .name = "haste " ++ name,
+        .animation = .{ .Particle = .{ .name = anim } },
         .cast_type = .Smite,
-        .smite_target_type = .{ .SpecificMob = id },
+        .smite_target_type = .{ .SpecificAlly = id },
         .effect_type = .{ .Status = s },
     };
 }
 
-pub const CAST_HASTE_EMBERLING = _createSpecificStatusSp("emberling", "emberling", .Fast);
-pub const CAST_HASTE_SPARKLING = _createSpecificStatusSp("sparkling", "sparkling", .Fast);
-pub const CAST_HASTE_DUSTLING = _createSpecificStatusSp("dustling", "dustling", .Fast);
-pub const CAST_ENRAGE_DUSTLING = _createSpecificStatusSp("dustling", "dustling", .Enraged);
+pub const CAST_ENRAGE_BONE_RAT = _createSpecificStatusSp("bone_rat", "bone rat", "glow-white-gray", .Enraged);
+pub const CAST_FIREPROOF_DUSTLING = _createSpecificStatusSp("dustling", "dustling", "glow-cream", .Fireproof);
+pub const CAST_ENRAGE_DUSTLING = _createSpecificStatusSp("dustling", "dustling", "glow-cream", .Enraged);
 
 // }}}
 
@@ -637,12 +637,12 @@ pub const BOLT_FIREBALL = Spell{
     }.f },
 };
 
-pub const CAST_HASTE_UNDEAD = Spell{
-    .id = "sp_hasten_undead",
-    .name = "hasten undead",
+pub const CAST_ENRAGE_UNDEAD = Spell{
+    .id = "sp_enrage_undead",
+    .name = "enrage undead",
     .cast_type = .Smite,
     .smite_target_type = .UndeadAlly,
-    .effect_type = .{ .Status = .Fast },
+    .effect_type = .{ .Status = .Enraged },
     .checks_will = false,
 };
 
@@ -947,7 +947,7 @@ pub const Spell = struct {
 
     // Only used if cast_type == .Smite.
     smite_target_type: union(enum) {
-        SpecificMob: []const u8, // mob's ID
+        SpecificAlly: []const u8, // mob's ID
         Self,
         UndeadAlly,
         Mob,
@@ -1147,13 +1147,13 @@ pub const Spell = struct {
                 };
 
                 switch (self.smite_target_type) {
-                    .Self, .Mob, .SpecificMob, .UndeadAlly => {
+                    .Self, .Mob, .SpecificAlly, .UndeadAlly => {
                         if (state.dungeon.at(target).mob == null) {
                             err.bug("Mage used smite-targeted spell on empty target!", .{});
                         }
 
-                        if (self.smite_target_type == .SpecificMob) {
-                            const wanted_id = self.smite_target_type.SpecificMob;
+                        if (self.smite_target_type == .SpecificAlly) {
+                            const wanted_id = self.smite_target_type.SpecificAlly;
                             const got_id = state.dungeon.at(target).mob.?.id;
                             if (!mem.eql(u8, got_id, wanted_id)) {
                                 err.bug("Mage cast {s} at wrong mob! (Wanted {s}; got {s})", .{

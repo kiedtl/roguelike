@@ -594,12 +594,13 @@
   (new-emitter @{
     :particle (new-particle @{
       :tile (new-tile @{ :ch " " :bg color1 :bg-mix 0.9 })
-      :speed 0    :lifetime 3
+      :speed 0    :lifetime 5
       :triggers @[
         [[:COND-true] [:TRIG-lerp-color :bg color2 "rgb" [:completed-lifetime 1] :inverse true]]
       ]
     })
     :lifetime 1
+    :get-spawn-params (fn [self ticks ctx coord target] [target coord])
   }))
 
 (defn _statue-border-effect [color linedraw direction]

@@ -525,8 +525,8 @@ pub const VapourMageTemplate = MobTemplate{
         },
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 8, .spell = &spells.BOLT_AIRBLAST, .power = 6 },
-            .{ .MP_cost = 2, .spell = &spells.CAST_HASTE_DUSTLING, .power = 10 },
+            //.{ .MP_cost = 8, .spell = &spells.BOLT_AIRBLAST, .power = 6 },
+            .{ .MP_cost = 2, .spell = &spells.CAST_FIREPROOF_DUSTLING, .power = 10 },
         },
         .max_MP = 15,
 
@@ -1067,7 +1067,7 @@ pub const BoneMageTemplate = MobTemplate{
         },
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 25, .spell = &spells.CAST_HASTE_UNDEAD, .duration = 5 },
+            .{ .MP_cost = 25, .spell = &spells.CAST_ENRAGE_BONE_RAT, .duration = 5 },
         },
         .max_MP = 20,
 
@@ -1128,7 +1128,7 @@ pub const DeathMageTemplate = MobTemplate{
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 10, .spell = &spells.CAST_HEAL_UNDEAD },
-            .{ .MP_cost = 20, .spell = &spells.CAST_HASTE_UNDEAD, .duration = 12 },
+            .{ .MP_cost = 20, .spell = &spells.CAST_ENRAGE_UNDEAD, .duration = 12 },
         },
         .max_MP = 20,
 
@@ -1204,7 +1204,6 @@ pub const BrimstoneMageTemplate = MobTemplate{
             .{ .MP_cost = 15, .spell = &spells.CAST_CREATE_EMBERLING },
             .{ .MP_cost = 1, .spell = &spells.CAST_FLAMMABLE, .power = 20 },
             .{ .MP_cost = 15, .spell = &spells.CAST_FRY, .power = 7 },
-            .{ .MP_cost = 10, .spell = &spells.CAST_HASTE_EMBERLING, .power = 7 },
         },
         .max_MP = 15,
 
@@ -1278,7 +1277,6 @@ pub const LightningMageTemplate = MobTemplate{
             .{ .MP_cost = 6, .spell = &spells.CAST_CREATE_SPARKLING },
             .{ .MP_cost = 10, .spell = &spells.BOLT_PARALYSE, .power = 2 },
             .{ .MP_cost = 3, .spell = &spells.CAST_DISCHARGE },
-            .{ .MP_cost = 15, .spell = &spells.CAST_HASTE_SPARKLING, .power = 7 },
         },
         .max_MP = 15,
 

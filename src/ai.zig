@@ -1284,7 +1284,8 @@ fn _isValidTargetForSpell(caster: *Mob, spell: SpellOptions, target: *Mob) bool 
 
     if (spell.spell.cast_type == .Smite) {
         switch (spell.spell.smite_target_type) {
-            .SpecificMob => |id| if (!mem.eql(u8, id, target.id)) return false,
+            .UndeadAlly => if (target.life_type != .Undead) return false,
+            .SpecificAlly => |id| if (!mem.eql(u8, id, target.id)) return false,
             else => {},
         }
     }
@@ -1319,10 +1320,9 @@ fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
     {
         return utils.getNearestCorpse(caster);
     } else if (spell.spell.cast_type == .Smite and
-        spell.spell.smite_target_type == .UndeadAlly)
+        (spell.spell.smite_target_type == .UndeadAlly or spell.spell.smite_target_type == .SpecificAlly))
     {
         return for (caster.allies.items) |ally| {
-            if (ally.life_type != .Undead) continue;
             if (_isValidTargetForSpell(caster, spell, ally))
                 return ally.coord;
         } else null;

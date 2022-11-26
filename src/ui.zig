@@ -644,7 +644,7 @@ fn _getMonsSpellsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, li
             if (spellcfg.spell.cast_type == .Smite) {
                 const target = @as([]const u8, switch (spellcfg.spell.smite_target_type) {
                     .Self => "$bself$.",
-                    .SpecificMob => |id| b: {
+                    .SpecificAlly => |id| b: {
                         const t = mobs.findMobById(id).?;
                         break :b t.mob.ai.profession_name orelse t.mob.species.name;
                     },
