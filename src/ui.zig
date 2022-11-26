@@ -3030,6 +3030,7 @@ pub const Animation = union(enum) {
         target: union(enum) {
             C: Coord,
             I: isize,
+            Z: usize,
         },
     },
 
@@ -3214,6 +3215,7 @@ pub const Animation = union(enum) {
                 const target = switch (anim.target) {
                     .C => |c| c,
                     .I => |n| Coord.new(anim.coord.x, anim.coord.y + @intCast(usize, n)),
+                    .Z => |n| Coord.new(anim.coord.x, anim.coord.y + n),
                 };
                 var ctx = janet.callFunction("animation-init", .{
                     anim.coord.x,                        anim.coord.y,

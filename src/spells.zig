@@ -247,6 +247,7 @@ pub const CAST_FIREBLAST = Spell{
     .name = "vomit flames",
     .cast_type = .Smite,
     .smite_target_type = .Self,
+    .animation = .{ .Particle = .{ .name = "explosion-fire1", .target = .Power } },
     .check_has_effect = struct {
         fn f(caster: *Mob, opts: SpellOptions, target: Coord) bool {
             return opts.power >= target.distance(caster.coord);
@@ -995,6 +996,10 @@ pub const Spell = struct {
 
         pub const Particle = struct {
             name: []const u8,
+            target: union(enum) {
+                Target,
+                Power,
+            } = .Target,
         };
     };
 
@@ -1098,7 +1103,10 @@ pub const Spell = struct {
                         ui.Animation.apply(.{ .Particle = .{
                             .name = particle_anim.name,
                             .coord = caster_coord,
-                            .target = .{ .C = last_processed_coord },
+                            .target = switch (particle_anim.target) {
+                                .Target => .{ .C = last_processed_coord },
+                                .Power => .{ .Z = opts.power },
+                            },
                         } });
                     },
                 };
@@ -1141,7 +1149,10 @@ pub const Spell = struct {
                         ui.Animation.apply(.{ .Particle = .{
                             .name = particle_anim.name,
                             .coord = caster_coord,
-                            .target = .{ .C = target },
+                            .target = switch (particle_anim.target) {
+                                .Target => .{ .C = target },
+                                .Power => .{ .Z = opts.power },
+                            },
                         } });
                     },
                 };

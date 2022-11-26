@@ -178,7 +178,7 @@
                 :triggers @[]
                 :lifetime nil
                 :territorial false
-                :require-los 0
+                :require-los 1
                 :filter (fn [self ticks ctx] false)
 
                 :parent nil
