@@ -74,9 +74,9 @@ pub fn fireBurst(ground0: Coord, max_radius: usize, opts: FireBurstOpts) void {
                     }, .{
                         .noun = "The fiery blast",
                         .strs = &[_]DamageStr{
-                            items._dmgstr(0, "scorches", "BUG", ""),
-                            items._dmgstr(100, "burns", "BUG", ""),
-                            items._dmgstr(300, "incinerates", "BUG", ""),
+                            items._dmgstr(0, "scorches", "scorches", ""),
+                            items._dmgstr(100, "burns", "burns", ""),
+                            items._dmgstr(300, "incinerates", "incinerates", ""),
                         },
                     });
                 }
