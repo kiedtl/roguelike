@@ -618,6 +618,7 @@ pub const BOLT_LIGHTNING = Spell{
 pub const BOLT_FIREBALL = Spell{
     .id = "sp_fireball",
     .name = "fireball",
+    .animation = .{ .Particle = .{ .name = "zap-fire-messy" } },
     .cast_type = .Bolt,
     // Has effect if:
     //    mob isn't fire-immune
@@ -644,6 +645,7 @@ pub const BOLT_FIREBALL = Spell{
 pub const CAST_ENRAGE_UNDEAD = Spell{
     .id = "sp_enrage_undead",
     .name = "enrage undead",
+    .animation = .{ .Particle = .{ .name = "glow-white-gray" } },
     .cast_type = .Smite,
     .smite_target_type = .UndeadAlly,
     .effect_type = .{ .Status = .Enraged },
@@ -653,6 +655,7 @@ pub const CAST_ENRAGE_UNDEAD = Spell{
 pub const CAST_HEAL_UNDEAD = Spell{
     .id = "sp_heal_undead",
     .name = "heal undead",
+    .animation = .{ .Particle = .{ .name = "chargeover-white-pink" } },
     .cast_type = .Smite,
     .smite_target_type = .UndeadAlly,
     .check_has_effect = _hasEffectHealUndead,
@@ -680,6 +683,7 @@ fn _effectHealUndead(caster: Coord, _: Spell, _: SpellOptions, coord: Coord) voi
 pub const CAST_HASTEN_ROT = Spell{
     .id = "sp_hasten_rot",
     .name = "hasten rot",
+    .animation = .{ .Particle = .{ .name = "glow-purple" } },
     .cast_type = .Smite,
     .smite_target_type = .Corpse,
     .effect_type = .{ .Custom = _effectHastenRot },
@@ -700,6 +704,7 @@ fn _effectHastenRot(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
 pub const CAST_RESURRECT_FIRE = Spell{
     .id = "sp_burnt_offering",
     .name = "burnt offering",
+    .animation = .{ .Particle = .{ .name = "glow-orange-red" } },
     .cast_type = .Smite,
     .smite_target_type = .Corpse,
     .effect_type = .{ .Custom = _resurrectFire },
@@ -723,6 +728,7 @@ fn _resurrectFire(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
 pub const CAST_RESURRECT_FROZEN = Spell{
     .id = "sp_raise_frozen",
     .name = "frozen resurrection",
+    .animation = .{ .Particle = .{ .name = "glow-blue-dblue" } },
     .cast_type = .Smite,
     .smite_target_type = .Corpse,
     .effect_type = .{ .Custom = _resurrectFrozen },
@@ -752,6 +758,7 @@ fn _resurrectFrozen(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
 pub const CAST_POLAR_LAYER = Spell{
     .id = "sp_polar_casing",
     .name = "polar casing",
+    .animation = .{ .Particle = .{ .name = "chargeover-blue-out" } },
     .cast_type = .Smite,
     .smite_target_type = .Mob,
     .check_has_effect = _hasEffectPolarLayer,
@@ -782,6 +789,7 @@ fn _effectPolarLayer(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void 
 pub const CAST_RESURRECT_NORMAL = Spell{
     .id = "sp_raise",
     .name = "resurrection",
+    .animation = .{ .Particle = .{ .name = "pulse-twice-explosion", .target = .Origin, .coord_is_target = true } },
     .cast_type = .Smite,
     .smite_target_type = .Corpse,
     .effect_type = .{ .Custom = _resurrectNormal },
@@ -801,6 +809,7 @@ fn _resurrectNormal(_: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
 pub const CAST_DISCHARGE = Spell{
     .id = "sp_discharge",
     .name = "static discharge",
+    .animation = .{ .Particle = .{ .name = "pulse-twice-electric-explosion" } },
     .cast_type = .Smite,
     .check_has_effect = struct {
         fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
@@ -840,23 +849,17 @@ pub const CAST_BARTENDER_FERMENT = Spell{
     .effect_type = .{ .Status = .Drunk },
     //.checks_will = true,
 };
-pub const CAST_FRY = Spell{
-    .id = "sp_fry",
-    .name = "ignite",
-    .cast_type = .Smite,
-    .effect_type = .{ .Status = .Fire },
-    .checks_will = true,
-};
 pub const CAST_FLAMMABLE = Spell{
     .id = "sp_flammable",
     .name = "flammabilification",
+    .animation = .{ .Particle = .{ .name = "glow-orange-red" } },
     .cast_type = .Smite,
     .effect_type = .{ .Status = .Flammable },
     .checks_will = true,
 };
 
 const STATUE_SPELL_ANIMATION = .{
-    .Particle = .{ .name = "lzap-golden" },
+    .Particle = .{ .name = "zap-statues" },
     // .Type2 = .{
     //     .chars = ".#.#.",
     //     .fg = colors.LIGHT_GOLD,
@@ -897,6 +900,7 @@ pub const CAST_FERMENT = Spell{
 pub const CAST_FEAR = Spell{
     .id = "sp_fear",
     .name = "fear",
+    .animation = .{ .Particle = .{ .name = "glow-pink" } },
     .cast_type = .Smite,
     .effect_type = .{ .Status = .Fear },
     .checks_will = true,
@@ -904,6 +908,7 @@ pub const CAST_FEAR = Spell{
 pub const CAST_PAIN = Spell{
     .id = "sp_pain",
     .name = "pain",
+    .animation = .{ .Particle = .{ .name = "glow-pink" } },
     .cast_type = .Smite,
     .effect_type = .{ .Status = .Pain },
     .checks_will = true,
@@ -999,9 +1004,12 @@ pub const Spell = struct {
 
         pub const Particle = struct {
             name: []const u8,
+            coord_is_target: bool = false,
             target: union(enum) {
                 Target,
                 Power,
+                Z: usize,
+                Origin,
             } = .Target,
         };
     };
@@ -1105,10 +1113,12 @@ pub const Spell = struct {
                     .Particle => |particle_anim| {
                         ui.Animation.apply(.{ .Particle = .{
                             .name = particle_anim.name,
-                            .coord = caster_coord,
+                            .coord = if (particle_anim.coord_is_target) last_processed_coord else caster_coord,
                             .target = switch (particle_anim.target) {
                                 .Target => .{ .C = last_processed_coord },
                                 .Power => .{ .Z = opts.power },
+                                .Z => |n| .{ .Z = n },
+                                .Origin => .{ .C = caster_coord },
                             },
                         } });
                     },
@@ -1151,10 +1161,12 @@ pub const Spell = struct {
                     .Particle => |particle_anim| {
                         ui.Animation.apply(.{ .Particle = .{
                             .name = particle_anim.name,
-                            .coord = caster_coord,
+                            .coord = if (particle_anim.coord_is_target) target else caster_coord,
                             .target = switch (particle_anim.target) {
                                 .Target => .{ .C = target },
                                 .Power => .{ .Z = opts.power },
+                                .Z => |n| .{ .Z = n },
+                                .Origin => .{ .C = caster_coord },
                             },
                         } });
                     },

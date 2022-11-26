@@ -1204,7 +1204,7 @@ pub const BrimstoneMageTemplate = MobTemplate{
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 15, .spell = &spells.CAST_CREATE_EMBERLING },
             .{ .MP_cost = 1, .spell = &spells.CAST_FLAMMABLE, .power = 20 },
-            .{ .MP_cost = 15, .spell = &spells.CAST_FRY, .power = 7 },
+            .{ .MP_cost = 7, .spell = &spells.BOLT_FIREBALL, .power = 3, .duration = 3 },
         },
         .max_MP = 15,
 

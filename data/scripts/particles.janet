@@ -179,6 +179,7 @@
                 :lifetime nil
                 :territorial false
                 :require-los 1
+                :require-nonwall true
                 :filter (fn [self ticks ctx] false)
 
                 :id 0
@@ -443,9 +444,9 @@
                               (default inverse false)
                               (default radius :distance)
                               (fn [self ticks ctx coord target]
-                                (let [lrad (case radius :distance (:distance coord target) radius)
+                                (let [lrad (case radius :distance (+ 1 (:distance coord target)) radius)
                                       angle (deg-to-rad (* 1 (/ (self :total-spawned) lrad)))
-                                      n (+ (% (self :total-spawned) lrad) 1)]
+                                      n (+ (% (self :total-spawned) lrad) 0)]
                                   (if inverse
                                     [(:move-angle target n angle) target]
                                     [(:move-angle coord n angle) target]))))
@@ -463,7 +464,7 @@
 
                # :spawn-count presets
                :SCNT-dist-to-target (fn [self &] (+ (:distance ((self :particle) :coord) ((self :particle) :target)) 1))
-               :SCNT-dist-to-target-360 (fn [self &] (+ (* 360 (:distance ((self :particle) :coord) ((self :particle) :target)) 1)))
+               :SCNT-dist-to-target-360 (fn [self &] (* 360 (+ 1 (:distance ((self :particle) :coord) ((self :particle) :target)))))
 
                :COND-age-eq? (fn [self ticks ctx num]
                                (= (self :age) num))
@@ -887,29 +888,29 @@
     (_beams-single-emitter (fn [deg] (+ 360 deg)))
     (_beams-single-emitter (fn [deg] (- 360 deg)))
   ]
-  "pulse-twice-sparkles" @[
+  "pulse-twice-electric-explosion" @[
     (new-emitter @{
       :particle (new-particle @{
-        :tile (new-tile @{ :ch ":" :fg 0x888888 :bg 0x33332f :bg-mix 0.8 })
+        :tile (new-tile @{ :ch ":" :fg ELEC_BLUE1 :bg 0x2f2f33 :bg-mix 0.9 })
         :speed 0    :lifetime 45   :territorial true
-        :triggers @[ [[:COND-true] [:TRIG-lerp-color :bg 0xffffff "rgb" [:sine-custom (fn [self ticks &] (* 8.2 ticks))]]] ]
+        :triggers @[ [[:COND-true] [:TRIG-lerp-color :bg ELEC_BLUE2 "rgb" [:sine-custom (fn [self ticks &] (* 8.2 ticks))]]] ]
       })
       :lifetime 1
       :spawn-count (Emitter :SCNT-dist-to-target-360)
-      :get-spawn-params (:SPAR-circle Emitter)
+      :get-spawn-params ((Emitter :SPAR-circle) :inverse true :radius 2)
     })
     (new-emitter @{
       :particle (new-particle @{
-        :tile (new-tile @{ :ch ":" :fg 0xaaaaaa :bg 0xffffff :bg-mix 1 })
+        :tile (new-tile @{ :ch ":" :fg ELEC_BLUE1 :bg ELEC_BLUE2 :bg-mix 1 })
         :speed 0    :lifetime 12   :territorial true
         :triggers @[
           [[:COND-true] [:TRIG-scramble-glyph "~!@#$%^&*()_+`-={}|[]\\;':\",./<>?"]]
-          [[:COND-true] [:TRIG-modify-color :bg "a" [:completed-lifetime 1]]]
+          [[:COND-true] [:TRIG-modify-color :bg "rgb" [:completed-lifetime 1]]]
         ]
       })
       :lifetime 1
       :spawn-count (Emitter :SCNT-dist-to-target-360)
-      :get-spawn-params (:SPAR-circle Emitter)
+      :get-spawn-params ((Emitter :SPAR-circle) :inverse true :radius 2)
       :birth-delay 45
     })
   ]
@@ -921,8 +922,8 @@
         :triggers @[
           [[:COND-true]
             [:TRIG-modify-color :bg "a" [:custom :origtile
-              (fn [self &] (- 1 (/ (:distance-euc (((self :parent) :particle) :coord) (self :coord))
-                                   (:distance-euc (((self :parent) :particle) :coord) (self :target)))))]]]
+              (fn [self &] (max 0.15 (- 1 (/ (:distance-euc (((self :parent) :particle) :coord) (self :coord))
+                                             (:distance-euc (((self :parent) :particle) :coord) (self :target))))))]]]
           [[:COND-true] [:TRIG-lerp-color :bg 0xffffff "rgb" [:sine-custom (fn [self ticks &] (* 8.1 ticks))]]]
         ]
       })
@@ -993,6 +994,7 @@
   "chargeover-blue-pink"    @[ (template-chargeover SYMB1_CHARS   0x4488aa 0x440000 :direction :in :speed 0.5 :lifetime 12) ]
   "chargeover-purple-green" @[ (template-chargeover SYMB1_CHARS   0x995599 0x33ff33 :direction :in :speed 0.5 :lifetime 12) ]
   "chargeover-lines"        @[ (template-chargeover   "|_-=\\/"   0xcacbca 0xffffff                :speed 0.3             ) ]
+  "chargeover-blue-out"     @[ (template-chargeover SYMB1_CHARS   0x11ddff 0x001e85 :direction :out :speed 0.5 :lifetime 12) ]
   "beams-ring-distraction" @[
     (new-emitter @{
       :particle (new-particle @{
@@ -1028,7 +1030,11 @@
      })
   ]
   "glow-white-gray" @[ (template-lerp-single 0xffffff 0x111111) ]
-  "glow-cream" @[ (template-lerp-single 0xffe377 0x332300) ]
+  "glow-cream"      @[ (template-lerp-single 0xffe377 0x332300) ]
+  "glow-purple"     @[ (template-lerp-single 0x995599 0x662266) ]
+  "glow-orange-red" @[ (template-lerp-single 0xffdd11 0x851e00) ]
+  "glow-blue-dblue" @[ (template-lerp-single 0x11ddff 0x001e85) ]
+  "glow-pink"       @[ (template-lerp-single 0xff9999 0x333333) ]
 })
 
 (defn animation-init [initialx initialy targetx targety boundsx boundsy bounds-width bounds-height emitters-set]
@@ -1090,7 +1096,8 @@
                                   ((particle :tile) :bg-mix)
                                   (math/round ((particle :coord) :x))
                                   (math/round ((particle :coord) :y))
-                                  (particle :require-los)])))))
+                                  (particle :require-los)
+                                  (particle :require-nonwall)])))))
   (shuffle-in-place particles)
 
   # Insert filler particle if no live particles (but there are still live emitters)
