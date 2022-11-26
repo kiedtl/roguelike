@@ -471,6 +471,7 @@ fn _effectConjureBL(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
 pub const BOLT_PARALYSE = Spell{
     .id = "sp_elec_paralyse",
     .name = "paralysing zap",
+    .animation = .{ .Particle = .{ .name = "zap-electric-charging" } },
     .cast_type = .Bolt,
     .noise = .Medium,
     .check_has_effect = struct {
@@ -537,7 +538,7 @@ pub const BOLT_IRON = Spell{
     .cast_type = .Bolt,
     .bolt_dodgeable = true,
     .bolt_multitarget = false,
-    .animation = .{ .Simple = .{ .char = '+' } },
+    .animation = .{ .Particle = .{ .name = "zap-iron-inacc" } },
     .noise = .Medium,
     .effect_type = .{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
