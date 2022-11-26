@@ -942,6 +942,7 @@ pub const AncientMageTemplate = MobTemplate{
             .{ .MP_cost = 9, .spell = &spells.CAST_SUMMON_ENEMY },
         },
         .max_MP = 30,
+        .base_night_vision = true,
 
         .deaf = false,
         .life_type = .Undead,
