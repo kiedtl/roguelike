@@ -577,6 +577,7 @@ fn _effectBoltCrystal(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coor
 pub const BOLT_LIGHTNING = Spell{
     .id = "sp_elec_bolt",
     .name = "bolt of electricity",
+    .animation = .{ .Particle = .{ .name = "lzap-electric" } },
     .cast_type = .Bolt,
     .bolt_dodgeable = false,
     .bolt_multitarget = true,
@@ -590,7 +591,6 @@ pub const BOLT_LIGHTNING = Spell{
     //         .approach = 2,
     //     },
     // },
-    .animation = .{ .Particle = .{ .name = "lzap-electric" } },
     .check_has_effect = struct {
         fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
             const mob = state.dungeon.at(target).mob.?;
