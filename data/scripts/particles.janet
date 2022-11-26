@@ -959,12 +959,12 @@
         :speed 2
         :triggers @[ [[:COND-parent-dead? 1] [:TRIG-die]] ]
       })
-      :lifetime (fn [self &] (* 2 (:distance ((self :particle) :coord) ((self :particle) :target))))
+      :lifetime (fn [self &] (+ 8 (:distance ((self :particle) :coord) ((self :particle) :target))))
       :spawn-count 5
       :get-spawn-tile (fn [self ticks ctx tile]
                         (new-tile @{ :ch (tile :ch) :fg (tile :fg) :bg (tile :bg) :bg-mix (math/random) }))
       :get-spawn-params (fn [self ticks ctx coord target]
-                          (let [angle (- (:angle target coord)    (* 0.10 (random-choose [-1 0 1])))
+                          (let [angle (- (:angle target coord)    (* 0.20 (random-choose [-1 0 1])))
                                 dist  (- (:distance coord target) (* (math/random) 1.5))
                                 ntarg (:move-angle coord dist angle)]
                             [coord ntarg]))

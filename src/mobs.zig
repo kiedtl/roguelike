@@ -525,7 +525,7 @@ pub const VapourMageTemplate = MobTemplate{
         },
 
         .spells = &[_]SpellOptions{
-            //.{ .MP_cost = 8, .spell = &spells.BOLT_AIRBLAST, .power = 6 },
+            .{ .MP_cost = 8, .spell = &spells.BOLT_AIRBLAST, .power = 6 },
             .{ .MP_cost = 2, .spell = &spells.CAST_FIREPROOF_DUSTLING, .power = 10 },
         },
         .max_MP = 15,

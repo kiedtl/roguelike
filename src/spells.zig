@@ -269,6 +269,7 @@ pub const CAST_FIREBLAST = Spell{
 pub const BOLT_AIRBLAST = Spell{
     .id = "sp_airblast",
     .name = "airblast",
+    .animation = .{ .Particle = .{ .name = "zap-air-messy" } },
     .cast_type = .Bolt,
     .bolt_dodgeable = false,
     .bolt_multitarget = false,
