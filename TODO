@@ -1031,16 +1031,16 @@ x Write rest of docs/manual
   x Tutorial
 x Playtest game throughout, especially CAV and make adjustments
 *** v2.0.0 release ***
-- Animations (w/ particle engine)
-  - Paralysing zap
+x Animations (w/ particle engine)
+  x Paralysing zap
   x Fire bolts
-  - Flammabilification
-  - Fry
-  - Pain AoE effect
+  x Flammabilification
+  x Fry
+  x Pain AoE effect
   x Regular explosions
   x Fire explosions
-  - Walls disintegrating (for Lair map)
-  - Electricity blasts
+  x Walls disintegrating (for Lair map)
+  x Electricity blasts
 - Night creatures
   - Night creature enclaves
   - Popups explaining UI elements on hover
@@ -1069,19 +1069,24 @@ x Playtest game throughout, especially CAV and make adjustments
 - UI
   x Menu to invoke patterns (via SPACE)
   - Map dynamic popups/annotations
-    - Label usage of special abilities
-    - Label aquirement/disaquirement of a status effect
-    - Label new items
+    - Label: usage of special abilities
+    - Label: aquirement/disaquirement of a status effect
+    - Label: new items or dungeon features in view
   - Escape menu
     - List of visited/unvisited floors
     - Status/mob/item description lookup screen
     - Keybinding help "?" screen
+    - About screen (or just in log area?)
 - Corpse-related mechanics
   - Enemies alerted of player if finding recently-killed corpse w/ player nearby
   - Patrols and guards report corpses
   - Cleaners clean area and move corpse to side of room
   - Coroner comes, examines corpse, & registers threat
   - Fix: don't spawn corpses when removing enemies near staircases
+- Lava and Water rework
+  - Rework as terrain
+  - Addition of submerged creatures
+  - Lava flans
 - Laboratory rework
   - New mapgen
   - Enh. sparklings in upper levels
@@ -1122,10 +1127,6 @@ x Playtest game throughout, especially CAV and make adjustments
     - Laboratory: alchemist bending over workbench, with barrels of glycerin,
       nitric acid, and sulfuric acid and a pile of potions of decimation
       nearby.
-- Lava and Water rework
-  - Rework as terrain
-  - Addition of submerged creatures
-  - Lava flans
 - Analyse mob and loot distribution and tweak weights
 - Basalt monsters (-fiends, -mages, -lings)?
   - Plus: ability that confers status on player that causes Living Stone to
