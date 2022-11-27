@@ -613,6 +613,10 @@ pub const Rect = struct {
 
     pub const ArrayList = std.ArrayList(Rect);
 
+    pub fn new(start: Coord, w: usize, h: usize) Rect {
+        return Rect{ .start = start, .width = w, .height = h };
+    }
+
     pub fn add(a: *const Rect, b: *const Rect) Rect {
         assert(b.start.z == 0);
 

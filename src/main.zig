@@ -491,7 +491,10 @@ fn readInput() !bool {
                 //state.player.innate_resists.rElec += 25;
                 //state.player.addStatus(.Drunk, 0, .{ .Tmp = 20 });
                 //state.message(.Info, "Lorem ipsum, dolor sit amet. Lorem ipsum, dolor sit amet.. Lorem ipsum, dolor sit amet. {}", .{rng.int(usize)});
-                _ = ui.drawYesNoPrompt("foo, bar, baz. Lorem ipsum, dolor sit amet. Dolem Lipsum, solor ait smet. Iorem Aipsum, lolor dit asset.", .{});
+                //_ = ui.drawYesNoPrompt("foo, bar, baz. Lorem ipsum, dolor sit amet. Dolem Lipsum, solor ait smet. Iorem Aipsum, lolor dit asset.", .{});
+                ui.labels.append(.{ .text = "foo bar baz", .loc = .{ .Mob = state.player } }) catch err.wat();
+                ui.drawLabels();
+                display.present();
                 break :blk false;
             },
             .F8 => b: {

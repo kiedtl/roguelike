@@ -32,6 +32,7 @@ const SurfaceItem = types.SurfaceItem;
 const Stat = types.Stat;
 const Resistance = types.Resistance;
 const Coord = types.Coord;
+const Rect = types.Rect;
 const Direction = types.Direction;
 const Tile = types.Tile;
 const Status = types.Status;
@@ -55,10 +56,28 @@ pub const MAP_WIDTH_R = 14;
 pub const MIN_HEIGHT = (MAP_HEIGHT_R * 2) + LOG_HEIGHT + 2;
 pub const MIN_WIDTH = (MAP_WIDTH_R * 4) + LEFT_INFO_WIDTH + 2 + 1;
 
+pub const MapLabel = struct {
+    text: []const u8,
+    loc: union(enum) {
+        Coord: Coord,
+        Mob: *Mob,
+    },
+    win_lines: []const u8 = "",
+    win_loc: ?Rect = null,
+
+    pub fn getLoc(self: @This()) Coord {
+        return switch (self.loc) {
+            .Coord => |c| c,
+            .Mob => |m| m.coord,
+        };
+    }
+};
+pub var labels: std.ArrayList(MapLabel) = undefined;
+
 pub var map_win: struct {
     map: Console,
 
-    // For Examine mode, directional choose, etc.
+    // For Examine mode, directional choose, labels, etc.
     annotations: Console,
 
     // For particle animations and such.
@@ -114,6 +133,8 @@ pub fn init() !void {
     zap_win.init();
     map_win.init();
     clearScreen();
+
+    labels = @TypeOf(labels).init(state.GPA.allocator());
 }
 
 // Check that the window is the minimum size.
@@ -162,6 +183,7 @@ pub fn deinit() !void {
     try display.deinit();
     zap_win.deinit();
     map_win.deinit();
+    labels.deinit();
 }
 
 pub const DisplayWindow = enum { Whole, PlayerInfo, Main, Log, Zap };
@@ -1437,6 +1459,47 @@ fn coordToScreenFromRefpoint(coord: Coord, refpoint: Coord) ?Coord {
 
 fn coordToScreen(coord: Coord) ?Coord {
     return coordToScreenFromRefpoint(coord, state.player.coord);
+}
+
+pub fn drawLabels() void {
+    map_win.annotations.clear();
+
+    defer map_win.annotations.clear();
+
+    for (labels.items) |*label| {
+        if (label.win_loc == null) {
+            const w_loc = coordToScreen(label.getLoc()) orelse continue;
+            const possibles = [_]struct { s: []const u8, r: Rect }{
+                .{ .s = "─┐", .r = Rect.new(Coord.new(w_loc.x -| (label.text.len + 3), w_loc.y -| 1), 1, label.text.len + 3) },
+                .{ .s = "┌─", .r = Rect.new(Coord.new(w_loc.x, w_loc.y -| 1), 1, label.text.len + 3) },
+                .{ .s = "─", .r = Rect.new(Coord.new(w_loc.x -| (label.text.len + 2), w_loc.y), 1, label.text.len + 2) },
+                .{ .s = "─", .r = Rect.new(Coord.new(w_loc.x + (label.text.len + 2), w_loc.y), 1, label.text.len + 2) },
+                .{ .s = "─┘", .r = Rect.new(Coord.new(w_loc.x -| (label.text.len + 3), w_loc.y + 1), 1, label.text.len + 3) },
+                .{ .s = "└─", .r = Rect.new(Coord.new(w_loc.x, w_loc.y -| 1), 1, label.text.len + 3) },
+            };
+            const chosen = for (possibles) |possible| {
+                if (possible.r.end().x > map_win.annotations.width or
+                    possible.r.start.x == 0 or
+                    possible.r.end().y > map_win.annotations.height or
+                    possible.r.start.y == 0)
+                {
+                    continue;
+                }
+                if (for (labels.items) |other_label| {
+                    if (other_label.win_loc != null and other_label.win_loc.?.intersects(&possible.r, 0))
+                        break true;
+                } else false) {
+                    continue;
+                }
+                break possible;
+            } else continue;
+            label.win_loc = chosen.r;
+            label.win_lines = chosen.s;
+        }
+        _ = map_win.annotations.drawTextAt(label.win_loc.?.start.x, label.win_loc.?.start.y, label.text, .{ .fg = 0, .bg = 0xeeeeee });
+    }
+
+    defer map_win.map.renderFullyW(.Main);
 }
 
 fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display.Cell {
