@@ -62,8 +62,9 @@ pub const MapLabel = struct {
         Coord: Coord,
         Mob: *Mob,
     },
-    win_lines: []const u8 = "",
+    win_lines: u21 = 0,
     win_loc: ?Rect = null,
+    win_side: usize = 0,
 
     pub fn getLoc(self: @This()) Coord {
         return switch (self.loc) {
@@ -1464,18 +1465,17 @@ fn coordToScreen(coord: Coord) ?Coord {
 pub fn drawLabels() void {
     map_win.annotations.clear();
 
-    defer map_win.annotations.clear();
-
     for (labels.items) |*label| {
         if (label.win_loc == null) {
             const w_loc = coordToScreen(label.getLoc()) orelse continue;
-            const possibles = [_]struct { s: []const u8, r: Rect }{
-                .{ .s = "─┐", .r = Rect.new(Coord.new(w_loc.x -| (label.text.len + 3), w_loc.y -| 1), 1, label.text.len + 3) },
-                .{ .s = "┌─", .r = Rect.new(Coord.new(w_loc.x, w_loc.y -| 1), 1, label.text.len + 3) },
-                .{ .s = "─", .r = Rect.new(Coord.new(w_loc.x -| (label.text.len + 2), w_loc.y), 1, label.text.len + 2) },
-                .{ .s = "─", .r = Rect.new(Coord.new(w_loc.x + (label.text.len + 2), w_loc.y), 1, label.text.len + 2) },
-                .{ .s = "─┘", .r = Rect.new(Coord.new(w_loc.x -| (label.text.len + 3), w_loc.y + 1), 1, label.text.len + 3) },
-                .{ .s = "└─", .r = Rect.new(Coord.new(w_loc.x, w_loc.y -| 1), 1, label.text.len + 3) },
+            const t_len = label.text.len;
+            const possibles = [_]struct { z: usize, s: u21, r: Rect }{
+                .{ .z = 0, .s = '┐', .r = Rect.new(Coord.new(w_loc.x -| (t_len + 3), w_loc.y -| 1), t_len + 5, 1) },
+                .{ .z = 1, .s = '┌', .r = Rect.new(Coord.new(w_loc.x, w_loc.y -| 1), t_len + 3, 1) },
+                .{ .z = 0, .s = '─', .r = Rect.new(Coord.new(w_loc.x -| (t_len + 5), w_loc.y), t_len + 5, 1) },
+                .{ .z = 1, .s = '─', .r = Rect.new(Coord.new(w_loc.x + 2, w_loc.y), t_len + 5, 1) },
+                .{ .z = 0, .s = '┘', .r = Rect.new(Coord.new(w_loc.x -| (t_len + 3), w_loc.y + 1), t_len + 5, 1) },
+                .{ .z = 1, .s = '└', .r = Rect.new(Coord.new(w_loc.x, w_loc.y -| 1), 1, t_len + 5) },
             };
             const chosen = for (possibles) |possible| {
                 if (possible.r.end().x > map_win.annotations.width or
@@ -1493,13 +1493,26 @@ pub fn drawLabels() void {
                 }
                 break possible;
             } else continue;
-            label.win_loc = chosen.r;
             label.win_lines = chosen.s;
+            label.win_loc = chosen.r;
+            label.win_side = chosen.z;
         }
-        _ = map_win.annotations.drawTextAt(label.win_loc.?.start.x, label.win_loc.?.start.y, label.text, .{ .fg = 0, .bg = 0xeeeeee });
+
+        const l_startx = label.win_loc.?.start.x;
+        const l_starty = label.win_loc.?.start.y;
+        if (label.win_side == 0) {
+            _ = map_win.annotations.drawTextAtf(l_startx, l_starty, " {s} ", .{label.text}, .{ .fg = 0, .bg = 0x777777 });
+            _ = map_win.annotations.drawTextAt(l_startx + label.text.len + 2, l_starty, "█", .{ .fg = 0x555555 });
+            map_win.annotations.setCell(l_startx + label.text.len + 3, l_starty, .{ .ch = label.win_lines, .fg = 0x555555, .fl = .{ .wide = true } });
+        } else if (label.win_side == 1) {
+            map_win.annotations.setCell(l_startx, l_starty, .{ .ch = label.win_lines, .fg = 0x555555, .fl = .{ .wide = true } });
+            _ = map_win.annotations.drawTextAt(l_startx + 2, l_starty, "█", .{ .fg = 0x555555 });
+            _ = map_win.annotations.drawTextAtf(l_startx + 3, l_starty, " {s} ", .{label.text}, .{ .fg = 0, .bg = 0x777777 });
+        }
     }
 
-    defer map_win.map.renderFullyW(.Main);
+    map_win.annotations.renderFullyW(.Main);
+    display.present();
 }
 
 fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display.Cell {
@@ -1574,6 +1587,7 @@ pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
             // if out of bounds on the map, draw a black tile
             if (y < 0 or x < 0 or y >= HEIGHT or x >= WIDTH) {
                 map_win.map.setCell(cursorx, cursory, .{ .bg = colors.BG, .fl = .{ .wide = true } });
+                map_win.map.setCell(cursorx + 1, cursory, .{ .fl = .{ .skip = true } });
                 continue;
             }
 
@@ -1617,6 +1631,7 @@ pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
 
             tile.fl.wide = true;
             map_win.map.setCell(cursorx, cursory, tile);
+            map_win.map.setCell(cursorx + 1, cursory, .{ .fl = .{ .skip = true } });
         }
     }
 }

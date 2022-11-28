@@ -38,18 +38,20 @@ pub const Cell = struct {
     sfg: u32 = 0,
     sbg: u32 = 0,
 
-    // Used for Console{}
+    // Used only for Console.render*() funcs. No effect in present().
+    //
     // TODO: move to flags
     trans: bool = false,
 
     fl: Flags = .{},
 
     pub const Flags = packed struct {
-        underline: bool = false,
-        strikethrough: bool = false,
-        bold: bool = false,
-        italic: bool = false,
+        // underline: bool = false,
+        // strikethrough: bool = false,
+        // bold: bool = false,
+        // italic: bool = false,
         wide: bool = false,
+        skip: bool = false,
     };
 };
 
@@ -345,6 +347,8 @@ pub fn present() void {
     switch (driver) {
         .Termbox => driver_m.tb_present(),
         .SDL2 => {
+            comptime assert(font.FONT_W_WIDTH == font.FONT_WIDTH * 2);
+
             var pixels: [*c]u32 = undefined;
             var pitch: c_int = undefined;
 
@@ -357,15 +361,9 @@ pub fn present() void {
                 var px: usize = 0;
                 while (dx < width()) : (dx += 1) {
                     const cell = grid[dy * width() + dx];
-                    const skip_next = cell.fl.wide and grid[dy * w_width + dx + 1].fl.wide;
 
-                    if (!dirty[dy * width() + dx]) {
-                        if (skip_next) {
-                            dx += 1;
-                            px += font.FONT_W_WIDTH;
-                        } else {
-                            px += font.FONT_WIDTH;
-                        }
+                    if (!dirty[dy * width() + dx] or cell.fl.skip) {
+                        px += font.FONT_WIDTH;
                         continue;
                     }
 
@@ -391,9 +389,7 @@ pub fn present() void {
                         }
                     }
 
-                    if (skip_next)
-                        dx += 1;
-                    px += f_width;
+                    px += font.FONT_WIDTH;
                 }
                 py += font.FONT_HEIGHT;
             }
