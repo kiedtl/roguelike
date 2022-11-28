@@ -65,6 +65,7 @@ pub const MapLabel = struct {
     win_lines: u21 = 0,
     win_loc: ?Rect = null,
     win_side: usize = 0,
+    created_on: usize = 0,
 
     pub fn getLoc(self: @This()) Coord {
         return switch (self.loc) {
@@ -1462,8 +1463,19 @@ fn coordToScreen(coord: Coord) ?Coord {
     return coordToScreenFromRefpoint(coord, state.player.coord);
 }
 
+pub fn addLabelFor(mob: *Mob, text: []const u8) void {
+    labels.append(.{ .text = text, .loc = .{ .Mob = mob }, .created_on = state.ticks }) catch unreachable;
+}
+
 pub fn drawLabels() void {
     map_win.annotations.clear();
+
+    var new_labels = @TypeOf(labels).init(state.GPA.allocator());
+    while (labels.popOrNull()) |label|
+        if (label.created_on == state.ticks)
+            new_labels.append(label) catch unreachable;
+    labels.deinit();
+    labels = new_labels;
 
     for (labels.items) |*label| {
         if (label.win_loc == null) {
@@ -1510,9 +1522,6 @@ pub fn drawLabels() void {
             _ = map_win.annotations.drawTextAtf(l_startx + 3, l_starty, " {s} ", .{label.text}, .{ .fg = 0, .bg = 0x777777 });
         }
     }
-
-    map_win.annotations.renderFullyW(.Main);
-    display.present();
 }
 
 fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display.Cell {
@@ -1648,6 +1657,7 @@ pub fn drawNoPresent() void {
 
     drawInfo(moblist.items, pinfo_win.startx, pinfo_win.starty, pinfo_win.endx, pinfo_win.endy);
     drawMap(moblist.items, state.player.coord);
+    drawLabels();
     map_win.map.renderFullyW(.Main);
 
     const log_console = drawLog(log_window.startx, log_window.endx, alloc);
