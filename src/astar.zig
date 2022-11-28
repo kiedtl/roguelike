@@ -185,6 +185,6 @@ test "coordFromPtr" {
 
     for (&cases) |expected| {
         const got = coordFromPtr(&nodes[expected.y][expected.x], begin, z);
-        testing.expectEqual(expected, got);
+        try testing.expectEqual(expected, got);
     }
 }

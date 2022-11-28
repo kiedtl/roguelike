@@ -131,33 +131,27 @@ pub fn LinkedList(comptime T: type) type {
     };
 }
 
-// Use a GPA for tests as then we get an error when there's a memory leak
-const GPA = std.heap.GeneralPurposeAllocator(.{});
-
 test "basic LinkedList test" {
     const Node = ScalarNode(usize);
     const List = LinkedList(Node);
 
-    var gpa = GPA{};
-    defer testing.expect(!gpa.deinit());
-
-    var list = List.init(&gpa.allocator);
+    var list = List.init(testing.allocator);
     defer list.deinit();
 
     const datas = [_]usize{ 5, 22, 623, 1, 36 };
     for (datas) |data| {
         try list.append(Node{ .data = data });
-        testing.expectEqual(data, list.last().?.data);
+        try testing.expectEqual(data, list.last().?.data);
     }
 
-    testing.expectEqual(datas[0], list.first().?.data);
-    testing.expectEqual(datas[4], list.last().?.data);
+    try testing.expectEqual(datas[0], list.first().?.data);
+    try testing.expectEqual(datas[4], list.last().?.data);
 
     // TODO: separate iterator test into its own test
     var index: usize = 0;
     var iter = list.iterator();
     while (iter.next()) |node| : (index += 1) {
-        testing.expectEqual(datas[index], node.data);
+        try testing.expectEqual(datas[index], node.data);
     }
 
     iter = list.iterator();
@@ -166,19 +160,16 @@ test "basic LinkedList test" {
             list.remove(node);
     }
 
-    testing.expectEqual(list.nth(0).?.data, 5);
-    testing.expectEqual(list.nth(1).?.data, 623);
-    testing.expectEqual(list.nth(2).?.data, 1);
+    try testing.expectEqual(list.nth(0).?.data, 5);
+    try testing.expectEqual(list.nth(1).?.data, 623);
+    try testing.expectEqual(list.nth(2).?.data, 1);
 }
 
 test "basic nth() usage" {
     const Node = ScalarNode(usize);
     const List = LinkedList(Node);
 
-    var gpa = GPA{};
-    defer testing.expect(!gpa.deinit());
-
-    var list = List.init(&gpa.allocator);
+    var list = List.init(testing.allocator);
     defer list.deinit();
 
     try list.append(Node{ .data = 23 });
@@ -188,10 +179,10 @@ test "basic nth() usage" {
     try list.append(Node{ .data = 12 });
     try list.append(Node{ .data = 72 });
 
-    testing.expectEqual(list.nth(0).?.data, 23);
-    testing.expectEqual(list.nth(1).?.data, 0);
-    testing.expectEqual(list.nth(2).?.data, 98);
-    testing.expectEqual(list.nth(3).?.data, 11);
-    testing.expectEqual(list.nth(4).?.data, 12);
-    testing.expectEqual(list.nth(5).?.data, 72);
+    try testing.expectEqual(list.nth(0).?.data, 23);
+    try testing.expectEqual(list.nth(1).?.data, 0);
+    try testing.expectEqual(list.nth(2).?.data, 98);
+    try testing.expectEqual(list.nth(3).?.data, 11);
+    try testing.expectEqual(list.nth(4).?.data, 12);
+    try testing.expectEqual(list.nth(5).?.data, 72);
 }
