@@ -66,6 +66,9 @@ pub const MapLabel = struct {
     win_loc: ?Rect = null,
     win_side: usize = 0,
     created_on: usize = 0,
+    age_frames: usize = 0,
+
+    pub const MAX_FRAME_AGE = 200;
 
     pub fn getLoc(self: @This()) Coord {
         return switch (self.loc) {
@@ -1472,12 +1475,14 @@ pub fn drawLabels() void {
 
     var new_labels = @TypeOf(labels).init(state.GPA.allocator());
     while (labels.popOrNull()) |label|
-        if (label.created_on == state.ticks)
+        if (label.created_on == state.ticks and label.age_frames < MapLabel.MAX_FRAME_AGE)
             new_labels.append(label) catch unreachable;
     labels.deinit();
     labels = new_labels;
 
     for (labels.items) |*label| {
+        label.age_frames += 1;
+
         if (label.win_loc == null) {
             const w_loc = coordToScreen(label.getLoc()) orelse continue;
             const t_len = label.text.len;
@@ -1510,16 +1515,24 @@ pub fn drawLabels() void {
             label.win_side = chosen.z;
         }
 
+        const text = if (label.age_frames < label.text.len / 2)
+            label.text[0 .. label.age_frames * 2]
+        else if (label.age_frames > (MapLabel.MAX_FRAME_AGE - (label.text.len * 2)))
+            label.text[0 .. (MapLabel.MAX_FRAME_AGE - label.age_frames) / 2]
+        else
+            label.text;
         const l_startx = label.win_loc.?.start.x;
         const l_starty = label.win_loc.?.start.y;
+
         if (label.win_side == 0) {
-            _ = map_win.annotations.drawTextAtf(l_startx, l_starty, " {s} ", .{label.text}, .{ .fg = 0, .bg = 0x777777 });
-            _ = map_win.annotations.drawTextAt(l_startx + label.text.len + 2, l_starty, "█", .{ .fg = 0x555555 });
-            map_win.annotations.setCell(l_startx + label.text.len + 3, l_starty, .{ .ch = label.win_lines, .fg = 0x555555, .fl = .{ .wide = true } });
+            const actual_startx = l_startx + (label.text.len - text.len);
+            _ = map_win.annotations.drawTextAtf(actual_startx, l_starty, " {s} ", .{text}, .{ .fg = 0, .bg = 0x777777 });
+            _ = map_win.annotations.drawTextAt(actual_startx + text.len + 2, l_starty, "█", .{ .fg = 0x555555 });
+            map_win.annotations.setCell(actual_startx + text.len + 3, l_starty, .{ .ch = label.win_lines, .fg = 0x555555, .fl = .{ .wide = true } });
         } else if (label.win_side == 1) {
             map_win.annotations.setCell(l_startx, l_starty, .{ .ch = label.win_lines, .fg = 0x555555, .fl = .{ .wide = true } });
             _ = map_win.annotations.drawTextAt(l_startx + 2, l_starty, "█", .{ .fg = 0x555555 });
-            _ = map_win.annotations.drawTextAtf(l_startx + 3, l_starty, " {s} ", .{label.text}, .{ .fg = 0, .bg = 0x777777 });
+            _ = map_win.annotations.drawTextAtf(l_startx + 3, l_starty, " {s} ", .{text}, .{ .fg = 0, .bg = 0x777777 });
         }
     }
 }
