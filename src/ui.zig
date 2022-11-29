@@ -1509,11 +1509,15 @@ pub fn drawLabels() void {
 
     var new_labels = @TypeOf(labels).init(state.GPA.allocator());
     while (labels.popOrNull()) |label|
-        if (state.ticks < label.created_on + label.max_tick_age and
-            label.age < label.max_age and
-            coordToScreen(label.getLoc()) != null)
-        {
+        if (label.age < label.max_age and coordToScreen(label.getLoc()) != null) {
             new_labels.append(label) catch unreachable;
+
+            // Set age to near max if label is too old, to begin slidein
+            // animation
+            if (state.ticks < label.created_on + label.max_tick_age) {
+                const last = &new_labels.items[new_labels.items.len - 1];
+                last.max_age = last.age + last.text.len * 2;
+            }
         };
     labels.deinit();
     labels = new_labels;
