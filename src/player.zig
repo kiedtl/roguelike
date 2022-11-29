@@ -191,27 +191,6 @@ pub fn checkForGarbage() void {
 // - If they haven't existed in memory before as an .Immediate tile, check for
 //   things of interest (items, machines, etc) and announce their presence.
 pub fn bookkeepingFOV() void {
-    const SBuf = StackBuffer(u8, 64);
-    const Announcement = struct { count: usize, name: SBuf };
-    const AList = std.ArrayList(Announcement);
-
-    var announcements = AList.init(state.GPA.allocator());
-    defer announcements.deinit();
-
-    const S = struct {
-        // Add to announcements if it doesn't exist, otherwise increment counter
-        pub fn _addToAnnouncements(name: SBuf, buf: *AList) void {
-            for (buf.items) |*announcement| {
-                if (mem.eql(u8, announcement.name.constSlice(), name.constSlice())) {
-                    announcement.count += 1;
-                    return;
-                }
-            }
-            // Add, since we didn't encounter it before
-            buf.append(.{ .count = 1, .name = name }) catch err.wat();
-        }
-    };
-
     for (state.player.fov) |row, y| for (row) |_, x| {
         if (state.player.fov[y][x] > 0) {
             const fc = Coord.new2(state.player.coord.z, x, y);
@@ -225,45 +204,18 @@ pub fn bookkeepingFOV() void {
             if (!was_already_seen) {
                 if (state.dungeon.at(fc).surface) |surf| switch (surf) {
                     .Machine => |m| if (m.announce)
-                        S._addToAnnouncements(SBuf.init(m.name), &announcements),
+                        //S._addToAnnouncements(SBuf.init(m.name), &announcements),
+                        ui.labels.addAt(fc, m.name, .{ .color = colors.LIGHT_STEEL_BLUE }),
                     .Stair => |s| if (s != null)
-                        S._addToAnnouncements(SBuf.init("upward stairs"), &announcements),
+                        //S._addToAnnouncements(SBuf.init("upward stairs"), &announcements),
+                        ui.labels.addAt(fc, state.levelinfo[s.?.z].name, .{ .color = colors.GOLD }),
                     else => {},
                 };
-
-                // Disabled for now. Will need to decide if it's worth keeping in
-                // later on from player feedback.
-                //
-                // Reasons to keep:
-                //   - New players realize that there are items they can pick up/use
-                //   - ???
-                //
-                // Reasons to remove:
-                //   - Clutters map, especially in loot-heavy areas (vaults, Cavern)
-                //
-                // if (state.dungeon.itemsAt(fc).last()) |item|
-                //     if (item.announce()) {
-                //         const n = item.shortName() catch err.wat();
-                //         S._addToAnnouncements(n, &announcements);
-                //     };
             }
 
             memorizeTile(fc, .Immediate);
         }
     };
-
-    if (announcements.items.len > 7) {
-        state.message(.Info, "Found {} objects.", .{announcements.items.len});
-    } else {
-        for (announcements.items) |ann| {
-            const n = ann.name.constSlice();
-            if (ann.count == 1) {
-                state.message(.Info, "Found a {s}.", .{n});
-            } else {
-                state.message(.Info, "Found {} {s}.", .{ ann.count, n });
-            }
-        }
-    }
 }
 
 // Player auto-attack.

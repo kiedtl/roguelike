@@ -45,6 +45,7 @@ const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
 // -----------------------------------------------------------------------------
+pub const labels = @import("ui/labels.zig");
 
 pub const FRAMERATE = 1000 / 30;
 
@@ -57,29 +58,6 @@ pub const MAP_WIDTH_R = 14;
 
 pub const MIN_HEIGHT = (MAP_HEIGHT_R * 2) + LOG_HEIGHT + 2;
 pub const MIN_WIDTH = (MAP_WIDTH_R * 4) + LEFT_INFO_WIDTH + 2 + 1;
-
-pub const MapLabel = struct {
-    text: []const u8,
-    loc: union(enum) {
-        Coord: Coord,
-        Mob: *Mob,
-    },
-    win_lines: u21 = 0,
-    win_loc: ?Rect = null,
-    win_side: usize = 0,
-    created_on: usize = 0,
-    age: usize = 0,
-    max_age: usize = 1000 / FRAMERATE * 7, // ~7 seconds
-    max_tick_age: usize = 1,
-
-    pub fn getLoc(self: @This()) Coord {
-        return switch (self.loc) {
-            .Coord => |c| c,
-            .Mob => |m| m.coord,
-        };
-    }
-};
-pub var labels: std.ArrayList(MapLabel) = undefined;
 
 pub var map_win: struct {
     map: Console,
@@ -141,7 +119,7 @@ pub fn init() !void {
     map_win.init();
     clearScreen();
 
-    labels = @TypeOf(labels).init(state.GPA.allocator());
+    labels.labels = @TypeOf(labels.labels).init(state.GPA.allocator());
 }
 
 // Check that the window is the minimum size.
@@ -190,7 +168,7 @@ pub fn deinit() !void {
     try display.deinit();
     zap_win.deinit();
     map_win.deinit();
-    labels.deinit();
+    labels.labels.deinit();
 }
 
 pub const DisplayWindow = enum { Whole, PlayerInfo, Main, Log, Zap };
@@ -1447,7 +1425,7 @@ fn _mobs_can_see(moblist: []const *Mob, coord: Coord) bool {
     return false;
 }
 
-fn coordToScreenFromRefpoint(coord: Coord, refpoint: Coord) ?Coord {
+pub fn coordToScreenFromRefpoint(coord: Coord, refpoint: Coord) ?Coord {
     if (coord.x < refpoint.x -| MAP_WIDTH_R or coord.x > refpoint.x + MAP_WIDTH_R or
         coord.y < refpoint.y -| MAP_HEIGHT_R or coord.y > refpoint.y + MAP_HEIGHT_R)
     {
@@ -1464,91 +1442,8 @@ fn coordToScreenFromRefpoint(coord: Coord, refpoint: Coord) ?Coord {
     return r;
 }
 
-fn coordToScreen(coord: Coord) ?Coord {
+pub fn coordToScreen(coord: Coord) ?Coord {
     return coordToScreenFromRefpoint(coord, state.player.coord);
-}
-
-pub fn addLabelFor(mob: *Mob, text: []const u8) void {
-    labels.append(.{ .text = text, .loc = .{ .Mob = mob }, .created_on = state.ticks }) catch unreachable;
-}
-
-pub fn _setLabelWindowLocation(label: *MapLabel) !void {
-    const w_loc = coordToScreen(label.getLoc()) orelse return error.NoValidRect;
-    const t_len = label.text.len;
-    const possibles = [_]struct { z: usize, s: u21, r: Rect }{
-        .{ .z = 0, .s = '┐', .r = Rect.new(Coord.new(w_loc.x -| (t_len + 3), w_loc.y -| 1), t_len + 5, 1) },
-        .{ .z = 1, .s = '┌', .r = Rect.new(Coord.new(w_loc.x, w_loc.y -| 1), t_len + 3, 1) },
-        .{ .z = 0, .s = '─', .r = Rect.new(Coord.new(w_loc.x -| (t_len + 5), w_loc.y), t_len + 5, 1) },
-        .{ .z = 1, .s = '─', .r = Rect.new(Coord.new(w_loc.x + 2, w_loc.y), t_len + 5, 1) },
-        .{ .z = 0, .s = '┘', .r = Rect.new(Coord.new(w_loc.x -| (t_len + 3), w_loc.y + 1), t_len + 5, 1) },
-        .{ .z = 1, .s = '└', .r = Rect.new(Coord.new(w_loc.x, w_loc.y -| 1), 1, t_len + 5) },
-    };
-    const chosen = for (possibles) |possible| {
-        if (possible.r.end().x > map_win.annotations.width or
-            possible.r.start.x == 0 or
-            possible.r.end().y > map_win.annotations.height or
-            possible.r.start.y == 0)
-        {
-            continue;
-        }
-        if (for (labels.items) |other_label| {
-            if (other_label.win_loc != null and other_label.win_loc.?.intersects(&possible.r, 0))
-                break true;
-        } else false) {
-            continue;
-        }
-        break possible;
-    } else return error.NoValidRect;
-    label.win_lines = chosen.s;
-    label.win_loc = chosen.r;
-    label.win_side = chosen.z;
-}
-
-pub fn drawLabels() void {
-    map_win.annotations.clear();
-
-    var new_labels = @TypeOf(labels).init(state.GPA.allocator());
-    while (labels.popOrNull()) |label|
-        if (label.age < label.max_age and coordToScreen(label.getLoc()) != null) {
-            new_labels.append(label) catch unreachable;
-
-            // Set age to near max if label is too old, to begin slidein
-            // animation
-            if (state.ticks < label.created_on + label.max_tick_age) {
-                const last = &new_labels.items[new_labels.items.len - 1];
-                last.max_age = last.age + last.text.len * 2;
-            }
-        };
-    labels.deinit();
-    labels = new_labels;
-
-    for (labels.items) |*label| {
-        if (label.win_loc == null) {
-            _setLabelWindowLocation(label) catch continue;
-        }
-
-        label.age += 1;
-
-        const text = if (label.age < label.text.len / 2)
-            label.text[0 .. label.age * 2]
-        else if (label.age > (label.max_age - (label.text.len / 2)))
-            label.text[0 .. (label.max_age - label.age) * 2]
-        else
-            label.text;
-        const l_startx = label.win_loc.?.start.x;
-        const l_starty = label.win_loc.?.start.y;
-
-        if (label.win_side == 0) {
-            const actual_startx = l_startx + (label.text.len - text.len);
-            _ = map_win.annotations.drawTextAtf(actual_startx, l_starty, " {s} ", .{text}, .{ .fg = 0, .bg = 0x777777 });
-            _ = map_win.annotations.drawTextAt(actual_startx + text.len + 2, l_starty, "█", .{ .fg = 0x555555 });
-            map_win.annotations.setCell(actual_startx + text.len + 3, l_starty, .{ .ch = label.win_lines, .fg = 0x555555, .fl = .{ .wide = true } });
-        } else if (label.win_side == 1) {
-            map_win.annotations.setCell(l_startx, l_starty, .{ .ch = label.win_lines, .fg = 0x555555, .fl = .{ .wide = true } });
-            _ = map_win.annotations.drawTextAt(l_startx + 2, l_starty, "█", .{ .fg = 0x555555 });
-            _ = map_win.annotations.drawTextAtf(l_startx + 3, l_starty, " {s} ", .{text}, .{ .fg = 0, .bg = 0x777777 });
-        }
-    }
 }
 
 fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display.Cell {
@@ -1684,7 +1579,7 @@ pub fn drawNoPresent() void {
 
     drawInfo(moblist.items, pinfo_win.startx, pinfo_win.starty, pinfo_win.endx, pinfo_win.endy);
     drawMap(moblist.items, state.player.coord);
-    drawLabels();
+    labels.drawLabels();
     map_win.map.renderFullyW(.Main);
 
     const log_console = drawLog(log_window.startx, log_window.endx, alloc);
