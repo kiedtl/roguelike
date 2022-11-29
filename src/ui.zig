@@ -1475,8 +1475,12 @@ pub fn drawLabels() void {
 
     var new_labels = @TypeOf(labels).init(state.GPA.allocator());
     while (labels.popOrNull()) |label|
-        if (label.created_on == state.ticks and label.age_frames < MapLabel.MAX_FRAME_AGE)
+        if (label.created_on <= state.ticks + 2 and
+            label.age_frames < MapLabel.MAX_FRAME_AGE and
+            coordToScreen(label.getLoc()) != null)
+        {
             new_labels.append(label) catch unreachable;
+        };
     labels.deinit();
     labels = new_labels;
 
@@ -1517,8 +1521,8 @@ pub fn drawLabels() void {
 
         const text = if (label.age_frames < label.text.len / 2)
             label.text[0 .. label.age_frames * 2]
-        else if (label.age_frames > (MapLabel.MAX_FRAME_AGE - (label.text.len * 2)))
-            label.text[0 .. (MapLabel.MAX_FRAME_AGE - label.age_frames) / 2]
+        else if (label.age_frames > (MapLabel.MAX_FRAME_AGE - (label.text.len / 2)))
+            label.text[0 .. (MapLabel.MAX_FRAME_AGE - label.age_frames) * 2]
         else
             label.text;
         const l_startx = label.win_loc.?.start.x;
