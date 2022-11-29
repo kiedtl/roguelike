@@ -428,7 +428,7 @@ fn readInput() !bool {
     ui.draw();
     if (state.state == .Quit) return error.Quit;
 
-    const action_taken = switch (display.waitForEvent(1000 / 30) catch return false) {
+    const action_taken = switch (display.waitForEvent(ui.FRAMERATE) catch return false) {
         .Quit => {
             state.state = .Quit;
             return false;

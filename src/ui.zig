@@ -46,6 +46,8 @@ const WIDTH = state.WIDTH;
 
 // -----------------------------------------------------------------------------
 
+pub const FRAMERATE = 1000 / 30;
+
 pub const LEFT_INFO_WIDTH: usize = 30;
 //pub const RIGHT_INFO_WIDTH: usize = 24;
 pub const LOG_HEIGHT = 6;
@@ -66,9 +68,9 @@ pub const MapLabel = struct {
     win_loc: ?Rect = null,
     win_side: usize = 0,
     created_on: usize = 0,
-    age_frames: usize = 0,
-
-    pub const MAX_FRAME_AGE = 200;
+    age: usize = 0,
+    max_age: usize = 1000 / FRAMERATE * 7, // ~7 seconds
+    max_tick_age: usize = 1,
 
     pub fn getLoc(self: @This()) Coord {
         return switch (self.loc) {
@@ -1470,13 +1472,45 @@ pub fn addLabelFor(mob: *Mob, text: []const u8) void {
     labels.append(.{ .text = text, .loc = .{ .Mob = mob }, .created_on = state.ticks }) catch unreachable;
 }
 
+pub fn _setLabelWindowLocation(label: *MapLabel) !void {
+    const w_loc = coordToScreen(label.getLoc()) orelse return error.NoValidRect;
+    const t_len = label.text.len;
+    const possibles = [_]struct { z: usize, s: u21, r: Rect }{
+        .{ .z = 0, .s = '┐', .r = Rect.new(Coord.new(w_loc.x -| (t_len + 3), w_loc.y -| 1), t_len + 5, 1) },
+        .{ .z = 1, .s = '┌', .r = Rect.new(Coord.new(w_loc.x, w_loc.y -| 1), t_len + 3, 1) },
+        .{ .z = 0, .s = '─', .r = Rect.new(Coord.new(w_loc.x -| (t_len + 5), w_loc.y), t_len + 5, 1) },
+        .{ .z = 1, .s = '─', .r = Rect.new(Coord.new(w_loc.x + 2, w_loc.y), t_len + 5, 1) },
+        .{ .z = 0, .s = '┘', .r = Rect.new(Coord.new(w_loc.x -| (t_len + 3), w_loc.y + 1), t_len + 5, 1) },
+        .{ .z = 1, .s = '└', .r = Rect.new(Coord.new(w_loc.x, w_loc.y -| 1), 1, t_len + 5) },
+    };
+    const chosen = for (possibles) |possible| {
+        if (possible.r.end().x > map_win.annotations.width or
+            possible.r.start.x == 0 or
+            possible.r.end().y > map_win.annotations.height or
+            possible.r.start.y == 0)
+        {
+            continue;
+        }
+        if (for (labels.items) |other_label| {
+            if (other_label.win_loc != null and other_label.win_loc.?.intersects(&possible.r, 0))
+                break true;
+        } else false) {
+            continue;
+        }
+        break possible;
+    } else return error.NoValidRect;
+    label.win_lines = chosen.s;
+    label.win_loc = chosen.r;
+    label.win_side = chosen.z;
+}
+
 pub fn drawLabels() void {
     map_win.annotations.clear();
 
     var new_labels = @TypeOf(labels).init(state.GPA.allocator());
     while (labels.popOrNull()) |label|
-        if (label.created_on <= state.ticks + 2 and
-            label.age_frames < MapLabel.MAX_FRAME_AGE and
+        if (state.ticks < label.created_on + label.max_tick_age and
+            label.age < label.max_age and
             coordToScreen(label.getLoc()) != null)
         {
             new_labels.append(label) catch unreachable;
@@ -1485,44 +1519,16 @@ pub fn drawLabels() void {
     labels = new_labels;
 
     for (labels.items) |*label| {
-        label.age_frames += 1;
-
         if (label.win_loc == null) {
-            const w_loc = coordToScreen(label.getLoc()) orelse continue;
-            const t_len = label.text.len;
-            const possibles = [_]struct { z: usize, s: u21, r: Rect }{
-                .{ .z = 0, .s = '┐', .r = Rect.new(Coord.new(w_loc.x -| (t_len + 3), w_loc.y -| 1), t_len + 5, 1) },
-                .{ .z = 1, .s = '┌', .r = Rect.new(Coord.new(w_loc.x, w_loc.y -| 1), t_len + 3, 1) },
-                .{ .z = 0, .s = '─', .r = Rect.new(Coord.new(w_loc.x -| (t_len + 5), w_loc.y), t_len + 5, 1) },
-                .{ .z = 1, .s = '─', .r = Rect.new(Coord.new(w_loc.x + 2, w_loc.y), t_len + 5, 1) },
-                .{ .z = 0, .s = '┘', .r = Rect.new(Coord.new(w_loc.x -| (t_len + 3), w_loc.y + 1), t_len + 5, 1) },
-                .{ .z = 1, .s = '└', .r = Rect.new(Coord.new(w_loc.x, w_loc.y -| 1), 1, t_len + 5) },
-            };
-            const chosen = for (possibles) |possible| {
-                if (possible.r.end().x > map_win.annotations.width or
-                    possible.r.start.x == 0 or
-                    possible.r.end().y > map_win.annotations.height or
-                    possible.r.start.y == 0)
-                {
-                    continue;
-                }
-                if (for (labels.items) |other_label| {
-                    if (other_label.win_loc != null and other_label.win_loc.?.intersects(&possible.r, 0))
-                        break true;
-                } else false) {
-                    continue;
-                }
-                break possible;
-            } else continue;
-            label.win_lines = chosen.s;
-            label.win_loc = chosen.r;
-            label.win_side = chosen.z;
+            _setLabelWindowLocation(label) catch continue;
         }
 
-        const text = if (label.age_frames < label.text.len / 2)
-            label.text[0 .. label.age_frames * 2]
-        else if (label.age_frames > (MapLabel.MAX_FRAME_AGE - (label.text.len / 2)))
-            label.text[0 .. (MapLabel.MAX_FRAME_AGE - label.age_frames) * 2]
+        label.age += 1;
+
+        const text = if (label.age < label.text.len / 2)
+            label.text[0 .. label.age * 2]
+        else if (label.age > (label.max_age - (label.text.len / 2)))
+            label.text[0 .. (label.max_age - label.age) * 2]
         else
             label.text;
         const l_startx = label.win_loc.?.start.x;
