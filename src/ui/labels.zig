@@ -1,4 +1,5 @@
 const std = @import("std");
+const math = std.math;
 
 const colors = @import("../colors.zig");
 const state = @import("../state.zig");
@@ -16,7 +17,7 @@ pub const MapLabel = struct {
         Mob: *Mob,
     },
     color: u32,
-    max_age: usize = 200, // ~7 seconds, 1000 / FRAMERATE * 7
+    max_age: usize = 1000 / ui.FRAMERATE * 6, // ~6 seconds
     max_tick_age: usize,
     malloced: bool,
 
@@ -39,6 +40,7 @@ pub const MapLabel = struct {
     }
 };
 pub var labels: std.ArrayList(MapLabel) = undefined;
+pub var last_player_position: Coord = Coord.new(0, 0);
 
 pub const LabelOpts = struct {
     color: u32 = 0x888888,
@@ -63,7 +65,7 @@ fn add(loc: std.meta.fieldInfo(MapLabel, .loc).field_type, text: []const u8, opt
         .loc = loc,
         .max_tick_age = opts.last_for,
         .color = opts.color,
-        .created_on = state.ticks,
+        .created_on = state.player_turns,
         .malloced = malloced,
     }) catch unreachable;
 }
@@ -101,18 +103,28 @@ pub fn _setLabelWindowLocation(label: *MapLabel) !void {
 }
 
 pub fn drawLabels() void {
+    defer last_player_position = state.player.coord;
+
     ui.map_win.annotations.clear();
 
     var new_labels = @TypeOf(labels).init(state.GPA.allocator());
     while (labels.popOrNull()) |label|
         if (label.age < label.max_age and ui.coordToScreen(label.getLoc()) != null) {
             new_labels.append(label) catch unreachable;
+            const last = &new_labels.items[new_labels.items.len - 1];
 
             // Set age to near max if label is too old, to begin slidein
             // animation
-            if (state.ticks < label.created_on + label.max_tick_age) {
-                const last = &new_labels.items[new_labels.items.len - 1];
-                last.max_age = last.age + last.text.len * 2;
+            if (state.player_turns >= label.created_on + label.max_tick_age and
+                label.age < (label.max_age - (label.text.len / 2)))
+            {
+                last.max_age = label.age + (label.text.len / 2) + 1;
+            }
+
+            // If player has moved, then all labels are off-center (since camera
+            // has moved).
+            if (!state.player.coord.eq(last_player_position)) {
+                last.win_loc = null;
             }
         };
     labels.deinit();

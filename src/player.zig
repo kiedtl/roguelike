@@ -205,10 +205,10 @@ pub fn bookkeepingFOV() void {
                 if (state.dungeon.at(fc).surface) |surf| switch (surf) {
                     .Machine => |m| if (m.announce)
                         //S._addToAnnouncements(SBuf.init(m.name), &announcements),
-                        ui.labels.addAt(fc, m.name, .{ .color = colors.LIGHT_STEEL_BLUE }),
+                        ui.labels.addAt(fc, m.name, .{ .color = colors.LIGHT_STEEL_BLUE, .last_for = 5 }),
                     .Stair => |s| if (s != null)
                         //S._addToAnnouncements(SBuf.init("upward stairs"), &announcements),
-                        ui.labels.addAt(fc, state.levelinfo[s.?.z].name, .{ .color = colors.GOLD }),
+                        ui.labels.addAt(fc, state.levelinfo[s.?.z].name, .{ .color = colors.GOLD, .last_for = 5 }),
                     else => {},
                 };
             }

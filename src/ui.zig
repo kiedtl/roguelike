@@ -120,6 +120,9 @@ pub fn init() !void {
     clearScreen();
 
     labels.labels = @TypeOf(labels.labels).init(state.GPA.allocator());
+
+    // Too bad we can't do this here...
+    //labels.last_player_position = state.player.coord;
 }
 
 // Check that the window is the minimum size.
