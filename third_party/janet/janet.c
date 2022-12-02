@@ -18865,30 +18865,6 @@ JANET_CORE_FN(os_cwd,
     return janet_cstringv(ptr);
 }
 
-JANET_CORE_FN(os_cryptorand,
-              "(os/cryptorand n &opt buf)",
-              "Get or append `n` bytes of good quality random data provided by the OS. Returns a new buffer or `buf`.") {
-    JanetBuffer *buffer;
-    janet_arity(argc, 1, 2);
-    int32_t offset;
-    int32_t n = janet_getinteger(argv, 0);
-    if (n < 0) janet_panic("expected positive integer");
-    if (argc == 2) {
-        buffer = janet_getbuffer(argv, 1);
-        offset = buffer->count;
-    } else {
-        offset = 0;
-        buffer = janet_buffer(n);
-    }
-    /* We could optimize here by adding setcount_uninit */
-    janet_buffer_setcount(buffer, offset + n);
-
-    if (janet_cryptorand(buffer->data + offset, n) != 0)
-        janet_panic("unable to get sufficient random data");
-
-    return janet_wrap_buffer(buffer);
-}
-
 JANET_CORE_FN(os_date,
               "(os/date &opt time local)",
               "Returns the given time as a date struct, or the current time if `time` is not given. "
@@ -19851,7 +19827,6 @@ void janet_lib_os(JanetTable *env) {
         JANET_CORE_REG("os/clock", os_clock),
         JANET_CORE_REG("os/sleep", os_sleep),
         JANET_CORE_REG("os/cwd", os_cwd),
-        JANET_CORE_REG("os/cryptorand", os_cryptorand),
         JANET_CORE_REG("os/date", os_date),
         JANET_CORE_REG("os/rename", os_rename),
         JANET_CORE_REG("os/realpath", os_realpath),
@@ -28550,50 +28525,6 @@ int janet_gettime(struct timespec *spec) {
 #if defined(JANET_BSD) || defined(MAC_OS_X_VERSION_10_7)
 void arc4random_buf(void *buf, size_t nbytes);
 #endif
-
-int janet_cryptorand(uint8_t *out, size_t n) {
-#ifdef JANET_WINDOWS
-    for (size_t i = 0; i < n; i += sizeof(unsigned int)) {
-        unsigned int v;
-        if (rand_s(&v))
-            return -1;
-        for (int32_t j = 0; (j < sizeof(unsigned int)) && (i + j < n); j++) {
-            out[i + j] = v & 0xff;
-            v = v >> 8;
-        }
-    }
-    return 0;
-#elif defined(JANET_LINUX) || ( defined(JANET_APPLE) && !defined(MAC_OS_X_VERSION_10_7) )
-    /* We should be able to call getrandom on linux, but it doesn't seem
-       to be uniformly supported on linux distros.
-       On Mac, arc4random_buf wasn't available on until 10.7.
-       In these cases, use this fallback path for now... */
-    int rc;
-    int randfd;
-    RETRY_EINTR(randfd, open("/dev/urandom", O_RDONLY | O_CLOEXEC));
-    if (randfd < 0)
-        return -1;
-    while (n > 0) {
-        ssize_t nread;
-        RETRY_EINTR(nread, read(randfd, out, n));
-        if (nread <= 0) {
-            RETRY_EINTR(rc, close(randfd));
-            return -1;
-        }
-        out += nread;
-        n -= nread;
-    }
-    RETRY_EINTR(rc, close(randfd));
-    return 0;
-#elif defined(JANET_BSD) || defined(MAC_OS_X_VERSION_10_7)
-    arc4random_buf(out, n);
-    return 0;
-#else
-    (void) n;
-    (void) out;
-    return -1;
-#endif
-}
 
 /* Dynamic library loading */
 
