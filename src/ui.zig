@@ -1531,7 +1531,7 @@ pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
 
             var tile: display.Cell = undefined;
 
-            // if player can't see area, draw a blank/grey tile, depending on
+            // if player can't see area, draw a blank/blue tile, depending on
             // what they saw last there
             if (!state.player.cansee(coord)) {
                 tile = .{ .fg = 0, .bg = colors.BG, .ch = ' ' };
@@ -1541,10 +1541,10 @@ pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
 
                     const old_sbg = tile.sbg;
 
-                    tile.bg = colors.darken(colors.filterGrayscale(tile.bg), 4);
-                    tile.fg = colors.darken(colors.filterGrayscale(tile.fg), 4);
-                    tile.sbg = colors.darken(colors.filterGrayscale(tile.sbg), 4);
-                    tile.sfg = colors.darken(colors.filterGrayscale(tile.sfg), 4);
+                    tile.bg = colors.filterBluescale(tile.bg);
+                    tile.fg = colors.filterBluescale(tile.fg);
+                    tile.sbg = colors.filterBluescale(tile.sbg);
+                    tile.sfg = colors.filterBluescale(tile.sfg);
 
                     if (tile.bg < colors.BG) tile.bg = colors.BG;
 

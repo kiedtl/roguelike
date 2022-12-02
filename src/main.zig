@@ -492,7 +492,8 @@ fn readInput() !bool {
                 //state.player.addStatus(.Drunk, 0, .{ .Tmp = 20 });
                 //state.message(.Info, "Lorem ipsum, dolor sit amet. Lorem ipsum, dolor sit amet.. Lorem ipsum, dolor sit amet. {}", .{rng.int(usize)});
                 //_ = ui.drawYesNoPrompt("foo, bar, baz. Lorem ipsum, dolor sit amet. Dolem Lipsum, solor ait smet. Iorem Aipsum, lolor dit asset.", .{});
-                ui.labels.addFor(state.player, "foo bar baz", .{});
+                //ui.labels.addFor(state.player, "foo bar baz", .{});
+                state.player.addStatus(.Corruption, 0, .{ .Tmp = 5 });
                 break :blk false;
             },
             .F8 => b: {
