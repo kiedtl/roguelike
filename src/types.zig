@@ -3279,7 +3279,7 @@ pub const Mob = struct { // {{{
         if (p_se.duration == .Tmp and got != null and ministring != null and
             (self == state.player or state.player.cansee(self.coord)))
         {
-            const verb = if (got.?) @as([]const u8, "acquired") else "lost";
+            const verb = if (got.?) @as([]const u8, "gained") else "lost";
             const pref = if (got.?) "+" else "-";
             state.message(.Info, "{c} {s} $a{s}$..", .{ self, verb, ministring });
             ui.labels.addForf(self, "{s}{s}", .{ pref, ministring }, .{ .color = colors.AQUAMARINE });
