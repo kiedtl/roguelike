@@ -1585,7 +1585,7 @@ pub fn drawNoPresent() void {
     labels.drawLabels();
     map_win.map.renderFullyW(.Main);
 
-    const log_console = drawLog(log_window.startx, log_window.endx, alloc);
+    var log_console = drawLog(log_window.startx, log_window.endx, alloc);
     log_console.renderAreaAt(
         @intCast(usize, log_window.startx),
         @intCast(usize, log_window.starty),
@@ -1775,7 +1775,7 @@ pub const LoadingScreen = struct {
     pub const TEXT_CON_HEIGHT = 2;
     pub const TEXT_CON_WIDTH = 28;
 
-    pub fn deinit(self: @This()) void {
+    pub fn deinit(self: *@This()) void {
         self.main_con.deinit();
 
         // Deinit'ing main_con automatically frees subconsoles
@@ -1913,7 +1913,7 @@ pub fn drawMessagesScreen() void {
     var starty = logw.starty;
     const endy = logw.endy;
 
-    const console = drawLog(mainw.startx, mainw.endx, arena.allocator());
+    var console = drawLog(mainw.startx, mainw.endx, arena.allocator());
     defer console.deinit();
 
     var scroll: usize = 0;
@@ -2560,7 +2560,7 @@ pub fn drawAlertThenLog(comptime fmt: []const u8, args: anytype) void {
 
     drawAlert(fmt, args);
 
-    const log_console = drawLog(log_window.startx, log_window.endx, arena.allocator());
+    var log_console = drawLog(log_window.startx, log_window.endx, arena.allocator());
     log_console.renderAreaAt(
         @intCast(usize, log_window.startx),
         @intCast(usize, log_window.starty),
@@ -2599,6 +2599,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
     text_c.clearTo(.{ .bg = colors.ABG });
     _ = text_c.drawTextAt(0, 0, str, .{ .bg = colors.ABG });
 
+    defer hint_c.deinit(); // May not be added as subconsole, so deinit separately
     defer container_c.deinit();
 
     defer clearScreen();
@@ -2714,6 +2715,7 @@ pub const Console = struct {
     height: usize,
     subconsoles: Subconsole.AList,
     default_transparent: bool = false,
+    deinited: bool = true,
 
     pub const Self = @This();
     pub const AList = std.ArrayList(Self);
@@ -2733,14 +2735,18 @@ pub const Console = struct {
             .width = width,
             .height = height,
             .subconsoles = Subconsole.AList.init(alloc),
+            .deinited = false,
         };
         mem.set(display.Cell, self.grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
         return self;
     }
 
-    pub fn deinit(self: *const Self) void {
+    pub fn deinit(self: *Self) void {
+        if (self.deinited)
+            return;
+        self.deinited = true;
         self.alloc.free(self.grid);
-        for (self.subconsoles.items) |subconsole|
+        for (self.subconsoles.items) |*subconsole|
             subconsole.console.deinit();
         self.subconsoles.deinit();
     }

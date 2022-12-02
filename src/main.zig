@@ -630,7 +630,10 @@ fn tickGame() !void {
 
             if (mob.isUnderStatus(.Paralysis)) |_| {
                 if (mob.coord.eq(state.player.coord)) {
-                    try readNoActionInput(130);
+                    var frames: usize = 5;
+                    while (frames > 0) : (frames -= 1) {
+                        try readNoActionInput(ui.FRAMERATE);
+                    }
                 }
 
                 mob.rest();

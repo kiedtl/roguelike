@@ -1255,8 +1255,8 @@ pub const Status = enum {
             .Nausea => "nauseated",
             .Fire => "burning",
             .Invigorate => "invigorated",
-            .Pain => "tormented",
-            .Fear => "terrified",
+            .Pain => "pain",
+            .Fear => "fear",
             .NightVision => "night-sighted",
             .DayBlindness => "day-blinded",
             .NightBlindness => "night-blinded",
@@ -1268,85 +1268,37 @@ pub const Status = enum {
         };
     } // }}}
 
-    pub fn messageWhenAdded(self: Status) ?[3][]const u8 { // {{{
+    pub fn miniString(self: Status) ?[]const u8 { // {{{
         return switch (self) {
-            .Amnesia => .{ "feel", "looks", " forgetful" },
-            .DetectHeat, .DetectElec => null,
-            .Intimidating => .{ "assume", "assumes", " a fearsome visage" },
-            .Drunk => .{ "feel", "looks", " a bit drunk" },
-            .TormentUndead, .CopperWeapon => null,
-            .Corruption => .{ "are", "is", " corrupted" },
-            .Fireproof => .{ "are", "is", " resistant to fire" },
-            .Flammable => .{ "are", "is", " vulnerable to fire" },
-            .Blind => .{ "are", "is", " blinded" },
-            .Riposte => null,
-            .Debil => .{ "are", "is", " debilitated" },
-            .ClosedMelee, .OpenMelee, .Conductive, .Noisy => null,
-            .Sleeping => .{ "go", "goes", " to sleep" }, // FIXME: bad wording for unliving
-            .Paralysis => .{ "are", "is", " paralyzed" },
-            .Held => .{ "are", "is", " entangled" },
-            .Corona => .{ "begin", "starts", " glowing" },
-            .Daze => .{ "are", "is", " dazed" },
-            .Disorient => .{ "are", "looks", " disoriented" },
-            .Fast => .{ "feel yourself", "starts", " moving faster" },
-            .Slow => .{ "feel yourself", "starts", " moving slowly" },
-            .Nausea => .{ "feel", "looks", " nauseated" },
-            .Fire => .{ "catch", "catches", " fire" },
-            .Invigorate => .{ "feel", "looks", " invigorated" },
-            .Pain => .{ "are", "is", " wracked with pain" },
-            .Fear => .{ "are crazed", "is crazed", " with fear" },
-            .Enraged => .{ "fly", "flies", " into a rage" },
-            .Exhausted => .{ "feel", "looks", " exhausted" },
-            .Lifespan => null,
-            .Explosive => null,
-            .ExplosiveElec => null,
-            .Echolocation => null,
-            .Recuperate => null,
-            .NightVision,
-            .NightBlindness,
-            .DayBlindness,
-            => null,
-        };
-    } // }}}
+            .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .OpenMelee, .ClosedMelee, .Echolocation, .NightVision, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
 
-    pub fn messageWhenRemoved(self: Status) ?[3][]const u8 { // {{{
-        return switch (self) {
-            .Amnesia => .{ "snap back", "snaps back", " to reality" },
-            .DetectHeat, .DetectElec => null,
-            .Intimidating => .{ "no longer seem", "no longer seems", " so scary" },
-            .Drunk => .{ "feel", "looks", " more sober" },
-            .TormentUndead, .CopperWeapon => null,
-            .Corruption => .{ "are no longer", "is no longer", " corrupted" },
-            .Fireproof => .{ "are no longer", "is no longer", " resistant to fire" },
-            .Flammable => .{ "are no longer", "is no longer", " vulnerable to fire" },
-            .Blind => .{ "are no longer", "is no longer", " blinded" },
-            .Riposte => null,
-            .Debil => .{ "are no longer", "is no longer", " debilitated" },
-            .ClosedMelee, .OpenMelee, .Conductive, .Noisy => null,
-            .Sleeping => .{ "wake", "wakes", " up" },
-            .Paralysis => .{ "can move again", "starts moving again", "" },
-            .Held => .{ "break", "breaks", " free" },
-            .Corona => .{ "stop", "stops", " glowing" },
-            .Daze => .{ "break out of your daze", "breaks out of their daze", "" },
-            .Disorient => .{ "are no longer", "is no longer", " disoriented" },
-            .Fast => .{ "are no longer", "is no longer", " moving faster" },
-            .Slow => .{ "are no longer", "is no longer", " moving slowly" },
-            .Nausea => .{ "are no longer", "is no longer", " nauseated" },
-            .Fire => .{ "are no longer", "is no longer", " on fire" },
-            .Invigorate => .{ "no longer feel", "no longer looks", " invigorated" },
-            .Pain => .{ "are no longer", "is no longer", " wracked with pain" },
-            .Fear => .{ "are no longer", "is no longer", " crazed with fear" },
-            .Enraged => .{ "stop", "stops", " raging" },
-            .Exhausted => .{ "are no longer", "is no longer", " exhausted" },
-            .Explosive => null,
-            .ExplosiveElec => null,
-            .Lifespan => null,
-            .Echolocation => null,
-            .Recuperate => null,
-            .NightVision,
-            .NightBlindness,
-            .DayBlindness,
-            => null,
+            .Amnesia => "amnesia",
+            .Intimidating => "intim",
+            .TormentUndead => "trmnt undead",
+            .Drunk => "drunk",
+            .Corruption => "corrupt",
+            .Fireproof => "fireproof",
+            .Flammable => "flammable",
+            .Blind => "blind",
+            .Debil => "devil",
+            .Conductive => "conductve",
+            .Noisy => "noisy",
+            .Sleeping => "sleep",
+            .Paralysis => "para",
+            .Held => "held",
+            .Corona => "glow",
+            .Daze => "dazed",
+            .Disorient => "disorient",
+            .Fast => "hasted",
+            .Slow => "slowed",
+            .Recuperate => "recup",
+            .Nausea => "nausea",
+            .Fire => "burn",
+            .Invigorate => "invig",
+            .Pain => "pain",
+            .Fear => "fear",
+            .Enraged => "rage",
+            .Exhausted => "exhausted",
         };
     } // }}}
 
@@ -3304,10 +3256,11 @@ pub const Mob = struct { // {{{
 
         const has_status_now = self.isUnderStatus(s.status) != null;
 
-        var msg_parts: ?[3][]const u8 = null;
+        var got: ?bool = null;
+        var ministring = s.status.miniString();
 
         if (had_status_before and !has_status_now) {
-            msg_parts = s.status.messageWhenRemoved();
+            got = false;
 
             if (was_exhausting or s.exhausting)
                 self.addStatus(.Exhausted, 0, .{ .Tmp = Status.MAX_DURATION });
@@ -3316,21 +3269,20 @@ pub const Mob = struct { // {{{
                 self.HP = 0;
             }
         } else if (!had_status_before and has_status_now) {
+            got = true;
+
             if (s.status == .Paralysis and self == state.player) {
                 ui.drawContinuePrompt("You are paralysed!", .{});
-            } else {
-                msg_parts = s.status.messageWhenAdded();
             }
         }
 
-        if (meta.activeTag(p_se.duration) == .Tmp and msg_parts != null) {
-            if (self == state.player) {
-                state.message(.Status, "You {s}{s}.", .{ msg_parts.?[0], msg_parts.?[2] });
-            } else if (state.player.cansee(self.coord)) {
-                state.message(.Status, "The {s} {s}{s}.", .{
-                    self.displayName(), msg_parts.?[1], msg_parts.?[2],
-                });
-            }
+        if (p_se.duration == .Tmp and got != null and ministring != null and
+            (self == state.player or state.player.cansee(self.coord)))
+        {
+            const verb = if (got.?) @as([]const u8, "acquired") else "lost";
+            const pref = if (got.?) "+" else "-";
+            state.message(.Info, "{c} {s} $a{s}$..", .{ self, verb, ministring });
+            ui.labels.addForf(self, "{s}{s}", .{ pref, ministring }, .{ .color = colors.AQUAMARINE });
         }
     }
 

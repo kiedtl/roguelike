@@ -17,7 +17,7 @@ pub const MapLabel = struct {
         Mob: *Mob,
     },
     color: u32,
-    max_age: usize = 1000 / ui.FRAMERATE * 6, // ~6 seconds
+    max_age: usize = 1000 / ui.FRAMERATE * 4, // ~5 seconds
     max_tick_age: usize,
     malloced: bool,
 
@@ -44,11 +44,15 @@ pub var last_player_position: Coord = Coord.new(0, 0);
 
 pub const LabelOpts = struct {
     color: u32 = 0x888888,
-    last_for: usize = 1,
+    last_for: usize = 2,
 };
 
 pub fn addFor(mob: *Mob, text: []const u8, opts: LabelOpts) void {
     add(.{ .Mob = mob }, text, opts, false);
+}
+
+pub fn addForf(mob: *Mob, comptime fmt: []const u8, args: anytype, opts: LabelOpts) void {
+    add(.{ .Mob = mob }, std.fmt.allocPrint(state.GPA.allocator(), fmt, args) catch unreachable, opts, true);
 }
 
 pub fn addAt(coord: Coord, text: []const u8, opts: LabelOpts) void {
@@ -56,7 +60,7 @@ pub fn addAt(coord: Coord, text: []const u8, opts: LabelOpts) void {
 }
 
 pub fn addAtf(coord: Coord, comptime fmt: []const u8, args: anytype, opts: LabelOpts) void {
-    add(.{ .Coord = coord }, std.fmt.allocPrint(state.GPA.allocator(), fmt, args), opts, true);
+    add(.{ .Coord = coord }, std.fmt.allocPrint(state.GPA.allocator(), fmt, args) catch unreachable, opts, true);
 }
 
 fn add(loc: std.meta.fieldInfo(MapLabel, .loc).field_type, text: []const u8, opts: LabelOpts, malloced: bool) void {
@@ -126,7 +130,7 @@ pub fn drawLabels() void {
             if (!state.player.coord.eq(last_player_position)) {
                 last.win_loc = null;
             }
-        };
+        } else label.deinit();
     labels.deinit();
     labels = new_labels;
 
