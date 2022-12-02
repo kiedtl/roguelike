@@ -617,7 +617,7 @@
   (new-emitter @{
     :particle (new-particle @{
       :tile (new-tile @{ :ch "O" :fg 0xffffff :bg 0xffffff :bg-mix 1 })
-      :speed 0 :lifetime 1 :require-los 0
+      :speed 0 :lifetime 1 :require-los 0 :require-nonwall 0
       :triggers @[
         [[:COND-true]
           [:TRIG-lerp-color :bg 0x77776f "rgb"
@@ -749,7 +749,7 @@
     #       too well with ELEC_BLUE*. Need to check on this after I've cleared
     #       my brain -- after hours of staring at the same animation the colors
     #       look to be the exact same hue.
-    (template-chargeover ASCII_CHARS 0x495355 ELEC_BLUE2 :which :origin :speed 0.2 :lifetime 9 :maxdist 2)
+    (template-chargeover ASCII_CHARS ELEC_BLUE2 0x495355 :which :origin :speed 0.3 :lifetime 8 :maxdist 2)
     (new-emitter-from @{ :birth-delay 8 } (template-lingering-zap ASCII_CHARS ELEC_BLUE1 ELEC_BLUE2 9 :bg-mix 0.4))
   ]
   "zap-crystal-chargeover" @[
@@ -838,12 +838,12 @@
         :tile (new-tile @{ :ch "+" :fg 0xccccdd :bg 0 :bg-mix 0 })
         :speed 0.6
         :triggers @[
-          [[:COND-percent? 20] [:TRIG-scramble-glyph "*-=+~?!@#%&"]]
+          [[:COND-percent? 30] [:TRIG-scramble-glyph "*-=+~?!@#%&"]]
         ]
       })
-      :lifetime 3
-      :spawn-delay 2
-      :spawn-count (fn [&] 1)
+      :lifetime 5
+      :spawn-delay 1
+      :spawn-count (fn [&] 3)
       :get-spawn-params (fn [self ticks ctx coord target]
                           (let [first? (= (self :total-spawned) 0)
                                 diffx (- (target :x) (coord :x))
