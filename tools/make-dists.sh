@@ -49,9 +49,9 @@ mktarball linux x86_64 SDL
 # oathbreaker-termbox crashes with illegal instruction if build with
 # release-safe, so build in debug mode.
 
-printf "Compiling for x86_64 Linux termbox...\n"
-zig build -Duse-sdl=false
-mktarball linux x86_64 termbox
+#printf "Compiling for x86_64 Linux termbox...\n"
+#zig build -Duse-sdl=false
+#mktarball linux x86_64 termbox
 
 printf "Compiling for x86_64 Windows SDL...\n"
 zig build -Drelease-safe -Dtarget=x86_64-windows-gnu -Duse-sdl=true
