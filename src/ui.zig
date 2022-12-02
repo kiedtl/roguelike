@@ -2590,6 +2590,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
     var text_c = Console.init(state.GPA.allocator(), W_WIDTH, text_height);
     var options_c = Console.init(state.GPA.allocator(), W_WIDTH, options.len);
     var hint_c = Console.init(state.GPA.allocator(), W_WIDTH, 2);
+    var hint_used = false;
 
     container_c.addSubconsole(text_c, 2, 2);
     container_c.addSubconsole(options_c, 2, 2 + text_height + 1);
@@ -2599,7 +2600,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
     text_c.clearTo(.{ .bg = colors.ABG });
     _ = text_c.drawTextAt(0, 0, str, .{ .bg = colors.ABG });
 
-    defer hint_c.deinit(); // May not be added as subconsole, so deinit separately
+    defer if (!hint_used) hint_c.deinit();
     defer container_c.deinit();
 
     defer clearScreen();
@@ -2660,12 +2661,15 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
                     }
                 },
                 else => {
-                    container_c.changeHeight(container_c.height + 2 + 1);
-                    container_c.clearTo(.{ .bg = colors.ABG });
-                    container_c.setBorder();
-                    container_c.addSubconsole(hint_c, 2, 2 + text_height + 1 + options.len + 1);
-                    hint_c.clearTo(.{ .bg = colors.ABG });
-                    _ = hint_c.drawTextAt(0, 0, HINT, .{ .bg = colors.ABG });
+                    if (!hint_used) {
+                        hint_used = true;
+                        container_c.changeHeight(container_c.height + 2 + 1);
+                        container_c.clearTo(.{ .bg = colors.ABG });
+                        container_c.setBorder();
+                        container_c.addSubconsole(hint_c, 2, 2 + text_height + 1 + options.len + 1);
+                        hint_c.clearTo(.{ .bg = colors.ABG });
+                        _ = hint_c.drawTextAt(0, 0, HINT, .{ .bg = colors.ABG });
+                    }
                 },
             },
             else => {},
@@ -2715,7 +2719,6 @@ pub const Console = struct {
     height: usize,
     subconsoles: Subconsole.AList,
     default_transparent: bool = false,
-    deinited: bool = true,
 
     pub const Self = @This();
     pub const AList = std.ArrayList(Self);
@@ -2735,16 +2738,12 @@ pub const Console = struct {
             .width = width,
             .height = height,
             .subconsoles = Subconsole.AList.init(alloc),
-            .deinited = false,
         };
         mem.set(display.Cell, self.grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
         return self;
     }
 
     pub fn deinit(self: *Self) void {
-        if (self.deinited)
-            return;
-        self.deinited = true;
         self.alloc.free(self.grid);
         for (self.subconsoles.items) |*subconsole|
             subconsole.console.deinit();
