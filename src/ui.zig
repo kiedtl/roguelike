@@ -3275,13 +3275,17 @@ pub const Animation = union(enum) {
                         const p_y = @intCast(usize, janet.c.janet_unwrap_integer(particle.data[5]));
                         const p_need_los = janet.c.janet_unwrap_number(particle.data[6]);
                         const p_need_nonwall = janet.c.janet_unwrap_boolean(particle.data[7]);
+                        const p_coord = Coord.new2(state.player.coord.z, p_x, p_y);
                         const p_dcoord = coordToScreen(Coord.new(p_x, p_y)) orelse continue;
+                        const p_out_of_map = p_coord.x >= WIDTH or p_coord.y >= HEIGHT;
 
-                        const cansee = state.player.cansee(Coord.new2(state.player.coord.z, p_x, p_y));
+                        const cansee = !p_out_of_map and state.player.cansee(p_coord);
+
                         // XXX: this could be a switch statement, but it causes Zig 0.9.1 to segfault
                         if ((!cansee and p_need_los == 1) or (cansee and p_need_los == -1))
                             continue;
-                        if (p_need_nonwall == 1 and state.dungeon.at(Coord.new2(state.player.coord.z, p_x, p_y)).type == .Wall)
+
+                        if (p_need_nonwall == 1 and (p_out_of_map or state.dungeon.at(p_coord).type == .Wall))
                             continue;
 
                         const mapcell = map_win.map.getCell(p_dcoord.x, p_dcoord.y);
