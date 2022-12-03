@@ -220,9 +220,9 @@ pub fn tryRest(mob: *Mob) void {
                         state.message(.Unimportant, "{c} writhes in agony.", .{mob});
                     }
 
-                    if (rng.percent(@as(usize, 50))) {
-                        mob.makeNoise(.Scream, .Louder);
-                    }
+                    // if (rng.percent(@as(usize, 50))) {
+                    //     mob.makeNoise(.Scream, .Louder);
+                    // }
                 }
             };
     }
