@@ -1159,7 +1159,6 @@ pub const EmberMageTemplate = MobTemplate{
             // to burn the world down
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
-            .is_curious = false,
             .spellcaster_backup_action = .Melee,
             .flags = &[_]AI.Flag{.DetectWithHeat},
         },
@@ -1196,7 +1195,6 @@ pub const BrimstoneMageTemplate = MobTemplate{
             // to burn the world down
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
-            .is_curious = false,
             .spellcaster_backup_action = .KeepDistance,
             .flags = &[_]AI.Flag{.DetectWithHeat},
         },
@@ -1233,7 +1231,6 @@ pub const SparkMageTemplate = MobTemplate{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
-            .is_curious = false,
             .spellcaster_backup_action = .Melee,
             .flags = &[_]AI.Flag{.DetectWithElec},
         },
@@ -1269,7 +1266,6 @@ pub const LightningMageTemplate = MobTemplate{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
-            .is_curious = false,
             .spellcaster_backup_action = .KeepDistance,
             .flags = &[_]AI.Flag{.DetectWithElec},
         },
@@ -1515,6 +1511,7 @@ pub const EmberlingTemplate = MobTemplate{
         },
     },
     .statuses = &[_]StatusDataInfo{
+        .{ .status = .Sleeping, .duration = .Prm },
         .{ .status = .Fire, .duration = .Prm },
         .{ .status = .Noisy, .duration = .Prm },
     },
@@ -1562,6 +1559,9 @@ pub const SparklingTemplate = MobTemplate{
         &[_]MobTemplate.SquadMember{
             .{ .mob = "sparkling", .weight = 1, .count = minmax(usize, 2, 3) },
         },
+    },
+    .statuses = &[_]StatusDataInfo{
+        .{ .status = .Sleeping, .duration = .Prm },
     },
 };
 
