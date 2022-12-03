@@ -2691,21 +2691,6 @@ pub const Mob = struct { // {{{
             recipient.applyStatus(effect, .{});
         }
 
-        // Apply weapon dipping effects.
-        if (attacker_weapon.dip_effect) |potion| {
-            assert(attacker_weapon.dip_counter > 0);
-            assert(mut_attacker_weapon != null);
-
-            if (rng.percent(combat.CHANCE_FOR_DIP_EFFECT)) {
-                recipient.applyStatus(potion.dip_effect.?, .{});
-                mut_attacker_weapon.?.dip_counter -= 1;
-
-                if (attacker_weapon.dip_counter == 0) {
-                    mut_attacker_weapon.?.dip_effect = null;
-                }
-            }
-        }
-
         // Knockback
         if (attacker_weapon.knockback > 0) {
             const d = attacker.coord.closestDirectionTo(recipient.coord, state.mapgeometry);
@@ -3876,10 +3861,6 @@ pub const Weapon = struct {
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     effects: []const StatusDataInfo = &[_]StatusDataInfo{},
     equip_effects: []const StatusDataInfo = &[_]StatusDataInfo{},
-
-    is_dippable: bool = false,
-    dip_effect: ?*const Consumable = null,
-    dip_counter: usize = 0,
 
     strs: []const DamageStr,
 

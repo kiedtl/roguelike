@@ -1595,7 +1595,6 @@ pub const Consumable = struct {
     effects: []const Effect,
     is_potion: bool = false,
     throwable: bool = false,
-    dip_effect: ?StatusDataInfo = null,
     verbs_player: []const []const u8,
     verbs_other: []const []const u8,
 
@@ -1740,7 +1739,6 @@ pub const DebilitatePotion = Consumable{
     .id = "potion_debilitate",
     .name = "potion of debilitation",
     .effects = &[_]Consumable.Effect{.{ .Gas = gas.Seizure.id }},
-    .dip_effect = .{ .status = .Debil, .duration = .{ .Tmp = 4 } },
     .is_potion = true,
     .color = 0xd7d77f,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
@@ -1752,7 +1750,6 @@ pub const IntimidatePotion = Consumable{
     .id = "potion_intimidate",
     .name = "potion of intimidation",
     .effects = &[_]Consumable.Effect{.{ .Status = .Intimidating }},
-    .dip_effect = .{ .status = .Fear, .duration = .{ .Tmp = 2 } },
     .is_potion = true,
     .color = colors.PALE_VIOLET_RED,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
@@ -1775,7 +1772,6 @@ pub const BlindPotion = Consumable{
     .id = "potion_blind",
     .name = "potion of irritation",
     .effects = &[_]Consumable.Effect{.{ .Gas = gas.Blinding.id }},
-    .dip_effect = .{ .status = .Blind, .duration = .{ .Tmp = 3 } },
     .is_potion = true,
     .color = 0x7fe7f7,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
@@ -1787,7 +1783,6 @@ pub const GlowPotion = Consumable{
     .id = "potion_glow",
     .name = "potion of illumination",
     .effects = &[_]Consumable.Effect{.{ .Status = .Corona }},
-    .dip_effect = .{ .status = .Corona, .duration = .{ .Tmp = 4 } },
     .is_potion = true,
     .color = 0xffffff,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
@@ -1810,7 +1805,6 @@ pub const DisorientPotion = Consumable{
     .id = "potion_disorient",
     .name = "potion of disorientation",
     .effects = &[_]Consumable.Effect{.{ .Gas = gas.Disorient.id }},
-    .dip_effect = .{ .status = .Disorient, .duration = .{ .Tmp = 5 } },
     .is_potion = true,
     .color = 0x33cbca,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
@@ -1822,7 +1816,6 @@ pub const ParalysisPotion = Consumable{
     .id = "potion_paralysis",
     .name = "potion of petrification",
     .effects = &[_]Consumable.Effect{.{ .Gas = gas.Paralysis.id }},
-    .dip_effect = .{ .status = .Paralysis, .duration = .{ .Tmp = 3 } },
     .is_potion = true,
     .color = 0xaaaaff,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
@@ -1834,7 +1827,6 @@ pub const FastPotion = Consumable{
     .id = "potion_fast",
     .name = "potion of acceleration",
     .effects = &[_]Consumable.Effect{.{ .Status = .Fast }},
-    .dip_effect = .{ .status = .Fast, .duration = .{ .Tmp = 5 } },
     .is_potion = true,
     .color = 0xbb6c55,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
@@ -1846,7 +1838,6 @@ pub const RecuperatePotion = Consumable{
     .id = "potion_recuperate",
     .name = "potion of recuperation",
     .effects = &[_]Consumable.Effect{.{ .Status = .Recuperate }},
-    .dip_effect = .{ .status = .Recuperate, .duration = .{ .Tmp = 5 } },
     .is_potion = true,
     .color = 0xffffff,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
@@ -1867,7 +1858,6 @@ pub const IncineratePotion = Consumable{
     .id = "potion_incinerate",
     .name = "potion of incineration",
     .effects = &[_]Consumable.Effect{.{ .Custom = triggerIncineratePotion }},
-    .dip_effect = .{ .status = .Fire, .duration = .{ .Tmp = 5 } },
     .is_potion = true,
     .color = 0xff3434, // TODO: unique color
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
@@ -2037,7 +2027,6 @@ pub const SwordWeapon = Weapon{
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .OpenMelee, .duration = .Equ },
     },
-    .is_dippable = true,
     .strs = &SLASHING_STRS,
 };
 pub const BoneSwordWeapon = Weapon.createBoneWeapon(&SwordWeapon, .{});
@@ -2055,7 +2044,6 @@ pub const MartialSwordWeapon = Weapon{
     .damage = 2,
     .martial = true,
     .stats = .{ .Evade = 10, .Martial = 2, .Melee = -10 },
-    .is_dippable = true,
     .strs = &SLASHING_STRS,
 };
 
@@ -2065,7 +2053,6 @@ pub const DaggerWeapon = Weapon{
     .damage = 1,
     .martial = true,
     .stats = .{ .Martial = 1 },
-    .is_dippable = true,
     .strs = &PIERCING_STRS,
 };
 pub const BoneDaggerWeapon = Weapon.createBoneWeapon(&DaggerWeapon, .{});
@@ -2075,7 +2062,6 @@ pub const StilettoWeapon = Weapon{
     .name = "stiletto",
     .damage = 5,
     .stats = .{ .Melee = -25 },
-    .is_dippable = true,
     .strs = &PIERCING_STRS,
 };
 pub const BoneStilettoWeapon = Weapon.createBoneWeapon(&StilettoWeapon, .{});
@@ -2088,7 +2074,6 @@ pub const RapierWeapon = Weapon{
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .Riposte, .duration = .Equ },
     },
-    .is_dippable = true,
     .strs = &PIERCING_STRS,
 };
 pub const CopperRapierWeapon = Weapon.createCopperWeapon(&RapierWeapon, .{});
@@ -2109,7 +2094,6 @@ pub const HalberdWeapon = Weapon{
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .OpenMelee, .duration = .Equ },
     },
-    .is_dippable = true,
     .strs = &SLASHING_STRS,
 };
 pub const BoneHalberdWeapon = Weapon.createBoneWeapon(&HalberdWeapon, .{});
@@ -2120,7 +2104,6 @@ pub const SpearWeapon = Weapon{
     .name = "spear",
     .damage = 2,
     .stats = .{ .Melee = 10, .Sneak = -1 },
-    .is_dippable = true,
     .strs = &SLASHING_STRS,
     .reach = 2,
 };
@@ -2133,7 +2116,6 @@ pub const GlaiveWeapon = Weapon{
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .ClosedMelee, .duration = .Equ },
     },
-    .is_dippable = true,
     .strs = &SLASHING_STRS,
 };
 
@@ -2152,7 +2134,6 @@ pub const WoldoWeapon = Weapon{
     .damage = 3,
     .martial = true,
     .stats = .{ .Melee = -15, .Martial = 1, .Sneak = -1 },
-    .is_dippable = true,
     .strs = &SLASHING_STRS,
 };
 

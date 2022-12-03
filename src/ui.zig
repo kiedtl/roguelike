@@ -833,11 +833,6 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
                 .Custom => _writerWrite(w, "· $G(See description)$.\n", .{}),
             };
             _writerWrite(w, "\n", .{});
-
-            if (p.dip_effect) |effect| {
-                _writerHeader(w, linewidth, "dip effects", .{});
-                _writerWrite(w, "{s}", .{_formatStatusInfo(&effect)});
-            }
         },
         .Projectile => |p| {
             const dmg = p.damage orelse @as(usize, 0);
@@ -864,21 +859,6 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
         .Weapon => |p| {
             if (p.reach != 1) _writerWrite(w, "$creach:$. {}\n", .{p.reach});
             if (p.knockback != 0) _writerWrite(w, "$cknockback:$. {}\n", .{p.knockback});
-            _writerWrite(w, "\n", .{});
-
-            if (p.is_dippable) {
-                _writerWrite(w, "$aCan be dipped.$.\n", .{});
-            } else {
-                _writerWrite(w, "$rCan't be dipped.$.\n", .{});
-            }
-            _writerWrite(w, "\n", .{});
-
-            if (p.dip_effect) |potion| {
-                assert(p.dip_counter > 0);
-                _writerWrite(w, "$cCurrent dip effect:$.\n", .{});
-                _writerWrite(w, "· {s}", .{_formatStatusInfo(&potion.dip_effect.?)});
-                _writerWrite(w, "· {} attacks left\n", .{p.dip_counter});
-            }
             _writerWrite(w, "\n", .{});
 
             _writerStats(w, p.stats, null);
@@ -2341,14 +2321,12 @@ pub fn drawInventoryScreen() bool {
             }
         }
 
-        var dippable = false;
         var usable = false;
         var throwable = false;
 
         if (chosen_item != null and itemlist_len > 0) switch (chosen_item.?) {
             .Consumable => |p| {
                 usable = true;
-                dippable = p.dip_effect != null;
                 throwable = p.throwable;
             },
             .Evocable => usable = true,
@@ -2377,7 +2355,6 @@ pub fn drawInventoryScreen() bool {
             );
 
             if (usable) writer.print("$b<Enter>$. to use.\n", .{}) catch err.wat();
-            if (dippable) writer.print("$bD$. to dip your weapon.\n", .{}) catch err.wat();
             if (throwable) writer.print("$bt$. to throw.\n", .{}) catch err.wat();
 
             _ = _drawStr(ii_startx, ii_starty, ii_endx, descbuf_stream.getWritten(), .{});
@@ -2454,12 +2431,6 @@ pub fn drawInventoryScreen() bool {
                         if (player.dropItem(chosen)) return true;
                 } else {
                     drawAlert("You can't drop that!", .{});
-                },
-                'D' => if (chosen_itemlist == .Pack) {
-                    if (itemlist_len > 0)
-                        if (player.dipWeapon(chosen)) return true;
-                } else {
-                    drawAlert("Select a potion and press $bD$. to dip something in it.", .{});
                 },
                 't' => if (chosen_itemlist == .Pack) {
                     if (itemlist_len > 0)
