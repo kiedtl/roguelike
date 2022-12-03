@@ -785,7 +785,6 @@ pub fn getRingHints(ring: *Ring) void {
                     .who = neighbor_mob,
                     .direction = d,
                     .coord = neighbor_tile,
-                    .delay = 0,
                 } };
                 if ((chk_func)(state.player, &ring.pattern_checker.state, attack_activity, true))
                     buf.append(attack_activity) catch err.wat();

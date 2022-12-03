@@ -863,10 +863,6 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
         .Armor => |a| _writerStats(w, a.stats, a.resists),
         .Weapon => |p| {
             if (p.reach != 1) _writerWrite(w, "$creach:$. {}\n", .{p.reach});
-            if (p.delay != 100) {
-                const col: u21 = if (p.delay > 100) 'r' else 'a';
-                _writerWrite(w, "$cdelay:$. ${u}{}%$.\n", .{ col, p.delay });
-            }
             if (p.knockback != 0) _writerWrite(w, "$cknockback:$. {}\n", .{p.knockback});
             _writerWrite(w, "\n", .{});
 

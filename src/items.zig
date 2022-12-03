@@ -547,7 +547,6 @@ pub const LightningRing = Ring{ // {{{
                     .direction = d,
                     .who = undefined,
                     .coord = undefined,
-                    .delay = undefined,
                 } };
             }
         }.f,
@@ -631,7 +630,6 @@ pub const CremationRing = Ring{ // {{{
                     .direction = d,
                     .who = undefined,
                     .coord = undefined,
-                    .delay = undefined,
                 } };
             }
         }.f,
@@ -976,7 +974,6 @@ pub const ElectrificationRing = Ring{ // {{{
                     .direction = d,
                     .who = undefined,
                     .coord = undefined,
-                    .delay = undefined,
                 } };
             }
         }.f,
@@ -1175,7 +1172,6 @@ pub const MagnetizationRing = Ring{ // {{{
                     .direction = d,
                     .who = undefined,
                     .coord = undefined,
-                    .delay = undefined,
                 } };
             }
         }.f,
@@ -1279,7 +1275,6 @@ pub const DefaultPinRing = Ring{ // {{{
                     .direction = d,
                     .who = undefined,
                     .coord = undefined,
-                    .delay = undefined,
                 } };
             }
         }.f,
@@ -2026,7 +2021,6 @@ pub const SHOCK_STRS = [_]DamageStr{
 pub const FistWeapon = Weapon{
     .id = "none",
     .name = "none",
-    .delay = 80,
     .damage = 2,
     .strs = &FIST_STRS,
 };
@@ -2187,7 +2181,6 @@ pub const WoldoWeapon = Weapon{
 pub const KnoutWeapon = Weapon{
     .id = "knout",
     .name = "knout",
-    .delay = 150,
     .damage = 6,
     .strs = &CRUSHING_STRS,
 };

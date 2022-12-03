@@ -580,7 +580,6 @@ pub const CinderWormTemplate = MobTemplate{
             .name = "cinder worm",
             .default_attack = &Weapon{
                 .damage = 1,
-                .delay = 150,
                 .strs = &items.BITING_STRS,
             },
         },
