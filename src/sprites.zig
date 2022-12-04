@@ -12,6 +12,7 @@ pub const Sprite = enum(u21) {
     S_G_Wall_Window = 0x2793,
     S_G_Wall_Scifish = 0x2794,
     S_G_Wall_Window2 = 0x2795,
+    S_G_Wall_Polished = 0x2796,
     S_G_StairsDown = 0x279E,
     S_G_StairsUp = 0x279F,
 

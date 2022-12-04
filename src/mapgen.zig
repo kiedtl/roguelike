@@ -112,6 +112,7 @@ pub const VAULT_LEVELS = [LEVELS][]const VaultType{
     &.{                          }, // -5/Caverns/3
     &.{                          }, // -5/Caverns/2
     &.{                          }, // -5/Caverns
+    &.{                          }, // -5/Shrine
     &.{ .Iron, .Marble, .Tavern  }, // -5/Prison
     &.{ .Iron, .Marble, .Tavern  }, // -6/Laboratory/3
     &.{ .Iron,          .Tavern  }, // -6/Laboratory/2
@@ -3624,7 +3625,7 @@ pub fn freeSpawnTables(alloc: mem.Allocator) void {
 pub const LevelConfig = struct {
     stairs_to: []const usize = &[_]usize{},
 
-    prefabs: []const []const u8 = .{},
+    prefabs: []const []const u8 = &[_][]const u8{},
     distances: [2][10]usize = [2][10]usize{
         .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
         .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
@@ -3748,6 +3749,29 @@ pub const QRT_BASE_LEVELCONFIG = LevelConfig{
     .chance_for_single_prop_placement = 90,
 
     .machines = &[_]*const Machine{ &surfaces.Fountain, &surfaces.WaterBarrel },
+};
+
+pub const SIN_BASE_LEVELCONFIG = LevelConfig{
+    .distances = [2][10]usize{
+        .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+        .{ 9, 4, 4, 1, 1, 1, 1, 0, 0, 0 },
+    },
+    .shrink_corridors_to_fit = true,
+    .prefab_chance = 100, // No prefabs for LAB
+    .mapgen_iters = 2048,
+    .min_room_width = 9,
+    .min_room_height = 9,
+    .max_room_width = 25,
+    .max_room_height = 25,
+
+    .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },
+
+    .door_chance = 10,
+    .material = &materials.Marble,
+    .window_material = &materials.LabGlass,
+    .light = &surfaces.Lamp,
+
+    .allow_statues = false,
 };
 
 pub const LAB_BASE_LEVELCONFIG = LevelConfig{
@@ -3883,6 +3907,7 @@ pub var Configs = [LEVELS]LevelConfig{
     CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
+    SIN_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
     LAB_BASE_LEVELCONFIG,
     LAB_BASE_LEVELCONFIG,
@@ -3903,7 +3928,7 @@ pub fn fixConfigs() void {
     Configs[ 0].room_crowd_max = 4;      Configs[ 1].room_crowd_max = 3;   // Upper prison
     Configs[ 2].room_crowd_max = 2;      Configs[ 3].room_crowd_max = 1;   // Quarters
     Configs[ 6].room_crowd_max = 6;      Configs[ 7].room_crowd_max = 5;   // Caverns
-    Configs[10].room_crowd_max = 4;      Configs[12].room_crowd_max = 3;   // Laboratory
+    Configs[11].room_crowd_max = 4;      Configs[12].room_crowd_max = 3;   // Laboratory
 
     Configs[ 6].level_crowd_max = 50;    Configs[ 7].level_crowd_max = 50; // Caverns
 }

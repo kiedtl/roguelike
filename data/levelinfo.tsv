@@ -1,6 +1,6 @@
 # vim: nowrap
 #
-# Spawn tables.
+# Level info.
 #
 
 #
@@ -14,6 +14,7 @@
 "CAV" 	         "-5/Caverns/3" 	nay 	    yea 	  .Basalt 	               - 	       "-4/Prison"
 "CAV" 	         "-5/Caverns/2" 	nay 	    yea 	        - 	               - 	    "-5/Caverns/3"
 "CAV" 	           "-5/Caverns" 	nay 	    yea 	        - 	               - 	    "-5/Caverns/2"
+"SIN" 	            "-5/Shrine" 	nay 	    yea 	        - 	               - 	                 -
 "PRI" 	            "-5/Prison" 	yea 	    nay 	        - 	     "-4/Prison" 	      "-5/Caverns"
 "LAB" 	      "-6/Laboratory/3" 	nay 	    yea 	 .Twisted 	               - 	       "-5/Prison"
 "LAB" 	      "-6/Laboratory/2" 	nay 	    yea 	        - 	               - 	 "-6/Laboratory/3"
