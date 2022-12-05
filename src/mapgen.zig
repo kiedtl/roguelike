@@ -1778,9 +1778,10 @@ pub const Tunneller = struct {
 
     pub fn canAdvance(self: *Self) bool {
         if (self.direction == .East or self.direction == .West) {
+            assert(self.rect.height > 0);
             const edge = if (self.direction == .East) self.rect.end() else self.rect.start;
             var y: usize = 0;
-            while (y < self.rect.height) {
+            while (y < self.rect.height) : (y += 1) {
                 const newedge = Coord.new2(edge.z, edge.x, edge.y + y);
                 if (newedge.move(self.direction, state.mapgeometry)) |advanced| {
                     if (state.dungeon.at(advanced).type != .Wall)
@@ -1788,9 +1789,10 @@ pub const Tunneller = struct {
                 } else return false;
             }
         } else if (self.direction == .North or self.direction == .South) {
+            assert(self.rect.width > 0);
             const edge = if (self.direction == .South) self.rect.end() else self.rect.start;
             var x: usize = 0;
-            while (x < self.rect.width) {
+            while (x < self.rect.width) : (x += 1) {
                 const newedge = Coord.new2(edge.z, edge.x + x, edge.y);
                 if (newedge.move(self.direction, state.mapgeometry)) |advanced| {
                     if (state.dungeon.at(advanced).type != .Wall)
@@ -1810,9 +1812,9 @@ pub fn placeTunnelledRooms(
 ) void {
     _ = level;
     _ = allocator;
-    var tun = Tunneller{ .rect = Rect.new(Coord.new2(level, 2, 2), 0, 0), .direction = .East };
+    var tun = Tunneller{ .rect = Rect.new(Coord.new2(level, 2, 2), 0, 3), .direction = .East };
     var tries: usize = 0;
-    while (tun.canAdvance() and tries < 10000) : (tries += 1) {
+    while (tun.canAdvance() and tries < 30) : (tries += 1) {
         tun.advance();
     }
     state.rooms[level].append(.{ .rect = tun.rect, .prefab = null }) catch err.wat();

@@ -191,32 +191,32 @@ fn initLevels() bool {
 
         ui.drawLoadingScreen(&loading_screen, level_name, "Generating map...", level * 100 / LEVELS) catch return false;
 
-        var placed_rune = true;
+        // var placed_rune = true;
 
         mapgen.resetLevel(level, &n_fabs, &s_fabs);
-        mapgen.placeBlobs(level);
+        // mapgen.placeBlobs(level);
         (mapgen.Configs[level].mapgen_func)(&n_fabs, &s_fabs, level, state.GPA.allocator());
-        mapgen.selectLevelVault(level);
-        if (mapgen.Configs[level].allow_extra_corridors)
-            mapgen.placeMoarCorridors(level, state.GPA.allocator());
+        //mapgen.selectLevelVault(level);
+        //if (mapgen.Configs[level].allow_extra_corridors)
+        //    mapgen.placeMoarCorridors(level, state.GPA.allocator());
 
-        // Generate a rune?
-        //
-        // Do this now, before placing anything else, because we'll have to
-        // start over if we fail this.
-        //
-        if (state.levelinfo[level].rune) |rune| {
-            placed_rune = mapgen.placeRuneAnywhere(level, rune);
-        }
+        //// Generate a rune?
+        ////
+        //// Do this now, before placing anything else, because we'll have to
+        //// start over if we fail this.
+        ////
+        //if (state.levelinfo[level].rune) |rune| {
+        //    placed_rune = mapgen.placeRuneAnywhere(level, rune);
+        //}
 
-        if (!placed_rune) {
-            if (tries < 28) {
-                std.log.info("{s}: Couldn't place rune, retrying...", .{level_name});
-                continue; // try again
-            } else {
-                err.bug("{s}: Couldn't generate valid map!", .{level_name});
-            }
-        }
+        //if (!placed_rune) {
+        //    if (tries < 28) {
+        //        std.log.info("{s}: Couldn't place rune, retrying...", .{level_name});
+        //        continue; // try again
+        //    } else {
+        //        err.bug("{s}: Couldn't generate valid map!", .{level_name});
+        //    }
+        //}
 
         // if (mapgen.validateLevel(level, state.GPA.allocator(), &n_fabs, &s_fabs)) |_| {
         //     // .
