@@ -1746,6 +1746,78 @@ pub fn placeBSPRooms(
     }
 }
 
+pub const Tunneller = struct {
+    // age: usize,
+    // max_age: usize,
+    rect: Rect,
+    direction: Direction,
+
+    const Self = @This();
+    const AList = std.ArrayList(Self);
+
+    pub fn advance(self: *Self) void {
+        switch (self.direction) {
+            .North => {
+                self.rect.start.y -= 1;
+                self.rect.height += 1;
+            },
+            .South => {
+                self.rect.height += 1;
+            },
+            .East => {
+                self.rect.width += 1;
+            },
+            .West => {
+                self.rect.start.x -= 1;
+                self.rect.width += 1;
+            },
+            else => unreachable,
+        }
+        excavateRect(&self.rect);
+    }
+
+    pub fn canAdvance(self: *Self) bool {
+        if (self.direction == .East or self.direction == .West) {
+            const edge = if (self.direction == .East) self.rect.end() else self.rect.start;
+            var y: usize = 0;
+            while (y < self.rect.height) {
+                const newedge = Coord.new2(edge.z, edge.x, edge.y + y);
+                if (newedge.move(self.direction, state.mapgeometry)) |advanced| {
+                    if (state.dungeon.at(advanced).type != .Wall)
+                        return false;
+                } else return false;
+            }
+        } else if (self.direction == .North or self.direction == .South) {
+            const edge = if (self.direction == .South) self.rect.end() else self.rect.start;
+            var x: usize = 0;
+            while (x < self.rect.width) {
+                const newedge = Coord.new2(edge.z, edge.x + x, edge.y);
+                if (newedge.move(self.direction, state.mapgeometry)) |advanced| {
+                    if (state.dungeon.at(advanced).type != .Wall)
+                        return false;
+                } else return false;
+            }
+        } else unreachable;
+        return true;
+    }
+};
+
+pub fn placeTunnelledRooms(
+    _: *PrefabArrayList,
+    _: *PrefabArrayList,
+    level: usize,
+    allocator: mem.Allocator,
+) void {
+    _ = level;
+    _ = allocator;
+    var tun = Tunneller{ .rect = Rect.new(Coord.new2(level, 2, 2), 0, 0), .direction = .East };
+    var tries: usize = 0;
+    while (tun.canAdvance() and tries < 10000) : (tries += 1) {
+        tun.advance();
+    }
+    state.rooms[level].append(.{ .rect = tun.rect, .prefab = null }) catch err.wat();
+}
+
 pub fn _strewItemsAround(room: *Room, max_items: usize) void {
     var items_placed: usize = 0;
 
@@ -3756,8 +3828,8 @@ pub const SIN_BASE_LEVELCONFIG = LevelConfig{
         .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
         .{ 9, 4, 4, 1, 1, 1, 1, 0, 0, 0 },
     },
-    .shrink_corridors_to_fit = true,
     .prefab_chance = 100, // No prefabs for LAB
+    .mapgen_func = placeTunnelledRooms,
     .mapgen_iters = 2048,
     .min_room_width = 9,
     .min_room_height = 9,
