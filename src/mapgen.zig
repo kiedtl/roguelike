@@ -1747,10 +1747,10 @@ pub fn placeBSPRooms(
 }
 
 pub const Ctx = struct {
-    tunnellers: Tunneller.AList,
+    tunnelers: Tunneler.AList,
 };
 
-pub const Tunneller = struct {
+pub const Tunneler = struct {
     // age: usize,
     // max_age: usize,
     rect: Rect,
@@ -1784,8 +1784,6 @@ pub const Tunneller = struct {
     pub fn canAdvance(self: *const Self) bool {
         if (self.rect.overflowsLimit(&LIMIT))
             return false;
-
-        std.log.info("rect: {},{}, {},{}", .{ self.rect.start.x, self.rect.start.y, self.rect.width, self.rect.height });
 
         if (self.direction == .East or self.direction == .West) {
             assert(self.rect.height > 0);
@@ -1821,8 +1819,8 @@ pub const Tunneller = struct {
         return true;
     }
 
-    pub fn getPotentialChildren(self: *Self) [2]Tunneller {
-        var res: [2]Tunneller = undefined;
+    pub fn getPotentialChildren(self: *Self) [2]Tunneler {
+        var res: [2]Tunneler = undefined;
         const level = self.rect.start.z;
         const theight = self.rect.height;
         const twidth = self.rect.width;
@@ -1834,8 +1832,8 @@ pub const Tunneller = struct {
         for (newdirecs) |newdirec, i| {
             const newstart = switch (self.direction) {
                 .East => switch (newdirec) {
-                    .North => Coord.new2(level, self.rect.end().x - theight, self.rect.start.y),
-                    .South => Coord.new2(level, self.rect.end().x - theight, self.rect.end().y),
+                    .North => Coord.new2(level, self.rect.end().x -| theight, self.rect.start.y),
+                    .South => Coord.new2(level, self.rect.end().x -| theight, self.rect.end().y),
                     else => unreachable,
                 },
                 .West => switch (newdirec) {
@@ -1864,48 +1862,128 @@ pub const Tunneller = struct {
         }
         return res;
     }
+
+    pub const RoomTemplate = struct {
+        rect: Rect,
+        door: Coord,
+    };
+
+    pub fn getPotentialRooms(self: *Self, ctx: *const Ctx) [2]?RoomTemplate {
+        var res = [2]?RoomTemplate{ null, null };
+
+        const level = self.rect.start.z;
+        const rectw = rng.range(usize, Configs[level].min_room_width, Configs[level].max_room_width);
+        const recth = rng.range(usize, Configs[level].min_room_height, Configs[level].max_room_height);
+
+        const start_coords = switch (self.direction) {
+            .East => &[_]Coord{
+                Coord.new2(level, self.rect.end().x -| rectw, self.rect.start.y -| recth -| 1),
+                Coord.new2(level, self.rect.end().x -| rectw, self.rect.end().y + 1),
+            },
+            .West => &[_]Coord{
+                Coord.new2(level, self.rect.start.x -| rectw, self.rect.start.y -| recth -| 1),
+                Coord.new2(level, self.rect.start.x -| rectw, self.rect.end().y + 1),
+            },
+            .North => &[_]Coord{
+                Coord.new2(level, self.rect.end().x + 1, self.rect.start.y -| recth -| 1),
+                Coord.new2(level, self.rect.start.x + 1, self.rect.start.y -| recth -| 1),
+            },
+            .South => &[_]Coord{
+                Coord.new2(level, self.rect.end().x + 1, self.rect.end().y -| recth -| 1),
+                Coord.new2(level, self.rect.start.x + 1, self.rect.end().y -| recth -| 1),
+            },
+            else => unreachable,
+        };
+        const door_coords = switch (self.direction) {
+            .East => &[_]Coord{
+                Coord.new2(level, self.rect.end().x -| 1, self.rect.start.y -| 1),
+                Coord.new2(level, self.rect.end().x -| 1, self.rect.end().y),
+            },
+            .West => &[_]Coord{
+                Coord.new2(level, self.rect.start.x, self.rect.start.y -| 1),
+                Coord.new2(level, self.rect.start.x, self.rect.end().y),
+            },
+            .North => &[_]Coord{
+                Coord.new2(level, self.rect.start.x -| 1, self.rect.start.y -| 1),
+                Coord.new2(level, self.rect.end().x -| 1, self.rect.start.y -| 1),
+            },
+            .South => &[_]Coord{
+                Coord.new2(level, self.rect.start.x -| 1, self.rect.end().y -| 1),
+                Coord.new2(level, self.rect.end().x -| 1, self.rect.end().y -| 1),
+            },
+            else => unreachable,
+        };
+
+        for (start_coords) |start_coord, i| {
+            const rect = Rect{ .start = start_coord, .width = rectw, .height = recth };
+            const room = Room{ .rect = rect };
+
+            // Forgive the crazy formatting...
+            if (isRoomInvalid(&state.rooms[level], &room, null, null, false) or
+                for (ctx.tunnelers.items) |othertun|
+            {
+                if (othertun.rect.intersects(&rect, 1))
+                    break true;
+            } else false) {
+                continue;
+            }
+
+            res[i] = .{ .rect = rect, .door = door_coords[i] };
+        }
+
+        return res;
+    }
 };
 
-pub fn placeTunnelledRooms(
+pub fn placeTunneledRooms(
     _: *PrefabArrayList,
     _: *PrefabArrayList,
     level: usize,
     allocator: mem.Allocator,
 ) void {
-    var ctx = Ctx{ .tunnellers = Tunneller.AList.init(allocator) };
-    ctx.tunnellers.append(Tunneller{ .rect = Rect.new(Coord.new2(level, 68, 20), 0, 6), .direction = .West }) catch err.wat();
-    defer ctx.tunnellers.deinit();
+    var ctx = Ctx{ .tunnelers = Tunneler.AList.init(allocator) };
+    ctx.tunnelers.append(Tunneler{ .rect = Rect.new(Coord.new2(level, 1, 20), 0, 3), .direction = .East }) catch err.wat();
+    defer ctx.tunnelers.deinit();
 
-    var new_tuns = Tunneller.AList.init(allocator);
+    var new_tuns = Tunneler.AList.init(allocator);
     defer new_tuns.deinit();
 
     var tries: usize = 0;
     while (tries < 50000) : (tries += 1) {
         var active: usize = 0;
-        for (ctx.tunnellers.items) |*tunneller| if (!tunneller.dead) {
-            if (tunneller.canAdvance()) {
-                tunneller.advance();
+        for (ctx.tunnelers.items) |*tunneler| if (!tunneler.dead) {
+            if (tunneler.canAdvance()) {
+                tunneler.advance();
                 active += 1;
             } else {
-                tunneller.dead = true;
+                tunneler.dead = true;
                 state.rooms[level].append(.{
                     .type = .Corridor,
-                    .rect = tunneller.rect,
+                    .rect = tunneler.rect,
                     .prefab = null,
                 }) catch err.wat();
             }
 
-            const children = tunneller.getPotentialChildren();
+            const children = tunneler.getPotentialChildren();
             for (children) |child| {
-                if (tunneller.dead or rng.onein(18)) {
+                if (tunneler.dead or rng.onein(18)) {
                     new_tuns.append(child) catch err.wat();
                 }
             }
+
+            const rooms = tunneler.getPotentialRooms(&ctx);
+            for (rooms) |maybe_room| if (maybe_room) |room| {
+                excavateRect(&room.rect);
+                state.dungeon.at(room.door).type = .Floor;
+                var new_room = Room{ .rect = room.rect };
+                new_room.connections.append(room.door) catch err.wat();
+                state.rooms[level].append(new_room) catch err.wat();
+            };
         };
         for (new_tuns.items) |new_tun| {
             if (new_tun.canAdvance()) {
                 active += 1;
-                ctx.tunnellers.append(new_tun) catch err.wat();
+                ctx.tunnelers.append(new_tun) catch err.wat();
             }
         }
         new_tuns.clearAndFree();
@@ -3921,12 +3999,12 @@ pub const SIN_BASE_LEVELCONFIG = LevelConfig{
         .{ 9, 4, 4, 1, 1, 1, 1, 0, 0, 0 },
     },
     .prefab_chance = 100, // No prefabs for LAB
-    .mapgen_func = placeTunnelledRooms,
+    .mapgen_func = placeTunneledRooms,
     .mapgen_iters = 2048,
-    .min_room_width = 9,
-    .min_room_height = 9,
-    .max_room_width = 25,
-    .max_room_height = 25,
+    .min_room_width = 6,
+    .min_room_height = 6,
+    .max_room_width = 14,
+    .max_room_height = 14,
 
     .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },
 
