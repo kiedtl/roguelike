@@ -1746,11 +1746,16 @@ pub fn placeBSPRooms(
     }
 }
 
+pub const Ctx = struct {
+    tunnellers: Tunneller.AList,
+};
+
 pub const Tunneller = struct {
     // age: usize,
     // max_age: usize,
     rect: Rect,
     direction: Direction,
+    dead: bool = false,
 
     const Self = @This();
     const AList = std.ArrayList(Self);
@@ -1776,31 +1781,88 @@ pub const Tunneller = struct {
         excavateRect(&self.rect);
     }
 
-    pub fn canAdvance(self: *Self) bool {
+    pub fn canAdvance(self: *const Self) bool {
+        if (self.rect.overflowsLimit(&LIMIT))
+            return false;
+
+        std.log.info("rect: {},{}, {},{}", .{ self.rect.start.x, self.rect.start.y, self.rect.width, self.rect.height });
+
         if (self.direction == .East or self.direction == .West) {
             assert(self.rect.height > 0);
-            const edge = if (self.direction == .East) self.rect.end() else self.rect.start;
+            const edgex = if (self.direction == .East) self.rect.end().x else self.rect.start.x;
             var y: usize = 0;
             while (y < self.rect.height) : (y += 1) {
-                const newedge = Coord.new2(edge.z, edge.x, edge.y + y);
+                const newedge = Coord.new2(self.rect.start.z, edgex, self.rect.start.y + y);
                 if (newedge.move(self.direction, state.mapgeometry)) |advanced| {
                     if (state.dungeon.at(advanced).type != .Wall)
                         return false;
+                    if (advanced.move(self.direction, state.mapgeometry)) |advanced2| {
+                        if (state.dungeon.at(advanced2).type != .Wall)
+                            return false;
+                    } else return false;
                 } else return false;
             }
         } else if (self.direction == .North or self.direction == .South) {
             assert(self.rect.width > 0);
-            const edge = if (self.direction == .South) self.rect.end() else self.rect.start;
+            const edgey = if (self.direction == .South) self.rect.end().y else self.rect.start.y;
             var x: usize = 0;
             while (x < self.rect.width) : (x += 1) {
-                const newedge = Coord.new2(edge.z, edge.x + x, edge.y);
+                const newedge = Coord.new2(self.rect.start.z, self.rect.start.x + x, edgey);
                 if (newedge.move(self.direction, state.mapgeometry)) |advanced| {
                     if (state.dungeon.at(advanced).type != .Wall)
                         return false;
+                    if (advanced.move(self.direction, state.mapgeometry)) |advanced2| {
+                        if (state.dungeon.at(advanced2).type != .Wall)
+                            return false;
+                    } else return false;
                 } else return false;
             }
         } else unreachable;
         return true;
+    }
+
+    pub fn getPotentialChildren(self: *Self) [2]Tunneller {
+        var res: [2]Tunneller = undefined;
+        const level = self.rect.start.z;
+        const theight = self.rect.height;
+        const twidth = self.rect.width;
+        const newdirecs = switch (self.direction) {
+            .East, .West => &[_]Direction{ .North, .South },
+            .North, .South => &[_]Direction{ .East, .West },
+            else => unreachable,
+        };
+        for (newdirecs) |newdirec, i| {
+            const newstart = switch (self.direction) {
+                .East => switch (newdirec) {
+                    .North => Coord.new2(level, self.rect.end().x - theight, self.rect.start.y),
+                    .South => Coord.new2(level, self.rect.end().x - theight, self.rect.end().y),
+                    else => unreachable,
+                },
+                .West => switch (newdirec) {
+                    .North => Coord.new2(level, self.rect.start.x, self.rect.start.y),
+                    .South => Coord.new2(level, self.rect.start.x, self.rect.end().y),
+                    else => unreachable,
+                },
+                .North => switch (newdirec) {
+                    .East => Coord.new2(level, self.rect.start.x + twidth, self.rect.start.y),
+                    .West => Coord.new2(level, self.rect.start.x, self.rect.start.y),
+                    else => unreachable,
+                },
+                .South => switch (newdirec) {
+                    .East => Coord.new2(level, self.rect.end().x, self.rect.end().y -| twidth),
+                    .West => Coord.new2(level, self.rect.start.x, self.rect.end().y -| twidth),
+                    else => unreachable,
+                },
+                else => unreachable,
+            };
+            const newdim = switch (newdirec) {
+                .North, .South => &[_]usize{ theight, 0 },
+                .East, .West => &[_]usize{ 0, twidth },
+                else => unreachable,
+            };
+            res[i] = .{ .rect = .{ .start = newstart, .width = newdim[0], .height = newdim[1] }, .direction = newdirec };
+        }
+        return res;
     }
 };
 
@@ -1810,14 +1872,46 @@ pub fn placeTunnelledRooms(
     level: usize,
     allocator: mem.Allocator,
 ) void {
-    _ = level;
-    _ = allocator;
-    var tun = Tunneller{ .rect = Rect.new(Coord.new2(level, 2, 2), 0, 3), .direction = .East };
+    var ctx = Ctx{ .tunnellers = Tunneller.AList.init(allocator) };
+    ctx.tunnellers.append(Tunneller{ .rect = Rect.new(Coord.new2(level, 68, 20), 0, 6), .direction = .West }) catch err.wat();
+    defer ctx.tunnellers.deinit();
+
+    var new_tuns = Tunneller.AList.init(allocator);
+    defer new_tuns.deinit();
+
     var tries: usize = 0;
-    while (tun.canAdvance() and tries < 30) : (tries += 1) {
-        tun.advance();
+    while (tries < 50000) : (tries += 1) {
+        var active: usize = 0;
+        for (ctx.tunnellers.items) |*tunneller| if (!tunneller.dead) {
+            if (tunneller.canAdvance()) {
+                tunneller.advance();
+                active += 1;
+            } else {
+                tunneller.dead = true;
+                state.rooms[level].append(.{
+                    .type = .Corridor,
+                    .rect = tunneller.rect,
+                    .prefab = null,
+                }) catch err.wat();
+            }
+
+            const children = tunneller.getPotentialChildren();
+            for (children) |child| {
+                if (tunneller.dead or rng.onein(18)) {
+                    new_tuns.append(child) catch err.wat();
+                }
+            }
+        };
+        for (new_tuns.items) |new_tun| {
+            if (new_tun.canAdvance()) {
+                active += 1;
+                ctx.tunnellers.append(new_tun) catch err.wat();
+            }
+        }
+        new_tuns.clearAndFree();
+        if (active == 0)
+            break;
     }
-    state.rooms[level].append(.{ .rect = tun.rect, .prefab = null }) catch err.wat();
 }
 
 pub fn _strewItemsAround(room: *Room, max_items: usize) void {
@@ -1829,10 +1923,6 @@ pub fn _strewItemsAround(room: *Room, max_items: usize) void {
         while (true) {
             item_coord = room.rect.randomCoord();
 
-            // FIXME: uhg, this will reject tiles with mobs on it, even
-            // though that's not what we want. On the other hand, killing
-            // a guard that has a potion underneath it will cause the
-            // corpse to hide the potion...
             if (isTileAvailable(item_coord) and
                 !state.dungeon.at(item_coord).prison)
                 break; // we found a valid coord

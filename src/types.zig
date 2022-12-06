@@ -261,26 +261,28 @@ pub const Coord = struct { // {{{
         return Coord.new2(
             a.z,
             math.max(a.x, b.x) - math.min(a.x, b.x),
-            math.max(a.y, b.y) - math.min(a.y, b.y),
+            math.max(a.y, b.y) -
+                math.min(a.y, b.y),
         );
     }
 
     pub inline fn distance(a: Self, b: Self) usize {
-        const diff = a.difference(b);
+        const diff =
+            a.difference(b);
 
         // Euclidean: d = sqrt(dx^2 + dy^2)
         //
         // return math.sqrt((diff.x * diff.x) + (diff.y * diff.y));
 
-        // Manhattan: d = dx + dy
-        // return diff.x + diff.y;
+        // Manhattan: d = dx + dy return diff.x + diff.y;
 
         // Chebyshev: d = max(dx, dy)
         return math.max(diff.x, diff.y);
     }
 
     pub inline fn distanceManhattan(a: Self, b: Self) usize {
-        const diff = a.difference(b);
+        const diff =
+            a.difference(b);
         return diff.x + diff.y;
     }
 
@@ -296,13 +298,17 @@ pub const Coord = struct { // {{{
     }
 
     pub inline fn add(a: Self, b: Self) Self {
-        return Coord.new2(a.z, a.x + b.x, a.y + b.y);
+        return Coord.new2(a.z, a.x +
+            b.x, a.y + b.y);
     }
 
     pub inline fn asRect(self: *const Self) Rect {
         return Rect{ .start = self.*, .width = 1, .height = 1 };
     }
 
+    // FIXME: this only checks if the relevant Coordinate component is within
+    // bounds. So, if trying to move a coord south that has the x-axis out of
+    // bounds, it won't return null.
     pub fn move(self: *const Self, direction: Direction, limit: Self) ?Coord {
         switch (direction) {
             .North => {
