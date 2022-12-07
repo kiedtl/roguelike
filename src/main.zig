@@ -247,20 +247,20 @@ fn initLevels() bool {
         tries = 0;
     }
 
-    var f_level: usize = LEVELS - 1;
-    while (f_level > 0) : (f_level -= 1) {
-        for (state.levelinfo[f_level].stairs) |maybe_stair| if (maybe_stair) |dest_stair| {
-            ui.drawLoadingScreen(&loading_screen, dest_stair, "Placing stairs...", (LEVELS - f_level) * 100 / LEVELS) catch return false;
+    // var f_level: usize = LEVELS - 1;
+    // while (f_level > 0) : (f_level -= 1) {
+    //     for (state.levelinfo[f_level].stairs) |maybe_stair| if (maybe_stair) |dest_stair| {
+    //         ui.drawLoadingScreen(&loading_screen, dest_stair, "Placing stairs...", (LEVELS - f_level) * 100 / LEVELS) catch return false;
 
-            const floor = for (state.levelinfo) |levelinfo, i| {
-                if (mem.eql(u8, levelinfo.name, dest_stair)) {
-                    break i;
-                }
-            } else err.bug("Levelinfo stairs {s} invalid", .{dest_stair});
+    //         const floor = for (state.levelinfo) |levelinfo, i| {
+    //             if (mem.eql(u8, levelinfo.name, dest_stair)) {
+    //                 break i;
+    //             }
+    //         } else err.bug("Levelinfo stairs {s} invalid", .{dest_stair});
 
-            mapgen.placeStair(f_level, floor, state.GPA.allocator());
-        };
-    }
+    //         mapgen.placeStair(f_level, floor, state.GPA.allocator());
+    //     };
+    // }
 
     return ui.drawLoadingScreenFinish(&loading_screen);
 }

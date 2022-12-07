@@ -1885,12 +1885,12 @@ pub const Tunneler = struct {
                 Coord.new2(level, self.rect.start.x -| rectw, self.rect.end().y + 1),
             },
             .North => &[_]Coord{
-                Coord.new2(level, self.rect.end().x + 1, self.rect.start.y -| recth -| 1),
-                Coord.new2(level, self.rect.start.x + 1, self.rect.start.y -| recth -| 1),
+                Coord.new2(level, self.rect.end().x + 1, self.rect.start.y -| recth),
+                Coord.new2(level, self.rect.start.x -| (rectw + 1), self.rect.start.y -| recth),
             },
             .South => &[_]Coord{
-                Coord.new2(level, self.rect.end().x + 1, self.rect.end().y -| recth -| 1),
-                Coord.new2(level, self.rect.start.x + 1, self.rect.end().y -| recth -| 1),
+                Coord.new2(level, self.rect.end().x + 1, self.rect.end().y -| recth),
+                Coord.new2(level, self.rect.start.x -| (rectw + 1), self.rect.end().y -| recth),
             },
             else => unreachable,
         };
@@ -1900,16 +1900,16 @@ pub const Tunneler = struct {
                 Coord.new2(level, self.rect.end().x -| 1, self.rect.end().y),
             },
             .West => &[_]Coord{
-                Coord.new2(level, self.rect.start.x, self.rect.start.y -| 1),
-                Coord.new2(level, self.rect.start.x, self.rect.end().y),
+                Coord.new2(level, self.rect.start.x -| 1, self.rect.start.y -| 1),
+                Coord.new2(level, self.rect.start.x -| 1, self.rect.end().y),
             },
             .North => &[_]Coord{
+                Coord.new2(level, self.rect.end().x, self.rect.start.y -| 1),
                 Coord.new2(level, self.rect.start.x -| 1, self.rect.start.y -| 1),
-                Coord.new2(level, self.rect.end().x -| 1, self.rect.start.y -| 1),
             },
             .South => &[_]Coord{
+                Coord.new2(level, self.rect.end().x, self.rect.end().y),
                 Coord.new2(level, self.rect.start.x -| 1, self.rect.end().y -| 1),
-                Coord.new2(level, self.rect.end().x -| 1, self.rect.end().y -| 1),
             },
             else => unreachable,
         };
@@ -1942,7 +1942,7 @@ pub fn placeTunneledRooms(
     allocator: mem.Allocator,
 ) void {
     var ctx = Ctx{ .tunnelers = Tunneler.AList.init(allocator) };
-    ctx.tunnelers.append(Tunneler{ .rect = Rect.new(Coord.new2(level, 1, 20), 0, 3), .direction = .East }) catch err.wat();
+    ctx.tunnelers.append(Tunneler{ .rect = Rect.new(Coord.new2(level, 20, 2), 3, 0), .direction = .South }) catch err.wat();
     defer ctx.tunnelers.deinit();
 
     var new_tuns = Tunneler.AList.init(allocator);
@@ -1964,12 +1964,12 @@ pub fn placeTunneledRooms(
                 }) catch err.wat();
             }
 
-            const children = tunneler.getPotentialChildren();
-            for (children) |child| {
-                if (tunneler.dead or rng.onein(18)) {
-                    new_tuns.append(child) catch err.wat();
-                }
-            }
+            // const children = tunneler.getPotentialChildren();
+            // for (children) |child| {
+            //     if (tunneler.dead or rng.onein(18)) {
+            //         new_tuns.append(child) catch err.wat();
+            //     }
+            // }
 
             const rooms = tunneler.getPotentialRooms(&ctx);
             for (rooms) |maybe_room| if (maybe_room) |room| {

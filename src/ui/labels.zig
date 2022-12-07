@@ -52,7 +52,8 @@ pub fn addFor(mob: *Mob, text: []const u8, opts: LabelOpts) void {
 }
 
 pub fn addForf(mob: *Mob, comptime fmt: []const u8, args: anytype, opts: LabelOpts) void {
-    add(.{ .Mob = mob }, std.fmt.allocPrint(state.GPA.allocator(), fmt, args) catch unreachable, opts, true);
+    const s = @call(.{ .modifier = .always_inline }, std.fmt.allocPrint, .{ state.GPA.allocator(), fmt, args }) catch unreachable;
+    add(.{ .Mob = mob }, s, opts, true);
 }
 
 pub fn addAt(coord: Coord, text: []const u8, opts: LabelOpts) void {
@@ -60,7 +61,8 @@ pub fn addAt(coord: Coord, text: []const u8, opts: LabelOpts) void {
 }
 
 pub fn addAtf(coord: Coord, comptime fmt: []const u8, args: anytype, opts: LabelOpts) void {
-    add(.{ .Coord = coord }, std.fmt.allocPrint(state.GPA.allocator(), fmt, args) catch unreachable, opts, true);
+    const s = @call(.{ .modifier = .always_inline }, std.fmt.allocPrint, .{ state.GPA.allocator(), fmt, args }) catch unreachable;
+    add(.{ .Coord = coord }, s, opts, true);
 }
 
 fn add(loc: std.meta.fieldInfo(MapLabel, .loc).field_type, text: []const u8, opts: LabelOpts, malloced: bool) void {
