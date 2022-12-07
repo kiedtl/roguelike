@@ -19,6 +19,7 @@ const state = @import("state.zig");
 const tsv = @import("tsv.zig");
 const types = @import("types.zig");
 
+const LinkedList = @import("list.zig").LinkedList;
 const Generator = @import("generators.zig").Generator;
 const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const StackBuffer = @import("buffer.zig").StackBuffer;
@@ -830,16 +831,20 @@ fn excavatePrefab(
     }
 }
 
-fn excavateRect(rect: *const Rect) void {
+fn fillRect(rect: *const Rect, with: TileType) void {
     var y = rect.start.y;
     while (y < rect.end().y) : (y += 1) {
         var x = rect.start.x;
         while (x < rect.end().x) : (x += 1) {
             const c = Coord.new2(rect.start.z, x, y);
             assert(c.x < WIDTH and c.y < HEIGHT);
-            state.dungeon.at(c).type = .Floor;
+            state.dungeon.at(c).type = with;
         }
     }
+}
+
+fn excavateRect(rect: *const Rect) void {
+    fillRect(rect, .Floor);
 }
 
 // Destroy items, machines, and mobs associated with level and reset level's
@@ -1747,7 +1752,7 @@ pub fn placeBSPRooms(
 }
 
 pub const Ctx = struct {
-    tunnelers: Tunneler.AList,
+    tunnelers: Tunneler.List,
 };
 
 pub const Tunneler = struct {
@@ -1755,10 +1760,18 @@ pub const Tunneler = struct {
     // max_age: usize,
     rect: Rect,
     direction: Direction,
-    dead: bool = false,
+    is_dead: bool = false,
+    is_eviscerated: bool = false,
+    child_corridors: StackBuffer(*Tunneler, 64) = StackBuffer(*Tunneler, 64).init(null),
+    child_rooms: usize = 0,
+    parent: ?*Self = null,
+
+    __prev: ?*Self = null,
+    __next: ?*Self = null,
 
     const Self = @This();
     const AList = std.ArrayList(Self);
+    const List = LinkedList(Self);
 
     pub fn advance(self: *Self) void {
         switch (self.direction) {
@@ -1779,6 +1792,15 @@ pub const Tunneler = struct {
             else => unreachable,
         }
         excavateRect(&self.rect);
+    }
+
+    pub fn isChildless(self: *const Self) bool {
+        if (self.child_rooms > 0)
+            return false;
+        for (self.child_corridors.constSlice()) |child_corridor|
+            if (!child_corridor.isChildless())
+                return false;
+        return true;
     }
 
     pub fn canAdvance(self: *const Self) bool {
@@ -1858,7 +1880,11 @@ pub const Tunneler = struct {
                 .East, .West => &[_]usize{ 0, twidth },
                 else => unreachable,
             };
-            res[i] = .{ .rect = .{ .start = newstart, .width = newdim[0], .height = newdim[1] }, .direction = newdirec };
+            res[i] = .{
+                .rect = .{ .start = newstart, .width = newdim[0], .height = newdim[1] },
+                .direction = newdirec,
+                .parent = self,
+            };
         }
         return res;
     }
@@ -1872,65 +1898,65 @@ pub const Tunneler = struct {
         var res = [2]?RoomTemplate{ null, null };
 
         const level = self.rect.start.z;
-        const rectw = rng.range(usize, Configs[level].min_room_width, Configs[level].max_room_width);
-        const recth = rng.range(usize, Configs[level].min_room_height, Configs[level].max_room_height);
 
-        const start_coords = switch (self.direction) {
-            .East => &[_]Coord{
-                Coord.new2(level, self.rect.end().x -| rectw, self.rect.start.y -| recth -| 1),
-                Coord.new2(level, self.rect.end().x -| rectw, self.rect.end().y + 1),
-            },
-            .West => &[_]Coord{
-                Coord.new2(level, self.rect.start.x -| rectw, self.rect.start.y -| recth -| 1),
-                Coord.new2(level, self.rect.start.x -| rectw, self.rect.end().y + 1),
-            },
-            .North => &[_]Coord{
-                Coord.new2(level, self.rect.end().x + 1, self.rect.start.y -| recth),
-                Coord.new2(level, self.rect.start.x -| (rectw + 1), self.rect.start.y -| recth),
-            },
-            .South => &[_]Coord{
-                Coord.new2(level, self.rect.end().x + 1, self.rect.end().y -| recth),
-                Coord.new2(level, self.rect.start.x -| (rectw + 1), self.rect.end().y -| recth),
-            },
-            else => unreachable,
-        };
-        const door_coords = switch (self.direction) {
-            .East => &[_]Coord{
-                Coord.new2(level, self.rect.end().x -| 1, self.rect.start.y -| 1),
-                Coord.new2(level, self.rect.end().x -| 1, self.rect.end().y),
-            },
-            .West => &[_]Coord{
-                Coord.new2(level, self.rect.start.x -| 1, self.rect.start.y -| 1),
-                Coord.new2(level, self.rect.start.x -| 1, self.rect.end().y),
-            },
-            .North => &[_]Coord{
-                Coord.new2(level, self.rect.end().x, self.rect.start.y -| 1),
-                Coord.new2(level, self.rect.start.x -| 1, self.rect.start.y -| 1),
-            },
-            .South => &[_]Coord{
-                Coord.new2(level, self.rect.end().x, self.rect.end().y),
-                Coord.new2(level, self.rect.start.x -| 1, self.rect.end().y -| 1),
-            },
-            else => unreachable,
-        };
+        for (res) |_, i| {
+            const rectw = rng.range(usize, Configs[level].min_room_width, Configs[level].max_room_width);
+            const recth = rng.range(usize, Configs[level].min_room_height, Configs[level].max_room_height);
 
-        for (start_coords) |start_coord, i| {
-            const rect = Rect{ .start = start_coord, .width = rectw, .height = recth };
+            const start_coords = switch (self.direction) {
+                .East => &[_]Coord{
+                    Coord.new2(level, self.rect.end().x -| rectw, self.rect.start.y -| recth -| 1),
+                    Coord.new2(level, self.rect.end().x -| rectw, self.rect.end().y + 1),
+                },
+                .West => &[_]Coord{
+                    Coord.new2(level, self.rect.start.x -| rectw, self.rect.start.y -| recth -| 1),
+                    Coord.new2(level, self.rect.start.x -| rectw, self.rect.end().y + 1),
+                },
+                .North => &[_]Coord{
+                    Coord.new2(level, self.rect.end().x + 1, self.rect.start.y -| recth),
+                    Coord.new2(level, self.rect.start.x -| (rectw + 1), self.rect.start.y -| recth),
+                },
+                .South => &[_]Coord{
+                    Coord.new2(level, self.rect.end().x + 1, self.rect.end().y -| recth),
+                    Coord.new2(level, self.rect.start.x -| (rectw + 1), self.rect.end().y -| recth),
+                },
+                else => unreachable,
+            };
+            const door_coords = switch (self.direction) {
+                .East => &[_]Coord{
+                    Coord.new2(level, self.rect.end().x -| 1, self.rect.start.y -| 1),
+                    Coord.new2(level, self.rect.end().x -| 1, self.rect.end().y),
+                },
+                .West => &[_]Coord{
+                    Coord.new2(level, self.rect.start.x -| 1, self.rect.start.y -| 1),
+                    Coord.new2(level, self.rect.start.x -| 1, self.rect.end().y),
+                },
+                .North => &[_]Coord{
+                    Coord.new2(level, self.rect.end().x, self.rect.start.y -| 1),
+                    Coord.new2(level, self.rect.start.x -| 1, self.rect.start.y -| 1),
+                },
+                .South => &[_]Coord{
+                    Coord.new2(level, self.rect.end().x, self.rect.end().y -| 1),
+                    Coord.new2(level, self.rect.start.x -| 1, self.rect.end().y -| 1),
+                },
+                else => unreachable,
+            };
+
+            const rect = Rect{ .start = start_coords[i], .width = rectw, .height = recth };
             const room = Room{ .rect = rect };
 
+            var tunnelers = ctx.tunnelers.iterator();
+            const overlaps = while (tunnelers.next()) |tunneler| {
+                if (tunneler.rect.intersects(&rect, 1)) break true;
+            } else false;
+
             // Forgive the crazy formatting...
-            if (isRoomInvalid(&state.rooms[level], &room, null, null, false) or
-                for (ctx.tunnelers.items) |othertun|
-            {
-                if (othertun.rect.intersects(&rect, 1))
-                    break true;
-            } else false) {
+            if (isRoomInvalid(&state.rooms[level], &room, null, null, false) or overlaps) {
                 continue;
             }
 
             res[i] = .{ .rect = rect, .door = door_coords[i] };
         }
-
         return res;
     }
 };
@@ -1941,8 +1967,8 @@ pub fn placeTunneledRooms(
     level: usize,
     allocator: mem.Allocator,
 ) void {
-    var ctx = Ctx{ .tunnelers = Tunneler.AList.init(allocator) };
-    ctx.tunnelers.append(Tunneler{ .rect = Rect.new(Coord.new2(level, 20, 2), 3, 0), .direction = .South }) catch err.wat();
+    var ctx = Ctx{ .tunnelers = Tunneler.List.init(allocator) };
+    ctx.tunnelers.append(Tunneler{ .rect = Rect.new(Coord.new2(level, 2, 20), 0, 3), .direction = .East }) catch err.wat();
     defer ctx.tunnelers.deinit();
 
     var new_tuns = Tunneler.AList.init(allocator);
@@ -1951,12 +1977,13 @@ pub fn placeTunneledRooms(
     var tries: usize = 0;
     while (tries < 50000) : (tries += 1) {
         var active: usize = 0;
-        for (ctx.tunnelers.items) |*tunneler| if (!tunneler.dead) {
+        var tunnelers = ctx.tunnelers.iterator();
+        while (tunnelers.next()) |tunneler| if (!tunneler.is_dead) {
             if (tunneler.canAdvance()) {
                 tunneler.advance();
                 active += 1;
             } else {
-                tunneler.dead = true;
+                tunneler.is_dead = true;
                 state.rooms[level].append(.{
                     .type = .Corridor,
                     .rect = tunneler.rect,
@@ -1964,12 +1991,12 @@ pub fn placeTunneledRooms(
                 }) catch err.wat();
             }
 
-            // const children = tunneler.getPotentialChildren();
-            // for (children) |child| {
-            //     if (tunneler.dead or rng.onein(18)) {
-            //         new_tuns.append(child) catch err.wat();
-            //     }
-            // }
+            const children = tunneler.getPotentialChildren();
+            for (children) |child| {
+                if (tunneler.is_dead or rng.onein(18)) {
+                    new_tuns.append(child) catch err.wat();
+                }
+            }
 
             const rooms = tunneler.getPotentialRooms(&ctx);
             for (rooms) |maybe_room| if (maybe_room) |room| {
@@ -1978,17 +2005,31 @@ pub fn placeTunneledRooms(
                 var new_room = Room{ .rect = room.rect };
                 new_room.connections.append(room.door) catch err.wat();
                 state.rooms[level].append(new_room) catch err.wat();
+                tunneler.child_rooms += 1;
             };
         };
         for (new_tuns.items) |new_tun| {
             if (new_tun.canAdvance()) {
                 active += 1;
-                ctx.tunnelers.append(new_tun) catch err.wat();
+                const new_tun_ptr = ctx.tunnelers.appendAndReturn(new_tun) catch err.wat();
+                new_tun.parent.?.child_corridors.append(new_tun_ptr) catch err.wat();
             }
         }
         new_tuns.clearAndFree();
         if (active == 0)
             break;
+    }
+
+    // Remove and fill in empty & childless corridors
+    var tunnelers = ctx.tunnelers.iterator();
+    while (tunnelers.next()) |tunneler| {
+        if (!tunneler.is_eviscerated and tunneler.isChildless()) {
+            fillRect(&tunneler.rect, .Wall);
+            for (tunneler.child_corridors.constSlice()) |child| {
+                fillRect(&child.rect, .Wall);
+                child.is_eviscerated = true;
+            }
+        }
     }
 }
 
