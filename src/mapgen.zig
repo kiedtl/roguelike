@@ -1789,6 +1789,15 @@ pub const Tunneler = struct {
     const AList = std.ArrayList(Self);
     const List = LinkedList(Self);
 
+    pub fn die(self: *Self) void {
+        self.is_dead = true;
+        state.rooms[self.rect.start.z].append(.{
+            .type = .Corridor,
+            .rect = self.rect,
+            .prefab = null,
+        }) catch err.wat();
+    }
+
     pub fn advance(self: *Self) void {
         switch (self.direction) {
             .North => {
@@ -1981,8 +1990,32 @@ pub const Tunneler = struct {
         }
         return res;
     }
+
+    pub fn corridorWidth(self: *const Self) usize {
+        return switch (self.direction) {
+            .North, .South => self.rect.width,
+            .East, .West => self.rect.height,
+            else => unreachable,
+        };
+    }
+
+    pub fn corridorLength(self: *const Self) usize {
+        return switch (self.direction) {
+            .North, .South => self.rect.height,
+            .East, .West => self.rect.width,
+            else => unreachable,
+        };
+    }
 };
 
+// TODO:
+// - Remove dead ends, i.e. reduce corridor length to it's last branch/junction
+// - Add junction points when a corridor turns
+// - Make corridors change widths as they branch out or change direction
+// - Prevent diagonal shortcuts
+// - Integrate additional corridors between rooms
+// - Ensure there are looping connections between multiple tunnelers
+// - Add doorways randomly to rooms, not the way it currently is
 pub fn placeTunneledRooms(
     _: *PrefabArrayList,
     _: *PrefabArrayList,
@@ -2019,34 +2052,43 @@ pub fn placeTunneledRooms(
                 is_any_active = true;
                 is_cur_gen_active = true;
             } else {
-                tunneler.is_dead = true;
-                state.rooms[level].append(.{
-                    .type = .Corridor,
-                    .rect = tunneler.rect,
-                    .prefab = null,
-                }) catch err.wat();
+                tunneler.die();
             }
 
             const children = tunneler.getPotentialChildren();
             for (children) |child| {
-                if (tunneler.is_dead or rng.onein(18)) {
+                if (!tunneler.is_dead and child.canAdvance(&ctx) and rng.onein(35)) {
+                    var new = child;
+                    new.generation = tunneler.generation;
+                    tunneler.die();
+                    new_tuns.append(new) catch err.wat();
+                } else if (tunneler.is_dead or rng.onein(18)) {
                     new_tuns.append(child) catch err.wat();
                 }
             }
 
-            const rooms = tunneler.getPotentialRooms();
-            for (rooms) |maybe_room| if (maybe_room) |room| {
-                ctx.roomies.append(room) catch err.wat();
-            };
+            if (tunneler.corridorLength() > tunneler.corridorWidth() * 2) {
+                var room_tries: usize = 20;
+                while (room_tries > 0) : (room_tries -= 1) {
+                    const rooms = tunneler.getPotentialRooms();
+                    for (rooms) |maybe_room| if (maybe_room) |room| {
+                        ctx.roomies.append(room) catch err.wat();
+                    };
+                }
+            }
         };
         for (new_tuns.items) |new_tun| {
             if (new_tun.canAdvance(&ctx)) {
                 is_any_active = true;
                 const new_tun_ptr = ctx.tunnelers.appendAndReturn(new_tun) catch err.wat();
                 new_tun.parent.?.child_corridors.append(new_tun_ptr) catch err.wat();
+
+                // Give new tun a head start to prevent roomies from immediately taking up place
+                new_tun_ptr.advance();
             }
         }
         new_tuns.clearAndFree();
+
         for (ctx.roomies.items) |roomie| {
             const room = Room{ .rect = roomie.rect };
 
@@ -2057,12 +2099,15 @@ pub fn placeTunneledRooms(
             {
                 continue;
             }
+
             excavateRect(&roomie.rect);
             state.dungeon.at(roomie.door).type = .Floor;
             var new_room = Room{ .rect = roomie.rect };
             new_room.connections.append(roomie.door) catch err.wat();
             state.rooms[level].append(new_room) catch err.wat();
             roomie.parent.child_rooms += 1;
+
+            // TODO: remove roomies that are dead?
         }
 
         if (!is_cur_gen_active)
