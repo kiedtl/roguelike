@@ -1752,7 +1752,22 @@ pub fn placeBSPRooms(
 }
 
 pub const Ctx = struct {
+    roomies: std.ArrayList(Roomie),
     tunnelers: Tunneler.List,
+
+    pub fn findIntersectingTunnel(self: *Ctx, rect: Rect) ?*Tunneler {
+        var tunnelers = self.tunnelers.iterator();
+        return while (tunnelers.next()) |tunneler| {
+            if (tunneler.rect.intersects(&rect, 1)) break tunneler;
+        } else null;
+    }
+};
+
+pub const Roomie = struct {
+    parent: *Tunneler,
+    generation: usize,
+    rect: Rect,
+    door: Coord,
 };
 
 pub const Tunneler = struct {
@@ -1765,6 +1780,7 @@ pub const Tunneler = struct {
     child_corridors: StackBuffer(*Tunneler, 64) = StackBuffer(*Tunneler, 64).init(null),
     child_rooms: usize = 0,
     parent: ?*Self = null,
+    generation: usize = 0,
 
     __prev: ?*Self = null,
     __next: ?*Self = null,
@@ -1803,13 +1819,13 @@ pub const Tunneler = struct {
         return true;
     }
 
-    pub fn canAdvance(self: *const Self) bool {
+    pub fn canAdvance(self: *const Self, ctx: *Ctx) bool {
         if (self.rect.overflowsLimit(&LIMIT))
             return false;
 
         if (self.direction == .East or self.direction == .West) {
             assert(self.rect.height > 0);
-            const edgex = if (self.direction == .East) self.rect.end().x else self.rect.start.x;
+            const edgex = if (self.direction == .East) self.rect.end().x - 1 else self.rect.start.x;
             var y: usize = 0;
             while (y < self.rect.height) : (y += 1) {
                 const newedge = Coord.new2(self.rect.start.z, edgex, self.rect.start.y + y);
@@ -1817,14 +1833,25 @@ pub const Tunneler = struct {
                     if (state.dungeon.at(advanced).type != .Wall)
                         return false;
                     if (advanced.move(self.direction, state.mapgeometry)) |advanced2| {
-                        if (state.dungeon.at(advanced2).type != .Wall)
+                        const intersector = ctx.findIntersectingTunnel(advanced2.asRect());
+                        const intersect_is_ok =
+                            rng.onein(3) and intersector != null and intersector.?.is_dead and intersector.?.child_rooms > 0;
+
+                        if (state.dungeon.at(advanced2).type != .Wall and !intersect_is_ok)
                             return false;
                     } else return false;
                 } else return false;
+
+                const edgex2 = if (self.direction == .East) self.rect.end().x else self.rect.start.x -| 1;
+                const sideedge1 = Coord.new2(self.rect.start.z, edgex2, self.rect.start.y -| 1);
+                const sideedge2 = Coord.new2(self.rect.start.z, edgex2, self.rect.end().y);
+                if (state.dungeon.at(sideedge1).type != .Wall or state.dungeon.at(sideedge2).type != .Wall) {
+                    return false;
+                }
             }
         } else if (self.direction == .North or self.direction == .South) {
             assert(self.rect.width > 0);
-            const edgey = if (self.direction == .South) self.rect.end().y else self.rect.start.y;
+            const edgey = if (self.direction == .South) self.rect.end().y - 1 else self.rect.start.y;
             var x: usize = 0;
             while (x < self.rect.width) : (x += 1) {
                 const newedge = Coord.new2(self.rect.start.z, self.rect.start.x + x, edgey);
@@ -1836,6 +1863,13 @@ pub const Tunneler = struct {
                             return false;
                     } else return false;
                 } else return false;
+
+                const edgey2 = if (self.direction == .South) self.rect.end().y else self.rect.start.y -| 1;
+                const sideedge1 = Coord.new2(self.rect.start.z, self.rect.start.x -| 1, edgey2);
+                const sideedge2 = Coord.new2(self.rect.start.z, self.rect.end().x, edgey2);
+                if (state.dungeon.at(sideedge1).type != .Wall or state.dungeon.at(sideedge2).type != .Wall) {
+                    return false;
+                }
             }
         } else unreachable;
         return true;
@@ -1884,18 +1918,14 @@ pub const Tunneler = struct {
                 .rect = .{ .start = newstart, .width = newdim[0], .height = newdim[1] },
                 .direction = newdirec,
                 .parent = self,
+                .generation = self.generation + 1,
             };
         }
         return res;
     }
 
-    pub const RoomTemplate = struct {
-        rect: Rect,
-        door: Coord,
-    };
-
-    pub fn getPotentialRooms(self: *Self, ctx: *const Ctx) [2]?RoomTemplate {
-        var res = [2]?RoomTemplate{ null, null };
+    pub fn getPotentialRooms(self: *Self) [2]?Roomie {
+        var res = [2]?Roomie{ null, null };
 
         const level = self.rect.start.z;
 
@@ -1909,12 +1939,12 @@ pub const Tunneler = struct {
                     Coord.new2(level, self.rect.end().x -| rectw, self.rect.end().y + 1),
                 },
                 .West => &[_]Coord{
-                    Coord.new2(level, self.rect.start.x -| rectw, self.rect.start.y -| recth -| 1),
-                    Coord.new2(level, self.rect.start.x -| rectw, self.rect.end().y + 1),
+                    Coord.new2(level, self.rect.start.x -| (rectw - 1), self.rect.start.y -| recth -| 1),
+                    Coord.new2(level, self.rect.start.x -| (rectw - 1), self.rect.end().y + 1),
                 },
                 .North => &[_]Coord{
-                    Coord.new2(level, self.rect.end().x + 1, self.rect.start.y -| recth),
-                    Coord.new2(level, self.rect.start.x -| (rectw + 1), self.rect.start.y -| recth),
+                    Coord.new2(level, self.rect.end().x + 1, self.rect.start.y -| (recth - 1)),
+                    Coord.new2(level, self.rect.start.x -| (rectw + 1), self.rect.start.y -| (recth - 1)),
                 },
                 .South => &[_]Coord{
                     Coord.new2(level, self.rect.end().x + 1, self.rect.end().y -| recth),
@@ -1928,12 +1958,12 @@ pub const Tunneler = struct {
                     Coord.new2(level, self.rect.end().x -| 1, self.rect.end().y),
                 },
                 .West => &[_]Coord{
-                    Coord.new2(level, self.rect.start.x -| 1, self.rect.start.y -| 1),
-                    Coord.new2(level, self.rect.start.x -| 1, self.rect.end().y),
+                    Coord.new2(level, self.rect.start.x, self.rect.start.y -| 1),
+                    Coord.new2(level, self.rect.start.x, self.rect.end().y),
                 },
                 .North => &[_]Coord{
-                    Coord.new2(level, self.rect.end().x, self.rect.start.y -| 1),
-                    Coord.new2(level, self.rect.start.x -| 1, self.rect.start.y -| 1),
+                    Coord.new2(level, self.rect.end().x, self.rect.start.y),
+                    Coord.new2(level, self.rect.start.x -| 1, self.rect.start.y),
                 },
                 .South => &[_]Coord{
                     Coord.new2(level, self.rect.end().x, self.rect.end().y -| 1),
@@ -1942,20 +1972,12 @@ pub const Tunneler = struct {
                 else => unreachable,
             };
 
-            const rect = Rect{ .start = start_coords[i], .width = rectw, .height = recth };
-            const room = Room{ .rect = rect };
-
-            var tunnelers = ctx.tunnelers.iterator();
-            const overlaps = while (tunnelers.next()) |tunneler| {
-                if (tunneler.rect.intersects(&rect, 1)) break true;
-            } else false;
-
-            // Forgive the crazy formatting...
-            if (isRoomInvalid(&state.rooms[level], &room, null, null, false) or overlaps) {
-                continue;
-            }
-
-            res[i] = .{ .rect = rect, .door = door_coords[i] };
+            res[i] = .{
+                .rect = Rect{ .start = start_coords[i], .width = rectw, .height = recth },
+                .door = door_coords[i],
+                .parent = self,
+                .generation = self.generation + 1,
+            };
         }
         return res;
     }
@@ -1967,21 +1989,35 @@ pub fn placeTunneledRooms(
     level: usize,
     allocator: mem.Allocator,
 ) void {
-    var ctx = Ctx{ .tunnelers = Tunneler.List.init(allocator) };
+    var ctx = Ctx{
+        .tunnelers = Tunneler.List.init(allocator),
+        .roomies = std.ArrayList(Roomie).init(allocator),
+    };
     ctx.tunnelers.append(Tunneler{ .rect = Rect.new(Coord.new2(level, 2, 20), 0, 3), .direction = .East }) catch err.wat();
     defer ctx.tunnelers.deinit();
+    defer ctx.roomies.deinit();
 
     var new_tuns = Tunneler.AList.init(allocator);
     defer new_tuns.deinit();
 
+    var cur_gen: usize = 0;
+
     var tries: usize = 0;
     while (tries < 50000) : (tries += 1) {
-        var active: usize = 0;
+        var is_any_active: bool = false;
+        var is_cur_gen_active: bool = false;
+
         var tunnelers = ctx.tunnelers.iterator();
         while (tunnelers.next()) |tunneler| if (!tunneler.is_dead) {
-            if (tunneler.canAdvance()) {
+            if (tunneler.generation != cur_gen) {
+                is_any_active = true;
+                continue;
+            }
+
+            if (tunneler.canAdvance(&ctx)) {
                 tunneler.advance();
-                active += 1;
+                is_any_active = true;
+                is_cur_gen_active = true;
             } else {
                 tunneler.is_dead = true;
                 state.rooms[level].append(.{
@@ -1998,25 +2034,40 @@ pub fn placeTunneledRooms(
                 }
             }
 
-            const rooms = tunneler.getPotentialRooms(&ctx);
+            const rooms = tunneler.getPotentialRooms();
             for (rooms) |maybe_room| if (maybe_room) |room| {
-                excavateRect(&room.rect);
-                state.dungeon.at(room.door).type = .Floor;
-                var new_room = Room{ .rect = room.rect };
-                new_room.connections.append(room.door) catch err.wat();
-                state.rooms[level].append(new_room) catch err.wat();
-                tunneler.child_rooms += 1;
+                ctx.roomies.append(room) catch err.wat();
             };
         };
         for (new_tuns.items) |new_tun| {
-            if (new_tun.canAdvance()) {
-                active += 1;
+            if (new_tun.canAdvance(&ctx)) {
+                is_any_active = true;
                 const new_tun_ptr = ctx.tunnelers.appendAndReturn(new_tun) catch err.wat();
                 new_tun.parent.?.child_corridors.append(new_tun_ptr) catch err.wat();
             }
         }
         new_tuns.clearAndFree();
-        if (active == 0)
+        for (ctx.roomies.items) |roomie| {
+            const room = Room{ .rect = roomie.rect };
+
+            // Forgive the crazy formatting...
+            if (isRoomInvalid(&state.rooms[level], &room, null, null, false) or
+                ctx.findIntersectingTunnel(roomie.rect) != null or
+                roomie.generation != cur_gen)
+            {
+                continue;
+            }
+            excavateRect(&roomie.rect);
+            state.dungeon.at(roomie.door).type = .Floor;
+            var new_room = Room{ .rect = roomie.rect };
+            new_room.connections.append(roomie.door) catch err.wat();
+            state.rooms[level].append(new_room) catch err.wat();
+            roomie.parent.child_rooms += 1;
+        }
+
+        if (!is_cur_gen_active)
+            cur_gen += 1;
+        if (!is_any_active)
             break;
     }
 
