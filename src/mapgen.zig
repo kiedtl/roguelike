@@ -1969,18 +1969,25 @@ pub const Tunneler = struct {
     pub fn getPotentialChildren(self: *Self) [2]Tunneler {
         var res: [2]Tunneler = undefined;
         const level = self.rect.start.z;
-        const theight = self.rect.height;
-        const twidth = self.rect.width;
+        // const theight = self.rect.height;
+        // const twidth = self.rect.width;
         const newdirecs = switch (self.direction) {
             .East, .West => &[_]Direction{ .North, .South },
             .North, .South => &[_]Direction{ .East, .West },
             else => unreachable,
         };
         for (newdirecs) |newdirec, i| {
+            var cor_width: usize = self.corridorWidth();
+            if (rng.percent(@as(usize, 40)) and cor_width < 5) {
+                cor_width += 1;
+            } else if (rng.percent(@as(usize, 40)) and cor_width > 1) {
+                cor_width -= 1;
+            }
+
             const newstart = switch (self.direction) {
                 .East => switch (newdirec) {
-                    .North => Coord.new2(level, self.rect.end().x -| theight, self.rect.start.y),
-                    .South => Coord.new2(level, self.rect.end().x -| theight, self.rect.end().y),
+                    .North => Coord.new2(level, self.rect.end().x -| cor_width, self.rect.start.y),
+                    .South => Coord.new2(level, self.rect.end().x -| cor_width, self.rect.end().y),
                     else => unreachable,
                 },
                 .West => switch (newdirec) {
@@ -1989,20 +1996,20 @@ pub const Tunneler = struct {
                     else => unreachable,
                 },
                 .North => switch (newdirec) {
-                    .East => Coord.new2(level, self.rect.start.x + twidth, self.rect.start.y),
+                    .East => Coord.new2(level, self.rect.end().x, self.rect.start.y),
                     .West => Coord.new2(level, self.rect.start.x, self.rect.start.y),
                     else => unreachable,
                 },
                 .South => switch (newdirec) {
-                    .East => Coord.new2(level, self.rect.end().x, self.rect.end().y -| twidth),
-                    .West => Coord.new2(level, self.rect.start.x, self.rect.end().y -| twidth),
+                    .East => Coord.new2(level, self.rect.end().x, self.rect.end().y -| cor_width),
+                    .West => Coord.new2(level, self.rect.start.x, self.rect.end().y -| cor_width),
                     else => unreachable,
                 },
                 else => unreachable,
             };
             const newdim = switch (newdirec) {
-                .North, .South => &[_]usize{ theight, 0 },
-                .East, .West => &[_]usize{ 0, twidth },
+                .North, .South => &[_]usize{ cor_width, 0 },
+                .East, .West => &[_]usize{ 0, cor_width },
                 else => unreachable,
             };
             res[i] = .{
@@ -2011,11 +2018,6 @@ pub const Tunneler = struct {
                 .parent = self,
                 .generation = self.generation + 1,
                 .born_at = self.corridorLength(),
-                // + switch (self.direction) {
-                // .North, .South => twidth,
-                // .East, .West => theight,
-                // else => unreachable,
-                // },
             };
         }
         return res;
@@ -2143,7 +2145,7 @@ pub fn placeTunneledRooms(
     var cur_gen: usize = 0;
 
     var tries: usize = 0;
-    while (tries < 20000) : (tries += 1) {
+    while (tries < 8000) : (tries += 1) {
         var is_any_active: bool = false;
         var is_cur_gen_active: bool = false;
 
