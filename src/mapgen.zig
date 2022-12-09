@@ -1766,6 +1766,7 @@ pub const Ctx = struct {
 pub const Roomie = struct {
     parent: *Tunneler,
     generation: usize,
+    born_at: usize,
     rect: Rect,
     door: Coord,
 };
@@ -1779,8 +1780,10 @@ pub const Tunneler = struct {
     is_eviscerated: bool = false,
     child_corridors: StackBuffer(*Tunneler, 64) = StackBuffer(*Tunneler, 64).init(null),
     child_rooms: usize = 0,
+    child_last_born: usize = 0,
     parent: ?*Self = null,
     generation: usize = 0,
+    born_at: usize = 0,
 
     __prev: ?*Self = null,
     __next: ?*Self = null,
@@ -1817,6 +1820,37 @@ pub const Tunneler = struct {
             else => unreachable,
         }
         excavateRect(&self.rect);
+    }
+
+    pub fn shrinkTo(self: *Self, new_length: usize) void {
+        assert(new_length <= self.corridorLength());
+
+        // debug thing
+        fillRect(&self.rect, .Wall);
+
+        switch (self.direction) {
+            .North => {
+                self.rect.start.y += self.rect.height - new_length;
+                self.rect.height = new_length;
+            },
+            .South => {
+                self.rect.height = new_length;
+            },
+            .East => {
+                self.rect.width = new_length;
+            },
+            .West => {
+                self.rect.start.x += self.rect.width - new_length;
+                self.rect.width = new_length;
+            },
+            else => unreachable,
+        }
+
+        // debug thing
+        // fillRect(&self.rect, .Water);
+        excavateRect(&self.rect);
+
+        assert(self.corridorLength() == new_length);
     }
 
     pub fn isChildless(self: *const Self) bool {
@@ -1928,6 +1962,12 @@ pub const Tunneler = struct {
                 .direction = newdirec,
                 .parent = self,
                 .generation = self.generation + 1,
+                .born_at = self.corridorLength(),
+                // + switch (self.direction) {
+                // .North, .South => twidth,
+                // .East, .West => theight,
+                // else => unreachable,
+                // },
             };
         }
         return res;
@@ -1982,10 +2022,11 @@ pub const Tunneler = struct {
             };
 
             res[i] = .{
-                .rect = Rect{ .start = start_coords[i], .width = rectw, .height = recth },
-                .door = door_coords[i],
                 .parent = self,
                 .generation = self.generation + 1,
+                .born_at = self.corridorLength(),
+                .rect = Rect{ .start = start_coords[i], .width = rectw, .height = recth },
+                .door = door_coords[i],
             };
         }
         return res;
@@ -2010,10 +2051,13 @@ pub const Tunneler = struct {
 
 // TODO:
 // - Remove dead ends, i.e. reduce corridor length to it's last branch/junction
-// - Add junction points when a corridor turns
-// - Make corridors change widths as they branch out or change direction
+// - Add junction points
+//   - When a corridor turns
+//   - At a meeting area for corridors
+//   - In front of some rooms
 // - Prevent diagonal shortcuts
-// - Integrate additional corridors between rooms
+// - Make corridors change widths as they branch out or change direction
+// - Integrate additional-corridors-between-rooms thing
 // - Ensure there are looping connections between multiple tunnelers
 // - Add doorways randomly to rooms, not the way it currently is
 pub fn placeTunneledRooms(
@@ -2036,7 +2080,7 @@ pub fn placeTunneledRooms(
     var cur_gen: usize = 0;
 
     var tries: usize = 0;
-    while (tries < 50000) : (tries += 1) {
+    while (tries < 10000) : (tries += 1) {
         var is_any_active: bool = false;
         var is_cur_gen_active: bool = false;
 
@@ -2068,7 +2112,7 @@ pub fn placeTunneledRooms(
             }
 
             if (tunneler.corridorLength() > tunneler.corridorWidth() * 2) {
-                var room_tries: usize = 20;
+                var room_tries: usize = 15;
                 while (room_tries > 0) : (room_tries -= 1) {
                     const rooms = tunneler.getPotentialRooms();
                     for (rooms) |maybe_room| if (maybe_room) |room| {
@@ -2082,6 +2126,7 @@ pub fn placeTunneledRooms(
                 is_any_active = true;
                 const new_tun_ptr = ctx.tunnelers.appendAndReturn(new_tun) catch err.wat();
                 new_tun.parent.?.child_corridors.append(new_tun_ptr) catch err.wat();
+                new_tun.parent.?.child_last_born = math.max(new_tun.parent.?.child_last_born, new_tun.born_at);
 
                 // Give new tun a head start to prevent roomies from immediately taking up place
                 new_tun_ptr.advance();
@@ -2093,9 +2138,9 @@ pub fn placeTunneledRooms(
             const room = Room{ .rect = roomie.rect };
 
             // Forgive the crazy formatting...
-            if (isRoomInvalid(&state.rooms[level], &room, null, null, false) or
-                ctx.findIntersectingTunnel(roomie.rect) != null or
-                roomie.generation != cur_gen)
+            if (roomie.generation != cur_gen or
+                isRoomInvalid(&state.rooms[level], &room, null, null, false) or
+                ctx.findIntersectingTunnel(roomie.rect) != null)
             {
                 continue;
             }
@@ -2106,6 +2151,7 @@ pub fn placeTunneledRooms(
             new_room.connections.append(roomie.door) catch err.wat();
             state.rooms[level].append(new_room) catch err.wat();
             roomie.parent.child_rooms += 1;
+            roomie.parent.child_last_born = math.max(roomie.parent.child_last_born, roomie.born_at);
 
             // TODO: remove roomies that are dead?
         }
@@ -2125,6 +2171,8 @@ pub fn placeTunneledRooms(
                 fillRect(&child.rect, .Wall);
                 child.is_eviscerated = true;
             }
+        } else if (!tunneler.is_eviscerated) {
+            tunneler.shrinkTo(tunneler.child_last_born);
         }
     }
 }
