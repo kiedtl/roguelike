@@ -1763,9 +1763,45 @@ pub const Ctx = struct {
     }
 
     pub fn killThemAll(self: *Ctx) void {
+        const z = self.tunnelers.first().?.rect.start.z;
+
         var tunnelers = self.tunnelers.iterator();
-        while (tunnelers.next()) |tunneler|
+        while (tunnelers.next()) |tunneler| {
             tunneler.is_dead = true;
+            if (!tunneler.is_eviscerated)
+                state.rooms[z].append(.{ .type = .Corridor, .rect = tunneler.rect }) catch err.wat();
+        }
+    }
+
+    // Dragons be here: we're modifying a container while iterating over it.
+    //
+    pub fn tryAddingRoomies(self: *Ctx, level: usize, cur_gen: usize) void {
+        var i: usize = 0;
+        while (i < self.roomies.items.len) {
+            const roomie = &self.roomies.items[i];
+
+            if (roomie.generation > cur_gen or
+                self.findIntersectingTunnel(roomie.rect) != null)
+            {
+                i += 1;
+                continue;
+            }
+
+            const room = Room{ .rect = roomie.rect };
+            if (isRoomInvalid(&state.rooms[level], &room, null, null, false)) {
+                _ = self.roomies.swapRemove(i);
+                continue;
+            }
+
+            excavateRect(&roomie.rect);
+            state.dungeon.at(roomie.door).type = .Floor;
+            var new_room = Room{ .rect = roomie.rect };
+            new_room.connections.append(roomie.door) catch err.wat();
+            state.rooms[level].append(new_room) catch err.wat();
+            roomie.parent.child_rooms += 1;
+            roomie.parent.roomie_last_born_at = math.max(roomie.parent.roomie_last_born_at, roomie.born_at);
+            _ = self.roomies.swapRemove(i);
+        }
     }
 
     // Remove and fill in empty & childless corridors
@@ -1796,7 +1832,6 @@ pub const Roomie = struct {
     born_at: usize,
     rect: Rect,
     door: Coord,
-    is_dead: bool = false,
 };
 
 pub const Tunneler = struct {
@@ -1822,11 +1857,13 @@ pub const Tunneler = struct {
 
     pub fn die(self: *Self) void {
         self.is_dead = true;
-        state.rooms[self.rect.start.z].append(.{
-            .type = .Corridor,
-            .rect = self.rect,
-            .prefab = null,
-        }) catch err.wat();
+        // Not done on a per-case basis, because then we'd have to update them
+        // if we shrink or destroy a tunnel.
+        //
+        // state.rooms[self.rect.start.z].append(.{
+        //     .type = .Corridor,
+        //     .rect = self.rect,
+        // }) catch err.wat();
     }
 
     pub fn advance(self: *Self) void {
@@ -2182,8 +2219,8 @@ pub fn placeTunneledRooms(
                 }
             }
 
-            if (tunneler.corridorLength() > tunneler.corridorWidth() * 2) {
-                var room_tries: usize = 20;
+            if (tunneler.corridorLength() > tunneler.corridorWidth()) {
+                var room_tries: usize = 15;
                 while (room_tries > 0) : (room_tries -= 1) {
                     const rooms = tunneler.getPotentialRooms();
                     for (rooms) |maybe_room| if (maybe_room) |room| {
@@ -2207,28 +2244,7 @@ pub fn placeTunneledRooms(
         }
         new_tuns.clearAndFree();
 
-        for (ctx.roomies.items) |*roomie| {
-            const room = Room{ .rect = roomie.rect };
-
-            // Forgive the crazy formatting...
-            if (roomie.is_dead or roomie.generation > cur_gen or
-                isRoomInvalid(&state.rooms[level], &room, null, null, false) or
-                ctx.findIntersectingTunnel(roomie.rect) != null)
-            {
-                continue;
-            }
-
-            excavateRect(&roomie.rect);
-            state.dungeon.at(roomie.door).type = .Floor;
-            var new_room = Room{ .rect = roomie.rect };
-            new_room.connections.append(roomie.door) catch err.wat();
-            state.rooms[level].append(new_room) catch err.wat();
-            roomie.parent.child_rooms += 1;
-            roomie.parent.roomie_last_born_at = math.max(roomie.parent.roomie_last_born_at, roomie.born_at);
-            roomie.is_dead = true;
-
-            // TODO: remove roomies that are dead?
-        }
+        ctx.tryAddingRoomies(level, cur_gen);
 
         if (!is_cur_gen_active) {
             cur_gen += 1;
@@ -2239,7 +2255,6 @@ pub fn placeTunneledRooms(
             break;
     }
 
-    ctx.killThemAll();
     ctx.removeChildlessTunnelers(false);
 
     // Fill in corridors that stick out past their last branch
@@ -2249,6 +2264,9 @@ pub fn placeTunneledRooms(
             tunneler.shrinkTo(tunneler.getLastBranch());
         }
     }
+
+    ctx.killThemAll();
+    ctx.tryAddingRoomies(level, 9999999);
 }
 
 pub fn _strewItemsAround(room: *Room, max_items: usize) void {
