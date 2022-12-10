@@ -1754,6 +1754,7 @@ pub fn placeBSPRooms(
 pub const Ctx = struct {
     roomies: std.ArrayList(Roomie),
     tunnelers: Tunneler.List,
+    extras: std.ArrayList(Roomie),
 
     pub fn findIntersectingTunnel(self: *Ctx, rect: Rect) ?*Tunneler {
         var tunnelers = self.tunnelers.iterator();
@@ -1788,7 +1789,9 @@ pub const Ctx = struct {
             }
 
             const room = Room{ .rect = roomie.rect };
-            if (isRoomInvalid(&state.rooms[level], &room, null, null, false)) {
+            if (roomie.parent.is_eviscerated or
+                isRoomInvalid(&state.rooms[level], &room, null, null, false))
+            {
                 _ = self.roomies.swapRemove(i);
                 continue;
             }
@@ -1801,6 +1804,91 @@ pub const Ctx = struct {
             roomie.parent.child_rooms += 1;
             roomie.parent.roomie_last_born_at = math.max(roomie.parent.roomie_last_born_at, roomie.born_at);
             _ = self.roomies.swapRemove(i);
+        }
+    }
+
+    pub fn tryAddingExtraRooms(self: *Ctx, level: usize) void {
+        for (self.extras.items) |extra| {
+            const parent = extra.parent;
+
+            if (parent.is_eviscerated or extra.born_at > parent.corridorLength())
+                continue;
+
+            var new = Room{ .rect = Rect{ .start = extra.rect.start, .width = 0, .height = 0 } };
+
+            while (new.rect.width <= Configs[level].max_room_width and
+                !isRoomInvalid(&state.rooms[level], &new, null, null, false))
+            {
+                new.rect.width += 1;
+            }
+            new.rect.width -|= 1;
+
+            while (new.rect.height <= Configs[level].max_room_height and
+                !isRoomInvalid(&state.rooms[level], &new, null, null, false))
+            {
+                new.rect.height += 1;
+            }
+            new.rect.height -|= 1;
+
+            if (new.rect.width < Configs[level].min_room_width or
+                new.rect.height < Configs[level].min_room_height)
+            {
+                continue;
+            }
+
+            const too_far = switch (extra.parent.direction) {
+                .North, .South => if (new.rect.start.x < parent.rect.start.x)
+                    Coord.new2(level, parent.rect.start.x, new.rect.start.y).distance(new.rect.start) > new.rect.width + 1
+                else
+                    extra.parent.rect.start.distance(new.rect.start) > parent.rect.width + 1,
+                .East, .West => if (new.rect.start.y < parent.rect.start.y)
+                    Coord.new2(level, new.rect.start.x, parent.rect.start.y).distance(new.rect.start) > new.rect.height + 1
+                else
+                    extra.parent.rect.start.distance(new.rect.start) > parent.rect.height + 1,
+                else => unreachable,
+            };
+
+            const door_x = [_]usize{
+                math.max(new.rect.start.x, parent.rect.start.x),
+                math.min(new.rect.end().x - 1, parent.rect.end().x - 1),
+            };
+            const door_y = [_]usize{
+                math.max(new.rect.start.y, parent.rect.start.y),
+                math.min(new.rect.end().y - 1, parent.rect.end().y - 1),
+            };
+
+            var no_door = false;
+
+            switch (parent.direction) {
+                .North, .South => b: {
+                    if (too_far or door_y[1] < door_y[0]) {
+                        no_door = true;
+                        break :b {};
+                    }
+                    const x = if (new.rect.start.x < parent.rect.start.x) new.rect.end().x else new.rect.start.x - 1;
+                    const y = rng.range(usize, door_y[0], door_y[1]);
+                    state.dungeon.at(Coord.new2(level, x, y)).type = .Lava;
+                },
+                .East, .West => b: {
+                    if (too_far or door_x[1] < door_x[0]) {
+                        no_door = true;
+                        break :b {};
+                    }
+                    const x = rng.range(usize, door_x[0], door_x[1]);
+                    const y = if (new.rect.start.y < parent.rect.start.y) new.rect.end().y else new.rect.start.y - 1;
+                    state.dungeon.at(Coord.new2(level, x, y)).type = .Lava;
+                },
+                else => unreachable,
+            }
+
+            if (too_far) {
+                //fillRect(&new.rect, .Lava);
+            } else if (no_door) {
+                fillRect(&new.rect, .Water);
+            } else {
+                excavateRect(&new.rect);
+                state.rooms[level].append(new) catch err.wat();
+            }
         }
     }
 
@@ -1963,7 +2051,7 @@ pub const Tunneler = struct {
                     if (advanced.move(self.direction, state.mapgeometry)) |advanced2| {
                         const intersector = ctx.findIntersectingTunnel(advanced2.asRect());
                         const intersect_is_ok =
-                            rng.onein(3) and intersector != null and intersector.?.is_dead and intersector.?.child_rooms > 0;
+                            rng.onein(2) and intersector != null and intersector.?.child_rooms > 0;
 
                         if (state.dungeon.at(advanced2).type != .Wall and !intersect_is_ok)
                             return false;
@@ -1987,7 +2075,11 @@ pub const Tunneler = struct {
                     if (state.dungeon.at(advanced).type != .Wall)
                         return false;
                     if (advanced.move(self.direction, state.mapgeometry)) |advanced2| {
-                        if (state.dungeon.at(advanced2).type != .Wall)
+                        const intersector = ctx.findIntersectingTunnel(advanced2.asRect());
+                        const intersect_is_ok =
+                            rng.onein(2) and intersector != null and intersector.?.child_rooms > 0;
+
+                        if (state.dungeon.at(advanced2).type != .Wall and !intersect_is_ok)
                             return false;
                     } else return false;
                 } else return false;
@@ -2152,13 +2244,13 @@ pub const Tunneler = struct {
 };
 
 // TODO:
-// - Remove dead ends, i.e. reduce corridor length to it's last branch/junction
+// x Remove dead ends, i.e. reduce corridor length to it's last branch/junction
 // - Add junction points
 //   - When a corridor turns
 //   - At a meeting area for corridors
 //   - In front of some rooms
 // - Prevent diagonal shortcuts
-// - Make corridors change widths as they branch out or change direction
+// x Make corridors change widths as they branch out or change direction
 // - Integrate additional-corridors-between-rooms thing
 // - Ensure there are looping connections between multiple tunnelers
 // - Add doorways randomly to rooms, not the way it currently is
@@ -2171,10 +2263,15 @@ pub fn placeTunneledRooms(
     var ctx = Ctx{
         .tunnelers = Tunneler.List.init(allocator),
         .roomies = std.ArrayList(Roomie).init(allocator),
+        .extras = std.ArrayList(Roomie).init(allocator),
     };
-    ctx.tunnelers.append(Tunneler{ .rect = Rect.new(Coord.new2(level, 2, 20), 0, 3), .direction = .East }) catch err.wat();
+    ctx.tunnelers.append(Tunneler{ .rect = Rect.new(Coord.new2(level, 1, 1), 0, 3), .direction = .East }) catch err.wat();
+    // ctx.tunnelers.append(Tunneler{ .rect = Rect.new(Coord.new2(level, 96, 1), 3, 0), .direction = .South }) catch err.wat();
+    // ctx.tunnelers.append(Tunneler{ .rect = Rect.new(Coord.new2(level, 96, 96), 0, 3), .direction = .West }) catch err.wat();
+    // ctx.tunnelers.append(Tunneler{ .rect = Rect.new(Coord.new2(level, 1, 96), 3, 0), .direction = .North }) catch err.wat();
     defer ctx.tunnelers.deinit();
     defer ctx.roomies.deinit();
+    defer ctx.extras.deinit();
 
     var new_tuns = Tunneler.AList.init(allocator);
     defer new_tuns.deinit();
@@ -2225,6 +2322,7 @@ pub fn placeTunneledRooms(
                     const rooms = tunneler.getPotentialRooms();
                     for (rooms) |maybe_room| if (maybe_room) |room| {
                         ctx.roomies.append(room) catch err.wat();
+                        ctx.extras.append(room) catch err.wat();
                     };
                 }
             }
@@ -2267,6 +2365,7 @@ pub fn placeTunneledRooms(
 
     ctx.killThemAll();
     ctx.tryAddingRoomies(level, 9999999);
+    ctx.tryAddingExtraRooms(level);
 }
 
 pub fn _strewItemsAround(room: *Room, max_items: usize) void {
@@ -4280,8 +4379,8 @@ pub const SIN_BASE_LEVELCONFIG = LevelConfig{
     .mapgen_iters = 2048,
     .min_room_width = 5,
     .min_room_height = 5,
-    .max_room_width = 14,
-    .max_room_height = 14,
+    .max_room_width = 12,
+    .max_room_height = 12,
 
     .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },
 
