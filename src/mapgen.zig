@@ -1755,10 +1755,21 @@ pub const Ctx = struct {
     roomies: std.ArrayList(Roomie),
     tunnelers: Tunneler.List,
     extras: std.ArrayList(Roomie),
+    junctions: std.ArrayList(Junction),
 
-    pub fn findIntersectingTunnel(self: *Ctx, rect: Rect) ?*Tunneler {
+    pub fn doesJunctionContain(self: *Ctx, t: *const Tunneler, coord: Coord) bool {
+        const rect = coord.asRect();
+        return for (self.junctions.items) |junction| {
+            if (junction.t1 == t or junction.t2 == t or junction.rect.intersects(&rect, 0))
+                break true;
+        } else false;
+    }
+
+    pub fn findIntersectingTunnel(self: *Ctx, rect: Rect, ign1: ?*Tunneler, ign2: ?*Tunneler) ?*Tunneler {
         var tunnelers = self.tunnelers.iterator();
         return while (tunnelers.next()) |tunneler| {
+            if (ign1) |ign1_| if (tunneler == ign1_) continue;
+            if (ign2) |ign2_| if (tunneler == ign2_) continue;
             if (tunneler.rect.intersects(&rect, 1)) break tunneler;
         } else null;
     }
@@ -1782,7 +1793,7 @@ pub const Ctx = struct {
             const roomie = &self.roomies.items[i];
 
             if (roomie.generation > cur_gen or
-                self.findIntersectingTunnel(roomie.rect) != null)
+                self.findIntersectingTunnel(roomie.rect, null, null) != null)
             {
                 i += 1;
                 continue;
@@ -1912,6 +1923,40 @@ pub const Ctx = struct {
             }
         }
     }
+
+    pub fn excavateJunctions(self: *Ctx) void {
+        // const level = self.tunnelers.first().?.rect.start.z;
+
+        for (self.junctions.items) |junction| {
+            // const room = Room{ .rect = junction.rect };
+            if (junction.t1.is_eviscerated or junction.t2.is_eviscerated or
+                //self.findIntersectingTunnel(junction.rect, junction.t1, junction.t2) != null or
+                //isRoomInvalid(&state.rooms[level], &room, null, null, true))
+                false)
+            {
+                continue;
+            }
+
+            // excavateRect(&self.rect);
+            // fillRect(&rect, .Lava);
+            var y = junction.rect.start.y;
+            while (y < junction.rect.end().y) : (y += 1) {
+                var x = junction.rect.start.x;
+                while (x < junction.rect.end().x) : (x += 1) {
+                    const c = Coord.new2(junction.rect.start.z, x, y);
+                    state.dungeon.at(c).material = &materials.Concrete;
+                }
+            }
+
+            state.rooms[junction.rect.start.z].append(.{ .type = .Junction, .rect = junction.rect }) catch err.wat();
+        }
+    }
+};
+
+pub const Junction = struct {
+    rect: Rect,
+    t1: *Tunneler,
+    t2: *Tunneler,
 };
 
 pub const Roomie = struct {
@@ -1923,8 +1968,6 @@ pub const Roomie = struct {
 };
 
 pub const Tunneler = struct {
-    // age: usize,
-    // max_age: usize,
     rect: Rect,
     direction: Direction,
     is_dead: bool = false,
@@ -1935,6 +1978,7 @@ pub const Tunneler = struct {
     parent: ?*Self = null,
     generation: usize = 0,
     born_at: usize = 0,
+    room_index: usize = 0, // Index in state.rooms[level]. Set in Ctx.killThemAll()
 
     __prev: ?*Self = null,
     __next: ?*Self = null,
@@ -1999,29 +2043,38 @@ pub const Tunneler = struct {
             else => unreachable,
         }
 
-        // debug thing
         // fillRect(&self.rect, .Water);
         excavateRect(&self.rect);
 
         assert(self.corridorLength() == new_length);
     }
 
-    pub fn createJunction(self: *const Self, other: *const Self) void {
-        const bigger = if (self.corridorWidth() > other.corridorWidth()) self else other;
+    pub fn createJunction(self: *Self, other: *Self, ctx: *Ctx) void {
+        const level = self.rect.start.z;
+
+        const self_end = switch (self.direction) {
+            .North, .West => self.rect.start,
+            .East => Coord.new2(level, self.rect.end().x - other.corridorWidth(), self.rect.start.y),
+            .South => Coord.new2(level, self.rect.start.x, self.rect.end().y - other.corridorWidth()),
+            else => unreachable,
+        };
+        const height = if (self.direction == .North or self.direction == .South) other.corridorWidth() else self.corridorWidth();
+        const width = if (self.direction == .North or self.direction == .South) self.corridorWidth() else other.corridorWidth();
+
         const rect = Rect{
-            .width = bigger.corridorWidth() + 2,
-            .height = bigger.corridorWidth() + 2,
+            .width = width + 2,
+            .height = height + 2,
             .start = Coord.new2(
                 self.rect.start.z,
-                other.rect.start.x - 1,
-                other.rect.start.y - 1,
+                self_end.x - 1,
+                self_end.y - 1,
             ),
         };
-        const room = Room{ .rect = rect };
-        if (!isRoomInvalid(&state.rooms[self.rect.start.z], &room, null, null, false)) {
-            // excavateRect(&rect);
-            // state.rooms[self.rect.start.z].append(.{ .type = .Junction, .rect = rect }) catch err.wat();
-        }
+
+        // const room = Room{ .rect = rect };
+        //if (!isRoomInvalid(&state.rooms[self.rect.start.z], &room, null, null, false)) {
+        ctx.junctions.append(.{ .rect = rect, .t1 = self, .t2 = other }) catch err.wat();
+        //}
     }
 
     pub fn isChildless(self: *const Self, require_dead: bool) bool {
@@ -2046,12 +2099,13 @@ pub const Tunneler = struct {
             while (y < self.rect.height) : (y += 1) {
                 const newedge = Coord.new2(self.rect.start.z, edgex, self.rect.start.y + y);
                 if (newedge.move(self.direction, state.mapgeometry)) |advanced| {
-                    if (state.dungeon.at(advanced).type != .Wall)
+                    if (state.dungeon.at(advanced).type != .Wall and !ctx.doesJunctionContain(self, advanced))
                         return false;
                     if (advanced.move(self.direction, state.mapgeometry)) |advanced2| {
-                        const intersector = ctx.findIntersectingTunnel(advanced2.asRect());
+                        const intersector = ctx.findIntersectingTunnel(advanced2.asRect(), null, null);
                         const intersect_is_ok =
-                            rng.onein(2) and intersector != null and intersector.?.child_rooms > 0;
+                            ctx.doesJunctionContain(self, advanced2) or
+                            (rng.onein(2) and intersector != null and intersector.?.child_rooms > 0);
 
                         if (state.dungeon.at(advanced2).type != .Wall and !intersect_is_ok)
                             return false;
@@ -2072,11 +2126,12 @@ pub const Tunneler = struct {
             while (x < self.rect.width) : (x += 1) {
                 const newedge = Coord.new2(self.rect.start.z, self.rect.start.x + x, edgey);
                 if (newedge.move(self.direction, state.mapgeometry)) |advanced| {
-                    if (state.dungeon.at(advanced).type != .Wall)
+                    if (state.dungeon.at(advanced).type != .Wall and !ctx.doesJunctionContain(self, advanced))
                         return false;
                     if (advanced.move(self.direction, state.mapgeometry)) |advanced2| {
-                        const intersector = ctx.findIntersectingTunnel(advanced2.asRect());
+                        const intersector = ctx.findIntersectingTunnel(advanced2.asRect(), null, null);
                         const intersect_is_ok =
+                            ctx.doesJunctionContain(self, advanced2) or
                             rng.onein(2) and intersector != null and intersector.?.child_rooms > 0;
 
                         if (state.dungeon.at(advanced2).type != .Wall and !intersect_is_ok)
@@ -2264,6 +2319,7 @@ pub fn placeTunneledRooms(
         .tunnelers = Tunneler.List.init(allocator),
         .roomies = std.ArrayList(Roomie).init(allocator),
         .extras = std.ArrayList(Roomie).init(allocator),
+        .junctions = std.ArrayList(Junction).init(allocator),
     };
     ctx.tunnelers.append(Tunneler{ .rect = Rect.new(Coord.new2(level, 1, 1), 0, 3), .direction = .East }) catch err.wat();
     // ctx.tunnelers.append(Tunneler{ .rect = Rect.new(Coord.new2(level, 96, 1), 3, 0), .direction = .South }) catch err.wat();
@@ -2272,6 +2328,7 @@ pub fn placeTunneledRooms(
     defer ctx.tunnelers.deinit();
     defer ctx.roomies.deinit();
     defer ctx.extras.deinit();
+    defer ctx.junctions.deinit();
 
     var new_tuns = Tunneler.AList.init(allocator);
     defer new_tuns.deinit();
@@ -2308,16 +2365,15 @@ pub fn placeTunneledRooms(
                 {
                     var new = child;
                     new.generation = tunneler.generation;
-                    tunneler.createJunction(&new);
-                    tunneler.die();
                     new_tuns.append(new) catch err.wat();
-                } else if (tunneler.is_dead or rng.onein(18)) {
+                    tunneler.die();
+                } else if (tunneler.is_dead or rng.onein(20)) {
                     new_tuns.append(child) catch err.wat();
                 }
             }
 
             if (tunneler.corridorLength() > tunneler.corridorWidth()) {
-                var room_tries: usize = 15;
+                var room_tries: usize = 10;
                 while (room_tries > 0) : (room_tries -= 1) {
                     const rooms = tunneler.getPotentialRooms();
                     for (rooms) |maybe_room| if (maybe_room) |room| {
@@ -2338,6 +2394,8 @@ pub fn placeTunneledRooms(
                 // immediately taking up place
                 if (rng.onein(2))
                     new_tun_ptr.advance();
+
+                new_tun.parent.?.createJunction(new_tun_ptr, &ctx);
             }
         }
         new_tuns.clearAndFree();
@@ -2364,8 +2422,9 @@ pub fn placeTunneledRooms(
     }
 
     ctx.killThemAll();
-    ctx.tryAddingRoomies(level, 9999999);
-    ctx.tryAddingExtraRooms(level);
+    // ctx.tryAddingRoomies(level, 9999999);
+    ctx.excavateJunctions();
+    // ctx.tryAddingExtraRooms(level);
 }
 
 pub fn _strewItemsAround(room: *Room, max_items: usize) void {
