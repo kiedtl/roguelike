@@ -1765,6 +1765,16 @@ pub const Ctx = struct {
         } else false;
     }
 
+    pub fn findIntersectingJunction(self: *Ctx, rect: Rect) ?Junction {
+        var why_do_i_need_a_ptr = rect;
+        return for (self.junctions.items) |junction| {
+            if (junction.t1.is_eviscerated or junction.t2.is_eviscerated)
+                continue;
+            if (junction.rect.intersects(&why_do_i_need_a_ptr, 1))
+                break junction;
+        } else null;
+    }
+
     pub fn findIntersectingTunnel(self: *Ctx, rect: Rect, ign1: ?*Tunneler, ign2: ?*Tunneler) ?*Tunneler {
         var tunnelers = self.tunnelers.iterator();
         return while (tunnelers.next()) |tunneler| {
@@ -1801,6 +1811,7 @@ pub const Ctx = struct {
 
             const room = Room{ .rect = roomie.rect };
             if (roomie.parent.is_eviscerated or
+                self.findIntersectingJunction(roomie.rect) != null or
                 isRoomInvalid(&state.rooms[level], &room, null, null, false))
             {
                 _ = self.roomies.swapRemove(i);
@@ -1925,31 +1936,33 @@ pub const Ctx = struct {
     }
 
     pub fn excavateJunctions(self: *Ctx) void {
-        // const level = self.tunnelers.first().?.rect.start.z;
+        const level = self.tunnelers.first().?.rect.start.z;
 
         for (self.junctions.items) |junction| {
-            // const room = Room{ .rect = junction.rect };
+            const room = Room{ .rect = junction.rect };
             if (junction.t1.is_eviscerated or junction.t2.is_eviscerated or
                 //self.findIntersectingTunnel(junction.rect, junction.t1, junction.t2) != null or
-                //isRoomInvalid(&state.rooms[level], &room, null, null, true))
-                false)
+                isRoomInvalid(&state.rooms[level], &room, null, null, true))
             {
                 continue;
             }
 
-            // excavateRect(&self.rect);
+            excavateRect(&junction.rect);
+            // Debug stuff
             // fillRect(&rect, .Lava);
-            var y = junction.rect.start.y;
-            while (y < junction.rect.end().y) : (y += 1) {
-                var x = junction.rect.start.x;
-                while (x < junction.rect.end().x) : (x += 1) {
-                    const c = Coord.new2(junction.rect.start.z, x, y);
-                    state.dungeon.at(c).material = &materials.Concrete;
-                }
-            }
+            // var y = junction.rect.start.y;
+            // while (y < junction.rect.end().y) : (y += 1) {
+            //     var x = junction.rect.start.x;
+            //     while (x < junction.rect.end().x) : (x += 1) {
+            //         const c = Coord.new2(junction.rect.start.z, x, y);
+            //         state.dungeon.at(c).material = &materials.Concrete;
+            //     }
+            // }
 
             state.rooms[junction.rect.start.z].append(.{ .type = .Junction, .rect = junction.rect }) catch err.wat();
         }
+
+        self.junctions.clearAndFree();
     }
 };
 
@@ -2300,8 +2313,8 @@ pub const Tunneler = struct {
 
 // TODO:
 // x Remove dead ends, i.e. reduce corridor length to it's last branch/junction
-// - Add junction points
-//   - When a corridor turns
+// x Add junction points
+//   x When a corridor turns or branches
 //   - At a meeting area for corridors
 //   - In front of some rooms
 // - Prevent diagonal shortcuts
@@ -2422,9 +2435,9 @@ pub fn placeTunneledRooms(
     }
 
     ctx.killThemAll();
-    // ctx.tryAddingRoomies(level, 9999999);
     ctx.excavateJunctions();
-    // ctx.tryAddingExtraRooms(level);
+    ctx.tryAddingRoomies(level, 9999999);
+    ctx.tryAddingExtraRooms(level);
 }
 
 pub fn _strewItemsAround(room: *Room, max_items: usize) void {
