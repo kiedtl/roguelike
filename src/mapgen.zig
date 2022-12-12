@@ -1819,7 +1819,7 @@ pub const Ctx = struct {
             }
 
             excavateRect(&roomie.rect);
-            state.dungeon.at(roomie.door).type = .Floor;
+            placeDoor(roomie.door, false);
             var new_room = Room{ .rect = roomie.rect };
             new_room.connections.append(roomie.door) catch err.wat();
             state.rooms[level].append(new_room) catch err.wat();
@@ -1870,46 +1870,12 @@ pub const Ctx = struct {
                 else => unreachable,
             };
 
-            const door_x = [_]usize{
-                math.max(new.rect.start.x, parent.rect.start.x),
-                math.min(new.rect.end().x - 1, parent.rect.end().x - 1),
-            };
-            const door_y = [_]usize{
-                math.max(new.rect.start.y, parent.rect.start.y),
-                math.min(new.rect.end().y - 1, parent.rect.end().y - 1),
-            };
-
-            var no_door = false;
-
-            switch (parent.direction) {
-                .North, .South => b: {
-                    if (too_far or door_y[1] < door_y[0]) {
-                        no_door = true;
-                        break :b {};
-                    }
-                    const x = if (new.rect.start.x < parent.rect.start.x) new.rect.end().x else new.rect.start.x - 1;
-                    const y = rng.range(usize, door_y[0], door_y[1]);
-                    state.dungeon.at(Coord.new2(level, x, y)).type = .Lava;
-                },
-                .East, .West => b: {
-                    if (too_far or door_x[1] < door_x[0]) {
-                        no_door = true;
-                        break :b {};
-                    }
-                    const x = rng.range(usize, door_x[0], door_x[1]);
-                    const y = if (new.rect.start.y < parent.rect.start.y) new.rect.end().y else new.rect.start.y - 1;
-                    state.dungeon.at(Coord.new2(level, x, y)).type = .Lava;
-                },
-                else => unreachable,
-            }
-
-            if (too_far) {
-                //fillRect(&new.rect, .Lava);
-            } else if (no_door) {
-                fillRect(&new.rect, .Water);
-            } else {
-                excavateRect(&new.rect);
-                state.rooms[level].append(new) catch err.wat();
+            if (!too_far) {
+                if (Roomie.getRandomDoorCoord(new, parent)) |door| {
+                    excavateRect(&new.rect);
+                    placeDoor(door, false);
+                    state.rooms[level].append(new) catch err.wat();
+                }
             }
         }
     }
@@ -1978,6 +1944,39 @@ pub const Roomie = struct {
     born_at: usize,
     rect: Rect,
     door: Coord,
+
+    pub fn getRandomDoorCoord(room: Room, parent: *const Tunneler) ?Coord {
+        const level = room.rect.start.z;
+
+        const door_x = [_]usize{
+            math.max(room.rect.start.x, parent.rect.start.x),
+            math.min(room.rect.end().x - 1, parent.rect.end().x - 1),
+        };
+        const door_y = [_]usize{
+            math.max(room.rect.start.y, parent.rect.start.y),
+            math.min(room.rect.end().y - 1, parent.rect.end().y - 1),
+        };
+
+        switch (parent.direction) {
+            .North, .South => {
+                if (door_y[1] < door_y[0]) {
+                    return null;
+                }
+                const x = if (room.rect.start.x < parent.rect.start.x) room.rect.end().x else room.rect.start.x - 1;
+                const y = rng.range(usize, door_y[0], door_y[1]);
+                return Coord.new2(level, x, y);
+            },
+            .East, .West => {
+                if (door_x[1] < door_x[0]) {
+                    return null;
+                }
+                const x = rng.range(usize, door_x[0], door_x[1]);
+                const y = if (room.rect.start.y < parent.rect.start.y) room.rect.end().y else room.rect.start.y - 1;
+                return Coord.new2(level, x, y);
+            },
+            else => unreachable,
+        }
+    }
 };
 
 pub const Tunneler = struct {
@@ -2253,32 +2252,14 @@ pub const Tunneler = struct {
                 },
                 else => unreachable,
             };
-            const door_coords = switch (self.direction) {
-                .East => &[_]Coord{
-                    Coord.new2(level, self.rect.end().x -| 1, self.rect.start.y -| 1),
-                    Coord.new2(level, self.rect.end().x -| 1, self.rect.end().y),
-                },
-                .West => &[_]Coord{
-                    Coord.new2(level, self.rect.start.x, self.rect.start.y -| 1),
-                    Coord.new2(level, self.rect.start.x, self.rect.end().y),
-                },
-                .North => &[_]Coord{
-                    Coord.new2(level, self.rect.end().x, self.rect.start.y),
-                    Coord.new2(level, self.rect.start.x -| 1, self.rect.start.y),
-                },
-                .South => &[_]Coord{
-                    Coord.new2(level, self.rect.end().x, self.rect.end().y -| 1),
-                    Coord.new2(level, self.rect.start.x -| 1, self.rect.end().y -| 1),
-                },
-                else => unreachable,
-            };
 
+            const rect = Rect{ .start = start_coords[i], .width = rectw, .height = recth };
             res[i] = .{
                 .parent = self,
                 .generation = self.generation + 1,
                 .born_at = self.corridorLength(),
-                .rect = Rect{ .start = start_coords[i], .width = rectw, .height = recth },
-                .door = door_coords[i],
+                .rect = rect,
+                .door = Roomie.getRandomDoorCoord(Room{ .rect = rect }, self).?,
             };
         }
         return res;
@@ -2380,7 +2361,7 @@ pub fn placeTunneledRooms(
                     new.generation = tunneler.generation;
                     new_tuns.append(new) catch err.wat();
                     tunneler.die();
-                } else if (tunneler.is_dead or rng.onein(20)) {
+                } else if (tunneler.is_dead or rng.onein(18)) {
                     new_tuns.append(child) catch err.wat();
                 }
             }
