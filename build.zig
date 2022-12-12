@@ -22,6 +22,9 @@ pub fn build(b: *Builder) void {
     options.addOption([]const u8, "release", release);
     options.addOption([]const u8, "dist", dist);
 
+    const opt_tun_gif = b.option(bool, "tunneler-gif", "Link GIFLIB and use to export a GIF of the tunneler mapgen") orelse false;
+    options.addOption(bool, "tunneler_gif", opt_tun_gif);
+
     const opt_use_sdl = b.option(bool, "use-sdl", "Build a graphical tiles version of Oathbreaker") orelse false;
     options.addOption(bool, "use_sdl", opt_use_sdl);
 
@@ -43,6 +46,10 @@ pub fn build(b: *Builder) void {
 
     exe.addIncludeDir("third_party/janet/"); // janet.h
     exe.addCSourceFile("third_party/janet/janet.c", &[_][]const u8{"-std=c99"});
+
+    if (opt_tun_gif) {
+        exe.linkSystemLibrary("gif");
+    }
 
     if (is_windows) {
         exe.addIncludeDir("third_party/mingw/zlib/include/");

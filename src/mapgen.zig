@@ -427,9 +427,24 @@ fn _add_player(coord: Coord, alloc: mem.Allocator) void {
     state.player_inited = true;
 }
 
-fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool) bool {
+pub const PrefabOpts = struct {
+    t_only: bool = false,
+    t_orientation: Direction = .South,
+};
+
+fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, opts: PrefabOpts) bool {
+    _ = opts;
+
     if (prefab.invisible and !allow_invis) {
         return false; // Can't be used unless specifically called for by name.
+    }
+
+    if (prefab.tunneler_prefab != opts.t_only) {
+        return false;
+    }
+
+    if (prefab.tunneler_prefab and prefab.tunneler_orientation != opts.t_orientation) {
+        return false;
     }
 
     if (!mem.eql(u8, prefab.name.constSlice()[0..3], state.levelinfo[level].id) and
@@ -447,13 +462,13 @@ fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool) bool {
     return true;
 }
 
-fn choosePrefab(level: usize, prefabs: *PrefabArrayList) ?*Prefab {
+fn choosePrefab(level: usize, prefabs: *PrefabArrayList, opts: PrefabOpts) ?*Prefab {
     var i: usize = 512;
     while (i > 0) : (i -= 1) {
         // Don't use rng.chooseUnweighted, as we need a pointer
         const p = &prefabs.items[rng.range(usize, 0, prefabs.items.len - 1)];
 
-        if (prefabIsValid(level, p, false)) return p;
+        if (prefabIsValid(level, p, false, opts)) return p;
     }
 
     return null;
@@ -1169,7 +1184,7 @@ fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, allo
             }
         }
 
-        if (!prefabIsValid(parent.rect.start.z, subroom, opts.specific_id != null)) {
+        if (!prefabIsValid(parent.rect.start.z, subroom, opts.specific_id != null, .{})) {
             continue;
         }
 
@@ -1238,7 +1253,7 @@ fn _place_rooms(
     if (rng.onein(Configs[level].prefab_chance)) {
         if (distance == 0) distance += 1;
 
-        fab = choosePrefab(level, n_fabs) orelse return;
+        fab = choosePrefab(level, n_fabs, .{}) orelse return;
         var childrect = attachRect(parent, side, fab.?.width, fab.?.height, distance, fab) orelse return;
 
         if (isRoomInvalid(rooms, &Room{ .rect = childrect }, parent, null, false) or
@@ -1756,6 +1771,9 @@ pub const Ctx = struct {
     tunnelers: Tunneler.List,
     extras: std.ArrayList(Roomie),
     junctions: std.ArrayList(Junction),
+    n_fabs: *PrefabArrayList,
+    s_fabs: *PrefabArrayList,
+    opts: TunnelerOptions,
 
     pub fn doesJunctionContain(self: *Ctx, t: *const Tunneler, coord: Coord) bool {
         const rect = coord.asRect();
@@ -1801,6 +1819,7 @@ pub const Ctx = struct {
         var i: usize = 0;
         while (i < self.roomies.items.len) {
             const roomie = &self.roomies.items[i];
+            var room = Room{ .rect = roomie.rect };
 
             if (roomie.generation > cur_gen or
                 self.findIntersectingTunnel(roomie.rect, null, null) != null)
@@ -1809,7 +1828,6 @@ pub const Ctx = struct {
                 continue;
             }
 
-            const room = Room{ .rect = roomie.rect };
             if (roomie.parent.is_eviscerated or
                 self.findIntersectingJunction(roomie.rect) != null or
                 isRoomInvalid(&state.rooms[level], &room, null, null, false))
@@ -1818,11 +1836,19 @@ pub const Ctx = struct {
                 continue;
             }
 
-            excavateRect(&roomie.rect);
-            placeDoor(roomie.door, false);
-            var new_room = Room{ .rect = roomie.rect };
-            new_room.connections.append(roomie.door) catch err.wat();
-            state.rooms[level].append(new_room) catch err.wat();
+            if (roomie.prefab) |fab| {
+                excavatePrefab(self.s_fabs, &room, fab, state.GPA.allocator(), 0, 0);
+            } else {
+                excavateRect(&roomie.rect);
+            }
+
+            if (roomie.prefab == null or !roomie.prefab.?.tunneler_inset) {
+                placeDoor(roomie.door, false);
+                room.connections.append(roomie.door) catch err.wat();
+            }
+
+            state.rooms[level].append(room) catch err.wat();
+
             roomie.parent.child_rooms += 1;
             roomie.parent.roomie_last_born_at = math.max(roomie.parent.roomie_last_born_at, roomie.born_at);
             _ = self.roomies.swapRemove(i);
@@ -1944,6 +1970,7 @@ pub const Roomie = struct {
     born_at: usize,
     rect: Rect,
     door: Coord,
+    prefab: ?*Prefab,
 
     pub fn getRandomDoorCoord(room: Room, parent: *const Tunneler) ?Coord {
         const level = room.rect.start.z;
@@ -2062,6 +2089,9 @@ pub const Tunneler = struct {
     }
 
     pub fn createJunction(self: *Self, other: *Self, ctx: *Ctx) void {
+        if (ctx.opts.add_junctions)
+            return;
+
         const level = self.rect.start.z;
 
         const self_end = switch (self.direction) {
@@ -2114,13 +2144,13 @@ pub const Tunneler = struct {
                     if (state.dungeon.at(advanced).type != .Wall and !ctx.doesJunctionContain(self, advanced))
                         return false;
                     if (advanced.move(self.direction, state.mapgeometry)) |advanced2| {
-                        const intersector = ctx.findIntersectingTunnel(advanced2.asRect(), null, null);
-                        const intersect_is_ok =
-                            ctx.doesJunctionContain(self, advanced2) or
-                            (rng.onein(2) and intersector != null and intersector.?.child_rooms > 0);
-
-                        if (state.dungeon.at(advanced2).type != .Wall and !intersect_is_ok)
-                            return false;
+                        if (state.dungeon.at(advanced2).type != .Wall) {
+                            const intersector = ctx.findIntersectingTunnel(advanced2.asRect(), null, null);
+                            const intersect_is_ok =
+                                rng.percent(ctx.opts.intersect_chance) and intersector != null and intersector.?.child_rooms > 0;
+                            if (!intersect_is_ok)
+                                return false;
+                        }
                     } else return false;
                 } else return false;
 
@@ -2141,13 +2171,13 @@ pub const Tunneler = struct {
                     if (state.dungeon.at(advanced).type != .Wall and !ctx.doesJunctionContain(self, advanced))
                         return false;
                     if (advanced.move(self.direction, state.mapgeometry)) |advanced2| {
-                        const intersector = ctx.findIntersectingTunnel(advanced2.asRect(), null, null);
-                        const intersect_is_ok =
-                            ctx.doesJunctionContain(self, advanced2) or
-                            rng.onein(2) and intersector != null and intersector.?.child_rooms > 0;
-
-                        if (state.dungeon.at(advanced2).type != .Wall and !intersect_is_ok)
-                            return false;
+                        if (state.dungeon.at(advanced2).type != .Wall) {
+                            const intersector = ctx.findIntersectingTunnel(advanced2.asRect(), null, null);
+                            const intersect_is_ok =
+                                rng.percent(ctx.opts.intersect_chance) and intersector != null and intersector.?.child_rooms > 0;
+                            if (!intersect_is_ok)
+                                return false;
+                        }
                     } else return false;
                 } else return false;
 
@@ -2162,11 +2192,10 @@ pub const Tunneler = struct {
         return true;
     }
 
-    pub fn getPotentialChildren(self: *Self) [2]Tunneler {
+    pub fn getPotentialChildren(self: *Self, ctx: *const Ctx) [2]Tunneler {
         var res: [2]Tunneler = undefined;
         const level = self.rect.start.z;
-        // const theight = self.rect.height;
-        // const twidth = self.rect.width;
+
         const newdirecs = switch (self.direction) {
             .East, .West => &[_]Direction{ .North, .South },
             .North, .South => &[_]Direction{ .East, .West },
@@ -2174,9 +2203,9 @@ pub const Tunneler = struct {
         };
         for (newdirecs) |newdirec, i| {
             var cor_width: usize = self.corridorWidth();
-            if (rng.percent(@as(usize, 40)) and cor_width < 5) {
+            if (rng.percent(ctx.opts.grow_chance) and cor_width < ctx.opts.max_width) {
                 cor_width += 1;
-            } else if (rng.percent(@as(usize, 40)) and cor_width > 1) {
+            } else if (rng.percent(ctx.opts.shrink_chance) and cor_width > 1) {
                 cor_width -= 1;
             }
 
@@ -2219,36 +2248,51 @@ pub const Tunneler = struct {
         return res;
     }
 
-    pub fn getPotentialRooms(self: *Self) [2]?Roomie {
+    pub fn getPotentialRooms(self: *Self, ctx: *Ctx) [2]?Roomie {
         var res = [2]?Roomie{ null, null };
 
         const level = self.rect.start.z;
 
         for (res) |_, i| {
+            var orientation = switch (self.direction) {
+                .East, .West => [_]Direction{ .North, .South },
+                .North, .South => [_]Direction{ .East, .West },
+                else => unreachable,
+            }[i];
+
+            var prefab: ?*Prefab = null;
+            var door_mod: usize = 1;
             var rectw = rng.range(usize, Configs[level].min_room_width, Configs[level].max_room_width);
             var recth = rng.range(usize, Configs[level].min_room_height, Configs[level].max_room_height);
 
-            if (rng.onein(5)) {
+            if (rng.onein(Configs[level].prefab_chance)) {
+                if (choosePrefab(level, ctx.n_fabs, .{ .t_only = true, .t_orientation = orientation })) |fab| {
+                    prefab = fab;
+                    rectw = fab.width;
+                    recth = fab.height;
+                    door_mod = 0;
+                }
+            } else if (rng.onein(5)) {
                 rectw = Configs[level].min_room_width;
                 recth = Configs[level].min_room_height;
             }
 
             const start_coords = switch (self.direction) {
                 .East => &[_]Coord{
-                    Coord.new2(level, self.rect.end().x -| rectw, self.rect.start.y -| recth -| 1),
-                    Coord.new2(level, self.rect.end().x -| rectw, self.rect.end().y + 1),
+                    Coord.new2(level, self.rect.end().x -| rectw, self.rect.start.y -| recth -| door_mod),
+                    Coord.new2(level, self.rect.end().x -| rectw, self.rect.end().y + door_mod),
                 },
                 .West => &[_]Coord{
-                    Coord.new2(level, self.rect.start.x -| (rectw - 1), self.rect.start.y -| recth -| 1),
+                    Coord.new2(level, self.rect.start.x -| (rectw - 1), self.rect.start.y -| recth -| door_mod),
                     Coord.new2(level, self.rect.start.x -| (rectw - 1), self.rect.end().y + 1),
                 },
                 .North => &[_]Coord{
-                    Coord.new2(level, self.rect.end().x + 1, self.rect.start.y -| (recth - 1)),
-                    Coord.new2(level, self.rect.start.x -| (rectw + 1), self.rect.start.y -| (recth - 1)),
+                    Coord.new2(level, self.rect.end().x + door_mod, self.rect.start.y -| (recth - 1)),
+                    Coord.new2(level, self.rect.start.x -| (rectw + door_mod), self.rect.start.y -| (recth - 1)),
                 },
                 .South => &[_]Coord{
-                    Coord.new2(level, self.rect.end().x + 1, self.rect.end().y -| recth),
-                    Coord.new2(level, self.rect.start.x -| (rectw + 1), self.rect.end().y -| recth),
+                    Coord.new2(level, self.rect.end().x + door_mod, self.rect.end().y -| recth),
+                    Coord.new2(level, self.rect.start.x -| (rectw + door_mod), self.rect.end().y -| recth),
                 },
                 else => unreachable,
             };
@@ -2260,6 +2304,7 @@ pub const Tunneler = struct {
                 .born_at = self.corridorLength(),
                 .rect = rect,
                 .door = Roomie.getRandomDoorCoord(Room{ .rect = rect }, self).?,
+                .prefab = prefab,
             };
         }
         return res;
@@ -2292,6 +2337,40 @@ pub const Tunneler = struct {
     }
 };
 
+pub const TunnelerOptions = struct {
+    max_iters: usize = 1000,
+
+    // Maximum tunnel length before the algorithm tries to force it to change
+    // directions.
+    max_length: usize = WIDTH / 4,
+
+    // Maximum tunnel width. If the tunnel is this size, it won't grow farther.
+    max_width: usize = 6,
+
+    // Chance (percentage) to change direction.
+    turn_chance: usize = 3,
+    branch_chance: usize = 6,
+
+    room_tries: usize = 6,
+
+    headstart_chance: usize = 60,
+
+    shrink_chance: usize = 40,
+    grow_chance: usize = 40,
+
+    intersect_chance: usize = 60,
+
+    add_extra_rooms: bool = true,
+    remove_childless: bool = true,
+    add_junctions: bool = true,
+
+    initial_tunnelers: []const InitialTunneler = &[_]InitialTunneler{
+        .{ .start = Coord.new(1, HEIGHT / 2), .width = 0, .height = 6, .direction = .East },
+    },
+
+    pub const InitialTunneler = struct { start: Coord, height: usize, width: usize, direction: Direction };
+};
+
 // TODO:
 // x Remove dead ends, i.e. reduce corridor length to it's last branch/junction
 // x Add junction points
@@ -2303,22 +2382,62 @@ pub const Tunneler = struct {
 // - Integrate additional-corridors-between-rooms thing
 // - Ensure there are looping connections between multiple tunnelers
 // - Add doorways randomly to rooms, not the way it currently is
-pub fn placeTunneledRooms(
-    _: *PrefabArrayList,
-    _: *PrefabArrayList,
-    level: usize,
-    allocator: mem.Allocator,
-) void {
+pub fn placeTunneledRooms(n_fabs: *PrefabArrayList, s_fabs: *PrefabArrayList, level: usize, allocator: mem.Allocator) void {
+    const gif = @import("build_options").tunneler_gif;
+    const giflib = if (gif) @cImport(@cInclude("gif_lib.h")) else null;
+    var frames: std.ArrayList([HEIGHT][WIDTH]u8) = if (gif) std.ArrayList([HEIGHT][WIDTH]u8).init(allocator) else undefined;
+    defer if (gif) frames.deinit();
+    const S = struct {
+        pub fn captureFrame(z: usize, p_frames: *std.ArrayList([HEIGHT][WIDTH]u8)) void {
+            var new: [HEIGHT][WIDTH]u8 = undefined;
+            {
+                var y: usize = 0;
+                while (y < HEIGHT) : (y += 1) {
+                    var x: usize = 0;
+                    while (x < WIDTH) : (x += 1) {
+                        const c = Coord.new2(z, x, y);
+                        new[y][x] = if (state.dungeon.at(c).type == .Wall) 0 else 1;
+                    }
+                }
+            }
+
+            // Something is wrecked here. Need to investigate.
+            //
+            // for (state.rooms[z].items) |room| {
+            //     var y: usize = room.rect.start.y;
+            //     while (y < room.rect.end().x) : (y += 1) {
+            //         var x: usize = room.rect.start.x;
+            //         while (x < room.rect.end().x) : (x += 1) {
+            //             const c = Coord.new2(z, x, y);
+            //             const color: u8 = switch (room.type) {
+            //                 .Corridor => 1,
+            //                 .Junction => 2,
+            //                 .Sideroom, .Room => 3,
+            //             };
+            //             new[y][x] = if (state.dungeon.at(c).type == .Wall) 0 else color;
+            //         }
+            //     }
+            // }
+            p_frames.append(new) catch err.wat();
+        }
+    };
+
     var ctx = Ctx{
         .tunnelers = Tunneler.List.init(allocator),
         .roomies = std.ArrayList(Roomie).init(allocator),
         .extras = std.ArrayList(Roomie).init(allocator),
         .junctions = std.ArrayList(Junction).init(allocator),
+        .n_fabs = n_fabs,
+        .s_fabs = s_fabs,
+        .opts = Configs[level].tunneler_opts,
     };
-    ctx.tunnelers.append(Tunneler{ .rect = Rect.new(Coord.new2(level, 1, 1), 0, 3), .direction = .East }) catch err.wat();
-    // ctx.tunnelers.append(Tunneler{ .rect = Rect.new(Coord.new2(level, 96, 1), 3, 0), .direction = .South }) catch err.wat();
-    // ctx.tunnelers.append(Tunneler{ .rect = Rect.new(Coord.new2(level, 96, 96), 0, 3), .direction = .West }) catch err.wat();
-    // ctx.tunnelers.append(Tunneler{ .rect = Rect.new(Coord.new2(level, 1, 96), 3, 0), .direction = .North }) catch err.wat();
+    for (ctx.opts.initial_tunnelers) |initial| {
+        ctx.tunnelers.append(Tunneler{
+            .rect = Rect{ .start = Coord.new2(level, initial.start.x, initial.start.y), .width = initial.width, .height = initial.height },
+            .direction = initial.direction,
+        }) catch err.wat();
+    }
+
     defer ctx.tunnelers.deinit();
     defer ctx.roomies.deinit();
     defer ctx.extras.deinit();
@@ -2330,7 +2449,9 @@ pub fn placeTunneledRooms(
     var cur_gen: usize = 0;
 
     var tries: usize = 0;
-    while (tries < 8000) : (tries += 1) {
+    while (tries < ctx.opts.max_iters) : (tries += 1) {
+        if (gif) S.captureFrame(level, &frames);
+
         var is_any_active: bool = false;
         var is_cur_gen_active: bool = false;
 
@@ -2349,27 +2470,27 @@ pub fn placeTunneledRooms(
                 tunneler.die();
             }
 
-            const children = tunneler.getPotentialChildren();
+            const children = tunneler.getPotentialChildren(&ctx);
             const tlength = tunneler.corridorLength();
             const twidth = tunneler.corridorWidth();
             for (children) |child| {
                 if (!tunneler.is_dead and tlength > twidth * 3 and
                     child.canAdvance(&ctx) and
-                    (tlength > WIDTH / 4 or rng.onein(35)))
+                    (tlength > ctx.opts.max_length or rng.percent(ctx.opts.turn_chance)))
                 {
                     var new = child;
                     new.generation = tunneler.generation;
                     new_tuns.append(new) catch err.wat();
                     tunneler.die();
-                } else if (tunneler.is_dead or rng.onein(18)) {
+                } else if (tunneler.is_dead or rng.percent(ctx.opts.branch_chance)) {
                     new_tuns.append(child) catch err.wat();
                 }
             }
 
             if (tunneler.corridorLength() > tunneler.corridorWidth()) {
-                var room_tries: usize = 10;
+                var room_tries: usize = ctx.opts.room_tries;
                 while (room_tries > 0) : (room_tries -= 1) {
-                    const rooms = tunneler.getPotentialRooms();
+                    const rooms = tunneler.getPotentialRooms(&ctx);
                     for (rooms) |maybe_room| if (maybe_room) |room| {
                         ctx.roomies.append(room) catch err.wat();
                         ctx.extras.append(room) catch err.wat();
@@ -2386,7 +2507,7 @@ pub fn placeTunneledRooms(
 
                 // Give a few tunnelers a head start to prevent roomies from
                 // immediately taking up place
-                if (rng.onein(2))
+                if (rng.percent(ctx.opts.headstart_chance))
                     new_tun_ptr.advance();
 
                 new_tun.parent.?.createJunction(new_tun_ptr, &ctx);
@@ -2398,14 +2519,17 @@ pub fn placeTunneledRooms(
 
         if (!is_cur_gen_active) {
             cur_gen += 1;
-            ctx.removeChildlessTunnelers(true);
+            if (ctx.opts.remove_childless)
+                ctx.removeChildlessTunnelers(true);
         }
 
         if (!is_any_active)
             break;
     }
 
-    ctx.removeChildlessTunnelers(false);
+    if (ctx.opts.remove_childless)
+        ctx.removeChildlessTunnelers(false);
+    if (gif) S.captureFrame(level, &frames);
 
     // Fill in corridors that stick out past their last branch
     var tunnelers = ctx.tunnelers.iterator();
@@ -2416,9 +2540,78 @@ pub fn placeTunneledRooms(
     }
 
     ctx.killThemAll();
+    if (gif) S.captureFrame(level, &frames);
     ctx.excavateJunctions();
+    if (gif) S.captureFrame(level, &frames);
     ctx.tryAddingRoomies(level, 9999999);
-    ctx.tryAddingExtraRooms(level);
+    if (gif) S.captureFrame(level, &frames);
+    if (ctx.opts.add_extra_rooms)
+        ctx.tryAddingExtraRooms(level);
+    if (gif) S.captureFrame(level, &frames);
+
+    if (gif) {
+        const fname = std.fmt.allocPrintZ(allocator, "tunneler-{}.gif", .{level}) catch err.oom();
+        defer allocator.free(fname);
+
+        var g_error: c_int = 0;
+        var g_file = giflib.EGifOpenFileName(fname.ptr, false, &g_error);
+        if (g_file == null) @panic("error (EGifOpenFileName)");
+
+        if (giflib.EGifPutScreenDesc(g_file, WIDTH, HEIGHT, 8, 0, null) == giflib.GIF_ERROR)
+            @panic("error (EGifPutScreenDesc)");
+
+        const nsle = "NETSCAPE2.0";
+        const subblock = [_]u8{ 1, 0, 0 };
+        _ = giflib.EGifPutExtensionLeader(g_file, giflib.APPLICATION_EXT_FUNC_CODE);
+        _ = giflib.EGifPutExtensionBlock(g_file, nsle.len, nsle);
+        _ = giflib.EGifPutExtensionBlock(g_file, subblock.len, &subblock);
+        _ = giflib.EGifPutExtensionTrailer(g_file);
+
+        const pal = [16]giflib.GifColorType{
+            .{ .Red = 0x2f, .Green = 0x1f, .Blue = 0x04 }, // background
+            .{ .Red = 0xaf, .Green = 0x9f, .Blue = 0x84 }, // corridors
+            .{ .Red = 0x8f, .Green = 0x7f, .Blue = 0x64 }, // junctions
+            .{ .Red = 0x6f, .Green = 0x5f, .Blue = 0x44 }, // rooms
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+        };
+
+        for (frames.items) |*frame, i| {
+            const sec1: u8 = if (i == frames.items.len - 1) 0x04 else 0x00;
+            const sec2: u8 = if (i == frames.items.len - 1) 0x00 else 0x01;
+            const gce_str = [_]u8{
+                0x04, // length of gce_str
+                0x00, // misc packed fields (unused)
+                sec1, // delay time in fractions of seconds (u16, continued below)
+                sec2, // ...
+            };
+
+            if (giflib.EGifPutExtension(g_file, giflib.GRAPHICS_EXT_FUNC_CODE, gce_str.len, &gce_str) == giflib.GIF_ERROR)
+                @panic("error (EGifPutExtension)");
+
+            // Put frame headers.
+            if (giflib.EGifPutImageDesc(g_file, 0, 0, WIDTH, HEIGHT, false, giflib.GifMakeMapObject(pal.len, &pal)) == giflib.GIF_ERROR)
+                @panic("error (EGifPutImageDesc)");
+
+            // Put frame, row-wise.
+            for (frame) |*row| {
+                if (giflib.EGifPutLine(g_file, row, WIDTH) == giflib.GIF_ERROR)
+                    @panic("error (EGifPutLine)");
+            }
+        }
+
+        _ = giflib.EGifCloseFile(g_file, &g_error);
+    }
 }
 
 pub fn _strewItemsAround(room: *Room, max_items: usize) void {
@@ -3660,6 +3853,10 @@ pub const Prefab = struct {
     notraps: bool = false,
     nopadding: bool = false,
 
+    tunneler_prefab: bool = false,
+    tunneler_inset: bool = false,
+    tunneler_orientation: Direction = .South,
+
     name: StackBuffer(u8, MAX_NAME_SIZE) = StackBuffer(u8, MAX_NAME_SIZE).init(null),
 
     material: ?*const Material = null,
@@ -3837,15 +4034,28 @@ pub const Prefab = struct {
                     f.stockpile = null;
                     f.input = null;
                     f.output = null;
+                    f.tunneler_orientation = .South;
+                    f.tunneler_inset = false;
                 },
                 ':' => {
                     var words = mem.tokenize(u8, line[1..], " ");
                     const key = words.next() orelse return error.MalformedMetadata;
                     const val = words.next() orelse "";
 
+                    // At some point I really need to sit down and cleanup this mess
+                    //
                     if (mem.eql(u8, key, "invisible")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.invisible = true;
+                    } else if (mem.eql(u8, key, "g_tunneler")) {
+                        if (val.len != 0) return error.UnexpectedMetadataValue;
+                        f.tunneler_prefab = true;
+                    } else if (mem.eql(u8, key, "tunneler_inset")) {
+                        if (val.len != 0) return error.UnexpectedMetadataValue;
+                        f.tunneler_inset = true;
+                    } else if (mem.eql(u8, key, "tunneler_orientation")) {
+                        if (val.len == 0) return error.ExpectedMetadataValue;
+                        f.tunneler_orientation = if (Direction.fromStr(val)) |d| d else |_| return error.InvalidMetadataValue;
                     } else if (mem.eql(u8, key, "subroom")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.subroom = true;
@@ -4306,6 +4516,8 @@ pub const LevelConfig = struct {
 
     mapgen_func: fn (*PrefabArrayList, *PrefabArrayList, usize, mem.Allocator) void = placeRandomRooms,
 
+    tunneler_opts: TunnelerOptions = .{},
+
     // If true, will not place rooms on top of lava/water.
     require_dry_rooms: bool = false,
 
@@ -4313,7 +4525,7 @@ pub const LevelConfig = struct {
     //
     // On placeRandomRooms: try mapgen_iters times to place a rooms randomly.
     // On placeBSPRooms:    try mapgen_iters times to split a BSP node.
-    mapgen_iters: usize,
+    mapgen_iters: usize = 2048,
 
     // Dimensions include the first wall, so a minimum width of 2 guarantee that
     // there will be one empty space in the room, minimum.
@@ -4423,13 +4635,18 @@ pub const QRT_BASE_LEVELCONFIG = LevelConfig{
 };
 
 pub const SIN_BASE_LEVELCONFIG = LevelConfig{
-    .distances = [2][10]usize{
-        .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-        .{ 9, 4, 4, 1, 1, 1, 1, 0, 0, 0 },
+    .tunneler_opts = .{
+        .shrink_chance = 0,
+        .grow_chance = 0,
+        .add_extra_rooms = false,
+        .add_junctions = false,
+        .remove_childless = false,
+        .initial_tunnelers = &[_]TunnelerOptions.InitialTunneler{
+            .{ .start = Coord.new(1, HEIGHT / 2), .width = 0, .height = 6, .direction = .East },
+        },
     },
-    .prefab_chance = 100, // No prefabs for LAB
+    .prefab_chance = 1, // No prefabs for SIN
     .mapgen_func = placeTunneledRooms,
-    .mapgen_iters = 2048,
     .min_room_width = 5,
     .min_room_height = 5,
     .max_room_width = 12,
@@ -4439,9 +4656,7 @@ pub const SIN_BASE_LEVELCONFIG = LevelConfig{
 
     .door_chance = 10,
     .material = &materials.Marble,
-    .window_material = &materials.LabGlass,
-    .light = &surfaces.Lamp,
-
+    .no_windows = true,
     .allow_statues = false,
 };
 

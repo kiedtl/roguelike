@@ -1,0 +1,33 @@
+:g_tunneler
+
+:tunneler_inset
+:tunneler_door north
+:material gold
+###
+#.#
+
+\
+
+:tunneler_inset
+:tunneler_door south
+:material gold
+#.#
+###
+
+\
+
+:tunneler_inset
+:tunneler_door west
+:material gold
+##
+#.
+##
+
+\
+
+:tunneler_inset
+:tunneler_door east
+:material gold
+##
+.#
+##

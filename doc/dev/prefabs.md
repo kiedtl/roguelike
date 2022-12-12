@@ -47,6 +47,16 @@
 %        Disallow placing a subroom if it wouldn't be aligned in the center of
 %        the parent room.
 %
+%    :g_tunneler
+%        Mark the prefab(s) as being for the tunneling algorithm only.
+%
+%    :tunneler_inset
+%        TODO
+%
+%    :tunneler_orientation
+%        TODO
+%        Default: south.
+%
 %    :priority
 %        Makes sense for subrooms only.
 %        Priority convention:
