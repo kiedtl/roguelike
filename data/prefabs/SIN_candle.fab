@@ -1,7 +1,7 @@
 :g_tunneler
 
 :tunneler_inset
-:tunneler_door north
+:tunneler_orientation north
 :material gold
 ###
 #.#
@@ -9,7 +9,7 @@
 \
 
 :tunneler_inset
-:tunneler_door south
+:tunneler_orientation south
 :material gold
 #.#
 ###
@@ -17,7 +17,7 @@
 \
 
 :tunneler_inset
-:tunneler_door west
+:tunneler_orientation west
 :material gold
 ##
 #.
@@ -26,7 +26,7 @@
 \
 
 :tunneler_inset
-:tunneler_door east
+:tunneler_orientation east
 :material gold
 ##
 .#

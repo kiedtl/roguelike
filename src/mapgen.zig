@@ -463,15 +463,13 @@ fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, opts: PrefabO
 }
 
 fn choosePrefab(level: usize, prefabs: *PrefabArrayList, opts: PrefabOpts) ?*Prefab {
-    var i: usize = 512;
-    while (i > 0) : (i -= 1) {
-        // Don't use rng.chooseUnweighted, as we need a pointer
-        const p = &prefabs.items[rng.range(usize, 0, prefabs.items.len - 1)];
-
-        if (prefabIsValid(level, p, false, opts)) return p;
-    }
-
-    return null;
+    var fab_list = std.ArrayList(*Prefab).init(state.GPA.allocator());
+    defer fab_list.deinit();
+    for (prefabs.items) |*prefab| if (prefabIsValid(level, prefab, false, opts)) {
+        fab_list.append(prefab) catch err.wat();
+    };
+    if (fab_list.items.len == 0) return null;
+    return fab_list.items[rng.range(usize, 0, fab_list.items.len - 1)];
 }
 
 fn attachRect(parent: *const Room, d: Direction, width: usize, height: usize, distance: usize, fab: ?*const Prefab) ?Rect {
@@ -1856,6 +1854,9 @@ pub const Ctx = struct {
     }
 
     pub fn tryAddingExtraRooms(self: *Ctx, level: usize) void {
+        if (!self.opts.add_extra_rooms)
+            return;
+
         for (self.extras.items) |extra| {
             const parent = extra.parent;
 
@@ -2089,7 +2090,7 @@ pub const Tunneler = struct {
     }
 
     pub fn createJunction(self: *Self, other: *Self, ctx: *Ctx) void {
-        if (ctx.opts.add_junctions)
+        if (!ctx.opts.add_junctions)
             return;
 
         const level = self.rect.start.z;
@@ -2270,7 +2271,10 @@ pub const Tunneler = struct {
                     prefab = fab;
                     rectw = fab.width;
                     recth = fab.height;
-                    door_mod = 0;
+                    if (fab.tunneler_inset)
+                        door_mod = 0;
+                } else if (ctx.opts.force_prefabs) {
+                    continue;
                 }
             } else if (rng.onein(5)) {
                 rectw = Configs[level].min_room_width;
@@ -2364,8 +2368,12 @@ pub const TunnelerOptions = struct {
     remove_childless: bool = true,
     add_junctions: bool = true,
 
+    force_prefabs: bool = true,
+
     initial_tunnelers: []const InitialTunneler = &[_]InitialTunneler{
-        .{ .start = Coord.new(1, HEIGHT / 2), .width = 0, .height = 6, .direction = .East },
+        .{ .start = Coord.new(1, HEIGHT / 2), .width = 0, .height = 3, .direction = .East },
+        .{ .start = Coord.new(WIDTH / 2, 1), .width = 3, .height = 0, .direction = .South },
+        .{ .start = Coord.new(WIDTH / 2, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
     },
 
     pub const InitialTunneler = struct { start: Coord, height: usize, width: usize, direction: Direction };
@@ -2545,8 +2553,7 @@ pub fn placeTunneledRooms(n_fabs: *PrefabArrayList, s_fabs: *PrefabArrayList, le
     if (gif) S.captureFrame(level, &frames);
     ctx.tryAddingRoomies(level, 9999999);
     if (gif) S.captureFrame(level, &frames);
-    if (ctx.opts.add_extra_rooms)
-        ctx.tryAddingExtraRooms(level);
+    ctx.tryAddingExtraRooms(level);
     if (gif) S.captureFrame(level, &frames);
 
     if (gif) {
@@ -4641,18 +4648,15 @@ pub const SIN_BASE_LEVELCONFIG = LevelConfig{
         .add_extra_rooms = false,
         .add_junctions = false,
         .remove_childless = false,
+        .force_prefabs = true,
         .initial_tunnelers = &[_]TunnelerOptions.InitialTunneler{
             .{ .start = Coord.new(1, HEIGHT / 2), .width = 0, .height = 6, .direction = .East },
         },
     },
-    .prefab_chance = 1, // No prefabs for SIN
+    .prefab_chance = 1, // Only prefabs for SIN
     .mapgen_func = placeTunneledRooms,
-    .min_room_width = 5,
-    .min_room_height = 5,
-    .max_room_width = 12,
-    .max_room_height = 12,
-
     .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },
+    .required_mobs = &[_]LevelConfig.RequiredMob{},
 
     .door_chance = 10,
     .material = &materials.Marble,

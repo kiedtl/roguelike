@@ -218,20 +218,20 @@ fn initLevels() bool {
             }
         }
 
-        if (mapgen.validateLevel(level, state.GPA.allocator(), &n_fabs, &s_fabs)) |_| {
-            // .
-        } else |e| {
-            if (tries < 28) {
-                std.log.info("{s}: Invalid map ({s}), retrying...", .{
-                    state.levelinfo[level].name,
-                    @errorName(e),
-                });
-                continue; // try again
-            } else {
-                // Give up!
-                err.bug("{s}: Couldn't generate valid map!", .{state.levelinfo[level].name});
-            }
-        }
+        // if (mapgen.validateLevel(level, state.GPA.allocator(), &n_fabs, &s_fabs)) |_| {
+        //     // .
+        // } else |e| {
+        //     if (tries < 28) {
+        //         std.log.info("{s}: Invalid map ({s}), retrying...", .{
+        //             state.levelinfo[level].name,
+        //             @errorName(e),
+        //         });
+        //         continue; // try again
+        //     } else {
+        //         // Give up!
+        //         err.bug("{s}: Couldn't generate valid map!", .{state.levelinfo[level].name});
+        //     }
+        // }
 
         mapgen.placeRoomFeatures(level, &s_fabs, state.GPA.allocator());
         mapgen.placeRoomTerrain(level);
