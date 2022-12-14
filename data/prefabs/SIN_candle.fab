@@ -2,32 +2,51 @@
 
 :tunneler_inset
 :tunneler_orientation north
-:material gold
-###
-#.#
+@0 m candle
+@a p gold_c_wall_block
+@b p gold_c_wall_lower
+@c p gold_c_wall_left
+@d p gold_c_wall_right
+aba
+c0d
+a.a
 
 \
 
 :tunneler_inset
 :tunneler_orientation south
-:material gold
-#.#
-###
+@0 m candle
+@a p gold_c_wall_block
+@b p gold_c_wall_upper
+@c p gold_c_wall_left
+@d p gold_c_wall_right
+a.a
+c0d
+aba
 
 \
 
 :tunneler_inset
 :tunneler_orientation west
-:material gold
-##
-#.
-##
+@0 m candle
+@a p gold_c_wall_block
+@b p gold_c_wall_lower
+@c p gold_c_wall_left
+@d p gold_c_wall_upper
+aba
+c0.
+ada
 
 \
 
 :tunneler_inset
 :tunneler_orientation east
-:material gold
-##
-.#
-##
+@0 m candle
+@a p gold_c_wall_block
+@b p gold_c_wall_lower
+@c p gold_c_wall_right
+@d p gold_c_wall_upper
+aba
+.0c
+ada
+

@@ -283,6 +283,7 @@ pub const MACHINES = [_]Machine{
     Mine,
     StalkerStation,
     CapacitorArray,
+    Candle,
     RechargingStation,
     Drain,
     Fountain,
@@ -880,6 +881,48 @@ pub const CapacitorArray = Machine{
                     state.player.makeNoise(.Explosion, .Loudest);
                     ui.Animation.blink(affected.constSlice(), '*', ui.Animation.ELEC_LINE_FG, .{}).apply();
                 }
+
+                return true;
+            }
+        }.f,
+    },
+};
+
+pub const Candle = Machine{
+    .id = "candle",
+    .name = "candle",
+    .announce = true,
+    .powered_tile = 'C',
+    .unpowered_tile = 'x',
+    .powered_fg = 0,
+    .unpowered_fg = 0,
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+    .bg = 0xffe766,
+    .power_drain = 0,
+    .power = 100,
+    .on_power = powerNone,
+    .player_interact = .{
+        .name = "extinguish",
+        .success_msg = "You extinguish the candle.",
+        .no_effect_msg = null,
+        .max_use = 1,
+        .func = struct {
+            fn f(self: *Machine, by: *Mob) bool {
+                state.destroyed_candles += 1;
+                self.bg = colors.percentageOf(self.bg.?, 50);
+
+                var gen = Generator(Rect.rectIter).init(state.mapRect(by.coord.z));
+                while (gen.next()) |coord| if (state.player.cansee(coord)) {
+                    if (utils.getHostileAt(state.player, coord)) |hostile| {
+                        if (mem.startsWith(u8, hostile.id, "hulking_")) {
+                            hostile.addStatus(.Paralysis, 0, .Prm);
+                        }
+                    } else |_| {}
+                };
+
+                // TODO: animation
+                //ui.Animation.blink(affected.constSlice(), '*', ui.Animation.ELEC_LINE_FG, .{}).apply();
 
                 return true;
             }

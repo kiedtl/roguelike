@@ -1820,7 +1820,7 @@ pub const Ctx = struct {
             var room = Room{ .rect = roomie.rect };
 
             if (roomie.generation > cur_gen or
-                self.findIntersectingTunnel(roomie.rect, null, null) != null)
+                self.findIntersectingTunnel(roomie.rect, roomie.parent, null) != null)
             {
                 i += 1;
                 continue;
@@ -2288,7 +2288,7 @@ pub const Tunneler = struct {
                 },
                 .West => &[_]Coord{
                     Coord.new2(level, self.rect.start.x -| (rectw - 1), self.rect.start.y -| recth -| door_mod),
-                    Coord.new2(level, self.rect.start.x -| (rectw - 1), self.rect.end().y + 1),
+                    Coord.new2(level, self.rect.start.x -| (rectw - 1), self.rect.end().y + door_mod),
                 },
                 .North => &[_]Coord{
                     Coord.new2(level, self.rect.end().x + door_mod, self.rect.start.y -| (recth - 1)),
@@ -4662,6 +4662,7 @@ pub const SIN_BASE_LEVELCONFIG = LevelConfig{
     .material = &materials.Marble,
     .no_windows = true,
     .allow_statues = false,
+    .allow_extra_corridors = false,
 };
 
 pub const LAB_BASE_LEVELCONFIG = LevelConfig{
