@@ -1,4 +1,5 @@
 :g_tunneler
+:restriction 4
 
 :tunneler_inset
 :tunneler_orientation north

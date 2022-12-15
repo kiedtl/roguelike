@@ -176,11 +176,7 @@ fn initLevels() bool {
     var loading_screen = ui.initLoadingScreen();
     defer loading_screen.deinit();
 
-    var s_fabs: mapgen.PrefabArrayList = undefined;
-    var n_fabs: mapgen.PrefabArrayList = undefined;
-    mapgen.readPrefabs(state.GPA.allocator(), &n_fabs, &s_fabs);
-    defer s_fabs.deinit();
-    defer n_fabs.deinit();
+    mapgen.readPrefabs(state.GPA.allocator());
 
     var level: usize = 0;
     var tries: usize = 0;
@@ -193,9 +189,9 @@ fn initLevels() bool {
 
         var placed_rune = true;
 
-        mapgen.resetLevel(level, &n_fabs, &s_fabs);
+        mapgen.resetLevel(level);
         mapgen.placeBlobs(level);
-        (mapgen.Configs[level].mapgen_func)(&n_fabs, &s_fabs, level, state.GPA.allocator());
+        (mapgen.Configs[level].mapgen_func)(level, state.GPA.allocator());
         mapgen.selectLevelVault(level);
         if (mapgen.Configs[level].allow_extra_corridors)
             mapgen.placeMoarCorridors(level, state.GPA.allocator());
@@ -233,7 +229,7 @@ fn initLevels() bool {
         //     }
         // }
 
-        mapgen.placeRoomFeatures(level, &s_fabs, state.GPA.allocator());
+        mapgen.placeRoomFeatures(level, state.GPA.allocator());
         mapgen.placeRoomTerrain(level);
         mapgen.placeTraps(level);
         mapgen.placeItems(level);
@@ -269,6 +265,10 @@ fn deinitGame() void {
     ui.deinit() catch err.wat();
 
     state.GPA.allocator().destroy(state.dungeon);
+
+    mapgen.s_fabs.deinit();
+    mapgen.n_fabs.deinit();
+    mapgen.fab_records.deinit();
 
     state.chardata.deinit();
     state.memory.clearAndFree();

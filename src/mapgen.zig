@@ -142,6 +142,10 @@ pub const VAULT_CROWD = [VAULT_KINDS]MinMax(usize){
 // TODO: replace with MinMax
 const Range = struct { from: Coord, to: Coord };
 
+pub var s_fabs: PrefabArrayList = undefined;
+pub var n_fabs: PrefabArrayList = undefined;
+pub var fab_records: std.StringHashMap(Prefab.PlacementRecord) = undefined;
+
 const LIMIT = Rect{
     .start = Coord.new(1, 1),
     .width = state.WIDTH - 1,
@@ -433,18 +437,16 @@ pub const PrefabOpts = struct {
 };
 
 fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, opts: PrefabOpts) bool {
-    _ = opts;
-
     if (prefab.invisible and !allow_invis) {
         return false; // Can't be used unless specifically called for by name.
     }
 
     if (prefab.tunneler_prefab != opts.t_only) {
-        return false;
+        return false; // Prefab is only for the tunneler algorithm.
     }
 
     if (prefab.tunneler_prefab and prefab.tunneler_orientation != opts.t_orientation) {
-        return false;
+        return false; // This is a prefab for tunneler's corridor and is the wrong orientation.
     }
 
     if (!mem.eql(u8, prefab.name.constSlice()[0..3], state.levelinfo[level].id) and
@@ -453,10 +455,15 @@ fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, opts: PrefabO
         return false; // Prefab isn't for this level.
     }
 
-    if (prefab.used[level] >= prefab.restriction or
-        prefab.global_used >= prefab.global_restriction)
-    {
-        return false; // Prefab was used too many times.
+    const record = fab_records.getOrPut(prefab.name.constSlice()) catch err.wat();
+    if (record.found_existing) {
+        if (record.value_ptr.level[level] >= prefab.restriction or
+            record.value_ptr.global >= prefab.global_restriction)
+        {
+            return false; // Prefab was used too many times.
+        }
+    } else {
+        record.value_ptr.* = .{};
     }
 
     return true;
@@ -590,7 +597,6 @@ fn isRoomInvalid(
 }
 
 fn excavatePrefab(
-    s_fabs: *PrefabArrayList,
     room: *Room,
     fab: *const Prefab,
     allocator: mem.Allocator,
@@ -838,7 +844,7 @@ fn excavatePrefab(
     }
 
     for (fab.subroom_areas.constSlice()) |subroom_area| {
-        placeSubroom(s_fabs, room, &subroom_area.rect, allocator, .{
+        placeSubroom(room, &subroom_area.rect, allocator, .{
             .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
         });
     }
@@ -864,7 +870,7 @@ fn excavateRect(rect: *const Rect) void {
 // terrain.
 //
 // Also, reset the `used` counters and connections for prefabs.
-pub fn resetLevel(level: usize, n_fabs: *PrefabArrayList, s_fabs: *PrefabArrayList) void {
+pub fn resetLevel(level: usize) void {
     for (n_fabs.items) |*fab| fab.reset(level);
     for (s_fabs.items) |*fab| fab.reset(level);
 
@@ -927,12 +933,7 @@ pub fn setLevelMaterial(level: usize) void {
     }
 }
 
-pub fn validateLevel(
-    level: usize,
-    alloc: mem.Allocator,
-    n_fabs: *PrefabArrayList,
-    s_fabs: *PrefabArrayList,
-) !void {
+pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
     // utility functions
     const _f = struct {
         pub fn _getWalkablePoint(room: *const Rect) Coord {
@@ -965,10 +966,10 @@ pub fn validateLevel(
 
     // Ensure that all required prefabs were used.
     for (Configs[level].prefabs) |required_fab| {
-        const fab = Prefab.findPrefabByName(required_fab, n_fabs) orelse
-            Prefab.findPrefabByName(required_fab, s_fabs).?;
+        const fab = Prefab.findPrefabByName(required_fab, &n_fabs) orelse
+            Prefab.findPrefabByName(required_fab, &s_fabs).?;
 
-        if (fab.used[level] == 0) {
+        if (fab.getOrPutValue(fab.id.constSlice(), .{}).level[level] == 0) {
             return error.RequiredPrefabsNotUsed;
         }
     }
@@ -1172,7 +1173,7 @@ const SubroomPlacementOptions = struct {
     specific_id: ?[]const u8 = null,
 };
 
-fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, alloc: mem.Allocator, opts: SubroomPlacementOptions) void {
+fn placeSubroom(parent: *Room, area: *const Rect, alloc: mem.Allocator, opts: SubroomPlacementOptions) void {
     assert(area.end().y < HEIGHT and area.end().x < WIDTH);
 
     for (s_fabs.items) |*subroom| {
@@ -1206,9 +1207,8 @@ fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, allo
 
             //std.log.debug("mapgen: Using subroom {s} at ({}x{}+{}+{})", .{ subroom.name.constSlice(), parent_adj.rect.start.x, parent_adj.rect.start.y, rx, ry });
 
-            excavatePrefab(s_fabs, &parent_adj, subroom, alloc, rx, ry);
-            subroom.used[parent.rect.start.z] += 1;
-            subroom.global_used += 1;
+            excavatePrefab(&parent_adj, subroom, alloc, rx, ry);
+            subroom.incrementRecord(parent.rect.start.z);
             parent.has_subroom = true;
 
             if (subroom.subroom_areas.len > 0) {
@@ -1218,7 +1218,7 @@ fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, allo
                         .height = subroom_area.rect.height,
                         .width = subroom_area.rect.width,
                     };
-                    placeSubroom(s_fabs, &parent_adj, &actual_subroom_area, alloc, .{
+                    placeSubroom(&parent_adj, &actual_subroom_area, alloc, .{
                         .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
                     });
                 }
@@ -1229,13 +1229,7 @@ fn placeSubroom(s_fabs: *PrefabArrayList, parent: *Room, area: *const Rect, allo
     }
 }
 
-fn _place_rooms(
-    rooms: *Room.ArrayList,
-    n_fabs: *PrefabArrayList,
-    s_fabs: *PrefabArrayList,
-    level: usize,
-    allocator: mem.Allocator,
-) !void {
+fn _place_rooms(rooms: *Room.ArrayList, level: usize, allocator: mem.Allocator) !void {
     const parent_i = rng.range(usize, 0, rooms.items.len - 1);
     var parent = &rooms.items[parent_i];
 
@@ -1251,7 +1245,7 @@ fn _place_rooms(
     if (rng.onein(Configs[level].prefab_chance)) {
         if (distance == 0) distance += 1;
 
-        fab = choosePrefab(level, n_fabs, .{}) orelse return;
+        fab = choosePrefab(level, &n_fabs, .{}) orelse return;
         var childrect = attachRect(parent, side, fab.?.width, fab.?.height, distance, fab) orelse return;
 
         if (isRoomInvalid(rooms, &Room{ .rect = childrect }, parent, null, false) or
@@ -1334,7 +1328,7 @@ fn _place_rooms(
     // Only now are we actually sure that we'd use the room
 
     if (child.prefab) |_| {
-        excavatePrefab(s_fabs, &child, fab.?, allocator, 0, 0);
+        excavatePrefab(&child, fab.?, allocator, 0, 0);
     } else {
         excavateRect(&child.rect);
     }
@@ -1366,13 +1360,12 @@ fn _place_rooms(
     }
 
     if (child.prefab) |f| {
-        f.used[level] += 1;
-        f.global_used += 1;
+        f.incrementRecord(level);
     }
 
     if (child.prefab == null) {
         if (rng.percent(Configs[level].subroom_chance)) {
-            placeSubroom(s_fabs, &child, &Rect{
+            placeSubroom(&child, &Rect{
                 .start = Coord.new(0, 0),
                 .width = child.rect.width,
                 .height = child.rect.height,
@@ -1380,7 +1373,7 @@ fn _place_rooms(
         }
     } else if (child.prefab.?.subroom_areas.len > 0) {
         // for (child.prefab.?.subroom_areas.constSlice()) |subroom_area| {
-        //     placeSubroom(s_fabs, &child, &subroom_area.rect, allocator, .{
+        //     placeSubroom(&child, &subroom_area.rect, allocator, .{
         //         .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
         //     });
         // }
@@ -1395,8 +1388,6 @@ fn _place_rooms(
 }
 
 pub fn placeRandomRooms(
-    n_fabs: *PrefabArrayList,
-    s_fabs: *PrefabArrayList,
     level: usize,
     allocator: mem.Allocator,
 ) void {
@@ -1408,7 +1399,7 @@ pub fn placeRandomRooms(
 
     while (reqctr < required.len) {
         const fab_name = required[reqctr];
-        const fab = Prefab.findPrefabByName(fab_name, n_fabs) orelse {
+        const fab = Prefab.findPrefabByName(fab_name, &n_fabs) orelse {
             // Do nothing, it might be a required subroom.
             //
             // FIXME: we still should handle this error
@@ -1446,9 +1437,8 @@ pub fn placeRandomRooms(
             continue;
 
         if (first == null) first = room;
-        fab.used[level] += 1;
-        fab.global_used += 1;
-        excavatePrefab(s_fabs, &room, fab, allocator, 0, 0);
+        fab.incrementRecord(level);
+        excavatePrefab(&room, fab, allocator, 0, 0);
         rooms.append(room) catch err.wat();
 
         reqctr += 1;
@@ -1477,18 +1467,13 @@ pub fn placeRandomRooms(
 
     var c = Configs[level].mapgen_iters;
     while (c > 0) : (c -= 1) {
-        _place_rooms(rooms, n_fabs, s_fabs, level, allocator) catch |e| switch (e) {
+        _place_rooms(rooms, level, allocator) catch |e| switch (e) {
             error.NoValidParent => break,
         };
     }
 }
 
-pub fn placeDrunkenWalkerCave(
-    n_fabs: *PrefabArrayList,
-    s_fabs: *PrefabArrayList,
-    level: usize,
-    alloc: mem.Allocator,
-) void {
+pub fn placeDrunkenWalkerCave(level: usize, alloc: mem.Allocator) void {
     const MIN_OPEN_SPACE = 50;
 
     var tiles_made_floors: usize = 0;
@@ -1553,15 +1538,10 @@ pub fn placeDrunkenWalkerCave(
     for (walls_to_remove.items) |coord|
         state.dungeon.at(coord).type = .Floor;
 
-    placeRandomRooms(n_fabs, s_fabs, level, alloc);
+    placeRandomRooms(level, alloc);
 }
 
-pub fn placeBSPRooms(
-    _: *PrefabArrayList,
-    s_fabs: *PrefabArrayList,
-    level: usize,
-    allocator: mem.Allocator,
-) void {
+pub fn placeBSPRooms(level: usize, allocator: mem.Allocator) void {
     const Node = struct {
         const Self = @This();
 
@@ -1755,7 +1735,7 @@ pub fn placeBSPRooms(
     //
     for (rooms.items) |*room| {
         if (rng.percent(Configs[level].subroom_chance)) {
-            placeSubroom(s_fabs, room, &Rect{
+            placeSubroom(room, &Rect{
                 .start = Coord.new(0, 0),
                 .width = room.rect.width,
                 .height = room.rect.height,
@@ -1769,8 +1749,6 @@ pub const Ctx = struct {
     tunnelers: Tunneler.List,
     extras: std.ArrayList(Roomie),
     junctions: std.ArrayList(Junction),
-    n_fabs: *PrefabArrayList,
-    s_fabs: *PrefabArrayList,
     opts: TunnelerOptions,
 
     pub fn doesJunctionContain(self: *Ctx, t: *const Tunneler, coord: Coord) bool {
@@ -1835,7 +1813,8 @@ pub const Ctx = struct {
             }
 
             if (roomie.prefab) |fab| {
-                excavatePrefab(self.s_fabs, &room, fab, state.GPA.allocator(), 0, 0);
+                excavatePrefab(&room, fab, state.GPA.allocator(), 0, 0);
+                fab.incrementRecord(level);
             } else {
                 excavateRect(&roomie.rect);
             }
@@ -2267,7 +2246,7 @@ pub const Tunneler = struct {
             var recth = rng.range(usize, Configs[level].min_room_height, Configs[level].max_room_height);
 
             if (rng.onein(Configs[level].prefab_chance)) {
-                if (choosePrefab(level, ctx.n_fabs, .{ .t_only = true, .t_orientation = orientation })) |fab| {
+                if (choosePrefab(level, &n_fabs, .{ .t_only = true, .t_orientation = orientation })) |fab| {
                     prefab = fab;
                     rectw = fab.width;
                     recth = fab.height;
@@ -2390,7 +2369,7 @@ pub const TunnelerOptions = struct {
 // - Integrate additional-corridors-between-rooms thing
 // - Ensure there are looping connections between multiple tunnelers
 // - Add doorways randomly to rooms, not the way it currently is
-pub fn placeTunneledRooms(n_fabs: *PrefabArrayList, s_fabs: *PrefabArrayList, level: usize, allocator: mem.Allocator) void {
+pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
     const gif = @import("build_options").tunneler_gif;
     const giflib = if (gif) @cImport(@cInclude("gif_lib.h")) else null;
     var frames: std.ArrayList([HEIGHT][WIDTH]u8) = if (gif) std.ArrayList([HEIGHT][WIDTH]u8).init(allocator) else undefined;
@@ -2435,8 +2414,6 @@ pub fn placeTunneledRooms(n_fabs: *PrefabArrayList, s_fabs: *PrefabArrayList, le
         .roomies = std.ArrayList(Roomie).init(allocator),
         .extras = std.ArrayList(Roomie).init(allocator),
         .junctions = std.ArrayList(Junction).init(allocator),
-        .n_fabs = n_fabs,
-        .s_fabs = s_fabs,
         .opts = Configs[level].tunneler_opts,
     };
     for (ctx.opts.initial_tunnelers) |initial| {
@@ -2972,7 +2949,7 @@ fn _placePropAlongRange(level: usize, where: Range, prop: *const Prop, max: usiz
     return placed;
 }
 
-pub fn setVaultFeatures(s_fabs: *PrefabArrayList, room: *Room) void {
+pub fn setVaultFeatures(room: *Room) void {
     const level = room.rect.start.z;
 
     const wall_areas = computeWallAreas(&room.rect, true);
@@ -3007,7 +2984,7 @@ pub fn setVaultFeatures(s_fabs: *PrefabArrayList, room: *Room) void {
 
     // Subroom, if any
     if (VAULT_SUBROOMS[@enumToInt(room.is_vault.?)]) |fab_name| {
-        placeSubroom(s_fabs, room, &Rect{
+        placeSubroom(room, &Rect{
             .start = Coord.new(0, 0),
             .width = room.rect.width,
             .height = room.rect.height,
@@ -3015,7 +2992,7 @@ pub fn setVaultFeatures(s_fabs: *PrefabArrayList, room: *Room) void {
     }
 }
 
-pub fn placeRoomFeatures(level: usize, s_fabs: *PrefabArrayList, alloc: mem.Allocator) void {
+pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
     for (state.rooms[level].items) |*room| {
         const rect = room.rect;
         const room_area = rect.height * rect.width;
@@ -3032,7 +3009,7 @@ pub fn placeRoomFeatures(level: usize, s_fabs: *PrefabArrayList, alloc: mem.Allo
         if (room.has_subroom and room_area < 25) continue;
 
         if (room.is_vault != null) {
-            setVaultFeatures(s_fabs, room);
+            setVaultFeatures(room);
         }
 
         const rect_end = rect.end();
@@ -3881,10 +3858,12 @@ pub const Prefab = struct {
     input: ?Rect = null,
     output: ?Rect = null,
 
-    used: [LEVELS]usize = [_]usize{0} ** LEVELS,
-    global_used: usize = 0,
-
     pub const MAX_NAME_SIZE = 64;
+
+    pub const PlacementRecord = struct {
+        level: [LEVELS]usize = [_]usize{0} ** LEVELS,
+        global: usize = 0,
+    };
 
     pub const SubroomArea = struct {
         rect: Rect,
@@ -3937,7 +3916,8 @@ pub const Prefab = struct {
     };
 
     pub fn reset(self: *Prefab, level: usize) void {
-        self.used[level] = 0;
+        if (fab_records.getPtr(self.name.constSlice())) |record|
+            record.level[level] = 0;
 
         for (self.connections) |maybe_con, i| {
             if (maybe_con == null) break;
@@ -3970,8 +3950,6 @@ pub const Prefab = struct {
         y: usize,
         w: usize,
         f: *Prefab,
-        n_fabs: *PrefabArrayList,
-        s_fabs: *PrefabArrayList,
     ) !void {
         f.width = w;
         f.height = y;
@@ -3995,16 +3973,11 @@ pub const Prefab = struct {
         const prefab_name = mem.trimRight(u8, name, ".fab");
         f.name = StackBuffer(u8, Prefab.MAX_NAME_SIZE).init(prefab_name);
 
-        const to = if (f.subroom) s_fabs else n_fabs;
+        const to = if (f.subroom) &s_fabs else &n_fabs;
         to.append(f.*) catch err.oom();
     }
 
-    pub fn parseAndLoad(
-        name: []const u8,
-        from: []const u8,
-        n_fabs: *PrefabArrayList,
-        s_fabs: *PrefabArrayList,
-    ) !void {
+    pub fn parseAndLoad(name: []const u8, from: []const u8) !void {
         var f: Prefab = .{};
         for (f.content) |*row| mem.set(FabTile, row, .Wall);
         mem.set(?Connection, &f.connections, null);
@@ -4023,7 +3996,7 @@ pub const Prefab = struct {
             switch (line[0]) {
                 '%' => {}, // ignore comments
                 '\\' => {
-                    try _finishParsing(name, y, w, &f, n_fabs, s_fabs);
+                    try _finishParsing(name, y, w, &f);
 
                     ci = 0;
                     cm = 0;
@@ -4348,7 +4321,7 @@ pub const Prefab = struct {
             }
         }
 
-        try _finishParsing(name, y, w, &f, n_fabs, s_fabs);
+        try _finishParsing(name, y, w, &f);
     }
 
     pub fn findPrefabByName(name: []const u8, fabs: *const PrefabArrayList) ?*Prefab {
@@ -4360,17 +4333,24 @@ pub const Prefab = struct {
         //return (a.priority > b.priority) or (a.height * a.width) > (b.height * b.width);
         return a.priority > b.priority;
     }
+
+    pub fn incrementRecord(self: *const Prefab, level: usize) void {
+        const record = (fab_records.getOrPutValue(self.name.constSlice(), .{}) catch err.wat()).value_ptr;
+        record.level[level] += 1;
+        record.global += 1;
+    }
 };
 
 pub const PrefabArrayList = std.ArrayList(Prefab);
 
 // FIXME: error handling
 // FIXME: warn if prefab is zerowidth/zeroheight (prefabs file might not have fit in buffer)
-pub fn readPrefabs(alloc: mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *PrefabArrayList) void {
+pub fn readPrefabs(alloc: mem.Allocator) void {
     var buf: [8192]u8 = undefined;
 
-    n_fabs.* = PrefabArrayList.init(alloc);
-    s_fabs.* = PrefabArrayList.init(alloc);
+    n_fabs = PrefabArrayList.init(alloc);
+    s_fabs = PrefabArrayList.init(alloc);
+    fab_records = @TypeOf(fab_records).init(alloc);
 
     const fabs_dir = std.fs.cwd().openDir("data/prefabs", .{
         .iterate = true,
@@ -4388,7 +4368,7 @@ pub fn readPrefabs(alloc: mem.Allocator, n_fabs: *PrefabArrayList, s_fabs: *Pref
 
         const read = fab_f.readAll(buf[0..]) catch err.wat();
 
-        Prefab.parseAndLoad(fab_file.name, buf[0..read], n_fabs, s_fabs) catch |e| {
+        Prefab.parseAndLoad(fab_file.name, buf[0..read]) catch |e| {
             const msg = switch (e) {
                 error.StockpileAlreadyDefined => "Stockpile already defined for prefab",
                 error.OutputAreaAlreadyDefined => "Output area already defined for prefab",
@@ -4521,7 +4501,7 @@ pub const LevelConfig = struct {
     shrink_corridors_to_fit: bool = true,
     prefab_chance: usize,
 
-    mapgen_func: fn (*PrefabArrayList, *PrefabArrayList, usize, mem.Allocator) void = placeRandomRooms,
+    mapgen_func: fn (usize, mem.Allocator) void = placeRandomRooms,
 
     tunneler_opts: TunnelerOptions = .{},
 
@@ -4650,7 +4630,10 @@ pub const SIN_BASE_LEVELCONFIG = LevelConfig{
         .remove_childless = false,
         .force_prefabs = true,
         .initial_tunnelers = &[_]TunnelerOptions.InitialTunneler{
-            .{ .start = Coord.new(1, HEIGHT / 2), .width = 0, .height = 6, .direction = .East },
+            .{ .start = Coord.new(1, 1), .width = 0, .height = 4, .direction = .East },
+            .{ .start = Coord.new(WIDTH - 1, 1), .width = 4, .height = 0, .direction = .South },
+            .{ .start = Coord.new(WIDTH - 1, HEIGHT - 1), .width = 0, .height = 4, .direction = .West },
+            .{ .start = Coord.new(1, HEIGHT - 1), .width = 4, .height = 0, .direction = .North },
         },
     },
     .prefab_chance = 1, // Only prefabs for SIN
