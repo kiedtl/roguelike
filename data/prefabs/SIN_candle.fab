@@ -1,5 +1,8 @@
 :g_tunneler
 :restriction 4
+:nolights
+:notraps
+:noguards
 
 :tunneler_inset
 :tunneler_orientation north

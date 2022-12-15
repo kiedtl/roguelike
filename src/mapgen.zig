@@ -434,9 +434,15 @@ fn _add_player(coord: Coord, alloc: mem.Allocator) void {
 pub const PrefabOpts = struct {
     t_only: bool = false,
     t_orientation: Direction = .South,
+    max_w: usize = 999,
+    max_h: usize = 999,
 };
 
 fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, opts: PrefabOpts) bool {
+    if (prefab.width > opts.max_w or prefab.height > opts.max_h) {
+        return false; // Too big
+    }
+
     if (prefab.invisible and !allow_invis) {
         return false; // Can't be used unless specifically called for by name.
     }
@@ -1812,14 +1818,49 @@ pub const Ctx = struct {
                 continue;
             }
 
-            if (roomie.prefab) |fab| {
+            var prefab: ?*Prefab = null;
+            if (rng.onein(Configs[level].prefab_chance)) {
+                if (choosePrefab(level, &n_fabs, .{
+                    .t_only = true,
+                    .t_orientation = roomie.orientation,
+                    .max_h = roomie.rect.height,
+                    .max_w = roomie.rect.width,
+                })) |fab| {
+                    prefab = fab;
+
+                    switch (roomie.orientation) {
+                        .North => roomie.rect.start.y += (roomie.rect.height - fab.height),
+                        .West => roomie.rect.start.x += (roomie.rect.width - fab.width),
+                        .South, .East => {},
+                        else => unreachable,
+                    }
+
+                    roomie.rect.width = fab.width;
+                    roomie.rect.height = fab.height;
+
+                    if (fab.tunneler_inset) switch (roomie.orientation) {
+                        .North => roomie.rect.start.y += 1,
+                        .South => roomie.rect.start.y -= 1,
+                        .East => roomie.rect.start.x -= 1,
+                        .West => roomie.rect.start.x += 1,
+                        else => unreachable,
+                    };
+
+                    room = Room{ .rect = roomie.rect };
+                } else if (self.opts.force_prefabs) {
+                    i += 1;
+                    continue;
+                }
+            }
+
+            if (prefab) |fab| {
                 excavatePrefab(&room, fab, state.GPA.allocator(), 0, 0);
                 fab.incrementRecord(level);
             } else {
                 excavateRect(&roomie.rect);
             }
 
-            if (roomie.prefab == null or !roomie.prefab.?.tunneler_inset) {
+            if (prefab == null or !prefab.?.tunneler_inset) {
                 placeDoor(roomie.door, false);
                 room.connections.append(roomie.door) catch err.wat();
             }
@@ -1950,7 +1991,7 @@ pub const Roomie = struct {
     born_at: usize,
     rect: Rect,
     door: Coord,
-    prefab: ?*Prefab,
+    orientation: Direction,
 
     pub fn getRandomDoorCoord(room: Room, parent: *const Tunneler) ?Coord {
         const level = room.rect.start.z;
@@ -2229,56 +2270,45 @@ pub const Tunneler = struct {
     }
 
     pub fn getPotentialRooms(self: *Self, ctx: *Ctx) [2]?Roomie {
+        _ = ctx;
+
         var res = [2]?Roomie{ null, null };
 
         const level = self.rect.start.z;
 
         for (res) |_, i| {
-            var orientation = switch (self.direction) {
-                .East, .West => [_]Direction{ .North, .South },
-                .North, .South => [_]Direction{ .East, .West },
-                else => unreachable,
-            }[i];
-
-            var prefab: ?*Prefab = null;
-            var door_mod: usize = 1;
             var rectw = rng.range(usize, Configs[level].min_room_width, Configs[level].max_room_width);
             var recth = rng.range(usize, Configs[level].min_room_height, Configs[level].max_room_height);
 
-            if (rng.onein(Configs[level].prefab_chance)) {
-                if (choosePrefab(level, &n_fabs, .{ .t_only = true, .t_orientation = orientation })) |fab| {
-                    prefab = fab;
-                    rectw = fab.width;
-                    recth = fab.height;
-                    if (fab.tunneler_inset)
-                        door_mod = 0;
-                } else if (ctx.opts.force_prefabs) {
-                    continue;
-                }
-            } else if (rng.onein(5)) {
+            if (rng.onein(5)) {
                 rectw = Configs[level].min_room_width;
                 recth = Configs[level].min_room_height;
             }
 
             const start_coords = switch (self.direction) {
                 .East => &[_]Coord{
-                    Coord.new2(level, self.rect.end().x -| rectw, self.rect.start.y -| recth -| door_mod),
-                    Coord.new2(level, self.rect.end().x -| rectw, self.rect.end().y + door_mod),
+                    Coord.new2(level, self.rect.end().x -| rectw, self.rect.start.y -| recth -| 1),
+                    Coord.new2(level, self.rect.end().x -| rectw, self.rect.end().y + 1),
                 },
                 .West => &[_]Coord{
-                    Coord.new2(level, self.rect.start.x -| (rectw - 1), self.rect.start.y -| recth -| door_mod),
-                    Coord.new2(level, self.rect.start.x -| (rectw - 1), self.rect.end().y + door_mod),
+                    Coord.new2(level, self.rect.start.x -| (rectw - 1), self.rect.start.y -| recth -| 1),
+                    Coord.new2(level, self.rect.start.x -| (rectw - 1), self.rect.end().y + 1),
                 },
                 .North => &[_]Coord{
-                    Coord.new2(level, self.rect.end().x + door_mod, self.rect.start.y -| (recth - 1)),
-                    Coord.new2(level, self.rect.start.x -| (rectw + door_mod), self.rect.start.y -| (recth - 1)),
+                    Coord.new2(level, self.rect.end().x + 1, self.rect.start.y -| (recth - 1)),
+                    Coord.new2(level, self.rect.start.x -| (rectw + 1), self.rect.start.y -| (recth - 1)),
                 },
                 .South => &[_]Coord{
-                    Coord.new2(level, self.rect.end().x + door_mod, self.rect.end().y -| recth),
-                    Coord.new2(level, self.rect.start.x -| (rectw + door_mod), self.rect.end().y -| recth),
+                    Coord.new2(level, self.rect.end().x + 1, self.rect.end().y -| recth),
+                    Coord.new2(level, self.rect.start.x -| (rectw + 1), self.rect.end().y -| recth),
                 },
                 else => unreachable,
             };
+            const orientation = switch (self.direction) {
+                .East, .West => [_]Direction{ .North, .South },
+                .North, .South => [_]Direction{ .East, .West },
+                else => unreachable,
+            }[i];
 
             const rect = Rect{ .start = start_coords[i], .width = rectw, .height = recth };
             res[i] = .{
@@ -2287,7 +2317,7 @@ pub const Tunneler = struct {
                 .born_at = self.corridorLength(),
                 .rect = rect,
                 .door = Roomie.getRandomDoorCoord(Room{ .rect = rect }, self).?,
-                .prefab = prefab,
+                .orientation = orientation,
             };
         }
         return res;
