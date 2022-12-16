@@ -1811,6 +1811,7 @@ pub const Ctx = struct {
             }
 
             if (roomie.parent.is_eviscerated or
+                roomie.parent.child_rooms >= self.opts.max_room_per_tunnel or
                 self.findIntersectingJunction(roomie.rect) != null or
                 isRoomInvalid(&state.rooms[level], &room, null, null, false))
             {
@@ -2379,6 +2380,8 @@ pub const TunnelerOptions = struct {
 
     force_prefabs: bool = true,
 
+    max_room_per_tunnel: usize = 0,
+
     initial_tunnelers: []const InitialTunneler = &[_]InitialTunneler{
         .{ .start = Coord.new(1, HEIGHT / 2), .width = 0, .height = 3, .direction = .East },
         .{ .start = Coord.new(WIDTH / 2, 1), .width = 3, .height = 0, .direction = .South },
@@ -2502,7 +2505,9 @@ pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
                 }
             }
 
-            if (tunneler.corridorLength() > tunneler.corridorWidth()) {
+            if (tunneler.child_rooms < ctx.opts.max_room_per_tunnel and
+                tunneler.corridorLength() > tunneler.corridorWidth())
+            {
                 var room_tries: usize = ctx.opts.room_tries;
                 while (room_tries > 0) : (room_tries -= 1) {
                     const rooms = tunneler.getPotentialRooms(&ctx);
@@ -4653,12 +4658,18 @@ pub const QRT_BASE_LEVELCONFIG = LevelConfig{
 
 pub const SIN_BASE_LEVELCONFIG = LevelConfig{
     .tunneler_opts = .{
+        .room_tries = 1,
+        .headstart_chance = 0, // More chance for enough candles to spawn
         .shrink_chance = 0,
         .grow_chance = 0,
         .add_extra_rooms = false,
         .add_junctions = false,
         .remove_childless = false,
         .force_prefabs = true,
+
+        // Due to having 4 tunnelers, and candles having restriction=4 each branch will likely spawn only one room
+        .max_room_per_tunnel = 1,
+
         .initial_tunnelers = &[_]TunnelerOptions.InitialTunneler{
             .{ .start = Coord.new(1, 1), .width = 0, .height = 4, .direction = .East },
             .{ .start = Coord.new(WIDTH - 1, 1), .width = 4, .height = 0, .direction = .South },
