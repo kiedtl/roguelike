@@ -2354,6 +2354,10 @@ pub const Mob = struct { // {{{
     // can swap with that other mob.
     //
     pub fn canSwapWith(self: *const Mob, other: *Mob, _: ?Direction) bool {
+        if (self.multitile != null or other.multitile != null) {
+            return false;
+        }
+
         if (self == state.player) {
             return !other.immobile and
                 (other.prisoner_status == null or other.prisoner_status.?.held_by == null);
@@ -2442,7 +2446,9 @@ pub const Mob = struct { // {{{
     }
 
     pub fn teleportTo(self: *Mob, dest: Coord, direction: ?Direction, instant: bool) bool {
-        assert(!self.immobile);
+        if (self.multitile != null) {
+            return self._teleportToMultitile(dest, direction, instant);
+        }
 
         const coord = self.coord;
 
@@ -2516,6 +2522,44 @@ pub const Mob = struct { // {{{
                     _ = m.addPower(self);
                 },
                 else => {},
+            }
+        }
+
+        return true;
+    }
+
+    pub fn _teleportToMultitile(self: *Mob, dest: Coord, direction: ?Direction, instant: bool) bool {
+        assert(!self.immobile);
+
+        if (self.prisoner_status) |prisoner|
+            if (prisoner.held_by != null)
+                return false;
+
+        if (!state.is_walkable(dest, .{ .right_now = true, .mob = self })) {
+            return false;
+        }
+
+        {
+            var gen = Generator(Rect.rectIter).init(self.areaRect());
+            while (gen.next()) |mobcoord|
+                state.dungeon.at(mobcoord).mob = null;
+        }
+
+        self.coord = dest;
+
+        {
+            var gen = Generator(Rect.rectIter).init(self.areaRect());
+            while (gen.next()) |mobcoord|
+                state.dungeon.at(mobcoord).mob = self;
+        }
+
+        assert(state.dungeon.at(dest).surface == null);
+
+        if (!instant) {
+            if (direction) |d| {
+                self.declareAction(Activity{ .Move = d });
+            } else {
+                self.declareAction(Activity{ .Teleport = dest });
             }
         }
 
@@ -4170,7 +4214,10 @@ pub const Tile = struct {
         }
 
         if (self.mob != null and !ignore_mobs) {
-            assert(self.type != .Wall);
+            //assert(self.type != .Wall);
+            if (self.type == .Wall) {
+                cell.bg = 0xff0000;
+            }
 
             const mob = self.mob.?;
 

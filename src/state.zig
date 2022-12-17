@@ -54,6 +54,8 @@ const SoundState = @import("sound.zig").SoundState;
 const TaskArrayList = @import("tasks.zig").TaskArrayList;
 const EvocableList = @import("items.zig").EvocableList;
 const PosterArrayList = literature.PosterArrayList;
+const Generator = @import("generators.zig").Generator;
+const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
 pub const GameState = union(enum) { Game, Win, Lose, Quit };
 pub const Layout = union(enum) { Unknown, Room: usize };
@@ -263,10 +265,25 @@ pub const IsWalkableOptions = struct {
     ignore_mobs: bool = false,
 
     mob: ?*const Mob = null,
+
+    _no_multitile_recurse: bool = false,
 };
 
 // STYLE: change to Tile.isWalkable
 pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
+    if (opts.mob != null and opts.mob.?.multitile != null and !opts._no_multitile_recurse) {
+        var newopts = opts;
+        newopts._no_multitile_recurse = true;
+        const l = opts.mob.?.multitile.?;
+
+        var gen = Generator(Rect.rectIter).init(Rect.new(coord, l, l));
+        while (gen.next()) |mobcoord|
+            if (!is_walkable(mobcoord, newopts))
+                return false;
+
+        return true;
+    }
+
     switch (dungeon.at(coord).type) {
         .Wall => return false,
         .Water, .Lava => if (!opts.only_if_breaks_lof) return false,

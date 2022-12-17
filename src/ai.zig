@@ -1018,7 +1018,7 @@ pub fn wanderWork(mob: *Mob, _: mem.Allocator) void {
     const station = mob.ai.work_area.items[0];
     const dest = mob.ai.target orelse mob.coord;
 
-    if (mob.coord.eq(dest) or !state.is_walkable(dest, .{ .right_now = true })) {
+    if (mob.coord.eq(dest) or !state.is_walkable(dest, .{ .right_now = true, .mob = mob })) {
         if (rng.tenin(15)) {
             tryRest(mob);
             return;
@@ -1035,7 +1035,7 @@ pub fn wanderWork(mob: *Mob, _: mem.Allocator) void {
         while (tries < 5) : (tries += 1) {
             const point = room.rect.randomCoord();
 
-            if (!state.is_walkable(point, .{ .right_now = true }) or
+            if (!state.is_walkable(point, .{ .right_now = true, .mob = mob }) or
                 state.dungeon.at(point).prison)
                 continue;
 
