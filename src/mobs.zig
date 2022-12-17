@@ -133,11 +133,11 @@ pub const CombatDummyPrisoner = MobTemplate{
 };
 // }}}
 
-pub const RagingHulkTemplate = MobTemplate{
+pub const SwollenHulkTemplate = MobTemplate{
     .mob = .{
-        .id = "hulk_raging",
+        .id = "hulk_swollen",
         .species = &Species{
-            .name = "raging hulk",
+            .name = "swollen hulk",
             .default_attack = &Weapon{
                 .damage = 6,
                 .strs = &[_]DamageStr{items._dmgstr(1, "thrash", "thrashes", "")},
@@ -150,6 +150,7 @@ pub const RagingHulkTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
         },
         .multitile = 2,
+        .base_night_vision = true,
 
         .max_HP = 20,
         .memory_duration = 20,
@@ -1884,7 +1885,7 @@ pub const SpectralSwordTemplate = MobTemplate{
 pub const MOBS = [_]MobTemplate{
     CombatDummyNormal,
     CombatDummyPrisoner,
-    RagingHulkTemplate,
+    SwollenHulkTemplate,
     CoronerTemplate,
     ExecutionerTemplate,
     WatcherTemplate,

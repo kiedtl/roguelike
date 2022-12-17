@@ -789,7 +789,8 @@ pub const DistractionRing = Ring{ // {{{
                 anim_buf.append(coord2) catch unreachable;
             }
 
-            ui.Animation.blink(anim_buf.constSlice(), '?', colors.AQUAMARINE, .{}).apply();
+            // TODO: use beams-ring-amnesia particle effect
+            // ui.Animation.blink(anim_buf.constSlice(), '?', colors.AQUAMARINE, .{}).apply();
         }
     }.f,
 }; // }}}

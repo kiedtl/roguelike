@@ -1967,7 +1967,25 @@ pub const Mob = struct { // {{{
         const energy = math.clamp(vision * Dungeon.FLOOR_OPACITY, 0, 100);
         const direction = if (self.deg360_vision) null else self.facing;
 
-        fov.rayCast(self.coord, vision, energy, Dungeon.tileOpacity, &self.fov, direction, self == state.player);
+        // Handle multitile creatures
+        var eyes = Rect{ .start = self.coord, .width = 1, .height = 1 };
+        if (direction != null and self.multitile != null) {
+            const area = self.areaRect();
+            eyes = switch (direction.?) {
+                .North => Rect.new(area.start, self.multitile.?, 1),
+                .South => Rect.new(Coord.new2(self.coord.z, area.start.x, area.end().y), self.multitile.?, 1),
+                .East => Rect.new(Coord.new2(self.coord.z, area.end().x, area.start.y), 1, self.multitile.?),
+                .West => Rect.new(area.start, 1, self.multitile.?),
+                .NorthWest => Rect.new(area.start, 1, 1),
+                .NorthEast => Rect.new(Coord.new2(self.coord.z, area.end().x - 1, area.start.y), 1, 1),
+                .SouthWest => Rect.new(Coord.new2(self.coord.z, area.start.x, area.end().y), 1, 1),
+                .SouthEast => Rect.new(Coord.new2(self.coord.z, area.end().x - 1, area.end().y), 1, 1),
+            };
+        }
+
+        var gen = Generator(Rect.rectIter).init(eyes);
+        while (gen.next()) |eye_coord|
+            fov.rayCast(eye_coord, vision, energy, Dungeon.tileOpacity, &self.fov, direction, self == state.player);
 
         for (self.fov) |row, y| for (row) |_, x| {
             if (self.fov[y][x] > 0) {
@@ -1976,7 +1994,7 @@ pub const Mob = struct { // {{{
 
                 // If a tile is too dim to be seen by a mob and the tile isn't
                 // adjacent to that mob, mark it as unlit.
-                if (fc.distance(self.coord) > 1 and
+                if (fc.distance(self.coordMT(fc)) > 1 and
                     (!light_needs[@boolToInt(light)] or is_blinded))
                 {
                     self.fov[y][x] = 0;
@@ -2339,15 +2357,17 @@ pub const Mob = struct { // {{{
     pub fn makeNoise(self: *Mob, s_type: SoundType, intensity: SoundIntensity) void {
         assert(!self.is_dead);
 
-        state.dungeon.soundAt(self.coord).* = .{
-            .mob_source = self,
-            .intensity = intensity,
-            .type = s_type,
-            .state = .New,
-            .when = state.ticks,
-        };
+        var gen = Generator(Rect.rectIter).init(self.areaRect());
+        while (gen.next()) |mobcoord|
+            state.dungeon.soundAt(mobcoord).* = .{
+                .mob_source = self,
+                .intensity = intensity,
+                .type = s_type,
+                .state = .New,
+                .when = state.ticks,
+            };
 
-        sound.announceSound(self.coord);
+        sound.announceSound(self.coordMT(state.player.coord));
     }
 
     // Check if a mob, when trying to move into a space that already has a mob,
@@ -2549,11 +2569,12 @@ pub const Mob = struct { // {{{
 
         {
             var gen = Generator(Rect.rectIter).init(self.areaRect());
-            while (gen.next()) |mobcoord|
+            while (gen.next()) |mobcoord| {
+                assert(state.dungeon.at(mobcoord).mob == null);
+                assert(state.dungeon.at(mobcoord).surface == null);
                 state.dungeon.at(mobcoord).mob = self;
+            }
         }
-
-        assert(state.dungeon.at(dest).surface == null);
 
         if (!instant) {
             if (direction) |d| {
@@ -2575,6 +2596,25 @@ pub const Mob = struct { // {{{
         self.declareAction(.Rest);
     }
 
+    // closestMultitileCoord
+    pub fn coordMT(self: *Mob, to: Coord) Coord {
+        var closest = self.coord;
+        {
+            var gen = Generator(Rect.rectIter).init(self.areaRect());
+            while (gen.next()) |mobcoord|
+                if (mobcoord.distance(to) < closest.distanceManhattan(to)) {
+                    closest = mobcoord;
+                };
+        }
+        return closest;
+    }
+
+    pub fn distance(a: *Mob, b: *Mob) usize {
+        const ac = a.coordMT(b.coord);
+        const bc = b.coordMT(ac);
+        return ac.distance(bc);
+    }
+
     pub fn listOfWeapons(self: *Mob) StackBuffer(*const Weapon, 7) {
         var buf = StackBuffer(*const Weapon, 7).init(null);
 
@@ -2587,21 +2627,18 @@ pub const Mob = struct { // {{{
     }
 
     pub fn canMelee(attacker: *Mob, defender: *Mob) bool {
-        if (attacker.coord.closestDirectionTo(defender.coord, state.mapgeometry).is_diagonal() and
+        if (attacker.coordMT(defender.coord).closestDirectionTo(defender.coord, state.mapgeometry).is_diagonal() and
             attacker.hasStatus(.Disorient))
         {
             return false;
         }
 
         const weapons = attacker.listOfWeapons();
-        const distance = attacker.coord.distance(defender.coord);
+        const dist = attacker.distance(defender);
 
         return for (weapons.constSlice()) |weapon| {
-            if (weapon.reach >= distance and
-                utils.hasClearLOF(attacker.coord, defender.coord))
-            {
+            if (weapon.reach >= dist and utils.hasClearLOF(attacker.coordMT(defender.coord), defender.coordMT(attacker.coord)))
                 break true;
-            }
         } else false;
     }
 
@@ -2646,7 +2683,7 @@ pub const Mob = struct { // {{{
             // recipient could be out of reach, either because the attacker has
             // multiple attacks and only one of them reaches, or because the
             // previous attack knocked the defender backwards
-            if (weapon.reach < attacker.coord.distance(recipient.coord))
+            if (weapon.reach < attacker.distance(recipient))
                 continue;
 
             _fightWithWeapon(
@@ -2660,7 +2697,7 @@ pub const Mob = struct { // {{{
         }
 
         if (!opts.free_attack) {
-            const d = attacker.coord.closestDirectionTo(recipient.coord, state.mapgeometry);
+            const d = attacker.coordMT(recipient.coord).closestDirectionTo(recipient.coord, state.mapgeometry);
             attacker.declareAction(.{ .Attack = .{ .who = recipient, .coord = recipient.coord, .direction = d } });
         }
 
@@ -2693,29 +2730,31 @@ pub const Mob = struct { // {{{
 
         const missed = !rng.percent(combat.chanceOfMeleeLanding(attacker, recipient));
         const evaded = rng.percent(combat.chanceOfAttackEvaded(recipient, attacker));
+        const acoord = attacker.coordMT(recipient.coord);
+        const rcoord = recipient.coordMT(acoord);
 
         const hit = opts.auto_hit or (!missed and !evaded);
 
         if (!hit) {
-            if (state.player.cansee(attacker.coord) or state.player.cansee(recipient.coord)) {
+            if (state.player.canSeeMob(attacker) or state.player.canSeeMob(recipient)) {
                 if (missed) {
                     const verb = if (attacker == state.player) "miss" else "misses";
                     state.message(.CombatUnimportant, "{c} {s} {}.", .{
                         attacker, verb, recipient,
                     });
-                    ui.Animation.blink(&.{recipient.coord}, '/', colors.LIGHT_STEEL_BLUE, .{}).apply();
+                    ui.Animation.blinkMob(&.{recipient}, '/', colors.LIGHT_STEEL_BLUE, .{});
                 } else if (evaded) {
                     const verb = if (recipient == state.player) "evade" else "evades";
                     state.message(.CombatUnimportant, "{c} {s} {}.", .{
                         recipient, verb, attacker,
                     });
-                    ui.Animation.blink(&.{recipient.coord}, ')', colors.LIGHT_STEEL_BLUE, .{}).apply();
+                    ui.Animation.blinkMob(&.{recipient}, ')', colors.LIGHT_STEEL_BLUE, .{});
                 }
             }
 
             if (recipient.isUnderStatus(.Riposte)) |_| {
                 if (recipient.canMelee(attacker)) {
-                    ui.Animation.blink(&.{recipient.coord}, 'R', colors.LIGHT_STEEL_BLUE, .{}).apply();
+                    ui.Animation.blinkMob(&.{recipient}, 'R', colors.LIGHT_STEEL_BLUE, .{});
                     recipient.fight(attacker, .{ .free_attack = true, .is_riposte = true });
                 }
             }
@@ -2749,7 +2788,7 @@ pub const Mob = struct { // {{{
 
         // Knockback
         if (attacker_weapon.knockback > 0) {
-            const d = attacker.coord.closestDirectionTo(recipient.coord, state.mapgeometry);
+            const d = acoord.closestDirectionTo(rcoord, state.mapgeometry);
             combat.throwMob(attacker, recipient, d, attacker_weapon.knockback);
         }
 
@@ -2762,7 +2801,7 @@ pub const Mob = struct { // {{{
         if (recipient.stat(.Spikes) > 0 and
             attacker.coord.distance(recipient.coord) == 1)
         {
-            ui.Animation.blink(&.{recipient.coord}, 'S', colors.LIGHT_STEEL_BLUE, .{}).apply();
+            ui.Animation.blinkMob(&.{recipient}, 'S', colors.LIGHT_STEEL_BLUE, .{});
 
             attacker.takeDamage(.{
                 .amount = @intCast(usize, recipient.stat(.Spikes)),
@@ -2781,7 +2820,7 @@ pub const Mob = struct { // {{{
             newopts.damage_bonus = 100;
             newopts.is_bonus = true;
 
-            ui.Animation.blink(&.{attacker.coord}, 'M', colors.LIGHT_STEEL_BLUE, .{}).apply();
+            ui.Animation.blinkMob(&.{attacker}, 'M', colors.LIGHT_STEEL_BLUE, .{});
 
             _fightWithWeapon(
                 attacker,
@@ -2837,7 +2876,7 @@ pub const Mob = struct { // {{{
         // Make animations
         const clamped_dmg = math.clamp(@intCast(u21, amount), 0, 9);
         const damage_char = if (self.should_be_dead()) '∞' else '0' + clamped_dmg;
-        ui.Animation.blink(&.{self.coord}, damage_char, colors.PALE_VIOLET_RED, .{}).apply();
+        ui.Animation.blinkMob(&.{self}, damage_char, colors.PALE_VIOLET_RED, .{});
 
         // Print message
         if (state.player.cansee(self.coord) or (d.by_mob != null and state.player.cansee(d.by_mob.?.coord))) {
@@ -2939,18 +2978,18 @@ pub const Mob = struct { // {{{
             var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 9, S.isConductive, .{}, fba.allocator());
             defer dijk.deinit();
 
-            var list = StackBuffer(Coord, 64).init(null);
+            var list = StackBuffer(*Mob, 64).init(null);
 
             while (dijk.next()) |child| {
                 const mob = state.dungeon.at(child).mob.?;
                 if (mob != self and list.len < list.capacity)
-                    list.append(child) catch unreachable;
+                    list.append(mob) catch unreachable;
             }
 
-            ui.Animation.blink(list.constSlice(), '*', ui.Animation.ELEC_LINE_FG, .{}).apply();
+            ui.Animation.blinkMob(list.constSlice(), '*', ui.Animation.ELEC_LINE_FG, .{});
 
-            for (list.constSlice()) |mob_coord| {
-                state.dungeon.at(mob_coord).mob.?.takeDamage(.{
+            for (list.constSlice()) |mob| {
+                mob.takeDamage(.{
                     .amount = d.amount,
                     .by_mob = d.by_mob,
                     .source = d.source,
@@ -3376,6 +3415,13 @@ pub const Mob = struct { // {{{
         }
 
         return hostile;
+    }
+
+    pub fn canSeeMob(self: *const Mob, mob: *const Mob) bool {
+        var gen = Generator(Rect.rectIter).init(mob.areaRect());
+        return while (gen.next()) |mobcoord| {
+            if (self.cansee(mobcoord)) break true;
+        } else false;
     }
 
     pub fn cansee(self: *const Mob, coord: Coord) bool {
@@ -4214,10 +4260,7 @@ pub const Tile = struct {
         }
 
         if (self.mob != null and !ignore_mobs) {
-            //assert(self.type != .Wall);
-            if (self.type == .Wall) {
-                cell.bg = 0xff0000;
-            }
+            assert(self.type != .Wall);
 
             const mob = self.mob.?;
 

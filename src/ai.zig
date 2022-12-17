@@ -340,10 +340,7 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
 
     // Animation
     if (new.mob == state.player and state.player.cansee(mob.coord)) {
-        ui.Animation.blink(&.{mob.coord}, '!', colors.AQUAMARINE, .{
-            .repeat = 2,
-            .delay = 120,
-        }).apply();
+        ui.Animation.blinkMob(&.{mob}, '!', colors.AQUAMARINE, .{ .repeat = 2, .delay = 100 });
     }
 }
 

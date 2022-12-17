@@ -834,7 +834,7 @@ pub const CapacitorArray = Machine{
                     return false;
                 }
 
-                var affected = StackBuffer(Coord, 128).init(null);
+                var affected = StackBuffer(*Mob, 128).init(null);
 
                 var gen = Generator(Rect.rectIter).init(state.mapRect(by.coord.z));
                 while (gen.next()) |coord| if (state.player.cansee(coord)) {
@@ -847,7 +847,7 @@ pub const CapacitorArray = Machine{
                                 .source = .RangedAttack,
                                 .kind = .Electric,
                             }, .{ .basic = true });
-                            affected.append(coord) catch err.wat();
+                            affected.append(hostile) catch err.wat();
                         }
                     } else |_| {}
                 };
@@ -879,7 +879,7 @@ pub const CapacitorArray = Machine{
                     return false;
                 } else {
                     state.player.makeNoise(.Explosion, .Loudest);
-                    ui.Animation.blink(affected.constSlice(), '*', ui.Animation.ELEC_LINE_FG, .{}).apply();
+                    ui.Animation.blinkMob(affected.constSlice(), '*', ui.Animation.ELEC_LINE_FG, .{});
                 }
 
                 return true;

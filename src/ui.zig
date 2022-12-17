@@ -23,6 +23,8 @@ const utils = @import("utils.zig");
 const types = @import("types.zig");
 const rng = @import("rng.zig");
 
+const Generator = @import("generators.zig").Generator;
+const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 const StringBuf64 = @import("buffer.zig").StringBuf64;
 
@@ -3023,6 +3025,25 @@ pub const Animation = union(enum) {
     pub const ELEC_LINE_FG = 0x9fefff;
     pub const ELEC_LINE_BG = 0x8fdfff;
     pub const ELEC_LINE_MIX = 0.02;
+
+    pub fn blinkMob(list: []const *Mob, char: u32, fg: ?u32, opts: struct {
+        repeat: usize = 1,
+        delay: usize = 170,
+    }) void {
+        var coords = StackBuffer(Coord, 128).init(null);
+        for (list) |mob| {
+            var gen = Generator(Rect.rectIter).init(mob.areaRect());
+            while (gen.next()) |mobcoord|
+                coords.append(mobcoord) catch err.wat();
+        }
+        (Animation{ .BlinkChar = .{
+            .coords = coords.constSlice(),
+            .char = char,
+            .fg = fg,
+            .repeat = opts.repeat,
+            .delay = opts.delay,
+        } }).apply();
+    }
 
     pub fn blink(coords: []const Coord, char: u32, fg: ?u32, opts: struct {
         repeat: usize = 1,

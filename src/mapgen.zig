@@ -975,7 +975,8 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
         const fab = Prefab.findPrefabByName(required_fab, &n_fabs) orelse
             Prefab.findPrefabByName(required_fab, &s_fabs).?;
 
-        if (fab.getOrPutValue(fab.id.constSlice(), .{}).level[level] == 0) {
+        const rec = fab_records.getPtr(fab.name.constSlice());
+        if (rec == null or rec.?.level[level] == 0) {
             return error.RequiredPrefabsNotUsed;
         }
     }
