@@ -4687,6 +4687,8 @@ pub const SIN_BASE_LEVELCONFIG = LevelConfig{
     .mapgen_func = placeTunneledRooms,
     .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },
     .required_mobs = &[_]LevelConfig.RequiredMob{},
+    .room_crowd_max = 1,
+    .level_crowd_max = 20,
 
     .door_chance = 10,
     .material = &materials.Marble,
