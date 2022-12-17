@@ -2836,7 +2836,7 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
         }
 
         if (room.prefab) |rfb| if (rfb.noguards) continue;
-        if (room.type == .Corridor) continue;
+        if (room.type == .Corridor and !Configs[level].allow_spawn_in_corridors) continue;
         if (room.rect.height * room.rect.width < 25) continue;
 
         const vault_type: ?usize = if (room.is_vault) |v| @enumToInt(v) else null;
@@ -2851,7 +2851,7 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
         else
             &spawn_tables[level];
 
-        while (room.mob_count < max_crowd) {
+        loop: while (room.mob_count < max_crowd) {
             const mob_spawn_info = rng.choose2(MobSpawnInfo, sptable.items, "weight") catch err.wat();
             const mob = mobs.findMobById(mob_spawn_info.id) orelse err.bug(
                 "Mob {s} specified in spawn tables couldn't be found.",
@@ -2861,8 +2861,13 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
             var tries: usize = 300;
             while (tries > 0) : (tries -= 1) {
                 const post_coord = room.rect.randomCoord();
-                if (!isTileAvailable(post_coord) or state.dungeon.at(post_coord).prison)
-                    continue;
+
+                {
+                    var gen = Generator(Rect.rectIter).init(mob.mobAreaRect(post_coord));
+                    while (gen.next()) |mobcoord|
+                        if (!isTileAvailable(mobcoord) or state.dungeon.at(mobcoord).prison)
+                            continue :loop;
+                }
 
                 const m = mobs.placeMob(alloc, mob, post_coord, .{
                     .facing = rng.chooseUnweighted(Direction, &DIRECTIONS),
@@ -4590,6 +4595,7 @@ pub const LevelConfig = struct {
     door_chance: usize = 30,
     room_trapped_chance: usize = 60,
     subroom_chance: usize = 60,
+    allow_spawn_in_corridors: bool = false,
     allow_corridors: bool = true,
     allow_extra_corridors: bool = true,
 
@@ -4685,6 +4691,8 @@ pub const SIN_BASE_LEVELCONFIG = LevelConfig{
     .door_chance = 10,
     .material = &materials.Marble,
     .no_windows = true,
+
+    .allow_spawn_in_corridors = true,
     .allow_statues = false,
     .allow_extra_corridors = false,
 };

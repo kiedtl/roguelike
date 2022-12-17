@@ -17,6 +17,7 @@ const utils = @import("utils.zig");
 const MinMax = types.MinMax;
 const minmax = types.minmax;
 const Coord = types.Coord;
+const Rect = types.Rect;
 const Item = types.Item;
 const Ring = types.Ring;
 const DamageStr = types.DamageStr;
@@ -43,6 +44,8 @@ const Cloak = items.Cloak;
 const Projectile = items.Projectile;
 const StackBuffer = buffer.StackBuffer;
 const SpellOptions = spells.SpellOptions;
+const Generator = @import("generators.zig").Generator;
+const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
 // -----------------------------------------------------------------------------
 
@@ -82,6 +85,11 @@ pub const MobTemplate = struct {
         weight: usize = 1, // percentage
         count: MinMax(usize),
     };
+
+    pub fn mobAreaRect(self: MobTemplate, coord: Coord) Rect {
+        const l = self.mob.multitile orelse 1;
+        return Rect{ .start = coord, .width = l, .height = l };
+    }
 };
 
 // Combat dummies for tutorial {{{
@@ -124,6 +132,31 @@ pub const CombatDummyPrisoner = MobTemplate{
     .armor = &items.GambesonArmor,
 };
 // }}}
+
+pub const RagingHulkTemplate = MobTemplate{
+    .mob = .{
+        .id = "hulk_raging",
+        .species = &Species{
+            .name = "raging hulk",
+            .default_attack = &Weapon{
+                .damage = 6,
+                .strs = &[_]DamageStr{items._dmgstr(1, "thrash", "thrashes", "")},
+            },
+        },
+        .tile = 'H',
+        .ai = AI{
+            .profession_description = "wandering",
+            .work_fn = ai.wanderWork,
+            .fight_fn = ai.meleeFight,
+        },
+        .multitile = 2,
+
+        .max_HP = 20,
+        .memory_duration = 20,
+        .innate_resists = .{ .rElec = 25, .rFire = 25 },
+        .stats = .{ .Willpower = 2, .Melee = 100, .Speed = 200, .Vision = 6 },
+    },
+};
 
 pub const CoronerTemplate = MobTemplate{
     .mob = .{
@@ -1851,6 +1884,7 @@ pub const SpectralSwordTemplate = MobTemplate{
 pub const MOBS = [_]MobTemplate{
     CombatDummyNormal,
     CombatDummyPrisoner,
+    RagingHulkTemplate,
     CoronerTemplate,
     ExecutionerTemplate,
     WatcherTemplate,
@@ -1940,7 +1974,11 @@ pub fn placeMob(
     coord: Coord,
     opts: PlaceMobOptions,
 ) *Mob {
-    assert(state.dungeon.at(coord).mob == null);
+    {
+        var gen = Generator(Rect.rectIter).init(template.mobAreaRect(coord));
+        while (gen.next()) |mobcoord|
+            assert(state.dungeon.at(mobcoord).mob == null);
+    }
 
     var mob = template.mob;
     mob.init(alloc);
@@ -1981,6 +2019,14 @@ pub fn placeMob(
     // ---
 
     if (!opts.no_squads and template.squad.len > 0) {
+        // TODO: allow placing squads next to multitile creatures.
+        //
+        // AFAIK the only thing that needs to be changed is skipping over all of
+        // the squad leader's tiles instead of just the main one when choosing
+        // tiles to place squadlings on.
+        //
+        assert(mob.multitile == null);
+
         const squad_template = rng.chooseUnweighted([]const MobTemplate.SquadMember, template.squad);
 
         var squad_member_weights = StackBuffer(usize, 20).init(null);
@@ -2023,7 +2069,11 @@ pub fn placeMob(
         mob_ptr.squad = squad;
     }
 
-    state.dungeon.at(coord).mob = mob_ptr;
+    {
+        var gen = Generator(Rect.rectIter).init(mob_ptr.areaRect());
+        while (gen.next()) |mobcoord|
+            state.dungeon.at(mobcoord).mob = mob_ptr;
+    }
 
     return mob_ptr;
 }

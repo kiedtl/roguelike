@@ -1800,6 +1800,7 @@ pub const Mob = struct { // {{{
     inventory: Inventory = .{},
 
     life_type: enum { Living, Construct, Undead } = .Living,
+    multitile: ?usize = null,
     is_dead: bool = true,
     is_death_reported: bool = false,
     is_death_verified: bool = false,
@@ -1945,6 +1946,11 @@ pub const Mob = struct { // {{{
             const the = if (caps) "The" else "the";
             try fmt.format(writer, "{s} {s}", .{ the, self.displayName() });
         }
+    }
+
+    pub fn areaRect(self: *const Mob) Rect {
+        const l = self.multitile orelse 1;
+        return Rect{ .start = self.coord, .width = l, .height = l };
     }
 
     pub fn tickFOV(self: *Mob) void {

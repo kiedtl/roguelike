@@ -30,6 +30,9 @@
 "watcher"             	 - 	  45 	  45 	 100 	  90 	  80 	  45 	   - 	  25 	  25 	  25 	   - 	   - 	   - 	   - 	   - 	   -
 "shrieker"            	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  45 	 100 	 100 	 100 	  45 	  45
 
+# special Shrine monsters
+"hulk_raging"         	 - 	   - 	   - 	   - 	   - 	   - 	   - 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
+
 # special Lab monsters
 "lead_turtle"         	 - 	   - 	   - 	  40 	  50 	  50 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
 "iron_wasp"           	 - 	   - 	   - 	   - 	  40 	  40 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   -
