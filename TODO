@@ -1031,6 +1031,34 @@ x Write rest of docs/manual
   x Tutorial
 x Playtest game throughout, especially CAV and make adjustments
 *** v2.0.0 release ***
+- Shrine maps
+  - Tunneling mapgen
+    x Basic tunneling
+    - Rooms
+      x Normal rooms
+      x Rooms at end of tunnels
+      - Side/"inset" rooms
+    x Junctions
+    x Remove dead corridors & such
+  x Candle prefabs
+  - Candle effects throughout game
+  - Hulkers
+    x Mapgen
+    x Pathfinding
+    x Melee + fighting
+    x Animations
+    - Corpses
+    x UI
+      x Sidebar
+      - Examine mode
+    - Gravitate-to-player AI
+    - Individuals:
+      - Writhing hulks
+      x Swollen hulks
+      - Thundering hulks
+  x First map + specialized content
+  - Second map + specialized content
+  - Revenge squad events in following maps
 x Animations (w/ particle engine)
   x Paralysing zap
   x Fire bolts
