@@ -11,6 +11,7 @@ const utils = @import("utils.zig");
 
 const Mob = types.Mob;
 const Coord = types.Coord;
+const Rect = types.Rect;
 const Direction = types.Direction;
 const Path = types.Path;
 const CoordArrayList = types.CoordArrayList;
@@ -99,7 +100,7 @@ pub fn path(
     alloc: std.mem.Allocator,
 ) ?CoordArrayList {
     if (start.z != goal.z) {
-        // TODO: add support for pathfinding between levels
+        // TODO: add support for pathfinding between levels?
         return null;
     }
 
@@ -114,11 +115,19 @@ pub fn path(
     };
     open_list.add(&nodes[start.y][start.x]) catch unreachable;
 
+    // Shouldn't need this var...
+    const goal_rect = goal.asRect();
+
+    // Special handling for multitile creatures
+    const mt_l: ?usize = if (opts.mob != null and opts.mob.?.multitile != null) opts.mob.?.multitile.? else null;
+
     while (open_list.count() > 0) {
         var current_node: *Node = open_list.remove();
         const cur_coord = coordFromPtr(current_node, &nodes[0][0], start.z);
 
-        if (cur_coord.eq(goal)) {
+        if (cur_coord.eq(goal) or
+            (mt_l != null and Rect.new(cur_coord, mt_l.?, mt_l.?).intersects(&goal_rect, 1))) // uhg
+        {
             open_list.deinit();
 
             var list = CoordArrayList.init(alloc);
@@ -143,7 +152,8 @@ pub fn path(
                 if (nodes[coord.y][coord.x].state == .Closed)
                     continue;
 
-                if (!is_walkable(coord, opts) and !goal.eq(coord)) continue;
+                if (!is_walkable(coord, opts) and !goal.eq(coord))
+                    continue;
 
                 const cost = (if (neighbor.is_diagonal()) @as(usize, 7) else 5) +
                     pathfindingPenalty(coord, opts);

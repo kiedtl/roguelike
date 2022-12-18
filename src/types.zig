@@ -3152,9 +3152,14 @@ pub const Mob = struct { // {{{
         self.ai.work_area.deinit();
 
         self.is_dead = true;
-        state.dungeon.at(self.coord).mob = null;
+
+        var gen = Generator(Rect.rectIter).init(self.areaRect());
+        while (gen.next()) |mobcoord|
+            state.dungeon.at(mobcoord).mob = null;
 
         if (self.corpse != .None) {
+            assert(self.multitile == null);
+
             // Generate a corpse if possible.
             var membuf: [4096]u8 = undefined;
             var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
@@ -3231,7 +3236,8 @@ pub const Mob = struct { // {{{
                 ) catch err.wat();
                 last = coord;
             }
-            assert(last.eq(to));
+            if (self.multitile == null)
+                assert(last.eq(to));
         }
 
         // Return the next direction, ensuring that the next tile is walkable.

@@ -152,6 +152,7 @@ pub const SwollenHulkTemplate = MobTemplate{
         .multitile = 2,
         .base_night_vision = true,
 
+        .corpse = .None,
         .max_HP = 20,
         .memory_duration = 20,
         .innate_resists = .{ .rElec = 25, .rFire = 25 },

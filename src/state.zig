@@ -349,6 +349,10 @@ pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, al
                 if (only_if_infov and !player.cansee(coord))
                     continue;
 
+                // Skip extra areas of multitile creatures to avoid duplicates
+                if (mob.multitile != null and !mob.coord.eq(coord))
+                    continue;
+
                 moblist.append(mob) catch unreachable;
             }
         }
