@@ -139,7 +139,7 @@ pub const SwollenHulkTemplate = MobTemplate{
         .species = &Species{
             .name = "swollen hulk",
             .default_attack = &Weapon{
-                .damage = 6,
+                .damage = 4,
                 .strs = &[_]DamageStr{items._dmgstr(1, "thrash", "thrashes", "")},
             },
         },
@@ -154,9 +154,9 @@ pub const SwollenHulkTemplate = MobTemplate{
 
         .corpse = .None,
         .max_HP = 28,
-        .memory_duration = 20,
+        .memory_duration = 10,
         .innate_resists = .{ .rElec = 25, .rFire = 25 },
-        .stats = .{ .Willpower = 2, .Melee = 100, .Speed = 200, .Vision = 6 },
+        .stats = .{ .Willpower = 2, .Melee = 100, .Speed = 200, .Vision = 5 },
     },
 };
 
