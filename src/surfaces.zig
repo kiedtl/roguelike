@@ -893,24 +893,29 @@ pub const Candle = Machine{
     .name = "candle",
     .announce = true,
     .powered_tile = 'C',
-    .unpowered_tile = 'x',
+    .unpowered_tile = 'C',
     .powered_fg = 0,
     .unpowered_fg = 0,
     .powered_walkable = false,
     .unpowered_walkable = false,
+    .powered_luminescence = 100, // Just for theme
+    .unpowered_luminescence = 0, // ...
     .bg = 0xffe766,
     .power_drain = 0,
     .power = 100,
     .on_power = powerNone,
     .player_interact = .{
         .name = "extinguish",
-        .success_msg = "You extinguish the candle.",
+        .success_msg = "You feel the Power ruling this place weaken.",
         .no_effect_msg = null,
+        .expended_msg = null,
         .max_use = 1,
         .func = struct {
             fn f(self: *Machine, by: *Mob) bool {
                 state.destroyed_candles += 1;
                 self.bg = colors.percentageOf(self.bg.?, 50);
+                self.unpowered_fg = self.bg;
+                self.power = 0;
 
                 var gen = Generator(Rect.rectIter).init(state.mapRect(by.coord.z));
                 while (gen.next()) |coord| if (state.player.cansee(coord)) {
@@ -923,6 +928,8 @@ pub const Candle = Machine{
 
                 // TODO: animation
                 //ui.Animation.blink(affected.constSlice(), '*', ui.Animation.ELEC_LINE_FG, .{}).apply();
+
+                state.message(.Info, "You extinguish the candle.", .{});
 
                 return true;
             }

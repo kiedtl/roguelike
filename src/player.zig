@@ -521,7 +521,8 @@ pub fn activateSurfaceItem(coord: Coord) bool {
     if (mach.player_interact.?.max_use != 0) {
         const left = mach.player_interact.?.max_use - mach.player_interact.?.used;
         if (left == 0) {
-            state.message(.Unimportant, "You cannot use the {s} again.", .{mach.name});
+            if (interaction.expended_msg) |msg|
+                state.message(.Unimportant, "{s}", .{msg});
         } else {
             state.message(.Info, "You can use this {s} {} more times.", .{ mach.name, left });
         }

@@ -3751,6 +3751,7 @@ pub const Machine = struct {
         name: []const u8,
         success_msg: []const u8,
         no_effect_msg: ?[]const u8,
+        expended_msg: ?[]const u8 = null,
         needs_power: bool = true,
         used: usize = 0,
         max_use: usize, // 0 for infinite uses
