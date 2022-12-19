@@ -2,6 +2,9 @@
 A rune, a symbol of authority for the master of this particular place. You can
 steal it out of spite if you want.
 
+% undead_ash
+All that remains of one of the Necromancer's most devoted servants.
+
 % knife
 Typically used for cutting rope and making holes in cloth, this knife will make
 holes in wardens and guards just fine. Hopefully you'll find a better weapon
@@ -42,9 +45,9 @@ blunt edges. Its general design, especially the handle, is uncommonly elegant.
 A axe-headed polearm, with a hook on the blade's backside.
 
 % bone_halberd
-The fool's silver pole is topped with a solid piece of bone, carved into an
-axe-head. It is wound about with a curse to inflict more damage on the living,
-but less on the undead.
+The silver pole is topped with a solid piece of bone, carved into an axe-head.
+It is wound about with a curse to inflict more damage on the living, but less on
+the undead.
 
 % mace
 The leaden head on this heavy mace menaces with hardened steel flanges.
@@ -54,8 +57,9 @@ A mace with a head of solid bone, unnaturally heavy. It is wound about with a
 curse to inflict more damage on the living, but less on the undead.
 
 % great_mace
-The blow of this large mace stuns your victims, rendering them less likely to
-dodge blows and land hits.
+The leaden head on this heavy mace menaces with hardened steel flanges. Its
+blows will stun your victims, rendering them less likely to dodge blows and land
+hits.
 
 % bone_great_mace
 An evil mace crafted for the bane of the Necromancer's enemies. It is wound
@@ -120,6 +124,11 @@ Drinking from this fountain will refresh you, healing some of your injuries.
 
 % drain
 Crawling into this will make you teleport to another place. Hopefully.
+
+% candle
+A massive, ornate altar of pure gold. Engraved on its glittering surface are
+depictions of the destruction of Irthimgilnaz. A single candle of dark wax sits
+on the surface.
 
 % evoc_brazier_wand
 This wand can fire a beam of electricity at a light source, disabling it.
