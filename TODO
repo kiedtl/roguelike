@@ -1043,8 +1043,8 @@ x Playtest game throughout, especially CAV and make adjustments
   - Candles
     x Prefabs/encounters
     - Animations
-    - Short-term effects
-    - Long-term effects
+    x Short-term effects
+    x Long-term effects
   - Hulkers
     x Pathfinding
     x Melee + fighting
