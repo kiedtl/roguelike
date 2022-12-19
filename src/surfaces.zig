@@ -915,7 +915,7 @@ pub const Candle = Machine{
                 var gen = Generator(Rect.rectIter).init(state.mapRect(by.coord.z));
                 while (gen.next()) |coord| if (state.player.cansee(coord)) {
                     if (utils.getHostileAt(state.player, coord)) |hostile| {
-                        if (mem.startsWith(u8, hostile.id, "hulking_")) {
+                        if (mem.startsWith(u8, hostile.id, "hulk_")) {
                             hostile.addStatus(.Paralysis, 0, .Prm);
                         }
                     } else |_| {}
