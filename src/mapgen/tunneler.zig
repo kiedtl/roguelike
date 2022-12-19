@@ -30,6 +30,7 @@ const WIDTH = state.WIDTH;
 const LIMIT = mapgen.LIMIT;
 
 pub const Ctx = struct {
+    level: usize,
     roomies: std.ArrayList(Roomie),
     tunnelers: Tunneler.List,
     extras: std.ArrayList(Roomie),
@@ -64,13 +65,11 @@ pub const Ctx = struct {
     }
 
     pub fn killThemAll(self: *Ctx) void {
-        const z = self.tunnelers.first().?.rect.start.z;
-
         var tunnelers = self.tunnelers.iterator();
         while (tunnelers.next()) |tunneler| {
             tunneler.is_dead = true;
             if (!tunneler.is_eviscerated and tunneler.corridorWidth() > 0)
-                state.rooms[z].append(.{ .type = .Corridor, .rect = tunneler.rect }) catch err.wat();
+                state.rooms[self.level].append(.{ .type = .Corridor, .rect = tunneler.rect }) catch err.wat();
         }
     }
 
@@ -257,6 +256,25 @@ pub const Ctx = struct {
 
         self.junctions.clearAndFree();
     }
+
+    pub fn addPlayer(self: *Ctx) void {
+        if (self.level == state.PLAYER_STARTING_LEVEL) {
+            for (state.rooms[self.level].items) |room| {
+                if (room.prefab != null and room.prefab.?.player_position != null) {
+                    const player_pos = room.prefab.?.player_position.?;
+                    const p = Coord.new2(self.level, room.rect.start.x + player_pos.x, room.rect.start.y + player_pos.y);
+                    mapgen.placePlayer(p, state.GPA.allocator());
+                    return;
+                }
+            }
+            for (state.rooms[self.level].items) |room| {
+                const p = room.rect.randomCoord();
+                mapgen.placePlayer(p, state.GPA.allocator());
+                return;
+            }
+            err.bug("Unable to place player anywhere on starting level", .{});
+        }
+    }
 };
 
 pub const Junction = struct {
@@ -312,7 +330,7 @@ pub const Tunneler = struct {
     direction: Direction,
     is_dead: bool = false,
     is_eviscerated: bool = false,
-    child_corridors: StackBuffer(*Tunneler, 64) = StackBuffer(*Tunneler, 64).init(null),
+    child_corridors: StackBuffer(*Tunneler, 128) = StackBuffer(*Tunneler, 128).init(null),
     child_rooms: usize = 0,
     roomie_last_born_at: usize = 0,
     parent: ?*Self = null,
@@ -635,21 +653,21 @@ pub const TunnelerOptions = struct {
 
     // Maximum tunnel length before the algorithm tries to force it to change
     // directions.
-    max_length: usize = WIDTH / 4,
+    max_length: usize = WIDTH, //WIDTH / 3,
 
     // Maximum tunnel width. If the tunnel is this size, it won't grow farther.
     max_width: usize = 6,
 
     // Chance (percentage) to change direction.
-    turn_chance: usize = 3,
-    branch_chance: usize = 6,
+    turn_chance: usize = 0,
+    branch_chance: usize = 4,
 
-    room_tries: usize = 6,
+    room_tries: usize = 10,
 
-    headstart_chance: usize = 60,
+    headstart_chance: usize = 20,
 
-    shrink_chance: usize = 40,
-    grow_chance: usize = 40,
+    shrink_chance: usize = 50,
+    grow_chance: usize = 50,
 
     intersect_chance: usize = 60,
 
@@ -657,14 +675,22 @@ pub const TunnelerOptions = struct {
     remove_childless: bool = true,
     add_junctions: bool = true,
 
-    force_prefabs: bool = true,
+    force_prefabs: bool = false,
 
-    max_room_per_tunnel: usize = 0,
+    max_room_per_tunnel: usize = 99,
 
     initial_tunnelers: []const InitialTunneler = &[_]InitialTunneler{
-        .{ .start = Coord.new(1, HEIGHT / 2), .width = 0, .height = 3, .direction = .East },
-        .{ .start = Coord.new(WIDTH / 2, 1), .width = 3, .height = 0, .direction = .South },
-        .{ .start = Coord.new(WIDTH / 2, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
+        // .{ .start = Coord.new(1, 1), .width = 0, .height = 3, .direction = .East },
+
+        // .{ .start = Coord.new((WIDTH / 2) + 1, HEIGHT / 2), .width = 0, .height = 3, .direction = .East },
+        // .{ .start = Coord.new((WIDTH / 2) - 1, HEIGHT / 2), .width = 0, .height = 3, .direction = .West },
+        // .{ .start = Coord.new(WIDTH / 2, (HEIGHT / 2) + 1), .width = 3, .height = 0, .direction = .South },
+        // .{ .start = Coord.new(WIDTH / 2, (HEIGHT / 2) - 1), .width = 3, .height = 0, .direction = .North },
+
+        .{ .start = Coord.new(1, 1), .width = 0, .height = 3, .direction = .East },
+        // .{ .start = Coord.new(WIDTH - 1, HEIGHT - 4), .width = 0, .height = 3, .direction = .West },
+        // .{ .start = Coord.new(1, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
+        // .{ .start = Coord.new(WIDTH - 4, 1), .width = 3, .height = 0, .direction = .South },
     },
 
     pub const InitialTunneler = struct { start: Coord, height: usize, width: usize, direction: Direction };
@@ -722,6 +748,7 @@ pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
     };
 
     var ctx = Ctx{
+        .level = level,
         .tunnelers = Tunneler.List.init(allocator),
         .roomies = std.ArrayList(Roomie).init(allocator),
         .extras = std.ArrayList(Roomie).init(allocator),
@@ -846,6 +873,8 @@ pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
     if (gif) S.captureFrame(level, &frames);
     ctx.tryAddingExtraRooms(level);
     if (gif) S.captureFrame(level, &frames);
+
+    ctx.addPlayer();
 
     if (gif) {
         const fname = std.fmt.allocPrintZ(allocator, "tunneler-{}.gif", .{level}) catch err.oom();
