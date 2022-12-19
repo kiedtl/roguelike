@@ -268,3 +268,5 @@
 "gas_vent"             	 "gas vent"             	 '+' 	                        -  	 0x888888 	 -        	 -   	 -
 "iron_bars"            	 "iron bars"            	 '#' 	          .S_G_Wall_Grate  	 0xeeeeee 	 -        	 nay
 "titanium_bars"        	 "titanium bars"        	 '*' 	                        -  	 0xeaecef 	 -        	 nay
+
+"undead_ash"           	 "pile of ash"          	 '%' 	                        -  	 0x8888aa 	 -        	 -  

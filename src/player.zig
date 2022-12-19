@@ -153,6 +153,8 @@ pub fn triggerStair(cur_stair: Coord, dest_stair: Coord) bool {
         });
     }
 
+    combat.disruptAllUndead(dest_stair.z);
+
     // "Garbage-collect" previous level.
     var iter = state.mobs.iterator();
     while (iter.next()) |mob| {

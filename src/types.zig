@@ -852,13 +852,13 @@ pub const Material = struct {
 
 pub const MessageType = union(enum) {
     Prompt, // Prompt for a choice/input, or respond to result from previous prompt
-    Status, // A status effect was added or removed.
+    Status, // A status effect (or other misc effects, like disruption) was added or removed.
     Combat, // X hit you! You hit X!
     CombatUnimportant, // X missed you! You miss X! You slew X!
     Unimportant, // A bit dark, okay if player misses it.
     Info,
-    Move,
-    Trap,
+    Move, // TODO: merge with Info (only used for stairs rn)
+    Trap, // TODO: merge with ... what? (only used for trap messages in surfaces.zig)
     Damage,
     Important,
     SpellCast,
@@ -1824,7 +1824,7 @@ pub const Mob = struct { // {{{
     max_HP: usize,
     blood: ?Spatter = .Blood,
     blood_spray: ?usize = null, // Gas ID
-    corpse: enum { Normal, Wall, None } = .Normal,
+    corpse: enum { Normal, Wall, Dust, None } = .Normal,
     immobile: bool = false,
     innate_resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
 
@@ -1951,6 +1951,14 @@ pub const Mob = struct { // {{{
     pub fn areaRect(self: *const Mob) Rect {
         const l = self.multitile orelse 1;
         return Rect{ .start = self.coord, .width = l, .height = l };
+    }
+
+    pub fn tickDisruption(self: *Mob) void {
+        if (self.allegiance == .Necromancer and self.life_type == .Undead and
+            self.ai.phase == .Attack)
+        {
+            combat.disruptIndividualUndead(self);
+        }
     }
 
     pub fn tickFOV(self: *Mob) void {
@@ -3179,6 +3187,9 @@ pub const Mob = struct { // {{{
                         self.coord = c;
                     },
                     .Wall => state.dungeon.at(c).type = .Wall,
+                    .Dust => if (utils.findById(surfaces.props.items, "undead_ash")) |prop| {
+                        _ = mapgen.placeProp(c, &surfaces.props.items[prop]);
+                    } else unreachable,
                 }
             }
         }
@@ -3398,6 +3409,10 @@ pub const Mob = struct { // {{{
         return noise;
     }
 
+    // FIXME: need a isAlliedWith() function, since even if alliegiances match
+    // mobs may be enemies (if one of them is insane)
+    //
+    // Hope I remember this when implementing insanity effects :P
     pub fn isHostileTo(self: *const Mob, othermob: *const Mob) bool {
         if (self.allegiance == othermob.allegiance) return false;
 

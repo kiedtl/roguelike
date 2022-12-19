@@ -378,7 +378,7 @@ fn _chooseLootItem(value_range: MinMax(usize), class: ?ItemTemplate.Type) ItemTe
     }
 }
 
-fn placeProp(coord: Coord, prop_template: *const Prop) *Prop {
+pub fn placeProp(coord: Coord, prop_template: *const Prop) *Prop {
     var prop = prop_template.*;
     prop.coord = coord;
     state.props.append(prop) catch err.wat();
