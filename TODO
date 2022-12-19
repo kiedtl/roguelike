@@ -1036,29 +1036,33 @@ x Playtest game throughout, especially CAV and make adjustments
     x Basic tunneling
     - Rooms
       x Normal rooms
-      x Rooms at end of tunnels
-      - Side/"inset" rooms
-    x Junctions
+      - Rooms at end of tunnels
+      x Side/"inset" rooms
+      x Junctions
     x Remove dead corridors & such
-  x Candle prefabs
-  - Candle effects throughout game
+  - Candles
+    x Prefabs/encounters
+    - Animations
+    - Short-term effects
+    - Long-term effects
   - Hulkers
-    x Mapgen
     x Pathfinding
     x Melee + fighting
     x Animations
-    - Corpses
+    x Corpses
     x UI
       x Sidebar
       - Examine mode
-    - Gravitate-to-player AI
+    x Gravitate-to-player AI
     - Individuals:
       - Writhing hulks
       x Swollen hulks
       - Thundering hulks
+    - Sceptre of Torment
   x First map + specialized content
   - Second map + specialized content
-  - Revenge squad events in following maps
+  - Prefab stairs to SIN from PRI
+  - Revenge squad events in following maps (maybe postpone for later?)
 x Animations (w/ particle engine)
   x Paralysing zap
   x Fire bolts
