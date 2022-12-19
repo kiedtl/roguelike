@@ -146,14 +146,14 @@ pub const SwollenHulkTemplate = MobTemplate{
         .tile = 'H',
         .ai = AI{
             .profession_description = "wandering",
-            .work_fn = ai.wanderWork,
+            .work_fn = ai.hulkWork,
             .fight_fn = ai.meleeFight,
         },
         .multitile = 2,
         .base_night_vision = true,
 
         .corpse = .None,
-        .max_HP = 20,
+        .max_HP = 28,
         .memory_duration = 20,
         .innate_resists = .{ .rElec = 25, .rFire = 25 },
         .stats = .{ .Willpower = 2, .Melee = 100, .Speed = 200, .Vision = 6 },

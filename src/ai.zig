@@ -1008,6 +1008,15 @@ pub fn bartenderWork(mob: *Mob, _: mem.Allocator) void {
     tryRest(mob);
 }
 
+pub fn hulkWork(mob: *Mob, _: mem.Allocator) void {
+    switch (rng.range(usize, 0, 99)) {
+        00...50 => tryRest(mob),
+        51...75 => if (!mob.moveInDirection(rng.chooseUnweighted(Direction, &DIRECTIONS))) tryRest(mob),
+        76...99 => mob.tryMoveTo(state.player.coord),
+        else => unreachable,
+    }
+}
+
 pub fn wanderWork(mob: *Mob, _: mem.Allocator) void {
     assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.ai.phase == .Work);

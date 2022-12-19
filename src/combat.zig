@@ -239,7 +239,7 @@ pub fn isAttackStab(attacker: *const Mob, defender: *const Mob) bool {
     return switch (defender.ai.phase) {
         .Flee, .Hunt, .Investigate => b: {
             if (defender.isUnderStatus(.Paralysis)) |_| break :b true;
-            if (defender.isUnderStatus(.Daze)) |_| break :b true;
+            // if (defender.isUnderStatus(.Daze)) |_| break :b true;
 
             if (defender.ai.phase == .Flee and !defender.cansee(attacker.coord)) {
                 break :b true;
