@@ -1010,9 +1010,9 @@ pub fn bartenderWork(mob: *Mob, _: mem.Allocator) void {
 
 pub fn hulkWork(mob: *Mob, _: mem.Allocator) void {
     switch (rng.range(usize, 0, 99)) {
-        00...50 => tryRest(mob),
-        51...75 => if (!mob.moveInDirection(rng.chooseUnweighted(Direction, &DIRECTIONS))) tryRest(mob),
-        76...99 => mob.tryMoveTo(state.player.coord),
+        00...75 => tryRest(mob),
+        76...90 => if (!mob.moveInDirection(rng.chooseUnweighted(Direction, &DIRECTIONS))) tryRest(mob),
+        91...99 => mob.tryMoveTo(state.player.coord),
         else => unreachable,
     }
 }
