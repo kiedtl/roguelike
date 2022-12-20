@@ -62,8 +62,8 @@ pub const Layout = union(enum) { Unknown, Room: usize };
 
 pub const HEIGHT = 70;
 pub const WIDTH = 70;
-pub const LEVELS = 17;
-pub const PLAYER_STARTING_LEVEL = 15; // TODO: define in data file
+pub const LEVELS = 18;
+pub const PLAYER_STARTING_LEVEL = 16; // TODO: define in data file
 
 // Should only be used directly by functions in main.zig. For other applications,
 // should be passed as a parameter by caller.

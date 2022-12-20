@@ -139,8 +139,8 @@ pub const SwollenHulkTemplate = MobTemplate{
         .species = &Species{
             .name = "swollen hulk",
             .default_attack = &Weapon{
-                .damage = 4,
-                .strs = &[_]DamageStr{items._dmgstr(1, "thrash", "thrashes", "")},
+                .damage = 2,
+                .strs = &[_]DamageStr{items._dmgstr(1, "batter", "batters", "")},
             },
         },
         .tile = 'H',
@@ -157,6 +157,33 @@ pub const SwollenHulkTemplate = MobTemplate{
         .memory_duration = 10,
         .innate_resists = .{ .rElec = 25, .rFire = 25 },
         .stats = .{ .Willpower = 2, .Melee = 100, .Speed = 200, .Vision = 5 },
+    },
+};
+
+pub const ThrashingHulkTemplate = MobTemplate{
+    .mob = .{
+        .id = "hulk_thrashing",
+        .species = &Species{
+            .name = "thrashing hulk",
+            .default_attack = &Weapon{
+                .damage = 4,
+                .strs = &[_]DamageStr{items._dmgstr(1, "thrash", "thrashes", "")},
+            },
+        },
+        .tile = 'H',
+        .ai = AI{
+            .profession_description = "wandering",
+            .work_fn = ai.hulkWork,
+            .fight_fn = ai.meleeFight,
+        },
+        .multitile = 3,
+        .base_night_vision = true,
+
+        .corpse = .None,
+        .max_HP = 63,
+        .memory_duration = 10,
+        .innate_resists = .{ .rElec = 25, .rFire = 25 },
+        .stats = .{ .Willpower = 2, .Melee = 100, .Speed = 300, .Vision = 5 },
     },
 };
 
@@ -1887,6 +1914,7 @@ pub const MOBS = [_]MobTemplate{
     CombatDummyNormal,
     CombatDummyPrisoner,
     SwollenHulkTemplate,
+    ThrashingHulkTemplate,
     CoronerTemplate,
     ExecutionerTemplate,
     WatcherTemplate,

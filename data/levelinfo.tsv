@@ -9,15 +9,16 @@
 "PRI" 	            "-2/Prison" 	nay 	    nay 	        - 	     "-1/Prison" 	                 -
 "QRT" 	        "-3/Quarters/3" 	nay 	    yea 	  .Golden 	               - 	       "-2/Prison"
 "QRT" 	        "-3/Quarters/2" 	nay 	    yea 	        - 	               - 	   "-3/Quarters/3"
+"SIN" 	            "-3/Shrine" 	nay 	    yea 	        - 	     "-2/Prison" 	                 -
 "QRT" 	          "-3/Quarters" 	yea 	    nay 	        - 	     "-2/Prison" 	   "-3/Quarters/2"
 "PRI" 	            "-4/Prison" 	nay 	    nay 	        - 	   "-3/Quarters" 	                 -
 "CAV" 	         "-5/Caverns/3" 	nay 	    yea 	  .Basalt 	               - 	       "-4/Prison"
 "CAV" 	         "-5/Caverns/2" 	nay 	    yea 	        - 	               - 	    "-5/Caverns/3"
 "CAV" 	           "-5/Caverns" 	nay 	    yea 	        - 	               - 	    "-5/Caverns/2"
-"SIN" 	            "-5/Shrine" 	nay 	    yea 	        - 	               - 	                 -
 "PRI" 	            "-5/Prison" 	yea 	    nay 	        - 	     "-4/Prison" 	      "-5/Caverns"
 "LAB" 	      "-6/Laboratory/3" 	nay 	    yea 	 .Twisted 	               - 	       "-5/Prison"
 "LAB" 	      "-6/Laboratory/2" 	nay 	    yea 	        - 	               - 	 "-6/Laboratory/3"
+"SIN" 	            "-6/Shrine" 	nay 	    yea 	        - 	     "-5/Prison" 	                 -
 "LAB" 	        "-6/Laboratory" 	yea 	    nay 	        - 	     "-5/Prison" 	 "-6/Laboratory/2"
 "PRI" 	            "-7/Prison" 	nay 	    nay 	        - 	 "-6/Laboratory" 	                 -
 "PRI" 	            "-8/Prison" 	nay 	    nay 	        - 	     "-7/Prison" 	                 -

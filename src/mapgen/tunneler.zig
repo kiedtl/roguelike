@@ -466,7 +466,8 @@ pub const Tunneler = struct {
                         if (state.dungeon.at(advanced2).type != .Wall) {
                             const intersector = ctx.findIntersectingTunnel(advanced2.asRect(), null, null);
                             const intersect_is_ok =
-                                rng.percent(ctx.opts.intersect_chance) and intersector != null and intersector.?.child_rooms > 0;
+                                rng.percent(ctx.opts.intersect_chance) and
+                                intersector != null and (ctx.opts.intersect_with_childless or intersector.?.child_rooms > 0);
                             if (!intersect_is_ok)
                                 return false;
                         }
@@ -493,7 +494,8 @@ pub const Tunneler = struct {
                         if (state.dungeon.at(advanced2).type != .Wall) {
                             const intersector = ctx.findIntersectingTunnel(advanced2.asRect(), null, null);
                             const intersect_is_ok =
-                                rng.percent(ctx.opts.intersect_chance) and intersector != null and intersector.?.child_rooms > 0;
+                                rng.percent(ctx.opts.intersect_chance) and
+                                intersector != null and (ctx.opts.intersect_with_childless or intersector.?.child_rooms > 0);
                             if (!intersect_is_ok)
                                 return false;
                         }
@@ -670,6 +672,7 @@ pub const TunnelerOptions = struct {
     grow_chance: usize = 50,
 
     intersect_chance: usize = 60,
+    intersect_with_childless: bool = false,
 
     add_extra_rooms: bool = true,
     remove_childless: bool = true,

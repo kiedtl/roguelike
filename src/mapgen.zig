@@ -110,15 +110,16 @@ pub const VAULT_LEVELS = [LEVELS][]const VaultType{
     &.{ .Gold, .Marble           }, // -2/Prison
     &.{                          }, // -3/Quarters/3
     &.{                          }, // -3/Quarters/2
+    &.{                          }, // -3/Shrine
     &.{                          }, // -3/Quarters
     &.{ .Gold, .Marble, .Tavern  }, // -4/Prison
     &.{                          }, // -5/Caverns/3
     &.{                          }, // -5/Caverns/2
     &.{                          }, // -5/Caverns
-    &.{                          }, // -5/Shrine
     &.{ .Iron, .Marble, .Tavern  }, // -5/Prison
     &.{ .Iron, .Marble, .Tavern  }, // -6/Laboratory/3
     &.{ .Iron,          .Tavern  }, // -6/Laboratory/2
+    &.{                          }, // -6/Shrine
     &.{ .Iron,          .Tavern  }, // -6/Laboratory
     &.{ .Iron,          .Tavern  }, // -7/Prison
     &.{ .Iron                    }, // -8/Prison
@@ -976,12 +977,6 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
     if (rooms.len < 1)
         return error.TooFewRooms;
 
-    const base_room = b: while (true) {
-        const r = rng.chooseUnweighted(Room, rooms);
-        if (r.type != .Corridor) break :b r;
-    } else err.wat();
-    const point = _f._getWalkablePoint(&base_room.rect);
-
     // Ensure that all required prefabs were used.
     for (Configs[level].prefabs) |required_fab| {
         const fab = Prefab.findPrefabByName(required_fab, &n_fabs) orelse
@@ -992,6 +987,11 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
             return error.RequiredPrefabsNotUsed;
         }
     }
+
+    const base_room = for (rooms) |room| {
+        if (room.type != .Corridor) break room;
+    } else err.wat();
+    const point = _f._getWalkablePoint(&base_room.rect);
 
     for (rooms) |otherroom| {
         if (otherroom.type == .Corridor) continue;
@@ -3087,8 +3087,10 @@ pub const Prefab = struct {
     };
 
     pub fn reset(self: *Prefab, level: usize) void {
-        if (fab_records.getPtr(self.name.constSlice())) |record|
+        if (fab_records.getPtr(self.name.constSlice())) |record| {
+            record.global -= record.level[level];
             record.level[level] = 0;
+        }
 
         for (self.connections) |maybe_con, i| {
             if (maybe_con == null) break;
@@ -3798,41 +3800,48 @@ pub const QRT_BASE_LEVELCONFIG = LevelConfig{
     .machines = &[_]*const Machine{ &surfaces.Fountain, &surfaces.WaterBarrel },
 };
 
-pub const SIN_BASE_LEVELCONFIG = LevelConfig{
-    .tunneler_opts = .{
-        .room_tries = 1,
-        .headstart_chance = 0, // More chance for enough candles to spawn
-        .shrink_chance = 0,
-        .grow_chance = 0,
-        .add_extra_rooms = false,
-        .add_junctions = false,
-        .remove_childless = false,
-        .force_prefabs = true,
+pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
+    return LevelConfig{
+        .prefabs = &[_][]const u8{"SIN_candle"},
+        .tunneler_opts = .{
+            .room_tries = 1,
+            .turn_chance = 7,
+            .branch_chance = 6,
+            .headstart_chance = 0, // More chance for enough candles to spawn
+            .shrink_chance = 0,
+            .grow_chance = 0,
+            .intersect_chance = 60,
+            .intersect_with_childless = true,
+            .add_extra_rooms = false,
+            .add_junctions = false,
+            .remove_childless = false,
+            .force_prefabs = true,
 
-        // Due to having 4 tunnelers, and candles having restriction=4 each branch will likely spawn only one room
-        .max_room_per_tunnel = 1,
+            // Due to having 2 tunnelers, and candles having restriction=4 each branch will likely spawn only two rooms
+            .max_room_per_tunnel = 1,
 
-        .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
-            .{ .start = Coord.new(1, 1), .width = 0, .height = 4, .direction = .East },
-            .{ .start = Coord.new(WIDTH - 1, 1), .width = 4, .height = 0, .direction = .South },
-            .{ .start = Coord.new(WIDTH - 1, HEIGHT - 1), .width = 0, .height = 4, .direction = .West },
-            .{ .start = Coord.new(1, HEIGHT - 1), .width = 4, .height = 0, .direction = .North },
+            .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
+                .{ .start = Coord.new(1, 1), .width = 0, .height = width, .direction = .East },
+                // .{ .start = Coord.new(WIDTH - 5, 1), .width = width, .height = 0, .direction = .South },
+                .{ .start = Coord.new(WIDTH - 1, HEIGHT - 5), .width = 0, .height = width, .direction = .West },
+                // .{ .start = Coord.new(1, HEIGHT - 1), .width = width, .height = 0, .direction = .North },
+            },
         },
-    },
-    .prefab_chance = 1, // Only prefabs for SIN
-    .mapgen_func = tunneler.placeTunneledRooms,
-    .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },
-    .required_mobs = &[_]LevelConfig.RequiredMob{},
-    .room_crowd_max = 1,
-    .level_crowd_max = 18,
+        .prefab_chance = 1, // Only prefabs for SIN
+        .mapgen_func = tunneler.placeTunneledRooms,
+        .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },
+        .required_mobs = &[_]LevelConfig.RequiredMob{},
+        .room_crowd_max = 1,
+        .level_crowd_max = 18,
 
-    .material = &materials.Marble,
-    .no_windows = true,
+        .material = &materials.Marble,
+        .no_windows = true,
 
-    .allow_spawn_in_corridors = true,
-    .allow_statues = false,
-    .allow_extra_corridors = false,
-};
+        .allow_spawn_in_corridors = true,
+        .allow_statues = false,
+        .allow_extra_corridors = false,
+    };
+}
 
 pub const LAB_BASE_LEVELCONFIG = LevelConfig{
     .prefabs = &[_][]const u8{"ANY_s_recharging"},
@@ -3957,15 +3966,16 @@ pub var Configs = [LEVELS]LevelConfig{
     PRI_BASE_LEVELCONFIG,
     QRT_BASE_LEVELCONFIG,
     QRT_BASE_LEVELCONFIG,
+    createLevelConfig_SIN(6),
     QRT_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
-    SIN_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
     LAB_BASE_LEVELCONFIG,
     LAB_BASE_LEVELCONFIG,
+    createLevelConfig_SIN(4),
     LAB_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
@@ -3979,12 +3989,12 @@ pub fn fixConfigs() void {
     Configs[0].prefabs = &[_][]const u8{ "ENT_start", "ANY_s_recharging" };
     Configs[state.PLAYER_STARTING_LEVEL].prefabs = &[_][]const u8{ "PRI_start", "ANY_s_recharging" };
 
-    // Increase crowd sizes for difficult levels.
-    Configs[ 0].room_crowd_max = 4;      Configs[ 1].room_crowd_max = 3;   // Upper prison
-    Configs[ 2].room_crowd_max = 2;      Configs[ 3].room_crowd_max = 1;   // Quarters
-    Configs[ 6].room_crowd_max = 6;      Configs[ 7].room_crowd_max = 5;   // Caverns
-    Configs[11].room_crowd_max = 4;      Configs[12].room_crowd_max = 3;   // Laboratory
+    // // Increase crowd sizes for difficult levels.
+    // Configs[ 0].room_crowd_max = 4;      Configs[ 1].room_crowd_max = 3;   // Upper prison
+    // Configs[ 2].room_crowd_max = 2;      Configs[ 3].room_crowd_max = 1;   // Quarters
+    // Configs[ 6].room_crowd_max = 6;      Configs[ 7].room_crowd_max = 5;   // Caverns
+    // Configs[11].room_crowd_max = 4;      Configs[12].room_crowd_max = 3;   // Laboratory
 
-    Configs[ 6].level_crowd_max = 50;    Configs[ 7].level_crowd_max = 50; // Caverns
+    // Configs[ 6].level_crowd_max = 50;    Configs[ 7].level_crowd_max = 50; // Caverns
 }
 // zig fmt: on
