@@ -4,6 +4,7 @@
 :nolights
 :notraps
 :noguards
+:noitems
 
 :tunneler_inset
 :tunneler_orientation north
@@ -12,9 +13,10 @@
 @b p gold_c_wall_lower
 @c p gold_c_wall_left
 @d p gold_c_wall_right
+@e p gold_c_wall_pltfrm
 aba
 c0d
-a.a
+aea
 
 \
 
@@ -25,7 +27,8 @@ a.a
 @b p gold_c_wall_upper
 @c p gold_c_wall_left
 @d p gold_c_wall_right
-a.a
+@e p gold_c_wall_pltfrm
+aea
 c0d
 aba
 
@@ -38,8 +41,9 @@ aba
 @b p gold_c_wall_lower
 @c p gold_c_wall_left
 @d p gold_c_wall_upper
+@e p gold_c_wall_pltfrm
 aba
-c0.
+c0e
 ada
 
 \
@@ -51,7 +55,7 @@ ada
 @b p gold_c_wall_lower
 @c p gold_c_wall_right
 @d p gold_c_wall_upper
+@e p gold_c_wall_pltfrm
 aba
-.0c
+e0c
 ada
-

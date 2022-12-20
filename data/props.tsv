@@ -253,6 +253,7 @@
 "gold_c_wall_left"     	 "carved gold wall"     	 '▐' 	                        -  	 0xffd700 	 -        	 nay
 "gold_c_wall_right"    	 "carved gold wall"     	 '▌' 	                        -  	 0xffd700 	 -        	 nay
 "gold_c_wall_block"    	 "carved gold wall"     	 '■' 	                        -  	 0xeec700 	 -        	 nay
+"gold_c_wall_pltfrm"   	 "carved gold platform" 	 '■' 	                        -  	 0x442700 	 -        	   -
 
 "left_copper_coil"     	 "half copper coil"     	 '▌' 	                        -  	 0xe99c39 	 -        	 nay
 "right_copper_coil"    	 "half copper coil"     	 '▐' 	                        -  	 0xe99c39 	 -        	 nay

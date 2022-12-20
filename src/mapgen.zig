@@ -957,9 +957,7 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
                 var x: usize = room.start.x;
                 while (x < room.end().x) : (x += 1) {
                     const point = Coord.new2(room.start.z, x, y);
-                    if (state.dungeon.at(point).type == .Floor and
-                        state.dungeon.at(point).surface == null)
-                    {
+                    if (state.is_walkable(point, .{})) {
                         return point;
                     }
                 }
