@@ -414,7 +414,7 @@ pub fn placeDoor(coord: Coord, locked: bool) void {
     state.dungeon.at(coord).type = .Floor;
 }
 
-fn _add_player(coord: Coord, alloc: mem.Allocator) void {
+pub fn placePlayer(coord: Coord, alloc: mem.Allocator) void {
     state.player = mobs.placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
 
     //const ring = items.createItem(Ring, items.MagnetizationRing);
@@ -449,11 +449,17 @@ fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, opts: PrefabO
         return false; // Can't be used unless specifically called for by name.
     }
 
+    if (prefab.whitelist.len > 0 and !prefab.whitelist.linearSearch(level)) {
+        return false; // Prefab has a whitelist and this level isn't on it.
+    }
+
     if (prefab.tunneler_prefab != opts.t_only) {
         return false; // Prefab is only for the tunneler algorithm.
     }
 
-    if (prefab.tunneler_prefab and prefab.tunneler_orientation != opts.t_orientation) {
+    if (prefab.tunneler_prefab and prefab.tunneler_orientation != null and
+        prefab.tunneler_orientation.? != opts.t_orientation)
+    {
         return false; // This is a prefab for tunneler's corridor and is the wrong orientation.
     }
 
@@ -966,6 +972,10 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
     };
 
     const rooms = state.rooms[level].items;
+
+    if (rooms.len < 1)
+        return error.TooFewRooms;
+
     const base_room = b: while (true) {
         const r = rng.chooseUnweighted(Room, rooms);
         if (r.type != .Corridor) break :b r;
@@ -1471,7 +1481,7 @@ pub fn placeRandomRooms(
             if (prefab.player_position) |pos| {
                 p = Coord.new2(level, first.?.rect.start.x + pos.x, first.?.rect.start.y + pos.y);
             };
-        _add_player(p, allocator);
+        placePlayer(p, allocator);
     }
 
     var c = Configs[level].mapgen_iters;
@@ -2999,7 +3009,7 @@ pub const Prefab = struct {
 
     tunneler_prefab: bool = false,
     tunneler_inset: bool = false,
-    tunneler_orientation: Direction = .South,
+    tunneler_orientation: ?Direction = null,
 
     name: StackBuffer(u8, MAX_NAME_SIZE) = StackBuffer(u8, MAX_NAME_SIZE).init(null),
 
@@ -3014,6 +3024,7 @@ pub const Prefab = struct {
     mobs: [45]?FeatureMob = [_]?FeatureMob{null} ** 45,
     prisons: StackBuffer(Rect, 16) = StackBuffer(Rect, 16).init(null),
     subroom_areas: StackBuffer(SubroomArea, 8) = StackBuffer(SubroomArea, 8).init(null),
+    whitelist: StackBuffer(usize, LEVELS) = StackBuffer(usize, LEVELS).init(null),
     stockpile: ?Rect = null,
     input: ?Rect = null,
     output: ?Rect = null,
@@ -3174,7 +3185,7 @@ pub const Prefab = struct {
                     f.stockpile = null;
                     f.input = null;
                     f.output = null;
-                    f.tunneler_orientation = .South;
+                    f.tunneler_orientation = null;
                     f.tunneler_inset = false;
                 },
                 ':' => {
@@ -3187,6 +3198,13 @@ pub const Prefab = struct {
                     if (mem.eql(u8, key, "invisible")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.invisible = true;
+                    } else if (mem.eql(u8, key, "g_whitelist")) {
+                        if (val.len == 0) return error.ExpectedMetadataValue;
+                        if (mem.eql(u8, val, "$SPAWN_LEVEL")) {
+                            f.whitelist.append(state.PLAYER_STARTING_LEVEL) catch err.wat();
+                        } else {
+                            f.whitelist.append(state.findLevelByName(val) orelse return error.InvalidMetadataValue) catch err.wat();
+                        }
                     } else if (mem.eql(u8, key, "g_tunneler")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.tunneler_prefab = true;
@@ -3226,6 +3244,9 @@ pub const Prefab = struct {
                     } else if (mem.eql(u8, key, "notraps")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.notraps = true;
+                    } else if (mem.eql(u8, key, "noitems")) {
+                        if (val.len != 0) return error.UnexpectedMetadataValue;
+                        f.noitems = true;
                     } else if (mem.eql(u8, key, "spawn")) {
                         const spawn_at_str = words.next() orelse return error.ExpectedMetadataValue;
                         const maybe_work_at_str: ?[]const u8 = words.next() orelse null;
@@ -3353,7 +3374,7 @@ pub const Prefab = struct {
                         height = std.fmt.parseInt(usize, height_str, 0) catch return error.InvalidMetadataValue;
 
                         f.input = .{ .start = rect_start, .width = width, .height = height };
-                    }
+                    } else return error.InvalidMetadataValue;
                 },
                 '@' => {
                     var words = mem.tokenize(u8, line, " ");
@@ -3712,7 +3733,7 @@ pub const LevelConfig = struct {
     utility_items: *[]const Prop = &surfaces.prison_item_props.items,
 
     allow_statues: bool = true,
-    door_chance: usize = 30,
+    door_chance: usize = 10,
     room_trapped_chance: usize = 60,
     subroom_chance: usize = 60,
     allow_spawn_in_corridors: bool = false,
@@ -3735,10 +3756,6 @@ pub const LevelConfig = struct {
 
 pub const PRI_BASE_LEVELCONFIG = LevelConfig{
     .prefabs = &[_][]const u8{"ANY_s_recharging"},
-    .distances = [2][10]usize{
-        .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-        .{ 4, 9, 5, 4, 3, 1, 1, 1, 1, 1 },
-    },
     .prefab_chance = 3,
     .mapgen_iters = 4096,
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
@@ -3756,7 +3773,7 @@ pub const QRT_BASE_LEVELCONFIG = LevelConfig{
     .prefabs = &[_][]const u8{"ANY_s_recharging"},
     .prefab_chance = 1000, // No prefabs for QRT
     .mapgen_func = placeBSPRooms,
-    .mapgen_iters = 4096,
+    .mapgen_iters = 512,
     .min_room_width = 5,
     .min_room_height = 5,
     .max_room_width = 14,
@@ -3771,7 +3788,6 @@ pub const QRT_BASE_LEVELCONFIG = LevelConfig{
 
     .no_windows = true,
     .allow_statues = false,
-    .door_chance = 10,
     .door = &surfaces.VaultDoor,
 
     .props = &surfaces.vault_props.items,
@@ -3810,7 +3826,6 @@ pub const SIN_BASE_LEVELCONFIG = LevelConfig{
     .room_crowd_max = 1,
     .level_crowd_max = 18,
 
-    .door_chance = 10,
     .material = &materials.Marble,
     .no_windows = true,
 
@@ -3821,17 +3836,13 @@ pub const SIN_BASE_LEVELCONFIG = LevelConfig{
 
 pub const LAB_BASE_LEVELCONFIG = LevelConfig{
     .prefabs = &[_][]const u8{"ANY_s_recharging"},
-    .distances = [2][10]usize{
-        .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-        .{ 9, 4, 4, 1, 1, 1, 1, 0, 0, 0 },
-    },
-    .shrink_corridors_to_fit = true,
-    .prefab_chance = 100, // No prefabs for LAB
-    .mapgen_iters = 2048,
-    .min_room_width = 9,
-    .min_room_height = 9,
-    .max_room_width = 25,
-    .max_room_height = 25,
+    .prefab_chance = 1000, // No prefabs for LAB
+    .mapgen_func = placeBSPRooms,
+    .mapgen_iters = 512,
+    .min_room_width = 8,
+    .min_room_height = 8,
+    .max_room_width = 14,
+    .max_room_height = 14,
 
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
         levelFeatureVials,
@@ -3840,7 +3851,6 @@ pub const LAB_BASE_LEVELCONFIG = LevelConfig{
         levelFeatureOres,
     },
 
-    .door_chance = 10,
     .material = &materials.Dobalene,
     .window_material = &materials.LabGlass,
     .light = &surfaces.Lamp,
@@ -3895,7 +3905,6 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
     //.tiletype = .Floor,
 
     .allow_statues = false,
-    .door_chance = 10,
     .room_trapped_chance = 0,
     .subroom_chance = 60,
     .allow_corridors = true,
@@ -3937,6 +3946,7 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
 
 pub const TUT_BASE_LEVELCONFIG = LevelConfig{
     .prefabs = &[_][]const u8{"TUT_basic"},
+    .mapgen_func = placeRandomRooms,
     .prefab_chance = 1,
     .mapgen_iters = 0,
     .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },

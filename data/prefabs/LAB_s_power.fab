@@ -7,7 +7,7 @@
 % █▄┌┬ ▄█╡
 %  ▀▀┴▀▀ ⌨
 
-:notrap
+:notraps
 :subroom
 
 @0 p concrete_wall_lower

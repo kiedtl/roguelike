@@ -466,6 +466,12 @@ pub fn loadLevelInfo() void {
     std.log.info("Loaded data/levelinfo.tsv.", .{});
 }
 
+pub fn findLevelByName(name: []const u8) ?usize {
+    return for (levelinfo) |item, i| {
+        if (mem.eql(u8, item.name, name)) break i;
+    } else null;
+}
+
 pub fn freeLevelInfo() void {
     const alloc = GPA.allocator();
 
