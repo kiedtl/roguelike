@@ -68,8 +68,24 @@ pub const Ctx = struct {
         var tunnelers = self.tunnelers.iterator();
         while (tunnelers.next()) |tunneler| {
             tunneler.is_dead = true;
-            if (!tunneler.is_eviscerated and tunneler.corridorWidth() > 0)
+            const cw = tunneler.corridorWidth();
+            if (!tunneler.is_eviscerated and cw > 0) {
                 state.rooms[self.level].append(.{ .type = .Corridor, .rect = tunneler.rect }) catch err.wat();
+
+                // Create receiving staircase
+                if (tunneler.parent == null) {
+                    const stairloc = switch (tunneler.direction) {
+                        .North => Coord.new2(self.level, tunneler.rect.start.x + cw / 2, tunneler.rect.start.y - 1),
+                        .South => Coord.new2(self.level, tunneler.rect.start.x + cw / 2, tunneler.rect.end().y),
+                        .East => Coord.new2(self.level, tunneler.rect.start.x - 1, tunneler.rect.start.y + cw / 2),
+                        .West => Coord.new2(self.level, tunneler.rect.end().x, tunneler.rect.start.y + cw / 2),
+                        else => unreachable,
+                    };
+                    state.dungeon.at(stairloc).surface = .{ .Stair = null };
+                    state.dungeon.at(stairloc).type = .Floor;
+                    state.dungeon.receive_stairs[self.level].append(stairloc) catch err.wat();
+                }
+            }
         }
     }
 

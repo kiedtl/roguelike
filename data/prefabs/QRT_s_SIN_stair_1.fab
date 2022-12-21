@@ -1,0 +1,18 @@
+:restriction 1
+:material marble
+:subroom
+:priority 100
+:g_whitelist -3/Quarters
+
+@h M hulk_swollen
+@s s -3/Shrine
+
+...........
+....###....
+....#s#....
+...........
+####...####
+#h.&...&h.#
+#..&...&..#
+####...####
+...........

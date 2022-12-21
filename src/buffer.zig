@@ -5,6 +5,8 @@ const std = @import("std");
 const mem = std.mem;
 const assert = std.debug.assert;
 
+const rng = @import("rng.zig");
+
 pub const StringBuf64 = StackBuffer(u8, 64);
 
 pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
@@ -103,6 +105,11 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
                 } else false;
             }
         };
+
+        pub fn chooseUnweighted(self: *Self) ?T {
+            if (self.len == 0) return null;
+            return rng.chooseUnweighted(T, self.data[0..self.len]);
+        }
 
         pub inline fn isFull(self: *Self) bool {
             return self.len == self.capacity;

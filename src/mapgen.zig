@@ -663,6 +663,16 @@ pub fn excavatePrefab(
                 .Feature => |feature_id| {
                     if (fab.features[feature_id]) |feature| {
                         switch (feature) {
+                            .Stair => |dest| {
+                                const dest_staircase = state.dungeon.receive_stairs[dest].chooseUnweighted() orelse {
+                                    std.log.err("{s}: Couldn't place stairs to {s} (no receiving stair)", .{
+                                        fab.name.constSlice(),
+                                        state.levelinfo[dest].name,
+                                    });
+                                    continue;
+                                };
+                                state.dungeon.at(rc).surface = .{ .Stair = dest_staircase };
+                            },
                             .Item => |template| {
                                 state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(template.*)) catch err.wat();
                             },
@@ -928,6 +938,9 @@ pub fn resetLevel(level: usize) void {
     state.stockpiles[level].shrinkRetainingCapacity(0);
     state.inputs[level].shrinkRetainingCapacity(0);
     state.outputs[level].shrinkRetainingCapacity(0);
+
+    state.dungeon.receive_stairs[level].clear();
+    state.dungeon.stairs[level].clear();
 }
 
 pub fn setLevelMaterial(level: usize) void {
@@ -2570,6 +2583,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
         .Room => |r| state.rooms[dest_floor].items[r].has_stair = true,
         else => {},
     }
+    state.dungeon.receive_stairs[dest_floor].append(down_staircase) catch err.wat();
 
     // Place a guardian near the stairs in a diagonal position, if possible.
     const mob_spawn_info = rng.choose2(MobSpawnInfo, spawn_tables_stairs[level].items, "weight") catch err.wat();
@@ -3076,6 +3090,7 @@ pub const Prefab = struct {
             points: StackBuffer(Coord, 16),
         },
         Prop: [32:0]u8,
+        Stair: usize,
     };
 
     pub const Connection = struct {
@@ -3386,6 +3401,11 @@ pub const Prefab = struct {
                     const id = words.next();
 
                     switch (feature_type[0]) {
+                        's' => {
+                            const level = state.findLevelByName(id orelse return error.InvalidMetadataValue) orelse
+                                return error.InvalidMetadataValue;
+                            f.features[identifier] = Feature{ .Stair = level };
+                        },
                         'M' => {
                             if (mobs.findMobById(id orelse return error.MalformedFeatureDefinition)) |mob_template| {
                                 f.features[identifier] = Feature{ .Mob = mob_template };
@@ -3769,34 +3789,36 @@ pub const PRI_BASE_LEVELCONFIG = LevelConfig{
     .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
 };
 
-pub const QRT_BASE_LEVELCONFIG = LevelConfig{
-    .prefabs = &[_][]const u8{"ANY_s_recharging"},
-    .prefab_chance = 1000, // No prefabs for QRT
-    .mapgen_func = placeBSPRooms,
-    .mapgen_iters = 512,
-    .min_room_width = 5,
-    .min_room_height = 5,
-    .max_room_width = 14,
-    .max_room_height = 10,
+pub fn createLevelConfig_QRT(comptime prefabs: []const []const u8) LevelConfig {
+    return LevelConfig{
+        .prefabs = prefabs,
+        .prefab_chance = 1000, // No prefabs for QRT
+        .mapgen_func = placeBSPRooms,
+        .mapgen_iters = 512,
+        .min_room_width = 5,
+        .min_room_height = 5,
+        .max_room_width = 14,
+        .max_room_height = 10,
 
-    .level_features = [_]?LevelConfig.LevelFeatureFunc{
-        levelFeaturePrisoners,
-        levelFeaturePrisonersMaybe,
-        null,
-        null,
-    },
+        .level_features = [_]?LevelConfig.LevelFeatureFunc{
+            levelFeaturePrisoners,
+            levelFeaturePrisonersMaybe,
+            null,
+            null,
+        },
 
-    .no_windows = true,
-    .allow_statues = false,
-    .door = &surfaces.VaultDoor,
+        .no_windows = true,
+        .allow_statues = false,
+        .door = &surfaces.VaultDoor,
 
-    .props = &surfaces.vault_props.items,
-    //.containers = &[_]Container{surfaces.Chest},
-    .single_props = &[_][]const u8{ "fuel_barrel", "bed" },
-    .chance_for_single_prop_placement = 90,
+        .props = &surfaces.vault_props.items,
+        //.containers = &[_]Container{surfaces.Chest},
+        .single_props = &[_][]const u8{ "fuel_barrel", "bed" },
+        .chance_for_single_prop_placement = 90,
 
-    .machines = &[_]*const Machine{ &surfaces.Fountain, &surfaces.WaterBarrel },
-};
+        .machines = &[_]*const Machine{ &surfaces.Fountain, &surfaces.WaterBarrel },
+    };
+}
 
 pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
     return LevelConfig{
@@ -3841,38 +3863,40 @@ pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
     };
 }
 
-pub const LAB_BASE_LEVELCONFIG = LevelConfig{
-    .prefabs = &[_][]const u8{"ANY_s_recharging"},
-    .prefab_chance = 1000, // No prefabs for LAB
-    .mapgen_func = placeBSPRooms,
-    .mapgen_iters = 512,
-    .min_room_width = 8,
-    .min_room_height = 8,
-    .max_room_width = 14,
-    .max_room_height = 14,
+pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
+    return LevelConfig{
+        .prefabs = prefabs,
+        .prefab_chance = 1000, // No prefabs for LAB
+        .mapgen_func = placeBSPRooms,
+        .mapgen_iters = 512,
+        .min_room_width = 8,
+        .min_room_height = 8,
+        .max_room_width = 14,
+        .max_room_height = 14,
 
-    .level_features = [_]?LevelConfig.LevelFeatureFunc{
-        levelFeatureVials,
-        levelFeaturePrisoners,
-        null,
-        levelFeatureOres,
-    },
+        .level_features = [_]?LevelConfig.LevelFeatureFunc{
+            levelFeatureVials,
+            levelFeaturePrisoners,
+            null,
+            levelFeatureOres,
+        },
 
-    .material = &materials.Dobalene,
-    .window_material = &materials.LabGlass,
-    .light = &surfaces.Lamp,
-    .bars = "titanium_bars",
-    .door = &surfaces.LabDoor,
-    //.containers = &[_]Container{ surfaces.Chest, surfaces.LabCabinet },
-    .containers = &[_]Container{surfaces.LabCabinet},
-    .utility_items = &surfaces.laboratory_item_props.items,
-    .props = &surfaces.laboratory_props.items,
-    .single_props = &[_][]const u8{ "table", "centrifuge", "compact_turbine", "water_purifier", "distiller" },
+        .material = &materials.Dobalene,
+        .window_material = &materials.LabGlass,
+        .light = &surfaces.Lamp,
+        .bars = "titanium_bars",
+        .door = &surfaces.LabDoor,
+        //.containers = &[_]Container{ surfaces.Chest, surfaces.LabCabinet },
+        .containers = &[_]Container{surfaces.LabCabinet},
+        .utility_items = &surfaces.laboratory_item_props.items,
+        .props = &surfaces.laboratory_props.items,
+        .single_props = &[_][]const u8{ "table", "centrifuge", "compact_turbine", "water_purifier", "distiller" },
 
-    .allow_statues = false,
+        .allow_statues = false,
 
-    .machines = &[_]*const Machine{&surfaces.Fountain},
-};
+        .machines = &[_]*const Machine{&surfaces.Fountain},
+    };
+}
 
 pub const CAV_BASE_LEVELCONFIG = LevelConfig{
     .prefabs = &[_][]const u8{},
@@ -3962,19 +3986,19 @@ pub const TUT_BASE_LEVELCONFIG = LevelConfig{
 pub var Configs = [LEVELS]LevelConfig{
     PRI_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
-    QRT_BASE_LEVELCONFIG,
-    QRT_BASE_LEVELCONFIG,
+    createLevelConfig_QRT(&[_][]const u8{"ANY_s_recharging"}),
+    createLevelConfig_QRT(&[_][]const u8{"ANY_s_recharging"}),
     createLevelConfig_SIN(6),
-    QRT_BASE_LEVELCONFIG,
+    createLevelConfig_QRT(&[_][]const u8{ "ANY_s_recharging", "QRT_s_SIN_stair_1" }),
     PRI_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
-    LAB_BASE_LEVELCONFIG,
-    LAB_BASE_LEVELCONFIG,
+    createLevelConfig_LAB(&[_][]const u8{"ANY_s_recharging"}),
+    createLevelConfig_LAB(&[_][]const u8{"ANY_s_recharging"}),
     createLevelConfig_SIN(4),
-    LAB_BASE_LEVELCONFIG,
+    createLevelConfig_LAB(&[_][]const u8{ "ANY_s_recharging", "LAB_s_SIN_stair_1" }),
     PRI_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
 

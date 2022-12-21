@@ -4440,11 +4440,12 @@ pub const Dungeon = struct {
     light: [LEVELS][HEIGHT][WIDTH]bool = [1][HEIGHT][WIDTH]bool{[1][WIDTH]bool{[1]bool{false} ** WIDTH} ** HEIGHT} ** LEVELS,
     fire: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     stairs: [LEVELS]StairBuffer = [_]StairBuffer{StairBuffer.init(null)} ** LEVELS,
+    receive_stairs: [LEVELS]StairBuffer = [_]StairBuffer{StairBuffer.init(null)} ** LEVELS,
 
     pub const ItemBuffer = StackBuffer(Item, 4);
     pub const StairBuffer = StackBuffer(Coord, MAX_STAIRS);
 
-    pub const MAX_STAIRS: usize = 2;
+    pub const MAX_STAIRS: usize = 10; // Used to be 2, but need to make room for tunneling alg's stairs
 
     pub const MOB_OPACITY: usize = 0;
     pub const FLOOR_OPACITY: usize = 10;
