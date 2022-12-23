@@ -148,8 +148,8 @@ pub fn chanceOfAttackEvaded(defender: *const Mob, attacker: ?*const Mob) usize {
 }
 
 pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: usize) void {
-    if (throwee.immobile) {
-        return; // Don't do anything.
+    if (throwee.immobile or throwee.multitile != null) {
+        return; // Don't do anything if throwee is immobile or multitile.
     }
 
     if (thrower) |enemy| {
