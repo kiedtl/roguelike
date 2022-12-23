@@ -1957,7 +1957,7 @@ pub const Mob = struct { // {{{
 
     pub fn tickDisruption(self: *Mob) void {
         if (self.allegiance == .Necromancer and self.life_type == .Undead and
-            self.ai.phase == .Attack)
+            self.ai.phase == .Hunt)
         {
             combat.disruptIndividualUndead(self);
         }

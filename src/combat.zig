@@ -320,11 +320,11 @@ pub fn disruptIndividualUndead(mob: *Mob) void {
     const CHANCE_SAME_GAIN_PARALYSIS = 2; // Range: always 2
 
     const adjacent_ally: ?*Mob = for (&DIRECTIONS) |d| {
-        if (utils.getMobInDirection(d)) |othermob| {
+        if (utils.getMobInDirection(mob, d)) |othermob| {
             if (othermob.allegiance == mob.allegiance) {
                 break mob;
             }
-        }
+        } else |_| {}
     } else null;
 
     var msg: []const u8 = undefined;
@@ -334,8 +334,8 @@ pub fn disruptIndividualUndead(mob: *Mob) void {
         assert(enemylist.items.len > 0);
         _ = enemylist.swapRemove(rng.range(usize, 0, enemylist.items.len - 1));
         msg = "forget enemy";
-    } else if (rng.percent(CHANCE_NLIN_ATTACK_ALLY * candles) and adjacent_ally) {
-        mob.fight(adjacent_ally, .{ .free_attack = true });
+    } else if (rng.percent(CHANCE_NLIN_ATTACK_ALLY * candles) and adjacent_ally != null) {
+        mob.fight(adjacent_ally.?, .{ .free_attack = true });
         msg = "attack ally";
     } else if (rng.percent(CHANCE_HLIN_GAIN_BLIND * (candles / 2))) {
         mob.addStatus(.Blind, 0, .{ .Tmp = rng.range(usize, 7, 14) });

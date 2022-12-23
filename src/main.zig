@@ -619,6 +619,7 @@ fn tickGame() !void {
 
             mob.tick_env();
             mob.tickFOV();
+            mob.tickDisruption();
             mob.tickStatuses();
 
             if (mob == state.player) {
