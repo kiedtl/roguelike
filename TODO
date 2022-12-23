@@ -1032,11 +1032,10 @@ x Write rest of docs/manual
 x Playtest game throughout, especially CAV and make adjustments
 *** v2.0.0 release ***
 - Shrine maps
-  - Tunneling mapgen
+  x Tunneling mapgen
     x Basic tunneling
-    - Rooms
+    x Rooms
       x Normal rooms
-      - Rooms at end of tunnels
       x Side/"inset" rooms
       x Junctions
     x Remove dead corridors & such
@@ -1050,18 +1049,19 @@ x Playtest game throughout, especially CAV and make adjustments
     x Melee + fighting
     x Animations
     x Corpses
-    x UI
-      x Sidebar
-      - Examine mode
+    x UI: sidebar
     x Gravitate-to-player AI
     - Individuals:
       - Writhing hulks
       x Swollen hulks
-      - Thundering hulks
-    - Sceptre of Torment
+      x Thundering hulks
+  - Symbol of Torment
+    - Prefab
+    - Animation
+    - Effects
   x First map + specialized content
-  - Second map + specialized content
-  - Prefab stairs to SIN from PRI
+  x Second map + specialized content
+  x Prefab stairs to SIN
   - Revenge squad events in following maps (maybe postpone for later?)
 x Animations (w/ particle engine)
   x Paralysing zap
