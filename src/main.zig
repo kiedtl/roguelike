@@ -602,6 +602,7 @@ fn tickGame() !void {
                 try readNoActionInput(130);
             }
 
+            ai.tickAI(mob);
             continue;
         }
 
@@ -646,6 +647,7 @@ fn tickGame() !void {
                     while (!try readInput()) ui.draw();
                     if (state.state == .Quit) break;
                 } else {
+                    ai.tickAI(mob);
                     ai.main(mob, state.GPA.allocator());
                 }
             }

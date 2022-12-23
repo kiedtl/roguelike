@@ -1424,13 +1424,15 @@ pub fn work(mob: *Mob, alloc: mem.Allocator) void {
     (work_fn)(mob, alloc);
 }
 
-pub fn main(mob: *Mob, alloc: mem.Allocator) void {
+pub fn tickAI(mob: *Mob) void {
     checkForLeadership(mob);
 
     checkForAllies(mob);
     checkForHostiles(mob);
     checkForNoises(mob);
+}
 
+pub fn main(mob: *Mob, alloc: mem.Allocator) void {
     // Should I wake up?
     if (mob.isUnderStatus(.Sleeping)) |_| {
         switch (mob.ai.phase) {
