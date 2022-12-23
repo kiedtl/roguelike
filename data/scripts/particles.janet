@@ -245,6 +245,8 @@
                                                    ((get-parent self parent) :explosion-finished-expanding))
                 :COND-percent? (fn [self ticks ctx percent]
                                  (< (* (math/random) 101) percent))
+                :COND-custom (fn [self ticks ctx func & args]
+                               (func self ticks ctx ;args))
 
                 :TRIG-custom (fn [self ticks ctx func & args]
                                (func self ticks ctx ;args))
@@ -311,7 +313,7 @@
                                      (if (string/find "r" rgb?) (set r (math/floor (min 255 (* r factor)))))
                                      (if (string/find "g" rgb?) (set g (math/floor (min 255 (* g factor)))))
                                      (if (string/find "b" rgb?) (set b (math/floor (min 255 (* b factor)))))
-                                     (if (string/find "a" rgb?) (set a (* a factor)))
+                                     (if (string/find "a" rgb?) (set a (max 0 (min 1.0 (* a factor)))))
                                      (put (self :tile) which (bor (blshift r 16) (blshift g 8) b))
                                      (put (self :tile) :bg-mix a))
                 :TRIG-lerp-color (fn [self ticks ctx which color2 rgb? how &named inverse]
@@ -634,6 +636,32 @@
                           [(:move-angle coord n angle) target]))
   }))
 
+# TODO: fade in 1st 5-10 ticks, then fade out last 5-10 ticks
+(defn _beams-golden-blue [func]
+  (new-emitter @{
+        :particle (new-particle @{
+          :tile (new-tile @{ :ch "." :fg 0x220700 :bg 0xffd700 :bg-mix 1.0 })
+          :speed 0.3 :lifetime 50 :require-los 0 :require-nonwall 0
+          :triggers @[
+            [[:COND-custom (fn [_s ticks &] (<= ticks 10))]
+              [:TRIG-modify-color :bg "a" [:custom :origtile (fn [_s ticks &] (* 0.1 ticks))]]]
+            [[:COND-custom (fn [_s ticks &] (>= ticks 45))]
+              [:TRIG-modify-color :bg "a" [:custom :origtile (fn [_s ticks &] (- 1 (* 0.03 (- ticks 45))))]]]
+            [[:COND-percent? 5] [:TRIG-scramble-glyph "`-=!#$%^&*()_+[]\\{}|;':\",./<>?"]]
+            [[:COND-true]
+              [:TRIG-lerp-color :bg 0x0000ff "rgb" #0x77776f "rgb"
+                [:sine-custom (fn [self ticks &] (* (:distance (((self :parent) :particle) :target) (self :coord)) 1.5 ticks))]]]
+          ]
+        })
+        :lifetime 21
+        :spawn-count (fn [self ticks ctx] (* (max ((ctx :bounds) :width) ((ctx :bounds) :height)) 2)) 
+        :get-spawn-params (fn [self ticks ctx coord target]
+                            (let [dist  (max ((ctx :bounds) :width) ((ctx :bounds) :height))
+                                  angle (deg-to-rad (func (* 4 (/ (self :total-spawned) dist))))
+                                  n     (+ (% (self :total-spawned) dist) 1)]
+                              [(:move-angle coord n angle) target]))
+      }))
+
 (def emitters-table @{
   "lzap-electric" @[ (template-lingering-zap "AEFHIKLMNTYZ13457*-=+~?!@#%&" 0x9fefff 0x7fc7ef 7) ]
   "lzap-golden" @[ (template-lingering-zap ".#.#.#." LIGHT_GOLD GOLD 12) ]
@@ -888,6 +916,12 @@
     (_beams-single-emitter (fn [deg] (+ 360 deg)))
     (_beams-single-emitter (fn [deg] (- 360 deg)))
   ]
+  "beams-candle-extinguish" @[
+    (_beams-golden-blue (fn [deg] (+ 180 deg)))
+    (_beams-golden-blue (fn [deg] (- 180 deg)))
+    (_beams-golden-blue (fn [deg] (+ 360 deg)))
+    (_beams-golden-blue (fn [deg] (- 360 deg)))
+  ]
   "pulse-twice-electric-explosion" @[
     (new-emitter @{
       :particle (new-particle @{
@@ -951,33 +985,6 @@
       })
       :lifetime 2
       :spawn-count (fn [&] 360)
-      :get-spawn-params ((Emitter :SPAR-explosion) :sparsity-factor 1)
-      :birth-delay 45
-    })
-  ]
-  "pulse-brief" @[
-    (new-emitter @{
-      :particle (new-particle @{
-        :tile (new-tile @{ :ch ":" :fg 0x888888 :bg BG :bg-mix 0.9 })
-        :speed 0    :lifetime 12   :territorial true   :require-los 1
-        :triggers @[
-          [[:COND-true] [:TRIG-lerp-color :bg 0xffffff "rgb" [:sine-custom (fn [self ticks &] (* 16 ticks))]]]
-        ]
-      })
-      :lifetime 1
-      :spawn-count (Emitter :SCNT-dist-to-target-360)
-      :get-spawn-params (:SPAR-circle Emitter)
-    })
-  ]
-  "zap-air-messy" @[
-    (new-emitter @{
-      :particle (new-particle @{
-        :tile (new-tile @{ :ch " " :fg 0 :bg 0xffffff :bg-mix 0 })
-        :speed 2
-        :triggers @[ [[:COND-parent-dead? 1] [:TRIG-die]] ]
-      })
-      :lifetime (fn [self &] (+ 8 (:distance ((self :particle) :coord) ((self :particle) :target))))
-      :spawn-count 5
       :get-spawn-tile (fn [self ticks ctx tile]
                         (new-tile @{ :ch (tile :ch) :fg (tile :fg) :bg (tile :bg) :bg-mix (math/random) }))
       :get-spawn-params (fn [self ticks ctx coord target]
@@ -995,7 +1002,7 @@
   "chargeover-purple-green" @[ (template-chargeover SYMB1_CHARS   0x995599 0x33ff33 :direction :in :speed 0.5 :lifetime 12) ]
   "chargeover-lines"        @[ (template-chargeover   "|_-=\\/"   0xcacbca 0xffffff                :speed 0.3             ) ]
   "chargeover-blue-out"     @[ (template-chargeover SYMB1_CHARS   0x11ddff 0x001e85 :direction :out :speed 0.5 :lifetime 12) ]
-  "beams-ring-distraction" @[
+  "beams-ring-amnesia" @[
     (new-emitter @{
       :particle (new-particle @{
         :tile (new-tile @{ :ch "?" :fg 0xd7ff00 :bg 0x5f6600 :bg-mix 0.55 })
