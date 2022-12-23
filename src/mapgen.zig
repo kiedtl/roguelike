@@ -3785,7 +3785,7 @@ pub const PRI_BASE_LEVELCONFIG = LevelConfig{
         null,
     },
 
-    .machines = &[_]*const Machine{ &surfaces.Fountain, &surfaces.Drain, &surfaces.WaterBarrel },
+    .machines = &[_]*const Machine{ &surfaces.Fountain, &surfaces.Drain },
     .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
 };
 
@@ -3816,7 +3816,7 @@ pub fn createLevelConfig_QRT(comptime prefabs: []const []const u8) LevelConfig {
         .single_props = &[_][]const u8{ "fuel_barrel", "bed" },
         .chance_for_single_prop_placement = 90,
 
-        .machines = &[_]*const Machine{ &surfaces.Fountain, &surfaces.WaterBarrel },
+        .machines = &[_]*const Machine{&surfaces.Fountain},
     };
 }
 

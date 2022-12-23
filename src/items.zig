@@ -147,8 +147,8 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 120, .i = .{ .P = &RecuperatePotion } },
     .{ .w = 120, .i = .{ .P = &DecimatePotion } },
     // Consumables
-    .{ .w = 80, .i = .{ .c = &HotPokerConsumable } },
-    .{ .w = 90, .i = .{ .c = &CoalConsumable } },
+    // .{ .w = 80, .i = .{ .c = &HotPokerConsumable } },
+    // .{ .w = 90, .i = .{ .c = &CoalConsumable } },
     .{ .w = 1, .i = .{ .c = &CopperIngotConsumable } },
     // Kits
     .{ .w = 50, .i = .{ .c = &FireTrapKit } },
@@ -1654,29 +1654,29 @@ pub const Consumable = struct {
     }
 };
 
-pub const HotPokerConsumable = Consumable{
-    .id = "cons_hot_poker",
-    .name = "red-hot poker",
-    .effects = &[_]Consumable.Effect{
-        .{ .Damage = .{ .amount = 20, .kind = .Fire, .lethal = false } },
-        .{ .Heal = 20 },
-    },
-    .color = 0xdd1010,
-    .verbs_player = Consumable.VERBS_PLAYER_CAUT,
-    .verbs_other = Consumable.VERBS_OTHER_CAUT,
-};
+// pub const HotPokerConsumable = Consumable{
+//     .id = "cons_hot_poker",
+//     .name = "red-hot poker",
+//     .effects = &[_]Consumable.Effect{
+//         .{ .Damage = .{ .amount = 20, .kind = .Fire, .lethal = false } },
+//         .{ .Heal = 20 },
+//     },
+//     .color = 0xdd1010,
+//     .verbs_player = Consumable.VERBS_PLAYER_CAUT,
+//     .verbs_other = Consumable.VERBS_OTHER_CAUT,
+// };
 
-pub const CoalConsumable = Consumable{
-    .id = "cons_coal",
-    .name = "burning coal",
-    .effects = &[_]Consumable.Effect{
-        .{ .Damage = .{ .amount = 10, .kind = .Fire, .lethal = false } },
-        .{ .Heal = 10 },
-    },
-    .color = 0xdd3a3a,
-    .verbs_player = Consumable.VERBS_PLAYER_CAUT,
-    .verbs_other = Consumable.VERBS_OTHER_CAUT,
-};
+// pub const CoalConsumable = Consumable{
+//     .id = "cons_coal",
+//     .name = "burning coal",
+//     .effects = &[_]Consumable.Effect{
+//         .{ .Damage = .{ .amount = 10, .kind = .Fire, .lethal = false } },
+//         .{ .Heal = 10 },
+//     },
+//     .color = 0xdd3a3a,
+//     .verbs_player = Consumable.VERBS_PLAYER_CAUT,
+//     .verbs_other = Consumable.VERBS_OTHER_CAUT,
+// };
 
 pub const CopperIngotConsumable = Consumable{
     .id = "cons_copper_ingot",

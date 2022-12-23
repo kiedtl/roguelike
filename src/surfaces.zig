@@ -287,7 +287,7 @@ pub const MACHINES = [_]Machine{
     RechargingStation,
     Drain,
     Fountain,
-    WaterBarrel,
+    // WaterBarrel,
 };
 
 pub const SteamVent = Machine{
@@ -1002,44 +1002,44 @@ pub const Fountain = Machine{
     },
 };
 
-pub const WaterBarrel = Machine{
-    .id = "barrel_water",
-    .name = "barrel of water",
-    .announce = true,
-    .powered_tile = 'Θ',
-    .unpowered_tile = 'Θ',
-    .powered_fg = 0x00d7ff,
-    .unpowered_fg = 0x00d7ff,
-    .powered_walkable = false,
-    .unpowered_walkable = false,
-    .evoke_confirm = "Break open the barrel of water?",
-    .on_power = struct {
-        fn f(machine: *Machine) void {
-            assert(machine.last_interaction.? == state.player);
+// pub const WaterBarrel = Machine{
+//     .id = "barrel_water",
+//     .name = "barrel of water",
+//     .announce = true,
+//     .powered_tile = 'Θ',
+//     .unpowered_tile = 'Θ',
+//     .powered_fg = 0x00d7ff,
+//     .unpowered_fg = 0x00d7ff,
+//     .powered_walkable = false,
+//     .unpowered_walkable = false,
+//     .evoke_confirm = "Break open the barrel of water?",
+//     .on_power = struct {
+//         fn f(machine: *Machine) void {
+//             assert(machine.last_interaction.? == state.player);
 
-            var dijk = dijkstra.Dijkstra.init(
-                machine.coord,
-                state.mapgeometry,
-                3,
-                state.is_walkable,
-                .{ .ignore_mobs = true, .right_now = true },
-                state.GPA.allocator(),
-            );
-            defer dijk.deinit();
-            while (dijk.next()) |item|
-                if (machine.coord.distanceManhattan(item) < 4 or
-                    rng.percent(@as(usize, 20)))
-                {
-                    state.dungeon.at(item).terrain = &ShallowWaterTerrain;
-                };
+//             var dijk = dijkstra.Dijkstra.init(
+//                 machine.coord,
+//                 state.mapgeometry,
+//                 3,
+//                 state.is_walkable,
+//                 .{ .ignore_mobs = true, .right_now = true },
+//                 state.GPA.allocator(),
+//             );
+//             defer dijk.deinit();
+//             while (dijk.next()) |item|
+//                 if (machine.coord.distanceManhattan(item) < 4 or
+//                     rng.percent(@as(usize, 20)))
+//                 {
+//                     state.dungeon.at(item).terrain = &ShallowWaterTerrain;
+//                 };
 
-            state.message(.Info, "You break open the water barrel!", .{});
+//             state.message(.Info, "You break open the water barrel!", .{});
 
-            machine.disabled = true;
-            state.dungeon.at(machine.coord).surface = null;
-        }
-    }.f,
-};
+//             machine.disabled = true;
+//             state.dungeon.at(machine.coord).surface = null;
+//         }
+//     }.f,
+// };
 
 fn powerNone(_: *Machine) void {}
 
