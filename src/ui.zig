@@ -1264,9 +1264,12 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
                         }
                     }.func);
                     if (existing == null) {
+                        var tile = Tile.displayAs(coord, true, true);
+                        tile.fl.wide = true;
+
                         features.append(FeatureInfo{
                             .name = name,
-                            .tile = Tile.displayAs(coord, true, true),
+                            .tile = tile,
                             .player = state.player.coord.eq(coord),
                             .priority = priority,
                         }) catch err.wat();
@@ -1286,8 +1289,9 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
 
         for (features.items) |feature| {
             display.setCell(startx, y, feature.tile);
+            display.setCell(startx + 1, y, .{ .fl = .{ .skip = true } });
 
-            _ = _drawStrf(startx + 2, y, endx, "$c{s}$.", .{feature.name.constSlice()}, .{});
+            _ = _drawStrf(startx + 3, y, endx, "$c{s}$.", .{feature.name.constSlice()}, .{});
             if (feature.player) {
                 _ = _drawStrf(endx - 1, y, endx, "@", .{}, .{});
             }

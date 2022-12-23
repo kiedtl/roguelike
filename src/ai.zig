@@ -475,7 +475,7 @@ pub fn checkForAllies(mob: *Mob) void {
     }.f);
 }
 
-fn checkForNoises(mob: *Mob) void {
+pub fn checkForNoises(mob: *Mob) void {
     if (!mob.ai.is_curious) {
         return;
     }
