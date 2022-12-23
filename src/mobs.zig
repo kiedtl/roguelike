@@ -133,6 +133,32 @@ pub const CombatDummyPrisoner = MobTemplate{
 };
 // }}}
 
+pub const WrithingHulkTemplate = MobTemplate{
+    .mob = .{
+        .id = "hulk_writhing",
+        .species = &Species{
+            .name = "writhing hulk",
+            .default_attack = &Weapon{
+                .damage = 1,
+                .strs = &[_]DamageStr{items._dmgstr(1, "strike", "strikes", "")},
+            },
+        },
+        .tile = 'H',
+        .ai = AI{
+            .profession_description = "wandering",
+            .work_fn = ai.hulkWork,
+            .fight_fn = ai.meleeFight,
+        },
+        .base_night_vision = true,
+
+        .corpse = .None,
+        .max_HP = 7,
+        .memory_duration = 10,
+        .innate_resists = .{ .rElec = 25, .rFire = 25 },
+        .stats = .{ .Willpower = 2, .Melee = 100, .Vision = 5 },
+    },
+};
+
 pub const SwollenHulkTemplate = MobTemplate{
     .mob = .{
         .id = "hulk_swollen",
@@ -153,6 +179,12 @@ pub const SwollenHulkTemplate = MobTemplate{
         .base_night_vision = true,
 
         .corpse = .None,
+        .slain_trigger = .{ .Disintegrate = &[_]*const MobTemplate{
+            &WrithingHulkTemplate,
+            &WrithingHulkTemplate,
+            &WrithingHulkTemplate,
+            &WrithingHulkTemplate,
+        } },
         .max_HP = 28,
         .memory_duration = 10,
         .innate_resists = .{ .rElec = 25, .rFire = 25 },
@@ -180,6 +212,14 @@ pub const ThrashingHulkTemplate = MobTemplate{
         .base_night_vision = true,
 
         .corpse = .None,
+        .slain_trigger = .{ .Disintegrate = &[_]*const MobTemplate{
+            &SwollenHulkTemplate,
+            &WrithingHulkTemplate,
+            &WrithingHulkTemplate,
+            &WrithingHulkTemplate,
+            &WrithingHulkTemplate,
+            &WrithingHulkTemplate,
+        } },
         .max_HP = 63,
         .memory_duration = 10,
         .innate_resists = .{ .rElec = 25, .rFire = 25 },
@@ -1913,6 +1953,7 @@ pub const SpectralSwordTemplate = MobTemplate{
 pub const MOBS = [_]MobTemplate{
     CombatDummyNormal,
     CombatDummyPrisoner,
+    WrithingHulkTemplate,
     SwollenHulkTemplate,
     ThrashingHulkTemplate,
     CoronerTemplate,

@@ -25,6 +25,7 @@ const explosions = @import("explosions.zig");
 const fire = @import("fire.zig");
 const fov = @import("fov.zig");
 const font = @import("font.zig");
+const mobs = @import("mobs.zig");
 const gas = @import("gas.zig");
 const items = @import("items.zig");
 const literature = @import("literature.zig");
@@ -1822,11 +1823,12 @@ pub const Mob = struct { // {{{
     memory_duration: usize = 4,
     deaf: bool = false,
     max_HP: usize,
+    immobile: bool = false,
+    innate_resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
     blood: ?Spatter = .Blood,
     blood_spray: ?usize = null, // Gas ID
     corpse: enum { Normal, Wall, Dust, None } = .Normal,
-    immobile: bool = false,
-    innate_resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
+    slain_trigger: union(enum) { None, Disintegrate: []const *const mobs.MobTemplate } = .None,
 
     // Don't use EnumFieldStruct here because we want to provide per-field
     // defaults.
@@ -2604,6 +2606,15 @@ pub const Mob = struct { // {{{
         self.declareAction(.Rest);
     }
 
+    // XXX: increase max stackbuffer size if adding bigger mobs
+    pub fn coordListMT(self: *Mob) StackBuffer(Coord, 16) {
+        var list = StackBuffer(Coord, 16).init(null);
+        var gen = Generator(Rect.rectIter).init(self.areaRect());
+        while (gen.next()) |mobcoord|
+            list.append(mobcoord) catch err.wat();
+        return list;
+    }
+
     // closestMultitileCoord
     pub fn coordMT(self: *Mob, to: Coord) Coord {
         var closest = self.coord;
@@ -3140,6 +3151,31 @@ pub const Mob = struct { // {{{
 
         if (self.isUnderStatus(.ExplosiveElec)) |s| {
             explosions.elecBurst(self.coord, s.power, self);
+        }
+
+        // Apply death effect
+        switch (self.slain_trigger) {
+            .None => {},
+            .Disintegrate => |list| {
+                const coords = self.coordListMT();
+                assert(list.len <= coords.len);
+
+                // FIXME: this loop exits as soon as there are no more coords to place
+                // mobs on. In future it should continue looking at adjacent coords via
+                // Dijkstra search.
+                //
+                var list_i: usize = 0;
+                for (coords.constSlice()) |coord| {
+                    if (list_i >= list.len) break;
+                    if (!state.is_walkable(coord, .{})) continue;
+                    _ = mobs.placeMob(state.GPA.allocator(), list[list_i], coord, .{});
+                    list_i += 1;
+                }
+
+                // FIXME: make template specify message, currently this only works
+                // for hulkers
+                state.message(.Combat, "{c} contorts and breaks up.", .{self});
+            },
         }
     }
 
