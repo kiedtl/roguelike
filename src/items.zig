@@ -453,6 +453,25 @@ fn _triggerEldritchLantern(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
     mob.makeNoise(.Explosion, .Medium);
 }
 
+pub const SymbolEvoc = Evocable{
+    .id = "evoc_symbol",
+    .name = "Symbol of Torment",
+    .tile_fg = 0xffffff,
+    .max_charges = 7,
+    .rechargable = false,
+    .trigger_fn = struct {
+        fn f(_: *Mob, _: *Evocable) Evocable.EvokeError!void {
+            const dest = ui.chooseCell(.{
+                .require_seen = true,
+                .targeter = .{ .AoE1 = .{ .dist = 7, .opts = .{ .right_now = true } } },
+            }) orelse return error.BadPosition;
+
+            _ = dest;
+            state.message(.Info, "You hear some gears turning...", .{});
+        }
+    }.f,
+};
+
 // }}}
 
 pub const PatternChecker = struct { // {{{

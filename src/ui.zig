@@ -9,6 +9,7 @@ const RexMap = @import("rexpaint").RexMap;
 
 const janet = @import("janet.zig");
 const display = @import("display.zig");
+const dijkstra = @import("dijkstra.zig");
 const colors = @import("colors.zig");
 const player = @import("player.zig");
 const spells = @import("spells.zig");
@@ -1593,36 +1594,42 @@ pub const ChooseCellOpts = struct {
     pub const Targeter = union(enum) {
         Single,
         Trajectory,
+        AoE1: struct { dist: usize, opts: state.IsWalkableOptions },
 
         pub const Result = struct {
             coord: Coord,
+            ch: ?u32 = null,
             color: u32,
             pub const AList = std.ArrayList(@This());
         };
 
-        pub const Func = fn (Targeter, bool, Coord, *Result.AList) Error!void;
+        pub const Func = fn (Targeter, bool, bool, Coord, *Result.AList) Error!void;
         pub const Error = error{ BrokenLOF, OutOfRange, OutOfLOS };
+
+        pub const COLOR_Y = colors.percentageOf(colors.LIGHT_STEEL_BLUE, 40);
+        pub const COLOR_N = colors.percentageOf(colors.PALE_VIOLET_RED, 40);
 
         pub fn func(self: Targeter) Func {
             return switch (self) {
                 .Single => struct {
-                    pub fn f(_: Targeter, force_error: bool, coord: Coord, buf: *Result.AList) Error!void {
-                        const bg = if (force_error) colors.PALE_VIOLET_RED else colors.LIGHT_STEEL_BLUE;
+                    pub fn f(_: Targeter, _: bool, force_error: bool, coord: Coord, buf: *Result.AList) Error!void {
+                        const bg = if (force_error) COLOR_N else COLOR_Y;
                         buf.append(.{ .coord = coord, .color = bg }) catch err.wat();
                     }
                 }.f,
                 .Trajectory => struct {
-                    pub fn f(_: Targeter, force_error: bool, coord: Coord, buf: *Result.AList) Error!void {
+                    pub fn f(_: Targeter, require_seen: bool, force_error: bool, coord: Coord, buf: *Result.AList) Error!void {
+                        const trajectory = state.player.coord.drawLine(coord, state.mapgeometry, 0);
+
+                        const trajectory_is_unseen = if (require_seen) for (trajectory.constSlice()) |c| {
+                            if (!state.player.cansee(c)) break true;
+                        } else false else false;
                         const has_lof = utils.hasClearLOF(state.player.coord, coord);
-                        const bg = if (force_error or !has_lof)
-                            colors.percentageOf(colors.PALE_VIOLET_RED, 50)
-                        else
-                            colors.percentageOf(colors.LIGHT_STEEL_BLUE, 50);
+                        const bg = if (force_error or !has_lof or !trajectory_is_unseen) COLOR_N else COLOR_Y;
 
                         buf.append(.{ .coord = state.player.coord, .color = bg }) catch err.wat();
                         buf.append(.{ .coord = coord, .color = bg }) catch err.wat();
 
-                        const trajectory = state.player.coord.drawLine(coord, state.mapgeometry, 0);
                         for (trajectory.constSlice()) |traj_c| {
                             if (state.player.coord.eq(traj_c)) continue;
                             if (coord.eq(traj_c)) break;
@@ -1632,6 +1639,37 @@ pub const ChooseCellOpts = struct {
 
                         if (!has_lof) {
                             return error.BrokenLOF;
+                        }
+                    }
+                }.f,
+                .AoE1 => struct {
+                    pub fn f(targeter: Targeter, _: bool, force_error: bool, coord: Coord, buf: *Result.AList) Error!void {
+                        const bg = if (force_error) COLOR_N else COLOR_Y;
+
+                        // First do the squares that the player can see
+                        {
+                            var dijk = dijkstra.Dijkstra.init(coord, state.mapgeometry, targeter.AoE1.dist, state.is_walkable, targeter.AoE1.opts, state.GPA.allocator());
+                            defer dijk.deinit();
+
+                            while (dijk.next()) |child| if (state.player.cansee(child)) {
+                                const percent = math.max(25, 100 - (child.distance(coord) * 100 / targeter.AoE1.dist));
+                                buf.append(.{ .coord = child, .color = colors.percentageOf(bg, percent) }) catch err.wat();
+                            };
+                        }
+
+                        // ...And now the squares the player can't see
+                        {
+                            var dijk = dijkstra.Dijkstra.init(coord, state.mapgeometry, targeter.AoE1.dist, struct {
+                                pub fn f(c: Coord, opts: state.IsWalkableOptions) bool {
+                                    if (state.player.cansee(c)) return state.is_walkable(c, opts);
+                                    return true;
+                                }
+                            }.f, targeter.AoE1.opts, state.GPA.allocator());
+                            defer dijk.deinit();
+
+                            while (dijk.next()) |child| if (!state.player.cansee(child)) {
+                                buf.append(.{ .coord = child, .color = colors.percentageOf(bg, 30), .ch = '?' }) catch err.wat();
+                            };
                         }
                     }
                 }.f,
@@ -1672,13 +1710,13 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
         }
 
         coords.clearAndFree();
-        (opts.targeter.func())(opts.targeter, terror != null, coord, &coords) catch |e| {
+        (opts.targeter.func())(opts.targeter, opts.require_seen, terror != null, coord, &coords) catch |e| {
             terror = e;
         };
         for (coords.items) |item| {
-            const ditemc = coordToScreenFromRefpoint(item.coord, refpoint).?;
+            const ditemc = coordToScreenFromRefpoint(item.coord, refpoint) orelse continue;
             const old = map_win.map.getCell(ditemc.x, ditemc.y);
-            map_win.annotations.setCell(ditemc.x, ditemc.y, .{ .ch = old.ch, .fg = old.fg, .bg = item.color, .fl = .{ .wide = true } });
+            map_win.annotations.setCell(ditemc.x, ditemc.y, .{ .ch = item.ch orelse old.ch, .fg = old.fg, .bg = item.color, .fl = .{ .wide = true } });
         }
 
         map_win.map.renderFullyW(.Main);
