@@ -3113,16 +3113,16 @@ pub const Mob = struct { // {{{
         // FIXME: don't assume this (the player might be raising a corpse too!)
         self.allegiance = .Necromancer;
 
-        self.stats.Speed += 10;
         self.stats.Evade -= 10;
+        self.stats.Melee -= 10;
         self.stats.Willpower -= 2;
         self.stats.Vision = 4;
 
-        self.memory_duration = 4;
+        self.memory_duration = 7;
         self.deaf = true;
 
-        self.innate_resists.rFire = math.clamp(self.innate_resists.rFire - 25, -100, 100);
-        self.innate_resists.rElec = math.clamp(self.innate_resists.rElec - 25, -100, 100);
+        self.innate_resists.rFire = math.clamp(self.innate_resists.rFire + 25, -100, 100);
+        self.innate_resists.rElec = math.clamp(self.innate_resists.rElec + 25, -100, 100);
         self.innate_resists.rFume = 100;
 
         return true;

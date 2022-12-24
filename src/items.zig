@@ -461,13 +461,26 @@ pub const SymbolEvoc = Evocable{
     .rechargable = false,
     .trigger_fn = struct {
         fn f(_: *Mob, _: *Evocable) Evocable.EvokeError!void {
+            const DIST = 7;
+            const OPTS = .{ .right_now = true };
+
             const dest = ui.chooseCell(.{
                 .require_seen = true,
-                .targeter = .{ .AoE1 = .{ .dist = 7, .opts = .{ .right_now = true } } },
+                .targeter = .{ .AoE1 = .{ .dist = DIST, .opts = OPTS } },
             }) orelse return error.BadPosition;
 
-            _ = dest;
-            state.message(.Info, "You hear some gears turning...", .{});
+            state.message(.SpellCast, "You raise the $oSymbol of Torment$.!", .{});
+
+            var dijk = dijkstra.Dijkstra.init(dest, state.mapgeometry, DIST, state.is_walkable, OPTS, state.GPA.allocator());
+            defer dijk.deinit();
+
+            while (dijk.next()) |child| if (utils.getHostileAt(state.player, child)) |hostile| {
+                if (hostile.life_type == .Living) {
+                    assert(hostile.corpse == .Normal);
+                    hostile.kill();
+                    _ = hostile.raiseAsUndead(hostile.coord);
+                }
+            } else |_| {};
         }
     }.f,
 };
