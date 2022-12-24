@@ -367,8 +367,7 @@ pub const BrazierWandEvoc = Evocable{
         fn f(_: *Mob, _: *Evocable) Evocable.EvokeError!void {
             const chosen = ui.chooseCell(.{
                 .require_seen = true,
-                .show_trajectory = true,
-                .require_lof = true,
+                .targeter = .Trajectory,
             }) orelse return error.BadPosition;
 
             if (state.dungeon.machineAt(chosen)) |mach| {
@@ -406,8 +405,7 @@ pub const FlamethrowerEvoc = Evocable{
         fn f(_: *Mob, _: *Evocable) Evocable.EvokeError!void {
             const dest = ui.chooseCell(.{
                 .require_seen = true,
-                .show_trajectory = true,
-                .require_lof = true,
+                .targeter = .Trajectory,
             }) orelse return error.BadPosition;
 
             ui.Animation.apply(.{ .Particle = .{

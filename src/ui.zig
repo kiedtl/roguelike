@@ -1587,12 +1587,64 @@ pub fn draw() void {
 pub const ChooseCellOpts = struct {
     require_seen: bool = true,
     max_distance: ?usize = null,
-    show_trajectory: bool = false,
+    targeter: Targeter = .Single,
     require_lof: bool = false,
+
+    pub const Targeter = union(enum) {
+        Single,
+        Trajectory,
+
+        pub const Result = struct {
+            coord: Coord,
+            color: u32,
+            pub const AList = std.ArrayList(@This());
+        };
+
+        pub const Func = fn (Targeter, bool, Coord, *Result.AList) Error!void;
+        pub const Error = error{ BrokenLOF, OutOfRange, OutOfLOS };
+
+        pub fn func(self: Targeter) Func {
+            return switch (self) {
+                .Single => struct {
+                    pub fn f(_: Targeter, force_error: bool, coord: Coord, buf: *Result.AList) Error!void {
+                        const bg = if (force_error) colors.PALE_VIOLET_RED else colors.LIGHT_STEEL_BLUE;
+                        buf.append(.{ .coord = coord, .color = bg }) catch err.wat();
+                    }
+                }.f,
+                .Trajectory => struct {
+                    pub fn f(_: Targeter, force_error: bool, coord: Coord, buf: *Result.AList) Error!void {
+                        const has_lof = utils.hasClearLOF(state.player.coord, coord);
+                        const bg = if (force_error or !has_lof)
+                            colors.percentageOf(colors.PALE_VIOLET_RED, 50)
+                        else
+                            colors.percentageOf(colors.LIGHT_STEEL_BLUE, 50);
+
+                        buf.append(.{ .coord = state.player.coord, .color = bg }) catch err.wat();
+                        buf.append(.{ .coord = coord, .color = bg }) catch err.wat();
+
+                        const trajectory = state.player.coord.drawLine(coord, state.mapgeometry, 0);
+                        for (trajectory.constSlice()) |traj_c| {
+                            if (state.player.coord.eq(traj_c)) continue;
+                            if (coord.eq(traj_c)) break;
+
+                            buf.append(.{ .coord = traj_c, .color = bg }) catch err.wat();
+                        }
+
+                        if (!has_lof) {
+                            return error.BrokenLOF;
+                        }
+                    }
+                }.f,
+            };
+        }
+    };
 };
 
 pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
     var coord: Coord = state.player.coord;
+    var coords = ChooseCellOpts.Targeter.Result.AList.init(state.GPA.allocator());
+    var terror: ?ChooseCellOpts.Targeter.Error = null;
+
     map_win.annotations.clear();
 
     defer map_win.annotations.clear();
@@ -1602,42 +1654,32 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
     defer moblist.deinit();
 
     while (true) {
-        drawMap(moblist.items, coord);
+        terror = null;
+        const refpoint = if (opts.require_seen) state.player.coord else coord;
+
+        drawMap(moblist.items, refpoint);
         map_win.annotations.clear();
         map_win.map.renderFullyW(.Main);
 
-        if (opts.show_trajectory) {
-            const trajectory = state.player.coord.drawLine(coord, state.mapgeometry, 0);
-            const fg = if (utils.hasClearLOF(state.player.coord, coord))
-                colors.CONCRETE
-            else
-                colors.PALE_VIOLET_RED;
-
-            for (trajectory.constSlice()) |traj_c| {
-                const d_traj_c = coordToScreenFromRefpoint(traj_c, coord) orelse break;
-
-                if (state.player.coord.eq(traj_c)) continue;
-                if (coord.eq(traj_c)) break;
-
-                if (!state.is_walkable(traj_c, .{
-                    .right_now = true,
-                    .only_if_breaks_lof = true,
-                }))
-                    break;
-
-                display.setCell(d_traj_c.x, d_traj_c.y, .{ .ch = 'x', .fg = fg, .bg = colors.BG });
-            }
+        if (opts.require_seen and !state.player.cansee(coord) and
+            !state.memory.contains(coord))
+        {
+            terror = error.OutOfLOS;
+        } else if (opts.max_distance != null and
+            coord.distance(state.player.coord) > opts.max_distance.?)
+        {
+            terror = error.OutOfRange;
         }
 
-        const dcoord = coordToScreenFromRefpoint(coord, coord).?;
-        map_win.annotations.setCell(dcoord.x - 2, dcoord.y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        map_win.annotations.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        map_win.annotations.setCell(dcoord.x + 2, dcoord.y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        map_win.annotations.setCell(dcoord.x - 2, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        map_win.annotations.setCell(dcoord.x + 2, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        map_win.annotations.setCell(dcoord.x - 2, dcoord.y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        map_win.annotations.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        map_win.annotations.setCell(dcoord.x + 2, dcoord.y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        coords.clearAndFree();
+        (opts.targeter.func())(opts.targeter, terror != null, coord, &coords) catch |e| {
+            terror = e;
+        };
+        for (coords.items) |item| {
+            const ditemc = coordToScreenFromRefpoint(item.coord, refpoint).?;
+            const old = map_win.map.getCell(ditemc.x, ditemc.y);
+            map_win.annotations.setCell(ditemc.x, ditemc.y, .{ .ch = old.ch, .fg = old.fg, .bg = item.color, .fl = .{ .wide = true } });
+        }
 
         map_win.map.renderFullyW(.Main);
         display.present();
@@ -1650,18 +1692,12 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
             .Key => |k| switch (k) {
                 .Esc, .CtrlC, .CtrlG => return null,
                 .Enter => {
-                    if (opts.require_seen and !state.player.cansee(coord) and
-                        !state.memory.contains(coord))
-                    {
-                        drawAlert("You haven't seen that place!", .{});
-                    } else if (opts.max_distance != null and
-                        coord.distance(state.player.coord) > opts.max_distance.?)
-                    {
-                        drawAlert("Out of range!", .{});
-                    } else if (opts.require_lof and
-                        !utils.hasClearLOF(state.player.coord, coord))
-                    {
-                        drawAlert("There's something in the way.", .{});
+                    if (terror) |_terror| {
+                        switch (_terror) {
+                            error.BrokenLOF => drawAlert("There's something in the way.", .{}),
+                            error.OutOfRange => drawAlert("Out of range!", .{}),
+                            error.OutOfLOS => drawAlert("You haven't seen that place!", .{}),
+                        }
                     } else {
                         return coord;
                     }
