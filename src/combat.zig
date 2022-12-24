@@ -346,7 +346,7 @@ pub fn disruptIndividualUndead(mob: *Mob) void {
     } else if (rng.percent(CHANCE_SAME_GAIN_PARALYSIS)) {
         mob.addStatus(.Paralysis, 0, .{ .Tmp = rng.range(usize, 7, 14) });
         msg = "paralysis";
-    }
+    } else return;
 
     state.message(.Status, "{c} is disrupted ($b{s}$.)", .{ mob, msg });
 }
