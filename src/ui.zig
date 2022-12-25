@@ -1652,7 +1652,7 @@ pub const ChooseCellOpts = struct {
                             defer dijk.deinit();
 
                             while (dijk.next()) |child| if (state.player.cansee(child)) {
-                                const percent = math.max(25, 100 - (child.distance(coord) * 100 / targeter.AoE1.dist));
+                                const percent = 100 - (child.distance(coord) * 100 / (targeter.AoE1.dist * 3 / 2));
                                 buf.append(.{ .coord = child, .color = colors.percentageOf(bg, percent) }) catch err.wat();
                             };
                         }

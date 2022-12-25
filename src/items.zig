@@ -462,7 +462,11 @@ pub const SymbolEvoc = Evocable{
     .trigger_fn = struct {
         fn f(_: *Mob, _: *Evocable) Evocable.EvokeError!void {
             const DIST = 7;
-            const OPTS = .{ .right_now = true };
+            const OPTS = .{ .ignore_mobs = true, .only_if_breaks_lof = true, .right_now = true };
+
+            // TODO:
+            // - fix targeting to require LOF
+            // - fix effects
 
             const dest = ui.chooseCell(.{
                 .require_seen = true,
@@ -474,13 +478,13 @@ pub const SymbolEvoc = Evocable{
             var dijk = dijkstra.Dijkstra.init(dest, state.mapgeometry, DIST, state.is_walkable, OPTS, state.GPA.allocator());
             defer dijk.deinit();
 
-            while (dijk.next()) |child| if (utils.getHostileAt(state.player, child)) |hostile| {
-                if (hostile.life_type == .Living) {
-                    assert(hostile.corpse == .Normal);
-                    hostile.kill();
-                    _ = hostile.raiseAsUndead(hostile.coord);
+            while (dijk.next()) |child| if (state.dungeon.at(child).mob) |mob| {
+                if (mob != state.player and mob.life_type == .Living) {
+                    assert(mob.corpse == .Normal);
+                    mob.kill();
+                    _ = mob.raiseAsUndead(mob.coord);
                 }
-            } else |_| {};
+            };
         }
     }.f,
 };
