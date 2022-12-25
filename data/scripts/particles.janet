@@ -433,12 +433,15 @@
                                  :number (self :lifetime)))
 
                # :get-spawn-params presets
-               :SPAR-explosion (fn [&named inverse sparsity-factor]
+               :SPAR-explosion (fn [&named distance inverse sparsity-factor]
+                                 (default distance :distance-to-target)
                                  (default inverse false)
                                  (default sparsity-factor 2)
                                  (fn [self ticks ctx coord target]
                                    (let [angle  (* (/ (% (* sparsity-factor (self :total-spawned)) 360) 180) math/pi)
-                                         dist   (:distance coord target)
+                                         dist   (case distance
+                                                  :distance-to-target (:distance coord target)
+                                                  distance)
                                          ntarg  (new-coord (+ (coord :x) (* dist (math/cos angle)))
                                                            (+ (coord :y) (* dist (math/sin angle))))]
                                      (if inverse [ntarg coord] [coord ntarg]))))
@@ -465,7 +468,7 @@
                                       (max 0.1 (- speed (math/random) (math/abs (math/sin (deg-to-rad (* 10 ticks)))))))
 
                # :spawn-count presets
-               :SCNT-dist-to-target (fn [self &] (+ (:distance ((self :particle) :coord) ((self :particle) :target)) 1))
+               :SCNT-dist-to-target (fn [self &] (+ (:distance-euc ((self :particle) :coord) ((self :particle) :target)) 1))
                :SCNT-dist-to-target-360 (fn [self &] (* 360 (+ 1 (:distance ((self :particle) :coord) ((self :particle) :target)))))
 
                :COND-age-eq? (fn [self ticks ctx num]
@@ -486,13 +489,15 @@
 (defn new-context [target area-size emitters]
   (table/setproto @{ :bounds area-size :target target :emitters emitters } Context))
 
-(defn template-chargeover [chars color1 color2 &named direction speed lifetime which maxdist style]
-  (default direction :out)
-  (default speed     0.25)
-  (default lifetime     9)
-  (default which  :target)
-  (default maxdist      4)
-  (default style      :bg)
+(defn template-chargeover [chars color1 color2 &named direction speed lifetime which maxdist mindist style stopshort]
+  (default direction                          :out)
+  (default speed                              0.25)
+  (default lifetime                              9)
+  (default which                           :target)
+  (default maxdist                               4)
+  (default mindist (case direction :out 1 :in 2.5))
+  (default style                               :bg)
+  (default stopshort                         false)
   (def special-triggers
     (case style
       :bg   @[ [[:COND-true] [:TRIG-lerp-color :bg color2 "rgb" @(:completed-journey)]] ]
@@ -514,34 +519,36 @@
       :spawn-count (fn [&] 7)
       :get-spawn-params (fn [self ticks ctx origin target]
                           (let [angle  (/ (* (math/random) 360 math/pi) 180)
-                                dist1  (max 1   (* (math/random) maxdist))
-                                dist2  (max 2.5 (* (math/random) maxdist))
+                                dist1  (+ mindist (* (math/random) (- maxdist mindist)))
+                                dist2  (+ mindist (* (math/random) (- maxdist mindist)))
                                 coord  (case which :target target :origin origin)]
                             (case direction
                               :out [coord (:move-angle coord dist1 angle)]
-                              :in  [(:move-angle coord dist2 angle) coord])))
+                              :in  [(:move-angle coord dist2 angle) (:move-angle coord 1 angle)])))
     }))
 
-(defn template-lingering-zap [chars bg fg lifetime &named bg-mix territorial]
+(defn template-lingering-zap [chars bg fg lifetime &named bg-mix territorial lerp-to]
   (default bg-mix 0.7)
   (default territorial false)
+  (default lerp-to nil)
+  (def color-change-trigger (case lerp-to
+    nil [[:COND-true] [:TRIG-modify-color :bg "rgb" [:completed-lifetime 1.3]]]
+        [[:COND-true] [:TRIG-lerp-color :bg lerp-to "rgb" [:completed-lifetime 1.3] :inverse true]]))
+
   (new-emitter @{
     :particle (new-particle @{
       :tile (new-tile @{ :ch "Z" :fg fg :bg bg :bg-mix bg-mix })
-      :speed 0
-      :territorial territorial
+      :speed 0 :lifetime lifetime :territorial territorial
       :triggers @[
         [[:COND-true] [:TRIG-scramble-glyph chars]]
-        [[:COND-true] [:TRIG-modify-color :bg "rgb" @(:completed-parent-lifetime 1 3.5)]]
-        [[:COND-parent-dead? 1] [:TRIG-die]]
+        color-change-trigger
       ]
     })
-    :lifetime lifetime
-    :triggers [ [[:COND-age-eq? 0] [:TRIG-inactivate]] ] # disable after first volley
+    :lifetime 0
     :spawn-count (Emitter :SCNT-dist-to-target)
     :get-spawn-params (fn [self ticks ctx coord target]
                         (let [angle (:angle target coord)
-                              n (+ (% (self :total-spawned) (:distance coord target)) 1)]
+                              n (% (self :total-spawned) (+ 1 (:distance-euc coord target)))]
                           [(:move-angle coord n angle) target]))
    }))
 
@@ -595,17 +602,22 @@
                        :2 (Emitter :SSPD-min-sin-ticks2))
   }))
 
-(defn template-lerp-single [color1 color2]
+(defn template-lerp-single [color1 color2 &named lifetime which]
+  (default lifetime 4)
+  (default which :target)
   (new-emitter @{
     :particle (new-particle @{
       :tile (new-tile @{ :ch " " :bg color1 :bg-mix 0.9 })
-      :speed 0    :lifetime 5
+      :speed 0    :lifetime lifetime
       :triggers @[
         [[:COND-true] [:TRIG-lerp-color :bg color2 "rgb" [:completed-lifetime 1] :inverse true]]
       ]
     })
     :lifetime 1
-    :get-spawn-params (fn [self ticks ctx coord target] [target coord])
+    :get-spawn-params (fn [self ticks ctx coord target]
+                        (case which
+                          :target [target coord]
+                          :origin [coord target]))
   }))
 
 (defn _statue-border-effect [color linedraw direction]
@@ -1042,6 +1054,24 @@
   "glow-orange-red" @[ (template-lerp-single 0xffdd11 0x851e00) ]
   "glow-blue-dblue" @[ (template-lerp-single 0x11ddff 0x001e85) ]
   "glow-pink"       @[ (template-lerp-single 0xff9999 0x333333) ]
+
+  "zap-torment" @[
+    (template-chargeover ASCII_CHARS 0xffd700 0x000066 :direction :in :which :origin :speed 0.5 :lifetime 2 :maxdist 4 :mindist 3)
+    (new-emitter-from @{ :birth-delay 2 } (template-lerp-single 0x000066 0xffd700 :lifetime 8 :which :origin))
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch " " :bg 0xffd700 :bg-mix 0.7 })
+        :speed 1
+        :triggers @[ [[:COND-true] [:TRIG-lerp-color :bg 0x0000ff "rgb" [:completed-journey]]] ]
+      })
+      :birth-delay 10
+      :lifetime 3
+     })
+  ]
+  "explosion-torment" @[
+    (new-emitter-from @{ :birth-delay 10 }
+      (template-explosion :embers? false :die-out? false :speed-variation-preset :2 :color2 0xaa8700 :color1 0x000088 :require-los 0))
+  ]
 })
 
 (defn animation-init [initialx initialy targetx targety boundsx boundsy bounds-width bounds-height emitters-set]

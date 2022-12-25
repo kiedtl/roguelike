@@ -475,6 +475,9 @@ pub const SymbolEvoc = Evocable{
 
             state.message(.SpellCast, "You raise the $oSymbol of Torment$.!", .{});
 
+            ui.Animation.apply(.{ .Particle = .{ .name = "zap-torment", .coord = state.player.coord, .target = .{ .C = dest } } });
+            ui.Animation.apply(.{ .Particle = .{ .name = "explosion-torment", .coord = dest, .target = .{ .Z = DIST } } });
+
             var dijk = dijkstra.Dijkstra.init(dest, state.mapgeometry, DIST, state.is_walkable, OPTS, state.GPA.allocator());
             defer dijk.deinit();
 
