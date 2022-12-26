@@ -1595,57 +1595,51 @@ pub const ChooseCellOpts = struct {
         Single,
         Trajectory,
         AoE1: struct { dist: usize, opts: state.IsWalkableOptions },
+        Duo: [2]*const Targeter,
 
         pub const Result = struct {
             coord: Coord,
             ch: ?u32 = null,
-            color: u32,
+            color: usize,
             pub const AList = std.ArrayList(@This());
         };
 
-        pub const Func = fn (Targeter, bool, bool, Coord, *Result.AList) Error!void;
+        pub const Func = fn (Targeter, bool, Coord, *Result.AList) Error!void;
         pub const Error = error{ BrokenLOF, OutOfRange, OutOfLOS };
-
-        pub const COLOR_Y = colors.percentageOf(colors.LIGHT_STEEL_BLUE, 40);
-        pub const COLOR_N = colors.percentageOf(colors.PALE_VIOLET_RED, 40);
 
         pub fn func(self: Targeter) Func {
             return switch (self) {
                 .Single => struct {
-                    pub fn f(_: Targeter, _: bool, force_error: bool, coord: Coord, buf: *Result.AList) Error!void {
-                        const bg = if (force_error) COLOR_N else COLOR_Y;
-                        buf.append(.{ .coord = coord, .color = bg }) catch err.wat();
+                    pub fn f(_: Targeter, _: bool, coord: Coord, buf: *Result.AList) Error!void {
+                        buf.append(.{ .coord = coord, .color = 100 }) catch err.wat();
                     }
                 }.f,
                 .Trajectory => struct {
-                    pub fn f(_: Targeter, require_seen: bool, force_error: bool, coord: Coord, buf: *Result.AList) Error!void {
+                    pub fn f(_: Targeter, require_seen: bool, coord: Coord, buf: *Result.AList) Error!void {
                         const trajectory = state.player.coord.drawLine(coord, state.mapgeometry, 0);
 
                         const trajectory_is_unseen = if (require_seen) for (trajectory.constSlice()) |c| {
                             if (!state.player.cansee(c)) break true;
                         } else false else false;
                         const has_lof = utils.hasClearLOF(state.player.coord, coord);
-                        const bg = if (force_error or !has_lof or !trajectory_is_unseen) COLOR_N else COLOR_Y;
 
-                        buf.append(.{ .coord = state.player.coord, .color = bg }) catch err.wat();
-                        buf.append(.{ .coord = coord, .color = bg }) catch err.wat();
+                        buf.append(.{ .coord = state.player.coord, .color = 100 }) catch err.wat();
+                        buf.append(.{ .coord = coord, .color = 100 }) catch err.wat();
 
                         for (trajectory.constSlice()) |traj_c| {
                             if (state.player.coord.eq(traj_c)) continue;
                             if (coord.eq(traj_c)) break;
 
-                            buf.append(.{ .coord = traj_c, .color = bg }) catch err.wat();
+                            buf.append(.{ .coord = traj_c, .color = 100 }) catch err.wat();
                         }
 
-                        if (!has_lof) {
+                        if (!has_lof or trajectory_is_unseen) {
                             return error.BrokenLOF;
                         }
                     }
                 }.f,
                 .AoE1 => struct {
-                    pub fn f(targeter: Targeter, _: bool, force_error: bool, coord: Coord, buf: *Result.AList) Error!void {
-                        const bg = if (force_error) COLOR_N else COLOR_Y;
-
+                    pub fn f(targeter: Targeter, _: bool, coord: Coord, buf: *Result.AList) Error!void {
                         // First do the squares that the player can see
                         {
                             var dijk = dijkstra.Dijkstra.init(coord, state.mapgeometry, targeter.AoE1.dist, state.is_walkable, targeter.AoE1.opts, state.GPA.allocator());
@@ -1653,7 +1647,8 @@ pub const ChooseCellOpts = struct {
 
                             while (dijk.next()) |child| if (state.player.cansee(child)) {
                                 const percent = 100 - (child.distance(coord) * 100 / (targeter.AoE1.dist * 3 / 2));
-                                buf.append(.{ .coord = child, .color = colors.percentageOf(bg, percent) }) catch err.wat();
+                                // const percent = if (child.eq(coord)) @as(usize, 100) else 30;
+                                buf.append(.{ .coord = child, .color = percent }) catch err.wat();
                             };
                         }
 
@@ -1668,9 +1663,21 @@ pub const ChooseCellOpts = struct {
                             defer dijk.deinit();
 
                             while (dijk.next()) |child| if (!state.player.cansee(child)) {
-                                buf.append(.{ .coord = child, .color = colors.percentageOf(bg, 30), .ch = '?' }) catch err.wat();
+                                buf.append(.{ .coord = child, .color = 30, .ch = '?' }) catch err.wat();
                             };
                         }
+                    }
+                }.f,
+                .Duo => struct {
+                    pub fn f(targeter: Targeter, require_seen: bool, coord: Coord, buf: *Result.AList) Error!void {
+                        var terror: ?Error = null;
+                        (targeter.Duo[0].*.func())(targeter.Duo[0].*, require_seen, coord, buf) catch |e| {
+                            terror = e;
+                        };
+                        (targeter.Duo[1].*.func())(targeter.Duo[1].*, require_seen, coord, buf) catch |e| {
+                            terror = e;
+                        };
+                        return if (terror) |e| e else {};
                     }
                 }.f,
             };
@@ -1679,6 +1686,9 @@ pub const ChooseCellOpts = struct {
 };
 
 pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
+    const COLOR_Y = colors.percentageOf(colors.LIGHT_STEEL_BLUE, 40);
+    const COLOR_N = colors.percentageOf(colors.PALE_VIOLET_RED, 40);
+
     var coord: Coord = state.player.coord;
     var coords = ChooseCellOpts.Targeter.Result.AList.init(state.GPA.allocator());
     var terror: ?ChooseCellOpts.Targeter.Error = null;
@@ -1709,14 +1719,18 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
             terror = error.OutOfRange;
         }
 
+        const color = if (terror != null) COLOR_N else COLOR_Y;
+
         coords.clearAndFree();
-        (opts.targeter.func())(opts.targeter, opts.require_seen, terror != null, coord, &coords) catch |e| {
+        (opts.targeter.func())(opts.targeter, opts.require_seen, coord, &coords) catch |e| {
             terror = e;
         };
         for (coords.items) |item| {
             const ditemc = coordToScreenFromRefpoint(item.coord, refpoint) orelse continue;
             const old = map_win.map.getCell(ditemc.x, ditemc.y);
-            map_win.annotations.setCell(ditemc.x, ditemc.y, .{ .ch = item.ch orelse old.ch, .fg = old.fg, .bg = item.color, .fl = .{ .wide = true } });
+            const item_color = colors.percentageOf(color, item.color);
+            const ch = item.ch orelse old.ch;
+            map_win.annotations.setCell(ditemc.x, ditemc.y, .{ .ch = ch, .fg = old.fg, .bg = item_color, .fl = .{ .wide = true } });
         }
 
         map_win.map.renderFullyW(.Main);

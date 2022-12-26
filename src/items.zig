@@ -464,13 +464,12 @@ pub const SymbolEvoc = Evocable{
             const DIST = 7;
             const OPTS = .{ .ignore_mobs = true, .only_if_breaks_lof = true, .right_now = true };
 
-            // TODO:
-            // - fix targeting to require LOF
-            // - fix effects
-
             const dest = ui.chooseCell(.{
                 .require_seen = true,
-                .targeter = .{ .AoE1 = .{ .dist = DIST, .opts = OPTS } },
+                .targeter = .{ .Duo = [2]*const ui.ChooseCellOpts.Targeter{
+                    &.{ .AoE1 = .{ .dist = DIST, .opts = OPTS } },
+                    &.{ .Trajectory = {} },
+                } },
             }) orelse return error.BadPosition;
 
             state.message(.SpellCast, "You raise the $oSymbol of Torment$.!", .{});
