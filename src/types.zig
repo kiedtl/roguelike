@@ -2050,24 +2050,25 @@ pub const Mob = struct { // {{{
         }
 
         // Corruption effects
-        if (self.life_type == .Living and self.isUnderStatus(.Corruption) == null) {
-            var found_undead = false;
-            for (&DIRECTIONS) |d| if (self.coord.move(d, state.mapgeometry)) |neighbor| {
-                if (state.dungeon.at(neighbor).mob) |mob|
-                    if (mob.life_type == .Undead and mob.isHostileTo(self)) {
-                        self.corruption_ctr += 1;
-                        found_undead = true;
-                        if (self.corruption_ctr >= self.stat(.Willpower)) {
-                            if (state.player.cansee(self.coord)) {
-                                state.message(.Combat, "{c} corrupts {}!", .{ mob, self });
-                            }
-                            self.addStatus(.Corruption, 0, .{ .Tmp = 7 });
-                            ai.updateEnemyKnowledge(mob, self, null);
-                            break;
-                        }
-                    };
-            };
-            if (!found_undead) {
+        if (self.life_type == .Living and !self.hasStatus(.Corruption)) {
+            const adjacent_undead: ?*Mob = for (&DIRECTIONS) |d| {
+                if (utils.getHostileInDirection(self, d)) |hostile| {
+                    if (hostile.life_type == .Undead)
+                        break hostile;
+                } else |_| {}
+            } else null;
+
+            if (adjacent_undead) |hostile| {
+                self.corruption_ctr += 1;
+                if (self.corruption_ctr >= self.stat(.Willpower)) {
+                    if (state.player.cansee(self.coord)) {
+                        state.message(.Combat, "{c} corrupts {}!", .{ hostile, self });
+                    }
+                    self.addStatus(.Corruption, 0, .{ .Tmp = 7 });
+                    ai.updateEnemyKnowledge(hostile, self, null);
+                    self.corruption_ctr = 0;
+                }
+            } else {
                 self.corruption_ctr = 0;
             }
         }

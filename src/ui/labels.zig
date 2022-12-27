@@ -109,6 +109,9 @@ pub fn _setLabelWindowLocation(label: *MapLabel) !void {
 }
 
 pub fn drawLabels() void {
+    if (labels.items.len == 0)
+        return;
+
     defer last_player_position = state.player.coord;
 
     ui.map_win.annotations.clear();
