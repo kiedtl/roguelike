@@ -1055,9 +1055,10 @@ x Playtest game throughout, especially CAV and make adjustments
       x Writhing hulks
       x Swollen hulks
       x Thundering hulks
-  - Symbol of Torment
+  x Symbol of Torment
     x Effects
-    - Prefab + mapgen integration
+    x Description
+    x Prefab + mapgen integration
     x Animation
   x First map + specialized content
   x Second map + specialized content
