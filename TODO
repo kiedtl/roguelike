@@ -1039,30 +1039,35 @@ x Playtest game throughout, especially CAV and make adjustments
       x Side/"inset" rooms
       x Junctions
     x Remove dead corridors & such
-  - Candles
+  x Candles
     x Prefabs/encounters
-    - Animations
+    x Animations
     x Short-term effects
     x Long-term effects
-  - Hulkers
+  x Hulkers
     x Pathfinding
     x Melee + fighting
     x Animations
     x Corpses
     x UI: sidebar
     x Gravitate-to-player AI
-    - Individuals:
-      - Writhing hulks
+    x Individuals:
+      x Writhing hulks
       x Swollen hulks
       x Thundering hulks
   - Symbol of Torment
-    - Prefab
-    - Animation
-    - Effects
+    x Effects
+    - Prefab + mapgen integration
+    x Animation
   x First map + specialized content
   x Second map + specialized content
   x Prefab stairs to SIN
   - Revenge squad events in following maps (maybe postpone for later?)
+- Potion of distraction
+  - Effect
+  - Description
+  - AI modification to revert to investigating on hearing a loud sound
+  - Animation
 x Animations (w/ particle engine)
   x Paralysing zap
   x Fire bolts
