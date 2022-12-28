@@ -1690,9 +1690,10 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
     const COLOR_Y = colors.percentageOf(colors.LIGHT_STEEL_BLUE, 40);
     const COLOR_N = colors.percentageOf(colors.PALE_VIOLET_RED, 40);
 
+    var terror: ?ChooseCellOpts.Targeter.Error = null;
     var coord: Coord = state.player.coord;
     var coords = ChooseCellOpts.Targeter.Result.AList.init(state.GPA.allocator());
-    var terror: ?ChooseCellOpts.Targeter.Error = null;
+    defer coords.deinit();
 
     map_win.annotations.clear();
 
@@ -3109,6 +3110,7 @@ pub const Animation = union(enum) {
         coord: Coord,
         target: union(enum) {
             C: Coord,
+            L: []const Coord,
             I: isize,
             Z: usize,
         },
@@ -3311,18 +3313,28 @@ pub const Animation = union(enum) {
                 }
             },
             .Particle => |anim| {
-                const target = switch (anim.target) {
-                    .C => |c| c,
-                    .I => |n| Coord.new(anim.coord.x, anim.coord.y + @intCast(usize, n)),
-                    .Z => |n| Coord.new(anim.coord.x, anim.coord.y + n),
-                };
-                var ctx = janet.callFunction("animation-init", .{
-                    anim.coord.x,                        anim.coord.y,
-                    target.x,                            target.y,
-                    state.player.coord.x -| MAP_WIDTH_R, state.player.coord.y -| MAP_HEIGHT_R,
-                    MAP_WIDTH_R * 2,                     MAP_HEIGHT_R * 2,
-                    anim.name,
-                }) catch err.wat();
+                var ctx: janet.c.Janet = undefined;
+                if (anim.target == .L) {
+                    ctx = janet.callFunction("animation-init", .{
+                        anim.coord,                          anim.target.L,
+                        state.player.coord.x -| MAP_WIDTH_R, state.player.coord.y -| MAP_HEIGHT_R,
+                        MAP_WIDTH_R * 2,                     MAP_HEIGHT_R * 2,
+                        anim.name,
+                    }) catch err.wat();
+                } else {
+                    const target = switch (anim.target) {
+                        .C => |c| c,
+                        .I => |n| Coord.new(anim.coord.x, anim.coord.y + @intCast(usize, n)),
+                        .Z => |n| Coord.new(anim.coord.x, anim.coord.y + n),
+                        .L => unreachable,
+                    };
+                    ctx = janet.callFunction("animation-init", .{
+                        anim.coord,                          target,
+                        state.player.coord.x -| MAP_WIDTH_R, state.player.coord.y -| MAP_HEIGHT_R,
+                        MAP_WIDTH_R * 2,                     MAP_HEIGHT_R * 2,
+                        anim.name,
+                    }) catch err.wat();
+                }
 
                 const WAIT_PERIOD = 50_000_000;
 

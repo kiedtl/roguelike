@@ -320,6 +320,8 @@
                                    (default inverse false)
                                    (var factor
                                      (case (how 0)
+                                       :custom
+                                           ((how 1) self ticks ctx)
                                        :sine-custom # (:sine (fn [self ticks ctx] ...))
                                            (/ (+ (math/sin (deg-to-rad ((how 1) self ticks ctx))) 1) 2)
                                        :completed-lifetime # (:completed-lifetime factor)
@@ -398,8 +400,9 @@
                              (do
                                (var new (deepclone (self :particle)))
                                (let [[coord target]
-                                    (:get-spawn-params self ticks ctx
-                                                       ((self :particle) :coord) ((self :particle) :target))]
+                                    (:get-spawn-params self ticks ctx (ctx :initial) (ctx :target))]
+                                 (if (or (not coord) (not target))
+                                   (break))
                                  # Just gonna vent my frustrations here: Janet,
                                  # why the FUCK do you have to do a
                                  # copy-by-pointer when assigning a new
@@ -485,9 +488,11 @@
                :bounds (new-rect)
                :particles @[]
                :emitters @[]
+               :initial nil
+               :target nil
                })
-(defn new-context [target area-size emitters]
-  (table/setproto @{ :bounds area-size :target target :emitters emitters } Context))
+(defn new-context [target area-size emitters initial target]
+  (table/setproto @{ :bounds area-size :target target :emitters emitters :initial initial :target target} Context))
 
 (defn template-chargeover [chars color1 color2 &named direction speed lifetime which maxdist mindist style stopshort]
   (default direction                          :out)
@@ -1069,23 +1074,42 @@
      })
   ]
   "explosion-torment" @[
-    (new-emitter-from @{ :birth-delay 10 }
-      (template-explosion :embers? false :die-out? false :speed-variation-preset :2 :color2 0xaa8700 :color1 0x000088 :require-los 0))
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch " " :fg 0 :bg 0x0a0a90 :bg-mix 0.8 })
+        :speed 0 :require-los 0
+        :triggers @[
+          [[:COND-true] [:TRIG-reset-lifetime-once (fn [&] (random-choose [18 19 21 22])) 0]]
+          [[:COND-true]
+           [:TRIG-lerp-color :bg 0xaa8700 "rgb"
+            [:custom (fn [self ticks ctx]
+                       (def dist (:distance (self :coord) (ctx :initial)))
+                       (min 1 (/ (* dist ticks) 150)))
+             :inverse]]]
+        ]
+      })
+      :lifetime 5
+      :spawn-count (fn [self ticks ctx &] (/ (length (ctx :target)) 5))
+      :get-spawn-params (fn [self ticks ctx coord target]
+                          (if (>= (self :total-spawned) (length target))
+                            (break [nil nil]))
+                          [(target (self :total-spawned)) coord])
+      })
   ]
+  "test" @[]
 })
 
-(defn animation-init [initialx initialy targetx targety boundsx boundsy bounds-width bounds-height emitters-set]
-  (def initial (new-coord initialx initialy))
-  (def target (new-coord targetx targety))
+(defn animation-init [initial target boundsx boundsy bounds-width bounds-height emitters-set]
   (def area-size (new-rect (new-coord boundsx boundsy) bounds-width bounds-height))
   (def emitters (deepclone (emitters-table emitters-set)))
 
-  # set targets for emitter particles
   (each emitter emitters
-    (put (emitter :particle) :coord initial)
-    (put (emitter :particle) :target target))
+    (if (and (initial :x) (initial :y))
+      (put (emitter :particle) :coord initial))
+    (if (and (= (type target) :table) (target :x) (target :y))
+      (put (emitter :particle) :target target)))
 
-  (new-context target area-size emitters))
+  (new-context target area-size emitters initial target))
 
 (defn animation-tick [ctx ticks]
 

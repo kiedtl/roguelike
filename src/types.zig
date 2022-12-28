@@ -250,6 +250,8 @@ pub const Coord = struct { // {{{
 
     const Self = @This();
 
+    pub const __JANET_PROTOTYPE = "Coord";
+
     pub inline fn new2(level: usize, x: usize, y: usize) Coord {
         return .{ .z = level, .x = x, .y = y };
     }

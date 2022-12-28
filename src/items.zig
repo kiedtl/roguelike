@@ -472,21 +472,28 @@ pub const SymbolEvoc = Evocable{
                 } },
             }) orelse return error.BadPosition;
 
-            state.message(.SpellCast, "You raise the $oSymbol of Torment$.!", .{});
-
-            ui.Animation.apply(.{ .Particle = .{ .name = "zap-torment", .coord = state.player.coord, .target = .{ .C = dest } } });
-            ui.Animation.apply(.{ .Particle = .{ .name = "explosion-torment", .coord = dest, .target = .{ .Z = DIST } } });
+            var coordlist = types.CoordArrayList.init(state.GPA.allocator());
+            defer coordlist.deinit();
 
             var dijk = dijkstra.Dijkstra.init(dest, state.mapgeometry, DIST, state.is_walkable, OPTS, state.GPA.allocator());
             defer dijk.deinit();
 
-            while (dijk.next()) |child| if (state.dungeon.at(child).mob) |mob| {
-                if (mob != state.player and mob.life_type == .Living) {
-                    assert(mob.corpse == .Normal);
-                    mob.kill();
-                    _ = mob.raiseAsUndead(mob.coord);
-                }
-            };
+            while (dijk.next()) |child|
+                coordlist.append(child) catch err.wat();
+
+            state.message(.SpellCast, "You raise the $oSymbol of Torment$.!", .{});
+
+            ui.Animation.apply(.{ .Particle = .{ .name = "zap-torment", .coord = state.player.coord, .target = .{ .C = dest } } });
+            ui.Animation.apply(.{ .Particle = .{ .name = "explosion-torment", .coord = dest, .target = .{ .L = coordlist.items } } });
+
+            for (coordlist.items) |coord|
+                if (state.dungeon.at(coord).mob) |mob| {
+                    if (mob != state.player and mob.life_type == .Living) {
+                        assert(mob.corpse == .Normal);
+                        mob.kill();
+                        _ = mob.raiseAsUndead(mob.coord);
+                    }
+                };
         }
     }.f,
 };
