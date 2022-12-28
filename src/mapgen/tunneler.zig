@@ -149,6 +149,7 @@ pub const Ctx = struct {
             }
 
             if (prefab) |fab| {
+                room.prefab = fab;
                 mapgen.excavatePrefab(&room, fab, state.GPA.allocator(), 0, 0);
                 fab.incrementRecord(level);
             } else {

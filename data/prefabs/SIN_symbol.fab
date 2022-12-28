@@ -1,0 +1,40 @@
+% TODO: add east/west versions. Too lazy to do that right now.
+
+:g_tunneler
+:g_global_restriction 1
+:nolights
+:notraps
+:noguards
+:noitems
+
+:tunneler_inset
+:tunneler_orientation south
+@a p gold_c_wall_block
+@b p gold_c_wall_lower
+@c p gold_c_wall_upper
+@d p gold_c_wall_left
+@e p gold_c_wall_right
+@f p gold_c_wall_full
+@g p gold_c_wall_pltfrm
+@0 i evoc_symbol
+ab...ba
+dae0dae
+daebdae
+gcafacg
+
+\
+
+:tunneler_inset
+:tunneler_orientation north
+@a p gold_c_wall_block
+@b p gold_c_wall_lower
+@c p gold_c_wall_upper
+@d p gold_c_wall_left
+@e p gold_c_wall_right
+@f p gold_c_wall_full
+@g p gold_c_wall_pltfrm
+@0 i evoc_symbol
+gbafabg
+daecdae
+dae0dae
+ac...ca

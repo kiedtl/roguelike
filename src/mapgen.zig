@@ -427,7 +427,7 @@ pub fn placePlayer(coord: Coord, alloc: mem.Allocator) void {
     state.player.squad.?.leader = state.player;
 
     //state.player.inventory.pack.append(Item{ .Consumable = &items.DecimatePotion }) catch err.wat();
-    //state.player.inventory.pack.append(Item{ .Evocable = items.createItem(Evocable, items.BrazierWandEvoc) }) catch err.wat();
+    //state.player.inventory.pack.append(Item{ .Evocable = items.createItem(Evocable, items.SymbolEvoc) }) catch err.wat();
     //state.player.inventory.pack.append(Item{ .Aux = &items.DetectHeatAux }) catch err.wat();
     //state.player.inventory.pack.append(Item{ .Aux = &items.DetectElecAux }) catch err.wat();
 

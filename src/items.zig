@@ -168,6 +168,10 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 20, .i = .{ .C = &VelvetCloak } },
     .{ .w = 10, .i = .{ .C = &ThornyCloak } },
 };
+pub const ALL_ITEMS = [_]ItemTemplate{
+    .{ .w = 0, .i = .{ .List = &ITEM_DROPS } },
+    .{ .w = 0, .i = .{ .E = SymbolEvoc } },
+};
 
 pub const RINGS = [_]Ring{
     LightningRing,
@@ -2300,5 +2304,5 @@ pub fn findItemById(p_id: []const u8) ?*const ItemTemplate {
             } else null;
         }
     };
-    return (_helper.f)(p_id, &ITEM_DROPS);
+    return (_helper.f)(p_id, &ALL_ITEMS);
 }
