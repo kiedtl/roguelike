@@ -14,6 +14,7 @@ const rng = @import("rng.zig");
 const janet = @import("janet.zig");
 const player = @import("player.zig");
 const font = @import("font.zig");
+const events = @import("events.zig");
 const literature = @import("literature.zig");
 const explosions = @import("explosions.zig");
 const tasks = @import("tasks.zig");
@@ -149,6 +150,7 @@ fn initGame() bool {
     janet.init() catch return false;
     _ = janet.loadFile("scripts/particles.janet", state.GPA.allocator()) catch return false;
 
+    events.init();
     font.loadFontsData();
     state.loadLevelInfo();
     surfaces.readProps(state.GPA.allocator());
@@ -177,6 +179,7 @@ fn initLevels() bool {
     defer loading_screen.deinit();
 
     mapgen.readPrefabs(state.GPA.allocator());
+    events.executeGlobalEvents();
 
     var level: usize = 0;
     var tries: usize = 0;
@@ -305,6 +308,7 @@ fn deinitGame() void {
         poster.deinit(state.GPA.allocator());
     literature.posters.deinit();
 
+    events.deinit();
     janet.deinit();
     font.freeFontData();
     state.freeLevelInfo();
