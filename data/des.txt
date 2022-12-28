@@ -136,6 +136,10 @@ This wand can fire a beam of electricity at a light source, disabling it.
 % evoc_flamethrower
 This device can spray a fountain of sparks at a nearby tile, igniting it.
 
+% evoc_symbol
+A plain staff carved of some light-colored wood, but unnaturally heavy.
+A maddening low-pitched hum emanates from the center when you lift it.
+
 % eldritch_lantern
 A very strange device, found in abundance in this place when the hill-goblins
 overran it. What use the cave-goblins might have had for it is a mystery.
