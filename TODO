@@ -1063,12 +1063,12 @@ x Shrine maps
   x First map + specialized content
   x Second map + specialized content
   x Prefab stairs to SIN
-  - Revenge squad events in following maps (maybe postpone for later?)
-- Potion of distraction
-  - Effect
-  - Description
-  - AI modification to revert to investigating on hearing a loud sound
-  - Animation
+  - Revenge squad events in following maps (maybe postpone for later?) (POSTPONED)
+x Potion of distraction
+  x Effect
+  x Description
+  ~ AI modification to revert to investigating on hearing a loud sound
+  x Animation
 x Animations (w/ particle engine)
   x Paralysing zap
   x Fire bolts
@@ -1093,6 +1093,8 @@ x Animations (w/ particle engine)
   - Demolisher specialists
   - Rings
     - ring of infestation
+    - ring of conjuration
+    - ring of perforation
     - ring: insanity status
     - ring: aura:para status
   - Night-creature-themed items
@@ -1106,10 +1108,9 @@ x Animations (w/ particle engine)
     - Animation (need particle engine)
 - UI
   x Menu to invoke patterns (via SPACE)
-  - Map dynamic popups/annotations
-    - Label: usage of special abilities
-    - Label: aquirement/disaquirement of a status effect
-    - Label: new items or dungeon features in view
+  x Map dynamic popups/annotations
+    x Label: aquirement/disaquirement of a status effect
+    x Label: new items or dungeon features in view
   - Escape menu
     - List of visited/unvisited floors
     - Status/mob/item description lookup screen
