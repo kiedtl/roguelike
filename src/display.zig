@@ -246,7 +246,7 @@ pub fn init(preferred_width: usize, preferred_height: usize) InitErr!void {
                 return error.SDL2InitError;
 
             // TODO: get rid of this
-            const SCALE = 2;
+            const SCALE = 1.5;
 
             // SDL2 has scaling issues on Windows when using HiDPI displays.
             //
@@ -264,8 +264,8 @@ pub fn init(preferred_width: usize, preferred_height: usize) InitErr!void {
                 "Oathbreaker", // TODO: move to const
                 driver_m.SDL_WINDOWPOS_CENTERED,
                 driver_m.SDL_WINDOWPOS_CENTERED,
-                @intCast(c_int, preferred_width * font.FONT_WIDTH * SCALE),
-                @intCast(c_int, preferred_height * font.FONT_HEIGHT * SCALE),
+                @floatToInt(c_int, @intToFloat(f64, preferred_width * font.FONT_WIDTH) * SCALE),
+                @floatToInt(c_int, @intToFloat(f64, preferred_height * font.FONT_HEIGHT) * SCALE),
                 driver_m.SDL_WINDOW_SHOWN,
             );
             if (window == null)
@@ -300,8 +300,8 @@ pub fn init(preferred_width: usize, preferred_height: usize) InitErr!void {
             if (r < 0) {
                 return error.SDL2GetDimensionsError;
             }
-            w_width = @intCast(usize, w) / font.FONT_WIDTH / SCALE;
-            w_height = @intCast(usize, h) / font.FONT_HEIGHT / SCALE;
+            w_width = preferred_width;
+            w_height = preferred_height;
         },
     }
 }

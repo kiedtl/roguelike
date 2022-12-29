@@ -52,12 +52,12 @@ pub const labels = @import("ui/labels.zig");
 
 pub const FRAMERATE = 1000 / 30;
 
-pub const LEFT_INFO_WIDTH: usize = 30;
+pub const LEFT_INFO_WIDTH: usize = 35;
 //pub const RIGHT_INFO_WIDTH: usize = 24;
 pub const LOG_HEIGHT = 6;
-pub const ZAP_HEIGHT = 14 + 4;
-pub const MAP_HEIGHT_R = 10;
-pub const MAP_WIDTH_R = 14;
+pub const ZAP_HEIGHT = 15 + 4;
+pub const MAP_HEIGHT_R = 15;
+pub const MAP_WIDTH_R = 20;
 
 pub const MIN_HEIGHT = (MAP_HEIGHT_R * 2) + LOG_HEIGHT + 2;
 pub const MIN_WIDTH = (MAP_WIDTH_R * 4) + LEFT_INFO_WIDTH + 2 + 1;
