@@ -267,7 +267,9 @@
                                     :function (put self :speed (new-speed self ticks ctx))))
                 :TRIG-scramble-glyph (fn [self ticks ctx chars &]
                                        (def new-char (random-choose chars))
-                                       (put (self :tile) :ch (string/from-bytes new-char)))
+                                       (case (type chars)
+                                         :string (put (self :tile) :ch (string/from-bytes new-char))
+                                         :tuple  (put (self :tile) :ch new-char)))
                 :TRIG-set-glyph (fn [self ticks ctx how]
                                   (def new
                                     (case (how 0)
@@ -1012,13 +1014,14 @@
       :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
     })
   ]
-  "chargeover-electric"     @[ (template-chargeover SYMB1_CHARS ELEC_BLUE1 0x453555 :direction :in :speed 0.5 :lifetime 12) ]
-  "chargeover-orange-red"   @[ (template-chargeover SYMB1_CHARS   0xff4500 0x440000 :direction :in :speed 0.5 :lifetime 12 :style :nobg) ]
-  "chargeover-white-pink"   @[ (template-chargeover SYMB1_CHARS   0xffffff 0x440000 :direction :in :speed 0.5 :lifetime 12) ]
-  "chargeover-blue-pink"    @[ (template-chargeover SYMB1_CHARS   0x4488aa 0x440000 :direction :in :speed 0.5 :lifetime 12) ]
-  "chargeover-purple-green" @[ (template-chargeover SYMB1_CHARS   0x995599 0x33ff33 :direction :in :speed 0.5 :lifetime 12) ]
-  "chargeover-lines"        @[ (template-chargeover   "|_-=\\/"   0xcacbca 0xffffff                :speed 0.3             ) ]
+  "chargeover-electric"     @[ (template-chargeover SYMB1_CHARS ELEC_BLUE1 0x453555 :direction :in  :speed 0.5 :lifetime 12) ]
+  "chargeover-orange-red"   @[ (template-chargeover SYMB1_CHARS   0xff4500 0x440000 :direction :in  :speed 0.5 :lifetime 12 :style :nobg) ]
+  "chargeover-white-pink"   @[ (template-chargeover SYMB1_CHARS   0xffffff 0x440000 :direction :in  :speed 0.5 :lifetime 12) ]
+  "chargeover-blue-pink"    @[ (template-chargeover SYMB1_CHARS   0x4488aa 0x440000 :direction :in  :speed 0.5 :lifetime 12) ]
+  "chargeover-purple-green" @[ (template-chargeover SYMB1_CHARS   0x995599 0x33ff33 :direction :in  :speed 0.5 :lifetime 12) ]
+  "chargeover-lines"        @[ (template-chargeover   "|_-=\\/"   0xcacbca 0xffffff                 :speed 0.3             ) ]
   "chargeover-blue-out"     @[ (template-chargeover SYMB1_CHARS   0x11ddff 0x001e85 :direction :out :speed 0.5 :lifetime 12) ]
+  "chargeover-noise"        @[ (template-chargeover ["♫" "♩"]     0x00d610 0x00d610 :direction :out :speed 0.5 :lifetime  4 :style :nobg :maxdist 2) ]
   "beams-ring-amnesia" @[
     (new-emitter @{
       :particle (new-particle @{

@@ -1941,6 +1941,7 @@ pub const DecimatePotion = Consumable{
 
 fn triggerDistractPotion(_: ?*Mob, coord: Coord) void {
     sound.makeNoise(coord, .Explosion, .Medium);
+    ui.Animation.apply(.{ .Particle = .{ .name = "chargeover-noise", .coord = coord, .target = .{ .C = coord } } });
 }
 
 fn triggerIncineratePotion(_: ?*Mob, coord: Coord) void {
