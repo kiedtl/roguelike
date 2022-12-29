@@ -18,6 +18,7 @@ const ui = @import("ui.zig");
 const rng = @import("rng.zig");
 const mobs = @import("mobs.zig");
 const state = @import("state.zig");
+const sound = @import("sound.zig");
 const surfaces = @import("surfaces.zig");
 const types = @import("types.zig");
 const ringbuffer = @import("ringbuffer.zig");
@@ -136,6 +137,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 190, .i = .{ .P = &DisorientPotion } },
     .{ .w = 190, .i = .{ .P = &DebilitatePotion } },
     .{ .w = 190, .i = .{ .P = &IntimidatePotion } },
+    .{ .w = 160, .i = .{ .P = &DistractPotion } },
     .{ .w = 160, .i = .{ .P = &BlindPotion } },
     .{ .w = 160, .i = .{ .P = &GlowPotion } },
     .{ .w = 160, .i = .{ .P = &SmokePotion } },
@@ -1783,6 +1785,17 @@ pub const MineKit = Consumable{
     .verbs_other = Consumable.VERBS_OTHER_KIT,
 };
 
+pub const DistractPotion = Consumable{
+    .id = "potion_distract",
+    .name = "potion of distraction",
+    .effects = &[_]Consumable.Effect{.{ .Custom = triggerDistractPotion }},
+    .is_potion = true,
+    .color = 0xffd700,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+    .throwable = true,
+};
+
 pub const DebilitatePotion = Consumable{
     .id = "potion_debilitate",
     .name = "potion of debilitation",
@@ -1925,6 +1938,10 @@ pub const DecimatePotion = Consumable{
 };
 
 // Potion effects {{{
+
+fn triggerDistractPotion(_: ?*Mob, coord: Coord) void {
+    sound.makeNoise(coord, .Explosion, .Medium);
+}
 
 fn triggerIncineratePotion(_: ?*Mob, coord: Coord) void {
     explosions.fireBurst(coord, 4, .{});
