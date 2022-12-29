@@ -172,6 +172,10 @@ electrocute.
 A particularly sadistic death mage. His features are perpetually twisted into a
 leer of cruel contempt.
 
+% potion_distract
+The fizzy liquid within this vial will explode into scalding vapor when exposed
+to air. Can be thrown to distract guards.
+
 % potion_debilitate
 Releases a cloud of vile smelling gas, causing minor seizures in victims and
 impeding effective combat.
