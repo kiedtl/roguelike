@@ -1337,9 +1337,8 @@ pub const SparkMageTemplate = MobTemplate{
         },
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 6, .spell = &spells.CAST_CREATE_SPARKLING },
-            // About five turn's delay until next cast (power<3> - MP_cost<8> = 5)
-            .{ .MP_cost = 8, .spell = &spells.BOLT_PARALYSE, .power = 1 },
+            .{ .MP_cost = 20, .spell = &spells.CAST_CREATE_SPARKLING },
+            .{ .MP_cost = 15, .spell = &spells.BOLT_PARALYSE, .power = 2 },
         },
         .max_MP = 10,
 
@@ -1352,7 +1351,7 @@ pub const SparkMageTemplate = MobTemplate{
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
-            .{ .mob = "sparkling", .weight = 1, .count = minmax(usize, 2, 3) },
+            .{ .mob = "sparkling", .weight = 1, .count = minmax(usize, 1, 1) },
         },
     },
 };
@@ -1372,9 +1371,9 @@ pub const LightningMageTemplate = MobTemplate{
         },
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 6, .spell = &spells.CAST_CREATE_SPARKLING },
-            .{ .MP_cost = 10, .spell = &spells.BOLT_PARALYSE, .power = 2 },
-            .{ .MP_cost = 3, .spell = &spells.CAST_DISCHARGE },
+            .{ .MP_cost = 12, .spell = &spells.CAST_CREATE_SPARKLING },
+            .{ .MP_cost = 8, .spell = &spells.BOLT_PARALYSE, .power = 3 },
+            .{ .MP_cost = 6, .spell = &spells.CAST_DISCHARGE },
         },
         .max_MP = 15,
 
@@ -1388,7 +1387,7 @@ pub const LightningMageTemplate = MobTemplate{
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
-            .{ .mob = "sparkling", .weight = 1, .count = minmax(usize, 2, 4) },
+            .{ .mob = "sparkling", .weight = 1, .count = minmax(usize, 2, 3) },
         },
     },
 };
@@ -1642,7 +1641,7 @@ pub const SparklingTemplate = MobTemplate{
         .life_type = .Construct,
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 14, .spell = &spells.BOLT_BLINKBOLT, .power = 2 },
+            .{ .MP_cost = 2, .spell = &spells.BOLT_BLINKBOLT, .power = 1 },
         },
         .max_MP = 14,
 

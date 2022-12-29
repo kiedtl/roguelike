@@ -47,9 +47,9 @@
 # easier mobs, intended for early game
 # TODO: spark mage should be mid-game due to `paralysing zap` spell?
 "bone_rat"            	 - 	  15 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	   -
-"bone_mage"           	 - 	  15 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	   -
 "ember_mage"          	 - 	  15 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	   -
-"spark_mage"          	 - 	  15 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	   -
+"bone_mage"           	 - 	   - 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	   -
+"spark_mage"          	 - 	   - 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	   -
 
 # medium-difficulty monsters, early-middle game
 "recruit"             	 - 	   - 	   - 	   - 	   - 	  10 	  15 	  15 	   - 	   - 	   - 	  15 	   - 	   - 	   - 	   - 	   - 	   -
