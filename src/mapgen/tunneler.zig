@@ -163,6 +163,14 @@ pub const Ctx = struct {
 
             state.rooms[level].append(room) catch err.wat();
 
+            if (prefab == null and rng.percent(Configs[level].subroom_chance)) {
+                mapgen.placeSubroom(&room, &Rect{
+                    .start = Coord.new(0, 0),
+                    .width = room.rect.width,
+                    .height = room.rect.height,
+                }, state.GPA.allocator(), .{});
+            }
+
             roomie.parent.child_rooms += 1;
             roomie.parent.roomie_last_born_at = math.max(roomie.parent.roomie_last_born_at, roomie.born_at);
             _ = self.roomies.swapRemove(i);
@@ -233,8 +241,12 @@ pub const Ctx = struct {
             while (tunnelers.next()) |tunneler| {
                 if (!tunneler.is_eviscerated and tunneler.isChildless(require_dead)) {
                     mapgen.fillRect(&tunneler.rect, .Wall);
+                    tunneler.rect.height = 0;
+                    tunneler.rect.width = 0;
                     for (tunneler.child_corridors.constSlice()) |child| {
                         mapgen.fillRect(&child.rect, .Wall);
+                        child.rect.height = 0;
+                        child.rect.width = 0;
                         child.is_eviscerated = true;
                     }
                     tunneler.is_eviscerated = true;
@@ -347,6 +359,7 @@ pub const Tunneler = struct {
     direction: Direction,
     is_dead: bool = false,
     is_eviscerated: bool = false,
+    is_intersected: bool = false,
     child_corridors: StackBuffer(*Tunneler, 128) = StackBuffer(*Tunneler, 128).init(null),
     child_rooms: usize = 0,
     roomie_last_born_at: usize = 0,
@@ -466,9 +479,12 @@ pub const Tunneler = struct {
         return true;
     }
 
-    pub fn canAdvance(self: *const Self, ctx: *Ctx) bool {
+    pub const CanIntersect = enum { No, Yes, YesIntersect };
+    pub fn canAdvance(self: *const Self, ctx: *Ctx) CanIntersect {
         if (self.rect.overflowsLimit(&LIMIT))
-            return false;
+            return .No;
+
+        var yes: CanIntersect = .Yes;
 
         if (self.direction == .East or self.direction == .West) {
             assert(self.rect.height > 0);
@@ -478,24 +494,27 @@ pub const Tunneler = struct {
                 const newedge = Coord.new2(self.rect.start.z, edgex, self.rect.start.y + y);
                 if (newedge.move(self.direction, state.mapgeometry)) |advanced| {
                     if (state.dungeon.at(advanced).type != .Wall and !ctx.doesJunctionContain(self, advanced))
-                        return false;
+                        return .No;
                     if (advanced.move(self.direction, state.mapgeometry)) |advanced2| {
                         if (state.dungeon.at(advanced2).type != .Wall) {
                             const intersector = ctx.findIntersectingTunnel(advanced2.asRect(), null, null);
                             const intersect_is_ok =
                                 rng.percent(ctx.opts.intersect_chance) and
-                                intersector != null and (ctx.opts.intersect_with_childless or intersector.?.child_rooms > 0);
-                            if (!intersect_is_ok)
-                                return false;
+                                self.corridorLength() >= self.corridorWidth() and
+                                intersector != null and !intersector.?.isParallelTo(self) and
+                                (ctx.opts.intersect_with_childless or intersector.?.child_rooms > 0);
+                            if (!intersect_is_ok) {
+                                return .No;
+                            } else yes = .YesIntersect;
                         }
-                    } else return false;
-                } else return false;
+                    } else return .No;
+                } else return .No;
 
                 const edgex2 = if (self.direction == .East) self.rect.end().x else self.rect.start.x -| 1;
                 const sideedge1 = Coord.new2(self.rect.start.z, edgex2, self.rect.start.y -| 1);
                 const sideedge2 = Coord.new2(self.rect.start.z, edgex2, self.rect.end().y);
                 if (state.dungeon.at(sideedge1).type != .Wall or state.dungeon.at(sideedge2).type != .Wall) {
-                    return false;
+                    return .No;
                 }
             }
         } else if (self.direction == .North or self.direction == .South) {
@@ -506,28 +525,50 @@ pub const Tunneler = struct {
                 const newedge = Coord.new2(self.rect.start.z, self.rect.start.x + x, edgey);
                 if (newedge.move(self.direction, state.mapgeometry)) |advanced| {
                     if (state.dungeon.at(advanced).type != .Wall and !ctx.doesJunctionContain(self, advanced))
-                        return false;
+                        return .No;
                     if (advanced.move(self.direction, state.mapgeometry)) |advanced2| {
                         if (state.dungeon.at(advanced2).type != .Wall) {
                             const intersector = ctx.findIntersectingTunnel(advanced2.asRect(), null, null);
                             const intersect_is_ok =
                                 rng.percent(ctx.opts.intersect_chance) and
-                                intersector != null and (ctx.opts.intersect_with_childless or intersector.?.child_rooms > 0);
-                            if (!intersect_is_ok)
-                                return false;
+                                self.corridorLength() >= self.corridorWidth() and
+                                intersector != null and !intersector.?.isParallelTo(self) and
+                                (ctx.opts.intersect_with_childless or intersector.?.child_rooms > 0);
+                            if (!intersect_is_ok) {
+                                return .No;
+                            } else yes = .YesIntersect;
                         }
-                    } else return false;
-                } else return false;
+                    } else return .No;
+                } else return .No;
 
                 const edgey2 = if (self.direction == .South) self.rect.end().y else self.rect.start.y -| 1;
                 const sideedge1 = Coord.new2(self.rect.start.z, self.rect.start.x -| 1, edgey2);
                 const sideedge2 = Coord.new2(self.rect.start.z, self.rect.end().x, edgey2);
                 if (state.dungeon.at(sideedge1).type != .Wall or state.dungeon.at(sideedge2).type != .Wall) {
-                    return false;
+                    return .No;
                 }
             }
         } else unreachable;
-        return true;
+
+        if (self.corridorLength() > 0) {
+            var tunnelers = ctx.tunnelers.iterator();
+            while (tunnelers.next()) |tunneler| {
+                if (self == tunneler or tunneler.is_eviscerated or
+                    tunneler.corridorLength() == 0 or
+                    tunneler.rect.intersects(&self.rect, 1))
+                {
+                    continue;
+                }
+
+                if (self.isParallelTo(tunneler) and self.axisOverlaps(tunneler) and
+                    self.minimumDistanceBetween(tunneler) < ctx.opts.min_tunneler_distance)
+                {
+                    return .No;
+                }
+            }
+        }
+
+        return yes;
     }
 
     pub fn getPotentialChildren(self: *Self, ctx: *const Ctx) [2]Tunneler {
@@ -665,6 +706,40 @@ pub const Tunneler = struct {
             else => unreachable,
         };
     }
+
+    pub fn isParallelTo(self: *const Self, other: *const Self) bool {
+        return switch (self.direction) {
+            .North, .South => other.direction == .North or other.direction == .South,
+            .East, .West => other.direction == .East or other.direction == .West,
+            else => unreachable,
+        };
+    }
+
+    // Given two parallel tunnels, check if their length intersects in a single axis.
+    //
+    // (Not to be confused with checking if the tunnels intersect.)
+    //
+    pub fn axisOverlaps(self: *const Self, other: *const Self) bool {
+        assert(self.isParallelTo(other));
+
+        const a_begin = if (self.direction == .North or self.direction == .South) self.rect.start.y else self.rect.start.x;
+        const a_end = a_begin + self.corridorLength();
+        const b_begin = if (other.direction == .North or other.direction == .South) other.rect.start.y else other.rect.start.x;
+        const b_end = b_begin + other.corridorLength();
+
+        return math.max(a_begin, b_begin) <= math.min(a_end, b_end);
+    }
+
+    pub fn minimumDistanceBetween(self: *const Self, other: *const Self) usize {
+        assert(self.isParallelTo(other) and !self.rect.intersects(&other.rect, 1));
+
+        const a_begin = if (self.direction == .North or self.direction == .South) self.rect.start.x else self.rect.start.y;
+        const a_end = if (self.direction == .North or self.direction == .South) self.rect.end().x - 1 else self.rect.end().y - 1;
+        const b_begin = if (other.direction == .North or other.direction == .South) other.rect.start.x else other.rect.start.y;
+        const b_end = if (other.direction == .North or other.direction == .South) other.rect.end().x - 1 else other.rect.end().y - 1;
+
+        return if (b_begin < a_begin) a_begin - b_end else b_begin - a_end;
+    }
 };
 
 pub const TunnelerOptions = struct {
@@ -676,6 +751,8 @@ pub const TunnelerOptions = struct {
 
     // Maximum tunnel width. If the tunnel is this size, it won't grow farther.
     max_width: usize = 6,
+
+    min_tunneler_distance: usize = 10,
 
     // Chance (percentage) to change direction.
     turn_chance: usize = 0,
@@ -806,8 +883,11 @@ pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
                 continue;
             }
 
-            if (tunneler.canAdvance(&ctx)) {
+            const can = tunneler.canAdvance(&ctx);
+            if (can != .No) {
                 tunneler.advance();
+                if (can == .YesIntersect)
+                    tunneler.is_intersected = true;
                 is_any_active = true;
                 is_cur_gen_active = true;
             } else {
@@ -819,7 +899,7 @@ pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
             const twidth = tunneler.corridorWidth();
             for (children) |child| {
                 if (!tunneler.is_dead and tlength > twidth * 3 and
-                    child.canAdvance(&ctx) and
+                    child.canAdvance(&ctx) != .No and
                     (tlength > ctx.opts.max_length or rng.percent(ctx.opts.turn_chance)))
                 {
                     var new = child;
@@ -846,7 +926,10 @@ pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
         };
 
         for (new_tuns.items) |new_tun| {
-            if (new_tun.canAdvance(&ctx)) {
+            const can = new_tun.canAdvance(&ctx);
+            if (can != .No) {
+                assert(can != .YesIntersect);
+
                 is_any_active = true;
                 const new_tun_ptr = ctx.tunnelers.appendAndReturn(new_tun) catch err.wat();
                 new_tun.parent.?.child_corridors.append(new_tun_ptr) catch err.wat();
@@ -880,7 +963,7 @@ pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
     // Fill in corridors that stick out past their last branch
     var tunnelers = ctx.tunnelers.iterator();
     while (tunnelers.next()) |tunneler| {
-        if (!tunneler.is_eviscerated) {
+        if (!tunneler.is_eviscerated and !tunneler.is_intersected) {
             tunneler.shrinkTo(tunneler.getLastBranch());
         }
     }

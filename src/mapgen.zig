@@ -1199,11 +1199,11 @@ fn createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?C
     };
 }
 
-const SubroomPlacementOptions = struct {
+pub const SubroomPlacementOptions = struct {
     specific_id: ?[]const u8 = null,
 };
 
-fn placeSubroom(parent: *Room, area: *const Rect, alloc: mem.Allocator, opts: SubroomPlacementOptions) void {
+pub fn placeSubroom(parent: *Room, area: *const Rect, alloc: mem.Allocator, opts: SubroomPlacementOptions) void {
     assert(area.end().y < HEIGHT and area.end().x < WIDTH);
 
     for (s_fabs.items) |*subroom| {
@@ -3824,9 +3824,10 @@ pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
     return LevelConfig{
         .prefabs = &[_][]const u8{"SIN_candle"},
         .tunneler_opts = .{
-            .room_tries = 1,
+            .min_tunneler_distance = 0,
             .turn_chance = 7,
             .branch_chance = 6,
+            .room_tries = 1,
             .headstart_chance = 0, // More chance for enough candles to spawn
             .shrink_chance = 0,
             .grow_chance = 0,
@@ -3866,13 +3867,24 @@ pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
 pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
         .prefabs = prefabs,
+        .tunneler_opts = .{
+            .turn_chance = 0,
+            .branch_chance = 7,
+            .headstart_chance = 0,
+            .shrink_chance = 60,
+            .grow_chance = 5,
+            .intersect_chance = 100,
+            .intersect_with_childless = true,
+
+            .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
+                .{ .start = Coord.new(1, 1), .width = 0, .height = 3, .direction = .East },
+                .{ .start = Coord.new(WIDTH - 4, 1), .width = 3, .height = 0, .direction = .South },
+                .{ .start = Coord.new(WIDTH - 1, HEIGHT - 4), .width = 0, .height = 3, .direction = .West },
+                .{ .start = Coord.new(1, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
+            },
+        },
         .prefab_chance = 1000, // No prefabs for LAB
-        .mapgen_func = placeBSPRooms,
-        .mapgen_iters = 512,
-        .min_room_width = 8,
-        .min_room_height = 8,
-        .max_room_width = 14,
-        .max_room_height = 14,
+        .mapgen_func = tunneler.placeTunneledRooms,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeatureVials,
