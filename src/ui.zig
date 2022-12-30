@@ -3212,7 +3212,7 @@ pub const Animation = union(enum) {
                     display.present();
                     std.time.sleep(anim.delay * 1_000_000);
 
-                    for (anim.coords) |coord, i| if (state.player.cansee(coord)) {
+                    for (coords.constSlice()) |coord, i| if (state.player.cansee(coord)) {
                         const dcoord = coordToScreen(coord).?;
                         const old = old_cells.constSlice()[i];
                         map_win.animations.setCell(dcoord.x, dcoord.y, old);
