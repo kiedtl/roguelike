@@ -1079,6 +1079,10 @@ x Animations (w/ particle engine)
   x Fire explosions
   x Walls disintegrating (for Lair map)
   x Electricity blasts
+- Crypt floor
+  - Modify level data and spawn files
+  - Vile protector
+  - Garrison inset prefabs
 - Night creatures
   - Night creature enclaves
   - Popups explaining UI elements on hover
