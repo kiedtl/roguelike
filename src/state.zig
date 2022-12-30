@@ -77,7 +77,7 @@ pub var GPA = std.heap.GeneralPurposeAllocator(.{
     // Probably would enable this later?
     .thread_safe = false,
 
-    .never_unmap = true,
+    .never_unmap = false,
 
     .stack_trace_frames = 6,
 }){};
