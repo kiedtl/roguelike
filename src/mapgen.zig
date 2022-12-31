@@ -106,6 +106,9 @@ pub const VAULT_DOORS = [VAULT_KINDS]*const Machine{
 //
 // FIXME: add vault to QRT
 pub const VAULT_LEVELS = [LEVELS][]const VaultType{
+    &.{                          }, // -1/Crypt/3
+    &.{        .Marble           }, // -1/Crypt/2
+    &.{        .Marble           }, // -1/Crypt
     &.{ .Gold, .Marble           }, // -1/Prison
     &.{ .Gold, .Marble           }, // -2/Prison
     &.{                          }, // -3/Quarters/3
@@ -3864,6 +3867,32 @@ pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
     };
 }
 
+pub fn createLevelConfig_CRY() LevelConfig {
+    return LevelConfig{
+        .tunneler_opts = .{
+            .turn_chance = 2,
+            .branch_chance = 4,
+            .shrink_chance = 60,
+            .grow_chance = 60,
+            // .remove_childless = false,
+            .shrink_corridors = false,
+
+            .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
+                .{ .start = Coord.new(1, HEIGHT / 2), .width = 0, .height = 3, .direction = .East },
+            },
+        },
+        .prefab_chance = 1000, // No prefabs for CRY
+        .mapgen_func = tunneler.placeTunneledRooms,
+
+        .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },
+
+        .material = &materials.Marble,
+        .no_windows = true,
+        .door = &surfaces.VaultDoor,
+        .allow_statues = false,
+    };
+}
+
 pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
         .prefabs = prefabs,
@@ -3996,6 +4025,9 @@ pub const TUT_BASE_LEVELCONFIG = LevelConfig{
 };
 
 pub var Configs = [LEVELS]LevelConfig{
+    createLevelConfig_CRY(),
+    createLevelConfig_CRY(),
+    createLevelConfig_CRY(),
     PRI_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
     createLevelConfig_QRT(&[_][]const u8{"ANY_s_recharging"}),
@@ -4020,7 +4052,7 @@ pub var Configs = [LEVELS]LevelConfig{
 // TODO: convert this to a comptime expression
 // zig fmt: off
 pub fn fixConfigs() void {
-    Configs[0].prefabs = &[_][]const u8{ "ENT_start", "ANY_s_recharging" };
+    Configs[3].prefabs = &[_][]const u8{ "ENT_start", "ANY_s_recharging" };
     Configs[state.PLAYER_STARTING_LEVEL].prefabs = &[_][]const u8{ "PRI_start", "ANY_s_recharging" };
 
     // // Increase crowd sizes for difficult levels.

@@ -758,18 +758,19 @@ pub const TunnelerOptions = struct {
     turn_chance: usize = 0,
     branch_chance: usize = 4,
 
-    room_tries: usize = 10,
+    room_tries: usize = 12,
 
-    headstart_chance: usize = 20,
+    headstart_chance: usize = 15,
 
     shrink_chance: usize = 50,
     grow_chance: usize = 50,
 
-    intersect_chance: usize = 60,
+    intersect_chance: usize = 70,
     intersect_with_childless: bool = false,
 
     add_extra_rooms: bool = true,
     remove_childless: bool = true,
+    shrink_corridors: bool = true,
     add_junctions: bool = true,
 
     force_prefabs: bool = false,
@@ -961,10 +962,12 @@ pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
     if (gif) S.captureFrame(level, &frames);
 
     // Fill in corridors that stick out past their last branch
-    var tunnelers = ctx.tunnelers.iterator();
-    while (tunnelers.next()) |tunneler| {
-        if (!tunneler.is_eviscerated and !tunneler.is_intersected) {
-            tunneler.shrinkTo(tunneler.getLastBranch());
+    if (ctx.opts.shrink_corridors) {
+        var tunnelers = ctx.tunnelers.iterator();
+        while (tunnelers.next()) |tunneler| {
+            if (!tunneler.is_eviscerated and !tunneler.is_intersected) {
+                tunneler.shrinkTo(tunneler.getLastBranch());
+            }
         }
     }
 
