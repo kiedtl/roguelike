@@ -18,6 +18,7 @@ const utils = @import("utils.zig");
 const gas = @import("gas.zig");
 const mapgen = @import("mapgen.zig");
 const surfaces = @import("surfaces.zig");
+const spells = @import("spells.zig");
 const ui = @import("ui.zig");
 const state = @import("state.zig");
 const types = @import("types.zig");
@@ -304,6 +305,11 @@ pub fn moveOrFight(direction: Direction) bool {
             return false;
     }
 
+    if (!movementTriggers(direction)) {
+        state.player.declareAction(Activity{ .Move = direction });
+        return true;
+    }
+
     const ret = state.player.moveInDirection(direction);
 
     if (!state.player.coord.eq(current)) {
@@ -320,6 +326,36 @@ pub fn moveOrFight(direction: Direction) bool {
     }
 
     return ret;
+}
+
+pub fn movementTriggers(direction: Direction) bool {
+    if (state.player.hasStatus(.RingTeleportation)) {
+        // Get last enemy in chain of enemies.
+        var last_coord = state.player.coord;
+        var mob_chain_count: usize = 0;
+        while (true) {
+            if (last_coord.move(direction, state.mapgeometry)) |coord| {
+                last_coord = coord;
+                if (utils.getHostileAt(state.player, coord)) |_| {
+                    mob_chain_count += 1;
+                } else |_| {
+                    if (mob_chain_count > 0) {
+                        break;
+                    }
+                }
+            } else break;
+        }
+
+        spells.BOLT_BLINKBOLT.use(state.player, state.player.coord, last_coord, .{
+            .MP_cost = 0,
+            .spell = &spells.BOLT_BLINKBOLT,
+            .power = math.clamp(mob_chain_count, 2, 5),
+        });
+
+        return false;
+    }
+
+    return true;
 }
 
 pub fn rummageContainer(coord: Coord) bool {
@@ -711,6 +747,12 @@ pub fn beginUsingRing(index: usize) void {
             }
         }
     }
+}
+
+pub fn getRingIndexBySlot(slot: Mob.Inventory.EquSlot) usize {
+    return for (Mob.Inventory.RING_SLOTS) |item, i| {
+        if (item == slot) break i + state.default_patterns.len;
+    } else err.bug("Tried to get ring index from non-ring slot", .{});
 }
 
 pub fn getRingByIndex(index: usize) ?*Ring {

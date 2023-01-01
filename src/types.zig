@@ -1016,6 +1016,9 @@ pub const Allegiance = enum {
 pub const Status = enum {
     // Status list {{{
 
+    // Ring status effects
+    RingTeleportation, // No power field
+
     // Causes a monster to forget any noise or enemies they ran across, and
     // return to a working state. When the status is depleted, all dementia
     // will be instantly cured.
@@ -1222,6 +1225,8 @@ pub const Status = enum {
 
     pub fn string(self: Status, mob: *const Mob) []const u8 { // {{{
         return switch (self) {
+            .RingTeleportation => "ring: teleportation",
+
             .Amnesia => "amnesia",
             .DetectHeat => "detect heat",
             .DetectElec => "detect electricity",
@@ -1270,6 +1275,8 @@ pub const Status = enum {
 
     pub fn miniString(self: Status) ?[]const u8 { // {{{
         return switch (self) {
+            .RingTeleportation => null,
+
             .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .OpenMelee, .ClosedMelee, .Echolocation, .NightVision, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
 
             .Amnesia => "amnesia",

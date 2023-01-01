@@ -983,24 +983,8 @@ pub const TeleportationRing = Ring{ // {{{
         },
     },
     .effect = struct {
-        pub fn f(self: *Mob, stt: PatternChecker.State) void {
-            // Get last enemy in chain of enemies.
-            var last_mob = stt.mobs[0].?;
-            var chain_count: usize = 0;
-            while (true) {
-                if (last_mob.coord.move(stt.directions[0].?, state.mapgeometry)) |coord| {
-                    if (utils.getHostileAt(self, coord)) |hostile| {
-                        last_mob = hostile;
-                        chain_count += 1;
-                    } else |_| break;
-                } else break;
-            }
-
-            spells.BOLT_BLINKBOLT.use(self, self.coord, last_mob.coord, .{
-                .MP_cost = 0,
-                .spell = &spells.BOLT_BLINKBOLT,
-                .power = chain_count + 2, // minimum 3
-            });
+        pub fn f(self: *Mob, _: PatternChecker.State) void {
+            self.addStatus(.RingTeleportation, 0, .{ .Tmp = 5 });
         }
     }.f,
 }; // }}}

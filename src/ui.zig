@@ -54,7 +54,7 @@ pub const FRAMERATE = 1000 / 30;
 
 pub const LEFT_INFO_WIDTH: usize = 35;
 //pub const RIGHT_INFO_WIDTH: usize = 24;
-pub const LOG_HEIGHT = 6;
+pub const LOG_HEIGHT = 8;
 pub const ZAP_HEIGHT = 15 + 4;
 pub const MAP_HEIGHT_R = 15;
 pub const MAP_WIDTH_R = 20;
@@ -2513,7 +2513,11 @@ pub fn drawInventoryScreen() bool {
                 } else if (chosen_item) |item| {
                     switch (item) {
                         .Weapon => drawAlert("Bump into enemies to attack.", .{}),
-                        .Ring => drawAlert("Follow the ring's pattern to use it.", .{}),
+                        .Ring => {
+                            const slot = @intToEnum(Mob.Inventory.EquSlot, chosen);
+                            player.beginUsingRing(player.getRingIndexBySlot(slot));
+                            return false;
+                        },
                         else => drawAlert("You can't use that!", .{}),
                     }
                 } else {

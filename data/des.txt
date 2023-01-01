@@ -544,10 +544,10 @@ $G    $rmm$.@$G..    .$rmm$.@$G.    $.<rest>$G    ..$rmm$.@$G    $.<rest>$G    $
 $G    .....    .....              .....
 
 
-$cEffect:$. Fire a bolt of lightning at an enemy for a minimum of $b3$. electric
-damage, then teleport yourself to the last tile the bolt touched. (If that tile
-is unwalkable, you won't be teleported). Damage scales with the number of
-enemies hit.
+$cStatus effect (5 turns):$. Fire a bolt of lightning at an enemy for a minimum
+of $b2$. electric damage, then teleport yourself to the last tile the bolt
+touched. (If that tile is unwalkable, you won't be teleported). Damage scales
+with the number of enemies hit, up to a maximum of $b5$..
 
 % electrification
 $cPattern:$. Attack foe, move one tile backwards into corridor (i.e., with walls
