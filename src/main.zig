@@ -267,8 +267,6 @@ fn initLevels() bool {
 fn deinitGame() void {
     ui.deinit() catch err.wat();
 
-    state.GPA.allocator().destroy(state.dungeon);
-
     mapgen.s_fabs.deinit();
     mapgen.n_fabs.deinit();
     mapgen.fab_records.deinit();
@@ -315,6 +313,10 @@ fn deinitGame() void {
     surfaces.freeProps(state.GPA.allocator());
     mapgen.freeSpawnTables(state.GPA.allocator());
     freeDescriptions(state.GPA.allocator());
+
+    // Do this last so that mob corpses can be placed (A better fix would be to
+    // just not place corpses at all when deinit'ing the game)
+    state.GPA.allocator().destroy(state.dungeon);
 
     _ = state.GPA.deinit();
 }
