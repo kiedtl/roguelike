@@ -305,12 +305,14 @@ pub fn moveOrFight(direction: Direction) bool {
             return false;
     }
 
-    if (!movementTriggers(direction)) {
+    if (!movementTriggersA(direction)) {
+        movementTriggersB(direction);
         state.player.declareAction(Activity{ .Move = direction });
         return true;
     }
 
     const ret = state.player.moveInDirection(direction);
+    movementTriggersB(direction);
 
     if (!state.player.coord.eq(current)) {
         if (state.dungeon.at(state.player.coord).surface) |s| switch (s) {
@@ -328,7 +330,7 @@ pub fn moveOrFight(direction: Direction) bool {
     return ret;
 }
 
-pub fn movementTriggers(direction: Direction) bool {
+pub fn movementTriggersA(direction: Direction) bool {
     if (state.player.hasStatus(.RingTeleportation)) {
         // Get last enemy in chain of enemies.
         var last_coord = state.player.coord;
@@ -356,6 +358,17 @@ pub fn movementTriggers(direction: Direction) bool {
     }
 
     return true;
+}
+
+pub fn movementTriggersB(direction: Direction) void {
+    if (state.player.hasStatus(.RingDamnation) and !direction.is_diagonal()) {
+        spells.SUPER_DAMNATION.use(
+            state.player,
+            state.player.coord,
+            state.player.coord,
+            .{ .MP_cost = 0, .no_message = true, .context_direction1 = direction, .free = true },
+        );
+    }
 }
 
 pub fn rummageContainer(coord: Coord) bool {

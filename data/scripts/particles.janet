@@ -686,6 +686,7 @@
   "lzap-golden" @[ (template-lingering-zap ".#.#.#." LIGHT_GOLD GOLD 12) ]
   "explosion-simple" @[ (template-explosion) ]
   "explosion-fire1" @[ (template-explosion :embers? false :die-out? false :speed-variation-preset :2 :color1 0xff9f00) ]
+  "lzap-fire-quick" @[ (template-lingering-zap " " 0x770f0f 0 4) ]
   "zap-electric" @[(new-emitter @{
     :particle (new-particle @{
       :tile (new-tile @{ :ch "Z" :fg 0x9fefff :bg 0x7fc7ef :bg-mix 0.7 })
@@ -1099,7 +1100,7 @@
                           [(target (self :total-spawned)) coord])
       })
   ]
-  "test" @[]
+  # "test" @[]
 })
 
 (defn animation-init [initial target boundsx boundsy bounds-width bounds-height emitters-set]

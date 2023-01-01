@@ -530,8 +530,9 @@ $G    .....   ...$.@$G.    $.<wait>$G    $.<attack any foe>$G
 $G    ...$C$~##$.$G   ...$C$~##$.$G
 
 
-$cEffect:$. Creates a fiery explosion on all tiles containing foes that are
-visible to you.
+$cEffect:$. Every time you move, foes to your sides will be engulfed in a fiery
+explosion. Has no effect if you move diagonally. The effect duration and
+strength increases with your fire resistance.
 
 % teleportation
 $cPattern:$. Move away three times, attack an enemy.

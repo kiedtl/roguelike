@@ -1018,6 +1018,7 @@ pub const Status = enum {
 
     // Ring status effects
     RingTeleportation, // No power field
+    RingDamnation, // Power field == initial damage
 
     // Causes a monster to forget any noise or enemies they ran across, and
     // return to a working state. When the status is depleted, all dementia
@@ -1226,6 +1227,7 @@ pub const Status = enum {
     pub fn string(self: Status, mob: *const Mob) []const u8 { // {{{
         return switch (self) {
             .RingTeleportation => "ring: teleportation",
+            .RingDamnation => "ring: damnation",
 
             .Amnesia => "amnesia",
             .DetectHeat => "detect heat",
@@ -1275,7 +1277,7 @@ pub const Status = enum {
 
     pub fn miniString(self: Status) ?[]const u8 { // {{{
         return switch (self) {
-            .RingTeleportation => null,
+            .RingTeleportation, .RingDamnation => null,
 
             .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .OpenMelee, .ClosedMelee, .Echolocation, .NightVision, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
 

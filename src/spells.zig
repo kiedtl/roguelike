@@ -468,6 +468,50 @@ fn _effectConjureBL(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
     };
 }
 
+pub const SUPER_DAMNATION = Spell{
+    .id = "sp_damnation",
+    .name = "damnation",
+    .cast_type = .Smite,
+    .smite_target_type = .Self,
+    .noise = .Loud,
+    .effect_type = .{ .Custom = struct {
+        fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
+            const SPELL = Spell{
+                .id = "_",
+                .name = "[this is a bug]",
+                .animation = .{ .Particle = .{ .name = "lzap-fire-quick" } },
+                .cast_type = .Bolt,
+                .noise = .Medium,
+                .effect_type = .{ .Custom = struct {
+                    fn f(_caster_c: Coord, _: Spell, _opts: SpellOptions, _coord: Coord) void {
+                        const caster = state.dungeon.at(_caster_c).mob.?;
+                        if (state.dungeon.at(_coord).mob) |victim| {
+                            if (victim.isHostileTo(caster)) {
+                                explosions.fireBurst(_coord, 1, .{ .culprit = caster, .initial_damage = _opts.power });
+                            }
+                        }
+                    }
+                }.f },
+            };
+
+            const directions = [_]Direction{
+                opts.context_direction1.turnleft(),
+                opts.context_direction1.turnright(),
+            };
+            for (&directions) |direction| {
+                var target = coord;
+                while (target.move(direction, state.mapgeometry)) |newcoord| {
+                    if (!state.is_walkable(newcoord, .{ .only_if_breaks_lof = true }))
+                        break;
+                    target = newcoord;
+                }
+
+                SPELL.use(state.dungeon.at(caster_c).mob, coord, target, .{ .MP_cost = 0, .spell = &SPELL, .power = opts.power, .free = true, .no_message = true });
+            }
+        }
+    }.f },
+};
+
 pub const BOLT_PARALYSE = Spell{
     .id = "sp_elec_paralyse",
     .name = "paralysing zap",
@@ -938,6 +982,11 @@ pub const SpellOptions = struct {
     duration: usize = Status.MAX_DURATION,
     power: usize = 0,
     MP_cost: usize = 1,
+    free: bool = false,
+
+    no_message: bool = false,
+
+    context_direction1: Direction = undefined,
 };
 
 pub const Spell = struct {
@@ -1027,7 +1076,7 @@ pub const Spell = struct {
             err.bug("Non-mob entity attempting to cast will-checked spell!", .{});
         }
 
-        if (state.player.cansee(caster_coord)) {
+        if (!opts.no_message and state.player.cansee(caster_coord)) {
             if (opts.caster_name) |name| {
                 state.message(.SpellCast, "The {s} uses $o{s}$.!", .{ name, self.name });
             } else if (caster) |c| {
@@ -1039,7 +1088,9 @@ pub const Spell = struct {
         }
 
         if (caster) |_| {
-            caster.?.declareAction(.Cast);
+            if (!opts.free) {
+                caster.?.declareAction(.Cast);
+            }
             caster.?.makeNoise(.Combat, self.noise);
         } else {
             state.dungeon.soundAt(caster_coord).* = .{

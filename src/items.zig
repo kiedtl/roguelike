@@ -899,32 +899,11 @@ pub const DamnationRing = Ring{ // {{{
     },
     .effect = struct {
         pub fn f(self: *Mob, _: PatternChecker.State) void {
-            var gen = Generator(Rect.rectIter).init(state.mapRect(self.coord.z));
-            while (gen.next()) |coord| if (self.cansee(coord)) {
-                if (state.dungeon.at(coord).mob) |othermob| {
-                    if (othermob.isHostileTo(self)) { // damnation doesn't care about is_combative
-                        explosions.fireBurst(coord, 1, .{ .culprit = self, .initial_damage = 1 });
-                    }
-                }
-            };
+            const rFire_pips = @intCast(usize, math.max(0, self.resistance(.rFire))) / 25;
+            const power = 1 + (rFire_pips / 2);
+            const duration = 3 + (rFire_pips * 3);
 
-            // var y: usize = 0;
-            // while (y < HEIGHT) : (y += 1) {
-            //     var x: usize = 0;
-            //     while (x < WIDTH) : (x += 1) {
-            //         const coord = Coord.new2(self.coord.z, x, y);
-            //         if (self.coord.distance(coord) == 1) {
-            //             if (state.dungeon.at(coord).mob) |othermob| {
-            //                 if (othermob.isHostileTo(self)) { // damnation doesn't care about is_combative
-            //                     explosions.fireBurst(coord, 1);
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
-
-            if (self == state.player)
-                state.message(.Info, "Fire bursts out of your enemies!", .{});
+            self.addStatus(.RingDamnation, power, .{ .Tmp = duration });
         }
     }.f,
 }; // }}}

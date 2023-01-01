@@ -500,7 +500,8 @@ fn readInput() !bool {
                 //_ = ui.drawYesNoPrompt("foo, bar, baz. Lorem ipsum, dolor sit amet. Dolem Lipsum, solor ait smet. Iorem Aipsum, lolor dit asset.", .{});
                 //ui.labels.addFor(state.player, "foo bar baz", .{});
                 // state.player.addStatus(.Corruption, 0, .{ .Tmp = 5 });
-                state.player.addStatus(.RingTeleportation, 0, .{ .Tmp = 5 });
+                // state.player.addStatus(.RingTeleportation, 0, .{ .Tmp = 5 });
+                state.player.addStatus(.RingDamnation, 0, .{ .Tmp = 5 });
                 break :blk false;
             },
             .F8 => b: {
