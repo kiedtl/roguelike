@@ -1081,8 +1081,14 @@ x Animations (w/ particle engine)
   x Electricity blasts
 - Crypt floor
   - Modify level data and spawn files
-  - Vile protector
+  - New monsters:
+    - Vile protector
+    - Hornblende statues
+    - Schalenblende statues(?)
+    - Pitchblende statues
   - Garrison inset prefabs
+  - -1/Crypt/3 prefab
+  - Staircase prefab on -1/Prison
 - Night creatures
   - Night creature enclaves
   - Popups explaining UI elements on hover
@@ -1131,11 +1137,16 @@ x Animations (w/ particle engine)
   - Addition of submerged creatures
   - Lava flans
 - Laboratory rework
-  - New mapgen
+  x New mapgen
   - Enh. sparklings in upper levels
     - Dep: capacitors (and possibly Wiring levels)
-    - Dep: UI labels to effectively communicate when next discharge is
-      - "discharge 5..." "discharge 4..." "discharge 3...", etc.
+    x Dep: UI labels to effectively communicate when next discharge is
+      x "discharge 5..." "discharge 4..." "discharge 3...", etc.
+  - Enh. sparkling machines
+  - Tentaclings
+- Caverns rework
+  - Alchemist + dustling analyzer prefabs
+  - Dustling machines
 - Capacitor mechanic
   - Basic capacitor, charging, discharging
   - Capacitor expansion slots
