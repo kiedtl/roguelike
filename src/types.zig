@@ -3193,16 +3193,7 @@ pub const Mob = struct { // {{{
         }
     }
 
-    // Separate from kill() because some code (e.g., mapgen) cannot rely on the player
-    // having been initialized (to print the messages).
-    pub fn deinit(self: *Mob) void {
-        const S = struct {
-            pub fn _isNotWall(c: Coord, _: state.IsWalkableOptions) bool {
-                return state.dungeon.at(c).type != .Wall and
-                    state.dungeon.at(c).surface == null;
-            }
-        };
-
+    pub fn deinitNoCorpse(self: *Mob) void {
         self.enemies.deinit();
         self.allies.deinit();
         self.sustiles.deinit();
@@ -3214,6 +3205,19 @@ pub const Mob = struct { // {{{
         var gen = Generator(Rect.rectIter).init(self.areaRect());
         while (gen.next()) |mobcoord|
             state.dungeon.at(mobcoord).mob = null;
+    }
+
+    // Separate from kill() because some code (e.g., mapgen) cannot rely on the player
+    // having been initialized (to print the messages).
+    pub fn deinit(self: *Mob) void {
+        const S = struct {
+            pub fn _isNotWall(c: Coord, _: state.IsWalkableOptions) bool {
+                return state.dungeon.at(c).type != .Wall and
+                    state.dungeon.at(c).surface == null;
+            }
+        };
+
+        self.deinitNoCorpse();
 
         if (self.corpse != .None) {
             assert(self.multitile == null);

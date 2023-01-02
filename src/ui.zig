@@ -3344,11 +3344,16 @@ pub const Animation = union(enum) {
 
                 var last_tick_time = std.time.nanoTimestamp();
                 var j_particles = janet.callFunction("animation-tick", .{ ctx, 0 }) catch err.wat();
+                var were_any_visible = true;
                 var tick: usize = 1;
                 while (tick < 200) : (tick += 1) {
-                    const time_since_last_sleep = @intCast(u64, std.time.nanoTimestamp() - last_tick_time);
-                    std.time.sleep(WAIT_PERIOD -| time_since_last_sleep);
+                    if (were_any_visible) {
+                        const time_since_last_sleep = @intCast(u64, std.time.nanoTimestamp() - last_tick_time);
+                        std.time.sleep(WAIT_PERIOD -| time_since_last_sleep);
+                    }
+
                     last_tick_time = std.time.nanoTimestamp();
+                    were_any_visible = false;
 
                     map_win.map.renderFullyW(.Main);
                     display.present();
@@ -3386,6 +3391,7 @@ pub const Animation = union(enum) {
 
                         const mapcell = map_win.map.getCell(p_dcoord.x, p_dcoord.y);
                         map_win.animations.setCell(p_dcoord.x, p_dcoord.y, .{ .ch = p_tile, .fg = p_fg, .bg = colors.mix(mapcell.bg, p_bg, p_bg_mix), .fl = .{ .wide = true } });
+                        were_any_visible = true;
                     }
                     j_particles = janet.callFunction("animation-tick", .{ ctx, tick }) catch err.wat();
                 }

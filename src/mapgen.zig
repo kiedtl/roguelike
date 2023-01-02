@@ -419,6 +419,9 @@ pub fn placeDoor(coord: Coord, locked: bool) void {
 }
 
 pub fn placePlayer(coord: Coord, alloc: mem.Allocator) void {
+    if (state.dungeon.at(coord).mob) |mob|
+        mob.deinitNoCorpse();
+
     state.player = mobs.placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
 
     //const ring = items.createItem(Ring, items.MagnetizationRing);
@@ -905,7 +908,7 @@ pub fn resetLevel(level: usize) void {
     var mobiter = state.mobs.iterator();
     while (mobiter.next()) |mob| {
         if (mob.coord.z == level) {
-            mob.deinit();
+            mob.deinitNoCorpse();
             state.mobs.remove(mob);
         }
     }
@@ -1418,6 +1421,11 @@ fn _place_rooms(rooms: *Room.ArrayList, level: usize, allocator: mem.Allocator) 
     child.connections.append(rooms.items[parent_i].rect.start) catch err.wat();
 
     rooms.append(child) catch err.wat();
+}
+
+pub fn placeTunnelsThenRandomRooms(level: usize, alloc: mem.Allocator) void {
+    tunneler.placeTunneledRooms(level, alloc);
+    placeRandomRooms(level, alloc);
 }
 
 pub fn placeRandomRooms(
@@ -3705,7 +3713,7 @@ pub const LevelConfig = struct {
     shrink_corridors_to_fit: bool = true,
     prefab_chance: usize,
 
-    mapgen_func: fn (usize, mem.Allocator) void = placeRandomRooms,
+    mapgen_func: fn (usize, mem.Allocator) void = placeTunnelsThenRandomRooms,
 
     tunneler_opts: tunneler.TunnelerOptions = .{},
 
@@ -3780,7 +3788,7 @@ pub const LevelConfig = struct {
 pub const PRI_BASE_LEVELCONFIG = LevelConfig{
     .prefabs = &[_][]const u8{"ANY_s_recharging"},
     .prefab_chance = 3,
-    .mapgen_iters = 4096,
+    .mapgen_iters = 2048,
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
         levelFeaturePrisoners,
         levelFeaturePrisonersMaybe,
@@ -3834,7 +3842,7 @@ pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
             .headstart_chance = 0, // More chance for enough candles to spawn
             .shrink_chance = 0,
             .grow_chance = 0,
-            .intersect_chance = 60,
+            .intersect_chance = 80,
             .intersect_with_childless = true,
             .add_extra_rooms = false,
             .add_junctions = false,
@@ -3847,7 +3855,7 @@ pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
             .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
                 .{ .start = Coord.new(1, 1), .width = 0, .height = width, .direction = .East },
                 // .{ .start = Coord.new(WIDTH - 5, 1), .width = width, .height = 0, .direction = .South },
-                .{ .start = Coord.new(WIDTH - 1, HEIGHT - 5), .width = 0, .height = width, .direction = .West },
+                .{ .start = Coord.new(WIDTH - 1, HEIGHT - width - 2), .width = 0, .height = width, .direction = .West },
                 // .{ .start = Coord.new(1, HEIGHT - 1), .width = width, .height = 0, .direction = .North },
             },
         },
