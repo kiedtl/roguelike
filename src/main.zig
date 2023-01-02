@@ -501,7 +501,7 @@ fn readInput() !bool {
                 //ui.labels.addFor(state.player, "foo bar baz", .{});
                 // state.player.addStatus(.Corruption, 0, .{ .Tmp = 5 });
                 // state.player.addStatus(.RingTeleportation, 0, .{ .Tmp = 5 });
-                state.player.addStatus(.RingDamnation, 0, .{ .Tmp = 5 });
+                state.player.addStatus(.RingElectrocution, 0, .{ .Tmp = 5 });
                 break :blk false;
             },
             .F8 => b: {

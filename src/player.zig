@@ -42,6 +42,7 @@ const Direction = types.Direction;
 const Inventory = types.Mob.Inventory;
 
 const DIRECTIONS = types.DIRECTIONS;
+const DIAGONAL_DIRECTIONS = types.DIAGONAL_DIRECTIONS;
 const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
@@ -362,12 +363,33 @@ pub fn movementTriggersA(direction: Direction) bool {
 
 pub fn movementTriggersB(direction: Direction) void {
     if (state.player.hasStatus(.RingDamnation) and !direction.is_diagonal()) {
+        const power = state.player.isUnderStatus(.RingDamnation).?.power;
         spells.SUPER_DAMNATION.use(
             state.player,
             state.player.coord,
             state.player.coord,
-            .{ .MP_cost = 0, .no_message = true, .context_direction1 = direction, .free = true },
+            .{ .MP_cost = 0, .no_message = true, .context_direction1 = direction, .free = true, .power = power },
         );
+    }
+    if (state.player.hasStatus(.RingElectrocution)) {
+        const power = state.player.isUnderStatus(.RingElectrocution).?.power;
+
+        var anim_buf = StackBuffer(Coord, 4).init(null);
+        for (&DIAGONAL_DIRECTIONS) |d|
+            if (state.player.coord.move(d, state.mapgeometry)) |c|
+                anim_buf.append(c) catch err.wat();
+
+        ui.Animation.blink(anim_buf.constSlice(), '*', ui.Animation.ELEC_LINE_FG, .{}).apply();
+
+        for (&DIAGONAL_DIRECTIONS) |d|
+            if (utils.getHostileInDirection(state.player, d)) |hostile| {
+                hostile.takeDamage(.{
+                    .amount = power,
+                    .by_mob = state.player,
+                    .kind = .Electric,
+                }, .{ .noun = "Lightning" });
+            } else |_| {};
+        state.player.makeNoise(.Combat, .Loud);
     }
 }
 

@@ -646,22 +646,11 @@ pub const LightningRing = Ring{ // {{{
     },
     .effect = struct {
         pub fn f(self: *Mob, _: PatternChecker.State) void {
-            var anim_buf = StackBuffer(Coord, 4).init(null);
-            for (&DIAGONAL_DIRECTIONS) |d|
-                if (self.coord.move(d, state.mapgeometry)) |c|
-                    anim_buf.append(c) catch err.wat();
+            const rElec_pips = @intCast(usize, math.max(0, self.resistance(.rElec))) / 25;
+            const power = 1 + (rElec_pips / 2);
+            const duration = 3 + (rElec_pips * 3);
 
-            ui.Animation.blink(anim_buf.constSlice(), '*', ui.Animation.ELEC_LINE_FG, .{}).apply();
-
-            for (&DIAGONAL_DIRECTIONS) |d|
-                if (utils.getHostileInDirection(self, d)) |hostile| {
-                    hostile.takeDamage(.{
-                        .amount = 3,
-                        .by_mob = self,
-                        .kind = .Electric,
-                    }, .{ .noun = "Lightning" });
-                } else |_| {};
-            self.makeNoise(.Combat, .Loud);
+            self.addStatus(.RingDamnation, power, .{ .Tmp = duration });
         }
     }.f,
 }; // }}}

@@ -487,7 +487,8 @@ $G    $.@$G... $.<attack>$G $rm$G...   $rm$G... $.<attack>$G
 $G    ....          $.@$G...   .$.@$G..
 
 
-$cEffect:$. Mobs in your four corners will be electrocuted.
+$cEffect:$. Each time your move, monsters in your four corners will be
+electrocuted. Damage and effect duration scales with electricity resistance.
 
 % distraction
 $cPattern:$. Move forward against foe, move left or right, move forward.
