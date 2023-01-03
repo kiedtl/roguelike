@@ -1921,6 +1921,42 @@ pub const SpectralSwordTemplate = MobTemplate{
                 .strs = &[_]DamageStr{items._dmgstr(1, "nick", "nicks", "")},
             },
         },
+        .tile = '|',
+        .ai = AI{
+            .profession_description = "[this is a bug]",
+            .work_fn = ai.suicideWork,
+            .fight_fn = ai.combatDummyFight,
+            .flags = &[_]AI.Flag{.IgnoredByEnemies},
+            .is_curious = false,
+            .is_fearless = true,
+        },
+
+        .deaf = true,
+        .deg360_vision = true,
+        .no_show_fov = true,
+        .base_night_vision = true,
+        .max_HP = 1,
+        .memory_duration = 999999,
+
+        .life_type = .Spectral,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .Armor = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rFume = 100 },
+        .stats = .{ .Willpower = WILL_IMMUNE, .Vision = 20 },
+    },
+};
+
+pub const SpectralSabreTemplate = MobTemplate{
+    .mob = .{
+        .id = "spec_sword",
+        .species = &Species{
+            .name = "spectral sword",
+            .default_attack = &Weapon{
+                .damage = 1,
+                .strs = &[_]DamageStr{items._dmgstr(1, "nick", "nicks", "")},
+            },
+        },
         .tile = ')',
         .ai = AI{
             .profession_description = "[this is a bug]",

@@ -980,7 +980,10 @@ pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
     ctx.tryAddingExtraRooms(level);
     if (gif) S.captureFrame(level, &frames);
 
-    ctx.addPlayer();
+    // Removed because for the time being we want the placeRandomRooms
+    // algorithm to place the player
+    //
+    // ctx.addPlayer();
 
     if (gif) {
         const fname = std.fmt.allocPrintZ(allocator, "tunneler-{}.gif", .{level}) catch err.oom();

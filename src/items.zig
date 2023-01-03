@@ -1969,7 +1969,7 @@ pub const CRUSHING_STRS = [_]DamageStr{
 pub const SLASHING_STRS = [_]DamageStr{
     _dmgstr(40, "hit", "hits", ""),
     _dmgstr(50, "slash", "slashes", ""),
-    _dmgstr(90, "chop", "chops", " into pieces"),
+    _dmgstr(100, "chop", "chops", " into pieces"),
     _dmgstr(110, "chop", "chops", " into tiny pieces"),
     _dmgstr(150, "slice", "slices", " into ribbons"),
     _dmgstr(200, "cut", "cuts", " asunder"),

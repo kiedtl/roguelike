@@ -23,6 +23,7 @@ const items = @import("items.zig");
 const utils = @import("utils.zig");
 const gas = @import("gas.zig");
 const mapgen = @import("mapgen.zig");
+const mobs = @import("mobs.zig");
 const surfaces = @import("surfaces.zig");
 const ui = @import("ui.zig");
 const termbox = @import("termbox.zig");
@@ -501,7 +502,19 @@ fn readInput() !bool {
                 //ui.labels.addFor(state.player, "foo bar baz", .{});
                 // state.player.addStatus(.Corruption, 0, .{ .Tmp = 5 });
                 // state.player.addStatus(.RingTeleportation, 0, .{ .Tmp = 5 });
-                state.player.addStatus(.RingElectrocution, 0, .{ .Tmp = 5 });
+                // state.player.addStatus(.RingElectrocution, 0, .{ .Tmp = 5 });
+                state.player.addStatus(.RingExcision, 0, .{ .Tmp = 5 });
+                for (&DIRECTIONS) |d| if (state.player.coord.move(d, state.mapgeometry)) |n| {
+                    if (state.is_walkable(n, .{})) {
+                        const s = mobs.placeMob(state.GPA.allocator(), &mobs.SpectralSwordTemplate, n, .{});
+                        state.player.squad.?.trimMembers();
+                        state.player.squad.?.members.append(s) catch err.wat();
+                        s.squad = state.player.squad;
+                        s.allegiance = state.player.allegiance;
+                        s.addStatus(.Lifespan, 0, .{ .Tmp = 5 });
+                        break;
+                    }
+                };
                 break :blk false;
             },
             .F8 => b: {

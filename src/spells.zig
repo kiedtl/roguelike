@@ -271,7 +271,6 @@ pub const BOLT_AIRBLAST = Spell{
     .name = "airblast",
     .animation = .{ .Particle = .{ .name = "zap-air-messy" } },
     .cast_type = .Bolt,
-    .bolt_dodgeable = false,
     .bolt_multitarget = false,
     .check_has_effect = struct {
         fn f(caster: *Mob, opts: SpellOptions, c: Coord) bool {
@@ -499,13 +498,7 @@ pub const SUPER_DAMNATION = Spell{
                 opts.context_direction1.turnright(),
             };
             for (&directions) |direction| {
-                var target = coord;
-                while (target.move(direction, state.mapgeometry)) |newcoord| {
-                    if (!state.is_walkable(newcoord, .{ .only_if_breaks_lof = true }))
-                        break;
-                    target = newcoord;
-                }
-
+                const target = utils.getFarthestWalkableCoord(direction, coord);
                 SPELL.use(state.dungeon.at(caster_c).mob, coord, target, .{ .MP_cost = 0, .spell = &SPELL, .power = opts.power, .free = true, .no_message = true });
             }
         }
@@ -541,6 +534,39 @@ pub const BOLT_PARALYSE = Spell{
     }.f },
 };
 
+pub const BOLT_SPINNING_SWORD = Spell{
+    .id = "sp_elec_blinkbolt",
+    .name = "spinning sword",
+    .cast_type = .Bolt,
+    .noise = .Loud,
+    .animation = .{ .Particle = .{ .name = "zap-electric" } },
+    // Commented out because it'll never be called
+    //
+    // .check_has_effect = struct {
+    //     fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
+    //         const mob = state.dungeon.at(target).mob.?;
+    //         return !mob.isFullyResistant(.Armor);
+    //     }
+    // }.f,
+    .effect_type = .{ .Custom = struct {
+        fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
+            if (state.dungeon.at(coord).mob) |victim| {
+                victim.takeDamage(.{
+                    .amount = opts.power,
+                    .source = .RangedAttack,
+                    .by_mob = state.dungeon.at(caster_c).mob,
+                }, .{ .strs = &items.SLASHING_STRS });
+            }
+        }
+    }.f },
+    .bolt_last_coord_effect = struct {
+        pub fn f(caster_coord: Coord, _: SpellOptions, coord: Coord) void {
+            if (state.is_walkable(coord, .{ .right_now = true }))
+                _ = state.dungeon.at(caster_coord).mob.?.teleportTo(coord, null, true);
+        }
+    }.f,
+};
+
 pub const BOLT_BLINKBOLT = Spell{
     .id = "sp_elec_blinkbolt",
     .name = "living lightning",
@@ -568,10 +594,8 @@ pub const BOLT_BLINKBOLT = Spell{
     }.f },
     .bolt_last_coord_effect = struct {
         pub fn f(caster_coord: Coord, _: SpellOptions, coord: Coord) void {
-            if (state.is_walkable(coord, .{ .right_now = true })) {
-                const caster = state.dungeon.at(caster_coord).mob.?;
-                _ = caster.teleportTo(coord, null, true);
-            }
+            if (state.is_walkable(coord, .{ .right_now = true }))
+                _ = state.dungeon.at(caster_coord).mob.?.teleportTo(coord, null, true);
         }
     }.f,
 };
@@ -623,8 +647,6 @@ pub const BOLT_LIGHTNING = Spell{
     .name = "bolt of electricity",
     .animation = .{ .Particle = .{ .name = "lzap-electric" } },
     .cast_type = .Bolt,
-    .bolt_dodgeable = false,
-    .bolt_multitarget = true,
     //.animation = .{ .Type2 = .{ .chars = "EFHIKLMNTVWXYZ\\/|-=+#", .fg = 0x73c5ff } },
     // .animation = .{
     //     .Type2 = .{

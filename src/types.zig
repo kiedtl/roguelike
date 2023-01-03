@@ -1020,6 +1020,7 @@ pub const Status = enum {
     RingTeleportation, // No power field
     RingDamnation, // Power field == initial damage
     RingElectrocution, // Power field == damage
+    RingExcision, // No power field
 
     // Causes a monster to forget any noise or enemies they ran across, and
     // return to a working state. When the status is depleted, all dementia
@@ -1230,6 +1231,7 @@ pub const Status = enum {
             .RingTeleportation => "ring: teleportation",
             .RingDamnation => "ring: damnation",
             .RingElectrocution => "ring: electrocution",
+            .RingExcision => "ring: excision",
 
             .Amnesia => "amnesia",
             .DetectHeat => "detect heat",
@@ -1250,7 +1252,7 @@ pub const Status = enum {
             .Noisy => "noisy",
             .Sleeping => switch (mob.life_type) {
                 .Living => "sleeping",
-                .Construct, .Undead => "dormant",
+                .Spectral, .Construct, .Undead => "dormant",
             },
             .Paralysis => "paralyzed",
             .Held => "held",
@@ -1279,7 +1281,7 @@ pub const Status = enum {
 
     pub fn miniString(self: Status) ?[]const u8 { // {{{
         return switch (self) {
-            .RingTeleportation, .RingDamnation, .RingElectrocution => null,
+            .RingTeleportation, .RingDamnation, .RingElectrocution, .RingExcision => null,
 
             .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .OpenMelee, .ClosedMelee, .Echolocation, .NightVision, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
 
@@ -1729,6 +1731,19 @@ pub const Squad = struct {
         return state.squads.last().?;
     }
 
+    // Remove dead members. Should be called before adding to player's squad, in
+    // case it's full of long-dead allies.
+    //
+    pub fn trimMembers(self: *Squad) void {
+        var newmembers = @TypeOf(self.members).init(null);
+        for (self.members.constSlice()) |member| {
+            // TODO: hostility checks?
+            if (!member.is_dead)
+                newmembers.append(member) catch err.wat();
+        }
+        self.members = newmembers;
+    }
+
     pub fn deinit(self: *Squad) void {
         self.enemies.deinit();
     }
@@ -1813,7 +1828,7 @@ pub const Mob = struct { // {{{
 
     inventory: Inventory = .{},
 
-    life_type: enum { Living, Construct, Undead } = .Living,
+    life_type: enum { Living, Spectral, Construct, Undead } = .Living,
     multitile: ?usize = null,
     is_dead: bool = true,
     is_death_reported: bool = false,
@@ -3395,6 +3410,7 @@ pub const Mob = struct { // {{{
 
         var got: ?bool = null;
         var ministring = s.status.miniString();
+        var string = s.status.string(self);
 
         if (had_status_before and !has_status_now) {
             got = false;
@@ -3413,13 +3429,15 @@ pub const Mob = struct { // {{{
             }
         }
 
-        if (p_se.duration == .Tmp and got != null and ministring != null and
+        if (p_se.duration == .Tmp and got != null and
             (self == state.player or state.player.cansee(self.coord)))
         {
             const verb = if (got.?) @as([]const u8, "gained") else "lost";
-            const pref = if (got.?) "+" else "-";
-            state.message(.Info, "{c} {s} $a{s}$..", .{ self, verb, ministring });
-            ui.labels.addForf(self, "{s}{s}", .{ pref, ministring }, .{ .color = colors.AQUAMARINE });
+            state.message(.Info, "{c} {s} $a{s}$..", .{ self, verb, string });
+            if (ministring) |str| {
+                const pref = if (got.?) "+" else "-";
+                ui.labels.addForf(self, "{s}{s}", .{ pref, str }, .{ .color = colors.AQUAMARINE });
+            }
         }
     }
 

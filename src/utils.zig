@@ -28,6 +28,16 @@ const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
 
 const StackBuffer = buffer.StackBuffer;
 
+pub fn getFarthestWalkableCoord(d: Direction, coord: Coord) Coord {
+    var target = coord;
+    while (target.move(d, state.mapgeometry)) |newcoord| {
+        if (!state.is_walkable(newcoord, .{ .only_if_breaks_lof = true }))
+            break;
+        target = newcoord;
+    }
+    return target;
+}
+
 pub fn walkableNeighbors(c: Coord, diagonals: bool, opts: state.IsWalkableOptions) usize {
     const directions = if (diagonals) &DIRECTIONS else &CARDINAL_DIRECTIONS;
     var ctr: usize = 0;

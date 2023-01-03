@@ -419,6 +419,8 @@ pub fn placeDoor(coord: Coord, locked: bool) void {
 }
 
 pub fn placePlayer(coord: Coord, alloc: mem.Allocator) void {
+    assert(!state.player_inited);
+
     if (state.dungeon.at(coord).mob) |mob|
         mob.deinitNoCorpse();
 
