@@ -511,7 +511,6 @@ fn readInput() !bool {
                         state.player.squad.?.members.append(s) catch err.wat();
                         s.squad = state.player.squad;
                         s.allegiance = state.player.allegiance;
-                        s.addStatus(.Lifespan, 0, .{ .Tmp = 5 });
                         break;
                     }
                 };

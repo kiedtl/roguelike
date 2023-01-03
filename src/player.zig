@@ -392,13 +392,15 @@ pub fn movementTriggersB(direction: Direction) void {
         state.player.makeNoise(.Combat, .Loud);
     }
     if (state.player.hasStatus(.RingExcision)) {
+        state.player.squad.?.trimMembers();
         assert(state.player.squad.?.members.len > 0);
-        for (state.player.squad.?.members.constSlice()) |mob| if (mem.eql(u8, mob.id, "spec_sword")) {
-            const target = utils.getFarthestWalkableCoord(direction, mob.coord);
-            const weapon = state.player.inventory.equipmentConst(.Weapon).*;
-            const damage = if (weapon) |w| combat.damageOfWeapon(state.player, w.Weapon, null).total else 1;
-            spells.BOLT_BLINKBOLT.use(mob, mob.coord, target, .{ .MP_cost = 0, .free = true, .no_message = true, .power = damage });
-        };
+        for (state.player.squad.?.members.constSlice()) |mob|
+            if (mem.eql(u8, mob.id, "spec_sword")) {
+                const target = utils.getFarthestWalkableCoord(direction, mob.coord);
+                const weapon = state.player.inventory.equipmentConst(.Weapon).*;
+                const damage = if (weapon) |w| combat.damageOfWeapon(state.player, w.Weapon, null).total else 1;
+                spells.BOLT_SPINNING_SWORD.use(mob, mob.coord, target, .{ .MP_cost = 0, .free = true, .power = damage });
+            };
     }
 }
 

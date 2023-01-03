@@ -3418,8 +3418,16 @@ pub const Mob = struct { // {{{
             if (was_exhausting or s.exhausting)
                 self.addStatus(.Exhausted, 0, .{ .Tmp = Status.MAX_DURATION });
 
-            if (p_se.status == .Lifespan) {
-                self.HP = 0;
+            switch (p_se.status) {
+                .Lifespan => self.HP = 0,
+                .RingExcision => {
+                    assert(self == state.player);
+                    state.player.squad.?.trimMembers();
+                    for (state.player.squad.?.members.constSlice()) |member|
+                        if (mem.eql(u8, member.id, "spec_sword"))
+                            member.deinit();
+                },
+                else => {},
             }
         } else if (!had_status_before and has_status_now) {
             got = true;

@@ -5,7 +5,7 @@
 #                           diffy  (- (target :y) (coord :y))
 #                           angle  (math/atan2 diffy diffx)
 #                           dist   (:distance coord target)
-#                           offset [(deg-to-rad 90) (deg-to-rad -90) (deg-to-rad 180)]
+#                           offset [(rad 90) (rad -90) (rad 180)]
 #                           nangle (+ angle (offset (% (self :total-spawned) 2)))
 #                           ntarg  (new-coord (+ (coord :x) (* dist (math/cos nangle)))
 #                                             (+ (coord :y) (* dist (math/sin nangle))))]
@@ -80,7 +80,7 @@
 (defn random-choose [array]
   (array (math/floor (* (math/random) (length array)))))
 
-(defn deg-to-rad [deg]
+(defn rad [deg]
   (* (/ (% deg 360) 180) math/pi))
 
 (def Coord @{
@@ -227,7 +227,7 @@
                                        (/ (- orig-dist curr-dist) (* factor orig-dist))))
 
                 :COND-true (fn [&] true)
-                :COND-nth-tick (fn [self ticks ctx n] (% (/ ticks n) 0))
+                :COND-nth-tick (fn [self ticks ctx n] (= (% ticks n) 0))
                 :COND-completed-journey-percent-is? (fn [self ticks ctx func rvalue]
                                                       (func (/ (:distance (self :target) (self :coord))
                                                                (:distance (self :target) (self :initial-coord)))
@@ -265,6 +265,18 @@
                                   (case (type new-speed)
                                     :number (put self :speed new-speed)
                                     :function (put self :speed (new-speed self ticks ctx))))
+                :TRIG-cycle-glyph (fn [self ticks ctx chars &]
+                                    (assert (= (type chars) :string))
+                                    (def current ((self :tile) :ch))
+                                    (var current-index nil)
+                                    (loop [i :range [0 (length chars)]]
+                                      (if (= (string/from-bytes (chars i)) current)
+                                        (do (set current-index i)
+                                            (break))))
+                                    (if (not current-index)
+                                      (break))
+                                    (def new-index (% (+ current-index 1) (length chars)))
+                                    (put (self :tile) :ch (string/from-bytes (chars new-index))))
                 :TRIG-scramble-glyph (fn [self ticks ctx chars &]
                                        (def new-char (random-choose chars))
                                        (case (type chars)
@@ -325,7 +337,7 @@
                                        :custom
                                            ((how 1) self ticks ctx)
                                        :sine-custom # (:sine (fn [self ticks ctx] ...))
-                                           (/ (+ (math/sin (deg-to-rad ((how 1) self ticks ctx))) 1) 2)
+                                           (/ (+ (math/sin (rad ((how 1) self ticks ctx))) 1) 2)
                                        :completed-lifetime # (:completed-lifetime factor)
                                            (min 1 (- 1 (/ (self :age) (* (how 1) (self :lifetime)))))
 
@@ -353,8 +365,8 @@
                                    (put (self :tile) which (bor (blshift r 16) (blshift g 8) b)))
                 :TRIG-create-emitter (fn [self ticks ctx emitter-template]
                                        (def new-emitter (deepclone emitter-template))
-                                       (put (new-emitter :particle) :coord (self :coord))
-                                       (put (new-emitter :particle) :target (((self :parent) :particle) :target))
+                                       (put new-emitter :initial (deepclone (self :coord)))
+                                       (put new-emitter :target (deepclone ((self :parent) :target)))
                                        (put new-emitter :parent self)
                                        (array/push (ctx :emitters) new-emitter))
                 :TRIG-set-explosion-expand-status (fn [self ticks ctx parent finished?]
@@ -382,6 +394,8 @@
                :inactive false
                :parent nil
                :total-spawned 0
+               :initial nil
+               :target nil
 
                # Context specific to an effect
                :explosion-finished-expanding false
@@ -402,7 +416,7 @@
                              (do
                                (var new (deepclone (self :particle)))
                                (let [[coord target]
-                                    (:get-spawn-params self ticks ctx (ctx :initial) (ctx :target))]
+                                    (:get-spawn-params self ticks ctx (self :initial) (self :target))]
                                  (if (or (not coord) (not target))
                                    (break))
                                  # Just gonna vent my frustrations here: Janet,
@@ -455,7 +469,7 @@
                               (default radius :distance)
                               (fn [self ticks ctx coord target]
                                 (let [lrad (case radius :distance (+ 1 (:distance coord target)) radius)
-                                      angle (deg-to-rad (* 1 (/ (self :total-spawned) lrad)))
+                                      angle (rad (* 1 (/ (self :total-spawned) lrad)))
                                       n (+ (% (self :total-spawned) lrad) 0)]
                                   (if inverse
                                     [(:move-angle target n angle) target]
@@ -470,7 +484,7 @@
                :SSPD-min-sin-ticks (fn [self ticks ctx speed]
                                      (max 0.1 (- speed (math/random) (math/abs (math/sin ticks)))))
                :SSPD-min-sin-ticks2 (fn [self ticks ctx speed]
-                                      (max 0.1 (- speed (math/random) (math/abs (math/sin (deg-to-rad (* 10 ticks)))))))
+                                      (max 0.1 (- speed (math/random) (math/abs (math/sin (rad (* 10 ticks)))))))
 
                # :spawn-count presets
                :SCNT-dist-to-target (fn [self &] (+ (:distance-euc ((self :particle) :coord) ((self :particle) :target)) 1))
@@ -490,11 +504,9 @@
                :bounds (new-rect)
                :particles @[]
                :emitters @[]
-               :initial nil
-               :target nil
                })
-(defn new-context [target area-size emitters initial target]
-  (table/setproto @{ :bounds area-size :target target :emitters emitters :initial initial :target target} Context))
+(defn new-context [target area-size emitters]
+  (table/setproto @{ :bounds area-size :target target :emitters emitters} Context))
 
 (defn template-chargeover [chars color1 color2 &named direction speed lifetime which maxdist mindist style stopshort]
   (default direction                          :out)
@@ -650,7 +662,7 @@
     :spawn-count (fn [self ticks ctx] (* (max ((ctx :bounds) :width) ((ctx :bounds) :height)) 2)) 
     :get-spawn-params (fn [self ticks ctx coord target]
                         (let [dist  (max ((ctx :bounds) :width) ((ctx :bounds) :height))
-                              angle (deg-to-rad (func (* 4 (/ (self :total-spawned) dist))))
+                              angle (rad (func (* 4 (/ (self :total-spawned) dist))))
                               n     (+ (% (self :total-spawned) dist) 1)]
                           [(:move-angle coord n angle) target]))
   }))
@@ -676,7 +688,7 @@
         :spawn-count (fn [self ticks ctx] (* (max ((ctx :bounds) :width) ((ctx :bounds) :height)) 2)) 
         :get-spawn-params (fn [self ticks ctx coord target]
                             (let [dist  (max ((ctx :bounds) :width) ((ctx :bounds) :height))
-                                  angle (deg-to-rad (func (* 4 (/ (self :total-spawned) dist))))
+                                  angle (rad (func (* 4 (/ (self :total-spawned) dist))))
                                   n     (+ (% (self :total-spawned) dist) 1)]
                               [(:move-angle coord n angle) target]))
       }))
@@ -698,6 +710,35 @@
     })
     :lifetime 5
     :spawn-count (Emitter :SCNT-dist-to-target)
+   })]
+  "zap-sword" @[(new-emitter @{
+    :particle (new-particle @{
+      :tile (new-tile @{ :ch "|" :fg 0xef9fff :bg 0 :bg-mix 1 })
+      :require-los 0
+      :triggers @[
+        [[:COND-nth-tick 1] [:TRIG-cycle-glyph "|/-\\"]]
+        # Smooth-end transformation. i.e. 1-((1-x)^2)
+        [[:COND-true] [:TRIG-set-speed (fn [self &] (+ 0.1 (- 1 (math/pow (:completed-journey self) 2))))]]
+        [[:COND-true] [:TRIG-create-emitter (new-emitter @{
+          :particle (new-particle @{
+            :tile (new-tile @{ :ch " " :fg 0 :bg 0x442266 :bg-mix 1 })
+            :speed 0.1 :require-nonwall 0 :require-los 0
+            :triggers @[
+              [[:COND-reached-target? true] [:TRIG-set-speed 0]]
+              [[:COND-true] [:TRIG-reset-lifetime-once (fn [&] (random-choose [9 5])) 0]]
+              [[:COND-true] [:TRIG-modify-color :bg "rg" [:completed-lifetime 1]]]
+            ]
+          })
+          :lifetime 2
+          :birth-delay 2
+          :get-spawn-params (fn [self ticks ctx coord target]
+                              (let [nangle (+ (:angle target coord) (random-choose [(rad 90) (rad -90) 0 0 0]))
+                                    ntarg  (:move-angle coord 1 nangle)]
+                                [ntarg coord]))
+        })]]
+      ]
+    })
+    :lifetime 0
    })]
   "zap-fire-messy" @[(new-emitter @{
     :particle (new-particle @{
@@ -734,11 +775,11 @@
           :lifetime 1
           :birth-delay 1
           :get-spawn-params (fn [self ticks ctx coord target]
-                              (let [nangle (+ (:angle target coord) (random-choose [(deg-to-rad 90) (deg-to-rad -90)]))
+                              (let [nangle (+ (:angle target coord) (random-choose [(rad 90) (rad -90)]))
                                     ntarg  (:move-angle coord 1 nangle)]
                                 [coord ntarg]))
 
-        })]]
+       })]]
       ]
     })
     :spawn-count 2
@@ -767,7 +808,7 @@
     })
     :lifetime 0
    })]
-  "zap-statues" @[
+  "test" @[
     (new-emitter @{
       :particle (new-particle @{
         :tile (new-tile @{ :ch "*" :fg LIGHT_GOLD })
@@ -823,7 +864,7 @@
             :lifetime 7
             :spawn-count (fn [&] 5)
             :get-spawn-params (fn [self ticks ctx coord target]
-                                (let [angle  (deg-to-rad (* (math/random) 360))
+                                (let [angle  (rad (* (math/random) 360))
                                       dist   (max 1 (* (math/random) 4))]
                                   [(:move-angle coord dist angle) coord]))
           })]]
@@ -1054,7 +1095,7 @@
       :lifetime 0
       :spawn-count (fn [self ticks ctx &] 360)
       :get-spawn-params (fn [self ticks ctx coord target]
-                          [(:move-angle coord PLAYER_LOS_R (deg-to-rad (self :total-spawned))) target])
+                          [(:move-angle coord PLAYER_LOS_R (rad (self :total-spawned))) target])
      })
   ]
   "glow-white-gray" @[ (template-lerp-single 0xffffff 0x111111) ]
@@ -1100,7 +1141,7 @@
                           [(target (self :total-spawned)) coord])
       })
   ]
-  # "test" @[]
+  "test" @[]
 })
 
 (defn animation-init [initial target boundsx boundsy bounds-width bounds-height emitters-set]
@@ -1108,12 +1149,14 @@
   (def emitters (deepclone (emitters-table emitters-set)))
 
   (each emitter emitters
+    (put emitter :initial initial)
+    (put emitter :target target)
     (if (and (initial :x) (initial :y))
       (put (emitter :particle) :coord initial))
     (if (and (= (type target) :table) (target :x) (target :y))
       (put (emitter :particle) :target target)))
 
-  (new-context target area-size emitters initial target))
+  (new-context target area-size emitters))
 
 (defn animation-tick [ctx ticks]
 

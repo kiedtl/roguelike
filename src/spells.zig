@@ -535,11 +535,11 @@ pub const BOLT_PARALYSE = Spell{
 };
 
 pub const BOLT_SPINNING_SWORD = Spell{
-    .id = "sp_elec_blinkbolt",
+    .id = "sp_spinning_sword",
     .name = "spinning sword",
     .cast_type = .Bolt,
     .noise = .Loud,
-    .animation = .{ .Particle = .{ .name = "zap-electric" } },
+    .animation = .{ .Particle = .{ .name = "zap-sword" } },
     // Commented out because it'll never be called
     //
     // .check_has_effect = struct {
