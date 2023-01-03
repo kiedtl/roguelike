@@ -1060,30 +1060,30 @@ pub const AncientMageTemplate = MobTemplate{
     .cloak = &items.SilCloak,
 };
 
-pub const SpectreMageTemplate = MobTemplate{
-    .mob = .{
-        .id = "spectre_mage",
-        .species = &HumanSpecies,
-        .tile = 'Ƨ',
-        .ai = AI{
-            .profession_name = "spectre mage",
-            .profession_description = "watching",
-            .work_fn = ai.standStillAndGuardWork,
-            .fight_fn = ai.mageFight,
-            .spellcaster_backup_action = .KeepDistance,
-        },
+// pub const SpectreMageTemplate = MobTemplate{
+//     .mob = .{
+//         .id = "spectre_mage",
+//         .species = &HumanSpecies,
+//         .tile = 'Ƨ',
+//         .ai = AI{
+//             .profession_name = "spectre mage",
+//             .profession_description = "watching",
+//             .work_fn = ai.standStillAndGuardWork,
+//             .fight_fn = ai.mageFight,
+//             .spellcaster_backup_action = .KeepDistance,
+//         },
 
-        .spells = &[_]SpellOptions{
-            .{ .MP_cost = 15, .spell = &spells.CAST_CONJ_SPECTRAL_SWORD },
-        },
-        .max_MP = 15,
+//         .spells = &[_]SpellOptions{
+//             .{ .MP_cost = 15, .spell = &spells.CAST_CONJ_SPECTRAL_SWORD },
+//         },
+//         .max_MP = 15,
 
-        .max_HP = 5,
-        .memory_duration = 6,
-        .stats = .{ .Willpower = 6, .Vision = 5 },
-    },
-    .armor = &items.HauberkArmor,
-};
+//         .max_HP = 5,
+//         .memory_duration = 6,
+//         .stats = .{ .Willpower = 6, .Vision = 5 },
+//     },
+//     .armor = &items.HauberkArmor,
+// };
 
 pub const RecruitTemplate = MobTemplate{
     .mob = .{
@@ -1987,7 +1987,7 @@ pub const MOBS = [_]MobTemplate{
     CleanerTemplate,
     HaulerTemplate,
     AncientMageTemplate,
-    SpectreMageTemplate,
+    //SpectreMageTemplate,
     RecruitTemplate,
     WarriorTemplate,
     HunterTemplate,
