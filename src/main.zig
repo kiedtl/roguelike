@@ -503,17 +503,6 @@ fn readInput() !bool {
                 // state.player.addStatus(.Corruption, 0, .{ .Tmp = 5 });
                 // state.player.addStatus(.RingTeleportation, 0, .{ .Tmp = 5 });
                 // state.player.addStatus(.RingElectrocution, 0, .{ .Tmp = 5 });
-                state.player.addStatus(.RingExcision, 0, .{ .Tmp = 5 });
-                for (&DIRECTIONS) |d| if (state.player.coord.move(d, state.mapgeometry)) |n| {
-                    if (state.is_walkable(n, .{})) {
-                        const s = mobs.placeMob(state.GPA.allocator(), &mobs.SpectralSwordTemplate, n, .{});
-                        state.player.squad.?.trimMembers();
-                        state.player.squad.?.members.append(s) catch err.wat();
-                        s.squad = state.player.squad;
-                        s.allegiance = state.player.allegiance;
-                        break;
-                    }
-                };
                 break :blk false;
             },
             .F8 => b: {

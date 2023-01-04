@@ -184,6 +184,7 @@ pub const RINGS = [_]Ring{
     ElectrificationRing,
     InsurrectionRing,
     MagnetizationRing,
+    ExcisionRing,
 };
 
 pub const Rune = enum {
@@ -1256,6 +1257,81 @@ pub const MagnetizationRing = Ring{ // {{{
 
             if (state.player.cansee(magnet.coord))
                 state.message(.Info, "{c} becomes magnetic!", .{magnet});
+        }
+    }.f,
+}; // }}}
+
+pub const ExcisionRing = Ring{ // {{{
+    .name = "excision",
+    .pattern_checker = .{
+        .turns = 4,
+        .init = struct {
+            pub fn f(_: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+                if (d.is_diagonal())
+                    return error.NeedCardinalDirection;
+
+                stt.directions[0] = d;
+
+                return .Rest;
+            }
+        }.f,
+        .funcs = [_]PatternChecker.Func{
+            struct {
+                pub fn f(_: *Mob, _: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    return cur == .Rest;
+                }
+            }.f,
+            struct {
+                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
+                    const r = cur == .Move and
+                        (cur.Move == stt.directions[0].?.turnleft() or
+                        cur.Move == stt.directions[0].?.turnright());
+                    if (r and !dry) {
+                        stt.directions[1] = cur.Move;
+                    }
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    const r = cur == .Move and
+                        cur.Move == stt.directions[1].?;
+                    return r;
+                }
+            }.f,
+            struct {
+                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
+                    const r = cur == .Move and
+                        cur.Move == stt.directions[0].?.opposite();
+                    return r;
+                }
+            }.f,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        },
+    },
+    .effect = struct {
+        pub fn f(self: *Mob, stt: PatternChecker.State) void {
+            if (self.coord.move(stt.directions[0].?, state.mapgeometry)) |n| {
+                if (state.is_walkable(n, .{})) {
+                    const s = mobs.placeMob(state.GPA.allocator(), &mobs.SpectralSwordTemplate, n, .{});
+                    self.squad.?.trimMembers();
+                    self.squad.?.members.append(s) catch err.wat();
+                    s.squad = self.squad;
+                    s.allegiance = self.allegiance;
+                    state.message(.Info, "A spectral blade appears mid-air, hovering precariously.", .{});
+
+                    const will = @intCast(usize, self.stat(.Willpower));
+                    self.addStatus(.RingExcision, 0, .{ .Tmp = will * 2 });
+
+                    return;
+                }
+            }
+            state.message(.Info, "A haftless sword seems to appear mid-air, then disappears abruptly.", .{});
         }
     }.f,
 }; // }}}

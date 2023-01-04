@@ -426,8 +426,8 @@ pub fn placePlayer(coord: Coord, alloc: mem.Allocator) void {
 
     state.player = mobs.placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
 
-    //const ring = items.createItem(Ring, items.MagnetizationRing);
-    //state.player.inventory.equipment(.Ring1).* = Item{ .Ring = ring };
+    const ring = items.createItem(Ring, items.ExcisionRing);
+    state.player.inventory.equipment(.Ring1).* = Item{ .Ring = ring };
 
     state.player.prisoner_status = Prisoner{ .of = .Necromancer };
 

@@ -594,6 +594,27 @@ $G    ....                  ....    ....
 $cEffect:$. All other enemies in your LOS will go flying towards the enemy you
 attacked.
 
+% excision
+$cPattern:$. Wait, move sideways twice, then move backwards.
+
+
+$G    .$rm$G...              ..$rm$G..    .....    .....
+
+$G    .....              .....    ...$rm$G.    .....
+
+$G    ..$.@$G..    $.<rest>$G    ...$.@$G.    ....$.@$G    ....$rm$G
+
+$G    .....              .....    .....    ....$.@$G
+
+
+$cEffect:$. Conjures a spectral sword in the chosen direction. When you move,
+the sword will attack multiple foes in a line in that direction.
+
+
+The lifespan of the spectral sword is equivalent to your willpower * 2, and its
+damage is equivalent to the damage your current weapon would deal if you
+attacked (defaulting to $b1$. damage if you don't have a weapon).
+
 % pin foe
 $cPattern:$. Attack a foe, move diagonally around it, attack again, move away.
 
