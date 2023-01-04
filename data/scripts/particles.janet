@@ -43,6 +43,10 @@
   0xffff00
 ])
 
+(defn panic [msg & args]
+  (eprintf msg ;args)
+  (assert false))
+
 # From spork.
 (defn shuffle-in-place
   ```
@@ -808,7 +812,7 @@
     })
     :lifetime 0
    })]
-  "test" @[
+  "zap-statues" @[
     (new-emitter @{
       :particle (new-particle @{
         :tile (new-tile @{ :ch "*" :fg LIGHT_GOLD })
@@ -1147,6 +1151,9 @@
 (defn animation-init [initial target boundsx boundsy bounds-width bounds-height emitters-set]
   (def area-size (new-rect (new-coord boundsx boundsy) bounds-width bounds-height))
   (def emitters (deepclone (emitters-table emitters-set)))
+
+  (if (not emitters)
+    (panic "Animation %s doesn't exist." emitters-set))
 
   (each emitter emitters
     (put emitter :initial initial)
