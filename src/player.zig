@@ -284,14 +284,14 @@ pub fn moveOrFight(direction: Direction) bool {
     // Does the player want to stab or push past?
     if (state.dungeon.at(dest).mob) |mob| {
         if (state.player.isHostileTo(mob))
-            if (mob.ai.phase == .Work or combat.isAttackStab(state.player, mob)) {
+            if (combat.isAttackStab(state.player, mob)) {
                 state.player.fight(mob, .{});
                 return true;
             } else if (mob.ai.phase == .Hunt or mob.ai.phase == .Investigate) {
                 if (getActiveRing()) |_| {
                     state.player.fight(mob, .{});
                     return true;
-                } else if (!ai.isEnemyKnown(mob, state.player)) {
+                } else if (!ai.isEnemyKnown(mob, state.player) and !mob.hasStatus(.Amnesia)) {
                     if (!ui.drawYesNoPrompt("Really push past unaware enemy?", .{}))
                         return false;
                 }

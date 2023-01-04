@@ -501,7 +501,8 @@ $G    $.@$G.$rm$G.   .$.@$G$rm$G.   ..$rm$G.   ..$rm$G.
 $G    ....   ....   .$.@$G..   ..$.@$G.
 
 
-$cEffect:$. All enemies within four tiles of you receive the Amnesia status.
+$cEffect:$. All enemies in your LOS receive the $oAmnesia$. status for $b7$.
+turns.
 
 % cremation
 $cPattern:$. Attack foe, then move all around foe in four turns (without

@@ -823,7 +823,7 @@ pub const DistractionRing = Ring{ // {{{
             defer dijk.deinit();
             while (dijk.next()) |coord2| {
                 if (utils.getHostileAt(self, coord2)) |hostile| {
-                    hostile.addStatus(.Amnesia, 0, .{ .Tmp = 10 });
+                    hostile.addStatus(.Amnesia, 0, .{ .Tmp = 7 });
                 } else |_| {}
                 anim_buf.append(coord2) catch unreachable;
             }

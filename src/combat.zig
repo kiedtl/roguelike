@@ -247,7 +247,13 @@ pub fn isAttackStab(attacker: *const Mob, defender: *const Mob) bool {
 
             break :b false;
         },
-        .Work => true,
+        .Work => b: {
+            if (defender.hasStatus(.Amnesia) and ai.isEnemyKnown(defender, attacker)) {
+                break :b false;
+            } else {
+                break :b true;
+            }
+        },
     };
 }
 

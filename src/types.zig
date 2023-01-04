@@ -2918,6 +2918,9 @@ pub const Mob = struct { // {{{
         // We already do this in fight() for missed attacks, but this takes
         // care of ranged combat, spell damage, etc.
         if (d.by_mob) |attacker| {
+            if (attacker.isHostileTo(self) and self.hasStatus(.Amnesia)) {
+                self.cancelStatus(.Amnesia);
+            }
             ai.updateEnemyKnowledge(self, attacker, null);
         }
 
@@ -3748,7 +3751,18 @@ pub const Mob = struct { // {{{
     // we somehow invalidate the current `self` pointer while we're appending
     // to self.enemies (say, we change self.mobs to an ArrayList and append to
     // it or something, triggering a realloc) then havoc can happen
+    //
     pub fn enemyList(self: *Mob) *EnemyRecord.AList {
+        assert(@TypeOf(state.mobs) == LinkedList(Mob));
+
+        if (self.squad) |squad| {
+            return &squad.enemies;
+        } else {
+            return &self.enemies;
+        }
+    }
+
+    pub fn enemyListConst(self: *const Mob) *const EnemyRecord.AList {
         assert(@TypeOf(state.mobs) == LinkedList(Mob));
 
         if (self.squad) |squad| {

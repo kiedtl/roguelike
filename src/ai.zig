@@ -203,8 +203,8 @@ pub fn shouldFlee(me: *Mob) bool {
     return calculateMorale(me) < 0;
 }
 
-pub fn isEnemyKnown(mob: *Mob, enemy: *Mob) bool {
-    return for (mob.enemyList().items) |enemyrecord| {
+pub fn isEnemyKnown(mob: *const Mob, enemy: *const Mob) bool {
+    return for (mob.enemyListConst().items) |enemyrecord| {
         if (enemyrecord.mob == enemy) break true;
     } else false;
 }
