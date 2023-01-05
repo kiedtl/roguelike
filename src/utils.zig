@@ -28,11 +28,10 @@ const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
 
 const StackBuffer = buffer.StackBuffer;
 
-pub fn getFarthestWalkableCoord(d: Direction, coord: Coord) Coord {
+pub fn getFarthestWalkableCoord(d: Direction, coord: Coord, opts: state.IsWalkableOptions) Coord {
     var target = coord;
     while (target.move(d, state.mapgeometry)) |newcoord| {
-        if (!state.is_walkable(newcoord, .{ .only_if_breaks_lof = true }))
-            break;
+        if (!state.is_walkable(newcoord, opts)) break;
         target = newcoord;
     }
     return target;

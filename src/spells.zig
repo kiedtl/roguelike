@@ -428,21 +428,53 @@ fn _effectAuraDispersal(caster: Coord, _: Spell, _: SpellOptions, _: Coord) void
         });
 }
 
-pub const CAST_CONJ_SPECTRAL_SWORD = Spell{
-    .id = "sp_conj_ss",
-    .name = "conjure spectral sword",
-    .cast_type = .Smite,
-    .smite_target_type = .Self,
-    .noise = .Quiet,
+// pub const CAST_CONJ_SPECTRAL_SWORD = Spell{
+//     .id = "sp_conj_ss",
+//     .name = "conjure spectral sword",
+//     .cast_type = .Smite,
+//     .smite_target_type = .Self,
+//     .noise = .Silent,
+//     .effect_type = .{
+//         .Custom = struct {
+//             fn f(_: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
+//                 for (&CARDINAL_DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
+//                     if (state.is_walkable(neighbor, .{ .right_now = true })) {
+//                         // FIXME: passing allocator directly is anti-pattern?
+//                         _ = mobs.placeMob(state.GPA.allocator(), &mobs.SpectralSwordTemplate, neighbor, .{});
+//                     }
+//                 };
+//             }
+//         }.f,
+//     },
+// };
+
+pub const BOLT_CONJURE = Spell{
+    .id = "sp_conj_ss_bolt",
+    .name = "conjure spectral sabre",
+    .cast_type = .Bolt,
+    .bolt_multitarget = false,
+    .animation = .{ .Particle = .{ .name = "zap-electric-charging" } },
+    .noise = .Silent,
     .effect_type = .{
         .Custom = struct {
-            fn f(_: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
-                for (&CARDINAL_DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
-                    if (state.is_walkable(neighbor, .{ .right_now = true })) {
-                        // FIXME: passing allocator directly is anti-pattern?
-                        _ = mobs.placeMob(state.GPA.allocator(), &mobs.SpectralSwordTemplate, neighbor, .{});
-                    }
-                };
+            fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
+                const caster = state.dungeon.at(caster_c).mob.?;
+
+                var directions = DIRECTIONS;
+                rng.shuffle(Direction, &directions);
+
+                var spawned_ctr: usize = 0;
+                for (&directions) |d|
+                    if (coord.move(d, state.mapgeometry)) |neighbor| {
+                        if (state.is_walkable(neighbor, .{ .right_now = true })) {
+                            const ss = mobs.placeMob(state.GPA.allocator(), &mobs.SpectralSabreTemplate, neighbor, .{});
+                            caster.addUnderling(ss);
+
+                            spawned_ctr += 1;
+                            if (spawned_ctr == opts.power)
+                                break;
+                        }
+                    };
             }
         }.f,
     },
@@ -498,7 +530,7 @@ pub const SUPER_DAMNATION = Spell{
                 opts.context_direction1.turnright(),
             };
             for (&directions) |direction| {
-                const target = utils.getFarthestWalkableCoord(direction, coord);
+                const target = utils.getFarthestWalkableCoord(direction, coord, .{ .only_if_breaks_lof = true, .ignore_mobs = true });
                 SPELL.use(state.dungeon.at(caster_c).mob, coord, target, .{ .MP_cost = 0, .spell = &SPELL, .power = opts.power, .free = true, .no_message = true });
             }
         }

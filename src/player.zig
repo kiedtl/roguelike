@@ -396,11 +396,15 @@ pub fn movementTriggersB(direction: Direction) void {
         assert(state.player.squad.?.members.len > 0);
         for (state.player.squad.?.members.constSlice()) |mob|
             if (mem.eql(u8, mob.id, "spec_sword")) {
-                const target = utils.getFarthestWalkableCoord(direction, mob.coord);
+                const target = utils.getFarthestWalkableCoord(direction, mob.coord, .{ .only_if_breaks_lof = true, .ignore_mobs = true });
                 const weapon = state.player.inventory.equipmentConst(.Weapon).*;
                 const damage = if (weapon) |w| combat.damageOfWeapon(state.player, w.Weapon, null).total else 1;
                 spells.BOLT_SPINNING_SWORD.use(mob, mob.coord, target, .{ .MP_cost = 0, .free = true, .power = damage });
             };
+    }
+    if (state.player.hasStatus(.RingConjuration)) {
+        const target = utils.getFarthestWalkableCoord(direction, state.player.coord, .{ .only_if_breaks_lof = true });
+        spells.BOLT_CONJURE.use(state.player, state.player.coord, target, .{ .MP_cost = 0, .free = true, .power = 2 });
     }
 }
 

@@ -1021,6 +1021,7 @@ pub const Status = enum {
     RingDamnation, // Power field == initial damage
     RingElectrocution, // Power field == damage
     RingExcision, // No power field
+    RingConjuration, // No power field
 
     // Causes a monster to forget any noise or enemies they ran across, and
     // return to a working state. When the status is depleted, all dementia
@@ -1232,6 +1233,7 @@ pub const Status = enum {
             .RingDamnation => "ring: damnation",
             .RingElectrocution => "ring: electrocution",
             .RingExcision => "ring: excision",
+            .RingConjuration => "ring: conjuration",
 
             .Amnesia => "amnesia",
             .DetectHeat => "detect heat",
@@ -1281,7 +1283,7 @@ pub const Status = enum {
 
     pub fn miniString(self: Status) ?[]const u8 { // {{{
         return switch (self) {
-            .RingTeleportation, .RingDamnation, .RingElectrocution, .RingExcision => null,
+            .RingTeleportation, .RingDamnation, .RingElectrocution, .RingExcision, .RingConjuration => null,
 
             .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .OpenMelee, .ClosedMelee, .Echolocation, .NightVision, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
 
@@ -1676,6 +1678,8 @@ pub const AI = struct {
         DetectWithElec, // Detected with .DetectElec status
         AvoidsEnemies, // A* penalty for enemy monsters. For prisoners/stalkers.
         IgnoredByEnemies, // Hacky fix for prisoners continually hacking at statues.
+        IgnoresEnemiesUnknownToLeader, // Won't attack enemies that the leader can't see
+        ForceNormalWork, // Continue normal work even when in squad with leader.
     };
 
     pub fn flag(self: *const AI, f: Flag) bool {
@@ -1716,7 +1720,7 @@ pub const Squad = struct {
     __next: ?*Squad = null,
     __prev: ?*Squad = null,
 
-    members: StackBuffer(*Mob, 16) = StackBuffer(*Mob, 16).init(null),
+    members: StackBuffer(*Mob, 64) = StackBuffer(*Mob, 64).init(null),
     leader: ?*Mob = null, // FIXME: Should never be null in practice!
     enemies: EnemyRecord.AList = undefined,
 
@@ -2407,6 +2411,13 @@ pub const Mob = struct { // {{{
             };
 
         sound.announceSound(self.coordMT(state.player.coord));
+    }
+
+    pub fn addUnderling(self: *Mob, underling: *Mob) void {
+        self.squad.?.trimMembers();
+        self.squad.?.members.append(underling) catch err.wat();
+        underling.squad = self.squad.?;
+        underling.allegiance = self.allegiance;
     }
 
     // Check if a mob, when trying to move into a space that already has a mob,

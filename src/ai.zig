@@ -378,7 +378,10 @@ pub fn checkForHostiles(mob: *Mob) void {
 
             if (othermob == mob) continue;
 
-            if (!othermob.ai.flag(.IgnoredByEnemies) and mob.isHostileTo(othermob)) {
+            if (!othermob.ai.flag(.IgnoredByEnemies) and
+                mob.isHostileTo(othermob) and
+                (!mob.ai.flag(.IgnoresEnemiesUnknownToLeader) or mob.squad.?.leader.?.cansee(othermob.coord)))
+            {
                 updateEnemyRecord(mob, .{
                     .mob = othermob,
                     .counter = mob.memory_duration,
@@ -409,6 +412,7 @@ pub fn checkForHostiles(mob: *Mob) void {
             !mob.isHostileTo(enemy.mob) or
             enemy.mob.coord.z != mob.coord.z or
             enemy.mob.ai.flag(.IgnoredByEnemies) or
+            (mob.ai.flag(.IgnoresEnemiesUnknownToLeader) and !mob.squad.?.leader.?.cansee(enemy.mob.coord)) or
             enemy.mob.is_dead)
         {
             _ = mob.enemyList().orderedRemove(i);
@@ -1417,7 +1421,7 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
 
 pub fn work(mob: *Mob, alloc: mem.Allocator) void {
     var work_fn = mob.ai.work_fn;
-    if (!mob.isAloneOrLeader()) {
+    if (!mob.isAloneOrLeader() and !mob.ai.flag(.ForceNormalWork)) {
         work_fn = stayNearLeaderWork;
     }
 

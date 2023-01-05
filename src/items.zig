@@ -1136,9 +1136,7 @@ pub const InsurrectionRing = Ring{ // {{{
 
                     corpse_mob.addStatus(.Lifespan, 0, .{ .Tmp = lifetime });
                     corpse_mob.addStatus(.Blind, 0, .Prm);
-                    corpse_mob.allegiance = .OtherGood;
-                    corpse_mob.squad = state.player.squad.?;
-                    state.player.squad.?.members.append(corpse_mob) catch err.wat();
+                    self.addUnderling(corpse_mob);
                     ai.updateEnemyKnowledge(corpse_mob, stt.mobs[0].?, null);
                 }
 
@@ -1319,10 +1317,7 @@ pub const ExcisionRing = Ring{ // {{{
             if (self.coord.move(stt.directions[0].?, state.mapgeometry)) |n| {
                 if (state.is_walkable(n, .{})) {
                     const s = mobs.placeMob(state.GPA.allocator(), &mobs.SpectralSwordTemplate, n, .{});
-                    self.squad.?.trimMembers();
-                    self.squad.?.members.append(s) catch err.wat();
-                    s.squad = self.squad;
-                    s.allegiance = self.allegiance;
+                    self.addUnderling(s);
                     state.message(.Info, "A spectral blade appears mid-air, hovering precariously.", .{});
 
                     const will = @intCast(usize, self.stat(.Willpower));

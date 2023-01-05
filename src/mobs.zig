@@ -1949,9 +1949,9 @@ pub const SpectralSwordTemplate = MobTemplate{
 
 pub const SpectralSabreTemplate = MobTemplate{
     .mob = .{
-        .id = "spec_sword",
+        .id = "spec_sabre",
         .species = &Species{
-            .name = "spectral sword",
+            .name = "spectral sabre",
             .default_attack = &Weapon{
                 .damage = 1,
                 .strs = &[_]DamageStr{items._dmgstr(1, "nick", "nicks", "")},
@@ -1959,29 +1959,27 @@ pub const SpectralSabreTemplate = MobTemplate{
         },
         .tile = ')',
         .ai = AI{
-            .profession_description = "[this is a bug]",
+            .profession_description = "hovering",
             .work_fn = ai.suicideWork,
             .fight_fn = ai.meleeFight,
             .is_curious = false,
             .is_fearless = true,
+            .flags = &[_]AI.Flag{ .IgnoresEnemiesUnknownToLeader, .ForceNormalWork },
         },
 
         .deaf = true,
         .deg360_vision = true,
         .no_show_fov = true,
+        .base_night_vision = true,
         .max_HP = 1,
-        .memory_duration = 5,
+        .memory_duration = 1,
 
-        .life_type = .Construct,
+        .life_type = .Spectral,
         .blood = null,
         .corpse = .None,
 
         .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rFume = 100 },
         .stats = .{ .Willpower = WILL_IMMUNE, .Melee = 40, .Speed = 50, .Vision = 20 },
-    },
-    .statuses = &[_]StatusDataInfo{
-        .{ .status = .Corona, .power = 10, .duration = .Prm },
-        .{ .status = .NightVision, .duration = .Prm },
     },
 };
 

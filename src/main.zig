@@ -503,6 +503,7 @@ fn readInput() !bool {
                 // state.player.addStatus(.Corruption, 0, .{ .Tmp = 5 });
                 // state.player.addStatus(.RingTeleportation, 0, .{ .Tmp = 5 });
                 // state.player.addStatus(.RingElectrocution, 0, .{ .Tmp = 5 });
+                state.player.addStatus(.RingConjuration, 0, .{ .Tmp = 2 });
                 break :blk false;
             },
             .F8 => b: {
