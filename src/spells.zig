@@ -453,7 +453,7 @@ pub const BOLT_CONJURE = Spell{
     .name = "conjure spectral sabre",
     .cast_type = .Bolt,
     .bolt_multitarget = false,
-    .animation = .{ .Particle = .{ .name = "zap-electric-charging" } },
+    .animation = .{ .Particle = .{ .name = "zap-conjuration" } },
     .noise = .Silent,
     .effect_type = .{
         .Custom = struct {

@@ -550,10 +550,12 @@
                               :in  [(:move-angle coord dist2 angle) (:move-angle coord 1 angle)])))
     }))
 
-(defn template-lingering-zap [chars bg fg lifetime &named bg-mix territorial lerp-to]
+(defn template-lingering-zap [chars bg fg lifetime &named bg-mix territorial lerp-to require-nonwall require-los]
   (default bg-mix 0.7)
   (default territorial false)
   (default lerp-to nil)
+  (default require-nonwall true)
+  (default require-los 1)
   (def color-change-trigger (case lerp-to
     nil [[:COND-true] [:TRIG-modify-color :bg "rgb" [:completed-lifetime 1.3]]]
         [[:COND-true] [:TRIG-lerp-color :bg lerp-to "rgb" [:completed-lifetime 1.3] :inverse true]]))
@@ -562,6 +564,7 @@
     :particle (new-particle @{
       :tile (new-tile @{ :ch "Z" :fg fg :bg bg :bg-mix bg-mix })
       :speed 0 :lifetime lifetime :territorial territorial
+      :require-nonwall require-nonwall :require-los require-los
       :triggers @[
         [[:COND-true] [:TRIG-scramble-glyph chars]]
         color-change-trigger
@@ -698,6 +701,7 @@
       }))
 
 (def emitters-table @{
+  "test" @[]
   "lzap-electric" @[ (template-lingering-zap "AEFHIKLMNTYZ13457*-=+~?!@#%&" 0x9fefff 0x7fc7ef 7) ]
   "lzap-golden" @[ (template-lingering-zap ".#.#.#." LIGHT_GOLD GOLD 12) ]
   "explosion-simple" @[ (template-explosion) ]
@@ -844,6 +848,11 @@
     #       look to be the exact same hue.
     (template-chargeover ASCII_CHARS ELEC_BLUE2 0x495355 :which :origin :speed 0.3 :lifetime 8 :maxdist 2)
     (new-emitter-from @{ :birth-delay 8 } (template-lingering-zap ASCII_CHARS ELEC_BLUE1 ELEC_BLUE2 9 :bg-mix 0.4))
+  ]
+  "zap-conjuration" @[
+    (template-chargeover ASCII_CHARS 0x0a0a90 0x661188 :which :origin :speed 0.3 :lifetime 8 :maxdist 2)
+    (new-emitter-from @{ :birth-delay 8 }
+      (template-lingering-zap ASCII_CHARS 0x0a0a90 0x661188 9 :bg-mix 0.8 :require-nonwall false :require-los 0))
   ]
   "zap-crystal-chargeover" @[
     (new-emitter @{
@@ -1145,7 +1154,6 @@
                           [(target (self :total-spawned)) coord])
       })
   ]
-  "test" @[]
 })
 
 (defn animation-init [initial target boundsx boundsy bounds-width bounds-height emitters-set]
