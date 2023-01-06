@@ -1887,7 +1887,7 @@ pub const Mob = struct { // {{{
         pack: PackBuffer = PackBuffer.init(&[_]Item{}),
         equ_slots: [EQU_SLOT_SIZE]?Item = [_]?Item{null} ** EQU_SLOT_SIZE,
 
-        pub const RING_SLOTS = [_]EquSlot{ .Ring1, .Ring2, .Ring3, .Ring4 };
+        pub const RING_SLOTS = [_]EquSlot{ .Ring1, .Ring2, .Ring3, .Ring4, .Ring5 };
 
         pub const EquSlot = enum(usize) {
             Weapon = 0,
@@ -1897,8 +1897,9 @@ pub const Mob = struct { // {{{
             Ring2 = 4,
             Ring3 = 5,
             Ring4 = 6,
-            Armor = 7,
-            Cloak = 8,
+            Ring5 = 7,
+            Armor = 8,
+            Cloak = 9,
 
             pub fn slotFor(item: Item) EquSlot {
                 return switch (item) {
@@ -1916,7 +1917,7 @@ pub const Mob = struct { // {{{
                     .Weapon => "weapon",
                     .Backup => "backup",
                     .Aux => "aux",
-                    .Ring1, .Ring2, .Ring3, .Ring4 => "ring",
+                    .Ring1, .Ring2, .Ring3, .Ring4, .Ring5 => "ring",
                     .Armor => "armor",
                     .Cloak => "cloak",
                 };
@@ -3739,8 +3740,7 @@ pub const Mob = struct { // {{{
                 (func)(self, ring);
         }
 
-        const rings = [_]Inventory.EquSlot{ .Ring1, .Ring2, .Ring3, .Ring4 };
-        for (rings) |r| if (self.inventory.equipment(r).*) |ring_item|
+        for (&Inventory.RING_SLOTS) |r| if (self.inventory.equipment(r).*) |ring_item|
             (func)(self, ring_item.Ring);
     }
 

@@ -276,7 +276,8 @@ sorcerer, a cross-breed between the very ugliest of humans and goblins.
 The Dungeon warden. It will call for help with its warning horn if it spots you.
 
 % guard
-Ah, finally, a guard who has the sense to carry a polearm.
+He seems to fear no danger, or he would be wielding something better than his
+bludgeon.
 
 % defender
 A lone guard, standing motionless in the stagnant air of the Dungeon.
@@ -618,12 +619,13 @@ $G    .....              .....    .....    ....$.@$G
 
 
 $cEffect:$. Conjures a spectral sword in the chosen direction. When you move,
-the sword will attack multiple foes in a line in that direction.
+the sword will attack multiple foes in a line in that direction while giving
+them the $oheld$. status.
 
 
 The lifespan of the spectral sword is equivalent to your willpower * 2, and its
-damage is equivalent to the damage your current weapon would deal if you
-attacked (defaulting to $b1$. damage if you don't have a weapon).
+damage is equivalent to $btriple$. the damage your current weapon would deal if
+you attacked (defaulting to $b1$. damage if you don't have a weapon).
 
 % conjuration
 $cPattern:$. Move forward against foe, move left or right, move forward.

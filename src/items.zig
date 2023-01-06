@@ -584,7 +584,6 @@ pub const PatternChecker = struct { // {{{
 pub const LightningRing = Ring{ // {{{
     .name = "electrocution",
     .pattern_checker = .{
-        // mobs[0] is the attacked enemy.
         // coords[0] is the original coord of the attacked enemy.
         // directions[0] is the attacked direction.
         // directions[1] is the first move away from the enemy.
@@ -607,7 +606,6 @@ pub const LightningRing = Ring{ // {{{
                     const r = cur == .Attack and
                         cur.Attack.direction == stt.directions[0].?;
                     if (r and !dry) {
-                        stt.mobs[0] = cur.Attack.who;
                         stt.coords[0] = cur.Attack.coord;
                     }
                     return r;
@@ -632,8 +630,7 @@ pub const LightningRing = Ring{ // {{{
                     const r = !cur.Move.is_diagonal() and
                         (cur.Move == stt.directions[1].?.turnleft() or
                         cur.Move == stt.directions[1].?.turnright()) and
-                        new_coord.distance(stt.coords[0].?) == 2 and
-                        new_coord.distance(stt.mobs[0].?.coord) == 1; // he's still there?
+                        new_coord.distance(stt.coords[0].?) == 2;
                     return r;
                 }
             }.f,
@@ -649,10 +646,10 @@ pub const LightningRing = Ring{ // {{{
     .effect = struct {
         pub fn f(self: *Mob, _: PatternChecker.State) void {
             const rElec_pips = @intCast(usize, math.max(0, self.resistance(.rElec))) / 25;
-            const power = 1 + (rElec_pips / 2);
+            const power = 2 + (rElec_pips / 2);
             const duration = 3 + (rElec_pips * 3);
 
-            self.addStatus(.RingDamnation, power, .{ .Tmp = duration });
+            self.addStatus(.RingElectrocution, power, .{ .Tmp = duration });
         }
     }.f,
 }; // }}}
@@ -891,8 +888,8 @@ pub const DamnationRing = Ring{ // {{{
     .effect = struct {
         pub fn f(self: *Mob, _: PatternChecker.State) void {
             const rFire_pips = @intCast(usize, math.max(0, self.resistance(.rFire))) / 25;
-            const power = 1 + (rFire_pips / 2);
-            const duration = 3 + (rFire_pips * 3);
+            const power = 2 + rFire_pips;
+            const duration = 4 + (rFire_pips * 4);
 
             self.addStatus(.RingDamnation, power, .{ .Tmp = duration });
         }
@@ -906,9 +903,8 @@ pub const TeleportationRing = Ring{ // {{{
         // directions[0]: first attack direction
         .turns = 5,
         .init = struct {
-            pub fn f(mob: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
+            pub fn f(_: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
                 stt.directions[0] = d;
-                stt.mobs[0] = try PatternChecker._util_getHostileInDirection(mob, d);
                 return Activity{ .Move = d.opposite() };
             }
         }.f,
@@ -940,7 +936,6 @@ pub const TeleportationRing = Ring{ // {{{
             struct {
                 pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
                     const r = cur == .Attack and
-                        cur.Attack.who == stt.mobs[0].? and
                         cur.Attack.direction == stt.directions[0].?;
                     return r;
                 }

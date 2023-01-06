@@ -398,7 +398,7 @@ pub fn movementTriggersB(direction: Direction) void {
             if (mem.eql(u8, mob.id, "spec_sword")) {
                 const target = utils.getFarthestWalkableCoord(direction, mob.coord, .{ .only_if_breaks_lof = true, .ignore_mobs = true });
                 const weapon = state.player.inventory.equipmentConst(.Weapon).*;
-                const damage = if (weapon) |w| combat.damageOfWeapon(state.player, w.Weapon, null).total else 1;
+                const damage = if (weapon) |w| combat.damageOfWeapon(state.player, w.Weapon, null).total * 3 else 1;
                 spells.BOLT_SPINNING_SWORD.use(mob, mob.coord, target, .{ .MP_cost = 0, .free = true, .power = damage });
             };
     }
@@ -480,6 +480,7 @@ pub fn equipItem(item: Item) bool {
                         state.player.inventory.equipment(.Ring2).*.?.Ring.name,
                         state.player.inventory.equipment(.Ring3).*.?.Ring.name,
                         state.player.inventory.equipment(.Ring4).*.?.Ring.name,
+                        state.player.inventory.equipment(.Ring5).*.?.Ring.name,
                     },
                 ) orelse return false;
                 empty_slot = Inventory.RING_SLOTS[index];
@@ -807,8 +808,6 @@ pub fn getRingIndexBySlot(slot: Mob.Inventory.EquSlot) usize {
 }
 
 pub fn getRingByIndex(index: usize) ?*Ring {
-    assert(index <= 9);
-
     if (index >= state.default_patterns.len) {
         const rel_index = index - state.default_patterns.len;
         if (rel_index >= Inventory.RING_SLOTS.len) return null;
@@ -819,8 +818,10 @@ pub fn getRingByIndex(index: usize) ?*Ring {
 }
 
 pub fn getActiveRing() ?*Ring {
+    const max_rings = state.default_patterns.len + Inventory.RING_SLOTS.len;
+
     var i: usize = 0;
-    return while (i <= 9) : (i += 1) {
+    return while (i <= max_rings) : (i += 1) {
         if (getRingByIndex(i)) |ring| {
             if (ring.activated)
                 break ring;

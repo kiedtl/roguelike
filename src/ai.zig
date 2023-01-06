@@ -100,7 +100,7 @@ pub fn calculateMorale(self: *Mob) isize {
     if (self.hasStatus(.Slow)) base -= 2;
 
     if (self.hasStatus(.Fire) and !self.isFullyResistant(.rFire))
-        base -= 2;
+        base -= 6;
 
     if (self.ai.phase == .Flee) base -= 12;
 
@@ -159,6 +159,8 @@ pub fn calculateMorale(self: *Mob) isize {
                 para_info.duration.Tmp > enemy.coord.distance(self.coord))
             {
                 base += 8;
+            } else {
+                base += 4;
             }
         }
     }
@@ -166,7 +168,7 @@ pub fn calculateMorale(self: *Mob) isize {
 
     // Bonuses/neg bonuses depending on enemy's condition {{{
     for (self.allies.items) |ally| {
-        base += 1;
+        base += 2;
 
         if (ally.hasStatus(.Enraged)) base += 4;
         if (ally.hasStatus(.Fast)) base += 4;
@@ -183,13 +185,13 @@ pub fn calculateMorale(self: *Mob) isize {
         if (ally.hasStatus(.Pain)) base -= 2;
         if (ally.hasStatus(.Slow)) base -= 2;
 
-        if (ally.hasStatus(.Fire) and !ally.isFullyResistant(.rFire)) base -= 2;
+        if (ally.hasStatus(.Fire) and !ally.isFullyResistant(.rFire)) base -= 4;
         if (ally.hasStatus(.Paralysis)) base -= 4;
 
         if (ally.HP < (ally.max_HP / 2)) base -= 1;
         if (ally.HP < (ally.max_HP / 4)) base -= 2;
 
-        if (ally.ai.phase == .Flee) base -= 1;
+        if (ally.ai.phase == .Flee) base -= 2;
     }
     // }}}
 

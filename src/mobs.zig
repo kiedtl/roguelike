@@ -316,11 +316,11 @@ pub const GuardTemplate = MobTemplate{
         },
 
         .max_HP = 5,
-        .memory_duration = 10,
+        .memory_duration = 15,
 
         .stats = .{ .Willpower = 2 },
     },
-    .weapon = &items.SpearWeapon,
+    .weapon = &items.BludgeonWeapon,
 };
 
 pub const SentinelTemplate = MobTemplate{
@@ -335,12 +335,12 @@ pub const SentinelTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
         },
 
-        .max_HP = 8,
-        .memory_duration = 10,
+        .max_HP = 7,
+        .memory_duration = 15,
 
-        .stats = .{ .Willpower = 2, .Melee = 70 },
+        .stats = .{ .Willpower = 3, .Melee = 70 },
     },
-    .weapon = &items.SpearWeapon,
+    .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
 };
 
@@ -1979,7 +1979,7 @@ pub const SpectralSabreTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rFume = 100 },
-        .stats = .{ .Willpower = WILL_IMMUNE, .Melee = 40, .Speed = 50, .Vision = 20 },
+        .stats = .{ .Willpower = WILL_IMMUNE, .Speed = 50, .Vision = 20 },
     },
 };
 

@@ -588,6 +588,7 @@ pub const BOLT_SPINNING_SWORD = Spell{
                     .source = .RangedAttack,
                     .by_mob = state.dungeon.at(caster_c).mob,
                 }, .{ .strs = &items.SLASHING_STRS });
+                victim.addStatus(.Held, 0, .{ .Tmp = opts.power });
             }
         }
     }.f },
