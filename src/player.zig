@@ -403,8 +403,9 @@ pub fn movementTriggersB(direction: Direction) void {
             };
     }
     if (state.player.hasStatus(.RingConjuration)) {
+        const power = state.player.isUnderStatus(.RingConjuration).?.power;
         const target = utils.getFarthestWalkableCoord(direction, state.player.coord, .{ .only_if_breaks_lof = true });
-        spells.BOLT_CONJURE.use(state.player, state.player.coord, target, .{ .MP_cost = 0, .free = true, .power = 2 });
+        spells.BOLT_CONJURE.use(state.player, state.player.coord, target, .{ .MP_cost = 0, .free = true, .power = power });
     }
 }
 

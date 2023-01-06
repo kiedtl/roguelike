@@ -253,15 +253,24 @@ A pillar.
 % t_platform
 A raised platform.
 
+% spec_sword
+A ghostly apparition hovering mid-air, taking the shape of haftless double-edged
+dagger. It sparkles incessantly in shades of the deepest blue and purple, yet
+casts no light on its surroundings.
+
+% spec_sabre
+A long, curved blade, hovering mid-air. The tip and handle seem to constantly
+dissolve and reform themselves, emitting an eerie blue light as it does so.
+
 % executioner
 One of the many Dungeon executioners. It wields a giant spiked flail that,
 luckily, is good for little else besides its gruesome profession.
 
 % watcher
 Despite unusually acute senses that enable its ceaseless vigilance, not to
-mention the fact that it has no need of sleep, this imp is universally despised
-by its comrades. Some even hold that it is the work of an evil wizard, a
-cross-breed between the ugliest of humans and goblins.
+mention the fact that it has no need of sleep, this ape-creature is universally
+despised by its comrades. Some even hold that it is the work of an evil
+sorcerer, a cross-breed between the very ugliest of humans and goblins.
 
 % warden
 The Dungeon warden. It will call for help with its warning horn if it spots you.
@@ -615,6 +624,25 @@ the sword will attack multiple foes in a line in that direction.
 The lifespan of the spectral sword is equivalent to your willpower * 2, and its
 damage is equivalent to the damage your current weapon would deal if you
 attacked (defaulting to $b1$. damage if you don't have a weapon).
+
+% conjuration
+$cPattern:$. Move forward against foe, move left or right, move forward.
+
+
+$G    ....   ....   ....   ....
+
+$G    $.@$G.$rm$G.   .$.@$G$rm$G.   ..$rm$G.   ..$rm$G.
+
+$G    ....   ....   .$.@$G..   ..$.@$G.
+
+
+$cEffect:$. Every time you move, a bolt of conjuration is fired in that
+direction, creating a number of spectral swords. The effect lasts for $bwill /
+2$. turns (minimum $b1$. turn).
+
+
+Spectral swords only attack enemies that you can see, and will self-destruct
+when there are no more enemies.
 
 % pin foe
 $cPattern:$. Attack a foe, move diagonally around it, attack again, move away.

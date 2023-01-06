@@ -1943,7 +1943,7 @@ pub const SpectralSwordTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .Armor = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rFume = 100 },
-        .stats = .{ .Willpower = WILL_IMMUNE, .Vision = 20 },
+        .stats = .{ .Willpower = WILL_IMMUNE, .Melee = 50, .Evade = 20, .Vision = 20 },
     },
 };
 
