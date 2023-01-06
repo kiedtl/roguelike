@@ -752,15 +752,15 @@ pub const TunnelerOptions = struct {
     // Maximum tunnel width. If the tunnel is this size, it won't grow farther.
     max_width: usize = 6,
 
-    min_tunneler_distance: usize = 10,
+    min_tunneler_distance: usize = 8,
 
     // Chance (percentage) to change direction.
-    turn_chance: usize = 0,
-    branch_chance: usize = 4,
+    turn_chance: usize = 6,
+    branch_chance: usize = 7,
 
     room_tries: usize = 12,
 
-    headstart_chance: usize = 15,
+    headstart_chance: usize = 20,
 
     shrink_chance: usize = 50,
     grow_chance: usize = 50,
@@ -785,10 +785,12 @@ pub const TunnelerOptions = struct {
         // .{ .start = Coord.new(WIDTH / 2, (HEIGHT / 2) + 1), .width = 3, .height = 0, .direction = .South },
         // .{ .start = Coord.new(WIDTH / 2, (HEIGHT / 2) - 1), .width = 3, .height = 0, .direction = .North },
 
-        .{ .start = Coord.new(1, 1), .width = 0, .height = 3, .direction = .East },
+        // .{ .start = Coord.new(1, 1), .width = 0, .height = 3, .direction = .East },
         // .{ .start = Coord.new(WIDTH - 1, HEIGHT - 4), .width = 0, .height = 3, .direction = .West },
         // .{ .start = Coord.new(1, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
         // .{ .start = Coord.new(WIDTH - 4, 1), .width = 3, .height = 0, .direction = .South },
+
+        .{ .start = Coord.new(1, HEIGHT / 2), .width = 0, .height = 3, .direction = .East },
     },
 
     pub const InitialTunneler = struct { start: Coord, height: usize, width: usize, direction: Direction };

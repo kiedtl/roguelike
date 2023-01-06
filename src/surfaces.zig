@@ -103,7 +103,7 @@ pub const DefaultTerrain = Terrain{
     .for_levels = &[_][]const u8{"ANY"},
     .placement = .EntireRoom,
 
-    .weight = 20,
+    .weight = 1,
 };
 
 pub const CarpetTerrain = Terrain{

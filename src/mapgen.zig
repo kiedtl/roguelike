@@ -426,11 +426,11 @@ pub fn placePlayer(coord: Coord, alloc: mem.Allocator) void {
 
     state.player = mobs.placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
 
-    state.player.inventory.equipment(.Ring1).* = Item{ .Ring = items.createItem(Ring, items.ConjurationRing) };
-    state.player.inventory.equipment(.Ring2).* = Item{ .Ring = items.createItem(Ring, items.ExcisionRing) };
-    state.player.inventory.equipment(.Ring3).* = Item{ .Ring = items.createItem(Ring, items.DamnationRing) };
-    state.player.inventory.equipment(.Ring4).* = Item{ .Ring = items.createItem(Ring, items.LightningRing) };
-    state.player.inventory.equipment(.Ring5).* = Item{ .Ring = items.createItem(Ring, items.TeleportationRing) };
+    //     state.player.inventory.equipment(.Ring1).* = Item{ .Ring = items.createItem(Ring, items.ConjurationRing) };
+    //     state.player.inventory.equipment(.Ring2).* = Item{ .Ring = items.createItem(Ring, items.ExcisionRing) };
+    //     state.player.inventory.equipment(.Ring3).* = Item{ .Ring = items.createItem(Ring, items.DamnationRing) };
+    //     state.player.inventory.equipment(.Ring4).* = Item{ .Ring = items.createItem(Ring, items.LightningRing) };
+    //     state.player.inventory.equipment(.Ring5).* = Item{ .Ring = items.createItem(Ring, items.TeleportationRing) };
 
     state.player.prisoner_status = Prisoner{ .of = .Necromancer };
 
@@ -579,7 +579,7 @@ pub fn findIntersectingRoom(
                     continue;
         }
 
-        if (other.type == .Corridor and ignore_corridors) {
+        if (other.type == .Corridor and (other.rect.width == 1 or other.rect.height == 1) and ignore_corridors) {
             continue;
         }
 
@@ -913,6 +913,8 @@ pub fn resetLevel(level: usize) void {
     var mobiter = state.mobs.iterator();
     while (mobiter.next()) |mob| {
         if (mob.coord.z == level) {
+            if (mob == state.player)
+                state.player_inited = false;
             mob.deinitNoCorpse();
             state.mobs.remove(mob);
         }
@@ -2364,7 +2366,7 @@ pub fn placeRoomTerrain(level: usize) void {
     }
 
     for (state.rooms[level].items) |*room| {
-        if (rng.percent(@as(usize, 40)) or
+        if (rng.percent(@as(usize, 60)) or
             room.rect.width <= 4 or room.rect.height <= 4)
         {
             continue;
@@ -3847,7 +3849,7 @@ pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
             .headstart_chance = 0, // More chance for enough candles to spawn
             .shrink_chance = 0,
             .grow_chance = 0,
-            .intersect_chance = 80,
+            .intersect_chance = 90,
             .intersect_with_childless = true,
             .add_extra_rooms = false,
             .add_junctions = false,
