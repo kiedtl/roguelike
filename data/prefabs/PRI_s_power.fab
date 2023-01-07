@@ -15,10 +15,10 @@
 @8 p steel_support_nsw2
 @9 p steel_support_nse2
 @a p large_magnet
-@b m battery_pack
+@b p battery_pack2
 
 :subroom
-:restriction 1
+:g_global_restriction 1
 :notraps
 
 ...........

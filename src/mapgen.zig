@@ -360,8 +360,11 @@ fn computeWallAreas(rect: *const Rect, include_corners: bool) [4]Range {
 fn randomWallCoord(rect: *const Rect, i: ?usize) Coord {
     const ranges = computeWallAreas(rect, false);
     const range = if (i) |_i| ranges[(_i + 1) % ranges.len] else rng.chooseUnweighted(Range, &ranges);
-    const x = rng.rangeClumping(usize, range.from.x, range.to.x, 2);
-    const y = rng.rangeClumping(usize, range.from.y, range.to.y, 2);
+    // Clump is set to 1 for now
+    // (Was 2 previously, which wouldn't work when placing lights in gigantic
+    // corridors since they'd all be clustered together)
+    const x = rng.rangeClumping(usize, range.from.x, range.to.x, 1);
+    const y = rng.rangeClumping(usize, range.from.y, range.to.y, 1);
     return Coord.new2(rect.start.z, x, y);
 }
 
@@ -2196,12 +2199,15 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
         const rect = room.rect;
         const room_area = rect.height * rect.width;
 
-        // Don't fill or light up small rooms or corridors.
+        // Don't light up narrow corridors
+        if (room.rect.width > 2 and room.rect.height > 2)
+            placeLights(room);
+
+        // Don't fill small rooms or corridors.
         if (room_area < 16 or rect.height <= 2 or rect.width <= 2 or room.type == .Corridor) {
             continue;
         }
 
-        placeLights(room);
         placeWindow(room);
 
         if (room.prefab != null) continue;
@@ -3737,8 +3743,8 @@ pub const LevelConfig = struct {
     // there will be one empty space in the room, minimum.
     min_room_width: usize = 7,
     min_room_height: usize = 7,
-    max_room_width: usize = 15,
-    max_room_height: usize = 15,
+    max_room_width: usize = 20,
+    max_room_height: usize = 20,
 
     level_features: [4]?LevelFeatureFunc = [_]?LevelFeatureFunc{ null, null, null, null },
 
@@ -3773,7 +3779,7 @@ pub const LevelConfig = struct {
     allow_statues: bool = true,
     door_chance: usize = 10,
     room_trapped_chance: usize = 60,
-    subroom_chance: usize = 60,
+    subroom_chance: usize = 40,
     allow_spawn_in_corridors: bool = false,
     allow_corridors: bool = true,
     allow_extra_corridors: bool = true,
@@ -3816,7 +3822,7 @@ pub fn createLevelConfig_QRT(comptime prefabs: []const []const u8) LevelConfig {
         .min_room_width = 5,
         .min_room_height = 5,
         .max_room_width = 14,
-        .max_room_height = 10,
+        .max_room_height = 14,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeaturePrisoners,
@@ -3965,8 +3971,8 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
     .mapgen_func = placeDrunkenWalkerCave,
     .mapgen_iters = 64,
 
-    .min_room_width = 5,
-    .min_room_height = 5,
+    .min_room_width = 4,
+    .min_room_height = 4,
     .max_room_width = 7,
     .max_room_height = 7,
 
@@ -3993,7 +3999,6 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
 
     .allow_statues = false,
     .room_trapped_chance = 0,
-    .subroom_chance = 60,
     .allow_corridors = true,
     .allow_extra_corridors = false,
     .door = &surfaces.VaultDoor,

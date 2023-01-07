@@ -235,6 +235,8 @@ pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: u
 pub fn isAttackStab(attacker: *const Mob, defender: *const Mob) bool {
     if (defender.coord.eq(state.player.coord))
         return false;
+    if (defender.life_type != .Living)
+        return false;
 
     return switch (defender.ai.phase) {
         .Flee, .Hunt, .Investigate => b: {

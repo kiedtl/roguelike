@@ -287,7 +287,7 @@ pub fn moveOrFight(direction: Direction) bool {
             if (combat.isAttackStab(state.player, mob)) {
                 state.player.fight(mob, .{});
                 return true;
-            } else if (mob.ai.phase == .Hunt or mob.ai.phase == .Investigate) {
+            } else {
                 if (getActiveRing()) |_| {
                     state.player.fight(mob, .{});
                     return true;
@@ -295,8 +295,6 @@ pub fn moveOrFight(direction: Direction) bool {
                     if (!ui.drawYesNoPrompt("Really push past unaware enemy?", .{}))
                         return false;
                 }
-            } else {
-                // Nothing
             };
     }
 

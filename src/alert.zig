@@ -26,13 +26,13 @@ pub const GUARD_SQUADS = [_][][]const u8{
     &.{ "guard", "watcher", "watcher" },
     &.{ "guard", "shrieker", "watcher" },
     &.{ "guard", "guard", "guard" },
-    &.{ "sentinel", "guard", "guard" },
-    &.{ "sentinel", "defender", "defender" },
+    &.{ "armored_guard", "guard", "guard" },
+    &.{ "armored_guard", "defender", "defender" },
 };
 
 pub const DEATH_SQUADS = [_][][]const u8{
-    &.{ "sentinel", "executioner" },
-    &.{ "sentinel", "destroyer" },
+    &.{ "armored_guard", "executioner" },
+    &.{ "armored_guard", "destroyer" },
     &.{ "destroyer", "executioner", "executioner" },
     &.{"death_knight"},
     &.{"brimstone_mage"},

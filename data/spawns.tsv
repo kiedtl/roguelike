@@ -19,7 +19,7 @@
 
 # guards
 "guard"               	 - 	 100 	  90 	  25 	   - 	  20 	  15 	  80 	   - 	   - 	   - 	  70 	  60 	   - 	  50 	  40 	  50 	  40 	  - 	  - 	  -
-"sentinel"            	 - 	   - 	   - 	   - 	   - 	   5 	  10 	   - 	   - 	   - 	   - 	  30 	  40 	   - 	  50 	  60 	  50 	  60 	  - 	  - 	  -
+"armored_guard"       	 - 	   - 	   - 	   - 	   - 	   5 	  10 	   - 	   - 	   - 	   - 	  30 	  40 	   - 	  50 	  60 	  50 	  60 	  - 	  - 	  -
 
 # special mundane mobs
 "javelineer"          	 - 	   - 	  10 	  10 	   - 	  10 	  10 	  10 	   - 	   - 	   - 	  10 	  20 	   - 	  30 	  30 	  45 	  45 	  - 	  - 	  -
@@ -46,10 +46,10 @@
 
 # easier mobs, intended for early game
 # TODO: spark mage should be mid-game due to `paralysing zap` spell?
-"bone_rat"            	 - 	  15 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"ember_mage"          	 - 	  15 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"bone_mage"           	 - 	   - 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"spark_mage"          	 - 	   - 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"bone_rat"            	 - 	  15 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"ember_mage"          	 - 	  15 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"bone_mage"           	 - 	   - 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"spark_mage"          	 - 	   - 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 
 # medium-difficulty monsters, early-middle game
 "recruit"             	 - 	   - 	   - 	   - 	   - 	  10 	  15 	  15 	   - 	   - 	   - 	  15 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
@@ -67,11 +67,11 @@
 "thrashing_sculptor"  	 - 	   - 	   - 	   - 	   - 	   5 	  10 	  10 	   - 	   - 	   - 	  10 	  15 	   - 	  15 	  10 	  10 	  10 	  - 	  - 	  -
 
 # higher-difficulty monsters. late-game.
-"warrior"             	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   5 	  10 	  15 	   - 	  15 	  10 	  15 	  25 	  - 	  - 	  -
-"death_mage"          	 - 	   - 	   - 	   - 	   - 	   - 	   5 	   - 	   - 	   - 	   5 	   5 	  10 	   - 	  15 	  15 	  15 	  20 	  - 	  - 	  -
-"hunter"              	 - 	   - 	   - 	   - 	   - 	   - 	   5 	   - 	   - 	   - 	   5 	   5 	  10 	   - 	  15 	  15 	  15 	  20 	  - 	  - 	  -
-"brimstone_mage"      	 - 	   - 	   - 	   - 	   - 	   - 	   5 	   - 	   - 	   - 	   5 	   5 	  10 	   - 	  15 	  15 	  15 	  20 	  - 	  - 	  -
-"lightning_mage"      	 - 	   - 	   - 	   - 	   - 	   - 	   5 	   - 	   - 	   - 	   5 	   5 	  10 	   - 	  15 	  15 	  15 	  20 	  - 	  - 	  -
+"warrior"             	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  15 	   - 	  15 	  10 	  15 	  25 	  - 	  - 	  -
+"death_mage"          	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  15 	  15 	  20 	  - 	  - 	  -
+"hunter"              	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  15 	  15 	  20 	  - 	  - 	  -
+"brimstone_mage"      	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  15 	  15 	  20 	  - 	  - 	  -
+"lightning_mage"      	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  15 	  15 	  20 	  - 	  - 	  -
 
 # boss monsters
 "frozen_fiend"        	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   1 	   - 	   3 	   5 	   1 	   3 	  - 	  - 	  -

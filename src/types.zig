@@ -1181,11 +1181,6 @@ pub const Status = enum {
     // Doesn't have a power field.
     Fear,
 
-    // Allows mob to see completely in dark areas.
-    //
-    // Doesn't have a power field.
-    NightVision,
-
     // Prevents mob from seeing in brightly-lit areas.
     //
     // Doesn't have a power field.
@@ -1270,7 +1265,6 @@ pub const Status = enum {
             .Invigorate => "invigorated",
             .Pain => "pain",
             .Fear => "fear",
-            .NightVision => "night-sighted",
             .DayBlindness => "day-blinded",
             .NightBlindness => "night-blinded",
             .Enraged => "enraged",
@@ -1285,7 +1279,7 @@ pub const Status = enum {
         return switch (self) {
             .RingTeleportation, .RingDamnation, .RingElectrocution, .RingExcision, .RingConjuration => null,
 
-            .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .OpenMelee, .ClosedMelee, .Echolocation, .NightVision, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
+            .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .OpenMelee, .ClosedMelee, .Echolocation, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
 
             .Amnesia => "amnesia",
             .Intimidating => "intim",
@@ -1872,7 +1866,7 @@ pub const Mob = struct { // {{{
         Evade: isize = 0,
         Speed: isize = 100,
         Sneak: isize = 1,
-        Vision: isize = 6,
+        Vision: isize = 7,
         Willpower: isize = 3,
         Spikes: isize = 0,
     } = .{},
@@ -2842,19 +2836,22 @@ pub const Mob = struct { // {{{
         // XXX: should this be .Loud instead of .Medium?
         attacker.makeNoise(.Combat, if (is_stab) .Quiet else opts.loudness);
 
-        for (attacker_weapon.effects) |effect| {
-            recipient.applyStatus(effect, .{});
+        // Weapon effects.
+        if (!recipient.should_be_dead()) {
+            for (attacker_weapon.effects) |effect| {
+                recipient.applyStatus(effect, .{});
+            }
+        }
+
+        // Daze stabbed mobs.
+        if (is_stab and !recipient.should_be_dead()) {
+            recipient.addStatus(.Daze, 0, .{ .Tmp = rng.range(usize, 3, 5) });
         }
 
         // Knockback
         if (attacker_weapon.knockback > 0) {
             const d = acoord.closestDirectionTo(rcoord, state.mapgeometry);
             combat.throwMob(attacker, recipient, d, attacker_weapon.knockback);
-        }
-
-        // Daze stabbed mobs.
-        if (is_stab and !recipient.should_be_dead()) {
-            recipient.addStatus(.Daze, 0, .{ .Tmp = rng.range(usize, 3, 5) });
         }
 
         // Retaliation/spikes damage?
@@ -3080,8 +3077,8 @@ pub const Mob = struct { // {{{
         // FIXME: this probably shouldn't be handled here.
         if (self.HP > 0 and
             self.isUnderStatus(.Exhausted) == null and
-            self.lastDamagePercentage() >= 50 or
-            (self.HP <= (self.max_HP / 10) and old_HP > (self.max_HP / 10)))
+            (self.lastDamagePercentage() >= 50 or
+            (self.HP <= (self.max_HP / 10) and old_HP > (self.max_HP / 10))))
         {
             if (self.ai.flee_effect) |s| {
                 if (self.isUnderStatus(s.status) == null) {
@@ -3093,6 +3090,7 @@ pub const Mob = struct { // {{{
 
     pub fn init(self: *Mob, alloc: mem.Allocator) void {
         self.is_dead = false;
+        self.corruption_ctr = 0;
         self.HP = self.max_HP;
         self.MP = self.max_MP;
         self.enemies = EnemyRecord.AList.init(alloc);
@@ -3160,7 +3158,7 @@ pub const Mob = struct { // {{{
         self.stats.Evade -= 10;
         self.stats.Melee -= 10;
         self.stats.Willpower -= 2;
-        self.stats.Vision = 4;
+        self.stats.Vision = 5;
 
         self.memory_duration = 7;
         self.deaf = true;
@@ -3587,7 +3585,6 @@ pub const Mob = struct { // {{{
     pub fn canSeeInLight(self: *const Mob, light: bool) bool {
         if (!light) {
             if (self.isUnderStatus(.NightBlindness) != null) return false;
-            if (self.isUnderStatus(.NightVision) != null) return true;
             if (self.base_night_vision) return true;
             return false;
         } else {

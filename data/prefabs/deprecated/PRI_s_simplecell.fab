@@ -1,5 +1,6 @@
 :subroom
-:priority 50
+:priority 20
+:restriction 1
 
 :prison 0,0 3 3
 #≡#

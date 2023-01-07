@@ -16,7 +16,7 @@
 "defender"            	 100 	   - 	   - 	   -
 "javelineer"          	  90 	   - 	   - 	   -
 "death_knight"        	  70 	   - 	   - 	   -
-"sentinel"            	  50 	   - 	   - 	   -
+"armored_guard"       	  50 	   - 	   - 	   -
 "bone_mage"           	  50 	   - 	   - 	   -
 "iron_spire"          	  10 	   - 	   - 	   -
 "sentry_spire"        	  10 	   - 	   - 	   -
@@ -82,7 +82,7 @@
 "javelineer"          	   - 	   - 	   - 	 100
 "bloat"               	   - 	   - 	   - 	 100
 "defender"            	   - 	   - 	   - 	 100
-"sentinel"            	   - 	   - 	   - 	 100
+"armored_guard"       	   - 	   - 	   - 	 100
 "warrior"             	   - 	   - 	   - 	 100
 "executioner"         	   - 	   - 	   - 	 100
 "necromancer"         	   - 	   - 	   - 	 100

@@ -1,7 +1,7 @@
 % Recharging station
 %
-% ▂┌╥╥╖┒
-% R╧ŸŸŸ┚
+% ▂┌╥╖┒
+% R╧ŸŸ┚
 %
 
 :subroom
@@ -20,7 +20,7 @@
 @i p wall_n1w1_thinw
 @j p wire_n1e1
 
-........
-.abccde.
-.0ghhhi.
-........
+.......
+.abcce.
+.0ghhi.
+.......

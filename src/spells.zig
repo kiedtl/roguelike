@@ -582,12 +582,10 @@ pub const BOLT_SPINNING_SWORD = Spell{
     // }.f,
     .effect_type = .{ .Custom = struct {
         fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
+            const caster = state.dungeon.at(caster_c).mob.?;
             if (state.dungeon.at(coord).mob) |victim| {
-                victim.takeDamage(.{
-                    .amount = opts.power,
-                    .source = .RangedAttack,
-                    .by_mob = state.dungeon.at(caster_c).mob,
-                }, .{ .strs = &items.SLASHING_STRS });
+                if (!victim.isHostileTo(caster)) return;
+                victim.takeDamage(.{ .amount = opts.power, .source = .RangedAttack, .by_mob = caster }, .{ .strs = &items.SLASHING_STRS });
                 victim.addStatus(.Held, 0, .{ .Tmp = opts.power });
             }
         }

@@ -647,7 +647,7 @@ pub const LightningRing = Ring{ // {{{
         pub fn f(self: *Mob, _: PatternChecker.State) void {
             const rElec_pips = @intCast(usize, math.max(0, self.resistance(.rElec))) / 25;
             const power = 2 + (rElec_pips / 2);
-            const duration = 3 + (rElec_pips * 3);
+            const duration = 4 + (rElec_pips * 4);
 
             self.addStatus(.RingElectrocution, power, .{ .Tmp = duration });
         }

@@ -323,13 +323,13 @@ pub const GuardTemplate = MobTemplate{
     .weapon = &items.BludgeonWeapon,
 };
 
-pub const SentinelTemplate = MobTemplate{
+pub const ArmoredGuardTemplate = MobTemplate{
     .mob = .{
-        .id = "sentinel",
+        .id = "armored_guard",
         .species = &GoblinSpecies,
         .tile = 'ת',
         .ai = AI{
-            .profession_name = "sentinel",
+            .profession_name = "armored guard",
             .profession_description = "guarding",
             .work_fn = ai.guardWork,
             .fight_fn = ai.meleeFight,
@@ -402,11 +402,7 @@ pub const LeadTurtleTemplate = MobTemplate{
         .id = "lead_turtle",
         .species = &Species{
             .name = "lead turtle",
-            .default_attack = &Weapon{
-                .reach = 2,
-                .damage = 4,
-                .strs = &items.BITING_STRS,
-            },
+            .default_attack = &Weapon{ .damage = 4, .strs = &items.BITING_STRS },
         },
         .tile = 't',
         .life_type = .Construct,
@@ -423,7 +419,7 @@ pub const LeadTurtleTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
         .innate_resists = .{ .rElec = -100, .rFire = RESIST_IMMUNE, .Armor = 60, .rFume = 100 },
-        .stats = .{ .Willpower = 5, .Melee = 100, .Speed = 250, .Vision = 4 },
+        .stats = .{ .Willpower = 5, .Melee = 100, .Speed = 250, .Vision = 5 },
     },
 
     .statuses = &[_]StatusDataInfo{.{ .status = .Sleeping, .duration = .Prm }},
@@ -559,7 +555,7 @@ pub const PlayerTemplate = MobTemplate{
         .max_HP = 20,
         .memory_duration = 10,
 
-        .stats = .{ .Willpower = 4, .Missile = 60, .Evade = 10, .Vision = 10, .Sneak = 4 },
+        .stats = .{ .Willpower = 4, .Missile = 60, .Evade = 10, .Vision = 12, .Sneak = 4 },
     },
     .weapon = &items.DaggerWeapon,
     //.backup_weapon = &items.RapierWeapon,
@@ -583,7 +579,7 @@ pub const GoblinTemplate = MobTemplate{
         .allegiance = .OtherEvil,
         .max_HP = 6,
         .memory_duration = 20,
-        .stats = .{ .Willpower = 4, .Evade = 15, .Vision = 6 },
+        .stats = .{ .Willpower = 4, .Evade = 15, .Vision = 8 },
     },
 };
 
@@ -631,13 +627,13 @@ pub const VapourMageTemplate = MobTemplate{
             .{ .MP_cost = 2, .spell = &spells.CAST_FIREPROOF_DUSTLING, .power = 10 },
         },
         .max_MP = 15,
+        .base_night_vision = true,
 
         .max_HP = 5,
         .memory_duration = 10,
         .stats = .{ .Willpower = 6, .Speed = 200, .Vision = 6 },
     },
     .armor = &items.HauberkArmor,
-    .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
             .{ .mob = "dustling", .weight = 1, .count = minmax(usize, 2, 3) },
@@ -664,10 +660,10 @@ pub const DustlingTemplate = MobTemplate{
         .blood = .Dust,
         .blood_spray = gas.Dust.id,
         .corpse = .None,
+        .base_night_vision = true,
         .innate_resists = .{ .rFire = -25, .rElec = -25, .rFume = 100 },
         .stats = .{ .Willpower = 4, .Melee = 50, .Vision = 3 },
     },
-    .statuses = &[_]StatusDataInfo{.{ .status = .NightVision, .duration = .Prm }},
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
             .{ .mob = "dustling", .weight = 1, .count = minmax(usize, 2, 3) },
@@ -748,7 +744,7 @@ pub const WarOlgTemplate = MobTemplate{
         .max_MP = 3,
 
         .memory_duration = 10,
-        .stats = .{ .Willpower = 2, .Melee = 90, .Vision = 4 },
+        .stats = .{ .Willpower = 2, .Melee = 90, .Vision = 5 },
     },
 };
 
@@ -808,7 +804,7 @@ fn createSpireTemplate(
             .corpse = .Wall,
             .immobile = true,
             .innate_resists = .{ .rFume = 100, .rFire = 25, .rElec = 25, .Armor = 20 },
-            .stats = .{ .Willpower = opts.willpower, .Evade = 0, .Vision = 6 },
+            .stats = .{ .Willpower = opts.willpower, .Evade = 0, .Vision = 8 },
         },
 
         .statuses = &[_]StatusDataInfo{.{ .status = .Sleeping, .duration = .Prm }},
@@ -1100,7 +1096,7 @@ pub const RecruitTemplate = MobTemplate{
 
         .max_HP = 5,
         .memory_duration = 10,
-        .stats = .{ .Willpower = 1, .Melee = 70, .Vision = 5 },
+        .stats = .{ .Willpower = 1, .Melee = 70, .Vision = 6 },
     },
     .weapon = &items.BludgeonWeapon,
     .armor = &items.GambesonArmor,
@@ -1121,7 +1117,7 @@ pub const WarriorTemplate = MobTemplate{
 
         .max_HP = 8,
         .memory_duration = 10,
-        .stats = .{ .Willpower = 2, .Melee = 80, .Evade = 15, .Vision = 5 },
+        .stats = .{ .Willpower = 2, .Melee = 80, .Evade = 15, .Vision = 6 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.CuirassArmor,
@@ -1142,7 +1138,7 @@ pub const HunterTemplate = MobTemplate{
 
         .max_HP = 8,
         .memory_duration = 40,
-        .stats = .{ .Willpower = 3, .Melee = 70, .Speed = 150, .Vision = 7 },
+        .stats = .{ .Willpower = 3, .Melee = 70, .Speed = 150, .Vision = 8 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
@@ -1175,7 +1171,7 @@ pub const BoneMageTemplate = MobTemplate{
 
         .max_HP = 4,
         .memory_duration = 10,
-        .stats = .{ .Willpower = 4, .Vision = 5, .Melee = 40 },
+        .stats = .{ .Willpower = 4, .Vision = 6, .Melee = 40 },
     },
     .weapon = &items.BoneMaceWeapon,
 
@@ -1202,7 +1198,7 @@ pub const DeathKnightTemplate = MobTemplate{
 
         .max_HP = 8,
         .memory_duration = 8,
-        .stats = .{ .Willpower = 6, .Melee = 70, .Evade = 10, .Vision = 5 },
+        .stats = .{ .Willpower = 6, .Melee = 70, .Evade = 10, .Vision = 6 },
     },
     .weapon = &items.BoneSwordWeapon,
     .armor = &items.HauberkArmor,
@@ -1236,7 +1232,7 @@ pub const DeathMageTemplate = MobTemplate{
 
         .max_HP = 6,
         .memory_duration = 15,
-        .stats = .{ .Willpower = 8, .Evade = 10, .Vision = 6 },
+        .stats = .{ .Willpower = 8, .Evade = 10 },
     },
     .weapon = &items.BoneSwordWeapon,
     .armor = &items.HauberkArmor,
@@ -1272,7 +1268,7 @@ pub const EmberMageTemplate = MobTemplate{
 
         .max_HP = 5,
         .memory_duration = 10,
-        .stats = .{ .Willpower = 4, .Evade = 0, .Vision = 5 },
+        .stats = .{ .Willpower = 4, .Evade = 0, .Vision = 6 },
     },
     .weapon = &items.BludgeonWeapon,
     .cloak = &items.SilCloak,
@@ -1309,7 +1305,7 @@ pub const BrimstoneMageTemplate = MobTemplate{
 
         .max_HP = 7,
         .memory_duration = 10,
-        .stats = .{ .Willpower = 6, .Evade = 10, .Vision = 6 },
+        .stats = .{ .Willpower = 6, .Evade = 10 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.HauberkArmor,
@@ -1344,7 +1340,7 @@ pub const SparkMageTemplate = MobTemplate{
 
         .max_HP = 5,
         .memory_duration = 10,
-        .stats = .{ .Willpower = 4, .Evade = 0, .Vision = 5 },
+        .stats = .{ .Willpower = 4, .Evade = 0, .Vision = 6 },
     },
     .weapon = &items.BludgeonWeapon,
     .cloak = &items.FurCloak,
@@ -1372,14 +1368,14 @@ pub const LightningMageTemplate = MobTemplate{
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 12, .spell = &spells.CAST_CREATE_SPARKLING },
-            .{ .MP_cost = 8, .spell = &spells.BOLT_PARALYSE, .power = 3 },
+            .{ .MP_cost = 8, .spell = &spells.BOLT_PARALYSE, .power = 2 },
             .{ .MP_cost = 6, .spell = &spells.CAST_DISCHARGE },
         },
         .max_MP = 15,
 
         .max_HP = 7,
         .memory_duration = 10,
-        .stats = .{ .Willpower = 6, .Evade = 10, .Vision = 6 },
+        .stats = .{ .Willpower = 6, .Evade = 10 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.HauberkArmor,
@@ -1416,14 +1412,14 @@ pub const BloatTemplate = MobTemplate{
         .blood = null,
         .blood_spray = gas.Miasma.id,
         .corpse = .None,
+        .base_night_vision = true,
 
         .innate_resists = .{ .rFume = 100 },
-        .stats = .{ .Willpower = 4, .Melee = 80, .Speed = 150, .Vision = 5 },
+        .stats = .{ .Willpower = 4, .Melee = 80, .Speed = 150 },
     },
 
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Sleeping, .duration = .Prm },
-        .{ .status = .NightVision, .duration = .Prm },
     },
 };
 
@@ -1452,16 +1448,13 @@ pub const ThrashingSculptorTemplate = MobTemplate{
 
         .max_HP = 12,
         .memory_duration = 20,
+        .base_night_vision = true,
 
         .life_type = .Undead,
         .corpse = .None,
 
         .innate_resists = .{ .rFume = 100 },
-        .stats = .{ .Willpower = 5, .Evade = 20, .Melee = 100, .Vision = 5 },
-    },
-
-    .statuses = &[_]StatusDataInfo{
-        .{ .status = .NightVision, .duration = .Prm },
+        .stats = .{ .Willpower = 5, .Evade = 20, .Melee = 100, .Vision = 6 },
     },
 };
 
@@ -1491,7 +1484,7 @@ pub const SkeletonTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rFume = 100, .rFire = -25 },
-        .stats = .{ .Willpower = 3, .Vision = 4 },
+        .stats = .{ .Willpower = 3, .Vision = 5 },
     },
 };
 
@@ -1517,10 +1510,11 @@ pub const StalkerTemplate = MobTemplate{
         },
         .life_type = .Construct,
         .deg360_vision = true,
+        .base_night_vision = true,
 
-        // XXX: synchronize MP costs w/ mob speed so that it gets one shot every turn
+        // XXX: synchronize MP costs w/ mob speed so that it gets one shot every 3 turns
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 5, .spell = &spells.BOLT_LIGHTNING, .power = 1 },
+            .{ .MP_cost = 15, .spell = &spells.BOLT_LIGHTNING, .power = 1 },
         },
         .max_MP = 5,
 
@@ -1530,11 +1524,10 @@ pub const StalkerTemplate = MobTemplate{
         .max_HP = 2,
         .memory_duration = 2, // Forget about enemies quickly in absence of hunter captain
         .innate_resists = .{ .rFume = 100, .rElec = RESIST_IMMUNE },
-        .stats = .{ .Willpower = 0, .Evade = 80, .Speed = 20, .Vision = 3 },
+        .stats = .{ .Willpower = 0, .Evade = 80, .Speed = 20, .Vision = 4 },
     },
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Sleeping, .duration = .Prm },
-        .{ .status = .NightVision, .duration = .Prm },
     },
 };
 
@@ -1601,7 +1594,7 @@ pub const EmberlingTemplate = MobTemplate{
         .max_HP = 2,
         .memory_duration = 5,
         .innate_resists = .{ .rFume = 100, .rFire = RESIST_IMMUNE },
-        .stats = .{ .Willpower = 1, .Evade = 10, .Vision = 4, .Melee = 50 },
+        .stats = .{ .Willpower = 1, .Evade = 10, .Vision = 5, .Melee = 50 },
     },
     // XXX: Emberlings are never placed alone, this determines number of
     // summoned emberlings from CAST_CREATE_EMBERLING
@@ -1651,7 +1644,7 @@ pub const SparklingTemplate = MobTemplate{
         .max_HP = 2,
         .memory_duration = 5,
         .innate_resists = .{ .rFume = 100, .rElec = RESIST_IMMUNE },
-        .stats = .{ .Willpower = 1, .Evade = 10, .Vision = 4 },
+        .stats = .{ .Willpower = 1, .Evade = 10, .Vision = 5 },
     },
     // XXX: Sparklings are never placed alone, this determines number of
     // summoned sparklings from CAST_CREATE_SPARKLING
@@ -1690,7 +1683,7 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
         // Will have rElec-25 from Cuirass
         .innate_resists = .{ .rFume = 100, .rFire = -25 },
         // Melee is 100% but in practice will be 90% due to penalty from rapier
-        .stats = .{ .Willpower = 4, .Melee = 100, .Vision = 5 },
+        .stats = .{ .Willpower = 4, .Melee = 100, .Vision = 6 },
     },
     .weapon = &items.RapierWeapon,
     .armor = &items.CuirassArmor,
@@ -1720,7 +1713,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
 
         .max_HP = 8,
         .memory_duration = 15,
-        .stats = .{ .Willpower = 8, .Evade = 10, .Vision = 6 },
+        .stats = .{ .Willpower = 8, .Evade = 10 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
@@ -1767,7 +1760,7 @@ pub const BurningBruteTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = -25 },
-        .stats = .{ .Willpower = 8, .Evade = 10, .Melee = 80, .Vision = 6 },
+        .stats = .{ .Willpower = 8, .Evade = 10, .Melee = 80 },
     },
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Fire, .duration = .Prm },
@@ -1800,7 +1793,7 @@ pub const SulfurFiendTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rFire = 50, .rElec = RESIST_IMMUNE, .rFume = 80 },
-        .stats = .{ .Willpower = 10, .Evade = 10, .Vision = 6 },
+        .stats = .{ .Willpower = 10, .Evade = 10 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.HauberkArmor,
@@ -1832,7 +1825,7 @@ pub const FrozenFiendTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rElec = 75, .rFire = -25 },
-        .stats = .{ .Willpower = 8, .Evade = 10, .Vision = 6 },
+        .stats = .{ .Willpower = 8, .Evade = 10 },
     },
     .weapon = &items.MorningstarWeapon,
     .armor = &items.HauberkArmor,
@@ -1994,7 +1987,7 @@ pub const MOBS = [_]MobTemplate{
     WatcherTemplate,
     ShriekerTemplate,
     GuardTemplate,
-    SentinelTemplate,
+    ArmoredGuardTemplate,
     JavelineerTemplate,
     DefenderTemplate,
     LeadTurtleTemplate,
@@ -2185,7 +2178,8 @@ pub fn placeMob(
 pub fn placeMobSurrounding(c: Coord, t: *const MobTemplate, opts: PlaceMobOptions) void {
     for (&DIRECTIONS) |d| if (c.move(d, state.mapgeometry)) |neighbor| {
         if (state.is_walkable(neighbor, .{ .right_now = true })) {
-            _ = placeMob(state.GPA.allocator(), t, neighbor, opts);
+            const m = placeMob(state.GPA.allocator(), t, neighbor, opts);
+            m.cancelStatus(.Sleeping);
         }
     };
 }

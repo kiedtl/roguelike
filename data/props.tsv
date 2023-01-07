@@ -100,6 +100,7 @@
 "iron_statue"          	 "iron statue"          	 '☹' 	                        -  	 0xcacad2 	 -        	 nay 	 - 	 - 	 .Statue
 "sodalite_statue"      	 "sodalite statue"      	 '☺' 	                        -  	 0xa4cfff 	 -        	 nay 	 - 	 - 	 .Statue
 "hematite_statue"      	 "hematite statue"      	 '☺' 	                        -  	 0xff7f70 	 -        	 nay 	 - 	 - 	 .Statue
+"fluorite_statue"      	 "fluorite statue"      	 '☺' 	                        -  	 0x3faf30 	 -        	 nay 	 - 	 - 	 .Statue
 
 # Smithing stuff
 #
@@ -130,6 +131,9 @@
 # recharging station
 "antenna"              	 "antenna"              	 '▂' 	                        -  	 0x90a3b7 	 -        	 nay 	 - 	20
 "battery_pack"         	 "battery pack"         	 'Ÿ' 	                        -  	 0x90a3b7 	 -        	 nay 	 - 	 - 	 .Laboratory
+
+# PRI power station
+"battery_pack2"        	 "battery pack"         	 '⊠' 	                        -  	 0x90a3b7 	 -        	 nay 	 - 	 - 	 .Laboratory
 
 # stalker station
 "antenna_controller"   	 "control antenna"      	 '▌' 	                        -  	 0x90b7a3 	 -        	 nay 	 - 	10

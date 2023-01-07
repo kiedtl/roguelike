@@ -286,8 +286,8 @@ A lone guard, standing motionless in the stagnant air of the Dungeon.
 A warrior clad in light armor, able to throw poisoned javelins with surprising
 accuracy.
 
-% sentinel
-A highly-trained guard.
+% armored_guard
+A highly-trained and better armed guard.
 
 % lead_turtle
 A monstrous contraption, no doubt the latest invention of the Laboratory
