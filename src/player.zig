@@ -101,16 +101,12 @@ pub const PlayerUpgrade = enum {
 };
 
 pub fn choosePlayerUpgrades() void {
+    var upgrades = PlayerUpgrade.UPGRADES;
+    rng.shuffle(PlayerUpgrade, &upgrades);
+
     var i: usize = 0;
     for (state.levelinfo) |level| if (level.upgr) {
-        var upgrade: PlayerUpgrade = while (true) {
-            const upgrade_c = rng.chooseUnweighted(PlayerUpgrade, &PlayerUpgrade.UPGRADES);
-            const already_picked = for (state.player_upgrades) |existing_upgr| {
-                if (existing_upgr.upgrade == upgrade_c) break true;
-            } else false;
-            if (!already_picked) break upgrade_c;
-        } else err.wat();
-        state.player_upgrades[i] = .{ .recieved = false, .upgrade = upgrade };
+        state.player_upgrades[i] = .{ .recieved = false, .upgrade = upgrades[i] };
         i += 1;
     };
 }
@@ -143,16 +139,16 @@ pub fn triggerStair(cur_stair: Coord, dest_stair: Coord) bool {
     if (state.levelinfo[state.player.coord.z].upgr) {
         state.player.max_HP += 2;
 
-        for (state.player_upgrades) |*u| {
-            if (!u.recieved) {
-                u.recieved = true;
-                state.message(.Info, "You feel different... {s}", .{u.upgrade.announce()});
-                u.upgrade.implement();
-                break;
-            }
+        const upgrade = for (state.player_upgrades) |*u| {
+            if (!u.recieved)
+                break u;
         } else err.bug("Cannot find upgrade to grant! (upgrades: {} {} {})", .{
             state.player_upgrades[0], state.player_upgrades[1], state.player_upgrades[2],
         });
+
+        upgrade.recieved = true;
+        state.message(.Info, "You feel different... {s}", .{upgrade.upgrade.announce()});
+        upgrade.upgrade.implement();
     }
 
     combat.disruptAllUndead(dest_stair.z);

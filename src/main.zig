@@ -129,7 +129,6 @@ fn initGame() bool {
 
     rng.init(state.GPA.allocator()) catch return false;
 
-    player.choosePlayerUpgrades();
     for (state.default_patterns) |*r| r.pattern_checker.reset();
 
     state.chardata.init(state.GPA.allocator());
@@ -158,6 +157,7 @@ fn initGame() bool {
     literature.readPosters(state.GPA.allocator());
     mapgen.readSpawnTables(state.GPA.allocator());
     readDescriptions(state.GPA.allocator());
+    player.choosePlayerUpgrades();
 
     for (state.dungeon.map) |*map, level| {
         state.stockpiles[level] = StockpileArrayList.init(state.GPA.allocator());
