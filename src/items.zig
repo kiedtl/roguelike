@@ -158,6 +158,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 40, .i = .{ .c = &SparklingTrapKit } },
     .{ .w = 40, .i = .{ .c = &EmberlingTrapKit } },
     .{ .w = 40, .i = .{ .c = &AirblastTrapKit } },
+    .{ .w = 30, .i = .{ .c = &GlueTrapKit } },
     .{ .w = 10, .i = .{ .c = &MineKit } },
     .{ .w = 10, .i = .{ .c = &BigFireTrapKit } },
     // Evocables
@@ -1832,6 +1833,12 @@ pub const CopperIngotConsumable = Consumable{
     .verbs_player = &[_][]const u8{ "choke down", "swallow" },
     .verbs_other = &[_][]const u8{"chokes down"},
 };
+
+pub const GlueTrapKit = Consumable.createTrapKit("kit_trap_glue", "glue trap", struct {
+    pub fn f(_: *Machine, mob: *Mob) void {
+        mob.addStatus(.Held, 0, .{ .Tmp = 20 });
+    }
+}.f);
 
 pub const AirblastTrapKit = Consumable.createTrapKit("kit_trap_airblast", "airblast trap", struct {
     pub fn f(_: *Machine, mob: *Mob) void {
