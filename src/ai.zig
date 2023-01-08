@@ -1426,6 +1426,14 @@ pub fn work(mob: *Mob, alloc: mem.Allocator) void {
     if (!mob.isAloneOrLeader() and !mob.ai.flag(.ForceNormalWork)) {
         work_fn = stayNearLeaderWork;
     }
+    if (mob.hasStatus(.Insane)) {
+        work_fn = struct {
+            pub fn f(p_mob: *Mob, _: mem.Allocator) void {
+                if (!p_mob.moveInDirection(rng.chooseUnweighted(Direction, &DIRECTIONS)))
+                    tryRest(p_mob);
+            }
+        }.f;
+    }
 
     (work_fn)(mob, alloc);
 }
@@ -1451,6 +1459,12 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
             },
             .Flee => err.bug("Fleeing mob was put to sleep...?", .{}),
         }
+    }
+
+    // Randomly shout if insane
+    if (mob.hasStatus(.Insane)) {
+        if (rng.onein(10))
+            mob.makeNoise(.Shout, .Loud);
     }
 
     // Should I flee (or stop fleeing?)

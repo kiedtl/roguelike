@@ -2377,6 +2377,16 @@ pub const GreatMaceWeapon = Weapon{
 };
 pub const BoneGreatMaceWeapon = Weapon.createBoneWeapon(&GreatMaceWeapon, .{});
 
+pub const ShadowMaceWeapon = Weapon{
+    .id = "shadow_mace",
+    .name = "shadow mace",
+    .damage = 2,
+    .effects = &[_]StatusDataInfo{
+        .{ .status = .Insane, .duration = .{ .Tmp = 10 } },
+    },
+    .strs = &CRUSHING_STRS,
+};
+
 // }}}
 
 // ----------------------------------------------------------------------------

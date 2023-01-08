@@ -1023,6 +1023,11 @@ pub const Status = enum {
     RingExcision, // No power field
     RingConjuration, // No power field
 
+    // Causes monster to be considered hostile to all other monsters.
+    //
+    // Doesn't have a power field.
+    Insane,
+
     // Causes a monster to forget any noise or enemies they ran across, and
     // return to a working state. When the status is depleted, all dementia
     // will be instantly cured.
@@ -1231,6 +1236,7 @@ pub const Status = enum {
             .RingConjuration => "ring: conjuration",
 
             .Amnesia => "amnesia",
+            .Insane => "insane",
             .DetectHeat => "detect heat",
             .DetectElec => "detect electricity",
             .TormentUndead => "torment undead",
@@ -1282,6 +1288,7 @@ pub const Status = enum {
             .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .OpenMelee, .ClosedMelee, .Echolocation, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
 
             .Amnesia => "amnesia",
+            .Insane => "insane",
             .Intimidating => "intim",
             .TormentUndead => "trmnt undead",
             .Drunk => "drunk",
@@ -1312,8 +1319,15 @@ pub const Status = enum {
     } // }}}
 
     pub fn isMobImmune(self: Status, mob: *Mob) bool {
+        if (mob == state.player) {
+            switch (self) {
+                .Explosive, .ExplosiveElec, .Fear, .Insane, .Lifespan => return true,
+                else => {},
+            }
+        }
+
         return switch (self) {
-            .Disorient => mob.life_type == .Construct,
+            // .Disorient => mob.life_type == .Construct,
             .Fire => mob.isFullyResistant(.rFire),
             .Exhausted,
             .Pain,
@@ -3502,11 +3516,15 @@ pub const Mob = struct { // {{{
         return noise;
     }
 
-    // FIXME: need a isAlliedWith() function, since even if alliegiances match
-    // mobs may be enemies (if one of them is insane)
+    // ~~FIXME: need a isAlliedWith() function, since even if alliegiances match
+    // mobs may be enemies (if one of them is insane)~~
     //
     // Hope I remember this when implementing insanity effects :P
+    //
+    // EDIT: I did!
+    //
     pub fn isHostileTo(self: *const Mob, othermob: *const Mob) bool {
+        if (self.hasStatus(.Insane) or othermob.hasStatus(.Insane)) return true;
         if (self.allegiance == othermob.allegiance) return false;
 
         var hostile = true;
