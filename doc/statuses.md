@@ -177,6 +177,11 @@ Causes all attempts to move to fail with the message "You flail around
 helplessly." Attempting to move will, however, cause the duration of the status
 to decrease faster.
 
+## insane
+
+(Monster-only.) Causes the monster in question to become hostile to every other
+monster, including former allies and other insane monsters.
+
 ## intimidating
 
 Sharply reduces all enemies' morale (the ones that can see you), making it much
