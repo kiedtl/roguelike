@@ -1255,9 +1255,6 @@ x Squad overhaul
 - eXamine screen:
   - Show last remembered items on out-of-sight tiles
   - Show floor spattering, floor material, gas
-- Garrison/Morgue extended-game level
-  - Cogmind-esque tunneling algorithm
-  - *blende statues
 - Scoring
 - Basic save system, replaying of saves, scoresheet uploading
 
