@@ -242,7 +242,7 @@ pub const CoronerTemplate = MobTemplate{
         .max_HP = 8,
         .memory_duration = 10,
 
-        .stats = .{ .Willpower = 2 },
+        .stats = .{ .Willpower = 1 },
     },
 };
 
@@ -260,7 +260,7 @@ pub const ExecutionerTemplate = MobTemplate{
 
         .max_HP = 5,
         .memory_duration = 8,
-        .stats = .{ .Willpower = 3 },
+        .stats = .{ .Willpower = 2 },
     },
     .weapon = &items.KnoutWeapon,
 };
@@ -280,7 +280,7 @@ pub const WatcherTemplate = MobTemplate{
         },
         .max_HP = 4,
         .memory_duration = 15,
-        .stats = .{ .Willpower = 3, .Evade = 30 },
+        .stats = .{ .Willpower = 2, .Evade = 30 },
     },
 };
 
@@ -299,7 +299,7 @@ pub const ShriekerTemplate = MobTemplate{
         },
         .max_HP = 3,
         .memory_duration = 20,
-        .stats = .{ .Willpower = 4, .Evade = 40 },
+        .stats = .{ .Willpower = 3, .Evade = 40 },
     },
 };
 
@@ -338,7 +338,7 @@ pub const ArmoredGuardTemplate = MobTemplate{
         .max_HP = 7,
         .memory_duration = 15,
 
-        .stats = .{ .Willpower = 3, .Melee = 70 },
+        .stats = .{ .Willpower = 2, .Melee = 70 },
     },
     .weapon = &items.MaceWeapon,
     .armor = &items.GambesonArmor,
@@ -390,7 +390,7 @@ pub const DefenderTemplate = MobTemplate{
 
         .max_HP = 6,
         .memory_duration = 20,
-        .stats = .{ .Willpower = 4, .Evade = 10, .Missile = 90 },
+        .stats = .{ .Willpower = 3, .Evade = 10, .Missile = 90 },
     },
     .weapon = &items.SwordWeapon,
     .armor = &items.HauberkArmor,
@@ -419,7 +419,7 @@ pub const LeadTurtleTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
         .innate_resists = .{ .rElec = -100, .rFire = RESIST_IMMUNE, .Armor = 60, .rFume = 100 },
-        .stats = .{ .Willpower = 5, .Melee = 100, .Speed = 250, .Vision = 5 },
+        .stats = .{ .Willpower = 1, .Melee = 100, .Speed = 250, .Vision = 5 },
     },
 
     .statuses = &[_]StatusDataInfo{.{ .status = .Sleeping, .duration = .Prm }},
