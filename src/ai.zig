@@ -174,7 +174,14 @@ pub fn calculateMorale(self: *Mob) isize {
         if (ally.hasStatus(.Fast)) base += 4;
         if (ally.hasStatus(.Invigorate)) base += 4;
 
-        if (ally.hasStatus(.Sleeping)) base -= 1;
+        if (ally.HP < (ally.max_HP / 2)) base -= 1;
+        if (ally.HP < (ally.max_HP / 4)) base -= 2;
+
+        // Doesn't make sense to subtract morale here, because a sleeping ally
+        // is just as good as a regular one.
+        //
+        //if (ally.hasStatus(.Sleeping)) base -= 1;
+
         if (ally.hasStatus(.Blind)) base -= 2;
         if (ally.hasStatus(.Daze)) base -= 2;
         if (ally.hasStatus(.Debil)) base -= 1;
@@ -188,8 +195,8 @@ pub fn calculateMorale(self: *Mob) isize {
         if (ally.hasStatus(.Fire) and !ally.isFullyResistant(.rFire)) base -= 4;
         if (ally.hasStatus(.Paralysis)) base -= 4;
 
-        if (ally.HP < (ally.max_HP / 2)) base -= 1;
-        if (ally.HP < (ally.max_HP / 4)) base -= 2;
+        // "Ohno what have they done to my friend ?!??"
+        if (ally.hasStatus(.Insane)) base -= 4;
 
         if (ally.ai.phase == .Flee) base -= 2;
     }

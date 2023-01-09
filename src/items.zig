@@ -2381,9 +2381,7 @@ pub const ShadowMaceWeapon = Weapon{
     .id = "shadow_mace",
     .name = "shadow mace",
     .damage = 2,
-    .effects = &[_]StatusDataInfo{
-        .{ .status = .Insane, .duration = .{ .Tmp = 10 } },
-    },
+    .ego = .NC_Insane,
     .strs = &CRUSHING_STRS,
 };
 

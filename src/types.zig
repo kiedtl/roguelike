@@ -2851,14 +2851,24 @@ pub const Mob = struct { // {{{
         attacker.makeNoise(.Combat, if (is_stab) .Quiet else opts.loudness);
 
         // Weapon effects.
-        if (!recipient.should_be_dead()) {
-            for (attacker_weapon.effects) |effect| {
-                recipient.applyStatus(effect, .{});
-            }
+        for (attacker_weapon.effects) |effect| {
+            recipient.applyStatus(effect, .{});
+        }
+
+        // Weapon ego effects.
+        switch (attacker_weapon.ego) {
+            .NC_Insane => {
+                if (!recipient.isLit() and !attacker.isLit() and
+                    spells.willSucceedAgainstMob(attacker, recipient))
+                {
+                    recipient.addStatus(.Insane, 0, .{ .Tmp = 20 });
+                }
+            },
+            else => {},
         }
 
         // Daze stabbed mobs.
-        if (is_stab and !recipient.should_be_dead()) {
+        if (is_stab) {
             recipient.addStatus(.Daze, 0, .{ .Tmp = rng.range(usize, 3, 5) });
         }
 
@@ -3385,6 +3395,10 @@ pub const Mob = struct { // {{{
             replace_duration: bool = false,
         },
     ) void {
+        if (self.should_be_dead()) {
+            return;
+        }
+
         if (s.status.isMobImmune(self)) {
             self.cancelStatus(s.status);
             return;
@@ -3547,6 +3561,10 @@ pub const Mob = struct { // {{{
         }
 
         return hostile;
+    }
+
+    pub fn isLit(self: *const Mob) bool {
+        return state.dungeon.lightAt(self.coord).*;
     }
 
     pub fn canSeeMob(self: *const Mob, mob: *const Mob) bool {
@@ -4108,7 +4126,12 @@ pub const Weapon = struct {
 
     strs: []const DamageStr,
 
-    pub const Ego = enum { None, Bone, Copper };
+    pub const Ego = enum {
+        None,
+        Bone,
+        Copper,
+        NC_Insane,
+    };
 
     pub fn createBoneWeapon(comptime weapon: *const Weapon, opts: struct {}) Weapon {
         _ = opts;

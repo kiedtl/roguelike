@@ -1179,7 +1179,7 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
         if (status_drawn) y += 1;
     }
 
-    const light = state.dungeon.lightAt(state.player.coord).*;
+    const light = state.player.isLit();
     const spotted = player.isPlayerSpotted();
 
     if (light or spotted) {
