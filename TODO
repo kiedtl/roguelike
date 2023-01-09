@@ -1103,12 +1103,24 @@ x Animations (w/ particle engine)
   - Demolisher specialists
   - Rings
     - ring of infestation
-    - ring of conjuration
-    - ring of perforation
+    x ring of conjuration
+    x ring of excision
     - ring: insanity status
     - ring: aura:para status
   - Night-creature-themed items
     - Shadow weapons
+      - Shadow Mace
+        x Insanity
+        - Particle effect
+        - Description/flavor-text
+      - Shadow Sword
+        x Mass Paralysis
+        - Particle effect
+        - Description/flavor-text
+      - Shadow Maul
+        - Multiplicity
+        - Particle effect
+        - Description/flavor-text
     - Misc armor, cloaks
     - Auxes
       - Extradimensional gemstones
