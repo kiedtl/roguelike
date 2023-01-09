@@ -2213,6 +2213,16 @@ pub const MartialSwordWeapon = Weapon{
     .strs = &SLASHING_STRS,
 };
 
+pub const ShadowSwordWeapon = Weapon{
+    .id = "shadow_sword",
+    .name = "shadow sword",
+    .damage = 1,
+    .martial = true,
+    .stats = .{ .Evade = 10, .Martial = 2 },
+    .ego = .NC_Insane,
+    .strs = &SLASHING_STRS,
+};
+
 pub const DaggerWeapon = Weapon{
     .id = "dagger",
     .name = "dagger",
@@ -2380,8 +2390,8 @@ pub const BoneGreatMaceWeapon = Weapon.createBoneWeapon(&GreatMaceWeapon, .{});
 pub const ShadowMaceWeapon = Weapon{
     .id = "shadow_mace",
     .name = "shadow mace",
-    .damage = 2,
-    .ego = .NC_Insane,
+    .damage = 1,
+    .ego = .NC_MassPara,
     .strs = &CRUSHING_STRS,
 };
 

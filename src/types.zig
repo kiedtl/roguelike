@@ -2864,6 +2864,21 @@ pub const Mob = struct { // {{{
                     recipient.addStatus(.Insane, 0, .{ .Tmp = 20 });
                 }
             },
+            .NC_MassPara => {
+                if (!attacker.isLit()) {
+                    var iter = state.mobs.iterator();
+                    while (iter.next()) |mob| {
+                        if (mob.coord.z == attacker.coord.z and attacker.canSeeMob(mob) and
+                            mob.distance(attacker) > 1 and mob.isHostileTo(attacker) and
+                            spells.willSucceedAgainstMob(attacker, mob) and !mob.isLit())
+                        {
+                            const dist = mob.distance(attacker);
+                            const dur = rng.range(usize, dist / 2, dist);
+                            mob.addStatus(.Paralysis, 0, .{ .Tmp = dur });
+                        }
+                    }
+                }
+            },
             else => {},
         }
 
@@ -4126,12 +4141,7 @@ pub const Weapon = struct {
 
     strs: []const DamageStr,
 
-    pub const Ego = enum {
-        None,
-        Bone,
-        Copper,
-        NC_Insane,
-    };
+    pub const Ego = enum { None, Bone, Copper, NC_Insane, NC_MassPara };
 
     pub fn createBoneWeapon(comptime weapon: *const Weapon, opts: struct {}) Weapon {
         _ = opts;
