@@ -475,8 +475,10 @@ fn readInput() !bool {
                 state.player.allegiance = switch (state.player.allegiance) {
                     .OtherGood => .Necromancer,
                     .Necromancer => .OtherEvil,
-                    .OtherEvil => .OtherGood,
+                    .OtherEvil => .Night,
+                    .Night => .OtherGood,
                 };
+                state.message(.Info, "[wizard] new faction: {}", .{state.player.allegiance});
                 break :blk false;
             },
             .F4 => blk: {

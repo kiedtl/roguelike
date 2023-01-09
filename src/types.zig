@@ -1011,6 +1011,7 @@ pub const Allegiance = enum {
     Necromancer,
     OtherGood, // Humans in the plains
     OtherEvil, // Cave goblins, southern humans
+    Night,
 };
 
 pub const Status = enum {
@@ -1794,7 +1795,7 @@ pub const Mob = struct { // {{{
 
     id: []const u8,
     species: *const Species,
-    undead_prefix: []const u8 = "former ",
+    prefix: []const u8 = "",
     tile: u21,
     allegiance: Allegiance = .Necromancer,
 
@@ -1955,15 +1956,9 @@ pub const Mob = struct { // {{{
 
         const base_name = self.ai.profession_name orelse self.species.name;
 
-        if (self.life_type == .Undead) {
-            var fbs = std.io.fixedBufferStream(&Static.buf);
-            std.fmt.format(fbs.writer(), "{s}{s}", .{
-                self.undead_prefix, base_name,
-            }) catch err.wat();
-            return fbs.getWritten();
-        } else {
-            return base_name;
-        }
+        var fbs = std.io.fixedBufferStream(&Static.buf);
+        std.fmt.format(fbs.writer(), "{s}{s}", .{ self.prefix, base_name }) catch err.wat();
+        return fbs.getWritten();
     }
 
     pub fn format(self: *const Mob, comptime f: []const u8, opts: fmt.FormatOptions, writer: anytype) !void {
@@ -2879,6 +2874,18 @@ pub const Mob = struct { // {{{
                     }
                 }
             },
+            .NC_Duplicate => {
+                if (!recipient.should_be_dead() and
+                    recipient.allegiance != .Night and recipient.life_type != .Spectral and
+                    !recipient.isLit() and !attacker.isLit() and
+                    spells.willSucceedAgainstMob(attacker, recipient))
+                {
+                    const new = recipient.duplicateIntoSpectral();
+                    if (new) |new_mob| {
+                        new_mob.addStatus(.Lifespan, 0, .{ .Tmp = @intCast(usize, attacker.stat(.Willpower)) * 2 });
+                    }
+                }
+            },
             else => {},
         }
 
@@ -3129,7 +3136,6 @@ pub const Mob = struct { // {{{
 
     pub fn init(self: *Mob, alloc: mem.Allocator) void {
         self.is_dead = false;
-        self.corruption_ctr = 0;
         self.HP = self.max_HP;
         self.MP = self.max_MP;
         self.enemies = EnemyRecord.AList.init(alloc);
@@ -3138,6 +3144,51 @@ pub const Mob = struct { // {{{
         self.activities.init();
         self.path_cache = std.AutoHashMap(Path, Coord).init(alloc);
         self.ai.work_area = CoordArrayList.init(alloc);
+
+        self.squad = null;
+        self.linked_fovs.clear();
+        self.push_flag = false;
+        self.energy = 0;
+        self.statuses = StatusArray.initFill(.{});
+        self.activities = .{};
+        self.last_attempted_move = null;
+        self.last_damage = null;
+        self.corruption_ctr = 0;
+        self.inventory = .{};
+    }
+
+    // Returns null if there wasn't any nearby walkable spot to put the new
+    // spectral creature
+    pub fn duplicateIntoSpectral(self: *Mob) ?*Mob {
+        var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 5, state.is_walkable, .{}, state.GPA.allocator());
+        defer dijk.deinit();
+
+        const newcoord = while (dijk.next()) |child| {
+            if (state.dungeon.at(child).mob == null) break child;
+        } else return null;
+
+        var new = self.*;
+        new.init(state.GPA.allocator());
+        new.coord = newcoord;
+        new.prefix = "spectral ";
+
+        new.allegiance = .Night;
+        new.life_type = .Spectral;
+        new.blood = null;
+        new.corpse = .None;
+
+        new.ai.work_fn = ai.dummyWork;
+        new.ai.is_curious = false;
+        new.ai.flee_effect = null;
+
+        new.innate_resists.rFire = math.clamp(self.innate_resists.rFire - 25, -100, 100);
+        new.innate_resists.rElec = math.clamp(self.innate_resists.rElec + 25, -100, 100);
+        new.innate_resists.rFume = 100;
+
+        state.mobs.append(new) catch err.wat();
+        const new_ptr = state.mobs.last().?;
+        state.dungeon.at(newcoord).mob = new_ptr;
+        return new_ptr;
     }
 
     // Returns false if there wasn't any nearby walkable spot to put the new
@@ -3168,6 +3219,7 @@ pub const Mob = struct { // {{{
         self.init(state.GPA.allocator());
 
         self.tile = 'z';
+        self.prefix = "former ";
         self.life_type = .Undead;
 
         self.energy = 0;
@@ -4141,7 +4193,7 @@ pub const Weapon = struct {
 
     strs: []const DamageStr,
 
-    pub const Ego = enum { None, Bone, Copper, NC_Insane, NC_MassPara };
+    pub const Ego = enum { None, Bone, Copper, NC_Insane, NC_MassPara, NC_Duplicate };
 
     pub fn createBoneWeapon(comptime weapon: *const Weapon, opts: struct {}) Weapon {
         _ = opts;

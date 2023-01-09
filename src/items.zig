@@ -2395,6 +2395,14 @@ pub const ShadowMaceWeapon = Weapon{
     .strs = &CRUSHING_STRS,
 };
 
+pub const ShadowMaulWeapon = Weapon{
+    .id = "shadow_maul",
+    .name = "shadow maul",
+    .damage = 2,
+    .ego = .NC_Duplicate,
+    .strs = &CRUSHING_STRS,
+};
+
 // }}}
 
 // ----------------------------------------------------------------------------

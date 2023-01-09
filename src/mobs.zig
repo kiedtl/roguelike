@@ -318,7 +318,7 @@ pub const GuardTemplate = MobTemplate{
         .max_HP = 5,
         .memory_duration = 15,
 
-        .stats = .{ .Willpower = 2 },
+        .stats = .{ .Willpower = 1 },
     },
     .weapon = &items.BludgeonWeapon,
 };
@@ -558,7 +558,7 @@ pub const PlayerTemplate = MobTemplate{
         .stats = .{ .Willpower = 4, .Missile = 60, .Evade = 10, .Vision = 12, .Sneak = 4 },
     },
     .weapon = &items.DaggerWeapon,
-    // .backup_weapon = &items.ShadowMaceWeapon,
+    .backup_weapon = &items.ShadowMaulWeapon,
     .armor = &items.RobeArmor,
     //.evocables = &[_]Evocable{items.EldritchLanternEvoc},
     //.cloak = &items.ThornsCloak,
@@ -1015,7 +1015,6 @@ pub const AncientMageTemplate = MobTemplate{
         .id = "ancient_mage",
         .species = &HumanSpecies,
         .tile = 'Ã',
-        .undead_prefix = "",
         .ai = AI{
             .profession_name = "ancient mage",
             .profession_description = "watching",
@@ -1396,7 +1395,6 @@ pub const BloatTemplate = MobTemplate{
             .default_attack = &Weapon{ .damage = 1, .strs = &items.FIST_STRS },
         },
         .tile = 'n',
-        .undead_prefix = "",
         .ai = AI{
             .profession_description = "dormant",
             .work_fn = ai.dummyWork,
@@ -1431,7 +1429,6 @@ pub const ThrashingSculptorTemplate = MobTemplate{
             .default_attack = &Weapon{ .damage = 0, .knockback = 2, .strs = &items.CLAW_STRS },
         },
         .tile = 'T',
-        .undead_prefix = "",
         .ai = AI{
             .profession_description = "dormant",
             .work_fn = ai.watcherWork,
@@ -1466,7 +1463,6 @@ pub const SkeletonTemplate = MobTemplate{
             .default_attack = &Weapon{ .damage = 1, .strs = &items.FIST_STRS },
         },
         .tile = 's',
-        .undead_prefix = "",
         .ai = AI{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
@@ -1539,7 +1535,6 @@ pub const BoneRatTemplate = MobTemplate{
             .default_attack = &Weapon{ .damage = 1, .strs = &items.BITING_STRS },
         },
         .tile = 'r',
-        .undead_prefix = "",
         .ai = AI{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
@@ -1663,7 +1658,6 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
         .id = "skeletal_blademaster",
         .species = &HumanSpecies,
         .tile = 'ƀ',
-        .undead_prefix = "",
         .ai = AI{
             .profession_name = "skeletal blademaster",
             .profession_description = "watching",
