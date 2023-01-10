@@ -74,8 +74,8 @@ A sudden pulsing migraine prevents you from reading the strange characters
 inscribed on the flanges of this mace.
 
 % shadow_sword
-As you look into the translucent blade, you seem to see your surroundings in
-unearthly colors.
+As you look into the translucent blade, you seem to observe your surroundings in
+new unearthly colors.
 
 % aux_wolfram_orb
 A heavy sphere of the purest wolfram, polished to a silver sheen. It is
