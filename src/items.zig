@@ -90,10 +90,7 @@ pub const ItemTemplate = struct {
 };
 pub const RARE_ITEM_DROPS = [_]ItemTemplate{
     // Dilute this list by adding a few more common weapon
-    .{ .w = 100, .i = .{ .W = GlaiveWeapon } },
-    .{ .w = 100, .i = .{ .W = SwordWeapon } },
-    // Rare weapons
-    .{ .w = 50, .i = .{ .W = MartialSwordWeapon } },
+    .{ .w = 50, .i = .{ .W = SwordWeapon } },
     // Bone weapons
     .{ .w = 1, .i = .{ .W = BoneSwordWeapon } },
     .{ .w = 1, .i = .{ .W = BoneDaggerWeapon } },
@@ -112,12 +109,8 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 30, .i = .{ .W = DaggerWeapon } },
     .{ .w = 20, .i = .{ .W = StilettoWeapon } },
     .{ .w = 25, .i = .{ .W = RapierWeapon } },
-    //.{ .w = 025, .i = .{ .W = QuarterstaffWeapon } },
-    //.{ .w = 030, .i = .{ .W = MaceWeapon } },
     .{ .w = 25, .i = .{ .W = GreatMaceWeapon } },
     .{ .w = 30, .i = .{ .W = MorningstarWeapon } },
-    .{ .w = 30, .i = .{ .W = HalberdWeapon } },
-    .{ .w = 30, .i = .{ .W = GlaiveWeapon } },
     .{ .w = 25, .i = .{ .W = MonkSpadeWeapon } },
     .{ .w = 15, .i = .{ .W = WoldoWeapon } },
     // Armor
@@ -2189,7 +2182,8 @@ pub const SwordWeapon = Weapon{
     .id = "sword",
     .name = "longsword",
     .damage = 2,
-    .stats = .{ .Evade = 10 },
+    .martial = true,
+    .stats = .{ .Evade = 10, .Martial = 2 },
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .OpenMelee, .duration = .Equ },
     },
@@ -2197,21 +2191,6 @@ pub const SwordWeapon = Weapon{
 };
 pub const BoneSwordWeapon = Weapon.createBoneWeapon(&SwordWeapon, .{});
 pub const CopperSwordWeapon = Weapon.createCopperWeapon(&SwordWeapon, .{});
-
-// Rare foreign weapon, so no copper/bone weapons (since that'd have
-// to be produced at home in Irtraummisem).
-//
-// .Melee-10 represents difficulty for Obmirnul to use since it's foreign (of
-// course, it's also there for balance :P)
-//
-pub const MartialSwordWeapon = Weapon{
-    .id = "martial_sword",
-    .name = "martial sword",
-    .damage = 2,
-    .martial = true,
-    .stats = .{ .Evade = 10, .Martial = 2, .Melee = -10 },
-    .strs = &SLASHING_STRS,
-};
 
 pub const ShadowSwordWeapon = Weapon{
     .id = "shadow_sword",
@@ -2274,27 +2253,6 @@ pub const HalberdWeapon = Weapon{
 };
 pub const BoneHalberdWeapon = Weapon.createBoneWeapon(&HalberdWeapon, .{});
 
-// Glaive without the closed-melee effect, and with reaching.
-pub const SpearWeapon = Weapon{
-    .id = "spear",
-    .name = "spear",
-    .damage = 2,
-    .stats = .{ .Melee = 10, .Sneak = -1 },
-    .strs = &SLASHING_STRS,
-    .reach = 2,
-};
-
-pub const GlaiveWeapon = Weapon{
-    .id = "glaive",
-    .name = "glaive",
-    .damage = 2,
-    .stats = .{ .Melee = 10, .Sneak = -1 },
-    .equip_effects = &[_]StatusDataInfo{
-        .{ .status = .ClosedMelee, .duration = .Equ },
-    },
-    .strs = &SLASHING_STRS,
-};
-
 pub const MonkSpadeWeapon = Weapon{
     .id = "monk_spade",
     .name = "monk's spade",
@@ -2309,7 +2267,7 @@ pub const WoldoWeapon = Weapon{
     .name = "woldo",
     .damage = 3,
     .martial = true,
-    .stats = .{ .Melee = -15, .Martial = 1, .Sneak = -1 },
+    .stats = .{ .Melee = -15, .Martial = 2, .Sneak = -1 },
     .strs = &SLASHING_STRS,
 };
 
