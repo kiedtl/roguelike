@@ -276,13 +276,37 @@ fn _formatStatusInfo(statusinfo: *const StatusDataInfo) []const u8 {
 
     const sname = statusinfo.status.string(state.player);
     switch (statusinfo.duration) {
-        .Prm => _writerWrite(w, "$bPrm$. {s}\n", .{sname}),
-        .Equ => _writerWrite(w, "$bEqu$. {s}\n", .{sname}),
-        .Tmp => _writerWrite(w, "$bTmp$. {s} $g({})$.\n", .{ sname, statusinfo.duration.Tmp }),
-        .Ctx => _writerWrite(w, "$bCtx$. {s}\n", .{sname}),
+        .Prm => _writerWrite(w, "$bPrm$. {s}", .{sname}),
+        .Equ => _writerWrite(w, "$bEqu$. {s}", .{sname}),
+        .Tmp => _writerWrite(w, "$bTmp$. {s} $g({})$.", .{ sname, statusinfo.duration.Tmp }),
+        .Ctx => _writerWrite(w, "$bCtx$. {s}", .{sname}),
     }
 
     return fbs.getWritten();
+}
+
+fn _writerTwice(
+    writer: io.FixedBufferStream([]u8).Writer,
+    linewidth: usize,
+    string: []const u8,
+    comptime fmt2: []const u8,
+    args2: anytype,
+) void {
+    writer.writeAll("$c") catch err.wat();
+
+    const prev_pos = @intCast(usize, writer.context.getPos() catch err.wat());
+    writer.writeAll(string) catch err.wat();
+    const new_pos = @intCast(usize, writer.context.getPos() catch err.wat());
+
+    writer.writeAll("$.") catch err.wat();
+
+    const fmt2_width = utils.countFmt(fmt2, args2);
+    var i: usize = linewidth - ((new_pos - prev_pos) + fmt2_width);
+    while (i > 0) : (i -= 1)
+        writer.writeAll(" ") catch err.wat();
+
+    writer.print(fmt2, args2) catch err.wat();
+    writer.writeAll("$.\n") catch err.wat();
 }
 
 fn _writerWrite(writer: io.FixedBufferStream([]u8).Writer, comptime fmt: []const u8, args: anytype) void {
@@ -290,19 +314,19 @@ fn _writerWrite(writer: io.FixedBufferStream([]u8).Writer, comptime fmt: []const
 }
 
 fn _writerHeader(writer: io.FixedBufferStream([]u8).Writer, linewidth: usize, comptime fmt: []const u8, args: anytype) void {
-    writer.writeAll("─($c ") catch err.wat();
+    writer.writeAll("$b") catch err.wat();
 
     const prev_pos = @intCast(usize, writer.context.getPos() catch err.wat());
     writer.print(fmt, args) catch err.wat();
     const new_pos = @intCast(usize, writer.context.getPos() catch err.wat());
 
-    writer.writeAll(" $.)─") catch err.wat();
+    writer.writeAll(" $G") catch err.wat();
 
-    var i: usize = linewidth - (new_pos - prev_pos) - 3 - 3 - 1;
+    var i: usize = linewidth - (new_pos - prev_pos) - 1;
     while (i > 0) : (i -= 1)
         writer.writeAll("─") catch err.wat();
 
-    writer.writeAll("\n\n") catch err.wat();
+    writer.writeAll("$.\n") catch err.wat();
 }
 
 fn _writerHLine(writer: io.FixedBufferStream([]u8).Writer, linewidth: usize) void {
@@ -329,7 +353,6 @@ fn _writerMobStats(
     mob: *Mob,
 ) void {
     // TODO: don't manually tabulate this?
-    _writerWrite(w, "$cstat       value$.\n", .{});
     inline for (@typeInfo(Stat).Enum.fields) |statv| {
         const stat = @intToEnum(Stat, statv.value);
         const stat_val_raw = mob.stat(stat);
@@ -338,6 +361,7 @@ fn _writerMobStats(
         if (stat == .Sneak) continue;
         _writerWrite(w, "$c{s: <8}$.   {: >5}\n", .{ stat.string(), stat_val });
     }
+    _writerWrite(w, "\n", .{});
     inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
         const resist = @intToEnum(Resistance, resistancev.value);
         const resist_val = utils.SignedFormatter{ .v = mob.resistance(resist) };
@@ -350,11 +374,10 @@ fn _writerMobStats(
 
 fn _writerStats(
     w: io.FixedBufferStream([]u8).Writer,
+    linewidth: usize,
     p_stats: ?enums.EnumFieldStruct(Stat, isize, 0),
     p_resists: ?enums.EnumFieldStruct(Resistance, isize, 0),
 ) void {
-    // TODO: don't manually tabulate this?
-    _writerWrite(w, "$cstat       value$.\n", .{});
     if (p_stats) |stats| {
         inline for (@typeInfo(Stat).Enum.fields) |statv| {
             const stat = @intToEnum(Stat, statv.value);
@@ -379,11 +402,15 @@ fn _writerStats(
                 //     stat.string(), base_stat_val, terrain_stat_val, new_stat_val,
                 // });
                 const fmt_val = utils.SignedFormatter{ .v = x_stat_val };
-                _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ stat.string(), fmt_val });
+                // _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ stat.string(), fmt_val });
+                _writerTwice(w, linewidth, stat.string(), "{}", .{fmt_val});
             }
         }
     }
     if (p_resists) |resists| {
+        if (p_stats != null)
+            _writerWrite(w, "\n", .{});
+
         inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
             const resist = @intToEnum(Resistance, resistancev.value);
 
@@ -402,7 +429,8 @@ fn _writerStats(
                 //     resist.string(), base_resist_val, terrain_resist_val, new_resist_val,
                 // });
                 const fmt_val = utils.SignedFormatter{ .v = x_resist_val };
-                _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ resist.string(), fmt_val });
+                // _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ resist.string(), fmt_val });
+                _writerTwice(w, linewidth, resist.string(), "{}", .{fmt_val});
             }
         }
     }
@@ -422,7 +450,8 @@ fn _getTerrDescription(w: io.FixedBufferStream([]u8).Writer, terrain: *const sur
         _writerWrite(w, "\n", .{});
     }
 
-    _writerStats(w, terrain.stats, terrain.resists);
+    _writerHeader(w, linewidth, "stats", .{});
+    _writerStats(w, linewidth, terrain.stats, terrain.resists);
     _writerWrite(w, "\n", .{});
 
     if (terrain.effects.len > 0) {
@@ -712,7 +741,7 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
         while (statuses.next()) |entry| {
             if (state.player.isUnderStatus(entry.key) == null)
                 continue;
-            _writerWrite(w, "{s}", .{_formatStatusInfo(entry.value)});
+            _writerWrite(w, "{s}\n", .{_formatStatusInfo(entry.value)});
         }
         _writerWrite(w, "\n", .{});
 
@@ -764,7 +793,7 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
     while (statuses.next()) |entry| {
         if (mob.isUnderStatus(entry.key) == null)
             continue;
-        _writerWrite(w, "{s}", .{_formatStatusInfo(entry.value)});
+        _writerWrite(w, "{s}\n", .{_formatStatusInfo(entry.value)});
     }
     _writerWrite(w, "\n", .{});
 
@@ -791,7 +820,7 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
 
     if (mob.ai.flee_effect) |effect| {
         _writerHeader(w, linewidth, "flee behaviour", .{});
-        _writerWrite(w, "· {s}", .{_formatStatusInfo(&effect)});
+        _writerWrite(w, "· {s}\n", .{_formatStatusInfo(&effect)});
         _writerWrite(w, "\n", .{});
     }
 }
@@ -824,7 +853,7 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
 
     switch (item) {
         .Rune => err.wat(),
-        .Ring => _writerWrite(w, "TODO: ring descriptions.", .{}),
+        .Ring => {},
         .Consumable => |p| {
             _writerHeader(w, linewidth, "effects", .{});
             for (p.effects) |effect| switch (effect) {
@@ -845,40 +874,55 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
             switch (p.effect) {
                 .Status => |sinfo| {
                     _writerHeader(w, linewidth, "effects", .{});
-                    _writerWrite(w, "{s}", .{_formatStatusInfo(&sinfo)});
+                    _writerWrite(w, "{s}\n", .{_formatStatusInfo(&sinfo)});
                 },
             }
         },
-        .Cloak => |c| _writerStats(w, c.stats, c.resists),
+        .Cloak => |c| {
+            _writerHeader(w, linewidth, "stats", .{});
+            _writerStats(w, linewidth, c.stats, c.resists);
+        },
         .Aux => |x| {
-            _writerStats(w, x.stats, x.resists);
+            _writerHeader(w, linewidth, "stats", .{});
+            _writerStats(w, linewidth, x.stats, x.resists);
 
             if (x.equip_effects.len > 0) {
                 _writerHeader(w, linewidth, "on equip", .{});
                 for (x.equip_effects) |effect|
-                    _writerWrite(w, "· {s}", .{_formatStatusInfo(&effect)});
+                    _writerWrite(w, "· {s}\n", .{_formatStatusInfo(&effect)});
                 _writerWrite(w, "\n", .{});
             }
         },
-        .Armor => |a| _writerStats(w, a.stats, a.resists),
+        .Armor => |a| {
+            _writerHeader(w, linewidth, "stats", .{});
+            _writerStats(w, linewidth, a.stats, a.resists);
+        },
         .Weapon => |p| {
-            if (p.reach != 1) _writerWrite(w, "$creach:$. {}\n", .{p.reach});
-            if (p.knockback != 0) _writerWrite(w, "$cknockback:$. {}\n", .{p.knockback});
+            // if (p.reach != 1) _writerWrite(w, "$creach:$. {}\n", .{p.reach});
+            assert(p.reach == 1);
+
+            _writerHeader(w, linewidth, "overview", .{});
+            _writerTwice(w, linewidth, "damage", "{}", .{p.damage});
+            if (p.martial)
+                _writerTwice(w, linewidth, "martial?", "yes ($a{}$.)", .{p.stats.Martial})
+            else
+                _writerTwice(w, linewidth, "martial?", "no", .{});
+            if (p.knockback != 0)
+                _writerTwice(w, linewidth, "knockback", "{}", .{p.knockback});
+            for (p.effects) |effect|
+                _writerTwice(w, linewidth, "effect", "{s}", .{_formatStatusInfo(&effect)});
             _writerWrite(w, "\n", .{});
 
-            _writerStats(w, p.stats, null);
+            _writerHeader(w, linewidth, "stats", .{});
+            _writerStats(w, linewidth, p.stats, null);
 
             if (p.equip_effects.len > 0) {
                 _writerHeader(w, linewidth, "on equip", .{});
                 for (p.equip_effects) |effect|
-                    _writerWrite(w, "· {s}", .{_formatStatusInfo(&effect)});
+                    _writerWrite(w, "· {s}\n", .{_formatStatusInfo(&effect)});
                 _writerWrite(w, "\n", .{});
             }
 
-            _writerHeader(w, linewidth, "on attack", .{});
-            _writerWrite(w, "· $gIns$. damage <{}>\n", .{p.damage});
-            for (p.effects) |effect|
-                _writerWrite(w, "· {s}", .{_formatStatusInfo(&effect)});
             _writerWrite(w, "\n", .{});
         },
         .Evocable => |e| {

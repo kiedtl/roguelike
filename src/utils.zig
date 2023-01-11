@@ -28,6 +28,32 @@ const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
 
 const StackBuffer = buffer.StackBuffer;
 
+// Count the characters needed to display some text
+pub fn countFmt(comptime fmt: []const u8, args: anytype) u64 {
+    var counting_writer = (struct {
+        bytes_written: u64,
+        ignore_next: bool = false,
+        pub const E = error{};
+        pub const Writer = std.io.Writer(*@This(), E, write);
+
+        pub fn write(self: *@This(), bytes: []const u8) E!usize {
+            for (bytes) |byte| if (byte == '$') {
+                self.ignore_next = true;
+            } else if (self.ignore_next) {
+                self.ignore_next = false;
+            } else {
+                self.bytes_written += 1;
+            };
+            return bytes.len;
+        }
+        pub fn writer(self: *@This()) Writer {
+            return .{ .context = self };
+        }
+    }){ .bytes_written = 0 };
+    std.fmt.format(counting_writer.writer(), fmt, args) catch err.wat();
+    return counting_writer.bytes_written;
+}
+
 pub fn getFarthestWalkableCoord(d: Direction, coord: Coord, opts: state.IsWalkableOptions) Coord {
     var target = coord;
     while (target.move(d, state.mapgeometry)) |newcoord| {

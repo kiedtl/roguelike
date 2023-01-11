@@ -94,10 +94,8 @@ pub const RARE_ITEM_DROPS = [_]ItemTemplate{
     // Bone weapons
     .{ .w = 1, .i = .{ .W = BoneSwordWeapon } },
     .{ .w = 1, .i = .{ .W = BoneDaggerWeapon } },
-    .{ .w = 1, .i = .{ .W = BoneStilettoWeapon } },
     .{ .w = 1, .i = .{ .W = BoneMaceWeapon } },
     .{ .w = 1, .i = .{ .W = BoneGreatMaceWeapon } },
-    .{ .w = 1, .i = .{ .W = BoneHalberdWeapon } },
     // Copper weapons
     .{ .w = 1, .i = .{ .W = CopperSwordWeapon } },
     .{ .w = 1, .i = .{ .W = CopperRapierWeapon } },
@@ -107,7 +105,6 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     // Weapons
     .{ .w = 30, .i = .{ .W = SwordWeapon } },
     .{ .w = 30, .i = .{ .W = DaggerWeapon } },
-    .{ .w = 20, .i = .{ .W = StilettoWeapon } },
     .{ .w = 25, .i = .{ .W = RapierWeapon } },
     .{ .w = 25, .i = .{ .W = GreatMaceWeapon } },
     .{ .w = 30, .i = .{ .W = MorningstarWeapon } },
@@ -164,8 +161,14 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 20, .i = .{ .C = &VelvetCloak } },
     .{ .w = 10, .i = .{ .C = &ThornyCloak } },
 };
+pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
+    .{ .w = 99, .i = .{ .W = ShadowSwordWeapon } },
+    .{ .w = 99, .i = .{ .W = ShadowMaulWeapon } },
+    .{ .w = 99, .i = .{ .W = ShadowMaceWeapon } },
+};
 pub const ALL_ITEMS = [_]ItemTemplate{
     .{ .w = 0, .i = .{ .List = &ITEM_DROPS } },
+    .{ .w = 0, .i = .{ .List = &NIGHT_ITEM_DROPS } },
     .{ .w = 0, .i = .{ .E = SymbolEvoc } },
 };
 
@@ -2212,15 +2215,6 @@ pub const DaggerWeapon = Weapon{
 };
 pub const BoneDaggerWeapon = Weapon.createBoneWeapon(&DaggerWeapon, .{});
 
-pub const StilettoWeapon = Weapon{
-    .id = "stiletto",
-    .name = "stiletto",
-    .damage = 5,
-    .stats = .{ .Melee = -25 },
-    .strs = &PIERCING_STRS,
-};
-pub const BoneStilettoWeapon = Weapon.createBoneWeapon(&StilettoWeapon, .{});
-
 pub const RapierWeapon = Weapon{
     .id = "rapier",
     .name = "rapier",
@@ -2240,18 +2234,6 @@ pub const CopperRapierWeapon = Weapon.createCopperWeapon(&RapierWeapon, .{});
 // XXX: no copper weapons for polearms, as it might create some imbalance
 // with players being allowed to stand on copper ground and attack safely at a
 // distance...?
-
-pub const HalberdWeapon = Weapon{
-    .id = "halberd",
-    .name = "halberd",
-    .damage = 2,
-    .stats = .{ .Sneak = -1 },
-    .equip_effects = &[_]StatusDataInfo{
-        .{ .status = .OpenMelee, .duration = .Equ },
-    },
-    .strs = &SLASHING_STRS,
-};
-pub const BoneHalberdWeapon = Weapon.createBoneWeapon(&HalberdWeapon, .{});
 
 pub const MonkSpadeWeapon = Weapon{
     .id = "monk_spade",
@@ -2305,6 +2287,9 @@ pub const MorningstarWeapon = Weapon{
     .name = "morningstar",
     .damage = 3,
     .stats = .{ .Melee = 10 },
+    .effects = &[_]StatusDataInfo{
+        .{ .status = .Fear, .duration = .{ .Tmp = 2 } },
+    },
     .strs = &CRUSHING_STRS,
 };
 
