@@ -902,11 +902,7 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
             assert(p.reach == 1);
 
             _writerHeader(w, linewidth, "overview", .{});
-            _writerTwice(w, linewidth, "damage", "{}", .{p.damage});
-            if (p.martial)
-                _writerTwice(w, linewidth, "martial?", "yes ($a{}$.)", .{p.stats.Martial})
-            else
-                _writerTwice(w, linewidth, "martial?", "no", .{});
+            _writerTwice(w, linewidth, "damage", "($g{s}$.) {}", .{ p.damage_kind.stringLong(), p.damage });
             if (p.knockback != 0)
                 _writerTwice(w, linewidth, "knockback", "{}", .{p.knockback});
             for (p.effects) |effect|
@@ -921,6 +917,17 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
                 for (p.equip_effects) |effect|
                     _writerWrite(w, "· {s}\n", .{_formatStatusInfo(&effect)});
                 _writerWrite(w, "\n", .{});
+            }
+
+            _writerHeader(w, linewidth, "traits", .{});
+            if (p.martial) {
+                const stat = state.player.stat(.Martial);
+                const statfmt = utils.SignedFormatter{ .v = stat };
+                const color = if (stat < 0) @as(u21, 'r') else 'c';
+                _writerWrite(w, "$cmartial$.: You can attack up to ${u}{}$. extra time(s) (your Martial stat) if your attacks all land.\n\n", .{ color, statfmt });
+            }
+            if (p.ego.description()) |description| {
+                _writerWrite(w, "$c{s}$.: {s}\n\n", .{ p.ego.name().?, description });
             }
 
             _writerWrite(w, "\n", .{});

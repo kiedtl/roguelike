@@ -941,6 +941,15 @@ pub const Damage = struct {
                 .Physical => "dmg",
                 .Fire => "fire",
                 .Electric => "elec",
+                .Irresistible => "irresist",
+            };
+        }
+
+        pub fn stringLong(self: DamageKind) []const u8 {
+            return switch (self) {
+                .Physical => "physical",
+                .Fire => "fire",
+                .Electric => "electric",
                 .Irresistible => "irresistible",
             };
         }
@@ -4195,7 +4204,39 @@ pub const Weapon = struct {
 
     strs: []const DamageStr,
 
-    pub const Ego = enum { None, Bone, Copper, NC_Insane, NC_MassPara, NC_Duplicate, Swap };
+    pub const Ego = enum {
+        None,
+        Bone,
+        Copper,
+        NC_Insane,
+        NC_MassPara,
+        NC_Duplicate,
+        Swap,
+
+        pub fn name(self: Ego) ?[]const u8 {
+            return switch (self) {
+                .None => null,
+                .Bone => "bone",
+                .Copper => "copper",
+                .NC_Insane => "insanity",
+                .NC_MassPara => "mass paralysis",
+                .NC_Duplicate => "duplicity",
+                .Swap => "swapping",
+            };
+        }
+
+        pub fn description(self: Ego) ?[]const u8 {
+            return switch (self) {
+                .None => null,
+                .Bone => "More damage will be dealt to living enemies, and less to undead.",
+                .Copper => "When standing on copper ground, you deal $b+3$. electric damage.",
+                .NC_Insane => "When both you and your foe are in an unlit area, you have a will-checked chance to send your foe insane with your attacks.",
+                .NC_MassPara => "When you are attacking from an unlit area, you have a will-checked chance to paralyse nearby foes if they are also standing in the dark. The duration of the paralysis will always be less than the time needed to reach them.",
+                .NC_Duplicate => "When both you and your foe are in an unlit area, you have a will-checked chance to create a spectral copy of your foe. The spectral copy will be aligned with the Night Creatures, and will last for $bwillpower * 2$. turns.",
+                .Swap => "When you land a successful hit, you have a chance to swap places with your foe.",
+            };
+        }
+    };
 
     pub fn createBoneWeapon(comptime weapon: *const Weapon, opts: struct {}) Weapon {
         _ = opts;
