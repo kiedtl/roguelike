@@ -298,7 +298,7 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
     if (!opts.ignore_mobs) {
         if (dungeon.at(coord).mob) |other| {
             if (opts.mob) |mob| {
-                if (mob != other and !mob.canSwapWith(other, null)) {
+                if (mob != other and !mob.canSwapWith(other, .{})) {
                     return false;
                 }
             } else return false;

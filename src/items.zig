@@ -2211,6 +2211,7 @@ pub const DaggerWeapon = Weapon{
     .damage = 1,
     .martial = true,
     .stats = .{ .Martial = 1 },
+    .ego = .Swap,
     .strs = &PIERCING_STRS,
 };
 pub const BoneDaggerWeapon = Weapon.createBoneWeapon(&DaggerWeapon, .{});

@@ -456,7 +456,7 @@ fn readInput() !bool {
                     const l = state.player.coord.z - 1;
                     const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
                     const c = r.rect.randomCoord();
-                    break :blk state.player.teleportTo(c, null, false);
+                    break :blk state.player.teleportTo(c, null, false, false);
                 } else {
                     break :blk false;
                 }
@@ -466,7 +466,7 @@ fn readInput() !bool {
                     const l = state.player.coord.z + 1;
                     const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
                     const c = r.rect.randomCoord();
-                    break :blk state.player.teleportTo(c, null, false);
+                    break :blk state.player.teleportTo(c, null, false, false);
                 } else {
                     break :blk false;
                 }
@@ -494,7 +494,7 @@ fn readInput() !bool {
             .F6 => blk: {
                 const stairlocs = state.dungeon.stairs[state.player.coord.z];
                 const stairloc = rng.chooseUnweighted(Coord, stairlocs.constSlice());
-                break :blk state.player.teleportTo(stairloc, null, false);
+                break :blk state.player.teleportTo(stairloc, null, false, false);
             },
             .F7 => blk: {
                 //state.player.innate_resists.rElec += 25;
@@ -517,7 +517,7 @@ fn readInput() !bool {
             },
             .F9 => b: {
                 const chosen = ui.chooseCell(.{}) orelse break :b false;
-                break :b state.player.teleportTo(chosen, null, false);
+                break :b state.player.teleportTo(chosen, null, false, false);
             },
             else => false,
         },
@@ -674,7 +674,6 @@ fn tickGame() !void {
 
             if (mob == state.player) {
                 player.bookkeepingFOV();
-                player.autoAttack();
             }
 
             err.ensure(prev_energy > mob.energy, "{c} (phase: {}) did nothing during turn!", .{ mob, mob.ai.phase }) catch {

@@ -366,7 +366,7 @@ fn _effectSummonEnemy(caster: Coord, _: Spell, _: SpellOptions, coord: Coord) vo
     }
 
     if (new) |newcoord| {
-        _ = target_mob.teleportTo(newcoord, null, true);
+        _ = target_mob.teleportTo(newcoord, null, true, false);
 
         state.messageAboutMob(target_mob, caster, .SpellCast, "are dragged back to the {s}!", .{caster_mob.displayName()}, "is dragged back to the {s}!", .{caster_mob.displayName()});
     }
@@ -414,7 +414,7 @@ fn _effectAuraDispersal(caster: Coord, _: Spell, _: SpellOptions, _: Coord) void
                     }
                 }
                 if (new) |newcoord| {
-                    _ = mob.teleportTo(newcoord, null, true);
+                    _ = mob.teleportTo(newcoord, null, true, false);
                     mob.addStatus(.Daze, 0, .{ .Tmp = 2 });
                     if (state.player.cansee(mob.coord) or state.player.cansee(caster))
                         had_visible_effect = true;
@@ -593,7 +593,7 @@ pub const BOLT_SPINNING_SWORD = Spell{
     .bolt_last_coord_effect = struct {
         pub fn f(caster_coord: Coord, _: SpellOptions, coord: Coord) void {
             if (state.is_walkable(coord, .{ .right_now = true }))
-                _ = state.dungeon.at(caster_coord).mob.?.teleportTo(coord, null, true);
+                _ = state.dungeon.at(caster_coord).mob.?.teleportTo(coord, null, true, false);
         }
     }.f,
 };
@@ -626,7 +626,7 @@ pub const BOLT_BLINKBOLT = Spell{
     .bolt_last_coord_effect = struct {
         pub fn f(caster_coord: Coord, _: SpellOptions, coord: Coord) void {
             if (state.is_walkable(coord, .{ .right_now = true }))
-                _ = state.dungeon.at(caster_coord).mob.?.teleportTo(coord, null, true);
+                _ = state.dungeon.at(caster_coord).mob.?.teleportTo(coord, null, true, false);
         }
     }.f,
 };

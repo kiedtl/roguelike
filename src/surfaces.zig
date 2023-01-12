@@ -1296,7 +1296,7 @@ fn interact1Drain(machine: *Machine, mob: *Mob) bool {
     }
     const drain = rng.chooseUnweighted(*Machine, drains.constSlice());
 
-    const succeeded = mob.teleportTo(drain.coord, null, true);
+    const succeeded = mob.teleportTo(drain.coord, null, true, false);
     assert(succeeded);
 
     if (rng.onein(3)) {

@@ -185,7 +185,7 @@ pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: u
     } });
 
     if (!dest_coord.eq(throwee.coord))
-        assert(throwee.teleportTo(dest_coord, null, true));
+        assert(throwee.teleportTo(dest_coord, null, true, false));
 
     // Give damage and print messages
 

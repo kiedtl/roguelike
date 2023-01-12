@@ -2427,21 +2427,16 @@ pub const Mob = struct { // {{{
     // Check if a mob, when trying to move into a space that already has a mob,
     // can swap with that other mob.
     //
-    pub fn canSwapWith(self: *const Mob, other: *Mob, _: ?Direction) bool {
+    pub fn canSwapWith(self: *const Mob, other: *Mob, opts: struct { ignore_hostility: bool = false }) bool {
         if (self.multitile != null or other.multitile != null) {
             return false;
         }
 
-        if (self == state.player) {
-            return !other.immobile and
-                (other.prisoner_status == null or other.prisoner_status.?.held_by == null);
-        } else {
-            return other != state.player and
-                !other.isHostileTo(self) and
-                !other.immobile and
-                (other.prisoner_status == null or other.prisoner_status.?.held_by == null) and
-                (other.hasStatus(.Paralysis) or !other.push_flag);
-        }
+        return other != state.player and
+            (opts.ignore_hostility or !other.isHostileTo(self)) and
+            !other.immobile and
+            (other.prisoner_status == null or other.prisoner_status.?.held_by == null) and
+            (other.hasStatus(.Paralysis) or !other.push_flag);
     }
 
     // Try to move to a destination, one step at a time.
@@ -2502,7 +2497,7 @@ pub const Mob = struct { // {{{
 
         var succeeded = false;
         if (coord.move(direction, state.mapgeometry)) |dest| {
-            succeeded = self.teleportTo(dest, direction, false);
+            succeeded = self.teleportTo(dest, direction, false, false);
         } else {
             succeeded = false;
         }
@@ -2519,7 +2514,7 @@ pub const Mob = struct { // {{{
         } else return succeeded;
     }
 
-    pub fn teleportTo(self: *Mob, dest: Coord, direction: ?Direction, instant: bool) bool {
+    pub fn teleportTo(self: *Mob, dest: Coord, direction: ?Direction, instant: bool, swap_ignore_hostility: bool) bool {
         if (self.multitile != null) {
             return self._teleportToMultitile(dest, direction, instant);
         }
@@ -2563,16 +2558,10 @@ pub const Mob = struct { // {{{
             return false;
         }
 
-        if (!instant) {
-            if (direction) |d| {
-                self.declareAction(Activity{ .Move = d });
-            } else {
-                self.declareAction(Activity{ .Teleport = dest });
-            }
-        }
-
         if (state.dungeon.at(dest).mob) |other| {
-            if (!self.canSwapWith(other, direction)) return false;
+            if (!self.canSwapWith(other, .{ .ignore_hostility = swap_ignore_hostility }))
+                return false;
+
             self.coord = dest;
             state.dungeon.at(dest).mob = self;
             other.coord = coord;
@@ -2588,6 +2577,14 @@ pub const Mob = struct { // {{{
             self.coord = dest;
             state.dungeon.at(dest).mob = self;
             state.dungeon.at(coord).mob = null;
+        }
+
+        if (!instant) {
+            if (direction) |d| {
+                self.declareAction(Activity{ .Move = d });
+            } else {
+                self.declareAction(Activity{ .Teleport = dest });
+            }
         }
 
         if (state.dungeon.at(dest).surface) |surface| {
@@ -2852,6 +2849,11 @@ pub const Mob = struct { // {{{
 
         // Weapon ego effects.
         switch (attacker_weapon.ego) {
+            .Swap => {
+                if (attacker.canSwapWith(recipient, .{ .ignore_hostility = true })) {
+                    _ = attacker.teleportTo(recipient.coord, null, true, true);
+                }
+            },
             .NC_Insane => {
                 if (!recipient.isLit() and !attacker.isLit() and
                     spells.willSucceedAgainstMob(attacker, recipient))
@@ -4193,7 +4195,7 @@ pub const Weapon = struct {
 
     strs: []const DamageStr,
 
-    pub const Ego = enum { None, Bone, Copper, NC_Insane, NC_MassPara, NC_Duplicate };
+    pub const Ego = enum { None, Bone, Copper, NC_Insane, NC_MassPara, NC_Duplicate, Swap };
 
     pub fn createBoneWeapon(comptime weapon: *const Weapon, opts: struct {}) Weapon {
         _ = opts;

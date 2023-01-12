@@ -130,7 +130,7 @@ pub fn triggerStair(cur_stair: Coord, dest_stair: Coord) bool {
         }
     } else err.bug("Unable to find passable tile near upstairs!", .{});
 
-    if (state.player.teleportTo(dest, null, false)) {
+    if (state.player.teleportTo(dest, null, false, false)) {
         state.message(.Move, "You ascend. Welcome to {s}!", .{state.levelinfo[dest_stair.z].name});
     } else {
         err.bug("Unable to ascend stairs! (something's in the way, maybe?)", .{});
@@ -218,26 +218,6 @@ pub fn bookkeepingFOV() void {
     };
 }
 
-// Player auto-attack.
-pub fn autoAttack() void {
-    if (state.player.activities.current()) |cur_a| {
-        if (cur_a == .Move or cur_a == .Attack)
-            return;
-    }
-
-    if (!state.player.hasStatus(.Paralysis) and getActiveRing() == null) {
-        // Redefine direction list to be ordered clockwise
-        const directions = [_]Direction{ .North, .NorthEast, .East, .SouthEast, .South, .SouthWest, .West, .NorthWest };
-
-        for (&directions) |d| if (utils.getHostileInDirection(state.player, d)) |hostile| {
-            if (hostile.ai.phase == .Hunt and state.player.canMelee(hostile) and !hostile.immobile) {
-                state.player.fight(hostile, .{ .free_attack = true });
-                break;
-            }
-        } else |_| {};
-    }
-}
-
 pub fn tryRest() bool {
     if (state.player.hasStatus(.Pain)) {
         ui.drawAlertThenLog("You cannot rest while in pain!", .{});
@@ -277,21 +257,18 @@ pub fn moveOrFight(direction: Direction) bool {
         return true;
     }
 
-    // Does the player want to stab or push past?
+    // Does the player want to stab or fight?
     if (state.dungeon.at(dest).mob) |mob| {
-        if (state.player.isHostileTo(mob))
-            if (combat.isAttackStab(state.player, mob)) {
-                state.player.fight(mob, .{});
-                return true;
-            } else {
-                if (getActiveRing()) |_| {
-                    state.player.fight(mob, .{});
-                    return true;
-                } else if (!ai.isEnemyKnown(mob, state.player) and !mob.hasStatus(.Amnesia)) {
-                    if (!ui.drawYesNoPrompt("Really push past unaware enemy?", .{}))
-                        return false;
-                }
-            };
+        if (state.player.isHostileTo(mob)) {
+            if (!combat.isAttackStab(state.player, mob) and
+                (!ai.isEnemyKnown(mob, state.player) and !mob.hasStatus(.Amnesia)))
+            {
+                if (!ui.drawYesNoPrompt("Really attack unaware enemy?", .{}))
+                    return false;
+            }
+            state.player.fight(mob, .{});
+            return true;
+        }
     }
 
     // Does the player want to move into a surveilled location?

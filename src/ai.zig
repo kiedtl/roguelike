@@ -224,7 +224,7 @@ pub fn tryRest(mob: *Mob) void {
         rng.shuffle(Direction, &directions);
         for (&directions) |direction|
             if (mob.coord.move(direction, state.mapgeometry)) |dest_coord| {
-                if (mob.teleportTo(dest_coord, direction, true)) {
+                if (mob.teleportTo(dest_coord, direction, true, false)) {
                     if (state.player.cansee(mob.coord)) {
                         state.message(.Unimportant, "{c} writhes in agony.", .{mob});
                     }
