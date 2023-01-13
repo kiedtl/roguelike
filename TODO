@@ -1091,13 +1091,6 @@ x Animations (w/ particle engine)
   - Staircase prefab on -1/Prison
 - Night creatures
   - Night creature enclaves
-  - Popups explaining UI elements on hover
-    - Quick description for current level indicator
-    - Bars (health, corruption, sneak)
-    - Stats (resists, other stats near bars)
-      - Basic description
-      - Breakdown
-    - Status effects
   - Individual night creatures
   - Reputation mechanics
   - Demolisher specialists
@@ -1105,29 +1098,20 @@ x Animations (w/ particle engine)
     - ring of infestation
     x ring of conjuration
     x ring of excision
-    - ring: insanity status
-    - ring: aura:para status
   - Night-creature-themed items
-    - Shadow weapons
-      - Shadow Mace
-        x Insanity
-        - Particle effect
-        - Description/flavor-text
-      - Shadow Sword
-        x Mass Paralysis
-        - Particle effect
-        - Description/flavor-text
-      - Shadow Maul
-        x Multiplicity
-        - Particle effect
-        - Description/flavor-text
-    - Misc armor, cloaks
-    - Auxes
-      - Extradimensional gemstones
+    x Shadow weapons
+      x Shadow Mace (Insanity)
+      x Shadow Sword (Mass Paralysis)
+      x Shadow Maul (Multiplicity)
+      x Descriptions for weapons
+    - Armor, cloaks, and other items
+      - Cloak of fumes
+      - Shadow hauberk
+      - Shadow mail
   - Alignment map/mechanics
-    - Map design, basic aligner
+    - Map design, basic aligner machine/prop/consumable
     - Props on map for effect
-    - Animation (need particle engine)
+    - Animation (need particle engine[DONE])
 - UI
   x Menu to invoke patterns (via SPACE)
   x Map dynamic popups/annotations
@@ -1138,6 +1122,13 @@ x Animations (w/ particle engine)
     - Status/mob/item description lookup screen
     - Keybinding help "?" screen
     - About screen (or just in log area?)
+  - Popups explaining UI elements on hover
+    - Quick description for current level indicator
+    - Bars (health, corruption, sneak)
+    - Stats (resists, other stats near bars)
+      - Basic description
+      - Breakdown
+    - Status effects
 - Corpse-related mechanics
   - Enemies alerted of player if finding recently-killed corpse w/ player nearby
   - Patrols and guards report corpses
