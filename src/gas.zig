@@ -41,7 +41,9 @@ pub const SmokeGas = Gas{
     .name = "smoke",
     .color = 0xffffff,
     .dissipation_rate = 0.02,
-    .opacity = 1.0,
+    // Lava emits smoke. If opacity >= 1.0, this causes massive lighting
+    // fluctuations, which is not desirable.
+    .opacity = 0.9,
     .trigger = triggerNone,
     .id = 1,
 };
