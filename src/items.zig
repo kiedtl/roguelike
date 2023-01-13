@@ -2187,9 +2187,6 @@ pub const SwordWeapon = Weapon{
     .damage = 2,
     .martial = true,
     .stats = .{ .Evade = 10, .Martial = 2 },
-    .equip_effects = &[_]StatusDataInfo{
-        .{ .status = .OpenMelee, .duration = .Equ },
-    },
     .strs = &SLASHING_STRS,
 };
 pub const BoneSwordWeapon = Weapon.createBoneWeapon(&SwordWeapon, .{});
@@ -2232,9 +2229,6 @@ pub const CopperRapierWeapon = Weapon.createCopperWeapon(&RapierWeapon, .{});
 
 // Polearms {{{
 //
-// XXX: no copper weapons for polearms, as it might create some imbalance
-// with players being allowed to stand on copper ground and attack safely at a
-// distance...?
 
 pub const MonkSpadeWeapon = Weapon{
     .id = "monk_spade",

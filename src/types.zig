@@ -1101,16 +1101,6 @@ pub const Status = enum {
     // Doesn't have a power field.
     Debil,
 
-    // .Melee bonus if surrounded by empty space.
-    //
-    // Doesn't have a power field.
-    OpenMelee,
-
-    // .Melee bonus if in closed area.
-    //
-    // Doesn't have a power field.
-    ClosedMelee,
-
     // Makes monster "share" electric damage to nearby mobs and through
     // conductive terrain.
     //
@@ -1259,8 +1249,6 @@ pub const Status = enum {
             .Blind => "blind",
             .Riposte => "riposte",
             .Debil => "debilitated",
-            .OpenMelee => "open melee",
-            .ClosedMelee => "closed melee",
             .Conductive => "conductive",
             .Noisy => "noisy",
             .Sleeping => switch (mob.life_type) {
@@ -1295,7 +1283,7 @@ pub const Status = enum {
         return switch (self) {
             .RingTeleportation, .RingDamnation, .RingElectrocution, .RingExcision, .RingConjuration => null,
 
-            .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .OpenMelee, .ClosedMelee, .Echolocation, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
+            .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .Echolocation, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
 
             .Amnesia => "amnesia",
             .Insane => "insane",
