@@ -975,6 +975,7 @@ pub const Drain = Machine{
         .name = "crawl",
         .success_msg = "You crawl into the drain and emerge from another!",
         .no_effect_msg = "You crawl into the drain, but it's a dead end!",
+        .expended_msg = null,
         .needs_power = false,
         .max_use = 1,
         .func = interact1Drain,
