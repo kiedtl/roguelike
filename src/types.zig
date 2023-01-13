@@ -2859,7 +2859,9 @@ pub const Mob = struct { // {{{
         // Weapon ego effects.
         switch (attacker_weapon.ego) {
             .Swap => {
-                if (attacker.canSwapWith(recipient, .{ .ignore_hostility = true })) {
+                if ((attacker != state.player or player.getActiveRing() == null) and
+                    attacker.canSwapWith(recipient, .{ .ignore_hostility = true }))
+                {
                     _ = attacker.teleportTo(recipient.coord, null, true, true);
                 }
             },
