@@ -112,17 +112,20 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 15, .i = .{ .W = WoldoWeapon } },
     // Armor
     .{ .w = 20, .i = .{ .A = GambesonArmor } },
-    .{ .w = 10, .i = .{ .A = SpikedLeatherArmor } },
     .{ .w = 20, .i = .{ .A = HauberkArmor } },
     .{ .w = 20, .i = .{ .A = CuirassArmor } },
+    .{ .w = 10, .i = .{ .A = SpikedLeatherArmor } },
+    .{ .w = 05, .i = .{ .A = BrigandineArmor } },
     // Aux items
     .{ .w = 20, .i = .{ .X = &WolframOrbAux } },
     .{ .w = 20, .i = .{ .X = &MinersMapAux } },
     .{ .w = 20, .i = .{ .X = &DetectHeatAux } },
     .{ .w = 20, .i = .{ .X = &DetectElecAux } },
-    .{ .w = 10, .i = .{ .X = &DispelUndeadAux } },
+    // .{ .w = 10, .i = .{ .X = &DispelUndeadAux } },
     .{ .w = 10, .i = .{ .X = &BucklerAux } },
+    .{ .w = 10, .i = .{ .X = &ShieldAux } },
     .{ .w = 10, .i = .{ .X = &SpikedBucklerAux } },
+    .{ .w = 05, .i = .{ .X = &TowerShieldAux } },
     // Potions
     .{ .w = 190, .i = .{ .P = &DisorientPotion } },
     .{ .w = 190, .i = .{ .P = &DebilitatePotion } },
@@ -159,6 +162,8 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 20, .i = .{ .C = &SilCloak } },
     .{ .w = 20, .i = .{ .C = &FurCloak } },
     .{ .w = 20, .i = .{ .C = &VelvetCloak } },
+    .{ .w = 10, .i = .{ .C = &AgilityCloak } },
+    .{ .w = 10, .i = .{ .C = &WarringCloak } },
     .{ .w = 10, .i = .{ .C = &ThornyCloak } },
 };
 pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
@@ -213,6 +218,8 @@ pub const SilCloak = Cloak{ .id = "cloak_silicon", .name = "silicon", .resists =
 pub const FurCloak = Cloak{ .id = "cloak_fur", .name = "fur", .resists = .{ .rElec = 25 } };
 pub const VelvetCloak = Cloak{ .id = "cloak_velvet", .name = "velvet", .stats = .{ .Sneak = 2 } };
 pub const ThornyCloak = Cloak{ .id = "cloak_thorny", .name = "thorns", .stats = .{ .Spikes = 1 } };
+pub const AgilityCloak = Cloak{ .id = "cloak_agility", .name = "agility", .stats = .{ .Martial = 2 } };
+pub const WarringCloak = Cloak{ .id = "cloak_warring", .name = "warring", .stats = .{ .Melee = 20 } };
 // }}}
 
 // Aux items {{{
@@ -273,6 +280,21 @@ pub const BucklerAux = Aux{
     .name = "buckler",
 
     .stats = .{ .Evade = 10 },
+};
+
+pub const ShieldAux = Aux{
+    .id = "aux_shield",
+    .name = "kite shield",
+
+    .stats = .{ .Evade = 20, .Martial = -1 },
+};
+
+pub const TowerShieldAux = Aux{
+    .id = "aux_shield_tower",
+    .name = "tower shield",
+
+    .resists = .{ .rFire = -25, .rElec = 25 },
+    .stats = .{ .Evade = 30, .Martial = -5 },
 };
 
 pub const SpikedBucklerAux = Aux{
@@ -2071,10 +2093,11 @@ pub const HauberkArmor = Armor{
     .stats = .{ .Evade = -10, .Martial = -1 },
 };
 
-pub const RobeArmor = Armor{
-    .id = "robe_armor",
-    .name = "robe",
-    .resists = .{ .Armor = 0 },
+pub const BrigandineArmor = Armor{
+    .id = "brigandine_armor",
+    .name = "brigandine",
+    .resists = .{ .Armor = 25 },
+    .stats = .{ .Sneak = -1, .Melee = 10, .Martial = 1 },
 };
 
 pub const GambesonArmor = Armor{

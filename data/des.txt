@@ -77,6 +77,10 @@ inscribed on the flanges of this mace.
 As you look into the translucent blade, you seem to observe your surroundings in
 new unearthly colors.
 
+% brigandine_armor
+A light and flexible armor, permitting greater agility than would otherwise be
+possible for its amount of protection.
+
 % aux_wolfram_orb
 A heavy sphere of the purest wolfram, polished to a silver sheen. It is
 extraordinarily heavily, but will help conduct electricity through itself
@@ -87,16 +91,32 @@ A metal device typically used by miners to navigate the widespread cave systems
 beneath Ir Traummisem and Ir Lehurenkrun.
 
 % aux_dispel_undead
-A powerful artifact used by many of the Necromancer's enemies. If you wear it,
-adjacent undead, both friendly and hostile, will take damage each turn.
+A powerful and mysterious artifact, of which only a few were found when the
+Necromancer's forces overran this place. Its origins and maker is unknown.
+
+
+When worn, adjacent undead, both friendly and hostile, will take damage each
+turn.
 
 % aux_buckler
-A simple wooden buckler, covered in some thin leather.
+A simple wooden buckler. Not much to say about it.
+
+% aux_shield
+An oval wooden shield, faced with leather. It is, unfortunately, unwieldy to use.
+
+% aux_shield_tower
+A very large and unwieldy rectangular shield, carved out of lightweight wood. As
+it is intended as a showpiece, only one truly desperate would use it.
+
+
+Engraved on the front is the likeness of a dying Revgenunkim. The Revgenunkim,
+impaled by a warrior's sabre, is raging furiously. Visible in the background is
+the burning of Iredelemnul.
 
 % aux_buckler_spiked
 A bucker made of thin sheet metal. All craftsmanship is of the highest quality.
 It it adorned with embedded chains of copper and silver. It menaces with spikes
-of hardened foolsilver.
+of hardened steel.
 
 % aux_detect_heat
 A device that can be used to detect sources of heat, such as fires or warm
