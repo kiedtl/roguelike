@@ -2,10 +2,10 @@
 :material marble
 :subroom
 :priority 100
-:g_whitelist -6/Laboratory
+:g_whitelist 6/Laboratory
 
 @h M hulk_swollen
-@s s -6/Shrine
+@s s 6/Shrine
 
 ...........
 ....###....
