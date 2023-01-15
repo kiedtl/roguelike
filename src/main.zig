@@ -138,8 +138,6 @@ fn initGame() bool {
     state.squads = Squad.List.init(state.GPA.allocator());
     state.mobs = MobList.init(state.GPA.allocator());
     state.rings = RingList.init(state.GPA.allocator());
-    state.armors = ArmorList.init(state.GPA.allocator());
-    state.weapons = WeaponList.init(state.GPA.allocator());
     state.machines = MachineList.init(state.GPA.allocator());
     state.props = PropList.init(state.GPA.allocator());
     state.containers = ContainerList.init(state.GPA.allocator());
@@ -294,8 +292,6 @@ fn deinitGame() void {
     state.squads.deinit();
     state.mobs.deinit();
     state.rings.deinit();
-    state.armors.deinit();
-    state.weapons.deinit();
     state.machines.deinit();
     state.messages.deinit();
     state.props.deinit();

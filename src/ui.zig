@@ -408,9 +408,6 @@ fn _writerStats(
         }
     }
     if (p_resists) |resists| {
-        if (p_stats != null)
-            _writerWrite(w, "\n", .{});
-
         inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
             const resist = @intToEnum(Resistance, resistancev.value);
 
@@ -886,16 +883,34 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
             _writerHeader(w, linewidth, "stats", .{});
             _writerStats(w, linewidth, x.stats, x.resists);
 
+            if (x.night) {
+                _writerHeader(w, linewidth, "night stats (if in dark)", .{});
+                _writerStats(w, linewidth, x.night_stats, x.night_resists);
+            }
+
             if (x.equip_effects.len > 0) {
                 _writerHeader(w, linewidth, "on equip", .{});
                 for (x.equip_effects) |effect|
                     _writerWrite(w, "· {s}\n", .{_formatStatusInfo(&effect)});
                 _writerWrite(w, "\n", .{});
             }
+
+            if (x.night) {
+                _writerHeader(w, linewidth, "traits", .{});
+                _writerWrite(w, "It is a $cnight$. item and provides greater benefits if you stand on an unlit tile.\n", .{});
+            }
         },
         .Armor => |a| {
             _writerHeader(w, linewidth, "stats", .{});
             _writerStats(w, linewidth, a.stats, a.resists);
+
+            if (a.night) {
+                _writerHeader(w, linewidth, "night stats (if in dark)", .{});
+                _writerStats(w, linewidth, a.night_stats, a.night_resists);
+
+                _writerHeader(w, linewidth, "traits", .{});
+                _writerWrite(w, "It is a $cnight$. item and provides greater benefits if you stand on an unlit tile.\n", .{});
+            }
         },
         .Weapon => |p| {
             // if (p.reach != 1) _writerWrite(w, "$creach:$. {}\n", .{p.reach});

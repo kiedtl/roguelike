@@ -64,8 +64,8 @@ pub const ItemTemplate = struct {
     i: TemplateItem,
 
     pub const TemplateItem = union(enum) {
-        W: Weapon,
-        A: Armor,
+        W: *const Weapon,
+        A: *const Armor,
         C: *const Cloak,
         X: *const Aux,
         P: *const Consumable,
@@ -90,32 +90,32 @@ pub const ItemTemplate = struct {
 };
 pub const RARE_ITEM_DROPS = [_]ItemTemplate{
     // Dilute this list by adding a few more common weapon
-    .{ .w = 50, .i = .{ .W = SwordWeapon } },
+    .{ .w = 50, .i = .{ .W = &SwordWeapon } },
     // Bone weapons
-    .{ .w = 1, .i = .{ .W = BoneSwordWeapon } },
-    .{ .w = 1, .i = .{ .W = BoneDaggerWeapon } },
-    .{ .w = 1, .i = .{ .W = BoneMaceWeapon } },
-    .{ .w = 1, .i = .{ .W = BoneGreatMaceWeapon } },
+    .{ .w = 1, .i = .{ .W = &BoneSwordWeapon } },
+    .{ .w = 1, .i = .{ .W = &BoneDaggerWeapon } },
+    .{ .w = 1, .i = .{ .W = &BoneMaceWeapon } },
+    .{ .w = 1, .i = .{ .W = &BoneGreatMaceWeapon } },
     // Copper weapons
-    .{ .w = 1, .i = .{ .W = CopperSwordWeapon } },
-    .{ .w = 1, .i = .{ .W = CopperRapierWeapon } },
+    .{ .w = 1, .i = .{ .W = &CopperSwordWeapon } },
+    .{ .w = 1, .i = .{ .W = &CopperRapierWeapon } },
 };
 pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 1, .i = .{ .List = &RARE_ITEM_DROPS } },
     // Weapons
-    .{ .w = 30, .i = .{ .W = SwordWeapon } },
-    .{ .w = 30, .i = .{ .W = DaggerWeapon } },
-    .{ .w = 25, .i = .{ .W = RapierWeapon } },
-    .{ .w = 25, .i = .{ .W = GreatMaceWeapon } },
-    .{ .w = 30, .i = .{ .W = MorningstarWeapon } },
-    .{ .w = 25, .i = .{ .W = MonkSpadeWeapon } },
-    .{ .w = 15, .i = .{ .W = WoldoWeapon } },
+    .{ .w = 30, .i = .{ .W = &SwordWeapon } },
+    .{ .w = 30, .i = .{ .W = &DaggerWeapon } },
+    .{ .w = 25, .i = .{ .W = &RapierWeapon } },
+    .{ .w = 25, .i = .{ .W = &GreatMaceWeapon } },
+    .{ .w = 30, .i = .{ .W = &MorningstarWeapon } },
+    .{ .w = 25, .i = .{ .W = &MonkSpadeWeapon } },
+    .{ .w = 15, .i = .{ .W = &WoldoWeapon } },
     // Armor
-    .{ .w = 20, .i = .{ .A = GambesonArmor } },
-    .{ .w = 20, .i = .{ .A = HauberkArmor } },
-    .{ .w = 20, .i = .{ .A = CuirassArmor } },
-    .{ .w = 10, .i = .{ .A = SpikedLeatherArmor } },
-    .{ .w = 05, .i = .{ .A = BrigandineArmor } },
+    .{ .w = 20, .i = .{ .A = &GambesonArmor } },
+    .{ .w = 20, .i = .{ .A = &HauberkArmor } },
+    .{ .w = 20, .i = .{ .A = &CuirassArmor } },
+    .{ .w = 10, .i = .{ .A = &SpikedLeatherArmor } },
+    .{ .w = 05, .i = .{ .A = &BrigandineArmor } },
     // Aux items
     .{ .w = 20, .i = .{ .X = &WolframOrbAux } },
     .{ .w = 20, .i = .{ .X = &MinersMapAux } },
@@ -167,9 +167,16 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .C = &ThornyCloak } },
 };
 pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
-    .{ .w = 99, .i = .{ .W = ShadowSwordWeapon } },
-    .{ .w = 99, .i = .{ .W = ShadowMaulWeapon } },
-    .{ .w = 99, .i = .{ .W = ShadowMaceWeapon } },
+    // Weapons
+    .{ .w = 99, .i = .{ .W = &ShadowSwordWeapon } },
+    .{ .w = 99, .i = .{ .W = &ShadowMaulWeapon } },
+    .{ .w = 99, .i = .{ .W = &ShadowMaceWeapon } },
+    // Armors
+    .{ .w = 99, .i = .{ .A = &ShadowMailArmor } },
+    .{ .w = 99, .i = .{ .A = &ShadowBrigandineArmor } },
+    .{ .w = 99, .i = .{ .A = &ShadowHauberkArmor } },
+    // Auxes
+    .{ .w = 20, .i = .{ .X = &ShadowShieldAux } },
 };
 pub const ALL_ITEMS = [_]ItemTemplate{
     .{ .w = 0, .i = .{ .List = &ITEM_DROPS } },
@@ -230,6 +237,9 @@ pub const Aux = struct {
     equip_effects: []const StatusDataInfo = &[_]StatusDataInfo{},
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
+    night: bool = false,
+    night_stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
+    night_resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
 };
 
 pub const WolframOrbAux = Aux{
@@ -302,6 +312,16 @@ pub const SpikedBucklerAux = Aux{
     .name = "spiked buckler",
 
     .stats = .{ .Spikes = 1, .Evade = 10 },
+};
+
+pub const ShadowShieldAux = Aux{
+    .id = "aux_shield_shadow",
+    .name = "shadow shield",
+
+    .stats = .{ .Evade = 5 },
+
+    .night = true,
+    .night_stats = .{ .Evade = 15 },
 };
 // }}}
 
@@ -2113,6 +2133,37 @@ pub const SpikedLeatherArmor = Armor{
     .stats = .{ .Spikes = 1, .Sneak = -1, .Martial = -1 },
 };
 
+pub const ShadowMailArmor = Armor{
+    .id = "shadow_mail_armor",
+    .name = "shadow mail",
+    .resists = .{ .Armor = 15 },
+
+    .night = true,
+    .night_resists = .{ .rElec = -25, .Armor = 35 },
+};
+
+pub const ShadowHauberkArmor = Armor{
+    .id = "shadow_hauberk_armor",
+    .name = "shadow hauberk",
+    .resists = .{ .Armor = 10 },
+    .stats = .{ .Evade = -5 },
+
+    .night = true,
+    .night_resists = .{ .Armor = 25 },
+    .night_stats = .{ .Evade = -10, .Martial = -1 },
+};
+
+pub const ShadowBrigandineArmor = Armor{
+    .id = "shadow_brigandine_armor",
+    .name = "shadow brigandine",
+    .resists = .{ .Armor = 10 },
+    .stats = .{ .Melee = 5, .Martial = 1 },
+
+    .night = true,
+    .night_resists = .{ .Armor = 25 },
+    .night_stats = .{ .Melee = 10, .Martial = 2 },
+};
+
 // }}}
 
 pub fn _dmgstr(p: usize, vself: []const u8, vother: []const u8, vdeg: []const u8) DamageStr {
@@ -2371,8 +2422,6 @@ pub const ShadowMaulWeapon = Weapon{
 pub fn createItem(comptime T: type, item: T) *T {
     const list = switch (T) {
         Ring => &state.rings,
-        Armor => &state.armors,
-        Weapon => &state.weapons,
         Evocable => &state.evocables,
         else => @compileError("uh wat"),
     };
@@ -2384,8 +2433,8 @@ pub fn createItem(comptime T: type, item: T) *T {
 
 pub fn createItemFromTemplate(template: ItemTemplate) Item {
     return switch (template.i) {
-        .W => |i| Item{ .Weapon = createItem(Weapon, i) },
-        .A => |i| Item{ .Armor = createItem(Armor, i) },
+        .W => |i| Item{ .Weapon = i },
+        .A => |i| Item{ .Armor = i },
         .P, .c => |i| Item{ .Consumable = i },
         .E => |i| Item{ .Evocable = createItem(Evocable, i) },
         .C => |i| Item{ .Cloak = i },

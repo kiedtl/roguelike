@@ -2734,7 +2734,6 @@ pub const Mob = struct { // {{{
 
         const martial = @intCast(usize, math.max(0, attacker.stat(.Martial)));
         const weapons = attacker.listOfWeapons();
-        const wielded_wp = if (attacker.inventory.equipment(.Weapon).*) |w| w.Weapon else null;
 
         for (weapons.constSlice()) |weapon| {
             // recipient could be out of reach, either because the attacker has
@@ -2743,14 +2742,7 @@ pub const Mob = struct { // {{{
             if (weapon.reach < attacker.distance(recipient))
                 continue;
 
-            _fightWithWeapon(
-                attacker,
-                recipient,
-                weapon,
-                if (wielded_wp != null and wielded_wp.? == weapon) wielded_wp else null,
-                opts,
-                if (weapon.martial) martial else 0,
-            );
+            _fightWithWeapon(attacker, recipient, weapon, opts, if (weapon.martial) martial else 0);
         }
 
         if (!opts.free_attack) {
@@ -2770,7 +2762,6 @@ pub const Mob = struct { // {{{
         attacker: *Mob,
         recipient: *Mob,
         attacker_weapon: *const Weapon,
-        mut_attacker_weapon: ?*Weapon, // XXX: hack, because not all weapons are mutable
         opts: FightOptions,
         remaining_bonus_attacks: usize,
     ) void {
@@ -2926,14 +2917,7 @@ pub const Mob = struct { // {{{
 
             ui.Animation.blinkMob(&.{attacker}, 'M', colors.LIGHT_STEEL_BLUE, .{});
 
-            _fightWithWeapon(
-                attacker,
-                recipient,
-                attacker_weapon,
-                mut_attacker_weapon,
-                newopts,
-                remaining_bonus_attacks - 1,
-            );
+            _fightWithWeapon(attacker, recipient, attacker_weapon, newopts, remaining_bonus_attacks - 1);
         }
     }
 
@@ -3722,10 +3706,20 @@ pub const Mob = struct { // {{{
             val += utils.getFieldByEnum(Stat, weapon.Weapon.stats, _stat);
         if (self.inventory.equipmentConst(.Cloak).*) |clk|
             val += utils.getFieldByEnum(Stat, clk.Cloak.stats, _stat);
-        if (self.inventory.equipmentConst(.Armor).*) |clk|
-            val += utils.getFieldByEnum(Stat, clk.Armor.stats, _stat);
-        if (self.inventory.equipmentConst(.Aux).*) |aux|
-            val += utils.getFieldByEnum(Stat, aux.Aux.stats, _stat);
+        if (self.inventory.equipmentConst(.Armor).*) |arm| {
+            if (arm.Armor.night and !self.isLit()) {
+                val += utils.getFieldByEnum(Stat, arm.Armor.night_stats, _stat);
+            } else {
+                val += utils.getFieldByEnum(Stat, arm.Armor.stats, _stat);
+            }
+        }
+        if (self.inventory.equipmentConst(.Aux).*) |aux| {
+            if (aux.Aux.night and !self.isLit()) {
+                val += utils.getFieldByEnum(Stat, aux.Aux.night_stats, _stat);
+            } else {
+                val += utils.getFieldByEnum(Stat, aux.Aux.stats, _stat);
+            }
+        }
 
         // Check rings.
         for (Inventory.RING_SLOTS) |ring_slot|
@@ -3775,10 +3769,20 @@ pub const Mob = struct { // {{{
         // Check armor and cloaks
         if (self.inventory.equipmentConst(.Cloak).*) |clk|
             r += utils.getFieldByEnum(Resistance, clk.Cloak.resists, resist);
-        if (self.inventory.equipmentConst(.Armor).*) |arm|
-            r += utils.getFieldByEnum(Resistance, arm.Armor.resists, resist);
-        if (self.inventory.equipmentConst(.Aux).*) |aux|
-            r += utils.getFieldByEnum(Resistance, aux.Aux.resists, resist);
+        if (self.inventory.equipmentConst(.Armor).*) |arm| {
+            if (arm.Armor.night and !self.isLit()) {
+                r += utils.getFieldByEnum(Resistance, arm.Armor.night_resists, resist);
+            } else {
+                r += utils.getFieldByEnum(Resistance, arm.Armor.resists, resist);
+            }
+        }
+        if (self.inventory.equipmentConst(.Aux).*) |aux| {
+            if (aux.Aux.night and !self.isLit()) {
+                r += utils.getFieldByEnum(Resistance, aux.Aux.night_resists, resist);
+            } else {
+                r += utils.getFieldByEnum(Resistance, aux.Aux.resists, resist);
+            }
+        }
 
         // Check statuses
         switch (resist) {
@@ -4171,6 +4175,9 @@ pub const Armor = struct {
     name: []const u8,
     resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
+    night: bool = false,
+    night_stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
+    night_resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
 };
 
 pub const Weapon = struct {
@@ -4336,10 +4343,10 @@ pub const Item = union(ItemType) {
     Consumable: *const Consumable,
     Vial: Vial,
     Projectile: *const Projectile,
-    Armor: *Armor,
+    Armor: *const Armor,
     Cloak: *const Cloak,
     Aux: *const Aux,
-    Weapon: *Weapon,
+    Weapon: *const Weapon,
     Boulder: *const Material,
     Prop: *const Prop,
     Evocable: *Evocable,

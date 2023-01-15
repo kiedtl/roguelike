@@ -2078,9 +2078,9 @@ pub fn placeMob(
     mob.allegiance = opts.allegiance orelse mob.allegiance;
     mob.ai.phase = opts.phase;
 
-    if (template.weapon) |w| mob.equipItem(.Weapon, Item{ .Weapon = items.createItem(Weapon, w.*) });
-    if (template.backup_weapon) |w| mob.equipItem(.Backup, Item{ .Weapon = items.createItem(Weapon, w.*) });
-    if (template.armor) |a| mob.equipItem(.Armor, Item{ .Armor = items.createItem(Armor, a.*) });
+    if (template.weapon) |w| mob.equipItem(.Weapon, Item{ .Weapon = w });
+    if (template.backup_weapon) |w| mob.equipItem(.Backup, Item{ .Weapon = w });
+    if (template.armor) |a| mob.equipItem(.Armor, Item{ .Armor = a });
     if (template.cloak) |c| mob.equipItem(.Cloak, Item{ .Cloak = c });
 
     if (opts.facing) |dir| mob.facing = dir;
