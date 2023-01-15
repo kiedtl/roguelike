@@ -194,6 +194,7 @@ fn initLevels() bool {
         mapgen.resetLevel(level);
         mapgen.placeBlobs(level);
         (mapgen.Configs[level].mapgen_func)(level, state.GPA.allocator());
+        mapgen.selectLevelLairs(level);
         mapgen.selectLevelVault(level);
         if (mapgen.Configs[level].allow_extra_corridors)
             mapgen.placeMoarCorridors(level, state.GPA.allocator());

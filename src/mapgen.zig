@@ -957,6 +957,7 @@ pub fn resetLevel(level: usize) void {
 
     state.dungeon.receive_stairs[level].clear();
     state.dungeon.stairs[level].clear();
+    state.mapgen_infos[level] = .{};
 }
 
 pub fn setLevelMaterial(level: usize) void {
@@ -1048,7 +1049,7 @@ pub fn selectLevelVault(level: usize) void {
 
     for (state.rooms[level].items) |room, i| {
         if (room.connections.len == 1 and
-            !room.is_extension_room and !room.has_subroom and room.prefab == null and
+            !room.is_lair and !room.is_extension_room and !room.has_subroom and room.prefab == null and
             !state.mapgen_infos[level].has_vault)
         {
             candidates.append(i) catch err.wat();
@@ -1063,6 +1064,29 @@ pub fn selectLevelVault(level: usize) void {
     state.rooms[level].items[selected_room_i].is_vault = vault_kind;
 }
 
+pub fn selectLevelLairs(level: usize) void {
+    var candidates = std.ArrayList(usize).init(state.GPA.allocator());
+    defer candidates.deinit();
+
+    for (state.rooms[level].items) |room, i| {
+        if (room.connections.len == 1 and
+            !room.is_extension_room and !room.has_subroom and room.prefab == null and
+            room.rect.width <= 12 and room.rect.height <= 12)
+        {
+            candidates.append(i) catch err.wat();
+        }
+    }
+
+    rng.shuffle(usize, candidates.items);
+
+    if (candidates.items.len > 0)
+        state.rooms[level].items[candidates.items[0]].is_lair = true;
+    if (candidates.items.len > 1)
+        state.rooms[level].items[candidates.items[1]].is_lair = true;
+
+    std.log.info("level {}: {} candidates", .{ level, candidates.items.len });
+}
+
 pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
     var newrooms = Room.ArrayList.init(alloc);
     defer newrooms.deinit();
@@ -1074,8 +1098,8 @@ pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
         const parent = &rooms.items[i];
 
         for (rooms.items) |*child| {
-            if (parent.is_vault != null or
-                child.is_vault != null or
+            if (parent.is_lair or child.is_lair or
+                parent.is_vault != null or child.is_vault != null or
                 parent.connections.isFull() or
                 child.connections.isFull() or
                 parent.hasCloseConnectionTo(child.rect) or
@@ -2194,13 +2218,38 @@ pub fn setVaultFeatures(room: *Room) void {
     }
 }
 
+pub fn setLairFeatures(room: *Room) void {
+    const level = room.rect.start.z;
+
+    const wall_areas = computeWallAreas(&room.rect, true);
+    for (&wall_areas) |wall_area| {
+        var y: usize = wall_area.from.y;
+        while (y <= wall_area.to.y) : (y += 1) {
+            var x: usize = wall_area.from.x;
+            while (x <= wall_area.to.x) : (x += 1) {
+                const coord = Coord.new2(level, x, y);
+                state.dungeon.at(coord).material = &materials.Slade;
+            }
+        }
+    }
+
+    var y: usize = room.rect.start.y;
+    while (y < room.rect.end().y) : (y += 1) {
+        var x: usize = room.rect.start.x;
+        while (x < room.rect.end().x) : (x += 1) {
+            const coord = Coord.new2(level, x, y);
+            state.dungeon.at(coord).material = &materials.Slade;
+        }
+    }
+}
+
 pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
     for (state.rooms[level].items) |*room| {
         const rect = room.rect;
         const room_area = rect.height * rect.width;
 
         // Don't light up narrow corridors
-        if (room.rect.width > 2 and room.rect.height > 2)
+        if (room.rect.width > 2 and room.rect.height > 2 and !room.is_lair)
             placeLights(room);
 
         // Don't fill small rooms or corridors.
@@ -2215,6 +2264,8 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
 
         if (room.is_vault != null) {
             setVaultFeatures(room);
+        } else if (room.is_lair) {
+            setLairFeatures(room);
         }
 
         const rect_end = rect.end();
@@ -3003,6 +3054,7 @@ pub const Room = struct {
     mob_count: usize = 0,
     is_vault: ?VaultType = null,
     is_extension_room: bool = false,
+    is_lair: bool = false,
 
     connections: ConnectionsBuf = ConnectionsBuf.init(null),
 

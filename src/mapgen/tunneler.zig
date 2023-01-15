@@ -752,18 +752,18 @@ pub const TunnelerOptions = struct {
     // Maximum tunnel width. If the tunnel is this size, it won't grow farther.
     max_width: usize = 6,
 
-    min_tunneler_distance: usize = 8,
+    min_tunneler_distance: usize = 7,
 
     // Chance (percentage) to change direction.
-    turn_chance: usize = 6,
-    branch_chance: usize = 7,
+    turn_chance: usize = 8,
+    branch_chance: usize = 8,
 
     room_tries: usize = 12,
 
-    headstart_chance: usize = 20,
+    headstart_chance: usize = 15,
 
-    shrink_chance: usize = 50,
-    grow_chance: usize = 50,
+    shrink_chance: usize = 70,
+    grow_chance: usize = 30,
 
     intersect_chance: usize = 70,
     intersect_with_childless: bool = false,
