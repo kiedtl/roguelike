@@ -61,7 +61,11 @@ inline fn manhattanHeuristic(a: Coord, b: Coord) usize {
     return diff.x + diff.y;
 }
 
-fn pathfindingPenalty(coord: Coord, opts: state.IsWalkableOptions) usize {
+pub fn dummyPenaltyFunc(_: Coord, _: state.IsWalkableOptions) usize {
+    return 0;
+}
+
+pub fn basePenaltyFunc(coord: Coord, opts: state.IsWalkableOptions) usize {
     var c: usize = 0;
 
     if (state.dungeon.at(coord).surface) |surface| switch (surface) {
@@ -96,6 +100,7 @@ pub fn path(
     limit: Coord,
     is_walkable: fn (Coord, state.IsWalkableOptions) bool,
     opts: state.IsWalkableOptions,
+    penaltyFunc: fn (Coord, state.IsWalkableOptions) usize,
     directions: []const Direction,
     alloc: std.mem.Allocator,
 ) ?CoordArrayList {
@@ -156,7 +161,7 @@ pub fn path(
                     continue;
 
                 const cost = (if (neighbor.is_diagonal()) @as(usize, 7) else 5) +
-                    pathfindingPenalty(coord, opts);
+                    (penaltyFunc)(coord, opts);
                 const new_g = current_node.g + cost;
 
                 if (nodes[coord.y][coord.x].state == .Open and nodes[coord.y][coord.x].g < new_g)

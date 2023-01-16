@@ -161,8 +161,6 @@ pub const Ctx = struct {
                 room.connections.append(roomie.door) catch err.wat();
             }
 
-            state.rooms[level].append(room) catch err.wat();
-
             if (prefab == null and rng.percent(Configs[level].subroom_chance)) {
                 mapgen.placeSubroom(&room, &Rect{
                     .start = Coord.new(0, 0),
@@ -170,6 +168,8 @@ pub const Ctx = struct {
                     .height = room.rect.height,
                 }, state.GPA.allocator(), .{});
             }
+
+            state.rooms[level].append(room) catch err.wat();
 
             roomie.parent.child_rooms += 1;
             roomie.parent.roomie_last_born_at = math.max(roomie.parent.roomie_last_born_at, roomie.born_at);

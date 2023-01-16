@@ -1029,7 +1029,7 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
 
         if (astar.path(point, otherpoint, state.mapgeometry, state.is_walkable, .{
             .ignore_mobs = true,
-        }, &DIRECTIONS, alloc)) |p| {
+        }, astar.dummyPenaltyFunc, &DIRECTIONS, alloc)) |p| {
             p.deinit();
         } else {
             return error.RoomsNotConnected;
@@ -1064,6 +1064,67 @@ pub fn selectLevelVault(level: usize) void {
     state.rooms[level].items[selected_room_i].is_vault = vault_kind;
 }
 
+pub fn modifyRoomToLair(room: *Room) void {
+    room.is_lair = true;
+
+    // Reset room to walls
+    {
+        var y: usize = room.rect.start.y;
+        while (y < room.rect.end().y) : (y += 1) {
+            var x: usize = room.rect.start.x;
+            while (x < room.rect.end().x) : (x += 1) {
+                const coord = Coord.new2(room.rect.start.z, x, y);
+                state.dungeon.at(coord).type = .Wall;
+            }
+        }
+    }
+
+    const config = BlobConfig{
+        .type = .Floor,
+        .min_blob_width = minmax(usize, room.rect.width * 75 / 100, room.rect.width * 75 / 100),
+        .min_blob_height = minmax(usize, room.rect.height * 75 / 100, room.rect.height * 75 / 100),
+        .max_blob_width = minmax(usize, room.rect.width - 1, room.rect.width - 1),
+        .max_blob_height = minmax(usize, room.rect.height - 1, room.rect.height - 1),
+        .ca_rounds = 5,
+        .ca_percent_seeded = 60,
+        .ca_birth_params = "ffffffttt",
+        .ca_survival_params = "ffffttttt",
+    };
+
+    placeBlob(config, Coord.new2(room.rect.start.z, room.rect.start.x + 1, room.rect.start.y + 1));
+
+    var walkable_coord: Coord = undefined;
+
+    {
+        var y: usize = room.rect.start.y;
+        walkable_coord_search: while (y < room.rect.end().y) : (y += 1) {
+            var x: usize = room.rect.start.x;
+            while (x < room.rect.end().x) : (x += 1) {
+                const coord = Coord.new2(room.rect.start.z, x, y);
+                if (state.dungeon.at(coord).type == .Floor) {
+                    walkable_coord = coord;
+                    break :walkable_coord_search;
+                }
+            }
+        }
+    }
+
+    const path = astar.path(walkable_coord, room.connections.last().?, state.mapgeometry, struct {
+        pub fn f(_: Coord, _: state.IsWalkableOptions) bool {
+            return true;
+        }
+    }.f, .{}, struct {
+        pub fn f(c: Coord, _: state.IsWalkableOptions) usize {
+            return if (state.dungeon.at(c).type == .Wall) 10 else 0;
+        }
+    }.f, &DIRECTIONS, state.GPA.allocator()).?;
+    defer path.deinit();
+
+    for (path.items) |coord| {
+        state.dungeon.at(coord).type = .Floor;
+    }
+}
+
 pub fn selectLevelLairs(level: usize) void {
     var candidates = std.ArrayList(usize).init(state.GPA.allocator());
     defer candidates.deinit();
@@ -1071,7 +1132,7 @@ pub fn selectLevelLairs(level: usize) void {
     for (state.rooms[level].items) |room, i| {
         if (room.connections.len == 1 and
             !room.is_extension_room and !room.has_subroom and room.prefab == null and
-            room.rect.width <= 12 and room.rect.height <= 12)
+            room.rect.width >= 7 and room.rect.height >= 7)
         {
             candidates.append(i) catch err.wat();
         }
@@ -1080,11 +1141,9 @@ pub fn selectLevelLairs(level: usize) void {
     rng.shuffle(usize, candidates.items);
 
     if (candidates.items.len > 0)
-        state.rooms[level].items[candidates.items[0]].is_lair = true;
+        modifyRoomToLair(&state.rooms[level].items[candidates.items[0]]);
     if (candidates.items.len > 1)
-        state.rooms[level].items[candidates.items[1]].is_lair = true;
-
-    std.log.info("level {}: {} candidates", .{ level, candidates.items.len });
+        modifyRoomToLair(&state.rooms[level].items[candidates.items[1]]);
 }
 
 pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
@@ -2266,6 +2325,7 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
             setVaultFeatures(room);
         } else if (room.is_lair) {
             setLairFeatures(room);
+            continue;
         }
 
         const rect_end = rect.end();

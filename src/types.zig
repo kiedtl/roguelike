@@ -3392,7 +3392,7 @@ pub const Mob = struct { // {{{
                 }
             };
 
-            const pth = astar.path(self.coord, to, state.mapgeometry, state.is_walkable, .{ .mob = self }, directions, state.GPA.allocator()) orelse return null;
+            const pth = astar.path(self.coord, to, state.mapgeometry, state.is_walkable, .{ .mob = self }, astar.basePenaltyFunc, directions, state.GPA.allocator()) orelse return null;
             defer pth.deinit();
 
             assert(pth.items[0].eq(self.coord));
