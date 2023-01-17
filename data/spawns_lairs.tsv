@@ -1,0 +1,14 @@
+# vim: nowrap
+#
+# Spawn tables for Night Creature lairs.
+#
+# Note that this spawn table only has a single level, since night creature
+# placement does not vary across levels.
+#
+
+#
+# monster id        (weight)
+
+"mellaent"            	 100
+
+# monster id        (weight)

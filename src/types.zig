@@ -4527,7 +4527,10 @@ pub const Tile = struct {
         }
 
         if (self.mob != null and !ignore_mobs) {
-            assert(self.type != .Wall);
+            // assert(self.type != .Wall);
+            if (self.type == .Wall) {
+                cell.bg = 0xff0000;
+            }
 
             const mob = self.mob.?;
 

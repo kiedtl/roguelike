@@ -173,6 +173,12 @@ const Corridor = struct {
     child_connector: ?Coord,
     distance: usize,
 
+    // Distinct from parent_connector/child_connector, which are the prefab
+    // connectors used.
+    //
+    parent_door: Coord,
+    child_door: Coord,
+
     // The connector coords for the prefabs used, if any (the first is the parent's
     // connector, the second is the child's connector).
     //
@@ -1081,13 +1087,13 @@ pub fn modifyRoomToLair(room: *Room) void {
 
     const config = BlobConfig{
         .type = .Floor,
-        .min_blob_width = minmax(usize, room.rect.width * 75 / 100, room.rect.width * 75 / 100),
-        .min_blob_height = minmax(usize, room.rect.height * 75 / 100, room.rect.height * 75 / 100),
+        .min_blob_width = minmax(usize, room.rect.width * 60 / 100, room.rect.width * 60 / 100),
+        .min_blob_height = minmax(usize, room.rect.height * 60 / 100, room.rect.height * 60 / 100),
         .max_blob_width = minmax(usize, room.rect.width - 1, room.rect.width - 1),
         .max_blob_height = minmax(usize, room.rect.height - 1, room.rect.height - 1),
         .ca_rounds = 5,
-        .ca_percent_seeded = 60,
-        .ca_birth_params = "ffffffttt",
+        .ca_percent_seeded = 50,
+        .ca_birth_params = "ffffftttt",
         .ca_survival_params = "ffffttttt",
     };
 
@@ -1109,13 +1115,14 @@ pub fn modifyRoomToLair(room: *Room) void {
         }
     }
 
-    const path = astar.path(walkable_coord, room.connections.last().?, state.mapgeometry, struct {
+    const path = astar.path(walkable_coord, room.connections.last().?.door.?, state.mapgeometry, struct {
         pub fn f(_: Coord, _: state.IsWalkableOptions) bool {
             return true;
         }
     }.f, .{}, struct {
-        pub fn f(c: Coord, _: state.IsWalkableOptions) usize {
-            return if (state.dungeon.at(c).type == .Wall) 10 else 0;
+        pub fn f(_: Coord, _: state.IsWalkableOptions) usize {
+            // return if (state.dungeon.at(c).type == .Wall) 10 else 0;
+            return 0;
         }
     }.f, &DIRECTIONS, state.GPA.allocator()).?;
     defer path.deinit();
@@ -1132,7 +1139,7 @@ pub fn selectLevelLairs(level: usize) void {
     for (state.rooms[level].items) |room, i| {
         if (room.connections.len == 1 and
             !room.is_extension_room and !room.has_subroom and room.prefab == null and
-            room.rect.width >= 7 and room.rect.height >= 7)
+            room.rect.width >= 8 and room.rect.height >= 8)
         {
             candidates.append(i) catch err.wat();
         }
@@ -1196,8 +1203,8 @@ pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
                     continue;
                 }
 
-                parent.connections.append(child.rect.start) catch err.wat();
-                child.connections.append(parent.rect.start) catch err.wat();
+                parent.connections.append(.{ .room = child.rect.start, .door = corridor.parent_door }) catch err.wat();
+                child.connections.append(.{ .room = parent.rect.start, .door = corridor.child_door }) catch err.wat();
 
                 excavateRect(&corridor.room.rect);
                 corridor.markConnectorsAsUsed(parent, child) catch err.wat();
@@ -1211,6 +1218,10 @@ pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
                 if (rng.tenin(Configs[level].door_chance)) {
                     if (utils.findPatternMatch(corridor.room.rect.start, &VALID_DOOR_PLACEMENT_PATTERNS) != null)
                         placeDoor(corridor.room.rect.start, false);
+                }
+                if (rng.tenin(Configs[level].door_chance)) {
+                    if (utils.findPatternMatch(corridor.room.rect.end(), &VALID_DOOR_PLACEMENT_PATTERNS) != null)
+                        placeDoor(corridor.room.rect.end(), false);
                 }
             }
         }
@@ -1281,6 +1292,10 @@ fn createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?C
         else => err.wat(),
     };
 
+    // Hack
+    const parent_door = if (room.rect.start.distance(parent.rect.start) < room.rect.end().distance(parent.rect.start)) room.rect.start else room.rect.end();
+    const child_door = if (room.rect.start.distance(child.rect.start) < room.rect.end().distance(child.rect.start)) room.rect.start else room.rect.end();
+
     room.type = .Corridor;
 
     return Corridor{
@@ -1289,6 +1304,8 @@ fn createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?C
         .child = child,
         .parent_connector = parent_connector_coord,
         .child_connector = child_connector_coord,
+        .parent_door = parent_door,
+        .child_door = child_door,
         .distance = switch (side) {
             .North, .South => room.rect.height,
             .West, .East => room.rect.width,
@@ -1508,10 +1525,13 @@ fn _place_rooms(rooms: *Room.ArrayList, level: usize, allocator: mem.Allocator) 
         // }
     }
 
+    const parent_door = if (corridor) |c| c.parent_door else null;
+    const child_door = if (corridor) |c| c.child_door else null;
+
     // Use parent's index, as we appended the corridor earlier and that may
     // have invalidated parent's pointer
-    rooms.items[parent_i].connections.append(child.rect.start) catch err.wat();
-    child.connections.append(rooms.items[parent_i].rect.start) catch err.wat();
+    rooms.items[parent_i].connections.append(.{ .room = child.rect.start, .door = parent_door }) catch err.wat();
+    child.connections.append(.{ .room = rooms.items[parent_i].rect.start, .door = child_door }) catch err.wat();
 
     rooms.append(child) catch err.wat();
 }
@@ -2008,6 +2028,7 @@ pub fn placeTraps(level: usize) void {
     room_iter: for (state.rooms[level].items) |maproom| {
         if (maproom.prefab) |rfb| if (rfb.notraps) continue;
         if (maproom.has_subroom) continue; // Too cluttered
+        if (maproom.is_lair) continue;
 
         const room = maproom.rect;
 
@@ -2091,7 +2112,9 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
         else
             rng.range(usize, 1, Configs[level].room_crowd_max);
 
-        const sptable: *MobSpawnInfo.AList = if (room.is_vault != null)
+        const sptable: *MobSpawnInfo.AList = if (room.is_lair)
+            &spawn_tables_lairs[0]
+        else if (room.is_vault != null)
             &spawn_tables_vaults[vault_type.?]
         else
             &spawn_tables[level];
@@ -2280,24 +2303,39 @@ pub fn setVaultFeatures(room: *Room) void {
 pub fn setLairFeatures(room: *Room) void {
     const level = room.rect.start.z;
 
-    const wall_areas = computeWallAreas(&room.rect, true);
-    for (&wall_areas) |wall_area| {
-        var y: usize = wall_area.from.y;
-        while (y <= wall_area.to.y) : (y += 1) {
-            var x: usize = wall_area.from.x;
-            while (x <= wall_area.to.x) : (x += 1) {
-                const coord = Coord.new2(level, x, y);
-                state.dungeon.at(coord).material = &materials.Slade;
-            }
-        }
-    }
+    // const wall_areas = computeWallAreas(&room.rect, true);
+    // for (&wall_areas) |wall_area| {
+    //     var y: usize = wall_area.from.y;
+    //     while (y <= wall_area.to.y) : (y += 1) {
+    //         var x: usize = wall_area.from.x;
+    //         while (x <= wall_area.to.x) : (x += 1) {
+    //             const coord = Coord.new2(level, x, y);
+    //             state.dungeon.at(coord).material = &materials.Slade;
+    //         }
+    //     }
+    // }
+
+    var walkable_point: Coord = undefined;
 
     var y: usize = room.rect.start.y;
     while (y < room.rect.end().y) : (y += 1) {
         var x: usize = room.rect.start.x;
         while (x < room.rect.end().x) : (x += 1) {
             const coord = Coord.new2(level, x, y);
+            if (state.dungeon.at(coord).type == .Floor)
+                walkable_point = coord;
             state.dungeon.at(coord).material = &materials.Slade;
+        }
+    }
+
+    var dijk = dijkstra.Dijkstra.init(walkable_point, state.mapgeometry, 100, dijkstra.dummyIsValid, .{}, state.GPA.allocator());
+    defer dijk.deinit();
+    while (dijk.next()) |child| {
+        if (child.asRect().overflowsLimit(&room.rect)) {
+            dijk.skip();
+        } else if (state.dungeon.at(child).type == .Wall) {
+            dijk.skip();
+            state.dungeon.at(child).material = &materials.PolishedSlade;
         }
     }
 }
@@ -3118,7 +3156,8 @@ pub const Room = struct {
 
     connections: ConnectionsBuf = ConnectionsBuf.init(null),
 
-    pub const ConnectionsBuf = StackBuffer(Coord, CONNECTIONS_MAX);
+    pub const Connection = struct { room: Coord, door: ?Coord };
+    pub const ConnectionsBuf = StackBuffer(Connection, CONNECTIONS_MAX);
     pub const RoomType = enum { Corridor, Room, Sideroom, Junction };
     pub const ArrayList = std.ArrayList(Room);
 
@@ -3130,11 +3169,11 @@ pub const Room = struct {
 
     pub fn hasCloseConnectionTo(self: *const Room, room: Rect) bool {
         for (self.connections.constSlice()) |connection| {
-            if (connection.eq(room.start))
+            if (connection.room.eq(room.start))
                 return true;
-            if (getByStart(connection)) |connection_r| {
+            if (getByStart(connection.room)) |connection_r| {
                 for (connection_r.connections.constSlice()) |child_connection|
-                    if (child_connection.eq(room.start))
+                    if (child_connection.room.eq(room.start))
                         return true;
             }
         }
@@ -3745,6 +3784,7 @@ pub const MobSpawnInfo = struct {
 pub var spawn_tables: [LEVELS]MobSpawnInfo.AList = undefined;
 pub var spawn_tables_vaults: [VAULT_KINDS]MobSpawnInfo.AList = undefined;
 pub var spawn_tables_stairs: [LEVELS]MobSpawnInfo.AList = undefined;
+pub var spawn_tables_lairs: [1]MobSpawnInfo.AList = undefined;
 
 pub fn readSpawnTables(alloc: mem.Allocator) void {
     const TmpMobSpawnData = struct {
@@ -3763,6 +3803,7 @@ pub fn readSpawnTables(alloc: mem.Allocator) void {
         .{ .filename = "spawns.tsv", .sptable = &spawn_tables, .backwards = true },
         .{ .filename = "spawns_vaults.tsv", .sptable = &spawn_tables_vaults },
         .{ .filename = "spawns_stairs.tsv", .sptable = &spawn_tables_stairs, .backwards = true },
+        .{ .filename = "spawns_lairs.tsv", .sptable = &spawn_tables_lairs, .backwards = true },
     };
 
     // We need `inline for` because the schema needs to be comptime...
@@ -3825,6 +3866,10 @@ pub fn freeSpawnTables(alloc: mem.Allocator) void {
             alloc.free(spawn_info.id);
         table.deinit();
     }
+
+    for (spawn_tables_lairs[0].items) |spawn_info|
+        alloc.free(spawn_info.id);
+    spawn_tables_lairs[0].deinit();
 }
 
 pub const LevelConfig = struct {

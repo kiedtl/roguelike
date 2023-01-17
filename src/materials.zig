@@ -51,14 +51,24 @@ pub const Gold = Material{
     .opacity = 1.0,
 };
 
-pub const Slade = Material{
-    .name = "slade",
-    .color_fg = 0x664488,
+pub const PolishedSlade = Material{
+    .name = "polished slade",
+    .color_fg = 0xb00bb0,
     .color_bg = null,
     .color_floor = 0x9e9e9e,
     .tileset = 0,
     .luminescence = 0,
     .opacity = 0.9,
+};
+
+pub const Slade = Material{
+    .name = "slade",
+    .color_fg = 0x775599,
+    .color_bg = null,
+    .color_floor = 0x9e9e9e,
+    .tileset = 0,
+    .luminescence = 0,
+    .opacity = 1.0,
 };
 
 pub const Rust = Material{

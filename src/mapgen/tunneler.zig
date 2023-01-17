@@ -158,7 +158,10 @@ pub const Ctx = struct {
 
             if (prefab == null or !prefab.?.tunneler_inset) {
                 mapgen.placeDoor(roomie.door, false);
-                room.connections.append(roomie.door) catch err.wat();
+                room.connections.append(.{ .room = roomie.parent.rect.start, .door = roomie.door }) catch err.wat();
+            } else if (prefab.?.tunneler_inset) {
+                room.is_extension_room = true;
+                room.connections.append(.{ .room = roomie.parent.rect.start, .door = null }) catch err.wat();
             }
 
             if (prefab == null and rng.percent(Configs[level].subroom_chance)) {
@@ -223,6 +226,7 @@ pub const Ctx = struct {
 
             if (!too_far) {
                 if (Roomie.getRandomDoorCoord(new, parent)) |door| {
+                    new.connections.append(.{ .room = parent.rect.start, .door = door }) catch err.wat();
                     mapgen.excavateRect(&new.rect);
                     mapgen.placeDoor(door, false);
                     state.rooms[level].append(new) catch err.wat();
