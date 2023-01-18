@@ -55,7 +55,7 @@ pub const EV_SYMBOL_RESTRICT_TO_UPPER_SHRINE = Event{
     .id = "ev_symbol_restrict_to_upper_shrine",
     .checked_when = .MapgenBeginning,
     .global_incompats = &[_][]const u8{"ev_symbol_disallow"},
-    .effect = &[_]Effect{.{ .AppendPrefabWhitelist = .{ .prefab = "SIN_symbol", .val = "-6/Shrine" } }},
+    .effect = &[_]Effect{.{ .AppendPrefabWhitelist = .{ .prefab = "SIN_symbol", .val = "6/Shrine" } }},
 };
 
 pub const EVENTS = [_]struct { p: usize, v: *const Event }{

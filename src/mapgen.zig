@@ -461,7 +461,7 @@ pub const PrefabOpts = struct {
     max_h: usize = 999,
 };
 
-fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, opts: PrefabOpts) bool {
+fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, need_lair: bool, opts: PrefabOpts) bool {
     if (prefab.width > opts.max_w or prefab.height > opts.max_h) {
         return false; // Too big
     }
@@ -484,10 +484,16 @@ fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, opts: PrefabO
         return false; // This is a prefab for tunneler's corridor and is the wrong orientation.
     }
 
-    if (!mem.eql(u8, prefab.name.constSlice()[0..3], state.levelinfo[level].id) and
-        !mem.eql(u8, prefab.name.constSlice()[0..3], "ANY"))
-    {
-        return false; // Prefab isn't for this level.
+    if (need_lair) {
+        if (!mem.eql(u8, prefab.name.constSlice()[0..3], "LAI")) {
+            return false; // We need a subroom for the lairs
+        }
+    } else {
+        if (!mem.eql(u8, prefab.name.constSlice()[0..3], state.levelinfo[level].id) and
+            !mem.eql(u8, prefab.name.constSlice()[0..3], "ANY"))
+        {
+            return false; // Prefab isn't for this level.
+        }
     }
 
     const record = fab_records.getOrPut(prefab.name.constSlice()) catch err.wat();
@@ -507,7 +513,7 @@ fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, opts: PrefabO
 pub fn choosePrefab(level: usize, prefabs: *PrefabArrayList, opts: PrefabOpts) ?*Prefab {
     var fab_list = std.ArrayList(*Prefab).init(state.GPA.allocator());
     defer fab_list.deinit();
-    for (prefabs.items) |*prefab| if (prefabIsValid(level, prefab, false, opts)) {
+    for (prefabs.items) |*prefab| if (prefabIsValid(level, prefab, false, false, opts)) {
         fab_list.append(prefab) catch err.wat();
     };
     if (fab_list.items.len == 0) return null;
@@ -889,7 +895,7 @@ pub fn excavatePrefab(
     }
 
     for (fab.subroom_areas.constSlice()) |subroom_area| {
-        placeSubroom(room, &subroom_area.rect, allocator, .{
+        _ = placeSubroom(room, &subroom_area.rect, allocator, .{
             .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
         });
     }
@@ -1018,6 +1024,7 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
 
         const rec = fab_records.getPtr(fab.name.constSlice());
         if (rec == null or rec.?.level[level] == 0) {
+            std.log.info("fab: {s}, rec? {}", .{ fab.name.constSlice(), rec == null });
             return error.RequiredPrefabsNotUsed;
         }
     }
@@ -1115,20 +1122,21 @@ pub fn modifyRoomToLair(room: *Room) void {
         }
     }
 
-    const path = astar.path(walkable_coord, room.connections.last().?.door.?, state.mapgeometry, struct {
-        pub fn f(_: Coord, _: state.IsWalkableOptions) bool {
-            return true;
+    if (room.connections.last().?.door != null) {
+        const path = astar.path(walkable_coord, room.connections.last().?.door.?, state.mapgeometry, struct {
+            pub fn f(_: Coord, _: state.IsWalkableOptions) bool {
+                return true;
+            }
+        }.f, .{}, struct {
+            pub fn f(_: Coord, _: state.IsWalkableOptions) usize {
+                // return if (state.dungeon.at(c).type == .Wall) 10 else 0;
+                return 0;
+            }
+        }.f, &DIRECTIONS, state.GPA.allocator()).?;
+        defer path.deinit();
+        for (path.items) |coord| {
+            state.dungeon.at(coord).type = .Floor;
         }
-    }.f, .{}, struct {
-        pub fn f(_: Coord, _: state.IsWalkableOptions) usize {
-            // return if (state.dungeon.at(c).type == .Wall) 10 else 0;
-            return 0;
-        }
-    }.f, &DIRECTIONS, state.GPA.allocator()).?;
-    defer path.deinit();
-
-    for (path.items) |coord| {
-        state.dungeon.at(coord).type = .Floor;
     }
 }
 
@@ -1145,12 +1153,14 @@ pub fn selectLevelLairs(level: usize) void {
         }
     }
 
+    if (candidates.items.len == 0)
+        return;
     rng.shuffle(usize, candidates.items);
 
-    if (candidates.items.len > 0)
-        modifyRoomToLair(&state.rooms[level].items[candidates.items[0]]);
-    if (candidates.items.len > 1)
-        modifyRoomToLair(&state.rooms[level].items[candidates.items[1]]);
+    var lair_count = rng.range(usize, 1, math.min(candidates.items.len, 3));
+    while (lair_count > 0) : (lair_count -= 1) {
+        modifyRoomToLair(&state.rooms[level].items[candidates.items[lair_count - 1]]);
+    }
 }
 
 pub fn placeMoarCorridors(level: usize, alloc: mem.Allocator) void {
@@ -1317,9 +1327,11 @@ fn createCorridor(level: usize, parent: *Room, child: *Room, side: Direction) ?C
 
 pub const SubroomPlacementOptions = struct {
     specific_id: ?[]const u8 = null,
+    specific_fab: ?*Prefab = null,
+    for_lair: bool = false,
 };
 
-pub fn placeSubroom(parent: *Room, area: *const Rect, alloc: mem.Allocator, opts: SubroomPlacementOptions) void {
+pub fn placeSubroom(parent: *Room, area: *const Rect, alloc: mem.Allocator, opts: SubroomPlacementOptions) bool {
     assert(area.end().y < HEIGHT and area.end().x < WIDTH);
 
     for (s_fabs.items) |*subroom| {
@@ -1328,8 +1340,13 @@ pub fn placeSubroom(parent: *Room, area: *const Rect, alloc: mem.Allocator, opts
                 continue;
             }
         }
+        if (opts.specific_fab) |ptr| {
+            if (subroom != ptr) {
+                continue;
+            }
+        }
 
-        if (!prefabIsValid(parent.rect.start.z, subroom, opts.specific_id != null, .{})) {
+        if (!prefabIsValid(parent.rect.start.z, subroom, opts.specific_id != null, opts.for_lair, .{})) {
             continue;
         }
 
@@ -1364,15 +1381,17 @@ pub fn placeSubroom(parent: *Room, area: *const Rect, alloc: mem.Allocator, opts
                         .height = subroom_area.rect.height,
                         .width = subroom_area.rect.width,
                     };
-                    placeSubroom(&parent_adj, &actual_subroom_area, alloc, .{
+                    _ = placeSubroom(&parent_adj, &actual_subroom_area, alloc, .{
                         .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
                     });
                 }
             }
 
-            break;
+            return true;
         }
     }
+
+    return false;
 }
 
 fn _place_rooms(rooms: *Room.ArrayList, level: usize, allocator: mem.Allocator) !void {
@@ -1454,13 +1473,11 @@ fn _place_rooms(rooms: *Room.ArrayList, level: usize, allocator: mem.Allocator) 
         child = Room{ .rect = childrect };
     }
 
-    if (distance == 0) {
-        child.is_extension_room = true;
-    }
-
     var corridor: ?Corridor = null;
 
-    if (distance > 0 and Configs[level].allow_corridors) {
+    if (distance == 0) {
+        child.is_extension_room = true;
+    } else {
         if (createCorridor(level, parent, &child, side)) |maybe_corridor| {
             if (isRoomInvalid(rooms, &maybe_corridor.room, parent, null, true)) {
                 return;
@@ -1511,7 +1528,7 @@ fn _place_rooms(rooms: *Room.ArrayList, level: usize, allocator: mem.Allocator) 
 
     if (child.prefab == null) {
         if (rng.percent(Configs[level].subroom_chance)) {
-            placeSubroom(&child, &Rect{
+            _ = placeSubroom(&child, &Rect{
                 .start = Coord.new(0, 0),
                 .width = child.rect.width,
                 .height = child.rect.height,
@@ -1519,7 +1536,7 @@ fn _place_rooms(rooms: *Room.ArrayList, level: usize, allocator: mem.Allocator) 
         }
     } else if (child.prefab.?.subroom_areas.len > 0) {
         // for (child.prefab.?.subroom_areas.constSlice()) |subroom_area| {
-        //     placeSubroom(&child, &subroom_area.rect, allocator, .{
+        //     _ = placeSubroom(&child, &subroom_area.rect, allocator, .{
         //         .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
         //     });
         // }
@@ -1889,7 +1906,7 @@ pub fn placeBSPRooms(level: usize, allocator: mem.Allocator) void {
     //
     for (rooms.items) |*room| {
         if (rng.percent(Configs[level].subroom_chance)) {
-            placeSubroom(room, &Rect{
+            _ = placeSubroom(room, &Rect{
                 .start = Coord.new(0, 0),
                 .width = room.rect.width,
                 .height = room.rect.height,
@@ -2292,7 +2309,7 @@ pub fn setVaultFeatures(room: *Room) void {
 
     // Subroom, if any
     if (VAULT_SUBROOMS[@enumToInt(room.is_vault.?)]) |fab_name| {
-        placeSubroom(room, &Rect{
+        _ = placeSubroom(room, &Rect{
             .start = Coord.new(0, 0),
             .width = room.rect.width,
             .height = room.rect.height,
@@ -2317,6 +2334,7 @@ pub fn setLairFeatures(room: *Room) void {
 
     var walkable_point: Coord = undefined;
 
+    // Set the entire room to rough slade
     var y: usize = room.rect.start.y;
     while (y < room.rect.end().y) : (y += 1) {
         var x: usize = room.rect.start.x;
@@ -2328,6 +2346,7 @@ pub fn setLairFeatures(room: *Room) void {
         }
     }
 
+    // Set polished slade areas
     var dijk = dijkstra.Dijkstra.init(walkable_point, state.mapgeometry, 100, dijkstra.dummyIsValid, .{}, state.GPA.allocator());
     defer dijk.deinit();
     while (dijk.next()) |child| {
@@ -2336,6 +2355,29 @@ pub fn setLairFeatures(room: *Room) void {
         } else if (state.dungeon.at(child).type == .Wall) {
             dijk.skip();
             state.dungeon.at(child).material = &materials.PolishedSlade;
+        }
+    }
+
+    // Find areas to place subroom
+    const subroom_area = Rect.new(
+        Coord.new2(room.rect.start.z, room.rect.start.x + 1, room.rect.start.y + 1),
+        room.rect.width - 2,
+        room.rect.height - 1,
+    );
+    var tries: usize = 200;
+    var subroom_count: usize = rng.range(usize, 1, 2);
+    while (tries > 0 and subroom_count > 0) : (tries -= 1) {
+        const coord = subroom_area.randomCoord();
+        if (state.dungeon.at(coord).type != .Floor) {
+            continue;
+        } else {
+            if (placeSubroom(room, &Rect{
+                .start = Coord.new(coord.x - room.rect.start.x, coord.y - room.rect.start.y),
+                .width = room.rect.end().x - coord.x,
+                .height = room.rect.end().y - coord.y,
+            }, state.GPA.allocator(), .{ .for_lair = true })) {
+                subroom_count -= 1;
+            }
         }
     }
 }
@@ -3938,7 +3980,6 @@ pub const LevelConfig = struct {
     room_trapped_chance: usize = 60,
     subroom_chance: usize = 40,
     allow_spawn_in_corridors: bool = false,
-    allow_corridors: bool = true,
     allow_extra_corridors: bool = true,
 
     blobs: []const BlobConfig = &[_]BlobConfig{},
@@ -3956,7 +3997,7 @@ pub const LevelConfig = struct {
 // -----------------------------------------------------------------------------
 
 pub const PRI_BASE_LEVELCONFIG = LevelConfig{
-    .prefabs = &[_][]const u8{"ANY_s_recharging"},
+    .prefabs = &[_][]const u8{},
     .prefab_chance = 3,
     .mapgen_iters = 2048,
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
@@ -4156,7 +4197,6 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
 
     .allow_statues = false,
     .room_trapped_chance = 0,
-    .allow_corridors = true,
     .allow_extra_corridors = false,
     .door = &surfaces.VaultDoor,
 
@@ -4207,19 +4247,19 @@ pub var Configs = [LEVELS]LevelConfig{
     createLevelConfig_CRY(),
     PRI_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
-    createLevelConfig_QRT(&[_][]const u8{"ANY_s_recharging"}),
-    createLevelConfig_QRT(&[_][]const u8{"ANY_s_recharging"}),
+    createLevelConfig_QRT(&[_][]const u8{}),
+    createLevelConfig_QRT(&[_][]const u8{}),
     createLevelConfig_SIN(6),
-    createLevelConfig_QRT(&[_][]const u8{ "ANY_s_recharging", "QRT_s_SIN_stair_1" }),
+    createLevelConfig_QRT(&[_][]const u8{"QRT_s_SIN_stair_1"}),
     PRI_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
-    createLevelConfig_LAB(&[_][]const u8{"ANY_s_recharging"}),
-    createLevelConfig_LAB(&[_][]const u8{"ANY_s_recharging"}),
+    createLevelConfig_LAB(&[_][]const u8{}),
+    createLevelConfig_LAB(&[_][]const u8{}),
     createLevelConfig_SIN(4),
-    createLevelConfig_LAB(&[_][]const u8{ "ANY_s_recharging", "LAB_s_SIN_stair_1" }),
+    createLevelConfig_LAB(&[_][]const u8{"LAB_s_SIN_stair_1"}),
     PRI_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
 
@@ -4229,8 +4269,8 @@ pub var Configs = [LEVELS]LevelConfig{
 // TODO: convert this to a comptime expression
 // zig fmt: off
 pub fn fixConfigs() void {
-    Configs[3].prefabs = &[_][]const u8{ "ENT_start", "ANY_s_recharging" };
-    Configs[state.PLAYER_STARTING_LEVEL].prefabs = &[_][]const u8{ "PRI_start", "ANY_s_recharging" };
+    Configs[3].prefabs = &[_][]const u8{ "PRI_main_exit" };
+    Configs[state.PLAYER_STARTING_LEVEL].prefabs = &[_][]const u8{ "PRI_start" };
 
     // // Increase crowd sizes for difficult levels.
     // Configs[ 0].room_crowd_max = 4;      Configs[ 1].room_crowd_max = 3;   // Upper prison

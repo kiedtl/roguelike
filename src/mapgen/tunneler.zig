@@ -165,7 +165,7 @@ pub const Ctx = struct {
             }
 
             if (prefab == null and rng.percent(Configs[level].subroom_chance)) {
-                mapgen.placeSubroom(&room, &Rect{
+                _ = mapgen.placeSubroom(&room, &Rect{
                     .start = Coord.new(0, 0),
                     .width = room.rect.width,
                     .height = room.rect.height,
