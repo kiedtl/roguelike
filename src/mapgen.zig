@@ -374,9 +374,9 @@ fn randomWallCoord(rect: *const Rect, i: ?usize) Coord {
     return Coord.new2(rect.start.z, x, y);
 }
 
-fn _chooseLootItem(value_range: MinMax(usize), class: ?ItemTemplate.Type) ItemTemplate {
+fn _chooseLootItem(list: []const ItemTemplate, value_range: MinMax(usize), class: ?ItemTemplate.Type) ItemTemplate {
     while (true) {
-        var item_info = rng.choose2(ItemTemplate, &items.ITEM_DROPS, "w") catch err.wat();
+        var item_info = rng.choose2(ItemTemplate, list, "w") catch err.wat();
 
         if (!value_range.contains(item_info.w))
             continue;
@@ -755,11 +755,13 @@ pub fn excavatePrefab(
                     _ = placeProp(rc, &surfaces.props.items[p_ind.?]);
                 },
                 .Loot1 => {
-                    const loot_item1 = _chooseLootItem(minmax(usize, 60, 200), null);
+                    const drop_list = if (room.is_lair) &items.NIGHT_ITEM_DROPS else &items.ITEM_DROPS;
+                    const loot_item1 = _chooseLootItem(drop_list, minmax(usize, 60, 200), null);
                     state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(loot_item1)) catch err.wat();
                 },
                 .RareLoot => {
-                    const rare_loot_item = _chooseLootItem(minmax(usize, 0, 60), null);
+                    const drop_list = if (room.is_lair) &items.NIGHT_ITEM_DROPS else &items.ITEM_DROPS;
+                    const rare_loot_item = _chooseLootItem(drop_list, minmax(usize, 0, 60), null);
                     state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(rare_loot_item)) catch err.wat();
                 },
                 .Corpse => {
@@ -1933,7 +1935,7 @@ pub fn _strewItemsAround(room: *Room, max_items: usize) void {
             tries -= 1;
         }
 
-        const t = _chooseLootItem(minmax(usize, 0, 200), null);
+        const t = _chooseLootItem(&items.ITEM_DROPS, minmax(usize, 0, 200), null);
         const item = items.createItemFromTemplate(t);
         state.dungeon.itemsAt(item_coord).append(item) catch err.wat();
     }
@@ -1964,7 +1966,7 @@ pub fn _placeLootChest(room: *Room, max_items: usize) void {
 
     while (items_placed < max_items and !container_ref.isFull()) : (items_placed += 1) {
         const chosen_item_class = rng.chooseUnweighted(ItemTemplate.Type, item_class);
-        const t = _chooseLootItem(minmax(usize, 0, 200), chosen_item_class);
+        const t = _chooseLootItem(&items.ITEM_DROPS, minmax(usize, 0, 200), chosen_item_class);
         const item = items.createItemFromTemplate(t);
         container_ref.items.append(item) catch err.wat();
     }
