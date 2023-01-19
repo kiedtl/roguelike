@@ -265,6 +265,10 @@ pub const IsWalkableOptions = struct {
     mob: ?*const Mob = null,
 
     _no_multitile_recurse: bool = false,
+
+    // This is a hack to confine astar within a rectangle, not relevant to
+    // is_walkable.
+    confines: Rect = Rect.new(Coord.new2(0, 0, 0), WIDTH, HEIGHT),
 };
 
 // STYLE: change to Tile.isWalkable

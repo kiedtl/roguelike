@@ -132,7 +132,6 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 190, .i = .{ .P = &IntimidatePotion } },
     .{ .w = 160, .i = .{ .P = &DistractPotion } },
     .{ .w = 160, .i = .{ .P = &BlindPotion } },
-    .{ .w = 160, .i = .{ .P = &GlowPotion } },
     .{ .w = 160, .i = .{ .P = &SmokePotion } },
     .{ .w = 160, .i = .{ .P = &ParalysisPotion } },
     .{ .w = 150, .i = .{ .P = &LeavenPotion } },
@@ -141,6 +140,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 150, .i = .{ .P = &IncineratePotion } },
     .{ .w = 120, .i = .{ .P = &RecuperatePotion } },
     .{ .w = 120, .i = .{ .P = &DecimatePotion } },
+    .{ .w = 60, .i = .{ .P = &GlowPotion } },
     // Consumables
     // .{ .w = 80, .i = .{ .c = &HotPokerConsumable } },
     // .{ .w = 90, .i = .{ .c = &CoalConsumable } },
@@ -167,14 +167,20 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .C = &ThornyCloak } },
 };
 pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
+    // Fluff
+    .{ .w = 200, .i = .{ .P = &DisorientPotion } },
+    .{ .w = 200, .i = .{ .P = &IntimidatePotion } },
+    .{ .w = 170, .i = .{ .P = &BlindPotion } },
+    .{ .w = 170, .i = .{ .P = &SmokePotion } },
+    .{ .w = 170, .i = .{ .P = &ParalysisPotion } },
     // Weapons
-    .{ .w = 99, .i = .{ .W = &ShadowSwordWeapon } },
-    .{ .w = 99, .i = .{ .W = &ShadowMaulWeapon } },
-    .{ .w = 99, .i = .{ .W = &ShadowMaceWeapon } },
+    .{ .w = 30, .i = .{ .W = &ShadowSwordWeapon } },
+    .{ .w = 30, .i = .{ .W = &ShadowMaulWeapon } },
+    .{ .w = 30, .i = .{ .W = &ShadowMaceWeapon } },
     // Armors
-    .{ .w = 99, .i = .{ .A = &ShadowMailArmor } },
-    .{ .w = 99, .i = .{ .A = &ShadowBrigandineArmor } },
-    .{ .w = 99, .i = .{ .A = &ShadowHauberkArmor } },
+    .{ .w = 30, .i = .{ .A = &ShadowMailArmor } },
+    .{ .w = 30, .i = .{ .A = &ShadowBrigandineArmor } },
+    .{ .w = 30, .i = .{ .A = &ShadowHauberkArmor } },
     // Auxes
     .{ .w = 20, .i = .{ .X = &ShadowShieldAux } },
 };

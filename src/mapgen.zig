@@ -1124,17 +1124,21 @@ pub fn modifyRoomToLair(room: *Room) void {
         }
     }
 
+    // FIXME: the door var should never, never be null...
+    //
     if (room.connections.last().?.door != null) {
         const path = astar.path(walkable_coord, room.connections.last().?.door.?, state.mapgeometry, struct {
-            pub fn f(_: Coord, _: state.IsWalkableOptions) bool {
-                return true;
+            pub fn f(c: Coord, opts: state.IsWalkableOptions) bool {
+                return opts.confines.intersects(&c.asRect(), 1);
             }
-        }.f, .{}, struct {
-            pub fn f(_: Coord, _: state.IsWalkableOptions) usize {
-                // return if (state.dungeon.at(c).type == .Wall) 10 else 0;
-                return 0;
+        }.f, .{ .confines = room.rect }, struct {
+            pub fn f(c: Coord, opts: state.IsWalkableOptions) usize {
+                if (!opts.confines.intersects(&c.asRect(), 0)) {
+                    return 10000;
+                }
+                return if (state.dungeon.at(c).type == .Wall) 10 else 0;
             }
-        }.f, &DIRECTIONS, state.GPA.allocator()).?;
+        }.f, &CARDINAL_DIRECTIONS, state.GPA.allocator()) orelse return;
         defer path.deinit();
         for (path.items) |coord| {
             state.dungeon.at(coord).type = .Floor;
@@ -1977,12 +1981,13 @@ pub fn placeItems(level: usize) void {
     for (state.rooms[level].items) |*room| {
         // Don't place items if:
         // - Room is a corridor. Loot in corridors is dumb (looking at you, DCSS).
+        // - Room is a lair of the night creatures.
         // - Room has a subroom (might be too crowded!).
         // - Room is a prefab and the prefab forbids items.
         // - Random chance.
         //
         if (room.type == .Corridor or
-            room.has_subroom or
+            room.has_subroom or room.is_lair or
             (room.prefab != null and room.prefab.?.noitems) or
             rng.tenin(25))
         {
@@ -1990,8 +1995,8 @@ pub fn placeItems(level: usize) void {
         }
 
         if (rng.onein(2)) {
-            // 1/3 chance to have chest full of rubbish
-            if (rng.onein(3)) {
+            // 1/8 chance to have chest full of rubbish
+            if (rng.onein(8)) {
                 _placeLootChest(room, 0);
             } else {
                 _placeLootChest(room, rng.range(usize, 1, 3));
@@ -2363,7 +2368,7 @@ pub fn setLairFeatures(room: *Room) void {
     // Find areas to place subroom
     const subroom_area = Rect.new(
         Coord.new2(room.rect.start.z, room.rect.start.x + 1, room.rect.start.y + 1),
-        room.rect.width - 2,
+        room.rect.width - 1,
         room.rect.height - 1,
     );
     var tries: usize = 200;
@@ -2661,7 +2666,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
             };
 
             if (state.dungeon.at(coord).prison or
-                room != null and (room.?.has_stair or room.?.is_vault != null))
+                room != null and (room.?.is_lair or room.?.has_stair or room.?.is_vault != null))
             {
                 continue :coord_search;
             }
@@ -2697,7 +2702,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
                 };
 
                 if (state.dungeon.at(coord).prison or
-                    room != null and (room.?.has_stair or room.?.is_vault != null))
+                    room != null and (room.?.is_lair or room.?.has_stair or room.?.is_vault != null))
                 {
                     continue :coord_search;
                 }
