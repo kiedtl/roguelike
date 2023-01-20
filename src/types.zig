@@ -4539,10 +4539,7 @@ pub const Tile = struct {
         }
 
         if (self.mob != null and !ignore_mobs) {
-            // assert(self.type != .Wall);
-            if (self.type == .Wall) {
-                cell.bg = 0xff0000;
-            }
+            assert(self.type != .Wall);
 
             const mob = self.mob.?;
 
@@ -4585,14 +4582,7 @@ pub const Tile = struct {
             assert(self.type != .Wall);
             cell = item.tile();
         } else if (state.dungeon.at(coord).surface) |surfaceitem| {
-            if (self.type == .Wall) {
-                cell.fg = 0;
-                cell.bg = 0xff0000;
-                cell.ch = 'X';
-                cell.sch = null;
-                return cell;
-            }
-            //assert(self.type != .Wall);
+            assert(self.type != .Wall);
 
             cell.fg = 0xffffff;
 
