@@ -1090,10 +1090,18 @@ x Animations (w/ particle engine)
   - -1/Crypt/3 prefab
   - Staircase prefab on -1/Prison
 - Night creatures
-  - Night creature enclaves
-  - Individual night creatures
+  x Night creature enclaves
   - Reputation mechanics
+  - Doors to enclaves
+  - Individual night creatures
+    - Winged terror & Cherbs
+    - Spectral totem
+    - Slinking terror
+    - Creeping death
+    - Night reaper
+    - Grue
   - Demolisher specialists
+  - Exterminator specialists
   - Rings
     - ring of infestation
     x ring of conjuration
@@ -1104,10 +1112,21 @@ x Animations (w/ particle engine)
       x Shadow Sword (Mass Paralysis)
       x Shadow Maul (Multiplicity)
       x Descriptions for weapons
-    - Armor, cloaks, and other items
-      - Cloak of fumes
-      - Shadow hauberk
-      - Shadow mail
+    - Conjuration stat
+    - Spectral Orbs
+      - (100) Augment [s]: Will-checked survival when against opposing blades
+      - (100) Augment [w]: Wall disintegrating into more blades
+      - ( 50) Augment [F]: rFire +25%/+50%
+      - (100) Augment [E]: rElec +25%/+50%
+      - ( 50) Augment [u]: When undead dies in LOS, additional volley spawns near it.
+      - (100) Augment [a]: An additional 2/4 blades spawn on each volley.
+      - (100) Augment [%]: Each blade gets 75% melee instead of 50%.
+      - ( 50) Augment [v]: Each blade gets 25% evasion instead of 0%.
+    - Armor, cloaks, aux items
+      x Fuming vest
+      x Shadow hauberk, shadow mail, shadow brigandine, shadow shield
+      x Ethereal shield
+      - Spectral mail, spectral crown, cloak of spectres
   - Alignment map/mechanics
     - Map design, basic aligner machine/prop/consumable
     - Props on map for effect
