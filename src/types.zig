@@ -1033,6 +1033,11 @@ pub const Status = enum {
     RingExcision, // No power field
     RingConjuration, // No power field
 
+    // Item-specific effects.
+    DetectHeat, // Doesn't have a power field.
+    DetectElec, // Doesn't have a power field.
+    EtherealShield, // Doesn't have a power field.
+
     // Causes monster to be considered hostile to all other monsters.
     //
     // Doesn't have a power field.
@@ -1044,12 +1049,6 @@ pub const Status = enum {
     //
     // Doesn't have a power field.
     Amnesia,
-
-    // Detects heat/electricity
-    //
-    // Doesn't have a power field.
-    DetectHeat,
-    DetectElec,
 
     // Causes adjacent undead, enemy or not, to take TORMENT_UNDEAD_DAMAGE damage.
     //
@@ -1235,10 +1234,12 @@ pub const Status = enum {
             .RingExcision => "ring: excision",
             .RingConjuration => "ring: conjuration",
 
-            .Amnesia => "amnesia",
-            .Insane => "insane",
             .DetectHeat => "detect heat",
             .DetectElec => "detect electricity",
+            .EtherealShield => "ethereal shield",
+
+            .Amnesia => "amnesia",
+            .Insane => "insane",
             .TormentUndead => "torment undead",
             .Intimidating => "intimidating",
             .Drunk => "drunk",
@@ -1283,7 +1284,7 @@ pub const Status = enum {
         return switch (self) {
             .RingTeleportation, .RingDamnation, .RingElectrocution, .RingExcision, .RingConjuration => null,
 
-            .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .Echolocation, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
+            .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .EtherealShield, .Echolocation, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
 
             .Amnesia => "amnesia",
             .Insane => "insane",
@@ -2806,6 +2807,17 @@ pub const Mob = struct { // {{{
                     recipient.fight(attacker, .{ .free_attack = true, .is_riposte = true });
                 }
             }
+
+            if (recipient.isUnderStatus(.EtherealShield)) |_| {
+                if (!recipient.isLit() and !attacker.isLit() and
+                    spells.willSucceedAgainstMob(recipient, attacker))
+                {
+                    const d = acoord.closestDirectionTo(rcoord, state.mapgeometry).opposite();
+                    const w = @intCast(usize, recipient.stat(.Willpower));
+                    combat.throwMob(recipient, attacker, d, w);
+                }
+            }
+
             return;
         }
 

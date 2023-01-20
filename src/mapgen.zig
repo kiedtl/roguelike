@@ -315,8 +315,8 @@ fn choosePoster(level: usize) ?*const Poster {
     return null;
 }
 
-fn chooseRing() Ring {
-    return rng.chooseUnweighted(Ring, &items.RINGS);
+fn chooseRing(night: bool) Ring {
+    return rng.chooseUnweighted(Ring, if (night) &items.NIGHT_RINGS else &items.RINGS);
 }
 
 // Given a parent and child room, return the direction a corridor between the two
@@ -775,7 +775,7 @@ pub fn excavatePrefab(
                     }
                 },
                 .Ring => {
-                    const ring = items.createItem(Ring, chooseRing());
+                    const ring = items.createItem(Ring, chooseRing(room.is_lair));
                     state.dungeon.itemsAt(rc).append(.{ .Ring = ring }) catch err.wat();
                 },
                 else => {},

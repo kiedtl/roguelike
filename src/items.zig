@@ -183,6 +183,7 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 30, .i = .{ .A = &ShadowHauberkArmor } },
     // Auxes
     .{ .w = 20, .i = .{ .X = &ShadowShieldAux } },
+    .{ .w = 05, .i = .{ .X = &EtherealShieldAux } },
 };
 pub const ALL_ITEMS = [_]ItemTemplate{
     .{ .w = 0, .i = .{ .List = &ITEM_DROPS } },
@@ -199,6 +200,9 @@ pub const RINGS = [_]Ring{
     ElectrificationRing,
     InsurrectionRing,
     MagnetizationRing,
+};
+
+pub const NIGHT_RINGS = [_]Ring{
     ExcisionRing,
     ConjurationRing,
 };
@@ -328,6 +332,16 @@ pub const ShadowShieldAux = Aux{
 
     .night = true,
     .night_stats = .{ .Evade = 15 },
+};
+
+pub const EtherealShieldAux = Aux{
+    .id = "aux_shield_ethereal",
+    .name = "ethereal shield",
+
+    .stats = .{ .Willpower = 1, .Evade = -10 },
+    .equip_effects = &[_]StatusDataInfo{
+        .{ .status = .EtherealShield, .duration = .Equ },
+    },
 };
 // }}}
 

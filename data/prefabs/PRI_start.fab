@@ -18,7 +18,7 @@
 @b i potion_paralysis
 @c i potion_blind
 @d i potion_disorient
-@e i potion_distract
+@e i aux_shield_ethereal
 
 ###***###
 #a.....a#

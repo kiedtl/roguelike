@@ -113,6 +113,14 @@ Engraved on the front is the likeness of a dying Revgenunkim. The Revgenunkim,
 impaled by a warrior's sabre, is raging furiously. Visible in the background is
 the burning of Iredelemnul.
 
+% aux_shield_ethereal
+The surface of this shield shimmers in hues of iridescent blue and purple.
+Despite its size, it is nearly weightless and does not impede your movement in
+any way. Unfortunately, it's worse than useless at blocking hits.
+
+
+This shield provides a will-checked chance to knockback foes on a blocked hit.
+
 % aux_buckler_spiked
 A bucker made of thin sheet metal. All craftsmanship is of the highest quality.
 It it adorned with embedded chains of copper and silver. It menaces with spikes
