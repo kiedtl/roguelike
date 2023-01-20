@@ -81,6 +81,11 @@ new unearthly colors.
 A light and flexible armor, permitting greater agility than would otherwise be
 possible for its amount of protection.
 
+% fuming_vest_armor
+The sparsely-woven fibers composing this eldritch clothing seem be absorbing all
+light and color nearby, appearing only as criss-crossing web of pitch-black
+lines.
+
 % aux_wolfram_orb
 A heavy sphere of the purest wolfram, polished to a silver sheen. It is
 extraordinarily heavily, but will help conduct electricity through itself

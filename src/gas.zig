@@ -136,10 +136,19 @@ pub const Blinding = Gas{
     .id = 9,
 };
 
+pub const Darkness = Gas{
+    .name = "suffocating darkness",
+    .color = 0x1f00ff,
+    .dissipation_rate = 0.01,
+    .opacity = 1.0,
+    .trigger = triggerNone,
+    .id = 10,
+};
+
 pub const Gases = [_]Gas{
     Paralysis, SmokeGas, Disorient, Slow,
     Healing,   Dust,     Steam,     Miasma,
-    Seizure,   Blinding,
+    Seizure,   Blinding, Darkness,
 };
 pub const GAS_NUM: usize = Gases.len;
 

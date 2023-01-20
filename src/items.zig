@@ -181,6 +181,7 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 30, .i = .{ .A = &ShadowMailArmor } },
     .{ .w = 30, .i = .{ .A = &ShadowBrigandineArmor } },
     .{ .w = 30, .i = .{ .A = &ShadowHauberkArmor } },
+    .{ .w = 20, .i = .{ .A = &FumingVestArmor } },
     // Auxes
     .{ .w = 20, .i = .{ .X = &ShadowShieldAux } },
     .{ .w = 05, .i = .{ .X = &EtherealShieldAux } },
@@ -2182,6 +2183,21 @@ pub const ShadowBrigandineArmor = Armor{
     .night = true,
     .night_resists = .{ .Armor = 25 },
     .night_stats = .{ .Melee = 10, .Martial = 2 },
+};
+
+pub const FumingVestArmor = Armor{
+    .id = "fuming_vest_armor",
+    .name = "fuming vest",
+
+    .resists = .{ .rFire = -25 },
+
+    .night = true,
+    .night_resists = .{ .Armor = 5, .rFire = -25 },
+    .night_stats = .{ .Melee = 10, .Willpower = 1 },
+
+    .equip_effects = &[_]StatusDataInfo{
+        .{ .status = .FumesVest, .duration = .Equ },
+    },
 };
 
 // }}}

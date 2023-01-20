@@ -1037,6 +1037,7 @@ pub const Status = enum {
     DetectHeat, // Doesn't have a power field.
     DetectElec, // Doesn't have a power field.
     EtherealShield, // Doesn't have a power field.
+    FumesVest, // Doesn't have a power field.
 
     // Causes monster to be considered hostile to all other monsters.
     //
@@ -1237,6 +1238,7 @@ pub const Status = enum {
             .DetectHeat => "detect heat",
             .DetectElec => "detect electricity",
             .EtherealShield => "ethereal shield",
+            .FumesVest => "fuming vest",
 
             .Amnesia => "amnesia",
             .Insane => "insane",
@@ -1284,7 +1286,7 @@ pub const Status = enum {
         return switch (self) {
             .RingTeleportation, .RingDamnation, .RingElectrocution, .RingExcision, .RingConjuration => null,
 
-            .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .EtherealShield, .Echolocation, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
+            .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .EtherealShield, .FumesVest, .Echolocation, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
 
             .Amnesia => "amnesia",
             .Insane => "insane",
@@ -2182,6 +2184,7 @@ pub const Mob = struct { // {{{
         if (slot != .Backup) {
             switch (item) {
                 .Weapon => |w| for (w.equip_effects) |effect| self.applyStatus(effect, .{}),
+                .Armor => |a| for (a.equip_effects) |effect| self.applyStatus(effect, .{}),
                 .Aux => |a| for (a.equip_effects) |effect| self.applyStatus(effect, .{}),
                 else => {},
             }
@@ -2196,6 +2199,7 @@ pub const Mob = struct { // {{{
         {
             const equip_effects = switch (item) {
                 .Weapon => |w| w.equip_effects,
+                .Armor => |a| a.equip_effects,
                 .Aux => |a| a.equip_effects,
                 else => unreachable,
             };
@@ -2583,6 +2587,10 @@ pub const Mob = struct { // {{{
             } else {
                 self.declareAction(Activity{ .Teleport = dest });
             }
+        }
+
+        if (self.hasStatus(.FumesVest) and direction != null) {
+            state.dungeon.atGas(coord)[gas.Darkness.id] += 0.02;
         }
 
         if (state.dungeon.at(dest).surface) |surface| {
@@ -4190,6 +4198,8 @@ pub const Armor = struct {
     night: bool = false,
     night_stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     night_resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
+
+    equip_effects: []const StatusDataInfo = &[_]StatusDataInfo{},
 };
 
 pub const Weapon = struct {
