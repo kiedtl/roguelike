@@ -1901,13 +1901,7 @@ pub const BallLightningTemplate = MobTemplate{
 pub const SpectralSwordTemplate = MobTemplate{
     .mob = .{
         .id = "spec_sword",
-        .species = &Species{
-            .name = "spectral sword",
-            .default_attack = &Weapon{
-                .damage = 1,
-                .strs = &[_]DamageStr{items._dmgstr(1, "nick", "nicks", "")},
-            },
-        },
+        .species = &Species{ .name = "spectral sword" },
         .tile = '|',
         .ai = AI{
             .profession_description = "[this is a bug]",
@@ -1930,7 +1924,7 @@ pub const SpectralSwordTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .Armor = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rFume = 100 },
-        .stats = .{ .Willpower = WILL_IMMUNE, .Melee = 50, .Evade = 20, .Vision = 20 },
+        .stats = .{ .Willpower = WILL_IMMUNE, .Vision = 20 },
     },
 };
 
@@ -1965,8 +1959,8 @@ pub const SpectralSabreTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rFume = 100 },
-        .stats = .{ .Willpower = WILL_IMMUNE, .Speed = 50, .Vision = 20 },
+        .innate_resists = .{ .rFume = 100 },
+        .stats = .{ .Willpower = WILL_IMMUNE, .Melee = 50, .Speed = 50, .Vision = 20 },
     },
 };
 
