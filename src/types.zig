@@ -4549,6 +4549,17 @@ pub const Tile = struct {
             },
         }
 
+        const gases = state.dungeon.atGas(coord);
+        for (gases) |q, g| {
+            const gcolor = gas.Gases[g].color;
+            // const aq = 1 - math.clamp(q, 0.19, 1);
+            if (q > 0) {
+                cell.fg = gcolor; //colors.mix(gcolor, cell.bg, aq);
+                cell.ch = '§';
+                cell.sch = null;
+            }
+        }
+
         if (self.mob != null and !ignore_mobs) {
             assert(self.type != .Wall);
 
@@ -4675,22 +4686,15 @@ pub const Tile = struct {
             }
         }
 
-        var spattering = self.spatter.iterator();
-        while (spattering.next()) |entry| {
-            const spatter = entry.key;
-            const num = entry.value.*;
-            const sp_color = spatter.color();
-            const q = @intToFloat(f64, num / 10);
-            const aq = 1 - math.clamp(q, 0.19, 0.40);
-            if (num > 0) cell.bg = colors.mix(sp_color, cell.bg, aq);
-        }
-
-        const gases = state.dungeon.atGas(coord);
-        for (gases) |q, g| {
-            const gcolor = gas.Gases[g].color;
-            const aq = 1 - math.clamp(q, 0.19, 1);
-            if (q > 0) cell.bg = colors.mix(gcolor, cell.bg, aq);
-        }
+        // var spattering = self.spatter.iterator();
+        // while (spattering.next()) |entry| {
+        //     const spatter = entry.key;
+        //     const num = entry.value.*;
+        //     const sp_color = spatter.color();
+        //     const q = @intToFloat(f64, num / 10);
+        //     const aq = 1 - math.clamp(q, 0.19, 0.40);
+        //     if (num > 0) cell.bg = colors.mix(sp_color, cell.bg, aq);
+        // }
 
         return cell;
     }
