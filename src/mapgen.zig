@@ -2371,19 +2371,16 @@ pub fn setLairFeatures(room: *Room) void {
         room.rect.width - 1,
         room.rect.height - 1,
     );
-    var tries: usize = 200;
-    var subroom_count: usize = rng.range(usize, 1, 2);
-    while (tries > 0 and subroom_count > 0) : (tries -= 1) {
+    var tries: usize = 300;
+    while (tries > 0) : (tries -= 1) {
         const coord = subroom_area.randomCoord();
-        if (state.dungeon.at(coord).type != .Floor) {
-            continue;
-        } else {
+        if (state.dungeon.at(coord).type == .Floor) {
             if (placeSubroom(room, &Rect{
                 .start = Coord.new(coord.x - room.rect.start.x, coord.y - room.rect.start.y),
                 .width = room.rect.end().x - coord.x,
                 .height = room.rect.end().y - coord.y,
             }, state.GPA.allocator(), .{ .for_lair = true })) {
-                subroom_count -= 1;
+                break;
             }
         }
     }

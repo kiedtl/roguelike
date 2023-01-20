@@ -4480,7 +4480,8 @@ pub const Item = union(ItemType) {
             .Evocable => |v| v.id,
             .Ring => |r| r.name,
             .Rune => "AMBIG_rune",
-            .Vial, .Boulder => null,
+            .Vial => "AMBIG_vial",
+            .Boulder => "AMBIG_boulder",
         };
     }
 };
@@ -4579,7 +4580,10 @@ pub const Tile = struct {
             cell.sch = null;
             cell.fg = fire.fireColor(famount);
         } else if (state.dungeon.itemsAt(coord).last()) |item| {
-            assert(self.type != .Wall);
+            err.ensure(self.type != .Wall, "Item {s} located in wall @({},{})", .{ item.id().?, coord.x, coord.y }) catch {
+                return .{ .fg = 0xffffff, .bg = 0xff0000, .sfg = 0, .sbg = 0, .ch = 'X', .sch = null };
+            };
+
             cell = item.tile();
         } else if (state.dungeon.at(coord).surface) |surfaceitem| {
             assert(self.type != .Wall);
