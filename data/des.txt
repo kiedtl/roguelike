@@ -201,6 +201,12 @@ resistance (rFire).
 
 The damage from this item is never lethal.
 
+% cons_spectral_orb
+An ethereal orb, a web of shimmering patterns glowing eerily within.
+
+When consumed, it will grant a new Conjuration augment, unless there are no more
+to give. Only useful if you possess the Ring of Conjuration.
+
 % kit_mine
 You can evoke it to build a small mine where you are standing.
 

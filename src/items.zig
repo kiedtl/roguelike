@@ -177,15 +177,18 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 30, .i = .{ .W = &ShadowSwordWeapon } },
     .{ .w = 30, .i = .{ .W = &ShadowMaulWeapon } },
     .{ .w = 30, .i = .{ .W = &ShadowMaceWeapon } },
-    // Armors
+    // Armors and cloaks
     .{ .w = 30, .i = .{ .A = &ShadowMailArmor } },
     .{ .w = 30, .i = .{ .A = &ShadowBrigandineArmor } },
     .{ .w = 30, .i = .{ .A = &ShadowHauberkArmor } },
     .{ .w = 20, .i = .{ .A = &FumingVestArmor } },
+    .{ .w = 10, .i = .{ .C = &SpectralVestArmor } },
+    .{ .w = 10, .i = .{ .C = &SpectralCloak } },
     // Spectral orb
     .{ .w = 10, .i = .{ .c = &SpectralOrbConsumable } },
     // Auxes
     .{ .w = 20, .i = .{ .X = &ShadowShieldAux } },
+    .{ .w = 10, .i = .{ .X = &SpectralCrownAux } },
     .{ .w = 05, .i = .{ .X = &EtherealShieldAux } },
 };
 pub const ALL_ITEMS = [_]ItemTemplate{
@@ -234,6 +237,7 @@ pub const Cloak = struct {
     resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
 };
 
+pub const SpectralCloak = Cloak{ .id = "cloak_spectral", .name = "spectres", .stats = .{ .Conjuration = 1 } };
 pub const SilCloak = Cloak{ .id = "cloak_silicon", .name = "silicon", .resists = .{ .rFire = 25 } };
 pub const FurCloak = Cloak{ .id = "cloak_fur", .name = "fur", .resists = .{ .rElec = 25 } };
 pub const VelvetCloak = Cloak{ .id = "cloak_velvet", .name = "velvet", .stats = .{ .Sneak = 2 } };
@@ -345,6 +349,13 @@ pub const EtherealShieldAux = Aux{
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .EtherealShield, .duration = .Equ },
     },
+};
+
+pub const SpectralCrownAux = Aux{
+    .id = "aux_spectral_crown",
+    .name = "spectral crown",
+
+    .stats = .{ .Willpower = 1, .Conjuration = 2 },
 };
 // }}}
 
@@ -2225,6 +2236,13 @@ pub const FumingVestArmor = Armor{
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .FumesVest, .duration = .Equ },
     },
+};
+
+pub const SpectralVestArmor = Armor{
+    .id = "spectral_vest_armor",
+    .name = "spectral vest",
+
+    .stats = .{ .Melee = 10, .Conjuration = 1 },
 };
 
 // }}}
