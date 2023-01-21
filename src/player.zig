@@ -51,19 +51,49 @@ pub var wiz_lidless_eye: bool = false;
 
 pub var auto_wait_enabled: bool = false;
 
-pub const ConjAugment = enum {
+pub const ConjAugment = enum(usize) {
     // Survival,
-    WallDisintegrate1,
-    WallDisintegrate2,
-    rFire_25,
-    rFire_50,
-    rElec_25,
-    rElec_50,
-    UndeadBloodthirst,
-    Melee,
-    Evade,
+    Melee = 0,
+    Evade = 1,
+    WallDisintegrate1 = 2,
+    WallDisintegrate2 = 3,
+    UndeadBloodthirst = 4,
+    rElec_25 = 5,
+    rElec_50 = 6,
+    rFire_25 = 7,
+    rFire_50 = 8,
 
     pub const TOTAL = std.meta.fields(@This()).len;
+
+    pub fn char(self: ConjAugment) []const u8 {
+        return switch (self) {
+            // .Survival => "Opposing spectral sabres will not always destroy your own. (TODO: update)",
+            .WallDisintegrate1 => "$aw$.",
+            .WallDisintegrate2 => "$aw+$.",
+            .rFire_25 => "$rF$.",
+            .rFire_50 => "$rF+$.",
+            .rElec_25 => "$bE$.",
+            .rElec_50 => "$bE+$.",
+            .UndeadBloodthirst => "u",
+            .Melee => "m",
+            .Evade => "v",
+        };
+    }
+
+    pub fn description(self: ConjAugment) []const u8 {
+        return switch (self) {
+            // .Survival => "Opposing spectral sabres will not always destroy your own. (TODO: update)",
+            .WallDisintegrate1 => "A single nearby wall disintegrates into a new sabre when there are other sabres in your vision.",
+            .WallDisintegrate2 => "Two nearby walls disintegrate into new sabres when there are other sabres in your vision.",
+            .rFire_25 => "Your sabres possess +25% rFire.",
+            .rFire_50 => "Your sabres possess +50% rFire.",
+            .rElec_25 => "Your sabres possess +25% rElec.",
+            .rElec_50 => "Your sabres possess +50% rElec.",
+            .UndeadBloodthirst => "A new volley of sabres spawn when you see a hostile undead die.",
+            .Melee => "Your sabres possess +25% Melee.",
+            .Evade => "Your sabres possess +25% Evade.",
+        };
+    }
 };
 
 pub const ConjAugmentInfo = struct { received: bool, a: ConjAugment };
@@ -162,6 +192,13 @@ pub fn choosePlayerUpgrades() void {
 pub fn hasAugment(augment: ConjAugment) bool {
     return for (state.player_conj_augments) |augment_info| {
         if (augment_info.received and augment_info.a == augment)
+            break true;
+    } else false;
+}
+
+pub fn hasSabresInSight() bool {
+    return for (state.player.squad.?.members.constSlice()) |squadling| {
+        if (mem.eql(u8, squadling.id, "spec_sabre"))
             break true;
     } else false;
 }

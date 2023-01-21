@@ -2121,6 +2121,23 @@ pub const Mob = struct { // {{{
                 self.corruption_ctr = 0;
             }
         }
+
+        // Player conjuration augments
+        if (self == state.player and player.hasSabresInSight()) {
+            var spawn_ctr = 0 +
+                if (player.hasAugment(.WallDisintegrate1)) @as(usize, 1) else 0 +
+                if (player.hasAugment(.WallDisintegrate2)) @as(usize, 2) else 0;
+            for (&DIRECTIONS) |d|
+                if (state.player.coord.move(d, state.mapgeometry)) |neighbor| {
+                    if (state.dungeon.at(neighbor).type == .Wall) {
+                        spells.spawnSabreSingle(state.player, neighbor);
+                        state.message(.Info, "A nearby wall disintegrates into a spectral sabre.", .{});
+                        spawn_ctr -= 1;
+                        if (spawn_ctr == 0)
+                            break;
+                    }
+                };
+        }
     }
 
     // Decrement status durations, and do stuff for various statuses that need
@@ -3302,6 +3319,13 @@ pub const Mob = struct { // {{{
 
         if (self.isUnderStatus(.ExplosiveElec)) |s| {
             explosions.elecBurst(self.coord, s.power, self);
+        }
+
+        if (state.player.canSeeMob(self) and player.hasSabresInSight() and
+            self.isHostileTo(state.player) and self.life_type == .Undead and
+            player.hasAugment(.UndeadBloodthirst))
+        {
+            spells.spawnSabreVolley(state.player, self.coord);
         }
 
         // Apply death effect

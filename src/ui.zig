@@ -1196,6 +1196,36 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
 
     y += 1;
 
+    const conjuration = @intCast(usize, state.player.stat(.Conjuration));
+    if (conjuration > 0) {
+        y = _drawStrf(startx, y, endx, "$cConjuration:$. $b{}$.", .{conjuration}, .{});
+
+        var augment_cnt: usize = 0;
+        var augment_buf = StackBuffer(player.ConjAugment, 64).init(null);
+        for (state.player_conj_augments) |aug| if (aug.received) {
+            augment_cnt += 1;
+            augment_buf.append(aug.a) catch err.wat();
+        };
+
+        std.sort.sort(player.ConjAugment, augment_buf.slice(), {}, struct {
+            pub fn f(_: void, a: player.ConjAugment, b: player.ConjAugment) bool {
+                return @enumToInt(a) < @enumToInt(b);
+            }
+        }.f);
+
+        var augment_str = StackBuffer(u8, 64).init(null);
+        for (augment_buf.constSlice()) |aug|
+            augment_str.appendSlice(aug.char()) catch err.wat();
+
+        if (augment_cnt == 0) {
+            y = _drawStrf(startx, y, endx, "$cNo augments$.", .{}, .{});
+        } else {
+            y = _drawStrf(startx, y, endx, "$cAugments($b{}$c)$.: {s}", .{ augment_cnt, augment_str.constSlice() }, .{});
+        }
+
+        y += 1;
+    }
+
     const bar_endx = endx - 9;
 
     // Use red if below 40% health

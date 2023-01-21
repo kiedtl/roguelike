@@ -449,6 +449,51 @@ fn _effectAuraDispersal(caster: Coord, _: Spell, _: SpellOptions, _: Coord) void
 //     },
 // };
 
+pub fn spawnSabreSingle(caster: *Mob, coord: Coord) void {
+    const rFire = @as(usize, 0) +
+        if (caster == state.player and player.hasAugment(.rFire_25)) @as(usize, 25) else 0 +
+        if (caster == state.player and player.hasAugment(.rFire_50)) @as(usize, 50) else 0;
+    const rElec = @as(usize, 0) +
+        if (caster == state.player and player.hasAugment(.rElec_25)) @as(usize, 25) else 0 +
+        if (caster == state.player and player.hasAugment(.rElec_50)) @as(usize, 50) else 0;
+    const Melee = @as(usize, 0) +
+        if (caster == state.player and player.hasAugment(.Melee)) @as(usize, 25) else 0;
+    const Evade = @as(usize, 0) +
+        if (caster == state.player and player.hasAugment(.Evade)) @as(usize, 25) else 0;
+
+    const ss = mobs.placeMob(state.GPA.allocator(), &mobs.SpectralSabreTemplate, coord, .{});
+    ss.innate_resists.rFire += @intCast(isize, rFire);
+    ss.innate_resists.rElec += @intCast(isize, rElec);
+    ss.stats.Melee += @intCast(isize, Melee);
+    ss.stats.Evade += @intCast(isize, Evade);
+    caster.addUnderling(ss);
+}
+
+pub fn spawnSabreVolley(caster: *Mob, coord: Coord) void {
+    var directions = DIRECTIONS;
+    rng.shuffle(Direction, &directions);
+
+    var spawned_ctr: usize = @intCast(usize, caster.stat(.Conjuration));
+
+    if (state.is_walkable(coord, .{ .right_now = true })) {
+        spawnSabreSingle(caster, coord);
+        spawned_ctr -= 1;
+    }
+
+    for (&directions) |d| {
+        if (spawned_ctr == 0)
+            break;
+
+        if (coord.move(d, state.mapgeometry)) |neighbor| {
+            if (state.is_walkable(neighbor, .{ .right_now = true })) {
+                spawnSabreSingle(caster, neighbor);
+
+                spawned_ctr -= 1;
+            }
+        }
+    }
+}
+
 pub const BOLT_CONJURE = Spell{
     .id = "sp_conj_ss_bolt",
     .name = "conjure spectral sabre",
@@ -460,37 +505,7 @@ pub const BOLT_CONJURE = Spell{
         .Custom = struct {
             fn f(caster_c: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
                 const caster = state.dungeon.at(caster_c).mob.?;
-
-                var directions = DIRECTIONS;
-                rng.shuffle(Direction, &directions);
-
-                const rFire = @as(usize, 0) +
-                    if (caster == state.player and player.hasAugment(.rFire_25)) @as(usize, 25) else 0 +
-                    if (caster == state.player and player.hasAugment(.rFire_50)) @as(usize, 50) else 0;
-                const rElec = @as(usize, 0) +
-                    if (caster == state.player and player.hasAugment(.rElec_25)) @as(usize, 25) else 0 +
-                    if (caster == state.player and player.hasAugment(.rElec_50)) @as(usize, 50) else 0;
-                const Melee = @as(usize, 0) +
-                    if (caster == state.player and player.hasAugment(.Melee)) @as(usize, 75) else 0;
-                const Evade = @as(usize, 0) +
-                    if (caster == state.player and player.hasAugment(.Evade)) @as(usize, 25) else 0;
-
-                var spawned_ctr: usize = @intCast(usize, caster.stat(.Conjuration));
-                for (&directions) |d|
-                    if (coord.move(d, state.mapgeometry)) |neighbor| {
-                        if (state.is_walkable(neighbor, .{ .right_now = true })) {
-                            const ss = mobs.placeMob(state.GPA.allocator(), &mobs.SpectralSabreTemplate, neighbor, .{});
-                            ss.innate_resists.rFire += @intCast(isize, rFire);
-                            ss.innate_resists.rElec += @intCast(isize, rElec);
-                            ss.stats.Melee += @intCast(isize, Melee);
-                            ss.stats.Evade += @intCast(isize, Evade);
-                            caster.addUnderling(ss);
-
-                            spawned_ctr -= 1;
-                            if (spawned_ctr == 0)
-                                break;
-                        }
-                    };
+                spawnSabreVolley(caster, coord);
             }
         }.f,
     },

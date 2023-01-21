@@ -182,6 +182,8 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 30, .i = .{ .A = &ShadowBrigandineArmor } },
     .{ .w = 30, .i = .{ .A = &ShadowHauberkArmor } },
     .{ .w = 20, .i = .{ .A = &FumingVestArmor } },
+    // Spectral orb
+    .{ .w = 10, .i = .{ .c = &SpectralOrbConsumable } },
     // Auxes
     .{ .w = 20, .i = .{ .X = &ShadowShieldAux } },
     .{ .w = 05, .i = .{ .X = &EtherealShieldAux } },
@@ -1892,6 +1894,30 @@ pub const CopperIngotConsumable = Consumable{
     .color = 0xcacbca,
     .verbs_player = &[_][]const u8{ "choke down", "swallow" },
     .verbs_other = &[_][]const u8{"chokes down"},
+};
+
+pub const SpectralOrbConsumable = Consumable{
+    .id = "cons_spectral_orb",
+    .name = "spectral orb",
+    .effects = &[_]Consumable.Effect{
+        .{ .Custom = struct {
+            pub fn f(mob: ?*Mob, _: Coord) void {
+                assert(mob.? == state.player);
+                const next_aug = for (state.player_conj_augments) |aug, i| {
+                    if (!aug.received)
+                        break i;
+                } else {
+                    state.message(.Info, "Nothing happens. You feel a dryness within...", .{});
+                    return;
+                };
+                state.player_conj_augments[next_aug].received = true;
+                state.message(.Info, "[$oConjuration augment$.] {s}", .{state.player_conj_augments[next_aug].a.description()});
+            }
+        }.f },
+    },
+    .color = 0xcacbca,
+    .verbs_player = &[_][]const u8{"use"},
+    .verbs_other = &[_][]const u8{"[this is a bug]"},
 };
 
 pub const GlueTrapKit = Consumable.createTrapKit("kit_trap_glue", "glue trap", struct {
