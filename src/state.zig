@@ -134,6 +134,7 @@ pub var chardata: struct {
 pub var collected_runes = enums.EnumArray(Rune, bool).initFill(false);
 
 pub var player_upgrades: [3]player_m.PlayerUpgradeInfo = undefined;
+pub var player_conj_augments: [player_m.ConjAugment.TOTAL]player_m.ConjAugmentInfo = undefined;
 
 // Cached return value of player.isPlayerSpotted()
 pub var player_is_spotted: struct {

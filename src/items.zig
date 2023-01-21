@@ -1389,6 +1389,7 @@ pub const ExcisionRing = Ring{ // {{{
 
 pub const ConjurationRing = Ring{ // {{{
     .name = "conjuration",
+    .stats = .{ .Conjuration = 2 },
     .pattern_checker = .{
         .turns = 3,
         .init = struct {
@@ -1456,7 +1457,7 @@ pub const ConjurationRing = Ring{ // {{{
         pub fn f(self: *Mob, _: PatternChecker.State) void {
             const will = @intCast(usize, self.stat(.Willpower));
             const duration = math.max(1, will / 2);
-            self.addStatus(.RingConjuration, 2, .{ .Tmp = duration });
+            self.addStatus(.RingConjuration, 0, .{ .Tmp = duration });
         }
     }.f,
 }; // }}}

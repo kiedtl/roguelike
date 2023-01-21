@@ -1772,6 +1772,7 @@ pub const Stat = enum {
     Vision,
     Willpower,
     Spikes,
+    Conjuration,
 
     pub fn string(self: Stat) []const u8 {
         return switch (self) {
@@ -1784,6 +1785,17 @@ pub const Stat = enum {
             .Vision => "vision",
             .Willpower => "will",
             .Spikes => "spikes",
+            .Conjuration => "spikes",
+        };
+    }
+
+    pub fn showMobStat(self: Stat, value: isize) bool {
+        return switch (self) {
+            .Melee, .Evade, .Vision, .Willpower => true,
+            .Sneak => false,
+            .Missile => value != 40,
+            .Speed => value != 100,
+            .Martial, .Spikes, .Conjuration => value > 0,
         };
     }
 };
@@ -1884,6 +1896,7 @@ pub const Mob = struct { // {{{
         Vision: isize = 7,
         Willpower: isize = 3,
         Spikes: isize = 0,
+        Conjuration: isize = 0,
     } = .{},
 
     // Listed in order of preference.

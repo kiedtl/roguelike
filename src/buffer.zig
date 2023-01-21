@@ -93,16 +93,16 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
         }
 
         pub usingnamespace if (T == usize) struct {
-            pub fn linearSearch(self: *const Self, value: T) bool {
-                return for (self.constSlice()) |item| {
-                    if (item == value) break true;
-                } else false;
+            pub fn linearSearch(self: *const Self, value: T) ?usize {
+                return for (self.constSlice()) |item, i| {
+                    if (item == value) break i;
+                } else null;
             }
         } else struct {
-            pub fn linearSearch(self: *const Self, value: T, eq_fn: fn (a: T, b: T) bool) bool {
-                return for (self.constSlice()) |item| {
-                    if ((eq_fn)(value, item)) break true;
-                } else false;
+            pub fn linearSearch(self: *const Self, value: T, eq_fn: fn (a: T, b: T) bool) ?usize {
+                return for (self.constSlice()) |item, i| {
+                    if ((eq_fn)(value, item)) break i;
+                } else null;
             }
         };
 

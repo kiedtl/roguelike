@@ -51,6 +51,37 @@ pub var wiz_lidless_eye: bool = false;
 
 pub var auto_wait_enabled: bool = false;
 
+pub const ConjAugment = enum {
+    // Survival,
+    WallDisintegrate1,
+    WallDisintegrate2,
+    rFire_25,
+    rFire_50,
+    rElec_25,
+    rElec_50,
+    UndeadBloodthirst,
+    Melee,
+    Evade,
+
+    pub const TOTAL = std.meta.fields(@This()).len;
+};
+
+pub const ConjAugmentInfo = struct { received: bool, a: ConjAugment };
+pub const ConjAugmentEntry = struct { w: usize, a: ConjAugment };
+
+pub const CONJ_AUGMENT_DROPS = [_]ConjAugmentEntry{
+    // .{ .w = 99, .a = .Survival },
+    .{ .w = 99, .a = .WallDisintegrate1 },
+    .{ .w = 25, .a = .WallDisintegrate2 },
+    .{ .w = 50, .a = .rFire_25 },
+    .{ .w = 50, .a = .rFire_50 },
+    .{ .w = 99, .a = .rElec_25 },
+    .{ .w = 99, .a = .rElec_50 },
+    .{ .w = 50, .a = .UndeadBloodthirst },
+    .{ .w = 99, .a = .Melee },
+    .{ .w = 50, .a = .Evade },
+};
+
 pub const PlayerUpgradeInfo = struct {
     recieved: bool = false,
     upgrade: PlayerUpgrade,
@@ -109,6 +140,30 @@ pub fn choosePlayerUpgrades() void {
         state.player_upgrades[i] = .{ .recieved = false, .upgrade = upgrades[i] };
         i += 1;
     };
+
+    var augments = StackBuffer(ConjAugmentEntry, ConjAugment.TOTAL).init(&CONJ_AUGMENT_DROPS);
+    for (state.player_conj_augments) |*entry| {
+        // Choose an augment...
+        //
+        const augment = rng.choose2(ConjAugmentEntry, augments.constSlice(), "w") catch err.wat();
+        entry.* = .{ .received = false, .a = augment.a };
+
+        // ...and then delete that entry to avoid it being given again
+        //
+        const index = augments.linearSearch(augment, struct {
+            pub fn f(a: ConjAugmentEntry, b: ConjAugmentEntry) bool {
+                return a.a == b.a;
+            }
+        }.f).?;
+        _ = augments.orderedRemove(index) catch err.wat(); // FIXME: should be swapRemove()
+    }
+}
+
+pub fn hasAugment(augment: ConjAugment) bool {
+    return for (state.player_conj_augments) |augment_info| {
+        if (augment_info.received and augment_info.a == augment)
+            break true;
+    } else false;
 }
 
 pub fn triggerPoster(coord: Coord) bool {
@@ -374,9 +429,8 @@ pub fn movementTriggersB(direction: Direction) void {
             };
     }
     if (state.player.hasStatus(.RingConjuration)) {
-        const power = state.player.isUnderStatus(.RingConjuration).?.power;
         const target = utils.getFarthestWalkableCoord(direction, state.player.coord, .{ .only_if_breaks_lof = true });
-        spells.BOLT_CONJURE.use(state.player, state.player.coord, target, .{ .MP_cost = 0, .free = true, .power = power });
+        spells.BOLT_CONJURE.use(state.player, state.player.coord, target, .{ .MP_cost = 0, .free = true });
     }
 }
 

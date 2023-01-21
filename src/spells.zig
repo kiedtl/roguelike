@@ -17,6 +17,7 @@ const dijkstra = @import("dijkstra.zig");
 const types = @import("types.zig");
 const combat = @import("combat.zig");
 const err = @import("err.zig");
+const player = @import("player.zig");
 const explosions = @import("explosions.zig");
 const items = @import("items.zig");
 const gas = @import("gas.zig");
@@ -457,21 +458,36 @@ pub const BOLT_CONJURE = Spell{
     .noise = .Silent,
     .effect_type = .{
         .Custom = struct {
-            fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
+            fn f(caster_c: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
                 const caster = state.dungeon.at(caster_c).mob.?;
 
                 var directions = DIRECTIONS;
                 rng.shuffle(Direction, &directions);
 
-                var spawned_ctr: usize = 0;
+                const rFire = @as(usize, 0) +
+                    if (caster == state.player and player.hasAugment(.rFire_25)) @as(usize, 25) else 0 +
+                    if (caster == state.player and player.hasAugment(.rFire_50)) @as(usize, 50) else 0;
+                const rElec = @as(usize, 0) +
+                    if (caster == state.player and player.hasAugment(.rElec_25)) @as(usize, 25) else 0 +
+                    if (caster == state.player and player.hasAugment(.rElec_50)) @as(usize, 50) else 0;
+                const Melee = @as(usize, 0) +
+                    if (caster == state.player and player.hasAugment(.Melee)) @as(usize, 75) else 0;
+                const Evade = @as(usize, 0) +
+                    if (caster == state.player and player.hasAugment(.Evade)) @as(usize, 25) else 0;
+
+                var spawned_ctr: usize = @intCast(usize, caster.stat(.Conjuration));
                 for (&directions) |d|
                     if (coord.move(d, state.mapgeometry)) |neighbor| {
                         if (state.is_walkable(neighbor, .{ .right_now = true })) {
                             const ss = mobs.placeMob(state.GPA.allocator(), &mobs.SpectralSabreTemplate, neighbor, .{});
+                            ss.innate_resists.rFire += @intCast(isize, rFire);
+                            ss.innate_resists.rElec += @intCast(isize, rElec);
+                            ss.stats.Melee += @intCast(isize, Melee);
+                            ss.stats.Evade += @intCast(isize, Evade);
                             caster.addUnderling(ss);
 
-                            spawned_ctr += 1;
-                            if (spawned_ctr == opts.power)
+                            spawned_ctr -= 1;
+                            if (spawned_ctr == 0)
                                 break;
                         }
                     };

@@ -470,7 +470,7 @@ fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, need_lair: bo
         return false; // Can't be used unless specifically called for by name.
     }
 
-    if (prefab.whitelist.len > 0 and !prefab.whitelist.linearSearch(level)) {
+    if (prefab.whitelist.len > 0 and prefab.whitelist.linearSearch(level) == null) {
         return false; // Prefab has a whitelist and this level isn't on it.
     }
 
