@@ -1106,31 +1106,31 @@ x Animations (w/ particle engine)
     - ring of infestation
     x ring of conjuration
     x ring of excision
-  - Night-creature-themed items
+  x Night-creature-themed items
     x Shadow weapons
       x Shadow Mace (Insanity)
       x Shadow Sword (Mass Paralysis)
       x Shadow Maul (Multiplicity)
       x Descriptions for weapons
-    - Conjuration stat
-    - Spectral Orbs
-      - (100) Augment [s]: Will-checked survival when against opposing blades
-      - (100) Augment [w]: Wall disintegrating into more blades
-      - ( 50) Augment [F]: rFire +25%/+50%
-      - (100) Augment [E]: rElec +25%/+50%
-      - ( 50) Augment [u]: When undead dies in LOS, additional volley spawns near it.
-      - (100) Augment [a]: An additional 2/4 blades spawn on each volley.
-      - (100) Augment [%]: Each blade gets 75% melee instead of 50%.
-      - ( 50) Augment [v]: Each blade gets 25% evasion instead of 0%.
-    - Armor, cloaks, aux items
+    x Conjuration stat
+    x Spectral Orbs
+      x (100) Augment [w]: 1/2 nearby walls disintegrating into single blade
+      x ( 50) Augment [F]: rFire +25%/+50%
+      x (100) Augment [E]: rElec +25%/+50%
+      x ( 50) Augment [u]: When undead dies in LOS, additional volley spawns near it.
+      x (100) Augment [m]: Each blade gets 75% melee instead of 50%.
+      x ( 50) Augment [v]: Each blade gets 25% evasion instead of 0%.
+    x Armor, cloaks, aux items
       x Fuming vest
       x Shadow hauberk, shadow mail, shadow brigandine, shadow shield
       x Ethereal shield
-      - Spectral mail, spectral crown, cloak of spectres
+      x Spectral mail, spectral crown, cloak of spectres
   - Alignment map/mechanics
     - Map design, basic aligner machine/prop/consumable
     - Props on map for effect
     - Animation (need particle engine[DONE])
+- Additional spectral orb augments
+  - (100) Augment [s]: Will-checked survival when against opposing blades
 - UI
   x Menu to invoke patterns (via SPACE)
   x Map dynamic popups/annotations
