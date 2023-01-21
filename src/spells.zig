@@ -451,15 +451,15 @@ fn _effectAuraDispersal(caster: Coord, _: Spell, _: SpellOptions, _: Coord) void
 
 pub fn spawnSabreSingle(caster: *Mob, coord: Coord) void {
     const rFire = @as(usize, 0) +
-        if (caster == state.player and player.hasAugment(.rFire_25)) @as(usize, 25) else 0 +
-        if (caster == state.player and player.hasAugment(.rFire_50)) @as(usize, 50) else 0;
+        (if (caster == state.player and player.hasAugment(.rFire_25)) @as(usize, 25) else 0) +
+        (if (caster == state.player and player.hasAugment(.rFire_50)) @as(usize, 50) else 0);
     const rElec = @as(usize, 0) +
-        if (caster == state.player and player.hasAugment(.rElec_25)) @as(usize, 25) else 0 +
-        if (caster == state.player and player.hasAugment(.rElec_50)) @as(usize, 50) else 0;
+        (if (caster == state.player and player.hasAugment(.rElec_25)) @as(usize, 25) else 0) +
+        (if (caster == state.player and player.hasAugment(.rElec_50)) @as(usize, 50) else 0);
     const Melee = @as(usize, 0) +
-        if (caster == state.player and player.hasAugment(.Melee)) @as(usize, 25) else 0;
+        (if (caster == state.player and player.hasAugment(.Melee)) @as(usize, 25) else 0);
     const Evade = @as(usize, 0) +
-        if (caster == state.player and player.hasAugment(.Evade)) @as(usize, 25) else 0;
+        (if (caster == state.player and player.hasAugment(.Evade)) @as(usize, 25) else 0);
 
     const ss = mobs.placeMob(state.GPA.allocator(), &mobs.SpectralSabreTemplate, coord, .{});
     ss.innate_resists.rFire += @intCast(isize, rFire);

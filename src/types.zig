@@ -1785,7 +1785,7 @@ pub const Stat = enum {
             .Vision => "vision",
             .Willpower => "will",
             .Spikes => "spikes",
-            .Conjuration => "spikes",
+            .Conjuration => "conjuration",
         };
     }
 
@@ -2125,18 +2125,20 @@ pub const Mob = struct { // {{{
         // Player conjuration augments
         if (self == state.player and player.hasSabresInSight()) {
             var spawn_ctr = 0 +
-                if (player.hasAugment(.WallDisintegrate1)) @as(usize, 1) else 0 +
-                if (player.hasAugment(.WallDisintegrate2)) @as(usize, 2) else 0;
-            for (&DIRECTIONS) |d|
+                (if (player.hasAugment(.WallDisintegrate1)) @as(usize, 1) else 0) +
+                (if (player.hasAugment(.WallDisintegrate2)) @as(usize, 2) else 0);
+            for (&DIRECTIONS) |d| {
+                if (spawn_ctr == 0)
+                    break;
                 if (state.player.coord.move(d, state.mapgeometry)) |neighbor| {
                     if (state.dungeon.at(neighbor).type == .Wall) {
+                        state.dungeon.at(neighbor).type = .Floor;
                         spells.spawnSabreSingle(state.player, neighbor);
                         state.message(.Info, "A nearby wall disintegrates into a spectral sabre.", .{});
                         spawn_ctr -= 1;
-                        if (spawn_ctr == 0)
-                            break;
                     }
-                };
+                }
+            }
         }
     }
 

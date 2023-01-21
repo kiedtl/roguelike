@@ -198,7 +198,7 @@ pub fn hasAugment(augment: ConjAugment) bool {
 
 pub fn hasSabresInSight() bool {
     return for (state.player.squad.?.members.constSlice()) |squadling| {
-        if (mem.eql(u8, squadling.id, "spec_sabre"))
+        if (!squadling.is_dead and mem.eql(u8, squadling.id, "spec_sabre"))
             break true;
     } else false;
 }
