@@ -2339,6 +2339,13 @@ pub fn setLairFeatures(room: *Room) void {
     //     }
     // }
 
+    const door_c = room.connections.slice()[0].door.?;
+    if (state.dungeon.at(door_c).surface != null) {
+        state.dungeon.at(door_c).surface.?.Machine.disabled = true;
+        state.dungeon.at(door_c).surface = null;
+    }
+    _place_machine(door_c, &surfaces.SladeDoor);
+
     var walkable_point: Coord = undefined;
 
     // Set the entire room to rough slade

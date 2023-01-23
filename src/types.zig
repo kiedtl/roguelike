@@ -4061,9 +4061,19 @@ pub const Machine = struct {
         } else return error.NoEffect;
     }
 
-    pub fn addPower(self: *Machine, by: *Mob) bool {
+    pub fn canBePoweredBy(self: *Machine, by: *const Mob) bool {
         if (self.restricted_to) |restriction|
-            if (restriction != by.allegiance) return false;
+            if (restriction != by.faction and
+                (restriction != .Night or state.night_rep[@enumToInt(by.faction)] < 1))
+            {
+                return false;
+            };
+        return true;
+    }
+
+    pub fn addPower(self: *Machine, by: *Mob) bool {
+        if (!self.canBePoweredBy(by))
+            return false;
 
         self.power = math.min(self.power + 100, 100);
         self.last_interaction = by;

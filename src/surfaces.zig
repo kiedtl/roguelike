@@ -273,6 +273,7 @@ pub const MACHINES = [_]Machine{
     LabDoor,
     VaultDoor,
     LockedDoor,
+    SladeDoor,
     HeavyLockedDoor,
     IronVaultDoor,
     GoldVaultDoor,
@@ -574,15 +575,15 @@ pub const LockedDoor = Machine{
 
     .powered_tile = '\'',
     .unpowered_tile = '+',
-    .powered_fg = 0xaaaaff,
-    .unpowered_fg = 0xaaaaff,
-    .powered_bg = 0x29147a,
-    .unpowered_bg = 0x29147a,
+    .powered_fg = 0x5588ff,
+    .unpowered_fg = 0x5588ff,
+    .powered_bg = 0x14297a,
+    .unpowered_bg = 0x14297a,
 
     .powered_sprite = .S_G_M_DoorOpen,
     .unpowered_sprite = .S_G_M_DoorShut,
-    .powered_sfg = 0x7964ba,
-    .unpowered_sfg = 0x7964ba,
+    .powered_sfg = 0x6479ba,
+    .unpowered_sfg = 0x6479ba,
     .powered_sbg = colors.BG,
     .unpowered_sbg = colors.BG,
 
@@ -607,6 +608,52 @@ pub const LockedDoor = Machine{
 
                 machine.disabled = true;
                 state.dungeon.at(machine.coord).surface = null;
+                return true;
+            }
+        }.f,
+    },
+};
+
+pub const SladeDoor = Machine{
+    .id = "door_slade",
+    .name = "slade door",
+
+    .powered_tile = '\'',
+    .unpowered_tile = '+',
+    .powered_fg = 0xaaaaff,
+    .unpowered_fg = 0xaaaaff,
+    .powered_bg = 0x29147a,
+    .unpowered_bg = 0x29147a,
+
+    .powered_sprite = .S_G_M_DoorOpen,
+    .unpowered_sprite = .S_G_M_DoorShut,
+    .powered_sfg = 0x775599,
+    .unpowered_sfg = 0x775599,
+    .powered_sbg = colors.BG,
+    .unpowered_sbg = colors.BG,
+
+    .power_drain = 100,
+    .restricted_to = .Night,
+    .powered_walkable = true,
+    .unpowered_walkable = false,
+    .porous = false,
+    .on_power = powerNone,
+
+    .evoke_confirm = "Trespass on the Night Creature's lair?",
+    .player_interact = .{
+        .name = "break down",
+        .needs_power = false,
+        .success_msg = "You break down the slade door. ($b-2 rep$.)",
+        .no_effect_msg = "(This is a bug.)",
+        .max_use = 1,
+        .func = struct {
+            fn f(machine: *Machine, by: *Mob) bool {
+                assert(by == state.player);
+
+                state.night_rep[@enumToInt(state.player.faction)] -= 2;
+                machine.disabled = true;
+                state.dungeon.at(machine.coord).surface = null;
+
                 return true;
             }
         }.f,

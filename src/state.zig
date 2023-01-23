@@ -327,12 +327,10 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
                     if (!m.powered_walkable and !m.unpowered_walkable)
                         return false;
 
-                    // oh boy
                     if (opts.mob) |mob|
-                        if (m.restricted_to) |restriction|
-                            if (!m.isWalkable() and m.powered_walkable and !m.unpowered_walkable)
-                                if (restriction != mob.allegiance)
-                                    return false;
+                        if (!m.canBePoweredBy(mob) and
+                            !m.isWalkable() and m.powered_walkable and !m.unpowered_walkable)
+                            return false;
                 }
             },
             .Prop => |p| if (!p.walkable) return false,
