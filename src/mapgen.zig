@@ -435,7 +435,7 @@ pub fn placePlayer(coord: Coord, alloc: mem.Allocator) void {
 
     state.player = mobs.placeMob(alloc, &mobs.PlayerTemplate, coord, .{ .phase = .Hunt });
 
-    state.player.inventory.equipment(.Ring1).* = Item{ .Ring = items.createItem(Ring, items.ConjurationRing) };
+    // state.player.inventory.equipment(.Ring1).* = Item{ .Ring = items.createItem(Ring, items.ConjurationRing) };
     // state.player.inventory.equipment(.Ring2).* = Item{ .Ring = items.createItem(Ring, items.ExcisionRing) };
     // state.player.inventory.equipment(.Ring3).* = Item{ .Ring = items.createItem(Ring, items.DamnationRing) };
     // state.player.inventory.equipment(.Ring4).* = Item{ .Ring = items.createItem(Ring, items.LightningRing) };
