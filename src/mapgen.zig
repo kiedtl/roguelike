@@ -2368,7 +2368,11 @@ pub fn setLairFeatures(room: *Room) void {
             dijk.skip();
         } else if (state.dungeon.at(child).type == .Wall) {
             dijk.skip();
-            state.dungeon.at(child).material = &materials.PolishedSlade;
+            if (child.x > room.rect.start.x and child.x < room.rect.end().x - 1 and
+                child.y > room.rect.start.y and child.y < room.rect.end().y - 1)
+            {
+                state.dungeon.at(child).material = &materials.PolishedSlade;
+            }
         }
     }
 
