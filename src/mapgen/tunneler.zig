@@ -812,45 +812,6 @@ pub const TunnelerOptions = struct {
 // - Ensure there are looping connections between multiple tunnelers
 // - Add doorways randomly to rooms, not the way it currently is
 pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
-    const gif = @import("build_options").tunneler_gif;
-    const giflib = if (gif) @cImport(@cInclude("gif_lib.h")) else null;
-    var frames: std.ArrayList([HEIGHT][WIDTH]u8) = if (gif) std.ArrayList([HEIGHT][WIDTH]u8).init(allocator) else undefined;
-    defer if (gif) frames.deinit();
-    const S = struct {
-        pub fn captureFrame(z: usize, p_frames: *std.ArrayList([HEIGHT][WIDTH]u8)) void {
-            var new: [HEIGHT][WIDTH]u8 = undefined;
-            {
-                var y: usize = 0;
-                while (y < HEIGHT) : (y += 1) {
-                    var x: usize = 0;
-                    while (x < WIDTH) : (x += 1) {
-                        const c = Coord.new2(z, x, y);
-                        new[y][x] = if (state.dungeon.at(c).type == .Wall) 0 else 1;
-                    }
-                }
-            }
-
-            // Something is wrecked here. Need to investigate.
-            //
-            // for (state.rooms[z].items) |room| {
-            //     var y: usize = room.rect.start.y;
-            //     while (y < room.rect.end().x) : (y += 1) {
-            //         var x: usize = room.rect.start.x;
-            //         while (x < room.rect.end().x) : (x += 1) {
-            //             const c = Coord.new2(z, x, y);
-            //             const color: u8 = switch (room.type) {
-            //                 .Corridor => 1,
-            //                 .Junction => 2,
-            //                 .Sideroom, .Room => 3,
-            //             };
-            //             new[y][x] = if (state.dungeon.at(c).type == .Wall) 0 else color;
-            //         }
-            //     }
-            // }
-            p_frames.append(new) catch err.wat();
-        }
-    };
-
     var ctx = Ctx{
         .level = level,
         .tunnelers = Tunneler.List.init(allocator),
@@ -878,7 +839,7 @@ pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
 
     var tries: usize = 0;
     while (tries < ctx.opts.max_iters) : (tries += 1) {
-        if (gif) S.captureFrame(level, &frames);
+        mapgen.captureFrame(level);
 
         var is_any_active: bool = false;
         var is_cur_gen_active: bool = false;
@@ -965,7 +926,7 @@ pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
 
     if (ctx.opts.remove_childless)
         ctx.removeChildlessTunnelers(false);
-    if (gif) S.captureFrame(level, &frames);
+    mapgen.captureFrame(level);
 
     // Fill in corridors that stick out past their last branch
     if (ctx.opts.shrink_corridors) {
@@ -978,80 +939,16 @@ pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
     }
 
     ctx.killThemAll();
-    if (gif) S.captureFrame(level, &frames);
+    mapgen.captureFrame(level);
     ctx.excavateJunctions();
-    if (gif) S.captureFrame(level, &frames);
+    mapgen.captureFrame(level);
     ctx.tryAddingRoomies(level, 9999999);
-    if (gif) S.captureFrame(level, &frames);
+    mapgen.captureFrame(level);
     ctx.tryAddingExtraRooms(level);
-    if (gif) S.captureFrame(level, &frames);
+    mapgen.captureFrame(level);
 
     // Removed because for the time being we want the placeRandomRooms
     // algorithm to place the player
     //
     // ctx.addPlayer();
-
-    if (gif) {
-        const fname = std.fmt.allocPrintZ(allocator, "tunneler-{}.gif", .{level}) catch err.oom();
-        defer allocator.free(fname);
-
-        var g_error: c_int = 0;
-        var g_file = giflib.EGifOpenFileName(fname.ptr, false, &g_error);
-        if (g_file == null) @panic("error (EGifOpenFileName)");
-
-        if (giflib.EGifPutScreenDesc(g_file, WIDTH, HEIGHT, 8, 0, null) == giflib.GIF_ERROR)
-            @panic("error (EGifPutScreenDesc)");
-
-        const nsle = "NETSCAPE2.0";
-        const subblock = [_]u8{ 1, 0, 0 };
-        _ = giflib.EGifPutExtensionLeader(g_file, giflib.APPLICATION_EXT_FUNC_CODE);
-        _ = giflib.EGifPutExtensionBlock(g_file, nsle.len, nsle);
-        _ = giflib.EGifPutExtensionBlock(g_file, subblock.len, &subblock);
-        _ = giflib.EGifPutExtensionTrailer(g_file);
-
-        const pal = [16]giflib.GifColorType{
-            .{ .Red = 0x2f, .Green = 0x1f, .Blue = 0x04 }, // background
-            .{ .Red = 0xaf, .Green = 0x9f, .Blue = 0x84 }, // corridors
-            .{ .Red = 0x8f, .Green = 0x7f, .Blue = 0x64 }, // junctions
-            .{ .Red = 0x6f, .Green = 0x5f, .Blue = 0x44 }, // rooms
-            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
-            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
-            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
-            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
-            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
-            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
-            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
-            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
-            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
-            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
-            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
-            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
-        };
-
-        for (frames.items) |*frame, i| {
-            const sec1: u8 = if (i == frames.items.len - 1) 0x04 else 0x00;
-            const sec2: u8 = if (i == frames.items.len - 1) 0x00 else 0x01;
-            const gce_str = [_]u8{
-                0x04, // length of gce_str
-                0x00, // misc packed fields (unused)
-                sec1, // delay time in fractions of seconds (u16, continued below)
-                sec2, // ...
-            };
-
-            if (giflib.EGifPutExtension(g_file, giflib.GRAPHICS_EXT_FUNC_CODE, gce_str.len, &gce_str) == giflib.GIF_ERROR)
-                @panic("error (EGifPutExtension)");
-
-            // Put frame headers.
-            if (giflib.EGifPutImageDesc(g_file, 0, 0, WIDTH, HEIGHT, false, giflib.GifMakeMapObject(pal.len, &pal)) == giflib.GIF_ERROR)
-                @panic("error (EGifPutImageDesc)");
-
-            // Put frame, row-wise.
-            for (frame) |*row| {
-                if (giflib.EGifPutLine(g_file, row, WIDTH) == giflib.GIF_ERROR)
-                    @panic("error (EGifPutLine)");
-            }
-        }
-
-        _ = giflib.EGifCloseFile(g_file, &g_error);
-    }
 }

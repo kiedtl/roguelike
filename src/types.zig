@@ -4659,7 +4659,9 @@ pub const Tile = struct {
 
             cell = item.tile();
         } else if (state.dungeon.at(coord).surface) |surfaceitem| {
-            assert(self.type != .Wall);
+            err.ensure(self.type != .Wall, "Surface {s} located in wall @({},{})", .{ surfaceitem.id(), coord.x, coord.y }) catch {
+                return .{ .fg = 0xffffff, .bg = 0xff0000, .sfg = 0, .sbg = 0, .ch = 'X', .sch = null };
+            };
 
             cell.fg = 0xffffff;
 

@@ -152,6 +152,125 @@ pub var s_fabs: PrefabArrayList = undefined;
 pub var n_fabs: PrefabArrayList = undefined;
 pub var fab_records: std.StringHashMap(Prefab.PlacementRecord) = undefined;
 
+const gif = @import("build_options").tunneler_gif;
+const giflib = if (gif) @cImport(@cInclude("gif_lib.h")) else null;
+var frames: ?std.ArrayList([HEIGHT][WIDTH]u8) = null;
+
+pub fn initGif() void {
+    deinitGif();
+    frames = if (gif) std.ArrayList([HEIGHT][WIDTH]u8).init(state.GPA.allocator()) else null;
+}
+
+pub fn deinitGif() void {
+    if (gif) if (frames) |f| {
+        f.deinit();
+        frames = null;
+    };
+}
+
+pub fn captureFrame(z: usize) void {
+    if (!gif)
+        return;
+
+    var new: [HEIGHT][WIDTH]u8 = undefined;
+    {
+        var y: usize = 0;
+        while (y < HEIGHT) : (y += 1) {
+            var x: usize = 0;
+            while (x < WIDTH) : (x += 1) {
+                const c = Coord.new2(z, x, y);
+                new[y][x] = if (state.dungeon.at(c).type == .Wall) 0 else 1;
+            }
+        }
+    }
+
+    // Something is wrecked here. Need to investigate.
+
+    // for (state.rooms[z].items) |room| {
+    //     var y: usize = room.rect.start.y;
+    //     while (y < room.rect.end().y) : (y += 1) {
+    //         var x: usize = room.rect.start.x;
+    //         while (x < room.rect.end().x) : (x += 1) {
+    //             const c = Coord.new2(z, x, y);
+    //             const color: u8 = switch (room.type) {
+    //                 .Corridor => 2,
+    //                 .Junction => 3,
+    //                 .Sideroom, .Room => 3,
+    //             };
+    //             new[y][x] = if (state.dungeon.at(c).type == .Wall) 0 else color;
+    //         }
+    //     }
+    // }
+
+    frames.?.append(new) catch err.wat();
+}
+
+pub fn emitGif(level: usize) void {
+    if (gif) {
+        const fname = std.fmt.allocPrintZ(state.GPA.allocator(), "L_{}_{s}.gif", .{ level, state.levelinfo[level].id }) catch err.oom();
+        defer state.GPA.allocator().free(fname);
+
+        var g_error: c_int = 0;
+        var g_file = giflib.EGifOpenFileName(fname.ptr, false, &g_error);
+        if (g_file == null) @panic("error (EGifOpenFileName)");
+
+        if (giflib.EGifPutScreenDesc(g_file, WIDTH, HEIGHT, 8, 0, null) == giflib.GIF_ERROR)
+            @panic("error (EGifPutScreenDesc)");
+
+        const nsle = "NETSCAPE2.0";
+        const subblock = [_]u8{ 1, 0, 0 };
+        _ = giflib.EGifPutExtensionLeader(g_file, giflib.APPLICATION_EXT_FUNC_CODE);
+        _ = giflib.EGifPutExtensionBlock(g_file, nsle.len, nsle);
+        _ = giflib.EGifPutExtensionBlock(g_file, subblock.len, &subblock);
+        _ = giflib.EGifPutExtensionTrailer(g_file);
+
+        const pal = [16]giflib.GifColorType{
+            .{ .Red = 0x2f, .Green = 0x1f, .Blue = 0x04 }, // background
+            .{ .Red = 0xaf, .Green = 0x9f, .Blue = 0x84 }, // corridors
+            .{ .Red = 0x8f, .Green = 0x7f, .Blue = 0x64 }, // junctions
+            .{ .Red = 0x6f, .Green = 0x5f, .Blue = 0x44 }, // rooms
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+            .{ .Red = 0x9f, .Green = 0x8f, .Blue = 0x74 },
+        };
+
+        for (frames.?.items) |*frame, i| {
+            const sec1: u8 = if (i == frames.?.items.len - 1) 0x04 else 0x00;
+            const sec2: u8 = if (i == frames.?.items.len - 1) 0x00 else 0x01;
+            const gce_str = [_]u8{
+                0x04, // length of gce_str
+                0x00, // misc packed fields (unused)
+                sec1, // delay time in fractions of seconds (u16, continued below)
+                sec2, // ...
+            };
+
+            if (giflib.EGifPutExtension(g_file, giflib.GRAPHICS_EXT_FUNC_CODE, gce_str.len, &gce_str) == giflib.GIF_ERROR)
+                @panic("error (EGifPutExtension)");
+
+            // Put frame headers.
+            if (giflib.EGifPutImageDesc(g_file, 0, 0, WIDTH, HEIGHT, false, giflib.GifMakeMapObject(pal.len, &pal)) == giflib.GIF_ERROR)
+                @panic("error (EGifPutImageDesc)");
+
+            // Put frame, row-wise.
+            for (frame) |*row| {
+                if (giflib.EGifPutLine(g_file, row, WIDTH) == giflib.GIF_ERROR)
+                    @panic("error (EGifPutLine)");
+            }
+        }
+
+        _ = giflib.EGifCloseFile(g_file, &g_error);
+    }
+}
+
 pub const LIMIT = Rect{
     .start = Coord.new(1, 1),
     .width = state.WIDTH - 1,
@@ -1557,6 +1676,8 @@ fn _place_rooms(rooms: *Room.ArrayList, level: usize, allocator: mem.Allocator) 
     child.connections.append(.{ .room = rooms.items[parent_i].rect.start, .door = child_door }) catch err.wat();
 
     rooms.append(child) catch err.wat();
+
+    captureFrame(level);
 }
 
 pub fn placeTunnelsThenRandomRooms(level: usize, alloc: mem.Allocator) void {
@@ -1621,7 +1742,7 @@ pub fn placeRandomRooms(
         reqctr += 1;
     }
 
-    if (first == null) {
+    if (rooms.items.len == 0 and first == null) {
         const width = rng.range(usize, Configs[level].min_room_width, Configs[level].max_room_width);
         const height = rng.range(usize, Configs[level].min_room_height, Configs[level].max_room_height);
         const x = rng.range(usize, 1, state.WIDTH - width - 1);
@@ -1631,6 +1752,8 @@ pub fn placeRandomRooms(
         };
         excavateRect(&first.?.rect);
         rooms.append(first.?) catch err.wat();
+    } else if (rooms.items.len > 0 and first == null) {
+        first = rooms.items[0];
     }
 
     if (level == state.PLAYER_STARTING_LEVEL) {
