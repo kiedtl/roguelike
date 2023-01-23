@@ -1226,6 +1226,13 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
         y += 1;
     }
 
+    const rep = state.night_rep[@enumToInt(state.player.faction)];
+    if (rep != 0) {
+        const str = if (rep == 0) "$g$~ NEUTRAL $." else if (rep > 0) "$a$~ FRIENDLY $." else if (rep >= -5) "$p$~ DISLIKED $." else "$r$~ HATED $.";
+        y = _drawStrf(startx, y, endx, "$cNight rep:$. {} {s}", .{ rep, str }, .{});
+        y += 1;
+    }
+
     const bar_endx = endx - 9;
 
     // Use red if below 40% health

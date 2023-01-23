@@ -243,6 +243,9 @@ pub fn triggerStair(cur_stair: Coord, dest_stair: Coord) bool {
         upgrade.upgrade.implement();
     }
 
+    const rep = &state.night_rep[@enumToInt(state.player.faction)];
+    if (rep.* < 0) rep.* += 1;
+
     combat.disruptAllUndead(dest_stair.z);
 
     // "Garbage-collect" previous level.

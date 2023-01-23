@@ -77,7 +77,7 @@ fn isMobInVault(mob: *Mob) bool {
 
 fn isMobNotable(mob: *Mob) bool {
     return !isMobInVault(mob) and
-        mob.allegiance == .Necromancer and mob.life_type == .Living;
+        mob.faction == .Necromancer and mob.life_type == .Living;
 }
 
 pub fn tickCheckLevelHealth(level: usize) void {

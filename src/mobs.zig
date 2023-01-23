@@ -122,7 +122,7 @@ pub const CombatDummyPrisoner = MobTemplate{
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
         },
-        .allegiance = .OtherEvil,
+        .faction = .CaveGoblins,
         .max_HP = 12,
         .memory_duration = 8,
         .stats = .{ .Willpower = 4, .Evade = 15, .Vision = 6 },
@@ -547,7 +547,7 @@ pub const PlayerTemplate = MobTemplate{
             .is_combative = false,
             .is_curious = false,
         },
-        .allegiance = .OtherGood,
+        .faction = .Player,
         .base_night_vision = true,
         .deg360_vision = true,
         .no_show_fov = true,
@@ -576,7 +576,7 @@ pub const GoblinTemplate = MobTemplate{
             .fight_fn = ai.meleeFight,
             .flags = &[_]AI.Flag{.AvoidsEnemies},
         },
-        .allegiance = .OtherEvil,
+        .faction = .CaveGoblins,
         .max_HP = 6,
         .memory_duration = 20,
         .stats = .{ .Willpower = 4, .Evade = 15, .Vision = 8 },
@@ -2050,7 +2050,7 @@ pub const PlaceMobOptions = struct {
     phase: AIPhase = .Work,
     work_area: ?Coord = null,
     no_squads: bool = false,
-    allegiance: ?types.Allegiance = null,
+    faction: ?types.Faction = null,
 };
 
 pub fn placeMob(
@@ -2069,7 +2069,7 @@ pub fn placeMob(
     mob.init(alloc);
 
     mob.coord = coord;
-    mob.allegiance = opts.allegiance orelse mob.allegiance;
+    mob.faction = opts.faction orelse mob.faction;
     mob.ai.phase = opts.phase;
 
     if (template.weapon) |w| mob.equipItem(.Weapon, Item{ .Weapon = w });

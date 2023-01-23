@@ -469,13 +469,14 @@ fn readInput() !bool {
                 }
             },
             .F3 => blk: {
-                state.player.allegiance = switch (state.player.allegiance) {
-                    .OtherGood => .Necromancer,
-                    .Necromancer => .OtherEvil,
-                    .OtherEvil => .Night,
-                    .Night => .OtherGood,
+                state.player.faction = switch (state.player.faction) {
+                    .Player => .Necromancer,
+                    .Necromancer => .CaveGoblins,
+                    .CaveGoblins => .Night,
+                    .Night => .Player,
+                    .Revgenunkim => unreachable,
                 };
-                state.message(.Info, "[wizard] new faction: {}", .{state.player.allegiance});
+                state.message(.Info, "[wizard] new faction: {}", .{state.player.faction});
                 break :blk false;
             },
             .F4 => blk: {

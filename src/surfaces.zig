@@ -663,7 +663,7 @@ fn createVaultDoor(comptime id_suffix: []const u8, comptime name_prefix: []const
         .unpowered_sbg = colors.BG,
 
         .power_drain = 0,
-        .restricted_to = .OtherGood,
+        .restricted_to = .Player,
         .powered_walkable = true,
         .unpowered_walkable = false,
         .powered_opacity = 0,
@@ -776,7 +776,7 @@ pub const StalkerStation = Machine{
                         }
 
                         state.player.linked_fovs.append(stalker) catch {};
-                        stalker.allegiance = .OtherGood;
+                        stalker.faction = .Player;
 
                         // Hack to keep stalkers not-hostile to goblin prisoners
                         stalker.prisoner_status = types.Prisoner{ .of = .Necromancer };

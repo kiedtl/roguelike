@@ -1963,13 +1963,13 @@ pub const FireTrapKit = Consumable.createTrapKit("kit_trap_fire", "fire trap", s
 
 pub const EmberlingTrapKit = Consumable.createTrapKit("kit_trap_emberling", "emberling trap", struct {
     pub fn f(machine: *Machine, _: *Mob) void {
-        mobs.placeMobSurrounding(machine.coord, &mobs.EmberlingTemplate, .{ .no_squads = true, .allegiance = state.player.allegiance });
+        mobs.placeMobSurrounding(machine.coord, &mobs.EmberlingTemplate, .{ .no_squads = true, .faction = state.player.faction });
     }
 }.f);
 
 pub const SparklingTrapKit = Consumable.createTrapKit("kit_trap_sparkling", "sparkling trap", struct {
     pub fn f(machine: *Machine, _: *Mob) void {
-        mobs.placeMobSurrounding(machine.coord, &mobs.SparklingTemplate, .{ .no_squads = true, .allegiance = state.player.allegiance });
+        mobs.placeMobSurrounding(machine.coord, &mobs.SparklingTemplate, .{ .no_squads = true, .faction = state.player.faction });
     }
 }.f);
 

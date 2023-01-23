@@ -89,6 +89,15 @@ pub var state: GameState = .Game;
 pub var player: *Mob = undefined;
 pub var player_inited = false;
 
+// zig fmt: off
+pub var night_rep = [types.Faction.TOTAL]isize{
+    //
+    // NEC    @   CG   YSM   NC
+         0,   0,   0,  -10,  10,
+    //
+};
+// zig fmt: on
+
 pub var sentry_disabled = false;
 
 pub fn mapRect(level: usize) Rect {

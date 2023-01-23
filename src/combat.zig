@@ -294,7 +294,7 @@ pub fn disruptAllUndead(level: usize) void {
 
     var iter = state.mobs.iterator();
     while (iter.next()) |mob| {
-        if (mob.coord.z != level or mob.is_dead or mob.life_type != .Undead or mob.allegiance != .Necromancer)
+        if (mob.coord.z != level or mob.is_dead or mob.life_type != .Undead or mob.faction != .Necromancer)
             continue;
 
         mob.stats.Melee -|= @intCast(isize, state.destroyed_candles * UNDEAD_DISRUPT_MELEE_DECREASE);
@@ -324,7 +324,7 @@ pub fn disruptIndividualUndead(mob: *Mob) void {
 
     const adjacent_ally: ?*Mob = for (&DIRECTIONS) |d| {
         if (utils.getMobInDirection(mob, d)) |othermob| {
-            if (othermob.allegiance == mob.allegiance) {
+            if (othermob.faction == mob.faction) {
                 break mob;
             }
         } else |_| {}

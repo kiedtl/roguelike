@@ -159,7 +159,7 @@ pub const CAST_CALL_UNDEAD = Spell{
                     while (x < WIDTH) : (x += 1) {
                         const coord = Coord.new2(caster_coord.z, x, y);
                         if (state.dungeon.at(coord).mob) |candidate| {
-                            if (candidate.allegiance == caster.allegiance and
+                            if (candidate.faction == caster.faction and
                                 (candidate.life_type == .Undead or
                                 candidate.ai.flag(.CalledWithUndead)) and
                                 candidate.ai.phase != .Hunt)

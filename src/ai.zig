@@ -474,7 +474,7 @@ pub fn checkForAllies(mob: *Mob) void {
         }
 
         if (state.dungeon.at(fitem).mob) |othermob| {
-            if (othermob != mob and othermob.allegiance == mob.allegiance) {
+            if (othermob != mob and othermob.faction == mob.faction) {
                 mob.allies.append(othermob) catch err.wat();
             }
         }
@@ -1413,7 +1413,7 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
     if (mob.hasStatus(.Fear)) {
         mob.makeNoise(.Scream, .Loud);
     } else {
-        if (mob.allegiance == .Necromancer) { // Only shout if dungeon full of frens
+        if (mob.faction == .Necromancer) { // Only shout if dungeon full of frens
             mob.makeNoise(.Shout, .Loud);
         }
     }

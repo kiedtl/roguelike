@@ -1010,17 +1010,14 @@ pub const Message = struct {
     noise: bool = false,
 };
 
-// Note, this is outdated. Cave goblins are just as nice as plains humans,
-// and southern humans are supposed to be the protoganists (sort of) in this
-// universe.
-//
-// TODO: rewrite allegiances (and rename to 'Factions' maybe?)
-//
-pub const Allegiance = enum {
-    Necromancer,
-    OtherGood, // Humans in the plains
-    OtherEvil, // Cave goblins, southern humans
-    Night,
+pub const Faction = enum(usize) {
+    Necromancer = 0,
+    Player = 1,
+    CaveGoblins = 2,
+    Revgenunkim = 3,
+    Night = 4,
+
+    pub const TOTAL = std.meta.fields(@This()).len;
 };
 
 pub const Status = enum {
@@ -1705,7 +1702,7 @@ pub const AIWorkPhase = enum {
 };
 
 pub const Prisoner = struct {
-    of: Allegiance,
+    of: Faction,
     held_by: ?union(enum) { Mob: *const Mob, Prop: *const Prop } = null,
 
     pub fn heldAt(self: *const Prisoner) Coord {
@@ -1809,7 +1806,7 @@ pub const Mob = struct { // {{{
     species: *const Species,
     prefix: []const u8 = "",
     tile: u21,
-    allegiance: Allegiance = .Necromancer,
+    faction: Faction = .Necromancer,
 
     squad: ?*Squad = null,
     prisoner_status: ?Prisoner = null,
@@ -2005,7 +2002,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn tickDisruption(self: *Mob) void {
-        if (self.allegiance == .Necromancer and self.life_type == .Undead and
+        if (self.faction == .Necromancer and self.life_type == .Undead and
             self.ai.phase == .Hunt)
         {
             combat.disruptIndividualUndead(self);
@@ -2455,7 +2452,7 @@ pub const Mob = struct { // {{{
         self.squad.?.trimMembers();
         self.squad.?.members.append(underling) catch err.wat();
         underling.squad = self.squad.?;
-        underling.allegiance = self.allegiance;
+        underling.faction = self.faction;
     }
 
     // Check if a mob, when trying to move into a space that already has a mob,
@@ -2920,7 +2917,7 @@ pub const Mob = struct { // {{{
             },
             .NC_Duplicate => {
                 if (!recipient.should_be_dead() and
-                    recipient.allegiance != .Night and recipient.life_type != .Spectral and
+                    recipient.faction != .Night and recipient.life_type != .Spectral and
                     !recipient.isLit() and !attacker.isLit() and
                     spells.willSucceedAgainstMob(attacker, recipient))
                 {
@@ -3209,7 +3206,7 @@ pub const Mob = struct { // {{{
         new.coord = newcoord;
         new.prefix = "spectral ";
 
-        new.allegiance = .Night;
+        new.faction = .Night;
         new.life_type = .Spectral;
         new.blood = null;
         new.corpse = .None;
@@ -3281,7 +3278,7 @@ pub const Mob = struct { // {{{
         self.corpse = .None;
 
         // FIXME: don't assume this (the player might be raising a corpse too!)
-        self.allegiance = .Necromancer;
+        self.faction = .Necromancer;
 
         self.stats.Evade -= 10;
         self.stats.Melee -= 10;
@@ -3650,15 +3647,15 @@ pub const Mob = struct { // {{{
     //
     pub fn isHostileTo(self: *const Mob, othermob: *const Mob) bool {
         if (self.hasStatus(.Insane) or othermob.hasStatus(.Insane)) return true;
-        if (self.allegiance == othermob.allegiance) return false;
+        if (self.faction == othermob.faction) return false;
 
         var hostile = true;
-        assert(self.allegiance != othermob.allegiance);
+        assert(self.faction != othermob.faction);
 
         // If the other mob is a prisoner of my faction (and is actually in
         // prison) or we're both prisoners of the same faction, don't be hostile.
         if (othermob.prisoner_status) |ps| {
-            if (ps.of == self.allegiance and
+            if (ps.of == self.faction and
                 (state.dungeon.at(othermob.coord).prison or ps.held_by != null))
             {
                 hostile = false;
@@ -3669,6 +3666,12 @@ pub const Mob = struct { // {{{
                     hostile = false;
                 }
             }
+        }
+
+        if (self.faction == .Night and
+            state.night_rep[@enumToInt(othermob.faction)] > -5)
+        {
+            hostile = false;
         }
 
         return hostile;
@@ -3984,7 +3987,7 @@ pub const Machine = struct {
 
     power_drain: usize = 100, // Power drained per turn
 
-    restricted_to: ?Allegiance = null,
+    restricted_to: ?Faction = null,
     powered_walkable: bool = true,
     unpowered_walkable: bool = true,
 
@@ -4109,7 +4112,7 @@ pub const Machine = struct {
             .on_power = struct {
                 fn f(machine: *Machine) void {
                     if (machine.last_interaction) |mob| {
-                        if (mob.allegiance == .Necromancer) return;
+                        if (mob.faction == .Necromancer) return;
 
                         for (machine.props) |maybe_prop| if (maybe_prop) |vent| {
                             state.dungeon.atGas(vent.coord)[g.id] = 1.0;
