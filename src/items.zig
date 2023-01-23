@@ -182,7 +182,7 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 30, .i = .{ .A = &ShadowBrigandineArmor } },
     .{ .w = 30, .i = .{ .A = &ShadowHauberkArmor } },
     .{ .w = 20, .i = .{ .A = &FumingVestArmor } },
-    .{ .w = 10, .i = .{ .C = &SpectralVestArmor } },
+    .{ .w = 10, .i = .{ .A = &SpectralVestArmor } },
     .{ .w = 10, .i = .{ .C = &SpectralCloak } },
     // Spectral orb
     .{ .w = 10, .i = .{ .c = &SpectralOrbConsumable } },
