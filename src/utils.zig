@@ -9,6 +9,7 @@ const enums = std.enums;
 
 const state = @import("state.zig");
 const err = @import("err.zig");
+const fov = @import("fov.zig");
 const rng = @import("rng.zig");
 const buffer = @import("buffer.zig");
 const types = @import("types.zig");
@@ -27,6 +28,25 @@ const DIAGONAL_DIRECTIONS = types.DIAGONAL_DIRECTIONS;
 const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
 
 const StackBuffer = buffer.StackBuffer;
+const Generator = @import("generators.zig").Generator;
+const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+
+pub fn iterCircle(ctx: *GeneratorCtx(Coord), arg: struct { center: Coord, r: usize }) void {
+    assert(arg.r < math.min(HEIGHT, WIDTH));
+    var buf: [HEIGHT][WIDTH]bool = [_][WIDTH]bool{[_]bool{false} ** WIDTH} ** HEIGHT;
+
+    fov.shadowCast(arg.center, arg.r, state.mapgeometry, &buf, struct {
+        pub fn f(_: Coord) bool {
+            return true;
+        }
+    }.f);
+
+    for (buf) |row, y| for (row) |cell, x| if (cell) {
+        ctx.yield(Coord.new2(arg.center.z, x, y));
+    };
+
+    ctx.finish();
+}
 
 // Count the characters needed to display some text
 pub fn countFmt(comptime fmt: []const u8, args: anytype) u64 {

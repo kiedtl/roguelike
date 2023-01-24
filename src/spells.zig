@@ -13,7 +13,6 @@ const mem = std.mem;
 const ai = @import("ai.zig");
 const colors = @import("colors.zig");
 const ui = @import("ui.zig");
-const dijkstra = @import("dijkstra.zig");
 const types = @import("types.zig");
 const combat = @import("combat.zig");
 const err = @import("err.zig");
@@ -39,6 +38,9 @@ const Mob = types.Mob;
 const Status = types.Status;
 const Machine = types.Machine;
 const Direction = types.Direction;
+
+const Generator = @import("generators.zig").Generator;
+const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
 const DIRECTIONS = types.DIRECTIONS;
 const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
@@ -506,6 +508,40 @@ pub const BOLT_CONJURE = Spell{
             fn f(caster_c: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
                 const caster = state.dungeon.at(caster_c).mob.?;
                 spawnSabreVolley(caster, coord);
+            }
+        }.f,
+    },
+};
+
+pub const BOLT_AOE_INSANITY = Spell{
+    .id = "sp_conj_ss_bolt",
+    .name = "mass insanity",
+    .cast_type = .Bolt,
+    .bolt_multitarget = false,
+    .check_has_effect = struct {
+        fn f(caster: *Mob, _: SpellOptions, target: Coord) bool {
+            const mob = state.dungeon.at(target).mob.?;
+            return mob.stat(.Willpower) < caster.stat(.Willpower) and
+                !mob.hasStatus(.Insane) and
+                mob.allies.items.len > 0;
+        }
+    }.f,
+    .animation = .{ .Particle = .{ .name = "zap-conjuration" } },
+    .noise = .Silent,
+    .effect_type = .{
+        .Custom = struct {
+            fn f(caster_c: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
+                // XXX: Need to update particle effect if changing this
+                const RADIUS = 4;
+
+                const caster = state.dungeon.at(caster_c).mob.?;
+
+                var gen = Generator(utils.iterCircle).init(.{ .center = coord, .r = RADIUS });
+                while (gen.next()) |aoecoord| if (utils.getHostileAt(caster, aoecoord)) |hostile| {
+                    if (willSucceedAgainstMob(caster, hostile)) {
+                        hostile.addStatus(.Insane, 0, .{ .Tmp = 10 });
+                    }
+                } else |_| {};
             }
         }.f,
     },

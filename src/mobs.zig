@@ -1967,14 +1967,8 @@ pub const SpectralSabreTemplate = MobTemplate{
 pub const SpectralTotemTemplate = MobTemplate{
     .mob = .{
         .id = "spec_totem",
-        .species = &Species{
-            .name = "spectral totem",
-            .default_attack = &Weapon{
-                .damage = 1,
-                .strs = &[_]DamageStr{items._dmgstr(1, "nick", "nicks", "")},
-            },
-        },
-        .tile = '9',
+        .species = &Species{ .name = "spectral totem" },
+        .tile = 'Д',
         .ai = AI{
             .profession_description = "watching",
             .work_fn = ai.dummyWork,
@@ -2004,6 +1998,42 @@ pub const SpectralTotemTemplate = MobTemplate{
         .innate_resists = .{ .rFume = 100, .Armor = 75, .rElec = RESIST_IMMUNE, .rFire = -50 },
         .stats = .{ .Willpower = 10, .Conjuration = 4, .Vision = 7 },
     },
+};
+
+pub const NightReaperTemplate = MobTemplate{
+    .mob = .{
+        .id = "night_reaper",
+        .species = &Species{ .name = "night reaper" },
+        .tile = 'И',
+        .ai = AI{
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.mageFight,
+            .is_curious = false,
+            .is_fearless = true,
+            .spellcaster_backup_action = .Melee,
+        },
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 8, .spell = &spells.BOLT_AOE_INSANITY },
+        },
+        .max_MP = 16,
+
+        .base_night_vision = true,
+
+        .faction = .Night,
+        .max_HP = 10,
+        .memory_duration = 15,
+
+        .life_type = .Spectral,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rFume = 100, .Armor = 75, .rElec = 25 }, // -25% rFire from shadow mail
+        .stats = .{ .Willpower = 10, .Melee = 80, .Spikes = 2, .Evade = 15, .Vision = 7 },
+    },
+    .weapon = &items.ShadowMaulWeapon,
+    .armor = &items.ShadowMailArmor,
 };
 
 pub const MOBS = [_]MobTemplate{
@@ -2071,6 +2101,7 @@ pub const MOBS = [_]MobTemplate{
     SpectralSwordTemplate,
     SpectralSabreTemplate,
     SpectralTotemTemplate,
+    NightReaperTemplate,
 };
 
 pub const PRISONERS = [_]MobTemplate{

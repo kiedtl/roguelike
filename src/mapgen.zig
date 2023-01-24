@@ -2255,7 +2255,7 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
         const vault_type: ?usize = if (room.is_vault) |v| @enumToInt(v) else null;
 
         const max_crowd = if (room.is_lair)
-            rng.range(usize, 0, 2)
+            rng.range(usize, 1, 2)
         else if (room.is_vault != null)
             rng.range(usize, VAULT_CROWD[vault_type.?].min, VAULT_CROWD[vault_type.?].max)
         else
@@ -2275,7 +2275,7 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
                 .{mob_spawn_info.id},
             );
 
-            var tries: usize = 300;
+            var tries: usize = if (room.is_lair) 800 else 250;
             while (tries > 0) : (tries -= 1) {
                 const post_coord = room.rect.randomCoord();
 

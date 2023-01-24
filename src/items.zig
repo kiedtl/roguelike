@@ -2198,7 +2198,7 @@ pub const ShadowMailArmor = Armor{
     .resists = .{ .Armor = 15 },
 
     .night = true,
-    .night_resists = .{ .rElec = -25, .Armor = 35 },
+    .night_resists = .{ .rFire = -25, .Armor = 35 },
 };
 
 pub const ShadowHauberkArmor = Armor{
