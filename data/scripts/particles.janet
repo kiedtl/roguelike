@@ -997,8 +997,8 @@
       ]
     })
     :lifetime (fn [self &] (* 2 (:distance ((self :particle) :coord)  ((self :particle) :target))))
-    :spawn-count (fn [self &] 180)
-    :get-spawn-params (SPAR-explosion :inverse true)
+    :spawn-count (fn [self &] 120)
+    :get-spawn-params (SPAR-explosion :inverse true :sparsity-factor 3)
     :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
   })]
   "beams-call-undead" @[
