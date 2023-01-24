@@ -2254,7 +2254,9 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
 
         const vault_type: ?usize = if (room.is_vault) |v| @enumToInt(v) else null;
 
-        const max_crowd = if (room.is_vault != null)
+        const max_crowd = if (room.is_lair)
+            rng.range(usize, 0, 2)
+        else if (room.is_vault != null)
             rng.range(usize, VAULT_CROWD[vault_type.?].min, VAULT_CROWD[vault_type.?].max)
         else
             rng.range(usize, 1, Configs[level].room_crowd_max);

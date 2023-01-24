@@ -1964,6 +1964,48 @@ pub const SpectralSabreTemplate = MobTemplate{
     },
 };
 
+pub const SpectralTotemTemplate = MobTemplate{
+    .mob = .{
+        .id = "spec_totem",
+        .species = &Species{
+            .name = "spectral totem",
+            .default_attack = &Weapon{
+                .damage = 1,
+                .strs = &[_]DamageStr{items._dmgstr(1, "nick", "nicks", "")},
+            },
+        },
+        .tile = '9',
+        .ai = AI{
+            .profession_description = "watching",
+            .work_fn = ai.dummyWork,
+            .fight_fn = ai.mageFight,
+            .is_curious = false,
+            .is_fearless = true,
+        },
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 6, .spell = &spells.BOLT_CONJURE },
+        },
+        .max_MP = 6,
+
+        .deaf = true,
+        .deg360_vision = true,
+        .base_night_vision = true,
+
+        .immobile = true,
+        .faction = .Night,
+        .max_HP = 15,
+        .memory_duration = 999,
+
+        .life_type = .Spectral,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rFume = 100, .Armor = 75, .rElec = RESIST_IMMUNE, .rFire = -50 },
+        .stats = .{ .Willpower = 10, .Conjuration = 4, .Vision = 7 },
+    },
+};
+
 pub const MOBS = [_]MobTemplate{
     CombatDummyNormal,
     CombatDummyPrisoner,
@@ -2025,6 +2067,10 @@ pub const MOBS = [_]MobTemplate{
     BurningBruteTemplate,
     FrozenFiendTemplate,
     SulfurFiendTemplate,
+    BallLightningTemplate,
+    SpectralSwordTemplate,
+    SpectralSabreTemplate,
+    SpectralTotemTemplate,
 };
 
 pub const PRISONERS = [_]MobTemplate{

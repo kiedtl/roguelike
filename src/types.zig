@@ -2449,6 +2449,11 @@ pub const Mob = struct { // {{{
     }
 
     pub fn addUnderling(self: *Mob, underling: *Mob) void {
+        if (self.squad == null) {
+            self.squad = Squad.allocNew();
+            self.squad.?.leader = self;
+        }
+
         self.squad.?.trimMembers();
         self.squad.?.members.append(underling) catch err.wat();
         underling.squad = self.squad.?;
