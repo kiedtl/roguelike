@@ -2015,7 +2015,7 @@ pub const NightReaperTemplate = MobTemplate{
         },
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 8, .spell = &spells.BOLT_AOE_INSANITY },
+            .{ .MP_cost = 8, .spell = &spells.BOLT_AOE_INSANITY, .duration = 10 },
         },
         .max_MP = 16,
 
@@ -2029,7 +2029,7 @@ pub const NightReaperTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rFume = 100, .Armor = 75, .rElec = 25 }, // -25% rFire from shadow mail
+        .innate_resists = .{ .rFume = 100, .rElec = 25 }, // -25% rFire from shadow mail
         .stats = .{ .Willpower = 10, .Melee = 80, .Spikes = 2, .Evade = 15, .Vision = 7 },
     },
     .weapon = &items.ShadowMaulWeapon,

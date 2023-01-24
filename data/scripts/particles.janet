@@ -456,28 +456,6 @@
                                  :number (self :lifetime)))
 
                # :get-spawn-params presets
-               :SPAR-explosion (fn [&named distance inverse sparsity-factor]
-                                 (default distance :distance-to-target)
-                                 (default inverse false)
-                                 (default sparsity-factor 2)
-                                 (fn [self ticks ctx coord target]
-                                   (let [angle  (* (/ (% (* sparsity-factor (self :total-spawned)) 360) 180) math/pi)
-                                         dist   (case distance
-                                                  :distance-to-target (:distance coord target)
-                                                  distance)
-                                         ntarg  (new-coord (+ (coord :x) (* dist (math/cos angle)))
-                                                           (+ (coord :y) (* dist (math/sin angle))))]
-                                     (if inverse [ntarg coord] [coord ntarg]))))
-               :SPAR-circle (fn [&named inverse radius]
-                              (default inverse false)
-                              (default radius :distance)
-                              (fn [self ticks ctx coord target]
-                                (let [lrad (case radius :distance (+ 1 (:distance coord target)) radius)
-                                      angle (rad (* 1 (/ (self :total-spawned) lrad)))
-                                      n (+ (% (self :total-spawned) lrad) 0)]
-                                  (if inverse
-                                    [(:move-angle target n angle) target]
-                                    [(:move-angle coord n angle) target]))))
                :SPAR-sweeping-beams (fn [&]
                                       (fn [self ticks ctx coord target]
                                         (let [x (+ (((ctx :bounds) :start) :x) (% (self :total-spawned) ((ctx :bounds) :width)))]
@@ -502,6 +480,29 @@
                })
 (defn new-emitter [table] (table/setproto table Emitter))
 (defn new-emitter-from [table proto] (table/setproto table (table/proto-flatten proto)))
+(defmacro SPAR-circle [&named inverse radius]
+  (default inverse false)
+  (default radius :distance)
+  ~(fn [self ticks ctx coord target]
+    (let [lrad (case ,radius :distance (+ 1 (:distance coord target)) ,radius)
+          angle (rad (* 2 (/ (self :total-spawned) lrad)))
+          n (+ (% (self :total-spawned) lrad) 0)]
+      (if ,inverse
+        [(:move-angle target n angle) target]
+        [(:move-angle coord n angle) target]))))
+(defmacro SPAR-explosion [&named distance inverse which-origin sparsity-factor]
+  (default distance :distance-to-target)
+  (default inverse false)
+  (default sparsity-factor 2)
+  (default which-origin :coord)
+  ~(fn [self ticks ctx p-coord target]
+    (let [origin (case ,which-origin :coord p-coord :target target)
+          angle  (* (/ (% (* ,sparsity-factor (self :total-spawned)) 360) 180) math/pi)
+          dist   (case ,distance
+                   :distance-to-target (:distance origin target)
+                   ,distance)
+          ntarg  (:move-angle origin dist angle)]
+      (if ,inverse [ntarg origin] [origin ntarg]))))
 
 (def Context @{
                :target (new-coord)
@@ -622,7 +623,7 @@
     })
     :lifetime 2
     :spawn-count (fn [&] 180)
-    :get-spawn-params (:SPAR-explosion Emitter)
+    :get-spawn-params (SPAR-explosion)
     :get-spawn-speed (case speed-variation-preset
                        :1 (Emitter :SSPD-min-sin-ticks)
                        :2 (Emitter :SSPD-min-sin-ticks2))
@@ -854,6 +855,22 @@
     (new-emitter-from @{ :birth-delay 8 }
       (template-lingering-zap ASCII_CHARS 0x0a0a90 0x661188 9 :bg-mix 0.8 :require-nonwall false :require-los 0))
   ]
+  "zap-mass-insanity" @[
+    (template-lingering-zap ASCII_CHARS 0 0xaa55cc 4 :bg-mix 0.0 :require-nonwall false :require-los 0)
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch "Z" :fg 0xaa55cc :bg 0 :bg-mix 0 })
+        :speed 1
+        :triggers @[
+          [[:COND-true] [:TRIG-scramble-glyph ASCII_CHARS]]
+          [[:COND-true] [:TRIG-lerp-color :fg 0x0a0a90 "rgb" @(:completed-journey)]]
+        ]
+      })
+      :lifetime (fn [self &] 4)
+      :spawn-count (fn [self &] (* 4 90))
+      :get-spawn-params (SPAR-explosion :which-origin :target :distance 4 :sparsity-factor 4)
+    })
+  ]
   "zap-crystal-chargeover" @[
     (new-emitter @{
       :particle (new-particle @{
@@ -912,7 +929,7 @@
       })
       :lifetime 1
       :spawn-count (Emitter :SCNT-dist-to-target-360)
-      :get-spawn-params ((Emitter :SPAR-circle) :inverse true :radius 2)
+      :get-spawn-params (SPAR-circle :inverse true :radius 2)
     })
   ]
   "spawn-sparklings" @[
@@ -981,7 +998,7 @@
     })
     :lifetime (fn [self &] (* 2 (:distance ((self :particle) :coord)  ((self :particle) :target))))
     :spawn-count (fn [self &] 180)
-    :get-spawn-params (:SPAR-explosion Emitter :inverse true)
+    :get-spawn-params (SPAR-explosion :inverse true)
     :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
   })]
   "beams-call-undead" @[
@@ -1005,7 +1022,7 @@
       })
       :lifetime 1
       :spawn-count (Emitter :SCNT-dist-to-target-360)
-      :get-spawn-params ((Emitter :SPAR-circle) :inverse true :radius 2)
+      :get-spawn-params (SPAR-circle :inverse true :radius 2)
     })
     (new-emitter @{
       :particle (new-particle @{
@@ -1018,7 +1035,7 @@
       })
       :lifetime 1
       :spawn-count (Emitter :SCNT-dist-to-target-360)
-      :get-spawn-params ((Emitter :SPAR-circle) :inverse true :radius 2)
+      :get-spawn-params (SPAR-circle :inverse true :radius 2)
       :birth-delay 45
     })
   ]
@@ -1037,7 +1054,7 @@
       })
       :lifetime 1
       :spawn-count (Emitter :SCNT-dist-to-target-360)
-      :get-spawn-params (:SPAR-circle Emitter)
+      :get-spawn-params (SPAR-circle)
     })
     (new-emitter @{
       :particle (new-particle @{

@@ -41,6 +41,7 @@ const Direction = types.Direction;
 
 const Generator = @import("generators.zig").Generator;
 const GeneratorCtx = @import("generators.zig").GeneratorCtx;
+const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const DIRECTIONS = types.DIRECTIONS;
 const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
@@ -518,33 +519,17 @@ pub const BOLT_AOE_INSANITY = Spell{
     .name = "mass insanity",
     .cast_type = .Bolt,
     .bolt_multitarget = false,
+    .checks_will = true,
+    .bolt_aoe = 4, // XXX: Need to update particle effect if changing this
     .check_has_effect = struct {
-        fn f(caster: *Mob, _: SpellOptions, target: Coord) bool {
+        fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
             const mob = state.dungeon.at(target).mob.?;
-            return mob.stat(.Willpower) < caster.stat(.Willpower) and
-                !mob.hasStatus(.Insane) and
-                mob.allies.items.len > 0;
+            return mob.allies.items.len > 0;
         }
     }.f,
-    .animation = .{ .Particle = .{ .name = "zap-conjuration" } },
+    .animation = .{ .Particle = .{ .name = "zap-mass-insanity" } },
     .noise = .Silent,
-    .effect_type = .{
-        .Custom = struct {
-            fn f(caster_c: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
-                // XXX: Need to update particle effect if changing this
-                const RADIUS = 4;
-
-                const caster = state.dungeon.at(caster_c).mob.?;
-
-                var gen = Generator(utils.iterCircle).init(.{ .center = coord, .r = RADIUS });
-                while (gen.next()) |aoecoord| if (utils.getHostileAt(caster, aoecoord)) |hostile| {
-                    if (willSucceedAgainstMob(caster, hostile)) {
-                        hostile.addStatus(.Insane, 0, .{ .Tmp = 10 });
-                    }
-                } else |_| {};
-            }
-        }.f,
-    },
+    .effect_type = .{ .Status = .Insane },
 };
 
 pub const CAST_CONJ_BALL_LIGHTNING = Spell{
@@ -1135,6 +1120,7 @@ pub const Spell = struct {
     // Only used if cast_type == .Bolt
     bolt_dodgeable: bool = false,
     bolt_multitarget: bool = true,
+    bolt_aoe: usize = 1,
 
     animation: ?Animation = null,
 
@@ -1226,8 +1212,7 @@ pub const Spell = struct {
             .Bolt => {
                 // Fling a bolt and let it hit whatever
                 var last_processed_coord: Coord = undefined;
-                var affected_tiles = types.CoordArrayList.init(state.GPA.allocator());
-                defer affected_tiles.deinit();
+                var affected_tiles = StackBuffer(Coord, 128).init(null);
                 const line = caster_coord.drawLine(target, state.mapgeometry, 3);
                 assert(line.len > 0);
                 for (line.constSlice()) |c| {
@@ -1235,14 +1220,6 @@ pub const Spell = struct {
                         const hit_mob = state.dungeon.at(c).mob;
 
                         if (hit_mob) |victim| {
-                            if (self.checks_will and !willSucceedAgainstMob(caster.?, victim)) {
-                                const chance = 100 - appxChanceOfWillOverpowered(caster.?, victim);
-                                if (state.player.cansee(victim.coord) or state.player.cansee(caster_coord)) {
-                                    state.message(.SpellCast, "{c} resisted $g($c{}%$g chance)$.", .{ victim, chance });
-                                }
-                                continue;
-                            }
-
                             if (self.bolt_dodgeable) {
                                 if (rng.percent(combat.chanceOfAttackEvaded(victim, caster))) {
                                     state.messageAboutMob(victim, caster_coord, .CombatUnimportant, "dodge the {s}.", .{self.name}, "dodges the {s}.", .{self.name});
@@ -1254,9 +1231,19 @@ pub const Spell = struct {
                         affected_tiles.append(c) catch err.wat();
 
                         // Stop if we're not multi-targeting or if the blocking object
-                        // isn't a mob
-                        if (!self.bolt_multitarget or hit_mob == null)
+                        // isn't a mob.
+                        if (!self.bolt_multitarget or hit_mob == null) {
+                            // Now we apply AOE effects if applicable
+                            if (self.bolt_aoe > 1) {
+                                var gen = Generator(utils.iterCircle).init(.{ .center = c, .r = self.bolt_aoe });
+                                while (gen.next()) |aoecoord| {
+                                    if (affected_tiles.linearSearch(aoecoord, Coord.eqNotInline) == null)
+                                        affected_tiles.append(aoecoord) catch err.wat();
+                                }
+                            }
+
                             break;
+                        }
                     }
                     last_processed_coord = c;
                 }
@@ -1298,7 +1285,20 @@ pub const Spell = struct {
                 if (self.bolt_last_coord_effect) |func|
                     (func)(caster_coord, opts, last_processed_coord);
 
-                for (affected_tiles.items) |coord| {
+                for (affected_tiles.constSlice()) |coord| {
+                    //
+                    // If there's a mob on the tile, see if it resisted the effect.
+                    //
+                    if (state.dungeon.at(coord).mob) |victim| {
+                        if (self.checks_will and !willSucceedAgainstMob(caster.?, victim)) {
+                            const chance = 100 - appxChanceOfWillOverpowered(caster.?, victim);
+                            if (state.player.cansee(victim.coord) or state.player.cansee(caster_coord)) {
+                                state.message(.SpellCast, "{c} resisted $g($c{}%$g chance)$.", .{ victim, chance });
+                            }
+                            continue;
+                        }
+                    }
+
                     switch (self.effect_type) {
                         .Status => |s| if (state.dungeon.at(coord).mob) |victim| {
                             victim.addStatus(s, opts.power, .{ .Tmp = opts.duration });

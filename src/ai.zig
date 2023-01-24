@@ -1294,6 +1294,10 @@ pub fn rangedFight(mob: *Mob, alloc: mem.Allocator) void {
 fn _isValidTargetForSpell(caster: *Mob, spell: SpellOptions, target: *Mob) bool {
     assert(!target.is_dead);
 
+    if (spell.spell.checks_will and
+        target.stat(.Willpower) > caster.stat(.Willpower))
+        return false;
+
     if (spell.spell.needs_cardinal_direction_target and
         (target.coord.x != caster.coord.x and target.coord.y != caster.coord.y))
         return false;
@@ -1309,14 +1313,13 @@ fn _isValidTargetForSpell(caster: *Mob, spell: SpellOptions, target: *Mob) bool 
         }
     }
 
-    if (spell.spell.cast_type == .Bolt)
-        if (!utils.hasClearLOF(caster.coord, target.coord))
-            return false;
+    if (spell.spell.cast_type == .Bolt and
+        !utils.hasClearLOF(caster.coord, target.coord))
+        return false;
 
-    if (meta.activeTag(spell.spell.effect_type) == .Status) {
-        if (target.isUnderStatus(spell.spell.effect_type.Status)) |_|
-            return false;
-    }
+    if (spell.spell.effect_type == .Status and
+        target.hasStatus(spell.spell.effect_type.Status))
+        return false;
 
     if (spell.spell.check_has_effect) |func| {
         if (!(func)(caster, spell, target.coord))
