@@ -2004,7 +2004,7 @@ pub const NightReaperTemplate = MobTemplate{
     .mob = .{
         .id = "night_reaper",
         .species = &Species{ .name = "night reaper" },
-        .tile = 'И',
+        .tile = 'Я',
         .ai = AI{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
