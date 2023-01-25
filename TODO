@@ -1090,17 +1090,20 @@ x Animations (w/ particle engine)
   - -1/Crypt/3 prefab
   - Staircase prefab on -1/Prison
 - Night creatures
+  x Font: add Cyrillic characters
   x Night creature enclaves
-  - Reputation mechanics
-  - Doors to enclaves
+  x Reputation mechanics
+  x Doors to enclaves
   - Individual night creatures
     - Winged terror & Cherbs
-    - Spectral totem
+    x Spectral totem
     - Slinking terror
     - Creeping death
-    - Night reaper
-    - Grue
-  - Demolisher specialists
+    x Night reaper
+    x Grue
+  - Global NC AI features
+    - Hunting down treacherous player
+    - Periodically visiting another lair
   - Exterminator specialists
   - Rings
     - ring of infestation
@@ -1129,6 +1132,7 @@ x Animations (w/ particle engine)
     - Map design, basic aligner machine/prop/consumable
     - Props on map for effect
     - Animation (need particle engine[DONE])
+    - Demolisher specialists
 - Additional spectral orb augments
   - (100) Augment [s]: Will-checked survival when against opposing blades
 - UI
