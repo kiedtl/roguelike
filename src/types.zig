@@ -2452,6 +2452,18 @@ pub const Mob = struct { // {{{
         if (self.squad == null) {
             self.squad = Squad.allocNew();
             self.squad.?.leader = self;
+            //
+            // Copy over existing enemies.
+            //
+            // (Not doing this caused a bug where spectral totems conjure spectral
+            // sabres, lose their enemy list (since a squad was added and enemylist now
+            // points to the squad enemylist instead of the totem's enemylist),
+            // and then fail an assertion right after <mob_fight_fn>() stating that
+            // there should be at least one enemy in enemylist.
+            //
+            // Not sure why I wrote three paragraphs for a one-line fix.
+            //
+            self.squad.?.enemies.appendSlice(self.enemies.items[0..]) catch err.wat();
         }
 
         self.squad.?.trimMembers();
