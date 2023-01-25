@@ -1231,7 +1231,7 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
     if (rep != 0 or is_on_slade) {
         const str = if (rep == 0) "$g$~ NEUTRAL $." else if (rep > 0) "$a$~ FRIENDLY $." else if (rep >= -5) "$p$~ DISLIKED $." else "$r$~ HATED $.";
         if (is_on_slade) {
-            y = _drawStrf(startx, y, endx, "$cNight rep:$. {} $r$~TRESPASSING$.", .{rep}, .{});
+            y = _drawStrf(startx, y, endx, "$cNight rep:$. {} $r$~ TRESPASSING $.", .{rep}, .{});
         } else {
             y = _drawStrf(startx, y, endx, "$cNight rep:$. {} {s}", .{ rep, str }, .{});
         }
