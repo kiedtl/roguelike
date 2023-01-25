@@ -106,6 +106,18 @@ pub const DefaultTerrain = Terrain{
     .weight = 1,
 };
 
+pub const SladeTerrain = Terrain{
+    .id = "t_slade",
+    .name = "slade",
+    .color = 0xb00bb0, // polished slade
+    .tile = '·',
+    .stats = .{},
+
+    .for_levels = &[_][]const u8{"LAI"},
+    .placement = .EntireRoom,
+    .weight = 0,
+};
+
 pub const CarpetTerrain = Terrain{
     .id = "t_carpet",
     .name = "carpet",
@@ -238,6 +250,7 @@ pub const PillarTerrain = Terrain{
 
 pub const TERRAIN = [_]*const Terrain{
     &DefaultTerrain,
+    &SladeTerrain,
     &CarpetTerrain,
     &GravelTerrain,
     &MetalTerrain,

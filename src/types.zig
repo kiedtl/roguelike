@@ -3674,7 +3674,9 @@ pub const Mob = struct { // {{{
         }
 
         if (self.faction == .Night and
-            state.night_rep[@enumToInt(othermob.faction)] > -5)
+            state.night_rep[@enumToInt(othermob.faction)] > -5 and
+            (state.night_rep[@enumToInt(othermob.faction)] > 0 or
+            state.dungeon.terrainAt(othermob.coord) != &surfaces.SladeTerrain))
         {
             hostile = false;
         }

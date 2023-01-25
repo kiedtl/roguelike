@@ -2703,19 +2703,22 @@ pub fn placeRoomTerrain(level: usize) void {
     }
 
     for (state.rooms[level].items) |*room| {
-        if (rng.percent(@as(usize, 60)) or
-            room.rect.width <= 4 or room.rect.height <= 4)
+        if (!room.is_lair and (rng.percent(@as(usize, 60)) or
+            room.rect.width <= 4 or room.rect.height <= 4))
         {
             continue;
         }
 
         const rect = room.rect;
 
-        const chosen_terrain = rng.choose(
-            *const surfaces.Terrain,
-            terrains.constSlice(),
-            weights.constSlice(),
-        ) catch err.wat();
+        const chosen_terrain = if (room.is_lair)
+            &surfaces.SladeTerrain
+        else
+            rng.choose(
+                *const surfaces.Terrain,
+                terrains.constSlice(),
+                weights.constSlice(),
+            ) catch err.wat();
 
         switch (chosen_terrain.placement) {
             .EntireRoom, .RoomPortion => {
