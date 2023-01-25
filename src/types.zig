@@ -3223,7 +3223,13 @@ pub const Mob = struct { // {{{
         new.coord = newcoord;
         new.prefix = "spectral ";
 
+        // Can't have "spectral [this is a bug]" enemies being created when a
+        // night reaper attacks the player.
+        if (self == state.player)
+            new.ai.profession_name = "clone";
+
         new.faction = .Night;
+        new.prisoner_status = null;
         new.life_type = .Spectral;
         new.blood = null;
         new.corpse = .None;
@@ -3231,6 +3237,7 @@ pub const Mob = struct { // {{{
         new.ai.work_fn = ai.dummyWork;
         new.ai.is_curious = false;
         new.ai.flee_effect = null;
+        new.ai.is_combative = true;
 
         new.innate_resists.rFire = math.clamp(self.innate_resists.rFire - 25, -100, 100);
         new.innate_resists.rElec = math.clamp(self.innate_resists.rElec + 25, -100, 100);
