@@ -141,7 +141,11 @@ pub const Darkness = Gas{
     .color = 0x1f00ff,
     .dissipation_rate = 0.01,
     .opacity = 1.0,
-    .trigger = triggerNone,
+    .trigger = struct {
+        pub fn f(mob: *Mob, _: f64) void {
+            mob.addStatus(.Insane, 0, .{ .Tmp = 3 });
+        }
+    }.f,
     .id = 10,
 };
 

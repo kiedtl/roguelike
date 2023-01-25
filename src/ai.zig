@@ -6,6 +6,7 @@ const meta = std.meta;
 
 const alert = @import("alert.zig");
 const colors = @import("colors.zig");
+const combat = @import("combat.zig");
 const ui = @import("ui.zig");
 const fov = @import("fov.zig");
 const state = @import("state.zig");
@@ -1168,16 +1169,35 @@ pub fn combatDummyFight(mob: *Mob, _: mem.Allocator) void {
     tryRest(mob);
 }
 
-// Check if we can evoke anything.
-// - Move towards hostile, bapping it if we can.
 pub fn meleeFight(mob: *Mob, _: mem.Allocator) void {
-    assert(state.dungeon.at(mob.coord).mob != null);
-
     const target = currentEnemy(mob).mob;
 
     if (mob.canMelee(target)) {
         _ = mob.fight(target, .{});
     } else if (!mob.immobile) {
+        mob.tryMoveTo(target.coord);
+    } else {
+        tryRest(mob);
+    }
+}
+
+pub fn grueFight(mob: *Mob, _: mem.Allocator) void {
+    const target = currentEnemy(mob).mob;
+
+    if (mob.distance(target) == 1) {
+        if (mob.HP < (mob.max_HP / 4) or rng.onein(50)) {
+            const D = struct { d: Direction, dist: usize };
+            var directions = StackBuffer(D, 8).init(null);
+            for (&DIRECTIONS) |d| {
+                const farthest = utils.getFarthestWalkableCoord(d, target.coord, .{ .only_if_breaks_lof = true });
+                const distance = farthest.distance(mob.coord);
+                if (distance > 2 and distance < 8)
+                    directions.append(.{ .d = d, .dist = distance }) catch err.wat();
+            }
+            const chosen = rng.chooseUnweighted(D, directions.constSlice());
+            combat.throwMob(mob, target, chosen.d, chosen.dist);
+        }
+    } else if (mob.distance(target) == 2) {
         mob.tryMoveTo(target.coord);
     } else {
         tryRest(mob);

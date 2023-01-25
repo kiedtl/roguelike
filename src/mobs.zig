@@ -2030,10 +2030,40 @@ pub const NightReaperTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rFume = 100, .rElec = 25 }, // -25% rFire from shadow mail
-        .stats = .{ .Willpower = 10, .Melee = 80, .Spikes = 2, .Evade = 15, .Vision = 7 },
+        .stats = .{ .Willpower = 10, .Melee = 80, .Evade = 15, .Vision = 8 },
     },
     .weapon = &items.ShadowMaulWeapon,
     .armor = &items.ShadowMailArmor,
+};
+
+pub const GrueTemplate = MobTemplate{
+    .mob = .{
+        .id = "grue",
+        .species = &Species{ .name = "grue" },
+        .tile = 'Ю',
+        .ai = AI{
+            .profession_description = "TODO: remove profession descriptions",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.grueFight,
+            .is_curious = false,
+            .is_fearless = true,
+        },
+
+        .base_night_vision = true,
+        .deg360_vision = true,
+
+        .faction = .Night,
+        .max_HP = 20,
+        .memory_duration = 99999,
+
+        .life_type = .Spectral,
+        .blood = null,
+        .blood_spray = gas.Darkness.id,
+        .corpse = .None,
+
+        .innate_resists = .{ .rFume = 100, .rFire = -25, .rElec = 25 },
+        .stats = .{ .Willpower = 10, .Spikes = 2, .Vision = 7 },
+    },
 };
 
 pub const MOBS = [_]MobTemplate{
@@ -2102,6 +2132,7 @@ pub const MOBS = [_]MobTemplate{
     SpectralSabreTemplate,
     SpectralTotemTemplate,
     NightReaperTemplate,
+    GrueTemplate,
 };
 
 pub const PRISONERS = [_]MobTemplate{
