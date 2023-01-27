@@ -2066,6 +2066,50 @@ pub const GrueTemplate = MobTemplate{
     },
 };
 
+const SLINKING_TERROR_CLAW_WEAPON = Weapon{
+    .damage = 1,
+    .ego = .NC_Insane,
+    .strs = &items.CLAW_STRS,
+};
+
+pub const SlinkingTerrorTemplate = MobTemplate{
+    .mob = .{
+        .id = "slinking_terror",
+        .species = &Species{
+            .name = "slinking terror",
+            .default_attack = &SLINKING_TERROR_CLAW_WEAPON,
+            .aux_attacks = &[_]*const Weapon{
+                &SLINKING_TERROR_CLAW_WEAPON,
+                &SLINKING_TERROR_CLAW_WEAPON,
+                &SLINKING_TERROR_CLAW_WEAPON,
+                &SLINKING_TERROR_CLAW_WEAPON,
+            },
+        },
+        .tile = 'Ж',
+        .ai = AI{
+            .profession_description = "TODO: remove profession descriptions",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.meleeFight,
+            .is_curious = false,
+            .is_fearless = true,
+        },
+
+        .base_night_vision = true,
+        .deg360_vision = true,
+
+        .faction = .Night,
+        .max_HP = 8,
+        .memory_duration = 99999,
+
+        .life_type = .Spectral,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rFume = 100, .rFire = -25, .rElec = 25 },
+        .stats = .{ .Willpower = 10, .Melee = 80, .Vision = 7 },
+    },
+};
+
 pub const MOBS = [_]MobTemplate{
     CombatDummyNormal,
     CombatDummyPrisoner,
@@ -2133,6 +2177,7 @@ pub const MOBS = [_]MobTemplate{
     SpectralTotemTemplate,
     NightReaperTemplate,
     GrueTemplate,
+    SlinkingTerrorTemplate,
 };
 
 pub const PRISONERS = [_]MobTemplate{
