@@ -2014,6 +2014,7 @@ pub const NightReaperTemplate = MobTemplate{
             .is_fearless = true,
             .spellcaster_backup_action = .Melee,
             .work_phase = .NC_Guard,
+            .flags = &[_]AI.Flag{ .AvoidsEnemies, .FearsLight },
         },
 
         .spells = &[_]SpellOptions{
@@ -2050,6 +2051,7 @@ pub const GrueTemplate = MobTemplate{
             .is_curious = false,
             .is_fearless = true,
             .work_phase = .NC_Guard,
+            .flags = &[_]AI.Flag{ .AvoidsEnemies, .FearsLight },
         },
 
         .base_night_vision = true,
@@ -2096,6 +2098,7 @@ pub const SlinkingTerrorTemplate = MobTemplate{
             .is_curious = false,
             .is_fearless = true,
             .work_phase = .NC_Guard,
+            .flags = &[_]AI.Flag{ .AvoidsEnemies, .FearsLight },
         },
 
         .base_night_vision = true,

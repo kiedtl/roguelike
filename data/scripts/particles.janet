@@ -868,7 +868,26 @@
       })
       :lifetime (fn [self &] 4)
       :spawn-count (fn [self &] (* 4 90))
-      :get-spawn-params (SPAR-explosion :which-origin :target :distance 4 :sparsity-factor 4)
+      :get-spawn-params (SPAR-explosion :which-origin :target :distance 3 :sparsity-factor 4)
+    })
+  ]
+  # Essentially the same as zap-mass-insanity, but with TRIG-set-glyph(overall-cardinal-angle) and
+  # different colors (which match the amnesia beams effect somewhat)
+  "zap-mass-amnesia" @[
+    (template-lingering-zap ASCII_CHARS 0 0x5f6600 4 :bg-mix 0.0 :require-nonwall false :require-los 0)
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch "Z" :fg 0xaa55cc :bg 0 :bg-mix 0 })
+        :speed 1
+        :triggers @[
+          [[:COND-true] [:TRIG-scramble-glyph "*&~@+=<>:;"]]
+          [[:COND-true] [:COND-percent? 60] [:TRIG-set-glyph [:overall-cardinal-angle ["│" "│" "─" "─"]]]]
+          [[:COND-true] [:TRIG-lerp-color :fg 0x5f6600 "rgb" @(:completed-journey)]]
+        ]
+      })
+      :lifetime (fn [self &] 3)
+      :spawn-count (fn [self &] (* 3 45))
+      :get-spawn-params (SPAR-explosion :which-origin :target :distance 2 :sparsity-factor 8)
     })
   ]
   "zap-crystal-chargeover" @[

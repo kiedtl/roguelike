@@ -645,14 +645,36 @@ pub const SladeDoor = Machine{
     .powered_sbg = colors.BG,
     .unpowered_sbg = colors.BG,
 
-    .power_drain = 90,
+    .power_drain = 100,
     .restricted_to = .Night,
     .powered_walkable = true,
     .unpowered_walkable = false,
-    .powered_opacity = 1.0,
+    .powered_opacity = 0.0,
     .unpowered_opacity = 0.0,
     .porous = false,
-    .on_power = powerNone,
+
+    .on_power = struct {
+        fn f(m: *Machine) void {
+            if (m.last_interaction) |mob| {
+                if (mob.multitile != null) return;
+                for (&DIRECTIONS) |d| if (m.coord.move(d, state.mapgeometry)) |neighbor| {
+                    // A bit hackish
+                    if (neighbor.distance(mob.coord) == 2 and state.is_walkable(neighbor, .{ .mob = mob })) {
+                        _ = mob.teleportTo(neighbor, null, true, true);
+                        return;
+                    }
+                };
+
+                // const orig = mob.coord;
+                // if (state.player.cansee(orig)) {
+                //     state.message(.Info, "{c} phases through the door.", .{});
+                // }
+                // if (state.player.cansee(dest)) {
+                //     state.message(.Info, "{c} phases through the door.", .{});
+                // }
+            }
+        }
+    }.f,
 
     .evoke_confirm = "Trespass on the Night Creature's lair?",
     .player_interact = .{

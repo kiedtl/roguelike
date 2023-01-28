@@ -1167,7 +1167,7 @@ pub fn ballLightningWorkOrFight(mob: *Mob, _: mem.Allocator) void {
 pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
     switch (mob.ai.work_phase) {
         .NC_Guard => {
-            if (!mob.immobile and rng.onein(100)) {
+            if (!mob.immobile and rng.onein(1000)) {
                 const cur_room: ?*mapgen.Room = switch (state.layout[mob.coord.z][mob.coord.y][mob.coord.x]) {
                     .Unknown => null,
                     .Room => |r| &state.rooms[mob.coord.z].items[r],
@@ -1187,6 +1187,7 @@ pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
 
                 if (possibles.len > 0) {
                     const point = rng.chooseUnweighted(Coord, possibles.constSlice());
+                    mob.ai.work_area.clearRetainingCapacity();
                     mob.ai.work_area.append(point) catch err.wat();
                     mob.ai.work_phase = .NC_Travel;
                     mob.tryMoveTo(point);
@@ -1196,10 +1197,40 @@ pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
             standStillAndGuardWork(mob, alloc);
         },
         .NC_Travel => {
-            var to = mob.ai.work_area.items[mob.ai.work_area.items.len - 1];
+
+            // First check for enemies that have seen us, and disable them.
+            for (mob.fov) |row, y| for (row) |cell, x| if (cell != 0) {
+                const fitem = Coord.new2(mob.coord.z, x, y);
+
+                if (state.dungeon.at(fitem).mob) |othermob| {
+                    if (!othermob.ai.flag(.IgnoredByEnemies) and othermob.isHostileTo(mob) and
+                        !othermob.hasStatus(.Amnesia) and !Status.isMobImmune(.Amnesia, othermob) and
+                        isEnemyKnown(othermob, mob))
+                    {
+                        spells.BOLT_AOE_AMNESIA.use(mob, mob.coord, othermob.coord, .{
+                            .free = true,
+                            .MP_cost = 0,
+                            .spell = &spells.BOLT_AOE_AMNESIA,
+                            .duration = 10,
+                        });
+                    }
+                }
+            };
+
+            // Now check if there are enemies adjacent to us, and face them to
+            // be disposed of next turn.
+            for (&DIRECTIONS) |d| if (mob.coord.move(d, state.mapgeometry)) |neighbor| {
+                if (state.dungeon.at(neighbor).mob) |othermob| {
+                    if (othermob.isHostileTo(mob) and !othermob.ai.flag(.IgnoredByEnemies)) {
+                        mob.facing = d;
+                        tryRest(mob); // Rest to avoid moving and resetting face direction.
+                    }
+                }
+            };
+
+            var to = mob.ai.work_area.items[0];
 
             if (mob.cansee(to)) {
-                _ = mob.ai.work_area.pop();
                 mob.ai.work_phase = .NC_Guard;
                 tryRest(mob);
             } else {
@@ -1239,6 +1270,10 @@ pub fn grueFight(mob: *Mob, _: mem.Allocator) void {
                 const distance = farthest.distance(mob.coord);
                 if (distance > 2 and distance < 8)
                     directions.append(.{ .d = d, .dist = distance }) catch err.wat();
+            }
+            if (directions.len == 0) {
+                tryRest(mob);
+                return;
             }
             const chosen = rng.chooseUnweighted(D, directions.constSlice());
             combat.throwMob(mob, target, chosen.d, chosen.dist);

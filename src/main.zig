@@ -751,7 +751,9 @@ fn viewerTickGame(cur_level: usize) void {
                 });
             }
 
-            assert(prev_energy > mob.energy);
+            err.ensure(prev_energy > mob.energy, "{c} (phase: {}) did nothing during turn!", .{ mob, mob.ai.phase }) catch {
+                ai.tryRest(mob);
+            };
         }
     }
 }

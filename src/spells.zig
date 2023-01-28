@@ -514,8 +514,20 @@ pub const BOLT_CONJURE = Spell{
     },
 };
 
+pub const BOLT_AOE_AMNESIA = Spell{
+    .id = "sp_amnesia_bolt",
+    .name = "mass amnesia",
+    .cast_type = .Bolt,
+    .bolt_multitarget = false,
+    .checks_will = true,
+    .bolt_aoe = 3, // XXX: Need to update particle effect if changing this
+    .animation = .{ .Particle = .{ .name = "zap-mass-amnesia" } },
+    .noise = .Silent,
+    .effect_type = .{ .Status = .Amnesia },
+};
+
 pub const BOLT_AOE_INSANITY = Spell{
-    .id = "sp_conj_ss_bolt",
+    .id = "sp_insanity_bolt",
     .name = "mass insanity",
     .cast_type = .Bolt,
     .bolt_multitarget = false,

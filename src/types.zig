@@ -1319,7 +1319,7 @@ pub const Status = enum {
     pub fn isMobImmune(self: Status, mob: *Mob) bool {
         if (mob == state.player) {
             switch (self) {
-                .Explosive, .ExplosiveElec, .Fear, .Insane, .Lifespan => return true,
+                .Amnesia, .Explosive, .ExplosiveElec, .Fear, .Insane, .Lifespan => return true,
                 else => {},
             }
         }
@@ -1679,6 +1679,7 @@ pub const AI = struct {
         SocialFighter2, // Like above, but doesn't need allies to be aware.
         CalledWithUndead, // Can be called by CAST_CALL_UNDEAD, even if not undead.
         FearsDarkness, // Tries very hard to stay in light areas (pathfinding).
+        FearsLight, // Opposite of FearsDarkness (pathfinding).
         MovesDiagonally, // Usually tries to move diagonally.
         DetectWithHeat, // Detected with .DetectHeat status
         DetectWithElec, // Detected with .DetectElec status
@@ -1977,19 +1978,18 @@ pub const Mob = struct { // {{{
         _ = opts;
 
         comptime var caps = false;
+        comptime var force = false;
 
-        if (comptime mem.eql(u8, f, "")) {
-            //
-        } else if (comptime mem.eql(u8, f, "c")) {
-            caps = true;
-        } else {
-            @compileError("Unknown format string: '" ++ f ++ "'");
-        }
+        inline for (f) |char| switch (char) {
+            'c' => caps = true,
+            'f' => force = true,
+            else => @compileError("Unknown format string: '" ++ f ++ "'"),
+        };
 
         if (self == state.player) {
             const n = if (caps) "You" else "you";
             try fmt.format(writer, "{s}", .{n});
-        } else if (!state.player.cansee(self.coord)) {
+        } else if (!state.player.cansee(self.coord) and !force) {
             const n = if (caps) "Something" else "something";
             try fmt.format(writer, "{s}", .{n});
         } else {
@@ -3325,13 +3325,13 @@ pub const Mob = struct { // {{{
         if (self != state.player) {
             if (self.killed_by) |by_mob| {
                 if (by_mob == state.player) {
-                    state.message(.Damage, "You slew the {s}.", .{self.displayName()});
+                    state.message(.Damage, "You slew {c}.", .{self});
                 } else if (state.player.cansee(by_mob.coord)) {
-                    state.message(.Damage, "The {s} killed the {s}.", .{ by_mob.displayName(), self.displayName() });
+                    state.message(.Damage, "{c} killed the {c}.", .{ by_mob, self });
                 }
             } else {
                 if (state.player.cansee(self.coord)) {
-                    state.message(.Damage, "The {s} dies.", .{self.displayName()});
+                    state.message(.Damage, "{c} dies.", .{self});
                 }
             }
         }
