@@ -1694,6 +1694,8 @@ pub const AI = struct {
 };
 
 pub const AIWorkPhase = enum {
+    NC_Guard,
+    NC_Travel,
     CleanerScan,
     CleanerClean,
     HaulerScan,
@@ -4089,12 +4091,12 @@ pub const Machine = struct {
 
     pub fn canBePoweredBy(self: *Machine, by: *const Mob) bool {
         if (self.restricted_to) |restriction|
-            if (restriction != by.faction and
-                (restriction != .Night or state.night_rep[@enumToInt(by.faction)] < 1))
+            if ((restriction == .Night and state.night_rep[@enumToInt(by.faction)] > 0) or
+                restriction == by.faction)
             {
-                return false;
+                return true;
             };
-        return true;
+        return false;
     }
 
     pub fn addPower(self: *Machine, by: *Mob) bool {

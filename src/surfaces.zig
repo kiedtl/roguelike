@@ -645,7 +645,7 @@ pub const SladeDoor = Machine{
     .powered_sbg = colors.BG,
     .unpowered_sbg = colors.BG,
 
-    .power_drain = 100,
+    .power_drain = 90,
     .restricted_to = .Night,
     .powered_walkable = true,
     .unpowered_walkable = false,

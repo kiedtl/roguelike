@@ -680,7 +680,7 @@ pub fn patrolWork(mob: *Mob, _: mem.Allocator) void {
             const room = rng.chooseUnweighted(mapgen.Room, state.rooms[mob.coord.z].items);
             const point = room.rect.randomCoord();
 
-            if (state.dungeon.at(point).prison or room.is_vault != null)
+            if (state.dungeon.at(point).prison or room.is_vault != null or room.is_lair)
                 continue;
 
             if (mob.nextDirectionTo(point)) |_| {
@@ -1161,6 +1161,52 @@ pub fn ballLightningWorkOrFight(mob: *Mob, _: mem.Allocator) void {
 
     if (!mob.moveInDirection(direction.?)) {
         tryRest(mob);
+    }
+}
+
+pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
+    switch (mob.ai.work_phase) {
+        .NC_Guard => {
+            if (!mob.immobile and rng.onein(100)) {
+                const cur_room: ?*mapgen.Room = switch (state.layout[mob.coord.z][mob.coord.y][mob.coord.x]) {
+                    .Unknown => null,
+                    .Room => |r| &state.rooms[mob.coord.z].items[r],
+                };
+
+                var possibles = StackBuffer(Coord, 2).init(null);
+                for (state.rooms[mob.coord.z].items) |*room| {
+                    if ((cur_room != null and room == cur_room.?) or !room.is_lair)
+                        continue;
+
+                    const point = room.rect.randomCoord();
+                    if (mob.nextDirectionTo(point)) |_| {
+                        possibles.append(point) catch err.wat();
+                        break;
+                    }
+                }
+
+                if (possibles.len > 0) {
+                    const point = rng.chooseUnweighted(Coord, possibles.constSlice());
+                    mob.ai.work_area.append(point) catch err.wat();
+                    mob.ai.work_phase = .NC_Travel;
+                    mob.tryMoveTo(point);
+                    return;
+                }
+            }
+            standStillAndGuardWork(mob, alloc);
+        },
+        .NC_Travel => {
+            var to = mob.ai.work_area.items[mob.ai.work_area.items.len - 1];
+
+            if (mob.cansee(to)) {
+                _ = mob.ai.work_area.pop();
+                mob.ai.work_phase = .NC_Guard;
+                tryRest(mob);
+            } else {
+                mob.tryMoveTo(to);
+            }
+        },
+        else => unreachable,
     }
 }
 

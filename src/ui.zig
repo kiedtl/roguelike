@@ -1230,7 +1230,7 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
     const is_on_slade = state.dungeon.terrainAt(state.player.coord) == &surfaces.SladeTerrain;
     if (rep != 0 or is_on_slade) {
         const str = if (rep == 0) "$g$~ NEUTRAL $." else if (rep > 0) "$a$~ FRIENDLY $." else if (rep >= -5) "$p$~ DISLIKED $." else "$r$~ HATED $.";
-        if (is_on_slade) {
+        if (is_on_slade and rep < 1) {
             y = _drawStrf(startx, y, endx, "$cNight rep:$. {} $r$~ TRESPASSING $.", .{rep}, .{});
         } else {
             y = _drawStrf(startx, y, endx, "$cNight rep:$. {} {s}", .{ rep, str }, .{});

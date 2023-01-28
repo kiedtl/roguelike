@@ -1975,6 +1975,7 @@ pub const SpectralTotemTemplate = MobTemplate{
             .fight_fn = ai.mageFight,
             .is_curious = false,
             .is_fearless = true,
+            .work_phase = .NC_Guard,
         },
 
         .spells = &[_]SpellOptions{
@@ -2007,11 +2008,12 @@ pub const NightReaperTemplate = MobTemplate{
         .tile = 'Я',
         .ai = AI{
             .profession_description = "watching",
-            .work_fn = ai.standStillAndGuardWork,
+            .work_fn = ai.nightCreatureWork,
             .fight_fn = ai.mageFight,
             .is_curious = false,
             .is_fearless = true,
             .spellcaster_backup_action = .Melee,
+            .work_phase = .NC_Guard,
         },
 
         .spells = &[_]SpellOptions{
@@ -2043,10 +2045,11 @@ pub const GrueTemplate = MobTemplate{
         .tile = 'Ю',
         .ai = AI{
             .profession_description = "TODO: remove profession descriptions",
-            .work_fn = ai.standStillAndGuardWork,
+            .work_fn = ai.nightCreatureWork,
             .fight_fn = ai.grueFight,
             .is_curious = false,
             .is_fearless = true,
+            .work_phase = .NC_Guard,
         },
 
         .base_night_vision = true,
@@ -2088,10 +2091,11 @@ pub const SlinkingTerrorTemplate = MobTemplate{
         .tile = 'Ж',
         .ai = AI{
             .profession_description = "TODO: remove profession descriptions",
-            .work_fn = ai.standStillAndGuardWork,
+            .work_fn = ai.nightCreatureWork,
             .fight_fn = ai.meleeFight,
             .is_curious = false,
             .is_fearless = true,
+            .work_phase = .NC_Guard,
         },
 
         .base_night_vision = true,
