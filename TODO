@@ -1097,13 +1097,14 @@ x Animations (w/ particle engine)
   - Individual night creatures
     - Winged terror & Cherbs
     x Spectral totem
-    - Slinking terror
+    x Slinking terror
     - Creeping death
     x Night reaper
     x Grue
-  - Global NC AI features
-    - Hunting down treacherous player
-    - Periodically visiting another lair
+  - Night Creature features
+    - Invisibility unless in light (or nearby)
+    - AI: Hunting down treacherous player
+    x AI: Periodically visiting another lair
   - Exterminator specialists
   - Rings
     - ring of infestation
@@ -1173,11 +1174,6 @@ x Animations (w/ particle engine)
 - Caverns rework
   - Alchemist + dustling analyzer prefabs
   - Dustling machines
-- Capacitor mechanic
-  - Basic capacitor, charging, discharging
-  - Capacitor expansion slots
-  - Wiring floors
-    - map generation
 - Mapgen features
   - Guards in cubbyholes (both corridors and rooms)
     - Diagonal cubbyholes
@@ -1246,27 +1242,29 @@ x Auto-wait: don't wait while in combat
     - Click on tabs in examine mode
     - Click on items/buttons in inventory mode
 - Load colors from data file
-- Minor poster rework
-  - Different poster types (graffiti, announcement, engraving, etc)
-  - Allow placement on walls (or *only* on walls?)
-- Rings spawn with stat modifiers? (Will+ Will- Will++ Will--)
-- Headgear, footgear
-~ Masterpiece weapons
 - Multi-tile props: trees and braziers
-~ More mundane weapons: hammer, poker
-- More potions:
-  - Potion of disruption
-  - Potion of insubstantiation and fortification
 - Basic speeches by mobs
 - Rework gases
   - Remove usage of floats entirely
   - Quantize all gas dissipation rates into VSLOW, SLOW, MED, FAST, VFAST, etc
   - SIMD where possible
-- Acid damage; related potions, monsters, machines
-- WFC mapgen algorithm
-  - Research possible usage for Morgue level
-  - Research possible usage to augment Cavern mapgen
-  - Use for Solitary, Armory, Watchtower
+- The Revgenuhelkim
+  - Acid damage, resists, potions
+  - Monsters
+    - Revgenunkim
+    - Quicklime brutes (acid bolts)
+    - Burning brutes
+    - Cinder beasts
+  - Caged monsters in Lab
+  - Invasion of -1/Prison
+    - Initial wave
+    - Additional invasion waves
+    - Initial counterattack
+    - Further counterattack waves
+    - Final counter attack with Archmagi
+    - Possible Night Creature counterattack event
+    - Possible Angel counterattack event
+  - Carapace in Storage
 x Squad overhaul
 - Mob repositioning AI
   - AI to move out of dangerous tiles (gas/terrain)
@@ -1283,6 +1281,11 @@ x Squad overhaul
   - Show floor spattering, floor material, gas
 - Scoring
 - Basic save system, replaying of saves, scoresheet uploading
+- Capacitor mechanic
+  - Basic capacitor, charging, discharging
+  - Capacitor expansion slots
+  - Wiring floors
+    - map generation
 
 Animations
 ==========
