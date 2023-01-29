@@ -1167,6 +1167,22 @@ pub fn ballLightningWorkOrFight(mob: *Mob, _: mem.Allocator) void {
 pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
     switch (mob.ai.work_phase) {
         .NC_Guard => {
+            // If this is a slinking terror and it's not close to walls, immediately
+            // begin moving to the closest wall.
+            if (mob.ai.flag(.WallLover) and state.dungeon.neighboringWalls(mob.coord, true) == 0) {
+                assert(!mob.immobile);
+                var dijk = dijkstra.Dijkstra.init(mob.coord, state.mapgeometry, 9999, state.is_walkable, .{}, state.GPA.allocator());
+                defer dijk.deinit();
+                while (dijk.next()) |item|
+                    if (state.dungeon.neighboringWalls(item, true) > 0) {
+                        mob.ai.work_area.clearRetainingCapacity();
+                        mob.ai.work_area.append(item) catch err.wat();
+                        mob.ai.work_phase = .NC_MoveTo;
+                        tryRest(mob);
+                        return;
+                    };
+            }
+
             if (!mob.immobile and rng.onein(1000)) {
                 const cur_room: ?*mapgen.Room = switch (state.layout[mob.coord.z][mob.coord.y][mob.coord.x]) {
                     .Unknown => null,
@@ -1189,15 +1205,14 @@ pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
                     const point = rng.chooseUnweighted(Coord, possibles.constSlice());
                     mob.ai.work_area.clearRetainingCapacity();
                     mob.ai.work_area.append(point) catch err.wat();
-                    mob.ai.work_phase = .NC_Travel;
+                    mob.ai.work_phase = .NC_PatrolTo;
                     mob.tryMoveTo(point);
                     return;
                 }
             }
             standStillAndGuardWork(mob, alloc);
         },
-        .NC_Travel => {
-
+        .NC_MoveTo, .NC_PatrolTo => {
             // First check for enemies that have seen us, and disable them.
             for (mob.fov) |row, y| for (row) |cell, x| if (cell != 0) {
                 const fitem = Coord.new2(mob.coord.z, x, y);
@@ -1230,7 +1245,9 @@ pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
 
             var to = mob.ai.work_area.items[0];
 
-            if (mob.cansee(to)) {
+            if ((mob.ai.work_phase == .NC_PatrolTo and mob.cansee(to)) or
+                (mob.ai.work_phase == .NC_MoveTo and mob.coord.eq(to)))
+            {
                 mob.ai.work_phase = .NC_Guard;
                 tryRest(mob);
             } else {

@@ -2088,6 +2088,7 @@ pub const SlinkingTerrorTemplate = MobTemplate{
                 &SLINKING_TERROR_CLAW_WEAPON,
                 &SLINKING_TERROR_CLAW_WEAPON,
                 &SLINKING_TERROR_CLAW_WEAPON,
+                &SLINKING_TERROR_CLAW_WEAPON,
             },
         },
         .tile = 'Ж',
@@ -2098,7 +2099,7 @@ pub const SlinkingTerrorTemplate = MobTemplate{
             .is_curious = false,
             .is_fearless = true,
             .work_phase = .NC_Guard,
-            .flags = &[_]AI.Flag{ .AvoidsEnemies, .FearsLight },
+            .flags = &[_]AI.Flag{ .AvoidsEnemies, .FearsLight, .WallLover },
         },
 
         .base_night_vision = true,

@@ -132,6 +132,10 @@ pub fn path(
     // Special handling for multitile creatures
     const mt_l: ?usize = if (opts.mob != null and opts.mob.?.multitile != null) opts.mob.?.multitile.? else null;
 
+    // Special handling for slinking terrors
+    const need_walls = opts.mob != null and opts.mob.?.ai.flag(.WallLover) and
+        state.dungeon.neighboringWalls(opts.mob.?.coord, true) > 0;
+
     while (open_list.count() > 0) {
         var current_node: *Node = open_list.remove();
         const cur_coord = coordFromPtr(current_node, &nodes[0][0], start.z);
@@ -164,6 +168,9 @@ pub fn path(
                     continue;
 
                 if (!is_walkable(coord, opts) and !goal.eq(coord))
+                    continue;
+
+                if (need_walls and state.dungeon.neighboringWalls(coord, true) == 0 and !goal.eq(coord))
                     continue;
 
                 const cost = (if (neighbor.is_diagonal()) @as(usize, 7) else 5) +
