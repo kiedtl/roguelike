@@ -4,81 +4,80 @@
 #
 
 #
-# monster id          Tut...  -8/Pri  -7/Pri  -6/Lab  -5/Sin  -6/Lab2 -6/Lab3  -5/Pri  -5/Smi -5/Smi2 -5/Smi3  -4/Pri -3/Vlt  -3/Sin  -3/Vlt2 -3/Vlt3  -2/Pri -1/Pri -1/Cry -1/Cry2 -1/Cry3
-"cleaner"             	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"hauler"              	 - 	   - 	   - 	   5 	   - 	   5 	   5 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+# monster id          -8/Pri  -7/Pri  -6/Lab  -5/Sin  -5/Pri  -5/Smi  -4/Pri -3/Vlt  -3/Sin   -2/Pri  -1/Pri -1/Cry -1/Cry2 -1/Cry3
+"cleaner"              	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"hauler"               	   - 	   - 	   5 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 
 # nuisances
-"mellaent"            	 - 	   - 	   - 	   5 	   - 	   5 	   5 	   - 	  10 	  10 	  10 	   2 	   2 	   - 	   2 	   2 	   2 	   2 	  - 	  - 	  -
+"mellaent"             	   - 	   - 	   5 	   - 	   - 	  10 	   2 	   2 	   - 	   2 	   2 	  - 	  - 	  -
 
 # spires
-"iron_spire"          	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  10 	  10 	  10 	  10 	   - 	  10 	  10 	  10 	  10 	  - 	  - 	  -
-"lightning_spire"     	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  10 	  10 	  10 	  10 	   - 	  10 	  10 	  10 	  10 	  - 	  - 	  -
-"calcite_spire"       	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  10 	   - 	  10 	  10 	  10 	  10 	  - 	  - 	  -
-"sentry_spire"        	 - 	   - 	   - 	  10 	   - 	  10 	  10 	  10 	  10 	  10 	  10 	  10 	  10 	   - 	  10 	  10 	  10 	  10 	  - 	  - 	  -
+"iron_spire"           	   - 	   - 	   - 	   - 	   - 	  10 	  10 	  10 	   - 	  10 	  10 	  - 	  - 	  -
+"lightning_spire"      	   - 	   - 	   - 	   - 	   - 	  10 	  10 	  10 	   - 	  10 	  10 	  - 	  - 	  -
+"calcite_spire"        	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  10 	   - 	  10 	  10 	  - 	  - 	  -
+"sentry_spire"         	   - 	   - 	  10 	   - 	  10 	  10 	  10 	  10 	   - 	  10 	  10 	  - 	  - 	  -
 
 # guards
-"guard"               	 - 	 100 	  90 	  25 	   - 	  20 	  15 	  80 	   - 	   - 	   - 	  70 	  60 	   - 	  50 	  40 	  50 	  40 	  - 	  - 	  -
-"armored_guard"       	 - 	   - 	   - 	   - 	   - 	   5 	  10 	   - 	   - 	   - 	   - 	  30 	  40 	   - 	  50 	  60 	  50 	  60 	  - 	  - 	  -
+"guard"                	 100 	  90 	  25 	   - 	  80 	   - 	  70 	  60 	   - 	  50 	  40 	  - 	  - 	  -
+"armored_guard"        	   - 	   - 	   - 	   - 	   - 	   - 	  30 	  40 	   - 	  50 	  60 	  - 	  - 	  -
 
 # special mundane mobs
-"javelineer"          	 - 	   - 	  10 	  10 	   - 	  10 	  10 	  10 	   - 	   - 	   - 	  10 	  20 	   - 	  30 	  30 	  45 	  45 	  - 	  - 	  -
-"patrol"              	 - 	  25 	  25 	  25 	   - 	  25 	  25 	  25 	  25 	  25 	  25 	  25 	   - 	   - 	   - 	   - 	  25 	  25 	  - 	  - 	  -
-"executioner"         	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  10 	   - 	  20 	  20 	  20 	  20 	  - 	  - 	  -
+"javelineer"           	   - 	  10 	  10 	   - 	  10 	   - 	  10 	  20 	   - 	  45 	  45 	  - 	  - 	  -
+"patrol"               	  25 	  25 	  25 	   - 	  25 	  25 	  25 	   - 	   - 	  25 	  25 	  - 	  - 	  -
+"executioner"          	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  10 	   - 	  20 	  20 	  - 	  - 	  -
 
 # watcher
-"watcher"             	 - 	  45 	  45 	 100 	   - 	  90 	  80 	  45 	  25 	  25 	  25 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"shrieker"            	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  45 	 100 	   - 	 100 	 100 	  45 	  45 	  - 	  - 	  -
+"watcher"              	  45 	  45 	 100 	   - 	  45 	  25 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"shrieker"             	   - 	   - 	   - 	   - 	   - 	   - 	  45 	 100 	   - 	  45 	  45 	  - 	  - 	  -
 
 # special Shrine monsters
-"hulk_swollen"        	 - 	   - 	   - 	   - 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"hulk_thrashing"      	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	 100 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"hulk_swollen"         	   - 	   - 	   - 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"hulk_thrashing"       	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	 100 	   - 	   - 	  - 	  - 	  -
 
 # special Lab monsters
-"lead_turtle"         	 - 	   - 	   - 	  40 	   - 	  50 	  50 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"iron_wasp"           	 - 	   - 	   - 	   - 	   - 	  40 	  40 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"copper_hornet"       	 - 	   - 	   - 	  30 	   - 	  30 	  30 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"lead_turtle"          	   - 	   - 	  40 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"iron_wasp"            	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"copper_hornet"        	   - 	   - 	  30 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 
 # special Cavern monsters
-"dustling"            	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  60 	  60 	  50 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"vapour_mage"         	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  60 	  60 	  70 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"convult"             	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  30 	  30 	  35 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"dustling"             	   - 	   - 	   - 	   - 	   - 	  60 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"vapour_mage"          	   - 	   - 	   - 	   - 	   - 	  60 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"convult"              	   - 	   - 	   - 	   - 	   - 	  30 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 
 # easier mobs, intended for early game
 # TODO: spark mage should be mid-game due to `paralysing zap` spell?
-"bone_rat"            	 - 	  15 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"ember_mage"          	 - 	  15 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"bone_mage"           	 - 	   - 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"spark_mage"          	 - 	   - 	  15 	  15 	   - 	  10 	   5 	  15 	  10 	  10 	  10 	  10 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"bone_rat"             	  15 	  15 	  15 	   - 	  15 	  10 	  10 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"ember_mage"           	  15 	  15 	  15 	   - 	  15 	  10 	  10 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"bone_mage"            	   - 	  15 	  15 	   - 	  15 	  10 	  10 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"spark_mage"           	   - 	  15 	  15 	   - 	  15 	  10 	  10 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 
 # medium-difficulty monsters, early-middle game
-"recruit"             	 - 	   - 	   - 	   - 	   - 	  10 	  15 	  15 	   - 	   - 	   - 	  15 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"skeleton"            	 - 	   - 	   - 	   - 	   - 	  10 	  15 	  15 	  10 	  10 	  15 	  15 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"recruit"              	   - 	   - 	   - 	   - 	  15 	   - 	  15 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"skeleton"             	   - 	   - 	   - 	   - 	  15 	  10 	  15 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 
 # medium-difficulty monsters, middle-late game
-#"spectre_mage"        	 - 	   - 	   - 	   - 	   - 	  10 	  15 	  10 	  10 	  10 	  15 	  15 	   - 	   - 	   - 	  10 	  10 	  10 	  - 	  - 	  -
-"cinder_worm"         	 - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	   - 	   - 	  20 	  20 	   - 	  20 	  30 	  25 	  25 	  - 	  - 	  -
-"war_olg"             	 - 	   - 	   - 	   - 	   - 	  10 	  10 	  10 	   - 	   - 	   - 	  20 	  25 	   - 	  25 	  30 	  30 	  30 	  - 	  - 	  -
-"necromancer"         	 - 	   - 	   - 	   - 	   - 	  10 	  15 	  10 	   - 	   - 	   - 	  10 	  15 	   - 	  15 	  10 	  10 	  20 	  - 	  - 	  -
-"death_knight"        	 - 	   - 	   - 	   - 	   - 	  10 	  15 	  10 	   - 	   - 	   - 	  10 	  15 	   - 	  15 	  10 	  10 	  20 	  - 	  - 	  -
-"defender"            	 - 	   - 	   - 	  10 	   - 	  10 	  10 	   - 	   - 	   - 	   - 	  10 	  10 	   - 	  10 	  10 	  10 	  10 	  - 	  - 	  -
-"skeletal_blademaster"	 - 	   - 	   - 	   - 	   - 	   5 	  10 	  10 	   - 	   - 	   - 	  10 	  15 	   - 	  15 	  10 	  15 	  25 	  - 	  - 	  -
-"bloat"               	 - 	   - 	   - 	   - 	   - 	   5 	  10 	  10 	   - 	   - 	   - 	  10 	  15 	   - 	  15 	  10 	  10 	  10 	  - 	  - 	  -
-"thrashing_sculptor"  	 - 	   - 	   - 	   - 	   - 	   5 	  10 	  10 	   - 	   - 	   - 	  10 	  15 	   - 	  15 	  10 	  10 	  10 	  - 	  - 	  -
+"cinder_worm"          	   - 	   - 	   - 	   - 	  10 	   - 	  20 	  20 	   - 	  25 	  25 	  - 	  - 	  -
+"war_olg"              	   - 	   - 	   - 	   - 	  10 	   - 	  20 	  25 	   - 	  30 	  30 	  - 	  - 	  -
+"necromancer"          	   - 	   - 	   - 	   - 	  10 	   - 	  10 	  15 	   - 	  10 	  20 	  - 	  - 	  -
+"death_knight"         	   - 	   - 	   - 	   - 	  10 	   - 	  10 	  15 	   - 	  10 	  20 	  - 	  - 	  -
+"defender"             	   - 	   - 	  10 	   - 	   - 	   - 	  10 	  10 	   - 	  10 	  10 	  - 	  - 	  -
+"skeletal_blademaster" 	   - 	   - 	   - 	   - 	  10 	   - 	  10 	  15 	   - 	  15 	  25 	  - 	  - 	  -
+"bloat"                	   - 	   - 	   - 	   - 	  10 	   - 	  10 	  15 	   - 	  10 	  10 	  - 	  - 	  -
+"thrashing_sculptor"   	   - 	   - 	   - 	   - 	  10 	   - 	  10 	  15 	   - 	  10 	  10 	  - 	  - 	  -
 
 # higher-difficulty monsters. late-game.
-"warrior"             	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  15 	   - 	  15 	  10 	  15 	  25 	  - 	  - 	  -
-"death_mage"          	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  15 	  15 	  20 	  - 	  - 	  -
-"hunter"              	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  15 	  15 	  20 	  - 	  - 	  -
-"brimstone_mage"      	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  15 	  15 	  20 	  - 	  - 	  -
-"lightning_mage"      	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  15 	  15 	  20 	  - 	  - 	  -
+"warrior"              	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  15 	   - 	  15 	  25 	  - 	  - 	  -
+"death_mage"           	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  20 	  - 	  - 	  -
+"hunter"               	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  20 	  - 	  - 	  -
+"brimstone_mage"       	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  20 	  - 	  - 	  -
+"lightning_mage"       	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  20 	  - 	  - 	  -
 
 # boss monsters
-"frozen_fiend"        	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   1 	   - 	   3 	   5 	   1 	   3 	  - 	  - 	  -
-"sulfur_fiend"        	 - 	   - 	   - 	   - 	   - 	   - 	   1 	   - 	   - 	   3 	   5 	   - 	   2 	   - 	   2 	   3 	   1 	   1 	  - 	  - 	  -
-"burning_brute"       	 - 	   - 	   - 	   - 	   - 	   - 	   1 	   - 	   - 	   3 	  10 	   2 	   2 	   - 	   2 	   3 	   3 	   5 	  - 	  - 	  -
+"frozen_fiend"         	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   1 	   - 	   1 	   3 	  - 	  - 	  -
+"sulfur_fiend"         	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   2 	   - 	   1 	   1 	  - 	  - 	  -
+"burning_brute"        	   - 	   - 	   - 	   - 	   - 	   - 	   2 	   2 	   - 	   3 	   5 	  - 	  - 	  -
 
 # the one and only ancient mage
-"ancient_mage"        	 - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   1 	   1 	   2 	   2 	  - 	  - 	  -
+"ancient_mage"         	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   2 	   2 	  - 	  - 	  -
 
-# monster id          Tut...  -8/Pri  -7/Pri  -6/Lab  -5/Sin  -6/Lab2 -6/Lab3  -5/Pri  -5/Smi -5/Smi2 -5/Smi3  -4/Pri -3/Vlt  -3/Sin  -3/Vlt2 -3/Vlt3  -2/Pri -1/Pri -1/Cry -1/Cry2 -1/Cry3
+# monster id          -8/Pri  -7/Pri  -6/Lab  -5/Sin  -5/Pri  -5/Smi  -4/Pri -3/Vlt  -3/Sin   -2/Pri  -1/Pri -1/Cry -1/Cry2 -1/Cry3

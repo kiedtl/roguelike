@@ -111,23 +111,23 @@ pub const VAULT_LEVELS = [LEVELS][]const VaultType{
     &.{        .Marble           }, // -1/Crypt
     &.{ .Gold, .Marble           }, // -1/Prison
     &.{ .Gold, .Marble           }, // -2/Prison
-    &.{                          }, // -3/Quarters/3
-    &.{                          }, // -3/Quarters/2
+    // &.{                          }, // -3/Quarters/3
+    // &.{                          }, // -3/Quarters/2
     &.{                          }, // -3/Shrine
     &.{                          }, // -3/Quarters
     &.{ .Gold, .Marble, .Tavern  }, // -4/Prison
-    &.{                          }, // -5/Caverns/3
-    &.{                          }, // -5/Caverns/2
+    // &.{                          }, // -5/Caverns/3
+    // &.{                          }, // -5/Caverns/2
     &.{                          }, // -5/Caverns
     &.{ .Iron, .Marble, .Tavern  }, // -5/Prison
-    &.{ .Iron, .Marble, .Tavern  }, // -6/Laboratory/3
-    &.{ .Iron,          .Tavern  }, // -6/Laboratory/2
+    // &.{ .Iron, .Marble, .Tavern  }, // -6/Laboratory/3
+    // &.{ .Iron,          .Tavern  }, // -6/Laboratory/2
     &.{                          }, // -6/Shrine
     &.{ .Iron,          .Tavern  }, // -6/Laboratory
     &.{ .Iron,          .Tavern  }, // -7/Prison
     &.{ .Iron                    }, // -8/Prison
 
-    &.{                          }, // Tutorial
+    // &.{                          }, // Tutorial
 };
 // zig fmt: on
 pub const VAULT_KINDS = 4;
@@ -4390,23 +4390,23 @@ pub var Configs = [LEVELS]LevelConfig{
     createLevelConfig_CRY(),
     PRI_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
-    createLevelConfig_QRT(&[_][]const u8{}),
-    createLevelConfig_QRT(&[_][]const u8{}),
+    // createLevelConfig_QRT(&[_][]const u8{}),
+    // createLevelConfig_QRT(&[_][]const u8{}),
     createLevelConfig_SIN(6),
     createLevelConfig_QRT(&[_][]const u8{"QRT_s_SIN_stair_1"}),
     PRI_BASE_LEVELCONFIG,
-    CAV_BASE_LEVELCONFIG,
-    CAV_BASE_LEVELCONFIG,
+    // CAV_BASE_LEVELCONFIG,
+    // CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
-    createLevelConfig_LAB(&[_][]const u8{}),
-    createLevelConfig_LAB(&[_][]const u8{}),
+    // createLevelConfig_LAB(&[_][]const u8{}),
+    // createLevelConfig_LAB(&[_][]const u8{}),
     createLevelConfig_SIN(4),
     createLevelConfig_LAB(&[_][]const u8{"LAB_s_SIN_stair_1"}),
     PRI_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
 
-    TUT_BASE_LEVELCONFIG,
+    // TUT_BASE_LEVELCONFIG,
 };
 
 // TODO: convert this to a comptime expression
