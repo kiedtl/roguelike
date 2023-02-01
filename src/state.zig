@@ -23,7 +23,6 @@ const fov = @import("fov.zig");
 const types = @import("types.zig");
 const tsv = @import("tsv.zig");
 
-const Rune = items.Rune;
 const Squad = types.Squad;
 const Mob = types.Mob;
 const MessageType = types.MessageType;
@@ -110,7 +109,6 @@ pub const LevelInfo = struct {
     name: []u8,
     upgr: bool,
     optional: bool,
-    rune: ?Rune,
     stairs: [Dungeon.MAX_STAIRS]?[]u8,
 };
 
@@ -139,8 +137,6 @@ pub var chardata: struct {
         self.evocs_used.clearAndFree();
     }
 } = .{};
-
-pub var collected_runes = enums.EnumArray(Rune, bool).initFill(false);
 
 pub var player_upgrades: [3]player_m.PlayerUpgradeInfo = undefined;
 pub var player_conj_augments: [player_m.ConjAugment.TOTAL]player_m.ConjAugmentInfo = undefined;
@@ -444,14 +440,12 @@ pub fn loadLevelInfo() void {
         .{ .field_name = "name", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
         .{ .field_name = "upgr", .parse_to = bool, .parse_fn = tsv.parsePrimitive },
         .{ .field_name = "optional", .parse_to = bool, .parse_fn = tsv.parsePrimitive },
-        .{ .field_name = "rune", .parse_to = ?Rune, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = null },
         .{ .field_name = "stairs", .parse_to = ?[]u8, .is_array = Dungeon.MAX_STAIRS, .parse_fn = tsv.parseOptionalUtf8String, .optional = true, .default_val = null },
     }, .{
         .id = undefined,
         .name = undefined,
         .upgr = undefined,
         .optional = undefined,
-        .rune = undefined,
         .stairs = undefined,
     }, rbuf[0..read], alloc);
 
@@ -620,15 +614,6 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
     for (player_upgrades) |upgr| if (upgr.recieved) {
         try w.print("- {s}\n", .{upgr.upgrade.description()});
     };
-    try w.print("\n", .{});
-
-    try w.print("Runes:\n", .{});
-    {
-        var runes_iter = collected_runes.iterator();
-        while (runes_iter.next()) |rune| if (rune.value.*) {
-            try w.print("· {s} Rune\n", .{rune.key.name()});
-        };
-    }
     try w.print("\n", .{});
 
     try w.print("Inventory:\n", .{});

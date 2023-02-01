@@ -1,7 +1,3 @@
-% AMBIG_rune
-A rune, a symbol of authority for the master of this particular place. You can
-steal it out of spite if you want.
-
 % undead_ash
 All that remains of one of the Necromancer's most devoted servants.
 

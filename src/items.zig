@@ -213,22 +213,6 @@ pub const NIGHT_RINGS = [_]Ring{
     ConjurationRing,
 };
 
-pub const Rune = enum {
-    Basalt, // Caverns
-    Twisted, // Laboratory
-    Golden, // Quarters
-
-    pub const COUNT = 3;
-
-    pub fn name(self: Rune) []const u8 {
-        return switch (self) {
-            .Basalt => "Basalt",
-            .Twisted => "Twisted",
-            .Golden => "Golden",
-        };
-    }
-};
-
 // Cloaks {{{
 pub const Cloak = struct {
     id: []const u8,

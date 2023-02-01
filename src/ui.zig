@@ -745,12 +745,6 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
         _writerMobStats(w, state.player);
         _writerWrite(w, "\n", .{});
 
-        _writerHeader(w, linewidth, "collected runes", .{});
-        var runes_iter = state.collected_runes.iterator();
-        while (runes_iter.next()) |rune| if (rune.value.*) {
-            _writerWrite(w, "· $b{s}$. Rune", .{rune.key.name()});
-        };
-
         return;
     }
 
@@ -831,7 +825,6 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
     _writerWrite(w, "$c{s}$.\n", .{shortname});
 
     const itemtype: []const u8 = switch (item) {
-        .Rune => err.wat(),
         .Ring => "ring",
         .Consumable => |c| if (c.is_potion) "potion" else "consumable",
         .Vial => "vial",
@@ -849,7 +842,6 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
     _writerWrite(w, "\n", .{});
 
     switch (item) {
-        .Rune => err.wat(),
         .Ring => {},
         .Consumable => |p| {
             _writerHeader(w, linewidth, "effects", .{});

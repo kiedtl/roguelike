@@ -576,19 +576,6 @@ pub fn grabItem() bool {
     };
 
     switch (item) {
-        .Rune => |rune| {
-            state.message(.Info, "You grab the {s} rune.", .{rune.name()});
-            state.collected_runes.set(rune, true);
-
-            state.message(.Important, "The alarm goes off!!", .{});
-            state.markMessageNoisy();
-            state.player.makeNoise(.Alarm, .Loudest);
-
-            state.player.declareAction(.Grab);
-
-            // Delete item on the ground
-            _ = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
-        },
         .Ring, .Armor, .Cloak, .Aux, .Weapon => {
             // Delete item on the ground
             _ = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
@@ -691,7 +678,6 @@ pub fn useItem(index: usize) bool {
 
     const item = state.player.inventory.pack.slice()[index];
     switch (item) {
-        .Rune => err.wat(),
         .Ring, .Armor, .Cloak, .Aux, .Weapon => return equipItem(item),
         .Consumable => |p| {
             if (p.is_potion and state.player.isUnderStatus(.Nausea) != null) {

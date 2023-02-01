@@ -44,7 +44,6 @@ const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
-const Rune = items.Rune;
 const Evocable = items.Evocable;
 const Projectile = items.Projectile;
 const Consumable = items.Consumable;
@@ -4439,10 +4438,9 @@ pub const Ring = struct {
     activated: bool = false,
 };
 
-pub const ItemType = enum { Rune, Ring, Consumable, Vial, Projectile, Armor, Cloak, Aux, Weapon, Boulder, Prop, Evocable };
+pub const ItemType = enum { Ring, Consumable, Vial, Projectile, Armor, Cloak, Aux, Weapon, Boulder, Prop, Evocable };
 
 pub const Item = union(ItemType) {
-    Rune: Rune,
     Ring: *Ring,
     Consumable: *const Consumable,
     Vial: Vial,
@@ -4458,7 +4456,7 @@ pub const Item = union(ItemType) {
     pub fn isUseful(self: Item) bool {
         return switch (self) {
             .Vial, .Boulder, .Prop => false,
-            .Rune, .Projectile, .Cloak, .Aux, .Ring, .Consumable, .Armor, .Weapon, .Evocable => true,
+            .Projectile, .Cloak, .Aux, .Ring, .Consumable, .Armor, .Weapon, .Evocable => true,
         };
     }
 
@@ -4471,10 +4469,6 @@ pub const Item = union(ItemType) {
         var cell = display.Cell{ .fg = 0xffffff, .bg = colors.BG, .ch = ' ' };
 
         switch (self) {
-            .Rune => |_| {
-                cell.ch = 'ß';
-                cell.fg = colors.AQUAMARINE;
-            },
             .Consumable => |cons| {
                 cell.ch = if (cons.is_potion) '¡' else '&';
                 cell.fg = cons.color;
@@ -4521,7 +4515,6 @@ pub const Item = union(ItemType) {
         var buf = StackBuffer(u8, 64).init(&([_]u8{0} ** 64));
         var fbs = std.io.fixedBufferStream(buf.slice());
         switch (self.*) {
-            .Rune => |r| try fmt.format(fbs.writer(), "ß{s}", .{r.name()}),
             .Ring => |r| try fmt.format(fbs.writer(), "*{s}", .{r.name}),
             .Consumable => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
             .Vial => |v| try fmt.format(fbs.writer(), "♪{s}", .{v.name()}),
@@ -4543,7 +4536,6 @@ pub const Item = union(ItemType) {
         var buf = StackBuffer(u8, 128).init(&([_]u8{0} ** 128));
         var fbs = std.io.fixedBufferStream(buf.slice());
         switch (self.*) {
-            .Rune => |r| try fmt.format(fbs.writer(), "{s} Rune", .{r.name()}),
             .Ring => |r| try fmt.format(fbs.writer(), "ring of {s}", .{r.name}),
             .Consumable => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
             .Vial => |v| try fmt.format(fbs.writer(), "vial of {s}", .{v.name()}),
@@ -4571,7 +4563,6 @@ pub const Item = union(ItemType) {
             .Prop => |p| p.id,
             .Evocable => |v| v.id,
             .Ring => |r| r.name,
-            .Rune => "AMBIG_rune",
             .Vial => "AMBIG_vial",
             .Boulder => "AMBIG_boulder",
         };
