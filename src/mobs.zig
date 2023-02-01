@@ -58,6 +58,7 @@ const NONE_WEAPON = Weapon{
     },
 };
 
+pub const PLAYER_VISION = 12;
 pub const RESIST_IMMUNE = 1000;
 pub const WILL_IMMUNE = 1000;
 
@@ -555,7 +556,7 @@ pub const PlayerTemplate = MobTemplate{
         .max_HP = 14,
         .memory_duration = 10,
 
-        .stats = .{ .Willpower = 4, .Missile = 60, .Evade = 10, .Vision = 12, .Sneak = 4 },
+        .stats = .{ .Willpower = 4, .Missile = 60, .Evade = 10, .Vision = PLAYER_VISION, .Sneak = 4 },
     },
     .weapon = &items.DaggerWeapon,
     // .backup_weapon = &items.ShadowMaulWeapon,
@@ -2118,6 +2119,55 @@ pub const SlinkingTerrorTemplate = MobTemplate{
     },
 };
 
+const CREEPING_DEATH_CLAW_WEAPON = Weapon{
+    .damage = 1,
+    .ego = .NC_Insane,
+    .strs = &items.CLAW_STRS,
+};
+
+pub const CreepingDeathTemplate = MobTemplate{
+    .mob = .{
+        .id = "creeping_death",
+        .species = &Species{
+            .name = "creeping_death",
+            .default_attack = &Weapon{
+                .damage = 1,
+                .ego = .NC_Insane,
+                .strs = &items.BITING_STRS,
+            },
+            .aux_attacks = &[_]*const Weapon{
+                &CREEPING_DEATH_CLAW_WEAPON,
+                &CREEPING_DEATH_CLAW_WEAPON,
+            },
+        },
+        .tile = 'Э',
+        .ai = AI{
+            .profession_description = "TODO: remove profession descriptions",
+            .work_fn = ai.nightCreatureWork,
+            .fight_fn = ai.mageFight,
+            .is_curious = false,
+            .is_fearless = true,
+            .work_phase = .NC_Guard,
+            .spellcaster_backup_action = .Melee,
+            .flags = &[_]AI.Flag{ .AvoidsEnemies, .FearsLight },
+        },
+
+        .base_night_vision = true,
+        .deg360_vision = true,
+
+        .faction = .Night,
+        .max_HP = 7,
+        .memory_duration = 99999,
+
+        .life_type = .Spectral,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rFume = 100, .rFire = -25, .rElec = 25 },
+        .stats = .{ .Willpower = 8, .Melee = 90, .Vision = PLAYER_VISION + 2 },
+    },
+};
+
 pub const MOBS = [_]MobTemplate{
     CombatDummyNormal,
     CombatDummyPrisoner,
@@ -2186,6 +2236,7 @@ pub const MOBS = [_]MobTemplate{
     NightReaperTemplate,
     GrueTemplate,
     SlinkingTerrorTemplate,
+    CreepingDeathTemplate,
 };
 
 pub const PRISONERS = [_]MobTemplate{

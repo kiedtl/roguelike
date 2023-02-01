@@ -10,8 +10,9 @@
 # monster id        (weight)
 
 "spec_totem"          	 100
-"night_reaper"        	 100
+"night_reaper"        	  70
 "grue"                	 100
 "slinking_terror"     	 100
+"creeping_death"      	  70
 
 # monster id        (weight)
