@@ -1099,6 +1099,9 @@ x Animations (w/ particle engine)
     x Spectral totem
     x Slinking terror
     - Creeping death
+      - Inject venom spell
+      - Dijkstra vision
+      - Stalking enemy AI
     x Night reaper
     x Grue
   - Night Creature features
