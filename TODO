@@ -1139,6 +1139,12 @@ x Animations (w/ particle engine)
     - Demolisher specialists
 - Additional spectral orb augments
   - (100) Augment [s]: Will-checked survival when against opposing blades
+  - ( 50) Augment [d]: 10%/20% chance to die when no hostiles, instead of instantly.
+  - ( 10) Augment [x]: Blades spawn immobile and explode (elec) on death.
+  - ( 10) Augment [i]: Blades spawn immobile, but get +1 HP and 100% Melee.
+  - (100) Augment [k]: Each blade gets +1 Spikes and -25% Melee.
+  - (100) Augment [y]: Blade attacks cause insanity for 1 turn in vulnerable foes.
+  - (100) Augment [f]: Blade attacks have minor chance to infest foe.
 - UI
   x Menu to invoke patterns (via SPACE)
   x Map dynamic popups/annotations
