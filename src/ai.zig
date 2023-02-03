@@ -1183,6 +1183,12 @@ pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
                     };
             }
 
+            if (!mob.immobile and state.night_rep[@enumToInt(state.player.faction)] <= -10 and rng.onein(1500)) {
+                updateEnemyKnowledge(mob, state.player, null);
+                tryRest(mob);
+                return;
+            }
+
             if (!mob.immobile and rng.onein(1000)) {
                 const cur_room: ?*mapgen.Room = switch (state.layout[mob.coord.z][mob.coord.y][mob.coord.x]) {
                     .Unknown => null,
