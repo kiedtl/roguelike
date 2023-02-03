@@ -61,7 +61,7 @@
 "lead_turtle"         	   - 	  20 	   - 	   -
 
 # boss monsters
-"frozen_fiend"        	   - 	  20 	   - 	   -
+#"frozen_fiend"        	   - 	  20 	   - 	   -
 "ancient_mage"        	   - 	  20 	   - 	   -
 
 # -- Marble vaults -------------------------------------------------------------

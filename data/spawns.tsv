@@ -56,7 +56,7 @@
 "skeleton"             	   - 	   - 	   - 	   - 	  15 	  10 	  15 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 
 # medium-difficulty monsters, middle-late game
-"cinder_worm"          	   - 	   - 	   - 	   - 	  10 	   - 	  20 	  20 	   - 	  25 	  25 	  - 	  - 	  -
+#"cinder_worm"          	   - 	   - 	   - 	   - 	  10 	   - 	  20 	  20 	   - 	  25 	  25 	  - 	  - 	  -
 "war_olg"              	   - 	   - 	   - 	   - 	  10 	   - 	  20 	  25 	   - 	  30 	  30 	  - 	  - 	  -
 "necromancer"          	   - 	   - 	   - 	   - 	  10 	   - 	  10 	  15 	   - 	  10 	  20 	  - 	  - 	  -
 "death_knight"         	   - 	   - 	   - 	   - 	  10 	   - 	  10 	  15 	   - 	  10 	  20 	  - 	  - 	  -
@@ -73,9 +73,9 @@
 "lightning_mage"       	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  20 	  - 	  - 	  -
 
 # boss monsters
-"frozen_fiend"         	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   1 	   - 	   1 	   3 	  - 	  - 	  -
-"sulfur_fiend"         	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   2 	   - 	   1 	   1 	  - 	  - 	  -
-"burning_brute"        	   - 	   - 	   - 	   - 	   - 	   - 	   2 	   2 	   - 	   3 	   5 	  - 	  - 	  -
+#"frozen_fiend"         	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   1 	   - 	   1 	   3 	  - 	  - 	  -
+#"sulfur_fiend"         	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   2 	   - 	   1 	   1 	  - 	  - 	  -
+#"burning_brute"        	   - 	   - 	   - 	   - 	   - 	   - 	   2 	   2 	   - 	   3 	   5 	  - 	  - 	  -
 
 # the one and only ancient mage
 "ancient_mage"         	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   2 	   2 	  - 	  - 	  -

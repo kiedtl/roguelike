@@ -672,47 +672,47 @@ pub const DustlingTemplate = MobTemplate{
     },
 };
 
-pub const CinderWormTemplate = MobTemplate{
-    .mob = .{
-        .id = "cinder_worm",
-        .species = &Species{
-            .name = "cinder worm",
-            .default_attack = &Weapon{
-                .damage = 1,
-                .strs = &items.BITING_STRS,
-            },
-        },
-        .tile = '¢',
-        .ai = AI{
-            .profession_description = "wandering",
-            .work_fn = ai.standStillAndGuardWork,
-            .fight_fn = ai.mageFight,
-            .flags = &[_]AI.Flag{.DetectWithHeat},
-        },
-        .max_HP = 6,
+//pub const CinderWormTemplate = MobTemplate{
+//    .mob = .{
+//        .id = "cinder_worm",
+//        .species = &Species{
+//            .name = "cinder worm",
+//            .default_attack = &Weapon{
+//                .damage = 1,
+//                .strs = &items.BITING_STRS,
+//            },
+//        },
+//        .tile = '¢',
+//        .ai = AI{
+//            .profession_description = "wandering",
+//            .work_fn = ai.standStillAndGuardWork,
+//            .fight_fn = ai.mageFight,
+//            .flags = &[_]AI.Flag{.DetectWithHeat},
+//        },
+//        .max_HP = 6,
 
-        .spells = &[_]SpellOptions{
-            // Have cooldown period that matches time needed for flames to
-            // die out, so that the worm isn't constantly vomiting fire when
-            // its surroundings are already in flames
-            //
-            // TODO: check this in spells.zig
-            .{ .MP_cost = 10, .spell = &spells.CAST_FIREBLAST, .power = 4 },
-        },
-        .max_MP = 10,
+//        .spells = &[_]SpellOptions{
+//            // Have cooldown period that matches time needed for flames to
+//            // die out, so that the worm isn't constantly vomiting fire when
+//            // its surroundings are already in flames
+//            //
+//            // TODO: check this in spells.zig
+//            .{ .MP_cost = 10, .spell = &spells.CAST_FIREBLAST, .power = 4 },
+//        },
+//        .max_MP = 10,
 
-        .memory_duration = 10,
-        .blood = .Ash,
-        .blood_spray = gas.SmokeGas.id,
-        .corpse = .None,
-        .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = 25, .rFume = 100 },
-        .stats = .{ .Willpower = 6, .Melee = 80, .Vision = 4 },
-    },
-    .statuses = &[_]StatusDataInfo{
-        .{ .status = .Fire, .duration = .Prm },
-        .{ .status = .Noisy, .duration = .Prm },
-    },
-};
+//        .memory_duration = 10,
+//        .blood = .Ash,
+//        .blood_spray = gas.SmokeGas.id,
+//        .corpse = .None,
+//        .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = 25, .rFume = 100 },
+//        .stats = .{ .Willpower = 6, .Melee = 80, .Vision = 4 },
+//    },
+//    .statuses = &[_]StatusDataInfo{
+//        .{ .status = .Fire, .duration = .Prm },
+//        .{ .status = .Noisy, .duration = .Prm },
+//    },
+//};
 
 const WAR_OLG_CLAW_WEAPON = Weapon{
     .damage = 1,
@@ -1714,117 +1714,117 @@ pub const TorturerNecromancerTemplate = MobTemplate{
     .armor = &items.GambesonArmor,
 };
 
-const BURNING_BRUTE_CLAW_WEAPON = Weapon{
-    .damage = 2,
-    .strs = &items.CLAW_STRS,
-};
+// const BURNING_BRUTE_CLAW_WEAPON = Weapon{
+//     .damage = 2,
+//     .strs = &items.CLAW_STRS,
+// };
 
-pub const BurningBruteTemplate = MobTemplate{
-    .mob = .{
-        .id = "burning_brute",
-        .species = &Species{
-            .name = "burning brute",
-            .default_attack = &BURNING_BRUTE_CLAW_WEAPON,
-            .aux_attacks = &[_]*const Weapon{
-                &BURNING_BRUTE_CLAW_WEAPON,
-                &Weapon{ .knockback = 3, .damage = 1, .strs = &items.KICK_STRS },
-            },
-        },
-        .tile = 'B',
-        .ai = AI{
-            .profession_description = "sulking",
-            // *must* be stand_still_and_guard, otherwise it'll spread fire
-            // everywhere.
-            .work_fn = ai.standStillAndGuardWork,
-            .fight_fn = ai.mageFight,
-            //.is_fearless = true, // Flee effect won't trigger otherwise.
-            .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
-            .spellcaster_backup_action = .Melee,
-            .flags = &[_]AI.Flag{.DetectWithHeat},
-        },
+// pub const BurningBruteTemplate = MobTemplate{
+//     .mob = .{
+//         .id = "burning_brute",
+//         .species = &Species{
+//             .name = "burning brute",
+//             .default_attack = &BURNING_BRUTE_CLAW_WEAPON,
+//             .aux_attacks = &[_]*const Weapon{
+//                 &BURNING_BRUTE_CLAW_WEAPON,
+//                 &Weapon{ .knockback = 3, .damage = 1, .strs = &items.KICK_STRS },
+//             },
+//         },
+//         .tile = 'B',
+//         .ai = AI{
+//             .profession_description = "sulking",
+//             // *must* be stand_still_and_guard, otherwise it'll spread fire
+//             // everywhere.
+//             .work_fn = ai.standStillAndGuardWork,
+//             .fight_fn = ai.mageFight,
+//             //.is_fearless = true, // Flee effect won't trigger otherwise.
+//             .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
+//             .spellcaster_backup_action = .Melee,
+//             .flags = &[_]AI.Flag{.DetectWithHeat},
+//         },
 
-        .spells = &[_]SpellOptions{
-            .{ .MP_cost = 2, .spell = &spells.CAST_RESURRECT_FIRE, .power = 200, .duration = 10 },
-            .{ .MP_cost = 3, .spell = &spells.BOLT_FIREBALL, .power = 3, .duration = 5 },
-        },
-        .max_MP = 12,
+//         .spells = &[_]SpellOptions{
+//             .{ .MP_cost = 2, .spell = &spells.CAST_RESURRECT_FIRE, .power = 200, .duration = 10 },
+//             .{ .MP_cost = 3, .spell = &spells.BOLT_FIREBALL, .power = 3, .duration = 5 },
+//         },
+//         .max_MP = 12,
 
-        .max_HP = 15,
-        .memory_duration = 10,
-        .blood = null,
-        .corpse = .None,
+//         .max_HP = 15,
+//         .memory_duration = 10,
+//         .blood = null,
+//         .corpse = .None,
 
-        .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = -25 },
-        .stats = .{ .Willpower = 8, .Evade = 10, .Melee = 80 },
-    },
-    .statuses = &[_]StatusDataInfo{
-        .{ .status = .Fire, .duration = .Prm },
-        .{ .status = .Noisy, .duration = .Prm },
-    },
-};
+//         .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = -25 },
+//         .stats = .{ .Willpower = 8, .Evade = 10, .Melee = 80 },
+//     },
+//     .statuses = &[_]StatusDataInfo{
+//         .{ .status = .Fire, .duration = .Prm },
+//         .{ .status = .Noisy, .duration = .Prm },
+//     },
+// };
 
-pub const SulfurFiendTemplate = MobTemplate{
-    .mob = .{
-        .id = "sulfur_fiend",
-        .species = &Species{ .name = "sulfur fiend" },
-        .tile = 'S',
-        .ai = AI{
-            .profession_description = "sulking",
-            .work_fn = ai.patrolWork,
-            .fight_fn = ai.mageFight,
-            .is_fearless = true,
-            .spellcaster_backup_action = .KeepDistance,
-            .flags = &[_]AI.Flag{.DetectWithElec},
-        },
-        .spells = &[_]SpellOptions{
-            .{ .MP_cost = 1, .spell = &spells.CAST_HASTEN_ROT, .power = 150 },
-            .{ .MP_cost = 6, .spell = &spells.CAST_CONJ_BALL_LIGHTNING, .power = 12 },
-        },
-        .max_MP = 10,
+// pub const SulfurFiendTemplate = MobTemplate{
+//     .mob = .{
+//         .id = "sulfur_fiend",
+//         .species = &Species{ .name = "sulfur fiend" },
+//         .tile = 'S',
+//         .ai = AI{
+//             .profession_description = "sulking",
+//             .work_fn = ai.patrolWork,
+//             .fight_fn = ai.mageFight,
+//             .is_fearless = true,
+//             .spellcaster_backup_action = .KeepDistance,
+//             .flags = &[_]AI.Flag{.DetectWithElec},
+//         },
+//         .spells = &[_]SpellOptions{
+//             .{ .MP_cost = 1, .spell = &spells.CAST_HASTEN_ROT, .power = 150 },
+//             .{ .MP_cost = 6, .spell = &spells.CAST_CONJ_BALL_LIGHTNING, .power = 12 },
+//         },
+//         .max_MP = 10,
 
-        .max_HP = 15,
-        .memory_duration = 10,
-        .blood = null,
-        .corpse = .None,
+//         .max_HP = 15,
+//         .memory_duration = 10,
+//         .blood = null,
+//         .corpse = .None,
 
-        .innate_resists = .{ .rFire = 50, .rElec = RESIST_IMMUNE, .rFume = 80 },
-        .stats = .{ .Willpower = 10, .Evade = 10 },
-    },
-    .weapon = &items.MaceWeapon,
-    .armor = &items.HauberkArmor,
-    .statuses = &[_]StatusDataInfo{.{ .status = .Noisy, .duration = .Prm }},
-};
+//         .innate_resists = .{ .rFire = 50, .rElec = RESIST_IMMUNE, .rFume = 80 },
+//         .stats = .{ .Willpower = 10, .Evade = 10 },
+//     },
+//     .weapon = &items.MaceWeapon,
+//     .armor = &items.HauberkArmor,
+//     .statuses = &[_]StatusDataInfo{.{ .status = .Noisy, .duration = .Prm }},
+// };
 
-pub const FrozenFiendTemplate = MobTemplate{
-    .mob = .{
-        .id = "frozen_fiend",
-        .species = &Species{ .name = "frozen fiend" },
-        .tile = 'F',
-        .ai = AI{
-            .profession_description = "patrolling",
-            .work_fn = ai.patrolWork,
-            .fight_fn = ai.mageFight,
-            .is_fearless = true,
-            .spellcaster_backup_action = .Melee,
-        },
+// pub const FrozenFiendTemplate = MobTemplate{
+//     .mob = .{
+//         .id = "frozen_fiend",
+//         .species = &Species{ .name = "frozen fiend" },
+//         .tile = 'F',
+//         .ai = AI{
+//             .profession_description = "patrolling",
+//             .work_fn = ai.patrolWork,
+//             .fight_fn = ai.mageFight,
+//             .is_fearless = true,
+//             .spellcaster_backup_action = .Melee,
+//         },
 
-        .spells = &[_]SpellOptions{
-            .{ .MP_cost = 2, .spell = &spells.CAST_POLAR_LAYER, .power = 14 },
-            .{ .MP_cost = 3, .spell = &spells.CAST_RESURRECT_FROZEN, .power = 21 },
-        },
-        .max_MP = 15,
+//         .spells = &[_]SpellOptions{
+//             .{ .MP_cost = 2, .spell = &spells.CAST_POLAR_LAYER, .power = 14 },
+//             .{ .MP_cost = 3, .spell = &spells.CAST_RESURRECT_FROZEN, .power = 21 },
+//         },
+//         .max_MP = 15,
 
-        .max_HP = 15,
-        .memory_duration = 10,
-        .blood = null,
-        .corpse = .None,
+//         .max_HP = 15,
+//         .memory_duration = 10,
+//         .blood = null,
+//         .corpse = .None,
 
-        .innate_resists = .{ .rElec = 75, .rFire = -25 },
-        .stats = .{ .Willpower = 8, .Evade = 10 },
-    },
-    .weapon = &items.MorningstarWeapon,
-    .armor = &items.HauberkArmor,
-};
+//         .innate_resists = .{ .rElec = 75, .rFire = -25 },
+//         .stats = .{ .Willpower = 8, .Evade = 10 },
+//     },
+//     .weapon = &items.MorningstarWeapon,
+//     .armor = &items.HauberkArmor,
+// };
 
 pub const LivingIceTemplate = MobTemplate{
     .mob = .{
@@ -2191,7 +2191,7 @@ pub const MOBS = [_]MobTemplate{
     ConvultTemplate,
     VapourMageTemplate,
     DustlingTemplate,
-    CinderWormTemplate,
+    // CinderWormTemplate,
     WarOlgTemplate,
     MellaentTemplate,
     IronSpireTemplate,
@@ -2226,9 +2226,9 @@ pub const MOBS = [_]MobTemplate{
     SparklingTemplate,
     SkeletalBlademasterTemplate,
     TorturerNecromancerTemplate,
-    BurningBruteTemplate,
-    FrozenFiendTemplate,
-    SulfurFiendTemplate,
+    // BurningBruteTemplate,
+    // FrozenFiendTemplate,
+    // SulfurFiendTemplate,
     BallLightningTemplate,
     SpectralSwordTemplate,
     SpectralSabreTemplate,
