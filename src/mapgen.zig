@@ -103,26 +103,25 @@ pub const VAULT_DOORS = [VAULT_KINDS]*const Machine{
 };
 // zig fmt: off
 //
-// FIXME: add vault to QRT
 pub const VAULT_LEVELS = [LEVELS][]const VaultType{
     &.{                          }, // -1/Crypt/3
     &.{        .Marble           }, // -1/Crypt/2
     &.{        .Marble           }, // -1/Crypt
     &.{ .Gold, .Marble           }, // -1/Prison
     &.{ .Gold, .Marble           }, // -2/Prison
-    // &.{                          }, // -3/Quarters/3
-    // &.{                          }, // -3/Quarters/2
+    // &.{                          }, // -3/Laboratory/3
+    // &.{                          }, // -3/Laboratory/2
     &.{                          }, // -3/Shrine
-    &.{                          }, // -3/Quarters
+    &.{ .Gold, .Marble, .Tavern  }, // -3/Laboratory
     &.{ .Gold, .Marble, .Tavern  }, // -4/Prison
     // &.{                          }, // -5/Caverns/3
     // &.{                          }, // -5/Caverns/2
     &.{                          }, // -5/Caverns
     &.{ .Iron, .Marble, .Tavern  }, // -5/Prison
-    // &.{ .Iron, .Marble, .Tavern  }, // -6/Laboratory/3
-    // &.{ .Iron,          .Tavern  }, // -6/Laboratory/2
+    // &.{ .Iron, .Marble, .Tavern  }, // -6/Workshop/3
+    // &.{ .Iron,          .Tavern  }, // -6/Workshop/2
     &.{                          }, // -6/Shrine
-    &.{ .Iron,          .Tavern  }, // -6/Laboratory
+    &.{ .Iron,          .Tavern  }, // -6/Workshop
     &.{ .Iron,          .Tavern  }, // -7/Prison
     &.{ .Iron                    }, // -8/Prison
 
@@ -4129,32 +4128,38 @@ pub const PRI_BASE_LEVELCONFIG = LevelConfig{
     .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
 };
 
-pub fn createLevelConfig_QRT(comptime prefabs: []const []const u8) LevelConfig {
+pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
         .prefabs = prefabs,
-        .prefab_chance = 1000, // No prefabs for QRT
-        .mapgen_func = placeBSPRooms,
-        .mapgen_iters = 512,
-        .min_room_width = 5,
-        .min_room_height = 5,
-        .max_room_width = 14,
-        .max_room_height = 14,
+        .tunneler_opts = .{
+            .turn_chance = 1,
+            .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
+                .{ .start = Coord.new(1, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
+                .{ .start = Coord.new(WIDTH - 4, 1), .width = 3, .height = 0, .direction = .South },
+            },
+        },
+        .prefab_chance = 1000, // No prefabs for WRK
+        .mapgen_func = tunneler.placeTunneledRooms,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
+            levelFeatureVials,
             levelFeaturePrisoners,
-            levelFeaturePrisonersMaybe,
             null,
-            null,
+            levelFeatureOres,
         },
 
-        .no_windows = true,
-        .allow_statues = false,
-        .door = &surfaces.VaultDoor,
+        .material = &materials.Dobalene,
+        .window_material = &materials.LabGlass,
+        .light = &surfaces.Lamp,
+        .bars = "titanium_bars",
+        .door = &surfaces.LabDoor,
+        //.containers = &[_]Container{ surfaces.Chest, surfaces.LabCabinet },
+        .containers = &[_]Container{surfaces.LabCabinet},
+        .utility_items = &surfaces.laboratory_item_props.items,
+        .props = &surfaces.laboratory_props.items,
+        .single_props = &[_][]const u8{ "table", "centrifuge", "compact_turbine", "water_purifier", "distiller" },
 
-        .props = &surfaces.vault_props.items,
-        //.containers = &[_]Container{surfaces.Chest},
-        .single_props = &[_][]const u8{ "fuel_barrel", "bed" },
-        .chance_for_single_prop_placement = 90,
+        .allow_statues = false,
 
         .machines = &[_]*const Machine{&surfaces.Fountain},
     };
@@ -4168,7 +4173,6 @@ pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
             .turn_chance = 7,
             .branch_chance = 6,
             .room_tries = 1,
-            .headstart_chance = 0, // More chance for enough candles to spawn
             .shrink_chance = 0,
             .grow_chance = 0,
             .intersect_chance = 90,
@@ -4230,13 +4234,12 @@ pub fn createLevelConfig_CRY() LevelConfig {
     };
 }
 
-pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
+pub fn createLevelConfig_WRK(comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
         .prefabs = prefabs,
         .tunneler_opts = .{
             .turn_chance = 0,
-            .branch_chance = 7,
-            .headstart_chance = 0,
+            .branch_chance = 5,
             .shrink_chance = 60,
             .grow_chance = 5,
             .intersect_chance = 100,
@@ -4249,7 +4252,7 @@ pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
                 .{ .start = Coord.new(1, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
             },
         },
-        .prefab_chance = 1000, // No prefabs for LAB
+        .prefab_chance = 1000, // No prefabs for WRK
         .mapgen_func = tunneler.placeTunneledRooms,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
@@ -4268,7 +4271,7 @@ pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
         .containers = &[_]Container{surfaces.LabCabinet},
         .utility_items = &surfaces.laboratory_item_props.items,
         .props = &surfaces.laboratory_props.items,
-        .single_props = &[_][]const u8{ "table", "centrifuge", "compact_turbine", "water_purifier", "distiller" },
+        .single_props = &[_][]const u8{"table"},
 
         .allow_statues = false,
 
@@ -4365,19 +4368,19 @@ pub var Configs = [LEVELS]LevelConfig{
     createLevelConfig_CRY(),
     PRI_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
-    // createLevelConfig_QRT(&[_][]const u8{}),
-    // createLevelConfig_QRT(&[_][]const u8{}),
+    // createLevelConfig_LAB(&[_][]const u8{}),
+    // createLevelConfig_LAB(&[_][]const u8{}),
     createLevelConfig_SIN(6),
-    createLevelConfig_QRT(&[_][]const u8{"QRT_s_SIN_stair_1"}),
+    createLevelConfig_LAB(&[_][]const u8{"LAB_s_SIN_stair_1"}),
     PRI_BASE_LEVELCONFIG,
     // CAV_BASE_LEVELCONFIG,
     // CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
-    // createLevelConfig_LAB(&[_][]const u8{}),
-    // createLevelConfig_LAB(&[_][]const u8{}),
+    // createLevelConfig_WRK(&[_][]const u8{}),
+    // createLevelConfig_WRK(&[_][]const u8{}),
     createLevelConfig_SIN(4),
-    createLevelConfig_LAB(&[_][]const u8{"LAB_s_SIN_stair_1"}),
+    createLevelConfig_WRK(&[_][]const u8{"WRK_s_SIN_stair_1"}),
     PRI_BASE_LEVELCONFIG,
     PRI_BASE_LEVELCONFIG,
 

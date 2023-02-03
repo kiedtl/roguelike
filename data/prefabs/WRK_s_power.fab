@@ -1,0 +1,40 @@
+% Nuclear power supply.
+% Heavily inspired by Cogmind's art, probably the art for a trap(?)
+%
+%  ▄▄┬▄▄
+% █▀ ┴┘▀█┐
+% ┣╾┤≡├╼┫⊡
+% █▄┌┬ ▄█╡
+%  ▀▀┴▀▀ ⌨
+
+:notraps
+:subroom
+
+@0 p concrete_wall_lower
+@1 p concrete_wall_upper
+@2 p concrete_wall_full
+@3 p nuclear_core
+@4 p switching_station
+@5 p control_panel
+@b p wall_n1s1e1
+@c p wall_e1w1_thine
+@d p wall_e1w1_thinw
+@e p wall_n1s1w1
+@f p pipe_s1e1w1
+@g p pipe_n1e1w1
+@h p pipe_n1w1
+@i p pipe_n1s1w1
+@j p pipe_n1s1e1
+@k p pipe_n1e1w1
+@l p pipe_s1e1w1
+@m p pipe_s1e1
+@n p wire_s1w1
+@o p wire_n1s1w2
+
+..........
+..00f00...
+.211gh12n.
+.bci3jde4.
+.20ml002o.
+..11k11.5.
+..........

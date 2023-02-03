@@ -126,7 +126,7 @@ pub const CarpetTerrain = Terrain{
     .stats = .{ .Sneak = 3 },
     .flammability = 30,
 
-    .for_levels = &[_][]const u8{ "PRI", "QRT" },
+    .for_levels = &[_][]const u8{"PRI"},
     .placement = .EntireRoom,
     .weight = 8,
 };
@@ -154,7 +154,7 @@ pub const MetalTerrain = Terrain{
         .{ .status = .Conductive, .duration = .{ .Ctx = null } },
     },
 
-    .for_levels = &[_][]const u8{ "PRI", "LAB", "QRT" },
+    .for_levels = &[_][]const u8{ "WRK", "LAB" },
     .placement = .EntireRoom,
     .weight = 6,
 };
@@ -169,7 +169,7 @@ pub const CopperTerrain = Terrain{
         .{ .status = .CopperWeapon, .duration = .{ .Ctx = null } },
     },
 
-    .for_levels = &[_][]const u8{ "PRI", "LAB", "QRT" },
+    .for_levels = &[_][]const u8{ "PRI", "WRK", "LAB" },
     .placement = .EntireRoom,
     .weight = 8,
 };
@@ -183,7 +183,7 @@ pub const WoodTerrain = Terrain{
     .resists = .{ .rFire = -25, .rElec = 25 },
     .flammability = 40,
 
-    .for_levels = &[_][]const u8{ "PRI", "QRT" },
+    .for_levels = &[_][]const u8{"PRI"},
     .placement = .RoomPortion,
     .weight = 5,
 };
@@ -229,7 +229,7 @@ pub const TallFungiTerrain = Terrain{
     .flammability = 20,
     .repairable = false,
 
-    .for_levels = &[_][]const u8{ "PRI", "QRT" },
+    .for_levels = &[_][]const u8{ "PRI", "CAV" },
     .placement = .RoomBlob,
     .weight = 7,
 };
@@ -243,7 +243,7 @@ pub const PillarTerrain = Terrain{
     .opacity = 50,
     .repairable = false,
 
-    .for_levels = &[_][]const u8{ "PRI", "LAB", "QRT" },
+    .for_levels = &[_][]const u8{ "PRI", "WRK", "LAB" },
     .placement = .{ .RoomSpotty = 5 },
     .weight = 8,
 };

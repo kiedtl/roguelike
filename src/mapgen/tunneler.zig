@@ -756,20 +756,18 @@ pub const TunnelerOptions = struct {
     // Maximum tunnel width. If the tunnel is this size, it won't grow farther.
     max_width: usize = 6,
 
-    min_tunneler_distance: usize = 7,
+    min_tunneler_distance: usize = 6,
 
     // Chance (percentage) to change direction.
     turn_chance: usize = 8,
-    branch_chance: usize = 8,
+    branch_chance: usize = 6,
 
-    room_tries: usize = 12,
+    room_tries: usize = 14,
 
-    headstart_chance: usize = 15,
+    shrink_chance: usize = 50,
+    grow_chance: usize = 50,
 
-    shrink_chance: usize = 70,
-    grow_chance: usize = 30,
-
-    intersect_chance: usize = 70,
+    intersect_chance: usize = 80,
     intersect_with_childless: bool = false,
 
     add_extra_rooms: bool = true,
@@ -901,11 +899,6 @@ pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
                 is_any_active = true;
                 const new_tun_ptr = ctx.tunnelers.appendAndReturn(new_tun) catch err.wat();
                 new_tun.parent.?.child_corridors.append(new_tun_ptr) catch err.wat();
-
-                // Give a few tunnelers a head start to prevent roomies from
-                // immediately taking up place
-                if (rng.percent(ctx.opts.headstart_chance))
-                    new_tun_ptr.advance();
 
                 new_tun.parent.?.createJunction(new_tun_ptr, &ctx);
             }

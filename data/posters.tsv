@@ -5,49 +5,36 @@
 #
 
 # Random grafitti that can appear anywhere.
-"ANY"	"Protip! To defeat the death mage, hit him until he's dead."
-"ANY"	"I hate watchers."
+"ANY"	"Protip! To defeat the burning brute, hit him until he's dead."
 "ANY"	"I used a grindstone on my best knife and IT BROKE."
 "ANY"	"Beware of the @!"
 "ANY"	"Can you believe it, the @ escaped again."
 
 # Prison
-#
-# Lore note: unit names are constructed as follows:
-#     <unit-type><species><number>
-# ...where:
-#     <unit-type> is one of: (G)uard, (I)nfantry
-# and <species>   is one of: (H)uman, (U)ruk (hill goblin)
-#
 "PRI"	"A new shipment of prisoners from Traumbulnahl will arrive next week."
 "PRI"	"Please do not feed the prisoners."
 "PRI"	"Prison staffers must strive to be inclusive and welcoming to all new inmates."
 "PRI"	"Prison torturers must strive to be inclusive and welcoming to all new inmates."
 "PRI"	"Absence without leave is punishable by a mandatory interview with the High Priest."
-"PRI"	"WANTED: Obnulojmir, human, escaped prisoner."
+"PRI"	"WANTED: Obmirnul, human, escaped prisoner."
 "PRI"	"WANTED: kiedtl, human, escaped prisoner."
-"PRI"	"GH3-Sentinels must report to the Captain of the Guard tomorrow regarding the upcoming transfer to Traummalnahl."
-"PRI"	"Nine patrol troops will be added to unit GU7 in a few months."
-"PRI"	"Twenty-seven infantry troops will be added to unit IU2 in four weeks."
-"PRI"	"Korskuth ðalsmalbehl, goblin glaivemaster, will be publicly impaled tomorrow morning for attempted cannibalisation of a fellow guard while drunk."
+"PRI"	"Reinforcements from the company of Thornsthom Nath should be arriving by noon tomorrow."
+"PRI"	"Korskuth ðalsmalbehl, goblin pikemaster, will be hanged tomorrow morning for attempted murder of a fellow guard while intoxicated."
 "PRI"	"Unauthorized consumption of prisoners is punishable with up to 20 lashes."
 "PRI"	"Naughty prisoners get extra solitary time."
-"PRI"	"Rations will be halved for two weeks in preparation for the upcoming sewer maintenance."
+"PRI"	"Rations will be halved for two weeks in preparation for the upcoming sewer maintenance. -- COG (probably)"
 "PRI"	"An investigation is underway regarding the recent fire on the fourth floor."
 "PRI"	"Executions will continue until prisoner morale improves."
 "PRI"	"Where there's a whip, there's a will."
 
-# QRT posters
-"QRT"	"Talk to your commander today if your comrades show signs of disloyalty."
-"QRT"	"Don't hesitate to report the numbers of traitorous comrades."
-"QRT"	"The Necromancer is watching you."
-"QRT"	"The Necromancer can see you."
-"QRT"	"The Necromancer knows your thoughts."
-"QRT"	"The Necromancer knows your loyalties."
-"QRT"	"Rumors that the recent fire was caused by an angry burning brute have not yet been confirmed."
-"QRT"	"A goblin's honor is his loyalty."
-"QRT"	"We must secure the existence of the Goblin Nation and a future for our seed."
-"QRT"	"The Cave Goblins will not replace us."
+# More PRI posters, moved from QRT
+"PRI"	"The Necromancer is watching you."
+"PRI"	"The Necromancer can see you."
+"PRI"	"The Necromancer knows your thoughts."
+"PRI"	"The Necromancer knows your loyalties."
+"PRI"	"A goblin's honor is his loyalty."
+"PRI"	"We must secure the existence of the Goblin Nation and a future for our seed."
+"PRI"	"The Cave Goblins will not replace us."
 
 # Laboratory
 #
@@ -58,8 +45,3 @@
 "LAB"	"A inspection by the Head of Research on current safety practices will be conducted next week."
 "LAB"	"The Head of Research is committed to ensuring that all staff remain safe during work shifts."
 "LAB"	"Please read the appropriate manual(s) before operating machinery."
-"LAB"	"Read the owner's manual before operating extractors."
-"LAB"	"Read the owner's manual before operating grinders."
-"LAB"	"Read the owner's manual before operating research stations."
-"LAB"	"Do not use another staffer's research station."
-"LAB"	"Staffers that molest prisoners outside of research sessions will be scheduled for a mandatory appointment at the Shrine."
