@@ -595,8 +595,8 @@ fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, need_lair: bo
         return false; // Prefab is only for the tunneler algorithm.
     }
 
-    if (prefab.tunneler_prefab and prefab.tunneler_orientation != null and
-        prefab.tunneler_orientation.? != opts.t_orientation)
+    if (prefab.tunneler_prefab and prefab.tunneler_orientation.len != 0 and
+        prefab.tunneler_orientation.linearSearch(opts.t_orientation) == null)
     {
         return false; // This is a prefab for tunneler's corridor and is the wrong orientation.
     }
@@ -801,7 +801,7 @@ pub fn excavatePrefab(
                 };
 
             switch (fab.content[y][x]) {
-                .Window => state.dungeon.at(rc).material = &materials.Glass,
+                .Window => state.dungeon.at(rc).material = Configs[room.rect.start.z].window_material,
                 .LevelFeature => |l| (Configs[room.rect.start.z].level_features[l].?)(l, rc, room, fab, allocator),
                 .Feature => |feature_id| {
                     if (fab.features[feature_id]) |feature| {
@@ -3236,6 +3236,20 @@ pub fn generateLayoutMap(level: usize) void {
     }
 }
 
+fn levelFeatureDormantConstruct(_: usize, coord: Coord, _: *const Room, _: *const Prefab, alloc: mem.Allocator) void {
+    while (true) {
+        const mob_spawn_info = rng.choose2(MobSpawnInfo, spawn_tables[coord.z].items, "weight") catch err.wat();
+        const mob = mobs.findMobById(mob_spawn_info.id) orelse err.bug(
+            "Mob {s} specified in spawn tables couldn't be found.",
+            .{mob_spawn_info.id},
+        );
+        if (mob.mob.life_type != .Construct) continue;
+        const mob_ptr = mobs.placeMob(alloc, mob, coord, .{});
+        mob_ptr.addStatus(.Sleeping, 0, .Prm);
+        return;
+    }
+}
+
 fn levelFeaturePrisonersMaybe(c: usize, coord: Coord, room: *const Room, prefab: *const Prefab, alloc: mem.Allocator) void {
     if (rng.onein(2)) levelFeaturePrisoners(c, coord, room, prefab, alloc);
 }
@@ -3359,7 +3373,7 @@ pub const Prefab = struct {
 
     tunneler_prefab: bool = false,
     tunneler_inset: bool = false,
-    tunneler_orientation: ?Direction = null,
+    tunneler_orientation: StackBuffer(Direction, 3) = StackBuffer(Direction, 3).init(null),
 
     name: StackBuffer(u8, MAX_NAME_SIZE) = StackBuffer(u8, MAX_NAME_SIZE).init(null),
 
@@ -3538,7 +3552,7 @@ pub const Prefab = struct {
                     f.stockpile = null;
                     f.input = null;
                     f.output = null;
-                    f.tunneler_orientation = null;
+                    f.tunneler_orientation = @TypeOf(f.tunneler_orientation).init(null);
                     f.tunneler_inset = false;
                 },
                 ':' => {
@@ -3566,7 +3580,7 @@ pub const Prefab = struct {
                         f.tunneler_inset = true;
                     } else if (mem.eql(u8, key, "tunneler_orientation")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
-                        f.tunneler_orientation = if (Direction.fromStr(val)) |d| d else |_| return error.InvalidMetadataValue;
+                        f.tunneler_orientation.append(if (Direction.fromStr(val)) |d| d else |_| return error.InvalidMetadataValue) catch err.wat();
                     } else if (mem.eql(u8, key, "subroom")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.subroom = true;
@@ -4148,7 +4162,7 @@ pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeatureVials,
             levelFeaturePrisoners,
-            null,
+            levelFeatureDormantConstruct,
             levelFeatureOres,
         },
 
@@ -4256,13 +4270,13 @@ pub fn createLevelConfig_WRK(comptime prefabs: []const []const u8) LevelConfig {
                 .{ .start = Coord.new(1, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
             },
         },
-        .prefab_chance = 1000, // No prefabs for WRK
+        .prefab_chance = 2,
         .mapgen_func = tunneler.placeTunneledRooms,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeatureVials,
             levelFeaturePrisoners,
-            null,
+            levelFeatureDormantConstruct,
             levelFeatureOres,
         },
 

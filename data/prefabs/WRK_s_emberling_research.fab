@@ -1,0 +1,29 @@
+:g_tunneler
+:noguards
+:noitems
+:notraps
+
+:tunneler_orientation north
+:tunneler_orientation south
+@a p alch_frame_n1s1w2
+@b p alch_frame_n1s1w2
+@c p alch_table_r_t1
+@d p alch_table_r_t2
+@e p alch_table_r_t3
+@f p alch_frame_n1s1
+@g p alch_frame_s1e1
+@h p alch_frame_e1w1
+@i p alch_frame_s1w1
+@j p alch_frame_n1w1
+@w p whiteboard_r
+@x p broken_emberling
+@0 M alchemist
+ghi.....γ
+fxf0.....
+a.j.....w
+a.......w
+ae0.....w
+ad......w
+ac.0...0w
+ad0..0...
+ae......γ

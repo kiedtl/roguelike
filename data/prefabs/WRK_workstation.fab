@@ -1,0 +1,15 @@
+:g_tunneler
+:noguards
+:notraps
+
+:tunneler_orientation north
+:tunneler_orientation south
+@a p alch_frame_n1s1e2
+@b p alch_table_r_t1
+@c p alch_table_r_t2
+@0 M alchemist
+........
+γ.....ca
+.....0ba
+γ.....ca
+........
