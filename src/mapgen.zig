@@ -1112,20 +1112,20 @@ pub fn setLevelMaterial(level: usize) void {
 pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
     // utility functions
     const _f = struct {
-        pub fn _getWalkablePoint(room: *const Rect) Coord {
-            var y: usize = room.start.y;
-            while (y < room.end().y) : (y += 1) {
-                var x: usize = room.start.x;
-                while (x < room.end().x) : (x += 1) {
-                    const point = Coord.new2(room.start.z, x, y);
+        pub fn _getWalkablePoint(room: *const Room) Coord {
+            var y: usize = room.rect.start.y;
+            while (y < room.rect.end().y) : (y += 1) {
+                var x: usize = room.rect.start.x;
+                while (x < room.rect.end().x) : (x += 1) {
+                    const point = Coord.new2(room.rect.start.z, x, y);
                     if (state.is_walkable(point, .{})) {
                         return point;
                     }
                 }
             }
             std.log.err(
-                "BUG: found no walkable point in room (dim: {}x{})",
-                .{ room.width, room.height },
+                "BUG: found no walkable point in room (dim: {}x{}, prefab: {s})",
+                .{ room.rect.width, room.rect.height, room.prefabId() },
             );
             err.wat();
         }
@@ -1148,16 +1148,16 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
         }
     }
 
-    const base_room = for (rooms) |room| {
+    const base_room = for (rooms) |*room| {
         if (room.type != .Corridor) break room;
     } else err.wat();
-    const point = _f._getWalkablePoint(&base_room.rect);
+    const point = _f._getWalkablePoint(base_room);
 
-    for (rooms) |otherroom| {
+    for (rooms) |*otherroom| {
         if (otherroom.type == .Corridor) continue;
         if (otherroom.rect.start.eq(base_room.rect.start)) continue;
 
-        const otherpoint = _f._getWalkablePoint(&otherroom.rect);
+        const otherpoint = _f._getWalkablePoint(otherroom);
 
         if (astar.path(point, otherpoint, state.mapgeometry, state.is_walkable, .{
             .ignore_mobs = true,
@@ -3320,6 +3320,10 @@ pub const Room = struct {
     pub const RoomType = enum { Corridor, Room, Sideroom, Junction };
     pub const ArrayList = std.ArrayList(Room);
 
+    pub fn prefabId(self: *const Room) []const u8 {
+        return if (self.prefab) |prefab| prefab.name.constSlice() else "NONE";
+    }
+
     pub fn getByStart(start: Coord) ?*Room {
         return for (state.rooms[start.z].items) |*room| {
             if (room.rect.start.eq(start)) break room;
@@ -4138,7 +4142,7 @@ pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
                 .{ .start = Coord.new(WIDTH - 4, 1), .width = 3, .height = 0, .direction = .South },
             },
         },
-        .prefab_chance = 1000, // No prefabs for WRK
+        .prefab_chance = 2,
         .mapgen_func = tunneler.placeTunneledRooms,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
