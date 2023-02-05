@@ -4083,7 +4083,7 @@ pub const LevelConfig = struct {
     level_features: [4]?LevelFeatureFunc = [_]?LevelFeatureFunc{ null, null, null, null },
 
     required_mobs: []const RequiredMob = &[_]RequiredMob{
-        .{ .count = 3, .template = &mobs.CleanerTemplate },
+        // .{ .count = 3, .template = &mobs.CleanerTemplate },
     },
     room_crowd_max: usize = 2,
     level_crowd_max: ?usize = null,

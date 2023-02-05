@@ -5,8 +5,8 @@
 
 #
 # monster id          -8/Pri  -7/Pri  -6/Lab  -5/Sin  -5/Pri  -5/Smi  -4/Pri -3/Vlt  -3/Sin   -2/Pri  -1/Pri -1/Cry -1/Cry2 -1/Cry3
-"cleaner"              	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"hauler"               	   - 	   - 	   5 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+#"cleaner"              	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+#"hauler"               	   - 	   - 	   5 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 
 # nuisances
 "mellaent"             	   - 	   - 	   5 	   - 	   - 	  10 	   2 	   2 	   - 	   2 	   2 	  - 	  - 	  -
