@@ -1136,6 +1136,11 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
     if (rooms.len < 1)
         return error.TooFewRooms;
 
+    for (rooms) |room| {
+        if (room.rect.height == 0 or room.rect.width == 0)
+            return error.ZeroDimensionedRooms;
+    }
+
     // Ensure that all required prefabs were used.
     for (Configs[level].prefabs) |required_fab| {
         const fab = Prefab.findPrefabByName(required_fab, &n_fabs) orelse

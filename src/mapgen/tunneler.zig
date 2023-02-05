@@ -68,11 +68,12 @@ pub const Ctx = struct {
         var tunnelers = self.tunnelers.iterator();
         while (tunnelers.next()) |tunneler| {
             tunneler.is_dead = true;
-            const cw = tunneler.corridorWidth();
-            if (!tunneler.is_eviscerated and cw > 0) {
+            if (!tunneler.is_eviscerated and tunneler.corridorLength() > 0) {
+                assert(tunneler.rect.width > 0 and tunneler.rect.height > 0);
                 state.rooms[self.level].append(.{ .type = .Corridor, .rect = tunneler.rect }) catch err.wat();
 
                 // Create receiving staircase
+                const cw = tunneler.corridorWidth();
                 if (tunneler.parent == null) {
                     const stairloc = switch (tunneler.direction) {
                         .North => Coord.new2(self.level, tunneler.rect.start.x + cw / 2, tunneler.rect.start.y - 1),
