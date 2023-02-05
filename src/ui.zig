@@ -688,6 +688,7 @@ fn _getMonsSpellsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, li
                         break :b t.mob.ai.profession_name orelse t.mob.species.name;
                     },
                     .UndeadAlly => "undead ally",
+                    .ConstructAlly => "construct ally",
                     .Mob => "you",
                     .Corpse => "corpse",
                 });

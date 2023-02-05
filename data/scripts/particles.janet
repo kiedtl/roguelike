@@ -720,6 +720,15 @@
     :lifetime 5
     :spawn-count (Emitter :SCNT-dist-to-target)
    })]
+  "zap-awaken-construct" @[(new-emitter @{
+    :particle (new-particle @{
+      :tile (new-tile @{ :ch "Z" :fg 0x9fefff :bg-mix 1 })
+      :speed 1
+      :triggers @[ [[:COND-true] [:TRIG-scramble-glyph "[]{}()*-=+~?!@#%&"]] ]
+    })
+    :lifetime 3
+    :spawn-count (Emitter :SCNT-dist-to-target)
+   })]
   "zap-sword" @[(new-emitter @{
     :particle (new-particle @{
       :tile (new-tile @{ :ch "|" :fg 0xef9fff :bg 0 :bg-mix 1 })

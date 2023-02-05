@@ -1431,6 +1431,7 @@ fn _isValidTargetForSpell(caster: *Mob, spell: SpellOptions, target: *Mob) bool 
 
     if (spell.spell.cast_type == .Smite) {
         switch (spell.spell.smite_target_type) {
+            .ConstructAlly => if (target.life_type != .Construct) return false,
             .UndeadAlly => if (target.life_type != .Undead) return false,
             .SpecificAlly => |id| if (!mem.eql(u8, id, target.id)) return false,
             else => {},
@@ -1466,7 +1467,9 @@ fn _findValidTargetForSpell(caster: *Mob, spell: SpellOptions) ?Coord {
     {
         return utils.getNearestCorpse(caster);
     } else if (spell.spell.cast_type == .Smite and
-        (spell.spell.smite_target_type == .UndeadAlly or spell.spell.smite_target_type == .SpecificAlly))
+        (spell.spell.smite_target_type == .ConstructAlly or
+        spell.spell.smite_target_type == .UndeadAlly or
+        spell.spell.smite_target_type == .SpecificAlly))
     {
         return for (caster.allies.items) |ally| {
             if (_isValidTargetForSpell(caster, spell, ally))
@@ -1516,6 +1519,11 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
             if (!moved) meleeFight(mob, alloc);
         } else {
             tryRest(mob);
+        },
+        .Flee => {
+            assert(!mob.immobile);
+            const moved = keepDistance(mob, currentEnemy(mob).mob.coord, 1000);
+            if (!moved) meleeFight(mob, alloc);
         },
     }
 }

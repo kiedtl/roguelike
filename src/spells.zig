@@ -246,6 +246,25 @@ pub const CAST_ENRAGE_DUSTLING = _createSpecificStatusSp("dustling", "dustling",
 
 // }}}
 
+pub const CAST_AWAKEN_CONSTRUCT = Spell{
+    .id = "sp_awaken_construct",
+    .name = "awaken construct",
+    .cast_type = .Smite,
+    .smite_target_type = .ConstructAlly,
+    .animation = .{ .Particle = .{ .name = "zap-awaken-construct" } },
+    .check_has_effect = struct {
+        fn f(_: *Mob, _: SpellOptions, target: Coord) bool {
+            return state.dungeon.at(target).mob.?.hasStatus(.Sleeping);
+        }
+    }.f,
+    .noise = .Silent,
+    .effect_type = .{ .Custom = struct {
+        fn f(_: Coord, _: Spell, _: SpellOptions, target: Coord) void {
+            state.dungeon.at(target).mob.?.cancelStatus(.Sleeping);
+        }
+    }.f },
+};
+
 pub const CAST_FIREBLAST = Spell{
     .id = "sp_fireblast",
     .name = "vomit flames",
@@ -1124,6 +1143,7 @@ pub const Spell = struct {
     smite_target_type: union(enum) {
         SpecificAlly: []const u8, // mob's ID
         Self,
+        ConstructAlly,
         UndeadAlly,
         Mob,
         Corpse,
@@ -1356,7 +1376,7 @@ pub const Spell = struct {
                 };
 
                 switch (self.smite_target_type) {
-                    .Self, .Mob, .SpecificAlly, .UndeadAlly => {
+                    .Self, .Mob, .SpecificAlly, .ConstructAlly, .UndeadAlly => {
                         if (state.dungeon.at(target).mob == null) {
                             err.bug("Mage used smite-targeted spell on empty target!", .{});
                         }
