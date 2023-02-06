@@ -1677,55 +1677,6 @@ pub const TorturerNecromancerTemplate = MobTemplate{
     .armor = &items.GambesonArmor,
 };
 
-// const BURNING_BRUTE_CLAW_WEAPON = Weapon{
-//     .damage = 2,
-//     .strs = &items.CLAW_STRS,
-// };
-
-// pub const BurningBruteTemplate = MobTemplate{
-//     .mob = .{
-//         .id = "burning_brute",
-//         .species = &Species{
-//             .name = "burning brute",
-//             .default_attack = &BURNING_BRUTE_CLAW_WEAPON,
-//             .aux_attacks = &[_]*const Weapon{
-//                 &BURNING_BRUTE_CLAW_WEAPON,
-//                 &Weapon{ .knockback = 3, .damage = 1, .strs = &items.KICK_STRS },
-//             },
-//         },
-//         .tile = 'B',
-//         .ai = AI{
-//             .profession_description = "sulking",
-//             // *must* be stand_still_and_guard, otherwise it'll spread fire
-//             // everywhere.
-//             .work_fn = ai.standStillAndGuardWork,
-//             .fight_fn = ai.mageFight,
-//             //.is_fearless = true, // Flee effect won't trigger otherwise.
-//             .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
-//             .spellcaster_backup_action = .Melee,
-//             .flags = &[_]AI.Flag{.DetectWithHeat},
-//         },
-
-//         .spells = &[_]SpellOptions{
-//             .{ .MP_cost = 2, .spell = &spells.CAST_RESURRECT_FIRE, .power = 200, .duration = 10 },
-//             .{ .MP_cost = 3, .spell = &spells.BOLT_FIREBALL, .power = 3, .duration = 5 },
-//         },
-//         .max_MP = 12,
-
-//         .max_HP = 15,
-//         .memory_duration = 10,
-//         .blood = null,
-//         .corpse = .None,
-
-//         .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = -25 },
-//         .stats = .{ .Willpower = 8, .Evade = 10, .Melee = 80 },
-//     },
-//     .statuses = &[_]StatusDataInfo{
-//         .{ .status = .Fire, .duration = .Prm },
-//         .{ .status = .Noisy, .duration = .Prm },
-//     },
-// };
-
 // pub const SulfurFiendTemplate = MobTemplate{
 //     .mob = .{
 //         .id = "sulfur_fiend",
@@ -2164,10 +2115,62 @@ pub const CinderBruteTemplate = MobTemplate{
         .blood = .Ash,
         .blood_spray = gas.SmokeGas.id,
         .corpse = .None,
+        .faction = .Revgenunkim,
         .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = -25, .rFume = 100 },
         .stats = .{ .Willpower = 6, .Melee = 80, .Vision = 4 },
     },
     .statuses = &[_]StatusDataInfo{.{ .status = .Fire, .duration = .Prm }},
+};
+
+const BURNING_BRUTE_CLAW_WEAPON = Weapon{
+    .damage = 2,
+    .strs = &items.CLAW_STRS,
+};
+
+pub const BurningBruteTemplate = MobTemplate{
+    .mob = .{
+        .id = "burning_brute",
+        .species = &Species{
+            .name = "burning brute",
+            .default_attack = &BURNING_BRUTE_CLAW_WEAPON,
+            .aux_attacks = &[_]*const Weapon{
+                &BURNING_BRUTE_CLAW_WEAPON,
+                &Weapon{ .knockback = 3, .damage = 1, .strs = &items.KICK_STRS },
+            },
+        },
+        .tile = 'B',
+        .ai = AI{
+            .profession_description = "sulking",
+            // *must* be stand_still_and_guard, otherwise it'll spread fire
+            // everywhere.
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.mageFight,
+            //.is_fearless = true, // Flee effect won't trigger otherwise.
+            .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
+            .spellcaster_backup_action = .Melee,
+            .flags = &[_]AI.Flag{.DetectWithHeat},
+        },
+
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 2, .spell = &spells.CAST_RESURRECT_FIRE, .power = 200, .duration = 10 },
+            .{ .MP_cost = 3, .spell = &spells.BOLT_FIREBALL, .power = 3, .duration = 5 },
+        },
+        .max_MP = 12,
+
+        .faction = .Revgenunkim,
+        .multitile = 2,
+        .max_HP = 15,
+        .memory_duration = 10,
+        .blood = null,
+        .corpse = .None,
+
+        .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = -25 },
+        .stats = .{ .Willpower = 8, .Evade = 10, .Melee = 80 },
+    },
+    .statuses = &[_]StatusDataInfo{
+        .{ .status = .Fire, .duration = .Prm },
+        .{ .status = .Noisy, .duration = .Prm },
+    },
 };
 
 pub const MOBS = [_]MobTemplate{
@@ -2227,7 +2230,6 @@ pub const MOBS = [_]MobTemplate{
     SparklingTemplate,
     SkeletalBlademasterTemplate,
     TorturerNecromancerTemplate,
-    // BurningBruteTemplate,
     // FrozenFiendTemplate,
     // SulfurFiendTemplate,
     BallLightningTemplate,
@@ -2239,6 +2241,7 @@ pub const MOBS = [_]MobTemplate{
     SlinkingTerrorTemplate,
     CreepingDeathTemplate,
     CinderBruteTemplate,
+    BurningBruteTemplate,
 };
 
 pub const PRISONERS = [_]MobTemplate{
@@ -2265,6 +2268,9 @@ pub const PlaceMobOptions = struct {
     work_area: ?Coord = null,
     no_squads: bool = false,
     faction: ?types.Faction = null,
+    prisoner_of: ?types.Faction = null,
+    prm_status1: ?Status = null,
+    prm_status2: ?Status = null,
 };
 
 pub fn placeMob(
@@ -2285,6 +2291,13 @@ pub fn placeMob(
     mob.coord = coord;
     mob.faction = opts.faction orelse mob.faction;
     mob.ai.phase = opts.phase;
+
+    if (opts.prisoner_of) |f|
+        mob.prisoner_status = types.Prisoner{ .of = f };
+    if (opts.prm_status1) |s|
+        mob.addStatus(s, 0, .Prm);
+    if (opts.prm_status2) |s|
+        mob.addStatus(s, 0, .Prm);
 
     if (template.weapon) |w| mob.equipItem(.Weapon, Item{ .Weapon = w });
     if (template.backup_weapon) |w| mob.equipItem(.Backup, Item{ .Weapon = w });

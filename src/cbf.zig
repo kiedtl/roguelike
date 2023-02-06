@@ -11,7 +11,7 @@ const testing = std.testing;
 const LinkedList = @import("list.zig").LinkedList;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
-const KVList = LinkedList(KV);
+const KVList = std.ArrayList(KV);
 const StringBuffer = StackBuffer(u8, 2048);
 
 const Value = union(enum) {
@@ -34,51 +34,49 @@ const KV = struct {
 
 fn _lastNumericKey(list: *KVList) ?usize {
     var last: ?usize = null;
-    var iter = list.iterator();
-    while (iter.nextPtr()) |node| {
-        switch (node.key) {
-            .Numeric => |n| last = n,
-            else => {},
-        }
-    }
+    for (list.items) |*node| switch (node.key) {
+        .Numeric => |n| last = n,
+        else => {},
+    };
     return last;
 }
 
 test "_lastNumericKey()" {
     var gpa = GPA{};
-    defer testing.expect(!gpa.deinit());
 
-    var list = KVList.init(&gpa.allocator);
-    defer list.deinit();
+    var list = KVList.init(gpa.allocator());
 
-    testing.expectEqual(_lastNumericKey(&list), null);
+    try testing.expectEqual(_lastNumericKey(&list), null);
 
     try list.append(KV{ .key = Key{ .String = "hai" }, .value = .None });
-    testing.expectEqual(_lastNumericKey(&list), null);
+    try testing.expectEqual(_lastNumericKey(&list), null);
 
     try list.append(KV{ .key = Key{ .Numeric = 0 }, .value = .None });
-    testing.expectEqual(_lastNumericKey(&list), 0);
+    try testing.expectEqual(_lastNumericKey(&list), 0);
 
     try list.append(KV{ .key = Key{ .String = "abcd" }, .value = .None });
-    testing.expectEqual(_lastNumericKey(&list), 0);
+    try testing.expectEqual(_lastNumericKey(&list), 0);
 
     try list.append(KV{ .key = Key{ .String = "foobarbaz" }, .value = .None });
-    testing.expectEqual(_lastNumericKey(&list), 0);
+    try testing.expectEqual(_lastNumericKey(&list), 0);
 
     try list.append(KV{ .key = Key{ .Numeric = 3 }, .value = .None });
-    testing.expectEqual(_lastNumericKey(&list), 3);
+    try testing.expectEqual(_lastNumericKey(&list), 3);
 
     try list.append(KV{ .key = Key{ .String = "bazbarfoo" }, .value = .None });
-    testing.expectEqual(_lastNumericKey(&list), 3);
+    try testing.expectEqual(_lastNumericKey(&list), 3);
 
     try list.append(KV{ .key = Key{ .Numeric = 6 }, .value = .None });
-    testing.expectEqual(_lastNumericKey(&list), 6);
+    try testing.expectEqual(_lastNumericKey(&list), 6);
 
     try list.append(KV{ .key = Key{ .Numeric = 7 }, .value = .None });
-    testing.expectEqual(_lastNumericKey(&list), 7);
+    try testing.expectEqual(_lastNumericKey(&list), 7);
+
+    list.deinit();
+    try testing.expect(!gpa.deinit());
 }
 
-const Parser = struct {
+pub const Parser = struct {
     input: []const u8,
     index: usize = 0,
     stack: usize = 0,
@@ -102,8 +100,7 @@ const Parser = struct {
     } || StringParserError;
 
     pub fn deinit(data: *KVList) void {
-        var iter = data.iterator();
-        while (iter.nextPtr()) |node| switch (node.value) {
+        for (data.items) |*node| switch (node.value) {
             .List => |*l| deinit(l),
             else => {},
         };
@@ -118,7 +115,7 @@ const Parser = struct {
         while (self.index < self.input.len) : (self.index += 1) {
             switch (self.input[self.index]) {
                 ']' => return self.input[oldi..self.index],
-                'a'...'z', '0'...'9', 'A'...'Z' => {},
+                'a'...'z', '_', '0'...'9', 'A'...'Z' => {},
                 else => return error.InvalidKeyChar,
             }
         }
@@ -251,26 +248,24 @@ const GPA = std.heap.GeneralPurposeAllocator(.{});
 
 test "parse values" {
     var gpa = GPA{};
-    defer testing.expect(!gpa.deinit());
 
     const input = "yea nah nil";
     const output = [_]Value{ .True, .False, .None };
     var p = Parser{ .input = input };
 
-    var res = try p.parse(&gpa.allocator);
-    defer Parser.deinit(&res);
+    var res = try p.parse(gpa.allocator());
 
-    var i: usize = 0;
-    var resiter = res.iterator();
-    while (resiter.next()) |kv| : (i += 1) {
+    for (res.items) |kv, i| {
         const key = Key{ .Numeric = i };
-        testing.expectEqual(KV{ .key = key, .value = output[i] }, kv);
+        try testing.expectEqual(KV{ .key = key, .value = output[i] }, kv);
     }
+
+    Parser.deinit(&res);
+    try testing.expect(!gpa.deinit());
 }
 
 test "parse strings" {
     var gpa = GPA{};
-    defer testing.expect(!gpa.deinit());
 
     const Case = struct { input: []const u8, output: []const u8 };
     const cases = [_]Case{
@@ -283,174 +278,182 @@ test "parse strings" {
 
     for (&cases) |case| {
         var p = Parser{ .input = case.input };
-        var res = try p.parse(&gpa.allocator);
-        defer Parser.deinit(&res);
+        var res = try p.parse(gpa.allocator());
 
-        testing.expectEqual(meta.activeTag(res.nth(0).?.value), .String);
-        testing.expectEqualSlices(
+        try testing.expectEqual(meta.activeTag(res.items[0].value), .String);
+        try testing.expectEqualSlices(
             u8,
-            res.nth(0).?.value.String.slice(),
+            res.items[0].value.String.slice(),
             case.output,
         );
+
+        Parser.deinit(&res);
     }
+
+    try testing.expect(!gpa.deinit());
 }
 
 test "parse basic list" {
     var gpa = GPA{};
-    defer testing.expect(!gpa.deinit());
 
     const input = "yea (nah nil) nah";
     var p = Parser{ .input = input };
 
-    var res = try p.parse(&gpa.allocator);
-    defer Parser.deinit(&res);
+    var res = try p.parse(gpa.allocator());
 
-    testing.expectEqual(res.nth(0).?.value, .True);
-    testing.expectEqual(meta.activeTag(res.nth(1).?.value), .List);
-    testing.expectEqual(res.nth(1).?.value.List.nth(0).?.value, .False);
-    testing.expectEqual(res.nth(1).?.value.List.nth(1).?.value, .None);
-    testing.expectEqual(res.nth(2).?.value, .False);
+    try testing.expectEqual(res.items[0].value, .True);
+    try testing.expectEqual(meta.activeTag(res.items[1].value), .List);
+    try testing.expectEqual(res.items[1].value.List.items[0].value, .False);
+    try testing.expectEqual(res.items[1].value.List.items[1].value, .None);
+    try testing.expectEqual(res.items[2].value, .False);
+
+    Parser.deinit(&res);
+    try testing.expect(!gpa.deinit());
 }
 
 test "parse nested list" {
     var gpa = GPA{};
-    defer testing.expect(!gpa.deinit());
 
     const input = "yea ( nah (nah nil) (nah yea  )) nah";
     var p = Parser{ .input = input };
 
-    var res = try p.parse(&gpa.allocator);
-    defer Parser.deinit(&res);
+    var res = try p.parse(gpa.allocator());
 
-    testing.expectEqual(res.nth(0).?.value, .True);
-    testing.expectEqual(meta.activeTag(res.nth(1).?.value), .List);
-    testing.expectEqual(res.nth(2).?.value, .False);
+    try testing.expectEqual(res.items[0].value, .True);
+    try testing.expectEqual(meta.activeTag(res.items[1].value), .List);
+    try testing.expectEqual(res.items[2].value, .False);
 
-    var list1 = res.nth(1).?.value.List;
+    var list1 = res.items[1].value.List;
 
-    testing.expectEqual(list1.nth(0).?.value, .False);
-    testing.expectEqual(meta.activeTag(list1.nth(1).?.value), .List);
-    testing.expectEqual(meta.activeTag(list1.nth(2).?.value), .List);
+    try testing.expectEqual(list1.items[0].value, .False);
+    try testing.expectEqual(meta.activeTag(list1.items[1].value), .List);
+    try testing.expectEqual(meta.activeTag(list1.items[2].value), .List);
 
-    testing.expectEqual(list1.nth(1).?.value.List.nth(0).?.value, .False);
-    testing.expectEqual(list1.nth(1).?.value.List.nth(1).?.value, .None);
+    try testing.expectEqual(list1.items[1].value.List.items[0].value, .False);
+    try testing.expectEqual(list1.items[1].value.List.items[1].value, .None);
 
-    testing.expectEqual(list1.nth(2).?.value.List.nth(0).?.value, .False);
-    testing.expectEqual(list1.nth(2).?.value.List.nth(1).?.value, .True);
+    try testing.expectEqual(list1.items[2].value.List.items[0].value, .False);
+    try testing.expectEqual(list1.items[2].value.List.items[1].value, .True);
+
+    Parser.deinit(&res);
+    try testing.expect(!gpa.deinit());
 }
 
 test "parse values with tags" {
     var gpa = GPA{};
-    defer testing.expect(!gpa.deinit());
 
     const input = "nil [frobnicate]yea [confuzzlementate]nah [fillibigimentate]nil";
 
     var p = Parser{ .input = input };
-    var res = try p.parse(&gpa.allocator);
-    defer Parser.deinit(&res);
+    var res = try p.parse(gpa.allocator());
 
     // Keys
-    testing.expectEqual(res.nth(0).?.key.Numeric, 0);
-    testing.expectEqualSlices(u8, res.nth(1).?.key.String, "frobnicate");
-    testing.expectEqualSlices(u8, res.nth(2).?.key.String, "confuzzlementate");
-    testing.expectEqualSlices(u8, res.nth(3).?.key.String, "fillibigimentate");
+    try testing.expectEqual(res.items[0].key.Numeric, 0);
+    try testing.expectEqualSlices(u8, res.items[1].key.String, "frobnicate");
+    try testing.expectEqualSlices(u8, res.items[2].key.String, "confuzzlementate");
+    try testing.expectEqualSlices(u8, res.items[3].key.String, "fillibigimentate");
 
     // Values
-    testing.expectEqual(res.nth(0).?.value, .None);
-    testing.expectEqual(res.nth(1).?.value, .True);
-    testing.expectEqual(res.nth(2).?.value, .False);
-    testing.expectEqual(res.nth(3).?.value, .None);
+    try testing.expectEqual(res.items[0].value, .None);
+    try testing.expectEqual(res.items[1].value, .True);
+    try testing.expectEqual(res.items[2].value, .False);
+    try testing.expectEqual(res.items[3].value, .None);
+
+    Parser.deinit(&res);
+    try testing.expect(!gpa.deinit());
 }
 
 test "parse lists with tags" {
     var gpa = GPA{};
-    defer testing.expect(!gpa.deinit());
 
     const input = "[xyz](nil [foo]yea [bar]nah [baz]nil nil)";
 
     var p = Parser{ .input = input };
-    var res = try p.parse(&gpa.allocator);
-    defer Parser.deinit(&res);
+    var res = try p.parse(gpa.allocator());
 
-    testing.expectEqualSlices(u8, res.nth(0).?.key.String, "xyz");
-    testing.expectEqual(meta.activeTag(res.nth(0).?.value), .List);
-    var list = res.nth(0).?.value.List;
+    try testing.expectEqualSlices(u8, res.items[0].key.String, "xyz");
+    try testing.expectEqual(meta.activeTag(res.items[0].value), .List);
+    var list = res.items[0].value.List;
 
     // Keys
-    testing.expectEqual(list.nth(0).?.key.Numeric, 0);
-    testing.expectEqualSlices(u8, list.nth(1).?.key.String, "foo");
-    testing.expectEqualSlices(u8, list.nth(2).?.key.String, "bar");
-    testing.expectEqualSlices(u8, list.nth(3).?.key.String, "baz");
-    testing.expectEqual(list.nth(4).?.key.Numeric, 1);
+    try testing.expectEqual(list.items[0].key.Numeric, 0);
+    try testing.expectEqualSlices(u8, list.items[1].key.String, "foo");
+    try testing.expectEqualSlices(u8, list.items[2].key.String, "bar");
+    try testing.expectEqualSlices(u8, list.items[3].key.String, "baz");
+    try testing.expectEqual(list.items[4].key.Numeric, 1);
 
     // Values
-    testing.expectEqual(list.nth(0).?.value, .None);
-    testing.expectEqual(list.nth(1).?.value, .True);
-    testing.expectEqual(list.nth(2).?.value, .False);
-    testing.expectEqual(list.nth(3).?.value, .None);
-    testing.expectEqual(list.nth(4).?.value, .None);
+    try testing.expectEqual(list.items[0].value, .None);
+    try testing.expectEqual(list.items[1].value, .True);
+    try testing.expectEqual(list.items[2].value, .False);
+    try testing.expectEqual(list.items[3].value, .None);
+    try testing.expectEqual(list.items[4].value, .None);
+
+    Parser.deinit(&res);
+    try testing.expect(!gpa.deinit());
 }
 
-pub fn deserializeValue(comptime T: type, val: Value) ?T {
+pub fn deserializeValue(comptime T: type, val: Value, default: ?T) !T {
     return switch (@typeInfo(T)) {
-        .NoReturn, .Void, .Type => null,
-        .Vector, .ComptimeInt, .ComptimeFloat, .Undefined => null,
+        .NoReturn, .Void, .Type => error.E,
+        .Vector, .ComptimeInt, .ComptimeFloat, .Undefined => error.E,
         .Bool => switch (val) {
             .True => true,
             .False => false,
-            else => null,
+            else => error.E,
         },
         .Int => switch (val) {
-            .String => |s| fmt.parseInt(T, s.constSlice(), 0) catch null,
-            else => null,
+            .String => |s| fmt.parseInt(T, s.constSlice(), 0) catch error.E,
+            else => error.E,
         },
         .Float => switch (val) {
-            .String => |s| fmt.parseFloat(T, s.constSlice()) catch null,
-            else => null,
+            .String => |s| fmt.parseFloat(T, s.constSlice()) catch error.E,
+            else => error.E,
+        },
+        .Enum => switch (val) {
+            .String => |s| std.meta.stringToEnum(T, s.constSlice()) orelse error.E,
+            else => error.E,
+        },
+        .Optional => |optional| switch (val) {
+            .None => null,
+            else => try deserializeValue(optional.child, val, null),
         },
         .Struct => switch (val) {
-            .List => |l| deserializeStruct(T, l) catch null,
-            else => null,
+            .List => |l| try deserializeStruct(T, l, default.?),
+            else => error.E,
         },
         else => @panic("TODO"),
     };
 }
 
-pub fn deserializeStruct(comptime T: type, data: *KVList) !T {
+pub fn deserializeStruct(comptime T: type, data: KVList, initial: T) !T {
     const struct_info = @typeInfo(T).Struct;
     const fields = struct_info.fields;
 
-    var output = T{};
+    var output: T = initial;
 
-    var iter = data.iterator();
-    while (iter.next()) |node| {
+    for (data.items) |node| {
         // Using block labels and 'break :block;' instead of the clunky 'found'
         // variables segfaults Zig (See: #2727)
         //
         // https://github.com/ziglang/zig/issues/2727
         switch (node.key) {
             .Numeric => |n| {
-                var found = false;
+                var found: bool = false;
                 inline for (fields) |f, i| {
                     if (n == i) {
-                        if (deserializeValue(f.field_type, node.value)) |v| {
-                            @field(output, f.name) = v;
-                        }
+                        @field(output, f.name) = try deserializeValue(f.field_type, node.value, f.default_value);
                         found = true;
-                        break;
                     }
                 }
                 if (!found) return error.TooManyItems;
             },
             .String => |s| {
-                var found = false;
-                inline for (fields) |f, i| {
+                var found: bool = false;
+                inline for (fields) |f| {
                     if (mem.eql(u8, s, f.name)) {
-                        if (deserializeValue(fields[i].field_type, node.value)) |v| {
-                            @field(output, fields[i].name) = v;
-                        }
+                        @field(output, f.name) = try deserializeValue(f.field_type, node.value, f.default_value);
                         found = true;
-                        break;
                     }
                 }
                 if (!found) return error.NoSuchTag;
@@ -462,32 +465,33 @@ pub fn deserializeStruct(comptime T: type, data: *KVList) !T {
 }
 
 test "value deserial" {
-    testing.expectEqual(deserializeValue(bool, .True), true);
-    testing.expectEqual(deserializeValue(bool, .False), false);
+    try testing.expectEqual(deserializeValue(bool, .True, null), true);
+    try testing.expectEqual(deserializeValue(bool, .False, null), false);
 
-    testing.expectEqual(deserializeValue(usize, Value{ .String = StringBuffer.init("0") }), 0);
-    testing.expectEqual(deserializeValue(usize, Value{ .String = StringBuffer.init("231") }), 231);
+    try testing.expectEqual(deserializeValue(usize, Value{ .String = StringBuffer.init("0") }, null), 0);
+    try testing.expectEqual(deserializeValue(usize, Value{ .String = StringBuffer.init("231") }, null), 231);
 
-    testing.expectEqual(deserializeValue(isize, Value{ .String = StringBuffer.init("-1") }), -1);
-    testing.expectEqual(deserializeValue(isize, Value{ .String = StringBuffer.init("91") }), 91);
+    try testing.expectEqual(deserializeValue(isize, Value{ .String = StringBuffer.init("-1") }, null), -1);
+    try testing.expectEqual(deserializeValue(isize, Value{ .String = StringBuffer.init("91") }, null), 91);
 
-    testing.expectEqual(deserializeValue(f64, Value{ .String = StringBuffer.init("15.21") }), 15.21);
+    try testing.expectEqual(deserializeValue(f64, Value{ .String = StringBuffer.init("15.21") }, null), 15.21);
 }
 
 test "struct deserial" {
     const Type = struct { foo: usize = 0, bar: bool = true, baz: isize = 0 };
 
     var gpa = GPA{};
-    defer testing.expect(!gpa.deinit());
 
     const input = "([foo]12 [bar]yea [baz]-2)";
 
     var p = Parser{ .input = input };
-    var res = try p.parse(&gpa.allocator);
-    defer Parser.deinit(&res);
+    var res = try p.parse(gpa.allocator());
 
-    const r = try deserializeStruct(Type, &res.nth(0).?.value.List);
-    testing.expectEqual(r.foo, 12);
-    testing.expectEqual(r.bar, true);
-    testing.expectEqual(r.baz, -2);
+    const r = try deserializeStruct(Type, res.items[0].value.List, .{});
+    try testing.expectEqual(r.foo, 12);
+    try testing.expectEqual(r.bar, true);
+    try testing.expectEqual(r.baz, -2);
+
+    Parser.deinit(&res);
+    try testing.expect(!gpa.deinit());
 }

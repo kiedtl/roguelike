@@ -1,0 +1,59 @@
+:g_tunneler
+:g_global_restriction 1
+:noguards
+:noitems
+:notraps
+:nostairs
+:priority 10000000000
+
+%:tunneler_orientation east
+%:tunneler_orientation west
+%:tunneler_orientation north
+%:tunneler_orientation south
+
+@0 Cmons burning_brute        ([prisoner_of]Necromancer [prm_status1]Sleeping [prm_status2]Paralysis)
+@1 Cmons sparkling            ([no_squads]yea)
+@2 Cmons lightning_mage       ([no_squads]yea)
+@3 Cmons skeletal_blademaster ([prm_status1]Sleeping)
+
+@4 P
+-- BURNING BRUTE CONTAINMENT AREA --
+
+That the Hugghehel managed to capture the lone Burning Brute that was found
+wandering in this area is extraordinary, doubly so as their records state that
+it seems to be much more resiliant to the effects of the eldritch transmitters
+than the Revgenuhelkim, and was not dazed or confused at the time of its
+capture.
+
+$r*** KORNALG WILL BE AVENGED ***$.
+
+END POSTER
+
+@a p chamber_s1e1
+@b p chamber_s1w1
+@c p chamber_n1e1
+@d p chamber_n1w1
+@e p chamber_e1w1
+@f p chamber_n1s1
+@g p chamber_p_n1s1e1w1
+@h p chamber_p_s1e1w1
+@i p chamber_p_n1e1w1
+@j p chamber_p_n1s1
+@k p chamber_p_n1s1e1w1
+@l p chamber_p_s1e1
+@m p chamber_p_n1w1
+
+:prison 3,5 2 2
+
+............
+.111112.aeb.
+........f3f.
+.lhb....f3f.
+.jgeeb..f3f.
+.cf0.f..f3f.
+..f..fb.f3f.
+..ceegj.f3f.
+.4..cim.f3f.
+........f3f.
+.211111.ced.
+............

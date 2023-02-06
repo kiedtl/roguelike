@@ -8,6 +8,7 @@ const assert = std.debug.assert;
 const astar = @import("astar.zig");
 const err = @import("err.zig");
 const rng = @import("rng.zig");
+const cbf = @import("cbf.zig");
 const dijkstra = @import("dijkstra.zig");
 const mobs = @import("mobs.zig");
 const items = @import("items.zig");
@@ -634,7 +635,7 @@ pub fn choosePrefab(level: usize, prefabs: *PrefabArrayList, opts: PrefabOpts) ?
         fab_list.append(prefab) catch err.wat();
     };
     if (fab_list.items.len == 0) return null;
-    return fab_list.items[rng.range(usize, 0, fab_list.items.len - 1)];
+    return rng.choose2(*Prefab, fab_list.items, "priority") catch err.wat();
 }
 
 fn attachRect(parent: *const Room, d: Direction, width: usize, height: usize, distance: usize, fab: ?*const Prefab) ?Rect {
@@ -821,6 +822,9 @@ pub fn excavatePrefab(
                             },
                             .Mob => |mob| {
                                 _ = mobs.placeMob(allocator, mob, rc, .{});
+                            },
+                            .CMob => |mob_info| {
+                                _ = mobs.placeMob(allocator, mob_info.t, rc, mob_info.opts);
                             },
                             .Poster => |poster| {
                                 state.dungeon.at(rc).surface = SurfaceItem{ .Poster = poster };
@@ -3442,6 +3446,11 @@ pub const Prefab = struct {
     pub const Feature = union(enum) {
         Item: *const items.ItemTemplate,
         Mob: *const mobs.MobTemplate,
+        // Same as Mob, but with more options
+        CMob: struct {
+            t: *const mobs.MobTemplate,
+            opts: mobs.PlaceMobOptions,
+        },
         Poster: *const Poster,
         Machine: struct {
             id: [32:0]u8,
@@ -3758,10 +3767,27 @@ pub const Prefab = struct {
 
                     const identifier = line[1];
                     const feature_type = words.next() orelse return error.MalformedFeatureDefinition;
-                    if (feature_type.len != 1) return error.InvalidFeatureType;
                     const id = words.next();
 
                     switch (feature_type[0]) {
+                        'C' => {
+                            if (mem.eql(u8, feature_type, "Cmons")) {
+                                const mob_t = mobs.findMobById(id orelse return error.MalformedFeatureDefinition) orelse
+                                    return error.NoSuchMob;
+
+                                const ind = @ptrToInt((words.next() orelse return error.MalformedFeatureDefinition).ptr) - @ptrToInt(line.ptr);
+                                const rest = line[ind..];
+                                var p = cbf.Parser{ .input = rest };
+                                var res = try p.parse(state.GPA.allocator());
+                                defer cbf.Parser.deinit(&res);
+
+                                const r = cbf.deserializeStruct(mobs.PlaceMobOptions, res.items[0].value.List, .{}) catch
+                                    return error.InvalidMetadataValue;
+                                f.features[identifier] = Feature{ .CMob = .{ .t = mob_t, .opts = r } };
+                            } else {
+                                return error.InvalidFeatureType;
+                            }
+                        },
                         's' => {
                             const level = state.findLevelByName(id orelse return error.InvalidMetadataValue) orelse
                                 return error.InvalidMetadataValue;
@@ -3952,7 +3978,7 @@ pub fn readPrefabs(alloc: mem.Allocator) void {
                 error.InvalidUtf8 => "Encountered invalid UTF-8",
                 else => "Unknown error",
             };
-            std.log.err("{s}: Couldn't load prefab: {s}", .{ fab_file.name, msg });
+            std.log.err("{s}: Couldn't load prefab: {s} [{s}]", .{ fab_file.name, msg, e });
             continue;
         };
     }

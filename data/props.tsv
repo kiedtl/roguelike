@@ -163,11 +163,13 @@
 "chamber_n1w1"         	 "chamber"              	 '┘' 	                        -  	 0x999999 	 -        	 nay 	 - 	 -
 "chamber_s1w1"         	 "chamber"              	 '┐' 	                        -  	 0x999999 	 -        	 nay 	 - 	 -
 "chamber_n1e1w1"       	 "chamber"              	 '┴' 	                        -  	 0x999999 	 -        	 nay 	 - 	 -
+"chamber_p_s1e1"       	 "paralysis chamber"    	 '┌' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
 "chamber_p_n1s1e1w1"   	 "paralysis chamber"    	 '┼' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
 "chamber_p_n1s1"       	 "paralysis chamber"    	 '│' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
 "chamber_p_n1e1"       	 "paralysis chamber"    	 '└' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
 "chamber_p_n1w1"       	 "paralysis chamber"    	 '┘' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
 "chamber_p_n1e1w1"     	 "paralysis chamber"    	 '┴' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
+"chamber_p_s1e1w1"     	 "paralysis chamber"    	 '┬' 	                        -  	 0x008c00 	 -        	 nay 	 - 	 -
 
 "compact_turbine"      	 "compact turbine"      	 'Ä' 	       .S_G_P_MiscLabMach  	 0xffe4e1 	 -        	 nay 	 - 	10 	 .Laboratory
 "centrifuge"           	 "centrifuge"           	 '⊜' 	       .S_G_P_MiscLabMach  	 0xffe4e1 	 -        	 nay 	 - 	 - 	 .Laboratory
