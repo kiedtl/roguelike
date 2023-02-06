@@ -229,7 +229,7 @@ pub fn triggerStair(cur_stair: Coord, dest_stair: Coord) bool {
     }
 
     if (state.levelinfo[state.player.coord.z].upgr) {
-        state.player.max_HP += 2;
+        state.player.max_HP += 1;
 
         const upgrade = for (state.player_upgrades) |*u| {
             if (!u.recieved)

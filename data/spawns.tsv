@@ -44,30 +44,31 @@
 "vapour_mage"          	   - 	   - 	   - 	   - 	   - 	  60 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 "convult"              	   - 	   - 	   - 	   - 	   - 	  30 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 
+# monster id          -8/Pri  -7/Pri  -6/Lab  -5/Sin  -5/Pri  -5/Smi  -4/Pri -3/Vlt  -3/Sin   -2/Pri  -1/Pri -1/Cry -1/Cry2 -1/Cry3
+
 # easier mobs, intended for early game
 # TODO: spark mage should be mid-game due to `paralysing zap` spell?
-"bone_rat"             	  15 	  15 	  15 	   - 	  15 	  10 	  10 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"bone_rat"             	  15 	  15 	  15 	   - 	  15 	  10 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 "ember_mage"           	  15 	  15 	  15 	   - 	  15 	  10 	  10 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 "bone_mage"            	   - 	  15 	  15 	   - 	  15 	  10 	  10 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 "spark_mage"           	   - 	  15 	  15 	   - 	  15 	  10 	  10 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 
 # medium-difficulty monsters, early-middle game
 "recruit"              	   - 	   - 	   - 	   - 	  15 	   - 	  15 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"skeleton"             	   - 	   - 	   - 	   - 	  15 	  10 	  15 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"skeleton"             	   - 	   - 	   - 	   - 	  15 	   - 	  15 	  15 	  15 	  15 	  15 	100 	100 	100
 
 # medium-difficulty monsters, middle-late game
-#"cinder_worm"          	   - 	   - 	   - 	   - 	  10 	   - 	  20 	  20 	   - 	  25 	  25 	  - 	  - 	  -
 "war_olg"              	   - 	   - 	   - 	   - 	  10 	   - 	  20 	  25 	   - 	  30 	  30 	  - 	  - 	  -
-"necromancer"          	   - 	   - 	   - 	   - 	  10 	   - 	  10 	  15 	   - 	  10 	  20 	  - 	  - 	  -
-"death_knight"         	   - 	   - 	   - 	   - 	  10 	   - 	  10 	  15 	   - 	  10 	  20 	  - 	  - 	  -
 "defender"             	   - 	   - 	  10 	   - 	   - 	   - 	  10 	  10 	   - 	  10 	  10 	  - 	  - 	  -
-"skeletal_blademaster" 	   - 	   - 	   - 	   - 	  10 	   - 	  10 	  15 	   - 	  15 	  25 	  - 	  - 	  -
-"bloat"                	   - 	   - 	   - 	   - 	  10 	   - 	  10 	  15 	   - 	  10 	  10 	  - 	  - 	  -
-"thrashing_sculptor"   	   - 	   - 	   - 	   - 	  10 	   - 	  10 	  15 	   - 	  10 	  10 	  - 	  - 	  -
+"necromancer"          	   - 	   - 	   - 	   - 	  10 	   - 	  10 	  15 	   - 	  10 	  20 	  5 	  5 	  5
+"death_knight"         	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  15 	  15 	  15 	  15 	 30 	 30 	 30
+"bloat"                	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  15 	   - 	  10 	  10 	 30 	 30 	 30
+"skeletal_blademaster" 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  15 	   - 	  15 	  25 	 15 	 15 	 15
+"thrashing_sculptor"   	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  15 	   - 	  10 	  10 	 20 	 20 	 20
 
 # higher-difficulty monsters. late-game.
 "warrior"              	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  15 	   - 	  15 	  25 	  - 	  - 	  -
-"death_mage"           	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  20 	  - 	  - 	  -
+"death_mage"           	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  20 	 20 	 20 	 20
 "hunter"               	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  20 	  - 	  - 	  -
 "brimstone_mage"       	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  20 	  - 	  - 	  -
 "lightning_mage"       	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  20 	  - 	  - 	  -
