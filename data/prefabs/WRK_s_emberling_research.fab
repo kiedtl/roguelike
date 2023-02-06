@@ -2,6 +2,7 @@
 :noguards
 :noitems
 :notraps
+:nostairs
 
 :tunneler_orientation north
 :tunneler_orientation south

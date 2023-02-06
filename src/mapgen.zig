@@ -2781,7 +2781,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
             };
 
             if (state.dungeon.at(coord).prison or
-                room != null and (room.?.is_lair or room.?.has_stair or room.?.is_vault != null))
+                room != null and ((room.?.prefab != null and room.?.prefab.?.nostairs) or room.?.is_lair or room.?.has_stair or room.?.is_vault != null))
             {
                 continue :coord_search;
             }
@@ -2817,7 +2817,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
                 };
 
                 if (state.dungeon.at(coord).prison or
-                    room != null and (room.?.is_lair or room.?.has_stair or room.?.is_vault != null))
+                    room != null and ((room.?.prefab != null and room.?.prefab.?.nostairs) or room.?.is_lair or room.?.has_stair or room.?.is_vault != null))
                 {
                     continue :coord_search;
                 }
@@ -3374,6 +3374,7 @@ pub const Prefab = struct {
     noguards: bool = false,
     nolights: bool = false,
     notraps: bool = false,
+    nostairs: bool = false,
     nopadding: bool = false,
 
     tunneler_prefab: bool = false,
@@ -3619,6 +3620,9 @@ pub const Prefab = struct {
                     } else if (mem.eql(u8, key, "noitems")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.noitems = true;
+                    } else if (mem.eql(u8, key, "nostairs")) {
+                        if (val.len != 0) return error.UnexpectedMetadataValue;
+                        f.nostairs = true;
                     } else if (mem.eql(u8, key, "spawn")) {
                         const spawn_at_str = words.next() orelse return error.ExpectedMetadataValue;
                         const maybe_work_at_str: ?[]const u8 = words.next() orelse null;
@@ -4080,10 +4084,10 @@ pub const LevelConfig = struct {
 
     // Dimensions include the first wall, so a minimum width of 2 guarantee that
     // there will be one empty space in the room, minimum.
-    min_room_width: usize = 7,
-    min_room_height: usize = 7,
-    max_room_width: usize = 20,
-    max_room_height: usize = 20,
+    min_room_width: usize = 8,
+    min_room_height: usize = 8,
+    max_room_width: usize = 18,
+    max_room_height: usize = 18,
 
     level_features: [4]?LevelFeatureFunc = [_]?LevelFeatureFunc{ null, null, null, null },
 
@@ -4234,19 +4238,24 @@ pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
 pub fn createLevelConfig_CRY() LevelConfig {
     return LevelConfig{
         .tunneler_opts = .{
-            .turn_chance = 2,
+            .turn_chance = 10,
             .branch_chance = 4,
             .shrink_chance = 60,
-            .grow_chance = 60,
+            .grow_chance = 30,
             // .remove_childless = false,
             .shrink_corridors = false,
 
             .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
-                .{ .start = Coord.new(1, HEIGHT / 2), .width = 0, .height = 3, .direction = .East },
+                .{ .start = Coord.new(1, HEIGHT / 2), .width = 0, .height = 2, .direction = .East },
             },
         },
         .prefab_chance = 1000, // No prefabs for CRY
         .mapgen_func = tunneler.placeTunneledRooms,
+
+        .min_room_width = 4,
+        .min_room_height = 4,
+        .max_room_width = 10,
+        .max_room_height = 10,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },
 

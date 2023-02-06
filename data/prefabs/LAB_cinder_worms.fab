@@ -1,0 +1,56 @@
+:g_tunneler
+:g_global_restriction 2
+:noguards
+:noitems
+:notraps
+:nostairs
+
+:tunneler_orientation east
+:tunneler_orientation west
+
+@0 M cinder_brute
+@1 M sparkling
+@2 M lightning_mage
+
+@3 P
+-- CINDER BRUTE CONTAINMENT AREA --
+
+This strange creature is undoubtedly one with the Revgenuhelkim, yet strangely
+it was not encountered at all at Iredelemnul; at least, no record of them
+persists. The Hugghehel found two wandering in the vicinity of Traumbulnahl in
+a dazed state, and were able to capture them both without incident. Preliminary
+research was done by the Hugghehel on these creatures, with the following
+conclusions:
+
+
+- It is suggested that it also is vulnerable to eldritch transmitters, but this
+  cannot be verified as both have entered a dormant state and are now
+  completely unresponsive.
+
+- It is likely that they are vulnerable to electricity.
+
+- Examination suggests that its hide is much stronger than the skin of
+  Revgenuhelkim, strong enough to possibly deflect iron weapons, but this
+  cannot be confirmed without harming and potentially waking the creatures.
+END POSTER
+
+@a p chamber_s1e1
+@b p chamber_s1w1
+@c p chamber_e1w1
+@d p chamber_n1s1
+@e p chamber_p_n1s1e1w1
+@f p chamber_p_n1s1
+@g p chamber_p_n1e1w1
+@h p chamber_p_n1e1
+@i p chamber_p_n1w1
+@j p chamber_p_n1e1w1
+
+1112111
+.......
+.......
+...3...
+.......
+..acb..
+.ad0db.
+.fecef.
+.hjgji.

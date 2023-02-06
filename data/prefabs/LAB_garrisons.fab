@@ -1,0 +1,69 @@
+% Emberling "garrisons". Only for flavor, emberlings should never
+% actually be able to attack player (unless the player blows
+% open the containment chambers).
+
+:g_tunneler
+:restriction 3
+:noitems
+:notraps
+:nostairs
+
+:tunneler_orientation north
+@e M emberling
+@p P
+-- GARRISON --
+In case of emergency, break glass.
+END POSTER
+eeeeee
+eeeeee
+eeeeee
+eeeeee
+&&&&&&
+p.....
+......
+
+\
+
+:tunneler_orientation south
+@e M emberling
+@p P
+-- GARRISON --
+In case of emergency, break glass.
+END POSTER
+......
+p.....
+&&&&&&
+eeeeee
+eeeeee
+eeeeee
+eeeeee
+
+\
+
+:tunneler_orientation east
+@e M emberling
+@p P
+-- GARRISON --
+In case of emergency, break glass.
+END POSTER
+.p&eeee
+..&eeee
+..&eeee
+..&eeee
+..&eeee
+..&eeee
+
+\
+
+:tunneler_orientation west
+@e M emberling
+@p P
+-- GARRISON --
+In case of emergency, break glass.
+END POSTER
+eeee&p.
+eeee&..
+eeee&..
+eeee&..
+eeee&..
+eeee&..

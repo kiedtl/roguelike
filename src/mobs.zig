@@ -672,48 +672,6 @@ pub const DustlingTemplate = MobTemplate{
     },
 };
 
-//pub const CinderWormTemplate = MobTemplate{
-//    .mob = .{
-//        .id = "cinder_worm",
-//        .species = &Species{
-//            .name = "cinder worm",
-//            .default_attack = &Weapon{
-//                .damage = 1,
-//                .strs = &items.BITING_STRS,
-//            },
-//        },
-//        .tile = '¢',
-//        .ai = AI{
-//            .profession_description = "wandering",
-//            .work_fn = ai.standStillAndGuardWork,
-//            .fight_fn = ai.mageFight,
-//            .flags = &[_]AI.Flag{.DetectWithHeat},
-//        },
-//        .max_HP = 6,
-
-//        .spells = &[_]SpellOptions{
-//            // Have cooldown period that matches time needed for flames to
-//            // die out, so that the worm isn't constantly vomiting fire when
-//            // its surroundings are already in flames
-//            //
-//            // TODO: check this in spells.zig
-//            .{ .MP_cost = 10, .spell = &spells.CAST_FIREBLAST, .power = 4 },
-//        },
-//        .max_MP = 10,
-
-//        .memory_duration = 10,
-//        .blood = .Ash,
-//        .blood_spray = gas.SmokeGas.id,
-//        .corpse = .None,
-//        .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = 25, .rFume = 100 },
-//        .stats = .{ .Willpower = 6, .Melee = 80, .Vision = 4 },
-//    },
-//    .statuses = &[_]StatusDataInfo{
-//        .{ .status = .Fire, .duration = .Prm },
-//        .{ .status = .Noisy, .duration = .Prm },
-//    },
-//};
-
 const WAR_OLG_CLAW_WEAPON = Weapon{
     .damage = 1,
     .strs = &items.CLAW_STRS,
@@ -2173,6 +2131,45 @@ pub const CreepingDeathTemplate = MobTemplate{
     },
 };
 
+pub const CinderBruteTemplate = MobTemplate{
+    .mob = .{
+        .id = "cinder_brute",
+        .species = &Species{
+            .name = "cinder brute",
+            .default_attack = &Weapon{
+                .damage = 1,
+                .strs = &items.BITING_STRS,
+            },
+        },
+        .tile = '¢',
+        .ai = AI{
+            .profession_description = "wandering",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.mageFight,
+            .flags = &[_]AI.Flag{.DetectWithHeat},
+        },
+        .max_HP = 6,
+
+        .spells = &[_]SpellOptions{
+            // Have cooldown period that matches time needed for flames to
+            // die out, so that the brute isn't constantly vomiting fire when
+            // its surroundings are already in flames
+            //
+            // TODO: check this in spells.zig
+            .{ .MP_cost = 10, .spell = &spells.CAST_FIREBLAST, .power = 4 },
+        },
+        .max_MP = 10,
+
+        .memory_duration = 10,
+        .blood = .Ash,
+        .blood_spray = gas.SmokeGas.id,
+        .corpse = .None,
+        .innate_resists = .{ .rFire = RESIST_IMMUNE, .rElec = -25, .rFume = 100 },
+        .stats = .{ .Willpower = 6, .Melee = 80, .Vision = 4 },
+    },
+    .statuses = &[_]StatusDataInfo{.{ .status = .Fire, .duration = .Prm }},
+};
+
 pub const MOBS = [_]MobTemplate{
     CombatDummyNormal,
     CombatDummyPrisoner,
@@ -2196,7 +2193,6 @@ pub const MOBS = [_]MobTemplate{
     ConvultTemplate,
     VapourMageTemplate,
     DustlingTemplate,
-    // CinderWormTemplate,
     WarOlgTemplate,
     MellaentTemplate,
     IronSpireTemplate,
@@ -2242,6 +2238,7 @@ pub const MOBS = [_]MobTemplate{
     GrueTemplate,
     SlinkingTerrorTemplate,
     CreepingDeathTemplate,
+    CinderBruteTemplate,
 };
 
 pub const PRISONERS = [_]MobTemplate{
