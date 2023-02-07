@@ -1539,7 +1539,7 @@ fn _place_rooms(rooms: *Room.ArrayList, level: usize, allocator: mem.Allocator) 
     var child: Room = undefined;
     var side = rng.chooseUnweighted(Direction, &CARDINAL_DIRECTIONS);
 
-    if (rng.onein(Configs[level].prefab_chance)) {
+    if (rng.percent(Configs[level].prefab_chance)) {
         if (distance == 0) distance += 1;
 
         fab = choosePrefab(level, &n_fabs, .{}) orelse return;
@@ -4168,7 +4168,7 @@ pub const LevelConfig = struct {
 
 pub const PRI_BASE_LEVELCONFIG = LevelConfig{
     .prefabs = &[_][]const u8{},
-    .prefab_chance = 3,
+    .prefab_chance = 33,
     .mapgen_iters = 2048,
     .level_features = [_]?LevelConfig.LevelFeatureFunc{
         levelFeaturePrisoners,
@@ -4191,7 +4191,7 @@ pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
                 .{ .start = Coord.new(WIDTH - 4, 1), .width = 3, .height = 0, .direction = .South },
             },
         },
-        .prefab_chance = 2,
+        .prefab_chance = 60,
         .mapgen_func = tunneler.placeTunneledRooms,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
@@ -4212,6 +4212,7 @@ pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
         .props = &surfaces.laboratory_props.items,
         .single_props = &[_][]const u8{ "table", "centrifuge", "compact_turbine", "water_purifier", "distiller" },
 
+        .subroom_chance = 70,
         .allow_statues = false,
 
         .machines = &[_]*const Machine{&surfaces.Fountain},
@@ -4245,7 +4246,7 @@ pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
                 // .{ .start = Coord.new(1, HEIGHT - 1), .width = width, .height = 0, .direction = .North },
             },
         },
-        .prefab_chance = 1, // Only prefabs for SIN
+        .prefab_chance = 100, // Only prefabs for SIN
         .mapgen_func = tunneler.placeTunneledRooms,
         .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },
         .required_mobs = &[_]LevelConfig.RequiredMob{},
@@ -4275,7 +4276,7 @@ pub fn createLevelConfig_CRY() LevelConfig {
                 .{ .start = Coord.new(1, HEIGHT / 2), .width = 0, .height = 2, .direction = .East },
             },
         },
-        .prefab_chance = 1000, // No prefabs for CRY
+        .prefab_chance = 0, // No prefabs for CRY
         .mapgen_func = tunneler.placeTunneledRooms,
 
         .min_room_width = 4,
@@ -4310,7 +4311,7 @@ pub fn createLevelConfig_WRK(comptime prefabs: []const []const u8) LevelConfig {
                 .{ .start = Coord.new(1, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
             },
         },
-        .prefab_chance = 2,
+        .prefab_chance = 50,
         .mapgen_func = tunneler.placeTunneledRooms,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
@@ -4344,7 +4345,7 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
         .{ 1, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
     },
     .shrink_corridors_to_fit = true,
-    .prefab_chance = 3,
+    .prefab_chance = 33,
     .mapgen_func = placeDrunkenWalkerCave,
     .mapgen_iters = 64,
 
@@ -4415,7 +4416,7 @@ pub const CAV_BASE_LEVELCONFIG = LevelConfig{
 pub const TUT_BASE_LEVELCONFIG = LevelConfig{
     .prefabs = &[_][]const u8{"TUT_basic"},
     .mapgen_func = placeRandomRooms,
-    .prefab_chance = 1,
+    .prefab_chance = 100,
     .mapgen_iters = 0,
     .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },
 };

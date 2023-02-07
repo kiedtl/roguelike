@@ -115,7 +115,7 @@ pub const Ctx = struct {
             }
 
             var prefab: ?*Prefab = null;
-            if (rng.onein(Configs[level].prefab_chance)) {
+            if (rng.percent(Configs[level].prefab_chance)) {
                 if (mapgen.choosePrefab(level, &mapgen.n_fabs, .{
                     .t_only = true,
                     .t_orientation = roomie.orientation,

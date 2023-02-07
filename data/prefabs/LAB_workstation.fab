@@ -14,7 +14,7 @@
 @g p alch_frame_n1s1
 @h p alch_frame_s1e1
 @i p alch_frame_s1w1
-hcabaci
+hcbabci
 gd..0dg
 ge0..eg
 gf...fg
@@ -37,21 +37,21 @@ gf...fg
 gf...fg
 ge0..eg
 gd..0dg
-hcabaci
+hcbabci
 
 \
 
 :tunneler_orientation west
 @0 M alchemist
-@a p alch_table_d_t1
-@b p alch_table_d_t2
+@a p alch_table_l_t1
+@b p alch_table_l_t2
 @c p alch_frame_blk1
 @d p alch_shelf_t1
 @e p alch_shelf_t2
 @f p alch_shelf_t3
 @g p alch_frame_e1w1
-@h p alch_frame_n1e1
-@i p alch_frame_s1e1
+@h p alch_frame_s1e1
+@i p alch_frame_n1e1
 hgggγ
 cdef.
 b....
@@ -64,15 +64,15 @@ igggγ
 
 :tunneler_orientation east
 @0 M alchemist
-@a p alch_table_d_t1
-@b p alch_table_d_t2
+@a p alch_table_r_t1
+@b p alch_table_r_t2
 @c p alch_frame_blk1
 @d p alch_shelf_t1
 @e p alch_shelf_t2
 @f p alch_shelf_t3
 @g p alch_frame_e1w1
-@h p alch_frame_n1w1
-@i p alch_frame_s1w1
+@h p alch_frame_s1w1
+@i p alch_frame_n1w1
 γgggh
 .fedc
 ....b

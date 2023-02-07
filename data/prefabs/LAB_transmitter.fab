@@ -1,0 +1,65 @@
+:g_global_restriction 2
+:g_tunneler
+
+:tunneler_orientation north
+
+@0 P
+The filthy Mold-Eaters weren't lying, it seems, when they boasted of their
+contraption's ability to remotely paralyse and disable the Revgenuhelkim at no
+risk to them. According to the Hugghehel's records, it accomplishes this by
+first detecting the Revgenuhelkim and then firing some kind of
+electricity-produced ray in its direction, interfering with the Squatter's
+communication and cognition, eventually causing it to fall into a permanently
+dazed and confused state. -- NATH
+
+Further tests are revealing that the Revgenuhelkim react rather unpredictably
+to the eldritch rays. Some instantly fall into a coma and die within hours;
+others can sustain exposure to the rays for a whole minute before becoming
+dazed. The Brutes, on the other hand, invariably require several minutes of
+exposure before being affected in the least. -- MAL. NATH
+
+My personal theory for this is that the ones which immediately died were in the
+process of communicating with their brethren, making them more vulnerable to
+the effects of the rays. It is unfortunate that we currently have no way of
+determining if a Revgenuhelkim is trying to communicate at any particular
+point, so this hypothesis will remain unverifiable for the time being. -- THOB
+
+Aurmthrod suggested in our meeting last night that the detection/targeting
+system works by intercepting the Revgenuhelkim's communications and pinpointing
+their origin points. If this is found to be true, reverse-engineering those
+systems and determining their mode of function should be our priority.
+-- LESTNGOL
+END POSTER
+
+@1 M alchemist
+
+@a p chamber_p_n2e1w1
+@b p chamber_p_n2s2w1e1
+@c p chamber_n1e1
+@d p chamber_n1w1
+
+@e p generator_green
+@f p chamber_p_n1s1e2
+@g p chamber_p_n1s1w2
+@h p chamber_p_n2s2
+
+@i p chamber_e1w1
+@j p eldr_targeting
+
+@k p chamber_s1e1
+@l p chamber_s1w1
+@m p eldr_junction
+
+@o p eldr_transmitter_1
+
+cabbad
+efhhge
+idjjci
+.kmml1
+1oooo.
+....1.
+.11...
+..1...
+....1.
+γ.....
+γγ...0

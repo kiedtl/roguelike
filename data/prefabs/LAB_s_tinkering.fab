@@ -1,0 +1,33 @@
+:subroom
+:g_global_restriction 2
+:center_align
+
+@0 M alchemist
+
+@1 P
+These prototype eldritch paralysation systems are a copper mine of potential,
+able to paralyse the filthy Earth Demons at a far greater range and speed than
+the ones currently in use. I don't understand, however, why the Hugghehel
+didn't immediately put them into operation given their obvious superiority.
+-- HUBSEL
+
+I find their chosen colors interesting. Grey for the earliest models, yellow
+for the current ones, and green for the prototypes. -- MAG. NATH
+END POSTER
+
+@a p eldr_junction
+@b p eldr_transmitter_1
+@c p eldr_transmitter_2
+
+@d p generator_green
+@e p chamber_p_n1s1w2
+@f p chamber_n1e1
+@h p chamber_e1w1
+
+γ.....ed
+..aa..fh
+..aa0.00
+...0....
+.....0..
+..bbb.c.
+γ.0....1
