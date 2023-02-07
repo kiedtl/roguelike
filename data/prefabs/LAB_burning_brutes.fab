@@ -4,7 +4,6 @@
 :noitems
 :notraps
 :nostairs
-:priority 10000000000
 
 %:tunneler_orientation east
 %:tunneler_orientation west

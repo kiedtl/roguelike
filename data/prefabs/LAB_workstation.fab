@@ -1,0 +1,82 @@
+:g_tunneler
+:notraps
+:noitems
+:noguards
+
+:tunneler_orientation north
+@0 M alchemist
+@a p alch_table_u_t1
+@b p alch_table_u_t2
+@c p alch_frame_blk1
+@d p alch_shelf_t1
+@e p alch_shelf_t2
+@f p alch_shelf_t3
+@g p alch_frame_n1s1
+@h p alch_frame_s1e1
+@i p alch_frame_s1w1
+hcabaci
+gd..0dg
+ge0..eg
+gf...fg
+γ.....γ
+
+\
+
+:tunneler_orientation south
+@0 M alchemist
+@a p alch_table_d_t1
+@b p alch_table_d_t2
+@c p alch_frame_blk1
+@d p alch_shelf_t1
+@e p alch_shelf_t2
+@f p alch_shelf_t3
+@g p alch_frame_n1s1
+@h p alch_frame_n1e1
+@i p alch_frame_n1w1
+γ.....γ
+gf...fg
+ge0..eg
+gd..0dg
+hcabaci
+
+\
+
+:tunneler_orientation west
+@0 M alchemist
+@a p alch_table_d_t1
+@b p alch_table_d_t2
+@c p alch_frame_blk1
+@d p alch_shelf_t1
+@e p alch_shelf_t2
+@f p alch_shelf_t3
+@g p alch_frame_e1w1
+@h p alch_frame_n1e1
+@i p alch_frame_s1e1
+hgggγ
+cdef.
+b....
+a....
+b....
+cdef.
+igggγ
+
+\
+
+:tunneler_orientation east
+@0 M alchemist
+@a p alch_table_d_t1
+@b p alch_table_d_t2
+@c p alch_frame_blk1
+@d p alch_shelf_t1
+@e p alch_shelf_t2
+@f p alch_shelf_t3
+@g p alch_frame_e1w1
+@h p alch_frame_n1w1
+@i p alch_frame_s1w1
+γgggh
+.fedc
+....b
+....a
+....b
+.fedc
+γgggi

@@ -140,10 +140,17 @@
 #"antenna_tip"          	 "antenna tip"          	 '´' 	                        -  	 0x90a3b7 	 -        	 nay 	 - 	 - 	 .Laboratory
 
 # workshop/lab
-"whiteboard_r"         	 "table"                	 '▐' 	                        -  	 0xaaaaaa 	 -        	 nay 	 - 	10
-"alch_table_r_t1"      	 "table"                	 '▐' 	                        -  	 0xbfab8f 	 -        	 nay 	 - 	10
+"alch_shelf_t1"        	 "shelf"                	 '≡' 	                        -  	 0xbfab8f 	 0x33291a 	 nay 	 - 	10
+"alch_shelf_t2"        	 "shelf"                	 '≡' 	                        -  	 0x9e8664 	 0x33291a 	 nay 	 - 	10
+"alch_shelf_t3"        	 "shelf"                	 '≡' 	                        -  	 0x806604 	 0x33291a 	 nay 	 - 	10
+"alch_table_u_t1"      	 "table"                	 '▀' 	                        -  	 0xbfab8f 	 -        	 nay 	 - 	10
+"alch_table_u_t2"      	 "table"                	 '▀' 	                        -  	 0x9e8664 	 -        	 nay 	 - 	10
+"alch_table_d_t1"      	 "table"                	 '▄' 	                        -  	 0xbfab8f 	 -        	 nay 	 - 	10
+"alch_table_d_t2"      	 "table"                	 '▄' 	                        -  	 0x9e8664 	 -        	 nay 	 - 	10
+"alch_table_r_t1"      	 "table"                	 '▐' 	                        -  	 0xbfab8f 	 -        	 nay 	 - 	10 
 "alch_table_r_t2"      	 "table"                	 '▐' 	                        -  	 0x9e8664 	 -        	 nay 	 - 	10
 "alch_table_r_t3"      	 "table"                	 '▐' 	                        -  	 0x806640 	 -        	 nay 	 - 	10
+"whiteboard_r"         	 "whiteboard"           	 '▐' 	                        -  	 0x888888 	 -        	 nay 	 - 	10 
 "alch_frame_n1s1e2"    	 "frame"                	 '╞' 	                        -  	 0x9e8664 	 -        	 nay 	 - 	10
 "alch_frame_n1s1w2"    	 "frame"                	 '╡' 	                        -  	 0x9e8664 	 -        	 nay 	 - 	10
 "alch_frame_s1e1"      	 "frame"                	 '┌' 	                        -  	 0x9e8664 	 -        	 nay 	 - 	10
@@ -152,6 +159,7 @@
 "alch_frame_e1w1"      	 "frame"                	 '─' 	                        -  	 0x9e8664 	 -        	 nay 	 - 	10
 "alch_frame_n1w1"      	 "frame"                	 '┘' 	                        -  	 0x9e8664 	 -        	 nay 	 - 	10
 "alch_frame_s1w1"      	 "frame"                	 '┐' 	                        -  	 0x9e8664 	 -        	 nay 	 - 	10
+"alch_frame_blk1"      	 "frame"                	 '▓' 	                        -  	 0x9e8664 	 -        	 nay 	 - 	10
 "broken_turtle"        	 "broken lead turtle"   	 't' 	                        -  	 0xaaaaaa 	 -        	 nay 	 - 	10
 "broken_emberling"     	 "broken emberling"     	 'e' 	                        -  	 0xaaaaaa 	 -        	 nay 	 - 	10
 
