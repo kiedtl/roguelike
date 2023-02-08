@@ -4170,20 +4170,22 @@ pub const LevelConfig = struct {
 
 // -----------------------------------------------------------------------------
 
-pub const PRI_BASE_LEVELCONFIG = LevelConfig{
-    .prefabs = &[_][]const u8{},
-    .prefab_chance = 33,
-    .mapgen_iters = 2048,
-    .level_features = [_]?LevelConfig.LevelFeatureFunc{
-        levelFeaturePrisoners,
-        levelFeaturePrisonersMaybe,
-        null,
-        null,
-    },
+pub fn createLevelConfig_PRI(comptime prefabs: []const []const u8) LevelConfig {
+    return LevelConfig{
+        .prefabs = prefabs,
+        .prefab_chance = 33,
+        .mapgen_iters = 2048,
+        .level_features = [_]?LevelConfig.LevelFeatureFunc{
+            levelFeaturePrisoners,
+            levelFeaturePrisonersMaybe,
+            null,
+            null,
+        },
 
-    .machines = &[_]*const Machine{ &surfaces.Fountain, &surfaces.Drain },
-    .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
-};
+        .machines = &[_]*const Machine{ &surfaces.Fountain, &surfaces.Drain },
+        .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
+    };
+}
 
 pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
@@ -4435,39 +4437,23 @@ pub var Configs = [LEVELS]LevelConfig{
     createLevelConfig_CRY(),
     createLevelConfig_CRY(),
     createLevelConfig_CRY(),
-    PRI_BASE_LEVELCONFIG,
-    PRI_BASE_LEVELCONFIG,
+    createLevelConfig_PRI(&[_][]const u8{"PRI_main_exit"}),
+    createLevelConfig_PRI(&[_][]const u8{}),
     // createLevelConfig_LAB(&[_][]const u8{}),
     // createLevelConfig_LAB(&[_][]const u8{}),
     createLevelConfig_SIN(6),
     createLevelConfig_LAB(&[_][]const u8{"LAB_s_SIN_stair_1"}),
-    PRI_BASE_LEVELCONFIG,
+    createLevelConfig_PRI(&[_][]const u8{}),
     // CAV_BASE_LEVELCONFIG,
     // CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
-    PRI_BASE_LEVELCONFIG,
+    createLevelConfig_PRI(&[_][]const u8{}),
     // createLevelConfig_WRK(&[_][]const u8{}),
     // createLevelConfig_WRK(&[_][]const u8{}),
     createLevelConfig_SIN(4),
     createLevelConfig_WRK(&[_][]const u8{"WRK_s_SIN_stair_1"}),
-    PRI_BASE_LEVELCONFIG,
-    PRI_BASE_LEVELCONFIG,
+    createLevelConfig_PRI(&[_][]const u8{"PRI_s_NC"}),
+    createLevelConfig_PRI(&[_][]const u8{"PRI_start"}),
 
     // TUT_BASE_LEVELCONFIG,
 };
-
-// TODO: convert this to a comptime expression
-// zig fmt: off
-pub fn fixConfigs() void {
-    Configs[3].prefabs = &[_][]const u8{ "PRI_main_exit" };
-    Configs[state.PLAYER_STARTING_LEVEL].prefabs = &[_][]const u8{ "PRI_start" };
-
-    // // Increase crowd sizes for difficult levels.
-    // Configs[ 0].room_crowd_max = 4;      Configs[ 1].room_crowd_max = 3;   // Upper prison
-    // Configs[ 2].room_crowd_max = 2;      Configs[ 3].room_crowd_max = 1;   // Quarters
-    // Configs[ 6].room_crowd_max = 6;      Configs[ 7].room_crowd_max = 5;   // Caverns
-    // Configs[11].room_crowd_max = 4;      Configs[12].room_crowd_max = 3;   // Laboratory
-
-    // Configs[ 6].level_crowd_max = 50;    Configs[ 7].level_crowd_max = 50; // Caverns
-}
-// zig fmt: on

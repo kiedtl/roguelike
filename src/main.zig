@@ -168,8 +168,6 @@ fn initGame() bool {
         };
     }
 
-    mapgen.fixConfigs();
-
     return true;
 }
 
