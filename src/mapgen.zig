@@ -4185,10 +4185,11 @@ pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
         .prefabs = prefabs,
         .tunneler_opts = .{
-            .turn_chance = 1,
+            // .turn_chance = 1,
             .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
-                .{ .start = Coord.new(1, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
-                .{ .start = Coord.new(WIDTH - 4, 1), .width = 3, .height = 0, .direction = .South },
+                .{ .start = Coord.new(WIDTH / 2, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
+                // .{ .start = Coord.new(1, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
+                // .{ .start = Coord.new(WIDTH - 4, 1), .width = 3, .height = 0, .direction = .South },
             },
         },
         .prefab_chance = 60,
@@ -4229,7 +4230,7 @@ pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
             .room_tries = 1,
             .shrink_chance = 0,
             .grow_chance = 0,
-            .intersect_chance = 90,
+            .intersect_chance = 99,
             .intersect_with_childless = true,
             .add_extra_rooms = false,
             .add_junctions = false,
