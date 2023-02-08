@@ -1273,6 +1273,9 @@ pub fn modifyRoomToLair(room: *Room) void {
 }
 
 pub fn selectLevelLairs(level: usize) void {
+    if (Configs[level].lair_max == 0)
+        return;
+
     var candidates = std.ArrayList(usize).init(state.GPA.allocator());
     defer candidates.deinit();
 
@@ -1289,7 +1292,7 @@ pub fn selectLevelLairs(level: usize) void {
         return;
     rng.shuffle(usize, candidates.items);
 
-    var lair_count = rng.range(usize, 1, math.min(candidates.items.len, 3));
+    var lair_count = rng.range(usize, 1, math.min(candidates.items.len, Configs[level].lair_max));
     while (lair_count > 0) : (lair_count -= 1) {
         modifyRoomToLair(&state.rooms[level].items[candidates.items[lair_count - 1]]);
     }
@@ -4122,6 +4125,7 @@ pub const LevelConfig = struct {
     },
     room_crowd_max: usize = 2,
     level_crowd_max: ?usize = null,
+    lair_max: usize = 3,
 
     no_lights: bool = false,
     no_windows: bool = false,
@@ -4194,6 +4198,7 @@ pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
         },
         .prefab_chance = 60,
         .mapgen_func = tunneler.placeTunneledRooms,
+        .lair_max = 1,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeatureVials,
@@ -4253,6 +4258,7 @@ pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
         .required_mobs = &[_]LevelConfig.RequiredMob{},
         .room_crowd_max = 1,
         .level_crowd_max = 18,
+        .lair_max = 0,
 
         .material = &materials.Marble,
         .no_windows = true,
@@ -4284,6 +4290,7 @@ pub fn createLevelConfig_CRY() LevelConfig {
         .min_room_height = 4,
         .max_room_width = 10,
         .max_room_height = 10,
+        .lair_max = 0,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },
 
@@ -4321,6 +4328,8 @@ pub fn createLevelConfig_WRK(comptime prefabs: []const []const u8) LevelConfig {
             levelFeatureDormantConstruct,
             levelFeatureOres,
         },
+
+        .lair_max = 1,
 
         .material = &materials.Dobalene,
         .window_material = &materials.LabGlass,
