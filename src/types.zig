@@ -865,6 +865,7 @@ pub const MessageType = union(enum) {
     Important,
     SpellCast,
     Inventory, // Grabbing, dropping, or equipping item
+    Dialog,
 
     pub fn color(self: MessageType) u32 {
         return switch (self) {
@@ -879,7 +880,8 @@ pub const MessageType = union(enum) {
             .Combat => 0xdadeda, // creamy white
             .CombatUnimportant => 0x7a9cc7, // steel blue
             .Unimportant => 0x8019ac,
-            .Inventory => 0x7a9cc7,
+            .Inventory => 0x7a9cc7, // steel blue
+            .Dialog => 0x9abce7, // lighter steel blue
         };
     }
 };
@@ -1705,6 +1707,43 @@ pub const AIWorkPhase = enum {
     HaulerDrop,
 };
 
+pub const AIJob = struct {
+    job: Type,
+    ctx: Ctx,
+
+    pub const Ctx = std.StringHashMap(Value);
+    pub const JStatus = enum { Defer, Ongoing, Complete };
+
+    pub const Value = union(enum) {
+        bool: bool,
+    };
+
+    pub const Type = enum {
+        SPC_NCAlignment,
+
+        pub fn func(self: @This()) fn (*Mob, *AIJob) JStatus {
+            return switch (self) {
+                .SPC_NCAlignment => ai._Job_SPC_NCAlignment,
+            };
+        }
+    };
+
+    pub fn deinit(self: *@This()) void {
+        self.ctx.deinit();
+    }
+
+    pub fn getCtx(self: *@This(), comptime T: type, key: []const u8, default: T) T {
+        const default_v = @unionInit(Value, @typeName(T), default);
+        const entry = self.ctx.getOrPutValue(key, default_v) catch err.wat();
+        return @field(entry.value_ptr, @typeName(T));
+    }
+
+    pub fn setCtx(self: *@This(), comptime T: type, key: []const u8, val: T) void {
+        const val_v = @unionInit(Value, @typeName(T), val);
+        self.ctx.put(key, val_v) catch err.wat();
+    }
+};
+
 pub const Prisoner = struct {
     of: Faction,
     held_by: ?union(enum) { Mob: *const Mob, Prop: *const Prop } = null,
@@ -1821,6 +1860,7 @@ pub const Mob = struct { // {{{
     enemies: EnemyRecord.AList = undefined,
     allies: MobArrayList = undefined,
     sustiles: std.ArrayList(SuspiciousTileRecord) = undefined,
+    jobs: StackBuffer(AIJob, 16) = StackBuffer(AIJob, 16).init(null),
 
     // "Push" flag, set when mob pushes past or is pushed past.
     // Reset on each turn.
@@ -3195,6 +3235,7 @@ pub const Mob = struct { // {{{
         self.enemies = EnemyRecord.AList.init(alloc);
         self.allies = MobArrayList.init(alloc);
         self.sustiles = std.ArrayList(SuspiciousTileRecord).init(alloc);
+        self.jobs = @TypeOf(self.jobs).init(null);
         self.activities.init();
         self.path_cache = std.AutoHashMap(Path, Coord).init(alloc);
         self.ai.work_area = CoordArrayList.init(alloc);
@@ -3386,6 +3427,9 @@ pub const Mob = struct { // {{{
         self.sustiles.deinit();
         self.path_cache.clearAndFree();
         self.ai.work_area.deinit();
+
+        for (self.jobs.slice()) |*job|
+            job.deinit();
 
         self.is_dead = true;
 

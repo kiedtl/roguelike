@@ -1563,11 +1563,59 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
     }
 }
 
+pub fn _Job_SPC_NCAlignment(mob: *Mob, job: *types.AIJob) types.AIJob.JStatus {
+    const CTX_DIALOG1_GIVEN = "dialog1_given";
+    const CTX_DIALOG2_GIVEN = "dialog2_given";
+
+    // If player pissed us off then we won't help them.
+    if (state.night_rep[@enumToInt(state.player.faction)] < 0) {
+        tryRest(mob);
+        return .Complete;
+    }
+
+    var path: ?Coord = null;
+    for (state.rooms[mob.coord.z].items) |*room| {
+        if (!room.is_lair)
+            continue;
+
+        const point = room.rect.randomCoord();
+        if (mob.nextDirectionTo(point)) |_| {
+            path = point;
+            break;
+        }
+    }
+
+    mob.facing = mob.coord.closestDirectionTo(state.player.coord, state.mapgeometry);
+
+    if (path != null) {
+        if (mob.canSeeMob(state.player) and state.player.canSeeMob(mob) and
+            !job.getCtx(bool, CTX_DIALOG2_GIVEN, false))
+        {
+            state.dialog(mob, "I appreciate it.");
+            job.setCtx(bool, CTX_DIALOG1_GIVEN, true);
+            job.setCtx(bool, CTX_DIALOG2_GIVEN, true);
+        }
+        mob.ai.work_area.clearRetainingCapacity();
+        mob.ai.work_area.append(path.?) catch err.wat();
+        mob.ai.work_phase = .NC_MoveTo;
+        mob.tryMoveTo(path.?);
+        mob.prisoner_status = null;
+        state.night_rep[@enumToInt(state.player.faction)] = 1;
+        return .Complete;
+    } else if (mob.canSeeMob(state.player) and state.player.canSeeMob(mob) and
+        !job.getCtx(bool, CTX_DIALOG1_GIVEN, false))
+    {
+        state.dialog(mob, "You, human. Let me out of this cage, please?");
+        job.setCtx(bool, CTX_DIALOG1_GIVEN, true);
+        tryRest(mob);
+        return .Ongoing;
+    } else {
+        return .Defer;
+    }
+}
+
 pub fn work(mob: *Mob, alloc: mem.Allocator) void {
     var work_fn = mob.ai.work_fn;
-    if (!mob.isAloneOrLeader() and !mob.ai.flag(.ForceNormalWork)) {
-        work_fn = stayNearLeaderWork;
-    }
     if (mob.hasStatus(.Insane)) {
         work_fn = struct {
             pub fn f(p_mob: *Mob, _: mem.Allocator) void {
@@ -1575,6 +1623,23 @@ pub fn work(mob: *Mob, alloc: mem.Allocator) void {
                     tryRest(p_mob);
             }
         }.f;
+    }
+
+    if (mob.jobs.len > 0) {
+        const real_work_fn = (mob.jobs.last().?.job.func());
+        const r = (real_work_fn)(mob, &mob.jobs.slice()[mob.jobs.len - 1]);
+        switch (r) {
+            .Ongoing => return,
+            .Complete => {
+                (mob.jobs.pop() catch err.wat()).deinit();
+                return;
+            },
+            .Defer => {},
+        }
+    }
+
+    if (!mob.isAloneOrLeader() and !mob.ai.flag(.ForceNormalWork)) {
+        work_fn = stayNearLeaderWork;
     }
 
     (work_fn)(mob, alloc);

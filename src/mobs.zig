@@ -2271,6 +2271,7 @@ pub const PlaceMobOptions = struct {
     prisoner_of: ?types.Faction = null,
     prm_status1: ?Status = null,
     prm_status2: ?Status = null,
+    job: ?types.AIJob.Type = null,
 };
 
 pub fn placeMob(
@@ -2291,6 +2292,11 @@ pub fn placeMob(
     mob.coord = coord;
     mob.faction = opts.faction orelse mob.faction;
     mob.ai.phase = opts.phase;
+
+    if (opts.job) |j| {
+        const job = types.AIJob{ .job = j, .ctx = types.AIJob.Ctx.init(state.GPA.allocator()) };
+        mob.jobs.append(job) catch err.wat();
+    }
 
     if (opts.prisoner_of) |f|
         mob.prisoner_status = types.Prisoner{ .of = f };

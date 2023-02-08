@@ -488,6 +488,11 @@ pub fn freeLevelInfo() void {
     }
 }
 
+pub fn dialog(by: *const Mob, text: []const u8) void {
+    ui.Animation.apply(.{ .PopChar = .{ .coord = by.coord, .char = '!' } });
+    message(.Dialog, "{c}: \"{s}\"", .{ by, text });
+}
+
 pub fn messageAboutMob2(mob: *const Mob, ref_coord: ?Coord, mtype: MessageType, comptime fmt: []const u8, args: anytype) void {
     messageAboutMob(mob, ref_coord, mtype, fmt, args, fmt, args);
 }

@@ -13,8 +13,9 @@ Magaren Nath, and we don't want to lose it in the meantime.
 $g-- Zilodothrod Hubsel, Captain of the Guard$.
 END POSTER
 
-@1 Cmons night_reaper ([prisoner_of]Necromancer)
+@1 Cmons night_reaper ([prisoner_of]Necromancer [job]SPC_NCAlignment)
 :prison 1,1 3 1
+:material slade
 
 #≡≡≡#
 •1..•

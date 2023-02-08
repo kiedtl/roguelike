@@ -538,7 +538,8 @@ pub const BOLT_AOE_AMNESIA = Spell{
     .name = "mass amnesia",
     .cast_type = .Bolt,
     .bolt_multitarget = false,
-    .checks_will = true,
+    .bolt_avoids_allies = true,
+    // .checks_will = true,
     .bolt_aoe = 3, // XXX: Need to update particle effect if changing this
     .animation = .{ .Particle = .{ .name = "zap-mass-amnesia" } },
     .noise = .Silent,
@@ -1152,6 +1153,7 @@ pub const Spell = struct {
     // Only used if cast_type == .Bolt
     bolt_dodgeable: bool = false,
     bolt_multitarget: bool = true,
+    bolt_avoids_allies: bool = false,
     bolt_aoe: usize = 1,
 
     animation: ?Animation = null,
@@ -1322,6 +1324,10 @@ pub const Spell = struct {
                     // If there's a mob on the tile, see if it resisted the effect.
                     //
                     if (state.dungeon.at(coord).mob) |victim| {
+                        if (self.bolt_avoids_allies and victim == caster.? or !victim.isHostileTo(caster.?)) {
+                            continue;
+                        }
+
                         if (self.checks_will and !willSucceedAgainstMob(caster.?, victim)) {
                             const chance = 100 - appxChanceOfWillOverpowered(caster.?, victim);
                             if (state.player.cansee(victim.coord) or state.player.cansee(caster_coord)) {
