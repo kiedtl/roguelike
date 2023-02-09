@@ -73,7 +73,7 @@ pub fn currentEnemy(me: *Mob) *EnemyRecord {
 }
 
 pub fn calculateMorale(self: *Mob) isize {
-    var base: isize = 6;
+    var base: isize = 5;
 
     // Bonuses depending on self's condition {{{
     if (self.hasStatus(.Enraged)) base += 4;
@@ -88,8 +88,8 @@ pub fn calculateMorale(self: *Mob) isize {
     // properly canceled out by the fact that the mob themself is also
     // below 50% health
     //
-    if (self.HP < (self.max_HP / 2)) base -= 2;
-    if (self.HP < (self.max_HP / 4)) base -= 2;
+    if (self.HP < (self.max_HP / 2)) base -= 3;
+    if (self.HP < (self.max_HP / 4)) base -= 3;
 
     if (self.hasStatus(.Blind)) base -= 2;
     if (self.hasStatus(.Debil)) base -= 2;
@@ -115,11 +115,11 @@ pub fn calculateMorale(self: *Mob) isize {
     for (self.enemyList().items) |enemy_record| {
         const enemy = enemy_record.mob;
 
-        if (enemy.hasStatus(.Intimidating)) base -= 12;
+        if (enemy.hasStatus(.Intimidating)) base -= 10;
 
-        if (enemy.hasStatus(.Enraged)) base -= 4;
-        if (enemy.hasStatus(.Fast)) base -= 4;
-        if (enemy.hasStatus(.Invigorate)) base -= 4;
+        if (enemy.hasStatus(.Enraged)) base -= 3;
+        if (enemy.hasStatus(.Fast)) base -= 3;
+        if (enemy.hasStatus(.Invigorate)) base -= 3;
 
         if (enemy.hasStatus(.Sleeping)) base += 2;
         if (enemy.hasStatus(.Blind)) base += 2;
@@ -142,7 +142,7 @@ pub fn calculateMorale(self: *Mob) isize {
         // properly canceled out by the fact that the mob themself is also
         // below 50% health
         //
-        if (enemy.HP < (enemy.max_HP / 2)) base += 4;
+        if (enemy.HP < (enemy.max_HP / 2)) base += 3;
         if (enemy.HP < (enemy.max_HP / 4)) base += 4;
 
         if (enemy.ai.phase == .Flee) base += 6;
