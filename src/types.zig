@@ -4118,8 +4118,7 @@ pub const Machine = struct {
         func: fn (*Machine, *Mob) bool,
     };
 
-    pub fn canBeInteracted(self: *Machine, mob: *Mob, interaction: *const MachInteract) bool {
-        _ = mob;
+    pub fn canBeInteracted(self: *Machine, _: *Mob, interaction: *const MachInteract) bool {
         if (interaction.needs_power and !self.isPowered())
             return false;
         return interaction.max_use == 0 or interaction.used < interaction.max_use;
@@ -4476,6 +4475,7 @@ pub const Ring = struct {
     name: []const u8,
 
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
+    hated_by_nc: bool = false,
     pattern_checker: PatternChecker,
     effect: fn (*Mob, PatternChecker.State) void,
 

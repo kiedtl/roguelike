@@ -721,6 +721,7 @@ pub const LightningRing = Ring{ // {{{
 
 pub const CremationRing = Ring{ // {{{
     .name = "cremation",
+    .hated_by_nc = true,
     .pattern_checker = .{
         .turns = 4,
         .init = struct {
@@ -899,6 +900,7 @@ pub const DistractionRing = Ring{ // {{{
 
 pub const DamnationRing = Ring{ // {{{
     .name = "damnation",
+    .hated_by_nc = true,
     .pattern_checker = .{
         .turns = 3,
         .init = struct {
@@ -1112,6 +1114,7 @@ pub const ElectrificationRing = Ring{ // {{{
 
 pub const InsurrectionRing = Ring{ // {{{
     .name = "insurrection",
+    .hated_by_nc = true,
     .pattern_checker = .{
         .turns = 5,
         .init = struct {

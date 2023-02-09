@@ -837,12 +837,37 @@ pub fn canSeeAny(coords: []const ?Coord) bool {
     } else false;
 }
 
-pub fn beginUsingRing(index: usize) void {
-    if (getActiveRing()) |ring| {
-        ring.activated = false;
-        ring.pattern_checker.reset();
+pub const RingError = enum {
+    HatedByNight,
+
+    pub fn text1(self: @This()) []const u8 {
+        return switch (self) {
+            .HatedByNight => "hated by the Night",
+        };
     }
+};
+
+pub fn checkRing(index: usize) ?RingError {
     const ring = getRingByIndex(index).?;
+    if (ring.hated_by_nc and hasAlignedNC()) {
+        return .HatedByNight;
+    }
+    return null;
+}
+
+pub fn beginUsingRing(index: usize) void {
+    const ring = getRingByIndex(index).?;
+
+    if (checkRing(index)) |e| {
+        state.message(.Info, "[$o{s}$.] You cannot use this ring ({s}).", .{ ring.name, e.text1() });
+        return;
+    }
+
+    if (getActiveRing()) |otherring| {
+        otherring.activated = false;
+        otherring.pattern_checker.reset();
+    }
+
     if (ui.chooseDirection()) |dir| {
         state.message(.Info, "Activated ring $o{s}$....", .{ring.name});
 

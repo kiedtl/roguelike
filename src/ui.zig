@@ -2143,8 +2143,11 @@ pub fn drawMessagesScreen() void {
 
 pub fn drawZapScreen() void {
     var selected: usize = 0;
+    var r_error: ?player.RingError = null;
 
     while (true) {
+        r_error = player.checkRing(selected);
+
         zap_win.container.clearLineTo(0, zap_win.container.width - 1, 0, .{ .ch = '▀', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
         zap_win.container.clearLineTo(0, zap_win.container.width - 1, zap_win.container.height - 1, .{ .ch = '▄', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
 
@@ -2161,8 +2164,12 @@ pub fn drawZapScreen() void {
                     var ry: usize = 0;
                     const itemdesc = state.descriptions.get((Item{ .Ring = ring }).id().?).?;
                     zap_win.right.clear();
-                    const active: []const u8 = if (ring.activated) "$b(active)$.\n\n" else "Press $b<Enter>$. to use.\n\n";
-                    ry += zap_win.right.drawTextAt(0, ry, active, .{});
+                    if (r_error) |r_err| {
+                        ry += zap_win.right.drawTextAtf(0, ry, "$cCannot use$.: $b{s}$.\n\n", .{r_err.text1()}, .{});
+                    } else {
+                        const active: []const u8 = if (ring.activated) "$b(active)$.\n\n" else "Press $b<Enter>$. to use.\n\n";
+                        ry += zap_win.right.drawTextAt(0, ry, active, .{});
+                    }
                     ry += zap_win.right.drawTextAt(0, ry, itemdesc, .{});
                 }
             } else {
@@ -2183,7 +2190,7 @@ pub fn drawZapScreen() void {
                 .CtrlC, .CtrlG, .Esc => break,
                 .ArrowUp => selected -|= 1,
                 .ArrowDown => selected = math.min(ring_count, selected + 1),
-                .Enter => {
+                .Enter => if (r_error == null) {
                     clearScreen();
                     player.beginUsingRing(selected);
                     break;
