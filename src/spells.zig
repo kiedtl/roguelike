@@ -540,7 +540,7 @@ pub const BOLT_AOE_AMNESIA = Spell{
     .bolt_multitarget = false,
     .bolt_avoids_allies = true,
     // .checks_will = true,
-    .bolt_aoe = 3, // XXX: Need to update particle effect if changing this
+    .bolt_aoe = 4, // XXX: Need to update particle effect if changing this
     .animation = .{ .Particle = .{ .name = "zap-mass-amnesia" } },
     .noise = .Silent,
     .effect_type = .{ .Status = .Amnesia },

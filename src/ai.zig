@@ -1238,17 +1238,6 @@ pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
                 }
             };
 
-            // Now check if there are enemies adjacent to us, and face them to
-            // be disposed of next turn.
-            for (&DIRECTIONS) |d| if (mob.coord.move(d, state.mapgeometry)) |neighbor| {
-                if (state.dungeon.at(neighbor).mob) |othermob| {
-                    if (othermob.isHostileTo(mob) and !othermob.ai.flag(.IgnoredByEnemies)) {
-                        mob.facing = d;
-                        tryRest(mob); // Rest to avoid moving and resetting face direction.
-                    }
-                }
-            };
-
             var to = mob.ai.work_area.items[0];
 
             if ((mob.ai.work_phase == .NC_PatrolTo and mob.cansee(to)) or
@@ -1259,6 +1248,16 @@ pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
             } else {
                 mob.tryMoveTo(to);
             }
+
+            // Now check if there are enemies adjacent to us, and face them to
+            // be disposed of next turn.
+            for (&DIRECTIONS) |d| if (mob.coord.move(d, state.mapgeometry)) |neighbor| {
+                if (state.dungeon.at(neighbor).mob) |othermob| {
+                    if (othermob.isHostileTo(mob) and !othermob.ai.flag(.IgnoredByEnemies)) {
+                        mob.facing = d;
+                    }
+                }
+            };
         },
         else => unreachable,
     }
