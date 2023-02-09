@@ -2226,7 +2226,6 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
     var desc_scroll: usize = 0;
 
     var kbd_s = false;
-    var kbd_a = false;
 
     const moblist = state.createMobList(false, true, state.player.coord.z, state.GPA.allocator());
     defer moblist.deinit();
@@ -2288,11 +2287,6 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                         .Stats => _writerWrite(writer, "Press $bs$. to see spells.\n", .{}),
                         .Spells => _writerWrite(writer, "Press $bs$. to see mob.\n", .{}),
                     }
-                }
-
-                if (mob != state.player and state.player.canMelee(mob)) {
-                    kbd_a = true;
-                    _writerWrite(writer, "Press $bA$. to attack.\n", .{});
                 }
             } else if (tile_focus == .Surface and has_surf) {
                 // nothing
@@ -2417,10 +2411,6 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                 'e', 'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
                 'z', 'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
                 'c', 'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
-                'A' => if (kbd_a) {
-                    state.player.fight(state.dungeon.at(coord).mob.?, .{});
-                    return true;
-                },
                 's' => if (kbd_s) {
                     mob_tile_focus = switch (mob_tile_focus) {
                         .Main => .Stats,
