@@ -676,20 +676,27 @@ pub const SladeDoor = Machine{
         }
     }.f,
 
-    .evoke_confirm = "Trespass on the Night Creature's lair?",
     .player_interact = .{
-        .name = "break down",
+        .name = "[this is a bug]",
         .needs_power = false,
-        .success_msg = "You break down the slade door. ($b-2 rep$.)",
-        .no_effect_msg = "(This is a bug.)",
-        .max_use = 1,
+        .success_msg = null,
+        .no_effect_msg = null,
+        .max_use = 0,
         .func = struct {
             fn f(machine: *Machine, by: *Mob) bool {
                 assert(by == state.player);
+                const rep = &state.night_rep[@enumToInt(state.player.faction)];
 
-                state.night_rep[@enumToInt(state.player.faction)] -= 2;
-                machine.disabled = true;
-                state.dungeon.at(machine.coord).surface = null;
+                if (rep.* <= 0) {
+                    if (!ui.drawYesNoPrompt("Trespass on the Lair?", .{}))
+                        return false;
+                    machine.disabled = true;
+                    state.dungeon.at(machine.coord).surface = null;
+                    state.message(.Info, "You break down the slade door. ($b-2 rep$.)", .{});
+                    rep.* -= 2;
+                } else {
+                    assert(machine.addPower(by));
+                }
 
                 return true;
             }

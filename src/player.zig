@@ -658,7 +658,8 @@ pub fn activateSurfaceItem(coord: Coord) bool {
     };
 
     state.player.declareAction(.Interact);
-    state.message(.Info, "{s}", .{interaction.success_msg});
+    if (interaction.success_msg) |msg|
+        state.message(.Info, "{s}", .{msg});
 
     if (mach.player_interact.?.max_use != 0) {
         const left = mach.player_interact.?.max_use - mach.player_interact.?.used;
