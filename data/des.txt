@@ -523,6 +523,23 @@ Gyilthor-drauglâ".
 A segmented wooden spire, resting on cast iron supports. A single black pupil,
 carved out of ceramic, rests on its top.
 
+% spec_totem
+You cannot tell whether it is a living being, or if its functions are purely
+mechanical.
+
+% night_reaper
+A emaciated, sickly-looking humanoid.
+
+% grue
+An invisible Presence that stalks the dungeon, clothed in unapproachable
+darkness.
+
+% slinking_terror
+It was awake even before the first breaking of the primordial silence.
+
+% creeping_death
+If you're seeing this message, please tell kiedtl.
+
 % sp_hasten_undead
 Hasten a nearby undead ally, making them twice as fast.
 
