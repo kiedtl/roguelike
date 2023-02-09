@@ -314,10 +314,7 @@ One of the many Dungeon executioners. It wields a giant spiked flail that,
 luckily, is good for little else besides its gruesome profession.
 
 % watcher
-Despite unusually acute senses that enable its ceaseless vigilance, not to
-mention the fact that it has no need of sleep, this ape-creature is universally
-despised by its comrades. Some even hold that it is the work of an evil
-sorcerer, a cross-breed between the very ugliest of humans and goblins.
+A unarmed guard.
 
 % warden
 The Dungeon warden. It will call for help with its warning horn if it spots you.
