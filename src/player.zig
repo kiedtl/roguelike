@@ -203,6 +203,14 @@ pub fn hasSabresInSight() bool {
     } else false;
 }
 
+pub fn hasAlignedNC() bool {
+    return repPtr().* > 0;
+}
+
+pub fn repPtr() *isize {
+    return &state.night_rep[@enumToInt(state.player.faction)];
+}
+
 pub fn triggerPoster(coord: Coord) bool {
     const poster = state.dungeon.at(coord).surface.?.Poster;
     ui.drawTextScreen("$oYou read:$.\n\n{s}", .{poster.text});
@@ -614,6 +622,11 @@ pub fn throwItem(index: usize) bool {
         return false;
     }
 
+    if (item == .Consumable and item.Consumable.hated_by_nc and hasAlignedNC()) {
+        ui.drawAlertThenLog("Using that would anger the Night!", .{});
+        return false;
+    }
+
     const dest = ui.chooseCell(.{
         .require_seen = true,
         .targeter = .Trajectory,
@@ -681,6 +694,11 @@ pub fn useItem(index: usize) bool {
     switch (item) {
         .Ring, .Armor, .Cloak, .Aux, .Weapon => return equipItem(item),
         .Consumable => |p| {
+            if (p.hated_by_nc and hasAlignedNC()) {
+                ui.drawAlertThenLog("You can't use that item (hated by the Night)!", .{});
+                return false;
+            }
+
             if (p.is_potion and state.player.isUnderStatus(.Nausea) != null) {
                 ui.drawAlertThenLog("You can't drink potions while nauseated!", .{});
                 return false;
@@ -707,8 +725,10 @@ pub fn useItem(index: usize) bool {
         },
         .Evocable => |v| {
             v.evoke(state.player) catch |e| {
-                if (e == error.NoCharges) {
-                    ui.drawAlertThenLog("You can't use the {s} anymore!", .{v.name});
+                switch (e) {
+                    error.NoCharges => ui.drawAlertThenLog("You can't use the {s} anymore!", .{v.name}),
+                    error.HatedByNight => ui.drawAlertThenLog("Using that would anger the Night!", .{}),
+                    else => {},
                 }
                 return false;
             };

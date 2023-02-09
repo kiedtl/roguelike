@@ -394,6 +394,8 @@ pub const Evocable = struct {
     name: []const u8,
     tile_fg: u32,
 
+    hated_by_nc: bool = false,
+
     charges: usize = 0,
     max_charges: usize, // Zero for infinite charges
 
@@ -409,9 +411,13 @@ pub const Evocable = struct {
 
     // TODO: targeting functionality
 
-    pub const EvokeError = error{ NoCharges, BadPosition };
+    pub const EvokeError = error{ HatedByNight, NoCharges, BadPosition };
 
     pub fn evoke(self: *Evocable, by: *Mob) EvokeError!void {
+        if (by == state.player and player.hasAlignedNC() and self.hated_by_nc) {
+            return error.HatedByNight;
+        }
+
         if (self.max_charges == 0 or self.charges > 0) {
             self.trigger_fn(by, self) catch |e| return e;
             if (self.max_charges > 0)
@@ -464,6 +470,7 @@ pub const FlamethrowerEvoc = Evocable{
     .id = "evoc_flamethrower",
     .name = "flamethrower",
     .tile_fg = 0xff0000,
+    .hated_by_nc = true,
     .max_charges = 3,
     .rechargable = true,
     .trigger_fn = struct {
@@ -487,6 +494,7 @@ pub const EldritchLanternEvoc = Evocable{
     .id = "eldritch_lantern",
     .name = "eldritch lantern",
     .tile_fg = 0x23abef,
+    .hated_by_nc = true,
     .max_charges = 5,
     .trigger_fn = _triggerEldritchLantern,
 };
@@ -1798,6 +1806,7 @@ pub const Consumable = struct {
     throwable: bool = false,
     verbs_player: []const []const u8,
     verbs_other: []const []const u8,
+    hated_by_nc: bool = false,
 
     const Effect = union(enum) {
         Status: Status,
@@ -1822,6 +1831,7 @@ pub const Consumable = struct {
     pub fn createTrapKit(
         comptime id: []const u8,
         comptime name: []const u8,
+        hated_by_nc: bool,
         func: fn (*Machine, *Mob) void,
     ) Consumable {
         return Consumable{
@@ -1850,6 +1860,7 @@ pub const Consumable = struct {
             .color = colors.GOLD,
             .verbs_player = Consumable.VERBS_PLAYER_KIT,
             .verbs_other = Consumable.VERBS_OTHER_KIT,
+            .hated_by_nc = hated_by_nc,
         };
     }
 };
@@ -1915,43 +1926,43 @@ pub const SpectralOrbConsumable = Consumable{
     .verbs_other = &[_][]const u8{"[this is a bug]"},
 };
 
-pub const GlueTrapKit = Consumable.createTrapKit("kit_trap_glue", "glue trap", struct {
+pub const GlueTrapKit = Consumable.createTrapKit("kit_trap_glue", "glue trap", false, struct {
     pub fn f(_: *Machine, mob: *Mob) void {
         mob.addStatus(.Held, 0, .{ .Tmp = 20 });
     }
 }.f);
 
-pub const AirblastTrapKit = Consumable.createTrapKit("kit_trap_airblast", "airblast trap", struct {
+pub const AirblastTrapKit = Consumable.createTrapKit("kit_trap_airblast", "airblast trap", false, struct {
     pub fn f(_: *Machine, mob: *Mob) void {
         combat.throwMob(null, mob, rng.chooseUnweighted(Direction, &DIRECTIONS), 10);
     }
 }.f);
 
-pub const ShockTrapKit = Consumable.createTrapKit("kit_trap_shock", "shock trap", struct {
+pub const ShockTrapKit = Consumable.createTrapKit("kit_trap_shock", "shock trap", false, struct {
     pub fn f(machine: *Machine, _: *Mob) void {
         explosions.elecBurst(machine.coord, 5, state.player);
     }
 }.f);
 
-pub const BigFireTrapKit = Consumable.createTrapKit("kit_trap_bigfire", "incineration trap", struct {
+pub const BigFireTrapKit = Consumable.createTrapKit("kit_trap_bigfire", "incineration trap", true, struct {
     pub fn f(machine: *Machine, _: *Mob) void {
         explosions.fireBurst(machine.coord, 7, .{});
     }
 }.f);
 
-pub const FireTrapKit = Consumable.createTrapKit("kit_trap_fire", "fire trap", struct {
+pub const FireTrapKit = Consumable.createTrapKit("kit_trap_fire", "fire trap", true, struct {
     pub fn f(machine: *Machine, _: *Mob) void {
         explosions.fireBurst(machine.coord, 3, .{});
     }
 }.f);
 
-pub const EmberlingTrapKit = Consumable.createTrapKit("kit_trap_emberling", "emberling trap", struct {
+pub const EmberlingTrapKit = Consumable.createTrapKit("kit_trap_emberling", "emberling trap", false, struct {
     pub fn f(machine: *Machine, _: *Mob) void {
         mobs.placeMobSurrounding(machine.coord, &mobs.EmberlingTemplate, .{ .no_squads = true, .faction = state.player.faction });
     }
 }.f);
 
-pub const SparklingTrapKit = Consumable.createTrapKit("kit_trap_sparkling", "sparkling trap", struct {
+pub const SparklingTrapKit = Consumable.createTrapKit("kit_trap_sparkling", "sparkling trap", false, struct {
     pub fn f(machine: *Machine, _: *Mob) void {
         mobs.placeMobSurrounding(machine.coord, &mobs.SparklingTemplate, .{ .no_squads = true, .faction = state.player.faction });
     }
@@ -1964,6 +1975,7 @@ pub const MineKit = Consumable{
     .color = 0xffd7d7,
     .verbs_player = Consumable.VERBS_PLAYER_KIT,
     .verbs_other = Consumable.VERBS_OTHER_KIT,
+    .hated_by_nc = true,
 };
 
 pub const DistractPotion = Consumable{
@@ -2030,6 +2042,7 @@ pub const GlowPotion = Consumable{
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
     .verbs_other = Consumable.VERBS_OTHER_POTION,
     .throwable = true,
+    .hated_by_nc = true,
 };
 
 pub const SmokePotion = Consumable{
@@ -2105,6 +2118,7 @@ pub const IncineratePotion = Consumable{
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
     .verbs_other = Consumable.VERBS_OTHER_POTION,
     .throwable = true,
+    .hated_by_nc = true,
 };
 
 pub const DecimatePotion = Consumable{
@@ -2116,6 +2130,7 @@ pub const DecimatePotion = Consumable{
     .verbs_player = Consumable.VERBS_PLAYER_POTION,
     .verbs_other = Consumable.VERBS_OTHER_POTION,
     .throwable = true,
+    .hated_by_nc = true,
 };
 
 // Potion effects {{{

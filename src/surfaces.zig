@@ -19,6 +19,7 @@ const utils = @import("utils.zig");
 const state = @import("state.zig");
 const explosions = @import("explosions.zig");
 const gas = @import("gas.zig");
+const player = @import("player.zig");
 const tsv = @import("tsv.zig");
 const rng = @import("rng.zig");
 const materials = @import("materials.zig");
@@ -685,15 +686,14 @@ pub const SladeDoor = Machine{
         .func = struct {
             fn f(machine: *Machine, by: *Mob) bool {
                 assert(by == state.player);
-                const rep = &state.night_rep[@enumToInt(state.player.faction)];
 
-                if (rep.* <= 0) {
+                if (!player.hasAlignedNC()) {
                     if (!ui.drawYesNoPrompt("Trespass on the Lair?", .{}))
                         return false;
                     machine.disabled = true;
                     state.dungeon.at(machine.coord).surface = null;
                     state.message(.Info, "You break down the slade door. ($b-2 rep$.)", .{});
-                    rep.* -= 2;
+                    player.repPtr().* -= 2;
                 } else {
                     assert(machine.addPower(by));
                 }
