@@ -2042,6 +2042,41 @@ pub fn drawLoadingScreenFinish(loading_win: *LoadingScreen) bool {
     return true;
 }
 
+pub fn drawGameOverScreen() void {
+    const win_d = dimensions(.Whole);
+    var container_c = Console.init(state.GPA.allocator(), win_d.width(), win_d.height());
+    defer container_c.deinit();
+
+    var layer1_anim: usize = 0;
+    var layer1_c = Console.init(state.GPA.allocator(), win_d.width(), win_d.height());
+    draw();
+    layer1_c.drawCapturedDisplay(1, 1);
+    container_c.addSubconsole(layer1_c, 0, 0);
+
+    var y: usize = 0;
+    y += container_c.drawTextAt(0, y, "Placeholder text...", .{});
+
+    while (true) {
+        layer1_c.animationDeath(layer1_anim);
+        container_c.renderFully(@intCast(usize, win_d.startx), @intCast(usize, win_d.starty));
+        display.present();
+        layer1_anim += 1;
+
+        switch (display.waitForEvent(FRAMERATE) catch continue) {
+            .Quit => return,
+            .Key => |k| switch (k) {
+                .CtrlC, .Esc, .Enter => return,
+                else => {},
+            },
+            .Char => |c| switch (c) {
+                ' ' => return,
+                else => {},
+            },
+            else => {},
+        }
+    }
+}
+
 pub fn drawTextScreen(comptime fmt: []const u8, args: anytype) void {
     const mainw = dimensions(.Main);
 
@@ -3034,12 +3069,23 @@ pub const Console = struct {
         self.grid[self.width * y + x] = c;
     }
 
+    pub fn animationDeath(self: *const Self, step: usize) void {
+        var y: usize = 0;
+        while (y < self.height / 2 and y < step) : (y += 1) {
+            var x: usize = 0;
+            while (x < self.width) : (x += 1) {
+                self.setCell(x, y, .{ .trans = true });
+                self.setCell(x, self.height - y, .{ .trans = true });
+            }
+        }
+    }
+
     // TODO: draw multiple layers as needed
     pub fn drawXP(self: *const Self, map: *const RexMap) void {
         var y: usize = 0;
         while (y < map.height and y < self.height) : (y += 1) {
             var x: usize = 0;
-            while (x < map.width and y < self.width) : (x += 1) {
+            while (x < map.width and x < self.width) : (x += 1) {
                 const tile = map.get(x, y);
 
                 if (tile.bg.r == 255 and tile.bg.g == 0 and tile.bg.b == 255) {
@@ -3047,6 +3093,24 @@ pub const Console = struct {
                 }
 
                 self.setCell(x, y, .{ .ch = RexMap.DEFAULT_TILEMAP[tile.ch], .fg = tile.fg.asU32(), .bg = tile.bg.asU32() });
+            }
+        }
+    }
+
+    pub fn drawCapturedDisplay(self: *const Self, startx: usize, starty: usize) void {
+        var y: usize = 0;
+        var dy: usize = starty;
+        while (y < self.height) : ({
+            y += 1;
+            dy += 1;
+        }) {
+            var x: usize = 0;
+            var dx: usize = startx;
+            while (x < self.width) : ({
+                x += 1;
+                dx += 1;
+            }) {
+                self.setCell(x, y, display.getCell(dx, dy));
             }
         }
     }

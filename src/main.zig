@@ -484,8 +484,9 @@ fn readInput() !bool {
                 // state.player.addStatus(.RingTeleportation, 0, .{ .Tmp = 5 });
                 // state.player.addStatus(.RingElectrocution, 0, .{ .Tmp = 5 });
                 // state.player.addStatus(.RingConjuration, 0, .{ .Tmp = 2 });
-                state.night_rep[@enumToInt(state.player.faction)] += 10;
-                break :blk false;
+                // state.night_rep[@enumToInt(state.player.faction)] += 10;
+                state.player.HP = 0;
+                break :blk true;
             },
             .F8 => b: {
                 _ = janet.loadFile("scripts/particles.janet", state.GPA.allocator()) catch break :b false;
@@ -882,11 +883,16 @@ pub fn actualMain() anyerror!void {
         };
     }
 
-    const morgue = state.formatMorgue(state.GPA.allocator()) catch err.wat();
-    const filename = "dump.txt";
-    try std.fs.cwd().writeFile(filename, morgue.items[0..]);
-    std.log.info("Morgue file written to {s}.", .{filename});
-    morgue.deinit(); // We can't defer{} this because we're deinit'ing the allocator
+    if (!use_viewer) {
+        if (state.state != .Quit)
+            ui.drawGameOverScreen();
+
+        const morgue = state.formatMorgue(state.GPA.allocator()) catch err.wat();
+        const filename = "dump.txt";
+        try std.fs.cwd().writeFile(filename, morgue.items[0..]);
+        std.log.info("Morgue file written to {s}.", .{filename});
+        morgue.deinit(); // We can't defer{} this because we're deinit'ing the allocator
+    }
 
     deinitGame();
 }
