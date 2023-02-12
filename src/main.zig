@@ -32,6 +32,7 @@ const types = @import("types.zig");
 const sentry = @import("sentry.zig");
 const state = @import("state.zig");
 const err = @import("err.zig");
+const scores = @import("scores.zig");
 
 const Direction = types.Direction;
 const Coord = types.Coord;
@@ -887,7 +888,7 @@ pub fn actualMain() anyerror!void {
         if (state.state != .Quit)
             ui.drawGameOverScreen();
 
-        const morgue = state.formatMorgue(state.GPA.allocator()) catch err.wat();
+        const morgue = scores.formatMorgue(state.GPA.allocator()) catch err.wat();
         const filename = "dump.txt";
         try std.fs.cwd().writeFile(filename, morgue.items[0..]);
         std.log.info("Morgue file written to {s}.", .{filename});
