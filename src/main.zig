@@ -887,12 +887,7 @@ pub fn actualMain() anyerror!void {
     if (!use_viewer) {
         if (state.state != .Quit)
             ui.drawGameOverScreen();
-
-        const morgue = scores.formatMorgue(state.GPA.allocator()) catch err.wat();
-        const filename = "dump.txt";
-        try std.fs.cwd().writeFile(filename, morgue.items[0..]);
-        std.log.info("Morgue file written to {s}.", .{filename});
-        morgue.deinit(); // We can't defer{} this because we're deinit'ing the allocator
+        scores.exportMorgueTXT();
     }
 
     deinitGame();

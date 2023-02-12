@@ -16,7 +16,7 @@ const Tile = types.Tile;
 const WIDTH = state.WIDTH;
 const HEIGHT = state.HEIGHT;
 
-pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
+fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
     const S = struct {
         fn _damageString() []const u8 {
             const ldp = state.player.lastDamagePercentage();
@@ -221,4 +221,46 @@ pub fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
     }
 
     return buf;
+}
+
+pub fn exportMorgueTXT() void {
+    const morgue = formatMorgue(state.GPA.allocator()) catch err.wat();
+    defer morgue.deinit();
+
+    var username: []const u8 = undefined;
+    // FIXME: should be a cleaner way to do this...
+    if (std.process.getEnvVarOwned(state.GPA.allocator(), "USER")) |s| {
+        username = s;
+    } else |_| {
+        if (std.process.getEnvVarOwned(state.GPA.allocator(), "USERNAME")) |s| {
+            username = s;
+        } else |_| {
+            username = state.GPA.allocator().dupe(u8, "Obmirnul") catch unreachable;
+        }
+    }
+    defer state.GPA.allocator().free(username);
+
+    const ep_secs = std.time.epoch.EpochSeconds{ .secs = @intCast(u64, std.time.timestamp()) };
+    const ep_day = ep_secs.getEpochDay();
+    const year_day = ep_day.calculateYearDay();
+    const month_day = year_day.calculateMonthDay();
+
+    const filename = std.fmt.allocPrintZ(state.GPA.allocator(), "morgue-{s}-{}-{}-{:0>2}-{:0>2}.txt", .{ username, rng.seed, year_day.year, month_day.month.numeric(), month_day.day_index }) catch err.oom();
+    defer state.GPA.allocator().free(filename);
+
+    std.os.mkdir("morgue", 0o776) catch |e| switch (e) {
+        error.PathAlreadyExists => {},
+        else => {
+            std.log.err("Could not create morgue directory: {}", .{e});
+            std.log.err("Refusing to write morgue entries.", .{});
+            return;
+        },
+    };
+
+    (std.fs.cwd().openDir("morgue", .{}) catch err.wat()).writeFile(filename, morgue.items[0..]) catch |e| {
+        std.log.err("Could not write to morgue file '{s}': {}", .{ filename, e });
+        std.log.err("Refusing to write morgue entries.", .{});
+        return;
+    };
+    std.log.info("Morgue file written to {s}.", .{filename});
 }

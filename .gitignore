@@ -1,9 +1,8 @@
 zig-cache
 zig-out
 log
-dump.txt
 recordings/
-dumps/
+morgue/
 *.ttyrec
 changelog
 *cursed*
