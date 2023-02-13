@@ -15,6 +15,64 @@ const Status = types.Status;
 const Tile = types.Tile;
 const WIDTH = state.WIDTH;
 const HEIGHT = state.HEIGHT;
+const LEVELS = state.LEVELS;
+
+pub const Stat = enum(usize) {
+    PHONY_GeneralStats = 0,
+    TurnsSpent = 1,
+
+    pub fn name(self: Stat) []const u8 {
+        return switch (self) {
+            .PHONY_GeneralStats => "General",
+            .TurnsSpent => "turns spent",
+        };
+    }
+
+    pub fn isHeader(self: Stat) bool {
+        return switch (self) {
+            .PHONY_GeneralStats => true,
+            else => false,
+        };
+    }
+
+    pub fn stattype(self: Stat) std.meta.FieldEnum(StatValue) {
+        return switch (self) {
+            .PHONY_GeneralStats => undefined,
+            .TurnsSpent => .SingleUsize,
+        };
+    }
+};
+
+pub const StatValue = struct {
+    SingleUsize: struct {
+        total: usize = 0,
+        each: [LEVELS]usize = [1]usize{0} ** LEVELS,
+    } = .{},
+};
+
+pub var data = std.enums.directEnumArray(Stat, StatValue, 0, undefined);
+
+pub fn init() void {
+    for (data) |*entry, i|
+        if (std.meta.intToEnum(Stat, i)) |_| {
+            entry.* = .{};
+        } else |_| {};
+}
+
+pub fn recordUsize(stat: Stat, value: usize) void {
+    switch (stat.stattype()) {
+        .SingleUsize => {
+            data[@enumToInt(stat)].SingleUsize.total += value;
+            // XXX: this hidden reliance on state.player.z could cause bugs
+            // e.g. when recording stats of a level the player just left
+            data[@enumToInt(stat)].SingleUsize.each[state.player.coord.z] += value;
+        },
+    }
+}
+
+fn _isLevelSignificant(level: usize) bool {
+    return data[@enumToInt(@as(Stat, .TurnsSpent))].SingleUsize.each[level] > 0;
+}
 
 fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
     const S = struct {
@@ -214,11 +272,53 @@ fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
             try w.print("- {: <20} {s: >5}\n", .{ item.value_ptr.*, item.key_ptr.* });
         }
     }
-    try w.print("\n", .{});
-    try w.print("Time spent on levels:\n", .{});
-    for (state.chardata.time_on_levels[0..]) |turns, level| {
-        try w.print("- {s: <20} {: >5}\n", .{ state.levelinfo[level].name, turns });
+    try w.print("\n\n", .{});
+
+    try w.print(" *** Stats ***\n", .{});
+
+    for (data) |*entry, i| {
+        const key = std.meta.intToEnum(Stat, i) catch continue;
+        if (key.isHeader()) {
+            try w.print("\n\n", .{});
+            try w.print(" {s: <23}", .{key.name()});
+            try w.print("| ", .{});
+            {
+                var c: usize = state.levelinfo.len - 1;
+                while (c > 0) : (c -= 1) if (_isLevelSignificant(c)) {
+                    try w.print("{: <4} ", .{state.levelinfo[c].depth});
+                };
+            }
+            try w.print("\n-", .{});
+            for (key.name()) |_|
+                try w.print("-", .{});
+            try w.print("-", .{});
+            var si: usize = 23 - (key.name().len + 2) + 1;
+            while (si > 0) : (si -= 1)
+                try w.print(" ", .{});
+            try w.print("| ", .{});
+            {
+                var c: usize = state.levelinfo.len - 1;
+                while (c > 0) : (c -= 1) if (_isLevelSignificant(c)) {
+                    try w.print("{s: <4} ", .{state.levelinfo[c].shortname});
+                };
+            }
+            try w.print("\n", .{});
+        } else {
+            switch (key.stattype()) {
+                .SingleUsize => {
+                    try w.print("{s: <20} {} | ", .{ key.name(), entry.SingleUsize.total });
+                    {
+                        var c: usize = state.levelinfo.len - 1;
+                        while (c > 0) : (c -= 1) if (_isLevelSignificant(c)) {
+                            try w.print("{: <4} ", .{entry.SingleUsize.each[c]});
+                        };
+                    }
+                },
+            }
+        }
     }
+
+    try w.print("\n", .{});
 
     return buf;
 }

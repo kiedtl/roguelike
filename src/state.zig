@@ -106,6 +106,8 @@ pub fn mapRect(level: usize) Rect {
 // XXX: []u8 instead of '[]const u8` because of tsv parsing limits
 pub const LevelInfo = struct {
     id: []u8,
+    depth: usize,
+    shortname: []u8,
     name: []u8,
     upgr: bool,
     optional: bool,
@@ -121,7 +123,6 @@ pub var chardata: struct {
     foes_stabbed: usize = 0,
     foes_killed: std.StringHashMap(usize) = undefined,
     time_with_statuses: enums.EnumArray(Status, usize) = enums.EnumArray(Status, usize).initFill(0),
-    time_on_levels: [LEVELS]usize = [1]usize{0} ** LEVELS,
     items_used: std.StringHashMap(usize) = undefined,
     evocs_used: std.StringHashMap(usize) = undefined,
 
@@ -437,12 +438,16 @@ pub fn loadLevelInfo() void {
 
     const result = tsv.parse(LevelInfo, &[_]tsv.TSVSchemaItem{
         .{ .field_name = "id", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
+        .{ .field_name = "depth", .parse_to = usize, .parse_fn = tsv.parsePrimitive },
+        .{ .field_name = "shortname", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
         .{ .field_name = "name", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
         .{ .field_name = "upgr", .parse_to = bool, .parse_fn = tsv.parsePrimitive },
         .{ .field_name = "optional", .parse_to = bool, .parse_fn = tsv.parsePrimitive },
         .{ .field_name = "stairs", .parse_to = ?[]u8, .is_array = Dungeon.MAX_STAIRS, .parse_fn = tsv.parseOptionalUtf8String, .optional = true, .default_val = null },
     }, .{
         .id = undefined,
+        .depth = undefined,
+        .shortname = undefined,
         .name = undefined,
         .upgr = undefined,
         .optional = undefined,

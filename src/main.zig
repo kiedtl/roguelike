@@ -617,7 +617,8 @@ fn tickGame() !void {
 
             if (mob == state.player) {
                 state.player_turns += 1;
-                state.chardata.time_on_levels[mob.coord.z] += 1;
+                // state.chardata.time_on_levels[mob.coord.z] += 1;
+                scores.recordUsize(.TurnsSpent, 1);
                 player.bookkeepingFOV();
                 player.checkForGarbage();
                 if (player.getActiveRing()) |r|
