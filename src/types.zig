@@ -35,6 +35,7 @@ const player = @import("player.zig");
 const rng = @import("rng.zig");
 const sound = @import("sound.zig");
 const spells = @import("spells.zig");
+const scores = @import("scores.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
 const display = @import("display.zig");
@@ -3207,8 +3208,12 @@ pub const Mob = struct { // {{{
                 state.chardata.foes_killed_total += 1;
                 if (d.source == .Stab) state.chardata.foes_stabbed += 1;
 
-                const prevtotal = (state.chardata.foes_killed.getOrPutValue(self.displayName(), 0) catch err.wat()).value_ptr.*;
-                state.chardata.foes_killed.put(self.displayName(), prevtotal + 1) catch err.wat();
+                // const prevtotal = (state.chardata.foes_killed.getOrPutValue(self.displayName(), 0) catch err.wat()).value_ptr.*;
+                // state.chardata.foes_killed.put(self.displayName(), prevtotal + 1) catch err.wat();
+
+                scores.recordTaggedUsize(.KillRecord, self.id, 1);
+                if (d.source == .Stab)
+                    scores.recordTaggedUsize(.StabRecord, self.id, 1);
             }
         }
 

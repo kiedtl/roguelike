@@ -9,6 +9,8 @@ const rng = @import("rng.zig");
 const types = @import("types.zig");
 const utils = @import("utils.zig");
 
+const StackBuffer = @import("buffer.zig").StackBuffer;
+
 const Mob = types.Mob;
 const Coord = types.Coord;
 const Status = types.Status;
@@ -17,37 +19,48 @@ const WIDTH = state.WIDTH;
 const HEIGHT = state.HEIGHT;
 const LEVELS = state.LEVELS;
 
+pub const Chunk = union(enum) {
+    Header: struct { n: []const u8 },
+    Stat: struct { s: Stat, n: []const u8, ign0: bool = true },
+};
+
+pub const CHUNKS = [_]Chunk{
+    .{ .Header = .{ .n = "General stats" } },
+    .{ .Stat = .{ .s = .TurnsSpent, .n = "turns spent" } },
+    .{ .Stat = .{ .s = .KillRecord, .n = "vanquished foes" } },
+    .{ .Stat = .{ .s = .StabRecord, .n = "stabbed foes" } },
+};
+
 pub const Stat = enum(usize) {
-    PHONY_GeneralStats = 0,
-    TurnsSpent = 1,
-
-    pub fn name(self: Stat) []const u8 {
-        return switch (self) {
-            .PHONY_GeneralStats => "General",
-            .TurnsSpent => "turns spent",
-        };
-    }
-
-    pub fn isHeader(self: Stat) bool {
-        return switch (self) {
-            .PHONY_GeneralStats => true,
-            else => false,
-        };
-    }
+    TurnsSpent = 0,
+    KillRecord = 1,
+    StabRecord = 2,
 
     pub fn stattype(self: Stat) std.meta.FieldEnum(StatValue) {
         return switch (self) {
-            .PHONY_GeneralStats => undefined,
             .TurnsSpent => .SingleUsize,
+            .KillRecord => .BatchUsize,
+            .StabRecord => .BatchUsize,
         };
     }
 };
 
 pub const StatValue = struct {
-    SingleUsize: struct {
+    SingleUsize: SingleUsize = .{},
+    BatchUsize: struct {
+        total: usize = 0,
+        singles: StackBuffer(BatchEntry, 256) = StackBuffer(BatchEntry, 256).init(null),
+    },
+
+    pub const BatchEntry = struct {
+        id: []const u8 = "",
+        val: SingleUsize = .{},
+    };
+
+    pub const SingleUsize = struct {
         total: usize = 0,
         each: [LEVELS]usize = [1]usize{0} ** LEVELS,
-    } = .{},
+    };
 };
 
 pub var data = std.enums.directEnumArray(Stat, StatValue, 0, undefined);
@@ -59,14 +72,38 @@ pub fn init() void {
         } else |_| {};
 }
 
+// XXX: this hidden reliance on state.player.z could cause bugs
+// e.g. when recording stats of a level the player just left
 pub fn recordUsize(stat: Stat, value: usize) void {
     switch (stat.stattype()) {
         .SingleUsize => {
             data[@enumToInt(stat)].SingleUsize.total += value;
-            // XXX: this hidden reliance on state.player.z could cause bugs
-            // e.g. when recording stats of a level the player just left
             data[@enumToInt(stat)].SingleUsize.each[state.player.coord.z] += value;
         },
+        else => unreachable,
+    }
+}
+
+// XXX: this hidden reliance on state.player.z could cause bugs
+// e.g. when recording stats of a level the player just left
+pub fn recordTaggedUsize(stat: Stat, key: []const u8, value: usize) void {
+    switch (stat.stattype()) {
+        .BatchUsize => {
+            data[@enumToInt(stat)].BatchUsize.total += value;
+            const index: ?usize = for (data[@enumToInt(stat)].BatchUsize.singles.constSlice()) |single, i| {
+                if (mem.eql(u8, single.id, key)) break i;
+            } else null;
+            if (index) |i| {
+                data[@enumToInt(stat)].BatchUsize.singles.slice()[i].val.total += value;
+                data[@enumToInt(stat)].BatchUsize.singles.slice()[i].val.each[state.player.coord.z] += value;
+            } else {
+                data[@enumToInt(stat)].BatchUsize.singles.append(.{}) catch err.wat();
+                data[@enumToInt(stat)].BatchUsize.singles.lastPtr().?.id = key;
+                data[@enumToInt(stat)].BatchUsize.singles.lastPtr().?.val.total += value;
+                data[@enumToInt(stat)].BatchUsize.singles.lastPtr().?.val.each[state.player.coord.z] += value;
+            }
+        },
+        else => unreachable,
     }
 }
 
@@ -242,13 +279,6 @@ fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
     }
     try w.print("\n", .{});
 
-    try w.print("Vanquished foes:\n", .{});
-    {
-        var iter = state.chardata.foes_killed.iterator();
-        while (iter.next()) |mobcount| {
-            try w.print("- {: >2} {s}\n", .{ mobcount.value_ptr.*, mobcount.key_ptr.* });
-        }
-    }
     try w.print("\n", .{});
     try w.print("Time spent with statuses:\n", .{});
     inline for (@typeInfo(Status).Enum.fields) |status| {
@@ -272,49 +302,72 @@ fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
             try w.print("- {: <20} {s: >5}\n", .{ item.value_ptr.*, item.key_ptr.* });
         }
     }
-    try w.print("\n\n", .{});
 
-    try w.print(" *** Stats ***\n", .{});
+    // Newlines will be auto-added by header, see below
+    // try w.print("\n\n", .{});
 
-    for (data) |*entry, i| {
-        const key = std.meta.intToEnum(Stat, i) catch continue;
-        if (key.isHeader()) {
-            try w.print("\n\n", .{});
-            try w.print(" {s: <23}", .{key.name()});
-            try w.print("| ", .{});
-            {
-                var c: usize = state.levelinfo.len - 1;
-                while (c > 0) : (c -= 1) if (_isLevelSignificant(c)) {
-                    try w.print("{: <4} ", .{state.levelinfo[c].depth});
-                };
-            }
-            try w.print("\n-", .{});
-            for (key.name()) |_|
+    for (&CHUNKS) |chunk| {
+        switch (chunk) {
+            .Header => |header| {
+                try w.print("\n\n", .{});
+                try w.print(" {s: <26}", .{header.n});
+                try w.print("| ", .{});
+                {
+                    var c: usize = state.levelinfo.len - 1;
+                    while (c > 0) : (c -= 1) if (_isLevelSignificant(c)) {
+                        try w.print("{: <4} ", .{state.levelinfo[c].depth});
+                    };
+                }
+                try w.print("\n-", .{});
+                for (header.n) |_|
+                    try w.print("-", .{});
                 try w.print("-", .{});
-            try w.print("-", .{});
-            var si: usize = 23 - (key.name().len + 2) + 1;
-            while (si > 0) : (si -= 1)
-                try w.print(" ", .{});
-            try w.print("| ", .{});
-            {
-                var c: usize = state.levelinfo.len - 1;
-                while (c > 0) : (c -= 1) if (_isLevelSignificant(c)) {
-                    try w.print("{s: <4} ", .{state.levelinfo[c].shortname});
-                };
-            }
-            try w.print("\n", .{});
-        } else {
-            switch (key.stattype()) {
-                .SingleUsize => {
-                    try w.print("{s: <20} {} | ", .{ key.name(), entry.SingleUsize.total });
-                    {
-                        var c: usize = state.levelinfo.len - 1;
-                        while (c > 0) : (c -= 1) if (_isLevelSignificant(c)) {
-                            try w.print("{: <4} ", .{entry.SingleUsize.each[c]});
-                        };
-                    }
-                },
-            }
+                var si: usize = 26 - (header.n.len + 2) + 1;
+                while (si > 0) : (si -= 1)
+                    try w.print(" ", .{});
+                try w.print("| ", .{});
+                {
+                    var c: usize = state.levelinfo.len - 1;
+                    while (c > 0) : (c -= 1) if (_isLevelSignificant(c)) {
+                        try w.print("{s: <4} ", .{state.levelinfo[c].shortname});
+                    };
+                }
+                try w.print("\n", .{});
+            },
+            .Stat => |stat| {
+                const entry = &data[@enumToInt(stat.s)];
+                switch (stat.s.stattype()) {
+                    .SingleUsize => {
+                        try w.print("{s: <20} {: >5} | ", .{ stat.n, entry.SingleUsize.total });
+                        {
+                            var c: usize = state.levelinfo.len - 1;
+                            while (c > 0) : (c -= 1) if (_isLevelSignificant(c)) {
+                                if (stat.ign0 and entry.SingleUsize.each[c] == 0) {
+                                    try w.print("-    ", .{});
+                                } else {
+                                    try w.print("{: <4} ", .{entry.SingleUsize.each[c]});
+                                }
+                            };
+                        }
+                        try w.print("\n", .{});
+                    },
+                    .BatchUsize => {
+                        try w.print("{s: <20} {: >5} |\n", .{ stat.n, entry.BatchUsize.total });
+                        for (entry.BatchUsize.singles.slice()) |batch_entry| {
+                            try w.print("  {s: <18} {: >5} | ", .{ batch_entry.id, batch_entry.val.total });
+                            var c: usize = state.levelinfo.len - 1;
+                            while (c > 0) : (c -= 1) if (_isLevelSignificant(c)) {
+                                if (stat.ign0 and batch_entry.val.each[c] == 0) {
+                                    try w.print("-    ", .{});
+                                } else {
+                                    try w.print("{: <4} ", .{batch_entry.val.each[c]});
+                                }
+                            };
+                            try w.print("\n", .{});
+                        }
+                    },
+                }
+            },
         }
     }
 

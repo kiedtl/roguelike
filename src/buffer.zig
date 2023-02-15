@@ -98,6 +98,12 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
                     if (item == value) break i;
                 } else null;
             }
+        } else if (T == []const u8) struct {
+            pub fn linearSearch(self: *const Self, value: T) ?usize {
+                return for (self.constSlice()) |item, i| {
+                    if (mem.eql(u8, item, value)) break i;
+                } else null;
+            }
         } else struct {
             pub fn linearSearch(self: *const Self, value: T, eq_fn: fn (a: T, b: T) bool) ?usize {
                 return for (self.constSlice()) |item, i| {
@@ -117,6 +123,10 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
 
         pub inline fn last(self: *Self) ?T {
             return if (self.len > 0) self.data[self.len - 1] else null;
+        }
+
+        pub inline fn lastPtr(self: *Self) ?*T {
+            return if (self.len > 0) &self.data[self.len - 1] else null;
         }
     };
 }

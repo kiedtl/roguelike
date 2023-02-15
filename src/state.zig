@@ -121,19 +121,16 @@ pub var levelinfo: [LEVELS]LevelInfo = undefined;
 pub var chardata: struct {
     foes_killed_total: usize = 0,
     foes_stabbed: usize = 0,
-    foes_killed: std.StringHashMap(usize) = undefined,
     time_with_statuses: enums.EnumArray(Status, usize) = enums.EnumArray(Status, usize).initFill(0),
     items_used: std.StringHashMap(usize) = undefined,
     evocs_used: std.StringHashMap(usize) = undefined,
 
     pub fn init(self: *@This(), alloc: mem.Allocator) void {
-        self.foes_killed = std.StringHashMap(usize).init(alloc);
         self.items_used = std.StringHashMap(usize).init(alloc);
         self.evocs_used = std.StringHashMap(usize).init(alloc);
     }
 
     pub fn deinit(self: *@This()) void {
-        self.foes_killed.clearAndFree();
         self.items_used.clearAndFree();
         self.evocs_used.clearAndFree();
     }
