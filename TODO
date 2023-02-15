@@ -1425,6 +1425,8 @@ Morgue files
 - Show total (IRL) time duration of game.
 - Show player's title.
 - Show number of steps player was from stairs when they died.
+- Record % of aggravated/spooked enemies on each floor.
+- Record other interacted machines (fountains, capacitor arrays, etc)
 
 Mobs, AI
 ========
@@ -1508,7 +1510,7 @@ x Show information characters next to mob in enemy pane
 
 Items/Machines
 ==============
-j Add cloaks:
+x Add cloaks:
   x cloak of silicon (fire resistance)
   x cloak of fur     (electricty resistance)
   ~ cloak of velvet
@@ -1520,19 +1522,7 @@ j Add cloaks:
 - Add evocables:
   x "eldritch lantern": dazes or blinds mobs in FOV; blinds player
     for 2 turns. 4 charges.
-  - "symbol of torment" (House): Gives .Fear to all mobs in FOV, and halves HP of
-    all mobs (including evoker). Has no effect on rTorm or undead. ∞ charges.
-    - "You raise the Symbol of Torment. Pain wracks your body!"
-    - "The guard beholds the symbol and is wracked with agony!"
-    - 10% chance for the Symbol to not affect player.
-    - Inspired by DCSS' Symbol of Torment spell.
-  - "blade trap kit": Creates blade trap on tile. 6 charges; cannot be recharged.
-    - Blade trap:
-      - Deals massive damage to *any* mob that steps on it, with 10% chance to
-        evade trap.
-      - Will be avoided if possible by pathfinding AI.
-      - Very quiet, maybe even silent.
-      - Would be disabled by engineers.
+  x "symbol of torment"
   ~ "fume hood" (CAV): Grants rFume∞ for ~10 turns. 4 charges.
   ~ "hammer": Destroys a machine. ∞ charges; cannot be recharged.
   x "iron spike": Jams a door. 1 charge; cannot be recharged.
@@ -1555,7 +1545,6 @@ Message pane
 ============
 - Messages:
   x On using ring
-  - On swapping with mob
   - On mob refusing to swap with player
   - On enemy turning to flee
   - On enemy noticing player
@@ -1585,8 +1574,6 @@ x Fix sound propagation
 - Give player credit for deaths caused by fires
 x Show appropriate number of exclamation points on messages about spell damage
 x Don't allow confused monsters to attack diagonally.
-- Consider LOF clear if bolt is multi-target & only enemies are blocking LOF
-- Allow vaults to be placed in Quarters
 - Fix bugged liquids with regards to thrown trajectories (fix w/ liquid rework)
 
 Ideas
