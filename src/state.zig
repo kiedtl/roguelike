@@ -117,25 +117,6 @@ pub const LevelInfo = struct {
 // Loaded at runtime from data/levelinfo.tsv
 pub var levelinfo: [LEVELS]LevelInfo = undefined;
 
-// Information collected over a run to present in a morgue file.
-pub var chardata: struct {
-    foes_killed_total: usize = 0,
-    foes_stabbed: usize = 0,
-    time_with_statuses: enums.EnumArray(Status, usize) = enums.EnumArray(Status, usize).initFill(0),
-    items_used: std.StringHashMap(usize) = undefined,
-    evocs_used: std.StringHashMap(usize) = undefined,
-
-    pub fn init(self: *@This(), alloc: mem.Allocator) void {
-        self.items_used = std.StringHashMap(usize).init(alloc);
-        self.evocs_used = std.StringHashMap(usize).init(alloc);
-    }
-
-    pub fn deinit(self: *@This()) void {
-        self.items_used.clearAndFree();
-        self.evocs_used.clearAndFree();
-    }
-} = .{};
-
 pub var player_upgrades: [3]player_m.PlayerUpgradeInfo = undefined;
 pub var player_conj_augments: [player_m.ConjAugment.TOTAL]player_m.ConjAugmentInfo = undefined;
 

@@ -27,20 +27,50 @@ pub const Chunk = union(enum) {
 pub const CHUNKS = [_]Chunk{
     .{ .Header = .{ .n = "General stats" } },
     .{ .Stat = .{ .s = .TurnsSpent, .n = "turns spent" } },
+    .{ .Stat = .{ .s = .StatusRecord, .n = "turns w/ statuses" } },
+    .{ .Header = .{ .n = "Combat" } },
     .{ .Stat = .{ .s = .KillRecord, .n = "vanquished foes" } },
     .{ .Stat = .{ .s = .StabRecord, .n = "stabbed foes" } },
+    .{ .Stat = .{ .s = .DamageInflicted, .n = "inflicted damage" } },
+    .{ .Stat = .{ .s = .DamageEndured, .n = "endured damage" } },
+    .{ .Header = .{ .n = "Items/patterns" } },
+    .{ .Stat = .{ .s = .ItemsUsed, .n = "items used" } },
+    .{ .Stat = .{ .s = .ItemsThrown, .n = "items thrown" } },
+    .{ .Stat = .{ .s = .PatternsUsed, .n = "patterns used" } },
+    .{ .Header = .{ .n = "Misc" } },
+    .{ .Stat = .{ .s = .RaidedLairs, .n = "lairs trespassed" } },
+    .{ .Stat = .{ .s = .CandlesDestroyed, .n = "candles destroyed" } },
+    .{ .Stat = .{ .s = .TimesCorrupted, .n = "times corrupted" } },
 };
 
 pub const Stat = enum(usize) {
     TurnsSpent = 0,
     KillRecord = 1,
     StabRecord = 2,
+    DamageInflicted = 3,
+    DamageEndured = 4,
+    StatusRecord = 5,
+    ItemsUsed = 6,
+    ItemsThrown = 7,
+    PatternsUsed = 8,
+    RaidedLairs = 9,
+    CandlesDestroyed = 10,
+    TimesCorrupted = 11,
 
     pub fn stattype(self: Stat) std.meta.FieldEnum(StatValue) {
         return switch (self) {
             .TurnsSpent => .SingleUsize,
             .KillRecord => .BatchUsize,
             .StabRecord => .BatchUsize,
+            .DamageInflicted => .BatchUsize,
+            .DamageEndured => .BatchUsize,
+            .StatusRecord => .BatchUsize,
+            .ItemsUsed => .BatchUsize,
+            .ItemsThrown => .BatchUsize,
+            .PatternsUsed => .BatchUsize,
+            .RaidedLairs => .SingleUsize,
+            .CandlesDestroyed => .SingleUsize,
+            .TimesCorrupted => .BatchUsize,
         };
     }
 };
@@ -53,7 +83,7 @@ pub const StatValue = struct {
     },
 
     pub const BatchEntry = struct {
-        id: []const u8 = "",
+        id: StackBuffer(u8, 64) = StackBuffer(u8, 64).init(null),
         val: SingleUsize = .{},
     };
 
@@ -84,14 +114,29 @@ pub fn recordUsize(stat: Stat, value: usize) void {
     }
 }
 
+pub const Tag = union(enum) {
+    M: *Mob,
+    I: types.Item,
+    s: []const u8,
+
+    pub fn intoString(self: Tag) StackBuffer(u8, 64) {
+        return switch (self) {
+            .M => |mob| StackBuffer(u8, 64).initFmt("{s}", .{mob.displayName()}),
+            .I => |item| StackBuffer(u8, 64).init((item.shortName() catch err.wat()).slice()),
+            .s => |str| StackBuffer(u8, 64).init(str),
+        };
+    }
+};
+
 // XXX: this hidden reliance on state.player.z could cause bugs
 // e.g. when recording stats of a level the player just left
-pub fn recordTaggedUsize(stat: Stat, key: []const u8, value: usize) void {
+pub fn recordTaggedUsize(stat: Stat, tag: Tag, value: usize) void {
+    const key = tag.intoString();
     switch (stat.stattype()) {
         .BatchUsize => {
             data[@enumToInt(stat)].BatchUsize.total += value;
             const index: ?usize = for (data[@enumToInt(stat)].BatchUsize.singles.constSlice()) |single, i| {
-                if (mem.eql(u8, single.id, key)) break i;
+                if (mem.eql(u8, single.id.constSlice(), key.constSlice())) break i;
             } else null;
             if (index) |i| {
                 data[@enumToInt(stat)].BatchUsize.singles.slice()[i].val.total += value;
@@ -198,11 +243,9 @@ fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
     }
     try w.print("\n", .{});
 
-    try w.print("You killed {} foe{s}, stabbing {} of them.\n", .{
-        state.chardata.foes_killed_total,
-        if (state.chardata.foes_killed_total > 0) @as([]const u8, "s") else "",
-        state.chardata.foes_stabbed,
-    });
+    const killed = data[@enumToInt(@as(Stat, .KillRecord))].BatchUsize.total;
+    const stabbed = data[@enumToInt(@as(Stat, .StabRecord))].BatchUsize.total;
+    try w.print("You killed {} foe(s), stabbing {} of them.\n", .{ killed, stabbed });
     try w.print("\n", .{});
 
     try w.print("Last messages:\n", .{});
@@ -279,30 +322,6 @@ fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
     }
     try w.print("\n", .{});
 
-    try w.print("\n", .{});
-    try w.print("Time spent with statuses:\n", .{});
-    inline for (@typeInfo(Status).Enum.fields) |status| {
-        const status_e = @field(Status, status.name);
-        const turns = state.chardata.time_with_statuses.get(status_e);
-        if (turns > 0) {
-            try w.print("- {s: <20} {: >5} turns\n", .{ status_e.string(state.player), turns });
-        }
-    }
-    try w.print("\n", .{});
-    try w.print("Items used:\n", .{});
-    {
-        var iter = state.chardata.items_used.iterator();
-        while (iter.next()) |item| {
-            try w.print("- {: <20} {s: >5}\n", .{ item.value_ptr.*, item.key_ptr.* });
-        }
-    }
-    {
-        var iter = state.chardata.evocs_used.iterator();
-        while (iter.next()) |item| {
-            try w.print("- {: <20} {s: >5}\n", .{ item.value_ptr.*, item.key_ptr.* });
-        }
-    }
-
     // Newlines will be auto-added by header, see below
     // try w.print("\n\n", .{});
 
@@ -354,7 +373,7 @@ fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
                     .BatchUsize => {
                         try w.print("{s: <20} {: >5} |\n", .{ stat.n, entry.BatchUsize.total });
                         for (entry.BatchUsize.singles.slice()) |batch_entry| {
-                            try w.print("  {s: <18} {: >5} | ", .{ batch_entry.id, batch_entry.val.total });
+                            try w.print("  {s: <18} {: >5} | ", .{ batch_entry.id.constSlice(), batch_entry.val.total });
                             var c: usize = state.levelinfo.len - 1;
                             while (c > 0) : (c -= 1) if (_isLevelSignificant(c)) {
                                 if (stat.ign0 and batch_entry.val.each[c] == 0) {

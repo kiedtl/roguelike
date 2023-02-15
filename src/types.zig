@@ -2151,6 +2151,9 @@ pub const Mob = struct { // {{{
             if (adjacent_undead) |hostile| {
                 self.corruption_ctr += 1;
                 if (self.corruption_ctr >= self.stat(.Willpower)) {
+                    if (self == state.player) {
+                        scores.recordTaggedUsize(.TimesCorrupted, .{ .M = hostile }, 1);
+                    }
                     if (state.player.cansee(self.coord)) {
                         state.message(.Combat, "{c} corrupts {}!", .{ hostile, self });
                     }
@@ -2223,7 +2226,7 @@ pub const Mob = struct { // {{{
 
             if (self.isUnderStatus(status_e)) |_| {
                 if (self == state.player) {
-                    state.chardata.time_with_statuses.getPtr(status_e).* += 1;
+                    scores.recordTaggedUsize(.StatusRecord, .{ .s = status_e.string(self) }, 1);
                 }
 
                 switch (status_e) {
@@ -2399,6 +2402,10 @@ pub const Mob = struct { // {{{
 
         self.declareAction(.Throw);
         state.messageAboutMob(self, self.coord, .Info, "throw a {s}!", .{item_name}, "throws a {s}!", .{item_name});
+
+        if (self == state.player) {
+            scores.recordTaggedUsize(.ItemsThrown, .{ .I = item.* }, 1);
+        }
 
         const dodgeable = switch (item.*) {
             .Projectile => true,
@@ -3074,6 +3081,17 @@ pub const Mob = struct { // {{{
             ai.updateEnemyKnowledge(self, attacker, null);
         }
 
+        // Record stats
+        if (d.by_mob != null and d.by_mob == state.player) {
+            scores.recordTaggedUsize(.DamageInflicted, .{ .M = self }, 1);
+        } else if (self == state.player) {
+            if (d.by_mob) |attacker| {
+                scores.recordTaggedUsize(.DamageEndured, .{ .M = attacker }, 1);
+            } else {
+                scores.recordTaggedUsize(.DamageEndured, .{ .s = "???" }, 1);
+            }
+        }
+
         // Make animations
         const clamped_dmg = math.clamp(@intCast(u21, amount), 0, 9);
         const damage_char = if (self.should_be_dead()) '∞' else '0' + clamped_dmg;
@@ -3205,15 +3223,9 @@ pub const Mob = struct { // {{{
         if (!was_already_dead and self.HP == 0 and d.by_mob != null) {
             self.killed_by = d.by_mob.?;
             if (d.by_mob == state.player) {
-                state.chardata.foes_killed_total += 1;
-                if (d.source == .Stab) state.chardata.foes_stabbed += 1;
-
-                // const prevtotal = (state.chardata.foes_killed.getOrPutValue(self.displayName(), 0) catch err.wat()).value_ptr.*;
-                // state.chardata.foes_killed.put(self.displayName(), prevtotal + 1) catch err.wat();
-
-                scores.recordTaggedUsize(.KillRecord, self.id, 1);
+                scores.recordTaggedUsize(.KillRecord, .{ .M = self }, 1);
                 if (d.source == .Stab)
-                    scores.recordTaggedUsize(.StabRecord, self.id, 1);
+                    scores.recordTaggedUsize(.StabRecord, .{ .M = self }, 1);
             }
         }
 
@@ -3965,6 +3977,8 @@ pub const Mob = struct { // {{{
                         .Completed => |stt| {
                             ring.activated = false;
                             ring.effect(mself, stt);
+                            assert(mself == state.player);
+                            scores.recordTaggedUsize(.PatternsUsed, .{ .s = ring.name }, 1);
                         },
                         .Failed => {
                             ring.activated = false;

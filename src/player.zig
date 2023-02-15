@@ -22,6 +22,7 @@ const spells = @import("spells.zig");
 const ui = @import("ui.zig");
 const state = @import("state.zig");
 const types = @import("types.zig");
+const scores = @import("scores.zig");
 const err = @import("err.zig");
 
 const Activity = types.Activity;
@@ -711,8 +712,7 @@ pub fn useItem(index: usize) bool {
                 },
             };
 
-            const prevtotal = (state.chardata.items_used.getOrPutValue(p.id, 0) catch err.wat()).value_ptr.*;
-            state.chardata.items_used.put(p.id, prevtotal + 1) catch err.wat();
+            scores.recordTaggedUsize(.ItemsUsed, .{ .I = item }, 1);
         },
         .Vial => |_| err.todo(),
         .Projectile, .Boulder => {
@@ -733,8 +733,7 @@ pub fn useItem(index: usize) bool {
                 return false;
             };
 
-            const prevtotal = (state.chardata.evocs_used.getOrPutValue(v.id, 0) catch err.wat()).value_ptr.*;
-            state.chardata.evocs_used.put(v.id, prevtotal + 1) catch err.wat();
+            scores.recordTaggedUsize(.ItemsUsed, .{ .I = item }, 1);
         },
     }
 

@@ -132,7 +132,6 @@ fn initGame() bool {
 
     for (state.default_patterns) |*r| r.pattern_checker.reset();
 
-    state.chardata.init(state.GPA.allocator());
     state.memory = state.MemoryTileMap.init(state.GPA.allocator());
 
     state.tasks = TaskArrayList.init(state.GPA.allocator());
@@ -252,7 +251,6 @@ fn deinitGame() void {
     mapgen.n_fabs.deinit();
     mapgen.fab_records.deinit();
 
-    state.chardata.deinit();
     state.memory.clearAndFree();
 
     var iter = state.mobs.iterator();
@@ -617,7 +615,6 @@ fn tickGame() !void {
 
             if (mob == state.player) {
                 state.player_turns += 1;
-                // state.chardata.time_on_levels[mob.coord.z] += 1;
                 scores.recordUsize(.TurnsSpent, 1);
                 player.bookkeepingFOV();
                 player.checkForGarbage();

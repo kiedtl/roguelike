@@ -24,6 +24,7 @@ const tsv = @import("tsv.zig");
 const rng = @import("rng.zig");
 const materials = @import("materials.zig");
 const types = @import("types.zig");
+const scores = @import("scores.zig");
 
 const Rect = types.Rect;
 const Coord = types.Coord;
@@ -693,6 +694,7 @@ pub const SladeDoor = Machine{
                     machine.disabled = true;
                     state.dungeon.at(machine.coord).surface = null;
                     state.message(.Info, "You break down the slade door. ($b-2 rep$.)", .{});
+                    scores.recordUsize(.RaidedLairs, 1);
                     player.repPtr().* -= 2;
                 } else {
                     assert(machine.addPower(by));
@@ -1019,6 +1021,7 @@ pub const Candle = Machine{
 
                 ui.Animation.apply(.{ .Particle = .{ .name = "beams-candle-extinguish", .coord = self.coord, .target = .{ .Z = 0 } } });
                 state.message(.Info, "You extinguish the candle.", .{});
+                scores.recordUsize(.CandlesDestroyed, 1);
 
                 return true;
             }
