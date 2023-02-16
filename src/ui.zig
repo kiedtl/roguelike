@@ -2047,7 +2047,6 @@ pub fn drawGameOverScreen() void {
     var container_c = Console.init(state.GPA.allocator(), win_d.width(), win_d.height());
     defer container_c.deinit();
 
-    var layer1_anim: usize = 0;
     var layer1_c = Console.init(state.GPA.allocator(), win_d.width(), win_d.height());
     draw();
     layer1_c.drawCapturedDisplay(1, 1);
@@ -2056,11 +2055,12 @@ pub fn drawGameOverScreen() void {
     var y: usize = 0;
     y += container_c.drawTextAt(0, y, "Placeholder text...", .{});
 
+    var layer1_anim = Generator(Console.animationDeath).init(&layer1_c);
+
     while (true) {
-        layer1_c.animationDeath(layer1_anim);
+        _ = layer1_anim.next();
         container_c.renderFully(@intCast(usize, win_d.startx), @intCast(usize, win_d.starty));
         display.present();
-        layer1_anim += 1;
 
         switch (display.waitForEvent(FRAMERATE) catch continue) {
             .Quit => return,
@@ -3069,15 +3069,50 @@ pub const Console = struct {
         self.grid[self.width * y + x] = c;
     }
 
-    pub fn animationDeath(self: *const Self, step: usize) void {
-        var y: usize = 0;
-        while (y < self.height / 2 and y < step) : (y += 1) {
-            var x: usize = 0;
-            while (x < self.width) : (x += 1) {
-                self.setCell(x, y, .{ .trans = true });
-                self.setCell(x, self.height - y, .{ .trans = true });
-            }
+    pub fn animationDeath(ctx: *GeneratorCtx(void), self: *Self) void {
+        const Ray = struct { x: f64, y: f64 };
+
+        var rays = StackBuffer(Ray, 360).init(null);
+        {
+            const d = @intToFloat(f64, math.max(self.width, self.height) / 2);
+            var i: f64 = 0;
+            while (i < 360) : (i += 1)
+                rays.append(Ray{
+                    .x = @intToFloat(f64, self.width / 2) + math.sin(i * math.pi / 180.0) * d,
+                    .y = @intToFloat(f64, self.height / 2) + math.cos(i * math.pi / 180.0) * d,
+                }) catch err.wat();
         }
+
+        var i: usize = math.max(self.height, self.width) / 2;
+        while (i > 0) : (i += 1) {
+            for (rays.slice()) |*ray, angle| {
+                const f = @intToFloat(f64, rng.rangeClumping(usize, 1, 3, 3));
+                ray.x -= math.sin(@intToFloat(f64, angle) * math.pi / 180.0) * f;
+                ray.y -= math.cos(@intToFloat(f64, angle) * math.pi / 180.0) * f;
+
+                if (ray.x < 0 or ray.y < 0) {
+                    continue;
+                }
+
+                const x = @floatToInt(usize, math.round(ray.x));
+                const y = @floatToInt(usize, math.round(ray.y));
+
+                if (x >= self.width or y >= self.height) {
+                    continue;
+                }
+
+                // self.setCell(x, y, .{ .trans = true });
+                self.setCell(x + 0, y + 0, .{ .fg = 0xff0000, .bg = 0, .ch = '*' });
+                self.setCell(x + 1, y + 0, .{ .fg = 0xff0000, .bg = 0, .ch = '*' });
+                self.setCell(x + 0, y + 1, .{ .fg = 0xff0000, .bg = 0, .ch = '*' });
+                self.setCell(x -| 1, y + 0, .{ .fg = 0xff0000, .bg = 0, .ch = '*' });
+                self.setCell(x + 0, y -| 1, .{ .fg = 0xff0000, .bg = 0, .ch = '*' });
+            }
+
+            ctx.yield({});
+        }
+
+        ctx.finish();
     }
 
     // TODO: draw multiple layers as needed
