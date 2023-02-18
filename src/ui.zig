@@ -3084,9 +3084,12 @@ pub const Console = struct {
         }
 
         var i: usize = 0;
-        while (i < math.max(self.height, self.width) / 2) : (i += 1) {
+        const box_delay = 3;
+        const m = (math.min(self.height, self.width) / 2) + box_delay * 2;
+        while (i < m) : (i += 1) {
+            // while (true) : (i += 1) {
             for (rays.slice()) |*ray, angle| {
-                const f = @intToFloat(f64, rng.rangeClumping(usize, 1, 3, 3));
+                const f = @intToFloat(f64, rng.rangeClumping(usize, 2, 4, 3));
                 ray.x -= math.sin(@intToFloat(f64, angle) * math.pi / 180.0) * f;
                 ray.y -= math.cos(@intToFloat(f64, angle) * math.pi / 180.0) * f;
 
@@ -3102,23 +3105,35 @@ pub const Console = struct {
                 }
 
                 self.setCell(x, y, .{ .trans = true });
+                self.setCell(x + 1, y, .{ .trans = true });
+                self.setCell(x, y + 1, .{ .trans = true });
+                self.setCell(x -| 1, y, .{ .trans = true });
+                self.setCell(x, y -| 1, .{ .trans = true });
             }
+
+            const z = i -| box_delay;
+            var box_x: usize = 0;
+            while (box_x < self.width) : (box_x += 1) {
+                self.setCell(box_x, z, .{ .trans = true });
+                self.setCell(box_x, self.height - z, .{ .trans = true });
+            }
+            var box_b: usize = 0;
+            while (box_b < self.height) : (box_b += 1) {
+                self.setCell(z, box_b, .{ .trans = true });
+                self.setCell(self.width - z, box_b, .{ .trans = true });
+            }
+
+            //             var any_left = false;
+            //             var y: usize = 0;
+            //             while (y < self.height) : (y += 1) {
+            //                 var x: usize = 0;
+            //                 while (x < self.width) : (x += 1) {
+            //                     if (self.getCell(x, y).fg != 0xff0000) any_left = true;
+            //                 }
+            //             }
+            //             if (!any_left) ctx.finish();
 
             ctx.yield({});
-
-            var box_a: usize = self.width;
-            while (box_a > 0) : (box_a -= 1) {
-                self.setCell(box_a, i, .{ .fg = 0xff0000, .ch = '*' });
-                self.setCell(box_a, self.height - i, .{ .fg = 0xff0000, .ch = '*' });
-            }
-            var box_b: usize = self.height;
-            while (box_b > 0) : (box_b -= 1) {
-                self.setCell(i, box_b, .{ .fg = 0xff0000, .ch = '*' });
-                self.setCell(self.height - i, box_b, .{
-                    .fg = 0xff0000,
-                    .ch = '*',
-                });
-            }
         }
 
         ctx.finish();

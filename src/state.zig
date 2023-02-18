@@ -464,6 +464,7 @@ pub fn freeLevelInfo() void {
 
     for (levelinfo) |info| {
         alloc.free(info.id);
+        alloc.free(info.shortname);
         alloc.free(info.name);
         for (&info.stairs) |maybe_stair|
             if (maybe_stair) |stair|
