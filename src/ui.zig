@@ -3083,8 +3083,8 @@ pub const Console = struct {
                 }) catch err.wat();
         }
 
-        var i: usize = math.max(self.height, self.width) / 2;
-        while (i > 0) : (i += 1) {
+        var i: usize = 0;
+        while (i < math.max(self.height, self.width) / 2) : (i += 1) {
             for (rays.slice()) |*ray, angle| {
                 const f = @intToFloat(f64, rng.rangeClumping(usize, 1, 3, 3));
                 ray.x -= math.sin(@intToFloat(f64, angle) * math.pi / 180.0) * f;
@@ -3101,15 +3101,24 @@ pub const Console = struct {
                     continue;
                 }
 
-                // self.setCell(x, y, .{ .trans = true });
-                self.setCell(x + 0, y + 0, .{ .fg = 0xff0000, .bg = 0, .ch = '*' });
-                self.setCell(x + 1, y + 0, .{ .fg = 0xff0000, .bg = 0, .ch = '*' });
-                self.setCell(x + 0, y + 1, .{ .fg = 0xff0000, .bg = 0, .ch = '*' });
-                self.setCell(x -| 1, y + 0, .{ .fg = 0xff0000, .bg = 0, .ch = '*' });
-                self.setCell(x + 0, y -| 1, .{ .fg = 0xff0000, .bg = 0, .ch = '*' });
+                self.setCell(x, y, .{ .trans = true });
             }
 
             ctx.yield({});
+
+            var box_a: usize = self.width;
+            while (box_a > 0) : (box_a -= 1) {
+                self.setCell(box_a, i, .{ .fg = 0xff0000, .ch = '*' });
+                self.setCell(box_a, self.height - i, .{ .fg = 0xff0000, .ch = '*' });
+            }
+            var box_b: usize = self.height;
+            while (box_b > 0) : (box_b -= 1) {
+                self.setCell(i, box_b, .{ .fg = 0xff0000, .ch = '*' });
+                self.setCell(self.height - i, box_b, .{
+                    .fg = 0xff0000,
+                    .ch = '*',
+                });
+            }
         }
 
         ctx.finish();
