@@ -1427,6 +1427,8 @@ Morgue files
 - Show number of steps player was from stairs when they died.
 - Record % of aggravated/spooked enemies on each floor.
 - Record other interacted machines (fountains, capacitor arrays, etc)
+- Record % of explored open space/explored rooms on each floor.
+- Record equipment state and HP when leaving each floor.
 
 Mobs, AI
 ========
