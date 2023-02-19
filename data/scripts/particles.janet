@@ -1114,6 +1114,25 @@
       :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
     })
   ]
+ "zap-air-messy" @[
+   (new-emitter @{
+     :particle (new-particle @{
+       :tile (new-tile @{ :ch " " :fg 0 :bg 0xffffff :bg-mix 0 })
+       :speed 2
+       :triggers @[ [[:COND-parent-dead? 1] [:TRIG-die]] ]
+     })
+     :lifetime (fn [self &] (+ 8 (:distance ((self :particle) :coord) ((self :particle) :target))))
+     :spawn-count 5
+     :get-spawn-tile (fn [self ticks ctx tile]
+                       (new-tile @{ :ch (tile :ch) :fg (tile :fg) :bg (tile :bg) :bg-mix (math/random) }))
+     :get-spawn-params (fn [self ticks ctx coord target]
+                         (let [angle (- (:angle target coord)    (* 0.20 (random-choose [-1 0 1])))
+                               dist  (- (:distance coord target) (* (math/random) 1.5))
+                               ntarg (:move-angle coord dist angle)]
+                           [coord ntarg]))
+     :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
+    })
+  ]
   "chargeover-electric"     @[ (template-chargeover SYMB1_CHARS ELEC_BLUE1 0x453555 :direction :in  :speed 0.5 :lifetime 12) ]
   "chargeover-orange-red"   @[ (template-chargeover SYMB1_CHARS   0xff4500 0x440000 :direction :in  :speed 0.5 :lifetime 12 :style :nobg) ]
   "chargeover-white-pink"   @[ (template-chargeover SYMB1_CHARS   0xffffff 0x440000 :direction :in  :speed 0.5 :lifetime 12) ]
