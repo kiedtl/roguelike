@@ -34,25 +34,27 @@ pub const Info = struct {
     slain_by_captain_id: []const u8, // Empty if won/quit
     slain_by_captain_name: BStr(32), // Empty if won/quit
     level: usize,
-    statuses: StackBuffer(BStr(32), Status.TOTAL),
+    statuses: StackBuffer(types.StatusDataInfo, Status.TOTAL),
     stats: Mob.MobStat,
-    surroundings: [SURROUND_RADIUS][SURROUND_RADIUS]u32,
-    messages: StackBuffer(BStr(128), MESSAGE_COUNT),
+    surroundings: [SURROUND_RADIUS][SURROUND_RADIUS]u21,
+    messages: StackBuffer(Message, MESSAGE_COUNT),
 
+    in_view_ids: StackBuffer([]const u8, 32),
+    in_view_names: StackBuffer(BStr(32), 32),
+
+    inventory_ids: StackBuffer([]const u8, Mob.Inventory.PACK_SIZE),
+    inventory_names: StackBuffer(BStr(128), Mob.Inventory.PACK_SIZE),
+    equipment: StackBuffer(Equipment, Mob.Inventory.EQU_SLOT_SIZE),
     aptitudes_names: StackBuffer([]const u8, player.PlayerUpgrade.TOTAL),
     aptitudes_descs: StackBuffer([]const u8, player.PlayerUpgrade.TOTAL),
     augments_names: StackBuffer([]const u8, player.ConjAugment.TOTAL),
     augments_descs: StackBuffer([]const u8, player.ConjAugment.TOTAL),
-    inventory_ids: StackBuffer([]const u8, Mob.Inventory.PACK_SIZE),
-    equipment_ids: StackBuffer([]const u8, Mob.Inventory.EQU_SLOT_SIZE),
-    inventory_names: StackBuffer([]const u8, Mob.Inventory.PACK_SIZE),
-    equipment_names: StackBuffer([]const u8, Mob.Inventory.EQU_SLOT_SIZE),
-    in_view_ids: StackBuffer([]const u8, 32),
-    in_view_names: StackBuffer(BStr(32), 32),
 
     pub const MESSAGE_COUNT = 30;
     pub const SURROUND_RADIUS = 20;
     pub const Self = @This();
+    pub const Message = struct { text: BStr(128), dups: usize };
+    pub const Equipment = struct { slot_id: []const u8, slot_name: []const u8, id: []const u8, name: BStr(128) };
 
     pub fn collect() Self {
         // FIXME: should be a cleaner way to do this...
@@ -133,9 +135,97 @@ pub const Info = struct {
 
         s.level = state.player.coord.z;
 
-        // TODO: statuses
+        s.statuses.reinit(null);
+        var statuses = state.player.statuses.iterator();
+        while (statuses.next()) |entry| {
+            if (!state.player.hasStatus(entry.key)) continue;
+            s.statuses.append(entry.value.*) catch err.wat();
+        }
 
         s.stats = state.player.stats;
+
+        {
+            var dy: usize = 0;
+            var my: usize = state.player.coord.y -| Info.SURROUND_RADIUS;
+            while (dy < Info.SURROUND_RADIUS) : ({
+                dy += 1;
+                my += 1;
+            }) {
+                var dx: usize = 0;
+                var mx: usize = state.player.coord.x -| Info.SURROUND_RADIUS;
+                while (dx < Info.SURROUND_RADIUS) : ({
+                    dx += 1;
+                    mx += 1;
+                }) {
+                    const coord = Coord.new2(state.player.coord.z, mx, my);
+
+                    if (state.dungeon.neighboringWalls(coord, true) == 9) {
+                        s.surroundings[dy][dx] = ' ';
+                    } else if (state.player.coord.eq(coord)) {
+                        s.surroundings[dy][dx] = '@';
+                    } else {
+                        s.surroundings[dy][dx] = @intCast(u21, Tile.displayAs(coord, false, false).ch);
+                    }
+                }
+            }
+        }
+
+        s.messages.reinit(null);
+        if (state.messages.items.len > 0) {
+            const msgcount = state.messages.items.len - 1;
+            var i: usize = msgcount - math.min(msgcount, 45);
+            while (i <= msgcount) : (i += 1) {
+                const msg = state.messages.items[i];
+                s.messages.append(.{
+                    .text = BStr(128).init(utils.used(msg.msg)),
+                    .dups = msg.dups,
+                }) catch err.wat();
+            }
+        }
+
+        s.in_view_ids.reinit(null);
+        s.in_view_names.reinit(null);
+        {
+            const can_see = state.createMobList(false, true, state.player.coord.z, state.GPA.allocator());
+            defer can_see.deinit();
+            for (can_see.items) |mob| {
+                s.in_view_ids.append(mob.id) catch err.wat();
+                s.in_view_names.append(BStr(32).init(mob.displayName())) catch err.wat();
+            }
+        }
+
+        s.inventory_ids.reinit(null);
+        s.inventory_names.reinit(null);
+        for (state.player.inventory.pack.constSlice()) |item| {
+            s.inventory_ids.append(item.id().?) catch err.wat();
+            s.inventory_names.append(BStr(128).init((item.longName() catch err.wat()).constSlice())) catch err.wat();
+        }
+
+        s.equipment.reinit(null);
+        inline for (@typeInfo(Mob.Inventory.EquSlot).Enum.fields) |slots_f| {
+            const slot = @intToEnum(Mob.Inventory.EquSlot, slots_f.value);
+            const item = state.player.inventory.equipment(slot).*;
+            s.equipment.append(.{
+                .slot_id = @tagName(slot),
+                .slot_name = slot.name(),
+                .id = if (item) |i| i.id().? else "",
+                .name = BStr(128).init(if (item) |i| (i.longName() catch err.wat()).constSlice() else ""),
+            }) catch err.wat();
+        }
+
+        s.aptitudes_names.reinit(null);
+        s.aptitudes_descs.reinit(null);
+        for (state.player_upgrades) |upgr| if (upgr.recieved) {
+            s.aptitudes_names.append(upgr.upgrade.name()) catch err.wat();
+            s.aptitudes_descs.append(upgr.upgrade.description()) catch err.wat();
+        };
+
+        s.augments_names.reinit(null);
+        s.augments_descs.reinit(null);
+        for (state.player_conj_augments) |aug| if (aug.received) {
+            s.augments_names.append(aug.a.name()) catch err.wat();
+            s.augments_descs.append(aug.a.description()) catch err.wat();
+        };
 
         return s;
     }
@@ -302,118 +392,114 @@ fn formatMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
     try w.print("... at {s} after {} turns\n", .{ state.levelinfo[info.level].name, info.turns });
     try w.print("\n", .{});
 
-    inline for (@typeInfo(Mob.Inventory.EquSlot).Enum.fields) |slots_f| {
-        const slot = @intToEnum(Mob.Inventory.EquSlot, slots_f.value);
-        try w.print("{s: <7} {s}\n", .{
-            slot.name(),
-            if (state.player.inventory.equipment(slot).*) |i|
-                (i.longName() catch unreachable).constSlice()
-            else
-                "<none>",
-        });
+    try w.print(" State \n", .{});
+    try w.print("=======\n", .{});
+    try w.print("\n", .{});
+
+    for (info.equipment.constSlice()) |equ| {
+        try w.print("{s: <7} {s}\n", .{ equ.slot_name, equ.name.constSlice() });
     }
     try w.print("\n", .{});
 
-    try w.print("Aptitudes:\n", .{});
-    for (state.player_upgrades) |upgr| if (upgr.recieved) {
-        try w.print("- {s}\n", .{upgr.upgrade.description()});
-    };
-    try w.print("\n", .{});
-
-    try w.print("Inventory:\n", .{});
-    for (state.player.inventory.pack.constSlice()) |item| {
-        const itemname = (item.longName() catch unreachable).constSlice();
-        try w.print("- {s}\n", .{itemname});
+    if (info.inventory_ids.len > 0) {
+        try w.print("Inventory:\n", .{});
+        for (info.inventory_names.constSlice()) |item|
+            try w.print("- {s}\n", .{item});
+    } else {
+        try w.print("Your inventory was empty.\n", .{});
     }
     try w.print("\n", .{});
 
-    try w.print("Statuses:\n", .{});
-    {
-        inline for (@typeInfo(Status).Enum.fields) |status| {
-            const status_e = @field(Status, status.name);
-            if (state.player.isUnderStatus(status_e)) |_| {
-                try w.print("- {s}\n", .{status_e.string(state.player)});
-            }
-        }
+    if (info.aptitudes_names.len > 0) {
+        try w.print("Aptitudes:\n", .{});
+        for (info.aptitudes_names.constSlice()) |apt, i|
+            try w.print("- [{s}] {s}\n", .{ apt, info.aptitudes_descs.data[i] });
+    } else {
+        try w.print("Your memory was still clouded.\n", .{});
     }
     try w.print("\n", .{});
+
+    if (info.augments_names.len > 0) {
+        try w.print("Conjuration Augments:\n", .{});
+        for (info.augments_names.constSlice()) |apt, i|
+            try w.print("- [{s}] {s}\n", .{ apt, info.augments_descs.data[i] });
+        try w.print("\n", .{});
+    }
 
     const killed = data[@enumToInt(@as(Stat, .KillRecord))].BatchUsize.total;
     const stabbed = data[@enumToInt(@as(Stat, .StabRecord))].BatchUsize.total;
     try w.print("You killed {} foe(s), stabbing {} of them.\n", .{ killed, stabbed });
     try w.print("\n", .{});
 
-    try w.print("Last messages:\n", .{});
-    if (state.messages.items.len > 0) {
-        const msgcount = state.messages.items.len - 1;
-        var i: usize = msgcount - math.min(msgcount, 45);
-        while (i <= msgcount) : (i += 1) {
-            const msg = state.messages.items[i];
-            const msgtext = utils.used(msg.msg);
+    try w.print(" Circumstances \n", .{});
+    try w.print("===============\n", .{});
+    try w.print("\n", .{});
 
-            if (msg.dups == 0) {
-                try w.print("- {s}\n", .{msgtext});
-            } else {
-                try w.print("- {s} (×{})\n", .{ msgtext, msg.dups + 1 });
+    if (info.statuses.len > 0) {
+        try w.print("Statuses:\n", .{});
+        for (info.statuses.constSlice()) |statusinfo| {
+            const sname = statusinfo.status.string(state.player);
+            switch (statusinfo.duration) {
+                .Prm => try w.print("<Prm> {s}", .{sname}),
+                .Equ => try w.print("<Equ> {s}", .{sname}),
+                .Tmp => try w.print("<Tmp> {s} ({})", .{ sname, statusinfo.duration.Tmp }),
+                .Ctx => try w.print("<Ctx> {s}", .{sname}),
             }
         }
+    } else {
+        try w.print("You had no status effects.", .{});
+    }
+    try w.print("\n", .{});
+
+    try w.print("Last messages:\n", .{});
+    for (info.messages.constSlice()) |message| {
+        try w.print("- ", .{});
+        {
+            var f = false;
+            for (message.text.constSlice()) |ch| {
+                if (f) {
+                    f = false;
+                    continue;
+                } else if (ch == '$') {
+                    f = true;
+                    continue;
+                }
+                try w.print("{u}", .{ch});
+            }
+        }
+        if (message.dups > 0) {
+            try w.print(" (×{})", .{message.dups + 1});
+        }
+        try w.print("\n", .{});
     }
     try w.print("\n", .{});
 
     try w.print("Surroundings:\n", .{});
-    {
-        const radius: usize = 14;
-        var y: usize = state.player.coord.y -| radius;
-        while (y < math.min(state.player.coord.y + radius, HEIGHT)) : (y += 1) {
-            try w.print("        ", .{});
-            var x: usize = state.player.coord.x -| radius;
-            while (x < math.min(state.player.coord.x + radius, WIDTH)) : (x += 1) {
-                const coord = Coord.new2(state.player.coord.z, x, y);
-
-                if (state.dungeon.neighboringWalls(coord, true) == 9) {
-                    try w.print(" ", .{});
-                    continue;
-                }
-
-                if (state.player.coord.eq(coord)) {
-                    try w.print("@", .{});
-                    continue;
-                }
-
-                var ch = @intCast(u21, Tile.displayAs(coord, false, false).ch);
-                if (ch == ' ') ch = '.';
-
-                try w.print("{u}", .{ch});
-            }
-            try w.print("\n", .{});
+    for (info.surroundings) |row| {
+        for (row) |ch| {
+            try w.print("{u}", .{ch});
         }
+        try w.print("\n", .{});
     }
     try w.print("\n", .{});
 
-    try w.print("You could see:\n", .{});
-    {
-        // Memory buffer to hold mob displayName()'s, because StringHashMap
-        // doesn't clone the strings...
-        //
-        // (We're using this so we don't have to try to deallocate stuff.)
-        var membuf: [65535]u8 = undefined;
-        var fba = std.heap.FixedBufferAllocator.init(membuf[0..]);
+    if (info.in_view_ids.len > 0) {
+        try w.print("You could see:\n", .{});
 
-        var can_see_counted = std.StringHashMap(usize).init(alloc);
+        var can_see_counted = std.StringHashMap(usize).init(state.GPA.allocator());
         defer can_see_counted.deinit();
 
-        const can_see = state.createMobList(false, true, state.player.coord.z, alloc);
-        defer can_see.deinit();
-        for (can_see.items) |mob| {
-            const name = try utils.cloneStr(mob.displayName(), fba.allocator());
-            const prevtotal = (can_see_counted.getOrPutValue(name, 0) catch err.wat()).value_ptr.*;
-            can_see_counted.put(name, prevtotal + 1) catch unreachable;
+        for (info.in_view_names.constSlice()) |name| {
+            const prevtotal = (can_see_counted.getOrPutValue(name.constSlice(), 0) catch err.wat()).value_ptr.*;
+            can_see_counted.put(name.constSlice(), prevtotal + 1) catch unreachable;
         }
 
         var iter = can_see_counted.iterator();
         while (iter.next()) |mobcount| {
             try w.print("- {: >2} {s}\n", .{ mobcount.value_ptr.*, mobcount.key_ptr.* });
         }
+    } else {
+        try w.print("There was nothing in sight.\n", .{});
     }
     try w.print("\n", .{});
 

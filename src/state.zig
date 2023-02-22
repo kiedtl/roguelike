@@ -319,6 +319,7 @@ pub fn is_walkable(coord: Coord, opts: IsWalkableOptions) bool {
 }
 
 // TODO: move this to utils.zig?
+// TODO: actually no, move this to player.zig
 pub fn createMobList(include_player: bool, only_if_infov: bool, level: usize, alloc: mem.Allocator) MobArrayList {
     var moblist = std.ArrayList(*Mob).init(alloc);
     var y: usize = 0;

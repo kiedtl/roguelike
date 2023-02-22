@@ -1604,9 +1604,9 @@ pub const StatusDataInfo = struct {
     // This field doesn't matter when it's in mob.statuses
     status: Status = undefined,
 
-    // What's the "power" of a status (percentage). For some statuses, doesn't
-    // mean anything at all.
-    power: usize = 0, // What's the "power" of the status
+    // What's the "power" of a status. For most statuses, doesn't mean anything
+    // at all.
+    power: usize = 0,
 
     // How long the status should last.
     //
