@@ -31,6 +31,35 @@ const StackBuffer = buffer.StackBuffer;
 const Generator = @import("generators.zig").Generator;
 const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
+// Bounded string
+pub fn BStr(comptime sz: usize) type {
+    return StackBuffer(u8, sz);
+}
+
+pub const DateTime = struct {
+    Y: usize,
+    M: usize,
+    D: usize,
+    h: usize,
+    m: usize,
+
+    pub fn collect() @This() {
+        const ep_secs = std.time.epoch.EpochSeconds{ .secs = @intCast(u64, std.time.timestamp()) };
+        const ep_day = ep_secs.getEpochDay();
+        const year_day = ep_day.calculateYearDay();
+        const month_day = year_day.calculateMonthDay();
+        const day_seconds = ep_secs.getDaySeconds();
+
+        return .{
+            .Y = year_day.year,
+            .M = month_day.month.numeric(),
+            .D = month_day.day_index,
+            .h = day_seconds.getHoursIntoDay(),
+            .m = day_seconds.getMinutesIntoHour(),
+        };
+    }
+};
+
 pub fn iterCircle(ctx: *GeneratorCtx(Coord), arg: struct { center: Coord, r: usize }) void {
     assert(arg.r < math.min(HEIGHT, WIDTH));
     var buf: [HEIGHT][WIDTH]bool = [_][WIDTH]bool{[_]bool{false} ** WIDTH} ** HEIGHT;

@@ -66,6 +66,20 @@ pub const ConjAugment = enum(usize) {
 
     pub const TOTAL = std.meta.fields(@This()).len;
 
+    pub fn name(self: ConjAugment) []const u8 {
+        return switch (self) {
+            .WallDisintegrate1 => "Wall Disintegration [1]",
+            .WallDisintegrate2 => "Wall Disintegration [2]",
+            .rFire_25 => "rFire+25",
+            .rFire_50 => "rFire+50",
+            .rElec_25 => "rElec+25",
+            .rElec_50 => "rElec+50",
+            .UndeadBloodthirst => "Undead Bloodthirst",
+            .Melee => "+Melee",
+            .Evade => "+Evasion",
+        };
+    }
+
     pub fn char(self: ConjAugment) []const u8 {
         return switch (self) {
             // .Survival => "Opposing spectral sabres will not always destroy your own. (TODO: update)",
@@ -125,7 +139,18 @@ pub const PlayerUpgrade = enum {
     Will,
     Echolocating,
 
+    pub const TOTAL = std.meta.fields(@This()).len;
     pub const UPGRADES = [_]PlayerUpgrade{ .Agile, .OI_Enraged, .Healthy, .Will, .Echolocating };
+
+    pub fn name(self: PlayerUpgrade) []const u8 {
+        return switch (self) {
+            .Agile => "Agility",
+            .OI_Enraged => "Inner Rage",
+            .Healthy => "Robust",
+            .Will => "Hardened Will",
+            .Echolocating => "Echolocation",
+        };
+    }
 
     pub fn announce(self: PlayerUpgrade) []const u8 {
         return switch (self) {

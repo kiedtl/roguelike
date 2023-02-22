@@ -7,9 +7,12 @@ const err = @import("err.zig");
 const state = @import("state.zig");
 const rng = @import("rng.zig");
 const types = @import("types.zig");
+const player = @import("player.zig");
+const surfaces = @import("surfaces.zig");
 const utils = @import("utils.zig");
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
+const BStr = utils.BStr;
 
 const Mob = types.Mob;
 const Coord = types.Coord;
@@ -18,6 +21,125 @@ const Tile = types.Tile;
 const WIDTH = state.WIDTH;
 const HEIGHT = state.HEIGHT;
 const LEVELS = state.LEVELS;
+
+pub const Info = struct {
+    seed: u64,
+    username: BStr(128),
+    end_datetime: utils.DateTime,
+    turns: usize,
+    result: []const u8, // "Escaped", "died in darkness", etc
+    slain_str: []const u8, // Empty if won/quit
+    slain_by_id: []const u8, // Empty if won/quit
+    slain_by_name: BStr(32), // Empty if won/quit
+    slain_by_captain_id: []const u8, // Empty if won/quit
+    slain_by_captain_name: BStr(32), // Empty if won/quit
+    level: usize,
+    statuses: StackBuffer(BStr(32), Status.TOTAL),
+    stats: Mob.MobStat,
+    surroundings: [SURROUND_RADIUS][SURROUND_RADIUS]u32,
+    messages: StackBuffer(BStr(128), MESSAGE_COUNT),
+
+    aptitudes_names: StackBuffer([]const u8, player.PlayerUpgrade.TOTAL),
+    aptitudes_descs: StackBuffer([]const u8, player.PlayerUpgrade.TOTAL),
+    augments_names: StackBuffer([]const u8, player.ConjAugment.TOTAL),
+    augments_descs: StackBuffer([]const u8, player.ConjAugment.TOTAL),
+    inventory_ids: StackBuffer([]const u8, Mob.Inventory.PACK_SIZE),
+    equipment_ids: StackBuffer([]const u8, Mob.Inventory.EQU_SLOT_SIZE),
+    inventory_names: StackBuffer([]const u8, Mob.Inventory.PACK_SIZE),
+    equipment_names: StackBuffer([]const u8, Mob.Inventory.EQU_SLOT_SIZE),
+    in_view_ids: StackBuffer([]const u8, 32),
+    in_view_names: StackBuffer(BStr(32), 32),
+
+    pub const MESSAGE_COUNT = 30;
+    pub const SURROUND_RADIUS = 20;
+    pub const Self = @This();
+
+    pub fn collect() Self {
+        // FIXME: should be a cleaner way to do this...
+        var s: Self = undefined;
+
+        s.seed = rng.seed;
+
+        if (std.process.getEnvVarOwned(state.GPA.allocator(), "USER")) |env| {
+            s.username.reinit(env);
+            state.GPA.allocator().free(env);
+        } else |_| {
+            if (std.process.getEnvVarOwned(state.GPA.allocator(), "USERNAME")) |env| {
+                s.username.reinit(env);
+                state.GPA.allocator().free(env);
+            } else |_| {
+                s.username.reinit("Obmirnul");
+            }
+        }
+
+        s.end_datetime = utils.DateTime.collect();
+        s.turns = state.player_turns;
+
+        s.result = switch (state.state) {
+            .Game => "Began meditating on the mysteries of eggplants",
+            .Win => "Escaped the Necromancer's wrath",
+            .Quit => "Overcome by the Fear of death",
+            .Lose => b: {
+                if (state.player.killed_by) |by| {
+                    if (by.faction == .Necromancer) {
+                        if (by.life_type == .Undead) {
+                            break :b "Suffered the Necromancer's wrath";
+                        } else {
+                            break :b "Paid for their treachery";
+                        }
+                    } else if (by.faction == .Night) {
+                        if (state.dungeon.terrainAt(state.player.coord) == &surfaces.SladeTerrain) {
+                            break :b "Died in darkness";
+                        } else {
+                            break :b "Fell into darkness";
+                        }
+                        // } else if (by.faction == .Revgenunkim) {
+                        //     break :b "Overcome by an ancient Power";
+                        // } else if (by.faction == .Holy) {
+                        //     break :b "Overcome by Hellfire";
+                    } else {
+                        break :b "Died on the journey";
+                    }
+                }
+                break :b "Died on the journey";
+            },
+        };
+
+        s.slain_str = "";
+        s.slain_by_id = "";
+        s.slain_by_captain_id = "";
+        s.slain_by_name.reinit(null);
+        s.slain_by_captain_name.reinit(null);
+
+        if (state.state == .Lose and state.player.killed_by != null) {
+            const ldp = state.player.lastDamagePercentage();
+            s.slain_str = "killed";
+            if (ldp > 30) s.slain_str = "slain";
+            if (ldp > 60) s.slain_str = "executed";
+            if (ldp > 90) s.slain_str = "demolished";
+            if (ldp > 120) s.slain_str = "miserably destroyed";
+
+            const killer = state.player.killed_by.?;
+            s.slain_by_id = killer.id;
+            s.slain_by_name.reinit(killer.displayName());
+
+            if (!killer.isAloneOrLeader()) {
+                if (killer.squad.?.leader) |leader| {
+                    s.slain_by_captain_id = leader.id;
+                    s.slain_by_captain_name.reinit(leader.displayName());
+                }
+            }
+        }
+
+        s.level = state.player.coord.z;
+
+        // TODO: statuses
+
+        s.stats = state.player.stats;
+
+        return s;
+    }
+};
 
 pub const Chunk = union(enum) {
     Header: struct { n: []const u8 },
@@ -156,57 +278,30 @@ fn _isLevelSignificant(level: usize) bool {
     return data[@enumToInt(@as(Stat, .TurnsSpent))].SingleUsize.each[level] > 0;
 }
 
-fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
-    const S = struct {
-        fn _damageString() []const u8 {
-            const ldp = state.player.lastDamagePercentage();
-            var str: []const u8 = "killed";
-            if (ldp > 20) str = "demolished";
-            if (ldp > 40) str = "exterminated";
-            if (ldp > 60) str = "utterly destroyed";
-            if (ldp > 80) str = "miserably destroyed";
-            return str;
-        }
-    };
-
+fn formatMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
     var buf = std.ArrayList(u8).init(alloc);
     var w = buf.writer();
 
-    try w.print("Oathbreaker morgue entry\n", .{});
-    try w.print("\n", .{});
-    try w.print("Seed: {}\n", .{rng.seed});
+    try w.print("// Oathbreaker morgue entry @@ {}-{}-{} {}:{}\n", .{ info.end_datetime.Y, info.end_datetime.M, info.end_datetime.D, info.end_datetime.h, info.end_datetime.m });
+    try w.print("// Seed: {}\n", .{info.seed});
     try w.print("\n", .{});
 
-    var username: []const u8 = undefined;
-    // FIXME: should be a cleaner way to do this...
-    if (std.process.getEnvVarOwned(alloc, "USER")) |s| {
-        username = s;
-    } else |_| {
-        if (std.process.getEnvVarOwned(alloc, "USERNAME")) |s| {
-            username = s;
-        } else |_| {
-            username = alloc.dupe(u8, "Obmirnul") catch unreachable;
-        }
-    }
-    defer alloc.free(username);
-
-    const gamestate = switch (state.state) {
-        .Win => "escaped",
-        .Lose => "died",
-        else => "quit",
-    };
-    try w.print("{s} {s} after {} turns\n", .{ username, gamestate, state.ticks });
-    if (state.state == .Lose) {
-        if (state.player.killed_by) |by| {
-            try w.print("        ...{s} by a {s} ({}% dmg)\n", .{
-                S._damageString(),
-                by.displayName(),
-                state.player.lastDamagePercentage(),
-            });
-        }
-        try w.print("        ...on level {s} of the Dungeon\n", .{state.levelinfo[state.player.coord.z].name});
-    }
+    try w.print("{s} the Oathbreaker\n", .{info.username.constSlice()});
     try w.print("\n", .{});
+    try w.print("*** {s} ***\n", .{info.result});
+    try w.print("\n", .{});
+
+    if (state.state == .Lose or state.state == .Quit) {
+        if (info.slain_str.len > 0) {
+            try w.print("... {s} by a {s}\n", .{ info.slain_str, info.slain_by_name.constSlice() });
+            if (info.slain_by_captain_name.len > 0)
+                try w.print("... in service of a {s}\n", .{info.slain_by_captain_name.constSlice()});
+        }
+    }
+
+    try w.print("... at {s} after {} turns\n", .{ state.levelinfo[info.level].name, info.turns });
+    try w.print("\n", .{});
+
     inline for (@typeInfo(Mob.Inventory.EquSlot).Enum.fields) |slots_f| {
         const slot = @intToEnum(Mob.Inventory.EquSlot, slots_f.value);
         try w.print("{s: <7} {s}\n", .{
@@ -395,29 +490,13 @@ fn formatMorgue(alloc: mem.Allocator) !std.ArrayList(u8) {
     return buf;
 }
 
-pub fn exportMorgueTXT() void {
-    const morgue = formatMorgue(state.GPA.allocator()) catch err.wat();
+pub fn createMorgue() void {
+    const info = Info.collect();
+
+    const morgue = formatMorgue(info, state.GPA.allocator()) catch err.wat();
     defer morgue.deinit();
 
-    var username: []const u8 = undefined;
-    // FIXME: should be a cleaner way to do this...
-    if (std.process.getEnvVarOwned(state.GPA.allocator(), "USER")) |s| {
-        username = s;
-    } else |_| {
-        if (std.process.getEnvVarOwned(state.GPA.allocator(), "USERNAME")) |s| {
-            username = s;
-        } else |_| {
-            username = state.GPA.allocator().dupe(u8, "Obmirnul") catch unreachable;
-        }
-    }
-    defer state.GPA.allocator().free(username);
-
-    const ep_secs = std.time.epoch.EpochSeconds{ .secs = @intCast(u64, std.time.timestamp()) };
-    const ep_day = ep_secs.getEpochDay();
-    const year_day = ep_day.calculateYearDay();
-    const month_day = year_day.calculateMonthDay();
-
-    const filename = std.fmt.allocPrintZ(state.GPA.allocator(), "morgue-{s}-{}-{}-{:0>2}-{:0>2}.txt", .{ username, rng.seed, year_day.year, month_day.month.numeric(), month_day.day_index }) catch err.oom();
+    const filename = std.fmt.allocPrintZ(state.GPA.allocator(), "morgue-{s}-{}-{}-{:0>2}-{:0>2}-{}:{}.txt", .{ info.username.constSlice(), rng.seed, info.end_datetime.Y, info.end_datetime.M, info.end_datetime.D, info.end_datetime.h, info.end_datetime.m }) catch err.oom();
     defer state.GPA.allocator().free(filename);
 
     std.os.mkdir("morgue", 0o776) catch |e| switch (e) {

@@ -1224,6 +1224,7 @@ pub const Status = enum {
 
     // }}}
 
+    pub const TOTAL = @typeInfo(@This()).Enum.fields.len;
     pub const MAX_DURATION: usize = 20;
 
     pub fn string(self: Status, mob: *const Mob) []const u8 { // {{{
@@ -1925,10 +1926,18 @@ pub const Mob = struct { // {{{
     corpse: enum { Normal, Wall, Dust, None } = .Normal,
     slain_trigger: union(enum) { None, Disintegrate: []const *const mobs.MobTemplate } = .None,
 
+    //stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
+    stats: MobStat = .{},
+
+    // Listed in order of preference.
+    spells: []const SpellOptions = &[_]SpellOptions{},
+
+    max_MP: usize = 0,
+    MP: usize = 0,
+
     // Don't use EnumFieldStruct here because we want to provide per-field
     // defaults.
-    //stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
-    stats: struct {
+    pub const MobStat = struct {
         Melee: isize = 60,
         Missile: isize = 40,
         Martial: isize = 0,
@@ -1939,13 +1948,7 @@ pub const Mob = struct { // {{{
         Willpower: isize = 3,
         Spikes: isize = 0,
         Conjuration: isize = 0,
-    } = .{},
-
-    // Listed in order of preference.
-    spells: []const SpellOptions = &[_]SpellOptions{},
-
-    max_MP: usize = 0,
-    MP: usize = 0,
+    };
 
     pub const Inventory = struct {
         pack: PackBuffer = PackBuffer.init(&[_]Item{}),

@@ -33,6 +33,11 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
             return b;
         }
 
+        pub fn reinit(self: *Self, data: ?[]const T) void {
+            self.clear();
+            self.* = Self.init(data);
+        }
+
         pub fn fmt(self: *Self, comptime format: []const u8, args: anytype) void {
             var fbs = std.io.fixedBufferStream(&self.data);
             std.fmt.format(fbs.writer(), format, args) catch unreachable;

@@ -885,7 +885,7 @@ pub fn actualMain() anyerror!void {
     if (!use_viewer) {
         if (state.state != .Quit)
             ui.drawGameOverScreen();
-        scores.exportMorgueTXT();
+        scores.createMorgue();
     }
 
     deinitGame();
