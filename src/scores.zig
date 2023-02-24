@@ -173,7 +173,7 @@ pub const Info = struct {
         s.messages.reinit(null);
         if (state.messages.items.len > 0) {
             const msgcount = state.messages.items.len - 1;
-            var i: usize = msgcount - math.min(msgcount, 45);
+            var i: usize = msgcount - math.min(msgcount, MESSAGE_COUNT);
             while (i <= msgcount) : (i += 1) {
                 const msg = state.messages.items[i];
                 s.messages.append(.{
@@ -576,7 +576,7 @@ fn formatMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
     return buf;
 }
 
-pub fn createMorgue() void {
+pub fn createMorgue() Info {
     const info = Info.collect();
 
     const morgue = formatMorgue(info, state.GPA.allocator()) catch err.wat();
@@ -590,14 +590,16 @@ pub fn createMorgue() void {
         else => {
             std.log.err("Could not create morgue directory: {}", .{e});
             std.log.err("Refusing to write morgue entries.", .{});
-            return;
+            return info;
         },
     };
 
     (std.fs.cwd().openDir("morgue", .{}) catch err.wat()).writeFile(filename, morgue.items[0..]) catch |e| {
         std.log.err("Could not write to morgue file '{s}': {}", .{ filename, e });
         std.log.err("Refusing to write morgue entries.", .{});
-        return;
+        return info;
     };
     std.log.info("Morgue file written to {s}.", .{filename});
+
+    return info;
 }

@@ -23,6 +23,7 @@ const termbox = @import("termbox.zig");
 const utils = @import("utils.zig");
 const types = @import("types.zig");
 const rng = @import("rng.zig");
+const scores = @import("scores.zig");
 
 const Generator = @import("generators.zig").Generator;
 const GeneratorCtx = @import("generators.zig").GeneratorCtx;
@@ -2042,7 +2043,7 @@ pub fn drawLoadingScreenFinish(loading_win: *LoadingScreen) bool {
     return true;
 }
 
-pub fn drawGameOverScreen() void {
+pub fn drawGameOverScreen(scoreinfo: scores.Info) void {
     const win_d = dimensions(.Whole);
     var container_c = Console.init(state.GPA.allocator(), win_d.width(), win_d.height());
     defer container_c.deinit();
@@ -2052,8 +2053,30 @@ pub fn drawGameOverScreen() void {
     layer1_c.drawCapturedDisplay(1, 1);
     container_c.addSubconsole(layer1_c, 0, 0);
 
-    var y: usize = 0;
-    y += container_c.drawTextAt(0, y, "Placeholder text...", .{});
+    const player_dc = coordToScreen(state.player.coord).?;
+    for (&DIRECTIONS) |d| if (state.player.coord.move(d, state.mapgeometry)) |nei| {
+        if (coordToScreen(nei)) |c| {
+            container_c.setCell(c.x, c.y, layer1_c.getCell(c.x, c.y));
+        }
+    };
+    container_c.setCell(player_dc.x, player_dc.y, layer1_c.getCell(player_dc.x, player_dc.y));
+
+    {
+        var tmpbuf = StackBuffer(u8, 128).init(null);
+        const x = player_dc.x - (32 + 4); // padding + space between @ and text
+
+        tmpbuf.fmt("{s} the Oathbreaker", .{scoreinfo.username.constSlice()});
+        _ = container_c.drawTextAtf(x, player_dc.y - 1, "{s: >32}", .{tmpbuf.constSlice()}, .{});
+        tmpbuf.clear();
+
+        tmpbuf.fmt("** {s} **", .{scoreinfo.result});
+        _ = container_c.drawTextAtf(x, player_dc.y + 0, "$c{s: >32}$.", .{tmpbuf.constSlice()}, .{});
+        tmpbuf.clear();
+
+        tmpbuf.fmt("after {} turns", .{scoreinfo.turns});
+        _ = container_c.drawTextAtf(x, player_dc.y + 1, "$b{s: >32}$.", .{tmpbuf.constSlice()}, .{});
+        tmpbuf.clear();
+    }
 
     var layer1_anim = Generator(Console.animationDeath).init(&layer1_c);
 
@@ -2957,6 +2980,11 @@ pub const Console = struct {
 
     pub fn addSubconsole(self: *Self, subconsole: Console, x: usize, y: usize) void {
         self.subconsoles.append(.{ .console = subconsole, .x = x, .y = y }) catch err.wat();
+    }
+
+    // Utility function for centering subconsoles
+    pub fn centerY(self: *const Self, subheight: usize) usize {
+        return (self.height / 2) - (subheight / 2);
     }
 
     // Utility function for centering subconsoles

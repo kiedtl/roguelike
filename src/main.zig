@@ -883,9 +883,9 @@ pub fn actualMain() anyerror!void {
     }
 
     if (!use_viewer) {
+        const info = scores.createMorgue();
         if (state.state != .Quit)
-            ui.drawGameOverScreen();
-        scores.createMorgue();
+            ui.drawGameOverScreen(info);
     }
 
     deinitGame();
