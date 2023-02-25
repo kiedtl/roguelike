@@ -2057,9 +2057,11 @@ pub fn drawGameOverScreen(scoreinfo: scores.Info) void {
     for (&DIRECTIONS) |d| if (state.player.coord.move(d, state.mapgeometry)) |nei| {
         if (coordToScreen(nei)) |c| {
             container_c.setCell(c.x, c.y, layer1_c.getCell(c.x, c.y));
+            container_c.setCell(c.x + 1, c.y, .{ .fl = .{ .skip = true } });
         }
     };
     container_c.setCell(player_dc.x, player_dc.y, layer1_c.getCell(player_dc.x, player_dc.y));
+    container_c.setCell(player_dc.x + 1, player_dc.y, .{ .fl = .{ .skip = true } });
 
     {
         var tmpbuf = StackBuffer(u8, 128).init(null);
@@ -2076,6 +2078,18 @@ pub fn drawGameOverScreen(scoreinfo: scores.Info) void {
         tmpbuf.fmt("after {} turns", .{scoreinfo.turns});
         _ = container_c.drawTextAtf(x, player_dc.y + 1, "$b{s: >32}$.", .{tmpbuf.constSlice()}, .{});
         tmpbuf.clear();
+    }
+
+    {
+        const x = player_dc.x + 4;
+        var oy: usize = 0;
+        if (state.state == .Lose) {
+            oy += container_c.drawTextAtf(x, player_dc.y + oy, "... {s} by a {s}", .{ scoreinfo.slain_str, scoreinfo.slain_by_name.constSlice() }, .{});
+            if (scoreinfo.slain_by_captain_name.len > 0)
+                oy += container_c.drawTextAtf(x, player_dc.y + oy, "... led by a {s}", .{scoreinfo.slain_by_captain_name.constSlice()}, .{});
+        }
+        if (oy == 0) oy += 1;
+        oy += container_c.drawTextAtf(x, player_dc.y + oy, "$bat {s}$.", .{state.levelinfo[scoreinfo.level].name}, .{});
     }
 
     var layer1_anim = Generator(Console.animationDeath).init(&layer1_c);
