@@ -146,13 +146,13 @@ pub const Info = struct {
 
         {
             var dy: usize = 0;
-            var my: usize = state.player.coord.y -| Info.SURROUND_RADIUS;
+            var my: usize = state.player.coord.y -| Info.SURROUND_RADIUS / 2;
             while (dy < Info.SURROUND_RADIUS) : ({
                 dy += 1;
                 my += 1;
             }) {
                 var dx: usize = 0;
-                var mx: usize = state.player.coord.x -| Info.SURROUND_RADIUS;
+                var mx: usize = state.player.coord.x -| Info.SURROUND_RADIUS / 2;
                 while (dx < Info.SURROUND_RADIUS) : ({
                     dx += 1;
                     mx += 1;
@@ -173,7 +173,7 @@ pub const Info = struct {
         s.messages.reinit(null);
         if (state.messages.items.len > 0) {
             const msgcount = state.messages.items.len - 1;
-            var i: usize = msgcount - math.min(msgcount, MESSAGE_COUNT);
+            var i: usize = msgcount - math.min(msgcount, MESSAGE_COUNT - 1);
             while (i <= msgcount) : (i += 1) {
                 const msg = state.messages.items[i];
                 s.messages.append(.{
@@ -404,7 +404,7 @@ fn formatMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
     if (info.inventory_ids.len > 0) {
         try w.print("Inventory:\n", .{});
         for (info.inventory_names.constSlice()) |item|
-            try w.print("- {s}\n", .{item});
+            try w.print("- {s}\n", .{item.constSlice()});
     } else {
         try w.print("Your inventory was empty.\n", .{});
     }
@@ -445,9 +445,10 @@ fn formatMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
                 .Tmp => try w.print("<Tmp> {s} ({})", .{ sname, statusinfo.duration.Tmp }),
                 .Ctx => try w.print("<Ctx> {s}", .{sname}),
             }
+            try w.print("\n", .{});
         }
     } else {
-        try w.print("You had no status effects.", .{});
+        try w.print("You had no status effects.\n", .{});
     }
     try w.print("\n", .{});
 
@@ -501,7 +502,6 @@ fn formatMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
     } else {
         try w.print("There was nothing in sight.\n", .{});
     }
-    try w.print("\n", .{});
 
     // Newlines will be auto-added by header, see below
     // try w.print("\n\n", .{});
@@ -510,7 +510,7 @@ fn formatMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
         switch (chunk) {
             .Header => |header| {
                 try w.print("\n\n", .{});
-                try w.print(" {s: <26}", .{header.n});
+                try w.print(" {s: <30}", .{header.n});
                 try w.print("| ", .{});
                 {
                     var c: usize = state.levelinfo.len - 1;
@@ -522,7 +522,7 @@ fn formatMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
                 for (header.n) |_|
                     try w.print("-", .{});
                 try w.print("-", .{});
-                var si: usize = 26 - (header.n.len + 2) + 1;
+                var si: usize = 30 - (header.n.len + 2) + 1;
                 while (si > 0) : (si -= 1)
                     try w.print(" ", .{});
                 try w.print("| ", .{});
@@ -538,7 +538,7 @@ fn formatMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
                 const entry = &data[@enumToInt(stat.s)];
                 switch (stat.s.stattype()) {
                     .SingleUsize => {
-                        try w.print("{s: <20} {: >5} | ", .{ stat.n, entry.SingleUsize.total });
+                        try w.print("{s: <24} {: >5} | ", .{ stat.n, entry.SingleUsize.total });
                         {
                             var c: usize = state.levelinfo.len - 1;
                             while (c > 0) : (c -= 1) if (_isLevelSignificant(c)) {
@@ -552,9 +552,9 @@ fn formatMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
                         try w.print("\n", .{});
                     },
                     .BatchUsize => {
-                        try w.print("{s: <20} {: >5} |\n", .{ stat.n, entry.BatchUsize.total });
+                        try w.print("{s: <24} {: >5} |\n", .{ stat.n, entry.BatchUsize.total });
                         for (entry.BatchUsize.singles.slice()) |batch_entry| {
-                            try w.print("  {s: <18} {: >5} | ", .{ batch_entry.id.constSlice(), batch_entry.val.total });
+                            try w.print("  {s: <22} {: >5} | ", .{ batch_entry.id.constSlice(), batch_entry.val.total });
                             var c: usize = state.levelinfo.len - 1;
                             while (c > 0) : (c -= 1) if (_isLevelSignificant(c)) {
                                 if (stat.ign0 and batch_entry.val.each[c] == 0) {

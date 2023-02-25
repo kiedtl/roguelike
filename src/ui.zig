@@ -2081,15 +2081,15 @@ pub fn drawGameOverScreen(scoreinfo: scores.Info) void {
     }
 
     {
-        const x = player_dc.x + 4;
-        var oy: usize = 0;
+        const x = player_dc.x + 6;
+        var oy: usize = player_dc.y - 1;
         if (state.state == .Lose) {
-            oy += container_c.drawTextAtf(x, player_dc.y + oy, "... {s} by a {s}", .{ scoreinfo.slain_str, scoreinfo.slain_by_name.constSlice() }, .{});
+            if (scoreinfo.slain_by_name.len > 0)
+                oy += container_c.drawTextAtf(x, oy, "... {s} by a {s}", .{ scoreinfo.slain_str, scoreinfo.slain_by_name.constSlice() }, .{});
             if (scoreinfo.slain_by_captain_name.len > 0)
-                oy += container_c.drawTextAtf(x, player_dc.y + oy, "... led by a {s}", .{scoreinfo.slain_by_captain_name.constSlice()}, .{});
+                oy += container_c.drawTextAtf(x, oy, "... led by a {s}", .{scoreinfo.slain_by_captain_name.constSlice()}, .{});
         }
-        if (oy == 0) oy += 1;
-        oy += container_c.drawTextAtf(x, player_dc.y + oy, "$bat {s}$.", .{state.levelinfo[scoreinfo.level].name}, .{});
+        _ = container_c.drawTextAtf(x, oy, "$bat {s}$.", .{state.levelinfo[scoreinfo.level].name}, .{});
     }
 
     var layer1_anim = Generator(Console.animationDeath).init(&layer1_c);
