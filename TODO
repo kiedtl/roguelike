@@ -129,13 +129,13 @@ x frozen fiend
     - "The freezing fiend stares at you."
 
 - hornblende statue
-  - Appears in pairs in hallways of the Morgue.
+  - Appears in pairs in hallways of the Crypt.
   - Chance to resistibly blink intruders to itself.
 - pitchblende statue
-  - Appears in pairs in hallways of the Morgue.
+  - Appears in pairs in hallways of the Crypt.
   - Chance to resistibly blink intruders away from itself.
 - schalenblende statue
-  - Appears in pairs guarding doorways of rooms in the Morgue.
+  - Appears in pairs guarding doorways of rooms in the Crypt.
   - Chance to prevent passage of intruders.
 
 - operator
@@ -351,7 +351,7 @@ x mellaent
     and throw player around just for the heck of it.
 - revealer
   - Casts glowing (will-checked).
-  - Uncommon. Found in Vaults, Morgue, higher Prison.
+  - Uncommon. Found in Vaults, Crypt, higher Prison.
 x bloat
   - Bloated, very slow (150/200), 18 HP
   - When wounded, bursts forth miasma.
@@ -1429,6 +1429,8 @@ Morgue files
 - Record other interacted machines (fountains, capacitor arrays, etc)
 - Record % of explored open space/explored rooms on each floor.
 - Record equipment state and HP when leaving each floor.
+- Replace augment/aptitude list in front of scoresheet with stat recording when
+  it was granted to player. (Consistency + less spaghetti info collection code)
 
 Mobs, AI
 ========
