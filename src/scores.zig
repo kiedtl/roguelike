@@ -314,6 +314,10 @@ pub fn init() void {
         } else |_| {};
 }
 
+pub fn get(s: Stat) *StatValue {
+    return &data[@enumToInt(s)];
+}
+
 // XXX: this hidden reliance on state.player.z could cause bugs
 // e.g. when recording stats of a level the player just left
 pub fn recordUsize(stat: Stat, value: usize) void {

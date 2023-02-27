@@ -2092,6 +2092,37 @@ pub fn drawGameOverScreen(scoreinfo: scores.Info) void {
         _ = container_c.drawTextAtf(x, oy, "$bat {s}$.", .{state.levelinfo[scoreinfo.level].name}, .{});
     }
 
+    {
+        const startx = player_dc.x - 32;
+        const endx = player_dc.x + 24;
+        var oy: usize = player_dc.y + 4;
+
+        // zig fmt: off
+        const stats = [_]struct { b: []const u8, v: scores.Stat }{
+            .{ .b = "      Foes slain:",        .v = .KillRecord },
+            .{ .b = "    Foes stabbed:",     .v = .StabRecord },
+            .{ .b = "Inflicted damage:", .v = .DamageInflicted },
+            .{ .b = "  Endured damage:",   .v = .DamageEndured },
+        };
+        // zig fmt: on
+
+        for (stats) |stat, i| {
+            if (i % 2 == 0)
+                _ = container_c.drawTextAt(startx, oy, "$c│$.", .{});
+            const v = scores.get(stat.v).BatchUsize.total;
+            const x = switch (i % 2) {
+                0 => startx + 2,
+                1 => endx - std.fmt.count("{s} {: >4}", .{ stat.b, v }),
+                else => unreachable,
+            };
+            _ = container_c.drawTextAtf(x, oy, "{s} $o{: >4}$.", .{ stat.b, v }, .{});
+            if (i % 2 == 1 or i == stats.len - 1)
+                oy += 1;
+        }
+    }
+
+    // _ = container_c.drawTextAt(player_dc.x - 32, player_dc.y - 4, "$gPress <Enter> to continue.$.", .{});
+
     var layer1_anim = Generator(Console.animationDeath).init(&layer1_c);
 
     while (true) {
