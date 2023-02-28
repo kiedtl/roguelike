@@ -154,8 +154,10 @@ fn initGame() bool {
     surfaces.readProps(state.GPA.allocator());
     literature.readPosters(state.GPA.allocator());
     mapgen.readSpawnTables(state.GPA.allocator());
+    mapgen.readPrefabs(state.GPA.allocator());
     readDescriptions(state.GPA.allocator());
     player.choosePlayerUpgrades();
+    events.executeGlobalEvents();
 
     for (state.dungeon.map) |*map, level| {
         state.stockpiles[level] = StockpileArrayList.init(state.GPA.allocator());
@@ -168,6 +170,9 @@ fn initGame() bool {
         };
     }
 
+    for (mapgen.floor_seeds) |*seed|
+        seed.* = rng.int(u64);
+
     return true;
 }
 
@@ -175,71 +180,8 @@ fn initLevels() bool {
     var loading_screen = ui.initLoadingScreen();
     defer loading_screen.deinit();
 
-    mapgen.readPrefabs(state.GPA.allocator());
-    events.executeGlobalEvents();
-
-    var level: usize = 0;
-    var tries: usize = 0;
-    while (level < LEVELS) {
-        tries += 1;
-
-        const level_name = state.levelinfo[level].name;
-
-        ui.drawLoadingScreen(&loading_screen, level_name, "Generating map...", level * 100 / LEVELS) catch return false;
-
-        mapgen.resetLevel(level);
-        mapgen.initGif();
-        mapgen.placeBlobs(level);
-        (mapgen.Configs[level].mapgen_func)(level, state.GPA.allocator());
-        mapgen.selectLevelLairs(level);
-        mapgen.selectLevelVault(level);
-        if (mapgen.Configs[level].allow_extra_corridors)
-            mapgen.placeMoarCorridors(level, state.GPA.allocator());
-
-        if (mapgen.validateLevel(level, state.GPA.allocator())) |_| {
-            // .
-        } else |e| {
-            if (tries < 28) {
-                std.log.info("{s}: Invalid map ({s}), retrying...", .{
-                    state.levelinfo[level].name,
-                    @errorName(e),
-                });
-                continue; // try again
-            } else {
-                // Give up!
-                err.bug("{s}: Couldn't generate valid map!", .{state.levelinfo[level].name});
-            }
-        }
-
-        mapgen.emitGif(level);
-        mapgen.placeRoomFeatures(level, state.GPA.allocator());
-        mapgen.placeRoomTerrain(level);
-        mapgen.placeTraps(level);
-        mapgen.placeItems(level);
-        mapgen.placeMobs(level, state.GPA.allocator());
-        mapgen.setLevelMaterial(level);
-        mapgen.generateLayoutMap(level);
-
-        std.log.info("Generated map {s}.", .{state.levelinfo[level].name});
-
-        level += 1;
-        tries = 0;
-    }
-
-    var f_level: usize = LEVELS - 1;
-    while (f_level > 0) : (f_level -= 1) {
-        for (state.levelinfo[f_level].stairs) |maybe_stair| if (maybe_stair) |dest_stair| {
-            ui.drawLoadingScreen(&loading_screen, dest_stair, "Placing stairs...", (LEVELS - f_level) * 100 / LEVELS) catch return false;
-
-            const floor = for (state.levelinfo) |levelinfo, i| {
-                if (mem.eql(u8, levelinfo.name, dest_stair)) {
-                    break i;
-                }
-            } else err.bug("Levelinfo stairs {s} invalid", .{dest_stair});
-
-            mapgen.placeStair(f_level, floor, state.GPA.allocator());
-        };
-    }
+    ui.drawLoadingScreen(&loading_screen, "", "Generating level...", 0) catch return false;
+    mapgen.initLevel(state.PLAYER_STARTING_LEVEL);
 
     return ui.drawLoadingScreenFinish(&loading_screen);
 }
@@ -812,6 +754,9 @@ fn viewerMain() void {
                         ),
                         '<' => if (level > 0) {
                             level -= 1;
+                            if (state.rooms[level].items.len == 0) {
+                                mapgen.initLevel(level);
+                            }
                         },
                         '>' => if (level < (LEVELS - 1)) {
                             level += 1;

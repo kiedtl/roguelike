@@ -7,6 +7,8 @@ const rand = std.rand;
 const math = std.math;
 
 var rng: rand.Isaac64 = undefined;
+var rng2: rand.Isaac64 = undefined;
+pub var using_temp = false;
 pub var seed: u64 = undefined;
 //seed = 0xdefaced_cafe;
 
@@ -22,6 +24,21 @@ pub fn init(alloc: std.mem.Allocator) !void {
     }
 
     rng = rand.Isaac64.init(seed);
+}
+
+pub fn useTemp(tseed: u64) void {
+    assert(!using_temp);
+    const t = rng;
+    rng = rng2;
+    rng2 = t;
+    rng = rand.Isaac64.init(tseed);
+}
+
+pub fn useNorm() void {
+    assert(using_temp);
+    const t = rng2;
+    rng2 = rng;
+    rng = t;
 }
 
 pub fn int(comptime T: type) T {

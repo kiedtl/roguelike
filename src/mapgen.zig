@@ -150,6 +150,7 @@ const Range = struct { from: Coord, to: Coord };
 pub var s_fabs: PrefabArrayList = undefined;
 pub var n_fabs: PrefabArrayList = undefined;
 pub var fab_records: std.StringHashMap(Prefab.PlacementRecord) = undefined;
+pub var floor_seeds: [LEVELS]u64 = undefined;
 
 const gif = @import("build_options").tunneler_gif;
 const giflib = if (gif) @cImport(@cInclude("gif_lib.h")) else null;
@@ -808,14 +809,7 @@ pub fn excavatePrefab(
                     if (fab.features[feature_id]) |feature| {
                         switch (feature) {
                             .Stair => |dest| {
-                                const dest_staircase = state.dungeon.receive_stairs[dest].chooseUnweighted() orelse {
-                                    std.log.err("{s}: Couldn't place stairs to {s} (no receiving stair)", .{
-                                        fab.name.constSlice(),
-                                        state.levelinfo[dest].name,
-                                    });
-                                    continue;
-                                };
-                                state.dungeon.at(rc).surface = .{ .Stair = dest_staircase };
+                                state.dungeon.at(rc).surface = .{ .Stair = dest };
                             },
                             .Item => |template| {
                                 state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(template.*)) catch err.wat();
@@ -1081,6 +1075,7 @@ pub fn resetLevel(level: usize) void {
             tile.surface = null;
             tile.spatter = SpatterArray.initFill(0);
 
+            state.layout[level][y][x] = .Unknown;
             state.dungeon.itemsAt(coord).clear();
         }
     }
@@ -1090,7 +1085,7 @@ pub fn resetLevel(level: usize) void {
     state.inputs[level].shrinkRetainingCapacity(0);
     state.outputs[level].shrinkRetainingCapacity(0);
 
-    state.dungeon.receive_stairs[level].clear();
+    state.dungeon.entries[level] = undefined;
     state.dungeon.stairs[level].clear();
     state.mapgen_infos[level] = .{};
 }
@@ -2772,42 +2767,6 @@ pub fn placeRoomTerrain(level: usize) void {
 }
 
 pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
-    assert(level != 0);
-
-    // Find a location for the "reciever" staircase on the destination floor.
-    var reciever_locations = CoordArrayList.init(alloc);
-    defer reciever_locations.deinit();
-
-    coord_search: for (state.dungeon.map[dest_floor]) |*row, y| for (row) |_, x| {
-        const coord = Coord.new2(dest_floor, x, y);
-
-        for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
-            const room: ?*Room = switch (state.layout[dest_floor][neighbor.y][neighbor.x]) {
-                .Unknown => null,
-                .Room => |r| &state.rooms[dest_floor].items[r],
-            };
-
-            if (state.dungeon.at(coord).prison or
-                room != null and ((room.?.prefab != null and room.?.prefab.?.nostairs) or room.?.is_lair or room.?.has_stair or room.?.is_vault != null))
-            {
-                continue :coord_search;
-            }
-        };
-
-        if (state.dungeon.at(coord).type == .Wall and
-            !state.dungeon.at(coord).prison and
-            utils.hasPatternMatch(coord, &VALID_STAIR_PLACEMENT_PATTERNS))
-        {
-            reciever_locations.append(coord) catch err.wat();
-        }
-    };
-
-    if (reciever_locations.items.len == 0) {
-        err.bug("Couldn't place a downstair on {s}!", .{state.levelinfo[dest_floor].name});
-    }
-
-    const down_staircase = rng.chooseUnweighted(Coord, reciever_locations.items);
-
     // Find coord candidates for stairs placement. Usually this will be in a room,
     // but we're not forcing it because that wouldn't work well for Caverns.
     //
@@ -2869,16 +2828,15 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
 
     // First, find the entry/exit locations. These locations are either the
     // stairs leading from the previous levels, or the player's starting area.
-    for (state.dungeon.stairs) |level_stairs| {
-        for (level_stairs.constSlice()) |stair| {
-            if (state.dungeon.at(stair).surface.?.Stair) |stair_dest|
-                if (stair_dest.z == level) {
-                    stair_dijkmap[stair_dest.y][stair_dest.x] = 0;
-                };
-        }
+    for (state.dungeon.stairs[level].constSlice()) |stair| {
+        stair_dijkmap[stair.y][stair.x] = 0;
     }
-    if (level == state.PLAYER_STARTING_LEVEL)
+    if (level == state.PLAYER_STARTING_LEVEL) {
         stair_dijkmap[state.player.coord.y][state.player.coord.x] = 0;
+    } else {
+        const entry = state.dungeon.entries[level];
+        stair_dijkmap[entry.y][entry.x] = 0;
+    }
 
     // Now fill out the dijkstra map to assign a score to each coordinate.
     // Farthest == best.
@@ -2914,20 +2872,12 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     // Create some stairs!
     const up_staircase = locations.items[locations.items.len - 1];
     state.dungeon.at(up_staircase).type = .Floor;
-    state.dungeon.at(up_staircase).surface = .{ .Stair = down_staircase };
+    state.dungeon.at(up_staircase).surface = .{ .Stair = dest_floor };
     switch (state.layout[level][up_staircase.y][up_staircase.x]) {
         .Room => |r| state.rooms[level].items[r].has_stair = true,
         else => {},
     }
     state.dungeon.stairs[level].append(up_staircase) catch err.wat();
-
-    state.dungeon.at(down_staircase).type = .Floor;
-    state.dungeon.at(down_staircase).surface = .{ .Stair = null };
-    switch (state.layout[dest_floor][down_staircase.y][down_staircase.x]) {
-        .Room => |r| state.rooms[dest_floor].items[r].has_stair = true,
-        else => {},
-    }
-    state.dungeon.receive_stairs[dest_floor].append(down_staircase) catch err.wat();
 
     // Place a guardian near the stairs in a diagonal position, if possible.
     const mob_spawn_info = rng.choose2(MobSpawnInfo, spawn_tables_stairs[level].items, "weight") catch err.wat();
@@ -2941,6 +2891,51 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
             break;
         }
     };
+}
+
+// Note: must be run before placeStairs()
+//
+pub fn placeEntry(level: usize, alloc: mem.Allocator) void {
+    var reciever_locations = CoordArrayList.init(alloc);
+    defer reciever_locations.deinit();
+
+    coord_search: for (state.dungeon.map[level]) |*row, y| for (row) |_, x| {
+        const coord = Coord.new2(level, x, y);
+
+        for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
+            const room: ?*Room = switch (state.layout[level][neighbor.y][neighbor.x]) {
+                .Unknown => null,
+                .Room => |r| &state.rooms[level].items[r],
+            };
+
+            if (state.dungeon.at(coord).prison or
+                room != null and ((room.?.prefab != null and room.?.prefab.?.nostairs) or room.?.is_lair or room.?.has_stair or room.?.is_vault != null))
+            {
+                continue :coord_search;
+            }
+        };
+
+        if (state.dungeon.at(coord).type == .Wall and
+            !state.dungeon.at(coord).prison and
+            utils.hasPatternMatch(coord, &VALID_STAIR_PLACEMENT_PATTERNS))
+        {
+            reciever_locations.append(coord) catch err.wat();
+        }
+    };
+
+    if (reciever_locations.items.len == 0) {
+        err.bug("Couldn't place an entrypoint on {s}!", .{state.levelinfo[level].name});
+    }
+
+    const down_staircase = rng.chooseUnweighted(Coord, reciever_locations.items);
+
+    state.dungeon.at(down_staircase).type = .Floor;
+    state.dungeon.at(down_staircase).surface = .{ .Stair = null };
+    switch (state.layout[level][down_staircase.y][down_staircase.x]) {
+        .Room => |r| state.rooms[level].items[r].has_stair = true,
+        else => {},
+    }
+    state.dungeon.entries[level] = down_staircase;
 
     // Remove mobs nearby upstairs.
     var dijk = dijkstra.Dijkstra.init(down_staircase, state.mapgeometry, 8, state.is_walkable, .{ .ignore_mobs = true, .right_now = true }, alloc);
@@ -3316,6 +3311,64 @@ fn levelFeatureOres(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _:
             }
         }
     }
+}
+
+pub fn initLevel(level: usize) void {
+    rng.useTemp(floor_seeds[level]);
+
+    var tries: usize = 0;
+    while (true) {
+        tries += 1;
+
+        resetLevel(level);
+        initGif();
+        placeBlobs(level);
+        (Configs[level].mapgen_func)(level, state.GPA.allocator());
+        selectLevelLairs(level);
+        selectLevelVault(level);
+        if (Configs[level].allow_extra_corridors)
+            placeMoarCorridors(level, state.GPA.allocator());
+        generateLayoutMap(level);
+        placeEntry(level, state.GPA.allocator());
+
+        for (state.levelinfo[level].stairs) |maybe_stair| if (maybe_stair) |dest_stair| {
+            const floor = for (state.levelinfo) |levelinfo, i| {
+                if (mem.eql(u8, levelinfo.name, dest_stair)) {
+                    break i;
+                }
+            } else err.bug("Levelinfo stairs {s} invalid", .{dest_stair});
+
+            placeStair(level, floor, state.GPA.allocator());
+        };
+
+        if (validateLevel(level, state.GPA.allocator())) |_| {
+            // .
+        } else |e| {
+            if (tries < 28) {
+                std.log.info("{s}: Invalid map ({s}), retrying...", .{
+                    state.levelinfo[level].name,
+                    @errorName(e),
+                });
+                continue; // try again
+            } else {
+                // Give up!
+                err.bug("{s}: Couldn't generate valid map!", .{state.levelinfo[level].name});
+            }
+        }
+
+        emitGif(level);
+        placeRoomFeatures(level, state.GPA.allocator());
+        placeRoomTerrain(level);
+        placeTraps(level);
+        placeItems(level);
+        placeMobs(level, state.GPA.allocator());
+        setLevelMaterial(level);
+
+        std.log.info("Generated map {s}.", .{state.levelinfo[level].name});
+        return;
+    }
+
+    rng.useNorm(floor_seeds[level]);
 }
 
 // Room: "Annotated Room{}"

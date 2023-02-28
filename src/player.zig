@@ -243,12 +243,17 @@ pub fn triggerPoster(coord: Coord) bool {
     return false;
 }
 
-pub fn triggerStair(cur_stair: Coord, dest_stair: Coord) bool {
-    if (state.levelinfo[dest_stair.z].optional) {
-        if (!ui.drawYesNoPrompt("Really travel to optional level?", .{}))
-            return false;
-    }
+pub fn triggerStair(cur_stair: Coord, dest_floor: usize) bool {
+    // if (state.levelinfo[dest_stair.z].optional) {
+    //     if (!ui.drawYesNoPrompt("Really travel to optional level?", .{}))
+    //         return false;
+    // }
 
+    state.message(.Move, "You ascend...", .{});
+
+    mapgen.initLevel(dest_floor);
+
+    const dest_stair = state.dungeon.entries[dest_floor];
     const dest = for (&DIRECTIONS) |d| {
         if (dest_stair.move(d, state.mapgeometry)) |neighbor| {
             if (state.is_walkable(neighbor, .{ .right_now = true }))
@@ -256,9 +261,7 @@ pub fn triggerStair(cur_stair: Coord, dest_stair: Coord) bool {
         }
     } else err.bug("Unable to find passable tile near upstairs!", .{});
 
-    if (state.player.teleportTo(dest, null, false, false)) {
-        state.message(.Move, "You ascend. Welcome to {s}!", .{state.levelinfo[dest_stair.z].name});
-    } else {
+    if (!state.player.teleportTo(dest, null, false, false)) {
         err.bug("Unable to ascend stairs! (something's in the way, maybe?)", .{});
     }
 
@@ -337,7 +340,7 @@ pub fn bookkeepingFOV() void {
                         ui.labels.addAt(fc, m.name, .{ .color = colors.LIGHT_STEEL_BLUE, .last_for = 5 }),
                     .Stair => |s| if (s != null)
                         //S._addToAnnouncements(SBuf.init("upward stairs"), &announcements),
-                        ui.labels.addAt(fc, state.levelinfo[s.?.z].name, .{ .color = colors.GOLD, .last_for = 5 }),
+                        ui.labels.addAt(fc, state.levelinfo[s.?].name, .{ .color = colors.GOLD, .last_for = 5 }),
                     else => {},
                 };
             }

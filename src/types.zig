@@ -4311,7 +4311,7 @@ pub const SurfaceItem = union(SurfaceItemTag) {
     Prop: *Prop,
     Container: *Container,
     Poster: *const Poster,
-    Stair: ?Coord, // null = downstairs
+    Stair: ?usize, // null = downstairs
 
     pub fn id(self: SurfaceItem) []const u8 {
         return switch (self) {
@@ -4809,11 +4809,11 @@ pub const Tile = struct {
                         cell.fg = 0xeeeeee;
                         cell.bg = 0x0000ff;
                     } else {
-                        cell.ch = if (state.levelinfo[s.?.z].optional) '≤' else '<';
+                        cell.ch = if (state.levelinfo[s.?].optional) '≤' else '<';
                         cell.bg = 0x997700;
                         cell.fg = 0xffd700;
 
-                        cell.sch = if (state.levelinfo[s.?.z].optional) .S_G_M_DoorShut else .S_G_StairsUp;
+                        cell.sch = if (state.levelinfo[s.?].optional) .S_G_M_DoorShut else .S_G_StairsUp;
                         cell.sbg = colors.BG;
                         cell.sfg = 0xffd700;
                     }
@@ -4849,7 +4849,7 @@ pub const Dungeon = struct {
     light: [LEVELS][HEIGHT][WIDTH]bool = [1][HEIGHT][WIDTH]bool{[1][WIDTH]bool{[1]bool{false} ** WIDTH} ** HEIGHT} ** LEVELS,
     fire: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
     stairs: [LEVELS]StairBuffer = [_]StairBuffer{StairBuffer.init(null)} ** LEVELS,
-    receive_stairs: [LEVELS]StairBuffer = [_]StairBuffer{StairBuffer.init(null)} ** LEVELS,
+    entries: [LEVELS]Coord = [_]Coord{Coord.new2(0, 0, 0)} ** LEVELS,
 
     pub const ItemBuffer = StackBuffer(Item, 4);
     pub const StairBuffer = StackBuffer(Coord, MAX_STAIRS);

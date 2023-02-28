@@ -502,11 +502,9 @@ fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceIte
                 _writerWrite(w, "$cDownward Stairs$.\n\n", .{});
                 _writerWrite(w, "$gGoing back down would sure be dumb.$.\n", .{});
             } else {
-                _writerWrite(w, "$cUpward Stairs$.\n\nStairs to {s}.\n", .{
-                    state.levelinfo[s.?.z].name,
-                });
+                _writerWrite(w, "$cUpward Stairs$.\n\nStairs to {s}.\n", .{state.levelinfo[s.?].name});
             }
-            if (state.levelinfo[s.?.z].optional) {
+            if (state.levelinfo[s.?].optional) {
                 _writerWrite(w, "\nThese stairs are $coptional$. and lead to more difficult floors.\n", .{});
             }
         },
@@ -2099,8 +2097,8 @@ pub fn drawGameOverScreen(scoreinfo: scores.Info) void {
 
         // zig fmt: off
         const stats = [_]struct { b: []const u8, v: scores.Stat }{
-            .{ .b = "      Foes slain:",        .v = .KillRecord },
-            .{ .b = "    Foes stabbed:",     .v = .StabRecord },
+            .{ .b = "      Foes slain:",      .v = .KillRecord },
+            .{ .b = "    Foes stabbed:",      .v = .StabRecord },
             .{ .b = "Inflicted damage:", .v = .DamageInflicted },
             .{ .b = "  Endured damage:",   .v = .DamageEndured },
         };
