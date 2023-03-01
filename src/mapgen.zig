@@ -4245,10 +4245,16 @@ pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
         .prefabs = prefabs,
         .tunneler_opts = .{
             // .turn_chance = 1,
+            // .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
+            //     .{ .start = Coord.new(WIDTH / 2, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
+            //     // .{ .start = Coord.new(1, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
+            //     // .{ .start = Coord.new(WIDTH - 4, 1), .width = 3, .height = 0, .direction = .South },
+            // },
             .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
-                .{ .start = Coord.new(WIDTH / 2, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
-                // .{ .start = Coord.new(1, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
-                // .{ .start = Coord.new(WIDTH - 4, 1), .width = 3, .height = 0, .direction = .South },
+                .{ .start = Coord.new(1, 1), .width = 0, .height = 3, .direction = .East },
+                .{ .start = Coord.new(WIDTH - 4, 1), .width = 3, .height = 0, .direction = .South },
+                .{ .start = Coord.new(WIDTH - 1, HEIGHT - 4), .width = 0, .height = 3, .direction = .West },
+                .{ .start = Coord.new(1, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
             },
         },
         .prefab_chance = 60,

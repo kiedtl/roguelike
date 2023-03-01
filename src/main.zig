@@ -419,14 +419,14 @@ fn readInput() !bool {
                 //state.player.innate_resists.rElec += 25;
                 //state.player.addStatus(.Drunk, 0, .{ .Tmp = 20 });
                 //state.message(.Info, "Lorem ipsum, dolor sit amet. Lorem ipsum, dolor sit amet.. Lorem ipsum, dolor sit amet. {}", .{rng.int(usize)});
-                //_ = ui.drawYesNoPrompt("foo, bar, baz. Lorem ipsum, dolor sit amet. Dolem Lipsum, solor ait smet. Iorem Aipsum, lolor dit asset.", .{});
+                // _ = ui.drawYesNoPrompt("foo, bar, baz. Lorem ipsum, dolor sit amet. Dolem Lipsum, solor ait smet. Iorem Aipsum, lolor dit asset.", .{});
                 //ui.labels.addFor(state.player, "foo bar baz", .{});
                 // state.player.addStatus(.Corruption, 0, .{ .Tmp = 5 });
                 // state.player.addStatus(.RingTeleportation, 0, .{ .Tmp = 5 });
                 // state.player.addStatus(.RingElectrocution, 0, .{ .Tmp = 5 });
                 // state.player.addStatus(.RingConjuration, 0, .{ .Tmp = 2 });
                 // state.night_rep[@enumToInt(state.player.faction)] += 10;
-                state.player.HP = 0;
+                // state.player.HP = 0;
                 break :blk true;
             },
             .F8 => b: {
@@ -705,6 +705,12 @@ fn viewerMain() void {
     if (build_options.use_sdl) {
         assert(false);
     } else {
+        for (state.rooms) |*smh, i| {
+            if (smh.items.len == 0) {
+                mapgen.initLevel(i);
+            }
+        }
+
         state.player.kill();
 
         var level: usize = state.PLAYER_STARTING_LEVEL;
@@ -754,9 +760,6 @@ fn viewerMain() void {
                         ),
                         '<' => if (level > 0) {
                             level -= 1;
-                            if (state.rooms[level].items.len == 0) {
-                                mapgen.initLevel(level);
-                            }
                         },
                         '>' => if (level < (LEVELS - 1)) {
                             level += 1;

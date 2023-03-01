@@ -249,7 +249,8 @@ pub fn triggerStair(cur_stair: Coord, dest_floor: usize) bool {
     //         return false;
     // }
 
-    state.message(.Move, "You ascend...", .{});
+    // state.message(.Move, "You ascend...", .{});
+    _ = ui.drawTextModal("You ascend...", .{});
 
     mapgen.initLevel(dest_floor);
 
