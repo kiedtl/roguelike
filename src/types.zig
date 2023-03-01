@@ -3442,6 +3442,8 @@ pub const Mob = struct { // {{{
     }
 
     pub fn deinitNoCorpse(self: *Mob) void {
+        assert(!self.is_dead);
+
         self.enemies.deinit();
         self.allies.deinit();
         self.sustiles.deinit();

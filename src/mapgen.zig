@@ -1044,7 +1044,7 @@ pub fn resetLevel(level: usize) void {
 
     var mobiter = state.mobs.iterator();
     while (mobiter.next()) |mob| {
-        if (mob.coord.z == level) {
+        if (mob.coord.z == level and !mob.is_dead) {
             if (mob == state.player)
                 state.player_inited = false;
             mob.deinitNoCorpse();
