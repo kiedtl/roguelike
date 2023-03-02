@@ -302,6 +302,26 @@ pub const StatValue = struct {
     pub const SingleUsize = struct {
         total: usize = 0,
         each: [LEVELS]usize = [1]usize{0} ** LEVELS,
+
+        pub fn jsonStringify(val: SingleUsize, opts: std.json.StringifyOptions, stream: anytype) !void {
+            const JsonValue = struct { floor_type: []const u8, floor_name: []const u8, value: usize };
+            var object: struct { total: usize, values: StackBuffer(JsonValue, LEVELS) } = .{
+                .total = val.total,
+                .values = StackBuffer(JsonValue, LEVELS).init(null),
+            };
+
+            var c: usize = state.levelinfo.len - 1;
+            while (c > 0) : (c -= 1) if (_isLevelSignificant(c)) {
+                const v = JsonValue{
+                    .floor_type = state.levelinfo[c].id,
+                    .floor_name = state.levelinfo[c].name,
+                    .value = val.each[c],
+                };
+                object.values.append(v) catch err.wat();
+            };
+
+            try std.json.stringify(object, opts, stream);
+        }
     };
 };
 
@@ -372,7 +392,7 @@ fn _isLevelSignificant(level: usize) bool {
     return data[@enumToInt(@as(Stat, .TurnsSpent))].SingleUsize.each[level] > 0;
 }
 
-fn formatMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
+fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
     var buf = std.ArrayList(u8).init(alloc);
     var w = buf.writer();
 
@@ -580,14 +600,54 @@ fn formatMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
     return buf;
 }
 
+fn exportJsonMorgue(info: Info) !std.ArrayList(u8) {
+    var buf = std.ArrayList(u8).init(state.GPA.allocator());
+    var w = buf.writer();
+
+    try w.writeAll("{");
+
+    try w.writeAll("\"info\":");
+    try std.json.stringify(info, .{}, w);
+
+    try w.writeAll(",\"stats\":{");
+    for (&CHUNKS) |chunk, chunk_i| switch (chunk) {
+        .Header => {},
+        .Stat => |stat| {
+            const entry = &data[@enumToInt(stat.s)];
+            try w.print("\"{s}\": {{", .{stat.n});
+            try w.print("\"type\": \"{s}\",", .{@tagName(stat.s.stattype())});
+            switch (stat.s.stattype()) {
+                .SingleUsize => {
+                    try w.writeAll("\"value\":");
+                    try std.json.stringify(entry.SingleUsize, .{}, w);
+                },
+                .BatchUsize => {
+                    try w.writeAll("\"values\": [");
+                    for (entry.BatchUsize.singles.slice()) |batch_entry, i| {
+                        try w.print("{{ \"name\": \"{s}\", \"value\":", .{batch_entry.id.constSlice()});
+                        try std.json.stringify(batch_entry.val, .{}, w);
+                        try w.writeAll("}");
+                        if (i != entry.BatchUsize.singles.slice().len - 1)
+                            try w.writeAll(",");
+                    }
+                    try w.writeAll("]");
+                },
+            }
+            try w.writeAll("}");
+
+            if (chunk_i != CHUNKS.len - 1)
+                try w.writeAll(",");
+        },
+    };
+    try w.writeByte('}');
+
+    try w.writeByte('}');
+
+    return buf;
+}
+
 pub fn createMorgue() Info {
     const info = Info.collect();
-
-    const morgue = formatMorgue(info, state.GPA.allocator()) catch err.wat();
-    defer morgue.deinit();
-
-    const filename = std.fmt.allocPrintZ(state.GPA.allocator(), "morgue-{s}-{}-{}-{:0>2}-{:0>2}-{}:{}.txt", .{ info.username.constSlice(), rng.seed, info.end_datetime.Y, info.end_datetime.M, info.end_datetime.D, info.end_datetime.h, info.end_datetime.m }) catch err.oom();
-    defer state.GPA.allocator().free(filename);
 
     std.os.mkdir("morgue", 0o776) catch |e| switch (e) {
         error.PathAlreadyExists => {},
@@ -598,12 +658,34 @@ pub fn createMorgue() Info {
         },
     };
 
-    (std.fs.cwd().openDir("morgue", .{}) catch err.wat()).writeFile(filename, morgue.items[0..]) catch |e| {
-        std.log.err("Could not write to morgue file '{s}': {}", .{ filename, e });
-        std.log.err("Refusing to write morgue entries.", .{});
-        return info;
-    };
-    std.log.info("Morgue file written to {s}.", .{filename});
+    {
+        const morgue = exportJsonMorgue(info) catch err.wat();
+        defer morgue.deinit();
+
+        const filename = std.fmt.allocPrintZ(state.GPA.allocator(), "morgue-{s}-{}-{}-{:0>2}-{:0>2}-{}:{}.json", .{ info.username.constSlice(), rng.seed, info.end_datetime.Y, info.end_datetime.M, info.end_datetime.D, info.end_datetime.h, info.end_datetime.m }) catch err.oom();
+        defer state.GPA.allocator().free(filename);
+
+        (std.fs.cwd().openDir("morgue", .{}) catch err.wat()).writeFile(filename, morgue.items[0..]) catch |e| {
+            std.log.err("Could not write to morgue file '{s}': {}", .{ filename, e });
+            std.log.err("Refusing to write morgue entries.", .{});
+            return info;
+        };
+        std.log.info("Morgue file written to {s}.", .{filename});
+    }
+    {
+        const morgue = exportTextMorgue(info, state.GPA.allocator()) catch err.wat();
+        defer morgue.deinit();
+
+        const filename = std.fmt.allocPrintZ(state.GPA.allocator(), "morgue-{s}-{}-{}-{:0>2}-{:0>2}-{}:{}.txt", .{ info.username.constSlice(), rng.seed, info.end_datetime.Y, info.end_datetime.M, info.end_datetime.D, info.end_datetime.h, info.end_datetime.m }) catch err.oom();
+        defer state.GPA.allocator().free(filename);
+
+        (std.fs.cwd().openDir("morgue", .{}) catch err.wat()).writeFile(filename, morgue.items[0..]) catch |e| {
+            std.log.err("Could not write to morgue file '{s}': {}", .{ filename, e });
+            std.log.err("Refusing to write morgue entries.", .{});
+            return info;
+        };
+        std.log.info("Morgue file written to {s}.", .{filename});
+    }
 
     return info;
 }

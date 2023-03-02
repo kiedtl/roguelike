@@ -133,5 +133,9 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
         pub inline fn lastPtr(self: *Self) ?*T {
             return if (self.len > 0) &self.data[self.len - 1] else null;
         }
+
+        pub fn jsonStringify(val: @This(), opts: std.json.StringifyOptions, stream: anytype) !void {
+            try std.json.stringify(val.constSlice(), opts, stream);
+        }
     };
 }

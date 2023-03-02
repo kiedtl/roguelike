@@ -1346,6 +1346,10 @@ pub const Status = enum {
         };
     }
 
+    pub fn jsonStringify(val: Status, opts: std.json.StringifyOptions, stream: anytype) !void {
+        try std.json.stringify(val.string(state.player), opts, stream);
+    }
+
     // Tick functions {{{
 
     pub fn tickDetectHeat(mob: *Mob) void {
@@ -1621,6 +1625,30 @@ pub const StatusDataInfo = struct {
         Equ,
         Tmp: usize,
         Ctx: ?*const surfaces.Terrain,
+
+        pub fn jsonStringify(val: Duration, opts: std.json.StringifyOptions, stream: anytype) !void {
+            try stream.writeByte('{');
+
+            try stream.writeAll("\"duration_type\":");
+            try stream.writeByte('"');
+            try stream.writeAll(@tagName(val));
+            try stream.writeByte('"');
+            try stream.writeByte(',');
+
+            // val.Ctx should never be null, in theory, but it is an optional
+            // for some reason... Just putting a check here to be safe...
+            //
+            if (val == .Tmp or (val == .Ctx and val.Ctx != null)) {
+                try stream.writeAll("\"duration_arg\":");
+                if (val == .Tmp) {
+                    try std.json.stringify(val.Tmp, opts, stream);
+                } else {
+                    try std.json.stringify(val.Ctx.?.id, opts, stream);
+                }
+            }
+
+            try stream.writeByte('}');
+        }
     };
 };
 
@@ -2197,8 +2225,6 @@ pub const Mob = struct { // {{{
             var adj_effect = effect;
 
             // Set the dummy .Ctx durations' values.
-            //
-            // (See surfaces.Terrain.)
             //
             if (meta.activeTag(effect.duration) == .Ctx) {
                 adj_effect.duration = .{ .Ctx = terrain };
