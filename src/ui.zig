@@ -3,6 +3,7 @@ const math = std.math;
 const io = std.io;
 const assert = std.debug.assert;
 const mem = std.mem;
+const meta = std.meta;
 const enums = std.enums;
 
 const RexMap = @import("rexpaint").RexMap;
@@ -1974,7 +1975,7 @@ pub fn initLoadingScreen() LoadingScreen {
 
     const starty = (win.height() / 2) - ((map.height + LoadingScreen.TEXT_CON_HEIGHT + 2) / 2) - 4;
 
-    win_c.logo_con.drawXP(&map);
+    win_c.logo_con.drawXP(&map, 0, 0, null, false);
     win_c.main_con.addSubconsole(win_c.logo_con, win_c.main_con.centerX(map.width), starty);
 
     win_c.main_con.addSubconsole(win_c.text_con, win_c.main_con.centerX(LoadingScreen.TEXT_CON_WIDTH), starty + win_c.logo_con.height);
@@ -2544,6 +2545,103 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
     return false;
 }
 // }}}
+
+pub fn drawEscapeMenu() void {
+    // FIXME: fix underlying issue then remove this clear();
+    //
+    // (Too lazy to explain issue, just remove call and see what happens when
+    // pressing <F4> then Escape)
+    clearScreen();
+
+    const main_c_dim = dimensions(.Main);
+    const main_c = Console.init(state.GPA.allocator(), main_c_dim.width(), main_c_dim.height());
+
+    const menu_c_dim = dimensions(.PlayerInfo);
+    const menu_c = Console.init(state.GPA.allocator(), menu_c_dim.width(), menu_c_dim.height());
+
+    const movement = RexMap.initFromFile(state.GPA.allocator(), "data/keybinds_movement.xp") catch err.wat();
+    defer movement.deinit();
+
+    const pad = 11; // Padding between two columns
+
+    var y: usize = 0;
+    y += main_c.drawTextAt(0, y, "$c──── Movement ────$.", .{});
+    y += 1;
+    main_c.drawXP(&movement, 5, y, Rect{ .start = Coord.new(0, 0), .width = 9, .height = 9 }, true);
+    main_c.drawXP(&movement, 5 + 18 + pad, y, Rect{ .start = Coord.new(9, 0), .width = 9, .height = 9 }, true);
+    y += 11 + 1;
+    y += main_c.drawTextAt(5, y, "$g(qweasdzxc movement keys, or hjklyubn for neckbeards.)$.", .{});
+    y += 2;
+    y += main_c.drawTextAt(0, y, "$c──── Misc ────$.", .{});
+    y += 1;
+    // Two columns
+    y += main_c.drawTextAt(5, y, "$CMessages$.            $bM$.", .{});
+    y += main_c.drawTextAt(5, y, "$CInventory$.           $bi$.", .{});
+    y += main_c.drawTextAt(5, y, "$CExamine$.             $bv$.", .{});
+    y += main_c.drawTextAt(5, y, "$CAbilities$.       $bSPACE$.", .{});
+    y -= 4; // Next column
+    y += main_c.drawTextAt(5 + 18 + pad, y, "$CSwap weapons$.        $b'$.", .{});
+    y += main_c.drawTextAt(5 + 18 + pad, y, "$CPickup item$.         $b,$.", .{});
+    y += main_c.drawTextAt(5 + 18 + pad, y, "$CActivate feature$.    $bA$.", .{});
+
+    y += 8;
+    y += main_c.drawTextAtf(0, y, "$gOathbreaker v{s} (dist {s})$.", .{
+        @import("build_options").release,
+        @import("build_options").dist,
+    }, .{});
+    y += main_c.drawTextAt(0, y, "$gCreated by kiedtl on a Raspberry Pi Zero.$.", .{});
+
+    const Tab = enum(usize) { Continue = 0, Quit = 1 };
+    var tab: usize = @enumToInt(@as(Tab, .Continue));
+
+    while (true) {
+        var my: usize = 0;
+        my += menu_c.drawTextAt(0, my, "$cMain Menu$.", .{});
+        inline for (@typeInfo(Tab).Enum.fields) |tabv| {
+            const sel = if (tabv.value == tab) "$c>" else "$g ";
+            my += menu_c.drawTextAtf(0, my, "{s} {s}$.", .{ sel, tabv.name }, .{});
+        }
+        menu_c.renderFullyW(.PlayerInfo);
+
+        main_c.renderFullyW(.Main);
+        display.present();
+
+        switch (display.waitForEvent(null) catch err.wat()) {
+            .Quit => return,
+            .Key => |k| switch (k) {
+                .CtrlC, .Esc, .CtrlG => return,
+                .Enter => {
+                    switch (@intToEnum(Tab, tab)) {
+                        .Continue => {},
+                        .Quit => {
+                            if (drawYesNoPrompt("Really abandon this run?", .{}))
+                                state.state = .Quit;
+                        },
+                    }
+                    return;
+                },
+                .ArrowDown => if (tab < meta.fields(Tab).len) {
+                    tab += 1;
+                },
+                .ArrowUp => if (tab > 0) {
+                    tab -= 1;
+                },
+                else => {},
+            },
+            .Char => |c| switch (c) {
+                'q' => return,
+                'x', 'j', 'h' => if (tab < meta.fields(Tab).len) {
+                    tab += 1;
+                },
+                'w', 'k', 'l' => if (tab > 0) {
+                    tab -= 1;
+                },
+                else => {},
+            },
+            else => {},
+        }
+    }
+}
 
 // Wait for input. Return null if Ctrl+c or escape was pressed, default_input
 // if <enter> is pressed ,otherwise the key pressed. Will continue waiting if a
@@ -3242,18 +3340,44 @@ pub const Console = struct {
     }
 
     // TODO: draw multiple layers as needed
-    pub fn drawXP(self: *const Self, map: *const RexMap) void {
-        var y: usize = 0;
-        while (y < map.height and y < self.height) : (y += 1) {
-            var x: usize = 0;
-            while (x < map.width and x < self.width) : (x += 1) {
+    pub fn drawXP(self: *const Self, map: *const RexMap, startx: usize, starty: usize, pmrect: ?Rect, wide: bool) void {
+        const mrect = pmrect orelse Rect.new(Coord.new(0, 0), map.width, map.height);
+        var dy: usize = starty;
+        var y: usize = mrect.start.y;
+        while (y < map.height and y < mrect.end().y and dy < self.height) : ({
+            y += 1;
+            dy += 1;
+        }) {
+            var dx: usize = startx;
+            var x: usize = mrect.start.x;
+            while (x < map.width and x < mrect.end().x and dx < self.width) : ({
+                x += 1;
+                dx += 1;
+            }) {
                 const tile = map.get(x, y);
 
                 if (tile.bg.r == 255 and tile.bg.g == 0 and tile.bg.b == 255) {
+                    if (wide) {
+                        self.setCell(dx, dy, .{ .fl = .{ .wide = true } });
+                        dx += 1;
+                        self.setCell(dx, dy, .{ .fl = .{ .skip = true } });
+                    }
                     continue;
                 }
 
-                self.setCell(x, y, .{ .ch = RexMap.DEFAULT_TILEMAP[tile.ch], .fg = tile.fg.asU32(), .bg = tile.bg.asU32() });
+                const bg = tile.bg.asU32();
+
+                self.setCell(dx, dy, .{
+                    .ch = RexMap.DEFAULT_TILEMAP[tile.ch],
+                    .fg = tile.fg.asU32(),
+                    .bg = if (bg == 0) colors.BG else bg,
+                    .fl = .{ .wide = wide },
+                });
+
+                if (wide) {
+                    dx += 1;
+                    self.setCell(dx, dy, .{ .fl = .{ .skip = true } });
+                }
             }
         }
     }

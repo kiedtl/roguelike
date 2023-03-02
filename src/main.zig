@@ -363,6 +363,10 @@ fn readInput() !bool {
             return false;
         },
         .Key => |k| switch (k) {
+            .Esc => b: {
+                ui.drawEscapeMenu();
+                break :b false;
+            },
             .CtrlC => b: {
                 state.state = .Quit;
                 break :b true;
@@ -426,7 +430,7 @@ fn readInput() !bool {
                 // state.player.addStatus(.RingElectrocution, 0, .{ .Tmp = 5 });
                 // state.player.addStatus(.RingConjuration, 0, .{ .Tmp = 2 });
                 // state.night_rep[@enumToInt(state.player.faction)] += 10;
-                // state.player.HP = 0;
+                state.player.HP = 0;
                 break :blk true;
             },
             .F8 => b: {
