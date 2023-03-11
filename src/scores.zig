@@ -189,7 +189,7 @@ pub const Info = struct {
             const can_see = state.createMobList(false, true, state.player.coord.z, state.GPA.allocator());
             defer can_see.deinit();
             for (can_see.items) |mob| {
-                s.in_view_ids.append(mob.id) catch err.wat();
+                s.in_view_ids.append(mob.id) catch break;
                 s.in_view_names.append(BStr(32).init(mob.displayName())) catch err.wat();
             }
         }
