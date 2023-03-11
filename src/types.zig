@@ -4189,8 +4189,8 @@ pub const Machine = struct {
                 restriction == by.faction)
             {
                 return true;
-            };
-        return false;
+            } else return false;
+        return true;
     }
 
     pub fn addPower(self: *Machine, by: *Mob) bool {
