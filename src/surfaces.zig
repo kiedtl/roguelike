@@ -286,7 +286,7 @@ pub const MACHINES = [_]Machine{
     Candle,
     RechargingStation,
     Drain,
-    Fountain,
+    FirstAidStation,
     // WaterBarrel,
 };
 
@@ -1060,24 +1060,25 @@ pub const Drain = Machine{
     },
 };
 
-pub const Fountain = Machine{
-    .id = "fountain",
-    .name = "fountain",
-    .announce = true,
-    .powered_tile = '¶',
-    .unpowered_tile = '¶',
-    .powered_fg = 0x00d7ff,
-    .unpowered_fg = 0x00d7ff,
-    .powered_walkable = true,
-    .unpowered_walkable = true,
+pub const FirstAidStation = Machine{
+    .id = "first_aid_station",
+    .name = "first aid station",
+    .announce = false,
+    .powered_tile = 'F',
+    .unpowered_tile = 'F',
+    .powered_fg = 0x001000,
+    .unpowered_fg = 0x001000,
+    .bg = 0x117011,
+    .powered_walkable = false,
+    .unpowered_walkable = false,
     .on_power = powerNone,
     .player_interact = .{
         .name = "quaff",
-        .success_msg = "The fountain refreshes you.",
-        .no_effect_msg = "The fountain is dry!",
+        .success_msg = null,
+        .no_effect_msg = "The first aid station is empty.",
         .needs_power = false,
         .max_use = 1,
-        .func = interact1Fountain,
+        .func = interact1FirstAidStation,
     },
 };
 
@@ -1385,17 +1386,22 @@ fn interact1Drain(machine: *Machine, mob: *Mob) bool {
     return true;
 }
 
-fn interact1Fountain(_: *Machine, mob: *Mob) bool {
+fn interact1FirstAidStation(m: *Machine, mob: *Mob) bool {
     assert(mob == state.player);
 
     const HP = state.player.HP;
-    const heal_amount = (state.player.max_HP - HP) / 2;
+    const heal_amount = state.player.max_HP - HP;
     state.player.takeHealing(heal_amount);
 
     // Remove some harmful statuses.
     state.player.cancelStatus(.Fire);
     state.player.cancelStatus(.Nausea);
     state.player.cancelStatus(.Pain);
+    state.player.cancelStatus(.Disorient);
+
+    m.powered_fg = colors.filterGrayscale(m.powered_fg.?);
+    m.unpowered_fg = colors.filterGrayscale(m.unpowered_fg.?);
+    m.bg = colors.filterGrayscale(m.bg.?);
 
     return true;
 }

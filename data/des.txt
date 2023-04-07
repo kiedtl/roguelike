@@ -160,8 +160,8 @@ You can activate this to recharge some of your evocables.
 You can break open this barrel to make a puddle of water. If you lure foes into
 the water, they will be vulnerable to electricity.
 
-% fountain
-Drinking from this fountain will refresh you, healing some of your injuries.
+% first_aid_station
+Could be useful.
 
 % drain
 Crawling into this will make you teleport to another place. Hopefully.

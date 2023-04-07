@@ -4231,7 +4231,7 @@ pub fn createLevelConfig_PRI(comptime prefabs: []const []const u8) LevelConfig {
             null,
         },
 
-        .machines = &[_]*const Machine{ &surfaces.Fountain, &surfaces.Drain },
+        .machines = &[_]*const Machine{ &surfaces.FirstAidStation, &surfaces.Drain },
         .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
     };
 }
@@ -4278,7 +4278,7 @@ pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
         .subroom_chance = 70,
         .allow_statues = false,
 
-        .machines = &[_]*const Machine{&surfaces.Fountain},
+        .machines = &[_]*const Machine{&surfaces.FirstAidStation},
     };
 }
 
@@ -4401,7 +4401,7 @@ pub fn createLevelConfig_WRK(comptime prefabs: []const []const u8) LevelConfig {
 
         .allow_statues = false,
 
-        .machines = &[_]*const Machine{&surfaces.Fountain},
+        .machines = &[_]*const Machine{&surfaces.FirstAidStation},
     };
 }
 
