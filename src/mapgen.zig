@@ -1696,6 +1696,7 @@ pub fn placeRandomRooms(
     var reqctr: usize = 0;
 
     while (reqctr < required.len) {
+        std.log.info("trying to place {s}", .{required[reqctr]});
         const fab_name = required[reqctr];
         const fab = Prefab.findPrefabByName(fab_name, &n_fabs) orelse {
             // Do nothing, it might be a required subroom.
@@ -4223,6 +4224,7 @@ pub fn createLevelConfig_PRI(comptime prefabs: []const []const u8) LevelConfig {
         .prefabs = prefabs,
         .prefab_chance = 33,
         .mapgen_iters = 2048,
+        .mapgen_func = placeRandomRooms,
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
             levelFeaturePrisoners,
             levelFeaturePrisonersMaybe,
