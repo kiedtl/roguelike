@@ -151,6 +151,7 @@ pub const Ctx = struct {
 
             if (prefab) |fab| {
                 room.prefab = fab;
+                roomie.door = Roomie.getRandomDoorCoord(room, roomie.parent) orelse continue;
                 mapgen.excavatePrefab(&room, fab, state.GPA.allocator(), 0, 0);
                 fab.incrementRecord(level);
             } else {
@@ -228,6 +229,13 @@ pub const Ctx = struct {
             if (!too_far) {
                 if (Roomie.getRandomDoorCoord(new, parent)) |door| {
                     new.connections.append(.{ .room = parent.rect.start, .door = door }) catch err.wat();
+                    if (rng.percent(Configs[level].subroom_chance)) {
+                        _ = mapgen.placeSubroom(&new, &Rect{
+                            .start = Coord.new(0, 0),
+                            .width = new.rect.width,
+                            .height = new.rect.height,
+                        }, state.GPA.allocator(), .{});
+                    }
                     mapgen.excavateRect(&new.rect);
                     mapgen.placeDoor(door, false);
                     state.rooms[level].append(new) catch err.wat();
@@ -748,7 +756,7 @@ pub const Tunneler = struct {
 };
 
 pub const TunnelerOptions = struct {
-    max_iters: usize = 1000,
+    max_iters: usize = 700,
 
     // Maximum tunnel length before the algorithm tries to force it to change
     // directions.
@@ -757,7 +765,7 @@ pub const TunnelerOptions = struct {
     // Maximum tunnel width. If the tunnel is this size, it won't grow farther.
     max_width: usize = 6,
 
-    min_tunneler_distance: usize = 6,
+    min_tunneler_distance: usize = 2,
 
     // Chance (percentage) to change direction.
     turn_chance: usize = 8,
