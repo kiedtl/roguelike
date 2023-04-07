@@ -4681,11 +4681,11 @@ pub const Tile = struct {
             if (mob.isUnderStatus(.Sleeping) != null)
                 cell.fg = 0xffcfff;
 
-            const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);
-            if (hp_loss_percent > 0) {
-                //const red = @floatToInt(u32, (255 * (hp_loss_percent / 2)) / 100) + 0x22;
-                //cell.bg = math.clamp(red, 0x66, 0xff) << 16;
-            }
+            // const hp_loss_percent = 100 - (mob.HP * 100 / mob.max_HP);
+            // if (hp_loss_percent > 0) {
+            //     const red = @floatToInt(u32, (255 * (hp_loss_percent / 2)) / 100) + 0x22;
+            //     cell.bg = math.clamp(red, 0x66, 0xff) << 16;
+            // }
 
             if (!mob.ai.is_combative) {
                 cell.fg = colors.AQUAMARINE;
