@@ -154,7 +154,6 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 20, .i = .{ .C = &SilCloak } },
     .{ .w = 20, .i = .{ .C = &FurCloak } },
     .{ .w = 20, .i = .{ .C = &VelvetCloak } },
-    .{ .w = 10, .i = .{ .C = &AgilityCloak } },
     .{ .w = 10, .i = .{ .C = &WarringCloak } },
     .{ .w = 10, .i = .{ .C = &ThornyCloak } },
 };
@@ -218,7 +217,6 @@ pub const SilCloak = Cloak{ .id = "cloak_silicon", .name = "silicon", .resists =
 pub const FurCloak = Cloak{ .id = "cloak_fur", .name = "fur", .resists = .{ .rElec = 25 } };
 pub const VelvetCloak = Cloak{ .id = "cloak_velvet", .name = "velvet", .stats = .{ .Sneak = 2 } };
 pub const ThornyCloak = Cloak{ .id = "cloak_thorny", .name = "thorns", .stats = .{ .Spikes = 1 } };
-pub const AgilityCloak = Cloak{ .id = "cloak_agility", .name = "agility", .stats = .{ .Martial = 2 } };
 pub const WarringCloak = Cloak{ .id = "cloak_warring", .name = "warring", .stats = .{ .Melee = 20 } };
 // }}}
 
@@ -239,7 +237,7 @@ pub const WolframOrbAux = Aux{
     .id = "aux_wolfram_orb",
     .name = "Orb of Wolfram",
 
-    .stats = .{ .Evade = -10, .Martial = -1 },
+    .stats = .{ .Evade = -10 },
     .resists = .{ .rElec = 25 },
 };
 
@@ -289,7 +287,7 @@ pub const ShieldAux = Aux{
     .id = "aux_shield",
     .name = "kite shield",
 
-    .stats = .{ .Evade = 20, .Martial = -1 },
+    .stats = .{ .Evade = 20 },
 };
 
 pub const TowerShieldAux = Aux{
@@ -297,7 +295,7 @@ pub const TowerShieldAux = Aux{
     .name = "tower shield",
 
     .resists = .{ .rFire = -25, .rElec = 25 },
-    .stats = .{ .Evade = 30, .Martial = -5 },
+    .stats = .{ .Evade = 30 },
 };
 
 pub const SpikedBucklerAux = Aux{
@@ -1888,8 +1886,7 @@ pub const CopperIngotConsumable = Consumable{
     .id = "cons_copper_ingot",
     .name = "copper ingot",
     .effects = &[_]Consumable.Effect{
-        .{ .Stat = .{ .s = .Martial, .change = -1 } },
-        .{ .Stat = .{ .s = .Evade, .change = -5 } },
+        .{ .Stat = .{ .s = .Evade, .change = -10 } },
         .{ .Resist = .{ .r = .rElec, .change = 25 } },
     },
     .color = 0xcacbca,
@@ -2163,14 +2160,14 @@ pub const HauberkArmor = Armor{
     .id = "chainmail_armor",
     .name = "hauberk",
     .resists = .{ .Armor = 25 },
-    .stats = .{ .Evade = -10, .Martial = -1 },
+    .stats = .{ .Evade = -10 },
 };
 
 pub const BrigandineArmor = Armor{
     .id = "brigandine_armor",
     .name = "brigandine",
     .resists = .{ .Armor = 25 },
-    .stats = .{ .Sneak = -1, .Melee = 10, .Martial = 1 },
+    .stats = .{ .Sneak = -1, .Melee = 10 },
 };
 
 pub const GambesonArmor = Armor{
@@ -2183,7 +2180,7 @@ pub const SpikedLeatherArmor = Armor{
     .id = "spiked_leather_armor",
     .name = "spiked leather armor",
     .resists = .{ .Armor = 15 },
-    .stats = .{ .Spikes = 1, .Sneak = -1, .Martial = -1 },
+    .stats = .{ .Spikes = 1, .Sneak = -1 },
 };
 
 pub const ShadowMailArmor = Armor{
@@ -2203,18 +2200,18 @@ pub const ShadowHauberkArmor = Armor{
 
     .night = true,
     .night_resists = .{ .Armor = 25 },
-    .night_stats = .{ .Evade = -10, .Martial = -1 },
+    .night_stats = .{ .Evade = -10 },
 };
 
 pub const ShadowBrigandineArmor = Armor{
     .id = "shadow_brigandine_armor",
     .name = "shadow brigandine",
     .resists = .{ .Armor = 10 },
-    .stats = .{ .Melee = 5, .Martial = 1 },
+    .stats = .{ .Melee = 5 },
 
     .night = true,
     .night_resists = .{ .Armor = 25 },
-    .night_stats = .{ .Melee = 10, .Martial = 2 },
+    .night_stats = .{ .Melee = 10 },
 };
 
 pub const FumingVestArmor = Armor{
@@ -2335,7 +2332,7 @@ pub const SwordWeapon = Weapon{
     .name = "longsword",
     .damage = 2,
     .martial = true,
-    .stats = .{ .Evade = 10, .Martial = 2 },
+    .stats = .{ .Evade = 10 },
     .strs = &SLASHING_STRS,
 };
 
@@ -2344,7 +2341,7 @@ pub const ShadowSwordWeapon = Weapon{
     .name = "shadow sword",
     .damage = 1,
     .martial = true,
-    .stats = .{ .Evade = 10, .Martial = 2 },
+    .stats = .{ .Evade = 10 },
     .ego = .NC_Insane,
     .strs = &SLASHING_STRS,
 };
@@ -2354,7 +2351,7 @@ pub const DaggerWeapon = Weapon{
     .name = "dagger",
     .damage = 1,
     .martial = true,
-    .stats = .{ .Martial = 1 },
+    .stats = .{},
     .ego = .Swap,
     .strs = &PIERCING_STRS,
 };
@@ -2389,7 +2386,7 @@ pub const WoldoWeapon = Weapon{
     .name = "woldo",
     .damage = 3,
     .martial = true,
-    .stats = .{ .Melee = -15, .Martial = 2, .Sneak = -1 },
+    .stats = .{ .Melee = -15, .Sneak = -1 },
     .strs = &SLASHING_STRS,
 };
 
