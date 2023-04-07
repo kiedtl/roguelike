@@ -1612,38 +1612,6 @@ pub const TorturerNecromancerTemplate = MobTemplate{
     .armor = &items.GambesonArmor,
 };
 
-// pub const SulfurFiendTemplate = MobTemplate{
-//     .mob = .{
-//         .id = "sulfur_fiend",
-//         .species = &Species{ .name = "sulfur fiend" },
-//         .tile = 'S',
-//         .ai = AI{
-//             .profession_description = "sulking",
-//             .work_fn = ai.patrolWork,
-//             .fight_fn = ai.mageFight,
-//             .is_fearless = true,
-//             .spellcaster_backup_action = .KeepDistance,
-//             .flags = &[_]AI.Flag{.DetectWithElec},
-//         },
-//         .spells = &[_]SpellOptions{
-//             .{ .MP_cost = 1, .spell = &spells.CAST_HASTEN_ROT, .power = 150 },
-//             .{ .MP_cost = 6, .spell = &spells.CAST_CONJ_BALL_LIGHTNING, .power = 12 },
-//         },
-//         .max_MP = 10,
-
-//         .max_HP = 15,
-//         .memory_duration = 10,
-//         .blood = null,
-//         .corpse = .None,
-
-//         .innate_resists = .{ .rFire = 50, .rElec = RESIST_IMMUNE, .rFume = 80 },
-//         .stats = .{ .Willpower = 10, .Evade = 10 },
-//     },
-//     .weapon = &items.MaceWeapon,
-//     .armor = &items.HauberkArmor,
-//     .statuses = &[_]StatusDataInfo{.{ .status = .Noisy, .duration = .Prm }},
-// };
-
 // pub const FrozenFiendTemplate = MobTemplate{
 //     .mob = .{
 //         .id = "frozen_fiend",
@@ -2164,7 +2132,6 @@ pub const MOBS = [_]MobTemplate{
     SkeletalBlademasterTemplate,
     TorturerNecromancerTemplate,
     // FrozenFiendTemplate,
-    // SulfurFiendTemplate,
     BallLightningTemplate,
     SpectralSwordTemplate,
     SpectralSabreTemplate,

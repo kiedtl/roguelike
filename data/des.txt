@@ -475,9 +475,6 @@ leer of cruel contempt.
 A raging winged demon composed of boiling basalt, feared even by its peers for
 its vicious fire attacks.
 
-% sulfur_fiend
-A writhing mass of golden sulfur. It has supreme power over electricity.
-
 % frozen_fiend
 A winged humanoid, clothed in watery-blue robes. It whispers grimly to itself as
 it patrols the dungeon, inspecting its underlings with an expression of cold
