@@ -154,6 +154,10 @@ pub const Direction = enum { // {{{
         return other == adjacent[0] or other == adjacent[1];
     }
 
+    pub fn is_cardinal(self: Self) bool {
+        return !self.is_diagonal();
+    }
+
     pub fn is_diagonal(self: Self) bool {
         return switch (self) {
             .North, .South, .East, .West => false,
@@ -1133,7 +1137,7 @@ pub const Status = enum {
     // Doesn't have a power field.
     Daze,
 
-    // Prevents mobs from using diagonal moves.
+    // Prevents mobs from using cardinal moves.
     //
     // Doesn't have a power field.
     Disorient,
@@ -2577,8 +2581,8 @@ pub const Mob = struct { // {{{
         // This should have been handled elsewhere (in the pathfinding code
         // for monsters, or in main:moveOrFight() for the player).
         //
-        if (direction.is_diagonal() and self.isUnderStatus(.Disorient) != null)
-            err.bug("Disoriented mob is trying to move diagonally!", .{});
+        if (direction.is_cardinal() and self.isUnderStatus(.Disorient) != null)
+            err.bug("Disoriented mob is trying to move cardinally!", .{});
 
         if (self.isUnderStatus(.Daze)) |_|
             direction = rng.chooseUnweighted(Direction, &DIRECTIONS);
@@ -2789,7 +2793,7 @@ pub const Mob = struct { // {{{
     }
 
     pub fn canMelee(attacker: *Mob, defender: *Mob) bool {
-        if (attacker.coordMT(defender.coord).closestDirectionTo(defender.coord, state.mapgeometry).is_diagonal() and
+        if (attacker.coordMT(defender.coord).closestDirectionTo(defender.coord, state.mapgeometry).is_cardinal() and
             attacker.hasStatus(.Disorient))
         {
             return false;
@@ -3517,7 +3521,7 @@ pub const Mob = struct { // {{{
         if (!self.path_cache.contains(pathobj)) {
             const directions = b: {
                 if (is_disoriented) {
-                    break :b &CARDINAL_DIRECTIONS;
+                    break :b &DIAGONAL_DIRECTIONS;
                 } else {
                     if (self.ai.flag(.MovesDiagonally)) {
                         break :b &DIAGONAL_DIRECTIONS;

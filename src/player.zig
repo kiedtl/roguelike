@@ -378,8 +378,8 @@ pub fn moveOrFight(direction: Direction) bool {
         else => {},
     };
 
-    if (direction.is_diagonal() and state.player.isUnderStatus(.Disorient) != null) {
-        ui.drawAlertThenLog("You cannot move or attack diagonally whilst disoriented!", .{});
+    if (direction.is_cardinal() and state.player.isUnderStatus(.Disorient) != null) {
+        ui.drawAlertThenLog("You cannot move or attack cardinally whilst disoriented!", .{});
         return false;
     }
 
