@@ -37,7 +37,6 @@
 # special Lab monsters
 "lead_turtle"          	   - 	   - 	  40 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 "iron_wasp"            	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"copper_hornet"        	   - 	   - 	  30 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 
 # special Cavern monsters
 "dustling"             	   - 	   - 	   - 	   - 	   - 	  60 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
@@ -61,7 +60,6 @@
 "war_olg"              	   - 	   - 	   - 	   - 	  10 	   - 	  20 	  25 	   - 	  30 	  30 	  - 	  - 	  -
 "defender"             	   - 	   - 	  10 	   - 	   - 	   - 	  10 	  10 	   - 	  10 	  10 	  - 	  - 	  -
 "necromancer"          	   - 	   - 	   - 	   - 	  10 	   - 	  10 	  15 	   - 	  10 	  20 	  5 	  5 	  5
-"death_knight"         	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  15 	   - 	  15 	  15 	 30 	 30 	 30
 "bloat"                	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  15 	   - 	  10 	  10 	 30 	 30 	 30
 "skeletal_blademaster" 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  15 	   - 	  15 	  25 	 15 	 15 	 15
 "thrashing_sculptor"   	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  15 	   - 	  10 	  10 	 20 	 20 	 20

@@ -38,9 +38,6 @@ const DEFENDER_STUN_NBONUS: isize = 15;
 
 pub const WeaponDamageInfo = struct {
     total: usize,
-    bone_bonus: bool = false,
-    bone_nbonus: bool = false,
-    copper_bonus: bool = false,
 };
 
 pub fn damageOfWeapon(attacker: ?*const Mob, weapon: *const Weapon, recipient: ?*const Mob) WeaponDamageInfo {
@@ -50,27 +47,6 @@ pub fn damageOfWeapon(attacker: ?*const Mob, weapon: *const Weapon, recipient: ?
         // If attacker is corrupted and defender is living, +1 dmg.
         if (attacker.?.isUnderStatus(.Corruption) != null and recipient.?.life_type == .Living) {
             damage.total += 1;
-        }
-    }
-    if (attacker != null) {
-        // If copper weapon and attacker is on copper ground, +3 damage.
-        if (weapon.ego == .Copper and attacker.?.isUnderStatus(.CopperWeapon) != null) {
-            damage.total += 3;
-            damage.copper_bonus = true;
-        }
-    }
-    if (recipient != null) {
-        // If bone weapon and defender is living and not corrupted, +1 dmg.
-        if (weapon.ego == .Bone and recipient.?.life_type == .Living and
-            recipient.?.isUnderStatus(.Corruption) == null)
-        {
-            damage.total += 1;
-            damage.bone_bonus = true;
-        }
-        // If bone weapon and defender is undead, -1 dmg.
-        if (weapon.ego == .Bone and recipient.?.life_type == .Undead) {
-            damage.total -= 1;
-            damage.bone_nbonus = true;
         }
     }
 
