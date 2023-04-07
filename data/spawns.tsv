@@ -3,12 +3,11 @@
 # Spawn tables.
 #
 
-#
-# monster id          -8/Pri  -7/Pri  -6/Lab  -5/Sin  -5/Pri  -5/Smi  -4/Pri -3/Vlt  -3/Sin   -2/Pri  -1/Pri -1/Cry -1/Cry2 -1/Cry3
 #"cleaner"              	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 #"hauler"               	   - 	   - 	   5 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 
-# nuisances
+#
+# monster id           -8/Pri  -7/Pri  -6/Lab  -5/Sin  -5/Pri  -5/Smi  -4/Pri  -3/Vlt  -3/Sin   -2/Pri  -1/Pri -1/Cry -1/Cry2 -1/Cry3
 "mellaent"             	   - 	   - 	   5 	   - 	   - 	  10 	   2 	   2 	   - 	   2 	   2 	  - 	  - 	  -
 
 # spires
@@ -47,9 +46,9 @@
 
 # easier mobs, intended for early game
 # TODO: spark mage should be mid-game due to `paralysing zap` spell?
-"bone_rat"             	  15 	  15 	  15 	   - 	  15 	  10 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"bone_rat"             	   - 	  15 	  15 	   - 	  15 	  10 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 "ember_mage"           	  15 	  15 	  15 	   - 	  15 	  10 	  10 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"bone_mage"            	   - 	  15 	  15 	   - 	  15 	  10 	  10 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"bone_mage"            	   - 	   - 	  15 	   - 	  15 	  10 	  10 	  10 	   - 	   - 	   - 	  - 	  - 	  -
 "spark_mage"           	   - 	  15 	  15 	   - 	  15 	  10 	  10 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 
 # medium-difficulty monsters, early-middle game
@@ -59,16 +58,16 @@
 # medium-difficulty monsters, middle-late game
 "war_olg"              	   - 	   - 	   - 	   - 	  10 	   - 	  20 	  25 	   - 	  30 	  30 	  - 	  - 	  -
 "defender"             	   - 	   - 	  10 	   - 	   - 	   - 	  10 	  10 	   - 	  10 	  10 	  - 	  - 	  -
-"necromancer"          	   - 	   - 	   - 	   - 	  10 	   - 	  10 	  15 	   - 	  10 	  20 	  5 	  5 	  5
-"bloat"                	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  15 	   - 	  10 	  10 	 30 	 30 	 30
-"skeletal_blademaster" 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  15 	   - 	  15 	  25 	 15 	 15 	 15
+"necromancer"          	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  15 	   - 	  10 	  20 	  5 	  5 	  5
+"bloat"                	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  15 	   - 	  10 	  10 	 30 	 30 	 30
+"skeletal_blademaster" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  15 	   - 	  15 	  25 	 15 	 15 	 15
 
 # higher-difficulty monsters. late-game.
-"warrior"              	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  15 	   - 	  15 	  25 	  - 	  - 	  -
-"death_mage"           	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  20 	 20 	 20 	 20
+"warrior"              	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  15 	  25 	  - 	  - 	  -
+"death_mage"           	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  20 	 20 	 20 	 20
 "hunter"               	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  20 	  - 	  - 	  -
-"brimstone_mage"       	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  20 	  - 	  - 	  -
-"lightning_mage"       	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	   - 	  15 	  20 	  - 	  - 	  -
+"brimstone_mage"       	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  15 	  20 	  - 	  - 	  -
+"lightning_mage"       	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  15 	  20 	  - 	  - 	  -
 
 # boss monsters
 #"frozen_fiend"         	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   1 	   3 	  - 	  - 	  -
@@ -78,4 +77,4 @@
 # the one and only ancient mage
 "ancient_mage"         	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   2 	   2 	  1 	  1 	  1
 
-# monster id          -8/Pri  -7/Pri  -6/Lab  -5/Sin  -5/Pri  -5/Smi  -4/Pri -3/Vlt  -3/Sin   -2/Pri  -1/Pri -1/Cry -1/Cry2 -1/Cry3
+# monster id           -8/Pri  -7/Pri  -6/Lab  -5/Sin  -5/Pri  -5/Smi  -4/Pri  -3/Vlt  -3/Sin   -2/Pri  -1/Pri -1/Cry -1/Cry2 -1/Cry3
