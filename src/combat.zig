@@ -26,7 +26,6 @@ pub const CHANCE_FOR_DIP_EFFECT = 33;
 const ATTACKER_ENRAGED_BONUS: isize = 20;
 const ATTACKER_FEAR_NBONUS: isize = 10;
 const ATTACKER_HELD_NBONUS: isize = 20;
-const ATTACKER_DRUNK_NBONUS: isize = 10;
 const ATTACKER_STUN_NBONUS: isize = 15;
 
 const DEFENDER_UNLIT_BONUS: isize = 5;
@@ -87,7 +86,6 @@ pub fn chanceOfMeleeLanding(attacker: *const Mob, defender: ?*const Mob) usize {
     chance += if (attacker.isUnderStatus(.Enraged) != null) ATTACKER_ENRAGED_BONUS else 0;
     chance -= if (attacker.isUnderStatus(.Fear)) |_| ATTACKER_FEAR_NBONUS else 0;
     chance -= if (attacker.isUnderStatus(.Held)) |_| ATTACKER_HELD_NBONUS else 0;
-    chance -= if (attacker.isUnderStatus(.Drunk)) |_| ATTACKER_DRUNK_NBONUS else 0;
     chance -= if (attacker.isUnderStatus(.Debil)) |_| ATTACKER_STUN_NBONUS else 0;
 
     return @intCast(usize, math.clamp(chance, 0, 100));

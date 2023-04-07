@@ -1060,11 +1060,6 @@ pub const Status = enum {
     // Doesn't have a power field
     Intimidating,
 
-    // Hampers movement.
-    //
-    // Doesn't have a power field.
-    Drunk,
-
     // Variety of effects.
     //
     // Doesn't have a power field (yet?)
@@ -1239,7 +1234,6 @@ pub const Status = enum {
             .Insane => "insane",
             .TormentUndead => "torment undead",
             .Intimidating => "intimidating",
-            .Drunk => "drunk",
             .Corruption => "corrupted",
             .Fireproof => "fireproof",
             .Flammable => "flammable",
@@ -1286,7 +1280,6 @@ pub const Status = enum {
             .Insane => "insane",
             .Intimidating => "intim",
             .TormentUndead => "trmnt undead",
-            .Drunk => "drunk",
             .Corruption => "corrupt",
             .Fireproof => "fireproof",
             .Flammable => "flammable",
@@ -1332,7 +1325,6 @@ pub const Status = enum {
             .Daze,
             .Paralysis,
             .Debil,
-            .Drunk,
             .Corruption,
             .Blind,
             => mob.life_type != .Living,
@@ -2587,22 +2579,6 @@ pub const Mob = struct { // {{{
         //
         if (direction.is_diagonal() and self.isUnderStatus(.Disorient) != null)
             err.bug("Disoriented mob is trying to move diagonally!", .{});
-
-        if (self.isUnderStatus(.Drunk)) |_| {
-            if (rng.percent(@as(usize, 60))) {
-                var adjacents = Direction.adjacentDirectionsTo(direction);
-                rng.shuffle(Direction, &adjacents);
-
-                if (coord.move(adjacents[0], state.mapgeometry)) |candidate|
-                    if (state.is_walkable(candidate, .{ .mob = self })) {
-                        direction = adjacents[0];
-                    };
-                if (coord.move(adjacents[1], state.mapgeometry)) |candidate|
-                    if (state.is_walkable(candidate, .{ .mob = self })) {
-                        direction = adjacents[1];
-                    };
-            }
-        }
 
         if (self.isUnderStatus(.Daze)) |_|
             direction = rng.chooseUnweighted(Direction, &DIRECTIONS);

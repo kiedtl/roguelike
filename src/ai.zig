@@ -995,33 +995,6 @@ pub fn stayNearLeaderWork(mob: *Mob, _: mem.Allocator) void {
     }
 }
 
-pub fn bartenderWork(mob: *Mob, _: mem.Allocator) void {
-    const post = mob.ai.work_area.items[0];
-
-    if (!mob.coord.eq(post)) {
-        // We're not at our post, return there
-        mob.tryMoveTo(post);
-        return;
-    }
-
-    for (mob.allies.items) |ally| {
-        if ((ally.isUnderStatus(.Drunk) == null or
-            (ally.isUnderStatus(.Drunk).?.duration == .Tmp and
-            ally.isUnderStatus(.Drunk).?.duration.Tmp <= 4)) and
-            ally.life_type == .Living)
-        {
-            spells.CAST_BARTENDER_FERMENT.use(mob, mob.coord, ally.coord, .{
-                .MP_cost = 0,
-                .spell = &spells.CAST_BARTENDER_FERMENT,
-                .duration = Status.MAX_DURATION,
-            });
-            return;
-        }
-    }
-
-    tryRest(mob);
-}
-
 pub fn hulkWork(mob: *Mob, _: mem.Allocator) void {
     switch (rng.range(usize, 0, 99)) {
         00...75 => tryRest(mob),

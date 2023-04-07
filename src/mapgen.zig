@@ -86,21 +86,18 @@ pub const VaultType = enum(usize) {
     Iron = 0,
     Gold = 1,
     Marble = 2,
-    Tavern = 3,
-    Cuprite = 4,
-    Obsidian = 5,
+    Cuprite = 3,
+    Obsidian = 4,
 };
 pub const VAULT_MATERIALS = [VAULT_KINDS]*const Material{
     &materials.Rust,
     &materials.Gold,
     &materials.Marble,
-    &materials.PaintedConcrete,
 };
 pub const VAULT_DOORS = [VAULT_KINDS]*const Machine{
     &surfaces.IronVaultDoor,
     &surfaces.GoldVaultDoor,
     &surfaces.MarbleVaultDoor,
-    &surfaces.TavernVaultDoor,
 };
 // zig fmt: off
 //
@@ -113,34 +110,32 @@ pub const VAULT_LEVELS = [LEVELS][]const VaultType{
     // &.{                          }, // -3/Laboratory/3
     // &.{                          }, // -3/Laboratory/2
     &.{                          }, // -3/Shrine
-    &.{ .Gold, .Marble, .Tavern  }, // -3/Laboratory
-    &.{ .Gold, .Marble, .Tavern  }, // -4/Prison
+    &.{ .Gold, .Marble,          }, // -3/Laboratory
+    &.{ .Gold, .Marble,          }, // -4/Prison
     // &.{                          }, // -5/Caverns/3
     // &.{                          }, // -5/Caverns/2
     &.{                          }, // -5/Caverns
-    &.{ .Iron, .Marble, .Tavern  }, // -5/Prison
-    // &.{ .Iron, .Marble, .Tavern  }, // -6/Workshop/3
-    // &.{ .Iron,          .Tavern  }, // -6/Workshop/2
+    &.{ .Iron, .Marble,          }, // -5/Prison
+    // &.{ .Iron, .Marble,          }, // -6/Workshop/3
+    // &.{ .Iron,                   }, // -6/Workshop/2
     &.{                          }, // -6/Shrine
-    &.{ .Iron,          .Tavern  }, // -6/Workshop
-    &.{ .Iron,          .Tavern  }, // -7/Prison
+    &.{ .Iron,                   }, // -6/Workshop
+    &.{ .Iron,                   }, // -7/Prison
     &.{ .Iron                    }, // -8/Prison
 
     // &.{                          }, // Tutorial
 };
 // zig fmt: on
-pub const VAULT_KINDS = 4;
+pub const VAULT_KINDS = 3;
 pub const VAULT_SUBROOMS = [VAULT_KINDS]?[]const u8{
     null,
     null,
     "ANY_s_marble_vlts",
-    "ANY_s_tavern_vlts",
 };
 pub const VAULT_CROWD = [VAULT_KINDS]MinMax(usize){
     minmax(usize, 7, 14),
     minmax(usize, 7, 14),
     minmax(usize, 1, 4),
-    minmax(usize, 14, 28),
 };
 // }}}
 
