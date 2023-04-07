@@ -105,23 +105,23 @@ pub const VAULT_LEVELS = [LEVELS][]const VaultType{
     &.{                          }, // -1/Crypt/3
     &.{        .Marble           }, // -1/Crypt/2
     &.{        .Marble           }, // -1/Crypt
-    &.{ .Gold, .Marble           }, // -1/Prison
-    &.{ .Gold, .Marble           }, // -2/Prison
+    &.{        .Marble           }, // -1/Prison
+    &.{        .Marble           }, // -2/Prison
     // &.{                          }, // -3/Laboratory/3
     // &.{                          }, // -3/Laboratory/2
     &.{                          }, // -3/Shrine
-    &.{ .Gold, .Marble,          }, // -3/Laboratory
-    &.{ .Gold, .Marble,          }, // -4/Prison
+    &.{        .Marble,          }, // -3/Laboratory
+    &.{        .Marble,          }, // -4/Prison
     // &.{                          }, // -5/Caverns/3
     // &.{                          }, // -5/Caverns/2
     &.{                          }, // -5/Caverns
-    &.{ .Iron, .Marble,          }, // -5/Prison
+    &.{        .Marble,          }, // -5/Prison
     // &.{ .Iron, .Marble,          }, // -6/Workshop/3
     // &.{ .Iron,                   }, // -6/Workshop/2
     &.{                          }, // -6/Shrine
-    &.{ .Iron,                   }, // -6/Workshop
-    &.{ .Iron,                   }, // -7/Prison
-    &.{ .Iron                    }, // -8/Prison
+    &.{                          }, // -6/Workshop
+    &.{                          }, // -7/Prison
+    &.{                          }, // -8/Prison
 
     // &.{                          }, // Tutorial
 };
