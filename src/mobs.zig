@@ -1297,39 +1297,39 @@ pub const BloatTemplate = MobTemplate{
     },
 };
 
-pub const ThrashingSculptorTemplate = MobTemplate{
-    .mob = .{
-        .id = "thrashing_sculptor",
-        .species = &Species{
-            .name = "thrashing sculptor",
-            .default_attack = &Weapon{ .damage = 0, .knockback = 2, .strs = &items.CLAW_STRS },
-        },
-        .tile = 'T',
-        .ai = AI{
-            .profession_description = "dormant",
-            .work_fn = ai.watcherWork,
-            .fight_fn = ai.mageFight,
-            .is_fearless = true,
-            .spellcaster_backup_action = .Melee,
-            .flags = &[_]AI.Flag{.MovesDiagonally},
-        },
+// pub const ThrashingSculptorTemplate = MobTemplate{
+//     .mob = .{
+//         .id = "thrashing_sculptor",
+//         .species = &Species{
+//             .name = "thrashing sculptor",
+//             .default_attack = &Weapon{ .damage = 0, .knockback = 2, .strs = &items.CLAW_STRS },
+//         },
+//         .tile = 'T',
+//         .ai = AI{
+//             .profession_description = "dormant",
+//             .work_fn = ai.watcherWork,
+//             .fight_fn = ai.mageFight,
+//             .is_fearless = true,
+//             .spellcaster_backup_action = .Melee,
+//             .flags = &[_]AI.Flag{.MovesDiagonally},
+//         },
 
-        .spells = &[_]SpellOptions{
-            .{ .MP_cost = 10, .spell = &spells.CAST_CREATE_BLOAT },
-        },
-        .max_MP = 10,
+//         .spells = &[_]SpellOptions{
+//             .{ .MP_cost = 10, .spell = &spells.CAST_CREATE_BLOAT },
+//         },
+//         .max_MP = 10,
 
-        .max_HP = 12,
-        .memory_duration = 20,
-        .base_night_vision = true,
+//         .max_HP = 12,
+//         .memory_duration = 20,
+//         .base_night_vision = true,
 
-        .life_type = .Undead,
-        .corpse = .None,
+//         .life_type = .Undead,
+//         .corpse = .None,
 
-        .innate_resists = .{ .rFume = 100 },
-        .stats = .{ .Willpower = 5, .Evade = 20, .Melee = 100, .Vision = 6 },
-    },
-};
+//         .innate_resists = .{ .rFume = 100 },
+//         .stats = .{ .Willpower = 5, .Evade = 20, .Melee = 100, .Vision = 6 },
+//     },
+// };
 
 pub const SkeletonTemplate = MobTemplate{
     .mob = .{
@@ -2099,7 +2099,7 @@ pub const MOBS = [_]MobTemplate{
     SparkMageTemplate,
     LightningMageTemplate,
     BloatTemplate,
-    ThrashingSculptorTemplate,
+    // ThrashingSculptorTemplate,
     SkeletonTemplate,
     StalkerTemplate,
     BoneRatTemplate,

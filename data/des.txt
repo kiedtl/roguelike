@@ -608,20 +608,6 @@ of $b2$. electric damage, then teleport yourself to the last tile the bolt
 touched. (If that tile is unwalkable, you won't be teleported). Damage scales
 with the number of enemies hit, up to a maximum of $b5$..
 
-% electrification
-$cPattern:$. Attack foe, move one tile backwards into corridor (i.e., with walls
-on the other two sides of your character), wait, attack forwards.
-
-
-$G    $C$~##$.$G.$rm$G...                 $C$~##$.$G$rm$G....
-
-$G    $G$G..$G$.@$rM$G...    $.<attack $GM$.>$G   .$.@$rM$G....    $.<wait>$G    $.<attack $rM$.>$G
-
-$G    $C$~##$.$G.$rm$G...                 $C$~##$.$G$rm$G....
-
-
-$cEffect:$. All foes on your side are zapped with electricity for $b2$. damage.
-
 % insurrection
 $cPattern:$. Wait, then move to the two sides of the foe and back.
 

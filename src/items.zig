@@ -194,7 +194,6 @@ pub const RINGS = [_]Ring{
     DistractionRing,
     DamnationRing,
     TeleportationRing,
-    ElectrificationRing,
     InsurrectionRing,
     MagnetizationRing,
 };
@@ -1011,97 +1010,6 @@ pub const TeleportationRing = Ring{ // {{{
     }.f,
 }; // }}}
 
-pub const ElectrificationRing = Ring{ // {{{
-    .name = "electrification",
-    .pattern_checker = .{
-        .turns = 3,
-        .init = struct {
-            pub fn f(mob: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
-                if (d.is_diagonal())
-                    return error.NeedCardinalDirection;
-
-                if (state.dungeon.neighboringWalls(mob.coord, false) > 0)
-                    return error.NeedOpenSpace;
-
-                stt.directions[0] = d;
-                stt.mobs[0] = try PatternChecker._util_getHostileInDirection(mob, d);
-
-                return Activity{ .Attack = .{
-                    .direction = d,
-                    .who = undefined,
-                    .coord = undefined,
-                } };
-            }
-        }.f,
-        .funcs = [_]PatternChecker.Func{
-            struct {
-                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
-                    const r = cur == .Attack and
-                        cur.Attack.direction == stt.directions[0].? and
-                        cur.Attack.who == stt.mobs[0].?;
-                    return r;
-                }
-            }.f,
-            struct {
-                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
-                    if (cur != .Move or cur.Move.is_diagonal())
-                        return false;
-                    const new_coord = if (dry) mob.coord.move(cur.Move, state.mapgeometry).? else mob.coord;
-                    const side1_coord = new_coord.move(cur.Move.turnright(), state.mapgeometry) orelse return false;
-                    const side2_coord = new_coord.move(cur.Move.turnleft(), state.mapgeometry) orelse return false;
-                    const r = cur.Move == stt.directions[0].?.opposite() and
-                        state.dungeon.at(side1_coord).type == .Wall and
-                        state.dungeon.at(side2_coord).type == .Wall;
-                    return r;
-                }
-            }.f,
-            struct {
-                pub fn f(_: *Mob, _: *PatternChecker.State, cur: Activity, _: bool) bool {
-                    return cur == .Rest;
-                }
-            }.f,
-            struct {
-                pub fn f(_: *Mob, stt: *PatternChecker.State, cur: Activity, _: bool) bool {
-                    const r = cur == .Attack and
-                        cur.Attack.who == stt.mobs[0].?;
-                    return r;
-                }
-            }.f,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-        },
-    },
-    .effect = struct {
-        pub fn f(self: *Mob, stt: PatternChecker.State) void {
-            const directions = [_]Direction{
-                stt.directions[0].?,
-                stt.directions[0].?.turnLeftDiagonally(),
-                stt.directions[0].?.turnRightDiagonally(),
-            };
-
-            var anim_buf = StackBuffer(Coord, 4).init(null);
-            for (&directions) |d|
-                if (self.coord.move(d, state.mapgeometry)) |c|
-                    anim_buf.append(c) catch err.wat();
-
-            ui.Animation.blink(anim_buf.constSlice(), '*', ui.Animation.ELEC_LINE_FG, .{}).apply();
-
-            for (&directions) |d|
-                if (utils.getHostileInDirection(self, d)) |hostile| {
-                    hostile.takeDamage(.{
-                        .amount = @intToFloat(f64, 2),
-                        .by_mob = self,
-                        .kind = .Electric,
-                    }, .{ .noun = "Lightning" });
-                } else |_| {};
-        }
-    }.f,
-}; // }}}
-
 pub const InsurrectionRing = Ring{ // {{{
     .name = "insurrection",
     .hated_by_nc = true,
@@ -1599,63 +1507,6 @@ pub const DefaultChargeRing = Ring{ // {{{
                 state.message(.Info, "{c} {s} {}!", .{ self, verb, target });
             }
             combat.throwMob(self, stt.mobs[0].?, stt.directions[0].?, 7);
-        }
-    }.f,
-}; // }}}
-
-pub const DefaultLungeRing = Ring{ // {{{
-    .name = "lunge",
-    .pattern_checker = .{
-        .turns = 2,
-        .init = struct {
-            pub fn f(_: *Mob, d: Direction, stt: *PatternChecker.State) PatternChecker.InitFnErr!Activity {
-                stt.directions[0] = d;
-                return .Rest;
-            }
-        }.f,
-        .funcs = [_]PatternChecker.Func{
-            // directions[0]: first movement direction
-            struct {
-                pub fn f(_: *Mob, _: *PatternChecker.State, cur: Activity, _: bool) bool {
-                    return cur == .Rest;
-                }
-            }.f,
-            struct {
-                pub fn f(mob: *Mob, stt: *PatternChecker.State, cur: Activity, dry: bool) bool {
-                    if (cur == .Move and cur.Move == stt.directions[0].?) {
-                        const new_coord = if (dry) mob.coord.move(cur.Move, state.mapgeometry).? else mob.coord;
-                        if (new_coord.move(cur.Move, state.mapgeometry)) |adj_mob_c| {
-                            if (state.dungeon.at(adj_mob_c).mob) |other| {
-                                if (other.isHostileTo(mob) and other.ai.is_combative) {
-                                    if (!dry)
-                                        stt.mobs[0] = other;
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    return false;
-                }
-            }.f,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-        },
-    },
-    .effect = struct {
-        pub fn f(self: *Mob, stt: PatternChecker.State) void {
-            const target = stt.mobs[0].?;
-
-            const msg_verb = if (target == state.player) "lunges" else "lunge";
-            state.message(.Combat, "{c} {s} at {}!", .{ self, msg_verb, target });
-
-            self.fight(target, .{ .free_attack = true, .auto_hit = true, .disallow_stab = true, .damage_bonus = 300, .loudness = .Loud });
-            target.addStatus(.Fear, 0, .{ .Tmp = 7 });
         }
     }.f,
 }; // }}}
