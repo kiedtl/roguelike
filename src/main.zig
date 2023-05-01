@@ -9,7 +9,7 @@ const meta = std.meta;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const ai = @import("ai.zig");
-const alert = @import("alert.zig");
+// const alert = @import("alert.zig");
 const rng = @import("rng.zig");
 const janet = @import("janet.zig");
 const player = @import("player.zig");
@@ -143,7 +143,7 @@ fn initGame() bool {
     state.containers = ContainerList.init(state.GPA.allocator());
     state.evocables = EvocableList.init(state.GPA.allocator());
     state.messages = MessageArrayList.init(state.GPA.allocator());
-    state.alerts = alert.Alert.List.init(state.GPA.allocator());
+    // state.alerts = alert.Alert.List.init(state.GPA.allocator());
 
     janet.init() catch return false;
     _ = janet.loadFile("scripts/particles.janet", state.GPA.allocator()) catch return false;
@@ -219,7 +219,7 @@ fn deinitGame() void {
     state.props.deinit();
     state.containers.deinit();
     state.evocables.deinit();
-    state.alerts.deinit();
+    // state.alerts.deinit();
 
     for (literature.posters.items) |poster|
         poster.deinit(state.GPA.allocator());
@@ -516,8 +516,8 @@ fn tickGame() !void {
     state.tickLight(cur_level);
 
     if (state.ticks % 10 == 0) {
-        alert.tickCheckLevelHealth(cur_level);
-        alert.tickActOnAlert(cur_level);
+        // alert.tickCheckLevelHealth(cur_level);
+        // alert.tickActOnAlert(cur_level);
         tasks.tickTasks(cur_level);
     }
 
@@ -627,8 +627,8 @@ fn viewerTickGame(cur_level: usize) void {
     state.tickLight(cur_level);
 
     if (state.ticks % 10 == 0) {
-        alert.tickCheckLevelHealth(cur_level);
-        alert.tickActOnAlert(cur_level);
+        // alert.tickCheckLevelHealth(cur_level);
+        // alert.tickActOnAlert(cur_level);
         tasks.tickTasks(cur_level);
     }
 

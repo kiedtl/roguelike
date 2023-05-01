@@ -228,24 +228,24 @@ pub const ThrashingHulkTemplate = MobTemplate{
     },
 };
 
-pub const CoronerTemplate = MobTemplate{
-    .mob = .{
-        .id = "coroner",
-        .species = &GoblinSpecies,
-        .tile = 'a',
-        .ai = AI{
-            .profession_name = "coroner",
-            .profession_description = "doing autopsy",
-            .work_fn = ai.coronerWork,
-            .fight_fn = ai.coronerFight,
-        },
+// pub const CoronerTemplate = MobTemplate{
+//     .mob = .{
+//         .id = "coroner",
+//         .species = &GoblinSpecies,
+//         .tile = 'a',
+//         .ai = AI{
+//             .profession_name = "coroner",
+//             .profession_description = "doing autopsy",
+//             .work_fn = ai.coronerWork,
+//             .fight_fn = ai.coronerFight,
+//         },
 
-        .max_HP = 8,
-        .memory_duration = 10,
+//         .max_HP = 8,
+//         .memory_duration = 10,
 
-        .stats = .{ .Willpower = 1 },
-    },
-};
+//         .stats = .{ .Willpower = 1 },
+//     },
+// };
 
 pub const ExecutionerTemplate = MobTemplate{
     .mob = .{
@@ -2059,7 +2059,7 @@ pub const MOBS = [_]MobTemplate{
     WrithingHulkTemplate,
     SwollenHulkTemplate,
     ThrashingHulkTemplate,
-    CoronerTemplate,
+    // CoronerTemplate,
     ExecutionerTemplate,
     WatcherTemplate,
     ShriekerTemplate,
