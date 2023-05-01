@@ -2617,6 +2617,10 @@ pub const Mob = struct { // {{{
     }
 
     pub fn teleportTo(self: *Mob, dest: Coord, direction: ?Direction, instant: bool, swap_ignore_hostility: bool) bool {
+        if (self != state.player) {
+            self.makeNoise(.Movement, .Medium);
+        }
+
         if (self.multitile != null) {
             return self._teleportToMultitile(dest, direction, instant);
         }
@@ -3962,9 +3966,6 @@ pub const Mob = struct { // {{{
         while (activity_iter.next()) |activity|
             activities[activity_iter.counter - 1] = activity;
 
-        // Walking pattern
-        if (!self.isCreeping()) self.makeNoise(.Movement, .Medium);
-
         self.forEachRing(struct {
             pub fn f(mself: *Mob, ring: *Ring) void {
                 if (ring.activated) {
@@ -3996,10 +3997,6 @@ pub const Mob = struct { // {{{
 
         for (&Inventory.RING_SLOTS) |r| if (self.inventory.equipment(r).*) |ring_item|
             (func)(self, ring_item.Ring);
-    }
-
-    pub fn isCreeping(self: *const Mob) bool {
-        return self.turnsSpentMoving() <= @intCast(usize, self.stat(.Sneak));
     }
 
     // Find out how many turns spent in moving
