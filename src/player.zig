@@ -383,13 +383,6 @@ pub fn moveOrFight(direction: Direction) bool {
         return false;
     }
 
-    // Should we auto-rest?
-    if (shouldAutoWait()) {
-        state.player.rest();
-        state.message(.Info, "Auto-waited.", .{});
-        return true;
-    }
-
     // Does the player want to stab or fight?
     if (state.dungeon.at(dest).mob) |mob| {
         if (state.player.isHostileTo(mob)) {
@@ -800,22 +793,6 @@ pub fn dropItem(index: usize) bool {
 pub fn memorizeTile(fc: Coord, mtype: state.MemoryTile.Type) void {
     const memt = state.MemoryTile{ .tile = Tile.displayAs(fc, true, false), .type = mtype };
     state.memory.put(fc, memt) catch err.wat();
-}
-
-pub fn shouldAutoWait() bool {
-    if (!auto_wait_enabled)
-        return false;
-
-    if (state.player.hasStatus(.Pain))
-        return false;
-
-    if (state.player.turnsSpentMoving() < @intCast(usize, state.player.stat(.Sneak)))
-        return false;
-
-    if (isPlayerSpotted())
-        return false;
-
-    return true;
 }
 
 pub fn enemiesCanSee(coord: Coord) bool {

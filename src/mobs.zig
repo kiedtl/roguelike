@@ -500,7 +500,7 @@ pub const PlayerTemplate = MobTemplate{
         .max_HP = 14,
         .memory_duration = 10,
 
-        .stats = .{ .Willpower = 4, .Missile = 60, .Evade = 10, .Vision = PLAYER_VISION, .Sneak = 4 },
+        .stats = .{ .Willpower = 4, .Missile = 60, .Evade = 10, .Vision = PLAYER_VISION },
     },
     .weapon = &items.DaggerWeapon,
     // .backup_weapon = &items.ShadowMaulWeapon,

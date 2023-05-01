@@ -125,24 +125,11 @@ pub const CarpetTerrain = Terrain{
     .name = "carpet",
     .color = 0xdaa520, // goldenish
     .tile = '÷',
-    .stats = .{ .Sneak = 3 },
     .flammability = 30,
 
     .for_levels = &[_][]const u8{"PRI"},
     .placement = .EntireRoom,
     .weight = 8,
-};
-
-pub const GravelTerrain = Terrain{
-    .id = "t_gravel",
-    .name = "gravel",
-    .color = 0xdadada,
-    .tile = ',',
-    .stats = .{ .Sneak = -1 },
-
-    .for_levels = &[_][]const u8{"CAV"},
-    .placement = .EntireRoom,
-    .weight = 5,
 };
 
 pub const MetalTerrain = Terrain{
@@ -166,7 +153,6 @@ pub const WoodTerrain = Terrain{
     .name = "wood",
     .color = 0xdaa520, // wood
     .tile = '·',
-    .stats = .{ .Sneak = -1 },
     .resists = .{ .rFire = -25, .rElec = 25 },
     .flammability = 40,
 
@@ -180,7 +166,6 @@ pub const ShallowWaterTerrain = Terrain{
     .name = "shallow water",
     .color = 0x3c73b1, // medium blue
     .tile = '≈',
-    .stats = .{ .Sneak = -2 },
     .resists = .{ .rFire = 50, .rElec = -50 },
     .effects = &[_]StatusDataInfo{
         .{ .status = .Conductive, .duration = .{ .Ctx = null } },
@@ -239,10 +224,8 @@ pub const TERRAIN = [_]*const Terrain{
     &DefaultTerrain,
     &SladeTerrain,
     &CarpetTerrain,
-    &GravelTerrain,
     &MetalTerrain,
     &WoodTerrain,
-    &ShallowWaterTerrain,
     &DeadFungiTerrain,
     &TallFungiTerrain,
     &PillarTerrain,

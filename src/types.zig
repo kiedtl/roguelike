@@ -1828,7 +1828,6 @@ pub const Stat = enum {
     Martial,
     Evade,
     Speed,
-    Sneak,
     Vision,
     Willpower,
     Spikes,
@@ -1841,7 +1840,6 @@ pub const Stat = enum {
             .Martial => "martial",
             .Evade => "evade%",
             .Speed => "speed",
-            .Sneak => "sneak",
             .Vision => "vision",
             .Willpower => "will",
             .Spikes => "spikes",
@@ -1852,7 +1850,6 @@ pub const Stat = enum {
     pub fn showMobStat(self: Stat, value: isize) bool {
         return switch (self) {
             .Melee, .Evade, .Vision, .Willpower => true,
-            .Sneak => false,
             .Missile => value != 40,
             .Speed => value != 100,
             .Martial, .Spikes, .Conjuration => value > 0,
@@ -1961,7 +1958,6 @@ pub const Mob = struct { // {{{
         Martial: isize = 0,
         Evade: isize = 0,
         Speed: isize = 100,
-        Sneak: isize = 1,
         Vision: isize = 7,
         Willpower: isize = 3,
         Spikes: isize = 0,
@@ -3880,7 +3876,6 @@ pub const Mob = struct { // {{{
 
         // Clamp value.
         val = switch (_stat) {
-            .Sneak => math.clamp(val, 0, 10),
             // Should never be below 0
             .Vision, .Spikes => math.max(0, val),
             else => val,

@@ -360,7 +360,6 @@ fn _writerMobStats(
         const stat_val_raw = mob.stat(stat);
         const stat_val = utils.SignedFormatter{ .v = stat_val_raw };
 
-        if (stat == .Sneak) continue;
         _writerWrite(w, "$c{s: <8}$.   {: >5}\n", .{ stat.string(), stat_val });
     }
     _writerWrite(w, "\n", .{});

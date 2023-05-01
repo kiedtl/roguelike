@@ -153,8 +153,6 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     // Cloaks
     .{ .w = 20, .i = .{ .C = &SilCloak } },
     .{ .w = 20, .i = .{ .C = &FurCloak } },
-    .{ .w = 20, .i = .{ .C = &VelvetCloak } },
-    .{ .w = 10, .i = .{ .C = &WarringCloak } },
     .{ .w = 10, .i = .{ .C = &ThornyCloak } },
 };
 pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
@@ -214,9 +212,7 @@ pub const Cloak = struct {
 pub const SpectralCloak = Cloak{ .id = "cloak_spectral", .name = "spectres", .stats = .{ .Conjuration = 1 } };
 pub const SilCloak = Cloak{ .id = "cloak_silicon", .name = "silicon", .resists = .{ .rFire = 25 } };
 pub const FurCloak = Cloak{ .id = "cloak_fur", .name = "fur", .resists = .{ .rElec = 25 } };
-pub const VelvetCloak = Cloak{ .id = "cloak_velvet", .name = "velvet", .stats = .{ .Sneak = 2 } };
 pub const ThornyCloak = Cloak{ .id = "cloak_thorny", .name = "thorns", .stats = .{ .Spikes = 1 } };
-pub const WarringCloak = Cloak{ .id = "cloak_warring", .name = "warring", .stats = .{ .Melee = 20 } };
 // }}}
 
 // Aux items {{{
@@ -2018,7 +2014,7 @@ pub const BrigandineArmor = Armor{
     .id = "brigandine_armor",
     .name = "brigandine",
     .resists = .{ .Armor = 25 },
-    .stats = .{ .Sneak = -1, .Melee = 10 },
+    .stats = .{ .Melee = 10 },
 };
 
 pub const GambesonArmor = Armor{
@@ -2031,7 +2027,7 @@ pub const SpikedLeatherArmor = Armor{
     .id = "spiked_leather_armor",
     .name = "spiked leather armor",
     .resists = .{ .Armor = 15 },
-    .stats = .{ .Spikes = 1, .Sneak = -1 },
+    .stats = .{ .Spikes = 1 },
 };
 
 pub const ShadowMailArmor = Armor{
@@ -2228,7 +2224,7 @@ pub const MonkSpadeWeapon = Weapon{
     .name = "monk's spade",
     .damage = 1,
     .knockback = 2,
-    .stats = .{ .Melee = 20, .Sneak = -1 },
+    .stats = .{ .Melee = 20 },
     .strs = &PIERCING_STRS,
 };
 
@@ -2237,7 +2233,7 @@ pub const WoldoWeapon = Weapon{
     .name = "woldo",
     .damage = 3,
     .martial = true,
-    .stats = .{ .Melee = -15, .Sneak = -1 },
+    .stats = .{ .Melee = -15 },
     .strs = &SLASHING_STRS,
 };
 
