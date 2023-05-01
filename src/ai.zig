@@ -1293,31 +1293,11 @@ pub fn watcherFight(mob: *Mob, alloc: mem.Allocator) void {
     }
 }
 
-pub fn shriekerFight(mob: *Mob, alloc: mem.Allocator) void {
-    const target = currentEnemy(mob).mob;
-
-    mob.makeNoise(.Shout, .Loud);
-
-    const mob_lit = state.dungeon.lightAt(mob.coord).*;
-    const target_lit = state.dungeon.lightAt(target.coord).*;
-
-    if (!mob.cansee(target.coord) and
-        // Can't lure me to darker areas!
-        (target_lit or !mob_lit))
-    {
-        mob.tryMoveTo(target.coord);
-    } else {
-        alertAllyOfHostile(mob);
-        if (!keepDistance(mob, target.coord, 8))
-            meleeFight(mob, alloc);
-    }
-}
-
-pub fn coronerFight(mob: *Mob, alloc: mem.Allocator) void {
-    const target = currentEnemy(mob).mob;
-    alert.announceEnemyAlert(target);
-    shriekerFight(mob, alloc);
-}
+// pub fn coronerFight(mob: *Mob, alloc: mem.Allocator) void {
+//     const target = currentEnemy(mob).mob;
+//     alert.announceEnemyAlert(target);
+//     watcherFight(mob, alloc);
+// }
 
 pub fn stalkerFight(mob: *Mob, alloc: mem.Allocator) void {
     const target = currentEnemy(mob).mob;

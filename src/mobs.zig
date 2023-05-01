@@ -251,7 +251,7 @@ pub const ExecutionerTemplate = MobTemplate{
     .mob = .{
         .id = "executioner",
         .species = &GoblinSpecies,
-        .tile = 'א',
+        .tile = 'x',
         .ai = AI{
             .profession_name = "executioner",
             .profession_description = "wandering",
@@ -270,7 +270,7 @@ pub const WatcherTemplate = MobTemplate{
     .mob = .{
         .id = "watcher",
         .species = &ImpSpecies,
-        .tile = 'ש',
+        .tile = 'w',
         .ai = AI{
             .profession_name = "watcher",
             .profession_description = "guarding",
@@ -285,30 +285,11 @@ pub const WatcherTemplate = MobTemplate{
     },
 };
 
-pub const ShriekerTemplate = MobTemplate{
-    .mob = .{
-        .id = "shrieker",
-        .species = &ImpSpecies,
-        .tile = 'ל',
-        .ai = AI{
-            .profession_name = "shrieker",
-            .profession_description = "guarding",
-            .work_fn = ai.watcherWork,
-            .fight_fn = ai.shriekerFight,
-            .is_curious = false,
-            .flags = &[_]AI.Flag{.FearsDarkness},
-        },
-        .max_HP = 3,
-        .memory_duration = 20,
-        .stats = .{ .Willpower = 3, .Evade = 40 },
-    },
-};
-
 pub const GuardTemplate = MobTemplate{
     .mob = .{
         .id = "guard",
         .species = &GoblinSpecies,
-        .tile = 'ה',
+        .tile = 'g',
         .ai = AI{
             .profession_name = "guard",
             .profession_description = "guarding",
@@ -328,7 +309,7 @@ pub const ArmoredGuardTemplate = MobTemplate{
     .mob = .{
         .id = "armored_guard",
         .species = &GoblinSpecies,
-        .tile = 'ת',
+        .tile = 'G',
         .ai = AI{
             .profession_name = "armored guard",
             .profession_description = "guarding",
@@ -375,7 +356,7 @@ pub const DefenderTemplate = MobTemplate{
     .mob = .{
         .id = "defender",
         .species = &HumanSpecies,
-        .tile = 'ץ',
+        .tile = 'd',
         .ai = AI{
             .profession_name = "defender",
             .profession_description = "guarding",
@@ -474,7 +455,7 @@ pub const PatrolTemplate = MobTemplate{
     .mob = .{
         .id = "patrol",
         .species = &GoblinSpecies,
-        .tile = 'ק',
+        .tile = 'g',
         .ai = AI{
             .profession_name = "patrol",
             .profession_description = "patrolling",
@@ -532,9 +513,9 @@ pub const GoblinTemplate = MobTemplate{
     .mob = .{
         .id = "goblin",
         .species = &GoblinSpecies,
-        .tile = 'g',
+        .tile = 'i',
         .ai = AI{
-            .profession_name = "cave goblin",
+            .profession_name = "prisoner",
             .profession_description = "wandering",
             .work_fn = ai.patrolWork,
             .fight_fn = ai.meleeFight,
@@ -874,7 +855,7 @@ pub const CleanerTemplate = MobTemplate{
     .mob = .{
         .id = "cleaner",
         .species = &GoblinSpecies,
-        .tile = 'w',
+        .tile = 'a',
         .ai = AI{
             .profession_name = "cleaner",
             .profession_description = "cleaning",
@@ -1663,7 +1644,7 @@ pub const BallLightningTemplate = MobTemplate{
     .mob = .{
         .id = "ball_lightning",
         .species = &Species{ .name = "ball lightning" },
-        .tile = 'י',
+        .tile = '*',
         .ai = AI{
             .profession_description = "wandering",
             .work_fn = ai.ballLightningWorkOrFight,
@@ -2062,7 +2043,6 @@ pub const MOBS = [_]MobTemplate{
     // CoronerTemplate,
     ExecutionerTemplate,
     WatcherTemplate,
-    ShriekerTemplate,
     GuardTemplate,
     ArmoredGuardTemplate,
     JavelineerTemplate,

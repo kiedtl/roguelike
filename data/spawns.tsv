@@ -26,8 +26,7 @@
 "executioner"          	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  10 	   - 	  20 	  20 	  - 	  - 	  -
 
 # watcher
-"watcher"              	  45 	  45 	 100 	   - 	  45 	  25 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"shrieker"             	   - 	   - 	   - 	   - 	   - 	   - 	  45 	 100 	   - 	  45 	  45 	  - 	  - 	  -
+"watcher"              	  45 	  45 	 100 	   - 	  45 	  25 	  45 	 100 	   - 	  45 	  45 	  - 	  - 	  -
 
 # special Shrine monsters
 "hulk_swollen"         	   - 	   - 	   - 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -

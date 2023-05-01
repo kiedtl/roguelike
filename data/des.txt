@@ -346,9 +346,7 @@ to say about it. You can't help but wonder if a glaive would suit it better.
 Always remember that you are completely unique. Just like everyone else.
 
 % goblin
-One of the last few prisoners of war captured in the battle in which the
-hill-goblins overran this cave-goblin stronghold. It sits here, nursing its
-wounds and waiting miserably until its execution.
+A cave-goblin prisoner.
 
 % convult
 A foul apprentice mage, specializing in the manipulation of emotions. His craft,
