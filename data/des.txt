@@ -274,6 +274,10 @@ Very noisy to walk on.
 % t_metal
 Metal plates have been bolted onto the floor for some reason.
 
+% t_copper
+Copper plates have been bolted onto the floor for some reason. While standing on
+this, you share electricity damage with nearby monsters.
+
 % t_wood
 Wooden boards. Creaky and flammable, but makes you resistant to electricity.
 
@@ -334,9 +338,12 @@ A monstrous contraption, no doubt the latest invention of the Laboratory
 alchemists. Its heavy shell shines dully in the dim light.
 
 % iron_wasp
-A tiny buzzing insect, forged out of thin metal sheets, its copper entrails
-exposed and looping around its abdomen. It's almost as if its wings are mounted
-on its back, instead of its sides...
+A tiny buzzing insect, seemingly forged out of thin metal sheets. It's almost as
+if its four wings are mounted on its back instead of its sides...
+
+% copper_hornet
+A tiny buzzing insect, seemingly forged out of thin metal sheets. Its
+copper-colored entrails wrap around its silver abdomen.
 
 % patrol
 An ordinary hill-goblin guard, with a crude mace and some light armor. Not much
@@ -439,7 +446,7 @@ A mouldering skeleton, imbued with a parody of life.
 
 % emberling
 A construct of smoldering ash, imbued with false life and commanded by a
-sorcerer.
+human sorcerer.
 
 % sparkling
 An insubstantial construct. It's trying to electrocute you!
@@ -448,16 +455,20 @@ An insubstantial construct. It's trying to electrocute you!
 A goblin warrior in training. It's waving its wooden mace wildly in the air.
 
 % warrior
-A highly competent human mercenary, wearing a battle cuirass.
+A competent and highly trained infantry-goblin wearing a battle cuirass.
 
 % hunter
 He is tasked with liquidating escaped prisoners, like you.
 
 % bone_mage
-His armor is inscribed with crude engravings of torment and death.
+She may not be as experienced as the dreaded Death Mages she is apprenticed to,
+but she quite capable of killing you all the same.
+
+% death_knight
+His bone longsword is inscribed with crude engravings of torment and death.
 
 % death_mage
-A goblin mage, specializing in the manipulations of undead skeletons.
+A human mage, specializing in the manipulations of undead skeletons.
 
 % skeletal_blademaster
 A vicious and surprisingly durable skeleton, decked in royal robes and armed to
@@ -466,8 +477,9 @@ enemy morale during battles. Battles are slow in coming, however, so you'll just
 have to do for now...
 
 % necromancer
-An unusually sadistic death mage. His features are perpetually twisted into a
-leer of cruel contempt.
+An unusually sadistic death mage, tasked with making the prisoner's lives as
+miserable as possible. His features are perpetually twisted into a leer of cruel
+contempt.
 
 % burning_brute
 A raging winged demon composed of boiling basalt, feared even by its peers for

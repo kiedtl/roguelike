@@ -1064,6 +1064,16 @@ pub const Status = enum {
     // Doesn't have a power field
     Intimidating,
 
+    // Hampers movement.
+    //
+    // Doesn't have a power field.
+    Drunk,
+
+    // Enables copper weapons.
+    //
+    // Doesn't have a power field.
+    CopperWeapon,
+
     // Variety of effects.
     //
     // Doesn't have a power field (yet?)
@@ -1238,6 +1248,8 @@ pub const Status = enum {
             .Insane => "insane",
             .TormentUndead => "torment undead",
             .Intimidating => "intimidating",
+            .Drunk => "drunk",
+            .CopperWeapon => "copper",
             .Corruption => "corrupted",
             .Fireproof => "fireproof",
             .Flammable => "flammable",
@@ -1278,7 +1290,7 @@ pub const Status = enum {
         return switch (self) {
             .RingTeleportation, .RingDamnation, .RingElectrocution, .RingExcision, .RingConjuration => null,
 
-            .DetectHeat, .DetectElec, .Riposte, .EtherealShield, .FumesVest, .Echolocation, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
+            .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .EtherealShield, .FumesVest, .Echolocation, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
 
             .Amnesia => "amnesia",
             .Insane => "insane",
@@ -2942,6 +2954,9 @@ pub const Mob = struct { // {{{
             .strs = attacker_weapon.strs,
             .is_bonus = opts.is_bonus,
             .is_riposte = opts.is_riposte,
+            .is_bone = weapon_damage.bone_bonus,
+            .is_nbone = weapon_damage.bone_nbonus,
+            .is_copper = weapon_damage.copper_bonus,
         });
 
         // XXX: should this be .Loud instead of .Medium?
@@ -3055,6 +3070,9 @@ pub const Mob = struct { // {{{
         },
         is_bonus: bool = false,
         is_riposte: bool = false,
+        is_bone: bool = false,
+        is_nbone: bool = false,
+        is_copper: bool = false,
         is_spikes: bool = false,
     }) void {
         const was_already_dead = self.should_be_dead();
@@ -3135,6 +3153,9 @@ pub const Mob = struct { // {{{
             } else {
                 const martial_str = if (msg.is_bonus) " $b*Martial*$. " else "";
                 const riposte_str = if (msg.is_riposte) " $b*Riposte*$. " else "";
+                const bone_str = if (msg.is_bone) " $b*Bone*$. " else "";
+                const nbone_str = if (msg.is_nbone) " $b*-Bone*$. " else "";
+                const copper_str = if (msg.is_copper) " $b*Copper*$. " else "";
                 const spikes_str = if (msg.is_spikes) " $b*Spikes*$. " else "";
 
                 var noun = StackBuffer(u8, 64).init(null);
@@ -3151,12 +3172,13 @@ pub const Mob = struct { // {{{
 
                 state.message(
                     .Combat,
-                    "{s} {s} {}{s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.) {s}{s}{s}",
+                    "{s} {s} {}{s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.) {s}{s}{s}{s}{s}{s}",
                     .{
                         noun.constSlice(),   verb,        self,
                         hitstrs.verb_degree, punctuation, amount,
                         d.kind.string(),     resisted,    resist_str,
-                        martial_str,         riposte_str, spikes_str,
+                        martial_str,         riposte_str, bone_str,
+                        nbone_str,           copper_str,  spikes_str,
                     },
                 );
             }
@@ -4355,6 +4377,8 @@ pub const Weapon = struct {
 
     pub const Ego = enum {
         None,
+        Bone,
+        Copper,
         NC_Insane,
         NC_MassPara,
         NC_Duplicate,
@@ -4363,6 +4387,8 @@ pub const Weapon = struct {
         pub fn name(self: Ego) ?[]const u8 {
             return switch (self) {
                 .None => null,
+                .Bone => "bone",
+                .Copper => "copper",
                 .NC_Insane => "insanity",
                 .NC_MassPara => "mass paralysis",
                 .NC_Duplicate => "duplicity",
@@ -4373,6 +4399,8 @@ pub const Weapon = struct {
         pub fn description(self: Ego) ?[]const u8 {
             return switch (self) {
                 .None => null,
+                .Bone => "More damage will be dealt to living enemies, and less to undead.",
+                .Copper => "When standing on copper ground, you deal $b+3$. electric damage.",
                 .NC_Insane => "When both you and your foe are in an unlit area, you have a will-checked chance to send your foe insane with your attacks.",
                 .NC_MassPara => "When you are attacking from an unlit area, you have a will-checked chance to paralyse nearby foes if they are also standing in the dark. The duration of the paralysis will always be less than the time needed to reach them.",
                 .NC_Duplicate => "When both you and your foe are in an unlit area, you have a will-checked chance to create a spectral copy of your foe. The spectral copy will be aligned with the Night Creatures, and will last for $bwillpower * 2$. turns.",
@@ -4380,6 +4408,27 @@ pub const Weapon = struct {
             };
         }
     };
+
+    pub fn createBoneWeapon(comptime weapon: *const Weapon, opts: struct {}) Weapon {
+        _ = opts;
+        var new = weapon.*;
+        new.id = "bone_" ++ weapon.id;
+        new.name = "bone " ++ weapon.name;
+        new.ego = .Bone;
+        new.stats.Willpower -= 2;
+        return new;
+    }
+
+    pub fn createCopperWeapon(comptime weapon: *const Weapon, opts: struct {}) Weapon {
+        _ = opts;
+        var new = weapon.*;
+        new.id = "copper_" ++ weapon.id;
+        new.name = "copper " ++ weapon.name;
+        new.ego = .Copper;
+        new.damage_kind = .Electric;
+        new.damage -= 1;
+        return new;
+    }
 };
 
 pub const Vial = enum {

@@ -15,6 +15,7 @@
 "recruit"             	 100 	   - 	   - 	   -
 "defender"            	 100 	   - 	   - 	   -
 "javelineer"          	  90 	   - 	   - 	   -
+"death_knight"        	  70 	   - 	   - 	   -
 "armored_guard"       	  50 	   - 	   - 	   -
 "bone_mage"           	  50 	   - 	   - 	   -
 "iron_spire"          	  10 	   - 	   - 	   -
@@ -28,6 +29,8 @@
 
 # rarer monsters, because it rapidly increases difficulty
 #
+# war olg is hard: "why wont this thing just die??"
+# necromancer is hard: "i thought i killed that recruit?!"
 "warrior"             	   3 	   - 	   - 	   -
 "war_olg"             	   2 	   - 	   - 	   -
 "necromancer"         	   1 	   - 	   - 	   -
@@ -43,6 +46,8 @@
 "necromancer"         	   - 	  70 	   - 	   -
 "war_olg"             	   - 	  70 	   - 	   -
 "bloat"               	   - 	  70 	   - 	   -
+"thrashing_sculptor"  	   - 	  70 	   - 	   -
+"death_knight"        	   - 	  50 	   - 	   -
 
 # spires
 "iron_spire"          	   - 	  30 	   - 	   -

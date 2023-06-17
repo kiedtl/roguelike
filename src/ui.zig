@@ -561,6 +561,12 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
         list.append(i) catch err.wat();
     }
 
+    if (mob.isUnderStatus(.CopperWeapon) != null and mob.hasWeaponOfEgo(.Copper)) {
+        var i = MobInfoLine{ .char = 'C', .color = 'r' };
+        i.string.writer().print("has copper weapon", .{}) catch err.wat();
+        list.append(i) catch err.wat();
+    }
+
     const mobspeed = mob.stat(.Speed);
     const youspeed = state.player.stat(.Speed);
     if (mobspeed != youspeed) {

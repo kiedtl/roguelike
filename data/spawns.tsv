@@ -35,6 +35,7 @@
 # special Lab monsters
 "lead_turtle"          	   - 	   - 	  40 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 "iron_wasp"            	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"copper_hornet"        	   - 	   - 	  30 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
 
 # special Cavern monsters
 "dustling"             	   - 	   - 	   - 	   - 	   - 	  60 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
@@ -60,6 +61,8 @@
 "necromancer"          	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  15 	   - 	  10 	  20 	  5 	  5 	  5
 "bloat"                	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  15 	   - 	  10 	  10 	 30 	 30 	 30
 "skeletal_blademaster" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  15 	   - 	  15 	  25 	 15 	 15 	 15
+"death_knight"         	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  15 	   - 	  15 	  15 	 30 	 30 	 30
+"thrashing_sculptor"   	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  15 	   - 	  10 	  10 	 20 	 20 	 20
 
 # higher-difficulty monsters. late-game.
 "warrior"              	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  15 	  25 	  - 	  - 	  -

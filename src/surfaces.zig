@@ -148,6 +148,21 @@ pub const MetalTerrain = Terrain{
     .weight = 6,
 };
 
+pub const CopperTerrain = Terrain{
+    .id = "t_copper",
+    .name = "copper",
+    .color = 0x998883,
+    .tile = ':',
+    .resists = .{ .rElec = -25 },
+    .effects = &[_]StatusDataInfo{
+        .{ .status = .CopperWeapon, .duration = .{ .Ctx = null } },
+    },
+
+    .for_levels = &[_][]const u8{ "PRI", "WRK", "LAB" },
+    .placement = .EntireRoom,
+    .weight = 8,
+};
+
 pub const WoodTerrain = Terrain{
     .id = "t_wood",
     .name = "wood",
@@ -225,6 +240,7 @@ pub const TERRAIN = [_]*const Terrain{
     &SladeTerrain,
     &CarpetTerrain,
     &MetalTerrain,
+    &CopperTerrain,
     &WoodTerrain,
     &DeadFungiTerrain,
     &TallFungiTerrain,

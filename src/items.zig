@@ -88,12 +88,20 @@ pub const ItemTemplate = struct {
     };
     pub const Type = meta.Tag(TemplateItem);
 };
-// pub const RARE_ITEM_DROPS = [_]ItemTemplate{
-//     // Dilute this list by adding a few more common weapon
-//     .{ .w = 50, .i = .{ .W = &SwordWeapon } },
-// };
+pub const RARE_ITEM_DROPS = [_]ItemTemplate{
+    // Dilute this list by adding a few more common weapon
+    .{ .w = 50, .i = .{ .W = &SwordWeapon } },
+    // Bone weapons
+    .{ .w = 1, .i = .{ .W = &BoneSwordWeapon } },
+    .{ .w = 1, .i = .{ .W = &BoneDaggerWeapon } },
+    .{ .w = 1, .i = .{ .W = &BoneMaceWeapon } },
+    .{ .w = 1, .i = .{ .W = &BoneGreatMaceWeapon } },
+    // Copper weapons
+    .{ .w = 1, .i = .{ .W = &CopperSwordWeapon } },
+    .{ .w = 1, .i = .{ .W = &CopperRapierWeapon } },
+};
 pub const ITEM_DROPS = [_]ItemTemplate{
-    // .{ .w = 1, .i = .{ .List = &RARE_ITEM_DROPS } },
+    .{ .w = 1, .i = .{ .List = &RARE_ITEM_DROPS } },
     // Weapons
     .{ .w = 30, .i = .{ .W = &SwordWeapon } },
     .{ .w = 30, .i = .{ .W = &DaggerWeapon } },
@@ -2182,6 +2190,8 @@ pub const SwordWeapon = Weapon{
     .stats = .{ .Evade = 10 },
     .strs = &SLASHING_STRS,
 };
+pub const BoneSwordWeapon = Weapon.createBoneWeapon(&SwordWeapon, .{});
+pub const CopperSwordWeapon = Weapon.createCopperWeapon(&SwordWeapon, .{});
 
 pub const ShadowSwordWeapon = Weapon{
     .id = "shadow_sword",
@@ -2202,6 +2212,7 @@ pub const DaggerWeapon = Weapon{
     .ego = .Swap,
     .strs = &PIERCING_STRS,
 };
+pub const BoneDaggerWeapon = Weapon.createBoneWeapon(&DaggerWeapon, .{});
 
 pub const RapierWeapon = Weapon{
     .id = "rapier",
@@ -2213,6 +2224,7 @@ pub const RapierWeapon = Weapon{
     },
     .strs = &PIERCING_STRS,
 };
+pub const CopperRapierWeapon = Weapon.createCopperWeapon(&RapierWeapon, .{});
 
 // }}}
 
@@ -2300,6 +2312,8 @@ pub const MaceWeapon = Weapon{
     //.stats = .{ .Melee = 10 }, // Not for player, no reason to entice them to use it. Plus spoils balance
     .strs = &CRUSHING_STRS,
 };
+pub const BoneMaceWeapon = Weapon.createBoneWeapon(&MaceWeapon, .{});
+//pub const CopperMaceWeapon = Weapon.createCopperWeapon(&MaceWeapon, .{});
 
 pub const GreatMaceWeapon = Weapon{
     .id = "great_mace",
@@ -2310,6 +2324,7 @@ pub const GreatMaceWeapon = Weapon{
     },
     .strs = &CRUSHING_STRS,
 };
+pub const BoneGreatMaceWeapon = Weapon.createBoneWeapon(&GreatMaceWeapon, .{});
 
 pub const ShadowMaceWeapon = Weapon{
     .id = "shadow_mace",

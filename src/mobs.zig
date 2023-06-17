@@ -451,6 +451,43 @@ pub const IronWaspTemplate = MobTemplate{
     },
 };
 
+pub const CopperHornetTemplate = MobTemplate{
+    .mob = .{
+        .id = "copper_hornet",
+        .species = &Species{
+            .name = "copper hornet",
+            .default_attack = &Weapon{
+                .damage = 1,
+                .ego = .Copper,
+                .damage_kind = .Electric,
+                .strs = &[_]DamageStr{
+                    items._dmgstr(5, "jab", "jabs", ""),
+                    items._dmgstr(100, "sting", "stings", ""),
+                },
+            },
+        },
+        .tile = 'ÿ',
+        .life_type = .Construct,
+        .ai = AI{
+            .profession_description = "resting",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.meleeFight,
+            .is_fearless = true,
+            .flags = &[_]AI.Flag{.DetectWithElec},
+        },
+        .max_HP = 3,
+        .memory_duration = 8,
+        .blood = null,
+        .corpse = .None,
+        .innate_resists = .{ .rElec = 25, .rFire = 50, .rFume = 100 },
+        .stats = .{ .Willpower = 0, .Evade = 40, .Speed = 50, .Vision = 5 },
+    },
+
+    .statuses = &[_]StatusDataInfo{
+        .{ .status = .Sleeping, .duration = .Prm }, .{ .status = .Noisy, .duration = .Prm },
+    },
+};
+
 pub const PatrolTemplate = MobTemplate{
     .mob = .{
         .id = "patrol",
@@ -935,7 +972,7 @@ pub const AncientMageTemplate = MobTemplate{
         .innate_resists = .{ .rFume = 100, .rElec = 75 },
         .stats = .{ .Willpower = 10, .Evade = 20, .Speed = 150 },
     },
-    .weapon = &items.GreatMaceWeapon,
+    .weapon = &items.BoneGreatMaceWeapon,
     .armor = &items.HauberkArmor,
     .cloak = &items.SilCloak,
 };
@@ -1057,11 +1094,39 @@ pub const BoneMageTemplate = MobTemplate{
         .memory_duration = 10,
         .stats = .{ .Willpower = 4, .Vision = 6, .Melee = 40 },
     },
-    .weapon = &items.GreatMaceWeapon,
+    .weapon = &items.BoneMaceWeapon,
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
             .{ .mob = "bone_rat", .weight = 4, .count = minmax(usize, 1, 2) },
+        },
+    },
+};
+
+pub const DeathKnightTemplate = MobTemplate{
+    .mob = .{
+        .id = "death_knight",
+        .species = &HumanSpecies,
+        .tile = 'k',
+        .ai = AI{
+            .profession_name = "death knight",
+            .profession_description = "watching",
+            .work_fn = ai.standStillAndGuardWork,
+            .fight_fn = ai.meleeFight,
+            .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
+            .flags = &[_]AI.Flag{.CalledWithUndead},
+        },
+
+        .max_HP = 8,
+        .memory_duration = 8,
+        .stats = .{ .Willpower = 6, .Melee = 70, .Evade = 10, .Vision = 6 },
+    },
+    .weapon = &items.BoneSwordWeapon,
+    .armor = &items.HauberkArmor,
+
+    .squad = &[_][]const MobTemplate.SquadMember{
+        &[_]MobTemplate.SquadMember{
+            .{ .mob = "skeleton", .weight = 1, .count = minmax(usize, 2, 3) },
         },
     },
 };
@@ -1090,7 +1155,7 @@ pub const DeathMageTemplate = MobTemplate{
         .memory_duration = 15,
         .stats = .{ .Willpower = 8, .Evade = 10 },
     },
-    .weapon = &items.GreatMaceWeapon,
+    .weapon = &items.BoneSwordWeapon,
     .armor = &items.HauberkArmor,
 
     .squad = &[_][]const MobTemplate.SquadMember{
@@ -2049,6 +2114,7 @@ pub const MOBS = [_]MobTemplate{
     DefenderTemplate,
     LeadTurtleTemplate,
     IronWaspTemplate,
+    CopperHornetTemplate,
     PatrolTemplate,
     PlayerTemplate,
     GoblinTemplate,
@@ -2073,6 +2139,7 @@ pub const MOBS = [_]MobTemplate{
     WarriorTemplate,
     HunterTemplate,
     BoneMageTemplate,
+    DeathKnightTemplate,
     DeathMageTemplate,
     EmberMageTemplate,
     BrimstoneMageTemplate,
