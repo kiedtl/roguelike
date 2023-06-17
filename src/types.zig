@@ -1064,11 +1064,6 @@ pub const Status = enum {
     // Doesn't have a power field
     Intimidating,
 
-    // Hampers movement.
-    //
-    // Doesn't have a power field.
-    Drunk,
-
     // Enables copper weapons.
     //
     // Doesn't have a power field.
@@ -1248,7 +1243,6 @@ pub const Status = enum {
             .Insane => "insane",
             .TormentUndead => "torment undead",
             .Intimidating => "intimidating",
-            .Drunk => "drunk",
             .CopperWeapon => "copper",
             .Corruption => "corrupted",
             .Fireproof => "fireproof",
