@@ -3,7 +3,8 @@
 :subroom
 
 :priority 99
-:restriction 1
+%:restriction 1
+:restriction 0
 
 :material gold
 ###

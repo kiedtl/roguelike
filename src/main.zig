@@ -447,10 +447,10 @@ fn readInput() !bool {
             else => false,
         },
         .Char => |c| switch (c) {
-            ' ' => b: {
-                _ = ui.drawZapScreen();
-                break :b false;
-            },
+            // ' ' => b: {
+            //     _ = ui.drawZapScreen();
+            //     break :b false;
+            // },
             't' => b: {
                 player.auto_wait_enabled = !player.auto_wait_enabled;
                 const str = if (player.auto_wait_enabled)
