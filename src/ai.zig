@@ -19,6 +19,7 @@ const mapgen = @import("mapgen.zig");
 const dijkstra = @import("dijkstra.zig");
 const buffer = @import("buffer.zig");
 const rng = @import("rng.zig");
+const tasks = @import("tasks.zig");
 const types = @import("types.zig");
 
 const Dungeon = types.Dungeon;
@@ -853,59 +854,64 @@ pub fn watcherWork(mob: *Mob, _: mem.Allocator) void {
 }
 
 pub fn cleanerWork(mob: *Mob, _: mem.Allocator) void {
-    switch (mob.ai.work_phase) {
-        .CleanerScan => {
-            if (mob.ai.work_area.items.len > 0 and
-                mob.coord.distance(mob.ai.work_area.items[0]) > 1)
-            {
-                mob.tryMoveTo(mob.ai.work_area.items[0]);
-            } else {
-                tryRest(mob);
-            }
+    assert(mob.jobs.len == 0);
 
-            for (state.tasks.items) |*task, id|
-                if (!task.completed and task.assigned_to == null) {
-                    switch (task.type) {
-                        .Clean => |_| {
-                            mob.ai.task_id = id;
-                            task.assigned_to = mob;
-                            mob.ai.work_phase = .CleanerClean;
-                            break;
-                        },
-                        else => {},
-                    }
-                };
-        },
-        .CleanerClean => {
-            const task = state.tasks.items[mob.ai.task_id.?];
-            const target = task.type.Clean;
+    mob.newJob(.WRK_LeaveFloor);
+    mob.newJob(.WRK_CleanerScanJobs);
 
-            if (target.distance(mob.coord) > 1) {
-                mob.tryMoveTo(target);
-            } else {
-                tryRest(mob);
+    // switch (mob.ai.work_phase) {
+    //     .CleanerScan => {
+    //         if (mob.ai.work_area.items.len > 0 and
+    //             mob.coord.distance(mob.ai.work_area.items[0]) > 1)
+    //         {
+    //             mob.tryMoveTo(mob.ai.work_area.items[0]);
+    //         } else {
+    //             tryRest(mob);
+    //         }
 
-                var was_clean = true;
-                var spattering = state.dungeon.at(target).spatter.iterator();
+    //         for (state.tasks.items) |*task, id|
+    //             if (!task.completed and task.assigned_to == null) {
+    //                 switch (task.type) {
+    //                     .Clean => |_| {
+    //                         mob.ai.task_id = id;
+    //                         task.assigned_to = mob;
+    //                         mob.ai.work_phase = .CleanerClean;
+    //                         break;
+    //                     },
+    //                     else => {},
+    //                 }
+    //             };
+    //     },
+    //     .CleanerClean => {
+    //         const task = state.tasks.items[mob.ai.task_id.?];
+    //         const target = task.type.Clean;
 
-                while (spattering.next()) |entry| {
-                    const spatter = entry.key;
-                    const num = entry.value.*;
-                    if (num > 0) {
-                        was_clean = false;
-                        state.dungeon.at(target).spatter.set(spatter, num - 1);
-                    }
-                }
+    //         if (target.distance(mob.coord) > 1) {
+    //             mob.tryMoveTo(target);
+    //         } else {
+    //             tryRest(mob);
 
-                if (was_clean) {
-                    mob.ai.work_phase = .CleanerScan;
-                    state.tasks.items[mob.ai.task_id.?].completed = true;
-                    mob.ai.task_id = null;
-                }
-            }
-        },
-        else => unreachable,
-    }
+    //             var was_clean = true;
+    //             var spattering = state.dungeon.at(target).spatter.iterator();
+
+    //             while (spattering.next()) |entry| {
+    //                 const spatter = entry.key;
+    //                 const num = entry.value.*;
+    //                 if (num > 0) {
+    //                     was_clean = false;
+    //                     state.dungeon.at(target).spatter.set(spatter, num - 1);
+    //                 }
+    //             }
+
+    //             if (was_clean) {
+    //                 mob.ai.work_phase = .CleanerScan;
+    //                 state.tasks.items[mob.ai.task_id.?].completed = true;
+    //                 mob.ai.task_id = null;
+    //             }
+    //         }
+    //     },
+    //     else => unreachable,
+    // }
 }
 
 pub fn haulerWork(mob: *Mob, alloc: mem.Allocator) void {
@@ -1515,6 +1521,90 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
     }
 }
 
+pub fn _Job_WRK_LeaveFloor(mob: *Mob, job: *types.AIJob) types.AIJob.JStatus {
+    const CTX_STAIR_LOCATION = "ctx_stair_location";
+
+    // Chosen incase we haven't done this step yet. If we have done this step of
+    // choosing the stair, then its ignored
+    const random_stair = rng.chooseUnweighted(Coord, state.dungeon.stairs[mob.coord.z].constSlice());
+
+    const stair = job.getCtx(Coord, CTX_STAIR_LOCATION, random_stair);
+
+    if (mob.distance2(stair) == 1) {
+        mob.deinitNoCorpse();
+        return .Complete;
+    } else {
+        mob.tryMoveTo(stair);
+        return .Ongoing;
+    }
+}
+
+// Do some theatrical glancing around for a bit, then check for available tasks
+// and complete them.
+//
+// The delay before checking for jobs should ensure some variability in whether
+// the task manager decides to send out additional workers or not...
+//
+pub fn _Job_WRK_CleanerScanJobs(mob: *Mob, job: *types.AIJob) types.AIJob.JStatus {
+    const CTX_TURNS_LEFT_SCANNING = "ctx_turns_left_scanning";
+    const turns_left = job.getCtx(usize, CTX_TURNS_LEFT_SCANNING, rng.range(usize, 3, 6));
+
+    for (state.tasks.items) |*task, id|
+        if (!task.completed and task.assigned_to == null) {
+            switch (task.type) {
+                .Clean => |_| {
+                    mob.ai.task_id = id;
+                    task.assigned_to = mob;
+                    mob.newJob(.WRK_Clean);
+                    break;
+                },
+                else => {},
+            }
+        };
+
+    tryRest(mob);
+    guardGlanceAround(mob);
+
+    if (turns_left == 0) {
+        return .Complete;
+    } else {
+        job.setCtx(usize, CTX_TURNS_LEFT_SCANNING, turns_left - 1);
+        return .Ongoing;
+    }
+}
+
+pub fn _Job_WRK_Clean(mob: *Mob, _: *types.AIJob) types.AIJob.JStatus {
+    const task = state.tasks.items[mob.ai.task_id.?];
+    const target = task.type.Clean;
+
+    if (target.distance(mob.coord) > 1) {
+        mob.tryMoveTo(target);
+        return .Ongoing;
+    } else {
+        tryRest(mob);
+
+        var was_clean = true;
+        var spattering = state.dungeon.at(target).spatter.iterator();
+
+        while (spattering.next()) |entry| {
+            const spatter = entry.key;
+            const num = entry.value.*;
+            if (num > 0) {
+                was_clean = false;
+                state.dungeon.at(target).spatter.set(spatter, num - 1);
+            }
+        }
+
+        if (was_clean) {
+            state.tasks.items[mob.ai.task_id.?].completed = true;
+            mob.ai.task_id = null;
+            return .Complete;
+        } else {
+            return .Ongoing;
+        }
+    }
+}
+
 pub fn _Job_SPC_NCAlignment(mob: *Mob, job: *types.AIJob) types.AIJob.JStatus {
     const CTX_DIALOG1_GIVEN = "dialog1_given";
     const CTX_DIALOG2_GIVEN = "dialog2_given";
@@ -1577,13 +1667,19 @@ pub fn work(mob: *Mob, alloc: mem.Allocator) void {
         }.f;
     }
 
+    if (!mob.hasStatus(.Insane) and mob.ai.flag(.ScansForCleaningJobs)) {
+        tasks.scanForCleaningJobs(mob);
+    }
+
     if (mob.jobs.len > 0) {
         const real_work_fn = (mob.jobs.last().?.job.func());
-        const r = (real_work_fn)(mob, &mob.jobs.slice()[mob.jobs.len - 1]);
+        const ind = mob.jobs.len - 1;
+        const r = (real_work_fn)(mob, &mob.jobs.slice()[ind]);
         switch (r) {
             .Ongoing => return,
             .Complete => {
-                (mob.jobs.pop() catch err.wat()).deinit();
+                if (!mob.is_dead) // Some jobs involve suicide (ie leaving floor)
+                    (mob.jobs.orderedRemove(ind) catch err.wat()).deinit();
                 return;
             },
             .Defer => {},

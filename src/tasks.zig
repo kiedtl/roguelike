@@ -1,5 +1,8 @@
 const std = @import("std");
+const enums = std.enums;
+const meta = std.meta;
 
+const mobs = @import("mobs.zig");
 const state = @import("state.zig");
 const types = @import("types.zig");
 
@@ -41,50 +44,6 @@ pub const Task = struct {
 
 // Scan for tasks
 pub fn tickTasks(level: usize) void {
-    {
-        var y: usize = 0;
-        while (y < HEIGHT) : (y += 1) {
-            var x: usize = 0;
-            while (x < WIDTH) : (x += 1) {
-                const coord = Coord.new2(level, x, y);
-
-                // Check for tile cleanliness
-                if (!state.dungeon.at(coord).prison) { // Let the prisoners wallow in filth
-                    var clean = true;
-
-                    var spattering = state.dungeon.at(coord).spatter.iterator();
-                    while (spattering.next()) |entry| {
-                        if (entry.value.* > 0) {
-                            clean = false;
-                            break;
-                        }
-                    }
-
-                    if (!clean) {
-                        var already_reported: ?usize = null;
-
-                        for (state.tasks.items) |task, id| switch (task.type) {
-                            .Clean => |c| if (c.eq(coord)) {
-                                already_reported = id;
-                                break;
-                            },
-                            else => {},
-                        };
-
-                        if (already_reported) |id| {
-                            if (state.tasks.items[id].completed) {
-                                state.tasks.items[id].completed = false;
-                                state.tasks.items[id].assigned_to = null;
-                            }
-                        } else {
-                            state.tasks.append(Task{ .type = TaskType{ .Clean = coord } }) catch unreachable;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     // Check for items in outputs that need to be hauled to stockpiles
     for (state.outputs[level].items) |output_area| {
         var item: ?*const Item = null;
@@ -198,4 +157,73 @@ pub fn tickTasks(level: usize) void {
             }
         }
     }
+
+    // Check if we need to dispatch workers.
+    //
+    // First, get a count of all workers, sorted by type, on the floor
+    var worker_count = enums.EnumArray(meta.Tag(TaskType), usize).initFill(0);
+    for (state.tasks.items) |task|
+        if (task.assigned_to != null and !task.completed)
+            worker_count.set(task.type, worker_count.get(task.type) + 1);
+
+    // Now go through orders again and dispatch workers if necessary.
+    for (state.tasks.items) |task|
+        if (task.assigned_to == null and !task.completed and
+            worker_count.get(task.type) <= 3)
+        {
+            const mob_template = switch (task.type) {
+                .Clean => &mobs.CleanerTemplate,
+                .Haul => &mobs.HaulerTemplate,
+            };
+            const coord = for (state.dungeon.stairs[level].constSlice()) |stair| {
+                if (state.nextSpotForMob(stair, null)) |coord| {
+                    break coord;
+                }
+            } else null;
+            if (coord) |spawn_coord| {
+                _ = mobs.placeMob(state.GPA.allocator(), mob_template, spawn_coord, .{});
+                worker_count.set(task.type, worker_count.get(task.type) + 1);
+            }
+        };
+}
+
+pub fn scanForCleaningJobs(mob: *Mob) void {
+    for (mob.fov) |row, y| for (row) |cell, x| {
+        if (cell == 0) continue;
+        const coord = Coord.new2(mob.coord.z, x, y);
+
+        // Check for tile cleanliness
+        if (!state.dungeon.at(coord).prison) { // Let the prisoners wallow in filth
+            var clean = true;
+
+            var spattering = state.dungeon.at(coord).spatter.iterator();
+            while (spattering.next()) |entry| {
+                if (entry.value.* > 0) {
+                    clean = false;
+                    break;
+                }
+            }
+
+            if (!clean) {
+                var already_reported: ?usize = null;
+
+                for (state.tasks.items) |task, id| switch (task.type) {
+                    .Clean => |c| if (c.eq(coord)) {
+                        already_reported = id;
+                        break;
+                    },
+                    else => {},
+                };
+
+                if (already_reported) |id| {
+                    if (state.tasks.items[id].completed) {
+                        state.tasks.items[id].completed = false;
+                        state.tasks.items[id].assigned_to = null;
+                    }
+                } else {
+                    state.tasks.append(Task{ .type = TaskType{ .Clean = coord } }) catch unreachable;
+                }
+            }
+        }
+    };
 }

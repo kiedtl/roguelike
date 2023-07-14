@@ -1,3 +1,12 @@
+// Note for future self: this whole thing is a mess and will have to be
+// rewritten. Especially since, in the meantime that I disabled
+// alerts/coroners, a lot of code was written while pretending this stuff
+// didn't exist.
+//
+// Please, kiedtl, stop writing half-assed mechanics and then ripping them out
+// just a few months later.
+//
+
 const std = @import("std");
 const assert = std.debug.assert;
 

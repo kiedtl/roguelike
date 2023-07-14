@@ -590,6 +590,8 @@ fn tickGame() !void {
                 }
             }
 
+            if (mob.is_dead) break;
+
             mob.checkForPatternUsage();
 
             if (state.dungeon.at(mob.coord).mob == null) {
@@ -669,6 +671,8 @@ fn viewerTickGame(cur_level: usize) void {
             } else {
                 ai.main(mob, state.GPA.allocator());
             }
+
+            if (mob.is_dead) break;
 
             mob.checkForPatternUsage();
             mob.tickFOV();

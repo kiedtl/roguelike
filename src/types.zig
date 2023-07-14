@@ -1716,6 +1716,7 @@ pub const AI = struct {
         ForceNormalWork, // Continue normal work even when in squad with leader.
         WallLover, // Considers areas without adjacent walls to be unwalkable.
         NoRaiseAllyMorale, // What it says on the tin. Won't make allies happy in fights.
+        ScansForCleaningJobs, // Reports dirty tiles in need of cleaning
     };
 
     pub fn flag(self: *const AI, f: Flag) bool {
@@ -1742,14 +1743,22 @@ pub const AIJob = struct {
     pub const JStatus = enum { Defer, Ongoing, Complete };
 
     pub const Value = union(enum) {
+        usize: usize,
         bool: bool,
+        Coord: Coord,
     };
 
     pub const Type = enum {
+        WRK_LeaveFloor,
+        WRK_CleanerScanJobs,
+        WRK_Clean,
         SPC_NCAlignment,
 
         pub fn func(self: @This()) fn (*Mob, *AIJob) JStatus {
             return switch (self) {
+                .WRK_LeaveFloor => ai._Job_WRK_LeaveFloor,
+                .WRK_CleanerScanJobs => ai._Job_WRK_CleanerScanJobs,
+                .WRK_Clean => ai._Job_WRK_Clean,
                 .SPC_NCAlignment => ai._Job_SPC_NCAlignment,
             };
         }
@@ -1789,6 +1798,16 @@ pub const Species = struct {
     name: []const u8,
     default_attack: *const Weapon = &items.FistWeapon,
     aux_attacks: []const *const Weapon = &[_]*const Weapon{},
+};
+
+// Stuff to keep track of coroner mechanics and such... not used for mobs not
+// aligned w/ necromancer
+//
+pub const CorpseInfo = struct {
+    is_noticed: bool = false,
+    is_reported: bool = false,
+    is_checked: bool = false,
+    is_resolved: bool = false,
 };
 
 pub const Squad = struct {
@@ -1922,8 +1941,7 @@ pub const Mob = struct { // {{{
     life_type: enum { Living, Spectral, Construct, Undead } = .Living,
     multitile: ?usize = null,
     is_dead: bool = true,
-    is_death_reported: bool = false,
-    is_death_verified: bool = false,
+    death_info: CorpseInfo = .{},
     killed_by: ?*Mob = null,
 
     // Immutable instrinsic attributes.
@@ -2346,6 +2364,11 @@ pub const Mob = struct { // {{{
             return error.IndexOutOfRange;
 
         return self.inventory.pack.orderedRemove(index) catch err.wat();
+    }
+
+    pub fn newJob(self: *Mob, jtype: AIJob.Type) void {
+        const job = AIJob{ .job = jtype, .ctx = AIJob.Ctx.init(state.GPA.allocator()) };
+        self.jobs.append(job) catch err.wat();
     }
 
     // This is what happens when you flail to dodge a net.
@@ -2812,6 +2835,10 @@ pub const Mob = struct { // {{{
         const ac = a.coordMT(b.coord);
         const bc = b.coordMT(ac);
         return ac.distance(bc);
+    }
+
+    pub fn distance2(a: *Mob, b: Coord) usize {
+        return a.coordMT(b).distance(b);
     }
 
     pub fn listOfWeapons(self: *Mob) StackBuffer(*const Weapon, 7) {
@@ -3371,6 +3398,7 @@ pub const Mob = struct { // {{{
         }
 
         self.is_dead = false;
+        self.death_info = .{};
         self.init(state.GPA.allocator());
 
         self.tile = 'z';

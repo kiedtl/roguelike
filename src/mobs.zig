@@ -238,6 +238,7 @@ pub const ThrashingHulkTemplate = MobTemplate{
 //             .profession_description = "doing autopsy",
 //             .work_fn = ai.coronerWork,
 //             .fight_fn = ai.coronerFight,
+//             .flags = &[_]AI.Flag{ .ScansForCleaningJobs },
 //         },
 
 //         .max_HP = 8,
@@ -257,6 +258,7 @@ pub const ExecutionerTemplate = MobTemplate{
             .profession_description = "wandering",
             .work_fn = ai.wanderWork,
             .fight_fn = ai.meleeFight,
+            .flags = &[_]AI.Flag{.ScansForCleaningJobs},
         },
 
         .max_HP = 5,
@@ -295,6 +297,7 @@ pub const GuardTemplate = MobTemplate{
             .profession_description = "guarding",
             .work_fn = ai.guardWork,
             .fight_fn = ai.meleeFight,
+            .flags = &[_]AI.Flag{.ScansForCleaningJobs},
         },
 
         .max_HP = 5,
@@ -315,6 +318,7 @@ pub const ArmoredGuardTemplate = MobTemplate{
             .profession_description = "guarding",
             .work_fn = ai.guardWork,
             .fight_fn = ai.meleeFight,
+            .flags = &[_]AI.Flag{.ScansForCleaningJobs},
         },
 
         .max_HP = 7,
@@ -341,6 +345,7 @@ pub const JavelineerTemplate = MobTemplate{
                 .duration = .{ .Tmp = 10 },
                 .exhausting = true,
             },
+            .flags = &[_]AI.Flag{.ScansForCleaningJobs},
         },
 
         .max_HP = 6,
@@ -368,6 +373,7 @@ pub const DefenderTemplate = MobTemplate{
                 .duration = .{ .Tmp = 10 },
                 .exhausting = true,
             },
+            .flags = &[_]AI.Flag{.ScansForCleaningJobs},
         },
 
         .max_HP = 6,
@@ -498,7 +504,7 @@ pub const PatrolTemplate = MobTemplate{
             .profession_description = "patrolling",
             .work_fn = ai.patrolWork,
             .fight_fn = ai.meleeFight,
-            .flags = &[_]AI.Flag{.FearsDarkness},
+            .flags = &[_]AI.Flag{ .FearsDarkness, .ScansForCleaningJobs },
         },
 
         .max_HP = 6,
@@ -874,6 +880,7 @@ pub const AlchemistTemplate = MobTemplate{
             .fight_fn = ai.mageFight,
             .spellcaster_backup_action = .Flee,
             .is_curious = false,
+            .flags = &[_]AI.Flag{.ScansForCleaningJobs},
         },
 
         .spells = &[_]SpellOptions{
@@ -900,7 +907,7 @@ pub const CleanerTemplate = MobTemplate{
             .fight_fn = null,
             .is_combative = false,
             .is_curious = false,
-            .work_phase = .CleanerScan,
+            .flags = &[_]AI.Flag{.ScansForCleaningJobs},
         },
 
         .max_HP = 10,
@@ -922,6 +929,7 @@ pub const HaulerTemplate = MobTemplate{
             .is_combative = false,
             .is_curious = false,
             .work_phase = .HaulerScan,
+            .flags = &[_]AI.Flag{.ScansForCleaningJobs},
         },
 
         .max_HP = 10,
@@ -2218,8 +2226,7 @@ pub fn placeMob(
     mob.ai.phase = opts.phase;
 
     if (opts.job) |j| {
-        const job = types.AIJob{ .job = j, .ctx = types.AIJob.Ctx.init(state.GPA.allocator()) };
-        mob.jobs.append(job) catch err.wat();
+        mob.newJob(j);
     }
 
     if (opts.prisoner_of) |f|
