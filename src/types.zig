@@ -1915,6 +1915,7 @@ pub const Mob = struct { // {{{
     last_attempted_move: ?Direction = null,
     last_damage: ?Damage = null,
     corruption_ctr: usize = 0,
+    morale: isize = 5,
 
     inventory: Inventory = .{},
 
@@ -2067,6 +2068,31 @@ pub const Mob = struct { // {{{
     pub fn areaRect(self: *const Mob) Rect {
         const l = self.multitile orelse 1;
         return Rect{ .start = self.coord, .width = l, .height = l };
+    }
+
+    // Change morale over time to be close to target morale, to avoid sudden
+    // flee-flight shifts as allies come in and out of view
+    //
+    // If target morale is lower, change is accomplished instantly; otherwise,
+    // over a few turns.
+    //
+    pub fn tickMorale(self: *Mob) void {
+        const m = ai.calculateMorale(self);
+        if (m == self.morale) return;
+
+        const diff = math.absInt(m - self.morale) catch err.wat();
+        const factor = if (m > self.morale) switch (diff) {
+            0 => err.wat(),
+            1...2 => diff,
+            3...5 => @as(isize, 2),
+            else => @as(isize, 3),
+        } else diff;
+
+        if (self.morale < m) {
+            self.morale = math.min(m, self.morale + factor);
+        } else if (self.morale > m) {
+            self.morale = math.max(m, self.morale - factor);
+        } else err.wat();
     }
 
     pub fn tickDisruption(self: *Mob) void {

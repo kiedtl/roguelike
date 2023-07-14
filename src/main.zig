@@ -555,6 +555,7 @@ fn tickGame() !void {
             const prev_energy = mob.energy;
 
             mob.tick_env();
+            mob.tickMorale();
             mob.tickFOV();
             mob.tickDisruption();
             mob.tickStatuses();
@@ -651,7 +652,9 @@ fn viewerTickGame(cur_level: usize) void {
             const prev_energy = mob.energy;
 
             mob.tick_env();
+            mob.tickMorale();
             mob.tickFOV();
+            // mob.tickDisruption(); // TODO: uncomment and see if there was a reason for originally ommitting this line
             mob.tickStatuses();
 
             if (state.dungeon.at(mob.coord).mob == null) {

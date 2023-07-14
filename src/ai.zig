@@ -210,7 +210,7 @@ pub fn shouldFlee(me: *Mob) bool {
     if (me.ai.is_fearless or me.life_type != .Living)
         return false;
 
-    return calculateMorale(me) < 0;
+    return me.morale < 0;
 }
 
 pub fn isEnemyKnown(mob: *const Mob, enemy: *const Mob) bool {
