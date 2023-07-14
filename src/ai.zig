@@ -89,7 +89,7 @@ pub fn calculateMorale(self: *Mob) isize {
     // below 50% health
     //
     if (self.HP < (self.max_HP / 2)) base -= 3;
-    if (self.HP < (self.max_HP / 4)) base -= 3;
+    if (self.HP < (self.max_HP / 4) or self.HP == 1) base -= 3;
 
     if (self.hasStatus(.Blind)) base -= 2;
     if (self.hasStatus(.Debil)) base -= 2;
@@ -142,8 +142,8 @@ pub fn calculateMorale(self: *Mob) isize {
         // properly canceled out by the fact that the mob themself is also
         // below 50% health
         //
-        if (enemy.HP < (enemy.max_HP / 2)) base += 3;
-        if (enemy.HP < (enemy.max_HP / 4)) base += 4;
+        if (enemy.HP < (enemy.max_HP / 2)) base += 2;
+        if (enemy.HP < (enemy.max_HP / 4)) base += 3;
 
         if (enemy.ai.phase == .Flee) base += 6;
 
@@ -169,14 +169,14 @@ pub fn calculateMorale(self: *Mob) isize {
 
     // Bonuses/neg bonuses depending on enemy's condition {{{
     for (self.allies.items) |ally| {
-        base += 2;
+        if (!ally.ai.flag(.NoRaiseAllyMorale)) base += 1;
 
         if (ally.hasStatus(.Enraged)) base += 4;
         if (ally.hasStatus(.Fast)) base += 4;
         if (ally.hasStatus(.Invigorate)) base += 4;
 
         if (ally.HP < (ally.max_HP / 2)) base -= 1;
-        if (ally.HP < (ally.max_HP / 4)) base -= 2;
+        if (ally.HP < (ally.max_HP / 4) or ally.HP == 1) base -= 2;
 
         // Doesn't make sense to subtract morale here, because a sleeping ally
         // is just as good as a regular one.

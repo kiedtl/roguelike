@@ -1715,6 +1715,7 @@ pub const AI = struct {
         IgnoresEnemiesUnknownToLeader, // Won't attack enemies that the leader can't see
         ForceNormalWork, // Continue normal work even when in squad with leader.
         WallLover, // Considers areas without adjacent walls to be unwalkable.
+        NoRaiseAllyMorale, // What it says on the tin. Won't make allies happy in fights.
     };
 
     pub fn flag(self: *const AI, f: Flag) bool {
