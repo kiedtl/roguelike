@@ -1,11 +1,15 @@
 const std = @import("std");
+const mem = std.mem;
 const enums = std.enums;
 const meta = std.meta;
 
+const ai = @import("ai.zig");
+const err = @import("err.zig");
 const mobs = @import("mobs.zig");
 const state = @import("state.zig");
 const types = @import("types.zig");
 
+const AIJob = types.AIJob;
 const Coord = types.Coord;
 const Direction = types.Direction;
 const Tile = types.Tile;
@@ -34,6 +38,7 @@ pub const TaskArrayList = std.ArrayList(Task);
 pub const TaskType = union(enum) {
     Clean: Coord,
     Haul: struct { from: Coord, to: Coord },
+    ExamineCorpse: *Mob,
 };
 
 pub const Task = struct {
@@ -41,6 +46,17 @@ pub const Task = struct {
     assigned_to: ?*Mob = null,
     completed: bool = false,
 };
+
+pub fn getJobTypesForWorker(mob: *Mob) struct { tasktype: meta.Tag(TaskType), aijobtype: AIJob.Type } {
+    if (mem.eql(u8, mob.id, "cleaner")) {
+        return .{ .tasktype = .Clean, .aijobtype = .WRK_Clean };
+    } else if (mem.eql(u8, mob.id, "hauler")) {
+        err.todo(); // WRK_Haul isn't implemented yet
+        // return .{ .tasktype = .Haul, .aijobtype = .WRK_Haul };
+    } else if (mem.eql(u8, mob.id, "coroner")) {
+        return .{ .tasktype = .ExamineCorpse, .aijobtype = .WRK_ExamineCorpse };
+    } else unreachable;
+}
 
 // Scan for tasks
 pub fn tickTasks(level: usize) void {
@@ -167,13 +183,14 @@ pub fn tickTasks(level: usize) void {
             worker_count.set(task.type, worker_count.get(task.type) + 1);
 
     // Now go through orders again and dispatch workers if necessary.
-    for (state.tasks.items) |task|
+    for (state.tasks.items) |*task, id|
         if (task.assigned_to == null and !task.completed and
             worker_count.get(task.type) <= 3)
         {
             const mob_template = switch (task.type) {
                 .Clean => &mobs.CleanerTemplate,
                 .Haul => &mobs.HaulerTemplate,
+                .ExamineCorpse => &mobs.CoronerTemplate,
             };
             const coord = for (state.dungeon.stairs[level].constSlice()) |stair| {
                 if (state.nextSpotForMob(stair, null)) |coord| {
@@ -181,10 +198,38 @@ pub fn tickTasks(level: usize) void {
                 }
             } else null;
             if (coord) |spawn_coord| {
-                _ = mobs.placeMob(state.GPA.allocator(), mob_template, spawn_coord, .{});
+                const worker = mobs.placeMob(state.GPA.allocator(), mob_template, spawn_coord, .{});
+                worker.ai.task_id = id;
+                task.assigned_to = worker;
                 worker_count.set(task.type, worker_count.get(task.type) + 1);
             }
         };
+}
+
+pub fn scanForCorpses(mob: *Mob) void {
+    if (mob.faction != .Necromancer) return;
+
+    for (mob.fov) |row, y| for (row) |cell, x| {
+        if (cell == 0) continue;
+        const coord = Coord.new2(mob.coord.z, x, y);
+
+        if (state.dungeon.at(coord).surface) |surface| if (surface == .Corpse) {
+            const corpse = surface.Corpse;
+            if (corpse.faction == .Necromancer and !corpse.corpse_info.is_noticed) {
+                if (corpse.killed_by != null and
+                    (state.ticks - corpse.last_damage.?.inflicted_time) < 2 and
+                    corpse.killed_by.?.distance2(corpse.coord) < 4 and
+                    corpse.killed_by.?.isHostileTo(mob))
+                {
+                    ai.updateEnemyKnowledge(mob, corpse.killed_by.?, coord);
+                }
+
+                std.log.info("found corpse", .{});
+                mob.newJob(.WRK_ScanCorpse);
+                mob.newestJob().?.setCtx(Coord, AIJob.CTX_CORPSE_LOCATION, corpse.coord);
+            }
+        };
+    };
 }
 
 pub fn scanForCleaningJobs(mob: *Mob) void {

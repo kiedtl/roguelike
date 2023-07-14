@@ -927,6 +927,9 @@ pub const Damage = struct {
     //
     propagate_elec_damage: bool = true,
 
+    // Set only by takeDamage.
+    inflicted_time: usize = 0,
+
     pub const DamageKind = enum {
         Physical,
         Fire,
@@ -1716,7 +1719,8 @@ pub const AI = struct {
         ForceNormalWork, // Continue normal work even when in squad with leader.
         WallLover, // Considers areas without adjacent walls to be unwalkable.
         NoRaiseAllyMorale, // What it says on the tin. Won't make allies happy in fights.
-        ScansForCleaningJobs, // Reports dirty tiles in need of cleaning
+        ScansForJobs, // Reports jobs in FOV
+        ScansForCorpses, // Reports jobs in FOV
     };
 
     pub fn flag(self: *const AI, f: Flag) bool {
@@ -1742,6 +1746,8 @@ pub const AIJob = struct {
     pub const Ctx = std.StringHashMap(Value);
     pub const JStatus = enum { Defer, Ongoing, Complete };
 
+    pub const CTX_CORPSE_LOCATION = "ctx_corpse_location";
+
     pub const Value = union(enum) {
         usize: usize,
         bool: bool,
@@ -1750,15 +1756,21 @@ pub const AIJob = struct {
 
     pub const Type = enum {
         WRK_LeaveFloor,
-        WRK_CleanerScanJobs,
+        WRK_ScanJobs,
         WRK_Clean,
+        WRK_ScanCorpse,
+        WRK_ReportCorpse,
+        WRK_ExamineCorpse,
         SPC_NCAlignment,
 
         pub fn func(self: @This()) fn (*Mob, *AIJob) JStatus {
             return switch (self) {
                 .WRK_LeaveFloor => ai._Job_WRK_LeaveFloor,
-                .WRK_CleanerScanJobs => ai._Job_WRK_CleanerScanJobs,
+                .WRK_ScanJobs => ai._Job_WRK_ScanJobs,
                 .WRK_Clean => ai._Job_WRK_Clean,
+                .WRK_ScanCorpse => ai._Job_WRK_ScanCorpse,
+                .WRK_ReportCorpse => ai._Job_WRK_ReportCorpse,
+                .WRK_ExamineCorpse => ai._Job_WRK_ExamineCorpse,
                 .SPC_NCAlignment => ai._Job_SPC_NCAlignment,
             };
         }
@@ -1941,7 +1953,7 @@ pub const Mob = struct { // {{{
     life_type: enum { Living, Spectral, Construct, Undead } = .Living,
     multitile: ?usize = null,
     is_dead: bool = true,
-    death_info: CorpseInfo = .{},
+    corpse_info: CorpseInfo = .{},
     killed_by: ?*Mob = null,
 
     // Immutable instrinsic attributes.
@@ -2369,6 +2381,11 @@ pub const Mob = struct { // {{{
     pub fn newJob(self: *Mob, jtype: AIJob.Type) void {
         const job = AIJob{ .job = jtype, .ctx = AIJob.Ctx.init(state.GPA.allocator()) };
         self.jobs.append(job) catch err.wat();
+    }
+
+    pub fn newestJob(self: *Mob) ?*AIJob {
+        if (self.jobs.len == 0) return null;
+        return &self.jobs.data[self.jobs.len - 1];
     }
 
     // This is what happens when you flail to dodge a net.
@@ -3242,6 +3259,7 @@ pub const Mob = struct { // {{{
         }
 
         self.last_damage = d;
+        self.last_damage.?.inflicted_time = state.ticks;
 
         // Propagate electric damage
         if (d.kind == .Electric and d.propagate_elec_damage) {
@@ -3398,7 +3416,7 @@ pub const Mob = struct { // {{{
         }
 
         self.is_dead = false;
-        self.death_info = .{};
+        self.corpse_info = .{};
         self.init(state.GPA.allocator());
 
         self.tile = 'z';

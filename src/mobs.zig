@@ -228,25 +228,26 @@ pub const ThrashingHulkTemplate = MobTemplate{
     },
 };
 
-// pub const CoronerTemplate = MobTemplate{
-//     .mob = .{
-//         .id = "coroner",
-//         .species = &GoblinSpecies,
-//         .tile = 'a',
-//         .ai = AI{
-//             .profession_name = "coroner",
-//             .profession_description = "doing autopsy",
-//             .work_fn = ai.coronerWork,
-//             .fight_fn = ai.coronerFight,
-//             .flags = &[_]AI.Flag{ .ScansForCleaningJobs },
-//         },
+pub const CoronerTemplate = MobTemplate{
+    .mob = .{
+        .id = "coroner",
+        .species = &GoblinSpecies,
+        .tile = 'c',
+        .ai = AI{
+            .profession_name = "coroner",
+            .profession_description = "doing autopsy",
+            .work_fn = ai.workerWork,
+            .fight_fn = null, //ai.coronerFight,
+            .is_combative = false,
+            .flags = &[_]AI.Flag{ .ScansForJobs, .ScansForCorpses },
+        },
 
-//         .max_HP = 8,
-//         .memory_duration = 10,
+        .max_HP = 8,
+        .memory_duration = 10,
 
-//         .stats = .{ .Willpower = 1 },
-//     },
-// };
+        .stats = .{ .Willpower = 1 },
+    },
+};
 
 pub const ExecutionerTemplate = MobTemplate{
     .mob = .{
@@ -258,7 +259,7 @@ pub const ExecutionerTemplate = MobTemplate{
             .profession_description = "wandering",
             .work_fn = ai.wanderWork,
             .fight_fn = ai.meleeFight,
-            .flags = &[_]AI.Flag{.ScansForCleaningJobs},
+            .flags = &[_]AI.Flag{ .ScansForJobs, .ScansForCorpses },
         },
 
         .max_HP = 5,
@@ -297,7 +298,7 @@ pub const GuardTemplate = MobTemplate{
             .profession_description = "guarding",
             .work_fn = ai.guardWork,
             .fight_fn = ai.meleeFight,
-            .flags = &[_]AI.Flag{.ScansForCleaningJobs},
+            .flags = &[_]AI.Flag{ .ScansForJobs, .ScansForCorpses },
         },
 
         .max_HP = 5,
@@ -318,7 +319,7 @@ pub const ArmoredGuardTemplate = MobTemplate{
             .profession_description = "guarding",
             .work_fn = ai.guardWork,
             .fight_fn = ai.meleeFight,
-            .flags = &[_]AI.Flag{.ScansForCleaningJobs},
+            .flags = &[_]AI.Flag{ .ScansForJobs, .ScansForCorpses },
         },
 
         .max_HP = 7,
@@ -345,7 +346,7 @@ pub const JavelineerTemplate = MobTemplate{
                 .duration = .{ .Tmp = 10 },
                 .exhausting = true,
             },
-            .flags = &[_]AI.Flag{.ScansForCleaningJobs},
+            .flags = &[_]AI.Flag{ .ScansForJobs, .ScansForCorpses },
         },
 
         .max_HP = 6,
@@ -373,7 +374,7 @@ pub const DefenderTemplate = MobTemplate{
                 .duration = .{ .Tmp = 10 },
                 .exhausting = true,
             },
-            .flags = &[_]AI.Flag{.ScansForCleaningJobs},
+            .flags = &[_]AI.Flag{ .ScansForJobs, .ScansForCorpses },
         },
 
         .max_HP = 6,
@@ -504,7 +505,7 @@ pub const PatrolTemplate = MobTemplate{
             .profession_description = "patrolling",
             .work_fn = ai.patrolWork,
             .fight_fn = ai.meleeFight,
-            .flags = &[_]AI.Flag{ .FearsDarkness, .ScansForCleaningJobs },
+            .flags = &[_]AI.Flag{ .FearsDarkness, .ScansForJobs, .ScansForCorpses },
         },
 
         .max_HP = 6,
@@ -582,6 +583,7 @@ pub const ConvultTemplate = MobTemplate{
             .work_fn = ai.patrolWork,
             .fight_fn = ai.mageFight,
             .spellcaster_backup_action = .KeepDistance,
+            .flags = &[_]AI.Flag{.ScansForCorpses},
         },
 
         .spells = &[_]SpellOptions{
@@ -608,6 +610,7 @@ pub const VapourMageTemplate = MobTemplate{
             .work_fn = ai.patrolWork,
             .fight_fn = ai.mageFight,
             .spellcaster_backup_action = .KeepDistance,
+            .flags = &[_]AI.Flag{.ScansForCorpses},
         },
 
         .spells = &[_]SpellOptions{
@@ -880,7 +883,7 @@ pub const AlchemistTemplate = MobTemplate{
             .fight_fn = ai.mageFight,
             .spellcaster_backup_action = .Flee,
             .is_curious = false,
-            .flags = &[_]AI.Flag{.ScansForCleaningJobs},
+            .flags = &[_]AI.Flag{ .ScansForJobs, .ScansForCorpses },
         },
 
         .spells = &[_]SpellOptions{
@@ -903,11 +906,11 @@ pub const CleanerTemplate = MobTemplate{
         .ai = AI{
             .profession_name = "cleaner",
             .profession_description = "cleaning",
-            .work_fn = ai.cleanerWork,
+            .work_fn = ai.workerWork,
             .fight_fn = null,
             .is_combative = false,
             .is_curious = false,
-            .flags = &[_]AI.Flag{.ScansForCleaningJobs},
+            .flags = &[_]AI.Flag{ .ScansForJobs, .ScansForCorpses },
         },
 
         .max_HP = 10,
@@ -929,7 +932,7 @@ pub const HaulerTemplate = MobTemplate{
             .is_combative = false,
             .is_curious = false,
             .work_phase = .HaulerScan,
-            .flags = &[_]AI.Flag{.ScansForCleaningJobs},
+            .flags = &[_]AI.Flag{ .ScansForJobs, .ScansForCorpses },
         },
 
         .max_HP = 10,
@@ -1021,6 +1024,7 @@ pub const RecruitTemplate = MobTemplate{
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
             .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
+            .flags = &[_]AI.Flag{.ScansForCorpses},
         },
 
         .max_HP = 5,
@@ -1042,6 +1046,7 @@ pub const WarriorTemplate = MobTemplate{
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
             .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
+            .flags = &[_]AI.Flag{.ScansForCorpses},
         },
 
         .max_HP = 8,
@@ -1063,6 +1068,7 @@ pub const HunterTemplate = MobTemplate{
             .work_fn = ai.watcherWork,
             .fight_fn = ai.meleeFight,
             .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 20 }, .exhausting = true },
+            .flags = &[_]AI.Flag{.ScansForCorpses},
         },
 
         .max_HP = 8,
@@ -1090,7 +1096,7 @@ pub const BoneMageTemplate = MobTemplate{
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
             .spellcaster_backup_action = .Melee,
-            .flags = &[_]AI.Flag{.CalledWithUndead},
+            .flags = &[_]AI.Flag{ .CalledWithUndead, .ScansForCorpses },
         },
 
         .spells = &[_]SpellOptions{
@@ -1122,7 +1128,7 @@ pub const DeathKnightTemplate = MobTemplate{
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.meleeFight,
             .flee_effect = .{ .status = .Enraged, .duration = .{ .Tmp = 10 }, .exhausting = true },
-            .flags = &[_]AI.Flag{.CalledWithUndead},
+            .flags = &[_]AI.Flag{ .CalledWithUndead, .ScansForCorpses },
         },
 
         .max_HP = 8,
@@ -1150,7 +1156,7 @@ pub const DeathMageTemplate = MobTemplate{
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
             .spellcaster_backup_action = .KeepDistance,
-            .flags = &[_]AI.Flag{.CalledWithUndead},
+            .flags = &[_]AI.Flag{ .CalledWithUndead, .ScansForCorpses },
         },
 
         .spells = &[_]SpellOptions{
@@ -1186,7 +1192,7 @@ pub const EmberMageTemplate = MobTemplate{
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
             .spellcaster_backup_action = .Melee,
-            .flags = &[_]AI.Flag{.DetectWithHeat},
+            .flags = &[_]AI.Flag{ .DetectWithHeat, .ScansForCorpses },
         },
 
         .spells = &[_]SpellOptions{
@@ -1222,7 +1228,7 @@ pub const BrimstoneMageTemplate = MobTemplate{
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
             .spellcaster_backup_action = .KeepDistance,
-            .flags = &[_]AI.Flag{.DetectWithHeat},
+            .flags = &[_]AI.Flag{ .DetectWithHeat, .ScansForCorpses },
         },
 
         .spells = &[_]SpellOptions{
@@ -1258,7 +1264,7 @@ pub const SparkMageTemplate = MobTemplate{
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
             .spellcaster_backup_action = .Melee,
-            .flags = &[_]AI.Flag{.DetectWithElec},
+            .flags = &[_]AI.Flag{ .DetectWithElec, .ScansForCorpses },
         },
 
         .spells = &[_]SpellOptions{
@@ -1292,7 +1298,7 @@ pub const LightningMageTemplate = MobTemplate{
             .work_fn = ai.standStillAndGuardWork,
             .fight_fn = ai.mageFight,
             .spellcaster_backup_action = .KeepDistance,
-            .flags = &[_]AI.Flag{.DetectWithElec},
+            .flags = &[_]AI.Flag{ .DetectWithElec, .ScansForCorpses },
         },
 
         .spells = &[_]SpellOptions{
@@ -1625,6 +1631,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
             .fight_fn = ai.mageFight,
             .is_fearless = true,
             .spellcaster_backup_action = .KeepDistance,
+            .flags = &[_]AI.Flag{.ScansForCorpses},
         },
         .no_show_fov = false,
 

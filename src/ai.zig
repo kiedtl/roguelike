@@ -22,6 +22,7 @@ const rng = @import("rng.zig");
 const tasks = @import("tasks.zig");
 const types = @import("types.zig");
 
+const AIJob = types.AIJob;
 const Dungeon = types.Dungeon;
 const Mob = types.Mob;
 const EnemyRecord = types.EnemyRecord;
@@ -355,6 +356,13 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
     }
 }
 
+pub fn checkForCorpses(mob: *Mob) void {
+    if (mob.hasStatus(.Insane) or !mob.ai.flag(.ScansForCorpses))
+        return;
+
+    tasks.scanForCorpses(mob);
+}
+
 // For every enemy in the mob's FOV, create an "enemy record" with a pointer to
 // that mob and a counter. Set the counter to the mob's memory_duration.
 //
@@ -641,33 +649,6 @@ fn guardGlanceLeftRight(mob: *Mob, prev_direction: Direction) void {
     mob.facing = newdirection;
 }
 
-pub fn coronerWork(mob: *Mob, _: mem.Allocator) void {
-    // All done?
-    if (mob.ai.work_area.items.len == 0) {
-        tryRest(mob);
-        guardGlanceAround(mob);
-        return;
-    }
-
-    const current_task = mob.ai.work_area.items[mob.ai.work_area.items.len - 1];
-
-    if (mob.cansee(current_task)) {
-        if (state.dungeon.corpseAt(current_task)) |current_corpse| {
-            if (current_corpse.killed_by) |killer| {
-                alert.announceEnemyAlert(killer);
-            }
-            current_corpse.is_death_verified = true;
-        }
-        _ = mob.ai.work_area.pop();
-        tryRest(mob);
-    } else if (mob.nextDirectionTo(current_task) == null) {
-        _ = mob.ai.work_area.pop();
-        tryRest(mob);
-    } else {
-        mob.tryMoveTo(current_task);
-    }
-}
-
 pub fn patrolWork(mob: *Mob, _: mem.Allocator) void {
     assert(state.dungeon.at(mob.coord).mob != null);
     assert(mob.ai.phase == .Work);
@@ -853,11 +834,11 @@ pub fn watcherWork(mob: *Mob, _: mem.Allocator) void {
     }
 }
 
-pub fn cleanerWork(mob: *Mob, _: mem.Allocator) void {
+pub fn workerWork(mob: *Mob, _: mem.Allocator) void {
     assert(mob.jobs.len == 0);
 
     mob.newJob(.WRK_LeaveFloor);
-    mob.newJob(.WRK_CleanerScanJobs);
+    mob.newJob(.WRK_ScanJobs);
 
     // switch (mob.ai.work_phase) {
     //     .CleanerScan => {
@@ -1521,7 +1502,7 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
     }
 }
 
-pub fn _Job_WRK_LeaveFloor(mob: *Mob, job: *types.AIJob) types.AIJob.JStatus {
+pub fn _Job_WRK_LeaveFloor(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_STAIR_LOCATION = "ctx_stair_location";
 
     // Chosen incase we haven't done this step yet. If we have done this step of
@@ -1542,24 +1523,25 @@ pub fn _Job_WRK_LeaveFloor(mob: *Mob, job: *types.AIJob) types.AIJob.JStatus {
 // Do some theatrical glancing around for a bit, then check for available tasks
 // and complete them.
 //
-// The delay before checking for jobs should ensure some variability in whether
-// the task manager decides to send out additional workers or not...
-//
-pub fn _Job_WRK_CleanerScanJobs(mob: *Mob, job: *types.AIJob) types.AIJob.JStatus {
+pub fn _Job_WRK_ScanJobs(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_TURNS_LEFT_SCANNING = "ctx_turns_left_scanning";
-    const turns_left = job.getCtx(usize, CTX_TURNS_LEFT_SCANNING, rng.range(usize, 3, 6));
+    const turns_left = job.getCtx(usize, CTX_TURNS_LEFT_SCANNING, rng.range(usize, 3, 5));
+
+    const jobtypes = tasks.getJobTypesForWorker(mob);
+
+    // Ideally we get to work right away, but too lazy to code that right now
+    if (mob.ai.task_id != null) {
+        tryRest(mob);
+        mob.newJob(jobtypes.aijobtype);
+        return .Complete;
+    }
 
     for (state.tasks.items) |*task, id|
-        if (!task.completed and task.assigned_to == null) {
-            switch (task.type) {
-                .Clean => |_| {
-                    mob.ai.task_id = id;
-                    task.assigned_to = mob;
-                    mob.newJob(.WRK_Clean);
-                    break;
-                },
-                else => {},
-            }
+        if (!task.completed and task.assigned_to == null and task.type == jobtypes.tasktype) {
+            mob.ai.task_id = id;
+            task.assigned_to = mob;
+            mob.newJob(jobtypes.aijobtype);
+            break;
         };
 
     tryRest(mob);
@@ -1573,7 +1555,7 @@ pub fn _Job_WRK_CleanerScanJobs(mob: *Mob, job: *types.AIJob) types.AIJob.JStatu
     }
 }
 
-pub fn _Job_WRK_Clean(mob: *Mob, _: *types.AIJob) types.AIJob.JStatus {
+pub fn _Job_WRK_Clean(mob: *Mob, _: *AIJob) AIJob.JStatus {
     const task = state.tasks.items[mob.ai.task_id.?];
     const target = task.type.Clean;
 
@@ -1605,7 +1587,85 @@ pub fn _Job_WRK_Clean(mob: *Mob, _: *types.AIJob) types.AIJob.JStatus {
     }
 }
 
-pub fn _Job_SPC_NCAlignment(mob: *Mob, job: *types.AIJob) types.AIJob.JStatus {
+pub fn _Job_WRK_ScanCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
+    const coord = job.getCtx(Coord, AIJob.CTX_CORPSE_LOCATION, undefined);
+    const corpse = state.dungeon.at(coord).surface.?.Corpse;
+
+    if (mob.distance2(coord) > 1) {
+        mob.tryMoveTo(coord);
+        return .Ongoing;
+    }
+
+    for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |neighbor| {
+        if (state.is_walkable(neighbor, .{ .mob = mob }) and rng.boolean()) {
+            mob.sustiles.append(.{ .coord = coord }) catch err.wat();
+        }
+    };
+
+    corpse.corpse_info.is_noticed = true;
+    mob.newJob(.WRK_ReportCorpse);
+    mob.newestJob().?.setCtx(Coord, AIJob.CTX_CORPSE_LOCATION, coord);
+
+    tryRest(mob);
+    return .Complete;
+}
+
+pub fn _Job_WRK_ReportCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
+    const coord = job.getCtx(Coord, AIJob.CTX_CORPSE_LOCATION, undefined);
+    const corpse = state.dungeon.at(coord).surface.?.Corpse;
+
+    if (mob.distance2(coord) > 1) {
+        mob.tryMoveTo(coord);
+        return .Ongoing;
+    }
+
+    const already_reported = corpse.corpse_info.is_reported or for (state.tasks.items) |task| {
+        if (task.type == .ExamineCorpse and task.type.ExamineCorpse == corpse)
+            break true;
+    } else false;
+
+    if (!already_reported) {
+        state.tasks.append(tasks.Task{ .type = tasks.TaskType{ .ExamineCorpse = corpse } }) catch unreachable;
+        corpse.corpse_info.is_reported = true;
+    }
+
+    tryRest(mob);
+    return .Complete;
+}
+
+pub fn _Job_WRK_ExamineCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
+    const CTX_TURNS_LEFT_EXAMINING = "ctx_turns_left_examining";
+    const turns_left = job.getCtx(usize, CTX_TURNS_LEFT_EXAMINING, rng.range(usize, 8, 16));
+
+    const task = state.tasks.items[mob.ai.task_id.?];
+    const corpse = task.type.ExamineCorpse;
+
+    if (mob.distance2(corpse.coord) > 1) {
+        mob.tryMoveTo(corpse.coord);
+        return .Ongoing;
+    } else {
+        // Flip a coin and decide whether to stand still or move around the
+        // corpse for dramatic effect.
+        //
+        if (rng.boolean()) {
+            tryRest(mob);
+        } else for (&DIRECTIONS) |d|
+            if (corpse.coord.move(d, state.mapgeometry)) |neighbor| {
+                if (state.is_walkable(neighbor, .{ .mob = mob }) and mob.distance2(neighbor) == 1)
+                    mob.tryMoveTo(neighbor);
+            };
+
+        if (turns_left == 0) {
+            corpse.corpse_info.is_resolved = true;
+            return .Complete;
+        } else {
+            job.setCtx(usize, CTX_TURNS_LEFT_EXAMINING, turns_left - 1);
+            return .Ongoing;
+        }
+    }
+}
+
+pub fn _Job_SPC_NCAlignment(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_DIALOG1_GIVEN = "dialog1_given";
     const CTX_DIALOG2_GIVEN = "dialog2_given";
 
@@ -1667,8 +1727,9 @@ pub fn work(mob: *Mob, alloc: mem.Allocator) void {
         }.f;
     }
 
-    if (!mob.hasStatus(.Insane) and mob.ai.flag(.ScansForCleaningJobs)) {
-        tasks.scanForCleaningJobs(mob);
+    if (!mob.hasStatus(.Insane)) {
+        if (mob.ai.flag(.ScansForJobs))
+            tasks.scanForCleaningJobs(mob);
     }
 
     if (mob.jobs.len > 0) {
@@ -1699,6 +1760,7 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
     checkForAllies(mob);
     checkForHostiles(mob);
     checkForNoises(mob);
+    checkForCorpses(mob);
 
     // Should I wake up?
     if (mob.isUnderStatus(.Sleeping)) |_| {
