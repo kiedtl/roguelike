@@ -171,6 +171,7 @@ pub var player_turns: usize = 0;
 pub var messages: MessageArrayList = undefined;
 pub var score: usize = 0;
 pub var destroyed_candles: usize = 0;
+pub var is_in_viewer: bool = false;
 
 // Find the nearest space near a coord in which a monster can be placed.
 //

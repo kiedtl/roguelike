@@ -723,6 +723,7 @@ fn viewerMain() void {
         }
 
         state.player.kill();
+        state.is_in_viewer = true;
 
         var level: usize = state.PLAYER_STARTING_LEVEL;
         var y: usize = 0;

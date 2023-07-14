@@ -174,7 +174,9 @@ pub fn tickTasks(level: usize) void {
         }
     }
 
-    // Check if we need to dispatch workers.
+    // Check if we need to dispatch workers. (Only one is dispatched each time,
+    // to prevent 10 workers from suddenly teleporting into the floor in a
+    // single turn, which is unrealistic.)
     //
     // First, get a count of all workers, sorted by type, on the floor
     var worker_count = enums.EnumArray(meta.Tag(TaskType), usize).initFill(0);
@@ -185,7 +187,7 @@ pub fn tickTasks(level: usize) void {
     // Now go through orders again and dispatch workers if necessary.
     for (state.tasks.items) |*task, id|
         if (task.assigned_to == null and !task.completed and
-            worker_count.get(task.type) <= 3)
+            worker_count.get(task.type) <= 2)
         {
             const mob_template = switch (task.type) {
                 .Clean => &mobs.CleanerTemplate,
@@ -201,7 +203,7 @@ pub fn tickTasks(level: usize) void {
                 const worker = mobs.placeMob(state.GPA.allocator(), mob_template, spawn_coord, .{});
                 worker.ai.task_id = id;
                 task.assigned_to = worker;
-                worker_count.set(task.type, worker_count.get(task.type) + 1);
+                break;
             }
         };
 }
@@ -224,9 +226,9 @@ pub fn scanForCorpses(mob: *Mob) void {
                     ai.updateEnemyKnowledge(mob, corpse.killed_by.?, coord);
                 }
 
-                std.log.info("found corpse", .{});
                 mob.newJob(.WRK_ScanCorpse);
                 mob.newestJob().?.setCtx(Coord, AIJob.CTX_CORPSE_LOCATION, corpse.coord);
+                corpse.corpse_info.is_noticed = true;
             }
         };
     };

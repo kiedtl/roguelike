@@ -1149,7 +1149,7 @@ pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
                 return;
             }
 
-            if (!mob.immobile and rng.onein(1000)) {
+            if (!mob.immobile and rng.onein(2000)) {
                 const cur_room: ?*mapgen.Room = switch (state.layout[mob.coord.z][mob.coord.y][mob.coord.x]) {
                     .Unknown => null,
                     .Room => |r| &state.rooms[mob.coord.z].items[r],
@@ -1226,6 +1226,18 @@ pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
 // For combat dummies
 pub fn combatDummyFight(mob: *Mob, _: mem.Allocator) void {
     tryRest(mob);
+}
+
+// Run away and keep distance, but don't look back or update enemy's current
+// position.
+pub fn workerFight(mob: *Mob, _: mem.Allocator) void {
+    // Do we really want to do this? There may be some cases I've forgotten
+    // about where enemies deliberately purge knowledge of enemy...
+    if (currentEnemy(mob).last_seen == null)
+        currentEnemy(mob).last_seen = currentEnemy(mob).mob.coord;
+
+    if (!keepDistance(mob, currentEnemy(mob).last_seen.?, 24))
+        tryRest(mob);
 }
 
 pub fn meleeFight(mob: *Mob, _: mem.Allocator) void {
@@ -1525,7 +1537,7 @@ pub fn _Job_WRK_LeaveFloor(mob: *Mob, job: *AIJob) AIJob.JStatus {
 //
 pub fn _Job_WRK_ScanJobs(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_TURNS_LEFT_SCANNING = "ctx_turns_left_scanning";
-    const turns_left = job.getCtx(usize, CTX_TURNS_LEFT_SCANNING, rng.range(usize, 3, 5));
+    const turns_left = job.getCtx(usize, CTX_TURNS_LEFT_SCANNING, rng.range(usize, 4, 7));
 
     const jobtypes = tasks.getJobTypesForWorker(mob);
 
@@ -1589,7 +1601,6 @@ pub fn _Job_WRK_Clean(mob: *Mob, _: *AIJob) AIJob.JStatus {
 
 pub fn _Job_WRK_ScanCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const coord = job.getCtx(Coord, AIJob.CTX_CORPSE_LOCATION, undefined);
-    const corpse = state.dungeon.at(coord).surface.?.Corpse;
 
     if (mob.distance2(coord) > 1) {
         mob.tryMoveTo(coord);
@@ -1602,7 +1613,6 @@ pub fn _Job_WRK_ScanCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
         }
     };
 
-    corpse.corpse_info.is_noticed = true;
     mob.newJob(.WRK_ReportCorpse);
     mob.newestJob().?.setCtx(Coord, AIJob.CTX_CORPSE_LOCATION, coord);
 

@@ -3602,6 +3602,9 @@ pub const Animation = union(enum) {
     }
 
     pub fn apply(self: Animation) void {
+        if (state.is_in_viewer)
+            return;
+
         drawNoPresent();
         map_win.animations.clear();
 

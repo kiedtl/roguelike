@@ -228,27 +228,6 @@ pub const ThrashingHulkTemplate = MobTemplate{
     },
 };
 
-pub const CoronerTemplate = MobTemplate{
-    .mob = .{
-        .id = "coroner",
-        .species = &GoblinSpecies,
-        .tile = 'c',
-        .ai = AI{
-            .profession_name = "coroner",
-            .profession_description = "doing autopsy",
-            .work_fn = ai.workerWork,
-            .fight_fn = null, //ai.coronerFight,
-            .is_combative = false,
-            .flags = &[_]AI.Flag{ .ScansForJobs, .ScansForCorpses },
-        },
-
-        .max_HP = 8,
-        .memory_duration = 10,
-
-        .stats = .{ .Willpower = 1 },
-    },
-};
-
 pub const ExecutionerTemplate = MobTemplate{
     .mob = .{
         .id = "executioner",
@@ -678,7 +657,7 @@ pub const WarOlgTemplate = MobTemplate{
                 &WAR_OLG_CLAW_WEAPON,
             },
         },
-        .tile = 'ò',
+        .tile = 'o',
         .ai = AI{
             .profession_description = "wandering",
             .work_fn = ai.guardWork,
@@ -898,17 +877,37 @@ pub const AlchemistTemplate = MobTemplate{
     },
 };
 
+pub const CoronerTemplate = MobTemplate{
+    .mob = .{
+        .id = "coroner",
+        .species = &GoblinSpecies,
+        .tile = 'ö',
+        .ai = AI{
+            .profession_name = "coroner",
+            .profession_description = "doing autopsy",
+            .work_fn = ai.workerWork,
+            .fight_fn = ai.workerFight, //ai.coronerFight,
+            .is_curious = false,
+            .flags = &[_]AI.Flag{ .ScansForJobs, .ScansForCorpses },
+        },
+
+        .max_HP = 8,
+        .memory_duration = 10,
+
+        .stats = .{ .Willpower = 1 },
+    },
+};
+
 pub const CleanerTemplate = MobTemplate{
     .mob = .{
         .id = "cleaner",
         .species = &GoblinSpecies,
-        .tile = 'a',
+        .tile = 'ë',
         .ai = AI{
             .profession_name = "cleaner",
             .profession_description = "cleaning",
             .work_fn = ai.workerWork,
-            .fight_fn = null,
-            .is_combative = false,
+            .fight_fn = ai.workerFight,
             .is_curious = false,
             .flags = &[_]AI.Flag{ .ScansForJobs, .ScansForCorpses },
         },
@@ -923,13 +922,12 @@ pub const HaulerTemplate = MobTemplate{
     .mob = .{
         .id = "hauler",
         .species = &GoblinSpecies,
-        .tile = 'h',
+        .tile = 'ü',
         .ai = AI{
             .profession_name = "hauler",
             .profession_description = "hauling",
             .work_fn = ai.haulerWork,
-            .fight_fn = null,
-            .is_combative = false,
+            .fight_fn = ai.workerFight,
             .is_curious = false,
             .work_phase = .HaulerScan,
             .flags = &[_]AI.Flag{ .ScansForJobs, .ScansForCorpses },
@@ -1183,7 +1181,7 @@ pub const EmberMageTemplate = MobTemplate{
     .mob = .{
         .id = "ember_mage",
         .species = &HumanSpecies,
-        .tile = 'Ë',
+        .tile = 'È',
         .ai = AI{
             .profession_name = "ember mage",
             .profession_description = "watching",
@@ -1398,7 +1396,7 @@ pub const SkeletonTemplate = MobTemplate{
             .name = "skeleton",
             .default_attack = &Weapon{ .damage = 1, .strs = &items.FIST_STRS },
         },
-        .tile = 's',
+        .tile = 'l',
         .ai = AI{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
@@ -1430,7 +1428,7 @@ pub const StalkerTemplate = MobTemplate{
                 .strs = &[_]DamageStr{items._dmgstr(0, "ram", "rams", "")},
             },
         },
-        .tile = 'e',
+        .tile = 's',
         .ai = AI{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
@@ -1508,7 +1506,7 @@ pub const EmberlingTemplate = MobTemplate{
                 .strs = &items.CLAW_STRS,
             },
         },
-        .tile = 'ë',
+        .tile = 'è',
         .ai = AI{
             .profession_description = "watching",
             .work_fn = ai.standStillAndGuardWork,
