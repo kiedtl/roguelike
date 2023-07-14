@@ -2938,7 +2938,7 @@ pub fn placeEntry(level: usize, alloc: mem.Allocator) void {
     while (dijk.next()) |child| {
         if (state.dungeon.at(child).mob) |mob|
             if (mob.ai.is_combative and mob.isHostileTo(state.player)) {
-                mob.deinit();
+                mob.deinitNoCorpse();
             };
     }
 }
