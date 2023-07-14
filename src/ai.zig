@@ -427,13 +427,20 @@ pub fn checkForHostiles(mob: *Mob) void {
             }
         }
 
-        if (enemy.counter == 0 or
-            !mob.isHostileTo(enemy.mob) or
+        if (enemy.counter == 0 or !mob.isHostileTo(enemy.mob) or
             enemy.mob.coord.z != mob.coord.z or
             enemy.mob.ai.flag(.IgnoredByEnemies) or
-            (mob.ai.flag(.IgnoresEnemiesUnknownToLeader) and !mob.squad.?.leader.?.cansee(enemy.mob.coord)) or
+            (mob.ai.flag(.IgnoresEnemiesUnknownToLeader) and
+            !mob.squad.?.leader.?.cansee(enemy.mob.coord)) or
             enemy.mob.is_dead)
         {
+            _ = mob.enemyList().orderedRemove(i);
+        } else if (enemy.mob.faction == .Night and
+            mob.nextDirectionTo(enemy.mob.coordMT(mob.coord)) == null)
+        {
+            // Placeholder, eventually we want to call reinforcements and
+            // exterminators to make the night creatures miserable.
+            //
             _ = mob.enemyList().orderedRemove(i);
         } else {
             if (mob.ai.phase != .Flee and mob.isAloneOrLeader() and
@@ -1511,6 +1518,15 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
     } else if (dist >= FLEE_GOAL) {
         // Forget about him
         target.counter = 0;
+    }
+
+    // Don't flee forever
+    //
+    // Note, I have no idea how effective this is. Probably test later on and
+    // remove if not useful.
+    //
+    if (!mob.hasStatus(.Fear) and !mob.canSeeMob(target.mob)) {
+        mob.morale += 1;
     }
 }
 
