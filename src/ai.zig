@@ -1694,7 +1694,7 @@ pub fn _Job_WRK_ScanCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
 
 pub fn _Job_WRK_ReportCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const coord = job.getCtx(Coord, AIJob.CTX_CORPSE_LOCATION, undefined);
-    const corpse = state.dungeon.at(coord).surface.?.Corpse;
+    const corpse = (state.dungeon.at(coord).surface orelse return .Complete).Corpse;
 
     if (mob.distance2(coord) > 1) {
         mob.tryMoveTo(coord);
@@ -1708,6 +1708,8 @@ pub fn _Job_WRK_ReportCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
     return .Complete;
 }
 
+// FIXME: examine corpse job will continue even if corpse is destroyed in a fire/explosion
+//
 pub fn _Job_WRK_ExamineCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_TURNS_LEFT_EXAMINING = "ctx_turns_left_examining";
     const turns_left = job.getCtx(usize, CTX_TURNS_LEFT_EXAMINING, rng.range(usize, 8, 16));
