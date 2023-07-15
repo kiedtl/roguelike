@@ -447,10 +447,10 @@ fn readInput() !bool {
             else => false,
         },
         .Char => |c| switch (c) {
-            // ' ' => b: {
-            //     _ = ui.drawZapScreen();
-            //     break :b false;
-            // },
+            ' ' => b: {
+                _ = ui.drawZapScreen();
+                break :b false;
+            },
             't' => b: {
                 player.auto_wait_enabled = !player.auto_wait_enabled;
                 const str = if (player.auto_wait_enabled)
@@ -565,8 +565,6 @@ fn tickGame() !void {
                 scores.recordUsize(.TurnsSpent, 1);
                 player.bookkeepingFOV();
                 player.checkForGarbage();
-                if (player.getActiveRing()) |r|
-                    player.getRingHints(r);
             }
 
             if (mob.isUnderStatus(.Paralysis)) |_| {
@@ -591,8 +589,6 @@ fn tickGame() !void {
             }
 
             if (mob.is_dead) break;
-
-            mob.checkForPatternUsage();
 
             if (state.dungeon.at(mob.coord).mob == null) {
                 err.bug("Mob {s} is dancing around the chessboard!", .{mob.displayName()});
@@ -674,7 +670,6 @@ fn viewerTickGame(cur_level: usize) void {
 
             if (mob.is_dead) break;
 
-            mob.checkForPatternUsage();
             mob.tickFOV();
 
             if (state.dungeon.at(mob.coord).mob == null) {

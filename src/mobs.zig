@@ -527,7 +527,9 @@ pub const PlayerTemplate = MobTemplate{
         .max_HP = 14,
         .memory_duration = 10,
 
-        .stats = .{ .Willpower = 4, .Missile = 60, .Evade = 10, .Vision = PLAYER_VISION },
+        .max_MP = 20,
+
+        .stats = .{ .Willpower = 4, .Missile = 60, .Evade = 10, .Vision = PLAYER_VISION, .Potential = 25 },
     },
     .weapon = &items.DaggerWeapon,
     // .backup_weapon = &items.ShadowMaulWeapon,
@@ -573,6 +575,7 @@ pub const ConvultTemplate = MobTemplate{
             .{ .MP_cost = 3, .spell = &spells.CAST_ENRAGE_DUSTLING, .power = 9 },
         },
         .max_MP = 6,
+        .max_drainable_MP = 8,
 
         .max_HP = 7,
         .memory_duration = 8,
@@ -601,6 +604,7 @@ pub const VapourMageTemplate = MobTemplate{
             .{ .MP_cost = 2, .spell = &spells.CAST_FIREPROOF_DUSTLING, .power = 10 },
         },
         .max_MP = 15,
+        .max_drainable_MP = 10,
         .base_night_vision = true,
 
         .max_HP = 5,
@@ -973,6 +977,7 @@ pub const AncientMageTemplate = MobTemplate{
             .{ .MP_cost = 9, .spell = &spells.CAST_SUMMON_ENEMY },
         },
         .max_MP = 30,
+        .max_drainable_MP = 50,
         .base_night_vision = true,
 
         .deaf = false,
@@ -1105,6 +1110,7 @@ pub const BoneMageTemplate = MobTemplate{
             .{ .MP_cost = 25, .spell = &spells.CAST_ENRAGE_BONE_RAT, .duration = 5 },
         },
         .max_MP = 20,
+        .max_drainable_MP = 12,
 
         .max_HP = 4,
         .memory_duration = 10,
@@ -1166,6 +1172,7 @@ pub const DeathMageTemplate = MobTemplate{
             .{ .MP_cost = 20, .spell = &spells.CAST_ENRAGE_UNDEAD, .duration = 12 },
         },
         .max_MP = 20,
+        .max_drainable_MP = 18,
 
         .max_HP = 6,
         .memory_duration = 15,
@@ -1202,6 +1209,7 @@ pub const EmberMageTemplate = MobTemplate{
             .{ .MP_cost = 10, .spell = &spells.CAST_FLAMMABLE, .power = 20 },
         },
         .max_MP = 15,
+        .max_drainable_MP = 12,
 
         .max_HP = 5,
         .memory_duration = 10,
@@ -1239,6 +1247,7 @@ pub const BrimstoneMageTemplate = MobTemplate{
             .{ .MP_cost = 7, .spell = &spells.BOLT_FIREBALL, .power = 3, .duration = 3 },
         },
         .max_MP = 15,
+        .max_drainable_MP = 18,
 
         .max_HP = 7,
         .memory_duration = 10,
@@ -1274,6 +1283,7 @@ pub const SparkMageTemplate = MobTemplate{
             .{ .MP_cost = 15, .spell = &spells.BOLT_PARALYSE, .power = 2 },
         },
         .max_MP = 10,
+        .max_drainable_MP = 12,
 
         .max_HP = 5,
         .memory_duration = 10,
@@ -1309,6 +1319,7 @@ pub const LightningMageTemplate = MobTemplate{
             .{ .MP_cost = 6, .spell = &spells.CAST_DISCHARGE },
         },
         .max_MP = 15,
+        .max_drainable_MP = 18,
 
         .max_HP = 7,
         .memory_duration = 10,
@@ -1342,6 +1353,7 @@ pub const BloatTemplate = MobTemplate{
 
         .max_HP = 21,
         .memory_duration = 20,
+        .max_drainable_MP = 8,
 
         //.deaf = true,
         .life_type = .Undead,
@@ -1411,6 +1423,7 @@ pub const SkeletonTemplate = MobTemplate{
 
         .max_HP = 4,
         .memory_duration = 8,
+        .max_drainable_MP = 8,
 
         .deaf = true,
         .life_type = .Undead,
@@ -1482,6 +1495,7 @@ pub const BoneRatTemplate = MobTemplate{
 
         .deaf = true,
         .life_type = .Undead,
+        .max_drainable_MP = 5,
 
         .max_HP = 2,
         .memory_duration = 5,
@@ -1606,6 +1620,7 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
 
         .deaf = true,
         .life_type = .Undead,
+        .max_drainable_MP = 10,
 
         .max_HP = 9,
         .memory_duration = 6,
@@ -1643,6 +1658,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
             .{ .MP_cost = 1, .spell = &spells.CAST_FEAR, .duration = 10 },
         },
         .max_MP = 10,
+        .max_drainable_MP = 14,
 
         .max_HP = 8,
         .memory_duration = 15,

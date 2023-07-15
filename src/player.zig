@@ -843,10 +843,12 @@ pub fn canSeeAny(coords: []const ?Coord) bool {
 }
 
 pub const RingError = enum {
+    NotEnoughMP,
     HatedByNight,
 
     pub fn text1(self: @This()) []const u8 {
         return switch (self) {
+            .NotEnoughMP => "low mana",
             .HatedByNight => "hated by the Night",
         };
     }
@@ -854,6 +856,9 @@ pub const RingError = enum {
 
 pub fn checkRing(index: usize) ?RingError {
     const ring = getRingByIndex(index).?;
+    if (ring.required_MP > state.player.MP) {
+        return .NotEnoughMP;
+    }
     if (ring.hated_by_nc and hasAlignedNC()) {
         return .HatedByNight;
     }
@@ -868,39 +873,15 @@ pub fn beginUsingRing(index: usize) void {
         return;
     }
 
-    if (getActiveRing()) |otherring| {
-        otherring.activated = false;
-        otherring.pattern_checker.reset();
+    if (state.player.MP < ring.required_MP) {
+        err.wat();
     }
 
-    if (ui.chooseDirection()) |dir| {
-        state.message(.Info, "Activated ring $o{s}$....", .{ring.name});
-
-        if (ring.pattern_checker.init.?(state.player, dir, &ring.pattern_checker.state)) |hint| {
-            ring.activated = true;
-
-            var strbuf = std.ArrayList(u8).init(state.GPA.allocator());
-            defer strbuf.deinit();
-            const writer = strbuf.writer();
-            writer.print("[$o{s}$.] ", .{ring.name}) catch err.wat();
-            formatActivityList(&.{hint}, writer);
-            state.message(.Info, "{s}", .{strbuf.items});
-        } else |derr| {
-            ring.activated = false;
-            switch (derr) {
-                error.NeedCardinalDirection => state.message(.Info, "[$o{s}$.] error: need a cardinal direction", .{ring.name}),
-                error.NeedOppositeWalkableTile => state.message(.Info, "[$o{s}$.] error: needs to have walkable space in the opposite direction", .{ring.name}),
-                error.NeedWalkableTile => state.message(.Info, "[$o{s}$.] error: need a walkable space in that direction", .{ring.name}),
-
-                error.NeedOppositeTileNearWalls => state.message(.Info, "[$o{s}$.] error: needs to have walkable space near walls in the opposite direction", .{ring.name}),
-                error.NeedTileNearWalls => state.message(.Info, "[$o{s}$.] error: need a walkable space near walls in that direction", .{ring.name}),
-                error.NeedHostileOnTile => state.message(.Info, "[$o{s}$.] error: there needs to be a hostile in that direction", .{ring.name}),
-                error.NeedOpenSpace => state.message(.Info, "[$o{s}$.] error: need to be in open space (no walls in cardinal directions)", .{ring.name}),
-                error.NeedOppositeWalkableTileInFrontOfWall => state.message(.Info, "[$o{s}$.] error: needs to have walkable space in front of wall in opposite direction", .{ring.name}),
-                error.NeedLivingEnemy => state.message(.Info, "[$o{s}$.] error: enemy cannot be a construct or undead", .{ring.name}),
-            }
-        }
+    if (ring.effect()) {
+        state.player.MP -= ring.required_MP;
     }
+
+    scores.recordTaggedUsize(.RingsUsed, .{ .s = ring.name }, 1);
 }
 
 pub fn getRingIndexBySlot(slot: Mob.Inventory.EquSlot) usize {
@@ -919,57 +900,29 @@ pub fn getRingByIndex(index: usize) ?*Ring {
     }
 }
 
-pub fn getActiveRing() ?*Ring {
-    const max_rings = state.default_patterns.len + Inventory.RING_SLOTS.len;
-
-    var i: usize = 0;
-    return while (i <= max_rings) : (i += 1) {
-        if (getRingByIndex(i)) |ring| {
-            if (ring.activated)
-                break ring;
-        }
-    } else null;
-}
-
-pub fn getRingHints(ring: *Ring) void {
-    var buf = StackBuffer(Activity, 16).init(null);
-
-    const chk_func = ring.pattern_checker.funcs[ring.pattern_checker.turns_taken];
-
-    for (&DIRECTIONS) |d| if (state.player.coord.move(d, state.mapgeometry)) |neighbor_tile| {
-        const move_activity = Activity{ .Move = d };
-        if (state.is_walkable(neighbor_tile, .{ .mob = state.player })) {
-            if ((chk_func)(state.player, &ring.pattern_checker.state, move_activity, true))
-                buf.append(move_activity) catch err.wat();
-        }
-
-        if (state.dungeon.at(neighbor_tile).mob) |neighbor_mob| {
-            if (neighbor_mob.isHostileTo(state.player) and neighbor_mob.ai.is_combative) {
-                const attack_activity = Activity{ .Attack = .{
-                    .who = neighbor_mob,
-                    .direction = d,
-                    .coord = neighbor_tile,
-                } };
-                if ((chk_func)(state.player, &ring.pattern_checker.state, attack_activity, true))
-                    buf.append(attack_activity) catch err.wat();
+pub fn drainMob(mob: *Mob) void {
+    if (mob.max_drainable_MP > 0) {
+        const S = struct {
+            pub fn _helper(a: usize, pot: usize) usize {
+                var n: usize = 0;
+                var ctr = a;
+                while (ctr > 0) : (ctr -= 1)
+                    if (rng.percent(pot)) {
+                        n += 1;
+                    };
+                return n;
             }
-        }
-    };
+        };
 
-    const wait_activity: Activity = .Rest;
-    if ((chk_func)(state.player, &ring.pattern_checker.state, wait_activity, true))
-        buf.append(wait_activity) catch err.wat();
+        const pot = @intCast(usize, state.player.stat(.Potential));
+        const amount = (S._helper(mob.max_drainable_MP, pot) + S._helper(mob.max_drainable_MP, pot)) / 2;
 
-    if (buf.len == 0) {
-        state.message(.Info, "[$o{s}$.] No valid moves!", .{ring.name});
+        state.player.MP = math.min(state.player.max_MP, state.player.MP + amount);
+        mob.is_drained = true;
+
+        state.message(.Drain, "You drain the corpse of the Necromancer's power.", .{});
+        state.message(.Drain, "You absorbed $o{}$. / $g{}$. mana ($o{}% potential$.).", .{ amount, mob.max_drainable_MP, pot });
     }
-
-    var strbuf = std.ArrayList(u8).init(state.GPA.allocator());
-    defer strbuf.deinit();
-    const writer = strbuf.writer();
-    writer.print("[$o{s}$.] ", .{ring.name}) catch err.wat();
-    formatActivityList(buf.constSlice(), writer);
-    state.message(.Info, "{s}", .{strbuf.items});
 }
 
 pub fn formatActivityList(activities: []const Activity, writer: anytype) void {

@@ -126,12 +126,8 @@ pub var player_is_spotted: struct {
     turn_cached: usize,
 } = .{ .is_spotted = false, .turn_cached = 0 };
 
-pub var default_patterns = [_]types.Ring{
-    items.DefaultPinRing,
-    items.DefaultChargeRing,
-    items.DefaultEyepunchRing,
-    items.DefaultLeapRing,
-};
+// Unused now
+pub var default_patterns = [_]types.Ring{};
 
 pub const MemoryTile = struct {
     tile: display.Cell,

@@ -48,7 +48,6 @@ const WIDTH = state.WIDTH;
 const Evocable = items.Evocable;
 const Projectile = items.Projectile;
 const Consumable = items.Consumable;
-const PatternChecker = items.PatternChecker;
 const Cloak = items.Cloak;
 const Aux = items.Aux;
 
@@ -869,6 +868,7 @@ pub const MessageType = union(enum) {
     Damage,
     Important,
     SpellCast,
+    Drain, // Draining a corpse
     Inventory, // Grabbing, dropping, or equipping item
     Dialog,
 
@@ -881,6 +881,7 @@ pub const MessageType = union(enum) {
             .Damage => 0xed254d, // pinkish red
             .Important => 0xed254d, // pinkish red
             .SpellCast => 0xdadeda, // creamy white
+            .Drain => 0xffd700, // gold
             .Status => colors.AQUAMARINE, // aquamarine
             .Combat => 0xdadeda, // creamy white
             .CombatUnimportant => 0x7a9cc7, // steel blue
@@ -1870,6 +1871,7 @@ pub const Stat = enum {
     Willpower,
     Spikes,
     Conjuration,
+    Potential,
 
     pub fn string(self: Stat) []const u8 {
         return switch (self) {
@@ -1882,6 +1884,7 @@ pub const Stat = enum {
             .Willpower => "will",
             .Spikes => "spikes",
             .Conjuration => "conjuration",
+            .Potential => "potential",
         };
     }
 
@@ -1890,7 +1893,7 @@ pub const Stat = enum {
             .Melee, .Evade, .Vision, .Willpower => true,
             .Missile => value != 40,
             .Speed => value != 100,
-            .Martial, .Spikes, .Conjuration => value > 0,
+            .Martial, .Spikes, .Conjuration, .Potential => value > 0,
         };
     }
 };
@@ -1986,7 +1989,9 @@ pub const Mob = struct { // {{{
     spells: []const SpellOptions = &[_]SpellOptions{},
 
     max_MP: usize = 0,
+    max_drainable_MP: usize = 0,
     MP: usize = 0,
+    is_drained: bool = false,
 
     // Don't use EnumFieldStruct here because we want to provide per-field
     // defaults.
@@ -2000,6 +2005,7 @@ pub const Mob = struct { // {{{
         Willpower: isize = 3,
         Spikes: isize = 0,
         Conjuration: isize = 0,
+        Potential: isize = 0,
     };
 
     pub const Inventory = struct {
@@ -2209,7 +2215,8 @@ pub const Mob = struct { // {{{
     // Misc stuff.
     pub fn tick_env(self: *Mob) void {
         self.push_flag = false;
-        self.MP = math.clamp(self.MP + 1, 0, self.max_MP);
+        if (self != state.player)
+            self.MP = math.clamp(self.MP + 1, 0, self.max_MP);
 
         // Gases
         const gases = state.dungeon.atGas(self.coord);
@@ -2768,6 +2775,9 @@ pub const Mob = struct { // {{{
 
         if (state.dungeon.at(dest).surface) |surface| {
             switch (surface) {
+                .Corpse => |c| if (self == state.player) {
+                    player.drainMob(c);
+                },
                 .Machine => |m| if (m.isWalkable()) {
                     _ = m.addPower(self);
                 },
@@ -3035,9 +3045,7 @@ pub const Mob = struct { // {{{
         // Weapon ego effects.
         switch (attacker_weapon.ego) {
             .Swap => {
-                if ((attacker != state.player or player.getActiveRing() == null) and
-                    attacker.canSwapWith(recipient, .{ .ignore_hostility = true }))
-                {
+                if (attacker != state.player and attacker.canSwapWith(recipient, .{ .ignore_hostility = true })) {
                     _ = attacker.teleportTo(recipient.coord, null, true, true);
                 }
             },
@@ -3329,7 +3337,8 @@ pub const Mob = struct { // {{{
     pub fn init(self: *Mob, alloc: mem.Allocator) void {
         self.is_dead = false;
         self.HP = self.max_HP;
-        self.MP = self.max_MP;
+        if (!mem.eql(u8, self.id, "player"))
+            self.MP = self.max_MP;
         self.enemies = EnemyRecord.AList.init(alloc);
         self.allies = MobArrayList.init(alloc);
         self.sustiles = std.ArrayList(SuspiciousTileRecord).init(alloc);
@@ -3966,7 +3975,7 @@ pub const Mob = struct { // {{{
         // Clamp value.
         val = switch (_stat) {
             // Should never be below 0
-            .Vision, .Spikes => math.max(0, val),
+            .Vision, .Spikes, .Potential => math.max(0, val),
             else => val,
         };
 
@@ -4040,47 +4049,6 @@ pub const Mob = struct { // {{{
 
         // For rFume, make the value a percentage
         return if (resist == .rFume) 100 - r else r;
-    }
-
-    // This is very very very ugly.
-    //
-    pub fn checkForPatternUsage(self: *Mob) void {
-        var activities: [MAX_ACTIVITY_BUFFER_SZ]Activity = undefined;
-        var activity_iter = self.activities.iterator();
-        while (activity_iter.next()) |activity|
-            activities[activity_iter.counter - 1] = activity;
-
-        self.forEachRing(struct {
-            pub fn f(mself: *Mob, ring: *Ring) void {
-                if (ring.activated) {
-                    switch (ring.pattern_checker.advance(mself)) {
-                        .Completed => |stt| {
-                            ring.activated = false;
-                            ring.effect(mself, stt);
-                            assert(mself == state.player);
-                            scores.recordTaggedUsize(.PatternsUsed, .{ .s = ring.name }, 1);
-                        },
-                        .Failed => {
-                            ring.activated = false;
-                            if (state.player.cansee(mself.coord)) {
-                                state.message(.Info, "{c} failed to use $o{s}$.", .{ mself, ring.name });
-                            }
-                        },
-                        .Continued => {},
-                    }
-                }
-            }
-        }.f);
-    }
-
-    pub fn forEachRing(self: *Mob, func: fn (*Mob, *Ring) void) void {
-        if (self == state.player) {
-            for (state.default_patterns) |*ring|
-                (func)(self, ring);
-        }
-
-        for (&Inventory.RING_SLOTS) |r| if (self.inventory.equipment(r).*) |ring_item|
-            (func)(self, ring_item.Ring);
     }
 
     // Find out how many turns spent in moving
@@ -4569,12 +4537,10 @@ pub const Ring = struct {
     // Ring of <name>
     name: []const u8,
 
+    required_MP: usize,
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     hated_by_nc: bool = false,
-    pattern_checker: PatternChecker,
-    effect: fn (*Mob, PatternChecker.State) void,
-
-    activated: bool = false,
+    effect: fn () bool,
 };
 
 pub const ItemType = enum { Ring, Consumable, Vial, Projectile, Armor, Cloak, Aux, Weapon, Boulder, Prop, Evocable };
@@ -4826,8 +4792,10 @@ pub const Tile = struct {
             cell.fg = 0xffffff;
 
             switch (surfaceitem) {
-                .Corpse => |_| {
+                .Corpse => |c| {
                     cell.fg = 0xffe0ef;
+                    if (c.max_drainable_MP > 0 and !c.is_drained)
+                        cell.fg = colors.GOLD;
                     cell.ch = '%';
                     cell.sch = null;
                 },

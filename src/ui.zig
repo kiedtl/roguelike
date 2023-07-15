@@ -1231,6 +1231,7 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
     }
 
     const bar_endx = endx - 9;
+    // const bar_endx2 = endx - 18;
 
     // Use red if below 40% health
     const color: [2]u32 = if (state.player.HP < (state.player.max_HP / 5) * 2)
@@ -1239,16 +1240,24 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
         [_]u32{ colors.percentageOf(colors.DOBALENE_BLUE, 25), colors.DOBALENE_BLUE };
     _drawBar(y, startx, bar_endx, state.player.HP, state.player.max_HP, "health", color[0], color[1], .{});
     const hit = combat.chanceOfMeleeLanding(state.player, null);
-    _ = _drawStrf(bar_endx + 1, y, endx, "$.hit {: >3}%$.", .{hit}, .{});
+    _ = _drawStrf(bar_endx + 1, y, endx, "$bhit {: >3}%$.", .{hit}, .{});
     y += 1;
 
-    const ev = utils.SignedFormatter{ .v = state.player.stat(.Evade) };
+    _drawBar(y, startx, bar_endx, state.player.MP, state.player.max_MP, "mana", colors.percentageOf(colors.GOLD, 55), colors.LIGHT_GOLD, .{});
+    const pot = utils.SignedFormatter{ .v = state.player.stat(.Potential) };
+    std.log.info("pot: {}", .{pot});
+    _ = _drawStrf(bar_endx + 1, y, endx, "$opot {: >3}%$.", .{pot}, .{});
+    y += 1;
+
+    // const ev = utils.SignedFormatter{ .v = state.player.stat(.Evade) };
+    const arm = utils.SignedFormatter{ .v = state.player.resistance(.Armor) };
     const willpower = @intCast(usize, state.player.stat(.Willpower));
     const is_corrupted = state.player.hasStatus(.Corruption);
     const corruption_str = if (is_corrupted) "corrupted" else "corruption";
     const corruption_val = if (is_corrupted) willpower else state.player.corruption_ctr;
     _drawBar(y, startx, bar_endx, corruption_val, willpower, corruption_str, 0x999999, 0xeeeeee, .{ .detail = !is_corrupted });
-    _ = _drawStrf(bar_endx + 1, y, endx, "$pev  {: >3}%$.", .{ev}, .{});
+    // _ = _drawStrf(bar_endx2 + 1, y, bar_endx, "$pev  {: >3}%$.", .{ev}, .{});
+    _ = _drawStrf(bar_endx + 1, y, endx, "$.arm {: >3}%$.", .{arm}, .{});
     y += 2;
 
     {
@@ -1286,24 +1295,6 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
         }, .{});
         y += 1;
     }
-
-    var ring_count: usize = 0;
-    var ring_active: ?usize = null;
-    var ring_i: usize = 0;
-    while (ring_i <= 9) : (ring_i += 1)
-        if (player.getRingByIndex(ring_i)) |ring| {
-            ring_count += 1;
-            if (ring.activated)
-                ring_active = ring_i;
-        };
-
-    if (ring_active) |active_i| {
-        const ring = player.getRingByIndex(active_i).?;
-        y = _drawStrf(startx, y, endx, "Active pattern: $o{s}$.", .{ring.name}, .{});
-    } else {
-        y = _drawStr(startx, y, endx, "$bNo active pattern.$.", .{});
-    }
-    y += 1;
 
     // ------------------------------------------------------------------------
 
@@ -1685,10 +1676,12 @@ pub fn draw() void {
 }
 
 pub const ChooseCellOpts = struct {
-    require_seen: bool = true,
     max_distance: ?usize = null,
     targeter: Targeter = .Single,
+    require_seen: bool = true,
     require_lof: bool = false,
+    require_enemy_on_tile: bool = false,
+    require_walkable: ?state.IsWalkableOptions = null,
 
     pub const Targeter = union(enum) {
         Single,
@@ -1704,7 +1697,7 @@ pub const ChooseCellOpts = struct {
         };
 
         pub const Func = fn (Targeter, bool, Coord, *Result.AList) Error!void;
-        pub const Error = error{ BrokenLOF, OutOfRange, OutOfLOS };
+        pub const Error = error{ BrokenLOF, OutOfRange, OutOfLOS, RequireEnemyOnTile, Unwalkable };
 
         pub fn func(self: Targeter) Func {
             return switch (self) {
@@ -1817,14 +1810,23 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
             coord.distance(state.player.coord) > opts.max_distance.?)
         {
             terror = error.OutOfRange;
+        } else if (opts.require_enemy_on_tile and
+            (utils.getHostileAt(state.player, coord) catch null) == null)
+        {
+            terror = error.RequireEnemyOnTile;
+        } else if (opts.require_walkable != null and
+            !state.is_walkable(coord, opts.require_walkable.?))
+        {
+            terror = error.Unwalkable;
         }
-
-        const color = if (terror != null) COLOR_N else COLOR_Y;
 
         coords.clearAndFree();
         (opts.targeter.func())(opts.targeter, opts.require_seen, coord, &coords) catch |e| {
             terror = e;
         };
+
+        const color = if (terror != null) COLOR_N else COLOR_Y;
+
         for (coords.items) |item| {
             const ditemc = coordToScreenFromRefpoint(item.coord, refpoint) orelse continue;
             const old = map_win.map.getCell(ditemc.x, ditemc.y);
@@ -1849,6 +1851,8 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
                             error.BrokenLOF => drawAlert("There's something in the way.", .{}),
                             error.OutOfRange => drawAlert("Out of range!", .{}),
                             error.OutOfLOS => drawAlert("You haven't seen that place!", .{}),
+                            error.RequireEnemyOnTile => drawAlert("You must select a nearby enemy.", .{}),
+                            error.Unwalkable => drawAlert("Tile must be empty.", .{}),
                         }
                     } else {
                         return coord;
@@ -2261,8 +2265,7 @@ pub fn drawZapScreen() void {
                     if (r_error) |r_err| {
                         ry += zap_win.right.drawTextAtf(0, ry, "$cCannot use$.: $b{s}$.\n\n", .{r_err.text1()}, .{});
                     } else {
-                        const active: []const u8 = if (ring.activated) "$b(active)$.\n\n" else "Press $b<Enter>$. to use.\n\n";
-                        ry += zap_win.right.drawTextAt(0, ry, active, .{});
+                        ry += zap_win.right.drawTextAt(0, ry, "Press $b<Enter>$. to use.\n\n", .{});
                     }
                     ry += zap_win.right.drawTextAt(0, ry, itemdesc, .{});
                 }
