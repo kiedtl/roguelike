@@ -4317,8 +4317,10 @@ pub const Machine = struct {
                             state.dungeon.atGas(vent.coord)[g.id] = 1.0;
                         };
 
-                        state.message(.Trap, "{c} triggers a " ++ gstr ++ " trap!", .{mob});
-                        state.message(.Trap, "Noxious fumes seep through nearby vents!", .{});
+                        if (state.player.cansee(machine.coord)) {
+                            state.message(.Trap, "{c} triggers a " ++ gstr ++ " trap!", .{mob});
+                            state.message(.Trap, "Noxious fumes seep through nearby vents!", .{});
+                        }
 
                         machine.disabled = true;
                         state.dungeon.at(machine.coord).surface = null;
