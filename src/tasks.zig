@@ -272,8 +272,8 @@ pub fn scanForCorpses(mob: *Mob) void {
             const corpse = surface.Corpse;
             if (corpse.faction == .Necromancer and !corpse.corpse_info.is_noticed) {
                 if (corpse.killed_by != null and
-                    (state.ticks - corpse.last_damage.?.inflicted_time) < 2 and
-                    corpse.killed_by.?.distance2(corpse.coord) < 4 and
+                    (state.ticks - corpse.last_damage.?.inflicted_time) <= 2 and
+                    corpse.killed_by.?.distance2(corpse.coord) <= 3 and
                     corpse.killed_by.?.isHostileTo(mob))
                 {
                     ai.updateEnemyKnowledge(mob, corpse.killed_by.?, coord);

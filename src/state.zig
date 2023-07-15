@@ -48,7 +48,6 @@ const MobArrayList = types.MobArrayList;
 const Direction = types.Direction;
 const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
 
-const Alert = @import("alert.zig").Alert;
 const SoundState = @import("sound.zig").SoundState;
 const TaskArrayList = @import("tasks.zig").TaskArrayList;
 const EvocableList = @import("items.zig").EvocableList;
@@ -160,7 +159,6 @@ pub var machines: MachineList = undefined;
 pub var props: PropList = undefined;
 pub var containers: ContainerList = undefined;
 pub var evocables: EvocableList = undefined;
-pub var alerts: Alert.List = undefined;
 
 pub var ticks: usize = 0;
 pub var player_turns: usize = 0;

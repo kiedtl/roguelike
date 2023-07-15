@@ -491,12 +491,11 @@ pub const PatrolTemplate = MobTemplate{
             .flags = &[_]AI.Flag{ .FearsDarkness, .ScansForJobs, .ScansForCorpses },
         },
 
-        .max_HP = 6,
+        .max_HP = 5,
         .memory_duration = 10,
-        .stats = .{ .Willpower = 2, .Evade = 10 },
+        .stats = .{ .Willpower = 1 },
     },
     .weapon = &items.BludgeonWeapon,
-    .armor = &items.GambesonArmor,
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{

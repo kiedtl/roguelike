@@ -28,6 +28,7 @@ const Mob = types.Mob;
 const EnemyRecord = types.EnemyRecord;
 const SuspiciousTileRecord = types.SuspiciousTileRecord;
 const Coord = types.Coord;
+const CoordArrayList = types.CoordArrayList;
 const Direction = types.Direction;
 const Status = types.Status;
 
@@ -434,10 +435,13 @@ pub fn checkForHostiles(mob: *Mob) void {
             !mob.squad.?.leader.?.cansee(enemy.mob.coord)) or
             enemy.mob.is_dead)
         {
+            alert.reportThreat(mob, .{ .Specific = enemy.mob }, .Confrontation);
             _ = mob.enemyList().orderedRemove(i);
         } else if (enemy.mob.faction == .Night and
             mob.nextDirectionTo(enemy.mob.coordMT(mob.coord)) == null)
         {
+            alert.reportThreat(mob, .{ .Specific = enemy.mob }, .Confrontation);
+
             // Placeholder, eventually we want to call reinforcements and
             // exterminators to make the night creatures miserable.
             //
@@ -578,6 +582,13 @@ pub fn checkForNoises(mob: *Mob) void {
     }
 }
 
+fn getCurrentRoom(mob: *Mob) ?usize {
+    return switch (state.layout[mob.coord.z][mob.coord.y][mob.coord.x]) {
+        .Unknown => null,
+        .Room => |r| r,
+    };
+}
+
 pub fn guardGlanceRandom(mob: *Mob) void {
     if (rng.onein(6)) {
         mob.facing = rng.chooseUnweighted(Direction, &DIRECTIONS);
@@ -646,14 +657,31 @@ fn guardGlanceLeftRight(mob: *Mob, prev_direction: Direction) void {
             .East => .North,
             .South => .East,
             .West => .South,
-            .NorthEast => .SouthEast,
-            .SouthEast => .NorthEast,
-            .SouthWest => .NorthWest,
-            .NorthWest => .SouthWest,
+            .NorthEast => .NorthWest,
+            .NorthWest => .NorthEast,
+            .SouthEast => .SouthWest,
+            .SouthWest => .SouthEast,
         };
     }
 
     mob.facing = newdirection;
+}
+
+fn tryChooseRandomPatrolDest(mob: *Mob) ?Coord {
+    var tries: usize = 5;
+    while (tries > 0) : (tries -= 1) {
+        const room = rng.chooseUnweighted(mapgen.Room, state.rooms[mob.coord.z].items);
+        const point = room.rect.randomCoord();
+
+        if (state.dungeon.at(point).prison or room.is_vault != null or room.is_lair)
+            continue;
+
+        if (mob.nextDirectionTo(point)) |_| {
+            return point;
+        }
+    }
+
+    return null;
 }
 
 pub fn patrolWork(mob: *Mob, _: mem.Allocator) void {
@@ -663,28 +691,37 @@ pub fn patrolWork(mob: *Mob, _: mem.Allocator) void {
     var to = mob.ai.work_area.items[0];
 
     if (mob.cansee(to)) {
-        // OK, reached our destination. Time to choose another one!
-        var tries: usize = 30;
-        while (tries > 0) : (tries -= 1) {
-            const room = rng.chooseUnweighted(mapgen.Room, state.rooms[mob.coord.z].items);
-            const point = room.rect.randomCoord();
-
-            if (state.dungeon.at(point).prison or room.is_vault != null or room.is_lair)
-                continue;
-
-            if (mob.nextDirectionTo(point)) |_| {
-                mob.ai.work_area.items[0] = point;
-                break;
-            }
-        }
-
+        if (tryChooseRandomPatrolDest(mob)) |point|
+            mob.ai.work_area.items[0] = point;
         tryRest(mob);
+        guardGlanceAround(mob);
         return;
     }
+
+    const old_room = getCurrentRoom(mob);
 
     const prev_facing = mob.facing;
     mob.tryMoveTo(to);
     guardGlanceLeftRight(mob, prev_facing);
+
+    const new_room = getCurrentRoom(mob);
+
+    if (mob.faction == .Necromancer) {
+        const genthreat = alert.getThreat(.General).level;
+        if (genthreat > alert.GENERAL_THREAT_LOOK_CAREFULLY2 and
+            old_room != null and new_room != null and
+            old_room.? != new_room.? and
+            state.rooms[mob.coord.z].items[new_room.?].type == .Room and
+            !state.rooms[mob.coord.z].items[new_room.?].is_extension_room)
+        {
+            mob.newJob(.GRD_SweepRoom);
+            mob.newestJob().?.setCtx(usize, AIJob.CTX_ROOM_ID, new_room.?);
+        } else if (genthreat > alert.GENERAL_THREAT_LOOK_CAREFULLY) {
+            mob.newJob(.GRD_LookAround);
+            // crashes, idk
+            // mob.delegateJob();
+        }
+    }
 }
 
 pub fn guardWork(mob: *Mob, _: mem.Allocator) void {
@@ -1692,6 +1729,65 @@ pub fn _Job_WRK_ExamineCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
             job.setCtx(usize, CTX_TURNS_LEFT_EXAMINING, turns_left - 1);
             return .Ongoing;
         }
+    }
+}
+
+pub fn _Job_GRD_LookAround(mob: *Mob, job: *AIJob) AIJob.JStatus {
+    const CTX_TURNS_LEFT_LOOKING = "ctx_turns_left_examining";
+    const turns_left = job.getCtx(usize, CTX_TURNS_LEFT_LOOKING, rng.range(usize, 2, 4));
+
+    if (rng.onein(3)) {
+        if (!mob.moveInDirection(rng.chooseUnweighted(Direction, &DIRECTIONS)))
+            tryRest(mob);
+    } else tryRest(mob);
+    guardGlanceRandom(mob);
+
+    if (turns_left == 0) {
+        return .Complete;
+    } else {
+        job.setCtx(usize, CTX_TURNS_LEFT_LOOKING, turns_left - 1);
+        return .Ongoing;
+    }
+}
+
+pub fn _Job_GRD_SweepRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
+    const CTX_ROOM_MAP = "ctx_room_map";
+    const CTX_ROOM_SWEEP_DEST = "ctx_room_sweep_dest";
+
+    const room_id = job.getCtx(usize, AIJob.CTX_ROOM_ID, getCurrentRoom(mob) orelse undefined);
+    const room = state.rooms[mob.coord.z].items[room_id];
+    const room_map = job.getCtxPtr(CoordArrayList, CTX_ROOM_MAP, CoordArrayList.init(state.GPA.allocator()));
+    const room_dst = job.getCtx(Coord, CTX_ROOM_SWEEP_DEST, room.rect.middle());
+
+    for (mob.fov) |row, y| for (row) |cell, x| {
+        if (cell == 0) continue;
+        const fitem = Coord.new2(mob.coord.z, x, y);
+        room_map.append(fitem) catch err.wat();
+    };
+
+    if (mob.cansee(room_dst)) {
+        var tries = room.rect.height * (room.rect.width / 2);
+        while (tries > 0) : (tries -= 1) {
+            const ctry = room.rect.randomCoord();
+            const seen = for (room_map.items) |c| {
+                if (c.eq(ctry)) break true;
+            } else false;
+            if (!seen and !state.dungeon.at(ctry).prison and
+                mob.nextDirectionTo(ctry) != null)
+            {
+                tryRest(mob);
+                job.setCtx(Coord, CTX_ROOM_SWEEP_DEST, ctry);
+                return .Ongoing;
+            }
+        }
+
+        tryRest(mob);
+        return .Complete;
+    } else {
+        const prev_facing = mob.facing;
+        mob.tryMoveTo(room_dst);
+        guardGlanceLeftRight(mob, prev_facing);
+        return .Ongoing;
     }
 }
 

@@ -45,8 +45,7 @@ pub fn bug(comptime fmt: []const u8, args: anytype) noreturn {
         };
     }
 
-    std.os.abort();
-    unreachable;
+    @panic("Aborting");
 }
 
 pub fn fatal(comptime fmt: []const u8, args: anytype) noreturn {

@@ -646,6 +646,10 @@ pub const Rect = struct {
             self.start.y < limit.start.y;
     }
 
+    pub fn middle(self: Rect) Coord {
+        return Coord.new2(self.start.z, self.start.x + (self.width / 2), self.start.y + (self.height / 2));
+    }
+
     pub fn end(self: *const Rect) Coord {
         return Coord.new2(self.start.z, self.start.x + self.width, self.start.y + self.height);
     }
@@ -997,6 +1001,9 @@ pub const EnemyRecord = struct {
     mob: *Mob,
     last_seen: ?Coord,
     counter: usize,
+
+    // For threat record-keeping. Only used by Necromancer faction
+    was_attacked: bool = false,
 
     pub const AList = std.ArrayList(EnemyRecord);
 
@@ -1748,48 +1755,69 @@ pub const AIJob = struct {
     pub const JStatus = enum { Defer, Ongoing, Complete };
 
     pub const CTX_CORPSE_LOCATION = "ctx_corpse_location";
+    pub const CTX_ROOM_ID = "ctx_room_id";
 
     pub const Value = union(enum) {
         usize: usize,
         bool: bool,
         Coord: Coord,
+        @"std.array_list.ArrayListAligned(types.Coord,null)": CoordArrayList,
     };
 
     pub const Type = enum {
+        Dummy,
         WRK_LeaveFloor,
         WRK_ScanJobs,
         WRK_Clean,
         WRK_ScanCorpse,
         WRK_ReportCorpse,
         WRK_ExamineCorpse,
+        GRD_LookAround,
+        GRD_SweepRoom,
         SPC_NCAlignment,
 
         pub fn func(self: @This()) fn (*Mob, *AIJob) JStatus {
             return switch (self) {
+                .Dummy => unreachable,
                 .WRK_LeaveFloor => ai._Job_WRK_LeaveFloor,
                 .WRK_ScanJobs => ai._Job_WRK_ScanJobs,
                 .WRK_Clean => ai._Job_WRK_Clean,
                 .WRK_ScanCorpse => ai._Job_WRK_ScanCorpse,
                 .WRK_ReportCorpse => ai._Job_WRK_ReportCorpse,
                 .WRK_ExamineCorpse => ai._Job_WRK_ExamineCorpse,
+                .GRD_LookAround => ai._Job_GRD_LookAround,
+                .GRD_SweepRoom => ai._Job_GRD_SweepRoom,
                 .SPC_NCAlignment => ai._Job_SPC_NCAlignment,
             };
         }
     };
 
     pub fn deinit(self: *@This()) void {
+        var iter = self.ctx.iterator();
+        while (iter.next()) |entry| switch (entry.value_ptr.*) {
+            .@"std.array_list.ArrayListAligned(types.Coord,null)" => |c| c.deinit(),
+            else => {},
+        };
         self.ctx.deinit();
     }
 
     pub fn getCtx(self: *@This(), comptime T: type, key: []const u8, default: T) T {
+        return getCtxPtr(self, T, key, default).*;
+    }
+
+    pub fn getCtxPtr(self: *@This(), comptime T: type, key: []const u8, default: T) *T {
         const default_v = @unionInit(Value, @typeName(T), default);
         const entry = self.ctx.getOrPutValue(key, default_v) catch err.wat();
-        return @field(entry.value_ptr, @typeName(T));
+        return &@field(entry.value_ptr, @typeName(T));
     }
 
     pub fn setCtx(self: *@This(), comptime T: type, key: []const u8, val: T) void {
         const val_v = @unionInit(Value, @typeName(T), val);
         self.ctx.put(key, val_v) catch err.wat();
+    }
+
+    pub fn clone(self: *@This()) @This() {
+        return .{ .job = self.job, .ctx = self.ctx.clone() catch err.oom() };
     }
 };
 
@@ -2388,6 +2416,16 @@ pub const Mob = struct { // {{{
     pub fn newJob(self: *Mob, jtype: AIJob.Type) void {
         const job = AIJob{ .job = jtype, .ctx = AIJob.Ctx.init(state.GPA.allocator()) };
         self.jobs.append(job) catch err.wat();
+    }
+
+    pub fn delegateJob(self: *Mob) void {
+        if (self.squad == null or self.squad.?.leader != self) {
+            return;
+        }
+
+        for (self.squad.?.members.constSlice()) |member| {
+            member.jobs.append(self.newestJob().?.clone()) catch err.wat();
+        }
     }
 
     pub fn newestJob(self: *Mob) ?*AIJob {
@@ -3167,6 +3205,10 @@ pub const Mob = struct { // {{{
                 self.cancelStatus(.Amnesia);
             }
             ai.updateEnemyKnowledge(self, attacker, null);
+            for (self.enemyList().items) |*enemyrec|
+                if (enemyrec.mob == attacker) {
+                    enemyrec.was_attacked = true;
+                };
         }
 
         // Record stats

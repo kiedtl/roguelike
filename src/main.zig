@@ -9,7 +9,7 @@ const meta = std.meta;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const ai = @import("ai.zig");
-// const alert = @import("alert.zig");
+const alert = @import("alert.zig");
 const rng = @import("rng.zig");
 const janet = @import("janet.zig");
 const player = @import("player.zig");
@@ -143,11 +143,11 @@ fn initGame() bool {
     state.containers = ContainerList.init(state.GPA.allocator());
     state.evocables = EvocableList.init(state.GPA.allocator());
     state.messages = MessageArrayList.init(state.GPA.allocator());
-    // state.alerts = alert.Alert.List.init(state.GPA.allocator());
 
     janet.init() catch return false;
     _ = janet.loadFile("scripts/particles.janet", state.GPA.allocator()) catch return false;
 
+    alert.init();
     events.init();
     font.loadFontsData();
     state.loadLevelInfo();
@@ -219,12 +219,12 @@ fn deinitGame() void {
     state.props.deinit();
     state.containers.deinit();
     state.evocables.deinit();
-    // state.alerts.deinit();
 
     for (literature.posters.items) |poster|
         poster.deinit(state.GPA.allocator());
     literature.posters.deinit();
 
+    alert.deinit();
     events.deinit();
     janet.deinit();
     font.freeFontData();
@@ -514,6 +514,7 @@ fn tickGame() !void {
     gas.tickGases(cur_level);
     state.tickSound(cur_level);
     state.tickLight(cur_level);
+    alert.tickThreats();
 
     if (state.ticks % 10 == 0) {
         // alert.tickCheckLevelHealth(cur_level);
@@ -600,7 +601,8 @@ fn tickGame() !void {
                 player.bookkeepingFOV();
             }
 
-            err.ensure(prev_energy > mob.energy, "{c} (phase: {}) did nothing during turn!", .{ mob, mob.ai.phase }) catch {
+            const _j = if (mob.newestJob()) |j| j.job else .Dummy;
+            err.ensure(prev_energy > mob.energy, "{c} (phase: {}; job: {}) did nothing during turn!", .{ mob, mob.ai.phase, _j }) catch {
                 ai.tryRest(mob);
             };
 
@@ -678,7 +680,8 @@ fn viewerTickGame(cur_level: usize) void {
                 });
             }
 
-            err.ensure(prev_energy > mob.energy, "{c} (phase: {}) did nothing during turn!", .{ mob, mob.ai.phase }) catch {
+            const _j = if (mob.newestJob()) |j| j.job else .Dummy;
+            err.ensure(prev_energy > mob.energy, "{c} (phase: {}; job: {}) did nothing during turn!", .{ mob, mob.ai.phase, _j }) catch {
                 ai.tryRest(mob);
             };
         }
