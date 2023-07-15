@@ -85,7 +85,7 @@ pub const Info = struct {
                 if (state.player.killed_by) |by| {
                     if (by.faction == .Necromancer) {
                         if (by.life_type == .Undead) {
-                            break :b "Suffered the Necromancer's wrath";
+                            break :b "Faced the Necromancer's rage";
                         } else {
                             break :b "Paid for their treachery";
                         }
