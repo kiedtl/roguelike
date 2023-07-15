@@ -49,6 +49,10 @@ const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
 // -----------------------------------------------------------------------------
 
+pub const spawns = @import("mobs/spawns.zig");
+
+// -----------------------------------------------------------------------------
+
 const NONE_WEAPON = Weapon{
     .id = "",
     .name = "",
@@ -2330,6 +2334,15 @@ pub fn placeMob(
     }
 
     return mob_ptr;
+}
+
+pub fn placeMobNearStairs(template: *const MobTemplate, level: usize, opts: PlaceMobOptions) !*Mob {
+    const coord = for (state.dungeon.stairs[level].constSlice()) |stair| {
+        if (state.nextSpotForMob(stair, null)) |coord| {
+            break coord;
+        }
+    } else return error.NoSpace;
+    return placeMob(state.GPA.allocator(), template, coord, opts);
 }
 
 pub fn placeMobSurrounding(c: Coord, t: *const MobTemplate, opts: PlaceMobOptions) void {

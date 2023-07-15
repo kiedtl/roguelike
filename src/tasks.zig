@@ -39,13 +39,46 @@ pub const TaskType = union(enum) {
     Clean: Coord,
     Haul: struct { from: Coord, to: Coord },
     ExamineCorpse: *Mob,
+    ReinforceRoom: struct { room: usize, preferred_spot: Coord },
 };
 
 pub const Task = struct {
     type: TaskType,
+    level: usize,
     assigned_to: ?*Mob = null,
     completed: bool = false,
 };
+
+pub fn reportTask(level: usize, newtask: TaskType) void {
+    var reuse_task_slot: ?usize = null;
+
+    // Check if task has already been reported
+    for (state.tasks.items) |task, id| {
+        if (@as(meta.Tag(TaskType), task.type) == newtask) {
+            const is_same = task.level == level and switch (task.type) {
+                .Clean => |c| c.eq(newtask.Clean),
+                .Haul => |h| h.from.eq(newtask.Haul.from) and h.to.eq(newtask.Haul.to),
+                .ExamineCorpse => |m| m == newtask.ExamineCorpse,
+                .ReinforceRoom => |r| r.room == newtask.ReinforceRoom.room,
+            };
+
+            if (is_same and !task.completed) {
+                // Already reported.
+                return;
+            }
+
+            if (task.completed) {
+                reuse_task_slot = id;
+            }
+        }
+    }
+
+    if (reuse_task_slot) |slot| {
+        state.tasks.items[slot] = .{ .type = newtask, .level = level };
+    } else {
+        state.tasks.append(.{ .type = newtask, .level = level }) catch err.wat();
+    }
+}
 
 pub fn getJobTypesForWorker(mob: *Mob) struct { tasktype: meta.Tag(TaskType), aijobtype: AIJob.Type } {
     if (mem.eql(u8, mob.id, "cleaner")) {
@@ -60,6 +93,21 @@ pub fn getJobTypesForWorker(mob: *Mob) struct { tasktype: meta.Tag(TaskType), ai
 
 // Scan for tasks
 pub fn tickTasks(level: usize) void {
+    // Clear out tasks assigned to dead mobs and tasks on other levels
+    for (state.tasks.items) |*task| {
+        if (task.completed) continue;
+
+        if (task.level != level) {
+            task.completed = true;
+        }
+
+        if (task.assigned_to) |assigned_to| {
+            if (assigned_to.is_dead and assigned_to.corpse_info.is_noticed) {
+                task.assigned_to = null;
+            }
+        }
+    }
+
     // Check for items in outputs that need to be hauled to stockpiles
     for (state.outputs[level].items) |output_area| {
         var item: ?*const Item = null;
@@ -114,7 +162,7 @@ pub fn tickTasks(level: usize) void {
 
             if (stockpile) |dest| {
                 state.tasks.append(
-                    Task{ .type = TaskType{ .Haul = .{ .from = itemcoord.?, .to = dest } } },
+                    Task{ .level = level, .type = TaskType{ .Haul = .{ .from = itemcoord.?, .to = dest } } },
                 ) catch unreachable;
             }
         }
@@ -168,7 +216,7 @@ pub fn tickTasks(level: usize) void {
 
             if (take_from_) |take_from| {
                 state.tasks.append(
-                    Task{ .type = TaskType{ .Haul = .{ .from = take_from, .to = empty_slot } } },
+                    Task{ .level = level, .type = TaskType{ .Haul = .{ .from = take_from, .to = empty_slot } } },
                 ) catch unreachable;
             }
         }
@@ -193,18 +241,23 @@ pub fn tickTasks(level: usize) void {
                 .Clean => &mobs.CleanerTemplate,
                 .Haul => &mobs.HaulerTemplate,
                 .ExamineCorpse => &mobs.CoronerTemplate,
+                .ReinforceRoom => mobs.spawns.chooseMob(.Special, level, "C") catch err.wat(),
             };
-            const coord = for (state.dungeon.stairs[level].constSlice()) |stair| {
-                if (state.nextSpotForMob(stair, null)) |coord| {
-                    break coord;
-                }
-            } else null;
-            if (coord) |spawn_coord| {
-                const worker = mobs.placeMob(state.GPA.allocator(), mob_template, spawn_coord, .{});
+
+            var opts: mobs.PlaceMobOptions = .{};
+            if (task.type == .ReinforceRoom) {
+                opts.work_area = task.type.ReinforceRoom.preferred_spot;
+            }
+
+            if (mobs.placeMobNearStairs(mob_template, level, opts)) |worker| {
                 worker.ai.task_id = id;
                 task.assigned_to = worker;
-                break;
+            } else |_| {
+                // No space near stairs. Do nothing, wait until next time, hopefully
+                // the traffic dissipates.
             }
+
+            break;
         };
 }
 
@@ -228,8 +281,8 @@ pub fn scanForCorpses(mob: *Mob) void {
 
                 mob.newJob(.WRK_ScanCorpse);
                 mob.newestJob().?.setCtx(Coord, AIJob.CTX_CORPSE_LOCATION, corpse.coord);
-                corpse.corpse_info.is_noticed = true;
             }
+            corpse.corpse_info.is_noticed = true;
         };
     };
 }
@@ -252,24 +305,7 @@ pub fn scanForCleaningJobs(mob: *Mob) void {
             }
 
             if (!clean) {
-                var already_reported: ?usize = null;
-
-                for (state.tasks.items) |task, id| switch (task.type) {
-                    .Clean => |c| if (c.eq(coord)) {
-                        already_reported = id;
-                        break;
-                    },
-                    else => {},
-                };
-
-                if (already_reported) |id| {
-                    if (state.tasks.items[id].completed) {
-                        state.tasks.items[id].completed = false;
-                        state.tasks.items[id].assigned_to = null;
-                    }
-                } else {
-                    state.tasks.append(Task{ .type = TaskType{ .Clean = coord } }) catch unreachable;
-                }
+                reportTask(coord.z, .{ .Clean = coord });
             }
         }
     };

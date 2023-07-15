@@ -1645,15 +1645,8 @@ pub fn _Job_WRK_ReportCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
         return .Ongoing;
     }
 
-    const already_reported = corpse.corpse_info.is_reported or for (state.tasks.items) |task| {
-        if (task.type == .ExamineCorpse and task.type.ExamineCorpse == corpse)
-            break true;
-    } else false;
-
-    if (!already_reported) {
-        state.tasks.append(tasks.Task{ .type = tasks.TaskType{ .ExamineCorpse = corpse } }) catch unreachable;
-        corpse.corpse_info.is_reported = true;
-    }
+    tasks.reportTask(mob.coord.z, .{ .ExamineCorpse = corpse });
+    corpse.corpse_info.is_reported = true;
 
     tryRest(mob);
     return .Complete;
@@ -1673,7 +1666,7 @@ pub fn _Job_WRK_ExamineCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
         // Flip a coin and decide whether to stand still or move around the
         // corpse for dramatic effect.
         //
-        if (rng.boolean()) {
+        if (rng.onein(4)) {
             tryRest(mob);
         } else for (&DIRECTIONS) |d|
             if (corpse.coord.move(d, state.mapgeometry)) |neighbor| {
@@ -1683,6 +1676,17 @@ pub fn _Job_WRK_ExamineCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
 
         if (turns_left == 0) {
             corpse.corpse_info.is_resolved = true;
+
+            if (corpse.killed_by) |killed_by|
+                if (killed_by == state.player or !killed_by.corpse_info.is_noticed) {
+                    if (switch (state.layout[corpse.coord.z][corpse.coord.y][corpse.coord.x]) {
+                        .Unknown => null,
+                        .Room => |r| r,
+                    }) |room| {
+                        tasks.reportTask(mob.coord.z, .{ .ReinforceRoom = .{ .room = room, .preferred_spot = corpse.coord } });
+                    }
+                };
+
             return .Complete;
         } else {
             job.setCtx(usize, CTX_TURNS_LEFT_EXAMINING, turns_left - 1);

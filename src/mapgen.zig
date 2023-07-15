@@ -50,6 +50,7 @@ const CoordArrayList = types.CoordArrayList;
 const Material = types.Material;
 const Vial = types.Vial;
 const Squad = types.Squad;
+const MobSpawnInfo = mobs.spawns.MobSpawnInfo;
 
 const DIRECTIONS = types.DIRECTIONS;
 const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
@@ -2262,11 +2263,11 @@ pub fn placeMobs(level: usize, alloc: mem.Allocator) void {
             rng.range(usize, 1, Configs[level].room_crowd_max);
 
         const sptable: *MobSpawnInfo.AList = if (room.is_lair)
-            &spawn_tables_lairs[0]
+            &mobs.spawns.spawn_tables_lairs[0]
         else if (room.is_vault != null)
-            &spawn_tables_vaults[vault_type.?]
+            &mobs.spawns.spawn_tables_vaults[vault_type.?]
         else
-            &spawn_tables[level];
+            &mobs.spawns.spawn_tables[level];
 
         loop: while (room.mob_count < max_crowd) {
             const mob_spawn_info = rng.choose2(MobSpawnInfo, sptable.items, "weight") catch err.wat();
@@ -2875,11 +2876,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     state.dungeon.stairs[level].append(up_staircase) catch err.wat();
 
     // Place a guardian near the stairs in a diagonal position, if possible.
-    const mob_spawn_info = rng.choose2(MobSpawnInfo, spawn_tables_stairs[level].items, "weight") catch err.wat();
-    const guardian = mobs.findMobById(mob_spawn_info.id) orelse err.bug(
-        "Mob {s} specified in [stair] spawn tables couldn't be found.",
-        .{mob_spawn_info.id},
-    );
+    const guardian = mobs.spawns.chooseMob(.Special, level, "g") catch err.wat();
     for (&DIAGONAL_DIRECTIONS) |d| if (up_staircase.move(d, state.mapgeometry)) |neighbor| {
         if (state.is_walkable(neighbor, .{ .right_now = true })) {
             _ = mobs.placeMob(alloc, guardian, neighbor, .{});
@@ -3240,11 +3237,7 @@ pub fn generateLayoutMap(level: usize) void {
 
 fn levelFeatureDormantConstruct(_: usize, coord: Coord, _: *const Room, _: *const Prefab, alloc: mem.Allocator) void {
     while (true) {
-        const mob_spawn_info = rng.choose2(MobSpawnInfo, spawn_tables[coord.z].items, "weight") catch err.wat();
-        const mob = mobs.findMobById(mob_spawn_info.id) orelse err.bug(
-            "Mob {s} specified in spawn tables couldn't be found.",
-            .{mob_spawn_info.id},
-        );
+        const mob = mobs.spawns.chooseMob(.Main, coord.z, null) catch err.wat();
         if (mob.mob.life_type != .Construct) continue;
         const mob_ptr = mobs.placeMob(alloc, mob, coord, .{});
         mob_ptr.addStatus(.Sleeping, 0, .Prm);
@@ -4036,103 +4029,6 @@ pub fn readPrefabs(alloc: mem.Allocator) void {
 
     rng.shuffle(Prefab, s_fabs.items);
     std.sort.insertionSort(Prefab, s_fabs.items, {}, Prefab.lesserThan);
-}
-
-pub const MobSpawnInfo = struct {
-    id: []const u8 = undefined,
-    weight: usize,
-
-    const AList = std.ArrayList(@This());
-};
-pub var spawn_tables: [LEVELS]MobSpawnInfo.AList = undefined;
-pub var spawn_tables_vaults: [VAULT_KINDS]MobSpawnInfo.AList = undefined;
-pub var spawn_tables_stairs: [LEVELS]MobSpawnInfo.AList = undefined;
-pub var spawn_tables_lairs: [1]MobSpawnInfo.AList = undefined;
-
-pub fn readSpawnTables(alloc: mem.Allocator) void {
-    const TmpMobSpawnData = struct {
-        id: []u8 = undefined,
-        levels: [LEVELS]usize = undefined,
-    };
-
-    const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
-    var rbuf: [65535]u8 = undefined;
-
-    const spawn_table_files = [_]struct {
-        filename: []const u8,
-        sptable: []MobSpawnInfo.AList,
-        backwards: bool = false,
-    }{
-        .{ .filename = "spawns.tsv", .sptable = &spawn_tables, .backwards = true },
-        .{ .filename = "spawns_vaults.tsv", .sptable = &spawn_tables_vaults },
-        .{ .filename = "spawns_stairs.tsv", .sptable = &spawn_tables_stairs, .backwards = true },
-        .{ .filename = "spawns_lairs.tsv", .sptable = &spawn_tables_lairs, .backwards = true },
-    };
-
-    // We need `inline for` because the schema needs to be comptime...
-    //
-    inline for (spawn_table_files) |sptable_file| {
-        const data_file = data_dir.openFile(sptable_file.filename, .{ .read = true }) catch unreachable;
-        const len = sptable_file.sptable.len;
-
-        const read = data_file.readAll(rbuf[0..]) catch unreachable;
-
-        const result = tsv.parse(TmpMobSpawnData, &[_]tsv.TSVSchemaItem{
-            .{ .field_name = "id", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
-            .{ .field_name = "levels", .parse_to = usize, .is_array = len, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-        }, .{}, rbuf[0..read], alloc);
-
-        if (!result.is_ok()) {
-            err.bug("Can't load {s}: {} (line {}, field {})", .{
-                sptable_file.filename,
-                result.Err.type,
-                result.Err.context.lineno,
-                result.Err.context.field,
-            });
-        }
-
-        const spawndatas = result.unwrap();
-        defer spawndatas.deinit();
-
-        for (sptable_file.sptable) |*table, i| {
-            table.* = @TypeOf(table.*).init(alloc);
-            for (spawndatas.items) |spawndata| {
-                table.append(.{
-                    .id = utils.cloneStr(spawndata.id, state.GPA.allocator()) catch err.oom(),
-                    .weight = spawndata.levels[if (sptable_file.backwards) (len - 1) - i else i],
-                }) catch err.wat();
-            }
-        }
-
-        for (spawndatas.items) |spawndata| {
-            alloc.free(spawndata.id);
-        }
-        std.log.info("Loaded spawn tables ({s}).", .{sptable_file.filename});
-    }
-}
-
-pub fn freeSpawnTables(alloc: mem.Allocator) void {
-    for (spawn_tables) |table| {
-        for (table.items) |spawn_info|
-            alloc.free(spawn_info.id);
-        table.deinit();
-    }
-
-    for (spawn_tables_vaults) |table| {
-        for (table.items) |spawn_info|
-            alloc.free(spawn_info.id);
-        table.deinit();
-    }
-
-    for (spawn_tables_stairs) |table| {
-        for (table.items) |spawn_info|
-            alloc.free(spawn_info.id);
-        table.deinit();
-    }
-
-    for (spawn_tables_lairs[0].items) |spawn_info|
-        alloc.free(spawn_info.id);
-    spawn_tables_lairs[0].deinit();
 }
 
 pub const LevelConfig = struct {

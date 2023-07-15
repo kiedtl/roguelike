@@ -153,7 +153,7 @@ fn initGame() bool {
     state.loadLevelInfo();
     surfaces.readProps(state.GPA.allocator());
     literature.readPosters(state.GPA.allocator());
-    mapgen.readSpawnTables(state.GPA.allocator());
+    mobs.spawns.readSpawnTables(state.GPA.allocator());
     mapgen.readPrefabs(state.GPA.allocator());
     readDescriptions(state.GPA.allocator());
     player.choosePlayerUpgrades();
@@ -230,7 +230,7 @@ fn deinitGame() void {
     font.freeFontData();
     state.freeLevelInfo();
     surfaces.freeProps(state.GPA.allocator());
-    mapgen.freeSpawnTables(state.GPA.allocator());
+    mobs.spawns.freeSpawnTables(state.GPA.allocator());
     freeDescriptions(state.GPA.allocator());
 
     // Do this last so that mob corpses can be placed (A better fix would be to

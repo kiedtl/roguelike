@@ -1813,7 +1813,7 @@ pub const Species = struct {
 };
 
 // Stuff to keep track of coroner mechanics and such... not used for mobs not
-// aligned w/ necromancer
+// aligned w/ necromancer (except is_noticed, which *is* used)
 //
 pub const CorpseInfo = struct {
     is_noticed: bool = false,
