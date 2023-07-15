@@ -1245,7 +1245,6 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
 
     _drawBar(y, startx, bar_endx, state.player.MP, state.player.max_MP, "mana", colors.percentageOf(colors.GOLD, 55), colors.LIGHT_GOLD, .{});
     const pot = utils.SignedFormatter{ .v = state.player.stat(.Potential) };
-    std.log.info("pot: {}", .{pot});
     _ = _drawStrf(bar_endx + 1, y, endx, "$opot {: >3}%$.", .{pot}, .{});
     y += 1;
 
