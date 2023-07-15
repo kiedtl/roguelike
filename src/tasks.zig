@@ -103,7 +103,10 @@ pub fn tickTasks(level: usize) void {
 
         if (task.assigned_to) |assigned_to| {
             if (assigned_to.is_dead and assigned_to.corpse_info.is_noticed) {
-                task.assigned_to = null;
+                switch (task.type) {
+                    .Haul => task.completed = true,
+                    else => task.assigned_to = null,
+                }
             }
         }
     }
