@@ -130,6 +130,7 @@ pub fn readSpawnTables(alloc: mem.Allocator) void {
 
         for (spawndatas.items) |spawndata| {
             alloc.free(spawndata.id);
+            alloc.free(spawndata.classtype);
         }
         std.log.info("Loaded spawn tables ({s}).", .{sptable_file.filename});
     }
