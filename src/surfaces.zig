@@ -1286,7 +1286,6 @@ fn powerHealingGasPump(machine: *Machine) void {
 }
 
 fn powerStairExit(machine: *Machine) void {
-    assert(machine.coord.z == 0);
     if (machine.last_interaction) |culprit| {
         if (!culprit.coord.eq(state.player.coord)) return;
         state.state = .Win;
