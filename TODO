@@ -838,6 +838,26 @@ Headaches
 - Possible source: aura of microwave radiation (havana sickness? hah)
 
 
+Threat countermeasures
+----------------------
+General:
+x Patrols looking around                60
+x Patrols looking around even more     180
+
+Specific:
+- Hunter squad sent out                200, 300, 400, ...
+  (escorted if deadly)
+
+Unknown:
+- Watcher dispatched to rooms          200, 300
+- Floor-wide sweep                     400
+
+Unknown/Specific (deadly):
+- Using checkpoints more often         100
+- Stationary reinforcements to rooms   200, 300, 400, ...
+- Extra member for each patrol         200, 300
+
+
 Roadmap
 =======
 x Basic prefabs
@@ -1151,8 +1171,8 @@ x Animations (w/ particle engine)
   - Escape menu
     - List of visited/unvisited floors
     - Status/mob/item description lookup screen
-    - Keybinding help "?" screen
-    - About screen (or just in log area?)
+    x Keybinding help "?" screen
+    x About screen (or just in log area?)
   - Popups explaining UI elements on hover
     - Quick description for current level indicator
     - Bars (health, corruption, sneak)
@@ -1161,10 +1181,11 @@ x Animations (w/ particle engine)
       - Breakdown
     - Status effects
 - Corpse-related mechanics
-  - Enemies alerted of player if finding recently-killed corpse w/ player nearby
-  - Patrols and guards report corpses
-  - Cleaners clean area and move corpse to side of room
-  - Coroner comes, examines corpse, & registers threat
+  x Enemies alerted of player if finding recently-killed corpse w/ player nearby
+  x Patrols and guards report corpses
+  x Cleaners clean area 
+  - Haulers move corpse to side of room
+  x Coroner comes, examines corpse, & registers threat
   - Fix: don't spawn corpses when removing enemies near staircases
 - Lava and Water rework
   - Rework as terrain
