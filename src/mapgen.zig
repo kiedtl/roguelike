@@ -2928,13 +2928,23 @@ pub fn placeEntry(level: usize, alloc: mem.Allocator) void {
         else => {},
     }
     state.dungeon.entries[level] = down_staircase;
+}
 
-    // Remove mobs nearby upstairs.
-    var dijk = dijkstra.Dijkstra.init(down_staircase, state.mapgeometry, 8, state.is_walkable, .{ .ignore_mobs = true, .right_now = true }, alloc);
+// Remove mobs nearby entry points to avoid punishing player too hard.
+pub fn removeEnemiesNearEntry(level: usize) void {
+    const down_staircase = state.dungeon.entries[level];
+    var dijk = dijkstra.Dijkstra.init(
+        down_staircase,
+        state.mapgeometry,
+        8,
+        state.is_walkable,
+        .{ .ignore_mobs = true, .right_now = true },
+        state.GPA.allocator(),
+    );
     defer dijk.deinit();
     while (dijk.next()) |child| {
         if (state.dungeon.at(child).mob) |mob|
-            if (mob.ai.is_combative and mob.isHostileTo(state.player)) {
+            if (mob.isHostileTo(state.player)) {
                 mob.deinitNoCorpse();
             };
     }
@@ -3351,6 +3361,7 @@ pub fn initLevel(level: usize) void {
         placeItems(level);
         placeMobs(level, state.GPA.allocator());
         setLevelMaterial(level);
+        removeEnemiesNearEntry(level);
 
         std.log.info("Generated map {s}.", .{state.levelinfo[level].name});
         return;
