@@ -351,6 +351,19 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
     // No existing record, append.
     mob.enemyList().append(new) catch unreachable;
 
+    // Remove any sustiles related to this enemy
+    //
+    // Both to avoid unnecessary investigation and prevent redundant threat reporting
+    while (true) {
+        var completed = true;
+        for (mob.sustiles.items) |susrecord, i|
+            if (susrecord.sound) |s| if (s.mob_source) |src| if (src == new.mob) {
+                completed = false;
+                _ = mob.sustiles.orderedRemove(i);
+            };
+        if (completed) break;
+    }
+
     // Animation
     if (new.mob == state.player and state.player.cansee(mob.coord)) {
         ui.Animation.blinkMob(&.{mob}, '!', colors.AQUAMARINE, .{ .repeat = 2, .delay = 100 });
@@ -421,6 +434,8 @@ pub fn checkForHostiles(mob: *Mob) void {
     var i: usize = 0;
     while (i < mob.enemyList().items.len) {
         const enemy = &mob.enemyList().items[i];
+        const confrontation: alert.ThreatIncrease =
+            if (enemy.attacked_me) .ArmedConfrontation else .Confrontation;
 
         if (enemy.last_seen) |last_seen| {
             if (mob.cansee(last_seen) and !enemy.mob.coord.eq(last_seen)) {
@@ -435,12 +450,12 @@ pub fn checkForHostiles(mob: *Mob) void {
             !mob.squad.?.leader.?.cansee(enemy.mob.coord)) or
             enemy.mob.is_dead)
         {
-            alert.reportThreat(mob, .{ .Specific = enemy.mob }, .Confrontation);
+            alert.reportThreat(mob, .{ .Specific = enemy.mob }, confrontation);
             _ = mob.enemyList().orderedRemove(i);
         } else if (enemy.mob.faction == .Night and
             mob.nextDirectionTo(enemy.mob.coordMT(mob.coord)) == null)
         {
-            alert.reportThreat(mob, .{ .Specific = enemy.mob }, .Confrontation);
+            alert.reportThreat(mob, .{ .Specific = enemy.mob }, confrontation);
 
             // Placeholder, eventually we want to call reinforcements and
             // exterminators to make the night creatures miserable.
@@ -561,6 +576,10 @@ pub fn checkForNoises(mob: *Mob) void {
             record.time_stared_at < NOISE_DONE_CHECKING)
         {
             new_sustiles.append(record.*) catch err.wat();
+        } else {
+            if (record.sound) |sound| if (sound.mob_source) |_| {
+                alert.reportThreat(mob, .Unknown, .Noise);
+            };
         }
     }
     mob.sustiles.deinit();
@@ -1714,7 +1733,15 @@ pub fn _Job_WRK_ExamineCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
         if (turns_left == 0) {
             corpse.corpse_info.is_resolved = true;
 
-            if (corpse.killed_by) |killed_by|
+            if (corpse.killed_by) |killed_by| {
+                alert.reportThreat(mob, if (corpse.corpse_info.killer_confirmed) .{ .Specific = killed_by } else .Unknown, .Death);
+
+                // Summon reinforcements (irregardless of whether killer is
+                // confirmed or not), only refraining from doing so if the
+                // killer isn't the player and hasn't been noticed dead. This
+                // is to prevent floor from filling up with reinforcements from
+                // a short-lived player-instigated prisoner rebellion.
+                //
                 if (killed_by == state.player or !killed_by.corpse_info.is_noticed) {
                     if (switch (state.layout[corpse.coord.z][corpse.coord.y][corpse.coord.x]) {
                         .Unknown => null,
@@ -1722,7 +1749,8 @@ pub fn _Job_WRK_ExamineCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
                     }) |room| {
                         tasks.reportTask(mob.coord.z, .{ .ReinforceRoom = .{ .room = room, .preferred_spot = corpse.coord } });
                     }
-                };
+                }
+            }
 
             return .Complete;
         } else {

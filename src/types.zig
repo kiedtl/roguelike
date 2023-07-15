@@ -1003,7 +1003,7 @@ pub const EnemyRecord = struct {
     counter: usize,
 
     // For threat record-keeping. Only used by Necromancer faction
-    was_attacked: bool = false,
+    attacked_me: bool = false,
 
     pub const AList = std.ArrayList(EnemyRecord);
 
@@ -1017,6 +1017,7 @@ pub const SuspiciousTileRecord = struct {
     time_stared_at: usize = 0,
     age: usize = 0,
     unforgettable: bool = false,
+    sound: ?Sound = null,
 };
 
 pub const Message = struct {
@@ -1849,6 +1850,8 @@ pub const CorpseInfo = struct {
     is_reported: bool = false,
     is_checked: bool = false,
     is_resolved: bool = false,
+
+    killer_confirmed: bool = false,
 };
 
 pub const Squad = struct {
@@ -3207,7 +3210,7 @@ pub const Mob = struct { // {{{
             ai.updateEnemyKnowledge(self, attacker, null);
             for (self.enemyList().items) |*enemyrec|
                 if (enemyrec.mob == attacker) {
-                    enemyrec.was_attacked = true;
+                    enemyrec.attacked_me = true;
                 };
         }
 
@@ -3526,6 +3529,15 @@ pub const Mob = struct { // {{{
                     state.message(.Damage, "{c} dies.", .{self});
                 }
             }
+        }
+
+        if (self.faction == .Necromancer and self.killed_by != null) {
+            const is_killer_confirmed = for (self.allies.items) |ally| {
+                if (ai.isEnemyKnown(ally, self.killed_by.?))
+                    break true;
+            } else false;
+            if (is_killer_confirmed)
+                self.corpse_info.killer_confirmed = true;
         }
 
         self.deinit();
