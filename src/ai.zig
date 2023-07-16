@@ -1301,6 +1301,8 @@ pub fn workerFight(mob: *Mob, _: mem.Allocator) void {
 
     if (!keepDistance(mob, currentEnemy(mob).last_seen.?, 24))
         tryRest(mob);
+
+    alertAllyOfHostile(mob);
 }
 
 pub fn meleeFight(mob: *Mob, _: mem.Allocator) void {
