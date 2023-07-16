@@ -4147,17 +4147,14 @@ pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
         .prefabs = prefabs,
         .tunneler_opts = .{
-            // .turn_chance = 1,
-            // .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
-            //     .{ .start = Coord.new(WIDTH / 2, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
-            //     // .{ .start = Coord.new(1, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
-            //     // .{ .start = Coord.new(WIDTH - 4, 1), .width = 3, .height = 0, .direction = .South },
-            // },
+            .max_iters = 300,
+            .shrink_chance = 90,
+            .grow_chance = 10,
             .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
-                .{ .start = Coord.new(1, 1), .width = 0, .height = 3, .direction = .East },
-                .{ .start = Coord.new(WIDTH - 4, 1), .width = 3, .height = 0, .direction = .South },
-                .{ .start = Coord.new(WIDTH - 1, HEIGHT - 4), .width = 0, .height = 3, .direction = .West },
-                .{ .start = Coord.new(1, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
+                .{ .start = Coord.new(1, 1), .width = 0, .height = 4, .direction = .East },
+                .{ .start = Coord.new(WIDTH - 5, 1), .width = 4, .height = 0, .direction = .South },
+                .{ .start = Coord.new(WIDTH - 1, HEIGHT - 5), .width = 0, .height = 4, .direction = .West },
+                .{ .start = Coord.new(1, HEIGHT - 1), .width = 4, .height = 0, .direction = .North },
             },
         },
         .prefab_chance = 60,
@@ -4236,24 +4233,25 @@ pub fn createLevelConfig_SIN(comptime width: usize) LevelConfig {
 pub fn createLevelConfig_CRY() LevelConfig {
     return LevelConfig{
         .tunneler_opts = .{
+            .max_iters = 350,
             .turn_chance = 10,
             .branch_chance = 4,
-            .shrink_chance = 60,
+            .shrink_chance = 70,
             .grow_chance = 30,
             // .remove_childless = false,
             .shrink_corridors = false,
 
             .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
-                .{ .start = Coord.new(1, HEIGHT / 2), .width = 0, .height = 2, .direction = .East },
+                .{ .start = Coord.new(WIDTH / 4, HEIGHT / 2), .width = 0, .height = 5, .direction = .East },
             },
         },
         .prefab_chance = 0, // No prefabs for CRY
         .mapgen_func = tunneler.placeTunneledRooms,
 
-        .min_room_width = 4,
-        .min_room_height = 4,
-        .max_room_width = 10,
-        .max_room_height = 10,
+        .min_room_width = 6,
+        .min_room_height = 6,
+        .max_room_width = 9,
+        .max_room_height = 9,
         .lair_max = 0,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{ null, null, null, null },

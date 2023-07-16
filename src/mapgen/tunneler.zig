@@ -768,7 +768,7 @@ pub const TunnelerOptions = struct {
     min_tunneler_distance: usize = 2,
 
     // Chance (percentage) to change direction.
-    turn_chance: usize = 8,
+    turn_chance: usize = 7,
     branch_chance: usize = 6,
 
     room_tries: usize = 14,
