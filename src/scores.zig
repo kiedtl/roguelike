@@ -157,6 +157,11 @@ pub const Info = struct {
                     dx += 1;
                     mx += 1;
                 }) {
+                    if (mx >= WIDTH or my >= HEIGHT) {
+                        s.surroundings[dy][dx] = ' ';
+                        continue;
+                    }
+
                     const coord = Coord.new2(state.player.coord.z, mx, my);
 
                     if (state.dungeon.neighboringWalls(coord, true) == 9) {
