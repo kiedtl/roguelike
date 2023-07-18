@@ -1047,6 +1047,7 @@ pub const Status = enum {
     RingElectrocution, // Power field == damage
     RingExcision, // No power field
     RingConjuration, // No power field
+    RingAcceleration, // No power field
 
     // Item-specific effects.
     DetectHeat, // Doesn't have a power field.
@@ -1245,6 +1246,7 @@ pub const Status = enum {
             .RingElectrocution => "ring: electrocution",
             .RingExcision => "ring: excision",
             .RingConjuration => "ring: conjuration",
+            .RingAcceleration => "ring: acceleration",
 
             .DetectHeat => "detect heat",
             .DetectElec => "detect electricity",
@@ -1294,7 +1296,7 @@ pub const Status = enum {
 
     pub fn miniString(self: Status) ?[]const u8 { // {{{
         return switch (self) {
-            .RingTeleportation, .RingDamnation, .RingElectrocution, .RingExcision, .RingConjuration => null,
+            .RingTeleportation, .RingDamnation, .RingElectrocution, .RingExcision, .RingConjuration, .RingAcceleration => null,
 
             .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .EtherealShield, .FumesVest, .Echolocation, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
 
@@ -2616,7 +2618,8 @@ pub const Mob = struct { // {{{
     pub fn declareAction(self: *Mob, action: Activity) void {
         assert(!self.is_dead);
         self.activities.append(action);
-        self.energy -= @divTrunc(self.stat(.Speed) * 100, 100);
+        const mod = if (action == .Move) self.stat(.Speed) else 100;
+        self.energy -= @divTrunc(mod * 100, 100);
     }
 
     pub fn makeNoise(self: *Mob, s_type: SoundType, intensity: SoundIntensity) void {
@@ -3998,8 +4001,14 @@ pub const Mob = struct { // {{{
         // Check statuses.
         switch (_stat) {
             .Speed => {
-                if (self.isUnderStatus(.Fast)) |_| val = @divTrunc(val * 50, 100);
-                if (self.isUnderStatus(.Slow)) |_| val = @divTrunc(val * 150, 100);
+                if (self.isUnderStatus(.Fast)) |_|
+                    val = @divTrunc(val * 50, 100);
+                if (self.isUnderStatus(.Slow)) |_|
+                    val = @divTrunc(val * 150, 100);
+                if (self.isUnderStatus(.RingAcceleration)) |_|
+                    if (utils.adjacentHostiles(self) == 0) {
+                        val = @divTrunc(val * 50, 100);
+                    };
             },
             else => {},
         }

@@ -635,3 +635,7 @@ direction, creating a number of spectral swords. The effect lasts for $bwill /
 
 Spectral swords only attack enemies that you can see, and will self-destruct
 when there are no more enemies.
+
+% acceleration
+$cEffect:$. You become 2x faster when there are no enemies adjacent to you.
+The effect lasts for $bevasion% / 4$. turns (minimum $b3$. turns).

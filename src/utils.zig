@@ -132,6 +132,14 @@ pub fn getMobInDirection(self: *Mob, d: Direction) !*Mob {
     }
 }
 
+pub fn adjacentHostiles(self: *const Mob) usize {
+    var i: usize = 0;
+    for (&DIRECTIONS) |d| if (getHostileInDirection(self, d)) {
+        i += 1;
+    } else |_| {};
+    return i;
+}
+
 pub fn getHostileInDirection(self: *const Mob, d: Direction) !*Mob {
     if (self.coord.move(d, state.mapgeometry)) |neighbor| {
         return getHostileAt(self, neighbor);

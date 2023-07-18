@@ -808,7 +808,7 @@ pub fn excavatePrefab(
                                 state.dungeon.at(rc).surface = .{ .Stair = dest };
                             },
                             .Item => |template| {
-                                state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(template.*)) catch err.wat();
+                                state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(template)) catch err.wat();
                             },
                             .Mob => |mob| {
                                 _ = mobs.placeMob(allocator, mob, rc, .{});
@@ -3499,7 +3499,7 @@ pub const Prefab = struct {
     };
 
     pub const Feature = union(enum) {
-        Item: *const items.ItemTemplate,
+        Item: items.ItemTemplate,
         Mob: *const mobs.MobTemplate,
         // Same as Mob, but with more options
         CMob: struct {

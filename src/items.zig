@@ -70,6 +70,7 @@ pub const ItemTemplate = struct {
         X: *const Aux,
         P: *const Consumable,
         c: *const Consumable,
+        r: Ring,
         E: Evocable,
         List: []const ItemTemplate,
 
@@ -81,6 +82,7 @@ pub const ItemTemplate = struct {
                 .X => |i| i.id,
                 .P => |i| i.id,
                 .c => |i| i.id,
+                .r => |i| i.name,
                 .E => |i| i.id,
                 .List => error.CannotGetListID,
             };
@@ -93,7 +95,6 @@ pub const RARE_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 90, .i = .{ .W = &SwordWeapon } },
     // Armor and cloaks
     .{ .w = 50, .i = .{ .C = &PureGoldCloak } },
-    .{ .w = 0, .i = .{ .A = &OrnateGoldArmor } }, // unique
     // Bone weapons
     .{ .w = 10, .i = .{ .W = &BoneSwordWeapon } },
     .{ .w = 10, .i = .{ .W = &BoneDaggerWeapon } },
@@ -201,6 +202,7 @@ pub const ALL_ITEMS = [_]ItemTemplate{
     .{ .w = 0, .i = .{ .List = &ITEM_DROPS } },
     .{ .w = 0, .i = .{ .List = &NIGHT_ITEM_DROPS } },
     .{ .w = 0, .i = .{ .E = SymbolEvoc } },
+    .{ .w = 0, .i = .{ .A = &OrnateGoldArmor } },
 };
 
 pub const RINGS = [_]Ring{
@@ -211,6 +213,7 @@ pub const RINGS = [_]Ring{
     TeleportationRing,
     InsurrectionRing,
     MagnetizationRing,
+    AccelerationRing,
 };
 
 pub const NIGHT_RINGS = [_]Ring{
@@ -754,6 +757,29 @@ pub const MagnetizationRing = Ring{ // {{{
                 state.message(.Info, "{c} becomes briefly magnetic!", .{magnet});
 
             return true;
+        }
+    }.f,
+}; // }}}
+
+pub const AccelerationRing = Ring{ // {{{
+    .name = "acceleration",
+    .required_MP = 2,
+    .effect = struct {
+        pub fn f() bool {
+            const ev = @intCast(usize, state.player.stat(.Evade));
+            const duration = math.max(3, ev / 4);
+            state.player.addStatus(.RingAcceleration, 0, .{ .Tmp = duration });
+
+            if (utils.adjacentHostiles(state.player) == 0) {
+                state.message(.Info, "You begin moving faster.", .{});
+            } else {
+                state.message(.Info, "You feel like you could be moving faster.", .{});
+            }
+
+            return true;
+
+            // Too bad we return immediately if the player cancels, this message was nice flavor
+            //state.message(.Info, "A haftless sword seems to appear mid-air, then disappears abruptly.", .{});
         }
     }.f,
 }; // }}}
@@ -1537,6 +1563,7 @@ pub fn createItemFromTemplate(template: ItemTemplate) Item {
         .W => |i| Item{ .Weapon = i },
         .A => |i| Item{ .Armor = i },
         .P, .c => |i| Item{ .Consumable = i },
+        .r => |i| Item{ .Ring = createItem(Ring, i) },
         .E => |i| Item{ .Evocable = createItem(Evocable, i) },
         .C => |i| Item{ .Cloak = i },
         .X => |i| Item{ .Aux = i },
@@ -1545,10 +1572,20 @@ pub fn createItemFromTemplate(template: ItemTemplate) Item {
     };
 }
 
-pub fn findItemById(p_id: []const u8) ?*const ItemTemplate {
+pub fn findItemById(p_id: []const u8) ?ItemTemplate {
+    if (p_id[0] == '=') {
+        for (&RINGS) |ring|
+            if (mem.eql(u8, ring.name, p_id[1..]))
+                return ItemTemplate{ .w = 0, .i = .{ .r = ring } };
+        for (&NIGHT_RINGS) |ring|
+            if (mem.eql(u8, ring.name, p_id[1..]))
+                return ItemTemplate{ .w = 0, .i = .{ .r = ring } };
+        return null;
+    }
+
     const _helper = struct {
-        pub fn f(id: []const u8, list: []const ItemTemplate) ?*const ItemTemplate {
-            return for (list) |*entry| {
+        pub fn f(id: []const u8, list: []const ItemTemplate) ?ItemTemplate {
+            return for (list) |entry| {
                 if (entry.i.id()) |entry_id| {
                     if (mem.eql(u8, entry_id, id)) {
                         break entry;
