@@ -771,14 +771,24 @@ pub fn useItem(index: usize) bool {
     return true;
 }
 
-pub fn dropItem(index: usize) bool {
-    assert(state.player.inventory.pack.len > index);
+// if is_inventory, index=pack index; otherwise, equipment id
+//
+pub fn dropItem(index: usize, is_inventory: bool) bool {
+    if (is_inventory)
+        assert(state.player.inventory.pack.len > index);
 
     if (state.nextAvailableSpaceForItem(state.player.coord, state.GPA.allocator())) |coord| {
-        const item = state.player.removeItem(index) catch err.wat();
-
-        const dropped = state.player.dropItem(item, coord);
-        assert(dropped);
+        const item = if (is_inventory) b: {
+            const i = state.player.removeItem(index) catch err.wat();
+            const dropped = state.player.dropItem(i, coord);
+            assert(dropped);
+            break :b i;
+        } else b: {
+            const slot = @intToEnum(Inventory.EquSlot, index);
+            const i = state.player.inventory.equipment(slot).*.?;
+            state.player.dequipItem(slot, coord);
+            break :b i;
+        };
 
         state.message(.Inventory, "Dropped: {s}.", .{
             (item.shortName() catch err.wat()).constSlice(),

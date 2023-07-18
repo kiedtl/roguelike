@@ -2828,9 +2828,9 @@ pub fn drawInventoryScreen() bool {
             .Char => |c| switch (c) {
                 'd' => if (chosen_itemlist == .Pack) {
                     if (itemlist_len > 0)
-                        if (player.dropItem(chosen)) return true;
-                } else {
-                    drawAlert("You can't drop that!", .{});
+                        if (player.dropItem(chosen, true)) return true;
+                } else if (chosen_item != null) {
+                    if (player.dropItem(chosen, false)) return true;
                 },
                 't' => if (chosen_itemlist == .Pack) {
                     if (itemlist_len > 0)
