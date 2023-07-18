@@ -1580,9 +1580,9 @@ pub const SparklingTemplate = MobTemplate{
         .life_type = .Construct,
 
         .spells = &[_]SpellOptions{
-            .{ .MP_cost = 2, .spell = &spells.BOLT_BLINKBOLT, .power = 1 },
+            .{ .MP_cost = 3, .spell = &spells.BOLT_BLINKBOLT, .power = 1 },
         },
-        .max_MP = 14,
+        .max_MP = 6,
 
         .blood = null,
         .corpse = .None,
