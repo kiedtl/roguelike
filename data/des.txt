@@ -25,6 +25,10 @@ An medium-sized double-edged knife, useful for stabbing foes.
 A shortsword of ancient bone. It is wound about with a curse to inflict more
 damage on the living, but less on the undead.
 
+% dagger_gold
+A ceremonial dagger of pure gold, layered in blue and black metal in intricate
+patterns. Its weight makes it highly impractical in combat.
+
 % stiletto
 A long dagger, ending in a razor-sharp point but with rather dull edges. It
 works very well for stabbing unaware enemies.
@@ -82,8 +86,43 @@ The sparsely-woven fibers composing this eldritch clothing seem be absorbing all
 light and color nearby, appearing only as criss-crossing web of pitch-black
 lines.
 
+% cloak_gold
+A wool cloak with intricate gold embroidery, usually worn by those channeling
+the Necromancer's power.
+
+% cloak_gold_pure
+A shimmering cloak woven of pure gold thread, able to empower its wearer to
+channel the Necromancer's power in extraordinary ways while shielding them from
+hostile hexes.
+
+
+Unfortunately, the cloak's composition comes with certain drawbacks, which might
+explain why such a valuable item is lying here unused.
+
+% gold_armor
+A soft leather jacket is beautifully adorned with gold embroidery,
+depicting towering mansions and palaces rising above a northern pine forest.
+The jacket will help you to channel the Necromancer's power, but is almost
+useless for protection.
+
+% ornate_gold_armor
+The leather jacket's gold embroidery depicts a walled city overlooking dense
+forests, while unidentifiable enemies assail the ornate wooden gates. The
+jacket's lower rim features cryptic writing:
+
+
+$g- Remember Baron Tyeburenet Kulbin --
+
+- Remember the house of Zilodothrod Berujdib --
+
+- Remember the 40 defenders -- selfless, stalwart shields, heroes --
+
+- Remember SILTEBLIN, Swift Sunrise, glory of the western forests$.
+
+% Note, replace "west forest" when I finally give it a name
+
 % aux_wolfram_orb
-A heavy sphere of the purest wolfram, polished to a silver sheen. It is
+A heavy sphere of some wolfram alloy, polished to a silver sheen. It is
 extraordinarily heavily, but will help conduct electricity through itself
 instead of through you.
 
@@ -106,8 +145,9 @@ A simple wooden buckler. Not much to say about it.
 An oval wooden shield, faced with leather. It is, unfortunately, unwieldy to use.
 
 % aux_shield_tower
-A very large and unwieldy rectangular shield, carved out of lightweight wood. As
-it is intended as a showpiece, only one truly desperate would use it.
+A very large and unwieldy rectangular shield, carved out of lightweight wood.
+Given its purpose as a showpiece, only morons or those truly desperate would
+bother with it.
 
 
 Engraved on the front is the likeness of a dying Revgenunkim. The Revgenunkim,
@@ -134,6 +174,10 @@ machines.
 % aux_detect_elec
 A device that can be used to detect sources of electricity, such as electrical
 machines and lamps or electrical constructs (e.g. sparklings).
+
+% aux_gold_pendant
+The carved marble pendant, hanging from a gold chain, is inlaid with gold leaf
+depicting a mountain overshadowing a dying forest.
 
 % mine
 It will activate when a non-player monster steps on it, but it may not explode
@@ -542,124 +586,38 @@ Use a nearby corpse to heal a nearby undead ally by a significant amount.
 Vomit fire, engulfing the surrounding area in blazing flames.
 
 % electrocution
-$cPattern:$. Attack in a cardinal direction, move opposite, move perpendicular,
-attack again.
-
-
-$G    $rm$G...          ....   ....
-
-$G    $.@$G... $.<attack>$G $rm$G...   $rm$G... $.<attack>$G
-
-$G    ....          $.@$G...   .$.@$G..
-
-
 $cEffect:$. Each time your move, monsters in your four corners will be
 electrocuted. Damage and effect duration scales with electricity resistance.
 
 % distraction
-$cPattern:$. Move forward against foe, move left or right, move forward.
-
-
-$G    ....   ....   ....   ....
-
-$G    $.@$G.$rm$G.   .$.@$G$rm$G.   ..$rm$G.   ..$rm$G.
-
-$G    ....   ....   .$.@$G..   ..$.@$G.
-
-
 $cEffect:$. All enemies in your LOS receive the $oAmnesia$. status for $b7$.
 turns.
 
 % cremation
-$cPattern:$. Attack foe, then move all around foe in four turns (without
-attacking or resting).
-
-
-$G    .....            .....   .....   ..$.@$G..
-
-$G    ..$rm$G$.@$G.  $.<attack>$G  ..$rm$G..   .$.@$G$rm$G..   ..$rm$G..
-
-$G    .....            ..$.@$G..   .....   .....
-
-
 $cEffect:$. Makes all adjacent foes temporarily vulnerable to fire, and creates
 a ring of flames in all adjacent squares.
 
 % damnation
-$cPattern:$. Move towards a wall, wait, attack in the opposite direction.
-
-
-$G    .$rm$G...   .....
-
-$G    ..$.@$G..   ..$rm$G..
-
-$G    .....   ...$.@$G.    $.<wait>$G    $.<attack any foe>$G
-
-$G    ...$C$~##$.$G   ...$C$~##$.$G
-
-
 $cEffect:$. Every time you move, foes to your sides will be engulfed in a fiery
 explosion. Has no effect if you move diagonally. The effect duration and
 strength increases with your fire resistance.
 
 % teleportation
-$cPattern:$. Move away three times, attack an enemy.
-
-
-$G    .....    .....              .....
-
-$G    $rmm$.@$G..    .$rmm$.@$G.    $.<rest>$G    ..$rmm$.@$G    $.<rest>$G    $.<attack left>$G
-
-$G    .....    .....              .....
-
-
 $cStatus effect (5 turns):$. Fire a bolt of lightning at an enemy for a minimum
 of $b2$. electric damage, then teleport yourself to the last tile the bolt
 touched. (If that tile is unwalkable, you won't be teleported). Damage scales
 with the number of enemies hit, up to a maximum of $b5$..
 
 % insurrection
-$cPattern:$. Wait, then move to the two sides of the foe and back.
-
-
-$G    .....              .$.@$G...    .....    .....    .....
-
-$G    $.@$G$rm$G...    $.<wait>$G    .$rm$G...    $.@$G$rm$G...    .$rm$G...    $.@$G$rm$G...
-
-$G    .....              .....    .....    .$.@$G...    .....
-
-
 $cEffect:$. Three corpses in your LOS wake up and attack the enemy for 14 turns
 before self-destructing. They are blind and won't hunt any other enemy unless
 attacked.
 
 % magnetization
-$cPattern:$. Attack a foe, then move behind it.
-
-
-$G    ....                  .$.@$G..    ....
-
-$G    $.@$G$rm$G..    $.<attack $rm$.>$G    .$rm$G..    .$rm$G$.@$G.    $.<attack $rm$.>$G
-
-$G    ....                  ....    ....
-
-
 $cEffect:$. All other enemies in your LOS will go flying towards the enemy you
 attacked.
 
 % excision
-$cPattern:$. Wait, move sideways twice, then move backwards.
-
-
-$G    .$rm$G...              ..$rm$G..    .....    .....
-
-$G    .....              .....    ...$rm$G.    .....
-
-$G    ..$.@$G..    $.<rest>$G    ...$.@$G.    ....$.@$G    ....$rm$G
-
-$G    .....              .....    .....    ....$.@$G
-
-
 $cEffect:$. Conjures a spectral sword in the chosen direction. When you move,
 the sword will attack multiple foes in a line in that direction while giving
 them the $oheld$. status.
@@ -670,16 +628,6 @@ damage is equivalent to $btriple$. the damage your current weapon would deal if
 you attacked (defaulting to $b1$. damage if you don't have a weapon).
 
 % conjuration
-$cPattern:$. Move forward against foe, move left or right, move forward.
-
-
-$G    ....   ....   ....   ....
-
-$G    $.@$G.$rm$G.   .$.@$G$rm$G.   ..$rm$G.   ..$rm$G.
-
-$G    ....   ....   .$.@$G..   ..$.@$G.
-
-
 $cEffect:$. Every time you move, a bolt of conjuration is fired in that
 direction, creating a number of spectral swords. The effect lasts for $bwill /
 2$. turns (minimum $b1$. turn).
@@ -687,83 +635,3 @@ direction, creating a number of spectral swords. The effect lasts for $bwill /
 
 Spectral swords only attack enemies that you can see, and will self-destruct
 when there are no more enemies.
-
-% pin foe
-$cPattern:$. Attack a foe, move diagonally around it, attack again, move away.
-
-
-$G    .....                  .....                  ......
-
-$G    ..$rm$G..    $.<attack $rm$.>$G    ..$rm$.@$G.    $.<attack $rm$.>$g    ..$rm$G.$.@$G.
-
-$G    ..$.@$G..                  .....                  ......
-
-
-$cEffect:$. $oheld$. status for a few turns, enough to set up a charge or a lunge.
-
-% charge
-$cPattern:$. Step away from a foe, wait, step against foe.
-
-
-$G    .....    ..$.@$G..    ..$.@$G..    .....
-
-$G    ..$.@$G..    .....    .....    ..$.@$G..
-
-$G    .....    .....    ..$rm$G..    ..$rm$G..
-
-$G    .....    ..$rm$G..    .....    .....
-
-$G    ..$rm$G..    .....    .....    .....
-
-
-$cEffect:$. Foe is knocked back 7 tiles.
-
-% lunge
-$cPattern:$. Wait, move forward against foe.
-
-
-$G    .$.@$G.    ..$.@$G..    .....
-
-$G    ...    .....    ..$.@$G..
-
-$G    ...    ..$rm$G..    ..$rm$G..
-
-$G    .$rm$G.    .....    .....
-
-
-$cEffect:$. You get a free attack against that foe which does triple damage and
-never misses, and the foe gets the $ofear$. status for 7 turns.
-
-% eyepunch
-$cPattern:$. Move twice near the enemy you're going to attack, then attack.
-
-
-$G    ......     ......     ......
-
-$G    ......     ......     ......
-
-$G    ..$rm$G$.@$G..     ..$rm$G...     ..$rm$G...     $.<attack $rm$.>$G
-
-$G    ......     ...$.@$G..     ..$.@$G...
-
-$G    ......     ......     ......
-
-
-$cEffect:$. A few turns of blindness, and ~10 turns of disorientation. Tip: use
-this in a large room, then move away diagonally to gain distance quickly.
-
-% leap
-$cPattern:$. Step adjacent to a wall and wait twice.
-
-
-$G    $C$~#$.$G....    $C$~#$.$G....    $C$~#$.$G....    $C$~#$.$G....
-
-$G    $C$~#$.$G.$.@$G..    $C$~#$.$G$.@$G...    $C$~#$.$G$.@$G...    $C$~#$.$G$.@$G...
-
-$G    $C$~#$.$G....    $C$~#$.$G....    $C$~#$.$G....    $C$~#$.$G....
-
-$G    $C$~#$.$G....    $C$~#$.$G....    $C$~#$.$G....    $C$~#$.$G....
-
-
-$cEffect:$. You are launched 7 tiles in the direction opposite to your first
-movement's direction.

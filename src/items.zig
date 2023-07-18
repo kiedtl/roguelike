@@ -90,15 +90,18 @@ pub const ItemTemplate = struct {
 };
 pub const RARE_ITEM_DROPS = [_]ItemTemplate{
     // Dilute this list by adding a few more common weapon
-    .{ .w = 50, .i = .{ .W = &SwordWeapon } },
+    .{ .w = 90, .i = .{ .W = &SwordWeapon } },
+    // Armor and cloaks
+    .{ .w = 50, .i = .{ .C = &PureGoldCloak } },
+    .{ .w = 0, .i = .{ .A = &OrnateGoldArmor } }, // unique
     // Bone weapons
-    .{ .w = 1, .i = .{ .W = &BoneSwordWeapon } },
-    .{ .w = 1, .i = .{ .W = &BoneDaggerWeapon } },
-    .{ .w = 1, .i = .{ .W = &BoneMaceWeapon } },
-    .{ .w = 1, .i = .{ .W = &BoneGreatMaceWeapon } },
+    .{ .w = 10, .i = .{ .W = &BoneSwordWeapon } },
+    .{ .w = 10, .i = .{ .W = &BoneDaggerWeapon } },
+    .{ .w = 10, .i = .{ .W = &BoneMaceWeapon } },
+    .{ .w = 10, .i = .{ .W = &BoneGreatMaceWeapon } },
     // Copper weapons
-    .{ .w = 1, .i = .{ .W = &CopperSwordWeapon } },
-    .{ .w = 1, .i = .{ .W = &CopperRapierWeapon } },
+    .{ .w = 10, .i = .{ .W = &CopperSwordWeapon } },
+    .{ .w = 10, .i = .{ .W = &CopperRapierWeapon } },
 };
 pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 1, .i = .{ .List = &RARE_ITEM_DROPS } },
@@ -110,21 +113,24 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 30, .i = .{ .W = &MorningstarWeapon } },
     .{ .w = 25, .i = .{ .W = &MonkSpadeWeapon } },
     .{ .w = 15, .i = .{ .W = &WoldoWeapon } },
+    .{ .w = 10, .i = .{ .W = &GoldDaggerWeapon } },
     // Armor
     .{ .w = 20, .i = .{ .A = &GambesonArmor } },
     .{ .w = 20, .i = .{ .A = &HauberkArmor } },
     .{ .w = 20, .i = .{ .A = &CuirassArmor } },
     .{ .w = 10, .i = .{ .A = &SpikedLeatherArmor } },
+    .{ .w = 10, .i = .{ .A = &GoldArmor } },
     .{ .w = 05, .i = .{ .A = &BrigandineArmor } },
     // Aux items
-    .{ .w = 20, .i = .{ .X = &WolframOrbAux } },
-    .{ .w = 20, .i = .{ .X = &MinersMapAux } },
-    .{ .w = 20, .i = .{ .X = &DetectHeatAux } },
-    .{ .w = 20, .i = .{ .X = &DetectElecAux } },
+    .{ .w = 20, .i = .{ .X = &BucklerAux } },
+    .{ .w = 20, .i = .{ .X = &ShieldAux } },
+    .{ .w = 20, .i = .{ .X = &SpikedBucklerAux } },
+    .{ .w = 20, .i = .{ .X = &GoldPendantAux } },
+    .{ .w = 10, .i = .{ .X = &WolframOrbAux } },
+    .{ .w = 10, .i = .{ .X = &MinersMapAux } },
+    .{ .w = 10, .i = .{ .X = &DetectHeatAux } },
+    .{ .w = 10, .i = .{ .X = &DetectElecAux } },
     // .{ .w = 10, .i = .{ .X = &DispelUndeadAux } },
-    .{ .w = 10, .i = .{ .X = &BucklerAux } },
-    .{ .w = 10, .i = .{ .X = &ShieldAux } },
-    .{ .w = 10, .i = .{ .X = &SpikedBucklerAux } },
     .{ .w = 05, .i = .{ .X = &TowerShieldAux } },
     // Potions
     .{ .w = 190, .i = .{ .P = &DisorientPotion } },
@@ -161,6 +167,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     // Cloaks
     .{ .w = 20, .i = .{ .C = &SilCloak } },
     .{ .w = 20, .i = .{ .C = &FurCloak } },
+    .{ .w = 20, .i = .{ .C = &GoldCloak } },
     .{ .w = 10, .i = .{ .C = &AgilityCloak } },
     .{ .w = 10, .i = .{ .C = &WarringCloak } },
     .{ .w = 10, .i = .{ .C = &ThornyCloak } },
@@ -222,6 +229,8 @@ pub const Cloak = struct {
 pub const SpectralCloak = Cloak{ .id = "cloak_spectral", .name = "spectres", .stats = .{ .Conjuration = 1 } };
 pub const SilCloak = Cloak{ .id = "cloak_silicon", .name = "silicon", .resists = .{ .rFire = 25 } };
 pub const FurCloak = Cloak{ .id = "cloak_fur", .name = "fur", .resists = .{ .rElec = 25 } };
+pub const GoldCloak = Cloak{ .id = "cloak_gold", .name = "gold", .stats = .{ .Potential = 10 } };
+pub const PureGoldCloak = Cloak{ .id = "cloak_gold_pure", .name = "pure gold", .stats = .{ .Potential = 25, .Willpower = 1 }, .resists = .{ .rElec = -25 } };
 pub const ThornyCloak = Cloak{ .id = "cloak_thorny", .name = "thorns", .stats = .{ .Spikes = 1 } };
 pub const AgilityCloak = Cloak{ .id = "cloak_agility", .name = "agility", .stats = .{ .Martial = 2 } };
 pub const WarringCloak = Cloak{ .id = "cloak_warring", .name = "warring", .stats = .{ .Melee = 20 } };
@@ -310,6 +319,13 @@ pub const SpikedBucklerAux = Aux{
     .name = "spiked buckler",
 
     .stats = .{ .Spikes = 1, .Evade = 10 },
+};
+
+pub const GoldPendantAux = Aux{
+    .id = "aux_gold_pendant",
+    .name = "gold necklace",
+
+    .stats = .{ .Potential = 10 },
 };
 
 pub const ShadowShieldAux = Aux{
@@ -1174,6 +1190,20 @@ pub const SpikedLeatherArmor = Armor{
     .stats = .{ .Spikes = 1, .Martial = -1 },
 };
 
+pub const GoldArmor = Armor{
+    .id = "gold_armor",
+    .name = "golden armor",
+    .resists = .{ .Armor = 05 },
+    .stats = .{ .Potential = 10 },
+};
+
+pub const OrnateGoldArmor = Armor{
+    .id = "ornate_gold_armor",
+    .name = "ornate golden armor",
+    .resists = .{ .Armor = 10 },
+    .stats = .{ .Potential = 25, .Willpower = 2, .Melee = 10 },
+};
+
 pub const ShadowMailArmor = Armor{
     .id = "shadow_mail_armor",
     .name = "shadow mail",
@@ -1349,6 +1379,15 @@ pub const DaggerWeapon = Weapon{
     .strs = &PIERCING_STRS,
 };
 pub const BoneDaggerWeapon = Weapon.createBoneWeapon(&DaggerWeapon, .{});
+
+pub const GoldDaggerWeapon = Weapon{
+    .id = "dagger_gold",
+    .name = "golden dagger",
+    .damage = 1,
+    .stats = .{ .Melee = -25, .Potential = 25 },
+    .ego = .Drain,
+    .strs = &PIERCING_STRS,
+};
 
 pub const RapierWeapon = Weapon{
     .id = "rapier",

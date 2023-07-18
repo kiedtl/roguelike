@@ -3085,6 +3085,10 @@ pub const Mob = struct { // {{{
 
         // Weapon ego effects.
         switch (attacker_weapon.ego) {
+            .Drain => {
+                assert(attacker == state.player);
+                player.drainMob(recipient);
+            },
             .Swap => {
                 if (attacker.canSwapWith(recipient, .{ .ignore_hostility = true })) {
                     _ = attacker.teleportTo(recipient.coord, null, true, true);
@@ -4474,6 +4478,7 @@ pub const Weapon = struct {
         NC_MassPara,
         NC_Duplicate,
         Swap,
+        Drain,
 
         pub fn name(self: Ego) ?[]const u8 {
             return switch (self) {
@@ -4484,6 +4489,7 @@ pub const Weapon = struct {
                 .NC_MassPara => "mass paralysis",
                 .NC_Duplicate => "duplicity",
                 .Swap => "swapping",
+                .Drain => "draining",
             };
         }
 
@@ -4496,6 +4502,7 @@ pub const Weapon = struct {
                 .NC_MassPara => "When you are attacking from an unlit area, you have a will-checked chance to paralyse nearby foes if they are also standing in the dark. The duration of the paralysis will always be less than the time needed to reach them.",
                 .NC_Duplicate => "When both you and your foe are in an unlit area, you have a will-checked chance to create a spectral copy of your foe. The spectral copy will be aligned with the Night Creatures, and will last for $bwillpower * 2$. turns.",
                 .Swap => "When you land a successful hit, you have a chance to swap places with your foe.",
+                .Drain => "Attacking a $oWielder$. $g(see the enemy's description)$. will drain them of their MP, absorbing it and preventing them from channelling the Necromancer's power.",
             };
         }
     };

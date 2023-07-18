@@ -602,7 +602,7 @@ fn tickGame() !void {
             }
 
             const _j = if (mob.newestJob()) |j| j.job else .Dummy;
-            err.ensure(prev_energy > mob.energy, "{c} (phase: {}; job: {}) did nothing during turn!", .{ mob, mob.ai.phase, _j }) catch {
+            err.ensure(prev_energy > mob.energy, "{cf} (phase: {}; job: {}) did nothing during turn!", .{ mob, mob.ai.phase, _j }) catch {
                 ai.tryRest(mob);
             };
 
@@ -681,7 +681,7 @@ fn viewerTickGame(cur_level: usize) void {
             }
 
             const _j = if (mob.newestJob()) |j| j.job else .Dummy;
-            err.ensure(prev_energy > mob.energy, "{c} (phase: {}; job: {}) did nothing during turn!", .{ mob, mob.ai.phase, _j }) catch {
+            err.ensure(prev_energy > mob.energy, "{cf} (phase: {}; job: {}) did nothing during turn!", .{ mob, mob.ai.phase, _j }) catch {
                 ai.tryRest(mob);
             };
         }
