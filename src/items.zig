@@ -786,7 +786,7 @@ pub const AccelerationRing = Ring{ // {{{
 
 pub const ExcisionRing = Ring{ // {{{
     .name = "excision",
-    .required_MP = 4,
+    .required_MP = 5,
     .effect = struct {
         pub fn f() bool {
             const n = ui.chooseCell(.{ .max_distance = 1, .require_walkable = .{} }) orelse return false;
