@@ -514,7 +514,7 @@ fn tickGame() !void {
     gas.tickGases(cur_level);
     state.tickSound(cur_level);
     state.tickLight(cur_level);
-    alert.tickThreats();
+    alert.tickThreats(cur_level);
 
     if (state.ticks % 10 == 0) {
         // alert.tickCheckLevelHealth(cur_level);
@@ -626,6 +626,7 @@ fn viewerTickGame(cur_level: usize) void {
     gas.tickGases(cur_level);
     state.tickSound(cur_level);
     state.tickLight(cur_level);
+    alert.tickThreats(cur_level);
 
     if (state.ticks % 10 == 0) {
         // alert.tickCheckLevelHealth(cur_level);

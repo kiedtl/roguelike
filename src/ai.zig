@@ -19,6 +19,7 @@ const mapgen = @import("mapgen.zig");
 const dijkstra = @import("dijkstra.zig");
 const buffer = @import("buffer.zig");
 const rng = @import("rng.zig");
+const mobs = @import("mobs.zig");
 const tasks = @import("tasks.zig");
 const types = @import("types.zig");
 
@@ -1751,7 +1752,9 @@ pub fn _Job_WRK_ExamineCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
                         .Unknown => null,
                         .Room => |r| r,
                     }) |room| {
-                        tasks.reportTask(mob.coord.z, .{ .ReinforceRoom = .{ .room = room, .preferred_spot = corpse.coord } });
+                        alert.queueThreatResponse(.{
+                            .ReinforceRoom = .{ .reinforcement = .{ .Class = "C" }, .room = room, .coord = corpse.coord },
+                        });
                     }
                 }
             }
@@ -1760,6 +1763,40 @@ pub fn _Job_WRK_ExamineCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
         } else {
             job.setCtx(usize, CTX_TURNS_LEFT_EXAMINING, turns_left - 1);
             return .Ongoing;
+        }
+    }
+}
+
+pub fn _Job_WRK_BuildMob(mob: *Mob, _: *AIJob) AIJob.JStatus {
+    const task = &state.tasks.items[mob.ai.task_id.?];
+    const coord = task.type.BuildMob.coord;
+
+    if (mob.distance2(coord) == 0) {
+        for (&DIRECTIONS) |d| if (coord.move(d, state.mapgeometry)) |n|
+            if (state.is_walkable(n, .{ .mob = mob })) {
+                mob.tryMoveTo(n);
+                return .Ongoing;
+            };
+        // FAILED
+        task.completed = true;
+        return .Complete;
+    } else if (mob.distance2(coord) > 1) {
+        mob.tryMoveTo(coord);
+        return .Ongoing;
+    } else {
+        tryRest(mob);
+        if (state.dungeon.at(coord).mob) |othermob| {
+            if (othermob.immobile) {
+                // FAILED
+                task.completed = true;
+                return .Complete;
+            } else {
+                return .Ongoing;
+            }
+        } else {
+            _ = mobs.placeMob(state.GPA.allocator(), task.type.BuildMob.mob, coord, task.type.BuildMob.opts);
+            task.completed = true;
+            return .Complete;
         }
     }
 }

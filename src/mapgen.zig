@@ -1104,6 +1104,11 @@ pub fn setLevelMaterial(level: usize) void {
     }
 }
 
+// Validate levels, ensuring they're all connected.
+//
+// Also assign each room an "importance" number, because we may as well do it
+// now when we're getting paths to all of them.
+//
 pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
     // utility functions
     const _f = struct {
@@ -1148,20 +1153,20 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
         }
     }
 
-    const base_room = for (rooms) |*room| {
-        if (room.type != .Corridor) break room;
-    } else err.wat();
-    const point = _f._getWalkablePoint(base_room);
+    const point = state.dungeon.entries[level];
 
     for (rooms) |*otherroom| {
         if (otherroom.type == .Corridor) continue;
-        if (otherroom.rect.start.eq(base_room.rect.start)) continue;
 
         const otherpoint = _f._getWalkablePoint(otherroom);
 
         if (astar.path(point, otherpoint, state.mapgeometry, state.is_walkable, .{
             .ignore_mobs = true,
         }, astar.dummyPenaltyFunc, &DIRECTIONS, alloc)) |p| {
+            for (p.items) |path_coord| {
+                const room_id = utils.getRoomFromCoord(level, path_coord) orelse continue;
+                state.rooms[level].items[room_id].importance += 1;
+            }
             p.deinit();
         } else {
             return error.RoomsNotConnected;
@@ -3392,6 +3397,7 @@ pub const Room = struct {
     is_lair: bool = false,
 
     connections: ConnectionsBuf = ConnectionsBuf.init(null),
+    importance: usize = 0,
 
     pub const Connection = struct { room: Coord, door: ?Coord };
     pub const ConnectionsBuf = StackBuffer(Connection, CONNECTIONS_MAX);

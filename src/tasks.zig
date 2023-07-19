@@ -39,7 +39,7 @@ pub const TaskType = union(enum) {
     Clean: Coord,
     Haul: struct { from: Coord, to: Coord },
     ExamineCorpse: *Mob,
-    ReinforceRoom: struct { room: usize, preferred_spot: Coord },
+    BuildMob: struct { mob: *const mobs.MobTemplate, coord: Coord, opts: mobs.PlaceMobOptions },
 };
 
 pub const Task = struct {
@@ -59,7 +59,8 @@ pub fn reportTask(level: usize, newtask: TaskType) void {
                 .Clean => |c| c.eq(newtask.Clean),
                 .Haul => |h| h.from.eq(newtask.Haul.from) and h.to.eq(newtask.Haul.to),
                 .ExamineCorpse => |m| m == newtask.ExamineCorpse,
-                .ReinforceRoom => |r| r.room == newtask.ReinforceRoom.room,
+                .BuildMob => |b| mem.eql(u8, b.mob.mob.id, newtask.BuildMob.mob.mob.id) and
+                    b.coord.eq(newtask.BuildMob.coord),
             };
 
             if (is_same and !task.completed) {
@@ -88,6 +89,8 @@ pub fn getJobTypesForWorker(mob: *Mob) struct { tasktype: meta.Tag(TaskType), ai
         // return .{ .tasktype = .Haul, .aijobtype = .WRK_Haul };
     } else if (mem.eql(u8, mob.id, "coroner")) {
         return .{ .tasktype = .ExamineCorpse, .aijobtype = .WRK_ExamineCorpse };
+    } else if (mem.eql(u8, mob.id, "engineer")) {
+        return .{ .tasktype = .ExamineCorpse, .aijobtype = .WRK_BuildMob };
     } else unreachable;
 }
 
@@ -244,15 +247,10 @@ pub fn tickTasks(level: usize) void {
                 .Clean => &mobs.CleanerTemplate,
                 .Haul => &mobs.HaulerTemplate,
                 .ExamineCorpse => &mobs.CoronerTemplate,
-                .ReinforceRoom => mobs.spawns.chooseMob(.Special, level, "C") catch err.wat(),
+                .BuildMob => &mobs.EngineerTemplate,
             };
 
-            var opts: mobs.PlaceMobOptions = .{};
-            if (task.type == .ReinforceRoom) {
-                opts.work_area = task.type.ReinforceRoom.preferred_spot;
-            }
-
-            if (mobs.placeMobNearStairs(mob_template, level, opts)) |worker| {
+            if (mobs.placeMobNearStairs(mob_template, level, .{})) |worker| {
                 worker.ai.task_id = id;
                 task.assigned_to = worker;
             } else |_| {

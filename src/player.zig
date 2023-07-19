@@ -7,6 +7,7 @@ const meta = std.meta;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const ai = @import("ai.zig");
+const alert = @import("alert.zig");
 const colors = @import("colors.zig");
 const combat = @import("combat.zig");
 const rng = @import("rng.zig");
@@ -285,6 +286,8 @@ pub fn triggerStair(cur_stair: Coord, dest_floor: usize) bool {
     if (rep.* < 0) rep.* += 1;
 
     combat.disruptAllUndead(dest_stair.z);
+    alert.deinit();
+    alert.init();
 
     // "Garbage-collect" previous level.
     var iter = state.mobs.iterator();

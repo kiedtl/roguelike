@@ -925,6 +925,26 @@ pub const CleanerTemplate = MobTemplate{
     },
 };
 
+pub const EngineerTemplate = MobTemplate{
+    .mob = .{
+        .id = "engineer",
+        .species = &GoblinSpecies,
+        .tile = 'ë',
+        .ai = AI{
+            .profession_name = "engineer",
+            .profession_description = "building",
+            .work_fn = ai.workerWork,
+            .fight_fn = ai.workerFight,
+            .is_curious = false,
+            .flags = &[_]AI.Flag{ .ScansForJobs, .ScansForCorpses },
+        },
+
+        .max_HP = 10,
+        .memory_duration = 5,
+        .stats = .{ .Willpower = 2, .Evade = 10 },
+    },
+};
+
 pub const HaulerTemplate = MobTemplate{
     .mob = .{
         .id = "hauler",

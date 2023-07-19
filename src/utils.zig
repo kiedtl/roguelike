@@ -31,6 +31,13 @@ const StackBuffer = buffer.StackBuffer;
 const Generator = @import("generators.zig").Generator;
 const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
+pub fn getRoomFromCoord(level: usize, coord: Coord) ?usize {
+    return switch (state.layout[level][coord.y][coord.x]) {
+        .Unknown => null,
+        .Room => |r| r,
+    };
+}
+
 // Bounded string
 pub fn BStr(comptime sz: usize) type {
     return StackBuffer(u8, sz);
