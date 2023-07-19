@@ -841,22 +841,28 @@ Headaches
 Threat countermeasures
 ----------------------
 General:
-x Patrols looking around                60
-x Patrols looking around even more     180
+x Patrols looking around                                  60
+x Patrols looking around even more                       180
 
 Specific:
-- Hunter squad sent out                200, 300, 400, ...
-  (escorted if deadly)
+- Sentry spires placed in important rooms(s)              80
+- Reinforcements dispatched, tracking player normally    200, 300, 400, ...
+- Hunter squad sent out (escorted if deadly)             400, 500, 600, ...
 
 Unknown:
-- Watcher dispatched to rooms          200, 300
-- Floor-wide sweep                     400
+x Watcher dispatched to rooms                            100, 300, 500
+- Floor-wide sweep                                       400
 
 Unknown/Specific (deadly):
-- Using checkpoints more often         100
-- Stationary reinforcements to rooms   200, 300, 400, ...
-- Extra member for each patrol         200, 300
+- Iron/lightning spires placed in important room(s)       80
+- Using checkpoints more often                           160
+- Reinforcement squads sent to rooms                     200, 300, 400, ...
+- Extra member for each patrol                           200, 300
 
+Misc:
+- Unknown threats should only rise for 30 turns in a row (before guards assume
+  whatever it was moved along)
+  - UNLESS incident_count > 10, then it continues rising indefinitely
 
 Roadmap
 =======
