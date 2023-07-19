@@ -93,7 +93,7 @@
 "small_fountain"       	 "small fountain"       	 '¶' 	                        -  	 0xa4cfff 	 -        	 -   	 - 	 -
 
 # Statues
-"gold_statue"          	 "gold statue"          	 '☺' 	                        -  	 0xfff720 	 -        	 nay 	 - 	 - 	 .Statue
+"pyrite_statue"        	 "pyrite statue"        	 '☺' 	                        -  	 0xfff720 	 -        	 nay 	 - 	 - 	 .Statue
 "realgar_statue"       	 "realgar statue"       	 '☺' 	                        -  	 0xff343f 	 -        	 nay 	 - 	 - 	 .Statue
 "iron_statue"          	 "iron statue"          	 '☹' 	                        -  	 0xcacad2 	 -        	 nay 	 - 	 - 	 .Statue
 "sodalite_statue"      	 "sodalite statue"      	 '☺' 	                        -  	 0xa4cfff 	 -        	 nay 	 - 	 - 	 .Statue
