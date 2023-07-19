@@ -854,7 +854,7 @@ x Watcher dispatched to rooms                            100, 300, 500
 - Floor-wide sweep                                       400
 
 Unknown/Specific (deadly):
-- Iron/lightning spires placed in important room(s)       80
+x Iron/lightning spires placed in important room(s)       80
 - Using checkpoints more often                           160
 - Reinforcement squads sent to rooms                     200, 300, 400, ...
 - Extra member for each patrol                           200, 300
