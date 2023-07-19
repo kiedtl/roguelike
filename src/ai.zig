@@ -1619,6 +1619,7 @@ pub fn _Job_WRK_ScanJobs(mob: *Mob, job: *AIJob) AIJob.JStatus {
     // Ideally we get to work right away, but too lazy to code that right now
     if (mob.ai.task_id != null) {
         tryRest(mob);
+        mob.newJob(.WRK_ScanJobs);
         mob.newJob(jobtypes.aijobtype);
         return .Complete;
     }
@@ -1627,8 +1628,10 @@ pub fn _Job_WRK_ScanJobs(mob: *Mob, job: *AIJob) AIJob.JStatus {
         if (!task.completed and task.assigned_to == null and task.type == jobtypes.tasktype) {
             mob.ai.task_id = id;
             task.assigned_to = mob;
+            mob.newJob(.WRK_ScanJobs);
             mob.newJob(jobtypes.aijobtype);
-            break;
+            tryRest(mob);
+            return .Complete;
         };
 
     tryRest(mob);
@@ -1717,7 +1720,7 @@ pub fn _Job_WRK_ExamineCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_TURNS_LEFT_EXAMINING = "ctx_turns_left_examining";
     const turns_left = job.getCtx(usize, CTX_TURNS_LEFT_EXAMINING, rng.range(usize, 8, 16));
 
-    const task = state.tasks.items[mob.ai.task_id.?];
+    const task = &state.tasks.items[mob.ai.task_id.?];
     const corpse = task.type.ExamineCorpse;
 
     if (mob.distance2(corpse.coord) > 1) {
@@ -1729,11 +1732,19 @@ pub fn _Job_WRK_ExamineCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
         //
         if (rng.onein(4)) {
             tryRest(mob);
-        } else for (&DIRECTIONS) |d|
-            if (corpse.coord.move(d, state.mapgeometry)) |neighbor| {
-                if (state.is_walkable(neighbor, .{ .mob = mob }) and mob.distance2(neighbor) == 1)
-                    mob.tryMoveTo(neighbor);
-            };
+        } else {
+            const moved = for (&DIRECTIONS) |d| {
+                if (corpse.coord.move(d, state.mapgeometry)) |neighbor| {
+                    if (state.is_walkable(neighbor, .{ .mob = mob }) and
+                        mob.distance2(neighbor) == 1 and rng.onein(6))
+                    {
+                        mob.tryMoveTo(neighbor);
+                        break true;
+                    }
+                }
+            } else false;
+            if (!moved) tryRest(mob);
+        }
 
         if (turns_left == 0) {
             corpse.corpse_info.is_resolved = true;
@@ -1759,6 +1770,8 @@ pub fn _Job_WRK_ExamineCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
                 }
             }
 
+            mob.ai.task_id = null;
+            task.completed = true;
             return .Complete;
         } else {
             job.setCtx(usize, CTX_TURNS_LEFT_EXAMINING, turns_left - 1);
@@ -1788,6 +1801,7 @@ pub fn _Job_WRK_BuildMob(mob: *Mob, _: *AIJob) AIJob.JStatus {
         if (state.dungeon.at(coord).mob) |othermob| {
             if (othermob.immobile) {
                 // FAILED
+                mob.ai.task_id = null;
                 task.completed = true;
                 return .Complete;
             } else {
@@ -1795,6 +1809,7 @@ pub fn _Job_WRK_BuildMob(mob: *Mob, _: *AIJob) AIJob.JStatus {
             }
         } else {
             _ = mobs.placeMob(state.GPA.allocator(), task.type.BuildMob.mob, coord, task.type.BuildMob.opts);
+            mob.ai.task_id = null;
             task.completed = true;
             return .Complete;
         }

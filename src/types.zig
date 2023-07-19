@@ -2422,7 +2422,15 @@ pub const Mob = struct { // {{{
 
     pub fn newJob(self: *Mob, jtype: AIJob.Type) void {
         const job = AIJob{ .job = jtype, .ctx = AIJob.Ctx.init(state.GPA.allocator()) };
-        self.jobs.append(job) catch err.wat();
+        self.jobs.append(job) catch {
+            // Somehow jobs queue is full, use nuclear option
+            err.ensure(false, "{cf} has too many jobs, clearing.", .{self}) catch {
+                for (self.jobs.constSlice()) |j|
+                    std.log.err("    - Job: {}", .{j.job});
+                self.ai.task_id = null;
+                self.jobs.clear();
+            };
+        };
     }
 
     pub fn delegateJob(self: *Mob) void {
