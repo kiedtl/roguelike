@@ -9,7 +9,7 @@
 :restriction 1
 :g_global_restriction 2
 
-:prison 0,0 5 5
+:prison 0,0 4 4
 :spawn necromancer 2,4 2,4
 #&•&#
 ±...#
