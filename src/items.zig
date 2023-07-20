@@ -933,7 +933,7 @@ pub const GoldOrbConsumable = Consumable{
     .name = "gold orb",
     .effects = &[_]Consumable.Effect{
         .{ .Resist = .{ .r = .rElec, .change = 25 } },
-        .{ .Stat = .{ .r = .Potential, .change = 25 } },
+        .{ .Stat = .{ .s = .Potential, .change = 25 } },
     },
     .color = 0xffd700,
     .verbs_player = &[_][]const u8{ "choke down", "swallow" },
