@@ -37,6 +37,7 @@ const StackBuffer = buffer.StackBuffer;
 const SpellOptions = spells.SpellOptions;
 
 const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
+const DIAGONAL_DIRECTIONS = types.DIAGONAL_DIRECTIONS;
 const DIRECTIONS = types.DIRECTIONS;
 
 const LEVELS = state.LEVELS;
@@ -288,7 +289,7 @@ pub fn keepDistance(mob: *Mob, from: Coord, distance: usize) bool {
         var direction: ?Direction = null;
         var lowest_val: f64 = 999;
         const directions: []const Direction = if (mob.isUnderStatus(.Disorient)) |_|
-            &CARDINAL_DIRECTIONS
+            &DIAGONAL_DIRECTIONS
         else
             &DIRECTIONS;
         for (directions) |d| if (mob.coord.move(d, state.mapgeometry)) |neighbor| {
