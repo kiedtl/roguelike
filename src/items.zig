@@ -151,7 +151,8 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     // Consumables
     // .{ .w = 80, .i = .{ .c = &HotPokerConsumable } },
     // .{ .w = 90, .i = .{ .c = &CoalConsumable } },
-    .{ .w = 1, .i = .{ .c = &CopperIngotConsumable } },
+    .{ .w = 5, .i = .{ .c = &CopperIngotConsumable } },
+    .{ .w = 5, .i = .{ .c = &GoldOrbConsumable } },
     // Kits
     .{ .w = 50, .i = .{ .c = &FireTrapKit } },
     .{ .w = 50, .i = .{ .c = &ShockTrapKit } },
@@ -923,6 +924,18 @@ pub const CopperIngotConsumable = Consumable{
         .{ .Resist = .{ .r = .rElec, .change = 25 } },
     },
     .color = 0xcacbca,
+    .verbs_player = &[_][]const u8{ "choke down", "swallow" },
+    .verbs_other = &[_][]const u8{"chokes down"},
+};
+
+pub const GoldOrbConsumable = Consumable{
+    .id = "cons_gold_orb",
+    .name = "gold orb",
+    .effects = &[_]Consumable.Effect{
+        .{ .Resist = .{ .r = .rElec, .change = 25 } },
+        .{ .Stat = .{ .r = .Potential, .change = 25 } },
+    },
+    .color = 0xffd700,
     .verbs_player = &[_][]const u8{ "choke down", "swallow" },
     .verbs_other = &[_][]const u8{"chokes down"},
 };
