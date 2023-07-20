@@ -308,6 +308,8 @@ pub fn disruptIndividualUndead(mob: *Mob) void {
     assert(mob.life_type == .Undead and !mob.is_dead);
 
     const candles = state.destroyed_candles;
+    if (candles == 0)
+        return;
 
     // Nomenclature: NLIN == "normal linear", == chance * candles
     //               HLIN == "half linear", == chance * (candles / 2)
@@ -349,7 +351,9 @@ pub fn disruptIndividualUndead(mob: *Mob) void {
         msg = "paralysis";
     } else return;
 
-    state.message(.Status, "{c} is disrupted ($b{s}$.)", .{ mob, msg });
+    if (state.player.canSeeMob(mob)) {
+        state.message(.Status, "{c} is disrupted ($b{s}$.)", .{ mob, msg });
+    }
 }
 
 test {
