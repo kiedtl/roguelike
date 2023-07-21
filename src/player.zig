@@ -137,6 +137,8 @@ pub const PlayerUpgrade = enum {
     Agile,
     OI_Enraged,
     Healthy,
+    Powerful,
+    Potent,
     Will,
     Echolocating,
 
@@ -148,6 +150,8 @@ pub const PlayerUpgrade = enum {
             .Agile => "Agility",
             .OI_Enraged => "Inner Rage",
             .Healthy => "Robust",
+            .Powerful => "Powerful",
+            .Potent => "Potent",
             .Will => "Hardened Will",
             .Echolocating => "Echolocation",
         };
@@ -158,6 +162,8 @@ pub const PlayerUpgrade = enum {
             .Agile => "You are good at evading blows.",
             .OI_Enraged => "You feel hatred building up inside.",
             .Healthy => "You are unusually robust.",
+            .Powerful => "You feel powerful.",
+            .Potent => "You feel a deeper connection to the Power here.",
             .Will => "Your will hardens.",
             .Echolocating => "Your sense of hearing becomes acute.",
         };
@@ -168,6 +174,8 @@ pub const PlayerUpgrade = enum {
             .Agile => "You have a +20% dodging bonus.",
             .OI_Enraged => "You become enraged when badly hurt.",
             .Healthy => "You have 50% more health than usual.",
+            .Powerful => "You have 2x max mana.",
+            .Potent => "You 50% more mana and +25% Potential.",
             .Will => "You have 3 extra pips of willpower.",
             .Echolocating => "You passively echolocate areas around sound.",
         };
@@ -182,6 +190,11 @@ pub const PlayerUpgrade = enum {
                 .exhausting = true,
             },
             .Healthy => state.player.max_HP = state.player.max_HP * 150 / 100,
+            .Powerful => state.player.max_MP = state.player.max_MP * 2,
+            .Potent => {
+                state.player.max_MP = state.player.max_MP * 150 / 100;
+                state.player.stats.Potential += 25;
+            },
             .Will => state.player.stats.Willpower += 3,
             .Echolocating => state.player.addStatus(.Echolocation, 7, .Prm),
         }
