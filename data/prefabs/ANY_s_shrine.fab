@@ -1,0 +1,30 @@
+:subroom
+:priority 50
+:restriction 1
+:material gold
+
+@0 m shrine
+@a p gold_c_wall_upper
+@b p gold_c_wall_lower
+@c p gold_c_wall_left
+@d p gold_c_wall_right
+@e p gold_c_slant_left
+@f p gold_c_slant_right
+@g p gold_c_wall_pltfrm
+ebf
+c0d
+fge
+
+\
+
+@0 m shrine
+@a p gold_c_wall_upper
+@b p gold_c_wall_lower
+@c p gold_c_wall_left
+@d p gold_c_wall_right
+@e p gold_c_slant_left
+@f p gold_c_slant_right
+@g p gold_c_wall_pltfrm
+egf
+c0d
+fae

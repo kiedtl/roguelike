@@ -25,6 +25,7 @@ const DIRECTIONS = types.DIRECTIONS;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 const StringBuf64 = @import("buffer.zig").StringBuf64;
 
+pub const GENERAL_THREAT_CLOSE_SHRINES = 50;
 pub const GENERAL_THREAT_LOOK_CAREFULLY = 80;
 pub const GENERAL_THREAT_LOOK_CAREFULLY2 = 160;
 pub const UNKNOWN_THREAT_IS_PERSISTENT = 200;
@@ -243,7 +244,12 @@ fn onThreatIncrease(level: usize, threat: Threat, old: usize, new: usize) void {
     assert(old != new);
 
     switch (threat) {
-        .General => {},
+        .General => {
+            if (_didIncreasePast(GENERAL_THREAT_CLOSE_SHRINES, old, new)) {
+                state.message(.Drain, "You sense the Power here minimizing its connection to the floor.", .{});
+                state.shrines_in_lockdown[level] = true;
+            }
+        },
         .Unknown => {
             if (!getThreat(.Unknown).deadly and
                 (_didIncreasePast(UNKNOWN_THREAT_DEPLOY_WATCHERS_1, old, new) or

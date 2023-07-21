@@ -159,13 +159,17 @@ pub var machines: MachineList = undefined;
 pub var props: PropList = undefined;
 pub var containers: ContainerList = undefined;
 pub var evocables: EvocableList = undefined;
+pub var messages: MessageArrayList = undefined;
 
+// Global variables
 pub var ticks: usize = 0;
 pub var player_turns: usize = 0;
-pub var messages: MessageArrayList = undefined;
-pub var score: usize = 0;
-pub var destroyed_candles: usize = 0;
 pub var is_in_viewer: bool = false;
+pub var score: usize = 0;
+
+// Global mechanic-specific variables
+pub var destroyed_candles: usize = 0;
+pub var shrines_in_lockdown: [LEVELS]bool = [1]bool{false} ** LEVELS;
 
 // Find the nearest space near a coord in which a monster can be placed.
 //

@@ -283,6 +283,7 @@ pub const MACHINES = [_]Machine{
     StalkerStation,
     CapacitorArray,
     Candle,
+    Shrine,
     RechargingStation,
     Drain,
     FirstAidStation,
@@ -1005,6 +1006,56 @@ pub const Candle = Machine{
                 ui.Animation.apply(.{ .Particle = .{ .name = "beams-candle-extinguish", .coord = self.coord, .target = .{ .Z = 0 } } });
                 state.message(.Info, "You extinguish the candle.", .{});
                 scores.recordUsize(.CandlesDestroyed, 1);
+
+                return true;
+            }
+        }.f,
+    },
+};
+
+pub const Shrine = Machine{
+    .id = "shrine",
+    .name = "shrine",
+    .announce = true,
+    .powered_tile = 'S',
+    .unpowered_tile = 'S',
+    .powered_fg = 0,
+    .unpowered_fg = 0,
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+    .powered_luminescence = 100, // Just for theme
+    .unpowered_luminescence = 0, // ...
+    .bg = 0xffe766,
+    .power_drain = 0,
+    .power = 100,
+    .on_power = powerNone,
+    .player_interact = .{
+        .name = "drain",
+        .success_msg = "You drained the shrine's power.",
+        .no_effect_msg = "It seems the shrine's power was hidden. Perhaps in response to a threat?",
+        .expended_msg = null,
+        .max_use = 1,
+        .func = struct {
+            fn f(self: *Machine, by: *Mob) bool {
+                assert(by == state.player);
+
+                // FIXME: we should do this when shrines go into lockdown as well
+                self.bg = colors.percentageOf(self.bg.?, 50);
+                self.unpowered_fg = self.bg;
+                self.power = 0;
+
+                if (state.shrines_in_lockdown[state.player.coord.z]) {
+                    return false;
+                }
+
+                const total = rng.range(usize, state.player.max_MP / 2, state.player.max_MP);
+                const pot = @intCast(usize, state.player.stat(.Potential));
+                const amount = player.calculateDrainableMana(total);
+                state.player.MP = math.min(state.player.max_MP, state.player.MP + amount);
+
+                ui.Animation.apply(.{ .Particle = .{ .name = "explosion-bluegold", .coord = self.coord, .target = .{ .Z = 0 } } });
+                state.message(.Drain, "You absorbed $o{}$. / $g{}$. mana ($o{}% potential$.).", .{ amount, total, pot });
+                scores.recordUsize(.ShrinesDrained, 1);
 
                 return true;
             }

@@ -257,6 +257,7 @@ pub const CHUNKS = [_]Chunk{
     .{ .Header = .{ .n = "Misc" } },
     .{ .Stat = .{ .s = .RaidedLairs, .n = "lairs trespassed" } },
     .{ .Stat = .{ .s = .CandlesDestroyed, .n = "candles destroyed" } },
+    .{ .Stat = .{ .s = .ShrinesDrained, .n = "shrines drained" } },
     .{ .Stat = .{ .s = .TimesCorrupted, .n = "times corrupted" } },
 };
 
@@ -272,7 +273,8 @@ pub const Stat = enum(usize) {
     RingsUsed = 8,
     RaidedLairs = 9,
     CandlesDestroyed = 10,
-    TimesCorrupted = 11,
+    ShrinesDrained = 11,
+    TimesCorrupted = 12,
 
     pub fn stattype(self: Stat) std.meta.FieldEnum(StatValue) {
         return switch (self) {
@@ -287,6 +289,7 @@ pub const Stat = enum(usize) {
             .RingsUsed => .BatchUsize,
             .RaidedLairs => .SingleUsize,
             .CandlesDestroyed => .SingleUsize,
+            .ShrinesDrained => .SingleUsize,
             .TimesCorrupted => .BatchUsize,
         };
     }

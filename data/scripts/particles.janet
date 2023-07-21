@@ -22,6 +22,7 @@
 (def ASCII_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`1234567890-=~!@#$%^&*()_+[]\\{}|;':\",./<>?")
 
 (def GOLD 0xddb733)
+(def DARK_GOLD  0x442700)
 (def LIGHT_GOLD 0xfdd753)
 (def ELEC_BLUE1 0x9fefff)
 (def ELEC_BLUE2 0x7fc7ef)
@@ -1029,6 +1030,28 @@
     :get-spawn-params (SPAR-explosion :inverse true :sparsity-factor 3)
     :get-spawn-speed (Emitter :SSPD-min-sin-ticks)
   })]
+  "explosion-bluegold" @[
+    (new-emitter @{
+            :particle (new-particle @{
+              :tile (new-tile @{ :ch "Z" :fg GOLD :bg LIGHT_GOLD :bg-mix 0.5 })
+              :speed 0.4
+              :triggers @[
+                [[:COND-percent?  5] [:TRIG-custom (fn [self &]
+                                                     (put (self :tile) :bg 0x3333ff) (put (self :tile) :fg 0)
+                                                     (put (self :original-tile) :bg 0x3333ff) (put (self :original-tile) :fg 0))]]
+                [[:COND-percent? 60] [:TRIG-scramble-glyph SYMB1_CHARS]]
+                [[:TRIG-modify-color :bg "a" [:completed-journey] :inverse true]]
+                [[:COND-reached-target?  true] [:TRIG-die]]
+              ]
+            })
+            :lifetime 8
+            :spawn-count (fn [&] 12)
+            :get-spawn-params (fn [self ticks ctx coord target]
+                                (let [angle  (rad (* (math/random) 360))
+                                      dist   (max 1 (* (math/random) 12))]
+                                  [(:move-angle coord dist angle) coord]))
+          })
+  ]
   "beams-call-undead" @[
     (_beams-single-emitter (fn [deg] (+ 180 deg)))
     (_beams-single-emitter (fn [deg] (- 180 deg)))

@@ -913,37 +913,44 @@ pub fn getRingByIndex(index: usize) ?*Ring {
     }
 }
 
+pub fn calculateDrainableMana(total: usize) usize {
+    const S = struct {
+        pub fn _helper(a: usize, pot: usize) usize {
+            const pot1 = math.min(pot, 100);
+            const pot2 = pot -| 100;
+            var n: usize = 0;
+            var ctr = a;
+            while (ctr > 0) : (ctr -= 1) {
+                if (rng.percent(pot1)) n += 1;
+                if (rng.percent(pot2)) n += 1;
+            }
+            return n;
+        }
+    };
+
+    const pot = @intCast(usize, state.player.stat(.Potential));
+    return (S._helper(total, pot) + S._helper(total, pot)) / 2;
+}
+
+// Note, lots of duplicated code here and in Shrine draining code
+//
 pub fn drainMob(mob: *Mob) void {
     if (!mob.is_drained and mob.max_drainable_MP > 0) {
-        const S = struct {
-            pub fn _helper(a: usize, pot: usize) usize {
-                const pot1 = math.min(pot, 100);
-                const pot2 = pot -| 100;
-                var n: usize = 0;
-                var ctr = a;
-                while (ctr > 0) : (ctr -= 1) {
-                    if (rng.percent(pot1)) n += 1;
-                    if (rng.percent(pot2)) n += 1;
-                }
-                return n;
-            }
-        };
-
         const pot = @intCast(usize, state.player.stat(.Potential));
-        const amount = (S._helper(mob.max_drainable_MP, pot) + S._helper(mob.max_drainable_MP, pot)) / 2;
+        const amount = calculateDrainableMana(mob.max_drainable_MP);
 
         state.player.MP = math.min(state.player.max_MP, state.player.MP + amount);
         mob.is_drained = true;
         mob.MP = 0;
         mob.max_MP = 0;
 
-        if (mob.is_dead) {
-            state.message(.Drain, "You drain the corpse of the Necromancer's power.", .{});
-        } else {
-            state.message(.Drain, "You drain {} of the Necromancer's power.", .{mob});
-        }
-
         state.message(.Drain, "You absorbed $o{}$. / $g{}$. mana ($o{}% potential$.).", .{ amount, mob.max_drainable_MP, pot });
+
+        if (mob.is_dead) {
+            state.message(.Drain, "You drained the corpse of the Necromancer's power.", .{});
+        } else {
+            state.message(.Drain, "You drained {} of the Necromancer's power.", .{mob});
+        }
     }
 }
 
