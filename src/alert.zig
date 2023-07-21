@@ -59,9 +59,9 @@ pub const ThreatData = struct {
 //
 pub const ThreatIncrease = enum(usize) {
     Noise = 10,
-    Death = 20,
-    Confrontation = 30,
-    ArmedConfrontation = 40,
+    Death = 15,
+    Confrontation = 20,
+    ArmedConfrontation = 25,
 
     pub fn isDeadly(self: @This()) bool {
         return switch (self) {
