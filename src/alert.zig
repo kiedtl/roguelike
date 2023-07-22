@@ -25,15 +25,15 @@ const DIRECTIONS = types.DIRECTIONS;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 const StringBuf64 = @import("buffer.zig").StringBuf64;
 
-pub const GENERAL_THREAT_CLOSE_SHRINES = 50;
-pub const GENERAL_THREAT_LOOK_CAREFULLY = 80;
+pub const GENERAL_THREAT_CLOSE_SHRINES = 80;
+pub const GENERAL_THREAT_LOOK_CAREFULLY = 100;
 pub const GENERAL_THREAT_LOOK_CAREFULLY2 = 160;
 pub const UNKNOWN_THREAT_IS_PERSISTENT = 200;
 pub const UNKNOWN_THREAT_DEPLOY_WATCHERS_1 = 100;
 pub const UNKNOWN_THREAT_DEPLOY_WATCHERS_2 = 300;
 pub const UNKNOWN_THREAT_DEPLOY_WATCHERS_3 = 500;
 pub const UNKNOWN_THREAT_DEPLOY_WATCHERS_4 = 700;
-pub const UNKNOWN_THREAT_DEPLOY_SPIRES = 80;
+pub const UNKNOWN_THREAT_DEPLOY_SPIRES = 100;
 
 pub const Threat = union(enum) { General, Unknown, Specific: *Mob };
 
@@ -59,9 +59,9 @@ pub const ThreatData = struct {
 //
 pub const ThreatIncrease = enum(usize) {
     Noise = 10,
-    Death = 15,
-    Confrontation = 20,
-    ArmedConfrontation = 25,
+    Death = 12,
+    Confrontation = 15,
+    ArmedConfrontation = 20,
 
     pub fn isDeadly(self: @This()) bool {
         return switch (self) {
