@@ -1822,7 +1822,8 @@ pub fn _Job_GRD_LookAround(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const turns_left = job.getCtx(usize, CTX_TURNS_LEFT_LOOKING, rng.range(usize, 2, 4));
 
     if (rng.onein(3)) {
-        if (!mob.moveInDirection(rng.chooseUnweighted(Direction, &DIRECTIONS)))
+        const dirs = if (mob.hasStatus(.Disorient)) &DIAGONAL_DIRECTIONS else &DIRECTIONS;
+        if (!mob.moveInDirection(rng.chooseUnweighted(Direction, dirs)))
             tryRest(mob);
     } else tryRest(mob);
     guardGlanceRandom(mob);
