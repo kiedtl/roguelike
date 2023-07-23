@@ -106,10 +106,35 @@
 "chain"                	 "chain"                	 '§' 	                        -  	 0xe0e0ff 	 -        	 nay 	 - 	 - 	               - 	 yea
 
 "table"                	 "table"                	 '⊺' 	             .S_O_P_Table  	 0xffffff 	 -        	 nay 	 - 	10
-"bed"                  	 "bed"                  	 'Θ' 	                        -  	 0xdaa520 	 -        	 -   	0.6	30
+"bed"                  	 "bed"                  	 'Θ' 	               .S_O_P_Bed  	 0xdaa520 	 -        	 -   	0.6	30
 "wood_table"           	 "table"                	 '⊺' 	             .S_O_P_Table  	 0xdaa520 	 -        	 nay 	 - 	30
+"desk"                 	 "desk"                 	 '⊺' 	              .S_O_P_Desk  	 0xb0c4de 	 -        	 nay 	 - 	30
+"table_a"              	 "table"                	 '⊺' 	              .S_O_TableA  	 0xdaa520 	 -        	 nay 	 - 	30
+"table_b"              	 "table"                	 '⊺' 	              .S_O_TableB  	 0xdaa520 	 -        	 nay 	 - 	30
+"table_c"              	 "table"                	 '⊺' 	              .S_O_TableC  	 0xdaa520 	 -        	 nay 	 - 	30
+"table_d"              	 "table"                	 '⊺' 	              .S_O_TableD  	 0xdaa520 	 -        	 nay 	 - 	30
+
 # chairs ⑁
 "wood_chair"           	 "chair"                	 'ⅎ' 	             .S_O_P_Chair  	 0xdaa520 	 -        	 yea 	 - 	30
+"chair_a"              	 "chair"                	 'ⅎ' 	              .S_O_ChairA  	 0xdaa520 	 -        	 yea 	 - 	30
+"chair_b"              	 "chair"                	 'ⅎ' 	              .S_O_ChairB  	 0xdaa520 	 -        	 yea 	 - 	30
+"sofa_a"               	 "sofa"                 	 'ⅎ' 	             .S_O_P_SofaA  	 0x77ffd4 	 -        	 nay 	 - 	30
+"sofa_b"               	 "sofa"                 	 'ⅎ' 	             .S_O_P_SofaB  	 0x77ffd4 	 -        	 nay 	 - 	30
+"sofa_c"               	 "sofa"                 	 'ⅎ' 	             .S_O_P_SofaC  	 0x77ffd4 	 -        	 nay 	 - 	30
+
+"cabinet_a"            	 "cabinet"              	 'π' 	            .S_O_StorageA  	 0xdaa520 	 -        	 nay 	 - 	10
+"cabinet_b"            	 "cabinet"              	 'π' 	            .S_O_StorageB  	 0xdaa520 	 -        	 nay 	 - 	10
+"cabinet_c"            	 "cabinet"              	 'π' 	            .S_O_StorageC  	 0xdaa520 	 -        	 nay 	 - 	10
+"cabinet_d"            	 "cabinet"              	 'π' 	            .S_O_StorageD  	 0xdaa520 	 -        	 nay 	 - 	10
+"chest"                	 "chest"                	 'æ' 	              .S_O_CrateA  	 0xb0c4de 	 -        	 nay 	 - 	10
+"crate_a"              	 "crate"                	 'æ' 	              .S_O_CrateA  	 0xdaa520 	 -        	 nay 	 - 	10
+"crate_b"              	 "crate"                	 'æ' 	              .S_O_CrateB  	 0xdaa520 	 -        	 nay 	 - 	10
+"crate_c"              	 "crate"                	 'æ' 	              .S_O_CrateC  	 0xdaa520 	 -        	 nay 	 - 	10
+"crate_d"              	 "crate"                	 'æ' 	              .S_O_CrateD  	 0xdaa520 	 -        	 nay 	 - 	10
+"pot"                  	 "pot"                  	 'æ' 	                 .S_O_Pot  	 0xb0c4de 	 -        	 nay 	 -
+
+"sink"                 	 "sink"                 	 '⊺' 	              .S_O_P_Sink  	 0xb0c4de 	 -        	 nay 	 - 	30
+"stove"                	 "stove"                	 '⊺' 	             .S_O_P_Stove  	 0xb0c4de 	 -        	 nay 	 - 	30
 
 "turbine"              	 "turbine"              	 '◴' 	                        -  	 0xffd700 	 -        	 nay 	 - 	10
 "gearbox"              	 "gearbox"              	 '■' 	                        -  	 0xffffff 	 -        	 nay 	 - 	10
@@ -328,6 +353,7 @@
 "medium_sieve"         	 "medium_sieve"         	 '▒' 	                        -  	 0xffe7e7 	 -        	 nay 	 -
 "gas_vent"             	 "gas vent"             	 '+' 	                        -  	 0x888888 	 -        	 -   	 -
 "iron_bars"            	 "iron bars"            	 '#' 	          .S_G_Wall_Grate  	 0xeeeeee 	 -        	 nay
+"iron_bars_broken"     	 "broken grate"         	 '#' 	   .S_G_Wall_Grate_Broken  	 0xeeeeee 	 -        	 yea
 "titanium_bars"        	 "titanium bars"        	 '*' 	                        -  	 0xeaecef 	 -        	 nay
 
 "undead_ash"           	 "pile of ash"          	 '%' 	                        -  	 0x8888aa 	 -        	 -  

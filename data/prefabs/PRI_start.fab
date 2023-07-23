@@ -14,18 +14,25 @@
 :notraps
 :priority 100
 
-@a i potion_smoke
-@b i potion_paralysis
-@c i potion_blind
-@d i potion_disorient
-@e i potion_distract
+:subroom_area 2,2 4 4 PRI_s_cell_4x4
+:subroom_area 8,2 4 4 PRI_s_cell_4x4
+:subroom_area 8,7 4 4 PRI_s_cell_4x4
 
-###***###
-#a.....a#
-#.......#
-*.......*
-#c..@..b#
-*.......*
-#.......#
-#d.....e#
-###***###
+@b p iron_bars
+@p p iron_bars_broken
+@g Cmons guard ([prm_status1]Sleeping)
+
+#####****#####
+#............#
+#............#
+*............*
+#............#
+*............*
+#............#
+#.####.......#
+#.b..b.......#
+#.b..p@......#
+#.####.......#
+#............#
+#g..........g#
+#####****#####
