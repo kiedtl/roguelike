@@ -860,9 +860,10 @@ x Iron/lightning spires placed in important room(s)       80
 - Extra member for each patrol                           200, 300
 
 Misc:
-- Unknown threats should only rise for 30 turns in a row (before guards assume
+x Unknown threats should only rise for 30 turns in a row (before guards assume
   whatever it was moved along)
-  - UNLESS incident_count > 10, then it continues rising indefinitely
+  x UNLESS incident_count > 10, then it continues rising indefinitely
+
 
 Roadmap
 =======
