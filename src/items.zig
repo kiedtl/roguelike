@@ -145,7 +145,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 150, .i = .{ .P = &InvigoratePotion } },
     .{ .w = 150, .i = .{ .P = &FastPotion } },
     .{ .w = 150, .i = .{ .P = &IncineratePotion } },
-    .{ .w = 120, .i = .{ .P = &RecuperatePotion } },
+    .{ .w = 140, .i = .{ .P = &RecuperatePotion } },
     .{ .w = 120, .i = .{ .P = &DecimatePotion } },
     .{ .w = 60, .i = .{ .P = &GlowPotion } },
     // Consumables
