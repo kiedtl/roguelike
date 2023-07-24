@@ -95,7 +95,8 @@ pub fn build(b: *Builder) void {
             exe.addObjectFile("third_party/mingw/SDL2/lib/libSDL2.dll.a");
             b.installBinFile("third_party/mingw/SDL2/bin/SDL2.dll", "SDL2.dll");
         } else {
-            exe.linkSystemLibrary("sdl2");
+            exe.addIncludeDir("/usr/include/SDL2/");
+            exe.linkSystemLibrary("SDL2");
         }
     }
 
