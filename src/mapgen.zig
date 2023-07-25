@@ -430,8 +430,9 @@ fn choosePoster(level: usize) ?*const Poster {
     return null;
 }
 
-fn chooseRing(night: bool) Ring {
-    return rng.chooseUnweighted(Ring, if (night) &items.NIGHT_RINGS else &items.RINGS);
+fn chooseRing(night: bool) ItemTemplate {
+    const drop_list = if (night) &items.NIGHT_RINGS else &items.RINGS;
+    return _chooseLootItem(drop_list, minmax(usize, 0, 999), null);
 }
 
 // Given a parent and child room, return the direction a corridor between the two
@@ -827,6 +828,8 @@ pub fn excavatePrefab(
                                         "{s}: Couldn't load prop {s}, skipping.",
                                         .{ fab.name.constSlice(), utils.used(pid) },
                                     );
+                                    const ring = items.createItemFromTemplate(chooseRing(room.is_lair));
+                                    state.dungeon.itemsAt(rc).append(ring) catch err.wat();
                                 }
                             },
                             .Machine => |mid| {
@@ -886,8 +889,8 @@ pub fn excavatePrefab(
                     }
                 },
                 .Ring => {
-                    const ring = items.createItem(Ring, chooseRing(room.is_lair));
-                    state.dungeon.itemsAt(rc).append(.{ .Ring = ring }) catch err.wat();
+                    const ring = items.createItemFromTemplate(chooseRing(room.is_lair));
+                    state.dungeon.itemsAt(rc).append(ring) catch err.wat();
                 },
                 else => {},
             }

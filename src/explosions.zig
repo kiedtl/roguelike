@@ -235,8 +235,7 @@ pub fn kaboom(ground0: Coord, opts: ExplosionOpts) void {
             }
 
             if (state.dungeon.at(coord).surface) |surface| switch (surface) {
-                .Poster, .Prop, .Machine => state.dungeon.at(coord).surface = null,
-                .Corpse => |_| state.dungeon.at(coord).surface = null, // Nuke corpses
+                .Corpse, .Poster, .Prop, .Machine => surface.destroy(coord),
                 else => {},
             };
 

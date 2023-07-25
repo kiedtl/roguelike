@@ -639,3 +639,19 @@ when there are no more enemies.
 % acceleration
 $cEffect:$. You become 2x faster when there are no enemies adjacent to you.
 The effect lasts for $bevasion% / 4$. turns (minimum $b3$. turns).
+
+% disintegration
+$cEffect:$. A disintegration bolt is fired in the chosen direction, destroyed
+walls and obstructions and damaging all targets, hostile or otherwise.
+
+$c    -$. The bolt will always reach a distance equivalent to your $bWillpower$..
+
+$c    -$. The bolt initially does $b2$. damage, gaining $b+3 damage$. for each
+wall destroyed and $b+1$. for each non-wall obstruction destroyed.
+
+$c    -$. Once an enemy or other creature has been hit by the bolt, the bolt
+loses $b1 damage$. for each tile it passes, fizzling out when its damage reaches
+$b0$..
+
+$c    -$. The first time the bolt hits an enemy, the damage will be applied
+stealthily, and the enemy will not be alerted to your presence.

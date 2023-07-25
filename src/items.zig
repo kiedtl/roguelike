@@ -199,27 +199,28 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .X = &SpectralCrownAux } },
     .{ .w = 05, .i = .{ .X = &EtherealShieldAux } },
 };
+pub const RINGS = [_]ItemTemplate{
+    .{ .w = 9, .i = .{ .r = LightningRing } },
+    .{ .w = 9, .i = .{ .r = CremationRing } },
+    .{ .w = 9, .i = .{ .r = DistractionRing } },
+    .{ .w = 9, .i = .{ .r = DamnationRing } },
+    .{ .w = 9, .i = .{ .r = TeleportationRing } },
+    .{ .w = 9, .i = .{ .r = InsurrectionRing } },
+    .{ .w = 9, .i = .{ .r = MagnetizationRing } },
+    .{ .w = 9, .i = .{ .r = AccelerationRing } },
+};
+pub const NIGHT_RINGS = [_]ItemTemplate{
+    .{ .w = 9, .i = .{ .r = ExcisionRing } },
+    .{ .w = 9, .i = .{ .r = ConjurationRing } },
+};
 pub const ALL_ITEMS = [_]ItemTemplate{
     .{ .w = 0, .i = .{ .List = &ITEM_DROPS } },
     .{ .w = 0, .i = .{ .List = &NIGHT_ITEM_DROPS } },
+    .{ .w = 0, .i = .{ .List = &RINGS } },
+    .{ .w = 0, .i = .{ .List = &NIGHT_RINGS } },
     .{ .w = 0, .i = .{ .E = SymbolEvoc } },
     .{ .w = 0, .i = .{ .A = &OrnateGoldArmor } },
-};
-
-pub const RINGS = [_]Ring{
-    LightningRing,
-    CremationRing,
-    DistractionRing,
-    DamnationRing,
-    TeleportationRing,
-    InsurrectionRing,
-    MagnetizationRing,
-    AccelerationRing,
-};
-
-pub const NIGHT_RINGS = [_]Ring{
-    ExcisionRing,
-    ConjurationRing,
+    .{ .w = 0, .i = .{ .r = DisintegrationRing } },
 };
 
 // Cloaks {{{
@@ -455,7 +456,7 @@ pub const BrazierWandEvoc = Evocable{
         fn f(_: *Mob, _: *Evocable) Evocable.EvokeError!void {
             const chosen = ui.chooseCell(.{
                 .require_seen = true,
-                .targeter = .Trajectory,
+                .targeter = .{ .Trajectory = .{} },
             }) orelse return error.BadPosition;
 
             if (state.dungeon.machineAt(chosen)) |mach| {
@@ -494,7 +495,7 @@ pub const FlamethrowerEvoc = Evocable{
         fn f(_: *Mob, _: *Evocable) Evocable.EvokeError!void {
             const dest = ui.chooseCell(.{
                 .require_seen = true,
-                .targeter = .Trajectory,
+                .targeter = .{ .Trajectory = .{} },
             }) orelse return error.BadPosition;
 
             ui.Animation.apply(.{ .Particle = .{
@@ -557,7 +558,7 @@ pub const SymbolEvoc = Evocable{
             const dest = ui.chooseCell(.{
                 .targeter = .{ .Duo = [2]*const ui.ChooseCellOpts.Targeter{
                     &.{ .AoE1 = .{ .dist = DIST, .opts = OPTS } },
-                    &.{ .Trajectory = {} },
+                    &.{ .Trajectory = .{} },
                 } },
             }) orelse return error.BadPosition;
 
@@ -781,6 +782,78 @@ pub const AccelerationRing = Ring{ // {{{
 
             // Too bad we return immediately if the player cancels, this message was nice flavor
             //state.message(.Info, "A haftless sword seems to appear mid-air, then disappears abruptly.", .{});
+        }
+    }.f,
+}; // }}}
+
+pub const DisintegrationRing = Ring{ // {{{
+    .name = "disintegration",
+    .required_MP = 4,
+    .effect = struct {
+        pub fn f() bool {
+            const will = @intCast(usize, state.player.stat(.Willpower));
+
+            const dest = ui.chooseCell(.{
+                .require_seen = false,
+                .targeter = .{ .Trajectory = .{ .require_lof = false } },
+                .max_distance = will,
+            }) orelse return false;
+            const overhang = will - state.player.coord.distance(dest);
+            const path = state.player.coord.drawLine(dest, state.mapgeometry, overhang);
+
+            // Get dest of bolt, including overhang
+            //
+            // Hacky, might not work all the time since I'm not sure if there's
+            // a guarantee that the trajectory will be the same
+            //
+            const anim_dest = path.data[path.len - 1];
+            ui.Animation.apply(.{ .Particle = .{ .name = "zap-disintegrate", .coord = state.player.coord, .target = .{ .C = anim_dest } } });
+
+            var i: usize = will;
+            var d: usize = 2; // damage
+            var v: usize = 0; // victims so far
+            for (path.constSlice()) |coord| {
+                if (coord.eq(state.player.coord)) continue;
+
+                if (state.is_walkable(coord, .{ .only_if_breaks_lof = true })) {
+                    if (v > 0)
+                        d -|= 1;
+                } else {
+                    if (state.dungeon.at(coord).mob) |mob| {
+                        mob.takeDamage(.{
+                            .amount = d,
+                            .by_mob = state.player,
+                            .kind = .Irresistible,
+                            .blood = false,
+                            .source = .RangedAttack,
+                            .stealth = v == 0,
+                        }, .{
+                            .strs = &[_]DamageStr{
+                                _dmgstr(10, "zap", "zaps", ""),
+                                _dmgstr(99, "disintegrate", "disintegrates", ""),
+                                _dmgstr(200, "annihilate", "annihilates", ""),
+                            },
+                        });
+                        v += 1;
+                    } else if (state.dungeon.at(coord).surface) |surface| {
+                        // It's not walkable
+                        if (surface != .Stair) {
+                            surface.destroy(coord);
+                            if (v == 0)
+                                d += 1;
+                        }
+                    } else if (state.dungeon.at(coord).type == .Wall) {
+                        state.dungeon.at(coord).type = .Floor;
+                        if (v == 0)
+                            d += 3;
+                    }
+                }
+
+                i -= 1;
+                if (i == 0 or d == 0) break;
+            }
+
+            return true;
         }
     }.f,
 }; // }}}
@@ -1586,23 +1659,17 @@ pub fn createItemFromTemplate(template: ItemTemplate) Item {
 }
 
 pub fn findItemById(p_id: []const u8) ?ItemTemplate {
-    if (p_id[0] == '=') {
-        for (&RINGS) |ring|
-            if (mem.eql(u8, ring.name, p_id[1..]))
-                return ItemTemplate{ .w = 0, .i = .{ .r = ring } };
-        for (&NIGHT_RINGS) |ring|
-            if (mem.eql(u8, ring.name, p_id[1..]))
-                return ItemTemplate{ .w = 0, .i = .{ .r = ring } };
-        return null;
-    }
-
     const _helper = struct {
         pub fn f(id: []const u8, list: []const ItemTemplate) ?ItemTemplate {
             return for (list) |entry| {
+                if (id[0] == '=') {
+                    if (entry.i != .r and entry.i != .List) continue;
+                } else {
+                    if (entry.i == .r) continue;
+                }
                 if (entry.i.id()) |entry_id| {
-                    if (mem.eql(u8, entry_id, id)) {
-                        break entry;
-                    }
+                    const match_against = if (id[0] == '=') id[1..] else id;
+                    if (mem.eql(u8, entry_id, match_against)) break entry;
                 } else |e| if (e == error.CannotGetListID) {
                     if (f(id, entry.i.List)) |ret| break ret;
                 }

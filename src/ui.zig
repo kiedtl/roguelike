@@ -1688,7 +1688,7 @@ pub const ChooseCellOpts = struct {
 
     pub const Targeter = union(enum) {
         Single,
-        Trajectory,
+        Trajectory: struct { require_lof: bool = true },
         AoE1: struct { dist: usize, opts: state.IsWalkableOptions },
         Duo: [2]*const Targeter,
 
@@ -1710,13 +1710,14 @@ pub const ChooseCellOpts = struct {
                     }
                 }.f,
                 .Trajectory => struct {
-                    pub fn f(_: Targeter, require_seen: bool, coord: Coord, buf: *Result.AList) Error!void {
+                    pub fn f(t: Targeter, require_seen: bool, coord: Coord, buf: *Result.AList) Error!void {
                         const trajectory = state.player.coord.drawLine(coord, state.mapgeometry, 0);
 
                         const trajectory_is_unseen = if (require_seen) for (trajectory.constSlice()) |c| {
                             if (!state.player.cansee(c)) break true;
                         } else false else false;
-                        const has_lof = utils.hasClearLOF(state.player.coord, coord);
+                        const lof_is_ok = !t.Trajectory.require_lof or
+                            utils.hasClearLOF(state.player.coord, coord);
 
                         buf.append(.{ .coord = state.player.coord, .color = 100 }) catch err.wat();
                         buf.append(.{ .coord = coord, .color = 100 }) catch err.wat();
@@ -1728,7 +1729,7 @@ pub const ChooseCellOpts = struct {
                             buf.append(.{ .coord = traj_c, .color = 100 }) catch err.wat();
                         }
 
-                        if (!has_lof or trajectory_is_unseen) {
+                        if (!lof_is_ok or trajectory_is_unseen) {
                             return error.BrokenLOF;
                         }
                     }

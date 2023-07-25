@@ -668,7 +668,7 @@ pub fn throwItem(index: usize) bool {
 
     const dest = ui.chooseCell(.{
         .require_seen = true,
-        .targeter = .Trajectory,
+        .targeter = .{ .Trajectory = .{} },
     }) orelse return false;
 
     state.player.throwItem(&item, dest, state.GPA.allocator());

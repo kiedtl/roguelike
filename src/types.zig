@@ -926,6 +926,9 @@ pub const Damage = struct {
     // by_mob.
     indirect: bool = false,
 
+    // If true, the mob will not be alerted to the enemy's presence.
+    stealth: bool = false,
+
     // Whether to propagate electric damage to the surroundings if the mob
     // is conductive. Usually this will be true, but it will be false when
     // takeDamage is called recursively to prevent an infinite recursion.
@@ -3220,7 +3223,8 @@ pub const Mob = struct { // {{{
         //
         // We already do this in fight() for missed attacks, but this takes
         // care of ranged combat, spell damage, etc.
-        if (d.by_mob) |attacker| {
+        if (!d.stealth and d.by_mob != null) {
+            const attacker = d.by_mob.?;
             if (attacker.isHostileTo(self) and self.hasStatus(.Amnesia)) {
                 self.cancelStatus(.Amnesia);
             }
@@ -4442,6 +4446,14 @@ pub const SurfaceItem = union(SurfaceItemTag) {
             .Poster => "AMBIG_poster",
             .Stair => "AMBIG_stair",
         };
+    }
+
+    pub fn destroy(self: SurfaceItem, coord: Coord) void {
+        switch (self) {
+            .Machine => |m| m.disabled = true,
+            else => {},
+        }
+        state.dungeon.at(coord).surface = null;
     }
 };
 

@@ -541,7 +541,7 @@
         ])
       })
       :lifetime lifetime
-      :spawn-count (fn [&] 7)
+      :spawn-count 7
       :get-spawn-params (fn [self ticks ctx origin target]
                           (let [angle  (/ (* (math/random) 360 math/pi) 180)
                                 dist1  (+ mindist (* (math/random) (- maxdist mindist)))
@@ -623,7 +623,7 @@
       ]
     })
     :lifetime 2
-    :spawn-count (fn [&] 180)
+    :spawn-count 180
     :get-spawn-params (SPAR-explosion)
     :get-spawn-speed (case speed-variation-preset
                        :1 (Emitter :SSPD-min-sin-ticks)
@@ -979,6 +979,34 @@
                                 ntarg  (:move-angle target 2 angle)]
                             [ntarg target]))
     })
+  ]
+  # Lots of stuff stolen from zap-fire-trails, and zap-sword
+  "zap-disintegrate" @[
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch " " :bg 0xd7d722 :bg-mix 0.7 })
+        :require-los 0 :require-nonwall false
+        :triggers @[
+          [[:COND-true] [:TRIG-set-speed (fn [self &] (+ 0.5 (math/pow (:completed-journey self 0.7) 2)))]]
+          [[:COND-true] [:TRIG-create-emitter (new-emitter @{
+            :particle (new-particle @{
+              :tile (new-tile @{ :ch "0" :fg 0xd7d722 :bg DARK_GOLD :bg-mix 1 })
+              :require-los 0 :require-nonwall false
+              :speed 0
+              :lifetime 15
+              :triggers @[
+                [[:COND-true] [:TRIG-scramble-glyph "!@#$%^&*(){}|\\][=-+_1234567890"]]
+                [[:COND-true] [:TRIG-modify-color :bg "a" [:completed-lifetime 0.5]]]
+                [[:COND-parent-dead? 2] [:TRIG-modify-color :fg "rgb" [:fixed-factor 0.8]]]
+              ]
+            })
+            :lifetime 0
+          })]]
+        ]
+      })
+      :lifetime 0
+      :spawn-count (Emitter :SCNT-dist-to-target)
+     })
   ]
   "zap-iron-inacc" @[
     (new-emitter @{
