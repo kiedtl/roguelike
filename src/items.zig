@@ -303,14 +303,14 @@ pub const BucklerAux = Aux{
     .id = "aux_buckler",
     .name = "buckler",
 
-    .stats = .{ .Evade = 10 },
+    .stats = .{ .Evade = 5 },
 };
 
 pub const ShieldAux = Aux{
     .id = "aux_shield",
     .name = "kite shield",
 
-    .stats = .{ .Evade = 20, .Martial = -1 },
+    .stats = .{ .Evade = 10, .Martial = -1 },
 };
 
 pub const Earthen1ShieldAux = Aux{
@@ -318,7 +318,7 @@ pub const Earthen1ShieldAux = Aux{
     .name = "earthen shield",
 
     // .resists = .{ .rAcid = 50 }, // Uncomment when Acid damage is added
-    .stats = .{ .Evade = 10 },
+    .stats = .{ .Evade = 5 },
 };
 
 pub const Earthen2ShieldAux = Aux{
@@ -326,7 +326,7 @@ pub const Earthen2ShieldAux = Aux{
     .name = "Shield of Earth",
 
     // .resists = .{ .rAcid = 50 }, // Uncomment when Acid damage is added
-    .stats = .{ .Evade = 15 },
+    .stats = .{ .Evade = 10 },
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .EarthenShield, .duration = .Equ },
     },
@@ -337,14 +337,14 @@ pub const TowerShieldAux = Aux{
     .name = "tower shield",
 
     .resists = .{ .rFire = -25, .rElec = 25 },
-    .stats = .{ .Evade = 30, .Martial = -5 },
+    .stats = .{ .Evade = 20, .Martial = -5 },
 };
 
 pub const SpikedBucklerAux = Aux{
     .id = "aux_buckler_spiked",
     .name = "spiked buckler",
 
-    .stats = .{ .Spikes = 1, .Evade = 10 },
+    .stats = .{ .Spikes = 1, .Evade = 5 },
 };
 
 pub const GoldPendantAux = Aux{
@@ -361,14 +361,14 @@ pub const ShadowShieldAux = Aux{
     .stats = .{ .Evade = 5 },
 
     .night = true,
-    .night_stats = .{ .Evade = 15 },
+    .night_stats = .{ .Evade = 10 },
 };
 
 pub const EtherealShieldAux = Aux{
     .id = "aux_shield_ethereal",
     .name = "ethereal shield",
 
-    .stats = .{ .Willpower = 1, .Evade = -10 },
+    .stats = .{ .Willpower = 1, .Evade = -5 },
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .EtherealShield, .duration = .Equ },
     },
@@ -1300,7 +1300,7 @@ pub const HauberkArmor = Armor{
     .id = "chainmail_armor",
     .name = "hauberk",
     .resists = .{ .Armor = 25 },
-    .stats = .{ .Evade = -10, .Martial = -1 },
+    .stats = .{ .Evade = -5, .Martial = -1 },
 };
 
 pub const BrigandineArmor = Armor{
@@ -1350,11 +1350,11 @@ pub const ShadowHauberkArmor = Armor{
     .id = "shadow_hauberk_armor",
     .name = "shadow hauberk",
     .resists = .{ .Armor = 10 },
-    .stats = .{ .Evade = -5 },
+    // .stats = .{ .Evade = -5 },
 
     .night = true,
     .night_resists = .{ .Armor = 25 },
-    .night_stats = .{ .Evade = -10, .Martial = -1 },
+    .night_stats = .{ .Evade = -5, .Martial = -1 },
 };
 
 pub const ShadowBrigandineArmor = Armor{
