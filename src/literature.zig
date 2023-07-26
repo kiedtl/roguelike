@@ -4,9 +4,15 @@ const std = @import("std");
 const mem = std.mem;
 const meta = std.meta;
 
+const err = @import("err.zig");
 const tsv = @import("tsv.zig");
+const LinkedList = @import("list.zig").LinkedList;
 
 pub const Poster = struct {
+    // linked list stuff
+    __next: ?*Poster = null,
+    __prev: ?*Poster = null,
+
     // What level this poster belongs on. E.g., "PRI" "LAB" "VLT"
     level: []u8,
 
@@ -22,9 +28,9 @@ pub const Poster = struct {
     }
 };
 
-pub const PosterArrayList = std.ArrayList(Poster);
+pub const PosterList = LinkedList(Poster);
 
-pub var posters: PosterArrayList = undefined;
+pub var posters: PosterList = undefined;
 
 pub fn readPosters(alloc: mem.Allocator) void {
     const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
@@ -53,7 +59,8 @@ pub fn readPosters(alloc: mem.Allocator) void {
             .{ result.Err.type, result.Err.context.lineno, result.Err.context.field },
         );
     } else {
-        posters = result.unwrap();
-        std.log.warn("Loaded {} posters.", .{posters.items.len});
+        posters = @TypeOf(posters).init(alloc);
+        for (result.unwrap().items) |poster| posters.append(poster) catch err.wat();
+        std.log.info("Loaded {} posters.", .{result.unwrap().items.len});
     }
 }

@@ -55,7 +55,7 @@ const StockpileArrayList = types.StockpileArrayList;
 const DIRECTIONS = types.DIRECTIONS;
 
 const TaskArrayList = tasks.TaskArrayList;
-const PosterArrayList = literature.PosterArrayList;
+const PosterList = literature.PosterList;
 const EvocableList = items.EvocableList;
 
 const LEVELS = state.LEVELS;
@@ -196,14 +196,19 @@ fn deinitGame() void {
 
     state.memory.clearAndFree();
 
-    var iter = state.mobs.iterator();
-    while (iter.next()) |mob| {
-        if (mob.is_dead) continue;
-        mob.deinit();
+    {
+        var iter = state.mobs.iterator();
+        while (iter.next()) |mob| {
+            if (mob.is_dead) continue;
+            mob.deinit();
+        }
     }
-    var s_iter = state.squads.iterator();
-    while (s_iter.next()) |squad|
-        squad.deinit();
+    {
+        var s_iter = state.squads.iterator();
+        while (s_iter.next()) |squad|
+            squad.deinit();
+    }
+
     for (state.dungeon.map) |_, level| {
         state.stockpiles[level].deinit();
         state.inputs[level].deinit();
@@ -222,8 +227,11 @@ fn deinitGame() void {
     state.containers.deinit();
     state.evocables.deinit();
 
-    for (literature.posters.items) |poster|
-        poster.deinit(state.GPA.allocator());
+    {
+        var iter = literature.posters.iterator();
+        while (iter.next()) |poster|
+            poster.deinit(state.GPA.allocator());
+    }
     literature.posters.deinit();
 
     alert.deinit();

@@ -417,8 +417,12 @@ fn isTileAvailable(coord: Coord) bool {
 fn choosePoster(level: usize) ?*const Poster {
     var tries: usize = 256;
     while (tries > 0) : (tries -= 1) {
-        const i = rng.range(usize, 0, literature.posters.items.len - 1);
-        const p = &literature.posters.items[i];
+        var l: usize = 0;
+        var iter = literature.posters.iterator();
+        while (iter.next()) |_| l += 1;
+
+        const i = rng.range(usize, 0, l - 1);
+        const p = literature.posters.nth(i).?;
 
         if (p.placement_counter > 0 or !mem.eql(u8, state.levelinfo[level].id, p.level))
             continue;
