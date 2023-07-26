@@ -1232,7 +1232,7 @@ pub const EmberMageTemplate = MobTemplate{
 
         .max_HP = 5,
         .memory_duration = 10,
-        .stats = .{ .Willpower = 4, .Evade = 0, .Vision = 6 },
+        .stats = .{ .Willpower = 4, .Vision = 6 },
     },
     .weapon = &items.BludgeonWeapon,
     .cloak = &items.SilCloak,
@@ -1306,7 +1306,7 @@ pub const SparkMageTemplate = MobTemplate{
 
         .max_HP = 5,
         .memory_duration = 10,
-        .stats = .{ .Willpower = 4, .Evade = 0, .Vision = 6 },
+        .stats = .{ .Willpower = 4, .Vision = 6 },
     },
     .weapon = &items.BludgeonWeapon,
     .cloak = &items.FurCloak,
@@ -1490,7 +1490,7 @@ pub const StalkerTemplate = MobTemplate{
         .max_HP = 2,
         .memory_duration = 2, // Forget about enemies quickly in absence of hunter captain
         .innate_resists = .{ .rFume = 100, .rElec = RESIST_IMMUNE },
-        .stats = .{ .Willpower = 0, .Evade = 80, .Speed = 20, .Vision = 4 },
+        .stats = .{ .Willpower = 0, .Evade = 50, .Speed = 20, .Vision = 4 },
     },
     .statuses = &[_]StatusDataInfo{
         .{ .status = .Sleeping, .duration = .Prm },
@@ -1522,7 +1522,7 @@ pub const BoneRatTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rFume = 100, .rFire = -25 },
-        .stats = .{ .Willpower = 0, .Evade = 10, .Speed = 50, .Vision = 4 },
+        .stats = .{ .Willpower = 0, .Evade = 5, .Speed = 50, .Vision = 4 },
     },
 
     .squad = &[_][]const MobTemplate.SquadMember{
@@ -1560,7 +1560,7 @@ pub const EmberlingTemplate = MobTemplate{
         .max_HP = 2,
         .memory_duration = 5,
         .innate_resists = .{ .rFume = 100, .rFire = RESIST_IMMUNE },
-        .stats = .{ .Willpower = 1, .Evade = 10, .Vision = 5, .Melee = 50 },
+        .stats = .{ .Willpower = 1, .Evade = 5, .Vision = 5, .Melee = 50 },
     },
     // XXX: Emberlings are never placed alone, this determines number of
     // summoned emberlings from CAST_CREATE_EMBERLING
@@ -1610,7 +1610,7 @@ pub const SparklingTemplate = MobTemplate{
         .max_HP = 2,
         .memory_duration = 5,
         .innate_resists = .{ .rFume = 100, .rElec = RESIST_IMMUNE },
-        .stats = .{ .Willpower = 1, .Evade = 10, .Vision = 5 },
+        .stats = .{ .Willpower = 1, .Evade = 5, .Vision = 5 },
     },
     // XXX: Sparklings are never placed alone, this determines number of
     // summoned sparklings from CAST_CREATE_SPARKLING
