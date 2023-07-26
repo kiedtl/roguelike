@@ -4650,6 +4650,7 @@ pub const Ring = struct {
 
     // Ring of <name>
     name: []const u8,
+    color: u32 = colors.GOLD,
 
     required_MP: usize,
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
@@ -4700,9 +4701,9 @@ pub const Item = union(ItemType) {
                 cell.ch = '(';
                 cell.fg = p.color;
             },
-            .Ring => |_| {
+            .Ring => |r| {
                 cell.ch = '*';
-                cell.fg = colors.GOLD;
+                cell.fg = r.color;
             },
             .Weapon => |_| {
                 cell.ch = ')';

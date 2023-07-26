@@ -58,9 +58,16 @@ pub const EV_SYMBOL_RESTRICT_TO_UPPER_SHRINE = Event{
     .effect = &[_]Effect{.{ .AppendPrefabWhitelist = .{ .prefab = "SIN_symbol", .val = "6/Shrine" } }},
 };
 
+pub const EV_DISINT_DISALLOW = Event{
+    .id = "ev_disint_disallow",
+    .checked_when = .MapgenBeginning,
+    .effect = &[_]Effect{.{ .SetPrefabGlobalRestriction = .{ .prefab = "WRK_disintegration", .val = 0 } }},
+};
+
 pub const EVENTS = [_]struct { p: usize, v: *const Event }{
     .{ .p = 30, .v = &EV_SYMBOL_DISALLOW },
     .{ .p = 30, .v = &EV_SYMBOL_RESTRICT_TO_UPPER_SHRINE },
+    .{ .p = 50, .v = &EV_DISINT_DISALLOW },
 };
 
 pub var completed_events: Event.AList = undefined;

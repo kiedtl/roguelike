@@ -1,0 +1,46 @@
+:g_tunneler
+:g_global_restriction 1
+:priority 99
+:noitems
+:noguards
+:notraps
+:nostairs
+
+@@0 i =disintegration
+@@1 P
+This is the ring taken from the Revgenunkim's shield; it'll be here
+until it can be moved back to the Laboratory for Bail to analyse.
+
+
+Interestingly, it bears every mark of being one of the Necromancer's
+rings, which would imply that the Revgenunkim were able to corrupt it
+to their use by some means beyond our understanding. If so, the
+Revgenunkim may be far more intelligent than anyone realized.
+END POSTER
+@@2 M bone_rat
+
+:material gold
+:tunneler_orientation north
+:tunneler_orientation south
+@a p gold_c_wall_right
+@b p gold_c_wall_lower
+@c p gold_c_wall_upper
+2......#
+γ.....ba
+......0a
+γ.....ca
+2.....1#
+
+\
+
+:material gold
+:tunneler_orientation north
+:tunneler_orientation south
+@a p gold_c_wall_left
+@b p gold_c_wall_lower
+@c p gold_c_wall_upper
+#1.....2
+ab.....γ
+a0......
+ac.....γ
+#......2

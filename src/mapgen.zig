@@ -3459,6 +3459,7 @@ pub const Prefab = struct {
     content: [40][60]FabTile = undefined,
     connections: [40]?Connection = undefined,
     features: [128]?Feature = [_]?Feature{null} ** 128,
+    features_global: [128]bool = [_]bool{false} ** 128,
     mobs: [45]?FeatureMob = [_]?FeatureMob{null} ** 45,
     prisons: StackBuffer(Rect, 16) = StackBuffer(Rect, 16).init(null),
     subroom_areas: StackBuffer(SubroomArea, 8) = StackBuffer(SubroomArea, 8).init(null),
@@ -3626,7 +3627,10 @@ pub const Prefab = struct {
                     f.subroom_areas.clear();
                     for (f.content) |*row| mem.set(FabTile, row, .Wall);
                     mem.set(?Connection, &f.connections, null);
-                    mem.set(?Feature, &f.features, null);
+                    for (&f.features) |*feat, i| {
+                        if (!f.features_global[i])
+                            feat.* = null;
+                    }
                     mem.set(?FeatureMob, &f.mobs, null);
                     f.stockpile = null;
                     f.input = null;
@@ -3829,7 +3833,8 @@ pub const Prefab = struct {
                     var words = mem.tokenize(u8, line, " ");
                     _ = words.next(); // Skip the '@<ident>' bit
 
-                    const identifier = line[1];
+                    const is_global = line[1] == '@';
+                    const identifier = if (is_global) line[2] else line[1];
                     const feature_type = words.next() orelse return error.MalformedFeatureDefinition;
                     const id = words.next();
 
@@ -3848,6 +3853,7 @@ pub const Prefab = struct {
                                 const r = cbf.deserializeStruct(mobs.PlaceMobOptions, res.items[0].value.List, .{}) catch
                                     return error.InvalidMetadataValue;
                                 f.features[identifier] = Feature{ .CMob = .{ .t = mob_t, .opts = r } };
+                                f.features_global[identifier] = is_global;
                             } else {
                                 return error.InvalidFeatureType;
                             }
@@ -3856,10 +3862,12 @@ pub const Prefab = struct {
                             const level = state.findLevelByName(id orelse return error.InvalidMetadataValue) orelse
                                 return error.InvalidMetadataValue;
                             f.features[identifier] = Feature{ .Stair = level };
+                            f.features_global[identifier] = is_global;
                         },
                         'M' => {
                             if (mobs.findMobById(id orelse return error.MalformedFeatureDefinition)) |mob_template| {
                                 f.features[identifier] = Feature{ .Mob = mob_template };
+                                f.features_global[identifier] = is_global;
                             } else return error.NoSuchMob;
                         },
                         'P' => {
@@ -3875,16 +3883,17 @@ pub const Prefab = struct {
                                 }
                                 try buf.appendSlice(" ");
                             }
-                            try literature.posters.append(.{
+                            const poster_ptr = try literature.posters.appendAndReturn(.{
                                 .level = try state.GPA.allocator().dupe(u8, "NUL"),
                                 .text = buf.items,
                                 .placement_counter = 0,
                             });
-                            const poster = &literature.posters.items[literature.posters.items.len - 1];
-                            f.features[identifier] = Feature{ .Poster = poster };
+                            f.features[identifier] = Feature{ .Poster = poster_ptr };
+                            f.features_global[identifier] = is_global;
                         },
                         'p' => {
                             f.features[identifier] = Feature{ .Prop = [_:0]u8{0} ** 32 };
+                            f.features_global[identifier] = is_global;
                             mem.copy(u8, &f.features[identifier].?.Prop, id orelse return error.MalformedFeatureDefinition);
                         },
                         'm' => {
@@ -3905,10 +3914,12 @@ pub const Prefab = struct {
                                 },
                             };
                             mem.copy(u8, &f.features[identifier].?.Machine.id, id orelse return error.MalformedFeatureDefinition);
+                            f.features_global[identifier] = is_global;
                         },
                         'i' => {
                             if (items.findItemById(id orelse return error.MalformedFeatureDefinition)) |template| {
                                 f.features[identifier] = Feature{ .Item = template };
+                                f.features_global[identifier] = is_global;
                             } else {
                                 return error.NoSuchItem;
                             }

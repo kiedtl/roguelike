@@ -146,11 +146,11 @@ An oval wooden shield, faced with leather. It is, unfortunately, unwieldy to use
 
 % aux_shield_earthen1
 A large shield made of some black metal, exceedingly lightweight. In the
-shield's center amidst various half-effaced etchings is a broken metal clasp,
+shield's center amidst various half-effaced etchings is a broken copper clasp,
 seemingly meant to hold some kind of jewelry.
 
 % aux_shield_earthen2
-A strange power emanates from the shield, weapon of the Revgenunkim. The effaced
+A strange power emanates from the shield, weapon of the Revgenuhelkim. The effaced
 engravings on the front seem to have now completely disappeared.
 
 % aux_shield_tower
@@ -650,6 +650,11 @@ $cEffect:$. You become 2x faster when there are no enemies adjacent to you.
 The effect lasts for $bevasion% / 4$. turns (minimum $b3$. turns).
 
 % disintegration
+Strangely, this ring seems to be have been carved out of stone instead of gold.
+A single broken copper band adorns one side, as though the ring was meant to
+hang from a chain.
+
+
 $cEffect:$. A disintegration bolt is fired in the chosen direction, destroyed
 walls and obstructions and damaging all targets, hostile or otherwise.
 

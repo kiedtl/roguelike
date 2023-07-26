@@ -824,6 +824,7 @@ pub const AccelerationRing = Ring{ // {{{
 
 pub const DisintegrationRing = Ring{ // {{{
     .name = "disintegration",
+    .color = 0xd5aa6a,
     .required_MP = 4,
     .effect = struct {
         pub fn f() bool {
