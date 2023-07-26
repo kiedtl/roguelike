@@ -6,6 +6,8 @@
 # Classes:
 #     g: stair guardian
 #     C: coroner reinforcements
+#     p: corridor patrol (LAB/WRK only); MUST have guard AI that patrols based
+#        on the two coords in ai.work_area
 
 #
 # monster id               class      -8/Pri  -7/Pri  -6/Lab  -5/Sin   -5/Pri  -5/Smi  -4/Pri -3/Vlt  -3/Sin  -2/Pri  -1/Pri  -1/Cry -1/Cry2 -1/Cry3
@@ -21,5 +23,8 @@
 "bone_mage"           	    "C" 	 100 	 100 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
 "death_knight"        	    "C" 	   - 	   - 	   - 	   - 	 100 	   - 	 100 	 100 	   - 	  - 	   - 	  - 	  - 	  -
 "death_mage"          	    "C" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	100 	 100 	  - 	  - 	  -
+
+"guard"               	    "p" 	   - 	   - 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
+"armored_guard"       	    "p" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	 100 	   - 	  - 	   - 	  - 	  - 	  -
 
 # monster id               class      -8/Pri  -7/Pri  -6/Lab  -5/Sin   -5/Pri  -5/Smi  -4/Pri -3/Vlt  -3/Sin  -2/Pri  -1/Pri  -1/Cry -1/Cry2 -1/Cry3

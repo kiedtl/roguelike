@@ -25,15 +25,18 @@ const DIRECTIONS = types.DIRECTIONS;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 const StringBuf64 = @import("buffer.zig").StringBuf64;
 
+pub const GENERAL_THREAT_DEPLOY_CORRIDOR_PATROLS_1 = 40;
 pub const GENERAL_THREAT_CLOSE_SHRINES = 80;
+pub const GENERAL_THREAT_DEPLOY_PATROLS = 80;
 pub const GENERAL_THREAT_LOOK_CAREFULLY = 100;
+pub const GENERAL_THREAT_DEPLOY_CORRIDOR_PATROLS_2 = 120;
 pub const GENERAL_THREAT_LOOK_CAREFULLY2 = 160;
-pub const UNKNOWN_THREAT_IS_PERSISTENT = 200;
 pub const UNKNOWN_THREAT_DEPLOY_WATCHERS_1 = 100;
+pub const UNKNOWN_THREAT_DEPLOY_SPIRES = 100;
+pub const UNKNOWN_THREAT_IS_PERSISTENT = 200;
 pub const UNKNOWN_THREAT_DEPLOY_WATCHERS_2 = 300;
 pub const UNKNOWN_THREAT_DEPLOY_WATCHERS_3 = 500;
 pub const UNKNOWN_THREAT_DEPLOY_WATCHERS_4 = 700;
-pub const UNKNOWN_THREAT_DEPLOY_SPIRES = 100;
 
 pub const Threat = union(enum) { General, Unknown, Specific: *Mob };
 
@@ -79,6 +82,7 @@ pub const ThreatResponseType = union(enum) {
         },
         room: usize,
         coord: ?Coord = null,
+        coord2: ?Coord = null,
     },
 };
 
@@ -249,6 +253,33 @@ fn onThreatIncrease(level: usize, threat: Threat, old: usize, new: usize) void {
                 state.message(.Drain, "You sense the Power here minimizing its connection to the floor.", .{});
                 state.shrines_in_lockdown[level] = true;
             }
+
+            if (_didIncreasePast(GENERAL_THREAT_DEPLOY_PATROLS, old, new)) {
+                _reinforceRooms(level, &mobs.PatrolTemplate, 1);
+            }
+
+            if (_didIncreasePast(GENERAL_THREAT_DEPLOY_CORRIDOR_PATROLS_1, old, new) or
+                _didIncreasePast(GENERAL_THREAT_DEPLOY_CORRIDOR_PATROLS_2, old, new))
+            {
+                // Duplicated code here and in _reinforceRooms()
+                var tries: usize = 1000;
+                while (tries > 0) : (tries -= 1) {
+                    const room = rng.choose2(Room, state.rooms[level].items, "importance") catch err.wat();
+                    const rect = room.rect;
+                    if (room.type != .Corridor or rect.width == 1 or rect.height == 1)
+                        continue;
+                    const room_id = utils.getRoomFromCoord(level, rect.start).?;
+                    queueThreatResponse(.{
+                        .ReinforceRoom = .{
+                            .reinforcement = .{ .Class = "p" },
+                            .room = room_id,
+                            .coord = rect.start,
+                            .coord2 = rect.end(),
+                        },
+                    });
+                    break;
+                }
+            }
         },
         .Unknown => {
             if (!getThreat(.Unknown).deadly and
@@ -281,7 +312,7 @@ fn _reinforceRooms(level: usize, reinforcement: *const mobs.MobTemplate, times: 
     // TODO: check that we don't deploy to the same room again
     var count: usize = times;
     while (count > 0) : (count -= 1) {
-        const room = rng.choose2(Room, state.rooms[state.player.coord.z].items, "importance") catch err.wat();
+        const room = rng.choose2(Room, state.rooms[level].items, "importance") catch err.wat();
         const room_id = utils.getRoomFromCoord(level, room.rect.start).?;
         queueThreatResponse(.{
             .ReinforceRoom = .{ .reinforcement = .{ .Specific = reinforcement }, .room = room_id },
