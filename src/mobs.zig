@@ -76,7 +76,7 @@ pub const MobTemplate = struct {
     mob: Mob,
     weapon: ?*const Weapon = null,
     backup_weapon: ?*const Weapon = null,
-    armor: ?*const Armor = null,
+    armor: ?Armor = null,
     cloak: ?*const Cloak = null,
     statuses: []const StatusDataInfo = &[_]StatusDataInfo{},
     projectile: ?*const Projectile = null,
@@ -134,7 +134,7 @@ pub const CombatDummyPrisoner = MobTemplate{
         .prisoner_status = types.Prisoner{ .of = .Necromancer },
     },
     .weapon = &items.MaceWeapon,
-    .armor = &items.GambesonArmor,
+    .armor = items.GambesonArmor,
 };
 // }}}
 
@@ -311,7 +311,7 @@ pub const ArmoredGuardTemplate = MobTemplate{
         .stats = .{ .Willpower = 2, .Melee = 70 },
     },
     .weapon = &items.MaceWeapon,
-    .armor = &items.GambesonArmor,
+    .armor = items.GambesonArmor,
 };
 
 pub const JavelineerTemplate = MobTemplate{
@@ -337,7 +337,7 @@ pub const JavelineerTemplate = MobTemplate{
         .stats = .{ .Willpower = 2, .Evade = 10, .Missile = 80, .Vision = 5 },
     },
     .weapon = &items.MaceWeapon,
-    .armor = &items.GambesonArmor,
+    .armor = items.GambesonArmor,
     .projectile = &items.JavelinProj,
 };
 
@@ -365,7 +365,7 @@ pub const DefenderTemplate = MobTemplate{
         .stats = .{ .Willpower = 3, .Evade = 10, .Missile = 90 },
     },
     .weapon = &items.SwordWeapon,
-    .armor = &items.HauberkArmor,
+    .armor = items.HauberkArmor,
     .projectile = &items.NetProj,
 };
 
@@ -532,7 +532,7 @@ pub const PlayerTemplate = MobTemplate{
     },
     .weapon = &items.DaggerWeapon,
     // .backup_weapon = &items.ShadowMaulWeapon,
-    // .armor = &items.FumingVestArmor,
+    // .armor = items.FumingVestArmor,
     //.evocables = &[_]Evocable{items.EldritchLanternEvoc},
     //.cloak = &items.ThornsCloak,
 };
@@ -610,7 +610,7 @@ pub const VapourMageTemplate = MobTemplate{
         .memory_duration = 10,
         .stats = .{ .Willpower = 6, .Speed = 200, .Vision = 6 },
     },
-    .armor = &items.HauberkArmor,
+    .armor = items.HauberkArmor,
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
             .{ .mob = "dustling", .weight = 1, .count = minmax(usize, 2, 3) },
@@ -1010,7 +1010,7 @@ pub const AncientMageTemplate = MobTemplate{
         .stats = .{ .Willpower = 10, .Evade = 20, .Speed = 150 },
     },
     .weapon = &items.BoneGreatMaceWeapon,
-    .armor = &items.HauberkArmor,
+    .armor = items.HauberkArmor,
     .cloak = &items.SilCloak,
 };
 
@@ -1036,7 +1036,7 @@ pub const AncientMageTemplate = MobTemplate{
 //         .memory_duration = 6,
 //         .stats = .{ .Willpower = 6, .Vision = 5 },
 //     },
-//     .armor = &items.HauberkArmor,
+//     .armor = items.HauberkArmor,
 // };
 
 pub const RecruitTemplate = MobTemplate{
@@ -1058,7 +1058,7 @@ pub const RecruitTemplate = MobTemplate{
         .stats = .{ .Willpower = 1, .Melee = 70, .Vision = 6 },
     },
     .weapon = &items.BludgeonWeapon,
-    .armor = &items.GambesonArmor,
+    .armor = items.GambesonArmor,
 };
 
 pub const WarriorTemplate = MobTemplate{
@@ -1080,7 +1080,7 @@ pub const WarriorTemplate = MobTemplate{
         .stats = .{ .Willpower = 2, .Melee = 80, .Evade = 15, .Vision = 6 },
     },
     .weapon = &items.MaceWeapon,
-    .armor = &items.CuirassArmor,
+    .armor = items.CuirassArmor,
 };
 
 pub const HunterTemplate = MobTemplate{
@@ -1102,7 +1102,7 @@ pub const HunterTemplate = MobTemplate{
         .stats = .{ .Willpower = 3, .Melee = 70, .Speed = 150, .Vision = 8 },
     },
     .weapon = &items.MaceWeapon,
-    .armor = &items.GambesonArmor,
+    .armor = items.GambesonArmor,
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
@@ -1163,7 +1163,7 @@ pub const DeathKnightTemplate = MobTemplate{
         .stats = .{ .Willpower = 6, .Melee = 70, .Evade = 10, .Vision = 6 },
     },
     .weapon = &items.BoneSwordWeapon,
-    .armor = &items.HauberkArmor,
+    .armor = items.HauberkArmor,
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
@@ -1198,7 +1198,7 @@ pub const DeathMageTemplate = MobTemplate{
         .stats = .{ .Willpower = 8, .Evade = 10 },
     },
     .weapon = &items.BoneSwordWeapon,
-    .armor = &items.HauberkArmor,
+    .armor = items.HauberkArmor,
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
@@ -1273,7 +1273,7 @@ pub const BrimstoneMageTemplate = MobTemplate{
         .stats = .{ .Willpower = 6, .Evade = 10 },
     },
     .weapon = &items.MaceWeapon,
-    .armor = &items.HauberkArmor,
+    .armor = items.HauberkArmor,
     .cloak = &items.SilCloak,
 
     .squad = &[_][]const MobTemplate.SquadMember{
@@ -1345,7 +1345,7 @@ pub const LightningMageTemplate = MobTemplate{
         .stats = .{ .Willpower = 6, .Evade = 10 },
     },
     .weapon = &items.MaceWeapon,
-    .armor = &items.HauberkArmor,
+    .armor = items.HauberkArmor,
     .cloak = &items.FurCloak,
 
     .squad = &[_][]const MobTemplate.SquadMember{
@@ -1652,7 +1652,7 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
         .stats = .{ .Willpower = 4, .Melee = 100, .Vision = 6 },
     },
     .weapon = &items.RapierWeapon,
-    .armor = &items.CuirassArmor,
+    .armor = items.CuirassArmor,
 };
 
 pub const TorturerNecromancerTemplate = MobTemplate{
@@ -1684,7 +1684,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
         .stats = .{ .Willpower = 8, .Evade = 10 },
     },
     .weapon = &items.MaceWeapon,
-    .armor = &items.GambesonArmor,
+    .armor = items.GambesonArmor,
 };
 
 // pub const FrozenFiendTemplate = MobTemplate{
@@ -1715,7 +1715,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
 //         .stats = .{ .Willpower = 8, .Evade = 10 },
 //     },
 //     .weapon = &items.MorningstarWeapon,
-//     .armor = &items.HauberkArmor,
+//     .armor = items.HauberkArmor,
 // };
 
 pub const LivingIceTemplate = MobTemplate{
@@ -1930,7 +1930,7 @@ pub const NightReaperTemplate = MobTemplate{
         .stats = .{ .Willpower = 10, .Melee = 80, .Evade = 15, .Vision = 8 },
     },
     .weapon = &items.ShadowMaulWeapon,
-    .armor = &items.ShadowMailArmor,
+    .armor = items.ShadowMailArmor,
 };
 
 pub const GrueTemplate = MobTemplate{
@@ -2282,7 +2282,7 @@ pub fn placeMob(
 
     if (template.weapon) |w| mob.equipItem(.Weapon, Item{ .Weapon = w });
     if (template.backup_weapon) |w| mob.equipItem(.Backup, Item{ .Weapon = w });
-    if (template.armor) |a| mob.equipItem(.Armor, Item{ .Armor = a });
+    if (template.armor) |a| mob.equipItem(.Armor, Item{ .Armor = items.createItem(Armor, a) });
     if (template.cloak) |c| mob.equipItem(.Cloak, Item{ .Cloak = c });
 
     if (opts.facing) |dir| mob.facing = dir;

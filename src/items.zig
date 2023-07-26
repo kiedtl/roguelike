@@ -65,7 +65,7 @@ pub const ItemTemplate = struct {
 
     pub const TemplateItem = union(enum) {
         W: *const Weapon,
-        A: *const Armor,
+        A: Armor,
         C: *const Cloak,
         X: *const Aux,
         P: *const Consumable,
@@ -116,12 +116,12 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 15, .i = .{ .W = &WoldoWeapon } },
     .{ .w = 10, .i = .{ .W = &GoldDaggerWeapon } },
     // Armor
-    .{ .w = 20, .i = .{ .A = &GambesonArmor } },
-    .{ .w = 20, .i = .{ .A = &HauberkArmor } },
-    .{ .w = 20, .i = .{ .A = &CuirassArmor } },
-    .{ .w = 10, .i = .{ .A = &SpikedLeatherArmor } },
-    .{ .w = 10, .i = .{ .A = &GoldArmor } },
-    .{ .w = 05, .i = .{ .A = &BrigandineArmor } },
+    .{ .w = 20, .i = .{ .A = GambesonArmor } },
+    .{ .w = 20, .i = .{ .A = HauberkArmor } },
+    .{ .w = 20, .i = .{ .A = CuirassArmor } },
+    .{ .w = 10, .i = .{ .A = SpikedLeatherArmor } },
+    .{ .w = 10, .i = .{ .A = GoldArmor } },
+    .{ .w = 05, .i = .{ .A = BrigandineArmor } },
     // Aux items
     .{ .w = 20, .i = .{ .X = &BucklerAux } },
     .{ .w = 20, .i = .{ .X = &ShieldAux } },
@@ -186,11 +186,11 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 30, .i = .{ .W = &ShadowMaulWeapon } },
     .{ .w = 30, .i = .{ .W = &ShadowMaceWeapon } },
     // Armors and cloaks
-    .{ .w = 30, .i = .{ .A = &ShadowMailArmor } },
-    .{ .w = 30, .i = .{ .A = &ShadowBrigandineArmor } },
-    .{ .w = 30, .i = .{ .A = &ShadowHauberkArmor } },
-    .{ .w = 20, .i = .{ .A = &FumingVestArmor } },
-    .{ .w = 10, .i = .{ .A = &SpectralVestArmor } },
+    .{ .w = 30, .i = .{ .A = ShadowMailArmor } },
+    .{ .w = 30, .i = .{ .A = ShadowBrigandineArmor } },
+    .{ .w = 30, .i = .{ .A = ShadowHauberkArmor } },
+    .{ .w = 20, .i = .{ .A = FumingVestArmor } },
+    .{ .w = 10, .i = .{ .A = SpectralVestArmor } },
     .{ .w = 10, .i = .{ .C = &SpectralCloak } },
     // Spectral orb
     .{ .w = 10, .i = .{ .c = &SpectralOrbConsumable } },
@@ -219,7 +219,9 @@ pub const ALL_ITEMS = [_]ItemTemplate{
     .{ .w = 0, .i = .{ .List = &RINGS } },
     .{ .w = 0, .i = .{ .List = &NIGHT_RINGS } },
     .{ .w = 0, .i = .{ .E = SymbolEvoc } },
-    .{ .w = 0, .i = .{ .A = &OrnateGoldArmor } },
+    .{ .w = 0, .i = .{ .A = OrnateGoldArmor } },
+    .{ .w = 0, .i = .{ .X = &Earthen1ShieldAux } },
+    .{ .w = 0, .i = .{ .X = &Earthen2ShieldAux } },
     .{ .w = 0, .i = .{ .r = DisintegrationRing } },
 };
 
@@ -309,6 +311,25 @@ pub const ShieldAux = Aux{
     .name = "kite shield",
 
     .stats = .{ .Evade = 20, .Martial = -1 },
+};
+
+pub const Earthen1ShieldAux = Aux{
+    .id = "aux_shield_earthen1",
+    .name = "earthen shield",
+
+    // .resists = .{ .rAcid = 50 }, // Uncomment when Acid damage is added
+    .stats = .{ .Evade = 10 },
+};
+
+pub const Earthen2ShieldAux = Aux{
+    .id = "aux_shield_earthen2",
+    .name = "Shield of Earth",
+
+    // .resists = .{ .rAcid = 50 }, // Uncomment when Acid damage is added
+    .stats = .{ .Evade = 15 },
+    .equip_effects = &[_]StatusDataInfo{
+        .{ .status = .EarthenShield, .duration = .Equ },
+    },
 };
 
 pub const TowerShieldAux = Aux{
@@ -1635,6 +1656,7 @@ pub const ShadowMaulWeapon = Weapon{
 
 pub fn createItem(comptime T: type, item: T) *T {
     const list = switch (T) {
+        Armor => &state.armors,
         Ring => &state.rings,
         Evocable => &state.evocables,
         else => @compileError("uh wat"),
@@ -1647,7 +1669,7 @@ pub fn createItem(comptime T: type, item: T) *T {
 pub fn createItemFromTemplate(template: ItemTemplate) Item {
     return switch (template.i) {
         .W => |i| Item{ .Weapon = i },
-        .A => |i| Item{ .Armor = i },
+        .A => |i| Item{ .Armor = createItem(Armor, i) },
         .P, .c => |i| Item{ .Consumable = i },
         .r => |i| Item{ .Ring = createItem(Ring, i) },
         .E => |i| Item{ .Evocable = createItem(Evocable, i) },

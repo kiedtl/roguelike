@@ -144,6 +144,15 @@ A simple wooden buckler. Not much to say about it.
 % aux_shield
 An oval wooden shield, faced with leather. It is, unfortunately, unwieldy to use.
 
+% aux_shield_earthen1
+A large shield made of some black metal, exceedingly lightweight. In the
+shield's center amidst various half-effaced etchings is a broken metal clasp,
+seemingly meant to hold some kind of jewelry.
+
+% aux_shield_earthen2
+A strange power emanates from the shield, weapon of the Revgenunkim. The effaced
+engravings on the front seem to have now completely disappeared.
+
 % aux_shield_tower
 A very large and unwieldy rectangular shield, carved out of lightweight wood.
 Given its purpose as a showpiece, only morons or those truly desperate would

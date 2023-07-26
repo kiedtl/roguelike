@@ -154,6 +154,7 @@ pub var mapgen_infos = [1]MapgenInfos{.{}} ** LEVELS;
 pub var tasks: TaskArrayList = undefined;
 pub var squads: Squad.List = undefined;
 pub var mobs: MobList = undefined;
+pub var armors: ArmorList = undefined;
 pub var rings: RingList = undefined;
 pub var machines: MachineList = undefined;
 pub var props: PropList = undefined;

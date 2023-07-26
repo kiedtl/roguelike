@@ -83,6 +83,7 @@ pub const TORMENT_UNDEAD_DAMAGE = 2;
 pub const DETECT_HEAT_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
 pub const DETECT_ELEC_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
 pub const DETECT_UNDEAD_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
+pub const EARTHEN_SHIELD_WALL_EV_BONUS = 7;
 
 pub fn MinMax(comptime T: type) type {
     return struct {
@@ -1056,6 +1057,7 @@ pub const Status = enum {
     DetectHeat, // Doesn't have a power field.
     DetectElec, // Doesn't have a power field.
     EtherealShield, // Doesn't have a power field.
+    EarthenShield,
     FumesVest, // Doesn't have a power field.
 
     // Causes monster to be considered hostile to all other monsters.
@@ -1254,6 +1256,7 @@ pub const Status = enum {
             .DetectHeat => "detect heat",
             .DetectElec => "detect electricity",
             .EtherealShield => "ethereal shield",
+            .EarthenShield => "earthen shield",
             .FumesVest => "fuming vest",
 
             .Amnesia => "amnesia",
@@ -1301,7 +1304,7 @@ pub const Status = enum {
         return switch (self) {
             .RingTeleportation, .RingDamnation, .RingElectrocution, .RingExcision, .RingConjuration, .RingAcceleration => null,
 
-            .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .EtherealShield, .FumesVest, .Echolocation, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
+            .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .EtherealShield, .EarthenShield, .FumesVest, .Echolocation, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
 
             .Amnesia => "amnesia",
             .Insane => "insane",
@@ -3070,6 +3073,17 @@ pub const Mob = struct { // {{{
                 }
             }
 
+            if (recipient.hasStatus(.EarthenShield)) {
+                for (&DIRECTIONS) |d| if (recipient.coord.move(d, state.mapgeometry)) |n| {
+                    if (state.dungeon.at(n).type == .Wall) {
+                        assert(recipient == state.player);
+                        state.message(.Info, "Your shield rattles, and a nearby wall disintegrates.", .{});
+                        state.dungeon.at(n).type = .Floor;
+                        break;
+                    }
+                };
+            }
+
             return;
         }
 
@@ -4024,6 +4038,12 @@ pub const Mob = struct { // {{{
                         val = @divTrunc(val * 50, 100);
                     };
             },
+            .Evade => {
+                if (self.hasStatus(.EarthenShield)) {
+                    const walls = state.dungeon.neighboringWalls(self.coord, true);
+                    val += @intCast(isize, walls) * EARTHEN_SHIELD_WALL_EV_BONUS;
+                }
+            },
             else => {},
         }
 
@@ -4640,17 +4660,17 @@ pub const Ring = struct {
 pub const ItemType = enum { Ring, Consumable, Vial, Projectile, Armor, Cloak, Aux, Weapon, Boulder, Prop, Evocable };
 
 pub const Item = union(ItemType) {
-    Ring: *Ring,
-    Consumable: *const Consumable,
-    Vial: Vial,
-    Projectile: *const Projectile,
-    Armor: *const Armor,
-    Cloak: *const Cloak,
-    Aux: *const Aux,
     Weapon: *const Weapon,
+    Armor: *Armor,
+    Aux: *const Aux,
+    Ring: *Ring,
+    Cloak: *const Cloak,
+    Evocable: *Evocable,
+    Consumable: *const Consumable,
+    Projectile: *const Projectile,
     Boulder: *const Material,
     Prop: *const Prop,
-    Evocable: *Evocable,
+    Vial: Vial,
 
     pub fn isUseful(self: Item) bool {
         return switch (self) {

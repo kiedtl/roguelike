@@ -1170,7 +1170,7 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
     // zig fmt: off
     const stats = [_]struct { b: []const u8, a: []const u8, v: isize }{
         .{ .b = "martial: ", .a = "",  .v = state.player.stat(.Martial) },
-        .{ .b = "vision:  ", .a = "",  .v = state.player.stat(.Vision) },
+        .{ .b = "evasion: ", .a = "",  .v = state.player.stat(.Evade) },
         .{ .b = "rFire:  ",  .a = "%", .v = state.player.resistance(.rFire) },
         .{ .b = "rElec:  ",  .a = "%", .v = state.player.resistance(.rElec) },
     };
