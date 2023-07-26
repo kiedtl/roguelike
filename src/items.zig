@@ -254,6 +254,10 @@ pub const Aux = struct {
     night: bool = false,
     night_stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     night_resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
+
+    ring_upgrade_name: ?[]const u8 = null,
+    ring_upgrade_dest: ?[]const u8 = null,
+    ring_upgrade_mesg: ?[]const u8 = null,
 };
 
 pub const WolframOrbAux = Aux{
@@ -319,6 +323,10 @@ pub const Earthen1ShieldAux = Aux{
 
     // .resists = .{ .rAcid = 50 }, // Uncomment when Acid damage is added
     .stats = .{ .Evade = 5 },
+
+    .ring_upgrade_name = "disintegration",
+    .ring_upgrade_dest = "aux_shield_earthen2",
+    .ring_upgrade_mesg = "You fit the ring into the broken clasp.",
 };
 
 pub const Earthen2ShieldAux = Aux{
@@ -331,6 +339,13 @@ pub const Earthen2ShieldAux = Aux{
         .{ .status = .EarthenShield, .duration = .Equ },
     },
 };
+
+// Reminder via comptime :)
+// Glory to comptime, hail zig. (hmm... zig hail?)
+comptime {
+    if (@hasField(types.Resistance, "rAcid"))
+        @compileError("TODO: Add rAcid to earth shields and remove this error");
+}
 
 pub const TowerShieldAux = Aux{
     .id = "aux_shield_tower",

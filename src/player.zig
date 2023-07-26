@@ -787,6 +787,38 @@ pub fn useItem(index: usize) bool {
     return true;
 }
 
+// Returns ring slot number
+pub fn isAuxUpgradable(index: usize) ?Inventory.EquSlot {
+    const slot = @intToEnum(Inventory.EquSlot, index);
+    const item = state.player.inventory.equipment(slot).*.?;
+
+    if (item == .Aux)
+        if (item.Aux.ring_upgrade_name) |ring_name|
+            if (for (&Inventory.RING_SLOTS) |ring_slot| {
+                const ind = getRingIndexBySlot(ring_slot);
+                const ring = getRingByIndex(ind) orelse continue;
+                if (mem.eql(u8, ring.name, ring_name))
+                    break ring_slot;
+            } else null) |ring_slot|
+                return ring_slot;
+    return null;
+}
+
+pub fn upgradeAux(index: usize, ring_slot: Inventory.EquSlot) void {
+    const slot = @intToEnum(Inventory.EquSlot, index);
+    const i = state.player.inventory.equipment(slot).*.?;
+    assert(i == .Aux and i.Aux.ring_upgrade_name != null);
+    state.player.dequipItem(slot, null);
+    state.player.dequipItem(ring_slot, null);
+
+    const dst_id = i.Aux.ring_upgrade_dest.?;
+    const dst_template = items.findItemById(dst_id) orelse err.bug("Upgrade doesn't exist", .{});
+    const dst = items.createItemFromTemplate(dst_template);
+
+    state.message(.Info, "{s}", .{i.Aux.ring_upgrade_mesg.?});
+    state.player.equipItem(slot, dst);
+}
+
 // if is_inventory, index=pack index; otherwise, equipment id
 //
 pub fn dropItem(index: usize, is_inventory: bool) bool {

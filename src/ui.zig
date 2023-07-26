@@ -2720,8 +2720,10 @@ pub fn drawInventoryScreen() bool {
 
         var usable = false;
         var throwable = false;
+        var upgradable: ?Mob.Inventory.EquSlot = null;
 
         if (chosen_item != null and itemlist_len > 0) switch (chosen_item.?) {
+            .Aux => upgradable = player.isAuxUpgradable(chosen),
             .Consumable => |p| {
                 usable = true;
                 throwable = p.throwable;
@@ -2753,6 +2755,12 @@ pub fn drawInventoryScreen() bool {
 
             if (usable) writer.print("$b<Enter>$. to use.\n", .{}) catch err.wat();
             if (throwable) writer.print("$bt$. to throw.\n", .{}) catch err.wat();
+            if (upgradable) |ring_slot| {
+                assert(!usable);
+                const ind = player.getRingIndexBySlot(ring_slot);
+                const ring = player.getRingByIndex(ind).?;
+                writer.print("$b<Enter>$. to upgrade with the $oring of {s}$..\n", .{ring.name}) catch err.wat();
+            }
 
             _ = _drawStr(ii_startx, ii_starty, ii_endx, descbuf_stream.getWritten(), .{});
         }
@@ -2819,10 +2827,10 @@ pub fn drawInventoryScreen() bool {
                             player.beginUsingRing(player.getRingIndexBySlot(slot));
                             return false;
                         },
-                        else => drawAlert("You can't use that!", .{}),
+                        .Aux => if (upgradable) |u| player.upgradeAux(chosen, u),
+                        .Cloak => drawAlert("You're already wearing it, stupid.", .{}),
+                        else => {},
                     }
-                } else {
-                    drawAlert("You can't use that!", .{});
                 },
                 else => {},
             },
