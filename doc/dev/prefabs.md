@@ -49,16 +49,19 @@
 %
 %    :g_tunneler
 %        Mark the prefab(s) as being for the tunneling algorithm only.
+%        Global.
 %
 %    :tunneler_inset
 %        TODO
+%        Reset on /.
 %
 %    :tunneler_orientation
 %        TODO
 %        Default: south.
+%        Reset on /.
 %
 %    :priority
-%        Makes sense for subrooms only.
+%        Works for both subrooms and entire rooms.
 %        Priority convention:
 %        - 99: subrooms that should appear on every level.
 %              e.g.: recharging station, ring drop areas.
@@ -67,7 +70,7 @@
 %              e.g.: capacitor arrays, prisons.
 %        - 10: subrooms that enhance tactical gameplay.
 %              e.g.: diamond centerpieces, pillars, etc.
-%           0: fluff.
+%        -  0: fluff.
 %        Global.
 %
 
