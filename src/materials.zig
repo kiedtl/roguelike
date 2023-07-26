@@ -12,6 +12,7 @@ pub const MATERIALS = [_]*const Material{
     &Marble,
     &Gold,
     &Slade,
+    &Basalt,
 };
 
 pub const PaintedConcrete = Material{
@@ -127,6 +128,7 @@ pub const Iron = Material{
 };
 
 pub const Basalt = Material{
+    .id = "basalt",
     .name = "basalt",
     .color_fg = 0x505050,
     .color_bg = 0x9e9e9e,

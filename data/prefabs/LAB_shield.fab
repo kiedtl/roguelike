@@ -1,0 +1,37 @@
+:g_tunneler
+:g_global_restriction 1
+:priority 99
+:noitems
+:notraps
+:noitems
+:noguards
+:nostairs
+
+@p P
+BALE: This shield was found by the Hugghehel in the possession of one of the
+Revgenunkim they captured. Apparently, if their analysis is correct, it is a
+trophy that once belonged to none other than Zilodothrod Berujdib, though we
+have no idea where the Revgenunkim acquired the ring that they crudely attached
+to the shield's center. As for the ring, since it has some kind of undesirable
+connection to the shield, I've separated it from the shield for now and moved
+it down to the Workshop. It'll be brought to the temple once I'm free to
+examine it.
+
+MAG. NATH: Reader, be reminded that the wretched Eńgusold apparently knew this
+shield belonged to Berujdib all the while Tyeburenet Neyl's negotiations were
+in progress, and said nothing. Which goes to show how much these sadistic
+bastards ever cared for brotherly love.
+END POSTER
+
+:tunneler_orientation east
+:tunneler_orientation west
+:material gold
+@0 i aux_shield_earthen1
+@g M skeletal_blademaster
+.#######.
+.g######.
+...####p.
+....0....
+..####...
+.•#####g.
+.#######.

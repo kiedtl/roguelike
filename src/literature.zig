@@ -62,5 +62,6 @@ pub fn readPosters(alloc: mem.Allocator) void {
         posters = @TypeOf(posters).init(alloc);
         for (result.unwrap().items) |poster| posters.append(poster) catch err.wat();
         std.log.info("Loaded {} posters.", .{result.unwrap().items.len});
+        result.unwrap().deinit();
     }
 }
