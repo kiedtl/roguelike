@@ -99,7 +99,7 @@ pub var zap_win: struct {
     left: Console,
     right: Console,
 
-    const LEFT_WIDTH = 18; // 15 (length of longest ring name, electrification) + 3 (padding)
+    const LEFT_WIDTH = 28; // 15 (length of longest ring name, electrification) + 6 (MP cost) + 7 (padding)
 
     pub fn init(self: *@This()) void {
         const d = dimensions(.Zap);
@@ -2260,7 +2260,8 @@ pub fn drawZapScreen() void {
             if (player.getRingByIndex(ring_i)) |ring| {
                 ring_count = ring_i;
                 const arrow = if (selected == ring_i) "$c>" else "$.·";
-                y += zap_win.left.drawTextAtf(0, y, "{s} {s}$.", .{ arrow, ring.name }, .{});
+                const mp_cost_color: u8 = if (state.player.MP < ring.required_MP) 'r' else 'b';
+                y += zap_win.left.drawTextAtf(0, y, "{s} {s}$. $g(${u}{}$g MP)$.", .{ arrow, ring.name, mp_cost_color, ring.required_MP }, .{});
 
                 if (selected == ring_i) {
                     var ry: usize = 0;
