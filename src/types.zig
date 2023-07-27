@@ -1009,6 +1009,9 @@ pub const EnemyRecord = struct {
     // For threat record-keeping. Only used by Necromancer faction
     attacked_me: bool = false,
 
+    // Times mob informed allies of this enemy.
+    alerted_allies: usize = 0,
+
     pub const AList = std.ArrayList(EnemyRecord);
 
     pub fn lastSeenOrCoord(self: *const EnemyRecord) Coord {

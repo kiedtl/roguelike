@@ -251,6 +251,12 @@ pub fn alertAllyOfHostile(mob: *Mob) void {
     for (mob.allies.items) |ally| {
         if (!isEnemyKnown(ally, hostile.mob)) {
             updateEnemyRecord(ally, hostile);
+
+            const enemy_record = for (mob.enemyList().items) |*record| {
+                if (record.mob == mob) break record;
+            } else err.wat();
+            enemy_record.alerted_allies += 1;
+
             break;
         }
     }
@@ -464,8 +470,8 @@ pub fn checkForHostiles(mob: *Mob) void {
             //
             _ = mob.enemyList().orderedRemove(i);
         } else {
-            if (mob.ai.phase != .Flee and mob.isAloneOrLeader() and
-                enemy.last_seen == null)
+            if ((mob.ai.phase != .Flee or enemy.alerted_allies > 0) and
+                mob.isAloneOrLeader() and enemy.last_seen == null)
             {
                 enemy.counter -= 1;
             }
