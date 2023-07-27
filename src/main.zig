@@ -106,14 +106,14 @@ pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace) noreturn {
     };
 }
 
-fn initGame() bool {
+fn initGame(display_scale: f32) bool {
     // Initialize this *first* because we might have to deinitGame() at
     // checkWindowSize, and we have no way to tell if state.dungeon was
     // allocated or not.
     state.dungeon = state.GPA.allocator().create(types.Dungeon) catch err.oom();
     state.dungeon.* = types.Dungeon{};
 
-    if (ui.init()) {} else |e| switch (e) {
+    if (ui.init(display_scale)) {} else |e| switch (e) {
         error.AlreadyInitialized => err.wat(),
         error.TTYOpenFailed => err.fatal("Could not open TTY", .{}),
         error.UnsupportedTerminal => err.fatal("Unsupported terminal", .{}),
@@ -801,7 +801,17 @@ pub fn actualMain() anyerror!void {
         state.sentry_disabled = false;
     }
 
-    if (!initGame()) {
+    var scale: f32 = 2;
+    if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_DISPLAY_SCALE")) |v| {
+        if (std.fmt.parseFloat(f32, v)) |val| {
+            scale = val;
+        } else |e| {
+            std.log.err("Could not parse RL_DISPLAY_SCALE (reason: {}); using default.", .{e});
+        }
+        state.GPA.allocator().free(v);
+    } else |_| {}
+
+    if (!initGame(scale)) {
         deinitGame();
         std.log.err("Unknown error occurred while initializing game.", .{});
         return;

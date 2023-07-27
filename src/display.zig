@@ -224,7 +224,7 @@ const InitErr = error{
     SDL2GetDimensionsError,
 } || mem.Allocator.Error;
 
-pub fn init(preferred_width: usize, preferred_height: usize) InitErr!void {
+pub fn init(preferred_width: usize, preferred_height: usize, scale: f32) InitErr!void {
     switch (driver) {
         .Termbox => {
             if (is_tb_inited)
@@ -245,9 +245,6 @@ pub fn init(preferred_width: usize, preferred_height: usize) InitErr!void {
             if (driver_m.SDL_Init(driver_m.SDL_INIT_EVERYTHING) != 0)
                 return error.SDL2InitError;
 
-            // TODO: get rid of this
-            const SCALE = 1.5;
-
             // SDL2 has scaling issues on Windows when using HiDPI displays.
             //
             // Convince Windows it doesn't need to babysit us, we can set our
@@ -264,8 +261,8 @@ pub fn init(preferred_width: usize, preferred_height: usize) InitErr!void {
                 "Oathbreaker", // TODO: move to const
                 driver_m.SDL_WINDOWPOS_CENTERED,
                 driver_m.SDL_WINDOWPOS_CENTERED,
-                @floatToInt(c_int, @intToFloat(f64, preferred_width * font.FONT_WIDTH) * SCALE),
-                @floatToInt(c_int, @intToFloat(f64, preferred_height * font.FONT_HEIGHT) * SCALE),
+                @floatToInt(c_int, @intToFloat(f64, preferred_width * font.FONT_WIDTH) * scale),
+                @floatToInt(c_int, @intToFloat(f64, preferred_height * font.FONT_HEIGHT) * scale),
                 driver_m.SDL_WINDOW_SHOWN,
             );
             if (window == null)
@@ -274,7 +271,7 @@ pub fn init(preferred_width: usize, preferred_height: usize) InitErr!void {
             renderer = driver_m.SDL_CreateRenderer(window, -1, driver_m.SDL_RENDERER_ACCELERATED);
             if (renderer == null)
                 return error.SDL2InitError;
-            _ = driver_m.SDL_RenderSetScale(renderer, SCALE, SCALE);
+            _ = driver_m.SDL_RenderSetScale(renderer, scale, scale);
 
             texture = driver_m.SDL_CreateTexture(
                 renderer,
