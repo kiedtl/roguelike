@@ -1168,11 +1168,11 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
     y += 1;
 
     // zig fmt: off
-    const stats = [_]struct { b: []const u8, a: []const u8, v: isize }{
-        .{ .b = "martial: ", .a = "",  .v = state.player.stat(.Martial) },
-        .{ .b = "evasion: ", .a = "",  .v = state.player.stat(.Evade) },
-        .{ .b = "rFire:  ",  .a = "%", .v = state.player.resistance(.rFire) },
-        .{ .b = "rElec:  ",  .a = "%", .v = state.player.resistance(.rElec) },
+    const stats = [_]struct { b: []const u8, a: []const u8, v: isize, va: ?usize = 0 }{
+        .{ .b = "to-hit: ",  .a = "%", .v = state.player.stat(.Melee), .va = combat.chanceOfMeleeLanding(state.player, null) },
+        .{ .b = "rFire:",  .a = "%", .v = state.player.resistance(.rFire) },
+        .{ .b = "evasion:", .a = "%", .v = state.player.stat(.Evade), .va = combat.chanceOfAttackEvaded(state.player, null) },
+        .{ .b = "rElec:",  .a = "%", .v = state.player.resistance(.rElec) },
     };
     // zig fmt: on
 
@@ -1180,17 +1180,29 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
         const v = utils.SignedFormatter{ .v = stat.v };
         const x = switch (i % 2) {
             0 => startx,
-            1 => endx - std.fmt.count("{s} {: >3}{s}", .{ stat.b, v, stat.a }),
+            1 => startx + std.fmt.count("{s} {: >3}{s}", .{ stat.b, v, stat.a }) + 12,
             //2 => startx + (@divTrunc(endx - startx, 3) * 2) + 1,
             else => unreachable,
         };
         const c: u21 = if (stat.v < 0) 'p' else '.';
-        _ = _drawStrf(x, y, endx, "$c{s}$. ${u}{: >3}{s}$.", .{ stat.b, c, v, stat.a }, .{});
+        if (stat.va == null or @intCast(usize, math.clamp(stat.v, 0, 100)) == stat.va.?) {
+            _ = _drawStrf(x, y, endx, "$c{s}$. ${u}{: >3}{s}$.", .{ stat.b, c, v, stat.a }, .{});
+        } else {
+            const ca: u21 = if (stat.va.? < stat.v) 'p' else 'b';
+            _ = _drawStrf(x, y, endx, "$c{s}$. ${u}{: >3}{s} $g(${u}{}{s}$g)$.", .{ stat.b, c, v, stat.a, ca, stat.va.?, stat.a }, .{});
+        }
         if (i % 2 == 1 or i == stats.len - 1)
             y += 1;
     }
 
     y += 1;
+
+    const martial = state.player.stat(.Martial);
+    const weapon = state.player.inventory.equipment(.Weapon).*;
+    if (martial > 0 and weapon != null and weapon.?.Weapon.martial) {
+        y = _drawStrf(startx, y, endx, "$cMartial:$. $b{}$.", .{martial}, .{});
+        y += 1;
+    }
 
     const conjuration = @intCast(usize, state.player.stat(.Conjuration));
     if (conjuration > 0) {

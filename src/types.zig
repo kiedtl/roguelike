@@ -83,7 +83,6 @@ pub const TORMENT_UNDEAD_DAMAGE = 2;
 pub const DETECT_HEAT_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
 pub const DETECT_ELEC_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
 pub const DETECT_UNDEAD_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
-pub const EARTHEN_SHIELD_WALL_EV_BONUS = 7;
 
 pub fn MinMax(comptime T: type) type {
     return struct {
@@ -4041,12 +4040,6 @@ pub const Mob = struct { // {{{
                         val = @divTrunc(val * 50, 100);
                     };
             },
-            .Evade => {
-                if (self.hasStatus(.EarthenShield)) {
-                    const walls = state.dungeon.neighboringWalls(self.coord, true);
-                    val += @intCast(isize, walls) * EARTHEN_SHIELD_WALL_EV_BONUS;
-                }
-            },
             else => {},
         }
 
@@ -4134,9 +4127,6 @@ pub const Mob = struct { // {{{
 
         // Check statuses
         switch (resist) {
-            .Armor => if (self.isUnderStatus(.Recuperate) != null) {
-                r -= 50;
-            },
             .rFire => {
                 if (self.isUnderStatus(.Flammable) != null) {
                     r -= 25;
