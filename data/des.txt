@@ -308,7 +308,7 @@ Releases paralysing gas.
 Makes you faster. This potion cannot be thrown.
 
 % potion_recuperate
-Heals you over a period of time, but reduces your armor as well for that
+Heals you over a period of time, but reduces your evasion as well for that
 duration.
 
 % potion_invigorate
