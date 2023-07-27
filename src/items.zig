@@ -117,6 +117,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .W = &GoldDaggerWeapon } },
     // Armor
     .{ .w = 20, .i = .{ .A = GambesonArmor } },
+    .{ .w = 05, .i = .{ .A = SilusGambesonArmor } },
     .{ .w = 20, .i = .{ .A = HauberkArmor } },
     .{ .w = 20, .i = .{ .A = CuirassArmor } },
     .{ .w = 10, .i = .{ .A = SpikedLeatherArmor } },
@@ -1330,6 +1331,12 @@ pub const GambesonArmor = Armor{
     .id = "gambeson_armor",
     .name = "gambeson",
     .resists = .{ .Armor = 15 },
+};
+
+pub const SilusGambesonArmor = Armor{
+    .id = "silus_gambeson_armor",
+    .name = "silus gambeson",
+    .resists = .{ .Armor = 15, .rFire = 25 },
 };
 
 pub const SpikedLeatherArmor = Armor{

@@ -77,6 +77,10 @@ inscribed on the flanges of this mace.
 As you look into the translucent blade, you seem to observe your surroundings in
 new unearthly colors.
 
+% silus_gambeson_armor
+A gambeson in a woven silus enclosure, providing a gambeson's minimal protection
+in conjunction with decent fire resistance.
+
 % brigandine_armor
 A light and flexible armor, permitting greater agility than would otherwise be
 possible for its amount of protection.
