@@ -153,6 +153,10 @@ seemingly meant to hold some kind of jewelry.
 A strange power emanates from the shield, weapon of the Revgenuhelkim. The effaced
 engravings on the front seem to have now completely disappeared.
 
+
+Each time a hit is blocked, the shield will cause a random adjacent wall to
+disintegrate.
+
 % aux_shield_tower
 A very large and unwieldy rectangular shield, carved out of lightweight wood.
 Given its purpose as a showpiece, only morons or those truly desperate would
