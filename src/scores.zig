@@ -40,7 +40,7 @@ pub const Info = struct {
     messages: StackBuffer(Message, MESSAGE_COUNT),
 
     in_view_ids: StackBuffer([]const u8, 32),
-    in_view_names: StackBuffer(BStr(32), 32),
+    in_view_names: StackBuffer([]const u8, 32),
 
     inventory_ids: StackBuffer([]const u8, Mob.Inventory.PACK_SIZE),
     inventory_names: StackBuffer(BStr(128), Mob.Inventory.PACK_SIZE),
@@ -56,7 +56,7 @@ pub const Info = struct {
     pub const Message = struct { text: BStr(128), dups: usize };
     pub const Equipment = struct { slot_id: []const u8, slot_name: []const u8, id: []const u8, name: BStr(128) };
 
-    pub fn collect() Self {
+    pub fn collect(alloc: std.mem.Allocator) Self {
         // FIXME: should be a cleaner way to do this...
         var s: Self = undefined;
 
@@ -195,7 +195,9 @@ pub const Info = struct {
             defer can_see.deinit();
             for (can_see.items) |mob| {
                 s.in_view_ids.append(mob.id) catch break;
-                s.in_view_names.append(BStr(32).init(mob.displayName())) catch err.wat();
+                s.in_view_names.append(
+                    std.fmt.allocPrint(alloc, "{cAf}", .{mob}) catch err.wat(),
+                ) catch err.wat();
             }
         }
 
@@ -523,8 +525,8 @@ fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
         defer can_see_counted.deinit();
 
         for (info.in_view_names.constSlice()) |name| {
-            const prevtotal = (can_see_counted.getOrPutValue(name.constSlice(), 0) catch err.wat()).value_ptr.*;
-            can_see_counted.put(name.constSlice(), prevtotal + 1) catch unreachable;
+            const prevtotal = (can_see_counted.getOrPutValue(name, 0) catch err.wat()).value_ptr.*;
+            can_see_counted.put(name, prevtotal + 1) catch unreachable;
         }
 
         var iter = can_see_counted.iterator();
@@ -655,7 +657,10 @@ fn exportJsonMorgue(info: Info) !std.ArrayList(u8) {
 }
 
 pub fn createMorgue() Info {
-    const info = Info.collect();
+    var arena = std.heap.ArenaAllocator.init(state.GPA.allocator());
+    defer arena.deinit();
+
+    const info = Info.collect(arena.allocator());
 
     std.os.mkdir("morgue", 0o776) catch |e| switch (e) {
         error.PathAlreadyExists => {},

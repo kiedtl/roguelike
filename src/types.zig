@@ -2123,10 +2123,12 @@ pub const Mob = struct { // {{{
     pub fn format(self: *const Mob, comptime f: []const u8, opts: fmt.FormatOptions, writer: anytype) !void {
         _ = opts;
 
+        comptime var article = true;
         comptime var caps = false;
         comptime var force = false;
 
         inline for (f) |char| switch (char) {
+            'A' => article = false,
             'c' => caps = true,
             'f' => force = true,
             else => @compileError("Unknown format string: '" ++ f ++ "'"),
@@ -2139,8 +2141,8 @@ pub const Mob = struct { // {{{
             const n = if (caps) "Something" else "something";
             try fmt.format(writer, "{s}", .{n});
         } else {
-            const the = if (caps) "The" else "the";
-            try fmt.format(writer, "{s} {s}", .{ the, self.displayName() });
+            const the = if (!article) @as([]const u8, "") else if (caps) "The " else "the ";
+            try fmt.format(writer, "{s}{s}", .{ the, self.displayName() });
         }
     }
 
