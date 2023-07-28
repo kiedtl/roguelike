@@ -974,7 +974,7 @@ pub fn calculateDrainableMana(total: usize) usize {
     };
 
     const pot = @intCast(usize, state.player.stat(.Potential));
-    return (S._helper(total, pot) + S._helper(total, pot)) / 2;
+    return (S._helper(total, pot) + S._helper(total, pot) + S._helper(total, pot)) / 3;
 }
 
 // Note, lots of duplicated code here and in Shrine draining code
