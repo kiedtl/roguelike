@@ -73,8 +73,8 @@ pub const EV_SHIELD_DISALLOW = Event{
 pub const EVENTS = [_]struct { p: usize, v: *const Event }{
     .{ .p = 30, .v = &EV_SYMBOL_DISALLOW },
     .{ .p = 30, .v = &EV_SYMBOL_RESTRICT_TO_UPPER_SHRINE },
-    .{ .p = 50, .v = &EV_DISINT_DISALLOW },
-    .{ .p = 50, .v = &EV_SHIELD_DISALLOW },
+    .{ .p = 75, .v = &EV_DISINT_DISALLOW },
+    .{ .p = 75, .v = &EV_SHIELD_DISALLOW },
 };
 
 pub var completed_events: Event.AList = undefined;
