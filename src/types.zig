@@ -1931,6 +1931,13 @@ pub const Stat = enum {
         };
     }
 
+    pub fn formatAfter(self: Stat) []const u8 {
+        return switch (self) {
+            .Melee, .Missile, .Evade => "%",
+            else => "",
+        };
+    }
+
     pub fn showMobStat(self: Stat, value: isize) bool {
         return switch (self) {
             .Melee, .Evade, .Vision, .Willpower => true,

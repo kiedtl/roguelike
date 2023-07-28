@@ -58,6 +58,7 @@ pub const LEFT_INFO_WIDTH: usize = 35;
 //pub const RIGHT_INFO_WIDTH: usize = 24;
 pub const LOG_HEIGHT = 7;
 pub const ZAP_HEIGHT = 15 + 4;
+pub const PLAYER_INFO_MODAL_HEIGHT = 24;
 pub const MAP_HEIGHT_R = 12;
 pub const MAP_WIDTH_R = 14;
 
@@ -94,33 +95,40 @@ pub var map_win: struct {
     }
 } = undefined;
 
-pub var zap_win: struct {
-    container: Console,
-    left: Console,
-    right: Console,
+fn ModalWindow(comptime left_width: usize, comptime dim: DisplayWindow) type {
+    return struct {
+        container: Console,
+        left: Console,
+        right: Console,
 
-    const LEFT_WIDTH = 28; // 15 (length of longest ring name, electrification) + 6 (MP cost) + 7 (padding)
+        const LEFT_WIDTH = left_width;
 
-    pub fn init(self: *@This()) void {
-        const d = dimensions(.Zap);
+        pub fn init(self: *@This()) void {
+            const d = dimensions(dim);
 
-        self.container = Console.init(state.GPA.allocator(), d.width(), d.height());
-        self.left = Console.init(state.GPA.allocator(), LEFT_WIDTH, d.height() - 2);
-        self.right = Console.init(state.GPA.allocator(), d.width() - LEFT_WIDTH - 3, d.height() - 2);
+            self.container = Console.init(state.GPA.allocator(), d.width(), d.height());
+            self.left = Console.init(state.GPA.allocator(), LEFT_WIDTH, d.height() - 2);
+            self.right = Console.init(state.GPA.allocator(), d.width() - LEFT_WIDTH - 3, d.height() - 2);
 
-        self.container.addSubconsole(self.left, 1, 1);
-        self.container.addSubconsole(self.right, LEFT_WIDTH + 2, 1);
-    }
+            self.container.addSubconsole(self.left, 1, 1);
+            self.container.addSubconsole(self.right, LEFT_WIDTH + 2, 1);
+        }
 
-    pub fn deinit(self: *@This()) void {
-        self.container.deinit();
-    }
-} = undefined;
+        pub fn deinit(self: *@This()) void {
+            self.container.deinit();
+        }
+    };
+}
+
+// 28: 15 (length of longest ring name, electification) + 6 (MP cost) + 7 (padding)
+pub var zap_win: ModalWindow(28, .Zap) = undefined;
+pub var pinfo_win: ModalWindow(15, .PlayerInfoModal) = undefined;
 
 pub fn init(scale: f32) !void {
     try display.init(MIN_WIDTH, MIN_HEIGHT, scale);
 
     zap_win.init();
+    pinfo_win.init();
     map_win.init();
     clearScreen();
 
@@ -175,11 +183,12 @@ pub fn checkWindowSize() bool {
 pub fn deinit() !void {
     try display.deinit();
     zap_win.deinit();
+    pinfo_win.deinit();
     map_win.deinit();
     labels.labels.deinit();
 }
 
-pub const DisplayWindow = enum { Whole, PlayerInfo, Main, Log, Zap };
+pub const DisplayWindow = enum { Whole, PlayerInfo, Main, Log, Zap, PlayerInfoModal };
 pub const Dimension = struct {
     startx: usize,
     endx: usize,
@@ -209,6 +218,7 @@ pub fn dimensions(w: DisplayWindow) Dimension {
     const playerinfo_start = main_start + main_width + 1;
     const log_start = main_start;
     const zap_start = height / 2 - (ZAP_HEIGHT / 2);
+    const pinfo_modal_start = height / 2 - (PLAYER_INFO_MODAL_HEIGHT / 2);
 
     return switch (w) {
         .Whole => .{
@@ -246,6 +256,12 @@ pub fn dimensions(w: DisplayWindow) Dimension {
             .endx = playerinfo_start + playerinfo_width + 1,
             .starty = zap_start,
             .endy = zap_start + ZAP_HEIGHT,
+        },
+        .PlayerInfoModal => .{
+            .startx = 0,
+            .endx = playerinfo_start + playerinfo_width + 1,
+            .starty = pinfo_modal_start,
+            .endy = pinfo_modal_start + PLAYER_INFO_MODAL_HEIGHT,
         },
     };
 }
@@ -354,26 +370,41 @@ fn _writerMobStats(
     w: io.FixedBufferStream([]u8).Writer,
     mob: *Mob,
 ) void {
-    // TODO: don't manually tabulate this?
     inline for (@typeInfo(Stat).Enum.fields) |statv| {
         const stat = @intToEnum(Stat, statv.value);
         const stat_val_raw = mob.stat(stat);
         const stat_val = utils.SignedFormatter{ .v = stat_val_raw };
-
-        _writerWrite(w, "$c{s: <8}$.   {: >5}\n", .{ stat.string(), stat_val });
+        const stat_val_real = switch (stat) {
+            .Melee => combat.chanceOfMeleeLanding(mob, null),
+            .Evade => combat.chanceOfAttackEvaded(mob, null),
+            else => stat_val_raw,
+        };
+        if (stat.showMobStat(stat_val_raw)) {
+            if (@intCast(usize, math.clamp(stat_val_raw, 0, 100)) != stat_val_real) {
+                const c = if (@intCast(isize, stat_val_real) < stat_val_raw) @as(u21, 'r') else 'b';
+                _writerWrite(w, "$c{s: <9}$. {: >5}{s: >1}  $g(${u}{}{s}$g)$.\n", .{ stat.string(), stat_val, stat.formatAfter(), c, stat_val_real, stat.formatAfter() });
+            } else {
+                _writerWrite(w, "$c{s: <9}$. {: >5}{s: >1}\n", .{ stat.string(), stat_val, stat.formatAfter() });
+            }
+        }
     }
     _writerWrite(w, "\n", .{});
     inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
         const resist = @intToEnum(Resistance, resistancev.value);
         const resist_val = utils.SignedFormatter{ .v = mob.resistance(resist) };
-        if (resist_val.v != 0) {
-            _writerWrite(w, "$c{s: <8}$.   {: >5}%\n", .{ resist.string(), resist_val });
+        const resist_str = resist.string();
+        if (resist_val.v != 0 and
+            // This BS is necessary because we can't use a comptime var at
+            // runtime
+            (!mem.eql(u8, resist_str, "rFume") or resist_val.v != 100))
+        {
+            _writerWrite(w, "$c{s: <9}$. {: >5}%\n", .{ resist_str, resist_val });
         }
     }
     _writerWrite(w, "\n", .{});
 }
 
-fn _writerStats(
+fn _writerSobStats(
     w: io.FixedBufferStream([]u8).Writer,
     linewidth: usize,
     p_stats: ?enums.EnumFieldStruct(Stat, isize, 0),
@@ -449,7 +480,7 @@ fn _getTerrDescription(w: io.FixedBufferStream([]u8).Writer, terrain: *const sur
     }
 
     _writerHeader(w, linewidth, "stats", .{});
-    _writerStats(w, linewidth, terrain.stats, terrain.resists);
+    _writerSobStats(w, linewidth, terrain.stats, terrain.resists);
     _writerWrite(w, "\n", .{});
 
     if (terrain.effects.len > 0) {
@@ -733,17 +764,7 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
     if (mob == state.player) {
         _writerWrite(w, "$cYou.$.\n", .{});
         _writerWrite(w, "\n", .{});
-
-        var statuses = state.player.statuses.iterator();
-        while (statuses.next()) |entry| {
-            if (state.player.isUnderStatus(entry.key) == null)
-                continue;
-            _writerWrite(w, "{s}\n", .{_formatStatusInfo(entry.value)});
-        }
-        _writerWrite(w, "\n", .{});
-
-        _writerMobStats(w, state.player);
-        _writerWrite(w, "\n", .{});
+        _writerWrite(w, "Press $b@$. to see your stats, abilities, and more.\n", .{});
 
         return;
     }
@@ -873,15 +894,15 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
         },
         .Cloak => |c| {
             _writerHeader(w, linewidth, "stats", .{});
-            _writerStats(w, linewidth, c.stats, c.resists);
+            _writerSobStats(w, linewidth, c.stats, c.resists);
         },
         .Aux => |x| {
             _writerHeader(w, linewidth, "stats", .{});
-            _writerStats(w, linewidth, x.stats, x.resists);
+            _writerSobStats(w, linewidth, x.stats, x.resists);
 
             if (x.night) {
                 _writerHeader(w, linewidth, "night stats (if in dark)", .{});
-                _writerStats(w, linewidth, x.night_stats, x.night_resists);
+                _writerSobStats(w, linewidth, x.night_stats, x.night_resists);
             }
 
             if (x.equip_effects.len > 0) {
@@ -898,11 +919,11 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
         },
         .Armor => |a| {
             _writerHeader(w, linewidth, "stats", .{});
-            _writerStats(w, linewidth, a.stats, a.resists);
+            _writerSobStats(w, linewidth, a.stats, a.resists);
 
             if (a.night) {
                 _writerHeader(w, linewidth, "night stats (if in dark)", .{});
-                _writerStats(w, linewidth, a.night_stats, a.night_resists);
+                _writerSobStats(w, linewidth, a.night_stats, a.night_resists);
 
                 _writerHeader(w, linewidth, "traits", .{});
                 _writerWrite(w, "It is a $cnight$. item and provides greater benefits if you stand on an unlit tile.\n", .{});
@@ -921,7 +942,7 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
             _writerWrite(w, "\n", .{});
 
             _writerHeader(w, linewidth, "stats", .{});
-            _writerStats(w, linewidth, p.stats, null);
+            _writerSobStats(w, linewidth, p.stats, null);
 
             if (p.equip_effects.len > 0) {
                 _writerHeader(w, linewidth, "on equip", .{});
@@ -1204,47 +1225,9 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
         y += 1;
     y += 1;
 
-    // const conjuration = @intCast(usize, state.player.stat(.Conjuration));
-    // if (conjuration > 0) {
-    //     y = _drawStrf(startx, y, endx, "$cConjuration:$. $b{}$.", .{conjuration}, .{});
-
-    //     var augment_cnt: usize = 0;
-    //     var augment_buf = StackBuffer(player.ConjAugment, 64).init(null);
-    //     for (state.player_conj_augments) |aug| if (aug.received) {
-    //         augment_cnt += 1;
-    //         augment_buf.append(aug.a) catch err.wat();
-    //     };
-
-    //     std.sort.sort(player.ConjAugment, augment_buf.slice(), {}, struct {
-    //         pub fn f(_: void, a: player.ConjAugment, b: player.ConjAugment) bool {
-    //             return @enumToInt(a) < @enumToInt(b);
-    //         }
-    //     }.f);
-
-    //     var augment_str = StackBuffer(u8, 64).init(null);
-    //     for (augment_buf.constSlice()) |aug|
-    //         augment_str.appendSlice(aug.char()) catch err.wat();
-
-    //     if (augment_cnt == 0) {
-    //         y = _drawStrf(startx, y, endx, "$cNo augments$.", .{}, .{});
-    //     } else {
-    //         y = _drawStrf(startx, y, endx, "$cAugments($b{}$c)$.: {s}", .{ augment_cnt, augment_str.constSlice() }, .{});
-    //     }
-
-    //     y += 1;
-    // }
-
-    const rep = state.night_rep[@enumToInt(state.player.faction)];
-    const is_on_slade = state.dungeon.terrainAt(state.player.coord) == &surfaces.SladeTerrain;
-    if (rep != 0 or is_on_slade) {
-        const str = if (rep == 0) "$g$~ NEUTRAL $." else if (rep > 0) "$a$~ FRIENDLY $." else if (rep >= -5) "$p$~ DISLIKED $." else "$r$~ HATED $.";
-        if (is_on_slade and rep < 1) {
-            y = _drawStrf(startx, y, endx, "$cNight rep:$. {} $r$~ TRESPASSING $.", .{rep}, .{});
-        } else {
-            y = _drawStrf(startx, y, endx, "$cNight rep:$. {} {s}", .{ rep, str }, .{});
-        }
-        y += 1;
-    }
+    const repfmt = utils.ReputationFormatter{};
+    if (repfmt.dewIt())
+        y = _drawStrf(startx, y, endx, "{}", .{repfmt}, .{});
 
     const bar_endx = endx - 9;
     // const bar_endx2 = endx - 18;
@@ -1665,10 +1648,10 @@ pub fn drawNoPresent() void {
 
     const moblist = state.createMobList(false, true, state.player.coord.z, alloc);
 
-    const pinfo_win = dimensions(.PlayerInfo);
+    const hud_win = dimensions(.PlayerInfo);
     const log_window = dimensions(.Log);
 
-    drawInfo(moblist.items, pinfo_win.startx, pinfo_win.starty, pinfo_win.endx, pinfo_win.endy);
+    drawInfo(moblist.items, hud_win.startx, hud_win.starty, hud_win.endx, hud_win.endy);
     drawMap(moblist.items, state.player.coord);
     labels.drawLabels();
     map_win.map.renderFullyW(.Main);
@@ -2255,6 +2238,149 @@ pub fn drawMessagesScreen() void {
     clearScreen();
 }
 
+pub fn drawPlayerInfoScreen() void {
+    const Tab = enum(usize) { Stats = 0, Statuses = 1, Aptitudes = 2, Augments = 3 };
+    var tab: usize = @enumToInt(@as(Tab, .Stats));
+
+    while (true) {
+        pinfo_win.container.clearLineTo(0, pinfo_win.container.width - 1, 0, .{ .ch = '▀', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+        pinfo_win.container.clearLineTo(0, pinfo_win.container.width - 1, pinfo_win.container.height - 1, .{ .ch = '▄', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+
+        var my: usize = 0;
+        my += pinfo_win.left.drawTextAt(0, my, "$cPlayer Info$.", .{});
+        inline for (@typeInfo(Tab).Enum.fields) |tabv| {
+            const sel = if (tabv.value == tab) "$c>" else "$g ";
+            my += pinfo_win.left.drawTextAtf(0, my, "{s} {s}$.", .{ sel, tabv.name }, .{});
+        }
+
+        pinfo_win.right.clear();
+        var iy: usize = 0;
+        switch (@intToEnum(Tab, tab)) {
+            .Stats => {
+                inline for (@typeInfo(Stat).Enum.fields) |statv| {
+                    const stat = @intToEnum(Stat, statv.value);
+                    const stat_val_raw = state.player.stat(stat);
+                    const stat_val = utils.SignedFormatter{ .v = stat_val_raw };
+                    const stat_val_real = switch (stat) {
+                        .Melee => combat.chanceOfMeleeLanding(state.player, null),
+                        .Evade => combat.chanceOfAttackEvaded(state.player, null),
+                        else => stat_val_raw,
+                    };
+                    if (stat.showMobStat(stat_val_raw)) {
+                        if (@intCast(usize, math.clamp(stat_val_raw, 0, 100)) != stat_val_real) {
+                            const c = if (@intCast(isize, stat_val_real) < stat_val_raw) @as(u21, 'r') else 'b';
+                            iy += pinfo_win.right.drawTextAtf(0, iy, "$c{s: <11}$.  {: >5}{s: >1}    $g(${u}{}{s}$g)$.\n", .{ stat.string(), stat_val, stat.formatAfter(), c, stat_val_real, stat.formatAfter() }, .{});
+                        } else {
+                            iy += pinfo_win.right.drawTextAtf(0, iy, "$c{s: <11}$.  {: >5}{s: >1}\n", .{ stat.string(), stat_val, stat.formatAfter() }, .{});
+                        }
+                    }
+                }
+                iy += pinfo_win.right.drawTextAt(0, iy, "\n", .{});
+                inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
+                    const resist = @intToEnum(Resistance, resistancev.value);
+                    const resist_val = utils.SignedFormatter{ .v = state.player.resistance(resist) };
+                    const resist_str = resist.string();
+                    iy += pinfo_win.right.drawTextAtf(0, iy, "$c{s: <11}$.  {: >5}%\n", .{ resist_str, resist_val }, .{});
+                }
+                iy += pinfo_win.right.drawTextAt(0, iy, "\n", .{});
+
+                const repfmt = utils.ReputationFormatter{};
+                if (repfmt.dewIt())
+                    iy += pinfo_win.right.drawTextAtf(0, iy, "{}", .{repfmt}, .{});
+            },
+            .Statuses => {
+                var statuses = state.player.statuses.iterator();
+                while (statuses.next()) |entry| {
+                    if (state.player.isUnderStatus(entry.key) == null)
+                        continue;
+                    iy += pinfo_win.right.drawTextAt(0, iy, _formatStatusInfo(entry.value), .{});
+                }
+                if (iy == 0) {
+                    iy += pinfo_win.right.drawTextAt(0, iy, "You have no status effects (yet).\n", .{});
+                }
+            },
+            .Aptitudes => {
+                const any = for (state.player_upgrades) |upgr| {
+                    if (upgr.recieved) break true;
+                } else false;
+                if (any) {
+                    iy += pinfo_win.right.drawTextAt(0, iy, "$cAptitudes:$.\n", .{});
+                    for (state.player_upgrades) |upgr| if (upgr.recieved) {
+                        const name = upgr.upgrade.name();
+                        const desc = upgr.upgrade.description();
+                        iy += pinfo_win.right.drawTextAtf(0, iy, "- [{s}] {s}\n", .{ name, desc }, .{});
+                    };
+                } else {
+                    iy += pinfo_win.right.drawTextAt(0, iy, "You have no aptitudes (yet).\n\n", .{});
+                    iy += pinfo_win.right.drawTextAt(0, iy, "(As you ascend, you'll gain up to three random aptitudes.)\n", .{});
+                }
+            },
+            .Augments => {
+                const conjuration = @intCast(usize, state.player.stat(.Conjuration));
+                if (conjuration > 0) {
+                    iy = pinfo_win.right.drawTextAtf(0, iy, "$cConjuration:$. $b{}$.", .{conjuration}, .{});
+
+                    var augment_cnt: usize = 0;
+                    var augment_buf = StackBuffer(player.ConjAugment, 64).init(null);
+                    for (state.player_conj_augments) |aug| if (aug.received) {
+                        augment_cnt += 1;
+                        augment_buf.append(aug.a) catch err.wat();
+                    };
+
+                    std.sort.sort(player.ConjAugment, augment_buf.slice(), {}, struct {
+                        pub fn f(_: void, a: player.ConjAugment, b: player.ConjAugment) bool {
+                            return @enumToInt(a) < @enumToInt(b);
+                        }
+                    }.f);
+
+                    var augment_str = StackBuffer(u8, 64).init(null);
+                    for (augment_buf.constSlice()) |aug|
+                        augment_str.appendSlice(aug.char()) catch err.wat();
+
+                    if (augment_cnt == 0) {
+                        iy = pinfo_win.right.drawTextAtf(0, iy, "$cNo augments$.", .{}, .{});
+                    } else {
+                        iy = pinfo_win.right.drawTextAtf(0, iy, "$cAugments($b{}$c)$.: {s}", .{ augment_cnt, augment_str.constSlice() }, .{});
+                    }
+
+                    iy += 1;
+                }
+            },
+        }
+
+        pinfo_win.container.renderFullyW(.PlayerInfoModal);
+
+        display.present();
+
+        switch (display.waitForEvent(null) catch err.wat()) {
+            .Quit => {
+                state.state = .Quit;
+                break;
+            },
+            .Key => |k| switch (k) {
+                .CtrlC, .CtrlG, .Esc => break,
+                .ArrowDown => if (tab < meta.fields(Tab).len - 1) {
+                    tab += 1;
+                },
+                .ArrowUp => tab -|= 1,
+                else => {},
+            },
+            .Char => |c| switch (c) {
+                'x', 'j', 'h' => if (tab < meta.fields(Tab).len - 1) {
+                    tab += 1;
+                },
+                'w', 'k', 'l' => tab -|= 1,
+                else => {},
+            },
+            else => {},
+        }
+    }
+
+    // FIXME: remove once all of ui.* is converted to subconsole system and
+    // artifacts are auto-cleared
+    clearScreen();
+}
+
 pub fn drawZapScreen() void {
     var selected: usize = 0;
     var r_error: ?player.RingError = null;
@@ -2604,8 +2730,9 @@ pub fn drawEscapeMenu() void {
         @import("build_options").dist,
     }, .{});
     y += main_c.drawTextAt(0, y, "$gCreated by kiedtl on a Raspberry Pi Zero.$.", .{});
+    // TODO: credit tilde.team here
 
-    const Tab = enum(usize) { Continue = 0, Quit = 1 };
+    const Tab = enum(usize) { Continue = 0, @"Player Info" = 1, Quit = 2 };
     var tab: usize = @enumToInt(@as(Tab, .Continue));
 
     while (true) {
@@ -2627,6 +2754,7 @@ pub fn drawEscapeMenu() void {
                 .Enter => {
                     switch (@intToEnum(Tab, tab)) {
                         .Continue => {},
+                        .@"Player Info" => drawPlayerInfoScreen(),
                         .Quit => {
                             if (drawYesNoPrompt("Really abandon this run?", .{}))
                                 state.state = .Quit;
@@ -2634,7 +2762,7 @@ pub fn drawEscapeMenu() void {
                     }
                     return;
                 },
-                .ArrowDown => if (tab < meta.fields(Tab).len) {
+                .ArrowDown => if (tab < meta.fields(Tab).len - 1) {
                     tab += 1;
                 },
                 .ArrowUp => if (tab > 0) {
@@ -2644,12 +2772,10 @@ pub fn drawEscapeMenu() void {
             },
             .Char => |c| switch (c) {
                 'q' => return,
-                'x', 'j', 'h' => if (tab < meta.fields(Tab).len) {
+                'x', 'j', 'h' => if (tab < meta.fields(Tab).len - 1) {
                     tab += 1;
                 },
-                'w', 'k', 'l' => if (tab > 0) {
-                    tab -= 1;
-                },
+                'w', 'k', 'l' => tab -|= 1,
                 else => {},
             },
             else => {},

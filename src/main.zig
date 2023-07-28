@@ -440,7 +440,14 @@ fn readInput() !bool {
                 // state.player.addStatus(.RingElectrocution, 0, .{ .Tmp = 5 });
                 // state.player.addStatus(.RingConjuration, 0, .{ .Tmp = 2 });
                 // state.night_rep[@enumToInt(state.player.faction)] += 10;
-                state.player.HP = 0;
+                // state.player.HP = 0;
+                for (state.player_conj_augments) |aug, i| {
+                    if (!aug.received) {
+                        state.player_conj_augments[i].received = true;
+                        state.message(.Info, "[$oConjuration augment$.] {s}", .{state.player_conj_augments[i].a.description()});
+                        break;
+                    }
+                }
                 break :blk true;
             },
             .F8 => b: {
@@ -484,7 +491,10 @@ fn readInput() !bool {
             'A' => player.activateSurfaceItem(state.player.coord),
             'i' => ui.drawInventoryScreen(),
             'v' => ui.drawExamineScreen(null),
-            '@' => ui.drawExamineScreen(.Mob),
+            '@' => b: {
+                ui.drawPlayerInfoScreen();
+                break :b false;
+            },
             'M' => b: {
                 ui.drawMessagesScreen();
                 break :b false;
