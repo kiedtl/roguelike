@@ -4,6 +4,7 @@ log
 recordings/
 morgue/
 *.ttyrec
+core*
 changelog
 *cursed*
 mingw
