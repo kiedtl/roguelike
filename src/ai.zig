@@ -247,16 +247,11 @@ pub fn tryRest(mob: *Mob) void {
 
 // Notify nearest ally of a hostile.
 pub fn alertAllyOfHostile(mob: *Mob) void {
-    const hostile = mob.enemyList().items[0];
+    const hostile = &mob.enemyList().items[0];
     for (mob.allies.items) |ally| {
         if (!isEnemyKnown(ally, hostile.mob)) {
-            updateEnemyRecord(ally, hostile);
-
-            const enemy_record = for (mob.enemyList().items) |*record| {
-                if (record.mob == mob) break record;
-            } else err.wat();
-            enemy_record.alerted_allies += 1;
-
+            updateEnemyRecord(ally, hostile.*);
+            hostile.alerted_allies += 1;
             break;
         }
     }
