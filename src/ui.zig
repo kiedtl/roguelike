@@ -2260,8 +2260,6 @@ pub fn drawZapScreen() void {
     var r_error: ?player.RingError = null;
 
     while (true) {
-        r_error = player.checkRing(selected);
-
         zap_win.container.clearLineTo(0, zap_win.container.width - 1, 0, .{ .ch = '▀', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
         zap_win.container.clearLineTo(0, zap_win.container.width - 1, zap_win.container.height - 1, .{ .ch = '▄', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
 
@@ -2271,6 +2269,7 @@ pub fn drawZapScreen() void {
         while (ring_i <= 9) : (ring_i += 1) {
             if (player.getRingByIndex(ring_i)) |ring| {
                 ring_count = ring_i;
+                r_error = player.checkRing(selected);
                 const arrow = if (selected == ring_i) "$c>" else "$.·";
                 const mp_cost_color: u8 = if (state.player.MP < ring.required_MP) 'r' else 'b';
                 y += zap_win.left.drawTextAtf(0, y, "{s} {s}$. $g(${u}{}$g MP)$.", .{ arrow, ring.name, mp_cost_color, ring.required_MP }, .{});
@@ -2288,6 +2287,7 @@ pub fn drawZapScreen() void {
                 }
             } else {
                 y += zap_win.left.drawTextAt(0, y, "$g· <none>$.", .{});
+                r_error = null;
             }
         }
 
@@ -2566,10 +2566,12 @@ pub fn drawEscapeMenu() void {
     clearScreen();
 
     const main_c_dim = dimensions(.Main);
-    const main_c = Console.init(state.GPA.allocator(), main_c_dim.width(), main_c_dim.height());
+    var main_c = Console.init(state.GPA.allocator(), main_c_dim.width(), main_c_dim.height());
+    defer main_c.deinit();
 
     const menu_c_dim = dimensions(.PlayerInfo);
-    const menu_c = Console.init(state.GPA.allocator(), menu_c_dim.width(), menu_c_dim.height());
+    var menu_c = Console.init(state.GPA.allocator(), menu_c_dim.width(), menu_c_dim.height());
+    defer menu_c.deinit();
 
     const movement = RexMap.initFromFile(state.GPA.allocator(), "data/keybinds_movement.xp") catch err.wat();
     defer movement.deinit();
