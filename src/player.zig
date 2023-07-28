@@ -787,6 +787,12 @@ pub fn useItem(index: usize) bool {
     return true;
 }
 
+pub fn isPlayerMartial() bool {
+    const martial = state.player.stat(.Martial);
+    const weapon = state.player.inventory.equipment(.Weapon).*;
+    return martial > 0 and weapon != null and weapon.?.Weapon.martial;
+}
+
 // Returns ring slot number
 pub fn isAuxUpgradable(index: usize) ?Inventory.EquSlot {
     const slot = @intToEnum(Inventory.EquSlot, index);

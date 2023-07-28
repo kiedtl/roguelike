@@ -1168,19 +1168,24 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
     y += 1;
 
     // zig fmt: off
-    const stats = [_]struct { b: []const u8, a: []const u8, v: isize, va: ?usize = 0 }{
-        .{ .b = "to-hit: ",  .a = "%", .v = state.player.stat(.Melee), .va = combat.chanceOfMeleeLanding(state.player, null) },
-        .{ .b = "rFire:",  .a = "%", .v = state.player.resistance(.rFire) },
+    const stats = [_]struct { b: []const u8, a: []const u8, v: isize, va: ?usize = null, p: bool = true }{
+        .{ .b = "to-hit: ", .a = "%", .v = state.player.stat(.Melee), .va = combat.chanceOfMeleeLanding(state.player, null) },
+        .{ .b = "rFire:  ", .a = "%", .v = state.player.resistance(.rFire) },
         .{ .b = "evasion:", .a = "%", .v = state.player.stat(.Evade), .va = combat.chanceOfAttackEvaded(state.player, null) },
-        .{ .b = "rElec:",  .a = "%", .v = state.player.resistance(.rElec) },
-    };
+        .{ .b = "rElec:  ", .a = "%", .v = state.player.resistance(.rElec) },
+        .{ .b = "martial:", .a = " ", .v = state.player.stat(.Martial),     .p = player.isPlayerMartial() },
+        .{ .b = "conj:   ", .a = " ", .v = state.player.stat(.Conjuration), .p = state.player.stat(.Conjuration) > 0 },
+        .{ .b = "spikes: ", .a = " ", .v = state.player.stat(.Spikes),      .p = state.player.stat(.Spikes) > 0 },
+    }; 
     // zig fmt: on
 
-    for (stats) |stat, i| {
+    var i: usize = 0;
+    for (stats) |stat| {
+        if (!stat.p) continue;
         const v = utils.SignedFormatter{ .v = stat.v };
         const x = switch (i % 2) {
             0 => startx,
-            1 => startx + std.fmt.count("{s} {: >3}{s}", .{ stat.b, v, stat.a }) + 12,
+            1 => startx + std.fmt.count("{s} {: >3}{s}", .{ stat.b, v, stat.a }) + 9,
             //2 => startx + (@divTrunc(endx - startx, 3) * 2) + 1,
             else => unreachable,
         };
@@ -1191,48 +1196,43 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
             const ca: u21 = if (stat.va.? < stat.v) 'p' else 'b';
             _ = _drawStrf(x, y, endx, "$c{s}$. ${u}{: >3}{s} $g(${u}{}{s}$g)$.", .{ stat.b, c, v, stat.a, ca, stat.va.?, stat.a }, .{});
         }
-        if (i % 2 == 1 or i == stats.len - 1)
+        if (i % 2 == 1)
             y += 1;
+        i += 1;
     }
-
+    if (i % 2 == 1)
+        y += 1;
     y += 1;
 
-    const martial = state.player.stat(.Martial);
-    const weapon = state.player.inventory.equipment(.Weapon).*;
-    if (martial > 0 and weapon != null and weapon.?.Weapon.martial) {
-        y = _drawStrf(startx, y, endx, "$cMartial:$. $b{}$.", .{martial}, .{});
-        y += 1;
-    }
+    // const conjuration = @intCast(usize, state.player.stat(.Conjuration));
+    // if (conjuration > 0) {
+    //     y = _drawStrf(startx, y, endx, "$cConjuration:$. $b{}$.", .{conjuration}, .{});
 
-    const conjuration = @intCast(usize, state.player.stat(.Conjuration));
-    if (conjuration > 0) {
-        y = _drawStrf(startx, y, endx, "$cConjuration:$. $b{}$.", .{conjuration}, .{});
+    //     var augment_cnt: usize = 0;
+    //     var augment_buf = StackBuffer(player.ConjAugment, 64).init(null);
+    //     for (state.player_conj_augments) |aug| if (aug.received) {
+    //         augment_cnt += 1;
+    //         augment_buf.append(aug.a) catch err.wat();
+    //     };
 
-        var augment_cnt: usize = 0;
-        var augment_buf = StackBuffer(player.ConjAugment, 64).init(null);
-        for (state.player_conj_augments) |aug| if (aug.received) {
-            augment_cnt += 1;
-            augment_buf.append(aug.a) catch err.wat();
-        };
+    //     std.sort.sort(player.ConjAugment, augment_buf.slice(), {}, struct {
+    //         pub fn f(_: void, a: player.ConjAugment, b: player.ConjAugment) bool {
+    //             return @enumToInt(a) < @enumToInt(b);
+    //         }
+    //     }.f);
 
-        std.sort.sort(player.ConjAugment, augment_buf.slice(), {}, struct {
-            pub fn f(_: void, a: player.ConjAugment, b: player.ConjAugment) bool {
-                return @enumToInt(a) < @enumToInt(b);
-            }
-        }.f);
+    //     var augment_str = StackBuffer(u8, 64).init(null);
+    //     for (augment_buf.constSlice()) |aug|
+    //         augment_str.appendSlice(aug.char()) catch err.wat();
 
-        var augment_str = StackBuffer(u8, 64).init(null);
-        for (augment_buf.constSlice()) |aug|
-            augment_str.appendSlice(aug.char()) catch err.wat();
+    //     if (augment_cnt == 0) {
+    //         y = _drawStrf(startx, y, endx, "$cNo augments$.", .{}, .{});
+    //     } else {
+    //         y = _drawStrf(startx, y, endx, "$cAugments($b{}$c)$.: {s}", .{ augment_cnt, augment_str.constSlice() }, .{});
+    //     }
 
-        if (augment_cnt == 0) {
-            y = _drawStrf(startx, y, endx, "$cNo augments$.", .{}, .{});
-        } else {
-            y = _drawStrf(startx, y, endx, "$cAugments($b{}$c)$.: {s}", .{ augment_cnt, augment_str.constSlice() }, .{});
-        }
-
-        y += 1;
-    }
+    //     y += 1;
+    // }
 
     const rep = state.night_rep[@enumToInt(state.player.faction)];
     const is_on_slade = state.dungeon.terrainAt(state.player.coord) == &surfaces.SladeTerrain;
