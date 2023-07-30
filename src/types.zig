@@ -1247,95 +1247,16 @@ pub const Status = enum {
     pub const MAX_DURATION: usize = 20;
 
     pub fn string(self: Status, mob: *const Mob) []const u8 { // {{{
-        return switch (self) {
-            .RingTeleportation => "ring: teleportation",
-            .RingDamnation => "ring: damnation",
-            .RingElectrocution => "ring: electrocution",
-            .RingExcision => "ring: excision",
-            .RingConjuration => "ring: conjuration",
-            .RingAcceleration => "ring: acceleration",
-
-            .DetectHeat => "detect heat",
-            .DetectElec => "detect electricity",
-            .EtherealShield => "ethereal shield",
-            .EarthenShield => "earthen shield",
-            .FumesVest => "fuming vest",
-
-            .Amnesia => "amnesia",
-            .Insane => "insane",
-            .TormentUndead => "torment undead",
-            .Intimidating => "intimidating",
-            .CopperWeapon => "copper",
-            .Corruption => "corrupted",
-            .Fireproof => "fireproof",
-            .Flammable => "flammable",
-            .Blind => "blind",
-            .Riposte => "riposte",
-            .Debil => "debilitated",
-            .Conductive => "conductive",
-            .Noisy => "noisy",
-            .Sleeping => switch (mob.life_type) {
-                .Living => "sleeping",
-                .Spectral, .Construct, .Undead => "dormant",
-            },
-            .Paralysis => "paralyzed",
-            .Held => "held",
-            .Echolocation => "echolocating",
-            .Corona => "glowing",
-            .Daze => "dazed",
-            .Disorient => "disoriented",
-            .Fast => "hasted",
-            .Slow => "slowed",
-            .Recuperate => "recuperating",
-            .Nausea => "nauseated",
-            .Fire => "burning",
-            .Invigorate => "invigorated",
-            .Pain => "pain",
-            .Fear => "fear",
-            .DayBlindness => "day-blinded",
-            .NightBlindness => "night-blinded",
-            .Enraged => "enraged",
-            .Exhausted => "exhausted",
-            .Explosive => "explosive",
-            .ExplosiveElec => "charged",
-            .Lifespan => "lifespan",
-        };
+        const s = state.status_str_infos.get(self).?;
+        return if (mob.life_type != .Living and s.unliving_name != null) s.unliving_name.? else s.name;
     } // }}}
 
     pub fn miniString(self: Status) ?[]const u8 { // {{{
-        return switch (self) {
-            .RingTeleportation, .RingDamnation, .RingElectrocution, .RingExcision, .RingConjuration, .RingAcceleration => null,
+        return state.status_str_infos.get(self).?.mini_name;
+    } // }}}
 
-            .DetectHeat, .DetectElec, .CopperWeapon, .Riposte, .EtherealShield, .EarthenShield, .FumesVest, .Echolocation, .DayBlindness, .NightBlindness, .Explosive, .ExplosiveElec, .Lifespan => null,
-
-            .Amnesia => "amnesia",
-            .Insane => "insane",
-            .Intimidating => "intim",
-            .TormentUndead => "trmnt undead",
-            .Corruption => "corrupt",
-            .Fireproof => "fireproof",
-            .Flammable => "flammable",
-            .Blind => "blind",
-            .Debil => "debil",
-            .Conductive => "conductve",
-            .Noisy => "noisy",
-            .Sleeping => "sleep",
-            .Paralysis => "para",
-            .Held => "held",
-            .Corona => "glow",
-            .Daze => "dazed",
-            .Disorient => "disorient",
-            .Fast => "hasted",
-            .Slow => "slowed",
-            .Recuperate => "recup",
-            .Nausea => "nausea",
-            .Fire => "burn",
-            .Invigorate => "invig",
-            .Pain => "pain",
-            .Fear => "fear",
-            .Enraged => "rage",
-            .Exhausted => "exhausted",
-        };
+    pub fn playerDescription(self: Status) ?[]const u8 { // {{{
+        return state.status_str_infos.get(self).?.p_description;
     } // }}}
 
     pub fn isMobImmune(self: Status, mob: *Mob) bool {
@@ -1503,7 +1424,7 @@ pub const Status = enum {
         }
 
         if (!mob.isFullyResistant(.rFire)) { // Don't spam "you are scorched" messages
-            if (rng.percent(@as(usize, 50))) {
+            if (rng.percent(@as(usize, 33))) {
                 mob.takeDamage(.{ .amount = 1, .kind = .Fire, .blood = false }, .{
                     .noun = "The fire",
                     .strs = &[_]DamageStr{

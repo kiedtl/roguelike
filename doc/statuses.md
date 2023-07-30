@@ -29,19 +29,10 @@ distance between.
 
 You are on fire.
 
-- You have a 50% chance to take damage each turn.
+- You have a 33% chance to take damage each turn.
 - You spread fire to the tile you are on, if it isn't already on fire.
 
 See [fire.md](fire.md) for more details.
-
-## closed melee
-
-A status conferred by certain weapons.
-
-Gives a `melee%` bonus if you are in closed space, i.e. there are at least 5
-walls adjacent to you (including in diagonal directions).
-
-See also: open melee.
 
 ## charged
 
@@ -73,8 +64,8 @@ as revealing the locations of all undead on the map.
 
 The main negative effect of corruption is that it instantly alerts the undead
 which inflicted it of your presence. This means that attempting to sneak past
-unaware or dormant undead could potentially fail catastrophically if the RNG
-decides to screw with you.
+unaware or dormant undead could potentially fail catastrophically if you stay
+next to them too long.
 
 In future releases, additional negative effects will be added.
 
@@ -136,7 +127,6 @@ a wall.)
 - +20% chance to land a hit.
 - -10% chance to dodge an attack.
 - +20% damage for melee hits.
-- +20% speed bonus.
 
 ## exhausted
 
@@ -201,7 +191,7 @@ self-destruct. Usually found paired with the `explosive` or `charged` statuses.
 
 You are unable to drink potions.
 
-Doesn't affect non-player mobs, since they don't have an AI that drinks potions.
+Doesn't affect enemies, since they don't drink potions at any rate.
 
 ## night-vision
 
@@ -216,14 +206,12 @@ Causes noise to be emit on each turn, regardless if the mob is moving or not.
 
 Many monsters have this status, allowing you to detect them more easily.
 
-## open melee
+## pain
 
-A status conferred by certain weapons.
-
-Gives a `melee%` bonus if you are in open space, i.e. there are fewer than 4
-walls adjacent to you (including in diagonal directions).
-
-See also: closed melee.
+- You are in agony and cannot rest.
+- You take variable amounts of damage each turn. (For now that amount is
+  dependent on the source of this status; in future releases this will be
+  properly documented.)
 
 ## paralyzed
 
@@ -262,10 +250,3 @@ No effect on the player.
 
 For monsters, makes it drastically more likely that they'll flee from you
 (unless they're fearless, undead, or non-living).
-
-## tormented
-
-- You are in agony and cannot rest.
-- You take variable amounts of damage each turn. (For now that amount is
-  dependent on the source of this status; in future releases this will be
-  properly documented.)

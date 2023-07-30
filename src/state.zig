@@ -112,9 +112,17 @@ pub const LevelInfo = struct {
     optional: bool,
     stairs: [Dungeon.MAX_STAIRS]?[]u8,
 };
-
 // Loaded at runtime from data/levelinfo.tsv
 pub var levelinfo: [LEVELS]LevelInfo = undefined;
+
+pub const StatusStringInfo = struct {
+    name: []const u8,
+    unliving_name: ?[]const u8,
+    mini_name: ?[]const u8,
+    p_description: []const u8,
+};
+pub var status_str_infos: std.enums.EnumArray(Status, ?StatusStringInfo) =
+    std.enums.EnumArray(Status, ?StatusStringInfo).initFill(null);
 
 pub var player_upgrades: [3]player_m.PlayerUpgradeInfo = undefined;
 pub var player_conj_augments: [player_m.ConjAugment.TOTAL]player_m.ConjAugmentInfo = undefined;
@@ -402,6 +410,60 @@ pub fn tickSound(cur_lev: usize) void {
             const cur_sound = dungeon.soundAt(coord);
             cur_sound.state = SoundState.ageToState(ticks - cur_sound.when);
         }
+    }
+}
+
+pub fn loadStatusStringInfo() void {
+    const alloc = GPA.allocator();
+
+    var rbuf: [65535]u8 = undefined;
+    const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
+    const data_file = data_dir.openFile("status_help.tsv", .{ .read = true }) catch unreachable;
+
+    const read = data_file.readAll(rbuf[0..]) catch unreachable;
+
+    const result = tsv.parse(struct { e: Status, n: []u8, un: ?[]u8, mn: ?[]u8, d: []u8 }, &[_]tsv.TSVSchemaItem{
+        .{ .field_name = "e", .parse_to = Status, .parse_fn = tsv.parsePrimitive },
+        .{ .field_name = "n", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
+        .{ .field_name = "un", .parse_to = ?[]u8, .parse_fn = tsv.parseOptionalUtf8String, .optional = true, .default_val = null },
+        .{ .field_name = "mn", .parse_to = ?[]u8, .parse_fn = tsv.parseOptionalUtf8String, .optional = true, .default_val = null },
+        .{ .field_name = "d", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
+    }, .{ .e = undefined, .n = undefined, .un = undefined, .mn = undefined, .d = undefined }, rbuf[0..read], alloc);
+
+    if (!result.is_ok()) {
+        err.bug("Can't load data/status_help.tsv: {} (line {}, field {})", .{
+            result.Err.type,
+            result.Err.context.lineno,
+            result.Err.context.field,
+        });
+    }
+
+    const data = result.unwrap();
+    defer data.deinit();
+
+    for (data.items) |row| {
+        const s = StatusStringInfo{ .name = row.n, .unliving_name = row.un, .mini_name = row.mn, .p_description = row.d };
+        status_str_infos.set(row.e, s);
+    }
+
+    var iter = status_str_infos.iterator();
+    while (iter.next()) |info|
+        if (info.value.* == null)
+            err.bug("Can't load data/status_help.tsv: Missing entry for {}.", .{info.key});
+
+    std.log.info("Loaded data/status_help.tsv.", .{});
+}
+
+pub fn freeStatusStringInfo() void {
+    const alloc = GPA.allocator();
+
+    var iter = status_str_infos.iterator();
+    while (iter.next()) |info| {
+        alloc.free(info.value.*.?.name);
+        if (info.value.*.?.unliving_name) |str|
+            alloc.free(str);
+        if (info.value.*.?.mini_name) |str|
+            alloc.free(str);
     }
 }
 

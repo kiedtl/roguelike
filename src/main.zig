@@ -151,6 +151,7 @@ fn initGame(display_scale: f32) bool {
     alert.init();
     events.init();
     font.loadFontsData();
+    state.loadStatusStringInfo();
     state.loadLevelInfo();
     surfaces.readProps(state.GPA.allocator());
     literature.readPosters(state.GPA.allocator());
@@ -238,6 +239,7 @@ fn deinitGame() void {
     events.deinit();
     janet.deinit();
     font.freeFontData();
+    state.freeStatusStringInfo();
     state.freeLevelInfo();
     surfaces.freeProps(state.GPA.allocator());
     mobs.spawns.freeSpawnTables(state.GPA.allocator());
