@@ -207,6 +207,16 @@ pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: u
     }
 }
 
+// Determine whether mob has any innate, permanent qualities that prevent it
+// from being surprise-attacked (undead, etc)
+pub fn canMobBeSurprised(mob: *const Mob) bool {
+    if (mob == state.player)
+        return false;
+    if (mob.life_type != .Living)
+        return false;
+    return true;
+}
+
 // Check if an attack is a stab attack.
 //
 // Return true if:
@@ -222,9 +232,7 @@ pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: u
 // to stab a paralyzed player is too harsh of a punishment.
 //
 pub fn isAttackStab(attacker: *const Mob, defender: *const Mob) bool {
-    if (defender.coord.eq(state.player.coord))
-        return false;
-    if (defender.life_type != .Living)
+    if (!canMobBeSurprised(defender))
         return false;
 
     return switch (defender.ai.phase) {

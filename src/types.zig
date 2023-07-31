@@ -3043,6 +3043,7 @@ pub const Mob = struct { // {{{
             .by_mob = attacker,
         }, .{
             .strs = attacker_weapon.strs,
+            .is_surprise = is_stab,
             .is_bonus = opts.is_bonus,
             .is_riposte = opts.is_riposte,
             .is_bone = weapon_damage.bone_bonus,
@@ -3161,6 +3162,7 @@ pub const Mob = struct { // {{{
         strs: []const DamageStr = &[_]DamageStr{
             items._dmgstr(0, "hit", "hits", ""),
         },
+        is_surprise: bool = false,
         is_bonus: bool = false,
         is_riposte: bool = false,
         is_bone: bool = false,
@@ -3251,6 +3253,7 @@ pub const Mob = struct { // {{{
             } else {
                 const martial_str = if (msg.is_bonus) " $b*Martial*$. " else "";
                 const riposte_str = if (msg.is_riposte) " $b*Riposte*$. " else "";
+                const surprise_str = if (msg.is_surprise) " $b*Surprise*$. " else "";
                 const bone_str = if (msg.is_bone) " $b*Bone*$. " else "";
                 const nbone_str = if (msg.is_nbone) " $b*-Bone*$. " else "";
                 const copper_str = if (msg.is_copper) " $b*Copper*$. " else "";
@@ -3270,13 +3273,15 @@ pub const Mob = struct { // {{{
 
                 state.message(
                     .Combat,
-                    "{s} {s} {}{s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.) {s}{s}{s}{s}{s}{s}",
+                    "{s} {s} {}{s}{s} $g($r{}$. $g{s}$g, $c{}$. $g{s}$.) {s}{s}{s}{s}{s}{s}{s}",
                     .{
                         noun.constSlice(),   verb,        self,
                         hitstrs.verb_degree, punctuation, amount,
                         d.kind.string(),     resisted,    resist_str,
-                        martial_str,         riposte_str, bone_str,
-                        nbone_str,           copper_str,  spikes_str,
+
+                        surprise_str,        martial_str, riposte_str,
+                        bone_str,            nbone_str,   copper_str,
+                        spikes_str,
                     },
                 );
             }

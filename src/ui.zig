@@ -818,8 +818,10 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
         _writerWrite(w, "· is non-living ($bspectral$.)\n", .{});
     if (mob.max_drainable_MP > 0)
         _writerWrite(w, "· is a $oWielder$. ($o{}$. drainable MP)\n", .{mob.max_drainable_MP});
+    if (!combat.canMobBeSurprised(mob))
+        _writerWrite(w, "· can't be $bsurprised$.\n", .{});
     if (mob.max_drainable_MP > 0 and mob.is_drained)
-        _writerWrite(w, "· is $odrained$.", .{});
+        _writerWrite(w, "· is $odrained$.\n", .{});
     if (mob.ai.is_curious and !mob.deaf)
         _writerWrite(w, "· investigates noises\n", .{})
     else
