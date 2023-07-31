@@ -21,12 +21,6 @@ stronger than you are.
 
 ![screenshot](https://tilde.team/~kiedtl/images/rl/apr29-release1.png)
 
-The other main mechanic, stolen from Peter Harkins's 7DRL Ironwood, is movement
-patterns to activate various combat bonuses and abilities. These movement
-patterns are tied to rings that will be scattered throughout the dungeon, of
-which four can be worn at one time. These rings are the only way of utilising
-magic (which is otherwise unavailable for the player's use).
-
 [Here's](https://tilde.team/~kiedtl/blog/roguelike) the (very outdated) initial
 writeup back when I started the project in May 2021.
 
