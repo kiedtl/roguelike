@@ -374,7 +374,7 @@ pub const ShadowShieldAux = Aux{
     .id = "aux_shield_shadow",
     .name = "shadow shield",
 
-    .stats = .{ .Evade = 5 },
+    .stats = .{ .Evade = 5, .Potential = -5 },
 
     .night = true,
     .night_stats = .{ .Evade = 10 },
@@ -384,7 +384,7 @@ pub const EtherealShieldAux = Aux{
     .id = "aux_shield_ethereal",
     .name = "ethereal shield",
 
-    .stats = .{ .Willpower = 1, .Evade = -5 },
+    .stats = .{ .Willpower = 1, .Evade = -5, .Potential = -5 },
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .EtherealShield, .duration = .Equ },
     },
@@ -1363,9 +1363,11 @@ pub const OrnateGoldArmor = Armor{
 pub const ShadowMailArmor = Armor{
     .id = "shadow_mail_armor",
     .name = "shadow mail",
+    .stats = .{ .Potential = -10 },
     .resists = .{ .Armor = 15 },
 
     .night = true,
+    .night_stats = .{ .Potential = -10 },
     .night_resists = .{ .rFire = -25, .Armor = 35 },
 };
 
@@ -1373,22 +1375,22 @@ pub const ShadowHauberkArmor = Armor{
     .id = "shadow_hauberk_armor",
     .name = "shadow hauberk",
     .resists = .{ .Armor = 10 },
-    // .stats = .{ .Evade = -5 },
+    .stats = .{ .Potential = -10 },
 
     .night = true,
     .night_resists = .{ .Armor = 25 },
-    .night_stats = .{ .Evade = -5, .Martial = -1 },
+    .night_stats = .{ .Evade = -5, .Martial = -1, .Potential = 10 },
 };
 
 pub const ShadowBrigandineArmor = Armor{
     .id = "shadow_brigandine_armor",
     .name = "shadow brigandine",
     .resists = .{ .Armor = 10 },
-    .stats = .{ .Melee = 5, .Martial = 1 },
+    .stats = .{ .Melee = 5, .Martial = 1, .Potential = -10 },
 
     .night = true,
     .night_resists = .{ .Armor = 25 },
-    .night_stats = .{ .Melee = 10, .Martial = 2 },
+    .night_stats = .{ .Melee = 10, .Martial = 2, .Potential = -10 },
 };
 
 pub const FumingVestArmor = Armor{
@@ -1520,7 +1522,7 @@ pub const ShadowSwordWeapon = Weapon{
     .name = "shadow sword",
     .damage = 1,
     .martial = true,
-    .stats = .{ .Evade = 10, .Martial = 2 },
+    .stats = .{ .Evade = 10, .Martial = 2, .Potential = -5 },
     .ego = .NC_Insane,
     .strs = &SLASHING_STRS,
 };
@@ -1661,6 +1663,7 @@ pub const ShadowMaceWeapon = Weapon{
     .id = "shadow_mace",
     .name = "shadow mace",
     .damage = 1,
+    .stats = .{ .Potential = -5 },
     .ego = .NC_MassPara,
     .strs = &CRUSHING_STRS,
 };
@@ -1669,6 +1672,7 @@ pub const ShadowMaulWeapon = Weapon{
     .id = "shadow_maul",
     .name = "shadow maul",
     .damage = 2,
+    .stats = .{ .Potential = -5 },
     .ego = .NC_Duplicate,
     .strs = &CRUSHING_STRS,
 };
