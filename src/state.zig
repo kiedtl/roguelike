@@ -464,6 +464,7 @@ pub fn freeStatusStringInfo() void {
             alloc.free(str);
         if (info.value.*.?.mini_name) |str|
             alloc.free(str);
+        alloc.free(info.value.*.?.p_description);
     }
 }
 
