@@ -52,7 +52,7 @@ const WIDTH = state.WIDTH;
 // -----------------------------------------------------------------------------
 pub const labels = @import("ui/labels.zig");
 
-pub const FRAMERATE = 1000 / 30;
+pub const FRAMERATE = 1000 / 45;
 
 pub const LEFT_INFO_WIDTH: usize = 35;
 //pub const RIGHT_INFO_WIDTH: usize = 24;

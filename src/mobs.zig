@@ -70,6 +70,7 @@ const W_BLUDG_2 = Weapon{ .damage = 2, .strs = &items.CRUSHING_STRS };
 const W_MACES_2 = Weapon{ .damage = 2, .strs = &items.CRUSHING_STRS };
 const W_MACES_3 = Weapon{ .damage = 3, .strs = &items.CRUSHING_STRS };
 const W_MSWRD_1 = Weapon{ .damage = 1, .strs = &items.SLASHING_STRS };
+const W_SPROD_1 = Weapon{ .damage = 1, .damage_kind = .Electric, .strs = &items.SHOCK_STRS };
 
 pub const PLAYER_VISION = 12;
 pub const RESIST_IMMUNE = 1000;
@@ -318,10 +319,48 @@ pub const ArmoredGuardTemplate = MobTemplate{
         .memory_duration = 7,
 
         .stats = .{ .Willpower = 2, .Melee = 70 },
+        .innate_resists = .{ .Armor = 15 },
     },
     .weapon = &W_BLUDG_2,
-    .armor = items.GambesonArmor,
 };
+
+pub fn createEnforcerTemplate(comptime minion: []const u8) MobTemplate {
+    return MobTemplate{
+        .mob = .{
+            .id = "enforcer_" ++ minion,
+            .species = &GoblinSpecies,
+            .tile = 'E',
+            .ai = AI{
+                .profession_name = "enforcer",
+                .profession_description = "guarding",
+                .work_fn = ai.patrolWork,
+                .fight_fn = ai.mageFight,
+                .spellcaster_backup_action = .Melee,
+                .flags = &[_]AI.Flag{ .ScansForJobs, .ScansForCorpses },
+            },
+
+            .spells = &[_]SpellOptions{
+                .{ .MP_cost = 15, .spell = &spells.BOLT_PULL_FOE },
+            },
+            .max_MP = 15,
+
+            .max_HP = 7,
+            .memory_duration = 7,
+
+            .stats = .{ .Willpower = 2, .Melee = 70 },
+            .innate_resists = .{ .Armor = 15, .rElec = 50 },
+        },
+        .weapon = &W_SPROD_1,
+
+        .squad = &[_][]const MobTemplate.SquadMember{
+            &[_]MobTemplate.SquadMember{
+                .{ .mob = minion, .weight = 1, .count = minmax(usize, 1, 2) },
+            },
+        },
+    };
+}
+pub const EnforcerGTemplate = createEnforcerTemplate("guard");
+pub const EnforcerAGTemplate = createEnforcerTemplate("armored_guard");
 
 pub const JavelineerTemplate = MobTemplate{
     .mob = .{
@@ -2136,6 +2175,8 @@ pub const MOBS = [_]MobTemplate{
     WatcherTemplate,
     GuardTemplate,
     ArmoredGuardTemplate,
+    EnforcerGTemplate,
+    EnforcerAGTemplate,
     JavelineerTemplate,
     DefenderTemplate,
     LeadTurtleTemplate,

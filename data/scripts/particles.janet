@@ -865,6 +865,41 @@
     (new-emitter-from @{ :birth-delay 8 }
       (template-lingering-zap ASCII_CHARS 0x0a0a90 0x661188 9 :bg-mix 0.8 :require-nonwall false :require-los 0))
   ]
+  "zap-pull-foe" @[
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch "×" })
+        :speed 1
+        :triggers @[
+          [[:COND-reached-target? false] [:TRIG-create-emitter (new-emitter @{
+            :particle (new-particle @{ :tile (new-tile @{ :ch "×" :fg 0x777777 :bg-mix 0 }) :speed 0 })
+            :lifetime 0
+          })]]
+          [[:COND-reached-target? true] [:TRIG-create-emitter (new-emitter @{
+            :particle (new-particle @{
+              :tile (new-tile @{ :ch "@" :fg 0x9f8f74 })
+              :speed 1
+              :triggers @[
+                [[:COND-reached-target? true] [:TRIG-die]]
+                [[:COND-true] [:TRIG-create-emitter (new-emitter @{
+                  :particle (new-particle @{
+                    :tile (new-tile @{ :ch "@" :fg 0xaaaaaa :bg-mix 0 })
+                    :speed 0 :territorial true
+                    :triggers @[[[:COND-parent-dead? 2] [:TRIG-die]]]
+                  })
+                  :lifetime 0
+                })]]
+              ]
+            })
+            :lifetime 0
+            :get-spawn-params (fn [self ticks ctx _ target]
+                                [target ((get-parent self 1) :initial-coord)])
+          })]]
+        ]
+      })
+      :lifetime 0
+     })
+  ]
   "zap-mass-insanity" @[
     (template-lingering-zap ASCII_CHARS 0 0xaa55cc 4 :bg-mix 0.0 :require-nonwall false :require-los 0)
     (new-emitter @{

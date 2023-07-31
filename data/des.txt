@@ -395,6 +395,11 @@ accuracy.
 A highly-trained and better armed guard. It seems that they've taken note of
 your exploits here...
 
+% enforcer_guard
+Due to the hill-goblin's inexperience in dealing with a sizeable prisoner
+population, they've hired human mercenaries from nearby settlements and
+outfitted them with the cave-goblin's shock prods and enforcer chains.
+
 % lead_turtle
 A monstrous contraption, no doubt the latest invention of the Laboratory
 alchemists. Its heavy shell shines dully in the dim light.

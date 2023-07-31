@@ -1615,20 +1615,6 @@ pub const MorningstarWeapon = Weapon{
     .strs = &CRUSHING_STRS,
 };
 
-pub const ClubWeapon = Weapon{
-    .id = "club",
-    .name = "club",
-    .damage = 1,
-    .strs = &CRUSHING_STRS,
-};
-
-pub const BludgeonWeapon = Weapon{
-    .id = "bludgeon",
-    .name = "bludgeon",
-    .damage = 1,
-    .strs = &CRUSHING_STRS,
-};
-
 // XXX: not dropped as loot, as it's not interesting enough to warrant giving
 // it to player
 pub const MaceWeapon = Weapon{

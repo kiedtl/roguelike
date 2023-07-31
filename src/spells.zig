@@ -350,6 +350,49 @@ fn _effectMassDismissal(caster: Coord, _: Spell, opts: SpellOptions, _: Coord) v
     }
 }
 
+pub const BOLT_PULL_FOE = Spell{
+    .id = "sp_pull_enemy",
+    .name = "yank foe",
+    .cast_type = .Smite,
+    .animation = .{ .Particle = .{ .name = "zap-pull-foe" } },
+    .smite_target_type = .Mob,
+    .needs_visible_target = true,
+    .check_has_effect = struct {
+        fn f(caster: *Mob, _: SpellOptions, target: Coord) bool {
+            const target_m = state.dungeon.at(target).mob.?;
+            const need_to = caster.distance(target_m) > 1 and !caster.canMelee(target_m);
+            if (!need_to) return false;
+
+            // Is there a place to yoink our enemy
+            for (&DIRECTIONS) |d| if (caster.coord.move(d, state.mapgeometry)) |n| {
+                if (utils.hasClearLOF(target_m.coord, n))
+                    return true;
+            };
+
+            return false;
+        }
+    }.f,
+    .noise = .Quiet,
+    .effect_type = .{
+        .Custom = struct {
+            fn f(caster_coord: Coord, _: Spell, _: SpellOptions, coord: Coord) void {
+                const target_mob = state.dungeon.at(coord).mob.?;
+
+                var dest = caster_coord;
+                for (&DIRECTIONS) |d|
+                    if (caster_coord.move(d, state.mapgeometry)) |n|
+                        if (utils.hasClearLOF(target_mob.coord, n) and
+                            n.distance(coord) < dest.distance(coord))
+                        {
+                            dest = n;
+                        };
+
+                _ = target_mob.teleportTo(dest, null, true, false);
+            }
+        }.f,
+    },
+};
+
 pub const CAST_SUMMON_ENEMY = Spell{
     .id = "sp_summon_enemy",
     .name = "summon enemy",
