@@ -1866,7 +1866,7 @@ pub const SpectralTotemTemplate = MobTemplate{
         .corpse = .None,
 
         .innate_resists = .{ .rFume = 100, .Armor = 75, .rElec = RESIST_IMMUNE, .rFire = -50 },
-        .stats = .{ .Willpower = 10, .Conjuration = 3, .Vision = 7 },
+        .stats = .{ .Willpower = 10, .Conjuration = 2, .Vision = 7 },
     },
 };
 
@@ -2105,7 +2105,7 @@ pub const BurningBruteTemplate = MobTemplate{
 
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 2, .spell = &spells.CAST_RESURRECT_FIRE, .power = 200, .duration = 10 },
-            .{ .MP_cost = 3, .spell = &spells.BOLT_FIREBALL, .power = 3, .duration = 5 },
+            .{ .MP_cost = 3, .spell = &spells.BOLT_FIREBALL, .power = 2, .duration = 8 },
         },
         .max_MP = 12,
 
