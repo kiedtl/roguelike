@@ -937,6 +937,10 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
             _writerTwice(w, linewidth, "damage", "($g{s}$.) {}", .{ p.damage_kind.stringLong(), p.damage });
             if (p.knockback != 0)
                 _writerTwice(w, linewidth, "knockback", "{}", .{p.knockback});
+            if (p.delay != 100) {
+                const col: u21 = if (p.delay > 100) 'r' else 'b';
+                _writerTwice(w, linewidth, "delay", "${u}{}%$.\n", .{ col, p.delay });
+            }
             for (p.effects) |effect|
                 _writerTwice(w, linewidth, "effect", "{s}", .{_formatStatusInfo(&effect)});
             _writerWrite(w, "\n", .{});

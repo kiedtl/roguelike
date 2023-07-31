@@ -55,17 +55,15 @@ pub fn damageOfWeapon(attacker: ?*const Mob, weapon: *const Weapon, recipient: ?
         }
     }
     if (attacker != null) {
-        // If copper weapon and attacker is on copper ground, +3 damage.
+        // If copper weapon and attacker is on copper ground, +1 damage.
         if (weapon.ego == .Copper and attacker.?.isUnderStatus(.CopperWeapon) != null) {
-            damage.total += 3;
+            damage.total += 1;
             damage.copper_bonus = true;
         }
     }
     if (recipient != null) {
-        // If bone weapon and defender is living and not corrupted, +1 dmg.
-        if (weapon.ego == .Bone and recipient.?.life_type == .Living and
-            recipient.?.isUnderStatus(.Corruption) == null)
-        {
+        // If bone weapon and defender is living, +1 dmg.
+        if (weapon.ego == .Bone and recipient.?.life_type == .Living) {
             damage.total += 1;
             damage.bone_bonus = true;
         }
@@ -197,7 +195,7 @@ pub fn throwMob(thrower: ?*Mob, throwee: *Mob, direction: Direction, distance: u
     }
 
     if (slammed_into_something) {
-        throwee.takeDamage(.{ .amount = 3, .by_mob = thrower }, .{ .basic = true });
+        throwee.takeDamage(.{ .amount = 1, .by_mob = thrower }, .{ .basic = true });
 
         if (slammed_into_mob) |othermob| {
             othermob.takeDamage(.{ .amount = 3, .by_mob = throwee }, .{

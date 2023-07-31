@@ -989,6 +989,7 @@ pub const Activity = union(enum) {
         who: *Mob,
         direction: Direction,
         coord: Coord,
+        delay: usize,
     },
     Teleport: Coord,
     Grab,
@@ -998,6 +999,13 @@ pub const Activity = union(enum) {
     Fire,
     Cast,
     None,
+
+    pub inline fn cost(self: Activity) isize {
+        return switch (self) {
+            .Attack => |a| @intCast(isize, a.delay),
+            else => 100,
+        };
+    }
 };
 
 pub const EnemyRecord = struct {
@@ -2567,7 +2575,7 @@ pub const Mob = struct { // {{{
         assert(!self.is_dead);
         self.activities.append(action);
         const mod = if (action == .Move) self.stat(.Speed) else 100;
-        self.energy -= @divTrunc(mod * 100, 100);
+        self.energy -= @divTrunc(mod * action.cost(), 100);
     }
 
     pub fn makeNoise(self: *Mob, s_type: SoundType, intensity: SoundIntensity) void {
@@ -2923,6 +2931,7 @@ pub const Mob = struct { // {{{
         const martial = @intCast(usize, math.max(0, attacker.stat(.Martial)));
         const weapons = attacker.listOfWeapons();
 
+        var longest_delay: usize = 0;
         for (weapons.constSlice()) |weapon| {
             // recipient could be out of reach, either because the attacker has
             // multiple attacks and only one of them reaches, or because the
@@ -2930,12 +2939,16 @@ pub const Mob = struct { // {{{
             if (weapon.reach < attacker.distance(recipient))
                 continue;
 
+            if (weapon.delay > longest_delay) longest_delay = weapon.delay;
             _fightWithWeapon(attacker, recipient, weapon, opts, if (weapon.martial) martial else 0);
         }
 
+        // If longest_delay is still 0, we didn't attack at all!
+        assert(longest_delay > 0);
+
         if (!opts.free_attack) {
             const d = attacker.coordMT(recipient.coord).closestDirectionTo(recipient.coord, state.mapgeometry);
-            attacker.declareAction(.{ .Attack = .{ .who = recipient, .coord = recipient.coord, .direction = d } });
+            attacker.declareAction(.{ .Attack = .{ .who = recipient, .coord = recipient.coord, .direction = d, .delay = longest_delay } });
         }
 
         // If the defender didn't know about the attacker's existence now's a
@@ -4434,6 +4447,7 @@ pub const Weapon = struct {
     reach: usize = 1,
     damage: usize,
     damage_kind: Damage.DamageKind = .Physical,
+    delay: usize = 100,
     knockback: usize = 0,
     martial: bool = false,
     ego: Ego = .None,

@@ -392,7 +392,8 @@ A warrior clad in light armor, able to throw poisoned javelins with surprising
 accuracy.
 
 % armored_guard
-A highly-trained and better armed guard.
+A highly-trained and better armed guard. It seems that they've taken note of
+your exploits here...
 
 % lead_turtle
 A monstrous contraption, no doubt the latest invention of the Laboratory
@@ -522,8 +523,8 @@ A competent and highly trained infantry-goblin wearing a battle cuirass.
 He is tasked with liquidating escaped prisoners, like you.
 
 % bone_mage
-She may not be as experienced as the dreaded Death Mages she is apprenticed to,
-but she quite capable of killing you all the same.
+Although not as experienced as the dreaded Death Mages she is apprenticed to,
+she quite capable of killing you all the same.
 
 % death_knight
 His bone longsword is inscribed with crude engravings of torment and death.
@@ -538,9 +539,8 @@ enemy morale during battles. Battles are slow in coming, however, so you'll just
 have to do for now...
 
 % necromancer
-An unusually sadistic death mage, tasked with making the prisoner's lives as
-miserable as possible. His features are perpetually twisted into a leer of cruel
-contempt.
+An unusually sadistic death mage, his features perpetually twisted into a leer
+of cruel contempt.
 
 % burning_brute
 A raging winged demon composed of boiling basalt, feared even by its peers for

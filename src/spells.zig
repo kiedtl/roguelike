@@ -220,7 +220,7 @@ pub const CAST_REGEN = Spell{
         // spell, ensuring it's only used when the caster is clearly losing a
         // fight
         fn f(caster: *Mob, opts: SpellOptions, _: Coord) bool {
-            return caster.HP <= (opts.power * 2);
+            return caster.HP <= (opts.power * 3);
         }
     }.f,
     .noise = .Loud,

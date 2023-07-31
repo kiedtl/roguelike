@@ -426,7 +426,7 @@ pub const JavelinProj = Projectile{
     .id = "javelin",
     .name = "javelin",
     .color = 0xffd7d7,
-    .damage = 2,
+    .damage = 1,
     .effect = .{
         .Status = .{
             .status = .Disorient,
@@ -1498,7 +1498,7 @@ pub const SHOCK_STRS = [_]DamageStr{
 pub const FistWeapon = Weapon{
     .id = "none",
     .name = "none",
-    .damage = 2,
+    .damage = 1,
     .strs = &FIST_STRS,
 };
 
@@ -1603,13 +1603,6 @@ pub const WoldoWeapon = Weapon{
 //     },
 //     .strs = &CRUSHING_STRS,
 // };
-
-pub const KnoutWeapon = Weapon{
-    .id = "knout",
-    .name = "knout",
-    .damage = 6,
-    .strs = &CRUSHING_STRS,
-};
 
 pub const MorningstarWeapon = Weapon{
     .id = "morningstar",
