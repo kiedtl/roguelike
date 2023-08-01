@@ -2202,7 +2202,10 @@ pub const Mob = struct { // {{{
         // Gases
         const gases = state.dungeon.atGas(self.coord);
         for (gases) |quantity, gasi| {
-            if ((rng.range(usize, 0, 100) < self.resistance(.rFume) or gas.Gases[gasi].not_breathed) and quantity > 0.0) {
+            if (quantity > 0.0 and
+                (rng.range(usize, 0, 100) < (100 - self.resistance(.rFume)) or
+                gas.Gases[gasi].not_breathed))
+            {
                 gas.Gases[gasi].trigger(self, quantity);
             }
         }
@@ -4038,7 +4041,7 @@ pub const Mob = struct { // {{{
     // Returns different things depending on what resist is.
     //
     // For all resists except rFume, returns damage mitigated.
-    // For rFume, returns chance for gas to trigger.
+    // For rFume, returns chance for gas effect to not trigger.
     pub fn resistance(self: *const Mob, resist: Resistance) isize {
         var r: isize = 0;
 
@@ -4090,7 +4093,7 @@ pub const Mob = struct { // {{{
         r = math.clamp(r, -100, 100);
 
         // For rFume, make the value a percentage
-        return if (resist == .rFume) 100 - r else r;
+        return r;
     }
 
     // Find out how many turns spent in moving

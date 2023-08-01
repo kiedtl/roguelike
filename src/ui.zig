@@ -393,13 +393,8 @@ fn _writerMobStats(
         const resist = @intToEnum(Resistance, resistancev.value);
         const resist_val = utils.SignedFormatter{ .v = mob.resistance(resist) };
         const resist_str = resist.string();
-        if (resist_val.v != 0 and
-            // This BS is necessary because we can't use a comptime var at
-            // runtime
-            (!mem.eql(u8, resist_str, "rFume") or resist_val.v != 100))
-        {
+        if (resist_val.v != 0)
             _writerWrite(w, "$c{s: <9}$. {: >5}%\n", .{ resist_str, resist_val });
-        }
     }
     _writerWrite(w, "\n", .{});
 }
@@ -580,7 +575,7 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
         list.append(i) catch err.wat();
     }
 
-    if (mob.resistance(.rFume) == 0) {
+    if (mob.resistance(.rFume) == 100) {
         var i = MobInfoLine{ .char = 'u' };
         i.string.writer().print("unbreathing $g(100% rFume)$.", .{}) catch err.wat();
         list.append(i) catch err.wat();
