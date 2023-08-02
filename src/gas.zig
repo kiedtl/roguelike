@@ -89,7 +89,7 @@ pub const Steam = Gas{
     .opacity = 0.00,
     .trigger = struct {
         pub fn f(mob: *Mob, _: f64) void {
-            mob.takeDamage(.{ .amount = 2, .kind = .Fire }, .{
+            mob.takeDamage(.{ .amount = 1, .kind = .Fire, .source = .Gas }, .{
                 .noun = "The steam",
                 .strs = &[_]types.DamageStr{
                     items._dmgstr(0, "BUG", "scalds", ""),
