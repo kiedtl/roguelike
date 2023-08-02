@@ -1,3 +1,4 @@
+const builtin = @import("builtin");
 const build_options = @import("build_options");
 
 const std = @import("std");
@@ -38,6 +39,7 @@ const Direction = types.Direction;
 const Coord = types.Coord;
 const Rect = types.Rect;
 const Tile = types.Tile;
+const Mob = types.Mob;
 
 const Squad = types.Squad;
 const MobList = types.MobList;
@@ -61,6 +63,16 @@ const EvocableList = items.EvocableList;
 const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
+
+pub fn log(
+    comptime message_level: std.log.Level,
+    comptime scope: @Type(.EnumLiteral),
+    comptime format: []const u8,
+    args: anytype,
+) void {
+    if (message_level == .info and state.log_disabled) return;
+    std.log.defaultLog(message_level, scope, format, args);
+}
 
 // Install a panic handler that tries to shutdown termbox and print the RNG
 // seed before calling sentry and then the default panic handler.
@@ -106,29 +118,49 @@ pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace) noreturn {
     };
 }
 
-fn initGame(display_scale: f32) bool {
-    // Initialize this *first* because we might have to deinitGame() at
-    // checkWindowSize, and we have no way to tell if state.dungeon was
-    // allocated or not.
+fn initGame(no_display: bool, display_scale: f32) bool {
+    janet.init() catch return false;
+    _ = janet.loadFile("scripts/particles.janet", state.GPA.allocator()) catch return false;
+
+    font.loadFontsData();
+    state.loadStatusStringInfo();
+    state.loadLevelInfo();
+    surfaces.readProps(state.GPA.allocator());
+    literature.readPosters(state.GPA.allocator());
+    mobs.spawns.readSpawnTables(state.GPA.allocator());
+    mapgen.readPrefabs(state.GPA.allocator());
+    readDescriptions(state.GPA.allocator());
+
+    initGameState();
+
+    for (mapgen.floor_seeds) |*seed|
+        seed.* = rng.int(u64);
+
+    if (!no_display) {
+        if (ui.init(display_scale)) {} else |e| switch (e) {
+            error.AlreadyInitialized => err.wat(),
+            error.TTYOpenFailed => err.fatal("Could not open TTY", .{}),
+            error.UnsupportedTerminal => err.fatal("Unsupported terminal", .{}),
+            error.PipeTrapFailed => err.fatal("Internal termbox error", .{}),
+            error.SDL2InitError => if (build_options.use_sdl) {
+                err.fatal("SDL2 Error: {s}", .{display.driver_m.SDL_GetError()});
+            } else unreachable,
+            else => err.fatal("Error when initializing display", .{}),
+        }
+
+        if (!ui.checkWindowSize()) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+fn initGameState() void {
     state.dungeon = state.GPA.allocator().create(types.Dungeon) catch err.oom();
     state.dungeon.* = types.Dungeon{};
 
-    if (ui.init(display_scale)) {} else |e| switch (e) {
-        error.AlreadyInitialized => err.wat(),
-        error.TTYOpenFailed => err.fatal("Could not open TTY", .{}),
-        error.UnsupportedTerminal => err.fatal("Unsupported terminal", .{}),
-        error.PipeTrapFailed => err.fatal("Internal termbox error", .{}),
-        error.SDL2InitError => if (build_options.use_sdl) {
-            err.fatal("SDL2 Error: {s}", .{display.driver_m.SDL_GetError()});
-        } else unreachable,
-        else => err.fatal("Error when initializing display", .{}),
-    }
-
-    if (!ui.checkWindowSize()) {
-        return false;
-    }
-
-    rng.init(state.GPA.allocator()) catch return false;
+    rng.init();
 
     for (state.default_patterns) |*r| r.pattern_checker.reset();
 
@@ -145,19 +177,8 @@ fn initGame(display_scale: f32) bool {
     state.evocables = EvocableList.init(state.GPA.allocator());
     state.messages = MessageArrayList.init(state.GPA.allocator());
 
-    janet.init() catch return false;
-    _ = janet.loadFile("scripts/particles.janet", state.GPA.allocator()) catch return false;
-
     alert.init();
     events.init();
-    font.loadFontsData();
-    state.loadStatusStringInfo();
-    state.loadLevelInfo();
-    surfaces.readProps(state.GPA.allocator());
-    literature.readPosters(state.GPA.allocator());
-    mobs.spawns.readSpawnTables(state.GPA.allocator());
-    mapgen.readPrefabs(state.GPA.allocator());
-    readDescriptions(state.GPA.allocator());
     player.choosePlayerUpgrades();
     events.executeGlobalEvents();
 
@@ -171,11 +192,6 @@ fn initGame(display_scale: f32) bool {
             tile.rand = rng.int(usize);
         };
     }
-
-    for (mapgen.floor_seeds) |*seed|
-        seed.* = rng.int(u64);
-
-    return true;
 }
 
 fn initLevels() bool {
@@ -189,19 +205,40 @@ fn initLevels() bool {
 }
 
 fn deinitGame() void {
-    ui.deinit() catch err.wat();
+    ui.deinit() catch {};
 
     mapgen.s_fabs.deinit();
     mapgen.n_fabs.deinit();
     mapgen.fab_records.deinit();
 
+    deinitGameState();
+
+    {
+        var iter = literature.posters.iterator();
+        while (iter.next()) |poster|
+            poster.deinit(state.GPA.allocator());
+    }
+    literature.posters.deinit();
+
+    janet.deinit();
+    font.freeFontData();
+    state.freeStatusStringInfo();
+    state.freeLevelInfo();
+    surfaces.freeProps(state.GPA.allocator());
+    mobs.spawns.freeSpawnTables(state.GPA.allocator());
+    freeDescriptions(state.GPA.allocator());
+
+    _ = state.GPA.deinit();
+}
+
+fn deinitGameState() void {
     state.memory.clearAndFree();
 
     {
         var iter = state.mobs.iterator();
         while (iter.next()) |mob| {
             if (mob.is_dead) continue;
-            mob.deinit();
+            mob.deinitNoCorpse();
         }
     }
     {
@@ -228,28 +265,11 @@ fn deinitGame() void {
     state.containers.deinit();
     state.evocables.deinit();
 
-    {
-        var iter = literature.posters.iterator();
-        while (iter.next()) |poster|
-            poster.deinit(state.GPA.allocator());
-    }
-    literature.posters.deinit();
-
     alert.deinit();
     events.deinit();
-    janet.deinit();
-    font.freeFontData();
-    state.freeStatusStringInfo();
-    state.freeLevelInfo();
-    surfaces.freeProps(state.GPA.allocator());
-    mobs.spawns.freeSpawnTables(state.GPA.allocator());
-    freeDescriptions(state.GPA.allocator());
 
-    // Do this last so that mob corpses can be placed (A better fix would be to
-    // just not place corpses at all when deinit'ing the game)
+    state.player_inited = false;
     state.GPA.allocator().destroy(state.dungeon);
-
-    _ = state.GPA.deinit();
 }
 
 fn readDescriptions(alloc: mem.Allocator) void {
@@ -521,13 +541,13 @@ fn readInput() !bool {
     return action_taken;
 }
 
-fn tickGame() !void {
-    if (state.player.is_dead) {
+fn tickGame(p_cur_level: ?usize) !void {
+    if (state.state != .Viewer and state.player.is_dead) {
         state.state = .Lose;
         return;
     }
 
-    const cur_level = state.player.coord.z;
+    const cur_level = p_cur_level orelse state.player.coord.z;
 
     state.ticks += 1;
     surfaces.tickMachines(cur_level);
@@ -559,6 +579,7 @@ fn tickGame() !void {
 
         if (mob.energy < 0) {
             if (mob == state.player) {
+                assert(state.state != .Viewer);
                 try readNoActionInput(130);
             }
 
@@ -584,18 +605,20 @@ fn tickGame() !void {
             mob.tickStatuses();
 
             if (mob == state.player) {
+                assert(state.state != .Viewer);
                 state.player_turns += 1;
                 scores.recordUsize(.TurnsSpent, 1);
                 player.bookkeepingFOV();
                 player.checkForGarbage();
             }
 
+            mob.assertIsAtLocation();
+
             if (mob.isUnderStatus(.Paralysis)) |_| {
                 if (mob.coord.eq(state.player.coord)) {
                     var frames: usize = 5;
-                    while (frames > 0) : (frames -= 1) {
+                    while (frames > 0) : (frames -= 1)
                         try readNoActionInput(ui.FRAMERATE);
-                    }
                 }
 
                 mob.rest();
@@ -613,13 +636,12 @@ fn tickGame() !void {
 
             if (mob.is_dead) break;
 
-            if (state.dungeon.at(mob.coord).mob == null) {
-                err.bug("Mob {s} is dancing around the chessboard!", .{mob.displayName()});
-            }
-
-            mob.tickFOV();
+            mob.assertIsAtLocation();
+            if (mob == state.player or state.player.canSeeMob(mob))
+                mob.tickFOV();
 
             if (mob == state.player) {
+                assert(state.state != .Viewer);
                 player.bookkeepingFOV();
             }
 
@@ -628,7 +650,9 @@ fn tickGame() !void {
                 ai.tryRest(mob);
             };
 
-            if (actions_taken > 1 and state.player.cansee(mob.coord)) {
+            if (state.state != .Viewer and
+                actions_taken > 1 and state.player.cansee(mob.coord))
+            {
                 try readNoActionInput(130);
             }
         }
@@ -636,77 +660,6 @@ fn tickGame() !void {
         if (!mob.is_dead and mob.should_be_dead()) {
             mob.kill();
             continue;
-        }
-    }
-}
-
-fn viewerTickGame(cur_level: usize) void {
-    state.ticks += 1;
-    surfaces.tickMachines(cur_level);
-    fire.tickFire(cur_level);
-    gas.tickGasEmitters(cur_level);
-    gas.tickGases(cur_level);
-    state.tickSound(cur_level);
-    state.tickLight(cur_level);
-    alert.tickThreats(cur_level);
-
-    if (state.ticks % 10 == 0) {
-        // alert.tickCheckLevelHealth(cur_level);
-        // alert.tickActOnAlert(cur_level);
-        tasks.tickTasks(cur_level);
-    }
-
-    var iter = state.mobs.iterator();
-    while (iter.next()) |mob| {
-        if (mob.coord.z != cur_level) continue;
-
-        if (mob.is_dead) {
-            continue;
-        } else if (mob.should_be_dead()) {
-            mob.kill();
-            continue;
-        }
-
-        mob.energy += 100;
-
-        while (mob.energy >= 0) {
-            if (mob.is_dead or mob.should_be_dead()) break;
-
-            const prev_energy = mob.energy;
-
-            mob.tick_env();
-            mob.tickMorale();
-            mob.tickFOV();
-            // mob.tickDisruption(); // TODO: uncomment and see if there was a reason for originally ommitting this line
-            mob.tickStatuses();
-
-            if (state.dungeon.at(mob.coord).mob == null) {
-                err.bug("Mob {s} isn't where it is! (mob.coord: {}, last activity: {})", .{
-                    mob.displayName(), mob.coord, mob.activities.current(),
-                });
-            }
-
-            if (mob.isUnderStatus(.Paralysis)) |_| {
-                mob.rest();
-                continue;
-            } else {
-                ai.main(mob, state.GPA.allocator());
-            }
-
-            if (mob.is_dead) break;
-
-            mob.tickFOV();
-
-            if (state.dungeon.at(mob.coord).mob == null) {
-                err.bug("Mob {s} isn't where it is! (mob.coord: {}, last activity: {})", .{
-                    mob.displayName(), mob.coord, mob.activities.current(),
-                });
-            }
-
-            const _j = if (mob.newestJob()) |j| j.job else .Dummy;
-            err.ensure(prev_energy > mob.energy, "{cf} (phase: {}; job: {}) did nothing during turn!", .{ mob, mob.ai.phase, _j }) catch {
-                ai.tryRest(mob);
-            };
         }
     }
 }
@@ -744,7 +697,7 @@ fn viewerMain() void {
         }
 
         state.player.kill();
-        state.is_in_viewer = true;
+        state.state = .Viewer;
 
         var level: usize = state.PLAYER_STARTING_LEVEL;
         var y: usize = 0;
@@ -761,7 +714,7 @@ fn viewerMain() void {
             if (running) {
                 t = termbox.tb_peek_event(&ev, 150);
                 if (t == 0) {
-                    viewerTickGame(level);
+                    tickGame(level) catch {};
                     continue;
                 }
             } else {
@@ -777,7 +730,7 @@ fn viewerMain() void {
                     }
                 } else if (ev.ch != 0) {
                     switch (ev.ch) {
-                        '.' => viewerTickGame(level),
+                        '.' => tickGame(level) catch {},
                         'a' => running = !running,
                         'j' => if (y < HEIGHT) {
                             y = math.min(y + (tty_height / 2), HEIGHT - 1);
@@ -805,7 +758,240 @@ fn viewerMain() void {
     }
 }
 
+fn testerMain() void {
+    state.state = .Viewer;
+    state.sentry_disabled = true;
+    state.log_disabled = true;
+
+    assert(initGame(true, 0));
+    defer deinitGame();
+
+    const Error = error{ Failed, BasicFailed };
+
+    const TestContext = struct {
+        alloc: mem.Allocator,
+
+        current_suite: []const u8 = undefined,
+        current_test: []const u8 = undefined,
+
+        total_asserts: usize = 0,
+        failed: usize = 0,
+        succeeded: usize = 0,
+        total: usize = 0,
+
+        errors: std.ArrayList([]const u8),
+
+        pub fn record(x: *@This(), comptime fmt: []const u8, args: anytype) void {
+            if (builtin.strip_debug_info) return;
+            const debug_info = std.debug.getSelfDebugInfo() catch err.wat();
+            const startaddr = @returnAddress();
+            if (builtin.os.tag == .windows) {} else {
+                var it = std.debug.StackIterator.init(startaddr, null);
+                _ = it.next().?;
+                const retaddr = it.next().?;
+
+                const module = debug_info.getModuleForAddress(retaddr) catch err.wat();
+                const symb_info = module.getSymbolAtAddress(retaddr) catch err.wat();
+                defer symb_info.deinit();
+                const str = std.fmt.allocPrint(x.alloc, "{s}:{s} ({})\t" ++ fmt ++ "\n", .{
+                    x.current_suite, x.current_test, symb_info.line_info.?.line,
+                } ++ args) catch err.wat();
+                x.errors.append(str) catch err.wat();
+            }
+        }
+
+        pub fn assertT(x: *@This(), b: bool) Error!void {
+            x.total_asserts += 1;
+            if (!b) {
+                x.record("Assertion failed (expected true)", .{});
+                return error.Failed;
+            }
+        }
+
+        pub fn assertF(x: *@This(), b: bool) Error!void {
+            x.total_asserts += 1;
+            if (b) {
+                x.record("Assertion failed (expected false)", .{});
+                return error.Failed;
+            }
+        }
+
+        pub fn getMob(x: *@This(), tag: u8) Error!*Mob {
+            var i = state.mobs.iteratorReverse();
+            return while (i.next()) |mob| {
+                if (mob.tag == tag) break mob;
+            } else {
+                x.record("No such mob tagged '{u}'", .{tag});
+                return error.BasicFailed;
+            };
+        }
+    };
+
+    const Test = struct {
+        name: []const u8,
+        prefab: []const u8,
+        initial_setup: ?fn (*TestContext) Error!void,
+        initial_ticks: usize,
+        fun: fn (*TestContext) Error!void,
+
+        pub fn n(name: []const u8, fab: []const u8, ticks: usize, f1: ?fn (*TestContext) Error!void, f2: fn (*TestContext) Error!void) @This() {
+            return .{ .name = name, .prefab = fab, .initial_setup = f1, .initial_ticks = ticks, .fun = f2 };
+        }
+    };
+
+    const TestGroup = struct {
+        name: []const u8,
+        tests: []const Test,
+    };
+
+    const TESTS = [_]TestGroup{
+        .{
+            .name = "gases",
+            .tests = &[_]Test{
+                Test.n("no_effect_on_unbreathing", "TEST_gas_rFume", 5, struct {
+                    pub fn f(x: *TestContext) !void {
+                        state.dungeon.atGas((try x.getMob('2')).coord)[gas.Paralysis.id] = 1.0;
+                    }
+                }.f, struct {
+                    pub fn f(x: *TestContext) !void {
+                        try x.assertT((try x.getMob('0')).hasStatus(.Paralysis));
+                        try x.assertF((try x.getMob('1')).hasStatus(.Paralysis));
+                        try x.assertF((try x.getMob('2')).hasStatus(.Paralysis));
+                        try x.assertF((try x.getMob('3')).hasStatus(.Paralysis));
+                        try x.assertF((try x.getMob('4')).hasStatus(.Paralysis));
+                    }
+                }.f),
+                // ---
+                Test.n("no_pass_through_walls", "TEST_gas_no_pass_through_walls", 6, struct {
+                    pub fn f(x: *TestContext) !void {
+                        state.dungeon.atGas((try x.getMob('A')).coord)[gas.Paralysis.id] = 1.0;
+                    }
+                }.f, struct {
+                    pub fn f(x: *TestContext) !void {
+                        try x.assertT((try x.getMob('A')).hasStatus(.Paralysis));
+                        try x.assertF((try x.getMob('B')).hasStatus(.Paralysis));
+                    }
+                }.f),
+            },
+        },
+    };
+
+    const stdout = std.io.getStdOut().writer();
+    var ctx = TestContext{
+        .alloc = state.GPA.allocator(),
+        .errors = std.ArrayList([]const u8).init(state.GPA.allocator()),
+    };
+    defer ctx.errors.deinit();
+
+    stdout.print("*** Starting test suites\n", .{}) catch {};
+
+    for (&TESTS) |test_group, j| {
+        ctx.current_suite = test_group.name;
+        if (j != 0) stdout.print("\n", .{}) catch {};
+        stdout.print("--- Beginning test suite '{s}'; {} test(s)", .{ // deliberately omit newline
+            test_group.name, test_group.tests.len,
+        }) catch {};
+        for (test_group.tests) |testg, i| {
+            ctx.current_test = testg.name;
+            ctx.total += 1;
+
+            if (i % 60 == 0) stdout.print("\n    ", .{}) catch {};
+
+            if (!(j == 0 and i == 0))
+                initGameState();
+            defer deinitGameState();
+
+            mapgen.initLevelTest(testg.prefab) catch |e| switch (e) {
+                error.NoSuchPrefab => {
+                    ctx.failed += 1;
+                    ctx.record("No such prefab '{s}'", .{testg.prefab});
+                    stdout.print("P", .{}) catch {};
+                    continue;
+                },
+            };
+
+            if (testg.initial_setup) |fun| {
+                fun(&ctx) catch |e| {
+                    ctx.failed += 1;
+                    stdout.print("I", .{}) catch {};
+                    ctx.record("Initial setup error: {}", .{e});
+                    continue;
+                };
+            }
+
+            var t = testg.initial_ticks;
+            while (t > 0) : (t -= 1)
+                tickGame(0) catch |e| {
+                    ctx.failed += 1;
+                    ctx.record("Tick error: {}", .{e});
+                    stdout.print("T", .{}) catch {};
+                    continue;
+                };
+
+            if (testg.fun(&ctx)) |_| {
+                ctx.succeeded += 1;
+                stdout.print(".", .{}) catch {};
+            } else |e| switch (e) {
+                error.BasicFailed => {
+                    ctx.failed += 1;
+                    stdout.print("B", .{}) catch {};
+                },
+                error.Failed => {
+                    ctx.failed += 1;
+                    stdout.print("F", .{}) catch {};
+                },
+            }
+        }
+    }
+
+    stdout.print("\n---\n", .{}) catch {};
+    stdout.print("*** Completed {} suites with {} tests and {} asserts.\n", .{
+        TESTS.len, ctx.total, ctx.total_asserts,
+    }) catch {};
+    stdout.print("    {} succeeded, {} failed, 0 skipped.\n", .{
+        ctx.succeeded, ctx.failed,
+    }) catch {};
+    for (ctx.errors.items) |str| {
+        stdout.print("FAIL: {s}", .{str}) catch {};
+    }
+
+    // XXX: stupid hack: init game state again to prevent crash when deinitGame()
+    // is called :))
+    initGameState();
+}
+
 pub fn actualMain() anyerror!void {
+    var use_viewer = false;
+    var use_tester = false;
+
+    if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_SEED")) |seed_str| {
+        defer state.GPA.allocator().free(seed_str);
+        rng.seed = std.fmt.parseInt(u64, seed_str, 0) catch |e| b: {
+            std.log.err("Could not parse RL_SEED (reason: {}); using default.", .{e});
+            break :b 0;
+        };
+    } else |_| {
+        rng.seed = @intCast(u64, std.time.milliTimestamp());
+    }
+
+    if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_MODE")) |v| {
+        if (mem.eql(u8, v, "viewer")) {
+            use_viewer = true;
+        } else if (mem.eql(u8, v, "tester")) {
+            use_tester = true;
+        }
+        use_viewer = mem.eql(u8, v, "viewer");
+        state.GPA.allocator().free(v);
+    } else |_| {
+        use_viewer = false;
+        use_tester = false;
+    }
+
+    if (use_tester) {
+        testerMain();
+        return;
+    }
+
     if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_NO_SENTRY")) |v| {
         state.sentry_disabled = true;
         state.GPA.allocator().free(v);
@@ -823,7 +1009,7 @@ pub fn actualMain() anyerror!void {
         state.GPA.allocator().free(v);
     } else |_| {}
 
-    if (!initGame(scale)) {
+    if (!initGame(false, scale)) {
         deinitGame();
         std.log.err("Unknown error occurred while initializing game.", .{});
         return;
@@ -839,20 +1025,11 @@ pub fn actualMain() anyerror!void {
     state.message(.Info, "You've just escaped from prison.", .{});
     state.message(.Info, "Hurry to the stairs before the guards find you!", .{});
 
-    var use_viewer: bool = undefined;
-
-    if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_MODE")) |v| {
-        use_viewer = mem.eql(u8, v, "viewer");
-        state.GPA.allocator().free(v);
-    } else |_| {
-        use_viewer = false;
-    }
-
     if (use_viewer) {
         viewerMain();
     } else {
         while (state.state != .Quit) switch (state.state) {
-            .Game => tickGame() catch {},
+            .Game => tickGame(null) catch {},
             .Win => {
                 _ = ui.drawContinuePrompt("You escaped!", .{});
                 break;
@@ -870,6 +1047,7 @@ pub fn actualMain() anyerror!void {
                 break;
             },
             .Quit => break,
+            .Viewer => err.wat(),
         };
     }
 

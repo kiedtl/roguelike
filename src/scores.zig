@@ -78,6 +78,7 @@ pub const Info = struct {
         s.turns = state.player_turns;
 
         s.result = switch (state.state) {
+            .Viewer => "Ate a polar bear's liver",
             .Game => "Began meditating on the mysteries of eggplants",
             .Win => "Escaped the Necromancer's wrath",
             .Quit => "Overcome by the Fear of death",

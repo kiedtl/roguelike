@@ -55,7 +55,7 @@ const PosterArrayList = literature.PosterArrayList;
 const Generator = @import("generators.zig").Generator;
 const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
-pub const GameState = union(enum) { Game, Win, Lose, Quit };
+pub const GameState = union(enum) { Game, Win, Lose, Quit, Viewer };
 pub const Layout = union(enum) { Unknown, Room: usize };
 
 pub const HEIGHT = 80;
@@ -97,6 +97,7 @@ pub var night_rep = [types.Faction.TOTAL]isize{
 // zig fmt: on
 
 pub var sentry_disabled = false;
+pub var log_disabled = false;
 
 pub fn mapRect(level: usize) Rect {
     return Rect{ .start = Coord.new2(level, 0, 0), .width = WIDTH, .height = HEIGHT };
@@ -173,7 +174,6 @@ pub var messages: MessageArrayList = undefined;
 // Global variables
 pub var ticks: usize = 0;
 pub var player_turns: usize = 0;
-pub var is_in_viewer: bool = false;
 pub var score: usize = 0;
 
 // Global mechanic-specific variables

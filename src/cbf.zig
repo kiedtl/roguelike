@@ -3,6 +3,7 @@
 const std = @import("std");
 const meta = std.meta;
 const mem = std.mem;
+const unicode = std.unicode;
 const fmt = std.fmt;
 const math = std.math;
 const assert = std.debug.assert;
@@ -19,6 +20,7 @@ const Value = union(enum) {
     False,
     None,
     String: StringBuffer,
+    Char: u21,
     List: KVList,
 };
 
@@ -87,6 +89,8 @@ pub const Parser = struct {
         UnterminatedString,
         StringTooLong,
         InvalidEscape,
+        TooManyCodepointsInChar,
+        InvalidUnicode,
     };
 
     const ParserError = error{
@@ -150,19 +154,27 @@ pub const Parser = struct {
         }
     }
 
-    fn parseString(self: *Self) StringParserError!Value {
-        assert(self.input[self.index] == '"');
+    fn parseString(self: *Self, mode: u8) StringParserError!Value {
+        assert(self.input[self.index] == mode);
         self.index += 1;
 
         var buf = StringBuffer.init("");
 
         while (self.index < self.input.len) : (self.index += 1) {
             switch (self.input[self.index]) {
-                '"' => return Value{ .String = buf },
+                '\'' => {
+                    if ((unicode.utf8CountCodepoints(buf.constSlice()) catch return error.InvalidUnicode) > 1)
+                        return error.TooManyCodepointsInChar;
+                    return Value{ .Char = unicode.utf8Decode(buf.constSlice()) catch return error.InvalidUnicode };
+                },
+                '"' => {
+                    return Value{ .String = buf };
+                },
                 '\\' => {
                     self.index += 1;
                     const esc: u8 = switch (self.input[self.index]) {
                         '"' => '"',
+                        '\'' => '\'',
                         '\\' => '\\',
                         'n' => '\n',
                         'r' => '\r',
@@ -211,7 +223,8 @@ pub const Parser = struct {
                     break :c null;
                 },
                 ']', 0x09, 0x0a...0x0d, 0x20 => continue,
-                '"' => try self.parseString(),
+                '"' => try self.parseString('"'),
+                '\'' => try self.parseString('\''),
                 else => try self.parseValue(),
             };
 
@@ -249,8 +262,8 @@ const GPA = std.heap.GeneralPurposeAllocator(.{});
 test "parse values" {
     var gpa = GPA{};
 
-    const input = "yea nah nil";
-    const output = [_]Value{ .True, .False, .None };
+    const input = "yea nah nil 'f'";
+    const output = [_]Value{ .True, .False, .None, .{ .Char = 'f' } };
     var p = Parser{ .input = input };
 
     var res = try p.parse(gpa.allocator());
@@ -403,6 +416,7 @@ pub fn deserializeValue(comptime T: type, val: Value, default: ?T) !T {
             else => error.E,
         },
         .Int => switch (val) {
+            .Char => |c| @intCast(T, c),
             .String => |s| fmt.parseInt(T, s.constSlice(), 0) catch error.E,
             else => error.E,
         },

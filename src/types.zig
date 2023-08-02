@@ -1891,6 +1891,7 @@ pub const Mob = struct { // {{{
     squad: ?*Squad = null,
     prisoner_status: ?Prisoner = null,
     linked_fovs: StackBuffer(*Mob, 16) = StackBuffer(*Mob, 16).init(null),
+    tag: ?u8 = null, // Used by test harness
 
     fov: [HEIGHT][WIDTH]usize = [1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT,
     path_cache: std.AutoHashMap(Path, Coord) = undefined,
@@ -3636,6 +3637,14 @@ pub const Mob = struct { // {{{
         return self.HP == 0;
     }
 
+    pub fn assertIsAtLocation(self: *const Mob) void {
+        if (state.dungeon.at(self.coord).mob == null) {
+            err.bug("Nothing at mob {f} location. ({}, last activity: {})", .{
+                self, self.coord, self.activities.current(),
+            });
+        }
+    }
+
     pub fn nextDirectionTo(self: *Mob, to: Coord) ?Direction {
         if (self.immobile) return null;
 
@@ -4304,9 +4313,13 @@ pub const Machine = struct {
                     if (machine.last_interaction) |mob| {
                         if (mob.faction == .Necromancer) return;
 
-                        for (machine.props) |maybe_prop| if (maybe_prop) |vent| {
-                            state.dungeon.atGas(vent.coord)[g.id] = 1.0;
-                        };
+                        if (machine.props.len == 0) {
+                            state.dungeon.atGas(machine.coord)[g.id] = 1.0;
+                        } else {
+                            for (machine.props) |maybe_prop| if (maybe_prop) |vent| {
+                                state.dungeon.atGas(vent.coord)[g.id] = 1.0;
+                            };
+                        }
 
                         if (state.player.cansee(machine.coord)) {
                             state.message(.Trap, "{c} triggers a " ++ gstr ++ " trap!", .{mob});

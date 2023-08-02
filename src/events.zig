@@ -7,9 +7,11 @@ const state = @import("state.zig");
 const types = @import("types.zig");
 const mapgen = @import("mapgen.zig");
 
-fn _gimmePrefab(name: []const u8) ?*mapgen.Prefab {
+fn _gimmePrefab(name: []const u8) *mapgen.Prefab {
     return mapgen.Prefab.findPrefabByName(name, &mapgen.n_fabs) orelse
-        mapgen.Prefab.findPrefabByName(name, &mapgen.s_fabs);
+        mapgen.Prefab.findPrefabByName(name, &mapgen.s_fabs) orelse {
+        err.bug("Couldn't find required prefab {s}", .{name});
+    };
 }
 
 pub const Effect = union(enum) {
@@ -19,10 +21,10 @@ pub const Effect = union(enum) {
     pub fn apply(self: @This()) !void {
         switch (self) {
             .SetPrefabGlobalRestriction => |ctx| {
-                _gimmePrefab(ctx.prefab).?.global_restriction = ctx.val;
+                _gimmePrefab(ctx.prefab).global_restriction = ctx.val;
             },
             .AppendPrefabWhitelist => |ctx| {
-                const prefab = _gimmePrefab(ctx.prefab).?;
+                const prefab = _gimmePrefab(ctx.prefab);
 
                 if (mem.eql(u8, ctx.val, "$SPAWN_LEVEL")) {
                     prefab.whitelist.append(state.PLAYER_STARTING_LEVEL) catch err.wat();

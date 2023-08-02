@@ -34,7 +34,7 @@ pub fn RingBuffer(comptime T: type, size: usize) type {
             self.buffer[self.top] = item;
         }
 
-        pub fn current(self: *Self) ?T {
+        pub fn current(self: *const Self) ?T {
             return self.buffer[self.top];
         }
 

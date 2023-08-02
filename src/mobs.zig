@@ -50,6 +50,7 @@ const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 // -----------------------------------------------------------------------------
 
 pub const spawns = @import("mobs/spawns.zig");
+pub const templates_test = @import("mobs/templates_test.zig");
 
 // -----------------------------------------------------------------------------
 
@@ -2232,6 +2233,7 @@ pub const MOBS = [_]MobTemplate{
     CreepingDeathTemplate,
     CinderBruteTemplate,
     BurningBruteTemplate,
+    templates_test.Dummy_L_Immobile,
 };
 
 pub const PRISONERS = [_]MobTemplate{
@@ -2262,6 +2264,7 @@ pub const PlaceMobOptions = struct {
     prm_status1: ?Status = null,
     prm_status2: ?Status = null,
     job: ?types.AIJob.Type = null,
+    tag: ?u8 = null,
 };
 
 pub fn placeMob(
@@ -2282,6 +2285,7 @@ pub fn placeMob(
     mob.coord = coord;
     mob.faction = opts.faction orelse mob.faction;
     mob.ai.phase = opts.phase;
+    mob.tag = opts.tag;
 
     if (opts.job) |j| {
         mob.newJob(j);

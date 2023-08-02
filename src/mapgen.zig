@@ -1047,9 +1047,9 @@ pub fn resetLevel(level: usize) void {
 
     var mobiter = state.mobs.iterator();
     while (mobiter.next()) |mob| {
+        if (mob == state.player)
+            state.player_inited = false;
         if (mob.coord.z == level and !mob.is_dead) {
-            if (mob == state.player)
-                state.player_inited = false;
             mob.deinitNoCorpse();
             state.mobs.remove(mob);
         }
@@ -3323,6 +3323,25 @@ fn levelFeatureOres(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _:
     }
 }
 
+pub fn initLevelTest(prefab: []const u8) !void {
+    resetLevel(0);
+
+    const fab = Prefab.findPrefabByName(prefab, &n_fabs) orelse return error.NoSuchPrefab;
+    var room = Room{
+        .rect = Rect{ .start = Coord.new2(0, 0, 0), .width = fab.width, .height = fab.height },
+        .prefab = fab,
+    };
+    excavatePrefab(&room, fab, state.GPA.allocator(), 0, 0);
+    state.rooms[0].append(room) catch err.wat();
+
+    const p_coord = Coord.new2(0, WIDTH - 1, HEIGHT - 1);
+    state.dungeon.at(p_coord).type = .Floor;
+    placePlayer(p_coord, state.GPA.allocator());
+    state.player.kill();
+
+    generateLayoutMap(0);
+}
+
 pub fn initLevel(level: usize) void {
     rng.useTemp(floor_seeds[level]);
 
@@ -4010,6 +4029,35 @@ pub const Prefab = struct {
 
 pub const PrefabArrayList = std.ArrayList(Prefab);
 
+fn _readPrefab(name: []const u8, fab_f: std.fs.File, buf: []u8) void {
+    const read = fab_f.readAll(buf[0..]) catch err.wat();
+
+    Prefab.parseAndLoad(name, buf[0..read]) catch |e| {
+        const msg = switch (e) {
+            error.StockpileAlreadyDefined => "Stockpile already defined for prefab",
+            error.OutputAreaAlreadyDefined => "Output area already defined for prefab",
+            error.InputAreaAlreadyDefined => "Input area already defined for prefab",
+            error.TooManyPrisons => "Too many prisons",
+            error.TooManySubrooms => "Too many subroom areas",
+            error.InvalidFabTile => "Invalid prefab tile",
+            error.InvalidConnection => "Out of place connection tile",
+            error.FabTooWide => "Prefab exceeds width limit",
+            error.FabTooTall => "Prefab exceeds height limit",
+            error.InvalidFeatureType => "Unknown feature type encountered",
+            error.MalformedFeatureDefinition => "Invalid syntax for feature definition",
+            error.NoSuchMob => "Encountered non-existent mob id",
+            error.NoSuchItem => "Encountered non-existent item id",
+            error.MalformedMetadata => "Malformed metadata",
+            error.InvalidMetadataValue => "Invalid value for metadata",
+            error.UnexpectedMetadataValue => "Unexpected value for metadata",
+            error.ExpectedMetadataValue => "Expected value for metadata",
+            error.InvalidUtf8 => "Encountered invalid UTF-8",
+            else => "Unknown error",
+        };
+        std.log.err("{s}: Couldn't load prefab: {s} [{s}]", .{ name, msg, e });
+    };
+}
+
 // FIXME: error handling
 // FIXME: warn if prefab is zerowidth/zeroheight (prefabs file might not have fit in buffer)
 pub fn readPrefabs(alloc: mem.Allocator) void {
@@ -4019,47 +4067,16 @@ pub fn readPrefabs(alloc: mem.Allocator) void {
     s_fabs = PrefabArrayList.init(alloc);
     fab_records = @TypeOf(fab_records).init(alloc);
 
-    const fabs_dir = std.fs.cwd().openDir("data/prefabs", .{
-        .iterate = true,
-    }) catch err.wat();
+    for (&[_][]const u8{ "data/prefabs", "data/prefabs/tests" }) |dir| {
+        const fabs_dir = std.fs.cwd().openDir(dir, .{ .iterate = true }) catch err.wat();
 
-    var fabs_dir_iterator = fabs_dir.iterate();
-    while (fabs_dir_iterator.next() catch err.wat()) |fab_file| {
-        if (fab_file.kind != .File) continue;
-
-        var fab_f = fabs_dir.openFile(fab_file.name, .{
-            .read = true,
-            .lock = .None,
-        }) catch err.wat();
-        defer fab_f.close();
-
-        const read = fab_f.readAll(buf[0..]) catch err.wat();
-
-        Prefab.parseAndLoad(fab_file.name, buf[0..read]) catch |e| {
-            const msg = switch (e) {
-                error.StockpileAlreadyDefined => "Stockpile already defined for prefab",
-                error.OutputAreaAlreadyDefined => "Output area already defined for prefab",
-                error.InputAreaAlreadyDefined => "Input area already defined for prefab",
-                error.TooManyPrisons => "Too many prisons",
-                error.TooManySubrooms => "Too many subroom areas",
-                error.InvalidFabTile => "Invalid prefab tile",
-                error.InvalidConnection => "Out of place connection tile",
-                error.FabTooWide => "Prefab exceeds width limit",
-                error.FabTooTall => "Prefab exceeds height limit",
-                error.InvalidFeatureType => "Unknown feature type encountered",
-                error.MalformedFeatureDefinition => "Invalid syntax for feature definition",
-                error.NoSuchMob => "Encountered non-existent mob id",
-                error.NoSuchItem => "Encountered non-existent item id",
-                error.MalformedMetadata => "Malformed metadata",
-                error.InvalidMetadataValue => "Invalid value for metadata",
-                error.UnexpectedMetadataValue => "Unexpected value for metadata",
-                error.ExpectedMetadataValue => "Expected value for metadata",
-                error.InvalidUtf8 => "Encountered invalid UTF-8",
-                else => "Unknown error",
-            };
-            std.log.err("{s}: Couldn't load prefab: {s} [{s}]", .{ fab_file.name, msg, e });
-            continue;
-        };
+        var fabs_dir_iterator = fabs_dir.iterate();
+        while (fabs_dir_iterator.next() catch err.wat()) |fab_file| {
+            if (fab_file.kind != .File) continue;
+            var fab_f = fabs_dir.openFile(fab_file.name, .{ .read = true }) catch err.wat();
+            defer fab_f.close();
+            _readPrefab(fab_file.name, fab_f, &buf);
+        }
     }
 
     rng.shuffle(Prefab, s_fabs.items);

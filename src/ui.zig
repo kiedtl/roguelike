@@ -3759,7 +3759,7 @@ pub const Animation = union(enum) {
     }
 
     pub fn apply(self: Animation) void {
-        if (state.is_in_viewer)
+        if (state.state == .Viewer)
             return;
 
         drawNoPresent();

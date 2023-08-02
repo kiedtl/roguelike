@@ -30,12 +30,17 @@ pub fn LinkedList(comptime T: type) type {
 
         pub const Iterator = struct {
             current: ?*T,
+            reverse: bool = false,
 
             pub fn next(iter: *Iterator) ?*T {
                 const current = iter.current;
 
                 if (current) |c| {
-                    iter.current = c.__next;
+                    if (iter.reverse) {
+                        iter.current = c.__prev;
+                    } else {
+                        iter.current = c.__next;
+                    }
                     return c;
                 } else {
                     return null;
@@ -128,6 +133,11 @@ pub fn LinkedList(comptime T: type) type {
         pub fn iterator(self: *const Self) Iterator {
             return Iterator{ .current = self.head };
         }
+
+        // TODO: allow const iteration
+        pub fn iteratorReverse(self: *const Self) Iterator {
+            return Iterator{ .current = self.tail, .reverse = true };
+        }
     };
 }
 
@@ -163,6 +173,26 @@ test "basic LinkedList test" {
     try testing.expectEqual(list.nth(0).?.data, 5);
     try testing.expectEqual(list.nth(1).?.data, 623);
     try testing.expectEqual(list.nth(2).?.data, 1);
+}
+
+test "LinkedList reverse iterator" {
+    const Node = ScalarNode(usize);
+    var list = LinkedList(Node).init(testing.allocator);
+    defer list.deinit();
+
+    try list.append(Node{ .data = 0 });
+    try list.append(Node{ .data = 1 });
+    try list.append(Node{ .data = 2 });
+    try list.append(Node{ .data = 3 });
+    try list.append(Node{ .data = 4 });
+
+    const data = [_]usize{ 4, 3, 2, 1, 0 };
+    var i: usize = 0;
+    var iter = list.iteratorReverse();
+    while (iter.next()) |number| : (i += 1)
+        try testing.expectEqual(number.data, data[i]);
+
+    try testing.expectEqual(i, data.len);
 }
 
 test "basic nth() usage" {
