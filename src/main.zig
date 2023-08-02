@@ -800,18 +800,26 @@ fn testerMain() void {
             }
         }
 
-        pub fn assertT(x: *@This(), b: bool) Error!void {
+        pub fn assertT(x: *@This(), b: bool, comptime c_fmt: []const u8, c_args: anytype) Error!void {
             x.total_asserts += 1;
             if (!b) {
-                x.record("Assertion failed (expected true)", .{});
+                x.record("Expected true (" ++ c_fmt ++ ")", c_args);
                 return error.Failed;
             }
         }
 
-        pub fn assertF(x: *@This(), b: bool) Error!void {
+        pub fn assertF(x: *@This(), b: bool, comptime c_fmt: []const u8, c_args: anytype) Error!void {
             x.total_asserts += 1;
             if (b) {
-                x.record("Assertion failed (expected false)", .{});
+                x.record("Expected false (" ++ c_fmt ++ ")", c_args);
+                return error.Failed;
+            }
+        }
+
+        pub fn assertEq(x: *@This(), a: anytype, b: @TypeOf(a), comptime c_fmt: []const u8, c_args: anytype) Error!void {
+            x.total_asserts += 1;
+            if (a != b) {
+                x.record("Expected equality ({} != {}) (" ++ c_fmt ++ ")", .{ a, b } ++ c_args);
                 return error.Failed;
             }
         }
@@ -860,11 +868,11 @@ fn testerMain() void {
                     }
                 }.f, struct {
                     pub fn f(x: *TestContext) !void {
-                        try x.assertT((try x.getMob('0')).hasStatus(.Paralysis));
-                        try x.assertF((try x.getMob('1')).hasStatus(.Paralysis));
-                        try x.assertF((try x.getMob('2')).hasStatus(.Paralysis));
-                        try x.assertF((try x.getMob('3')).hasStatus(.Paralysis));
-                        try x.assertF((try x.getMob('4')).hasStatus(.Paralysis));
+                        try x.assertT((try x.getMob('0')).hasStatus(.Paralysis), "", .{});
+                        try x.assertF((try x.getMob('1')).hasStatus(.Paralysis), "", .{});
+                        try x.assertF((try x.getMob('2')).hasStatus(.Paralysis), "", .{});
+                        try x.assertF((try x.getMob('3')).hasStatus(.Paralysis), "", .{});
+                        try x.assertF((try x.getMob('4')).hasStatus(.Paralysis), "", .{});
                     }
                 }.f),
                 // ---
@@ -874,8 +882,8 @@ fn testerMain() void {
                     }
                 }.f, struct {
                     pub fn f(x: *TestContext) !void {
-                        try x.assertT((try x.getMob('A')).hasStatus(.Paralysis));
-                        try x.assertF((try x.getMob('B')).hasStatus(.Paralysis));
+                        try x.assertT((try x.getMob('A')).hasStatus(.Paralysis), "", .{});
+                        try x.assertF((try x.getMob('B')).hasStatus(.Paralysis), "", .{});
                     }
                 }.f),
                 // ---
@@ -885,11 +893,55 @@ fn testerMain() void {
                     }
                 }.f, struct {
                     pub fn f(x: *TestContext) !void {
-                        try x.assertT((try x.getMob('0')).is_dead);
-                        try x.assertT((try x.getMob('1')).is_dead);
-                        try x.assertT((try x.getMob('2')).is_dead);
+                        try x.assertT((try x.getMob('0')).is_dead, "", .{});
+                        try x.assertT((try x.getMob('1')).is_dead, "", .{});
+                        try x.assertT((try x.getMob('2')).is_dead, "", .{});
                     }
                 }.f),
+                // ---
+                Test.n("gas_works_in_tandem", "TEST_gas_works_in_tandem", 10, struct {
+                    pub fn f(x: *TestContext) !void {
+                        state.dungeon.atGas((try x.getMob('B')).coord)[gas.Paralysis.id] = 1.0;
+                        state.dungeon.atGas((try x.getMob('B')).coord)[gas.Seizure.id] = 1.0;
+                        state.dungeon.atGas((try x.getMob('B')).coord)[gas.Miasma.id] = 1.0;
+                        state.dungeon.atGas((try x.getMob('B')).coord)[gas.Blinding.id] = 1.0;
+                    }
+                }.f, struct {
+                    pub fn f(x: *TestContext) !void {
+                        for (@as([]const u8, "ABCD")) |subject|
+                            for (&[_]types.Status{ .Paralysis, .Debil, .Nausea, .Blind }) |status|
+                                try x.assertT(
+                                    (try x.getMob(subject)).hasStatus(status),
+                                    "subject: {u}; status: {}",
+                                    .{ subject, status },
+                                );
+                    }
+                }.f),
+                // ---
+                Test.n("gas_pass_through_if_porous", "TEST_gas_pass_through_if_porous", 3, struct {
+                    pub fn f(x: *TestContext) !void {
+                        state.dungeon.atGas((try x.getMob('A')).coord)[gas.Paralysis.id] = 1.0;
+                    }
+                }.f, struct {
+                    pub fn f(x: *TestContext) !void {
+                        try x.assertT((try x.getMob('B')).hasStatus(.Paralysis), "", .{});
+                        try x.assertT((try x.getMob('C')).hasStatus(.Paralysis), "", .{});
+                        try x.assertF((try x.getMob('D')).hasStatus(.Paralysis), "", .{});
+                        try x.assertF((try x.getMob('E')).hasStatus(.Paralysis), "", .{});
+                    }
+                }.f),
+                // ---
+                Test.n("gas_eventually_dissipates", "TEST_gas_eventually_dissipates", 15, struct {
+                    pub fn f(x: *TestContext) !void {
+                        // Choose one w/ high dissipation rate so we don't have to do 40 ticks
+                        state.dungeon.atGas((try x.getMob('A')).coord)[gas.Dust.id] = 1.0;
+                    }
+                }.f, struct {
+                    pub fn f(x: *TestContext) !void {
+                        try x.assertEq(state.dungeon.atGas((try x.getMob('A')).coord)[gas.Paralysis.id], 0, "", .{});
+                    }
+                }.f),
+                // ---
             },
         },
     };

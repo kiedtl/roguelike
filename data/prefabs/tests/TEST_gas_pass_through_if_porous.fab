@@ -1,0 +1,15 @@
+@0 m steam_vent
+@1 m door_normal
+@2 m door_slade
+@a Cmons dummy_l_immobile ([tag]'A')
+@b Cmons dummy_l_immobile ([tag]'B')
+@c Cmons dummy_l_immobile ([tag]'C')
+@d Cmons dummy_l_immobile ([tag]'D')
+@e Cmons dummy_l_immobile ([tag]'E')
+..###..
+..#c#..
+###1###
+#b0a2d#
+###&###
+..#e#..
+..###..
