@@ -3618,7 +3618,10 @@ pub const Prefab = struct {
         to.append(f.*) catch err.oom();
     }
 
-    pub fn parseAndLoad(name: []const u8, from: []const u8) !void {
+    // XXX: anyerror is a hack because we call ourselves, meaning Zig can't
+    // infer the error type
+    //
+    pub fn parseAndLoad(name: []const u8, from: []const u8) anyerror!void {
         var f: Prefab = .{};
         for (f.content) |*row| mem.set(FabTile, row, .Wall);
         mem.set(?Connection, &f.connections, null);
@@ -3668,7 +3671,13 @@ pub const Prefab = struct {
 
                     // At some point I really need to sit down and cleanup this mess
                     //
-                    if (mem.eql(u8, key, "invisible")) {
+                    if (mem.eql(u8, key, "begin_prefab")) {
+                        if (val.len == 0) return error.ExpectedMetadataValue;
+                        const next = lines.next() orelse return error.UnexpectedEndOfFile;
+                        const ptr = @ptrToInt(next.ptr) - @ptrToInt(from.ptr);
+                        try parseAndLoad(val, from[ptr..]);
+                        break;
+                    } else if (mem.eql(u8, key, "invisible")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.invisible = true;
                     } else if (mem.eql(u8, key, "g_whitelist")) {
@@ -4050,6 +4059,7 @@ fn _readPrefab(name: []const u8, fab_f: std.fs.File, buf: []u8) void {
             error.MalformedMetadata => "Malformed metadata",
             error.InvalidMetadataValue => "Invalid value for metadata",
             error.UnexpectedMetadataValue => "Unexpected value for metadata",
+            error.UnexpectedEndOfFile => "Unexpected end of file",
             error.ExpectedMetadataValue => "Expected value for metadata",
             error.InvalidUtf8 => "Encountered invalid UTF-8",
             else => "Unknown error",

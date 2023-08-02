@@ -2233,9 +2233,7 @@ pub const MOBS = [_]MobTemplate{
     CreepingDeathTemplate,
     CinderBruteTemplate,
     BurningBruteTemplate,
-    templates_test.Dummy_L_Immobile,
-    templates_test.Dummy_C_Immobile,
-};
+} ++ templates_test.MOBS;
 
 pub const PRISONERS = [_]MobTemplate{
     GoblinTemplate,

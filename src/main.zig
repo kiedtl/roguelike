@@ -942,6 +942,55 @@ fn testerMain() void {
                     }
                 }.f),
                 // ---
+                Test.n("light_opacity_checks", "TEST_light_opacity_checks", 1, struct {
+                    pub fn f(x: *TestContext) !void {
+                        state.dungeon.atGas((try x.getMob('X')).coord)[gas.Darkness.id] = 1.0;
+                    }
+                }.f, struct {
+                    pub fn f(x: *TestContext) !void {
+                        try x.assertF((try x.getMob('A')).isLit(), "", .{});
+                        try x.assertT((try x.getMob('B')).isLit(), "", .{});
+                        try x.assertT((try x.getMob('C')).isLit(), "", .{});
+                        try x.assertF((try x.getMob('D')).isLit(), "", .{});
+                    }
+                }.f),
+                // ---
+            },
+        },
+        .{
+            .name = "combat_ai",
+            .tests = &[_]Test{
+                Test.n("enters_combat_mode", "TEST_combat_ai_enters_combat", 2, null, struct {
+                    pub fn f(x: *TestContext) !void {
+                        try x.assertT((try x.getMob('A')).isHostileTo(try x.getMob('B')), "", .{});
+                        try x.assertEq((try x.getMob('A')).ai.phase, .Hunt, "", .{});
+                    }
+                }.f),
+                // ---
+                Test.n("melee_fight", "TEST_combat_ai_melee_fight", 8, null, struct {
+                    pub fn f(x: *TestContext) !void {
+                        const A = try x.getMob('A');
+                        const C = try x.getMob('C');
+                        // A gotta be right next to B, since it should be fighting it
+                        try x.assertEq(A.distance2(C.coord), 1, "", .{});
+                        try x.assertF((try x.getMob('B')).is_dead, "", .{}); // should be ignored
+                        try x.assertT(C.is_dead, "", .{});
+                        try x.assertF((try x.getMob('D')).is_dead, "", .{}); // too far away
+                        // Still got that D mob to kill
+                        try x.assertEq(A.ai.phase, .Hunt, "", .{});
+                    }
+                }.f),
+                // ---
+                Test.n("slaughter", "TEST_combat_ai_slaughter", 46, null, struct {
+                    pub fn f(x: *TestContext) !void {
+                        const A = try x.getMob('A');
+                        try x.assertEq(A.distance2((try x.getMob('B')).coord), 1, "", .{});
+                        for ("LKJIHGFEDCB") |enemy|
+                            try x.assertT((try x.getMob(enemy)).is_dead, "mob: {u}", .{enemy});
+                        try x.assertEq(A.ai.phase, .Investigate, "", .{});
+                    }
+                }.f),
+                // ---
             },
         },
     };

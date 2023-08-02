@@ -1,0 +1,45 @@
+.
+
+:begin_prefab TEST_combat_ai_enters_combat
+
+@a Cmons dummy_l_immobile ([tag]'A' [faction]Necromancer [facing]East)
+@b Cmons dummy_l_immobile ([tag]'B' [faction]Player)
+ab
+
+% -----
+:begin_prefab TEST_combat_ai_melee_fight
+
+@a Cmons dummy_l_meleedude ([tag]'A' [faction]Player [facing]East)
+@b Cmons dummy_l_ignored   ([tag]'B')
+@c Cmons dummy_l_immobile  ([tag]'C')
+@d Cmons dummy_l_immobile  ([tag]'D')
+•b.......d•
+•.####....•
+•a&c......•
+
+% -----
+:begin_prefab TEST_combat_ai_slaughter
+
+@a Cmons dummy_l_meleedude ([tag]'A' [faction]Player [facing]West)
+@b Cmons dummy_l_immobile  ([tag]'B')
+@c Cmons dummy_l_immobile  ([tag]'C')
+@d Cmons dummy_l_immobile  ([tag]'D')
+@e Cmons dummy_l_immobile  ([tag]'E')
+@f Cmons dummy_l_immobile  ([tag]'F')
+@g Cmons dummy_l_immobile  ([tag]'G')
+@h Cmons dummy_l_immobile  ([tag]'H')
+@i Cmons dummy_l_immobile  ([tag]'I')
+@j Cmons dummy_l_immobile  ([tag]'J')
+@k Cmons dummy_l_immobile  ([tag]'K')
+@l Cmons dummy_l_immobile  ([tag]'L')
+@z Cmons dummy_l_immobile  ([tag]'Z')
+&&&&&&•&•&&&•#
+#.b&a•.......•
+#..•.#.i•.&.h•
+#..•.&.&&•&..•
+#.c•l....j&..•
+#..•&&.&&&&g.•
+#..•.k...•...•
+#..&&&&&•&&&.•
+#d...........•
+#&&•&*e&•&&f&•

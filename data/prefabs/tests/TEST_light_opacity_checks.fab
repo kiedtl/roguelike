@@ -1,0 +1,12 @@
+@x Cmons dummy_l_immobile ([tag]'X')
+@y Cmons dummy_l_immobile ()
+@z m     door_normal
+@a Cmons dummy_l_immobile ([tag]'A')
+@b Cmons dummy_l_immobile ([tag]'B')
+@c Cmons dummy_l_immobile ([tag]'C')
+@d Cmons dummy_l_immobile ([tag]'D')
+..#b#.
+###.##
+ax&•yc
+###z##
+..#d#.
