@@ -825,6 +825,12 @@ fn testerMain() void {
                 return error.BasicFailed;
             };
         }
+
+        pub fn deinit(x: *@This()) void {
+            for (x.errors.items) |str|
+                x.alloc.free(str);
+            x.errors.deinit();
+        }
     };
 
     const Test = struct {
@@ -846,9 +852,9 @@ fn testerMain() void {
 
     const TESTS = [_]TestGroup{
         .{
-            .name = "gases",
+            .name = "basic_systems",
             .tests = &[_]Test{
-                Test.n("no_effect_on_unbreathing", "TEST_gas_rFume", 5, struct {
+                Test.n("gas_no_effect_on_unbreathing", "TEST_gas_rFume", 5, struct {
                     pub fn f(x: *TestContext) !void {
                         state.dungeon.atGas((try x.getMob('2')).coord)[gas.Paralysis.id] = 1.0;
                     }
@@ -862,7 +868,7 @@ fn testerMain() void {
                     }
                 }.f),
                 // ---
-                Test.n("no_pass_through_walls", "TEST_gas_no_pass_through_walls", 6, struct {
+                Test.n("gas_no_pass_through_walls", "TEST_gas_no_pass_through_walls", 6, struct {
                     pub fn f(x: *TestContext) !void {
                         state.dungeon.atGas((try x.getMob('A')).coord)[gas.Paralysis.id] = 1.0;
                     }
@@ -870,6 +876,18 @@ fn testerMain() void {
                     pub fn f(x: *TestContext) !void {
                         try x.assertT((try x.getMob('A')).hasStatus(.Paralysis));
                         try x.assertF((try x.getMob('B')).hasStatus(.Paralysis));
+                    }
+                }.f),
+                // ---
+                Test.n("gas_effect_on_unbreathing_if_not_breathed", "TEST_gas_rFume2", 10, struct {
+                    pub fn f(x: *TestContext) !void {
+                        state.dungeon.atGas((try x.getMob('1')).coord)[gas.Corrosive.id] = 1.0;
+                    }
+                }.f, struct {
+                    pub fn f(x: *TestContext) !void {
+                        try x.assertT((try x.getMob('0')).is_dead);
+                        try x.assertT((try x.getMob('1')).is_dead);
+                        try x.assertT((try x.getMob('2')).is_dead);
                     }
                 }.f),
             },
@@ -881,7 +899,7 @@ fn testerMain() void {
         .alloc = state.GPA.allocator(),
         .errors = std.ArrayList([]const u8).init(state.GPA.allocator()),
     };
-    defer ctx.errors.deinit();
+    defer ctx.deinit();
 
     stdout.print("*** Starting test suites\n", .{}) catch {};
 

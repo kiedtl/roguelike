@@ -899,6 +899,7 @@ pub const MessageType = union(enum) {
 pub const Resistance = enum {
     rFire,
     rElec,
+    rAcid,
     Armor,
     rFume,
 
@@ -906,6 +907,7 @@ pub const Resistance = enum {
         return switch (self) {
             .rFire => "rFire",
             .rElec => "rElec",
+            .rAcid => "rAcid",
             .Armor => "Armor",
             .rFume => "rFume",
         };
@@ -942,6 +944,7 @@ pub const Damage = struct {
         Physical,
         Fire,
         Electric,
+        Acid,
         Irresistible,
 
         pub fn resist(self: DamageKind) ?Resistance {
@@ -949,6 +952,7 @@ pub const Damage = struct {
                 .Physical => .Armor,
                 .Fire => .rFire,
                 .Electric => .rElec,
+                .Acid => .rAcid,
                 .Irresistible => null,
             };
         }
@@ -958,6 +962,7 @@ pub const Damage = struct {
                 .Physical => "dmg",
                 .Fire => "fire",
                 .Electric => "elec",
+                .Acid => "acid",
                 .Irresistible => "irresist",
             };
         }
@@ -967,6 +972,7 @@ pub const Damage = struct {
                 .Physical => "physical",
                 .Fire => "fire",
                 .Electric => "electric",
+                .Acid => "acid",
                 .Irresistible => "irresistible",
             };
         }
@@ -979,6 +985,7 @@ pub const Damage = struct {
         Stab,
         Explosion,
         Passive,
+        Gas,
     };
 };
 pub const Activity = union(enum) {
@@ -3243,6 +3250,7 @@ pub const Mob = struct { // {{{
                     .Irresistible, .Physical => "damaged",
                     .Fire => "burnt with fire",
                     .Electric => "electrocuted",
+                    .Acid => "splashed with acid",
                 };
 
                 state.message(
@@ -3426,6 +3434,7 @@ pub const Mob = struct { // {{{
 
         new.innate_resists.rFire = math.clamp(self.innate_resists.rFire - 25, -100, 100);
         new.innate_resists.rElec = math.clamp(self.innate_resists.rElec + 25, -100, 100);
+        new.innate_resists.rAcid = 100;
         new.innate_resists.rFume = 100;
 
         state.mobs.append(new) catch err.wat();

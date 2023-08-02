@@ -149,18 +149,41 @@ pub const Darkness = Gas{
     .id = 10,
 };
 
+pub const Corrosive = Gas{
+    .name = "acid cloud",
+    .color = 0xa7e234,
+    .dissipation_rate = 0.05,
+    .opacity = 0.0,
+    .trigger = struct {
+        pub fn f(mob: *Mob, _: f64) void {
+            if (!mob.isFullyResistant(.rAcid) and rng.onein(3)) {
+                mob.takeDamage(.{ .amount = 1, .kind = .Acid, .blood = false, .source = .Gas }, .{
+                    .noun = "The caustic gas",
+                    .strs = &[_]DamageStr{
+                        items._dmgstr(10, "BUG", "burns", ""),
+                        items._dmgstr(30, "BUG", "eats away at", ""),
+                        items._dmgstr(99, "BUG", "dissolves", ""),
+                    },
+                });
+            }
+        }
+    }.f,
+    .not_breathed = true,
+    .id = 11,
+};
+
 pub const Gases = [_]Gas{
     Paralysis, SmokeGas, Disorient, Slow,
     Healing,   Dust,     Steam,     Miasma,
-    Seizure,   Blinding, Darkness,
+    Seizure,   Blinding, Darkness,  Corrosive,
 };
 pub const GAS_NUM: usize = Gases.len;
 
 // Ensure that each gas's ID matches the index that it appears as in Gases.
-// comptime {
-//     for (&Gases) |gas, i|
-//         if (i != gas.id) @compileError("Gas's ID doesn't match index");
-// }
+comptime {
+    for (&Gases) |gas, i|
+        if (i != gas.id) @compileError("Gas's ID doesn't match index");
+}
 
 fn triggerNone(_: *Mob, _: f64) void {}
 

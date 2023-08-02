@@ -322,7 +322,7 @@ pub const Earthen1ShieldAux = Aux{
     .id = "aux_shield_earthen1",
     .name = "earthen shield",
 
-    // .resists = .{ .rAcid = 50 }, // Uncomment when Acid damage is added
+    .resists = .{ .rAcid = 50 }, // Uncomment when Acid damage is added
     .stats = .{ .Evade = 5 },
 
     .ring_upgrade_name = "disintegration",
@@ -334,7 +334,7 @@ pub const Earthen2ShieldAux = Aux{
     .id = "aux_shield_earthen2",
     .name = "Shield of Earth",
 
-    // .resists = .{ .rAcid = 50 }, // Uncomment when Acid damage is added
+    .resists = .{ .rAcid = 50 }, // Uncomment when Acid damage is added
     .stats = .{ .Evade = 10 },
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .EarthenShield, .duration = .Equ },
@@ -343,10 +343,10 @@ pub const Earthen2ShieldAux = Aux{
 
 // Reminder via comptime :)
 // Glory to comptime, hail zig. (hmm... zig hail?)
-comptime {
-    if (@hasField(types.Resistance, "rAcid"))
-        @compileError("TODO: Add rAcid to earth shields and remove this error");
-}
+// comptime {
+//     if (@hasField(types.Resistance, "rAcid"))
+//         @compileError("TODO: Add rAcid to earth shields and remove this error");
+// }
 
 pub const TowerShieldAux = Aux{
     .id = "aux_shield_tower",

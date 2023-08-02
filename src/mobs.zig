@@ -1832,7 +1832,7 @@ pub const SpectralSwordTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .Armor = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rFume = 100 },
+        .innate_resists = .{ .Armor = RESIST_IMMUNE, .rFire = RESIST_IMMUNE, .rElec = RESIST_IMMUNE, .rFume = 100, .rAcid = RESIST_IMMUNE },
         .stats = .{ .Willpower = WILL_IMMUNE, .Vision = 20 },
     },
 };
@@ -1868,7 +1868,7 @@ pub const SpectralSabreTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rFume = 100 },
+        .innate_resists = .{ .rFume = 100, .rAcid = RESIST_IMMUNE },
         .stats = .{ .Willpower = WILL_IMMUNE, .Melee = 50, .Speed = 50, .Vision = 20 },
     },
 };
@@ -1905,7 +1905,7 @@ pub const SpectralTotemTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rFume = 100, .Armor = 75, .rElec = RESIST_IMMUNE, .rFire = -50 },
+        .innate_resists = .{ .rFume = 100, .Armor = 75, .rElec = RESIST_IMMUNE, .rFire = -50, .rAcid = RESIST_IMMUNE },
         .stats = .{ .Willpower = 10, .Conjuration = 2, .Vision = 7 },
     },
 };
@@ -1941,7 +1941,7 @@ pub const NightReaperTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rFume = 100, .rElec = 25 }, // -25% rFire from shadow mail
+        .innate_resists = .{ .rFume = 100, .rElec = 25, .rAcid = RESIST_IMMUNE }, // -25% rFire from shadow mail
         .stats = .{ .Willpower = 10, .Melee = 80, .Evade = 15, .Vision = 8 },
     },
     .weapon = &items.ShadowMaulWeapon,
@@ -1975,7 +1975,7 @@ pub const GrueTemplate = MobTemplate{
         .blood_spray = gas.Darkness.id,
         .corpse = .None,
 
-        .innate_resists = .{ .rFume = 100, .rFire = -25, .rElec = 25 },
+        .innate_resists = .{ .rFume = 100, .rFire = -25, .rElec = 25, .rAcid = RESIST_IMMUNE },
         .stats = .{ .Willpower = 10, .Spikes = 2, .Vision = 7 },
     },
 };
@@ -2020,7 +2020,7 @@ pub const SlinkingTerrorTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rFume = 100, .rFire = -25, .rElec = 25 },
+        .innate_resists = .{ .rFume = 100, .rFire = -25, .rElec = 25, .rAcid = RESIST_IMMUNE },
         .stats = .{ .Willpower = 10, .Melee = 80, .Martial = 1, .Vision = 7 },
     },
 };
@@ -2069,7 +2069,7 @@ pub const CreepingDeathTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        .innate_resists = .{ .rFume = 100, .rFire = -25, .rElec = 25 },
+        .innate_resists = .{ .rFume = 100, .rFire = -25, .rElec = 25, .rAcid = RESIST_IMMUNE },
         .stats = .{ .Willpower = 8, .Melee = 90, .Vision = PLAYER_VISION + 2 },
     },
 };
@@ -2234,6 +2234,7 @@ pub const MOBS = [_]MobTemplate{
     CinderBruteTemplate,
     BurningBruteTemplate,
     templates_test.Dummy_L_Immobile,
+    templates_test.Dummy_C_Immobile,
 };
 
 pub const PRISONERS = [_]MobTemplate{
