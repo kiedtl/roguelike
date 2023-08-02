@@ -2662,6 +2662,8 @@ pub const Mob = struct { // {{{
 
     // Try to move a mob.
     pub fn moveInDirection(self: *Mob, p_direction: Direction) bool {
+        assert(!self.immobile);
+
         const coord = self.coord;
         var direction = p_direction;
 

@@ -1556,7 +1556,9 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
 
     alertAllyOfHostile(mob);
 
-    if (!keepDistance(mob, target.lastSeenOrCoord(), FLEE_GOAL)) {
+    if (mob.immobile or
+        !keepDistance(mob, target.lastSeenOrCoord(), FLEE_GOAL))
+    {
         if (mob.canMelee(target.mob)) {
             meleeFight(mob, alloc);
         } else {
@@ -1934,8 +1936,11 @@ pub fn work(mob: *Mob, alloc: mem.Allocator) void {
     if (mob.hasStatus(.Insane)) {
         work_fn = struct {
             pub fn f(p_mob: *Mob, _: mem.Allocator) void {
-                if (!p_mob.moveInDirection(rng.chooseUnweighted(Direction, &DIRECTIONS)))
+                if (p_mob.immobile or
+                    !p_mob.moveInDirection(rng.chooseUnweighted(Direction, &DIRECTIONS)))
+                {
                     tryRest(p_mob);
+                }
             }
         }.f;
     }
@@ -2044,9 +2049,6 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
         assert(mob.enemyList().items.len > 0);
 
         (mob.ai.fight_fn.?)(mob, alloc);
-
-        const target = mob.enemyList().items[0].mob;
-        mob.facing = mob.coord.closestDirectionTo(target.coord, state.mapgeometry);
     } else if (mob.ai.phase == .Flee) {
         flee(mob, alloc);
     } else unreachable;
