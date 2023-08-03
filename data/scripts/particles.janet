@@ -721,6 +721,16 @@
     :lifetime 5
     :spawn-count (Emitter :SCNT-dist-to-target)
    })]
+  "zap-bolt" @[(new-emitter @{
+    :particle (new-particle @{
+      :tile (new-tile @{ :ch "+" :fg 0x7c5353 :bg-mix 1 })
+      :speed 0.9
+      :triggers @[
+        [[:COND-true] [:TRIG-set-glyph [:overall-cardinal-angle ["|" "|" "-" "-"]]]]
+      ]
+    })
+    :lifetime 0
+   })]
   "zap-awaken-construct" @[(new-emitter @{
     :particle (new-particle @{
       :tile (new-tile @{ :ch "Z" :fg 0x9fefff :bg-mix 1 })

@@ -315,6 +315,34 @@ pub const BOLT_AIRBLAST = Spell{
     }.f },
 };
 
+pub const BOLT_JAVELIN = Spell{
+    .id = "sp_javelin",
+    .name = "javelin",
+    .cast_type = .Bolt,
+    .bolt_dodgeable = true,
+    .bolt_missable = true,
+    .bolt_multitarget = false,
+    .animation = .{ .Particle = .{ .name = "zap-bolt" } },
+    .noise = .Medium,
+    .check_has_effect = struct {
+        fn f(caster: *Mob, _: SpellOptions, target: Coord) bool {
+            return caster.distance2(target) >= 2;
+        }
+    }.f,
+    .effect_type = .{ .Custom = struct {
+        fn f(caster_c: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
+            if (state.dungeon.at(coord).mob) |victim| {
+                victim.addStatus(.Disorient, 0, .{ .Tmp = opts.duration });
+                victim.takeDamage(.{
+                    .amount = opts.power,
+                    .source = .RangedAttack,
+                    .by_mob = state.dungeon.at(caster_c).mob,
+                }, .{ .noun = "The javelin", .strs = &items.PIERCING_STRS });
+            }
+        }
+    }.f },
+};
+
 pub const CAST_MASS_DISMISSAL = Spell{
     .id = "sp_mass_dismissal",
     .name = "mass dismissal",
@@ -1194,6 +1222,7 @@ pub const Spell = struct {
     } = .Mob,
 
     // Only used if cast_type == .Bolt
+    bolt_missable: bool = false,
     bolt_dodgeable: bool = false,
     bolt_multitarget: bool = true,
     bolt_avoids_allies: bool = false,
@@ -1287,10 +1316,34 @@ pub const Spell = struct {
         switch (self.cast_type) {
             .Ray => err.todo(),
             .Bolt => {
+                var actual_target = target;
+
+                // If the bolt can miss and the caster's Missile% check fails,
+                // change the destination by a random angle.
+                if (self.bolt_missable and caster != null and
+                    !rng.percent(combat.chanceOfMissileLanding(caster.?)))
+                {
+                    if (state.dungeon.at(target).mob) |target_mob|
+                        state.message(.CombatUnimportant, "{c} missed {}", .{ caster.?, target_mob });
+                    const dist = caster_coord.distanceEuclidean(target);
+                    const diff_x = @intToFloat(f64, target.x) - @intToFloat(f64, caster_coord.x);
+                    const diff_y = @intToFloat(f64, target.y) - @intToFloat(f64, caster_coord.y);
+                    const prev_angle = math.atan2(f64, diff_y, diff_x);
+                    const angle_vary = @intToFloat(f64, rng.range(usize, 5, 15)) * math.pi / 180.0;
+                    const new_angle = if (rng.boolean()) prev_angle + angle_vary else prev_angle - angle_vary;
+                    // std.log.warn("prev_angle: {}, new_angle: {}, x_off: {}, y_off: {}", .{
+                    //     prev_angle,                             new_angle,
+                    //     math.round(math.cos(new_angle) * dist), math.round(math.sin(new_angle) * dist),
+                    // });
+                    const new_x = @intCast(isize, caster_coord.x) + @floatToInt(isize, math.round(math.cos(new_angle) * dist));
+                    const new_y = @intCast(isize, caster_coord.y) + @floatToInt(isize, math.round(math.sin(new_angle) * dist));
+                    actual_target = Coord.new2(target.z, @intCast(usize, new_x), @intCast(usize, new_y));
+                }
+
                 // Fling a bolt and let it hit whatever
                 var last_processed_coord: Coord = undefined;
                 var affected_tiles = StackBuffer(Coord, 128).init(null);
-                const line = caster_coord.drawLine(target, state.mapgeometry, 3);
+                const line = caster_coord.drawLine(actual_target, state.mapgeometry, 3);
                 assert(line.len > 0);
                 for (line.constSlice()) |c| {
                     if (!c.eq(caster_coord) and !state.is_walkable(c, .{ .right_now = true, .only_if_breaks_lof = true })) {
@@ -1367,7 +1420,9 @@ pub const Spell = struct {
                     // If there's a mob on the tile, see if it resisted the effect.
                     //
                     if (state.dungeon.at(coord).mob) |victim| {
-                        if (self.bolt_avoids_allies and victim == caster.? or !victim.isHostileTo(caster.?)) {
+                        if (self.bolt_avoids_allies and
+                            (victim == caster.? or !victim.isHostileTo(caster.?)))
+                        {
                             continue;
                         }
 

@@ -372,7 +372,7 @@ pub const JavelineerTemplate = MobTemplate{
             .profession_name = "javelineer",
             .profession_description = "guarding",
             .work_fn = ai.standStillAndGuardWork,
-            .fight_fn = ai.rangedFight,
+            .fight_fn = ai.mageFight,
             .flee_effect = .{
                 .status = .Enraged,
                 .duration = .{ .Tmp = 10 },
@@ -381,13 +381,17 @@ pub const JavelineerTemplate = MobTemplate{
             .flags = &[_]AI.Flag{ .ScansForJobs, .ScansForCorpses },
         },
 
+        .spells = &[_]SpellOptions{
+            .{ .MP_cost = 4, .spell = &spells.BOLT_JAVELIN, .power = 1, .duration = 3 },
+        },
+        .max_MP = 10,
+
         .max_HP = 6,
         .memory_duration = 5,
         .stats = .{ .Willpower = 2, .Evade = 10, .Missile = 80, .Vision = 5 },
     },
     .weapon = &W_BLUDG_2,
     .armor = items.GambesonArmor,
-    .projectile = &items.JavelinProj,
 };
 
 pub const DefenderTemplate = MobTemplate{

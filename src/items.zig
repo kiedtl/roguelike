@@ -422,19 +422,6 @@ pub const NetProj = Projectile{
     },
 };
 
-pub const JavelinProj = Projectile{
-    .id = "javelin",
-    .name = "javelin",
-    .color = 0xffd7d7,
-    .damage = 1,
-    .effect = .{
-        .Status = .{
-            .status = .Disorient,
-            .duration = .{ .Tmp = 3 },
-        },
-    },
-};
-
 // }}}
 
 // Evocables {{{

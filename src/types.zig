@@ -287,9 +287,13 @@ pub const Coord = struct { // {{{
     }
 
     pub inline fn distanceManhattan(a: Self, b: Self) usize {
-        const diff =
-            a.difference(b);
+        const diff = a.difference(b);
         return diff.x + diff.y;
+    }
+
+    pub inline fn distanceEuclidean(a: Self, b: Self) f64 {
+        const diff = a.difference(b);
+        return math.sqrt(@intToFloat(f64, diff.x * diff.x) + @intToFloat(f64, diff.y * diff.y));
     }
 
     // Sometimes we want to pass Coord.eq around, but we can't since an inline
