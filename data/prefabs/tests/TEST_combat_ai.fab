@@ -43,3 +43,59 @@ ab
 #..&&&&&•&&&.•
 #d...........•
 #&&•&*e&•&&f&•
+
+% -----
+:begin_prefab TEST_combat_ai_simple_spell_use
+
+@j Cmons dummy_l_javelineer ([tag]'J' [faction]Player [facing]South)
+@t Cmons dummy_l_immobile   ([tag]'T')
+.j.
+~~~
+~~~
+•t•
+
+% -----
+:begin_prefab TEST_combat_ai_social_fighter
+
+@a Cmons dummy_l_immobile       ([tag]'A')
+@b Cmons dummy_l_immobile       ([tag]'B')
+@c Cmons dummy_l_immobile       ([tag]'C')
+@d Cmons dummy_l_immobile       ([tag]'D')
+@e Cmons dummy_l_immobile       ([tag]'E')
+@f Cmons dummy_l_immobile       ([tag]'F')
+@u Cmons dummy_l_javelineer_sf2 ([faction]Player [facing]North)
+@v Cmons dummy_l_javelineer_sf2 ([faction]Player [facing]North)
+@w Cmons dummy_l_javelineer_sf2 ([faction]Player [facing]North)
+@x Cmons dummy_l_javelineer_sf  ([faction]Player [facing]North)
+@y Cmons dummy_l_javelineer_sf  ([faction]Player [facing]North)
+@z Cmons dummy_l_javelineer_sf  ([faction]Player [facing]North)
+@0 Cmons dummy_l_meleedude      ([faction]Player [facing]North)
+
+% 1. Shouldn't attack, no emotional support
+% 2. Should attack, emotional support exists and SocialFighter2 flag doesn't
+%    require it to be aware of enemy
+% 3. Should attack, emotional support exists and is aware of the enemy.
+%
+% 4. Shouldn't attack, no emotional support
+% 5. Shouldn't attack, emotional support exists but SocialFighter flag requires
+%    it to be aware of the enemy
+% 6. Should attack, emotional support exists and is aware of the enemy.
+%
+% Other things we could test, for example, socialfighter* flags require that
+% the ally in question must be immobile, etc. Not really necessary though.
+%
+% Note: thick walls are to block out sounds and prevent meleedudes from going
+% into investigation mode (because SocialFighter counts 'investigating' as
+% "aware ally"
+%
+####################
+#..a.##..b.####..c.#
+•....####..•##•....•
+#..u.##0.v.####0.w.#
+####################
+####################
+####################
+#..d.##..e.####..f.#
+•....#####.•##•....•
+#..x.##0..y####0.z.#
+####################

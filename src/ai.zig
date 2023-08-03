@@ -1510,7 +1510,7 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
         //      - Is either investigating or attacking
         const found_ally = for (mob.allies.items) |ally| {
             if (ally != mob and !ally.immobile and
-                (!mob.ai.flag(.SocialFighter) or ally.ai.phase == .Hunt or ally.ai.phase == .Investigate))
+                (mob.ai.flag(.SocialFighter2) or ally.ai.phase == .Hunt or ally.ai.phase == .Investigate))
             {
                 break true;
             }

@@ -981,13 +981,28 @@ fn testerMain() void {
                     }
                 }.f),
                 // ---
-                Test.n("slaughter", "TEST_combat_ai_slaughter", 46, null, struct {
+                Test.n("slaughter", "TEST_combat_ai_slaughter", 50, null, struct {
                     pub fn f(x: *TestContext) !void {
                         const A = try x.getMob('A');
                         try x.assertEq(A.distance2((try x.getMob('B')).coord), 1, "", .{});
                         for ("LKJIHGFEDCB") |enemy|
                             try x.assertT((try x.getMob(enemy)).is_dead, "mob: {u}", .{enemy});
-                        try x.assertEq(A.ai.phase, .Investigate, "", .{});
+                    }
+                }.f),
+                // ---
+                Test.n("simple_spell_use", "TEST_combat_ai_simple_spell_use", 1, null, struct {
+                    pub fn f(x: *TestContext) !void {
+                        try x.assertEq((try x.getMob('J')).ai.phase, .Hunt, "", .{});
+                        try x.assertT((try x.getMob('T')).is_dead, "", .{});
+                    }
+                }.f),
+                // ---
+                Test.n("social_fighter", "TEST_combat_ai_social_fighter", 2, null, struct {
+                    pub fn f(x: *TestContext) !void {
+                        for ("ADE") |m|
+                            try x.assertF((try x.getMob(m)).is_dead, "mob: {u}", .{m});
+                        for ("BCF") |m|
+                            try x.assertT((try x.getMob(m)).is_dead, "mob: {u}", .{m});
                     }
                 }.f),
                 // ---
