@@ -1484,7 +1484,7 @@ pub const SHOCK_STRS = [_]DamageStr{
 // Body weapons {{{
 pub const FistWeapon = Weapon{
     .id = "none",
-    .name = "none",
+    .name = "fist",
     .damage = 1,
     .strs = &FIST_STRS,
 };

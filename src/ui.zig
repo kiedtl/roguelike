@@ -689,67 +689,87 @@ fn _getMonsSpellsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, li
     _writerMonsHostility(w, mob);
     _writerWrite(w, "\n", .{});
 
-    if (mob.spells.len == 0) {
-        _writerWrite(w, "$gThis monster has no spells, and is thus (relatively) safe to underestimate.$.\n", .{});
-        _writerWrite(w, "\n", .{});
-    } else {
+    const has_willchecked_spell = for (mob.spells) |spellcfg| {
+        if (spellcfg.spell.checks_will) break true;
+    } else false;
+    if (has_willchecked_spell) {
         const chance = spells.appxChanceOfWillOverpowered(mob, state.player);
         const colorset = [_]u21{ 'g', 'b', 'b', 'p', 'p', 'r', 'r', 'r', 'r', 'r' };
         _writerWrite(w, "$cChance to overpower your will$.: ${u}{}%$.\n", .{
             colorset[chance / 10], chance,
         });
         _writerWrite(w, "\n", .{});
+    }
 
-        for (mob.spells) |spellcfg| {
-            _writerWrite(w, "$c{s}$. $g($b{}$. $gmp)$.\n", .{
-                spellcfg.spell.name, spellcfg.MP_cost,
+    for (mob.spells) |spellcfg| {
+        _writerWrite(w, "$c{s}$. $g($b{}$. $gmp)$.\n", .{
+            spellcfg.spell.name, spellcfg.MP_cost,
+        });
+
+        if (spellcfg.spell.cast_type == .Smite) {
+            const target = @as([]const u8, switch (spellcfg.spell.smite_target_type) {
+                .Self => "$bself$.",
+                .SpecificAlly => |id| b: {
+                    const t = mobs.findMobById(id).?;
+                    break :b t.mob.ai.profession_name orelse t.mob.species.name;
+                },
+                .UndeadAlly => "undead ally",
+                .ConstructAlly => "construct ally",
+                .Mob => "you",
+                .Corpse => "corpse",
             });
+            _writerWrite(w, "· $ctarget$.: {s}\n", .{target});
+        } else if (spellcfg.spell.cast_type == .Bolt) {
+            const dodgeable = spellcfg.spell.bolt_dodgeable;
+            _writerWrite(w, "· $cdodgeable$.: {s}\n", .{_formatBool(dodgeable)});
+        }
 
-            if (spellcfg.spell.cast_type == .Smite) {
-                const target = @as([]const u8, switch (spellcfg.spell.smite_target_type) {
-                    .Self => "$bself$.",
-                    .SpecificAlly => |id| b: {
-                        const t = mobs.findMobById(id).?;
-                        break :b t.mob.ai.profession_name orelse t.mob.species.name;
-                    },
-                    .UndeadAlly => "undead ally",
-                    .ConstructAlly => "construct ally",
-                    .Mob => "you",
-                    .Corpse => "corpse",
-                });
-                _writerWrite(w, "· $ctarget$.: {s}\n", .{target});
-            } else if (spellcfg.spell.cast_type == .Bolt) {
-                const dodgeable = spellcfg.spell.bolt_dodgeable;
-                _writerWrite(w, "· $cdodgeable$.: {s}\n", .{_formatBool(dodgeable)});
-            }
+        if (!(spellcfg.spell.cast_type == .Smite and
+            spellcfg.spell.smite_target_type == .Self))
+        {
+            const targeting = @as([]const u8, switch (spellcfg.spell.cast_type) {
+                .Ray => @panic("TODO"),
+                .Smite => "smite-targeted",
+                .Bolt => "bolt",
+            });
+            _writerWrite(w, "· $ctype$.: {s}\n", .{targeting});
+        }
 
-            if (!(spellcfg.spell.cast_type == .Smite and
-                spellcfg.spell.smite_target_type == .Self))
-            {
-                const targeting = @as([]const u8, switch (spellcfg.spell.cast_type) {
-                    .Ray => @panic("TODO"),
-                    .Smite => "smite-targeted",
-                    .Bolt => "bolt",
-                });
-                _writerWrite(w, "· $ctype$.: {s}\n", .{targeting});
-            }
-
+        if (spellcfg.spell.cast_type != .Smite or spellcfg.spell.smite_target_type == .Mob) {
             if (spellcfg.spell.checks_will) {
                 _writerWrite(w, "· $cwill-checked$.: $byes$.\n", .{});
             } else {
                 _writerWrite(w, "· $cwill-checked$.: $rno$.\n", .{});
             }
-
-            switch (spellcfg.spell.effect_type) {
-                .Status => |s| _writerWrite(w, "· $gTmp$. {s} ({})\n", .{
-                    s.string(state.player), spellcfg.duration,
-                }),
-                .Heal => _writerWrite(w, "· $gIns$. Heal <{}>\n", .{spellcfg.power}),
-                .Custom => {},
-            }
-
-            _writerWrite(w, "\n", .{});
         }
+
+        switch (spellcfg.spell.effect_type) {
+            .Status => |s| _writerWrite(w, "· $gTmp$. {s} ({})\n", .{
+                s.string(state.player), spellcfg.duration,
+            }),
+            .Heal => _writerWrite(w, "· $gIns$. Heal <{}>\n", .{spellcfg.power}),
+            .Custom => {},
+        }
+
+        _writerWrite(w, "\n", .{});
+    }
+
+    const weapons = mob.listOfWeapons();
+    for (weapons.constSlice()) |weapon| {
+        _writerWrite(w, "$c{s}$. $g(melee)$.\n", .{weapon.name});
+        _writerWrite(w, "· $cdamage$.: {} $g<{s}>$.\n", .{
+            weapon.damage, weapon.damage_kind.stringLong(),
+        });
+        if (weapon.ego != .None)
+            _writerWrite(w, "· $cego$.: {s}\n", .{weapon.ego.name().?});
+        if (weapon.martial != false)
+            _writerWrite(w, "· $cmartial$.: yes\n", .{});
+        if (weapon.delay != 100)
+            _writerWrite(w, "· $cdelay$.: {}%\n", .{weapon.delay});
+        if (weapon.knockback != 0)
+            _writerWrite(w, "· $cknockback$.: {}\n", .{weapon.knockback});
+        assert(weapon.reach == 1);
+        _writerWrite(w, "\n", .{});
     }
 }
 

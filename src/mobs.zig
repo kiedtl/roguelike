@@ -56,22 +56,22 @@ pub const templates_test = @import("mobs/templates_test.zig");
 
 const NONE_WEAPON = Weapon{
     .id = "",
-    .name = "",
+    .name = "blue plastic train",
     .damage = 0,
     .strs = &[_]DamageStr{
         items._dmgstr(80, "hurl", "hurls", " at kiedtl"),
     },
 };
 
-const W_SWORD_1 = Weapon{ .damage = 1, .strs = &items.SLASHING_STRS };
-const W_SWORD_2 = Weapon{ .damage = 2, .strs = &items.SLASHING_STRS };
-const W_KNOUT_3 = Weapon{ .damage = 3, .strs = &items.CRUSHING_STRS, .delay = 200 };
-const W_BLUDG_1 = Weapon{ .damage = 1, .strs = &items.CRUSHING_STRS };
-const W_BLUDG_2 = Weapon{ .damage = 2, .strs = &items.CRUSHING_STRS };
-const W_MACES_2 = Weapon{ .damage = 2, .strs = &items.CRUSHING_STRS };
-const W_MACES_3 = Weapon{ .damage = 3, .strs = &items.CRUSHING_STRS };
-const W_MSWRD_1 = Weapon{ .damage = 1, .strs = &items.SLASHING_STRS };
-const W_SPROD_1 = Weapon{ .damage = 1, .damage_kind = .Electric, .strs = &items.SHOCK_STRS };
+const W_SWORD_1 = Weapon{ .damage = 1, .strs = &items.SLASHING_STRS, .name = "sword" };
+const W_SWORD_2 = Weapon{ .damage = 2, .strs = &items.SLASHING_STRS, .name = "sword" };
+const W_KNOUT_3 = Weapon{ .damage = 3, .strs = &items.CRUSHING_STRS, .delay = 200, .name = "knout" };
+const W_BLUDG_1 = Weapon{ .damage = 1, .strs = &items.CRUSHING_STRS, .name = "bludgeon" };
+const W_BLUDG_2 = Weapon{ .damage = 2, .strs = &items.CRUSHING_STRS, .name = "bludgeon" };
+const W_MACES_2 = Weapon{ .damage = 2, .strs = &items.CRUSHING_STRS, .name = "mace" };
+const W_MACES_3 = Weapon{ .damage = 3, .strs = &items.CRUSHING_STRS, .name = "mace" };
+const W_MSWRD_1 = Weapon{ .damage = 1, .strs = &items.SLASHING_STRS, .name = "martial sword" };
+const W_SPROD_1 = Weapon{ .damage = 1, .damage_kind = .Electric, .strs = &items.SHOCK_STRS, .name = "shock prod" };
 
 pub const PLAYER_VISION = 12;
 pub const RESIST_IMMUNE = 1000;
@@ -155,6 +155,7 @@ pub const WrithingHulkTemplate = MobTemplate{
         .species = &Species{
             .name = "writhing hulk",
             .default_attack = &Weapon{
+                .name = "tentacle",
                 .damage = 1,
                 .strs = &[_]DamageStr{items._dmgstr(1, "strike", "strikes", "")},
             },
@@ -181,6 +182,7 @@ pub const SwollenHulkTemplate = MobTemplate{
         .species = &Species{
             .name = "swollen hulk",
             .default_attack = &Weapon{
+                .name = "tentacle",
                 .damage = 2,
                 .strs = &[_]DamageStr{items._dmgstr(1, "batter", "batters", "")},
             },
@@ -214,6 +216,7 @@ pub const ThrashingHulkTemplate = MobTemplate{
         .species = &Species{
             .name = "thrashing hulk",
             .default_attack = &Weapon{
+                .name = "tentacle",
                 .damage = 4,
                 .strs = &[_]DamageStr{items._dmgstr(1, "thrash", "thrashes", "")},
             },
@@ -427,7 +430,7 @@ pub const LeadTurtleTemplate = MobTemplate{
         .id = "lead_turtle",
         .species = &Species{
             .name = "lead turtle",
-            .default_attack = &Weapon{ .damage = 3, .strs = &items.BITING_STRS },
+            .default_attack = &Weapon{ .name = "lead jaw", .damage = 3, .strs = &items.BITING_STRS },
         },
         .tile = 't',
         .life_type = .Construct,
@@ -456,6 +459,7 @@ pub const IronWaspTemplate = MobTemplate{
         .species = &Species{
             .name = "iron wasp",
             .default_attack = &Weapon{
+                .name = "stinger",
                 .damage = 1,
                 .effects = &[_]StatusDataInfo{
                     .{ .status = .Disorient, .duration = .{ .Tmp = 3 } },
@@ -500,6 +504,7 @@ pub const CopperHornetTemplate = MobTemplate{
         .species = &Species{
             .name = "copper hornet",
             .default_attack = &Weapon{
+                .name = "copper tail",
                 .damage = 1,
                 .ego = .Copper,
                 .damage_kind = .Electric,
@@ -676,7 +681,7 @@ pub const DustlingTemplate = MobTemplate{
         .id = "dustling",
         .species = &Species{
             .name = "dustling",
-            .default_attack = &Weapon{ .damage = 1, .strs = &items.FIST_STRS },
+            .default_attack = &Weapon{ .name = "fist", .damage = 1, .strs = &items.FIST_STRS },
         },
         .tile = 'ð',
         .ai = AI{
@@ -702,6 +707,7 @@ pub const DustlingTemplate = MobTemplate{
 };
 
 const WAR_OLG_CLAW_WEAPON = Weapon{
+    .name = "claw",
     .damage = 1,
     .strs = &items.CLAW_STRS,
 };
@@ -1386,7 +1392,7 @@ pub const BloatTemplate = MobTemplate{
         .id = "bloat",
         .species = &Species{
             .name = "bloat",
-            .default_attack = &Weapon{ .damage = 1, .strs = &items.FIST_STRS },
+            .default_attack = &Weapon{ .name = "fist", .damage = 1, .strs = &items.FIST_STRS },
         },
         .tile = 'n',
         .ai = AI{
@@ -1455,7 +1461,7 @@ pub const SkeletonTemplate = MobTemplate{
         .id = "skeleton",
         .species = &Species{
             .name = "skeleton",
-            .default_attack = &Weapon{ .damage = 1, .strs = &items.FIST_STRS },
+            .default_attack = &Weapon{ .name = "fist", .damage = 1, .strs = &items.FIST_STRS },
         },
         .tile = 'l',
         .ai = AI{
@@ -1486,6 +1492,7 @@ pub const StalkerTemplate = MobTemplate{
         .species = &Species{
             .name = "stalker",
             .default_attack = &Weapon{
+                .name = "bonk",
                 .damage = 0,
                 .strs = &[_]DamageStr{items._dmgstr(0, "ram", "rams", "")},
             },
@@ -1528,7 +1535,7 @@ pub const BoneRatTemplate = MobTemplate{
         .id = "bone_rat",
         .species = &Species{
             .name = "bone rat",
-            .default_attack = &Weapon{ .damage = 1, .strs = &items.BITING_STRS },
+            .default_attack = &Weapon{ .name = "teeth", .damage = 1, .strs = &items.BITING_STRS },
         },
         .tile = 'r',
         .ai = AI{
@@ -1563,7 +1570,7 @@ pub const EmberlingTemplate = MobTemplate{
         .id = "emberling",
         .species = &Species{
             .name = "emberling",
-            .default_attack = &Weapon{ .damage = 1, .damage_kind = .Fire, .strs = &items.CLAW_STRS, .delay = 120 },
+            .default_attack = &Weapon{ .name = "red-hot claw", .damage = 1, .damage_kind = .Fire, .strs = &items.CLAW_STRS, .delay = 120 },
         },
         .tile = 'è',
         .ai = AI{
@@ -1604,7 +1611,7 @@ pub const SparklingTemplate = MobTemplate{
         .id = "sparkling",
         .species = &Species{
             .name = "sparkling",
-            .default_attack = &Weapon{ .damage = 1, .damage_kind = .Electric, .strs = &items.SHOCK_STRS, .delay = 120 },
+            .default_attack = &Weapon{ .name = "shock prod", .damage = 1, .damage_kind = .Electric, .strs = &items.SHOCK_STRS, .delay = 120 },
         },
         .tile = 'p',
         .ai = AI{
@@ -1743,6 +1750,7 @@ pub const LivingIceTemplate = MobTemplate{
         .species = &Species{
             .name = "living ice",
             .default_attack = &Weapon{
+                .name = "icy blast",
                 .damage = 1,
                 .strs = &[_]DamageStr{
                     items._dmgstr(10, "hit", "hits", ""),
@@ -1847,6 +1855,7 @@ pub const SpectralSabreTemplate = MobTemplate{
         .species = &Species{
             .name = "spectral sabre",
             .default_attack = &Weapon{
+                .name = "blade",
                 .damage = 1,
                 .strs = &[_]DamageStr{items._dmgstr(1, "nick", "nicks", "")},
             },
@@ -1985,6 +1994,7 @@ pub const GrueTemplate = MobTemplate{
 };
 
 const SLINKING_TERROR_CLAW_WEAPON = Weapon{
+    .name = "ethereal claw",
     .damage = 1,
     .ego = .NC_Insane,
     .martial = true,
@@ -2030,6 +2040,7 @@ pub const SlinkingTerrorTemplate = MobTemplate{
 };
 
 const CREEPING_DEATH_CLAW_WEAPON = Weapon{
+    .name = "ethereal claw",
     .damage = 1,
     .ego = .NC_Insane,
     .strs = &items.CLAW_STRS,
@@ -2084,6 +2095,7 @@ pub const CinderBruteTemplate = MobTemplate{
         .species = &Species{
             .name = "cinder brute",
             .default_attack = &Weapon{
+                .name = "teeth",
                 .damage = 1,
                 .strs = &items.BITING_STRS,
             },
@@ -2119,6 +2131,7 @@ pub const CinderBruteTemplate = MobTemplate{
 };
 
 const BURNING_BRUTE_CLAW_WEAPON = Weapon{
+    .name = "burning claw",
     .damage = 1,
     .strs = &items.CLAW_STRS,
 };
@@ -2131,7 +2144,7 @@ pub const BurningBruteTemplate = MobTemplate{
             .default_attack = &BURNING_BRUTE_CLAW_WEAPON,
             .aux_attacks = &[_]*const Weapon{
                 &BURNING_BRUTE_CLAW_WEAPON,
-                &Weapon{ .knockback = 3, .damage = 1, .strs = &items.KICK_STRS },
+                &Weapon{ .name = "kick", .knockback = 3, .damage = 1, .strs = &items.KICK_STRS },
             },
         },
         .tile = 'B',
