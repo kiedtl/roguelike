@@ -1689,6 +1689,7 @@ pub const ChooseCellOpts = struct {
         Single,
         Trajectory: struct { require_lof: bool = true },
         AoE1: struct { dist: usize, opts: state.IsWalkableOptions },
+        Gas: struct { gas: usize },
         Duo: [2]*const Targeter,
 
         pub const Result = struct {
@@ -1731,6 +1732,18 @@ pub const ChooseCellOpts = struct {
                         if (!lof_is_ok or trajectory_is_unseen) {
                             return error.BrokenLOF;
                         }
+                    }
+                }.f,
+                .Gas => struct {
+                    pub fn f(targeter: Targeter, _: bool, coord: Coord, buf: *Result.AList) Error!void {
+                        buf.append(.{ .coord = coord, .color = 100 }) catch err.wat();
+
+                        var matrix = std.mem.zeroes([HEIGHT][WIDTH]usize);
+                        _ = gas.mockGasSpread(targeter.Gas.gas, 100, coord, &matrix);
+                        for (matrix) |row, y| for (row) |cell, x| if (cell > 0) {
+                            const c = Coord.new2(coord.z, x, y);
+                            buf.append(.{ .coord = c, .color = cell }) catch err.wat();
+                        };
                     }
                 }.f,
                 .AoE1 => struct {

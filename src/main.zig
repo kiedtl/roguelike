@@ -462,7 +462,7 @@ fn readInput() !bool {
                 // state.player.addStatus(.RingElectrocution, 0, .{ .Tmp = 5 });
                 // state.player.addStatus(.RingConjuration, 0, .{ .Tmp = 2 });
                 // state.night_rep[@enumToInt(state.player.faction)] += 10;
-                state.player.HP = 0;
+                // state.player.HP = 0;
                 // for (state.player_conj_augments) |aug, i| {
                 //     if (!aug.received) {
                 //         state.player_conj_augments[i].received = true;
@@ -470,6 +470,12 @@ fn readInput() !bool {
                 //         break;
                 //     }
                 // }
+                _ = ui.chooseCell(.{
+                    .require_seen = true,
+                    .targeter = ui.ChooseCellOpts.Targeter{
+                        .Gas = .{ .gas = gas.Dust.id },
+                    },
+                }) orelse return false;
                 break :blk true;
             },
             .F8 => b: {

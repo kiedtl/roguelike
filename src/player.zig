@@ -666,10 +666,37 @@ pub fn throwItem(index: usize) bool {
         return false;
     }
 
-    const dest = ui.chooseCell(.{
-        .require_seen = true,
-        .targeter = .{ .Trajectory = .{} },
-    }) orelse return false;
+    //     var gas_targeter = ui.ChooseCellOpts.Targeter{
+    //         .Duo = [2]*const ui.ChooseCellOpts.Targeter{
+    //             &.{ .Gas = .{ .gas = 0 } },
+    //             &.{ .Trajectory = .{} },
+    //         },
+    //     };
+
+    const targeter: ui.ChooseCellOpts.Targeter = switch (item) {
+        .Projectile => .{ .Trajectory = .{} },
+        .Consumable => |c| b: {
+            const gas_effect = for (c.effects) |e| {
+                if (e == .Gas) break e.Gas;
+            } else null;
+
+            if (gas_effect) |_| {
+                // gas_targeter.Duo[0].Gas.gas = g;
+                // break :b gas_targeter;
+                break :b ui.ChooseCellOpts.Targeter{
+                    .Duo = [2]*const ui.ChooseCellOpts.Targeter{
+                        &.{ .Gas = .{ .gas = 0 } },
+                        &.{ .Trajectory = .{} },
+                    },
+                };
+            } else {
+                break :b ui.ChooseCellOpts.Targeter{ .Trajectory = .{} };
+            }
+        },
+        else => err.wat(),
+    };
+
+    const dest = ui.chooseCell(.{ .require_seen = true, .targeter = targeter }) orelse return false;
 
     state.player.throwItem(&item, dest, state.GPA.allocator());
     _ = state.player.removeItem(index) catch err.wat();

@@ -241,12 +241,12 @@ pub fn tickGasEmitters(level: usize) void {
     }
 }
 
-pub fn spreadGas(matrix: anytype, z: usize, cur_gas: usize) void {
+pub fn spreadGas(matrix: anytype, z: usize, cur_gas: usize, deterministic: bool) void {
     const is_conglomerate = @TypeOf(matrix) == *[HEIGHT][WIDTH][GAS_NUM]usize;
     if (!is_conglomerate and @TypeOf(matrix) != *[HEIGHT][WIDTH]usize)
         @compileError("Invalid argument to spreadGas");
 
-    const std_dissipation = Gases[cur_gas].dissipation_rate;
+    const dis = Gases[cur_gas].dissipation_rate;
 
     var new: [HEIGHT][WIDTH]usize = std.mem.zeroes([HEIGHT][WIDTH]usize);
     var y: usize = 0;
@@ -267,7 +267,6 @@ pub fn spreadGas(matrix: anytype, z: usize, cur_gas: usize) void {
             for (&DIRECTIONS) |d| {
                 if (coord.move(d, state.mapgeometry)) |n| {
                     const n_gas = if (is_conglomerate) matrix[n.y][n.x][cur_gas] else matrix[n.y][n.x];
-                    std.log.info("n_gas: {}", .{n_gas});
                     if (n_gas < 10) continue;
 
                     avg += n_gas;
@@ -276,11 +275,9 @@ pub fn spreadGas(matrix: anytype, z: usize, cur_gas: usize) void {
             }
 
             avg /= neighbors;
-            avg -|= rng.rangeClumping(usize, 0, std_dissipation * 2, 2);
+            avg -|= if (deterministic) dis else rng.rangeClumping(usize, 0, dis * 2, 2);
 
             new[y][x] = avg;
-            const old = if (is_conglomerate) matrix[y][x][cur_gas] else matrix[y][x];
-            std.log.info("old: {}, new: {}", .{ old, new[y][x] });
         }
     }
 
@@ -294,6 +291,27 @@ pub fn spreadGas(matrix: anytype, z: usize, cur_gas: usize) void {
             }
         }
     }
+}
+
+pub fn mockGasSpread(gas: usize, amount: usize, coord: Coord, result: *[HEIGHT][WIDTH]usize) usize {
+    const MAX_J = 20;
+
+    var buf = std.mem.zeroes([HEIGHT][WIDTH]usize);
+    buf[coord.y][coord.x] = amount;
+    var j: usize = MAX_J;
+    while (j > 0) : (j -= 1) {
+        spreadGas(&buf, coord.z, gas, true);
+        var anyleft = false;
+        for (buf) |row, y| for (row) |cell, x| if (cell > 0) {
+            anyleft = true;
+            result[y][x] += 1;
+        };
+        if (!anyleft) break;
+    }
+    for (result) |*row| for (row) |*cell| if (cell.* > 0) {
+        cell.* = cell.* * 100 / (MAX_J - j);
+    };
+    return MAX_J - j;
 }
 
 // Spread and dissipate gas.
@@ -315,7 +333,7 @@ pub fn tickGases(cur_lev: usize) void {
 
     var cur_gas: usize = 0;
     while (cur_gas < GAS_NUM) : (cur_gas += 1) if (dirty_flags[cur_gas]) {
-        spreadGas(&state.dungeon.gas[cur_lev], cur_lev, cur_gas);
+        spreadGas(&state.dungeon.gas[cur_lev], cur_lev, cur_gas, false);
 
         const residue = Gases[cur_gas].residue;
 
