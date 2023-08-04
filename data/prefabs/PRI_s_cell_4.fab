@@ -1,19 +1,37 @@
 :subroom
 :priority 20
-:restriction 1
+:g_individual_restriction 1
+% Must be higher than 4 to accomodate prisons in starting prefab
+:restriction 6
 
 :prison 0,0 4 4
-#≡≡#
-±.β#
+####
+#ββ#
 #ββ#
 #≡≡#
 
 \
 
 :prison 0,0 4 4
+#≡≡#
+#ββ#
+#ββ#
+####
+
+\
+
+:prison 0,0 4 4
+#&&#
+&.β#
+&ββ#
+#&&#
+
+\
+
+:prison 0,0 4 4
 ≡≡≡≡
 #ββ#
-±β.#
+±..#
 ####
 
 \
@@ -34,10 +52,8 @@
 
 \
 
-
 :prison 0,0 4 4
 ####
 #β.#
 #β.#
 #≡±#
-

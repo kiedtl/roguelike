@@ -619,7 +619,8 @@ fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, need_lair: bo
     const record = fab_records.getOrPut(prefab.name.constSlice()) catch err.wat();
     if (record.found_existing) {
         if (record.value_ptr.level[level] >= prefab.restriction or
-            record.value_ptr.global >= prefab.global_restriction)
+            record.value_ptr.global >= prefab.global_restriction or
+            prefab.level_uses[level] >= prefab.individual_restriction)
         {
             return false; // Prefab was used too many times.
         }
@@ -1017,6 +1018,7 @@ pub fn excavatePrefab(
     for (fab.subroom_areas.constSlice()) |subroom_area| {
         _ = placeSubroom(room, &subroom_area.rect, allocator, .{
             .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
+            .no_padding = true,
         });
     }
 }
@@ -1155,7 +1157,6 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
 
         const rec = fab_records.getPtr(fab.name.constSlice());
         if (rec == null or rec.?.level[level] == 0) {
-            std.log.info("fab: {s}, rec? {}", .{ fab.name.constSlice(), rec == null });
             return error.RequiredPrefabsNotUsed;
         }
     }
@@ -1467,6 +1468,7 @@ pub const SubroomPlacementOptions = struct {
     specific_id: ?[]const u8 = null,
     specific_fab: ?*Prefab = null,
     for_lair: bool = false,
+    no_padding: bool = false,
 };
 
 pub fn placeSubroom(parent: *Room, area: *const Rect, alloc: mem.Allocator, opts: SubroomPlacementOptions) bool {
@@ -1496,8 +1498,8 @@ pub fn placeSubroom(parent: *Room, area: *const Rect, alloc: mem.Allocator, opts
             }
         }
 
-        const minheight = subroom.height + if (subroom.nopadding) @as(usize, 0) else 2;
-        const minwidth = subroom.width + if (subroom.nopadding) @as(usize, 0) else 2;
+        const minheight = subroom.height + if (opts.no_padding or subroom.nopadding) @as(usize, 0) else 2;
+        const minwidth = subroom.width + if (opts.no_padding or subroom.nopadding) @as(usize, 0) else 2;
 
         if (minheight <= area.height and minwidth <= area.width) {
             const rx = (area.width / 2) - (subroom.width / 2);
@@ -1521,6 +1523,7 @@ pub fn placeSubroom(parent: *Room, area: *const Rect, alloc: mem.Allocator, opts
                     };
                     _ = placeSubroom(&parent_adj, &actual_subroom_area, alloc, .{
                         .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
+                        .no_padding = true,
                     });
                 }
             }
@@ -3460,6 +3463,7 @@ pub const Prefab = struct {
     invisible: bool = false,
     global_restriction: usize = LEVELS,
     restriction: usize = 1,
+    individual_restriction: usize = 999,
     priority: usize = 0,
     noitems: bool = false,
     noguards: bool = false,
@@ -3473,6 +3477,8 @@ pub const Prefab = struct {
     tunneler_orientation: StackBuffer(Direction, 3) = StackBuffer(Direction, 3).init(null),
 
     name: StackBuffer(u8, MAX_NAME_SIZE) = StackBuffer(u8, MAX_NAME_SIZE).init(null),
+
+    level_uses: [LEVELS]usize = [1]usize{0} ** LEVELS,
 
     material: ?*const Material = null,
 
@@ -3559,6 +3565,8 @@ pub const Prefab = struct {
             record.global -= record.level[level];
             record.level[level] = 0;
         }
+
+        self.level_uses[level] = 0;
 
         for (self.connections) |maybe_con, i| {
             if (maybe_con == null) break;
@@ -3714,6 +3722,9 @@ pub const Prefab = struct {
                     } else if (mem.eql(u8, key, "g_global_restriction")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
                         f.global_restriction = std.fmt.parseInt(usize, val, 0) catch return error.InvalidMetadataValue;
+                    } else if (mem.eql(u8, key, "g_individual_restriction")) {
+                        if (val.len == 0) return error.ExpectedMetadataValue;
+                        f.individual_restriction = std.fmt.parseInt(usize, val, 0) catch return error.InvalidMetadataValue;
                     } else if (mem.eql(u8, key, "priority")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
                         f.priority = std.fmt.parseInt(usize, val, 0) catch return error.InvalidMetadataValue;
@@ -4029,10 +4040,11 @@ pub const Prefab = struct {
         return a.priority > b.priority;
     }
 
-    pub fn incrementRecord(self: *const Prefab, level: usize) void {
+    pub fn incrementRecord(self: *Prefab, level: usize) void {
         const record = (fab_records.getOrPutValue(self.name.constSlice(), .{}) catch err.wat()).value_ptr;
         record.level[level] += 1;
         record.global += 1;
+        self.level_uses[level] += 1;
     }
 };
 

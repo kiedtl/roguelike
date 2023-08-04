@@ -470,12 +470,16 @@ fn readInput() !bool {
                 //         break;
                 //     }
                 // }
-                _ = ui.chooseCell(.{
-                    .require_seen = true,
-                    .targeter = ui.ChooseCellOpts.Targeter{
-                        .Gas = .{ .gas = gas.Dust.id },
-                    },
-                }) orelse return false;
+                // _ = ui.chooseCell(.{
+                //     .require_seen = true,
+                //     .targeter = ui.ChooseCellOpts.Targeter{
+                //         .Gas = .{ .gas = gas.Dust.id },
+                //     },
+                // }) orelse return false;
+                // state.player.HP = 1;
+                // const cell = ui.chooseCell(.{}) orelse break :blk false;
+                // state.dungeon.at(cell).mob.?.HP = 1;
+                // @import("combat.zig").throwMob(null, state.player, .North, 7);
                 break :blk true;
             },
             .F8 => b: {
