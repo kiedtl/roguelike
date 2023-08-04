@@ -1437,6 +1437,9 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
         //y = _drawStrf(endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2), y, endx, "{s}", .{activity}, .{ .fg = 0x9a9a9a });
 
         //y += 2;
+
+        if (y == endy)
+            break;
     }
 }
 
@@ -2058,37 +2061,78 @@ pub fn drawGameOverScreen(scoreinfo: scores.Info) void {
     container_c.setCell(player_dc.x, player_dc.y, layer1_c.getCell(player_dc.x, player_dc.y));
     container_c.setCell(player_dc.x + 1, player_dc.y, .{ .fl = .{ .skip = true } });
 
+    // TODO: have different border styles for different levels that the player can die on
+    // - Border styles would be defined in levelinfo.tsv as strings
+    //   - One field that describes the characters
+    //   - One field that states whether it'd be inverted or not
+    //   - So, this current border would be:
+    //     - \t "    ▐▐▐▌▌▌▂▂▂▂▂▂▆▆▆▆▆▆" \t "................######"
+    //     - (First four describe the borders)
+    // - Higher levels should have more "fancy" border styles
+    // - Shrine borders should be somewhat ornate
+    // - Laboratory should be dashed lines (see Cogmind achievement art)
+    // - Caves should be, uh, more "rough"
+    // - Maybe different/special border if player dies from angry night creature syndrome
+    // - Different colors for different floors. Concrete for prison, blue for Lab, etc
+    // - etc etc etc
+    //
+    {
+        const c = colors.percentageOf(colors.CONCRETE, 20);
+        container_c.setCell(player_dc.x - 3, player_dc.y - 1, .{ .ch = '▐', .fg = c });
+        container_c.setCell(player_dc.x - 3, player_dc.y + 0, .{ .ch = '▐', .fg = c });
+        container_c.setCell(player_dc.x - 3, player_dc.y + 1, .{ .ch = '▐', .fg = c });
+
+        container_c.setCell(player_dc.x + 4, player_dc.y - 1, .{ .ch = '▌', .fg = c });
+        container_c.setCell(player_dc.x + 4, player_dc.y + 0, .{ .ch = '▌', .fg = c });
+        container_c.setCell(player_dc.x + 4, player_dc.y + 1, .{ .ch = '▌', .fg = c });
+
+        container_c.setCell(player_dc.x - 2, player_dc.y - 2, .{ .ch = '▂', .fg = c });
+        container_c.setCell(player_dc.x - 1, player_dc.y - 2, .{ .ch = '▂', .fg = c });
+        container_c.setCell(player_dc.x + 0, player_dc.y - 2, .{ .ch = '▂', .fg = c });
+        container_c.setCell(player_dc.x + 1, player_dc.y - 2, .{ .ch = '▂', .fg = c });
+        container_c.setCell(player_dc.x + 2, player_dc.y - 2, .{ .ch = '▂', .fg = c });
+        container_c.setCell(player_dc.x + 3, player_dc.y - 2, .{ .ch = '▂', .fg = c });
+
+        container_c.setCell(player_dc.x - 2, player_dc.y + 2, .{ .ch = '▆', .bg = c, .fg = colors.BG });
+        container_c.setCell(player_dc.x - 1, player_dc.y + 2, .{ .ch = '▆', .bg = c, .fg = colors.BG });
+        container_c.setCell(player_dc.x + 0, player_dc.y + 2, .{ .ch = '▆', .bg = c, .fg = colors.BG });
+        container_c.setCell(player_dc.x + 1, player_dc.y + 2, .{ .ch = '▆', .bg = c, .fg = colors.BG });
+        container_c.setCell(player_dc.x + 2, player_dc.y + 2, .{ .ch = '▆', .bg = c, .fg = colors.BG });
+        container_c.setCell(player_dc.x + 3, player_dc.y + 2, .{ .ch = '▆', .bg = c, .fg = colors.BG });
+    }
+
     {
         var tmpbuf = StackBuffer(u8, 128).init(null);
-        const x = player_dc.x - (32 + 4); // padding + space between @ and text
+        const x = player_dc.x - (24 + 4); // padding + space between @ and text
 
         tmpbuf.fmt("{s} the Oathbreaker", .{scoreinfo.username.constSlice()});
-        _ = container_c.drawTextAtf(x, player_dc.y - 1, "{s: >32}", .{tmpbuf.constSlice()}, .{});
+        _ = container_c.drawTextAtf(x, player_dc.y - 1, "$c{s: >24}", .{tmpbuf.constSlice()}, .{});
         tmpbuf.clear();
 
-        tmpbuf.fmt("** {s} **", .{scoreinfo.result});
-        _ = container_c.drawTextAtf(x, player_dc.y + 0, "$c{s: >32}$.", .{tmpbuf.constSlice()}, .{});
+        tmpbuf.fmt("at {s}", .{state.levelinfo[scoreinfo.level].name});
+        _ = container_c.drawTextAtf(x, player_dc.y + 0, "{s: >24}$.", .{tmpbuf.constSlice()}, .{});
         tmpbuf.clear();
 
-        tmpbuf.fmt("after {} turns", .{scoreinfo.turns});
-        _ = container_c.drawTextAtf(x, player_dc.y + 1, "$b{s: >32}$.", .{tmpbuf.constSlice()}, .{});
+        const s = if (scoreinfo.turns > 1) @as([]const u8, "s") else "";
+        tmpbuf.fmt("after {} turn{s}", .{ scoreinfo.turns, s });
+        _ = container_c.drawTextAtf(x, player_dc.y + 1, "$b{s: >24}$.", .{tmpbuf.constSlice()}, .{});
         tmpbuf.clear();
     }
 
     {
         const x = player_dc.x + 6;
         var oy: usize = player_dc.y - 1;
+        oy += container_c.drawTextAtf(x, oy, "$c{s}", .{scoreinfo.result}, .{});
         if (state.state == .Lose) {
             if (scoreinfo.slain_by_name.len > 0)
-                oy += container_c.drawTextAtf(x, oy, "... {s} by a {s}", .{ scoreinfo.slain_str, scoreinfo.slain_by_name.constSlice() }, .{});
+                oy += container_c.drawTextAtf(x, oy, "{s} by a {s}", .{ scoreinfo.slain_str, scoreinfo.slain_by_name.constSlice() }, .{});
             if (scoreinfo.slain_by_captain_name.len > 0)
-                oy += container_c.drawTextAtf(x, oy, "... led by a {s}", .{scoreinfo.slain_by_captain_name.constSlice()}, .{});
+                oy += container_c.drawTextAtf(x, oy, "$bled by a {s}$.", .{scoreinfo.slain_by_captain_name.constSlice()}, .{});
         }
-        _ = container_c.drawTextAtf(x, oy, "$bat {s}$.", .{state.levelinfo[scoreinfo.level].name}, .{});
     }
 
     {
-        const startx = player_dc.x - 32;
+        const startx = player_dc.x - 24;
         const endx = player_dc.x + 24;
         var oy: usize = player_dc.y + 4;
 
@@ -3419,68 +3463,134 @@ pub const Console = struct {
     }
 
     pub fn animationDeath(ctx: *GeneratorCtx(void), self: *Self) void {
-        const Ray = struct { x: f64, y: f64 };
+        const Ray = struct {
+            c: display.Cell,
+            x: f64,
+            y: f64,
+            dead: bool = false,
+
+            pub fn move(ray: *@This(), angle: usize, f: f64) void {
+                ray.x -= math.sin(@intToFloat(f64, angle) * math.pi / 180.0) * f;
+                ray.y -= math.cos(@intToFloat(f64, angle) * math.pi / 180.0) * f;
+            }
+
+            pub fn isValid(ray: *@This(), w: usize, h: usize) bool {
+                if (!ray.dead and ray.x > 0 and ray.y > 0) {
+                    const x = @floatToInt(usize, math.round(ray.x));
+                    const y = @floatToInt(usize, math.round(ray.y));
+                    if (x < w and y < h) return true;
+                }
+                return false;
+            }
+        };
+
+        const pdc = coordToScreen(state.player.coord).?;
 
         var rays = StackBuffer(Ray, 360).init(null);
         {
-            const d = @intToFloat(f64, math.max(self.width, self.height) / 2);
+            const d = pdc.distanceEuclidean(Coord.new(self.width, self.height));
             var i: f64 = 0;
             while (i < 360) : (i += 1)
                 rays.append(Ray{
-                    .x = @intToFloat(f64, self.width / 2) + math.sin(i * math.pi / 180.0) * d,
-                    .y = @intToFloat(f64, self.height / 2) + math.cos(i * math.pi / 180.0) * d,
+                    .c = .{ .trans = true },
+                    .x = @intToFloat(f64, pdc.x) + math.sin(i * math.pi / 180.0) * d,
+                    .y = @intToFloat(f64, pdc.y) + math.cos(i * math.pi / 180.0) * d,
                 }) catch err.wat();
+            for (rays.slice()) |*ray, angle|
+                ray.move(angle, 0.5);
         }
 
         var i: usize = 0;
-        const box_delay = 3;
-        const m = (math.min(self.height, self.width) / 2) + box_delay * 2;
+        var z: isize = @intCast(isize, pdc.distance(Coord.new(self.width, self.height / 2)));
+        const m = math.max(self.width - pdc.x, self.height - pdc.y) * 3;
         while (i < m) : (i += 1) {
-            // while (true) : (i += 1) {
+            var farthest_ray: usize = 0;
             for (rays.slice()) |*ray, angle| {
-                const f = @intToFloat(f64, rng.rangeClumping(usize, 2, 4, 3));
-                ray.x -= math.sin(@intToFloat(f64, angle) * math.pi / 180.0) * f;
-                ray.y -= math.cos(@intToFloat(f64, angle) * math.pi / 180.0) * f;
+                if (ray.isValid(self.width, self.height)) {
+                    const x = @floatToInt(usize, math.round(ray.x));
+                    const y = @floatToInt(usize, math.round(ray.y));
 
-                if (ray.x < 0 or ray.y < 0) {
-                    continue;
+                    if (farthest_ray < Coord.new(x, y).distance(pdc)) {
+                        farthest_ray = Coord.new(x, y).distance(pdc);
+                    }
+
+                    self.setCell(x, y, .{ .trans = true });
                 }
 
-                const x = @floatToInt(usize, math.round(ray.x));
-                const y = @floatToInt(usize, math.round(ray.y));
+                // Some stupid casting going on because rangeClumping can't handle f64's
+                const f = 2.0 / (@intToFloat(f64, rng.range(usize, 14, 28)) / 10.0);
+                ray.move(angle, f);
 
-                if (x >= self.width or y >= self.height) {
-                    continue;
+                if (ray.isValid(self.width, self.height)) {
+                    const x = @floatToInt(usize, math.round(ray.x));
+                    const y = @floatToInt(usize, math.round(ray.y));
+                    const cell = self.getCell(x, y);
+
+                    if (Coord.new(x, y).distance(pdc) < 2) {
+                        ray.dead = true;
+                        self.setCell(x, y, .{ .trans = true });
+                    } else if (!cell.fl.skip) {
+                        ray.c.trans = false;
+                        if ((ray.c.bg == colors.BG or rng.percent(33)) and cell.bg != colors.BG) {
+                            const frac = @intToFloat(f64, rng.range(usize, 0, 0) / 100);
+                            const bg = colors.percentageOf2(cell.bg, 140);
+                            if (colors.brightness(bg) > colors.brightness(ray.c.bg)) {
+                                ray.c.bg = bg;
+                            } else if (colors.brightness(0xcccccc) < colors.brightness(ray.c.bg)) {
+                                ray.c.bg = colors.mix(ray.c.bg, cell.bg, frac);
+                            } else {
+                                ray.c.bg = colors.mix(ray.c.bg, bg, frac);
+                            }
+                        }
+                        if ((ray.c.ch == ' ' or rng.percent(33)) and cell.ch != ' ') {
+                            ray.c.ch = cell.ch;
+                        }
+                        if ((ray.c.fg == 0x0 or rng.percent(33)) and cell.fg != 0x0) {
+                            ray.c.fg = colors.mix(ray.c.fg, cell.fg, 0.5);
+                        }
+                        if (cell.fl.wide and !(cell.bg == colors.BG and cell.fg == 0x0)) {
+                            ray.c.fl.wide = true;
+                            self.setCell(x + 1, y, .{ .fl = .{ .skip = true } });
+                        }
+
+                        self.setCell(x, y, ray.c);
+
+                        for (rays.slice()) |*otherray|
+                            if (otherray.isValid(self.width, self.height) and
+                                @floatToInt(usize, math.round(otherray.x)) == x and
+                                @floatToInt(usize, math.round(otherray.y)) == y and
+                                !otherray.c.trans and
+                                colors.brightness(otherray.c.bg) < colors.brightness(ray.c.bg))
+                            {
+                                otherray.c = ray.c;
+                            };
+                    }
                 }
-
-                self.setCell(x, y, .{ .trans = true });
-                self.setCell(x + 1, y, .{ .trans = true });
-                self.setCell(x, y + 1, .{ .trans = true });
-                self.setCell(x -| 1, y, .{ .trans = true });
-                self.setCell(x, y -| 1, .{ .trans = true });
             }
 
-            const z = i -| box_delay;
+            if (z > farthest_ray + 1) z -|= 1;
             var box_x: usize = 0;
             while (box_x < self.width) : (box_x += 1) {
-                self.setCell(box_x, z, .{ .trans = true });
-                self.setCell(box_x, self.height - z, .{ .trans = true });
+                self.setCell(box_x, pdc.y + @intCast(usize, z), .{ .trans = true });
+                if (@intCast(usize, z) <= pdc.y)
+                    self.setCell(box_x, pdc.y - @intCast(usize, z), .{ .trans = true });
             }
             var box_b: usize = 0;
             while (box_b < self.height) : (box_b += 1) {
-                self.setCell(z, box_b, .{ .trans = true });
-                self.setCell(self.width - z, box_b, .{ .trans = true });
+                self.setCell(pdc.x + @intCast(usize, z), box_b, .{ .trans = true });
+                if (@intCast(usize, z) <= pdc.x)
+                    self.setCell(pdc.x - @intCast(usize, z), box_b, .{ .trans = true });
             }
 
-            //             var any_left = false;
-            //             var y: usize = 0;
-            //             while (y < self.height) : (y += 1) {
-            //                 var x: usize = 0;
-            //                 while (x < self.width) : (x += 1) {
-            //                     if (self.getCell(x, y).fg != 0xff0000) any_left = true;
-            //                 }
-            //             }
-            //             if (!any_left) ctx.finish();
+            // var any_left = false;
+            // var y: usize = 0;
+            // while (y < self.height) : (y += 1) {
+            //     var x: usize = 0;
+            //     while (x < self.width) : (x += 1) {
+            //         if (self.getCell(x, y).fg != 0xff0000) any_left = true;
+            //     }
+            // }
+            // if (!any_left) ctx.finish();
 
             ctx.yield({});
         }

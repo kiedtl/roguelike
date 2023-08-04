@@ -86,12 +86,16 @@ pub const Info = struct {
                 if (state.player.killed_by) |by| {
                     if (by.faction == .Necromancer) {
                         if (by.life_type == .Undead) {
-                            break :b "Faced the Necromancer's rage";
+                            break :b "Faced the Necromancer's wrath";
                         } else {
                             break :b "Paid for their treachery";
                         }
                     } else if (by.faction == .Night) {
-                        if (state.dungeon.terrainAt(state.player.coord) == &surfaces.SladeTerrain) {
+                        // Don't use terrainAt() because the player's corpse will
+                        // be there, and terrainAt() only returns the terrain if there's
+                        // no surface item.
+                        //
+                        if (state.dungeon.at(state.player.coord).terrain == &surfaces.SladeTerrain) {
                             break :b "Died in darkness";
                         } else {
                             break :b "Fell into darkness";

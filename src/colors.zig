@@ -45,6 +45,14 @@ pub fn mix(a: u32, b: u32, frac: f64) u32 {
     return (rr << 16) | (rg << 8) | rb;
 }
 
+// How could I forget that percentageOf clamps the value...
+pub fn percentageOf2(color: u32, percentage: u32) u32 {
+    const r = math.min(((color >> 16) & 0xFF) * percentage / 100, 0xFF);
+    const g = math.min(((color >> 8) & 0xFF) * percentage / 100, 0xFF);
+    const b = math.min(((color >> 0) & 0xFF) * percentage / 100, 0xFF);
+    return (r << 16) | (g << 8) | b;
+}
+
 pub fn percentageOf(color: u32, _p: usize) u32 {
     const percentage = @intCast(u32, math.clamp(_p, 0, 100));
     const r = math.min(((color >> 16) & 0xFF) * percentage / 100, 0xFF);
@@ -60,19 +68,20 @@ pub fn darken(color: u32, by: u32) u32 {
     return (r << 16) | (g << 8) | b;
 }
 
-pub fn filterGrayscale(color: u32) u32 {
+pub fn brightness(color: u32) u32 {
     const r = @intToFloat(f64, ((color >> 16) & 0xFF));
     const g = @intToFloat(f64, ((color >> 8) & 0xFF));
     const b = @intToFloat(f64, ((color >> 0) & 0xFF));
-    const brightness = @floatToInt(u32, 0.299 * r + 0.587 * g + 0.114 * b);
-    return (brightness << 16) | (brightness << 8) | brightness;
+    return @floatToInt(u32, 0.299 * r + 0.587 * g + 0.114 * b);
+}
+
+pub fn filterGrayscale(color: u32) u32 {
+    const bri = brightness(color);
+    return (bri << 16) | (bri << 8) | bri;
 }
 
 pub fn filterBluescale(color: u32) u32 {
-    const r = @intToFloat(f64, ((color >> 16) & 0xFF));
-    const g = @intToFloat(f64, ((color >> 8) & 0xFF));
-    const b = @intToFloat(f64, ((color >> 0) & 0xFF));
-    const brightness = @floatToInt(u32, 0.299 * r + 0.587 * g + 0.114 * b);
-    const newrg = brightness * 60 / 100;
-    return (newrg << 16) | (newrg << 8) | brightness;
+    const bri = brightness(color);
+    const newrg = bri * 60 / 100;
+    return (newrg << 16) | (newrg << 8) | bri;
 }

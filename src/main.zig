@@ -462,14 +462,14 @@ fn readInput() !bool {
                 // state.player.addStatus(.RingElectrocution, 0, .{ .Tmp = 5 });
                 // state.player.addStatus(.RingConjuration, 0, .{ .Tmp = 2 });
                 // state.night_rep[@enumToInt(state.player.faction)] += 10;
-                // state.player.HP = 0;
-                for (state.player_conj_augments) |aug, i| {
-                    if (!aug.received) {
-                        state.player_conj_augments[i].received = true;
-                        state.message(.Info, "[$oConjuration augment$.] {s}", .{state.player_conj_augments[i].a.description()});
-                        break;
-                    }
-                }
+                state.player.HP = 0;
+                // for (state.player_conj_augments) |aug, i| {
+                //     if (!aug.received) {
+                //         state.player_conj_augments[i].received = true;
+                //         state.message(.Info, "[$oConjuration augment$.] {s}", .{state.player_conj_augments[i].a.description()});
+                //         break;
+                //     }
+                // }
                 break :blk true;
             },
             .F8 => b: {
@@ -635,6 +635,15 @@ fn tickGame(p_cur_level: ?usize) !void {
             }
 
             if (mob.is_dead) break;
+
+            // Dupe of code at start of function
+            if (state.player.should_be_dead()) {
+                state.player.kill();
+            }
+            if (state.state != .Viewer and state.player.is_dead) {
+                state.state = .Lose;
+                return;
+            }
 
             mob.assertIsAtLocation();
             if (mob == state.player or state.player.canSeeMob(mob))
