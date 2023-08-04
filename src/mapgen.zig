@@ -73,7 +73,7 @@ const Poster = literature.Poster;
 // TODO: some of these will eventually (when?) be moved to level configs.
 //
 // {{{
-const CONNECTIONS_MAX = 4;
+const CONNECTIONS_MAX = 3;
 
 pub const TRAPS = &[_]*const Machine{
     &surfaces.ParalysisGasTrap,
@@ -4099,7 +4099,7 @@ pub const LevelConfig = struct {
     prefabs: []const []const u8 = &[_][]const u8{},
     distances: [2][10]usize = [2][10]usize{
         .{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-        .{ 3, 9, 4, 3, 2, 1, 0, 0, 0, 0 },
+        .{ 7, 4, 4, 3, 2, 1, 1, 0, 0, 0 },
     },
     shrink_corridors_to_fit: bool = true,
     prefab_chance: usize,
@@ -4158,7 +4158,7 @@ pub const LevelConfig = struct {
     allow_statues: bool = true,
     door_chance: usize = 10,
     room_trapped_chance: usize = 60,
-    subroom_chance: usize = 40,
+    subroom_chance: usize = 33,
     allow_spawn_in_corridors: bool = false,
     allow_extra_corridors: bool = true,
 
@@ -4179,7 +4179,7 @@ pub const LevelConfig = struct {
 pub fn createLevelConfig_PRI(comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
         .prefabs = prefabs,
-        .prefab_chance = 33,
+        .prefab_chance = 20,
         .mapgen_iters = 2048,
         .mapgen_func = placeRandomRooms,
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
