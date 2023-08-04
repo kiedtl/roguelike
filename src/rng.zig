@@ -132,7 +132,8 @@ pub fn choose2(comptime T: type, arr: []const T, comptime weight_field: []const 
 test "range" {
     const testing = std.testing;
 
-    try init(testing.allocator);
+    seed = 2384928349;
+    init();
 
     var i: usize = 0;
     while (i < 1000) : (i += 1) {

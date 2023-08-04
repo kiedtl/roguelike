@@ -62,7 +62,7 @@
 "defender"                	 "" 	   - 	   - 	  10 	   - 	   - 	   - 	  10 	  10 	   - 	  10 	  10 	  - 	  - 	  -
 "necromancer"             	 "" 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  15 	   - 	  10 	  20 	  5 	  5 	  5
 "bloat"                   	 "" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  15 	   - 	  10 	  10 	 30 	 30 	 30
-"skeletal_blademaster   " 	 "" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  15 	   - 	  15 	  25 	 15 	 15 	 15
+"skeletal_blademaster"    	 "" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  15 	   - 	  15 	  25 	 15 	 15 	 15
 "death_knight"            	 "" 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  15 	   - 	  15 	  15 	 30 	 30 	 30
 #"thrashing_sculptor"      	 "" 	   - 	   - 	   - 	   - 	   - 	   - 	  10 	  15 	   - 	  10 	  10 	 20 	 20 	 20
 

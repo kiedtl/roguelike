@@ -361,12 +361,13 @@ pub fn disruptIndividualUndead(mob: *Mob) void {
 }
 
 test {
-    try rng.init(std.testing.allocator);
+    rng.seed = 2384928349;
+    rng.init();
 
     var i: usize = 10;
     while (i > 0) : (i -= 1) {
         var resist = rng.range(isize, -4, 4) * 25;
-        var damage = @intToFloat(f64, rng.range(usize, 1, 9));
+        var damage = rng.range(usize, 1, 9);
         var ndmg = shaveDamage(damage, resist);
         _ = ndmg;
         // std.log.warn("damage: {}\tresist: {}\tnew: {}\tshaved: {}", .{

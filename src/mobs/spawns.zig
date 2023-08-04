@@ -6,8 +6,8 @@ const tsv = @import("../tsv.zig");
 const utils = @import("../utils.zig");
 const state = @import("../state.zig");
 const rng = @import("../rng.zig");
-const mobs = @import("../mobs.zig");
 const mapgen = @import("../mapgen.zig");
+const mobs = @import("../mobs.zig");
 
 const LEVELS = state.LEVELS;
 const HEIGHT = state.HEIGHT;
@@ -26,6 +26,7 @@ pub var spawn_tables: [LEVELS]MobSpawnInfo.AList = undefined;
 pub var spawn_tables_vaults: [mapgen.VAULT_KINDS]MobSpawnInfo.AList = undefined;
 pub var spawn_tables_special: [LEVELS]MobSpawnInfo.AList = undefined;
 pub var spawn_tables_lairs: [1]MobSpawnInfo.AList = undefined;
+pub const TABLES = [_][]MobSpawnInfo.AList{ &spawn_tables, &spawn_tables_vaults, &spawn_tables_special, &spawn_tables_lairs };
 
 pub fn chooseMob(which_table: SpawnTable, z: usize, maybe_class: ?[]const u8) !*const mobs.MobTemplate {
     const chosen_table = switch (which_table) {

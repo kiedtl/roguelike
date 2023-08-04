@@ -839,6 +839,14 @@ fn testerMain() void {
             }
         }
 
+        pub fn assertNotNull(x: *@This(), a: anytype, comptime c_fmt: []const u8, c_args: anytype) Error!void {
+            x.total_asserts += 1;
+            if (a == null) {
+                x.record("Got null (" ++ c_fmt ++ ")", c_args);
+                return error.Failed;
+            }
+        }
+
         pub fn getMob(x: *@This(), tag: u8) Error!*Mob {
             var i = state.mobs.iteratorReverse();
             return while (i.next()) |mob| {
@@ -874,6 +882,24 @@ fn testerMain() void {
     };
 
     const TESTS = [_]TestGroup{
+        .{
+            .name = "data_files",
+            .tests = &[_]Test{
+                Test.n("mob_spawns", "TEST_dummy", 0, null, struct {
+                    pub fn f(x: *TestContext) !void {
+                        for (mobs.spawns.TABLES) |spawn_table, i|
+                            for (spawn_table) |table|
+                                for (table.items) |spawn_info| {
+                                    try x.assertNotNull(
+                                        mobs.findMobById(spawn_info.id),
+                                        "table: {}, id: {s}",
+                                        .{ i, spawn_info.id },
+                                    );
+                                };
+                    }
+                }.f),
+            },
+        },
         .{
             .name = "basic_systems",
             .tests = &[_]Test{
