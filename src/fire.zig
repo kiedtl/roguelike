@@ -136,7 +136,7 @@ pub fn tickFire(level: usize) void {
                         },
                         .Water => {
                             if (rng.onein(3))
-                                state.dungeon.atGas(neighbor)[gas.Steam.id] += 0.2;
+                                state.dungeon.atGas(neighbor)[gas.Steam.id] += 20;
                         },
                         else => {},
                     }

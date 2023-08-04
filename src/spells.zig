@@ -945,7 +945,7 @@ fn _effectHastenRot(_: Coord, _: Spell, opts: SpellOptions, coord: Coord) void {
     const corpse = state.dungeon.at(coord).surface.?.Corpse;
     state.dungeon.at(coord).surface = null;
 
-    state.dungeon.atGas(coord)[gas.Miasma.id] = @intToFloat(f64, opts.power) / 100;
+    state.dungeon.atGas(coord)[gas.Miasma.id] = opts.power;
     if (state.player.cansee(coord)) {
         state.message(.SpellCast, "The {s} corpse explodes in a blast of foul miasma!", .{
             corpse.displayName(),

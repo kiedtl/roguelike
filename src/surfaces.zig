@@ -308,7 +308,7 @@ pub const SteamVent = Machine{
     .on_power = struct {
         pub fn f(machine: *Machine) void {
             if (state.ticks % 40 == 0) {
-                state.dungeon.atGas(machine.coord)[gas.Steam.id] += 2;
+                state.dungeon.atGas(machine.coord)[gas.Steam.id] += 200;
             }
         }
     }.f,
@@ -1237,7 +1237,7 @@ fn powerExtractor(machine: *Machine) void {
         .Boulder => |b| for (&Vial.VIAL_ORES) |vd| if (vd.m) |m|
             if (mem.eql(u8, m.name, b.name)) {
                 state.dungeon.itemsAt(output).append(Item{ .Vial = vd.v }) catch unreachable;
-                state.dungeon.atGas(machine.coord)[gas.Dust.id] = rng.range(f64, 0.1, 0.2);
+                state.dungeon.atGas(machine.coord)[gas.Dust.id] = rng.range(usize, 10, 20);
             },
         else => {},
     };
@@ -1308,7 +1308,7 @@ fn powerBlastFurnace(machine: *Machine) void {
 fn powerTurbinePowerSupply(machine: *Machine) void {
     assert(machine.areas.len > 0);
 
-    var steam: f64 = 0.0;
+    var steam: usize = 0;
 
     for (machine.areas.constSlice()) |area| {
         const prop = state.dungeon.at(area).surface.?.Prop;
@@ -1333,7 +1333,7 @@ fn powerHealingGasPump(machine: *Machine) void {
     assert(machine.areas.len > 0);
 
     for (machine.areas.constSlice()) |coord| {
-        state.dungeon.atGas(coord)[gas.Healing.id] = 1.0;
+        state.dungeon.atGas(coord)[gas.Healing.id] = 100;
     }
 }
 

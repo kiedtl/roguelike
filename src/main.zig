@@ -873,7 +873,7 @@ fn testerMain() void {
             .tests = &[_]Test{
                 Test.n("gas_no_effect_on_unbreathing", "TEST_gas_rFume", 5, struct {
                     pub fn f(x: *TestContext) !void {
-                        state.dungeon.atGas((try x.getMob('2')).coord)[gas.Paralysis.id] = 1.0;
+                        state.dungeon.atGas((try x.getMob('2')).coord)[gas.Paralysis.id] = 100;
                     }
                 }.f, struct {
                     pub fn f(x: *TestContext) !void {
@@ -887,7 +887,7 @@ fn testerMain() void {
                 // ---
                 Test.n("gas_no_pass_through_walls", "TEST_gas_no_pass_through_walls", 6, struct {
                     pub fn f(x: *TestContext) !void {
-                        state.dungeon.atGas((try x.getMob('A')).coord)[gas.Paralysis.id] = 1.0;
+                        state.dungeon.atGas((try x.getMob('A')).coord)[gas.Paralysis.id] = 100;
                     }
                 }.f, struct {
                     pub fn f(x: *TestContext) !void {
@@ -898,7 +898,7 @@ fn testerMain() void {
                 // ---
                 Test.n("gas_effect_on_unbreathing_if_not_breathed", "TEST_gas_rFume2", 10, struct {
                     pub fn f(x: *TestContext) !void {
-                        state.dungeon.atGas((try x.getMob('1')).coord)[gas.Corrosive.id] = 1.0;
+                        state.dungeon.atGas((try x.getMob('1')).coord)[gas.Corrosive.id] = 100;
                     }
                 }.f, struct {
                     pub fn f(x: *TestContext) !void {
@@ -910,10 +910,10 @@ fn testerMain() void {
                 // ---
                 Test.n("gas_works_in_tandem", "TEST_gas_works_in_tandem", 10, struct {
                     pub fn f(x: *TestContext) !void {
-                        state.dungeon.atGas((try x.getMob('B')).coord)[gas.Paralysis.id] = 1.0;
-                        state.dungeon.atGas((try x.getMob('B')).coord)[gas.Seizure.id] = 1.0;
-                        state.dungeon.atGas((try x.getMob('B')).coord)[gas.Miasma.id] = 1.0;
-                        state.dungeon.atGas((try x.getMob('B')).coord)[gas.Blinding.id] = 1.0;
+                        state.dungeon.atGas((try x.getMob('B')).coord)[gas.Paralysis.id] = 100;
+                        state.dungeon.atGas((try x.getMob('B')).coord)[gas.Seizure.id] = 100;
+                        state.dungeon.atGas((try x.getMob('B')).coord)[gas.Miasma.id] = 100;
+                        state.dungeon.atGas((try x.getMob('B')).coord)[gas.Blinding.id] = 100;
                     }
                 }.f, struct {
                     pub fn f(x: *TestContext) !void {
@@ -929,7 +929,7 @@ fn testerMain() void {
                 // ---
                 Test.n("gas_pass_through_if_porous", "TEST_gas_pass_through_if_porous", 3, struct {
                     pub fn f(x: *TestContext) !void {
-                        state.dungeon.atGas((try x.getMob('A')).coord)[gas.Paralysis.id] = 1.0;
+                        state.dungeon.atGas((try x.getMob('A')).coord)[gas.Paralysis.id] = 100;
                     }
                 }.f, struct {
                     pub fn f(x: *TestContext) !void {
@@ -943,7 +943,7 @@ fn testerMain() void {
                 Test.n("gas_eventually_dissipates", "TEST_gas_eventually_dissipates", 15, struct {
                     pub fn f(x: *TestContext) !void {
                         // Choose one w/ high dissipation rate so we don't have to do 40 ticks
-                        state.dungeon.atGas((try x.getMob('A')).coord)[gas.Dust.id] = 1.0;
+                        state.dungeon.atGas((try x.getMob('A')).coord)[gas.Dust.id] = 100;
                     }
                 }.f, struct {
                     pub fn f(x: *TestContext) !void {
@@ -953,7 +953,7 @@ fn testerMain() void {
                 // ---
                 Test.n("light_opacity_checks", "TEST_light_opacity_checks", 1, struct {
                     pub fn f(x: *TestContext) !void {
-                        state.dungeon.atGas((try x.getMob('X')).coord)[gas.Darkness.id] = 1.0;
+                        state.dungeon.atGas((try x.getMob('X')).coord)[gas.Darkness.id] = 100;
                     }
                 }.f, struct {
                     pub fn f(x: *TestContext) !void {

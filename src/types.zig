@@ -2214,7 +2214,7 @@ pub const Mob = struct { // {{{
         // Gases
         const gases = state.dungeon.atGas(self.coord);
         for (gases) |quantity, gasi| {
-            if (quantity > 0.0 and
+            if (quantity > 0 and
                 (rng.range(usize, 0, 100) < (100 - self.resistance(.rFume)) or
                 gas.Gases[gasi].not_breathed))
             {
@@ -2449,7 +2449,7 @@ pub const Mob = struct { // {{{
 
         for (item.effects) |effect| switch (effect) {
             .Status => |s| if (direct) self.addStatus(s, 0, .{ .Tmp = Status.MAX_DURATION }),
-            .Gas => |s| state.dungeon.atGas(self.coord)[s] = 1.0,
+            .Gas => |s| state.dungeon.atGas(self.coord)[s] = 100,
             .Damage => |d| self.takeDamage(.{
                 .lethal = d.lethal,
                 .amount = d.amount,
@@ -2577,7 +2577,7 @@ pub const Mob = struct { // {{{
                     mob.useConsumable(c, false) catch |e|
                         err.bug("Couldn't use thrown consumable: {}", .{e});
                 } else for (c.effects) |effect| switch (effect) {
-                    .Gas => |s| state.dungeon.atGas(coord)[s] = 1.0,
+                    .Gas => |s| state.dungeon.atGas(coord)[s] = 100,
                     .Custom => |f| f(null, coord),
                     else => {},
                 };
@@ -2787,7 +2787,7 @@ pub const Mob = struct { // {{{
         }
 
         if (self.hasStatus(.FumesVest) and direction != null) {
-            state.dungeon.atGas(coord)[gas.Darkness.id] += 0.02;
+            state.dungeon.atGas(coord)[gas.Darkness.id] += 2;
         }
 
         if (state.dungeon.at(dest).surface) |surface| {
@@ -3310,7 +3310,7 @@ pub const Mob = struct { // {{{
                 if (self.blood) |s|
                     state.dungeon.spatter(self.coord, s);
                 if (self.blood_spray) |g|
-                    state.dungeon.atGas(self.coord)[g] += 0.2;
+                    state.dungeon.atGas(self.coord)[g] += 20;
             }
         }
 
@@ -4329,10 +4329,10 @@ pub const Machine = struct {
                         if (mob.faction == .Necromancer) return;
 
                         if (machine.props.len == 0) {
-                            state.dungeon.atGas(machine.coord)[g.id] = 1.0;
+                            state.dungeon.atGas(machine.coord)[g.id] = 100;
                         } else {
                             for (machine.props) |maybe_prop| if (maybe_prop) |vent| {
-                                state.dungeon.atGas(vent.coord)[g.id] = 1.0;
+                                state.dungeon.atGas(vent.coord)[g.id] = 100;
                             };
                         }
 
@@ -4973,7 +4973,7 @@ pub const Tile = struct {
 pub const Dungeon = struct {
     map: [LEVELS][HEIGHT][WIDTH]Tile = [1][HEIGHT][WIDTH]Tile{[1][WIDTH]Tile{[1]Tile{.{}} ** WIDTH} ** HEIGHT} ** LEVELS,
     items: [LEVELS][HEIGHT][WIDTH]ItemBuffer = [1][HEIGHT][WIDTH]ItemBuffer{[1][WIDTH]ItemBuffer{[1]ItemBuffer{ItemBuffer.init(null)} ** WIDTH} ** HEIGHT} ** LEVELS,
-    gas: [LEVELS][HEIGHT][WIDTH][gas.GAS_NUM]f64 = [1][HEIGHT][WIDTH][gas.GAS_NUM]f64{[1][WIDTH][gas.GAS_NUM]f64{[1][gas.GAS_NUM]f64{[1]f64{0} ** gas.GAS_NUM} ** WIDTH} ** HEIGHT} ** LEVELS,
+    gas: [LEVELS][HEIGHT][WIDTH][gas.GAS_NUM]usize = [1][HEIGHT][WIDTH][gas.GAS_NUM]usize{[1][WIDTH][gas.GAS_NUM]usize{[1][gas.GAS_NUM]usize{[1]usize{0} ** gas.GAS_NUM} ** WIDTH} ** HEIGHT} ** LEVELS,
     sound: [LEVELS][HEIGHT][WIDTH]Sound = [1][HEIGHT][WIDTH]Sound{[1][WIDTH]Sound{[1]Sound{.{}} ** WIDTH} ** HEIGHT} ** LEVELS,
     light: [LEVELS][HEIGHT][WIDTH]bool = [1][HEIGHT][WIDTH]bool{[1][WIDTH]bool{[1]bool{false} ** WIDTH} ** HEIGHT} ** LEVELS,
     fire: [LEVELS][HEIGHT][WIDTH]usize = [1][HEIGHT][WIDTH]usize{[1][WIDTH]usize{[1]usize{0} ** WIDTH} ** HEIGHT} ** LEVELS,
@@ -5172,7 +5172,7 @@ pub const Dungeon = struct {
     }
 
     // STYLE: rename to gasAt
-    pub inline fn atGas(self: *Dungeon, c: Coord) []f64 {
+    pub inline fn atGas(self: *Dungeon, c: Coord) []usize {
         return &self.gas[c.z][c.y][c.x];
     }
 
