@@ -3,7 +3,15 @@ run-name: Determining amount of garbage code in latest commit
 
 on: [push]
 jobs:
-  test1:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.9.1
+      - run: zig fmt --check src/*.zig
+  unit-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -11,7 +19,7 @@ jobs:
         with:
           version: 0.9.1
       - run: zig test src/test.zig
-  test2:
+  integration-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -22,11 +30,3 @@ jobs:
           version: 0.9.1
       - run: zig build
       - run: RL_NO_SENTRY=1 RL_SEED=0xdefaced_cafe RL_MODE=tester zig-out/bin/rl
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: goto-bus-stop/setup-zig@v2
-        with:
-          version: 0.9.1
-      - run: zig fmt --check src/*.zig
