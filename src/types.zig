@@ -246,6 +246,47 @@ pub const Direction = enum { // {{{
     }
 }; // }}}
 
+pub const CoordIsize = struct { // {{{
+    x: isize,
+    y: isize,
+    z: isize,
+
+    pub const Self = @This();
+
+    pub inline fn new(x: isize, y: isize) CoordIsize {
+        return .{ .z = 0, .x = x, .y = y };
+    }
+
+    pub inline fn newUsize(x: usize, y: usize) CoordIsize {
+        return .{ .z = 0, .x = @intCast(isize, x), .y = @intCast(isize, y) };
+    }
+
+    pub inline fn fromCoord(c: Coord) CoordIsize {
+        return .{
+            .x = @intCast(isize, c.x),
+            .y = @intCast(isize, c.y),
+            .z = @intCast(isize, c.z),
+        };
+    }
+
+    pub inline fn difference(a: Self, b: Self) Self {
+        return CoordIsize.new(
+            math.max(a.x, b.x) - math.min(a.x, b.x),
+            math.max(a.y, b.y) - math.min(a.y, b.y),
+        );
+    }
+
+    pub inline fn distance(a: Self, b: Self) isize {
+        const diff = a.difference(b);
+        return math.max(diff.x, diff.y);
+    }
+
+    pub inline fn distanceEuclidean(a: Self, b: Self) f64 {
+        const diff = a.difference(b);
+        return math.sqrt(@intToFloat(f64, diff.x * diff.x) + @intToFloat(f64, diff.y * diff.y));
+    }
+}; // }}}
+
 pub const Coord = struct { // {{{
     x: usize,
     y: usize,

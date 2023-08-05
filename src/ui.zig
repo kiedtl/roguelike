@@ -37,6 +37,7 @@ const SurfaceItem = types.SurfaceItem;
 const Stat = types.Stat;
 const Resistance = types.Resistance;
 const Coord = types.Coord;
+const CoordIsize = types.CoordIsize;
 const Rect = types.Rect;
 const Direction = types.Direction;
 const Tile = types.Tile;
@@ -3500,7 +3501,15 @@ pub const Console = struct {
             c: display.Cell,
             x: f64,
             y: f64,
+            speed: f64 = 1.0,
+            orig: CoordIsize,
             dead: bool = false,
+
+            pub fn init(x: f64, y: f64) @This() {
+                const xr = @floatToInt(isize, math.round(x));
+                const yr = @floatToInt(isize, math.round(y));
+                return .{ .c = .{ .trans = true }, .x = x, .y = y, .orig = CoordIsize.new(xr, yr) };
+            }
 
             pub fn move(ray: *@This(), angle: usize, f: f64) void {
                 ray.x -= math.sin(@intToFloat(f64, angle) * math.pi / 180.0) * f;
@@ -3518,17 +3527,17 @@ pub const Console = struct {
         };
 
         const pdc = coordToScreen(state.player.coord).?;
+        const pdci = CoordIsize.fromCoord(pdc);
 
         var rays = StackBuffer(Ray, 360).init(null);
         {
             const d = pdc.distanceEuclidean(Coord.new(self.width, self.height));
             var i: f64 = 0;
             while (i < 360) : (i += 1)
-                rays.append(Ray{
-                    .c = .{ .trans = true },
-                    .x = @intToFloat(f64, pdc.x) + math.sin(i * math.pi / 180.0) * d,
-                    .y = @intToFloat(f64, pdc.y) + math.cos(i * math.pi / 180.0) * d,
-                }) catch err.wat();
+                rays.append(Ray.init(
+                    @intToFloat(f64, pdc.x) + math.sin(i * math.pi / 180.0) * d,
+                    @intToFloat(f64, pdc.y) + math.cos(i * math.pi / 180.0) * d,
+                )) catch err.wat();
             for (rays.slice()) |*ray, angle|
                 ray.move(angle, 0.5);
         }
@@ -3551,15 +3560,27 @@ pub const Console = struct {
                 }
 
                 // Some stupid casting going on because rangeClumping can't handle f64's
-                const f = 2.0 / (@intToFloat(f64, rng.range(usize, 14, 28)) / 10.0);
+                const f = ray.speed / (@intToFloat(f64, rng.range(usize, 14, 28)) / 10.0);
                 ray.move(angle, f);
+
+                {
+                    const x = @floatToInt(isize, math.round(ray.x));
+                    const y = @floatToInt(isize, math.round(ray.y));
+
+                    const orig_dist = ray.orig.distanceEuclidean(pdci);
+                    const curr_dist = CoordIsize.new(x, y).distanceEuclidean(pdci);
+                    const journey_done = (orig_dist - curr_dist) / orig_dist;
+                    ray.speed = 2 * (1.3 + (journey_done * journey_done * journey_done));
+                    ray.speed = math.min(2.3, ray.speed);
+                }
 
                 if (ray.isValid(self.width, self.height)) {
                     const x = @floatToInt(usize, math.round(ray.x));
                     const y = @floatToInt(usize, math.round(ray.y));
+
                     const cell = self.getCell(x, y);
 
-                    if (Coord.new(x, y).distance(pdc) < 2) {
+                    if (Coord.new(x, y).distance(pdc) < 3) {
                         ray.dead = true;
                         self.setCell(x, y, .{ .trans = true });
                     } else if (!cell.fl.skip) {
@@ -3601,29 +3622,20 @@ pub const Console = struct {
                 }
             }
 
-            if (z > farthest_ray + 1) z -|= 1;
-            var box_x: usize = 0;
-            while (box_x < self.width) : (box_x += 1) {
-                self.setCell(box_x, pdc.y + @intCast(usize, z), .{ .trans = true });
-                if (@intCast(usize, z) <= pdc.y)
-                    self.setCell(box_x, pdc.y - @intCast(usize, z), .{ .trans = true });
+            while (farthest_ray > 0 and z > 0 and z > farthest_ray + 1) : (z -= 1) {
+                var box_x: usize = 0;
+                while (box_x < self.width) : (box_x += 1) {
+                    self.setCell(box_x, pdc.y + @intCast(usize, z), .{ .trans = true });
+                    if (@intCast(usize, z) <= pdc.y)
+                        self.setCell(box_x, pdc.y - @intCast(usize, z), .{ .trans = true });
+                }
+                var box_b: usize = 0;
+                while (box_b < self.height) : (box_b += 1) {
+                    self.setCell(pdc.x + @intCast(usize, z), box_b, .{ .trans = true });
+                    if (@intCast(usize, z) <= pdc.x)
+                        self.setCell(pdc.x - @intCast(usize, z), box_b, .{ .trans = true });
+                }
             }
-            var box_b: usize = 0;
-            while (box_b < self.height) : (box_b += 1) {
-                self.setCell(pdc.x + @intCast(usize, z), box_b, .{ .trans = true });
-                if (@intCast(usize, z) <= pdc.x)
-                    self.setCell(pdc.x - @intCast(usize, z), box_b, .{ .trans = true });
-            }
-
-            // var any_left = false;
-            // var y: usize = 0;
-            // while (y < self.height) : (y += 1) {
-            //     var x: usize = 0;
-            //     while (x < self.width) : (x += 1) {
-            //         if (self.getCell(x, y).fg != 0xff0000) any_left = true;
-            //     }
-            // }
-            // if (!any_left) ctx.finish();
 
             ctx.yield({});
         }
