@@ -783,7 +783,6 @@ fn testerMain() void {
     state.log_disabled = true;
 
     assert(initGame(true, 0));
-    defer deinitGame();
 
     const Error = error{ Failed, BasicFailed };
 
@@ -1137,6 +1136,10 @@ fn testerMain() void {
     // XXX: stupid hack: init game state again to prevent crash when deinitGame()
     // is called :))
     initGameState();
+
+    deinitGame();
+
+    std.os.exit(if (ctx.failed > 0) 1 else 0);
 }
 
 pub fn actualMain() anyerror!void {
