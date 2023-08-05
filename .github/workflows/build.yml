@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: goto-bus-stop/setup-zig@v2
         with:
-          version 0.9.1
+          version: 0.9.1
       - run: zig test src/test.zig
   test2:
     runs-on: ubuntu-latest
@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: goto-bus-stop/setup-zig@v2
         with:
-          version 0.9.1
+          version: 0.9.1
       - run: zig build
       - run: RL_NO_SENTRY=1 RL_SEED=0xdefaced_cafe RL_MODE=tester zig-out/bin/rl
   lint:
@@ -26,5 +26,5 @@ jobs:
       - uses: actions/checkout@v2
       - uses: goto-bus-stop/setup-zig@v2
         with:
-          version 0.9.1
+          version: 0.9.1
       - run: zig fmt --check src/*.zig
