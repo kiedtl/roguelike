@@ -4211,6 +4211,7 @@ pub fn createLevelConfig_LAB(comptime prefabs: []const []const u8) LevelConfig {
         .prefabs = prefabs,
         .tunneler_opts = .{
             .max_iters = 450,
+            .max_length = math.max(WIDTH, HEIGHT),
             .turn_chance = 0,
             .branch_chance = 5,
             .shrink_chance = 90,
@@ -4334,6 +4335,7 @@ pub fn createLevelConfig_WRK(comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
         .prefabs = prefabs,
         .tunneler_opts = .{
+            .max_length = math.max(WIDTH, HEIGHT),
             .turn_chance = 0,
             .branch_chance = 5,
             .shrink_chance = 60,

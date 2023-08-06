@@ -760,7 +760,7 @@ pub const TunnelerOptions = struct {
 
     // Maximum tunnel length before the algorithm tries to force it to change
     // directions.
-    max_length: usize = WIDTH, //WIDTH / 3,
+    max_length: usize = math.max(WIDTH, HEIGHT) * 2 / 3, //WIDTH / 3,
 
     // Maximum tunnel width. If the tunnel is this size, it won't grow farther.
     max_width: usize = 6,
