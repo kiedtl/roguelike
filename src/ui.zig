@@ -530,9 +530,10 @@ fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceIte
                 _writerWrite(w, "$gGoing back down would sure be dumb.$.\n", .{});
             } else {
                 _writerWrite(w, "$cUpward Stairs$.\n\nStairs to {s}.\n", .{state.levelinfo[s.?].name});
-            }
-            if (state.levelinfo[s.?].optional) {
-                _writerWrite(w, "\nThese stairs are $coptional$. and lead to more difficult floors.\n", .{});
+
+                if (state.levelinfo[s.?].optional) {
+                    _writerWrite(w, "\nThese stairs are $coptional$. and lead to more difficult floors.\n", .{});
+                }
             }
         },
         .Corpse => |c| {
@@ -2542,6 +2543,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
     var coord: Coord = state.player.coord;
     var tile_focus = starting_focus orelse .Mob;
     var mob_tile_focus: MobTileFocus = .Main;
+    var tile_focus_set_manually = false;
     var desc_scroll: usize = 0;
 
     var kbd_s = false;
@@ -2556,6 +2558,20 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
         const has_item = state.dungeon.itemsAt(coord).len > 0;
         const has_mons = state.dungeon.at(coord).mob != null;
         const has_surf = state.dungeon.at(coord).surface != null or !mem.eql(u8, state.dungeon.terrainAt(coord).id, "t_default");
+
+        if (!tile_focus_set_manually) {
+            const has_something = switch (tile_focus) {
+                .Mob => has_mons,
+                .Surface => has_surf,
+                .Item => has_item,
+            };
+
+            if (!has_something) {
+                if (has_item) tile_focus = .Item;
+                if (has_surf) tile_focus = .Surface;
+                if (has_mons) tile_focus = .Mob;
+            }
+        }
 
         // Draw side info pane.
         if (state.player.cansee(coord) and has_mons or has_surf or has_item) {
@@ -2738,6 +2754,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                     };
                 },
                 '>' => {
+                    tile_focus_set_manually = true;
                     tile_focus = switch (tile_focus) {
                         .Mob => .Surface,
                         .Surface => .Item,
@@ -2746,6 +2763,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                     if (tile_focus == .Mob) mob_tile_focus = .Main;
                 },
                 '<' => {
+                    tile_focus_set_manually = true;
                     tile_focus = switch (tile_focus) {
                         .Mob => .Item,
                         .Surface => .Mob,
