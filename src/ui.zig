@@ -60,8 +60,8 @@ pub const LEFT_INFO_WIDTH: usize = 35;
 pub const LOG_HEIGHT = 7;
 pub const ZAP_HEIGHT = 15 + 4;
 pub const PLAYER_INFO_MODAL_HEIGHT = 24;
-pub const MAP_HEIGHT_R = 12;
-pub const MAP_WIDTH_R = 16;
+pub const MAP_HEIGHT_R = 14;
+pub const MAP_WIDTH_R = 20;
 
 pub const MIN_HEIGHT = (MAP_HEIGHT_R * 2) + LOG_HEIGHT + 2;
 pub const MIN_WIDTH = (MAP_WIDTH_R * 4) + LEFT_INFO_WIDTH + 2 + 1;

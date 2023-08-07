@@ -1181,7 +1181,7 @@ pub fn actualMain() anyerror!void {
         state.sentry_disabled = false;
     }
 
-    var scale: f32 = 2;
+    var scale: f32 = 1;
     if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_DISPLAY_SCALE")) |v| {
         if (std.fmt.parseFloat(f32, v)) |val| {
             scale = val;
