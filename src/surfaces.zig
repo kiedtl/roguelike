@@ -120,17 +120,17 @@ pub const SladeTerrain = Terrain{
     .weight = 0,
 };
 
-pub const CarpetTerrain = Terrain{
-    .id = "t_carpet",
-    .name = "carpet",
-    .color = 0xdaa520, // goldenish
-    .tile = '÷',
-    .flammability = 30,
+// pub const CarpetTerrain = Terrain{
+//     .id = "t_carpet",
+//     .name = "carpet",
+//     .color = 0xdaa520, // goldenish
+//     .tile = '÷',
+//     .flammability = 30,
 
-    .for_levels = &[_][]const u8{"PRI"},
-    .placement = .EntireRoom,
-    .weight = 8,
-};
+//     .for_levels = &[_][]const u8{"PRI"},
+//     .placement = .EntireRoom,
+//     .weight = 8,
+// };
 
 pub const MetalTerrain = Terrain{
     .id = "t_metal",
@@ -238,7 +238,7 @@ pub const PillarTerrain = Terrain{
 pub const TERRAIN = [_]*const Terrain{
     &DefaultTerrain,
     &SladeTerrain,
-    &CarpetTerrain,
+    // &CarpetTerrain,
     &MetalTerrain,
     &CopperTerrain,
     &WoodTerrain,

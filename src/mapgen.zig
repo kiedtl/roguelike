@@ -804,6 +804,9 @@ pub fn excavatePrefab(
                     state.dungeon.at(rc).material = mat;
                 };
 
+            if (fab.terrain) |t|
+                state.dungeon.at(rc).terrain = t;
+
             switch (fab.content[y][x]) {
                 .Window => state.dungeon.at(rc).material = Configs[room.rect.start.z].window_material,
                 .LevelFeature => |l| (Configs[room.rect.start.z].level_features[l].?)(l, rc, room, fab, allocator),
@@ -1474,6 +1477,8 @@ pub const SubroomPlacementOptions = struct {
 pub fn placeSubroom(parent: *Room, area: *const Rect, alloc: mem.Allocator, opts: SubroomPlacementOptions) bool {
     assert(area.end().y < HEIGHT and area.end().x < WIDTH);
 
+    var buf = StackBuffer(*Prefab, 128).init(null);
+
     for (s_fabs.items) |*subroom| {
         if (opts.specific_id) |id| {
             if (!mem.eql(u8, subroom.name.constSlice(), id)) {
@@ -1501,38 +1506,49 @@ pub fn placeSubroom(parent: *Room, area: *const Rect, alloc: mem.Allocator, opts
         const minheight = subroom.height + if (opts.no_padding or subroom.nopadding) @as(usize, 0) else 2;
         const minwidth = subroom.width + if (opts.no_padding or subroom.nopadding) @as(usize, 0) else 2;
 
-        if (minheight <= area.height and minwidth <= area.width) {
-            const rx = (area.width / 2) - (subroom.width / 2);
-            const ry = (area.height / 2) - (subroom.height / 2);
+        if (minheight > area.height or minwidth > area.width) {
+            // if (mem.eql(u8, subroom.name.constSlice(), "PRI_s_s_cell_4_empty_walls_horiz") and opts.no_padding)
+            //     std.log.info("rejected (invalid size): minheight={}, minwidth={}, areaheight={}, areawidth={}", .{ minheight, minwidth, area.height, area.width }); // DEBUG
+            continue;
+        }
 
-            var parent_adj = parent.*;
-            parent_adj.rect = parent_adj.rect.add(area);
+        buf.append(subroom) catch {
+            std.log.warn("More prefabs than can fit inside buffer", .{});
+            break;
+        };
+    }
 
-            //std.log.debug("mapgen: Using subroom {s} at ({}x{}+{}+{})", .{ subroom.name.constSlice(), parent_adj.rect.start.x, parent_adj.rect.start.y, rx, ry });
+    if (buf.len == 0) return false;
 
-            excavatePrefab(&parent_adj, subroom, alloc, rx, ry);
-            subroom.incrementRecord(parent.rect.start.z);
-            parent.has_subroom = true;
+    const subroom = buf.chooseUnweighted().?;
 
-            if (subroom.subroom_areas.len > 0) {
-                for (subroom.subroom_areas.constSlice()) |subroom_area| {
-                    const actual_subroom_area = Rect{
-                        .start = Coord.new2(0, subroom_area.rect.start.x + rx, subroom_area.rect.start.y + ry),
-                        .height = subroom_area.rect.height,
-                        .width = subroom_area.rect.width,
-                    };
-                    _ = placeSubroom(&parent_adj, &actual_subroom_area, alloc, .{
-                        .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
-                        .no_padding = true,
-                    });
-                }
-            }
+    const rx = (area.width / 2) - (subroom.width / 2);
+    const ry = (area.height / 2) - (subroom.height / 2);
 
-            return true;
+    var parent_adj = parent.*;
+    parent_adj.rect = parent_adj.rect.add(area);
+
+    //std.log.debug("mapgen: Using subroom {s} at ({}x{}+{}+{})", .{ subroom.name.constSlice(), parent_adj.rect.start.x, parent_adj.rect.start.y, rx, ry });
+
+    excavatePrefab(&parent_adj, subroom, alloc, rx, ry);
+    subroom.incrementRecord(parent.rect.start.z);
+    parent.has_subroom = true;
+
+    if (subroom.subroom_areas.len > 0) {
+        for (subroom.subroom_areas.constSlice()) |subroom_area| {
+            const actual_subroom_area = Rect{
+                .start = Coord.new2(0, subroom_area.rect.start.x + rx, subroom_area.rect.start.y + ry),
+                .height = subroom_area.rect.height,
+                .width = subroom_area.rect.width,
+            };
+            _ = placeSubroom(&parent_adj, &actual_subroom_area, alloc, .{
+                .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
+                .no_padding = true,
+            });
         }
     }
 
-    return false;
+    return true;
 }
 
 fn _place_rooms(rooms: *Room.ArrayList, level: usize, allocator: mem.Allocator) !void {
@@ -3471,6 +3487,7 @@ pub const Prefab = struct {
     notraps: bool = false,
     nostairs: bool = false,
     nopadding: bool = false,
+    transforms: StackBuffer(Transform, 5) = StackBuffer(Transform, 5).init(null),
 
     tunneler_prefab: bool = false,
     tunneler_inset: bool = false,
@@ -3481,6 +3498,7 @@ pub const Prefab = struct {
     level_uses: [LEVELS]usize = [1]usize{0} ** LEVELS,
 
     material: ?*const Material = null,
+    terrain: ?*const surfaces.Terrain = null,
 
     player_position: ?Coord = null,
     height: usize = 0,
@@ -3498,6 +3516,15 @@ pub const Prefab = struct {
     output: ?Rect = null,
 
     pub const MAX_NAME_SIZE = 64;
+
+    pub const Transform = struct {
+        // File memory isn't freed until after parsing, so we can get away with
+        // not using a stackbuffer here
+        transform_into: ?[]const u8 = null,
+        transform_type: Type,
+
+        pub const Type = enum { Turn1, Turn2, Turn3 };
+    };
 
     pub const PlacementRecord = struct {
         level: [LEVELS]usize = [_]usize{0} ** LEVELS,
@@ -3594,12 +3621,93 @@ pub const Prefab = struct {
         return null;
     }
 
+    fn _parseTransform(f: *Prefab, origname: []const u8, t: Transform) !void {
+        var new = f.*;
+
+        if (f.input != null or f.output != null or f.stockpile != null or
+            f.connections[0] != null or f.mobs[0] != null or
+            f.subroom_areas.len != 0 or f.prisons.len != 0)
+        {
+            return error.UnimplementedTransformation;
+        }
+
+        new.transforms.clear();
+        for (new.content) |*row| mem.set(FabTile, row, .Wall);
+
+        var width: usize = undefined;
+        var height: usize = undefined;
+
+        switch (t.transform_type) {
+            .Turn1 => {
+                width = f.height;
+                height = f.width;
+                if (width >= f.content[0].len or height >= f.content.len)
+                    return error.OverflowingTransform;
+                for (f.content) |row, y| for (row) |cell, x| {
+                    if (y >= width or x >= height) continue;
+                    new.content[x][(width - 1) - y] = cell;
+                };
+            },
+            .Turn2 => {
+                width = f.width;
+                height = f.height;
+                for (f.content) |row, y| for (row) |cell, x| {
+                    if (y >= height or x >= width) continue;
+                    new.content[(height - 1) - y][(width - 1) - x] = cell;
+                };
+            },
+            .Turn3 => {
+                width = f.height;
+                height = f.width;
+                if (width >= f.content[0].len or height >= f.content.len)
+                    return error.OverflowingTransform;
+                for (f.content) |row, y| for (row) |cell, x| {
+                    if (y >= width or x >= height) continue;
+                    new.content[(height - 1) - x][y] = cell;
+                };
+            },
+        }
+
+        // std.log.info("Did transform {}. Old:", .{t.transform_type});
+        // for (f.content) |row, y| {
+        //     if (y >= height) continue;
+        //     for (row) |cell, x| {
+        //         if (x >= width) continue;
+        //         const ch = switch (cell) {
+        //             .Wall => '#',
+        //             .Feature => |z| z,
+        //             .Floor => '.',
+        //             else => ',',
+        //         };
+        //         _ = std.io.getStdErr().writer().print("{u}", .{ch}) catch err.wat();
+        //     }
+        //     _ = std.io.getStdErr().writer().write("\n") catch err.wat();
+        // }
+        // std.log.info("New:", .{});
+        // for (new.content) |row, y| {
+        //     if (y >= height) continue;
+        //     for (row) |cell, x| {
+        //         if (x >= width) continue;
+        //         const ch = switch (cell) {
+        //             .Wall => '#',
+        //             .Feature => |z| z,
+        //             .Floor => '.',
+        //             else => ',',
+        //         };
+        //         _ = std.io.getStdErr().writer().print("{u}", .{ch}) catch err.wat();
+        //     }
+        //     _ = std.io.getStdErr().writer().write("\n") catch err.wat();
+        // }
+
+        try _finishParsing(t.transform_into orelse origname, height, width, &new);
+    }
+
     fn _finishParsing(
         name: []const u8,
         y: usize,
         w: usize,
         f: *Prefab,
-    ) !void {
+    ) anyerror!void { // TODO: add Prefab.Error type and remove this anyerror nonsense
         f.width = w;
         f.height = y;
 
@@ -3624,6 +3732,9 @@ pub const Prefab = struct {
 
         const to = if (f.subroom) &s_fabs else &n_fabs;
         to.append(f.*) catch err.oom();
+
+        for (f.transforms.constSlice()) |transform|
+            try f._parseTransform(name, transform);
     }
 
     // XXX: anyerror is a hack because we call ourselves, meaning Zig can't
@@ -3716,6 +3827,12 @@ pub const Prefab = struct {
                             if (mem.eql(u8, val, mat.id orelse mat.name))
                                 break mat;
                         } else return error.InvalidMetadataValue;
+                    } else if (mem.eql(u8, key, "terrain")) {
+                        if (val.len == 0) return error.ExpectedMetadataValue;
+                        f.terrain = for (surfaces.TERRAIN) |t| {
+                            if (mem.eql(u8, val, t.id))
+                                break t;
+                        } else return error.InvalidMetadataValue;
                     } else if (mem.eql(u8, key, "restriction")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
                         f.restriction = std.fmt.parseInt(usize, val, 0) catch return error.InvalidMetadataValue;
@@ -3789,6 +3906,23 @@ pub const Prefab = struct {
                         height = std.fmt.parseInt(usize, height_str, 0) catch return error.InvalidMetadataValue;
 
                         f.prisons.append(.{ .start = rect_start, .width = width, .height = height }) catch return error.TooManyPrisons;
+                    } else if (mem.eql(u8, key, "g_transform")) {
+                        var ttype = Transform.Type.Turn1;
+
+                        if (val.len > 0) {
+                            if (mem.eql(u8, val, ".Turn1")) {
+                                ttype = .Turn1;
+                            } else if (mem.eql(u8, val, ".Turn2")) {
+                                ttype = .Turn2;
+                            } else if (mem.eql(u8, val, ".Turn3")) {
+                                ttype = .Turn3;
+                            } else return error.InvalidMetadataValue;
+                        }
+
+                        f.transforms.append(.{
+                            .transform_into = words.next(),
+                            .transform_type = ttype,
+                        }) catch return error.TooManyTransforms;
                     } else if (mem.eql(u8, key, "subroom_area")) {
                         var rect_start = Coord.new(0, 0);
                         var width: usize = 0;
@@ -4074,6 +4208,9 @@ fn _readPrefab(name: []const u8, fab_f: std.fs.File, buf: []u8) void {
             error.UnexpectedEndOfFile => "Unexpected end of file",
             error.ExpectedMetadataValue => "Expected value for metadata",
             error.InvalidUtf8 => "Encountered invalid UTF-8",
+            error.TooManyTransforms => "Too many transforms",
+            error.UnimplementedTransformation => "Unimplemented transformation",
+            error.OverflowingTransform => "Requested transform would overflow limits",
             else => "Unknown error",
         };
         std.log.err("{s}: Couldn't load prefab: {s} [{s}]", .{ name, msg, e });

@@ -143,7 +143,7 @@ pub fn init(scale: f32) !void {
 //
 // Return true if the user resized the window, false if the user press Ctrl+C.
 pub fn checkWindowSize() bool {
-    if (display.driver == .SDL2) {
+    if (state.state == .Viewer or display.driver == .SDL2) {
         return true;
     }
 
@@ -2072,7 +2072,8 @@ pub fn drawLoadingScreenFinish(loading_win: *LoadingScreen) bool {
     display.present();
     clearScreen();
 
-    _ = waitForInput(' ') orelse return false;
+    if (state.state != .Viewer)
+        _ = waitForInput(' ') orelse return false;
     return true;
 }
 

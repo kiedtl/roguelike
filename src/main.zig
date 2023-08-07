@@ -716,7 +716,6 @@ fn viewerMain() void {
         }
 
         state.player.kill();
-        state.state = .Viewer;
 
         var level: usize = state.PLAYER_STARTING_LEVEL;
         var y: usize = 0;
@@ -778,7 +777,6 @@ fn viewerMain() void {
 }
 
 fn testerMain() void {
-    state.state = .Viewer;
     state.sentry_disabled = true;
     state.log_disabled = true;
 
@@ -1158,8 +1156,10 @@ pub fn actualMain() anyerror!void {
 
     if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_MODE")) |v| {
         if (mem.eql(u8, v, "viewer")) {
+            state.state = .Viewer;
             use_viewer = true;
         } else if (mem.eql(u8, v, "tester")) {
+            state.state = .Viewer;
             use_tester = true;
         }
         use_viewer = mem.eql(u8, v, "viewer");

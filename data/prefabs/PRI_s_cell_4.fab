@@ -1,59 +1,100 @@
 :subroom
-:priority 20
-:g_individual_restriction 1
+:priority 90
+:g_individual_restriction 2
 % Must be higher than 4 to accomodate prisons in starting prefab
 :restriction 6
 
 :prison 0,0 4 4
-####
-#ββ#
-#ββ#
+:terrain t_metal
+:subroom_area 0,0 4 1 PRI_s_s_cell_4_occupied_walls_horiz
+:subroom_area 0,3 4 1 PRI_s_s_cell_4_occupied_walls_horiz
 #≡≡#
-
-\
-
-:prison 0,0 4 4
-#≡≡#
-#ββ#
-#ββ#
-####
-
-\
-
-:prison 0,0 4 4
-#&&#
-&.β#
-&ββ#
-#&&#
-
-\
-
-:prison 0,0 4 4
-≡≡≡≡
-#ββ#
-±..#
-####
-
-\
-
-:prison 0,0 4 4
-#≡≡#
-≡β.±
-≡.β#
-#≡≡#
-
-\
-
-:prison 0,0 4 4
-≡##≡
-≡β.≡
-≡β.≡
-##±#
-
-\
-
-:prison 0,0 4 4
-####
 #β.#
 #β.#
-#≡±#
+#≡≡#
+
+\
+
+:prison 0,0 4 4
+:terrain t_metal
+:subroom_area 0,0 1 4 PRI_s_s_cell_4_occupied_walls_vert
+:subroom_area 3,0 1 4 PRI_s_s_cell_4_occupied_walls_vert
+####
+≡β.≡
+≡β.≡
+####
+
+\
+
+
+:prison 0,0 4 4
+:terrain t_metal
+:subroom_area 0,0 4 1 PRI_s_s_cell_4_empty_walls_horiz
+:subroom_area 0,3 4 1 PRI_s_s_cell_4_empty_walls_horiz
+#≡≡#
+#..#
+#..#
+#≡≡#
+
+\
+
+:prison 0,0 4 4
+:terrain t_metal
+:subroom_area 0,0 1 4 PRI_s_s_cell_4_empty_walls_vert
+:subroom_area 3,0 1 4 PRI_s_s_cell_4_empty_walls_vert
+####
+≡..≡
+≡..≡
+####
+
+% --------------------------------------------------------------------------
+
+:begin_prefab PRI_s_s_cell_4_empty_walls_horiz
+:g_transform .Turn1 PRI_s_s_cell_4_empty_walls_vert
+:g_transform .Turn2
+:g_transform .Turn3 PRI_s_s_cell_4_empty_walls_vert
+:subroom
+:invisible
+
+@@b p iron_bars_broken
+
+####
+
+\
+
+#..#
+
+\
+
+##.#
+
+\
+
+#bb#
+
+\
+
+#b.#
+
+\
+
+#≡##
+
+% --------------------------------------------------------------------------
+
+:begin_prefab PRI_s_s_cell_4_occupied_walls_horiz
+:g_transform .Turn1 PRI_s_s_cell_4_occupied_walls_vert
+:g_transform .Turn2
+:g_transform .Turn3 PRI_s_s_cell_4_occupied_walls_vert
+:subroom
+:invisible
+
+#≡##
+
+\
+
+#±##
+
+\
+
+#±≡#
