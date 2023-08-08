@@ -72,6 +72,11 @@
 %              e.g.: diamond centerpieces, pillars, etc.
 %        -  0: fluff.
 %        Global.
+%    :g_transform <transform_type> <new_prefab_name>
+%        Does a transform/rotate for the prefab and creates a new variation,
+%        optionally with a different name (<new_prefab_name>). Available transform_types:
+%        - '.Turn1', '.Turn2', '.Turn3'
+%        Global, acts on / or when prefab is done parsing.
 %
 
 % Example:
