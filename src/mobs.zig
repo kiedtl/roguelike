@@ -70,7 +70,7 @@ const W_BLUDG_1 = Weapon{ .damage = 1, .strs = &items.CRUSHING_STRS, .name = "bl
 const W_BLUDG_2 = Weapon{ .damage = 2, .strs = &items.CRUSHING_STRS, .name = "bludgeon" };
 const W_MACES_2 = Weapon{ .damage = 2, .strs = &items.CRUSHING_STRS, .name = "mace" };
 const W_MACES_3 = Weapon{ .damage = 3, .strs = &items.CRUSHING_STRS, .name = "mace" };
-const W_MSWRD_1 = Weapon{ .damage = 1, .strs = &items.SLASHING_STRS, .name = "martial sword" };
+const W_MSWRD_1 = Weapon{ .damage = 1, .strs = &items.SLASHING_STRS, .name = "martial sword", .martial = true };
 const W_SPROD_1 = Weapon{ .damage = 1, .damage_kind = .Electric, .strs = &items.SHOCK_STRS, .name = "shock prod" };
 
 pub const PLAYER_VISION = 12;
@@ -1192,10 +1192,10 @@ pub const DeathKnightTemplate = MobTemplate{
 
         .max_HP = 8,
         .memory_duration = 8,
-        .stats = .{ .Willpower = 6, .Melee = 70, .Evade = 10, .Vision = 6 },
+        .innate_resists = .{ .Armor = 25 },
+        .stats = .{ .Willpower = 6, .Melee = 65, .Martial = 1, .Evade = 10, .Vision = 6 },
     },
-    .weapon = &W_SWORD_2,
-    .armor = items.HauberkArmor,
+    .weapon = &W_MSWRD_1,
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
@@ -1673,12 +1673,10 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
         .blood = null,
         .corpse = .None,
 
-        // Will have rElec-25 from Cuirass
-        .innate_resists = .{ .rFume = 100, .rFire = -25 },
-        .stats = .{ .Willpower = 4, .Melee = 90, .Martial = 3, .Vision = 6 },
+        .innate_resists = .{ .rFume = 100, .rFire = -25, .Armor = 35 },
+        .stats = .{ .Willpower = 4, .Melee = 90, .Martial = 2, .Vision = 6 },
     },
     .weapon = &W_MSWRD_1,
-    .armor = items.CuirassArmor,
 };
 
 pub const TorturerNecromancerTemplate = MobTemplate{
