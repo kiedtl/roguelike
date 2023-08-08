@@ -1082,7 +1082,7 @@ pub const ShockTrapKit = Consumable.createTrapKit("kit_trap_shock", "shock trap"
 
 pub const BigFireTrapKit = Consumable.createTrapKit("kit_trap_bigfire", "incineration trap", true, struct {
     pub fn f(machine: *Machine, _: *Mob) void {
-        explosions.fireBurst(machine.coord, 7, .{});
+        explosions.fireBurst(machine.coord, 6, .{ .initial_damage = 2 });
     }
 }.f);
 

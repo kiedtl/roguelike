@@ -28,7 +28,7 @@ pub fn tileFlammability(c: Coord) usize {
 
     if (state.dungeon.at(c).mob) |mob| {
         if (mob.isVulnerable(.rFire)) {
-            f += if (!mob.hasStatus(.Fire)) @as(usize, 20) else 10;
+            f += if (mob.hasStatus(.Fire)) @as(usize, 5) else 8;
         }
     }
 

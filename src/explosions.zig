@@ -25,7 +25,7 @@ const HEIGHT = state.HEIGHT;
 const WIDTH = state.WIDTH;
 
 pub const FireBurstOpts = struct {
-    initial_damage: usize = 2,
+    initial_damage: usize = 1,
 
     min_fire: usize = 20,
 
