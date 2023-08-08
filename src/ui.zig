@@ -2744,6 +2744,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                 else => {},
             },
             .Char => |c| switch (c) {
+                '@' => if (coord.eq(state.player.coord)) drawPlayerInfoScreen(),
                 'a', 'h' => coord = coord.move(.West, state.mapgeometry) orelse coord,
                 'x', 'j' => coord = coord.move(.South, state.mapgeometry) orelse coord,
                 'w', 'k' => coord = coord.move(.North, state.mapgeometry) orelse coord,
