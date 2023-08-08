@@ -83,6 +83,7 @@ pub const TORMENT_UNDEAD_DAMAGE = 2;
 pub const DETECT_HEAT_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
 pub const DETECT_ELEC_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
 pub const DETECT_UNDEAD_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
+pub const RECUPERATION_HEAL_CHANCE = 20;
 
 pub fn MinMax(comptime T: type) type {
     return struct {
@@ -1467,7 +1468,7 @@ pub const Status = enum {
     }
 
     pub fn tickRecuperate(mob: *Mob) void {
-        mob.HP = math.clamp(mob.HP + 1, 0, mob.max_HP);
+        if (rng.percent(RECUPERATION_HEAL_CHANCE)) mob.takeHealing(1);
     }
 
     pub fn tickNausea(mob: *Mob) void {

@@ -1440,14 +1440,14 @@ fn interact1FirstAidStation(m: *Machine, mob: *Mob) bool {
     assert(mob == state.player);
 
     const HP = state.player.HP;
-    const heal_amount = state.player.max_HP - HP;
+    const heal_amount = math.min(rng.range(usize, 3, 5), state.player.max_HP - HP);
     state.player.takeHealing(heal_amount);
 
     // Remove some harmful statuses.
-    state.player.cancelStatus(.Fire);
     state.player.cancelStatus(.Nausea);
     state.player.cancelStatus(.Pain);
     state.player.cancelStatus(.Disorient);
+    state.player.cancelStatus(.Blind);
 
     m.powered_fg = colors.filterGrayscale(m.powered_fg.?);
     m.unpowered_fg = colors.filterGrayscale(m.unpowered_fg.?);
