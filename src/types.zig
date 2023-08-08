@@ -5048,7 +5048,7 @@ pub const Dungeon = struct {
     pub fn isTileOpaque(coord: Coord) bool {
         const tile = state.dungeon.at(coord);
 
-        if (tile.type == .Wall)
+        if (tile.type == .Wall and tile.material.opacity >= 1.0)
             return true;
 
         if (tile.surface) |surface| {
