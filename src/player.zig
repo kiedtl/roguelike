@@ -196,7 +196,7 @@ pub const PlayerUpgrade = enum {
                 state.player.stats.Potential += 25;
             },
             .Will => state.player.stats.Willpower += 3,
-            .Echolocating => state.player.addStatus(.Echolocation, 7, .Prm),
+            .Echolocating => state.player.addStatus(.Echolocation, 5, .Prm),
         }
     }
 };
