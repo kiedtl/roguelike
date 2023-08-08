@@ -617,24 +617,15 @@ pub fn guardGlanceRandom(mob: *Mob) void {
     }
 }
 
-pub fn guardGlanceRight(mob: *Mob) void {
-    mob.facing = switch (mob.facing) {
-        .North => .NorthEast,
-        .NorthEast => .East,
-        .East => .SouthEast,
-        .SouthEast => .South,
-        .South => .SouthWest,
-        .SouthWest => .West,
-        .West => .NorthWest,
-        .NorthWest => .North,
-    };
+pub fn isMobFacingStupid(mob: *Mob) bool {
+    if (mob.coord.move(mob.facing, state.mapgeometry)) |n| {
+        return Dungeon.isTileOpaque(n);
+    } else return true;
 }
 
-pub fn guardGlanceAround(mob: *Mob) void {
-    if (rng.tenin(15)) return;
-
-    if (rng.boolean()) {
-        // Glance right
+pub fn guardGlanceRight(mob: *Mob) void {
+    var tries: usize = 0;
+    while ((tries == 0 or isMobFacingStupid(mob)) and tries < 10) : (tries += 1)
         mob.facing = switch (mob.facing) {
             .North => .NorthEast,
             .NorthEast => .East,
@@ -645,8 +636,11 @@ pub fn guardGlanceAround(mob: *Mob) void {
             .West => .NorthWest,
             .NorthWest => .North,
         };
-    } else {
-        // Glance left
+}
+
+pub fn guardGlanceLeft(mob: *Mob) void {
+    var tries: usize = 0;
+    while ((tries == 0 or isMobFacingStupid(mob)) and tries < 10) : (tries += 1)
         mob.facing = switch (mob.facing) {
             .North => .NorthWest,
             .NorthWest => .West,
@@ -657,6 +651,15 @@ pub fn guardGlanceAround(mob: *Mob) void {
             .East => .NorthEast,
             .NorthEast => .North,
         };
+}
+
+pub fn guardGlanceAround(mob: *Mob) void {
+    if (rng.tenin(15)) return;
+
+    if (rng.boolean()) {
+        guardGlanceRight(mob);
+    } else {
+        guardGlanceLeft(mob);
     }
 }
 
