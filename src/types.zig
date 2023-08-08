@@ -3926,6 +3926,13 @@ pub const Mob = struct { // {{{
         return noise;
     }
 
+    pub fn isMobMartial(self: *Mob) bool {
+        const has_martial_weapon = for (self.listOfWeapons().constSlice()) |w| {
+            if (w.martial) break true;
+        } else false;
+        return self.stat(.Martial) > 0 and has_martial_weapon;
+    }
+
     // ~~FIXME: need a isAlliedWith() function, since even if alliegiances match
     // mobs may be enemies (if one of them is insane)~~
     //

@@ -589,6 +589,12 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
         list.append(i) catch err.wat();
     }
 
+    if (mob.isMobMartial()) {
+        var i = MobInfoLine{ .char = 'M', .color = 'r' };
+        i.string.writer().print("uses martial attacks <$b+{}$.>", .{mob.stat(.Martial)}) catch err.wat();
+        list.append(i) catch err.wat();
+    }
+
     if (mob.isUnderStatus(.CopperWeapon) != null and mob.hasWeaponOfEgo(.Copper)) {
         var i = MobInfoLine{ .char = 'C', .color = 'r' };
         i.string.writer().print("has copper weapon", .{}) catch err.wat();
@@ -811,10 +817,9 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
     const c_melee_you_color = m_colorsets[c_melee_you / 10];
     const c_evade_you_color = e_colorsets[c_evade_you / 10];
 
-    _writerWrite(w, "${u}{}%$. to hit you.\n", .{ c_melee_you_color, c_melee_you });
-    _writerWrite(w, "${u}{}%$. to evade you.\n", .{ c_evade_you_color, c_evade_you });
-    _writerWrite(w, "\n", .{});
-
+    _writerWrite(w, "${u}{}%$. to hit you, ${u}{}%$. to evade.\n", .{
+        c_melee_you_color, c_melee_you, c_evade_you_color, c_evade_you,
+    });
     _writerWrite(w, "Hits for ~$r{}$. damage.\n", .{mob.totalMeleeOutput(state.player)});
     _writerWrite(w, "\n", .{});
 
@@ -843,7 +848,7 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
         _writerWrite(w, "· investigates noises\n", .{})
     else
         _writerWrite(w, "· won't investigate noises\n", .{});
-    if (mob.ai.flag(.SocialFighter))
+    if (mob.ai.flag(.SocialFighter) or mob.ai.flag(.SocialFighter2))
         _writerWrite(w, "· won't attack alone\n", .{});
     if (mob.ai.flag(.MovesDiagonally))
         _writerWrite(w, "· (usually) moves diagonally\n", .{});
