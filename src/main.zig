@@ -480,18 +480,18 @@ fn readInput() !bool {
                 // const cell = ui.chooseCell(.{}) orelse break :blk false;
                 // state.dungeon.at(cell).mob.?.HP = 1;
                 // @import("combat.zig").throwMob(null, state.player, .North, 7);
-                const gthreat = alert.getThreat(.General);
-                state.message(.Info, "G: {}, deadly: {}, active: {}, last: {}", .{
-                    gthreat.level, gthreat.deadly, gthreat.is_active, gthreat.last_incident,
-                });
-                const uthreat = alert.getThreat(.Unknown);
-                state.message(.Info, "U: {}, deadly: {}, active: {}, last: {}", .{
-                    uthreat.level, uthreat.deadly, uthreat.is_active, uthreat.last_incident,
-                });
-                const pthreat = alert.getThreat(.{ .Specific = state.player });
-                state.message(.Info, "P: {}, deadly: {}, active: {}, last: {}", .{
-                    pthreat.level, pthreat.deadly, pthreat.is_active, pthreat.last_incident,
-                });
+                // const gthreat = alert.getThreat(.General);
+                // state.message(.Info, "G: {}, deadly: {}, active: {}, last: {}", .{
+                //     gthreat.level, gthreat.deadly, gthreat.is_active, gthreat.last_incident,
+                // });
+                // const uthreat = alert.getThreat(.Unknown);
+                // state.message(.Info, "U: {}, deadly: {}, active: {}, last: {}", .{
+                //     uthreat.level, uthreat.deadly, uthreat.is_active, uthreat.last_incident,
+                // });
+                // const pthreat = alert.getThreat(.{ .Specific = state.player });
+                // state.message(.Info, "P: {}, deadly: {}, active: {}, last: {}", .{
+                //     pthreat.level, pthreat.deadly, pthreat.is_active, pthreat.last_incident,
+                // });
                 break :blk true;
             },
             .F8 => b: {
@@ -814,7 +814,9 @@ fn testerMain() void {
             if (builtin.strip_debug_info) return;
             const debug_info = std.debug.getSelfDebugInfo() catch err.wat();
             const startaddr = @returnAddress();
-            if (builtin.os.tag == .windows) {} else {
+            if (builtin.os.tag == .windows) {
+                @panic("Unimplemented backtrace for windows, blurrg.");
+            } else {
                 var it = std.debug.StackIterator.init(startaddr, null);
                 _ = it.next().?;
                 const retaddr = it.next().?;

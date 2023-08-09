@@ -32,6 +32,22 @@ const StackBuffer = buffer.StackBuffer;
 const Generator = @import("generators.zig").Generator;
 const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
+// Should not be left in compiled code, as it's incompatible with Windows
+pub fn debugPrintDirectCaller() void {
+    const debug_info = std.debug.getSelfDebugInfo() catch err.wat();
+    const startaddr = @returnAddress();
+    var it = std.debug.StackIterator.init(startaddr, null);
+    _ = it.next().?;
+    const retaddr = it.next().?;
+
+    const module = debug_info.getModuleForAddress(retaddr) catch err.wat();
+    const symb_info = module.getSymbolAtAddress(retaddr) catch err.wat();
+    defer symb_info.deinit();
+    std.log.debug("direct caller: {s}:{}", .{
+        symb_info.line_info.?.file_name, symb_info.line_info.?.line,
+    });
+}
+
 pub fn getRoomFromCoord(level: usize, coord: Coord) ?usize {
     return switch (state.layout[level][coord.y][coord.x]) {
         .Unknown => null,

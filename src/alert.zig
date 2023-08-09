@@ -101,7 +101,6 @@ pub fn init() void {
 }
 
 pub fn deinit() void {
-    std.log.info("------- DEINIT'ED -----------------------------------------", .{});
     threats.clearAndFree();
     responses.deinit();
 }
@@ -144,6 +143,8 @@ pub fn reportThreat(by: ?*Mob, threat: Threat, threattype: ThreatIncrease) void 
     const info = getThreat(threat);
 
     onThreatIncrease(z, threat, info.level, info.level + @enumToInt(threattype));
+
+    // std.log.info("*** Increasing level for {} by {}", .{ threat, @enumToInt(threattype) });
 
     info.deadly = info.deadly or threattype.isDeadly();
     info.level += @enumToInt(threattype);
@@ -201,6 +202,10 @@ pub fn tickThreats(level: usize) void {
             dismiss_threats.append(entry.key_ptr.*) catch {};
             continue;
         }
+
+        // std.log.info("{}: {}: Increasing threat level for {} ({}).", .{
+        //     state.ticks, state.player_turns, entry.key_ptr.*, entry.value_ptr.*,
+        // });
 
         onThreatIncrease(level, entry.key_ptr.*, entry.value_ptr.level, entry.value_ptr.level + 1);
         entry.value_ptr.level += 1;
