@@ -186,6 +186,8 @@ pub fn deinit() !void {
     zap_win.deinit();
     pinfo_win.deinit();
     map_win.deinit();
+    for (labels.labels.items) |label|
+        label.deinit();
     labels.labels.deinit();
 }
 
