@@ -2085,12 +2085,20 @@ pub fn drawLoadingScreenFinish(loading_win: *LoadingScreen) bool {
 }
 
 pub fn drawGameOverScreen(scoreinfo: scores.Info) void {
+    draw();
+
+    // Delete labels and don't show mob vision areas for the gameover screen
+    // Need to draw anyway to ensure drawCapturedDisplay() works right
+    map_win.annotations.clear();
+    drawMap(&[_]*Mob{}, state.player.coord);
+    map_win.map.renderFullyW(.Main);
+    display.present();
+
     const win_d = dimensions(.Whole);
     var container_c = Console.init(state.GPA.allocator(), win_d.width(), win_d.height());
     defer container_c.deinit();
 
     var layer1_c = Console.init(state.GPA.allocator(), win_d.width(), win_d.height());
-    draw();
     layer1_c.drawCapturedDisplay(1, 1);
     container_c.addSubconsole(layer1_c, 0, 0);
 
