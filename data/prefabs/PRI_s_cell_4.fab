@@ -1,5 +1,5 @@
 :subroom
-:priority 90
+:priority 20
 :g_individual_restriction 2
 % Must be higher than 4 to accomodate prisons in starting prefab
 :restriction 6
