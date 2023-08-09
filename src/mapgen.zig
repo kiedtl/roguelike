@@ -436,7 +436,7 @@ fn choosePoster(level: usize) ?*const Poster {
 
 fn chooseRing(night: bool) ItemTemplate {
     const drop_list = if (night) &items.NIGHT_RINGS else &items.RINGS;
-    return _chooseLootItem(drop_list, minmax(usize, 0, 999), null);
+    return _chooseLootItem(drop_list, minmax(usize, 1, 999), null);
 }
 
 // Given a parent and child room, return the direction a corridor between the two
