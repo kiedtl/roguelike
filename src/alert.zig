@@ -101,6 +101,7 @@ pub fn init() void {
 }
 
 pub fn deinit() void {
+    std.log.info("------- DEINIT'ED -----------------------------------------", .{});
     threats.clearAndFree();
     responses.deinit();
 }
@@ -112,11 +113,16 @@ pub fn getThreat(threat: Threat) *ThreatData {
 pub fn reportThreat(by: ?*Mob, threat: Threat, threattype: ThreatIncrease) void {
     const z = if (by) |b| b.coord.z else state.player.coord.z;
 
-    if ((by != null and by.?.faction != .Necromancer) or
+    if (z != state.current_level or (by != null and by.?.faction != .Necromancer) or
         (threat == .Specific and threat.Specific.faction == .Necromancer)) // Insanity
     {
         return;
     }
+
+    // if (by) |_by|
+    //     std.log.info("{}: threat: <- {cf} ({}, t: {})", .{ z, _by, threat, threattype })
+    // else
+    //     std.log.info("{}: threat: <- anon ({}, t: {})", .{ z, threat, threattype });
 
     // If a new specific threat is encountered, put the unknown threat to sleep.
     if (threat == .Specific and getThreat(threat).level == 0 and

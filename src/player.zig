@@ -268,6 +268,8 @@ pub fn triggerStair(cur_stair: Coord, dest_floor: usize) bool {
 
     mapgen.initLevel(dest_floor);
 
+    state.message(.Unimportant, "You ascend, sealing the steel doors behind you.", .{});
+
     const dest_stair = state.dungeon.entries[dest_floor];
     const dest = for (&DIRECTIONS) |d| {
         if (dest_stair.move(d, state.mapgeometry)) |neighbor| {

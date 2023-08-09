@@ -2820,6 +2820,10 @@ pub const Mob = struct { // {{{
             state.dungeon.at(coord).mob = null;
         }
 
+        if (self == state.player) {
+            state.current_level = state.player.coord.z;
+        }
+
         if (!instant) {
             if (direction) |d| {
                 self.declareAction(Activity{ .Move = d });

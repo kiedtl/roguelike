@@ -462,7 +462,7 @@ fn readInput() !bool {
                 // state.player.addStatus(.RingElectrocution, 0, .{ .Tmp = 5 });
                 // state.player.addStatus(.RingConjuration, 0, .{ .Tmp = 2 });
                 // state.night_rep[@enumToInt(state.player.faction)] += 10;
-                state.player.HP = 0;
+                // state.player.HP = 0;
                 // for (state.player_conj_augments) |aug, i| {
                 //     if (!aug.received) {
                 //         state.player_conj_augments[i].received = true;
@@ -480,6 +480,18 @@ fn readInput() !bool {
                 // const cell = ui.chooseCell(.{}) orelse break :blk false;
                 // state.dungeon.at(cell).mob.?.HP = 1;
                 // @import("combat.zig").throwMob(null, state.player, .North, 7);
+                const gthreat = alert.getThreat(.General);
+                state.message(.Info, "G: {}, deadly: {}, active: {}, last: {}", .{
+                    gthreat.level, gthreat.deadly, gthreat.is_active, gthreat.last_incident,
+                });
+                const uthreat = alert.getThreat(.Unknown);
+                state.message(.Info, "U: {}, deadly: {}, active: {}, last: {}", .{
+                    uthreat.level, uthreat.deadly, uthreat.is_active, uthreat.last_incident,
+                });
+                const pthreat = alert.getThreat(.{ .Specific = state.player });
+                state.message(.Info, "P: {}, deadly: {}, active: {}, last: {}", .{
+                    pthreat.level, pthreat.deadly, pthreat.is_active, pthreat.last_incident,
+                });
                 break :blk true;
             },
             .F8 => b: {
@@ -557,7 +569,9 @@ fn tickGame(p_cur_level: ?usize) !void {
         return;
     }
 
-    const cur_level = p_cur_level orelse state.player.coord.z;
+    const cur_level = p_cur_level orelse state.current_level;
+
+    assert(state.state == .Viewer or state.player.coord.z == state.current_level);
 
     state.ticks += 1;
     surfaces.tickMachines(cur_level);
@@ -683,7 +697,7 @@ fn tickGame(p_cur_level: ?usize) !void {
     }
 }
 
-fn viewerDisplay(tty_height: usize, level: usize, sy: usize) void {
+fn viewerDisplay(tty_height: usize, sy: usize) void {
     var dy: usize = sy;
     var y: usize = 0;
     while (y < tty_height and dy < HEIGHT) : ({
@@ -692,7 +706,7 @@ fn viewerDisplay(tty_height: usize, level: usize, sy: usize) void {
     }) {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
-            const t = Tile.displayAs(Coord.new2(level, x, dy), false, false);
+            const t = Tile.displayAs(Coord.new2(state.current_level, x, dy), false, false);
             display.setCell(x, y, t);
         }
     }
@@ -717,14 +731,13 @@ fn viewerMain() void {
 
         state.player.kill();
 
-        var level: usize = state.PLAYER_STARTING_LEVEL;
         var y: usize = 0;
         var running: bool = false;
 
         const tty_height = @intCast(usize, termbox.tb_height());
 
         while (true) {
-            viewerDisplay(tty_height, level, y);
+            viewerDisplay(tty_height, y);
 
             var ev: termbox.tb_event = undefined;
             var t: isize = 0;
@@ -732,7 +745,7 @@ fn viewerMain() void {
             if (running) {
                 t = termbox.tb_peek_event(&ev, 150);
                 if (t == 0) {
-                    tickGame(level) catch {};
+                    tickGame(state.current_level) catch {};
                     continue;
                 }
             } else {
@@ -748,7 +761,7 @@ fn viewerMain() void {
                     }
                 } else if (ev.ch != 0) {
                     switch (ev.ch) {
-                        '.' => tickGame(level) catch {},
+                        '.' => tickGame(state.current_level) catch {},
                         'a' => running = !running,
                         'j' => if (y < HEIGHT) {
                             y = math.min(y + (tty_height / 2), HEIGHT - 1);
@@ -756,17 +769,17 @@ fn viewerMain() void {
                         'k' => y -|= tty_height / 2,
                         'e' => explosions.kaboom(
                             Coord.new2(
-                                level,
+                                state.current_level,
                                 rng.range(usize, 20, WIDTH - 20),
                                 rng.range(usize, 20, HEIGHT - 20),
                             ),
                             .{ .strength = rng.range(usize, 400, 1500) },
                         ),
-                        '<' => if (level > 0) {
-                            level -= 1;
+                        '<' => if (state.current_level > 0) {
+                            state.current_level -= 1;
                         },
-                        '>' => if (level < (LEVELS - 1)) {
-                            level += 1;
+                        '>' => if (state.current_level < (LEVELS - 1)) {
+                            state.current_level += 1;
                         },
                         else => {},
                     }
