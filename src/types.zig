@@ -1633,12 +1633,12 @@ pub const StatusDataInfo = struct {
             try stream.writeByte('"');
             try stream.writeAll(@tagName(val));
             try stream.writeByte('"');
-            try stream.writeByte(',');
 
             // val.Ctx should never be null, in theory, but it is an optional
             // for some reason... Just putting a check here to be safe...
             //
             if (val == .Tmp or (val == .Ctx and val.Ctx != null)) {
+                try stream.writeByte(',');
                 try stream.writeAll("\"duration_arg\":");
                 if (val == .Tmp) {
                     try std.json.stringify(val.Tmp, opts, stream);
