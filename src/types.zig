@@ -4266,6 +4266,7 @@ pub const Machine = struct {
 
     coord: Coord = Coord.new(0, 0),
     on_power: fn (*Machine) void, // Called on each turn when the machine is powered
+    on_place: ?fn (*Machine) void = null, // Called when placed by mapgen
     power: usize = 0, // percentage (0..100)
     last_interaction: ?*Mob = null,
 

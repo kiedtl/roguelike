@@ -261,8 +261,13 @@ fn onThreatIncrease(level: usize, threat: Threat, old: usize, new: usize) void {
     switch (threat) {
         .General => {
             if (_didIncreasePast(GENERAL_THREAT_CLOSE_SHRINES, old, new)) {
-                state.message(.Drain, "You sense the Power here minimizing its connection to the floor.", .{});
-                state.shrines_in_lockdown[level] = true;
+                if (state.shrine_locations[level]) |shrine_coord| {
+                    const shrine = state.dungeon.machineAt(shrine_coord).?;
+                    if (shrine.canBeInteracted(state.player, &shrine.player_interact.?)) {
+                        state.message(.Drain, "You sense the Power here removing its link to the floor.", .{});
+                        state.shrines_in_lockdown[level] = true;
+                    }
+                }
             }
 
             if (_didIncreasePast(GENERAL_THREAT_DEPLOY_PATROLS, old, new)) {

@@ -1029,6 +1029,12 @@ pub const Shrine = Machine{
     .power_drain = 0,
     .power = 100,
     .on_power = powerNone,
+    .on_place = struct {
+        pub fn f(machine: *Machine) void {
+            // assert(state.shrine_locations[machine.coord.z] == null);
+            state.shrine_locations[machine.coord.z] = machine.coord;
+        }
+    }.f,
     .player_interact = .{
         .name = "drain",
         .success_msg = "You drained the shrine's power.",

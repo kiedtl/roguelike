@@ -536,6 +536,7 @@ fn _place_machine(coord: Coord, machine_template: *const Machine) void {
     state.machines.append(machine) catch err.wat();
     const machineptr = state.machines.last().?;
     state.dungeon.at(coord).surface = SurfaceItem{ .Machine = machineptr };
+    if (machineptr.on_place) |on_place| on_place(machineptr);
 }
 
 pub fn placeDoor(coord: Coord, locked: bool) void {
@@ -1096,6 +1097,7 @@ pub fn resetLevel(level: usize) void {
     state.dungeon.entries[level] = undefined;
     state.dungeon.stairs[level].clear();
     state.mapgen_infos[level] = .{};
+    state.shrine_locations[level] = null;
 }
 
 pub fn setLevelMaterial(level: usize) void {

@@ -180,6 +180,7 @@ pub var score: usize = 0;
 // Global mechanic-specific variables
 pub var destroyed_candles: usize = 0;
 pub var shrines_in_lockdown: [LEVELS]bool = [1]bool{false} ** LEVELS;
+pub var shrine_locations: [LEVELS]?Coord = [1]?Coord{null} ** LEVELS;
 
 // Find the nearest space near a coord in which a monster can be placed.
 //
