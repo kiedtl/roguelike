@@ -585,13 +585,12 @@ fn _cast_light(
 pub fn quickLOSCheck(refpoint: Coord, coord: Coord, opacity_func: fn (Coord) usize) bool {
     var energy: usize = 100;
     const trajectory = refpoint.drawLine(coord, state.mapgeometry, 0);
-    for (trajectory.constSlice()) |line_coord| {
-        if (line_coord.eq(refpoint) or line_coord.eq(coord))
-            continue;
+    for (trajectory.constSlice()) |line_coord, i| {
+        if (i == 0 or i == trajectory.len - 1) continue;
 
         energy -|= opacity_func(line_coord);
 
-        if (energy == 0 and !line_coord.eq(coord))
+        if (energy == 0 and i != trajectory.len - 1)
             return false;
     }
     return true;
