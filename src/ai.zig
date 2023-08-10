@@ -342,6 +342,8 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
         return;
     }
 
+    assert(!new.mob.is_dead);
+
     // Search for an existing record.
     for (mob.enemyList().items) |*enemyrec| {
         if (enemyrec.mob == new.mob) {

@@ -3583,7 +3583,9 @@ pub const Mob = struct { // {{{
 
         if (self.faction == .Necromancer and self.killed_by != null) {
             const is_killer_confirmed = for (self.allies.items) |ally| {
-                if (ai.isEnemyKnown(ally, self.killed_by.?))
+                // Ally might have died between the time we had our turn to check
+                // for allies and now. Do a check before.
+                if (!ally.is_dead and ai.isEnemyKnown(ally, self.killed_by.?))
                     break true;
             } else false;
             if (is_killer_confirmed)

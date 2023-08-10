@@ -273,6 +273,7 @@ pub fn scanForCorpses(mob: *Mob) void {
             const corpse = surface.Corpse;
             if (corpse.faction == .Necromancer and !corpse.corpse_info.is_noticed) {
                 if (corpse.killed_by != null and
+                    !corpse.killed_by.?.is_dead and
                     (state.ticks - corpse.last_damage.?.inflicted_time) <= 2 and
                     corpse.killed_by.?.distance2(corpse.coord) <= 3 and
                     corpse.killed_by.?.isHostileTo(mob))
