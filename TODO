@@ -447,24 +447,32 @@ x gambeson         15% armor   Sneak+
 - cuirass          35% armor   Sneak-  Martial-
 
 footwear:
-- velvet boots:                Sneak++
-- sabatons:        15% armor   Sneak-
+- sabatons:        15% armor
 - martial shoe:                Martial++
-- combat boots:    10% armor   +10..+20 evade% when in open areas
-  - "perfectly weighted for combat"
-- alt. combat boots:           +10% melee
+- combat boots:    10% armor   +10% melee ("perfectly weighted for combat")
+- silus boots:                 rFire+
+- insulated boots:             rElec+
+- golden shoes:                Potential+5
+- ornate shoes:                Potential+10 Will-1
 ~ scale shoes:      5% armor   +10% speed when moving over ground that gives speed, -10% speed
                                 on ground that slows down
-- crimson boots:    5% armor   +20 evade% when move,move,move,move pattern, but stealth-
-~ hiking boots:                +10 speed% when move,move,move,move pattern
 
 headgear:
-- mining helmet:    5% armor   Vision+  lights up area *in direction mob is facing*.
-- mail coif:       10% armor            Sneak-
-- cloth hood:                           Sneak++ rElec+
-- fume hood:                   Vision-  rFume+10
+- mining helmet:               Vision+ 
+- mail coif:       10% armor
+- cloth hood:                           rElec+             Evade+
+- fume hood:                   Vision-  rFume+70
 - welding helmet:   5% armor   Vision-  rFire+
+- spectral crown:                       Conjuration+       (change from Aux)
 - thief's mask:                Vision-  infravision
+- gold headband:                        Potential+10       rElec-10
+- gold tiara:                           Potential+20       Will-1  
+- lightning helm:   5% armor            rElec+
+- silus mask:                           rFire+
+- silus hood:      10% armor            rFire+
+
+- shadow mask:                 Vision-  Will+1             [Night] Will+2
+  - wrong theme
 
 utility and auxiliary items:
 - Detect undead (or nah... overlaps with Corruption too much)
@@ -1015,7 +1023,7 @@ x Shrine maps
 x Potion of distraction
   x Effect
   x Description
-  ~ AI modification to revert to investigating on hearing a loud sound
+  - AI modification to revert to investigating on hearing a loud sound
   x Animation
 x Animations (w/ particle engine)
   x Paralysing zap
@@ -1027,17 +1035,7 @@ x Animations (w/ particle engine)
   x Fire explosions
   x Walls disintegrating (for Lair map)
   x Electricity blasts
-- Crypt floor
-  - Modify level data and spawn files
-  - New monsters:
-    - Vile protector
-    - Hornblende statues
-    - Schalenblende statues(?)
-    - Pitchblende statues
-  - Garrison inset prefabs
-  - -1/Crypt/3 prefab
-  - Staircase prefab on -1/Prison
-- Night creatures
+x Night creatures
   x Font: add Cyrillic characters
   x Night creature enclaves
   x Reputation mechanics
@@ -1072,6 +1070,24 @@ x Animations (w/ particle engine)
       x Shadow hauberk, shadow mail, shadow brigandine, shadow shield
       x Ethereal shield
       x Spectral mail, spectral crown, cloak of spectres
+- Golden stuff
+  x Golden equipment
+  - Potion of absorption
+  x Mini-shrines
+  x Potential stat
+  x Draining mobs (dead)
+  x Draining mobs (alive)
+- Crypt floor
+  - Modify level data and spawn files
+  - New monsters:
+    - Vile protector
+    - Tormenters
+    - Hornblende statues
+    - Schalenblende statues(?)
+    - Pitchblende statues
+  - Garrison inset prefabs
+  - -1/Crypt/3 prefab
+  - Staircase prefab on -1/Prison
 - Revgenuhelkim
   - Acid damage and resistance
   - Revgenuhelkim
@@ -1125,8 +1141,9 @@ x Animations (w/ particle engine)
     ~ Dep: capacitors (and possibly Wiring levels)
     x Dep: UI labels to effectively communicate when next discharge is
       x "discharge 5..." "discharge 4..." "discharge 3...", etc.
-  - Emberling garrisons + flamethrower stockpiles
-  - New Alchemist AI
+  - Emberling garrisons
+  - Prefab: Flamethrower prop/evocable stockpiles
+  x New Alchemist AI
 - Caverns rework
   - Alchemist + dustling analyzer prefabs
   - Dustling machines
