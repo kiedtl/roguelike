@@ -1336,13 +1336,12 @@ pub fn grueFight(mob: *Mob, _: mem.Allocator) void {
                 if (distance > 2 and distance < 8)
                     directions.append(.{ .d = d, .dist = distance }) catch err.wat();
             }
-            if (directions.len == 0) {
-                tryRest(mob);
-                return;
+            if (directions.len > 0) {
+                const chosen = rng.chooseUnweighted(D, directions.constSlice());
+                combat.throwMob(mob, target, chosen.d, chosen.dist);
             }
-            const chosen = rng.chooseUnweighted(D, directions.constSlice());
-            combat.throwMob(mob, target, chosen.d, chosen.dist);
         }
+        tryRest(mob);
     } else if (mob.distance(target) == 2) {
         mob.tryMoveTo(target.coord);
     } else {
