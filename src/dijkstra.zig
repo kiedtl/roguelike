@@ -19,7 +19,6 @@ const WIDTH = state.WIDTH;
 
 // Dijkstra maps, aka influence maps
 
-// param force_roll: Whether to roll on a tile, even if it's not walkable.
 pub fn dijkRollUphill(
     map: *[HEIGHT][WIDTH]?f64,
     directions: []const Direction,
@@ -34,9 +33,9 @@ pub fn dijkRollUphill(
             }
 
             const coord = Coord.new(x, y);
-            const cur_val = cell.* orelse 999;
+            const cur_val = cell.* orelse 9999;
 
-            var lowest_neighbor: f64 = 999;
+            var lowest_neighbor: f64 = 9999;
             for (directions) |d|
                 if (coord.move(d, state.mapgeometry)) |neighbor| {
                     if (map[neighbor.y][neighbor.x]) |ncell|

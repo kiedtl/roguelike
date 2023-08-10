@@ -55,7 +55,7 @@ fn flingRandomSpell(me: *Mob, target: *Mob) void {
 }
 
 // Find the nearest enemy.
-pub fn currentEnemy(me: *Mob) *EnemyRecord {
+pub fn _getClosestEnemy(me: *Mob, require_visible: bool) *EnemyRecord {
     assert(me.ai.phase == .Hunt or me.ai.phase == .Flee);
     assert(me.enemyList().items.len > 0);
 
@@ -64,7 +64,9 @@ pub fn currentEnemy(me: *Mob) *EnemyRecord {
     var i: usize = 0;
 
     while (i < me.enemyList().items.len) : (i += 1) {
-        const distance = me.coord.distance(me.enemyList().items[i].lastSeenOrCoord());
+        const enemy = me.enemyList().items[i];
+        const distance = me.distance2(enemy.lastSeenOrCoord());
+        if (require_visible and !me.canSeeMob(enemy.mob)) continue;
         if (distance < nearest_distance) {
             nearest = i;
             nearest_distance = distance;
@@ -75,6 +77,14 @@ pub fn currentEnemy(me: *Mob) *EnemyRecord {
     assert(me.isHostileTo(target.mob));
 
     return target;
+}
+
+pub fn closestEnemy(me: *Mob) *EnemyRecord {
+    return _getClosestEnemy(me, false);
+}
+
+pub fn closestVisibleEnemy(me: *Mob) *EnemyRecord {
+    return _getClosestEnemy(me, true);
 }
 
 pub fn calculateMorale(self: *Mob) isize {
@@ -261,25 +271,22 @@ pub fn alertAllyOfHostile(mob: *Mob) void {
 // TODO: make it possible to move away from multiple coordinates, i.e. flee from
 // multiple enemies
 //
-pub fn keepDistance(mob: *Mob, from: Coord, distance: usize) bool {
+pub fn runAwayFromEnemies(mob: *Mob, min_dist: usize) bool {
     var moved = false;
+    const closest_enemy = closestVisibleEnemy(mob).lastSeenOrCoord();
 
-    const current_distance = mob.coord.distance(from);
-
-    if (current_distance < distance) {
+    if (mob.distance2(closest_enemy) < min_dist) {
         var walkability_map: [HEIGHT][WIDTH]bool = undefined;
         for (walkability_map) |*row, y| for (row) |*cell, x| {
             const coord = Coord.new2(mob.coord.z, x, y);
             cell.* = state.is_walkable(coord, .{ .mob = mob });
         };
 
-        var flee_dijkmap: [HEIGHT][WIDTH]?f64 = undefined;
-        for (flee_dijkmap) |*row| for (row) |*cell| {
-            cell.* = null;
-        };
+        var flee_dijkmap = [1][WIDTH]?f64{[1]?f64{null} ** WIDTH} ** HEIGHT;
 
         for (mob.enemyList().items) |enemy| {
-            const coord = enemy.lastSeenOrCoord();
+            // Only run away from visible enemies.
+            const coord = enemy.last_seen orelse continue;
             flee_dijkmap[coord.y][coord.x] = 0;
         }
 
@@ -288,7 +295,7 @@ pub fn keepDistance(mob: *Mob, from: Coord, distance: usize) bool {
         dijkstra.dijkRollUphill(&flee_dijkmap, &DIRECTIONS, &walkability_map);
 
         var direction: ?Direction = null;
-        var lowest_val: f64 = 999;
+        var lowest_val: f64 = 99999;
         const directions: []const Direction = if (mob.isUnderStatus(.Disorient)) |_|
             &DIAGONAL_DIRECTIONS
         else
@@ -312,7 +319,7 @@ pub fn keepDistance(mob: *Mob, from: Coord, distance: usize) bool {
     }
 
     if (!moved) {
-        mob.facing = mob.coord.closestDirectionTo(from, state.mapgeometry);
+        mob.facing = mob.coord.closestDirectionTo(closest_enemy, state.mapgeometry);
     }
 
     return moved;
@@ -1301,17 +1308,21 @@ pub fn combatDummyFight(mob: *Mob, _: mem.Allocator) void {
 pub fn workerFight(mob: *Mob, _: mem.Allocator) void {
     // Do we really want to do this? There may be some cases I've forgotten
     // about where enemies deliberately purge knowledge of enemy...
-    if (currentEnemy(mob).last_seen == null)
-        currentEnemy(mob).last_seen = currentEnemy(mob).mob.coord;
+    //
+    // NOTE: 2023-08-10: not sure why we're doing this? Is it to prevent forgetting
+    // the enemy too quickly?
+    //
+    if (closestEnemy(mob).last_seen == null)
+        closestEnemy(mob).last_seen = closestEnemy(mob).mob.coord;
 
-    if (!keepDistance(mob, currentEnemy(mob).last_seen.?, 24))
+    if (!runAwayFromEnemies(mob, 24))
         tryRest(mob);
 
     alertAllyOfHostile(mob);
 }
 
 pub fn meleeFight(mob: *Mob, _: mem.Allocator) void {
-    const target = currentEnemy(mob).mob;
+    const target = closestEnemy(mob).mob;
 
     if (mob.canMelee(target)) {
         _ = mob.fight(target, .{});
@@ -1323,7 +1334,7 @@ pub fn meleeFight(mob: *Mob, _: mem.Allocator) void {
 }
 
 pub fn grueFight(mob: *Mob, _: mem.Allocator) void {
-    const target = currentEnemy(mob).mob;
+    const target = closestEnemy(mob).mob;
 
     if (mob.distance(target) == 1) {
         if (mob.HP < (mob.max_HP / 4) or rng.onein(50)) {
@@ -1349,26 +1360,26 @@ pub fn grueFight(mob: *Mob, _: mem.Allocator) void {
 }
 
 pub fn watcherFight(mob: *Mob, alloc: mem.Allocator) void {
-    const target = currentEnemy(mob).mob;
+    const target = closestEnemy(mob).mob;
 
     mob.makeNoise(.Shout, .Loud);
 
     if (!mob.cansee(target.coord)) {
         mob.tryMoveTo(target.coord);
     } else {
-        if (!keepDistance(mob, target.coord, 8))
+        if (!runAwayFromEnemies(mob, 8))
             meleeFight(mob, alloc);
     }
 }
 
 // pub fn coronerFight(mob: *Mob, alloc: mem.Allocator) void {
-//     const target = currentEnemy(mob).mob;
+//     const target = closestEnemy(mob).mob;
 //     alert.announceEnemyAlert(target);
 //     watcherFight(mob, alloc);
 // }
 
 pub fn stalkerFight(mob: *Mob, alloc: mem.Allocator) void {
-    const target = currentEnemy(mob).mob;
+    const target = closestEnemy(mob).mob;
 
     if (mob.squad != null and
         mem.eql(u8, mob.squad.?.leader.?.id, "hunter"))
@@ -1377,7 +1388,7 @@ pub fn stalkerFight(mob: *Mob, alloc: mem.Allocator) void {
             mob.tryMoveTo(target.coord);
         } else {
             const dist = @intCast(usize, mob.stat(.Vision) - 1);
-            if (!keepDistance(mob, target.coord, dist))
+            if (!runAwayFromEnemies(mob, dist))
                 tryRest(mob);
         }
     } else if (mob.enemyList().items.len == 1) {
@@ -1399,7 +1410,7 @@ pub fn stalkerFight(mob: *Mob, alloc: mem.Allocator) void {
 //                  - Yes: Attack.
 //
 pub fn rangedFight(mob: *Mob, alloc: mem.Allocator) void {
-    const target = currentEnemy(mob).mob;
+    const target = closestEnemy(mob).mob;
 
     // if we can't see the enemy, move towards it
     if (!mob.cansee(target.coord))
@@ -1535,30 +1546,30 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
         .Melee => meleeFight(mob, alloc),
         .KeepDistance => if (!mob.immobile) {
             const dist = @intCast(usize, mob.stat(.Vision) -| 1);
-            const moved = keepDistance(mob, currentEnemy(mob).mob.coord, dist);
+            const moved = runAwayFromEnemies(mob, dist);
             if (!moved) meleeFight(mob, alloc);
         } else {
             tryRest(mob);
         },
         .Flee => {
             assert(!mob.immobile);
-            const moved = keepDistance(mob, currentEnemy(mob).mob.coord, 1000);
+            const moved = runAwayFromEnemies(mob, 1000);
             if (!moved) meleeFight(mob, alloc);
         },
     }
 }
 
 pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
-    const FLEE_GOAL = 40;
+    const FLEE_GOAL = 25;
 
     assert(mob.stat(.Vision) < FLEE_GOAL);
 
-    const target = currentEnemy(mob);
+    const target = closestEnemy(mob);
 
     alertAllyOfHostile(mob);
 
     if (mob.immobile or
-        !keepDistance(mob, target.lastSeenOrCoord(), FLEE_GOAL))
+        !runAwayFromEnemies(mob, FLEE_GOAL))
     {
         if (mob.canMelee(target.mob)) {
             meleeFight(mob, alloc);
