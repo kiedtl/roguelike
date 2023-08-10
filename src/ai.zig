@@ -505,22 +505,19 @@ pub fn checkForAllies(mob: *Mob) void {
     // We're iterating over FOV because it's the lazy thing to do.
     for (mob.fov) |row, y| for (row) |_, x| {
         const fitem = Coord.new2(mob.coord.z, x, y);
-
-        if (fitem.distance(mob.coord) > vision or
-            !fov.quickLOSCheck(mob.coord, fitem, Dungeon.tileOpacity))
-        {
-            continue;
-        }
+        if (fitem.distance(mob.coord) > vision) continue;
 
         if (state.dungeon.at(fitem).mob) |othermob| {
-            if (othermob != mob and othermob.faction == mob.faction) {
+            if (othermob != mob and othermob.faction == mob.faction and
+                !fov.quickLOSCheck(mob.coord, fitem, Dungeon.tileOpacity))
+            {
                 mob.allies.append(othermob) catch err.wat();
             }
         }
     };
 
     // Sort allies according to distance.
-    std.sort.insertionSort(*Mob, mob.allies.items, mob, struct {
+    std.sort.sort(*Mob, mob.allies.items, mob, struct {
         fn f(me: *Mob, a: *Mob, b: *Mob) bool {
             return a.coord.distance(me.coord) > b.coord.distance(me.coord);
         }
