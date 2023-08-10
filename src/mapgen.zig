@@ -4228,7 +4228,7 @@ pub fn readPrefabs(alloc: mem.Allocator) void {
     s_fabs = PrefabArrayList.init(alloc);
     fab_records = @TypeOf(fab_records).init(alloc);
 
-    for (&[_][]const u8{ "data/prefabs", "data/prefabs/tests" }) |dir| {
+    for (&[_][]const u8{ "data/prefabs", "data/prefabs/tests", "data/prefabs/profiler" }) |dir| {
         const fabs_dir = std.fs.cwd().openDir(dir, .{ .iterate = true }) catch err.wat();
 
         var fabs_dir_iterator = fabs_dir.iterate();

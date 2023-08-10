@@ -1155,9 +1155,30 @@ fn testerMain() void {
     std.os.exit(if (ctx.failed > 0) 1 else 0);
 }
 
+fn profilerMain() void {
+    // const LEVEL = 0;
+
+    std.log.info("[ Seed: {} ]", .{rng.seed});
+
+    state.sentry_disabled = true;
+    assert(initGame(true, 0));
+    defer deinitGame();
+
+    mapgen.initLevelTest("PRF1_combat") catch err.wat();
+
+    var i: usize = 1000;
+    while (i > 0) : (i -= 1) {
+        std.log.info("{}", .{i});
+        tickGame(0) catch err.wat();
+        // mapgen.initLevel(LEVEL);
+        // mapgen.resetLevel(LEVEL);
+    }
+}
+
 pub fn actualMain() anyerror!void {
     var use_viewer = false;
     var use_tester = false;
+    var use_profiler = false;
 
     if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_SEED")) |seed_str| {
         defer state.GPA.allocator().free(seed_str);
@@ -1176,6 +1197,9 @@ pub fn actualMain() anyerror!void {
         } else if (mem.eql(u8, v, "tester")) {
             state.state = .Viewer;
             use_tester = true;
+        } else if (mem.eql(u8, v, "profiler1")) {
+            state.state = .Viewer;
+            use_profiler = true;
         }
         use_viewer = mem.eql(u8, v, "viewer");
         state.GPA.allocator().free(v);
@@ -1186,6 +1210,9 @@ pub fn actualMain() anyerror!void {
 
     if (use_tester) {
         testerMain();
+        return;
+    } else if (use_profiler) {
+        profilerMain();
         return;
     }
 
