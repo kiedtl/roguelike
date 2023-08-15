@@ -55,6 +55,32 @@ ab
 •t•
 
 % -----
+:begin_prefab TEST_combat_ai_checkForAllies
+
+@a Cmons dummy_l_immobile_omniscient ([tag]'A')
+@b Cmons dummy_l_immobile            ([tag]'B')
+@c Cmons dummy_l_immobile            ([tag]'C')
+@d Cmons dummy_l_immobile            ([tag]'D')
+@e Cmons dummy_l_immobile            ([tag]'E')
+@x Cmons dummy_l_immobile            ([faction]Player)
+
+#########
+#....#c.•
+#....&&##
+#.......#
+•b..a..x•
+#.......#
+####....#
+•.d#....#
+####....#
+#.......#
+#.......#
+#.......#
+#.......#
+#...e...#
+#########
+
+% -----
 :begin_prefab TEST_combat_ai_social_fighter
 
 @a Cmons dummy_l_immobile       ([tag]'A')
@@ -64,7 +90,7 @@ ab
 @e Cmons dummy_l_immobile       ([tag]'E')
 @f Cmons dummy_l_immobile       ([tag]'F')
 @u Cmons dummy_l_javelineer_sf2 ([faction]Player [facing]North)
-@v Cmons dummy_l_javelineer_sf2 ([faction]Player [facing]North)
+@v Cmons dummy_l_javelineer_sf2 ([faction]Player [facing]North [tag]'v')
 @w Cmons dummy_l_javelineer_sf2 ([faction]Player [facing]North)
 @x Cmons dummy_l_javelineer_sf  ([faction]Player [facing]North)
 @y Cmons dummy_l_javelineer_sf  ([faction]Player [facing]North)
@@ -88,14 +114,18 @@ ab
 % into investigation mode (because SocialFighter counts 'investigating' as
 % "aware ally"
 %
-####################
-#..a.##..b.####..c.#
-•....####..•##•....•
-#..u.##0.v.####0.w.#
-####################
-####################
-####################
-#..d.##..e.####..f.#
-•....#####.•##•....•
-#..x.##0..y####0.z.#
-####################
+############################
+#..a.######..b.########..c.#
+•....########..•######•....•
+#..u.######0.v.########0.w.#
+############################
+############################
+############################
+############################
+############################
+############################
+############################
+#..d.######..e.########..f.#
+•....#########.•######•....•
+#..x.######0..y########0.z.#
+############################

@@ -23,6 +23,23 @@ pub const Dummy_L_Immobile = MobTemplate{
     },
 };
 
+pub const Dummy_L_Immobile_Omniscient = MobTemplate{
+    .mob = .{
+        .id = "dummy_l_immobile_omniscient",
+        .species = &mobs.HumanSpecies,
+        .tile = '0',
+        .ai = AI{
+            .profession_name = "dummy <immobile>",
+            .profession_description = "crying",
+            .work_fn = ai.combatDummyWork,
+            .fight_fn = ai.combatDummyFight,
+        },
+        .deg360_vision = true,
+        .immobile = true,
+        .max_HP = 1,
+    },
+};
+
 pub const Dummy_L_Meleedude = MobTemplate{
     .mob = .{
         .id = "dummy_l_meleedude",
@@ -142,6 +159,7 @@ pub const Dummy_C_Immobile = MobTemplate{
 
 pub const MOBS = [_]MobTemplate{
     Dummy_L_Immobile,
+    Dummy_L_Immobile_Omniscient,
     Dummy_L_Meleedude,
     Dummy_L_Javelineer,
     Dummy_L_Javelineer_SF,

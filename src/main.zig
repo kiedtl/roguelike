@@ -1055,6 +1055,20 @@ fn testerMain() void {
                     }
                 }.f),
                 // ---
+                Test.n("checkForAllies", "TEST_combat_ai_checkForAllies", 2, null, struct {
+                    pub fn f(x: *TestContext) !void {
+                        const a = try x.getMob('A');
+                        // NOTE: it doesn't have to be in this order, b could
+                        // come before c, but due to checkForAllies'
+                        // implementation (iterating over each x and y) it will
+                        // always be in this order. Kinda fragile testing like
+                        // this though.
+                        try x.assertEq(a.allies.items[0], try x.getMob('C'), "", .{});
+                        try x.assertEq(a.allies.items[1], try x.getMob('B'), "", .{});
+                        try x.assertEq(a.allies.items.len, 2, "", .{});
+                    }
+                }.f),
+                // ---
                 Test.n("social_fighter", "TEST_combat_ai_social_fighter", 2, null, struct {
                     pub fn f(x: *TestContext) !void {
                         for ("ADE") |m|
