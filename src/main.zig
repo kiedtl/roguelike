@@ -873,10 +873,11 @@ fn testerMain() void {
             };
         }
 
+        // For some reason this isn't getting called w/ defer in Zig 0.9.1...
+        // So I manually free it in the main loop.
         pub fn deinit(x: *@This()) void {
-            for (x.errors.items) |str|
-                x.alloc.free(str);
-            x.errors.deinit();
+            // do nothing, test in zig v12
+            _ = x;
         }
     };
 
@@ -1144,7 +1145,9 @@ fn testerMain() void {
     }) catch {};
     for (ctx.errors.items) |str| {
         stdout.print("FAIL: {s}", .{str}) catch {};
+        ctx.alloc.free(str);
     }
+    ctx.errors.deinit();
 
     // XXX: stupid hack: init game state again to prevent crash when deinitGame()
     // is called :))
@@ -1166,10 +1169,43 @@ fn profilerMain() void {
 
     mapgen.initLevelTest("PRF1_combat") catch err.wat();
 
-    var i: usize = 1000;
+    var i: usize = 200;
     while (i > 0) : (i -= 1) {
-        std.log.info("{}", .{i});
+        var alive_nec: [2]usize = [2]usize{ 0, 0 };
+        var alive_rev: [2]usize = [2]usize{ 0, 0 };
+        var alive_cav: [2]usize = [2]usize{ 0, 0 };
+        var alive_drk: [2]usize = [2]usize{ 0, 0 };
+
+        var iter = state.mobs.iterator();
+        while (iter.next()) |mob| if (!mob.is_dead) {
+            switch (mob.faction) {
+                .Necromancer => {
+                    if (mob.ai.phase == .Flee) alive_nec[0] += 1;
+                    alive_nec[1] += 1;
+                },
+                .Revgenunkim => {
+                    if (mob.ai.phase == .Flee) alive_rev[0] += 1;
+                    alive_rev[1] += 1;
+                },
+                .CaveGoblins => {
+                    if (mob.ai.phase == .Flee) alive_cav[0] += 1;
+                    alive_cav[1] += 1;
+                },
+                .Night => {
+                    if (mob.ai.phase == .Flee) alive_drk[0] += 1;
+                    alive_drk[1] += 1;
+                },
+                .Player => err.wat(),
+            }
+        };
+
+        std.log.info("{}\tnec: {} ({})\tcav: {} ({})\trev: {} ({})\tnight: {} ({})", .{
+            i,            alive_nec[0], alive_nec[1], alive_cav[0], alive_cav[1],
+            alive_rev[0], alive_rev[1], alive_drk[0], alive_drk[1],
+        });
+
         tickGame(0) catch err.wat();
+
         // mapgen.initLevel(LEVEL);
         // mapgen.resetLevel(LEVEL);
     }
