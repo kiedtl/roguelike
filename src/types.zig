@@ -1971,6 +1971,10 @@ pub const Mob = struct { // {{{
     //
     push_flag: bool = false,
 
+    // Used to make mobs glance left and right when patrolling. Only used
+    // by ai.guardGlanceLeftRight.
+    glance_flag: u2 = 0,
+
     facing: Direction = .North,
     coord: Coord = Coord.new(0, 0),
 

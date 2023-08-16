@@ -669,33 +669,24 @@ pub fn guardGlanceAround(mob: *Mob) void {
     }
 }
 
-fn guardGlanceLeftRight(mob: *Mob, prev_direction: Direction) void {
-    var newdirection: Direction = switch (mob.facing) {
-        .North => .NorthEast,
-        .East => .SouthEast,
-        .South => .SouthWest,
-        .West => .NorthWest,
-        .NorthEast => .East,
-        .SouthEast => .South,
-        .SouthWest => .West,
-        .NorthWest => .North,
-    };
-
-    if (prev_direction == newdirection) {
-        // TODO: factor into Direction.oppositeAdjacent
-        newdirection = switch (newdirection) {
-            .North => .West,
-            .East => .North,
-            .South => .East,
-            .West => .South,
-            .NorthEast => .NorthWest,
-            .NorthWest => .NorthEast,
-            .SouthEast => .SouthWest,
-            .SouthWest => .SouthEast,
+fn guardGlanceLeftRight(mob: *Mob, _: Direction) void {
+    if (mob.last_attempted_move) |last_move| {
+        // zig fmt: off
+        const directions = switch (last_move) {
+            .North =>     [_]Direction{.NorthEast, .North,     .NorthWest, .North     },
+            .South =>     [_]Direction{.SouthEast, .South,     .SouthWest, .South     },
+            .East =>      [_]Direction{.SouthEast, .East,      .NorthEast, .East      },
+            .West =>      [_]Direction{.SouthWest, .West,      .NorthWest, .West      },
+            .NorthEast => [_]Direction{.North,     .NorthEast, .East,      .NorthEast },
+            .NorthWest => [_]Direction{.North,     .NorthWest, .West,      .NorthWest },
+            .SouthEast => [_]Direction{.South,     .SouthEast, .East,      .SouthEast },
+            .SouthWest => [_]Direction{.South,     .SouthWest, .West,      .SouthWest },
         };
-    }
+        // zig fmt: on
 
-    mob.facing = newdirection;
+        mob.glance_flag +%= 1;
+        mob.facing = directions[mob.glance_flag];
+    }
 }
 
 fn tryChooseRandomPatrolDest(mob: *Mob) ?Coord {
