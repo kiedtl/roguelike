@@ -1,0 +1,36 @@
+- profile item/ring gen
+- borders around map in examine mode
+- corruption effects
+  - less dodge
+  - no forget
+
+- potion of absorption
+- restroom prefab
+- headgear
+
+- ring of transformation: turns all fire into electricity
+  - "heals" status
+  - zaps self
+- ring of detonation: make enemy explosive+noisy+insane
+- ring of deception: undead mistake you for ally unless non-undead allies are nearby
+- ring of deconstruction: rolling boulder
+- ring of condemnation: undead explode, causing other undead to explode, chain reaction
+  - explosion only over cardinals
+  - ...unless disoriented, then it's only diagonals
+  - will/2-will damage
+  - damage stacks
+  - cannot be used while corrupt
+  - target must be undead, doesn't affect non-undead
+
+- pull up @ when pressedin examine mode
+- no staring into walls
+- "you ascend, sealing the steel gates behind you."
+- check alert issues already
+- debug keys for listing alert
+- tone down echolocation
+- fix json morgue files
+- only give shrine message is shrine exists and isn't drained
+- what's wrong with rings generation
+  - nothing apparently?
+- fix glancing (when moving)
+- profile mapgen code
