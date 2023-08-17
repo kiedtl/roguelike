@@ -673,14 +673,14 @@ fn guardGlanceLeftRight(mob: *Mob, _: Direction) void {
     if (mob.last_attempted_move) |last_move| {
         // zig fmt: off
         const directions = switch (last_move) {
-            .North =>     [_]Direction{.NorthEast, .North,     .NorthWest, .North     },
-            .South =>     [_]Direction{.SouthEast, .South,     .SouthWest, .South     },
-            .East =>      [_]Direction{.SouthEast, .East,      .NorthEast, .East      },
-            .West =>      [_]Direction{.SouthWest, .West,      .NorthWest, .West      },
-            .NorthEast => [_]Direction{.North,     .NorthEast, .East,      .NorthEast },
-            .NorthWest => [_]Direction{.North,     .NorthWest, .West,      .NorthWest },
-            .SouthEast => [_]Direction{.South,     .SouthEast, .East,      .SouthEast },
-            .SouthWest => [_]Direction{.South,     .SouthWest, .West,      .SouthWest },
+            .North =>     [_]Direction{ .NorthEast, .North,     .NorthWest, .North     },
+            .South =>     [_]Direction{ .SouthEast, .South,     .SouthWest, .South     },
+            .East =>      [_]Direction{ .SouthEast, .East,      .NorthEast, .East      },
+            .West =>      [_]Direction{ .SouthWest, .West,      .NorthWest, .West      },
+            .NorthEast => [_]Direction{ .North,     .NorthEast, .East,      .NorthEast },
+            .NorthWest => [_]Direction{ .North,     .NorthWest, .West,      .NorthWest },
+            .SouthEast => [_]Direction{ .South,     .SouthEast, .East,      .SouthEast },
+            .SouthWest => [_]Direction{ .South,     .SouthWest, .West,      .SouthWest },
         };
         // zig fmt: on
 
