@@ -563,6 +563,51 @@ Rings
 -----
 Rings have "tiers" instead of an enchantment level (gold, silver, iron).
 
+- ring of provocation: (Alvoc) Tear apart a nearby (standing on/adjacent)
+  corpse in a crazed animal rage, causing all visible enemies to either flee or
+  become enraged (50/50 chance). Target corpse must be "named".
+
+- ring of ____________: (Alvoc) +50 attack speed, -50 move speed
+
+- ring of anticipation: +10% innate melee boost, will-checked chance to grant
+  adjacent enemies `anticipated movements` status, giving them -15% evasion
+
+- ring of distortion: (alt) Bends space around player, granting +20% evade and
+  -20% melee.
+
+- ring of ____________: Grants "invisible" status, drains 1 MP for each enemy
+  that can see player in exchange for them not noticing player. No MP drain
+  when player can't be seen. 0 MP to start with. (Needs downside. Maybe doesn't
+  work if player is directly adjacent, or player is corrupted and target is
+  undead?)
+  - Maybe MP drain only occurs if player fails will-check? (Maybe ring could
+    have Will-3)
+
+- ring of ____________: Grants enemy on conductive terrain "gathering charge"
+  status, causing them to take damage each turn they stand on that terrain
+  (status is cured when they walk off)
+
+- ring of demolition: Explosion centered on player, player takes no damage.
+  (Needs some downside/quirk to make it interesting. Only works if completely
+  surrounded (by either allies or enemies? hmm, could be useful for summoners)?
+  Damage is low, but gives player bad/good effect for each enemy injured?)
+
+- ring of ____________: Gives "sanctuary" + disorient status effects. Sanctuary
+  status damages and .Held's(10) any mob adjacent (cardinals only), and doesn't
+  affect mobs with .Held. Creates puzzle-like gameplay. Damage could scale with
+  some stat.
+
+- ring of condemnation: instakill undead, at cost of 10 turns held. Ancient
+  Mage should have some kind of countermeasure (transform into something else?
+  explode into swarm of enemies?)
+
+- ring of infestation: Gives infestation status (mob-only), "night beatles"
+  burst out of affected mob when status effect ends. Night beatles should only
+  be dangerous in larger numbers (maybe steal ghoul respawn mechanic from SPD?)
+  - Potion of infestation + infestation gas: infestation status to
+    paralyzed/will==0/in-dark-area mobs (still haven't decided, maybe a
+    combination of the two
+
 - ring of transformation: turns all fire into electricity. "Heals" the burning
   status, and targets self.
 
@@ -573,7 +618,7 @@ Rings have "tiers" instead of an enchantment level (gold, silver, iron).
 
 - ring of deconstruction: rolling boulder
 
-- ring of condemnation: [holy] undead explode, causing other undead to explode,
+- ring of fustigation: [holy] undead explode, causing other undead to explode,
   chain reaction
   - Explosion only over cardinals... unless disoriented, then it's only
     diagonals
@@ -1090,6 +1135,8 @@ x Night creatures
   - ring of deception
   - ring of deconstruction
   - ring of condemnation
+  - ring of infestation
+  - 
 - Crypt floor
   x Modify level data and spawn files
   - New monsters:
@@ -1103,6 +1150,11 @@ x Night creatures
   - Staircase prefab on -1/Prison
 - Revgenuhelkim
   - Acid damage and resistance
+    - 'slimy' status (knockback in direction of last move + rFire)
+      - note for later: no rings, should be unique status
+      - 1/10 chance of hitting wall when moving towards it (otherwise no hit)
+      - barrels/pools of sludge
+      - potion of slimification (found rarely or by cooking disorient potions)
   - Revgenuhelkim
     - Acid claws
     - Digging abilities
