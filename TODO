@@ -563,16 +563,23 @@ Rings
 -----
 Rings have "tiers" instead of an enchantment level (gold, silver, iron).
 
-  .....
-  ..m..
-  .m@m. attack each direction
-  ..m..
-  .....
+- ring of transformation: turns all fire into electricity. "Heals" the burning
+  status, and targets self.
 
-  #.....    #.....    #.....    #.....
-  #.@m..    #.m...    #.m...    #.@M..
-  #.....    #@....    #.@...    #.....
-  #####.    #####.    #####.    #####.
+- ring of detonation: make enemy explosive+noisy+insane
+
+- ring of deception: [anti-Holy] undead mistake you for ally unless non-undead
+  allies are nearby
+
+- ring of deconstruction: rolling boulder
+
+- ring of condemnation: [holy] undead explode, causing other undead to explode,
+  chain reaction
+  - Explosion only over cardinals... unless disoriented, then it's only
+    diagonals
+  - will/2-will damage, damage stacks
+  - cannot be used while corrupt and target must be undead, doesn't affect
+    non-undead
 
 - ring of distortion: bend space, blinking away all mobs in 3-5 tile radius of
   player. Blinks player as well. All affected mobs, including player, have
@@ -1077,8 +1084,14 @@ x Night creatures
   x Potential stat
   x Draining mobs (dead)
   x Draining mobs (alive)
+- New rings
+  - ring of transformation
+  - ring of detonation
+  - ring of deception
+  - ring of deconstruction
+  - ring of condemnation
 - Crypt floor
-  - Modify level data and spawn files
+  x Modify level data and spawn files
   - New monsters:
     - Vile protector
     - Tormenters
@@ -1156,7 +1169,7 @@ x Night creatures
     - QRT: sinks, washtubs, beer taps
     - LAB: misc machinery, cages of constructs and animals
 - More "Living Dungeon" content
-  - Patrols report areas that need cleaning
+  x Patrols report areas that need cleaning
   - Haulers periodically bring prisoners food/alcohol rations
   - Cleaners occasionally go over prison cell
   - Guards drag new prisoners to replace ones which died
