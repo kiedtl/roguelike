@@ -671,8 +671,20 @@ pub const Rect = struct {
 
     pub const ArrayList = std.ArrayList(Rect);
 
-    pub fn new(start: Coord, w: usize, h: usize) Rect {
+    pub inline fn new(start: Coord, w: usize, h: usize) Rect {
         return Rect{ .start = start, .width = w, .height = h };
+    }
+
+    pub inline fn area(self: Rect) usize {
+        return self.width * self.height;
+    }
+
+    pub fn relTo(self: Rect, d: ui.Dimension) Rect {
+        return Rect.new(
+            Coord.new2(self.start.z, self.start.x - d.startx, self.start.y - d.starty),
+            self.width,
+            self.height,
+        );
     }
 
     pub fn add(a: *const Rect, b: *const Rect) Rect {

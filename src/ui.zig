@@ -205,6 +205,10 @@ pub const Dimension = struct {
     pub fn height(self: @This()) usize {
         return self.endy - self.starty;
     }
+
+    pub fn asRect(self: @This()) Rect {
+        return Rect.new(Coord.new(self.startx, self.starty), self.width(), self.height());
+    }
 };
 
 pub fn dimensions(w: DisplayWindow) Dimension {
@@ -2850,32 +2854,34 @@ pub fn drawEscapeMenu() void {
     var tab: usize = @enumToInt(@as(Tab, .Continue));
 
     while (true) {
+        menu_c.clearMouseTriggers();
         var my: usize = 0;
         my += menu_c.drawTextAt(0, my, "$cMain Menu$.", .{});
         inline for (@typeInfo(Tab).Enum.fields) |tabv| {
             const sel = if (tabv.value == tab) "$c>" else "$g ";
             my += menu_c.drawTextAtf(0, my, "{s} {s}$.", .{ sel, tabv.name }, .{});
+            menu_c.addClickableText(.Hover, .{ .Signal = tabv.value });
+            menu_c.addClickableText(.Click, .{ .Signal = tabv.value });
         }
         menu_c.renderFullyW(.PlayerInfo);
 
         main_c.renderFullyW(.Main);
         display.present();
 
+        var menu_tab_chosen = false;
+
         switch (display.waitForEvent(null) catch err.wat()) {
             .Quit => return,
+            .Hover => |c| if (menu_c.handleMouseEvent(c, .Hover, .PlayerInfo)) |sig| {
+                tab = sig;
+            },
+            .Click => |c| if (menu_c.handleMouseEvent(c, .Click, .PlayerInfo)) |sig| {
+                assert(tab == sig);
+                menu_tab_chosen = true;
+            },
             .Key => |k| switch (k) {
                 .CtrlC, .Esc, .CtrlG => return,
-                .Enter => {
-                    switch (@intToEnum(Tab, tab)) {
-                        .Continue => {},
-                        .@"Player Info" => drawPlayerInfoScreen(),
-                        .Quit => {
-                            if (drawYesNoPrompt("Really abandon this run?", .{}))
-                                state.state = .Quit;
-                        },
-                    }
-                    return;
-                },
+                .Enter => menu_tab_chosen = true,
                 .ArrowDown => if (tab < meta.fields(Tab).len - 1) {
                     tab += 1;
                 },
@@ -2894,6 +2900,15 @@ pub fn drawEscapeMenu() void {
             },
             else => {},
         }
+
+        if (menu_tab_chosen) switch (@intToEnum(Tab, tab)) {
+            .Continue => return,
+            .@"Player Info" => drawPlayerInfoScreen(),
+            .Quit => {
+                if (drawYesNoPrompt("Really abandon this run?", .{}))
+                    state.state = .Quit;
+            },
+        };
     }
 }
 
@@ -3381,9 +3396,33 @@ pub const Console = struct {
     height: usize,
     subconsoles: Subconsole.AList,
     default_transparent: bool = false,
+    mouse_triggers: MouseTrigger.AList,
+
+    // some state to make adding mouse triggers less painful
+    last_written_text_startx: usize = 0,
+    last_written_text_starty: usize = 0,
+    last_written_text_endx: usize = 0,
+    last_written_text_endy: usize = 0,
 
     pub const Self = @This();
     pub const AList = std.ArrayList(Self);
+
+    pub const MouseTrigger = struct {
+        kind: Kind,
+        rect: Rect,
+        action: Action,
+
+        pub const Kind = enum {
+            Click,
+            Hover,
+        };
+
+        pub const Action = union(enum) {
+            Signal: usize,
+        };
+
+        pub const AList = std.ArrayList(@This());
+    };
 
     pub const Subconsole = struct {
         console: Console,
@@ -3400,6 +3439,7 @@ pub const Console = struct {
             .width = width,
             .height = height,
             .subconsoles = Subconsole.AList.init(alloc),
+            .mouse_triggers = MouseTrigger.AList.init(alloc),
         };
         mem.set(display.Cell, self.grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
         return self;
@@ -3410,6 +3450,7 @@ pub const Console = struct {
         for (self.subconsoles.items) |*subconsole|
             subconsole.console.deinit();
         self.subconsoles.deinit();
+        self.mouse_triggers.deinit();
     }
 
     pub fn addSubconsole(self: *Self, subconsole: Console, x: usize, y: usize) void {
@@ -3443,6 +3484,42 @@ pub const Console = struct {
 
         self.height = new_height;
         self.grid = new_grid;
+    }
+
+    pub fn addClickableText(self: *Self, kind: MouseTrigger.Kind, action: MouseTrigger.Action) void {
+        self.addMouseTrigger(Rect.new(
+            Coord.new(self.last_written_text_startx, self.last_written_text_starty),
+            self.last_written_text_endx - self.last_written_text_startx,
+            self.last_written_text_endy - self.last_written_text_starty,
+        ), kind, action);
+    }
+
+    pub fn addMouseTrigger(self: *Self, rect: Rect, kind: MouseTrigger.Kind, action: MouseTrigger.Action) void {
+        self.mouse_triggers.append(.{ .rect = rect, .kind = kind, .action = action }) catch err.oom();
+        std.sort.sort(MouseTrigger, self.mouse_triggers.items, {}, struct {
+            fn f(_: void, a: MouseTrigger, b: MouseTrigger) bool {
+                return a.rect.area() < b.rect.area();
+            }
+        }.f);
+    }
+
+    // Returns usize only if trigger for mouse event was a signal
+    pub fn handleMouseEvent(self: *Self, abscoord: Coord, kind: MouseTrigger.Kind, d: DisplayWindow) ?usize {
+        const dim = dimensions(d);
+        const coord = (&abscoord).asRect();
+        if (!dim.asRect().intersects(&coord, 0))
+            return null;
+        for (self.mouse_triggers.items) |t| {
+            if (t.kind == kind and t.rect.intersects(&coord.relTo(dim), 1))
+                switch (t.action) {
+                    .Signal => |s| return s,
+                };
+        }
+        return null;
+    }
+
+    pub fn clearMouseTriggers(self: *Self) void {
+        self.mouse_triggers.clearRetainingCapacity();
     }
 
     pub fn clearTo(self: *const Self, to: display.Cell) void {
@@ -3739,7 +3816,7 @@ pub const Console = struct {
         }
     }
 
-    pub fn drawTextAtf(self: *const Self, startx: usize, starty: usize, comptime format: []const u8, args: anytype, opts: DrawStrOpts) usize {
+    pub fn drawTextAtf(self: *Self, startx: usize, starty: usize, comptime format: []const u8, args: anytype, opts: DrawStrOpts) usize {
         const str = std.fmt.allocPrint(state.GPA.allocator(), format, args) catch err.oom();
         defer state.GPA.allocator().free(str);
         return self.drawTextAt(startx, starty, str, opts);
@@ -3748,7 +3825,11 @@ pub const Console = struct {
     // Re-implementation of _drawStr
     //
     // Returns lines/rows used
-    pub fn drawTextAt(self: *const Self, startx: usize, starty: usize, str: []const u8, opts: DrawStrOpts) usize {
+    pub fn drawTextAt(self: *Self, startx: usize, starty: usize, str: []const u8, opts: DrawStrOpts) usize {
+        self.last_written_text_startx = startx;
+        self.last_written_text_starty = starty;
+        self.last_written_text_endx = startx;
+
         var x = startx;
         var y = starty;
         var skipped: usize = 0; // TODO: remove
@@ -3760,6 +3841,7 @@ pub const Console = struct {
         var fold_iter = utils.FoldedTextIterator.init(str, self.width + 1);
         while (fold_iter.next(&fibuf)) |line| : ({
             y += 1;
+            if (x > self.last_written_text_endx) self.last_written_text_endx = x;
             x = startx;
         }) {
             if (skipped < opts.skip_lines) {
@@ -3780,6 +3862,7 @@ pub const Console = struct {
                 switch (codepoint) {
                     '\n' => {
                         y += 1;
+                        if (x > self.last_written_text_endx) self.last_written_text_endx = x;
                         x = startx;
                         continue;
                     },
@@ -3823,11 +3906,13 @@ pub const Console = struct {
             }
         }
 
+        self.last_written_text_endy = y - 1;
+
         return y - starty;
     }
 
     // Reimplementation of _drawBar
-    fn drawBarAt(self: *const Console, x: usize, endx: usize, y: usize, current: usize, max: usize, description: []const u8, bg: u32, fg: u32, opts: struct {
+    fn drawBarAt(self: *Console, x: usize, endx: usize, y: usize, current: usize, max: usize, description: []const u8, bg: u32, fg: u32, opts: struct {
         detail: bool = true,
         detail_type: enum { Specific, Percent } = .Specific,
     }) usize {
@@ -3855,6 +3940,7 @@ pub const Console = struct {
             },
         };
 
+        self.last_written_text_endx = endx;
         return y + 1;
     }
 };

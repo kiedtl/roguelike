@@ -25,6 +25,7 @@ var grid: []Cell = undefined;
 var dirty: []bool = undefined;
 var w_height: usize = undefined;
 var w_width: usize = undefined;
+var last_hover: usize = Coord.new(0, 0);
 
 pub const Driver = enum {
     Termbox,
@@ -62,6 +63,7 @@ pub const Event = union(enum) {
     Key: Key,
     Char: u21,
     Click: Coord,
+    Hover: Coord,
     Quit,
 };
 
@@ -505,6 +507,24 @@ pub fn waitForEvent(wait_period: ?usize) !Event {
                                 return Event{ .Click = Coord.new(xrel - 1, yrel) };
                             } else {
                                 return Event{ .Click = Coord.new(xrel, yrel) };
+                            }
+                        }
+                    },
+                    driver_m.SDL_MOUSEMOTION => {
+                        // ev is driver_m.SDL_MouseMotionEvent
+                        const xpix = @intCast(usize, ev.motion.x);
+                        const ypix = @intCast(usize, ev.motion.y);
+                        const xrel = xpix / font.FONT_WIDTH;
+                        const yrel = ypix / font.FONT_HEIGHT;
+                        if (xrel < width() and yrel < height() and
+                            ev.button.state == 0)
+                        {
+                            if (grid[yrel * width() + xrel].fl.skip and
+                                xrel != 0 and grid[yrel * width() + xrel - 1].fl.wide)
+                            {
+                                return Event{ .Hover = Coord.new(xrel - 1, yrel) };
+                            } else {
+                                return Event{ .Hover = Coord.new(xrel, yrel) };
                             }
                         }
                     },

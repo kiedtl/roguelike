@@ -567,7 +567,7 @@ fn readInput() !bool {
             else => false,
         },
         //else => false,
-        .Click => return false,
+        .Hover, .Click => return false,
     };
 
     ui.draw();
