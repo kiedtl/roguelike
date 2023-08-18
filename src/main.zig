@@ -492,6 +492,17 @@ fn readInput() !bool {
                 // state.message(.Info, "P: {}, deadly: {}, active: {}, last: {}", .{
                 //     pthreat.level, pthreat.deadly, pthreat.is_active, pthreat.last_incident,
                 // });
+                // while (true)
+                //     switch (display.waitForEvent(null) catch err.wat()) {
+                //         .Quit => break,
+                //         .Click => |b| {
+                //             std.log.info("event: x: {}, y: {}", .{ b.x, b.y });
+                //             const wide = display.getCell(b.x, b.y).fl.wide;
+                //             display.setCell(b.x, b.y, .{ .ch = ' ', .bg = 0xffffff, .fl = .{ .wide = wide } });
+                //             display.present();
+                //         },
+                //         else => {},
+                //     };
                 break :blk true;
             },
             .F8 => b: {
@@ -556,6 +567,7 @@ fn readInput() !bool {
             else => false,
         },
         //else => false,
+        .Click => return false,
     };
 
     ui.draw();

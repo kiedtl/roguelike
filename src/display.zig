@@ -7,6 +7,8 @@ const assert = std.debug.assert;
 const state = @import("state.zig"); // For the allocator
 const colors = @import("colors.zig");
 
+const Coord = @import("types.zig").Coord;
+
 pub const driver: Driver = if (build_options.use_sdl) .SDL2 else .Termbox;
 pub const driver_m = if (build_options.use_sdl) @cImport(@cInclude("SDL.h")) else @import("termbox.zig");
 pub const font = @import("font.zig");
@@ -59,6 +61,7 @@ pub const Event = union(enum) {
     Resize: struct { new_width: usize, new_height: usize },
     Key: Key,
     Char: u21,
+    Click: Coord,
     Quit,
 };
 
@@ -488,6 +491,22 @@ pub fn waitForEvent(wait_period: ?usize) !Event {
                         } else if (kcode == driver_m.SDLK_SPACE) {
                             return Event{ .Char = ' ' };
                         } else continue;
+                    },
+                    driver_m.SDL_MOUSEBUTTONUP => {
+                        // ev is driver_m.SDL_MouseButtonEvent
+                        const xpix = @intCast(usize, ev.button.x);
+                        const ypix = @intCast(usize, ev.button.y);
+                        const xrel = xpix / font.FONT_WIDTH;
+                        const yrel = ypix / font.FONT_HEIGHT;
+                        if (xrel < width() and yrel < height()) {
+                            if (grid[yrel * width() + xrel].fl.skip and
+                                xrel != 0 and grid[yrel * width() + xrel - 1].fl.wide)
+                            {
+                                return Event{ .Click = Coord.new(xrel - 1, yrel) };
+                            } else {
+                                return Event{ .Click = Coord.new(xrel, yrel) };
+                            }
+                        }
                     },
                     else => continue,
                 }
