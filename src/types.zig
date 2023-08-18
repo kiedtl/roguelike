@@ -679,9 +679,9 @@ pub const Rect = struct {
         return self.width * self.height;
     }
 
-    pub fn relTo(self: Rect, d: ui.Dimension) Rect {
+    pub fn relTo(self: Rect, d: Rect) Rect {
         return Rect.new(
-            Coord.new2(self.start.z, self.start.x - d.startx, self.start.y - d.starty),
+            Coord.new2(self.start.z, self.start.x - d.start.x, self.start.y - d.start.y),
             self.width,
             self.height,
         );

@@ -87,8 +87,8 @@ pub var map_win: struct {
         self.animations.default_transparent = true;
         self.animations.clear();
 
-        self.map.addSubconsole(self.annotations, 0, 0);
-        self.map.addSubconsole(self.animations, 0, 0);
+        self.map.addSubconsole(&self.annotations, 0, 0);
+        self.map.addSubconsole(&self.animations, 0, 0);
     }
 
     pub fn deinit(self: *@This()) void {
@@ -111,8 +111,8 @@ fn ModalWindow(comptime left_width: usize, comptime dim: DisplayWindow) type {
             self.left = Console.init(state.GPA.allocator(), LEFT_WIDTH, d.height() - 2);
             self.right = Console.init(state.GPA.allocator(), d.width() - LEFT_WIDTH - 3, d.height() - 2);
 
-            self.container.addSubconsole(self.left, 1, 1);
-            self.container.addSubconsole(self.right, LEFT_WIDTH + 2, 1);
+            self.container.addSubconsole(&self.left, 1, 1);
+            self.container.addSubconsole(&self.right, LEFT_WIDTH + 2, 1);
         }
 
         pub fn deinit(self: *@This()) void {
@@ -1488,7 +1488,7 @@ fn drawLog(startx: usize, endx: usize, alloc: mem.Allocator) Console {
 
     var total_height: usize = 0;
     for (state.messages.items) |message, i| {
-        var console = Console.init(alloc, linewidth, 7);
+        var console = Console.initHeap(alloc, linewidth, 7);
 
         const col = if (message.turn >= state.player_turns or i == messages_len)
             message.type.color()
@@ -1992,18 +1992,14 @@ pub fn chooseDirection() ?Direction {
 
 pub const LoadingScreen = struct {
     main_con: Console,
-    logo_con: Console,
-    text_con: Console,
+    logo_con: *Console,
+    text_con: *Console,
 
     pub const TEXT_CON_HEIGHT = 2;
     pub const TEXT_CON_WIDTH = 28;
 
     pub fn deinit(self: *@This()) void {
         self.main_con.deinit();
-
-        // Deinit'ing main_con automatically frees subconsoles
-        //self.logo_con.deinit();
-        //self.text_con.deinit();
     }
 };
 
@@ -2015,8 +2011,8 @@ pub fn initLoadingScreen() LoadingScreen {
     defer map.deinit();
 
     win_c.main_con = Console.init(state.GPA.allocator(), win.width(), win.height());
-    win_c.logo_con = Console.init(state.GPA.allocator(), map.width, map.height + 1); // +1 padding
-    win_c.text_con = Console.init(state.GPA.allocator(), LoadingScreen.TEXT_CON_WIDTH, LoadingScreen.TEXT_CON_HEIGHT);
+    win_c.logo_con = Console.initHeap(state.GPA.allocator(), map.width, map.height + 1); // +1 padding
+    win_c.text_con = Console.initHeap(state.GPA.allocator(), LoadingScreen.TEXT_CON_WIDTH, LoadingScreen.TEXT_CON_HEIGHT);
 
     const starty = (win.height() / 2) - ((map.height + LoadingScreen.TEXT_CON_HEIGHT + 2) / 2) - 4;
 
@@ -2104,7 +2100,7 @@ pub fn drawGameOverScreen(scoreinfo: scores.Info) void {
 
     var layer1_c = Console.init(state.GPA.allocator(), win_d.width(), win_d.height());
     layer1_c.drawCapturedDisplay(1, 1);
-    container_c.addSubconsole(layer1_c, 0, 0);
+    container_c.addSubconsole(&layer1_c, 0, 0);
 
     const player_dc = coordToScreen(state.player.coord).?;
     for (&DIRECTIONS) |d| if (state.player.coord.move(d, state.mapgeometry)) |nei| {
@@ -2341,16 +2337,21 @@ pub fn drawMessagesScreen() void {
 pub fn drawPlayerInfoScreen() void {
     const Tab = enum(usize) { Stats = 0, Statuses = 1, Aptitudes = 2, Augments = 3 };
     var tab: usize = @enumToInt(@as(Tab, .Stats));
+    var tab_hover: ?usize = null;
 
     while (true) {
         pinfo_win.container.clearLineTo(0, pinfo_win.container.width - 1, 0, .{ .ch = '▀', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
         pinfo_win.container.clearLineTo(0, pinfo_win.container.width - 1, pinfo_win.container.height - 1, .{ .ch = '▄', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
 
+        pinfo_win.left.clearMouseTriggers();
         var my: usize = 0;
         my += pinfo_win.left.drawTextAt(0, my, "$cPlayer Info$.", .{});
         inline for (@typeInfo(Tab).Enum.fields) |tabv| {
             const sel = if (tabv.value == tab) "$c>" else "$g ";
-            my += pinfo_win.left.drawTextAtf(0, my, "{s} {s}$.", .{ sel, tabv.name }, .{});
+            const bg = if (tab_hover != null and tab_hover.? == tabv.value) colors.BG_L else colors.BG;
+            my += pinfo_win.left.drawTextAtf(0, my, "{s} {s}$. ", .{ sel, tabv.name }, .{ .bg = bg });
+            pinfo_win.left.addClickableLine(.Hover, .{ .Signal = tabv.value });
+            pinfo_win.left.addClickableLine(.Click, .{ .Signal = tabv.value });
         }
 
         pinfo_win.right.clear();
@@ -2456,6 +2457,19 @@ pub fn drawPlayerInfoScreen() void {
             .Quit => {
                 state.state = .Quit;
                 break;
+            },
+            .Hover => |c| switch (pinfo_win.container.handleMouseEvent(c, .Hover)) {
+                .Signal => |sig| tab_hover = sig,
+                .Void => err.wat(),
+                .Unhandled => {},
+            },
+            .Click => |c| switch (pinfo_win.container.handleMouseEvent(c, .Click)) {
+                .Signal => |sig| {
+                    tab = sig;
+                    tab_hover = null;
+                },
+                .Void => err.wat(),
+                .Unhandled => {},
             },
             .Key => |k| switch (k) {
                 .CtrlC, .CtrlG, .Esc => break,
@@ -2872,12 +2886,18 @@ pub fn drawEscapeMenu() void {
 
         switch (display.waitForEvent(null) catch err.wat()) {
             .Quit => return,
-            .Hover => |c| if (menu_c.handleMouseEvent(c, .Hover, .PlayerInfo)) |sig| {
-                tab = sig;
+            .Hover => |c| switch (menu_c.handleMouseEvent(c, .Hover)) {
+                .Signal => |sig| tab = sig,
+                .Void => err.wat(),
+                .Unhandled => {},
             },
-            .Click => |c| if (menu_c.handleMouseEvent(c, .Click, .PlayerInfo)) |sig| {
-                assert(tab == sig);
-                menu_tab_chosen = true;
+            .Click => |c| switch (menu_c.handleMouseEvent(c, .Click)) {
+                .Signal => |sig| {
+                    assert(tab == sig);
+                    menu_tab_chosen = true;
+                },
+                .Void => err.wat(),
+                .Unhandled => {},
             },
             .Key => |k| switch (k) {
                 .CtrlC, .Esc, .CtrlG => return,
@@ -2905,8 +2925,10 @@ pub fn drawEscapeMenu() void {
             .Continue => return,
             .@"Player Info" => drawPlayerInfoScreen(),
             .Quit => {
-                if (drawYesNoPrompt("Really abandon this run?", .{}))
+                if (drawYesNoPrompt("Really abandon this run?", .{})) {
                     state.state = .Quit;
+                    return;
+                }
             },
         };
     }
@@ -3232,7 +3254,7 @@ pub fn drawTextModal(comptime fmt: []const u8, args: anytype) void {
     var container_c = Console.init(state.GPA.allocator(), W_WIDTH + 4, text_height + 4);
     var text_c = Console.init(state.GPA.allocator(), W_WIDTH, text_height);
 
-    container_c.addSubconsole(text_c, 2, 2);
+    container_c.addSubconsole(&text_c, 2, 2);
 
     container_c.clearTo(.{ .bg = colors.ABG });
     container_c.setBorder();
@@ -3269,8 +3291,8 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
     var hint_c = Console.init(state.GPA.allocator(), W_WIDTH, 2);
     var hint_used = false;
 
-    container_c.addSubconsole(text_c, 2, 2);
-    container_c.addSubconsole(options_c, 2, 2 + text_height + 1);
+    container_c.addSubconsole(&text_c, 2, 2);
+    container_c.addSubconsole(&options_c, 2, 2 + text_height + 1);
 
     container_c.clearTo(.{ .bg = colors.ABG });
     container_c.setBorder();
@@ -3292,6 +3314,8 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
             const ind = if (chosen == i) ">" else "-";
             const color = if (chosen == i) colors.LIGHT_CONCRETE else colors.GREY;
             y = options_c.drawTextAtf(0, y, "{s} {s}", .{ ind, option }, .{ .fg = color, .bg = colors.ABG });
+            options_c.addClickableText(.Hover, .{ .Signal = i });
+            options_c.addClickableText(.Click, .{ .Signal = i });
         }
 
         container_c.renderFully(
@@ -3305,6 +3329,19 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
                 state.state = .Quit;
                 cancelled = true;
                 break;
+            },
+            .Hover => |c| switch (container_c.handleMouseEvent(c, .Hover)) {
+                .Signal => |sig| chosen = sig,
+                .Void => err.wat(),
+                .Unhandled => {},
+            },
+            .Click => |c| switch (container_c.handleMouseEvent(c, .Click)) {
+                .Signal => |sig| {
+                    chosen = sig;
+                    break;
+                },
+                .Void => err.wat(),
+                .Unhandled => {},
             },
             .Key => |k| switch (k) {
                 .CtrlC, .Esc, .CtrlG => {
@@ -3343,7 +3380,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
                         container_c.changeHeight(container_c.height + 2 + 1);
                         container_c.clearTo(.{ .bg = colors.ABG });
                         container_c.setBorder();
-                        container_c.addSubconsole(hint_c, 2, 2 + text_height + 1 + options.len + 1);
+                        container_c.addSubconsole(&hint_c, 2, 2 + text_height + 1 + options.len + 1);
                         hint_c.clearTo(.{ .bg = colors.ABG });
                         _ = hint_c.drawTextAt(0, 0, HINT, .{ .bg = colors.ABG });
                     }
@@ -3391,6 +3428,7 @@ pub fn drawItemChoicePrompt(comptime fmt: []const u8, args: anytype, items: []co
 
 pub const Console = struct {
     alloc: mem.Allocator,
+    heap_inited: bool = false,
     grid: []display.Cell,
     width: usize,
     height: usize,
@@ -3403,6 +3441,10 @@ pub const Console = struct {
     last_written_text_starty: usize = 0,
     last_written_text_endx: usize = 0,
     last_written_text_endy: usize = 0,
+
+    // more state to make handling mouse triggers less painful
+    rendered_offset_x: usize = 0,
+    rendered_offset_y: usize = 0,
 
     pub const Self = @This();
     pub const AList = std.ArrayList(Self);
@@ -3424,8 +3466,10 @@ pub const Console = struct {
         pub const AList = std.ArrayList(@This());
     };
 
+    pub const MouseEventHandleResult = union(enum) { Unhandled, Signal: usize, Void };
+
     pub const Subconsole = struct {
-        console: Console,
+        console: *Console,
         x: usize = 0,
         y: usize = 0,
 
@@ -3445,15 +3489,25 @@ pub const Console = struct {
         return self;
     }
 
+    pub fn initHeap(alloc: mem.Allocator, width: usize, height: usize) *Self {
+        const s = Console.init(alloc, width, height);
+        const p = alloc.create(Console) catch err.oom();
+        p.* = s;
+        p.heap_inited = true;
+        return p;
+    }
+
     pub fn deinit(self: *Self) void {
         self.alloc.free(self.grid);
         for (self.subconsoles.items) |*subconsole|
             subconsole.console.deinit();
         self.subconsoles.deinit();
         self.mouse_triggers.deinit();
+        if (self.heap_inited)
+            self.alloc.destroy(self);
     }
 
-    pub fn addSubconsole(self: *Self, subconsole: Console, x: usize, y: usize) void {
+    pub fn addSubconsole(self: *Self, subconsole: *Console, x: usize, y: usize) void {
         self.subconsoles.append(.{ .console = subconsole, .x = x, .y = y }) catch err.wat();
     }
 
@@ -3486,6 +3540,14 @@ pub const Console = struct {
         self.grid = new_grid;
     }
 
+    pub fn addClickableLine(self: *Self, kind: MouseTrigger.Kind, action: MouseTrigger.Action) void {
+        self.addMouseTrigger(Rect.new(
+            Coord.new(self.last_written_text_startx, self.last_written_text_starty),
+            self.width,
+            self.last_written_text_endy - self.last_written_text_starty,
+        ), kind, action);
+    }
+
     pub fn addClickableText(self: *Self, kind: MouseTrigger.Kind, action: MouseTrigger.Action) void {
         self.addMouseTrigger(Rect.new(
             Coord.new(self.last_written_text_startx, self.last_written_text_starty),
@@ -3503,19 +3565,31 @@ pub const Console = struct {
         }.f);
     }
 
-    // Returns usize only if trigger for mouse event was a signal
-    pub fn handleMouseEvent(self: *Self, abscoord: Coord, kind: MouseTrigger.Kind, d: DisplayWindow) ?usize {
-        const dim = dimensions(d);
-        const coord = (&abscoord).asRect();
-        if (!dim.asRect().intersects(&coord, 0))
-            return null;
+    fn _handleMouseEvent(self: *const Self, abscoord: Coord, kind: MouseTrigger.Kind, dim: Rect) MouseEventHandleResult {
+        const coord = abscoord.asRect();
+        if (!dim.intersects(&coord, 0))
+            return .Unhandled;
         for (self.mouse_triggers.items) |t| {
-            if (t.kind == kind and t.rect.intersects(&coord.relTo(dim), 1))
+            if (t.kind == kind and t.rect.intersects(&coord.relTo(dim), 1)) {
                 switch (t.action) {
-                    .Signal => |s| return s,
-                };
+                    .Signal => |s| return .{ .Signal = s },
+                }
+            }
         }
-        return null;
+        for (self.subconsoles.items) |*subconsole| {
+            const r = Rect.new(Coord.new(dim.start.x + subconsole.x, dim.start.y + subconsole.y), subconsole.console.width, subconsole.console.height);
+            switch (_handleMouseEvent(subconsole.console, abscoord, kind, r)) {
+                .Unhandled => {},
+                .Void => return .Void,
+                .Signal => |s| return .{ .Signal = s },
+            }
+        }
+        return .Unhandled;
+    }
+
+    pub fn handleMouseEvent(self: *const Self, abscoord: Coord, kind: MouseTrigger.Kind) MouseEventHandleResult {
+        const r = Rect.new(Coord.new(self.rendered_offset_x, self.rendered_offset_y), self.width, self.height);
+        return _handleMouseEvent(self, abscoord, kind, r);
     }
 
     pub fn clearMouseTriggers(self: *Self) void {
@@ -3590,12 +3664,17 @@ pub const Console = struct {
         }
     }
 
-    pub fn renderFully(self: *const Self, offset_x: usize, offset_y: usize) void {
+    pub fn renderFully(self: *Self, offset_x: usize, offset_y: usize) void {
+        self.rendered_offset_x = offset_x;
+        self.rendered_offset_y = offset_y;
         self.renderAreaAt(offset_x, offset_y, 0, 0, self.width, self.height);
     }
 
-    pub fn renderFullyW(self: *const Self, win: DisplayWindow) void {
-        self.renderAreaAt(dimensions(win).startx, dimensions(win).starty, 0, 0, self.width, self.height);
+    pub fn renderFullyW(self: *Self, win: DisplayWindow) void {
+        const d = dimensions(win);
+        self.rendered_offset_x = d.startx;
+        self.rendered_offset_y = d.starty;
+        self.renderAreaAt(d.startx, d.starty, 0, 0, self.width, self.height);
     }
 
     pub fn getCell(self: *const Self, x: usize, y: usize) display.Cell {
