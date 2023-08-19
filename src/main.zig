@@ -7,6 +7,8 @@ const assert = std.debug.assert;
 const mem = std.mem;
 const meta = std.meta;
 
+const Generator = @import("generators.zig").Generator;
+const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const ai = @import("ai.zig");
@@ -275,71 +277,73 @@ fn deinitGameState() void {
 fn readDescriptions(alloc: mem.Allocator) void {
     state.descriptions = @TypeOf(state.descriptions).init(alloc);
 
-    const data_dir = std.fs.cwd().openDir("data", .{}) catch err.wat();
-    const data_file = data_dir.openFile("des.txt", .{
-        .read = true,
-        .lock = .None,
-    }) catch err.wat();
+    const data_dir = std.fs.cwd().openDir("data/des", .{ .iterate = true }) catch err.wat();
+    var data_dir_iterator = data_dir.iterate();
+    while (data_dir_iterator.next() catch err.wat()) |data_f| {
+        if (data_f.kind != .File) continue;
+        var data_file = data_dir.openFile(data_f.name, .{ .read = true }) catch err.wat();
+        defer data_file.close();
 
-    const filesize = data_file.getEndPos() catch err.wat();
-    const filebuf = alloc.alloc(u8, @intCast(usize, filesize)) catch err.wat();
-    defer alloc.free(filebuf);
-    const read = data_file.readAll(filebuf[0..]) catch err.wat();
+        const filesize = data_file.getEndPos() catch err.wat();
+        const filebuf = alloc.alloc(u8, @intCast(usize, filesize)) catch err.wat();
+        defer alloc.free(filebuf);
+        const read = data_file.readAll(filebuf[0..]) catch err.wat();
 
-    var lines = mem.split(u8, filebuf[0..read], "\n");
-    var current_desc_id: ?[]const u8 = null;
-    var current_desc = StackBuffer(u8, 4096).init(null);
+        var lines = mem.split(u8, filebuf[0..read], "\n");
+        var current_desc_id: ?[]const u8 = null;
+        var current_desc = StackBuffer(u8, 4096).init(null);
 
-    const S = struct {
-        pub fn _finishDescEntry(id: []const u8, desc: []const u8, a: mem.Allocator) void {
-            const key = a.alloc(u8, id.len) catch err.wat();
-            mem.copy(u8, key, id);
+        const S = struct {
+            pub fn _finishDescEntry(fname: []const u8, id: []const u8, desc: []const u8, a: mem.Allocator) void {
+                const key = a.alloc(u8, id.len) catch err.wat();
+                mem.copy(u8, key, id);
 
-            const val = a.alloc(u8, desc.len) catch err.wat();
-            mem.copy(u8, val, desc);
+                const val = a.alloc(u8, desc.len) catch err.wat();
+                mem.copy(u8, val, desc);
 
-            state.descriptions.putNoClobber(key, val) catch err.bug(
-                "Duplicate description {s} found",
-                .{key},
-            );
-        }
-    };
-
-    var prev_was_nl = false;
-    while (lines.next()) |line| {
-        if (line.len == 0) {
-            if (prev_was_nl) {
-                current_desc.appendSlice("\n") catch err.wat();
+                state.descriptions.putNoClobber(key, val) catch err.bug(
+                    "{s}: Duplicate description {s} found",
+                    .{ fname, key },
+                );
             }
-            prev_was_nl = true;
-        } else {
-            if (prev_was_nl) {
-                current_desc.appendSlice(" ") catch err.wat();
-            }
-            prev_was_nl = false;
+        };
 
-            if (line[0] == '%') {
-                if (current_desc_id) |id| {
-                    S._finishDescEntry(id, current_desc.constSlice(), alloc);
-
-                    current_desc.clear();
-                    current_desc_id = null;
+        var prev_was_nl = false;
+        while (lines.next()) |line| {
+            if (line.len == 0) {
+                if (prev_was_nl) {
+                    current_desc.appendSlice("\n") catch err.wat();
                 }
-
-                if (line.len <= 2) err.bug("Missing desc ID", .{});
-                current_desc_id = line[2..];
-            } else {
-                if (current_desc_id == null) {
-                    err.bug("Description without ID", .{});
-                }
-
-                current_desc.appendSlice(line) catch err.wat();
                 prev_was_nl = true;
+            } else {
+                if (prev_was_nl) {
+                    current_desc.appendSlice(" ") catch err.wat();
+                }
+                prev_was_nl = false;
+
+                if (line[0] == '%') {
+                    if (current_desc_id) |id| {
+                        S._finishDescEntry(data_f.name, id, current_desc.constSlice(), alloc);
+
+                        current_desc.clear();
+                        current_desc_id = null;
+                    }
+
+                    if (line.len <= 2) err.bug("{s}: Missing desc ID", .{data_f.name});
+                    current_desc_id = line[2..];
+                } else {
+                    if (current_desc_id == null) {
+                        err.bug("{s}: Description without ID", .{data_f.name});
+                    }
+
+                    current_desc.appendSlice(line) catch err.wat();
+                    prev_was_nl = true;
+                }
             }
         }
-    }
 
-    S._finishDescEntry(current_desc_id.?, current_desc.constSlice(), alloc);
+        S._finishDescEntry(data_f.name, current_desc_id.?, current_desc.constSlice(), alloc);
+    }
 }
 
 fn freeDescriptions(alloc: mem.Allocator) void {
@@ -355,13 +359,8 @@ fn readNoActionInput(timeout: ?usize) !void {
     ui.draw();
     if (state.state == .Quit) return error.Quit;
 
-    switch (display.waitForEvent(timeout) catch |e| switch (e) {
-        error.NoInput => {
-            assert(timeout != null);
-            return;
-        },
-        else => err.fatal("{s}", .{@errorName(e)}),
-    }) {
+    var evgen = Generator(display.getEvents).init(timeout);
+    while (evgen.next()) |e| switch (e) {
         .Quit => {
             state.state = .Quit;
             return error.Quit;
@@ -375,7 +374,7 @@ fn readNoActionInput(timeout: ?usize) !void {
             else => {},
         },
         else => {},
-    }
+    };
 
     if (state.state == .Quit) return error.Quit;
     ui.draw();
@@ -384,191 +383,158 @@ fn readNoActionInput(timeout: ?usize) !void {
 fn readInput() !bool {
     ui.draw();
     if (state.state == .Quit) return error.Quit;
+    var action_taken = false;
 
-    const action_taken = switch (display.waitForEvent(ui.FRAMERATE) catch return false) {
-        .Quit => {
-            state.state = .Quit;
-            return false;
-        },
-        .Resize => {
-            ui.draw();
-            return false;
-        },
-        .Key => |k| switch (k) {
-            .Esc => b: {
-                ui.drawEscapeMenu();
-                break :b false;
-            },
-            .CtrlC => b: {
-                state.state = .Quit;
-                break :b true;
-            },
+    var evgen = Generator(display.getEvents).init(ui.FRAMERATE);
+    while (evgen.next()) |ev| {
+        switch (ev) {
+            .Quit => state.state = .Quit,
+            .Resize => ui.draw(),
+            .Hover, .Click => ui.handleMouseEvent(ev),
+            .Key => |k| switch (k) {
+                .Esc => ui.drawEscapeMenu(),
+                .CtrlC => state.state = .Quit,
 
-            // Wizard keys
-            .F1 => blk: {
-                if (state.player.coord.z != 0) {
-                    const l = state.player.coord.z - 1;
-                    const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
-                    const c = r.rect.randomCoord();
-                    break :blk state.player.teleportTo(c, null, false, false);
-                } else {
-                    break :blk false;
-                }
+                // Wizard keys
+                .F1 => {
+                    if (state.player.coord.z != 0) {
+                        const l = state.player.coord.z - 1;
+                        const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
+                        const c = r.rect.randomCoord();
+                        _ = state.player.teleportTo(c, null, false, false);
+                        action_taken = true;
+                    }
+                },
+                .F2 => {
+                    if (state.player.coord.z < (LEVELS - 1)) {
+                        const l = state.player.coord.z + 1;
+                        const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
+                        const c = r.rect.randomCoord();
+                        _ = state.player.teleportTo(c, null, false, false);
+                        action_taken = true;
+                    }
+                },
+                .F3 => {
+                    state.player.faction = switch (state.player.faction) {
+                        .Player => .Necromancer,
+                        .Necromancer => .CaveGoblins,
+                        .CaveGoblins => .Night,
+                        .Night => .Player,
+                        .Revgenunkim => unreachable,
+                    };
+                    state.message(.Info, "[wizard] new faction: {}", .{state.player.faction});
+                },
+                .F4 => {
+                    player.wiz_lidless_eye = !player.wiz_lidless_eye;
+                    state.player.rest(); // Update LOS
+                    action_taken = true;
+                },
+                .F5 => {
+                    state.player.HP = state.player.max_HP;
+                    state.player.MP = state.player.max_MP;
+                },
+                .F6 => {
+                    const stairlocs = state.dungeon.stairs[state.player.coord.z];
+                    const stairloc = rng.chooseUnweighted(Coord, stairlocs.constSlice());
+                    _ = state.player.teleportTo(stairloc, null, false, false);
+                    action_taken = true;
+                },
+                .F7 => {
+                    //state.player.innate_resists.rElec += 25;
+                    //state.player.addStatus(.Drunk, 0, .{ .Tmp = 20 });
+                    //state.message(.Info, "Lorem ipsum, dolor sit amet. Lorem ipsum, dolor sit amet.. Lorem ipsum, dolor sit amet. {}", .{rng.int(usize)});
+                    // _ = ui.drawYesNoPrompt("foo, bar, baz. Lorem ipsum, dolor sit amet. Dolem Lipsum, solor ait smet. Iorem Aipsum, lolor dit asset.", .{});
+                    //ui.labels.addFor(state.player, "foo bar baz", .{});
+                    // state.player.addStatus(.Corruption, 0, .{ .Tmp = 5 });
+                    // state.player.addStatus(.RingTeleportation, 0, .{ .Tmp = 5 });
+                    // state.player.addStatus(.RingElectrocution, 0, .{ .Tmp = 5 });
+                    // state.player.addStatus(.RingConjuration, 0, .{ .Tmp = 2 });
+                    // state.night_rep[@enumToInt(state.player.faction)] += 10;
+                    // state.player.HP = 0;
+                    // for (state.player_conj_augments) |aug, i| {
+                    //     if (!aug.received) {
+                    //         state.player_conj_augments[i].received = true;
+                    //         state.message(.Info, "[$oConjuration augment$.] {s}", .{state.player_conj_augments[i].a.description()});
+                    //         break;
+                    //     }
+                    // }
+                    // _ = ui.chooseCell(.{
+                    //     .require_seen = true,
+                    //     .targeter = ui.ChooseCellOpts.Targeter{
+                    //         .Gas = .{ .gas = gas.Dust.id },
+                    //     },
+                    // }) orelse return false;
+                    // state.player.HP = 1;
+                    // const cell = ui.chooseCell(.{}) orelse break :blk false;
+                    // state.dungeon.at(cell).mob.?.HP = 1;
+                    // @import("combat.zig").throwMob(null, state.player, .North, 7);
+                    // const gthreat = alert.getThreat(.General);
+                    // state.message(.Info, "G: {}, deadly: {}, active: {}, last: {}", .{
+                    //     gthreat.level, gthreat.deadly, gthreat.is_active, gthreat.last_incident,
+                    // });
+                    // const uthreat = alert.getThreat(.Unknown);
+                    // state.message(.Info, "U: {}, deadly: {}, active: {}, last: {}", .{
+                    //     uthreat.level, uthreat.deadly, uthreat.is_active, uthreat.last_incident,
+                    // });
+                    // const pthreat = alert.getThreat(.{ .Specific = state.player });
+                    // state.message(.Info, "P: {}, deadly: {}, active: {}, last: {}", .{
+                    //     pthreat.level, pthreat.deadly, pthreat.is_active, pthreat.last_incident,
+                    // });
+                    // while (true)
+                    //     switch (display.waitForEvent(null) catch err.wat()) {
+                    //         .Quit => break,
+                    //         .Click => |b| {
+                    //             std.log.info("event: x: {}, y: {}", .{ b.x, b.y });
+                    //             const wide = display.getCell(b.x, b.y).fl.wide;
+                    //             display.setCell(b.x, b.y, .{ .ch = ' ', .bg = 0xffffff, .fl = .{ .wide = wide } });
+                    //             display.present();
+                    //         },
+                    //         else => {},
+                    //     };
+                },
+                .F8 => {
+                    _ = janet.loadFile("scripts/particles.janet", state.GPA.allocator()) catch continue;
+                    const target = ui.chooseCell(.{}) orelse continue;
+                    ui.Animation.apply(.{ .Particle = .{ .name = "test", .coord = state.player.coord, .target = .{ .C = target } } });
+                },
+                .F9 => {
+                    const chosen = ui.chooseCell(.{}) orelse continue;
+                    action_taken = state.player.teleportTo(chosen, null, false, false);
+                },
+                else => {},
             },
-            .F2 => blk: {
-                if (state.player.coord.z < (LEVELS - 1)) {
-                    const l = state.player.coord.z + 1;
-                    const r = rng.chooseUnweighted(mapgen.Room, state.rooms[l].items);
-                    const c = r.rect.randomCoord();
-                    break :blk state.player.teleportTo(c, null, false, false);
-                } else {
-                    break :blk false;
-                }
+            .Char => |c| switch (c) {
+                ' ' => _ = ui.drawZapScreen(),
+                '\'' => {
+                    state.player.swapWeapons();
+                    if (state.player.inventory.equipment(.Weapon).*) |weapon| {
+                        state.message(.Inventory, "Now wielding a {s}.", .{
+                            (weapon.longName() catch err.wat()).constSlice(),
+                        });
+                    } else {
+                        state.message(.Inventory, "You aren't wielding anything now.", .{});
+                    }
+                },
+                'A' => action_taken = player.activateSurfaceItem(state.player.coord),
+                'i' => action_taken = ui.drawInventoryScreen(),
+                'v' => action_taken = ui.drawExamineScreen(null, null),
+                '@' => ui.drawPlayerInfoScreen(),
+                'M' => ui.drawMessagesScreen(),
+                ',' => action_taken = player.grabItem(),
+                's', '.' => action_taken = player.tryRest(),
+                'q', 'y' => action_taken = player.moveOrFight(.NorthWest),
+                'w', 'k' => action_taken = player.moveOrFight(.North),
+                'e', 'u' => action_taken = player.moveOrFight(.NorthEast),
+                'd', 'l' => action_taken = player.moveOrFight(.East),
+                'c', 'n' => action_taken = player.moveOrFight(.SouthEast),
+                'x', 'j' => action_taken = player.moveOrFight(.South),
+                'z', 'b' => action_taken = player.moveOrFight(.SouthWest),
+                'a', 'h' => action_taken = player.moveOrFight(.West),
+                else => {},
             },
-            .F3 => blk: {
-                state.player.faction = switch (state.player.faction) {
-                    .Player => .Necromancer,
-                    .Necromancer => .CaveGoblins,
-                    .CaveGoblins => .Night,
-                    .Night => .Player,
-                    .Revgenunkim => unreachable,
-                };
-                state.message(.Info, "[wizard] new faction: {}", .{state.player.faction});
-                break :blk false;
-            },
-            .F4 => blk: {
-                player.wiz_lidless_eye = !player.wiz_lidless_eye;
-                state.player.rest(); // Update LOS
-                break :blk true;
-            },
-            .F5 => blk: {
-                state.player.HP = state.player.max_HP;
-                state.player.MP = state.player.max_MP;
-                break :blk false;
-            },
-            .F6 => blk: {
-                const stairlocs = state.dungeon.stairs[state.player.coord.z];
-                const stairloc = rng.chooseUnweighted(Coord, stairlocs.constSlice());
-                break :blk state.player.teleportTo(stairloc, null, false, false);
-            },
-            .F7 => blk: {
-                //state.player.innate_resists.rElec += 25;
-                //state.player.addStatus(.Drunk, 0, .{ .Tmp = 20 });
-                //state.message(.Info, "Lorem ipsum, dolor sit amet. Lorem ipsum, dolor sit amet.. Lorem ipsum, dolor sit amet. {}", .{rng.int(usize)});
-                // _ = ui.drawYesNoPrompt("foo, bar, baz. Lorem ipsum, dolor sit amet. Dolem Lipsum, solor ait smet. Iorem Aipsum, lolor dit asset.", .{});
-                //ui.labels.addFor(state.player, "foo bar baz", .{});
-                // state.player.addStatus(.Corruption, 0, .{ .Tmp = 5 });
-                // state.player.addStatus(.RingTeleportation, 0, .{ .Tmp = 5 });
-                // state.player.addStatus(.RingElectrocution, 0, .{ .Tmp = 5 });
-                // state.player.addStatus(.RingConjuration, 0, .{ .Tmp = 2 });
-                // state.night_rep[@enumToInt(state.player.faction)] += 10;
-                // state.player.HP = 0;
-                // for (state.player_conj_augments) |aug, i| {
-                //     if (!aug.received) {
-                //         state.player_conj_augments[i].received = true;
-                //         state.message(.Info, "[$oConjuration augment$.] {s}", .{state.player_conj_augments[i].a.description()});
-                //         break;
-                //     }
-                // }
-                // _ = ui.chooseCell(.{
-                //     .require_seen = true,
-                //     .targeter = ui.ChooseCellOpts.Targeter{
-                //         .Gas = .{ .gas = gas.Dust.id },
-                //     },
-                // }) orelse return false;
-                // state.player.HP = 1;
-                // const cell = ui.chooseCell(.{}) orelse break :blk false;
-                // state.dungeon.at(cell).mob.?.HP = 1;
-                // @import("combat.zig").throwMob(null, state.player, .North, 7);
-                // const gthreat = alert.getThreat(.General);
-                // state.message(.Info, "G: {}, deadly: {}, active: {}, last: {}", .{
-                //     gthreat.level, gthreat.deadly, gthreat.is_active, gthreat.last_incident,
-                // });
-                // const uthreat = alert.getThreat(.Unknown);
-                // state.message(.Info, "U: {}, deadly: {}, active: {}, last: {}", .{
-                //     uthreat.level, uthreat.deadly, uthreat.is_active, uthreat.last_incident,
-                // });
-                // const pthreat = alert.getThreat(.{ .Specific = state.player });
-                // state.message(.Info, "P: {}, deadly: {}, active: {}, last: {}", .{
-                //     pthreat.level, pthreat.deadly, pthreat.is_active, pthreat.last_incident,
-                // });
-                // while (true)
-                //     switch (display.waitForEvent(null) catch err.wat()) {
-                //         .Quit => break,
-                //         .Click => |b| {
-                //             std.log.info("event: x: {}, y: {}", .{ b.x, b.y });
-                //             const wide = display.getCell(b.x, b.y).fl.wide;
-                //             display.setCell(b.x, b.y, .{ .ch = ' ', .bg = 0xffffff, .fl = .{ .wide = wide } });
-                //             display.present();
-                //         },
-                //         else => {},
-                //     };
-                break :blk true;
-            },
-            .F8 => b: {
-                _ = janet.loadFile("scripts/particles.janet", state.GPA.allocator()) catch break :b false;
-
-                const target = ui.chooseCell(.{}) orelse break :b false;
-                ui.Animation.apply(.{ .Particle = .{ .name = "test", .coord = state.player.coord, .target = .{ .C = target } } });
-                break :b true;
-            },
-            .F9 => b: {
-                const chosen = ui.chooseCell(.{}) orelse break :b false;
-                break :b state.player.teleportTo(chosen, null, false, false);
-            },
-            else => false,
-        },
-        .Char => |c| switch (c) {
-            ' ' => b: {
-                _ = ui.drawZapScreen();
-                break :b false;
-            },
-            't' => b: {
-                player.auto_wait_enabled = !player.auto_wait_enabled;
-                const str = if (player.auto_wait_enabled)
-                    @as([]const u8, "enabled")
-                else
-                    "disabled";
-                state.message(.Info, "Auto-waiting: {s}", .{str});
-                break :b false;
-            },
-            '\'' => b: {
-                state.player.swapWeapons();
-                if (state.player.inventory.equipment(.Weapon).*) |weapon| {
-                    state.message(.Inventory, "Now wielding a {s}.", .{
-                        (weapon.longName() catch err.wat()).constSlice(),
-                    });
-                } else {
-                    state.message(.Inventory, "You aren't wielding anything now.", .{});
-                }
-                break :b false;
-            },
-            'A' => player.activateSurfaceItem(state.player.coord),
-            'i' => ui.drawInventoryScreen(),
-            'v' => ui.drawExamineScreen(null),
-            '@' => b: {
-                ui.drawPlayerInfoScreen();
-                break :b false;
-            },
-            'M' => b: {
-                ui.drawMessagesScreen();
-                break :b false;
-            },
-            ',' => player.grabItem(),
-            's', '.' => player.tryRest(),
-            'q', 'y' => player.moveOrFight(.NorthWest),
-            'w', 'k' => player.moveOrFight(.North),
-            'e', 'u' => player.moveOrFight(.NorthEast),
-            'd', 'l' => player.moveOrFight(.East),
-            'c', 'n' => player.moveOrFight(.SouthEast),
-            'x', 'j' => player.moveOrFight(.South),
-            'z', 'b' => player.moveOrFight(.SouthWest),
-            'a', 'h' => player.moveOrFight(.West),
-            else => false,
-        },
-        //else => false,
-        .Hover, .Click => return false,
-    };
+        }
+        if (action_taken) break;
+    }
 
     ui.draw();
     if (state.state == .Quit) return error.Quit;

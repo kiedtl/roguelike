@@ -4,9 +4,12 @@ const std = @import("std");
 const mem = std.mem;
 const assert = std.debug.assert;
 
+const err = @import("err.zig"); // For the allocator
 const state = @import("state.zig"); // For the allocator
 const colors = @import("colors.zig");
 
+const Generator = @import("generators.zig").Generator;
+const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const Coord = @import("types.zig").Coord;
 
 pub const driver: Driver = if (build_options.use_sdl) .SDL2 else .Termbox;
@@ -25,7 +28,8 @@ var grid: []Cell = undefined;
 var dirty: []bool = undefined;
 var w_height: usize = undefined;
 var w_width: usize = undefined;
-var last_hover: usize = Coord.new(0, 0);
+var last_hover_x: usize = 0;
+var last_hover_y: usize = 0;
 
 pub const Driver = enum {
     Termbox,
@@ -437,61 +441,81 @@ pub fn getCell(x: usize, y: usize) Cell {
     };
 }
 
-pub fn waitForEvent(wait_period: ?usize) !Event {
-    switch (driver) {
-        .Termbox => {
-            var ev: driver_m.tb_event = undefined;
-            const t = if (wait_period) |v| driver_m.tb_peek_event(&ev, @intCast(isize, v)) else driver_m.tb_poll_event(&ev);
+// Continuously get events, optionally quitting after a timeout is reached. If
+// timeout is null, getEvents() will finish when the first non-mouse event is
+// reached.
+pub fn getEvents(ctx: *GeneratorCtx(Event), timeout: ?usize) void {
+    assert(timeout == null or timeout.? >= 10);
 
-            switch (t) {
-                0 => return error.NoInput,
-                -1 => return error.TermboxError,
-                driver_m.TB_EVENT_KEY => {
-                    if (ev.ch != 0) {
-                        return Event{ .Char = @intCast(u21, ev.ch) };
-                    } else if (ev.key != 0) {
-                        return switch (ev.key) {
-                            driver_m.TB_KEY_SPACE => Event{ .Char = ' ' },
-                            else => Event{ .Key = Key.fromTermbox(ev.key) },
-                        };
-                    } else unreachable;
-                },
-                driver_m.TB_EVENT_RESIZE => {
-                    return Event{ .Resize = .{
-                        .new_width = @intCast(usize, ev.w),
-                        .new_height = @intCast(usize, ev.h),
-                    } };
-                },
-                driver_m.TB_EVENT_MOUSE => @panic("TODO"),
-                else => unreachable,
-            }
-        },
-        .SDL2 => {
-            var ev: driver_m.SDL_Event = undefined;
+    var timer = std.time.Timer.start() catch err.wat();
+    var nonmouse_event_received = false;
 
-            while (true) {
-                const r = if (wait_period) |t| driver_m.SDL_WaitEventTimeout(&ev, @intCast(c_int, t)) else driver_m.SDL_WaitEvent(&ev);
+    while (true) {
+        const max_timeout_ns = 10_000_000; // 20 ms
+        const remaining = ((timeout orelse std.math.maxInt(u64)) *| 1_000_000) -| timer.read();
+        std.time.sleep(std.math.min(max_timeout_ns, remaining));
 
-                if (r != 1) {
-                    if (wait_period != null) {
-                        return error.NoInput;
-                    } else {
-                        return error.SDL2InputError;
-                    }
+        if (timeout != null and timer.read() / 1_000_000 > timeout.?) {
+            ctx.finish();
+            return;
+        } else if (timeout == null and nonmouse_event_received) {
+            ctx.finish();
+            return;
+        }
+
+        switch (driver) {
+            .Termbox => {
+                var ev: driver_m.tb_event = undefined;
+                const t = driver_m.tb_peek_event(&ev, 0);
+
+                switch (t) {
+                    0 => continue,
+                    -1 => err.bug("Termbox error", .{}),
+                    driver_m.TB_EVENT_KEY => {
+                        nonmouse_event_received = true;
+                        if (ev.ch != 0) {
+                            ctx.yield(Event{ .Char = @intCast(u21, ev.ch) });
+                        } else if (ev.key != 0) {
+                            ctx.yield(switch (ev.key) {
+                                driver_m.TB_KEY_SPACE => Event{ .Char = ' ' },
+                                else => Event{ .Key = Key.fromTermbox(ev.key) },
+                            });
+                        } else unreachable;
+                    },
+                    driver_m.TB_EVENT_RESIZE => {
+                        ctx.yield(Event{ .Resize = .{
+                            .new_width = @intCast(usize, ev.w),
+                            .new_height = @intCast(usize, ev.h),
+                        } });
+                    },
+                    driver_m.TB_EVENT_MOUSE => @panic("TODO"),
+                    else => unreachable,
                 }
+            },
+            .SDL2 => {
+                var ev: driver_m.SDL_Event = undefined;
+
+                const r = driver_m.SDL_PollEvent(&ev);
+                if (r != 1) continue;
 
                 switch (ev.type) {
-                    driver_m.SDL_QUIT => return .Quit,
+                    driver_m.SDL_QUIT => {
+                        nonmouse_event_received = true;
+                        ctx.yield(.Quit);
+                    },
                     driver_m.SDL_TEXTINPUT => {
-                        const text = ev.text.text[0..try std.unicode.utf8ByteSequenceLength(ev.text.text[0])];
-                        return Event{ .Char = try std.unicode.utf8Decode(text) };
+                        nonmouse_event_received = true;
+                        const len = std.unicode.utf8ByteSequenceLength(ev.text.text[0]) catch err.wat();
+                        const text = ev.text.text[0..len];
+                        ctx.yield(Event{ .Char = std.unicode.utf8Decode(text) catch err.wat() });
                     },
                     driver_m.SDL_KEYDOWN => {
+                        nonmouse_event_received = true;
                         const kcode = ev.key.keysym.sym;
                         if (Key.fromSDL(kcode, ev.key.keysym.mod)) |key| {
-                            return Event{ .Key = key };
+                            ctx.yield(Event{ .Key = key });
                         } else if (kcode == driver_m.SDLK_SPACE) {
-                            return Event{ .Char = ' ' };
+                            ctx.yield(Event{ .Char = ' ' });
                         } else continue;
                     },
                     driver_m.SDL_MOUSEBUTTONUP => {
@@ -504,9 +528,9 @@ pub fn waitForEvent(wait_period: ?usize) !Event {
                             if (grid[yrel * width() + xrel].fl.skip and
                                 xrel != 0 and grid[yrel * width() + xrel - 1].fl.wide)
                             {
-                                return Event{ .Click = Coord.new(xrel - 1, yrel) };
+                                ctx.yield(Event{ .Click = Coord.new(xrel - 1, yrel) });
                             } else {
-                                return Event{ .Click = Coord.new(xrel, yrel) };
+                                ctx.yield(Event{ .Click = Coord.new(xrel, yrel) });
                             }
                         }
                     },
@@ -516,21 +540,24 @@ pub fn waitForEvent(wait_period: ?usize) !Event {
                         const ypix = @intCast(usize, ev.motion.y);
                         const xrel = xpix / font.FONT_WIDTH;
                         const yrel = ypix / font.FONT_HEIGHT;
-                        if (xrel < width() and yrel < height() and
+                        if ((xrel != last_hover_x or yrel != last_hover_y) and
+                            xrel < width() and yrel < height() and
                             ev.button.state == 0)
                         {
+                            last_hover_y = yrel;
+                            last_hover_x = xrel;
                             if (grid[yrel * width() + xrel].fl.skip and
                                 xrel != 0 and grid[yrel * width() + xrel - 1].fl.wide)
                             {
-                                return Event{ .Hover = Coord.new(xrel - 1, yrel) };
+                                ctx.yield(Event{ .Hover = Coord.new(xrel - 1, yrel) });
                             } else {
-                                return Event{ .Hover = Coord.new(xrel, yrel) };
+                                ctx.yield(Event{ .Hover = Coord.new(xrel, yrel) });
                             }
                         }
                     },
                     else => continue,
                 }
-            }
-        },
+            },
+        }
     }
 }

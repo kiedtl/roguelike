@@ -74,6 +74,22 @@ pub var hud_win: struct {
         self.main = Console.init(state.GPA.allocator(), d.width(), d.height());
     }
 
+    pub fn handleMouseEvent(self: *@This(), ev: display.Event) bool {
+        return switch (ev) {
+            .Hover => |c| switch (self.main.handleMouseEvent(c, .Hover)) {
+                .Signal => err.wat(),
+                .Void => true,
+                .Unhandled => false,
+            },
+            .Click => |c| switch (self.main.handleMouseEvent(c, .Click)) {
+                .Signal => err.wat(),
+                .Void => true,
+                .Unhandled => false,
+            },
+            else => err.wat(),
+        };
+    }
+
     pub fn deinit(self: *@This()) void {
         self.main.deinit();
     }
@@ -102,6 +118,22 @@ pub var map_win: struct {
 
         self.map.addSubconsole(&self.annotations, 0, 0);
         self.map.addSubconsole(&self.animations, 0, 0);
+    }
+
+    pub fn handleMouseEvent(self: *@This(), ev: display.Event) bool {
+        return switch (ev) {
+            .Hover => |c| switch (self.map.handleMouseEvent(c, .Hover)) {
+                .Signal => err.wat(),
+                .Void => true,
+                .Unhandled => false,
+            },
+            .Click => |c| switch (self.map.handleMouseEvent(c, .Click)) {
+                .Signal => err.wat(),
+                .Void => true,
+                .Unhandled => false,
+            },
+            else => err.wat(),
+        };
     }
 
     pub fn deinit(self: *@This()) void {
@@ -177,7 +209,8 @@ pub fn checkWindowSize() bool {
 
         display.present();
 
-        switch (display.waitForEvent(null) catch err.wat()) {
+        var evgen = Generator(display.getEvents).init(null);
+        while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
                 return false;
@@ -191,7 +224,7 @@ pub fn checkWindowSize() bool {
                 else => {},
             },
             else => {},
-        }
+        };
     }
 }
 
@@ -1239,14 +1272,14 @@ fn drawHUD(moblist: []const *Mob) void {
     y += 1;
 
     // zig fmt: off
-    const stats = [_]struct { b: []const u8, a: []const u8, v: isize, va: ?usize = null, p: bool = true }{
-        .{ .b = "to-hit: ", .a = "%", .v = state.player.stat(.Melee), .va = combat.chanceOfMeleeLanding(state.player, null) },
-        .{ .b = "rFire:  ", .a = "%", .v = state.player.resistance(.rFire) },
-        .{ .b = "evasion:", .a = "%", .v = state.player.stat(.Evade), .va = combat.chanceOfAttackEvaded(state.player, null) },
-        .{ .b = "rElec:  ", .a = "%", .v = state.player.resistance(.rElec) },
-        .{ .b = "martial:", .a = " ", .v = state.player.stat(.Martial),     .p = player.isPlayerMartial() },
-        .{ .b = "conj:   ", .a = " ", .v = state.player.stat(.Conjuration), .p = state.player.stat(.Conjuration) > 0 },
-        .{ .b = "spikes: ", .a = " ", .v = state.player.stat(.Spikes),      .p = state.player.stat(.Spikes) > 0 },
+    const stats = [_]struct { id: []const u8, b: []const u8, a: []const u8, v: isize, va: ?usize = null, p: bool = true }{
+        .{ .id = "Melee",       .b = "to-hit: ", .a = "%", .v = state.player.stat(.Melee), .va = combat.chanceOfMeleeLanding(state.player, null) },
+        .{ .id = "rFire",       .b = "rFire:  ", .a = "%", .v = state.player.resistance(.rFire) },
+        .{ .id = "Evade",       .b = "evasion:", .a = "%", .v = state.player.stat(.Evade), .va = combat.chanceOfAttackEvaded(state.player, null) },
+        .{ .id = "rElec",       .b = "rElec:  ", .a = "%", .v = state.player.resistance(.rElec) },
+        .{ .id = "Martial",     .b = "martial:", .a = " ", .v = state.player.stat(.Martial),     .p = player.isPlayerMartial() },
+        .{ .id = "Conjuration", .b = "conj:   ", .a = " ", .v = state.player.stat(.Conjuration), .p = state.player.stat(.Conjuration) > 0 },
+        .{ .id = "Spikes",      .b = "spikes: ", .a = " ", .v = state.player.stat(.Spikes),      .p = state.player.stat(.Spikes) > 0 },
     }; 
     // zig fmt: on
 
@@ -1267,6 +1300,7 @@ fn drawHUD(moblist: []const *Mob) void {
             const ca: u21 = if (stat.va.? < stat.v) 'p' else 'b';
             _ = hud_win.main.drawTextAtf(x, y, "$c{s}$. ${u}{: >3}{s} $g(${u}{}{s}$g)$.", .{ stat.b, c, v, stat.a, ca, stat.va.?, stat.a }, .{});
         }
+        hud_win.main.addTooltipForText("{s} stat", .{stat.id}, "stat_{s}", .{stat.id});
         if (i % 2 == 1)
             y += 1;
         i += 1;
@@ -1488,6 +1522,7 @@ fn drawHUD(moblist: []const *Mob) void {
             break;
     }
 
+    hud_win.main.highlightMouseArea(colors.BG_L);
     hud_win.main.renderFullyW(.PlayerInfo);
 }
 
@@ -1628,6 +1663,7 @@ pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
     const map_startx = refpointx - @intCast(isize, MAP_WIDTH_R);
     const map_endx = refpointx + @intCast(isize, MAP_WIDTH_R);
 
+    map_win.map.clearMouseTriggers();
     map_win.map.clearTo(.{ .fl = .{ .wide = true } });
 
     var y = map_starty;
@@ -1651,6 +1687,7 @@ pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
             const u_x: usize = @intCast(usize, x);
             const u_y: usize = @intCast(usize, y);
             const coord = Coord.new2(level, u_x, u_y);
+            const cursor_coord = Coord.new(cursorx, cursory);
 
             var tile: display.Cell = undefined;
 
@@ -1689,8 +1726,14 @@ pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
             tile.fl.wide = true;
             map_win.map.setCell(cursorx, cursory, tile);
             map_win.map.setCell(cursorx + 1, cursory, .{ .fl = .{ .skip = true } });
+            if (state.player.cansee(coord)) {
+                map_win.map.addMouseTrigger(cursor_coord.asRect(), .Hover, .{ .RecordElem = &map_win.annotations });
+                map_win.map.addMouseTrigger(cursor_coord.asRect(), .Click, .{ .ExamineScreen = .{ .start_coord = coord } });
+            }
         }
     }
+
+    map_win.map.highlightMouseArea(colors.BG_L);
 }
 
 pub fn drawNoPresent() void {
@@ -1722,6 +1765,11 @@ pub fn drawNoPresent() void {
 pub fn draw() void {
     drawNoPresent();
     display.present();
+}
+
+pub fn handleMouseEvent(ev: display.Event) void {
+    _ = map_win.handleMouseEvent(ev) or
+        hud_win.handleMouseEvent(ev);
 }
 
 pub const ChooseCellOpts = struct {
@@ -1901,7 +1949,8 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
         map_win.map.renderFullyW(.Main);
         display.present();
 
-        switch (display.waitForEvent(null) catch err.wat()) {
+        var evgen = Generator(display.getEvents).init(null);
+        while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
                 return null;
@@ -1935,7 +1984,7 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
                 else => {},
             },
             else => {},
-        }
+        };
     }
 }
 
@@ -1971,7 +2020,8 @@ pub fn chooseDirection() ?Direction {
 
         drawModalText(colors.CONCRETE, "direction: {}", .{direction});
 
-        switch (display.waitForEvent(null) catch err.wat()) {
+        var evgen = Generator(display.getEvents).init(null);
+        while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
                 return null;
@@ -2000,7 +2050,7 @@ pub fn chooseDirection() ?Direction {
                 else => {},
             },
             else => {},
-        }
+        };
     }
 }
 
@@ -2062,7 +2112,8 @@ pub fn drawLoadingScreen(loading_win: *LoadingScreen, text_context: []const u8, 
     display.present();
     clearScreen();
 
-    if (display.waitForEvent(20)) |ev| switch (ev) {
+    var evgen = Generator(display.getEvents).init(20);
+    while (evgen.next()) |ev| switch (ev) {
         .Quit => {
             state.state = .Quit;
             return error.Canceled;
@@ -2072,7 +2123,7 @@ pub fn drawLoadingScreen(loading_win: *LoadingScreen, text_context: []const u8, 
             else => {},
         },
         else => {},
-    } else |e| if (e != error.NoInput) err.wat();
+    };
 }
 
 pub fn drawLoadingScreenFinish(loading_win: *LoadingScreen) bool {
@@ -2234,7 +2285,8 @@ pub fn drawGameOverScreen(scoreinfo: scores.Info) void {
         container_c.renderFully(@intCast(usize, win_d.startx), @intCast(usize, win_d.starty));
         display.present();
 
-        switch (display.waitForEvent(FRAMERATE) catch continue) {
+        var evgen = Generator(display.getEvents).init(FRAMERATE);
+        while (evgen.next()) |ev| switch (ev) {
             .Quit => return,
             .Key => |k| switch (k) {
                 .CtrlC, .Esc, .Enter => return,
@@ -2245,7 +2297,7 @@ pub fn drawGameOverScreen(scoreinfo: scores.Info) void {
                 else => {},
             },
             else => {},
-        }
+        };
     }
 }
 
@@ -2267,7 +2319,8 @@ pub fn drawTextScreen(comptime fmt: []const u8, args: anytype) void {
     clearScreen();
 
     while (true) {
-        switch (display.waitForEvent(null) catch err.wat()) {
+        var evgen = Generator(display.getEvents).init(null);
+        while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
                 return;
@@ -2281,7 +2334,7 @@ pub fn drawTextScreen(comptime fmt: []const u8, args: anytype) void {
                 else => {},
             },
             else => {},
-        }
+        };
     }
 }
 
@@ -2325,7 +2378,8 @@ pub fn drawMessagesScreen() void {
 
         display.present();
 
-        if (display.waitForEvent(50)) |ev| switch (ev) {
+        var evgen = Generator(display.getEvents).init(50);
+        while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
                 break;
@@ -2341,7 +2395,7 @@ pub fn drawMessagesScreen() void {
                 else => {},
             },
             else => {},
-        } else |e| if (e != error.NoInput) break;
+        };
     }
 
     // FIXME: remove this when visual artifacts between windows are fixed
@@ -2353,7 +2407,7 @@ pub fn drawPlayerInfoScreen() void {
     var tab: usize = @enumToInt(@as(Tab, .Stats));
     var tab_hover: ?usize = null;
 
-    while (true) {
+    main: while (true) {
         pinfo_win.container.clearLineTo(0, pinfo_win.container.width - 1, 0, .{ .ch = '▀', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
         pinfo_win.container.clearLineTo(0, pinfo_win.container.width - 1, pinfo_win.container.height - 1, .{ .ch = '▄', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
 
@@ -2467,10 +2521,11 @@ pub fn drawPlayerInfoScreen() void {
 
         display.present();
 
-        switch (display.waitForEvent(null) catch err.wat()) {
+        var evgen = Generator(display.getEvents).init(null);
+        while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
-                break;
+                break :main;
             },
             .Hover => |c| switch (pinfo_win.container.handleMouseEvent(c, .Hover)) {
                 .Signal => |sig| tab_hover = sig,
@@ -2501,7 +2556,7 @@ pub fn drawPlayerInfoScreen() void {
                 else => {},
             },
             else => {},
-        }
+        };
     }
 
     // FIXME: remove once all of ui.* is converted to subconsole system and
@@ -2513,7 +2568,7 @@ pub fn drawZapScreen() void {
     var selected: usize = 0;
     var r_error: ?player.RingError = null;
 
-    while (true) {
+    main: while (true) {
         zap_win.container.clearLineTo(0, zap_win.container.width - 1, 0, .{ .ch = '▀', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
         zap_win.container.clearLineTo(0, zap_win.container.width - 1, zap_win.container.height - 1, .{ .ch = '▄', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
 
@@ -2549,10 +2604,11 @@ pub fn drawZapScreen() void {
 
         display.present();
 
-        switch (display.waitForEvent(null) catch err.wat()) {
+        var evgen = Generator(display.getEvents).init(null);
+        while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
-                break;
+                break :main;
             },
             .Key => |k| switch (k) {
                 .CtrlC, .CtrlG, .Esc => break,
@@ -2561,7 +2617,7 @@ pub fn drawZapScreen() void {
                 .Enter => if (r_error == null) {
                     clearScreen();
                     player.beginUsingRing(selected);
-                    break;
+                    break :main;
                 },
                 else => {},
             },
@@ -2571,7 +2627,7 @@ pub fn drawZapScreen() void {
                 else => {},
             },
             else => {},
-        }
+        };
     }
 
     // FIXME: remove once all of ui.* is converted to subconsole system and
@@ -2582,13 +2638,13 @@ pub fn drawZapScreen() void {
 // Examine mode {{{
 pub const ExamineTileFocus = enum { Item, Surface, Mob };
 
-pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
+pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord) bool {
     const logw = dimensions(.Log);
     const infow = dimensions(.PlayerInfo);
 
     const MobTileFocus = enum { Main, Stats, Spells };
 
-    var coord: Coord = state.player.coord;
+    var coord: Coord = start_coord orelse state.player.coord;
     var tile_focus = starting_focus orelse .Mob;
     var mob_tile_focus: MobTileFocus = .Main;
     var tile_focus_set_manually = false;
@@ -2774,7 +2830,8 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
         map_win.map.renderFullyW(.Main);
         display.present();
 
-        switch (display.waitForEvent(null) catch err.wat()) {
+        var evgen = Generator(display.getEvents).init(null);
+        while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
                 return false;
@@ -2823,7 +2880,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus) bool {
                 else => {},
             },
             else => {},
-        }
+        };
     }
 
     return false;
@@ -2898,7 +2955,8 @@ pub fn drawEscapeMenu() void {
 
         var menu_tab_chosen = false;
 
-        switch (display.waitForEvent(null) catch err.wat()) {
+        var evgen = Generator(display.getEvents).init(null);
+        while (evgen.next()) |ev| switch (ev) {
             .Quit => return,
             .Hover => |c| switch (menu_c.handleMouseEvent(c, .Hover)) {
                 .Signal => |sig| tab = sig,
@@ -2933,7 +2991,7 @@ pub fn drawEscapeMenu() void {
                 else => {},
             },
             else => {},
-        }
+        };
 
         if (menu_tab_chosen) switch (@intToEnum(Tab, tab)) {
             .Continue => return,
@@ -2953,7 +3011,8 @@ pub fn drawEscapeMenu() void {
 // mouse event or resize event was recieved.
 pub fn waitForInput(default_input: ?u8) ?u32 {
     while (true) {
-        switch (display.waitForEvent(null) catch err.wat()) {
+        var evgen = Generator(display.getEvents).init(null);
+        while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
                 return null;
@@ -2965,7 +3024,7 @@ pub fn waitForInput(default_input: ?u8) ?u32 {
             },
             .Char => |c| return c,
             else => {},
-        }
+        };
     }
 }
 
@@ -3101,7 +3160,8 @@ pub fn drawInventoryScreen() bool {
 
         display.present();
 
-        switch (display.waitForEvent(null) catch err.wat()) {
+        var evgen = Generator(display.getEvents).init(null);
+        while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
                 return false;
@@ -3170,7 +3230,7 @@ pub fn drawInventoryScreen() bool {
                 else => {},
             },
             else => {},
-        }
+        };
     }
 }
 
@@ -3254,19 +3314,19 @@ pub fn drawAlertThenLog(comptime fmt: []const u8, args: anytype) void {
     log_console.deinit();
 }
 
-pub fn drawTextModal(comptime fmt: []const u8, args: anytype) void {
-    const W_WIDTH = 30;
-
+pub fn drawTextModalNoInput(comptime fmt: []const u8, args: anytype) void {
     const str = std.fmt.allocPrint(state.GPA.allocator(), fmt, args) catch err.oom();
     defer state.GPA.allocator().free(str);
 
+    const width = if (str.len < 200) @as(usize, 30) else 50;
+
     var text_height: usize = 0;
     var fibuf = StackBuffer(u8, 4096).init(null);
-    var fold_iter = utils.FoldedTextIterator.init(str, W_WIDTH);
+    var fold_iter = utils.FoldedTextIterator.init(str, width);
     while (fold_iter.next(&fibuf)) |_| text_height += 1;
 
-    var container_c = Console.init(state.GPA.allocator(), W_WIDTH + 4, text_height + 4);
-    var text_c = Console.init(state.GPA.allocator(), W_WIDTH, text_height);
+    var container_c = Console.init(state.GPA.allocator(), width + 4, text_height + 4);
+    var text_c = Console.init(state.GPA.allocator(), width, text_height);
 
     container_c.addSubconsole(&text_c, 2, 2);
 
@@ -3283,6 +3343,11 @@ pub fn drawTextModal(comptime fmt: []const u8, args: anytype) void {
         display.height() / 2 - container_c.height / 2,
     );
     display.present();
+}
+
+pub fn drawTextModal(comptime fmt: []const u8, args: anytype) void {
+    drawTextModalNoInput(fmt, args);
+    _ = waitForInput(null);
 }
 
 pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []const []const u8) ?usize {
@@ -3321,7 +3386,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
     var chosen: usize = 0;
     var cancelled = false;
 
-    while (true) {
+    main: while (true) {
         var y: usize = 0;
         options_c.clearTo(.{ .bg = colors.ABG });
         for (options) |option, i| {
@@ -3338,11 +3403,12 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
         );
         display.present();
 
-        switch (display.waitForEvent(null) catch err.wat()) {
+        var evgen = Generator(display.getEvents).init(null);
+        while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
                 cancelled = true;
-                break;
+                break :main;
             },
             .Hover => |c| switch (container_c.handleMouseEvent(c, .Hover)) {
                 .Signal => |sig| chosen = sig,
@@ -3352,7 +3418,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
             .Click => |c| switch (container_c.handleMouseEvent(c, .Click)) {
                 .Signal => |sig| {
                     chosen = sig;
-                    break;
+                    break :main;
                 },
                 .Void => err.wat(),
                 .Unhandled => {},
@@ -3360,9 +3426,9 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
             .Key => |k| switch (k) {
                 .CtrlC, .Esc, .CtrlG => {
                     cancelled = true;
-                    break;
+                    break :main;
                 },
-                .Enter => break,
+                .Enter => break :main,
                 .ArrowDown => if (chosen < options.len - 1) {
                     chosen += 1;
                 },
@@ -3374,7 +3440,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
             .Char => |c| switch (c) {
                 'q' => {
                     cancelled = true;
-                    break;
+                    break :main;
                 },
                 'x', 'j', 'h' => if (chosen < options.len - 1) {
                     chosen += 1;
@@ -3401,7 +3467,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
                 },
             },
             else => {},
-        }
+        };
     }
 
     return if (cancelled) null else chosen;
@@ -3460,6 +3526,8 @@ pub const Console = struct {
     rendered_offset_x: usize = 0,
     rendered_offset_y: usize = 0,
 
+    recorded_mouse_area: Rect = Rect.new(Coord.new(0, 0), 0, 0),
+
     pub const Self = @This();
     pub const AList = std.ArrayList(Self);
 
@@ -3475,6 +3543,15 @@ pub const Console = struct {
 
         pub const Action = union(enum) {
             Signal: usize,
+            ExamineScreen: struct {
+                starting_focus: ?ExamineTileFocus = null,
+                start_coord: ?Coord = null,
+            },
+            RecordElem: *Console,
+            DescriptionScreen: struct {
+                title: StackBuffer(u8, 32),
+                id: StackBuffer(u8, 32),
+            },
         };
 
         pub const AList = std.ArrayList(@This());
@@ -3562,6 +3639,14 @@ pub const Console = struct {
         ), kind, action);
     }
 
+    pub fn addTooltipForText(self: *Self, comptime title_fmt: []const u8, title_args: anytype, comptime id_fmt: []const u8, id_args: anytype) void {
+        self.addClickableText(.Hover, .{ .RecordElem = self });
+        self.addClickableText(.Click, .{ .DescriptionScreen = .{
+            .title = StackBuffer(u8, 32).initFmt(title_fmt, title_args),
+            .id = StackBuffer(u8, 32).initFmt(id_fmt, id_args),
+        } });
+    }
+
     pub fn addClickableText(self: *Self, kind: MouseTrigger.Kind, action: MouseTrigger.Action) void {
         self.addMouseTrigger(Rect.new(
             Coord.new(self.last_written_text_startx, self.last_written_text_starty),
@@ -3572,24 +3657,12 @@ pub const Console = struct {
 
     pub fn addMouseTrigger(self: *Self, rect: Rect, kind: MouseTrigger.Kind, action: MouseTrigger.Action) void {
         self.mouse_triggers.append(.{ .rect = rect, .kind = kind, .action = action }) catch err.oom();
-        std.sort.sort(MouseTrigger, self.mouse_triggers.items, {}, struct {
-            fn f(_: void, a: MouseTrigger, b: MouseTrigger) bool {
-                return a.rect.area() < b.rect.area();
-            }
-        }.f);
     }
 
-    fn _handleMouseEvent(self: *const Self, abscoord: Coord, kind: MouseTrigger.Kind, dim: Rect) MouseEventHandleResult {
+    fn _handleMouseEvent(self: *Self, abscoord: Coord, kind: MouseTrigger.Kind, dim: Rect) MouseEventHandleResult {
         const coord = abscoord.asRect();
         if (!dim.intersects(&coord, 0))
             return .Unhandled;
-        for (self.mouse_triggers.items) |t| {
-            if (t.kind == kind and t.rect.intersects(&coord.relTo(dim), 1)) {
-                switch (t.action) {
-                    .Signal => |s| return .{ .Signal = s },
-                }
-            }
-        }
         for (self.subconsoles.items) |*subconsole| {
             const r = Rect.new(Coord.new(dim.start.x + subconsole.x, dim.start.y + subconsole.y), subconsole.console.width, subconsole.console.height);
             switch (_handleMouseEvent(subconsole.console, abscoord, kind, r)) {
@@ -3598,10 +3671,34 @@ pub const Console = struct {
                 .Signal => |s| return .{ .Signal = s },
             }
         }
+        for (self.mouse_triggers.items) |t| {
+            if (t.kind == kind and t.rect.intersects(&coord.relTo(dim), 1)) {
+                switch (t.action) {
+                    .Signal => |s| return .{ .Signal = s },
+                    .ExamineScreen => |o| {
+                        const did_anything = drawExamineScreen(o.starting_focus, o.start_coord);
+                        assert(!did_anything);
+                        return .Void;
+                    },
+                    .RecordElem => {
+                        self.recorded_mouse_area = t.rect;
+                        return .Void;
+                    },
+                    .DescriptionScreen => |info| {
+                        if (state.descriptions.get(info.id.constSlice())) |desc| {
+                            drawTextModal("$c{s}$.\n\n{s}", .{ info.title.constSlice(), desc });
+                        } else {
+                            err.ensure(false, "Missing description {s}", .{info.id.constSlice()}) catch {};
+                        }
+                        return .Void;
+                    },
+                }
+            }
+        }
         return .Unhandled;
     }
 
-    pub fn handleMouseEvent(self: *const Self, abscoord: Coord, kind: MouseTrigger.Kind) MouseEventHandleResult {
+    pub fn handleMouseEvent(self: *Self, abscoord: Coord, kind: MouseTrigger.Kind) MouseEventHandleResult {
         const r = Rect.new(Coord.new(self.rendered_offset_x, self.rendered_offset_y), self.width, self.height);
         return _handleMouseEvent(self, abscoord, kind, r);
     }
@@ -3626,8 +3723,19 @@ pub const Console = struct {
             self.grid[y * self.width + x] = cell;
     }
 
-    fn clearLine(self: *const Self, startx: usize, endx: usize, y: usize) void {
+    pub fn clearLine(self: *const Self, startx: usize, endx: usize, y: usize) void {
         self.clearLineTo(startx, endx, y, .{ .ch = ' ', .fg = 0, .bg = colors.BG, .trans = self.default_transparent });
+    }
+
+    pub fn highlightMouseArea(self: *const Self, color: u32) void {
+        var y = self.recorded_mouse_area.start.y;
+        while (y <= self.recorded_mouse_area.end().y) : (y += 1) {
+            var x = self.recorded_mouse_area.start.x;
+            while (x <= self.recorded_mouse_area.end().x) : (x += 1) {
+                self.grid[y * self.width + x].bg = color;
+                self.grid[y * self.width + x].sbg = color;
+            }
+        }
     }
 
     pub fn setBorder(self: *const Self) void {

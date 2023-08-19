@@ -51,8 +51,6 @@ const WIDTH = state.WIDTH;
 
 pub var wiz_lidless_eye: bool = false;
 
-pub var auto_wait_enabled: bool = false;
-
 pub const ConjAugment = enum(usize) {
     // Survival,
     Melee = 0,
@@ -264,7 +262,7 @@ pub fn triggerStair(cur_stair: Coord, dest_floor: usize) bool {
     // }
 
     // state.message(.Move, "You ascend...", .{});
-    _ = ui.drawTextModal("You ascend...", .{});
+    _ = ui.drawTextModalNoInput("You ascend...", .{});
 
     mapgen.initLevel(dest_floor);
 
