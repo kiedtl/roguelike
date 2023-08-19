@@ -66,6 +66,19 @@ pub const MAP_WIDTH_R = 20;
 pub const MIN_HEIGHT = (MAP_HEIGHT_R * 2) + LOG_HEIGHT + 2;
 pub const MIN_WIDTH = (MAP_WIDTH_R * 4) + LEFT_INFO_WIDTH + 2 + 1;
 
+pub var hud_win: struct {
+    main: Console,
+
+    pub fn init(self: *@This()) void {
+        const d = dimensions(.PlayerInfo);
+        self.main = Console.init(state.GPA.allocator(), d.width(), d.height());
+    }
+
+    pub fn deinit(self: *@This()) void {
+        self.main.deinit();
+    }
+} = undefined;
+
 pub var map_win: struct {
     map: Console,
 
@@ -131,6 +144,7 @@ pub fn init(scale: f32) !void {
     zap_win.init();
     pinfo_win.init();
     map_win.init();
+    hud_win.init();
     clearScreen();
 
     labels.labels = @TypeOf(labels.labels).init(state.GPA.allocator());
@@ -186,6 +200,7 @@ pub fn deinit() !void {
     zap_win.deinit();
     pinfo_win.deinit();
     map_win.deinit();
+    hud_win.deinit();
     for (labels.labels.items) |label|
         label.deinit();
     labels.labels.deinit();
@@ -1203,23 +1218,24 @@ fn _drawBar(
     }
 }
 
-fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, endy: usize) void {
+fn drawHUD(moblist: []const *Mob) void {
     // const last_action_cost = if (state.player.activities.current()) |lastaction| b: {
     //     const spd = @intToFloat(f64, state.player.speed());
     //     break :b (spd * @intToFloat(f64, lastaction.cost())) / 100.0 / 10.0;
     // } else 0.0;
 
-    var y = starty;
-    while (y < endy) : (y += 1) _clear_line(startx, endx, y);
-    y = starty;
+    const endx = hud_win.main.width - 1;
+
+    hud_win.main.clear();
+    var y: usize = 0;
 
     const lvlstr = state.levelinfo[state.player.coord.z].name;
     //_clearLineWith(startx, endx - 1, y, '─', colors.DARK_GREY, colors.BG);
     //const lvlstrx = startx + @divTrunc(endx - startx - 1, 2) - @intCast(isize, (lvlstr.len + 4) / 2);
     //y = _drawStrf(lvlstrx, y, endx, "$G┤$. $c{s}$. $G├$.", .{lvlstr}, .{});
     //y += 1;
-    _ = _drawStrf(startx, y, endx, "$cturns:$. {}", .{state.player_turns}, .{});
-    y = _drawStrf(endx - lvlstr.len, y, endx, "$c{s}$.", .{lvlstr}, .{});
+    _ = hud_win.main.drawTextAtf(0, y, "$cturns:$. {}", .{state.player_turns}, .{});
+    y += hud_win.main.drawTextAtf(endx - lvlstr.len, y, "$c{s}$.", .{lvlstr}, .{});
     y += 1;
 
     // zig fmt: off
@@ -1239,17 +1255,17 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
         if (!stat.p) continue;
         const v = utils.SignedFormatter{ .v = stat.v };
         const x = switch (i % 2) {
-            0 => startx,
-            1 => startx + std.fmt.count("{s} {: >3}{s}", .{ stat.b, v, stat.a }) + 9,
-            //2 => startx + (@divTrunc(endx - startx, 3) * 2) + 1,
+            0 => 0,
+            1 => std.fmt.count("{s} {: >3}{s}", .{ stat.b, v, stat.a }) + 9,
+            //2 => (@divTrunc(endx - startx, 3) * 2) + 1,
             else => unreachable,
         };
         const c: u21 = if (stat.v < 0) 'p' else '.';
         if (stat.va == null or @intCast(usize, math.clamp(stat.v, 0, 100)) == stat.va.?) {
-            _ = _drawStrf(x, y, endx, "$c{s}$. ${u}{: >3}{s}$.", .{ stat.b, c, v, stat.a }, .{});
+            _ = hud_win.main.drawTextAtf(x, y, "$c{s}$. ${u}{: >3}{s}$.", .{ stat.b, c, v, stat.a }, .{});
         } else {
             const ca: u21 = if (stat.va.? < stat.v) 'p' else 'b';
-            _ = _drawStrf(x, y, endx, "$c{s}$. ${u}{: >3}{s} $g(${u}{}{s}$g)$.", .{ stat.b, c, v, stat.a, ca, stat.va.?, stat.a }, .{});
+            _ = hud_win.main.drawTextAtf(x, y, "$c{s}$. ${u}{: >3}{s} $g(${u}{}{s}$g)$.", .{ stat.b, c, v, stat.a, ca, stat.va.?, stat.a }, .{});
         }
         if (i % 2 == 1)
             y += 1;
@@ -1261,7 +1277,7 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
 
     const repfmt = utils.ReputationFormatter{};
     if (repfmt.dewIt())
-        y = _drawStrf(startx, y, endx, "{}", .{repfmt}, .{});
+        y += hud_win.main.drawTextAtf(0, y, "{}", .{repfmt}, .{});
 
     const bar_endx = endx - 9;
     // const bar_endx2 = endx - 18;
@@ -1271,14 +1287,14 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
         [_]u32{ colors.percentageOf(colors.PALE_VIOLET_RED, 25), colors.LIGHT_PALE_VIOLET_RED }
     else
         [_]u32{ colors.percentageOf(colors.DOBALENE_BLUE, 25), colors.DOBALENE_BLUE };
-    _drawBar(y, startx, bar_endx, state.player.HP, state.player.max_HP, "health", color[0], color[1], .{});
+    _ = hud_win.main.drawBarAt(0, bar_endx, y, state.player.HP, state.player.max_HP, "health", color[0], color[1], .{});
     const hit = combat.chanceOfMeleeLanding(state.player, null);
-    _ = _drawStrf(bar_endx + 1, y, endx, "$bhit {: >3}%$.", .{hit}, .{});
+    _ = hud_win.main.drawTextAtf(bar_endx + 1, y, "$bhit {: >3}%$.", .{hit}, .{});
     y += 1;
 
-    _drawBar(y, startx, bar_endx, state.player.MP, state.player.max_MP, "mana", colors.percentageOf(colors.GOLD, 55), colors.LIGHT_GOLD, .{});
+    _ = hud_win.main.drawBarAt(0, bar_endx, y, state.player.MP, state.player.max_MP, "mana", colors.percentageOf(colors.GOLD, 55), colors.LIGHT_GOLD, .{});
     const pot = utils.SignedFormatter{ .v = state.player.stat(.Potential) };
-    _ = _drawStrf(bar_endx + 1, y, endx, "$opot {: >3}%$.", .{pot}, .{});
+    _ = hud_win.main.drawTextAtf(bar_endx + 1, y, "$opot {: >3}%$.", .{pot}, .{});
     y += 1;
 
     // const ev = utils.SignedFormatter{ .v = state.player.stat(.Evade) };
@@ -1287,9 +1303,9 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
     const is_corrupted = state.player.hasStatus(.Corruption);
     const corruption_str = if (is_corrupted) "corrupted" else "corruption";
     const corruption_val = if (is_corrupted) willpower else state.player.corruption_ctr;
-    _drawBar(y, startx, bar_endx, corruption_val, willpower, corruption_str, 0x999999, 0xeeeeee, .{ .detail = !is_corrupted });
-    // _ = _drawStrf(bar_endx2 + 1, y, bar_endx, "$pev  {: >3}%$.", .{ev}, .{});
-    _ = _drawStrf(bar_endx + 1, y, endx, "$.arm {: >3}%$.", .{arm}, .{});
+    _ = hud_win.main.drawBarAt(0, bar_endx, y, corruption_val, willpower, corruption_str, 0x999999, 0xeeeeee, .{ .detail = !is_corrupted });
+    // _ = _hud_win.main.drawTextAtf(bar_endx2 + 1, y, bar_endx, "$pev  {: >3}%$.", .{ev}, .{});
+    _ = hud_win.main.drawTextAtf(bar_endx + 1, y, "$.arm {: >3}%$.", .{arm}, .{});
     y += 2;
 
     {
@@ -1303,13 +1319,13 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
             const sname = statusinfo.status.string(state.player);
 
             if (statusinfo.duration == .Tmp) {
-                _drawBar(y, startx, endx, statusinfo.duration.Tmp, Status.MAX_DURATION, sname, 0x30055c, 0xd069fc, .{});
+                y += hud_win.main.drawBarAt(0, endx, y, statusinfo.duration.Tmp, Status.MAX_DURATION, sname, 0x30055c, 0xd069fc, .{});
             } else {
-                _drawBar(y, startx, endx, Status.MAX_DURATION, Status.MAX_DURATION, sname, 0x054c20, 0x69fcd0, .{ .detail = false });
+                y += hud_win.main.drawBarAt(0, endx, y, Status.MAX_DURATION, Status.MAX_DURATION, sname, 0x054c20, 0x69fcd0, .{ .detail = false });
             }
 
-            //y = _drawStrf(startx, y, endx, "{s} ({} turns)", .{ sname, duration }, .{ .fg = 0x8019ac, .bg = null });
-            y += 1;
+            //y += hud_win.main.drawTextAtf(startx, y, endx, "{s} ({} turns)", .{ sname, duration }, .{ .fg = 0x8019ac, .bg = null });
+
             status_drawn = true;
         }
         if (status_drawn) y += 1;
@@ -1322,9 +1338,7 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
         const lit_str = if (light) "$C$~ Lit $. " else "";
         const spotted_str = if (spotted) "$bSpotted$. " else "";
 
-        y = _drawStrf(startx, y, endx, "{s}{s}", .{
-            lit_str, spotted_str,
-        }, .{});
+        y += hud_win.main.drawTextAtf(0, y, "{s}{s}", .{ lit_str, spotted_str }, .{});
         y += 1;
     }
 
@@ -1408,12 +1422,12 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
         }.f);
 
         for (features.items) |feature| {
-            display.setCell(startx, y, feature.tile);
-            display.setCell(startx + 1, y, .{ .fl = .{ .skip = true } });
+            hud_win.main.setCell(0, y, feature.tile);
+            hud_win.main.setCell(0 + 1, y, .{ .fl = .{ .skip = true } });
 
-            _ = _drawStrf(startx + 3, y, endx, "$c{s}$.", .{feature.name.constSlice()}, .{});
+            _ = hud_win.main.drawTextAtf(0 + 3, y, "$c{s}$.", .{feature.name.constSlice()}, .{});
             if (feature.player) {
-                _ = _drawStrf(endx - 1, y, endx, "@", .{}, .{});
+                _ = hud_win.main.drawTextAtf(endx - 1, y, "@", .{}, .{});
             }
 
             y += 1;
@@ -1426,20 +1440,20 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
     for (moblist) |mob| {
         if (mob.is_dead) continue;
 
-        _clear_line(startx, endx, y);
-        _clear_line(startx, endx, y + 1);
-
-        display.setCell(startx, y, Tile.displayAs(mob.coord, true, false));
+        var t = Tile.displayAs(mob.coord, true, false);
+        t.fl.wide = true;
+        hud_win.main.setCell(0, y, t);
+        hud_win.main.setCell(0 + 1, y, .{ .fl = .{ .skip = true } });
 
         const name = mob.displayName();
-        _ = _drawStrf(startx + 2, y, endx, "$c{s}$.", .{name}, .{ .bg = null });
+        _ = hud_win.main.drawTextAtf(0 + 3, y, "$c{s}$.", .{name}, .{ .bg = null });
 
         const infoset = _getMonsInfoSet(mob);
         defer MobInfoLine.deinitList(infoset);
         //var info_x: isize = startx + 2 + @intCast(isize, name.len) + 2;
         var info_x: usize = endx - infoset.items.len;
         for (infoset.items) |info| {
-            _ = _drawStrf(info_x, y, endx, "${u}{u}$.", .{ info.color, info.char }, .{ .bg = null });
+            _ = hud_win.main.drawTextAtf(info_x, y, "${u}{u}$.", .{ info.color, info.char }, .{ .bg = null });
             info_x += 1;
         }
         y += 1;
@@ -1458,22 +1472,23 @@ fn drawInfo(moblist: []const *Mob, startx: usize, starty: usize, endx: usize, en
                 const duration = statusinfo.duration.Tmp;
                 const sname = statusinfo.status.string(state.player);
 
-                _drawBar(y, startx, endx, duration, Status.MAX_DURATION, sname, 0x30055c, 0xd069fc, .{});
-                //y = _drawStrf(startx, y, endx, "{s}", .{_formatStatusInfo(entry.value)}, .{ .bg = null });
-                y += 1;
+                y += hud_win.main.drawBarAt(0, endx, y, duration, Status.MAX_DURATION, sname, 0x30055c, 0xd069fc, .{});
+                //y += hud_win.main.drawTextAtf(startx, y, endx, "{s}", .{_formatStatusInfo(entry.value)}, .{ .bg = null });
                 status_drawn = true;
             }
             if (status_drawn) y += 1;
         }
 
         //const activity = if (mob.prisoner_status != null) if (mob.prisoner_status.?.held_by != null) "(chained)" else "(prisoner)" else mob.activity_description();
-        //y = _drawStrf(endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2), y, endx, "{s}", .{activity}, .{ .fg = 0x9a9a9a });
+        //y += hud_win.main.drawTextAtf(endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2), y, endx, "{s}", .{activity}, .{ .fg = 0x9a9a9a });
 
         //y += 2;
 
-        if (y == endy)
+        if (y == hud_win.main.height - 1)
             break;
     }
+
+    hud_win.main.renderFullyW(.PlayerInfo);
 }
 
 fn drawLog(startx: usize, endx: usize, alloc: mem.Allocator) Console {
@@ -1685,10 +1700,9 @@ pub fn drawNoPresent() void {
 
     const moblist = state.createMobList(false, true, state.player.coord.z, alloc);
 
-    const hud_win = dimensions(.PlayerInfo);
     const log_window = dimensions(.Log);
 
-    drawInfo(moblist.items, hud_win.startx, hud_win.starty, hud_win.endx, hud_win.endy);
+    drawHUD(moblist.items);
     drawMap(moblist.items, state.player.coord);
     labels.drawLabels();
     map_win.map.renderFullyW(.Main);
