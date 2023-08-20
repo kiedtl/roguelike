@@ -223,9 +223,9 @@ pub const ReputationFormatter = struct {
         if (self.dewIt()) {
             const str = if (rep == 0) "$g$~ NEUTRAL $." else if (rep > 0) "$a$~ FRIENDLY $." else if (rep >= -5) "$p$~ DISLIKED $." else "$r$~ HATED $.";
             if (is_on_slade and rep < 1) {
-                try std.fmt.format(writer, "$cNight rep:$. {} $r$~ TRESPASSING $.\n\n", .{rep});
+                try std.fmt.format(writer, "$cNight rep:$. {} $r$~ TRESPASSING $.\n", .{rep});
             } else {
-                try std.fmt.format(writer, "$cNight rep:$. {} {s}\n\n", .{ rep, str });
+                try std.fmt.format(writer, "$cNight rep:$. {} {s}\n", .{ rep, str });
             }
         }
     }

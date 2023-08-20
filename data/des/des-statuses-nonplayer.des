@@ -1,0 +1,150 @@
+% nonplayer_Status.RingTeleportation
+This is supposed to be a player-only status, and is probably a bug.
+
+% nonplayer_Status.RingDamnation
+This is supposed to be a player-only status, and is probably a bug.
+
+% nonplayer_Status.RingElectrocution
+This is supposed to be a player-only status, and is probably a bug.
+
+% nonplayer_Status.RingExcision
+This is supposed to be a player-only status, and is probably a bug.
+
+% nonplayer_Status.RingConjuration
+This is supposed to be a player-only status, and is probably a bug.
+
+% nonplayer_Status.RingAcceleration
+This is supposed to be a player-only status, and is probably a bug.
+
+% nonplayer_Status.DetectHeat
+This is supposed to be a player-only status, and is probably a bug.
+
+% nonplayer_Status.DetectElec
+This is supposed to be a player-only status, and is probably a bug.
+
+% nonplayer_Status.EtherealShield
+This is supposed to be a player-only status, and is probably a bug.
+
+% nonplayer_Status.EarthenShield
+This is supposed to be a player-only status, and is probably a bug.
+
+% nonplayer_Status.FumesVest
+This is supposed to be a player-only status, and is probably a bug.
+
+% nonplayer_Status.CopperWeapon
+This creature is standing on copper-plated ground. If it is wielding a copper
+weapon, it can channel electricity from the ground into the weapon, dealing 1
+extra damage.
+
+% nonplayer_Status.Riposte
+This creature can retaliate when it blocks an attack, executing a free
+counterattack.
+
+% nonplayer_Status.TormentUndead
+This is supposed to be a player-only status, and is probably a bug.
+
+% nonplayer_Status.Echolocation
+This is supposed to be a player-only status, and is probably a bug.
+
+% nonplayer_Status.Amnesia
+This creature has entirely forgotten about its enemies, and will not attack or
+hunt.
+
+% nonplayer_Status.Blind
+Its vision is reduced to 1.
+
+% nonplayer_Status.Corruption
+It has become corrupted by being adjacent to hostile undead for too long.
+
+% nonplayer_Status.Conductive
+It will share electric damage with nearby creatures. If they are also
+conductive, they will share with other nearby mobs, and so on.
+
+% nonplayer_Status.Corona
+It is glowing in the dark.
+
+% nonplayer_Status.Daze
+It is dazed and will stumble around randomly when it tries to move.
+
+% nonplayer_Status.Debil
+It will have a much harder time trying to land hits or evade attacks.
+
+% nonplayer_Status.Disorient
+It is disoriented and can only move diagonally.
+
+% nonplayer_Status.Enraged
+It is in a crazed rage, and will deal +50% damage and land hits more often, but
+evade attacks less often.
+
+% nonplayer_Status.Exhausted
+It is exhausted and won't be able to enter a rage if badly hurt.
+
+% nonplayer_Status.Explosive
+It looks like it's going to explode when it dies.
+
+% nonplayer_Status.ExplosiveElec
+Electricity has gathered in its body, and will discharge when it dies.
+
+% nonplayer_Status.Fast
+It is moving 2x as fast.
+
+% nonplayer_Status.Fear
+It is terrified and will flee enemies more often.
+
+% nonplayer_Status.Fire
+It is burning and has a 33% chance to take fire damage each turn. It willll
+also spread fire to each tile it steps on.
+
+% nonplayer_Status.Fireproof
+It has +25% fire resistance.
+
+% nonplayer_Status.Flammable
+It has -25% fire resistance.
+
+% nonplayer_Status.Held
+It is stuck and can't move.
+
+% nonplayer_Status.Insane
+It has lost its mind, and will attack friends and foes alike. Former allies
+will consider it an enemy.
+
+% nonplayer_Status.Intimidating
+It looks very intimidating. Its face reminds you of that time your sister found
+a spider at the bottom of her coffee-mug.
+
+
+(As this status is intended to be player-only, this is probably a bug.)
+
+% nonplayer_Status.Invigorate
+It is invigorated and will deal +50% damage, as well as land hits and block
+attacks more often.
+
+% nonplayer_Status.Lifespan
+It will die or disintegrate at the end of its lifespan.
+
+% nonplayer_Status.Nausea
+It looks like it's going to throw up. Hopefully not on you.
+
+% nonplayer_Status.Noisy
+It is moving noisily.
+
+% nonplayer_Status.Pain
+It is in pain and cannot rest, and has a change to take damage every turn.
+
+% nonplayer_Status.Paralysis
+It is paralyzed, and will skip its turns entirely.
+
+% nonplayer_Status.Recuperate
+It is slowly regaining HP, at the cost of being able to evade attacks.
+
+% nonplayer_Status.Sleeping
+It doesn't seem to be awake...
+
+% nonplayer_Status.Slow
+It is moving 2x more slowly.
+
+% nonplayer_Status.DayBlindness
+(Bug) Seems the sun burnt it when it went outside.
+
+% nonplayer_Status.NightBlindness
+(Bug)

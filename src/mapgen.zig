@@ -4242,6 +4242,8 @@ pub fn readPrefabs(alloc: mem.Allocator) void {
 
     rng.shuffle(Prefab, s_fabs.items);
     std.sort.insertionSort(Prefab, s_fabs.items, {}, Prefab.lesserThan);
+
+    std.log.info("Loaded {} prefabs.", .{n_fabs.items.len + s_fabs.items.len});
 }
 
 pub const LevelConfig = struct {

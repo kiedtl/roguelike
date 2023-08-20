@@ -1,14 +1,63 @@
+% concept_Spotted
+
+You have been seen and are being hunted. If you stay out of vision long enough,
+your foes will forget about you (examine them to see how long until this
+happens).
+
+% concept_Lit
+
+You are standing in a lit tile, enabling enemies to see you.
+
+
+(Standing in an unlit tile will make you invisible to enemies without night
+vision.)
+
+% concept_Corruption
+
+Your corruption counter, i.e. how long you can stay adjacent to undead without
+being corrupted. It corresponds to your Willpower stat.
+
+
+Becoming corrupted causes a variety of effects (mostly negative), such as
+immediately alerting the undead which corrupted you to their presence, as well
+as allowing all undead to anticipate your attacks and evade them more often.
+
+% concept_Reputation
+
+Your reputation with the Night Creatures. If it is negative, tt will decay back
+to 0 each time you ascend a floor. Ransacking Night lairs decreases reputation.
+
+
+* At $b-5 reputation$., Night creatures will consider you an enemy and attack
+  you without provocation.
+
+* At $b-10 reputation$., Night creatures will occasionally leave your lairs to
+  hunt you down.
+
+% stat_Health_player
+
+Keep it above zero at all costs.
+
+% stat_Magic
+
+The Necromancer's power, channeled into the physical world. Used for casting
+spells from rings.
+
+
+You can acquire magic by draining shrines and the corpses of magic-Wielders.
+(Examine a mob to see if it's a Wielder or not.)
+
 % stat_Melee
 
-Your Melee% stat is a percentage, determining what chance you have to hit a
-foe. It does NOT take into account that enemy's Evasion stat.
+The chance to hit a foe. It does NOT take into account that enemy's Evasion
+stat.
 
 % stat_Evade
 
-Your chance to dodge attacks, both melee and ranged.
+The chance to dodge attacks, both melee and ranged.
 
 
-Beware: many magical ranged attacks by spell-casting enemies cannot be dodged
+Note: many magical ranged attacks by spell-casting enemies cannot be dodged
 under any circumstances.
 
 % stat_Martial
@@ -24,13 +73,13 @@ strike their target.
 
 % stat_Vision
 
-The radius of your FOV. Things like terrain and gas (e.g. tall fungi) can
-decrease or increase your Vision.
+The range of sight. Things like terrain and gas (e.g. tall fungi) can decrease
+or increase Vision.
 
 % stat_Willpower
 
-In a range of 0 to 10. Controls your ability to resist hostile enchantments, as
-well as your ability to inflict enchantments on others.
+In a range of 0 to 10. Determines how often hostile enchantments can be
+resisted, as well as the ability to inflict enchantments on others.
 
 
 You cannot be affected by a monster with a lower willpower than you, and vice
@@ -48,15 +97,17 @@ increase it up to 3.
 
 % stat_Conjuration
 
-Determines how many spectral blades you spawn when using the ring of
-Conjuration.
-
-
-The stat is, of course, useless if you don't have that ring.
+Determines how many spectral blades spawn when using the Conjuration
+spell/ring.
 
 % stat_Potential
 
+Determines how much magic you can absorb by draining shrines and certain fallen
+enemies.
 
+
+For example, with $o60% Potential$., you will be able to absorb about $o6$.
+magic from a corpse that has maximum $o10$. drainable magic points.
 
 % stat_Armor
 

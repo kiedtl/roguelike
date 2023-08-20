@@ -1328,10 +1328,6 @@ pub const Status = enum {
         return state.status_str_infos.get(self).?.mini_name;
     } // }}}
 
-    pub fn playerDescription(self: Status) ?[]const u8 { // {{{
-        return state.status_str_infos.get(self).?.p_description;
-    } // }}}
-
     pub fn isMobImmune(self: Status, mob: *Mob) bool {
         if (mob == state.player) {
             switch (self) {

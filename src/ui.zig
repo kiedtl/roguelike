@@ -1216,41 +1216,6 @@ fn _drawStr(_x: usize, _y: usize, endx: usize, str: []const u8, opts: DrawStrOpt
     return y;
 }
 
-fn _drawBar(
-    y: usize,
-    startx: usize,
-    endx: usize,
-    current: usize,
-    max: usize,
-    description: []const u8,
-    bg: u32,
-    fg: u32,
-    opts: struct { detail: bool = true },
-) void {
-    assert(current <= max);
-
-    const depleted_bg = colors.percentageOf(bg, 40);
-    const percent = if (max == 0) 100 else (current * 100) / max;
-    const bar = @divTrunc((endx - startx - 1) * percent, 100);
-    const bar_end = startx + bar;
-
-    _clearLineWith(startx, endx - 1, y, ' ', fg, depleted_bg);
-    if (percent != 0)
-        _clearLineWith(startx, bar_end, y, ' ', fg, bg);
-
-    _ = _drawStr(startx + 1, y, endx, description, .{ .fg = fg, .bg = null });
-
-    if (opts.detail) {
-        // Find out the width of "<current>/<max>" so we can right-align it
-        var buf: [256]u8 = undefined;
-        var fbs = std.io.fixedBufferStream(&buf);
-        @call(.{ .modifier = .always_inline }, std.fmt.format, .{ fbs.writer(), "{} / {}", .{ current, max } }) catch err.bug("format error", .{});
-        const info_width = fbs.getWritten().len;
-
-        _ = _drawStrf(endx - info_width - 1, y, endx, "{} / {}", .{ current, max }, .{ .fg = fg, .bg = null });
-    }
-}
-
 fn drawHUD(moblist: []const *Mob) void {
     // const last_action_cost = if (state.player.activities.current()) |lastaction| b: {
     //     const spd = @intToFloat(f64, state.player.speed());
@@ -1259,16 +1224,15 @@ fn drawHUD(moblist: []const *Mob) void {
 
     const endx = hud_win.main.width - 1;
 
+    hud_win.main.clearMouseTriggers();
     hud_win.main.clear();
     var y: usize = 0;
 
     const lvlstr = state.levelinfo[state.player.coord.z].name;
-    //_clearLineWith(startx, endx - 1, y, '─', colors.DARK_GREY, colors.BG);
-    //const lvlstrx = startx + @divTrunc(endx - startx - 1, 2) - @intCast(isize, (lvlstr.len + 4) / 2);
-    //y = _drawStrf(lvlstrx, y, endx, "$G┤$. $c{s}$. $G├$.", .{lvlstr}, .{});
-    //y += 1;
+    const lvlid = state.levelinfo[state.player.coord.z].id;
     _ = hud_win.main.drawTextAtf(0, y, "$cturns:$. {}", .{state.player_turns}, .{});
-    y += hud_win.main.drawTextAtf(endx - lvlstr.len, y, "$c{s}$.", .{lvlstr}, .{});
+    y += hud_win.main.drawTextAtf(endx - (lvlstr.len - 1), y, "$c{s}$.", .{lvlstr}, .{});
+    hud_win.main.addTooltipForText("{s}", .{lvlstr}, "level_{s}", .{lvlid});
     y += 1;
 
     // zig fmt: off
@@ -1310,10 +1274,13 @@ fn drawHUD(moblist: []const *Mob) void {
     y += 1;
 
     const repfmt = utils.ReputationFormatter{};
-    if (repfmt.dewIt())
+    if (repfmt.dewIt()) {
         y += hud_win.main.drawTextAtf(0, y, "{}", .{repfmt}, .{});
+        hud_win.main.addTooltipForText("Reputation", .{}, "concept_Reputation", .{});
+        y += 1;
+    }
 
-    const bar_endx = endx - 9;
+    const bar_endx = endx - 8;
     // const bar_endx2 = endx - 18;
 
     // Use red if below 40% health
@@ -1322,13 +1289,17 @@ fn drawHUD(moblist: []const *Mob) void {
     else
         [_]u32{ colors.percentageOf(colors.DOBALENE_BLUE, 25), colors.DOBALENE_BLUE };
     _ = hud_win.main.drawBarAt(0, bar_endx, y, state.player.HP, state.player.max_HP, "health", color[0], color[1], .{});
+    hud_win.main.addTooltipForText("Health", .{}, "stat_Health_player", .{});
     const hit = combat.chanceOfMeleeLanding(state.player, null);
     _ = hud_win.main.drawTextAtf(bar_endx + 1, y, "$bhit {: >3}%$.", .{hit}, .{});
+    hud_win.main.addTooltipForText("Melee stat", .{}, "stat_Melee", .{});
     y += 1;
 
     _ = hud_win.main.drawBarAt(0, bar_endx, y, state.player.MP, state.player.max_MP, "mana", colors.percentageOf(colors.GOLD, 55), colors.LIGHT_GOLD, .{});
+    hud_win.main.addTooltipForText("Magic", .{}, "stat_Magic", .{});
     const pot = utils.SignedFormatter{ .v = state.player.stat(.Potential) };
     _ = hud_win.main.drawTextAtf(bar_endx + 1, y, "$opot {: >3}%$.", .{pot}, .{});
+    hud_win.main.addTooltipForText("Potential stat", .{}, "stat_Potential", .{});
     y += 1;
 
     // const ev = utils.SignedFormatter{ .v = state.player.stat(.Evade) };
@@ -1338,8 +1309,10 @@ fn drawHUD(moblist: []const *Mob) void {
     const corruption_str = if (is_corrupted) "corrupted" else "corruption";
     const corruption_val = if (is_corrupted) willpower else state.player.corruption_ctr;
     _ = hud_win.main.drawBarAt(0, bar_endx, y, corruption_val, willpower, corruption_str, 0x999999, 0xeeeeee, .{ .detail = !is_corrupted });
+    hud_win.main.addTooltipForText("Corruption", .{}, "concept_Corruption", .{});
     // _ = _hud_win.main.drawTextAtf(bar_endx2 + 1, y, bar_endx, "$pev  {: >3}%$.", .{ev}, .{});
     _ = hud_win.main.drawTextAtf(bar_endx + 1, y, "$.arm {: >3}%$.", .{arm}, .{});
+    hud_win.main.addTooltipForText("Armor stat", .{}, "stat_Armor", .{});
     y += 2;
 
     {
@@ -1357,6 +1330,7 @@ fn drawHUD(moblist: []const *Mob) void {
             } else {
                 y += hud_win.main.drawBarAt(0, endx, y, Status.MAX_DURATION, Status.MAX_DURATION, sname, 0x054c20, 0x69fcd0, .{ .detail = false });
             }
+            hud_win.main.addTooltipForText("{s}", .{sname}, "player_{s}", .{entry.key});
 
             //y += hud_win.main.drawTextAtf(startx, y, endx, "{s} ({} turns)", .{ sname, duration }, .{ .fg = 0x8019ac, .bg = null });
 
@@ -1369,11 +1343,15 @@ fn drawHUD(moblist: []const *Mob) void {
     const spotted = player.isPlayerSpotted();
 
     if (light or spotted) {
-        const lit_str = if (light) "$C$~ Lit $. " else "";
-        const spotted_str = if (spotted) "$bSpotted$. " else "";
+        const lit_str = if (light) "$C$~ Lit $." else "";
+        const spotted_str = if (spotted) "$bSpotted$." else "";
 
-        y += hud_win.main.drawTextAtf(0, y, "{s}{s}", .{ lit_str, spotted_str }, .{});
-        y += 1;
+        _ = hud_win.main.drawTextAtf(0, y, "{s}", .{lit_str}, .{});
+        hud_win.main.addTooltipForText("Lit", .{}, "concept_Lit", .{});
+        _ = hud_win.main.drawTextAtf(hud_win.main.last_text_endx + 2, y, "{s}", .{spotted_str}, .{});
+        hud_win.main.addTooltipForText("Spotted", .{}, "concept_Spotted", .{});
+
+        y += 2;
     }
 
     // ------------------------------------------------------------------------
@@ -1382,6 +1360,8 @@ fn drawHUD(moblist: []const *Mob) void {
         const FeatureInfo = struct {
             name: StringBuf64,
             tile: display.Cell,
+            coord: Coord,
+            ex_focus: ExamineTileFocus,
             priority: usize,
             player: bool,
         };
@@ -1389,62 +1369,75 @@ fn drawHUD(moblist: []const *Mob) void {
         var features = std.ArrayList(FeatureInfo).init(state.GPA.allocator());
         defer features.deinit();
 
-        for (state.player.fov) |row, iy| for (row) |_, ix| {
-            const coord = Coord.new2(state.player.coord.z, ix, iy);
+        var dijk = dijkstra.Dijkstra.init(
+            state.player.coord,
+            state.mapgeometry,
+            @intCast(usize, state.player.stat(.Vision)),
+            dijkstra.dummyIsValid,
+            .{},
+            state.GPA.allocator(),
+        );
+        defer dijk.deinit();
 
-            if (state.player.fov[iy][ix] > 0) {
-                var name = StringBuf64.init(null);
-                var priority: usize = 0;
+        while (dijk.next()) |coord| if (state.player.cansee(coord)) {
+            var name = StringBuf64.init(null);
+            var priority: usize = 0;
+            var focus: ExamineTileFocus = .Item;
 
-                if (state.dungeon.itemsAt(coord).len > 0) {
-                    const item = state.dungeon.itemsAt(coord).last().?;
-                    if (item != .Vial and item != .Prop and item != .Boulder) {
-                        name.appendSlice((item.shortName() catch err.wat()).constSlice()) catch err.wat();
-                    }
-                    priority = 3;
-                } else if (state.dungeon.at(coord).surface) |surf| {
-                    priority = 2;
-                    name.appendSlice(switch (surf) {
-                        .Machine => |m| if (m.player_interact != null) m.name else "",
-                        .Prop => "",
-                        .Corpse => "corpse",
-                        .Container => |c| c.name,
-                        .Poster => "poster",
-                        .Stair => |s| if (s != null) "upward stairs" else "",
-                    }) catch err.wat();
-                } else if (!mem.eql(u8, state.dungeon.terrainAt(coord).id, "t_default")) {
-                    priority = 1;
-                    name.appendSlice(state.dungeon.terrainAt(coord).name) catch err.wat();
-                } else if (state.dungeon.at(coord).type != .Wall) {
-                    const material = state.dungeon.at(coord).material;
-                    switch (state.dungeon.at(coord).type) {
-                        .Wall => name.fmt("{s} wall", .{material.name}),
-                        .Floor => name.fmt("{s} floor", .{material.name}),
-                        .Lava => name.appendSlice("lava") catch err.wat(),
-                        .Water => name.appendSlice("water") catch err.wat(),
-                    }
+            if (state.dungeon.itemsAt(coord).len > 0) {
+                const item = state.dungeon.itemsAt(coord).last().?;
+                if (item != .Vial and item != .Prop and item != .Boulder) {
+                    name.appendSlice((item.shortName() catch err.wat()).constSlice()) catch err.wat();
                 }
+                priority = 3;
+                focus = .Item;
+            } else if (state.dungeon.at(coord).surface) |surf| {
+                priority = 2;
+                focus = .Surface;
+                name.appendSlice(switch (surf) {
+                    .Machine => |m| if (m.player_interact != null) m.name else "",
+                    .Prop => "",
+                    .Corpse => "corpse",
+                    .Container => |c| c.name,
+                    .Poster => "poster",
+                    .Stair => |s| if (s != null) "upward stairs" else "",
+                }) catch err.wat();
+            } else if (!mem.eql(u8, state.dungeon.terrainAt(coord).id, "t_default")) {
+                priority = 1;
+                focus = .Surface;
+                name.appendSlice(state.dungeon.terrainAt(coord).name) catch err.wat();
+            } else if (state.dungeon.at(coord).type != .Wall) {
+                const material = state.dungeon.at(coord).material;
+                focus = .Surface;
+                switch (state.dungeon.at(coord).type) {
+                    .Wall => name.fmt("{s} wall", .{material.name}),
+                    .Floor => name.fmt("{s} floor", .{material.name}),
+                    .Lava => name.appendSlice("lava") catch err.wat(),
+                    .Water => name.appendSlice("water") catch err.wat(),
+                }
+            }
 
-                if (name.len > 0) {
-                    const existing = utils.findFirstNeedlePtr(features.items, name, struct {
-                        pub fn func(f: *const FeatureInfo, n: StringBuf64) bool {
-                            return mem.eql(u8, n.constSlice(), f.name.constSlice());
-                        }
-                    }.func);
-                    if (existing == null) {
-                        var tile = Tile.displayAs(coord, true, true);
-                        tile.fl.wide = true;
-
-                        features.append(FeatureInfo{
-                            .name = name,
-                            .tile = tile,
-                            .player = state.player.coord.eq(coord),
-                            .priority = priority,
-                        }) catch err.wat();
-                    } else {
-                        if (state.player.coord.eq(coord))
-                            existing.?.player = true;
+            if (name.len > 0) {
+                const existing = utils.findFirstNeedlePtr(features.items, name, struct {
+                    pub fn func(f: *const FeatureInfo, n: StringBuf64) bool {
+                        return mem.eql(u8, n.constSlice(), f.name.constSlice());
                     }
+                }.func);
+                if (existing == null) {
+                    var tile = Tile.displayAs(coord, true, true);
+                    tile.fl.wide = true;
+
+                    features.append(FeatureInfo{
+                        .name = name,
+                        .tile = tile,
+                        .coord = coord,
+                        .ex_focus = focus,
+                        .player = state.player.coord.eq(coord),
+                        .priority = priority,
+                    }) catch err.wat();
+                } else {
+                    if (state.player.coord.eq(coord))
+                        existing.?.player = true;
                 }
             }
         };
@@ -1461,8 +1454,14 @@ fn drawHUD(moblist: []const *Mob) void {
 
             _ = hud_win.main.drawTextAtf(0 + 3, y, "$c{s}$.", .{feature.name.constSlice()}, .{});
             if (feature.player) {
-                _ = hud_win.main.drawTextAtf(endx - 1, y, "@", .{}, .{});
+                _ = hud_win.main.drawTextAtf(endx, y, "@", .{}, .{});
             }
+
+            const trigrect = Rect.new(Coord.new(0, y), endx, 0);
+            hud_win.main.addMouseTrigger(trigrect, .Hover, .{ .RecordElem = &hud_win.main });
+            hud_win.main.addMouseTrigger(trigrect, .Click, .{
+                .ExamineScreen = .{ .starting_focus = feature.ex_focus, .start_coord = feature.coord },
+            });
 
             y += 1;
         }
@@ -1485,15 +1484,19 @@ fn drawHUD(moblist: []const *Mob) void {
         const infoset = _getMonsInfoSet(mob);
         defer MobInfoLine.deinitList(infoset);
         //var info_x: isize = startx + 2 + @intCast(isize, name.len) + 2;
-        var info_x: usize = endx - infoset.items.len;
+        var info_x: usize = endx - (infoset.items.len - 1);
         for (infoset.items) |info| {
             _ = hud_win.main.drawTextAtf(info_x, y, "${u}{u}$.", .{ info.color, info.char }, .{ .bg = null });
             info_x += 1;
         }
-        y += 1;
 
-        //_drawBar(y, startx, endx, @floatToInt(usize, mob.HP), @floatToInt(usize, mob.max_HP), "health", 0x232faa, 0xffffff, .{});
-        //y += 1;
+        const trigrect = Rect.new(Coord.new(0, y), endx, 0);
+        hud_win.main.addMouseTrigger(trigrect, .Hover, .{ .RecordElem = &hud_win.main });
+        hud_win.main.addMouseTrigger(trigrect, .Click, .{
+            .ExamineScreen = .{ .starting_focus = .Mob, .start_coord = mob.coord },
+        });
+
+        y += 1;
 
         {
             var status_drawn = false;
@@ -1507,7 +1510,7 @@ fn drawHUD(moblist: []const *Mob) void {
                 const sname = statusinfo.status.string(state.player);
 
                 y += hud_win.main.drawBarAt(0, endx, y, duration, Status.MAX_DURATION, sname, 0x30055c, 0xd069fc, .{});
-                //y += hud_win.main.drawTextAtf(startx, y, endx, "{s}", .{_formatStatusInfo(entry.value)}, .{ .bg = null });
+                hud_win.main.addTooltipForText("{s}", .{sname}, "nonplayer_{s}", .{entry.key});
                 status_drawn = true;
             }
             if (status_drawn) y += 1;
@@ -1726,6 +1729,7 @@ pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
             tile.fl.wide = true;
             map_win.map.setCell(cursorx, cursory, tile);
             map_win.map.setCell(cursorx + 1, cursory, .{ .fl = .{ .skip = true } });
+
             if (state.player.cansee(coord)) {
                 map_win.map.addMouseTrigger(cursor_coord.asRect(), .Hover, .{ .RecordElem = &map_win.annotations });
                 map_win.map.addMouseTrigger(cursor_coord.asRect(), .Click, .{ .ExamineScreen = .{ .start_coord = coord } });
@@ -1733,7 +1737,7 @@ pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
         }
     }
 
-    map_win.map.highlightMouseArea(colors.BG_L);
+    // map_win.map.highlightMouseArea(colors.BG_L);
 }
 
 pub fn drawNoPresent() void {
@@ -2454,8 +2458,10 @@ pub fn drawPlayerInfoScreen() void {
                 iy += pinfo_win.right.drawTextAt(0, iy, "\n", .{});
 
                 const repfmt = utils.ReputationFormatter{};
-                if (repfmt.dewIt())
+                if (repfmt.dewIt()) {
                     iy += pinfo_win.right.drawTextAtf(0, iy, "{}", .{repfmt}, .{});
+                    iy += 1;
+                }
             },
             .Statuses => {
                 var statuses = state.player.statuses.iterator();
@@ -3517,16 +3523,16 @@ pub const Console = struct {
     mouse_triggers: MouseTrigger.AList,
 
     // some state to make adding mouse triggers less painful
-    last_written_text_startx: usize = 0,
-    last_written_text_starty: usize = 0,
-    last_written_text_endx: usize = 0,
-    last_written_text_endy: usize = 0,
+    last_text_startx: usize = 0,
+    last_text_starty: usize = 0,
+    last_text_endx: usize = 0,
+    last_text_endy: usize = 0,
 
     // more state to make handling mouse triggers less painful
     rendered_offset_x: usize = 0,
     rendered_offset_y: usize = 0,
 
-    recorded_mouse_area: Rect = Rect.new(Coord.new(0, 0), 0, 0),
+    recorded_mouse_area: ?Rect = null,
 
     pub const Self = @This();
     pub const AList = std.ArrayList(Self);
@@ -3549,8 +3555,8 @@ pub const Console = struct {
             },
             RecordElem: *Console,
             DescriptionScreen: struct {
-                title: StackBuffer(u8, 32),
-                id: StackBuffer(u8, 32),
+                title: StackBuffer(u8, 64),
+                id: StackBuffer(u8, 64),
             },
         };
 
@@ -3633,25 +3639,33 @@ pub const Console = struct {
 
     pub fn addClickableLine(self: *Self, kind: MouseTrigger.Kind, action: MouseTrigger.Action) void {
         self.addMouseTrigger(Rect.new(
-            Coord.new(self.last_written_text_startx, self.last_written_text_starty),
+            Coord.new(self.last_text_startx, self.last_text_starty),
             self.width,
-            self.last_written_text_endy - self.last_written_text_starty,
+            self.last_text_endy - self.last_text_starty,
         ), kind, action);
     }
 
     pub fn addTooltipForText(self: *Self, comptime title_fmt: []const u8, title_args: anytype, comptime id_fmt: []const u8, id_args: anytype) void {
         self.addClickableText(.Hover, .{ .RecordElem = self });
         self.addClickableText(.Click, .{ .DescriptionScreen = .{
-            .title = StackBuffer(u8, 32).initFmt(title_fmt, title_args),
-            .id = StackBuffer(u8, 32).initFmt(id_fmt, id_args),
+            .title = StackBuffer(u8, 64).initFmt(title_fmt, title_args),
+            .id = StackBuffer(u8, 64).initFmt(id_fmt, id_args),
+        } });
+    }
+
+    pub fn addTooltipForRect(self: *Self, rect: Rect, comptime title_fmt: []const u8, title_args: anytype, comptime id_fmt: []const u8, id_args: anytype) void {
+        self.addMouseTrigger(rect, .Hover, .{ .RecordElem = self });
+        self.addMouseTrigger(rect, .Click, .{ .DescriptionScreen = .{
+            .title = StackBuffer(u8, 64).initFmt(title_fmt, title_args),
+            .id = StackBuffer(u8, 64).initFmt(id_fmt, id_args),
         } });
     }
 
     pub fn addClickableText(self: *Self, kind: MouseTrigger.Kind, action: MouseTrigger.Action) void {
         self.addMouseTrigger(Rect.new(
-            Coord.new(self.last_written_text_startx, self.last_written_text_starty),
-            self.last_written_text_endx - self.last_written_text_startx,
-            self.last_written_text_endy - self.last_written_text_starty,
+            Coord.new(self.last_text_startx, self.last_text_starty),
+            self.last_text_endx - self.last_text_startx,
+            self.last_text_endy - self.last_text_starty,
         ), kind, action);
     }
 
@@ -3660,6 +3674,8 @@ pub const Console = struct {
     }
 
     fn _handleMouseEvent(self: *Self, abscoord: Coord, kind: MouseTrigger.Kind, dim: Rect) MouseEventHandleResult {
+        self.recorded_mouse_area = null;
+
         const coord = abscoord.asRect();
         if (!dim.intersects(&coord, 0))
             return .Unhandled;
@@ -3728,12 +3744,17 @@ pub const Console = struct {
     }
 
     pub fn highlightMouseArea(self: *const Self, color: u32) void {
-        var y = self.recorded_mouse_area.start.y;
-        while (y <= self.recorded_mouse_area.end().y) : (y += 1) {
-            var x = self.recorded_mouse_area.start.x;
-            while (x <= self.recorded_mouse_area.end().x) : (x += 1) {
-                self.grid[y * self.width + x].bg = color;
-                self.grid[y * self.width + x].sbg = color;
+        if (self.recorded_mouse_area) |area| {
+            var y = area.start.y;
+            while (y <= area.end().y) : (y += 1) {
+                var x = area.start.x;
+                while (x <= area.end().x) : (x += 1)
+                    if (self.grid[y * self.width + x].bg == colors.BG or
+                        self.grid[y * self.width + x].bg == colors.ABG)
+                    {
+                        self.grid[y * self.width + x].bg = color;
+                        self.grid[y * self.width + x].sbg = color;
+                    };
             }
         }
     }
@@ -4027,9 +4048,9 @@ pub const Console = struct {
     //
     // Returns lines/rows used
     pub fn drawTextAt(self: *Self, startx: usize, starty: usize, str: []const u8, opts: DrawStrOpts) usize {
-        self.last_written_text_startx = startx;
-        self.last_written_text_starty = starty;
-        self.last_written_text_endx = startx;
+        self.last_text_startx = startx;
+        self.last_text_starty = starty;
+        self.last_text_endx = startx;
 
         var x = startx;
         var y = starty;
@@ -4042,7 +4063,7 @@ pub const Console = struct {
         var fold_iter = utils.FoldedTextIterator.init(str, self.width + 1);
         while (fold_iter.next(&fibuf)) |line| : ({
             y += 1;
-            if (x > self.last_written_text_endx) self.last_written_text_endx = x;
+            if (x > self.last_text_endx + 1) self.last_text_endx = x -| 1;
             x = startx;
         }) {
             if (skipped < opts.skip_lines) {
@@ -4063,7 +4084,7 @@ pub const Console = struct {
                 switch (codepoint) {
                     '\n' => {
                         y += 1;
-                        if (x > self.last_written_text_endx) self.last_written_text_endx = x;
+                        if (x > self.last_text_endx + 1) self.last_text_endx = x -| 1;
                         x = startx;
                         continue;
                     },
@@ -4107,12 +4128,15 @@ pub const Console = struct {
             }
         }
 
-        self.last_written_text_endy = y - 1;
+        if (y == starty) { // Handle case of message w/o newline
+            self.last_text_endy = y;
+        } else {
+            self.last_text_endy = y - 1;
+        }
 
         return y - starty;
     }
 
-    // Reimplementation of _drawBar
     fn drawBarAt(self: *Console, x: usize, endx: usize, y: usize, current: usize, max: usize, description: []const u8, bg: u32, fg: u32, opts: struct {
         detail: bool = true,
         detail_type: enum { Specific, Percent } = .Specific,
@@ -4141,8 +4165,9 @@ pub const Console = struct {
             },
         };
 
-        self.last_written_text_endx = endx;
-        return y + 1;
+        self.last_text_startx = x;
+        self.last_text_endx = endx - 1;
+        return 1;
     }
 };
 

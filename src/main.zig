@@ -343,6 +343,7 @@ fn readDescriptions(alloc: mem.Allocator) void {
         }
 
         S._finishDescEntry(data_f.name, current_desc_id.?, current_desc.constSlice(), alloc);
+        std.log.info("Loaded description data (data/des/{s}).", .{data_f.name});
     }
 }
 

@@ -510,12 +510,13 @@ pub fn getEvents(ctx: *GeneratorCtx(Event), timeout: ?usize) void {
                         ctx.yield(Event{ .Char = std.unicode.utf8Decode(text) catch err.wat() });
                     },
                     driver_m.SDL_KEYDOWN => {
-                        nonmouse_event_received = true;
                         const kcode = ev.key.keysym.sym;
                         if (Key.fromSDL(kcode, ev.key.keysym.mod)) |key| {
                             ctx.yield(Event{ .Key = key });
+                            nonmouse_event_received = true;
                         } else if (kcode == driver_m.SDLK_SPACE) {
                             ctx.yield(Event{ .Char = ' ' });
+                            nonmouse_event_received = true;
                         } else continue;
                     },
                     driver_m.SDL_MOUSEBUTTONUP => {

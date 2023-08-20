@@ -121,7 +121,6 @@ pub const StatusStringInfo = struct {
     name: []const u8,
     unliving_name: ?[]const u8,
     mini_name: ?[]const u8,
-    p_description: []const u8,
 };
 pub var status_str_infos: std.enums.EnumArray(Status, ?StatusStringInfo) =
     std.enums.EnumArray(Status, ?StatusStringInfo).initFill(null);
@@ -424,13 +423,12 @@ pub fn loadStatusStringInfo() void {
 
     const read = data_file.readAll(rbuf[0..]) catch unreachable;
 
-    const result = tsv.parse(struct { e: Status, n: []u8, un: ?[]u8, mn: ?[]u8, d: []u8 }, &[_]tsv.TSVSchemaItem{
+    const result = tsv.parse(struct { e: Status, n: []u8, un: ?[]u8, mn: ?[]u8 }, &[_]tsv.TSVSchemaItem{
         .{ .field_name = "e", .parse_to = Status, .parse_fn = tsv.parsePrimitive },
         .{ .field_name = "n", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
         .{ .field_name = "un", .parse_to = ?[]u8, .parse_fn = tsv.parseOptionalUtf8String, .optional = true, .default_val = null },
         .{ .field_name = "mn", .parse_to = ?[]u8, .parse_fn = tsv.parseOptionalUtf8String, .optional = true, .default_val = null },
-        .{ .field_name = "d", .parse_to = []u8, .parse_fn = tsv.parseUtf8String },
-    }, .{ .e = undefined, .n = undefined, .un = undefined, .mn = undefined, .d = undefined }, rbuf[0..read], alloc);
+    }, .{ .e = undefined, .n = undefined, .un = undefined, .mn = undefined }, rbuf[0..read], alloc);
 
     if (!result.is_ok()) {
         err.bug("Can't load data/status_help.tsv: {} (line {}, field {})", .{
@@ -444,7 +442,7 @@ pub fn loadStatusStringInfo() void {
     defer data.deinit();
 
     for (data.items) |row| {
-        const s = StatusStringInfo{ .name = row.n, .unliving_name = row.un, .mini_name = row.mn, .p_description = row.d };
+        const s = StatusStringInfo{ .name = row.n, .unliving_name = row.un, .mini_name = row.mn };
         status_str_infos.set(row.e, s);
     }
 
@@ -466,7 +464,6 @@ pub fn freeStatusStringInfo() void {
             alloc.free(str);
         if (info.value.*.?.mini_name) |str|
             alloc.free(str);
-        alloc.free(info.value.*.?.p_description);
     }
 }
 

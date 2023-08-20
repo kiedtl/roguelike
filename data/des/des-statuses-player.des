@@ -1,0 +1,146 @@
+% player_Status.RingTeleportation
+Refer to the ring's description.
+
+% player_Status.RingDamnation
+Refer to the ring's description.
+
+% player_Status.RingElectrocution
+Refer to the ring's description.
+
+% player_Status.RingExcision
+Refer to the ring's description.
+
+% player_Status.RingConjuration
+Refer to the ring's description.
+
+% player_Status.RingAcceleration
+Refer to the ring's description.
+
+% player_Status.DetectHeat
+You are detecting sources of heat, as well as enemies attuned to fire.
+
+% player_Status.DetectElec
+You are detecting sources of electricity, as well as enemies attuned to it.
+
+% player_Status.EtherealShield
+Refer to the shield's description.
+
+% player_Status.EarthenShield
+Refer to the shield's description.
+
+% player_Status.FumesVest
+Refer to the vests' description.
+
+% player_Status.CopperWeapon
+You are standing on copper-plated ground and will deal 1 extra damage if you
+use a copper weapon.
+
+% player_Status.Riposte
+You can retaliate when you block an attack, executing a free counterattack.
+
+% player_Status.TormentUndead
+You are inhibiting the Forces that bind undead together. Nearby undead will
+have a will-checked chance to take damage each turn.
+
+% player_Status.Echolocation
+Whenever you hear a sound, you'll be able to deduce the structure of nearby
+terrain.
+
+% player_Status.Amnesia
+[BUG] Did you leave the stove on? DID YOU?
+
+% player_Status.Blind
+Your vision is reduced to 1.
+
+% player_Status.Corruption
+You have become corrupted by being adjacent to hostile undead for too long.
+
+% player_Status.Conductive
+You will share electric damage with nearby creatures. If they are also
+conductive, they will share with other nearby mobs, and so on.
+
+% player_Status.Corona
+You are glowing in the dark!
+
+% player_Status.Daze
+You are dazed and will stumble around randomly when you try to move.
+
+% player_Status.Debil
+Your ability to fight is destroyed, and you'll find it much harder to land hits
+or evade attacks.
+
+% player_Status.Disorient
+You are disoriented and can only move diagonally.
+
+% player_Status.Enraged
+You are FURIOUS and will deal +50% damage and land hits more often, but evade
+attacks less often.
+
+% player_Status.Exhausted
+You're exhausted and won't be able to enter a rage if badly hurt.
+
+% player_Status.Explosive
+[BUG] Whoopsies. Looks like you're going to explode when you die.
+
+% player_Status.ExplosiveElec
+[BUG] Force lightning, I mean electricity, is building up in your body and will
+discharge when you die.
+
+% player_Status.Fast
+You are moving 2x as fast.
+
+% player_Status.Fear
+You have a feeling of inescapable doom!
+
+% player_Status.Fire
+You are burning and have a 33% chance to take fire damage each turn. You'll
+also spread fire to each tile you step on.
+
+% player_Status.Fireproof
+You have +25% fire resistance.
+
+% player_Status.Flammable
+You have -25% fire resistance.
+
+% player_Status.Held
+You're stuck and can't move.
+
+% player_Status.Insane
+[BUG] Eating that peanut and eggplant curry was a mistake.
+
+% player_Status.Intimidating
+You look very intimidating, increasing the chance that foes will flee from you.
+
+% player_Status.Invigorate
+You are invigorated and will deal +50% damage, as well as land hits and block
+attacks more often.
+
+% player_Status.Lifespan
+[BUG] Can't think of anything funny to put here, sorry.
+
+% player_Status.Nausea
+You are nauseated and unable to drink potions.
+
+% player_Status.Noisy
+You are finding it difficult to move quietly!
+
+% player_Status.Pain
+You are in pain and cannot rest.
+
+% player_Status.Paralysis
+You are paralyzed, and will skip your turns entirely.
+
+% player_Status.Recuperate
+You are slowly regaining HP, at the cost of being able to evade attacks.
+
+% player_Status.Sleeping
+[BUG] I hate DCSS dream sheep. Don't you?
+
+% player_Status.Slow
+You are moving 2x more slowly.
+
+% player_Status.DayBlindness
+[BUG] So the sun burnt you when you went outside?
+
+% player_Status.NightBlindness
+[BUG]
