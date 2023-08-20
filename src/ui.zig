@@ -78,13 +78,13 @@ pub var hud_win: struct {
         return switch (ev) {
             .Hover => |c| switch (self.main.handleMouseEvent(c, .Hover)) {
                 .Signal => err.wat(),
-                .Void => true,
-                .Unhandled => false,
+                .Unhandled, .Void => true,
+                .Outside => false,
             },
             .Click => |c| switch (self.main.handleMouseEvent(c, .Click)) {
                 .Signal => err.wat(),
-                .Void => true,
-                .Unhandled => false,
+                .Unhandled, .Void => true,
+                .Outside => false,
             },
             else => err.wat(),
         };
@@ -124,13 +124,13 @@ pub var map_win: struct {
         return switch (ev) {
             .Hover => |c| switch (self.map.handleMouseEvent(c, .Hover)) {
                 .Signal => err.wat(),
-                .Void => true,
-                .Unhandled => false,
+                .Unhandled, .Void => true,
+                .Outside => false,
             },
             .Click => |c| switch (self.map.handleMouseEvent(c, .Click)) {
                 .Signal => err.wat(),
-                .Void => true,
-                .Unhandled => false,
+                .Unhandled, .Void => true,
+                .Outside => false,
             },
             else => err.wat(),
         };
@@ -2422,9 +2422,10 @@ pub fn drawPlayerInfoScreen() void {
             const sel = if (tabv.value == tab) "$c>" else "$g ";
             const bg = if (tab_hover != null and tab_hover.? == tabv.value) colors.BG_L else colors.BG;
             my += pinfo_win.left.drawTextAtf(0, my, "{s} {s}$. ", .{ sel, tabv.name }, .{ .bg = bg });
-            pinfo_win.left.addClickableLine(.Hover, .{ .Signal = tabv.value });
+            // pinfo_win.left.addClickableLine(.Hover, .{ .RecordElem = &pinfo_win.left });
             pinfo_win.left.addClickableLine(.Click, .{ .Signal = tabv.value });
         }
+        pinfo_win.left.highlightMouseArea(colors.BG_L);
 
         pinfo_win.right.clear();
         var iy: usize = 0;
@@ -2534,9 +2535,9 @@ pub fn drawPlayerInfoScreen() void {
                 break :main;
             },
             .Hover => |c| switch (pinfo_win.container.handleMouseEvent(c, .Hover)) {
-                .Signal => |sig| tab_hover = sig,
-                .Void => err.wat(),
-                .Unhandled => {},
+                .Signal => err.wat(),
+                .Void => break, // redraw, we can get rid of this after animations + timeout are added
+                .Outside, .Unhandled => {},
             },
             .Click => |c| switch (pinfo_win.container.handleMouseEvent(c, .Click)) {
                 .Signal => |sig| {
@@ -2544,10 +2545,11 @@ pub fn drawPlayerInfoScreen() void {
                     tab_hover = null;
                 },
                 .Void => err.wat(),
+                .Outside => break :main,
                 .Unhandled => {},
             },
             .Key => |k| switch (k) {
-                .CtrlC, .CtrlG, .Esc => break,
+                .CtrlC, .CtrlG, .Esc => break :main,
                 .ArrowDown => if (tab < meta.fields(Tab).len - 1) {
                     tab += 1;
                 },
@@ -2617,10 +2619,10 @@ pub fn drawZapScreen() void {
                 break :main;
             },
             .Key => |k| switch (k) {
-                .CtrlC, .CtrlG, .Esc => break,
+                .CtrlC, .CtrlG, .Esc => break :main,
                 .ArrowUp => selected -|= 1,
                 .ArrowDown => selected = math.min(ring_count, selected + 1),
-                .Enter => if (r_error == null) {
+                .Enter => if (player.getRingByIndex(selected) != null and r_error == null) {
                     clearScreen();
                     player.beginUsingRing(selected);
                     break :main;
@@ -2967,7 +2969,7 @@ pub fn drawEscapeMenu() void {
             .Hover => |c| switch (menu_c.handleMouseEvent(c, .Hover)) {
                 .Signal => |sig| tab = sig,
                 .Void => err.wat(),
-                .Unhandled => {},
+                .Outside, .Unhandled => {},
             },
             .Click => |c| switch (menu_c.handleMouseEvent(c, .Click)) {
                 .Signal => |sig| {
@@ -2975,7 +2977,7 @@ pub fn drawEscapeMenu() void {
                     menu_tab_chosen = true;
                 },
                 .Void => err.wat(),
-                .Unhandled => {},
+                .Outside, .Unhandled => {},
             },
             .Key => |k| switch (k) {
                 .CtrlC, .Esc, .CtrlG => return,
@@ -3395,6 +3397,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
     main: while (true) {
         var y: usize = 0;
         options_c.clearTo(.{ .bg = colors.ABG });
+        options_c.clearMouseTriggers();
         for (options) |option, i| {
             const ind = if (chosen == i) ">" else "-";
             const color = if (chosen == i) colors.LIGHT_CONCRETE else colors.GREY;
@@ -3417,9 +3420,12 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
                 break :main;
             },
             .Hover => |c| switch (container_c.handleMouseEvent(c, .Hover)) {
-                .Signal => |sig| chosen = sig,
+                .Signal => |sig| {
+                    chosen = sig;
+                    break; // redraw, we can get rid of this hack after animations + timeout is added
+                },
                 .Void => err.wat(),
-                .Unhandled => {},
+                .Outside, .Unhandled => {},
             },
             .Click => |c| switch (container_c.handleMouseEvent(c, .Click)) {
                 .Signal => |sig| {
@@ -3428,6 +3434,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
                 },
                 .Void => err.wat(),
                 .Unhandled => {},
+                .Outside => break :main,
             },
             .Key => |k| switch (k) {
                 .CtrlC, .Esc, .CtrlG => {
@@ -3563,7 +3570,7 @@ pub const Console = struct {
         pub const AList = std.ArrayList(@This());
     };
 
-    pub const MouseEventHandleResult = union(enum) { Unhandled, Signal: usize, Void };
+    pub const MouseEventHandleResult = union(enum) { Unhandled, Outside, Signal: usize, Void };
 
     pub const Subconsole = struct {
         console: *Console,
@@ -3678,11 +3685,11 @@ pub const Console = struct {
 
         const coord = abscoord.asRect();
         if (!dim.intersects(&coord, 0))
-            return .Unhandled;
+            return .Outside;
         for (self.subconsoles.items) |*subconsole| {
             const r = Rect.new(Coord.new(dim.start.x + subconsole.x, dim.start.y + subconsole.y), subconsole.console.width, subconsole.console.height);
             switch (_handleMouseEvent(subconsole.console, abscoord, kind, r)) {
-                .Unhandled => {},
+                .Outside, .Unhandled => {},
                 .Void => return .Void,
                 .Signal => |s| return .{ .Signal = s },
             }

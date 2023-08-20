@@ -23,6 +23,7 @@ pub const COPPER_RED: u32 = 0x985744;
 pub const BG: u32 = percentageOf(CONCRETE, 10);
 pub const BG_L: u32 = percentageOf(CONCRETE, 30);
 pub const ABG: u32 = percentageOf(LIGHT_STEEL_BLUE, 20);
+pub const ABG_L: u32 = percentageOf(LIGHT_STEEL_BLUE, 40);
 
 // Interpolate linearly between two vals.
 fn interpolate(a: u32, b: u32, f: f64) u32 {
