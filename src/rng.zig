@@ -22,6 +22,7 @@ pub fn useTemp(tseed: u64) void {
     rng = rng2;
     rng2 = t;
     rng = rand.Isaac64.init(tseed);
+    using_temp = true;
 }
 
 pub fn useNorm() void {
@@ -29,6 +30,7 @@ pub fn useNorm() void {
     const t = rng2;
     rng2 = rng;
     rng = t;
+    using_temp = false;
 }
 
 pub fn int(comptime T: type) T {

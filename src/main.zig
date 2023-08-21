@@ -492,6 +492,8 @@ fn readInput() !bool {
                     //         },
                     //         else => {},
                     //     };
+                    ui.hud_win.deinit();
+                    ui.hud_win.init();
                 },
                 .F8 => {
                     _ = janet.loadFile("scripts/particles.janet", state.GPA.allocator()) catch continue;

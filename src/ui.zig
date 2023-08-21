@@ -68,10 +68,22 @@ pub const MIN_WIDTH = (MAP_WIDTH_R * 4) + LEFT_INFO_WIDTH + 2 + 1;
 
 pub var hud_win: struct {
     main: Console,
+    anim: Console,
+
+    reveal_anim: Generator(Console.animationReveal),
 
     pub fn init(self: *@This()) void {
         const d = dimensions(.PlayerInfo);
         self.main = Console.init(state.GPA.allocator(), d.width(), d.height());
+        self.anim = Console.init(state.GPA.allocator(), d.width(), d.height());
+        self.anim.default_transparent = true;
+        self.anim.clear();
+        self.main.addSubconsole(&self.anim, 0, 0);
+
+        self.reveal_anim = Generator(Console.animationReveal).init(.{
+            .main_layer = &self.main,
+            .anim_layer = &self.anim,
+        });
     }
 
     pub fn handleMouseEvent(self: *@This(), ev: display.Event) bool {
@@ -1526,6 +1538,7 @@ fn drawHUD(moblist: []const *Mob) void {
     }
 
     hud_win.main.highlightMouseArea(colors.BG_L);
+    _ = hud_win.reveal_anim.next();
     hud_win.main.renderFullyW(.PlayerInfo);
 }
 
@@ -3835,6 +3848,71 @@ pub const Console = struct {
         if (x >= self.width or y >= self.height)
             return;
         self.grid[self.width * y + x] = c;
+    }
+
+    pub fn animationReveal(ctx: *GeneratorCtx(void), args: struct {
+        main_layer: *Self,
+        anim_layer: *Self,
+    }) void {
+        const S_resetAnimLayer = struct {
+            pub fn f(main_layer: *Console, anim_layer: *Console, revealctrs: []const usize) void {
+                var y: usize = 0;
+                while (y < main_layer.height) : (y += 1) {
+                    var x: usize = 0;
+                    while (x < main_layer.width) : (x += 1) {
+                        if (!main_layer.getCell(x, y).fl.skip and
+                            main_layer.getCell(x, y).ch != ' ' and
+                            anim_layer.getCell(x, y).trans and
+                            revealctrs[y] != 0)
+                        {
+                            anim_layer.setCell(x, y, main_layer.getCell(x, y));
+                            anim_layer.grid[main_layer.width * y + x].ch = ' ';
+                            anim_layer.grid[main_layer.width * y + x].sch = null;
+                        }
+                    }
+                }
+            }
+        }.f;
+
+        const F = 6;
+        var revealctrs = [_]usize{2 * F} ** 128;
+
+        S_resetAnimLayer(args.main_layer, args.anim_layer, &revealctrs);
+
+        var i: usize = 0;
+        var did_anything = false;
+        while (true) : (i += 1) {
+            S_resetAnimLayer(args.main_layer, args.anim_layer, &revealctrs);
+            var y: usize = 0;
+            while (y < args.anim_layer.height) : (y += 1) {
+                if (revealctrs[y] == 0)
+                    continue;
+                did_anything = true;
+                if (i / (F / 1) < y + 4)
+                    continue;
+                var x: usize = 0;
+                while (x < args.anim_layer.width) : (x += 1) {
+                    switch (revealctrs[y]) {
+                        2 * F => {
+                            args.anim_layer.grid[args.main_layer.width * y + x].ch = '·';
+                        },
+                        1 * F => {
+                            args.anim_layer.grid[args.main_layer.width * y + x].ch = '⠿';
+                        },
+                        1 => {
+                            args.anim_layer.setCell(x, y, .{ .trans = true });
+                        },
+                        else => {},
+                    }
+                }
+                revealctrs[y] -= 1;
+            }
+            if (!did_anything)
+                break;
+            ctx.yield({});
+        }
+
+        ctx.finish();
     }
 
     pub fn animationDeath(ctx: *GeneratorCtx(void), self: *Self) void {

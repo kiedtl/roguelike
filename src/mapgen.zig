@@ -3416,10 +3416,9 @@ pub fn initLevel(level: usize) void {
         removeEnemiesNearEntry(level);
 
         std.log.info("Generated map {s}.", .{state.levelinfo[level].name});
+        rng.useNorm();
         return;
     }
-
-    rng.useNorm(floor_seeds[level]);
 }
 
 // Room: "Annotated Room{}"
