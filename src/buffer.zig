@@ -139,3 +139,30 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
         }
     };
 }
+
+test "orderedRemove odd" {
+    var buf = StackBuffer(usize, 5).init(&[1]usize{0} ** 5);
+    for (buf.slice()) |*x, i| x.* = i + 1;
+
+    const r = try buf.orderedRemove(0);
+    try std.testing.expectEqual(@as(usize, 1), r);
+
+    try std.testing.expectEqual(@as(usize, 4), buf.len);
+    try std.testing.expectEqual(@as(usize, 2), buf.data[0]);
+    try std.testing.expectEqual(@as(usize, 3), buf.data[1]);
+    try std.testing.expectEqual(@as(usize, 4), buf.data[2]);
+    try std.testing.expectEqual(@as(usize, 5), buf.data[3]);
+}
+
+test "orderedRemove even" {
+    var buf = StackBuffer(usize, 4).init(&[1]usize{0} ** 4);
+    for (buf.slice()) |*x, i| x.* = i + 1;
+
+    const r = try buf.orderedRemove(0);
+    try std.testing.expectEqual(@as(usize, 1), r);
+
+    try std.testing.expectEqual(@as(usize, 3), buf.len);
+    try std.testing.expectEqual(@as(usize, 2), buf.data[0]);
+    try std.testing.expectEqual(@as(usize, 3), buf.data[1]);
+    try std.testing.expectEqual(@as(usize, 4), buf.data[2]);
+}

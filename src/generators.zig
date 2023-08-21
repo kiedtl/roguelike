@@ -19,6 +19,7 @@ pub fn GeneratorCtx(comptime Out: type) type {
 
         pub fn finish(self: *Self) void {
             self.done = true;
+            suspend {}
         }
     };
 }
