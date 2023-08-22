@@ -95,6 +95,11 @@ pub var log_win: struct {
     pub fn deinit(self: *@This()) void {
         self.main.deinit();
     }
+
+    pub fn render(self: *@This()) void {
+        const log_window = dimensions(.Log);
+        self.main.renderAreaAt(log_window.startx, log_window.starty, 0, self.main.height -| (log_window.endy - log_window.starty), self.main.width, self.main.height);
+    }
 } = undefined;
 
 pub var hud_win: struct {
@@ -1247,6 +1252,33 @@ fn _drawStr(_x: usize, _y: usize, endx: usize, str: []const u8, opts: DrawStrOpt
     return y;
 }
 
+pub fn drawAnimationNoPresentTimeout(timeout: ?usize) void {
+    assert(timeout == null or timeout.? >= FRAMERATE);
+    var timer = std.time.Timer.start() catch err.wat();
+    while (true) {
+        hud_win.main.stepRevealAnimation();
+        log_win.stepAnimations();
+
+        if (timeout == null) return;
+
+        const max_timeout_ns = FRAMERATE * 1_000_000; // 20 ms
+        const remaining = ((timeout orelse std.math.maxInt(u64)) *| 1_000_000) -| timer.read();
+        std.time.sleep(std.math.min(max_timeout_ns, remaining));
+
+        if (timer.read() / 1_000_000 > timeout.?) return;
+    }
+}
+
+pub fn drawAnimationsNoPresent() void {
+    drawAnimationNoPresentTimeout(null);
+}
+
+pub fn drawAnimations() void {
+    drawAnimationsNoPresent();
+    render();
+    display.present();
+}
+
 fn drawHUD(moblist: []const *Mob) void {
     // const last_action_cost = if (state.player.activities.current()) |lastaction| b: {
     //     const spd = @intToFloat(f64, state.player.speed());
@@ -1557,8 +1589,6 @@ fn drawHUD(moblist: []const *Mob) void {
     }
 
     hud_win.main.highlightMouseArea(colors.BG_L);
-    hud_win.main.stepRevealAnimation();
-    hud_win.main.renderFullyW(.PlayerInfo);
 }
 
 fn drawLog() void {
@@ -1609,10 +1639,6 @@ fn drawLog() void {
 
     log_win.last_message = messages_len;
     log_win.main.changeHeight(y);
-    log_win.stepAnimations();
-
-    const log_window = dimensions(.Log);
-    log_win.main.renderAreaAt(log_window.startx, log_window.starty, 0, log_win.main.height -| (log_window.endy - log_window.starty), log_win.main.width, log_win.main.height);
 }
 
 fn _mobs_can_see(moblist: []const *Mob, coord: Coord) bool {
@@ -1779,6 +1805,12 @@ pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
     // map_win.map.highlightMouseArea(colors.BG_L);
 }
 
+pub fn render() void {
+    map_win.map.renderFullyW(.Main);
+    hud_win.main.renderFullyW(.PlayerInfo);
+    log_win.render();
+}
+
 pub fn drawNoPresent() void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
@@ -1790,7 +1822,8 @@ pub fn drawNoPresent() void {
     drawMap(moblist.items, state.player.coord);
     drawLog();
     drawLabels();
-    map_win.map.renderFullyW(.Main);
+    drawAnimations();
+    render();
 }
 
 pub fn draw() void {
@@ -3355,6 +3388,8 @@ pub fn drawAlert(comptime fmt: []const u8, args: anytype) void {
 pub fn drawAlertThenLog(comptime fmt: []const u8, args: anytype) void {
     drawAlert(fmt, args);
     drawLog();
+    drawAnimations();
+    log_win.render();
 }
 
 pub fn drawTextModalNoInput(comptime fmt: []const u8, args: anytype) void {
@@ -4240,7 +4275,8 @@ pub const Animation = union(enum) {
 
                     map_win.map.renderFullyW(.Main);
                     display.present();
-                    std.time.sleep(anim.delay * 1_000_000);
+                    // std.time.sleep(anim.delay * 1_000_000);
+                    drawAnimationNoPresentTimeout(anim.delay);
 
                     for (coords.constSlice()) |coord, i| if (state.player.cansee(coord)) {
                         const dcoord = coordToScreen(coord).?;
@@ -4381,6 +4417,7 @@ pub const Animation = union(enum) {
                     last_tick_time = std.time.nanoTimestamp();
                     were_any_visible = false;
 
+                    drawAnimations();
                     map_win.map.renderFullyW(.Main);
                     display.present();
 

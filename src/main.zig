@@ -585,6 +585,7 @@ fn tickGame(p_cur_level: ?usize) !void {
         if (mob.energy < 0) {
             if (mob == state.player) {
                 assert(state.state != .Viewer);
+                ui.draw();
                 try readNoActionInput(130);
             }
 
@@ -632,7 +633,7 @@ fn tickGame(p_cur_level: ?usize) !void {
                 if (mob.coord.eq(state.player.coord)) {
                     ui.draw();
                     if (state.state == .Quit) break;
-                    while (!try readInput()) ui.draw();
+                    while (!try readInput()) ui.drawAnimations();
                     if (state.state == .Quit) break;
                 } else {
                     ai.main(mob, state.GPA.allocator());
@@ -667,6 +668,7 @@ fn tickGame(p_cur_level: ?usize) !void {
             if (state.state != .Viewer and
                 actions_taken > 1 and state.player.cansee(mob.coord))
             {
+                ui.draw();
                 try readNoActionInput(130);
             }
         }
