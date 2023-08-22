@@ -1252,33 +1252,6 @@ fn _drawStr(_x: usize, _y: usize, endx: usize, str: []const u8, opts: DrawStrOpt
     return y;
 }
 
-pub fn drawAnimationNoPresentTimeout(timeout: ?usize) void {
-    assert(timeout == null or timeout.? >= FRAMERATE);
-    var timer = std.time.Timer.start() catch err.wat();
-    while (true) {
-        hud_win.main.stepRevealAnimation();
-        log_win.stepAnimations();
-
-        if (timeout == null) return;
-
-        const max_timeout_ns = FRAMERATE * 1_000_000; // 20 ms
-        const remaining = ((timeout orelse std.math.maxInt(u64)) *| 1_000_000) -| timer.read();
-        std.time.sleep(std.math.min(max_timeout_ns, remaining));
-
-        if (timer.read() / 1_000_000 > timeout.?) return;
-    }
-}
-
-pub fn drawAnimationsNoPresent() void {
-    drawAnimationNoPresentTimeout(null);
-}
-
-pub fn drawAnimations() void {
-    drawAnimationsNoPresent();
-    render();
-    display.present();
-}
-
 fn drawHUD(moblist: []const *Mob) void {
     // const last_action_cost = if (state.player.activities.current()) |lastaction| b: {
     //     const spd = @intToFloat(f64, state.player.speed());
@@ -1805,6 +1778,34 @@ pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
     // map_win.map.highlightMouseArea(colors.BG_L);
 }
 
+pub fn drawAnimationNoPresentTimeout(timeout: ?usize) void {
+    assert(timeout == null or timeout.? >= FRAMERATE);
+    var timer = std.time.Timer.start() catch err.wat();
+    while (true) {
+        drawLabels();
+        hud_win.main.stepRevealAnimation();
+        log_win.stepAnimations();
+
+        if (timeout == null) return;
+
+        const max_timeout_ns = FRAMERATE * 1_000_000; // 20 ms
+        const remaining = ((timeout orelse std.math.maxInt(u64)) *| 1_000_000) -| timer.read();
+        std.time.sleep(std.math.min(max_timeout_ns, remaining));
+
+        if (timer.read() / 1_000_000 > timeout.?) return;
+    }
+}
+
+pub fn drawAnimationsNoPresent() void {
+    drawAnimationNoPresentTimeout(null);
+}
+
+pub fn drawAnimations() void {
+    drawAnimationsNoPresent();
+    render();
+    display.present();
+}
+
 pub fn render() void {
     map_win.map.renderFullyW(.Main);
     hud_win.main.renderFullyW(.PlayerInfo);
@@ -1821,7 +1822,6 @@ pub fn drawNoPresent() void {
     drawHUD(moblist.items);
     drawMap(moblist.items, state.player.coord);
     drawLog();
-    drawLabels();
     drawAnimations();
     render();
 }
@@ -2987,10 +2987,12 @@ pub fn drawEscapeMenu() void {
 
     const main_c_dim = dimensions(.Main);
     var main_c = Console.init(state.GPA.allocator(), main_c_dim.width(), main_c_dim.height());
+    main_c.addRevealAnimation(.{ .rvtype = .All });
     defer main_c.deinit();
 
     const menu_c_dim = dimensions(.PlayerInfo);
     var menu_c = Console.init(state.GPA.allocator(), menu_c_dim.width(), menu_c_dim.height());
+    menu_c.addRevealAnimation(.{});
     defer menu_c.deinit();
 
     const movement = RexMap.initFromFile(state.GPA.allocator(), "data/keybinds_movement.xp") catch err.wat();
@@ -3040,13 +3042,15 @@ pub fn drawEscapeMenu() void {
             menu_c.addClickableText(.Click, .{ .Signal = tabv.value });
         }
         menu_c.renderFullyW(.PlayerInfo);
+        menu_c.stepRevealAnimation();
 
+        main_c.stepRevealAnimation();
         main_c.renderFullyW(.Main);
         display.present();
 
         var menu_tab_chosen = false;
 
-        var evgen = Generator(display.getEvents).init(null);
+        var evgen = Generator(display.getEvents).init(FRAMERATE);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => return,
             .Hover => |c| switch (menu_c.handleMouseEvent(c, .Hover)) {
@@ -4470,6 +4474,7 @@ pub const RevealAnimationOpts = struct {
     factor: usize = 6,
     ydelay: usize = 4,
     idelay: usize = 3,
+    rvtype: enum { TopDown, All } = .TopDown,
 };
 
 pub fn animationReveal(ctx: *GeneratorCtx(void), args: struct {
@@ -4511,7 +4516,7 @@ pub fn animationReveal(ctx: *GeneratorCtx(void), args: struct {
             if (revealctrs[y] == 0)
                 continue;
             did_anything = true;
-            if (1 + (i / args.opts.idelay) < y + 4)
+            if (args.opts.rvtype != .All and 1 + (i / args.opts.idelay) < y + 4)
                 continue;
             var x: usize = 0;
             while (x < args.anim_layer.width) : (x += 1) {
