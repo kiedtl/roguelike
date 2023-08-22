@@ -2659,6 +2659,9 @@ pub fn drawZapScreen() void {
     var selected: usize = 0;
     var r_error: ?player.RingError = null;
 
+    zap_win.left.addRevealAnimation(.{ .rvtype = .All });
+    zap_win.right.addRevealAnimation(.{ .rvtype = .All });
+
     main: while (true) {
         zap_win.container.clearLineTo(0, zap_win.container.width - 1, 0, .{ .ch = '▀', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
         zap_win.container.clearLineTo(0, zap_win.container.width - 1, zap_win.container.height - 1, .{ .ch = '▄', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
@@ -2691,11 +2694,24 @@ pub fn drawZapScreen() void {
             }
         }
 
+        const has_no_rings = player.getRingByIndex(selected) == null;
+
+        if (has_no_rings) {
+            var ry: usize = 0;
+            ry += zap_win.right.drawTextAt(0, ry, "You have no rings.", .{});
+            ry += zap_win.right.drawTextAt(0, ry, "\n", .{});
+            ry += zap_win.right.drawTextAt(0, ry, "$gHint: rings are usually found in golden enclosures on most, but not all, levels.$.", .{});
+        }
+
+        zap_win.left.stepRevealAnimation();
+        zap_win.right.stepRevealAnimation();
         zap_win.container.renderFullyW(.Zap);
 
         display.present();
 
-        var evgen = Generator(display.getEvents).init(null);
+        const oldselected = selected;
+
+        var evgen = Generator(display.getEvents).init(FRAMERATE);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
@@ -2705,7 +2721,7 @@ pub fn drawZapScreen() void {
                 .CtrlC, .CtrlG, .Esc => break :main,
                 .ArrowUp => selected -|= 1,
                 .ArrowDown => selected = math.min(ring_count, selected + 1),
-                .Enter => if (player.getRingByIndex(selected) != null and r_error == null) {
+                .Enter => if (!has_no_rings and r_error == null) {
                     clearScreen();
                     player.beginUsingRing(selected);
                     break :main;
@@ -2719,6 +2735,12 @@ pub fn drawZapScreen() void {
             },
             else => {},
         };
+
+        while (selected > 0 and player.getRingByIndex(selected) == null)
+            selected -= 1;
+
+        if (selected != oldselected)
+            zap_win.right.addRevealAnimation(.{ .rvtype = .All });
     }
 
     // FIXME: remove once all of ui.* is converted to subconsole system and
