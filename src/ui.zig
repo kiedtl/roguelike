@@ -58,7 +58,7 @@ pub const FRAMERATE = 1000 / 45;
 
 pub const LEFT_INFO_WIDTH: usize = 35;
 //pub const RIGHT_INFO_WIDTH: usize = 24;
-pub const LOG_HEIGHT = 14;
+pub const LOG_HEIGHT = 7;
 pub const ZAP_HEIGHT = 15 + 4;
 pub const PLAYER_INFO_MODAL_HEIGHT = 24;
 pub const MAP_HEIGHT_R = 14;
