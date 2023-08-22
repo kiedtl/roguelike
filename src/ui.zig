@@ -2585,8 +2585,9 @@ pub fn drawPlayerInfoScreen() void {
         inline for (@typeInfo(Tab).Enum.fields) |tabv| {
             const sel = if (tabv.value == tab) "$c>" else "$g ";
             const bg = if (tab_hover != null and tab_hover.? == tabv.value) colors.BG_L else colors.BG;
-            my += pinfo_win.left.drawTextAtf(0, my, "{s} {s}$. ", .{ sel, tabv.name }, .{ .bg = bg });
-            // pinfo_win.left.addClickableLine(.Hover, .{ .RecordElem = &pinfo_win.left });
+            pinfo_win.left.clearLine(0, pinfo_win.left.width, my);
+            my += pinfo_win.left.drawTextAtf(0, my, "{s} {s}$.", .{ sel, tabv.name }, .{ .bg = bg });
+            pinfo_win.left.addClickableLine(.Hover, .{ .RecordElem = &pinfo_win.left });
             pinfo_win.left.addClickableLine(.Click, .{ .Signal = tabv.value });
         }
         pinfo_win.left.highlightMouseArea(colors.BG_L);
@@ -2666,16 +2667,22 @@ pub fn drawZapScreen() void {
         zap_win.container.clearLineTo(0, zap_win.container.width - 1, 0, .{ .ch = '▀', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
         zap_win.container.clearLineTo(0, zap_win.container.width - 1, zap_win.container.height - 1, .{ .ch = '▄', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
 
+        zap_win.left.clearMouseTriggers();
+        zap_win.right.clearMouseTriggers();
+
         var ring_count: usize = 0;
         var y: usize = 0;
         var ring_i: usize = 0;
         while (ring_i <= 9) : (ring_i += 1) {
+            zap_win.left.clearLine(0, zap_win.left.width, y);
             if (player.getRingByIndex(ring_i)) |ring| {
                 ring_count = ring_i;
                 r_error = player.checkRing(selected);
                 const arrow = if (selected == ring_i) "$c>" else "$.·";
                 const mp_cost_color: u8 = if (state.player.MP < ring.required_MP) 'r' else 'b';
                 y += zap_win.left.drawTextAtf(0, y, "{s} {s}$. $g(${u}{}$g MP)$.", .{ arrow, ring.name, mp_cost_color, ring.required_MP }, .{});
+                zap_win.left.addClickableLine(.Hover, .{ .RecordElem = &zap_win.left });
+                zap_win.left.addClickableText(.Click, .{ .Signal = ring_i });
 
                 if (selected == ring_i) {
                     var ry: usize = 0;
@@ -2690,6 +2697,7 @@ pub fn drawZapScreen() void {
                 }
             } else {
                 y += zap_win.left.drawTextAt(0, y, "$g· <none>$.", .{});
+                zap_win.left.addClickableLine(.Hover, .{ .RecordElem = &zap_win.left });
                 r_error = null;
             }
         }
@@ -2704,6 +2712,7 @@ pub fn drawZapScreen() void {
         }
 
         zap_win.left.stepRevealAnimation();
+        zap_win.left.highlightMouseArea(colors.BG_L);
         zap_win.right.stepRevealAnimation();
         zap_win.container.renderFullyW(.Zap);
 
@@ -2716,6 +2725,16 @@ pub fn drawZapScreen() void {
             .Quit => {
                 state.state = .Quit;
                 break :main;
+            },
+            .Hover => |c| switch (zap_win.container.handleMouseEvent(c, .Hover)) {
+                .Signal => err.wat(),
+                .Void, .Outside, .Unhandled => {},
+            },
+            .Click => |c| switch (zap_win.container.handleMouseEvent(c, .Click)) {
+                .Signal => |sig| selected = sig,
+                .Void => err.wat(),
+                .Outside => break :main,
+                .Unhandled => {},
             },
             .Key => |k| switch (k) {
                 .CtrlC, .CtrlG, .Esc => break :main,
@@ -3745,11 +3764,8 @@ pub const Console = struct {
     }
 
     pub fn addClickableLine(self: *Self, kind: MouseTrigger.Kind, action: MouseTrigger.Action) void {
-        self.addMouseTrigger(Rect.new(
-            Coord.new(self.last_text_startx, self.last_text_starty),
-            self.width,
-            self.last_text_endy - self.last_text_starty,
-        ), kind, action);
+        assert(self.last_text_endy == self.last_text_starty);
+        self.addMouseTrigger(Rect.new(Coord.new(self.last_text_startx, self.last_text_starty), self.width - 1, 0), kind, action);
     }
 
     pub fn addTooltipForText(self: *Self, comptime title_fmt: []const u8, title_args: anytype, comptime id_fmt: []const u8, id_args: anytype) void {
@@ -3856,7 +3872,8 @@ pub const Console = struct {
             while (y <= area.end().y) : (y += 1) {
                 var x = area.start.x;
                 while (x <= area.end().x) : (x += 1)
-                    if (self.grid[y * self.width + x].bg == colors.BG or
+                    if (y < self.height and x < self.width and
+                        self.grid[y * self.width + x].bg == colors.BG or
                         self.grid[y * self.width + x].bg == colors.ABG)
                     {
                         self.grid[y * self.width + x].bg = color;
@@ -3882,7 +3899,10 @@ pub const Console = struct {
         self.clearTo(.{ .ch = ' ', .fg = 0, .bg = colors.BG, .trans = self.default_transparent });
     }
 
-    pub fn renderAreaAt(self: *const Self, offset_x: usize, offset_y: usize, begin_x: usize, begin_y: usize, end_x: usize, end_y: usize) void {
+    pub fn renderAreaAt(self: *Self, offset_x: usize, offset_y: usize, begin_x: usize, begin_y: usize, end_x: usize, end_y: usize) void {
+        self.rendered_offset_x = offset_x;
+        self.rendered_offset_y = offset_y;
+
         var dy: usize = offset_y;
         var y: usize = begin_y;
         while (y < end_y) : (y += 1) {
@@ -3915,15 +3935,11 @@ pub const Console = struct {
     }
 
     pub fn renderFully(self: *Self, offset_x: usize, offset_y: usize) void {
-        self.rendered_offset_x = offset_x;
-        self.rendered_offset_y = offset_y;
         self.renderAreaAt(offset_x, offset_y, 0, 0, self.width, self.height);
     }
 
     pub fn renderFullyW(self: *Self, win: DisplayWindow) void {
         const d = dimensions(win);
-        self.rendered_offset_x = d.startx;
-        self.rendered_offset_y = d.starty;
         self.renderAreaAt(d.startx, d.starty, 0, 0, self.width, self.height);
     }
 
