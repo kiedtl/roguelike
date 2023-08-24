@@ -3437,7 +3437,7 @@ pub fn drawAlertThenLog(comptime fmt: []const u8, args: anytype) void {
     log_win.render();
 }
 
-pub fn drawTextModalNoInput(comptime fmt: []const u8, args: anytype) void {
+fn _setupTextModal(comptime fmt: []const u8, args: anytype) Console {
     const str = std.fmt.allocPrint(state.GPA.allocator(), fmt, args) catch err.oom();
     defer state.GPA.allocator().free(str);
 
@@ -3449,15 +3449,20 @@ pub fn drawTextModalNoInput(comptime fmt: []const u8, args: anytype) void {
     while (fold_iter.next(&fibuf)) |_| text_height += 1;
 
     var container_c = Console.init(state.GPA.allocator(), width + 4, text_height + 4);
-    var text_c = Console.init(state.GPA.allocator(), width, text_height);
+    var text_c = Console.initHeap(state.GPA.allocator(), width, text_height);
 
-    container_c.addSubconsole(&text_c, 2, 2);
+    container_c.addSubconsole(text_c, 2, 2);
 
     container_c.clearTo(.{ .bg = colors.ABG });
     container_c.setBorder();
     text_c.clearTo(.{ .bg = colors.ABG });
     _ = text_c.drawTextAt(0, 0, str, .{ .bg = colors.ABG });
 
+    return container_c;
+}
+
+pub fn drawTextModalNoInput(comptime fmt: []const u8, args: anytype) void {
+    var container_c = _setupTextModal(fmt, args);
     defer container_c.deinit();
     defer clearScreen();
 
@@ -3469,8 +3474,32 @@ pub fn drawTextModalNoInput(comptime fmt: []const u8, args: anytype) void {
 }
 
 pub fn drawTextModal(comptime fmt: []const u8, args: anytype) void {
-    drawTextModalNoInput(fmt, args);
-    _ = waitForInput(null);
+    var container_c = _setupTextModal(fmt, args);
+    const text_c = container_c.subconsoles.items[0].console;
+
+    text_c.addRevealAnimation(.{ .rvtype = .All });
+    defer container_c.deinit();
+    defer clearScreen();
+
+    while (true) {
+        text_c.stepRevealAnimation();
+        container_c.renderFully(
+            display.width() / 2 - container_c.width / 2,
+            display.height() / 2 - container_c.height / 2,
+        );
+        display.present();
+
+        var evgen = Generator(display.getEvents).init(FRAMERATE);
+        while (evgen.next()) |ev| switch (ev) {
+            .Quit => {
+                state.state = .Quit;
+                return;
+            },
+            .Click => |c| if (container_c.handleMouseEvent(c, .Click) == .Outside) return,
+            .Char, .Key => return,
+            else => {},
+        };
+    }
 }
 
 pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []const []const u8) ?usize {
@@ -3499,6 +3528,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
     container_c.clearTo(.{ .bg = colors.ABG });
     container_c.setBorder();
     text_c.clearTo(.{ .bg = colors.ABG });
+    text_c.addRevealAnimation(.{ .rvtype = .All });
     _ = text_c.drawTextAt(0, 0, str, .{ .bg = colors.ABG });
 
     defer if (!hint_used) hint_c.deinit();
@@ -3521,13 +3551,14 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
             options_c.addClickableText(.Click, .{ .Signal = i });
         }
 
+        text_c.stepRevealAnimation();
         container_c.renderFully(
             display.width() / 2 - container_c.width / 2,
             display.height() / 2 - container_c.height / 2,
         );
         display.present();
 
-        var evgen = Generator(display.getEvents).init(null);
+        var evgen = Generator(display.getEvents).init(FRAMERATE);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
@@ -3535,10 +3566,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
                 break :main;
             },
             .Hover => |c| switch (container_c.handleMouseEvent(c, .Hover)) {
-                .Signal => |sig| {
-                    chosen = sig;
-                    break; // redraw, we can get rid of this hack after animations + timeout is added
-                },
+                .Signal => |sig| chosen = sig,
                 .Void => err.wat(),
                 .Outside, .Unhandled => {},
             },
