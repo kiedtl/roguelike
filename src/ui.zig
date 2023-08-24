@@ -133,17 +133,28 @@ pub var hud_win: struct {
 } = undefined;
 
 pub var map_win: struct {
-    map: Console,
+    map: Console = undefined,
+    text_line: Console = undefined,
+    text_line_anim_layer: Console = undefined,
+    text_line_anim: ?*Generator(animationRevealUnreveal) = null,
 
     // For Examine mode, directional choose, labels, etc.
-    annotations: Console,
+    annotations: Console = undefined,
 
     // For particle animations and such.
-    animations: Console,
+    animations: Console = undefined,
 
     pub fn init(self: *@This()) void {
         const d = dimensions(.Main);
         self.map = Console.init(state.GPA.allocator(), d.width(), d.height());
+
+        self.text_line = Console.init(state.GPA.allocator(), d.width(), 2);
+        self.text_line.default_transparent = true;
+        self.text_line.clear();
+        self.text_line_anim_layer = Console.init(state.GPA.allocator(), d.width(), 2);
+        self.text_line_anim_layer.default_transparent = true;
+        self.text_line_anim_layer.clear();
+        self.text_line.addSubconsole(&self.text_line_anim_layer, 0, 0);
 
         self.annotations = Console.init(state.GPA.allocator(), d.width(), d.height());
         self.annotations.default_transparent = true;
@@ -153,8 +164,45 @@ pub var map_win: struct {
         self.animations.default_transparent = true;
         self.animations.clear();
 
+        self.map.addSubconsole(&self.text_line, 0, 0);
         self.map.addSubconsole(&self.annotations, 0, 0);
         self.map.addSubconsole(&self.animations, 0, 0);
+    }
+
+    fn _addTextLineReveal(self: *@This(), duration: usize) void {
+        if (self.text_line_anim) |ptr|
+            state.GPA.allocator().destroy(ptr);
+        self.text_line_anim = state.GPA.allocator().create(Generator(animationRevealUnreveal)) catch err.oom();
+        self.text_line_anim.?.* = Generator(animationRevealUnreveal).init(.{
+            .main_layer = &self.text_line,
+            .anim_layer = &self.text_line_anim_layer,
+            .opts = .{ .rv_unrv_delay = duration },
+        });
+    }
+
+    pub fn drawTextLinef(self: *@This(), comptime fmt: []const u8, args: anytype, opts: DrawStrOpts) void {
+        const str = std.fmt.allocPrint(state.GPA.allocator(), fmt, args) catch err.oom();
+        defer state.GPA.allocator().free(str);
+
+        var y: usize = 0;
+        var fibuf = StackBuffer(u8, 4096).init(null);
+        var fold_iter = utils.FoldedTextIterator.init(str, self.text_line.width * 75 / 100);
+        while (fold_iter.next(&fibuf)) |line| {
+            const x = self.text_line.width / 2 - line.len / 2;
+            y += self.text_line.drawTextAt(x, y, line, opts);
+        }
+
+        self._addTextLineReveal(80 * math.max(1, str.len / 20));
+    }
+
+    pub fn stepTextLineAnimations(self: *@This()) void {
+        if (self.text_line_anim) |anim|
+            if (anim.next() == null) {
+                self.text_line.clear();
+                self.text_line_anim_layer.clear();
+                state.GPA.allocator().destroy(self.text_line_anim.?);
+                self.text_line_anim = null;
+            };
     }
 
     pub fn handleMouseEvent(self: *@This(), ev: display.Event) bool {
@@ -175,8 +223,10 @@ pub var map_win: struct {
 
     pub fn deinit(self: *@This()) void {
         self.map.deinit();
+        if (self.text_line_anim) |ptr|
+            state.GPA.allocator().destroy(ptr);
     }
-} = undefined;
+} = .{};
 
 fn ModalWindow(comptime left_width: usize, comptime dim: DisplayWindow) type {
     return struct {
@@ -1785,6 +1835,7 @@ pub fn drawAnimationNoPresentTimeout(timeout: ?usize) void {
         drawLabels();
         hud_win.main.stepRevealAnimation();
         log_win.stepAnimations();
+        map_win.stepTextLineAnimations();
 
         if (timeout == null) return;
 
@@ -3391,50 +3442,11 @@ pub fn drawModalText(color: u32, comptime fmt: []const u8, args: anytype) void {
 }
 
 pub fn drawAlert(comptime fmt: []const u8, args: anytype) void {
-    const wind = dimensions(.Log);
-
-    var buf: [65535]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buf);
-    std.fmt.format(fbs.writer(), fmt, args) catch err.bug("format error!", .{});
-    const str = fbs.getWritten();
-
-    // Get height of folded text, so that we can center it vertically
-    const linewidth = @intCast(usize, (wind.endx - wind.startx) - 4);
-    var text_height: usize = 0;
-    var fibuf = StackBuffer(u8, 4096).init(null);
-    var fold_iter = utils.FoldedTextIterator.init(str, linewidth);
-    while (fold_iter.next(&fibuf)) |_| text_height += 1;
-
-    // Clear log window
-    var y = wind.starty;
-    while (y < wind.endy) : (y += 1) _clear_line(wind.startx, wind.endx, y);
-
-    const txt_starty = wind.endy -
-        @divTrunc(wind.endy - wind.starty, 2) -
-        text_height + 1 / 2;
-    y = txt_starty;
-
-    _ = _drawStr(wind.startx + 2, txt_starty, wind.endx, str, .{});
-
-    display.present();
-
-    _drawBorder(colors.CONCRETE, wind);
-    std.time.sleep(150_000_000);
-    _drawBorder(colors.BG, wind);
-    std.time.sleep(150_000_000);
-    _drawBorder(colors.CONCRETE, wind);
-    std.time.sleep(150_000_000);
-    _drawBorder(colors.BG, wind);
-    std.time.sleep(150_000_000);
-    _drawBorder(colors.CONCRETE, wind);
-    std.time.sleep(500_000_000);
+    map_win.drawTextLinef(fmt, args, .{ .fg = colors.PALE_VIOLET_RED });
 }
 
 pub fn drawAlertThenLog(comptime fmt: []const u8, args: anytype) void {
     drawAlert(fmt, args);
-    drawLog();
-    drawAnimations();
-    log_win.render();
 }
 
 fn _setupTextModal(comptime fmt: []const u8, args: anytype) Console {
@@ -3988,6 +4000,9 @@ pub const Console = struct {
             a.clear();
             self._reveal_animation_layer = a;
             self.addSubconsole(a, 0, 0);
+        } else {
+            assert(self._reveal_animation_layer.?.default_transparent);
+            self._reveal_animation_layer.?.clear();
         }
 
         if (self._reveal_animation) |oldanim| {
@@ -4541,27 +4556,50 @@ pub const RevealAnimationOpts = struct {
     ydelay: usize = 4,
     idelay: usize = 3,
     rvtype: enum { TopDown, All } = .TopDown,
+    reverse: bool = false,
+    rv_unrv_delay: usize = 100,
 };
 
-pub fn animationReveal(ctx: *GeneratorCtx(void), args: struct {
+pub const RevealAnimationArgs = struct {
     main_layer: *Console,
     anim_layer: *Console,
     opts: RevealAnimationOpts = .{},
-}) void {
+};
+
+pub fn animationRevealUnreveal(ctx: *GeneratorCtx(void), args: RevealAnimationArgs) void {
+    var a = Generator(animationReveal).init(args);
+    while (a.next()) |_| ctx.yield(.{});
+
+    var b = args.opts.rv_unrv_delay;
+    while (b > 0) : (b -= 1) ctx.yield(.{});
+
+    var cargs = args;
+    cargs.opts.reverse = true;
+    var c = Generator(animationReveal).init(cargs);
+    while (c.next()) |_| ctx.yield(.{});
+
+    ctx.finish();
+}
+
+pub fn animationReveal(ctx: *GeneratorCtx(void), args: RevealAnimationArgs) void {
     const S_resetAnimLayer = struct {
-        pub fn f(main_layer: *Console, anim_layer: *Console, revealctrs: []const usize) void {
+        pub fn f(_args: RevealAnimationArgs, revealctrs: []const usize) void {
             var y: usize = 0;
-            while (y < main_layer.height) : (y += 1) {
+            while (y < _args.main_layer.height) : (y += 1) {
                 var x: usize = 0;
-                while (x < main_layer.width) : (x += 1) {
-                    if (!main_layer.getCell(x, y).fl.skip and
-                        main_layer.getCell(x, y).ch != ' ' and
-                        anim_layer.getCell(x, y).trans and
+                while (x < _args.main_layer.width) : (x += 1) {
+                    if (!_args.main_layer.getCell(x, y).fl.skip and
+                        _args.main_layer.getCell(x, y).ch != ' ' and
+                        _args.anim_layer.getCell(x, y).trans and
                         revealctrs[y] != 0)
                     {
-                        anim_layer.setCell(x, y, main_layer.getCell(x, y));
-                        anim_layer.grid[main_layer.width * y + x].ch = ' ';
-                        anim_layer.grid[main_layer.width * y + x].sch = null;
+                        _args.anim_layer.setCell(x, y, _args.main_layer.getCell(x, y));
+                        if (_args.opts.reverse) {
+                            _args.anim_layer.grid[_args.main_layer.width * y + x].trans = false;
+                        } else {
+                            _args.anim_layer.grid[_args.main_layer.width * y + x].ch = ' ';
+                            _args.anim_layer.grid[_args.main_layer.width * y + x].sch = null;
+                        }
                     }
                 }
             }
@@ -4571,27 +4609,39 @@ pub fn animationReveal(ctx: *GeneratorCtx(void), args: struct {
     var revealctrs = [_]usize{0} ** 128;
     for (&revealctrs) |*c| c.* = 2 * args.opts.factor;
 
-    S_resetAnimLayer(args.main_layer, args.anim_layer, &revealctrs);
+    S_resetAnimLayer(args, &revealctrs);
 
     var i: usize = 0;
     var did_anything = false;
     while (true) : (i += 1) {
-        S_resetAnimLayer(args.main_layer, args.anim_layer, &revealctrs);
+        S_resetAnimLayer(args, &revealctrs);
+        did_anything = false;
         var y: usize = 0;
         while (y < args.anim_layer.height) : (y += 1) {
             if (revealctrs[y] == 0)
                 continue;
             did_anything = true;
-            if (args.opts.rvtype != .All and 1 + (i / args.opts.idelay) < y + 4)
+            if (args.opts.rvtype != .All and 1 + (i / args.opts.idelay) < y + args.opts.ydelay)
                 continue;
             var x: usize = 0;
             while (x < args.anim_layer.width) : (x += 1) {
-                if (revealctrs[y] == 2 * args.opts.factor) {
-                    args.anim_layer.grid[args.main_layer.width * y + x].ch = '·';
-                } else if (revealctrs[y] == 1 * args.opts.factor) {
-                    args.anim_layer.grid[args.main_layer.width * y + x].ch = '⠿';
-                } else if (revealctrs[y] == 1) {
-                    args.anim_layer.setCell(x, y, .{ .trans = true });
+                if (args.opts.reverse) {
+                    if (revealctrs[y] == 2 * args.opts.factor) {
+                        args.anim_layer.grid[args.main_layer.width * y + x].ch = '⠿';
+                    } else if (revealctrs[y] == 1 * args.opts.factor) {
+                        args.anim_layer.grid[args.main_layer.width * y + x].ch = '·';
+                    } else if (revealctrs[y] == 1) {
+                        args.anim_layer.grid[args.main_layer.width * y + x].ch = ' ';
+                        args.anim_layer.grid[args.main_layer.width * y + x].sch = null;
+                    }
+                } else {
+                    if (revealctrs[y] == 2 * args.opts.factor) {
+                        args.anim_layer.grid[args.main_layer.width * y + x].ch = '·';
+                    } else if (revealctrs[y] == 1 * args.opts.factor) {
+                        args.anim_layer.grid[args.main_layer.width * y + x].ch = '⠿';
+                    } else if (revealctrs[y] == 1) {
+                        args.anim_layer.setCell(x, y, .{ .trans = true });
+                    }
                 }
             }
             revealctrs[y] -= 1;
