@@ -1606,9 +1606,6 @@ fn drawHUD(moblist: []const *Mob) void {
         //y += hud_win.main.drawTextAtf(endx - @divTrunc(endx - startx, 2) - @intCast(isize, activity.len / 2), y, endx, "{s}", .{activity}, .{ .fg = 0x9a9a9a });
 
         //y += 2;
-
-        if (y == hud_win.main.height - 1)
-            break;
     }
 
     hud_win.main.highlightMouseArea(colors.BG_L);
@@ -4101,7 +4098,7 @@ pub const Console = struct {
 
         var fibuf = StackBuffer(u8, 4096).init(null);
         var fold_iter = utils.FoldedTextIterator.init(str, self.width + 1);
-        while (fold_iter.next(&fibuf)) |line| : ({
+        main: while (fold_iter.next(&fibuf)) |line| : ({
             y += 1;
             if (x > self.last_text_endx + 1) self.last_text_endx = x -| 1;
             x = startx;
@@ -4119,6 +4116,8 @@ pub const Console = struct {
             var utf8 = (std.unicode.Utf8View.init(line) catch err.bug("bad utf8", .{})).iterator();
             while (utf8.nextCodepointSlice()) |encoded_codepoint| {
                 const codepoint = std.unicode.utf8Decode(encoded_codepoint) catch err.bug("bad utf8", .{});
+                if (y * self.width + x >= self.width * self.height)
+                    break :main;
                 const def_bg = self.grid[y * self.width + x].bg;
 
                 switch (codepoint) {
@@ -4182,6 +4181,7 @@ pub const Console = struct {
         detail_type: enum { Specific, Percent } = .Specific,
     }) usize {
         assert(current <= max);
+        if (y >= self.height) return 0;
 
         const depleted_bg = colors.percentageOf(bg, 40);
         const percent = if (max == 0) 100 else (current * 100) / max;
