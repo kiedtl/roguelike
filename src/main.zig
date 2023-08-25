@@ -391,7 +391,7 @@ fn readInput() !bool {
         switch (ev) {
             .Quit => state.state = .Quit,
             .Resize => ui.draw(),
-            .Hover, .Click => ui.handleMouseEvent(ev),
+            .Wheel, .Hover, .Click => ui.handleMouseEvent(ev),
             .Key => |k| switch (k) {
                 .Esc => ui.drawEscapeMenu(),
                 .CtrlC => state.state = .Quit,
@@ -443,7 +443,7 @@ fn readInput() !bool {
                 .F7 => {
                     //state.player.innate_resists.rElec += 25;
                     //state.player.addStatus(.Drunk, 0, .{ .Tmp = 20 });
-                    // state.message(.Info, "Lorem ipsum, dolor sit amet. Lorem ipsum, dolor sit amet.. Lorem ipsum, dolor sit amet. {}", .{rng.int(usize)});
+                    state.message(.Info, "Lorem ipsum, dolor sit amet. Lorem ipsum, dolor sit amet.. Lorem ipsum, dolor sit amet. {}", .{rng.int(usize)});
                     // _ = ui.drawYesNoPrompt("foo, bar, baz. Lorem ipsum, dolor sit amet. Dolem Lipsum, solor ait smet. Iorem Aipsum, lolor dit asset.", .{});
                     //ui.labels.addFor(state.player, "foo bar baz", .{});
                     // state.player.addStatus(.Corruption, 0, .{ .Tmp = 5 });
@@ -494,7 +494,7 @@ fn readInput() !bool {
                     //     };
                     // ui.hud_win.deinit();
                     // ui.hud_win.init();
-                    ui.map_win.drawTextLinef("This is a test.", .{}, .{});
+                    // ui.map_win.drawTextLinef("This is a test.", .{}, .{});
                 },
                 .F8 => {
                     _ = janet.loadFile("scripts/particles.janet", state.GPA.allocator()) catch continue;

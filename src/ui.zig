@@ -100,6 +100,18 @@ pub var log_win: struct {
         const log_window = dimensions(.Log);
         self.main.renderAreaAt(log_window.startx, log_window.starty, 0, self.main.height -| (log_window.endy - log_window.starty), self.main.width, self.main.height);
     }
+
+    pub fn handleMouseEvent(self: *@This(), ev: display.Event) bool {
+        return switch (ev) {
+            .Click, .Hover => |c| switch (self.main.handleMouseEvent(c, _evToMEvType(ev))) {
+                .Signal => err.wat(),
+                .Unhandled, .Void => true,
+                .Outside => false,
+            },
+            .Wheel => false,
+            else => err.wat(),
+        };
+    }
 } = undefined;
 
 pub var hud_win: struct {
@@ -113,16 +125,12 @@ pub var hud_win: struct {
 
     pub fn handleMouseEvent(self: *@This(), ev: display.Event) bool {
         return switch (ev) {
-            .Hover => |c| switch (self.main.handleMouseEvent(c, .Hover)) {
+            .Click, .Hover => |c| switch (self.main.handleMouseEvent(c, _evToMEvType(ev))) {
                 .Signal => err.wat(),
                 .Unhandled, .Void => true,
                 .Outside => false,
             },
-            .Click => |c| switch (self.main.handleMouseEvent(c, .Click)) {
-                .Signal => err.wat(),
-                .Unhandled, .Void => true,
-                .Outside => false,
-            },
+            .Wheel => false,
             else => err.wat(),
         };
     }
@@ -207,16 +215,12 @@ pub var map_win: struct {
 
     pub fn handleMouseEvent(self: *@This(), ev: display.Event) bool {
         return switch (ev) {
-            .Hover => |c| switch (self.map.handleMouseEvent(c, .Hover)) {
+            .Click, .Hover => |c| switch (self.map.handleMouseEvent(c, _evToMEvType(ev))) {
                 .Signal => err.wat(),
                 .Unhandled, .Void => true,
                 .Outside => false,
             },
-            .Click => |c| switch (self.map.handleMouseEvent(c, .Click)) {
-                .Signal => err.wat(),
-                .Unhandled, .Void => true,
-                .Outside => false,
-            },
+            .Wheel => false,
             else => err.wat(),
         };
     }
@@ -1659,6 +1663,8 @@ fn drawLog() void {
 
     log_win.last_message = messages_len;
     log_win.main.changeHeight(y);
+    log_win.main.clearMouseTriggers();
+    log_win.main.addMouseTrigger(log_win.main.dimensionsRect(), .Click, .OpenLogWindow);
 }
 
 fn _mobs_can_see(moblist: []const *Mob, coord: Coord) bool {
@@ -1881,7 +1887,8 @@ pub fn draw() void {
 
 pub fn handleMouseEvent(ev: display.Event) void {
     _ = map_win.handleMouseEvent(ev) or
-        hud_win.handleMouseEvent(ev);
+        hud_win.handleMouseEvent(ev) or
+        log_win.handleMouseEvent(ev);
 }
 
 pub const ChooseCellOpts = struct {
@@ -2465,6 +2472,8 @@ pub fn drawMessagesScreen() void {
 
     var scroll: usize = 0;
 
+    log_win.main.clearMouseTriggers();
+
     main: while (true) {
         if (starty > mainw.starty) {
             starty = math.max(mainw.starty, starty -| 3);
@@ -2483,6 +2492,7 @@ pub fn drawMessagesScreen() void {
 
         const first_line = log_win.main.height -| window_height -| scroll;
         const last_line = math.min(first_line + window_height, log_win.main.height);
+        log_win.main.addMouseTrigger(log_win.main.dimensionsRect(), .Wheel, .{ .Signal = 1 });
         log_win.main.renderAreaAt(@intCast(usize, mainw.startx), @intCast(usize, starty), 0, first_line, log_win.main.width, last_line);
 
         display.present();
@@ -2492,6 +2502,18 @@ pub fn drawMessagesScreen() void {
             .Quit => {
                 state.state = .Quit;
                 break :main;
+            },
+            .Click => |c| switch (log_win.main.handleMouseEvent(c, .Click)) {
+                .Signal, .Void => err.wat(),
+                .Outside => break :main,
+                .Unhandled => {},
+            },
+            .Wheel => |w| switch (log_win.main.handleMouseEvent(w.c, .Wheel)) {
+                .Signal => |s| if (s == 1) {
+                    const new = @intCast(isize, scroll) + w.y;
+                    scroll = @intCast(usize, math.max(0, new));
+                },
+                else => {},
             },
             .Key => |k| switch (k) {
                 .CtrlC, .Esc, .Enter => break :main,
@@ -3671,6 +3693,15 @@ pub fn drawItemChoicePrompt(comptime fmt: []const u8, args: anytype, items: []co
     return drawChoicePrompt(fmt, args, namebuf.items);
 }
 
+fn _evToMEvType(ev: display.Event) Console.MouseTrigger.Kind {
+    return switch (ev) {
+        .Click => .Click,
+        .Hover => .Hover,
+        .Wheel => .Wheel,
+        else => err.wat(),
+    };
+}
+
 pub const Console = struct {
     alloc: mem.Allocator,
     heap_inited: bool = false,
@@ -3706,6 +3737,7 @@ pub const Console = struct {
         pub const Kind = enum {
             Click,
             Hover,
+            Wheel,
         };
 
         pub const Action = union(enum) {
@@ -3719,6 +3751,7 @@ pub const Console = struct {
                 title: StackBuffer(u8, 64),
                 id: StackBuffer(u8, 64),
             },
+            OpenLogWindow,
         };
 
         pub const AList = std.ArrayList(@This());
@@ -3765,6 +3798,10 @@ pub const Console = struct {
             self.alloc.destroy(a);
         if (self.heap_inited)
             self.alloc.destroy(self);
+    }
+
+    pub fn dimensionsRect(self: *const Self) Rect {
+        return Rect.new(Coord.new(0, 0), self.width, self.height);
     }
 
     pub fn addSubconsole(self: *Self, subconsole: *Console, x: usize, y: usize) void {
@@ -3866,6 +3903,10 @@ pub const Console = struct {
                         } else {
                             err.ensure(false, "Missing description {s}", .{info.id.constSlice()}) catch {};
                         }
+                        return .Void;
+                    },
+                    .OpenLogWindow => {
+                        drawMessagesScreen();
                         return .Void;
                     },
                 }

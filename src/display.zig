@@ -68,6 +68,7 @@ pub const Event = union(enum) {
     Char: u21,
     Click: Coord,
     Hover: Coord,
+    Wheel: struct { y: isize, c: Coord },
     Quit,
 };
 
@@ -441,6 +442,14 @@ pub fn getCell(x: usize, y: usize) Cell {
     };
 }
 
+inline fn norm(c: Coord) Coord {
+    if (getCell(c.x, c.y).fl.skip and c.x != 0 and getCell(c.x - 1, c.y).fl.wide) {
+        return Coord.new(c.x - 1, c.y);
+    } else {
+        return c;
+    }
+}
+
 // Continuously get events, optionally quitting after a timeout is reached. If
 // timeout is null, getEvents() will finish when the first non-mouse event is
 // reached.
@@ -526,13 +535,7 @@ pub fn getEvents(ctx: *GeneratorCtx(Event), timeout: ?usize) void {
                         const xrel = xpix / font.FONT_WIDTH;
                         const yrel = ypix / font.FONT_HEIGHT;
                         if (xrel < width() and yrel < height()) {
-                            if (grid[yrel * width() + xrel].fl.skip and
-                                xrel != 0 and grid[yrel * width() + xrel - 1].fl.wide)
-                            {
-                                ctx.yield(Event{ .Click = Coord.new(xrel - 1, yrel) });
-                            } else {
-                                ctx.yield(Event{ .Click = Coord.new(xrel, yrel) });
-                            }
+                            ctx.yield(Event{ .Click = norm(Coord.new(xrel, yrel)) });
                         }
                     },
                     driver_m.SDL_MOUSEMOTION => {
@@ -547,13 +550,20 @@ pub fn getEvents(ctx: *GeneratorCtx(Event), timeout: ?usize) void {
                         {
                             last_hover_y = yrel;
                             last_hover_x = xrel;
-                            if (grid[yrel * width() + xrel].fl.skip and
-                                xrel != 0 and grid[yrel * width() + xrel - 1].fl.wide)
-                            {
-                                ctx.yield(Event{ .Hover = Coord.new(xrel - 1, yrel) });
-                            } else {
-                                ctx.yield(Event{ .Hover = Coord.new(xrel, yrel) });
-                            }
+                            ctx.yield(Event{ .Hover = norm(Coord.new(xrel, yrel)) });
+                        }
+                    },
+                    driver_m.SDL_MOUSEWHEEL => {
+                        // ev is driver_m.SDL_MouseWheelEvent
+                        const xpix = @intCast(usize, ev.wheel.mouseX);
+                        const ypix = @intCast(usize, ev.wheel.mouseY);
+                        const xrel = xpix / font.FONT_WIDTH;
+                        const yrel = ypix / font.FONT_HEIGHT;
+                        if (xrel < width() and yrel < height()) {
+                            ctx.yield(Event{ .Wheel = .{
+                                .y = ev.wheel.y,
+                                .c = norm(Coord.new(xrel, yrel)),
+                            } });
                         }
                     },
                     else => continue,
