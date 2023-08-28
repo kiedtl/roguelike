@@ -486,7 +486,7 @@
   (default radius :distance)
   ~(fn [self ticks ctx coord target]
     (let [lrad (case ,radius :distance (+ 1 (:distance coord target)) ,radius)
-          angle (rad (* 2 (/ (self :total-spawned) lrad)))
+          angle (rad (* 3 (/ (self :total-spawned) lrad)))
           n (+ (% (self :total-spawned) lrad) 0)]
       (if ,inverse
         [(:move-angle target n angle) target]
@@ -1159,7 +1159,7 @@
         :speed 0    :lifetime 45   :territorial true
         :triggers @[ [[:COND-true] [:TRIG-lerp-color :bg ELEC_BLUE2 "rgb" [:sine-custom (fn [self ticks &] (* 8.2 ticks))]]] ]
       })
-      :lifetime 1
+      :lifetime 0
       :spawn-count (Emitter :SCNT-dist-to-target-360)
       :get-spawn-params (SPAR-circle :inverse true :radius 2)
     })
@@ -1172,7 +1172,7 @@
           [[:COND-true] [:TRIG-modify-color :bg "rgb" [:completed-lifetime 1]]]
         ]
       })
-      :lifetime 1
+      :lifetime 0
       :spawn-count (Emitter :SCNT-dist-to-target-360)
       :get-spawn-params (SPAR-circle :inverse true :radius 2)
       :birth-delay 45
@@ -1191,7 +1191,7 @@
           [[:COND-true] [:TRIG-lerp-color :bg 0xffffff "rgb" [:sine-custom (fn [self ticks &] (* 8.1 ticks))]]]
         ]
       })
-      :lifetime 1
+      :lifetime 0
       :spawn-count (Emitter :SCNT-dist-to-target-360)
       :get-spawn-params (SPAR-circle)
     })

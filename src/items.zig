@@ -561,7 +561,7 @@ fn _triggerEldritchLantern(mob: *Mob, _: *Evocable) Evocable.EvokeError!void {
     ui.Animation.apply(.{ .Particle = .{
         .name = "pulse-brief",
         .coord = state.player.coord,
-        .target = .{ .I = state.player.stat(.Vision) },
+        .target = .{ .I = state.player.stat(.Vision) - 1 },
     } });
 
     mob.addStatus(.Daze, 0, .{ .Tmp = rng.range(usize, 1, 4) });
