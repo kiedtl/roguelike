@@ -2801,7 +2801,7 @@ pub const Mob = struct { // {{{
                         if (s) |floor| {
                             return player.triggerStair(dest, floor);
                         } else {
-                            ui.drawAlertThenLog("It's suicide to go back!", .{});
+                            ui.drawAlertThenLog("Why would you want to go back?", .{});
                         }
                     },
                     else => {},
