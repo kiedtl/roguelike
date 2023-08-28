@@ -53,7 +53,10 @@ terrain.
 Your vision is reduced to 1.
 
 % player_Status.Corruption
-You have become corrupted by being adjacent to hostile undead for too long.
+You have become corrupted by being adjacent to hostile undead for too long. Due
+to having your minds temporarily connected, both you and undead will be able to
+hit each other more often, and undead will not forget about you while you are
+corrupted.
 
 % player_Status.Conductive
 You will share electric damage with nearby creatures. If they are also

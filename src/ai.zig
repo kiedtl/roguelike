@@ -475,7 +475,8 @@ pub fn checkForHostiles(mob: *Mob) void {
             _ = mob.enemyList().orderedRemove(i);
         } else {
             if ((mob.ai.phase != .Flee or enemy.alerted_allies > 0) and
-                mob.isAloneOrLeader() and enemy.last_seen == null)
+                mob.isAloneOrLeader() and enemy.last_seen == null and
+                (mob.life_type != .Undead or !enemy.mob.hasStatus(.Corruption)))
             {
                 enemy.counter -= 1;
             }

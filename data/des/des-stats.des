@@ -15,16 +15,19 @@ vision.)
 % concept_Corruption
 
 Your corruption counter, i.e. how long you can stay adjacent to undead without
-being corrupted. It corresponds to your Willpower stat.
+being corrupted and having your minds linked. It corresponds to your Willpower
+stat.
 
 
 Becoming corrupted causes a variety of effects (mostly negative), such as
 immediately alerting the undead which corrupted you to their presence, as well
-as allowing all undead to anticipate your attacks and evade them more often.
+as allowing all undead to anticipate your moves and thus hit you more often.
+However, you also will be able to anticipate their movements, and will gain a
+Melee bonus as well.
 
 % concept_Reputation
 
-Your reputation with the Night Creatures. If it is negative, tt will decay back
+Your reputation with the Night Creatures. If it is negative, it will decay back
 to 0 each time you ascend a floor. Ransacking Night lairs decreases reputation.
 
 
