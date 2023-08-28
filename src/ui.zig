@@ -4525,7 +4525,12 @@ pub const Animation = union(enum) {
                         state.player.coord.x -| MAP_WIDTH_R, state.player.coord.y -| MAP_HEIGHT_R,
                         MAP_WIDTH_R * 2,                     MAP_HEIGHT_R * 2,
                         anim.name,
-                    }) catch err.wat();
+                    }) catch |e| {
+                        err.ensure(false, "Could not load particle effect {s}: {}", .{
+                            anim.name, e,
+                        }) catch {};
+                        return;
+                    };
                 }
 
                 const WAIT_PERIOD = 50_000_000;

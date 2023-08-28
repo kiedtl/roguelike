@@ -704,6 +704,7 @@
 
 (def emitters-table @{
   "test" @[]
+  "null" @[]
   "lzap-electric" @[ (template-lingering-zap "AEFHIKLMNTYZ13457*-=+~?!@#%&" 0x9fefff 0x7fc7ef 7) ]
   "lzap-golden" @[ (template-lingering-zap ".#.#.#." LIGHT_GOLD GOLD 12) ]
   "explosion-simple" @[ (template-explosion) ]
