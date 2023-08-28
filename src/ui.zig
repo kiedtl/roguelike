@@ -787,6 +787,10 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
                     // Zig, why the fuck do I need to cast the below as Awareness?
                     // Wouldn't I like to fucking chop your fucking type checker into
                     // tiny shreds with a +9 halberd of flaming.
+                    //
+                    // 2023-08-28: no idea why I was this angry, I do this all
+                    // the time now without having an aneurysm. caffeine famine
+                    // maybe?
                     break if (enemyrec.last_seen != null and enemyrec.last_seen.?.eq(state.player.coord))
                         @as(Awareness, .Seeing)
                     else
@@ -801,7 +805,11 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
                 },
                 .Remember => |turns_left| {
                     i.color = 'p';
-                    i.string.writer().print("remembers you (~$b{}$. turns left)", .{turns_left}) catch err.wat();
+                    if (mob.life_type == .Undead and state.player.hasStatus(.Corruption)) {
+                        i.string.writer().print("remembers you ($ocorruption$.)", .{}) catch err.wat();
+                    } else {
+                        i.string.writer().print("remembers you (~$b{}$. turns left)", .{turns_left}) catch err.wat();
+                    }
                 },
                 .None => {
                     i.color = 'b';
