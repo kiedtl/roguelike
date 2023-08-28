@@ -1138,6 +1138,20 @@
     (_beams-golden-blue (fn [deg] (+ 360 deg)))
     (_beams-golden-blue (fn [deg] (- 360 deg)))
   ]
+  "pulse-brief" @[
+    (new-emitter @{
+      :particle (new-particle @{
+        :tile (new-tile @{ :ch ":" :fg 0x888888 :bg BG :bg-mix 0.9 })
+        :speed 0    :lifetime 12   :territorial true   :require-los 1
+        :triggers @[
+          [[:COND-true] [:TRIG-lerp-color :bg 0xffffff "rgb" [:sine-custom (fn [self ticks &] (* 16 ticks))]]]
+        ]
+      })
+      :lifetime 0
+      :spawn-count (Emitter :SCNT-dist-to-target-360)
+      :get-spawn-params (SPAR-circle)
+    })
+  ]
   "pulse-twice-electric-explosion" @[
     (new-emitter @{
       :particle (new-particle @{
