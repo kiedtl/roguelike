@@ -3026,6 +3026,10 @@ pub const Mob = struct { // {{{
             attacker.declareAction(.{ .Attack = .{ .who = recipient, .coord = recipient.coord, .direction = d, .delay = longest_delay } });
         }
 
+        if (!opts.free_attack) {
+            attacker.facing = attacker.coord.closestDirectionTo(recipient.coord, state.mapgeometry);
+        }
+
         // If the defender didn't know about the attacker's existence now's a
         // good time to find out
         //
