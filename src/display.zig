@@ -454,13 +454,13 @@ inline fn norm(c: Coord) Coord {
 // timeout is null, getEvents() will finish when the first non-mouse event is
 // reached.
 pub fn getEvents(ctx: *GeneratorCtx(Event), timeout: ?usize) void {
-    assert(timeout == null or timeout.? >= 10);
+    assert(timeout == null or timeout.? >= 15);
 
     var timer = std.time.Timer.start() catch err.wat();
     var nonmouse_event_received = false;
 
     while (true) {
-        const max_timeout_ns = 10_000_000; // 20 ms
+        const max_timeout_ns = 15_000_000; // 15 ms
         const remaining = ((timeout orelse std.math.maxInt(u64)) *| 1_000_000) -| timer.read();
         std.time.sleep(std.math.min(max_timeout_ns, remaining));
 
