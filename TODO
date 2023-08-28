@@ -571,11 +571,12 @@ Rings have "tiers" instead of an enchantment level (gold, silver, iron).
 
 - ring of anticipation: +10% innate melee boost, will-checked chance to grant
   adjacent enemies `anticipated movements` status, giving them -15% evasion
+  - Problem: kinda boring, lots of these kinds of bufs already
 
 - ring of distortion: (alt) Bends space around player, granting +20% evade and
   -20% melee.
 
-- ring of ____________: Grants "invisible" status, drains 1 MP for each enemy
+- ring of obscuration: Grants "invisible" status, drains 1 MP for each enemy
   that can see player in exchange for them not noticing player. No MP drain
   when player can't be seen. 0 MP to start with. (Needs downside. Maybe doesn't
   work if player is directly adjacent, or player is corrupted and target is
@@ -597,9 +598,9 @@ Rings have "tiers" instead of an enchantment level (gold, silver, iron).
   affect mobs with .Held. Creates puzzle-like gameplay. Damage could scale with
   some stat.
 
-- ring of condemnation: instakill undead, at cost of 10 turns held. Ancient
-  Mage should have some kind of countermeasure (transform into something else?
-  explode into swarm of enemies?)
+- ring of condemnation: [holy] instakill undead, at cost of 10 turns held.
+  Ancient Mage should have some kind of countermeasure (transform into
+  something else? explode into swarm of enemies?)
 
 - ring of infestation: Gives infestation status (mob-only), "night beatles"
   burst out of affected mob when status effect ends. Night beatles should only
@@ -1130,13 +1131,18 @@ x Night creatures
   x Draining mobs (dead)
   x Draining mobs (alive)
 - New rings
+  - ring of distortion
+  - ring of obscuration
+  - ring of condemnation
   - ring of transformation
   - ring of detonation
   - ring of deception
   - ring of deconstruction
-  - ring of condemnation
-  - ring of infestation
-  - 
+  - ring of fustigation
+- New potions
+  - potion of remediation (cure disorient/nausea) [recipe: recuperate]
+  - potion of vision (cure blindness)
+  - potion of perception (extra vision, ringing ears) [recipe: vision]
 - Crypt floor
   x Modify level data and spawn files
   - New monsters:
@@ -1147,14 +1153,20 @@ x Night creatures
     - Pitchblende statues
   - Garrison inset prefabs
   - -1/Crypt/3 prefab
-  - Staircase prefab on -1/Prison
+- Rework -1/Prison
+  - Exiting staircase to "outside" on top
+  - Doorway to Crypt on bottom side
+  - Entry points and (unavailable) staircase to "Dining" in center
+    - If player tries to go up w/ center staircase, staircase gets
+      locked down, and guards start pouring out. i.e. challenge mode
+      - Prevents Revgenunkim invasion event?
 - Revgenuhelkim
   - Acid damage and resistance
     - 'slimy' status (knockback in direction of last move + rFire)
       - note for later: no rings, should be unique status
       - 1/10 chance of hitting wall when moving towards it (otherwise no hit)
       - barrels/pools of sludge
-      - potion of slimification (found rarely or by cooking disorient potions)
+      - potion of slimification (rare) [recipe: disorient]
   - Revgenuhelkim
     - Acid claws
     - Digging abilities
@@ -1170,8 +1182,15 @@ x Night creatures
     - Renaming
     - Unsure if any other changes needed
   - -1/Prison invasion event
-  - Laboratory prefabs
-  - Carapace prefab
+    - Initial wave
+    - Additional invasion waves
+    - Initial counterattack
+    - Further counterattack waves
+    - Final counter attack with Archmagi
+    - Possible Night Creature counterattack event
+    - Possible Angel counterattack event
+  - Laboratory prefabs w/ caged monsters
+  - "Quarantine" map/area
 - UI
   x Menu to invoke patterns (via SPACE)
   x Map dynamic popups/annotations
@@ -1179,16 +1198,16 @@ x Night creatures
     x Label: new items or dungeon features in view
   - Escape menu
     - List of visited/unvisited floors
-    - Status/mob/item description lookup screen
+    ~ Status/mob/item description lookup screen
     x Keybinding help "?" screen
     x About screen (or just in log area?)
-  - Popups explaining UI elements on hover
-    - Quick description for current level indicator
-    - Bars (health, corruption, sneak)
-    - Stats (resists, other stats near bars)
-      - Basic description
-      - Breakdown
-    - Status effects
+  x Popups explaining UI elements on hover
+    x Quick description for current level indicator
+    x Bars (health, corruption, sneak)
+    x Stats (resists, other stats near bars)
+      x Basic description
+      ~ Breakdown
+    ~ Status effects
 - Corpse-related mechanics
   x Enemies alerted of player if finding recently-killed corpse w/ player nearby
   x Patrols and guards report corpses
@@ -1206,7 +1225,7 @@ x Night creatures
     ~ Dep: capacitors (and possibly Wiring levels)
     x Dep: UI labels to effectively communicate when next discharge is
       x "discharge 5..." "discharge 4..." "discharge 3...", etc.
-  - Emberling garrisons
+  x Emberling garrisons
   - Prefab: Flamethrower prop/evocable stockpiles
   x New Alchemist AI
 - Caverns rework
@@ -1286,46 +1305,21 @@ x Revamp messages for recieving/losing status
     - (100) Augment [y]: Blade attacks cause insanity for 1 turn in vulnerable foes.
     - (100) Augment [f]: Blade attacks have minor chance to infest foe.
 - UI
-  - Popups explaining UI elements on hover
-    - Quick description for current level indicator
-    - Bars (health, corruption, sneak)
-    - Stats (resists, other stats near bars)
-      - Basic description
-      - Breakdown
-    - Status effects
   - Basic mouse support
-    - Tooltips for UI labels
-      - Tooltips/explanations for individual messages?
+    x Tooltips for UI labels
+      ~ Tooltips/explanations for individual messages?
     - Click on tile to move/attack/interact
     - Right-click for examine/info
-    - Click on message pane for 'M' screen
+    x Click on message pane for 'M' screen
     - Click on tabs in examine mode
     - Click on items/buttons in inventory mode
 - Load colors from data file
 - Multi-tile props: trees and braziers
 - Basic speeches by mobs
 - Rework gases
-  - Remove usage of floats entirely
+  x Remove usage of floats entirely
   - Quantize all gas dissipation rates into VSLOW, SLOW, MED, FAST, VFAST, etc
   - SIMD where possible
-- The Revgenuhelkim
-  - Acid damage, resists, potions
-  - Digging mechanics for Revgen and Burning Brutes
-  - Monsters
-    - Revgenunkim
-    - Quicklime brutes (acid bolts)
-    - Burning brutes
-    - Cinder beasts
-  - Caged monsters in Lab
-  - Invasion of -1/Prison
-    - Initial wave
-    - Additional invasion waves
-    - Initial counterattack
-    - Further counterattack waves
-    - Final counter attack with Archmagi
-    - Possible Night Creature counterattack event
-    - Possible Angel counterattack event
-  - Carapace in Storage
 x Squad overhaul
 - Mob repositioning AI
   - AI to move out of dangerous tiles (gas/terrain)
@@ -1336,7 +1330,7 @@ x Squad overhaul
   X, then removes that equipment, they won't have status even if the Tmp status
   should have replaced it.
   - FIX: store statuses in a vector.
-- Implement intelligence
+~ Implement intelligence
 - eXamine screen:
   - Show last remembered items on out-of-sight tiles
   - Show floor spattering, floor material, gas
