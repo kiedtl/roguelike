@@ -210,6 +210,7 @@ pub const RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = MagnetizationRing } },
     .{ .w = 9, .i = .{ .r = AccelerationRing } },
     .{ .w = 9, .i = .{ .r = TransformationRing } },
+    .{ .w = 9, .i = .{ .r = DetonationRing } },
 };
 pub const NIGHT_RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = ExcisionRing } },
@@ -928,6 +929,34 @@ pub const DisintegrationRing = Ring{ // {{{
                 i -= 1;
                 if (i == 0 or d == 0) break;
             }
+
+            return true;
+        }
+    }.f,
+}; // }}}
+
+pub const DetonationRing = Ring{ // {{{
+    .name = "detonation",
+    .required_MP = 2,
+    .effect = struct {
+        pub fn f() bool {
+            const LIFESPAN = 3;
+
+            const target = state.dungeon.at(ui.chooseCell(.{
+                .require_enemy_on_tile = true,
+            }) orelse return false).mob.?;
+
+            if (!spells.willSucceedAgainstMob(state.player, target)) {
+                const chance = 100 - spells.appxChanceOfWillOverpowered(state.player, target);
+                state.message(.SpellCast, "{c} resisted $oDetonation$. $g($c{}%$g chance)$.", .{ target, chance });
+                return true;
+            }
+
+            target.immobile = true;
+            target.addStatus(.Noisy, 0, .{ .Tmp = LIFESPAN + 1 });
+            target.addStatus(.Explosive, 300, .{ .Tmp = LIFESPAN + 1 });
+            target.addStatus(.Lifespan, 0, .{ .Tmp = LIFESPAN });
+            ai.updateEnemyKnowledge(target, state.player, null);
 
             return true;
         }
