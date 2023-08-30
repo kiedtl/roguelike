@@ -14,21 +14,25 @@
 :notraps
 :priority 100
 
-@a i =transformation
-@b i potion_incinerate
-@c M guard
+:subroom_area 2,2 4 4 PRI_s_cell_4
+:subroom_area 8,2 4 4 PRI_s_cell_4
+:subroom_area 8,7 4 4 PRI_s_cell_4
+
+@b p iron_bars
+@p p iron_bars_broken
+@g Cmons guard ([prm_status1]Sleeping)
 
 #####****#####
 #............#
 #............#
 *............*
 #............#
-*..cccccccc..*
+*............*
 #............#
-#............#
-#............#
-#....a@b.....#
-#............#
+#.####.......#
+#.b..b.......#
+#.b..p@......#
+#.####.......#
 #............#
 #g..........g#
 #####****#####
