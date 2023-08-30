@@ -682,3 +682,13 @@ $b0$..
 
 $c    -$. The first time the bolt hits an enemy, the damage will be applied
 stealthily, and the enemy will not be alerted to your presence.
+
+% transformation
+$cEffect:$. All visible fire is transformed into searing bolts of electricity.
+All $aburning$. statuses are healed in the process.
+
+
+Damage scales with $brElec$. ($b0%$. == max $b1$. damage, $b25%$. == max 2
+damage, $b75%$. == max 4 damage, etc), before being reduced depending on how
+much fire there is on the tile ($r,$. == $b25%$. damage, $r^$. == $b75%$.
+damage, $r§$. == $b100%$. damage). Damage will never be below 1.

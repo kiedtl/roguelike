@@ -209,6 +209,7 @@ pub const RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = InsurrectionRing } },
     .{ .w = 9, .i = .{ .r = MagnetizationRing } },
     .{ .w = 9, .i = .{ .r = AccelerationRing } },
+    .{ .w = 9, .i = .{ .r = TransformationRing } },
 };
 pub const NIGHT_RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = ExcisionRing } },
@@ -806,6 +807,56 @@ pub const AccelerationRing = Ring{ // {{{
 
             // Too bad we return immediately if the player cancels, this message was nice flavor
             //state.message(.Info, "A haftless sword seems to appear mid-air, then disappears abruptly.", .{});
+        }
+    }.f,
+}; // }}}
+
+pub const TransformationRing = Ring{ // {{{
+    .name = "transformation",
+    .required_MP = 3,
+    .effect = struct {
+        pub fn f() bool {
+            const rElec_pips = @intCast(usize, math.max(0, state.player.resistance(.rElec))) / 25;
+            const damage = rElec_pips + 1;
+
+            var coords = StackBuffer(Coord, HEIGHT * WIDTH).init(null);
+
+            for (state.player.fov) |row, y| for (row) |cell, x| {
+                if (cell == 0) continue;
+                const coord = Coord.new2(state.player.coord.z, x, y);
+
+                if (state.dungeon.fireAt(coord).* == 0)
+                    continue;
+
+                coords.append(coord) catch unreachable;
+                if (state.dungeon.at(coord).mob) |mob|
+                    mob.cancelStatus(.Fire);
+            };
+
+            ui.Animation.blink(coords.constSlice(), '*', ui.Animation.ELEC_LINE_FG, .{}).apply();
+            for (coords.constSlice()) |coord| {
+                if (state.dungeon.at(coord).mob) |mob| {
+                    const firenum = state.dungeon.fireAt(coord).*;
+                    const percent: usize = switch (fire.fireGlyph(firenum)) {
+                        ',' => 25,
+                        '^' => 75,
+                        '§' => 100,
+                        else => err.wat(),
+                    };
+                    mob.takeDamage(.{
+                        .amount = math.max(1, damage * percent / 100),
+                        .by_mob = state.player,
+                        .source = .RingAOE,
+                        .kind = .Electric,
+                    }, .{
+                        .noun = "The lightning",
+                        .strs = &SHOCK2_STRS,
+                    });
+                }
+                state.dungeon.fireAt(coord).* = 0;
+            }
+
+            return true;
         }
     }.f,
 }; // }}}
@@ -1479,6 +1530,12 @@ pub const SHOCK_STRS = [_]DamageStr{
     _dmgstr(40, "shock", "shocks", ""),
     _dmgstr(70, "strike", "strikes", ""),
     _dmgstr(100, "electrocute", "electrocutes", ""),
+};
+pub const SHOCK2_STRS = [_]DamageStr{
+    _dmgstr(10, "zaps", "zaps", ""),
+    _dmgstr(40, "shocks", "shocks", ""),
+    _dmgstr(70, "strikes", "strikes", ""),
+    _dmgstr(100, "electrocutes", "electrocutes", ""),
 };
 
 // Body weapons {{{

@@ -1044,6 +1044,7 @@ pub const Damage = struct {
         Explosion,
         Passive,
         Gas,
+        RingAOE,
     };
 };
 pub const Activity = union(enum) {
