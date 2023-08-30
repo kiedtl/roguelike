@@ -17,7 +17,7 @@ pub const MapLabel = struct {
         Mob: *Mob,
     },
     color: u32,
-    max_age: usize = 1000 / ui.FRAMERATE * 4, // ~5 seconds
+    max_age: usize = 1000 / ui.FRAMERATE * 3, // ~3 seconds
     max_tick_age: usize,
     malloced: bool,
 
@@ -147,9 +147,9 @@ pub fn drawLabels() void {
         label.age += 1;
 
         const text = if (label.age < label.text.len / 2)
-            label.text[0 .. label.age * 2]
+            label.text[0 .. label.age * 1]
         else if (label.age > (label.max_age - (label.text.len / 2)))
-            label.text[0 .. (label.max_age - label.age) * 2]
+            label.text[0 .. (label.max_age - label.age) * 1]
         else
             label.text;
         const l_startx = label.win_loc.?.start.x;
