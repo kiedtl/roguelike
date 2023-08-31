@@ -4702,6 +4702,7 @@ pub const Ring = struct {
     required_MP: usize,
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     hated_by_nc: bool = false,
+    requires_uncorrupt: bool = false,
     effect: fn () bool,
 };
 

@@ -969,13 +969,9 @@ pub const DeceptionRing = Ring{ // {{{
     .name = "deception",
     .required_MP = 2,
     .stats = .{ .Willpower = 1 },
+    .requires_uncorrupt = true,
     .effect = struct {
         pub fn f() bool {
-            if (state.player.hasStatus(.Corruption)) {
-                state.message(.Info, "You cannot use this ring whilst corrupted.", .{});
-                return false;
-            }
-
             const will = @intCast(usize, state.player.stat(.Willpower));
             const duration = math.max(1, will);
             state.player.addStatus(.RingDeception, 0, .{ .Tmp = duration });
@@ -990,13 +986,9 @@ pub const DeceptionRing = Ring{ // {{{
 pub const CondemnationRing = Ring{ // {{{
     .name = "condemnation",
     .required_MP = 5,
+    .requires_uncorrupt = true,
     .effect = struct {
         pub fn f() bool {
-            if (state.player.hasStatus(.Corruption)) {
-                state.message(.Info, "You cannot use this ring whilst corrupted.", .{});
-                return false;
-            }
-
             const target = state.dungeon.at(ui.chooseCell(.{
                 .require_enemy_on_tile = true,
             }) orelse return false).mob.?;

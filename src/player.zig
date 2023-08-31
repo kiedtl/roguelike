@@ -936,11 +936,13 @@ pub fn canSeeAny(coords: []const ?Coord) bool {
 pub const RingError = enum {
     NotEnoughMP,
     HatedByNight,
+    CannotBeCorrupted,
 
     pub fn text1(self: @This()) []const u8 {
         return switch (self) {
             .NotEnoughMP => "low mana",
             .HatedByNight => "hated by the Night",
+            .CannotBeCorrupted => "must be uncorrupted",
         };
     }
 };
@@ -952,6 +954,9 @@ pub fn checkRing(index: usize) ?RingError {
     }
     if (ring.hated_by_nc and hasAlignedNC()) {
         return .HatedByNight;
+    }
+    if (ring.requires_uncorrupt and state.player.hasStatus(.Corruption)) {
+        return .CannotBeCorrupted;
     }
     return null;
 }
