@@ -211,6 +211,7 @@ pub const RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = AccelerationRing } },
     .{ .w = 9, .i = .{ .r = TransformationRing } },
     .{ .w = 9, .i = .{ .r = DetonationRing } },
+    .{ .w = 9, .i = .{ .r = DeceptionRing } },
 };
 pub const NIGHT_RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = ExcisionRing } },
@@ -957,6 +958,28 @@ pub const DetonationRing = Ring{ // {{{
             target.addStatus(.Explosive, 300, .{ .Tmp = LIFESPAN + 1 });
             target.addStatus(.Lifespan, 0, .{ .Tmp = LIFESPAN });
             ai.updateEnemyKnowledge(target, state.player, null);
+
+            return true;
+        }
+    }.f,
+}; // }}}
+
+pub const DeceptionRing = Ring{ // {{{
+    .name = "deception",
+    .required_MP = 2,
+    .stats = .{ .Willpower = 1 },
+    .effect = struct {
+        pub fn f() bool {
+            if (state.player.hasStatus(.Corruption)) {
+                state.message(.Info, "You cannot use this ring whilst corrupted.", .{});
+                return false;
+            }
+
+            const will = @intCast(usize, state.player.stat(.Willpower));
+            const duration = math.max(1, will);
+            state.player.addStatus(.RingDeception, 0, .{ .Tmp = duration });
+
+            state.message(.Info, "A strange aura begins to surround you.", .{});
 
             return true;
         }

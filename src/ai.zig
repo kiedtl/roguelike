@@ -412,6 +412,10 @@ pub fn checkForHostiles(mob: *Mob) void {
         return;
     }
 
+    const has_nonundead_ally = for (mob.allies.items) |ally| {
+        if (ally.life_type != .Undead) break true;
+    } else false;
+
     for (mob.fov) |row, y| for (row) |cell, x| {
         if (cell == 0) continue;
         const fitem = Coord.new2(mob.coord.z, x, y);
@@ -425,7 +429,8 @@ pub fn checkForHostiles(mob: *Mob) void {
 
             if (!othermob.ai.flag(.IgnoredByEnemies) and
                 mob.isHostileTo(othermob) and
-                (!mob.ai.flag(.IgnoresEnemiesUnknownToLeader) or mob.squad.?.leader.?.cansee(othermob.coord)))
+                (!mob.ai.flag(.IgnoresEnemiesUnknownToLeader) or mob.squad.?.leader.?.cansee(othermob.coord)) and
+                !(othermob.hasStatus(.RingDeception) and !has_nonundead_ally))
             {
                 updateEnemyRecord(mob, .{
                     .mob = othermob,
@@ -460,6 +465,7 @@ pub fn checkForHostiles(mob: *Mob) void {
             enemy.mob.ai.flag(.IgnoredByEnemies) or
             (mob.ai.flag(.IgnoresEnemiesUnknownToLeader) and
             !mob.squad.?.leader.?.cansee(enemy.mob.coord)) or
+            (enemy.mob.hasStatus(.RingDeception) and !has_nonundead_ally) or
             enemy.mob.is_dead)
         {
             alert.reportThreat(mob, .{ .Specific = enemy.mob }, confrontation);

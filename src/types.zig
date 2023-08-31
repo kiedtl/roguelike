@@ -1128,6 +1128,7 @@ pub const Status = enum {
     RingExcision, // No power field
     RingConjuration, // No power field
     RingAcceleration, // No power field
+    RingDeception, // No power field
 
     // Item-specific effects.
     DetectHeat, // Doesn't have a power field.

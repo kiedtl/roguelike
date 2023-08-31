@@ -1,12 +1,13 @@
 # vim: nowrap
 #
 # status                status name              status name (unliving)  mini name
-.RingTeleportation 	"ring: teleportation" 	 -                     	 -
-.RingDamnation     	"ring: damnation"     	 -                     	 -
-.RingElectrocution 	"ring: electrocution" 	 -                     	 -
-.RingExcision      	"ring: excision"      	 -                     	 -
-.RingConjuration   	"ring: conjuration"   	 -                     	 -
-.RingAcceleration  	"ring: acceleration"  	 -                     	 -
+.RingTeleportation 	"ring: teleportation" 	 "dancing"             	 -
+.RingDamnation     	"ring: damnation"     	 "whistling"           	 -
+.RingElectrocution 	"ring: electrocution" 	 "jumping around"      	 -
+.RingExcision      	"ring: excision"      	 "pontificating"       	 -
+.RingConjuration   	"ring: conjuration"   	 "house of pain"       	 -
+.RingAcceleration  	"ring: acceleration"  	 "is in effect"        	 -
+.RingDeception     	"ring: deception"     	 "voting for trump"    	 -
 .DetectHeat        	"detect heat"         	 -                     	 -
 .DetectElec        	"detect electricity"  	 -                     	 -
 .EtherealShield    	"ethereal shield"     	 -                     	 -
