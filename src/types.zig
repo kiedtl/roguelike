@@ -3588,9 +3588,11 @@ pub const Mob = struct { // {{{
         if (self != state.player) {
             if (self.killed_by) |by_mob| {
                 if (by_mob == state.player) {
-                    state.message(.Damage, "You slew {c}.", .{self});
+                    state.message(.Damage, "You slew {}.", .{self});
                 } else if (state.player.cansee(by_mob.coord)) {
-                    state.message(.Damage, "{c} killed the {c}.", .{ by_mob, self });
+                    state.message(.Damage, "{c} killed the {}.", .{ by_mob, self });
+                } else if (state.player.cansee(self.coord)) {
+                    state.message(.Damage, "{c} dies.", .{self});
                 }
             } else {
                 if (state.player.cansee(self.coord)) {
