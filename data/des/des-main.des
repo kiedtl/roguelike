@@ -705,3 +705,7 @@ while corrupted. The effect is not will-checked.
 
 
 $cDuration:$. Ring duration lasts for $bwillpower$. turns.
+
+% condemnation
+$cEffect:$. Destroys a single undead enemy, at the cost of $b20 - willpower$.
+turns of Held.

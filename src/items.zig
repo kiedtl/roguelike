@@ -212,6 +212,7 @@ pub const RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = TransformationRing } },
     .{ .w = 9, .i = .{ .r = DetonationRing } },
     .{ .w = 9, .i = .{ .r = DeceptionRing } },
+    .{ .w = 9, .i = .{ .r = CondemnationRing } },
 };
 pub const NIGHT_RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = ExcisionRing } },
@@ -980,6 +981,41 @@ pub const DeceptionRing = Ring{ // {{{
             state.player.addStatus(.RingDeception, 0, .{ .Tmp = duration });
 
             state.message(.Info, "A strange aura begins to surround you.", .{});
+
+            return true;
+        }
+    }.f,
+}; // }}}
+
+pub const CondemnationRing = Ring{ // {{{
+    .name = "condemnation",
+    .required_MP = 5,
+    .effect = struct {
+        pub fn f() bool {
+            if (state.player.hasStatus(.Corruption)) {
+                state.message(.Info, "You cannot use this ring whilst corrupted.", .{});
+                return false;
+            }
+
+            const target = state.dungeon.at(ui.chooseCell(.{
+                .require_enemy_on_tile = true,
+            }) orelse return false).mob.?;
+
+            target.takeDamage(.{
+                .amount = 999,
+                .by_mob = state.player,
+                .kind = .Irresistible,
+                .blood = false,
+                .source = .RangedAttack,
+            }, .{
+                .strs = &[_]DamageStr{
+                    _dmgstr(99, "dispel", "dispels", ""),
+                },
+            });
+
+            const will = @intCast(usize, state.player.stat(.Willpower));
+            const duration = 20 - math.max(1, will);
+            state.player.addStatus(.Held, 0, .{ .Tmp = duration });
 
             return true;
         }
