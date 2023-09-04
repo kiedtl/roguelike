@@ -1939,6 +1939,10 @@ pub const Stat = enum {
             .Martial, .Spikes, .Conjuration, .Potential => value > 0,
         };
     }
+
+    pub fn showMobStatFancy(self: Stat, stat_val_raw: isize, stat_val_real: isize) bool {
+        return self != .Speed and @intCast(usize, math.clamp(stat_val_raw, 0, 100)) != stat_val_real;
+    }
 };
 
 pub const Mob = struct { // {{{
@@ -4090,14 +4094,6 @@ pub const Mob = struct { // {{{
                     if (utils.adjacentHostiles(self) == 0) {
                         val = @divTrunc(val * 50, 100);
                     };
-            },
-            .Melee => {
-                if (self.hasStatus(.RingConcentration))
-                    val -= 100;
-            },
-            .Evade => {
-                if (self.hasStatus(.RingConcentration))
-                    val -= 100;
             },
             else => {},
         }

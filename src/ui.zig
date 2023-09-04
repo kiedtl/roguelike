@@ -2559,12 +2559,12 @@ pub fn drawPlayerInfoScreen() void {
                         const stat_val_raw = state.player.stat(stat);
                         const stat_val = utils.SignedFormatter{ .v = stat_val_raw };
                         const stat_val_real = switch (stat) {
-                            .Melee => combat.chanceOfMeleeLanding(state.player, null),
-                            .Evade => combat.chanceOfAttackEvaded(state.player, null),
+                            .Melee => @intCast(isize, combat.chanceOfMeleeLanding(state.player, null)),
+                            .Evade => @intCast(isize, combat.chanceOfAttackEvaded(state.player, null)),
                             else => stat_val_raw,
                         };
                         if (stat.showMobStat(stat_val_raw)) {
-                            if (@intCast(usize, math.clamp(stat_val_raw, 0, 100)) != stat_val_real) {
+                            if (stat.showMobStatFancy(stat_val_raw, stat_val_real)) {
                                 const c = if (@intCast(isize, stat_val_real) < stat_val_raw) @as(u21, 'r') else 'b';
                                 iy += pinfo_win.right.drawTextAtf(0, iy, "$c{s: <11}$.  {: >5}{s: >1}    $g(${u}{}{s}$g)$.\n", .{ stat.string(), stat_val, stat.formatAfter(), c, stat_val_real, stat.formatAfter() }, .{});
                             } else {

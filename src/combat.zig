@@ -29,6 +29,7 @@ const ATTACKER_CORRUPT_BONUS: isize = 10;
 const ATTACKER_FEAR_NBONUS: isize = 10;
 const ATTACKER_HELD_NBONUS: isize = 20;
 const ATTACKER_STUN_NBONUS: isize = 15;
+const ATTACKER_CONCENTRATE_NBONUS: isize = 100;
 
 const DEFENDER_UNLIT_BONUS: isize = 5;
 const DEFENDER_ESHIELD_BONUS: isize = 7; // (per wall, so +7..49)
@@ -38,6 +39,7 @@ const DEFENDER_ENRAGED_NBONUS: isize = 10;
 const DEFENDER_RECUPERATE_NBONUS: isize = 10;
 const DEFENDER_HELD_NBONUS: isize = 10;
 const DEFENDER_STUN_NBONUS: isize = 15;
+const DEFENDER_CONCENTRATE_NBONUS: isize = 100;
 
 pub const WeaponDamageInfo = struct {
     total: usize,
@@ -119,6 +121,7 @@ pub fn chanceOfMeleeLanding(attacker: *const Mob, defender: ?*const Mob) usize {
     chance -= if (attacker.hasStatus(.Fear)) ATTACKER_FEAR_NBONUS else 0;
     chance -= if (attacker.hasStatus(.Held)) ATTACKER_HELD_NBONUS else 0;
     chance -= if (attacker.hasStatus(.Debil)) ATTACKER_STUN_NBONUS else 0;
+    chance -= if (attacker.hasStatus(.RingConcentration)) ATTACKER_CONCENTRATE_NBONUS else 0;
 
     return @intCast(usize, math.clamp(chance, 0, 100));
 }
@@ -138,6 +141,7 @@ pub fn chanceOfAttackEvaded(defender: *const Mob, attacker: ?*const Mob) usize {
     chance -= if (defender.hasStatus(.Debil)) DEFENDER_STUN_NBONUS else 0;
     chance -= if (defender.hasStatus(.Recuperate)) DEFENDER_RECUPERATE_NBONUS else 0;
     chance -= if (defender.hasStatus(.Enraged)) DEFENDER_ENRAGED_NBONUS else 0;
+    chance -= if (defender.hasStatus(.RingConcentration)) DEFENDER_CONCENTRATE_NBONUS else 0;
 
     return @intCast(usize, math.clamp(chance, 0, 100));
 }
