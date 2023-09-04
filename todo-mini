@@ -1,10 +1,7 @@
 - profile item/ring gen
 - borders around map in examine mode
-- corruption effects
-  - less dodge
-  - no forget
 
-- potion of absorption
+- item: paras when elec damage is resisted, +50% rElec
 - restroom prefab
 - headgear
 
@@ -20,3 +17,6 @@
   - nothing apparently?
 - fix glancing (when moving)
 - profile mapgen code
+- corruption effects
+  - less dodge
+  - no forget
