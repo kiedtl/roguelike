@@ -708,4 +708,8 @@ $cDuration:$. Ring duration lasts for $bwillpower$. turns.
 
 % condemnation
 $cEffect:$. Destroys a single undead enemy, at the cost of $b20 - willpower$.
-turns of Held.
+turns of $aHeld$..
+
+% concentration
+$cEffect:$. Doubles your willpower for $bwillpower * 2$. turns, at the cost of
+$aSlow$., $b-100 Melee%$., and $b-100 Evade%$. for the same duration.

@@ -8,6 +8,7 @@
 .RingConjuration   	"ring: conjuration"   	 "house of pain"       	 -
 .RingAcceleration  	"ring: acceleration"  	 "is in effect"        	 -
 .RingDeception     	"ring: deception"     	 "voting for trump"    	 -
+.RingConcentration 	"ring: concentration" 	 "using the Force"     	 -
 .DetectHeat        	"detect heat"         	 -                     	 -
 .DetectElec        	"detect electricity"  	 -                     	 -
 .EtherealShield    	"ethereal shield"     	 -                     	 -

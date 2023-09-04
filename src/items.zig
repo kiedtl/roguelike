@@ -213,6 +213,7 @@ pub const RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = DetonationRing } },
     .{ .w = 9, .i = .{ .r = DeceptionRing } },
     .{ .w = 9, .i = .{ .r = CondemnationRing } },
+    .{ .w = 9, .i = .{ .r = ConcentrationRing } },
 };
 pub const NIGHT_RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = ExcisionRing } },
@@ -1008,6 +1009,25 @@ pub const CondemnationRing = Ring{ // {{{
             const will = @intCast(usize, state.player.stat(.Willpower));
             const duration = 20 - math.max(1, will);
             state.player.addStatus(.Held, 0, .{ .Tmp = duration });
+
+            return true;
+        }
+    }.f,
+}; // }}}
+
+pub const ConcentrationRing = Ring{ // {{{
+    .name = "concentration",
+    .required_MP = 1,
+    .stats = .{ .Willpower = 1 },
+    .requires_nopain = true,
+    .effect = struct {
+        pub fn f() bool {
+            const will = @intCast(usize, state.player.stat(.Willpower));
+            const duration = math.max(1, will * 2);
+            state.player.addStatus(.RingConcentration, 0, .{ .Tmp = duration });
+            state.player.addStatus(.Slow, 0, .{ .Tmp = duration });
+
+            state.message(.Info, "Your consciousness begins withdrawing from your physical body.", .{});
 
             return true;
         }

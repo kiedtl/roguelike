@@ -937,12 +937,14 @@ pub const RingError = enum {
     NotEnoughMP,
     HatedByNight,
     CannotBeCorrupted,
+    CannotBeInPain,
 
     pub fn text1(self: @This()) []const u8 {
         return switch (self) {
             .NotEnoughMP => "low mana",
             .HatedByNight => "hated by the Night",
             .CannotBeCorrupted => "must be uncorrupted",
+            .CannotBeInPain => "must not be in pain",
         };
     }
 };
@@ -957,6 +959,9 @@ pub fn checkRing(index: usize) ?RingError {
     }
     if (ring.requires_uncorrupt and state.player.hasStatus(.Corruption)) {
         return .CannotBeCorrupted;
+    }
+    if (ring.requires_nopain and state.player.hasStatus(.Pain)) {
+        return .CannotBeInPain;
     }
     return null;
 }

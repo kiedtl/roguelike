@@ -1129,6 +1129,7 @@ pub const Status = enum {
     RingConjuration, // No power field
     RingAcceleration, // No power field
     RingDeception, // No power field
+    RingConcentration, // No power field
 
     // Item-specific effects.
     DetectHeat, // Doesn't have a power field.
@@ -4090,6 +4091,14 @@ pub const Mob = struct { // {{{
                         val = @divTrunc(val * 50, 100);
                     };
             },
+            .Melee => {
+                if (self.hasStatus(.RingConcentration))
+                    val -= 100;
+            },
+            .Evade => {
+                if (self.hasStatus(.RingConcentration))
+                    val -= 100;
+            },
             else => {},
         }
 
@@ -4705,6 +4714,7 @@ pub const Ring = struct {
     stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     hated_by_nc: bool = false,
     requires_uncorrupt: bool = false,
+    requires_nopain: bool = false,
     effect: fn () bool,
 };
 
