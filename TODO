@@ -456,23 +456,23 @@ footwear:
 - ornate shoes:                Potential+10 Will-1
 ~ scale shoes:      5% armor   +10% speed when moving over ground that gives speed, -10% speed
                                 on ground that slows down
-
 headgear:
 - mining helmet:               Vision+ 
 - mail coif:       10% armor
-- cloth hood:                           rElec+             Evade+
+- cloth hood:                           rElec+           Evade+
 - fume hood:                   Vision-  rFume+70
 - welding helmet:   5% armor   Vision-  rFire+
-- spectral crown:                       Conjuration+       (change from Aux)
+- spectral crown:                       Conjuration+     (change from Aux)
 - thief's mask:                Vision-  infravision
-- gold headband:                        Potential+10       rElec-10
-- gold tiara:                           Potential+20       Will-1  
+- gold headband:                        Potential+10     rElec-10 Will-1
+- gold tiara:                           Potential+20     Will-2
 - lightning helm:   5% armor            rElec+
 - silus mask:                           rFire+
 - silus hood:      10% armor            rFire+
+- ______ mask:      5% armor            Will+            [holy] Suicide bomb status (hellfire blast)
 
-- shadow mask:                 Vision-  Will+1             [Night] Will+2
-  - wrong theme
+- shadow mask:                 Vision-  Will+1           [Night] Will+2
+  - wrong theme (Will+ is for holy faction)
 
 utility and auxiliary items:
 - Detect undead (or nah... overlaps with Corruption too much)
@@ -563,6 +563,9 @@ Rings
 -----
 Rings have "tiers" instead of an enchantment level (gold, silver, iron).
 
+x ring of concentration: [holy] Increase willpower by a factor of 2, at the
+  cost of melee%, evade%, and slowness.
+
 - ring of provocation: (Alvoc) Tear apart a nearby (standing on/adjacent)
   corpse in a crazed animal rage, causing all visible enemies to either flee or
   become enraged (50/50 chance). Target corpse must be "named".
@@ -598,7 +601,7 @@ Rings have "tiers" instead of an enchantment level (gold, silver, iron).
   affect mobs with .Held. Creates puzzle-like gameplay. Damage could scale with
   some stat.
 
-- ring of condemnation: [holy] instakill undead, at cost of 10 turns held.
+x ring of condemnation: [holy] instakill undead, at cost of 10 turns held.
   Ancient Mage should have some kind of countermeasure (transform into
   something else? explode into swarm of enemies?)
 
@@ -609,12 +612,12 @@ Rings have "tiers" instead of an enchantment level (gold, silver, iron).
     paralyzed/will==0/in-dark-area mobs (still haven't decided, maybe a
     combination of the two
 
-- ring of transformation: turns all fire into electricity. "Heals" the burning
+x ring of transformation: turns all fire into electricity. "Heals" the burning
   status, and targets self.
 
-- ring of detonation: make enemy explosive+noisy+insane
+x ring of detonation: make enemy explosive+noisy+insane+immobile
 
-- ring of deception: [anti-Holy] undead mistake you for ally unless non-undead
+x ring of deception: [anti-Holy] undead mistake you for ally unless non-undead
   allies are nearby
 
 - ring of deconstruction: rolling boulder
@@ -1131,16 +1134,16 @@ x Night creatures
   x Draining mobs (dead)
   x Draining mobs (alive)
 - New rings
-  - ring of distortion
+  x ring of concentration
   - ring of obscuration
-  - ring of condemnation
-  - ring of transformation
-  - ring of detonation
-  - ring of deception
+  x ring of condemnation
+  x ring of transformation
+  x ring of detonation
+  x ring of deception
   - ring of deconstruction
   - ring of fustigation
 - New potions
-  - potion of remediation (cure disorient/nausea) [recipe: recuperate]
+  - potion of remediation (cure disorient/nausea/pain) [recipe: recuperate]
   - potion of vision (cure blindness)
   - potion of perception (extra vision, ringing ears) [recipe: vision]
 - Crypt floor
@@ -1153,10 +1156,10 @@ x Night creatures
     - Pitchblende statues
   - Garrison inset prefabs
   - -1/Crypt/3 prefab
-- Rework -1/Prison
+- Rework -1/Prison to -1/Hub
   - Exiting staircase to "outside" on top
   - Doorway to Crypt on bottom side
-  - Entry points and (unavailable) staircase to "Dining" in center
+  - Entry points and (unavailable) staircase to "0/Dining" in center
     - If player tries to go up w/ center staircase, staircase gets
       locked down, and guards start pouring out. i.e. challenge mode
       - Prevents Revgenunkim invasion event?
