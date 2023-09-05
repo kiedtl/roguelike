@@ -812,8 +812,8 @@ pub fn guardWork(mob: *Mob, _: mem.Allocator) void {
             tryRest(mob);
             mob.ai.work_area.append(post) catch unreachable;
             return;
-        } else if (rng.tenin(15)) {
-            var tries: usize = 200;
+        } else if (rng.tenin(15) or state.rooms[mob.coord.z].items.len == 1) {
+            var tries: usize = 100;
             var farthest: Coord = post;
             while (tries > 0) : (tries -= 1) {
                 const rndcoord = cur_room.rect.randomCoord();
@@ -845,15 +845,9 @@ pub fn guardWork(mob: *Mob, _: mem.Allocator) void {
                 }
             }
 
-            // In rare cases, such as the tutorial map, there might be only one
-            // room. In that case just rest skip turn.
-            //assert(nearest != null);
-            if (nearest == null) {
-                tryRest(mob);
-                return;
-            }
+            assert(nearest != null);
 
-            var tries: usize = 500;
+            var tries: usize = 100;
             const post2 = while (tries > 0) : (tries -= 1) {
                 const rndcoord = nearest.?.rect.randomCoord();
                 if (!state.is_walkable(rndcoord, .{ .mob = mob, .right_now = true }) or
