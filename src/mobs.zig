@@ -1893,6 +1893,7 @@ pub const SpectralTotemTemplate = MobTemplate{
             .profession_description = "watching",
             .work_fn = ai.dummyWork,
             .fight_fn = ai.mageFight,
+            .spellcaster_backup_action = .KeepDistance,
             .is_curious = false,
             .is_fearless = true,
             .work_phase = .NC_Guard,
