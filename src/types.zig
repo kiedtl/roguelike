@@ -1166,6 +1166,21 @@ pub const Status = enum {
     EarthenShield,
     FumesVest, // Doesn't have a power field.
 
+    // Disrupts the player's hearing
+    //
+    // Doesn't have a power field.
+    RingingEars,
+
+    // Allows player to see through any obstacles that aren't completely opaque.
+    //
+    // Doesn't have a power field.
+    Perceptive,
+
+    // Doubles player's Potential stat.
+    //
+    // Doesn't have a power field.
+    Absorbing,
+
     // Causes monster to be considered hostile to all other monsters.
     //
     // Doesn't have a power field.
@@ -2235,6 +2250,7 @@ pub const Mob = struct { // {{{
         const is_blinded = self.isUnderStatus(.Blind) != null;
         const light_needs = [_]bool{ self.canSeeInLight(false), self.canSeeInLight(true) };
 
+        const perceptive = self.hasStatus(.Perceptive);
         const vision = @intCast(usize, self.stat(.Vision));
         const energy = math.clamp(vision * Dungeon.FLOOR_OPACITY, 0, 100);
         const direction = if (self.deg360_vision) null else self.facing;
@@ -2257,7 +2273,17 @@ pub const Mob = struct { // {{{
 
         var gen = Generator(Rect.rectIter).init(eyes);
         while (gen.next()) |eye_coord|
-            fov.rayCast(eye_coord, vision, energy, Dungeon.tileOpacity, &self.fov, direction, self == state.player);
+            if (perceptive) {
+                const S = struct {
+                    pub fn tileOpacity(coord: Coord) usize {
+                        const o = Dungeon.tileOpacity(coord);
+                        return if (o < 100) 0 else 100;
+                    }
+                };
+                fov.rayCast(eye_coord, vision, energy, S.tileOpacity, &self.fov, direction, self == state.player);
+            } else {
+                fov.rayCast(eye_coord, vision, energy, Dungeon.tileOpacity, &self.fov, direction, self == state.player);
+            };
 
         for (self.fov) |row, y| for (row) |_, x| {
             if (self.fov[y][x] > 0) {
@@ -3974,10 +4000,14 @@ pub const Mob = struct { // {{{
         return if (self.last_damage) |dam| (dam.amount * 100) / self.max_HP else 0;
     }
 
-    pub fn canHear(self: *const Mob, coord: Coord) ?*Sound {
+    pub fn canHear(self: *const Mob, coord: Coord) ?Sound {
         if (self.deaf) return null;
 
         const noise = state.dungeon.soundAt(coord);
+
+        if (self == state.player and state.player.hasStatus(.RingingEars) and
+            rng.onein(120))
+            return sound.Sound{ .intensity = .Loud, .type = .Movement, .state = .New };
 
         if (self.coord.z != coord.z)
             return null; // Can't hear across levels
@@ -3993,7 +4023,7 @@ pub const Mob = struct { // {{{
         if (self.coord.distance(coord) > radius)
             return null; // Too far away
 
-        return noise;
+        return noise.*;
     }
 
     pub fn isMobMartial(self: *Mob) bool {
@@ -4132,6 +4162,10 @@ pub const Mob = struct { // {{{
                     if (utils.adjacentHostiles(self) == 0) {
                         val = @divTrunc(val * 50, 100);
                     };
+            },
+            .Potential => {
+                if (self.hasStatus(.Absorbing))
+                    val *= 2;
             },
             else => {},
         }

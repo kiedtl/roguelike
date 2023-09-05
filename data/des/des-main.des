@@ -301,7 +301,6 @@ less.
 Releases a cloud of smoke. Useful for obscuring vision.
 
 % potion_disorient
-Disorient
 Emits disorienting gas, preventing any affected creatures from moving
 diagonally.
 
@@ -323,6 +322,21 @@ This will set you and your surroundings on fire in a 8-tile radius.
 
 % potion_decimate
 Creates a nasty explosion in a 3-tile radius, pulverising anyone caught in it.
+
+% potion_remediate
+A rare potion that cures $aDaze$., $aDisorient$., $aDebilitated$., and $aPain$..
+
+% potion_vision
+A rare potion that cures blindness.
+
+% potion_perception
+A rare potion that grants you enhanced vision, allowing you to see past any
+obstruction that isn't 100% opaque (such as most gases). Unfortunately, it also
+causes ringing ears.
+
+% potion_absorb
+This potion is composed of dissolved gold in some kind of solution. Drinking it
+will increase your ability to absorb the Necromancer's power.
 
 % t_default
 

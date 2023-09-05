@@ -52,6 +52,9 @@ This is supposed to be a player-only status, and is probably a bug.
 % nonplayer_Status.Echolocation
 This is supposed to be a player-only status, and is probably a bug.
 
+% nonplayer_Status.Absorbing
+[BUG] It is absorbing the sweet odor of the prison onto its skin.
+
 % nonplayer_Status.Amnesia
 This creature has entirely forgotten about its enemies, and will not attack or
 hunt.
@@ -140,8 +143,15 @@ It is in pain and cannot rest, and has a change to take damage every turn.
 % nonplayer_Status.Paralysis
 It is paralyzed, and will skip its turns entirely.
 
+% nonplayer_Status.Perceptive
+It can see through any obstacle that isn't 100% opaque, including most gases
+and vision-obstructing terrain.
+
 % nonplayer_Status.Recuperate
 It is slowly regaining HP, at the cost of being able to evade attacks.
+
+% nonplayer_Status.RingingEars
+[BUG] Ringing ears are often a sign of ear infection.
 
 % nonplayer_Status.Sleeping
 It doesn't seem to be awake...

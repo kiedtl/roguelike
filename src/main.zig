@@ -382,7 +382,6 @@ fn readNoActionInput(timeout: ?usize) !void {
 }
 
 fn readInput() !bool {
-    ui.draw();
     if (state.state == .Quit) return error.Quit;
     var action_taken = false;
 
@@ -540,7 +539,6 @@ fn readInput() !bool {
         if (action_taken) break;
     }
 
-    ui.draw();
     if (state.state == .Quit) return error.Quit;
     return action_taken;
 }

@@ -52,6 +52,9 @@ have a will-checked chance to take damage each turn.
 Whenever you hear a sound, you'll be able to deduce the structure of nearby
 terrain.
 
+% player_Status.Absorbing
+Your Potential stat is doubled.
+
 % player_Status.Amnesia
 [BUG] Did you leave the stove on? DID YOU?
 
@@ -139,8 +142,16 @@ You are in pain and cannot rest.
 % player_Status.Paralysis
 You are paralyzed, and will skip your turns entirely.
 
+% player_Status.Perceptive
+You can see through any obstacle that isn't 100% opaque, including most gases
+and vision-obstructing terrain.
+
 % player_Status.Recuperate
 You are slowly regaining HP, at the cost of being able to evade attacks.
+
+% player_Status.RingingEars
+Your ears are ringing. In this state you are unable to properly distinguish
+sounds.
 
 % player_Status.Sleeping
 [BUG] I hate DCSS dream sheep. Don't you?

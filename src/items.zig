@@ -147,8 +147,12 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 150, .i = .{ .P = &FastPotion } },
     .{ .w = 150, .i = .{ .P = &IncineratePotion } },
     .{ .w = 140, .i = .{ .P = &RecuperatePotion } },
-    .{ .w = 120, .i = .{ .P = &DecimatePotion } },
+    .{ .w = 140, .i = .{ .P = &AbsorbPotion } },
     .{ .w = 60, .i = .{ .P = &GlowPotion } },
+    .{ .w = 40, .i = .{ .P = &PerceptionPotion } },
+    .{ .w = 20, .i = .{ .P = &RemediatePotion } },
+    .{ .w = 20, .i = .{ .P = &DecimatePotion } },
+    .{ .w = 20, .i = .{ .P = &VisionPotion } },
     // Consumables
     // .{ .w = 80, .i = .{ .c = &HotPokerConsumable } },
     // .{ .w = 90, .i = .{ .c = &CoalConsumable } },
@@ -1380,6 +1384,60 @@ pub const RecuperatePotion = Consumable{
     .id = "potion_recuperate",
     .name = "potion of recuperation",
     .effects = &[_]Consumable.Effect{.{ .Status = .Recuperate }},
+    .is_potion = true,
+    .color = 0xffffff,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+};
+
+pub const RemediatePotion = Consumable{
+    .id = "potion_remediate",
+    .name = "potion of remediation",
+    .effects = &[_]Consumable.Effect{.{ .Custom = struct {
+        fn f(mob: ?*Mob, _: Coord) void {
+            mob.?.cancelStatus(.Disorient);
+            mob.?.cancelStatus(.Pain);
+            mob.?.cancelStatus(.Daze);
+            mob.?.cancelStatus(.Debil);
+        }
+    }.f }},
+    .is_potion = true,
+    .color = 0xffffff,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+};
+
+pub const VisionPotion = Consumable{
+    .id = "potion_vision",
+    .name = "potion of vision",
+    .effects = &[_]Consumable.Effect{.{ .Custom = struct {
+        fn f(mob: ?*Mob, _: Coord) void {
+            mob.?.cancelStatus(.Blind);
+        }
+    }.f }},
+    .is_potion = true,
+    .color = 0xffffff,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+};
+
+pub const AbsorbPotion = Consumable{
+    .id = "potion_absorb",
+    .name = "potion of absorption",
+    .effects = &[_]Consumable.Effect{.{ .Status = .Absorbing }},
+    .is_potion = true,
+    .color = colors.GOLD,
+    .verbs_player = Consumable.VERBS_PLAYER_POTION,
+    .verbs_other = Consumable.VERBS_OTHER_POTION,
+};
+
+pub const PerceptionPotion = Consumable{
+    .id = "potion_perception",
+    .name = "potion of perception",
+    .effects = &[_]Consumable.Effect{
+        .{ .Status = .Perceptive },
+        .{ .Status = .RingingEars },
+    },
     .is_potion = true,
     .color = 0xffffff,
     .verbs_player = Consumable.VERBS_PLAYER_POTION,

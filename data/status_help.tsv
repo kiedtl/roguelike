@@ -18,9 +18,10 @@
 .Riposte           	"riposte"             	 -                     	 -
 .TormentUndead     	"torment undead"      	 -                     	 -
 .Echolocation      	"echolocating"        	 -                     	 -
+.Absorbing         	"absorbing"           	 "devouring your soul" 	 "absorbing"
 .Amnesia           	"amnesia"             	 -                     	 "amnesia"
 .Blind             	"blind"               	 -                     	 "blind"
-.Corruption        	"corrupted"           	 "eating eggplant"     	 "corrupt"
+.Corruption        	"corrupted"           	 "eating cabbage"      	 "corrupt"
 .Conductive        	"conductive"          	 -                     	 "conductve"
 .Corona            	"glowing"             	 -                     	 "glow"
 .Daze              	"dazed"               	 -                     	 "dazed"
@@ -40,11 +41,13 @@
 .Intimidating      	"intimidating"        	 -                     	 "intim"
 .Invigorate        	"invigorated"         	 -                     	 "invig"
 .Lifespan          	"lifespan"            	 -                     	 -
-.Nausea            	"nauseated"           	 "baking eggplant"     	 "nausea"
+.Nausea            	"nauseated"           	 "making omelette"     	 "nausea"
 .Noisy             	"noisy"               	 -                     	 "noisy"
 .Pain              	"pain"                	 -                     	 "pain"
 .Paralysis         	"paralyzed"           	 -                     	 "para"
+.Perceptive        	"perceptive"          	 -                     	 "perceptve"
 .Recuperate        	"recuperating"        	 -                     	 "recup"
+.RingingEars       	"ringing ears"        	 "[bug] singing"       	 "ringing"
 .Sleeping          	"sleeping"            	 "dormant"             	 "sleep"
 .Slow              	"slowed"              	 -                     	 "slow"
 .DayBlindness      	"day-blinded"         	 -                     	 -

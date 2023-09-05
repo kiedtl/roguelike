@@ -105,7 +105,7 @@ pub const Miasma = Gas{
     .name = "miasma",
     .color = 0xd77fd7,
     .dissipation_rate = 8,
-    .opacity = 0.00,
+    .opacity = 0.1,
     .trigger = triggerMiasma,
     .id = 7,
 };
@@ -114,7 +114,7 @@ pub const Seizure = Gas{
     .name = "seizure gas",
     .color = 0xd7d77f,
     .dissipation_rate = 3,
-    .opacity = 0.00,
+    .opacity = 0.3,
     .trigger = struct {
         pub fn f(mob: *Mob, _: usize) void {
             mob.addStatus(.Debil, 0, .{ .Tmp = Status.MAX_DURATION });
@@ -127,7 +127,7 @@ pub const Blinding = Gas{
     .name = "tear gas",
     .color = 0x7fe7f7,
     .dissipation_rate = 8,
-    .opacity = 0.00,
+    .opacity = 0.5,
     .trigger = struct {
         pub fn f(mob: *Mob, _: usize) void {
             mob.addStatus(.Blind, 0, .{ .Tmp = Status.MAX_DURATION });
@@ -153,7 +153,7 @@ pub const Corrosive = Gas{
     .name = "acid cloud",
     .color = 0xa7e234,
     .dissipation_rate = 6,
-    .opacity = 0.0,
+    .opacity = 0.1,
     .trigger = struct {
         pub fn f(mob: *Mob, _: usize) void {
             if (!mob.isFullyResistant(.rAcid) and rng.onein(3)) {
