@@ -631,7 +631,7 @@ fn tickGame(p_cur_level: ?usize) !void {
                 mob.rest();
                 continue;
             } else {
-                if (mob.coord.eq(state.player.coord)) {
+                if (mob == state.player) {
                     ui.draw();
                     if (state.state == .Quit) break;
                     while (!try readInput()) ui.drawAnimations();
