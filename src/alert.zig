@@ -49,6 +49,9 @@ pub const ThreatData = struct {
 
     // Only used for .Unknown and .Specific.
     last_incident: usize = 0,
+
+    // Only used for .Specific.
+    last_known_coord: ?Coord = null,
 };
 
 // Note, the numbers do NOT indicate the deadliness of the threat -- if it did,
@@ -75,6 +78,13 @@ pub const ThreatIncrease = enum(usize) {
 };
 
 pub const ThreatResponseType = union(enum) {
+    ReinforceAgainstEnemy: struct {
+        reinforcement: union(enum) {
+            Class: []const u8,
+            Specific: *const mobs.MobTemplate,
+        },
+        threat: Threat,
+    },
     ReinforceRoom: struct {
         reinforcement: union(enum) {
             Class: []const u8,
@@ -149,6 +159,7 @@ pub fn reportThreat(by: ?*Mob, threat: Threat, threattype: ThreatIncrease) void 
     info.deadly = info.deadly or threattype.isDeadly();
     info.level += @enumToInt(threattype);
     info.last_incident = state.ticks;
+    info.last_known_coord = if (threat == .Specific) threat.Specific.coord else null;
 
     if (threat != .General)
         reportThreat(by, .General, threattype);
@@ -217,6 +228,41 @@ pub fn tickThreats(level: usize) void {
     if (responses.items.len > 0) {
         const response = responses.pop();
         switch (response.type) {
+            .ReinforceAgainstEnemy => |r| {
+                const mob_template = switch (r.reinforcement) {
+                    .Specific => |m| m,
+                    .Class => |c| mobs.spawns.chooseMob(.Special, level, c) catch err.wat(),
+                };
+
+                const coord = getThreat(r.threat).last_known_coord orelse
+                    // A bit unrealistic that enemies could possibly home in
+                    // on exact player's position, but whatever
+                    r.threat.Specific.coord;
+
+                const opts: mobs.PlaceMobOptions = .{
+                    .phase = .Investigate,
+                    .work_area = coord,
+                };
+
+                if (opts.work_area == null)
+                    return; // uhg
+
+                // Sending an engineer into a firefight to help against enemies
+                // is stupid
+                assert(!mob_template.mob.immobile);
+
+                if (mobs.placeMobNearStairs(mob_template, level, opts)) |mob| {
+                    std.log.debug("sent out a {Af}", .{mob});
+                    mob.sustiles.append(.{
+                        .coord = coord,
+                        .unforgettable = true,
+                    }) catch err.wat();
+                } else |_| {
+                    // No space near stairs. Add the response back, wait until next
+                    // time, hopefully the traffic dissipates.
+                    responses.append(response) catch err.wat();
+                }
+            },
             .ReinforceRoom => |r| {
                 const mob_template = switch (r.reinforcement) {
                     .Specific => |m| m,

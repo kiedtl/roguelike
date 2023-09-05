@@ -15,6 +15,7 @@ const StackBuffer = @import("buffer.zig").StackBuffer;
 const StringBuf64 = @import("buffer.zig").StringBuf64;
 
 const ai = @import("ai.zig");
+const alert = @import("alert.zig");
 const astar = @import("astar.zig");
 const combat = @import("combat.zig");
 const colors = @import("colors.zig");
@@ -1085,10 +1086,37 @@ pub const EnemyRecord = struct {
     // Times mob informed allies of this enemy.
     alerted_allies: usize = 0,
 
+    // When the enemy record is "done", ie mob forgets/leaves floor, then
+    // call for help
+    //
+    // This should only be set in case of mob that decides to flee to stairs
+    // with its buddies, so that threat reponse request will trigger as soon
+    // as mob leaves floor. In normal circumstances should not be triggered
+    request_help_when_finish: bool = false,
+
     pub const AList = std.ArrayList(EnemyRecord);
 
     pub fn lastSeenOrCoord(self: *const EnemyRecord) Coord {
         return self.last_seen orelse self.mob.coord;
+    }
+
+    pub fn finish(enemy: EnemyRecord, mob: *Mob) void {
+        if (mob.faction != .Necromancer) return;
+
+        const confrontation: alert.ThreatIncrease =
+            if (enemy.attacked_me) .ArmedConfrontation else .Confrontation;
+
+        alert.reportThreat(mob, .{ .Specific = enemy.mob }, confrontation);
+
+        if (enemy.request_help_when_finish) {
+            assert(mob.ai.phase == .Flee);
+            assert(mob.bflee_flag);
+
+            alert.queueThreatResponse(.{ .ReinforceAgainstEnemy = .{
+                .reinforcement = .{ .Class = "r" },
+                .threat = .{ .Specific = enemy.mob },
+            } });
+        }
     }
 };
 
@@ -1990,6 +2018,10 @@ pub const Mob = struct { // {{{
     // by ai.guardGlanceLeftRight.
     glance_flag: u2 = 0,
 
+    // If set, the mob is Necromancer-aligned and is fleeing the entire level
+    // (after having called for reinforcements)
+    bflee_flag: bool = false,
+
     facing: Direction = .North,
     coord: Coord = Coord.new(0, 0),
 
@@ -2443,16 +2475,18 @@ pub const Mob = struct { // {{{
     }
 
     pub fn newJob(self: *Mob, jtype: AIJob.Type) void {
-        const job = AIJob{ .job = jtype, .ctx = AIJob.Ctx.init(state.GPA.allocator()) };
-        self.jobs.append(job) catch {
-            // Somehow jobs queue is full, use nuclear option
-            err.ensure(false, "{cf} has too many jobs, clearing.", .{self}) catch {
-                for (self.jobs.constSlice()) |j|
-                    std.log.err("    - Job: {}", .{j.job});
-                self.ai.task_id = null;
-                self.jobs.clear();
-            };
+        err.ensure(!self.jobs.isFull(), "{cf} has too many jobs, clearing.", .{self}) catch {
+            // Somehow jobs queue is full, use nuclear option (remove all)
+            for (self.jobs.slice()) |*j| {
+                std.log.err("    - Job: {}", .{j.job});
+                j.deinit();
+            }
+            self.ai.task_id = null;
+            self.jobs.clear();
         };
+
+        const job = AIJob{ .job = jtype, .ctx = AIJob.Ctx.init(state.GPA.allocator()) };
+        self.jobs.append(job) catch err.wat();
     }
 
     pub fn delegateJob(self: *Mob) void {

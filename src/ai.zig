@@ -222,10 +222,42 @@ pub fn calculateMorale(self: *Mob) isize {
 }
 
 pub fn shouldFlee(me: *Mob) bool {
-    if (me.ai.is_fearless or me.life_type != .Living)
+    if (me.ai.is_fearless or me.life_type != .Living) {
+        assert(!me.bflee_flag);
         return false;
+    }
 
-    return me.morale < 0;
+    return me.bflee_flag or me.morale < 0;
+}
+
+pub fn shouldCallForReinforcements(mob: *Mob) bool {
+    assert(!mob.bflee_flag);
+    assert(mob.ai.phase == .Flee);
+
+    if (!mob.ai.is_combative or mob.faction != .Necromancer or
+        mob.life_type != .Living or !mob.isAloneOrLeader() or
+        mob.hasStatus(.Insane))
+    {
+        return false;
+    }
+
+    var fleeing_allies: usize = 0;
+    for (mob.allies.items) |ally| {
+        if (ally.ai.is_combative and ally.ai.phase == .Flee and
+            // Just added this condition here to prevent the hypothetical
+            // situation of a snowballing group of guards running to staircase,
+            // and in process making everyone else flee to staircase as well.
+            //
+            // Not sure if it's effective or desirable to prevent this, or if this
+            // would even happen.
+            //
+            !ally.bflee_flag)
+        {
+            fleeing_allies += 1;
+        }
+    }
+
+    return fleeing_allies >= 5;
 }
 
 pub fn isEnemyKnown(mob: *const Mob, enemy: *const Mob) bool {
@@ -260,7 +292,7 @@ pub fn alertAllyOfHostile(mob: *Mob) void {
     const hostile = &mob.enemyList().items[0];
     for (mob.allies.items) |ally| {
         if (!isEnemyKnown(ally, hostile.mob)) {
-            updateEnemyRecord(ally, hostile.*);
+            updateEnemyKnowledge(ally, hostile.mob, hostile.last_seen);
             hostile.alerted_allies += 1;
             break;
         }
@@ -361,7 +393,9 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
     }
 
     // No existing record, append.
-    mob.enemyList().append(new) catch unreachable;
+    var bnew = new;
+    bnew.request_help_when_finish = false;
+    mob.enemyList().append(bnew) catch unreachable;
 
     // Remove any sustiles related to this enemy
     //
@@ -384,8 +418,18 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
 }
 
 pub fn checkForCorpses(mob: *Mob) void {
-    if (mob.hasStatus(.Insane) or !mob.ai.flag(.ScansForCorpses))
+    if (mob.hasStatus(.Insane) or !mob.ai.flag(.ScansForCorpses) or
+        // Don't queue scan corpse jobs if we're heading for the stairs,
+        // because then we're in Big Panic and don't have time to mourn our
+        // dead...
+        //
+        // Real reason is because flee code expects the "Leave floor" job to
+        // be the current job, and we shouldn't be adding more jobs in that
+        // state.
+        (mob.ai.phase == .Flee and mob.bflee_flag))
+    {
         return;
+    }
 
     tasks.scanForCorpses(mob);
 }
@@ -452,8 +496,6 @@ pub fn checkForHostiles(mob: *Mob) void {
     var i: usize = 0;
     while (i < mob.enemyList().items.len) {
         const enemy = &mob.enemyList().items[i];
-        const confrontation: alert.ThreatIncrease =
-            if (enemy.attacked_me) .ArmedConfrontation else .Confrontation;
 
         if (enemy.last_seen) |last_seen| {
             if (mob.cansee(last_seen) and !enemy.mob.coord.eq(last_seen)) {
@@ -469,17 +511,13 @@ pub fn checkForHostiles(mob: *Mob) void {
             (enemy.mob.hasStatus(.RingDeception) and !has_nonundead_ally) or
             enemy.mob.is_dead)
         {
-            alert.reportThreat(mob, .{ .Specific = enemy.mob }, confrontation);
-            _ = mob.enemyList().orderedRemove(i);
+            const e = mob.enemyList().orderedRemove(i);
+            e.finish(mob);
         } else if (enemy.mob.faction == .Night and
             mob.nextDirectionTo(enemy.mob.coordMT(mob.coord)) == null)
         {
-            alert.reportThreat(mob, .{ .Specific = enemy.mob }, confrontation);
-
-            // Placeholder, eventually we want to call reinforcements and
-            // exterminators to make the night creatures miserable.
-            //
-            _ = mob.enemyList().orderedRemove(i);
+            const e = mob.enemyList().orderedRemove(i);
+            e.finish(mob);
         } else {
             if ((mob.ai.phase != .Flee or enemy.alerted_allies > 0) and
                 mob.isAloneOrLeader() and enemy.last_seen == null and
@@ -1567,15 +1605,36 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
 
     alertAllyOfHostile(mob);
 
-    if (mob.immobile or
-        !runAwayFromEnemies(mob, FLEE_GOAL))
-    {
-        if (mob.canMelee(target.mob)) {
-            meleeFight(mob, alloc);
-        } else {
-            tryRest(mob);
+    if (mob.bflee_flag) {
+        // Job should be leave floor.
+        assert(mob.jobs.last().?.job == .WRK_LeaveFloor);
+        assert(mob.faction == .Necromancer);
+        workJobs(mob);
+    } else {
+        if (mob.immobile or
+            !runAwayFromEnemies(mob, FLEE_GOAL))
+        {
+            if (mob.canMelee(target.mob)) {
+                meleeFight(mob, alloc);
+            } else {
+                tryRest(mob);
+            }
+        }
+        if (shouldCallForReinforcements(mob)) {
+            closestVisibleEnemy(mob).request_help_when_finish = true;
+            mob.newJob(.WRK_LeaveFloor);
+            mob.bflee_flag = true;
+            for (mob.allies.items) |ally|
+                if (ally.ai.phase == .Flee) {
+                    ally.newJob(.WRK_LeaveFloor);
+                    ally.bflee_flag = true;
+                };
         }
     }
+
+    // This can happen if the mob left the floor...
+    // sucks that I need to take care of these edge cases lol
+    if (mob.is_dead) return;
 
     if (mob.hasStatus(.Fear)) {
         mob.makeNoise(.Scream, .Loud);
@@ -1609,11 +1668,13 @@ pub fn _Job_WRK_LeaveFloor(mob: *Mob, job: *AIJob) AIJob.JStatus {
 
     // Chosen incase we haven't done this step yet. If we have done this step of
     // choosing the stair, then its ignored
-    const random_stair = rng.chooseUnweighted(Coord, state.dungeon.stairs[mob.coord.z].constSlice());
+    var random_stair = if (state.dungeon.stairs[mob.coord.z].len > 0) rng.chooseUnweighted(Coord, state.dungeon.stairs[mob.coord.z].constSlice()) else state.dungeon.entries[mob.coord.z];
 
     const stair = job.getCtx(Coord, CTX_STAIR_LOCATION, random_stair);
 
     if (mob.distance2(stair) == 1) {
+        for (mob.enemyList().items) |enemy|
+            enemy.finish(mob);
         mob.deinitNoCorpse();
         return .Complete;
     } else {
@@ -1942,6 +2003,22 @@ pub fn _Job_SPC_NCAlignment(mob: *Mob, job: *AIJob) AIJob.JStatus {
     }
 }
 
+pub fn workJobs(mob: *Mob) void {
+    assert(mob.jobs.len > 0);
+    const real_work_fn = (mob.jobs.last().?.job.func());
+    const ind = mob.jobs.len - 1;
+    const r = (real_work_fn)(mob, &mob.jobs.slice()[ind]);
+    switch (r) {
+        .Ongoing => return,
+        .Complete => {
+            if (!mob.is_dead) // Some jobs involve suicide (ie leaving floor)
+                (mob.jobs.orderedRemove(ind) catch err.wat()).deinit();
+            return;
+        },
+        .Defer => {},
+    }
+}
+
 pub fn work(mob: *Mob, alloc: mem.Allocator) void {
     var work_fn = mob.ai.work_fn;
     if (mob.hasStatus(.Insane)) {
@@ -1962,18 +2039,7 @@ pub fn work(mob: *Mob, alloc: mem.Allocator) void {
     }
 
     if (mob.jobs.len > 0) {
-        const real_work_fn = (mob.jobs.last().?.job.func());
-        const ind = mob.jobs.len - 1;
-        const r = (real_work_fn)(mob, &mob.jobs.slice()[ind]);
-        switch (r) {
-            .Ongoing => return,
-            .Complete => {
-                if (!mob.is_dead) // Some jobs involve suicide (ie leaving floor)
-                    (mob.jobs.orderedRemove(ind) catch err.wat()).deinit();
-                return;
-            },
-            .Defer => {},
-        }
+        workJobs(mob);
     }
 
     if (!mob.isAloneOrLeader() and !mob.ai.flag(.ForceNormalWork)) {
@@ -2016,6 +2082,7 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
     // Should I flee (or stop fleeing?)
     if (mob.ai.phase == .Hunt and shouldFlee(mob)) {
         mob.ai.phase = .Flee;
+        mob.bflee_flag = false;
 
         if (mob.isUnderStatus(.Exhausted) == null) {
             if (mob.ai.flee_effect) |s| {

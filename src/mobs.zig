@@ -2404,11 +2404,14 @@ pub fn placeMob(
 }
 
 pub fn placeMobNearStairs(template: *const MobTemplate, level: usize, opts: PlaceMobOptions) !*Mob {
-    const coord = for (state.dungeon.stairs[level].constSlice()) |stair| {
-        if (state.nextSpotForMob(stair, null)) |coord| {
-            break coord;
-        }
-    } else return error.NoSpace;
+    var coords = StackBuffer(Coord, types.Dungeon.MAX_STAIRS + 1).init(null);
+    for (state.dungeon.stairs[level].constSlice()) |stair|
+        if (state.nextSpotForMob(stair, null)) |coord|
+            coords.append(coord) catch err.wat();
+    if (state.nextSpotForMob(state.dungeon.entries[level], null)) |coord|
+        coords.append(coord) catch err.wat();
+
+    const coord = coords.chooseUnweighted() orelse return error.NoSpace;
     return placeMob(state.GPA.allocator(), template, coord, opts);
 }
 
