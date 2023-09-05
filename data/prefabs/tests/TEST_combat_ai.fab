@@ -108,7 +108,7 @@ ab
 % 6. Should attack, emotional support exists and is aware of the enemy.
 %
 % Other things we could test, for example, socialfighter* flags require that
-% the ally in question must be immobile, etc. Not really necessary though.
+% the ally in question must not be immobile, etc. Not really necessary though.
 %
 % Note: thick walls are to block out sounds and prevent meleedudes from going
 % into investigation mode (because SocialFighter counts 'investigating' as
