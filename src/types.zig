@@ -2658,7 +2658,10 @@ pub const Mob = struct { // {{{
         assert(!self.is_dead);
 
         var gen = Generator(Rect.rectIter).init(self.areaRect());
-        while (gen.next()) |mobcoord|
+        while (gen.next()) |mobcoord| {
+            if (state.dungeon.soundAt(mobcoord).intensity.radiusHeard() > intensity.radiusHeard())
+                continue;
+
             state.dungeon.soundAt(mobcoord).* = .{
                 .mob_source = self,
                 .intensity = intensity,
@@ -2666,6 +2669,7 @@ pub const Mob = struct { // {{{
                 .state = .New,
                 .when = state.ticks,
             };
+        }
 
         sound.announceSound(self.coordMT(state.player.coord));
     }

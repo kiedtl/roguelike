@@ -50,6 +50,9 @@ pub const Sound = struct {
 };
 
 pub fn makeNoise(coord: Coord, s_type: SoundType, intensity: SoundIntensity) void {
+    if (state.dungeon.soundAt(coord).intensity.radiusHeard() > intensity.radiusHeard())
+        return;
+
     state.dungeon.soundAt(coord).* = .{
         .intensity = intensity,
         .type = s_type,
