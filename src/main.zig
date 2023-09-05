@@ -1166,6 +1166,7 @@ fn profilerMain() void {
     defer deinitGame();
 
     mapgen.initLevelTest("PRF1_combat") catch err.wat();
+    mapgen.placeEntry(0, state.GPA.allocator());
 
     var i: usize = 200;
     while (i > 0) : (i -= 1) {
