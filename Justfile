@@ -1,5 +1,8 @@
 seed := "3849171"
 
+b:
+    zig build -Duse-sdl=true
+
 brun:
     zig build -Duse-sdl=true && (RL_NO_SENTRY=1 RL_SEED={{seed}} RL_MODE=normal zig-out/bin/rl 2>| log || less log)
 
