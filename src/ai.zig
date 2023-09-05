@@ -1603,7 +1603,8 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
         // Job should be leave floor.
         assert(mob.jobs.last().?.job == .WRK_LeaveFloor);
         assert(mob.faction == .Necromancer);
-        workJobs(mob);
+        const did_not_defer = workJobs(mob);
+        assert(did_not_defer);
     } else {
         if (mob.immobile or
             !runAwayFromEnemies(mob, FLEE_GOAL))
@@ -1997,19 +1998,19 @@ pub fn _Job_SPC_NCAlignment(mob: *Mob, job: *AIJob) AIJob.JStatus {
     }
 }
 
-pub fn workJobs(mob: *Mob) void {
+pub fn workJobs(mob: *Mob) bool {
     assert(mob.jobs.len > 0);
     const real_work_fn = (mob.jobs.last().?.job.func());
     const ind = mob.jobs.len - 1;
     const r = (real_work_fn)(mob, &mob.jobs.slice()[ind]);
     switch (r) {
-        .Ongoing => return,
+        .Ongoing => return true,
         .Complete => {
             if (!mob.is_dead) // Some jobs involve suicide (ie leaving floor)
                 (mob.jobs.orderedRemove(ind) catch err.wat()).deinit();
-            return;
+            return true;
         },
-        .Defer => {},
+        .Defer => return false,
     }
 }
 
@@ -2033,7 +2034,8 @@ pub fn work(mob: *Mob, alloc: mem.Allocator) void {
     }
 
     if (mob.jobs.len > 0) {
-        workJobs(mob);
+        if (workJobs(mob))
+            return;
     }
 
     if (!mob.isAloneOrLeader() and !mob.ai.flag(.ForceNormalWork)) {
