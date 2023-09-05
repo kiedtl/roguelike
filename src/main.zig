@@ -390,7 +390,7 @@ fn readInput() !bool {
         switch (ev) {
             .Quit => state.state = .Quit,
             .Resize => ui.draw(),
-            .Wheel, .Hover, .Click => ui.handleMouseEvent(ev),
+            .Wheel, .Hover, .Click => if (ui.handleMouseEvent(ev)) ui.draw(),
             .Key => |k| switch (k) {
                 .Esc => ui.drawEscapeMenu(),
                 .CtrlC => state.state = .Quit,

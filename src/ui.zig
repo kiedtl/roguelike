@@ -54,7 +54,7 @@ const WIDTH = state.WIDTH;
 pub const labels = @import("ui/labels.zig");
 pub const drawLabels = @import("ui/labels.zig").drawLabels;
 
-pub const FRAMERATE = 1000 / 45;
+pub const FRAMERATE = 1000 / 60;
 
 pub const LEFT_INFO_WIDTH: usize = 35;
 //pub const RIGHT_INFO_WIDTH: usize = 24;
@@ -1664,7 +1664,7 @@ fn drawLog() void {
         while (fold_iter.next(&fibuf)) |text_line| : (y += 1) {
             var console = Console.initHeap(state.GPA.allocator(), linewidth, 1);
             _ = console.drawTextAt(0, 0, text_line, .{ .fg = col });
-            console.addRevealAnimation(.{ .factor = 8 });
+            console.addRevealAnimation(.{ .factor = 6 });
             log_win.main.addSubconsole(console, 0, y);
         }
     }
@@ -1893,8 +1893,8 @@ pub fn draw() void {
     display.present();
 }
 
-pub fn handleMouseEvent(ev: display.Event) void {
-    _ = map_win.handleMouseEvent(ev) or
+pub fn handleMouseEvent(ev: display.Event) bool {
+    return map_win.handleMouseEvent(ev) or
         hud_win.handleMouseEvent(ev) or
         log_win.handleMouseEvent(ev);
 }
@@ -2542,7 +2542,7 @@ pub fn drawMessagesScreen() void {
 }
 
 pub fn drawPlayerInfoScreen() void {
-    pinfo_win.left.addRevealAnimation(.{ .factor = 6, .idelay = 4 });
+    pinfo_win.left.addRevealAnimation(.{ .factor = 3, .idelay = 4 });
 
     const Tab = enum(usize) {
         Stats = 0,
@@ -4541,6 +4541,8 @@ pub const Animation = union(enum) {
                     };
                 }
 
+                // FIXME: use framerate (will require adjustment of all particle
+                // effects)
                 const WAIT_PERIOD = 50_000_000;
 
                 var last_tick_time = std.time.nanoTimestamp();
@@ -4606,7 +4608,7 @@ pub const Animation = union(enum) {
 };
 
 pub const RevealAnimationOpts = struct {
-    factor: usize = 6,
+    factor: usize = 3,
     ydelay: usize = 4,
     idelay: usize = 3,
     rvtype: enum { TopDown, All } = .TopDown,
