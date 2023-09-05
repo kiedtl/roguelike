@@ -1126,9 +1126,9 @@ x Night creatures
       x Shadow hauberk, shadow mail, shadow brigandine, shadow shield
       x Ethereal shield
       x Spectral mail, spectral crown, cloak of spectres
-- Golden stuff
+x Golden stuff
   x Golden equipment
-  - Potion of absorption
+  x Potion of absorption
   x Mini-shrines
   x Potential stat
   x Draining mobs (dead)
@@ -1140,12 +1140,10 @@ x Night creatures
   x ring of transformation
   x ring of detonation
   x ring of deception
-  - ring of deconstruction
-  - ring of fustigation
-- New potions
-  - potion of remediation (cure disorient/nausea/pain) [recipe: recuperate]
-  - potion of vision (cure blindness)
-  - potion of perception (extra vision, ringing ears) [recipe: vision]
+x New potions
+  x potion of remediation (cure disorient/nausea/pain) [recipe: recuperate]
+  x potion of vision (cure blindness)
+  x potion of perception (extra vision, ringing ears) [recipe: vision]
 - Crypt floor
   x Modify level data and spawn files
   - New monsters:
