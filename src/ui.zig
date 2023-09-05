@@ -1446,7 +1446,8 @@ fn drawHUD(moblist: []const *Mob) void {
 
         _ = hud_win.main.drawTextAtf(0, y, "{s}", .{lit_str}, .{});
         hud_win.main.addTooltipForText("Lit", .{}, "concept_Lit", .{});
-        _ = hud_win.main.drawTextAtf(hud_win.main.last_text_endx + 2, y, "{s}", .{spotted_str}, .{});
+        const spotted_x = if (light) hud_win.main.last_text_endx + 2 else 0;
+        _ = hud_win.main.drawTextAtf(spotted_x, y, "{s}", .{spotted_str}, .{});
         hud_win.main.addTooltipForText("Spotted", .{}, "concept_Spotted", .{});
 
         y += 2;
