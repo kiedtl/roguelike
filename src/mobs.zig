@@ -1901,7 +1901,7 @@ pub const SpectralTotemTemplate = MobTemplate{
         .spells = &[_]SpellOptions{
             .{ .MP_cost = 7, .spell = &spells.BOLT_CONJURE },
         },
-        .max_MP = 6,
+        .max_MP = 7,
 
         .deaf = true,
         .deg360_vision = true,
