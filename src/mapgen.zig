@@ -3361,6 +3361,7 @@ pub fn initLevelTest(prefab: []const u8) !void {
     state.player.kill();
 
     generateLayoutMap(0);
+    placeEntry(0, state.GPA.allocator());
 }
 
 pub fn initLevel(level: usize) void {
