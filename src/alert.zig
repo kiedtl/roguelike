@@ -252,7 +252,6 @@ pub fn tickThreats(level: usize) void {
                 assert(!mob_template.mob.immobile);
 
                 if (mobs.placeMobNearStairs(mob_template, level, opts)) |mob| {
-                    std.log.debug("sent out a {Af}", .{mob});
                     mob.sustiles.append(.{
                         .coord = coord,
                         .unforgettable = true,
