@@ -372,6 +372,7 @@ pub fn updateEnemyRecord(mob: *Mob, new: EnemyRecord) void {
             if (susrecord.sound) |s| if (s.mob_source) |src| if (src == new.mob) {
                 completed = false;
                 _ = mob.sustiles.orderedRemove(i);
+                break;
             };
         if (completed) break;
     }
@@ -407,7 +408,7 @@ pub fn checkForCorpses(mob: *Mob) void {
 pub fn checkForHostiles(mob: *Mob) void {
     assert(!mob.is_dead);
 
-    if (mob.hasStatus(.Amnesia)) {
+    if (mob.hasStatus(.Amnesia) and mob.ai.phase != .Flee) {
         mob.ai.phase = .Work;
         return;
     }
@@ -490,7 +491,7 @@ pub fn checkForHostiles(mob: *Mob) void {
         }
     }
 
-    if (mob.ai.is_combative and mob.enemyList().items.len > 0) {
+    if (mob.ai.is_combative and mob.enemyList().items.len > 0 and mob.ai.phase != .Flee) {
         mob.ai.phase = .Hunt;
     }
 
