@@ -727,3 +727,15 @@ turns of $aHeld$..
 % concentration
 $cEffect:$. Doubles your willpower for $bwillpower * 2$. turns, at the cost of
 $aSlow$., $b-100 Melee%$., and $b-100 Evade%$. for the same duration.
+
+% obscuration
+$cEffect:$. Prevents you from being noticed by foes, but drains you of 1 MP per
+foe that would have seen you, per turn. Does not drain MP when you would not
+have been noticed.
+
+
+This has no effect when the foe is undead and you are corrupted, or if you are
+glowing.
+
+
+$cDuration:$. This effect lasts for $bwillpower$. turns.

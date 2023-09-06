@@ -22,6 +22,9 @@ Refer to the ring's description.
 % player_Status.RingConcentration
 Refer to the ring's description.
 
+% player_Status.RingObscuration
+Refer to the ring's description.
+
 % player_Status.DetectHeat
 You are detecting sources of heat, as well as enemies attuned to fire.
 

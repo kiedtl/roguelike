@@ -938,6 +938,7 @@ pub const RingError = enum {
     HatedByNight,
     CannotBeCorrupted,
     CannotBeInPain,
+    CannotBeGlowing,
 
     pub fn text1(self: @This()) []const u8 {
         return switch (self) {
@@ -945,6 +946,7 @@ pub const RingError = enum {
             .HatedByNight => "hated by the Night",
             .CannotBeCorrupted => "must be uncorrupted",
             .CannotBeInPain => "must not be in pain",
+            .CannotBeGlowing => "must not be glowing",
         };
     }
 };
@@ -962,6 +964,9 @@ pub fn checkRing(index: usize) ?RingError {
     }
     if (ring.requires_nopain and state.player.hasStatus(.Pain)) {
         return .CannotBeInPain;
+    }
+    if (ring.requires_noglow and state.player.hasStatus(.Corona)) {
+        return .CannotBeGlowing;
     }
     return null;
 }

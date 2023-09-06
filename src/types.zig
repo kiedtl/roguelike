@@ -1158,6 +1158,7 @@ pub const Status = enum {
     RingAcceleration, // No power field
     RingDeception, // No power field
     RingConcentration, // No power field
+    RingObscuration,
 
     // Item-specific effects.
     DetectHeat, // Doesn't have a power field.
@@ -1405,6 +1406,28 @@ pub const Status = enum {
     }
 
     // Tick functions {{{
+
+    pub fn tickRingObscuration(should_be_player: *Mob) void {
+        assert(should_be_player == state.player);
+
+        if (state.player.hasStatus(.Corona)) {
+            state.player.cancelStatus(.RingObscuration);
+            return;
+        }
+
+        var mobiter = state.mobs.iterator();
+        while (mobiter.next()) |mob| {
+            if (mob.coord.z == state.player.coord.z and !mob.is_dead and
+                mob.cansee(state.player.coord) and !mob.canSeeMob(state.player))
+            {
+                if (state.player.MP == 0) {
+                    state.player.cancelStatus(.RingObscuration);
+                    return;
+                }
+                state.player.MP -= 1;
+            }
+        }
+    }
 
     pub fn tickDetectHeat(mob: *Mob) void {
         var y: usize = 0;
@@ -2430,6 +2453,7 @@ pub const Mob = struct { // {{{
                 }
 
                 switch (status_e) {
+                    .RingObscuration => Status.tickRingObscuration(self),
                     .DetectHeat => Status.tickDetectHeat(self),
                     .DetectElec => Status.tickDetectElec(self),
                     .TormentUndead => Status.tickTormentUndead(self),
@@ -4079,6 +4103,12 @@ pub const Mob = struct { // {{{
     }
 
     pub fn canSeeMob(self: *const Mob, mob: *const Mob) bool {
+        if (mob.hasStatus(.RingObscuration) and
+            (self.life_type != .Undead or !mob.hasStatus(.Corruption)))
+        {
+            return false;
+        }
+
         var gen = Generator(Rect.rectIter).init(mob.areaRect());
         return while (gen.next()) |mobcoord| {
             if (self.cansee(mobcoord)) break true;
@@ -4099,11 +4129,7 @@ pub const Mob = struct { // {{{
         //if (self.coord.distance(coord) > self.stat(.Vision))
         //    return false;
 
-        // Can always see yourself
-        if (self.coord.eq(coord))
-            return true;
-
-        if (self.fov[coord.y][coord.x] > 0)
+        if (self.fov[coord.y][coord.x] > 0 or self.coord.eq(coord))
             return true;
 
         return false;
@@ -4783,6 +4809,7 @@ pub const Ring = struct {
     hated_by_nc: bool = false,
     requires_uncorrupt: bool = false,
     requires_nopain: bool = false,
+    requires_noglow: bool = false,
     effect: fn () bool,
 };
 

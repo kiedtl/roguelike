@@ -465,12 +465,10 @@ pub fn checkForHostiles(mob: *Mob) void {
         if (cell == 0) continue;
         const fitem = Coord.new2(mob.coord.z, x, y);
 
-        if (state.dungeon.at(fitem).mob) |othermob| {
+        if (state.dungeon.at(fitem).mob) |othermob| if (mob != othermob and mob.canSeeMob(othermob)) {
             if (othermob.is_dead) {
                 err.bug("Mob {s} is dead but walking around!", .{othermob.displayName()});
             }
-
-            if (othermob == mob) continue;
 
             if (!othermob.ai.flag(.IgnoredByEnemies) and
                 mob.isHostileTo(othermob) and
@@ -483,7 +481,7 @@ pub fn checkForHostiles(mob: *Mob) void {
                     .last_seen = othermob.coord,
                 });
             }
-        }
+        };
     };
 
     // Decrement enemy counters. (If we're part of a squad, just let the squad

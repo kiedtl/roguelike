@@ -9,6 +9,7 @@
 .RingAcceleration  	"ring: acceleration"  	 "is in effect"        	 -
 .RingDeception     	"ring: deception"     	 "voting for trump"    	 -
 .RingConcentration 	"ring: concentration" 	 "using the Force"     	 -
+.RingObscuration   	"ring: obscuration"   	 "cheating on taxes"   	 -
 .DetectHeat        	"detect heat"         	 -                     	 -
 .DetectElec        	"detect electricity"  	 -                     	 -
 .EtherealShield    	"ethereal shield"     	 -                     	 -
