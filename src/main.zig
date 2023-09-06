@@ -633,6 +633,7 @@ fn tickGame(p_cur_level: ?usize) !void {
                     ui.draw();
                     if (state.state == .Quit) break;
                     while (!try readInput()) ui.drawAnimations();
+                    ui.draw();
                     if (state.state == .Quit) break;
                 } else {
                     ai.main(mob, state.GPA.allocator());
