@@ -56,7 +56,8 @@ Whenever you hear a sound, you'll be able to deduce the structure of nearby
 terrain.
 
 % player_Status.Absorbing
-Your Potential stat is doubled.
+Your Potential stat is doubled, and you will gain extra max MP from shrines (5
+instead of 2).
 
 % player_Status.Amnesia
 [BUG] Did you leave the stove on? DID YOU?
