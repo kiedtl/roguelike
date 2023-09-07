@@ -168,9 +168,9 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .c = &MineKit } },
     .{ .w = 10, .i = .{ .c = &BigFireTrapKit } },
     // Evocables
-    .{ .w = 30, .i = .{ .E = FlamethrowerEvoc } },
-    .{ .w = 30, .i = .{ .E = EldritchLanternEvoc } },
-    .{ .w = 30, .i = .{ .E = BrazierWandEvoc } },
+    // .{ .w = 30, .i = .{ .E = FlamethrowerEvoc } },
+    // .{ .w = 30, .i = .{ .E = EldritchLanternEvoc } },
+    // .{ .w = 30, .i = .{ .E = BrazierWandEvoc } },
     // Cloaks
     .{ .w = 20, .i = .{ .C = &SilCloak } },
     .{ .w = 20, .i = .{ .C = &FurCloak } },
