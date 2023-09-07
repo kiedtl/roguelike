@@ -1047,6 +1047,20 @@ pub fn drainMob(mob: *Mob) void {
     }
 }
 
+pub fn drainRing(ring: *Ring) void {
+    if (!ring.drained) {
+        const max_drainable_MP = ring.required_MP * 2;
+        const pot = @intCast(usize, state.player.stat(.Potential));
+        const amount = calculateDrainableMana(max_drainable_MP);
+
+        state.player.MP = math.min(state.player.max_MP, state.player.MP + amount);
+        ring.drained = true;
+
+        state.message(.Drain, "You absorbed $o{}$. / $g{}$. mana ($o{}% potential$.).", .{ amount, max_drainable_MP, pot });
+        state.message(.Drain, "You drained some of the ring's stored power.", .{});
+    }
+}
+
 pub fn formatActivityList(activities: []const Activity, writer: anytype) void {
     for (activities) |activity, i| {
         if (i != 0 and i < activities.len - 1)

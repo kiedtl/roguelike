@@ -2955,6 +2955,11 @@ pub const Mob = struct { // {{{
             }
         }
 
+        if (state.dungeon.itemsAt(dest).last()) |item| switch (item) {
+            .Ring => |r| if (self == state.player) player.drainRing(r),
+            else => {},
+        };
+
         return true;
     }
 
@@ -4810,6 +4815,7 @@ pub const Ring = struct {
     requires_uncorrupt: bool = false,
     requires_nopain: bool = false,
     requires_noglow: bool = false,
+    drained: bool = false,
     effect: fn () bool,
 };
 

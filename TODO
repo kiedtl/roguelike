@@ -1126,14 +1126,14 @@ x Night creatures
       x Shadow hauberk, shadow mail, shadow brigandine, shadow shield
       x Ethereal shield
       x Spectral mail, spectral crown, cloak of spectres
-- Golden stuff
+x Golden stuff
   x Golden equipment
   x Potion of absorption
   x Mini-shrines
   x Potential stat
   x Draining mobs (dead)
   x Draining mobs (alive)
-  - Draining rings
+  x Draining rings
 x New rings
   x ring of concentration
   x ring of obscuration
@@ -1145,7 +1145,7 @@ x New potions
   x potion of remediation (cure disorient/nausea/pain) [recipe: recuperate]
   x potion of vision (cure blindness)
   x potion of perception (extra vision, ringing ears) [recipe: vision]
-- Fold evocables into consumables
+x Fold evocables into consumables
 - Crypt floor
   x Modify level data and spawn files
   - New monsters:
