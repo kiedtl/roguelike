@@ -1054,10 +1054,10 @@ pub const Shrine = Machine{
                     return false;
                 }
 
-                const total = rng.range(usize, state.player.max_MP / 2, state.player.max_MP * 150 / 100);
+                state.player.max_MP += 2;
+                const total = rng.range(usize, state.player.max_MP / 2, state.player.max_MP * 15 / 10);
                 const pot = @intCast(usize, state.player.stat(.Potential));
                 const amount = player.calculateDrainableMana(total);
-                state.player.max_MP += 2;
                 state.player.MP = math.min(state.player.max_MP, state.player.MP + amount);
 
                 ui.Animation.apply(.{ .Particle = .{ .name = "explosion-bluegold", .coord = self.coord, .target = .{ .Z = 0 } } });
