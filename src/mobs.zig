@@ -557,6 +557,7 @@ pub const PatrolTemplate = MobTemplate{
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
+            .{ .mob = "patrol", .weight = 4, .count = minmax(usize, 1, 1) },
             .{ .mob = "patrol", .weight = 1, .count = minmax(usize, 1, 2) },
         },
     },
