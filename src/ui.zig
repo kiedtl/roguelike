@@ -4759,7 +4759,7 @@ pub fn animationDeath(ctx: *GeneratorCtx(void), self: *Console) void {
 
     var i: usize = 0;
     var z: isize = @intCast(isize, pdc.distance(Coord.new(self.width, self.height / 2)));
-    const m = math.max(self.width - pdc.x, self.height - pdc.y) * 3;
+    const m = math.max(self.width - pdc.x, self.height - pdc.y) * 15 / 10;
     while (i < m) : (i += 1) {
         var farthest_ray: usize = 0;
         for (rays.slice()) |*ray, angle| {
@@ -4795,9 +4795,10 @@ pub fn animationDeath(ctx: *GeneratorCtx(void), self: *Console) void {
 
                 const cell = self.getCell(x, y);
 
-                if (Coord.new(x, y).distance(pdc) < 3) {
+                if (Coord.new(x, y).distance(pdc) < 2) {
                     ray.dead = true;
-                    self.setCell(x, y, .{ .trans = true });
+                    self.setCell(x, y, .{ .trans = true, .fl = .{ .wide = cell.fl.wide } });
+                    if (cell.fl.wide) self.setCell(x, y, .{ .fl = .{ .skip = true } });
                 } else if (!cell.fl.skip) {
                     ray.c.trans = false;
                     if ((ray.c.bg == colors.BG or rng.percent(33)) and cell.bg != colors.BG) {
@@ -4855,6 +4856,7 @@ pub fn animationDeath(ctx: *GeneratorCtx(void), self: *Console) void {
         ctx.yield({});
     }
 
+    self.clearTo(.{ .trans = true });
     ctx.finish();
 }
 

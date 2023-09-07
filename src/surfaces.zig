@@ -1054,7 +1054,7 @@ pub const Shrine = Machine{
                     return false;
                 }
 
-                state.player.max_MP += if (state.player.hasStatus(.Absorbing)) 5 else 2;
+                state.player.max_MP += if (state.player.hasStatus(.Absorbing)) @as(usize, 5) else 2;
                 const total = rng.range(usize, state.player.max_MP / 2, state.player.max_MP * 15 / 10);
                 const pot = @intCast(usize, state.player.stat(.Potential));
                 const amount = player.calculateDrainableMana(total);

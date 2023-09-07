@@ -58,8 +58,8 @@ const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 pub const GameState = union(enum) { Game, Win, Lose, Quit, Viewer };
 pub const Layout = union(enum) { Unknown, Room: usize };
 
-pub const HEIGHT = 110;
-pub const WIDTH = 50;
+pub const HEIGHT = 80;
+pub const WIDTH = 40;
 pub const LEVELS = 14; //21;
 pub const PLAYER_STARTING_LEVEL = 13; //19; // TODO: define in data file
 
