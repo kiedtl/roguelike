@@ -561,7 +561,7 @@ pub fn rummageContainer(coord: Coord) bool {
 
 pub fn equipItem(item: Item) bool {
     switch (item) {
-        .Weapon, .Armor, .Cloak, .Aux => {
+        .Weapon, .Head, .Armor, .Cloak, .Aux => {
             const slot = Mob.Inventory.EquSlot.slotFor(item);
             if (state.player.inventory.equipment(slot).*) |old_item| {
                 state.player.dequipItem(slot, state.player.coord);
@@ -623,7 +623,7 @@ pub fn grabItem() bool {
     };
 
     switch (item) {
-        .Ring, .Armor, .Cloak, .Aux, .Weapon => {
+        .Ring, .Armor, .Cloak, .Head, .Aux, .Weapon => {
             // Delete item on the ground
             _ = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
 
@@ -758,7 +758,7 @@ pub fn useItem(index: usize) bool {
 
     const item = state.player.inventory.pack.slice()[index];
     switch (item) {
-        .Ring, .Armor, .Cloak, .Aux, .Weapon => return equipItem(item),
+        .Ring, .Armor, .Cloak, .Head, .Aux, .Weapon => return equipItem(item),
         .Consumable => |p| {
             if (p.hated_by_nc and hasAlignedNC()) {
                 ui.drawAlertThenLog("You can't use that item (hated by the Night)!", .{});

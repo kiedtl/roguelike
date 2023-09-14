@@ -67,6 +67,7 @@ pub const ItemTemplate = struct {
         W: *const Weapon,
         A: Armor,
         C: *const Cloak,
+        H: *const Headgear,
         X: *const Aux,
         P: *const Consumable,
         c: *const Consumable,
@@ -79,6 +80,7 @@ pub const ItemTemplate = struct {
                 .W => |i| i.id,
                 .A => |i| i.id,
                 .C => |i| i.id,
+                .H => |i| i.id,
                 .X => |i| i.id,
                 .P => |i| i.id,
                 .c => |i| i.id,
@@ -178,6 +180,17 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .C = &AgilityCloak } },
     .{ .w = 10, .i = .{ .C = &WarringCloak } },
     .{ .w = 10, .i = .{ .C = &ThornyCloak } },
+    // Headgear
+    .{ .w = 20, .i = .{ .H = &MiningHelmet } },
+    .{ .w = 20, .i = .{ .H = &MailCoif } },
+    .{ .w = 20, .i = .{ .H = &BlackHood } },
+    .{ .w = 10, .i = .{ .H = &FumeHood } },
+    .{ .w = 20, .i = .{ .H = &WeldingHood } },
+    .{ .w = 20, .i = .{ .H = &SpectralCrown } },
+    .{ .w = 20, .i = .{ .H = &GoldHeadband } },
+    .{ .w = 10, .i = .{ .H = &GoldTiara } },
+    .{ .w = 10, .i = .{ .H = &SilusMask } },
+    .{ .w = 5, .i = .{ .H = &SilusHood } },
 };
 pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     // Fluff
@@ -201,7 +214,6 @@ pub const NIGHT_ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 10, .i = .{ .c = &SpectralOrbConsumable } },
     // Auxes
     .{ .w = 20, .i = .{ .X = &ShadowShieldAux } },
-    .{ .w = 10, .i = .{ .X = &SpectralCrownAux } },
     .{ .w = 05, .i = .{ .X = &EtherealShieldAux } },
 };
 pub const RINGS = [_]ItemTemplate{
@@ -252,6 +264,81 @@ pub const PureGoldCloak = Cloak{ .id = "cloak_gold_pure", .name = "pure gold", .
 pub const ThornyCloak = Cloak{ .id = "cloak_thorny", .name = "thorns", .stats = .{ .Spikes = 1 } };
 pub const AgilityCloak = Cloak{ .id = "cloak_agility", .name = "agility", .stats = .{ .Martial = 2 } };
 pub const WarringCloak = Cloak{ .id = "cloak_warring", .name = "warring", .stats = .{ .Melee = 20 } };
+// }}}
+
+// Headgear {{{
+pub const Headgear = struct {
+    id: []const u8,
+    name: []const u8,
+    stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
+    resists: enums.EnumFieldStruct(Resistance, isize, 0) = .{},
+};
+
+pub const MiningHelmet = Headgear{
+    .id = "head_mining",
+    .name = "mining helmet",
+    .stats = .{ .Vision = 1 },
+};
+
+pub const MailCoif = Headgear{
+    .id = "head_coif",
+    .name = "mail coif",
+    .resists = .{ .Armor = 10 },
+};
+
+pub const BlackHood = Headgear{
+    .id = "head_hood",
+    .name = "black hood",
+    .stats = .{ .Evade = 5 },
+    .resists = .{ .rFume = 70 },
+};
+
+pub const FumeHood = Headgear{
+    .id = "head_hood_fume",
+    .name = "fume hood",
+    .stats = .{ .Vision = -1 },
+    .resists = .{ .rElec = 25 },
+};
+
+pub const WeldingHood = Headgear{
+    .id = "head_hood_welding",
+    .name = "welding hood",
+    .stats = .{ .Vision = -1 },
+    .resists = .{ .Armor = 5, .rFire = 25 },
+};
+
+pub const SpectralCrown = Headgear{
+    .id = "head_crown_spectral",
+    .name = "spectral crown",
+    .stats = .{ .Conjuration = 2 },
+};
+
+pub const GoldHeadband = Headgear{
+    .id = "head_headband_gold",
+    .name = "gold headband",
+    .stats = .{ .Potential = 10, .Willpower = -1 },
+    .resists = .{ .rElec = -25 },
+};
+
+pub const GoldTiara = Headgear{
+    .id = "head_tiara_gold",
+    .name = "gold tiara",
+    .stats = .{ .Potential = 20, .Willpower = -2 },
+    .resists = .{ .rElec = -25 },
+};
+
+pub const SilusMask = Headgear{
+    .id = "head_mask_silus",
+    .name = "silus mask",
+    .resists = .{ .rFire = 25 },
+};
+
+pub const SilusHood = Headgear{
+    .id = "head_hood_silus",
+    .name = "silus hood",
+    .resists = .{ .Armor = 5, .rFire = 25 },
+};
+
 // }}}
 
 // Aux items {{{
@@ -398,13 +485,6 @@ pub const EtherealShieldAux = Aux{
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .EtherealShield, .duration = .Equ },
     },
-};
-
-pub const SpectralCrownAux = Aux{
-    .id = "aux_spectral_crown",
-    .name = "spectral crown",
-
-    .stats = .{ .Willpower = 1, .Conjuration = 2 },
 };
 // }}}
 
@@ -1900,6 +1980,7 @@ pub fn createItemFromTemplate(template: ItemTemplate) Item {
         .r => |i| Item{ .Ring = createItem(Ring, i) },
         .E => |i| Item{ .Evocable = createItem(Evocable, i) },
         .C => |i| Item{ .Cloak = i },
+        .H => |i| Item{ .Head = i },
         .X => |i| Item{ .Aux = i },
         .List => unreachable,
         //else => err.todo(),

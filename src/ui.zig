@@ -1032,6 +1032,7 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
         .Projectile => "projectile",
         .Armor => "armor",
         .Cloak => "cloak",
+        .Head => "headgear",
         .Aux => "auxiliary item",
         .Weapon => |wp| if (wp.martial) "martial weapon" else "weapon",
         .Boulder => "boulder",
@@ -1069,6 +1070,10 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
             }
         },
         .Cloak => |c| {
+            _writerHeader(w, linewidth, "stats", .{});
+            _writerSobStats(w, linewidth, c.stats, c.resists);
+        },
+        .Head => |c| {
             _writerHeader(w, linewidth, "stats", .{});
             _writerSobStats(w, linewidth, c.stats, c.resists);
         },
