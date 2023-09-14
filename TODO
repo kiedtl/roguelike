@@ -1147,6 +1147,9 @@ x New potions
   x potion of perception (extra vision, ringing ears) [recipe: vision]
 x Fold evocables into consumables
 - Dobalene rooms
+- Marble room reworks
+  - New prefabs
+  - Pure gold cloak prefab
 - Crypt floor
   x Modify level data and spawn files
   - New monsters:
