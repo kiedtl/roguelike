@@ -2291,8 +2291,10 @@ pub fn placeMob(
 ) *Mob {
     {
         var gen = Generator(Rect.rectIter).init(template.mobAreaRect(coord));
-        while (gen.next()) |mobcoord|
-            assert(state.dungeon.at(mobcoord).mob == null);
+        while (gen.next()) |mobcoord| {
+            if (state.dungeon.at(mobcoord).mob) |other|
+                err.bug("Attempting to place {s} in tile occupied by {f}", .{ template.mob.id, other });
+        }
     }
 
     var mob = template.mob;

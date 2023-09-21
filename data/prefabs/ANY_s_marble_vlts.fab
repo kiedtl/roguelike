@@ -4,16 +4,94 @@
 :invisible
 :subroom
 
-% 5x5
+%:g_transform .Turn1
+%:g_transform .Turn2
+%:g_transform .Turn3
 
-@t p wood_table
-@c p wood_chair
 :material marble
-:spawn sentry_spire 1,4
-:spawn death_mage 1,1
-:subroom_area 0,0 5 1 ANY_s_s_marble_vlts_furniture
+:subroom_area 0,0 2 2 ANY_s_s_marble_vlts_furniture
+:subroom_area 3,0 2 2 ANY_s_s_marble_vlts_furniture
+@b p gold_c_wall_block
+@0 m shrine
+@s Cmons skeletal_blademaster ([prm_status1]Sleeping)
+@m Cmons death_mage ([no_squads]yea)
 .....
 .....
-#t#tt
-#c+..
-#.###
+.....
+sb0bs
+..m..
+
+\
+
+:material marble
+:subroom_area 0,3 2 2 ANY_s_s_marble_vlts_furniture
+:subroom_area 3,3 2 2 ANY_s_s_marble_vlts_furniture
+@b p gold_c_wall_block
+@0 m shrine
+@s Cmons skeletal_blademaster ([prm_status1]Sleeping)
+@m Cmons death_mage ([no_squads]yea)
+..m..
+sb0bs
+.....
+.....
+.....
+
+% ------------------------------------------------------------------------------
+:begin_prefab ANY_s_s_marble_vlts_furniture
+
+:invisible
+:subroom
+:g_transform .Turn1
+:g_transform .Turn2
+:g_transform .Turn3
+
+CC
+CC
+
+\
+
+@n Cmons bloat ([prm_status1]Sleeping [no_squads]yea)
+CC
+n.
+
+\
+
+@n Cmons bloat ([prm_status1]Sleeping [no_squads]yea)
+CC
+nC
+
+\
+
+@n Cmons bloat ([prm_status1]Sleeping [no_squads]yea)
+CC
+nn
+
+\
+
+@r Cmons bone_rat ([prm_status1]Sleeping [no_squads]yea)
+Cr
+rr
+
+\
+
+@r Cmons bone_rat ([prm_status1]Sleeping [no_squads]yea)
+CC
+rC
+
+\
+
+@r Cmons bone_rat ([prm_status1]Sleeping [no_squads]yea)
+CC
+rr
+
+\
+
+@r Cmons bone_rat ([prm_status1]Sleeping [no_squads]yea)
+rr
+rr
+
+\
+
+@n Cmons bloat ([prm_status1]Sleeping [no_squads]yea)
+nn
+nn
