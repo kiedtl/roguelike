@@ -755,7 +755,7 @@ pub const BOLT_SPINNING_SWORD = Spell{
 
 pub const BOLT_BLINKBOLT = Spell{
     .id = "sp_elec_blinkbolt",
-    .name = "living lightning",
+    .name = "lightning flyover",
     .cast_type = .Bolt,
     .noise = .Loud,
     .animation = .{ .Particle = .{ .name = "zap-electric" } },
