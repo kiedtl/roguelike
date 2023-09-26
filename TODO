@@ -1150,6 +1150,51 @@ x Fold evocables into consumables
 - Marble room reworks
   - New prefabs
   - Pure gold cloak prefab
+- Rework -1/Prison to -1/Hub
+  - Exiting staircase to "outside" on top
+  - Doorway to Crypt on bottom side
+  - Entry points and (unavailable) staircase to "0/Dining" in center
+    - If player tries to go up w/ center staircase, staircase gets
+      locked down, and guards start pouring out. i.e. challenge mode
+      - Prevents Revgenunkim invasion event?
+- UI
+  x Menu to invoke patterns (via SPACE)
+  x Map dynamic popups/annotations
+    x Label: aquirement/disaquirement of a status effect
+    x Label: new items or dungeon features in view
+  - Escape menu
+    - List of visited/unvisited floors
+    ~ Status/mob/item description lookup screen
+    x Keybinding help "?" screen
+    x About screen (or just in log area?)
+  x Popups explaining UI elements on hover
+    x Quick description for current level indicator
+    x Bars (health, corruption, sneak)
+    x Stats (resists, other stats near bars)
+      x Basic description
+      ~ Breakdown
+    ~ Status effects
+x Corpse-related mechanics
+  x Enemies alerted of player if finding recently-killed corpse w/ player nearby
+  x Patrols and guards report corpses
+  x Cleaners clean area 
+  ~ Haulers move corpse to side of room
+  x Coroner comes, examines corpse, & registers threat
+  x Fix: don't spawn corpses when removing enemies near staircases
+- Lava and Water rework
+  - Rework as terrain
+  - Addition of submerged creatures
+  - Lava flans
+- Laboratory/Workshop rework
+  x New mapgen
+  ~ Enh. sparklings in upper levels
+    ~ Dep: capacitors (and possibly Wiring levels)
+    x Dep: UI labels to effectively communicate when next discharge is
+      x "discharge 5..." "discharge 4..." "discharge 3...", etc.
+  x Emberling garrisons
+  - Prefab: Flamethrower prop/evocable stockpiles
+  x New Alchemist AI
+*** 3.0.0 release ***
 - Crypt floor
   x Modify level data and spawn files
   - New monsters:
@@ -1160,13 +1205,6 @@ x Fold evocables into consumables
     - Pitchblende statues
   - Garrison inset prefabs
   - -1/Crypt/3 prefab
-- Rework -1/Prison to -1/Hub
-  - Exiting staircase to "outside" on top
-  - Doorway to Crypt on bottom side
-  - Entry points and (unavailable) staircase to "0/Dining" in center
-    - If player tries to go up w/ center staircase, staircase gets
-      locked down, and guards start pouring out. i.e. challenge mode
-      - Prevents Revgenunkim invasion event?
 - Revgenuhelkim
   - Acid damage and resistance
     - 'slimy' status (knockback in direction of last move + rFire)
@@ -1198,43 +1236,6 @@ x Fold evocables into consumables
     - Possible Angel counterattack event
   - Laboratory prefabs w/ caged monsters
   - "Quarantine" map/area
-- UI
-  x Menu to invoke patterns (via SPACE)
-  x Map dynamic popups/annotations
-    x Label: aquirement/disaquirement of a status effect
-    x Label: new items or dungeon features in view
-  - Escape menu
-    - List of visited/unvisited floors
-    ~ Status/mob/item description lookup screen
-    x Keybinding help "?" screen
-    x About screen (or just in log area?)
-  x Popups explaining UI elements on hover
-    x Quick description for current level indicator
-    x Bars (health, corruption, sneak)
-    x Stats (resists, other stats near bars)
-      x Basic description
-      ~ Breakdown
-    ~ Status effects
-- Corpse-related mechanics
-  x Enemies alerted of player if finding recently-killed corpse w/ player nearby
-  x Patrols and guards report corpses
-  x Cleaners clean area 
-  - Haulers move corpse to side of room
-  x Coroner comes, examines corpse, & registers threat
-  x Fix: don't spawn corpses when removing enemies near staircases
-- Lava and Water rework
-  - Rework as terrain
-  - Addition of submerged creatures
-  - Lava flans
-- Laboratory/Workshop rework
-  x New mapgen
-  ~ Enh. sparklings in upper levels
-    ~ Dep: capacitors (and possibly Wiring levels)
-    x Dep: UI labels to effectively communicate when next discharge is
-      x "discharge 5..." "discharge 4..." "discharge 3...", etc.
-  x Emberling garrisons
-  - Prefab: Flamethrower prop/evocable stockpiles
-  x New Alchemist AI
 - Caverns rework
   - Alchemist + dustling analyzer prefabs
   - Dustling machines
@@ -1267,6 +1268,8 @@ x Fold evocables into consumables
     - Laboratory: alchemist bending over workbench, with barrels of glycerin,
       nitric acid, and sulfuric acid and a pile of potions of decimation
       nearby.
+- Simplification: instead of having attack AI for stalker, have them actually
+  transform into sparklings when hunter captain dies"
 - Analyse mob and loot distribution and tweak weights
 - Basalt monsters (-fiends, -mages, -lings)?
   - Plus: ability that confers status on player that causes Living Stone to
