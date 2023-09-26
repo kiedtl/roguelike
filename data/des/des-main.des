@@ -533,8 +533,9 @@ Necromancer. Instead, it is invested in this undead mage, an immeasurably
 ancient skeleton resurrected for that purpose.
 
 % spark_mage
-An arrogant goblin mage with thick spectacles. He has been tasked with leading a
-band of sparklings, and can create more from a fallen friend's corpse.
+An arrogant goblin mage with thick spectacles. He has been tasked with leading
+a band of sparklings, and might create more if provoked by seeing a fallen
+friend's corpse.
 
 % lightning_mage
 One of the feared Lightning Mages, wielding unparalleled power over the
@@ -542,9 +543,8 @@ atmosphere. She can call on the surrounding air to discharge a powerful
 lightning bolt into unsuspecting foes.
 
 % ember_mage
-A rather stocky fellow, wearing a maroon tunic. He is tasked with leading a band
-of emberlings, and has been given the power to create more from a fallen
-friend's corpse.
+A rather stocky goblin, wearing a maroon tunic. He is tasked with leading a
+band of emberlings, and can release more from the wooden cases he carries.
 
 % brimstone_mage
 This unassuming human is one of the dreaded Brimstone Mages, learned in the ways
@@ -574,10 +574,11 @@ A construct of smoldering ash, imbued with false life and commanded by a
 human sorcerer.
 
 % sparkling
-An insubstantial construct. It's trying to electrocute you!
+An flying mechanical construct of cave-goblin creation. It's trying to
+electrocute you!
 
 % recruit
-A goblin warrior in training. It's waving its wooden mace wildly in the air.
+An inexperienced goblin warrior, still in training.
 
 % warrior
 A competent and highly trained infantry-goblin wearing a battle cuirass.
