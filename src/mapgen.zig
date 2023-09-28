@@ -3320,6 +3320,20 @@ fn levelFeatureVials(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _
     ) catch err.wat();
 }
 
+fn levelFeatureConstructParts(_: usize, coord: Coord, _: *const Room, _: *const Prefab, alloc: mem.Allocator) void {
+    var props = std.ArrayList(*const Prop).init(alloc);
+    defer props.deinit();
+
+    for (surfaces.props.items) |*prop|
+        if (prop.function != null and prop.function.? == .WRK_CompA) {
+            props.append(prop) catch err.wat();
+        };
+
+    state.dungeon.itemsAt(coord).append(
+        Item{ .Prop = rng.chooseUnweighted(*const Prop, props.items) },
+    ) catch err.wat();
+}
+
 // Randomly place a vial ore. If the Y coordinate is even, create a container and
 // fill it up halfway; otherwise, place only one item on the ground.
 fn levelFeatureOres(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _: mem.Allocator) void {
@@ -4500,10 +4514,10 @@ pub fn createLevelConfig_WRK(comptime prefabs: []const []const u8) LevelConfig {
         .mapgen_func = tunneler.placeTunneledRooms,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
-            levelFeatureVials,
-            levelFeaturePrisoners,
+            levelFeatureConstructParts,
+            null,
             levelFeatureDormantConstruct,
-            levelFeatureOres,
+            null,
         },
 
         .lair_max = 1,

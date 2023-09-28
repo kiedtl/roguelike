@@ -1028,15 +1028,15 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
     const itemtype: []const u8 = switch (item) {
         .Ring => "ring",
         .Consumable => |c| if (c.is_potion) "potion" else "consumable",
-        .Vial => "vial",
+        .Vial => "misc",
         .Projectile => "projectile",
         .Armor => "armor",
         .Cloak => "cloak",
         .Head => "headgear",
         .Aux => "auxiliary item",
         .Weapon => |wp| if (wp.martial) "martial weapon" else "weapon",
-        .Boulder => "boulder",
-        .Prop => "prop",
+        .Boulder => "misc",
+        .Prop => "misc",
         .Evocable => "evocable",
     };
     _writerWrite(w, "{s}\n", .{itemtype});
@@ -1159,7 +1159,7 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
                 _writerWrite(w, "\n", .{});
             }
         },
-        .Boulder, .Prop, .Vial => _writerWrite(w, "$G(This item is useless.)$.", .{}),
+        .Boulder, .Prop, .Vial => _writerWrite(w, "$G(This item is useless to you.)$.", .{}),
     }
 
     _writerWrite(w, "\n", .{});

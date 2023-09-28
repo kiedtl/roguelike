@@ -767,6 +767,7 @@ pub const Stockpile = struct {
     room: Rect,
     type: ItemType,
     boulder_material_type: ?Material.MaterialType = null,
+    prop_category: ?Prop.Function = null,
 
     pub fn findEmptySlot(self: *const Stockpile) ?Coord {
         var y: usize = self.room.start.y;
@@ -815,14 +816,24 @@ pub const Stockpile = struct {
             return false;
         }
 
-        if (a.boulder_material_type) |mat| {
+        if (a.boulder_material_type) |mate| {
             if (b.boulder_material_type == null) return false;
-            if (b.boulder_material_type != mat) return false;
+            if (b.boulder_material_type != mate) return false;
         }
 
-        if (b.boulder_material_type) |mat| {
+        if (b.boulder_material_type) |mate| {
             if (a.boulder_material_type == null) return false;
-            if (a.boulder_material_type != mat) return false;
+            if (a.boulder_material_type != mate) return false;
+        }
+
+        if (a.prop_category) |cate| {
+            if (b.prop_category == null) return false;
+            if (b.prop_category != cate) return false;
+        }
+
+        if (b.prop_category) |cate| {
+            if (a.prop_category == null) return false;
+            if (a.prop_category != cate) return false;
         }
 
         return true;
@@ -835,6 +846,7 @@ pub const Stockpile = struct {
 
         switch (item.*) {
             .Boulder => |b| if (b.type != self.boulder_material_type.?) return false,
+            .Prop => |p| if (p.function != self.prop_category.?) return false,
             else => {},
         }
 
@@ -851,6 +863,7 @@ pub const Stockpile = struct {
             self.type = std.meta.activeTag(item);
             switch (self.type) {
                 .Boulder => self.boulder_material_type = item.Boulder.type,
+                .Prop => self.prop_category = item.Prop.function,
                 else => {},
             }
 
@@ -4558,6 +4571,29 @@ pub const Prop = struct {
     holder: bool, // Can a prisoner be held to it?
     flammability: usize,
     coord: Coord = Coord.new(0, 0),
+    function: ?Function,
+
+    pub const Function = enum {
+        Laboratory,
+        Vault,
+        LaboratoryItem,
+        Statue,
+        Weapons,
+        Bottles,
+        Wearables,
+        Tools,
+        WRK_CompA,
+        None,
+    };
+
+    pub fn isFluff(self: *const Prop) bool {
+        if (self.function) |function| {
+            return switch (function) {
+                .Bottles, .Wearables, .Tools, .Weapons => true,
+                else => false,
+            };
+        } else return false;
+    }
 
     pub fn deinit(self: *const Prop, alloc: mem.Allocator) void {
         alloc.free(self.id);

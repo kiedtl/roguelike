@@ -1475,10 +1475,8 @@ pub fn readProps(alloc: mem.Allocator) void {
         walkable: bool = undefined,
         opacity: f64 = undefined,
         flammability: usize = undefined,
-        function: Function = undefined,
+        function: Prop.Function = undefined,
         holder: bool = undefined,
-
-        pub const Function = enum { Laboratory, Vault, LaboratoryItem, Statue, Weapons, Bottles, Wearables, Tools, None };
     };
 
     props = PropArrayList.init(alloc);
@@ -1513,7 +1511,7 @@ pub fn readProps(alloc: mem.Allocator) void {
             .{ .field_name = "walkable", .parse_to = bool, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = true },
             .{ .field_name = "opacity", .parse_to = f64, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0.0 },
             .{ .field_name = "flammability", .parse_to = usize, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = 0 },
-            .{ .field_name = "function", .parse_to = PropData.Function, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = .None },
+            .{ .field_name = "function", .parse_to = Prop.Function, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = .None },
             .{ .field_name = "holder", .parse_to = bool, .parse_fn = tsv.parsePrimitive, .optional = true, .default_val = false },
         },
         .{},
@@ -1542,6 +1540,7 @@ pub fn readProps(alloc: mem.Allocator) void {
                 .flammability = propdata.flammability,
                 .opacity = propdata.opacity,
                 .holder = propdata.holder,
+                .function = propdata.function,
             };
 
             switch (propdata.function) {

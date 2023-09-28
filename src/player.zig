@@ -327,7 +327,7 @@ pub fn checkForGarbage() void {
         // Don't use item.isUseful() here because that would toss Boulders
         // and Vials
         //
-        if (item == .Prop) {
+        if (item == .Prop and item.Prop.isFluff()) {
             ui.Animation.apply(.{ .PopChar = .{ .coord = state.player.coord, .char = '/' } });
             state.message(.Unimportant, "You toss the useless $g{s}$..", .{item.Prop.name});
             _ = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();

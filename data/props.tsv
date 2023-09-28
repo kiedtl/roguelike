@@ -90,6 +90,11 @@
 ""                     	 "Buchner funnel"       	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
 ""                     	 "Erlenmeyer flask"     	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
 
+# Workshop stuff
+"sparkling_heart"      	 "sparkling heart"      	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
+"sparkling_wings"      	 "sparkling wings"      	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
+"sparkling_muscles"    	 "sparkling muscles"    	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
+
 "small_fountain"       	 "small fountain"       	 '¶' 	                        -  	 0xa4cfff 	 -        	 -   	 - 	 -
 
 # Statues
