@@ -5027,7 +5027,9 @@ pub const Tile = struct {
         }
 
         if (self.mob != null and !ignore_mobs) {
-            assert(self.type != .Wall);
+            err.ensure(self.type != .Wall, "Mob {f} located in wall @({},{})", .{ self.mob.?, coord.x, coord.y }) catch {
+                return .{ .fg = 0xffffff, .bg = 0xff0000, .sfg = 0, .sbg = 0, .ch = self.mob.?.tile, .sch = null };
+            };
 
             const mob = self.mob.?;
 

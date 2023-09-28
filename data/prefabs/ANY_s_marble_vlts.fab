@@ -44,6 +44,7 @@ sb0bs
 :g_transform .Turn1
 :g_transform .Turn2
 :g_transform .Turn3
+:restriction 10
 
 CC
 CC
@@ -64,6 +65,12 @@ nC
 
 @n Cmons bloat ([prm_status1]Sleeping [no_squads]yea)
 CC
+nn
+
+\
+
+@n Cmons bloat ([prm_status1]Sleeping [no_squads]yea)
+nn
 nn
 
 \
@@ -89,9 +96,3 @@ rr
 @r Cmons bone_rat ([prm_status1]Sleeping [no_squads]yea)
 rr
 rr
-
-\
-
-@n Cmons bloat ([prm_status1]Sleeping [no_squads]yea)
-nn
-nn

@@ -1019,11 +1019,14 @@ pub fn excavatePrefab(
         }
     }
 
-    for (fab.subroom_areas.constSlice()) |subroom_area| {
-        _ = placeSubroom(room, &subroom_area.rect, allocator, .{
-            .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
-            .no_padding = true,
-        });
+    // Don't place sub-subrooms if this is a subroom, that's placeSubroom's job
+    if (!fab.subroom) {
+        for (fab.subroom_areas.constSlice()) |subroom_area| {
+            _ = placeSubroom(room, &subroom_area.rect, allocator, .{
+                .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
+                .no_padding = true,
+            });
+        }
     }
 }
 
@@ -1536,18 +1539,20 @@ pub fn placeSubroom(parent: *Room, area: *const Rect, alloc: mem.Allocator, opts
     subroom.incrementRecord(parent.rect.start.z);
     parent.has_subroom = true;
 
-    if (subroom.subroom_areas.len > 0) {
-        for (subroom.subroom_areas.constSlice()) |subroom_area| {
-            const actual_subroom_area = Rect{
-                .start = Coord.new2(0, subroom_area.rect.start.x + rx, subroom_area.rect.start.y + ry),
-                .height = subroom_area.rect.height,
-                .width = subroom_area.rect.width,
-            };
-            _ = placeSubroom(&parent_adj, &actual_subroom_area, alloc, .{
-                .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
-                .no_padding = true,
-            });
-        }
+    for (subroom.subroom_areas.constSlice()) |subroom_area| {
+        const actual_subroom_area = Rect{
+            .start = Coord.new2(
+                0,
+                rx + subroom_area.rect.start.x,
+                ry + subroom_area.rect.start.y,
+            ),
+            .height = subroom_area.rect.height,
+            .width = subroom_area.rect.width,
+        };
+        _ = placeSubroom(&parent_adj, &actual_subroom_area, alloc, .{
+            .specific_id = if (subroom_area.specific_id) |id| id.constSlice() else null,
+            .no_padding = true,
+        });
     }
 
     return true;
