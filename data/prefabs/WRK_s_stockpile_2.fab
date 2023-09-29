@@ -1,0 +1,26 @@
+:subroom
+%:g_transform .Turn1
+%:g_transform .Turn2
+%:g_transform .Turn3
+
+:stockpile 1,1 3 3
+####
+#αα#
+#αα#
+....
+
+\
+
+:stockpile 1,1 3 3
+....
+#αα#
+#αα#
+....
+
+\
+
+:stockpile 1,1 3 3
+###.
+#αα.
+#αα.
+....
