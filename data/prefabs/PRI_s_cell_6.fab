@@ -3,31 +3,104 @@
 :restriction 1
 
 :prison 0,0 5 4
+:terrain t_metal
+:subroom_area 0,0 5 1 PRI_s_s_cell_6_window_walls_horiz
+:subroom_area 0,3 5 1 PRI_s_s_cell_6_window_walls_horiz
+:subroom_area 0,0 5 1 PRI_s_s_cell_6_door_walls_vert
+:subroom_area 3,0 5 1 PRI_s_s_cell_6_door_walls_vert
 #≡≡≡#
-±βββ#
+#βββ#
 #βββ#
 #≡≡≡#
 
 \
 
 :prison 0,0 5 4
-≡≡≡≡≡
-#βββ#
-±βββ#
+:subroom_area 0,0 1 4 PRI_s_s_cell_6_window_walls_vert
+:subroom_area 3,0 1 4 PRI_s_s_cell_6_window_walls_vert
+:subroom_area 0,0 5 1 PRI_s_s_cell_6_door_walls_horiz
+:subroom_area 0,3 5 1 PRI_s_s_cell_6_door_walls_horiz
+#####
+≡βββ≡
+≡βββ≡
+#####
+
+% --------------------------------------------------------------------------
+
+:begin_prefab PRI_s_s_cell_6_window_walls_horiz
+:g_transform .Turn2
+:subroom
+:invisible
+
 #####
 
 \
 
-:prison 0,0 5 4
-#≡≡≡#
-≡βββ±
-≡βββ#
-#≡≡≡#
+##≡##
 
 \
 
-:prison 0,0 5 4
-≡###≡
-≡βββ≡
-≡βββ≡
-≡#±#≡
+#≡#≡#
+
+% --------------------------------------------------------------------------
+
+:begin_prefab PRI_s_s_cell_6_window_walls_vert
+:g_transform .Turn2
+:subroom
+:invisible
+
+#
+#
+#
+#
+
+\
+
+#
+≡
+#
+#
+
+% --------------------------------------------------------------------------
+
+:begin_prefab PRI_s_s_cell_6_door_walls_horiz
+:g_transform .Turn2
+:subroom
+:invisible
+
+#≡±≡#
+
+\
+
+##±##
+
+\
+
+#≡≡±#
+
+\
+
+###±#
+
+\
+
+##±≡#
+
+% --------------------------------------------------------------------------
+
+:begin_prefab PRI_s_s_cell_6_door_walls_vert
+:g_transform .Turn2
+:subroom
+:invisible
+
+#
+≡
+±
+#
+
+\
+
+#
+#
+±
+#

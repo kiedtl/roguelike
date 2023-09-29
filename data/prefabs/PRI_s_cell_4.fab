@@ -9,7 +9,7 @@
 :subroom_area 0,0 4 1 PRI_s_s_cell_4_occupied_walls_horiz
 :subroom_area 0,3 4 1 PRI_s_s_cell_4_occupied_walls_horiz
 #≡≡#
-#β.#
+#α.#
 #β.#
 #≡≡#
 
@@ -21,7 +21,7 @@
 :subroom_area 3,0 1 4 PRI_s_s_cell_4_occupied_walls_vert
 ####
 ≡β.≡
-≡β.≡
+≡α.≡
 ####
 
 \
@@ -62,7 +62,7 @@
 
 \
 
-#..#
+#≡b#
 
 \
 
@@ -98,3 +98,7 @@
 \
 
 #±≡#
+
+\
+
+#≡≡#

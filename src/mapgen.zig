@@ -778,6 +778,11 @@ pub fn excavatePrefab(
             assert(rc.x < WIDTH);
             assert(rc.y < HEIGHT);
 
+            state.dungeon.at(rc).surface = null;
+            if (state.dungeon.at(rc).mob) |m| m.deinitNoCorpse();
+            state.dungeon.at(rc).mob = null;
+            state.dungeon.itemsAt(rc).clear();
+
             const tt: ?TileType = switch (fab.content[y][x]) {
                 .Any, .Connection => null,
                 .Window, .Wall => .Wall,
@@ -3535,6 +3540,8 @@ pub const Prefab = struct {
     stockpile: ?Rect = null,
     input: ?Rect = null,
     output: ?Rect = null,
+
+    allow_walls_overwrite_other: bool = false,
 
     pub const MAX_NAME_SIZE = 64;
 
