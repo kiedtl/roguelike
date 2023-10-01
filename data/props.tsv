@@ -91,9 +91,14 @@
 ""                     	 "Erlenmeyer flask"     	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .LaboratoryItem
 
 # Workshop stuff
-"sparkling_heart"      	 "sparkling heart"      	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
-"sparkling_wings"      	 "sparkling wings"      	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
-"sparkling_muscles"    	 "sparkling muscles"    	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
+#"sparkling_heart"      	 "sparkling heart"      	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
+#"sparkling_wings"      	 "sparkling wings"      	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
+#"sparkling_muscles"    	 "sparkling muscles"    	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
+"sparkling_guts"       	 "sparkling muscles"    	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
+"sparkling_nerves"     	 "sparkling muscles"    	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
+"sparkling_glands"     	 "sparkling muscles"    	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
+"sparkling_stinger"    	 "sparkling muscles"    	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
+"sparkling_shell"      	 "sparkling muscles"    	 '©' 	                        -  	 0xcacbca 	 -        	 -   	 - 	 - 	 .WRK_CompA
 
 "small_fountain"       	 "small fountain"       	 '¶' 	                        -  	 0xa4cfff 	 -        	 -   	 - 	 -
 
@@ -195,6 +200,10 @@
 "broken_turtle"        	 "broken lead turtle"   	 't' 	                        -  	 0xaaaaaa 	 -        	 nay 	 - 	10
 "broken_emberling"     	 "broken emberling"     	 'e' 	                        -  	 0xaaaaaa 	 -        	 nay 	 - 	10
 
+# Sparkling workstation
+"tool_rack"            	 "tool rack"            	 '{' 	                        -  	 0xaaaaaa 	 -        	 nay 	 - 	10
+"hydraulic_pump"       	 "hydraulic pump"       	 '≡' 	                        -  	 0xaaaaaa 	 -        	 nay 	 - 	10
+
 # lab
 "chamber_s1e1"         	 "chamber"              	 '┌' 	                        -  	 0x999999 	 -        	 nay 	 - 	 -
 "chamber_n1s1"         	 "chamber"              	 '│' 	                        -  	 0x999999 	 -        	 nay 	 - 	 -
@@ -271,6 +280,7 @@
 "pipe_e2w2"            	 "steel pipe"           	 '═' 	                        -  	 0xa6c2d4 	 -        	 nay
 "pipe_n2e2"            	 "steel pipe"           	 '╚' 	                        -  	 0xa6c2d4 	 -        	 nay
 "pipe_s2e1"            	 "steel pipe"           	 '╓' 	                        -  	 0xa6c2d4 	 -        	 nay
+"pipe_s2w1"            	 "steel pipe"           	 '╖' 	                        -  	 0xa6c2d4 	 -        	 nay
 "pipe_e1w1"            	 "steel pipe"           	 '─' 	                        -  	 0xa6c2d4 	 -        	 nay
 "pipe_s1w1"            	 "steel pipe"           	 '┐' 	                        -  	 0xa6c2d4 	 -        	 nay
 "pipe_s1e1"            	 "steel pipe"           	 '┌' 	                        -  	 0xa6c2d4 	 -        	 nay

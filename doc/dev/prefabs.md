@@ -68,6 +68,8 @@
 %        - 50: interact-able machines, or machines/subrooms
 %              that are important for gameplay.
 %              e.g.: capacitor arrays, prisons.
+%        - 40: living dungeon stuff that should appear, but doesn't
+%              have to.
 %        - 10: subrooms that enhance tactical gameplay.
 %              e.g.: diamond centerpieces, pillars, etc.
 %        -  0: fluff.

@@ -264,6 +264,7 @@ pub const MACHINES = [_]Machine{
     Extractor,
     BlastFurnace,
     TurbinePowerSupply,
+    SparklingWorkstation,
     Brazier,
     Lamp,
     StairExit,
@@ -279,6 +280,8 @@ pub const MACHINES = [_]Machine{
     DisorientationGasTrap,
     SeizureGasTrap,
     BlindingGasTrap,
+    Press,
+    Auger,
     Mine,
     StalkerStation,
     CapacitorArray,
@@ -409,6 +412,39 @@ pub const TurbinePowerSupply = Machine{
     .on_power = powerTurbinePowerSupply,
 };
 
+pub const SparklingWorkstation = Machine{
+    .id = "sparkling_workstation",
+    .name = "workstation",
+
+    .powered_tile = '¼',
+    .unpowered_tile = '¼',
+
+    .power_drain = 0,
+    .power = 100,
+
+    .powered_walkable = false,
+    .unpowered_walkable = false,
+
+    .on_power = struct {
+        fn f(m: *Machine) void {
+            const alchemist: ?*Mob = for (&DIRECTIONS) |d| {
+                if (m.coord.move(d, state.mapgeometry)) |neighbor| {
+                    if (state.dungeon.at(neighbor).mob) |mob| {
+                        if (mem.eql(u8, mob.id, "alchemist")) {
+                            break mob;
+                        }
+                    }
+                }
+            } else null;
+
+            if (alchemist) |mob| {
+                if (mob.hasJob(.WRK_WrkstationBusyWork) == null)
+                    mob.newJob(.WRK_WrkstationBusyWork);
+            }
+        }
+    }.f,
+};
+
 pub const Brazier = Machine{
     .id = "light_brazier",
     .name = "brazier",
@@ -490,6 +526,33 @@ pub const ParalysisGasTrap = Machine.createGasTrap("paralysing gas", &gas.Paraly
 pub const DisorientationGasTrap = Machine.createGasTrap("disorienting gas", &gas.Disorient);
 pub const SeizureGasTrap = Machine.createGasTrap("seizure gas", &gas.Seizure);
 pub const BlindingGasTrap = Machine.createGasTrap("tear gas", &gas.Blinding);
+
+pub fn createTheaterMachine(id: []const u8, name: []const u8, tile: u21, utile: u21, fg: u32, ufg: u32, bg: ?u32, ubg: ?u32, pdrain: usize, opacity: f32, uopacity: f32, flame: usize, porous: bool) Machine {
+    return Machine{
+        .id = id,
+        .name = name,
+
+        .powered_tile = tile,
+        .unpowered_tile = utile,
+        .powered_fg = fg,
+        .unpowered_fg = ufg,
+        .powered_bg = bg,
+        .unpowered_bg = ubg,
+
+        .power_drain = pdrain,
+        .power = 0,
+        .powered_walkable = false,
+        .unpowered_walkable = false,
+        .powered_opacity = opacity,
+        .unpowered_opacity = uopacity,
+        .flammability = flame,
+        .porous = porous,
+        .on_power = powerNone,
+    };
+}
+
+pub const Press = createTheaterMachine("press", "mechanical press", 'Θ', 'Θ', 0xaaaaaa, colors.COPPER_RED, null, null, 50, 0, 1, 5, true);
+pub const Auger = createTheaterMachine("auger", "mechanical auger", 'φ', 'φ', 0xaaaaaa, colors.AQUAMARINE, null, null, 50, 0, 1, 3, true);
 
 pub const NormalDoor = Machine{
     .id = "door_normal",

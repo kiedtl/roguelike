@@ -2838,7 +2838,8 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     }
 
     if (locations.items.len == 0) {
-        err.bug("Couldn't place stairs anywhere on {s}!", .{state.levelinfo[level].name});
+        //err.bug("Couldn't place stairs anywhere on {s}!", .{state.levelinfo[level].name});
+        return;
     }
 
     // Map out the locations in a grid, so that we can easily tell what's in the
@@ -3675,6 +3676,8 @@ pub const Prefab = struct {
                     if (y >= width or x >= height) continue;
                     new.content[x][(width - 1) - y] = cell;
                 };
+                for (f.tunneler_orientation.slice()) |*orient|
+                    orient.* = orient.turnright();
             },
             .Turn2 => {
                 width = f.width;
@@ -3683,6 +3686,8 @@ pub const Prefab = struct {
                     if (y >= height or x >= width) continue;
                     new.content[(height - 1) - y][(width - 1) - x] = cell;
                 };
+                for (f.tunneler_orientation.slice()) |*orient|
+                    orient.* = orient.turnright().turnright();
             },
             .Turn3 => {
                 width = f.height;
@@ -3693,6 +3698,8 @@ pub const Prefab = struct {
                     if (y >= width or x >= height) continue;
                     new.content[(height - 1) - x][y] = cell;
                 };
+                for (f.tunneler_orientation.slice()) |*orient|
+                    orient.* = orient.turnright().turnright().turnright();
             },
         }
 
@@ -4517,7 +4524,7 @@ pub fn createLevelConfig_WRK(comptime prefabs: []const []const u8) LevelConfig {
                 .{ .start = Coord.new(1, HEIGHT - 1), .width = 3, .height = 0, .direction = .North },
             },
         },
-        .prefab_chance = 50,
+        .prefab_chance = 60,
         .mapgen_func = tunneler.placeTunneledRooms,
 
         .level_features = [_]?LevelConfig.LevelFeatureFunc{
@@ -4540,6 +4547,7 @@ pub fn createLevelConfig_WRK(comptime prefabs: []const []const u8) LevelConfig {
         .props = &surfaces.laboratory_props.items,
         .single_props = &[_][]const u8{"table"},
 
+        .subroom_chance = 70,
         .allow_statues = false,
 
         .machines = &[_]*const Machine{&surfaces.FirstAidStation},

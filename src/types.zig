@@ -1856,6 +1856,7 @@ pub const AIJob = struct {
         WRK_ScanCorpse,
         WRK_ReportCorpse,
         WRK_ExamineCorpse,
+        WRK_WrkstationBusyWork,
         WRK_BuildMob,
         GRD_LookAround,
         GRD_SweepRoom,
@@ -1871,6 +1872,7 @@ pub const AIJob = struct {
                 .WRK_ReportCorpse => ai._Job_WRK_ReportCorpse,
                 .WRK_ExamineCorpse => ai._Job_WRK_ExamineCorpse,
                 .WRK_BuildMob => ai._Job_WRK_BuildMob,
+                .WRK_WrkstationBusyWork => ai._Job_WRK_WrkstationBusyWork,
                 .GRD_LookAround => ai._Job_GRD_LookAround,
                 .GRD_SweepRoom => ai._Job_GRD_SweepRoom,
                 .SPC_NCAlignment => ai._Job_SPC_NCAlignment,
@@ -1904,6 +1906,14 @@ pub const AIJob = struct {
 
     pub fn clone(self: *@This()) @This() {
         return .{ .job = self.job, .ctx = self.ctx.clone() catch err.oom() };
+    }
+
+    pub fn checkTurnsLeft(self: *@This(), initial_val: usize) JStatus {
+        const CTX_TURNS_LEFT = "ctx_turns_left";
+        const turns_left = self.getCtx(usize, CTX_TURNS_LEFT, initial_val);
+
+        self.setCtx(usize, CTX_TURNS_LEFT, turns_left -| 1);
+        return if (turns_left == 0) .Complete else .Ongoing;
     }
 };
 
@@ -2569,6 +2579,12 @@ pub const Mob = struct { // {{{
     pub fn newestJob(self: *Mob) ?*AIJob {
         if (self.jobs.len == 0) return null;
         return &self.jobs.data[self.jobs.len - 1];
+    }
+
+    pub fn hasJob(self: *Mob, j: AIJob.Type) ?*AIJob {
+        return for (self.jobs.slice()) |*job| {
+            if (job.job == j) break job;
+        } else null;
     }
 
     // This is what happens when you flail to dodge a net.

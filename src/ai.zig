@@ -1885,6 +1885,28 @@ pub fn _Job_WRK_BuildMob(mob: *Mob, _: *AIJob) AIJob.JStatus {
     }
 }
 
+pub fn _Job_WRK_WrkstationBusyWork(mob: *Mob, j: *AIJob) AIJob.JStatus {
+    var didstuff = false;
+    const origcoord = mob.coord;
+    for (&DIRECTIONS) |d| if (mob.coord.move(d, state.mapgeometry)) |neighbor| {
+        if (state.dungeon.at(neighbor).surface) |surface|
+            if (surface == .Machine and surface.Machine.power == 0 and
+                !state.is_walkable(neighbor, .{ .mob = mob }) and
+                rng.onein(8))
+            {
+                const r = mob.moveInDirection(d);
+                err.ensure(r, "{cf}: Busywork failed", .{mob}) catch {};
+                err.ensure(mob.coord.eq(origcoord), "{cf}: Busywork caused movement", .{mob}) catch {};
+                if (r) didstuff = true;
+                break;
+            };
+    };
+
+    if (!didstuff) tryRest(mob);
+
+    return j.checkTurnsLeft(7);
+}
+
 pub fn _Job_GRD_LookAround(mob: *Mob, job: *AIJob) AIJob.JStatus {
     const CTX_TURNS_LEFT_LOOKING = "ctx_turns_left_examining";
     const turns_left = job.getCtx(usize, CTX_TURNS_LEFT_LOOKING, rng.range(usize, 2, 4));

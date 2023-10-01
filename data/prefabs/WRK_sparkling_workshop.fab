@@ -1,0 +1,58 @@
+% Θ═╕
+%  ¼≡
+% φ {
+% i o
+
+:g_tunneler
+:restriction 1
+:priority 40
+:nostairs
+:noguards
+:noitems
+:notraps
+
+@@a m press
+@@d m sparkling_workstation
+@@e p hydraulic_pump
+@@f m auger
+@@g p tool_rack
+@@0 Cmons alchemist ()
+
+:tunneler_orientation west
+:input  3,2 1 1
+:output 3,0 1 1
+
+@b p pipe_n2s2
+@c p pipe_s2e1
+
+ceg.
+bd..
+a0fα
+
+\
+
+
+:tunneler_orientation east
+:input  0,2 1 1
+:output 0,0 1 1
+
+@b p pipe_n2s2
+@c p pipe_s2w1
+
+.gec
+..db
+αf0a
+
+\
+
+:tunneler_orientation north
+:input  0,3 1 1
+:output 2,3 1 1
+
+@b p pipe_e2w2
+@c p pipe_s1w2
+
+abc
+0de
+f.g
+α..
