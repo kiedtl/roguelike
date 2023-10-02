@@ -1595,7 +1595,8 @@ pub fn flee(mob: *Mob, alloc: mem.Allocator) void {
 
     const target = closestEnemy(mob);
 
-    alertAllyOfHostile(mob);
+    if (target.alerted_allies < 2)
+        alertAllyOfHostile(mob);
 
     if (mob.bflee_flag) {
         // Job should be leave floor.
