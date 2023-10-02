@@ -2156,14 +2156,14 @@ pub fn placeItems(level: usize) void {
         if (room.type == .Corridor or
             room.has_subroom or room.is_lair or
             (room.prefab != null and room.prefab.?.noitems) or
-            rng.tenin(25))
+            rng.onein(4))
         {
             continue;
         }
 
         if (rng.onein(2)) {
-            // 1/8 chance to have chest full of rubbish
-            if (rng.onein(8)) {
+            // 1/12 chance to have chest full of rubbish
+            if (rng.onein(12)) {
                 _placeLootChest(room, 0);
             } else {
                 _placeLootChest(room, rng.range(usize, 1, 3));
