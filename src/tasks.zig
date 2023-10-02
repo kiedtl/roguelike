@@ -90,7 +90,7 @@ pub fn getJobTypesForWorker(mob: *Mob) struct { tasktype: meta.Tag(TaskType), ai
     } else if (mem.eql(u8, mob.id, "coroner")) {
         return .{ .tasktype = .ExamineCorpse, .aijobtype = .WRK_ExamineCorpse };
     } else if (mem.eql(u8, mob.id, "engineer")) {
-        return .{ .tasktype = .ExamineCorpse, .aijobtype = .WRK_BuildMob };
+        return .{ .tasktype = .BuildMob, .aijobtype = .WRK_BuildMob };
     } else unreachable;
 }
 
