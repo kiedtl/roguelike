@@ -229,7 +229,7 @@ pub const RINGS = [_]ItemTemplate{
     .{ .w = 9, .i = .{ .r = DetonationRing } },
     .{ .w = 9, .i = .{ .r = DeceptionRing } },
     .{ .w = 9, .i = .{ .r = CondemnationRing } },
-    .{ .w = 9, .i = .{ .r = ConcentrationRing } },
+    .{ .w = 2, .i = .{ .r = ConcentrationRing } },
     .{ .w = 9, .i = .{ .r = ObscurationRing } },
 };
 pub const NIGHT_RINGS = [_]ItemTemplate{
