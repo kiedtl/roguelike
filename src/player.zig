@@ -1049,7 +1049,7 @@ pub fn drainMob(mob: *Mob) void {
 
 pub fn drainRing(ring: *Ring) void {
     if (!ring.drained) {
-        const max_drainable_MP = ring.required_MP * 2;
+        const max_drainable_MP = ring.required_MP * 4;
         const pot = @intCast(usize, state.player.stat(.Potential));
         const amount = calculateDrainableMana(max_drainable_MP);
 
