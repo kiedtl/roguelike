@@ -1146,10 +1146,15 @@ x New potions
   x potion of vision (cure blindness)
   x potion of perception (extra vision, ringing ears) [recipe: vision]
 x Fold evocables into consumables
-- Dobalene rooms
-- Marble room reworks
-  - New prefabs
-  - Pure gold cloak prefab
+- Vaults
+  - Dobalene rooms
+  - Marble room reworks
+    x New prefabs
+    - Pure gold cloak prefab
+  - Armory room
+    - Anti-night-creature variant
+      - Potion of extermination
+      - Potion of illumination buf
 - Rework -1/Prison to -1/Hub
   - Exiting staircase to "outside" on top
   - Doorway to Crypt on bottom side
@@ -1183,8 +1188,7 @@ x Corpse-related mechanics
   x Fix: don't spawn corpses when removing enemies near staircases
 - Lava and Water rework
   - Rework as terrain
-  - Addition of submerged creatures
-  - Lava flans
+  - Lava -> Glowing water
 - Laboratory/Workshop rework
   x New mapgen
   ~ Enh. sparklings in upper levels
@@ -1290,7 +1294,6 @@ x Revamp messages for recieving/losing status
   - Various resurrection spells (limited range?)
   - Paralysing zap (directional bolt only)
   - Fry (Cardinal directional bolt only)
-*** v3.0.0 release ***
 - Night Creatures, part two
     - Creeping Death
       - Inject venom spell
@@ -1315,6 +1318,9 @@ x Revamp messages for recieving/losing status
     - (100) Augment [y]: Blade attacks cause insanity for 1 turn in vulnerable foes.
     - (100) Augment [f]: Blade attacks have minor chance to infest foe.
 - UI
+  - Examine mode
+    - refactoring
+    - Ability to view info on gas/terrain/wall/floor
   - Basic mouse support
     x Tooltips for UI labels
       ~ Tooltips/explanations for individual messages?
