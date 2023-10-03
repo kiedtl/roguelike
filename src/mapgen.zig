@@ -3447,6 +3447,97 @@ pub fn initLevel(level: usize) void {
     }
 }
 
+pub const LevelAnalysis = struct {
+    alloc: mem.Allocator,
+    prefabs: std.ArrayList(Pair),
+    items: std.ArrayList(Pair),
+    ring: ?[]const u8 = null,
+    seed: u64,
+    floor_seed: u64,
+
+    pub const Pair = struct { id: []const u8, c: usize };
+
+    pub fn init(alloc: mem.Allocator, z: usize) @This() {
+        return .{
+            .alloc = alloc,
+            .prefabs = std.ArrayList(Pair).init(alloc),
+            .items = std.ArrayList(Pair).init(alloc),
+            .seed = rng.seed,
+            .floor_seed = floor_seeds[z],
+        };
+    }
+
+    pub fn incrItem(self: *@This(), id: []const u8) !void {
+        const slot = for (self.items.items) |*itemr| {
+            if (mem.eql(u8, itemr.id, id)) break itemr;
+        } else b: {
+            const _id = try self.alloc.dupe(u8, id);
+            self.items.append(.{ .id = _id, .c = 0 }) catch err.wat();
+            break :b &self.items.items[self.items.items.len - 1];
+        };
+        slot.c += 1;
+    }
+
+    pub fn jsonStringify(val: *const @This(), opts: std.json.StringifyOptions, stream: anytype) !void {
+        const object: struct {
+            prefabs: []const Pair,
+            items: []const Pair,
+            ring: ?[]const u8,
+            seed: u64,
+            floor_seed: u64,
+        } = .{
+            .prefabs = val.prefabs.items,
+            .items = val.items.items,
+            .ring = val.ring,
+            .seed = val.seed,
+            .floor_seed = val.floor_seed,
+        };
+
+        try std.json.stringify(object, opts, stream);
+    }
+};
+
+pub fn analyzeLevel(level: usize, alloc: mem.Allocator) !LevelAnalysis {
+    var a = LevelAnalysis.init(alloc, level);
+
+    var riter = fab_records.iterator();
+    while (riter.next()) |prefab_record| {
+        if (prefab_record.value_ptr.level[level] > 0)
+            a.prefabs.append(.{
+                .id = try alloc.dupe(u8, prefab_record.key_ptr.*),
+                .c = prefab_record.value_ptr.level[level],
+            }) catch err.wat();
+    }
+
+    var y: usize = 0;
+    while (y < HEIGHT) : (y += 1) {
+        var x: usize = 0;
+        while (x < WIDTH) : (x += 1) {
+            const coord = Coord.new2(level, x, y);
+            if (utils.getRoomFromCoord(level, coord)) |room_id| {
+                if (state.rooms[level].items[room_id].is_lair or
+                    state.rooms[level].items[room_id].is_vault != null)
+                {
+                    continue;
+                }
+            }
+            for (state.dungeon.itemsAt(coord).constSlice()) |item| {
+                if (item == .Ring) {
+                    assert(state.dungeon.itemsAt(coord).len == 1);
+                    a.ring = try alloc.dupe(u8, item.Ring.name);
+                } else if (item.id()) |id| {
+                    try a.incrItem(id);
+                }
+            }
+            if (state.dungeon.at(coord).surface) |s| if (s == .Container)
+                for (s.Container.items.constSlice()) |item| if (item.id()) |id|
+                    try a.incrItem(id);
+        }
+    }
+
+    return a;
+}
+
 // Room: "Annotated Room{}"
 // Contains additional information necessary for mapgen.
 //

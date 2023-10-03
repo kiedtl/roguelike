@@ -26,11 +26,13 @@ pub const Effect = union(enum) {
             .AppendPrefabWhitelist => |ctx| {
                 const prefab = _gimmePrefab(ctx.prefab);
 
-                if (mem.eql(u8, ctx.val, "$SPAWN_LEVEL")) {
-                    prefab.whitelist.append(state.PLAYER_STARTING_LEVEL) catch err.wat();
-                } else {
-                    prefab.whitelist.append(state.findLevelByName(ctx.val).?) catch err.wat();
-                }
+                const z = if (mem.eql(u8, ctx.val, "$SPAWN_LEVEL"))
+                    state.PLAYER_STARTING_LEVEL
+                else
+                    state.findLevelByName(ctx.val).?;
+
+                if (prefab.whitelist.linearSearch(z) == null)
+                    prefab.whitelist.append(z) catch err.wat();
             },
         }
     }

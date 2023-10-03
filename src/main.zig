@@ -135,9 +135,6 @@ fn initGame(no_display: bool, display_scale: f32) bool {
 
     initGameState();
 
-    for (mapgen.floor_seeds) |*seed|
-        seed.* = rng.int(u64);
-
     if (!no_display) {
         if (ui.init(display_scale)) {} else |e| switch (e) {
             error.AlreadyInitialized => err.wat(),
@@ -163,6 +160,8 @@ fn initGameState() void {
     state.dungeon.* = types.Dungeon{};
 
     rng.init();
+    for (mapgen.floor_seeds) |*seed|
+        seed.* = rng.int(u64);
 
     for (state.default_patterns) |*r| r.pattern_checker.reset();
 
@@ -1208,10 +1207,61 @@ fn profilerMain() void {
     }
 }
 
+fn analyzerMain() void {
+    state.sentry_disabled = true;
+    assert(initGame(true, 0));
+    defer deinitGame();
+    deinitGameState();
+
+    var arena = std.heap.ArenaAllocator.init(state.GPA.allocator());
+    defer arena.deinit();
+
+    var ITERS: usize = 20;
+    if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_AN_ITERS")) |v| {
+        defer state.GPA.allocator().free(v);
+        ITERS = std.fmt.parseInt(u64, v, 0) catch |e| b: {
+            std.log.err("Could not parse RL_AN_ITERS (reason: {}); using default.", .{e});
+            break :b 20;
+        };
+    } else |_| {}
+
+    var results: [999][LEVELS]mapgen.LevelAnalysis = undefined;
+
+    var i: usize = 0;
+    while (i < ITERS) : (i += 1) {
+        rng.seed = @intCast(u64, std.time.milliTimestamp());
+        std.log.info("*** \x1b[94;1m ITERATION \x1b[m {} (seed: {})", .{ i, rng.seed });
+        initGameState();
+
+        const S = state.PLAYER_STARTING_LEVEL;
+
+        // Gotta place the player first or everything crumbles...
+        mapgen.initLevel(S);
+        results[i][S] = mapgen.analyzeLevel(S, arena.allocator()) catch err.wat();
+
+        for (state.levelinfo) |_, z| if (z != S)
+            mapgen.initLevel(z);
+        for (state.levelinfo) |_, z| if (z != S) {
+            results[i][z] = mapgen.analyzeLevel(z, arena.allocator()) catch err.wat();
+        };
+
+        for (state.levelinfo) |_, z|
+            mapgen.resetLevel(z);
+
+        deinitGameState();
+    }
+
+    std.json.stringify(results[0..ITERS], .{}, std.io.getStdOut().writer()) catch err.wat();
+
+    // Another hack for babysitting deinitGame()...
+    initGameState();
+}
+
 pub fn actualMain() anyerror!void {
     var use_viewer = false;
     var use_tester = false;
     var use_profiler = false;
+    var use_analyzer = false;
 
     if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_SEED")) |seed_str| {
         defer state.GPA.allocator().free(seed_str);
@@ -1233,8 +1283,10 @@ pub fn actualMain() anyerror!void {
         } else if (mem.eql(u8, v, "profiler1")) {
             state.state = .Viewer;
             use_profiler = true;
+        } else if (mem.eql(u8, v, "analyzer")) {
+            state.state = .Viewer;
+            use_analyzer = true;
         }
-        use_viewer = mem.eql(u8, v, "viewer");
         state.GPA.allocator().free(v);
     } else |_| {
         use_viewer = false;
@@ -1246,6 +1298,9 @@ pub fn actualMain() anyerror!void {
         return;
     } else if (use_profiler) {
         profilerMain();
+        return;
+    } else if (use_analyzer) {
+        analyzerMain();
         return;
     }
 
@@ -1273,7 +1328,7 @@ pub fn actualMain() anyerror!void {
     }
     if (!initLevels()) {
         deinitGame();
-        std.log.err("Unknown error occurred while building levels.", .{});
+        std.log.err("Canceled.", .{});
         return;
     }
 
