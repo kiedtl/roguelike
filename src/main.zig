@@ -869,9 +869,10 @@ fn testerMain() void {
         initial_setup: ?fn (*TestContext) Error!void,
         initial_ticks: usize,
         fun: fn (*TestContext) Error!void,
+        entry: bool,
 
-        pub fn n(name: []const u8, fab: []const u8, ticks: usize, f1: ?fn (*TestContext) Error!void, f2: fn (*TestContext) Error!void) @This() {
-            return .{ .name = name, .prefab = fab, .initial_setup = f1, .initial_ticks = ticks, .fun = f2 };
+        pub fn n(name: []const u8, fab: []const u8, ticks: usize, f1: ?fn (*TestContext) Error!void, f2: fn (*TestContext) Error!void, entry: bool) @This() {
+            return .{ .name = name, .prefab = fab, .initial_setup = f1, .initial_ticks = ticks, .fun = f2, .entry = entry };
         }
     };
 
@@ -896,7 +897,7 @@ fn testerMain() void {
                                     );
                                 };
                     }
-                }.f),
+                }.f, false),
             },
         },
         .{
@@ -914,7 +915,7 @@ fn testerMain() void {
                         try x.assertF((try x.getMob('3')).hasStatus(.Paralysis), "", .{});
                         try x.assertF((try x.getMob('4')).hasStatus(.Paralysis), "", .{});
                     }
-                }.f),
+                }.f, false),
                 // ---
                 Test.n("gas_no_pass_through_walls", "TEST_gas_no_pass_through_walls", 6, struct {
                     pub fn f(x: *TestContext) !void {
@@ -925,7 +926,7 @@ fn testerMain() void {
                         try x.assertT((try x.getMob('A')).hasStatus(.Paralysis), "", .{});
                         try x.assertF((try x.getMob('B')).hasStatus(.Paralysis), "", .{});
                     }
-                }.f),
+                }.f, false),
                 // ---
                 Test.n("gas_effect_on_unbreathing_if_not_breathed", "TEST_gas_rFume2", 10, struct {
                     pub fn f(x: *TestContext) !void {
@@ -937,7 +938,7 @@ fn testerMain() void {
                         try x.assertT((try x.getMob('1')).is_dead, "", .{});
                         try x.assertT((try x.getMob('2')).is_dead, "", .{});
                     }
-                }.f),
+                }.f, false),
                 // ---
                 Test.n("gas_works_in_tandem", "TEST_gas_works_in_tandem", 10, struct {
                     pub fn f(x: *TestContext) !void {
@@ -956,7 +957,7 @@ fn testerMain() void {
                                     .{ subject, status },
                                 );
                     }
-                }.f),
+                }.f, false),
                 // ---
                 Test.n("gas_pass_through_if_porous", "TEST_gas_pass_through_if_porous", 3, struct {
                     pub fn f(x: *TestContext) !void {
@@ -969,7 +970,7 @@ fn testerMain() void {
                         try x.assertF((try x.getMob('D')).hasStatus(.Paralysis), "", .{});
                         try x.assertF((try x.getMob('E')).hasStatus(.Paralysis), "", .{});
                     }
-                }.f),
+                }.f, false),
                 // ---
                 Test.n("gas_eventually_dissipates", "TEST_gas_eventually_dissipates", 15, struct {
                     pub fn f(x: *TestContext) !void {
@@ -980,7 +981,7 @@ fn testerMain() void {
                     pub fn f(x: *TestContext) !void {
                         try x.assertEq(state.dungeon.atGas((try x.getMob('A')).coord)[gas.Paralysis.id], 0, "", .{});
                     }
-                }.f),
+                }.f, false),
                 // ---
                 Test.n("light_opacity_checks", "TEST_light_opacity_checks", 1, struct {
                     pub fn f(x: *TestContext) !void {
@@ -993,7 +994,7 @@ fn testerMain() void {
                         try x.assertT((try x.getMob('C')).isLit(), "", .{});
                         try x.assertF((try x.getMob('D')).isLit(), "", .{});
                     }
-                }.f),
+                }.f, false),
                 // ---
             },
         },
@@ -1005,7 +1006,7 @@ fn testerMain() void {
                         try x.assertT((try x.getMob('A')).isHostileTo(try x.getMob('B')), "", .{});
                         try x.assertEq((try x.getMob('A')).ai.phase, .Hunt, "", .{});
                     }
-                }.f),
+                }.f, true),
                 // ---
                 Test.n("melee_fight", "TEST_combat_ai_melee_fight", 8, null, struct {
                     pub fn f(x: *TestContext) !void {
@@ -1019,7 +1020,7 @@ fn testerMain() void {
                         // Still got that D mob to kill
                         try x.assertEq(A.ai.phase, .Hunt, "", .{});
                     }
-                }.f),
+                }.f, true),
                 // ---
                 Test.n("slaughter", "TEST_combat_ai_slaughter", 50, null, struct {
                     pub fn f(x: *TestContext) !void {
@@ -1028,14 +1029,14 @@ fn testerMain() void {
                         for ("LKJIHGFEDCB") |enemy|
                             try x.assertT((try x.getMob(enemy)).is_dead, "mob: {u}", .{enemy});
                     }
-                }.f),
+                }.f, true),
                 // ---
                 Test.n("simple_spell_use", "TEST_combat_ai_simple_spell_use", 1, null, struct {
                     pub fn f(x: *TestContext) !void {
                         try x.assertEq((try x.getMob('J')).ai.phase, .Hunt, "", .{});
                         try x.assertT((try x.getMob('T')).is_dead, "", .{});
                     }
-                }.f),
+                }.f, true),
                 // ---
                 Test.n("checkForAllies", "TEST_combat_ai_checkForAllies", 2, null, struct {
                     pub fn f(x: *TestContext) !void {
@@ -1049,7 +1050,7 @@ fn testerMain() void {
                         try x.assertEq(a.allies.items[1], try x.getMob('B'), "", .{});
                         try x.assertEq(a.allies.items.len, 2, "", .{});
                     }
-                }.f),
+                }.f, true),
                 // ---
                 Test.n("social_fighter", "TEST_combat_ai_social_fighter", 2, null, struct {
                     pub fn f(x: *TestContext) !void {
@@ -1058,7 +1059,7 @@ fn testerMain() void {
                         for ("BCF") |m|
                             try x.assertT((try x.getMob(m)).is_dead, "mob: {u}", .{m});
                     }
-                }.f),
+                }.f, true),
                 // ---
             },
         },
@@ -1089,7 +1090,7 @@ fn testerMain() void {
                 initGameState();
             defer deinitGameState();
 
-            mapgen.initLevelTest(testg.prefab) catch |e| switch (e) {
+            mapgen.initLevelTest(testg.prefab, testg.entry) catch |e| switch (e) {
                 error.NoSuchPrefab => {
                     ctx.failed += 1;
                     ctx.record("No such prefab '{s}'", .{testg.prefab});
@@ -1163,7 +1164,7 @@ fn profilerMain() void {
     assert(initGame(true, 0));
     defer deinitGame();
 
-    mapgen.initLevelTest("PRF1_combat") catch err.wat();
+    mapgen.initLevelTest("PRF1_combat", true) catch err.wat();
 
     var i: usize = 200;
     while (i > 0) : (i -= 1) {

@@ -3369,7 +3369,7 @@ fn levelFeatureOres(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _:
     }
 }
 
-pub fn initLevelTest(prefab: []const u8) !void {
+pub fn initLevelTest(prefab: []const u8, entry: bool) !void {
     resetLevel(0);
 
     const fab = Prefab.findPrefabByName(prefab, &n_fabs) orelse return error.NoSuchPrefab;
@@ -3386,7 +3386,7 @@ pub fn initLevelTest(prefab: []const u8) !void {
     state.player.kill();
 
     generateLayoutMap(0);
-    placeEntry(0, state.GPA.allocator());
+    if (entry) placeEntry(0, state.GPA.allocator());
 }
 
 pub fn initLevel(level: usize) void {
