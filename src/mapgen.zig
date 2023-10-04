@@ -4747,7 +4747,7 @@ pub var Configs = [LEVELS]LevelConfig{
     // createLevelConfig_WRK(&[_][]const u8{}),
     createLevelConfig_SIN(4),
     createLevelConfig_WRK(&[_][]const u8{"WRK_s_SIN_stair_1"}),
-    createLevelConfig_PRI(&[_][]const u8{"PRI_s_NC"}),
+    createLevelConfig_PRI(&[_][]const u8{"PRI_NC"}),
     createLevelConfig_PRI(&[_][]const u8{"PRI_start"}),
 
     // TUT_BASE_LEVELCONFIG,

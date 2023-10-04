@@ -1,0 +1,28 @@
+% TODO: transform
+
+:g_global_restriction 1
+:g_whitelist 7/Prison
+:priority 100
+
+@0 P
+$c*** NOTICE ***$.
+
+This Thing will be staying here until it can be sent up to the Laboratory for
+an interview with Magaren Bale. Let's try not to lose it in the meantime.
+
+$g-- Zilodothrod Hubsel, Captain of the Guard$.
+END POSTER
+
+@1 Cmons night_reaper ([prisoner_of]Necromancer [job]SPC_NCAlignment)
+@g Cmons guard ()
+:prison 1,1 3 1
+:terrain t_metal
+
+##•#*#•##
+#g.....g#
+#.##≡##.#
+•.≡1..≡.•
+*.##±##.*
+#.#0..#.#
+#g.....g#
+##•#*#•##
