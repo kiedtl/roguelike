@@ -3457,29 +3457,32 @@ pub fn initLevel(level: usize) void {
 pub const LevelAnalysis = struct {
     alloc: mem.Allocator,
     prefabs: std.ArrayList(Pair),
-    items: std.ArrayList(Pair),
+    items: std.ArrayList(Pair2),
     ring: ?[]const u8 = null,
     seed: u64,
     floor_seed: u64,
 
     pub const Pair = struct { id: []const u8, c: usize };
+    pub const Pair2 = struct { id: []const u8, t: []const u8, c: usize };
 
     pub fn init(alloc: mem.Allocator, z: usize) @This() {
         return .{
             .alloc = alloc,
             .prefabs = std.ArrayList(Pair).init(alloc),
-            .items = std.ArrayList(Pair).init(alloc),
+            .items = std.ArrayList(Pair2).init(alloc),
             .seed = rng.seed,
             .floor_seed = floor_seeds[z],
         };
     }
 
-    pub fn incrItem(self: *@This(), id: []const u8) !void {
+    pub fn incrItem(self: *@This(), itemtype: types.ItemType, id: []const u8) !void {
         const slot = for (self.items.items) |*itemr| {
             if (mem.eql(u8, itemr.id, id)) break itemr;
         } else b: {
             const _id = try self.alloc.dupe(u8, id);
-            self.items.append(.{ .id = _id, .c = 0 }) catch err.wat();
+            self.items.append(
+                .{ .id = _id, .t = @tagName(itemtype), .c = 0 },
+            ) catch err.wat();
             break :b &self.items.items[self.items.items.len - 1];
         };
         slot.c += 1;
@@ -3488,7 +3491,7 @@ pub const LevelAnalysis = struct {
     pub fn jsonStringify(val: *const @This(), opts: std.json.StringifyOptions, stream: anytype) !void {
         const object: struct {
             prefabs: []const Pair,
-            items: []const Pair,
+            items: []const Pair2,
             ring: ?[]const u8,
             seed: u64,
             floor_seed: u64,
@@ -3532,13 +3535,16 @@ pub fn analyzeLevel(level: usize, alloc: mem.Allocator) !LevelAnalysis {
                 if (item == .Ring) {
                     assert(state.dungeon.itemsAt(coord).len == 1);
                     a.ring = try alloc.dupe(u8, item.Ring.name);
-                } else if (item.id()) |id| {
-                    try a.incrItem(id);
+                } else if (item != .Prop and item != .Vial and item != .Boulder) {
+                    if (item.id()) |id|
+                        try a.incrItem(item, id);
                 }
             }
             if (state.dungeon.at(coord).surface) |s| if (s == .Container)
-                for (s.Container.items.constSlice()) |item| if (item.id()) |id|
-                    try a.incrItem(id);
+                for (s.Container.items.constSlice()) |item|
+                    if (item != .Prop and item != .Vial and item != .Boulder)
+                        if (item.id()) |id|
+                            try a.incrItem(item, id);
         }
     }
 
