@@ -3458,6 +3458,7 @@ pub const LevelAnalysis = struct {
     alloc: mem.Allocator,
     prefabs: std.ArrayList(Pair),
     items: std.ArrayList(Pair2),
+    mobs: std.ArrayList(Pair),
     ring: ?[]const u8 = null,
     seed: u64,
     floor_seed: u64,
@@ -3470,9 +3471,21 @@ pub const LevelAnalysis = struct {
             .alloc = alloc,
             .prefabs = std.ArrayList(Pair).init(alloc),
             .items = std.ArrayList(Pair2).init(alloc),
+            .mobs = std.ArrayList(Pair).init(alloc),
             .seed = rng.seed,
             .floor_seed = floor_seeds[z],
         };
+    }
+
+    pub fn incrMob(self: *@This(), id: []const u8) !void {
+        const slot = for (self.mobs.items) |*mobr| {
+            if (mem.eql(u8, mobr.id, id)) break mobr;
+        } else b: {
+            const _id = try self.alloc.dupe(u8, id);
+            self.mobs.append(.{ .id = _id, .c = 0 }) catch err.wat();
+            break :b &self.mobs.items[self.mobs.items.len - 1];
+        };
+        slot.c += 1;
     }
 
     pub fn incrItem(self: *@This(), itemtype: types.ItemType, id: []const u8) !void {
@@ -3492,12 +3505,14 @@ pub const LevelAnalysis = struct {
         const object: struct {
             prefabs: []const Pair,
             items: []const Pair2,
+            mobs: []const Pair,
             ring: ?[]const u8,
             seed: u64,
             floor_seed: u64,
         } = .{
             .prefabs = val.prefabs.items,
             .items = val.items.items,
+            .mobs = val.mobs.items,
             .ring = val.ring,
             .seed = val.seed,
             .floor_seed = val.floor_seed,
@@ -3545,8 +3560,22 @@ pub fn analyzeLevel(level: usize, alloc: mem.Allocator) !LevelAnalysis {
                     if (item != .Prop and item != .Vial and item != .Boulder)
                         if (item.id()) |id|
                             try a.incrItem(item, id);
+
+            // Hack to make sure counting mobs works right
+            //
+            // Mobs are only counted if there is a straight path from them to
+            // the stair. However, if we didn't remove mobs from the map, this
+            // would break for multitile mobs in Shrine, as most of them
+            // wouldn't have a path.
+            state.dungeon.at(coord).mob = null;
         }
     }
+
+    var miter = state.mobs.iterator();
+    while (miter.next()) |mob|
+        if (!mob.is_dead and mob.coord.z == level and mob != state.player)
+            if (mob.immobile or mob.nextDirectionTo(state.dungeon.entries[level]) != null)
+                try a.incrMob(mob.id);
 
     return a;
 }
@@ -4466,7 +4495,7 @@ pub const LevelConfig = struct {
 
 // -----------------------------------------------------------------------------
 
-pub fn createLevelConfig_PRI(comptime prefabs: []const []const u8) LevelConfig {
+pub fn createLevelConfig_PRI(crowd: usize, comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
         .prefabs = prefabs,
         .prefab_chance = 20,
@@ -4479,6 +4508,7 @@ pub fn createLevelConfig_PRI(comptime prefabs: []const []const u8) LevelConfig {
             null,
         },
 
+        .room_crowd_max = crowd,
         .machines = &[_]*const Machine{ &surfaces.FirstAidStation, &surfaces.Drain },
         .single_props = &[_][]const u8{ "wood_table", "wood_chair" },
     };
@@ -4609,7 +4639,7 @@ pub fn createLevelConfig_CRY() LevelConfig {
     };
 }
 
-pub fn createLevelConfig_WRK(comptime prefabs: []const []const u8) LevelConfig {
+pub fn createLevelConfig_WRK(crowd: usize, comptime prefabs: []const []const u8) LevelConfig {
     return LevelConfig{
         .prefabs = prefabs,
         .tunneler_opts = .{
@@ -4651,6 +4681,7 @@ pub fn createLevelConfig_WRK(comptime prefabs: []const []const u8) LevelConfig {
         .props = &surfaces.laboratory_props.items,
         .single_props = &[_][]const u8{"table"},
 
+        .room_crowd_max = crowd,
         .subroom_chance = 70,
         .allow_statues = false,
 
@@ -4745,23 +4776,23 @@ pub var Configs = [LEVELS]LevelConfig{
     createLevelConfig_CRY(),
     createLevelConfig_CRY(),
     createLevelConfig_CRY(),
-    createLevelConfig_PRI(&[_][]const u8{"PRI_main_exit"}),
-    createLevelConfig_PRI(&[_][]const u8{}),
+    createLevelConfig_PRI(2, &[_][]const u8{"PRI_main_exit"}),
+    createLevelConfig_PRI(2, &[_][]const u8{}),
     // createLevelConfig_LAB(&[_][]const u8{}),
     // createLevelConfig_LAB(&[_][]const u8{}),
     createLevelConfig_SIN(6),
     createLevelConfig_LAB(&[_][]const u8{"LAB_s_SIN_stair_1"}),
-    createLevelConfig_PRI(&[_][]const u8{}),
+    createLevelConfig_PRI(2, &[_][]const u8{}),
     // CAV_BASE_LEVELCONFIG,
     // CAV_BASE_LEVELCONFIG,
     CAV_BASE_LEVELCONFIG,
-    createLevelConfig_PRI(&[_][]const u8{}),
-    // createLevelConfig_WRK(&[_][]const u8{}),
-    // createLevelConfig_WRK(&[_][]const u8{}),
+    createLevelConfig_PRI(2, &[_][]const u8{}),
+    // createLevelConfig_WRK(2, &[_][]const u8{}),
+    // createLevelConfig_WRK(2, &[_][]const u8{}),
     createLevelConfig_SIN(4),
-    createLevelConfig_WRK(&[_][]const u8{"WRK_s_SIN_stair_1"}),
-    createLevelConfig_PRI(&[_][]const u8{"PRI_NC"}),
-    createLevelConfig_PRI(&[_][]const u8{"PRI_start"}),
+    createLevelConfig_WRK(1, &[_][]const u8{"WRK_s_SIN_stair_1"}),
+    createLevelConfig_PRI(1, &[_][]const u8{"PRI_NC"}),
+    createLevelConfig_PRI(1, &[_][]const u8{"PRI_start"}),
 
     // TUT_BASE_LEVELCONFIG,
 };
