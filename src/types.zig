@@ -3088,6 +3088,9 @@ pub const Mob = struct { // {{{
     }
 
     pub fn canMelee(attacker: *Mob, defender: *Mob) bool {
+        if (attacker.hasStatus(.Paralysis))
+            return false;
+
         if (attacker.coordMT(defender.coord).closestDirectionTo(defender.coord, state.mapgeometry).is_cardinal() and
             attacker.hasStatus(.Disorient))
         {
