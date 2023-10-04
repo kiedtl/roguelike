@@ -2931,7 +2931,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
 
 // Note: must be run before placeStairs()
 //
-pub fn placeEntry(level: usize, alloc: mem.Allocator) void {
+pub fn placeEntry(level: usize, alloc: mem.Allocator) bool {
     var reciever_locations = CoordArrayList.init(alloc);
     defer reciever_locations.deinit();
 
@@ -2959,9 +2959,7 @@ pub fn placeEntry(level: usize, alloc: mem.Allocator) void {
         }
     };
 
-    if (reciever_locations.items.len == 0) {
-        err.bug("Couldn't place an entrypoint on {s}!", .{state.levelinfo[level].name});
-    }
+    err.ensure(reciever_locations.items.len > 0, "Couldn't place an entrypoint on {s}", .{state.levelinfo[level].name}) catch return false;
 
     const down_staircase = rng.chooseUnweighted(Coord, reciever_locations.items);
 
@@ -2972,6 +2970,8 @@ pub fn placeEntry(level: usize, alloc: mem.Allocator) void {
         else => {},
     }
     state.dungeon.entries[level] = down_staircase;
+
+    return true;
 }
 
 // Remove mobs nearby entry points to avoid punishing player too hard.
@@ -3386,7 +3386,7 @@ pub fn initLevelTest(prefab: []const u8, entry: bool) !void {
     state.player.kill();
 
     generateLayoutMap(0);
-    if (entry) placeEntry(0, state.GPA.allocator());
+    if (entry) _ = placeEntry(0, state.GPA.allocator());
 }
 
 pub fn initLevel(level: usize) void {
@@ -3405,7 +3405,14 @@ pub fn initLevel(level: usize) void {
         if (Configs[level].allow_extra_corridors)
             placeMoarCorridors(level, state.GPA.allocator());
         generateLayoutMap(level);
-        placeEntry(level, state.GPA.allocator());
+
+        if (!placeEntry(level, state.GPA.allocator())) {
+            // We should be checking tries here...
+            std.log.info("{s}: Invalid map (couldn't place entry), retrying...", .{
+                state.levelinfo[level].name,
+            });
+            continue; // try again
+        }
 
         for (state.levelinfo[level].stairs) |maybe_stair| if (maybe_stair) |dest_stair| {
             const floor = for (state.levelinfo) |levelinfo, i| {
