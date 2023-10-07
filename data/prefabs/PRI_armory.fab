@@ -1,5 +1,5 @@
 :g_global_restriction 2
-:restriction 1
+:g_restriction 1
 :priority 80
 :g_whitelist $SPAWN_LEVEL
 :g_whitelist 7/Prison
@@ -7,8 +7,8 @@
 :noguards
 :noitems
 :nostairs
-:material rust
-:terrain t_metal
+:g_material rust
+:g_terrain t_metal
 
 @@g Cmons  guard ([prm_status1]Sleeping)
 @@b Cpitem ((nil 50z) ("empty_bottle" 40z) ("kombucha" 9z) ("fruit_kombucha" 1z))
@@ -65,10 +65,10 @@
 
 :begin_prefab PRI_s_armory_section
 
-:subroom
+:g_subroom
 :invisible
 :g_individual_restriction 1
-:restriction 99
+:g_restriction 99
 :g_transform .Turn1
 :g_transform .Turn2
 :g_transform .Turn3

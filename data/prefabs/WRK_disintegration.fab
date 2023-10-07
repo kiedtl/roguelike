@@ -19,7 +19,7 @@ Revgenunkim may be far more intelligent than anyone realized.
 END POSTER
 @@2 M bone_rat
 
-:material gold
+:g_material gold
 :tunneler_orientation north
 :tunneler_orientation south
 @a p gold_c_wall_right
@@ -33,7 +33,7 @@ END POSTER
 
 \
 
-:material gold
+:g_material gold
 :tunneler_orientation north
 :tunneler_orientation south
 @a p gold_c_wall_left

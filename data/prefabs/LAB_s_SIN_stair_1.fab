@@ -1,6 +1,6 @@
-:restriction 1
-:material marble
-:subroom
+:g_restriction 1
+:g_material marble
+:g_subroom
 :priority 100
 :g_whitelist 3/Laboratory
 

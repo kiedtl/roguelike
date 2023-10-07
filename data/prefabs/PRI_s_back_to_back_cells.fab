@@ -1,5 +1,5 @@
-:subroom
-:restriction 2
+:g_subroom
+:g_restriction 2
 :prison 1,1 4 4
 :prison 6,1 4 4
 

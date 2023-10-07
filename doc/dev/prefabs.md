@@ -35,13 +35,13 @@
 %        Global.
 %
 %    :subroom_area <x>,<y> <height> <width> [prefab_id]
-%        Try to place a subroom in the following rectangle. May take an optional
+%        Try to place a subroom in tile following rectangle. May take an optional
 %        prefab id.
 %        Reset on /.
 %
-%    :material <name>
+%    :g_material <name>
 %        Use <name> as the material for floor and wall tiles.
-%        Reset on /.
+%        Global.
 %
 %    :center_align
 %        Disallow placing a subroom if it wouldn't be aligned in the center of

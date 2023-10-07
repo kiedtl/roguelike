@@ -2,13 +2,13 @@
 % the main monsters.
 
 :invisible
-:subroom
+:g_subroom
 
 %:g_transform .Turn1
 %:g_transform .Turn2
 %:g_transform .Turn3
 
-:material marble
+:g_material marble
 :subroom_area 0,0 2 2 ANY_s_s_marble_vlts_furniture
 :subroom_area 3,0 2 2 ANY_s_s_marble_vlts_furniture
 @b p gold_c_wall_block
@@ -23,7 +23,7 @@ sb0bs
 
 \
 
-:material marble
+:g_material marble
 :subroom_area 0,3 2 2 ANY_s_s_marble_vlts_furniture
 :subroom_area 3,3 2 2 ANY_s_s_marble_vlts_furniture
 @b p gold_c_wall_block
@@ -40,11 +40,11 @@ sb0bs
 :begin_prefab ANY_s_s_marble_vlts_furniture
 
 :invisible
-:subroom
+:g_subroom
 :g_transform .Turn1
 :g_transform .Turn2
 :g_transform .Turn3
-:restriction 10
+:g_restriction 10
 
 CC
 CC

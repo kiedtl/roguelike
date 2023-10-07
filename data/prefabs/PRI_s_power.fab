@@ -17,7 +17,7 @@
 @a p large_magnet
 @b p battery_pack2
 
-:subroom
+:g_subroom
 :g_global_restriction 1
 :notraps
 

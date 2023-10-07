@@ -3,7 +3,7 @@
 % open the containment chambers).
 
 :g_tunneler
-:restriction 3
+:g_restriction 3
 :noitems
 :notraps
 :nostairs

@@ -5,8 +5,8 @@
 % #####
 % ..Ñ..
 
-:subroom
-:restriction 1
+:g_subroom
+:g_restriction 1
 :g_global_restriction 2
 
 :prison 0,0 4 4

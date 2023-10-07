@@ -7,7 +7,7 @@
 % ⊺ P╜╘⊡┘
 
 :g_tunneler
-:restriction 2
+:g_restriction 2
 
 @0 m research_core
 @1 p small_transformer

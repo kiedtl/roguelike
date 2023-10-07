@@ -4,7 +4,7 @@
 % i o
 
 :g_tunneler
-:restriction 1
+:g_restriction 1
 :priority 40
 :nostairs
 :noguards

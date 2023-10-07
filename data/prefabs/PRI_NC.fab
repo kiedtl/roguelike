@@ -19,7 +19,7 @@ END POSTER
 @1 Cmons night_reaper ([prisoner_of]Necromancer [job]SPC_NCAlignment)
 @g Cmons watcher ()
 :prison 3,3 3 1
-:terrain t_metal
+:g_terrain t_metal
 
 ##•#*#•##
 #g.....g#

@@ -1,7 +1,7 @@
-:subroom
+:g_subroom
 :priority 50
-:restriction 1
-:material gold
+:g_restriction 1
+:g_material gold
 
 @0 m shrine
 @a p gold_c_wall_upper

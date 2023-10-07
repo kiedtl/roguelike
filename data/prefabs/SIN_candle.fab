@@ -1,6 +1,6 @@
 :g_tunneler
 :g_global_restriction 8
-:restriction 4
+:g_restriction 4
 :nolights
 :notraps
 :noguards

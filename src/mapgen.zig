@@ -3999,25 +3999,25 @@ pub const Prefab = struct {
                     } else if (mem.eql(u8, key, "tunneler_orientation")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
                         f.tunneler_orientation.append(if (Direction.fromStr(val)) |d| d else |_| return error.InvalidMetadataValue) catch err.wat();
-                    } else if (mem.eql(u8, key, "subroom")) {
+                    } else if (mem.eql(u8, key, "g_subroom")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.subroom = true;
                     } else if (mem.eql(u8, key, "center_align")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.center_align = true;
-                    } else if (mem.eql(u8, key, "material")) {
+                    } else if (mem.eql(u8, key, "g_material")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
                         f.material = for (materials.MATERIALS) |mat| {
                             if (mem.eql(u8, val, mat.id orelse mat.name))
                                 break mat;
                         } else return error.InvalidMetadataValue;
-                    } else if (mem.eql(u8, key, "terrain")) {
+                    } else if (mem.eql(u8, key, "g_terrain")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
                         f.terrain = for (surfaces.TERRAIN) |t| {
                             if (mem.eql(u8, val, t.id))
                                 break t;
                         } else return error.InvalidMetadataValue;
-                    } else if (mem.eql(u8, key, "restriction")) {
+                    } else if (mem.eql(u8, key, "g_restriction")) {
                         if (val.len == 0) return error.ExpectedMetadataValue;
                         f.restriction = std.fmt.parseInt(usize, val, 0) catch return error.InvalidMetadataValue;
                     } else if (mem.eql(u8, key, "g_global_restriction")) {

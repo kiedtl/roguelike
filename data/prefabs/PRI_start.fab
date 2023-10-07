@@ -8,7 +8,7 @@
 %:g_tunneler
 %:restriction 1
 
-:restriction 0
+:g_restriction 0
 :invisible
 :noguards
 :notraps

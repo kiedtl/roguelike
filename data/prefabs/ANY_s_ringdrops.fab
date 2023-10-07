@@ -1,12 +1,12 @@
 % Area to drop a ring
 
-:subroom
+:g_subroom
 :priority 100
-:restriction 1
+:g_restriction 1
 :g_transform .Turn1
 :g_transform .Turn2
 :g_transform .Turn3
-:material gold
+:g_material gold
 
 ###
 #=#

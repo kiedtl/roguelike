@@ -25,7 +25,7 @@ END POSTER
 
 :tunneler_orientation east
 :tunneler_orientation west
-:material gold
+:g_material gold
 @0 i aux_shield_earthen1
 @g M skeletal_blademaster
 .#######.

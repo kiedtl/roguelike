@@ -5,7 +5,7 @@
 % ┋##¦#┋│
 % └·─┻·┘⌨
 
-:subroom
+:g_subroom
 
 @b p fuel_burner
 @c p compact_turbine

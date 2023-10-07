@@ -1,9 +1,9 @@
-:subroom
+:g_subroom
 :priority 20
-:restriction 1
+:g_restriction 1
 
 :prison 0,0 5 4
-:terrain t_metal
+:g_terrain t_metal
 :subroom_area 0,0 5 1 PRI_s_s_cell_6_window_walls_horiz
 :subroom_area 0,3 5 1 PRI_s_s_cell_6_window_walls_horiz
 :subroom_area 0,0 5 1 PRI_s_s_cell_6_door_walls_vert
@@ -29,7 +29,7 @@
 
 :begin_prefab PRI_s_s_cell_6_window_walls_horiz
 :g_transform .Turn2
-:subroom
+:g_subroom
 :invisible
 
 #####
@@ -46,7 +46,7 @@
 
 :begin_prefab PRI_s_s_cell_6_window_walls_vert
 :g_transform .Turn2
-:subroom
+:g_subroom
 :invisible
 
 #
@@ -65,7 +65,7 @@
 
 :begin_prefab PRI_s_s_cell_6_door_walls_horiz
 :g_transform .Turn2
-:subroom
+:g_subroom
 :invisible
 
 #≡±≡#
@@ -90,7 +90,7 @@
 
 :begin_prefab PRI_s_s_cell_6_door_walls_vert
 :g_transform .Turn2
-:subroom
+:g_subroom
 :invisible
 
 #
