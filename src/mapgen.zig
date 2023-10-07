@@ -522,12 +522,13 @@ pub fn placeProp(coord: Coord, prop_template: *const Prop) *Prop {
     return state.props.last().?;
 }
 
-fn placeContainer(coord: Coord, template: *const Container) void {
+fn placeContainer(coord: Coord, template: *const Container) *Container {
     var container = template.*;
     container.coord = coord;
     state.containers.append(container) catch err.wat();
     const ptr = state.containers.last().?;
     state.dungeon.at(coord).surface = SurfaceItem{ .Container = ptr };
+    return ptr;
 }
 
 fn _place_machine(coord: Coord, machine_template: *const Machine) void {
@@ -832,7 +833,10 @@ pub fn excavatePrefab(
                                 _ = mobs.placeMob(allocator, mob_info.t, rc, mob_info.opts);
                             },
                             .CCont => |container_info| {
-                                placeContainer(rc, container_info.t);
+                                fillLootContainer(
+                                    placeContainer(rc, container_info.t),
+                                    rng.range(usize, 0, 1),
+                                );
                             },
                             .Cpitem => |prop_info| {
                                 const chosen = rng.choose(?*const Prop, prop_info.ts.constSlice(), prop_info.we.constSlice()) catch err.wat();
@@ -2133,17 +2137,19 @@ pub fn _placeLootChest(room: *Room, max_items: usize) void {
         &surfaces.LOOT_CONTAINERS,
         &surfaces.LOOT_CONTAINER_WEIGHTS,
     ) catch err.wat();
-    placeContainer(container_coord, container_template);
-    const container_ref = state.dungeon.at(container_coord).surface.?.Container;
-    const item_class = container_ref.type.itemType().?;
+    fillLootContainer(placeContainer(container_coord, container_template), max_items);
+}
+
+pub fn fillLootContainer(container: *Container, max_items: usize) void {
+    const item_class = container.type.itemType().?;
 
     var items_placed: usize = 0;
 
-    while (items_placed < max_items and !container_ref.isFull()) : (items_placed += 1) {
+    while (items_placed < max_items and !container.isFull()) : (items_placed += 1) {
         const chosen_item_class = rng.chooseUnweighted(ItemTemplate.Type, item_class);
         const t = _chooseLootItem(&items.ITEM_DROPS, minmax(usize, 0, 200), chosen_item_class);
         const item = items.createItemFromTemplate(t);
-        container_ref.items.append(item) catch err.wat();
+        container.items.append(item) catch err.wat();
     }
 }
 
@@ -2183,19 +2189,19 @@ pub fn placeItems(level: usize) void {
         }
     }
 
-    // Now fill up containers, including any ones we placed earlier in this
-    // function
+    // Now fill up containers with junk
+    // (Including any ones we placed earlier in this function)
     //
     var containers = state.containers.iterator();
     while (containers.next()) |container| {
         if (container.coord.z != level) continue;
-        if (container.items.isFull()) continue;
+        if (container.isFull()) continue;
 
         // 1/3 chance to skip filling a container if it already has items
         if (container.items.len > 0 and rng.onein(3)) continue;
 
         // How much should we fill the container?
-        const fill = rng.range(usize, 0, container.capacity - container.items.len);
+        const fill = rng.range(usize, 1, container.capacity - container.items.len);
 
         const maybe_item_list: ?[]const Prop = switch (container.type) {
             .Drinkables => surfaces.bottle_props.items,
@@ -2676,7 +2682,7 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
                 .Containers => {
                     if (containers < max_containers) {
                         var cont = rng.chooseUnweighted(Container, Configs[level].containers);
-                        placeContainer(coord, &cont);
+                        _ = placeContainer(coord, &cont);
                         containers += 1;
                     }
                 },
@@ -3350,8 +3356,7 @@ fn levelFeatureOres(_: usize, coord: Coord, _: *const Room, _: *const Prefab, _:
     var using_container: ?*Container = null;
 
     if ((coord.y % 2) == 0) {
-        placeContainer(coord, &surfaces.VOreCrate);
-        using_container = state.dungeon.at(coord).surface.?.Container;
+        using_container = placeContainer(coord, &surfaces.VOreCrate);
     }
 
     var placed: usize = rng.rangeClumping(usize, 3, 8, 2);
