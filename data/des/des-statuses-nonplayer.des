@@ -104,8 +104,8 @@ It is moving 2x as fast.
 It is terrified and will flee enemies more often.
 
 % nonplayer_Status.Fire
-It is burning and has a 33% chance to take fire damage each turn. It willll
-also spread fire to each tile it steps on.
+It is burning and has a 50% chance to take fire damage each turn. It will also
+spread fire to each tile it steps on.
 
 % nonplayer_Status.Fireproof
 It has +25% fire resistance.

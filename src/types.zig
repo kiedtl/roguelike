@@ -1576,7 +1576,8 @@ pub const Status = enum {
         }
 
         if (!mob.isFullyResistant(.rFire)) { // Don't spam "you are scorched" messages
-            if (rng.percent(@as(usize, 33))) {
+            const percent: usize = if (mob == state.player) 20 else 50;
+            if (rng.percent(percent)) {
                 mob.takeDamage(.{ .amount = 1, .kind = .Fire, .blood = false }, .{
                     .noun = "The fire",
                     .strs = &[_]DamageStr{

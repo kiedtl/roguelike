@@ -109,7 +109,7 @@ You are moving 2x as fast.
 You have a feeling of inescapable doom!
 
 % player_Status.Fire
-You are burning and have a 33% chance to take fire damage each turn. You'll
+You are burning and have a 20% chance to take fire damage each turn. You'll
 also spread fire to each tile you step on.
 
 % player_Status.Fireproof
