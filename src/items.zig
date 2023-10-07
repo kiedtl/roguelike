@@ -115,7 +115,7 @@ pub const ITEM_DROPS = [_]ItemTemplate{
     .{ .w = 25, .i = .{ .W = &GreatMaceWeapon } },
     .{ .w = 30, .i = .{ .W = &MorningstarWeapon } },
     .{ .w = 25, .i = .{ .W = &MonkSpadeWeapon } },
-    .{ .w = 15, .i = .{ .W = &WoldoWeapon } },
+    .{ .w = 10, .i = .{ .W = &WoldoWeapon } },
     .{ .w = 10, .i = .{ .W = &GoldDaggerWeapon } },
     // Armor
     .{ .w = 20, .i = .{ .A = GambesonArmor } },
@@ -1852,7 +1852,7 @@ pub const GoldDaggerWeapon = Weapon{
 pub const RapierWeapon = Weapon{
     .id = "rapier",
     .name = "rapier",
-    .damage = 3,
+    .damage = 2,
     .stats = .{ .Melee = -10, .Evade = 10 },
     .equip_effects = &[_]StatusDataInfo{
         .{ .status = .Riposte, .duration = .Equ },
@@ -1909,7 +1909,7 @@ pub const WoldoWeapon = Weapon{
 pub const MorningstarWeapon = Weapon{
     .id = "morningstar",
     .name = "morningstar",
-    .damage = 3,
+    .damage = 2,
     .stats = .{ .Melee = 10 },
     .effects = &[_]StatusDataInfo{
         .{ .status = .Fear, .duration = .{ .Tmp = 2 } },
