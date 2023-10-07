@@ -2,7 +2,6 @@
 :g_restriction 1
 :priority 80
 :g_whitelist $SPAWN_LEVEL
-:g_whitelist 7/Prison
 :g_whitelist 5/Prison
 :noguards
 :noitems
@@ -79,12 +78,12 @@
 @@g p     garbage
 
 ww
-w.
+..
 
 \
 
 rr
-r.
+..
 
 \
 
@@ -98,15 +97,15 @@ rw
 
 \
 
-ww
+.w
 wg
 
 \
 
-rr
+.r
 rg
 
 \
 
 pg
-gg
+.g
