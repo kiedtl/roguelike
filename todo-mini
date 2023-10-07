@@ -1,10 +1,13 @@
-- profile item/ring gen
+- rename :material/:terrain to :g_*
+
 - borders around map in examine mode
 
 - item: paras when elec damage is resisted, +50% rElec
 - restroom prefab
-- headgear
 
+- armory/weapon room prefab for lower levels
+- profile item/ring gen
+- headgear
 - pull up @ when pressedin examine mode
 - no staring into walls
 - "you ascend, sealing the steel gates behind you."
