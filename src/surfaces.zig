@@ -247,15 +247,16 @@ pub const TERRAIN = [_]*const Terrain{
     &PillarTerrain,
 };
 
-pub const ToolChest = Container{ .name = "tool chest", .tile = 'æ', .capacity = 1, .type = .Evocables };
-pub const Wardrobe = Container{ .name = "wardrobe", .tile = 'Æ', .capacity = 1, .type = .Wearables, .item_repeat = 0 };
-pub const PotionShelf = Container{ .name = "potion chest", .tile = 'æ', .capacity = 3, .type = .Drinkables, .item_repeat = 0 };
-pub const WeaponRack = Container{ .name = "weapon rack", .tile = 'π', .capacity = 1, .type = .Smackables, .item_repeat = 0 };
-pub const LabCabinet = Container{ .name = "cabinet", .tile = 'π', .capacity = 5, .type = .Utility, .item_repeat = 70 };
-pub const VOreCrate = Container{ .name = "crate", .tile = '∐', .capacity = 14, .type = .VOres, .item_repeat = 60 };
+pub const ToolChest = Container{ .id = "tool_chest", .name = "tool chest", .tile = 'æ', .capacity = 1, .type = .Evocables };
+pub const Wardrobe = Container{ .id = "wardrobe", .name = "wardrobe", .tile = 'Æ', .capacity = 1, .type = .Wearables, .item_repeat = 0 };
+pub const PotionShelf = Container{ .id = "potion_chest", .name = "potion chest", .tile = 'æ', .capacity = 3, .type = .Drinkables, .item_repeat = 0 };
+pub const WeaponRack = Container{ .id = "weapon_rack", .name = "weapon rack", .tile = 'π', .capacity = 1, .type = .Smackables, .item_repeat = 0 };
+pub const LabCabinet = Container{ .id = "cabinet", .name = "cabinet", .tile = 'π', .capacity = 5, .type = .Utility, .item_repeat = 70 };
+pub const VOreCrate = Container{ .id = "crate", .name = "crate", .tile = '∐', .capacity = 14, .type = .VOres, .item_repeat = 60 };
 
 pub const LOOT_CONTAINERS = [_]*const Container{ &WeaponRack, &PotionShelf, &Wardrobe };
 pub const LOOT_CONTAINER_WEIGHTS = [LOOT_CONTAINERS.len]usize{ 2, 4, 2 };
+pub const ALL_CONTAINERS = [_]*const Container{ &ToolChest, &Wardrobe, &PotionShelf, &WeaponRack, &LabCabinet, &VOreCrate };
 
 pub const MACHINES = [_]Machine{
     SteamVent,

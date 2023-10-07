@@ -22,6 +22,7 @@ const Value = union(enum) {
     String: StringBuffer,
     Char: u21,
     List: KVList,
+    Usize: usize,
 };
 
 const Key = union(enum) {
@@ -101,7 +102,7 @@ pub const Parser = struct {
         InvalidKeyChar,
         NoMatchingBrace,
         UnexpectedKey,
-    } || StringParserError;
+    } || StringParserError || std.fmt.ParseIntError;
 
     pub fn deinit(data: *KVList) void {
         for (data.items) |*node| switch (node.value) {
@@ -149,6 +150,16 @@ pub const Parser = struct {
             return .False;
         } else if (mem.eql(u8, word, "nil")) {
             return .None;
+        } else if (word[0] >= '0' and word[0] <= '9') {
+            // TODO: u8, u16, u21, u32, u64, u128, and signed variants.
+            //       (add them as needed...)
+            // TODO: multibase (0x, 0o, 0b)
+            if (mem.endsWith(u8, word, "z")) {
+                const num = try std.fmt.parseInt(usize, word[0 .. word.len - 1], 10);
+                return Value{ .Usize = num };
+            } else {
+                return Value{ .String = StringBuffer.init(word) };
+            }
         } else {
             return Value{ .String = StringBuffer.init(word) };
         }
@@ -262,8 +273,8 @@ const GPA = std.heap.GeneralPurposeAllocator(.{});
 test "parse values" {
     var gpa = GPA{};
 
-    const input = "yea nah nil 'f'";
-    const output = [_]Value{ .True, .False, .None, .{ .Char = 'f' } };
+    const input = "yea nah nil 'f' 129z 0z";
+    const output = [_]Value{ .True, .False, .None, .{ .Char = 'f' }, .{ .Usize = 129 }, .{ .Usize = 0 } };
     var p = Parser{ .input = input };
 
     var res = try p.parse(gpa.allocator());
@@ -327,23 +338,22 @@ test "parse basic list" {
 test "parse nested list" {
     var gpa = GPA{};
 
-    const input = "yea ( nah (nah nil) (nah yea  )) nah";
+    const input = "yea ((nah nil) nah (nah yea  )) nah";
     var p = Parser{ .input = input };
 
     var res = try p.parse(gpa.allocator());
 
     try testing.expectEqual(res.items[0].value, .True);
     try testing.expectEqual(meta.activeTag(res.items[1].value), .List);
-    try testing.expectEqual(res.items[2].value, .False);
 
     var list1 = res.items[1].value.List;
 
-    try testing.expectEqual(list1.items[0].value, .False);
-    try testing.expectEqual(meta.activeTag(list1.items[1].value), .List);
+    try testing.expectEqual(meta.activeTag(list1.items[0].value), .List);
+    try testing.expectEqual(list1.items[1].value, .False);
     try testing.expectEqual(meta.activeTag(list1.items[2].value), .List);
 
-    try testing.expectEqual(list1.items[1].value.List.items[0].value, .False);
-    try testing.expectEqual(list1.items[1].value.List.items[1].value, .None);
+    try testing.expectEqual(list1.items[0].value.List.items[0].value, .False);
+    try testing.expectEqual(list1.items[0].value.List.items[1].value, .None);
 
     try testing.expectEqual(list1.items[2].value.List.items[0].value, .False);
     try testing.expectEqual(list1.items[2].value.List.items[1].value, .True);

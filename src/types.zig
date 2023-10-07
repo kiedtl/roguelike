@@ -4625,6 +4625,7 @@ pub const Container = struct {
     __next: ?*Container = null,
     __prev: ?*Container = null,
 
+    id: []const u8,
     name: []const u8,
     tile: u21,
     capacity: usize,

@@ -831,20 +831,24 @@ pub fn excavatePrefab(
                             .CMob => |mob_info| {
                                 _ = mobs.placeMob(allocator, mob_info.t, rc, mob_info.opts);
                             },
+                            .CCont => |container_info| {
+                                placeContainer(rc, container_info.t);
+                            },
+                            .Cpitem => |prop_info| {
+                                const chosen = rng.choose(?*const Prop, prop_info.ts.constSlice(), prop_info.we.constSlice()) catch err.wat();
+                                if (chosen) |c|
+                                    state.dungeon.itemsAt(rc).append(Item{ .Prop = c }) catch err.wat();
+                            },
                             .Poster => |poster| {
                                 state.dungeon.at(rc).surface = SurfaceItem{ .Poster = poster };
                             },
                             .Prop => |pid| {
                                 if (utils.findById(surfaces.props.items, pid)) |prop| {
                                     _ = placeProp(rc, &surfaces.props.items[prop]);
-                                } else {
-                                    std.log.err(
-                                        "{s}: Couldn't load prop {s}, skipping.",
-                                        .{ fab.name.constSlice(), utils.used(pid) },
-                                    );
-                                    const ring = items.createItemFromTemplate(chooseRing(room.is_lair));
-                                    state.dungeon.itemsAt(rc).append(ring) catch err.wat();
-                                }
+                                } else std.log.err(
+                                    "{s}: Couldn't load prop {s}, skipping.",
+                                    .{ fab.name.constSlice(), utils.used(pid) },
+                                );
                             },
                             .Machine => |mid| {
                                 if (utils.findById(&surfaces.MACHINES, mid.id)) |mach| {
@@ -3734,6 +3738,13 @@ pub const Prefab = struct {
             t: *const mobs.MobTemplate,
             opts: mobs.PlaceMobOptions,
         },
+        CCont: struct {
+            t: *const Container,
+        },
+        Cpitem: struct {
+            ts: StackBuffer(?*const Prop, 16),
+            we: StackBuffer(usize, 16),
+        },
         Poster: *const Poster,
         Machine: struct {
             id: [32:0]u8,
@@ -4191,13 +4202,49 @@ pub const Prefab = struct {
 
                                 const ind = @ptrToInt((words.next() orelse return error.MalformedFeatureDefinition).ptr) - @ptrToInt(line.ptr);
                                 const rest = line[ind..];
-                                var p = cbf.Parser{ .input = rest };
-                                var res = try p.parse(state.GPA.allocator());
+                                var cbf_p = cbf.Parser{ .input = rest };
+                                var res = try cbf_p.parse(state.GPA.allocator());
                                 defer cbf.Parser.deinit(&res);
 
                                 const r = cbf.deserializeStruct(mobs.PlaceMobOptions, res.items[0].value.List, .{}) catch
                                     return error.InvalidMetadataValue;
                                 f.features[identifier] = Feature{ .CMob = .{ .t = mob_t, .opts = r } };
+                                f.features_global[identifier] = is_global;
+                            } else if (mem.eql(u8, feature_type, "Ccont")) {
+                                const container = for (&surfaces.ALL_CONTAINERS) |c| {
+                                    if (mem.eql(u8, c.id, id orelse return error.MalformedFeatureDefinition)) break c;
+                                } else return error.NoSuchContainer;
+
+                                f.features[identifier] = Feature{ .CCont = .{ .t = container } };
+                                f.features_global[identifier] = is_global;
+                            } else if (mem.eql(u8, feature_type, "Cpitem")) {
+                                const rest = line[@ptrToInt((id orelse return error.MalformedFeatureDefinition).ptr) - @ptrToInt(line.ptr) ..];
+                                var cbf_p = cbf.Parser{ .input = rest };
+                                var res = try cbf_p.parse(state.GPA.allocator());
+                                defer cbf.Parser.deinit(&res);
+
+                                // Probably more informative to just crash, given
+                                // lack of error context if we return an error
+                                //
+                                // if (res.items.len > 1 or res.items[0].value != .List)
+                                //     return error.MalformedFeatureDefinition;
+
+                                var feature = Feature{ .Cpitem = .{
+                                    .ts = StackBuffer(?*const Prop, 16).init(null),
+                                    .we = StackBuffer(usize, 16).init(null),
+                                } };
+                                for (res.items[0].value.List.items) |entry| {
+                                    const weight = entry.value.List.items[1].value.Usize;
+                                    const prop = switch (entry.value.List.items[0].value) {
+                                        .None => null,
+                                        .String => |s| &surfaces.props.items[utils.findById(surfaces.props.items, s.constSlice()) orelse return error.NoSuchProp],
+                                        else => return error.MalformedFeatureDefinition,
+                                    };
+                                    feature.Cpitem.ts.append(prop) catch err.wat();
+                                    feature.Cpitem.we.append(weight) catch err.wat();
+                                }
+
+                                f.features[identifier] = feature;
                                 f.features_global[identifier] = is_global;
                             } else {
                                 return error.InvalidFeatureType;
@@ -4370,6 +4417,8 @@ fn _readPrefab(name: []const u8, fab_f: std.fs.File, buf: []u8) void {
             error.MalformedFeatureDefinition => "Invalid syntax for feature definition",
             error.NoSuchMob => "Encountered non-existent mob id",
             error.NoSuchItem => "Encountered non-existent item id",
+            error.NoSuchContainer => "Encountered non-existent container id",
+            error.NoSuchProp => "Encountered non-existent prop id",
             error.MalformedMetadata => "Malformed metadata",
             error.InvalidMetadataValue => "Invalid value for metadata",
             error.UnexpectedMetadataValue => "Unexpected value for metadata",

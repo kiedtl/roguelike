@@ -31,9 +31,9 @@
 ""                     	 "wool sock"            	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Wearables
 
 # Potion props
-""                     	 "empty bottle"         	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
-""                     	 "kombucha"             	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
-""                     	 "passionfruit kombucha"	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
+"empty_bottle"         	 "empty bottle"         	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
+"kombucha"             	 "kombucha"             	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
+"fruit_kombucha"       	 "passionfruit kombucha"	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
 ""                     	 "kefir"                	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
 ""                     	 "sanitisation potion"  	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
 ""                     	 "fermentation potion"  	 ' ' 	                        -  	        - 	 -        	 -   	 - 	 - 	 .Bottles
@@ -372,3 +372,4 @@
 "titanium_bars"        	 "titanium bars"        	 '*' 	                        -  	 0xeaecef 	 -        	 nay
 
 "undead_ash"           	 "pile of ash"          	 '%' 	                        -  	 0x8888aa 	 -        	 -  
+"garbage"              	 "pile of garbage"      	 '%' 	                        -  	 0xaaaa88 	 -        	 -  

@@ -13,6 +13,7 @@ pub const MATERIALS = [_]*const Material{
     &Gold,
     &Slade,
     &Basalt,
+    &Rust,
 };
 
 pub const PaintedConcrete = Material{
