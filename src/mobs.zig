@@ -165,6 +165,7 @@ pub const WrithingHulkTemplate = MobTemplate{
             .profession_description = "wandering",
             .work_fn = ai.hulkWork,
             .fight_fn = ai.meleeFight,
+            .is_fearless = true,
         },
         .base_night_vision = true,
 
@@ -192,6 +193,7 @@ pub const SwollenHulkTemplate = MobTemplate{
             .profession_description = "wandering",
             .work_fn = ai.hulkWork,
             .fight_fn = ai.meleeFight,
+            .is_fearless = true,
         },
         .multitile = 2,
         .base_night_vision = true,
@@ -226,6 +228,7 @@ pub const ThrashingHulkTemplate = MobTemplate{
             .profession_description = "wandering",
             .work_fn = ai.hulkWork,
             .fight_fn = ai.meleeFight,
+            .is_fearless = true,
         },
         .multitile = 3,
         .base_night_vision = true,
