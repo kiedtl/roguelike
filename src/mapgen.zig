@@ -2195,7 +2195,7 @@ pub fn placeItems(level: usize) void {
         if (container.items.len > 0 and rng.onein(3)) continue;
 
         // How much should we fill the container?
-        const fill = rng.rangeClumping(usize, 0, container.capacity - container.items.len, 2);
+        const fill = rng.range(usize, 0, container.capacity - container.items.len);
 
         const maybe_item_list: ?[]const Prop = switch (container.type) {
             .Drinkables => surfaces.bottle_props.items,
