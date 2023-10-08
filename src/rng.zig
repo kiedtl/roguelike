@@ -9,11 +9,12 @@ const math = std.math;
 var rng: rand.Isaac64 = undefined;
 var rng2: rand.Isaac64 = undefined;
 pub var using_temp = false;
-pub var seed: u64 = undefined;
+pub const seed = &@import("state.zig").seed;
+
 //seed = 0xdefaced_cafe;
 
 pub fn init() void {
-    rng = rand.Isaac64.init(seed);
+    rng = rand.Isaac64.init(seed.*);
 }
 
 pub fn useTemp(tseed: u64) void {
@@ -134,7 +135,7 @@ pub fn choose2(comptime T: type, arr: []const T, comptime weight_field: []const 
 test "range" {
     const testing = std.testing;
 
-    seed = 2384928349;
+    seed.* = 2384928349;
     init();
 
     var i: usize = 0;

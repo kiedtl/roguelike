@@ -102,21 +102,18 @@ pub const ThreatResponse = struct {
     pub const AList = std.ArrayList(@This());
 };
 
-pub var threats: std.AutoHashMap(Threat, ThreatData) = undefined;
-pub var responses: ThreatResponse.AList = undefined;
-
 pub fn init() void {
-    threats = @TypeOf(threats).init(state.GPA.allocator());
-    responses = @TypeOf(responses).init(state.GPA.allocator());
+    state.threats = @TypeOf(state.threats).init(state.GPA.allocator());
+    state.responses = @TypeOf(state.responses).init(state.GPA.allocator());
 }
 
 pub fn deinit() void {
-    threats.clearAndFree();
-    responses.deinit();
+    state.threats.clearAndFree();
+    state.responses.deinit();
 }
 
 pub fn getThreat(threat: Threat) *ThreatData {
-    return (threats.getOrPutValue(threat, .{}) catch err.wat()).value_ptr;
+    return (state.threats.getOrPutValue(threat, .{}) catch err.wat()).value_ptr;
 }
 
 pub fn reportThreat(by: ?*Mob, threat: Threat, threattype: ThreatIncrease) void {
@@ -142,7 +139,7 @@ pub fn reportThreat(by: ?*Mob, threat: Threat, threattype: ThreatIncrease) void 
         getThreat(.Unknown).is_active = true;
     }
 
-    // Don't report threats if the guy is dead
+    // Don't report state.threats if the guy is dead
     if (threat == .Specific and
         threat.Specific.is_dead and threat.Specific.corpse_info.is_noticed)
     {
@@ -174,24 +171,24 @@ pub fn dismissThreat(by: ?*Mob, threat: Threat) void {
     // Also there would need to be checks in place for when threats are
     // dismissed redundantly
     //
-    //threats.put(threat, getThreat(.General).level - getThreat(threat).level);
+    //state.threats.put(threat, getThreat(.General).level - getThreat(threat).level);
 
     assert(threat != .General);
     assert(by == null or by.?.faction == .Necromancer);
 
     _ = by;
-    _ = threats.remove(threat);
+    _ = state.threats.remove(threat);
 }
 
 pub fn queueThreatResponse(response: ThreatResponseType) void {
-    responses.append(.{ .type = response }) catch err.wat();
+    state.responses.append(.{ .type = response }) catch err.wat();
 }
 
 pub fn tickThreats(level: usize) void {
     // Unsure if modifying container while iterator() is active is safe to do
     var dismiss_threats = StackBuffer(Threat, 64).init(null);
 
-    var iter = threats.iterator();
+    var iter = state.threats.iterator();
     while (iter.next()) |entry| {
         if (entry.key_ptr.* == .General)
             continue;
@@ -225,8 +222,8 @@ pub fn tickThreats(level: usize) void {
     for (dismiss_threats.constSlice()) |threat|
         dismissThreat(null, threat);
 
-    if (responses.items.len > 0) {
-        const response = responses.pop();
+    if (state.responses.items.len > 0) {
+        const response = state.responses.pop();
         switch (response.type) {
             .ReinforceAgainstEnemy => |r| {
                 const mob_template = switch (r.reinforcement) {
@@ -259,7 +256,7 @@ pub fn tickThreats(level: usize) void {
                 } else |_| {
                     // No space near stairs. Add the response back, wait until next
                     // time, hopefully the traffic dissipates.
-                    responses.append(response) catch err.wat();
+                    state.responses.append(response) catch err.wat();
                 }
             },
             .ReinforceRoom => |r| {
@@ -292,7 +289,7 @@ pub fn tickThreats(level: usize) void {
                     if (mobs.placeMobNearStairs(mob_template, level, opts)) |_| {} else |_| {
                         // No space near stairs. Add the response back, wait until next
                         // time, hopefully the traffic dissipates.
-                        responses.append(response) catch err.wat();
+                        state.responses.append(response) catch err.wat();
                     }
                 }
             },

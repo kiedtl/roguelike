@@ -60,7 +60,7 @@ pub const Info = struct {
         // FIXME: should be a cleaner way to do this...
         var s: Self = undefined;
 
-        s.seed = rng.seed;
+        s.seed = state.seed;
 
         if (std.process.getEnvVarOwned(state.GPA.allocator(), "USER")) |env| {
             s.username.reinit(env);
@@ -340,17 +340,15 @@ pub const StatValue = struct {
     };
 };
 
-pub var data = std.enums.directEnumArray(Stat, StatValue, 0, undefined);
-
 pub fn init() void {
-    for (data) |*entry, i|
+    for (state.scoredata) |*entry, i|
         if (std.meta.intToEnum(Stat, i)) |_| {
             entry.* = .{};
         } else |_| {};
 }
 
 pub fn get(s: Stat) *StatValue {
-    return &data[@enumToInt(s)];
+    return &state.scoredata[@enumToInt(s)];
 }
 
 // XXX: this hidden reliance on state.player.z could cause bugs
@@ -358,8 +356,8 @@ pub fn get(s: Stat) *StatValue {
 pub fn recordUsize(stat: Stat, value: usize) void {
     switch (stat.stattype()) {
         .SingleUsize => {
-            data[@enumToInt(stat)].SingleUsize.total += value;
-            data[@enumToInt(stat)].SingleUsize.each[state.player.coord.z] += value;
+            state.scoredata[@enumToInt(stat)].SingleUsize.total += value;
+            state.scoredata[@enumToInt(stat)].SingleUsize.each[state.player.coord.z] += value;
         },
         else => unreachable,
     }
@@ -385,18 +383,18 @@ pub fn recordTaggedUsize(stat: Stat, tag: Tag, value: usize) void {
     const key = tag.intoString();
     switch (stat.stattype()) {
         .BatchUsize => {
-            data[@enumToInt(stat)].BatchUsize.total += value;
-            const index: ?usize = for (data[@enumToInt(stat)].BatchUsize.singles.constSlice()) |single, i| {
+            state.scoredata[@enumToInt(stat)].BatchUsize.total += value;
+            const index: ?usize = for (state.scoredata[@enumToInt(stat)].BatchUsize.singles.constSlice()) |single, i| {
                 if (mem.eql(u8, single.id.constSlice(), key.constSlice())) break i;
             } else null;
             if (index) |i| {
-                data[@enumToInt(stat)].BatchUsize.singles.slice()[i].val.total += value;
-                data[@enumToInt(stat)].BatchUsize.singles.slice()[i].val.each[state.player.coord.z] += value;
+                state.scoredata[@enumToInt(stat)].BatchUsize.singles.slice()[i].val.total += value;
+                state.scoredata[@enumToInt(stat)].BatchUsize.singles.slice()[i].val.each[state.player.coord.z] += value;
             } else {
-                data[@enumToInt(stat)].BatchUsize.singles.append(.{}) catch err.wat();
-                data[@enumToInt(stat)].BatchUsize.singles.lastPtr().?.id = key;
-                data[@enumToInt(stat)].BatchUsize.singles.lastPtr().?.val.total += value;
-                data[@enumToInt(stat)].BatchUsize.singles.lastPtr().?.val.each[state.player.coord.z] += value;
+                state.scoredata[@enumToInt(stat)].BatchUsize.singles.append(.{}) catch err.wat();
+                state.scoredata[@enumToInt(stat)].BatchUsize.singles.lastPtr().?.id = key;
+                state.scoredata[@enumToInt(stat)].BatchUsize.singles.lastPtr().?.val.total += value;
+                state.scoredata[@enumToInt(stat)].BatchUsize.singles.lastPtr().?.val.each[state.player.coord.z] += value;
             }
         },
         else => unreachable,
@@ -404,7 +402,7 @@ pub fn recordTaggedUsize(stat: Stat, tag: Tag, value: usize) void {
 }
 
 fn _isLevelSignificant(level: usize) bool {
-    return data[@enumToInt(@as(Stat, .TurnsSpent))].SingleUsize.each[level] > 0;
+    return state.scoredata[@enumToInt(@as(Stat, .TurnsSpent))].SingleUsize.each[level] > 0;
 }
 
 fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
@@ -465,8 +463,8 @@ fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
         try w.print("\n", .{});
     }
 
-    const killed = data[@enumToInt(@as(Stat, .KillRecord))].BatchUsize.total;
-    const stabbed = data[@enumToInt(@as(Stat, .StabRecord))].BatchUsize.total;
+    const killed = state.scoredata[@enumToInt(@as(Stat, .KillRecord))].BatchUsize.total;
+    const stabbed = state.scoredata[@enumToInt(@as(Stat, .StabRecord))].BatchUsize.total;
     try w.print("You killed {} foe(s), stabbing {} of them.\n", .{ killed, stabbed });
     try w.print("\n", .{});
 
@@ -574,7 +572,7 @@ fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
                 try w.print("\n", .{});
             },
             .Stat => |stat| {
-                const entry = &data[@enumToInt(stat.s)];
+                const entry = &state.scoredata[@enumToInt(stat.s)];
                 switch (stat.s.stattype()) {
                     .SingleUsize => {
                         try w.print("{s: <24} {: >5} | ", .{ stat.n, entry.SingleUsize.total });
@@ -628,7 +626,7 @@ fn exportJsonMorgue(info: Info) !std.ArrayList(u8) {
     for (&CHUNKS) |chunk, chunk_i| switch (chunk) {
         .Header => {},
         .Stat => |stat| {
-            const entry = &data[@enumToInt(stat.s)];
+            const entry = &state.scoredata[@enumToInt(stat.s)];
             try w.print("\"{s}\": {{", .{stat.n});
             try w.print("\"type\": \"{s}\",", .{@tagName(stat.s.stattype())});
             switch (stat.s.stattype()) {
@@ -680,7 +678,7 @@ pub fn createMorgue() Info {
         const morgue = exportJsonMorgue(info) catch err.wat();
         defer morgue.deinit();
 
-        const filename = std.fmt.allocPrintZ(state.GPA.allocator(), "morgue-{s}-{}-{}-{:0>2}-{:0>2}-{}:{}.json", .{ info.username.constSlice(), rng.seed, info.end_datetime.Y, info.end_datetime.M, info.end_datetime.D, info.end_datetime.h, info.end_datetime.m }) catch err.oom();
+        const filename = std.fmt.allocPrintZ(state.GPA.allocator(), "morgue-{s}-{}-{}-{:0>2}-{:0>2}-{}:{}.json", .{ info.username.constSlice(), state.seed, info.end_datetime.Y, info.end_datetime.M, info.end_datetime.D, info.end_datetime.h, info.end_datetime.m }) catch err.oom();
         defer state.GPA.allocator().free(filename);
 
         (std.fs.cwd().openDir("morgue", .{}) catch err.wat()).writeFile(filename, morgue.items[0..]) catch |e| {
@@ -694,7 +692,7 @@ pub fn createMorgue() Info {
         const morgue = exportTextMorgue(info, state.GPA.allocator()) catch err.wat();
         defer morgue.deinit();
 
-        const filename = std.fmt.allocPrintZ(state.GPA.allocator(), "morgue-{s}-{}-{}-{:0>2}-{:0>2}-{}:{}.txt", .{ info.username.constSlice(), rng.seed, info.end_datetime.Y, info.end_datetime.M, info.end_datetime.D, info.end_datetime.h, info.end_datetime.m }) catch err.oom();
+        const filename = std.fmt.allocPrintZ(state.GPA.allocator(), "morgue-{s}-{}-{}-{:0>2}-{:0>2}-{}:{}.txt", .{ info.username.constSlice(), state.seed, info.end_datetime.Y, info.end_datetime.M, info.end_datetime.D, info.end_datetime.h, info.end_datetime.m }) catch err.oom();
         defer state.GPA.allocator().free(filename);
 
         (std.fs.cwd().openDir("morgue", .{}) catch err.wat()).writeFile(filename, morgue.items[0..]) catch |e| {

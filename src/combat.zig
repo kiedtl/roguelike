@@ -371,7 +371,7 @@ pub fn disruptIndividualUndead(mob: *Mob) void {
 }
 
 test {
-    rng.seed = 2384928349;
+    state.seed = 2384928349;
     rng.init();
 
     var i: usize = 10;

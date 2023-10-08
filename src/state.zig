@@ -5,23 +5,26 @@ const assert = std.debug.assert;
 const enums = std.enums;
 
 const ai = @import("ai.zig");
+const alert = @import("alert.zig");
 const astar = @import("astar.zig");
-const err = @import("err.zig");
-const player_m = @import("player.zig");
-const ui = @import("ui.zig");
-const display = @import("display.zig");
 const dijkstra = @import("dijkstra.zig");
+const display = @import("display.zig");
+const events = @import("events.zig");
+const err = @import("err.zig");
+const fire = @import("fire.zig");
+const fov = @import("fov.zig");
+const gas = @import("gas.zig");
+const items = @import("items.zig");
+const literature = @import("literature.zig");
 const mapgen = @import("mapgen.zig");
 const mobs_m = @import("mobs.zig");
-const fire = @import("fire.zig");
-const items = @import("items.zig");
-const utils = @import("utils.zig");
-const gas = @import("gas.zig");
+const player_m = @import("player.zig");
 const rng = @import("rng.zig");
-const literature = @import("literature.zig");
-const fov = @import("fov.zig");
-const types = @import("types.zig");
+const scores = @import("scores.zig");
 const tsv = @import("tsv.zig");
+const types = @import("types.zig");
+const ui = @import("ui.zig");
+const utils = @import("utils.zig");
 
 const Squad = types.Squad;
 const Mob = types.Mob;
@@ -80,53 +83,13 @@ pub var GPA = std.heap.GeneralPurposeAllocator(.{
     .stack_trace_frames = 10,
 }){};
 
-pub const mapgeometry = Coord.new2(LEVELS, WIDTH, HEIGHT);
-pub var dungeon: *Dungeon = undefined;
-pub var layout: [LEVELS][HEIGHT][WIDTH]Layout = [1][HEIGHT][WIDTH]Layout{[1][WIDTH]Layout{[1]Layout{.Unknown} ** WIDTH} ** HEIGHT} ** LEVELS;
-pub var state: GameState = .Game;
-pub var current_level: usize = PLAYER_STARTING_LEVEL;
-pub var player: *Mob = undefined;
-pub var player_inited = false;
-
-// zig fmt: off
-pub var night_rep = [types.Faction.TOTAL]isize{
-    //
-    // NEC    @   CG   YSM   NC
-         0,   0,   0,  -10,  10,
-    //
-};
-// zig fmt: on
-
 pub var sentry_disabled = false;
 pub var log_disabled = false;
 
+pub const mapgeometry = Coord.new2(LEVELS, WIDTH, HEIGHT);
 pub fn mapRect(level: usize) Rect {
     return Rect{ .start = Coord.new2(level, 0, 0), .width = WIDTH, .height = HEIGHT };
 }
-
-// XXX: []u8 instead of '[]const u8` because of tsv parsing limits
-pub const LevelInfo = struct {
-    id: []u8,
-    depth: usize,
-    shortname: []u8,
-    name: []u8,
-    upgr: bool,
-    optional: bool,
-    stairs: [Dungeon.MAX_STAIRS]?[]u8,
-};
-// Loaded at runtime from data/levelinfo.tsv
-pub var levelinfo: [LEVELS]LevelInfo = undefined;
-
-pub const StatusStringInfo = struct {
-    name: []const u8,
-    unliving_name: ?[]const u8,
-    mini_name: ?[]const u8,
-};
-pub var status_str_infos: std.enums.EnumArray(Status, ?StatusStringInfo) =
-    std.enums.EnumArray(Status, ?StatusStringInfo).initFill(null);
-
-pub var player_upgrades: [3]player_m.PlayerUpgradeInfo = undefined;
-pub var player_conj_augments: [player_m.ConjAugment.TOTAL]player_m.ConjAugmentInfo = undefined;
 
 // Cached return value of player.isPlayerSpotted()
 pub var player_is_spotted: struct {
@@ -137,6 +100,7 @@ pub var player_is_spotted: struct {
 // Unused now
 pub var default_patterns = [_]types.Ring{};
 
+// Data objects
 pub const MemoryTile = struct {
     tile: display.Cell,
     type: Type = .Immediate,
@@ -144,22 +108,13 @@ pub const MemoryTile = struct {
     pub const Type = enum { Immediate, Echolocated, DetectUndead };
 };
 pub const MemoryTileMap = std.AutoHashMap(Coord, MemoryTile);
-
 pub var memory: MemoryTileMap = undefined;
-
-pub var descriptions: std.StringHashMap([]const u8) = undefined;
 
 pub var rooms: [LEVELS]mapgen.Room.ArrayList = undefined;
 pub var stockpiles: [LEVELS]StockpileArrayList = undefined;
 pub var inputs: [LEVELS]StockpileArrayList = undefined;
 pub var outputs: [LEVELS]Rect.ArrayList = undefined;
 
-pub const MapgenInfos = struct {
-    has_vault: bool = false,
-};
-pub var mapgen_infos = [1]MapgenInfos{.{}} ** LEVELS;
-
-// Data objects
 pub var tasks: TaskArrayList = undefined;
 pub var squads: Squad.List = undefined;
 pub var mobs: MobList = undefined;
@@ -171,6 +126,9 @@ pub var containers: ContainerList = undefined;
 pub var evocables: EvocableList = undefined;
 pub var messages: MessageArrayList = undefined;
 
+pub var seed: u64 = undefined;
+pub var floor_seeds: [LEVELS]u64 = undefined;
+
 // Global variables
 pub var ticks: usize = 0;
 pub var player_turns: usize = 0;
@@ -180,6 +138,56 @@ pub var score: usize = 0;
 pub var destroyed_candles: usize = 0;
 pub var shrines_in_lockdown: [LEVELS]bool = [1]bool{false} ** LEVELS;
 pub var shrine_locations: [LEVELS]?Coord = [1]?Coord{null} ** LEVELS;
+
+pub var dungeon: *Dungeon = undefined;
+pub var layout: [LEVELS][HEIGHT][WIDTH]Layout = [1][HEIGHT][WIDTH]Layout{[1][WIDTH]Layout{[1]Layout{.Unknown} ** WIDTH} ** HEIGHT} ** LEVELS;
+pub var state: GameState = .Game;
+pub var current_level: usize = PLAYER_STARTING_LEVEL;
+pub var player: *Mob = undefined;
+pub var player_inited = false;
+
+pub var scoredata = std.enums.directEnumArray(scores.Stat, scores.StatValue, 0, undefined);
+pub var threats: std.AutoHashMap(alert.Threat, alert.ThreatData) = undefined;
+pub var responses: alert.ThreatResponse.AList = undefined;
+pub var completed_events: [events.EVENTS.len]usize = [_]usize{0} ** events.EVENTS.len;
+
+// zig fmt: off
+pub var night_rep = [types.Faction.TOTAL]isize{
+    //
+    // NEC    @   CG   YSM   NC
+         0,   0,   0,  -10,  10,
+    //
+};
+// zig fmt: on
+
+pub var player_upgrades: [3]player_m.PlayerUpgradeInfo = undefined;
+pub var player_conj_augments: [player_m.ConjAugment.TOTAL]player_m.ConjAugmentInfo = undefined;
+
+// Data files
+pub const MapgenInfos = struct {
+    has_vault: bool = false,
+};
+pub var mapgen_infos = [1]MapgenInfos{.{}} ** LEVELS;
+pub var descriptions: std.StringHashMap([]const u8) = undefined;
+// XXX: []u8 instead of '[]const u8` because of tsv parsing limits
+pub const LevelInfo = struct {
+    id: []u8,
+    depth: usize,
+    shortname: []u8,
+    name: []u8,
+    upgr: bool,
+    optional: bool,
+    stairs: [Dungeon.MAX_STAIRS]?[]u8,
+};
+pub var levelinfo: [LEVELS]LevelInfo = undefined; // data/levelinfo.tsv
+
+pub const StatusStringInfo = struct {
+    name: []const u8,
+    unliving_name: ?[]const u8,
+    mini_name: ?[]const u8,
+};
+pub var status_str_infos: std.enums.EnumArray(Status, ?StatusStringInfo) =
+    std.enums.EnumArray(Status, ?StatusStringInfo).initFill(null);
 
 // Find the nearest space near a coord in which a monster can be placed.
 //

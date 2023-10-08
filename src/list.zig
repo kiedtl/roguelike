@@ -3,6 +3,8 @@ const mem = std.mem;
 const assert = std.debug.assert;
 const testing = std.testing;
 
+const serializer = @import("serializer.zig");
+
 // Basic node that can be used for scalar data.
 pub fn ScalarNode(comptime T: type) type {
     return struct {
@@ -137,6 +139,15 @@ pub fn LinkedList(comptime T: type) type {
         // TODO: allow const iteration
         pub fn iteratorReverse(self: *const Self) Iterator {
             return Iterator{ .current = self.tail, .reverse = true };
+        }
+
+        pub fn serialize(val: @This(), out: anytype) !void {
+            var iter = val.iterator();
+            var i: usize = 0;
+            while (iter.next()) |_| i += 1;
+            try serializer.serialize(usize, i, out);
+            iter = val.iterator();
+            while (iter.next()) |item| try serializer.serialize(T, item, out);
         }
     };
 }

@@ -6,6 +6,7 @@ const mem = std.mem;
 const assert = std.debug.assert;
 
 const rng = @import("rng.zig");
+const serializer = @import("serializer.zig");
 
 pub const StringBuf64 = StackBuffer(u8, 64);
 
@@ -136,6 +137,10 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
 
         pub fn jsonStringify(val: @This(), opts: std.json.StringifyOptions, stream: anytype) !void {
             try std.json.stringify(val.constSlice(), opts, stream);
+        }
+
+        pub fn serialize(val: @This(), out: anytype) !void {
+            try serializer.serialize([]const T, val.constSlice(), out);
         }
     };
 }

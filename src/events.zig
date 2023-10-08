@@ -81,23 +81,19 @@ pub const EVENTS = [_]struct { p: usize, v: *const Event }{
     .{ .p = 75, .v = &EV_SHIELD_DISALLOW },
 };
 
-pub var completed_events: Event.AList = undefined;
-
 pub fn init() void {
-    completed_events = @TypeOf(completed_events).init(state.GPA.allocator());
+    // Nothing
 }
 
 pub fn deinit() void {
-    completed_events.deinit();
+    // Nothing
 }
 
 pub fn eventUsedCount(id: []const u8) usize {
-    var i: usize = 0;
-    for (completed_events.items) |completed| {
-        if (mem.eql(u8, id, completed.id))
-            i += 1;
-    }
-    return i;
+    const ind = for (EVENTS) |ev, i| {
+        if (mem.eql(u8, ev.v.id, id)) break i;
+    } else err.wat();
+    return state.completed_events[ind];
 }
 
 pub fn eventCanBeUsed(event: *const Event) bool {
@@ -115,12 +111,12 @@ pub fn eventCanBeUsed(event: *const Event) bool {
 // XXX: Need to add checks for restrictions etc when that's added
 //
 pub fn executeGlobalEvents() void {
-    for (&EVENTS) |event| {
+    for (&EVENTS) |event, i| {
         if (rng.percent(event.p) and eventCanBeUsed(event.v)) {
             var new_event = event.v.*;
             for (new_event.effect) |effect|
                 effect.apply() catch unreachable;
-            completed_events.append(new_event) catch err.wat();
+            state.completed_events[i] += 1;
         }
     }
 }

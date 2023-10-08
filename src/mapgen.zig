@@ -146,7 +146,6 @@ const Range = struct { from: Coord, to: Coord };
 pub var s_fabs: PrefabArrayList = undefined;
 pub var n_fabs: PrefabArrayList = undefined;
 pub var fab_records: std.StringHashMap(Prefab.PlacementRecord) = undefined;
-pub var floor_seeds: [LEVELS]u64 = undefined;
 
 const gif = @import("build_options").tunneler_gif;
 const giflib = if (gif) @cImport(@cInclude("gif_lib.h")) else null;
@@ -3399,7 +3398,7 @@ pub fn initLevelTest(prefab: []const u8, entry: bool) !void {
 }
 
 pub fn initLevel(level: usize) void {
-    rng.useTemp(floor_seeds[level]);
+    rng.useTemp(state.floor_seeds[level]);
 
     var tries: usize = 0;
     while (true) {
@@ -3481,8 +3480,8 @@ pub const LevelAnalysis = struct {
             .prefabs = std.ArrayList(Pair).init(alloc),
             .items = std.ArrayList(Pair2).init(alloc),
             .mobs = std.ArrayList(Pair).init(alloc),
-            .seed = rng.seed,
-            .floor_seed = floor_seeds[z],
+            .seed = state.seed,
+            .floor_seed = state.floor_seeds[z],
         };
     }
 

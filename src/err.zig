@@ -6,7 +6,6 @@ const std = @import("std");
 
 const ui = @import("ui.zig");
 const state = @import("state.zig");
-const rng = @import("rng.zig");
 const sentry = @import("sentry.zig");
 
 pub fn ensure(expr: bool, comptime err_message: []const u8, args: anytype) !void {
@@ -20,7 +19,7 @@ pub fn bug(comptime fmt: []const u8, args: anytype) noreturn {
     @setCold(true);
 
     ui.deinit() catch {};
-    std.log.err("Fatal bug encountered. (Seed: {})", .{rng.seed});
+    std.log.err("Fatal bug encountered. (Seed: {})", .{state.seed});
     std.log.err("BUG: " ++ fmt, args);
 
     if (!state.sentry_disabled) {
@@ -35,7 +34,7 @@ pub fn bug(comptime fmt: []const u8, args: anytype) noreturn {
             std.fmt.allocPrint(alloc, fmt, args) catch unreachable,
             &[_]sentry.SentryEvent.TagSet.Tag{.{
                 .name = "seed",
-                .value = std.fmt.allocPrint(alloc, "{}", .{rng.seed}) catch unreachable,
+                .value = std.fmt.allocPrint(alloc, "{}", .{state.seed}) catch unreachable,
             }},
             @errorReturnTrace(),
             @returnAddress(),

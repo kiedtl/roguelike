@@ -13,29 +13,30 @@ const StackBuffer = @import("buffer.zig").StackBuffer;
 
 const ai = @import("ai.zig");
 const alert = @import("alert.zig");
-const rng = @import("rng.zig");
-const janet = @import("janet.zig");
-const player = @import("player.zig");
-const font = @import("font.zig");
+const display = @import("display.zig");
+const err = @import("err.zig");
 const events = @import("events.zig");
-const literature = @import("literature.zig");
 const explosions = @import("explosions.zig");
-const tasks = @import("tasks.zig");
 const fire = @import("fire.zig");
-const items = @import("items.zig");
-const utils = @import("utils.zig");
+const font = @import("font.zig");
 const gas = @import("gas.zig");
+const items = @import("items.zig");
+const janet = @import("janet.zig");
+const literature = @import("literature.zig");
 const mapgen = @import("mapgen.zig");
 const mobs = @import("mobs.zig");
-const surfaces = @import("surfaces.zig");
-const ui = @import("ui.zig");
-const termbox = @import("termbox.zig");
-const display = @import("display.zig");
-const types = @import("types.zig");
-const sentry = @import("sentry.zig");
-const state = @import("state.zig");
-const err = @import("err.zig");
+const player = @import("player.zig");
+const rng = @import("rng.zig");
 const scores = @import("scores.zig");
+const sentry = @import("sentry.zig");
+const serializer = @import("serializer.zig");
+const state = @import("state.zig");
+const surfaces = @import("surfaces.zig");
+const tasks = @import("tasks.zig");
+const termbox = @import("termbox.zig");
+const types = @import("types.zig");
+const ui = @import("ui.zig");
+const utils = @import("utils.zig");
 
 const Direction = types.Direction;
 const Coord = types.Coord;
@@ -84,7 +85,7 @@ pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace) noreturn {
         0 => {
             __panic_stage = 1;
             ui.deinit() catch {};
-            std.log.err("Fatal error encountered. (Seed: {})", .{rng.seed});
+            std.log.err("Fatal error encountered. (Seed: {})", .{state.seed});
 
             if (!state.sentry_disabled) {
                 var membuf: [65535]u8 = undefined;
@@ -98,7 +99,7 @@ pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace) noreturn {
                     msg,
                     &[_]sentry.SentryEvent.TagSet.Tag{.{
                         .name = "seed",
-                        .value = std.fmt.allocPrint(alloc, "{}", .{rng.seed}) catch unreachable,
+                        .value = std.fmt.allocPrint(alloc, "{}", .{state.seed}) catch unreachable,
                     }},
                     trace,
                     @returnAddress(),
@@ -160,7 +161,7 @@ fn initGameState() void {
     state.dungeon.* = types.Dungeon{};
 
     rng.init();
-    for (mapgen.floor_seeds) |*seed|
+    for (state.floor_seeds) |*seed|
         seed.* = rng.int(u64);
 
     for (state.default_patterns) |*r| r.pattern_checker.reset();
@@ -493,6 +494,10 @@ fn readInput() !bool {
                     // ui.hud_win.deinit();
                     // ui.hud_win.init();
                     // ui.map_win.drawTextLinef("This is a test.", .{}, .{});
+                    var buf = std.ArrayList(u8).init(state.GPA.allocator());
+                    defer buf.deinit();
+                    serializer.serialize(Mob, state.player.*, buf.writer()) catch err.wat();
+                    std.fs.cwd().writeFile("dump.dat", buf.items) catch err.wat();
                 },
                 .F8 => {
                     _ = janet.loadFile("scripts/particles.janet", state.GPA.allocator()) catch continue;
@@ -1158,7 +1163,7 @@ fn testerMain() void {
 fn profilerMain() void {
     // const LEVEL = 0;
 
-    std.log.info("[ Seed: {} ]", .{rng.seed});
+    std.log.info("[ Seed: {} ]", .{state.seed});
 
     state.sentry_disabled = true;
     assert(initGame(true, 0));
@@ -1230,8 +1235,8 @@ fn analyzerMain() void {
 
     var i: usize = 0;
     while (i < ITERS) : (i += 1) {
-        rng.seed = @intCast(u64, std.time.milliTimestamp());
-        std.log.info("*** \x1b[94;1m ITERATION \x1b[m {} (seed: {})", .{ i, rng.seed });
+        state.seed = @intCast(u64, std.time.milliTimestamp());
+        std.log.info("*** \x1b[94;1m ITERATION \x1b[m {} (seed: {})", .{ i, state.seed });
         initGameState();
 
         const S = state.PLAYER_STARTING_LEVEL;
@@ -1266,12 +1271,12 @@ pub fn actualMain() anyerror!void {
 
     if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_SEED")) |seed_str| {
         defer state.GPA.allocator().free(seed_str);
-        rng.seed = std.fmt.parseInt(u64, seed_str, 0) catch |e| b: {
+        state.seed = std.fmt.parseInt(u64, seed_str, 0) catch |e| b: {
             std.log.err("Could not parse RL_SEED (reason: {}); using default.", .{e});
             break :b 0;
         };
     } else |_| {
-        rng.seed = @intCast(u64, std.time.milliTimestamp());
+        state.seed = @intCast(u64, std.time.milliTimestamp());
     }
 
     if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_MODE")) |v| {
@@ -1388,7 +1393,7 @@ pub fn main() void {
                     "propagated error trace",
                     &[_]sentry.SentryEvent.TagSet.Tag{.{
                         .name = "seed",
-                        .value = std.fmt.allocPrint(alloc, "{}", .{rng.seed}) catch unreachable,
+                        .value = std.fmt.allocPrint(alloc, "{}", .{state.seed}) catch unreachable,
                     }},
                     error_trace,
                     null,
