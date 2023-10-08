@@ -1,10 +1,14 @@
-- rename :material/:terrain to :g_*
+- non-deaf creatures should wake up on nearby noise
+  - and maybe look in that direction
+- if coroner dies, next coroners should be escorted
+- if undead die, alert should immediately go up
 
 - borders around map in examine mode
 
 - item: paras when elec damage is resisted, +50% rElec
 - restroom prefab
 
+- rename :material/:terrain to :g_*
 - armory/weapon room prefab for lower levels
 - profile item/ring gen
 - headgear
