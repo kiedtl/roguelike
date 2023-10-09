@@ -2143,7 +2143,7 @@ pub fn main(mob: *Mob, alloc: mem.Allocator) void {
         assert(mob.ai.is_combative);
         assert(mob.enemyList().items.len > 0);
 
-        (mob.ai.fight_fn.?)(mob, alloc);
+        (mob.ai.fight_fn)(mob, alloc);
     } else if (mob.ai.phase == .Flee) {
         flee(mob, alloc);
     } else unreachable;

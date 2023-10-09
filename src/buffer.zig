@@ -12,8 +12,8 @@ pub const StringBuf64 = StackBuffer(u8, 64);
 
 pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
     return struct {
-        data: [capacity]T = undefined,
         len: usize = 0,
+        data: [capacity]T = undefined,
         capacity: usize = capacity,
 
         const Self = @This();
@@ -141,6 +141,14 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
 
         pub fn serialize(val: @This(), out: anytype) !void {
             try serializer.serialize([]const T, val.constSlice(), out);
+        }
+
+        pub fn deserialize(in: anytype, alloc: mem.Allocator) !@This() {
+            var b = @This().init(null);
+            var i = try serializer.deserialize(usize, in, alloc);
+            while (i > 0) : (i -= 1)
+                b.append(try serializer.deserialize(T, in, alloc)) catch unreachable;
+            return b;
         }
     };
 }

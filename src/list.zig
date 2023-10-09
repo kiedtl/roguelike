@@ -149,6 +149,14 @@ pub fn LinkedList(comptime T: type) type {
             iter = val.iterator();
             while (iter.next()) |item| try serializer.serialize(T, item, out);
         }
+
+        pub fn deserialize(in: anytype, alloc: mem.Allocator) !@This() {
+            var i = try serializer.deserialize(usize, in, alloc);
+            var l = @This().init(alloc);
+            while (i > 0) : (i -= 1)
+                try l.append(try serializer.deserialize(T, in, alloc));
+            return l;
+        }
     };
 }
 

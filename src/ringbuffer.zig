@@ -1,6 +1,8 @@
 const std = @import("std");
 const testing = std.testing;
 
+const serializer = @import("serializer.zig");
+
 // Well, it's something like a ring buffer
 pub fn RingBuffer(comptime T: type, size: usize) type {
     return struct {
@@ -63,6 +65,21 @@ pub fn RingBuffer(comptime T: type, size: usize) type {
                     try writer.print(", ", .{});
             }
             try writer.print("]", .{});
+        }
+
+        pub fn serialize(val: @This(), out: anytype) !void {
+            try serializer.serializeWE(usize, val.top, out);
+            for (val.buffer) |item|
+                try serializer.serializeWE(?T, item, out);
+        }
+
+        pub fn deserialize(in: anytype, alloc: std.mem.Allocator) !@This() {
+            var b: @This() = undefined;
+            b.init();
+            b.top = try serializer.deserializeWE(usize, in, alloc);
+            for (&b.buffer) |*sl|
+                sl.* = try serializer.deserializeWE(?T, in, alloc);
+            return b;
         }
     };
 }

@@ -498,6 +498,12 @@ fn readInput() !bool {
                     defer buf.deinit();
                     serializer.serialize(Mob, state.player.*, buf.writer()) catch err.wat();
                     std.fs.cwd().writeFile("dump.dat", buf.items) catch err.wat();
+
+                    var f = std.fs.cwd().openFile("dump.dat", .{}) catch err.wat();
+                    defer f.close();
+                    state.player.* = serializer.deserialize(Mob, f.reader(), state.GPA.allocator()) catch |e| {
+                        err.bug("Deser failed ({})", .{e});
+                    };
                 },
                 .F8 => {
                     _ = janet.loadFile("scripts/particles.janet", state.GPA.allocator()) catch continue;

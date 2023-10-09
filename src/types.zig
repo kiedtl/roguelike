@@ -17,29 +17,30 @@ const StringBuf64 = @import("buffer.zig").StringBuf64;
 const ai = @import("ai.zig");
 const alert = @import("alert.zig");
 const astar = @import("astar.zig");
-const combat = @import("combat.zig");
 const colors = @import("colors.zig");
+const combat = @import("combat.zig");
 const dijkstra = @import("dijkstra.zig");
-const ui = @import("ui.zig");
+const display = @import("display.zig");
 const err = @import("err.zig");
 const explosions = @import("explosions.zig");
 const fire = @import("fire.zig");
-const fov = @import("fov.zig");
 const font = @import("font.zig");
-const mobs = @import("mobs.zig");
+const fov = @import("fov.zig");
 const gas = @import("gas.zig");
 const items = @import("items.zig");
 const literature = @import("literature.zig");
 const mapgen = @import("mapgen.zig");
 const materials = @import("materials.zig");
+const mobs = @import("mobs.zig");
 const player = @import("player.zig");
 const rng = @import("rng.zig");
+const scores = @import("scores.zig");
+const serializer = @import("serializer.zig");
 const sound = @import("sound.zig");
 const spells = @import("spells.zig");
-const scores = @import("scores.zig");
 const state = @import("state.zig");
 const surfaces = @import("surfaces.zig");
-const display = @import("display.zig");
+const ui = @import("ui.zig");
 const utils = @import("utils.zig");
 
 const LEVELS = state.LEVELS;
@@ -1747,6 +1748,10 @@ pub const StatusDataInfo = struct {
 pub const AIPhase = enum { Work, Hunt, Investigate, Flee };
 
 pub const AI = struct {
+    pub const __SER_SKIP = [_][]const u8{
+        "flags",
+    };
+
     // Name of mob doing the profession.
     profession_name: ?[]const u8 = null,
 
@@ -1762,7 +1767,7 @@ pub const AI = struct {
     //     - fight_fn: on each tick when the mob is pursuing a hostile mob.
     //
     work_fn: fn (*Mob, mem.Allocator) void,
-    fight_fn: ?fn (*Mob, mem.Allocator) void,
+    fight_fn: fn (*Mob, mem.Allocator) void,
 
     // Should the mob attack hostiles?
     is_combative: bool = true,
@@ -1792,9 +1797,14 @@ pub const AI = struct {
 
     // The particular phase of a mob's work phase. For instance a working Cleaner
     // might be scanning, idling, or cleaning.
-    work_phase: AIWorkPhase = undefined,
+    work_phase: AIWorkPhase = .None,
 
     flags: []const Flag = &[_]Flag{},
+
+    pub const __SER_FIELDW_work_fn = serializer.SerializeFunctionFromModule(AI, "work_fn", ai);
+    pub const __SER_FIELDR_work_fn = serializer.DeserializeFunctionFromModule(AI, "work_fn", ai);
+    pub const __SER_FIELDW_fight_fn = serializer.SerializeFunctionFromModule(AI, "fight_fn", ai);
+    pub const __SER_FIELDR_fight_fn = serializer.DeserializeFunctionFromModule(AI, "fight_fn", ai);
 
     pub const Flag = enum {
         AwakesNearAllies, // If the monster is dormant, it awakes near allies.
@@ -1822,6 +1832,7 @@ pub const AI = struct {
 };
 
 pub const AIWorkPhase = enum {
+    None,
     NC_Guard,
     NC_PatrolTo,
     NC_MoveTo,
@@ -2037,13 +2048,61 @@ pub const Stat = enum {
 };
 
 pub const Mob = struct { // {{{
+    pub const __SER_SKIP = [_][]const u8{
+        "__next",
+        "__prev",
+        "id",
+        "species",
+        "slain_trigger",
+        "spells",
+    };
+
+    pub fn __SER_GET_ID(self: *const Mob) []const u8 {
+        return self.id;
+    }
+
+    pub fn __SER_GET_PROTO(id: []const u8) Mob {
+        return for (&mobs.MOBS) |template| {
+            if (mem.eql(u8, template.mob.id, id))
+                break template.mob;
+        } else err.bug("Serialization: No proto for id {s}", .{id});
+    }
+
+    pub fn __SER_FIELDW_statuses(self: *const Mob, field: *const StatusArray, out: anytype) !void {
+        var item_count: u32 = 0;
+        var i: usize = 0;
+        while (i < StatusArray.Indexer.count) : (i += 1)
+            if (self.hasStatus(StatusArray.Indexer.keyForIndex(i))) {
+                item_count += 1;
+            };
+        try serializer.serialize(u32, item_count, out);
+        i = 0;
+        while (i < StatusArray.Indexer.count) : (i += 1) {
+            const key = StatusArray.Indexer.keyForIndex(i);
+            if (self.hasStatus(key)) {
+                try serializer.serialize(@TypeOf(key), key, out);
+                try serializer.serialize(@TypeOf(field.values[0]), field.values[i], out);
+            }
+        }
+    }
+
+    pub fn __SER_FIELDR_statuses(out: *StatusArray, in: anytype, alloc: mem.Allocator) !void {
+        out.* = StatusArray.initFill(.{});
+        var i: usize = try serializer.deserialize(u32, in, alloc);
+        while (i > 0) : (i -= 1) {
+            const k = try serializer.deserialize(StatusArray.Key, in, alloc);
+            const v = try serializer.deserialize(StatusArray.Value, in, alloc);
+            out.set(k, v);
+        }
+    }
+
     // linked list stuff
     __next: ?*Mob = null,
     __prev: ?*Mob = null,
 
     id: []const u8,
     species: *const Species,
-    prefix: []const u8 = "",
+    prefix: enum { None, Spectral, Former } = .None,
     tile: u21,
     faction: Faction = .Necromancer,
 
@@ -2127,12 +2186,15 @@ pub const Mob = struct { // {{{
     blood: ?Spatter = .Blood,
     blood_spray: ?usize = null, // Gas ID
     corpse: enum { Normal, Wall, Dust, None } = .Normal,
+
+    // Must stay static, as it's not serialized
     slain_trigger: union(enum) { None, Disintegrate: []const *const mobs.MobTemplate } = .None,
 
     //stats: enums.EnumFieldStruct(Stat, isize, 0) = .{},
     stats: MobStat = .{},
 
     // Listed in order of preference.
+    // Also must stay static (not serialized)
     spells: []const SpellOptions = &[_]SpellOptions{},
 
     max_MP: usize = 0,
@@ -2220,10 +2282,15 @@ pub const Mob = struct { // {{{
             var buf: [32]u8 = undefined;
         };
 
+        const prefix_str = switch (self.prefix) {
+            .None => "",
+            .Spectral => "spectral ",
+            .Former => "former ",
+        };
         const base_name = self.ai.profession_name orelse self.species.name;
 
         var fbs = std.io.fixedBufferStream(&Static.buf);
-        std.fmt.format(fbs.writer(), "{s}{s}", .{ self.prefix, base_name }) catch err.wat();
+        std.fmt.format(fbs.writer(), "{s}{s}", .{ prefix_str, base_name }) catch err.wat();
         return fbs.getWritten();
     }
 
@@ -3619,7 +3686,7 @@ pub const Mob = struct { // {{{
         var new = self.*;
         new.init(state.GPA.allocator());
         new.coord = newcoord;
-        new.prefix = "spectral ";
+        new.prefix = .Spectral;
 
         // Can't have "spectral [this is a bug]" enemies being created when a
         // night reaper attacks the player.
@@ -3677,7 +3744,7 @@ pub const Mob = struct { // {{{
         self.init(state.GPA.allocator());
 
         self.tile = 'z';
-        self.prefix = "former ";
+        self.prefix = .Former;
         self.life_type = .Undead;
 
         self.energy = 0;
@@ -5108,7 +5175,7 @@ pub const Tile = struct {
             //     cell.bg = math.clamp(red, 0x66, 0xff) << 16;
             // }
 
-            if (!mob.ai.is_combative or mob.ai.fight_fn != null and mob.ai.fight_fn == ai.workerFight) {
+            if (!mob.ai.is_combative and mob.ai.fight_fn == ai.workerFight) {
                 cell.fg = colors.AQUAMARINE;
             }
 
