@@ -2065,7 +2065,7 @@ pub const Mob = struct { // {{{
         return for (&mobs.MOBS) |template| {
             if (mem.eql(u8, template.mob.id, id))
                 break template.mob;
-        } else err.bug("Serialization: No proto for id {s}", .{id});
+        } else err.bug("Deserialization: No proto for id {s}", .{id});
     }
 
     pub fn __SER_FIELDW_statuses(self: *const Mob, field: *const StatusArray, out: anytype) !void {
@@ -2088,10 +2088,10 @@ pub const Mob = struct { // {{{
 
     pub fn __SER_FIELDR_statuses(out: *StatusArray, in: anytype, alloc: mem.Allocator) !void {
         out.* = StatusArray.initFill(.{});
-        var i: usize = try serializer.deserialize(u32, in, alloc);
+        var i: usize = try serializer.deserializeQ(u32, in, alloc);
         while (i > 0) : (i -= 1) {
-            const k = try serializer.deserialize(StatusArray.Key, in, alloc);
-            const v = try serializer.deserialize(StatusArray.Value, in, alloc);
+            const k = try serializer.deserializeQ(StatusArray.Key, in, alloc);
+            const v = try serializer.deserializeQ(StatusArray.Value, in, alloc);
             out.set(k, v);
         }
     }

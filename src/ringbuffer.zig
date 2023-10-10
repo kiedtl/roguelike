@@ -68,18 +68,16 @@ pub fn RingBuffer(comptime T: type, size: usize) type {
         }
 
         pub fn serialize(val: @This(), out: anytype) !void {
-            try serializer.serializeWE(usize, val.top, out);
+            try serializer.serialize(usize, val.top, out);
             for (val.buffer) |item|
-                try serializer.serializeWE(?T, item, out);
+                try serializer.serialize(?T, item, out);
         }
 
-        pub fn deserialize(in: anytype, alloc: std.mem.Allocator) !@This() {
-            var b: @This() = undefined;
-            b.init();
-            b.top = try serializer.deserializeWE(usize, in, alloc);
-            for (&b.buffer) |*sl|
-                sl.* = try serializer.deserializeWE(?T, in, alloc);
-            return b;
+        pub fn deserialize(out: *@This(), in: anytype, alloc: std.mem.Allocator) !void {
+            out.init();
+            out.top = try serializer.deserializeQ(usize, in, alloc);
+            for (&out.buffer) |*sl|
+                sl.* = try serializer.deserializeQ(?T, in, alloc);
         }
     };
 }

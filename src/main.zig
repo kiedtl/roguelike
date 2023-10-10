@@ -501,7 +501,7 @@ fn readInput() !bool {
 
                     var f = std.fs.cwd().openFile("dump.dat", .{}) catch err.wat();
                     defer f.close();
-                    state.player.* = serializer.deserialize(Mob, f.reader(), state.GPA.allocator()) catch |e| {
+                    serializer.deserialize(Mob, state.player, f.reader(), state.GPA.allocator()) catch |e| {
                         err.bug("Deser failed ({})", .{e});
                     };
                 },

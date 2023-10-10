@@ -143,12 +143,11 @@ pub fn StackBuffer(comptime T: type, comptime capacity: usize) type {
             try serializer.serialize([]const T, val.constSlice(), out);
         }
 
-        pub fn deserialize(in: anytype, alloc: mem.Allocator) !@This() {
-            var b = @This().init(null);
-            var i = try serializer.deserialize(usize, in, alloc);
+        pub fn deserialize(out: *@This(), in: anytype, alloc: mem.Allocator) !void {
+            out.* = @This().init(null);
+            var i = try serializer.deserializeQ(usize, in, alloc);
             while (i > 0) : (i -= 1)
-                b.append(try serializer.deserialize(T, in, alloc)) catch unreachable;
-            return b;
+                out.append(try serializer.deserializeQ(T, in, alloc)) catch unreachable;
         }
     };
 }

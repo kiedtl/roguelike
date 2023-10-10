@@ -150,12 +150,11 @@ pub fn LinkedList(comptime T: type) type {
             while (iter.next()) |item| try serializer.serialize(T, item, out);
         }
 
-        pub fn deserialize(in: anytype, alloc: mem.Allocator) !@This() {
-            var i = try serializer.deserialize(usize, in, alloc);
-            var l = @This().init(alloc);
+        pub fn deserialize(out: *@This(), in: anytype, alloc: mem.Allocator) !@This() {
+            out.* = @This().init(alloc);
+            var i = try serializer.deserializeQ(usize, in, alloc);
             while (i > 0) : (i -= 1)
-                try l.append(try serializer.deserialize(T, in, alloc));
-            return l;
+                try out.append(try serializer.deserializeQ(T, in, alloc));
         }
     };
 }

@@ -86,7 +86,8 @@ pub fn SerializeFunctionFromModule(comptime T: type, field: []const u8, containe
 pub fn DeserializeFunctionFromModule(comptime T: type, field: []const u8, container: type) fn (*_fieldType(T, field), anytype, mem.Allocator) Error!void {
     return struct {
         pub fn f(out: *_fieldType(T, field), in: anytype, alloc: mem.Allocator) Error!void {
-            const val = try deserialize([]const u8, in, alloc);
+            var val: []const u8 = undefined;
+            try deserialize([]const u8, &val, in, alloc);
             defer alloc.free(val);
             inline for (meta.declarations(container)) |decl| {
                 if (comptime mem.eql(u8, field, decl.name))
@@ -186,56 +187,67 @@ pub fn serialize(comptime T: type, obj: T, out: anytype) Error!void {
     }
 }
 
-pub fn deserialize(comptime T: type, in: anytype, alloc: mem.Allocator) Error!T {
-    if (comptime mem.startsWith(u8, @typeName(T), "std.hash_map.HashMap")) {
+pub fn deserializeQ(comptime T: type, in: anytype, alloc: mem.Allocator) Error!T {
+    var r: T = undefined;
+    try deserialize(T, &r, in, alloc);
+    return r;
+}
+
+pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator) Error!void {
+    if (comptime mem.startsWith(u8, @typeName(T), "std.hash_map.HashMap(")) {
+        const K = _fieldType(@field(T, "KV"), "key");
+        const V = _fieldType(@field(T, "KV"), "value");
         var obj = T.init(state.GPA.allocator());
-        var i = try deserialize(usize, in, alloc);
+        var i = try deserializeQ(usize, in, alloc);
         while (i > 0) : (i -= 1) {
-            const k = try deserialize(_fieldType(@field(T, "KV"), "key"), in, alloc);
-            const v = try deserialize(_fieldType(@field(T, "KV"), "value"), in, alloc);
+            const k = try deserializeQ(K, in, alloc);
+            const v = try deserializeQ(V, in, alloc);
             try obj.putNoClobber(k, v);
         }
-        return obj;
+        out.* = obj;
+        return;
     } else if (comptime mem.startsWith(u8, @typeName(T), "std.array_list.ArrayList")) {
-        var obj = std.ArrayList(meta.Elem(_fieldType(T, "items"))).init(alloc);
-        var i = try deserialize(usize, in, alloc);
+        out.* = std.ArrayList(meta.Elem(_fieldType(T, "items"))).init(alloc);
+        var i = try deserializeQ(usize, in, alloc);
         while (i > 0) : (i -= 1)
-            try obj.append(try deserialize(meta.Elem(_fieldType(T, "items")), in, alloc));
-        return obj;
+            try out.append(try deserializeQ(meta.Elem(_fieldType(T, "items")), in, alloc));
+        return;
     }
 
-    return switch (@typeInfo(T)) {
-        .Bool => (try read(u8, in)) == 1,
-        .Int => try read(T, in),
-        .Float => try read(if (T == f32) u32 else u64, in),
+    switch (@typeInfo(T)) {
+        .Bool => out.* = (try read(u8, in)) == 1,
+        .Int => out.* = try read(T, in),
+        .Float => out.* = try read(if (T == f32) u32 else u64, in),
         .Pointer => |p| switch (p.size) {
-            .One => b: {
+            .One => {
                 std.log.warn("WARN: deserialize pointer to {}", .{p.child});
-                const ptr = try deserialize(usize, in, alloc);
-                break :b @intToPtr(T, ptr);
+                const ptr = try deserializeQ(usize, in, alloc);
+                out.* = @intToPtr(T, ptr);
             },
-            .Slice => b: {
-                var i = try deserialize(usize, in, alloc);
-                var obj = try alloc.alloc(p.child, i);
-                while (i > 0) : (i -= 1) {
-                    obj[obj.len - i] = try deserialize(p.child, in, alloc);
-                }
-                break :b obj;
+            .Slice => {
+                var i = try deserializeQ(usize, in, alloc);
+                var o = try alloc.alloc(p.child, i);
+                while (i > 0) : (i -= 1)
+                    try deserialize(p.child, &o[o.len - i], in, alloc);
+                out.* = o;
             },
             .Many, .C => @compileError("Cannot deserialize " ++ @typeName(T)),
         },
-        .Array => @compileError("Cannot directly deserialize array"),
-        .Struct => |info| b: {
+        .Array => {
+            var i = try deserializeQ(usize, in, alloc);
+            assert(i == out.len);
+            while (i > 0) : (i -= 1)
+                try deserialize(meta.Child(T), &out[out.len - 1], in, alloc);
+        },
+        .Struct => |info| {
             if (comptime std.meta.trait.hasFn("deserialize")(T)) {
-                break :b try T.deserialize(in, alloc);
+                try T.deserialize(out, in, alloc);
             } else {
-                var obj: T = undefined;
-
                 if (@hasDecl(T, "__SER_GET_PROTO")) {
                     comptime assert(@hasDecl(T, "__SER_GET_ID"));
-                    const id = try deserialize([]const u8, in, alloc);
+                    const id = try deserializeQ([]const u8, in, alloc);
                     defer alloc.free(id);
-                    obj = T.__SER_GET_PROTO(id);
+                    out.* = T.__SER_GET_PROTO(id);
                 }
 
                 const noser = if (@hasDecl(T, "__SER_SKIP")) T.__SER_SKIP else [_][]const u8{};
@@ -254,29 +266,27 @@ pub fn deserialize(comptime T: type, in: anytype, alloc: mem.Allocator) Error!T 
 
                         if (@hasDecl(T, "__SER_FIELDR_" ++ field.name)) {
                             comptime assert(@hasDecl(T, "__SER_FIELDW_" ++ field.name));
-                            try @field(T, "__SER_FIELDR_" ++ field.name)(&@field(obj, field.name), in, alloc);
-                        } else if (@typeInfo(field.field_type) == .Array) {
-                            try deserializeArray(field.field_type, &@field(obj, field.name), in, alloc);
+                            try @field(T, "__SER_FIELDR_" ++ field.name)(&@field(out, field.name), in, alloc);
                         } else {
-                            @field(obj, field.name) = try deserialize(field.field_type, in, alloc);
+                            try deserialize(field.field_type, &@field(out, field.name), in, alloc);
                         }
 
                         switch (@typeInfo(field.field_type)) {
-                            .Pointer => if (field.field_type == []const u8) std.log.debug("Deser value: {s}", .{@field(obj, field.name)}) else std.log.debug("Deser value: skip", .{}),
-                            .Array => std.log.debug("Deser value: {any}", .{@field(obj, field.name)}),
+                            .Pointer => if (field.field_type == []const u8) std.log.debug("Deser value: {s}", .{@field(out, field.name)}) else std.log.debug("Deser value: skip", .{}),
+                            .Array => std.log.debug("Deser value: {any}", .{@field(out, field.name)}),
                             .Bool, .Enum, .Int, .Float => {
-                                std.log.debug("Deser value: {}", .{@field(obj, field.name)});
+                                std.log.debug("Deser value: {}", .{@field(out, field.name)});
                             },
                             else => {
                                 if (field.field_type == ?[]const u8) {
-                                    if (@field(obj, field.name)) |v|
+                                    if (@field(out, field.name)) |v|
                                         std.log.debug("Deser value: {s}", .{v})
                                     else
                                         std.log.debug("Deser value: null", .{});
                                 } else if (field.field_type == ?types.Damage or
                                     field.field_type == ?types.Direction)
                                 {
-                                    std.log.debug("Deser value: {}", .{@field(obj, field.name)});
+                                    std.log.debug("Deser value: {}", .{@field(out, field.name)});
                                 } else {
                                     std.log.debug("Deser value: skip", .{});
                                 }
@@ -284,46 +294,31 @@ pub fn deserialize(comptime T: type, in: anytype, alloc: mem.Allocator) Error!T 
                         }
                     }
                 }
-                break :b obj;
             }
         },
-        .Optional => |o| b: {
-            const flag = try deserialize(u8, in, alloc);
-            break :b if (flag == 0) null else @as(T, try deserialize(o.child, in, alloc));
+        .Optional => |o| {
+            const flag = try deserializeQ(u8, in, alloc);
+            out.* = if (flag == 0) null else @as(T, try deserializeQ(o.child, in, alloc));
         },
-        .Enum => |e| @intToEnum(T, try deserialize(e.tag_type, in, alloc)),
-        .Union => |u| b: {
-            const tag = try deserialize(meta.Tag(T), in, alloc);
-            var o: T = undefined;
+        .Enum => |e| out.* = @intToEnum(T, try deserializeQ(e.tag_type, in, alloc)),
+        .Union => |u| {
+            const tag = try deserializeQ(meta.Tag(T), in, alloc);
             inline for (u.fields) |ufield|
                 if (mem.eql(u8, ufield.name, @tagName(tag)))
                     // Can't break here due to Zig comptime control-flow bug
                     if (ufield.field_type == void) {
-                        o = @unionInit(T, ufield.name, {});
+                        out.* = @unionInit(T, ufield.name, {});
                     } else {
-                        const value = try deserialize(ufield.field_type, in, alloc);
-                        o = @unionInit(T, ufield.name, value);
+                        const value = try deserializeQ(ufield.field_type, in, alloc);
+                        out.* = @unionInit(T, ufield.name, value);
                     };
-            break :b o;
         },
         else => @compileError("Cannot deserialize " ++ @typeName(T)),
-    };
-}
-
-pub fn deserializeArray(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator) Error!void {
-    var i = try deserialize(usize, in, alloc);
-    assert(i == out.len);
-    while (i > 0) : (i -= 1) {
-        if (@typeInfo(meta.Child(T)) == .Array) {
-            try deserializeArray(meta.Child(T), &out[out.len - i], in, alloc);
-        } else {
-            out[out.len - i] = try deserialize(meta.Child(T), in, alloc);
-        }
     }
 }
 
 pub fn deserializeExpect(comptime T: type, in: anytype, alloc: mem.Allocator) !void {
-    const typeid = try deserialize(usize, in, alloc);
+    const typeid = try deserializeQ(usize, in, alloc);
     const typeid_str: ?[]const u8 = for (typelist.constSlice()) |typedata| {
         if (typeid == typedata.v) break typedata.k;
     } else null;
