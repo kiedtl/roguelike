@@ -46,6 +46,8 @@ pub fn build(b: *Builder) void {
 
     exe.addIncludeDir("third_party/janet/"); // janet.h
     exe.addCSourceFile("third_party/janet/janet.c", &[_][]const u8{"-std=c99"});
+    exe.addIncludeDir("third_party/microtar/src/"); // janet.h
+    exe.addCSourceFile("third_party/microtar/src/microtar.c", &[_][]const u8{});
 
     if (opt_tun_gif) {
         exe.linkSystemLibrary("gif");

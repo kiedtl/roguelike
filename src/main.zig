@@ -494,14 +494,10 @@ fn readInput() !bool {
                     // ui.hud_win.deinit();
                     // ui.hud_win.init();
                     // ui.map_win.drawTextLinef("This is a test.", .{}, .{});
-                    var buf = std.ArrayList(u8).init(state.GPA.allocator());
-                    defer buf.deinit();
-                    serializer.serialize(Mob, state.player.*, buf.writer()) catch err.wat();
-                    std.fs.cwd().writeFile("dump.dat", buf.items) catch err.wat();
-
-                    var f = std.fs.cwd().openFile("dump.dat", .{}) catch err.wat();
-                    defer f.close();
-                    serializer.deserialize(Mob, state.player, f.reader(), state.GPA.allocator()) catch |e| {
+                    serializer.serializeWorld() catch |e| {
+                        err.bug("Ser failed ({})", .{e});
+                    };
+                    serializer.deserializeWorld() catch |e| {
                         err.bug("Deser failed ({})", .{e});
                     };
                 },
@@ -630,7 +626,7 @@ fn tickGame(p_cur_level: ?usize) !void {
             mob.assertIsAtLocation();
 
             if (mob.isUnderStatus(.Paralysis)) |_| {
-                if (mob.coord.eq(state.player.coord)) {
+                if (mob == state.player) {
                     var frames: usize = 5;
                     while (frames > 0) : (frames -= 1)
                         try readNoActionInput(ui.FRAMERATE);

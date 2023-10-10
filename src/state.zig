@@ -39,7 +39,6 @@ const StockpileArrayList = types.StockpileArrayList;
 const Rect = types.Rect;
 const MobList = types.MobList;
 const RingList = types.RingList;
-const PotionList = types.PotionList;
 const ArmorList = types.ArmorList;
 const WeaponList = types.WeaponList;
 const MachineList = types.MachineList;
@@ -54,7 +53,6 @@ const CARDINAL_DIRECTIONS = types.CARDINAL_DIRECTIONS;
 const SoundState = @import("sound.zig").SoundState;
 const TaskArrayList = @import("tasks.zig").TaskArrayList;
 const EvocableList = @import("items.zig").EvocableList;
-const PosterArrayList = literature.PosterArrayList;
 const Generator = @import("generators.zig").Generator;
 const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 

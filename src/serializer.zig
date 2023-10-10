@@ -6,10 +6,19 @@ const assert = std.debug.assert;
 const types = @import("types.zig");
 const state = @import("state.zig");
 const err = @import("err.zig");
+const microtar = @import("microtar.zig");
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
+const Generator = @import("generators.zig").Generator;
+const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
-pub const Error = error{ CorruptedData, MismatchedType, InvalidUnionField } || std.ArrayList(u8).Writer.Error || std.mem.Allocator.Error || std.fs.File.Reader.Error || error{EndOfStream};
+pub const Error = error{ PointerNotFound, MismatchedPointerTypes, CorruptedData, MismatchedType, InvalidUnionField } || std.ArrayList(u8).Writer.Error || std.mem.Allocator.Error || std.fs.File.Reader.Error || std.fs.File.Writer.Error || error{EndOfStream} || microtar.MTar.Error;
+
+pub const ContainerInit = struct { container: []const u8, init_up_to: usize };
+pub const PointerData = struct { container: []const u8, ptrtype: []const u8, index: usize };
+pub const PointerData2 = struct { ptr: usize, ptrtype: []const u8, ind: usize };
+var ptrtable: std.AutoHashMap(u64, PointerData) = undefined;
+var ptrinits: StackBuffer(ContainerInit, 32) = undefined;
 
 // Cache type ids so we can look up a type by its id
 var typelist = StackBuffer(_KV, 256).init(null);
@@ -70,9 +79,9 @@ pub fn SerializeFunctionFromModule(comptime T: type, field: []const u8, containe
         pub fn f(_: *const T, field_value: *const _fieldType(T, field), out: anytype) Error!void {
             inline for (meta.declarations(container)) |decl|
                 if (decl.is_pub and _fieldType(T, field) == @TypeOf(@field(container, decl.name))) {
-                    std.log.info("comparing 0x{x:0>8} to 0x{x:0>8} ({s})", .{
-                        @ptrToInt(field_value), @ptrToInt(@field(container, decl.name)), decl.name,
-                    });
+                    // std.log.debug("comparing 0x{x:0>8} to 0x{x:0>8} ({s})", .{
+                    //     @ptrToInt(field_value), @ptrToInt(@field(container, decl.name)), decl.name,
+                    // });
                     if (field_value.* == @field(container, decl.name)) {
                         try serialize([]const u8, decl.name, out);
                         return;
@@ -125,7 +134,8 @@ pub fn serialize(comptime T: type, obj: T, out: anytype) Error!void {
         },
         .Pointer => |p| switch (p.size) {
             .One => {
-                std.log.warn("WARN: serialize pointer to {}", .{p.child});
+                if (!ptrtable.contains(@ptrToInt(obj)))
+                    std.log.warn("serialize: found {} pointer not in table", .{p.child});
                 try serialize(usize, @ptrToInt(obj), out);
             },
             .Slice => {
@@ -220,9 +230,34 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
         .Float => out.* = try read(if (T == f32) u32 else u64, in),
         .Pointer => |p| switch (p.size) {
             .One => {
-                std.log.warn("WARN: deserialize pointer to {}", .{p.child});
                 const ptr = try deserializeQ(usize, in, alloc);
-                out.* = @intToPtr(T, ptr);
+                if (ptrtable.get(ptr)) |ptrdata| {
+                    if (!mem.eql(u8, ptrdata.ptrtype, @typeName(T))) {
+                        std.log.err("Wanted pointer of type {s}, found {}", .{ ptrdata.ptrtype, T });
+                        return error.MismatchedPointerTypes;
+                    }
+
+                    // out.* = @intToPtr(T, ptr);
+                    inline for (meta.declarations(state)) |declinfo|
+                        if (declinfo.is_pub and
+                            @typeInfo(@TypeOf(@field(state, declinfo.name))) == .Struct and
+                            @hasDecl(@TypeOf(@field(state, declinfo.name)), "nth") and
+                            *@TypeOf(@field(state, declinfo.name)).ChildType == T)
+                        {
+                            if (mem.eql(u8, declinfo.name, ptrdata.container)) {
+                                out.* = @field(state, declinfo.name).nth(ptrdata.index).?;
+                                return;
+                            }
+                        };
+
+                    std.log.err("Could not find pointer {s},{s},{}", .{
+                        ptrdata.container, ptrdata.ptrtype, ptrdata.index,
+                    });
+                    return error.PointerNotFound;
+                } else {
+                    std.log.warn("deserialize: found {} pointer not in table", .{p.child});
+                    out.* = undefined;
+                }
             },
             .Slice => {
                 var i = try deserializeQ(usize, in, alloc);
@@ -331,15 +366,89 @@ pub fn deserializeExpect(comptime T: type, in: anytype, alloc: mem.Allocator) !v
             return error.CorruptedData;
         }
     } else {
-        std.log.debug("*** ({} == {s})", .{ T, typeid_str });
+        // std.log.debug("*** ({} == {s})", .{ T, typeid_str });
     }
 }
 
-pub fn deserializeWE(comptime T: type, in: anytype, alloc: mem.Allocator) Error!T {
+pub fn deserializeWE(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator) Error!void {
     try deserializeExpect(T, in, alloc);
-    return deserialize(T, in, alloc);
+    try deserialize(T, out, in, alloc);
 }
 
-test {
-    std.log.warn("{}", .{@sizeOf(u64)});
+pub fn buildPointerTable() void {
+    ptrtable = @TypeOf(ptrtable).init(state.GPA.allocator());
+
+    inline for (meta.declarations(state)) |declinfo| if (declinfo.is_pub) {
+        const decl = @field(state, declinfo.name);
+        const declptr = &@field(state, declinfo.name);
+        if (@typeInfo(@TypeOf(decl)) == .Struct and
+            @hasDecl(@TypeOf(decl), "__SER_getPointerData"))
+        {
+            var max: usize = 0;
+            var g = Generator(@TypeOf(decl).__SER_getPointerData).init(declptr);
+            while (g.next()) |ptrdata2| {
+                ptrtable.putNoClobber(ptrdata2.ptr, .{
+                    .container = declinfo.name,
+                    .index = ptrdata2.ind,
+                    .ptrtype = ptrdata2.ptrtype,
+                }) catch err.wat();
+                if (ptrdata2.ind > max)
+                    max = ptrdata2.ind;
+            }
+            ptrinits.append(.{ .container = declinfo.name, .init_up_to = max + 1 }) catch err.wat();
+            std.log.info("doing {s}", .{declinfo.name});
+            std.log.info("len   {}", .{declptr.len()});
+            std.log.info("max   {}", .{max + 1});
+        }
+    };
+}
+
+pub fn initPointerContainers() void {
+    for (ptrinits.constSlice()) |ptrinit| {
+        inline for (meta.declarations(state)) |declinfo|
+            if (declinfo.is_pub and
+                @typeInfo(@TypeOf(@field(state, declinfo.name))) == .Struct and
+                @hasDecl(@TypeOf(@field(state, declinfo.name)), "nth"))
+            {
+                if (mem.eql(u8, declinfo.name, ptrinit.container)) {
+                    const container = &@field(state, declinfo.name);
+                    var i: usize = ptrinit.init_up_to -| container.len();
+                    while (i > 0) : (i -= 1) {
+                        container.append(undefined) catch err.wat();
+                    }
+                }
+            };
+    }
+}
+
+pub fn serializeWorld() !void {
+    // var tar = try microtar.MTar.init("dump.tar", "w");
+    // defer tar.deinit();
+    var f = std.fs.cwd().openFile("dump.dat", .{ .write = true }) catch err.wat();
+    defer f.close();
+
+    // tar.writer()
+    // - ptrtable.dat, ptrinits.dat, mobs.dat
+
+    buildPointerTable();
+    try serializeWE(@TypeOf(ptrtable), ptrtable, f.writer());
+    try serializeWE(@TypeOf(ptrinits), ptrinits, f.writer());
+
+    try serializeWE(@TypeOf(state.mobs), state.mobs, f.writer());
+}
+
+pub fn deserializeWorld() !void {
+    const alloc = state.GPA.allocator();
+
+    // var tar = try microtar.MTar.init("dump.tar", "w");
+    // defer tar.deinit();
+
+    var f = std.fs.cwd().openFile("dump.dat", .{ .write = true }) catch err.wat();
+    defer f.close();
+
+    try deserializeWE(@TypeOf(ptrtable), &ptrtable, f.reader(), alloc);
+    try deserializeWE(@TypeOf(ptrinits), &ptrinits, f.reader(), alloc);
+    initPointerContainers();
+
+    try deserializeWE(@TypeOf(state.mobs), &state.mobs, f.reader(), alloc);
 }

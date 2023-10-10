@@ -4,6 +4,8 @@ const assert = std.debug.assert;
 const testing = std.testing;
 
 const serializer = @import("serializer.zig");
+const Generator = @import("generators.zig").Generator;
+const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
 // Basic node that can be used for scalar data.
 pub fn ScalarNode(comptime T: type) type {
@@ -53,6 +55,8 @@ pub fn LinkedList(comptime T: type) type {
         head: ?*T,
         tail: ?*T,
         allocator: mem.Allocator,
+
+        pub const ChildType = T;
 
         pub fn init(allocator: mem.Allocator) Self {
             return Self{
@@ -141,20 +145,36 @@ pub fn LinkedList(comptime T: type) type {
             return Iterator{ .current = self.tail, .reverse = true };
         }
 
+        pub fn len(self: *const Self) usize {
+            var iter = self.iterator();
+            var i: usize = 0;
+            while (iter.next()) |_| i += 1;
+            return i;
+        }
+
         pub fn serialize(val: @This(), out: anytype) !void {
             var iter = val.iterator();
             var i: usize = 0;
             while (iter.next()) |_| i += 1;
             try serializer.serialize(usize, i, out);
             iter = val.iterator();
-            while (iter.next()) |item| try serializer.serialize(T, item, out);
+            while (iter.next()) |item| try serializer.serialize(T, item.*, out);
         }
 
-        pub fn deserialize(out: *@This(), in: anytype, alloc: mem.Allocator) !@This() {
+        pub fn deserialize(out: *@This(), in: anytype, alloc: mem.Allocator) !void {
             out.* = @This().init(alloc);
             var i = try serializer.deserializeQ(usize, in, alloc);
             while (i > 0) : (i -= 1)
                 try out.append(try serializer.deserializeQ(T, in, alloc));
+        }
+
+        // Deserialization stuff
+        pub fn __SER_getPointerData(ctx: *GeneratorCtx(serializer.PointerData2), self: *@This()) void {
+            var i = self.iterator();
+            var c: usize = 0;
+            while (i.next()) |item| : (c += 1)
+                ctx.yield(.{ .ptr = @ptrToInt(item), .ind = c, .ptrtype = @typeName(*T) });
+            ctx.finish();
         }
     };
 }
