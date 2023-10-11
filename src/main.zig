@@ -211,7 +211,7 @@ fn deinitGame() void {
 
     mapgen.s_fabs.deinit();
     mapgen.n_fabs.deinit();
-    mapgen.fab_records.deinit();
+    state.fab_records.deinit();
 
     deinitGameState();
 

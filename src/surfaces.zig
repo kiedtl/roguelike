@@ -35,6 +35,7 @@ const Mob = types.Mob;
 const Squad = types.Squad;
 const Machine = types.Machine;
 const PropArrayList = types.PropArrayList;
+const PropPtrAList = std.ArrayList(*Prop);
 const Container = types.Container;
 const Material = types.Material;
 const Vial = types.Vial;
@@ -57,15 +58,15 @@ const StackBuffer = @import("buffer.zig").StackBuffer;
 // ---
 
 pub var props: PropArrayList = undefined;
-pub var prison_item_props: PropArrayList = undefined;
-pub var laboratory_item_props: PropArrayList = undefined;
-pub var laboratory_props: PropArrayList = undefined;
-pub var vault_props: PropArrayList = undefined;
-pub var statue_props: PropArrayList = undefined;
-pub var weapon_props: PropArrayList = undefined;
-pub var bottle_props: PropArrayList = undefined;
-pub var tools_props: PropArrayList = undefined;
-pub var armors_props: PropArrayList = undefined;
+pub var prison_item_props: PropPtrAList = undefined;
+pub var laboratory_item_props: PropPtrAList = undefined;
+pub var laboratory_props: PropPtrAList = undefined;
+pub var vault_props: PropPtrAList = undefined;
+pub var statue_props: PropPtrAList = undefined;
+pub var weapon_props: PropPtrAList = undefined;
+pub var bottle_props: PropPtrAList = undefined;
+pub var tools_props: PropPtrAList = undefined;
+pub var armors_props: PropPtrAList = undefined;
 
 pub const Terrain = struct {
     id: []const u8,
@@ -1544,15 +1545,15 @@ pub fn readProps(alloc: mem.Allocator) void {
     };
 
     props = PropArrayList.init(alloc);
-    prison_item_props = PropArrayList.init(alloc);
-    laboratory_item_props = PropArrayList.init(alloc);
-    laboratory_props = PropArrayList.init(alloc);
-    vault_props = PropArrayList.init(alloc);
-    statue_props = PropArrayList.init(alloc);
-    weapon_props = PropArrayList.init(alloc);
-    bottle_props = PropArrayList.init(alloc);
-    tools_props = PropArrayList.init(alloc);
-    armors_props = PropArrayList.init(alloc);
+    prison_item_props = PropPtrAList.init(alloc);
+    laboratory_item_props = PropPtrAList.init(alloc);
+    laboratory_props = PropPtrAList.init(alloc);
+    vault_props = PropPtrAList.init(alloc);
+    statue_props = PropPtrAList.init(alloc);
+    weapon_props = PropPtrAList.init(alloc);
+    bottle_props = PropPtrAList.init(alloc);
+    tools_props = PropPtrAList.init(alloc);
+    armors_props = PropPtrAList.init(alloc);
 
     const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
     const data_file = data_dir.openFile("props.tsv", .{
@@ -1607,20 +1608,20 @@ pub fn readProps(alloc: mem.Allocator) void {
                 .function = propdata.function,
             };
 
-            switch (propdata.function) {
-                .Laboratory => laboratory_props.append(prop) catch err.oom(),
-                .LaboratoryItem => laboratory_item_props.append(prop) catch err.oom(),
-                .Vault => vault_props.append(prop) catch err.oom(),
-                .Statue => statue_props.append(prop) catch err.oom(),
-                .Weapons => weapon_props.append(prop) catch err.oom(),
-                .Bottles => bottle_props.append(prop) catch err.oom(),
-                .Tools => tools_props.append(prop) catch err.oom(),
-                .Wearables => armors_props.append(prop) catch err.oom(),
-                else => {},
-            }
-
             props.append(prop) catch unreachable;
         }
+
+        for (props.items) |*prop| if (prop.function) |f| switch (f) {
+            .Laboratory => laboratory_props.append(prop) catch err.oom(),
+            .LaboratoryItem => laboratory_item_props.append(prop) catch err.oom(),
+            .Vault => vault_props.append(prop) catch err.oom(),
+            .Statue => statue_props.append(prop) catch err.oom(),
+            .Weapons => weapon_props.append(prop) catch err.oom(),
+            .Bottles => bottle_props.append(prop) catch err.oom(),
+            .Tools => tools_props.append(prop) catch err.oom(),
+            .Wearables => armors_props.append(prop) catch err.oom(),
+            else => {},
+        };
 
         std.log.info("Loaded {} props.", .{props.items.len});
     }

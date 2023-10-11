@@ -145,7 +145,6 @@ const Range = struct { from: Coord, to: Coord };
 
 pub var s_fabs: PrefabArrayList = undefined;
 pub var n_fabs: PrefabArrayList = undefined;
-pub var fab_records: std.StringHashMap(Prefab.PlacementRecord) = undefined;
 
 const gif = @import("build_options").tunneler_gif;
 const giflib = if (gif) @cImport(@cInclude("gif_lib.h")) else null;
@@ -617,7 +616,7 @@ fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, need_lair: bo
         }
     }
 
-    const record = fab_records.getOrPut(prefab.name.constSlice()) catch err.wat();
+    const record = state.fab_records.getOrPut(prefab.name.constSlice()) catch err.wat();
     if (record.found_existing) {
         if (record.value_ptr.level[level] >= prefab.restriction or
             record.value_ptr.global >= prefab.global_restriction or
@@ -1175,7 +1174,7 @@ pub fn validateLevel(level: usize, alloc: mem.Allocator) !void {
         const fab = Prefab.findPrefabByName(required_fab, &n_fabs) orelse
             Prefab.findPrefabByName(required_fab, &s_fabs).?;
 
-        const rec = fab_records.getPtr(fab.name.constSlice());
+        const rec = state.fab_records.getPtr(fab.name.constSlice());
         if (rec == null or rec.?.level[level] == 0) {
             return error.RequiredPrefabsNotUsed;
         }
@@ -2202,7 +2201,7 @@ pub fn placeItems(level: usize) void {
         // How much should we fill the container?
         const fill = rng.range(usize, 1, container.capacity - container.items.len);
 
-        const maybe_item_list: ?[]const Prop = switch (container.type) {
+        const maybe_item_list: ?[]*const Prop = switch (container.type) {
             .Drinkables => surfaces.bottle_props.items,
             .Smackables => surfaces.weapon_props.items,
             .Evocables => surfaces.tools_props.items,
@@ -2211,12 +2210,11 @@ pub fn placeItems(level: usize) void {
         };
 
         if (maybe_item_list) |item_list| {
-            var item = &item_list[rng.range(usize, 0, item_list.len - 1)];
+            var item = rng.chooseUnweighted(*const Prop, item_list);
             var i: usize = 0;
             while (i < fill) : (i += 1) {
-                if (!rng.percent(container.item_repeat)) {
-                    item = &item_list[rng.range(usize, 0, item_list.len - 1)];
-                }
+                if (!rng.percent(container.item_repeat))
+                    item = rng.chooseUnweighted(*const Prop, item_list);
 
                 container.items.append(Item{ .Prop = item }) catch err.wat();
             }
@@ -2673,8 +2671,8 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
                         _ = mobs.placeMob(alloc, &statue, coord, .{});
                         statues += 1;
                     } else if (props < 2) {
-                        const prop = rng.chooseUnweighted(Prop, Configs[level].props.*);
-                        _ = placeProp(coord, &prop);
+                        const prop = rng.chooseUnweighted(*const Prop, Configs[level].props.*);
+                        _ = placeProp(coord, prop);
                         props += 1;
                     }
                 },
@@ -3533,7 +3531,7 @@ pub const LevelAnalysis = struct {
 pub fn analyzeLevel(level: usize, alloc: mem.Allocator) !LevelAnalysis {
     var a = LevelAnalysis.init(alloc, level);
 
-    var riter = fab_records.iterator();
+    var riter = state.fab_records.iterator();
     while (riter.next()) |prefab_record| {
         if (prefab_record.value_ptr.level[level] > 0)
             a.prefabs.append(.{
@@ -3765,7 +3763,7 @@ pub const Prefab = struct {
     };
 
     pub fn reset(self: *Prefab, level: usize) void {
-        if (fab_records.getPtr(self.name.constSlice())) |record| {
+        if (state.fab_records.getPtr(self.name.constSlice())) |record| {
             record.global -= record.level[level];
             record.level[level] = 0;
         }
@@ -4394,7 +4392,7 @@ pub const Prefab = struct {
     }
 
     pub fn incrementRecord(self: *Prefab, level: usize) void {
-        const record = (fab_records.getOrPutValue(self.name.constSlice(), .{}) catch err.wat()).value_ptr;
+        const record = (state.fab_records.getOrPutValue(self.name.constSlice(), .{}) catch err.wat()).value_ptr;
         record.level[level] += 1;
         record.global += 1;
         self.level_uses[level] += 1;
@@ -4445,7 +4443,7 @@ pub fn readPrefabs(alloc: mem.Allocator) void {
 
     n_fabs = PrefabArrayList.init(alloc);
     s_fabs = PrefabArrayList.init(alloc);
-    fab_records = @TypeOf(fab_records).init(alloc);
+    state.fab_records = @TypeOf(state.fab_records).init(alloc);
 
     for (&[_][]const u8{ "data/prefabs", "data/prefabs/tests", "data/prefabs/profiler" }) |dir| {
         const fabs_dir = std.fs.cwd().openDir(dir, .{ .iterate = true }) catch err.wat();
@@ -4515,7 +4513,7 @@ pub const LevelConfig = struct {
     vent: []const u8 = "gas_vent",
     bars: []const u8 = "iron_bars",
     machines: []const *const Machine = &[_]*const Machine{},
-    props: *[]const Prop = &surfaces.statue_props.items,
+    props: *[]*const Prop = &surfaces.statue_props.items,
     // Props that can be placed in bulk along a single wall.
     single_props: []const []const u8 = &[_][]const u8{},
     chance_for_single_prop_placement: usize = 33, // percentage
@@ -4525,7 +4523,7 @@ pub const LevelConfig = struct {
         //surfaces.Cabinet,
         //surfaces.Chest,
     },
-    utility_items: *[]const Prop = &surfaces.prison_item_props.items,
+    utility_items: *[]*const Prop = &surfaces.prison_item_props.items,
 
     allow_statues: bool = true,
     door_chance: usize = 10,

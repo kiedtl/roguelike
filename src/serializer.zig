@@ -3,16 +3,39 @@ const meta = std.meta;
 const mem = std.mem;
 const assert = std.debug.assert;
 
-const types = @import("types.zig");
-const state = @import("state.zig");
 const err = @import("err.zig");
+const items = @import("items.zig");
+const itemlists = items.itemlists;
+const literature = @import("literature.zig");
+const mapgen = @import("mapgen.zig");
 const microtar = @import("microtar.zig");
+const state = @import("state.zig");
+const surfaces = @import("surfaces.zig");
+const types = @import("types.zig");
 
 const StackBuffer = @import("buffer.zig").StackBuffer;
 const Generator = @import("generators.zig").Generator;
 const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
 pub const Error = error{ PointerNotFound, MismatchedPointerTypes, CorruptedData, MismatchedType, InvalidUnionField } || std.ArrayList(u8).Writer.Error || std.mem.Allocator.Error || std.fs.File.Reader.Error || std.fs.File.Writer.Error || error{EndOfStream} || microtar.MTar.Error;
+
+const STATIC_CONTAINERS = [_]struct {
+    m: []const u8,
+    t: type,
+    s: anytype,
+}
+// zig fmt: off
+{
+.{ .m = "s.props",       .t = types.Prop,              .s = &surfaces.props.items   },
+.{ .m = "s.TERRAIN",     .t = *const surfaces.Terrain, .s = &@as([]const *const surfaces.Terrain, &surfaces.TERRAIN)      },
+.{ .m = "i.ARMORS",      .t = *const types.Armor,      .s = &itemlists.ARMORS      },
+.{ .m = "i.WEAPONS",     .t = *const types.Weapon,     .s = &itemlists.WEAPONS     },
+.{ .m = "i.CLOAKS",      .t = *const items.Cloak,      .s = &itemlists.CLOAKS      },
+.{ .m = "i.HEADGEAR",    .t = *const items.Headgear,   .s = &itemlists.HEADGEAR    },
+.{ .m = "i.AUXES",       .t = *const items.Aux,        .s = &itemlists.AUXES       },
+.{ .m = "i.CONSUMABLES", .t = *const items.Consumable, .s = &itemlists.CONSUMABLES },
+};
+// zig fmt: on
 
 pub const ContainerInit = struct { container: []const u8, init_up_to: usize };
 pub const PointerData = struct { container: []const u8, ptrtype: []const u8, index: usize };
@@ -237,7 +260,13 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
                         return error.MismatchedPointerTypes;
                     }
 
-                    // out.* = @intToPtr(T, ptr);
+                    inline for (&STATIC_CONTAINERS) |container|
+                        if (container.t == T)
+                            if (mem.eql(u8, container.m, ptrdata.container)) {
+                                out.* = @as(*const []const T, container.s).*[ptrdata.index];
+                                return;
+                            };
+
                     inline for (meta.declarations(state)) |declinfo|
                         if (declinfo.is_pub and
                             @typeInfo(@TypeOf(@field(state, declinfo.name))) == .Struct and
@@ -396,11 +425,27 @@ pub fn buildPointerTable() void {
                     max = ptrdata2.ind;
             }
             ptrinits.append(.{ .container = declinfo.name, .init_up_to = max + 1 }) catch err.wat();
-            std.log.info("doing {s}", .{declinfo.name});
-            std.log.info("len   {}", .{declptr.len()});
-            std.log.info("max   {}", .{max + 1});
         }
     };
+
+    inline for (&STATIC_CONTAINERS) |container| {
+        const Ptr = if (@typeInfo(container.t) == .Pointer) container.t else *const container.t;
+        const slice = @intToPtr(*const []const container.t, @ptrToInt(container.s));
+        for (slice.*) |*item, ind| {
+            const ptr = if (@typeInfo(container.t) == .Pointer) @ptrToInt(item.*) else @ptrToInt(item);
+            if (ptrtable.contains(ptr)) {
+                std.log.err("Pointer collision for {} (types: {s} vs {})", .{
+                    ptr, ptrtable.get(ptr).?.ptrtype, Ptr,
+                });
+                // it'll crash below, no need to return/raise error
+            }
+            ptrtable.putNoClobber(ptr, .{
+                .container = container.m,
+                .index = ind,
+                .ptrtype = @typeName(Ptr),
+            }) catch err.wat();
+        }
+    }
 }
 
 pub fn initPointerContainers() void {
@@ -431,6 +476,14 @@ pub fn serializeWorld() !void {
     // - ptrtable.dat, ptrinits.dat, mobs.dat
 
     buildPointerTable();
+
+    // var iter = ptrtable.iterator();
+    // while (iter.next()) |item| {
+    //     std.log.debug("ptr entry: 0x{X:0>16} -> {: >4} @ {s: >16} ({s})", .{
+    //         item.key_ptr.*, item.value_ptr.index, item.value_ptr.container, item.value_ptr.ptrtype,
+    //     });
+    // }
+
     try serializeWE(@TypeOf(ptrtable), ptrtable, f.writer());
     try serializeWE(@TypeOf(ptrinits), ptrinits, f.writer());
 

@@ -57,6 +57,8 @@ const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 const LinkedList = @import("list.zig").LinkedList;
 const StackBuffer = @import("buffer.zig").StackBuffer;
 
+pub const itemlists = @import("items/itemlists.zig");
+
 // Items to be dropped into rooms for the player's use.
 //
 pub const ItemTemplate = struct {

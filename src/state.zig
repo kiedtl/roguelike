@@ -124,6 +124,7 @@ pub var containers: ContainerList = undefined;
 pub var evocables: EvocableList = undefined;
 pub var messages: MessageArrayList = undefined;
 
+pub var fab_records: std.StringHashMap(mapgen.Prefab.PlacementRecord) = undefined;
 pub var seed: u64 = undefined;
 pub var floor_seeds: [LEVELS]u64 = undefined;
 
