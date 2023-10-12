@@ -103,8 +103,8 @@ pub const ThreatResponse = struct {
 };
 
 pub fn init() void {
-    state.threats = @TypeOf(state.threats).init(state.GPA.allocator());
-    state.responses = @TypeOf(state.responses).init(state.GPA.allocator());
+    state.threats = @TypeOf(state.threats).init(state.gpa.allocator());
+    state.responses = @TypeOf(state.responses).init(state.gpa.allocator());
 }
 
 pub fn deinit() void {

@@ -905,7 +905,7 @@ pub const StalkerStation = Machine{
                 var first_stalker: ?*Mob = null;
                 for (&DIRECTIONS) |d| if (state.player.coord.move(d, state.mapgeometry)) |neighbor| {
                     if (state.is_walkable(neighbor, .{ .right_now = true })) {
-                        const stalker = mobs.placeMob(state.GPA.allocator(), &mobs.StalkerTemplate, neighbor, .{});
+                        const stalker = mobs.placeMob(state.gpa.allocator(), &mobs.StalkerTemplate, neighbor, .{});
 
                         //state.player.squad.?.members.append(stalker) catch break;
                         //stalker.squad = state.player.squad;
@@ -1225,7 +1225,7 @@ pub const FirstAidStation = Machine{
 //                 3,
 //                 state.is_walkable,
 //                 .{ .ignore_mobs = true, .right_now = true },
-//                 state.GPA.allocator(),
+//                 state.gpa.allocator(),
 //             );
 //             defer dijk.deinit();
 //             while (dijk.next()) |item|

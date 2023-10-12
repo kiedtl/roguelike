@@ -152,7 +152,7 @@ var frames: ?std.ArrayList([HEIGHT][WIDTH]u8) = null;
 
 pub fn initGif() void {
     deinitGif();
-    frames = if (gif) std.ArrayList([HEIGHT][WIDTH]u8).init(state.GPA.allocator()) else null;
+    frames = if (gif) std.ArrayList([HEIGHT][WIDTH]u8).init(state.gpa.allocator()) else null;
 }
 
 pub fn deinitGif() void {
@@ -201,8 +201,8 @@ pub fn captureFrame(z: usize) void {
 
 pub fn emitGif(level: usize) void {
     if (gif) {
-        const fname = std.fmt.allocPrintZ(state.GPA.allocator(), "L_{}_{s}.gif", .{ level, state.levelinfo[level].id }) catch err.oom();
-        defer state.GPA.allocator().free(fname);
+        const fname = std.fmt.allocPrintZ(state.gpa.allocator(), "L_{}_{s}.gif", .{ level, state.levelinfo[level].id }) catch err.oom();
+        defer state.gpa.allocator().free(fname);
 
         var g_error: c_int = 0;
         var g_file = giflib.EGifOpenFileName(fname.ptr, false, &g_error);
@@ -632,7 +632,7 @@ fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, need_lair: bo
 }
 
 pub fn choosePrefab(level: usize, prefabs: *PrefabArrayList, opts: PrefabOpts) ?*Prefab {
-    var fab_list = std.ArrayList(*Prefab).init(state.GPA.allocator());
+    var fab_list = std.ArrayList(*Prefab).init(state.gpa.allocator());
     defer fab_list.deinit();
     for (prefabs.items) |*prefab| if (prefabIsValid(level, prefab, false, false, opts)) {
         fab_list.append(prefab) catch err.wat();
@@ -1208,7 +1208,7 @@ pub fn selectLevelVault(level: usize) void {
 
     const vault_kind = rng.chooseUnweighted(VaultType, VAULT_LEVELS[level]);
 
-    var candidates = std.ArrayList(usize).init(state.GPA.allocator());
+    var candidates = std.ArrayList(usize).init(state.gpa.allocator());
     defer candidates.deinit();
 
     for (state.rooms[level].items) |room, i| {
@@ -1287,7 +1287,7 @@ pub fn modifyRoomToLair(room: *Room) void {
                 }
                 return if (state.dungeon.at(c).type == .Wall) 10 else 0;
             }
-        }.f, &CARDINAL_DIRECTIONS, state.GPA.allocator()) orelse return;
+        }.f, &CARDINAL_DIRECTIONS, state.gpa.allocator()) orelse return;
         defer path.deinit();
         for (path.items) |coord| {
             state.dungeon.at(coord).type = .Floor;
@@ -1299,7 +1299,7 @@ pub fn selectLevelLairs(level: usize) void {
     if (Configs[level].lair_max == 0)
         return;
 
-    var candidates = std.ArrayList(usize).init(state.GPA.allocator());
+    var candidates = std.ArrayList(usize).init(state.gpa.allocator());
     defer candidates.deinit();
 
     for (state.rooms[level].items) |room, i| {
@@ -2496,7 +2496,7 @@ pub fn setVaultFeatures(room: *Room) void {
             .start = Coord.new(0, 0),
             .width = room.rect.width,
             .height = room.rect.height,
-        }, state.GPA.allocator(), .{ .specific_id = fab_name });
+        }, state.gpa.allocator(), .{ .specific_id = fab_name });
     }
 }
 
@@ -2537,7 +2537,7 @@ pub fn setLairFeatures(room: *Room) void {
     }
 
     // Set polished slade areas
-    var dijk = dijkstra.Dijkstra.init(walkable_point, state.mapgeometry, 100, dijkstra.dummyIsValid, .{}, state.GPA.allocator());
+    var dijk = dijkstra.Dijkstra.init(walkable_point, state.mapgeometry, 100, dijkstra.dummyIsValid, .{}, state.gpa.allocator());
     defer dijk.deinit();
     while (dijk.next()) |child| {
         if (child.asRect().overflowsLimit(&room.rect)) {
@@ -2566,7 +2566,7 @@ pub fn setLairFeatures(room: *Room) void {
                 .start = Coord.new(coord.x - room.rect.start.x, coord.y - room.rect.start.y),
                 .width = room.rect.end().x - coord.x,
                 .height = room.rect.end().y - coord.y,
-            }, state.GPA.allocator(), .{ .for_lair = true })) {
+            }, state.gpa.allocator(), .{ .for_lair = true })) {
                 break;
             }
         }
@@ -2990,7 +2990,7 @@ pub fn removeEnemiesNearEntry(level: usize) void {
         8,
         state.is_walkable,
         .{ .ignore_mobs = true, .right_now = true },
-        state.GPA.allocator(),
+        state.gpa.allocator(),
     );
     defer dijk.deinit();
     while (dijk.next()) |child| {
@@ -3383,16 +3383,16 @@ pub fn initLevelTest(prefab: []const u8, entry: bool) !void {
         .rect = Rect{ .start = Coord.new2(0, 0, 0), .width = fab.width, .height = fab.height },
         .prefab = fab,
     };
-    excavatePrefab(&room, fab, state.GPA.allocator(), 0, 0);
+    excavatePrefab(&room, fab, state.gpa.allocator(), 0, 0);
     state.rooms[0].append(room) catch err.wat();
 
     const p_coord = Coord.new2(0, WIDTH - 1, HEIGHT - 1);
     state.dungeon.at(p_coord).type = .Floor;
-    placePlayer(p_coord, state.GPA.allocator());
+    placePlayer(p_coord, state.gpa.allocator());
     state.player.kill();
 
     generateLayoutMap(0);
-    if (entry) _ = placeEntry(0, state.GPA.allocator());
+    if (entry) _ = placeEntry(0, state.gpa.allocator());
 }
 
 pub fn initLevel(level: usize) void {
@@ -3405,14 +3405,14 @@ pub fn initLevel(level: usize) void {
         resetLevel(level);
         initGif();
         placeBlobs(level);
-        (Configs[level].mapgen_func)(level, state.GPA.allocator());
+        (Configs[level].mapgen_func)(level, state.gpa.allocator());
         selectLevelLairs(level);
         selectLevelVault(level);
         if (Configs[level].allow_extra_corridors)
-            placeMoarCorridors(level, state.GPA.allocator());
+            placeMoarCorridors(level, state.gpa.allocator());
         generateLayoutMap(level);
 
-        if (!placeEntry(level, state.GPA.allocator())) {
+        if (!placeEntry(level, state.gpa.allocator())) {
             // We should be checking tries here...
             std.log.info("{s}: Invalid map (couldn't place entry), retrying...", .{
                 state.levelinfo[level].name,
@@ -3427,10 +3427,10 @@ pub fn initLevel(level: usize) void {
                 }
             } else err.bug("Levelinfo stairs {s} invalid", .{dest_stair});
 
-            placeStair(level, floor, state.GPA.allocator());
+            placeStair(level, floor, state.gpa.allocator());
         };
 
-        if (validateLevel(level, state.GPA.allocator())) |_| {
+        if (validateLevel(level, state.gpa.allocator())) |_| {
             // .
         } else |e| {
             if (tries < 28) {
@@ -3446,11 +3446,11 @@ pub fn initLevel(level: usize) void {
         }
 
         emitGif(level);
-        placeRoomFeatures(level, state.GPA.allocator());
+        placeRoomFeatures(level, state.gpa.allocator());
         placeRoomTerrain(level);
         placeTraps(level);
         placeItems(level);
-        placeMobs(level, state.GPA.allocator());
+        placeMobs(level, state.gpa.allocator());
         setLevelMaterial(level);
         removeEnemiesNearEntry(level);
 
@@ -4205,7 +4205,7 @@ pub const Prefab = struct {
                                 const ind = @ptrToInt((words.next() orelse return error.MalformedFeatureDefinition).ptr) - @ptrToInt(line.ptr);
                                 const rest = line[ind..];
                                 var cbf_p = cbf.Parser{ .input = rest };
-                                var res = try cbf_p.parse(state.GPA.allocator());
+                                var res = try cbf_p.parse(state.gpa.allocator());
                                 defer cbf.Parser.deinit(&res);
 
                                 const r = cbf.deserializeStruct(mobs.PlaceMobOptions, res.items[0].value.List, .{}) catch
@@ -4222,7 +4222,7 @@ pub const Prefab = struct {
                             } else if (mem.eql(u8, feature_type, "Cpitem")) {
                                 const rest = line[@ptrToInt((id orelse return error.MalformedFeatureDefinition).ptr) - @ptrToInt(line.ptr) ..];
                                 var cbf_p = cbf.Parser{ .input = rest };
-                                var res = try cbf_p.parse(state.GPA.allocator());
+                                var res = try cbf_p.parse(state.gpa.allocator());
                                 defer cbf.Parser.deinit(&res);
 
                                 // Probably more informative to just crash, given
@@ -4265,7 +4265,7 @@ pub const Prefab = struct {
                             } else return error.NoSuchMob;
                         },
                         'P' => {
-                            var buf = std.ArrayList(u8).init(state.GPA.allocator());
+                            var buf = std.ArrayList(u8).init(state.gpa.allocator());
                             while (lines.next()) |poster_line| {
                                 if (mem.eql(u8, poster_line, "END POSTER")) {
                                     break;
@@ -4278,7 +4278,7 @@ pub const Prefab = struct {
                                 try buf.appendSlice(" ");
                             }
                             const poster_ptr = try literature.posters.appendAndReturn(.{
-                                .level = try state.GPA.allocator().dupe(u8, "NUL"),
+                                .level = try state.gpa.allocator().dupe(u8, "NUL"),
                                 .text = buf.items,
                                 .placement_counter = 0,
                             });

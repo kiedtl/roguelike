@@ -535,7 +535,7 @@ pub fn rummageContainer(coord: Coord) bool {
         if (item.isUseful())
             found_goodies = true;
 
-        if (state.nextAvailableSpaceForItem(coord, state.GPA.allocator())) |spot| {
+        if (state.nextAvailableSpaceForItem(coord, state.gpa.allocator())) |spot| {
             state.dungeon.itemsAt(spot).append(item) catch err.wat();
         } else {
             // FIXME: an item gets swallowed up here!
@@ -698,7 +698,7 @@ pub fn throwItem(index: usize) bool {
 
     const dest = ui.chooseCell(.{ .require_seen = true, .targeter = targeter }) orelse return false;
 
-    state.player.throwItem(&item, dest, state.GPA.allocator());
+    state.player.throwItem(&item, dest, state.gpa.allocator());
     _ = state.player.removeItem(index) catch err.wat();
     return true;
 }
@@ -858,7 +858,7 @@ pub fn dropItem(index: usize, is_inventory: bool) bool {
     if (is_inventory)
         assert(state.player.inventory.pack.len > index);
 
-    if (state.nextAvailableSpaceForItem(state.player.coord, state.GPA.allocator())) |coord| {
+    if (state.nextAvailableSpaceForItem(state.player.coord, state.gpa.allocator())) |coord| {
         const item = if (is_inventory) b: {
             const i = state.player.removeItem(index) catch err.wat();
             const dropped = state.player.dropItem(i, coord);
@@ -887,7 +887,7 @@ pub fn memorizeTile(fc: Coord, mtype: state.MemoryTile.Type) void {
 }
 
 pub fn enemiesCanSee(coord: Coord) bool {
-    const moblist = state.createMobList(false, true, state.player.coord.z, state.GPA.allocator());
+    const moblist = state.createMobList(false, true, state.player.coord.z, state.gpa.allocator());
     defer moblist.deinit();
 
     return b: for (moblist.items) |mob| {
@@ -905,7 +905,7 @@ pub fn isPlayerSpotted() bool {
         return state.player_is_spotted.is_spotted;
     }
 
-    const moblist = state.createMobList(false, true, state.player.coord.z, state.GPA.allocator());
+    const moblist = state.createMobList(false, true, state.player.coord.z, state.gpa.allocator());
     defer moblist.deinit();
 
     const is_spotted = enemiesCanSee(state.player.coord) or (b: for (moblist.items) |mob| {

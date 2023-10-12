@@ -123,16 +123,16 @@ pub fn panic(msg: []const u8, trace: ?*std.builtin.StackTrace) noreturn {
 
 fn initGame(no_display: bool, display_scale: f32) bool {
     janet.init() catch return false;
-    _ = janet.loadFile("scripts/particles.janet", state.GPA.allocator()) catch return false;
+    _ = janet.loadFile("scripts/particles.janet", state.gpa.allocator()) catch return false;
 
     font.loadFontsData();
     state.loadStatusStringInfo();
     state.loadLevelInfo();
-    surfaces.readProps(state.GPA.allocator());
-    literature.readPosters(state.GPA.allocator());
-    mobs.spawns.readSpawnTables(state.GPA.allocator());
-    mapgen.readPrefabs(state.GPA.allocator());
-    readDescriptions(state.GPA.allocator());
+    surfaces.readProps(state.gpa.allocator());
+    literature.readPosters(state.gpa.allocator());
+    mobs.spawns.readSpawnTables(state.gpa.allocator());
+    mapgen.readPrefabs(state.gpa.allocator());
+    readDescriptions(state.gpa.allocator());
 
     initGameState();
 
@@ -157,7 +157,7 @@ fn initGame(no_display: bool, display_scale: f32) bool {
 }
 
 fn initGameState() void {
-    state.dungeon = state.GPA.allocator().create(types.Dungeon) catch err.oom();
+    state.dungeon = state.gpa.allocator().create(types.Dungeon) catch err.oom();
     state.dungeon.* = types.Dungeon{};
 
     rng.init();
@@ -166,18 +166,18 @@ fn initGameState() void {
 
     for (state.default_patterns) |*r| r.pattern_checker.reset();
 
-    state.memory = state.MemoryTileMap.init(state.GPA.allocator());
+    state.memory = state.MemoryTileMap.init(state.gpa.allocator());
 
-    state.tasks = TaskArrayList.init(state.GPA.allocator());
-    state.squads = Squad.List.init(state.GPA.allocator());
-    state.mobs = MobList.init(state.GPA.allocator());
-    state.rings = RingList.init(state.GPA.allocator());
-    state.armors = ArmorList.init(state.GPA.allocator());
-    state.machines = MachineList.init(state.GPA.allocator());
-    state.props = PropList.init(state.GPA.allocator());
-    state.containers = ContainerList.init(state.GPA.allocator());
-    state.evocables = EvocableList.init(state.GPA.allocator());
-    state.messages = MessageArrayList.init(state.GPA.allocator());
+    state.tasks = TaskArrayList.init(state.gpa.allocator());
+    state.squads = Squad.List.init(state.gpa.allocator());
+    state.mobs = MobList.init(state.gpa.allocator());
+    state.rings = RingList.init(state.gpa.allocator());
+    state.armors = ArmorList.init(state.gpa.allocator());
+    state.machines = MachineList.init(state.gpa.allocator());
+    state.props = PropList.init(state.gpa.allocator());
+    state.containers = ContainerList.init(state.gpa.allocator());
+    state.evocables = EvocableList.init(state.gpa.allocator());
+    state.messages = MessageArrayList.init(state.gpa.allocator());
 
     alert.init();
     events.init();
@@ -185,10 +185,10 @@ fn initGameState() void {
     events.executeGlobalEvents();
 
     for (state.dungeon.map) |*map, level| {
-        state.stockpiles[level] = StockpileArrayList.init(state.GPA.allocator());
-        state.inputs[level] = StockpileArrayList.init(state.GPA.allocator());
-        state.outputs[level] = Rect.ArrayList.init(state.GPA.allocator());
-        state.rooms[level] = mapgen.Room.ArrayList.init(state.GPA.allocator());
+        state.stockpiles[level] = StockpileArrayList.init(state.gpa.allocator());
+        state.inputs[level] = StockpileArrayList.init(state.gpa.allocator());
+        state.outputs[level] = Rect.ArrayList.init(state.gpa.allocator());
+        state.rooms[level] = mapgen.Room.ArrayList.init(state.gpa.allocator());
 
         for (map) |*row| for (row) |*tile| {
             tile.rand = rng.int(usize);
@@ -218,7 +218,7 @@ fn deinitGame() void {
     {
         var iter = literature.posters.iterator();
         while (iter.next()) |poster|
-            poster.deinit(state.GPA.allocator());
+            poster.deinit(state.gpa.allocator());
     }
     literature.posters.deinit();
 
@@ -226,11 +226,11 @@ fn deinitGame() void {
     font.freeFontData();
     state.freeStatusStringInfo();
     state.freeLevelInfo();
-    surfaces.freeProps(state.GPA.allocator());
-    mobs.spawns.freeSpawnTables(state.GPA.allocator());
-    freeDescriptions(state.GPA.allocator());
+    surfaces.freeProps(state.gpa.allocator());
+    mobs.spawns.freeSpawnTables(state.gpa.allocator());
+    freeDescriptions(state.gpa.allocator());
 
-    _ = state.GPA.deinit();
+    _ = state.gpa.deinit();
 }
 
 fn deinitGameState() void {
@@ -271,7 +271,7 @@ fn deinitGameState() void {
     events.deinit();
 
     state.player_inited = false;
-    state.GPA.allocator().destroy(state.dungeon);
+    state.gpa.allocator().destroy(state.dungeon);
 }
 
 fn readDescriptions(alloc: mem.Allocator) void {
@@ -502,7 +502,7 @@ fn readInput() !bool {
                     };
                 },
                 .F8 => {
-                    _ = janet.loadFile("scripts/particles.janet", state.GPA.allocator()) catch continue;
+                    _ = janet.loadFile("scripts/particles.janet", state.gpa.allocator()) catch continue;
                     const target = ui.chooseCell(.{}) orelse continue;
                     ui.Animation.apply(.{ .Particle = .{ .name = "test", .coord = state.player.coord, .target = .{ .C = target } } });
                 },
@@ -642,7 +642,7 @@ fn tickGame(p_cur_level: ?usize) !void {
                     ui.draw();
                     if (state.state == .Quit) break;
                 } else {
-                    ai.main(mob, state.GPA.allocator());
+                    ai.main(mob, state.gpa.allocator());
                 }
             }
 
@@ -1079,8 +1079,8 @@ fn testerMain() void {
 
     const stdout = std.io.getStdOut().writer();
     var ctx = TestContext{
-        .alloc = state.GPA.allocator(),
-        .errors = std.ArrayList([]const u8).init(state.GPA.allocator()),
+        .alloc = state.gpa.allocator(),
+        .errors = std.ArrayList([]const u8).init(state.gpa.allocator()),
     };
     defer ctx.deinit();
 
@@ -1226,12 +1226,12 @@ fn analyzerMain() void {
     defer deinitGame();
     deinitGameState();
 
-    var arena = std.heap.ArenaAllocator.init(state.GPA.allocator());
+    var arena = std.heap.ArenaAllocator.init(state.gpa.allocator());
     defer arena.deinit();
 
     var ITERS: usize = 20;
-    if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_AN_ITERS")) |v| {
-        defer state.GPA.allocator().free(v);
+    if (std.process.getEnvVarOwned(state.gpa.allocator(), "RL_AN_ITERS")) |v| {
+        defer state.gpa.allocator().free(v);
         ITERS = std.fmt.parseInt(u64, v, 0) catch |e| b: {
             std.log.err("Could not parse RL_AN_ITERS (reason: {}); using default.", .{e});
             break :b 20;
@@ -1276,8 +1276,8 @@ pub fn actualMain() anyerror!void {
     var use_profiler = false;
     var use_analyzer = false;
 
-    if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_SEED")) |seed_str| {
-        defer state.GPA.allocator().free(seed_str);
+    if (std.process.getEnvVarOwned(state.gpa.allocator(), "RL_SEED")) |seed_str| {
+        defer state.gpa.allocator().free(seed_str);
         state.seed = std.fmt.parseInt(u64, seed_str, 0) catch |e| b: {
             std.log.err("Could not parse RL_SEED (reason: {}); using default.", .{e});
             break :b 0;
@@ -1286,7 +1286,7 @@ pub fn actualMain() anyerror!void {
         state.seed = @intCast(u64, std.time.milliTimestamp());
     }
 
-    if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_MODE")) |v| {
+    if (std.process.getEnvVarOwned(state.gpa.allocator(), "RL_MODE")) |v| {
         if (mem.eql(u8, v, "viewer")) {
             state.state = .Viewer;
             use_viewer = true;
@@ -1300,7 +1300,7 @@ pub fn actualMain() anyerror!void {
             state.state = .Viewer;
             use_analyzer = true;
         }
-        state.GPA.allocator().free(v);
+        state.gpa.allocator().free(v);
     } else |_| {
         use_viewer = false;
         use_tester = false;
@@ -1317,21 +1317,21 @@ pub fn actualMain() anyerror!void {
         return;
     }
 
-    if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_NO_SENTRY")) |v| {
+    if (std.process.getEnvVarOwned(state.gpa.allocator(), "RL_NO_SENTRY")) |v| {
         state.sentry_disabled = true;
-        state.GPA.allocator().free(v);
+        state.gpa.allocator().free(v);
     } else |_| {
         state.sentry_disabled = false;
     }
 
     var scale: f32 = 1;
-    if (std.process.getEnvVarOwned(state.GPA.allocator(), "RL_DISPLAY_SCALE")) |v| {
+    if (std.process.getEnvVarOwned(state.gpa.allocator(), "RL_DISPLAY_SCALE")) |v| {
         if (std.fmt.parseFloat(f32, v)) |val| {
             scale = val;
         } else |e| {
             std.log.err("Could not parse RL_DISPLAY_SCALE (reason: {}); using default.", .{e});
         }
-        state.GPA.allocator().free(v);
+        state.gpa.allocator().free(v);
     } else |_| {}
 
     if (!initGame(false, scale)) {

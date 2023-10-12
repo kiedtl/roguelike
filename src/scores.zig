@@ -62,13 +62,13 @@ pub const Info = struct {
 
         s.seed = state.seed;
 
-        if (std.process.getEnvVarOwned(state.GPA.allocator(), "USER")) |env| {
+        if (std.process.getEnvVarOwned(state.gpa.allocator(), "USER")) |env| {
             s.username.reinit(env);
-            state.GPA.allocator().free(env);
+            state.gpa.allocator().free(env);
         } else |_| {
-            if (std.process.getEnvVarOwned(state.GPA.allocator(), "USERNAME")) |env| {
+            if (std.process.getEnvVarOwned(state.gpa.allocator(), "USERNAME")) |env| {
                 s.username.reinit(env);
-                state.GPA.allocator().free(env);
+                state.gpa.allocator().free(env);
             } else |_| {
                 s.username.reinit("Obmirnul");
             }
@@ -196,7 +196,7 @@ pub const Info = struct {
         s.in_view_ids.reinit(null);
         s.in_view_names.reinit(null);
         {
-            const can_see = state.createMobList(false, true, state.player.coord.z, state.GPA.allocator());
+            const can_see = state.createMobList(false, true, state.player.coord.z, state.gpa.allocator());
             defer can_see.deinit();
             for (can_see.items) |mob| {
                 s.in_view_ids.append(mob.id) catch break;
@@ -524,7 +524,7 @@ fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
     if (info.in_view_ids.len > 0) {
         try w.print("You could see:\n", .{});
 
-        var can_see_counted = std.StringHashMap(usize).init(state.GPA.allocator());
+        var can_see_counted = std.StringHashMap(usize).init(state.gpa.allocator());
         defer can_see_counted.deinit();
 
         for (info.in_view_names.constSlice()) |name| {
@@ -614,7 +614,7 @@ fn exportTextMorgue(info: Info, alloc: mem.Allocator) !std.ArrayList(u8) {
 }
 
 fn exportJsonMorgue(info: Info) !std.ArrayList(u8) {
-    var buf = std.ArrayList(u8).init(state.GPA.allocator());
+    var buf = std.ArrayList(u8).init(state.gpa.allocator());
     var w = buf.writer();
 
     try w.writeAll("{");
@@ -660,7 +660,7 @@ fn exportJsonMorgue(info: Info) !std.ArrayList(u8) {
 }
 
 pub fn createMorgue() Info {
-    var arena = std.heap.ArenaAllocator.init(state.GPA.allocator());
+    var arena = std.heap.ArenaAllocator.init(state.gpa.allocator());
     defer arena.deinit();
 
     const info = Info.collect(arena.allocator());
@@ -678,8 +678,8 @@ pub fn createMorgue() Info {
         const morgue = exportJsonMorgue(info) catch err.wat();
         defer morgue.deinit();
 
-        const filename = std.fmt.allocPrintZ(state.GPA.allocator(), "morgue-{s}-{}-{}-{:0>2}-{:0>2}-{}:{}.json", .{ info.username.constSlice(), state.seed, info.end_datetime.Y, info.end_datetime.M, info.end_datetime.D, info.end_datetime.h, info.end_datetime.m }) catch err.oom();
-        defer state.GPA.allocator().free(filename);
+        const filename = std.fmt.allocPrintZ(state.gpa.allocator(), "morgue-{s}-{}-{}-{:0>2}-{:0>2}-{}:{}.json", .{ info.username.constSlice(), state.seed, info.end_datetime.Y, info.end_datetime.M, info.end_datetime.D, info.end_datetime.h, info.end_datetime.m }) catch err.oom();
+        defer state.gpa.allocator().free(filename);
 
         (std.fs.cwd().openDir("morgue", .{}) catch err.wat()).writeFile(filename, morgue.items[0..]) catch |e| {
             std.log.err("Could not write to morgue file '{s}': {}", .{ filename, e });
@@ -689,11 +689,11 @@ pub fn createMorgue() Info {
         std.log.info("Morgue file written to {s}.", .{filename});
     }
     {
-        const morgue = exportTextMorgue(info, state.GPA.allocator()) catch err.wat();
+        const morgue = exportTextMorgue(info, state.gpa.allocator()) catch err.wat();
         defer morgue.deinit();
 
-        const filename = std.fmt.allocPrintZ(state.GPA.allocator(), "morgue-{s}-{}-{}-{:0>2}-{:0>2}-{}:{}.txt", .{ info.username.constSlice(), state.seed, info.end_datetime.Y, info.end_datetime.M, info.end_datetime.D, info.end_datetime.h, info.end_datetime.m }) catch err.oom();
-        defer state.GPA.allocator().free(filename);
+        const filename = std.fmt.allocPrintZ(state.gpa.allocator(), "morgue-{s}-{}-{}-{:0>2}-{:0>2}-{}:{}.txt", .{ info.username.constSlice(), state.seed, info.end_datetime.Y, info.end_datetime.M, info.end_datetime.D, info.end_datetime.h, info.end_datetime.m }) catch err.oom();
+        defer state.gpa.allocator().free(filename);
 
         (std.fs.cwd().openDir("morgue", .{}) catch err.wat()).writeFile(filename, morgue.items[0..]) catch |e| {
             std.log.err("Could not write to morgue file '{s}': {}", .{ filename, e });

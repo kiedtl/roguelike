@@ -66,7 +66,7 @@ pub const PLAYER_STARTING_LEVEL = 13; //19; // TODO: define in data file
 
 // Should only be used directly by functions in main.zig. For other applications,
 // should be passed as a parameter by caller.
-pub var GPA = std.heap.GeneralPurposeAllocator(.{
+pub var gpa = std.heap.GeneralPurposeAllocator(.{
     // Probably should enable this later on to track memory usage, if
     // allocations become too much
     .enable_memory_limit = false,
@@ -192,10 +192,10 @@ pub var status_str_infos: std.enums.EnumArray(Status, ?StatusStringInfo) =
 //
 // Will *not* return crd.
 //
-// Uses state.GPA.allocator()
+// Uses state.gpa.allocator()
 //
 pub fn nextSpotForMob(crd: Coord, mob: ?*Mob) ?Coord {
-    var dijk = dijkstra.Dijkstra.init(crd, mapgeometry, 3, is_walkable, .{ .mob = mob, .right_now = true }, GPA.allocator());
+    var dijk = dijkstra.Dijkstra.init(crd, mapgeometry, 3, is_walkable, .{ .mob = mob, .right_now = true }, gpa.allocator());
     defer dijk.deinit();
 
     return while (dijk.next()) |child| {
@@ -422,7 +422,7 @@ pub fn tickSound(cur_lev: usize) void {
 }
 
 pub fn loadStatusStringInfo() void {
-    const alloc = GPA.allocator();
+    const alloc = gpa.allocator();
 
     var rbuf: [65535]u8 = undefined;
     const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
@@ -462,7 +462,7 @@ pub fn loadStatusStringInfo() void {
 }
 
 pub fn freeStatusStringInfo() void {
-    const alloc = GPA.allocator();
+    const alloc = gpa.allocator();
 
     var iter = status_str_infos.iterator();
     while (iter.next()) |info| {
@@ -475,7 +475,7 @@ pub fn freeStatusStringInfo() void {
 }
 
 pub fn loadLevelInfo() void {
-    const alloc = GPA.allocator();
+    const alloc = gpa.allocator();
 
     var rbuf: [65535]u8 = undefined;
     const data_dir = std.fs.cwd().openDir("data", .{}) catch unreachable;
@@ -529,7 +529,7 @@ pub fn findLevelByName(name: []const u8) ?usize {
 }
 
 pub fn freeLevelInfo() void {
-    const alloc = GPA.allocator();
+    const alloc = gpa.allocator();
 
     for (levelinfo) |info| {
         alloc.free(info.id);

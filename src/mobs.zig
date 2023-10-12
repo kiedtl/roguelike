@@ -2400,13 +2400,13 @@ pub fn placeMobNearStairs(template: *const MobTemplate, level: usize, opts: Plac
         coords.append(coord) catch err.wat();
 
     const coord = coords.chooseUnweighted() orelse return error.NoSpace;
-    return placeMob(state.GPA.allocator(), template, coord, opts);
+    return placeMob(state.gpa.allocator(), template, coord, opts);
 }
 
 pub fn placeMobSurrounding(c: Coord, t: *const MobTemplate, opts: PlaceMobOptions) void {
     for (&DIRECTIONS) |d| if (c.move(d, state.mapgeometry)) |neighbor| {
         if (state.is_walkable(neighbor, .{ .right_now = true })) {
-            const m = placeMob(state.GPA.allocator(), t, neighbor, opts);
+            const m = placeMob(state.gpa.allocator(), t, neighbor, opts);
             m.cancelStatus(.Sleeping);
         }
     };

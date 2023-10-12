@@ -232,7 +232,7 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
     if (comptime mem.startsWith(u8, @typeName(T), "std.hash_map.HashMap(")) {
         const K = _fieldType(@field(T, "KV"), "key");
         const V = _fieldType(@field(T, "KV"), "value");
-        var obj = T.init(state.GPA.allocator());
+        var obj = T.init(state.gpa.allocator());
         var i = try deserializeQ(usize, in, alloc);
         while (i > 0) : (i -= 1) {
             const k = try deserializeQ(K, in, alloc);
@@ -425,7 +425,7 @@ pub fn deserializeWE(comptime T: type, out: *T, in: anytype, alloc: mem.Allocato
 }
 
 pub fn buildPointerTable() void {
-    ptrtable = @TypeOf(ptrtable).init(state.GPA.allocator());
+    ptrtable = @TypeOf(ptrtable).init(state.gpa.allocator());
 
     inline for (meta.declarations(state)) |declinfo| if (declinfo.is_pub) {
         const decl = @field(state, declinfo.name);
@@ -488,12 +488,13 @@ pub fn initPointerContainers() void {
 }
 
 pub fn serializeWorld() !void {
-    // var tar = try microtar.MTar.init("dump.tar", "w");
-    // defer tar.deinit();
+    var tar = try microtar.MTar.init("dump.tar", "w");
+    defer tar.deinit();
     var f = std.fs.cwd().openFile("dump.dat", .{ .write = true }) catch err.wat();
     defer f.close();
 
     // tar.writer()
+    //
     // - ptrtable.dat, ptrinits.dat, mobs.dat
 
     buildPointerTable();
@@ -513,7 +514,7 @@ pub fn serializeWorld() !void {
 }
 
 pub fn deserializeWorld() !void {
-    const alloc = state.GPA.allocator();
+    const alloc = state.gpa.allocator();
 
     // var tar = try microtar.MTar.init("dump.tar", "w");
     // defer tar.deinit();

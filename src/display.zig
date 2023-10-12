@@ -293,10 +293,10 @@ pub fn init(preferred_width: usize, preferred_height: usize, scale: f32) InitErr
             if (texture == null)
                 return error.SDL2InitError;
 
-            grid = try state.GPA.allocator().alloc(Cell, preferred_width * preferred_height);
+            grid = try state.gpa.allocator().alloc(Cell, preferred_width * preferred_height);
             mem.set(Cell, grid, .{ .ch = ' ', .fg = 0, .bg = colors.BG });
 
-            dirty = try state.GPA.allocator().alloc(bool, preferred_width * preferred_height);
+            dirty = try state.gpa.allocator().alloc(bool, preferred_width * preferred_height);
             mem.set(bool, dirty, true);
 
             driver_m.SDL_StartTextInput();
@@ -328,8 +328,8 @@ pub fn deinit() !void {
             driver_m.SDL_DestroyWindow(window);
             driver_m.SDL_Quit();
 
-            state.GPA.allocator().free(grid);
-            state.GPA.allocator().free(dirty);
+            state.gpa.allocator().free(grid);
+            state.gpa.allocator().free(dirty);
         },
     }
 }

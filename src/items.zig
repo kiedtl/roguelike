@@ -678,10 +678,10 @@ pub const SymbolEvoc = Evocable{
                 } },
             }) orelse return error.BadPosition;
 
-            var coordlist = types.CoordArrayList.init(state.GPA.allocator());
+            var coordlist = types.CoordArrayList.init(state.gpa.allocator());
             defer coordlist.deinit();
 
-            var dijk = dijkstra.Dijkstra.init(dest, state.mapgeometry, DIST, state.is_walkable, OPTS, state.GPA.allocator());
+            var dijk = dijkstra.Dijkstra.init(dest, state.mapgeometry, DIST, state.is_walkable, OPTS, state.gpa.allocator());
             defer dijk.deinit();
 
             while (dijk.next()) |child|
@@ -748,7 +748,7 @@ pub const DistractionRing = Ring{ // {{{
             const RADIUS = 4;
 
             var anim_buf = StackBuffer(Coord, (RADIUS * 2) * (RADIUS * 2)).init(null);
-            var dijk = dijkstra.Dijkstra.init(state.player.coord, state.mapgeometry, RADIUS, state.is_walkable, .{ .ignore_mobs = true, .only_if_breaks_lof = true }, state.GPA.allocator());
+            var dijk = dijkstra.Dijkstra.init(state.player.coord, state.mapgeometry, RADIUS, state.is_walkable, .{ .ignore_mobs = true, .only_if_breaks_lof = true }, state.gpa.allocator());
             defer dijk.deinit();
             while (dijk.next()) |coord2| {
                 if (utils.getHostileAt(state.player, coord2)) |hostile| {
@@ -1144,7 +1144,7 @@ pub const ExcisionRing = Ring{ // {{{
     .effect = struct {
         pub fn f() bool {
             const n = ui.chooseCell(.{ .max_distance = 1, .require_walkable = .{} }) orelse return false;
-            const s = mobs.placeMob(state.GPA.allocator(), &mobs.SpectralSwordTemplate, n, .{});
+            const s = mobs.placeMob(state.gpa.allocator(), &mobs.SpectralSwordTemplate, n, .{});
             state.player.addUnderling(s);
             state.message(.Info, "A spectral blade appears mid-air, hovering precariously.", .{});
 

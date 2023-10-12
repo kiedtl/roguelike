@@ -621,7 +621,7 @@ pub fn checkForNoises(mob: *Mob) void {
     }
 
     // Increment counters, remove dead ones
-    var new_sustiles = std.ArrayList(SuspiciousTileRecord).init(state.GPA.allocator());
+    var new_sustiles = std.ArrayList(SuspiciousTileRecord).init(state.gpa.allocator());
     for (mob.sustiles.items) |*record| {
         record.age += 1;
 
@@ -1235,7 +1235,7 @@ pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
             // begin moving to the closest wall.
             if (mob.ai.flag(.WallLover) and state.dungeon.neighboringWalls(mob.coord, true) == 0) {
                 assert(!mob.immobile);
-                var dijk = dijkstra.Dijkstra.init(mob.coord, state.mapgeometry, 9999, state.is_walkable, .{}, state.GPA.allocator());
+                var dijk = dijkstra.Dijkstra.init(mob.coord, state.mapgeometry, 9999, state.is_walkable, .{}, state.gpa.allocator());
                 defer dijk.deinit();
                 while (dijk.next()) |item|
                     if (state.dungeon.neighboringWalls(item, true) > 0) {
@@ -1878,7 +1878,7 @@ pub fn _Job_WRK_BuildMob(mob: *Mob, _: *AIJob) AIJob.JStatus {
                 return .Ongoing;
             }
         } else {
-            _ = mobs.placeMob(state.GPA.allocator(), task.type.BuildMob.mob, coord, task.type.BuildMob.opts);
+            _ = mobs.placeMob(state.gpa.allocator(), task.type.BuildMob.mob, coord, task.type.BuildMob.opts);
             mob.ai.task_id = null;
             task.completed = true;
             return .Complete;
@@ -1933,7 +1933,7 @@ pub fn _Job_GRD_SweepRoom(mob: *Mob, job: *AIJob) AIJob.JStatus {
 
     const room_id = job.getCtx(usize, AIJob.CTX_ROOM_ID, getCurrentRoom(mob) orelse undefined);
     const room = state.rooms[mob.coord.z].items[room_id];
-    const room_map = job.getCtxPtr(CoordArrayList, CTX_ROOM_MAP, CoordArrayList.init(state.GPA.allocator()));
+    const room_map = job.getCtxPtr(CoordArrayList, CTX_ROOM_MAP, CoordArrayList.init(state.gpa.allocator()));
     const room_dst = job.getCtx(Coord, CTX_ROOM_SWEEP_DEST, room.rect.middle());
 
     for (mob.fov) |row, y| for (row) |cell, x| {

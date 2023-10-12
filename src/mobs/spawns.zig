@@ -39,7 +39,7 @@ pub fn chooseMob(which_table: SpawnTable, z: usize, maybe_class: ?[]const u8) !*
     var table: @TypeOf(chosen_table) = undefined;
 
     if (maybe_class) |class| {
-        table = @TypeOf(table).init(state.GPA.allocator());
+        table = @TypeOf(table).init(state.gpa.allocator());
         for (chosen_table.items) |item| {
             const is_of_class = for (class) |class_char| {
                 if (mem.indexOfScalar(u8, item.classtype, class_char)) |_|
@@ -122,8 +122,8 @@ pub fn readSpawnTables(alloc: mem.Allocator) void {
             table.* = @TypeOf(table.*).init(alloc);
             for (spawndatas.items) |spawndata| {
                 table.append(.{
-                    .id = utils.cloneStr(spawndata.id, state.GPA.allocator()) catch err.oom(),
-                    .classtype = utils.cloneStr(spawndata.classtype, state.GPA.allocator()) catch err.oom(),
+                    .id = utils.cloneStr(spawndata.id, state.gpa.allocator()) catch err.oom(),
+                    .classtype = utils.cloneStr(spawndata.classtype, state.gpa.allocator()) catch err.oom(),
                     .weight = spawndata.levels[if (sptable_file.backwards) (len - 1) - i else i],
                 }) catch err.wat();
             }

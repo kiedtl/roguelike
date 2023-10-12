@@ -152,7 +152,7 @@ pub const Ctx = struct {
             if (prefab) |fab| {
                 room.prefab = fab;
                 roomie.door = Roomie.getRandomDoorCoord(room, roomie.parent) orelse continue;
-                mapgen.excavatePrefab(&room, fab, state.GPA.allocator(), 0, 0);
+                mapgen.excavatePrefab(&room, fab, state.gpa.allocator(), 0, 0);
                 fab.incrementRecord(level);
             } else {
                 mapgen.excavateRect(&roomie.rect);
@@ -171,7 +171,7 @@ pub const Ctx = struct {
                     .start = Coord.new(0, 0),
                     .width = room.rect.width,
                     .height = room.rect.height,
-                }, state.GPA.allocator(), .{});
+                }, state.gpa.allocator(), .{});
             }
 
             state.rooms[level].append(room) catch err.wat();
@@ -235,7 +235,7 @@ pub const Ctx = struct {
                             .start = Coord.new(0, 0),
                             .width = new.rect.width,
                             .height = new.rect.height,
-                        }, state.GPA.allocator(), .{});
+                        }, state.gpa.allocator(), .{});
                     }
                     mapgen.placeDoor(door, false);
                     state.rooms[level].append(new) catch err.wat();
@@ -305,13 +305,13 @@ pub const Ctx = struct {
                 if (room.prefab != null and room.prefab.?.player_position != null) {
                     const player_pos = room.prefab.?.player_position.?;
                     const p = Coord.new2(self.level, room.rect.start.x + player_pos.x, room.rect.start.y + player_pos.y);
-                    mapgen.placePlayer(p, state.GPA.allocator());
+                    mapgen.placePlayer(p, state.gpa.allocator());
                     return;
                 }
             }
             for (state.rooms[self.level].items) |room| {
                 const p = room.rect.randomCoord();
-                mapgen.placePlayer(p, state.GPA.allocator());
+                mapgen.placePlayer(p, state.gpa.allocator());
                 return;
             }
             err.bug("Unable to place player anywhere on starting level", .{});

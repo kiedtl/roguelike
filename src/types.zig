@@ -1974,8 +1974,8 @@ pub const Squad = struct {
 
     pub fn allocNew() *Squad {
         const squad = Squad{
-            //.members = MobArrayList.init(state.GPA.allocator()),
-            .enemies = EnemyRecord.AList.init(state.GPA.allocator()),
+            //.members = MobArrayList.init(state.gpa.allocator()),
+            .enemies = EnemyRecord.AList.init(state.gpa.allocator()),
         };
         state.squads.append(squad) catch err.wat();
         return state.squads.last().?;
@@ -2630,7 +2630,7 @@ pub const Mob = struct { // {{{
             self.jobs.clear();
         };
 
-        const job = AIJob{ .job = jtype, .ctx = AIJob.Ctx.init(state.GPA.allocator()) };
+        const job = AIJob{ .job = jtype, .ctx = AIJob.Ctx.init(state.gpa.allocator()) };
         self.jobs.append(job) catch err.wat();
     }
 
@@ -3676,7 +3676,7 @@ pub const Mob = struct { // {{{
     // Returns null if there wasn't any nearby walkable spot to put the new
     // spectral creature
     pub fn duplicateIntoSpectral(self: *Mob) ?*Mob {
-        var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 5, state.is_walkable, .{}, state.GPA.allocator());
+        var dijk = dijkstra.Dijkstra.init(self.coord, state.mapgeometry, 5, state.is_walkable, .{}, state.gpa.allocator());
         defer dijk.deinit();
 
         const newcoord = while (dijk.next()) |child| {
@@ -3684,7 +3684,7 @@ pub const Mob = struct { // {{{
         } else return null;
 
         var new = self.*;
-        new.init(state.GPA.allocator());
+        new.init(state.gpa.allocator());
         new.coord = newcoord;
         new.prefix = .Spectral;
 
@@ -3741,7 +3741,7 @@ pub const Mob = struct { // {{{
 
         self.is_dead = false;
         self.corpse_info = .{};
-        self.init(state.GPA.allocator());
+        self.init(state.gpa.allocator());
 
         self.tile = 'z';
         self.prefix = .Former;
@@ -3846,7 +3846,7 @@ pub const Mob = struct { // {{{
                 for (coords.constSlice()) |coord| {
                     if (list_i >= list.len) break;
                     if (!state.is_walkable(coord, .{})) continue;
-                    _ = mobs.placeMob(state.GPA.allocator(), list[list_i], coord, .{});
+                    _ = mobs.placeMob(state.gpa.allocator(), list[list_i], coord, .{});
                     list_i += 1;
                 }
 
@@ -3965,7 +3965,7 @@ pub const Mob = struct { // {{{
                 }
             };
 
-            const pth = astar.path(self.coord, to, state.mapgeometry, state.is_walkable, .{ .mob = self }, astar.basePenaltyFunc, directions, state.GPA.allocator()) orelse return null;
+            const pth = astar.path(self.coord, to, state.mapgeometry, state.is_walkable, .{ .mob = self }, astar.basePenaltyFunc, directions, state.gpa.allocator()) orelse return null;
             defer pth.deinit();
 
             assert(pth.items[0].eq(self.coord));
