@@ -54,25 +54,6 @@ pub const templates_test = @import("mobs/templates_test.zig");
 
 // -----------------------------------------------------------------------------
 
-const NONE_WEAPON = Weapon{
-    .id = "",
-    .name = "blue plastic train",
-    .damage = 0,
-    .strs = &[_]DamageStr{
-        items._dmgstr(80, "hurl", "hurls", " at kiedtl"),
-    },
-};
-
-const W_SWORD_1 = Weapon{ .damage = 1, .strs = &items.SLASHING_STRS, .name = "sword" };
-const W_SWORD_2 = Weapon{ .damage = 2, .strs = &items.SLASHING_STRS, .name = "sword" };
-const W_KNOUT_3 = Weapon{ .damage = 3, .strs = &items.CRUSHING_STRS, .delay = 200, .name = "knout" };
-const W_BLUDG_1 = Weapon{ .damage = 1, .strs = &items.CRUSHING_STRS, .name = "bludgeon" };
-const W_BLUDG_2 = Weapon{ .damage = 2, .strs = &items.CRUSHING_STRS, .name = "bludgeon" };
-const W_MACES_2 = Weapon{ .damage = 2, .strs = &items.CRUSHING_STRS, .name = "mace" };
-const W_MACES_3 = Weapon{ .damage = 3, .strs = &items.CRUSHING_STRS, .name = "mace" };
-const W_MSWRD_1 = Weapon{ .damage = 1, .strs = &items.SLASHING_STRS, .name = "martial sword", .martial = true };
-const W_SPROD_1 = Weapon{ .damage = 1, .damage_kind = .Electric, .strs = &items.SHOCK_STRS, .name = "shock prod" };
-
 pub const PLAYER_VISION = 12;
 pub const RESIST_IMMUNE = 1000;
 pub const WILL_IMMUNE = 1000;
@@ -266,7 +247,7 @@ pub const ExecutionerTemplate = MobTemplate{
         .memory_duration = 5,
         .stats = .{ .Willpower = 2 },
     },
-    .weapon = &W_KNOUT_3,
+    .weapon = &items.W_KNOUT_3,
 };
 
 pub const WatcherTemplate = MobTemplate{
@@ -306,7 +287,7 @@ pub const GuardTemplate = MobTemplate{
 
         .stats = .{ .Willpower = 1 },
     },
-    .weapon = &W_BLUDG_1,
+    .weapon = &items.W_BLUDG_1,
 };
 
 pub const ArmoredGuardTemplate = MobTemplate{
@@ -328,7 +309,7 @@ pub const ArmoredGuardTemplate = MobTemplate{
         .stats = .{ .Willpower = 2, .Melee = 70 },
         .innate_resists = .{ .Armor = 15 },
     },
-    .weapon = &W_BLUDG_2,
+    .weapon = &items.W_BLUDG_2,
 };
 
 pub fn createEnforcerTemplate(comptime minion: []const u8) MobTemplate {
@@ -357,7 +338,7 @@ pub fn createEnforcerTemplate(comptime minion: []const u8) MobTemplate {
             .stats = .{ .Willpower = 2, .Melee = 70 },
             .innate_resists = .{ .Armor = 15, .rElec = 50 },
         },
-        .weapon = &W_SPROD_1,
+        .weapon = &items.W_SPROD_1,
 
         .squad = &[_][]const MobTemplate.SquadMember{
             &[_]MobTemplate.SquadMember{
@@ -396,7 +377,7 @@ pub const JavelineerTemplate = MobTemplate{
         .memory_duration = 5,
         .stats = .{ .Willpower = 2, .Evade = 10, .Missile = 80, .Vision = 5 },
     },
-    .weapon = &W_BLUDG_2,
+    .weapon = &items.W_BLUDG_2,
     .armor = items.GambesonArmor,
 };
 
@@ -423,7 +404,7 @@ pub const DefenderTemplate = MobTemplate{
         .memory_duration = 6,
         .stats = .{ .Willpower = 3, .Evade = 10, .Missile = 90 },
     },
-    .weapon = &W_SWORD_1,
+    .weapon = &items.W_SWORD_1,
     .armor = items.HauberkArmor,
     .projectile = &items.NetProj,
 };
@@ -556,7 +537,7 @@ pub const PatrolTemplate = MobTemplate{
         .memory_duration = 8,
         .stats = .{ .Willpower = 1 },
     },
-    .weapon = &W_BLUDG_1,
+    .weapon = &items.W_BLUDG_1,
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
@@ -818,7 +799,7 @@ pub const KyaniteStatueTemplate = MobTemplate{
 
     .mob = .{
         .id = "kyanite_statue",
-        .species = &Species{ .name = "kyanite statue", .default_attack = &NONE_WEAPON },
+        .species = &Species{ .name = "kyanite statue", .default_attack = &items.NONE_WEAPON },
         .tile = '☻',
         .ai = AI{
             .profession_description = "gazing",
@@ -853,7 +834,7 @@ pub const NebroStatueTemplate = MobTemplate{
 
     .mob = .{
         .id = "nebro_statue",
-        .species = &Species{ .name = "nebro statue", .default_attack = &NONE_WEAPON },
+        .species = &Species{ .name = "nebro statue", .default_attack = &items.NONE_WEAPON },
         .tile = '☻',
         .ai = AI{
             .profession_description = "gazing",
@@ -888,7 +869,7 @@ pub const CrystalStatueTemplate = MobTemplate{
 
     .mob = .{
         .id = "crystal_statue",
-        .species = &Species{ .name = "crystal statue", .default_attack = &NONE_WEAPON },
+        .species = &Species{ .name = "crystal statue", .default_attack = &items.NONE_WEAPON },
         .tile = '☻',
         .ai = AI{
             .profession_description = "gazing",
@@ -1070,7 +1051,7 @@ pub const AncientMageTemplate = MobTemplate{
         .innate_resists = .{ .rFume = 100, .rElec = 75 },
         .stats = .{ .Willpower = 10, .Evade = 20, .Speed = 150 },
     },
-    .weapon = &W_MACES_3,
+    .weapon = &items.W_MACES_3,
     .armor = items.HauberkArmor,
     .cloak = &items.SilCloak,
 };
@@ -1093,7 +1074,7 @@ pub const RecruitTemplate = MobTemplate{
         .memory_duration = 6,
         .stats = .{ .Willpower = 1, .Melee = 80, .Evade = 5, .Vision = 6 },
     },
-    .weapon = &W_BLUDG_1,
+    .weapon = &items.W_BLUDG_1,
     .armor = items.GambesonArmor,
 };
 
@@ -1115,7 +1096,7 @@ pub const WarriorTemplate = MobTemplate{
         .memory_duration = 6,
         .stats = .{ .Willpower = 2, .Melee = 90, .Evade = 10, .Vision = 6 },
     },
-    .weapon = &W_MACES_2,
+    .weapon = &items.W_MACES_2,
     .armor = items.CuirassArmor,
 };
 
@@ -1137,7 +1118,7 @@ pub const HunterTemplate = MobTemplate{
         .memory_duration = 20,
         .stats = .{ .Willpower = 3, .Melee = 70, .Speed = 150, .Vision = 8 },
     },
-    .weapon = &W_MACES_2,
+    .weapon = &items.W_MACES_2,
     .armor = items.GambesonArmor,
 
     .squad = &[_][]const MobTemplate.SquadMember{
@@ -1171,7 +1152,7 @@ pub const BoneMageTemplate = MobTemplate{
         .memory_duration = 6,
         .stats = .{ .Willpower = 4, .Vision = 6, .Melee = 40 },
     },
-    .weapon = &W_BLUDG_1,
+    .weapon = &items.W_BLUDG_1,
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
@@ -1199,7 +1180,7 @@ pub const DeathKnightTemplate = MobTemplate{
         .innate_resists = .{ .Armor = 25 },
         .stats = .{ .Willpower = 6, .Melee = 65, .Martial = 1, .Evade = 10, .Vision = 6 },
     },
-    .weapon = &W_MSWRD_1,
+    .weapon = &items.W_MSWRD_1,
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
@@ -1233,7 +1214,7 @@ pub const DeathMageTemplate = MobTemplate{
         .memory_duration = 10,
         .stats = .{ .Willpower = 8, .Evade = 10 },
     },
-    .weapon = &W_SWORD_2,
+    .weapon = &items.W_SWORD_2,
     .armor = items.HauberkArmor,
 
     .squad = &[_][]const MobTemplate.SquadMember{
@@ -1270,7 +1251,7 @@ pub const EmberMageTemplate = MobTemplate{
         .memory_duration = 6,
         .stats = .{ .Willpower = 4, .Vision = 6 },
     },
-    .weapon = &W_BLUDG_1,
+    .weapon = &items.W_BLUDG_1,
     .cloak = &items.SilCloak,
 
     .squad = &[_][]const MobTemplate.SquadMember{
@@ -1308,7 +1289,7 @@ pub const BrimstoneMageTemplate = MobTemplate{
         .memory_duration = 8,
         .stats = .{ .Willpower = 6, .Evade = 10 },
     },
-    .weapon = &W_MACES_2,
+    .weapon = &items.W_MACES_2,
     .armor = items.HauberkArmor,
     .cloak = &items.SilCloak,
 
@@ -1344,7 +1325,7 @@ pub const SparkMageTemplate = MobTemplate{
         .memory_duration = 6,
         .stats = .{ .Willpower = 4, .Vision = 6 },
     },
-    .weapon = &W_BLUDG_1,
+    .weapon = &items.W_BLUDG_1,
     .cloak = &items.FurCloak,
 
     .squad = &[_][]const MobTemplate.SquadMember{
@@ -1380,7 +1361,7 @@ pub const LightningMageTemplate = MobTemplate{
         .memory_duration = 8,
         .stats = .{ .Willpower = 6, .Evade = 10 },
     },
-    .weapon = &W_MACES_2,
+    .weapon = &items.W_MACES_2,
     .armor = items.HauberkArmor,
     .cloak = &items.FurCloak,
 
@@ -1680,7 +1661,7 @@ pub const SkeletalBlademasterTemplate = MobTemplate{
         .innate_resists = .{ .rFume = 100, .rFire = -25, .Armor = 35 },
         .stats = .{ .Willpower = 4, .Melee = 90, .Martial = 2, .Vision = 6 },
     },
-    .weapon = &W_MSWRD_1,
+    .weapon = &items.W_MSWRD_1,
 };
 
 pub const TorturerNecromancerTemplate = MobTemplate{
@@ -1711,7 +1692,7 @@ pub const TorturerNecromancerTemplate = MobTemplate{
         .memory_duration = 8,
         .stats = .{ .Willpower = 8, .Evade = 10 },
     },
-    .weapon = &W_BLUDG_1,
+    .weapon = &items.W_BLUDG_1,
     .armor = items.GambesonArmor,
 };
 

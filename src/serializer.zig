@@ -19,6 +19,8 @@ const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
 pub const Error = error{ PointerNotFound, MismatchedPointerTypes, CorruptedData, MismatchedType, InvalidUnionField } || std.ArrayList(u8).Writer.Error || std.mem.Allocator.Error || std.fs.File.Reader.Error || std.fs.File.Writer.Error || error{EndOfStream} || microtar.MTar.Error;
 
+const FIELDS_ALWAYS_KEEP_LIST = [_][]const u8{ "__next", "__prev" };
+
 const STATIC_CONTAINERS = [_]struct {
     m: []const u8,
     t: type,
@@ -87,13 +89,13 @@ fn _normIntT(comptime Int: type) type {
 }
 
 pub fn write(comptime IntType: type, value: IntType, out: anytype) !void {
-    std.log.debug("..... => {: <20} {}", .{ _normIntT(IntType), value });
+    // std.log.debug("..... => {: <20} {}", .{ _normIntT(IntType), value });
     try out.writeIntLittle(_normIntT(IntType), @as(_normIntT(IntType), value));
 }
 
 pub fn read(comptime IntType: type, in: anytype) !IntType {
     const value = try in.readIntLittle(_normIntT(IntType));
-    std.log.debug("..... <= {: <20} {}", .{ _normIntT(IntType), value });
+    // std.log.debug("..... <= {: <20} {}", .{ _normIntT(IntType), value });
     return @intCast(IntType, value);
 }
 
@@ -187,7 +189,7 @@ pub fn serialize(comptime T: type, obj: T, out: anytype) Error!void {
                         if (mem.eql(u8, item, field.name)) break true;
                     } else false;
                     if (!noser_field) {
-                        std.log.debug("Ser {s: <20} ({s})", .{ field.name, @typeName(field.field_type) });
+                        // std.log.debug("Ser {s: <20} ({s})", .{ field.name, @typeName(field.field_type) });
                         try serialize(usize, _typeId(field.field_type), out);
 
                         if (@hasDecl(T, "__SER_FIELDW_" ++ field.name)) {
@@ -274,8 +276,18 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
                             *@TypeOf(@field(state, declinfo.name)).ChildType == T)
                         {
                             if (mem.eql(u8, declinfo.name, ptrdata.container)) {
-                                out.* = @field(state, declinfo.name).nth(ptrdata.index).?;
-                                return;
+                                if (@field(state, declinfo.name).nth(ptrdata.index)) |d| {
+                                    out.* = d;
+                                    return;
+                                } else {
+                                    std.log.err("Pointer {s},{s},{} not in container (len: {})", .{
+                                        ptrdata.container,
+                                        ptrdata.ptrtype,
+                                        ptrdata.index,
+                                        @field(state, declinfo.name).len(),
+                                    });
+                                    return error.PointerNotFound;
+                                }
                             }
                         };
 
@@ -307,6 +319,8 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
             if (comptime std.meta.trait.hasFn("deserialize")(T)) {
                 try T.deserialize(out, in, alloc);
             } else {
+                const oldobj = out.*;
+
                 if (@hasDecl(T, "__SER_GET_PROTO")) {
                     comptime assert(@hasDecl(T, "__SER_GET_ID"));
                     const id = try deserializeQ([]const u8, in, alloc);
@@ -320,11 +334,15 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
                         @setEvalBranchQuota(9999);
                         if (mem.eql(u8, item, field.name)) break true;
                     } else false;
+                    const keep_field = comptime for (FIELDS_ALWAYS_KEEP_LIST) |item| {
+                        @setEvalBranchQuota(9999);
+                        if (mem.eql(u8, item, field.name)) break true;
+                    } else false;
                     if (!noser_field) {
-                        std.log.debug("Deser {s: <20} ({s})", .{
-                            field.name,
-                            @typeName(field.field_type),
-                        });
+                        // std.log.debug("Deser {s: <20} ({s})", .{
+                        //     field.name,
+                        //     @typeName(field.field_type),
+                        // });
 
                         try deserializeExpect(field.field_type, in, alloc);
 
@@ -335,27 +353,29 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
                             try deserialize(field.field_type, &@field(out, field.name), in, alloc);
                         }
 
-                        switch (@typeInfo(field.field_type)) {
-                            .Pointer => if (field.field_type == []const u8) std.log.debug("Deser value: {s}", .{@field(out, field.name)}) else std.log.debug("Deser value: skip", .{}),
-                            .Array => std.log.debug("Deser value: {any}", .{@field(out, field.name)}),
-                            .Bool, .Enum, .Int, .Float => {
-                                std.log.debug("Deser value: {}", .{@field(out, field.name)});
-                            },
-                            else => {
-                                if (field.field_type == ?[]const u8) {
-                                    if (@field(out, field.name)) |v|
-                                        std.log.debug("Deser value: {s}", .{v})
-                                    else
-                                        std.log.debug("Deser value: null", .{});
-                                } else if (field.field_type == ?types.Damage or
-                                    field.field_type == ?types.Direction)
-                                {
-                                    std.log.debug("Deser value: {}", .{@field(out, field.name)});
-                                } else {
-                                    std.log.debug("Deser value: skip", .{});
-                                }
-                            },
-                        }
+                        // switch (@typeInfo(field.field_type)) {
+                        //     .Pointer => if (field.field_type == []const u8) std.log.debug("Deser value: {s}", .{@field(out, field.name)}) else std.log.debug("Deser value: skip", .{}),
+                        //     .Array => std.log.debug("Deser value: {any}", .{@field(out, field.name)}),
+                        //     .Bool, .Enum, .Int, .Float => {
+                        //         std.log.debug("Deser value: {}", .{@field(out, field.name)});
+                        //     },
+                        //     else => {
+                        //         if (field.field_type == ?[]const u8) {
+                        //             if (@field(out, field.name)) |v|
+                        //                 std.log.debug("Deser value: {s}", .{v})
+                        //             else
+                        //                 std.log.debug("Deser value: null", .{});
+                        //         } else if (field.field_type == ?types.Damage or
+                        //             field.field_type == ?types.Direction)
+                        //         {
+                        //             std.log.debug("Deser value: {}", .{@field(out, field.name)});
+                        //         } else {
+                        //             std.log.debug("Deser value: skip", .{});
+                        //         }
+                        //     },
+                        // }
+                    } else if (keep_field) {
+                        @field(out, field.name) = @field(oldobj, field.name);
                     }
                 }
             }
@@ -458,6 +478,7 @@ pub fn initPointerContainers() void {
                 if (mem.eql(u8, declinfo.name, ptrinit.container)) {
                     const container = &@field(state, declinfo.name);
                     var i: usize = ptrinit.init_up_to -| container.len();
+                    std.log.info("initing {s} ({s}), up to {} ({})", .{ ptrinit.container, declinfo.name, ptrinit.init_up_to, i });
                     while (i > 0) : (i -= 1) {
                         container.append(undefined) catch err.wat();
                     }
@@ -488,6 +509,7 @@ pub fn serializeWorld() !void {
     try serializeWE(@TypeOf(ptrinits), ptrinits, f.writer());
 
     try serializeWE(@TypeOf(state.mobs), state.mobs, f.writer());
+    // try serializeWE(types.Mob, state.player.*, f.writer());
 }
 
 pub fn deserializeWorld() !void {
@@ -504,4 +526,5 @@ pub fn deserializeWorld() !void {
     initPointerContainers();
 
     try deserializeWE(@TypeOf(state.mobs), &state.mobs, f.reader(), alloc);
+    // try deserializeWE(types.Mob, state.player, f.reader(), alloc);
 }

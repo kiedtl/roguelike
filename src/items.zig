@@ -1798,6 +1798,25 @@ pub const SHOCK2_STRS = [_]DamageStr{
     _dmgstr(100, "electrocutes", "electrocutes", ""),
 };
 
+// Mob weapons {{{
+pub const NONE_WEAPON = Weapon{
+    .id = "",
+    .name = "blue plastic train",
+    .damage = 0,
+    .strs = &[_]DamageStr{_dmgstr(80, "hurl", "hurls", " at kiedtl")},
+};
+
+pub const W_SWORD_1 = Weapon{ .damage = 1, .strs = &SLASHING_STRS, .name = "sword" };
+pub const W_SWORD_2 = Weapon{ .damage = 2, .strs = &SLASHING_STRS, .name = "sword" };
+pub const W_KNOUT_3 = Weapon{ .damage = 3, .strs = &CRUSHING_STRS, .delay = 200, .name = "knout" };
+pub const W_BLUDG_1 = Weapon{ .damage = 1, .strs = &CRUSHING_STRS, .name = "bludgeon" };
+pub const W_BLUDG_2 = Weapon{ .damage = 2, .strs = &CRUSHING_STRS, .name = "bludgeon" };
+pub const W_MACES_2 = Weapon{ .damage = 2, .strs = &CRUSHING_STRS, .name = "mace" };
+pub const W_MACES_3 = Weapon{ .damage = 3, .strs = &CRUSHING_STRS, .name = "mace" };
+pub const W_MSWRD_1 = Weapon{ .damage = 1, .strs = &SLASHING_STRS, .name = "martial sword", .martial = true };
+pub const W_SPROD_1 = Weapon{ .damage = 1, .damage_kind = .Electric, .strs = &SHOCK_STRS, .name = "shock prod" };
+// }}}
+
 // Body weapons {{{
 pub const FistWeapon = Weapon{
     .id = "none",

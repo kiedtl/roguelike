@@ -745,8 +745,13 @@ fn viewerMain() void {
 
             if (t == termbox.TB_EVENT_KEY) {
                 if (ev.key != 0) {
-                    if (ev.key == termbox.TB_KEY_CTRL_C) {
-                        break;
+                    switch (ev.key) {
+                        termbox.TB_KEY_CTRL_C => break,
+                        termbox.TB_KEY_F7 => {
+                            serializer.serializeWorld() catch err.wat();
+                            serializer.deserializeWorld() catch err.wat();
+                        },
+                        else => {},
                     }
                 } else if (ev.ch != 0) {
                     switch (ev.ch) {

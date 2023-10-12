@@ -162,10 +162,18 @@ pub fn LinkedList(comptime T: type) type {
         }
 
         pub fn deserialize(out: *@This(), in: anytype, alloc: mem.Allocator) !void {
-            out.* = @This().init(alloc);
-            var i = try serializer.deserializeQ(usize, in, alloc);
-            while (i > 0) : (i -= 1)
-                try out.append(try serializer.deserializeQ(T, in, alloc));
+            //out.* = @This().init(alloc);
+            const neededlen = try serializer.deserializeQ(usize, in, alloc);
+
+            if (neededlen > out.len()) {
+                var i = out.len();
+                while (i < neededlen) : (i += 1) try out.append(undefined);
+            }
+
+            var i: usize = 0;
+            while (i < neededlen) : (i += 1) {
+                try serializer.deserialize(T, out.nth(i).?, in, alloc);
+            }
         }
 
         // Deserialization stuff
