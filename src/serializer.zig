@@ -19,6 +19,7 @@ const GeneratorCtx = @import("generators.zig").GeneratorCtx;
 
 pub const Error = error{ PointerNotFound, MismatchedPointerTypes, CorruptedData, MismatchedType, InvalidUnionField } || std.ArrayList(u8).Writer.Error || std.mem.Allocator.Error || std.fs.File.Reader.Error || std.fs.File.Writer.Error || error{EndOfStream} || microtar.MTar.Error;
 
+const FIELDS_ALWAYS_SKIP_LIST = [_][]const u8{ "__next", "__prev" };
 const FIELDS_ALWAYS_KEEP_LIST = [_][]const u8{ "__next", "__prev" };
 
 const STATIC_CONTAINERS = [_]struct {
@@ -330,7 +331,7 @@ pub fn deserialize(comptime T: type, out: *T, in: anytype, alloc: mem.Allocator)
 
                 const noser = if (@hasDecl(T, "__SER_SKIP")) T.__SER_SKIP else [_][]const u8{};
                 inline for (info.fields) |field| {
-                    const noser_field = comptime for (noser) |item| {
+                    const noser_field = comptime for (noser ++ FIELDS_ALWAYS_SKIP_LIST) |item| {
                         @setEvalBranchQuota(9999);
                         if (mem.eql(u8, item, field.name)) break true;
                     } else false;
@@ -408,10 +409,10 @@ pub fn deserializeExpect(comptime T: type, in: anytype, alloc: mem.Allocator) !v
     } else null;
     if (typeid != _typeId(T)) {
         if (typeid_str) |f| {
-            std.log.err("Serialization: expected type {}, found {s}", .{ T, f });
+            std.log.err("Deserialization: expected type {}, found {s}", .{ T, f });
             return error.MismatchedType;
         } else {
-            std.log.err("Serialization: expected type {}, found corrupted data", .{T});
+            std.log.err("Deserialization: expected type {}, found corrupted data", .{T});
             return error.CorruptedData;
         }
     } else {
@@ -509,7 +510,19 @@ pub fn serializeWorld() !void {
     try serializeWE(@TypeOf(ptrtable), ptrtable, f.writer());
     try serializeWE(@TypeOf(ptrinits), ptrinits, f.writer());
 
-    try serializeWE(@TypeOf(state.mobs), state.mobs, f.writer());
+    comptime var begin = false;
+    inline for (meta.declarations(state)) |declinfo| {
+        if (declinfo.is_pub) {
+            if (comptime mem.eql(u8, declinfo.name, "__SER_BEGIN")) {
+                begin = true;
+            } else if (comptime mem.eql(u8, declinfo.name, "__SER_STOP")) {
+                begin = false;
+            } else if (begin) {
+                const decl = @field(state, declinfo.name);
+                try serializeWE(@TypeOf(decl), decl, f.writer());
+            }
+        }
+    }
 }
 
 pub fn deserializeWorld() !void {

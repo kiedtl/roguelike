@@ -520,6 +520,19 @@ pub const NetProj = Projectile{
 
 pub const EvocableList = LinkedList(Evocable);
 pub const Evocable = struct {
+    pub const __SER_SKIP = [_][]const u8{ "id", "name", "trigger_fn" };
+
+    pub fn __SER_GET_ID(self: *const @This()) []const u8 {
+        return self.id;
+    }
+
+    pub fn __SER_GET_PROTO(id: []const u8) @This() {
+        return for (&itemlists.EVOCABLES) |template| {
+            if (mem.eql(u8, template.id, id))
+                break template;
+        } else err.bug("Deserialization: No proto for id {s}", .{id});
+    }
+
     // linked list stuff
     __next: ?*Evocable = null,
     __prev: ?*Evocable = null,

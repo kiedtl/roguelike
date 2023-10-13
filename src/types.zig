@@ -1748,9 +1748,7 @@ pub const StatusDataInfo = struct {
 pub const AIPhase = enum { Work, Hunt, Investigate, Flee };
 
 pub const AI = struct {
-    pub const __SER_SKIP = [_][]const u8{
-        "flags",
-    };
+    pub const __SER_SKIP = [_][]const u8{"flags"};
 
     // Name of mob doing the profession.
     profession_name: ?[]const u8 = null,
@@ -2048,14 +2046,7 @@ pub const Stat = enum {
 };
 
 pub const Mob = struct { // {{{
-    pub const __SER_SKIP = [_][]const u8{
-        "__next",
-        "__prev",
-        "id",
-        "species",
-        "slain_trigger",
-        "spells",
-    };
+    pub const __SER_SKIP = [_][]const u8{ "id", "species", "slain_trigger", "spells" };
 
     pub fn __SER_GET_ID(self: *const Mob) []const u8 {
         return self.id;
@@ -4454,6 +4445,27 @@ pub const Mob = struct { // {{{
 }; // }}}
 
 pub const Machine = struct {
+    pub const __SER_SKIP = [_][]const u8{
+        "id",
+        "name",
+        "announce",
+        "spells",
+        "on_power",
+        "on_place",
+        "player_interact",
+    };
+
+    pub fn __SER_GET_ID(self: *const @This()) []const u8 {
+        return self.id;
+    }
+
+    pub fn __SER_GET_PROTO(id: []const u8) @This() {
+        return for (&surfaces.MACHINES) |template| {
+            if (mem.eql(u8, template.id, id))
+                break template;
+        } else err.bug("Deserialization: No proto for id {s}", .{id});
+    }
+
     // linked list stuff
     __next: ?*Machine = null,
     __prev: ?*Machine = null,
@@ -4933,6 +4945,8 @@ pub const Vial = enum {
 };
 
 pub const Ring = struct {
+    pub const __SER_SKIP = [_][]const u8{ "name", "color", "effect" };
+
     // linked list stuff
     __next: ?*Ring = null,
     __prev: ?*Ring = null,

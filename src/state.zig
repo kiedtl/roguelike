@@ -89,16 +89,6 @@ pub fn mapRect(level: usize) Rect {
     return Rect{ .start = Coord.new2(level, 0, 0), .width = WIDTH, .height = HEIGHT };
 }
 
-// Cached return value of player.isPlayerSpotted()
-pub var player_is_spotted: struct {
-    is_spotted: bool,
-    turn_cached: usize,
-} = .{ .is_spotted = false, .turn_cached = 0 };
-
-// Unused now
-pub var default_patterns = [_]types.Ring{};
-
-// Data objects
 pub const MemoryTile = struct {
     tile: display.Cell,
     type: Type = .Immediate,
@@ -106,6 +96,19 @@ pub const MemoryTile = struct {
     pub const Type = enum { Immediate, Echolocated, DetectUndead };
 };
 pub const MemoryTileMap = std.AutoHashMap(Coord, MemoryTile);
+
+// Unused now
+pub var default_patterns = [_]types.Ring{};
+
+pub const __SER_BEGIN = {};
+
+// Cached return value of player.isPlayerSpotted()
+pub var player_is_spotted: struct {
+    is_spotted: bool,
+    turn_cached: usize,
+} = .{ .is_spotted = false, .turn_cached = 0 };
+
+// Data objects
 pub var memory: MemoryTileMap = undefined;
 
 pub var rooms: [LEVELS]mapgen.Room.ArrayList = undefined;
@@ -161,6 +164,8 @@ pub var night_rep = [types.Faction.TOTAL]isize{
 
 pub var player_upgrades: [3]player_m.PlayerUpgradeInfo = undefined;
 pub var player_conj_augments: [player_m.ConjAugment.TOTAL]player_m.ConjAugmentInfo = undefined;
+
+pub const __SER_STOP = {};
 
 // Data files
 pub const MapgenInfos = struct {
