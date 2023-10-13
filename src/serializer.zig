@@ -478,7 +478,6 @@ pub fn initPointerContainers() void {
                 if (mem.eql(u8, declinfo.name, ptrinit.container)) {
                     const container = &@field(state, declinfo.name);
                     var i: usize = ptrinit.init_up_to -| container.len();
-                    std.log.info("initing {s} ({s}), up to {} ({})", .{ ptrinit.container, declinfo.name, ptrinit.init_up_to, i });
                     while (i > 0) : (i -= 1) {
                         container.append(undefined) catch err.wat();
                     }
@@ -488,9 +487,10 @@ pub fn initPointerContainers() void {
 }
 
 pub fn serializeWorld() !void {
-    var tar = try microtar.MTar.init("dump.tar", "w");
-    defer tar.deinit();
-    var f = std.fs.cwd().openFile("dump.dat", .{ .write = true }) catch err.wat();
+    // var tar = try microtar.MTar.init("dump.tar", "w");
+    // defer tar.deinit();
+
+    var f = std.fs.cwd().createFile("dump.dat", .{}) catch err.wat();
     defer f.close();
 
     // tar.writer()
@@ -510,7 +510,6 @@ pub fn serializeWorld() !void {
     try serializeWE(@TypeOf(ptrinits), ptrinits, f.writer());
 
     try serializeWE(@TypeOf(state.mobs), state.mobs, f.writer());
-    // try serializeWE(types.Mob, state.player.*, f.writer());
 }
 
 pub fn deserializeWorld() !void {
@@ -519,7 +518,7 @@ pub fn deserializeWorld() !void {
     // var tar = try microtar.MTar.init("dump.tar", "w");
     // defer tar.deinit();
 
-    var f = std.fs.cwd().openFile("dump.dat", .{ .write = true }) catch err.wat();
+    var f = std.fs.cwd().openFile("dump.dat", .{}) catch err.wat();
     defer f.close();
 
     try deserializeWE(@TypeOf(ptrtable), &ptrtable, f.reader(), alloc);
@@ -527,5 +526,4 @@ pub fn deserializeWorld() !void {
     initPointerContainers();
 
     try deserializeWE(@TypeOf(state.mobs), &state.mobs, f.reader(), alloc);
-    // try deserializeWE(types.Mob, state.player, f.reader(), alloc);
 }

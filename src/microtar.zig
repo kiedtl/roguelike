@@ -4,6 +4,7 @@ const std = @import("std");
 
 pub const MTar = struct {
     ctx: cmtar.mtar_t = undefined,
+    write: bool = false,
 
     pub const Error = error{
         UnknownError,
@@ -16,8 +17,8 @@ pub const MTar = struct {
         NotFound,
     };
 
-    pub fn errorFromC(v: c_int) Error!noreturn {
-        return switch (v) {
+    pub inline fn errorFromC(v: c_int) Error {
+        const f = switch (v) {
             cmtar.MTAR_EFAILURE => error.UnknownError,
             cmtar.MTAR_EREADFAIL => error.ReadFailure,
             cmtar.MTAR_EWRITEFAIL => error.WriteFailure,
@@ -28,6 +29,8 @@ pub const MTar = struct {
             cmtar.MTAR_ENOTFOUND => error.NotFound,
             else => unreachable,
         };
+        std.log.info("f: {}", .{f});
+        unreachable;
     }
 
     pub const WriterCtx = struct { mtar: *MTar, header: []const u8 };
@@ -39,30 +42,32 @@ pub const MTar = struct {
     pub fn init(file: []const u8, mode: [:0]const u8) !@This() {
         var tar: cmtar.mtar_t = undefined;
         return switch (cmtar.mtar_open(&tar, file.ptr, mode)) {
-            cmtar.MTAR_ESUCCESS => .{ .ctx = tar },
-            cmtar.MTAR_EOPENFAIL => error.OpenFailure,
-            cmtar.MTAR_ENOTFOUND => error.NotFound,
-            else => unreachable,
+            cmtar.MTAR_ESUCCESS => .{ .ctx = tar, .write = mode[0] == 'w' },
+            else => |v| errorFromC(v),
         };
     }
 
-    pub fn deinit(self: *@This()) void {
-        _ = cmtar.mtar_finalize(&self.ctx);
-        _ = cmtar.mtar_close(&self.ctx);
+    pub fn deinit(self: *@This()) !void {
+        if (self.write) {
+            const r1 = cmtar.mtar_finalize(&self.ctx);
+            if (r1 != cmtar.MTAR_ESUCCESS) return errorFromC(r1);
+        }
+        const artoo = cmtar.mtar_close(&self.ctx);
+        if (artoo != cmtar.MTAR_ESUCCESS) return errorFromC(artoo);
     }
 
     pub fn writer(self: *@This(), header: [:0]const u8) Error!Writer {
         var h: cmtar.mtar_header_t = undefined;
-        const already_has = while (cmtar.mtar_read_header(&self.ctx, &h) != cmtar.MTAR_ENULLRECORD) {
+        const already_has = while (cmtar.mtar_read_header(&self.ctx, &h) == cmtar.MTAR_ESUCCESS) {
             if (std.mem.eql(u8, header, std.mem.span(&h.name))) break true;
         } else false;
 
         if (!already_has) {
             const r = cmtar.mtar_write_file_header(&self.ctx, header.ptr, @intCast(c_uint, header.len));
-            if (r != cmtar.MTAR_ESUCCESS) try errorFromC(r);
+            if (r != cmtar.MTAR_ESUCCESS) return errorFromC(r);
         } else @panic("nah"); // TODO: see if mtar library can seek to area and append
 
-        return Writer{ .context = .{ .mtar = self.ctx, .header = header } };
+        return Writer{ .context = .{ .mtar = self, .header = header } };
     }
 
     pub fn write(self: WriterCtx, bytes: []const u8) Error!usize {
@@ -79,8 +84,8 @@ pub const MTar = struct {
     }
 
     pub fn reader(self: *@This(), header: [:0]const u8) Error!Reader {
-        const r = cmtar.mtar_find(&self.ctx, header.ptr, @intCast(c_uint, header.len));
-        if (r != cmtar.MTAR_ESUCCESS) try errorFromC(r);
+        const r = cmtar.mtar_find(&self.ctx, header.ptr, null);
+        if (r != cmtar.MTAR_ESUCCESS) return errorFromC(r);
 
         return Reader{ .context = .{ .mtar = self, .header = header } };
     }
@@ -89,7 +94,7 @@ pub const MTar = struct {
         const r = cmtar.mtar_read_data(&self.mtar.ctx, buffer.ptr, @intCast(c_uint, buffer.len));
         return switch (r) {
             cmtar.MTAR_ESUCCESS => buffer.len,
-            else => try errorFromC(r),
+            else => return errorFromC(r),
         };
     }
 };

@@ -18,7 +18,7 @@ pub fn ensure(expr: bool, comptime err_message: []const u8, args: anytype) !void
 pub fn bug(comptime fmt: []const u8, args: anytype) noreturn {
     @setCold(true);
 
-    ui.deinit() catch {};
+    // ui.deinit() catch {}; // Panic already deinits UI
     std.log.err("Fatal bug encountered. (Seed: {})", .{state.seed});
     std.log.err("BUG: " ++ fmt, args);
 
