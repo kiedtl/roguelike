@@ -5,6 +5,9 @@
 - don't store state in prefab list, everything should be in fab_records
   - usage data
   - for serialization
+- serialization optimizations
+  - optimize fov
+  - don't serialize path_cache
 
 - borders around map in examine mode
 
