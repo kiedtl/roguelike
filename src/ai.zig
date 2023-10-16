@@ -578,7 +578,7 @@ pub fn checkForAllies(mob: *Mob) void {
 }
 
 pub fn checkForNoises(mob: *Mob) void {
-    if (!mob.ai.is_curious) {
+    if (mob.deaf) {
         return;
     }
 
@@ -587,11 +587,16 @@ pub fn checkForNoises(mob: *Mob) void {
         return;
     }
 
+    const vision = mob.stat(.Vision);
+
     var y: usize = 0;
     while (y < HEIGHT) : (y += 1) {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
             const coord = Coord.new2(mob.coord.z, x, y);
+            if (mob.distance2(coord) > vision)
+                continue;
+
             if (mob.canHear(coord)) |sound| {
                 if (sound.mob_source) |othermob| {
                     // Just because one guard made some noise running over to

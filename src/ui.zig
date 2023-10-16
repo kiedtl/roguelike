@@ -999,7 +999,7 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
     if (mob.ai.is_curious and !mob.deaf)
         _writerWrite(w, "· investigates noises\n", .{})
     else
-        _writerWrite(w, "· won't investigate noises\n", .{});
+        _writerWrite(w, "· won't check noises outside FOV\n", .{});
     if (mob.ai.flag(.SocialFighter) or mob.ai.flag(.SocialFighter2))
         _writerWrite(w, "· won't attack alone\n", .{});
     if (mob.ai.flag(.MovesDiagonally))
