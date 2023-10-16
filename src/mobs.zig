@@ -1256,7 +1256,8 @@ pub const EmberMageTemplate = MobTemplate{
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
-            .{ .mob = "emberling", .weight = 1, .count = minmax(usize, 2, 4) },
+            .{ .mob = "emberling", .weight = 9, .count = minmax(usize, 1, 2) },
+            .{ .mob = "emberling", .weight = 1, .count = minmax(usize, 2, 3) },
         },
     },
 };
