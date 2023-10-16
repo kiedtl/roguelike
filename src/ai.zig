@@ -1343,16 +1343,22 @@ pub fn workerFight(mob: *Mob, _: mem.Allocator) void {
     // Do we really want to do this? There may be some cases I've forgotten
     // about where enemies deliberately purge knowledge of enemy...
     //
-    // NOTE: 2023-08-10: not sure why we're doing this? Is it to prevent forgetting
-    // the enemy too quickly?
+    // NOTE: 2023-08-10: not sure why we're doing this? Is it to prevent
+    // forgetting the enemy too quickly?
+    //
+    // NOTE: 2023-10-16: aha, it's to ensure workers always flee from current
+    // position of enemy, rather than last known position of enemy. I think. In
+    // which case the original comment doesn't really make sense? (because the
+    // memory duration isn't being affected)
     //
     if (closestEnemy(mob).last_seen == null)
         closestEnemy(mob).last_seen = closestEnemy(mob).mob.coord;
 
-    if (!runAwayFromEnemies(mob, 24))
+    if (!runAwayFromEnemies(mob, 16))
         tryRest(mob);
 
-    alertAllyOfHostile(mob);
+    if (closestEnemy(mob).alerted_allies < 3)
+        alertAllyOfHostile(mob);
 }
 
 pub fn meleeFight(mob: *Mob, _: mem.Allocator) void {
