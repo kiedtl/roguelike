@@ -3189,7 +3189,7 @@ pub const Mob = struct { // {{{
         auto_hit: bool = false,
         disallow_stab: bool = false,
         damage_bonus: usize = 100, // percentage
-        loudness: SoundIntensity = .Medium,
+        loudness: SoundIntensity = .Loud,
 
         is_bonus: bool = false,
         is_riposte: bool = false,
@@ -3325,8 +3325,7 @@ pub const Mob = struct { // {{{
             .is_copper = weapon_damage.copper_bonus,
         });
 
-        // XXX: should this be .Loud instead of .Medium?
-        attacker.makeNoise(.Combat, if (is_stab) .Quiet else opts.loudness);
+        attacker.makeNoise(.Combat, if (is_stab) .Medium else opts.loudness);
 
         // Weapon effects.
         for (attacker_weapon.effects) |effect| {
