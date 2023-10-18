@@ -147,6 +147,8 @@ pub fn reportThreat(by: ?*Mob, threat: Threat, threattype: ThreatIncrease) void 
         return;
     }
 
+    // state.message(.Info, "Report by {f} on threat {}: {}", .{ by, threat, threattype });
+
     const info = getThreat(threat);
 
     onThreatIncrease(z, threat, info.level, info.level + @enumToInt(threattype));

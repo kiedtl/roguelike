@@ -3802,6 +3802,14 @@ pub const Mob = struct { // {{{
             } else false;
             if (is_killer_confirmed)
                 self.corpse_info.killer_confirmed = true;
+
+            if (self.life_type == .Undead) {
+                const threat = if (self.corpse_info.killer_confirmed)
+                    alert.Threat{ .Specific = self.killed_by.? }
+                else
+                    .Unknown;
+                alert.reportThreat(self, threat, .Death);
+            }
         }
 
         self.deinit();

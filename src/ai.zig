@@ -1835,9 +1835,9 @@ pub fn _Job_WRK_ExamineCorpse(mob: *Mob, job: *AIJob) AIJob.JStatus {
 
                 // Summon reinforcements (irregardless of whether killer is
                 // confirmed or not), only refraining from doing so if the
-                // killer isn't the player and hasn't been noticed dead. This
-                // is to prevent floor from filling up with reinforcements from
-                // a short-lived player-instigated prisoner rebellion.
+                // killer isn't the player and has been noticed dead. This is
+                // to prevent floor from filling up with reinforcements from a
+                // short-lived player-instigated prisoner rebellion.
                 //
                 if (killed_by == state.player or !killed_by.corpse_info.is_noticed) {
                     if (switch (state.layout[corpse.coord.z][corpse.coord.y][corpse.coord.x]) {
