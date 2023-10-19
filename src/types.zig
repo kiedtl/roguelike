@@ -5196,7 +5196,7 @@ pub const Tile = struct {
             //     cell.bg = math.clamp(red, 0x66, 0xff) << 16;
             // }
 
-            if (!mob.ai.is_combative and mob.ai.fight_fn == ai.workerFight) {
+            if (!mob.ai.is_combative or mob.ai.fight_fn == ai.workerFight) {
                 cell.fg = colors.AQUAMARINE;
             }
 
