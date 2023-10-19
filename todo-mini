@@ -1,7 +1,4 @@
-- non-deaf creatures should wake up on nearby noise
-  - and maybe look in that direction
 - if coroner dies, next coroners should be escorted
-- if undead die, alert should immediately go up
 - don't store state in prefab list, everything should be in fab_records
   - usage data
   - for serialization
@@ -14,6 +11,9 @@
 - item: paras when elec damage is resisted, +50% rElec
 - restroom prefab
 
+- if undead die, alert should immediately go up
+- non-deaf creatures should wake up on nearby noise
+  - and maybe look in that direction
 - rename :material/:terrain to :g_*
 - armory/weapon room prefab for lower levels
 - profile item/ring gen
