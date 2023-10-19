@@ -669,15 +669,23 @@ fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceIte
             _writerHLine(w, linewidth);
         },
         .Stair => |s| {
-            if (s == null) {
+            if (s.stairtype == .Down) {
                 _writerWrite(w, "$cDownward Stairs$.\n\n", .{});
-                _writerWrite(w, "$gGoing back down would sure be dumb.$.\n", .{});
-            } else {
-                _writerWrite(w, "$cUpward Stairs$.\n\nStairs to {s}.\n", .{state.levelinfo[s.?].name});
+            } else if (s.stairtype == .Access) {
+                _writerWrite(w, "$cUpward Stairs$.\n\nStairs to outside.\n", .{});
 
-                if (state.levelinfo[s.?].optional) {
+                _writerWrite(w, "\nIt seems your journey is over.\n", .{});
+            } else {
+                _writerWrite(w, "$cUpward Stairs$.\n\nStairs to {s}.\n", .{state.levelinfo[s.stairtype.Up].name});
+
+                if (state.levelinfo[s.stairtype.Up].optional) {
                     _writerWrite(w, "\nThese stairs are $coptional$. and lead to more difficult floors.\n", .{});
                 }
+            }
+
+            if (s.locked) {
+                assert(s.stairtype != .Down);
+                _writerWrite(w, "\n$bA key is needed to unlock these stairs.$.\n", .{});
             }
         },
         .Corpse => |c| {
@@ -1504,7 +1512,11 @@ fn drawHUD(moblist: []const *Mob) void {
                     .Corpse => "corpse",
                     .Container => |c| c.name,
                     .Poster => "poster",
-                    .Stair => |s| if (s != null) "upward stairs" else "",
+                    .Stair => |s| switch (s.stairtype) {
+                        .Up => "upward stairs",
+                        .Access => "main stairway",
+                        .Down => "",
+                    },
                 }) catch err.wat();
             } else if (!mem.eql(u8, state.dungeon.terrainAt(coord).id, "t_default")) {
                 priority = 1;

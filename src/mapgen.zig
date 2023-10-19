@@ -64,6 +64,7 @@ const Evocable = items.Evocable;
 const EvocableList = items.EvocableList;
 const Cloak = items.Cloak;
 const Poster = literature.Poster;
+const Stair = surfaces.Stair;
 
 // Individual configurations.
 //
@@ -818,8 +819,8 @@ pub fn excavatePrefab(
                 .Feature => |feature_id| {
                     if (fab.features[feature_id]) |feature| {
                         switch (feature) {
-                            .Stair => |dest| {
-                                state.dungeon.at(rc).surface = .{ .Stair = dest };
+                            .Stair => |stair| {
+                                state.dungeon.at(rc).surface = .{ .Stair = stair };
                             },
                             .Item => |template| {
                                 state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(template)) catch err.wat();
@@ -2919,7 +2920,7 @@ pub fn placeStair(level: usize, dest_floor: usize, alloc: mem.Allocator) void {
     // Create some stairs!
     const up_staircase = locations.items[locations.items.len - 1];
     state.dungeon.at(up_staircase).type = .Floor;
-    state.dungeon.at(up_staircase).surface = .{ .Stair = dest_floor };
+    state.dungeon.at(up_staircase).surface = Stair.newUp(dest_floor);
     switch (state.layout[level][up_staircase.y][up_staircase.x]) {
         .Room => |r| state.rooms[level].items[r].has_stair = true,
         else => {},
@@ -2971,7 +2972,7 @@ pub fn placeEntry(level: usize, alloc: mem.Allocator) bool {
     const down_staircase = rng.chooseUnweighted(Coord, reciever_locations.items);
 
     state.dungeon.at(down_staircase).type = .Floor;
-    state.dungeon.at(down_staircase).surface = .{ .Stair = null };
+    state.dungeon.at(down_staircase).surface = Stair.newDown();
     switch (state.layout[level][down_staircase.y][down_staircase.x]) {
         .Room => |r| state.rooms[level].items[r].has_stair = true,
         else => {},
@@ -3753,7 +3754,7 @@ pub const Prefab = struct {
             points: StackBuffer(Coord, 16),
         },
         Prop: [32:0]u8,
-        Stair: usize,
+        Stair: surfaces.Stair,
     };
 
     pub const Connection = struct {
@@ -4248,6 +4249,26 @@ pub const Prefab = struct {
 
                                 f.features[identifier] = feature;
                                 f.features_global[identifier] = is_global;
+                            } else if (mem.eql(u8, feature_type, "Cstair")) {
+                                const rest = line[@ptrToInt((id orelse return error.MalformedFeatureDefinition).ptr) - @ptrToInt(line.ptr) ..];
+                                var cbf_p = cbf.Parser{ .input = rest };
+                                var res = try cbf_p.parse(state.gpa.allocator());
+                                defer cbf.Parser.deinit(&res);
+
+                                const r = cbf.deserializeStruct(struct {
+                                    locked: bool = false,
+                                    stairtype: union(enum) { Up: []const u8, Down, Access },
+                                }, res.items[0].value.List, .{ .stairtype = .Down }) catch
+                                    return error.InvalidMetadataValue;
+                                const artoo = surfaces.Stair{
+                                    .locked = r.locked,
+                                    .stairtype = switch (r.stairtype) {
+                                        .Up => |stairid| .{ .Up = state.findLevelByName(stairid) orelse return error.InvalidMetadataValue },
+                                        .Access => .Access,
+                                        .Down => .Down,
+                                    },
+                                };
+                                f.features[identifier] = Feature{ .Stair = artoo };
                             } else {
                                 return error.InvalidFeatureType;
                             }
@@ -4255,7 +4276,7 @@ pub const Prefab = struct {
                         's' => {
                             const level = state.findLevelByName(id orelse return error.InvalidMetadataValue) orelse
                                 return error.InvalidMetadataValue;
-                            f.features[identifier] = Feature{ .Stair = level };
+                            f.features[identifier] = Feature{ .Stair = .{ .stairtype = .{ .Up = level } } };
                             f.features_global[identifier] = is_global;
                         },
                         'M' => {

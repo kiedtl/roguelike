@@ -2985,8 +2985,11 @@ pub const Mob = struct { // {{{
                         return player.triggerPoster(dest);
                     },
                     .Stair => |s| if (self == state.player) {
-                        if (s) |floor| {
-                            return player.triggerStair(dest, floor);
+                        if (s.stairtype == .Up) {
+                            return player.triggerStair(dest, s.stairtype.Up);
+                        } else if (s.stairtype == .Access) {
+                            state.state = .Win;
+                            return true;
                         } else {
                             ui.drawAlertThenLog("Why would you want to go back?", .{});
                         }
@@ -4762,7 +4765,7 @@ pub const SurfaceItem = union(SurfaceItemTag) {
     Prop: *Prop,
     Container: *Container,
     Poster: *const Poster,
-    Stair: ?usize, // null = downstairs
+    Stair: surfaces.Stair,
 
     pub fn id(self: SurfaceItem) []const u8 {
         return switch (self) {
@@ -5279,19 +5282,27 @@ pub const Tile = struct {
                     cell.sbg = colors.BG;
                 },
                 .Stair => |s| {
-                    if (s == null) {
+                    if (s.stairtype == .Down) {
                         cell.ch = '>';
                         cell.sch = .S_G_StairsDown;
                         cell.fg = 0xeeeeee;
                         cell.bg = 0x0000ff;
                     } else {
-                        cell.ch = if (state.levelinfo[s.?].optional) '≤' else '<';
+                        const optional = s.stairtype != .Access and state.levelinfo[s.stairtype.Up].optional;
+                        cell.ch = if (optional) '≤' else '<';
                         cell.bg = 0x997700;
                         cell.fg = 0xffd700;
 
-                        cell.sch = if (state.levelinfo[s.?].optional) .S_G_M_DoorShut else .S_G_StairsUp;
+                        cell.sch = if (optional) .S_G_M_DoorShut else .S_G_StairsUp;
                         cell.sbg = colors.BG;
                         cell.sfg = 0xffd700;
+
+                        if (s.locked) {
+                            cell.bg = 0x992200;
+                            cell.fg = 0xff4400;
+                            cell.sbg = colors.BG;
+                            cell.sfg = 0xff4400;
+                        }
                     }
                 },
             }

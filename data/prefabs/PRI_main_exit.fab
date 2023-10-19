@@ -13,11 +13,7 @@
 :notraps
 :noguards
 
-@0 m stair_exit
-
-%...
-%.0.
-%...
+@0 Cstair ([stairtype](Access) [locked]yea)
 
 •#*#•
 #...#

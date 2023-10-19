@@ -23,6 +23,7 @@ const Value = union(enum) {
     Char: u21,
     List: KVList,
     Usize: usize,
+    Isize: isize,
 };
 
 const Key = union(enum) {
@@ -157,6 +158,9 @@ pub const Parser = struct {
             if (mem.endsWith(u8, word, "z")) {
                 const num = try std.fmt.parseInt(usize, word[0 .. word.len - 1], 10);
                 return Value{ .Usize = num };
+            } else if (mem.endsWith(u8, word, "i")) {
+                const num = try std.fmt.parseInt(isize, word[0 .. word.len - 1], 10);
+                return Value{ .Isize = num };
             } else {
                 return Value{ .String = StringBuffer.init(word) };
             }
@@ -428,6 +432,8 @@ pub fn deserializeValue(comptime T: type, val: Value, default: ?T) !T {
         .Int => switch (val) {
             .Char => |c| @intCast(T, c),
             .String => |s| fmt.parseInt(T, s.constSlice(), 0) catch error.E,
+            .Usize => |u| if (T == usize) u else error.E,
+            .Isize => |u| if (T == isize) u else error.E,
             else => error.E,
         },
         .Float => switch (val) {
@@ -436,6 +442,26 @@ pub fn deserializeValue(comptime T: type, val: Value, default: ?T) !T {
         },
         .Enum => switch (val) {
             .String => |s| std.meta.stringToEnum(T, s.constSlice()) orelse error.E,
+            else => error.E,
+        },
+        .Union => switch (val) {
+            .List => |l| {
+                if (l.items.len > 2 or l.items.len == 0) return error.E;
+                const tag = try deserializeValue(std.meta.Tag(T), l.items[0].value, null);
+                inline for (std.meta.fields(T)) |field| {
+                    if (mem.eql(u8, field.name, @tagName(tag))) {
+                        if (field.field_type == void) {
+                            if (l.items.len == 2) return error.E;
+                            return @unionInit(T, field.name, {});
+                        } else {
+                            if (l.items.len == 1) return error.E;
+                            const fld = try deserializeValue(field.field_type, l.items[1].value, null);
+                            return @unionInit(T, field.name, fld);
+                        }
+                    }
+                }
+                return error.E;
+            },
             else => error.E,
         },
         .Optional => |optional| switch (val) {
@@ -517,5 +543,42 @@ test "struct deserial" {
     try testing.expectEqual(r.baz, -2);
 
     Parser.deinit(&res);
+    try testing.expect(!gpa.deinit());
+}
+
+test "union deserial" {
+    const Type = union(enum) { foo: usize, bar: bool, baz: isize, flu };
+
+    var gpa = GPA{};
+
+    {
+        const input = "(foo 12)";
+        var p = Parser{ .input = input };
+        var res = try p.parse(gpa.allocator());
+        defer Parser.deinit(&res);
+        try testing.expectEqual(deserializeValue(Type, res.items[0].value, null), .{ .foo = 12 });
+    }
+    {
+        const input = "(bar nah)";
+        var p = Parser{ .input = input };
+        var res = try p.parse(gpa.allocator());
+        defer Parser.deinit(&res);
+        try testing.expectEqual(deserializeValue(Type, res.items[0].value, null), .{ .bar = false });
+    }
+    {
+        const input = "(baz -49)";
+        var p = Parser{ .input = input };
+        var res = try p.parse(gpa.allocator());
+        defer Parser.deinit(&res);
+        try testing.expectEqual(deserializeValue(Type, res.items[0].value, null), .{ .baz = -49 });
+    }
+    {
+        const input = "(flu)";
+        var p = Parser{ .input = input };
+        var res = try p.parse(gpa.allocator());
+        defer Parser.deinit(&res);
+        try testing.expectEqual(deserializeValue(Type, res.items[0].value, null), .flu);
+    }
+
     try testing.expect(!gpa.deinit());
 }

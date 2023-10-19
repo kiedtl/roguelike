@@ -68,6 +68,19 @@ pub var bottle_props: PropPtrAList = undefined;
 pub var tools_props: PropPtrAList = undefined;
 pub var armors_props: PropPtrAList = undefined;
 
+pub const Stair = struct {
+    stairtype: union(enum) { Up: usize, Down, Access },
+    locked: bool = false,
+
+    pub fn newUp(dest: usize) types.SurfaceItem {
+        return types.SurfaceItem{ .Stair = @This(){ .stairtype = .{ .Up = dest } } };
+    }
+
+    pub fn newDown() types.SurfaceItem {
+        return types.SurfaceItem{ .Stair = @This(){ .stairtype = .Down } };
+    }
+};
+
 pub const Terrain = struct {
     id: []const u8,
     name: []const u8,
@@ -269,7 +282,6 @@ pub const MACHINES = [_]Machine{
     SparklingWorkstation,
     Brazier,
     Lamp,
-    StairExit,
     NormalDoor,
     LabDoor,
     VaultDoor,
@@ -512,16 +524,6 @@ pub const Lamp = Machine{
 
     .flammability = 20,
     .on_power = powerNone,
-};
-
-pub const StairExit = Machine{
-    .id = "stair_exit",
-    .name = "exit staircase",
-    .powered_tile = '«',
-    .unpowered_tile = '«',
-    .powered_sprite = .S_G_StairsUp,
-    .unpowered_sprite = .S_G_StairsUp,
-    .on_power = powerStairExit,
 };
 
 pub const ParalysisGasTrap = Machine.createGasTrap("paralysing gas", &gas.Paralysis);
@@ -1405,13 +1407,6 @@ fn powerHealingGasPump(machine: *Machine) void {
 
     for (machine.areas.constSlice()) |coord| {
         state.dungeon.atGas(coord)[gas.Healing.id] = 100;
-    }
-}
-
-fn powerStairExit(machine: *Machine) void {
-    if (machine.last_interaction) |culprit| {
-        if (!culprit.coord.eq(state.player.coord)) return;
-        state.state = .Win;
     }
 }
 
