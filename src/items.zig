@@ -250,6 +250,11 @@ pub const ALL_ITEMS = [_]ItemTemplate{
     .{ .w = 0, .i = .{ .r = DisintegrationRing } },
 };
 
+pub const Key = struct {
+    lock: surfaces.Stair.Type,
+    level: usize,
+};
+
 // Cloaks {{{
 pub const Cloak = struct {
     id: []const u8,

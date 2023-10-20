@@ -1035,6 +1035,7 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
 
     const itemtype: []const u8 = switch (item) {
         .Ring => "ring",
+        .Key => "key",
         .Consumable => |c| if (c.is_potion) "potion" else "consumable",
         .Vial => "misc",
         .Projectile => "projectile",
@@ -1052,6 +1053,13 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
     _writerWrite(w, "\n", .{});
 
     switch (item) {
+        .Key => |k| switch (k.lock) {
+            .Up => |u| _writerWrite(w, "A key for the stairs to {s}", .{
+                state.levelinfo[u].name,
+            }),
+            .Access => _writerWrite(w, "A key for the main entrace", .{}),
+            .Down => _writerWrite(w, "On the key is a masterpiece engraving of a cockroach enjoying a hearty meal", .{}),
+        },
         .Ring => {},
         .Consumable => |p| {
             _writerHeader(w, linewidth, "effects", .{});

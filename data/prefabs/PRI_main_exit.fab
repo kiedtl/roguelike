@@ -12,14 +12,24 @@
 :nolights
 :notraps
 :noguards
+:noitems
 
 @0 Cstair ([stairtype](Access) [locked]yea)
+@p P
+This staircase has been barred after the attempted prison break on Oct 12;
+please using entrance from 0/Dining in the interim until a more permanent
+solution is found.
 
-•#*#•
-#...#
-*.0.*
-#...#
-•#*#•
+Only unlock after receiving explicit permission to do so (key is in Room 12).
+
+-- $bZilodothrod, Captain of the guard$.
+END POSTER
+
+•##*##•
+#.....#
+*..0..*
+#.....#
+•##*##•
 
 % ###########################
 % *...≡..#..#..#..#..#..≡...*

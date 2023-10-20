@@ -2985,14 +2985,7 @@ pub const Mob = struct { // {{{
                         return player.triggerPoster(dest);
                     },
                     .Stair => |s| if (self == state.player) {
-                        if (s.stairtype == .Up) {
-                            return player.triggerStair(dest, s.stairtype.Up);
-                        } else if (s.stairtype == .Access) {
-                            state.state = .Win;
-                            return true;
-                        } else {
-                            ui.drawAlertThenLog("Why would you want to go back?", .{});
-                        }
+                        return player.triggerStair(s, dest);
                     },
                     else => {},
                 }
@@ -4975,7 +4968,7 @@ pub const Ring = struct {
     effect: fn () bool,
 };
 
-pub const ItemType = enum { Ring, Consumable, Vial, Projectile, Armor, Cloak, Head, Aux, Weapon, Boulder, Prop, Evocable };
+pub const ItemType = enum { Ring, Consumable, Vial, Projectile, Armor, Cloak, Head, Aux, Weapon, Boulder, Prop, Evocable, Key };
 
 pub const Item = union(ItemType) {
     Weapon: *const Weapon,
@@ -4990,11 +4983,12 @@ pub const Item = union(ItemType) {
     Boulder: *const Material,
     Prop: *const Prop,
     Vial: Vial,
+    Key: items.Key,
 
     pub fn isUseful(self: Item) bool {
         return switch (self) {
             .Vial, .Boulder, .Prop => false,
-            .Projectile, .Cloak, .Head, .Aux, .Ring, .Consumable, .Armor, .Weapon, .Evocable => true,
+            .Key, .Projectile, .Cloak, .Head, .Aux, .Ring, .Consumable, .Armor, .Weapon, .Evocable => true,
         };
     }
 
@@ -5014,6 +5008,10 @@ pub const Item = union(ItemType) {
             .Vial => |v| {
                 cell.ch = '♪';
                 cell.fg = v.color();
+            },
+            .Key => {
+                cell.ch = '$';
+                cell.fg = 0xff4400;
             },
             .Projectile => |p| {
                 cell.ch = '(';
@@ -5056,6 +5054,7 @@ pub const Item = union(ItemType) {
             .Ring => |r| try fmt.format(fbs.writer(), "*{s}", .{r.name}),
             .Consumable => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
             .Vial => |v| try fmt.format(fbs.writer(), "♪{s}", .{v.name()}),
+            .Key => try fmt.format(fbs.writer(), "stair key", .{}),
             .Projectile => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
             .Armor => |a| try fmt.format(fbs.writer(), "]{s}", .{a.name}),
             .Cloak => |c| try fmt.format(fbs.writer(), "clk of {s}", .{c.name}),
@@ -5078,6 +5077,9 @@ pub const Item = union(ItemType) {
             .Ring => |r| try fmt.format(fbs.writer(), "ring of {s}", .{r.name}),
             .Consumable => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
             .Vial => |v| try fmt.format(fbs.writer(), "vial of {s}", .{v.name()}),
+            .Key => |k| try fmt.format(fbs.writer(), "stair key ({s})", .{
+                state.levelinfo[k.level].name,
+            }),
             .Projectile => |p| try fmt.format(fbs.writer(), "{s}", .{p.name}),
             .Armor => |a| try fmt.format(fbs.writer(), "{s}", .{a.name}),
             .Cloak => |c| try fmt.format(fbs.writer(), "cloak of {s}", .{c.name}),
@@ -5105,6 +5107,7 @@ pub const Item = union(ItemType) {
             .Evocable => |v| v.id,
             .Ring => |r| r.name,
             .Vial => "AMBIG_vial",
+            .Key => "AMBIG_key",
             .Boulder => "AMBIG_boulder",
         };
     }

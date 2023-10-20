@@ -255,17 +255,51 @@ pub fn triggerPoster(coord: Coord) bool {
     return false;
 }
 
-pub fn triggerStair(cur_stair: Coord, dest_floor: usize) bool {
+pub fn triggerStair(stair: surfaces.Stair, cur_stair: Coord) bool {
     // if (state.levelinfo[dest_stair.z].optional) {
     //     if (!ui.drawYesNoPrompt("Really travel to optional level?", .{}))
     //         return false;
     // }
+
+    // Index into inventory
+    var stair_key: ?usize = null;
+
+    if (stair.locked) {
+        assert(stair.stairtype != .Down);
+        stair_key = for (state.player.inventory.pack.constSlice()) |item, ind| {
+            if (item == .Key and item.Key.level == cur_stair.z and
+                item.Key.lock == @as(meta.Tag(surfaces.Stair.Type), stair.stairtype) and
+                (item.Key.lock != .Up or item.Key.lock.Up == stair.stairtype.Up))
+            {
+                break ind;
+            }
+        } else null;
+        if (stair_key == null) {
+            ui.drawAlertThenLog("The stair is locked and you don't have a matching key.", .{});
+            return false;
+        }
+    }
+
+    if (stair.stairtype == .Access) {
+        state.state = .Win;
+        // Don't bother removing key
+        return true;
+    } else if (stair.stairtype == .Down) {
+        ui.drawAlertThenLog("Why would you want to go back?", .{});
+        return false;
+    }
+
+    const dest_floor = stair.stairtype.Up;
 
     // state.message(.Move, "You ascend...", .{});
     _ = ui.drawTextModalNoInput("You ascend...", .{});
 
     mapgen.initLevel(dest_floor);
 
+    // The "sealing the steel doors" is just excuse for why guards don't follow
+    // player.
+    //
+    // Soon enough though, they will, and this message can be removed.
     state.message(.Unimportant, "You ascend, sealing the steel doors behind you.", .{});
 
     const dest_stair = state.dungeon.entries[dest_floor];
@@ -308,6 +342,9 @@ pub fn triggerStair(cur_stair: Coord, dest_floor: usize) bool {
         if (mob.coord.z != cur_stair.z) continue;
         mob.path_cache.clearAndFree();
     }
+
+    if (stair_key) |pack_ind|
+        _ = state.player.inventory.pack.orderedRemove(pack_ind) catch err.wat();
 
     return true;
 }
@@ -784,7 +821,14 @@ pub fn useItem(index: usize) bool {
 
             scores.recordTaggedUsize(.ItemsUsed, .{ .I = item }, 1);
         },
-        .Vial => |_| err.todo(),
+        .Vial => |_| {
+            state.message(.Info, "You angrily remind kiedtl for the 2048th time that vials are still in the game", .{});
+            return false;
+        },
+        .Key => {
+            ui.drawAlertThenLog("You stare at the key, wondering which staircase it unlocks.", .{});
+            return false;
+        },
         .Projectile, .Boulder => {
             ui.drawAlertThenLog("You want to *eat* that?", .{});
             return false;

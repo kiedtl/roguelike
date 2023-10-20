@@ -822,6 +822,12 @@ pub fn excavatePrefab(
                             .Stair => |stair| {
                                 state.dungeon.at(rc).surface = .{ .Stair = stair };
                             },
+                            .Key => |key| {
+                                state.dungeon.itemsAt(rc).append(Item{ .Key = .{
+                                    .lock = key,
+                                    .level = rc.z,
+                                } }) catch err.wat();
+                            },
                             .Item => |template| {
                                 state.dungeon.itemsAt(rc).append(items.createItemFromTemplate(template)) catch err.wat();
                             },
@@ -3755,6 +3761,7 @@ pub const Prefab = struct {
         },
         Prop: [32:0]u8,
         Stair: surfaces.Stair,
+        Key: surfaces.Stair.Type,
     };
 
     pub const Connection = struct {
@@ -4249,6 +4256,19 @@ pub const Prefab = struct {
 
                                 f.features[identifier] = feature;
                                 f.features_global[identifier] = is_global;
+                            } else if (mem.eql(u8, feature_type, "Ckey")) {
+                                const rest = line[@ptrToInt((id orelse return error.MalformedFeatureDefinition).ptr) - @ptrToInt(line.ptr) ..];
+                                var cbf_p = cbf.Parser{ .input = rest };
+                                var res = try cbf_p.parse(state.gpa.allocator());
+                                defer cbf.Parser.deinit(&res);
+
+                                const r = cbf.deserializeValue(union(enum) { Up: []const u8, Down, Access }, res.items[0].value, null) catch return error.InvalidMetadataValue;
+                                const artoo: surfaces.Stair.Type = switch (r) {
+                                    .Up => |stairid| .{ .Up = state.findLevelByName(stairid) orelse return error.InvalidMetadataValue },
+                                    .Access => .Access,
+                                    .Down => return error.InvalidMetadataValue,
+                                };
+                                f.features[identifier] = Feature{ .Key = artoo };
                             } else if (mem.eql(u8, feature_type, "Cstair")) {
                                 const rest = line[@ptrToInt((id orelse return error.MalformedFeatureDefinition).ptr) - @ptrToInt(line.ptr) ..];
                                 var cbf_p = cbf.Parser{ .input = rest };
@@ -4848,7 +4868,7 @@ pub var Configs = [LEVELS]LevelConfig{
     createLevelConfig_CRY(),
     createLevelConfig_CRY(),
     createLevelConfig_CRY(),
-    createLevelConfig_PRI(2, &[_][]const u8{"PRI_main_exit"}),
+    createLevelConfig_PRI(2, &[_][]const u8{ "PRI_main_exit", "PRI_main_exit_key" }),
     createLevelConfig_PRI(2, &[_][]const u8{}),
     // createLevelConfig_LAB(&[_][]const u8{}),
     // createLevelConfig_LAB(&[_][]const u8{}),

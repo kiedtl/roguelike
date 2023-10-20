@@ -69,8 +69,10 @@ pub var tools_props: PropPtrAList = undefined;
 pub var armors_props: PropPtrAList = undefined;
 
 pub const Stair = struct {
-    stairtype: union(enum) { Up: usize, Down, Access },
+    stairtype: Type,
     locked: bool = false,
+
+    pub const Type = union(enum) { Up: usize, Down, Access };
 
     pub fn newUp(dest: usize) types.SurfaceItem {
         return types.SurfaceItem{ .Stair = @This(){ .stairtype = .{ .Up = dest } } };
