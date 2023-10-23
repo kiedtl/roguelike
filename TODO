@@ -1193,12 +1193,20 @@ x Corpse-related mechanics
   x New mapgen
   ~ Enh. sparklings in upper levels
     ~ Dep: capacitors (and possibly Wiring levels)
-    x Dep: UI labels to effectively communicate when next discharge is
-      x "discharge 5..." "discharge 4..." "discharge 3...", etc.
+    ~ Dep: UI labels to effectively communicate when next discharge is
+      ~ "discharge 5..." "discharge 4..." "discharge 3...", etc.
   x Emberling garrisons
-  - Prefab: Flamethrower prop/evocable stockpiles
+  ~ Prefab: Flamethrower prop/evocable stockpiles
   x New Alchemist AI
 *** 3.0.0 release ***
+- Armor coatings
+  - Potion of absorption: +15% Potential, -1 Will
+  - Potion of fortification: +1 Will, -25% Potential (found in holy place)
+    - Incompat: absorption
+  - Potion of anti-corrosion: +25% rAcid (found only in special prefab?)
+    - Recipe: paralysation(?)
+  - Potion of anti-combustion: +25% rFire
+  - Multiple coating + incompatibilities
 - Crypt floor
   x Modify level data and spawn files
   - New monsters:
