@@ -258,13 +258,13 @@ fn executeResponse(response: ThreatResponse, level: usize) !void {
         .Assault => |a| {
             const send_wave = state.ticks > a._last_time + TURNS_BETWEEN_ASSAULT;
             if (send_wave) {
-                const opt = .{ .near_stair_opts = .{ .specific_stair = 0 } };
                 const squad_template = mobs.spawns.chooseMob(.Special, level, "a") catch err.wat();
-                const hunter = try mobs.placeMobNearStairs(&mobs.HunterTemplate, level, opt);
-                const squadl = mobs.placeMobNearStairs(squad_template, level, opt) catch |e| {
+                const hunter = try mobs.placeMobNearStairs(&mobs.HunterTemplate, level, .{});
+                const squad_coord = state.nextSpotForMob(hunter.coord, null) orelse {
                     hunter.deinitEntirelyNoCorpse();
-                    return e;
+                    return error.NoSpace;
                 };
+                const squadl = mobs.placeMob(state.gpa.allocator(), squad_template, squad_coord, .{});
                 if (squadl.squad) |squad| {
                     squad.mergeInto(hunter.squad.?);
                 } else {

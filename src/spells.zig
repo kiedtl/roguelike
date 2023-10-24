@@ -11,20 +11,21 @@ const assert = std.debug.assert;
 const mem = std.mem;
 
 const ai = @import("ai.zig");
+const alert = @import("alert.zig");
 const colors = @import("colors.zig");
-const ui = @import("ui.zig");
-const types = @import("types.zig");
 const combat = @import("combat.zig");
 const err = @import("err.zig");
-const player = @import("player.zig");
 const explosions = @import("explosions.zig");
-const items = @import("items.zig");
 const gas = @import("gas.zig");
+const items = @import("items.zig");
 const mobs = @import("mobs.zig");
+const player = @import("player.zig");
+const rng = @import("rng.zig");
 const sound = @import("sound.zig");
 const state = @import("state.zig");
+const types = @import("types.zig");
+const ui = @import("ui.zig");
 const utils = @import("utils.zig");
-const rng = @import("rng.zig");
 
 const Coord = types.Coord;
 const Tile = types.Tile;
@@ -136,6 +137,23 @@ pub const CAST_ALERT_ALLY = Spell{
         .Custom = struct {
             fn f(caster_coord: Coord, _: Spell, _: SpellOptions, _: Coord) void {
                 ai.alertAllyOfHostile(state.dungeon.at(caster_coord).mob.?);
+            }
+        }.f,
+    },
+};
+
+pub const CAST_ALERT_SIREN = Spell{
+    .id = "sp_alert_siren",
+    .name = "sound siren",
+    .cast_type = .Smite,
+    .effect_type = .{
+        .Custom = struct {
+            fn f(_: Coord, _: Spell, opts: SpellOptions, target: Coord) void {
+                state.message(.Info, "You hear an ominous alarm blaring.", .{});
+                alert.queueThreatResponse(.{ .Assault = .{
+                    .waves = opts.power,
+                    .target = state.dungeon.at(target).mob.?,
+                } });
             }
         }.f,
     },

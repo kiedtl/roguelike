@@ -754,7 +754,6 @@ fn createSpireTemplate(
         willpower: usize = WILL_IMMUNE,
     },
 ) MobTemplate {
-    assert(spell.MP_cost == 4);
     return MobTemplate{
         .mob = .{
             .id = name ++ "_spire",
@@ -772,7 +771,7 @@ fn createSpireTemplate(
             .base_night_vision = true,
 
             .spells = &[_]SpellOptions{spell},
-            .max_MP = 4,
+            .max_MP = spell.MP_cost,
 
             .max_HP = 10,
             .memory_duration = 77,
@@ -792,6 +791,7 @@ pub const IronSpireTemplate = createSpireTemplate("iron", '1', .{ .MP_cost = 4, 
 pub const LightningSpireTemplate = createSpireTemplate("lightning", '2', .{ .MP_cost = 4, .spell = &spells.BOLT_LIGHTNING, .power = 2 }, .{});
 pub const CalciteSpireTemplate = createSpireTemplate("calcite", '3', .{ .MP_cost = 4, .spell = &spells.CAST_CALL_UNDEAD }, .{ .willpower = 8 });
 pub const SentrySpireTemplate = createSpireTemplate("sentry", '4', .{ .MP_cost = 4, .spell = &spells.CAST_ALERT_ALLY }, .{});
+pub const SirenSpireTemplate = createSpireTemplate("siren", '5', .{ .MP_cost = 99, .spell = &spells.CAST_ALERT_SIREN }, .{});
 // }}}
 
 pub const KyaniteStatueTemplate = MobTemplate{
@@ -2198,6 +2198,7 @@ pub const MOBS = [_]MobTemplate{
     LightningSpireTemplate,
     CalciteSpireTemplate,
     SentrySpireTemplate,
+    SirenSpireTemplate,
     KyaniteStatueTemplate,
     NebroStatueTemplate,
     CrystalStatueTemplate,

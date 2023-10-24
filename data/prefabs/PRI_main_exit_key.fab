@@ -2,14 +2,62 @@
 :g_restriction 0
 :nolights
 :notraps
+:noitems
 :noguards
 
+@p P
+TAKE ONLY ONE -- Shor
+END POSTER
+@t m trap_siren
+:subroom_area 3,3 5 5 PRI_s_main_exit_key_cubbies
 @k Ckey (Access)
 
-###*###
-#.....#
-#.....#
-*..k..*
-#.....#
-#.....#
-###*###
+##p*#######
+#.........#
+#.###t###.p
+#.###k###.*
+#.#######.#
+#.tk###kt.#
+#.#######.#
+*.###k###.#
+p.###t###.#
+#.........#
+#######*p##
+
+% -----------------------------------------------------------------------------
+
+:begin_prefab PRI_s_main_exit_key_cubbies
+
+:g_subroom
+:invisible
+:nolights
+:notraps
+:noitems
+:g_transform .Turn1
+:g_transform .Turn2
+:g_transform .Turn3
+
+@k Ckey (Access)
+.#...
+.####
+.###.
+####.
+k..#.
+
+\
+
+@k Ckey (Access)
+.#..k
+.####
+.###.
+####.
+k..#.
+
+\
+
+@k Ckey (Access)
+.#...
+.####
+.###.
+####.
+k..#k

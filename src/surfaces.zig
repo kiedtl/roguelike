@@ -7,24 +7,25 @@ const meta = std.meta;
 const math = std.math;
 const enums = std.enums;
 
-const ui = @import("ui.zig");
-const dijkstra = @import("dijkstra.zig");
-const spells = @import("spells.zig");
+const alert = @import("alert.zig");
 const colors = @import("colors.zig");
+const dijkstra = @import("dijkstra.zig");
 const err = @import("err.zig");
-const font = @import("font.zig");
-const main = @import("root");
-const mobs = @import("mobs.zig");
-const utils = @import("utils.zig");
-const state = @import("state.zig");
 const explosions = @import("explosions.zig");
+const font = @import("font.zig");
 const gas = @import("gas.zig");
-const player = @import("player.zig");
-const tsv = @import("tsv.zig");
-const rng = @import("rng.zig");
+const main = @import("root");
 const materials = @import("materials.zig");
-const types = @import("types.zig");
+const mobs = @import("mobs.zig");
+const player = @import("player.zig");
+const rng = @import("rng.zig");
 const scores = @import("scores.zig");
+const spells = @import("spells.zig");
+const state = @import("state.zig");
+const tsv = @import("tsv.zig");
+const types = @import("types.zig");
+const ui = @import("ui.zig");
+const utils = @import("utils.zig");
 
 const Rect = types.Rect;
 const Coord = types.Coord;
@@ -296,6 +297,7 @@ pub const MACHINES = [_]Machine{
     DisorientationGasTrap,
     SeizureGasTrap,
     BlindingGasTrap,
+    SirenTrap,
     Press,
     Auger,
     Mine,
@@ -532,6 +534,28 @@ pub const ParalysisGasTrap = Machine.createGasTrap("paralysing gas", &gas.Paraly
 pub const DisorientationGasTrap = Machine.createGasTrap("disorienting gas", &gas.Disorient);
 pub const SeizureGasTrap = Machine.createGasTrap("seizure gas", &gas.Seizure);
 pub const BlindingGasTrap = Machine.createGasTrap("tear gas", &gas.Blinding);
+
+pub const SirenTrap = Machine{
+    .id = "trap_siren",
+    .name = "siren trap",
+    .powered_tile = '^',
+    .unpowered_tile = '^',
+    .evoke_confirm = "*Really* trigger the siren trap?",
+    .on_power = struct {
+        pub fn f(machine: *Machine) void {
+            if (machine.last_interaction) |mob| {
+                if (mob.faction == .Necromancer) return;
+                if (state.player.cansee(machine.coord))
+                    state.message(.Info, "{c} triggers the siren trap!", .{mob});
+                state.dungeon.at(machine.coord).surface = null;
+                alert.queueThreatResponse(.{ .Assault = .{ .waves = 3, .target = mob } });
+                state.message(.Info, "You hear an ominous alarm blaring.", .{});
+                machine.disabled = true;
+                state.dungeon.at(machine.coord).surface = null;
+            }
+        }
+    }.f,
+};
 
 pub fn createTheaterMachine(id: []const u8, name: []const u8, tile: u21, utile: u21, fg: u32, ufg: u32, bg: ?u32, ubg: ?u32, pdrain: usize, opacity: f32, uopacity: f32, flame: usize, porous: bool) Machine {
     return Machine{

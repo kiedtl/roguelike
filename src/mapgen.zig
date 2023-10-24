@@ -6,19 +6,20 @@ const meta = std.meta;
 const assert = std.debug.assert;
 
 const astar = @import("astar.zig");
-const err = @import("err.zig");
-const rng = @import("rng.zig");
 const cbf = @import("cbf.zig");
 const dijkstra = @import("dijkstra.zig");
-const mobs = @import("mobs.zig");
+const err = @import("err.zig");
+const fov = @import("fov.zig");
 const items = @import("items.zig");
-const surfaces = @import("surfaces.zig");
 const literature = @import("literature.zig");
 const materials = @import("materials.zig");
-const utils = @import("utils.zig");
+const mobs = @import("mobs.zig");
+const rng = @import("rng.zig");
 const state = @import("state.zig");
+const surfaces = @import("surfaces.zig");
 const tsv = @import("tsv.zig");
 const types = @import("types.zig");
+const utils = @import("utils.zig");
 
 const tunneler = @import("mapgen/tunneler.zig");
 
@@ -3002,7 +3003,9 @@ pub fn removeEnemiesNearEntry(level: usize) void {
     defer dijk.deinit();
     while (dijk.next()) |child| {
         if (state.dungeon.at(child).mob) |mob|
-            if (mob.isHostileTo(state.player)) {
+            if (mob.isHostileTo(state.player) and
+                fov.quickLOSCheck(down_staircase, child, types.Dungeon.tileOpacity))
+            {
                 mob.deinitNoCorpse();
             };
     }
