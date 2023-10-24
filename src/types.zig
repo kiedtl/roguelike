@@ -1964,6 +1964,7 @@ pub const Squad = struct {
     __next: ?*Squad = null,
     __prev: ?*Squad = null,
 
+    // 'members' should contain leader
     members: StackBuffer(*Mob, 64) = StackBuffer(*Mob, 64).init(null),
     leader: ?*Mob = null, // FIXME: Should never be null in practice!
     enemies: EnemyRecord.AList = undefined,
@@ -1977,6 +1978,22 @@ pub const Squad = struct {
         };
         state.squads.append(squad) catch err.wat();
         return state.squads.last().?;
+    }
+
+    // Add all members of squad into a new squad. Those which don't fit are
+    // deinit'd.
+    //
+    // TODO: add param governing what happens to those which don't fit. Imagine
+    // enemies disappearing in the middle of combat
+    //
+    pub fn mergeInto(self: *Squad, other: *Squad) void {
+        for (self.members.slice()) |mob| {
+            other.members.append(mob) catch {
+                mob.deinitNoCorpse();
+                continue; // Continue, to deinit the rest
+            };
+            mob.squad = other;
+        }
     }
 
     // Remove dead members. Should be called before adding to player's squad, in
@@ -3849,6 +3866,14 @@ pub const Mob = struct { // {{{
                 state.message(.Combat, "{c} contorts and breaks up.", .{self});
             },
         }
+    }
+
+    pub fn deinitEntirelyNoCorpse(self: *Mob) void {
+        if (self.squad) |squad|
+            for (squad.members.constSlice()) |member|
+                member.deinitNoCorpse();
+        self.deinitNoCorpse();
+        // TODO: deinit squad object itself
     }
 
     pub fn deinitNoCorpse(self: *Mob) void {

@@ -494,12 +494,16 @@ fn readInput() !bool {
                     // ui.hud_win.deinit();
                     // ui.hud_win.init();
                     // ui.map_win.drawTextLinef("This is a test.", .{}, .{});
-                    serializer.serializeWorld() catch |e| {
-                        err.bug("Ser failed ({})", .{e});
-                    };
-                    serializer.deserializeWorld() catch |e| {
-                        err.bug("Deser failed ({})", .{e});
-                    };
+                    // serializer.serializeWorld() catch |e| {
+                    //     err.bug("Ser failed ({})", .{e});
+                    // };
+                    // serializer.deserializeWorld() catch |e| {
+                    //     err.bug("Deser failed ({})", .{e});
+                    // };
+                    alert.queueThreatResponse(.{ .Assault = .{
+                        .waves = 3,
+                        .target = state.player,
+                    } });
                 },
                 .F8 => {
                     _ = janet.loadFile("scripts/particles.janet", state.gpa.allocator()) catch continue;

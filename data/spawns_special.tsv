@@ -10,6 +10,7 @@
 #        on the two coords in ai.work_area
 #     r: direct reinforcement summoned when lots of Necromancer-faction guys
 #        get scared
+#     a: assault waves
 
 # note: some have values for crypt, when reinforcements shouldn't be sent out,
 # in order to not break profiler (which does everything on floor 0)
@@ -35,5 +36,13 @@
 
 "guard"                	    "p" 	   - 	   - 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
 "armored_guard"        	    "p" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	 100 	   - 	  - 	   - 	  - 	  - 	  -
+
+"guard"                	    "a" 	 100 	 100 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	   - 	  - 	  - 	  -
+"ember_mage"           	    "a" 	   - 	   - 	  40 	   - 	  40 	   - 	  40 	   - 	   - 	  - 	   - 	  - 	  - 	  -
+"brimstone_mage"       	    "a" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  40 	   - 	 40 	  40 	  - 	  - 	  -
+"spark_mage"           	    "a" 	   - 	   - 	  40 	   - 	  40 	   - 	  40 	   - 	   - 	  - 	   - 	  - 	  - 	  -
+"lightning_mage"       	    "a" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  40 	   - 	 40 	  40 	  - 	  - 	  -
+"bone_mage"            	    "a" 	   - 	   - 	  20 	   - 	  20 	   - 	  20 	   - 	   - 	  - 	   - 	  - 	  - 	  -
+"death_mage"           	    "a" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  20 	   - 	 20 	  20 	  - 	  - 	  -
 
 # monster id               class      -8/Pri  -7/Pri  -6/Lab  -5/Sin   -5/Pri  -5/Smi  -4/Pri -3/Vlt  -3/Sin  -2/Pri  -1/Pri  -1/Cry -1/Cry2 -1/Cry3

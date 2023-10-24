@@ -38,6 +38,8 @@ pub const UNKNOWN_THREAT_DEPLOY_WATCHERS_2 = 300;
 pub const UNKNOWN_THREAT_DEPLOY_WATCHERS_3 = 500;
 pub const UNKNOWN_THREAT_DEPLOY_WATCHERS_4 = 700;
 
+pub const TURNS_BETWEEN_ASSAULT = 50;
+
 pub const Threat = union(enum) { General, Unknown, Specific: *Mob };
 
 pub const ThreatData = struct {
@@ -93,6 +95,12 @@ pub const ThreatResponseType = union(enum) {
         room: usize,
         coord: ?Coord = null,
         coord2: ?Coord = null,
+    },
+    Assault: struct {
+        waves: usize,
+        _ctr: usize = 0,
+        _last_time: usize = 0,
+        target: *Mob,
     },
 };
 
@@ -186,6 +194,98 @@ pub fn queueThreatResponse(response: ThreatResponseType) void {
     state.responses.append(.{ .type = response }) catch err.wat();
 }
 
+fn executeResponse(response: ThreatResponse, level: usize) !void {
+    switch (response.type) {
+        .ReinforceAgainstEnemy => |r| {
+            const mob_template = switch (r.reinforcement) {
+                .Specific => |m| m,
+                .Class => |c| mobs.spawns.chooseMob(.Special, level, c) catch err.wat(),
+            };
+
+            const coord = getThreat(r.threat).last_known_coord orelse
+                // A bit unrealistic that enemies could possibly home in
+                // on exact player's position, but whatever
+                r.threat.Specific.coord;
+
+            const opts: mobs.PlaceMobOptions = .{
+                .phase = .Investigate,
+                .work_area = coord,
+            };
+
+            if (opts.work_area == null)
+                return; // uhg
+
+            // Sending an engineer into a firefight to help against enemies
+            // is stupid
+            assert(!mob_template.mob.immobile);
+
+            const mob = try mobs.placeMobNearStairs(mob_template, level, opts);
+            mob.sustiles.append(.{
+                .coord = coord,
+                .unforgettable = true,
+            }) catch err.wat();
+        },
+        .ReinforceRoom => |r| {
+            const mob_template = switch (r.reinforcement) {
+                .Specific => |m| m,
+                .Class => |c| mobs.spawns.chooseMob(.Special, level, c) catch err.wat(),
+            };
+
+            var opts: mobs.PlaceMobOptions = .{};
+            if (r.coord) |coord| {
+                opts.work_area = coord;
+            } else {
+                const room = state.rooms[level].items[r.room];
+                var tries: usize = 100;
+                while (tries > 0) : (tries -= 1) {
+                    const post_coord = room.rect.randomCoord();
+                    if (state.is_walkable(post_coord, .{})) {
+                        opts.work_area = post_coord;
+                        break;
+                    }
+                }
+            }
+
+            if (opts.work_area == null)
+                return; // uhg
+
+            if (mob_template.mob.immobile) {
+                tasks.reportTask(level, .{ .BuildMob = .{ .mob = mob_template, .coord = opts.work_area.?, .opts = opts } });
+            } else {
+                _ = try mobs.placeMobNearStairs(mob_template, level, opts);
+            }
+        },
+        .Assault => |a| {
+            const send_wave = state.ticks > a._last_time + TURNS_BETWEEN_ASSAULT;
+            if (send_wave) {
+                const opt = .{ .near_stair_opts = .{ .specific_stair = 0 } };
+                const squad_template = mobs.spawns.chooseMob(.Special, level, "a") catch err.wat();
+                const hunter = try mobs.placeMobNearStairs(&mobs.HunterTemplate, level, opt);
+                const squadl = mobs.placeMobNearStairs(squad_template, level, opt) catch |e| {
+                    hunter.deinitEntirelyNoCorpse();
+                    return e;
+                };
+                if (squadl.squad) |squad| {
+                    squad.mergeInto(hunter.squad.?);
+                } else {
+                    hunter.addUnderling(squadl);
+                }
+                ai.updateEnemyKnowledge(hunter, a.target, null);
+                for (hunter.squad.?.members.constSlice()) |dude|
+                    dude.newJob(.WRK_LeaveFloor);
+            }
+            if (a._ctr < a.waves) {
+                var new = response;
+                if (send_wave) {
+                    new.type.Assault._ctr += 1;
+                    new.type.Assault._last_time = state.ticks;
+                }
+                state.responses.append(new) catch err.wat();
+            }
+        },
+    }
+}
+
 pub fn tickThreats(level: usize) void {
     // Unsure if modifying container while iterator() is active is safe to do
     var dismiss_threats = StackBuffer(Threat, 64).init(null);
@@ -225,76 +325,16 @@ pub fn tickThreats(level: usize) void {
         dismissThreat(null, threat);
 
     if (state.responses.items.len > 0) {
-        const response = state.responses.pop();
-        switch (response.type) {
-            .ReinforceAgainstEnemy => |r| {
-                const mob_template = switch (r.reinforcement) {
-                    .Specific => |m| m,
-                    .Class => |c| mobs.spawns.chooseMob(.Special, level, c) catch err.wat(),
-                };
-
-                const coord = getThreat(r.threat).last_known_coord orelse
-                    // A bit unrealistic that enemies could possibly home in
-                    // on exact player's position, but whatever
-                    r.threat.Specific.coord;
-
-                const opts: mobs.PlaceMobOptions = .{
-                    .phase = .Investigate,
-                    .work_area = coord,
-                };
-
-                if (opts.work_area == null)
-                    return; // uhg
-
-                // Sending an engineer into a firefight to help against enemies
-                // is stupid
-                assert(!mob_template.mob.immobile);
-
-                if (mobs.placeMobNearStairs(mob_template, level, opts)) |mob| {
-                    mob.sustiles.append(.{
-                        .coord = coord,
-                        .unforgettable = true,
-                    }) catch err.wat();
-                } else |_| {
-                    // No space near stairs. Add the response back, wait until next
-                    // time, hopefully the traffic dissipates.
-                    state.responses.append(response) catch err.wat();
-                }
-            },
-            .ReinforceRoom => |r| {
-                const mob_template = switch (r.reinforcement) {
-                    .Specific => |m| m,
-                    .Class => |c| mobs.spawns.chooseMob(.Special, level, c) catch err.wat(),
-                };
-
-                var opts: mobs.PlaceMobOptions = .{};
-                if (r.coord) |coord| {
-                    opts.work_area = coord;
-                } else {
-                    const room = state.rooms[level].items[r.room];
-                    var tries: usize = 100;
-                    while (tries > 0) : (tries -= 1) {
-                        const post_coord = room.rect.randomCoord();
-                        if (state.is_walkable(post_coord, .{})) {
-                            opts.work_area = post_coord;
-                            break;
-                        }
-                    }
-                }
-
-                if (opts.work_area == null)
-                    return; // uhg
-
-                if (mob_template.mob.immobile) {
-                    tasks.reportTask(level, .{ .BuildMob = .{ .mob = mob_template, .coord = opts.work_area.?, .opts = opts } });
-                } else {
-                    if (mobs.placeMobNearStairs(mob_template, level, opts)) |_| {} else |_| {
-                        // No space near stairs. Add the response back, wait until next
-                        // time, hopefully the traffic dissipates.
-                        state.responses.append(response) catch err.wat();
-                    }
-                }
-            },
+        const index = state.responses.items.len - 1;
+        const response = state.responses.items[index];
+        if (executeResponse(response, level)) |_| {
+            // Use index instead of pop(), as sometimes executeResponse will add
+            // a new (modified) response to the queue (e.g. Assault)
+            _ = state.responses.orderedRemove(index);
+        } else |_| {
+            // No space near stairs. Add the response back, wait until next
+            // time, hopefully the traffic dissipates.
+            state.responses.append(response) catch err.wat();
         }
     }
 }

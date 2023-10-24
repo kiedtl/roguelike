@@ -1104,7 +1104,7 @@ pub const HunterTemplate = MobTemplate{
     .mob = .{
         .id = "hunter",
         .species = &GoblinSpecies,
-        .tile = 'H',
+        .tile = 'h',
         .ai = AI{
             .profession_name = "hunter",
             .profession_description = "resting",
@@ -1116,14 +1116,15 @@ pub const HunterTemplate = MobTemplate{
 
         .max_HP = 8,
         .memory_duration = 20,
-        .stats = .{ .Willpower = 3, .Melee = 70, .Speed = 150, .Vision = 8 },
+        .stats = .{ .Willpower = 3, .Melee = 70, .Vision = 8 },
     },
-    .weapon = &items.W_MACES_2,
+    .weapon = &items.W_SPROD_1,
     .armor = items.GambesonArmor,
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
-            .{ .mob = "stalker", .weight = 4, .count = minmax(usize, 3, 6) },
+            .{ .mob = "stalker", .weight = 9, .count = minmax(usize, 1, 2) },
+            .{ .mob = "stalker", .weight = 1, .count = minmax(usize, 2, 3) },
         },
     },
 };
@@ -2266,6 +2267,9 @@ pub const PlaceMobOptions = struct {
     prm_status2: ?Status = null,
     job: ?types.AIJob.Type = null,
     tag: ?u8 = null,
+    near_stair_opts: struct {
+        specific_stair: ?usize = null,
+    } = .{},
 };
 
 pub fn placeMob(
@@ -2329,7 +2333,7 @@ pub fn placeMob(
     const mob_ptr = state.mobs.last().?;
 
     // ---
-    // --------------- `mob` mustn't be modified after this point! --------------
+    // -------------- `mob` mustn't be modified after this point! -------------
     // ---
 
     if (!opts.no_squads and template.squad.len > 0) {
@@ -2379,6 +2383,7 @@ pub fn placeMob(
             }
         }
 
+        squad.members.append(mob_ptr) catch err.wat();
         squad.leader = mob_ptr;
         mob_ptr.squad = squad;
     }
@@ -2394,11 +2399,16 @@ pub fn placeMob(
 
 pub fn placeMobNearStairs(template: *const MobTemplate, level: usize, opts: PlaceMobOptions) !*Mob {
     var coords = StackBuffer(Coord, types.Dungeon.MAX_STAIRS + 1).init(null);
-    for (state.dungeon.stairs[level].constSlice()) |stair|
-        if (state.nextSpotForMob(stair, null)) |coord|
+    if (opts.near_stair_opts.specific_stair) |stair_ind| {
+        if (state.nextSpotForMob(state.dungeon.stairs[level].slice()[stair_ind], null)) |coord|
             coords.append(coord) catch err.wat();
-    if (state.nextSpotForMob(state.dungeon.entries[level], null)) |coord|
-        coords.append(coord) catch err.wat();
+    } else {
+        for (state.dungeon.stairs[level].constSlice()) |stair|
+            if (state.nextSpotForMob(stair, null)) |coord|
+                coords.append(coord) catch err.wat();
+        if (state.nextSpotForMob(state.dungeon.entries[level], null)) |coord|
+            coords.append(coord) catch err.wat();
+    }
 
     const coord = coords.chooseUnweighted() orelse return error.NoSpace;
     return placeMob(state.gpa.allocator(), template, coord, opts);

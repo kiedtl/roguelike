@@ -200,12 +200,19 @@ pub var status_str_infos: std.enums.EnumArray(Status, ?StatusStringInfo) =
 // Uses state.gpa.allocator()
 //
 pub fn nextSpotForMob(crd: Coord, mob: ?*Mob) ?Coord {
-    var dijk = dijkstra.Dijkstra.init(crd, mapgeometry, 3, is_walkable, .{ .mob = mob, .right_now = true }, gpa.allocator());
+    var dijk = dijkstra.Dijkstra.init(crd, mapgeometry, 3, is_walkable, .{
+        .mob = mob,
+        .ignore_mobs = true,
+        .right_now = true,
+    }, gpa.allocator());
     defer dijk.deinit();
 
     return while (dijk.next()) |child| {
-        if (!child.eq(crd) and !dungeon.at(child).prison)
+        if (!child.eq(crd) and !dungeon.at(child).prison and
+            dungeon.at(child).mob == null)
+        {
             break child;
+        }
     } else null;
 }
 
