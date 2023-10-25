@@ -86,7 +86,7 @@ pub const TORMENT_UNDEAD_DAMAGE = 2;
 pub const DETECT_HEAT_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
 pub const DETECT_ELEC_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
 pub const DETECT_UNDEAD_RADIUS = math.min(ui.MAP_HEIGHT_R, ui.MAP_WIDTH_R);
-pub const RECUPERATION_HEAL_CHANCE = 20;
+pub const RECUPERATION_HEAL_CHANCE = 33;
 
 pub fn MinMax(comptime T: type) type {
     return struct {
