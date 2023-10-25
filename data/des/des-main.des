@@ -727,7 +727,7 @@ A single broken copper band adorns one side, as though the ring was meant to
 hang from a chain.
 
 
-$cEffect:$. A disintegration bolt is fired in the chosen direction, destroyed
+$cEffect:$. A disintegration bolt is fired in the chosen direction, destroying
 walls and obstructions and damaging all targets, hostile or otherwise.
 
 $c    -$. The bolt will always reach a distance equivalent to your $bWillpower$..
