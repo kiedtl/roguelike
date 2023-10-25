@@ -35,9 +35,9 @@
 "hulk_thrashing"          	 "" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	 100 	   - 	   - 	  - 	  - 	  -
 
 # special Lab monsters
-"lead_turtle"             	 "" 	   - 	   - 	  40 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"iron_wasp"               	 "" 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
-"copper_hornet"           	 "" 	   - 	   - 	  30 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -
+"lead_turtle"             	 "" 	   - 	   - 	  40 	   - 	   - 	   - 	   - 	  40 	   - 	   - 	   - 	  - 	  - 	  -
+"iron_wasp"               	 "" 	   - 	   - 	  20 	   - 	   - 	   - 	   - 	  10 	   - 	   - 	   - 	  - 	  - 	  -
+"copper_hornet"           	 "" 	   - 	   - 	  10 	   - 	   - 	   - 	   - 	  20 	   - 	   - 	   - 	  - 	  - 	  -
 
 # special Cavern monsters
 "dustling"                	 "" 	   - 	   - 	   - 	   - 	   - 	  60 	   - 	   - 	   - 	   - 	   - 	  - 	  - 	  -

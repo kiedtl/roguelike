@@ -473,7 +473,8 @@ pub const IronWaspTemplate = MobTemplate{
 
     .squad = &[_][]const MobTemplate.SquadMember{
         &[_]MobTemplate.SquadMember{
-            .{ .mob = "iron_wasp", .weight = 1, .count = minmax(usize, 1, 3) },
+            .{ .mob = "iron_wasp", .weight = 9, .count = minmax(usize, 0, 1) },
+            .{ .mob = "iron_wasp", .weight = 1, .count = minmax(usize, 1, 2) },
         },
     },
     .statuses = &[_]StatusDataInfo{
