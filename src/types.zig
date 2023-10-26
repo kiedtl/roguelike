@@ -4215,6 +4215,14 @@ pub const Mob = struct { // {{{
             }
         }
 
+        // If mob is prisoner of othermob, be docile...
+        if (self.prisoner_status) |my_ps|
+            if (othermob.faction == my_ps.of and
+                (state.dungeon.at(self.coord).prison or my_ps.held_by != null))
+            {
+                hostile = false;
+            };
+
         if (self.faction == .Night and
             state.night_rep[@enumToInt(othermob.faction)] > -5 and
             (state.night_rep[@enumToInt(othermob.faction)] > 0 or
