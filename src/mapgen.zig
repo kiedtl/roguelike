@@ -3002,12 +3002,24 @@ pub fn removeEnemiesNearEntry(level: usize) void {
     );
     defer dijk.deinit();
     while (dijk.next()) |child| {
-        if (state.dungeon.at(child).mob) |mob|
-            if (mob.isHostileTo(state.player) and
-                fov.quickLOSCheck(down_staircase, child, types.Dungeon.tileOpacity))
-            {
+        if (state.dungeon.at(child).mob) |mob| {
+            if (!mob.isHostileTo(state.player))
+                continue;
+
+            const can_be_seen = for (&DIRECTIONS) |d| {
+                if (child.move(d, state.mapgeometry)) |neighbor| {
+                    if (fov.quickLOSCheck(
+                        down_staircase,
+                        neighbor,
+                        types.Dungeon.tileOpacity,
+                    ))
+                        break true;
+                }
+            } else false;
+            if (child.distance(down_staircase) <= 3 or can_be_seen) {
                 mob.deinitNoCorpse();
-            };
+            }
+        }
     }
 }
 
