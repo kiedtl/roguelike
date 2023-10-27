@@ -247,7 +247,7 @@
 "calorimeter"          	 "calorimeter"          	 '⊝' 	       .S_G_P_MiscLabMach  	 0xf5f5dc 	 -        	 nay 	 - 	20 	 .Laboratory
 "vacuum_chmbr"         	 "vacuum chamber"       	 '⊜' 	       .S_G_P_MiscLabMach  	 0xffefdf 	 -        	 nay 	 - 	 - 	 .Laboratory
 
-"nuclear_core"         	 "nuclear_core"         	 '≡' 	                        -  	 0xffefdf 	 -        	 nay 	 - 	50
+"nuclear_core"         	 "orthire furnace"      	 '≡' 	                        -  	 0xffefdf 	 -        	 nay 	 - 	50
 
 "low_wall_n2s2"        	 "low wall"             	 '║' 	                        -  	 0xefefef 	 -        	 nay 	 - 	 -
 "low_wall_e2w2"        	 "low wall"             	 '═' 	                        -  	 0xefefef 	 -        	 nay 	 - 	 -
