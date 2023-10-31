@@ -149,6 +149,9 @@ pub var map_win: struct {
     // For Examine mode, directional choose, labels, etc.
     annotations: Console = undefined,
 
+    // For border around map, blinking chars on mobs, etc
+    grid_annotations: Console = undefined,
+
     // For particle animations and such.
     animations: Console = undefined,
 
@@ -168,13 +171,44 @@ pub var map_win: struct {
         self.annotations.default_transparent = true;
         self.annotations.clear();
 
+        self.grid_annotations = Console.init(state.gpa.allocator(), d.width(), d.height());
+        self.grid_annotations.default_transparent = true;
+        self.grid_annotations.clear();
+
         self.animations = Console.init(state.gpa.allocator(), d.width(), d.height());
         self.animations.default_transparent = true;
         self.animations.clear();
 
         self.map.addSubconsole(&self.text_line, 0, 0);
         self.map.addSubconsole(&self.annotations, 0, 0);
+        self.map.addSubconsole(&self.grid_annotations, 0, 0);
         self.map.addSubconsole(&self.animations, 0, 0);
+    }
+
+    pub fn stepBorderAnimations(self: *@This(), refpoint: Coord) void {
+        const S = struct {
+            var ctr: usize = 0;
+        };
+        self.grid_annotations.clear();
+        const f = (1 + math.sin(@intToFloat(f64, S.ctr) * math.pi / 180.0)) / 4;
+        const c = colors.mix(colors.BG, colors.CONCRETE, math.clamp(f, 0.1, 0.7));
+        const a = Rect.new(Coord.new(0, 0), WIDTH + 2, HEIGHT + 2);
+        const b = Rect.new(Coord.new(1, 1), WIDTH + 0, HEIGHT + 0);
+        var y: usize = 0;
+        while (y < a.end().y) : (y += 1) {
+            var x: usize = 0;
+            while (x < a.end().x) : (x += 1) {
+                const co = Coord.new(x, y).asRect();
+                if (co.intersects(&a, 0) and !co.intersects(&b, 0)) {
+                    const zy = @intCast(isize, y) - (@intCast(isize, refpoint.y) -| MAP_HEIGHT_R);
+                    const zx = @intCast(isize, x) - (@intCast(isize, refpoint.x) -| MAP_WIDTH_R);
+                    if (zy > 0 and zx > 0 and zx < self.map.width and zy < self.map.height - 1) {
+                        self.grid_annotations.setCell(@intCast(usize, zx * 2), @intCast(usize, zy), .{ .bg = c, .fl = .{ .wide = true } });
+                    }
+                }
+            }
+        }
+        S.ctr = (S.ctr + 1) % 360;
     }
 
     fn _addTextLineReveal(self: *@This(), duration: usize) void {
@@ -1872,6 +1906,7 @@ pub fn drawAnimationNoPresentTimeout(timeout: ?usize) void {
         drawLabels();
         hud_win.main.stepRevealAnimation();
         log_win.stepAnimations();
+        map_win.stepBorderAnimations(state.player.coord);
         map_win.stepTextLineAnimations();
 
         if (timeout == null) return;
