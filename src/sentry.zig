@@ -24,7 +24,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 
 // TODO: *don't* encode this in here
-const DSN = "https://029cc3a31c3740d4a60e3747e48c4aa2@o110999.ingest.sentry.io/6550409";
+const DSN = "http://029cc3a31c3740d4a60e3747e48c4aa2@o110999.ingest.sentry.io/6550409";
 const DSN_HASH = "029cc3a31c3740d4a60e3747e48c4aa2";
 const DSN_ID = 6550409;
 
@@ -280,6 +280,7 @@ pub fn recordError(
             const symb_info = try module.getSymbolAtAddress(address);
             defer symb_info.deinit();
             frame.function = symb_info.symbol_name;
+            std.log.info("function: {s}", .{frame.function});
             if (symb_info.line_info) |li| {
                 std.mem.copy(u8, &frame.filename, li.file_name);
                 frame.lineno = li.line;

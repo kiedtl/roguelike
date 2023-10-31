@@ -501,10 +501,11 @@ fn readInput() !bool {
                         // serializer.deserializeWorld() catch |e| {
                         //     err.bug("Deser failed ({})", .{e});
                         // };
-                        alert.queueThreatResponse(.{ .Assault = .{
-                            .waves = 3,
-                            .target = state.player,
-                        } });
+                        // alert.queueThreatResponse(.{ .Assault = .{
+                        //     .waves = 3,
+                        //     .target = state.player,
+                        // } });
+                        @panic("nooooooooooooo");
                     },
                     .F8 => {
                         _ = janet.loadFile("scripts/particles.janet", state.gpa.allocator()) catch continue;
@@ -1331,7 +1332,8 @@ pub fn actualMain() anyerror!void {
         state.sentry_disabled = true;
         state.gpa.allocator().free(v);
     } else |_| {
-        state.sentry_disabled = false;
+        // state.sentry_disabled = false;
+        state.sentry_disabled = true;
     }
 
     var scale: f32 = 1;
