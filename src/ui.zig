@@ -200,8 +200,8 @@ pub var map_win: struct {
             while (x < a.end().x) : (x += 1) {
                 const co = Coord.new(x, y).asRect();
                 if (co.intersects(&a, 0) and !co.intersects(&b, 0)) {
-                    const zy = @intCast(isize, y) - (@intCast(isize, refpoint.y) -| MAP_HEIGHT_R);
-                    const zx = @intCast(isize, x) - (@intCast(isize, refpoint.x) -| MAP_WIDTH_R);
+                    const zy = @intCast(isize, y) - (@intCast(isize, refpoint.y) - MAP_HEIGHT_R) - 1;
+                    const zx = @intCast(isize, x) - (@intCast(isize, refpoint.x) - MAP_WIDTH_R) - 1;
                     if (zy > 0 and zx > 0 and zx < self.map.width and zy < self.map.height - 1) {
                         self.grid_annotations.setCell(@intCast(usize, zx * 2), @intCast(usize, zy), .{ .bg = c, .fl = .{ .wide = true } });
                     }
@@ -2926,6 +2926,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
     const moblist = state.createMobList(false, true, state.player.coord.z, state.gpa.allocator());
     defer moblist.deinit();
 
+    map_win.grid_annotations.clear();
     defer map_win.annotations.clear();
     defer map_win.map.renderFullyW(.Main);
 
