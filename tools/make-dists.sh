@@ -20,7 +20,7 @@ mktarball() {
     mkdir ${pkgname}
 
     cp -r data           ${pkgname}
-    cp -r doc            ${pkgname}
+    #cp -r doc            ${pkgname}
     cp -r run.sh         ${pkgname}
 
     if [ ${1} = "windows" ]; then
