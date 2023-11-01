@@ -1146,29 +1146,12 @@ x New potions
   x potion of vision (cure blindness)
   x potion of perception (extra vision, ringing ears) [recipe: vision]
 x Fold evocables into consumables
-- Vaults
-  - Dobalene rooms
-  - Marble room reworks
-    x New prefabs
-    - Pure gold cloak prefab
-  - Armory room
-    - Anti-night-creature variant
-      - Potion of extermination
-      - Potion of illumination buf
-- Rework -1/Prison to -1/Hub
-  - Exiting staircase to "outside" on top
-  - Doorway to Crypt on bottom side
-  - Entry points and (unavailable) staircase to "0/Dining" in center
-    - If player tries to go up w/ center staircase, staircase gets
-      locked down, and guards start pouring out. i.e. challenge mode
-      - Prevents Revgenunkim invasion event?
-- UI
+x UI
   x Menu to invoke patterns (via SPACE)
   x Map dynamic popups/annotations
     x Label: aquirement/disaquirement of a status effect
     x Label: new items or dungeon features in view
-  - Escape menu
-    - List of visited/unvisited floors
+  x Escape menu
     ~ Status/mob/item description lookup screen
     x Keybinding help "?" screen
     x About screen (or just in log area?)
@@ -1186,10 +1169,7 @@ x Corpse-related mechanics
   ~ Haulers move corpse to side of room
   x Coroner comes, examines corpse, & registers threat
   x Fix: don't spawn corpses when removing enemies near staircases
-- Lava and Water rework
-  - Rework as terrain
-  - Lava -> Glowing water
-- Laboratory/Workshop rework
+x Laboratory/Workshop rework
   x New mapgen
   ~ Enh. sparklings in upper levels
     ~ Dep: capacitors (and possibly Wiring levels)
@@ -1199,6 +1179,25 @@ x Corpse-related mechanics
   ~ Prefab: Flamethrower prop/evocable stockpiles
   x New Alchemist AI
 *** 3.0.0 release ***
+- Lava and Water rework
+  - Rework as terrain
+  - Lava -> Glowing water
+- Rework -1/Prison to -1/Hub
+  - Exiting staircase to "outside" on top
+  - Doorway to Crypt on bottom side
+  - Entry points and (unavailable) staircase to "0/Dining" in center
+    - If player tries to go up w/ center staircase, staircase gets
+      locked down, and guards start pouring out. i.e. challenge mode
+      - Prevents Revgenunkim invasion event?
+- Vaults
+  - Dobalene rooms
+  - Marble room reworks
+    x New prefabs
+    - Pure gold cloak prefab
+  - Armory room
+    - Anti-night-creature variant
+      - Potion of extermination
+      - Potion of illumination buf
 - Armor coatings
   - Potion of absorption: +15% Potential, -1 Will
   - Potion of fortification: +1 Will, -25% Potential (found in holy place)
@@ -1326,6 +1325,8 @@ x Revamp messages for recieving/losing status
     - (100) Augment [y]: Blade attacks cause insanity for 1 turn in vulnerable foes.
     - (100) Augment [f]: Blade attacks have minor chance to infest foe.
 - UI
+  - Escape menu
+    - List of visited/unvisited floors
   - Examine mode
     - refactoring
     - Ability to view info on gas/terrain/wall/floor
