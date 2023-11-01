@@ -6,11 +6,18 @@
   - optimize fov
   - don't serialize path_cache
 
-- borders around map in examine mode
-
 - item: paras when elec damage is resisted, +50% rElec
-- restroom prefab
+- restr prefab
 
+Done
+----
+- add character for augers
+- borders around map in examine mode
+- draw screen after swapping weapons, using rings, exiting examine mode
+- fix removing enemies near stairs
+- fix nuclear power thing
+  - fix nuclear_core name
+- fix chained prisoners fab
 - if undead die, alert should immediately go up
 - non-deaf creatures should wake up on nearby noise
   - and maybe look in that direction
