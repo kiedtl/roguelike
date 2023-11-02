@@ -266,6 +266,7 @@ pub const CHUNKS = [_]Chunk{
     .{ .Stat = .{ .s = .CandlesDestroyed, .n = "candles destroyed" } },
     .{ .Stat = .{ .s = .ShrinesDrained, .n = "shrines drained" } },
     .{ .Stat = .{ .s = .TimesCorrupted, .n = "times corrupted" } },
+    .{ .Stat = .{ .s = .WizardUsed, .n = "wizard keys used" } },
 };
 
 pub const Stat = enum(usize) {
@@ -282,6 +283,7 @@ pub const Stat = enum(usize) {
     CandlesDestroyed = 10,
     ShrinesDrained = 11,
     TimesCorrupted = 12,
+    WizardUsed = 13,
 
     pub fn stattype(self: Stat) std.meta.FieldEnum(StatValue) {
         return switch (self) {
@@ -298,6 +300,7 @@ pub const Stat = enum(usize) {
             .CandlesDestroyed => .SingleUsize,
             .ShrinesDrained => .SingleUsize,
             .TimesCorrupted => .BatchUsize,
+            .WizardUsed => .BatchUsize,
         };
     }
 };
@@ -366,12 +369,14 @@ pub fn recordUsize(stat: Stat, value: usize) void {
 pub const Tag = union(enum) {
     M: *Mob,
     I: types.Item,
+    W: player.WizardFun,
     s: []const u8,
 
     pub fn intoString(self: Tag) StackBuffer(u8, 64) {
         return switch (self) {
             .M => |mob| StackBuffer(u8, 64).initFmt("{s}", .{mob.displayName()}),
             .I => |item| StackBuffer(u8, 64).init((item.shortName() catch err.wat()).slice()),
+            .W => |wiz| StackBuffer(u8, 64).init(@tagName(wiz)),
             .s => |str| StackBuffer(u8, 64).init(str),
         };
     }

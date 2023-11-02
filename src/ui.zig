@@ -294,12 +294,14 @@ fn ModalWindow(comptime left_width: usize, comptime dim: DisplayWindow) type {
 // 28: 15 (length of longest ring name, electification) + 6 (MP cost) + 7 (padding)
 pub var zap_win: ModalWindow(28, .Zap) = undefined;
 pub var pinfo_win: ModalWindow(15, .PlayerInfoModal) = undefined;
+pub var wiz_win: ModalWindow(0, .Zap) = undefined;
 
 pub fn init(scale: f32) !void {
     try display.init(MIN_WIDTH, MIN_HEIGHT, scale);
 
     zap_win.init();
     pinfo_win.init();
+    wiz_win.init();
     map_win.init();
     hud_win.init();
     log_win.init();
@@ -2783,6 +2785,64 @@ pub fn drawPlayerInfoScreen() void {
                 'w', 'k', 'l' => {
                     tab -|= 1;
                     tab_changed = true;
+                },
+                else => {},
+            },
+            else => {},
+        };
+    }
+
+    // FIXME: remove once all of ui.* is converted to subconsole system and
+    // artifacts are auto-cleared
+    clearScreen();
+}
+
+pub fn drawWizScreen() void {
+    // wiz_win.right.addRevealAnimation(.{ .rvtype = .All });
+
+    main: while (true) {
+        wiz_win.container.clearLineTo(0, wiz_win.container.width - 1, 0, .{ .ch = '▀', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+        wiz_win.container.clearLineTo(0, wiz_win.container.width - 1, wiz_win.container.height - 1, .{ .ch = '▄', .fg = colors.LIGHT_STEEL_BLUE, .bg = colors.BG });
+
+        var y: usize = 0;
+        var x: usize = 0;
+        var s: u21 = 'a';
+        const W = 13;
+
+        inline for (meta.fields(player.WizardFun)) |field| {
+            wiz_win.right.clearLine(x, x + W, y);
+            _ = wiz_win.right.drawTextAtf(x, y, "$b{u}$g - $.{s}", .{ s, field.name }, .{});
+            s += 1;
+            y += 1;
+            if (y == zap_win.right.height - 1) {
+                y = 0;
+                x += W + 2;
+            }
+        }
+
+        wiz_win.container.renderFullyW(.Zap);
+        display.present();
+
+        var evgen = Generator(display.getEvents).init(FRAMERATE);
+        while (evgen.next()) |ev| switch (ev) {
+            .Quit => {
+                state.state = .Quit;
+                break :main;
+            },
+            .Key => |k| switch (k) {
+                .CtrlC, .CtrlG, .Esc => break :main,
+                .F1 => break :main,
+                else => {},
+            },
+            .Char => |c| switch (c) {
+                'a'...'z' => {
+                    const sel = c - 'a';
+                    inline for (meta.fields(player.WizardFun)) |field, i| {
+                        if (sel == i) {
+                            player.executeWizardFun(@intToEnum(player.WizardFun, field.value));
+                            break;
+                        }
+                    }
                 },
                 else => {},
             },
