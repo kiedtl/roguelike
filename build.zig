@@ -48,6 +48,8 @@ pub fn build(b: *Builder) void {
     fabedit.addCSourceFile("third_party/microtar/src/microtar.c", &[_][]const u8{});
     fabedit.addIncludeDir("/usr/include/SDL2/");
     fabedit.linkSystemLibrary("SDL2");
+    fabedit.linkSystemLibrary("z");
+    fabedit.linkSystemLibrary("png");
     fabedit.setTarget(target);
     fabedit.setBuildMode(mode);
     fabedit.addOptions("build_options", options);
@@ -125,6 +127,11 @@ pub fn build(b: *Builder) void {
     if (b.args) |args| run_cmd.addArgs(args);
     const run_step = b.step("run", "Run the roguelike");
     run_step.dependOn(&run_cmd.step);
+
+    const fabedit_run_cmd = fabedit.run();
+    fabedit_run_cmd.step.dependOn(b.getInstallStep());
+    const fabedit_run_step = b.step("run-fabedit", "Run fabedit");
+    fabedit_run_step.dependOn(&fabedit_run_cmd.step);
 
     var tests = b.addTest("tests/tests.zig");
     tests.setBuildMode(mode);
