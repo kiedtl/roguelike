@@ -37,7 +37,6 @@ const termbox = @import("termbox.zig");
 const types = @import("types.zig");
 const ui = @import("ui.zig");
 const utils = @import("utils.zig");
-
 const Direction = types.Direction;
 const Coord = types.Coord;
 const Rect = types.Rect;
@@ -1167,16 +1166,6 @@ pub fn actualMain() anyerror!void {
     var use_profiler = false;
     var use_analyzer = false;
 
-    if (std.process.getEnvVarOwned(state.gpa.allocator(), "RL_SEED")) |seed_str| {
-        defer state.gpa.allocator().free(seed_str);
-        state.seed = std.fmt.parseInt(u64, seed_str, 0) catch |e| b: {
-            std.log.err("Could not parse RL_SEED (reason: {}); using default.", .{e});
-            break :b 0;
-        };
-    } else |_| {
-        state.seed = @intCast(u64, std.time.milliTimestamp());
-    }
-
     if (std.process.getEnvVarOwned(state.gpa.allocator(), "RL_MODE")) |v| {
         if (mem.eql(u8, v, "viewer")) {
             state.state = .Viewer;
@@ -1195,6 +1184,16 @@ pub fn actualMain() anyerror!void {
     } else |_| {
         use_viewer = false;
         use_tester = false;
+    }
+
+    if (std.process.getEnvVarOwned(state.gpa.allocator(), "RL_SEED")) |seed_str| {
+        defer state.gpa.allocator().free(seed_str);
+        state.seed = std.fmt.parseInt(u64, seed_str, 0) catch |e| b: {
+            std.log.err("Could not parse RL_SEED (reason: {}); using default.", .{e});
+            break :b 0;
+        };
+    } else |_| {
+        state.seed = @intCast(u64, std.time.milliTimestamp());
     }
 
     if (use_tester) {

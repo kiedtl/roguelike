@@ -40,6 +40,19 @@ pub fn build(b: *Builder) void {
 
     const is_windows = target.os_tag != null and target.os_tag.? == .windows;
 
+    const fabedit = b.addExecutable("rl_fabedit", "src/fabedit.zig");
+    fabedit.linkLibC();
+    fabedit.addIncludeDir("third_party/janet/"); // janet.h
+    fabedit.addCSourceFile("third_party/janet/janet.c", &[_][]const u8{"-std=c99"});
+    fabedit.addIncludeDir("third_party/microtar/src/"); // janet.h
+    fabedit.addCSourceFile("third_party/microtar/src/microtar.c", &[_][]const u8{});
+    fabedit.addIncludeDir("/usr/include/SDL2/");
+    fabedit.linkSystemLibrary("SDL2");
+    fabedit.setTarget(target);
+    fabedit.setBuildMode(mode);
+    fabedit.addOptions("build_options", options);
+    fabedit.install();
+
     const exe = b.addExecutable("rl", "src/main.zig");
     exe.linkLibC();
     exe.addPackagePath("rexpaint", "third_party/zig-rexpaint/lib.zig");
