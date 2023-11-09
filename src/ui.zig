@@ -1815,7 +1815,7 @@ fn modifyTile(moblist: []const *Mob, coord: Coord, p_tile: display.Cell) display
     return tile;
 }
 
-pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
+pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
     const refpointy = @intCast(isize, refpoint.y);
     const refpointx = @intCast(isize, refpoint.x);
     const level = state.player.coord.z;
@@ -1828,24 +1828,24 @@ pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
     const map_startx = refpointx - @intCast(isize, MAP_WIDTH_R);
     const map_endx = refpointx + @intCast(isize, MAP_WIDTH_R);
 
-    map_win.map.clearMouseTriggers();
-    map_win.map.clearTo(.{ .fl = .{ .wide = true } });
+    console.clearMouseTriggers();
+    console.clearTo(.{ .fl = .{ .wide = true } });
 
     var y = map_starty;
-    while (y < map_endy and cursory < map_win.map.height) : ({
+    while (y < map_endy and cursory < console.height) : ({
         y += 1;
         cursory += 1;
         cursorx = 0;
     }) {
         var x = map_startx;
-        while (x < map_endx and cursorx < map_win.map.width) : ({
+        while (x < map_endx and cursorx < console.width) : ({
             x += 1;
             cursorx += 2;
         }) {
             // if out of bounds on the map, draw a black tile
             if (y < 0 or x < 0 or y >= HEIGHT or x >= WIDTH) {
-                map_win.map.setCell(cursorx, cursory, .{ .bg = colors.BG, .fl = .{ .wide = true } });
-                map_win.map.setCell(cursorx + 1, cursory, .{ .fl = .{ .skip = true } });
+                console.setCell(cursorx, cursory, .{ .bg = colors.BG, .fl = .{ .wide = true } });
+                console.setCell(cursorx + 1, cursory, .{ .fl = .{ .skip = true } });
                 continue;
             }
 
@@ -1889,17 +1889,17 @@ pub fn drawMap(moblist: []const *Mob, refpoint: Coord) void {
             }
 
             tile.fl.wide = true;
-            map_win.map.setCell(cursorx, cursory, tile);
-            map_win.map.setCell(cursorx + 1, cursory, .{ .fl = .{ .skip = true } });
+            console.setCell(cursorx, cursory, tile);
+            console.setCell(cursorx + 1, cursory, .{ .fl = .{ .skip = true } });
 
             if (state.player.cansee(coord)) {
-                map_win.map.addMouseTrigger(cursor_coord.asRect(), .Hover, .{ .RecordElem = &map_win.annotations });
-                map_win.map.addMouseTrigger(cursor_coord.asRect(), .Click, .{ .ExamineScreen = .{ .start_coord = coord } });
+                console.addMouseTrigger(cursor_coord.asRect(), .Hover, .{ .RecordElem = &map_win.annotations });
+                console.addMouseTrigger(cursor_coord.asRect(), .Click, .{ .ExamineScreen = .{ .start_coord = coord } });
             }
         }
     }
 
-    // map_win.map.highlightMouseArea(colors.BG_L);
+    // console.highlightMouseArea(colors.BG_L);
 }
 
 pub fn drawAnimationNoPresentTimeout(timeout: ?usize) void {
@@ -1946,7 +1946,7 @@ pub fn drawNoPresent() void {
     const moblist = state.createMobList(false, true, state.player.coord.z, alloc);
 
     drawHUD(moblist.items);
-    drawMap(moblist.items, state.player.coord);
+    drawMap(&map_win.map, moblist.items, state.player.coord);
     drawLog();
     drawAnimations();
     render();
@@ -2100,7 +2100,7 @@ pub fn chooseCell(opts: ChooseCellOpts) ?Coord {
         terror = null;
         const refpoint = if (opts.require_seen) state.player.coord else coord;
 
-        drawMap(moblist.items, refpoint);
+        drawMap(&map_win.map, moblist.items, refpoint);
         map_win.annotations.clear();
         map_win.map.renderFullyW(.Main);
 
@@ -2346,7 +2346,7 @@ pub fn drawGameOverScreen(scoreinfo: scores.Info) void {
     // Delete labels and don't show mob vision areas for the gameover screen
     // Need to draw anyway to ensure drawCapturedDisplay() works right
     map_win.annotations.clear();
-    drawMap(&[_]*Mob{}, state.player.coord);
+    drawMap(&map_win.map, &[_]*Mob{}, state.player.coord);
     map_win.map.renderFullyW(.Main);
     display.present();
 
@@ -2971,8 +2971,22 @@ pub fn drawZapScreen() void {
 pub const ExamineTileFocus = enum { Item, Surface, Mob };
 
 pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord) bool {
-    const logw = dimensions(.Log);
-    const infow = dimensions(.PlayerInfo);
+    var container = Console.init(state.gpa.allocator(), MIN_WIDTH, MIN_HEIGHT);
+    var log_d = dimensions(.Log);
+    var lgg_win = Console.init(state.gpa.allocator(), log_d.width(), log_d.height());
+    var inf_d = dimensions(.PlayerInfo);
+    var inf_win = Console.init(state.gpa.allocator(), inf_d.width(), inf_d.height());
+    var map_d = dimensions(.Main);
+    var mpp_win = Console.init(state.gpa.allocator(), map_d.width(), map_d.height());
+    var mp3_win = Console.init(state.gpa.allocator(), map_d.width(), map_d.height());
+    mp3_win.default_transparent = true;
+
+    container.addSubconsole(&lgg_win, log_d.startx, log_d.starty);
+    container.addSubconsole(&inf_win, inf_d.startx, inf_d.starty);
+    container.addSubconsole(&mpp_win, map_d.startx, map_d.starty);
+    mpp_win.addSubconsole(&mp3_win, 0, 0);
+
+    defer container.deinit();
 
     const MobTileFocus = enum { Main, Stats, Spells };
 
@@ -2986,10 +3000,6 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
 
     const moblist = state.createMobList(false, true, state.player.coord.z, state.gpa.allocator());
     defer moblist.deinit();
-
-    map_win.grid_annotations.clear();
-    defer map_win.annotations.clear();
-    defer map_win.map.renderFullyW(.Main);
 
     while (true) {
         const has_item = state.dungeon.itemsAt(coord).len > 0;
@@ -3011,8 +3021,9 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
         }
 
         // Draw side info pane.
+        inf_win.clear();
         if (state.player.cansee(coord) and has_mons or has_surf or has_item) {
-            const linewidth = @intCast(usize, infow.endx - infow.startx);
+            const linewidth = @intCast(usize, inf_d.endx - inf_d.startx);
 
             var textbuf: [4096]u8 = undefined;
             var text = io.fixedBufferStream(&textbuf);
@@ -3064,25 +3075,15 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                 // nothing
             }
 
-            var y = infow.starty;
-
-            while (y < infow.endy) : (y += 1)
-                _clear_line(infow.startx, infow.endx, y);
-            y = infow.starty;
-
-            y = _drawStr(infow.startx, y, infow.endx, text.getWritten(), .{});
-        } else {
-            var y = infow.starty;
-            while (y < infow.endy) : (y += 1)
-                _clear_line(infow.startx, infow.endx, y);
+            _ = inf_win.drawTextAt(0, 0, text.getWritten(), .{});
         }
 
         // Draw description pane.
         if (state.player.cansee(coord)) {
-            const log_startx = logw.startx;
-            const log_endx = logw.endx;
-            const log_starty = logw.starty;
-            const log_endy = logw.endy;
+            const log_startx = log_d.startx;
+            const log_endx = log_d.endx;
+            const log_starty = log_d.starty;
+            const log_endy = log_d.endy;
 
             var descbuf: [4096]u8 = undefined;
             var descbuf_stream = io.fixedBufferStream(&descbuf);
@@ -3131,36 +3132,33 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                     };
             }
 
-            var y = log_starty;
-            while (y < log_endy) : (y += 1) _clear_line(log_startx, log_endx, y);
+            lgg_win.clear();
 
-            const lasty = _drawStr(log_startx, log_starty, log_endx, descbuf_stream.getWritten(), .{
-                .skip_lines = desc_scroll,
-                .endy = log_endy,
-            });
+            const lasty = lgg_win.drawTextAt(log_startx, log_starty, descbuf_stream.getWritten(), .{ .skip_lines = desc_scroll, .endy = log_endy });
 
             if (desc_scroll > 0) {
-                _ = _drawStr(log_endx - 14, log_starty, log_endx, " $p-- PgUp --$.", .{});
+                _ = lgg_win.drawTextAt(log_endx - 14, log_starty, " $p-- PgUp --$.", .{});
             }
             if (lasty == log_endy) {
-                _ = _drawStr(log_endx - 14, log_endy - 1, log_endx, " $p-- PgDn --$.", .{});
+                _ = lgg_win.drawTextAt(log_endx - 14, log_endy - 1, " $p-- PgDn --$.", .{});
             }
         }
 
-        map_win.annotations.clear();
-        drawMap(moblist.items, coord);
+        mpp_win.clear();
+        mp3_win.clear();
+        drawMap(&mpp_win, moblist.items, coord);
 
         const dcoord = coordToScreenFromRefpoint(coord, coord).?;
-        map_win.annotations.setCell(dcoord.x - 2, dcoord.y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        map_win.annotations.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        map_win.annotations.setCell(dcoord.x + 2, dcoord.y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        map_win.annotations.setCell(dcoord.x - 2, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        map_win.annotations.setCell(dcoord.x + 2, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        map_win.annotations.setCell(dcoord.x - 2, dcoord.y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        map_win.annotations.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        map_win.annotations.setCell(dcoord.x + 2, dcoord.y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        mp3_win.setCell(dcoord.x - 2, dcoord.y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        mp3_win.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        mp3_win.setCell(dcoord.x + 2, dcoord.y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        mp3_win.setCell(dcoord.x - 2, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        mp3_win.setCell(dcoord.x + 2, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        mp3_win.setCell(dcoord.x - 2, dcoord.y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        mp3_win.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        mp3_win.setCell(dcoord.x + 2, dcoord.y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
 
-        map_win.map.renderFullyW(.Main);
+        container.renderFully(0, 0);
         display.present();
 
         var evgen = Generator(display.getEvents).init(null);
