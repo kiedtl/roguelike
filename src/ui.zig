@@ -105,7 +105,7 @@ pub var log_win: struct {
     pub fn handleMouseEvent(self: *@This(), ev: display.Event) bool {
         return switch (ev) {
             .Click, .Hover => |c| switch (self.main.handleMouseEvent(c, _evToMEvType(ev))) {
-                .Signal => err.wat(),
+                .Coord, .Signal => err.wat(),
                 .Unhandled, .Void => true,
                 .Outside => false,
             },
@@ -127,7 +127,7 @@ pub var hud_win: struct {
     pub fn handleMouseEvent(self: *@This(), ev: display.Event) bool {
         return switch (ev) {
             .Click, .Hover => |c| switch (self.main.handleMouseEvent(c, _evToMEvType(ev))) {
-                .Signal => err.wat(),
+                .Coord, .Signal => err.wat(),
                 .Unhandled, .Void => true,
                 .Outside => false,
             },
@@ -251,7 +251,7 @@ pub var map_win: struct {
     pub fn handleMouseEvent(self: *@This(), ev: display.Event) bool {
         return switch (ev) {
             .Click, .Hover => |c| switch (self.map.handleMouseEvent(c, _evToMEvType(ev))) {
-                .Signal => err.wat(),
+                .Coord, .Signal => err.wat(),
                 .Unhandled, .Void => true,
                 .Outside => false,
             },
@@ -1748,6 +1748,16 @@ fn _mobs_can_see(moblist: []const *Mob, coord: Coord) bool {
     return false;
 }
 
+pub fn screenCoordToNormal(coord: Coord, refpoint: Coord) ?Coord {
+    const x = @intCast(isize, refpoint.x) +
+        (@intCast(isize, coord.x) - @intCast(isize, refpoint.x));
+    const y = @intCast(isize, refpoint.y) +
+        (@intCast(isize, coord.y) - @intCast(isize, refpoint.y));
+    if (x < 0 or y < 0 or x >= WIDTH or y >= HEIGHT)
+        return null;
+    return Coord.new(@intCast(usize, x), @intCast(usize, y));
+}
+
 pub fn coordToScreenFromRefpoint(coord: Coord, refpoint: Coord) ?Coord {
     if (coord.x < refpoint.x -| MAP_WIDTH_R or coord.x > refpoint.x + MAP_WIDTH_R or
         coord.y < refpoint.y -| MAP_HEIGHT_R or coord.y > refpoint.y + MAP_HEIGHT_R)
@@ -2576,7 +2586,7 @@ pub fn drawMessagesScreen() void {
                 break :main;
             },
             .Click => |c| switch (log_win.main.handleMouseEvent(c, .Click)) {
-                .Signal, .Void => err.wat(),
+                .Coord, .Signal, .Void => err.wat(),
                 .Outside => break :main,
                 .Unhandled => {},
             },
@@ -2753,7 +2763,7 @@ pub fn drawPlayerInfoScreen() void {
                 break :main;
             },
             .Hover => |c| switch (pinfo_win.container.handleMouseEvent(c, .Hover)) {
-                .Signal => err.wat(),
+                .Coord, .Signal => err.wat(),
                 .Void, .Outside, .Unhandled => {},
             },
             .Click => |c| switch (pinfo_win.container.handleMouseEvent(c, .Click)) {
@@ -2762,7 +2772,7 @@ pub fn drawPlayerInfoScreen() void {
                     tab_hover = null;
                     tab_changed = true;
                 },
-                .Void => err.wat(),
+                .Coord, .Void => err.wat(),
                 .Outside => break :main,
                 .Unhandled => {},
             },
@@ -2927,12 +2937,12 @@ pub fn drawZapScreen() void {
                 break :main;
             },
             .Hover => |c| switch (zap_win.container.handleMouseEvent(c, .Hover)) {
-                .Signal => err.wat(),
+                .Coord, .Signal => err.wat(),
                 .Void, .Outside, .Unhandled => {},
             },
             .Click => |c| switch (zap_win.container.handleMouseEvent(c, .Click)) {
                 .Signal => |sig| selected = sig,
-                .Void => err.wat(),
+                .Coord, .Void => err.wat(),
                 .Outside => break :main,
                 .Unhandled => {},
             },
@@ -2985,6 +2995,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
     container.addSubconsole(&inf_win, inf_d.startx, inf_d.starty);
     container.addSubconsole(&mpp_win, map_d.startx, map_d.starty);
     mpp_win.addSubconsole(&mp3_win, 0, 0);
+    mpp_win.addMouseTrigger(Rect.new(Coord.new(0, 0), mpp_win.width, mpp_win.height), .Click, .Coord);
 
     defer container.deinit();
 
@@ -3167,6 +3178,16 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                 state.state = .Quit;
                 return false;
             },
+            .Click => |c| {
+                switch (container.handleMouseEvent(c, .Click)) {
+                    .Coord => |clicked| {
+                        if (screenCoordToNormal(clicked, coord)) |mapc|
+                            coord = mapc;
+                    },
+                    .Signal, .Void => err.wat(),
+                    .Outside, .Unhandled => {},
+                }
+            },
             .Key => |k| switch (k) {
                 .CtrlC, .CtrlG, .Esc => return false,
                 .PgUp => desc_scroll -|= 1,
@@ -3295,7 +3316,7 @@ pub fn drawEscapeMenu() void {
             .Quit => return,
             .Hover => |c| switch (menu_c.handleMouseEvent(c, .Hover)) {
                 .Signal => |sig| tab = sig,
-                .Void => err.wat(),
+                .Coord, .Void => err.wat(),
                 .Outside, .Unhandled => {},
             },
             .Click => |c| switch (menu_c.handleMouseEvent(c, .Click)) {
@@ -3303,7 +3324,7 @@ pub fn drawEscapeMenu() void {
                     assert(tab == sig);
                     menu_tab_chosen = true;
                 },
-                .Void => err.wat(),
+                .Coord, .Void => err.wat(),
                 .Outside, .Unhandled => {},
             },
             .Key => |k| switch (k) {
@@ -3727,7 +3748,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
             },
             .Hover => |c| switch (container_c.handleMouseEvent(c, .Hover)) {
                 .Signal => |sig| chosen = sig,
-                .Void => err.wat(),
+                .Coord, .Void => err.wat(),
                 .Outside, .Unhandled => {},
             },
             .Click => |c| switch (container_c.handleMouseEvent(c, .Click)) {
@@ -3735,7 +3756,7 @@ pub fn drawChoicePrompt(comptime fmt: []const u8, args: anytype, options: []cons
                     chosen = sig;
                     break :main;
                 },
-                .Void => err.wat(),
+                .Coord, .Void => err.wat(),
                 .Unhandled => {},
                 .Outside => break :main,
             },

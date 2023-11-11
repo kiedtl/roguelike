@@ -59,6 +59,7 @@ pub const MouseTrigger = struct {
     };
 
     pub const Action = union(enum) {
+        Coord,
         Signal: usize,
         ExamineScreen: struct {
             starting_focus: ?ui.ExamineTileFocus = null,
@@ -75,7 +76,7 @@ pub const MouseTrigger = struct {
     pub const AList = std.ArrayList(@This());
 };
 
-pub const MouseEventHandleResult = union(enum) { Unhandled, Outside, Signal: usize, Void };
+pub const MouseEventHandleResult = union(enum) { Unhandled, Outside, Coord: Coord, Signal: usize, Void };
 
 pub const Subconsole = struct {
     console: *Self,
@@ -200,12 +201,14 @@ fn _handleMouseEvent(self: *Self, abscoord: Coord, kind: MouseTrigger.Kind, dim:
             .Outside, .Unhandled => {},
             .Void => return .Void,
             .Signal => |s| return .{ .Signal = s },
+            .Coord => |c| return .{ .Coord = c },
         }
     }
     for (self.mouse_triggers.items) |t| {
         if (t.kind == kind and t.rect.intersects(&coord.relTo(dim), 1)) {
             switch (t.action) {
                 .Signal => |s| return .{ .Signal = s },
+                .Coord => return .{ .Coord = abscoord },
                 .ExamineScreen => |o| {
                     const did_anything = ui.drawExamineScreen(o.starting_focus, o.start_coord);
                     assert(!did_anything);
