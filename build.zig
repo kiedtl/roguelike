@@ -28,6 +28,9 @@ pub fn build(b: *Builder) void {
     const opt_use_sdl = b.option(bool, "use-sdl", "Build a graphical tiles version of Oathbreaker") orelse false;
     options.addOption(bool, "use_sdl", opt_use_sdl);
 
+    const opt_build_fabedit = b.option(bool, "build-fabedit", "Build fabedit (dev utility)") orelse false;
+    options.addOption(bool, "build_fabedit", opt_build_fabedit);
+
     // Standard target options allows the person running `zig build` to choose
     // what target to build for. Here we do not override the defaults, which
     // means any target is allowed, and the default is native. Other options
@@ -40,20 +43,26 @@ pub fn build(b: *Builder) void {
 
     const is_windows = target.os_tag != null and target.os_tag.? == .windows;
 
-    const fabedit = b.addExecutable("rl_fabedit", "src/fabedit.zig");
-    fabedit.linkLibC();
-    fabedit.addIncludeDir("third_party/janet/"); // janet.h
-    fabedit.addCSourceFile("third_party/janet/janet.c", &[_][]const u8{"-std=c99"});
-    fabedit.addIncludeDir("third_party/microtar/src/"); // janet.h
-    fabedit.addCSourceFile("third_party/microtar/src/microtar.c", &[_][]const u8{});
-    fabedit.addIncludeDir("/usr/include/SDL2/");
-    fabedit.linkSystemLibrary("SDL2");
-    fabedit.linkSystemLibrary("z");
-    fabedit.linkSystemLibrary("png");
-    fabedit.setTarget(target);
-    fabedit.setBuildMode(mode);
-    fabedit.addOptions("build_options", options);
-    fabedit.install();
+    if (opt_build_fabedit) {
+        const fabedit = b.addExecutable("rl_fabedit", "src/fabedit.zig");
+        fabedit.linkLibC();
+        fabedit.addIncludeDir("third_party/janet/"); // janet.h
+        fabedit.addCSourceFile("third_party/janet/janet.c", &[_][]const u8{"-std=c99"});
+        fabedit.addIncludeDir("third_party/microtar/src/"); // janet.h
+        fabedit.addCSourceFile("third_party/microtar/src/microtar.c", &[_][]const u8{});
+        fabedit.addIncludeDir("/usr/include/SDL2/");
+        fabedit.linkSystemLibrary("SDL2");
+        fabedit.linkSystemLibrary("z");
+        fabedit.linkSystemLibrary("png");
+        fabedit.setTarget(target);
+        fabedit.setBuildMode(mode);
+        fabedit.addOptions("build_options", options);
+        fabedit.install();
+        const fabedit_run_cmd = fabedit.run();
+        fabedit_run_cmd.step.dependOn(b.getInstallStep());
+        const fabedit_run_step = b.step("run-fabedit", "Run fabedit");
+        fabedit_run_step.dependOn(&fabedit_run_cmd.step);
+    }
 
     const exe = b.addExecutable("rl", "src/main.zig");
     exe.linkLibC();
@@ -127,11 +136,6 @@ pub fn build(b: *Builder) void {
     if (b.args) |args| run_cmd.addArgs(args);
     const run_step = b.step("run", "Run the roguelike");
     run_step.dependOn(&run_cmd.step);
-
-    const fabedit_run_cmd = fabedit.run();
-    fabedit_run_cmd.step.dependOn(b.getInstallStep());
-    const fabedit_run_step = b.step("run-fabedit", "Run fabedit");
-    fabedit_run_step.dependOn(&fabedit_run_cmd.step);
 
     var tests = b.addTest("tests/tests.zig");
     tests.setBuildMode(mode);
