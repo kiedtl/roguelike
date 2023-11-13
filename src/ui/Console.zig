@@ -197,14 +197,13 @@ fn _handleMouseEvent(self: *Self, abscoord: Coord, kind: MouseTrigger.Kind, dim:
         return .Outside;
     for (self.subconsoles.items) |*subconsole| {
         const r = Rect.new(Coord.new(dim.start.x + subconsole.x, dim.start.y + subconsole.y), subconsole.console.width, subconsole.console.height);
-        switch (_handleMouseEvent(subconsole.console, abscoord, kind, r)) {
-            .Outside, .Unhandled => {},
-            .Void => return .Void,
-            .Signal => |s| return .{ .Signal = s },
-            .Coord => |c| return .{ .Coord = c },
-        }
+        const res = _handleMouseEvent(subconsole.console, abscoord, kind, r);
+        // std.log.debug("HANDLED abscoord={}, r={}, res={}, subconsole: {},{}", .{ abscoord, r, res, subconsole.console.width, subconsole.console.height });
+        if (res != .Outside and res != .Unhandled)
+            return res;
     }
     for (self.mouse_triggers.items) |t| {
+        // std.log.debug("HANDLING abscoord={}, kind={}, dim={}, coord={}, coordrel={}, tkind={}, trect={}", .{ abscoord, kind, dim, coord, coord.relTo(dim), t.kind, t.rect });
         if (t.kind == kind and t.rect.intersects(&coord.relTo(dim), 1)) {
             switch (t.action) {
                 .Signal => |s| return .{ .Signal = s },
@@ -374,6 +373,30 @@ pub fn addRevealAnimation(self: *Self, opts: ui.RevealAnimationOpts) void {
 
 pub fn stepRevealAnimation(self: *Self) void {
     _ = self._reveal_animation.?.next();
+}
+
+pub fn drawOutlineAround(self: *const Self, coord: Coord, style: display.Cell) void {
+    const f: isize = if (style.fl.wide) 2 else 1;
+    const c = [_]struct { x: isize, y: isize, ch: u21 }{
+        // zig fmt: off
+        .{ .x = -f, .y = -1, .ch = '╭' },
+        .{ .x =  0, .y = -1, .ch = '─' },
+        .{ .x =  f, .y = -1, .ch = '╮' },
+        .{ .x = -f, .y =  0, .ch = '│' },
+        .{ .x =  f, .y =  0, .ch = '│' },
+        .{ .x = -f, .y =  1, .ch = '╰' },
+        .{ .x =  0, .y =  1, .ch = '─' },
+        .{ .x =  f, .y =  1, .ch = '╯' },
+        // zig fmt: on
+    };
+    for (c) |i| {
+        var cell = style;
+        cell.ch = i.ch;
+        const dx = @intCast(isize, coord.x) + i.x;
+        const dy = @intCast(isize, coord.y) + i.y;
+        if (dx < 0 or dy < 0) continue;
+        self.setCell(@intCast(usize, dx), @intCast(usize, dy), cell);
+    }
 }
 
 // TODO: draw multiple layers as needed

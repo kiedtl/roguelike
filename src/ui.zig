@@ -1748,11 +1748,12 @@ fn _mobs_can_see(moblist: []const *Mob, coord: Coord) bool {
     return false;
 }
 
-pub fn screenCoordToNormal(coord: Coord, refpoint: Coord) ?Coord {
-    const x = @intCast(isize, refpoint.x) +
+pub fn screenCoordToNormal(coord: Coord, absrefpoint: Coord) ?Coord {
+    const refpoint = coordToScreenFromRefpoint(absrefpoint, absrefpoint).?;
+    const x = @intCast(isize, absrefpoint.x) +
         @divFloor(@intCast(isize, coord.x) - @intCast(isize, refpoint.x), 2);
-    const y = @intCast(isize, refpoint.y) +
-        (@intCast(isize, coord.y) - @intCast(isize, refpoint.y));
+    const y = @intCast(isize, absrefpoint.y) +
+        (@intCast(isize, coord.y) - @intCast(isize, refpoint.y) - 1);
     if (x < 0 or y < 0 or x >= WIDTH or y >= HEIGHT)
         return null;
     return Coord.new(@intCast(usize, x), @intCast(usize, y));
@@ -1838,7 +1839,9 @@ pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
     const map_startx = refpointx - @intCast(isize, MAP_WIDTH_R);
     const map_endx = refpointx + @intCast(isize, MAP_WIDTH_R);
 
-    console.clearMouseTriggers();
+    if (console == &map_win.map) // yuck
+        console.clearMouseTriggers();
+
     console.clearTo(.{ .fl = .{ .wide = true } });
 
     var y = map_starty;
@@ -3165,32 +3168,19 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
 
         {
             const dcoord = coordToScreenFromRefpoint(coord, coord).?;
-            mp3_win.setCell(dcoord.x - 2, dcoord.y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-            mp3_win.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-            mp3_win.setCell(dcoord.x + 2, dcoord.y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-            mp3_win.setCell(dcoord.x - 2, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-            mp3_win.setCell(dcoord.x + 2, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-            mp3_win.setCell(dcoord.x - 2, dcoord.y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-            mp3_win.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-            mp3_win.setCell(dcoord.x + 2, dcoord.y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+            mp3_win.drawOutlineAround(dcoord, .{ .fg = colors.CONCRETE, .fl = .{ .wide = true } });
         }
 
         if (highlight) |_highlight| {
-            const dcoord = coordToScreenFromRefpoint(_highlight, coord).?;
-            mp3_win.setCell(dcoord.x - 2, dcoord.y - 1, .{ .ch = '╭', .fg = 0xcacbca, .fl = .{ .wide = true } });
-            mp3_win.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = 0xcacbca, .fl = .{ .wide = true } });
-            mp3_win.setCell(dcoord.x + 2, dcoord.y - 1, .{ .ch = '╮', .fg = 0xcacbca, .fl = .{ .wide = true } });
-            mp3_win.setCell(dcoord.x - 2, dcoord.y + 0, .{ .ch = '│', .fg = 0xcacbca, .fl = .{ .wide = true } });
-            mp3_win.setCell(dcoord.x + 2, dcoord.y + 0, .{ .ch = '│', .fg = 0xcacbca, .fl = .{ .wide = true } });
-            mp3_win.setCell(dcoord.x - 2, dcoord.y + 1, .{ .ch = '╰', .fg = 0xcacbca, .fl = .{ .wide = true } });
-            mp3_win.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = 0xcacbca, .fl = .{ .wide = true } });
-            mp3_win.setCell(dcoord.x + 2, dcoord.y + 1, .{ .ch = '╯', .fg = 0xcacbca, .fl = .{ .wide = true } });
+            if (coordToScreenFromRefpoint(_highlight, coord)) |dcoord| {
+                mp3_win.drawOutlineAround(dcoord, .{ .fg = 0xaaaaaa, .fl = .{ .wide = true } });
+            }
         }
 
         container.renderFully(0, 0);
         display.present();
 
-        var evgen = Generator(display.getEvents).init(null);
+        var evgen = Generator(display.getEvents).init(FRAMERATE);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
@@ -3207,7 +3197,9 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                 }
             },
             .Click => |c| {
-                switch (container.handleMouseEvent(c, .Click)) {
+                const r = container.handleMouseEvent(c, .Click);
+                std.log.info("r: {}", .{r});
+                switch (r) {
                     .Coord => |screenc| {
                         if (screenCoordToNormal(screenc, coord)) |mapc|
                             coord = mapc;
