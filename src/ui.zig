@@ -1750,7 +1750,7 @@ fn _mobs_can_see(moblist: []const *Mob, coord: Coord) bool {
 
 pub fn screenCoordToNormal(coord: Coord, refpoint: Coord) ?Coord {
     const x = @intCast(isize, refpoint.x) +
-        (@intCast(isize, coord.x) - @intCast(isize, refpoint.x));
+        @divFloor(@intCast(isize, coord.x) - @intCast(isize, refpoint.x), 2);
     const y = @intCast(isize, refpoint.y) +
         (@intCast(isize, coord.y) - @intCast(isize, refpoint.y));
     if (x < 0 or y < 0 or x >= WIDTH or y >= HEIGHT)
@@ -1902,7 +1902,9 @@ pub fn drawMap(console: *Console, moblist: []const *Mob, refpoint: Coord) void {
             console.setCell(cursorx, cursory, tile);
             console.setCell(cursorx + 1, cursory, .{ .fl = .{ .skip = true } });
 
-            if (state.player.cansee(coord)) {
+            if (state.player.cansee(coord) and
+                console == &map_win.map) // yuck
+            {
                 console.addMouseTrigger(cursor_coord.asRect(), .Hover, .{ .RecordElem = &map_win.annotations });
                 console.addMouseTrigger(cursor_coord.asRect(), .Click, .{ .ExamineScreen = .{ .start_coord = coord } });
             }
@@ -2996,12 +2998,14 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
     container.addSubconsole(&mpp_win, map_d.startx, map_d.starty);
     mpp_win.addSubconsole(&mp3_win, 0, 0);
     mpp_win.addMouseTrigger(Rect.new(Coord.new(0, 0), mpp_win.width, mpp_win.height), .Click, .Coord);
+    mpp_win.addMouseTrigger(Rect.new(Coord.new(0, 0), mpp_win.width, mpp_win.height), .Hover, .Coord);
 
     defer container.deinit();
 
     const MobTileFocus = enum { Main, Stats, Spells };
 
     var coord: Coord = start_coord orelse state.player.coord;
+    var highlight: ?Coord = null;
     var tile_focus = starting_focus orelse .Mob;
     var mob_tile_focus: MobTileFocus = .Main;
     var tile_focus_set_manually = false;
@@ -3159,15 +3163,29 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
         mp3_win.clear();
         drawMap(&mpp_win, moblist.items, coord);
 
-        const dcoord = coordToScreenFromRefpoint(coord, coord).?;
-        mp3_win.setCell(dcoord.x - 2, dcoord.y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        mp3_win.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        mp3_win.setCell(dcoord.x + 2, dcoord.y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        mp3_win.setCell(dcoord.x - 2, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        mp3_win.setCell(dcoord.x + 2, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        mp3_win.setCell(dcoord.x - 2, dcoord.y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        mp3_win.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
-        mp3_win.setCell(dcoord.x + 2, dcoord.y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        {
+            const dcoord = coordToScreenFromRefpoint(coord, coord).?;
+            mp3_win.setCell(dcoord.x - 2, dcoord.y - 1, .{ .ch = '╭', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+            mp3_win.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+            mp3_win.setCell(dcoord.x + 2, dcoord.y - 1, .{ .ch = '╮', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+            mp3_win.setCell(dcoord.x - 2, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+            mp3_win.setCell(dcoord.x + 2, dcoord.y + 0, .{ .ch = '│', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+            mp3_win.setCell(dcoord.x - 2, dcoord.y + 1, .{ .ch = '╰', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+            mp3_win.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+            mp3_win.setCell(dcoord.x + 2, dcoord.y + 1, .{ .ch = '╯', .fg = colors.CONCRETE, .bg = colors.BG, .fl = .{ .wide = true } });
+        }
+
+        if (highlight) |_highlight| {
+            const dcoord = coordToScreenFromRefpoint(_highlight, coord).?;
+            mp3_win.setCell(dcoord.x - 2, dcoord.y - 1, .{ .ch = '╭', .fg = 0xcacbca, .fl = .{ .wide = true } });
+            mp3_win.setCell(dcoord.x + 0, dcoord.y - 1, .{ .ch = '─', .fg = 0xcacbca, .fl = .{ .wide = true } });
+            mp3_win.setCell(dcoord.x + 2, dcoord.y - 1, .{ .ch = '╮', .fg = 0xcacbca, .fl = .{ .wide = true } });
+            mp3_win.setCell(dcoord.x - 2, dcoord.y + 0, .{ .ch = '│', .fg = 0xcacbca, .fl = .{ .wide = true } });
+            mp3_win.setCell(dcoord.x + 2, dcoord.y + 0, .{ .ch = '│', .fg = 0xcacbca, .fl = .{ .wide = true } });
+            mp3_win.setCell(dcoord.x - 2, dcoord.y + 1, .{ .ch = '╰', .fg = 0xcacbca, .fl = .{ .wide = true } });
+            mp3_win.setCell(dcoord.x + 0, dcoord.y + 1, .{ .ch = '─', .fg = 0xcacbca, .fl = .{ .wide = true } });
+            mp3_win.setCell(dcoord.x + 2, dcoord.y + 1, .{ .ch = '╯', .fg = 0xcacbca, .fl = .{ .wide = true } });
+        }
 
         container.renderFully(0, 0);
         display.present();
@@ -3178,10 +3196,20 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                 state.state = .Quit;
                 return false;
             },
+            .Hover => |c| {
+                switch (container.handleMouseEvent(c, .Hover)) {
+                    .Coord => |screenc| {
+                        if (screenCoordToNormal(screenc, coord)) |mapc|
+                            highlight = mapc;
+                    },
+                    .Signal, .Void => err.wat(),
+                    .Outside, .Unhandled => highlight = null,
+                }
+            },
             .Click => |c| {
                 switch (container.handleMouseEvent(c, .Click)) {
-                    .Coord => |clicked| {
-                        if (screenCoordToNormal(clicked, coord)) |mapc|
+                    .Coord => |screenc| {
+                        if (screenCoordToNormal(screenc, coord)) |mapc|
                             coord = mapc;
                     },
                     .Signal, .Void => err.wat(),
