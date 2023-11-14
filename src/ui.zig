@@ -3000,8 +3000,9 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
     container.addSubconsole(&inf_win, inf_d.startx, inf_d.starty);
     container.addSubconsole(&mpp_win, map_d.startx, map_d.starty);
     mpp_win.addSubconsole(&mp3_win, 0, 0);
-    mpp_win.addMouseTrigger(Rect.new(Coord.new(0, 0), mpp_win.width, mpp_win.height), .Click, .Coord);
-    mpp_win.addMouseTrigger(Rect.new(Coord.new(0, 0), mpp_win.width, mpp_win.height), .Hover, .Coord);
+    mpp_win.addMouseTrigger(mpp_win.dimensionsRect(), .Click, .Coord);
+    mpp_win.addMouseTrigger(mpp_win.dimensionsRect(), .Hover, .Coord);
+    lgg_win.addMouseTrigger(lgg_win.dimensionsRect(), .Wheel, .{ .Signal = 1 });
 
     defer container.deinit();
 
@@ -3018,6 +3019,8 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
 
     const moblist = state.createMobList(false, true, state.player.coord.z, state.gpa.allocator());
     defer moblist.deinit();
+
+    var prev_coord = coord;
 
     while (true) {
         const has_item = state.dungeon.itemsAt(coord).len > 0;
@@ -3098,11 +3101,6 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
 
         // Draw description pane.
         if (state.player.cansee(coord)) {
-            const log_startx = log_d.startx;
-            const log_endx = log_d.endx;
-            const log_starty = log_d.starty;
-            const log_endy = log_d.endy;
-
             var descbuf: [4096]u8 = undefined;
             var descbuf_stream = io.fixedBufferStream(&descbuf);
             var writer = descbuf_stream.writer();
@@ -3152,13 +3150,13 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
 
             lgg_win.clear();
 
-            const lasty = lgg_win.drawTextAt(log_startx, log_starty, descbuf_stream.getWritten(), .{ .skip_lines = desc_scroll, .endy = log_endy });
+            const lasty = lgg_win.drawTextAt(0, 0, descbuf_stream.getWritten(), .{ .skip_lines = desc_scroll });
 
             if (desc_scroll > 0) {
-                _ = lgg_win.drawTextAt(log_endx - 14, log_starty, " $p-- PgUp --$.", .{});
+                _ = lgg_win.drawTextAt(lgg_win.width - 14, 0, " $p-- PgUp --$.", .{});
             }
-            if (lasty == log_endy) {
-                _ = lgg_win.drawTextAt(log_endx - 14, log_endy - 1, " $p-- PgDn --$.", .{});
+            if (lasty >= lgg_win.height) {
+                _ = lgg_win.drawTextAt(lgg_win.width - 14, lgg_win.height - 1, " $p-- PgDn --$.", .{});
             }
         }
 
@@ -3186,27 +3184,28 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                 state.state = .Quit;
                 return false;
             },
-            .Hover => |c| {
-                switch (container.handleMouseEvent(c, .Hover)) {
-                    .Coord => |screenc| {
-                        if (screenCoordToNormal(screenc, coord)) |mapc|
-                            highlight = mapc;
-                    },
-                    .Signal, .Void => err.wat(),
-                    .Outside, .Unhandled => highlight = null,
-                }
+            .Hover => |c| switch (container.handleMouseEvent(c, .Hover)) {
+                .Coord => |screenc| {
+                    if (screenCoordToNormal(screenc, coord)) |mapc|
+                        highlight = mapc;
+                },
+                .Signal, .Void => err.wat(),
+                .Outside, .Unhandled => highlight = null,
             },
-            .Click => |c| {
-                const r = container.handleMouseEvent(c, .Click);
-                std.log.info("r: {}", .{r});
-                switch (r) {
-                    .Coord => |screenc| {
-                        if (screenCoordToNormal(screenc, coord)) |mapc|
-                            coord = mapc;
-                    },
-                    .Signal, .Void => err.wat(),
-                    .Outside, .Unhandled => {},
-                }
+            .Click => |c| switch (container.handleMouseEvent(c, .Click)) {
+                .Coord => |screenc| {
+                    if (screenCoordToNormal(screenc, coord)) |mapc|
+                        coord = mapc;
+                },
+                .Signal, .Void => err.wat(),
+                .Outside, .Unhandled => {},
+            },
+            .Wheel => |w| switch (container.handleMouseEvent(w.c, .Wheel)) {
+                .Signal => |s| if (s == 1) {
+                    const new = @intCast(isize, desc_scroll) + w.y * -1;
+                    desc_scroll = @intCast(usize, math.max(0, new));
+                },
+                else => {},
             },
             .Key => |k| switch (k) {
                 .CtrlC, .CtrlG, .Esc => return false,
@@ -3230,6 +3229,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                         .Stats => .Spells,
                         .Spells => .Main,
                     };
+                    desc_scroll = 0;
                 },
                 '>' => {
                     tile_focus_set_manually = true;
@@ -3239,6 +3239,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                         .Item => .Mob,
                     };
                     if (tile_focus == .Mob) mob_tile_focus = .Main;
+                    desc_scroll = 0;
                 },
                 '<' => {
                     tile_focus_set_manually = true;
@@ -3253,6 +3254,11 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
             },
             else => {},
         };
+
+        if (!prev_coord.eq(coord)) {
+            prev_coord = coord;
+            desc_scroll = 0;
+        }
     }
 
     return false;

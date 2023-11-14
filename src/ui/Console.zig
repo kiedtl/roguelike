@@ -477,6 +477,7 @@ pub fn drawTextAt(self: *Self, startx: usize, starty: usize, str: []const u8, op
     var x = startx;
     var y = starty;
     var skipped: usize = 0; // TODO: remove
+    var no_incr_y = false;
 
     var fg = opts.fg;
     var bg: ?u32 = opts.bg;
@@ -485,12 +486,17 @@ pub fn drawTextAt(self: *Self, startx: usize, starty: usize, str: []const u8, op
     var fold_iter = utils.FoldedTextIterator.init(str, self.width + 1);
     main: while (fold_iter.next(&fibuf)) |line| : ({
         y += 1;
-        if (x > self.last_text_endx + 1) self.last_text_endx = x -| 1;
+        if (no_incr_y) {
+            y -= 1;
+            no_incr_y = false;
+        }
+        if (x > self.last_text_endx + 1)
+            self.last_text_endx = x -| 1;
         x = startx;
     }) {
         if (skipped < opts.skip_lines) {
             skipped += 1;
-            y -= 1; // Stay on the same line
+            no_incr_y = true; // Stay on the same line
             continue;
         }
 
