@@ -2983,7 +2983,7 @@ pub fn drawZapScreen() void {
 }
 
 // Examine mode {{{
-pub const ExamineTileFocus = enum { Item, Surface, Mob };
+pub const ExamineTileFocus = enum(usize) { Mob = 0, Surface = 1, Item = 2 };
 
 pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord) bool {
     var container = Console.init(state.gpa.allocator(), MIN_WIDTH, MIN_HEIGHT);
@@ -3006,7 +3006,19 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
 
     defer container.deinit();
 
-    const MobTileFocus = enum { Main, Stats, Spells };
+    const MobTileFocus = enum {
+        Main,
+        Stats,
+        Spells,
+
+        pub fn cycle(self: *@This()) void {
+            self.* = switch (self.*) {
+                .Main => .Stats,
+                .Stats => .Spells,
+                .Spells => .Main,
+            };
+        }
+    };
 
     var coord: Coord = start_coord orelse state.player.coord;
     var highlight: ?Coord = null;
@@ -3043,20 +3055,32 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
 
         // Draw side info pane.
         inf_win.clear();
+        inf_win.clearMouseTriggers();
         if (state.player.cansee(coord) and has_mons or has_surf or has_item) {
+            var y: usize = 0;
+
+            var tabx: usize = 0;
+            inline for (meta.fields(ExamineTileFocus)) |field, i| {
+                if (i != 0) {
+                    _ = inf_win.drawTextAt(tabx, y, " · ", .{});
+                    tabx += 3;
+                }
+                var c: u21 = 'g';
+                if (mem.eql(u8, @tagName(tile_focus), field.name))
+                    c = 'c';
+                _ = inf_win.drawTextAtf(tabx, y, "${u}{s}$.", .{ c, field.name }, .{});
+                inf_win.addClickableTextBoth(.{ .Signal = i });
+                tabx += field.name.len;
+            }
+            y += 1;
+
+            y += inf_win.drawTextAt(0, y, "Press $b<$./$b>$. to switch tabs.\n\n", .{});
+
             const linewidth = @intCast(usize, inf_d.endx - inf_d.startx);
 
             var textbuf: [4096]u8 = undefined;
             var text = io.fixedBufferStream(&textbuf);
             var writer = text.writer();
-
-            const mons_tab = if (tile_focus == .Mob) "$cMob$." else "$gMob$.";
-            const surf_tab = if (tile_focus == .Surface) "$cSurface$." else "$gSurface$.";
-            const item_tab = if (tile_focus == .Item) "$cItem$." else "$gItem$.";
-            _writerWrite(writer, "{s} · {s} · {s}$.\n", .{ mons_tab, surf_tab, item_tab });
-
-            _writerWrite(writer, "Press $b<>$. to switch tabs.\n", .{});
-            _writerWrite(writer, "\n", .{});
 
             if (tile_focus == .Mob and has_mons) {
                 const mob = state.dungeon.at(coord).mob.?;
@@ -3081,22 +3105,23 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                 _getItemDescription(writer, state.dungeon.itemsAt(coord).last().?, linewidth);
             }
 
+            y += inf_win.drawTextAt(0, y, text.getWritten(), .{});
+
             // Add keybinding descriptions
-            if (tile_focus == .Mob and has_mons) {
-                const mob = state.dungeon.at(coord).mob.?;
-                if (mob != state.player) {
-                    kbd_s = true;
-                    switch (mob_tile_focus) {
-                        .Main => _writerWrite(writer, "Press $bs$. to see stats.\n", .{}),
-                        .Stats => _writerWrite(writer, "Press $bs$. to see spells.\n", .{}),
-                        .Spells => _writerWrite(writer, "Press $bs$. to see mob.\n", .{}),
-                    }
-                }
-            } else if (tile_focus == .Surface and has_surf) {
-                // nothing
+            if (tile_focus == .Mob and has_mons and
+                state.dungeon.at(coord).mob.? != state.player)
+            {
+                kbd_s = true;
+                const s: []const u8 = switch (mob_tile_focus) {
+                    .Main => "stats",
+                    .Stats => "spells",
+                    .Spells => "mob",
+                };
+                y += inf_win.drawTextAtf(0, y, "Press $bs$. to see {s}", .{s}, .{});
+                inf_win.addClickableTextBoth(.{ .Signal = 0xFF });
             }
 
-            _ = inf_win.drawTextAt(0, 0, text.getWritten(), .{});
+            inf_win.highlightMouseArea(colors.BG_L);
         }
 
         // Draw description pane.
@@ -3189,7 +3214,8 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                     if (screenCoordToNormal(screenc, coord)) |mapc|
                         highlight = mapc;
                 },
-                .Signal, .Void => err.wat(),
+                .Signal => err.wat(),
+                .Void => {},
                 .Outside, .Unhandled => highlight = null,
             },
             .Click => |c| switch (container.handleMouseEvent(c, .Click)) {
@@ -3197,7 +3223,16 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                     if (screenCoordToNormal(screenc, coord)) |mapc|
                         coord = mapc;
                 },
-                .Signal, .Void => err.wat(),
+                .Signal => |s| switch (s) {
+                    0xFF => mob_tile_focus.cycle(),
+                    else => {
+                        tile_focus_set_manually = true;
+                        tile_focus = @intToEnum(ExamineTileFocus, s);
+                        if (tile_focus == .Mob) mob_tile_focus = .Main;
+                        desc_scroll = 0;
+                    },
+                },
+                .Void => err.wat(),
                 .Outside, .Unhandled => {},
             },
             .Wheel => |w| switch (container.handleMouseEvent(w.c, .Wheel)) {
@@ -3223,14 +3258,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                 'e', 'u' => coord = coord.move(.NorthEast, state.mapgeometry) orelse coord,
                 'z', 'b' => coord = coord.move(.SouthWest, state.mapgeometry) orelse coord,
                 'c', 'n' => coord = coord.move(.SouthEast, state.mapgeometry) orelse coord,
-                's' => if (kbd_s) {
-                    mob_tile_focus = switch (mob_tile_focus) {
-                        .Main => .Stats,
-                        .Stats => .Spells,
-                        .Spells => .Main,
-                    };
-                    desc_scroll = 0;
-                },
+                's' => if (kbd_s) mob_tile_focus.cycle(),
                 '>' => {
                     tile_focus_set_manually = true;
                     tile_focus = switch (tile_focus) {
@@ -3249,6 +3277,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                         .Item => .Surface,
                     };
                     if (tile_focus == .Mob) mob_tile_focus = .Main;
+                    desc_scroll = 0;
                 },
                 else => {},
             },

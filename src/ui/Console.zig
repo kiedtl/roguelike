@@ -177,6 +177,11 @@ pub fn addTooltipForRect(self: *Self, rect: Rect, comptime title_fmt: []const u8
     } });
 }
 
+pub fn addClickableTextBoth(self: *Self, click_action: MouseTrigger.Action) void {
+    self.addClickableText(.Hover, .{ .RecordElem = self });
+    self.addClickableText(.Click, click_action);
+}
+
 pub fn addClickableText(self: *Self, kind: MouseTrigger.Kind, action: MouseTrigger.Action) void {
     self.addMouseTrigger(Rect.new(
         Coord.new(self.last_text_startx, self.last_text_starty),
