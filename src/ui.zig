@@ -459,7 +459,7 @@ fn _formatBool(val: bool) []const u8 {
 
     const color: u21 = if (val) 'b' else 'r';
     const string = if (val) @as([]const u8, "yes") else "no";
-    _writerWrite(w, "${u}{s}$.", .{ color, string });
+    w.print("${u}{s}$.", .{ color, string }) catch err.wat();
 
     return fbs.getWritten();
 }
@@ -476,82 +476,69 @@ fn _formatStatusInfo(statusinfo: *const StatusDataInfo) []const u8 {
 
     const sname = statusinfo.status.string(state.player);
     switch (statusinfo.duration) {
-        .Prm => _writerWrite(w, "$bPrm$. {s}", .{sname}),
-        .Equ => _writerWrite(w, "$bEqu$. {s}", .{sname}),
-        .Tmp => _writerWrite(w, "$bTmp$. {s} $g({})$.", .{ sname, statusinfo.duration.Tmp }),
-        .Ctx => _writerWrite(w, "$bCtx$. {s}", .{sname}),
+        .Prm => w.print("$bPrm$. {s}", .{sname}) catch err.wat(),
+        .Equ => w.print("$bEqu$. {s}", .{sname}) catch err.wat(),
+        .Tmp => w.print("$bTmp$. {s} $g({})$.", .{ sname, statusinfo.duration.Tmp }) catch err.wat(),
+        .Ctx => w.print("$bCtx$. {s}", .{sname}) catch err.wat(),
     }
 
     return fbs.getWritten();
 }
 
 fn _writerTwice(
-    writer: io.FixedBufferStream([]u8).Writer,
+    self: *Console,
+    starty: usize,
     linewidth: usize,
     string: []const u8,
     comptime fmt2: []const u8,
     args2: anytype,
-) void {
-    writer.writeAll("$c") catch err.wat();
-
-    const prev_pos = @intCast(usize, writer.context.getPos() catch err.wat());
-    writer.writeAll(string) catch err.wat();
-    const new_pos = @intCast(usize, writer.context.getPos() catch err.wat());
-
-    writer.writeAll("$.") catch err.wat();
+) usize {
+    _ = self.drawTextAtf(0, starty, "$c{s}$.", .{string}, .{});
 
     const fmt2_width = utils.countFmt(fmt2, args2);
-    var i: usize = linewidth - ((new_pos - prev_pos) + fmt2_width);
-    while (i > 0) : (i -= 1)
-        writer.writeAll(" ") catch err.wat();
+    var i = linewidth - (string.len + fmt2_width);
 
-    writer.print(fmt2, args2) catch err.wat();
-    writer.writeAll("$.\n") catch err.wat();
+    _ = self.drawTextAtf(i, starty, fmt2, args2, .{});
+    return 1;
 }
 
 fn _writerWrite(writer: io.FixedBufferStream([]u8).Writer, comptime fmt: []const u8, args: anytype) void {
     writer.print(fmt, args) catch err.wat();
 }
 
-fn _writerHeader(writer: io.FixedBufferStream([]u8).Writer, linewidth: usize, comptime fmt: []const u8, args: anytype) void {
-    writer.writeAll("$b") catch err.wat();
+fn _writerHeader(self: *Console, y: usize, linewidth: usize, comptime fmt: []const u8, args: anytype) usize {
+    _ = self.drawTextAtf(0, y, "$c" ++ fmt ++ "$.", args, .{});
 
-    const prev_pos = @intCast(usize, writer.context.getPos() catch err.wat());
-    writer.print(fmt, args) catch err.wat();
-    const new_pos = @intCast(usize, writer.context.getPos() catch err.wat());
-
-    writer.writeAll(" $G") catch err.wat();
-
-    var i: usize = linewidth - (new_pos - prev_pos) - 1;
+    const fmt_width = utils.countFmt(fmt, args);
+    var i: usize = linewidth - fmt_width - 1;
     while (i > 0) : (i -= 1)
-        writer.writeAll("─") catch err.wat();
+        _ = self.drawTextAt(fmt_width + i, y, "$G─", .{});
 
-    writer.writeAll("$.\n") catch err.wat();
+    return 1;
 }
 
-fn _writerHLine(writer: io.FixedBufferStream([]u8).Writer, linewidth: usize) void {
+fn _writerHLine(self: *Console, y: usize, linewidth: usize) usize {
     var i: usize = 0;
     while (i < linewidth) : (i += 1)
-        writer.writeAll("─") catch err.wat();
-    writer.writeAll("\n") catch err.wat();
+        _ = self.drawTextAt(i, y, "─", .{});
+    return 1;
 }
 
-fn _writerMonsHostility(w: io.FixedBufferStream([]u8).Writer, mob: *Mob) void {
+fn _writerMonsHostility(self: *Console, y: usize, mob: *Mob) usize {
     if (mob.isHostileTo(state.player)) {
         if (mob.ai.is_combative) {
-            _writerWrite(w, "$rhostile$.\n", .{});
+            return self.drawTextAt(0, y, "$rhostile$.", .{});
         } else {
-            _writerWrite(w, "$gnon-combatant$.\n", .{});
+            return self.drawTextAt(0, y, "$gnon-combatant$.", .{});
         }
     } else {
-        _writerWrite(w, "$bneutral$.\n", .{});
+        return self.drawTextAt(0, y, "$bneutral$.", .{});
     }
 }
 
-fn _writerMobStats(
-    w: io.FixedBufferStream([]u8).Writer,
-    mob: *Mob,
-) void {
+fn _writerMobStats(self: *Console, starty: usize, mob: *Mob) usize {
+    var y = starty;
+
     inline for (@typeInfo(Stat).Enum.fields) |statv| {
         const stat = @intToEnum(Stat, statv.value);
         const stat_val_raw = mob.stat(stat);
@@ -564,29 +551,33 @@ fn _writerMobStats(
         if (stat.showMobStat(stat_val_raw)) {
             if (@intCast(usize, math.clamp(stat_val_raw, 0, 100)) != stat_val_real) {
                 const c = if (@intCast(isize, stat_val_real) < stat_val_raw) @as(u21, 'r') else 'b';
-                _writerWrite(w, "$c{s: <9}$. {: >5}{s: >1}  $g(${u}{}{s}$g)$.\n", .{ stat.string(), stat_val, stat.formatAfter(), c, stat_val_real, stat.formatAfter() });
+                y += self.drawTextAtf(0, y, "$c{s: <9}$. {: >5}{s: >1}  $g(${u}{}{s}$g)$.", .{ stat.string(), stat_val, stat.formatAfter(), c, stat_val_real, stat.formatAfter() }, .{});
             } else {
-                _writerWrite(w, "$c{s: <9}$. {: >5}{s: >1}\n", .{ stat.string(), stat_val, stat.formatAfter() });
+                y += self.drawTextAtf(0, y, "$c{s: <9}$. {: >5}{s: >1}", .{ stat.string(), stat_val, stat.formatAfter() }, .{});
             }
         }
     }
-    _writerWrite(w, "\n", .{});
+    y += self.drawTextAt(0, y, "\n", .{});
     inline for (@typeInfo(Resistance).Enum.fields) |resistancev| {
         const resist = @intToEnum(Resistance, resistancev.value);
         const resist_val = utils.SignedFormatter{ .v = mob.resistance(resist) };
         const resist_str = resist.string();
         if (resist_val.v != 0)
-            _writerWrite(w, "$c{s: <9}$. {: >5}%\n", .{ resist_str, resist_val });
+            y += self.drawTextAtf(0, y, "$c{s: <9}$. {: >5}%\n", .{ resist_str, resist_val }, .{});
     }
-    _writerWrite(w, "\n", .{});
+    y += self.drawTextAt(0, y, "\n", .{});
+    return y - starty;
 }
 
 fn _writerSobStats(
-    w: io.FixedBufferStream([]u8).Writer,
+    self: *Console,
+    starty: usize,
     linewidth: usize,
     p_stats: ?enums.EnumFieldStruct(Stat, isize, 0),
     p_resists: ?enums.EnumFieldStruct(Resistance, isize, 0),
-) void {
+) usize {
+    var y = starty;
+
     if (p_stats) |stats| {
         inline for (@typeInfo(Stat).Enum.fields) |statv| {
             const stat = @intToEnum(Stat, statv.value);
@@ -607,12 +598,12 @@ fn _writerSobStats(
                 // // TODO: use $r for negative '->' values, I tried to do this with
                 // // Zig v9.1 but ran into a compiler bug where the `color` variable
                 // // was replaced with random garbage.
-                // _writerWrite(w, "{s: <8} $a{: >5}$. $b{: >5}$. $a{: >5}$.\n", .{
+                // y += self.drawTextAtf(x, y, "{s: <8} $a{: >5}$. $b{: >5}$. $a{: >5}$.\n", .{
                 //     stat.string(), base_stat_val, terrain_stat_val, new_stat_val,
-                // });
+                // }, .{});
                 const fmt_val = utils.SignedFormatter{ .v = x_stat_val };
-                // _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ stat.string(), fmt_val });
-                _writerTwice(w, linewidth, stat.string(), "{}", .{fmt_val});
+                // y += self.drawTextAtf(x, y, "{s: <8} $a{: >5}$.\n", .{ stat.string(), fmt_val }, .{});
+                y += _writerTwice(self, y, linewidth, stat.string(), "{}", .{fmt_val});
             }
         }
     }
@@ -636,104 +627,112 @@ fn _writerSobStats(
                 // });
                 const fmt_val = utils.SignedFormatter{ .v = x_resist_val };
                 // _writerWrite(w, "{s: <8} $a{: >5}$.\n", .{ resist.string(), fmt_val });
-                _writerTwice(w, linewidth, resist.string(), "{}", .{fmt_val});
+                y += _writerTwice(self, y, linewidth, resist.string(), "{}", .{fmt_val});
             }
         }
     }
-    _writerWrite(w, "\n", .{});
+
+    y += self.drawTextAt(0, y, "\n", .{});
+
+    return y - starty;
 }
 
-fn _getTerrDescription(w: io.FixedBufferStream([]u8).Writer, terrain: *const surfaces.Terrain, linewidth: usize) void {
-    _writerWrite(w, "$c{s}$.\n", .{terrain.name});
-    _writerWrite(w, "terrain\n", .{});
-    _writerWrite(w, "\n", .{});
+fn _getTerrDescription(self: *Console, starty: usize, terrain: *const surfaces.Terrain, linewidth: usize) usize {
+    var y = starty;
+
+    y += self.drawTextAtf(0, y, "$c{s}$.", .{terrain.name}, .{});
+    y += self.drawTextAt(0, y, "terrain", .{});
+    y += self.drawTextAt(0, y, "\n", .{});
 
     if (terrain.fire_retardant) {
-        _writerWrite(w, "It will put out fires.\n", .{});
-        _writerWrite(w, "\n", .{});
+        y += self.drawTextAt(0, y, "It will put out fires.\n\n", .{});
     } else if (terrain.flammability > 0) {
-        _writerWrite(w, "It is flammable.\n", .{});
-        _writerWrite(w, "\n", .{});
+        y += self.drawTextAt(0, y, "It is flammable.\n\n", .{});
     }
 
-    _writerHeader(w, linewidth, "stats", .{});
-    _writerSobStats(w, linewidth, terrain.stats, terrain.resists);
-    _writerWrite(w, "\n", .{});
+    y += _writerHeader(self, y, linewidth, "stats", .{});
+    y += _writerSobStats(self, y, linewidth, terrain.stats, terrain.resists);
+    y += self.drawTextAt(0, y, "\n", .{});
 
     if (terrain.effects.len > 0) {
-        _writerHeader(w, linewidth, "effects", .{});
+        y += _writerHeader(self, y, linewidth, "effects", .{});
         for (terrain.effects) |effect| {
-            _writerWrite(w, "{s}\n", .{_formatStatusInfo(&effect)});
+            y += self.drawTextAtf(0, y, "{s}", .{_formatStatusInfo(&effect)}, .{});
         }
     }
+
+    return y - starty;
 }
 
-fn _getSurfDescription(w: io.FixedBufferStream([]u8).Writer, surface: SurfaceItem, linewidth: usize) void {
+fn _getSurfDescription(self: *Console, starty: usize, surface: SurfaceItem, linewidth: usize) usize {
+    var y = starty;
+
     switch (surface) {
         .Machine => |m| {
-            _writerWrite(w, "$c{s}$.\n", .{m.name});
-            _writerWrite(w, "feature\n", .{});
-            _writerWrite(w, "\n", .{});
+            y += self.drawTextAtf(0, y, "$c{s}$.", .{m.name}, .{});
+            y += self.drawTextAt(0, y, "feature", .{});
+            y += self.drawTextAt(0, y, "\n", .{});
 
             if (m.player_interact) |interaction| {
                 const remaining = interaction.max_use - interaction.used;
                 const plural: []const u8 = if (remaining == 1) "" else "s";
-                _writerWrite(w, "$cInteraction:$. {s}.\n\n", .{interaction.name});
-                _writerWrite(w, "You used this machine $b{}$. times.\n", .{interaction.used});
-                _writerWrite(w, "It can be used $b{}$. more time{s}.\n", .{ remaining, plural });
-                _writerWrite(w, "\n", .{});
+                y += self.drawTextAtf(0, y, "$cInteraction:$. {s}.\n\n", .{interaction.name}, .{});
+                y += self.drawTextAtf(0, y, "You used this machine $b{}$. times.", .{interaction.used}, .{});
+                y += self.drawTextAtf(0, y, "It can be used $b{}$. more time{s}.", .{ remaining, plural }, .{});
+                y += self.drawTextAt(0, y, "\n", .{});
             }
 
-            _writerWrite(w, "\n", .{});
+            y += self.drawTextAt(0, y, "\n", .{});
         },
-        .Prop => |p| _writerWrite(w, "$c{s}$.\nobject\n\n$gNothing to see here.$.\n", .{p.name}),
+        .Prop => |p| y += self.drawTextAtf(0, y, "$c{s}$.\nobject\n\n$gNothing to see here.$.", .{p.name}, .{}),
         .Container => |c| {
-            _writerWrite(w, "$cA {s}$.\nContainer\n\n", .{c.name});
+            y += self.drawTextAtf(0, y, "$cA {s}$.\ncontainer\n\n", .{c.name}, .{});
             if (c.items.len == 0) {
-                _writerWrite(w, "It appears to be empty...\n", .{});
+                y += self.drawTextAt(0, y, "It appears to be empty...", .{});
             } else if (!c.isLootable()) {
-                _writerWrite(w, "You don't expect to find anything useful inside.\n", .{});
+                y += self.drawTextAt(0, y, "You don't expect to find anything useful inside.", .{});
             } else {
-                _writerWrite(w, "Who knows what goodies lie within?\n\n", .{});
-                _writerWrite(w, "$gBump into it to search for loot.\n", .{});
+                y += self.drawTextAt(0, y, "Who knows what lies within?\n", .{});
+                y += self.drawTextAt(0, y, "$gBump into it to search for loot.", .{});
             }
         },
         .Poster => |p| {
-            _writerWrite(w, "$cPoster$.\n\n", .{});
-            _writerWrite(w, "Some writing on a board:\n", .{});
-            _writerHLine(w, linewidth);
-            _writerWrite(w, "$g{s}$.\n", .{p.text});
-            _writerHLine(w, linewidth);
+            y += self.drawTextAt(0, y, "$cPoster$.\n", .{});
+            y += self.drawTextAt(0, y, "Some writing on a board:", .{});
+            y += _writerHLine(self, y, linewidth);
+            y += self.drawTextAtf(0, y, "$g{s}$.", .{p.text}, .{});
+            y += _writerHLine(self, y, linewidth);
         },
         .Stair => |s| {
             if (s.stairtype == .Down) {
-                _writerWrite(w, "$cDownward Stairs$.\n\n", .{});
+                y += self.drawTextAt(0, y, "$cDownward Stairs$.\n", .{});
             } else if (s.stairtype == .Access) {
-                _writerWrite(w, "$cUpward Stairs$.\n\nStairs to outside.\n", .{});
+                y += self.drawTextAt(0, y, "$cUpward Stairs$.\n\nStairs to outside.", .{});
 
-                _writerWrite(w, "\nIt seems your journey is over.\n", .{});
+                y += self.drawTextAt(0, y, "\nIt seems your journey is over.", .{});
             } else {
-                _writerWrite(w, "$cUpward Stairs$.\n\nStairs to {s}.\n", .{state.levelinfo[s.stairtype.Up].name});
+                y += self.drawTextAtf(0, y, "$cUpward Stairs$.\n\nStairs to {s}.", .{state.levelinfo[s.stairtype.Up].name}, .{});
 
                 if (state.levelinfo[s.stairtype.Up].optional) {
-                    _writerWrite(w, "\nThese stairs are $coptional$. and lead to more difficult floors.\n", .{});
+                    y += self.drawTextAt(0, y, "\nThese stairs are $coptional$. and lead to more difficult floors.", .{});
                 }
             }
 
             if (s.locked) {
                 assert(s.stairtype != .Down);
-                _writerWrite(w, "\n$bA key is needed to unlock these stairs.$.\n", .{});
+                y += self.drawTextAt(0, y, "\n$bA key is needed to unlock these stairs.$.", .{});
             }
         },
         .Corpse => |c| {
             // Since the mob object was deinit'd, we can't rely on
             // mob.displayName() working
             const name = c.ai.profession_name orelse c.species.name;
-            _writerWrite(w, "$c{s} remains$.\n", .{name});
-            _writerWrite(w, "corpse\n\n", .{});
-            _writerWrite(w, "This corpse is just begging for a necromancer to raise it.", .{});
+            y += self.drawTextAtf(0, y, "$c{s} remains$.", .{name}, .{});
+            y += self.drawTextAt(0, y, "corpse\n", .{});
         },
     }
+
+    return y - starty;
 }
 
 const MobInfoLine = struct {
@@ -877,22 +876,24 @@ fn _getMonsInfoSet(mob: *Mob) MobInfoLine.ArrayList {
     return list;
 }
 
-fn _getMonsStatsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidth: usize) void {
-    _ = linewidth;
+fn _getMonsStatsDescription(self: *Console, starty: usize, mob: *Mob, _: usize) usize {
+    var y = starty;
 
-    _writerWrite(w, "$c{s}$.\n", .{mob.displayName()});
-    _writerMonsHostility(w, mob);
-    _writerWrite(w, "\n", .{});
+    y += self.drawTextAtf(0, y, "$c{s}$.", .{mob.displayName()}, .{});
+    y += _writerMonsHostility(self, y, mob);
+    y += self.drawTextAt(0, y, "\n", .{});
 
-    _writerMobStats(w, mob);
+    y += _writerMobStats(self, y, mob);
+
+    return y - starty;
 }
 
-fn _getMonsSpellsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidth: usize) void {
-    _ = linewidth;
+fn _getMonsSpellsDescription(self: *Console, starty: usize, mob: *Mob, _: usize) usize {
+    var y = starty;
 
-    _writerWrite(w, "$c{s}$.\n", .{mob.displayName()});
-    _writerMonsHostility(w, mob);
-    _writerWrite(w, "\n", .{});
+    y += self.drawTextAtf(0, y, "$c{s}$.", .{mob.displayName()}, .{});
+    y += _writerMonsHostility(self, y, mob);
+    y += self.drawTextAt(0, y, "\n", .{});
 
     const has_willchecked_spell = for (mob.spells) |spellcfg| {
         if (spellcfg.spell.checks_will) break true;
@@ -900,16 +901,16 @@ fn _getMonsSpellsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, li
     if (has_willchecked_spell) {
         const chance = spells.appxChanceOfWillOverpowered(mob, state.player);
         const colorset = [_]u21{ 'g', 'b', 'b', 'p', 'p', 'r', 'r', 'r', 'r', 'r' };
-        _writerWrite(w, "$cChance to overpower your will$.: ${u}{}%$.\n", .{
+        y += self.drawTextAtf(0, y, "$cChance to overpower your will$.: ${u}{}%$.", .{
             colorset[chance / 10], chance,
-        });
-        _writerWrite(w, "\n", .{});
+        }, .{});
+        y += self.drawTextAt(0, y, "\n", .{});
     }
 
     for (mob.spells) |spellcfg| {
-        _writerWrite(w, "$c{s}$. $g($b{}$. $gmp)$.\n", .{
+        y += self.drawTextAtf(0, y, "$c{s}$. $g($b{}$. $gmp)$.", .{
             spellcfg.spell.name, spellcfg.MP_cost,
-        });
+        }, .{});
 
         if (spellcfg.spell.cast_type == .Smite) {
             const target = @as([]const u8, switch (spellcfg.spell.smite_target_type) {
@@ -923,10 +924,10 @@ fn _getMonsSpellsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, li
                 .Mob => "you",
                 .Corpse => "corpse",
             });
-            _writerWrite(w, "· $ctarget$.: {s}\n", .{target});
+            y += self.drawTextAtf(0, y, "· $ctarget$.: {s}", .{target}, .{});
         } else if (spellcfg.spell.cast_type == .Bolt) {
             const dodgeable = spellcfg.spell.bolt_dodgeable;
-            _writerWrite(w, "· $cdodgeable$.: {s}\n", .{_formatBool(dodgeable)});
+            y += self.drawTextAtf(0, y, "· $cdodgeable$.: {s}", .{_formatBool(dodgeable)}, .{});
         }
 
         if (!(spellcfg.spell.cast_type == .Smite and
@@ -937,69 +938,71 @@ fn _getMonsSpellsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, li
                 .Smite => "smite-targeted",
                 .Bolt => "bolt",
             });
-            _writerWrite(w, "· $ctype$.: {s}\n", .{targeting});
+            y += self.drawTextAtf(0, y, "· $ctype$.: {s}", .{targeting}, .{});
         }
 
         if (spellcfg.spell.cast_type != .Smite or spellcfg.spell.smite_target_type == .Mob) {
             if (spellcfg.spell.checks_will) {
-                _writerWrite(w, "· $cwill-checked$.: $byes$.\n", .{});
+                y += self.drawTextAt(0, y, "· $cwill-checked$.: $byes$.", .{});
             } else {
-                _writerWrite(w, "· $cwill-checked$.: $rno$.\n", .{});
+                y += self.drawTextAt(0, y, "· $cwill-checked$.: $rno$.", .{});
             }
         }
 
         switch (spellcfg.spell.effect_type) {
-            .Status => |s| _writerWrite(w, "· $gTmp$. {s} ({})\n", .{
+            .Status => |s| y += self.drawTextAtf(0, y, "· $gTmp$. {s} ({})", .{
                 s.string(state.player), spellcfg.duration,
-            }),
-            .Heal => _writerWrite(w, "· $gIns$. Heal <{}>\n", .{spellcfg.power}),
+            }, .{}),
+            .Heal => y += self.drawTextAtf(0, y, "· $gIns$. Heal <{}>", .{spellcfg.power}, .{}),
             .Custom => {},
         }
 
-        _writerWrite(w, "\n", .{});
+        y += self.drawTextAt(0, y, "\n", .{});
     }
 
     const weapons = mob.listOfWeapons();
     for (weapons.constSlice()) |weapon| {
-        _writerWrite(w, "$c{s}$. $g(melee)$.\n", .{weapon.name});
-        _writerWrite(w, "· $cdamage$.: {} $g<{s}>$.\n", .{
+        y += self.drawTextAtf(0, y, "$c{s}$. $g(melee)$.", .{weapon.name}, .{});
+        y += self.drawTextAtf(0, y, "· $cdamage$.: {} $g<{s}>$.", .{
             weapon.damage, weapon.damage_kind.stringLong(),
-        });
+        }, .{});
         if (weapon.ego != .None)
-            _writerWrite(w, "· $cego$.: {s}\n", .{weapon.ego.name().?});
+            y += self.drawTextAtf(0, y, "· $cego$.: {s}", .{weapon.ego.name().?}, .{});
         if (weapon.martial != false)
-            _writerWrite(w, "· $cmartial$.: yes\n", .{});
+            y += self.drawTextAt(0, y, "· $cmartial$.: yes", .{});
         if (weapon.delay != 100)
-            _writerWrite(w, "· $cdelay$.: {}%\n", .{weapon.delay});
+            y += self.drawTextAtf(0, y, "· $cdelay$.: {}%", .{weapon.delay}, .{});
         if (weapon.knockback != 0)
-            _writerWrite(w, "· $cknockback$.: {}\n", .{weapon.knockback});
+            y += self.drawTextAtf(0, y, "· $cknockback$.: {}", .{weapon.knockback}, .{});
         assert(weapon.reach == 1);
-        _writerWrite(w, "\n", .{});
+        y += self.drawTextAt(0, y, "\n", .{});
     }
+
+    return y - starty;
 }
 
-fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidth: usize) void {
-    _ = linewidth;
+fn _getMonsDescription(self: *Console, starty: usize, mob: *Mob, linewidth: usize) usize {
+    var y = starty;
 
     if (mob == state.player) {
-        _writerWrite(w, "$cYou.$.\n", .{});
-        _writerWrite(w, "\n", .{});
-        _writerWrite(w, "Press $b@$. to see your stats, abilities, and more.\n", .{});
+        y += self.drawTextAt(0, y, "$cYou.$.", .{});
+        y += self.drawTextAt(0, y, "\n", .{});
+        y += self.drawTextAt(0, y, "Press $b@$. to see your stats, abilities, and more.", .{});
 
-        return;
+        return y - starty;
     }
 
-    _writerWrite(w, "$c{s}$.\n", .{mob.displayName()});
-    _writerMonsHostility(w, mob);
-    _writerWrite(w, "\n", .{});
+    y += self.drawTextAtf(0, y, "$c{s}$.", .{mob.displayName()}, .{});
+    y += _writerMonsHostility(self, y, mob);
+    y += self.drawTextAt(0, y, "\n", .{});
 
     const infoset = _getMonsInfoSet(mob);
     defer MobInfoLine.deinitList(infoset);
     for (infoset.items) |info| {
-        _writerWrite(w, "${u}{u}$. {s}\n", .{ info.color, info.char, info.string.items });
+        y += self.drawTextAtf(0, y, "${u}{u}$. {s}", .{ info.color, info.char, info.string.items }, .{});
     }
 
-    _writerWrite(w, "\n", .{});
+    y += self.drawTextAt(0, y, "\n", .{});
 
     const you_melee = combat.chanceOfMeleeLanding(state.player, mob);
     const you_evade = combat.chanceOfAttackEvaded(state.player, null);
@@ -1014,61 +1017,61 @@ fn _getMonsDescription(w: io.FixedBufferStream([]u8).Writer, mob: *Mob, linewidt
     const c_melee_you_color = m_colorsets[c_melee_you / 10];
     const c_evade_you_color = e_colorsets[c_evade_you / 10];
 
-    _writerWrite(w, "${u}{}%$. to hit you, ${u}{}%$. to evade.\n", .{
+    y += self.drawTextAtf(0, y, "${u}{}%$. to hit you, ${u}{}%$. to evade.", .{
         c_melee_you_color, c_melee_you, c_evade_you_color, c_evade_you,
-    });
-    _writerWrite(w, "Hits for ~$r{}$. damage.\n", .{mob.totalMeleeOutput(state.player)});
-    _writerWrite(w, "\n", .{});
+    }, .{});
+    y += self.drawTextAtf(0, y, "Hits for ~$r{}$. damage.", .{mob.totalMeleeOutput(state.player)}, .{});
 
     var statuses = mob.statuses.iterator();
     while (statuses.next()) |entry| {
         if (mob.isUnderStatus(entry.key) == null)
             continue;
-        _writerWrite(w, "{s}\n", .{_formatStatusInfo(entry.value)});
+        y += self.drawTextAtf(0, y, "{s}", .{_formatStatusInfo(entry.value)}, .{});
     }
-    _writerWrite(w, "\n", .{});
+    y += self.drawTextAtf(0, y, "\n", .{}, .{});
 
-    _writerHeader(w, linewidth, "info", .{});
+    y += _writerHeader(self, y, linewidth, "info", .{});
     if (mob.life_type == .Construct)
-        _writerWrite(w, "· is non-living ($bconstruct$.)\n", .{})
+        y += self.drawTextAt(0, y, "· is non-living ($bconstruct$.)", .{})
     else if (mob.life_type == .Undead)
-        _writerWrite(w, "· is non-living ($bundead$.)\n", .{})
+        y += self.drawTextAt(0, y, "· is non-living ($bundead$.)", .{})
     else if (mob.life_type == .Spectral)
-        _writerWrite(w, "· is non-living ($bspectral$.)\n", .{});
+        y += self.drawTextAt(0, y, "· is non-living ($bspectral$.)", .{});
     if (mob.max_drainable_MP > 0)
-        _writerWrite(w, "· is a $oWielder$. ($o{}$. drainable MP)\n", .{mob.max_drainable_MP});
+        y += self.drawTextAtf(0, y, "· is a $oWielder$. ($o{}$. drainable MP)", .{mob.max_drainable_MP}, .{});
     if (!combat.canMobBeSurprised(mob))
-        _writerWrite(w, "· can't be $bsurprised$.\n", .{});
+        y += self.drawTextAt(0, y, "· can't be $bsurprised$.", .{});
     if (mob.max_drainable_MP > 0 and mob.is_drained)
-        _writerWrite(w, "· is $odrained$.\n", .{});
+        y += self.drawTextAt(0, y, "· is $odrained$.", .{});
     if (mob.ai.is_curious and !mob.deaf)
-        _writerWrite(w, "· investigates noises\n", .{})
+        y += self.drawTextAt(0, y, "· investigates noises", .{})
     else
-        _writerWrite(w, "· won't check noises outside FOV\n", .{});
+        y += self.drawTextAt(0, y, "· won't check noises outside FOV", .{});
     if (mob.ai.flag(.SocialFighter) or mob.ai.flag(.SocialFighter2))
-        _writerWrite(w, "· won't attack alone\n", .{});
+        y += self.drawTextAt(0, y, "· won't attack alone", .{});
     if (mob.ai.flag(.MovesDiagonally))
-        _writerWrite(w, "· (usually) moves diagonally\n", .{});
+        y += self.drawTextAt(0, y, "· (usually) moves diagonally", .{});
     if (mob.ai.flag(.DetectWithHeat))
-        _writerWrite(w, "· detected w/ $bDetect Heat$.\n", .{});
+        y += self.drawTextAt(0, y, "· detected w/ $bDetect Heat$.", .{});
     if (mob.ai.flag(.DetectWithElec))
-        _writerWrite(w, "· detected w/ $bDetect Electricity$.\n", .{});
-    _writerWrite(w, "\n", .{});
+        y += self.drawTextAt(0, y, "· detected w/ $bDetect Electricity$.", .{});
+    y += self.drawTextAt(0, y, "\n", .{});
 
     if (mob.ai.flee_effect) |effect| {
-        _writerHeader(w, linewidth, "flee behaviour", .{});
-        _writerWrite(w, "· {s}\n", .{_formatStatusInfo(&effect)});
-        _writerWrite(w, "\n", .{});
+        y += _writerHeader(self, y, linewidth, "flee behaviour", .{});
+        y += self.drawTextAtf(0, y, "· {s}", .{_formatStatusInfo(&effect)}, .{});
+        y += self.drawTextAt(0, y, "\n", .{});
     }
+
+    return y - starty;
 }
 
-fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewidth: usize) void {
-    _ = linewidth;
+fn _getItemDescription(self: *Console, starty: usize, item: Item, linewidth: usize) usize {
+    var y = starty;
 
     const shortname = (item.shortName() catch err.wat()).constSlice();
 
-    //S.appendChar(w, ' ', (linewidth / 2) -| (shortname.len / 2));
-    _writerWrite(w, "$c{s}$.\n", .{shortname});
+    y += self.drawTextAtf(0, y, "$c{s}$.", .{shortname}, .{});
 
     const itemtype: []const u8 = switch (item) {
         .Ring => "ring",
@@ -1085,137 +1088,139 @@ fn _getItemDescription(w: io.FixedBufferStream([]u8).Writer, item: Item, linewid
         .Prop => "misc",
         .Evocable => "evocable",
     };
-    _writerWrite(w, "{s}\n", .{itemtype});
+    y += self.drawTextAtf(0, y, "{s}", .{itemtype}, .{});
 
-    _writerWrite(w, "\n", .{});
+    y += self.drawTextAt(0, y, "\n", .{});
 
     switch (item) {
         .Key => |k| switch (k.lock) {
-            .Up => |u| _writerWrite(w, "A key for the stairs to {s}", .{
+            .Up => |u| y += self.drawTextAtf(0, y, "A key for the stairs to {s}", .{
                 state.levelinfo[u].name,
-            }),
-            .Access => _writerWrite(w, "A key for the main entrace", .{}),
-            .Down => _writerWrite(w, "On the key is a masterpiece engraving of a cockroach enjoying a hearty meal", .{}),
+            }, .{}),
+            .Access => y += self.drawTextAt(0, y, "A key for the main entrace", .{}),
+            .Down => y += self.drawTextAt(0, y, "On the key is a masterpiece engraving of a cockroach enjoying a hearty meal", .{}),
         },
         .Ring => {},
         .Consumable => |p| {
-            _writerHeader(w, linewidth, "effects", .{});
+            y += _writerHeader(self, y, linewidth, "effects", .{});
             for (p.effects) |effect| switch (effect) {
-                .Kit => |m| _writerWrite(w, "· $gMachine$. {s}\n", .{m.name}),
-                .Damage => |d| _writerWrite(w, "· $gIns$. {s} <$b{}$.>\n", .{ d.kind.string(), d.amount }),
-                .Heal => |h| _writerWrite(w, "· $gIns$. heal <$b{}$.>\n", .{h}),
-                .Resist => |r| _writerWrite(w, "· $gPrm$. {s: <7} $b{:>4}$.\n", .{ r.r.string(), r.change }),
-                .Stat => |s| _writerWrite(w, "· $gPrm$. {s: <7} $b{:>4}$.\n", .{ s.s.string(), s.change }),
-                .Gas => |g| _writerWrite(w, "· $gGas$. {s}\n", .{gas.Gases[g].name}),
-                .Status => |s| _writerWrite(w, "· $gTmp$. {s}\n", .{s.string(state.player)}),
-                .Custom => _writerWrite(w, "· $G(See description)$.\n", .{}),
+                .Kit => |m| y += self.drawTextAtf(0, y, "· $gMachine$. {s}", .{m.name}, .{}),
+                .Damage => |d| y += self.drawTextAtf(0, y, "· $gIns$. {s} <$b{}$.>", .{ d.kind.string(), d.amount }, .{}),
+                .Heal => |h| y += self.drawTextAtf(0, y, "· $gIns$. heal <$b{}$.>", .{h}, .{}),
+                .Resist => |r| y += self.drawTextAtf(0, y, "· $gPrm$. {s: <7} $b{:>4}$.", .{ r.r.string(), r.change }, .{}),
+                .Stat => |s| y += self.drawTextAtf(0, y, "· $gPrm$. {s: <7} $b{:>4}$.", .{ s.s.string(), s.change }, .{}),
+                .Gas => |g| y += self.drawTextAtf(0, y, "· $gGas$. {s}", .{gas.Gases[g].name}, .{}),
+                .Status => |s| y += self.drawTextAtf(0, y, "· $gTmp$. {s}", .{s.string(state.player)}, .{}),
+                .Custom => y += self.drawTextAt(0, y, "· $G(See description)$.", .{}),
             };
-            _writerWrite(w, "\n", .{});
+            y += self.drawTextAt(0, y, "\n", .{});
         },
         .Projectile => |p| {
             const dmg = p.damage orelse @as(usize, 0);
-            _writerWrite(w, "$cdamage$.: {}\n", .{dmg});
+            y += self.drawTextAtf(0, y, "$cdamage$.: {}", .{dmg}, .{});
             switch (p.effect) {
                 .Status => |sinfo| {
-                    _writerHeader(w, linewidth, "effects", .{});
-                    _writerWrite(w, "{s}\n", .{_formatStatusInfo(&sinfo)});
+                    y += _writerHeader(self, y, linewidth, "effects", .{});
+                    y += self.drawTextAtf(0, y, "{s}", .{_formatStatusInfo(&sinfo)}, .{});
                 },
             }
         },
         .Cloak => |c| {
-            _writerHeader(w, linewidth, "stats", .{});
-            _writerSobStats(w, linewidth, c.stats, c.resists);
+            y += _writerHeader(self, y, linewidth, "stats", .{});
+            y += _writerSobStats(self, y, linewidth, c.stats, c.resists);
         },
         .Head => |c| {
-            _writerHeader(w, linewidth, "stats", .{});
-            _writerSobStats(w, linewidth, c.stats, c.resists);
+            y += _writerHeader(self, y, linewidth, "stats", .{});
+            y += _writerSobStats(self, y, linewidth, c.stats, c.resists);
         },
-        .Aux => |x| {
-            _writerHeader(w, linewidth, "stats", .{});
-            _writerSobStats(w, linewidth, x.stats, x.resists);
+        .Aux => |aux| {
+            y += _writerHeader(self, y, linewidth, "stats", .{});
+            y += _writerSobStats(self, y, linewidth, aux.stats, aux.resists);
 
-            if (x.night) {
-                _writerHeader(w, linewidth, "night stats (if in dark)", .{});
-                _writerSobStats(w, linewidth, x.night_stats, x.night_resists);
+            if (aux.night) {
+                y += _writerHeader(self, y, linewidth, "night stats (if in dark)", .{});
+                y += _writerSobStats(self, y, linewidth, aux.night_stats, aux.night_resists);
             }
 
-            if (x.equip_effects.len > 0) {
-                _writerHeader(w, linewidth, "on equip", .{});
-                for (x.equip_effects) |effect|
-                    _writerWrite(w, "· {s}\n", .{_formatStatusInfo(&effect)});
-                _writerWrite(w, "\n", .{});
+            if (aux.equip_effects.len > 0) {
+                y += _writerHeader(self, y, linewidth, "on equip", .{});
+                for (aux.equip_effects) |effect|
+                    y += self.drawTextAtf(0, y, "· {s}", .{_formatStatusInfo(&effect)}, .{});
+                y += self.drawTextAt(0, y, "\n", .{});
             }
 
-            if (x.night) {
-                _writerHeader(w, linewidth, "traits", .{});
-                _writerWrite(w, "It is a $cnight$. item and provides greater benefits if you stand on an unlit tile.\n", .{});
+            if (aux.night) {
+                y += _writerHeader(self, y, linewidth, "traits", .{});
+                y += self.drawTextAt(0, y, "It is a $cnight$. item and provides greater benefits if you stand on an unlit tile.", .{});
             }
         },
         .Armor => |a| {
-            _writerHeader(w, linewidth, "stats", .{});
-            _writerSobStats(w, linewidth, a.stats, a.resists);
+            y += _writerHeader(self, y, linewidth, "stats", .{});
+            y += _writerSobStats(self, y, linewidth, a.stats, a.resists);
 
             if (a.night) {
-                _writerHeader(w, linewidth, "night stats (if in dark)", .{});
-                _writerSobStats(w, linewidth, a.night_stats, a.night_resists);
+                y += _writerHeader(self, y, linewidth, "night stats (if in dark)", .{});
+                y += _writerSobStats(self, y, linewidth, a.night_stats, a.night_resists);
 
-                _writerHeader(w, linewidth, "traits", .{});
-                _writerWrite(w, "It is a $cnight$. item and provides greater benefits if you stand on an unlit tile.\n", .{});
+                y += _writerHeader(self, y, linewidth, "traits", .{});
+                y += self.drawTextAt(0, y, "It is a $cnight$. item and provides greater benefits if you stand on an unlit tile.", .{});
             }
         },
         .Weapon => |p| {
             // if (p.reach != 1) _writerWrite(w, "$creach:$. {}\n", .{p.reach});
             assert(p.reach == 1);
 
-            _writerHeader(w, linewidth, "overview", .{});
-            _writerTwice(w, linewidth, "damage", "($g{s}$.) {}", .{ p.damage_kind.stringLong(), p.damage });
+            y += _writerHeader(self, y, linewidth, "overview", .{});
+            y += _writerTwice(self, y, linewidth, "damage", "($g{s}$.) {}", .{ p.damage_kind.stringLong(), p.damage });
             if (p.knockback != 0)
-                _writerTwice(w, linewidth, "knockback", "{}", .{p.knockback});
+                y += _writerTwice(self, y, linewidth, "knockback", "{}", .{p.knockback});
             if (p.delay != 100) {
                 const col: u21 = if (p.delay > 100) 'r' else 'b';
-                _writerTwice(w, linewidth, "delay", "${u}{}%$.\n", .{ col, p.delay });
+                y += _writerTwice(self, y, linewidth, "delay", "${u}{}%$.\n", .{ col, p.delay });
             }
             for (p.effects) |effect|
-                _writerTwice(w, linewidth, "effect", "{s}", .{_formatStatusInfo(&effect)});
-            _writerWrite(w, "\n", .{});
+                y += _writerTwice(self, y, linewidth, "effect", "{s}", .{_formatStatusInfo(&effect)});
+            y += self.drawTextAt(0, y, "\n", .{});
 
-            _writerHeader(w, linewidth, "stats", .{});
-            _writerSobStats(w, linewidth, p.stats, null);
+            y += _writerHeader(self, y, linewidth, "stats", .{});
+            y += _writerSobStats(self, y, linewidth, p.stats, null);
 
             if (p.equip_effects.len > 0) {
-                _writerHeader(w, linewidth, "on equip", .{});
+                y += _writerHeader(self, y, linewidth, "on equip", .{});
                 for (p.equip_effects) |effect|
-                    _writerWrite(w, "· {s}\n", .{_formatStatusInfo(&effect)});
-                _writerWrite(w, "\n", .{});
+                    y += self.drawTextAtf(0, y, "· {s}", .{_formatStatusInfo(&effect)}, .{});
+                y += self.drawTextAt(0, y, "\n", .{});
             }
 
-            _writerHeader(w, linewidth, "traits", .{});
+            y += _writerHeader(self, y, linewidth, "traits", .{});
             if (p.martial) {
                 const stat = state.player.stat(.Martial);
                 const statfmt = utils.SignedFormatter{ .v = stat };
                 const color = if (stat < 0) @as(u21, 'r') else 'c';
-                _writerWrite(w, "$cmartial$.: You can attack up to ${u}{}$. extra time(s) (your Martial stat) if your attacks all land.\n\n", .{ color, statfmt });
+                y += self.drawTextAtf(0, y, "$cmartial$.: You can attack up to ${u}{}$. extra time(s) (your Martial stat) if your attacks all land.\n", .{ color, statfmt }, .{});
             }
             if (p.ego.description()) |description| {
-                _writerWrite(w, "$c{s}$.: {s}\n\n", .{ p.ego.name().?, description });
+                y += self.drawTextAtf(0, y, "$c{s}$.: {s}\n", .{ p.ego.name().?, description }, .{});
             }
 
-            _writerWrite(w, "\n", .{});
+            y += self.drawTextAt(0, y, "\n", .{});
         },
         .Evocable => |e| {
-            _writerWrite(w, "$b{}$./$b{}$. charges.\n", .{ e.charges, e.max_charges });
-            _writerWrite(w, "$crechargable:$. {s}\n", .{_formatBool(e.rechargable)});
-            _writerWrite(w, "\n", .{});
+            y += self.drawTextAtf(0, y, "$b{}$./$b{}$. charges.", .{ e.charges, e.max_charges }, .{});
+            y += self.drawTextAtf(0, y, "$crechargable:$. {s}", .{_formatBool(e.rechargable)}, .{});
+            y += self.drawTextAt(0, y, "\n", .{});
 
             if (e.delete_when_inert) {
-                _writerWrite(w, "$bThis item is destroyed on use.$.", .{});
-                _writerWrite(w, "\n", .{});
+                y += self.drawTextAt(0, y, "$bThis item is destroyed on use.$.", .{});
+                y += self.drawTextAt(0, y, "\n", .{});
             }
         },
-        .Boulder, .Prop, .Vial => _writerWrite(w, "$G(This item is useless to you.)$.", .{}),
+        .Boulder, .Prop, .Vial => y += self.drawTextAt(0, y, "$G(This item is useless to you.)$.", .{}),
     }
 
-    _writerWrite(w, "\n", .{});
+    y += self.drawTextAt(0, y, "\n", .{});
+
+    return y - starty;
 }
 
 // }}}
@@ -3078,10 +3083,6 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
 
             const linewidth = @intCast(usize, inf_d.endx - inf_d.startx);
 
-            var textbuf: [4096]u8 = undefined;
-            var text = io.fixedBufferStream(&textbuf);
-            var writer = text.writer();
-
             if (tile_focus == .Mob and has_mons) {
                 const mob = state.dungeon.at(coord).mob.?;
 
@@ -3091,21 +3092,19 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                 }
 
                 switch (mob_tile_focus) {
-                    .Main => _getMonsDescription(writer, mob, linewidth),
-                    .Spells => _getMonsSpellsDescription(writer, mob, linewidth),
-                    .Stats => _getMonsStatsDescription(writer, mob, linewidth),
+                    .Main => y += _getMonsDescription(&inf_win, y, mob, inf_win.width),
+                    .Spells => y += _getMonsSpellsDescription(&inf_win, y, mob, inf_win.width),
+                    .Stats => y += _getMonsStatsDescription(&inf_win, y, mob, inf_win.width),
                 }
             } else if (tile_focus == .Surface and has_surf) {
                 if (state.dungeon.at(coord).surface) |surf| {
-                    _getSurfDescription(writer, surf, linewidth);
+                    y += _getSurfDescription(&inf_win, y, surf, linewidth);
                 } else {
-                    _getTerrDescription(writer, state.dungeon.terrainAt(coord), linewidth);
+                    y += _getTerrDescription(&inf_win, y, state.dungeon.terrainAt(coord), linewidth);
                 }
             } else if (tile_focus == .Item and has_item) {
-                _getItemDescription(writer, state.dungeon.itemsAt(coord).last().?, linewidth);
+                y += _getItemDescription(&inf_win, y, state.dungeon.itemsAt(coord).last().?, linewidth);
             }
-
-            y += inf_win.drawTextAt(0, y, text.getWritten(), .{});
 
             // Add keybinding descriptions
             if (tile_focus == .Mob and has_mons and
@@ -3114,7 +3113,7 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
                 kbd_s = true;
                 const s: []const u8 = switch (mob_tile_focus) {
                     .Main => "stats",
-                    .Stats => "spells",
+                    .Stats => "abilities",
                     .Spells => "mob",
                 };
                 y += inf_win.drawTextAtf(0, y, "Press $bs$. to see {s}", .{s}, .{});
