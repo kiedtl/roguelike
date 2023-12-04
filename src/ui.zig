@@ -3439,9 +3439,20 @@ pub fn waitForInput(default_input: ?u8) ?u32 {
 }
 
 pub fn drawInventoryScreen() bool {
-    const main_window = dimensions(.Main);
-    const iteminfo_window = dimensions(.PlayerInfo);
-    const log_window = dimensions(.Log);
+    var container = Console.init(state.gpa.allocator(), MIN_WIDTH, MIN_HEIGHT);
+    var log_d = dimensions(.Log);
+    var lgg_win = Console.init(state.gpa.allocator(), log_d.width(), log_d.height());
+    var inf_d = dimensions(.PlayerInfo);
+    var inf_win = Console.init(state.gpa.allocator(), inf_d.width(), inf_d.height());
+    var map_d = dimensions(.Main);
+    var inv_win = Console.init(state.gpa.allocator(), map_d.width(), map_d.height());
+
+    container.addSubconsole(&lgg_win, log_d.startx, log_d.starty);
+    container.addSubconsole(&inf_win, inf_d.startx, inf_d.starty);
+    container.addSubconsole(&inv_win, map_d.startx, map_d.starty);
+    lgg_win.addMouseTrigger(lgg_win.dimensionsRect(), .Wheel, .{ .Signal = 1 });
+
+    defer container.deinit();
 
     const ItemListType = enum { Pack, Equip };
 
@@ -3453,43 +3464,41 @@ pub fn drawInventoryScreen() bool {
     while (true) {
         clearScreen();
 
-        const starty = main_window.starty;
-        const x = main_window.startx;
-        const endx = main_window.endx;
-
         const itemlist_len = if (chosen_itemlist == .Pack) state.player.inventory.pack.len else state.player.inventory.equ_slots.len;
         const chosen_item: ?Item = if (chosen_itemlist == .Pack) state.player.inventory.pack.data[chosen] else state.player.inventory.equ_slots[chosen];
 
         // Draw list of items
         {
-            y = starty;
-            y = _drawStr(x, y, endx, "$cInventory:$.", .{});
-            for (state.player.inventory.pack.constSlice()) |item, i| {
-                const startx = x;
+            inv_win.clear();
+            var mouse_ctr: usize = 0;
 
+            y = 0;
+            y += inv_win.drawTextAt(0, y, "$cInventory:$.", .{});
+            for (state.player.inventory.pack.constSlice()) |item, i| {
                 const name = (item.longName() catch err.wat()).constSlice();
                 const color = if (i == chosen and chosen_itemlist == .Pack) colors.LIGHT_CONCRETE else colors.GREY;
                 const arrow = if (i == chosen and chosen_itemlist == .Pack) ">" else " ";
-                _clear_line(startx, endx, y);
-                y = _drawStrf(startx, y, endx, "{s} {s}", .{ arrow, name }, .{ .fg = color });
+                y += inv_win.drawTextAtf(0, y, "{s} {s}", .{ arrow, name }, .{ .fg = color });
+                inv_win.addClickableTextBoth(.{ .Signal = mouse_ctr });
+                mouse_ctr += 1;
             }
 
-            y = starty;
-            const startx = endx - @divTrunc(endx - x, 2);
-            y = _drawStr(startx, y, endx, "$cEquipment:$.", .{});
+            y = 0;
+            const startx = inv_win.width - @divTrunc(inv_win.width, 2);
+            y += inv_win.drawTextAt(startx, y, "$cEquipment:$.", .{});
             inline for (@typeInfo(Mob.Inventory.EquSlot).Enum.fields) |slots_f, i| {
                 const slot = @intToEnum(Mob.Inventory.EquSlot, slots_f.value);
                 const arrow = if (i == chosen and chosen_itemlist == .Equip) ">" else "·";
                 const color = if (i == chosen and chosen_itemlist == .Equip) colors.LIGHT_CONCRETE else colors.GREY;
 
-                _clear_line(startx, endx, y);
-
                 if (state.player.inventory.equipment(slot).*) |item| {
                     const name = (item.longName() catch unreachable).constSlice();
-                    y = _drawStrf(startx, y, endx, "{s} {s: >6}: {s}", .{ arrow, slot.name(), name }, .{ .fg = color });
+                    y += inv_win.drawTextAtf(startx, y, "{s} {s: >6}: {s}", .{ arrow, slot.name(), name }, .{ .fg = color });
                 } else {
-                    y = _drawStrf(startx, y, endx, "{s} {s: >6}:", .{ arrow, slot.name() }, .{ .fg = color });
+                    y += inv_win.drawTextAtf(startx, y, "{s} {s: >6}:", .{ arrow, slot.name() }, .{ .fg = color });
                 }
+                inv_win.addClickableTextBoth(.{ .Signal = mouse_ctr });
+                mouse_ctr += 1;
             }
         }
 
@@ -3509,72 +3518,106 @@ pub fn drawInventoryScreen() bool {
         };
 
         // Draw item info
+        inf_win.clear();
         if (chosen_item != null and itemlist_len > 0) {
-            const ii_startx = iteminfo_window.startx;
-            const ii_endx = iteminfo_window.endx;
-            const ii_starty = iteminfo_window.starty;
-            const ii_endy = iteminfo_window.endy;
+            var ii_y = _getItemDescription(&inf_win, 0, chosen_item.?, LEFT_INFO_WIDTH - 1);
 
-            var ii_y = ii_starty;
-            while (ii_y < ii_endy) : (ii_y += 1)
-                _clear_line(ii_startx, ii_endx, ii_y);
-
-            var descbuf: [4096]u8 = undefined;
-            var descbuf_stream = io.fixedBufferStream(&descbuf);
-            var writer = descbuf_stream.writer();
-            _getItemDescription(
-                descbuf_stream.writer(),
-                chosen_item.?,
-                LEFT_INFO_WIDTH - 1,
-            );
-
-            if (usable) writer.print("$b<Enter>$. to use.\n", .{}) catch err.wat();
-            if (throwable) writer.print("$bt$. to throw.\n", .{}) catch err.wat();
+            if (usable) {
+                ii_y += inf_win.drawTextAt(0, ii_y, "$b<Enter>$. to use.\n", .{});
+                inf_win.addClickableTextBoth(.{ .Signal = 0xF1 });
+            }
+            if (throwable) {
+                ii_y += inf_win.drawTextAt(0, ii_y, "$bt$. to throw.\n", .{});
+                inf_win.addClickableTextBoth(.{ .Signal = 0xF2 });
+            }
             if (upgradable) |ring_slot| {
                 assert(!usable);
                 const ind = player.getRingIndexBySlot(ring_slot);
                 const ring = player.getRingByIndex(ind).?;
-                writer.print("$b<Enter>$. to upgrade with the $oring of {s}$..\n", .{ring.name}) catch err.wat();
+                ii_y += inf_win.drawTextAtf(0, ii_y, "$b<Enter>$. to upgrade with the $oring of {s}$..\n", .{ring.name}, .{});
+                inf_win.addClickableTextBoth(.{ .Signal = 0xF3 });
             }
-
-            _ = _drawStr(ii_startx, ii_starty, ii_endx, descbuf_stream.getWritten(), .{});
         }
 
         // Draw item description
+        lgg_win.clear();
         if (chosen_item != null) {
-            const log_startx = log_window.startx;
-            const log_endx = log_window.endx;
-            const log_starty = log_window.starty;
-            const log_endy = log_window.endy;
-
             if (itemlist_len > 0) {
                 const id = chosen_item.?.id();
                 const default_desc = "(Missing description)";
                 const desc: []const u8 = if (id) |i_id| state.descriptions.get(i_id) orelse default_desc else default_desc;
 
-                const ending_y = _drawStr(log_startx, log_starty, log_endx, desc, .{
-                    .skip_lines = desc_scroll,
-                    .endy = log_endy,
-                });
+                const ending_y = lgg_win.drawTextAt(0, 0, desc, .{ .skip_lines = desc_scroll });
 
                 if (desc_scroll > 0) {
-                    _ = _drawStr(log_endx - 14, log_starty, log_endx, " $p-- PgUp --$.", .{});
+                    _ = lgg_win.drawTextAt(lgg_win.width - 14, 0, " $p-- PgUp --$.", .{});
                 }
-                if (ending_y == log_endy) {
-                    _ = _drawStr(log_endx - 14, log_endy - 1, log_endx, " $p-- PgDn --$.", .{});
+                if (ending_y >= lgg_win.height) {
+                    _ = lgg_win.drawTextAt(lgg_win.width - 14, lgg_win.height - 1, " $p-- PgDn --$.", .{});
                 }
             } else {
-                _ = _drawStr(log_startx, log_starty, log_endx, "Your inventory is empty.", .{});
+                _ = lgg_win.drawTextAt(0, 0, "Your inventory is empty.", .{});
             }
         }
 
+        inv_win.highlightMouseArea(colors.BG_L);
+        inf_win.highlightMouseArea(colors.BG_L);
+        container.renderFully(0, 0);
         display.present();
 
-        var evgen = Generator(display.getEvents).init(null);
+        var evgen = Generator(display.getEvents).init(FRAMERATE);
         while (evgen.next()) |ev| switch (ev) {
             .Quit => {
                 state.state = .Quit;
                 return false;
+            },
+            .Hover => |c| switch (container.handleMouseEvent(c, .Hover)) {
+                .Coord, .Signal => err.wat(),
+                .Outside, .Unhandled, .Void => {},
+            },
+            .Click => |c| switch (container.handleMouseEvent(c, .Click)) {
+                .Signal => |s| {
+                    if (s == 0xF1) {
+                        // FIXME: duplicated code here and in Enter handling
+                        if (chosen_itemlist == .Pack) {
+                            if (itemlist_len > 0)
+                                return player.useItem(chosen);
+                        } else if (chosen_item) |item| switch (item) {
+                            .Weapon => drawTextModal("Bump into enemies to attack.", .{}),
+                            .Ring => {
+                                const slot = @intToEnum(Mob.Inventory.EquSlot, chosen);
+                                player.beginUsingRing(player.getRingIndexBySlot(slot));
+                                return false;
+                            },
+                            .Aux => if (upgradable) |u| player.upgradeAux(chosen, u),
+                            .Cloak => drawTextModal("You're already wearing it, stupid.", .{}),
+                            else => {},
+                        };
+                    } else if (s == 0xF2) {
+                        if (throwable and player.throwItem(chosen))
+                            return true;
+                    } else if (s == 0xF3) {
+                        if (upgradable) |u| {
+                            player.upgradeAux(chosen, u);
+                            return false;
+                        }
+                    } else if (s >= state.player.inventory.pack.len) {
+                        chosen_itemlist = .Equip;
+                        chosen = s - state.player.inventory.pack.len;
+                    } else {
+                        chosen_itemlist = .Pack;
+                        chosen = s;
+                    }
+                },
+                .Coord, .Void => err.wat(),
+                .Outside, .Unhandled => {},
+            },
+            .Wheel => |w| switch (container.handleMouseEvent(w.c, .Wheel)) {
+                .Signal => |s| if (s == 1) {
+                    const new = @intCast(isize, desc_scroll) + w.y * -1;
+                    desc_scroll = @intCast(usize, math.max(0, new));
+                },
+                else => {},
             },
             .Key => |k| switch (k) {
                 .ArrowRight => {
@@ -3597,14 +3640,14 @@ pub fn drawInventoryScreen() bool {
                         return player.useItem(chosen);
                 } else if (chosen_item) |item| {
                     switch (item) {
-                        .Weapon => drawAlert("Bump into enemies to attack.", .{}),
+                        .Weapon => drawTextModal("Bump into enemies to attack.", .{}),
                         .Ring => {
                             const slot = @intToEnum(Mob.Inventory.EquSlot, chosen);
                             player.beginUsingRing(player.getRingIndexBySlot(slot));
                             return false;
                         },
                         .Aux => if (upgradable) |u| player.upgradeAux(chosen, u),
-                        .Cloak => drawAlert("You're already wearing it, stupid.", .{}),
+                        .Cloak => drawTextModal("You're already wearing it, stupid.", .{}),
                         else => {},
                     }
                 },
@@ -3621,7 +3664,7 @@ pub fn drawInventoryScreen() bool {
                     if (itemlist_len > 0)
                         if (player.throwItem(chosen)) return true;
                 } else {
-                    drawAlert("You can't throw that!", .{});
+                    drawTextModal("You can't throw that!", .{});
                 },
                 'l' => {
                     chosen_itemlist = .Equip;

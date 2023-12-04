@@ -413,7 +413,7 @@ fn readInput() !bool {
                         }
                     },
                     'A' => action_taken = player.activateSurfaceItem(state.player.coord),
-                    // 'i' => action_taken = ui.drawInventoryScreen(),
+                    'i' => action_taken = ui.drawInventoryScreen(),
                     'v' => action_taken = ui.drawExamineScreen(null, null),
                     '@' => ui.drawPlayerInfoScreen(),
                     'M' => ui.drawMessagesScreen(),
