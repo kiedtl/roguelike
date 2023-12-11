@@ -21,7 +21,6 @@ mktarball() {
 
     cp -r data           ${pkgname}
     #cp -r doc            ${pkgname}
-    cp -r run.sh         ${pkgname}
 
     if [ ${1} = "windows" ]; then
         cp -r zig-out/bin/rl.exe ${pkgname}
@@ -30,6 +29,7 @@ mktarball() {
         cp -r zig-out/bin/SDL2.dll ${pkgname}
         cp -r zig-out/bin/zlib1.dll ${pkgname}
     else
+        cp -r run.sh         ${pkgname}
         cp -r zig-out/bin/rl ${pkgname}
     fi
 
