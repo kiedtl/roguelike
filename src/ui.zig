@@ -3189,14 +3189,23 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
         mp3_win.clear();
         drawMap(&mpp_win, moblist.items, coord);
 
-        {
-            const dcoord = coordToScreenFromRefpoint(coord, coord).?;
-            mp3_win.drawOutlineAround(dcoord, .{ .fg = colors.CONCRETE, .fl = .{ .wide = true } });
-        }
+        const dcoord = coordToScreenFromRefpoint(coord, coord).?;
+        mp3_win.drawOutlineAround(dcoord, .{ .fg = colors.CONCRETE, .fl = .{ .wide = true } });
 
         if (highlight) |_highlight| {
-            if (coordToScreenFromRefpoint(_highlight, coord)) |dcoord| {
-                mp3_win.drawOutlineAround(dcoord, .{ .fg = 0xaaaaaa, .fl = .{ .wide = true } });
+            if (coordToScreenFromRefpoint(_highlight, coord)) |hdcoord| {
+                mp3_win.drawOutlineAround(hdcoord, .{ .fg = 0xaaaaaa, .fl = .{ .wide = true } });
+            }
+        }
+
+        // Sometimes if highlight outline and main outline overlap then
+        // center coord will be opaqued.
+        //
+        // Force it to be transparent to prevent this
+        mp3_win.setCell(dcoord.x, dcoord.y, .{ .trans = true });
+        if (highlight) |_highlight| {
+            if (coordToScreenFromRefpoint(_highlight, coord)) |hdcoord| {
+                mp3_win.setCell(hdcoord.x, hdcoord.y, .{ .trans = true });
             }
         }
 
