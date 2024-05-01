@@ -1761,7 +1761,7 @@ pub fn screenCoordToNormal(coord: Coord, absrefpoint: Coord) ?Coord {
         (@intCast(isize, coord.y) - @intCast(isize, refpoint.y) - 1);
     if (x < 0 or y < 0 or x >= WIDTH or y >= HEIGHT)
         return null;
-    return Coord.new(@intCast(usize, x), @intCast(usize, y));
+    return Coord.new2(absrefpoint.z, @intCast(usize, x), @intCast(usize, y));
 }
 
 pub fn coordToScreenFromRefpoint(coord: Coord, refpoint: Coord) ?Coord {
@@ -3079,7 +3079,8 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
             }
             y += 1;
 
-            y += inf_win.drawTextAt(0, y, "Press $b<$./$b>$. to switch tabs.\n\n", .{});
+            //y += inf_win.drawTextAt(0, y, "Press $b<$./$b>$. to switch tabs.\n\n", .{});
+            y += inf_win.drawTextAt(0, y, "Switch tabs with $b<$./$b>$..\n\n", .{});
 
             const linewidth = @intCast(usize, inf_d.endx - inf_d.startx);
 
@@ -3283,9 +3284,10 @@ pub fn drawExamineScreen(starting_focus: ?ExamineTileFocus, start_coord: ?Coord)
             else => {},
         };
 
+        // If new coord selected, reset some stuff
         if (!prev_coord.eq(coord)) {
             prev_coord = coord;
-            desc_scroll = 0;
+            desc_scroll = 0; // Reset scrolling
         }
     }
 
