@@ -99,7 +99,7 @@ You're exhausted and won't be able to enter a rage if badly hurt.
 [BUG] Whoopsies. Looks like you're going to explode when you die.
 
 % player_Status.ExplosiveElec
-[BUG] Force lightning, I mean electricity, is building up in your body and will
+[BUG] Sith lightning, I mean electricity, is building up in your body and will
 discharge when you die.
 
 % player_Status.Fast
@@ -132,7 +132,8 @@ You are invigorated and will deal +50% damage, as well as land hits and block
 attacks more often.
 
 % player_Status.Lifespan
-[BUG] Can't think of anything funny to put here, sorry.
+[BUG] Can't think of anything funny to put here, sorry. Something about Thiel,
+I don't know.
 
 % player_Status.Nausea
 You are nauseated and unable to drink potions.
@@ -164,7 +165,7 @@ sounds.
 You are moving 2x more slowly.
 
 % player_Status.DayBlindness
-[BUG] So the sun burnt you when you went outside?
+[BUG] So the sun burnt you when you went outside huh?
 
 % player_Status.NightBlindness
 [BUG]

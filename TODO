@@ -817,7 +817,7 @@ s  maron
 
 Headaches
 ---------
-- Prevent usage of all (or nearly all) evocables (inability to focus).
+- Prevent usage of all (or nearly all) evocables/rings (inability to focus).
 - Cure: potion of ibuprofenication (10% chance of "heartburn" aka 1-2 dmg)
 - Possible source: monster that shoots beams of migraine-inducing energy
 - Possible source: aura of microwave radiation (havana sickness? hah)
@@ -1178,26 +1178,11 @@ x Laboratory/Workshop rework
   x Emberling garrisons
   ~ Prefab: Flamethrower prop/evocable stockpiles
   x New Alchemist AI
+x Warn when stepping into enemy's FOV
+x Auto-wait: don't wait while in combat
+x Revamp messages for recieving/losing status
 *** 3.0.0 release ***
-- Lava and Water rework
-  - Rework as terrain
-  - Lava -> Glowing water
-- Rework -1/Prison to -1/Hub
-  - Exiting staircase to "outside" on top
-  - Doorway to Crypt on bottom side
-  - Entry points and (unavailable) staircase to "0/Dining" in center
-    - If player tries to go up w/ center staircase, staircase gets
-      locked down, and guards start pouring out. i.e. challenge mode
-      - Prevents Revgenunkim invasion event?
-- Vaults
-  - Dobalene rooms
-  - Marble room reworks
-    x New prefabs
-    - Pure gold cloak prefab
-  - Armory room
-    - Anti-night-creature variant
-      - Potion of extermination
-      - Potion of illumination buf
+- Change statue's FOV
 - Armor coatings
   - Potion of absorption: +15% Potential, -1 Will
   - Potion of fortification: +1 Will, -25% Potential (found in holy place)
@@ -1206,6 +1191,131 @@ x Laboratory/Workshop rework
     - Recipe: paralysation(?)
   - Potion of anti-combustion: +25% rFire
   - Multiple coating + incompatibilities
+- Lava and Water rework
+  - Rework as terrain
+  - Lava -> Glowing water
+- Caverns rework
+  - Alchemist + dustling analyzer prefabs
+  - Dustling machines
+- Mapgen features
+  - Guards in cubbyholes (both corridors and rooms)
+    - Diagonal cubbyholes
+  - "Siderooms"
+    x PRI: prisons and cages
+    - PRI and QRT: misc machinery (boilers, water pipes)
+    x LAB: misc machinery, cages of constructs and animals
+- More "Living Dungeon" content
+  x Patrols report areas that need cleaning
+  - Haulers periodically bring prisoners food/alcohol rations
+  - Cleaners occasionally go over prison cell
+  - Guards drag new prisoners to replace ones which died
+    - Occasionally: mapgen schedules prisoner to be placed instead of placing one
+  - Executioners periodically demolish a prisoner (new dialog!)
+- Add "character" to game
+  - Names for all goblin/human monsters
+  - Named statues
+  - Fluff prefabs
+    - Washroom
+    - Boiler room
+    - Trophy room
+    - Bathroom
+    - Caverns: dustling workshop (paralyzed dustlings inside scanning machine)
+    - Laboratory: insane & paralysed prisoners inside scanning machine
+    - Laboratory: alchemist bending over workbench, with barrels of glycerin,
+      nitric acid, and sulfuric acid and a pile of potions of decimation
+      nearby.
+- Simplification: instead of having attack AI for stalker, have them actually
+  transform into sparklings when hunter captain dies"
+- Analyse mob and loot distribution and tweak weights
+- Basalt monsters (-fiends, -mages, -lings)?
+  - Plus: ability that confers status on player that causes Living Stone to
+    continually spawn around player
+- Consider adding more ugrades
+  - Hit% bonus, martial bonus (is that infringing on books too much?)
+  - Additional patterns (leap, counterattack, ...)
+- Warn when next to spreading gas and resting
+- Rework monster spells to be more positional in nature
+  - Pain (range-limited AoE effect?)
+  - Various resurrection spells (limited range?)
+  - Paralysing zap (directional bolt only)
+  - Fry (Cardinal directional bolt only)
+- Night Creatures, part two
+    - Creeping Death
+      - Inject venom spell
+      - Dijkstra vision
+      - Stalking enemy AI
+  - Infestation abilities
+    - Cherbs, actual spell
+    - Winged terrors
+    - Ring of Infestation
+    - Exterminator specialists
+  - Alignment map/mechanics
+    - Map design + cloak of the night
+    - NC dropping map/key
+    - Props on map for effect
+    - Animation (need particle engine[DONE])
+  - Demolisher specialists
+  - Additional spectral orb augments
+    - (100) Augment [s]: Will-checked survival when against opposing blades
+    - ( 50) Augment [d]: 10%/20% chance to die when no hostiles, instead of instantly.
+    - ( 10) Augment [x]: Blades spawn immobile and explode (elec) on death.
+    - ( 10) Augment [i]: Blades spawn immobile, but get +1 HP and 100% Melee.
+    - (100) Augment [k]: Each blade gets +1 Spikes and -25% Melee.
+    - (100) Augment [y]: Blade attacks cause insanity for 1 turn in vulnerable foes.
+    - (100) Augment [f]: Blade attacks have minor chance to infest foe.
+- UI
+  - Escape menu
+    - List of visited/unvisited floors
+  - Examine mode
+    - refactoring
+    - Ability to view info on gas/terrain/wall/floor
+  - Basic mouse support
+    x Tooltips for UI labels
+      ~ Tooltips/explanations for individual messages?
+    - Click on tile to move/attack/interact
+    - Right-click for examine/info
+    x Click on message pane for 'M' screen
+    - Click on tabs in examine mode
+    - Click on items/buttons in inventory mode
+- Load colors from data file
+- Basic speeches by mobs
+- Rework gases
+  x Remove usage of floats entirely
+  - Quantize all gas dissipation rates into VSLOW, SLOW, MED, FAST, VFAST, etc
+  - SIMD where possible
+x Squad overhaul
+- Mob repositioning AI
+  - AI to move out of dangerous tiles (gas/terrain)
+  - AI to move out of reach of enemy, if mob has reaching weapon and is faster
+  - AI to move onto advantageous terrain
+- BUG: If player wears Equ that grants status X, then get hits with Tmp status
+  X, then removes that equipment, they won't have status even if the Tmp status
+  should have replaced it.
+  - FIX: store statuses in a vector.
+- eXamine screen:
+  - Show last remembered items on out-of-sight tiles
+  - Show floor spattering, floor material, gas
+- Scoring
+- Basic save system, replaying of saves, scoresheet uploading
+~ Capacitor mechanic
+  ~ Basic capacitor, charging, discharging
+  ~ Capacitor expansion slots
+  ~ Wiring floors
+    ~ map generation
+~ Air purifiers
+~ Implement intelligence
+- Vaults
+  - Marble room reworks
+    x New prefabs
+    - Pure gold cloak prefab
+    - Tactic rooms
+      - Combat dummies
+      - Shooting targets, skeletal arbalist
+  x Armory room
+    - Anti-night-creature variant
+      - Potion of extermination
+      - Potion of illumination buf
+  - Dobalene rooms
 - Crypt floor
   x Modify level data and spawn files
   - New monsters:
@@ -1216,6 +1326,13 @@ x Laboratory/Workshop rework
     - Pitchblende statues
   - Garrison inset prefabs
   - -1/Crypt/3 prefab
+- Rework -1/Prison to -1/Hub
+  - Exiting staircase to "outside" on top
+  - Doorway to Crypt on bottom side
+  - Entry points and (unavailable) staircase to "0/Dining" in center
+    - If player tries to go up w/ center staircase, staircase gets
+      locked down, and guards start pouring out. i.e. challenge mode
+      - Prevents Revgenunkim invasion event?
 - Revgenuhelkim
   - Acid damage and resistance
     - 'slimy' status (knockback in direction of last move + rFire)
@@ -1247,125 +1364,10 @@ x Laboratory/Workshop rework
     - Possible Angel counterattack event
   - Laboratory prefabs w/ caged monsters
   - "Quarantine" map/area
-- Caverns rework
-  - Alchemist + dustling analyzer prefabs
-  - Dustling machines
-- Mapgen features
-  - Guards in cubbyholes (both corridors and rooms)
-    - Diagonal cubbyholes
-  - "Siderooms"
-    - PRI: prisons and cages
-    - PRI and QRT: misc machinery (boilers, water pipes)
-    - QRT: sinks, washtubs, beer taps
-    - LAB: misc machinery, cages of constructs and animals
-- More "Living Dungeon" content
-  x Patrols report areas that need cleaning
-  - Haulers periodically bring prisoners food/alcohol rations
-  - Cleaners occasionally go over prison cell
-  - Guards drag new prisoners to replace ones which died
-    - Occasionally: mapgen schedules prisoner to be placed instead of placing one
-  - Executioners periodically demolish a prisoner (new dialog!)
-- Add "character" to game
-  - Names for all goblin/human monsters
-  - Named statues
-  - Fluff prefabs
-    - Washroom
-    - Boiler room
-    - Trophy room
-    - Armory
-    - Bathroom
-    - Caverns: dustling workshop (paralyzed dustlings inside scanning machine)
-    - Laboratory: insane & paralysed prisoners inside scanning machine
-    - Laboratory: alchemist bending over workbench, with barrels of glycerin,
-      nitric acid, and sulfuric acid and a pile of potions of decimation
-      nearby.
-- Simplification: instead of having attack AI for stalker, have them actually
-  transform into sparklings when hunter captain dies"
-- Analyse mob and loot distribution and tweak weights
-- Basalt monsters (-fiends, -mages, -lings)?
-  - Plus: ability that confers status on player that causes Living Stone to
-    continually spawn around player
 - Add bookshelves and book types
   - Maps
   - Books that grant an ability
   - Misc useless books
-- Consider adding more ugrades
-  - Hit% bonus, martial bonus (is that infringing on books too much?)
-  - Additional patterns (leap, counterattack, ...)
-- Warn when next to spreading gas and resting
-x Warn when stepping into enemy's FOV
-x Auto-wait: don't wait while in combat
-x Revamp messages for recieving/losing status
-- Rework monster spells to be more positional in nature
-  - Pain (range-limited AoE effect?)
-  - Various resurrection spells (limited range?)
-  - Paralysing zap (directional bolt only)
-  - Fry (Cardinal directional bolt only)
-- Night Creatures, part two
-    - Creeping Death
-      - Inject venom spell
-      - Dijkstra vision
-      - Stalking enemy AI
-  - Infestation abilities
-    - Cherbs, actual spell
-    - Winged terrors
-    - Ring of Infestation
-    - Exterminator specialists
-  - Alignment map/mechanics
-    - Map design, basic aligner machine/prop/consumable
-    - Props on map for effect
-    - Animation (need particle engine[DONE])
-    - Demolisher specialists
-  - Additional spectral orb augments
-    - (100) Augment [s]: Will-checked survival when against opposing blades
-    - ( 50) Augment [d]: 10%/20% chance to die when no hostiles, instead of instantly.
-    - ( 10) Augment [x]: Blades spawn immobile and explode (elec) on death.
-    - ( 10) Augment [i]: Blades spawn immobile, but get +1 HP and 100% Melee.
-    - (100) Augment [k]: Each blade gets +1 Spikes and -25% Melee.
-    - (100) Augment [y]: Blade attacks cause insanity for 1 turn in vulnerable foes.
-    - (100) Augment [f]: Blade attacks have minor chance to infest foe.
-- UI
-  - Escape menu
-    - List of visited/unvisited floors
-  - Examine mode
-    - refactoring
-    - Ability to view info on gas/terrain/wall/floor
-  - Basic mouse support
-    x Tooltips for UI labels
-      ~ Tooltips/explanations for individual messages?
-    - Click on tile to move/attack/interact
-    - Right-click for examine/info
-    x Click on message pane for 'M' screen
-    - Click on tabs in examine mode
-    - Click on items/buttons in inventory mode
-- Load colors from data file
-- Multi-tile props: trees and braziers
-- Basic speeches by mobs
-- Rework gases
-  x Remove usage of floats entirely
-  - Quantize all gas dissipation rates into VSLOW, SLOW, MED, FAST, VFAST, etc
-  - SIMD where possible
-x Squad overhaul
-- Mob repositioning AI
-  - AI to move out of dangerous tiles (gas/terrain)
-  - AI to move out of reach of enemy, if mob has reaching weapon and is faster
-  - AI to move onto advantageous terrain
-- Air purifiers
-- BUG: If player wears Equ that grants status X, then get hits with Tmp status
-  X, then removes that equipment, they won't have status even if the Tmp status
-  should have replaced it.
-  - FIX: store statuses in a vector.
-~ Implement intelligence
-- eXamine screen:
-  - Show last remembered items on out-of-sight tiles
-  - Show floor spattering, floor material, gas
-- Scoring
-- Basic save system, replaying of saves, scoresheet uploading
-- Capacitor mechanic
-  - Basic capacitor, charging, discharging
-  - Capacitor expansion slots
-  - Wiring floors
-    - map generation
 
 Animations
 ==========

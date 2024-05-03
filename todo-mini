@@ -1,3 +1,4 @@
+- "coffins" (find word from old-english etc) near rings
 - if coroner dies, next coroners should be escorted
 - don't store state in prefab list, everything should be in fab_records
   - usage data
