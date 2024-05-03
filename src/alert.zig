@@ -60,7 +60,7 @@ pub const ThreatData = struct {
 // the numbers would be more like Noise=1, Confrontation=5,
 // ArmedConfrontation=10, Dead=10.
 //
-// Instead, the numbers indicate the likelihood (in the eyes of the Complex)
+// Instead, the numbers indicate the likelihood (in the eyes of the Dungeon)
 // that the threat is real and persistent. Thus, death is less than
 // confrontation because death could have been anything, confrontation is
 // visual confirmation of the existence of the threat.
@@ -74,7 +74,7 @@ pub const ThreatIncrease = enum(usize) {
     pub fn isDeadly(self: @This()) bool {
         return switch (self) {
             .Noise, .Confrontation => false,
-            else => true,
+            .Death, .ArmedConfrontation => true,
         };
     }
 };
@@ -138,7 +138,9 @@ pub fn reportThreat(by: ?*Mob, threat: Threat, threattype: ThreatIncrease) void 
     // else
     //     std.log.info("{}: threat: <- anon ({}, t: {})", .{ z, threat, threattype });
 
-    // If a new specific threat is encountered, put the unknown threat to sleep.
+    // If a new specific threat is encountered and an unknown threat existed,
+    // deactivate the unknown threat (assume the specific threat to be the unknown
+    // one)
     if (threat == .Specific and getThreat(threat).level == 0 and
         getThreat(.Unknown).is_active)
     {
@@ -147,7 +149,7 @@ pub fn reportThreat(by: ?*Mob, threat: Threat, threattype: ThreatIncrease) void 
         getThreat(.Unknown).is_active = true;
     }
 
-    // Don't report state.threats if the guy is dead
+    // If threat is dead and threat's corpse has been noticed, dismiss the threat.
     if (threat == .Specific and
         threat.Specific.is_dead and threat.Specific.corpse_info.is_noticed)
     {
@@ -334,6 +336,9 @@ pub fn tickThreats(level: usize) void {
         } else |_| {
             // No space near stairs. Add the response back, wait until next
             // time, hopefully the traffic dissipates.
+            //
+            // FIXME: why are we adding it back, when we never removed it
+            // in the first place??
             state.responses.append(response) catch err.wat();
         }
     }
@@ -409,7 +414,7 @@ inline fn _didIncreasePast(num: usize, old: usize, new: usize) bool {
 }
 
 fn _reinforceRooms(level: usize, reinforcement: *const mobs.MobTemplate, times: usize) void {
-    // TODO: check that we don't deploy to the same room again
+    // TODO: check that we don't deploy to the same room twice
     var count: usize = times;
     while (count > 0) : (count -= 1) {
         const room = rng.choose2(Room, state.rooms[level].items, "importance") catch err.wat();
