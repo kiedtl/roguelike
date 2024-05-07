@@ -495,10 +495,8 @@ fn _writerTwice(
 ) usize {
     _ = self.drawTextAtf(0, starty, "$c{s}$.", .{string}, .{});
 
-    const fmt2_width = utils.countFmt(fmt2, args2);
-    var i = linewidth - (string.len + fmt2_width);
-
-    _ = self.drawTextAtf(i, starty, fmt2, args2, .{});
+    var col = linewidth - utils.countFmt(fmt2, args2);
+    _ = self.drawTextAtf(col, starty, fmt2, args2, .{});
     return 1;
 }
 
@@ -1193,13 +1191,22 @@ fn _getItemDescription(self: *Console, starty: usize, item: Item, linewidth: usi
             }
 
             y += _writerHeader(self, y, linewidth, "traits", .{});
+
+            const p_ego_desc = p.ego.description();
             if (p.martial) {
                 const stat = state.player.stat(.Martial);
                 const statfmt = utils.SignedFormatter{ .v = stat };
                 const color = if (stat < 0) @as(u21, 'r') else 'c';
                 y += self.drawTextAtf(0, y, "$cmartial$.: You can attack up to ${u}{}$. extra time(s) (your Martial stat) if your attacks all land.\n", .{ color, statfmt }, .{});
             }
-            if (p.ego.description()) |description| {
+
+            // Newline between martial description and ego description, if
+            // applicable
+            if (p.martial and p_ego_desc != null) {
+                y += 1;
+            }
+
+            if (p_ego_desc) |description| {
                 y += self.drawTextAtf(0, y, "$c{s}$.: {s}\n", .{ p.ego.name().?, description }, .{});
             }
 
@@ -3531,7 +3538,7 @@ pub fn drawInventoryScreen() bool {
         // Draw item info
         inf_win.clear();
         if (chosen_item != null and itemlist_len > 0) {
-            var ii_y = _getItemDescription(&inf_win, 0, chosen_item.?, LEFT_INFO_WIDTH - 1);
+            var ii_y = _getItemDescription(&inf_win, 0, chosen_item.?, inf_win.width);
 
             if (usable) {
                 ii_y += inf_win.drawTextAt(0, ii_y, "$b<Enter>$. to use.\n", .{});

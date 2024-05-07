@@ -127,6 +127,10 @@ pub fn countFmt(comptime fmt: []const u8, args: anytype) u64 {
     return counting_writer.bytes_written;
 }
 
+test "countFmt" {
+    try testing.expectEqual(countFmt("$.$~$C$.foo$.", .{}), 3);
+}
+
 pub fn getFarthestWalkableCoord(d: Direction, coord: Coord, opts: state.IsWalkableOptions) Coord {
     var target = coord;
     while (target.move(d, state.mapgeometry)) |newcoord| {
