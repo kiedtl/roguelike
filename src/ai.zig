@@ -1569,6 +1569,7 @@ pub fn mageFight(mob: *Mob, alloc: mem.Allocator) void {
         } else false;
 
         if (!found_ally) {
+            mob.facing = mob.coord.closestDirectionTo(closestEnemy(mob).mob.coord, state.mapgeometry);
             tryRest(mob);
             return;
         }
