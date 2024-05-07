@@ -2900,7 +2900,7 @@ pub fn drawZapScreen() void {
         var ring_count: usize = 0;
         var y: usize = 0;
         var ring_i: usize = 0;
-        while (ring_i <= 9) : (ring_i += 1) {
+        while (ring_i < Mob.Inventory.RING_SLOTS.len) : (ring_i += 1) {
             zap_win.left.clearLine(0, zap_win.left.width, y);
             if (player.getRingByIndex(ring_i)) |ring| {
                 ring_count = ring_i;
@@ -2935,7 +2935,7 @@ pub fn drawZapScreen() void {
             var ry: usize = 0;
             ry += zap_win.right.drawTextAt(0, ry, "You have no rings.", .{});
             ry += zap_win.right.drawTextAt(0, ry, "\n", .{});
-            ry += zap_win.right.drawTextAt(0, ry, "$gHint: rings are usually found in golden enclosures on most, but not all, levels.$.", .{});
+            ry += zap_win.right.drawTextAt(0, ry, "$gHint: rings are usually found in golden enclosures on most (but not all) levels.$.", .{});
         }
 
         zap_win.left.stepRevealAnimation();
