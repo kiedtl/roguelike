@@ -594,7 +594,7 @@ pub fn checkForNoises(mob: *Mob) void {
         var x: usize = 0;
         while (x < WIDTH) : (x += 1) {
             const coord = Coord.new2(mob.coord.z, x, y);
-            if (mob.distance2(coord) > vision)
+            if (!mob.ai.is_curious and mob.distance2(coord) > vision)
                 continue;
 
             if (mob.canHear(coord)) |sound| {
@@ -1252,6 +1252,7 @@ pub fn nightCreatureWork(mob: *Mob, alloc: mem.Allocator) void {
                     };
             }
 
+            // If player is hated, randomly meditate on them
             if (!mob.immobile and state.night_rep[@enumToInt(state.player.faction)] <= -10 and rng.onein(1500)) {
                 updateEnemyKnowledge(mob, state.player, null);
                 tryRest(mob);
@@ -2008,7 +2009,7 @@ pub fn _Job_SPC_NCAlignment(mob: *Mob, job: *AIJob) AIJob.JStatus {
         if (mob.canSeeMob(state.player) and state.player.canSeeMob(mob) and
             !job.getCtx(bool, CTX_DIALOG2_GIVEN, false))
         {
-            state.dialog(mob, "I appreciate it.");
+            //state.dialog(mob, "I appreciate it.");
             job.setCtx(bool, CTX_DIALOG1_GIVEN, true);
             job.setCtx(bool, CTX_DIALOG2_GIVEN, true);
         }

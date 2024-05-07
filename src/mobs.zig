@@ -1933,6 +1933,7 @@ pub const NightReaperTemplate = MobTemplate{
 
         .base_night_vision = true,
 
+        .deaf = true,
         .faction = .Night,
         .max_HP = 10,
         .memory_duration = 10,
@@ -1966,6 +1967,7 @@ pub const GrueTemplate = MobTemplate{
         .base_night_vision = true,
         .deg360_vision = true,
 
+        .deaf = true,
         .faction = .Night,
         .max_HP = 20,
         .memory_duration = 99999,
@@ -2013,6 +2015,7 @@ pub const SlinkingTerrorTemplate = MobTemplate{
         .base_night_vision = true,
         .deg360_vision = true,
 
+        .deaf = true,
         .faction = .Night,
         .max_HP = 8,
         .memory_duration = 99999,
