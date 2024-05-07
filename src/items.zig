@@ -1167,12 +1167,13 @@ pub const ExcisionRing = Ring{ // {{{
             state.message(.Info, "A spectral blade appears mid-air, hovering precariously.", .{});
 
             const will = @intCast(usize, state.player.stat(.Willpower));
-            state.player.addStatus(.RingExcision, 0, .{ .Tmp = will * 2 });
+            state.player.addStatus(.RingExcision, 0, .{ .Tmp = will });
 
             return true;
 
             // Too bad we return immediately if the player cancels, this message was nice flavor
             //state.message(.Info, "A haftless sword seems to appear mid-air, then disappears abruptly.", .{});
+            // Alternative flavor: A haftless ethereal sword briefly intrudes on the profane world, then abruptly disappears.
         }
     }.f,
 }; // }}}

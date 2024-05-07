@@ -713,7 +713,7 @@ the sword will attack multiple foes in a line in that direction while giving
 them the $oheld$. status.
 
 
-The lifespan of the spectral sword is equivalent to your $bwillpower * 2$., and its
+The lifespan of the spectral sword is equivalent to your $bwillpower$., and its
 damage is equivalent to $btriple$. the damage your current weapon would deal if
 you attacked (defaulting to $b1$. damage if you don't have a weapon).
 
