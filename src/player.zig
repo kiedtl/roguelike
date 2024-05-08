@@ -770,6 +770,13 @@ pub fn equipItem(item: Item) bool {
                     },
                 ) orelse return false;
                 empty_slot = Inventory.RING_SLOTS[index];
+
+                const old_ring = state.player.inventory.equipment(empty_slot.?).*.?;
+                state.player.dequipItem(empty_slot.?, state.player.coord);
+                state.message(.Inventory, "You drop the {s}.", .{
+                    (old_ring.longName() catch err.wat()).constSlice(),
+                });
+                state.player.declareAction(.Drop);
             }
 
             state.player.equipItem(empty_slot.?, item);
@@ -795,13 +802,17 @@ pub fn grabItem() bool {
         ui.drawAlertThenLog("There's nothing here.", .{});
         return false;
     };
+    const item_index = state.dungeon.itemsAt(state.player.coord).len - 1;
 
     switch (item) {
         .Ring, .Armor, .Cloak, .Head, .Aux, .Weapon => {
-            // Delete item on the ground
-            _ = state.dungeon.itemsAt(state.player.coord).pop() catch err.wat();
-
-            return equipItem(item);
+            if (equipItem(item)) {
+                // Delete item on the ground
+                _ = state.dungeon.itemsAt(state.player.coord).orderedRemove(item_index) catch err.wat();
+                return true;
+            } else {
+                return false;
+            }
         },
         else => {
             if (state.player.inventory.pack.isFull()) {
