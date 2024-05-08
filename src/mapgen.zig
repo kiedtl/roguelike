@@ -767,6 +767,13 @@ pub fn excavatePrefab(
     startx: usize,
     starty: usize,
 ) void {
+    // Clear out prefab area.
+    //
+    // We could do this at the same time as excavation and placing objects, but
+    // that breaks prefabs that have multitile mobs (since the mob is placed,
+    // then subsequent tiles are cleared of that mob leaving only one tile
+    // with the mob on it)
+    //
     var y: usize = 0;
     while (y < fab.height) : (y += 1) {
         var x: usize = 0;
@@ -780,9 +787,22 @@ pub fn excavatePrefab(
             assert(rc.y < HEIGHT);
 
             state.dungeon.at(rc).surface = null;
+            state.dungeon.itemsAt(rc).clear();
+
             if (state.dungeon.at(rc).mob) |m| m.deinitNoCorpse();
             state.dungeon.at(rc).mob = null;
-            state.dungeon.itemsAt(rc).clear();
+        }
+    }
+
+    y = 0;
+    while (y < fab.height) : (y += 1) {
+        var x: usize = 0;
+        while (x < fab.width) : (x += 1) {
+            const rc = Coord.new2(
+                room.rect.start.z,
+                x + room.rect.start.x + startx,
+                y + room.rect.start.y + starty,
+            );
 
             const tt: ?TileType = switch (fab.content[y][x]) {
                 .Any, .Connection => null,
@@ -3016,9 +3036,8 @@ pub fn removeEnemiesNearEntry(level: usize) void {
                         break true;
                 }
             } else false;
-            if (child.distance(down_staircase) <= 3 or can_be_seen) {
+            if (child.distance(down_staircase) <= 3 or can_be_seen)
                 mob.deinitNoCorpse();
-            }
         }
     }
 }

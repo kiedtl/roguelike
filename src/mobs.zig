@@ -2283,6 +2283,9 @@ pub fn placeMob(
     coord: Coord,
     opts: PlaceMobOptions,
 ) *Mob {
+    if (coord.z == 11 and template.mob.multitile != null)
+        std.log.info("placing {s}", .{template.mob.id});
+
     {
         var gen = Generator(Rect.rectIter).init(template.mobAreaRect(coord));
         while (gen.next()) |mobcoord| {
