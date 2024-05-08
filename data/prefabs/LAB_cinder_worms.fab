@@ -7,15 +7,16 @@
 
 :tunneler_orientation east
 :tunneler_orientation west
+:prison 3,6 1 1
 
-@0 M cinder_brute
+@0 Cmons cinder_brute ([prisoner_of]Necromancer [prm_status1]Sleeping [prm_status2]Paralysis)
 @1 M sparkling
 @2 M lightning_mage
 
 @3 P
--- CINDER BRUTE CONTAINMENT AREA --
+-- CINDER BRUTE HOLDING CELL --
 
-This strange creature is undoubtedly one with the Revgenuhelkim, yet strangely
+This strange creature is undoubtedly one of the Revgenuhelkim, though strangely
 it was not encountered at all at Iredelemnul; at least, no record of them
 persists. The Hugghehel found two wandering in the vicinity of Traumbulnahl in
 a dazed state, and were able to capture them both without incident. Preliminary
@@ -30,8 +31,9 @@ conclusions:
 - It is likely that they are vulnerable to electricity.
 
 - Examination suggests that its hide is much stronger than the skin of
-  Revgenuhelkim, strong enough to possibly deflect iron weapons, but this
-  cannot be confirmed without harming and potentially waking the creatures.
+  ordinary Revgenuhelkim, strong enough to possibly deflect our best steel
+  projectiles, but this cannot be confirmed without harming and potentially
+  waking the creatures.
 END POSTER
 
 @a p chamber_s1e1
@@ -45,7 +47,7 @@ END POSTER
 @i p chamber_p_n1w1
 @j p chamber_p_n1e1w1
 
-1112111
+..121..
 .......
 .......
 ...3...
