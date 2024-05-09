@@ -45,11 +45,6 @@ A mask made of green silus.
 % head_hood_silus
 A hood made of green silus chainmail.
 
-% knife
-Typically used for cutting rope and making holes in cloth, this knife will make
-holes in wardens and guards just fine. Hopefully you'll find a better weapon
-before long.
-
 % sword
 A longsword, the razor-sharp edges glimmering reassuringly in the gloomy
 atmosphere of the Dungeon.
@@ -89,14 +84,6 @@ more damage on the living, but less on the undead.
 % rapier
 A very long needle-like dagger, ending in an incredibly sharp edge, but with
 blunt edges. Its general design, especially the handle, is uncommonly elegant.
-
-% halberd
-A axe-headed polearm, with a hook on the blade's backside.
-
-% bone_halberd
-The silver pole is topped with a solid piece of bone, carved into an axe-head.
-It is wound about with a curse to inflict more damage on the living, but less on
-the undead.
 
 % mace
 The leaden head on this heavy mace menaces with hardened steel flanges.
@@ -251,25 +238,6 @@ immediately.
 
 It will create an explosion with a radius of about 3 tiles.
 
-% stalker_station
-A large machine that houses several stalkers for the purpose of tracking down
-uncooperative death row inmates.
-
-% capacitor_array
-If you discharge this capacitor, all creatures in your line of sight without
-electricity resistance will be vaporized by a powerful blast of lightning.
-
-
-Of course, using the capacitor array without rElec yourself would be overly
-suicidal.
-
-% recharging_station
-You can activate this to recharge some of your evocables.
-
-% barrel_water
-You can break open this barrel to make a puddle of water. If you lure foes into
-the water, they will be vulnerable to electricity.
-
 % first_aid_station
 Could be useful.
 
@@ -290,15 +258,6 @@ This device can spray a fountain of sparks at a nearby tile, igniting it.
 % evoc_symbol
 A plain staff carved of some light-colored wood, but unnaturally heavy.
 A maddening low-pitched hum emanates from the center when you lift it.
-
-% eldritch_lantern
-A very strange device, found in abundance in this place when the hill-goblins
-overran it. What use the cave-goblins might have had for it is a mystery.
-
-
-When evoked, it will create a powerful flash of light, dazing all mobs in your
-field of vision for 8 turns. It will daze you as well, hopefully not for very
-long.
 
 % cons_coal
 You can cauterise your wounds with this coal. Only useful if you have fire
@@ -438,8 +397,8 @@ A long, curved blade, hovering mid-air. The tip and handle seem to constantly
 dissolve and reform themselves, emitting an eerie blue light as it does so.
 
 % executioner
-One of the many Dungeon executioners. It wields a giant spiked flail that,
-luckily, is good for little else besides its gruesome profession.
+A guard carrying a giant spiked flail that, luckily, is good for little else
+besides its gruesome hobby.
 
 % watcher
 A unarmed guard.
@@ -463,7 +422,7 @@ A highly-trained and better armed guard. It seems that they've taken note of
 your exploits here...
 
 % enforcer_guard
-One of your people, a pale-skinned and rather inexperienced human mercenary
+One of your countrymen, a pale-skinned and rather inexperienced human mercenary
 hired from the villages surrounding the hill-goblin's central forest city. He's
 been outfitted with the cave-goblin's shock prods and enforcer chains.
 
@@ -495,11 +454,11 @@ however, has caused him to lose control over his own, and now his features
 writhe and contort with irrepressible hatred.
 
 % vapour_mage
-Wow, he really does look weak on his own.
+He does not appear particularly resilient on his own.
 
 % dustling
-A humanoid construct created by a minor sorcerer. It seems to be more or less
-harmless...
+A humanoid construct, currently being designed and tested in these deep caves
+away from the city's bustle.
 
 % cinder_worm
 An ancient demon, incarnate as a writhing mass of molten granite.
@@ -523,12 +482,9 @@ The eyes of this statue seem to glimmer with an unearthly radiance.
 A statue of some nameless creature, the iridescent crystals encrusted on it
 shimmering horribly. You wish you could smash it into pieces.
 
-% bartender
-He's holding a pitcher of some kind of liquor.
-
 % alchemist
-A learned goblin alchemist. It delights in breeding horrible creatures and
-creating evil inventions. Somehow it doesn't care about you.
+A learned hill-goblin tasked with studying, manipulating, and duplicating the
+arcane cave-goblin arts that fill this city.
 
 % cleaner
 This slave is tasked with keeping the floor of the Dungeon spotless.
@@ -547,18 +503,20 @@ a band of sparklings, and might create more if provoked by seeing a fallen
 friend's corpse.
 
 % lightning_mage
-One of the feared Lightning Mages, wielding unparalleled power over the
-atmosphere. She can call on the surrounding air to discharge a powerful
-lightning bolt into unsuspecting foes.
+One of the feared lightning mages who assisted with the initial storming of
+Irthimgilnaz. Wielding unparalleled power over the atmosphere, they can call on
+the surrounding air to discharge a powerful lightning bolt into unsuspecting
+foes.
 
 % ember_mage
-A rather stocky goblin, wearing a maroon tunic. He is tasked with leading a
-band of emberlings, and can release more from the wooden cases he carries.
+A rather stocky hill-goblin, wearing a maroon tunic. He is tasked with leading
+a band of emberlings, and can release more from the wooden cases he carries.
 
 % brimstone_mage
-This unassuming human is one of the dreaded Brimstone Mages, learned in the ways
-of fiery sorcerery. The ornate lettering on her armor testifies to the power she
-has been allowed to wield.
+This unassuming human is a dreaded Brimstone Mages, one of the many powerful
+mages who led the initial assault on this city. Learned in the ways of the
+Necromancer's command over fire, the ornate lettering on their armor testifies
+to the power they have been allowed to wield.
 
 % stalker
 A small flying creature, its four wings humming ominously as it follows you at
@@ -579,8 +537,8 @@ braindamaged death mage.
 A mouldering skeleton, imbued with a parody of life.
 
 % emberling
-A construct of smoldering ash, imbued with false life and commanded by a
-human sorcerer.
+A construct of gleaming metal, with red-hot pincers attached to its polished
+limbs.
 
 % sparkling
 An flying mechanical construct of cave-goblin creation. It's trying to
@@ -596,8 +554,8 @@ A competent and highly trained infantry-goblin wearing a battle cuirass.
 He is tasked with liquidating escaped prisoners, like you.
 
 % bone_mage
-Although not as experienced as the dreaded Death Mages she is apprenticed to,
-she quite capable of killing you all the same.
+Although not as experienced as the dreaded Death Mages they are apprenticed to,
+they are quite capable of killing you all the same.
 
 % death_knight
 His bone longsword is inscribed with crude engravings of torment and death.
@@ -619,20 +577,6 @@ of cruel contempt.
 A raging winged demon composed of boiling basalt, feared even by its peers for
 its vicious fire attacks.
 
-% frozen_fiend
-A winged humanoid, clothed in watery-blue robes. It whispers grimly to itself as
-it patrols the dungeon, inspecting its underlings with an expression of cold
-contempt.
-
-% living_ice
-A mass of ice, imbued with sapience by a nearby demon. It will revert back to
-being a wall in a little bit.
-
-% ball_lightning
-A sphere of pure electricity, encased in a shell of burning sulfur. It will seek
-out nearby conductive creatures, hostile or not, before exploding in a blast of
-fire and lightning.
-
 % iron_spire
 A metal contraption. The thick iron plates covering it muffle an ominous
 whirring from within.
@@ -647,7 +591,7 @@ Gyilthor-drauglâ".
 
 % sentry_spire
 A segmented wooden spire, resting on cast iron supports. A single black pupil,
-carved out of ceramic, rests on its top.
+fashioned out of ceramic, rests on its top.
 
 % spec_totem
 You cannot tell whether it is a living being, or if its functions are purely
