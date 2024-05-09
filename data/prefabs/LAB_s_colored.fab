@@ -1,5 +1,6 @@
 :g_subroom
 :g_global_restriction 1
+:priority 999
 
 @a p generator_blue
 @b p generator_red
@@ -17,24 +18,32 @@
 @m p chamber_n1w1
 
 @0 P
-I don't understand why They would just dump these extremely valuable generators
-behind a crate of ginger beer in the cellar, like that. Why not keep them here
-or scavenge them for spare components? -- NATH
+$cdate$.: $b17O06$.. $croster$.: X Nath, X Tol
 
-I've asked Thob and Tol to compare these models with the green ones and report
-any novelties in their construction. -- NATH
+$cNath$.: Mentioned possible reasons for cave goblins dumping valuable
+transmitters in ginger beer storage room.
 
-Strangely enough, the color of the enamel over the generator's frame seems to be
-the only difference between these ones and the green models. Of course, these
-ones are also missing vital components, but I'm assuming that to be simply due
-to them being unfinished. -- TOL
+$cTol$.: Mentioned eldritch transmitters still remaining on 10/Storage and
+timeline for transporting them to 3/Laboratory.
 
-Unless... the enamel's color/composition affects the generator's functionality?
--- TOL
+$cNath$.: Mentioned possible reasons for cave goblins not scavenging
+transmitters for spare parts. Requested Thob and Tol to compare these models
+with ordinary green transmitters and report novelties in their construction.
 
-That could be possible. At some point we should finish their construction with
-spare components and do some tests to find any functional differences.
--- NATH
+---
+
+$cdate$.: $b17O08$.. $croster$.: X X, X Nath, X Tol, X Thob 
+
+$cTol$.: Discussed disassembly of colored eldritch transmitters. Reported no
+novelties in construction compared to ordinary transmitters, except the obvious
+issue of missing vital components.
+
+$cNath$.: Suggested that color or composition of enamel might have effect on
+functionality.
+
+---
+
+Full summary in archives.
 END POSTER
 
 .d..
