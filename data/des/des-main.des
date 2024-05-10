@@ -249,6 +249,9 @@ A massive, ornate altar of pure gold. Engraved on its glittering surface are
 depictions of the destruction of Irthimgilnaz. A single candle of dark wax sits
 on the surface.
 
+% trap_light_plate
+A pressure plate with some copper connected to it.
+
 % evoc_brazier_wand
 This wand can fire a beam of electricity at a light source, disabling it.
 

@@ -298,6 +298,7 @@ pub const MACHINES = [_]Machine{
     SeizureGasTrap,
     BlindingGasTrap,
     SirenTrap,
+    LightPressurePlate,
     Press,
     Auger,
     Mine,
@@ -553,6 +554,31 @@ pub const SirenTrap = Machine{
                 machine.disabled = true;
                 state.dungeon.at(machine.coord).surface = null;
             }
+        }
+    }.f,
+};
+
+pub const LightPressurePlate = Machine{
+    .id = "trap_light_plate",
+    .name = "pressure plate",
+    .powered_tile = '^',
+    .unpowered_tile = '^',
+    .powered_fg = colors.GOLD,
+    .unpowered_fg = null,
+    .power_drain = 16, // Calibrated to drain in 6.5ish turns, i.e. interval of placement
+    .detect_with_elec = true,
+    .detect_with_heat = false, // Efficient LED bulbs!
+    .powered_luminescence = 60,
+    .unpowered_luminescence = 0,
+    .on_power = struct {
+        pub fn f(machine: *Machine) void {
+            for (&DIRECTIONS) |d| if (machine.coord.move(d, state.mapgeometry)) |neighbor| {
+                if (state.dungeon.machineAt(neighbor)) |mach| {
+                    if (mach.power == 0 and machine.power == 100) {
+                        mach.power = machine.power;
+                    }
+                }
+            };
         }
     }.f,
 };

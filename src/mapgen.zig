@@ -578,6 +578,7 @@ pub fn placePlayer(coord: Coord, alloc: mem.Allocator) void {
 
 pub const PrefabOpts = struct {
     t_only: bool = false,
+    t_corridor_only: bool = false,
     t_orientation: Direction = .South,
     max_w: usize = 999,
     max_h: usize = 999,
@@ -598,6 +599,10 @@ fn prefabIsValid(level: usize, prefab: *Prefab, allow_invis: bool, need_lair: bo
 
     if (prefab.tunneler_prefab != opts.t_only) {
         return false; // Prefab is only for the tunneler algorithm.
+    }
+
+    if (prefab.tunneler_corridor_prefab != opts.t_corridor_only) {
+        return false; // Prefab is only for tunneler subrooms
     }
 
     if (prefab.tunneler_prefab and prefab.tunneler_orientation.len != 0 and
@@ -2733,7 +2738,7 @@ pub fn placeRoomFeatures(level: usize, alloc: mem.Allocator) void {
     }
 }
 
-fn _setTerrain(coord: Coord, terrain: *const surfaces.Terrain) void {
+pub fn setTerrain(coord: Coord, terrain: *const surfaces.Terrain) void {
     if (mem.eql(u8, state.dungeon.at(coord).terrain.id, "t_default")) {
         state.dungeon.at(coord).terrain = terrain;
     }
@@ -2797,7 +2802,7 @@ pub fn placeRoomTerrain(level: usize) void {
                         const coord = Coord.new2(level, x, y);
                         if (coord.x >= WIDTH or coord.y >= HEIGHT)
                             continue;
-                        _setTerrain(coord, chosen_terrain);
+                        setTerrain(coord, chosen_terrain);
                     }
                 }
             },
@@ -2810,7 +2815,7 @@ pub fn placeRoomTerrain(level: usize) void {
                     if (state.dungeon.at(coord).type == .Floor and
                         state.dungeon.at(coord).surface == null)
                     {
-                        _setTerrain(coord, chosen_terrain);
+                        setTerrain(coord, chosen_terrain);
                         placed += 1;
                     }
                 }
@@ -3091,7 +3096,7 @@ fn placeBlob(cfg: BlobConfig, start: Coord) void {
 
             if (grid[blob_x][blob_y] != 0) {
                 if (cfg.type) |tiletype| state.dungeon.at(coord).type = tiletype;
-                _setTerrain(coord, cfg.terrain);
+                setTerrain(coord, cfg.terrain);
             }
         }
     }
@@ -3697,8 +3702,9 @@ pub const Prefab = struct {
     transforms: StackBuffer(Transform, 5) = StackBuffer(Transform, 5).init(null),
 
     tunneler_prefab: bool = false,
+    tunneler_corridor_prefab: bool = false,
     tunneler_inset: bool = false,
-    tunneler_orientation: StackBuffer(Direction, 3) = StackBuffer(Direction, 3).init(null),
+    tunneler_orientation: StackBuffer(Direction, 4) = StackBuffer(Direction, 4).init(null),
 
     name: StackBuffer(u8, MAX_NAME_SIZE) = StackBuffer(u8, MAX_NAME_SIZE).init(null),
 
@@ -4032,6 +4038,9 @@ pub const Prefab = struct {
                     } else if (mem.eql(u8, key, "g_tunneler")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.tunneler_prefab = true;
+                    } else if (mem.eql(u8, key, "g_tunneler_corridor_subroom")) {
+                        if (val.len != 0) return error.UnexpectedMetadataValue;
+                        f.tunneler_corridor_prefab = true;
                     } else if (mem.eql(u8, key, "tunneler_inset")) {
                         if (val.len != 0) return error.UnexpectedMetadataValue;
                         f.tunneler_inset = true;
@@ -4776,6 +4785,7 @@ pub fn createLevelConfig_WRK(crowd: usize, comptime prefabs: []const []const u8)
             .grow_chance = 5,
             .intersect_chance = 100,
             .intersect_with_childless = true,
+            .corridor_prefab_interval = 6,
 
             .initial_tunnelers = &[_]tunneler.TunnelerOptions.InitialTunneler{
                 .{ .start = Coord.new(1, 1), .width = 0, .height = 3, .direction = .East },

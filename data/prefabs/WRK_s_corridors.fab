@@ -1,0 +1,42 @@
+:g_tunneler
+:g_tunneler_corridor_subroom
+:g_restriction 999
+:g_global_restriction 999
+
+:tunneler_orientation north
+:tunneler_orientation south
+@0 m trap_light_plate
+000
+
+\
+
+:tunneler_orientation east
+:tunneler_orientation west
+@m m trap_light_plate
+0
+0
+0
+
+\
+
+:tunneler_orientation north
+:tunneler_orientation south
+@0 m trap_light_plate
+00
+
+\
+
+:tunneler_orientation east
+:tunneler_orientation west
+@m m trap_light_plate
+0
+0
+
+\
+
+:tunneler_orientation north
+:tunneler_orientation south
+:tunneler_orientation east
+:tunneler_orientation west
+@0 m trap_light_plate
+0

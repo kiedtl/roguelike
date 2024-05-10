@@ -1,4 +1,4 @@
-const std = @import("std");
+const std = @import("std"); // {{{
 const mem = std.mem;
 const math = std.math;
 // const meta = std.meta;
@@ -71,6 +71,7 @@ pub const Ctx = struct {
             if (!tunneler.is_eviscerated and tunneler.corridorLength() > 0) {
                 assert(tunneler.rect.width > 0 and tunneler.rect.height > 0);
                 state.rooms[self.level].append(.{ .type = .Corridor, .rect = tunneler.rect }) catch err.wat();
+                tunneler.room_index = state.rooms[self.level].items.len - 1;
 
                 // // Create receiving staircase
                 // const cw = tunneler.corridorWidth();
@@ -239,6 +240,69 @@ pub const Ctx = struct {
                     }
                     mapgen.placeDoor(door, false);
                     state.rooms[level].append(new) catch err.wat();
+                }
+            }
+        }
+    }
+
+    pub fn tryAddingCorridorSubrooms(self: *Ctx) void {
+        if (self.opts.corridor_prefab_interval == null)
+            return;
+        const interval = self.opts.corridor_prefab_interval.?;
+
+        var tunnelers = self.tunnelers.iterator();
+        while (tunnelers.next()) |tunneler| {
+            if (tunneler.is_eviscerated or tunneler.corridorLength() < interval)
+                continue;
+
+            const bounds = if (tunneler.direction == .North or tunneler.direction == .South) tunneler.rect.height else tunneler.rect.width;
+            var ctr: usize = 0;
+            var did_something = true;
+
+            while (true) {
+                ctr += if (did_something) interval else 1;
+                if (ctr >= bounds) break;
+                did_something = false;
+
+                var rect = tunneler.rect;
+                rect = switch (tunneler.direction) {
+                    .North, .South => Rect{
+                        .start = Coord.new2(self.level, rect.start.x, tunneler.rect.end().y - ctr),
+                        .height = interval,
+                        .width = rect.width,
+                    },
+                    .East, .West => Rect{
+                        .start = Coord.new2(self.level, rect.end().x - ctr, tunneler.rect.start.y),
+                        .height = rect.height,
+                        .width = interval,
+                    },
+                    else => unreachable,
+                };
+
+                var room = Room{ .rect = rect };
+                const level = tunneler.rect.start.z;
+
+                if (!mapgen.isRoomInvalid(
+                    &state.rooms[level],
+                    &room,
+                    &state.rooms[level].items[tunneler.room_index],
+                    null,
+                    false,
+                )) {
+                    if (mapgen.choosePrefab(level, &mapgen.n_fabs, .{
+                        .t_only = true,
+                        .t_corridor_only = true,
+                        .t_orientation = tunneler.direction,
+                        .max_h = room.rect.height,
+                        .max_w = room.rect.width,
+                    })) |fab| {
+                        assert(!fab.tunneler_inset);
+                        mapgen.excavatePrefab(&room, fab, state.gpa.allocator(), 0, 0);
+                        fab.incrementRecord(level);
+                        did_something = true;
+                        // XXX: we don't register this room, maybe we should? It's
+                        // technically a subroom
+                    }
                 }
             }
         }
@@ -788,6 +852,13 @@ pub const TunnelerOptions = struct {
 
     max_room_per_tunnel: usize = 99,
 
+    // Place special prefabs in corridors?
+    //
+    // Null if no, number for attempting to place every X steps (if failed,
+    // attempt constantly after that until succeeding)
+    //
+    corridor_prefab_interval: ?usize = null,
+
     initial_tunnelers: []const InitialTunneler = &[_]InitialTunneler{
         // .{ .start = Coord.new(1, 1), .width = 0, .height = 3, .direction = .East },
 
@@ -948,9 +1019,11 @@ pub fn placeTunneledRooms(level: usize, allocator: mem.Allocator) void {
     mapgen.captureFrame(level);
     ctx.tryAddingExtraRooms(level);
     mapgen.captureFrame(level);
+    ctx.tryAddingCorridorSubrooms();
+    mapgen.captureFrame(level);
 
     // Removed because for the time being we want the placeRandomRooms
     // algorithm to place the player
     //
     // ctx.addPlayer();
-}
+} // }}}
