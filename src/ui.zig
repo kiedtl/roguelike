@@ -1564,7 +1564,7 @@ fn drawHUD(moblist: []const *Mob) void {
                 priority = 2;
                 focus = .Surface;
                 name.appendSlice(switch (surf) {
-                    .Machine => |m| if (m.player_interact != null) m.name else "",
+                    .Machine => |m| if (m.player_interact != null or m.show_on_hud) m.name else "",
                     .Prop => "",
                     .Corpse => "corpse",
                     .Container => |c| c.name,

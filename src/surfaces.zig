@@ -560,7 +560,7 @@ pub const SirenTrap = Machine{
 
 pub const LightPressurePlate = Machine{
     .id = "trap_light_plate",
-    .name = "pressure plate",
+    .name = "lamp pressure plate",
     .powered_tile = '^',
     .unpowered_tile = '^',
     .powered_fg = colors.GOLD,
@@ -570,6 +570,7 @@ pub const LightPressurePlate = Machine{
     .detect_with_heat = false, // Efficient LED bulbs!
     .powered_luminescence = 60,
     .unpowered_luminescence = 0,
+    .show_on_hud = true,
     .on_power = struct {
         pub fn f(machine: *Machine) void {
             for (&DIRECTIONS) |d| if (machine.coord.move(d, state.mapgeometry)) |neighbor| {

@@ -4559,6 +4559,7 @@ pub const Machine = struct {
     disabled: bool = false,
 
     player_interact: ?MachInteract = null,
+    show_on_hud: bool = false, // Show on HUD even if no player interaction
 
     // If the player tries to trigger the machine, should we prompt for a
     // confirmation?
