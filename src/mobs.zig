@@ -778,7 +778,7 @@ fn createSpireTemplate(
             .memory_duration = 77,
             .life_type = .Construct,
             .blood = null,
-            .corpse = .Wall,
+            .corpse = .None,
             .immobile = true,
             .innate_resists = .{ .rFume = 100, .rFire = 25, .rElec = 25, .Armor = 20 },
             .stats = .{ .Willpower = opts.willpower, .Evade = 0, .Vision = 8 },
