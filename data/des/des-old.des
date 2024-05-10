@@ -11,6 +11,12 @@ The silver pole is topped with a solid piece of bone, carved into an axe-head.
 It is wound about with a curse to inflict more damage on the living, but less on
 the undead.
 
+% evoc_brazier_wand
+This wand can fire a beam of electricity at a light source, disabling it.
+
+% evoc_flamethrower
+This device can spray a fountain of sparks at a nearby tile, igniting it.
+
 % stalker_station
 A large machine that houses several stalkers for the purpose of tracking down
 uncooperative death row inmates.
