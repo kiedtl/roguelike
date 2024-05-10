@@ -257,7 +257,7 @@ pub const CHUNKS = [_]Chunk{
     .{ .Stat = .{ .s = .StabRecord, .n = "stabbed foes" } },
     .{ .Stat = .{ .s = .DamageInflicted, .n = "inflicted damage" } },
     .{ .Stat = .{ .s = .DamageEndured, .n = "endured damage" } },
-    .{ .Header = .{ .n = "Items/patterns" } },
+    .{ .Header = .{ .n = "Items/rings" } },
     .{ .Stat = .{ .s = .ItemsUsed, .n = "items used" } },
     .{ .Stat = .{ .s = .ItemsThrown, .n = "items thrown" } },
     .{ .Stat = .{ .s = .RingsUsed, .n = "rings used" } },
